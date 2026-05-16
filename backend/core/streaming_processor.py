@@ -10,10 +10,14 @@ from typing import Dict, Any, Optional, List
 
 from core.telemetry_events import event_bus
 from core.normalization import SimAdapter
-from core.spatial import TrackSpline, CalibrationEngine
+from core.spatial import TrackSpline
 from core.dynamics import TelemetryDynamics
 from core.realtime_delta import RealTimeDelta
 from core.vehicle_physics import VehiclePhysicsAdapter
+
+# Formal Spatial Registration
+from core.spatial_registration import registrar
+from core.spatial_bootstrap import InitialTrackRegistration
 
 # Phase 3 Imports
 from core.coaching_engine import CoachingEngine
@@ -54,10 +58,15 @@ class RealTimeProcessor:
         self.delta_engine = RealTimeDelta(reference_lap)
         self.physics = VehiclePhysicsAdapter()
 
-        # Spatial Calibration System
-        self.calibration = CalibrationEngine()
-        self.calibration_points = []
-        self.is_calibrated = False
+        # Spatial Registration State (Global Origin Alignment)
+        self.registration_points = []
+        self.anchor_points = []
+        self.is_registered = False
+        
+        # Phase 9: INITIAL SPATIAL BOOTSTRAP (Cold Start Inference)
+        self.bootstrap_engine = InitialTrackRegistration(self.track)
+        self.is_bootstrapped = False
+        self.bootstrap_data = {}
 
         # Intelligence Layers
         self.classifier = CornerClassifier(track_spline)
@@ -163,26 +172,59 @@ class RealTimeProcessor:
         speed_ms = self.adapter.normalize_speed(self.current_state["speed"])
         throttle, brake = self.adapter.normalize_inputs(self.current_state["throttle"], self.current_state["brake"])
         
-        # 2. Spatial Calibration
-        if not self.is_calibrated:
-            self.calibration_points.append([raw_x, raw_z])
-            if len(self.calibration_points) == 100:
-                self.calibration.calibrate(self.track.points, np.array(self.calibration_points))
-                self.is_calibrated = self.calibration.transform["is_calibrated"]
+        # 2. Spatial Registration
+        if not self.is_registered:
+            self.registration_points.append([raw_x, raw_z])
+            
+            # Anchor point: theoretical track position at current lap_dist_pct
+            lp_pct = self.current_state.get("lap_dist_pct", 0.0)
+            if lp_pct >= 0:
+                ax, az = self.track.evaluate(lp_pct * self.track.total_length)
+                self.anchor_points.append([ax, az])
+            
+            if len(self.registration_points) >= 150:
+                # MANDATORY: Only align if we have enough paired anchors for Global Origin Alignment
+                if len(self.anchor_points) > 100:
+                    registrar.align_sim(np.array(self.registration_points), np.array(self.anchor_points))
+                    self.is_registered = registrar.sim_to_canonical.is_initialized
+                    if self.is_registered:
+                        self.registration_points = []
+                        self.anchor_points = []
+                else:
+                    # Not enough anchors yet, keep collecting
+                    pass
         
-        cal_x, cal_z = self.calibration.apply(raw_x, raw_z)
+        cal_x, cal_z = registrar.transform_sim(raw_x, raw_z)
         
         # 3. SPATIAL PIPELINE (Phase 8: PROFESSIONAL MOTORSPORT GRADE)
         
         # A. Heading Validation
         heading_rad = self.current_state.get("heading", 0.0)
         raw_h_vec = self.adapter.get_heading_vector(heading_rad)
-        cal_h_vec = self.calibration.apply_vector(raw_h_vec[0], raw_h_vec[1])
+        cal_h_vec = registrar.transform_sim_vector(raw_h_vec[0], raw_h_vec[1])
+        
+        # Phase 9: INITIAL SPATIAL BOOTSTRAP (Cold Start)
+        if not self.is_bootstrapped and self.is_registered:
+             boot = self.bootstrap_engine.infer_initial_state(cal_x, cal_z, cal_h_vec)
+             if boot["confidence"] > 0.6:
+                  # Prime the MapMatching and Estimator with inferred physical position
+                  self.map_matching.last_s = boot["initial_s"]
+                  self.is_bootstrapped = True
+                  self.bootstrap_data = boot
+                  logger.info(f"Spatial Anchor Bootstrapped at physical position: s={boot['initial_s']:.1f}")
         
         # B. Map Matching (Deterministic Projection)
-        hint_s = self.current_state["lap_dist_pct"] * self.track.total_length if self.current_state.get("lap_dist_pct", 0) > 0 else None
+        # Only use lap_dist_pct as hint AFTER bootstrap to avoid s=0 traps at spawn
+        hint_s = None
+        if self.is_bootstrapped:
+            hint_s = self.current_state["lap_dist_pct"] * self.track.total_length if self.current_state.get("lap_dist_pct", 0) > 0 else None
+            
         projection = self.map_matching.project(cal_x, cal_z, heading_vec=cal_h_vec, velocity=speed_ms, hint_s=hint_s)
         raw_s, raw_L = projection["s"], projection["L"]
+        
+        # Real-time Alignment Diagnostics (Internal dx/dz measurement)
+        anchor_x, anchor_z = self.track.evaluate(raw_s, 0.0) # Closest centerline point
+        diag = registrar.get_diagnostics(raw_x, raw_z, anchor_x, anchor_z)
 
         # C. Spatial State Estimation (Kalman Filter)
         dt = max(start_t - self.current_state["prev_t"], 0.001)
@@ -191,7 +233,8 @@ class RealTimeProcessor:
         # D. Trajectory Reconstruction (Motion Continuity)
         self.reconstructor.add_point(est_s, est_L, now, speed_ms)
         
-        # E. Final Spatial Reconstruction (Authoritative)
+        # E. Final Spatial Reconstruction (Authoritative for ANALYSIS)
+        # Note: We still calculate this for debug and analytical reference
         final_x, final_z = self.track.evaluate(est_s, est_L)
         
         # Corrected Heading Angle (for frontend rotation)
@@ -205,8 +248,9 @@ class RealTimeProcessor:
         dv = speed_ms - self.current_state["prev_speed"]
         accel_g = (dv / dt) / 9.81
         
+        # Use CALIBRATED coordinates for physics (real trajectory)
         physics_metrics = self.physics.calculate_metrics({
-            "x": final_x, "z": final_z, "speed": speed_ms,
+            "x": cal_x, "z": cal_z, "speed": speed_ms,
             "heading": corrected_heading,
             "steering_angle": self.current_state.get("steering", 0.0)
         }, now)
@@ -214,18 +258,27 @@ class RealTimeProcessor:
         # 6. Build Processed Frame
         processed_frame = {
             "driver_id": "player_1",
-            "lap_number": self.current_state["lap_number"],
-            "lap_time": self.current_state["lap_time"],
-            "s": est_s, "L": est_L, "speed": speed_ms,
-            "throttle": throttle, "brake": brake, "accel_g": accel_g,
-            "delta": delta, 
-            "x": final_x, "z": final_z, 
-            "raw_x": raw_x, "raw_z": raw_z,
-            "timestamp": now,
-            "corner_id": corner.corner_id if corner else None,
-            "corner_type": corner.archetype if corner else "straight",
-            "slip_angle": physics_metrics["slip_angle"],
+            "lap_number": int(self.current_state["lap_number"]),
+            "lap_time": float(self.current_state["lap_time"]),
+            "s": float(est_s), "L": float(est_L), "speed": float(speed_ms),
+            "throttle": float(throttle), "brake": float(brake), "accel_g": float(accel_g),
+            "delta": float(delta), 
+            "x": float(cal_x), "z": float(cal_z),  # VISUAL POSITION: Real calibrated position
+            "projected_x": float(final_x), "projected_z": float(final_z), # ANALYTICAL POSITION: Snapped to spline
+            "raw_x": float(raw_x), "raw_z": float(raw_z),
+            "timestamp": float(now),
+            "corner_id": int(corner.corner_id) if corner else None,
+            "corner_type": str(corner.archetype) if corner else "straight",
+            "slip_angle": float(physics_metrics["slip_angle"]),
             "heading": float(corrected_heading),
+            # Alignment Diagnostics (Visual Debug)
+            "dx": float(diag["dx"]),
+            "dz": float(diag["dz"]),
+            "alignment_drift": float(diag["drift"]),
+            # Phase 9 Bootstrap Diagnostics
+            "bootstrap_conf": float(self.bootstrap_data.get("confidence", 0.0)),
+            "is_pitlane": bool(self.bootstrap_data.get("is_pitlane", False)),
+            "bootstrap_src": str(self.bootstrap_data.get("source", "pending")),
             # Debug Instrumentation
             "reconstruction_confidence": float(1.0 - (projection["score"] / 50.0)),
             "s_dot": float(s_dot),

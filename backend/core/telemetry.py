@@ -1,7 +1,4 @@
-"""
-Módulo de processamento de telemetria
-Valida, limpa e processa dados de telemetria do jogador
-"""
+import math
 import pandas as pd
 import numpy as np
 from typing import Dict, List
@@ -9,6 +6,32 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def calculate_map_matching(car_x, car_z, centerline_x_list, centerline_z_list):
+    """
+    Calcula o ponto mais próximo na spline central da pista (Map Matching)
+    e retorna as coordenadas corrigidas e a distância lateral.
+    """
+    if not centerline_x_list or not centerline_z_list:
+        return car_x, car_z, 0.0
+
+    min_dist_sq = float('inf')
+    closest_idx = 0
+    
+    # Encontrar o vértice mais próximo na pista
+    for i in range(len(centerline_x_list)):
+        dx = car_x - centerline_x_list[i]
+        dz = car_z - centerline_z_list[i]
+        dist_sq = dx*dx + dz*dz
+        if dist_sq < min_dist_sq:
+            min_dist_sq = dist_sq
+            closest_idx = i
+
+    # Coordenadas do "snap" na linha ideal
+    snapped_x = centerline_x_list[closest_idx]
+    snapped_z = centerline_z_list[closest_idx]
+    lateral_offset = math.sqrt(min_dist_sq)
+
+    return snapped_x, snapped_z, lateral_offset
 
 class TelemetryProcessor:
     """Processa telemetria do jogador"""

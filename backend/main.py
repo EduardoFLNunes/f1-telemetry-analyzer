@@ -20,9 +20,11 @@ import logging
 import asyncio
 import time
 import random
+from pathlib import Path
 
 from core.state import AppState
-from core.trackmap    import TrackMapGenerator
+from core.trackmap    import TrackMapGenerator, AssettoCorsaTrackParser
+from core.ac_shared_memory import AssettoCorsaTelemetryReader
 from core.raceline_ai import RacelineAI
 from core.trajectory  import TrajectoryAI
 from core.fastf1_integration import FastF1Integration
@@ -148,11 +150,35 @@ async def start_simulation():
 streaming_ingest: Optional[StreamingIngest] = None
 rt_processor: Optional[RealTimeProcessor] = None
 session_manager: Optional[SessionManager] = None
+ac_reader: Optional[AssettoCorsaTelemetryReader] = None
+
+def on_track_change(track_name):
+    """Callback triggered when Assetto Corsa track changes."""
+    logger.info(f"🔄 Track change detected in AC: {track_name}")
+    # Assume track name is the directory name
+    track_dir = Path("data/tracks") / track_name 
+    if track_dir.exists():
+        parser = AssettoCorsaTrackParser()
+        try:
+            track_data = parser.parse_track(track_dir)
+            app_state["track_data"] = track_data
+            logger.info(f"✅ Auto-loaded track: {track_name}")
+        except Exception as e:
+            logger.error(f"Failed to auto-load track {track_name}: {e}")
+    else:
+        logger.warning(f"Track directory not found for: {track_name}")
+
+ac_reader = AssettoCorsaTelemetryReader(track_parser_callback=on_track_change)
 
 @app.post("/api/streaming/start")
 async def start_streaming(sim_type: str = "F1-25"):
-    global streaming_ingest, rt_processor, session_manager
+    global streaming_ingest, rt_processor, session_manager, ac_reader
     
+    if sim_type == "AC1":
+        if ac_reader and not ac_reader.running:
+            ac_reader.start()
+            logger.info("📡 AC Shared Memory reader started.")
+
     if app_state["track_data"] is None:
         raise HTTPException(status_code=400, detail="Carregue a pista antes de iniciar o streaming.")
         
@@ -205,12 +231,48 @@ async def get_lap_telemetry(driver_id: str, lap_number: int):
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-@app.post("/api/upload/track")
-async def upload_track(file: UploadFile = File(...)):
-    contents = await file.read()
-    df = pd.read_csv(io.BytesIO(contents))
-    app_state["track_data"] = TrackMapGenerator().generate_from_csv(df)
-    return {"status": "success", "track_name": app_state["track_data"]["name"]}
+from core.telemetry import calculate_map_matching
+from core.spatial_registration import registrar
+
+@app.get("/api/telemetry/live")
+async def get_live_telemetry(sim_type: str = "AC1"):
+    """Returns real-time telemetry with map matching."""
+    if sim_type == "AC1":
+        if not ac_reader:
+            raise HTTPException(status_code=404, detail="AC Telemetry Reader não iniciado.")
+        
+        raw_data = ac_reader.get_latest_data()
+        
+        # Transform raw coordinates to Canonical Space
+        car_x_canon, car_z_canon = registrar.transform_track(raw_data["x"], raw_data["z"])
+        
+        # Map matching
+        track = app_state.get("track_data")
+        if track:
+            cx = track["centerline"]["x"]
+            cz = track["centerline"]["y"] # assuming 'y' is Z-coord for trackmap
+            snapped_x, snapped_z, offset = calculate_map_matching(car_x_canon, car_z_canon, cx, cz)
+            
+            return {
+                "car_x": float(car_x_canon),
+                "car_z": float(car_z_canon),
+                "snapped_x": float(snapped_x),
+                "snapped_z": float(snapped_z),
+                "heading": float(raw_data["heading"]),
+                "lateral_offset": float(offset)
+            }
+        else:
+            return {
+                "car_x": float(car_x_canon),
+                "car_z": float(car_z_canon),
+                "snapped_x": float(car_x_canon),
+                "snapped_z": float(car_z_canon),
+                "heading": float(raw_data["heading"]),
+                "lateral_offset": 0.0
+            }
+    
+    # Handle other sim types or fallback
+    raise HTTPException(status_code=400, detail="Simulador não suportado ou sem streaming.")
 
 from core.schemas import ComparisonResponse
 from utils.serialization import sanitize_json
