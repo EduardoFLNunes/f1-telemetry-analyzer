@@ -1,0 +1,57 @@
+.telemetry-charts {
+  display: flex;
+  flex-direction: column;
+  background: #0b0c1a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.charts-header {
+  padding: 20px 20px 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.charts-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #c77dff;
+  margin-bottom: 16px;
+}
+
+.chart-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.chart-tab {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: #7a7d9a;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chart-tab:hover {
+  background: rgba(157, 78, 221, 0.05);
+  border-color: rgba(157, 78, 221, 0.3);
+  color: #c77dff;
+}
+
+.chart-tab.active {
+  background: rgba(157, 78, 221, 0.15);
+  border-color: #9d4edd;
+  color: #c77dff;
+}
+
+.chart-container {
+  height: 300px;
+  padding: 10px;
+}

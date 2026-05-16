@@ -1,0 +1,100 @@
+.track-map {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #0b0c1a;
+}
+
+.map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.map-title h2 {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #c77dff;
+  margin-bottom: 4px;
+}
+
+.map-subtitle {
+  font-size: 11px;
+  color: #7a7d9a;
+  letter-spacing: 1px;
+}
+
+.map-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-animate,
+.btn-reset-view {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: transparent;
+  color: #eceef8;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-animate:hover,
+.btn-reset-view:hover {
+  border-color: #9d4edd;
+  color: #9d4edd;
+}
+
+.btn-animate.active {
+  background: rgba(157, 78, 221, 0.15);
+  border-color: #9d4edd;
+  color: #c77dff;
+}
+
+.map-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-info {
+  display: flex;
+  gap: 24px;
+  padding: 12px 20px;
+  background: rgba(5, 6, 15, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.info-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.info-label {
+  font-size: 11px;
+  color: #7a7d9a;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #eceef8;
+}
+
+.info-value.player-color {
+  color: #ffd000;
+}
+
+.info-value.ai-color {
+  color: #c77dff;
+}
