@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Motorsport Intelligence Workstation</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      :root {
+        --bg-core: #06060d;
+        --bg-panel: #0c0c16;
+        --bg-surface: #12121f;
+        --border: rgba(255,255,255,0.055);
+        --border-hi: rgba(255,255,255,0.13);
+        --cyan: #22d3ee;
+        --emerald: #34d399;
+        --rose: #fb7185;
+        --amber: #fbbf24;
+        --violet: #a78bfa;
+        --text-1: #f1f5f9;
+        --text-2: #94a3b8;
+        --text-3: #475569;
+      }
+      html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--bg-core); color:var(--text-1); }
+      body { font-family:'Inter',-apple-system,sans-serif; -webkit-font-smoothing:antialiased; }
+      ::-webkit-scrollbar { width:3px; height:3px; }
+      ::-webkit-scrollbar-track { background:transparent; }
+      ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
+      ::-webkit-scrollbar-thumb:hover { background:var(--cyan); }
+
+      .font-eng { font-family:'JetBrains Mono',monospace; }
+      .num { font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums; letter-spacing:-0.02em; }
+      .label { font-family:'JetBrains Mono',monospace; font-size:7px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:var(--text-3); }
+
+      .panel { background:var(--bg-panel); border:1px solid var(--border); }
+      .panel-hover { transition:border-color 0.2s; }
+      .panel-hover:hover { border-color:var(--border-hi); }
+
+      .glow-cyan { box-shadow:0 0 24px rgba(34,211,238,0.12); }
+      .glow-rose { box-shadow:0 0 24px rgba(251,113,133,0.18); }
+
+      .status-live {
+        animation: sLive 2s ease-in-out infinite;
+      }
+      @keyframes sLive {
+        0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(52,211,153,0.5); }
+        50% { opacity:0.7; box-shadow:0 0 0 5px rgba(52,211,153,0); }
+      }
+
+      .scanlines::after {
+        content:''; position:fixed; inset:0; pointer-events:none; z-index:9999;
+        background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.025) 3px,rgba(0,0,0,0.025) 4px);
+      }
+
+      .corner-accent::before {
+        content:''; position:absolute; top:0; left:0; width:10px; height:10px;
+        border-top:1px solid var(--cyan); border-left:1px solid var(--cyan); opacity:0.5; z-index:1;
+      }
+
+      .slide-in { animation: slideIn 0.35s cubic-bezier(0.16,1,0.3,1); }
+      @keyframes slideIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+      .blink { animation: blink 1.4s step-end infinite; }
+      @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    </style>
+  </head>
+  <body class="scanlines">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

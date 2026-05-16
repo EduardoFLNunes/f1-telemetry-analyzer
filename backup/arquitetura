@@ -1,0 +1,23 @@
+F1-TELEMETRY-ANALYZER/
+├── data/                       # Centralização de todos os dados (ignorado no Git)
+│   ├── raw/                    # CSVs e arquivos originais (ex: SaoPaulo.csv)
+│   ├── processed/              # Telemetria limpa e salva (ex: telemetria_salva.csv)
+│   └── cache/                  # Cache do FastF1 e SQLites
+├── src/                        # Código fonte principal
+│   ├── core/                   # Lógica base e carregamento
+│   │   ├── loader.py           # Carregamento de APIs e arquivos
+│   │   └── processing.py       # Limpeza e cálculos matemáticos
+│   ├── providers/              # Adaptadores para diferentes jogos/fontes
+│   │   ├── f1_official.py      # Lógica para F1 23/24/25
+│   │   └── ams2.py             # Lógica específica para Automobilista 2
+│   ├── visualization/          # Gráficos e Mapas
+│   │   ├── trackmap.py
+│   │   └── charts.py           # Gráficos de velocidade, delta, etc.
+│   ├── ui/                     # Interface do usuário
+│   │   └── hud.py
+│   └── utils/                  # Funções auxiliares (conversores, etc.)
+├── exports/                    # Onde serão salvos os PNGs e MP4s gerados
+├── tests/                      # Scripts de teste (substitui o teste.py na raiz)
+├── main.py                     # Ponto de entrada único do aplicativo
+├── requirements.txt            # Dependências do projeto
+└── .gitignore                  # Para não subir caches e arquivos gigantes
