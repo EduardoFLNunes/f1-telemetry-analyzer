@@ -27,6 +27,14 @@ export interface TelemetryFrame {
   delta: number;
   x: number;
   z: number;
+  projected_x?: number;
+  projected_z?: number;
+  dx?: number;
+  dz?: number;
+  alignment_drift?: number;
+  bootstrap_conf?: number;
+  is_pitlane?: boolean;
+  bootstrap_src?: string;
   timestamp: number;
   corner_id?: number;
   corner_type?: string;

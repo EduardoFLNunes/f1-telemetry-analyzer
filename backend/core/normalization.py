@@ -52,7 +52,13 @@ class SimAdapter:
     def get_heading_vector(self, yaw: float) -> Tuple[float, float]:
         """Converts yaw (radians) to a 2D unit vector (hx, hz)."""
         # AC Yaw: 0 = North (+Z), Pi/2 = East (+X)
-        return (np.sin(yaw), np.cos(yaw))
+        hx = np.sin(yaw)
+        hz = np.cos(yaw)
+        
+        if self.config["flip_z"]:
+            hz = -hz
+            
+        return (hx, hz)
 
     def normalize_pos(self, x: np.ndarray, y: np.ndarray, z: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """Maps 3D sim coordinates to 2D canonical (x, z)."""

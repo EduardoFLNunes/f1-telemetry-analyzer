@@ -210,35 +210,48 @@ function drawDebugSpatial(
   scale: number
 ) {
   // 1. Projected Position on Spline (Visualized)
-  let minDist = Infinity;
-  let nearestIdx = 0;
-  for (let i = 0; i < trackData.centerline.x.length; i++) {
-    const d = Math.hypot(frame.x - trackData.centerline.x[i], frame.z - trackData.centerline.y[i]);
-    if (d < minDist) {
-      minDist = d;
-      nearestIdx = i;
-    }
-  }
-  const nx = trackData.centerline.x[nearestIdx];
-  const nz = trackData.centerline.y[nearestIdx];
+  // Use the analytical projection from backend if available, otherwise fallback to simple nearest
+  let nx = frame.projected_x;
+  let nz = frame.projected_z;
 
-  // Draw offset line (Track Lock Check)
+  if (nx === undefined || nz === undefined) {
+    let minDist = Infinity;
+    let nearestIdx = 0;
+    for (let i = 0; i < trackData.centerline.x.length; i++) {
+      const d = Math.hypot(frame.x - trackData.centerline.x[i], frame.z - trackData.centerline.y[i]);
+      if (d < minDist) {
+        minDist = d;
+        nearestIdx = i;
+      }
+    }
+    nx = trackData.centerline.x[nearestIdx];
+    nz = trackData.centerline.y[nearestIdx];
+  }
+
+  // Draw offset line (Decoupling Check)
   ctx.beginPath();
-  ctx.moveTo(frame.x, frame.z);
-  ctx.lineTo(nx, nz);
-  ctx.strokeStyle = Math.abs(frame.L || 0) > 10 ? '#ef4444' : '#10b981'; // Red if far from centerline
-  ctx.lineWidth = 2 / scale;
+  ctx.moveTo(frame.x, frame.z); // Real visual position
+  ctx.lineTo(nx, nz);           // Analytical projected position
+  ctx.strokeStyle = Math.abs(frame.L || 0) > 6.0 ? '#ef4444' : '#10b981'; // Red if high lateral error
+  ctx.lineWidth = 1.5 / scale;
   ctx.setLineDash([2/scale, 2/scale]);
   ctx.stroke();
   ctx.setLineDash([]);
+
+  // Draw analytical ghost marker (Small cross at projection)
+  ctx.beginPath();
+  ctx.moveTo(nx - 2/scale, nz - 2/scale); ctx.lineTo(nx + 2/scale, nz + 2/scale);
+  ctx.moveTo(nx + 2/scale, nz - 2/scale); ctx.lineTo(nx - 2/scale, nz + 2/scale);
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.stroke();
 
   // 2. Metrics HUD (Professional Diagnostics)
   ctx.save();
   ctx.resetTransform();
   ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-  ctx.fillRect(10, 50, 160, 100);
+  ctx.fillRect(10, 50, 180, 180);
   ctx.strokeStyle = '#334155';
-  ctx.strokeRect(10, 50, 160, 100);
+  ctx.strokeRect(10, 50, 180, 180);
   
   ctx.fillStyle = '#0ea5e9';
   ctx.font = 'bold 9px "JetBrains Mono"';
@@ -251,6 +264,20 @@ function drawDebugSpatial(
   ctx.fillText(`Yaw: ${(frame.heading || 0).toFixed(3)} rad`, 20, 110);
   ctx.fillText(`Conf: ${((frame as any).reconstruction_confidence * 100)?.toFixed(1)}%`, 20, 125);
   ctx.fillText(`V: ${(frame.speed * 3.6).toFixed(1)} km/h`, 20, 140);
+  
+  // Alignment Diagnostics
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillText(`dx (Offset): ${frame.dx?.toFixed(3)}m`, 20, 160);
+  ctx.fillText(`dz (Offset): ${frame.dz?.toFixed(3)}m`, 20, 175);
+  ctx.fillStyle = (frame.alignment_drift || 0) > 1.0 ? '#fbbf24' : '#10b981';
+  ctx.fillText(`Drift: ${frame.alignment_drift?.toFixed(3)}m`, 20, 190);
+  
+  // Bootstrap Diagnostics
+  ctx.fillStyle = frame.is_pitlane ? '#f43f5e' : '#94a3b8';
+  ctx.fillText(`Pitlane: ${frame.is_pitlane ? 'YES' : 'NO'}`, 20, 205);
+  ctx.fillStyle = (frame.bootstrap_conf || 0) > 0.8 ? '#10b981' : '#fbbf24';
+  ctx.fillText(`Boot Conf: ${((frame.bootstrap_conf || 0) * 100).toFixed(0)}%`, 20, 220);
+  
   ctx.restore();
 
   // 3. Heading Vectors
@@ -389,6 +416,8 @@ export const TrackRenderer: React.FC<TrackRendererProps> = ({ trackData }) => {
           speed: frameA.speed + (frameB.speed - frameA.speed) * t,
           s: frameA.s + (frameB.s - frameA.s) * t,
           L: frameA.L + (frameB.L - frameA.L) * t,
+          projected_x: frameA.projected_x && frameB.projected_x ? frameA.projected_x + (frameB.projected_x - frameA.projected_x) * t : undefined,
+          projected_z: frameA.projected_z && frameB.projected_z ? frameA.projected_z + (frameB.projected_z - frameA.projected_z) * t : undefined,
           throttle: frameA.throttle + (frameB.throttle - frameA.throttle) * t,
           brake: frameA.brake + (frameB.brake - frameA.brake) * t,
           steering: frameA.steering + (frameB.steering - frameA.steering) * t

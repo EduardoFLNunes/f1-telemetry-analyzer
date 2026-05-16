@@ -5,7 +5,23 @@ import './TrackMap.css'
 export default function TrackMap({ trackData, playerData, aiData, f1Data, showF1 }) {
   const [selectedPoint, setSelectedPoint] = useState(0)
   const [animating, setAnimating]         = useState(false)
+  const [liveData, setLiveData]           = useState(null)
   const animRef = useRef(null)
+
+  // Live telemetry polling
+  useEffect(() => {
+    const pollLive = async () => {
+      try {
+        const resp = await fetch('/api/telemetry/live')
+        const data = await resp.json()
+        setLiveData(data)
+      } catch (e) {
+        console.error("Live telemetry polling error:", e)
+      }
+    }
+    const interval = setInterval(pollLive, 33) // ~30Hz
+    return () => clearInterval(interval)
+  }, [])
 
   const playerX    = playerData?.best_lap_data?.x     || []
   const playerZ    = playerData?.best_lap_data?.z     || []
@@ -95,6 +111,23 @@ export default function TrackMap({ trackData, playerData, aiData, f1Data, showF1
       mode: 'markers',
       marker: { size: 12, color: '#ffd000', symbol: 'circle', line: { color: '#fff', width: 2 } },
       hoverinfo: 'skip', showlegend: false,
+    }] : []),
+    // Live Player Marker
+    ...(liveData ? [{
+      x: [liveData.snapped_x],
+      y: [liveData.snapped_z],
+      mode: 'markers',
+      marker: {
+        size: 14,
+        color: Math.abs(liveData.lateral_offset) > 5 ? 'red' : '#00ff00',
+        symbol: 'triangle-up',
+        angleref: 'previous',
+        angle: (liveData.heading * (180 / Math.PI))
+      },
+      name: 'Carro Live',
+      hoverinfo: 'text',
+      text: [`${liveData.lateral_offset.toFixed(2)}m`],
+      showlegend: true
     }] : []),
     // AI cursor
     ...(aiX.length > 0 ? [{

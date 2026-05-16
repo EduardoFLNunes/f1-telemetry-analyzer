@@ -5,6 +5,9 @@ REGRA CRÍTICA: O trackmap é SEMPRE gerado a partir do CSV da pista, NUNCA da r
 import pandas as pd
 import numpy as np
 import logging
+import struct
+import os
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 logger = logging.getLogger(__name__)
@@ -34,24 +37,47 @@ class TrackMapGenerator:
         width_right = df['w_tr_right_m'].values
         width_left = df['w_tr_left_m'].values
         
-        # Calcular bordas da pista usando geometria vetorial
+        return self._generate_from_raw_arrays(x_center, y_center, width_left, width_right)
+
+    def _generate_from_raw_arrays(
+        self,
+        x_center: np.ndarray,
+        y_center: np.ndarray,
+        width_left: np.ndarray,
+        width_right: np.ndarray
+    ) -> Dict:
+        """
+        Generates complete trackmap from raw numpy arrays of centerline
+        coordinates and track widths.
+        """
+        # PRO MODE: Formal Spatial Registration
+        from core.spatial_registration import registrar
+        raw_points = np.column_stack([x_center, y_center])
+        registrar.register_track(raw_points)
+        
+        # Transform centerline to Canonical Space
+        center_canonical = np.array([registrar.transform_track(x, y) for x, y in raw_points])
+        x_canonical = center_canonical[:, 0]
+        y_canonical = center_canonical[:, 1]
+
+        # Calcular bordas da pista usando geometria vetorial (no espaço canônico)
         left_edge, right_edge = self._calculate_track_edges(
-            x_center, y_center, width_left, width_right
+            x_canonical, y_canonical, width_left, width_right
         )
         
         # Calcular curvaturas (para análise da IA)
-        curvatures = self._calculate_curvature(x_center, y_center)
+        curvatures = self._calculate_curvature(x_canonical, y_canonical)
         
         # Identificar setores e corners
-        sectors = self._identify_sectors(x_center, y_center, curvatures)
+        sectors = self._identify_sectors(x_canonical, y_canonical, curvatures)
         corners = self._identify_corners(curvatures)
         
         # Calcular comprimento da pista
-        track_length = self._calculate_track_length(x_center, y_center)
+        track_length = self._calculate_track_length(x_canonical, y_canonical)
         
         # PRO MODE: Gerar Índice Espacial Profissional (CanonicalTrackSpace)
         from core.spatial_engine import CanonicalTrackSpace
-        spatial_index = CanonicalTrackSpace(x_center, y_center)
+        spatial_index = CanonicalTrackSpace(x_canonical, y_canonical)
         s_values = spatial_index.s_samples.tolist()
         
         # Calcular tangentes e normais para cada ponto da centerline
@@ -64,8 +90,8 @@ class TrackMapGenerator:
             normals.append({"x": float(nx), "z": float(nz)})
 
         # Calcular bounds para visualização
-        all_x = np.concatenate([x_center, left_edge[0], right_edge[0]])
-        all_y = np.concatenate([y_center, left_edge[1], right_edge[1]])
+        all_x = np.concatenate([x_canonical, left_edge[0], right_edge[0]])
+        all_y = np.concatenate([y_canonical, left_edge[1], right_edge[1]])
         
         bounds = {
             "min_x": float(np.min(all_x)),
@@ -74,14 +100,14 @@ class TrackMapGenerator:
             "max_y": float(np.max(all_y))
         }
 
-        logger.info(f"TrackMap generated: {len(x_center)} points. Bounds: {bounds}")
+        logger.info(f"TrackMap generated and registered in Canonical Space: {len(x_canonical)} points. Bounds: {bounds}")
 
         # Montar estrutura de dados
         track_data = {
             "name": "Circuit",
             "centerline": {
-                "x": x_center.tolist(),
-                "y": y_center.tolist(),
+                "x": x_canonical.tolist(),
+                "y": y_canonical.tolist(),
                 "s": s_values,
                 "tangents": tangents,
                 "normals": normals
@@ -119,14 +145,6 @@ class TrackMapGenerator:
         width_left: np.ndarray, 
         width_right: np.ndarray
     ) -> Tuple[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]:
-        """
-        Calcula as bordas da pista usando vetores perpendiculares
-        
-        Geometria:
-        1. Calcular tangente em cada ponto (dx, dy)
-        2. Calcular normal (perpendicular à tangente)
-        3. Aplicar largura para obter bordas
-        """
         # Gradiente = tangente
         dx = np.gradient(x_center)
         dy = np.gradient(y_center)
@@ -149,10 +167,6 @@ class TrackMapGenerator:
         return (x_left, y_left), (x_right, y_right)
     
     def _calculate_curvature(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
-        """
-        Calcula curvatura em cada ponto da pista
-        Curvatura = 1/raio da curva
-        """
         dx = np.gradient(x)
         dy = np.gradient(y)
         ddx = np.gradient(dx)
@@ -172,9 +186,6 @@ class TrackMapGenerator:
         y: np.ndarray, 
         curvatures: np.ndarray
     ) -> List[Dict]:
-        """
-        Identifica setores da pista (dividir em 3 setores como F1 real)
-        """
         n_points = len(x)
         sector_size = n_points // 3
         
@@ -202,11 +213,6 @@ class TrackMapGenerator:
         return sectors
     
     def _identify_corners(self, curvatures: np.ndarray) -> List[Dict]:
-        """
-        Identifica curvas principais da pista
-        Curva = região com curvatura acima de threshold
-        """
-        # Threshold para identificar curvas (ajustar conforme pista)
         threshold = np.percentile(curvatures, 70)
         
         corners = []
@@ -215,11 +221,9 @@ class TrackMapGenerator:
         
         for i, curv in enumerate(curvatures):
             if curv > threshold and not in_corner:
-                # Início de uma curva
                 in_corner = True
                 corner_start = i
             elif curv <= threshold and in_corner:
-                # Fim de uma curva
                 in_corner = False
                 corners.append({
                     "corner_id": len(corners) + 1,
@@ -233,8 +237,60 @@ class TrackMapGenerator:
         return corners
     
     def _calculate_track_length(self, x: np.ndarray, y: np.ndarray) -> float:
-        """Calcula comprimento total da pista em metros"""
         dx = np.diff(x)
         dy = np.diff(y)
         distances = np.sqrt(dx**2 + dy**2)
         return float(np.sum(distances))
+
+class AssettoCorsaTrackParser:
+    def parse_track(self, track_directory: Path) -> Dict:
+        """
+        Parses the fast_lane.ai file and returns track data in the
+        standard format.
+        """
+        fast_lane_path = track_directory / "ai" / "fast_lane.ai"
+        if not fast_lane_path.exists():
+            raise FileNotFoundError(f"fast_lane.ai not found at {fast_lane_path}")
+
+        x_coords = []
+        z_coords = []
+        width_left = []
+        width_right = []
+
+        point_format = '<18f' # 18 floats as per original AC binary structure (72 bytes)
+        point_size = struct.calcsize(point_format)
+
+        try:
+            with open(fast_lane_path, "rb") as f:
+                header_data = f.read(8)
+                if len(header_data) < 8:
+                    raise ValueError("Empty or corrupt file.")
+                version, points_count = struct.unpack('<II', header_data)
+
+                for i in range(points_count):
+                    chunk = f.read(point_size)
+                    if len(chunk) < point_size:
+                        break
+                    
+                    data = struct.unpack(point_format, chunk)
+                    x_coords.append(data[0])
+                    z_coords.append(data[2])
+                    width_left.append(abs(data[10]))
+                    width_right.append(abs(data[11]))
+
+        except Exception as e:
+            raise IOError(f"Error reading fast_lane.ai: {e}")
+
+        if not x_coords:
+            raise ValueError("No track points found in fast_lane.ai.")
+
+        generator = TrackMapGenerator()
+        track_data = generator._generate_from_raw_arrays(
+            np.array(x_coords, dtype=np.float32), 
+            np.array(z_coords, dtype=np.float32), 
+            np.array(width_left, dtype=np.float32), 
+            np.array(width_right, dtype=np.float32)
+        )
+        
+        track_data["name"] = track_directory.name 
+        return track_data
