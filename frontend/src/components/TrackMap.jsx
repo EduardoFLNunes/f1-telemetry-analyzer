@@ -58,19 +58,19 @@ export default function TrackMap({ trackData, playerData, aiData, f1Data, showF1
     },
     // Centerline dash
     {
-      x: trackData.centerline.x, y: trackData.centerline.y,
+      x: trackData.centerline.x, y: trackData.centerline.z,
       mode: 'lines',
       line: { color: 'rgba(255,208,0,0.35)', width: 1, dash: 'dot' },
       hoverinfo: 'skip', showlegend: false,
     },
     // Track limits
     {
-      x: trackData.left_edge.x, y: trackData.left_edge.y,
+      x: trackData.left_edge.x, y: trackData.left_edge.z,
       mode: 'lines', line: { color: 'rgba(255,255,255,0.65)', width: 2 },
       hoverinfo: 'skip', showlegend: false,
     },
     {
-      x: trackData.right_edge.x, y: trackData.right_edge.y,
+      x: trackData.right_edge.x, y: trackData.right_edge.z,
       mode: 'lines', line: { color: 'rgba(255,255,255,0.65)', width: 2 },
       hoverinfo: 'skip', showlegend: false,
     },
