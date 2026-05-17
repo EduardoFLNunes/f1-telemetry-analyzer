@@ -3,7 +3,8 @@ from typing import List, Dict, Any, Optional
 
 class TrackCenterline(BaseModel):
     x: List[float]
-    y: List[float]
+    y: Optional[List[float]] = None
+    z: Optional[List[float]] = None
     s: List[float]
     tangents: Optional[List[Dict[str, float]]] = None
     normals: Optional[List[Dict[str, float]]] = None

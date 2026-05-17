@@ -68,11 +68,14 @@ async def lifespan(app: FastAPI):
             # Initialize streaming autonomously
             track = app_state["track_data"]
             tx = track["centerline"]["x"]
-            tz = track["centerline"].get("z", track["centerline"].get("y"))
-            spline = TrackSpline(tx, tz)
+            tz = track["centerline"]["z"] # Using 'z' from the updated structure
+            
+            # Recreate spatial index for streaming from the correctly loaded track data
+            from core.spatial_engine import CanonicalTrackSpace
+            spatial_index = CanonicalTrackSpace(np.array(tx), np.array(tz))
             
             session_manager = SessionManager(track_length=track["length_meters"])
-            rt_processor = RealTimeProcessor(track_spline=spline, reference_lap=app_state.get("f1_reference"), sim_type="AC1")
+            rt_processor = RealTimeProcessor(track_spline=spatial_index, reference_lap=app_state.get("f1_reference"), sim_type="AC1")
             streaming_ingest = StreamingIngest()
             
             await streaming_ingest.start(sim_type="AC1")
@@ -232,7 +235,6 @@ async def get_lap_telemetry(driver_id: str, lap_number: int):
         raise HTTPException(status_code=404, detail=str(e))
 
 from core.telemetry import calculate_map_matching
-from core.spatial_registration import registrar
 
 @app.get("/api/telemetry/live")
 async def get_live_telemetry(sim_type: str = "AC1"):
@@ -243,36 +245,41 @@ async def get_live_telemetry(sim_type: str = "AC1"):
         
         raw_data = ac_reader.get_latest_data()
         
-        # Transform raw coordinates to Canonical Space
-        car_x_canon, car_z_canon = registrar.transform_track(raw_data["x"], raw_data["z"])
+        # World Space coordinates directly from AC
+        car_x, car_z = raw_data["x"], raw_data["z"]
         
         # Map matching
         track = app_state.get("track_data")
-        if track:
+        if track and track.get("is_raw_world_space"):
             cx = track["centerline"]["x"]
-            cz = track["centerline"]["y"] # assuming 'y' is Z-coord for trackmap
-            snapped_x, snapped_z, offset = calculate_map_matching(car_x_canon, car_z_canon, cx, cz)
+            cz = track["centerline"]["z"] # Z is the depth axis
+            
+            snapped_x, snapped_z, offset = calculate_map_matching(car_x, car_z, cx, cz)
+            
+            # Snap logic: if offset > 3m, treat as off-track
+            if offset > 3.0:
+                snapped_x, snapped_z = car_x, car_z
             
             return {
-                "car_x": float(car_x_canon),
-                "car_z": float(car_z_canon),
+                "car_x": float(car_x),
+                "car_z": float(car_z),
                 "snapped_x": float(snapped_x),
                 "snapped_z": float(snapped_z),
                 "heading": float(raw_data["heading"]),
                 "lateral_offset": float(offset)
             }
-        else:
-            return {
-                "car_x": float(car_x_canon),
-                "car_z": float(car_z_canon),
-                "snapped_x": float(car_x_canon),
-                "snapped_z": float(car_z_canon),
-                "heading": float(raw_data["heading"]),
-                "lateral_offset": 0.0
-            }
+        
+        return {
+            "car_x": float(car_x),
+            "car_z": float(car_z),
+            "snapped_x": float(car_x),
+            "snapped_z": float(car_z),
+            "heading": float(raw_data["heading"]),
+            "lateral_offset": 0.0
+        }
     
-    # Handle other sim types or fallback
-    raise HTTPException(status_code=400, detail="Simulador não suportado ou sem streaming.")
+    raise HTTPException(status_code=400, detail="Simulador não suportado.")
+
 
 from core.schemas import ComparisonResponse
 from utils.serialization import sanitize_json

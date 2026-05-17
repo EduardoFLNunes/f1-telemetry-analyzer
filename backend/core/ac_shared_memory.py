@@ -79,7 +79,7 @@ class AssettoCorsaTelemetryReader:
         self.running = False
         self.current_track = ""
         self.track_parser_callback = track_parser_callback
-        self.telemetry_data = {"x": 0.0, "y": 0.0, "z": 0.0, "speed": 0.0, "heading": 0.0}
+        self.telemetry_data = {"x": 0.0, "z": 0.0, "speed": 0.0, "heading": 0.0}
 
     def connect(self):
         try:
@@ -122,7 +122,6 @@ class AssettoCorsaTelemetryReader:
                     "speed": physics_data.speedKmh,
                     "heading": physics_data.heading,
                     "x": graphics_data.carCoordinates[0],
-                    "y": graphics_data.carCoordinates[1],
                     "z": graphics_data.carCoordinates[2]
                 }
             except Exception:
