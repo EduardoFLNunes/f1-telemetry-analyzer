@@ -114,20 +114,29 @@ export default function TrackMap({ trackData, playerData, aiData, f1Data, showF1
     }] : []),
     // Live Player Marker
     ...(liveData ? [{
-      x: [liveData.snapped_x],
-      y: [liveData.snapped_z],
+      x: [liveData.mapPosition?.x ?? liveData.car_x],
+      y: [liveData.mapPosition?.y ?? liveData.car_y],
       mode: 'markers',
       marker: {
         size: 14,
-        color: Math.abs(liveData.lateral_offset) > 5 ? 'red' : '#00ff00',
+        color: Math.abs(liveData.lateral_offset ?? 0) > 5 ? 'red' : '#00ff00',
         symbol: 'triangle-up',
         angleref: 'previous',
         angle: (liveData.heading * (180 / Math.PI))
       },
       name: 'Carro Live',
       hoverinfo: 'text',
-      text: [`${liveData.lateral_offset.toFixed(2)}m`],
+      text: [Number.isFinite(liveData.lateral_offset) ? `${liveData.lateral_offset.toFixed(2)}m` : 'pending'],
       showlegend: true
+    }] : []),
+    ...(liveData?.projectedPosition ? [{
+      x: [liveData.projectedPosition.x],
+      y: [liveData.projectedPosition.y],
+      mode: 'markers',
+      marker: { size: 8, color: 'rgba(255,255,255,0.7)', symbol: 'x' },
+      name: 'Projecao',
+      hoverinfo: 'skip',
+      showlegend: false
     }] : []),
     // AI cursor
     ...(aiX.length > 0 ? [{

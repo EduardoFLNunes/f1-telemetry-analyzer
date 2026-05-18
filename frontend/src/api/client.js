@@ -28,6 +28,10 @@ export const api = {
   },
 
   getTrackData:    async () => (await client.get('/api/data/track')).data,
+  getCurrentTrack: async () => (await client.get('/api/track/current')).data,
+  getTrackCache:   async () => (await client.get('/api/track/cache')).data,
+  getCarState:     async () => (await client.get('/api/car/state')).data,
+  getLiveTelemetry:async () => (await client.get('/api/live/telemetry')).data,
   getTelemetryData:async () => (await client.get('/api/data/telemetry')).data,
   getAiRaceline:   async () => (await client.get('/api/data/ai-raceline')).data,
   getComparison:   async () => (await client.get('/api/data/comparison')).data,

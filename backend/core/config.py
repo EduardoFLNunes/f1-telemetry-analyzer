@@ -2,7 +2,9 @@
 Configurações do F1 Telemetry Analyzer v2.0
 """
 
-AUTO_LOAD_EXAMPLE_DATA = True
+import os
+
+AUTO_LOAD_EXAMPLE_DATA = os.getenv("TELEMETRY_SOURCE", "auto").lower() == "replay"
 
 EXAMPLE_TRACK_CSV = "data/SaoPaulo.csv"
 EXAMPLE_TELEMETRY_CSV = "data/example_telemetry.csv"

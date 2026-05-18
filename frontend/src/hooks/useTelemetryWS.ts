@@ -11,10 +11,12 @@ export const useTelemetryWS = () => {
   const socketRef = useRef<WebSocket | null>(null);
   const { addFrame, addCoachingEvent, addEngineerSpeech, setCognitiveState, setStreaming } = useTelemetryStore();
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const shouldReconnectRef = useRef(true);
 
   const connect = useCallback(() => {
     if (socketRef.current?.readyState === WebSocket.OPEN) return;
 
+    shouldReconnectRef.current = true;
     console.log('Connecting to telemetry stream...', WS_URL);
     const ws = new WebSocket(WS_URL);
 
@@ -29,9 +31,23 @@ export const useTelemetryWS = () => {
         
         if (payload.type === 'telemetry') {
           const raw = payload.data;
+          const mapPosition = raw.mapPosition || { x: raw.x, y: raw.y ?? raw.z };
+          const projectedPosition = raw.projectedPosition || (
+            raw.projected_x !== undefined && (raw.projected_y !== undefined || raw.projected_z !== undefined)
+              ? { x: raw.projected_x, y: raw.projected_y ?? raw.projected_z }
+              : undefined
+          );
           // Map to professional structure
           const frame: TelemetryFrame = {
             ...raw,
+            mapPosition,
+            projectedPosition,
+            x: mapPosition.x,
+            y: mapPosition.y,
+            z: mapPosition.y,
+            projected_x: projectedPosition?.x,
+            projected_y: projectedPosition?.y,
+            projected_z: projectedPosition?.y,
             steering: raw.steering || 0,
             accel_g: typeof raw.accel_g === 'number' 
                 ? { x: 0, y: raw.accel_g, z: 0 } 
@@ -56,13 +72,16 @@ export const useTelemetryWS = () => {
     ws.onclose = () => {
       console.log('Telemetry stream closed');
       setStreaming(false);
-      // Auto-reconnect after 3 seconds
-      reconnectTimeoutRef.current = setTimeout(connect, 3000);
+      if (shouldReconnectRef.current) {
+        reconnectTimeoutRef.current = setTimeout(connect, 1000);
+      }
     };
 
     ws.onerror = (err) => {
-      console.error('WS Error:', err);
-      ws.close();
+      console.warn('Telemetry socket retrying', err);
+      if (ws.readyState !== WebSocket.CLOSED && ws.readyState !== WebSocket.CLOSING) {
+        ws.close();
+      }
     };
 
     socketRef.current = ws;
@@ -71,8 +90,10 @@ export const useTelemetryWS = () => {
   useEffect(() => {
     connect();
     return () => {
+      shouldReconnectRef.current = false;
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       socketRef.current?.close();
+      socketRef.current = null;
     };
   }, [connect]);
 

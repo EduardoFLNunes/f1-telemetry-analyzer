@@ -260,7 +260,7 @@ function drawDebugSpatial(
   ctx.fillStyle = '#94a3b8';
   ctx.font = '8px "JetBrains Mono"';
   ctx.fillText(`s (Progress): ${frame.s?.toFixed(2)}m`, 20, 80);
-  ctx.fillText(`L (Lateral): ${frame.L?.toFixed(2)}m`, 20, 95);
+  ctx.fillText(`L (Lateral): ${Number.isFinite(frame.L) ? Number(frame.L).toFixed(2) : 'pending'}m`, 20, 95);
   ctx.fillText(`Yaw: ${(frame.heading || 0).toFixed(3)} rad`, 20, 110);
   ctx.fillText(`Conf: ${((frame as any).reconstruction_confidence * 100)?.toFixed(1)}%`, 20, 125);
   ctx.fillText(`V: ${(frame.speed * 3.6).toFixed(1)} km/h`, 20, 140);
@@ -270,7 +270,7 @@ function drawDebugSpatial(
   ctx.fillText(`dx (Offset): ${frame.dx?.toFixed(3)}m`, 20, 160);
   ctx.fillText(`dz (Offset): ${frame.dz?.toFixed(3)}m`, 20, 175);
   ctx.fillStyle = (frame.alignment_drift || 0) > 1.0 ? '#fbbf24' : '#10b981';
-  ctx.fillText(`Drift: ${frame.alignment_drift?.toFixed(3)}m`, 20, 190);
+  ctx.fillText(`Drift: ${Number.isFinite(frame.alignment_drift) ? Number(frame.alignment_drift).toFixed(3) : 'pending'}m`, 20, 190);
   
   // Bootstrap Diagnostics
   ctx.fillStyle = frame.is_pitlane ? '#f43f5e' : '#94a3b8';
@@ -415,7 +415,7 @@ export const TrackRenderer: React.FC<TrackRendererProps> = ({ trackData }) => {
           heading: lerpAngle(frameA.heading || 0, frameB.heading || 0, t),
           speed: frameA.speed + (frameB.speed - frameA.speed) * t,
           s: frameA.s + (frameB.s - frameA.s) * t,
-          L: frameA.L + (frameB.L - frameA.L) * t,
+          L: Number.isFinite(frameA.L) && Number.isFinite(frameB.L) ? Number(frameA.L) + (Number(frameB.L) - Number(frameA.L)) * t : null,
           projected_x: frameA.projected_x && frameB.projected_x ? frameA.projected_x + (frameB.projected_x - frameA.projected_x) * t : undefined,
           projected_z: frameA.projected_z && frameB.projected_z ? frameA.projected_z + (frameB.projected_z - frameA.projected_z) * t : undefined,
           throttle: frameA.throttle + (frameB.throttle - frameA.throttle) * t,

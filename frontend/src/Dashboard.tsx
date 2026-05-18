@@ -3,7 +3,7 @@
  * Complete 9-Phase reformulation
  */
 import React, { useEffect, useState } from 'react';
-import { TrackRenderer } from './components/TrackRenderer';
+import { TrackRenderer } from './components/map/TrackRenderer.jsx';
 import { TelemetryTraces } from './components/TelemetryTraces';
 import { GGDiagram } from './components/GGDiagram';
 import { CoachingFeed } from './components/CoachingFeed';
@@ -83,10 +83,28 @@ const Dashboard: React.FC = () => {
   const [time, setTime] = useState(() => new Date());
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/data/comparison')
-      .then(r => r.json())
-      .then(d => { if (d.track) setTrackData(d.track); })
-      .catch(() => {});
+    let cancelled = false;
+    const loadTrack = async () => {
+      try {
+        const res = await fetch(`http://${window.location.hostname}:8000/api/track/current`);
+        const data = await res.json();
+        if (!cancelled && res.ok && data.track) {
+          setTrackData(data.track);
+          return;
+        }
+        if (!cancelled) {
+          setTrackData(null);
+        }
+      } catch {
+        if (!cancelled) setTrackData(null);
+      }
+    };
+    loadTrack();
+    const interval = setInterval(loadTrack, 500);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
