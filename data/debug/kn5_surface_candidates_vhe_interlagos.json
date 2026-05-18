@@ -1,0 +1,2250 @@
+{
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "primarySource": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+  "primarySourceRole": "visual",
+  "includedSurfaceKeys": [
+    "ROAD",
+    "CURB",
+    "KERB"
+  ],
+  "optionalSurfaceKeys": [
+    "PITLANE"
+  ],
+  "includePitlane": false,
+  "candidateMeshes": [
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1kerb003",
+      "nodePath": "_$$3DSimED$$_/1kerb003/1kerb003",
+      "material": "CRETEG",
+      "matchedSurface": "KERB",
+      "includedForRoadGeometry": true,
+      "vertices": 1021,
+      "triangles": 1186,
+      "vertexBounds": {
+        "min": [
+          -415.829803,
+          -16.939116,
+          -455.09967
+        ],
+        "max": [
+          152.410522,
+          12.482231,
+          486.782501
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -415.829803,
+          -16.939116,
+          -455.09967
+        ],
+        "max": [
+          152.410522,
+          12.482231,
+          486.782501
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 1020
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -252.020905,
+          6.416731,
+          453.324615
+        ],
+        [
+          -250.952881,
+          6.238615,
+          452.141388
+        ],
+        [
+          -251.372925,
+          6.27517,
+          451.754608
+        ],
+        [
+          -251.946274,
+          6.27517,
+          451.210663
+        ],
+        [
+          -253.023483,
+          6.454333,
+          452.403992
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          4
+        ],
+        [
+          4,
+          0,
+          2
+        ],
+        [
+          0,
+          4,
+          5
+        ],
+        [
+          5,
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1road002",
+      "nodePath": "_$$3DSimED$$_/1road002/1road002",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 7454,
+      "triangles": 9607,
+      "vertexBounds": {
+        "min": [
+          -493.686035,
+          -24.666569,
+          -563.641235
+        ],
+        "max": [
+          190.657349,
+          18.585047,
+          495.018799
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -493.686035,
+          -24.666569,
+          -563.641235
+        ],
+        "max": [
+          190.657349,
+          18.585047,
+          495.018799
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 7453
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 1,
+      "sampleVertices": [
+        [
+          -352.706055,
+          11.881735,
+          -500.822235
+        ],
+        [
+          -354.056793,
+          11.979101,
+          -500.012482
+        ],
+        [
+          -352.821503,
+          11.833097,
+          -498.082611
+        ],
+        [
+          -351.486359,
+          11.739039,
+          -498.889923
+        ],
+        [
+          -351.254333,
+          11.780481,
+          -501.683014
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          0,
+          3
+        ],
+        [
+          3,
+          5,
+          4
+        ],
+        [
+          6,
+          4,
+          5
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1curb002",
+      "nodePath": "_$$3DSimED$$_/1curb002/1curb002",
+      "material": "CRETEG",
+      "matchedSurface": "CURB",
+      "includedForRoadGeometry": true,
+      "vertices": 514,
+      "triangles": 692,
+      "vertexBounds": {
+        "min": [
+          -359.582703,
+          -2.470507,
+          -529.251831
+        ],
+        "max": [
+          -250.843552,
+          8.957534,
+          -292.169312
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -359.582703,
+          -2.470507,
+          -529.251831
+        ],
+        "max": [
+          -250.843552,
+          8.957534,
+          -292.169312
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 513
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -270.47522,
+          5.613364,
+          -520.99762
+        ],
+        [
+          -269.572815,
+          5.533974,
+          -521.463013
+        ],
+        [
+          -269.530518,
+          5.525518,
+          -521.61792
+        ],
+        [
+          -269.230957,
+          5.470776,
+          -522.438232
+        ],
+        [
+          -269.047668,
+          5.436518,
+          -522.80127
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          3,
+          4,
+          5
+        ],
+        [
+          2,
+          3,
+          5
+        ],
+        [
+          6,
+          7,
+          8
+        ],
+        [
+          8,
+          9,
+          6
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1road006",
+      "nodePath": "_$$3DSimED$$_/1road006/1road006",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 103,
+      "triangles": 99,
+      "vertexBounds": {
+        "min": [
+          -375.191803,
+          7.383404,
+          -484.533569
+        ],
+        "max": [
+          -274.154785,
+          12.900795,
+          -461.044312
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -375.191803,
+          7.383404,
+          -484.533569
+        ],
+        "max": [
+          -274.154785,
+          12.900795,
+          -461.044312
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 102
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -275.712036,
+          7.446483,
+          -481.846222
+        ],
+        [
+          -274.154785,
+          7.383404,
+          -482.124939
+        ],
+        [
+          -275.721191,
+          7.438635,
+          -481.91507
+        ],
+        [
+          -277.317657,
+          7.496846,
+          -481.717865
+        ],
+        [
+          -277.289825,
+          7.509611,
+          -481.586212
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          2,
+          3
+        ],
+        [
+          3,
+          4,
+          0
+        ],
+        [
+          3,
+          5,
+          4
+        ],
+        [
+          5,
+          6,
+          4
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1road005",
+      "nodePath": "_$$3DSimED$$_/1road005/1road005",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 479,
+      "triangles": 720,
+      "vertexBounds": {
+        "min": [
+          -377.190063,
+          4.078571,
+          -528.27417
+        ],
+        "max": [
+          -253.76355,
+          13.020596,
+          -460.114258
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -377.190063,
+          4.078571,
+          -528.27417
+        ],
+        "max": [
+          -253.76355,
+          13.020596,
+          -460.114258
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 478
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -255.154831,
+          4.213413,
+          -527.800903
+        ],
+        [
+          -254.822662,
+          4.189003,
+          -527.796021
+        ],
+        [
+          -253.76355,
+          4.078571,
+          -528.27417
+        ],
+        [
+          -255.687042,
+          4.29175,
+          -527.208618
+        ],
+        [
+          -256.650879,
+          4.355394,
+          -527.286499
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          0,
+          4,
+          3
+        ],
+        [
+          5,
+          3,
+          4
+        ],
+        [
+          4,
+          6,
+          5
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1curb004",
+      "nodePath": "_$$3DSimED$$_/1curb004/1curb004",
+      "material": "CRETEG",
+      "matchedSurface": "CURB",
+      "includedForRoadGeometry": true,
+      "vertices": 804,
+      "triangles": 1289,
+      "vertexBounds": {
+        "min": [
+          -415.365051,
+          -17.914082,
+          -527.394348
+        ],
+        "max": [
+          175.773315,
+          7.135986,
+          451.754608
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -415.365051,
+          -17.914082,
+          -527.394348
+        ],
+        "max": [
+          175.773315,
+          7.135986,
+          451.754608
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 803
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 1,
+      "sampleVertices": [
+        [
+          -272.526672,
+          6.582724,
+          -498.21579
+        ],
+        [
+          -272.363068,
+          6.532143,
+          -499.288391
+        ],
+        [
+          -272.633667,
+          6.640469,
+          -498.240784
+        ],
+        [
+          -272.633667,
+          6.640469,
+          -498.240784
+        ],
+        [
+          -272.363068,
+          6.532143,
+          -499.288391
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          3,
+          4,
+          5
+        ],
+        [
+          6,
+          3,
+          5
+        ],
+        [
+          3,
+          6,
+          7
+        ],
+        [
+          7,
+          8,
+          3
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1road004",
+      "nodePath": "_$$3DSimED$$_/1road004/1road004",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 326,
+      "triangles": 314,
+      "vertexBounds": {
+        "min": [
+          -495.749939,
+          12.918974,
+          -416.799194
+        ],
+        "max": [
+          -402.790222,
+          15.024778,
+          -62.551983
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -495.749939,
+          12.918974,
+          -416.799194
+        ],
+        "max": [
+          -402.790222,
+          15.024778,
+          -62.551983
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 325
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -402.790222,
+          14.511817,
+          -416.179321
+        ],
+        [
+          -404.353394,
+          14.611488,
+          -416.799194
+        ],
+        [
+          -404.379974,
+          14.608811,
+          -416.678528
+        ],
+        [
+          -403.92276,
+          14.638581,
+          -411.998474
+        ],
+        [
+          -404.916992,
+          14.636468,
+          -415.294342
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          3,
+          0,
+          2
+        ],
+        [
+          3,
+          2,
+          4
+        ],
+        [
+          3,
+          4,
+          5
+        ],
+        [
+          3,
+          5,
+          6
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1road003",
+      "nodePath": "_$$3DSimED$$_/1road003/1road003",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 3127,
+      "triangles": 3003,
+      "vertexBounds": {
+        "min": [
+          -493.644928,
+          -24.264633,
+          -515.819336
+        ],
+        "max": [
+          171.070862,
+          18.837833,
+          537.400757
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -493.644928,
+          -24.264633,
+          -515.819336
+        ],
+        "max": [
+          171.070862,
+          18.837833,
+          537.400757
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 3126
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -380.539978,
+          14.259649,
+          -483.57605
+        ],
+        [
+          -377.658936,
+          14.063093,
+          -482.761414
+        ],
+        [
+          -376.469177,
+          13.963739,
+          -483.830963
+        ],
+        [
+          -377.924194,
+          14.056487,
+          -485.459259
+        ],
+        [
+          -375.283508,
+          13.862188,
+          -484.87735
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          2,
+          3
+        ],
+        [
+          3,
+          2,
+          4
+        ],
+        [
+          3,
+          4,
+          5
+        ],
+        [
+          3,
+          5,
+          6
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1curb001",
+      "nodePath": "_$$3DSimED$$_/1curb001/1curb001",
+      "material": "CRETEG",
+      "matchedSurface": "CURB",
+      "includedForRoadGeometry": true,
+      "vertices": 4577,
+      "triangles": 5749,
+      "vertexBounds": {
+        "min": [
+          -431.946198,
+          -25.170135,
+          -560.35083
+        ],
+        "max": [
+          176.955139,
+          14.77755,
+          465.272919
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -431.946198,
+          -25.170135,
+          -560.35083
+        ],
+        "max": [
+          176.955139,
+          14.77755,
+          465.272919
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 4576
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -312.724487,
+          9.008104,
+          -481.110352
+        ],
+        [
+          -312.7883,
+          9.038858,
+          -481.250793
+        ],
+        [
+          -313.153717,
+          9.055161,
+          -481.350922
+        ],
+        [
+          -313.282532,
+          9.032738,
+          -481.263306
+        ],
+        [
+          -313.167114,
+          9.012609,
+          -482.061218
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          3,
+          2
+        ],
+        [
+          5,
+          4,
+          2
+        ],
+        [
+          2,
+          1,
+          5
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1pitlane003",
+      "nodePath": "_$$3DSimED$$_/1pitlane003/1pitlane003",
+      "material": "CRETEG",
+      "matchedSurface": "PITLANE",
+      "includedForRoadGeometry": false,
+      "vertices": 660,
+      "triangles": 330,
+      "vertexBounds": {
+        "min": [
+          -407.565369,
+          15.102601,
+          165.986908
+        ],
+        "max": [
+          -338.310547,
+          15.661656,
+          437.359131
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -407.565369,
+          15.102601,
+          165.986908
+        ],
+        "max": [
+          -338.310547,
+          15.661656,
+          437.359131
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 659
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -407.565369,
+          15.102601,
+          166.167847
+        ],
+        [
+          -407.151428,
+          15.124196,
+          167.733887
+        ],
+        [
+          -406.467377,
+          15.124196,
+          167.553253
+        ],
+        [
+          -406.881378,
+          15.102601,
+          165.986908
+        ],
+        [
+          -407.151428,
+          15.124196,
+          167.733887
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          5,
+          6
+        ],
+        [
+          6,
+          7,
+          4
+        ],
+        [
+          8,
+          9,
+          10
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1kerb002",
+      "nodePath": "_$$3DSimED$$_/1kerb002/1kerb002",
+      "material": "CRETEG",
+      "matchedSurface": "KERB",
+      "includedForRoadGeometry": true,
+      "vertices": 1603,
+      "triangles": 1501,
+      "vertexBounds": {
+        "min": [
+          -412.364471,
+          -23.817215,
+          -453.841583
+        ],
+        "max": [
+          193.438416,
+          18.81588,
+          541.527039
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -412.364471,
+          -23.817215,
+          -453.841583
+        ],
+        "max": [
+          193.438416,
+          18.81588,
+          541.527039
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 1602
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 1,
+      "sampleVertices": [
+        [
+          85.428223,
+          -7.488572,
+          152.30368
+        ],
+        [
+          83.77124,
+          -7.365367,
+          158.597321
+        ],
+        [
+          84.061401,
+          -7.365367,
+          158.673462
+        ],
+        [
+          85.718262,
+          -7.488572,
+          152.38031
+        ],
+        [
+          86.596069,
+          -7.572518,
+          147.89505
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          0,
+          3
+        ],
+        [
+          3,
+          5,
+          4
+        ],
+        [
+          6,
+          4,
+          5
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1kerb001",
+      "nodePath": "_$$3DSimED$$_/1kerb001/1kerb001",
+      "material": "CRETEG",
+      "matchedSurface": "KERB",
+      "includedForRoadGeometry": true,
+      "vertices": 17933,
+      "triangles": 12724,
+      "vertexBounds": {
+        "min": [
+          -430.312866,
+          -23.90048,
+          -559.520996
+        ],
+        "max": [
+          169.453186,
+          16.639711,
+          478.371124
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -430.312866,
+          -23.90048,
+          -559.520996
+        ],
+        "max": [
+          169.453186,
+          16.639711,
+          478.371124
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 17932
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -329.436157,
+          16.33378,
+          469.598236
+        ],
+        [
+          -329.755371,
+          16.379488,
+          469.925385
+        ],
+        [
+          -329.047363,
+          16.333719,
+          470.611237
+        ],
+        [
+          -328.736084,
+          16.288208,
+          470.27652
+        ],
+        [
+          -315.157043,
+          14.353362,
+          462.493958
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          5,
+          6
+        ],
+        [
+          6,
+          7,
+          4
+        ],
+        [
+          8,
+          4,
+          7
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "roadverge",
+      "nodePath": "_$$3DSimED$$_/roadverge/roadverge",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 12017,
+      "triangles": 11459,
+      "vertexBounds": {
+        "min": [
+          -493.992126,
+          -26.485422,
+          -642.826233
+        ],
+        "max": [
+          323.105743,
+          18.830482,
+          549.530334
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -493.992126,
+          -26.485422,
+          -642.826233
+        ],
+        "max": [
+          323.105743,
+          18.830482,
+          549.530334
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 12016
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -281.502869,
+          7.090483,
+          -503.20462
+        ],
+        [
+          -280.407104,
+          6.947992,
+          -504.725128
+        ],
+        [
+          -280.611633,
+          6.957232,
+          -504.868958
+        ],
+        [
+          -281.700317,
+          7.099813,
+          -503.358246
+        ],
+        [
+          -282.746643,
+          7.252817,
+          -501.725372
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          0,
+          3
+        ],
+        [
+          3,
+          5,
+          4
+        ],
+        [
+          6,
+          7,
+          8
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "roadline004",
+      "nodePath": "_$$3DSimED$$_/roadline004/roadline004",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 30068,
+      "triangles": 15370,
+      "vertexBounds": {
+        "min": [
+          -493.586029,
+          -25.094423,
+          -563.54126
+        ],
+        "max": [
+          190.557312,
+          18.615604,
+          494.918762
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -493.586029,
+          -25.094423,
+          -563.54126
+        ],
+        "max": [
+          190.557312,
+          18.615604,
+          494.918762
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 30067
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -404.321228,
+          15.765682,
+          -451.493683
+        ],
+        [
+          -403.453674,
+          15.727744,
+          -452.866608
+        ],
+        [
+          -403.664093,
+          15.759907,
+          -453.001617
+        ],
+        [
+          -404.533356,
+          15.797761,
+          -451.625946
+        ],
+        [
+          -416.385956,
+          16.113201,
+          -428.687653
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          5,
+          6
+        ],
+        [
+          6,
+          7,
+          4
+        ],
+        [
+          8,
+          9,
+          10
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "roadline006",
+      "nodePath": "_$$3DSimED$$_/roadline006/roadline006",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 138,
+      "triangles": 92,
+      "vertexBounds": {
+        "min": [
+          -402.901428,
+          15.238789,
+          167.641937
+        ],
+        "max": [
+          -333.042664,
+          15.576179,
+          433.650391
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -402.901428,
+          15.238789,
+          167.641937
+        ],
+        "max": [
+          -333.042664,
+          15.576179,
+          433.650391
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 137
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -338.897675,
+          15.505031,
+          421.977112
+        ],
+        [
+          -335.988831,
+          15.468872,
+          421.242981
+        ],
+        [
+          -337.056641,
+          15.467717,
+          417.011902
+        ],
+        [
+          -339.965515,
+          15.502886,
+          417.746033
+        ],
+        [
+          -341.033325,
+          15.50074,
+          413.514954
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          3,
+          2
+        ],
+        [
+          2,
+          5,
+          4
+        ],
+        [
+          6,
+          7,
+          8
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "roadline003",
+      "nodePath": "_$$3DSimED$$_/roadline003/roadline003",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 394,
+      "triangles": 408,
+      "vertexBounds": {
+        "min": [
+          -477.964539,
+          10.239873,
+          -25.054592
+        ],
+        "max": [
+          -416.902313,
+          13.498852,
+          188.76947
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -477.964539,
+          10.239873,
+          -25.054592
+        ],
+        "max": [
+          -416.902313,
+          13.498852,
+          188.76947
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 393
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -472.753632,
+          10.815045,
+          -15.169144
+        ],
+        [
+          -473.15155,
+          10.855444,
+          -16.780212
+        ],
+        [
+          -475.558044,
+          10.874624,
+          -16.178108
+        ],
+        [
+          -472.356812,
+          10.775623,
+          -13.560472
+        ],
+        [
+          -475.15509,
+          10.831439,
+          -14.567974
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          3,
+          0,
+          4
+        ],
+        [
+          2,
+          4,
+          0
+        ],
+        [
+          4,
+          2,
+          5
+        ],
+        [
+          5,
+          6,
+          4
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "roadline001",
+      "nodePath": "_$$3DSimED$$_/roadline001/roadline001",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 12324,
+      "triangles": 6162,
+      "vertexBounds": {
+        "min": [
+          130.075897,
+          4.917096,
+          26.783997
+        ],
+        "max": [
+          325.542969,
+          7.138616,
+          370.494507
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          130.075897,
+          4.917096,
+          26.783997
+        ],
+        "max": [
+          325.542969,
+          7.138616,
+          370.494507
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 12323
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          175.535248,
+          5.606794,
+          336.630432
+        ],
+        [
+          176.030594,
+          5.615201,
+          335.861389
+        ],
+        [
+          175.861862,
+          5.615161,
+          335.769531
+        ],
+        [
+          175.374283,
+          5.606794,
+          336.52652
+        ],
+        [
+          159.793289,
+          5.564993,
+          349.925262
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          5,
+          6
+        ],
+        [
+          6,
+          7,
+          4
+        ],
+        [
+          8,
+          9,
+          10
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "roadline002",
+      "nodePath": "_$$3DSimED$$_/roadline002/roadline002",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 126,
+      "triangles": 66,
+      "vertexBounds": {
+        "min": [
+          148.359375,
+          4.977076,
+          241.627029
+        ],
+        "max": [
+          169.288696,
+          5.211287,
+          319.234436
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          148.359375,
+          4.977076,
+          241.627029
+        ],
+        "max": [
+          169.288696,
+          5.211287,
+          319.234436
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 125
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          154.29512,
+          5.166821,
+          316.79068
+        ],
+        [
+          153.81192,
+          5.164448,
+          317.699005
+        ],
+        [
+          155.130417,
+          5.151296,
+          318.315308
+        ],
+        [
+          155.617081,
+          5.1542,
+          317.407501
+        ],
+        [
+          160.209183,
+          5.161642,
+          306.491608
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          5,
+          6
+        ],
+        [
+          6,
+          7,
+          4
+        ],
+        [
+          7,
+          6,
+          8
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "roadline005",
+      "nodePath": "_$$3DSimED$$_/roadline005/roadline005",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 138,
+      "triangles": 92,
+      "vertexBounds": {
+        "min": [
+          -402.901428,
+          15.238789,
+          167.641937
+        ],
+        "max": [
+          -333.042664,
+          15.576179,
+          433.650391
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -402.901428,
+          15.238789,
+          167.641937
+        ],
+        "max": [
+          -333.042664,
+          15.576179,
+          433.650391
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 137
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -383.089081,
+          15.538706,
+          246.878387
+        ],
+        [
+          -380.180237,
+          15.487002,
+          246.144012
+        ],
+        [
+          -381.248138,
+          15.47801,
+          241.912781
+        ],
+        [
+          -384.156982,
+          15.522005,
+          242.647034
+        ],
+        [
+          -385.224915,
+          15.505305,
+          238.415649
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          3,
+          2
+        ],
+        [
+          2,
+          5,
+          4
+        ],
+        [
+          6,
+          7,
+          8
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "roadlineout",
+      "nodePath": "_$$3DSimED$$_/roadlineout/roadlineout",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 2094,
+      "triangles": 1990,
+      "vertexBounds": {
+        "min": [
+          -416.347534,
+          -25.725756,
+          -636.607788
+        ],
+        "max": [
+          291.165405,
+          15.015442,
+          384.295654
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -416.347534,
+          -25.725756,
+          -636.607788
+        ],
+        "max": [
+          291.165405,
+          15.015442,
+          384.295654
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 2093
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -138.333969,
+          -8.087019,
+          -588.194824
+        ],
+        [
+          -137.198425,
+          -8.079486,
+          -584.359375
+        ],
+        [
+          -136.958725,
+          -8.104327,
+          -584.43042
+        ],
+        [
+          -138.094238,
+          -8.110518,
+          -588.265869
+        ],
+        [
+          -28.957886,
+          -13.784416,
+          -538.203003
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          5,
+          6
+        ],
+        [
+          6,
+          7,
+          4
+        ],
+        [
+          8,
+          4,
+          7
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1road001",
+      "nodePath": "_$$3DSimED$$_/1road001/1road001",
+      "material": "CRETEG",
+      "matchedSurface": "ROAD",
+      "includedForRoadGeometry": true,
+      "vertices": 18925,
+      "triangles": 30287,
+      "vertexBounds": {
+        "min": [
+          -485.354248,
+          -25.115467,
+          -558.173401
+        ],
+        "max": [
+          188.78772,
+          18.61635,
+          488.598663
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -485.354248,
+          -25.115467,
+          -558.173401
+        ],
+        "max": [
+          188.78772,
+          18.61635,
+          488.598663
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 18924
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -346.942688,
+          11.490088,
+          -504.187408
+        ],
+        [
+          -348.346924,
+          11.582582,
+          -503.379791
+        ],
+        [
+          -347.203217,
+          11.439469,
+          -501.419586
+        ],
+        [
+          -345.451233,
+          11.393026,
+          -505.036835
+        ],
+        [
+          -345.825623,
+          11.347264,
+          -502.21579
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          3,
+          0,
+          4
+        ],
+        [
+          2,
+          4,
+          0
+        ],
+        [
+          4,
+          2,
+          5
+        ],
+        [
+          6,
+          5,
+          2
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1pitlane001",
+      "nodePath": "_$$3DSimED$$_/1pitlane001/1pitlane001",
+      "material": "CRETEG",
+      "matchedSurface": "PITLANE",
+      "includedForRoadGeometry": false,
+      "vertices": 1448,
+      "triangles": 786,
+      "vertexBounds": {
+        "min": [
+          -438.215912,
+          10.74315,
+          63.612083
+        ],
+        "max": [
+          -337.999969,
+          15.872723,
+          438.294189
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -438.215912,
+          10.74315,
+          63.612083
+        ],
+        "max": [
+          -337.999969,
+          15.872723,
+          438.294189
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 1447
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -431.971222,
+          10.781048,
+          65.313164
+        ],
+        [
+          -432.390076,
+          10.74315,
+          63.612083
+        ],
+        [
+          -438.215912,
+          10.74315,
+          65.047203
+        ],
+        [
+          -437.797638,
+          10.781048,
+          66.746025
+        ],
+        [
+          -431.550049,
+          10.819362,
+          67.023674
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          0,
+          3
+        ],
+        [
+          3,
+          5,
+          4
+        ],
+        [
+          6,
+          4,
+          5
+        ]
+      ]
+    },
+    {
+      "sourceFile": "vhe_interlagos.kn5",
+      "sourcePath": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "role": "visual",
+      "meshName": "1pitlane002",
+      "nodePath": "_$$3DSimED$$_/1pitlane002/1pitlane002",
+      "material": "CRETEG",
+      "matchedSurface": "PITLANE",
+      "includedForRoadGeometry": false,
+      "vertices": 218,
+      "triangles": 210,
+      "vertexBounds": {
+        "min": [
+          -406.507935,
+          15.102601,
+          163.496826
+        ],
+        "max": [
+          -328.963989,
+          15.620553,
+          436.869568
+        ]
+      },
+      "triangleBounds": {
+        "min": [
+          -406.507935,
+          15.102601,
+          163.496826
+        ],
+        "max": [
+          -328.963989,
+          15.620553,
+          436.869568
+        ]
+      },
+      "indexRange": {
+        "min": 0,
+        "max": 217
+      },
+      "invalidIndexCount": 0,
+      "degenerateTriangleCount": 0,
+      "sampleVertices": [
+        [
+          -402.76532,
+          15.237524,
+          180.042755
+        ],
+        [
+          -402.352844,
+          15.239511,
+          181.602142
+        ],
+        [
+          -393.652954,
+          15.416686,
+          178.458801
+        ],
+        [
+          -393.778198,
+          15.416686,
+          177.962585
+        ],
+        [
+          -403.179871,
+          15.233414,
+          178.475189
+        ]
+      ],
+      "sampleTriangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          2,
+          3
+        ],
+        [
+          4,
+          0,
+          3
+        ],
+        [
+          5,
+          4,
+          3
+        ],
+        [
+          6,
+          5,
+          3
+        ]
+      ]
+    }
+  ],
+  "globalVertexBounds": {
+    "min": [
+      -495.749939,
+      -26.485422,
+      -642.826233
+    ],
+    "max": [
+      325.542969,
+      18.837833,
+      549.530334
+    ]
+  },
+  "globalTriangleBounds": {
+    "min": [
+      -495.749939,
+      -26.485422,
+      -642.826233
+    ],
+    "max": [
+      325.542969,
+      18.837833,
+      549.530334
+    ]
+  },
+  "diagnostics": []
+}

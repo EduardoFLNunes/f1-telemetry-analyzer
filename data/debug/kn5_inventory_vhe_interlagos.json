@@ -1,0 +1,2550 @@
+{
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "geometrySurfaces": [
+    "ROAD",
+    "CURB",
+    "KERB"
+  ],
+  "sourceManifest": {
+    "acRoot": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa",
+    "trackFolder": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos",
+    "modelsIni": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\models_gp.ini",
+    "surfacesIni": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\gp\\data\\surfaces.ini",
+    "candidateGeometryFiles": {
+      "mainVisual": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "collider": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\obj_collider.kn5",
+      "groove": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\obj_groove.kn5"
+    }
+  },
+  "files": [
+    {
+      "role": "collider",
+      "path": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\obj_collider.kn5",
+      "fileName": "obj_collider.kn5",
+      "exists": true,
+      "fileSizeBytes": 919318,
+      "version": 5,
+      "textureCount": 1,
+      "materialCount": 1,
+      "nodeCount": 15,
+      "meshCount": 7,
+      "materials": [
+        "COLLIDER"
+      ],
+      "nodes": [
+        "_$$3DSimED$$_",
+        "_$$3DSimED$$_/not_wall_collider_00",
+        "_$$3DSimED$$_/not_wall_collider_00/not_wall_collider_00",
+        "_$$3DSimED$$_/1wall_collider_00",
+        "_$$3DSimED$$_/1wall_collider_00/1wall_collider_00",
+        "_$$3DSimED$$_/1wall_collider_01",
+        "_$$3DSimED$$_/1wall_collider_01/1wall_collider_01",
+        "_$$3DSimED$$_/1wall_collider_02",
+        "_$$3DSimED$$_/1wall_collider_02/1wall_collider_02",
+        "_$$3DSimED$$_/1wall_collider_03",
+        "_$$3DSimED$$_/1wall_collider_03/1wall_collider_03",
+        "_$$3DSimED$$_/1wall_collider_04",
+        "_$$3DSimED$$_/1wall_collider_04/1wall_collider_04",
+        "_$$3DSimED$$_/1wall_collider_05",
+        "_$$3DSimED$$_/1wall_collider_05/1wall_collider_05"
+      ],
+      "meshes": [
+        {
+          "name": "not_wall_collider_00",
+          "nodeName": "not_wall_collider_00",
+          "nodePath": "_$$3DSimED$$_/not_wall_collider_00/not_wall_collider_00",
+          "material": "COLLIDER",
+          "materialIndex": 0,
+          "vertices": 2431,
+          "triangles": 2593,
+          "bbox": {
+            "min": [
+              -398.664398,
+              15.416662,
+              160.955795
+            ],
+            "max": [
+              -307.484497,
+              44.726002,
+              436.071411
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "collider"
+        },
+        {
+          "name": "1wall_collider_00",
+          "nodeName": "1wall_collider_00",
+          "nodePath": "_$$3DSimED$$_/1wall_collider_00/1wall_collider_00",
+          "material": "COLLIDER",
+          "materialIndex": 0,
+          "vertices": 2364,
+          "triangles": 788,
+          "bbox": {
+            "min": [
+              -378.492493,
+              -22.740604,
+              -339.368988
+            ],
+            "max": [
+              -29.899269,
+              0.788675,
+              -24.293512
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "collider"
+        },
+        {
+          "name": "1wall_collider_01",
+          "nodeName": "1wall_collider_01",
+          "nodePath": "_$$3DSimED$$_/1wall_collider_01/1wall_collider_01",
+          "material": "COLLIDER",
+          "materialIndex": 0,
+          "vertices": 1353,
+          "triangles": 451,
+          "bbox": {
+            "min": [
+              -56.246578,
+              -19.887686,
+              -266.94989
+            ],
+            "max": [
+              168.616104,
+              -1.284567,
+              420.478699
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "collider"
+        },
+        {
+          "name": "1wall_collider_02",
+          "nodeName": "1wall_collider_02",
+          "nodePath": "_$$3DSimED$$_/1wall_collider_02/1wall_collider_02",
+          "material": "COLLIDER",
+          "materialIndex": 0,
+          "vertices": 1731,
+          "triangles": 577,
+          "bbox": {
+            "min": [
+              -220.642105,
+              -4.504231,
+              305.329498
+            ],
+            "max": [
+              30.179979,
+              5.137136,
+              449.848297
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "collider"
+        },
+        {
+          "name": "1wall_collider_03",
+          "nodeName": "1wall_collider_03",
+          "nodePath": "_$$3DSimED$$_/1wall_collider_03/1wall_collider_03",
+          "material": "COLLIDER",
+          "materialIndex": 0,
+          "vertices": 1956,
+          "triangles": 652,
+          "bbox": {
+            "min": [
+              -342.13559,
+              -0.204393,
+              376.186401
+            ],
+            "max": [
+              -45.913689,
+              17.921926,
+              510.624207
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "collider"
+        },
+        {
+          "name": "1wall_collider_04",
+          "nodeName": "1wall_collider_04",
+          "nodePath": "_$$3DSimED$$_/1wall_collider_04/1wall_collider_04",
+          "material": "COLLIDER",
+          "materialIndex": 0,
+          "vertices": 1416,
+          "triangles": 472,
+          "bbox": {
+            "min": [
+              -463.032288,
+              -6.645894,
+              -577.595581
+            ],
+            "max": [
+              -150.595703,
+              15.996264,
+              55.64397
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "collider"
+        },
+        {
+          "name": "1wall_collider_05",
+          "nodeName": "1wall_collider_05",
+          "nodePath": "_$$3DSimED$$_/1wall_collider_05/1wall_collider_05",
+          "material": "COLLIDER",
+          "materialIndex": 0,
+          "vertices": 860,
+          "triangles": 307,
+          "bbox": {
+            "min": [
+              -413.89801,
+              12.92672,
+              123.0746
+            ],
+            "max": [
+              -307.484497,
+              21.844204,
+              435.271698
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "collider"
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "role": "visual",
+      "path": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+      "fileName": "vhe_interlagos.kn5",
+      "exists": true,
+      "fileSizeBytes": 134116468,
+      "version": 5,
+      "textureCount": 99,
+      "materialCount": 72,
+      "nodeCount": 167,
+      "meshCount": 83,
+      "materials": [
+        "CRETEG",
+        "SANDGRASS",
+        "SANDGRASSKART",
+        "CRETEKG",
+        "GRASSOUT",
+        "RDILB",
+        "ROADA",
+        "RDMARBLESA",
+        "RDILD",
+        "RDILC",
+        "RMBLE",
+        "RDILJ",
+        "ROADI",
+        "RMBSB",
+        "RDILA",
+        "RDILYG",
+        "RDILG",
+        "RDILF",
+        "RMBLA",
+        "ROADR",
+        "CONCNATURAL",
+        "CONCDRAIN",
+        "RDILYL",
+        "RMBGA",
+        "RDILSS",
+        "ASTROG",
+        "RDILE",
+        "ROADVERGE",
+        "ROADLINE",
+        "ROADLINEPITS",
+        "ROADGRID",
+        "RDLN",
+        "RDLNSFG",
+        "ROADLINEKART",
+        "RDILAS",
+        "RDILCS",
+        "CONCPAVEMENT",
+        "CONCNATS",
+        "ROADHELIPAD",
+        "CONCWHITE",
+        "CMWALLB",
+        "WATERA",
+        "CONC_GFLOOR",
+        "ROADK",
+        "RMBLK",
+        "RDILKG",
+        "CONCKART",
+        "CONCRED",
+        "ROADSFL",
+        "DISTMARKERDRS",
+        "DISTANCEMARKERB",
+        "DISTMARKER",
+        "ADVERT_OV02",
+        "OVERHEADAD_DETAILS",
+        "SILVERBARS",
+        "ADVERT_OV01",
+        "STARTLIGHT_POLES",
+        "LIGHTMATS",
+        "PWALLMETAL",
+        "ADVERTISEMENTS",
+        "ADVERTISEMENTS2",
+        "ADVERTISEMENTS1",
+        "ADVERTISEMENTS3",
+        "ADVERTISEMENTS4",
+        "ADVERTISEMENTS5",
+        "ADVERTISEMENTS6",
+        "BKB",
+        "BKA",
+        "BKC",
+        "WATER",
+        "GRASSA",
+        "SANDA"
+      ],
+      "nodes": [
+        "_$$3DSimED$$_",
+        "_$$3DSimED$$_/1kerb003",
+        "_$$3DSimED$$_/1kerb003/1kerb003",
+        "_$$3DSimED$$_/sandgrasskart",
+        "_$$3DSimED$$_/sandgrasskart/sandgrasskart",
+        "_$$3DSimED$$_/cretekg",
+        "_$$3DSimED$$_/cretekg/cretekg",
+        "_$$3DSimED$$_/rdilb",
+        "_$$3DSimED$$_/rdilb/rdilb",
+        "_$$3DSimED$$_/1road002",
+        "_$$3DSimED$$_/1road002/1road002",
+        "_$$3DSimED$$_/1outer002",
+        "_$$3DSimED$$_/1outer002/1outer002",
+        "_$$3DSimED$$_/1outer005",
+        "_$$3DSimED$$_/1outer005/1outer005",
+        "_$$3DSimED$$_/1outer003",
+        "_$$3DSimED$$_/1outer003/1outer003",
+        "_$$3DSimED$$_/1curb002",
+        "_$$3DSimED$$_/1curb002/1curb002",
+        "_$$3DSimED$$_/1road006",
+        "_$$3DSimED$$_/1road006/1road006",
+        "_$$3DSimED$$_/1road005",
+        "_$$3DSimED$$_/1road005/1road005",
+        "_$$3DSimED$$_/1curb004",
+        "_$$3DSimED$$_/1curb004/1curb004",
+        "_$$3DSimED$$_/1outer006",
+        "_$$3DSimED$$_/1outer006/1outer006",
+        "_$$3DSimED$$_/1road004",
+        "_$$3DSimED$$_/1road004/1road004",
+        "_$$3DSimED$$_/1road003",
+        "_$$3DSimED$$_/1road003/1road003",
+        "_$$3DSimED$$_/1outer004",
+        "_$$3DSimED$$_/1outer004/1outer004",
+        "_$$3DSimED$$_/1curb001",
+        "_$$3DSimED$$_/1curb001/1curb001",
+        "_$$3DSimED$$_/1pitlane003",
+        "_$$3DSimED$$_/1pitlane003/1pitlane003",
+        "_$$3DSimED$$_/1kerb002",
+        "_$$3DSimED$$_/1kerb002/1kerb002",
+        "_$$3DSimED$$_/1outer008",
+        "_$$3DSimED$$_/1outer008/1outer008",
+        "_$$3DSimED$$_/1kerb001",
+        "_$$3DSimED$$_/1kerb001/1kerb001",
+        "_$$3DSimED$$_/1outer001",
+        "_$$3DSimED$$_/1outer001/1outer001",
+        "_$$3DSimED$$_/1carpet001",
+        "_$$3DSimED$$_/1carpet001/1carpet001",
+        "_$$3DSimED$$_/1outer009",
+        "_$$3DSimED$$_/1outer009/1outer009",
+        "_$$3DSimED$$_/roadverge",
+        "_$$3DSimED$$_/roadverge/roadverge",
+        "_$$3DSimED$$_/roadline004",
+        "_$$3DSimED$$_/roadline004/roadline004",
+        "_$$3DSimED$$_/roadline006",
+        "_$$3DSimED$$_/roadline006/roadline006",
+        "_$$3DSimED$$_/roadline003",
+        "_$$3DSimED$$_/roadline003/roadline003",
+        "_$$3DSimED$$_/roadline001",
+        "_$$3DSimED$$_/roadline001/roadline001",
+        "_$$3DSimED$$_/roadline002",
+        "_$$3DSimED$$_/roadline002/roadline002",
+        "_$$3DSimED$$_/roadline005",
+        "_$$3DSimED$$_/roadline005/roadline005",
+        "_$$3DSimED$$_/roadlineout",
+        "_$$3DSimED$$_/roadlineout/roadlineout",
+        "_$$3DSimED$$_/1outer012",
+        "_$$3DSimED$$_/1outer012/1outer012",
+        "_$$3DSimED$$_/1outer013",
+        "_$$3DSimED$$_/1outer013/1outer013",
+        "_$$3DSimED$$_/1outer014",
+        "_$$3DSimED$$_/1outer014/1outer014",
+        "_$$3DSimED$$_/1outer011",
+        "_$$3DSimED$$_/1outer011/1outer011",
+        "_$$3DSimED$$_/1outer015",
+        "_$$3DSimED$$_/1outer015/1outer015",
+        "_$$3DSimED$$_/1outer016",
+        "_$$3DSimED$$_/1outer016/1outer016",
+        "_$$3DSimED$$_/1outer010",
+        "_$$3DSimED$$_/1outer010/1outer010",
+        "_$$3DSimED$$_/1outer017",
+        "_$$3DSimED$$_/1outer017/1outer017",
+        "_$$3DSimED$$_/tunnel002",
+        "_$$3DSimED$$_/tunnel002/tunnel002",
+        "_$$3DSimED$$_/tunnel001",
+        "_$$3DSimED$$_/tunnel001/tunnel001",
+        "_$$3DSimED$$_/water002",
+        "_$$3DSimED$$_/water002/water002",
+        "_$$3DSimED$$_/pit_building_floor",
+        "_$$3DSimED$$_/pit_building_floor/pit_building_floor",
+        "_$$3DSimED$$_/karttrack008",
+        "_$$3DSimED$$_/karttrack008/karttrack008",
+        "_$$3DSimED$$_/karttrack007",
+        "_$$3DSimED$$_/karttrack007/karttrack007",
+        "_$$3DSimED$$_/karttrack001",
+        "_$$3DSimED$$_/karttrack001/karttrack001",
+        "_$$3DSimED$$_/karttrack004",
+        "_$$3DSimED$$_/karttrack004/karttrack004",
+        "_$$3DSimED$$_/karttrack005",
+        "_$$3DSimED$$_/karttrack005/karttrack005",
+        "_$$3DSimED$$_/karttrack002",
+        "_$$3DSimED$$_/karttrack002/karttrack002",
+        "_$$3DSimED$$_/karttrack003",
+        "_$$3DSimED$$_/karttrack003/karttrack003",
+        "_$$3DSimED$$_/karttrack006",
+        "_$$3DSimED$$_/karttrack006/karttrack006",
+        "_$$3DSimED$$_/karttrack009",
+        "_$$3DSimED$$_/karttrack009/karttrack009",
+        "_$$3DSimED$$_/distancem003",
+        "_$$3DSimED$$_/distancem003/distancem003",
+        "_$$3DSimED$$_/distancem001",
+        "_$$3DSimED$$_/distancem001/distancem001",
+        "_$$3DSimED$$_/distancem002",
+        "_$$3DSimED$$_/distancem002/distancem002",
+        "_$$3DSimED$$_/ads_brg002",
+        "_$$3DSimED$$_/ads_brg002/ads_brg002",
+        "_$$3DSimED$$_/ads_brg004",
+        "_$$3DSimED$$_/ads_brg004/ads_brg004",
+        "_$$3DSimED$$_/ads_brg005",
+        "_$$3DSimED$$_/ads_brg005/ads_brg005",
+        "_$$3DSimED$$_/ads_brg001",
+        "_$$3DSimED$$_/ads_brg001/ads_brg001",
+        "_$$3DSimED$$_/ads_brg006",
+        "_$$3DSimED$$_/ads_brg006/ads_brg006",
+        "_$$3DSimED$$_/ads_brg003",
+        "_$$3DSimED$$_/ads_brg003/ads_brg003",
+        "_$$3DSimED$$_/lightmats001",
+        "_$$3DSimED$$_/lightmats001/lightmats001",
+        "_$$3DSimED$$_/lightmats002",
+        "_$$3DSimED$$_/lightmats002/lightmats002",
+        "_$$3DSimED$$_/ads001",
+        "_$$3DSimED$$_/ads001/ads001",
+        "_$$3DSimED$$_/ads006",
+        "_$$3DSimED$$_/ads006/ads006",
+        "_$$3DSimED$$_/ads004",
+        "_$$3DSimED$$_/ads004/ads004",
+        "_$$3DSimED$$_/ads005",
+        "_$$3DSimED$$_/ads005/ads005",
+        "_$$3DSimED$$_/ads003b",
+        "_$$3DSimED$$_/ads003b/ads003b",
+        "_$$3DSimED$$_/ads003c",
+        "_$$3DSimED$$_/ads003c/ads003c",
+        "_$$3DSimED$$_/ads002b",
+        "_$$3DSimED$$_/ads002b/ads002b",
+        "_$$3DSimED$$_/ads002c",
+        "_$$3DSimED$$_/ads002c/ads002c",
+        "_$$3DSimED$$_/1road001",
+        "_$$3DSimED$$_/1road001/1road001",
+        "_$$3DSimED$$_/1pitlane001",
+        "_$$3DSimED$$_/1pitlane001/1pitlane001",
+        "_$$3DSimED$$_/1outer007",
+        "_$$3DSimED$$_/1outer007/1outer007",
+        "_$$3DSimED$$_/1pitlane002",
+        "_$$3DSimED$$_/1pitlane002/1pitlane002",
+        "_$$3DSimED$$_/hor_002",
+        "_$$3DSimED$$_/hor_002/hor_002",
+        "_$$3DSimED$$_/hor_001",
+        "_$$3DSimED$$_/hor_001/hor_001",
+        "_$$3DSimED$$_/hor_003",
+        "_$$3DSimED$$_/hor_003/hor_003",
+        "_$$3DSimED$$_/water",
+        "_$$3DSimED$$_/water/water",
+        "_$$3DSimED$$_/1grass_new",
+        "_$$3DSimED$$_/1grass_new/1grass_new",
+        "_$$3DSimED$$_/grass_out",
+        "_$$3DSimED$$_/grass_out/grass_out",
+        "_$$3DSimED$$_/1sand001",
+        "_$$3DSimED$$_/1sand001/1sand001"
+      ],
+      "meshes": [
+        {
+          "name": "1kerb003",
+          "nodeName": "1kerb003",
+          "nodePath": "_$$3DSimED$$_/1kerb003/1kerb003",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 1021,
+          "triangles": 1186,
+          "bbox": {
+            "min": [
+              -415.829803,
+              -16.939116,
+              -455.09967
+            ],
+            "max": [
+              152.410522,
+              12.482231,
+              486.782501
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "KERB",
+          "role": "visual"
+        },
+        {
+          "name": "sandgrasskart",
+          "nodeName": "sandgrasskart",
+          "nodePath": "_$$3DSimED$$_/sandgrasskart/sandgrasskart",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 183,
+          "triangles": 194,
+          "bbox": {
+            "min": [
+              135.678238,
+              4.964881,
+              233.192703
+            ],
+            "max": [
+              163.649734,
+              5.359245,
+              365.85434
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "cretekg",
+          "nodeName": "cretekg",
+          "nodePath": "_$$3DSimED$$_/cretekg/cretekg",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 439,
+          "triangles": 528,
+          "bbox": {
+            "min": [
+              176.042969,
+              4.947662,
+              61.619034
+            ],
+            "max": [
+              266.648407,
+              5.743674,
+              258.649384
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "rdilb",
+          "nodeName": "rdilb",
+          "nodePath": "_$$3DSimED$$_/rdilb/rdilb",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 6,
+          "triangles": 4,
+          "bbox": {
+            "min": [
+              430.516602,
+              -16.763988,
+              -29.760399
+            ],
+            "max": [
+              516.183899,
+              -7.525475,
+              49.805031
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1road002",
+          "nodeName": "1road002",
+          "nodePath": "_$$3DSimED$$_/1road002/1road002",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 7454,
+          "triangles": 9607,
+          "bbox": {
+            "min": [
+              -493.686035,
+              -24.666569,
+              -563.641235
+            ],
+            "max": [
+              190.657349,
+              18.585047,
+              495.018799
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "1outer002",
+          "nodeName": "1outer002",
+          "nodePath": "_$$3DSimED$$_/1outer002/1outer002",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 2233,
+          "triangles": 2153,
+          "bbox": {
+            "min": [
+              -473.701447,
+              -24.288256,
+              -522.583618
+            ],
+            "max": [
+              237.020264,
+              16.821821,
+              549.342896
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1outer005",
+          "nodeName": "1outer005",
+          "nodePath": "_$$3DSimED$$_/1outer005/1outer005",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 416,
+          "triangles": 398,
+          "bbox": {
+            "min": [
+              -452.320129,
+              -14.767454,
+              -592.680542
+            ],
+            "max": [
+              -9.99115,
+              16.285616,
+              539.245117
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1outer003",
+          "nodeName": "1outer003",
+          "nodePath": "_$$3DSimED$$_/1outer003/1outer003",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 268,
+          "triangles": 236,
+          "bbox": {
+            "min": [
+              -421.53009,
+              -23.609039,
+              -563.538757
+            ],
+            "max": [
+              41.822937,
+              12.846555,
+              517.190918
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1curb002",
+          "nodeName": "1curb002",
+          "nodePath": "_$$3DSimED$$_/1curb002/1curb002",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 514,
+          "triangles": 692,
+          "bbox": {
+            "min": [
+              -359.582703,
+              -2.470507,
+              -529.251831
+            ],
+            "max": [
+              -250.843552,
+              8.957534,
+              -292.169312
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "CURB",
+          "role": "visual"
+        },
+        {
+          "name": "1road006",
+          "nodeName": "1road006",
+          "nodePath": "_$$3DSimED$$_/1road006/1road006",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 103,
+          "triangles": 99,
+          "bbox": {
+            "min": [
+              -375.191803,
+              7.383404,
+              -484.533569
+            ],
+            "max": [
+              -274.154785,
+              12.900795,
+              -461.044312
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "1road005",
+          "nodeName": "1road005",
+          "nodePath": "_$$3DSimED$$_/1road005/1road005",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 479,
+          "triangles": 720,
+          "bbox": {
+            "min": [
+              -377.190063,
+              4.078571,
+              -528.27417
+            ],
+            "max": [
+              -253.76355,
+              13.020596,
+              -460.114258
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "1curb004",
+          "nodeName": "1curb004",
+          "nodePath": "_$$3DSimED$$_/1curb004/1curb004",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 804,
+          "triangles": 1289,
+          "bbox": {
+            "min": [
+              -415.365051,
+              -17.914082,
+              -527.394348
+            ],
+            "max": [
+              175.773315,
+              7.135986,
+              451.754608
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "CURB",
+          "role": "visual"
+        },
+        {
+          "name": "1outer006",
+          "nodeName": "1outer006",
+          "nodePath": "_$$3DSimED$$_/1outer006/1outer006",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 368,
+          "triangles": 526,
+          "bbox": {
+            "min": [
+              -357.721924,
+              -9.555972,
+              -522.58374
+            ],
+            "max": [
+              -269.625305,
+              10.466337,
+              -27.40995
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1road004",
+          "nodeName": "1road004",
+          "nodePath": "_$$3DSimED$$_/1road004/1road004",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 326,
+          "triangles": 314,
+          "bbox": {
+            "min": [
+              -495.749939,
+              12.918974,
+              -416.799194
+            ],
+            "max": [
+              -402.790222,
+              15.024778,
+              -62.551983
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "1road003",
+          "nodeName": "1road003",
+          "nodePath": "_$$3DSimED$$_/1road003/1road003",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 3127,
+          "triangles": 3003,
+          "bbox": {
+            "min": [
+              -493.644928,
+              -24.264633,
+              -515.819336
+            ],
+            "max": [
+              171.070862,
+              18.837833,
+              537.400757
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "1outer004",
+          "nodeName": "1outer004",
+          "nodePath": "_$$3DSimED$$_/1outer004/1outer004",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 1052,
+          "triangles": 976,
+          "bbox": {
+            "min": [
+              -438.976562,
+              -24.072041,
+              -461.044312
+            ],
+            "max": [
+              96.035645,
+              18.390394,
+              524.504639
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1curb001",
+          "nodeName": "1curb001",
+          "nodePath": "_$$3DSimED$$_/1curb001/1curb001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 4577,
+          "triangles": 5749,
+          "bbox": {
+            "min": [
+              -431.946198,
+              -25.170135,
+              -560.35083
+            ],
+            "max": [
+              176.955139,
+              14.77755,
+              465.272919
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "CURB",
+          "role": "visual"
+        },
+        {
+          "name": "1pitlane003",
+          "nodeName": "1pitlane003",
+          "nodePath": "_$$3DSimED$$_/1pitlane003/1pitlane003",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 660,
+          "triangles": 330,
+          "bbox": {
+            "min": [
+              -407.565369,
+              15.102601,
+              165.986908
+            ],
+            "max": [
+              -338.310547,
+              15.661656,
+              437.359131
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1kerb002",
+          "nodeName": "1kerb002",
+          "nodePath": "_$$3DSimED$$_/1kerb002/1kerb002",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 1603,
+          "triangles": 1501,
+          "bbox": {
+            "min": [
+              -412.364471,
+              -23.817215,
+              -453.841583
+            ],
+            "max": [
+              193.438416,
+              18.81588,
+              541.527039
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "KERB",
+          "role": "visual"
+        },
+        {
+          "name": "1outer008",
+          "nodeName": "1outer008",
+          "nodePath": "_$$3DSimED$$_/1outer008/1outer008",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 30,
+          "triangles": 28,
+          "bbox": {
+            "min": [
+              -329.531403,
+              14.743721,
+              466.976929
+            ],
+            "max": [
+              -312.3797,
+              16.205492,
+              476.358856
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1kerb001",
+          "nodeName": "1kerb001",
+          "nodePath": "_$$3DSimED$$_/1kerb001/1kerb001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 17933,
+          "triangles": 12724,
+          "bbox": {
+            "min": [
+              -430.312866,
+              -23.90048,
+              -559.520996
+            ],
+            "max": [
+              169.453186,
+              16.639711,
+              478.371124
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "KERB",
+          "role": "visual"
+        },
+        {
+          "name": "1outer001",
+          "nodeName": "1outer001",
+          "nodePath": "_$$3DSimED$$_/1outer001/1outer001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 108,
+          "triangles": 99,
+          "bbox": {
+            "min": [
+              -155.727356,
+              -23.878422,
+              -286.130463
+            ],
+            "max": [
+              170.167908,
+              -7.131285,
+              178.378662
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1carpet001",
+          "nodeName": "1carpet001",
+          "nodePath": "_$$3DSimED$$_/1carpet001/1carpet001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 592,
+          "triangles": 566,
+          "bbox": {
+            "min": [
+              -280.304474,
+              -23.848307,
+              -387.114288
+            ],
+            "max": [
+              170.196411,
+              -8.071898,
+              44.078957
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1outer009",
+          "nodeName": "1outer009",
+          "nodePath": "_$$3DSimED$$_/1outer009/1outer009",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 61,
+          "triangles": 57,
+          "bbox": {
+            "min": [
+              -179.569885,
+              -16.56538,
+              -433.921906
+            ],
+            "max": [
+              -36.49176,
+              -7.442151,
+              -271.029999
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "roadverge",
+          "nodeName": "roadverge",
+          "nodePath": "_$$3DSimED$$_/roadverge/roadverge",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 12017,
+          "triangles": 11459,
+          "bbox": {
+            "min": [
+              -493.992126,
+              -26.485422,
+              -642.826233
+            ],
+            "max": [
+              323.105743,
+              18.830482,
+              549.530334
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "roadline004",
+          "nodeName": "roadline004",
+          "nodePath": "_$$3DSimED$$_/roadline004/roadline004",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 30068,
+          "triangles": 15370,
+          "bbox": {
+            "min": [
+              -493.586029,
+              -25.094423,
+              -563.54126
+            ],
+            "max": [
+              190.557312,
+              18.615604,
+              494.918762
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "roadline006",
+          "nodeName": "roadline006",
+          "nodePath": "_$$3DSimED$$_/roadline006/roadline006",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 138,
+          "triangles": 92,
+          "bbox": {
+            "min": [
+              -402.901428,
+              15.238789,
+              167.641937
+            ],
+            "max": [
+              -333.042664,
+              15.576179,
+              433.650391
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "roadline003",
+          "nodeName": "roadline003",
+          "nodePath": "_$$3DSimED$$_/roadline003/roadline003",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 394,
+          "triangles": 408,
+          "bbox": {
+            "min": [
+              -477.964539,
+              10.239873,
+              -25.054592
+            ],
+            "max": [
+              -416.902313,
+              13.498852,
+              188.76947
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "roadline001",
+          "nodeName": "roadline001",
+          "nodePath": "_$$3DSimED$$_/roadline001/roadline001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 12324,
+          "triangles": 6162,
+          "bbox": {
+            "min": [
+              130.075897,
+              4.917096,
+              26.783997
+            ],
+            "max": [
+              325.542969,
+              7.138616,
+              370.494507
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "roadline002",
+          "nodeName": "roadline002",
+          "nodePath": "_$$3DSimED$$_/roadline002/roadline002",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 126,
+          "triangles": 66,
+          "bbox": {
+            "min": [
+              148.359375,
+              4.977076,
+              241.627029
+            ],
+            "max": [
+              169.288696,
+              5.211287,
+              319.234436
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "roadline005",
+          "nodeName": "roadline005",
+          "nodePath": "_$$3DSimED$$_/roadline005/roadline005",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 138,
+          "triangles": 92,
+          "bbox": {
+            "min": [
+              -402.901428,
+              15.238789,
+              167.641937
+            ],
+            "max": [
+              -333.042664,
+              15.576179,
+              433.650391
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "roadlineout",
+          "nodeName": "roadlineout",
+          "nodePath": "_$$3DSimED$$_/roadlineout/roadlineout",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 2094,
+          "triangles": 1990,
+          "bbox": {
+            "min": [
+              -416.347534,
+              -25.725756,
+              -636.607788
+            ],
+            "max": [
+              291.165405,
+              15.015442,
+              384.295654
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "1outer012",
+          "nodeName": "1outer012",
+          "nodePath": "_$$3DSimED$$_/1outer012/1outer012",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 267,
+          "triangles": 253,
+          "bbox": {
+            "min": [
+              -456.389069,
+              -25.309185,
+              -572.442566
+            ],
+            "max": [
+              232.443481,
+              14.834778,
+              391.483093
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1outer013",
+          "nodeName": "1outer013",
+          "nodePath": "_$$3DSimED$$_/1outer013/1outer013",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 642,
+          "triangles": 567,
+          "bbox": {
+            "min": [
+              -403.688629,
+              -26.5,
+              -629.044495
+            ],
+            "max": [
+              309.418213,
+              20.539455,
+              577.154053
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1outer014",
+          "nodeName": "1outer014",
+          "nodePath": "_$$3DSimED$$_/1outer014/1outer014",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 1722,
+          "triangles": 1578,
+          "bbox": {
+            "min": [
+              -610.297729,
+              -32.871033,
+              -805.85144
+            ],
+            "max": [
+              450.200745,
+              22.79303,
+              631.113525
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1outer011",
+          "nodeName": "1outer011",
+          "nodePath": "_$$3DSimED$$_/1outer011/1outer011",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 146,
+          "triangles": 153,
+          "bbox": {
+            "min": [
+              -502.599335,
+              5.484845,
+              113.951073
+            ],
+            "max": [
+              -373.772858,
+              13.046997,
+              184.898651
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1outer015",
+          "nodeName": "1outer015",
+          "nodePath": "_$$3DSimED$$_/1outer015/1outer015",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 743,
+          "triangles": 703,
+          "bbox": {
+            "min": [
+              -356.278473,
+              -26.126751,
+              -642.626282
+            ],
+            "max": [
+              322.905701,
+              11.946087,
+              548.849854
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1outer016",
+          "nodeName": "1outer016",
+          "nodePath": "_$$3DSimED$$_/1outer016/1outer016",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 273,
+          "triangles": 257,
+          "bbox": {
+            "min": [
+              -155.622955,
+              -20.878334,
+              -241.642181
+            ],
+            "max": [
+              167.761902,
+              1.785393,
+              432.722504
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1outer010",
+          "nodeName": "1outer010",
+          "nodePath": "_$$3DSimED$$_/1outer010/1outer010",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 112,
+          "triangles": 97,
+          "bbox": {
+            "min": [
+              -414.809387,
+              -22.839355,
+              -164.326874
+            ],
+            "max": [
+              124.878052,
+              6.432819,
+              163.496948
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1outer017",
+          "nodeName": "1outer017",
+          "nodePath": "_$$3DSimED$$_/1outer017/1outer017",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 5,
+          "triangles": 3,
+          "bbox": {
+            "min": [
+              -15.90976,
+              -20.5,
+              -188.504578
+            ],
+            "max": [
+              16.034698,
+              -19.546181,
+              -157.539612
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "tunnel002",
+          "nodeName": "tunnel002",
+          "nodePath": "_$$3DSimED$$_/tunnel002/tunnel002",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 224,
+          "triangles": 183,
+          "bbox": {
+            "min": [
+              -482.492645,
+              5.568037,
+              78.303352
+            ],
+            "max": [
+              -365.414032,
+              15.323467,
+              171.451843
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "tunnel001",
+          "nodeName": "tunnel001",
+          "nodePath": "_$$3DSimED$$_/tunnel001/tunnel001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 24,
+          "triangles": 12,
+          "bbox": {
+            "min": [
+              -419.147186,
+              5.763814,
+              92.00779
+            ],
+            "max": [
+              -407.971161,
+              10.399607,
+              109.34491
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "water002",
+          "nodeName": "water002",
+          "nodePath": "_$$3DSimED$$_/water002/water002",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 96,
+          "triangles": 90,
+          "bbox": {
+            "min": [
+              33.606659,
+              -50.34124,
+              -1513.275879
+            ],
+            "max": [
+              2184.992188,
+              -44.211235,
+              165.476196
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "pit_building_floor",
+          "nodeName": "pit_building_floor",
+          "nodePath": "_$$3DSimED$$_/pit_building_floor/pit_building_floor",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 180,
+          "triangles": 90,
+          "bbox": {
+            "min": [
+              -396.59906,
+              15.416683,
+              161.809189
+            ],
+            "max": [
+              -309.05481,
+              15.416685,
+              434.774658
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "karttrack008",
+          "nodeName": "karttrack008",
+          "nodePath": "_$$3DSimED$$_/karttrack008/karttrack008",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 4735,
+          "triangles": 5603,
+          "bbox": {
+            "min": [
+              126.600029,
+              4.907099,
+              26.759796
+            ],
+            "max": [
+              325.5672,
+              7.128616,
+              370.518799
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "karttrack007",
+          "nodeName": "karttrack007",
+          "nodePath": "_$$3DSimED$$_/karttrack007/karttrack007",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 3487,
+          "triangles": 3450,
+          "bbox": {
+            "min": [
+              143.458359,
+              4.907099,
+              26.279785
+            ],
+            "max": [
+              326.047668,
+              7.169018,
+              350.774689
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "karttrack001",
+          "nodeName": "karttrack001",
+          "nodePath": "_$$3DSimED$$_/karttrack001/karttrack001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 818,
+          "triangles": 754,
+          "bbox": {
+            "min": [
+              121.680901,
+              4.999331,
+              37.228027
+            ],
+            "max": [
+              304.783203,
+              6.867772,
+              372.314789
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "karttrack004",
+          "nodeName": "karttrack004",
+          "nodePath": "_$$3DSimED$$_/karttrack004/karttrack004",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 396,
+          "triangles": 362,
+          "bbox": {
+            "min": [
+              117.586662,
+              4.954428,
+              34.491913
+            ],
+            "max": [
+              262.124023,
+              6.044139,
+              373.9953
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "karttrack005",
+          "nodeName": "karttrack005",
+          "nodePath": "_$$3DSimED$$_/karttrack005/karttrack005",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 552,
+          "triangles": 522,
+          "bbox": {
+            "min": [
+              138.955444,
+              5.095874,
+              53.782013
+            ],
+            "max": [
+              267.050201,
+              5.895011,
+              353.064972
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "karttrack002",
+          "nodeName": "karttrack002",
+          "nodePath": "_$$3DSimED$$_/karttrack002/karttrack002",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 318,
+          "triangles": 296,
+          "bbox": {
+            "min": [
+              115.065956,
+              4.968409,
+              193.145264
+            ],
+            "max": [
+              168.324966,
+              5.450993,
+              382.31543
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "karttrack003",
+          "nodeName": "karttrack003",
+          "nodePath": "_$$3DSimED$$_/karttrack003/karttrack003",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 192,
+          "triangles": 182,
+          "bbox": {
+            "min": [
+              130.428497,
+              5.065947,
+              226.591324
+            ],
+            "max": [
+              157.741669,
+              5.166443,
+              323.501617
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "karttrack006",
+          "nodeName": "karttrack006",
+          "nodePath": "_$$3DSimED$$_/karttrack006/karttrack006",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 588,
+          "triangles": 294,
+          "bbox": {
+            "min": [
+              126.624237,
+              5.080675,
+              163.308716
+            ],
+            "max": [
+              187.312454,
+              5.210015,
+              367.200867
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "karttrack009",
+          "nodeName": "karttrack009",
+          "nodePath": "_$$3DSimED$$_/karttrack009/karttrack009",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 8,
+          "triangles": 4,
+          "bbox": {
+            "min": [
+              163.133316,
+              4.954694,
+              93.985046
+            ],
+            "max": [
+              206.517731,
+              5.03417,
+              241.335419
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "distancem003",
+          "nodeName": "distancem003",
+          "nodePath": "_$$3DSimED$$_/distancem003/distancem003",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 48,
+          "triangles": 24,
+          "bbox": {
+            "min": [
+              -477.658905,
+              -3.804222,
+              -213.393311
+            ],
+            "max": [
+              46.499287,
+              14.093745,
+              335.767212
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "distancem001",
+          "nodeName": "distancem001",
+          "nodePath": "_$$3DSimED$$_/distancem001/distancem001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 168,
+          "triangles": 84,
+          "bbox": {
+            "min": [
+              -215.018204,
+              -16.703697,
+              -446.554443
+            ],
+            "max": [
+              180.65242,
+              -10.913261,
+              -10.789959
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "distancem002",
+          "nodeName": "distancem002",
+          "nodePath": "_$$3DSimED$$_/distancem002/distancem002",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 312,
+          "triangles": 390,
+          "bbox": {
+            "min": [
+              -417.678741,
+              15.036136,
+              238.270981
+            ],
+            "max": [
+              -381.641083,
+              21.822153,
+              373.445099
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads_brg002",
+          "nodeName": "ads_brg002",
+          "nodePath": "_$$3DSimED$$_/ads_brg002/ads_brg002",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 36,
+          "triangles": 18,
+          "bbox": {
+            "min": [
+              -453.895966,
+              -0.125189,
+              -317.105835
+            ],
+            "max": [
+              -321.088684,
+              24.66696,
+              226.603668
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads_brg004",
+          "nodeName": "ads_brg004",
+          "nodePath": "_$$3DSimED$$_/ads_brg004/ads_brg004",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 3028,
+          "triangles": 1514,
+          "bbox": {
+            "min": [
+              -456.030579,
+              -8.295937,
+              -317.982025
+            ],
+            "max": [
+              94.4841,
+              22.983355,
+              145.265564
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads_brg005",
+          "nodeName": "ads_brg005",
+          "nodePath": "_$$3DSimED$$_/ads_brg005/ads_brg005",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 432,
+          "triangles": 224,
+          "bbox": {
+            "min": [
+              -455.866211,
+              -4.177534,
+              -317.433533
+            ],
+            "max": [
+              94.302002,
+              22.010361,
+              144.718353
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads_brg001",
+          "nodeName": "ads_brg001",
+          "nodePath": "_$$3DSimED$$_/ads_brg001/ads_brg001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 16,
+          "triangles": 8,
+          "bbox": {
+            "min": [
+              71.574211,
+              -2.43128,
+              137.535751
+            ],
+            "max": [
+              92.34687,
+              0.221508,
+              144.335526
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads_brg006",
+          "nodeName": "ads_brg006",
+          "nodePath": "_$$3DSimED$$_/ads_brg006/ads_brg006",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 1038,
+          "triangles": 924,
+          "bbox": {
+            "min": [
+              -422.20694,
+              14.586038,
+              221.299591
+            ],
+            "max": [
+              -401.796295,
+              23.462656,
+              226.212494
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads_brg003",
+          "nodeName": "ads_brg003",
+          "nodePath": "_$$3DSimED$$_/ads_brg003/ads_brg003",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 20,
+          "triangles": 10,
+          "bbox": {
+            "min": [
+              -333.55722,
+              -5.011301,
+              -230.756348
+            ],
+            "max": [
+              -330.30838,
+              -4.143274,
+              -227.507523
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "lightmats001",
+          "nodeName": "lightmats001",
+          "nodePath": "_$$3DSimED$$_/lightmats001/lightmats001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 4746,
+          "triangles": 3540,
+          "bbox": {
+            "min": [
+              -441.481995,
+              10.739147,
+              67.231308
+            ],
+            "max": [
+              -343.545837,
+              20.963789,
+              440.036011
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "lightmats002",
+          "nodeName": "lightmats002",
+          "nodePath": "_$$3DSimED$$_/lightmats002/lightmats002",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 60,
+          "triangles": 28,
+          "bbox": {
+            "min": [
+              -414.528595,
+              20.952248,
+              222.986313
+            ],
+            "max": [
+              -408.883911,
+              21.092218,
+              224.418655
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads001",
+          "nodeName": "ads001",
+          "nodePath": "_$$3DSimED$$_/ads001/ads001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 13816,
+          "triangles": 9144,
+          "bbox": {
+            "min": [
+              -452.605774,
+              -21.719913,
+              -430.39679
+            ],
+            "max": [
+              27.346317,
+              22.142807,
+              505.845428
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads006",
+          "nodeName": "ads006",
+          "nodePath": "_$$3DSimED$$_/ads006/ads006",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 26440,
+          "triangles": 20500,
+          "bbox": {
+            "min": [
+              -454.739655,
+              -21.968437,
+              -589.844482
+            ],
+            "max": [
+              27.368137,
+              22.165594,
+              505.8591
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads004",
+          "nodeName": "ads004",
+          "nodePath": "_$$3DSimED$$_/ads004/ads004",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 4464,
+          "triangles": 2952,
+          "bbox": {
+            "min": [
+              -255.343964,
+              -3.014705,
+              -589.815613
+            ],
+            "max": [
+              -173.309906,
+              8.815662,
+              -551.772522
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads005",
+          "nodeName": "ads005",
+          "nodePath": "_$$3DSimED$$_/ads005/ads005",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 3528,
+          "triangles": 2328,
+          "bbox": {
+            "min": [
+              -449.166809,
+              2.035497,
+              -100.060577
+            ],
+            "max": [
+              -366.51535,
+              18.118576,
+              166.902344
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads003b",
+          "nodeName": "ads003b",
+          "nodePath": "_$$3DSimED$$_/ads003b/ads003b",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 932,
+          "triangles": 586,
+          "bbox": {
+            "min": [
+              -452.584412,
+              -21.64924,
+              -589.778625
+            ],
+            "max": [
+              27.282223,
+              22.072647,
+              505.790009
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads003c",
+          "nodeName": "ads003c",
+          "nodePath": "_$$3DSimED$$_/ads003c/ads003c",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 20,
+          "triangles": 10,
+          "bbox": {
+            "min": [
+              -374.465149,
+              -2.940787,
+              -589.778625
+            ],
+            "max": [
+              -173.371796,
+              4.281421,
+              71.407112
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads002b",
+          "nodeName": "ads002b",
+          "nodePath": "_$$3DSimED$$_/ads002b/ads002b",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 44,
+          "triangles": 22,
+          "bbox": {
+            "min": [
+              -374.461548,
+              -1.483096,
+              -583.085876
+            ],
+            "max": [
+              -186.96257,
+              22.049763,
+              501.718658
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "ads002c",
+          "nodeName": "ads002c",
+          "nodePath": "_$$3DSimED$$_/ads002c/ads002c",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 12,
+          "triangles": 6,
+          "bbox": {
+            "min": [
+              -381.736938,
+              -1.483096,
+              -583.085876
+            ],
+            "max": [
+              -186.96257,
+              3.477247,
+              71.521049
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1road001",
+          "nodeName": "1road001",
+          "nodePath": "_$$3DSimED$$_/1road001/1road001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 18925,
+          "triangles": 30287,
+          "bbox": {
+            "min": [
+              -485.354248,
+              -25.115467,
+              -558.173401
+            ],
+            "max": [
+              188.78772,
+              18.61635,
+              488.598663
+            ]
+          },
+          "matchesGeometrySurface": true,
+          "matchedSurface": "ROAD",
+          "role": "visual"
+        },
+        {
+          "name": "1pitlane001",
+          "nodeName": "1pitlane001",
+          "nodePath": "_$$3DSimED$$_/1pitlane001/1pitlane001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 1448,
+          "triangles": 786,
+          "bbox": {
+            "min": [
+              -438.215912,
+              10.74315,
+              63.612083
+            ],
+            "max": [
+              -337.999969,
+              15.872723,
+              438.294189
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1outer007",
+          "nodeName": "1outer007",
+          "nodePath": "_$$3DSimED$$_/1outer007/1outer007",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 59,
+          "triangles": 51,
+          "bbox": {
+            "min": [
+              -404.93042,
+              -1.276506,
+              3.761215
+            ],
+            "max": [
+              -332.69342,
+              16.940346,
+              462.549133
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1pitlane002",
+          "nodeName": "1pitlane002",
+          "nodePath": "_$$3DSimED$$_/1pitlane002/1pitlane002",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 218,
+          "triangles": 210,
+          "bbox": {
+            "min": [
+              -406.507935,
+              15.102601,
+              163.496826
+            ],
+            "max": [
+              -328.963989,
+              15.620553,
+              436.869568
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "hor_002",
+          "nodeName": "hor_002",
+          "nodePath": "_$$3DSimED$$_/hor_002/hor_002",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 20,
+          "triangles": 16,
+          "bbox": {
+            "min": [
+              4063.616211,
+              -234.440781,
+              -1533.369141
+            ],
+            "max": [
+              4688.880859,
+              205.559219,
+              743.120239
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "hor_001",
+          "nodeName": "hor_001",
+          "nodePath": "_$$3DSimED$$_/hor_001/hor_001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 104,
+          "triangles": 96,
+          "bbox": {
+            "min": [
+              -2942.721436,
+              -240.545013,
+              -3742.616699
+            ],
+            "max": [
+              4688.880859,
+              319.898438,
+              2458.489258
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "hor_003",
+          "nodeName": "hor_003",
+          "nodePath": "_$$3DSimED$$_/hor_003/hor_003",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 56,
+          "triangles": 48,
+          "bbox": {
+            "min": [
+              -2317.452881,
+              -260.356903,
+              -5173.11377
+            ],
+            "max": [
+              3856.64502,
+              245.614822,
+              -3457.747559
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "water",
+          "nodeName": "water",
+          "nodePath": "_$$3DSimED$$_/water/water",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 94,
+          "triangles": 144,
+          "bbox": {
+            "min": [
+              20.8894,
+              -28.0,
+              -616.024109
+            ],
+            "max": [
+              213.307007,
+              -28.0,
+              -338.678009
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1grass_new",
+          "nodeName": "1grass_new",
+          "nodePath": "_$$3DSimED$$_/1grass_new/1grass_new",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 21288,
+          "triangles": 16755,
+          "bbox": {
+            "min": [
+              -711.601013,
+              -32.870998,
+              -655.331116
+            ],
+            "max": [
+              580.362976,
+              24.236,
+              710.909119
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "grass_out",
+          "nodeName": "grass_out",
+          "nodePath": "_$$3DSimED$$_/grass_out/grass_out",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 988,
+          "triangles": 1705,
+          "bbox": {
+            "min": [
+              -455.026001,
+              -50.341202,
+              -1513.410034
+            ],
+            "max": [
+              2184.98999,
+              20.985701,
+              471.968994
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        },
+        {
+          "name": "1sand001",
+          "nodeName": "1sand001",
+          "nodePath": "_$$3DSimED$$_/1sand001/1sand001",
+          "material": "CRETEG",
+          "materialIndex": 0,
+          "vertices": 18,
+          "triangles": 12,
+          "bbox": {
+            "min": [
+              148.807007,
+              -20.3943,
+              -358.411987
+            ],
+            "max": [
+              220.401001,
+              -16.302799,
+              -276.311005
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "visual"
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "role": "groove",
+      "path": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\obj_groove.kn5",
+      "fileName": "obj_groove.kn5",
+      "exists": true,
+      "fileSizeBytes": 8656171,
+      "version": 5,
+      "textureCount": 2,
+      "materialCount": 2,
+      "nodeCount": 5,
+      "meshCount": 2,
+      "materials": [
+        "GROOVE",
+        "MARBLES"
+      ],
+      "nodes": [
+        "_$$3DSimED$$_",
+        "_$$3DSimED$$_/groove",
+        "_$$3DSimED$$_/groove/groove",
+        "_$$3DSimED$$_/marbles",
+        "_$$3DSimED$$_/marbles/marbles"
+      ],
+      "meshes": [
+        {
+          "name": "groove",
+          "nodeName": "groove",
+          "nodePath": "_$$3DSimED$$_/groove/groove",
+          "material": "GROOVE",
+          "materialIndex": 0,
+          "vertices": 158550,
+          "triangles": 40680,
+          "bbox": {
+            "min": [
+              -711.60144,
+              -50.34124,
+              -1513.411499
+            ],
+            "max": [
+              2184.992188,
+              24.66696,
+              710.90918
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "groove"
+        },
+        {
+          "name": "marbles",
+          "nodeName": "marbles",
+          "nodePath": "_$$3DSimED$$_/marbles/marbles",
+          "material": "GROOVE",
+          "materialIndex": 0,
+          "vertices": 7454,
+          "triangles": 9607,
+          "bbox": {
+            "min": [
+              -493.686035,
+              -24.666569,
+              -563.641235
+            ],
+            "max": [
+              190.657349,
+              18.585047,
+              495.018799
+            ]
+          },
+          "matchesGeometrySurface": false,
+          "matchedSurface": null,
+          "role": "groove"
+        }
+      ],
+      "diagnostics": []
+    }
+  ],
+  "diagnostics": []
+}

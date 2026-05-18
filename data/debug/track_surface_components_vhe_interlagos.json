@@ -1,0 +1,5007 @@
+{
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "projection": "mapX = worldX, mapY = -worldZ",
+  "components": {
+    "count": 198,
+    "selectedComponentId": 0,
+    "items": [
+      {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "perimeterEstimate": 71452.091339,
+        "centroid": [
+          -214.982257,
+          58.463903
+        ],
+        "bbox": {
+          "minX": -495.749939,
+          "maxX": 323.105743,
+          "minY": -549.530334,
+          "maxY": 642.826233,
+          "width": 818.855682,
+          "height": 1192.356567
+        },
+        "meshCounts": {
+          "1road001": 30287,
+          "roadline004": 15058,
+          "1kerb001": 12724,
+          "roadverge": 10505,
+          "1road002": 9606,
+          "1curb001": 5575,
+          "1road003": 2941,
+          "1kerb002": 1490,
+          "1curb004": 1288,
+          "1kerb003": 1186,
+          "1road005": 720,
+          "1curb002": 692,
+          "roadline003": 408,
+          "1road004": 314,
+          "1road006": 99
+        },
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "selected": true
+      },
+      {
+        "componentId": 1,
+        "triangleCount": 62,
+        "area": 1959.867418,
+        "perimeterEstimate": 254.766188,
+        "centroid": [
+          -299.542631,
+          -58.826964
+        ],
+        "bbox": {
+          "minX": -360.934357,
+          "maxX": -252.563568,
+          "minY": -76.508163,
+          "maxY": -35.575188,
+          "width": 108.370789,
+          "height": 40.932975
+        },
+        "meshCounts": {
+          "1road003": 62
+        },
+        "surfaceCounts": {
+          "ROAD": 62
+        },
+        "selected": false
+      },
+      {
+        "componentId": 2,
+        "triangleCount": 136,
+        "area": 212.433578,
+        "perimeterEstimate": 1700.027973,
+        "centroid": [
+          7.003315,
+          -193.595849
+        ],
+        "bbox": {
+          "minX": -154.213562,
+          "maxX": 119.56311,
+          "minY": -411.865967,
+          "maxY": 110.387634,
+          "width": 273.776672,
+          "height": 522.253601
+        },
+        "meshCounts": {
+          "roadverge": 136
+        },
+        "surfaceCounts": {
+          "ROAD": 136
+        },
+        "selected": false
+      },
+      {
+        "componentId": 3,
+        "triangleCount": 176,
+        "area": 201.382247,
+        "perimeterEstimate": 1611.597288,
+        "centroid": [
+          123.199595,
+          488.720844
+        ],
+        "bbox": {
+          "minX": -31.323792,
+          "maxX": 239.048248,
+          "minY": 320.397369,
+          "maxY": 629.094727,
+          "width": 270.37204,
+          "height": 308.697358
+        },
+        "meshCounts": {
+          "roadverge": 176
+        },
+        "surfaceCounts": {
+          "ROAD": 176
+        },
+        "selected": false
+      },
+      {
+        "componentId": 4,
+        "triangleCount": 1798,
+        "area": 188.745471,
+        "perimeterEstimate": 1971.458923,
+        "centroid": [
+          216.170448,
+          -196.241701
+        ],
+        "bbox": {
+          "minX": 143.962585,
+          "maxX": 325.542969,
+          "minY": -370.494507,
+          "maxY": -26.783997,
+          "width": 181.580384,
+          "height": 343.71051
+        },
+        "meshCounts": {
+          "roadline001": 1798
+        },
+        "surfaceCounts": {
+          "ROAD": 1798
+        },
+        "selected": false
+      },
+      {
+        "componentId": 5,
+        "triangleCount": 218,
+        "area": 173.903158,
+        "perimeterEstimate": 1391.751632,
+        "centroid": [
+          -20.607951,
+          487.168931
+        ],
+        "bbox": {
+          "minX": -108.236023,
+          "maxX": 47.32782,
+          "minY": 284.428314,
+          "maxY": 620.905701,
+          "width": 155.563843,
+          "height": 336.477387
+        },
+        "meshCounts": {
+          "roadverge": 218
+        },
+        "surfaceCounts": {
+          "ROAD": 218
+        },
+        "selected": false
+      },
+      {
+        "componentId": 6,
+        "triangleCount": 1722,
+        "area": 172.541773,
+        "perimeterEstimate": 1801.163789,
+        "centroid": [
+          209.980051,
+          -205.223812
+        ],
+        "bbox": {
+          "minX": 151.385574,
+          "maxX": 267.377991,
+          "minY": -343.469086,
+          "maxY": -60.923203,
+          "width": 115.992417,
+          "height": 282.545883
+        },
+        "meshCounts": {
+          "roadline001": 1722
+        },
+        "surfaceCounts": {
+          "ROAD": 1722
+        },
+        "selected": false
+      },
+      {
+        "componentId": 7,
+        "triangleCount": 90,
+        "area": 147.40987,
+        "perimeterEstimate": 1179.777569,
+        "centroid": [
+          -165.664533,
+          -142.976146
+        ],
+        "bbox": {
+          "minX": -284.083374,
+          "maxX": 11.646088,
+          "minY": -384.295654,
+          "maxY": 83.617584,
+          "width": 295.729462,
+          "height": 467.913238
+        },
+        "meshCounts": {
+          "roadlineout": 90
+        },
+        "surfaceCounts": {
+          "ROAD": 90
+        },
+        "selected": false
+      },
+      {
+        "componentId": 8,
+        "triangleCount": 90,
+        "area": 145.966539,
+        "perimeterEstimate": 1168.23905,
+        "centroid": [
+          -160.445547,
+          -142.947297
+        ],
+        "bbox": {
+          "minX": -279.295868,
+          "maxX": 15.772064,
+          "minY": -381.147522,
+          "maxY": 81.310211,
+          "width": 295.067932,
+          "height": 462.457733
+        },
+        "meshCounts": {
+          "roadlineout": 90
+        },
+        "surfaceCounts": {
+          "ROAD": 90
+        },
+        "selected": false
+      },
+      {
+        "componentId": 9,
+        "triangleCount": 98,
+        "area": 145.063938,
+        "perimeterEstimate": 1161.011748,
+        "centroid": [
+          -154.560262,
+          -142.783852
+        ],
+        "bbox": {
+          "minX": -274.50827,
+          "maxX": 19.330841,
+          "minY": -367.347687,
+          "maxY": 79.433014,
+          "width": 293.839111,
+          "height": 446.780701
+        },
+        "meshCounts": {
+          "roadlineout": 98
+        },
+        "surfaceCounts": {
+          "ROAD": 98
+        },
+        "selected": false
+      },
+      {
+        "componentId": 10,
+        "triangleCount": 164,
+        "area": 130.128351,
+        "perimeterEstimate": 1041.507417,
+        "centroid": [
+          93.911496,
+          535.615601
+        ],
+        "bbox": {
+          "minX": -52.23822,
+          "maxX": 291.165405,
+          "minY": 339.551788,
+          "maxY": 636.060303,
+          "width": 343.403625,
+          "height": 296.508515
+        },
+        "meshCounts": {
+          "roadlineout": 164
+        },
+        "surfaceCounts": {
+          "ROAD": 164
+        },
+        "selected": false
+      },
+      {
+        "componentId": 11,
+        "triangleCount": 40,
+        "area": 111.10192,
+        "perimeterEstimate": 889.309869,
+        "centroid": [
+          161.654778,
+          -39.304305
+        ],
+        "bbox": {
+          "minX": 101.414429,
+          "maxX": 222.204865,
+          "minY": -253.250092,
+          "maxY": 174.559845,
+          "width": 120.790436,
+          "height": 427.809937
+        },
+        "meshCounts": {
+          "roadlineout": 40
+        },
+        "surfaceCounts": {
+          "ROAD": 40
+        },
+        "selected": false
+      },
+      {
+        "componentId": 12,
+        "triangleCount": 62,
+        "area": 89.8972,
+        "perimeterEstimate": 719.679558,
+        "centroid": [
+          -182.230936,
+          -8.498726
+        ],
+        "bbox": {
+          "minX": -286.218079,
+          "maxX": -117.668701,
+          "minY": -85.165649,
+          "maxY": 63.507812,
+          "width": 168.549378,
+          "height": 148.673461
+        },
+        "meshCounts": {
+          "roadverge": 62
+        },
+        "surfaceCounts": {
+          "ROAD": 62
+        },
+        "selected": false
+      },
+      {
+        "componentId": 13,
+        "triangleCount": 296,
+        "area": 74.948,
+        "perimeterEstimate": 601.094015,
+        "centroid": [
+          -106.490912,
+          598.334785
+        ],
+        "bbox": {
+          "minX": -224.030289,
+          "maxX": -13.60791,
+          "minY": 560.919922,
+          "maxY": 626.219604,
+          "width": 210.422379,
+          "height": 65.299682
+        },
+        "meshCounts": {
+          "roadlineout": 296
+        },
+        "surfaceCounts": {
+          "ROAD": 296
+        },
+        "selected": false
+      },
+      {
+        "componentId": 14,
+        "triangleCount": 98,
+        "area": 70.374761,
+        "perimeterEstimate": 562.993527,
+        "centroid": [
+          -329.825508,
+          -155.430497
+        ],
+        "bbox": {
+          "minX": -375.570862,
+          "maxX": -303.042419,
+          "minY": -215.226471,
+          "maxY": -110.155731,
+          "width": 72.528443,
+          "height": 105.07074
+        },
+        "meshCounts": {
+          "roadlineout": 98
+        },
+        "surfaceCounts": {
+          "ROAD": 98
+        },
+        "selected": false
+      },
+      {
+        "componentId": 15,
+        "triangleCount": 68,
+        "area": 67.970094,
+        "perimeterEstimate": 544.292845,
+        "centroid": [
+          -282.614145,
+          -144.778206
+        ],
+        "bbox": {
+          "minX": -326.837158,
+          "maxX": -199.406052,
+          "minY": -231.428467,
+          "maxY": -78.486115,
+          "width": 127.431106,
+          "height": 152.942352
+        },
+        "meshCounts": {
+          "roadlineout": 68
+        },
+        "surfaceCounts": {
+          "ROAD": 68
+        },
+        "selected": false
+      },
+      {
+        "componentId": 16,
+        "triangleCount": 268,
+        "area": 59.917695,
+        "perimeterEstimate": 480.343055,
+        "centroid": [
+          -111.832159,
+          574.714596
+        ],
+        "bbox": {
+          "minX": -222.366287,
+          "maxX": -28.430649,
+          "minY": 537.093384,
+          "maxY": 590.85083,
+          "width": 193.935638,
+          "height": 53.757446
+        },
+        "meshCounts": {
+          "roadlineout": 268
+        },
+        "surfaceCounts": {
+          "ROAD": 268
+        },
+        "selected": false
+      },
+      {
+        "componentId": 17,
+        "triangleCount": 58,
+        "area": 58.983581,
+        "perimeterEstimate": 471.888392,
+        "centroid": [
+          -64.914154,
+          138.198806
+        ],
+        "bbox": {
+          "minX": -113.236328,
+          "maxX": -10.565979,
+          "minY": 115.146484,
+          "maxY": 150.602127,
+          "width": 102.670349,
+          "height": 35.455643
+        },
+        "meshCounts": {
+          "roadverge": 58
+        },
+        "surfaceCounts": {
+          "ROAD": 58
+        },
+        "selected": false
+      },
+      {
+        "componentId": 18,
+        "triangleCount": 28,
+        "area": 58.90319,
+        "perimeterEstimate": 471.263062,
+        "centroid": [
+          186.746968,
+          323.059908
+        ],
+        "bbox": {
+          "minX": 148.752319,
+          "maxX": 220.46283,
+          "minY": 276.208252,
+          "maxY": 358.475128,
+          "width": 71.710511,
+          "height": 82.266876
+        },
+        "meshCounts": {
+          "roadverge": 28
+        },
+        "surfaceCounts": {
+          "ROAD": 28
+        },
+        "selected": false
+      },
+      {
+        "componentId": 19,
+        "triangleCount": 84,
+        "area": 57.494064,
+        "perimeterEstimate": 460.454141,
+        "centroid": [
+          -304.973273,
+          -109.294476
+        ],
+        "bbox": {
+          "minX": -415.966492,
+          "maxX": -203.043808,
+          "minY": -121.837769,
+          "maxY": -74.192719,
+          "width": 212.922684,
+          "height": 47.64505
+        },
+        "meshCounts": {
+          "roadlineout": 84
+        },
+        "surfaceCounts": {
+          "ROAD": 84
+        },
+        "selected": false
+      },
+      {
+        "componentId": 20,
+        "triangleCount": 62,
+        "area": 57.092641,
+        "perimeterEstimate": 457.248972,
+        "centroid": [
+          -306.104236,
+          -106.202294
+        ],
+        "bbox": {
+          "minX": -416.347534,
+          "maxX": -205.695099,
+          "minY": -118.691864,
+          "maxY": -70.626343,
+          "width": 210.652435,
+          "height": 48.065521
+        },
+        "meshCounts": {
+          "roadlineout": 62
+        },
+        "surfaceCounts": {
+          "ROAD": 62
+        },
+        "selected": false
+      },
+      {
+        "componentId": 21,
+        "triangleCount": 64,
+        "area": 52.649233,
+        "perimeterEstimate": 421.223748,
+        "centroid": [
+          -109.059349,
+          -428.761085
+        ],
+        "bbox": {
+          "minX": -155.737915,
+          "maxX": -58.598389,
+          "minY": -437.083557,
+          "maxY": -410.11615,
+          "width": 97.139526,
+          "height": 26.967407
+        },
+        "meshCounts": {
+          "roadverge": 64
+        },
+        "surfaceCounts": {
+          "ROAD": 64
+        },
+        "selected": false
+      },
+      {
+        "componentId": 22,
+        "triangleCount": 8,
+        "area": 52.370586,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -350.2955,
+          -370.685829
+        ],
+        "bbox": {
+          "minX": -352.817871,
+          "maxX": -347.773163,
+          "minY": -375.284363,
+          "maxY": -366.087463,
+          "width": 5.044708,
+          "height": 9.1969
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 23,
+        "triangleCount": 8,
+        "area": 52.369736,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -400.37908,
+          -172.24013
+        ],
+        "bbox": {
+          "minX": -402.901428,
+          "maxX": -397.856781,
+          "minY": -176.838379,
+          "maxY": -167.641937,
+          "width": 5.044647,
+          "height": 9.196442
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 24,
+        "triangleCount": 8,
+        "area": 52.369426,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -373.864214,
+          -277.299666
+        ],
+        "bbox": {
+          "minX": -376.386566,
+          "maxX": -371.341858,
+          "minY": -281.897949,
+          "maxY": -272.701416,
+          "width": 5.044708,
+          "height": 9.196533
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 25,
+        "triangleCount": 8,
+        "area": 52.369206,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -382.70257,
+          -242.279919
+        ],
+        "bbox": {
+          "minX": -385.224915,
+          "maxX": -380.180237,
+          "minY": -246.878387,
+          "maxY": -237.68158,
+          "width": 5.044678,
+          "height": 9.196807
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 26,
+        "triangleCount": 8,
+        "area": 52.368582,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -376.810348,
+          -265.62624
+        ],
+        "bbox": {
+          "minX": -379.332703,
+          "maxX": -374.288025,
+          "minY": -270.224426,
+          "maxY": -261.028107,
+          "width": 5.044678,
+          "height": 9.196319
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 27,
+        "triangleCount": 8,
+        "area": 52.368548,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -365.025942,
+          -312.319496
+        ],
+        "bbox": {
+          "minX": -367.548279,
+          "maxX": -362.503601,
+          "minY": -316.917755,
+          "maxY": -307.721283,
+          "width": 5.044678,
+          "height": 9.196472
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 28,
+        "triangleCount": 8,
+        "area": 52.36846,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -367.972063,
+          -300.646071
+        ],
+        "bbox": {
+          "minX": -370.494385,
+          "maxX": -365.449738,
+          "minY": -305.244263,
+          "maxY": -296.047913,
+          "width": 5.044647,
+          "height": 9.19635
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 29,
+        "triangleCount": 8,
+        "area": 52.368318,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -362.079785,
+          -323.992889
+        ],
+        "bbox": {
+          "minX": -364.602081,
+          "maxX": -359.557495,
+          "minY": -328.591125,
+          "maxY": -319.394653,
+          "width": 5.044586,
+          "height": 9.196472
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 30,
+        "triangleCount": 8,
+        "area": 52.368228,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -359.133697,
+          -335.666137
+        ],
+        "bbox": {
+          "minX": -361.656006,
+          "maxX": -356.611389,
+          "minY": -340.264343,
+          "maxY": -331.067932,
+          "width": 5.044617,
+          "height": 9.196411
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 31,
+        "triangleCount": 8,
+        "area": 52.367664,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -397.433035,
+          -183.913484
+        ],
+        "bbox": {
+          "minX": -399.955322,
+          "maxX": -394.910767,
+          "minY": -188.511719,
+          "maxY": -179.315277,
+          "width": 5.044555,
+          "height": 9.196442
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 32,
+        "triangleCount": 8,
+        "area": 52.367002,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -388.594849,
+          -218.93327
+        ],
+        "bbox": {
+          "minX": -391.117126,
+          "maxX": -386.072571,
+          "minY": -223.531586,
+          "maxY": -214.335022,
+          "width": 5.044555,
+          "height": 9.196564
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 33,
+        "triangleCount": 8,
+        "area": 52.366802,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -344.403311,
+          -394.032385
+        ],
+        "bbox": {
+          "minX": -346.925598,
+          "maxX": -341.881042,
+          "minY": -398.630615,
+          "maxY": -389.434204,
+          "width": 5.044556,
+          "height": 9.196411
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 34,
+        "triangleCount": 8,
+        "area": 52.366472,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -356.187584,
+          -347.339384
+        ],
+        "bbox": {
+          "minX": -358.709869,
+          "maxX": -353.665314,
+          "minY": -351.9375,
+          "maxY": -342.741272,
+          "width": 5.044555,
+          "height": 9.196228
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 35,
+        "triangleCount": 8,
+        "area": 52.366402,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -335.564965,
+          -429.052242
+        ],
+        "bbox": {
+          "minX": -338.08725,
+          "maxX": -333.042664,
+          "minY": -433.650391,
+          "maxY": -424.454102,
+          "width": 5.044586,
+          "height": 9.196289
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 36,
+        "triangleCount": 8,
+        "area": 52.366034,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -338.51108,
+          -417.378974
+        ],
+        "bbox": {
+          "minX": -341.033325,
+          "maxX": -335.988831,
+          "minY": -421.977112,
+          "maxY": -412.780823,
+          "width": 5.044494,
+          "height": 9.196289
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 37,
+        "triangleCount": 8,
+        "area": 52.365862,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -370.91809,
+          -288.972845
+        ],
+        "bbox": {
+          "minX": -373.440369,
+          "maxX": -368.395813,
+          "minY": -293.570801,
+          "maxY": -284.374786,
+          "width": 5.044556,
+          "height": 9.196015
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 38,
+        "triangleCount": 8,
+        "area": 52.365774,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -341.457188,
+          -405.70572
+        ],
+        "bbox": {
+          "minX": -343.979431,
+          "maxX": -338.934937,
+          "minY": -410.303894,
+          "maxY": -401.107544,
+          "width": 5.044494,
+          "height": 9.19635
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 39,
+        "triangleCount": 8,
+        "area": 52.365524,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -391.540923,
+          -207.259882
+        ],
+        "bbox": {
+          "minX": -394.063171,
+          "maxX": -389.018677,
+          "minY": -211.858032,
+          "maxY": -202.661743,
+          "width": 5.044494,
+          "height": 9.196289
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 40,
+        "triangleCount": 8,
+        "area": 52.365292,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -353.241542,
+          -359.012439
+        ],
+        "bbox": {
+          "minX": -355.763794,
+          "maxX": -350.719269,
+          "minY": -363.610352,
+          "maxY": -354.414429,
+          "width": 5.044525,
+          "height": 9.195923
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 41,
+        "triangleCount": 8,
+        "area": 52.3652,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -379.75638,
+          -253.953183
+        ],
+        "bbox": {
+          "minX": -382.278625,
+          "maxX": -377.2341,
+          "minY": -258.551056,
+          "maxY": -249.355164,
+          "width": 5.044525,
+          "height": 9.195892
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 42,
+        "triangleCount": 8,
+        "area": 52.364638,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -394.486976,
+          -195.586756
+        ],
+        "bbox": {
+          "minX": -397.009186,
+          "maxX": -391.964752,
+          "minY": -200.184784,
+          "maxY": -190.988678,
+          "width": 5.044434,
+          "height": 9.196106
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 43,
+        "triangleCount": 8,
+        "area": 52.364414,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -347.349313,
+          -382.359234
+        ],
+        "bbox": {
+          "minX": -349.871521,
+          "maxX": -344.827087,
+          "minY": -386.957214,
+          "maxY": -377.761169,
+          "width": 5.044434,
+          "height": 9.196045
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 44,
+        "triangleCount": 8,
+        "area": 52.364316,
+        "perimeterEstimate": 0,
+        "centroid": [
+          -385.648675,
+          -230.606598
+        ],
+        "bbox": {
+          "minX": -388.170898,
+          "maxX": -383.126434,
+          "minY": -235.20462,
+          "maxY": -226.008514,
+          "width": 5.044464,
+          "height": 9.196106
+        },
+        "meshCounts": {
+          "roadline006": 4,
+          "roadline005": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 45,
+        "triangleCount": 52,
+        "area": 51.052009,
+        "perimeterEstimate": 408.919101,
+        "centroid": [
+          -297.224141,
+          -90.831349
+        ],
+        "bbox": {
+          "minX": -391.245789,
+          "maxX": -205.933411,
+          "minY": -102.280975,
+          "maxY": -64.930817,
+          "width": 185.312378,
+          "height": 37.350158
+        },
+        "meshCounts": {
+          "roadverge": 52
+        },
+        "surfaceCounts": {
+          "ROAD": 52
+        },
+        "selected": false
+      },
+      {
+        "componentId": 46,
+        "triangleCount": 230,
+        "area": 50.697162,
+        "perimeterEstimate": 406.084004,
+        "centroid": [
+          -26.850375,
+          599.597074
+        ],
+        "bbox": {
+          "minX": -68.122391,
+          "maxX": 38.232422,
+          "minY": 537.115601,
+          "maxY": 621.761353,
+          "width": 106.354813,
+          "height": 84.645752
+        },
+        "meshCounts": {
+          "roadlineout": 230
+        },
+        "surfaceCounts": {
+          "ROAD": 230
+        },
+        "selected": false
+      },
+      {
+        "componentId": 47,
+        "triangleCount": 464,
+        "area": 45.194588,
+        "perimeterEstimate": 471.789071,
+        "centroid": [
+          271.545062,
+          -58.964377
+        ],
+        "bbox": {
+          "minX": 222.904449,
+          "maxX": 317.848846,
+          "minY": -89.927216,
+          "maxY": -35.317276,
+          "width": 94.944397,
+          "height": 54.60994
+        },
+        "meshCounts": {
+          "roadline001": 464
+        },
+        "surfaceCounts": {
+          "ROAD": 464
+        },
+        "selected": false
+      },
+      {
+        "componentId": 48,
+        "triangleCount": 14,
+        "area": 43.107844,
+        "perimeterEstimate": 345.395224,
+        "centroid": [
+          221.080769,
+          414.45079
+        ],
+        "bbox": {
+          "minX": 169.747864,
+          "maxX": 264.617065,
+          "minY": 379.094421,
+          "maxY": 440.662201,
+          "width": 94.869201,
+          "height": 61.56778
+        },
+        "meshCounts": {
+          "roadverge": 14
+        },
+        "surfaceCounts": {
+          "ROAD": 14
+        },
+        "selected": false
+      },
+      {
+        "componentId": 49,
+        "triangleCount": 68,
+        "area": 42.904391,
+        "perimeterEstimate": 343.738243,
+        "centroid": [
+          -350.820252,
+          -152.717715
+        ],
+        "bbox": {
+          "minX": -415.034912,
+          "maxX": -322.092468,
+          "minY": -221.851715,
+          "maxY": -113.6008,
+          "width": 92.942444,
+          "height": 108.250915
+        },
+        "meshCounts": {
+          "roadlineout": 68
+        },
+        "surfaceCounts": {
+          "ROAD": 68
+        },
+        "selected": false
+      },
+      {
+        "componentId": 50,
+        "triangleCount": 54,
+        "area": 37.045053,
+        "perimeterEstimate": 296.898435,
+        "centroid": [
+          -190.593516,
+          -510.379296
+        ],
+        "bbox": {
+          "minX": -231.173401,
+          "maxX": -127.36377,
+          "minY": -524.49292,
+          "maxY": -490.586121,
+          "width": 103.809631,
+          "height": 33.906799
+        },
+        "meshCounts": {
+          "roadverge": 54
+        },
+        "surfaceCounts": {
+          "ROAD": 54
+        },
+        "selected": false
+      },
+      {
+        "componentId": 51,
+        "triangleCount": 352,
+        "area": 33.392913,
+        "perimeterEstimate": 348.589715,
+        "centroid": [
+          218.798519,
+          -184.617126
+        ],
+        "bbox": {
+          "minX": 189.708435,
+          "maxX": 245.121613,
+          "minY": -211.311676,
+          "maxY": -158.913757,
+          "width": 55.413178,
+          "height": 52.397919
+        },
+        "meshCounts": {
+          "roadline001": 352
+        },
+        "surfaceCounts": {
+          "ROAD": 352
+        },
+        "selected": false
+      },
+      {
+        "componentId": 52,
+        "triangleCount": 130,
+        "area": 32.692712,
+        "perimeterEstimate": 263.689973,
+        "centroid": [
+          48.374523,
+          622.854787
+        ],
+        "bbox": {
+          "minX": -13.520905,
+          "maxX": 89.031799,
+          "minY": 590.425415,
+          "maxY": 629.624634,
+          "width": 102.552704,
+          "height": 39.199219
+        },
+        "meshCounts": {
+          "roadlineout": 130
+        },
+        "surfaceCounts": {
+          "ROAD": 130
+        },
+        "selected": false
+      },
+      {
+        "componentId": 53,
+        "triangleCount": 54,
+        "area": 31.504692,
+        "perimeterEstimate": 252.578592,
+        "centroid": [
+          -280.545113,
+          -415.86503
+        ],
+        "bbox": {
+          "minX": -320.389099,
+          "maxX": -258.078674,
+          "minY": -448.635315,
+          "maxY": -374.228821,
+          "width": 62.310425,
+          "height": 74.406494
+        },
+        "meshCounts": {
+          "roadverge": 54
+        },
+        "surfaceCounts": {
+          "ROAD": 54
+        },
+        "selected": false
+      },
+      {
+        "componentId": 54,
+        "triangleCount": 322,
+        "area": 30.628911,
+        "perimeterEstimate": 320.120137,
+        "centroid": [
+          170.225934,
+          -337.797078
+        ],
+        "bbox": {
+          "minX": 133.515656,
+          "maxX": 214.826172,
+          "minY": -366.893433,
+          "maxY": -289.737549,
+          "width": 81.310516,
+          "height": 77.155884
+        },
+        "meshCounts": {
+          "roadline001": 322
+        },
+        "surfaceCounts": {
+          "ROAD": 322
+        },
+        "selected": false
+      },
+      {
+        "componentId": 55,
+        "triangleCount": 300,
+        "area": 28.73024,
+        "perimeterEstimate": 299.913797,
+        "centroid": [
+          240.051927,
+          -105.618943
+        ],
+        "bbox": {
+          "minX": 221.857544,
+          "maxX": 257.163666,
+          "minY": -129.76886,
+          "maxY": -76.31218,
+          "width": 35.306122,
+          "height": 53.45668
+        },
+        "meshCounts": {
+          "roadline001": 300
+        },
+        "surfaceCounts": {
+          "ROAD": 300
+        },
+        "selected": false
+      },
+      {
+        "componentId": 56,
+        "triangleCount": 96,
+        "area": 26.808768,
+        "perimeterEstimate": 216.170164,
+        "centroid": [
+          83.226225,
+          -201.565275
+        ],
+        "bbox": {
+          "minX": 76.060486,
+          "maxX": 88.332275,
+          "minY": -255.007904,
+          "maxY": -148.168457,
+          "width": 12.271789,
+          "height": 106.839447
+        },
+        "meshCounts": {
+          "roadline004": 96
+        },
+        "surfaceCounts": {
+          "ROAD": 96
+        },
+        "selected": false
+      },
+      {
+        "componentId": 57,
+        "triangleCount": 248,
+        "area": 25.97274,
+        "perimeterEstimate": 271.513639,
+        "centroid": [
+          139.957079,
+          -297.245336
+        ],
+        "bbox": {
+          "minX": 130.075897,
+          "maxX": 153.464111,
+          "minY": -361.667419,
+          "maxY": -230.990356,
+          "width": 23.388214,
+          "height": 130.677063
+        },
+        "meshCounts": {
+          "roadline001": 248
+        },
+        "surfaceCounts": {
+          "ROAD": 248
+        },
+        "selected": false
+      },
+      {
+        "componentId": 58,
+        "triangleCount": 32,
+        "area": 25.455235,
+        "perimeterEstimate": 203.646002,
+        "centroid": [
+          -197.437172,
+          -393.133824
+        ],
+        "bbox": {
+          "minX": -217.829773,
+          "maxX": -176.829651,
+          "minY": -407.645447,
+          "maxY": -378.495789,
+          "width": 41.000122,
+          "height": 29.149658
+        },
+        "meshCounts": {
+          "roadverge": 32
+        },
+        "surfaceCounts": {
+          "ROAD": 32
+        },
+        "selected": false
+      },
+      {
+        "componentId": 59,
+        "triangleCount": 92,
+        "area": 23.688755,
+        "perimeterEstimate": 189.982849,
+        "centroid": [
+          91.401829,
+          631.334613
+        ],
+        "bbox": {
+          "minX": 44.055298,
+          "maxX": 138.745758,
+          "minY": 629.558716,
+          "maxY": 633.169189,
+          "width": 94.69046,
+          "height": 3.610473
+        },
+        "meshCounts": {
+          "roadlineout": 92
+        },
+        "surfaceCounts": {
+          "ROAD": 92
+        },
+        "selected": false
+      },
+      {
+        "componentId": 60,
+        "triangleCount": 242,
+        "area": 22.679456,
+        "perimeterEstimate": 236.754515,
+        "centroid": [
+          201.319864,
+          -234.466603
+        ],
+        "bbox": {
+          "minX": 191.442017,
+          "maxX": 215.450439,
+          "minY": -259.345367,
+          "maxY": -210.751099,
+          "width": 24.008422,
+          "height": 48.594268
+        },
+        "meshCounts": {
+          "roadline001": 242
+        },
+        "surfaceCounts": {
+          "ROAD": 242
+        },
+        "selected": false
+      },
+      {
+        "componentId": 61,
+        "triangleCount": 10,
+        "area": 18.21577,
+        "perimeterEstimate": 122.042847,
+        "centroid": [
+          44.72655,
+          325.254338
+        ],
+        "bbox": {
+          "minX": 14.365295,
+          "maxX": 75.086914,
+          "minY": 324.984711,
+          "maxY": 325.506561,
+          "width": 60.721619,
+          "height": 0.52185
+        },
+        "meshCounts": {
+          "1kerb002": 10
+        },
+        "surfaceCounts": {
+          "KERB": 10
+        },
+        "selected": false
+      },
+      {
+        "componentId": 62,
+        "triangleCount": 162,
+        "area": 15.268039,
+        "perimeterEstimate": 159.390112,
+        "centroid": [
+          245.159186,
+          -41.508539
+        ],
+        "bbox": {
+          "minX": 226.379974,
+          "maxX": 262.558289,
+          "minY": -47.309067,
+          "maxY": -34.276108,
+          "width": 36.178315,
+          "height": 13.032959
+        },
+        "meshCounts": {
+          "roadline001": 162
+        },
+        "surfaceCounts": {
+          "ROAD": 162
+        },
+        "selected": false
+      },
+      {
+        "componentId": 63,
+        "triangleCount": 166,
+        "area": 15.267175,
+        "perimeterEstimate": 159.373121,
+        "centroid": [
+          186.694757,
+          -178.801749
+        ],
+        "bbox": {
+          "minX": 178.128418,
+          "maxX": 193.579681,
+          "minY": -195.759064,
+          "maxY": -160.02301,
+          "width": 15.451263,
+          "height": 35.736054
+        },
+        "meshCounts": {
+          "roadline001": 166
+        },
+        "surfaceCounts": {
+          "ROAD": 166
+        },
+        "selected": false
+      },
+      {
+        "componentId": 64,
+        "triangleCount": 126,
+        "area": 13.583391,
+        "perimeterEstimate": 142.179964,
+        "centroid": [
+          194.633894,
+          -130.617394
+        ],
+        "bbox": {
+          "minX": 184.986267,
+          "maxX": 203.900864,
+          "minY": -164.778381,
+          "maxY": -96.351913,
+          "width": 18.914597,
+          "height": 68.426468
+        },
+        "meshCounts": {
+          "roadline001": 126
+        },
+        "surfaceCounts": {
+          "ROAD": 126
+        },
+        "selected": false
+      },
+      {
+        "componentId": 65,
+        "triangleCount": 126,
+        "area": 13.561999,
+        "perimeterEstimate": 141.957597,
+        "centroid": [
+          192.211524,
+          -129.927288
+        ],
+        "bbox": {
+          "minX": 182.54686,
+          "maxX": 201.492249,
+          "minY": -164.02562,
+          "maxY": -95.723206,
+          "width": 18.945389,
+          "height": 68.302414
+        },
+        "meshCounts": {
+          "roadline001": 126
+        },
+        "surfaceCounts": {
+          "ROAD": 126
+        },
+        "selected": false
+      },
+      {
+        "componentId": 66,
+        "triangleCount": 128,
+        "area": 12.02572,
+        "perimeterEstimate": 125.535983,
+        "centroid": [
+          189.935013,
+          -309.357511
+        ],
+        "bbox": {
+          "minX": 183.871765,
+          "maxX": 200.216614,
+          "minY": -323.331482,
+          "maxY": -298.92514,
+          "width": 16.344849,
+          "height": 24.406342
+        },
+        "meshCounts": {
+          "roadline001": 128
+        },
+        "surfaceCounts": {
+          "ROAD": 128
+        },
+        "selected": false
+      },
+      {
+        "componentId": 67,
+        "triangleCount": 4,
+        "area": 11.093754,
+        "perimeterEstimate": 89.251741,
+        "centroid": [
+          -152.654142,
+          -519.369977
+        ],
+        "bbox": {
+          "minX": -174.690857,
+          "maxX": -130.604187,
+          "minY": -522.082703,
+          "maxY": -516.530579,
+          "width": 44.08667,
+          "height": 5.552124
+        },
+        "meshCounts": {
+          "roadverge": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 68,
+        "triangleCount": 28,
+        "area": 6.680992,
+        "perimeterEstimate": 53.447387,
+        "centroid": [
+          99.1617,
+          622.999489
+        ],
+        "bbox": {
+          "minX": 94.75705,
+          "maxX": 103.576263,
+          "minY": 618.602783,
+          "maxY": 627.342285,
+          "width": 8.819213,
+          "height": 8.739502
+        },
+        "meshCounts": {
+          "roadlineout": 28
+        },
+        "surfaceCounts": {
+          "ROAD": 28
+        },
+        "selected": false
+      },
+      {
+        "componentId": 69,
+        "triangleCount": 2,
+        "area": 4.259045,
+        "perimeterEstimate": 34.572806,
+        "centroid": [
+          -228.312403,
+          -371.439607
+        ],
+        "bbox": {
+          "minX": -235.302399,
+          "maxX": -221.322403,
+          "minY": -376.512451,
+          "maxY": -366.36676,
+          "width": 13.979996,
+          "height": 10.145691
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 70,
+        "triangleCount": 14,
+        "area": 3.762579,
+        "perimeterEstimate": 30.60011,
+        "centroid": [
+          -465.415995,
+          216.140882
+        ],
+        "bbox": {
+          "minX": -472.763123,
+          "maxX": -458.069489,
+          "minY": 214.262848,
+          "maxY": 218.014496,
+          "width": 14.693634,
+          "height": 3.751648
+        },
+        "meshCounts": {
+          "roadline004": 14
+        },
+        "surfaceCounts": {
+          "ROAD": 14
+        },
+        "selected": false
+      },
+      {
+        "componentId": 71,
+        "triangleCount": 4,
+        "area": 3.739868,
+        "perimeterEstimate": 30.417163,
+        "centroid": [
+          35.194684,
+          629.127435
+        ],
+        "bbox": {
+          "minX": 34.929352,
+          "maxX": 35.460022,
+          "minY": 621.647095,
+          "maxY": 636.607788,
+          "width": 0.53067,
+          "height": 14.960693
+        },
+        "meshCounts": {
+          "roadlineout": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 72,
+        "triangleCount": 4,
+        "area": 3.730512,
+        "perimeterEstimate": 30.345417,
+        "centroid": [
+          -336.178782,
+          -436.69219
+        ],
+        "bbox": {
+          "minX": -343.465302,
+          "maxX": -328.884949,
+          "minY": -438.554688,
+          "maxY": -434.87207,
+          "width": 14.580353,
+          "height": 3.682618
+        },
+        "meshCounts": {
+          "roadline004": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 73,
+        "triangleCount": 14,
+        "area": 3.727965,
+        "perimeterEstimate": 30.323822,
+        "centroid": [
+          -451.632629,
+          -65.66637
+        ],
+        "bbox": {
+          "minX": -458.888031,
+          "maxX": -444.377228,
+          "minY": -67.630814,
+          "maxY": -63.701927,
+          "width": 14.510803,
+          "height": 3.928887
+        },
+        "meshCounts": {
+          "roadline004": 14
+        },
+        "surfaceCounts": {
+          "ROAD": 14
+        },
+        "selected": false
+      },
+      {
+        "componentId": 74,
+        "triangleCount": 14,
+        "area": 3.657384,
+        "perimeterEstimate": 29.759569,
+        "centroid": [
+          -411.264781,
+          -223.485259
+        ],
+        "bbox": {
+          "minX": -418.384705,
+          "maxX": -404.144684,
+          "minY": -225.409485,
+          "maxY": -221.561462,
+          "width": 14.240021,
+          "height": 3.848023
+        },
+        "meshCounts": {
+          "roadline004": 14
+        },
+        "surfaceCounts": {
+          "ROAD": 14
+        },
+        "selected": false
+      },
+      {
+        "componentId": 75,
+        "triangleCount": 14,
+        "area": 3.642252,
+        "perimeterEstimate": 29.636777,
+        "centroid": [
+          -420.056589,
+          -189.240602
+        ],
+        "bbox": {
+          "minX": -427.145844,
+          "maxX": -412.967224,
+          "minY": -191.161163,
+          "maxY": -187.320007,
+          "width": 14.17862,
+          "height": 3.841156
+        },
+        "meshCounts": {
+          "roadline004": 14
+        },
+        "surfaceCounts": {
+          "ROAD": 14
+        },
+        "selected": false
+      },
+      {
+        "componentId": 76,
+        "triangleCount": 14,
+        "area": 3.638495,
+        "perimeterEstimate": 29.608449,
+        "centroid": [
+          -427.599197,
+          -159.92824
+        ],
+        "bbox": {
+          "minX": -434.681091,
+          "maxX": -420.517151,
+          "minY": -161.849609,
+          "maxY": -158.008301,
+          "width": 14.16394,
+          "height": 3.841308
+        },
+        "meshCounts": {
+          "roadline004": 14
+        },
+        "surfaceCounts": {
+          "ROAD": 14
+        },
+        "selected": false
+      },
+      {
+        "componentId": 77,
+        "triangleCount": 14,
+        "area": 3.627663,
+        "perimeterEstimate": 29.520829,
+        "centroid": [
+          -242.408523,
+          -435.411841
+        ],
+        "bbox": {
+          "minX": -244.669876,
+          "maxX": -240.147171,
+          "minY": -442.380493,
+          "maxY": -428.443024,
+          "width": 4.522705,
+          "height": 13.937469
+        },
+        "meshCounts": {
+          "roadline004": 14
+        },
+        "surfaceCounts": {
+          "ROAD": 14
+        },
+        "selected": false
+      },
+      {
+        "componentId": 78,
+        "triangleCount": 4,
+        "area": 3.415161,
+        "perimeterEstimate": 7.8715,
+        "centroid": [
+          162.887919,
+          -255.526078
+        ],
+        "bbox": {
+          "minX": 162.062012,
+          "maxX": 163.711411,
+          "minY": -256.923309,
+          "maxY": -254.127197,
+          "width": 1.649399,
+          "height": 2.796112
+        },
+        "meshCounts": {
+          "roadline002": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 79,
+        "triangleCount": 14,
+        "area": 3.35917,
+        "perimeterEstimate": 27.373194,
+        "centroid": [
+          -186.670346,
+          552.441756
+        ],
+        "bbox": {
+          "minX": -188.047974,
+          "maxX": -185.289246,
+          "minY": 545.818787,
+          "maxY": 559.06488,
+          "width": 2.758728,
+          "height": 13.246093
+        },
+        "meshCounts": {
+          "roadline004": 14
+        },
+        "surfaceCounts": {
+          "ROAD": 14
+        },
+        "selected": false
+      },
+      {
+        "componentId": 80,
+        "triangleCount": 4,
+        "area": 3.231248,
+        "perimeterEstimate": 7.33424,
+        "centroid": [
+          159.190361,
+          -307.317063
+        ],
+        "bbox": {
+          "minX": 158.159225,
+          "maxX": 160.209183,
+          "minY": -308.622314,
+          "maxY": -306.041779,
+          "width": 2.049958,
+          "height": 2.580535
+        },
+        "meshCounts": {
+          "roadline002": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 81,
+        "triangleCount": 4,
+        "area": 2.82724,
+        "perimeterEstimate": 6.791629,
+        "centroid": [
+          155.584929,
+          -303.990416
+        ],
+        "bbox": {
+          "minX": 154.61441,
+          "maxX": 156.539749,
+          "minY": -305.14212,
+          "maxY": -302.878113,
+          "width": 1.925339,
+          "height": 2.264007
+        },
+        "meshCounts": {
+          "roadline002": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 82,
+        "triangleCount": 4,
+        "area": 2.81961,
+        "perimeterEstimate": 23.324266,
+        "centroid": [
+          -469.707323,
+          120.398197
+        ],
+        "bbox": {
+          "minX": -473.826874,
+          "maxX": -465.400665,
+          "minY": 118.168419,
+          "maxY": 122.450897,
+          "width": 8.426209,
+          "height": 4.282478
+        },
+        "meshCounts": {
+          "roadline004": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 83,
+        "triangleCount": 10,
+        "area": 2.606887,
+        "perimeterEstimate": 21.354732,
+        "centroid": [
+          -167.341925,
+          580.158243
+        ],
+        "bbox": {
+          "minX": -169.14325,
+          "maxX": -165.53302,
+          "minY": 575.185791,
+          "maxY": 585.133423,
+          "width": 3.61023,
+          "height": 9.947632
+        },
+        "meshCounts": {
+          "roadlineout": 10
+        },
+        "surfaceCounts": {
+          "ROAD": 10
+        },
+        "selected": false
+      },
+      {
+        "componentId": 84,
+        "triangleCount": 14,
+        "area": 2.549211,
+        "perimeterEstimate": 20.894286,
+        "centroid": [
+          83.440688,
+          -133.950445
+        ],
+        "bbox": {
+          "minX": 78.492188,
+          "maxX": 88.38916,
+          "minY": -135.426575,
+          "maxY": -132.474792,
+          "width": 9.896972,
+          "height": 2.951783
+        },
+        "meshCounts": {
+          "roadline004": 14
+        },
+        "surfaceCounts": {
+          "ROAD": 14
+        },
+        "selected": false
+      },
+      {
+        "componentId": 85,
+        "triangleCount": 14,
+        "area": 2.467064,
+        "perimeterEstimate": 20.236271,
+        "centroid": [
+          29.196238,
+          -331.395033
+        ],
+        "bbox": {
+          "minX": 24.414246,
+          "maxX": 33.978302,
+          "minY": -332.8573,
+          "maxY": -329.932556,
+          "width": 9.564056,
+          "height": 2.924744
+        },
+        "meshCounts": {
+          "roadline004": 14
+        },
+        "surfaceCounts": {
+          "ROAD": 14
+        },
+        "selected": false
+      },
+      {
+        "componentId": 86,
+        "triangleCount": 4,
+        "area": 2.455986,
+        "perimeterEstimate": 20.393841,
+        "centroid": [
+          -470.002281,
+          124.919481
+        ],
+        "bbox": {
+          "minX": -473.593689,
+          "maxX": -466.265106,
+          "minY": 122.867668,
+          "maxY": 126.734795,
+          "width": 7.328583,
+          "height": 3.867127
+        },
+        "meshCounts": {
+          "roadline004": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 87,
+        "triangleCount": 10,
+        "area": 2.108285,
+        "perimeterEstimate": 17.366002,
+        "centroid": [
+          -32.595988,
+          335.641361
+        ],
+        "bbox": {
+          "minX": -36.234711,
+          "maxX": -28.957138,
+          "minY": 333.295624,
+          "maxY": 337.987152,
+          "width": 7.277573,
+          "height": 4.691528
+        },
+        "meshCounts": {
+          "roadlineout": 10
+        },
+        "surfaceCounts": {
+          "ROAD": 10
+        },
+        "selected": false
+      },
+      {
+        "componentId": 88,
+        "triangleCount": 8,
+        "area": 2.000054,
+        "perimeterEstimate": 16.500331,
+        "centroid": [
+          -190.845541,
+          571.964455
+        ],
+        "bbox": {
+          "minX": -192.647141,
+          "maxX": -189.043884,
+          "minY": 568.285278,
+          "maxY": 575.643433,
+          "width": 3.603257,
+          "height": 7.358155
+        },
+        "meshCounts": {
+          "roadlineout": 8
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 89,
+        "triangleCount": 8,
+        "area": 1.909231,
+        "perimeterEstimate": 15.773651,
+        "centroid": [
+          -193.500245,
+          570.98979
+        ],
+        "bbox": {
+          "minX": -195.259903,
+          "maxX": -191.73703,
+          "minY": 567.49231,
+          "maxY": 574.488647,
+          "width": 3.522873,
+          "height": 6.996337
+        },
+        "meshCounts": {
+          "roadlineout": 8
+        },
+        "surfaceCounts": {
+          "ROAD": 8
+        },
+        "selected": false
+      },
+      {
+        "componentId": 90,
+        "triangleCount": 4,
+        "area": 1.819848,
+        "perimeterEstimate": 15.318932,
+        "centroid": [
+          -470.33877,
+          133.914936
+        ],
+        "bbox": {
+          "minX": -473.028931,
+          "maxX": -467.578339,
+          "minY": 132.360138,
+          "maxY": 135.304749,
+          "width": 5.450592,
+          "height": 2.944611
+        },
+        "meshCounts": {
+          "roadline004": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 91,
+        "triangleCount": 2,
+        "area": 1.709572,
+        "perimeterEstimate": 5.230264,
+        "centroid": [
+          166.460641,
+          -258.022746
+        ],
+        "bbox": {
+          "minX": 165.730026,
+          "maxX": 167.189941,
+          "minY": -258.765778,
+          "maxY": -257.279633,
+          "width": 1.459915,
+          "height": 1.486145
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 92,
+        "triangleCount": 2,
+        "area": 1.702699,
+        "perimeterEstimate": 5.220152,
+        "centroid": [
+          167.168993,
+          -252.778641
+        ],
+        "bbox": {
+          "minX": 166.44339,
+          "maxX": 167.893341,
+          "minY": -253.52359,
+          "maxY": -252.033203,
+          "width": 1.449951,
+          "height": 1.490387
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 93,
+        "triangleCount": 2,
+        "area": 1.698023,
+        "perimeterEstimate": 5.212335,
+        "centroid": [
+          162.060484,
+          -261.380518
+        ],
+        "bbox": {
+          "minX": 161.32309,
+          "maxX": 162.796585,
+          "minY": -262.115234,
+          "maxY": -260.645782,
+          "width": 1.473495,
+          "height": 1.469452
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 94,
+        "triangleCount": 2,
+        "area": 1.692559,
+        "perimeterEstimate": 5.204682,
+        "centroid": [
+          163.722392,
+          -249.625314
+        ],
+        "bbox": {
+          "minX": 162.995544,
+          "maxX": 164.447952,
+          "minY": -250.368164,
+          "maxY": -248.882172,
+          "width": 1.452408,
+          "height": 1.485992
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 95,
+        "triangleCount": 2,
+        "area": 1.691749,
+        "perimeterEstimate": 5.202765,
+        "centroid": [
+          165.760279,
+          -263.20779
+        ],
+        "bbox": {
+          "minX": 165.026077,
+          "maxX": 166.493225,
+          "minY": -263.939545,
+          "maxY": -262.475769,
+          "width": 1.467148,
+          "height": 1.463776
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 96,
+        "triangleCount": 2,
+        "area": 1.675957,
+        "perimeterEstimate": 5.17905,
+        "centroid": [
+          167.877342,
+          -247.535766
+        ],
+        "bbox": {
+          "minX": 167.157791,
+          "maxX": 168.595612,
+          "minY": -248.275177,
+          "maxY": -246.79599,
+          "width": 1.437821,
+          "height": 1.479187
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 97,
+        "triangleCount": 2,
+        "area": 1.665167,
+        "perimeterEstimate": 5.162524,
+        "centroid": [
+          161.340722,
+          -266.475211
+        ],
+        "bbox": {
+          "minX": 160.600632,
+          "maxX": 162.079529,
+          "minY": -267.193054,
+          "maxY": -265.757446,
+          "width": 1.478897,
+          "height": 1.435608
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 98,
+        "triangleCount": 2,
+        "area": 1.658791,
+        "perimeterEstimate": 5.152382,
+        "centroid": [
+          164.460144,
+          -244.411068
+        ],
+        "bbox": {
+          "minX": 163.739746,
+          "maxX": 165.17923,
+          "minY": -245.145737,
+          "maxY": -243.676178,
+          "width": 1.439484,
+          "height": 1.469559
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 99,
+        "triangleCount": 2,
+        "area": 1.650551,
+        "perimeterEstimate": 5.145644,
+        "centroid": [
+          162.782441,
+          -285.276527
+        ],
+        "bbox": {
+          "minX": 162.030701,
+          "maxX": 163.532959,
+          "minY": -285.97406,
+          "maxY": -284.578888,
+          "width": 1.502258,
+          "height": 1.395172
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 100,
+        "triangleCount": 2,
+        "area": 1.640709,
+        "perimeterEstimate": 5.12587,
+        "centroid": [
+          164.909295,
+          -269.510088
+        ],
+        "bbox": {
+          "minX": 164.17215,
+          "maxX": 165.645279,
+          "minY": -270.217041,
+          "maxY": -268.802734,
+          "width": 1.473129,
+          "height": 1.414307
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 101,
+        "triangleCount": 2,
+        "area": 1.63372,
+        "perimeterEstimate": 5.113072,
+        "centroid": [
+          168.577311,
+          -242.354801
+        ],
+        "bbox": {
+          "minX": 167.864624,
+          "maxX": 169.288696,
+          "minY": -243.082336,
+          "maxY": -241.627029,
+          "width": 1.424072,
+          "height": 1.455307
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 102,
+        "triangleCount": 2,
+        "area": 1.620273,
+        "perimeterEstimate": 5.14673,
+        "centroid": [
+          157.076795,
+          -312.791108
+        ],
+        "bbox": {
+          "minX": 156.179443,
+          "maxX": 157.975357,
+          "minY": -313.596527,
+          "maxY": -311.988556,
+          "width": 1.795914,
+          "height": 1.607971
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 103,
+        "triangleCount": 2,
+        "area": 1.619542,
+        "perimeterEstimate": 5.102617,
+        "centroid": [
+          162.027873,
+          -290.876365
+        ],
+        "bbox": {
+          "minX": 161.272614,
+          "maxX": 162.781982,
+          "minY": -291.557983,
+          "maxY": -290.194427,
+          "width": 1.509368,
+          "height": 1.363556
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 104,
+        "triangleCount": 2,
+        "area": 1.614217,
+        "perimeterEstimate": 5.086458,
+        "centroid": [
+          160.644278,
+          -271.405684
+        ],
+        "bbox": {
+          "minX": 159.902664,
+          "maxX": 161.384781,
+          "minY": -272.100342,
+          "maxY": -270.71051,
+          "width": 1.482117,
+          "height": 1.389832
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 105,
+        "triangleCount": 2,
+        "area": 1.580265,
+        "perimeterEstimate": 5.03621,
+        "centroid": [
+          164.25747,
+          -274.339762
+        ],
+        "bbox": {
+          "minX": 163.519104,
+          "maxX": 164.99469,
+          "minY": -275.020325,
+          "maxY": -273.658997,
+          "width": 1.475586,
+          "height": 1.361328
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 106,
+        "triangleCount": 2,
+        "area": 1.558461,
+        "perimeterEstimate": 5.034522,
+        "centroid": [
+          160.566977,
+          -301.411081
+        ],
+        "bbox": {
+          "minX": 159.779327,
+          "maxX": 161.343323,
+          "minY": -302.084351,
+          "maxY": -300.750244,
+          "width": 1.563996,
+          "height": 1.334107
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 107,
+        "triangleCount": 2,
+        "area": 1.525774,
+        "perimeterEstimate": 5.008738,
+        "centroid": [
+          149.269931,
+          -318.466687
+        ],
+        "bbox": {
+          "minX": 148.359375,
+          "maxX": 150.181152,
+          "minY": -319.234436,
+          "maxY": -317.698273,
+          "width": 1.821777,
+          "height": 1.536163
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 108,
+        "triangleCount": 2,
+        "area": 1.520157,
+        "perimeterEstimate": 4.959452,
+        "centroid": [
+          157.513712,
+          -293.58797
+        ],
+        "bbox": {
+          "minX": 156.756607,
+          "maxX": 158.269791,
+          "minY": -294.229736,
+          "maxY": -292.945618,
+          "width": 1.513184,
+          "height": 1.284118
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 109,
+        "triangleCount": 4,
+        "area": 1.519882,
+        "perimeterEstimate": 12.905204,
+        "centroid": [
+          -470.379498,
+          138.406198
+        ],
+        "bbox": {
+          "minX": -472.663147,
+          "maxX": -468.105408,
+          "minY": 137.189606,
+          "maxY": 139.591614,
+          "width": 4.557739,
+          "height": 2.402008
+        },
+        "meshCounts": {
+          "roadline004": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 110,
+        "triangleCount": 2,
+        "area": 1.51714,
+        "perimeterEstimate": 4.943301,
+        "centroid": [
+          159.820107,
+          -277.243725
+        ],
+        "bbox": {
+          "minX": 159.078369,
+          "maxX": 160.56073,
+          "minY": -277.897705,
+          "maxY": -276.5896,
+          "width": 1.482361,
+          "height": 1.308105
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 111,
+        "triangleCount": 2,
+        "area": 1.497846,
+        "perimeterEstimate": 4.973088,
+        "centroid": [
+          154.713833,
+          -317.553002
+        ],
+        "bbox": {
+          "minX": 153.81192,
+          "maxX": 155.617081,
+          "minY": -318.315308,
+          "maxY": -316.79068,
+          "width": 1.805161,
+          "height": 1.524628
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 112,
+        "triangleCount": 2,
+        "area": 1.485951,
+        "perimeterEstimate": 4.958723,
+        "centroid": [
+          151.703511,
+          -313.833885
+        ],
+        "bbox": {
+          "minX": 150.815384,
+          "maxX": 152.593033,
+          "minY": -314.597534,
+          "maxY": -313.070618,
+          "width": 1.777649,
+          "height": 1.526916
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 113,
+        "triangleCount": 2,
+        "area": 1.482763,
+        "perimeterEstimate": 4.900189,
+        "centroid": [
+          158.280408,
+          -288.155018
+        ],
+        "bbox": {
+          "minX": 157.530502,
+          "maxX": 159.029175,
+          "minY": -288.78833,
+          "maxY": -287.521729,
+          "width": 1.498673,
+          "height": 1.266601
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 114,
+        "triangleCount": 2,
+        "area": 1.482256,
+        "perimeterEstimate": 4.905683,
+        "centroid": [
+          161.292993,
+          -296.344099
+        ],
+        "bbox": {
+          "minX": 160.54007,
+          "maxX": 162.045258,
+          "minY": -296.969879,
+          "maxY": -295.717468,
+          "width": 1.505188,
+          "height": 1.252411
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 115,
+        "triangleCount": 2,
+        "area": 1.474256,
+        "perimeterEstimate": 4.880759,
+        "centroid": [
+          163.492805,
+          -280.008425
+        ],
+        "bbox": {
+          "minX": 162.754639,
+          "maxX": 164.229797,
+          "minY": -280.645599,
+          "maxY": -279.37146,
+          "width": 1.475158,
+          "height": 1.274139
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 116,
+        "triangleCount": 2,
+        "area": 1.464642,
+        "perimeterEstimate": 4.939,
+        "centroid": [
+          153.832242,
+          -309.107666
+        ],
+        "bbox": {
+          "minX": 152.968414,
+          "maxX": 154.696091,
+          "minY": -309.862244,
+          "maxY": -308.358734,
+          "width": 1.727677,
+          "height": 1.50351
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 117,
+        "triangleCount": 2,
+        "area": 1.386185,
+        "perimeterEstimate": 4.752444,
+        "centroid": [
+          159.062545,
+          -282.611666
+        ],
+        "bbox": {
+          "minX": 158.322769,
+          "maxX": 159.801254,
+          "minY": -283.213623,
+          "maxY": -282.009766,
+          "width": 1.478485,
+          "height": 1.203857
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 118,
+        "triangleCount": 2,
+        "area": 1.363027,
+        "perimeterEstimate": 4.743024,
+        "centroid": [
+          156.744701,
+          -298.74124
+        ],
+        "bbox": {
+          "minX": 155.967239,
+          "maxX": 157.514984,
+          "minY": -299.327087,
+          "maxY": -298.161926,
+          "width": 1.547745,
+          "height": 1.165161
+        },
+        "meshCounts": {
+          "roadline002": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 119,
+        "triangleCount": 2,
+        "area": 1.339842,
+        "perimeterEstimate": 11.218833,
+        "centroid": [
+          -435.360047,
+          -64.110436
+        ],
+        "bbox": {
+          "minX": -437.991913,
+          "maxX": -432.72818,
+          "minY": -64.872566,
+          "maxY": -63.348305,
+          "width": 5.263733,
+          "height": 1.524261
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 120,
+        "triangleCount": 4,
+        "area": 1.246292,
+        "perimeterEstimate": 10.704443,
+        "centroid": [
+          -470.404911,
+          142.876177
+        ],
+        "bbox": {
+          "minX": -472.288086,
+          "maxX": -468.548889,
+          "minY": 141.839691,
+          "maxY": 143.878326,
+          "width": 3.739197,
+          "height": 2.038635
+        },
+        "meshCounts": {
+          "roadline004": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 121,
+        "triangleCount": 2,
+        "area": 1.000149,
+        "perimeterEstimate": 8.499998,
+        "centroid": [
+          -133.074248,
+          596.7581
+        ],
+        "bbox": {
+          "minX": -133.728302,
+          "maxX": -132.420197,
+          "minY": 594.797241,
+          "maxY": 598.718994,
+          "width": 1.308105,
+          "height": 3.921753
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 122,
+        "triangleCount": 2,
+        "area": 1.000098,
+        "perimeterEstimate": 8.500006,
+        "centroid": [
+          -95.089633,
+          600.859893
+        ],
+        "bbox": {
+          "minX": -95.450974,
+          "maxX": -94.728287,
+          "minY": 598.859131,
+          "maxY": 602.860596,
+          "width": 0.722687,
+          "height": 4.001465
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 123,
+        "triangleCount": 2,
+        "area": 1.00009,
+        "perimeterEstimate": 8.500067,
+        "centroid": [
+          -137.64635,
+          586.31266
+        ],
+        "bbox": {
+          "minX": -138.333969,
+          "maxX": -136.958725,
+          "minY": 584.359375,
+          "maxY": 588.265869,
+          "width": 1.375244,
+          "height": 3.906494
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 124,
+        "triangleCount": 2,
+        "area": 1.000089,
+        "perimeterEstimate": 8.50005,
+        "centroid": [
+          -65.718587,
+          592.274444
+        ],
+        "bbox": {
+          "minX": -66.643555,
+          "maxX": -64.793671,
+          "minY": 590.395386,
+          "maxY": 594.153442,
+          "width": 1.849884,
+          "height": 3.758056
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 125,
+        "triangleCount": 2,
+        "area": 1.000074,
+        "perimeterEstimate": 8.500094,
+        "centroid": [
+          -91.893192,
+          592.015215
+        ],
+        "bbox": {
+          "minX": -92.371689,
+          "maxX": -91.414703,
+          "minY": 590.02478,
+          "maxY": 594.005615,
+          "width": 0.956986,
+          "height": 3.980835
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 126,
+        "triangleCount": 2,
+        "area": 1.000045,
+        "perimeterEstimate": 8.500128,
+        "centroid": [
+          -79.912666,
+          597.965665
+        ],
+        "bbox": {
+          "minX": -80.61145,
+          "maxX": -79.213852,
+          "minY": 596.015137,
+          "maxY": 599.91626,
+          "width": 1.397598,
+          "height": 3.901123
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 127,
+        "triangleCount": 2,
+        "area": 1.000036,
+        "perimeterEstimate": 8.500022,
+        "centroid": [
+          -84.345922,
+          590.453521
+        ],
+        "bbox": {
+          "minX": -84.999924,
+          "maxX": -83.691895,
+          "minY": 588.492676,
+          "maxY": 592.414429,
+          "width": 1.308029,
+          "height": 3.921753
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 128,
+        "triangleCount": 2,
+        "area": 1.000034,
+        "perimeterEstimate": 8.499961,
+        "centroid": [
+          -76.968764,
+          587.952291
+        ],
+        "bbox": {
+          "minX": -77.770096,
+          "maxX": -76.167389,
+          "minY": 586.030151,
+          "maxY": 589.874512,
+          "width": 1.602707,
+          "height": 3.844361
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 129,
+        "triangleCount": 2,
+        "area": 1.000031,
+        "perimeterEstimate": 8.499944,
+        "centroid": [
+          -107.129521,
+          592.683043
+        ],
+        "bbox": {
+          "minX": -107.353394,
+          "maxX": -106.905655,
+          "minY": 590.679321,
+          "maxY": 594.686768,
+          "width": 0.447739,
+          "height": 4.007447
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 130,
+        "triangleCount": 2,
+        "area": 1.000023,
+        "perimeterEstimate": 8.500074,
+        "centroid": [
+          -87.415588,
+          599.930783
+        ],
+        "bbox": {
+          "minX": -87.960892,
+          "maxX": -86.87027,
+          "minY": 597.949585,
+          "maxY": 601.911987,
+          "width": 1.090622,
+          "height": 3.962402
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 131,
+        "triangleCount": 2,
+        "area": 1.000022,
+        "perimeterEstimate": 8.500116,
+        "centroid": [
+          -58.739883,
+          589.518373
+        ],
+        "bbox": {
+          "minX": -59.746368,
+          "maxX": -57.733398,
+          "minY": 587.673706,
+          "maxY": 591.363037,
+          "width": 2.01297,
+          "height": 3.689331
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 132,
+        "triangleCount": 2,
+        "area": 1.000012,
+        "perimeterEstimate": 8.500004,
+        "centroid": [
+          -99.448105,
+          592.724365
+        ],
+        "bbox": {
+          "minX": -99.705338,
+          "maxX": -99.190872,
+          "minY": 590.720459,
+          "maxY": 594.728271,
+          "width": 0.514466,
+          "height": 4.007812
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 133,
+        "triangleCount": 2,
+        "area": 0.999991,
+        "perimeterEstimate": 8.500045,
+        "centroid": [
+          -130.075108,
+          588.704884
+        ],
+        "bbox": {
+          "minX": -130.722855,
+          "maxX": -129.427383,
+          "minY": 586.742676,
+          "maxY": 590.667114,
+          "width": 1.295472,
+          "height": 3.924438
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 134,
+        "triangleCount": 2,
+        "area": 0.99999,
+        "perimeterEstimate": 8.500067,
+        "centroid": [
+          -62.599207,
+          581.577991
+        ],
+        "bbox": {
+          "minX": -63.605682,
+          "maxX": -61.592758,
+          "minY": 579.733276,
+          "maxY": 583.422607,
+          "width": 2.012924,
+          "height": 3.689331
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 135,
+        "triangleCount": 2,
+        "area": 0.999985,
+        "perimeterEstimate": 8.500103,
+        "centroid": [
+          -72.744175,
+          595.181965
+        ],
+        "bbox": {
+          "minX": -73.569183,
+          "maxX": -71.919174,
+          "minY": 593.267212,
+          "maxY": 597.09668,
+          "width": 1.650009,
+          "height": 3.829468
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 136,
+        "triangleCount": 2,
+        "area": 0.999984,
+        "perimeterEstimate": 8.499959,
+        "centroid": [
+          -125.779861,
+          598.615355
+        ],
+        "bbox": {
+          "minX": -126.349731,
+          "maxX": -125.209991,
+          "minY": 596.638184,
+          "maxY": 600.592529,
+          "width": 1.13974,
+          "height": 3.954345
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 137,
+        "triangleCount": 2,
+        "area": 0.999978,
+        "perimeterEstimate": 8.499947,
+        "centroid": [
+          -114.903934,
+          592.019443
+        ],
+        "bbox": {
+          "minX": -115.30838,
+          "maxX": -114.499481,
+          "minY": 590.021729,
+          "maxY": 594.017212,
+          "width": 0.808899,
+          "height": 3.995483
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 138,
+        "triangleCount": 2,
+        "area": 0.99997,
+        "perimeterEstimate": 8.500054,
+        "centroid": [
+          -122.510201,
+          590.770283
+        ],
+        "bbox": {
+          "minX": -123.057602,
+          "maxX": -121.962799,
+          "minY": 588.789429,
+          "maxY": 592.751099,
+          "width": 1.094803,
+          "height": 3.96167
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 139,
+        "triangleCount": 2,
+        "area": 0.999967,
+        "perimeterEstimate": 8.499856,
+        "centroid": [
+          -110.613301,
+          600.938024
+        ],
+        "bbox": {
+          "minX": -110.909515,
+          "maxX": -110.317093,
+          "minY": 598.934692,
+          "maxY": 602.941284,
+          "width": 0.592422,
+          "height": 4.006592
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 140,
+        "triangleCount": 2,
+        "area": 0.999923,
+        "perimeterEstimate": 8.499904,
+        "centroid": [
+          -102.880813,
+          601.274151
+        ],
+        "bbox": {
+          "minX": -103.026459,
+          "maxX": -102.735153,
+          "minY": 599.272949,
+          "maxY": 603.275269,
+          "width": 0.291306,
+          "height": 4.00232
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 141,
+        "triangleCount": 2,
+        "area": 0.999895,
+        "perimeterEstimate": 8.499978,
+        "centroid": [
+          -140.114041,
+          594.428125
+        ],
+        "bbox": {
+          "minX": -140.801666,
+          "maxX": -139.426422,
+          "minY": 592.474976,
+          "maxY": 596.381348,
+          "width": 1.375244,
+          "height": 3.906372
+        },
+        "meshCounts": {
+          "roadlineout": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 142,
+        "triangleCount": 4,
+        "area": 0.983698,
+        "perimeterEstimate": 8.603898,
+        "centroid": [
+          -470.369942,
+          147.337485
+        ],
+        "bbox": {
+          "minX": -471.868774,
+          "maxX": -468.908417,
+          "minY": 146.454041,
+          "maxY": 148.16452,
+          "width": 2.960357,
+          "height": 1.710479
+        },
+        "meshCounts": {
+          "roadline004": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 143,
+        "triangleCount": 4,
+        "area": 0.841817,
+        "perimeterEstimate": 4.643542,
+        "centroid": [
+          30.805333,
+          -303.252337
+        ],
+        "bbox": {
+          "minX": 30.174744,
+          "maxX": 31.582306,
+          "minY": -303.822876,
+          "maxY": -302.512604,
+          "width": 1.407562,
+          "height": 1.310272
+        },
+        "meshCounts": {
+          "roadline004": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 144,
+        "triangleCount": 4,
+        "area": 0.733365,
+        "perimeterEstimate": 6.60703,
+        "centroid": [
+          -470.263598,
+          151.790426
+        ],
+        "bbox": {
+          "minX": -471.392151,
+          "maxX": -469.172821,
+          "minY": 151.080414,
+          "maxY": 152.450134,
+          "width": 2.21933,
+          "height": 1.36972
+        },
+        "meshCounts": {
+          "roadline004": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 145,
+        "triangleCount": 4,
+        "area": 0.638167,
+        "perimeterEstimate": 3.808991,
+        "centroid": [
+          31.680682,
+          -300.666096
+        ],
+        "bbox": {
+          "minX": 31.167969,
+          "maxX": 32.285431,
+          "minY": -301.170288,
+          "maxY": -300.044617,
+          "width": 1.117462,
+          "height": 1.125671
+        },
+        "meshCounts": {
+          "roadline004": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 146,
+        "triangleCount": 2,
+        "area": 0.547806,
+        "perimeterEstimate": 3.316061,
+        "centroid": [
+          42.912319,
+          -273.478498
+        ],
+        "bbox": {
+          "minX": 42.279541,
+          "maxX": 43.541565,
+          "minY": -273.828857,
+          "maxY": -273.128113,
+          "width": 1.262024,
+          "height": 0.700744
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 147,
+        "triangleCount": 2,
+        "area": 0.547802,
+        "perimeterEstimate": 3.316046,
+        "centroid": [
+          31.711782,
+          -307.529165
+        ],
+        "bbox": {
+          "minX": 31.078918,
+          "maxX": 32.341125,
+          "minY": -307.879364,
+          "maxY": -307.178955,
+          "width": 1.262207,
+          "height": 0.700409
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 148,
+        "triangleCount": 2,
+        "area": 0.547802,
+        "perimeterEstimate": 3.316064,
+        "centroid": [
+          41.891671,
+          -276.573612
+        ],
+        "bbox": {
+          "minX": 41.259033,
+          "maxX": 42.520782,
+          "minY": -276.924225,
+          "maxY": -276.222961,
+          "width": 1.261749,
+          "height": 0.701264
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 149,
+        "triangleCount": 2,
+        "area": 0.5478,
+        "perimeterEstimate": 3.316062,
+        "centroid": [
+          30.687279,
+          -310.622083
+        ],
+        "bbox": {
+          "minX": 30.053925,
+          "maxX": 31.317108,
+          "minY": -310.971405,
+          "maxY": -310.272736,
+          "width": 1.263183,
+          "height": 0.698669
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 150,
+        "triangleCount": 2,
+        "area": 0.547799,
+        "perimeterEstimate": 3.316047,
+        "centroid": [
+          40.873041,
+          -279.669254
+        ],
+        "bbox": {
+          "minX": 40.240479,
+          "maxX": 41.502075,
+          "minY": -280.019989,
+          "maxY": -279.318481,
+          "width": 1.261596,
+          "height": 0.701508
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 151,
+        "triangleCount": 2,
+        "area": 0.547798,
+        "perimeterEstimate": 3.31604,
+        "centroid": [
+          43.934994,
+          -270.384549
+        ],
+        "bbox": {
+          "minX": 43.302368,
+          "maxX": 44.564087,
+          "minY": -270.735168,
+          "maxY": -270.033905,
+          "width": 1.261719,
+          "height": 0.701263
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 152,
+        "triangleCount": 2,
+        "area": 0.547792,
+        "perimeterEstimate": 3.316063,
+        "centroid": [
+          36.804387,
+          -292.052914
+        ],
+        "bbox": {
+          "minX": 36.172058,
+          "maxX": 37.433197,
+          "minY": -292.404083,
+          "maxY": -291.701721,
+          "width": 1.261139,
+          "height": 0.702362
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 153,
+        "triangleCount": 2,
+        "area": 0.547787,
+        "perimeterEstimate": 3.316041,
+        "centroid": [
+          37.821375,
+          -288.956745
+        ],
+        "bbox": {
+          "minX": 37.188904,
+          "maxX": 38.450317,
+          "minY": -289.307648,
+          "maxY": -288.605804,
+          "width": 1.261413,
+          "height": 0.701844
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 154,
+        "triangleCount": 2,
+        "area": 0.547786,
+        "perimeterEstimate": 3.316019,
+        "centroid": [
+          29.650751,
+          -313.70895
+        ],
+        "bbox": {
+          "minX": 29.015442,
+          "maxX": 30.282532,
+          "minY": -314.054688,
+          "maxY": -313.363159,
+          "width": 1.26709,
+          "height": 0.691529
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 155,
+        "triangleCount": 2,
+        "area": 0.547777,
+        "perimeterEstimate": 3.316048,
+        "centroid": [
+          44.944397,
+          -267.288748
+        ],
+        "bbox": {
+          "minX": 44.31366,
+          "maxX": 45.571594,
+          "minY": -267.642792,
+          "maxY": -266.934692,
+          "width": 1.257934,
+          "height": 0.7081
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 156,
+        "triangleCount": 2,
+        "area": 0.54776,
+        "perimeterEstimate": 3.316001,
+        "centroid": [
+          32.732753,
+          -304.434702
+        ],
+        "bbox": {
+          "minX": 32.100128,
+          "maxX": 33.361877,
+          "minY": -304.785309,
+          "maxY": -304.084076,
+          "width": 1.261749,
+          "height": 0.701233
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 157,
+        "triangleCount": 2,
+        "area": 0.547758,
+        "perimeterEstimate": 3.315967,
+        "centroid": [
+          34.769891,
+          -298.244357
+        ],
+        "bbox": {
+          "minX": 34.137482,
+          "maxX": 35.398773,
+          "minY": -298.595337,
+          "maxY": -297.893341,
+          "width": 1.261291,
+          "height": 0.701996
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 158,
+        "triangleCount": 2,
+        "area": 0.547756,
+        "perimeterEstimate": 3.315982,
+        "centroid": [
+          35.787244,
+          -295.148664
+        ],
+        "bbox": {
+          "minX": 35.154846,
+          "maxX": 36.416107,
+          "minY": -295.499695,
+          "maxY": -294.797607,
+          "width": 1.261261,
+          "height": 0.702088
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 159,
+        "triangleCount": 2,
+        "area": 0.547754,
+        "perimeterEstimate": 3.315966,
+        "centroid": [
+          39.855725,
+          -282.76533
+        ],
+        "bbox": {
+          "minX": 39.223419,
+          "maxX": 40.484528,
+          "minY": -283.116486,
+          "maxY": -282.414154,
+          "width": 1.261109,
+          "height": 0.702332
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 160,
+        "triangleCount": 2,
+        "area": 0.547751,
+        "perimeterEstimate": 3.315955,
+        "centroid": [
+          38.838505,
+          -285.860851
+        ],
+        "bbox": {
+          "minX": 38.206055,
+          "maxX": 39.467438,
+          "minY": -286.211761,
+          "maxY": -285.509918,
+          "width": 1.261383,
+          "height": 0.701843
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 161,
+        "triangleCount": 2,
+        "area": 0.547736,
+        "perimeterEstimate": 3.315924,
+        "centroid": [
+          33.751797,
+          -301.339642
+        ],
+        "bbox": {
+          "minX": 33.119263,
+          "maxX": 34.380798,
+          "minY": -301.690399,
+          "maxY": -300.988861,
+          "width": 1.261535,
+          "height": 0.701538
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 162,
+        "triangleCount": 6,
+        "area": 0.542638,
+        "perimeterEstimate": 2.968967,
+        "centroid": [
+          -312.892573,
+          481.591501
+        ],
+        "bbox": {
+          "minX": -313.282532,
+          "maxX": -312.41687,
+          "minY": 481.110352,
+          "maxY": 482.061218,
+          "width": 0.865662,
+          "height": 0.950866
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 163,
+        "triangleCount": 6,
+        "area": 0.542609,
+        "perimeterEstimate": 2.968901,
+        "centroid": [
+          -311.199134,
+          481.127582
+        ],
+        "bbox": {
+          "minX": -311.588959,
+          "maxX": -310.723511,
+          "minY": 480.646515,
+          "maxY": 481.597168,
+          "width": 0.865448,
+          "height": 0.950653
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 164,
+        "triangleCount": 6,
+        "area": 0.542608,
+        "perimeterEstimate": 2.968895,
+        "centroid": [
+          -314.585828,
+          482.055906
+        ],
+        "bbox": {
+          "minX": -314.97583,
+          "maxX": -314.110077,
+          "minY": 481.574707,
+          "maxY": 482.525696,
+          "width": 0.865753,
+          "height": 0.950989
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 165,
+        "triangleCount": 6,
+        "area": 0.542552,
+        "perimeterEstimate": 2.968765,
+        "centroid": [
+          -318.818151,
+          483.219139
+        ],
+        "bbox": {
+          "minX": -319.208405,
+          "maxX": -318.342194,
+          "minY": 482.737823,
+          "maxY": 483.689148,
+          "width": 0.866211,
+          "height": 0.951325
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 166,
+        "triangleCount": 6,
+        "area": 0.542547,
+        "perimeterEstimate": 2.968755,
+        "centroid": [
+          -313.739211,
+          481.823674
+        ],
+        "bbox": {
+          "minX": -314.12912,
+          "maxX": -313.263489,
+          "minY": 481.342499,
+          "maxY": 482.293396,
+          "width": 0.865631,
+          "height": 0.950897
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 167,
+        "triangleCount": 6,
+        "area": 0.542541,
+        "perimeterEstimate": 2.968741,
+        "centroid": [
+          -315.432379,
+          482.288297
+        ],
+        "bbox": {
+          "minX": -315.822357,
+          "maxX": -314.956604,
+          "minY": 481.807098,
+          "maxY": 482.758087,
+          "width": 0.865753,
+          "height": 0.950989
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 168,
+        "triangleCount": 6,
+        "area": 0.54254,
+        "perimeterEstimate": 2.968743,
+        "centroid": [
+          -312.04588,
+          481.359513
+        ],
+        "bbox": {
+          "minX": -312.435699,
+          "maxX": -311.570221,
+          "minY": 480.878387,
+          "maxY": 481.829163,
+          "width": 0.865478,
+          "height": 0.950776
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 169,
+        "triangleCount": 6,
+        "area": 0.542483,
+        "perimeterEstimate": 2.968595,
+        "centroid": [
+          -317.971845,
+          482.986208
+        ],
+        "bbox": {
+          "minX": -318.362,
+          "maxX": -317.495941,
+          "minY": 482.504883,
+          "maxY": 483.456177,
+          "width": 0.866059,
+          "height": 0.951294
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 170,
+        "triangleCount": 6,
+        "area": 0.542418,
+        "perimeterEstimate": 2.968427,
+        "centroid": [
+          -319.664507,
+          483.452505
+        ],
+        "bbox": {
+          "minX": -320.054871,
+          "maxX": -319.188446,
+          "minY": 482.9711,
+          "maxY": 483.922638,
+          "width": 0.866425,
+          "height": 0.951538
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 171,
+        "triangleCount": 6,
+        "area": 0.542351,
+        "perimeterEstimate": 2.96826,
+        "centroid": [
+          -321.342972,
+          483.862165
+        ],
+        "bbox": {
+          "minX": -321.709595,
+          "maxX": -320.886383,
+          "minY": 483.393585,
+          "maxY": 484.312073,
+          "width": 0.823212,
+          "height": 0.918488
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 172,
+        "triangleCount": 6,
+        "area": 0.542117,
+        "perimeterEstimate": 2.967651,
+        "centroid": [
+          -323.027664,
+          484.099389
+        ],
+        "bbox": {
+          "minX": -323.389221,
+          "maxX": -322.613678,
+          "minY": 483.661041,
+          "maxY": 484.505432,
+          "width": 0.775543,
+          "height": 0.844391
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 173,
+        "triangleCount": 6,
+        "area": 0.541807,
+        "perimeterEstimate": 2.966846,
+        "centroid": [
+          -324.745789,
+          484.133281
+        ],
+        "bbox": {
+          "minX": -325.141693,
+          "maxX": -324.364899,
+          "minY": 483.707825,
+          "maxY": 484.521576,
+          "width": 0.776794,
+          "height": 0.813751
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 174,
+        "triangleCount": 6,
+        "area": 0.541724,
+        "perimeterEstimate": 2.966619,
+        "centroid": [
+          -327.327437,
+          483.934179
+        ],
+        "bbox": {
+          "minX": -327.759491,
+          "maxX": -326.988525,
+          "minY": 483.482056,
+          "maxY": 484.359711,
+          "width": 0.770966,
+          "height": 0.877655
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 175,
+        "triangleCount": 6,
+        "area": 0.541648,
+        "perimeterEstimate": 2.9664,
+        "centroid": [
+          -330.749332,
+          483.347057
+        ],
+        "bbox": {
+          "minX": -331.208801,
+          "maxX": -330.378998,
+          "minY": 482.875824,
+          "maxY": 483.801025,
+          "width": 0.829803,
+          "height": 0.925201
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 176,
+        "triangleCount": 6,
+        "area": 0.541638,
+        "perimeterEstimate": 2.966354,
+        "centroid": [
+          -334.138842,
+          482.523008
+        ],
+        "bbox": {
+          "minX": -334.611603,
+          "maxX": -333.752289,
+          "minY": 482.04303,
+          "maxY": 482.990814,
+          "width": 0.859314,
+          "height": 0.947784
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 177,
+        "triangleCount": 6,
+        "area": 0.541636,
+        "perimeterEstimate": 2.966356,
+        "centroid": [
+          -332.4494,
+          482.959114
+        ],
+        "bbox": {
+          "minX": -332.916016,
+          "maxX": -332.070404,
+          "minY": 482.483124,
+          "maxY": 483.420502,
+          "width": 0.845612,
+          "height": 0.937378
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 178,
+        "triangleCount": 6,
+        "area": 0.541594,
+        "perimeterEstimate": 2.96622,
+        "centroid": [
+          -336.65109,
+          481.79421
+        ],
+        "bbox": {
+          "minX": -337.133514,
+          "maxX": -336.252411,
+          "minY": 481.308136,
+          "maxY": 482.272125,
+          "width": 0.881103,
+          "height": 0.963989
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 179,
+        "triangleCount": 6,
+        "area": 0.541573,
+        "perimeterEstimate": 2.966164,
+        "centroid": [
+          -338.316252,
+          481.265085
+        ],
+        "bbox": {
+          "minX": -338.802734,
+          "maxX": -337.912415,
+          "minY": 480.77652,
+          "maxY": 481.747253,
+          "width": 0.890319,
+          "height": 0.970733
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 180,
+        "triangleCount": 6,
+        "area": 0.540849,
+        "perimeterEstimate": 2.964062,
+        "centroid": [
+          -328.183661,
+          483.816449
+        ],
+        "bbox": {
+          "minX": -328.626221,
+          "maxX": -327.833313,
+          "minY": 483.357483,
+          "maxY": 484.25116,
+          "width": 0.792908,
+          "height": 0.893677
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 181,
+        "triangleCount": 6,
+        "area": 0.535686,
+        "perimeterEstimate": 2.952869,
+        "centroid": [
+          -337.485494,
+          481.535316
+        ],
+        "bbox": {
+          "minX": -337.969177,
+          "maxX": -337.090363,
+          "minY": 481.048462,
+          "maxY": 482.014069,
+          "width": 0.878814,
+          "height": 0.965607
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 182,
+        "triangleCount": 6,
+        "area": 0.53536,
+        "perimeterEstimate": 2.95215,
+        "centroid": [
+          -335.815468,
+          482.048597
+        ],
+        "bbox": {
+          "minX": -336.295563,
+          "maxX": -335.425659,
+          "minY": 481.566162,
+          "maxY": 482.520874,
+          "width": 0.869904,
+          "height": 0.954712
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 183,
+        "triangleCount": 6,
+        "area": 0.533584,
+        "perimeterEstimate": 2.948227,
+        "centroid": [
+          -333.296236,
+          482.7489
+        ],
+        "bbox": {
+          "minX": -333.764557,
+          "maxX": -332.922333,
+          "minY": 482.269348,
+          "maxY": 483.213409,
+          "width": 0.842224,
+          "height": 0.944061
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 184,
+        "triangleCount": 6,
+        "area": 0.532663,
+        "perimeterEstimate": 2.946115,
+        "centroid": [
+          -331.601344,
+          483.161936
+        ],
+        "bbox": {
+          "minX": -332.064087,
+          "maxX": -331.235901,
+          "minY": 482.690216,
+          "maxY": 483.61554,
+          "width": 0.828186,
+          "height": 0.925324
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 185,
+        "triangleCount": 2,
+        "area": 0.532599,
+        "perimeterEstimate": 3.229852,
+        "centroid": [
+          28.539525,
+          -316.743137
+        ],
+        "bbox": {
+          "minX": 27.935425,
+          "maxX": 29.168518,
+          "minY": -317.061279,
+          "maxY": -316.426544,
+          "width": 1.233093,
+          "height": 0.634735
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 186,
+        "triangleCount": 6,
+        "area": 0.531622,
+        "perimeterEstimate": 5.932617,
+        "centroid": [
+          169.868758,
+          -364.874685
+        ],
+        "bbox": {
+          "minX": 168.835785,
+          "maxX": 170.901749,
+          "minY": -365.938904,
+          "maxY": -363.810486,
+          "width": 2.065964,
+          "height": 2.128418
+        },
+        "meshCounts": {
+          "roadline001": 6
+        },
+        "surfaceCounts": {
+          "ROAD": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 187,
+        "triangleCount": 6,
+        "area": 0.531466,
+        "perimeterEstimate": 2.943454,
+        "centroid": [
+          -329.043825,
+          483.678888
+        ],
+        "bbox": {
+          "minX": -329.490356,
+          "maxX": -328.699249,
+          "minY": 483.216583,
+          "maxY": 484.116394,
+          "width": 0.791107,
+          "height": 0.899811
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 188,
+        "triangleCount": 6,
+        "area": 0.526761,
+        "perimeterEstimate": 2.933072,
+        "centroid": [
+          -326.464211,
+          484.033442
+        ],
+        "bbox": {
+          "minX": -326.889496,
+          "maxX": -326.115784,
+          "minY": 483.590607,
+          "maxY": 484.44162,
+          "width": 0.773712,
+          "height": 0.851013
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 189,
+        "triangleCount": 6,
+        "area": 0.519678,
+        "perimeterEstimate": 2.917424,
+        "centroid": [
+          -325.610482,
+          484.104101
+        ],
+        "bbox": {
+          "minX": -326.016327,
+          "maxX": -325.241486,
+          "minY": 483.660767,
+          "maxY": 484.503448,
+          "width": 0.774841,
+          "height": 0.842681
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 190,
+        "triangleCount": 2,
+        "area": 0.517386,
+        "perimeterEstimate": 3.210126,
+        "centroid": [
+          46.935544,
+          -261.075512
+        ],
+        "bbox": {
+          "minX": 46.323853,
+          "maxX": 47.529175,
+          "minY": -261.433075,
+          "maxY": -260.717865,
+          "width": 1.205322,
+          "height": 0.71521
+        },
+        "meshCounts": {
+          "roadline004": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 191,
+        "triangleCount": 6,
+        "area": 0.517235,
+        "perimeterEstimate": 2.912002,
+        "centroid": [
+          -320.497699,
+          483.681794
+        ],
+        "bbox": {
+          "minX": -320.849457,
+          "maxX": -320.034485,
+          "minY": 483.20459,
+          "maxY": 484.138092,
+          "width": 0.814972,
+          "height": 0.933502
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 192,
+        "triangleCount": 6,
+        "area": 0.509656,
+        "perimeterEstimate": 2.894917,
+        "centroid": [
+          -323.886279,
+          484.148601
+        ],
+        "bbox": {
+          "minX": -324.265106,
+          "maxX": -323.488831,
+          "minY": 483.721008,
+          "maxY": 484.523651,
+          "width": 0.776275,
+          "height": 0.802643
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 193,
+        "triangleCount": 6,
+        "area": 0.494144,
+        "perimeterEstimate": 2.860717,
+        "centroid": [
+          -322.178713,
+          484.028106
+        ],
+        "bbox": {
+          "minX": -322.514069,
+          "maxX": -321.746521,
+          "minY": 483.567535,
+          "maxY": 484.445465,
+          "width": 0.767548,
+          "height": 0.87793
+        },
+        "meshCounts": {
+          "1curb001": 6
+        },
+        "surfaceCounts": {
+          "CURB": 6
+        },
+        "selected": false
+      },
+      {
+        "componentId": 194,
+        "triangleCount": 4,
+        "area": 0.476974,
+        "perimeterEstimate": 4.554926,
+        "centroid": [
+          -470.075949,
+          156.245994
+        ],
+        "bbox": {
+          "minX": -470.826874,
+          "maxX": -469.369812,
+          "minY": 155.708984,
+          "maxY": 156.734833,
+          "width": 1.457062,
+          "height": 1.025849
+        },
+        "meshCounts": {
+          "roadline004": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 195,
+        "triangleCount": 2,
+        "area": 0.450779,
+        "perimeterEstimate": 4.106206,
+        "centroid": [
+          -410.059027,
+          206.437527
+        ],
+        "bbox": {
+          "minX": -410.489441,
+          "maxX": -409.628601,
+          "minY": 205.548645,
+          "maxY": 207.326279,
+          "width": 0.86084,
+          "height": 1.777634
+        },
+        "meshCounts": {
+          "roadverge": 2
+        },
+        "surfaceCounts": {
+          "ROAD": 2
+        },
+        "selected": false
+      },
+      {
+        "componentId": 196,
+        "triangleCount": 4,
+        "area": 0.423373,
+        "perimeterEstimate": 2.972401,
+        "centroid": [
+          32.55048,
+          -298.081825
+        ],
+        "bbox": {
+          "minX": 32.185852,
+          "maxX": 32.973236,
+          "minY": -298.53302,
+          "maxY": -297.52652,
+          "width": 0.787384,
+          "height": 1.0065
+        },
+        "meshCounts": {
+          "roadline004": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      },
+      {
+        "componentId": 197,
+        "triangleCount": 4,
+        "area": 0.193968,
+        "perimeterEstimate": 2.307927,
+        "centroid": [
+          -469.775374,
+          160.714219
+        ],
+        "bbox": {
+          "minX": -470.104797,
+          "maxX": -469.486725,
+          "minY": 160.373383,
+          "maxY": 161.017914,
+          "width": 0.618072,
+          "height": 0.644531
+        },
+        "meshCounts": {
+          "roadline004": 4
+        },
+        "surfaceCounts": {
+          "ROAD": 4
+        },
+        "selected": false
+      }
+    ]
+  },
+  "diagnostics": [
+    {
+      "code": "raycast_samples_interpolated",
+      "message": "Invalid raycast samples were interpolated from neighboring valid samples",
+      "count": 84
+    }
+  ]
+}

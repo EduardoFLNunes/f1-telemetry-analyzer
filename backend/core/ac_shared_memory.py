@@ -2,6 +2,10 @@ import mmap
 import ctypes
 import time
 import threading
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 # Estruturas simplificadas do AC via ctypes para mapeamento perfeito de memória
 class SPageFileStatic(ctypes.Structure):
@@ -77,17 +81,39 @@ class AssettoCorsaTelemetryReader:
         self.shm_physics = None
         self.shm_graphics = None
         self.running = False
+        self.is_connected = False
         self.current_track = ""
         self.track_parser_callback = track_parser_callback
-        self.telemetry_data = {"x": 0.0, "z": 0.0, "speed": 0.0, "heading": 0.0}
+        self.telemetry_data = {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "speed": 0.0,
+            "heading": 0.0,
+            "normalized_spline_pos": 0.0,
+            "throttle": 0.0,
+            "brake": 0.0,
+            "steering": 0.0,
+            "gear": 0,
+            "rpm": 0,
+            "accel_x": 0.0,
+            "accel_y": 0.0,
+            "accel_z": 0.0,
+            "lap": 0,
+            "sector": 0,
+            "session_time": 0.0,
+        }
 
     def connect(self):
         try:
             self.shm_static = mmap.mmap(0, ctypes.sizeof(SPageFileStatic), "Local\\acpmf_static", mmap.ACCESS_READ)
             self.shm_physics = mmap.mmap(0, ctypes.sizeof(SPageFilePhysics), "Local\\acpmf_physics", mmap.ACCESS_READ)
             self.shm_graphics = mmap.mmap(0, ctypes.sizeof(SPageFileGraphics), "Local\\acpmf_graphics", mmap.ACCESS_READ)
+            self.is_connected = True
             return True
         except Exception as e:
+            logger.debug("Assetto Corsa shared memory unavailable: %s", e)
+            self.is_connected = False
             return False
 
     def start(self):
@@ -99,6 +125,15 @@ class AssettoCorsaTelemetryReader:
 
     def stop(self):
         self.running = False
+        for name in ("shm_static", "shm_physics", "shm_graphics"):
+            mapping = getattr(self, name)
+            if mapping:
+                try:
+                    mapping.close()
+                except Exception:
+                    pass
+                setattr(self, name, None)
+        self.is_connected = False
 
     def _loop(self):
         while self.running:
@@ -122,7 +157,20 @@ class AssettoCorsaTelemetryReader:
                     "speed": physics_data.speedKmh,
                     "heading": physics_data.heading,
                     "x": graphics_data.carCoordinates[0],
-                    "z": graphics_data.carCoordinates[2]
+                    "y": graphics_data.carCoordinates[1],
+                    "z": graphics_data.carCoordinates[2],
+                    "normalized_spline_pos": graphics_data.normalizedCarPosition,
+                    "throttle": physics_data.gas,
+                    "brake": physics_data.brake,
+                    "steering": physics_data.steerAngle,
+                    "gear": physics_data.gear,
+                    "rpm": physics_data.rpms,
+                    "accel_x": physics_data.accG[0],
+                    "accel_y": physics_data.accG[1],
+                    "accel_z": physics_data.accG[2],
+                    "lap": graphics_data.completedLaps,
+                    "sector": graphics_data.currentSectorIndex,
+                    "session_time": graphics_data.iCurrentTime / 1000.0,
                 }
             except Exception:
                 pass
@@ -130,4 +178,6 @@ class AssettoCorsaTelemetryReader:
             time.sleep(1/60) # 60Hz update rate
 
     def get_latest_data(self):
+        if not self.is_connected:
+            return None
         return self.telemetry_data

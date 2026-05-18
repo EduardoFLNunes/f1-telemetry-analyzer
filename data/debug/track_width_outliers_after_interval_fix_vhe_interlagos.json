@@ -1,0 +1,6835 @@
+{
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "source": "track_edges_from_surface",
+  "goal": "Inspect top 50 widest local_width samples and identify auxiliary/internal loop influence.",
+  "thresholds": {
+    "smallLoopArea": 2500.0,
+    "smallLoopPerimeter": 250.0,
+    "usedLoopCount": null,
+    "raycastBoundarySource": "clean_boundary_loops_interval_all"
+  },
+  "summary": {
+    "sampleCount": 50,
+    "maxLocalWidth": 19.33197,
+    "minOutlierLocalWidth": 18.210869,
+    "outliersWithSmallInternalOrAuxiliaryEdge": 50,
+    "outliersWithAuxiliaryLoopEdge": 0,
+    "outliersWithSmallLoopEdge": 50,
+    "outliersWithInternalLoopEdge": 50,
+    "widthMetrics": {
+      "min": 4.301463,
+      "avg": 12.501468,
+      "max": 19.33197
+    },
+    "selectedComponentId": 0,
+    "intervalInternalHoleToInternalHole": 50,
+    "intervalInternalHoleJump": 0,
+    "selectedIntervalContainsFastLane": 50,
+    "selectedIntervalMidpointInsideSurface": 50,
+    "correctedFromNearestInterval": 0
+  },
+  "outliers": [
+    {
+      "rank": 1,
+      "index": 2489,
+      "p": 0.92907801,
+      "local_width": 19.33197,
+      "centerline": [
+        -483.293008,
+        85.564601
+      ],
+      "fast_lane": [
+        -474.622162,
+        86.086693
+      ],
+      "left_edge": [
+        -473.644498,
+        86.145561
+      ],
+      "right_edge": [
+        -492.941518,
+        84.983641
+      ],
+      "tangent": [
+        0.060104,
+        -0.998192
+      ],
+      "normal": [
+        0.998192,
+        0.060104
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.644498,
+          86.145561
+        ],
+        "segmentT": 0.395487,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 193,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.941518,
+          84.983641
+        ],
+        "segmentT": 0.062012,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.68655,
+      "lateral_reference_offset": 8.68655,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.33197,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.352535,
+        "endT": 0.979435,
+        "midpoint": [
+          -483.293008,
+          85.564601
+        ],
+        "rightHit": {
+          "t": -18.352534629937995,
+          "point": [
+            -492.941518,
+            84.983641
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 193,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.9794349723749604,
+          "point": [
+            -473.644498,
+            86.145561
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 2,
+      "index": 2488,
+      "p": 0.92870474,
+      "local_width": 19.320936,
+      "centerline": [
+        -483.343927,
+        87.170065
+      ],
+      "fast_lane": [
+        -474.715424,
+        87.668236
+      ],
+      "left_edge": [
+        -473.69952,
+        87.72689
+      ],
+      "right_edge": [
+        -492.988335,
+        86.613241
+      ],
+      "tangent": [
+        0.057639,
+        -0.998337
+      ],
+      "normal": [
+        0.998337,
+        0.057639
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.69952,
+          87.72689
+        ],
+        "segmentT": 0.442013,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 193,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.988335,
+          86.613241
+        ],
+        "segmentT": 0.173323,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.642872,
+      "lateral_reference_offset": 8.642872,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.320936,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.303341,
+        "endT": 1.017596,
+        "midpoint": [
+          -483.343927,
+          87.170065
+        ],
+        "rightHit": {
+          "t": -18.303340540289103,
+          "point": [
+            -492.988335,
+            86.613241
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 193,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.0175958278268273,
+          "point": [
+            -473.69952,
+            87.72689
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 3,
+      "index": 2487,
+      "p": 0.92833147,
+      "local_width": 19.310003,
+      "centerline": [
+        -483.394826,
+        88.774918
+      ],
+      "fast_lane": [
+        -474.804749,
+        89.249168
+      ],
+      "left_edge": [
+        -473.754505,
+        89.307151
+      ],
+      "right_edge": [
+        -493.035147,
+        88.242684
+      ],
+      "tangent": [
+        0.055125,
+        -0.998479
+      ],
+      "normal": [
+        0.998479,
+        0.055125
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.754505,
+          89.307151
+        ],
+        "segmentT": 0.488507,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 193,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.035147,
+          88.242684
+        ],
+        "segmentT": 0.284623,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.603158,
+      "lateral_reference_offset": 8.603158,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.310003,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.25816,
+        "endT": 1.051843,
+        "midpoint": [
+          -483.394826,
+          88.774918
+        ],
+        "rightHit": {
+          "t": -18.25816002475344,
+          "point": [
+            -493.035147,
+            88.242684
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 193,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.0518433082983296,
+          "point": [
+            -473.754505,
+            89.307151
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 4,
+      "index": 2490,
+      "p": 0.92945129,
+      "local_width": 19.300187,
+      "centerline": [
+        -483.220595,
+        83.958965
+      ],
+      "fast_lane": [
+        -474.524933,
+        84.504585
+      ],
+      "left_edge": [
+        -473.589442,
+        84.563284
+      ],
+      "right_edge": [
+        -492.851748,
+        83.354647
+      ],
+      "tangent": [
+        0.062623,
+        -0.998037
+      ],
+      "normal": [
+        0.998037,
+        0.062623
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.589442,
+          84.563284
+        ],
+        "segmentT": 0.348933,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 192,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.851748,
+          83.354647
+        ],
+        "segmentT": 0.950799,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.712763,
+      "lateral_reference_offset": 8.712763,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.300187,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.362857,
+        "endT": 0.93733,
+        "midpoint": [
+          -483.220595,
+          83.958965
+        ],
+        "rightHit": {
+          "t": -18.36285715704885,
+          "point": [
+            -492.851748,
+            83.354647
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 192,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.9373302860475679,
+          "point": [
+            -473.589442,
+            84.563284
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 5,
+      "index": 2486,
+      "p": 0.92795819,
+      "local_width": 19.299203,
+      "centerline": [
+        -483.44569,
+        90.378686
+      ],
+      "fast_lane": [
+        -474.889954,
+        90.829491
+      ],
+      "left_edge": [
+        -473.809456,
+        90.886423
+      ],
+      "right_edge": [
+        -493.081925,
+        89.870949
+      ],
+      "tangent": [
+        0.052617,
+        -0.998615
+      ],
+      "normal": [
+        0.998615,
+        0.052617
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.809456,
+          90.886423
+        ],
+        "segmentT": 0.534972,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 193,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.081925,
+          89.870949
+        ],
+        "segmentT": 0.395843,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.567604,
+      "lateral_reference_offset": 8.567605,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.299203,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.217206,
+        "endT": 1.081997,
+        "midpoint": [
+          -483.44569,
+          90.378686
+        ],
+        "rightHit": {
+          "t": -18.217206328944354,
+          "point": [
+            -493.081925,
+            89.870949
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 193,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.0819970954455262,
+          "point": [
+            -473.809456,
+            90.886423
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 6,
+      "index": 2485,
+      "p": 0.92758492,
+      "local_width": 19.288551,
+      "centerline": [
+        -483.496512,
+        91.981067
+      ],
+      "fast_lane": [
+        -474.971252,
+        92.409195
+      ],
+      "left_edge": [
+        -473.864375,
+        92.464781
+      ],
+      "right_edge": [
+        -493.12865,
+        91.497354
+      ],
+      "tangent": [
+        0.050156,
+        -0.998741
+      ],
+      "normal": [
+        0.998741,
+        0.050156
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.864375,
+          92.464781
+        ],
+        "segmentT": 0.581411,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 193,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.12865,
+          91.497354
+        ],
+        "segmentT": 0.506936,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.536003,
+      "lateral_reference_offset": 8.536003,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.288551,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.180279,
+        "endT": 1.108272,
+        "midpoint": [
+          -483.496512,
+          91.981067
+        ],
+        "rightHit": {
+          "t": -18.18027898031159,
+          "point": [
+            -493.12865,
+            91.497354
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 193,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.1082722200942026,
+          "point": [
+            -473.864375,
+            92.464781
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 7,
+      "index": 2484,
+      "p": 0.92721165,
+      "local_width": 19.277998,
+      "centerline": [
+        -483.54732,
+        93.583071
+      ],
+      "fast_lane": [
+        -475.048584,
+        93.988274
+      ],
+      "left_edge": [
+        -473.919258,
+        94.042118
+      ],
+      "right_edge": [
+        -493.175382,
+        93.124025
+      ],
+      "tangent": [
+        0.047624,
+        -0.998865
+      ],
+      "normal": [
+        0.998865,
+        0.047624
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.919258,
+          94.042118
+        ],
+        "segmentT": 0.627819,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 193,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.175382,
+          93.124025
+        ],
+        "segmentT": 0.618047,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.50839,
+      "lateral_reference_offset": 8.50839,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.277998,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.147389,
+        "endT": 1.130609,
+        "midpoint": [
+          -483.54732,
+          93.583071
+        ],
+        "rightHit": {
+          "t": -18.14738922585764,
+          "point": [
+            -493.175382,
+            93.124025
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 193,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.1306088740804097,
+          "point": [
+            -473.919258,
+            94.042118
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 8,
+      "index": 2483,
+      "p": 0.92683837,
+      "local_width": 19.267548,
+      "centerline": [
+        -483.598119,
+        95.184869
+      ],
+      "fast_lane": [
+        -475.121796,
+        95.566711
+      ],
+      "left_edge": [
+        -473.974105,
+        95.618412
+      ],
+      "right_edge": [
+        -493.222133,
+        94.751325
+      ],
+      "tangent": [
+        0.045002,
+        -0.998987
+      ],
+      "normal": [
+        0.998987,
+        0.045002
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.974105,
+          95.618412
+        ],
+        "segmentT": 0.674197,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 193,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.222133,
+          94.751325
+        ],
+        "segmentT": 0.7292,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.484919,
+      "lateral_reference_offset": 8.484919,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.267548,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.118693,
+        "endT": 1.148855,
+        "midpoint": [
+          -483.598119,
+          95.184869
+        ],
+        "rightHit": {
+          "t": -18.118693093585684,
+          "point": [
+            -493.222133,
+            94.751325
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 193,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.1488548750329564,
+          "point": [
+            -473.974105,
+            95.618412
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 9,
+      "index": 2482,
+      "p": 0.9264651,
+      "local_width": 19.25721,
+      "centerline": [
+        -483.648913,
+        96.786606
+      ],
+      "fast_lane": [
+        -475.190765,
+        97.144478
+      ],
+      "left_edge": [
+        -474.028915,
+        97.193637
+      ],
+      "right_edge": [
+        -493.26891,
+        96.379576
+      ],
+      "tangent": [
+        0.042273,
+        -0.999106
+      ],
+      "normal": [
+        0.999106,
+        0.042273
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -474.028915,
+          97.193637
+        ],
+        "segmentT": 0.720543,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 193,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.26891,
+          96.379576
+        ],
+        "segmentT": 0.840419,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.465716,
+      "lateral_reference_offset": 8.465715,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.25721,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.09432,
+        "endT": 1.16289,
+        "midpoint": [
+          -483.648913,
+          96.786606
+        ],
+        "rightHit": {
+          "t": -18.09432003340876,
+          "point": [
+            -493.26891,
+            96.379576
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 193,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.162889602366516,
+          "point": [
+            -474.028915,
+            97.193637
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 10,
+      "index": 2481,
+      "p": 0.92609183,
+      "local_width": 19.247007,
+      "centerline": [
+        -483.699693,
+        98.387967
+      ],
+      "fast_lane": [
+        -475.25528,
+        98.72155
+      ],
+      "left_edge": [
+        -474.083689,
+        98.767832
+      ],
+      "right_edge": [
+        -493.315696,
+        98.008103
+      ],
+      "tangent": [
+        0.039473,
+        -0.999221
+      ],
+      "normal": [
+        0.999221,
+        0.039473
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -474.083689,
+          98.767832
+        ],
+        "segmentT": 0.766859,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 193,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.315696,
+          98.008103
+        ],
+        "segmentT": 0.951657,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.450999,
+      "lateral_reference_offset": 8.450999,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.247007,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.074502,
+        "endT": 1.172505,
+        "midpoint": [
+          -483.699693,
+          98.387967
+        ],
+        "rightHit": {
+          "t": -18.074502470976945,
+          "point": [
+            -493.315696,
+            98.008103
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 193,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.1725048514957956,
+          "point": [
+            -474.083689,
+            98.767832
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 11,
+      "index": 2491,
+      "p": 0.92982456,
+      "local_width": 19.214546,
+      "centerline": [
+        -483.121173,
+        82.353476
+      ],
+      "fast_lane": [
+        -474.423584,
+        82.921913
+      ],
+      "left_edge": [
+        -473.534353,
+        82.980029
+      ],
+      "right_edge": [
+        -492.707994,
+        81.726923
+      ],
+      "tangent": [
+        0.065217,
+        -0.997871
+      ],
+      "normal": [
+        0.997871,
+        0.065217
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.534353,
+          82.980029
+        ],
+        "segmentT": 0.302351,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 192,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.707994,
+          81.726923
+        ],
+        "segmentT": 0.839743,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.716145,
+      "lateral_reference_offset": 8.716145,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.214546,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.323418,
+        "endT": 0.891128,
+        "midpoint": [
+          -483.121173,
+          82.353476
+        ],
+        "rightHit": {
+          "t": -18.323417678132582,
+          "point": [
+            -492.707994,
+            81.726923
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 192,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.8911278739245041,
+          "point": [
+            -473.534353,
+            82.980029
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 12,
+      "index": 2480,
+      "p": 0.92571855,
+      "local_width": 19.186803,
+      "centerline": [
+        -483.725373,
+        99.989126
+      ],
+      "fast_lane": [
+        -475.315338,
+        100.297958
+      ],
+      "left_edge": [
+        -474.138433,
+        100.341176
+      ],
+      "right_edge": [
+        -493.312313,
+        99.637075
+      ],
+      "tangent": [
+        0.036697,
+        -0.999326
+      ],
+      "normal": [
+        0.999326,
+        0.036697
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -474.138433,
+          100.341176
+        ],
+        "segmentT": 0.81315,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.312313,
+          99.637075
+        ],
+        "segmentT": 0.056783,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.415704,
+      "lateral_reference_offset": 8.415704,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.186803,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.009105,
+        "endT": 1.177698,
+        "midpoint": [
+          -483.725373,
+          99.989126
+        ],
+        "rightHit": {
+          "t": -18.00910502211104,
+          "point": [
+            -493.312313,
+            99.637075
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.1776978928876185,
+          "point": [
+            -474.138433,
+            100.341176
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 13,
+      "index": 2492,
+      "p": 0.93019784,
+      "local_width": 19.128951,
+      "centerline": [
+        -483.021623,
+        80.74623
+      ],
+      "fast_lane": [
+        -474.318024,
+        81.338692
+      ],
+      "left_edge": [
+        -473.47923,
+        81.39579
+      ],
+      "right_edge": [
+        -492.564015,
+        80.09667
+      ],
+      "tangent": [
+        0.067914,
+        -0.997691
+      ],
+      "normal": [
+        0.997691,
+        0.067914
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.47923,
+          81.39579
+        ],
+        "segmentT": 0.255739,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 192,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.564015,
+          80.09667
+        ],
+        "segmentT": 0.728514,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.72374,
+      "lateral_reference_offset": 8.72374,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.128951,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.288215,
+        "endT": 0.840735,
+        "midpoint": [
+          -483.021623,
+          80.74623
+        ],
+        "rightHit": {
+          "t": -18.288215282532388,
+          "point": [
+            -492.564015,
+            80.09667
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 192,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.8407354142571372,
+          "point": [
+            -473.47923,
+            81.39579
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 14,
+      "index": 2479,
+      "p": 0.92534528,
+      "local_width": 19.088237,
+      "centerline": [
+        -483.731767,
+        101.589712
+      ],
+      "fast_lane": [
+        -475.371033,
+        101.873703
+      ],
+      "left_edge": [
+        -474.19315,
+        101.913712
+      ],
+      "right_edge": [
+        -493.270385,
+        101.265711
+      ],
+      "tangent": [
+        0.033948,
+        -0.999424
+      ],
+      "normal": [
+        0.999424,
+        0.033948
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -474.19315,
+          101.913712
+        ],
+        "segmentT": 0.859417,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.270385,
+          101.265711
+        ],
+        "segmentT": 0.157171,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.365556,
+      "lateral_reference_offset": 8.365556,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.088237,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.909674,
+        "endT": 1.178563,
+        "midpoint": [
+          -483.731767,
+          101.589712
+        ],
+        "rightHit": {
+          "t": -17.90967445643276,
+          "point": [
+            -493.270385,
+            101.265711
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.1785626298371676,
+          "point": [
+            -474.19315,
+            101.913712
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 15,
+      "index": 2493,
+      "p": 0.93057111,
+      "local_width": 19.043415,
+      "centerline": [
+        -482.921936,
+        79.13715
+      ],
+      "fast_lane": [
+        -474.208008,
+        79.754982
+      ],
+      "left_edge": [
+        -473.424072,
+        79.810564
+      ],
+      "right_edge": [
+        -492.4198,
+        78.463735
+      ],
+      "tangent": [
+        0.070724,
+        -0.997496
+      ],
+      "normal": [
+        0.997496,
+        0.070724
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.424072,
+          79.810564
+        ],
+        "segmentT": 0.209099,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 192,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.4198,
+          78.463735
+        ],
+        "segmentT": 0.617102,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.735803,
+      "lateral_reference_offset": 8.735803,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 19.043415,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.257511,
+        "endT": 0.785904,
+        "midpoint": [
+          -482.921936,
+          79.13715
+        ],
+        "rightHit": {
+          "t": -18.257510628650028,
+          "point": [
+            -492.4198,
+            78.463735
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 192,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.7859041124219935,
+          "point": [
+            -473.424072,
+            79.810564
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 16,
+      "index": 2478,
+      "p": 0.924972,
+      "local_width": 18.989826,
+      "centerline": [
+        -483.738147,
+        103.189803
+      ],
+      "fast_lane": [
+        -475.422363,
+        103.448784
+      ],
+      "left_edge": [
+        -474.247835,
+        103.485363
+      ],
+      "right_edge": [
+        -493.228459,
+        102.894243
+      ],
+      "tangent": [
+        0.031128,
+        -0.999515
+      ],
+      "normal": [
+        0.999515,
+        0.031128
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -474.247835,
+          103.485363
+        ],
+        "segmentT": 0.905658,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.228459,
+          102.894243
+        ],
+        "segmentT": 0.257552,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.319816,
+      "lateral_reference_offset": 8.319816,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.989826,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.814729,
+        "endT": 1.175097,
+        "midpoint": [
+          -483.738147,
+          103.189803
+        ],
+        "rightHit": {
+          "t": -17.81472903684722,
+          "point": [
+            -493.228459,
+            102.894243
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.1750972895225698,
+          "point": [
+            -474.247835,
+            103.485363
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 17,
+      "index": 2471,
+      "p": 0.92235909,
+      "local_width": 18.97938,
+      "centerline": [
+        -483.445716,
+        114.380808
+      ],
+      "fast_lane": [
+        -475.641418,
+        114.452896
+      ],
+      "left_edge": [
+        -473.956431,
+        114.46846
+      ],
+      "right_edge": [
+        -492.935001,
+        114.293157
+      ],
+      "tangent": [
+        0.009237,
+        -0.999957
+      ],
+      "normal": [
+        0.999957,
+        0.009237
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.956431,
+          114.46846
+        ],
+        "segmentT": 0.224002,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.935001,
+          114.293157
+        ],
+        "segmentT": 0.960168,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 7.804631,
+      "lateral_reference_offset": 7.804631,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.97938,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.294321,
+        "endT": 1.685059,
+        "midpoint": [
+          -483.445716,
+          114.380808
+        ],
+        "rightHit": {
+          "t": -17.294321054303094,
+          "point": [
+            -492.935001,
+            114.293157
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.685059270885824,
+          "point": [
+            -473.956431,
+            114.46846
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 18,
+      "index": 2470,
+      "p": 0.92198582,
+      "local_width": 18.972313,
+      "centerline": [
+        -483.361267,
+        115.97049
+      ],
+      "fast_lane": [
+        -475.65387,
+        116.021851
+      ],
+      "left_edge": [
+        -473.875321,
+        116.033703
+      ],
+      "right_edge": [
+        -492.847213,
+        115.907276
+      ],
+      "tangent": [
+        0.006664,
+        -0.999978
+      ],
+      "normal": [
+        0.999978,
+        0.006664
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.875321,
+          116.033703
+        ],
+        "segmentT": 0.269088,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 1,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.847213,
+          115.907276
+        ],
+        "segmentT": 0.066199,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 7.707568,
+      "lateral_reference_offset": 7.707568,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.972313,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.193725,
+        "endT": 1.778588,
+        "midpoint": [
+          -483.361267,
+          115.97049
+        ],
+        "rightHit": {
+          "t": -17.193724514543597,
+          "point": [
+            -492.847213,
+            115.907276
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 1,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.7785884373788556,
+          "point": [
+            -473.875321,
+            116.033703
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 19,
+      "index": 2494,
+      "p": 0.93094438,
+      "local_width": 18.957965,
+      "centerline": [
+        -482.822159,
+        77.526708
+      ],
+      "fast_lane": [
+        -474.093414,
+        78.170784
+      ],
+      "left_edge": [
+        -473.368876,
+        78.224246
+      ],
+      "right_edge": [
+        -492.275441,
+        76.82917
+      ],
+      "tangent": [
+        0.073588,
+        -0.997289
+      ],
+      "normal": [
+        0.997289,
+        0.073588
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.368876,
+          78.224246
+        ],
+        "segmentT": 0.162426,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 192,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.275441,
+          76.82917
+        ],
+        "segmentT": 0.505579,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.752475,
+      "lateral_reference_offset": 8.752475,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.957965,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.231457,
+        "endT": 0.726508,
+        "midpoint": [
+          -482.822159,
+          77.526708
+        ],
+        "rightHit": {
+          "t": -18.231457386464697,
+          "point": [
+            -492.275441,
+            76.82917
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 192,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.7265077493525928,
+          "point": [
+            -473.368876,
+            78.224246
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 20,
+      "index": 2472,
+      "p": 0.92273236,
+      "local_width": 18.940382,
+      "centerline": [
+        -483.507116,
+        112.789076
+      ],
+      "fast_lane": [
+        -475.624878,
+        112.883141
+      ],
+      "left_edge": [
+        -474.037599,
+        112.902083
+      ],
+      "right_edge": [
+        -492.976632,
+        112.676069
+      ],
+      "tangent": [
+        0.011933,
+        -0.999929
+      ],
+      "normal": [
+        0.999929,
+        0.011933
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -474.037599,
+          112.902083
+        ],
+        "segmentT": 0.178883,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.976632,
+          112.676069
+        ],
+        "segmentT": 0.860493,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 7.882799,
+      "lateral_reference_offset": 7.882799,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.940382,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.35299,
+        "endT": 1.587392,
+        "midpoint": [
+          -483.507116,
+          112.789076
+        ],
+        "rightHit": {
+          "t": -17.35298973656797,
+          "point": [
+            -492.976632,
+            112.676069
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.5873921001698015,
+          "point": [
+            -474.037599,
+            112.902083
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 21,
+      "index": 2469,
+      "p": 0.92161254,
+      "local_width": 18.93448,
+      "centerline": [
+        -483.261447,
+        117.559109
+      ],
+      "fast_lane": [
+        -475.662323,
+        117.589951
+      ],
+      "left_edge": [
+        -473.794285,
+        117.597533
+      ],
+      "right_edge": [
+        -492.728609,
+        117.520686
+      ],
+      "tangent": [
+        0.004059,
+        -0.999992
+      ],
+      "normal": [
+        0.999992,
+        0.004059
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.794285,
+          117.597533
+        ],
+        "segmentT": 0.314134,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 1,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.728609,
+          117.520686
+        ],
+        "segmentT": 0.176546,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 7.599187,
+      "lateral_reference_offset": 7.599186,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.93448,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.066426,
+        "endT": 1.868054,
+        "midpoint": [
+          -483.261447,
+          117.559109
+        ],
+        "rightHit": {
+          "t": -17.06642629003736,
+          "point": [
+            -492.728609,
+            117.520686
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 1,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.8680536451978316,
+          "point": [
+            -473.794285,
+            117.597533
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 22,
+      "index": 2473,
+      "p": 0.92310564,
+      "local_width": 18.901656,
+      "centerline": [
+        -483.568605,
+        111.194362
+      ],
+      "fast_lane": [
+        -475.603943,
+        111.312653
+      ],
+      "left_edge": [
+        -474.118819,
+        111.33471
+      ],
+      "right_edge": [
+        -493.018391,
+        111.054014
+      ],
+      "tangent": [
+        0.01485,
+        -0.99989
+      ],
+      "normal": [
+        0.99989,
+        0.01485
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -474.118819,
+          111.33471
+        ],
+        "segmentT": 0.133735,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.018391,
+          111.054014
+        ],
+        "segmentT": 0.760511,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 7.96554,
+      "lateral_reference_offset": 7.96554,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.901656,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.416369,
+        "endT": 1.485288,
+        "midpoint": [
+          -483.568605,
+          111.194362
+        ],
+        "rightHit": {
+          "t": -17.416368515936668,
+          "point": [
+            -493.018391,
+            111.054014
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.4852879212625336,
+          "point": [
+            -474.118819,
+            111.33471
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 23,
+      "index": 2468,
+      "p": 0.92123927,
+      "local_width": 18.896683,
+      "centerline": [
+        -483.16166,
+        119.147042
+      ],
+      "fast_lane": [
+        -475.666595,
+        119.157188
+      ],
+      "left_edge": [
+        -473.713328,
+        119.159832
+      ],
+      "right_edge": [
+        -492.609993,
+        119.134252
+      ],
+      "tangent": [
+        0.001354,
+        -0.999999
+      ],
+      "normal": [
+        0.999999,
+        0.001354
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.713328,
+          119.159832
+        ],
+        "segmentT": 0.359136,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 1,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.609993,
+          119.134252
+        ],
+        "segmentT": 0.286903,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 7.495072,
+      "lateral_reference_offset": 7.495072,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 22,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.896683,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -16.943414,
+        "endT": 1.953269,
+        "midpoint": [
+          -483.16166,
+          119.147042
+        ],
+        "rightHit": {
+          "t": -16.943413774414918,
+          "point": [
+            -492.609993,
+            119.134252
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 1,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.9532690813855824,
+          "point": [
+            -473.713328,
+            119.159832
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 24,
+      "index": 2477,
+      "p": 0.92459873,
+      "local_width": 18.891456,
+      "centerline": [
+        -483.744479,
+        104.79045
+      ],
+      "fast_lane": [
+        -475.469116,
+        105.023109
+      ],
+      "left_edge": [
+        -474.302482,
+        105.055909
+      ],
+      "right_edge": [
+        -493.186476,
+        104.524991
+      ],
+      "tangent": [
+        0.028104,
+        -0.999605
+      ],
+      "normal": [
+        0.999605,
+        0.028104
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -474.302482,
+          105.055909
+        ],
+        "segmentT": 0.951866,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.186476,
+          104.524991
+        ],
+        "segmentT": 0.358069,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.278633,
+      "lateral_reference_offset": 8.278633,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.891456,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.724361,
+        "endT": 1.167095,
+        "midpoint": [
+          -483.744479,
+          104.79045
+        ],
+        "rightHit": {
+          "t": -17.72436126155252,
+          "point": [
+            -493.186476,
+            104.524991
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.1670947637960458,
+          "point": [
+            -474.302482,
+            105.055909
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 25,
+      "index": 2495,
+      "p": 0.93131766,
+      "local_width": 18.872619,
+      "centerline": [
+        -482.722347,
+        75.915514
+      ],
+      "fast_lane": [
+        -473.974182,
+        76.58609
+      ],
+      "left_edge": [
+        -473.313638,
+        76.636723
+      ],
+      "right_edge": [
+        -492.131056,
+        75.194305
+      ],
+      "tangent": [
+        0.076429,
+        -0.997075
+      ],
+      "normal": [
+        0.997075,
+        0.076429
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.313638,
+          76.636723
+        ],
+        "segmentT": 0.115718,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 192,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.131056,
+          75.194305
+        ],
+        "segmentT": 0.394036,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.773828,
+      "lateral_reference_offset": 8.773828,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.872619,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.210138,
+        "endT": 0.662482,
+        "midpoint": [
+          -482.722347,
+          75.915514
+        ],
+        "rightHit": {
+          "t": -18.21013790855281,
+          "point": [
+            -492.131056,
+            75.194305
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 192,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.6624815284854398,
+          "point": [
+            -473.313638,
+            76.636723
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 26,
+      "index": 2474,
+      "p": 0.92347891,
+      "local_width": 18.863268,
+      "centerline": [
+        -483.630196,
+        109.596236
+      ],
+      "fast_lane": [
+        -475.578217,
+        109.741409
+      ],
+      "left_edge": [
+        -474.200095,
+        109.766256
+      ],
+      "right_edge": [
+        -493.060298,
+        109.426216
+      ],
+      "tangent": [
+        0.018027,
+        -0.999838
+      ],
+      "normal": [
+        0.999838,
+        0.018027
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -474.200095,
+          109.766256
+        ],
+        "segmentT": 0.088556,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.060298,
+          109.426216
+        ],
+        "segmentT": 0.660175,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.053288,
+      "lateral_reference_offset": 8.053288,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.863268,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.484922,
+        "endT": 1.378346,
+        "midpoint": [
+          -483.630196,
+          109.596236
+        ],
+        "rightHit": {
+          "t": -17.484921707021545,
+          "point": [
+            -493.060298,
+            109.426216
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.378346141569852,
+          "point": [
+            -474.200095,
+            109.766256
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 27,
+      "index": 2467,
+      "p": 0.92086599,
+      "local_width": 18.858935,
+      "centerline": [
+        -483.061905,
+        120.734332
+      ],
+      "fast_lane": [
+        -475.666565,
+        120.723595
+      ],
+      "left_edge": [
+        -473.632448,
+        120.720642
+      ],
+      "right_edge": [
+        -492.491363,
+        120.748021
+      ],
+      "tangent": [
+        -0.001452,
+        -0.999999
+      ],
+      "normal": [
+        0.999999,
+        -0.001452
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.632448,
+          120.720642
+        ],
+        "segmentT": 0.404094,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 1,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.491363,
+          120.748021
+        ],
+        "segmentT": 0.397275,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 7.395348,
+      "lateral_reference_offset": 7.395348,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.858935,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -16.824815,
+        "endT": 2.034119,
+        "midpoint": [
+          -483.061905,
+          120.734332
+        ],
+        "rightHit": {
+          "t": -16.824815496065998,
+          "point": [
+            -492.491363,
+            120.748021
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 1,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 2.034119264528376,
+          "point": [
+            -473.632448,
+            120.720642
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 28,
+      "index": 2475,
+      "p": 0.92385218,
+      "local_width": 18.825212,
+      "centerline": [
+        -483.691885,
+        107.994974
+      ],
+      "fast_lane": [
+        -475.547272,
+        108.169411
+      ],
+      "left_edge": [
+        -474.281437,
+        108.196522
+      ],
+      "right_edge": [
+        -493.102333,
+        107.793426
+      ],
+      "tangent": [
+        0.021413,
+        -0.999771
+      ],
+      "normal": [
+        0.999771,
+        0.021413
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -474.281437,
+          108.196522
+        ],
+        "segmentT": 0.043341,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.102333,
+          107.793426
+        ],
+        "segmentT": 0.559532,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.146481,
+      "lateral_reference_offset": 8.146481,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.825212,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.559087,
+        "endT": 1.266125,
+        "midpoint": [
+          -483.691885,
+          107.994974
+        ],
+        "rightHit": {
+          "t": -17.559086564428107,
+          "point": [
+            -493.102333,
+            107.793426
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.2661251949199843,
+          "point": [
+            -474.281437,
+            108.196522
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 29,
+      "index": 2466,
+      "p": 0.92049272,
+      "local_width": 18.82124,
+      "centerline": [
+        -482.962178,
+        122.321017
+      ],
+      "fast_lane": [
+        -475.662048,
+        122.289131
+      ],
+      "left_edge": [
+        -473.551648,
+        122.279913
+      ],
+      "right_edge": [
+        -492.372708,
+        122.36212
+      ],
+      "tangent": [
+        -0.004368,
+        -0.99999
+      ],
+      "normal": [
+        0.99999,
+        -0.004368
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.551648,
+          122.279913
+        ],
+        "segmentT": 0.449009,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 1,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.372708,
+          122.36212
+        ],
+        "segmentT": 0.507669,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 7.3002,
+      "lateral_reference_offset": 7.3002,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.82124,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -16.71082,
+        "endT": 2.11042,
+        "midpoint": [
+          -482.962178,
+          122.321017
+        ],
+        "rightHit": {
+          "t": -16.710819506492463,
+          "point": [
+            -492.372708,
+            122.36212
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 1,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 2.1104203631809075,
+          "point": [
+            -473.551648,
+            122.279913
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 30,
+      "index": 2476,
+      "p": 0.92422546,
+      "local_width": 18.793126,
+      "centerline": [
+        -483.750755,
+        106.391958
+      ],
+      "fast_lane": [
+        -475.510864,
+        106.596642
+      ],
+      "left_edge": [
+        -474.357089,
+        106.625302
+      ],
+      "right_edge": [
+        -493.14442,
+        106.158614
+      ],
+      "tangent": [
+        0.024833,
+        -0.999692
+      ],
+      "normal": [
+        0.999692,
+        0.024833
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -474.357089,
+          106.625302
+        ],
+        "segmentT": 0.998041,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -493.14442,
+          106.158614
+        ],
+        "segmentT": 0.458764,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.242433,
+      "lateral_reference_offset": 8.242432,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.793126,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.638995,
+        "endT": 1.154131,
+        "midpoint": [
+          -483.750755,
+          106.391958
+        ],
+        "rightHit": {
+          "t": -17.638995466170872,
+          "point": [
+            -493.14442,
+            106.158614
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 1.154130722160543,
+          "point": [
+            -474.357089,
+            106.625302
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 31,
+      "index": 2496,
+      "p": 0.93169093,
+      "local_width": 18.787376,
+      "centerline": [
+        -482.622529,
+        74.30388
+      ],
+      "fast_lane": [
+        -473.850433,
+        75.000916
+      ],
+      "left_edge": [
+        -473.258357,
+        75.047963
+      ],
+      "right_edge": [
+        -491.986702,
+        73.559797
+      ],
+      "tangent": [
+        0.079211,
+        -0.996858
+      ],
+      "normal": [
+        0.996858,
+        0.079211
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.258357,
+          75.047963
+        ],
+        "segmentT": 0.068974,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 192,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -491.986702,
+          73.559797
+        ],
+        "segmentT": 0.282517,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.799746,
+      "lateral_reference_offset": 8.799746,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.787376,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.193435,
+        "endT": 0.593942,
+        "midpoint": [
+          -482.622529,
+          74.30388
+        ],
+        "rightHit": {
+          "t": -18.193434517392056,
+          "point": [
+            -491.986702,
+            73.559797
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 192,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.5939418416730815,
+          "point": [
+            -473.258357,
+            75.047963
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 32,
+      "index": 2465,
+      "p": 0.92011945,
+      "local_width": 18.78357,
+      "centerline": [
+        -482.862458,
+        123.907358
+      ],
+      "fast_lane": [
+        -475.652893,
+        123.853767
+      ],
+      "left_edge": [
+        -473.470932,
+        123.837548
+      ],
+      "right_edge": [
+        -492.253984,
+        123.977169
+      ],
+      "tangent": [
+        -0.007433,
+        -0.999972
+      ],
+      "normal": [
+        0.999972,
+        -0.007433
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.470932,
+          123.837548
+        ],
+        "segmentT": 0.493876,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 1,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.253984,
+          123.977169
+        ],
+        "segmentT": 0.618128,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 7.209764,
+      "lateral_reference_offset": 7.209764,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.78357,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -16.601549,
+        "endT": 2.182021,
+        "midpoint": [
+          -482.862458,
+          123.907358
+        ],
+        "rightHit": {
+          "t": -16.601549236260077,
+          "point": [
+            -492.253984,
+            123.977169
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 1,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 2.1820208085727146,
+          "point": [
+            -473.470932,
+            123.837548
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 33,
+      "index": 2464,
+      "p": 0.91974617,
+      "local_width": 18.745962,
+      "centerline": [
+        -482.762753,
+        125.493261
+      ],
+      "fast_lane": [
+        -475.638794,
+        125.417465
+      ],
+      "left_edge": [
+        -473.390302,
+        125.393542
+      ],
+      "right_edge": [
+        -492.135203,
+        125.59298
+      ],
+      "tangent": [
+        -0.010639,
+        -0.999943
+      ],
+      "normal": [
+        0.999943,
+        -0.010639
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.390302,
+          125.393542
+        ],
+        "segmentT": 0.538696,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 1,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.135203,
+          125.59298
+        ],
+        "segmentT": 0.728639,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 7.124362,
+      "lateral_reference_offset": 7.124362,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.745962,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -16.497343,
+        "endT": 2.248619,
+        "midpoint": [
+          -482.762753,
+          125.493261
+        ],
+        "rightHit": {
+          "t": -16.497342727664687,
+          "point": [
+            -492.135203,
+            125.59298
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 1,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 2.2486190872089966,
+          "point": [
+            -473.390302,
+            125.393542
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 34,
+      "index": 2463,
+      "p": 0.9193729,
+      "local_width": 18.704938,
+      "centerline": [
+        -482.66496,
+        127.077784
+      ],
+      "fast_lane": [
+        -475.619629,
+        126.980209
+      ],
+      "left_edge": [
+        -473.313388,
+        126.948269
+      ],
+      "right_edge": [
+        -492.016532,
+        127.207299
+      ],
+      "tangent": [
+        -0.013848,
+        -0.999904
+      ],
+      "normal": [
+        0.999904,
+        -0.013848
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 5,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.313388,
+          126.948269
+        ],
+        "segmentT": 0.138471,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 1,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -492.016532,
+          127.207299
+        ],
+        "segmentT": 0.839048,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 7.046007,
+      "lateral_reference_offset": 7.046007,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.704938,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -16.398476,
+        "endT": 2.306463,
+        "midpoint": [
+          -482.66496,
+          127.077784
+        ],
+        "rightHit": {
+          "t": -16.398475633632223,
+          "point": [
+            -492.016532,
+            127.207299
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 1,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 2.306462591110742,
+          "point": [
+            -473.313388,
+            126.948269
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 5,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 35,
+      "index": 2497,
+      "p": 0.9320642,
+      "local_width": 18.70222,
+      "centerline": [
+        -482.522661,
+        72.691308
+      ],
+      "fast_lane": [
+        -473.722229,
+        73.415298
+      ],
+      "left_edge": [
+        -473.203035,
+        73.458011
+      ],
+      "right_edge": [
+        -491.842287,
+        71.924604
+      ],
+      "tangent": [
+        0.081991,
+        -0.996633
+      ],
+      "normal": [
+        0.996633,
+        0.081991
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 104,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.203035,
+          73.458011
+        ],
+        "segmentT": 0.022194,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 192,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -491.842287,
+          71.924604
+        ],
+        "segmentT": 0.170951,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.830162,
+      "lateral_reference_offset": 8.830162,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.70222,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.181272,
+        "endT": 0.520948,
+        "midpoint": [
+          -482.522661,
+          72.691308
+        ],
+        "rightHit": {
+          "t": -18.181272492694877,
+          "point": [
+            -491.842287,
+            71.924604
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 192,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.5209478697043801,
+          "point": [
+            -473.203035,
+            73.458011
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 104,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 36,
+      "index": 2499,
+      "p": 0.93281075,
+      "local_width": 18.689878,
+      "centerline": [
+        -482.198895,
+        69.472622
+      ],
+      "fast_lane": [
+        -473.452118,
+        70.24279
+      ],
+      "left_edge": [
+        -472.889972,
+        70.292288
+      ],
+      "right_edge": [
+        -491.507817,
+        68.652957
+      ],
+      "tangent": [
+        0.087712,
+        -0.996146
+      ],
+      "normal": [
+        0.996146,
+        0.087712
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 103,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -472.889972,
+          70.292288
+        ],
+        "segmentT": 0.900478,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 191,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -491.507817,
+          68.652957
+        ],
+        "segmentT": 0.947455,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.780619,
+      "lateral_reference_offset": 8.780618,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.689878,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.125557,
+        "endT": 0.564321,
+        "midpoint": [
+          -482.198895,
+          69.472622
+        ],
+        "rightHit": {
+          "t": -18.125557357401476,
+          "point": [
+            -491.507817,
+            68.652957
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 191,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.5643206642640697,
+          "point": [
+            -472.889972,
+            70.292288
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 103,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 37,
+      "index": 2498,
+      "p": 0.93243748,
+      "local_width": 18.687106,
+      "centerline": [
+        -482.387833,
+        71.080154
+      ],
+      "fast_lane": [
+        -473.589508,
+        71.829254
+      ],
+      "left_edge": [
+        -473.077963,
+        71.872808
+      ],
+      "right_edge": [
+        -491.697704,
+        70.287501
+      ],
+      "tangent": [
+        0.084834,
+        -0.996395
+      ],
+      "normal": [
+        0.996395,
+        0.084834
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 103,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.077963,
+          71.872808
+        ],
+        "segmentT": 0.965709,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 192,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -491.697704,
+          70.287501
+        ],
+        "segmentT": 0.059255,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.830157,
+      "lateral_reference_offset": 8.830157,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.687106,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.173711,
+        "endT": 0.513396,
+        "midpoint": [
+          -482.387833,
+          71.080154
+        ],
+        "rightHit": {
+          "t": -18.173710556080763,
+          "point": [
+            -491.697704,
+            70.287501
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 192,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.5133958750955957,
+          "point": [
+            -473.077963,
+            71.872808
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 103,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 38,
+      "index": 2462,
+      "p": 0.91899963,
+      "local_width": 18.662024,
+      "centerline": [
+        -482.568453,
+        128.660063
+      ],
+      "fast_lane": [
+        -475.59552,
+        128.542038
+      ],
+      "left_edge": [
+        -473.238777,
+        128.502147
+      ],
+      "right_edge": [
+        -491.898129,
+        128.817978
+      ],
+      "tangent": [
+        -0.016924,
+        -0.999857
+      ],
+      "normal": [
+        0.999857,
+        -0.016924
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 5,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.238777,
+          128.502147
+        ],
+        "segmentT": 0.052832,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 1,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -491.898129,
+          128.817978
+        ],
+        "segmentT": 0.949208,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 6.973932,
+      "lateral_reference_offset": 6.973932,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.662024,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -16.304944,
+        "endT": 2.35708,
+        "midpoint": [
+          -482.568453,
+          128.660063
+        ],
+        "rightHit": {
+          "t": -16.304943998119462,
+          "point": [
+            -491.898129,
+            128.817978
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 1,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 2.3570804718564147,
+          "point": [
+            -473.238777,
+            128.502147
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 5,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 39,
+      "index": 2500,
+      "p": 0.93318402,
+      "local_width": 18.641619,
+      "centerline": [
+        -481.984381,
+        67.866625
+      ],
+      "fast_lane": [
+        -473.310089,
+        68.655899
+      ],
+      "left_edge": [
+        -472.701919,
+        68.711236
+      ],
+      "right_edge": [
+        -491.266844,
+        67.022013
+      ],
+      "tangent": [
+        0.090616,
+        -0.995886
+      ],
+      "normal": [
+        0.995886,
+        0.090616
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 103,
+        "distanceToLoop": 1e-06,
+        "closestPoint": [
+          -472.701918,
+          68.711236
+        ],
+        "segmentT": 0.835225,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 191,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -491.266844,
+          67.022013
+        ],
+        "segmentT": 0.835585,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.710126,
+      "lateral_reference_offset": 8.710126,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.641619,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -18.030936,
+        "endT": 0.610683,
+        "midpoint": [
+          -481.984381,
+          67.866625
+        ],
+        "rightHit": {
+          "t": -18.030935847990392,
+          "point": [
+            -491.266844,
+            67.022013
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 191,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.6106828824982342,
+          "point": [
+            -472.701919,
+            68.711236
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 103,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 40,
+      "index": 2501,
+      "p": 0.9335573,
+      "local_width": 18.593491,
+      "centerline": [
+        -481.769779,
+        66.259972
+      ],
+      "fast_lane": [
+        -473.1633,
+        67.068619
+      ],
+      "left_edge": [
+        -472.5138,
+        67.129645
+      ],
+      "right_edge": [
+        -491.025758,
+        65.390298
+      ],
+      "tangent": [
+        0.093546,
+        -0.995615
+      ],
+      "normal": [
+        0.995615,
+        0.093546
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 103,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -472.5138,
+          67.129645
+        ],
+        "segmentT": 0.76995,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 191,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -491.025758,
+          65.390298
+        ],
+        "segmentT": 0.723663,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.644385,
+      "lateral_reference_offset": 8.644385,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.593491,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.941131,
+        "endT": 0.65236,
+        "midpoint": [
+          -481.769779,
+          66.259972
+        ],
+        "rightHit": {
+          "t": -17.941130650113312,
+          "point": [
+            -491.025758,
+            65.390298
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 191,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.6523601997209384,
+          "point": [
+            -472.5138,
+            67.129645
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 103,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 41,
+      "index": 2461,
+      "p": 0.91862635,
+      "local_width": 18.586377,
+      "centerline": [
+        -482.440108,
+        130.239313
+      ],
+      "fast_lane": [
+        -475.566772,
+        130.103012
+      ],
+      "left_edge": [
+        -473.148746,
+        130.055062
+      ],
+      "right_edge": [
+        -491.73147,
+        130.423564
+      ],
+      "tangent": [
+        -0.019826,
+        -0.999803
+      ],
+      "normal": [
+        0.999803,
+        -0.019826
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.148746,
+          130.055062
+        ],
+        "segmentT": 0.67297,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 2,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -491.73147,
+          130.423564
+        ],
+        "segmentT": 0.068732,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 6.874687,
+      "lateral_reference_offset": 6.874687,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.586377,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -16.167876,
+        "endT": 2.418501,
+        "midpoint": [
+          -482.440108,
+          130.239313
+        ],
+        "rightHit": {
+          "t": -16.167875586671613,
+          "point": [
+            -491.73147,
+            130.423564
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 2,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 2.4185011915673025,
+          "point": [
+            -473.148746,
+            130.055062
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 42,
+      "index": 2502,
+      "p": 0.93393057,
+      "local_width": 18.545524,
+      "centerline": [
+        -481.555124,
+        64.652906
+      ],
+      "fast_lane": [
+        -473.01178,
+        65.48098
+      ],
+      "left_edge": [
+        -472.325615,
+        65.547487
+      ],
+      "right_edge": [
+        -490.784633,
+        63.758324
+      ],
+      "tangent": [
+        0.096474,
+        -0.995335
+      ],
+      "normal": [
+        0.995335,
+        0.096474
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 103,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -472.325615,
+          65.547487
+        ],
+        "segmentT": 0.704651,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 191,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -490.784633,
+          63.758324
+        ],
+        "segmentT": 0.611723,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.583381,
+      "lateral_reference_offset": 8.583381,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.545524,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.856144,
+        "endT": 0.689381,
+        "midpoint": [
+          -481.555124,
+          64.652906
+        ],
+        "rightHit": {
+          "t": -17.856143529246584,
+          "point": [
+            -490.784633,
+            63.758324
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 191,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.6893805385748456,
+          "point": [
+            -472.325615,
+            65.547487
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 103,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 43,
+      "index": 2503,
+      "p": 0.93430384,
+      "local_width": 18.497726,
+      "centerline": [
+        -481.340428,
+        63.045499
+      ],
+      "fast_lane": [
+        -472.855499,
+        63.892998
+      ],
+      "left_edge": [
+        -472.137358,
+        63.964728
+      ],
+      "right_edge": [
+        -490.543497,
+        62.12627
+      ],
+      "tangent": [
+        0.099388,
+        -0.995049
+      ],
+      "normal": [
+        0.995049,
+        0.099388
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 103,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -472.137358,
+          63.964728
+        ],
+        "segmentT": 0.639328,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 191,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -490.543497,
+          62.12627
+        ],
+        "segmentT": 0.499778,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.527149,
+      "lateral_reference_offset": 8.527149,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.497726,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.776012,
+        "endT": 0.721714,
+        "midpoint": [
+          -481.340428,
+          63.045499
+        ],
+        "rightHit": {
+          "t": -17.77601190831133,
+          "point": [
+            -490.543497,
+            62.12627
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 191,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.7217142869867512,
+          "point": [
+            -472.137358,
+            63.964728
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 103,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 44,
+      "index": 2460,
+      "p": 0.91825308,
+      "local_width": 18.45982,
+      "centerline": [
+        -482.295857,
+        131.816444
+      ],
+      "fast_lane": [
+        -475.53363,
+        131.66301
+      ],
+      "left_edge": [
+        -473.068322,
+        131.607073
+      ],
+      "right_edge": [
+        -491.523392,
+        132.025815
+      ],
+      "tangent": [
+        -0.022684,
+        -0.999743
+      ],
+      "normal": [
+        0.999743,
+        -0.022684
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -473.068322,
+          131.607073
+        ],
+        "segmentT": 0.717675,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 2,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -491.523392,
+          132.025815
+        ],
+        "segmentT": 0.196348,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 6.763967,
+      "lateral_reference_offset": 6.763968,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.45982,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -15.993878,
+        "endT": 2.465942,
+        "midpoint": [
+          -482.295857,
+          131.816444
+        ],
+        "rightHit": {
+          "t": -15.993877525399837,
+          "point": [
+            -491.523392,
+            132.025815
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 2,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 2.4659422088088285,
+          "point": [
+            -473.068322,
+            131.607073
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 45,
+      "index": 2504,
+      "p": 0.93467712,
+      "local_width": 18.435782,
+      "centerline": [
+        -481.13294,
+        61.437679
+      ],
+      "fast_lane": [
+        -472.694519,
+        62.304649
+      ],
+      "left_edge": [
+        -471.963318,
+        62.379773
+      ],
+      "right_edge": [
+        -490.302563,
+        60.495584
+      ],
+      "tangent": [
+        0.102203,
+        -0.994764
+      ],
+      "normal": [
+        0.994764,
+        0.102203
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 8,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -471.963318,
+          62.379773
+        ],
+        "segmentT": 0.88167,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 191,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -490.302563,
+          60.495584
+        ],
+        "segmentT": 0.387926,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.482841,
+      "lateral_reference_offset": 8.482841,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.435782,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.700732,
+        "endT": 0.73505,
+        "midpoint": [
+          -481.13294,
+          61.437679
+        ],
+        "rightHit": {
+          "t": -17.700732075730045,
+          "point": [
+            -490.302563,
+            60.495584
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 191,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.7350499240215337,
+          "point": [
+            -471.963318,
+            62.379773
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 8,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 46,
+      "index": 2505,
+      "p": 0.93505039,
+      "local_width": 18.338451,
+      "centerline": [
+        -480.943279,
+        59.828619
+      ],
+      "fast_lane": [
+        -472.529083,
+        60.715916
+      ],
+      "left_edge": [
+        -471.824613,
+        60.790204
+      ],
+      "right_edge": [
+        -490.061944,
+        58.867034
+      ],
+      "tangent": [
+        0.104871,
+        -0.994486
+      ],
+      "normal": [
+        0.994486,
+        0.104871
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 8,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -471.824613,
+          60.790204
+        ],
+        "segmentT": 0.986202,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 191,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -490.061944,
+          58.867034
+        ],
+        "segmentT": 0.276221,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.46085,
+      "lateral_reference_offset": 8.46085,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.338451,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.630076,
+        "endT": 0.708376,
+        "midpoint": [
+          -480.943279,
+          59.828619
+        ],
+        "rightHit": {
+          "t": -17.630075836843897,
+          "point": [
+            -490.061944,
+            58.867034
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 191,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.7083756188841196,
+          "point": [
+            -471.824613,
+            60.790204
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 8,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 47,
+      "index": 2459,
+      "p": 0.91787981,
+      "local_width": 18.333472,
+      "centerline": [
+        -482.151696,
+        133.392496
+      ],
+      "fast_lane": [
+        -475.496002,
+        133.222031
+      ],
+      "left_edge": [
+        -472.987965,
+        133.157795
+      ],
+      "right_edge": [
+        -491.315427,
+        133.627197
+      ],
+      "tangent": [
+        -0.025604,
+        -0.999672
+      ],
+      "normal": [
+        0.999672,
+        -0.025604
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 0,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -472.987965,
+          133.157795
+        ],
+        "segmentT": 0.762343,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 2,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -491.315427,
+          133.627197
+        ],
+        "segmentT": 0.323895,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 6.657877,
+      "lateral_reference_offset": 6.657877,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 18,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.333472,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -15.824613,
+        "endT": 2.508859,
+        "midpoint": [
+          -482.151696,
+          133.392496
+        ],
+        "rightHit": {
+          "t": -15.82461313742286,
+          "point": [
+            -491.315427,
+            133.627197
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 2,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 2.5088592822527134,
+          "point": [
+            -472.987965,
+            133.157795
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 0,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 48,
+      "index": 2506,
+      "p": 0.93542367,
+      "local_width": 18.326316,
+      "centerline": [
+        -480.711602,
+        58.22532
+      ],
+      "fast_lane": [
+        -472.359406,
+        59.126789
+      ],
+      "left_edge": [
+        -471.601354,
+        59.208607
+      ],
+      "right_edge": [
+        -489.821849,
+        57.242033
+      ],
+      "tangent": [
+        0.107309,
+        -0.994226
+      ],
+      "normal": [
+        0.994226,
+        0.107309
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 9,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -471.601354,
+          59.208607
+        ],
+        "segmentT": 0.101076,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 191,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -489.821849,
+          57.242033
+        ],
+        "segmentT": 0.164759,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.400704,
+      "lateral_reference_offset": 8.400704,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.326316,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.563862,
+        "endT": 0.762454,
+        "midpoint": [
+          -480.711602,
+          58.22532
+        ],
+        "rightHit": {
+          "t": -17.563861692342805,
+          "point": [
+            -489.821849,
+            57.242033
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 191,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.7624541097592982,
+          "point": [
+            -471.601354,
+            59.208607
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 9,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 49,
+      "index": 2507,
+      "p": 0.93579694,
+      "local_width": 18.308994,
+      "centerline": [
+        -480.482767,
+        56.622723
+      ],
+      "fast_lane": [
+        -472.186005,
+        57.537266
+      ],
+      "left_edge": [
+        -471.383384,
+        57.625738
+      ],
+      "right_edge": [
+        -489.58215,
+        55.619708
+      ],
+      "tangent": [
+        0.109565,
+        -0.99398
+      ],
+      "normal": [
+        0.99398,
+        0.109565
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 103,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -471.383384,
+          57.625738
+        ],
+        "segmentT": 0.377707,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 191,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -489.58215,
+          55.619708
+        ],
+        "segmentT": 0.053481,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.347014,
+      "lateral_reference_offset": 8.347015,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 20,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.308994,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.501512,
+        "endT": 0.807482,
+        "midpoint": [
+          -480.482767,
+          56.622723
+        ],
+        "rightHit": {
+          "t": -17.501511550603908,
+          "point": [
+            -489.58215,
+            55.619708
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 191,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.8074819565115537,
+          "point": [
+            -471.383384,
+            57.625738
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 103,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    },
+    {
+      "rank": 50,
+      "index": 2508,
+      "p": 0.93617021,
+      "local_width": 18.210869,
+      "centerline": [
+        -480.243045,
+        55.021383
+      ],
+      "fast_lane": [
+        -472.008942,
+        55.947369
+      ],
+      "left_edge": [
+        -471.194647,
+        56.038942
+      ],
+      "right_edge": [
+        -489.291443,
+        54.003824
+      ],
+      "tangent": [
+        0.111753,
+        -0.993736
+      ],
+      "normal": [
+        0.993736,
+        0.111753
+      ],
+      "edgeFromSmallInternalOrAuxiliaryLoop": true,
+      "left_edge_source": {
+        "loopId": 33,
+        "sourceLoopId": 360,
+        "classification": "internal_hole",
+        "segmentIndex": 103,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -471.194647,
+          56.038942
+        ],
+        "segmentT": 0.312217,
+        "area": 301.403132,
+        "perimeter": 2629.417872,
+        "pointCount": 106,
+        "isSmallLoop": true,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "right_edge_source": {
+        "loopId": 1,
+        "sourceLoopId": 357,
+        "classification": "internal_hole",
+        "segmentIndex": 190,
+        "distanceToLoop": 0.0,
+        "closestPoint": [
+          -489.291443,
+          54.003824
+        ],
+        "segmentT": 0.947962,
+        "area": 421157.407717,
+        "perimeter": 4349.974344,
+        "pointCount": 195,
+        "isSmallLoop": false,
+        "isInternalLoop": true,
+        "isAuxiliaryLoop": false,
+        "isSmallInternalOrAuxiliary": true
+      },
+      "distance_fast_lane_to_centerline": 8.286006,
+      "lateral_reference_offset": 8.286007,
+      "valid": true,
+      "interpolated": false,
+      "invalidReason": null,
+      "allIntersectionCount": 22,
+      "selectedIntervalIndex": 1,
+      "selectedIntervalWidth": 18.210869,
+      "selectedIntervalContainsFastLane": true,
+      "leftLoopType": "internal_hole",
+      "rightLoopType": "internal_hole",
+      "midpointInsideSurface": true,
+      "fastLaneInsideSurface": true,
+      "correctionReason": null,
+      "intervalInternalHoleToInternalHole": true,
+      "intervalInternalHoleJump": false,
+      "selectedInterval": {
+        "startT": -17.391441,
+        "endT": 0.819427,
+        "midpoint": [
+          -480.243045,
+          55.021383
+        ],
+        "rightHit": {
+          "t": -17.391441077701934,
+          "point": [
+            -489.291443,
+            54.003824
+          ],
+          "loopId": 1,
+          "sourceLoopId": 357,
+          "loopType": "internal_hole",
+          "loopArea": 421157.407717,
+          "loopPerimeter": 4349.974344,
+          "segmentIndex": 190,
+          "mergedHitCount": 1
+        },
+        "leftHit": {
+          "t": 0.8194274992548148,
+          "point": [
+            -471.194647,
+            56.038942
+          ],
+          "loopId": 33,
+          "sourceLoopId": 360,
+          "loopType": "internal_hole",
+          "loopArea": 301.403132,
+          "loopPerimeter": 2629.417872,
+          "segmentIndex": 103,
+          "mergedHitCount": 1
+        }
+      },
+      "surface_component": {
+        "componentId": 0,
+        "triangleCount": 92893,
+        "area": 97585.551379,
+        "surfaceCounts": {
+          "ROAD": 69938,
+          "KERB": 15400,
+          "CURB": 7555
+        },
+        "includedSurfaceKeys": [
+          "ROAD",
+          "CURB",
+          "KERB"
+        ]
+      }
+    }
+  ],
+  "sourceFile": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\track_edges_interval_raycast_vhe_interlagos.json"
+}

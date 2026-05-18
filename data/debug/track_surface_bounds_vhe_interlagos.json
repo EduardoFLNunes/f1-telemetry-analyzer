@@ -1,0 +1,276 @@
+{
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "projection": "mapX = worldX, mapY = -worldZ",
+  "bounds": {
+    "minX": -495.749939,
+    "maxX": 325.542969,
+    "minY": -549.530334,
+    "maxY": 642.826233,
+    "width": 821.292908,
+    "height": 1192.356567
+  },
+  "meshBounds": [
+    {
+      "meshName": "1kerb003",
+      "matchedSurface": "KERB",
+      "bounds": {
+        "minX": -415.829803,
+        "maxX": 152.410522,
+        "minY": -486.782501,
+        "maxY": 455.09967,
+        "width": 568.240325,
+        "height": 941.882171
+      },
+      "capturedTriangles": 1186
+    },
+    {
+      "meshName": "1road002",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": -493.686035,
+        "maxX": 190.657349,
+        "minY": -495.018799,
+        "maxY": 563.641235,
+        "width": 684.343384,
+        "height": 1058.660034
+      },
+      "capturedTriangles": 9606
+    },
+    {
+      "meshName": "1curb002",
+      "matchedSurface": "CURB",
+      "bounds": {
+        "minX": -359.582703,
+        "maxX": -250.843552,
+        "minY": 292.169312,
+        "maxY": 529.251831,
+        "width": 108.739151,
+        "height": 237.082519
+      },
+      "capturedTriangles": 692
+    },
+    {
+      "meshName": "1road006",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": -375.191803,
+        "maxX": -274.154785,
+        "minY": 461.044312,
+        "maxY": 484.533569,
+        "width": 101.037018,
+        "height": 23.489257
+      },
+      "capturedTriangles": 99
+    },
+    {
+      "meshName": "1road005",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": -377.190063,
+        "maxX": -253.76355,
+        "minY": 460.114258,
+        "maxY": 528.27417,
+        "width": 123.426513,
+        "height": 68.159912
+      },
+      "capturedTriangles": 720
+    },
+    {
+      "meshName": "1curb004",
+      "matchedSurface": "CURB",
+      "bounds": {
+        "minX": -415.365051,
+        "maxX": 175.773315,
+        "minY": -451.754608,
+        "maxY": 527.394348,
+        "width": 591.138366,
+        "height": 979.148956
+      },
+      "capturedTriangles": 1288
+    },
+    {
+      "meshName": "1road004",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": -495.749939,
+        "maxX": -402.790222,
+        "minY": 62.551983,
+        "maxY": 416.799194,
+        "width": 92.959717,
+        "height": 354.247211
+      },
+      "capturedTriangles": 314
+    },
+    {
+      "meshName": "1road003",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": -493.644928,
+        "maxX": 171.070862,
+        "minY": -537.400757,
+        "maxY": 515.819336,
+        "width": 664.71579,
+        "height": 1053.220093
+      },
+      "capturedTriangles": 3003
+    },
+    {
+      "meshName": "1curb001",
+      "matchedSurface": "CURB",
+      "bounds": {
+        "minX": -431.946198,
+        "maxX": 176.955139,
+        "minY": -465.272919,
+        "maxY": 560.35083,
+        "width": 608.901337,
+        "height": 1025.623749
+      },
+      "capturedTriangles": 5749
+    },
+    {
+      "meshName": "1kerb002",
+      "matchedSurface": "KERB",
+      "bounds": {
+        "minX": -412.364471,
+        "maxX": 193.438416,
+        "minY": -541.527039,
+        "maxY": 453.841583,
+        "width": 605.802887,
+        "height": 995.368622
+      },
+      "capturedTriangles": 1500
+    },
+    {
+      "meshName": "1kerb001",
+      "matchedSurface": "KERB",
+      "bounds": {
+        "minX": -430.312866,
+        "maxX": 169.453186,
+        "minY": -478.371124,
+        "maxY": 559.520996,
+        "width": 599.766052,
+        "height": 1037.89212
+      },
+      "capturedTriangles": 12724
+    },
+    {
+      "meshName": "roadverge",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": -493.992126,
+        "maxX": 323.105743,
+        "minY": -549.530334,
+        "maxY": 642.826233,
+        "width": 817.097869,
+        "height": 1192.356567
+      },
+      "capturedTriangles": 11459
+    },
+    {
+      "meshName": "roadline004",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": -493.586029,
+        "maxX": 190.557312,
+        "minY": -494.918762,
+        "maxY": 563.54126,
+        "width": 684.143341,
+        "height": 1058.460022
+      },
+      "capturedTriangles": 15370
+    },
+    {
+      "meshName": "roadline006",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": -402.901428,
+        "maxX": -333.042664,
+        "minY": -433.650391,
+        "maxY": -167.641937,
+        "width": 69.858764,
+        "height": 266.008454
+      },
+      "capturedTriangles": 92
+    },
+    {
+      "meshName": "roadline003",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": -477.964539,
+        "maxX": -416.902313,
+        "minY": -188.76947,
+        "maxY": 25.054592,
+        "width": 61.062226,
+        "height": 213.824062
+      },
+      "capturedTriangles": 408
+    },
+    {
+      "meshName": "roadline001",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": 130.075897,
+        "maxX": 325.542969,
+        "minY": -370.494507,
+        "maxY": -26.783997,
+        "width": 195.467072,
+        "height": 343.71051
+      },
+      "capturedTriangles": 6162
+    },
+    {
+      "meshName": "roadline002",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": 148.359375,
+        "maxX": 169.288696,
+        "minY": -319.234436,
+        "maxY": -241.627029,
+        "width": 20.929321,
+        "height": 77.607407
+      },
+      "capturedTriangles": 66
+    },
+    {
+      "meshName": "roadline005",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": -402.901428,
+        "maxX": -333.042664,
+        "minY": -433.650391,
+        "maxY": -167.641937,
+        "width": 69.858764,
+        "height": 266.008454
+      },
+      "capturedTriangles": 92
+    },
+    {
+      "meshName": "roadlineout",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": -416.347534,
+        "maxX": 291.165405,
+        "minY": -384.295654,
+        "maxY": 636.607788,
+        "width": 707.512939,
+        "height": 1020.903442
+      },
+      "capturedTriangles": 1990
+    },
+    {
+      "meshName": "1road001",
+      "matchedSurface": "ROAD",
+      "bounds": {
+        "minX": -485.354248,
+        "maxX": 188.78772,
+        "minY": -488.598663,
+        "maxY": 558.173401,
+        "width": 674.141968,
+        "height": 1046.772064
+      },
+      "capturedTriangles": 30287
+    }
+  ],
+  "diagnostics": []
+}

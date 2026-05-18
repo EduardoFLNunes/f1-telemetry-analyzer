@@ -1,0 +1,165 @@
+structure,field_name,data_type,array_length,current_value,unit,category,description,update_frequency,used_by_backend,exposed_by_api,notes
+Physics,packetId,c_long,1,2260314,integer/enum,unknown,Incrementing packet counter for the shared memory page.,high_frequency_physics_tick,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,gas,c_float,1,1.0,0-1,car_controls,Throttle input.,high_frequency_physics_tick,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,brake,c_float,1,0.0,0-1,brakes,Brake input.,high_frequency_physics_tick,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,fuel,c_float,1,27.407405853271484,L/laps,fuel,Current fuel amount.,high_frequency_physics_tick,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,gear,c_long,1,5,integer/enum,drivetrain,"Raw AC gear value: 0=reverse, 1=neutral, 2=first gear.",high_frequency_physics_tick,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,rpms,c_long,1,7281,rpm,engine,Engine speed.,high_frequency_physics_tick,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,steerAngle,c_float,1,-0.03749338909983635,rad,car_controls,Steering input/angle reported by AC.,high_frequency_physics_tick,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,speedKmh,c_float,1,192.5050811767578,km/h,car_speed,Current car speed in km/h.,high_frequency_physics_tick,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,velocity,c_float,3,"[-50.56578826904297, 4.6236162185668945, 16.767620086669922]",m/s,car_speed,Car velocity vector.,high_frequency_physics_tick,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,accG,c_float,3,"[0.9968234300613403, 0.3110707104206085, 0.3157564103603363]",g,car_speed,Acceleration vector in G.,high_frequency_physics_tick,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,wheelSlip,c_float,4,"[0.09451243281364441, 0.17167802155017853, 0.1267136186361313, 0.2302388995885849]",ratio,tyres,"Wheel slip per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,wheelLoad,c_float,4,"[934.6050415039062, 3280.82177734375, 4407.572265625, 5274.294921875]",N,tyres,"Wheel load per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,wheelsPressure,c_float,4,"[19.896671295166016, 20.589523315429688, 18.708084106445312, 18.93136215209961]",psi,tyres,"Tyre pressure per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,wheelAngularSpeed,c_float,4,"[164.86920166015625, 165.9242706298828, 167.9610595703125, 167.9610595703125]",rad/s,tyres,"Wheel angular speed per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,tyreWear,c_float,4,"[99.9959487915039, 99.99485778808594, 99.99429321289062, 99.99368286132812]",level/ratio,tyres,"Tyre wear per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,tyreDirtyLevel,c_float,4,"[0.0, 0.0, 0.0, 0.0]",level/ratio,tyres,"Tyre dirt level per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,tyreCoreTemp,c_float,4,"[80.92497253417969, 88.2901611328125, 81.2176513671875, 83.68103790283203]",deg C,tyres,"Tyre core temperature per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,tyreCoreTemperature,c_float,4,"[80.92497253417969, 88.2901611328125, 81.2176513671875, 83.68103790283203]",deg C,tyres,"Legacy tyre core temperature field per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,additional implemented ctypes struct; shares the same offset/layout as primary field tyreCoreTemp
+Physics,camberRAD,c_float,4,"[-0.06427197903394699, 0.04947945475578308, -0.05122148618102074, 0.041317421942949295]",rad,tyres,"Camber angle in radians per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,suspensionTravel,c_float,4,"[0.04005022346973419, 0.043517597019672394, 0.05151791125535965, 0.05671818554401398]",m,suspension,"Suspension travel per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,drs,c_float,1,0.0,level/ratio,assist_systems,DRS status/input.,high_frequency_physics_tick,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,tc,c_float,1,0.0,level/ratio,assist_systems,Traction control value.,high_frequency_physics_tick,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,heading,c_float,1,1.2376117706298828,rad,car_orientation,Car yaw/heading angle.,high_frequency_physics_tick,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Physics,pitch,c_float,1,0.09382139146327972,rad,car_orientation,Car pitch angle.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,roll,c_float,1,0.004876214079558849,rad,car_orientation,Car roll angle.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,cgHeight,c_float,1,0.2627067565917969,m,suspension,Center-of-gravity height.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,carDamage,c_float,5,"[0.0, 0.0, 0.0, 0.0, 0.0]",level/ratio,damage,Car damage values by component.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,numberOfTyresOut,c_long,1,0,integer/enum,tyres,Number of tyres outside track limits.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,pitLimiterOn,c_long,1,0,integer/enum,pit,Pit limiter enabled state.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,abs,c_float,1,0.0,level/ratio,assist_systems,ABS value or setting.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,kersCharge,c_float,1,0.0,J/level,unknown,KERS charge level.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,kersInput,c_float,1,0.0,unknown,unknown,KERS deployment input.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,autoShifterOn,c_long,1,0,integer/enum,car_controls,Automatic shifting enabled state.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,rideHeight,c_float,2,"[0.014243125915527344, 0.007714271545410156]",m,suspension,Front/rear ride height.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,turboBoost,c_float,1,0.0,unknown,engine,Turbo boost pressure/level.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,ballast,c_float,1,0.0,unknown,unknown,Ballast setting.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,airDensity,c_float,1,1.1054701805114746,unknown,engine,Air density.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,airTemp,c_float,1,18.241661071777344,deg C,weather,Ambient air temperature.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,roadTemp,c_float,1,16.901960372924805,deg C,weather,Track surface temperature.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,localAngularVel,c_float,3,"[-0.03680453449487686, 0.14621564745903015, -0.0457758791744709]",unknown,car_speed,Local angular velocity vector.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,finalFF,c_float,1,-0.38806235790252686,unknown,unknown,Final force feedback signal.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,performanceMeter,c_float,1,0.2849999964237213,unknown,car_speed,AC performance meter value.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,engineBrake,c_long,1,0,integer/enum,engine,Engine brake setting.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,ersRecoveryLevel,c_long,1,0,integer/enum,unknown,ERS recovery level.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,ersPowerLevel,c_long,1,0,W,unknown,ERS power level.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,ersHeatCharging,c_long,1,0,level/ratio,assist_systems,ERS heat charging state.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,ersIsBatteryCharging,c_long,1,0,integer/enum,unknown,ERS battery charging state.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,kersCurrentVK,c_float,1,0.0,unknown,unknown,Current KERS voltage/energy related value.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,visualTyreDamage,c_float,4,"[0.0, 0.0, 18.190166473388672, 18.190166473388672]",level/ratio,tyres,"Visual tyre damage per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,elecSystemsOverlap,c_long,1,1100055926,integer/enum,lap_timing,Electrical systems overlap value.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,ersFuelDiff,c_float,1,18.190166473388672,L/laps,drivetrain,ERS fuel delta/difference value.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,diffPa,c_long,1,1065353216,integer/enum,drivetrain,Differential preload/setting.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,tyreTempI,c_float,4,"[73.59599304199219, 98.47428894042969, 78.94895935058594, 92.21526336669922]",deg C,tyres,"Inner tyre temperature per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,tyreTempM,c_float,4,"[77.64775848388672, 93.16900634765625, 82.26789855957031, 88.24004364013672]",deg C,tyres,"Middle tyre temperature per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,tyreTempO,c_float,4,"[82.46504211425781, 87.82289123535156, 86.37838745117188, 84.73103332519531]",deg C,tyres,"Outer tyre temperature per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,isAIControlled,c_long,1,1,rad,car_orientation,Whether the car is AI controlled.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,tyreContactPoint,c_float,3 x 4,"[[-268.2490234375, 5.308894157409668, -528.4297485351562, -268.75927734375], [5.330419063568115, -529.9229736328125, -265.4625244140625, 5.054322719573975], [-529.419677734375, -265.9571838378906, 5.0707221031188965, -530.8538208007812]]",m,tyres,"Tyre contact point vector per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,tyreContactNormal,c_float,3 x 4,"[[0.08461909741163254, 0.9963071346282959, -0.014548877254128456, 0.08498572558164597], [0.9962683320045471, -0.015064897015690804, 0.08627135306596756, 0.9961020946502686], [-0.018381020054221153, 0.08627613633871078, 0.9961018562316895, -0.01836860179901123]]",unknown,tyres,"Tyre contact normal vector per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,tyreContactHeading,c_float,3 x 4,"[[0.9375143051147461, -0.08455434441566467, -0.3375168442726135, 0.9391902089118958], [-0.0851472020149231, -0.3326737880706787, 0.9427303075790405, -0.08758798241615295], [-0.3218509256839752, 0.9401422142982483, -0.08750275522470474, -0.3293569087982178]]",rad,car_orientation,"Tyre contact heading vector per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,brakeTemp,c_float,4,"[0.550000011920929, -0.6903559565544128, -0.39052021503448486, 53.46775436401367]",deg C,brakes,"Brake temperature per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,clutch,c_float,1,0.0,0-1,car_controls,Clutch input.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,tyreTempI2,c_float,4,"[0.0, 1.1630777253895982e-41, 0.0, 0.0]",deg C,tyres,"Secondary inner tyre temperature per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,tyreTempM2,c_float,4,"[0.0, 0.0, 0.0, 0.0]",deg C,tyres,"Secondary middle tyre temperature per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,tyreTempO2,c_float,4,"[0.0, 0.0, 0.0, 0.0]",deg C,tyres,"Secondary outer tyre temperature per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,isShadowTrack,c_long,1,0,integer/enum,track,Shadow track state.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,iDiffPriority,c_long,1,0,integer/enum,drivetrain,Differential priority setting.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,tyreWorkTemp,c_float,4,"[0.0, 0.0, 0.0, 0.0]",deg C,tyres,"Tyre working temperature per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,flag,c_long,1,0,integer/enum,flags,Current flag/status value.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,iCurrentMaxGear,c_long,1,0,integer/enum,drivetrain,Current maximum gear.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,iCurrentTyreSet,c_long,1,0,integer/enum,tyres,Current tyre set index.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,iMguKMaxTorque,c_float,1,0.0,Nm,engine,MGU-K maximum torque.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,iMguHMaxTorque,c_float,1,0.0,Nm,engine,MGU-H maximum torque.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,gearRatio,c_float,7,"[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]",unknown,drivetrain,Gear ratio table.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,iDiffIn,c_float,1,0.0,unknown,drivetrain,Differential input setting.,high_frequency_physics_tick,False,False,primary ctypes struct
+Physics,iDiffOut,c_float,1,0.0,unknown,drivetrain,Differential output setting.,high_frequency_physics_tick,False,False,primary ctypes struct
+Graphics,packetId,c_long,1,1652743,integer/enum,unknown,Incrementing packet counter for the shared memory page.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,status,c_long,1,2,integer/enum,session,Simulation status.,per_frame_or_session_update,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,session,c_long,1,0,integer/enum,session,Session type.,per_frame_or_session_update,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,currentTime,c_wchar,15,1:13:605,text,lap_timing,Current lap time as text.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,lastTime,c_wchar,15,1:43:046,text,lap_timing,Last lap time as text.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,bestTime,c_wchar,15,-:--:---,text,lap_timing,Best lap time as text.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,split,c_wchar,15,45.8,text,lap_timing,Current split delta/time as text.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,completedLaps,c_long,1,24,integer/enum,lap_timing,Completed lap count.,per_frame_or_session_update,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,position,c_long,1,8,integer/enum,multiplayer,Race/session position.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,iCurrentTime,c_long,1,73605,ms/text,lap_timing,Current lap time in milliseconds.,per_frame_or_session_update,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,iLastTime,c_long,1,103046,ms/text,lap_timing,Last lap time in milliseconds.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,iBestTime,c_long,1,86036,ms/text,lap_timing,Best lap time in milliseconds.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,sessionTimeLeft,c_float,1,40975372.0,s/text,lap_timing,Session time remaining.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,distanceTraveled,c_float,1,223726.296875,m,lap_timing,Distance traveled in session.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,isInPit,c_long,1,0,integer/enum,pit,Whether the car is in pit.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,currentSectorIndex,c_long,1,2,integer/enum,lap_timing,Current sector index.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,lastSectorTime,c_long,1,45868,ms/text,lap_timing,Last sector time.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,numberOfLaps,c_long,1,0,integer/enum,lap_timing,Configured session lap count.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,tyreCompound,c_wchar,33,Medium (M),text,tyres,Current tyre compound name.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,replayTimeMultiplier,c_float,1,1.0,unknown,lap_timing,Replay playback speed multiplier.,per_frame_or_session_update,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,normalizedCarPosition,c_float,1,0.8007575869560242,0-1,car_position,Normalized car position along AC track spline.,per_frame_or_session_update,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,activeCars,c_long,1,,integer/enum,multiplayer,Legacy implemented active car count field.,per_frame_or_session_update,False,False,additional implemented ctypes struct; legacy-only field overlaps primary layout field(s) carCoordinates; current value marked unknown to avoid reporting a misaligned read
+Graphics,carCoordinates,c_float,3,"[-266.7051086425781, 5.418052673339844, -529.7841186523438]",m,car_position,Current car world coordinates.,per_frame_or_session_update,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Graphics,penaltyTime,c_float,1,0.0,s/text,lap_timing,Penalty time.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,flag,c_long,1,0,integer/enum,flags,Current flag/status value.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,idealLineOn,c_long,1,0,integer/enum,assist_systems,Ideal line enabled state.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,isInPitLane,c_long,1,0,integer/enum,pit,Whether the car is in pit lane.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,surfaceGrip,c_float,1,0.9806261658668518,level/ratio,track,Current surface grip multiplier/value.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,mandatoryPitDone,c_long,1,0,integer/enum,pit,Mandatory pit stop completed state.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,windSpeed,c_float,1,9.25200080871582,m/s,car_speed,Wind speed.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,windDirection,c_float,1,-330.0,rad/deg,weather,Wind direction.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,isSetupMenuVisible,c_long,1,-1,integer/enum,assist_systems,Setup menu visibility state.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,mainDisplayIndex,c_long,1,0,integer/enum,car_controls,Main display/MFD page index.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,secondaryDisplayIndex,c_long,1,0,integer/enum,car_controls,Secondary display/MFD page index.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,tc,c_long,1,0,level/ratio,assist_systems,Traction control value.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,tcCut,c_long,1,0,level/ratio,assist_systems,Traction control cut setting.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,engineMap,c_long,1,0,integer/enum,engine,Engine map setting.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,abs,c_long,1,0,level/ratio,assist_systems,ABS value or setting.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,fuelUsedLaps,c_float,1,0.0,L/laps,fuel,Fuel usage measured in laps.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,rainIntensity,c_long,1,0,integer/enum,weather,Current rain intensity.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,rainIntensityIn10min,c_long,1,0,integer/enum,weather,Predicted rain intensity in 10 minutes.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,rainIntensityIn30min,c_long,1,0,integer/enum,weather,Predicted rain intensity in 30 minutes.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,currentTyreSet,c_long,1,0,integer/enum,tyres,Current tyre set index.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,strategyTyreSet,c_long,1,0,integer/enum,tyres,Strategy tyre set index.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,gapAhead,c_long,1,0,integer/enum,multiplayer,Gap to car ahead.,per_frame_or_session_update,False,False,primary ctypes struct
+Graphics,gapBehind,c_long,1,0,integer/enum,multiplayer,Gap to car behind.,per_frame_or_session_update,False,False,primary ctypes struct
+Static,smVersion,c_wchar,15,1.7,text,session,Shared memory version.,session_load_or_car_track_change,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Static,acVersion,c_wchar,15,1.16.4,text,session,Assetto Corsa version.,session_load_or_car_track_change,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Static,numberOfSessions,c_long,1,1,integer/enum,session,Number of sessions in event.,session_load_or_car_track_change,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Static,numCars,c_long,1,8,integer/enum,multiplayer,Number of cars in session.,session_load_or_car_track_change,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Static,carModel,c_wchar,33,rss_formula_rss_3_v6_2026,text,session,Loaded car model.,session_load_or_car_track_change,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Static,track,c_wchar,33,vhe_interlagos,text,track,Loaded track name.,session_load_or_car_track_change,True,True,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Static,playerName,c_wchar,33,Dokamiii,text,multiplayer,Player first name.,session_load_or_car_track_change,False,False,primary ctypes struct; also implemented in backend/core/ac_shared_memory.py
+Static,playerSurname,c_wchar,33,Dokamiii,text,multiplayer,Player surname.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,playerNick,c_wchar,33,Dokamiii,text,multiplayer,Player nickname.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,sectorCount,c_long,1,3,integer/enum,lap_timing,Number of track sectors.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,maxTorque,c_float,1,366.70001220703125,Nm,engine,Car maximum torque.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,maxPower,c_float,1,283404.5625,W,engine,Car maximum power.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,maxRpm,c_long,1,8300,rpm,engine,Car maximum RPM.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,maxFuel,c_float,1,65.0,L/laps,fuel,Maximum fuel capacity.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,suspensionMaxTravel,c_float,4,"[0.07000000029802322, 0.07000000029802322, 0.08100000023841858, 0.08100000023841858]",m,suspension,"Maximum suspension travel per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",session_load_or_car_track_change,False,False,primary ctypes struct
+Static,tyreRadius,c_float,4,"[0.3199999928474426, 0.3199999928474426, 0.3199999928474426, 0.3199999928474426]",m,tyres,"Tyre radius per wheel. Wheel arrays are usually ordered LF, RF, LR, RR in AC shared memory.",session_load_or_car_track_change,False,False,primary ctypes struct
+Static,maxTurboBoost,c_float,1,0.0,unknown,engine,Maximum turbo boost.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,deprecated_1,c_float,1,0.0,unknown,session,needs investigation,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,deprecated_2,c_float,1,0.0,unknown,session,needs investigation,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,isPenaltyEnabled,c_long,1,1,integer/enum,session,Penalty system enabled state.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,aidFuelRate,c_float,1,1.0,L/laps,fuel,Fuel consumption assist/rate.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,aidTireRate,c_float,1,1.0,unknown,tyres,Tyre wear assist/rate.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,aidMechanicalDamage,c_float,1,1.0,level/ratio,damage,Mechanical damage assist/rate.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,aidAllowTyreBlankets,c_long,1,0,integer/enum,tyres,Tyre blankets allowed aid flag.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,aidStability,c_float,1,0.0,unknown,assist_systems,Stability assist level.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,aidAutoClutch,c_long,1,1,level/ratio,car_controls,Auto clutch assist flag.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,aidAutoBlip,c_long,1,0,integer/enum,assist_systems,Auto blip assist flag.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,hasDRS,c_long,1,1,level/ratio,assist_systems,Whether the car supports DRS.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,hasERS,c_long,1,0,integer/enum,assist_systems,Whether the car supports ERS.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,hasKERS,c_long,1,0,integer/enum,assist_systems,Whether the car supports KERS.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,kersMaxJ,c_float,1,0.0,J/level,session,Maximum KERS energy.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,engineBrakeSettingsCount,c_long,1,0,integer/enum,engine,Number of engine-brake settings.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,ersPowerControllerCount,c_long,1,0,rad,car_orientation,Number of ERS power controller settings.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,trackSplineLength,c_float,1,4225.04638671875,m,track,Track spline length reported by AC.,session_load_or_car_track_change,True,True,primary ctypes struct
+Static,trackConfiguration,c_wchar,33,gp,text,drivetrain,Track layout/configuration.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,ersMaxJ,c_float,1,0.0,J/level,session,Maximum ERS energy.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,isTimedRace,c_long,1,0,ms/text,lap_timing,Whether race is timed.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,hasExtraLap,c_long,1,0,integer/enum,lap_timing,Whether session has extra lap.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,carSkin,c_wchar,33,05_carbon_fiber,text,session,Loaded car skin.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,reversedGridPositions,c_long,1,0,integer/enum,multiplayer,Reversed grid positions setting.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,PitWindowStart,c_long,1,0,integer/enum,weather,Pit window start lap/time.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,PitWindowEnd,c_long,1,0,integer/enum,weather,Pit window end lap/time.,session_load_or_car_track_change,False,False,primary ctypes struct
+Static,isOnline,c_long,1,0,integer/enum,multiplayer,Online session flag.,session_load_or_car_track_change,False,False,primary ctypes struct

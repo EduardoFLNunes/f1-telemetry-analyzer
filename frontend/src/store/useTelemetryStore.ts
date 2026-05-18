@@ -9,7 +9,7 @@ export interface TelemetryFrame {
   lap_number: number;
   lap_time: number;
   s: number; // Distance into lap
-  L: number; // Lateral offset
+  L: number | null; // Lateral offset
   speed: number;
   throttle: number;
   brake: number;
@@ -26,12 +26,20 @@ export interface TelemetryFrame {
   };
   delta: number;
   x: number;
+  y?: number;
   z: number;
+  world_x?: number;
+  world_y?: number;
+  world_z?: number;
+  mapPosition?: { x: number; y: number };
+  projectedPosition?: { x: number; y: number } | null;
+  projectedWorldPosition?: [number, number, number];
   projected_x?: number;
+  projected_y?: number;
   projected_z?: number;
   dx?: number;
   dz?: number;
-  alignment_drift?: number;
+  alignment_drift?: number | null;
   bootstrap_conf?: number;
   is_pitlane?: boolean;
   bootstrap_src?: string;
@@ -130,11 +138,24 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
   viewMode: 'live',
 
   addFrame: (frame) => set((state) => {
+    const mapPosition = frame.mapPosition && isFinite(frame.mapPosition.x) && isFinite(frame.mapPosition.y)
+      ? frame.mapPosition
+      : { x: frame.x, y: frame.y ?? frame.z };
+    const projectedPosition = frame.projectedPosition && isFinite(frame.projectedPosition.x) && isFinite(frame.projectedPosition.y)
+      ? frame.projectedPosition
+      : undefined;
+
     // Sanitization: Ensure coordinates and critical values are valid numbers
     const safeFrame: TelemetryFrame = {
       ...frame,
-      x: isFinite(frame.x) ? frame.x : (state.latestFrame?.x || 0),
-      z: isFinite(frame.z) ? frame.z : (state.latestFrame?.z || 0),
+      mapPosition,
+      projectedPosition,
+      x: isFinite(mapPosition.x) ? mapPosition.x : (state.latestFrame?.x || 0),
+      y: isFinite(mapPosition.y) ? mapPosition.y : (state.latestFrame?.y || 0),
+      z: isFinite(mapPosition.y) ? mapPosition.y : (state.latestFrame?.z || 0),
+      projected_x: projectedPosition?.x ?? frame.projected_x,
+      projected_y: projectedPosition?.y ?? frame.projected_y,
+      projected_z: projectedPosition?.y ?? frame.projected_z,
       speed: isFinite(frame.speed) ? frame.speed : 0,
       steering: isFinite(frame.steering) ? frame.steering : 0,
       heading: isFinite(frame.heading as number) ? (frame.heading as number) : (state.latestFrame?.heading || 0),

@@ -238,7 +238,7 @@ class AssettoAdapter:
             self.static = SPageFileStatic.from_buffer_copy(self._mmap_static[:ctypes.sizeof(SPageFileStatic)])
             
             # Heartbeat logging
-            logger.info(f"AC Telemetry Active | Speed: {self.physics.speedKmh:.1f} | RPM: {self.physics.rpms} | Pos: {list(self.graphics.carCoordinates)}")
+            logger.debug(f"AC Telemetry Active | Speed: {self.physics.speedKmh:.1f} | RPM: {self.physics.rpms} | Pos: {list(self.graphics.carCoordinates)}")
             
             # Map to canonical frame
             return self._normalize()
@@ -272,7 +272,11 @@ class AssettoAdapter:
             "wheel_slip": list(self.physics.wheelSlip),
             "timestamp": time.time(),
             "car_model": self.static.carModel,
-            "track_name": self.static.track
+            "track_name": self.static.track,
+            "track_config": self.static.trackConfiguration,
+            "track_length": self.static.trackSplineLength,
+            "game_code": "assetto_corsa",
+            "ac_install_path": None,
         }
 
     def close(self):
