@@ -2,17 +2,16 @@
  * Professional Motorsport Engineering HUD Header
  * F1 pitwall-inspired tactical information bar.
  */
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useTelemetryStore } from '../store/useTelemetryStore';
-import { useTelemetryWS } from '../hooks/useTelemetryWS';
 
 interface HeaderProps {
   time?: Date;
 }
 
 export const Header: React.FC<HeaderProps> = ({ time = new Date() }) => {
-  const { isConnected } = useTelemetryWS();
   const isStreaming  = useTelemetryStore(s => s.isStreaming);
+  const isConnected  = isStreaming;
   const latestFrame  = useTelemetryStore(s => s.latestFrame);
   const historyLen   = useTelemetryStore(s => s.history.length);
 

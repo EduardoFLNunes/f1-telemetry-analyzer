@@ -16,6 +16,10 @@ from ..telemetry_events import event_bus
 logger = logging.getLogger(__name__)
 
 
+def _fmt_ms(value: Optional[float]) -> str:
+    return "n/a" if value is None else f"{float(value):.2f}"
+
+
 class TelemetryRuntime:
     def __init__(
         self,
@@ -41,6 +45,7 @@ class TelemetryRuntime:
         self.running = False
         self._thread: Optional[threading.Thread] = None
         self._loop_ref: Optional[asyncio.AbstractEventLoop] = None
+        self._last_stats_log_at = time.time()
 
     def start(self, loop: Optional[asyncio.AbstractEventLoop] = None):
         if self.running:
@@ -77,8 +82,28 @@ class TelemetryRuntime:
                     self._try_finalize_lap()
 
                 frame = self.state.update_car(sample)
+                if frame:
+                    frame.update(self.source_manager.telemetry_timing_payload())
                 if frame and self._loop_ref:
                     asyncio.run_coroutine_threadsafe(event_bus.emit("processed_frame", frame), self._loop_ref)
+
+                now = time.time()
+                if now - self._last_stats_log_at >= 5.0:
+                    stats = self.source_manager.timing_window_stats(reset=True)
+                    logger.info(
+                        "Telemetry timing: source=%s sampleCounter=%s avgSampleDeltaMs=%s maxSampleDeltaMs=%s p95SampleDeltaMs=%s dropped=%s duplicated=%s avgEndpointResponseMs=%s maxEndpointResponseMs=%s p95EndpointResponseMs=%s",
+                        self.source_manager.get_active_source_name(),
+                        stats.get("sampleCounter"),
+                        _fmt_ms(stats.get("avgSampleDeltaMs")),
+                        _fmt_ms(stats.get("maxSampleDeltaMs")),
+                        _fmt_ms(stats.get("p95SampleDeltaMs")),
+                        stats.get("droppedSamples"),
+                        stats.get("duplicatedSamples"),
+                        _fmt_ms(stats.get("avgEndpointResponseMs")),
+                        _fmt_ms(stats.get("maxEndpointResponseMs")),
+                        _fmt_ms(stats.get("p95EndpointResponseMs")),
+                    )
+                    self._last_stats_log_at = now
             except Exception as exc:
                 logger.warning("Telemetry runtime loop error: %s", exc)
                 self.state.track_build_state = TrackBuildState.TRACK_INVALID

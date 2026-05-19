@@ -26,6 +26,7 @@ export const useTelemetryWS = () => {
     };
 
     ws.onmessage = (event) => {
+      if (!shouldReconnectRef.current || socketRef.current !== ws) return;
       try {
         const payload = JSON.parse(event.data);
         

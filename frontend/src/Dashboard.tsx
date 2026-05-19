@@ -2,7 +2,7 @@
  * F1 Motorsport Intelligence Workstation — Master Layout
  * Complete 9-Phase reformulation
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { TrackRenderer } from './components/map/TrackRenderer.jsx';
 import { TelemetryTraces } from './components/TelemetryTraces';
 import { GGDiagram } from './components/GGDiagram';
@@ -22,6 +22,41 @@ const sf = (v: any, fb = 0, d = 0) => {
   if (isNaN(n) || !isFinite(n)) return fb.toFixed(d);
   return d > 0 ? n.toFixed(d) : String(Math.round(n));
 };
+
+const trackGeometryKey = (track: any) => {
+  if (!track) return 'none';
+  const metadata = track.metadata || {};
+  const visual = track.visualGeometry || {};
+  const visualLeft = visual.leftEdge || visual.left_edge || {};
+  const visualRight = visual.rightEdge || visual.right_edge || {};
+  return [
+    track.cachePath || metadata.cachePath || '',
+    track.provider || track.reconstruction?.provider || '',
+    track.geometrySource || track.providerSource || track.source || '',
+    track.centerlineCount || track.total_points || track.centerline?.x?.length || 0,
+    String(track.cleanupEnabled ?? metadata.cleanupEnabled ?? false),
+    track.cleanedPointCount || metadata.cleanedPointCount || 0,
+    String(Boolean(track.visualGeometry)),
+    visualLeft?.x?.length || 0,
+    visualRight?.x?.length || 0,
+  ].join('|');
+};
+
+const trackPayloadMetrics = (track: any, payloadBytes = 0) => {
+  const visual = track?.visualGeometry || {};
+  const visualLeft = visual.leftEdge || visual.left_edge || {};
+  const visualRight = visual.rightEdge || visual.right_edge || {};
+  return {
+    payloadBytes,
+    centerlineCount: track?.centerline?.x?.length || 0,
+    physicalLeftCount: track?.left_edge?.x?.length || track?.leftEdge?.x?.length || 0,
+    physicalRightCount: track?.right_edge?.x?.length || track?.rightEdge?.x?.length || 0,
+    visualLeftCount: visualLeft?.x?.length || 0,
+    visualRightCount: visualRight?.x?.length || 0,
+  };
+};
+
+const DASHBOARD_FRAME_INTERVAL_MS = 100;
 
 /* ─── Metric Block ────────────────────────────────────────────── */
 const Metric = ({
@@ -77,7 +112,20 @@ const StabilityViz = ({ value }: { value: number }) => (
 /* ─── Dashboard ───────────────────────────────────────────────── */
 const Dashboard: React.FC = () => {
   const [trackData, setTrackData] = useState<any>(null);
-  const latestFrame  = useTelemetryStore(s => s.latestFrame);
+  const [trackDiagnostics, setTrackDiagnostics] = useState<any>({
+    trackFetchCount: 0,
+    payloadBytes: 0,
+    centerlineCount: 0,
+    physicalLeftCount: 0,
+    physicalRightCount: 0,
+    visualLeftCount: 0,
+    visualRightCount: 0,
+    lastTrackFetchMs: 0,
+    trackPollingEnabled: false,
+  });
+  const trackGeometryKeyRef = useRef('none');
+  const trackFetchCountRef = useRef(0);
+  const [dashboardFrame, setDashboardFrame] = useState<any>(() => useTelemetryStore.getState().latestFrame);
   const isStreaming  = useTelemetryStore(s => s.isStreaming);
   const [rightPanel, setRightPanel] = useState<'engineer'|'debrief'>('engineer');
   const [time, setTime] = useState(() => new Date());
@@ -85,25 +133,55 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
     const loadTrack = async () => {
+      const startedAt = performance.now();
+      trackFetchCountRef.current += 1;
       try {
         const res = await fetch(`http://${window.location.hostname}:8000/api/track/current`);
-        const data = await res.json();
+        const text = await res.text();
+        const contentLength = Number(res.headers.get('content-length'));
+        const payloadBytes = Number.isFinite(contentLength) && contentLength > 0
+          ? contentLength
+          : new TextEncoder().encode(text).length;
+        const data = JSON.parse(text);
         if (!cancelled && res.ok && data.track) {
-          setTrackData(data.track);
+          const nextKey = trackGeometryKey(data.track);
+          const metrics = trackPayloadMetrics(data.track, payloadBytes);
+          setTrackDiagnostics({
+            trackFetchCount: trackFetchCountRef.current,
+            ...metrics,
+            lastTrackFetchMs: performance.now() - startedAt,
+            trackPollingEnabled: false,
+          });
+          console.info('[Dashboard] loaded static track geometry', {
+            fetchCount: trackFetchCountRef.current,
+            key: nextKey,
+            ...metrics,
+          });
+          if (nextKey !== trackGeometryKeyRef.current) {
+            trackGeometryKeyRef.current = nextKey;
+            setTrackData(data.track);
+          }
           return;
         }
         if (!cancelled) {
+          trackGeometryKeyRef.current = 'none';
           setTrackData(null);
         }
       } catch {
-        if (!cancelled) setTrackData(null);
+        if (!cancelled) {
+          trackGeometryKeyRef.current = 'none';
+          setTrackData(null);
+          setTrackDiagnostics((current: any) => ({
+            ...current,
+            trackFetchCount: trackFetchCountRef.current,
+            trackPollingEnabled: false,
+          }));
+        }
       }
     };
     loadTrack();
-    const interval = setInterval(loadTrack, 500);
     return () => {
       cancelled = true;
-      clearInterval(interval);
     };
   }, []);
 
@@ -112,7 +190,44 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(t);
   }, []);
 
+  useEffect(() => {
+    let lastCommitAt = 0;
+    let pendingFrame: any = useTelemetryStore.getState().latestFrame;
+    let timer: number | null = null;
+
+    const commitPendingFrame = () => {
+      timer = null;
+      lastCommitAt = performance.now();
+      setDashboardFrame(pendingFrame);
+    };
+
+    const unsubscribe = useTelemetryStore.subscribe((state, previousState) => {
+      if (state.latestFrame === previousState.latestFrame) return;
+      pendingFrame = state.latestFrame;
+      const now = performance.now();
+      const elapsed = now - lastCommitAt;
+      if (elapsed >= DASHBOARD_FRAME_INTERVAL_MS) {
+        if (timer !== null) {
+          window.clearTimeout(timer);
+          timer = null;
+        }
+        lastCommitAt = now;
+        setDashboardFrame(pendingFrame);
+        return;
+      }
+      if (timer === null) {
+        timer = window.setTimeout(commitPendingFrame, DASHBOARD_FRAME_INTERVAL_MS - elapsed);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      if (timer !== null) window.clearTimeout(timer);
+    };
+  }, []);
+
   /* Live telemetry values */
+  const latestFrame = dashboardFrame;
   const speed    = latestFrame ? latestFrame.speed * 3.6 : 0;
   const gear     = latestFrame ? (latestFrame.gear ?? 'N') : 'N';
   const throttle = latestFrame ? latestFrame.throttle : 0;
@@ -219,7 +334,7 @@ const Dashboard: React.FC = () => {
 
             {/* Track map — primary viewport */}
             <div className="panel" style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-              <TrackRenderer trackData={trackData} />
+              <TrackRenderer trackData={trackData} trackDiagnostics={trackDiagnostics} />
             </div>
 
             {/* Telemetry multi-trace panel */}

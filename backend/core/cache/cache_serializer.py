@@ -15,6 +15,7 @@ class CacheSerializer:
             "source": track_data.get("source", "telemetry_reconstruction"),
             "provider": track_data.get("provider"),
             "providerSource": track_data.get("providerSource"),
+            "geometrySource": track_data.get("geometrySource", track_data.get("providerSource")),
             "trackConfig": track_data.get("trackConfig"),
             "cachePath": track_data.get("cachePath"),
             "sourceHash": source_hash,
@@ -33,6 +34,14 @@ class CacheSerializer:
             "widthMin": track_data.get("widthMin"),
             "widthAvg": track_data.get("widthAvg"),
             "widthMax": track_data.get("widthMax"),
+            "visualGeometry": track_data.get("visualGeometry"),
+            "rawPointCount": track_data.get("rawPointCount"),
+            "cleanedPointCount": track_data.get("cleanedPointCount"),
+            "rawMaxSegmentLength": track_data.get("rawMaxSegmentLength"),
+            "cleanedMaxSegmentLength": track_data.get("cleanedMaxSegmentLength"),
+            "cleanupEnabled": track_data.get("cleanupEnabled"),
+            "targetSpacing": track_data.get("targetSpacing"),
+            "smoothingWindow": track_data.get("smoothingWindow"),
         }
 
     @staticmethod
@@ -81,6 +90,7 @@ class CacheSerializer:
             "reconstruction": data.get("reconstruction", {}),
             "provider": data.get("provider"),
             "providerSource": data.get("providerSource"),
+            "geometrySource": data.get("geometrySource", data.get("providerSource")),
             "trackConfig": data.get("trackConfig"),
             "cachePath": data.get("cachePath"),
             "metadata": data.get("metadata", {}),
@@ -101,6 +111,14 @@ class CacheSerializer:
             "widthMin": data.get("widthMin"),
             "widthAvg": data.get("widthAvg"),
             "widthMax": data.get("widthMax"),
+            "visualGeometry": data.get("visualGeometry"),
+            "rawPointCount": data.get("rawPointCount"),
+            "cleanedPointCount": data.get("cleanedPointCount"),
+            "rawMaxSegmentLength": data.get("rawMaxSegmentLength"),
+            "cleanedMaxSegmentLength": data.get("cleanedMaxSegmentLength"),
+            "cleanupEnabled": data.get("cleanupEnabled"),
+            "targetSpacing": data.get("targetSpacing"),
+            "smoothingWindow": data.get("smoothingWindow"),
         }
 
     @staticmethod
@@ -120,6 +138,7 @@ class CacheSerializer:
             "source": track_data.get("source", "telemetry_reconstruction"),
             "provider": track_data.get("provider"),
             "providerSource": track_data.get("providerSource"),
+            "geometrySource": track_data.get("geometrySource", track_data.get("providerSource")),
             "trackConfig": track_data.get("trackConfig"),
             "cachePath": track_data.get("cachePath"),
             "version": track_data.get("version", 1),
@@ -149,6 +168,32 @@ class CacheSerializer:
             "widthMin": track_data.get("widthMin"),
             "widthAvg": track_data.get("widthAvg"),
             "widthMax": track_data.get("widthMax"),
+            "physicsGeometry": {
+                "source": "kn5_surface_interval_physics",
+                "coordinateSystem": "map_xy_from_world_x_negative_z",
+                "centerline": {
+                    "x": x,
+                    "y": map_y,
+                    "z": world_z,
+                    "distance": [float(p.get("distance", 0.0)) for p in center],
+                    "spline_t": [float(p.get("spline_t", 0.0)) for p in center],
+                },
+                "left_edge": CacheSerializer._edge_to_arrays(track_data.get("left_edge", track_data.get("boundsLeft", []))),
+                "right_edge": CacheSerializer._edge_to_arrays(track_data.get("right_edge", track_data.get("boundsRight", []))),
+                "localWidth": track_data.get("localWidth", []),
+                "bounds": track_data.get("bounds", {}),
+                "widthMin": track_data.get("widthMin"),
+                "widthAvg": track_data.get("widthAvg"),
+                "widthMax": track_data.get("widthMax"),
+            },
+            "visualGeometry": track_data.get("visualGeometry"),
+            "rawPointCount": track_data.get("rawPointCount"),
+            "cleanedPointCount": track_data.get("cleanedPointCount"),
+            "rawMaxSegmentLength": track_data.get("rawMaxSegmentLength"),
+            "cleanedMaxSegmentLength": track_data.get("cleanedMaxSegmentLength"),
+            "cleanupEnabled": track_data.get("cleanupEnabled"),
+            "targetSpacing": track_data.get("targetSpacing"),
+            "smoothingWindow": track_data.get("smoothingWindow"),
         }
 
     @staticmethod

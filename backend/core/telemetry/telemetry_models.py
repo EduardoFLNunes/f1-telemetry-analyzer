@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 
@@ -76,9 +76,12 @@ class TelemetrySample:
         if isinstance(self.timestamp, (int, float)):
             return float(self.timestamp)
         try:
-            return datetime.fromisoformat(str(self.timestamp)).timestamp() * 1000.0
+            parsed = datetime.fromisoformat(str(self.timestamp))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return parsed.timestamp() * 1000.0
         except ValueError:
-            return datetime.utcnow().timestamp() * 1000.0
+            return datetime.now(timezone.utc).timestamp() * 1000.0
 
 
 @dataclass

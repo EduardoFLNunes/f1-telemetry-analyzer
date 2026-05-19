@@ -337,6 +337,34 @@ class TelemetrySourceManager:
         self.sample_count = 0
         self.last_sample_time: Optional[str] = None
         self.last_world_position: Optional[List[float]] = None
+        self.last_sample_timestamp_ms: Optional[float] = None
+        self.previous_sample_timestamp_ms: Optional[float] = None
+        self.last_backend_read_timestamp_ms: Optional[float] = None
+        self.previous_backend_read_timestamp_ms: Optional[float] = None
+        self.sample_delta_ms: Optional[float] = None
+        self.backend_read_delta_ms: Optional[float] = None
+        self.duplicated_samples = 0
+        self.dropped_samples = 0
+        self._last_sample_signature: Optional[Tuple[Any, ...]] = None
+        self._window_sample_delta_ms: List[float] = []
+        self._window_endpoint_response_ms: List[float] = []
+        self._window_duplicated_samples = 0
+        self._window_dropped_samples = 0
+
+    def _reset_timing(self):
+        self.last_sample_timestamp_ms = None
+        self.previous_sample_timestamp_ms = None
+        self.last_backend_read_timestamp_ms = None
+        self.previous_backend_read_timestamp_ms = None
+        self.sample_delta_ms = None
+        self.backend_read_delta_ms = None
+        self.duplicated_samples = 0
+        self.dropped_samples = 0
+        self._last_sample_signature = None
+        self._window_sample_delta_ms = []
+        self._window_endpoint_response_ms = []
+        self._window_duplicated_samples = 0
+        self._window_dropped_samples = 0
 
     @staticmethod
     def detect_ac_available() -> bool:
@@ -356,6 +384,7 @@ class TelemetrySourceManager:
         self.sample_count = 0
         self.last_sample_time = None
         self.last_world_position = None
+        self._reset_timing()
 
         if requested == "assetto_corsa":
             return self._select_assetto_corsa(fail_loudly=True)
@@ -413,10 +442,97 @@ class TelemetrySourceManager:
         if not sample:
             return None
 
+        read_timestamp_ms = time.time() * 1000.0
+        sample_timestamp_ms = sample.timestamp_ms
+
         self.sample_count += 1
         self.last_sample_time = str(sample.timestamp)
         self.last_world_position = sample.worldPosition
+        self.previous_sample_timestamp_ms = self.last_sample_timestamp_ms
+        self.previous_backend_read_timestamp_ms = self.last_backend_read_timestamp_ms
+        self.last_sample_timestamp_ms = sample_timestamp_ms
+        self.last_backend_read_timestamp_ms = read_timestamp_ms
+
+        if self.previous_sample_timestamp_ms is not None:
+            self.sample_delta_ms = sample_timestamp_ms - self.previous_sample_timestamp_ms
+            if self.sample_delta_ms >= 0:
+                self._window_sample_delta_ms.append(self.sample_delta_ms)
+        else:
+            self.sample_delta_ms = None
+
+        if self.previous_backend_read_timestamp_ms is not None:
+            self.backend_read_delta_ms = read_timestamp_ms - self.previous_backend_read_timestamp_ms
+            expected_ms = 1000.0 / 60.0
+            if self.backend_read_delta_ms > expected_ms * 2.5:
+                missed = max(1, int(round(self.backend_read_delta_ms / expected_ms)) - 1)
+                self.dropped_samples += missed
+                self._window_dropped_samples += missed
+        else:
+            self.backend_read_delta_ms = None
+
+        signature = (
+            round(sample.worldPositionX, 4),
+            round(sample.worldPositionY, 4),
+            round(sample.worldPositionZ, 4),
+            round(sample.speed, 3),
+            sample.lap,
+            round(sample.sessionTime, 3),
+        )
+        if self._last_sample_signature == signature:
+            self.duplicated_samples += 1
+            self._window_duplicated_samples += 1
+        self._last_sample_signature = signature
         return sample
+
+    def telemetry_timing_payload(self) -> Dict[str, Any]:
+        server_timestamp_ms = time.time() * 1000.0
+        sample_timestamp_ms = self.last_sample_timestamp_ms
+        return {
+            "serverTimestampMs": server_timestamp_ms,
+            "telemetrySampleTimestampMs": sample_timestamp_ms,
+            "sampleAgeMs": (server_timestamp_ms - sample_timestamp_ms) if sample_timestamp_ms is not None else None,
+            "sampleDeltaMs": self.sample_delta_ms,
+            "backendReadDeltaMs": self.backend_read_delta_ms,
+            "source": self.active_source_name,
+            "sampleCounter": self.sample_count,
+        }
+
+    def record_endpoint_response_ms(self, response_ms: float):
+        if response_ms >= 0:
+            self._window_endpoint_response_ms.append(float(response_ms))
+
+    @staticmethod
+    def _timing_stats(values: List[float]) -> Dict[str, Optional[float]]:
+        if not values:
+            return {"avg": None, "max": None, "p95": None}
+        ordered = sorted(values)
+        p95_index = min(len(ordered) - 1, int(len(ordered) * 0.95))
+        return {
+            "avg": sum(values) / len(values),
+            "max": max(values),
+            "p95": ordered[p95_index],
+        }
+
+    def timing_window_stats(self, reset: bool = True) -> Dict[str, Any]:
+        sample_stats = self._timing_stats(self._window_sample_delta_ms)
+        endpoint_stats = self._timing_stats(self._window_endpoint_response_ms)
+        payload = {
+            "avgSampleDeltaMs": sample_stats["avg"],
+            "maxSampleDeltaMs": sample_stats["max"],
+            "p95SampleDeltaMs": sample_stats["p95"],
+            "droppedSamples": self._window_dropped_samples,
+            "duplicatedSamples": self._window_duplicated_samples,
+            "avgEndpointResponseMs": endpoint_stats["avg"],
+            "maxEndpointResponseMs": endpoint_stats["max"],
+            "p95EndpointResponseMs": endpoint_stats["p95"],
+            "sampleCounter": self.sample_count,
+        }
+        if reset:
+            self._window_sample_delta_ms = []
+            self._window_endpoint_response_ms = []
+            self._window_duplicated_samples = 0
+            self._window_dropped_samples = 0
+        return payload
 
     def stop(self):
         self.reader.stop()
@@ -461,6 +577,7 @@ class TelemetrySourceManager:
         self.sample_count = 0
         self.last_sample_time = None
         self.last_world_position = None
+        self._reset_timing()
 
     def status(self) -> Dict[str, Any]:
         return {
@@ -470,6 +587,9 @@ class TelemetrySourceManager:
             "sample_count": self.sample_count,
             "last_sample_time": self.last_sample_time,
             "last_world_position": self.last_world_position,
+            **self.telemetry_timing_payload(),
+            "dropped_samples": self.dropped_samples,
+            "duplicated_samples": self.duplicated_samples,
             "track_name": self.current_track_name(),
             "track_config": self.current_track_config(),
             "car_model": self.current_car_model(),
