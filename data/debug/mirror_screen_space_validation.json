@@ -1,0 +1,73 @@
+{
+  "mode": "screen-space bitmap mirror",
+  "viewport": {
+    "width": 1200,
+    "height": 820
+  },
+  "rule": "screenX = viewportWidth - screenX; screenY remains unchanged",
+  "horizontalFlipDetected": true,
+  "verticalFlipDetected": false,
+  "points": [
+    {
+      "name": "top_left_marker",
+      "x": 140,
+      "y": 120,
+      "color": "#f97316",
+      "mirroredX": 1060,
+      "mirroredY": 120,
+      "xRule": "1200 - 140 = 1060",
+      "yUnchanged": true,
+      "verticalFlipWouldBeY": 700,
+      "verticalFlipDetected": false
+    },
+    {
+      "name": "top_right_marker",
+      "x": 1010,
+      "y": 120,
+      "color": "#22d3ee",
+      "mirroredX": 190,
+      "mirroredY": 120,
+      "xRule": "1200 - 1010 = 190",
+      "yUnchanged": true,
+      "verticalFlipWouldBeY": 700,
+      "verticalFlipDetected": false
+    },
+    {
+      "name": "bottom_left_marker",
+      "x": 140,
+      "y": 690,
+      "color": "#a78bfa",
+      "mirroredX": 1060,
+      "mirroredY": 690,
+      "xRule": "1200 - 140 = 1060",
+      "yUnchanged": true,
+      "verticalFlipWouldBeY": 130,
+      "verticalFlipDetected": false
+    },
+    {
+      "name": "bottom_right_marker",
+      "x": 1010,
+      "y": 690,
+      "color": "#34d399",
+      "mirroredX": 190,
+      "mirroredY": 690,
+      "xRule": "1200 - 1010 = 190",
+      "yUnchanged": true,
+      "verticalFlipWouldBeY": 130,
+      "verticalFlipDetected": false
+    },
+    {
+      "name": "track_sample_2675",
+      "x": 368.75,
+      "y": 361.68,
+      "color": "#facc15",
+      "mirroredX": 831.25,
+      "mirroredY": 361.68,
+      "xRule": "1200 - 368.75 = 831.25",
+      "yUnchanged": true,
+      "verticalFlipWouldBeY": 458.32,
+      "verticalFlipDetected": false
+    }
+  ],
+  "result": "PASS: horizontal mirror only; no vertical inversion"
+}

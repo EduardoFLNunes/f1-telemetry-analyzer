@@ -1,8 +1,10 @@
-export function drawCar(ctx, frame, scale, color = '#22d3ee') {
-  const position = frame?.mapPosition;
+import { toRenderHeading, toRenderPoint } from './renderTransform.js';
+
+export function drawCar(ctx, frame, scale, color = '#22d3ee', options = {}) {
+  const position = toRenderPoint(frame?.mapPosition, options);
   if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return;
 
-  const heading = Number.isFinite(frame.heading) ? frame.heading : 0;
+  const heading = toRenderHeading(Number.isFinite(frame.heading) ? frame.heading : 0, options);
   const length = 9 / scale;
   const width = 4.5 / scale;
 
@@ -35,29 +37,32 @@ export function drawCar(ctx, frame, scale, color = '#22d3ee') {
   ctx.restore();
 }
 
-export function drawTrajectory(ctx, history, scale) {
+export function drawTrajectory(ctx, history, scale, options = {}) {
   if (!history || history.length < 2) return;
+  const maxSegmentDistance = Number.isFinite(options.maxSegmentDistance)
+    ? options.maxSegmentDistance
+    : 35;
 
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.shadowBlur = 10 / scale;
-  ctx.shadowColor = 'rgba(34,211,238,0.35)';
+  ctx.shadowBlur = 6 / scale;
+  ctx.shadowColor = 'rgba(34,211,238,0.28)';
 
   for (let i = 1; i < history.length; i += 1) {
     const a = history[i - 1];
     const b = history[i];
-    const ax = a.mapPosition?.x ?? a.x;
-    const ay = a.mapPosition?.y ?? a.z;
-    const bx = b.mapPosition?.x ?? b.x;
-    const by = b.mapPosition?.y ?? b.z;
-    if (!Number.isFinite(ax) || !Number.isFinite(ay) || !Number.isFinite(bx) || !Number.isFinite(by)) continue;
+    const start = toRenderPoint(a.mapPosition || { x: a.x, y: a.y ?? a.z }, options);
+    const end = toRenderPoint(b.mapPosition || { x: b.x, y: b.y ?? b.z }, options);
+    if (!start || !end) continue;
+    const segmentDistance = Math.hypot(end.x - start.x, end.y - start.y);
+    if (!Number.isFinite(segmentDistance) || segmentDistance > maxSegmentDistance) continue;
     const alpha = Math.max(0.08, i / history.length);
     ctx.beginPath();
-    ctx.moveTo(ax, ay);
-    ctx.lineTo(bx, by);
-    ctx.strokeStyle = `rgba(34,211,238,${alpha * 0.55})`;
-    ctx.lineWidth = 3 / scale;
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(end.x, end.y);
+    ctx.strokeStyle = `rgba(34,211,238,${alpha * 0.42})`;
+    ctx.lineWidth = 2 / scale;
     ctx.stroke();
   }
 

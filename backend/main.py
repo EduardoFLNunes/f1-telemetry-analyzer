@@ -11,6 +11,7 @@ import asyncio
 import io
 import logging
 import re
+import time
 
 import pandas as pd
 from fastapi import Body, FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
@@ -24,6 +25,7 @@ from core.geometry.track_geometry_provider import (
     DebugTrajectoryTrackGeometryProvider,
     Kn5SurfaceTrackGeometryProvider,
 )
+from core.geometry.track_geometry_cleanup import audit_geometry
 from core.live.lap_collector import TrackBuildState
 from core.live.runtime_state import RuntimeState
 from core.live.telemetry_runtime import TelemetryRuntime
@@ -53,6 +55,7 @@ LIVE_TRACK_CACHE_PREFIX = "assetto_corsa"
 TRACK_CACHE_DIR = REPO_ROOT / "data" / "cache" / "tracks"
 PRIMARY_TELEMETRY_FIXTURE = REPO_ROOT / "data" / "example_telemetry.csv"
 DEBUG_TELEMETRY_FIXTURE = REPO_ROOT / "data" / "example_telemetryOld.csv"
+DEBUG_DIR = REPO_ROOT / "data" / "debug"
 
 runtime_state = RuntimeState()
 telemetry_buffer = TelemetryBuffer(max_size=20000)
@@ -193,7 +196,10 @@ def ingest_one_active_sample() -> Optional[Dict[str, Any]]:
     if not sample:
         return None
     telemetry_buffer.add_sample(sample)
-    return runtime_state.update_car(sample)
+    frame = runtime_state.update_car(sample)
+    if frame:
+        frame.update(source_manager.telemetry_timing_payload())
+    return frame
 
 
 def prime_active_source():
@@ -230,6 +236,47 @@ def live_trajectory_api() -> List[Dict[str, Any]]:
     ]
 
 
+def _active_track_map_geometry() -> Dict[str, Any]:
+    track = runtime_state.track_data
+    if not track:
+        raise HTTPException(status_code=404, detail="No active TrackGeometry available")
+    centerline = track.get("centerline", [])
+    center_map = [[float(point.x), -float(point.z)] for point in centerline]
+    left_map = [
+        [float(point["x"]), -float(point.get("z", point.get("y", 0.0)))]
+        for point in track.get("boundsLeft", track.get("left_edge", []))
+    ]
+    right_map = [
+        [float(point["x"]), -float(point.get("z", point.get("y", 0.0)))]
+        for point in track.get("boundsRight", track.get("right_edge", []))
+    ]
+    widths = [float(width) for width in track.get("localWidth", [])]
+    return {
+        "track": track,
+        "centerline": center_map,
+        "leftEdge": left_map,
+        "rightEdge": right_map,
+        "localWidth": widths,
+    }
+
+
+def _active_track_cleanup_metadata(track: Dict[str, Any]) -> Dict[str, Any]:
+    metadata = track.get("metadata") or {}
+    return {
+        "provider": track.get("provider", track.get("reconstruction", {}).get("provider")),
+        "providerSource": track.get("providerSource", track.get("source")),
+        "geometrySource": track.get("geometrySource", track.get("providerSource", track.get("source"))),
+        "cleanupEnabled": track.get("cleanupEnabled") if track.get("cleanupEnabled") is not None else metadata.get("cleanupEnabled"),
+        "rawPointCount": track.get("rawPointCount") or metadata.get("rawPointCount"),
+        "cleanedPointCount": track.get("cleanedPointCount") or metadata.get("cleanedPointCount"),
+        "rawMaxSegmentLength": track.get("rawMaxSegmentLength") or metadata.get("rawMaxSegmentLength"),
+        "cleanedMaxSegmentLength": track.get("cleanedMaxSegmentLength") or metadata.get("cleanedMaxSegmentLength"),
+        "targetSpacing": track.get("targetSpacing") or metadata.get("targetSpacing"),
+        "smoothingWindow": track.get("smoothingWindow") or metadata.get("smoothingWindow"),
+        "cachePath": track.get("cachePath") or metadata.get("cachePath"),
+    }
+
+
 def telemetry_status_payload() -> Dict[str, Any]:
     if telemetry_runtime:
         status = telemetry_runtime.status()
@@ -257,12 +304,25 @@ def telemetry_status_payload() -> Dict[str, Any]:
         "trackCache": runtime_state.current_track_name,
         "trackGeometryProvider": track.get("provider", track.get("reconstruction", {}).get("provider")),
         "providerSource": track.get("providerSource", track.get("source")),
+        "geometrySource": track.get("geometrySource", track.get("providerSource", track.get("source"))),
         "centerlineCount": len(track.get("centerline", [])),
         "widthMin": width_min,
         "widthAvg": width_avg,
         "widthMax": width_max,
         "closedLoop": track.get("closedLoop"),
         "cachePath": track.get("cachePath") or (track.get("metadata") or {}).get("cachePath"),
+        "rawPointCount": track.get("rawPointCount") or (track.get("metadata") or {}).get("rawPointCount"),
+        "cleanedPointCount": track.get("cleanedPointCount") or (track.get("metadata") or {}).get("cleanedPointCount"),
+        "rawMaxSegmentLength": track.get("rawMaxSegmentLength") or (track.get("metadata") or {}).get("rawMaxSegmentLength"),
+        "cleanedMaxSegmentLength": track.get("cleanedMaxSegmentLength") or (track.get("metadata") or {}).get("cleanedMaxSegmentLength"),
+        "cleanupEnabled": track.get("cleanupEnabled") if track.get("cleanupEnabled") is not None else (track.get("metadata") or {}).get("cleanupEnabled"),
+        "targetSpacing": track.get("targetSpacing") or (track.get("metadata") or {}).get("targetSpacing"),
+        "smoothingWindow": track.get("smoothingWindow") or (track.get("metadata") or {}).get("smoothingWindow"),
+        "visualGeometryEnabled": bool(track.get("visualGeometry")),
+        "visualGeometrySource": (track.get("visualGeometry") or {}).get("source") or (track.get("metadata") or {}).get("visualGeometrySource"),
+        "visualWidthMin": (track.get("visualGeometry") or {}).get("widthMin"),
+        "visualWidthAvg": (track.get("visualGeometry") or {}).get("widthAvg"),
+        "visualWidthMax": (track.get("visualGeometry") or {}).get("widthMax"),
         **status,
     }
 
@@ -452,9 +512,11 @@ async def ingest_live_telemetry(payload: Any = Body(...)):
 
 @app.get("/api/telemetry/live")
 async def get_legacy_live_telemetry():
+    endpoint_started_at = time.perf_counter()
     car_response = await get_car_state()
     car = car_response["car"]
-    return {
+    timing = source_manager.telemetry_timing_payload()
+    response = {
         "car_x": car["mapPosition"]["x"],
         "car_y": car["mapPosition"]["y"],
         "car_z": car["mapPosition"]["y"],
@@ -466,7 +528,12 @@ async def get_legacy_live_telemetry():
         "heading": car.get("heading", 0.0),
         "lateral_offset": car.get("L"),
         "distance_along_track": car.get("s"),
+        **timing,
     }
+    endpoint_response_ms = (time.perf_counter() - endpoint_started_at) * 1000.0
+    source_manager.record_endpoint_response_ms(endpoint_response_ms)
+    response["endpointResponseMs"] = endpoint_response_ms
+    return response
 
 
 @app.post("/api/upload/telemetry")
@@ -542,6 +609,120 @@ async def get_projection_debug():
     if not runtime_state.car_projected_state:
         raise HTTPException(status_code=404, detail="No projected car state available")
     return {"status": "success", "debug": projection_debug_payload(runtime_state.car_projected_state)}
+
+
+@app.get("/api/debug/track-geometry-quality")
+async def get_track_geometry_quality():
+    geometry = _active_track_map_geometry()
+    track = geometry["track"]
+    metadata = track.get("metadata") or {}
+    config = {
+        "targetSpacingMeters": metadata.get("targetSpacingMeters", metadata.get("targetSpacing", 1.5)),
+        "smoothingWindow": metadata.get("smoothingWindow", 5),
+    }
+    active_quality = audit_geometry(
+        geometry["centerline"],
+        geometry["leftEdge"],
+        geometry["rightEdge"],
+        geometry["localWidth"],
+        config=config,
+    )
+    return {
+        "status": "success",
+        **_active_track_cleanup_metadata(track),
+        "activeQuality": active_quality,
+        "rawQuality": metadata.get("rawQuality"),
+        "cleanedQuality": metadata.get("cleanedQuality"),
+    }
+
+
+@app.get("/api/debug/track-geometry-cleaned")
+async def get_track_geometry_cleaned():
+    geometry = _active_track_map_geometry()
+    track = geometry["track"]
+    return {
+        "status": "success",
+        **_active_track_cleanup_metadata(track),
+        "trackLength": track.get("trackLength", track.get("track_length")),
+        "closedLoop": track.get("closedLoop"),
+        "widthMin": track.get("widthMin"),
+        "widthAvg": track.get("widthAvg"),
+        "widthMax": track.get("widthMax"),
+        "centerline": geometry["centerline"],
+        "leftEdge": geometry["leftEdge"],
+        "rightEdge": geometry["rightEdge"],
+        "localWidth": geometry["localWidth"],
+        "metadata": track.get("metadata", {}),
+    }
+
+
+@app.get("/api/debug/render-performance-state")
+async def get_render_performance_state():
+    track = runtime_state.track_data or {}
+    return {
+        "status": "success",
+        "trackGeometryProvider": track.get("provider", track.get("reconstruction", {}).get("provider")),
+        "providerSource": track.get("providerSource", track.get("source")),
+        "geometrySource": track.get("geometrySource", track.get("providerSource", track.get("source"))),
+        "cleanupEnabled": track.get("cleanupEnabled") if track.get("cleanupEnabled") is not None else (track.get("metadata") or {}).get("cleanupEnabled"),
+        "visualGeometryEnabled": bool(track.get("visualGeometry")),
+        "centerlineCount": len(track.get("centerline", [])),
+        "leftEdgeCount": len(track.get("boundsLeft", track.get("left_edge", []))),
+        "rightEdgeCount": len(track.get("boundsRight", track.get("right_edge", []))),
+        "liveTrajectoryCount": len(telemetry_buffer.get_samples()),
+        "source": source_manager.get_active_source_name(),
+        "activeTrackReady": runtime_state.track_build_state == TrackBuildState.TRACK_READY,
+        "cachePath": track.get("cachePath") or (track.get("metadata") or {}).get("cachePath"),
+    }
+
+
+@app.get("/api/debug/track-visual-geometry")
+async def get_track_visual_geometry_debug():
+    track = runtime_state.track_data or {}
+    visual = track.get("visualGeometry")
+    if not track:
+        raise HTTPException(status_code=404, detail="No active TrackGeometry available")
+
+    if not visual:
+        return {
+            "status": "success",
+            "enabled": False,
+            "reason": "visual_geometry_not_present",
+            "trackGeometryProvider": track.get("provider", track.get("reconstruction", {}).get("provider")),
+            "providerSource": track.get("providerSource", track.get("source")),
+            "geometrySource": track.get("geometrySource", track.get("providerSource", track.get("source"))),
+        }
+
+    widths = visual.get("width") or visual.get("localWidth") or []
+    center = visual.get("centerline") or {}
+    visual_artifacts = visual.get("visualArtifactReport") or {}
+    physics_artifacts = visual.get("artifactReport") or {}
+    return {
+        "status": "success",
+        "enabled": True,
+        "visualOnly": bool(visual.get("visualOnly", True)),
+        "source": visual.get("source"),
+        "method": visual.get("method"),
+        "visualPointCount": len(center.get("x", [])),
+        "widthMin": visual.get("widthMin"),
+        "widthAvg": visual.get("widthAvg"),
+        "widthMax": visual.get("widthMax"),
+        "removedSpikeCount": visual.get("removedSpikeCount"),
+        "maxWidthDeltaBefore": visual.get("maxWidthDeltaBefore"),
+        "maxWidthDeltaAfter": visual.get("maxWidthDeltaAfter"),
+        "artifactCountBefore": physics_artifacts.get("artifactCount"),
+        "artifactCountAfter": visual_artifacts.get("artifactCount"),
+        "config": visual.get("config"),
+        "metadata": visual.get("metadata"),
+        "widthSampleCount": len(widths),
+        "exports": {
+            "previewSvg": str(DEBUG_DIR / "track_visual_geometry_preview.svg"),
+            "physicsVsVisualSvg": str(DEBUG_DIR / "track_physics_vs_visual_geometry.svg"),
+            "artifactsSvg": str(DEBUG_DIR / "track_visual_edge_artifacts.svg"),
+            "widthProfileJson": str(DEBUG_DIR / "track_visual_width_profile.json"),
+            "artifactsRemovedJson": str(DEBUG_DIR / "track_visual_artifacts_removed.json"),
+        },
+    }
 
 
 @app.get("/api/debug/ac-shared-memory-full-inventory")

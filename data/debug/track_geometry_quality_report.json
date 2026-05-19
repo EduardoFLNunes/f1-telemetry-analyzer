@@ -1,0 +1,304 @@
+{
+  "config": {
+    "targetSpacingMeters": 1.5,
+    "nearZeroSegmentMeters": 0.05,
+    "largeJumpMultiplier": 4.0,
+    "largeJumpMinimumMeters": 6.0,
+    "minPlausibleWidthMeters": 4.0,
+    "maxPlausibleWidthMeters": 22.0,
+    "smoothingWindow": 5
+  },
+  "totalPoints": 2680,
+  "suspiciousSegmentCount": 12,
+  "segmentLengthStats": {
+    "centerline": {
+      "min": 1.415535,
+      "avg": 1.621595,
+      "max": 12.103819,
+      "median": 1.599274
+    },
+    "leftEdge": {
+      "min": 1.344982,
+      "avg": 1.604766,
+      "max": 10.64405,
+      "median": 1.571272
+    },
+    "rightEdge": {
+      "min": 1.279902,
+      "avg": 1.640393,
+      "max": 14.194079,
+      "median": 1.609109
+    }
+  },
+  "localWidthStats": {
+    "min": 4.301463,
+    "avg": 12.501468,
+    "max": 19.33197,
+    "median": 12.774556
+  },
+  "largeJumpThresholds": {
+    "centerline": 6.397094,
+    "leftEdge": 6.285088,
+    "rightEdge": 6.436436
+  },
+  "top50LargestCenterlineJumps": [
+    {
+      "index": 282,
+      "nextIndex": 283,
+      "length": 12.103819,
+      "from": [
+        -173.28836,
+        -463.185798
+      ],
+      "to": [
+        -167.899551,
+        -452.347755
+      ]
+    },
+    {
+      "index": 454,
+      "nextIndex": 455,
+      "length": 11.113137,
+      "from": [
+        29.512634,
+        -330.356615
+      ],
+      "to": [
+        40.453431,
+        -332.306174
+      ]
+    },
+    {
+      "index": 483,
+      "nextIndex": 484,
+      "length": 10.784279,
+      "from": [
+        53.164901,
+        -290.38189
+      ],
+      "to": [
+        43.172543,
+        -286.325603
+      ]
+    },
+    {
+      "index": 298,
+      "nextIndex": 299,
+      "length": 9.413292,
+      "from": [
+        -146.810336,
+        -461.145717
+      ],
+      "to": [
+        -146.923793,
+        -470.558325
+      ]
+    }
+  ],
+  "top50LargestLeftEdgeJumps": [
+    {
+      "index": 282,
+      "nextIndex": 283,
+      "length": 10.64405,
+      "from": [
+        -171.104,
+        -456.907458
+      ],
+      "to": [
+        -166.257728,
+        -447.430673
+      ]
+    },
+    {
+      "index": 454,
+      "nextIndex": 455,
+      "length": 9.762577,
+      "from": [
+        25.036681,
+        -328.834124
+      ],
+      "to": [
+        34.678235,
+        -330.366556
+      ]
+    },
+    {
+      "index": 2404,
+      "nextIndex": 2405,
+      "length": 8.469889,
+      "from": [
+        -457.728814,
+        215.685929
+      ],
+      "to": [
+        -466.193757,
+        215.396503
+      ]
+    },
+    {
+      "index": 483,
+      "nextIndex": 484,
+      "length": 7.591197,
+      "from": [
+        46.507507,
+        -288.734876
+      ],
+      "to": [
+        39.658539,
+        -285.461054
+      ]
+    }
+  ],
+  "top50LargestRightEdgeJumps": [
+    {
+      "index": 298,
+      "nextIndex": 299,
+      "length": 14.194079,
+      "from": [
+        -147.20707,
+        -463.25954
+      ],
+      "to": [
+        -148.165206,
+        -477.421244
+      ]
+    },
+    {
+      "index": 483,
+      "nextIndex": 484,
+      "length": 13.998621,
+      "from": [
+        59.822296,
+        -292.028903
+      ],
+      "to": [
+        46.686548,
+        -287.190153
+      ]
+    },
+    {
+      "index": 282,
+      "nextIndex": 283,
+      "length": 13.5648,
+      "from": [
+        -175.47272,
+        -469.464138
+      ],
+      "to": [
+        -169.541374,
+        -457.264837
+      ]
+    },
+    {
+      "index": 454,
+      "nextIndex": 455,
+      "length": 12.466747,
+      "from": [
+        33.988587,
+        -331.879106
+      ],
+      "to": [
+        46.228627,
+        -334.245793
+      ]
+    }
+  ],
+  "nearZeroSegments": {
+    "centerline": [],
+    "leftEdge": [],
+    "rightEdge": []
+  },
+  "nearZeroSegmentCounts": {
+    "centerline": 0,
+    "leftEdge": 0,
+    "rightEdge": 0
+  },
+  "invalidPointCount": 0,
+  "invalidPoints": [],
+  "leftRightInversionCount": 0,
+  "leftRightInversions": [],
+  "samplesBelowWidthLimit": [],
+  "samplesBelowWidthLimitCount": 0,
+  "samplesAboveWidthLimit": [],
+  "samplesAboveWidthLimitCount": 0,
+  "loopClosure": {
+    "closureDistance": 1.762344,
+    "medianSegmentLength": 1.599235,
+    "closed": true
+  },
+  "recommendations": [
+    "Resample by accumulated centerline distance and apply a small circular smoothing window."
+  ],
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "provider": "kn5_surface_interval",
+  "source": "assetto_corsa_track_files",
+  "cachePath": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\cache\\tracks\\vhe_interlagos_gp_kn5_surface_interval_geometry.json",
+  "distanceAlongTrackAudit": {
+    "name": "distanceAlongTrack",
+    "count": 2680,
+    "first": 0.0,
+    "last": 4344.113370881,
+    "deltaStats": {
+      "min": 1.415535,
+      "avg": 1.621543,
+      "max": 12.103819,
+      "median": 1.599235
+    },
+    "negativeDeltaCount": 0,
+    "zeroDeltaCount": 0,
+    "negativeDeltas": [],
+    "zeroDeltas": []
+  },
+  "pAudit": {
+    "name": "p",
+    "count": 2680,
+    "first": 0.0,
+    "last": 0.999594479,
+    "deltaStats": {
+      "min": 0.000326,
+      "avg": 0.000373,
+      "max": 0.002785,
+      "median": 0.000368
+    },
+    "negativeDeltaCount": 0,
+    "zeroDeltaCount": 0,
+    "negativeDeltas": [],
+    "zeroDeltas": []
+  },
+  "cleanedPreviewSummary": {
+    "totalPoints": 2897,
+    "suspiciousSegmentCount": 0,
+    "segmentLengthStats": {
+      "centerline": {
+        "min": 1.10813,
+        "avg": 1.496221,
+        "max": 1.500131,
+        "median": 1.500129
+      },
+      "leftEdge": {
+        "min": 0.73281,
+        "avg": 1.480412,
+        "max": 2.199754,
+        "median": 1.485643
+      },
+      "rightEdge": {
+        "min": 0.769709,
+        "avg": 1.513739,
+        "max": 2.26201,
+        "median": 1.514616
+      }
+    },
+    "localWidthStats": {
+      "min": 4.950885,
+      "avg": 12.522566,
+      "max": 19.315926,
+      "median": 12.812497
+    },
+    "loopClosure": {
+      "closureDistance": 1.50013,
+      "medianSegmentLength": 1.500129,
+      "closed": true
+    }
+  }
+}
