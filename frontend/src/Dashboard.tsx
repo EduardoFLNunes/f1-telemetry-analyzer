@@ -38,9 +38,14 @@ const trackGeometryKey = (track: any) => {
     track.cleanedPointCount || metadata.cleanedPointCount || 0,
     String(Boolean(track.visualGeometry)),
     visual.version || '',
+    visual.visualVersion || visual.metadata?.visualVersion || '',
+    visual.visualRenderMode || visual.metadata?.visualRenderMode || metadata.visualRenderMode || '',
+    visual.ribbonWidthMeters || visual.metadata?.ribbonWidthMeters || metadata.ribbonWidthMeters || '',
+    visual.centerlineMaxDisplacement || visual.metadata?.centerlineMaxDisplacement || metadata.centerlineMaxDisplacement || '',
     visual.source || visual.metadata?.source || metadata.visualGeometrySource || '',
     visual.visualSource || visual.metadata?.visualSource || metadata.visualSource || '',
     visual.falseCurveArtifactsRemoved || visual.metadata?.falseCurveArtifactsRemoved || '',
+    visual.centerlineArtifactsReduced || visual.metadata?.centerlineArtifactsReduced || '',
     visualLeft?.x?.length || 0,
     visualRight?.x?.length || 0,
   ].join('|');
@@ -51,11 +56,16 @@ const trackRuntimeVisualKey = (debug: any) => {
   return [
     debug.source || '',
     debug.visualSource || '',
+    debug.visualVersion || '',
+    debug.visualRenderMode || '',
+    debug.ribbonWidthMeters ?? '',
+    debug.centerlineMaxDisplacement ?? '',
     debug.visualPointCount || 0,
     debug.widthMin ?? '',
     debug.widthAvg ?? '',
     debug.widthMax ?? '',
     debug.falseCurveArtifactsRemoved ?? '',
+    debug.centerlineArtifactsReduced ?? '',
     debug.artifactCountAfter ?? '',
   ].join('|');
 };
@@ -65,11 +75,16 @@ const trackLoadedVisualKey = (track: any) => {
   return [
     visual.source || '',
     visual.visualSource || visual.metadata?.visualSource || '',
+    visual.visualVersion || visual.metadata?.visualVersion || '',
+    visual.visualRenderMode || visual.metadata?.visualRenderMode || '',
+    visual.ribbonWidthMeters || visual.metadata?.ribbonWidthMeters || '',
+    visual.centerlineMaxDisplacement || visual.metadata?.centerlineMaxDisplacement || '',
     visual.centerline?.x?.length || 0,
     visual.widthMin ?? '',
     visual.widthAvg ?? '',
     visual.widthMax ?? '',
     visual.falseCurveArtifactsRemoved ?? '',
+    visual.centerlineArtifactsReduced ?? '',
     visual.visualArtifactReport?.artifactCount ?? '',
   ].join('|');
 };
@@ -78,6 +93,7 @@ const trackPayloadMetrics = (track: any, payloadBytes = 0) => {
   const visual = track?.visualGeometry || {};
   const visualLeft = visual.leftEdge || visual.left_edge || {};
   const visualRight = visual.rightEdge || visual.right_edge || {};
+  const ribbon = visual.visualRibbonGeometry || {};
   return {
     payloadBytes,
     centerlineCount: track?.centerline?.x?.length || 0,
@@ -85,6 +101,7 @@ const trackPayloadMetrics = (track: any, payloadBytes = 0) => {
     physicalRightCount: track?.right_edge?.x?.length || track?.rightEdge?.x?.length || 0,
     visualLeftCount: visualLeft?.x?.length || 0,
     visualRightCount: visualRight?.x?.length || 0,
+    ribbonPointCount: ribbon.centerline?.x?.length || 0,
   };
 };
 

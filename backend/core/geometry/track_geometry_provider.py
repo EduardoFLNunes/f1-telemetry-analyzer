@@ -91,6 +91,10 @@ def track_visual_geometry_config() -> Dict[str, Any]:
         "enabled": track_visual_geometry_enabled(),
         "useRoadOnly": _env_bool("TRACK_VISUAL_USE_ROAD_ONLY", False),
         "visualSurfaces": visual_surfaces or list(DEFAULT_VISUAL_CONFIG["visualSurfaces"]),
+        "visualRenderMode": os.getenv(
+            "TRACK_VISUAL_RENDER_MODE",
+            str(DEFAULT_VISUAL_CONFIG["visualRenderMode"]),
+        ).strip().lower(),
         "artifactFixEnabled": _env_bool(
             "TRACK_VISUAL_ARTIFACT_FIX_ENABLED",
             bool(DEFAULT_VISUAL_CONFIG["artifactFixEnabled"]),
@@ -114,6 +118,26 @@ def track_visual_geometry_config() -> Dict[str, Any]:
         "maxWidth": _env_float(
             "TRACK_VISUAL_MAX_WIDTH",
             float(DEFAULT_VISUAL_CONFIG["maxWidth"]),
+        ),
+        "centerlineSmoothingEnabled": _env_bool(
+            "TRACK_VISUAL_CENTERLINE_SMOOTHING_ENABLED",
+            bool(DEFAULT_VISUAL_CONFIG["centerlineSmoothingEnabled"]),
+        ),
+        "centerlineSmoothingStrength": _env_float(
+            "TRACK_VISUAL_CENTERLINE_SMOOTHING_STRENGTH",
+            float(DEFAULT_VISUAL_CONFIG["centerlineSmoothingStrength"]),
+        ),
+        "centerlineArtifactSmoothingStrength": _env_float(
+            "TRACK_VISUAL_CENTERLINE_ARTIFACT_SMOOTHING_STRENGTH",
+            float(DEFAULT_VISUAL_CONFIG["centerlineArtifactSmoothingStrength"]),
+        ),
+        "curvatureOutlierThreshold": os.getenv(
+            "TRACK_VISUAL_CURVATURE_OUTLIER_THRESHOLD",
+            str(DEFAULT_VISUAL_CONFIG["curvatureOutlierThreshold"]),
+        ),
+        "normalRecompute": _env_bool(
+            "TRACK_VISUAL_NORMAL_RECOMPUTE",
+            bool(DEFAULT_VISUAL_CONFIG["normalRecompute"]),
         ),
         "artifactWidthMedianWindow": _env_int(
             "TRACK_VISUAL_ARTIFACT_WIDTH_MEDIAN_WINDOW",
@@ -158,6 +182,50 @@ def track_visual_geometry_config() -> Dict[str, Any]:
         "segmentSpikeMultiplier": _env_float(
             "TRACK_VISUAL_SEGMENT_SPIKE_MULTIPLIER",
             float(DEFAULT_VISUAL_CONFIG["segmentSpikeMultiplier"]),
+        ),
+        "localRepairEnabled": _env_bool(
+            "TRACK_VISUAL_LOCAL_REPAIR_ENABLED",
+            bool(DEFAULT_VISUAL_CONFIG["localRepairEnabled"]),
+        ),
+        "localRepairWindow": _env_int(
+            "TRACK_VISUAL_LOCAL_REPAIR_WINDOW",
+            int(DEFAULT_VISUAL_CONFIG["localRepairWindow"]),
+        ),
+        "localRepairMaxDisplacement": _env_float(
+            "TRACK_VISUAL_LOCAL_REPAIR_MAX_DISPLACEMENT",
+            float(DEFAULT_VISUAL_CONFIG["localRepairMaxDisplacement"]),
+        ),
+        "localRepairCurvatureZScore": _env_float(
+            "TRACK_VISUAL_LOCAL_REPAIR_CURVATURE_ZSCORE",
+            float(DEFAULT_VISUAL_CONFIG["localRepairCurvatureZScore"]),
+        ),
+        "localRepairMinSegmentCount": _env_int(
+            "TRACK_VISUAL_LOCAL_REPAIR_MIN_SEGMENT_COUNT",
+            int(DEFAULT_VISUAL_CONFIG["localRepairMinSegmentCount"]),
+        ),
+        "localRepairMaxSegmentCount": _env_int(
+            "TRACK_VISUAL_LOCAL_REPAIR_MAX_SEGMENT_COUNT",
+            int(DEFAULT_VISUAL_CONFIG["localRepairMaxSegmentCount"]),
+        ),
+        "ribbonCenterlineSmoothingWindow": _env_int(
+            "TRACK_VISUAL_RIBBON_CENTERLINE_SMOOTHING_WINDOW",
+            int(DEFAULT_VISUAL_CONFIG["ribbonCenterlineSmoothingWindow"]),
+        ),
+        "ribbonCenterlineSmoothingStrength": _env_float(
+            "TRACK_VISUAL_RIBBON_CENTERLINE_SMOOTHING_STRENGTH",
+            float(DEFAULT_VISUAL_CONFIG["ribbonCenterlineSmoothingStrength"]),
+        ),
+        "ribbonCenterlineMaxDisplacement": _env_float(
+            "TRACK_VISUAL_RIBBON_CENTERLINE_MAX_DISPLACEMENT",
+            float(DEFAULT_VISUAL_CONFIG["ribbonCenterlineMaxDisplacement"]),
+        ),
+        "ribbonMinWidth": _env_float(
+            "TRACK_VISUAL_RIBBON_MIN_WIDTH",
+            float(DEFAULT_VISUAL_CONFIG["ribbonMinWidth"]),
+        ),
+        "ribbonMaxWidth": _env_float(
+            "TRACK_VISUAL_RIBBON_MAX_WIDTH",
+            float(DEFAULT_VISUAL_CONFIG["ribbonMaxWidth"]),
         ),
     }
 
@@ -455,8 +523,17 @@ def apply_track_visual_geometry(
     metadata["visualGeometryEnabled"] = True
     metadata["visualGeometrySource"] = visual_geometry["source"]
     metadata["visualSource"] = visual_geometry.get("visualSource")
+    metadata["visualRenderMode"] = visual_geometry.get("visualRenderMode")
+    metadata["ribbonWidthMeters"] = visual_geometry.get("ribbonWidthMeters")
+    metadata["centerlineMaxDisplacement"] = visual_geometry.get("centerlineMaxDisplacement")
+    metadata["physicsUnaffected"] = visual_geometry.get("physicsUnaffected")
     metadata["visualArtifactFixEnabled"] = visual_geometry.get("visualArtifactFixEnabled")
     metadata["falseCurveArtifactsRemoved"] = visual_geometry.get("falseCurveArtifactsRemoved")
+    metadata["visualVersion"] = visual_geometry.get("visualVersion")
+    metadata["centerlineSmoothingEnabled"] = visual_geometry.get("centerlineSmoothingEnabled")
+    metadata["normalRecomputed"] = visual_geometry.get("normalRecomputed")
+    metadata["centerlineArtifactsDetected"] = visual_geometry.get("centerlineArtifactsDetected")
+    metadata["centerlineArtifactsReduced"] = visual_geometry.get("centerlineArtifactsReduced")
     metadata["visualWidthStats"] = {
         "min": visual_geometry.get("widthMin"),
         "avg": visual_geometry.get("widthAvg"),

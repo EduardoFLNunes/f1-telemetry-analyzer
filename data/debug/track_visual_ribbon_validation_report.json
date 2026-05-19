@@ -1,0 +1,173 @@
+{
+  "generatedAt": "2026-05-19T20:37:44.767Z",
+  "api": {
+    "activeTrackReady": true,
+    "visualVersion": "2-ribbon",
+    "visualRenderMode": "ribbon",
+    "ribbonWidthMeters": 12.538807,
+    "centerlineMaxDisplacement": 0.950001,
+    "physicsUnaffected": true,
+    "hasRibbon": true
+  },
+  "screenshots": {
+    "overviewPng": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\validation_overview_no_debug.png",
+    "followPng": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\validation_follow_no_debug.png",
+    "physPng": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\validation_debug_physics_on.png"
+  },
+  "states": {
+    "overviewState": {
+      "label": "overview_no_debug",
+      "buttons": [
+        {
+          "text": "OVERVIEW",
+          "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+        },
+        {
+          "text": "FOLLOW",
+          "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all text-slate-600 hover:text-slate-400"
+        },
+        {
+          "text": "Debug",
+          "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all text-slate-600 hover:text-slate-400"
+        },
+        {
+          "text": "AI Engineer",
+          "className": "num"
+        },
+        {
+          "text": "Debrief",
+          "className": "num"
+        },
+        {
+          "text": "Stop Session",
+          "className": "flex items-center gap-2 px-3 h-8 rounded-sm transition-all hover:opacity-80"
+        },
+        {
+          "text": "◀",
+          "className": "num text-[8px] text-slate-600 hover:text-slate-400 transition-colors"
+        },
+        {
+          "text": "▶",
+          "className": "num text-[8px] text-slate-600 hover:text-slate-400 transition-colors"
+        },
+        {
+          "text": "CLR",
+          "className": "num text-[7px] text-slate-700 hover:text-slate-500 uppercase tracking-wider transition-colors"
+        }
+      ],
+      "canvas": {
+        "width": 158,
+        "height": 158
+      },
+      "bodyText": "MOTORSPORT\nINTELLIGENCE\nWORKSTATION\nBUILD v12.0 // TELEMETRY ENGINE\nLAP_TIME\n--:--.---\nLAP\n58\nDELTA\n0.000\nFRAMES\n140\nLINK\nSTREAM\nSPATIAL\nAI_CORE\nLOCAL_TIME\n17:37:39\nVEHICLE STATE\nSPEED\n137.1KM/H\nGEAR\n3\nTHROTTLE\n100%\nBRAKE\n0%\nSTEER\nLAP DELTA\nDELTA_T\n0.000SEC\nLAT_G\n1.11\nLON_G\n0.65\nRPM_K\n6.1K\nYAW\n0.00\nG-G DIAGRAM\nSTABILITY\nLIVE\nCOGNITIVE MODEL OFFLINE\nOVERVIEW\nFOLLOW\nDEBUG\nAI ENGINEER\nDEBRIEF\nAI RACE ENGINEER\nACTIVE\nAI\nAWAITING DRIVER\nFEEDBACK SEQUENCES\nNEURAL-LINKED COACHING // PRIORITY ENABLED\nSESSION DEBRIEF\nPERFORMANCE METRICS\nAVG SPEED\n161.7 km/h\nMAX SPEED\n267 km/h\nTHROTTLE AVG\n30.5%\nBRAKE AVG\n34.9%\nEVENTS\n0 total\n0 critical\nAI RECOMMENDATIONS\n⟩\nFocus on corner exit speed — consistent throttle application point needed.\n⟩\nBrake variability detected. Single reference point per braking zone"
+    },
+    "followState": {
+      "label": "follow_no_debug",
+      "buttons": [
+        {
+          "text": "OVERVIEW",
+          "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all text-slate-600 hover:text-slate-400"
+        },
+        {
+          "text": "FOLLOW",
+          "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+        },
+        {
+          "text": "Debug",
+          "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all text-slate-600 hover:text-slate-400"
+        },
+        {
+          "text": "AI Engineer",
+          "className": "num"
+        },
+        {
+          "text": "Debrief",
+          "className": "num"
+        },
+        {
+          "text": "Stop Session",
+          "className": "flex items-center gap-2 px-3 h-8 rounded-sm transition-all hover:opacity-80"
+        },
+        {
+          "text": "◀",
+          "className": "num text-[8px] text-slate-600 hover:text-slate-400 transition-colors"
+        },
+        {
+          "text": "▶",
+          "className": "num text-[8px] text-slate-600 hover:text-slate-400 transition-colors"
+        },
+        {
+          "text": "CLR",
+          "className": "num text-[7px] text-slate-700 hover:text-slate-500 uppercase tracking-wider transition-colors"
+        }
+      ],
+      "canvas": {
+        "width": 158,
+        "height": 158
+      },
+      "bodyText": "MOTORSPORT\nINTELLIGENCE\nWORKSTATION\nBUILD v12.0 // TELEMETRY ENGINE\nLAP_TIME\n--:--.---\nLAP\n58\nDELTA\n0.000\nFRAMES\n190\nLINK\nSTREAM\nSPATIAL\nAI_CORE\nLOCAL_TIME\n17:37:41\nVEHICLE STATE\nSPEED\n170.1KM/H\nGEAR\n3\nTHROTTLE\n100%\nBRAKE\n0%\nSTEER\nLAP DELTA\nDELTA_T\n0.000SEC\nLAT_G\n1.29\nLON_G\n0.57\nRPM_K\n7.6K\nYAW\n0.00\nG-G DIAGRAM\nSTABILITY\nLIVE\nCOGNITIVE MODEL OFFLINE\nOVERVIEW\nFOLLOW\nDEBUG\nAI ENGINEER\nDEBRIEF\nAI RACE ENGINEER\nACTIVE\nAI\nAWAITING DRIVER\nFEEDBACK SEQUENCES\nNEURAL-LINKED COACHING // PRIORITY ENABLED\nSESSION DEBRIEF\nPERFORMANCE METRICS\nAVG SPEED\n160.0 km/h\nMAX SPEED\n267 km/h\nTHROTTLE AVG\n48.8%\nBRAKE AVG\n25.7%\nEVENTS\n0 total\n0 critical\nAI RECOMMENDATIONS\n⟩\nFocus on corner exit speed — consistent throttle application point needed.\n⟩\nBrake variability detected. Single reference point per braking zone"
+    },
+    "physState": {
+      "label": "debug_physics_on",
+      "buttons": [
+        {
+          "text": "OVERVIEW",
+          "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+        },
+        {
+          "text": "FOLLOW",
+          "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all text-slate-600 hover:text-slate-400"
+        },
+        {
+          "text": "Debug",
+          "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all bg-amber-500/15 text-amber-300 border border-amber-500/30"
+        },
+        {
+          "text": "Proj",
+          "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+        },
+        {
+          "text": "Phys",
+          "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+        },
+        {
+          "text": "Trail",
+          "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all text-slate-600 hover:text-slate-400"
+        },
+        {
+          "text": "Ctr",
+          "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all text-slate-600 hover:text-slate-400"
+        },
+        {
+          "text": "AI Engineer",
+          "className": "num"
+        },
+        {
+          "text": "Debrief",
+          "className": "num"
+        },
+        {
+          "text": "Stop Session",
+          "className": "flex items-center gap-2 px-3 h-8 rounded-sm transition-all hover:opacity-80"
+        },
+        {
+          "text": "◀",
+          "className": "num text-[8px] text-slate-600 hover:text-slate-400 transition-colors"
+        },
+        {
+          "text": "▶",
+          "className": "num text-[8px] text-slate-600 hover:text-slate-400 transition-colors"
+        },
+        {
+          "text": "CLR",
+          "className": "num text-[7px] text-slate-700 hover:text-slate-500 uppercase tracking-wider transition-colors"
+        }
+      ],
+      "canvas": {
+        "width": 158,
+        "height": 158
+      },
+      "bodyText": "MOTORSPORT\nINTELLIGENCE\nWORKSTATION\nBUILD v12.0 // TELEMETRY ENGINE\nLAP_TIME\n--:--.---\nLAP\n58\nDELTA\n0.000\nFRAMES\n249\nLINK\nSTREAM\nSPATIAL\nAI_CORE\nLOCAL_TIME\n17:37:43\nVEHICLE STATE\nSPEED\n194.0KM/H\nGEAR\n4\nTHROTTLE\n100%\nBRAKE\n0%\nSTEER\nLAP DELTA\nDELTA_T\n0.000SEC\nLAT_G\n1.85\nLON_G\n0.37\nRPM_K\n7.4K\nYAW\n0.00\nG-G DIAGRAM\nSTABILITY\nLIVE\nCOGNITIVE MODEL OFFLINE\nOVERVIEW\nFOLLOW\nDEBUG\nPROJ\nPHYS\nTRAIL\nCTR\nPROJECTION\ns 1582.37 m\nL -5.77 m\ndrift 5.772 m\nsegment 1060\nmirrorMode screen-space\nAI ENGINEER\nDEBRIEF\nAI RACE ENGINEER\nACTIVE\nAI\nAWAITING DRIVER\nFEEDBACK SEQUENCES\nNEURAL-LINKED COACHING // PRIORITY ENABLED\nSESSION DEBRIEF\nPERFORMANCE METRICS\nAVG SPEED\n165.8 km/h\nMAX SPEED\n267 km/h\nTHROTTLE AVG\n60.5%\nBRAKE AVG\n19.6%\nEVENTS\n0 total\n0 critical\nAI RECOMMENDATIONS\n⟩\nFocus on corner exit speed — consistent "
+    }
+  }
+}

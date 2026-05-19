@@ -1,0 +1,24 @@
+{
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "visualVersion": "2-ribbon",
+  "visualRenderMode": "ribbon",
+  "renderMode": "stroke_ribbon",
+  "ribbonWidthMeters": 12.538807,
+  "centerlineMaxDisplacement": 0.950001,
+  "physicsUnaffected": true,
+  "ribbonPointCount": 2897,
+  "polygonPointCount": 2897,
+  "ribbonMetadata": {
+    "visualOnly": true,
+    "source": "smoothed_centerline_ribbon",
+    "physicsUnaffected": true,
+    "centerlineSmoothingWindow": 49,
+    "centerlineSmoothingStrength": 0.72,
+    "centerlineMaxDisplacement": 0.950001,
+    "centerlineAvgDisplacement": 0.342819,
+    "ribbonWidthMeters": 12.538807,
+    "ribbonMinWidth": 10.5,
+    "ribbonMaxWidth": 13.5
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "file": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\validation_debug_physics_on.png",
+  "state": [
+    {
+      "text": "OVERVIEW",
+      "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+    },
+    {
+      "text": "FOLLOW",
+      "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all text-slate-600 hover:text-slate-400"
+    },
+    {
+      "text": "Debug",
+      "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all bg-amber-500/15 text-amber-300 border border-amber-500/30"
+    },
+    {
+      "text": "Proj",
+      "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all text-slate-600 hover:text-slate-400"
+    },
+    {
+      "text": "Phys",
+      "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+    },
+    {
+      "text": "Trail",
+      "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all text-slate-600 hover:text-slate-400"
+    },
+    {
+      "text": "Ctr",
+      "className": "px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all text-slate-600 hover:text-slate-400"
+    },
+    {
+      "text": "AI Engineer",
+      "className": "num"
+    },
+    {
+      "text": "Debrief",
+      "className": "num"
+    },
+    {
+      "text": "Stop Session",
+      "className": "flex items-center gap-2 px-3 h-8 rounded-sm transition-all hover:opacity-80"
+    },
+    {
+      "text": "◀",
+      "className": "num text-[8px] text-slate-600 hover:text-slate-400 transition-colors"
+    },
+    {
+      "text": "▶",
+      "className": "num text-[8px] text-slate-600 hover:text-slate-400 transition-colors"
+    },
+    {
+      "text": "CLR",
+      "className": "num text-[7px] text-slate-700 hover:text-slate-500 uppercase tracking-wider transition-colors"
+    }
+  ]
+}

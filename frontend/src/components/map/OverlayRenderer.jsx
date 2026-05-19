@@ -29,6 +29,37 @@ function buildPolylinePath(x = [], y = [], close = false, options = {}) {
   return path;
 }
 
+function buildSmoothPolylinePath(x = [], y = [], close = true, options = {}) {
+  if (typeof Path2D === 'undefined' || x.length < 2 || !y.length) return buildPolylinePath(x, y, close, options);
+  const points = x
+    .map((value, index) => toRenderPoint({ x: value, y: y[index] }, options))
+    .filter(Boolean);
+  if (points.length < 3) return buildPolylinePath(x, y, close, options);
+
+  const path = new Path2D();
+  path.moveTo(points[0].x, points[0].y);
+  const tension = 0.72;
+  const count = points.length;
+  const last = close ? count : count - 1;
+  for (let i = 0; i < last; i += 1) {
+    const p0 = points[(i - 1 + count) % count];
+    const p1 = points[i];
+    const p2 = points[(i + 1) % count];
+    const p3 = points[(i + 2) % count];
+    const cp1 = {
+      x: p1.x + ((p2.x - p0.x) * tension) / 6,
+      y: p1.y + ((p2.y - p0.y) * tension) / 6,
+    };
+    const cp2 = {
+      x: p2.x - ((p3.x - p1.x) * tension) / 6,
+      y: p2.y - ((p3.y - p1.y) * tension) / 6,
+    };
+    path.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y);
+  }
+  if (close) path.closePath();
+  return path;
+}
+
 export function createTrackPathCache(trackData, options = {}) {
   if (!trackData || typeof Path2D === 'undefined') {
     return {
@@ -44,7 +75,11 @@ export function createTrackPathCache(trackData, options = {}) {
 
   const left = trackData.left_edge;
   const right = trackData.right_edge;
-  const center = trackData.centerline;
+  const ribbon = trackData.visualRibbonGeometry;
+  const renderMode = trackData.visualRenderMode === 'ribbon' && ribbon?.centerline?.x?.length
+    ? 'ribbon'
+    : 'polygon';
+  const center = renderMode === 'ribbon' ? ribbon.centerline : trackData.centerline;
   const closed = trackData.closedLoop !== false;
   const asphaltPath = new Path2D();
 
@@ -55,6 +90,7 @@ export function createTrackPathCache(trackData, options = {}) {
       rightPoints: right?.x?.length || 0,
       centerlinePoints: center?.x?.length || 0,
       visualGeometryEnabled: Boolean(trackData.visualGeometryEnabled),
+      visualRenderMode: renderMode,
     });
   }
 
@@ -74,10 +110,14 @@ export function createTrackPathCache(trackData, options = {}) {
 
   const leftEdgePath = buildPolylinePath(left?.x, left?.y, closed, options);
   const rightEdgePath = buildPolylinePath(right?.x, right?.y, closed, options);
-  const centerlinePath = buildPolylinePath(center?.x, center?.y, closed, options);
+  const centerlinePath = renderMode === 'ribbon'
+    ? buildSmoothPolylinePath(center?.x, center?.y, closed, options)
+    : buildPolylinePath(center?.x, center?.y, closed, options);
 
   return {
     pathCacheEnabled: true,
+    renderMode,
+    ribbonWidthMeters: Number(trackData.ribbonWidthMeters || ribbon?.ribbonWidthMeters || ribbon?.width || 0),
     trackPointCount: center?.x?.length || 0,
     renderedPointCount: (left?.x?.length || 0) + (right?.x?.length || 0) + (center?.x?.length || 0),
     asphaltPath,
@@ -90,7 +130,11 @@ export function createTrackPathCache(trackData, options = {}) {
 export function drawTrackSurface(ctx, trackData, bounds, scale, pathCache = null, options = {}) {
   const left = trackData.left_edge;
   const right = trackData.right_edge;
-  const center = trackData.centerline;
+  const ribbon = trackData.visualRibbonGeometry;
+  const renderMode = trackData.visualRenderMode === 'ribbon' && ribbon?.centerline?.x?.length
+    ? 'ribbon'
+    : 'polygon';
+  const center = renderMode === 'ribbon' ? ribbon.centerline : trackData.centerline;
   const cache = pathCache?.pathCacheEnabled ? pathCache : null;
   if (cache && options.logPathCacheReuse && !cache.reuseLogged) {
     console.info('[OverlayRenderer] reusing visual Path2D');
@@ -98,6 +142,50 @@ export function drawTrackSurface(ctx, trackData, bounds, scale, pathCache = null
   }
 
   ctx.save();
+  if (renderMode === 'ribbon') {
+    const ribbonWidth = Number(trackData.ribbonWidthMeters || ribbon?.ribbonWidthMeters || ribbon?.width || 12);
+    const ribbonPath = cache?.centerlinePath;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(226,232,240,0.5)';
+    ctx.lineWidth = ribbonWidth + 1.35;
+    if (ribbonPath) ctx.stroke(ribbonPath);
+    else {
+      drawRenderPolyline(ctx, center.x, center.y, true, options);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#202838';
+    ctx.lineWidth = ribbonWidth;
+    if (ribbonPath) ctx.stroke(ribbonPath);
+    else {
+      drawRenderPolyline(ctx, center.x, center.y, true, options);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 0.55 / scale;
+    if (ribbonPath) ctx.stroke(ribbonPath);
+    else {
+      drawRenderPolyline(ctx, center.x, center.y, true, options);
+      ctx.stroke();
+    }
+
+    if (options.showCenterline) {
+      ctx.setLineDash([10 / scale, 16 / scale]);
+      ctx.strokeStyle = 'rgba(56,189,248,0.42)';
+      ctx.lineWidth = 0.9 / scale;
+      if (ribbonPath) ctx.stroke(ribbonPath);
+      else {
+        drawRenderPolyline(ctx, center.x, center.y, true, options);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+    return;
+  }
+
   if (!cache) {
     ctx.beginPath();
     for (let i = 0; i < left.x.length; i += 1) {
@@ -244,7 +332,7 @@ export function drawHud(ctx, width, height, trackData, frame, camera, debugEnabl
   ctx.font = '8px "JetBrains Mono", monospace';
   ctx.fillText(`${Math.round(trackData?.trackLength || trackData?.length_meters || 0)} m | ${trackData?.total_points || 0} pts | ${trackData?.source || 'driver path debug'}`, 24, 48);
   ctx.fillText(`Camera ${camera.mode}  Zoom x${camera.zoom.toFixed(1)}`, 24, 64);
-  ctx.fillText(`FPS ${Math.round(metrics.fps || 0)} | Path cache ${metrics.pathCacheEnabled ? 'ON' : 'OFF'} | Interp ${metrics.interpolationEnabled ? 'ON' : 'OFF'} | Visual ${metrics.visualGeometryEnabled ? 'ON' : 'OFF'} | mirrorMode ${metrics.mirrorMode || 'off'}`, 24, 80);
+  ctx.fillText(`FPS ${Math.round(metrics.fps || 0)} | Path cache ${metrics.pathCacheEnabled ? 'ON' : 'OFF'} | Interp ${metrics.interpolationEnabled ? 'ON' : 'OFF'} | Visual ${metrics.visualGeometryEnabled ? 'ON' : 'OFF'}:${metrics.visualRenderMode || 'polygon'} | mirrorMode ${metrics.mirrorMode || 'off'}`, 24, 80);
   ctx.fillText(`Track fetches ${metrics.trackFetchCount || 0} | Payload ${formatBytes(metrics.trackPayloadBytes || 0)} | Poll ${metrics.trackPollingEnabled ? 'ON' : 'OFF'}`, 24, 96);
   const debugFlags = metrics.debugOverlaysEnabled
     ? `${metrics.debugProjectionEnabled ? 'P' : '-'}${metrics.debugPhysicsEnabled ? 'E' : '-'}${metrics.debugTrajectoryEnabled ? 'T' : '-'}${metrics.debugCenterlineEnabled ? 'C' : '-'}`

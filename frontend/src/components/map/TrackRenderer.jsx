@@ -43,9 +43,13 @@ function normalizeVisualTrack(trackData) {
   const visualLeft = visual?.leftEdge || visual?.left_edge;
   const visualRight = visual?.rightEdge || visual?.right_edge;
   if (!trackData || !visualLeft?.x?.length || !visualRight?.x?.length) return null;
+  const ribbon = visual?.visualRibbonGeometry;
   return {
     ...trackData,
     source: visual.source || trackData.source,
+    visualRenderMode: visual.visualRenderMode || visual.metadata?.visualRenderMode || trackData.visualRenderMode || 'polygon',
+    visualRibbonGeometry: ribbon || null,
+    ribbonWidthMeters: visual.ribbonWidthMeters || ribbon?.ribbonWidthMeters || ribbon?.width,
     centerline: {
       ...(trackData.centerline || {}),
       ...(visual.centerline || {}),
@@ -259,6 +263,8 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
       metrics.debugPhysicsEnabled = Boolean(debugEnabled && debugLayers.physics);
       metrics.debugTrajectoryEnabled = Boolean(debugEnabled && debugLayers.trajectory);
       metrics.debugCenterlineEnabled = Boolean(debugEnabled && debugLayers.centerline);
+      metrics.visualRenderMode = visualTrack?.visualRenderMode || 'polygon';
+      metrics.ribbonWidthMeters = visualTrack?.ribbonWidthMeters;
       metrics.trackFetchCount = trackDiagnostics?.trackFetchCount || 0;
       metrics.trackPayloadBytes = trackDiagnostics?.payloadBytes || 0;
       metrics.trackPollingEnabled = Boolean(trackDiagnostics?.trackPollingEnabled);
@@ -299,6 +305,8 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
           debugLayers.physics ? 'physics' : 'physics-off',
           debugLayers.centerline ? 'centerline' : 'centerline-off',
           trackPathCache?.pathCacheBuildCount || 0,
+          visualTrack?.visualRenderMode || 'polygon',
+          visualTrack?.ribbonWidthMeters || 0,
           visualTrack?.cachePath || visualTrack?.trackName || '',
         ].join('|');
 
