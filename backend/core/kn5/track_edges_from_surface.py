@@ -948,9 +948,13 @@ def _bounds_from_points(points: Sequence[Sequence[float]]) -> Optional[Dict[str,
     return _bounds_payload(bounds_min, bounds_max)
 
 
-def build_track_edges_from_surface_from_manifest(manifest: Dict[str, Any]) -> Dict[str, Any]:
+def build_track_edges_from_surface_from_manifest(
+    manifest: Dict[str, Any],
+    *,
+    included_surfaces: Optional[Sequence[str]] = None,
+) -> Dict[str, Any]:
     diagnostics: List[Dict[str, Any]] = []
-    surface = build_track_surface_polygon_from_manifest(manifest)
+    surface = build_track_surface_polygon_from_manifest(manifest, included_surfaces=included_surfaces)
     triangles = surface.get("triangles", [])
     components, triangle_to_component = _component_analysis(triangles) if triangles else ([], {})
     selected_component = components[0] if components else None
@@ -1045,9 +1049,13 @@ def build_track_edges_from_surface_from_manifest(manifest: Dict[str, Any]) -> Di
     }
 
 
-def build_track_edges_interval_raycast_from_manifest(manifest: Dict[str, Any]) -> Dict[str, Any]:
+def build_track_edges_interval_raycast_from_manifest(
+    manifest: Dict[str, Any],
+    *,
+    included_surfaces: Optional[Sequence[str]] = None,
+) -> Dict[str, Any]:
     diagnostics: List[Dict[str, Any]] = []
-    surface = build_track_surface_polygon_from_manifest(manifest)
+    surface = build_track_surface_polygon_from_manifest(manifest, included_surfaces=included_surfaces)
     triangles = surface.get("triangles", [])
     components, triangle_to_component = _component_analysis(triangles) if triangles else ([], {})
     selected_component = components[0] if components else None

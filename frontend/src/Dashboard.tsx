@@ -37,8 +37,40 @@ const trackGeometryKey = (track: any) => {
     String(track.cleanupEnabled ?? metadata.cleanupEnabled ?? false),
     track.cleanedPointCount || metadata.cleanedPointCount || 0,
     String(Boolean(track.visualGeometry)),
+    visual.version || '',
+    visual.source || visual.metadata?.source || metadata.visualGeometrySource || '',
+    visual.visualSource || visual.metadata?.visualSource || metadata.visualSource || '',
+    visual.falseCurveArtifactsRemoved || visual.metadata?.falseCurveArtifactsRemoved || '',
     visualLeft?.x?.length || 0,
     visualRight?.x?.length || 0,
+  ].join('|');
+};
+
+const trackRuntimeVisualKey = (debug: any) => {
+  if (!debug?.enabled) return 'visual:none';
+  return [
+    debug.source || '',
+    debug.visualSource || '',
+    debug.visualPointCount || 0,
+    debug.widthMin ?? '',
+    debug.widthAvg ?? '',
+    debug.widthMax ?? '',
+    debug.falseCurveArtifactsRemoved ?? '',
+    debug.artifactCountAfter ?? '',
+  ].join('|');
+};
+
+const trackLoadedVisualKey = (track: any) => {
+  const visual = track?.visualGeometry || {};
+  return [
+    visual.source || '',
+    visual.visualSource || visual.metadata?.visualSource || '',
+    visual.centerline?.x?.length || 0,
+    visual.widthMin ?? '',
+    visual.widthAvg ?? '',
+    visual.widthMax ?? '',
+    visual.falseCurveArtifactsRemoved ?? '',
+    visual.visualArtifactReport?.artifactCount ?? '',
   ].join('|');
 };
 
@@ -124,6 +156,7 @@ const Dashboard: React.FC = () => {
     trackPollingEnabled: false,
   });
   const trackGeometryKeyRef = useRef('none');
+  const trackRuntimeVisualKeyRef = useRef('visual:unknown');
   const trackFetchCountRef = useRef(0);
   const [dashboardFrame, setDashboardFrame] = useState<any>(() => useTelemetryStore.getState().latestFrame);
   const isStreaming  = useTelemetryStore(s => s.isStreaming);
@@ -132,11 +165,12 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
-    const loadTrack = async () => {
+    let runtimePoll: number | null = null;
+    const loadTrack = async (reason = 'initial') => {
       const startedAt = performance.now();
       trackFetchCountRef.current += 1;
       try {
-        const res = await fetch(`http://${window.location.hostname}:8000/api/track/current`);
+        const res = await fetch(`http://${window.location.hostname}:8000/api/track/current`, { cache: 'no-store' });
         const text = await res.text();
         const contentLength = Number(res.headers.get('content-length'));
         const payloadBytes = Number.isFinite(contentLength) && contentLength > 0
@@ -145,21 +179,27 @@ const Dashboard: React.FC = () => {
         const data = JSON.parse(text);
         if (!cancelled && res.ok && data.track) {
           const nextKey = trackGeometryKey(data.track);
+          const nextRuntimeKey = trackLoadedVisualKey(data.track);
           const metrics = trackPayloadMetrics(data.track, payloadBytes);
           setTrackDiagnostics({
             trackFetchCount: trackFetchCountRef.current,
             ...metrics,
             lastTrackFetchMs: performance.now() - startedAt,
-            trackPollingEnabled: false,
+            trackPollingEnabled: true,
           });
           console.info('[Dashboard] loaded static track geometry', {
             fetchCount: trackFetchCountRef.current,
+            reason,
             key: nextKey,
+            visualKey: nextRuntimeKey,
             ...metrics,
           });
           if (nextKey !== trackGeometryKeyRef.current) {
             trackGeometryKeyRef.current = nextKey;
+            trackRuntimeVisualKeyRef.current = nextRuntimeKey;
             setTrackData(data.track);
+          } else {
+            trackRuntimeVisualKeyRef.current = nextRuntimeKey;
           }
           return;
         }
@@ -174,14 +214,37 @@ const Dashboard: React.FC = () => {
           setTrackDiagnostics((current: any) => ({
             ...current,
             trackFetchCount: trackFetchCountRef.current,
-            trackPollingEnabled: false,
+            trackPollingEnabled: true,
           }));
         }
       }
     };
+    const checkTrackRuntimeMetadata = async () => {
+      try {
+        const res = await fetch(`http://${window.location.hostname}:8000/api/debug/track-visual-geometry`, { cache: 'no-store' });
+        if (!res.ok || cancelled) return;
+        const debug = await res.json();
+        const runtimeKey = trackRuntimeVisualKey(debug);
+        if (
+          trackRuntimeVisualKeyRef.current !== 'visual:unknown'
+          && runtimeKey !== trackRuntimeVisualKeyRef.current
+        ) {
+          console.info('[Dashboard] invalidating static track geometry from runtime metadata', {
+            previous: trackRuntimeVisualKeyRef.current,
+            next: runtimeKey,
+          });
+          trackRuntimeVisualKeyRef.current = runtimeKey;
+          await loadTrack('runtime_visual_metadata_changed');
+        }
+      } catch {
+        // Metadata polling is diagnostic-only; live telemetry/render should keep running.
+      }
+    };
     loadTrack();
+    runtimePoll = window.setInterval(checkTrackRuntimeMetadata, 2000);
     return () => {
       cancelled = true;
+      if (runtimePoll !== null) window.clearInterval(runtimePoll);
     };
   }, []);
 
