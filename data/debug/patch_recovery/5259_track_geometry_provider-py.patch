@@ -1,0 +1,40 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\backend\core\geometry\track_geometry_provider.py
+@@
+ def apply_track_visual_geometry(
+@@
+     return track_data
++
++
++def build_visual_reference_track_from_manifest(
++    manifest: Dict[str, Any],
++    *,
++    visual_config: Dict[str, Any],
++    target_spacing: float,
++    smoothing_window: int,
++) -> Optional[Dict[str, Any]]:
++    surfaces = visual_config.get("visualSurfaces") or ["ROAD"]
++    try:
++        result = build_track_edges_interval_raycast_from_manifest(
++            manifest,
++            included_surfaces=surfaces,
++        )
++        metrics = result.get("metrics", {})
++        if metrics.get("validRaycastSamples", 0) <= 0 or not metrics.get("loopClosed"):
++            logger.warning("ROAD-only visual reference skipped: invalid raycast metrics: %s", metrics)
++            return None
++        reference = track_data_from_interval_edges(result, cache_path=None)
++        reference.setdefault("metadata", {})["visualReferenceOnly"] = True
++        reference.setdefault("metadata", {})["visualSurfaces"] = surfaces
++        reference.setdefault("metadata", {})["visualReferenceMetrics"] = metrics
++        if track_geometry_cleanup_enabled():
++            reference = apply_kn5_geometry_cleanup(
++                reference,
++                target_spacing=target_spacing,
++                smoothing_window=smoothing_window,
++            )
++        return reference
++    except Exception as exc:
++        logger.warning("ROAD-only visual reference failed; using physical centerline smoothing: %s", exc)
++        return None
+*** End Patch

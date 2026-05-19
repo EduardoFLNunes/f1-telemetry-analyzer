@@ -1,0 +1,149 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\TrackRenderer.jsx
+@@
+       const renderFrame = interpolatedCar.frameRef.current || liveFrame;
+       const liveDebugHistory = debugEnabled && debugLayers.trajectory
+         ? selectDebugTrajectory(liveHistory, renderFrame)
+         : [];
+       const renderBounds = visualTrack ? fixedBounds : computeTrackBounds(null, liveDebugHistory, renderFrame);
++      const nearestPhysicalPoint = diagnosticFlags.alignmentDebug
++        ? nearestPhysicalCenterlinePoint(normalizedTrack, renderFrame)
++        : null;
+       const metrics = renderMetricsRef.current;
+@@
+       metrics.duplicatePackets = telemetryPerf.duplicatePackets || 0;
+       metrics.interpolationBufferSize = interpolatedCar.metricsRef.current.bufferSize || 0;
++      metrics.alignmentDebugEnabled = diagnosticFlags.alignmentDebug;
++      metrics.drawCarInOffscreen = diagnosticFlags.drawCarInOffscreen;
++      metrics.renderGeometryMode = renderGeometryMode;
++      metrics.alignmentCase = [
++        renderOptions.mirrorX ? 'mirror:on' : 'mirror:off',
++        renderGeometryMode === 'visual' ? 'visual:on' : 'visual:off',
++      ].join(' ');
++
++      const publishAlignmentDiagnostic = () => {
++        if (!diagnosticFlags.alignmentDebug || !renderFrame) return null;
++        const carScreen = projectMapPointToScreen(renderFrame.mapPosition, rect.width, rect.height, renderBounds, cameraRef.current, renderOptions);
++        const projectedScreen = projectMapPointToScreen(renderFrame.projectedPosition, rect.width, rect.height, renderBounds, cameraRef.current, renderOptions);
++        const nearestScreen = projectMapPointToScreen(nearestPhysicalPoint, rect.width, rect.height, renderBounds, cameraRef.current, renderOptions);
++        const payload = {
++          case: metrics.alignmentCase,
++          renderGeometryMode,
++          flags: {
++            forceRenderPhysicsGeometry: diagnosticFlags.forceRenderPhysicsGeometry,
++            forceRenderVisualGeometry: diagnosticFlags.forceRenderVisualGeometry,
++            forceDisableMirror: diagnosticFlags.forceDisableMirror,
++            drawCarInOffscreen: diagnosticFlags.drawCarInOffscreen,
++          },
++          canonical: {
++            mapPosition: renderFrame.mapPosition || null,
++            projectedPosition: renderFrame.projectedPosition || null,
++            nearestPhysicalCenterline: nearestPhysicalPoint
++              ? { x: nearestPhysicalPoint.x, y: nearestPhysicalPoint.y, index: nearestPhysicalPoint.index, distance: nearestPhysicalPoint.distance }
++              : null,
++            lateralOffset: renderFrame.L ?? null,
++            distanceAlongTrack: renderFrame.s ?? null,
++          },
++          screen: {
++            car: carScreen,
++            projectedPosition: projectedScreen,
++            nearestPhysicalCenterline: nearestScreen,
++            carToProjectedPx: distanceBetween(carScreen, projectedScreen),
++            projectedToNearestPx: distanceBetween(projectedScreen, nearestScreen),
++          },
++          mapDistancesMeters: {
++            carToProjected: distanceBetween(renderFrame.mapPosition, renderFrame.projectedPosition),
++            carToNearestPhysicalCenterline: nearestPhysicalPoint?.distance ?? null,
++            projectedToNearestPhysicalCenterline: distanceBetween(renderFrame.projectedPosition, nearestPhysicalPoint),
++          },
++          pipeline: {
++            car: {
++              worldToScreen: true,
++              offscreenMapCanvas: diagnosticFlags.drawCarInOffscreen,
++              finalMirrorComposition: renderOptions.mirrorX,
++            },
++            projectedPosition: {
++              worldToScreen: true,
++              offscreenMapCanvas: true,
++              finalMirrorComposition: renderOptions.mirrorX,
++            },
++            nearestPhysicalCenterline: {
++              worldToScreen: true,
++              offscreenMapCanvas: true,
++              finalMirrorComposition: renderOptions.mirrorX,
++            },
++            track: {
++              worldToScreen: true,
++              staticTrackLayer: Boolean(visualTrack && cameraRef.current.mode === 'OVERVIEW'),
++              offscreenMapCanvas: true,
++              finalMirrorComposition: renderOptions.mirrorX,
++            },
++          },
++          camera: {
++            mode: cameraRef.current.mode,
++            zoom: cameraRef.current.zoom,
++            center: cameraRef.current.center,
++            offset: cameraRef.current.offset,
++            heading: cameraRef.current.heading,
++          },
++          bounds: renderBounds,
++        };
++        if (typeof window !== 'undefined') {
++          window.__trackAlignmentDiagnostics = payload;
++        }
++        if (
++          timestamp - alignmentLogRef.current.lastLoggedAt > 1000
++          || alignmentLogRef.current.lastCase !== payload.case
++        ) {
++          alignmentLogRef.current.lastLoggedAt = timestamp;
++          alignmentLogRef.current.lastCase = payload.case;
++          console.info('[TrackRenderer] alignment diagnostic', payload);
++        }
++        return payload;
++      };
+ 
+       let scale = 1;
++      let alignmentDiagnostic = null;
+       const useStaticTrackLayer = Boolean(visualTrack) && cameraRef.current.mode === 'OVERVIEW';
+       if (useStaticTrackLayer) {
+@@
+           debugLayers.centerline ? 'centerline' : 'centerline-off',
+           trackPathCache?.pathCacheBuildCount || 0,
++          renderGeometryMode,
++          diagnosticFlags.alignmentDebug ? 'alignment-on' : 'alignment-off',
+           visualTrack?.cachePath || visualTrack?.trackName || '',
+         ].join('|');
+@@
+         metrics.cameraEasingEnabled = Boolean(cameraRef.current.cameraEasingEnabled);
+         if (debugEnabled && debugLayers.trajectory) drawTrajectory(mapCtx, liveDebugHistory, scale, { maxSegmentDistance: 35 });
+         if (debugEnabled && debugLayers.projection && normalizedTrack && renderFrame) drawProjectionDebug(mapCtx, renderFrame, scale);
+-        if (renderFrame) drawCar(mapCtx, renderFrame, scale);
++        if (diagnosticFlags.alignmentDebug && renderFrame) {
++          drawAlignmentDebugMarkers(mapCtx, renderFrame, nearestPhysicalPoint, scale);
++        }
++        alignmentDiagnostic = publishAlignmentDiagnostic();
++        if (renderFrame && diagnosticFlags.drawCarInOffscreen) drawCar(mapCtx, renderFrame, scale);
+         mapCtx.restore();
+       } else {
+@@
+         if (debugEnabled && debugLayers.physics && normalizedTrack?.visualGeometry) drawPhysicsEdges(mapCtx, normalizedTrack, scale);
+         if (debugEnabled && debugLayers.trajectory) drawTrajectory(mapCtx, liveDebugHistory, scale, { maxSegmentDistance: 35 });
+         if (debugEnabled && debugLayers.projection && normalizedTrack && renderFrame) drawProjectionDebug(mapCtx, renderFrame, scale);
+-        if (renderFrame) drawCar(mapCtx, renderFrame, scale);
++        if (diagnosticFlags.alignmentDebug && renderFrame) {
++          drawAlignmentDebugMarkers(mapCtx, renderFrame, nearestPhysicalPoint, scale);
++        }
++        alignmentDiagnostic = publishAlignmentDiagnostic();
++        if (renderFrame && diagnosticFlags.drawCarInOffscreen) drawCar(mapCtx, renderFrame, scale);
+         mapCtx.restore();
+       }
+@@
+       ctx.drawImage(mapCanvas, 0, 0);
+       ctx.restore();
++
++      if (diagnosticFlags.alignmentDebug && !diagnosticFlags.drawCarInOffscreen && alignmentDiagnostic?.screen?.car) {
++        drawScreenSpaceAlignmentMarker(ctx, alignmentDiagnostic.screen.car, '#22d3ee', 'car screen');
++      }
+ 
+       drawHud(ctx, rect.width, rect.height, visualTrack, renderFrame, cameraRef.current, debugEnabled, metrics);
+*** End Patch

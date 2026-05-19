@@ -1,0 +1,21 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\hooks\useInterpolatedCarState.ts
+@@
+ export interface InterpolationMetrics {
+   interpolationEnabled: boolean;
+   lastTelemetryUpdate: number | null;
+   renderFrameCount: number;
++  bufferSize: number;
+ }
+@@
+   const metricsRef = useRef<InterpolationMetrics>({
+     interpolationEnabled: true,
+     lastTelemetryUpdate: null,
+     renderFrameCount: 0,
++    bufferSize: 0,
+   });
+@@
+     targetRef.current = sanitized;
+     metricsRef.current.lastTelemetryUpdate = Date.now();
++    metricsRef.current.bufferSize = 1;
+*** End Patch

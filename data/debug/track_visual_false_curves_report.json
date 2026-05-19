@@ -1,0 +1,245 @@
+{
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "visualSource": "centerline_width_smoothing",
+  "visualArtifactFixEnabled": true,
+  "falseCurveArtifactsRemoved": 8,
+  "before": {
+    "config": {
+      "enabled": true,
+      "visualSurfaces": [
+        "ROAD"
+      ],
+      "useRoadOnly": false,
+      "artifactFixEnabled": true,
+      "widthMedianWindow": 9,
+      "widthSmoothingWindow": 11,
+      "artifactWidthMedianWindow": 31,
+      "artifactWidthSmoothingWindow": 25,
+      "maxWidthDeltaPerSample": 1.2,
+      "minWidth": 6.0,
+      "maxWidth": 22.0,
+      "normalSmoothingWindow": 21,
+      "edgeSmoothingWindow": 23,
+      "centerlineSmoothingWindow": 25,
+      "artifactRepairRadius": 8,
+      "angleSpikeRadians": 0.55,
+      "falseCurveAngleRadians": 0.24,
+      "falseCurveCenterlineAngleRadians": 0.18,
+      "falseCurveDeviationMeters": 0.85,
+      "segmentSpikeMultiplier": 2.8
+    },
+    "pointCount": 2897,
+    "artifactCount": 9,
+    "uniqueArtifactIndexCount": 9,
+    "artifactIndices": [
+      327,
+      2586,
+      2587,
+      2605,
+      2606,
+      2607,
+      2612,
+      2613,
+      2614
+    ],
+    "artifacts": [
+      {
+        "index": 2612,
+        "p": 0.901368,
+        "edge": "left",
+        "localWidth": 9.582403,
+        "previousWidth": 9.503797,
+        "nextWidth": 9.703735,
+        "angleDelta": 0.026121,
+        "segmentLength": 1.470371,
+        "reason": "edge_deviates_from_neighbor_trend",
+        "centerlineAngleDelta": 0.011678,
+        "edgeTrendDeviation": 1.139064,
+        "centerlineTrendDeviation": 0.570616
+      },
+      {
+        "index": 2607,
+        "p": 0.899637,
+        "edge": "left",
+        "localWidth": 9.621726,
+        "previousWidth": 9.754712,
+        "nextWidth": 9.527681,
+        "angleDelta": 0.025709,
+        "segmentLength": 1.403543,
+        "reason": "edge_deviates_from_neighbor_trend",
+        "centerlineAngleDelta": 0.011949,
+        "edgeTrendDeviation": 1.131535,
+        "centerlineTrendDeviation": 0.592167
+      },
+      {
+        "index": 2613,
+        "p": 0.901714,
+        "edge": "left",
+        "localWidth": 9.703735,
+        "previousWidth": 9.582403,
+        "nextWidth": 9.865117,
+        "angleDelta": 0.020117,
+        "segmentLength": 1.474266,
+        "reason": "edge_deviates_from_neighbor_trend",
+        "centerlineAngleDelta": 0.006602,
+        "edgeTrendDeviation": 1.031126,
+        "centerlineTrendDeviation": 0.501594
+      },
+      {
+        "index": 2606,
+        "p": 0.899291,
+        "edge": "left",
+        "localWidth": 9.754712,
+        "previousWidth": 9.921337,
+        "nextWidth": 9.621726,
+        "angleDelta": 0.019249,
+        "segmentLength": 1.402676,
+        "reason": "edge_deviates_from_neighbor_trend",
+        "centerlineAngleDelta": 0.007518,
+        "edgeTrendDeviation": 1.024175,
+        "centerlineTrendDeviation": 0.531879
+      },
+      {
+        "index": 327,
+        "p": 0.112623,
+        "edge": "right",
+        "localWidth": 8.979303,
+        "previousWidth": 8.855973,
+        "nextWidth": 9.133249,
+        "angleDelta": 0.008644,
+        "segmentLength": 1.298422,
+        "reason": "edge_deviates_from_neighbor_trend",
+        "centerlineAngleDelta": 0.001795,
+        "edgeTrendDeviation": 0.946908,
+        "centerlineTrendDeviation": 0.509822
+      },
+      {
+        "index": 2614,
+        "p": 0.90206,
+        "edge": "left",
+        "localWidth": 9.865117,
+        "previousWidth": 9.703735,
+        "nextWidth": 10.061031,
+        "angleDelta": 0.016244,
+        "segmentLength": 1.476322,
+        "reason": "edge_deviates_from_neighbor_trend",
+        "centerlineAngleDelta": 0.004593,
+        "edgeTrendDeviation": 0.908472,
+        "centerlineTrendDeviation": 0.429416
+      },
+      {
+        "index": 2605,
+        "p": 0.898945,
+        "edge": "left",
+        "localWidth": 9.921337,
+        "previousWidth": 10.116283,
+        "nextWidth": 9.754712,
+        "angleDelta": 0.016009,
+        "segmentLength": 1.405211,
+        "reason": "edge_deviates_from_neighbor_trend",
+        "centerlineAngleDelta": 0.006233,
+        "edgeTrendDeviation": 0.904034,
+        "centerlineTrendDeviation": 0.465863
+      },
+      {
+        "index": 2587,
+        "p": 0.893011,
+        "edge": "left",
+        "localWidth": 14.402714,
+        "previousWidth": 14.527245,
+        "nextWidth": 14.247957,
+        "angleDelta": 0.033486,
+        "segmentLength": 1.432937,
+        "reason": "edge_deviates_from_neighbor_trend",
+        "centerlineAngleDelta": 0.022629,
+        "edgeTrendDeviation": 0.87791,
+        "centerlineTrendDeviation": 0.468138
+      },
+      {
+        "index": 2586,
+        "p": 0.892665,
+        "edge": "left",
+        "localWidth": 14.527245,
+        "previousWidth": 14.621555,
+        "nextWidth": 14.402714,
+        "angleDelta": 0.032123,
+        "segmentLength": 1.446287,
+        "reason": "edge_deviates_from_neighbor_trend",
+        "centerlineAngleDelta": 0.021357,
+        "edgeTrendDeviation": 0.872622,
+        "centerlineTrendDeviation": 0.468682
+      }
+    ],
+    "summary": {
+      "leftArtifacts": 8,
+      "rightArtifacts": 1,
+      "widthStats": {
+        "min": 5.999901,
+        "avg": 12.498934,
+        "max": 19.116431
+      },
+      "maxCenterlineAngleDelta": 0.087053,
+      "maxCenterlineTrendDeviation": 2.526897
+    }
+  },
+  "after": {
+    "config": {
+      "enabled": true,
+      "visualSurfaces": [
+        "ROAD"
+      ],
+      "useRoadOnly": false,
+      "artifactFixEnabled": true,
+      "widthMedianWindow": 9,
+      "widthSmoothingWindow": 11,
+      "artifactWidthMedianWindow": 31,
+      "artifactWidthSmoothingWindow": 25,
+      "maxWidthDeltaPerSample": 1.2,
+      "minWidth": 6.0,
+      "maxWidth": 22.0,
+      "normalSmoothingWindow": 21,
+      "edgeSmoothingWindow": 23,
+      "centerlineSmoothingWindow": 25,
+      "artifactRepairRadius": 8,
+      "angleSpikeRadians": 0.55,
+      "falseCurveAngleRadians": 0.24,
+      "falseCurveCenterlineAngleRadians": 0.18,
+      "falseCurveDeviationMeters": 0.85,
+      "segmentSpikeMultiplier": 2.8
+    },
+    "pointCount": 2897,
+    "artifactCount": 1,
+    "uniqueArtifactIndexCount": 1,
+    "artifactIndices": [
+      327
+    ],
+    "artifacts": [
+      {
+        "index": 327,
+        "p": 0.112623,
+        "edge": "right",
+        "localWidth": 10.66418,
+        "previousWidth": 10.540862,
+        "nextWidth": 10.818027,
+        "angleDelta": 0.026453,
+        "segmentLength": 1.220341,
+        "reason": "edge_deviates_from_neighbor_trend",
+        "centerlineAngleDelta": 0.015599,
+        "edgeTrendDeviation": 0.860024,
+        "centerlineTrendDeviation": 0.580767
+      }
+    ],
+    "summary": {
+      "leftArtifacts": 0,
+      "rightArtifacts": 1,
+      "widthStats": {
+        "min": 5.999901,
+        "avg": 12.520729,
+        "max": 19.116431
+      },
+      "maxCenterlineAngleDelta": 0.060923,
+      "maxCenterlineTrendDeviation": 2.526897
+    }
+  }
+}

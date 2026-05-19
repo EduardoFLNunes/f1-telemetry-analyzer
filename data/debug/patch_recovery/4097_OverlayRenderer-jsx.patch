@@ -1,0 +1,6 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\OverlayRenderer.jsx
+@@
+-  ctx.fillText(`FPS ${Math.round(metrics.fps || 0)} | Path cache ${metrics.pathCacheEnabled ? 'ON' : 'OFF'} | Interp ${metrics.interpolationEnabled ? 'ON' : 'OFF'} | Visual ${metrics.visualGeometryEnabled ? 'ON' : 'OFF'} | MirrorX ${metrics.mirrorX ? 'ON' : 'OFF'}`, 24, 80);
++  ctx.fillText(`FPS ${Math.round(metrics.fps || 0)} | Path cache ${metrics.pathCacheEnabled ? 'ON' : 'OFF'} | Interp ${metrics.interpolationEnabled ? 'ON' : 'OFF'} | Visual ${metrics.visualGeometryEnabled ? 'ON' : 'OFF'} | mirrorMode ${metrics.mirrorMode || 'off'}`, 24, 80);
+*** End Patch

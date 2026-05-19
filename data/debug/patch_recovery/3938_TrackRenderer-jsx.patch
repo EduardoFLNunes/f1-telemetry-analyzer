@@ -1,0 +1,78 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\TrackRenderer.jsx
+@@
+ import { drawCar, drawTrajectory } from './CarRenderer.jsx';
+ import { applyCameraTransform, computeTrackBounds } from './CameraController.jsx';
+-import { createTrackPathCache, drawHud, drawProjectionDebug, drawTrackSurface } from './OverlayRenderer.jsx';
++import { createTrackPathCache, drawHud, drawPhysicsEdges, drawProjectionDebug, drawTrackSurface } from './OverlayRenderer.jsx';
+@@
+ function normalizeTrack(trackData) {
+@@
+   };
+ }
+ 
++function normalizeVisualTrack(trackData) {
++  const visual = trackData?.visualGeometry;
++  if (!trackData || !visual?.left_edge?.x?.length || !visual?.right_edge?.x?.length) return null;
++  return {
++    ...trackData,
++    source: visual.source || trackData.source,
++    centerline: {
++      ...(trackData.centerline || {}),
++      ...(visual.centerline || {}),
++      y: visual.centerline?.y || visual.centerline?.z || [],
++    },
++    left_edge: {
++      ...(visual.left_edge || {}),
++      y: visual.left_edge?.y || visual.left_edge?.z || [],
++    },
++    right_edge: {
++      ...(visual.right_edge || {}),
++      y: visual.right_edge?.y || visual.right_edge?.z || [],
++    },
++    localWidth: visual.localWidth || trackData.localWidth,
++    bounds: visual.bounds || trackData.bounds,
++    widthMin: visual.widthMin ?? trackData.widthMin,
++    widthAvg: visual.widthAvg ?? trackData.widthAvg,
++    widthMax: visual.widthMax ?? trackData.widthMax,
++    visualGeometryEnabled: true,
++  };
++}
++
+ export function TrackRenderer({ trackData, mirrorX }) {
+@@
+   const renderOptions = useMemo(() => ({ mirrorX: resolveMirrorX(mirrorX) }), [mirrorX]);
+   const normalizedTrack = useMemo(() => normalizeTrack(trackData), [trackData]);
+-  const fixedBounds = useMemo(() => computeTrackBounds(normalizedTrack, [], null, renderOptions), [normalizedTrack, renderOptions]);
+-  const trackPathCache = useMemo(() => createTrackPathCache(normalizedTrack, renderOptions), [normalizedTrack, renderOptions]);
++  const visualTrack = useMemo(() => normalizeVisualTrack(normalizedTrack) || normalizedTrack, [normalizedTrack]);
++  const fixedBounds = useMemo(() => computeTrackBounds(visualTrack, [], null, renderOptions), [visualTrack, renderOptions]);
++  const trackPathCache = useMemo(() => createTrackPathCache(visualTrack, renderOptions), [visualTrack, renderOptions]);
+@@
+-      const renderBounds = normalizedTrack ? fixedBounds : computeTrackBounds(null, liveDebugHistory, renderFrame, renderOptions);
++      const renderBounds = visualTrack ? fixedBounds : computeTrackBounds(null, liveDebugHistory, renderFrame, renderOptions);
+@@
+-      metrics.trackPointCount = normalizedTrack?.total_points || normalizedTrack?.centerline?.x?.length || 0;
++      metrics.trackPointCount = visualTrack?.total_points || visualTrack?.centerline?.x?.length || 0;
+       metrics.renderedPointCount = trackPathCache?.renderedPointCount || 0;
+       metrics.pathCacheEnabled = Boolean(trackPathCache?.pathCacheEnabled);
+       metrics.interpolationEnabled = Boolean(interpolatedCar.interpolationEnabled);
+       metrics.cameraEasingEnabled = Boolean(cameraRef.current.cameraEasingEnabled);
+       metrics.mirrorX = renderOptions.mirrorX;
++      metrics.visualGeometryEnabled = Boolean(normalizedTrack?.visualGeometry);
+@@
+-      if (normalizedTrack) {
+-        drawTrackSurface(ctx, normalizedTrack, renderBounds, scale, trackPathCache, { showCenterline: debugEnabled, ...renderOptions });
++      if (visualTrack) {
++        drawTrackSurface(ctx, visualTrack, renderBounds, scale, trackPathCache, { showCenterline: debugEnabled, ...renderOptions });
+       }
++      if (debugEnabled && normalizedTrack?.visualGeometry) drawPhysicsEdges(ctx, normalizedTrack, scale, renderOptions);
+       if (debugEnabled) drawTrajectory(ctx, liveDebugHistory, scale, renderOptions);
+       if (debugEnabled && normalizedTrack && renderFrame) drawProjectionDebug(ctx, renderFrame, scale, renderOptions);
+@@
+-      drawHud(ctx, rect.width, rect.height, normalizedTrack, renderFrame, cameraRef.current, debugEnabled, metrics);
++      drawHud(ctx, rect.width, rect.height, visualTrack, renderFrame, cameraRef.current, debugEnabled, metrics);
+@@
+-  }, [debugEnabled, fixedBounds, interpolatedCar, normalizedTrack, renderOptions, trackPathCache]);
++  }, [debugEnabled, fixedBounds, interpolatedCar, normalizedTrack, renderOptions, trackPathCache, visualTrack]);
+*** End Patch

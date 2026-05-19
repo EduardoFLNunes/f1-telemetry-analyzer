@@ -1,0 +1,168 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\OverlayRenderer.jsx
+@@
+ function drawPolyline(ctx, x = [], y = [], close = false) {
+@@
+   if (close) ctx.closePath();
+ }
+ 
+-export function drawTrackSurface(ctx, trackData, bounds, scale) {
++function buildPolylinePath(x = [], y = [], close = false) {
++  if (typeof Path2D === 'undefined' || !x.length || !y.length) return null;
++  const path = new Path2D();
++  path.moveTo(x[0], y[0]);
++  for (let i = 1; i < x.length; i += 1) {
++    path.lineTo(x[i], y[i]);
++  }
++  if (close) path.closePath();
++  return path;
++}
++
++export function createTrackPathCache(trackData) {
++  if (!trackData || typeof Path2D === 'undefined') {
++    return {
++      pathCacheEnabled: false,
++      trackPointCount: 0,
++      renderedPointCount: 0,
++      asphaltPath: null,
++      leftEdgePath: null,
++      rightEdgePath: null,
++      centerlinePath: null,
++    };
++  }
++
+   const left = trackData.left_edge;
+   const right = trackData.right_edge;
+   const center = trackData.centerline;
++  const closed = trackData.closedLoop !== false;
++  const asphaltPath = new Path2D();
++
++  if (left?.x?.length && right?.x?.length) {
++    asphaltPath.moveTo(left.x[0], left.y[0]);
++    for (let i = 1; i < left.x.length; i += 1) {
++      asphaltPath.lineTo(left.x[i], left.y[i]);
++    }
++    for (let i = right.x.length - 1; i >= 0; i -= 1) {
++      asphaltPath.lineTo(right.x[i], right.y[i]);
++    }
++    asphaltPath.closePath();
++  }
++
++  const leftEdgePath = buildPolylinePath(left?.x, left?.y, closed);
++  const rightEdgePath = buildPolylinePath(right?.x, right?.y, closed);
++  const centerlinePath = buildPolylinePath(center?.x, center?.y, closed);
++
++  return {
++    pathCacheEnabled: true,
++    trackPointCount: center?.x?.length || 0,
++    renderedPointCount: (left?.x?.length || 0) + (right?.x?.length || 0) + (center?.x?.length || 0),
++    asphaltPath,
++    leftEdgePath,
++    rightEdgePath,
++    centerlinePath,
++  };
++}
+ 
++export function drawTrackSurface(ctx, trackData, bounds, scale, pathCache = null) {
++  const left = trackData.left_edge;
++  const right = trackData.right_edge;
++  const center = trackData.centerline;
++  const cache = pathCache?.pathCacheEnabled ? pathCache : null;
++
+   ctx.save();
+-  ctx.beginPath();
+-  for (let i = 0; i < left.x.length; i += 1) {
+-    const op = i === 0 ? 'moveTo' : 'lineTo';
+-    ctx[op](left.x[i], left.y[i]);
+-  }
+-  for (let i = right.x.length - 1; i >= 0; i -= 1) {
+-    ctx.lineTo(right.x[i], right.y[i]);
+-  }
+-  ctx.closePath();
++  if (!cache) {
++    ctx.beginPath();
++    for (let i = 0; i < left.x.length; i += 1) {
++      const op = i === 0 ? 'moveTo' : 'lineTo';
++      ctx[op](left.x[i], left.y[i]);
++    }
++    for (let i = right.x.length - 1; i >= 0; i -= 1) {
++      ctx.lineTo(right.x[i], right.y[i]);
++    }
++    ctx.closePath();
++  }
+ 
+   const asphalt = ctx.createLinearGradient(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY);
+   asphalt.addColorStop(0, '#1b1f2b');
+   asphalt.addColorStop(0.5, '#262a36');
+   asphalt.addColorStop(1, '#171b25');
+   ctx.fillStyle = asphalt;
+-  ctx.fill();
++  if (cache?.asphaltPath) ctx.fill(cache.asphaltPath);
++  else ctx.fill();
+ 
+   ctx.lineCap = 'round';
+   ctx.lineJoin = 'round';
+ 
+   ctx.strokeStyle = 'rgba(255,255,255,0.48)';
+   ctx.lineWidth = 1.4 / scale;
+   const closed = trackData.closedLoop !== false;
+-  drawPolyline(ctx, left.x, left.y, closed);
+-  ctx.stroke();
+-  drawPolyline(ctx, right.x, right.y, closed);
+-  ctx.stroke();
++  if (cache?.leftEdgePath) ctx.stroke(cache.leftEdgePath);
++  else {
++    drawPolyline(ctx, left.x, left.y, closed);
++    ctx.stroke();
++  }
++  if (cache?.rightEdgePath) ctx.stroke(cache.rightEdgePath);
++  else {
++    drawPolyline(ctx, right.x, right.y, closed);
++    ctx.stroke();
++  }
+ 
+   ctx.setLineDash([10 / scale, 16 / scale]);
+   ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+   ctx.lineWidth = 0.8 / scale;
+-  drawPolyline(ctx, center.x, center.y, closed);
+-  ctx.stroke();
++  if (cache?.centerlinePath) ctx.stroke(cache.centerlinePath);
++  else {
++    drawPolyline(ctx, center.x, center.y, closed);
++    ctx.stroke();
++  }
+   ctx.setLineDash([]);
+   ctx.restore();
+ }
+@@
+-export function drawHud(ctx, width, height, trackData, frame, camera, debugEnabled) {
++export function drawHud(ctx, width, height, trackData, frame, camera, debugEnabled, metrics = {}) {
+   ctx.save();
+   ctx.resetTransform();
+   ctx.fillStyle = 'rgba(6,8,16,0.78)';
+   ctx.strokeStyle = 'rgba(148,163,184,0.16)';
+   ctx.lineWidth = 1;
+-  ctx.fillRect(12, 12, 260, debugEnabled ? 122 : 62);
+-  ctx.strokeRect(12, 12, 260, debugEnabled ? 122 : 62);
++  const hudHeight = debugEnabled ? 154 : 82;
++  ctx.fillRect(12, 12, 284, hudHeight);
++  ctx.strokeRect(12, 12, 284, hudHeight);
+@@
+   ctx.font = '8px "JetBrains Mono", monospace';
+   ctx.fillText(`${Math.round(trackData?.trackLength || trackData?.length_meters || 0)} m | ${trackData?.total_points || 0} pts | ${trackData?.source || 'driver path debug'}`, 24, 48);
+   ctx.fillText(`Camera ${camera.mode}  Zoom x${camera.zoom.toFixed(1)}`, 24, 64);
++  ctx.fillText(`FPS ${Math.round(metrics.fps || 0)} | Path cache ${metrics.pathCacheEnabled ? 'ON' : 'OFF'} | Interp ${metrics.interpolationEnabled ? 'ON' : 'OFF'}`, 24, 80);
+ 
+   if (debugEnabled && frame) {
+     ctx.fillStyle = '#cbd5e1';
+     const lateral = Number.isFinite(frame.L) ? `${Number(frame.L).toFixed(2)}m` : 'pending';
+     const drift = Number.isFinite(frame.alignment_drift) ? `${Number(frame.alignment_drift).toFixed(3)}m` : 'pending';
+-    ctx.fillText(`s ${Number(frame.s || 0).toFixed(2)}m   L ${lateral}`, 24, 84);
+-    ctx.fillText(`drift ${drift}`, 24, 100);
+-    ctx.fillText(`segment ${frame.projectionDebug?.nearestSegmentIndex ?? '-'}`, 24, 116);
++    ctx.fillText(`s ${Number(frame.s || 0).toFixed(2)}m   L ${lateral}`, 24, 102);
++    ctx.fillText(`drift ${drift}`, 24, 118);
++    ctx.fillText(`segment ${frame.projectionDebug?.nearestSegmentIndex ?? '-'}`, 24, 134);
++    ctx.fillText(`rendered ${metrics.renderedPointCount || 0} pts | camera easing ${metrics.cameraEasingEnabled ? 'ON' : 'OFF'}`, 24, 150);
+   }
+*** End Patch

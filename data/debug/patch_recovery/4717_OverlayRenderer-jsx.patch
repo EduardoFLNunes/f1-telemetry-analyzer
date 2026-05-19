@@ -1,0 +1,67 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\OverlayRenderer.jsx
+@@
+ export function createTrackPathCache(trackData, options = {}) {
+   if (!trackData || typeof Path2D === 'undefined') {
+@@
+   const left = trackData.left_edge;
+   const right = trackData.right_edge;
+   const center = trackData.centerline;
+   const closed = trackData.closedLoop !== false;
+   const asphaltPath = new Path2D();
++
++  if (options.logBuild) {
++    console.info('[OverlayRenderer] building visual Path2D', {
++      track: trackData.trackName || trackData.name,
++      leftPoints: left?.x?.length || 0,
++      rightPoints: right?.x?.length || 0,
++      centerlinePoints: center?.x?.length || 0,
++      visualGeometryEnabled: Boolean(trackData.visualGeometryEnabled),
++    });
++  }
+@@
+ export function drawTrackSurface(ctx, trackData, bounds, scale, pathCache = null, options = {}) {
+@@
+   const cache = pathCache?.pathCacheEnabled ? pathCache : null;
++  if (cache && options.logPathCacheReuse && !cache.reuseLogged) {
++    console.info('[OverlayRenderer] reusing visual Path2D');
++    cache.reuseLogged = true;
++  }
+@@
+ export function drawHud(ctx, width, height, trackData, frame, camera, debugEnabled, metrics = {}) {
++  const formatBytes = (bytes = 0) => {
++    if (!bytes) return '0 KB';
++    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
++    return `${Math.round(bytes / 1024)} KB`;
++  };
++
+   ctx.save();
+   ctx.resetTransform();
+   ctx.fillStyle = 'rgba(6,8,16,0.78)';
+   ctx.strokeStyle = 'rgba(148,163,184,0.16)';
+   ctx.lineWidth = 1;
+-  const hudHeight = debugEnabled ? 154 : 82;
++  const hudHeight = debugEnabled ? 186 : 114;
+   ctx.fillRect(12, 12, 360, hudHeight);
+   ctx.strokeRect(12, 12, 360, hudHeight);
+@@
+   ctx.fillText(`${Math.round(trackData?.trackLength || trackData?.length_meters || 0)} m | ${trackData?.total_points || 0} pts | ${trackData?.source || 'driver path debug'}`, 24, 48);
+   ctx.fillText(`Camera ${camera.mode}  Zoom x${camera.zoom.toFixed(1)}`, 24, 64);
+   ctx.fillText(`FPS ${Math.round(metrics.fps || 0)} | Path cache ${metrics.pathCacheEnabled ? 'ON' : 'OFF'} | Interp ${metrics.interpolationEnabled ? 'ON' : 'OFF'} | Visual ${metrics.visualGeometryEnabled ? 'ON' : 'OFF'} | mirrorMode ${metrics.mirrorMode || 'off'}`, 24, 80);
++  ctx.fillText(`Track fetches ${metrics.trackFetchCount || 0} | Payload ${formatBytes(metrics.trackPayloadBytes || 0)} | Poll ${metrics.trackPollingEnabled ? 'ON' : 'OFF'}`, 24, 96);
++  ctx.fillText(`Path builds ${metrics.pathCacheBuildCount || 0} | Offscreen create ${metrics.offscreenCanvasRecreatedCount || 0} | resize ${metrics.offscreenCanvasResizeCount || 0} | Debug ${metrics.debugOverlaysEnabled ? 'ON' : 'OFF'}`, 24, 112);
+ 
+   if (debugEnabled && frame) {
+     ctx.fillStyle = '#cbd5e1';
+     const lateral = Number.isFinite(frame.L) ? `${Number(frame.L).toFixed(2)}m` : 'pending';
+     const drift = Number.isFinite(frame.alignment_drift) ? `${Number(frame.alignment_drift).toFixed(3)}m` : 'pending';
+-    ctx.fillText(`s ${Number(frame.s || 0).toFixed(2)}m   L ${lateral}`, 24, 102);
+-    ctx.fillText(`drift ${drift}`, 24, 118);
+-    ctx.fillText(`segment ${frame.projectionDebug?.nearestSegmentIndex ?? '-'}`, 24, 134);
+-    ctx.fillText(`rendered ${metrics.renderedPointCount || 0} pts | camera easing ${metrics.cameraEasingEnabled ? 'ON' : 'OFF'}`, 24, 150);
++    ctx.fillText(`s ${Number(frame.s || 0).toFixed(2)}m   L ${lateral}`, 24, 134);
++    ctx.fillText(`drift ${drift}`, 24, 150);
++    ctx.fillText(`segment ${frame.projectionDebug?.nearestSegmentIndex ?? '-'}`, 24, 166);
++    ctx.fillText(`rendered ${metrics.renderedPointCount || 0} pts | camera easing ${metrics.cameraEasingEnabled ? 'ON' : 'OFF'}`, 24, 182);
+   }
+*** End Patch

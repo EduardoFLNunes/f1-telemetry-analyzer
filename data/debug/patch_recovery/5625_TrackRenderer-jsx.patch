@@ -1,0 +1,89 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\TrackRenderer.jsx
+@@
+ import { useTelemetryStore } from '../../store/useTelemetryStore';
+ import { useInterpolatedCarState } from '../../hooks/useInterpolatedCarState';
+ import { drawCar, drawTrajectory } from './CarRenderer.jsx';
+-import { applyCameraTransform, computeTrackBounds } from './CameraController.jsx';
+-import { createTrackPathCache, drawHud, drawPhysicsEdges, drawProjectionDebug, drawTrackSurface } from './OverlayRenderer.jsx';
++import { applyCameraTransform, computeTrackBounds, projectMapPointToScreen } from './CameraController.jsx';
++import {
++  createTrackPathCache,
++  drawAlignmentDebugMarkers,
++  drawHud,
++  drawPhysicsEdges,
++  drawProjectionDebug,
++  drawScreenSpaceAlignmentMarker,
++  drawTrackSurface,
++} from './OverlayRenderer.jsx';
+ import { ProjectionDebugOverlay } from '../debug/ProjectionDebugOverlay.jsx';
+ import { mirrorMode, resolveMirrorX } from './renderTransform.js';
++
++function readFlag(names, defaultValue = false) {
++  const list = Array.isArray(names) ? names : [names];
++  const values = [];
++  if (typeof window !== 'undefined') {
++    const params = new URLSearchParams(window.location.search);
++    for (const name of list) {
++      if (params.has(name)) values.push(params.get(name));
++      const lower = name.replace(/^VITE_/, '').toLowerCase();
++      if (params.has(lower)) values.push(params.get(lower));
++    }
++  }
++  for (const name of list) {
++    values.push(import.meta.env?.[name]);
++    values.push(import.meta.env?.[`VITE_${name.replace(/^VITE_/, '')}`]);
++  }
++  const raw = values.find((value) => value !== undefined && value !== null && String(value).trim() !== '');
++  if (raw === undefined) return defaultValue;
++  return ['1', 'true', 'yes', 'on'].includes(String(raw).trim().toLowerCase());
++}
++
++function readOptionalFlag(names) {
++  const list = Array.isArray(names) ? names : [names];
++  const values = [];
++  if (typeof window !== 'undefined') {
++    const params = new URLSearchParams(window.location.search);
++    for (const name of list) {
++      if (params.has(name)) values.push(params.get(name));
++      const lower = name.replace(/^VITE_/, '').toLowerCase();
++      if (params.has(lower)) values.push(params.get(lower));
++    }
++  }
++  for (const name of list) {
++    values.push(import.meta.env?.[name]);
++    values.push(import.meta.env?.[`VITE_${name.replace(/^VITE_/, '')}`]);
++  }
++  const raw = values.find((value) => value !== undefined && value !== null && String(value).trim() !== '');
++  if (raw === undefined) return null;
++  return ['1', 'true', 'yes', 'on'].includes(String(raw).trim().toLowerCase());
++}
++
++function nearestPhysicalCenterlinePoint(trackData, frame) {
++  const center = trackData?.centerline || {};
++  const x = center.x || [];
++  const y = center.y || center.z || [];
++  const car = frame?.mapPosition;
++  if (!x.length || !y.length || !car) return null;
++  let best = null;
++  let bestDistance = Number.POSITIVE_INFINITY;
++  for (let index = 0; index < x.length; index += 1) {
++    const point = { x: Number(x[index]), y: Number(y[index]) };
++    if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) continue;
++    const distance = Math.hypot(point.x - car.x, point.y - car.y);
++    if (distance < bestDistance) {
++      bestDistance = distance;
++      best = { ...point, index, distance };
++    }
++  }
++  return best;
++}
++
++function distanceBetween(a, b) {
++  if (!a || !b) return null;
++  const dx = Number(a.x) - Number(b.x);
++  const dy = Number(a.y) - Number(b.y);
++  if (!Number.isFinite(dx) || !Number.isFinite(dy)) return null;
++  return Math.hypot(dx, dy);
++}
+*** End Patch

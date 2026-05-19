@@ -1,0 +1,39 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\CameraController.jsx
+@@
+ export function applyCameraTransform(ctx, width, height, bounds, camera, carFrame, options = {}) {
+@@
+   ctx.translate(-bounds.cx, -bounds.cy);
+   return scale;
+ }
++
++export function projectMapPointToScreen(point, width, height, bounds, camera, options = {}) {
++  const mapPoint = toRenderPoint(point, options);
++  if (!mapPoint || !bounds || !camera) return null;
++
++  let screen = null;
++  if (camera.mode === 'FOLLOW' && camera.center) {
++    const scale = (height / 90) * camera.zoom;
++    const theta = -(camera.heading || 0) + Math.PI / 2;
++    const dx = mapPoint.x - camera.center.x;
++    const dy = mapPoint.y - camera.center.y;
++    const rx = dx * Math.cos(theta) - dy * Math.sin(theta);
++    const ry = dx * Math.sin(theta) + dy * Math.cos(theta);
++    screen = {
++      x: width / 2 + rx * scale,
++      y: height * 0.68 + ry * scale,
++    };
++  } else {
++    const scale = Math.min(width / bounds.w, height / bounds.h) * 0.84 * camera.zoom;
++    screen = {
++      x: width / 2 + camera.offset.x + (mapPoint.x - bounds.cx) * scale,
++      y: height / 2 + camera.offset.y + (mapPoint.y - bounds.cy) * scale,
++    };
++  }
++
++  if (options.mirrorX) {
++    screen = { ...screen, x: width - screen.x };
++  }
++  return screen;
++}
+*** End Patch

@@ -265,7 +265,12 @@ class Kn5TrackSurfacePolygonBuilder:
         self.diagnostics.append({"code": code, "message": message, **context})
 
 
-def build_track_surface_polygon_from_manifest(manifest: Dict[str, Any]) -> Dict[str, Any]:
+def build_track_surface_polygon_from_manifest(
+    manifest: Dict[str, Any],
+    *,
+    included_surfaces: Optional[Sequence[str]] = None,
+) -> Dict[str, Any]:
+    surfaces = _normalize_surface_order(included_surfaces or INCLUDED_SURFACES)
     source = (manifest.get("candidateGeometryFiles") or {}).get("mainVisual")
     if not source:
         return {
@@ -273,7 +278,7 @@ def build_track_surface_polygon_from_manifest(manifest: Dict[str, Any]) -> Dict[
             "trackConfig": manifest.get("trackConfigFromSharedMemory"),
             "source": None,
             "projection": "mapX = worldX, mapY = -worldZ",
-            "includedSurfaceKeys": INCLUDED_SURFACES,
+            "includedSurfaceKeys": surfaces,
             "meshCount": 0,
             "triangleCount": 0,
             "bounds": None,
@@ -285,7 +290,7 @@ def build_track_surface_polygon_from_manifest(manifest: Dict[str, Any]) -> Dict[
     transform = _model_transform(manifest, source)
     return Kn5TrackSurfacePolygonBuilder(
         source,
-        included_surfaces=INCLUDED_SURFACES,
+        included_surfaces=surfaces,
         model_position=transform["position"],
         model_rotation=transform["rotation"],
     ).build(manifest.get("trackNameFromSharedMemory"), manifest.get("trackConfigFromSharedMemory"))

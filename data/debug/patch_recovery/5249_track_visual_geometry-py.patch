@@ -1,0 +1,189 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\backend\core\geometry\track_visual_geometry.py
+@@
+ class TrackVisualGeometryBuilder:
+@@
+     def _visual_widths(self, widths: Sequence[float]) -> List[float]:
+         cfg = self.config
+         clamped = [_clamp(width, cfg["minWidth"], cfg["maxWidth"]) for width in widths]
+         medianed = _median_filter(clamped, cfg["widthMedianWindow"])
+         limited = _limit_delta(medianed, cfg["maxWidthDeltaPerSample"])
+         averaged = _moving_average(limited, cfg["widthSmoothingWindow"])
+         return [_round(_clamp(width, cfg["minWidth"], cfg["maxWidth"])) for width in averaged]
++
++    def _visual_centerline(self, centerline: Sequence[Point], repair_indices: Sequence[int]) -> List[Point]:
++        if not centerline:
++            return []
++        cfg = self.config
++        broad = _smooth_points(centerline, cfg["centerlineSmoothingWindow"])
++        base = _blend_points(centerline, broad, 0.32)
++        if cfg.get("artifactFixEnabled", True) and repair_indices:
++            expanded = _expand_indices(repair_indices, len(centerline), int(cfg["artifactRepairRadius"]))
++            base = _replace_indices_with_smooth(base, expanded, cfg["centerlineSmoothingWindow"])
++        return base
++
++    def _build_edges(
++        self,
++        centerline: Sequence[Point],
++        orientation_left: Sequence[Point],
++        orientation_right: Sequence[Point],
++        widths: Sequence[float],
++    ) -> Tuple[List[Point], List[Point], List[Point], List[Point]]:
++        visual_left: List[Point] = []
++        visual_right: List[Point] = []
++        normals: List[Point] = []
++        visual_normals = _visual_normals(centerline, orientation_left, orientation_right, self.config["normalSmoothingWindow"])
++        for index, center in enumerate(centerline):
++            normal = visual_normals[index]
++            half_width = widths[index] * 0.5
++            normals.append(_point(normal))
++            visual_left.append(_point([center[0] + normal[0] * half_width, center[1] + normal[1] * half_width]))
++            visual_right.append(_point([center[0] - normal[0] * half_width, center[1] - normal[1] * half_width]))
++        visual_left = _smooth_points(visual_left, self.config["edgeSmoothingWindow"])
++        visual_right = _smooth_points(visual_right, self.config["edgeSmoothingWindow"])
++        visual_centerline = [
++            _point([(left[0] + right[0]) * 0.5, (left[1] + right[1]) * 0.5])
++            for left, right in zip(visual_left, visual_right)
++        ]
++        return visual_centerline, visual_left, visual_right, normals
+ 
+     def build(
+         self,
+@@
+         p_values: Sequence[float],
+     ) -> Dict[str, Any]:
+-        visual_widths = self._visual_widths(widths)
+-        visual_left: List[Point] = []
+-        visual_right: List[Point] = []
+-        normals: List[Point] = []
+-        visual_normals = _visual_normals(centerline, left_edge, right_edge, self.config["normalSmoothingWindow"])
+-        for index, center in enumerate(centerline):
+-            normal = visual_normals[index]
+-            half_width = visual_widths[index] * 0.5
+-            normals.append(_point(normal))
+-            visual_left.append(_point([center[0] + normal[0] * half_width, center[1] + normal[1] * half_width]))
+-            visual_right.append(_point([center[0] - normal[0] * half_width, center[1] - normal[1] * half_width]))
+-        visual_left = _smooth_points(visual_left, self.config["edgeSmoothingWindow"])
+-        visual_right = _smooth_points(visual_right, self.config["edgeSmoothingWindow"])
+-        visual_widths = [_round(_distance(left, right)) for left, right in zip(visual_left, visual_right)]
+-
+         artifact_report = audit_visual_edge_artifacts(
+             centerline,
+             left_edge,
+@@
+             p_values,
+             config=self.config,
+         )
++        initial_widths = self._visual_widths(widths)
++        initial_centerline = self._visual_centerline(centerline, [])
++        preliminary_centerline, preliminary_left, preliminary_right, _ = self._build_edges(
++            initial_centerline,
++            left_edge,
++            right_edge,
++            initial_widths,
++        )
++        preliminary_widths = [_round(_distance(left, right)) for left, right in zip(preliminary_left, preliminary_right)]
++        false_curve_report_before = audit_false_curve_artifacts(
++            preliminary_centerline,
++            preliminary_left,
++            preliminary_right,
++            preliminary_widths,
++            p_values,
++            config=self.config,
++        )
++        repair_indices = false_curve_report_before.get("artifactIndices", []) if self.config.get("artifactFixEnabled", True) else []
++        repair_indices = _expand_indices(repair_indices, len(centerline), int(self.config["artifactRepairRadius"])) if repair_indices else []
++        visual_widths = initial_widths
++        if repair_indices:
++            visual_widths = _replace_width_indices(
++                visual_widths,
++                repair_indices,
++                int(self.config["artifactWidthMedianWindow"]),
++                int(self.config["artifactWidthSmoothingWindow"]),
++            )
++            visual_widths = _limit_delta(visual_widths, self.config["maxWidthDeltaPerSample"])
++            visual_widths = [_round(_clamp(width, self.config["minWidth"], self.config["maxWidth"])) for width in visual_widths]
++
++        base_centerline = self._visual_centerline(centerline, repair_indices)
++        visual_centerline, visual_left, visual_right, normals = self._build_edges(
++            base_centerline,
++            left_edge,
++            right_edge,
++            visual_widths,
++        )
++        visual_widths = [_round(_distance(left, right)) for left, right in zip(visual_left, visual_right)]
++
+         visual_artifact_report = audit_visual_edge_artifacts(
+-            centerline,
++            visual_centerline,
+             visual_left,
+             visual_right,
+             visual_widths,
+@@
+             int(artifact_report.get("artifactCount", 0)) - int(visual_artifact_report.get("artifactCount", 0)),
+         )
++        false_curve_report_after = audit_false_curve_artifacts(
++            visual_centerline,
++            visual_left,
++            visual_right,
++            visual_widths,
++            p_values,
++            config=self.config,
++        )
++        false_curve_artifacts_removed = max(
++            0,
++            int(false_curve_report_before.get("artifactCount", 0)) - int(false_curve_report_after.get("artifactCount", 0)),
++        )
+         width_profile = [
+             {
+                 "index": index,
+                 "p": _round(p_values[index] if index < len(p_values) else index / max(len(visual_widths) - 1, 1)),
+                 "physicsWidth": _round(widths[index]),
+                 "visualWidth": _round(visual_widths[index]),
+                 "delta": _round(visual_widths[index] - float(widths[index])),
+@@
+             "version": VISUAL_GEOMETRY_VERSION,
+             "enabled": True,
+-            "source": "track_physics_geometry",
++            "source": "road_only" if self.config.get("visualSource") == "road_only" else "track_physics_geometry",
++            "visualSource": "road_only" if self.config.get("visualSource") == "road_only" else "centerline_width_smoothing",
+             "method": "centerline_width_smoothing",
+             "visualOnly": True,
++            "visualArtifactFixEnabled": bool(self.config.get("artifactFixEnabled", True)),
++            "falseCurveArtifactsRemoved": false_curve_artifacts_removed,
+             "coordinateSystem": "map_xy_from_world_x_negative_z",
+             "centerline": {
+-                "x": [_round(point[0]) for point in centerline],
+-                "y": [_round(point[1]) for point in centerline],
++                "x": [_round(point[0]) for point in visual_centerline],
++                "y": [_round(point[1]) for point in visual_centerline],
+             },
+@@
+-            "bounds": _bounds(centerline, visual_left, visual_right),
++            "bounds": _bounds(visual_centerline, visual_left, visual_right),
+             "config": self.config,
+             "metadata": {
+-                "source": "track_physics_geometry",
++                "source": "road_only" if self.config.get("visualSource") == "road_only" else "track_physics_geometry",
++                "visualSource": "road_only" if self.config.get("visualSource") == "road_only" else "centerline_width_smoothing",
+                 "method": "centerline_width_smoothing",
+                 "visualOnly": True,
++                "visualArtifactFixEnabled": bool(self.config.get("artifactFixEnabled", True)),
++                "falseCurveArtifactsRemoved": false_curve_artifacts_removed,
+                 "medianWindow": self.config["widthMedianWindow"],
+                 "smoothingWindow": self.config["widthSmoothingWindow"],
+                 "minWidth": self.config["minWidth"],
+                 "maxWidth": self.config["maxWidth"],
+                 "maxWidthDeltaPerSample": self.config["maxWidthDeltaPerSample"],
++                "visualSurfaces": self.config.get("visualSurfaces", ["ROAD"]),
+             },
+             "normals": [{"x": _round(normal[0]), "y": _round(normal[1])} for normal in normals],
+             "artifactReport": artifact_report,
+             "visualArtifactReport": visual_artifact_report,
++            "falseCurveReport": false_curve_report_before,
++            "falseCurveReportAfter": false_curve_report_after,
+             "removedSpikeCount": removed_spike_count,
++            "falseCurveArtifactsRemoved": false_curve_artifacts_removed,
+             "maxWidthDeltaBefore": _max_abs_delta(widths),
+             "maxWidthDeltaAfter": _max_abs_delta(visual_widths),
+*** End Patch

@@ -1,0 +1,100 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\backend\core\geometry\track_visual_geometry.py
+@@
+ DEFAULT_VISUAL_CONFIG = {
+     "enabled": True,
++    "visualSurfaces": ["ROAD"],
++    "useRoadOnly": True,
++    "artifactFixEnabled": True,
+     "widthMedianWindow": 9,
+     "widthSmoothingWindow": 11,
++    "artifactWidthMedianWindow": 31,
++    "artifactWidthSmoothingWindow": 25,
+     "maxWidthDeltaPerSample": 1.2,
+     "minWidth": 6.0,
+     "maxWidth": 22.0,
+-    "normalSmoothingWindow": 9,
+-    "edgeSmoothingWindow": 11,
++    "normalSmoothingWindow": 21,
++    "edgeSmoothingWindow": 23,
++    "centerlineSmoothingWindow": 25,
++    "artifactRepairRadius": 8,
+     "angleSpikeRadians": 0.55,
++    "falseCurveAngleRadians": 0.24,
++    "falseCurveCenterlineAngleRadians": 0.18,
++    "falseCurveDeviationMeters": 0.85,
+     "segmentSpikeMultiplier": 2.8,
+ }
+ 
+-VISUAL_GEOMETRY_VERSION = 3
++VISUAL_GEOMETRY_VERSION = 4
+@@
+ def _smooth_points(points: Sequence[Point], window: int) -> List[Point]:
+@@
+     return result
++
++
++def _blend_points(a: Sequence[Point], b: Sequence[Point], alpha: float) -> List[Point]:
++    return [
++        _point([
++            float(pa[0]) + (float(pb[0]) - float(pa[0])) * alpha,
++            float(pa[1]) + (float(pb[1]) - float(pa[1])) * alpha,
++        ])
++        for pa, pb in zip(a, b)
++    ]
+@@
+ def _angle_delta(points: Sequence[Point], index: int) -> float:
+@@
+     return math.atan2(ax * by - ay * bx, ax * bx + ay * by)
++
++
++def _local_trend_deviation(points: Sequence[Point], index: int, span: int = 6) -> float:
++    count = len(points)
++    if count < span * 2 + 1:
++        return 0.0
++    start = points[(index - span) % count]
++    point = points[index]
++    end = points[(index + span) % count]
++    ax, ay = float(start[0]), float(start[1])
++    bx, by = float(end[0]), float(end[1])
++    px, py = float(point[0]), float(point[1])
++    dx, dy = bx - ax, by - ay
++    length_sq = dx * dx + dy * dy
++    if length_sq <= 1e-12:
++        return _distance(point, start)
++    t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / length_sq))
++    cx, cy = ax + dx * t, ay + dy * t
++    return math.hypot(px - cx, py - cy)
+@@
+ def _visual_normals(centerline: Sequence[Point], left_edge: Sequence[Point], right_edge: Sequence[Point], window: int) -> List[Point]:
+@@
+     return _smooth_normals(normals, window)
++
++
++def _expand_indices(indices: Sequence[int], count: int, radius: int) -> List[int]:
++    expanded = set()
++    for index in indices:
++        for offset in range(-radius, radius + 1):
++            expanded.add((index + offset) % count)
++    return sorted(expanded)
++
++
++def _replace_indices_with_smooth(points: Sequence[Point], indices: Sequence[int], window: int) -> List[Point]:
++    if not points:
++        return []
++    smooth = _smooth_points(points, window)
++    result = [_point(point) for point in points]
++    for index in indices:
++        result[index] = smooth[index]
++    return result
++
++
++def _replace_width_indices(widths: Sequence[float], indices: Sequence[int], median_window: int, smoothing_window: int) -> List[float]:
++    if not widths:
++        return []
++    broad = _moving_average(_median_filter(widths, median_window), smoothing_window)
++    result = [float(width) for width in widths]
++    for index in indices:
++        result[index] = float(broad[index])
++    return [_round(width) for width in result]
+*** End Patch

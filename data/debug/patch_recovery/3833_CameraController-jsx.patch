@@ -1,0 +1,75 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\CameraController.jsx
+@@
+   if (mode === 'FOLLOW' && carFrame) {
+     const carPosition = toRenderPoint(pointFromFrame(carFrame), options);
+-    if (!carPosition) return 1;
+-    const heading = toRenderHeading(Number.isFinite(carFrame.heading) ? carFrame.heading : 0, options);
+-    const speedKmh = Number.isFinite(carFrame.speedKmh)
+-      ? carFrame.speedKmh
+-      : Number.isFinite(carFrame.speed)
+-        ? carFrame.speed * 3.6
+-        : 0;
+-    const forward = carForwardVector(heading);
+-    const aheadMeters = Math.max(0, Math.min(18, speedKmh * 0.045));
+-    const target = {
+-      x: carPosition.x + forward.x * aheadMeters,
+-      y: carPosition.y + forward.y * aheadMeters,
+-    };
+-    const deadzone = camera.deadzoneMeters ?? 1.2;
+-    const factor = camera.easingFactor ?? 0.12;
++    if (carPosition) {
++      const heading = toRenderHeading(Number.isFinite(carFrame.heading) ? carFrame.heading : 0, options);
++      const speedKmh = Number.isFinite(carFrame.speedKmh)
++        ? carFrame.speedKmh
++        : Number.isFinite(carFrame.speed)
++          ? carFrame.speed * 3.6
++          : 0;
++      const forward = carForwardVector(heading);
++      const aheadMeters = Math.max(0, Math.min(18, speedKmh * 0.045));
++      const target = {
++        x: carPosition.x + forward.x * aheadMeters,
++        y: carPosition.y + forward.y * aheadMeters,
++      };
++      const deadzone = camera.deadzoneMeters ?? 1.2;
++      const factor = camera.easingFactor ?? 0.12;
+ 
+-    if (!camera.center || !Number.isFinite(camera.center.x) || !Number.isFinite(camera.center.y)) {
+-      camera.center = { ...target };
+-      camera.heading = heading;
+-    }
++      if (!camera.center || !Number.isFinite(camera.center.x) || !Number.isFinite(camera.center.y)) {
++        camera.center = { ...target };
++        camera.heading = heading;
++      }
+ 
+-    const distance = Math.hypot(target.x - camera.center.x, target.y - camera.center.y);
+-    if (distance > deadzone) {
+-      camera.center.x = lerp(camera.center.x, target.x, factor);
+-      camera.center.y = lerp(camera.center.y, target.y, factor);
+-    }
+-    camera.heading = lerpAngle(camera.heading ?? heading, heading, Math.min(0.16, factor * 1.15));
+-    camera.cameraEasingEnabled = true;
++      const distance = Math.hypot(target.x - camera.center.x, target.y - camera.center.y);
++      if (distance > deadzone) {
++        camera.center.x = lerp(camera.center.x, target.x, factor);
++        camera.center.y = lerp(camera.center.y, target.y, factor);
++      }
++      camera.heading = lerpAngle(camera.heading ?? heading, heading, Math.min(0.16, factor * 1.15));
++      camera.cameraEasingEnabled = true;
+ 
+-    const scale = (height / 90) * zoom;
+-    ctx.translate(width / 2, height * 0.68);
+-    ctx.scale(scale, scale);
+-    ctx.rotate(-(camera.heading || 0) + Math.PI / 2);
+-    ctx.translate(-camera.center.x, -camera.center.y);
+-    return scale;
++      const scale = (height / 90) * zoom;
++      ctx.translate(width / 2, height * 0.68);
++      ctx.scale(scale, scale);
++      ctx.rotate(-(camera.heading || 0) + Math.PI / 2);
++      ctx.translate(-camera.center.x, -camera.center.y);
++      return scale;
++    }
+   }
+*** End Patch

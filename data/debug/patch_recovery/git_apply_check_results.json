@@ -1,0 +1,222 @@
+﻿[
+    {
+        "Patch":  "3670_OverlayRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "3677_useInterpolatedCarState-ts.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "3684_CameraController-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "3691_TrackRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "3696_useInterpolatedCarState-ts.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "3701_OverlayRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "3740_useInterpolatedCarState-ts.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "3745_useInterpolatedCarState-ts.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "3750_TrackRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "3813_CarRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "3833_CameraController-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "3938_TrackRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "4089_renderTransform-js.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "4093_TrackRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "4097_OverlayRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "4180_TrackRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "4717_OverlayRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "4832_TrackRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "4885_CarRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "4889_TrackRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "4894_OverlayRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5067_useInterpolatedCarState-ts.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5072_TrackRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5077_OverlayRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5132_OverlayRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5239_track_visual_geometry-py.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5244_track_visual_geometry-py.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5249_track_visual_geometry-py.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5254_track_geometry_provider-py.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5259_track_geometry_provider-py.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5264_track_geometry_provider-py.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5269_export_track_visual_geometry-py.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5317_main-py.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5541_track_visual_geometry-py.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5616_CameraController-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5620_OverlayRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5625_TrackRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5630_TrackRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5635_TrackRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5640_TrackRenderer-jsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5717_Dashboard-tsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5724_Dashboard-tsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5736_Dashboard-tsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    },
+    {
+        "Patch":  "5740_Dashboard-tsx.patch",
+        "ExitCode":  128,
+        "Output":  "error: No valid patches in input (allow with \"--allow-empty\")"
+    }
+]

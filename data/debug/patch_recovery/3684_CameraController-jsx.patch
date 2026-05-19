@@ -1,0 +1,111 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\CameraController.jsx
+@@
+ export function computeTrackBounds(trackData, history = [], carFrame = null) {
+   const left = trackData?.left_edge || {};
+   const right = trackData?.right_edge || {};
+-  const livePositions = history
+-    .map((frame) => frame?.mapPosition || { x: frame?.x, y: frame?.z })
+-    .filter((point) => Number.isFinite(point?.x) && Number.isFinite(point?.y));
+-  const carPosition = carFrame?.mapPosition || (carFrame ? { x: carFrame.x, y: carFrame.z } : null);
+-  if (carPosition && Number.isFinite(carPosition.x) && Number.isFinite(carPosition.y)) {
+-    livePositions.push(carPosition);
+-  }
++  const trackXs = [...(left.x || []), ...(right.x || [])].filter(Number.isFinite);
++  const trackYs = [...(left.y || left.z || []), ...(right.y || right.z || [])].filter(Number.isFinite);
++  const hasFixedTrack = trackXs.length > 0 && trackYs.length > 0;
++  const livePositions = hasFixedTrack
++    ? []
++    : history
++      .map((frame) => frame?.mapPosition || { x: frame?.x, y: frame?.z })
++      .filter((point) => Number.isFinite(point?.x) && Number.isFinite(point?.y));
++  if (!hasFixedTrack) {
++    const carPosition = carFrame?.mapPosition || (carFrame ? { x: carFrame.x, y: carFrame.z } : null);
++    if (carPosition && Number.isFinite(carPosition.x) && Number.isFinite(carPosition.y)) {
++      livePositions.push(carPosition);
++    }
++  }
+ 
+   const xs = [
+-    ...(left.x || []),
+-    ...(right.x || []),
++    ...trackXs,
+     ...livePositions.map((point) => point.x),
+   ].filter(Number.isFinite);
+   const ys = [
+-    ...(left.y || left.z || []),
+-    ...(right.y || right.z || []),
++    ...trackYs,
+     ...livePositions.map((point) => point.y),
+   ].filter(Number.isFinite);
+@@
+   };
+ }
+ 
++function lerp(from, to, factor) {
++  return from + (to - from) * factor;
++}
++
++function normalizeAngle(angle) {
++  return Math.atan2(Math.sin(angle), Math.cos(angle));
++}
++
++function lerpAngle(from, to, factor) {
++  return from + normalizeAngle(to - from) * factor;
++}
++
++function carForwardVector(heading = 0) {
++  return {
++    x: Math.sin(heading),
++    y: -Math.cos(heading),
++  };
++}
++
+ export function applyCameraTransform(ctx, width, height, bounds, camera, carFrame) {
+   const mode = camera.mode;
+   const zoom = camera.zoom;
+ 
+   if (mode === 'FOLLOW' && carFrame) {
+     const carPosition = carFrame.mapPosition || { x: carFrame.x, y: carFrame.z };
++    const heading = Number.isFinite(carFrame.heading) ? carFrame.heading : 0;
++    const speedKmh = Number.isFinite(carFrame.speedKmh)
++      ? carFrame.speedKmh
++      : Number.isFinite(carFrame.speed)
++        ? carFrame.speed * 3.6
++        : 0;
++    const forward = carForwardVector(heading);
++    const aheadMeters = Math.max(0, Math.min(18, speedKmh * 0.045));
++    const target = {
++      x: carPosition.x + forward.x * aheadMeters,
++      y: carPosition.y + forward.y * aheadMeters,
++    };
++    const deadzone = camera.deadzoneMeters ?? 1.2;
++    const factor = camera.easingFactor ?? 0.12;
++
++    if (!camera.center || !Number.isFinite(camera.center.x) || !Number.isFinite(camera.center.y)) {
++      camera.center = { ...target };
++      camera.heading = heading;
++    }
++
++    const distance = Math.hypot(target.x - camera.center.x, target.y - camera.center.y);
++    if (distance > deadzone) {
++      camera.center.x = lerp(camera.center.x, target.x, factor);
++      camera.center.y = lerp(camera.center.y, target.y, factor);
++    }
++    camera.heading = lerpAngle(camera.heading ?? heading, heading, Math.min(0.16, factor * 1.15));
++    camera.cameraEasingEnabled = true;
++
+     const scale = (height / 90) * zoom;
+     ctx.translate(width / 2, height * 0.68);
+     ctx.scale(scale, scale);
+-    ctx.rotate(-(carFrame.heading || 0) + Math.PI / 2);
+-    ctx.translate(-carPosition.x, -carPosition.y);
++    ctx.rotate(-(camera.heading || 0) + Math.PI / 2);
++    ctx.translate(-camera.center.x, -camera.center.y);
+     return scale;
+   }
+ 
++  camera.cameraEasingEnabled = false;
+   const scale = Math.min(width / bounds.w, height / bounds.h) * 0.84 * zoom;
+   ctx.translate(width / 2 + camera.offset.x, height / 2 + camera.offset.y);
+*** End Patch

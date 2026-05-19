@@ -1,0 +1,85 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\Dashboard.tsx
+@@
+   });
+   const trackGeometryKeyRef = useRef('none');
++  const trackRuntimeVisualKeyRef = useRef('visual:unknown');
+   const trackFetchCountRef = useRef(0);
+@@
+   useEffect(() => {
+     let cancelled = false;
+-    const loadTrack = async () => {
++    let runtimePoll: number | null = null;
++    const loadTrack = async (reason = 'initial') => {
+       const startedAt = performance.now();
+       trackFetchCountRef.current += 1;
+       try {
+-        const res = await fetch(`http://${window.location.hostname}:8000/api/track/current`);
++        const res = await fetch(`http://${window.location.hostname}:8000/api/track/current`, { cache: 'no-store' });
+         const text = await res.text();
+@@
+         if (!cancelled && res.ok && data.track) {
+           const nextKey = trackGeometryKey(data.track);
++          const nextRuntimeKey = trackLoadedVisualKey(data.track);
+           const metrics = trackPayloadMetrics(data.track, payloadBytes);
+           setTrackDiagnostics({
+             trackFetchCount: trackFetchCountRef.current,
+             ...metrics,
+             lastTrackFetchMs: performance.now() - startedAt,
+-            trackPollingEnabled: false,
++            trackPollingEnabled: true,
+           });
+           console.info('[Dashboard] loaded static track geometry', {
+             fetchCount: trackFetchCountRef.current,
++            reason,
+             key: nextKey,
++            visualKey: nextRuntimeKey,
+             ...metrics,
+           });
+           if (nextKey !== trackGeometryKeyRef.current) {
+             trackGeometryKeyRef.current = nextKey;
++            trackRuntimeVisualKeyRef.current = nextRuntimeKey;
+             setTrackData(data.track);
++          } else {
++            trackRuntimeVisualKeyRef.current = nextRuntimeKey;
+           }
+           return;
+         }
+@@
+             ...current,
+             trackFetchCount: trackFetchCountRef.current,
+-            trackPollingEnabled: false,
++            trackPollingEnabled: true,
+           }));
+         }
+       }
+     };
++    const checkTrackRuntimeMetadata = async () => {
++      try {
++        const res = await fetch(`http://${window.location.hostname}:8000/api/debug/track-visual-geometry`, { cache: 'no-store' });
++        if (!res.ok || cancelled) return;
++        const debug = await res.json();
++        const runtimeKey = trackRuntimeVisualKey(debug);
++        if (
++          trackRuntimeVisualKeyRef.current !== 'visual:unknown'
++          && runtimeKey !== trackRuntimeVisualKeyRef.current
++        ) {
++          console.info('[Dashboard] invalidating static track geometry from runtime metadata', {
++            previous: trackRuntimeVisualKeyRef.current,
++            next: runtimeKey,
++          });
++          trackRuntimeVisualKeyRef.current = runtimeKey;
++          await loadTrack('runtime_visual_metadata_changed');
++        }
++      } catch {
++        // Metadata polling is diagnostic-only; live telemetry/render should keep running.
++      }
++    };
+     loadTrack();
++    runtimePoll = window.setInterval(checkTrackRuntimeMetadata, 2000);
+     return () => {
+       cancelled = true;
++      if (runtimePoll !== null) window.clearInterval(runtimePoll);
+     };
+   }, []);
+*** End Patch

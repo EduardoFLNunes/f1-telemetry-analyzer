@@ -1,0 +1,74 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\TrackRenderer.jsx
+@@
+ export function TrackRenderer({ trackData, mirrorX }) {
+   const canvasRef = useRef(null);
++  const mapCanvasRef = useRef(null);
+   const containerRef = useRef(null);
+   const animationRef = useRef(null);
+@@
+       ctx.clearRect(0, 0, rect.width, rect.height);
+       ctx.fillStyle = '#070a12';
+       ctx.fillRect(0, 0, rect.width, rect.height);
++
++      if (!mapCanvasRef.current) {
++        mapCanvasRef.current = document.createElement('canvas');
++      }
++      const mapCanvas = mapCanvasRef.current;
++      if (mapCanvas.width !== canvas.width || mapCanvas.height !== canvas.height) {
++        mapCanvas.width = canvas.width;
++        mapCanvas.height = canvas.height;
++      }
++      const mapCtx = mapCanvas.getContext('2d');
++      if (!mapCtx) {
++        animationRef.current = requestAnimationFrame(render);
++        return;
++      }
++      mapCtx.setTransform(1, 0, 0, 1, 0, 0);
++      mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
++      mapCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+ 
+       const { latestFrame: liveFrame, history: liveHistory } = useTelemetryStore.getState();
+       const renderFrame = interpolatedCar.frameRef.current || liveFrame;
+@@
+       metrics.mirrorMode = mirrorMode(renderOptions);
+       metrics.visualGeometryEnabled = Boolean(normalizedTrack?.visualGeometry);
+ 
+-      ctx.save();
+-      if (renderOptions.mirrorX) {
+-        ctx.translate(rect.width, 0);
+-        ctx.scale(-1, 1);
+-      }
+-      const scale = applyCameraTransform(ctx, rect.width, rect.height, renderBounds, cameraRef.current, renderFrame);
++      mapCtx.save();
++      const scale = applyCameraTransform(mapCtx, rect.width, rect.height, renderBounds, cameraRef.current, renderFrame);
+       metrics.cameraEasingEnabled = Boolean(cameraRef.current.cameraEasingEnabled);
+ 
+       if (visualTrack) {
+-        drawTrackSurface(ctx, visualTrack, renderBounds, scale, trackPathCache, { showCenterline: debugEnabled });
++        drawTrackSurface(mapCtx, visualTrack, renderBounds, scale, trackPathCache, { showCenterline: debugEnabled });
+       }
+-      if (debugEnabled && normalizedTrack?.visualGeometry) drawPhysicsEdges(ctx, normalizedTrack, scale);
+-      if (debugEnabled) drawTrajectory(ctx, liveDebugHistory, scale);
+-      if (debugEnabled && normalizedTrack && renderFrame) drawProjectionDebug(ctx, renderFrame, scale);
+-      if (renderFrame) drawCar(ctx, renderFrame, scale);
++      if (debugEnabled && normalizedTrack?.visualGeometry) drawPhysicsEdges(mapCtx, normalizedTrack, scale);
++      if (debugEnabled) drawTrajectory(mapCtx, liveDebugHistory, scale);
++      if (debugEnabled && normalizedTrack && renderFrame) drawProjectionDebug(mapCtx, renderFrame, scale);
++      if (renderFrame) drawCar(mapCtx, renderFrame, scale);
++      mapCtx.restore();
+ 
++      ctx.save();
++      ctx.resetTransform();
++      ctx.imageSmoothingEnabled = true;
++      if (renderOptions.mirrorX) {
++        ctx.translate(mapCanvas.width, 0);
++        ctx.scale(-1, 1);
++      }
++      ctx.drawImage(mapCanvas, 0, 0);
+       ctx.restore();
++
+       drawHud(ctx, rect.width, rect.height, visualTrack, renderFrame, cameraRef.current, debugEnabled, metrics);
+       animationRef.current = requestAnimationFrame(render);
+     };
+*** End Patch

@@ -1,0 +1,37 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\Dashboard.tsx
+@@
+ const trackGeometryKey = (track: any) => {
+   if (!track) return 'none';
+   const metadata = track.metadata || {};
+   const visual = track.visualGeometry || {};
+   const visualMetadata = visual.metadata || {};
+@@
+     track.cleanedPointCount || metadata.cleanedPointCount || 0,
+     String(Boolean(track.visualGeometry)),
++    visual.version || '',
+     visual.source || visualMetadata.source || metadata.visualGeometrySource || '',
++    visual.visualSource || visualMetadata.visualSource || metadata.visualSource || '',
++    visual.falseCurveArtifactsRemoved || visualMetadata.falseCurveArtifactsRemoved || '',
+     String(Boolean(visualMetadata.visualOnly ?? visual.visualOnly ?? false)),
+     visualMetadata.medianWindow || '',
+     visualMetadata.smoothingWindow || '',
+     visualMetadata.minWidth || '',
+@@
+   }.join('|');
+ };
++
++const trackRuntimeVisualKey = (debug: any) => {
++  if (!debug?.enabled) return 'visual:none';
++  return [
++    debug.source || '',
++    debug.visualSource || '',
++    debug.visualPointCount || 0,
++    debug.widthMin ?? '',
++    debug.widthAvg ?? '',
++    debug.widthMax ?? '',
++    debug.falseCurveArtifactsRemoved ?? '',
++    debug.artifactCountAfter ?? '',
++  ].join('|');
++};
+*** End Patch

@@ -1,0 +1,398 @@
+[
+  {
+    "line": 3670,
+    "timestamp": "2026-05-18T04:19:38.843Z",
+    "patch": "data\\debug\\patch_recovery\\3670_OverlayRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\OverlayRenderer.jsx"
+    ],
+    "chars": 6171
+  },
+  {
+    "line": 3677,
+    "timestamp": "2026-05-18T04:20:10.179Z",
+    "patch": "data\\debug\\patch_recovery\\3677_useInterpolatedCarState-ts.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\hooks\\useInterpolatedCarState.ts"
+    ],
+    "chars": 5568
+  },
+  {
+    "line": 3684,
+    "timestamp": "2026-05-18T04:20:38.154Z",
+    "patch": "data\\debug\\patch_recovery\\3684_CameraController-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\CameraController.jsx"
+    ],
+    "chars": 4353
+  },
+  {
+    "line": 3691,
+    "timestamp": "2026-05-18T04:21:04.381Z",
+    "patch": "data\\debug\\patch_recovery\\3691_TrackRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\TrackRenderer.jsx"
+    ],
+    "chars": 5048
+  },
+  {
+    "line": 3696,
+    "timestamp": "2026-05-18T04:21:18.738Z",
+    "patch": "data\\debug\\patch_recovery\\3696_useInterpolatedCarState-ts.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\hooks\\useInterpolatedCarState.ts"
+    ],
+    "chars": 295
+  },
+  {
+    "line": 3701,
+    "timestamp": "2026-05-18T04:21:32.850Z",
+    "patch": "data\\debug\\patch_recovery\\3701_OverlayRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\OverlayRenderer.jsx"
+    ],
+    "chars": 1000
+  },
+  {
+    "line": 3740,
+    "timestamp": "2026-05-18T04:22:40.525Z",
+    "patch": "data\\debug\\patch_recovery\\3740_useInterpolatedCarState-ts.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\hooks\\useInterpolatedCarState.ts"
+    ],
+    "chars": 1336
+  },
+  {
+    "line": 3745,
+    "timestamp": "2026-05-18T04:22:46.546Z",
+    "patch": "data\\debug\\patch_recovery\\3745_useInterpolatedCarState-ts.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\hooks\\useInterpolatedCarState.ts"
+    ],
+    "chars": 519
+  },
+  {
+    "line": 3750,
+    "timestamp": "2026-05-18T04:22:57.534Z",
+    "patch": "data\\debug\\patch_recovery\\3750_TrackRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\TrackRenderer.jsx"
+    ],
+    "chars": 1345
+  },
+  {
+    "line": 3813,
+    "timestamp": "2026-05-18T04:28:51.049Z",
+    "patch": "data\\debug\\patch_recovery\\3813_CarRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\CarRenderer.jsx"
+    ],
+    "chars": 1662
+  },
+  {
+    "line": 3833,
+    "timestamp": "2026-05-18T04:30:06.717Z",
+    "patch": "data\\debug\\patch_recovery\\3833_CameraController-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\CameraController.jsx"
+    ],
+    "chars": 3375
+  },
+  {
+    "line": 3938,
+    "timestamp": "2026-05-18T04:36:01.873Z",
+    "patch": "data\\debug\\patch_recovery\\3938_TrackRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\TrackRenderer.jsx"
+    ],
+    "chars": 4490
+  },
+  {
+    "line": 4089,
+    "timestamp": "2026-05-19T02:22:08.181Z",
+    "patch": "data\\debug\\patch_recovery\\4089_renderTransform-js.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\renderTransform.js"
+    ],
+    "chars": 1583
+  },
+  {
+    "line": 4093,
+    "timestamp": "2026-05-19T02:22:23.807Z",
+    "patch": "data\\debug\\patch_recovery\\4093_TrackRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\TrackRenderer.jsx"
+    ],
+    "chars": 3006
+  },
+  {
+    "line": 4097,
+    "timestamp": "2026-05-19T02:22:32.030Z",
+    "patch": "data\\debug\\patch_recovery\\4097_OverlayRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\OverlayRenderer.jsx"
+    ],
+    "chars": 697
+  },
+  {
+    "line": 4180,
+    "timestamp": "2026-05-19T02:36:16.509Z",
+    "patch": "data\\debug\\patch_recovery\\4180_TrackRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\TrackRenderer.jsx"
+    ],
+    "chars": 3383
+  },
+  {
+    "line": 4717,
+    "timestamp": "2026-05-19T03:34:21.344Z",
+    "patch": "data\\debug\\patch_recovery\\4717_OverlayRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\OverlayRenderer.jsx"
+    ],
+    "chars": 3798
+  },
+  {
+    "line": 4832,
+    "timestamp": "2026-05-19T03:42:57.291Z",
+    "patch": "data\\debug\\patch_recovery\\4832_TrackRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\TrackRenderer.jsx"
+    ],
+    "chars": 6133
+  },
+  {
+    "line": 4885,
+    "timestamp": "2026-05-19T03:45:24.453Z",
+    "patch": "data\\debug\\patch_recovery\\4885_CarRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\CarRenderer.jsx"
+    ],
+    "chars": 1433
+  },
+  {
+    "line": 4889,
+    "timestamp": "2026-05-19T03:45:59.071Z",
+    "patch": "data\\debug\\patch_recovery\\4889_TrackRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\TrackRenderer.jsx"
+    ],
+    "chars": 6601
+  },
+  {
+    "line": 4894,
+    "timestamp": "2026-05-19T03:46:07.420Z",
+    "patch": "data\\debug\\patch_recovery\\4894_OverlayRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\OverlayRenderer.jsx"
+    ],
+    "chars": 982
+  },
+  {
+    "line": 5067,
+    "timestamp": "2026-05-19T04:04:37.790Z",
+    "patch": "data\\debug\\patch_recovery\\5067_useInterpolatedCarState-ts.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\hooks\\useInterpolatedCarState.ts"
+    ],
+    "chars": 621
+  },
+  {
+    "line": 5072,
+    "timestamp": "2026-05-19T04:04:54.357Z",
+    "patch": "data\\debug\\patch_recovery\\5072_TrackRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\TrackRenderer.jsx"
+    ],
+    "chars": 2709
+  },
+  {
+    "line": 5077,
+    "timestamp": "2026-05-19T04:05:16.504Z",
+    "patch": "data\\debug\\patch_recovery\\5077_OverlayRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\OverlayRenderer.jsx"
+    ],
+    "chars": 3141
+  },
+  {
+    "line": 5132,
+    "timestamp": "2026-05-19T04:07:33.879Z",
+    "patch": "data\\debug\\patch_recovery\\5132_OverlayRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\OverlayRenderer.jsx"
+    ],
+    "chars": 2504
+  },
+  {
+    "line": 5239,
+    "timestamp": "2026-05-19T13:00:44.990Z",
+    "patch": "data\\debug\\patch_recovery\\5239_track_visual_geometry-py.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\backend\\core\\geometry\\track_visual_geometry.py"
+    ],
+    "chars": 3436
+  },
+  {
+    "line": 5244,
+    "timestamp": "2026-05-19T13:01:32.169Z",
+    "patch": "data\\debug\\patch_recovery\\5244_track_visual_geometry-py.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\backend\\core\\geometry\\track_visual_geometry.py"
+    ],
+    "chars": 3836
+  },
+  {
+    "line": 5249,
+    "timestamp": "2026-05-19T13:02:18.653Z",
+    "patch": "data\\debug\\patch_recovery\\5249_track_visual_geometry-py.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\backend\\core\\geometry\\track_visual_geometry.py"
+    ],
+    "chars": 9848
+  },
+  {
+    "line": 5254,
+    "timestamp": "2026-05-19T13:02:43.149Z",
+    "patch": "data\\debug\\patch_recovery\\5254_track_geometry_provider-py.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\backend\\core\\geometry\\track_geometry_provider.py"
+    ],
+    "chars": 3956
+  },
+  {
+    "line": 5259,
+    "timestamp": "2026-05-19T13:02:54.009Z",
+    "patch": "data\\debug\\patch_recovery\\5259_track_geometry_provider-py.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\backend\\core\\geometry\\track_geometry_provider.py"
+    ],
+    "chars": 1636
+  },
+  {
+    "line": 5264,
+    "timestamp": "2026-05-19T13:03:15.077Z",
+    "patch": "data\\debug\\patch_recovery\\5264_track_geometry_provider-py.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\backend\\core\\geometry\\track_geometry_provider.py"
+    ],
+    "chars": 2471
+  },
+  {
+    "line": 5269,
+    "timestamp": "2026-05-19T13:03:53.058Z",
+    "patch": "data\\debug\\patch_recovery\\5269_export_track_visual_geometry-py.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\scripts\\export_track_visual_geometry.py"
+    ],
+    "chars": 5617
+  },
+  {
+    "line": 5317,
+    "timestamp": "2026-05-19T13:05:45.208Z",
+    "patch": "data\\debug\\patch_recovery\\5317_main-py.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\backend\\main.py"
+    ],
+    "chars": 2531
+  },
+  {
+    "line": 5541,
+    "timestamp": "2026-05-19T13:16:18.755Z",
+    "patch": "data\\debug\\patch_recovery\\5541_track_visual_geometry-py.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\backend\\core\\geometry\\track_visual_geometry.py"
+    ],
+    "chars": 256
+  },
+  {
+    "line": 5616,
+    "timestamp": "2026-05-19T13:20:28.939Z",
+    "patch": "data\\debug\\patch_recovery\\5616_CameraController-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\CameraController.jsx"
+    ],
+    "chars": 1382
+  },
+  {
+    "line": 5620,
+    "timestamp": "2026-05-19T13:20:49.650Z",
+    "patch": "data\\debug\\patch_recovery\\5620_OverlayRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\OverlayRenderer.jsx"
+    ],
+    "chars": 3060
+  },
+  {
+    "line": 5625,
+    "timestamp": "2026-05-19T13:21:21.139Z",
+    "patch": "data\\debug\\patch_recovery\\5625_TrackRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\TrackRenderer.jsx"
+    ],
+    "chars": 3712
+  },
+  {
+    "line": 5630,
+    "timestamp": "2026-05-19T13:21:36.927Z",
+    "patch": "data\\debug\\patch_recovery\\5630_TrackRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\TrackRenderer.jsx"
+    ],
+    "chars": 2761
+  },
+  {
+    "line": 5635,
+    "timestamp": "2026-05-19T13:22:43.807Z",
+    "patch": "data\\debug\\patch_recovery\\5635_TrackRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\TrackRenderer.jsx"
+    ],
+    "chars": 7715
+  },
+  {
+    "line": 5640,
+    "timestamp": "2026-05-19T13:22:50.525Z",
+    "patch": "data\\debug\\patch_recovery\\5640_TrackRenderer-jsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\components\\map\\TrackRenderer.jsx"
+    ],
+    "chars": 529
+  },
+  {
+    "line": 5717,
+    "timestamp": "2026-05-19T13:31:21.127Z",
+    "patch": "data\\debug\\patch_recovery\\5717_Dashboard-tsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\Dashboard.tsx"
+    ],
+    "chars": 1338
+  },
+  {
+    "line": 5724,
+    "timestamp": "2026-05-19T13:31:39.404Z",
+    "patch": "data\\debug\\patch_recovery\\5724_Dashboard-tsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\Dashboard.tsx"
+    ],
+    "chars": 1005
+  },
+  {
+    "line": 5736,
+    "timestamp": "2026-05-19T13:32:02.349Z",
+    "patch": "data\\debug\\patch_recovery\\5736_Dashboard-tsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\Dashboard.tsx"
+    ],
+    "chars": 759
+  },
+  {
+    "line": 5740,
+    "timestamp": "2026-05-19T13:32:20.650Z",
+    "patch": "data\\debug\\patch_recovery\\5740_Dashboard-tsx.patch",
+    "files": [
+      "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\frontend\\src\\Dashboard.tsx"
+    ],
+    "chars": 3321
+  }
+]

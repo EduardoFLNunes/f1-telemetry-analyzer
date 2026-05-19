@@ -1,0 +1,80 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\backend\core\geometry\track_visual_geometry.py
+@@
+ def audit_visual_edge_artifacts(
+@@
+     return {
+         "config": cfg,
+         "pointCount": len(centerline),
+@@
+     }
++
++
++def audit_false_curve_artifacts(
++    centerline: Sequence[Point],
++    left_edge: Sequence[Point],
++    right_edge: Sequence[Point],
++    widths: Sequence[float],
++    p_values: Sequence[float],
++    *,
++    config: Optional[Dict[str, Any]] = None,
++) -> Dict[str, Any]:
++    cfg = {**DEFAULT_VISUAL_CONFIG, **(config or {})}
++    artifacts: List[Dict[str, Any]] = []
++    if len(centerline) < 5:
++        return {"config": cfg, "artifactCount": 0, "artifacts": []}
++
++    count = len(centerline)
++    center_angles = [abs(_angle_delta(centerline, index)) for index in range(count)]
++    center_deviation = [_local_trend_deviation(centerline, index, span=8) for index in range(count)]
++    for edge_name, points in (("left", left_edge), ("right", right_edge)):
++        for index in range(count):
++            edge_angle = abs(_angle_delta(points, index))
++            edge_deviation = _local_trend_deviation(points, index, span=8)
++            width_delta_prev = abs(float(widths[index]) - float(widths[(index - 1) % count]))
++            width_delta_next = abs(float(widths[(index + 1) % count]) - float(widths[index]))
++            reasons = []
++            if edge_angle > cfg["falseCurveAngleRadians"] and center_angles[index] < cfg["falseCurveCenterlineAngleRadians"]:
++                reasons.append("edge_turn_not_supported_by_centerline")
++            if edge_deviation > cfg["falseCurveDeviationMeters"] and center_deviation[index] < cfg["falseCurveDeviationMeters"] * 0.7:
++                reasons.append("edge_deviates_from_neighbor_trend")
++            if max(width_delta_prev, width_delta_next) > cfg["maxWidthDeltaPerSample"]:
++                reasons.append("abrupt_visual_width_delta")
++            if center_angles[index] > cfg["falseCurveCenterlineAngleRadians"] * 1.6:
++                reasons.append("visual_centerline_angle_spike")
++            for reason in reasons:
++                artifacts.append(
++                    {
++                        **_artifact_record(
++                            index=index,
++                            edge=edge_name,
++                            widths=widths,
++                            p_values=p_values,
++                            angle_delta=edge_angle,
++                            segment_length=_distance(points[index], points[(index + 1) % count]),
++                            reason=reason,
++                        ),
++                        "centerlineAngleDelta": _round(center_angles[index]),
++                        "edgeTrendDeviation": _round(edge_deviation),
++                        "centerlineTrendDeviation": _round(center_deviation[index]),
++                    }
++                )
++
++    artifacts.sort(key=lambda item: (-max(abs(item["angleDelta"]), item["edgeTrendDeviation"]), item["index"]))
++    unique_indices = sorted({int(item["index"]) for item in artifacts})
++    return {
++        "config": cfg,
++        "pointCount": count,
++        "artifactCount": len(artifacts),
++        "uniqueArtifactIndexCount": len(unique_indices),
++        "artifactIndices": unique_indices,
++        "artifacts": artifacts,
++        "summary": {
++            "leftArtifacts": sum(1 for item in artifacts if item["edge"] == "left"),
++            "rightArtifacts": sum(1 for item in artifacts if item["edge"] == "right"),
++            "widthStats": _stats(widths),
++            "maxCenterlineAngleDelta": _round(max(center_angles) if center_angles else 0.0),
++            "maxCenterlineTrendDeviation": _round(max(center_deviation) if center_deviation else 0.0),
++        },
++    }
+*** End Patch

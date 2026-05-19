@@ -1,0 +1,128 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\TrackRenderer.jsx
+@@
+   const canvasRef = useRef(null);
+   const mapCanvasRef = useRef(null);
++  const trackLayerCanvasRef = useRef(null);
++  const trackLayerKeyRef = useRef('');
+   const containerRef = useRef(null);
+   const animationRef = useRef(null);
+   const pathCacheBuildCountRef = useRef(0);
+   const offscreenMetricsRef = useRef({
+     recreated: 0,
+     resized: 0,
+   });
++  const trackLayerMetricsRef = useRef({
++    builds: 0,
++    resized: 0,
++  });
+@@
+     trackPayloadBytes: 0,
+     trackPollingEnabled: false,
+     debugOverlaysEnabled: false,
++    staticTrackLayerCacheEnabled: false,
++    staticTrackLayerBuildCount: 0,
++    staticTrackLayerResizeCount: 0,
+   });
+@@
+       if (mapCanvas.width !== canvas.width || mapCanvas.height !== canvas.height) {
+         mapCanvas.width = canvas.width;
+         mapCanvas.height = canvas.height;
+         offscreenMetricsRef.current.resized += 1;
+       }
+@@
+       metrics.trackPayloadBytes = trackDiagnostics?.payloadBytes || 0;
+       metrics.trackPollingEnabled = Boolean(trackDiagnostics?.trackPollingEnabled);
++      metrics.staticTrackLayerCacheEnabled = Boolean(visualTrack && cameraRef.current.mode === 'OVERVIEW');
++      metrics.staticTrackLayerBuildCount = trackLayerMetricsRef.current.builds;
++      metrics.staticTrackLayerResizeCount = trackLayerMetricsRef.current.resized;
+ 
+-      mapCtx.save();
+-      const scale = applyCameraTransform(mapCtx, rect.width, rect.height, renderBounds, cameraRef.current, renderFrame);
+-      metrics.cameraEasingEnabled = Boolean(cameraRef.current.cameraEasingEnabled);
++      let scale = 1;
++      const useStaticTrackLayer = Boolean(visualTrack) && cameraRef.current.mode === 'OVERVIEW';
++      if (useStaticTrackLayer) {
++        if (!trackLayerCanvasRef.current) {
++          trackLayerCanvasRef.current = document.createElement('canvas');
++        }
++        const trackLayerCanvas = trackLayerCanvasRef.current;
++        if (trackLayerCanvas.width !== canvas.width || trackLayerCanvas.height !== canvas.height) {
++          trackLayerCanvas.width = canvas.width;
++          trackLayerCanvas.height = canvas.height;
++          trackLayerMetricsRef.current.resized += 1;
++          trackLayerKeyRef.current = '';
++        }
+ 
+-      if (visualTrack) {
+-        drawTrackSurface(mapCtx, visualTrack, renderBounds, scale, trackPathCache, {
+-          showCenterline: debugEnabled,
+-          logPathCacheReuse: Boolean(import.meta.env?.DEV),
+-        });
++        const staticTrackKey = [
++          canvas.width,
++          canvas.height,
++          dpr.toFixed(2),
++          cameraRef.current.zoom.toFixed(4),
++          cameraRef.current.offset.x.toFixed(1),
++          cameraRef.current.offset.y.toFixed(1),
++          debugEnabled ? 'debug' : 'clean',
++          trackPathCache?.pathCacheBuildCount || 0,
++          visualTrack?.cachePath || visualTrack?.trackName || '',
++        ].join('|');
++
++        if (trackLayerKeyRef.current !== staticTrackKey) {
++          const trackLayerCtx = trackLayerCanvas.getContext('2d');
++          if (trackLayerCtx) {
++            trackLayerCtx.setTransform(1, 0, 0, 1, 0, 0);
++            trackLayerCtx.clearRect(0, 0, trackLayerCanvas.width, trackLayerCanvas.height);
++            trackLayerCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
++            trackLayerCtx.save();
++            const layerScale = applyCameraTransform(trackLayerCtx, rect.width, rect.height, renderBounds, cameraRef.current, null);
++            drawTrackSurface(trackLayerCtx, visualTrack, renderBounds, layerScale, trackPathCache, {
++              showCenterline: debugEnabled,
++              logPathCacheReuse: Boolean(import.meta.env?.DEV),
++            });
++            if (debugEnabled && normalizedTrack?.visualGeometry) drawPhysicsEdges(trackLayerCtx, normalizedTrack, layerScale);
++            trackLayerCtx.restore();
++            trackLayerMetricsRef.current.builds += 1;
++            metrics.staticTrackLayerBuildCount = trackLayerMetricsRef.current.builds;
++            metrics.staticTrackLayerResizeCount = trackLayerMetricsRef.current.resized;
++            trackLayerKeyRef.current = staticTrackKey;
++          }
++        }
++
++        mapCtx.drawImage(trackLayerCanvas, 0, 0);
++
++        mapCtx.save();
++        scale = applyCameraTransform(mapCtx, rect.width, rect.height, renderBounds, cameraRef.current, renderFrame);
++        metrics.cameraEasingEnabled = Boolean(cameraRef.current.cameraEasingEnabled);
++        if (debugEnabled) drawTrajectory(mapCtx, liveDebugHistory, scale);
++        if (debugEnabled && normalizedTrack && renderFrame) drawProjectionDebug(mapCtx, renderFrame, scale);
++        if (renderFrame) drawCar(mapCtx, renderFrame, scale);
++        mapCtx.restore();
++      } else {
++        mapCtx.save();
++        scale = applyCameraTransform(mapCtx, rect.width, rect.height, renderBounds, cameraRef.current, renderFrame);
++        metrics.cameraEasingEnabled = Boolean(cameraRef.current.cameraEasingEnabled);
++
++        if (visualTrack) {
++          drawTrackSurface(mapCtx, visualTrack, renderBounds, scale, trackPathCache, {
++            showCenterline: debugEnabled,
++            logPathCacheReuse: Boolean(import.meta.env?.DEV),
++          });
++        }
++        if (debugEnabled && normalizedTrack?.visualGeometry) drawPhysicsEdges(mapCtx, normalizedTrack, scale);
++        if (debugEnabled) drawTrajectory(mapCtx, liveDebugHistory, scale);
++        if (debugEnabled && normalizedTrack && renderFrame) drawProjectionDebug(mapCtx, renderFrame, scale);
++        if (renderFrame) drawCar(mapCtx, renderFrame, scale);
++        mapCtx.restore();
+       }
+-      if (debugEnabled && normalizedTrack?.visualGeometry) drawPhysicsEdges(mapCtx, normalizedTrack, scale);
+-      if (debugEnabled) drawTrajectory(mapCtx, liveDebugHistory, scale);
+-      if (debugEnabled && normalizedTrack && renderFrame) drawProjectionDebug(mapCtx, renderFrame, scale);
+-      if (renderFrame) drawCar(mapCtx, renderFrame, scale);
+-      mapCtx.restore();
+ 
+       ctx.save();
+*** End Patch

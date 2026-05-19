@@ -1,0 +1,52 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\TrackRenderer.jsx
+@@
+     staticTrackLayerCacheEnabled: false,
+     staticTrackLayerBuildCount: 0,
+     staticTrackLayerResizeCount: 0,
++    maxFrameDeltaMs: 0,
++    droppedFrames: 0,
++    telemetryHz: 0,
++    renderHz: 0,
++    lastPacketAgeMs: null,
++    packetDeltaMs: null,
++    responseLatencyMs: null,
++    backendSampleDeltaMs: null,
++    backendReadDeltaMs: null,
++    interpolationBufferSize: 0,
++    outOfOrderPackets: 0,
++    duplicatePackets: 0,
+   });
+@@
+       const metrics = renderMetricsRef.current;
+       if (metrics.lastFrameAt) {
+-        const instantFps = 1000 / Math.max(timestamp - metrics.lastFrameAt, 1);
++        const frameDeltaMs = Math.max(timestamp - metrics.lastFrameAt, 1);
++        const instantFps = 1000 / frameDeltaMs;
+         metrics.fps = metrics.fps ? metrics.fps * 0.9 + instantFps * 0.1 : instantFps;
++        metrics.renderHz = metrics.fps;
++        metrics.maxFrameDeltaMs = Math.max(metrics.maxFrameDeltaMs || 0, frameDeltaMs);
++        if (frameDeltaMs > 50) metrics.droppedFrames = (metrics.droppedFrames || 0) + 1;
+       }
+       metrics.lastFrameAt = timestamp;
++      const telemetryPerf = useTelemetryStore.getState().telemetryPerf || {};
+       metrics.trackPointCount = visualTrack?.total_points || visualTrack?.centerline?.x?.length || 0;
+       metrics.renderedPointCount = trackPathCache?.renderedPointCount || 0;
+       metrics.pathCacheEnabled = Boolean(trackPathCache?.pathCacheEnabled);
+@@
+       metrics.trackFetchCount = trackDiagnostics?.trackFetchCount || 0;
+       metrics.trackPayloadBytes = trackDiagnostics?.payloadBytes || 0;
+       metrics.trackPollingEnabled = Boolean(trackDiagnostics?.trackPollingEnabled);
+       metrics.staticTrackLayerCacheEnabled = Boolean(visualTrack && cameraRef.current.mode === 'OVERVIEW');
+       metrics.staticTrackLayerBuildCount = trackLayerMetricsRef.current.builds;
+       metrics.staticTrackLayerResizeCount = trackLayerMetricsRef.current.resized;
++      metrics.telemetryHz = telemetryPerf.telemetryHz || 0;
++      metrics.packetDeltaMs = telemetryPerf.packetDeltaMs;
++      metrics.lastPacketAgeMs = telemetryPerf.lastPacketAgeMs;
++      metrics.responseLatencyMs = telemetryPerf.responseLatencyMs;
++      metrics.backendSampleDeltaMs = telemetryPerf.backendSampleDeltaMs;
++      metrics.backendReadDeltaMs = telemetryPerf.backendReadDeltaMs;
++      metrics.outOfOrderPackets = telemetryPerf.outOfOrderPackets || 0;
++      metrics.duplicatePackets = telemetryPerf.duplicatePackets || 0;
++      metrics.interpolationBufferSize = interpolatedCar.metricsRef.current.bufferSize || 0;
+*** End Patch

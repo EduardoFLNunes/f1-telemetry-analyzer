@@ -12,8 +12,11 @@ if str(BACKEND_DIR) not in sys.path:
 from core.cache.track_cache import TrackCache
 from core.geometry.track_geometry_provider import (
     apply_track_visual_geometry,
+    build_visual_reference_track_from_manifest,
+    track_geometry_cleanup_config,
     track_visual_geometry_config,
 )
+from core.track_file_resolver import TrackFileResolver
 
 
 TRACK_CACHE_DIR = REPO_ROOT / "data" / "cache" / "tracks"
@@ -138,7 +141,25 @@ def main() -> None:
     if not track:
         raise SystemExit(f"Missing cache: {TRACK_CACHE_NAME}")
     visual_cfg = track_visual_geometry_config()
-    track = apply_track_visual_geometry(track, config=visual_cfg)
+    cleanup_cfg = track_geometry_cleanup_config()
+    visual_reference = None
+    if visual_cfg.get("useRoadOnly", False):
+        try:
+            manifest = TrackFileResolver().build_track_file_manifest(
+                track.get("trackName", "vhe_interlagos"),
+                track.get("trackConfig", "gp"),
+                source="assetto_corsa",
+                game_code="assetto_corsa",
+            )
+            visual_reference = build_visual_reference_track_from_manifest(
+                manifest.to_dict(),
+                visual_config=visual_cfg,
+                target_spacing=float(cleanup_cfg["targetSpacingMeters"]),
+                smoothing_window=int(cleanup_cfg["smoothingWindow"]),
+            )
+        except Exception as exc:
+            print(f"ROAD-only visual reference unavailable: {exc}", file=sys.stderr)
+    track = apply_track_visual_geometry(track, config=visual_cfg, visual_reference_track=visual_reference)
     cache.save_track(TRACK_CACHE_NAME, track)
 
     physics = track_to_map(track)
@@ -152,7 +173,10 @@ def main() -> None:
         "trackConfig": track.get("trackConfig"),
         "physicsSource": "kn5_surface_interval_physics",
         "visualGeometrySource": track["visualGeometry"].get("source"),
+        "visualGeometrySourceMode": track["visualGeometry"].get("visualSource"),
         "visualMethod": track["visualGeometry"].get("method"),
+        "visualArtifactFixEnabled": track["visualGeometry"].get("visualArtifactFixEnabled"),
+        "falseCurveArtifactsRemoved": track["visualGeometry"].get("falseCurveArtifactsRemoved"),
         "visualGeometryEnabled": True,
         "config": track["visualGeometry"].get("config"),
         "metadata": track["visualGeometry"].get("metadata"),
@@ -163,6 +187,8 @@ def main() -> None:
         "maxWidthDeltaBefore": track["visualGeometry"].get("maxWidthDeltaBefore"),
         "maxWidthDeltaAfter": track["visualGeometry"].get("maxWidthDeltaAfter"),
         "artifacts": artifacts,
+        "falseCurveReport": track["visualGeometry"].get("falseCurveReport"),
+        "falseCurveReportAfter": track["visualGeometry"].get("falseCurveReportAfter"),
     }
 
     (DEBUG_DIR / "track_visual_edge_artifacts_vhe_interlagos.json").write_text(
@@ -210,6 +236,22 @@ def main() -> None:
         ),
         encoding="utf-8",
     )
+    (DEBUG_DIR / "track_visual_false_curves_report.json").write_text(
+        json.dumps(
+            {
+                "trackName": track.get("trackName"),
+                "trackConfig": track.get("trackConfig"),
+                "visualSource": track["visualGeometry"].get("visualSource"),
+                "visualArtifactFixEnabled": track["visualGeometry"].get("visualArtifactFixEnabled"),
+                "falseCurveArtifactsRemoved": track["visualGeometry"].get("falseCurveArtifactsRemoved"),
+                "before": track["visualGeometry"].get("falseCurveReport"),
+                "after": track["visualGeometry"].get("falseCurveReportAfter"),
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
     all_bounds = bounds_for(physics["leftEdge"], physics["rightEdge"], visual["leftEdge"], visual["rightEdge"])
     project = make_projector(all_bounds)
 
@@ -227,6 +269,28 @@ def main() -> None:
         ],
     )
     write_svg(
+        DEBUG_DIR / "track_visual_road_only_preview.svg",
+        "TrackVisualGeometry ROAD-only visual preview",
+        [
+            polygon(visual["leftEdge"], visual["rightEdge"], project, "#202838", 0.94),
+            polyline(visual["leftEdge"], project, "#38bdf8", 1.7, 0.9),
+            polyline(visual["rightEdge"], project, "#36f3a5", 1.7, 0.9),
+            polyline(visual["centerline"], project, "#f8fafc", 0.85, 0.38),
+        ],
+    )
+    write_svg(
+        DEBUG_DIR / "track_visual_fixed_false_curves.svg",
+        "TrackVisualGeometry false-curve fix",
+        [
+            polygon(visual["leftEdge"], visual["rightEdge"], project, "#202838", 0.9),
+            polyline(physics["leftEdge"], project, "#ff3158", 0.75, 0.22),
+            polyline(physics["rightEdge"], project, "#ffb000", 0.75, 0.22),
+            polyline(visual["leftEdge"], project, "#38bdf8", 1.8, 0.92),
+            polyline(visual["rightEdge"], project, "#36f3a5", 1.8, 0.92),
+            *removed_artifact_markers(removed_artifacts, physics, project),
+        ],
+    )
+    write_svg(
         DEBUG_DIR / "track_physics_vs_visual_geometry.svg",
         "Physics geometry vs visual geometry",
         [
@@ -237,6 +301,18 @@ def main() -> None:
             polyline(visual["rightEdge"], project, "#36f3a5", 1.7, 0.9),
             polyline(physics["centerline"], project, "#f8fafc", 0.75, 0.25),
             *removed_artifact_markers(removed_artifacts, physics, project),
+        ],
+    )
+    write_svg(
+        DEBUG_DIR / "track_physics_vs_visual_after_false_curve_fix.svg",
+        "Physics vs visual after false-curve fix",
+        [
+            polygon(visual["leftEdge"], visual["rightEdge"], project, "#202838", 0.74),
+            polyline(physics["leftEdge"], project, "#ff3158", 0.85, 0.38),
+            polyline(physics["rightEdge"], project, "#ffb000", 0.85, 0.38),
+            polyline(visual["leftEdge"], project, "#38bdf8", 1.8, 0.94),
+            polyline(visual["rightEdge"], project, "#36f3a5", 1.8, 0.94),
+            polyline(visual["centerline"], project, "#f8fafc", 0.8, 0.34),
         ],
     )
     write_svg(
@@ -261,8 +337,13 @@ def main() -> None:
                 "artifactsSvg": str(DEBUG_DIR / "track_visual_edge_artifacts.svg"),
                 "widthProfile": str(DEBUG_DIR / "track_visual_width_profile.json"),
                 "artifactsRemoved": str(DEBUG_DIR / "track_visual_artifacts_removed.json"),
+                "falseCurvesReport": str(DEBUG_DIR / "track_visual_false_curves_report.json"),
+                "roadOnlyPreview": str(DEBUG_DIR / "track_visual_road_only_preview.svg"),
+                "fixedFalseCurves": str(DEBUG_DIR / "track_visual_fixed_false_curves.svg"),
+                "physicsVsVisualAfterFalseCurveFix": str(DEBUG_DIR / "track_physics_vs_visual_after_false_curve_fix.svg"),
                 "artifactCount": len(artifacts),
                 "removedSpikeCount": track["visualGeometry"].get("removedSpikeCount"),
+                "falseCurveArtifactsRemoved": track["visualGeometry"].get("falseCurveArtifactsRemoved"),
                 "maxWidthDeltaBefore": track["visualGeometry"].get("maxWidthDeltaBefore"),
                 "maxWidthDeltaAfter": track["visualGeometry"].get("maxWidthDeltaAfter"),
                 "visualWidthMin": track["visualGeometry"].get("widthMin"),

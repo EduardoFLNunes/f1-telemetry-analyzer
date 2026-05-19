@@ -1,0 +1,38 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\OverlayRenderer.jsx
+@@
+ export function drawHud(ctx, width, height, trackData, frame, camera, debugEnabled, metrics = {}) {
+   const formatBytes = (bytes = 0) => {
+@@
+     return `${Math.round(bytes / 1024)} KB`;
+   };
++  const formatMs = (value) => Number.isFinite(value) ? `${Number(value).toFixed(0)}ms` : '--';
+ 
+   ctx.save();
+@@
+-  const hudHeight = debugEnabled ? 186 : 114;
++  const hudHeight = debugEnabled ? 218 : 146;
+@@
+   ctx.fillText(`FPS ${Math.round(metrics.fps || 0)} | Path cache ${metrics.pathCacheEnabled ? 'ON' : 'OFF'} | Interp ${metrics.interpolationEnabled ? 'ON' : 'OFF'} | Visual ${metrics.visualGeometryEnabled ? 'ON' : 'OFF'} | mirrorMode ${metrics.mirrorMode || 'off'}`, 24, 80);
+   ctx.fillText(`Track fetches ${metrics.trackFetchCount || 0} | Payload ${formatBytes(metrics.trackPayloadBytes || 0)} | Poll ${metrics.trackPollingEnabled ? 'ON' : 'OFF'}`, 24, 96);
+   const debugFlags = metrics.debugOverlaysEnabled
+     ? `${metrics.debugProjectionEnabled ? 'P' : '-'}${metrics.debugPhysicsEnabled ? 'E' : '-'}${metrics.debugTrajectoryEnabled ? 'T' : '-'}${metrics.debugCenterlineEnabled ? 'C' : '-'}`
+     : 'OFF';
+   ctx.fillText(`Path builds ${metrics.pathCacheBuildCount || 0} | Static layer ${metrics.staticTrackLayerCacheEnabled ? 'ON' : 'OFF'}:${metrics.staticTrackLayerBuildCount || 0} | Offscreen create ${metrics.offscreenCanvasRecreatedCount || 0} | Debug ${debugFlags}`, 24, 112);
++  ctx.fillText(`Telemetry ${Number(metrics.telemetryHz || 0).toFixed(1)}Hz | Render ${Number(metrics.renderHz || metrics.fps || 0).toFixed(1)}Hz | age ${formatMs(metrics.lastPacketAgeMs)} | pkt ${formatMs(metrics.packetDeltaMs)}`, 24, 128);
++  ctx.fillText(`Backend sample ${formatMs(metrics.backendSampleDeltaMs)} | read ${formatMs(metrics.backendReadDeltaMs)} | latency ${formatMs(metrics.responseLatencyMs)} | interpBuf ${metrics.interpolationBufferSize || 0}`, 24, 144);
+ 
+   if (debugEnabled && frame) {
+     ctx.fillStyle = '#cbd5e1';
+     const lateral = Number.isFinite(frame.L) ? `${Number(frame.L).toFixed(2)}m` : 'pending';
+     const drift = Number.isFinite(frame.alignment_drift) ? `${Number(frame.alignment_drift).toFixed(3)}m` : 'pending';
+-    ctx.fillText(`s ${Number(frame.s || 0).toFixed(2)}m   L ${lateral}`, 24, 134);
+-    ctx.fillText(`drift ${drift}`, 24, 150);
+-    ctx.fillText(`segment ${frame.projectionDebug?.nearestSegmentIndex ?? '-'}`, 24, 166);
+-    ctx.fillText(`rendered ${metrics.renderedPointCount || 0} pts | camera easing ${metrics.cameraEasingEnabled ? 'ON' : 'OFF'}`, 24, 182);
++    ctx.fillText(`s ${Number(frame.s || 0).toFixed(2)}m   L ${lateral}`, 24, 166);
++    ctx.fillText(`drift ${drift}`, 24, 182);
++    ctx.fillText(`segment ${frame.projectionDebug?.nearestSegmentIndex ?? '-'} | outOfOrder ${metrics.outOfOrderPackets || 0} | dup ${metrics.duplicatePackets || 0}`, 24, 198);
++    ctx.fillText(`rendered ${metrics.renderedPointCount || 0} pts | maxFrame ${formatMs(metrics.maxFrameDeltaMs)} | dropped ${metrics.droppedFrames || 0}`, 24, 214);
+   }
+*** End Patch

@@ -1,0 +1,55 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\TrackRenderer.jsx
+@@
+ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
+@@
+   const renderMetricsRef = useRef({
+@@
+     duplicatePackets: 0,
+   });
++  const alignmentLogRef = useRef({
++    lastLoggedAt: 0,
++    lastCase: '',
++  });
+   const interpolatedCar = useInterpolatedCarState();
+ 
+-  const renderOptions = useMemo(() => ({ mirrorX: resolveMirrorX(mirrorX) }), [mirrorX]);
++  const diagnosticFlags = useMemo(() => {
++    const forceVisual = readOptionalFlag(['FORCE_RENDER_VISUAL_GEOMETRY', 'forceRenderVisualGeometry', 'visualGeometry']);
++    const forcePhysics = readFlag(['FORCE_RENDER_PHYSICS_GEOMETRY', 'forceRenderPhysicsGeometry', 'physicsGeometry'], false);
++    const forceDisableMirror = readFlag(['FORCE_DISABLE_MIRROR', 'forceDisableMirror', 'mirrorOff'], false);
++    const drawCarInOffscreen = readOptionalFlag(['DRAW_CAR_IN_OFFSCREEN', 'drawCarInOffscreen']);
++    const alignmentDebug = readFlag(['ALIGNMENT_DEBUG', 'alignmentDebug', 'debugAlignment'], false);
++    return {
++      forceRenderVisualGeometry: forceVisual,
++      forceRenderPhysicsGeometry: forcePhysics,
++      forceDisableMirror,
++      drawCarInOffscreen: drawCarInOffscreen ?? true,
++      alignmentDebug,
++    };
++  }, []);
++
++  const renderOptions = useMemo(() => ({
++    mirrorX: diagnosticFlags.forceDisableMirror ? false : resolveMirrorX(mirrorX),
++  }), [diagnosticFlags.forceDisableMirror, mirrorX]);
+   const normalizedTrack = useMemo(() => normalizeTrack(trackData), [trackData]);
+-  const visualTrack = useMemo(() => normalizeVisualTrack(normalizedTrack) || normalizedTrack, [normalizedTrack]);
++  const normalizedVisualTrack = useMemo(() => normalizeVisualTrack(normalizedTrack), [normalizedTrack]);
++  const visualTrack = useMemo(() => {
++    if (diagnosticFlags.forceRenderPhysicsGeometry) return normalizedTrack;
++    if (diagnosticFlags.forceRenderVisualGeometry === false) return normalizedTrack;
++    if (diagnosticFlags.forceRenderVisualGeometry === true) return normalizedVisualTrack || normalizedTrack;
++    return normalizedVisualTrack || normalizedTrack;
++  }, [
++    diagnosticFlags.forceRenderPhysicsGeometry,
++    diagnosticFlags.forceRenderVisualGeometry,
++    normalizedTrack,
++    normalizedVisualTrack,
++  ]);
++  const renderGeometryMode = useMemo(() => {
++    if (visualTrack === normalizedVisualTrack && normalizedVisualTrack) return 'visual';
++    if (visualTrack === normalizedTrack && normalizedTrack) return 'physics';
++    return 'none';
++  }, [normalizedTrack, normalizedVisualTrack, visualTrack]);
+   const fixedBounds = useMemo(() => computeTrackBounds(visualTrack), [visualTrack]);
+*** End Patch

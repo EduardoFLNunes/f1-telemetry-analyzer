@@ -1,0 +1,9 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\backend\core\geometry\track_visual_geometry.py
+@@
+-    "useRoadOnly": True,
++    "useRoadOnly": False,
+@@
+-VISUAL_GEOMETRY_VERSION = 4
++VISUAL_GEOMETRY_VERSION = 5
+*** End Patch

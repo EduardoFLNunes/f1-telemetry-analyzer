@@ -1,0 +1,38 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\TrackRenderer.jsx
+@@
+   const canvasRef = useRef(null);
+   const containerRef = useRef(null);
+   const animationRef = useRef(null);
+-  const latestFrame = useTelemetryStore((state) => state.latestFrame);
+   const [cameraMode, setCameraMode] = useState('OVERVIEW');
+   const [debugEnabled, setDebugEnabled] = useState(false);
++  const [debugOverlayFrame, setDebugOverlayFrame] = useState(null);
+@@
+-  const interpolatedCar = useInterpolatedCarState(latestFrame);
++  const interpolatedCar = useInterpolatedCarState();
+@@
+   useEffect(() => {
+     cameraRef.current.mode = cameraMode;
+     if (cameraMode === 'OVERVIEW') {
+       cameraRef.current.center = null;
+     }
+   }, [cameraMode]);
++
++  useEffect(() => {
++    if (!debugEnabled) {
++      setDebugOverlayFrame(null);
++      return undefined;
++    }
++    const interval = window.setInterval(() => {
++      setDebugOverlayFrame(interpolatedCar.frameRef.current);
++    }, 150);
++    return () => window.clearInterval(interval);
++  }, [debugEnabled, interpolatedCar]);
+@@
+-      {debugEnabled && <ProjectionDebugOverlay frame={latestFrame} />}
++      {debugEnabled && <ProjectionDebugOverlay frame={debugOverlayFrame} />}
+     </div>
+   );
+ }
+*** End Patch

@@ -1,0 +1,70 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\backend\core\geometry\track_geometry_provider.py
+@@
+ def track_visual_geometry_config() -> Dict[str, Any]:
++    visual_surfaces_raw = os.getenv("TRACK_VISUAL_SURFACES", "ROAD")
++    visual_surfaces = [item.strip().upper() for item in visual_surfaces_raw.split(",") if item.strip()]
+     return {
+         "enabled": track_visual_geometry_enabled(),
++        "useRoadOnly": _env_bool("TRACK_VISUAL_USE_ROAD_ONLY", True),
++        "visualSurfaces": visual_surfaces or list(DEFAULT_VISUAL_CONFIG["visualSurfaces"]),
++        "artifactFixEnabled": _env_bool("TRACK_VISUAL_ARTIFACT_FIX_ENABLED", True),
+         "widthMedianWindow": _env_int(
+             "TRACK_VISUAL_WIDTH_MEDIAN_WINDOW",
+             int(DEFAULT_VISUAL_CONFIG["widthMedianWindow"]),
+@@
+         "maxWidth": _env_float(
+             "TRACK_VISUAL_MAX_WIDTH",
+             float(DEFAULT_VISUAL_CONFIG["maxWidth"]),
+         ),
++        "centerlineSmoothingWindow": _env_int(
++            "TRACK_VISUAL_CENTERLINE_SMOOTHING_WINDOW",
++            int(DEFAULT_VISUAL_CONFIG["centerlineSmoothingWindow"]),
++        ),
++        "normalSmoothingWindow": _env_int(
++            "TRACK_VISUAL_NORMAL_SMOOTHING_WINDOW",
++            int(DEFAULT_VISUAL_CONFIG["normalSmoothingWindow"]),
++        ),
++        "edgeSmoothingWindow": _env_int(
++            "TRACK_VISUAL_EDGE_SMOOTHING_WINDOW",
++            int(DEFAULT_VISUAL_CONFIG["edgeSmoothingWindow"]),
++        ),
++        "artifactRepairRadius": _env_int(
++            "TRACK_VISUAL_ARTIFACT_REPAIR_RADIUS",
++            int(DEFAULT_VISUAL_CONFIG["artifactRepairRadius"]),
++        ),
+     }
+@@
+-def apply_track_visual_geometry(track_data: Dict[str, Any], *, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
++def apply_track_visual_geometry(
++    track_data: Dict[str, Any],
++    *,
++    config: Optional[Dict[str, Any]] = None,
++    visual_reference_track: Optional[Dict[str, Any]] = None,
++) -> Dict[str, Any]:
+     cfg = track_visual_geometry_config()
+     if config:
+         cfg.update(config)
+@@
+-    center_map = [[float(point.x), -float(point.z)] for point in track_data.get("centerline", [])]
+-    left_map = [[float(point["x"]), -float(point.get("z", point.get("y", 0.0)))] for point in track_data.get("boundsLeft", [])]
+-    right_map = [[float(point["x"]), -float(point.get("z", point.get("y", 0.0)))] for point in track_data.get("boundsRight", [])]
+-    widths = [float(width) for width in track_data.get("localWidth", [])]
+-    p_values = [float(value) for value in track_data.get("p", [])] or [index / max(len(center_map) - 1, 1) for index in range(len(center_map))]
++    visual_source_track = visual_reference_track or track_data
++    if visual_reference_track:
++        cfg["visualSource"] = "road_only"
++
++    center_map = [[float(point.x), -float(point.z)] for point in visual_source_track.get("centerline", [])]
++    left_map = [[float(point["x"]), -float(point.get("z", point.get("y", 0.0)))] for point in visual_source_track.get("boundsLeft", [])]
++    right_map = [[float(point["x"]), -float(point.get("z", point.get("y", 0.0)))] for point in visual_source_track.get("boundsRight", [])]
++    widths = [float(width) for width in visual_source_track.get("localWidth", [])]
++    p_values = [float(value) for value in visual_source_track.get("p", [])] or [index / max(len(center_map) - 1, 1) for index in range(len(center_map))]
+@@
+     track_data["visualGeometry"] = visual_geometry
+@@
+     track_data.setdefault("metadata", {})["visualGeometrySource"] = visual_geometry["source"]
++    track_data.setdefault("metadata", {})["visualSource"] = visual_geometry.get("visualSource")
++    track_data.setdefault("metadata", {})["visualArtifactFixEnabled"] = visual_geometry.get("visualArtifactFixEnabled")
++    track_data.setdefault("metadata", {})["falseCurveArtifactsRemoved"] = visual_geometry.get("falseCurveArtifactsRemoved")
+*** End Patch

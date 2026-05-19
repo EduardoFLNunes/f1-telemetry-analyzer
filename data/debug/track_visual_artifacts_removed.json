@@ -3,7 +3,7 @@
   "trackConfig": "gp",
   "removedSpikeCount": 24,
   "maxWidthDeltaBefore": 1.988366,
-  "maxWidthDeltaAfter": 0.720017,
+  "maxWidthDeltaAfter": 0.2949,
   "artifactsRemoved": [
     {
       "index": 314,
@@ -271,5 +271,5 @@
     }
   ],
   "artifactCountBefore": 24,
-  "artifactCountAfter": 6
+  "artifactCountAfter": 0
 }

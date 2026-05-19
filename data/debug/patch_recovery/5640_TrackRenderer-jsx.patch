@@ -1,0 +1,18 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\TrackRenderer.jsx
+@@
+-  }, [debugEnabled, debugLayers, fixedBounds, interpolatedCar, normalizedTrack, renderOptions, trackDiagnostics, trackPathCache, visualTrack]);
++  }, [
++    debugEnabled,
++    debugLayers,
++    diagnosticFlags,
++    fixedBounds,
++    interpolatedCar,
++    normalizedTrack,
++    renderGeometryMode,
++    renderOptions,
++    trackDiagnostics,
++    trackPathCache,
++    visualTrack,
++  ]);
+*** End Patch

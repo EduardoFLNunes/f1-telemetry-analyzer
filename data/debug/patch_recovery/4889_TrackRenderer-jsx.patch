@@ -1,0 +1,124 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\TrackRenderer.jsx
+@@
+ function normalizeVisualTrack(trackData) {
+@@
+   };
+ }
+ 
++function selectDebugTrajectory(history = [], frame = null, maxPoints = 260) {
++  if (!frame || !history?.length) return [];
++  const frameLap = Number(frame.lap_number);
++  const hasLap = Number.isFinite(frameLap);
++  const filtered = hasLap
++    ? history.filter((sample) => Number(sample.lap_number) === frameLap)
++    : history;
++  return filtered.slice(-maxPoints);
++}
++
+ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
+@@
+   const [cameraMode, setCameraMode] = useState('OVERVIEW');
+   const [debugEnabled, setDebugEnabled] = useState(false);
++  const [debugLayers, setDebugLayers] = useState({
++    projection: true,
++    physics: false,
++    trajectory: false,
++    centerline: false,
++  });
+   const [debugOverlayFrame, setDebugOverlayFrame] = useState(null);
+@@
+       const { latestFrame: liveFrame, history: liveHistory } = useTelemetryStore.getState();
+       const renderFrame = interpolatedCar.frameRef.current || liveFrame;
+-      const liveDebugHistory = debugEnabled ? liveHistory.slice(-1200) : [];
++      const liveDebugHistory = debugEnabled && debugLayers.trajectory
++        ? selectDebugTrajectory(liveHistory, renderFrame)
++        : [];
+       const renderBounds = visualTrack ? fixedBounds : computeTrackBounds(null, liveDebugHistory, renderFrame);
+@@
+       metrics.visualGeometryEnabled = Boolean(normalizedTrack?.visualGeometry);
+       metrics.debugOverlaysEnabled = debugEnabled;
++      metrics.debugProjectionEnabled = Boolean(debugEnabled && debugLayers.projection);
++      metrics.debugPhysicsEnabled = Boolean(debugEnabled && debugLayers.physics);
++      metrics.debugTrajectoryEnabled = Boolean(debugEnabled && debugLayers.trajectory);
++      metrics.debugCenterlineEnabled = Boolean(debugEnabled && debugLayers.centerline);
+       metrics.trackFetchCount = trackDiagnostics?.trackFetchCount || 0;
+@@
+           cameraRef.current.offset.y.toFixed(1),
+-          debugEnabled ? 'debug' : 'clean',
++          debugLayers.physics ? 'physics' : 'physics-off',
++          debugLayers.centerline ? 'centerline' : 'centerline-off',
+           trackPathCache?.pathCacheBuildCount || 0,
+           visualTrack?.cachePath || visualTrack?.trackName || '',
+         ].join('|');
+@@
+             const layerScale = applyCameraTransform(trackLayerCtx, rect.width, rect.height, renderBounds, cameraRef.current, null);
+             drawTrackSurface(trackLayerCtx, visualTrack, renderBounds, layerScale, trackPathCache, {
+-              showCenterline: debugEnabled,
++              showCenterline: debugEnabled && debugLayers.centerline,
+               logPathCacheReuse: Boolean(import.meta.env?.DEV),
+             });
+-            if (debugEnabled && normalizedTrack?.visualGeometry) drawPhysicsEdges(trackLayerCtx, normalizedTrack, layerScale);
++            if (debugEnabled && debugLayers.physics && normalizedTrack?.visualGeometry) drawPhysicsEdges(trackLayerCtx, normalizedTrack, layerScale);
+             trackLayerCtx.restore();
+@@
+         scale = applyCameraTransform(mapCtx, rect.width, rect.height, renderBounds, cameraRef.current, renderFrame);
+         metrics.cameraEasingEnabled = Boolean(cameraRef.current.cameraEasingEnabled);
+-        if (debugEnabled) drawTrajectory(mapCtx, liveDebugHistory, scale);
+-        if (debugEnabled && normalizedTrack && renderFrame) drawProjectionDebug(mapCtx, renderFrame, scale);
++        if (debugEnabled && debugLayers.trajectory) drawTrajectory(mapCtx, liveDebugHistory, scale, { maxSegmentDistance: 35 });
++        if (debugEnabled && debugLayers.projection && normalizedTrack && renderFrame) drawProjectionDebug(mapCtx, renderFrame, scale);
+         if (renderFrame) drawCar(mapCtx, renderFrame, scale);
+         mapCtx.restore();
+@@
+         if (visualTrack) {
+           drawTrackSurface(mapCtx, visualTrack, renderBounds, scale, trackPathCache, {
+-            showCenterline: debugEnabled,
++            showCenterline: debugEnabled && debugLayers.centerline,
+             logPathCacheReuse: Boolean(import.meta.env?.DEV),
+           });
+         }
+-        if (debugEnabled && normalizedTrack?.visualGeometry) drawPhysicsEdges(mapCtx, normalizedTrack, scale);
+-        if (debugEnabled) drawTrajectory(mapCtx, liveDebugHistory, scale);
+-        if (debugEnabled && normalizedTrack && renderFrame) drawProjectionDebug(mapCtx, renderFrame, scale);
++        if (debugEnabled && debugLayers.physics && normalizedTrack?.visualGeometry) drawPhysicsEdges(mapCtx, normalizedTrack, scale);
++        if (debugEnabled && debugLayers.trajectory) drawTrajectory(mapCtx, liveDebugHistory, scale, { maxSegmentDistance: 35 });
++        if (debugEnabled && debugLayers.projection && normalizedTrack && renderFrame) drawProjectionDebug(mapCtx, renderFrame, scale);
+         if (renderFrame) drawCar(mapCtx, renderFrame, scale);
+         mapCtx.restore();
+@@
+-  }, [debugEnabled, fixedBounds, interpolatedCar, normalizedTrack, renderOptions, trackDiagnostics, trackPathCache, visualTrack]);
++  }, [debugEnabled, debugLayers, fixedBounds, interpolatedCar, normalizedTrack, renderOptions, trackDiagnostics, trackPathCache, visualTrack]);
+@@
+         <div className="panel px-1.5 py-1 flex gap-1">
+           <button
+             onClick={() => setDebugEnabled((value) => !value)}
+@@
+             Debug
+           </button>
+         </div>
++        {debugEnabled && (
++          <div className="panel px-1.5 py-1 grid grid-cols-2 gap-1">
++            {[
++              ['projection', 'Proj'],
++              ['physics', 'Phys'],
++              ['trajectory', 'Trail'],
++              ['centerline', 'Ctr'],
++            ].map(([key, label]) => (
++              <button
++                key={key}
++                onClick={() => setDebugLayers((layers) => ({ ...layers, [key]: !layers[key] }))}
++                className={`px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all ${
++                  debugLayers[key] ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30' : 'text-slate-600 hover:text-slate-400'
++                }`}
++              >
++                {label}
++              </button>
++            ))}
++          </div>
++        )}
+       </div>
+ 
+-      {debugEnabled && <ProjectionDebugOverlay frame={debugOverlayFrame} renderOptions={renderOptions} />}
++      {debugEnabled && debugLayers.projection && <ProjectionDebugOverlay frame={debugOverlayFrame} renderOptions={renderOptions} />}
+*** End Patch

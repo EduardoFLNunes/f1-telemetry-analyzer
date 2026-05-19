@@ -85,8 +85,16 @@ def track_visual_geometry_enabled() -> bool:
 
 
 def track_visual_geometry_config() -> Dict[str, Any]:
+    visual_surfaces_raw = os.getenv("TRACK_VISUAL_SURFACES", ",".join(DEFAULT_VISUAL_CONFIG["visualSurfaces"]))
+    visual_surfaces = [item.strip().upper() for item in visual_surfaces_raw.split(",") if item.strip()]
     return {
         "enabled": track_visual_geometry_enabled(),
+        "useRoadOnly": _env_bool("TRACK_VISUAL_USE_ROAD_ONLY", False),
+        "visualSurfaces": visual_surfaces or list(DEFAULT_VISUAL_CONFIG["visualSurfaces"]),
+        "artifactFixEnabled": _env_bool(
+            "TRACK_VISUAL_ARTIFACT_FIX_ENABLED",
+            bool(DEFAULT_VISUAL_CONFIG["artifactFixEnabled"]),
+        ),
         "widthMedianWindow": _env_int(
             "TRACK_VISUAL_WIDTH_MEDIAN_WINDOW",
             int(DEFAULT_VISUAL_CONFIG["widthMedianWindow"]),
@@ -106,6 +114,50 @@ def track_visual_geometry_config() -> Dict[str, Any]:
         "maxWidth": _env_float(
             "TRACK_VISUAL_MAX_WIDTH",
             float(DEFAULT_VISUAL_CONFIG["maxWidth"]),
+        ),
+        "artifactWidthMedianWindow": _env_int(
+            "TRACK_VISUAL_ARTIFACT_WIDTH_MEDIAN_WINDOW",
+            int(DEFAULT_VISUAL_CONFIG["artifactWidthMedianWindow"]),
+        ),
+        "artifactWidthSmoothingWindow": _env_int(
+            "TRACK_VISUAL_ARTIFACT_WIDTH_SMOOTHING_WINDOW",
+            int(DEFAULT_VISUAL_CONFIG["artifactWidthSmoothingWindow"]),
+        ),
+        "centerlineSmoothingWindow": _env_int(
+            "TRACK_VISUAL_CENTERLINE_SMOOTHING_WINDOW",
+            int(DEFAULT_VISUAL_CONFIG["centerlineSmoothingWindow"]),
+        ),
+        "normalSmoothingWindow": _env_int(
+            "TRACK_VISUAL_NORMAL_SMOOTHING_WINDOW",
+            int(DEFAULT_VISUAL_CONFIG["normalSmoothingWindow"]),
+        ),
+        "edgeSmoothingWindow": _env_int(
+            "TRACK_VISUAL_EDGE_SMOOTHING_WINDOW",
+            int(DEFAULT_VISUAL_CONFIG["edgeSmoothingWindow"]),
+        ),
+        "artifactRepairRadius": _env_int(
+            "TRACK_VISUAL_ARTIFACT_REPAIR_RADIUS",
+            int(DEFAULT_VISUAL_CONFIG["artifactRepairRadius"]),
+        ),
+        "angleSpikeRadians": _env_float(
+            "TRACK_VISUAL_ANGLE_SPIKE_RADIANS",
+            float(DEFAULT_VISUAL_CONFIG["angleSpikeRadians"]),
+        ),
+        "falseCurveAngleRadians": _env_float(
+            "TRACK_VISUAL_FALSE_CURVE_ANGLE_RADIANS",
+            float(DEFAULT_VISUAL_CONFIG["falseCurveAngleRadians"]),
+        ),
+        "falseCurveCenterlineAngleRadians": _env_float(
+            "TRACK_VISUAL_FALSE_CURVE_CENTERLINE_ANGLE_RADIANS",
+            float(DEFAULT_VISUAL_CONFIG["falseCurveCenterlineAngleRadians"]),
+        ),
+        "falseCurveDeviationMeters": _env_float(
+            "TRACK_VISUAL_FALSE_CURVE_DEVIATION_METERS",
+            float(DEFAULT_VISUAL_CONFIG["falseCurveDeviationMeters"]),
+        ),
+        "segmentSpikeMultiplier": _env_float(
+            "TRACK_VISUAL_SEGMENT_SPIKE_MULTIPLIER",
+            float(DEFAULT_VISUAL_CONFIG["segmentSpikeMultiplier"]),
         ),
     }
 
@@ -372,6 +424,7 @@ def apply_track_visual_geometry(
     track_data: Dict[str, Any],
     *,
     config: Optional[Dict[str, Any]] = None,
+    visual_reference_track: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     cfg = track_visual_geometry_config()
     if config:
@@ -380,11 +433,15 @@ def apply_track_visual_geometry(
         track_data.setdefault("metadata", {})["visualGeometryEnabled"] = False
         return track_data
 
-    center_map = [[float(point.x), -float(point.z)] for point in track_data.get("centerline", [])]
-    left_map = [[float(point["x"]), -float(point.get("z", point.get("y", 0.0)))] for point in track_data.get("boundsLeft", [])]
-    right_map = [[float(point["x"]), -float(point.get("z", point.get("y", 0.0)))] for point in track_data.get("boundsRight", [])]
-    widths = [float(width) for width in track_data.get("localWidth", [])]
-    p_values = [float(value) for value in track_data.get("p", [])] or [index / max(len(center_map) - 1, 1) for index in range(len(center_map))]
+    visual_source_track = visual_reference_track or track_data
+    if visual_reference_track:
+        cfg["visualSource"] = "road_only"
+
+    center_map = [[float(point.x), -float(point.z)] for point in visual_source_track.get("centerline", [])]
+    left_map = [[float(point["x"]), -float(point.get("z", point.get("y", 0.0)))] for point in visual_source_track.get("boundsLeft", [])]
+    right_map = [[float(point["x"]), -float(point.get("z", point.get("y", 0.0)))] for point in visual_source_track.get("boundsRight", [])]
+    widths = [float(width) for width in visual_source_track.get("localWidth", [])]
+    p_values = [float(value) for value in visual_source_track.get("p", [])] or [index / max(len(center_map) - 1, 1) for index in range(len(center_map))]
     if not center_map or len(center_map) != len(left_map) or len(center_map) != len(right_map) or len(center_map) != len(widths):
         logger.warning("Visual geometry skipped: inconsistent point counts")
         track_data.setdefault("metadata", {})["visualGeometryEnabled"] = False
@@ -395,10 +452,11 @@ def apply_track_visual_geometry(
     visual_geometry = builder.build(center_map, left_map, right_map, widths, p_values)
     track_data["visualGeometry"] = visual_geometry
     metadata = track_data.setdefault("metadata", {})
-    for stale_key in ("visualSource", "visualArtifactFixEnabled", "falseCurveArtifactsRemoved"):
-        metadata.pop(stale_key, None)
     metadata["visualGeometryEnabled"] = True
     metadata["visualGeometrySource"] = visual_geometry["source"]
+    metadata["visualSource"] = visual_geometry.get("visualSource")
+    metadata["visualArtifactFixEnabled"] = visual_geometry.get("visualArtifactFixEnabled")
+    metadata["falseCurveArtifactsRemoved"] = visual_geometry.get("falseCurveArtifactsRemoved")
     metadata["visualWidthStats"] = {
         "min": visual_geometry.get("widthMin"),
         "avg": visual_geometry.get("widthAvg"),
@@ -411,6 +469,39 @@ def apply_track_visual_geometry(
         visual_geometry.get("visualArtifactReport", {}).get("artifactCount")
     )
     return track_data
+
+
+def build_visual_reference_track_from_manifest(
+    manifest: Dict[str, Any],
+    *,
+    visual_config: Dict[str, Any],
+    target_spacing: float,
+    smoothing_window: int,
+) -> Optional[Dict[str, Any]]:
+    surfaces = visual_config.get("visualSurfaces") or ["ROAD"]
+    try:
+        result = build_track_edges_interval_raycast_from_manifest(
+            manifest,
+            included_surfaces=surfaces,
+        )
+        metrics = result.get("metrics", {})
+        if metrics.get("validRaycastSamples", 0) <= 0 or not metrics.get("loopClosed"):
+            logger.warning("ROAD-only visual reference skipped: invalid raycast metrics: %s", metrics)
+            return None
+        reference = track_data_from_interval_edges(result, cache_path=None)
+        reference.setdefault("metadata", {})["visualReferenceOnly"] = True
+        reference.setdefault("metadata", {})["visualSurfaces"] = surfaces
+        reference.setdefault("metadata", {})["visualReferenceMetrics"] = metrics
+        if track_geometry_cleanup_enabled():
+            reference = apply_kn5_geometry_cleanup(
+                reference,
+                target_spacing=target_spacing,
+                smoothing_window=smoothing_window,
+            )
+        return reference
+    except Exception as exc:
+        logger.warning("ROAD-only visual reference failed; using physical centerline smoothing: %s", exc)
+        return None
 
 
 class Kn5SurfaceTrackGeometryProvider:
@@ -447,7 +538,25 @@ class Kn5SurfaceTrackGeometryProvider:
                 not cached.get("visualGeometry")
                 or cached.get("visualGeometry", {}).get("version") != VISUAL_GEOMETRY_VERSION
             ):
-                cached = apply_track_visual_geometry(cached, config=visual_cfg)
+                visual_reference = None
+                if visual_cfg.get("useRoadOnly", False):
+                    try:
+                        resolver = TrackFileResolver(ac_root=self.ac_root)
+                        manifest = resolver.build_track_file_manifest(
+                            track_name,
+                            track_config,
+                            source=source,
+                            game_code=game_code,
+                        )
+                        visual_reference = build_visual_reference_track_from_manifest(
+                            manifest.to_dict(),
+                            visual_config=visual_cfg,
+                            target_spacing=target_spacing,
+                            smoothing_window=smoothing_window,
+                        )
+                    except Exception as exc:
+                        logger.warning("Visual ROAD-only reference unavailable for cached geometry: %s", exc)
+                cached = apply_track_visual_geometry(cached, config=visual_cfg, visual_reference_track=visual_reference)
                 self.cache.save_track(cache_name, cached)
                 cached["cachePath"] = str(cache_path)
                 cached.setdefault("metadata", {})["cachePath"] = str(cache_path)
@@ -487,7 +596,15 @@ class Kn5SurfaceTrackGeometryProvider:
             track_data.setdefault("metadata", {})["targetSpacing"] = target_spacing
             track_data.setdefault("metadata", {})["smoothingWindow"] = smoothing_window
         if visual_enabled:
-            track_data = apply_track_visual_geometry(track_data, config=visual_cfg)
+            visual_reference = None
+            if visual_cfg.get("useRoadOnly", False):
+                visual_reference = build_visual_reference_track_from_manifest(
+                    manifest_dict,
+                    visual_config=visual_cfg,
+                    target_spacing=target_spacing,
+                    smoothing_window=smoothing_window,
+                )
+            track_data = apply_track_visual_geometry(track_data, config=visual_cfg, visual_reference_track=visual_reference)
         self.cache.save_track(cache_name, track_data)
         track_data["cachePath"] = str(cache_path)
         track_data.setdefault("metadata", {})["cachePath"] = str(cache_path)

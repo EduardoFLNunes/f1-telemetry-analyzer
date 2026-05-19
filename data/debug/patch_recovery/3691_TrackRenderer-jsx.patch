@@ -1,0 +1,98 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\TrackRenderer.jsx
+@@
+ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+ import { useTelemetryStore } from '../../store/useTelemetryStore';
++import { useInterpolatedCarState } from '../../hooks/useInterpolatedCarState';
+ import { drawCar, drawTrajectory } from './CarRenderer.jsx';
+ import { applyCameraTransform, computeTrackBounds } from './CameraController.jsx';
+-import { drawHud, drawProjectionDebug, drawTrackSurface } from './OverlayRenderer.jsx';
++import { createTrackPathCache, drawHud, drawProjectionDebug, drawTrackSurface } from './OverlayRenderer.jsx';
+ import { ProjectionDebugOverlay } from '../debug/ProjectionDebugOverlay.jsx';
+@@
+     zoom: 1,
+     offset: { x: 0, y: 0 },
++    center: null,
++    heading: 0,
++    easingFactor: 0.12,
++    deadzoneMeters: 1.2,
++    cameraEasingEnabled: false,
+     isPanning: false,
+     lastMouse: { x: 0, y: 0 },
+   });
++  const renderMetricsRef = useRef({
++    fps: 0,
++    lastFrameAt: 0,
++    trackPointCount: 0,
++    renderedPointCount: 0,
++    interpolationEnabled: true,
++    pathCacheEnabled: false,
++    cameraEasingEnabled: false,
++  });
++  const interpolatedCar = useInterpolatedCarState(latestFrame);
+ 
+   const normalizedTrack = useMemo(() => normalizeTrack(trackData), [trackData]);
+-  const bounds = useMemo(() => computeTrackBounds(normalizedTrack), [normalizedTrack]);
++  const fixedBounds = useMemo(() => computeTrackBounds(normalizedTrack), [normalizedTrack]);
++  const trackPathCache = useMemo(() => createTrackPathCache(normalizedTrack), [normalizedTrack]);
+@@
+     cameraRef.current.mode = cameraMode;
++    if (cameraMode === 'OVERVIEW') {
++      cameraRef.current.center = null;
++    }
+   }, [cameraMode]);
+@@
+-    const render = () => {
++    const render = (timestamp) => {
+       const rect = container.getBoundingClientRect();
+       const dpr = window.devicePixelRatio || 1;
+       if (canvas.width !== Math.round(rect.width * dpr) || canvas.height !== Math.round(rect.height * dpr)) {
+         canvas.width = Math.round(rect.width * dpr);
+         canvas.height = Math.round(rect.height * dpr);
+@@
+       ctx.fillStyle = '#070a12';
+       ctx.fillRect(0, 0, rect.width, rect.height);
+ 
+       const { latestFrame: liveFrame, history: liveHistory } = useTelemetryStore.getState();
+-      const liveDebugHistory = liveHistory.slice(-1200);
+-      const renderBounds = normalizedTrack
+-        ? computeTrackBounds(normalizedTrack, liveDebugHistory, liveFrame)
+-        : computeTrackBounds(null, liveDebugHistory, liveFrame);
++      const renderFrame = interpolatedCar.frameRef.current || liveFrame;
++      const liveDebugHistory = debugEnabled ? liveHistory.slice(-1200) : [];
++      const renderBounds = normalizedTrack ? fixedBounds : computeTrackBounds(null, liveDebugHistory, renderFrame);
++      const metrics = renderMetricsRef.current;
++      if (metrics.lastFrameAt) {
++        const instantFps = 1000 / Math.max(timestamp - metrics.lastFrameAt, 1);
++        metrics.fps = metrics.fps ? metrics.fps * 0.9 + instantFps * 0.1 : instantFps;
++      }
++      metrics.lastFrameAt = timestamp;
++      metrics.trackPointCount = normalizedTrack?.total_points || normalizedTrack?.centerline?.x?.length || 0;
++      metrics.renderedPointCount = trackPathCache?.renderedPointCount || 0;
++      metrics.pathCacheEnabled = Boolean(trackPathCache?.pathCacheEnabled);
++      metrics.interpolationEnabled = Boolean(interpolatedCar.interpolationEnabled);
++      metrics.cameraEasingEnabled = Boolean(cameraRef.current.cameraEasingEnabled);
+ 
+       ctx.save();
+-      const scale = applyCameraTransform(ctx, rect.width, rect.height, renderBounds, cameraRef.current, liveFrame);
++      const scale = applyCameraTransform(ctx, rect.width, rect.height, renderBounds, cameraRef.current, renderFrame);
+ 
+       if (normalizedTrack) {
+-        drawTrackSurface(ctx, normalizedTrack, renderBounds, scale);
++        drawTrackSurface(ctx, normalizedTrack, renderBounds, scale, trackPathCache);
+       }
+       if (debugEnabled) drawTrajectory(ctx, liveDebugHistory, scale);
+-      if (debugEnabled && normalizedTrack && liveFrame) drawProjectionDebug(ctx, liveFrame, scale);
+-      if (liveFrame) drawCar(ctx, liveFrame, scale);
++      if (debugEnabled && normalizedTrack && renderFrame) drawProjectionDebug(ctx, renderFrame, scale);
++      if (renderFrame) drawCar(ctx, renderFrame, scale);
+ 
+       ctx.restore();
+-      drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current, debugEnabled);
++      drawHud(ctx, rect.width, rect.height, normalizedTrack, renderFrame, cameraRef.current, debugEnabled, metrics);
+       animationRef.current = requestAnimationFrame(render);
+     };
+@@
+-  }, [bounds, debugEnabled, normalizedTrack]);
++  }, [debugEnabled, fixedBounds, interpolatedCar, normalizedTrack, trackPathCache]);
+*** End Patch

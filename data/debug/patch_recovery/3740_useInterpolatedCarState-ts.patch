@@ -1,0 +1,37 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\hooks\useInterpolatedCarState.ts
+@@
+ import { useEffect, useRef } from 'react';
+ import type { MutableRefObject } from 'react';
+-import type { TelemetryFrame } from '../store/useTelemetryStore';
++import { useTelemetryStore } from '../store/useTelemetryStore';
++import type { TelemetryFrame } from '../store/useTelemetryStore';
+@@
+ export function useInterpolatedCarState(sourceFrame: TelemetryFrame | null): InterpolatedCarStateHandle {
+@@
+-  useEffect(() => {
++  const applySourceFrame = (frame: TelemetryFrame | null) => {
+     const sanitized = sanitizeFrame(sourceFrame);
+     if (!sanitized) return;
+     targetRef.current = sanitized;
+     metricsRef.current.lastTelemetryUpdate = Date.now();
+     if (!frameRef.current) {
+       frameRef.current = sanitized;
+     }
++  };
++
++  useEffect(() => {
++    if (sourceFrame !== undefined) {
++      applySourceFrame(sourceFrame);
++      return undefined;
++    }
++
++    applySourceFrame(useTelemetryStore.getState().latestFrame);
++    const unsubscribe = useTelemetryStore.subscribe((state, previousState) => {
++      if (state.latestFrame !== previousState.latestFrame) {
++        applySourceFrame(state.latestFrame);
++      }
++    });
++    return unsubscribe;
+   }, [sourceFrame]);
+*** End Patch

@@ -1,0 +1,47 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\backend\core\geometry\track_geometry_provider.py
+@@
+         visual_enabled = track_visual_geometry_enabled()
++        visual_cfg = track_visual_geometry_config()
+         cleanup_cfg = track_geometry_cleanup_config()
+@@
+             if visual_enabled and (
+                 not cached.get("visualGeometry")
+                 or cached.get("visualGeometry", {}).get("version") != VISUAL_GEOMETRY_VERSION
+             ):
+-                cached = apply_track_visual_geometry(cached)
++                visual_reference = None
++                if visual_cfg.get("useRoadOnly", True):
++                    try:
++                        resolver = TrackFileResolver(ac_root=self.ac_root)
++                        manifest = resolver.build_track_file_manifest(
++                            track_name,
++                            track_config,
++                            source=source,
++                            game_code=game_code,
++                        )
++                        visual_reference = build_visual_reference_track_from_manifest(
++                            manifest.to_dict(),
++                            visual_config=visual_cfg,
++                            target_spacing=target_spacing,
++                            smoothing_window=smoothing_window,
++                        )
++                    except Exception as exc:
++                        logger.warning("Visual ROAD-only reference unavailable for cached geometry: %s", exc)
++                cached = apply_track_visual_geometry(cached, config=visual_cfg, visual_reference_track=visual_reference)
+                 self.cache.save_track(cache_name, cached)
+                 cached["cachePath"] = str(cache_path)
+                 cached.setdefault("metadata", {})["cachePath"] = str(cache_path)
+@@
+         if visual_enabled:
+-            track_data = apply_track_visual_geometry(track_data)
++            visual_reference = None
++            if visual_cfg.get("useRoadOnly", True):
++                visual_reference = build_visual_reference_track_from_manifest(
++                    manifest_dict,
++                    visual_config=visual_cfg,
++                    target_spacing=target_spacing,
++                    smoothing_window=smoothing_window,
++                )
++            track_data = apply_track_visual_geometry(track_data, config=visual_cfg, visual_reference_track=visual_reference)
+*** End Patch

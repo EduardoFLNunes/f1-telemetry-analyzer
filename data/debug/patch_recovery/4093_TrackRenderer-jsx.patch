@@ -1,0 +1,44 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\TrackRenderer.jsx
+@@
+-import { resolveMirrorX } from './renderTransform.js';
++import { mirrorMode, resolveMirrorX } from './renderTransform.js';
+@@
+   const renderOptions = useMemo(() => ({ mirrorX: resolveMirrorX(mirrorX) }), [mirrorX]);
+   const normalizedTrack = useMemo(() => normalizeTrack(trackData), [trackData]);
+   const visualTrack = useMemo(() => normalizeVisualTrack(normalizedTrack) || normalizedTrack, [normalizedTrack]);
+-  const fixedBounds = useMemo(() => computeTrackBounds(visualTrack, [], null, renderOptions), [visualTrack, renderOptions]);
+-  const trackPathCache = useMemo(() => createTrackPathCache(visualTrack, renderOptions), [visualTrack, renderOptions]);
++  const fixedBounds = useMemo(() => computeTrackBounds(visualTrack), [visualTrack]);
++  const trackPathCache = useMemo(() => createTrackPathCache(visualTrack), [visualTrack]);
+@@
+-      const renderBounds = visualTrack ? fixedBounds : computeTrackBounds(null, liveDebugHistory, renderFrame, renderOptions);
++      const renderBounds = visualTrack ? fixedBounds : computeTrackBounds(null, liveDebugHistory, renderFrame);
+@@
+       metrics.cameraEasingEnabled = Boolean(cameraRef.current.cameraEasingEnabled);
+       metrics.mirrorX = renderOptions.mirrorX;
++      metrics.mirrorMode = mirrorMode(renderOptions);
+       metrics.visualGeometryEnabled = Boolean(normalizedTrack?.visualGeometry);
+ 
+       ctx.save();
+-      const scale = applyCameraTransform(ctx, rect.width, rect.height, renderBounds, cameraRef.current, renderFrame, renderOptions);
++      if (renderOptions.mirrorX) {
++        ctx.translate(rect.width, 0);
++        ctx.scale(-1, 1);
++      }
++      const scale = applyCameraTransform(ctx, rect.width, rect.height, renderBounds, cameraRef.current, renderFrame);
+       metrics.cameraEasingEnabled = Boolean(cameraRef.current.cameraEasingEnabled);
+ 
+       if (visualTrack) {
+-        drawTrackSurface(ctx, visualTrack, renderBounds, scale, trackPathCache, { showCenterline: debugEnabled, ...renderOptions });
++        drawTrackSurface(ctx, visualTrack, renderBounds, scale, trackPathCache, { showCenterline: debugEnabled });
+       }
+-      if (debugEnabled && normalizedTrack?.visualGeometry) drawPhysicsEdges(ctx, normalizedTrack, scale, renderOptions);
+-      if (debugEnabled) drawTrajectory(ctx, liveDebugHistory, scale, renderOptions);
+-      if (debugEnabled && normalizedTrack && renderFrame) drawProjectionDebug(ctx, renderFrame, scale, renderOptions);
+-      if (renderFrame) drawCar(ctx, renderFrame, scale, '#22d3ee', renderOptions);
++      if (debugEnabled && normalizedTrack?.visualGeometry) drawPhysicsEdges(ctx, normalizedTrack, scale);
++      if (debugEnabled) drawTrajectory(ctx, liveDebugHistory, scale);
++      if (debugEnabled && normalizedTrack && renderFrame) drawProjectionDebug(ctx, renderFrame, scale);
++      if (renderFrame) drawCar(ctx, renderFrame, scale);
+*** End Patch

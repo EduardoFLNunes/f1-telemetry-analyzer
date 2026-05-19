@@ -1,0 +1,9 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\OverlayRenderer.jsx
+@@
+-  ctx.fillText(`Path builds ${metrics.pathCacheBuildCount || 0} | Static layer ${metrics.staticTrackLayerCacheEnabled ? 'ON' : 'OFF'}:${metrics.staticTrackLayerBuildCount || 0} | Offscreen create ${metrics.offscreenCanvasRecreatedCount || 0} | Debug ${metrics.debugOverlaysEnabled ? 'ON' : 'OFF'}`, 24, 112);
++  const debugFlags = metrics.debugOverlaysEnabled
++    ? `${metrics.debugProjectionEnabled ? 'P' : '-'}${metrics.debugPhysicsEnabled ? 'E' : '-'}${metrics.debugTrajectoryEnabled ? 'T' : '-'}${metrics.debugCenterlineEnabled ? 'C' : '-'}`
++    : 'OFF';
++  ctx.fillText(`Path builds ${metrics.pathCacheBuildCount || 0} | Static layer ${metrics.staticTrackLayerCacheEnabled ? 'ON' : 'OFF'}:${metrics.staticTrackLayerBuildCount || 0} | Offscreen create ${metrics.offscreenCanvasRecreatedCount || 0} | Debug ${debugFlags}`, 24, 112);
+*** End Patch

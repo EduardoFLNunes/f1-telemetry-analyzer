@@ -1,0 +1,91 @@
+*** Begin Patch
+*** Update File: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\frontend\src\components\map\OverlayRenderer.jsx
+@@
+ export function drawProjectionDebug(ctx, frame, scale, options = {}) {
+@@
+   ctx.restore();
+ }
++
++function drawDebugMarker(ctx, point, scale, color, label) {
++  const renderPoint = toRenderPoint(point);
++  if (!renderPoint) return;
++  const radius = 5 / scale;
++  ctx.save();
++  ctx.lineWidth = 1.4 / scale;
++  ctx.strokeStyle = 'rgba(2,6,23,0.95)';
++  ctx.fillStyle = color;
++  ctx.beginPath();
++  ctx.arc(renderPoint.x, renderPoint.y, radius, 0, Math.PI * 2);
++  ctx.fill();
++  ctx.stroke();
++  ctx.fillStyle = color;
++  ctx.font = `${9 / scale}px "JetBrains Mono", monospace`;
++  ctx.fillText(label, renderPoint.x + 7 / scale, renderPoint.y - 7 / scale);
++  ctx.restore();
++}
++
++export function drawAlignmentDebugMarkers(ctx, frame, nearestCenterlinePoint, scale) {
++  if (!frame) return;
++  drawDebugMarker(ctx, frame.mapPosition, scale, '#22d3ee', 'car.map');
++  drawDebugMarker(ctx, frame.projectedPosition, scale, '#f472b6', 'projected');
++  drawDebugMarker(ctx, nearestCenterlinePoint, scale, '#facc15', 'nearest phys');
++
++  const car = toRenderPoint(frame.mapPosition);
++  const projected = toRenderPoint(frame.projectedPosition);
++  const nearest = toRenderPoint(nearestCenterlinePoint);
++  ctx.save();
++  ctx.lineWidth = 1.2 / scale;
++  ctx.setLineDash([4 / scale, 5 / scale]);
++  if (car && projected) {
++    ctx.strokeStyle = 'rgba(244,114,182,0.72)';
++    ctx.beginPath();
++    ctx.moveTo(car.x, car.y);
++    ctx.lineTo(projected.x, projected.y);
++    ctx.stroke();
++  }
++  if (projected && nearest) {
++    ctx.strokeStyle = 'rgba(250,204,21,0.72)';
++    ctx.beginPath();
++    ctx.moveTo(projected.x, projected.y);
++    ctx.lineTo(nearest.x, nearest.y);
++    ctx.stroke();
++  }
++  ctx.restore();
++}
++
++export function drawScreenSpaceAlignmentMarker(ctx, screenPoint, color, label) {
++  if (!screenPoint || !Number.isFinite(screenPoint.x) || !Number.isFinite(screenPoint.y)) return;
++  ctx.save();
++  ctx.resetTransform();
++  ctx.fillStyle = color;
++  ctx.strokeStyle = 'rgba(2,6,23,0.95)';
++  ctx.lineWidth = 1.5;
++  ctx.beginPath();
++  ctx.arc(screenPoint.x, screenPoint.y, 5, 0, Math.PI * 2);
++  ctx.fill();
++  ctx.stroke();
++  ctx.fillStyle = color;
++  ctx.font = '9px "JetBrains Mono", monospace';
++  ctx.fillText(label, screenPoint.x + 8, screenPoint.y - 8);
++  ctx.restore();
++}
+ 
+ export function drawHud(ctx, width, height, trackData, frame, camera, debugEnabled, metrics = {}) {
+@@
+   if (debugEnabled && frame) {
+@@
+     ctx.fillText(`rendered ${metrics.renderedPointCount || 0} pts | camera easing ${metrics.cameraEasingEnabled ? 'ON' : 'OFF'}`, 24, 230);
+   }
++
++  if (metrics.alignmentDebugEnabled) {
++    ctx.fillStyle = '#facc15';
++    ctx.fillText(
++      `align ${metrics.alignmentCase || '-'} | layer ${metrics.drawCarInOffscreen ? 'offscreen' : 'screen'} | track ${metrics.renderGeometryMode || '-'}`,
++      24,
++      debugEnabled ? 246 : 176,
++    );
++  }
+ 
+   ctx.restore();
+ }
+*** End Patch
