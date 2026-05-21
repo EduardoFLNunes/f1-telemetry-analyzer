@@ -91,6 +91,12 @@ export function createPitLanePathCache(pitlaneData) {
       pitAreaComponents: {},
       fastLaneReference: null,
       pitLaneAiReference: null,
+      entryAccessV2Centerline: null,
+      exitAccessV2Centerline: null,
+      entryAccessV2Footprint: [],
+      exitAccessV2Footprint: [],
+      entryAccessV2BoundaryLoops: [],
+      exitAccessV2BoundaryLoops: [],
       v2Centerline: null,
       v2Corridor: null,
       v2SurfaceLoops: [],
@@ -210,9 +216,47 @@ function fillTrianglePaths(ctx, paths = []) {
   });
 }
 
+function drawTriangleList(ctx, triangles = [], scale, { fillStyle, strokeStyle, lineWidth = 0.75, shadowColor = null } = {}) {
+  if (!triangles.length) return 0;
+  ctx.save();
+  ctx.fillStyle = fillStyle;
+  ctx.strokeStyle = strokeStyle;
+  ctx.lineWidth = lineWidth / scale;
+  if (shadowColor) {
+    ctx.shadowBlur = 8 / scale;
+    ctx.shadowColor = shadowColor;
+  }
+  let rendered = 0;
+  triangles.forEach((triangle) => {
+    const vertices = triangle.vertices || [];
+    if (vertices.length < 3) return;
+    const points = vertices.map(mapToCanvasPoint).filter(Boolean);
+    if (points.length < 3) return;
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    ctx.lineTo(points[1].x, points[1].y);
+    ctx.lineTo(points[2].x, points[2].y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    rendered += 1;
+  });
+  ctx.restore();
+  return rendered;
+}
+
 function strokeBoundaryLoops(ctx, loops = []) {
   loops.forEach((loop) => {
     if (loop.path) ctx.stroke(loop.path);
+  });
+}
+
+function fillBoundaryLoops(ctx, loops = []) {
+  loops.forEach((loop) => {
+    if (loop.path) {
+      ctx.fill(loop.path);
+      ctx.stroke(loop.path);
+    }
   });
 }
 
@@ -327,6 +371,48 @@ export function drawPitLaneOverlay(ctx, pitlaneData, scale, pathCache, options =
   const pitCorridorVisible = showPitCorridorV2 ?? showPitV2 ?? true;
   const legacyVisible = showAdvancedLegacy ?? showLegacy ?? false;
   const labelOptions = { screenMirrorX: Boolean(options.screenMirrorX) };
+  const entrySurfaceTriangles = entryAccessV2.surfaceFootprint?.sampleTriangles || [];
+  const exitSurfaceTriangles = exitAccessV2.surfaceFootprint?.sampleTriangles || [];
+  const entrySurfaceTriangleCount = entrySurfaceTriangles.length;
+  const exitSurfaceTriangleCount = exitSurfaceTriangles.length;
+  const entryReceived = entrySurfaceTriangleCount > 0;
+  const exitReceived = exitSurfaceTriangleCount > 0;
+  const renderCheck = {
+    frontendReceivedEntryAccess: entryReceived,
+    frontendReceivedExitAccess: exitReceived,
+    frontendReceivedEntrySurface: entryReceived,
+    frontendReceivedExitSurface: exitReceived,
+    entrySurfaceTriangleCount,
+    exitSurfaceTriangleCount,
+    entryAccessRendered: false,
+    exitAccessRendered: false,
+    entrySurfaceRendered: false,
+    exitSurfaceRendered: false,
+    pitAreaVisible: Boolean(showPitArea || showEntryAccess || showExitAccess || pitCorridorVisible),
+    cameraMode: options.cameraMode || 'unknown',
+    geometryMode: options.geometryMode || 'unknown',
+    runtimeChanged: false,
+  };
+  if (typeof globalThis !== 'undefined') {
+    globalThis.__pitAreaRenderCheck = {
+      ...(globalThis.__pitAreaRenderCheck || {}),
+      ...renderCheck,
+      modes: {
+        ...((globalThis.__pitAreaRenderCheck || {}).modes || {}),
+        [renderCheck.cameraMode]: renderCheck,
+      },
+    };
+  }
+  if (typeof document !== 'undefined') {
+    document.documentElement.dataset.pitAreaFrontendReceivedEntryAccess = String(renderCheck.frontendReceivedEntryAccess);
+    document.documentElement.dataset.pitAreaFrontendReceivedExitAccess = String(renderCheck.frontendReceivedExitAccess);
+    document.documentElement.dataset.pitAreaFrontendReceivedEntrySurface = String(renderCheck.frontendReceivedEntrySurface);
+    document.documentElement.dataset.pitAreaFrontendReceivedExitSurface = String(renderCheck.frontendReceivedExitSurface);
+    document.documentElement.dataset.pitAreaEntrySurfaceTriangleCount = String(renderCheck.entrySurfaceTriangleCount);
+    document.documentElement.dataset.pitAreaExitSurfaceTriangleCount = String(renderCheck.exitSurfaceTriangleCount);
+    document.documentElement.dataset.pitAreaVisible = String(renderCheck.pitAreaVisible);
+    document.documentElement.dataset.pitAreaCameraMode = renderCheck.cameraMode;
+  }
 
   ctx.save();
   ctx.lineCap = 'round';
@@ -351,9 +437,12 @@ export function drawPitLaneOverlay(ctx, pitlaneData, scale, pathCache, options =
     }
     if (pitLaneAi.length) {
       ctx.setLineDash([7 / scale, 7 / scale]);
-      ctx.strokeStyle = 'rgba(56,189,248,0.50)';
-      ctx.lineWidth = 1.1 / scale;
+      ctx.strokeStyle = 'rgba(56,189,248,0.32)';
+      ctx.lineWidth = 0.9 / scale;
       drawPathOrPolyline(ctx, cache?.pitLaneAiReference, pitLaneAi, false);
+      if (showLabels) {
+        drawLabel(ctx, pitLaneAi[Math.floor(pitLaneAi.length / 2)], scale, 'AI reference only', '#67e8f9', labelOptions);
+      }
     }
     ctx.setLineDash([]);
   }
@@ -382,28 +471,6 @@ export function drawPitLaneOverlay(ctx, pitlaneData, scale, pathCache, options =
         fillTrianglePaths(ctx, componentPaths.PitExitAccessArea || []);
       }
     }
-  }
-
-  if (showEntryAccess && entryAccessV2.surfaceFootprint?.sampleTriangles?.length) {
-    ctx.fillStyle = 'rgba(34,197,94,0.24)';
-    ctx.strokeStyle = 'rgba(34,197,94,0.36)';
-    ctx.lineWidth = 0.32 / scale;
-    fillTrianglePaths(ctx, cache?.entryAccessV2Footprint || buildTrianglePaths(entryAccessV2.surfaceFootprint.sampleTriangles));
-
-    ctx.strokeStyle = 'rgba(134,239,172,0.92)';
-    ctx.lineWidth = 2.2 / scale;
-    strokeBoundaryLoops(ctx, cache?.entryAccessV2BoundaryLoops || buildBoundaryLoopPaths(entryAccessV2.boundaryLoops || []));
-  }
-
-  if (showExitAccess && exitAccessV2.surfaceFootprint?.sampleTriangles?.length) {
-    ctx.fillStyle = 'rgba(251,146,60,0.25)';
-    ctx.strokeStyle = 'rgba(251,146,60,0.38)';
-    ctx.lineWidth = 0.32 / scale;
-    fillTrianglePaths(ctx, cache?.exitAccessV2Footprint || buildTrianglePaths(exitAccessV2.surfaceFootprint.sampleTriangles));
-
-    ctx.strokeStyle = 'rgba(253,186,116,0.94)';
-    ctx.lineWidth = 2.2 / scale;
-    strokeBoundaryLoops(ctx, cache?.exitAccessV2BoundaryLoops || buildBoundaryLoopPaths(exitAccessV2.boundaryLoops || []));
   }
 
   if (showSurface) {
@@ -458,10 +525,59 @@ export function drawPitLaneOverlay(ctx, pitlaneData, scale, pathCache, options =
     ctx.shadowBlur = 7 / scale;
     ctx.shadowColor = 'rgba(253,224,71,0.30)';
     ctx.strokeStyle = '#fde047';
-    ctx.lineWidth = 3.0 / scale;
+    ctx.lineWidth = 4.2 / scale;
     drawPathOrPolyline(ctx, cache?.v2Centerline, v2.centerline, false);
     ctx.shadowBlur = 0;
     drawDirectionTicks(ctx, v2.centerline, scale, '#fde047');
+  }
+
+  if (showEntryAccess && entrySurfaceTriangleCount > 0) {
+    const rendered = drawTriangleList(ctx, entrySurfaceTriangles, scale, {
+      fillStyle: 'rgba(34,197,94,0.62)',
+      strokeStyle: 'rgba(187,247,208,0.98)',
+      lineWidth: 0.85,
+      shadowColor: 'rgba(34,197,94,0.78)',
+    });
+    renderCheck.entryAccessRendered = rendered > 0;
+    renderCheck.entrySurfaceRendered = rendered > 0;
+    renderCheck.entrySurfaceRenderedTriangleCount = rendered;
+    ctx.strokeStyle = 'rgba(187,247,208,0.98)';
+    ctx.lineWidth = 4.0 / scale;
+    strokeBoundaryLoops(ctx, cache?.entryAccessV2BoundaryLoops || buildBoundaryLoopPaths(entryAccessV2.boundaryLoops || []));
+  }
+
+  if (showExitAccess && exitSurfaceTriangleCount > 0) {
+    const rendered = drawTriangleList(ctx, exitSurfaceTriangles, scale, {
+      fillStyle: 'rgba(248,113,113,0.64)',
+      strokeStyle: 'rgba(254,215,170,0.98)',
+      lineWidth: 0.85,
+      shadowColor: 'rgba(251,146,60,0.82)',
+    });
+    renderCheck.exitAccessRendered = rendered > 0;
+    renderCheck.exitSurfaceRendered = rendered > 0;
+    renderCheck.exitSurfaceRenderedTriangleCount = rendered;
+    ctx.strokeStyle = 'rgba(254,215,170,0.98)';
+    ctx.lineWidth = 4.0 / scale;
+    strokeBoundaryLoops(ctx, cache?.exitAccessV2BoundaryLoops || buildBoundaryLoopPaths(exitAccessV2.boundaryLoops || []));
+  }
+
+  if (typeof globalThis !== 'undefined') {
+    globalThis.__pitAreaRenderCheck = {
+      ...(globalThis.__pitAreaRenderCheck || {}),
+      ...renderCheck,
+      modes: {
+        ...((globalThis.__pitAreaRenderCheck || {}).modes || {}),
+        [renderCheck.cameraMode]: renderCheck,
+      },
+    };
+  }
+  if (typeof document !== 'undefined') {
+    document.documentElement.dataset.pitAreaEntryAccessRendered = String(renderCheck.entryAccessRendered);
+    document.documentElement.dataset.pitAreaExitAccessRendered = String(renderCheck.exitAccessRendered);
+    document.documentElement.dataset.pitAreaEntrySurfaceRendered = String(renderCheck.entrySurfaceRendered);
+    document.documentElement.dataset.pitAreaExitSurfaceRendered = String(renderCheck.exitSurfaceRendered);
+    document.documentElement.dataset.pitAreaEntrySurfaceRenderedTriangleCount = String(renderCheck.entrySurfaceRenderedTriangleCount || 0);
+    document.documentElement.dataset.pitAreaExitSurfaceRenderedTriangleCount = String(renderCheck.exitSurfaceRenderedTriangleCount || 0);
   }
 
   if (showEntryAccess && (entryAccessV2.centerline?.length || entryAccess.centerline?.length)) {
@@ -491,15 +607,15 @@ export function drawPitLaneOverlay(ctx, pitlaneData, scale, pathCache, options =
 
   if (showLabels) {
     if (pitCorridorVisible && v2.centerline?.length) {
-      drawLabel(ctx, v2.centerline[Math.floor(v2.centerline.length / 2)], scale, 'Pit Corridor V2', '#fef08a', labelOptions);
+      drawLabel(ctx, v2.centerline[Math.floor(v2.centerline.length / 2)], scale, 'PIT CORRIDOR', '#fef08a', labelOptions);
     }
     if (showEntryAccess) {
       const point = accessLabelPoint(entryAccessV2, entryAccess.centerline);
-      if (point) drawLabel(ctx, point, scale, 'Entry Access Area', '#bbf7d0', labelOptions);
+      if (point) drawLabel(ctx, point, scale, 'PIT ENTRY ACCESS', '#bbf7d0', labelOptions);
     }
     if (showExitAccess) {
       const point = accessLabelPoint(exitAccessV2, exitAccess.centerline);
-      if (point) drawLabel(ctx, point, scale, 'Exit Access Area', '#fed7aa', labelOptions);
+      if (point) drawLabel(ctx, point, scale, 'PIT EXIT ACCESS', '#fed7aa', labelOptions);
     }
   }
 

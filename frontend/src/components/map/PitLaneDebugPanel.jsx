@@ -47,6 +47,23 @@ export function PitLaneDebugPanel({
   onToggleRecording,
   onExportRecording,
 }) {
+  const [renderStatus, setRenderStatus] = React.useState({});
+  React.useEffect(() => {
+    const readRenderStatus = () => {
+      if (typeof document === 'undefined') return;
+      const dataset = document.documentElement.dataset;
+      setRenderStatus({
+        entrySurfaceRendered: dataset.pitAreaEntrySurfaceRendered,
+        exitSurfaceRendered: dataset.pitAreaExitSurfaceRendered,
+        entryRenderedTriangleCount: dataset.pitAreaEntrySurfaceRenderedTriangleCount,
+        exitRenderedTriangleCount: dataset.pitAreaExitSurfaceRenderedTriangleCount,
+      });
+    };
+    readRenderStatus();
+    const interval = window.setInterval(readRenderStatus, 500);
+    return () => window.clearInterval(interval);
+  }, []);
+
   const data = state?.data;
   const pitArea = data?.pitAreaGeometry || {};
   const corridor = data?.pitLaneCorridorV2 || data?.pitlaneV2 || {};
@@ -61,6 +78,13 @@ export function PitLaneDebugPanel({
   const exitAccessGeometryBuilt = Boolean(exitAccessGeometry.geometryBuilt ?? exitAccessGeometry.triangleCount);
   const entryAccessHasSurface = Boolean(entryAccessGeometry.hasSurface ?? entryAccessGeometry.surfaceFootprint?.triangleCount);
   const exitAccessHasSurface = Boolean(exitAccessGeometry.hasSurface ?? exitAccessGeometry.surfaceFootprint?.triangleCount);
+  const entrySurfaceTriangleCount = entryAccessGeometry.surfaceFootprint?.sampleTriangles?.length || 0;
+  const exitSurfaceTriangleCount = exitAccessGeometry.surfaceFootprint?.sampleTriangles?.length || 0;
+  const frontendReceivedEntrySurface = entrySurfaceTriangleCount > 0;
+  const frontendReceivedExitSurface = exitSurfaceTriangleCount > 0;
+  const entrySurfaceRendered = renderStatus.entrySurfaceRendered === 'true';
+  const exitSurfaceRendered = renderStatus.exitSurfaceRendered === 'true';
+  const missingAccessGeometry = data && (!frontendReceivedEntrySurface || !frontendReceivedExitSurface);
   const pitLaneAiUsedAsReferenceOnly = Boolean(
     (entryAccessGeometry.pitLaneAiUsedAsReferenceOnly ?? true)
       && (exitAccessGeometry.pitLaneAiUsedAsReferenceOnly ?? true),
@@ -96,15 +120,12 @@ export function PitLaneDebugPanel({
       </div>
 
       <div className="grid grid-cols-3 gap-1 mb-2">
-        <ToggleButton active={options.showMainTrack} label="Main" onClick={() => onToggle('showMainTrack')} />
         <ToggleButton active={options.showPitArea} label="Pit Area" onClick={() => onToggle('showPitArea')} />
-        <ToggleButton active={options.showPitCorridorV2} label="Corridor" onClick={() => onToggle('showPitCorridorV2')} />
-        <ToggleButton active={options.showEntryAccess} label="Entry" onClick={() => onToggle('showEntryAccess')} />
-        <ToggleButton active={options.showExitAccess} label="Exit" onClick={() => onToggle('showExitAccess')} />
-        <ToggleButton active={options.showAiReferences} label="AI refs" onClick={() => onToggle('showAiReferences')} />
-        <ToggleButton active={options.showCarPath} label="Car Path" onClick={() => onToggle('showCarPath')} />
+        <ToggleButton active={options.showEntryAccess} label="Entry Access" onClick={() => onToggle('showEntryAccess')} />
+        <ToggleButton active={options.showExitAccess} label="Exit Access" onClick={() => onToggle('showExitAccess')} />
+        <ToggleButton active={options.showPitCorridorV2} label="Pit Corridor" onClick={() => onToggle('showPitCorridorV2')} />
+        <ToggleButton active={options.showAiReferences} label="AI Ref" onClick={() => onToggle('showAiReferences')} />
         <ToggleButton active={options.showLabels} label="Labels" onClick={() => onToggle('showLabels')} />
-        <ToggleButton active={options.showAdvancedLegacy} label="Legacy" onClick={() => onToggle('showAdvancedLegacy')} />
       </div>
 
       <div className="grid grid-cols-2 gap-1 mb-2">
@@ -130,6 +151,11 @@ export function PitLaneDebugPanel({
 
       {state?.loading && <div className="text-amber-200">Carregando PitAreaGeometry...</div>}
       {state?.error && <div className="text-rose-300">Erro: {state.error}</div>}
+      {missingAccessGeometry && (
+        <div className="mb-2 rounded-sm border border-rose-500/35 bg-rose-500/10 px-2 py-1 text-[9px] text-rose-200">
+          Entry/Exit surface missing from frontend payload
+        </div>
+      )}
 
       {data && (
         <>
@@ -153,6 +179,18 @@ export function PitLaneDebugPanel({
             <span className={entryAccessHasSurface ? 'text-emerald-300' : 'text-rose-300'}>{String(entryAccessHasSurface)}</span>
             <span className="text-slate-500">exit surface</span>
             <span className={exitAccessHasSurface ? 'text-emerald-300' : 'text-rose-300'}>{String(exitAccessHasSurface)}</span>
+            <span className="text-slate-500">frontend entry surface</span>
+            <span className={frontendReceivedEntrySurface ? 'text-emerald-300' : 'text-rose-300'}>{String(frontendReceivedEntrySurface)}</span>
+            <span className="text-slate-500">frontend exit surface</span>
+            <span className={frontendReceivedExitSurface ? 'text-emerald-300' : 'text-rose-300'}>{String(frontendReceivedExitSurface)}</span>
+            <span className="text-slate-500">entry triangles</span>
+            <span>{formatText(entrySurfaceTriangleCount)}</span>
+            <span className="text-slate-500">exit triangles</span>
+            <span>{formatText(exitSurfaceTriangleCount)}</span>
+            <span className="text-slate-500">entry rendered</span>
+            <span className={entrySurfaceRendered ? 'text-emerald-300' : 'text-amber-300'}>{String(entrySurfaceRendered)}</span>
+            <span className="text-slate-500">exit rendered</span>
+            <span className={exitSurfaceRendered ? 'text-emerald-300' : 'text-amber-300'}>{String(exitSurfaceRendered)}</span>
             <span className="text-slate-500">entry confidence</span>
             <span>{formatText(entryConfidence)}</span>
             <span className="text-slate-500">exit confidence</span>

@@ -101,6 +101,44 @@ function normalizePhysicsDisplayTrack(trackData) {
   };
 }
 
+function mergeBounds(base, extra) {
+  if (!base || !extra) return base || extra || null;
+  const minX = Math.min(base.minX, extra.minX);
+  const maxX = Math.max(base.maxX, extra.maxX);
+  const minY = Math.min(base.minY, extra.minY);
+  const maxY = Math.max(base.maxY, extra.maxY);
+  return {
+    minX,
+    maxX,
+    minY,
+    maxY,
+    cx: (minX + maxX) / 2,
+    cy: (minY + maxY) / 2,
+    w: Math.max(maxX - minX, 1),
+    h: Math.max(maxY - minY, 1),
+  };
+}
+
+function boundsFromPitLaneDebug(data) {
+  const raw = data?.bounds || data?.pitAreaGeometry?.surface?.bbox;
+  if (!raw) return null;
+  const minX = Number(raw.minX);
+  const maxX = Number(raw.maxX);
+  const minY = Number(raw.minY);
+  const maxY = Number(raw.maxY);
+  if (![minX, maxX, minY, maxY].every(Number.isFinite)) return null;
+  return {
+    minX,
+    maxX,
+    minY,
+    maxY,
+    cx: (minX + maxX) / 2,
+    cy: (minY + maxY) / 2,
+    w: Math.max(maxX - minX, 1),
+    h: Math.max(maxY - minY, 1),
+  };
+}
+
 function selectDebugTrajectory(history = [], frame = null, maxPoints = 260) {
   if (!frame || !history?.length) return [];
   const frameLap = Number(frame.lap_number);
@@ -149,7 +187,7 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
     showEntryAccess: true,
     showExitAccess: true,
     showEntryExit: true,
-    showAiReferences: true,
+    showAiReferences: false,
     showCarPath: false,
     showSurface: false,
     showLabels: true,
@@ -215,6 +253,10 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
   const physicsDisplayTrack = useMemo(() => normalizePhysicsDisplayTrack(normalizedTrack) || normalizedTrack, [normalizedTrack]);
   
   const fixedBounds = useMemo(() => computeTrackBounds(visualTrack), [visualTrack]);
+  const pitAwareBounds = useMemo(
+    () => (pitLaneEnabled ? mergeBounds(fixedBounds, boundsFromPitLaneDebug(pitLaneDebugState.data)) : fixedBounds),
+    [fixedBounds, pitLaneDebugState.data, pitLaneEnabled],
+  );
 
   const trackPathCache = useMemo(() => {
     const cache = createTrackPathCache(visualTrack, { logBuild: Boolean(import.meta.env?.DEV) });
@@ -348,7 +390,7 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
           setRecordedPitPathCount(pitPathRecordingRef.current.samples.length);
         }
       }
-      const renderBounds = visualTrack ? fixedBounds : computeTrackBounds(null, liveDebugHistory, renderFrame);
+      const renderBounds = visualTrack ? pitAwareBounds : computeTrackBounds(null, liveDebugHistory, renderFrame);
       const metrics = renderMetricsRef.current;
       if (metrics.lastFrameAt) {
         const frameDeltaMs = Math.max(timestamp - metrics.lastFrameAt, 1);
@@ -470,6 +512,8 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
               drawPitLaneOverlay(trackLayerCtx, pitLaneDebugState.data, layerScale, pitLanePathCache, {
                 ...pitLaneOptions,
                 screenMirrorX: renderOptions.mirrorX,
+                cameraMode: cameraRef.current.mode,
+                geometryMode,
               });
             }
             trackLayerCtx.restore();
@@ -511,6 +555,8 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
           drawPitLaneOverlay(mapCtx, pitLaneDebugState.data, scale, pitLanePathCache, {
             ...pitLaneOptions,
             screenMirrorX: renderOptions.mirrorX,
+            cameraMode: cameraRef.current.mode,
+            geometryMode,
           });
         }
         if (pitLaneEnabled && pitLaneDebugState.data && pitLaneOptions.showCarPath) {
@@ -543,7 +589,7 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
   }, [
     debugEnabled,
     debugLayers,
-    fixedBounds,
+    pitAwareBounds,
     interpolatedCar,
     normalizedTrack,
     renderOptions,
