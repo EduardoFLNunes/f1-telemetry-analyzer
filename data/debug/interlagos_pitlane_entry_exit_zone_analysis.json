@@ -1,0 +1,185 @@
+{
+  "sourceFiles": [
+    "interlagos_pitlane_surface_derived_geometry.json",
+    "interlagos_pitlane_trimmed_manual_05_05.json",
+    "interlagos_pitlane_trim_candidates_minimal.json",
+    "interlagos_pitlane_surface_boundary.json",
+    "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\cache\\tracks\\vhe_interlagos_gp_kn5_surface_interval_cleaned_geometry.json"
+  ],
+  "runtimeChanged": false,
+  "selectedManualTrim": "candidate_05_05",
+  "raw": {
+    "pointCount": 192,
+    "lengthMeters": 384.44108422778714,
+    "start": {
+      "x": -336.841362,
+      "y": -434.749989
+    },
+    "end": {
+      "x": -434.833348,
+      "y": -66.237044
+    },
+    "startInsidePitSurface": true,
+    "endInsidePitSurface": true,
+    "entryZone35m": {
+      "sampleCount": 18,
+      "lengthMeters": 33.9390536952339,
+      "widthMin": 15.182048,
+      "widthAvg": 15.22559038888889,
+      "widthMax": 15.263871
+    },
+    "exitZone35m": {
+      "sampleCount": 18,
+      "lengthMeters": 33.940326801928904,
+      "widthMin": 6.000303,
+      "widthAvg": 6.000338888888889,
+      "widthMax": 6.000376
+    },
+    "startNearestMainCenterlineDistance": 37.85011151304028,
+    "endNearestMainCenterlineDistance": 20.727248758663467,
+    "startNearestMainEdgeDistance": 30.857608702678814,
+    "endNearestMainEdgeDistance": 14.942351976357694,
+    "startNearestMainIndex": 1838,
+    "endNearestMainIndex": 1473,
+    "startTangentAngleDiffToMainDeg": 81.52210001229301,
+    "endTangentAngleDiffToMainDeg": 156.2737339172598
+  },
+  "manual_05_05": {
+    "pointCount": 182,
+    "lengthMeters": 364.4765597373722,
+    "start": {
+      "x": -339.274471,
+      "y": -425.069001
+    },
+    "end": {
+      "x": -432.446484,
+      "y": -75.929951
+    },
+    "startInsidePitSurface": true,
+    "endInsidePitSurface": true,
+    "entryZone35m": {
+      "sampleCount": 18,
+      "lengthMeters": 33.93907427223518,
+      "widthMin": 15.15551410891931,
+      "widthAvg": 15.200303439446987,
+      "widthMax": 15.244127074708663
+    },
+    "exitZone35m": {
+      "sampleCount": 18,
+      "lengthMeters": 33.940267716107826,
+      "widthMin": 6.000293157480344,
+      "widthAvg": 6.000326452039767,
+      "widthMax": 6.0003571887195415
+    },
+    "startNearestMainCenterlineDistance": 28.076964596433584,
+    "endNearestMainCenterlineDistance": 16.710567279867576,
+    "startNearestMainEdgeDistance": 21.22405698690771,
+    "endNearestMainEdgeDistance": 10.924887990293554,
+    "startNearestMainIndex": 1838,
+    "endNearestMainIndex": 1479,
+    "startTangentAngleDiffToMainDeg": 81.49910194955764,
+    "endTangentAngleDiffToMainDeg": 156.2700401716849
+  },
+  "candidates": [
+    {
+      "name": "candidate_00_00",
+      "pointCount": 192,
+      "lengthMeters": 384.441084,
+      "removedStartMeters": 0.0,
+      "removedEndMeters": 0.0,
+      "start": {
+        "x": -336.841362,
+        "y": -434.749989
+      },
+      "end": {
+        "x": -434.833348,
+        "y": -66.237044
+      },
+      "startNearestMainCenterlineDistance": 37.85011151304028,
+      "endNearestMainCenterlineDistance": 20.727248758663467,
+      "startInsidePitSurface": true,
+      "endInsidePitSurface": true
+    },
+    {
+      "name": "candidate_05_05",
+      "pointCount": 182,
+      "lengthMeters": 364.47656,
+      "removedStartMeters": 9.982062,
+      "removedEndMeters": 9.982463,
+      "start": {
+        "x": -339.274471,
+        "y": -425.069001
+      },
+      "end": {
+        "x": -432.446484,
+        "y": -75.929951
+      },
+      "startNearestMainCenterlineDistance": 28.076964596433584,
+      "endNearestMainCenterlineDistance": 16.710567279867576,
+      "startInsidePitSurface": true,
+      "endInsidePitSurface": true
+    },
+    {
+      "name": "candidate_08_08",
+      "pointCount": 176,
+      "lengthMeters": 352.49784,
+      "removedStartMeters": 15.971308,
+      "removedEndMeters": 15.971936,
+      "start": {
+        "x": -340.732778,
+        "y": -419.260007
+      },
+      "end": {
+        "x": -431.014031,
+        "y": -81.745608
+      },
+      "startNearestMainCenterlineDistance": 22.2817200346055,
+      "endNearestMainCenterlineDistance": 14.300245392040175,
+      "startInsidePitSurface": true,
+      "endInsidePitSurface": true
+    },
+    {
+      "name": "candidate_10_10",
+      "pointCount": 172,
+      "lengthMeters": 344.512029,
+      "removedStartMeters": 19.964139,
+      "removedEndMeters": 19.964916,
+      "start": {
+        "x": -341.704861,
+        "y": -415.387313
+      },
+      "end": {
+        "x": -430.058836,
+        "y": -85.622655
+      },
+      "startNearestMainCenterlineDistance": 18.441278008554164,
+      "endNearestMainCenterlineDistance": 12.69330633298031,
+      "startInsidePitSurface": true,
+      "endInsidePitSurface": true
+    },
+    {
+      "name": "candidate_12_12",
+      "pointCount": 168,
+      "lengthMeters": 336.526218,
+      "removedStartMeters": 23.956972,
+      "removedEndMeters": 23.957894,
+      "start": {
+        "x": -342.676928,
+        "y": -411.514614
+      },
+      "end": {
+        "x": -429.103464,
+        "y": -89.499656
+      },
+      "startNearestMainCenterlineDistance": 14.630177712999489,
+      "endNearestMainCenterlineDistance": 11.098670292528842,
+      "startInsidePitSurface": true,
+      "endInsidePitSurface": true
+    }
+  ],
+  "interpretation": {
+    "entry": "manual_05_05 removes only the first ~10m of raw pitlane surface, keeps the corridor inside the 1pitlane* surface, and remains near the main-track merge/entry zone.",
+    "exit": "manual_05_05 removes only the final ~10m of raw pitlane surface, preserving almost all physical corridor while avoiding the small overrun at the far end.",
+    "warning": "Distances are geometric nearest distances to the main centerline/edges, not runtime pit speed-line activation logic."
+  }
+}

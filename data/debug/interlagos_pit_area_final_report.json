@@ -1,0 +1,38 @@
+{
+  "generatedAt": "2026-05-21T13:30:00.635533+00:00",
+  "pitAreaGenerated": true,
+  "pitAreaIncludesCorridor": true,
+  "pitAreaIncludesEntryAccess": true,
+  "pitAreaIncludesExitAccess": true,
+  "sourceMeshes": {
+    "1road001": 4043,
+    "roadline004": 2841,
+    "1road003": 1099,
+    "1pitlane001": 786,
+    "1road002": 669,
+    "roadline003": 384,
+    "1pitlane003": 330,
+    "1kerb001": 266,
+    "1pitlane002": 210,
+    "roadverge": 168,
+    "roadline006": 92,
+    "roadline005": 92,
+    "1curb001": 90,
+    "1kerb002": 52,
+    "roadlineout": 30
+  },
+  "sourceSurfaces": {
+    "ROAD": 9418,
+    "PITLANE": 1326,
+    "KERB": 318,
+    "CURB": 90
+  },
+  "sourceMeshCount": 15,
+  "triangleCount": 11152,
+  "confidence": "high",
+  "runtimeChanged": false,
+  "authoritativeGeometryChanged": false,
+  "readyForRuntimeIntegration": false,
+  "mainOverlayVerticalFlipFixed": true,
+  "recommendedNextStep": "Validate PitAreaGeometry visually as a separate branch/surface before considering any runtime projection work."
+}

@@ -1,0 +1,2312 @@
+{
+  "generatedAt": "2026-05-20T01:25:22.323016+00:00",
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "runtimeChanged": false,
+  "profile": [
+    {
+      "pitIndex": 0,
+      "pitPosition": {
+        "x": -336.841362,
+        "y": -434.749989
+      },
+      "pitWidth": 15.263871,
+      "distanceToMainCenterline": 37.851195,
+      "nearestMainIndex": 1838,
+      "nearestMainP": 0.6338513652999561,
+      "tangentAngleDiffDeg": 81.278032
+    },
+    {
+      "pitIndex": 1,
+      "pitPosition": {
+        "x": -337.328752,
+        "y": -432.81399
+      },
+      "pitWidth": 15.261507,
+      "distanceToMainCenterline": 35.899646,
+      "nearestMainIndex": 1838,
+      "nearestMainP": 0.6338513652999561,
+      "tangentAngleDiffDeg": 81.26976
+    },
+    {
+      "pitIndex": 2,
+      "pitPosition": {
+        "x": -337.815584,
+        "y": -430.877846
+      },
+      "pitWidth": 15.25799,
+      "distanceToMainCenterline": 33.93885,
+      "nearestMainIndex": 1839,
+      "nearestMainP": 0.6341947414904208,
+      "tangentAngleDiffDeg": 76.347235
+    },
+    {
+      "pitIndex": 3,
+      "pitPosition": {
+        "x": -338.301997,
+        "y": -428.941595
+      },
+      "pitWidth": 15.253607,
+      "distanceToMainCenterline": 31.979622,
+      "nearestMainIndex": 1839,
+      "nearestMainP": 0.6341947414904208,
+      "tangentAngleDiffDeg": 76.338969
+    },
+    {
+      "pitIndex": 4,
+      "pitPosition": {
+        "x": -338.788271,
+        "y": -427.005308
+      },
+      "pitWidth": 15.248938,
+      "distanceToMainCenterline": 30.025322,
+      "nearestMainIndex": 1839,
+      "nearestMainP": 0.6341947414904208,
+      "tangentAngleDiffDeg": 76.335809
+    },
+    {
+      "pitIndex": 5,
+      "pitPosition": {
+        "x": -339.274471,
+        "y": -425.069001
+      },
+      "pitWidth": 15.244127,
+      "distanceToMainCenterline": 28.076965,
+      "nearestMainIndex": 1839,
+      "nearestMainP": 0.6341947414904208,
+      "tangentAngleDiffDeg": 76.333752
+    },
+    {
+      "pitIndex": 6,
+      "pitPosition": {
+        "x": -339.760606,
+        "y": -423.132679
+      },
+      "pitWidth": 15.239178,
+      "distanceToMainCenterline": 26.135879,
+      "nearestMainIndex": 1839,
+      "nearestMainP": 0.6341947414904208,
+      "tangentAngleDiffDeg": 76.332374
+    },
+    {
+      "pitIndex": 7,
+      "pitPosition": {
+        "x": -340.246713,
+        "y": -421.196348
+      },
+      "pitWidth": 15.234167,
+      "distanceToMainCenterline": 24.203803,
+      "nearestMainIndex": 1839,
+      "nearestMainP": 0.6341947414904208,
+      "tangentAngleDiffDeg": 76.331333
+    },
+    {
+      "pitIndex": 8,
+      "pitPosition": {
+        "x": -340.732778,
+        "y": -419.260007
+      },
+      "pitWidth": 15.229072,
+      "distanceToMainCenterline": 22.283085,
+      "nearestMainIndex": 1839,
+      "nearestMainP": 0.6341947414904208,
+      "tangentAngleDiffDeg": 76.330536
+    },
+    {
+      "pitIndex": 9,
+      "pitPosition": {
+        "x": -341.218831,
+        "y": -417.323663
+      },
+      "pitWidth": 15.223951,
+      "distanceToMainCenterline": 20.373525,
+      "nearestMainIndex": 1840,
+      "nearestMainP": 0.6345391560309882,
+      "tangentAngleDiffDeg": 72.580333
+    },
+    {
+      "pitIndex": 10,
+      "pitPosition": {
+        "x": -341.704861,
+        "y": -415.387313
+      },
+      "pitWidth": 15.218783,
+      "distanceToMainCenterline": 18.441919,
+      "nearestMainIndex": 1840,
+      "nearestMainP": 0.6345391560309882,
+      "tangentAngleDiffDeg": 72.580702
+    },
+    {
+      "pitIndex": 11,
+      "pitPosition": {
+        "x": -342.190939,
+        "y": -413.450975
+      },
+      "pitWidth": 15.213701,
+      "distanceToMainCenterline": 16.525709,
+      "nearestMainIndex": 1840,
+      "nearestMainP": 0.6345391560309882,
+      "tangentAngleDiffDeg": 72.580093
+    },
+    {
+      "pitIndex": 12,
+      "pitPosition": {
+        "x": -342.676928,
+        "y": -411.514614
+      },
+      "pitWidth": 15.208443,
+      "distanceToMainCenterline": 14.630995,
+      "nearestMainIndex": 1840,
+      "nearestMainP": 0.6345391560309882,
+      "tangentAngleDiffDeg": 72.578954
+    },
+    {
+      "pitIndex": 13,
+      "pitPosition": {
+        "x": -343.162929,
+        "y": -409.578257
+      },
+      "pitWidth": 15.203214,
+      "distanceToMainCenterline": 12.760918,
+      "nearestMainIndex": 1841,
+      "nearestMainP": 0.6348845791267982,
+      "tangentAngleDiffDeg": 70.05722
+    },
+    {
+      "pitIndex": 14,
+      "pitPosition": {
+        "x": -343.648921,
+        "y": -407.641897
+      },
+      "pitWidth": 15.197967,
+      "distanceToMainCenterline": 10.853971,
+      "nearestMainIndex": 1841,
+      "nearestMainP": 0.6348845791267982,
+      "tangentAngleDiffDeg": 70.056744
+    },
+    {
+      "pitIndex": 15,
+      "pitPosition": {
+        "x": -344.13489,
+        "y": -405.705531
+      },
+      "pitWidth": 15.192673,
+      "distanceToMainCenterline": 8.985981,
+      "nearestMainIndex": 1841,
+      "nearestMainP": 0.6348845791267982,
+      "tangentAngleDiffDeg": 70.056479
+    },
+    {
+      "pitIndex": 16,
+      "pitPosition": {
+        "x": -344.620864,
+        "y": -403.769167
+      },
+      "pitWidth": 15.18739,
+      "distanceToMainCenterline": 7.133465,
+      "nearestMainIndex": 1842,
+      "nearestMainP": 0.6352303911077437,
+      "tangentAngleDiffDeg": 68.112078
+    },
+    {
+      "pitIndex": 17,
+      "pitPosition": {
+        "x": -345.106816,
+        "y": -401.832796
+      },
+      "pitWidth": 15.182048,
+      "distanceToMainCenterline": 5.256453,
+      "nearestMainIndex": 1842,
+      "nearestMainP": 0.6352303911077437,
+      "tangentAngleDiffDeg": 68.112242
+    },
+    {
+      "pitIndex": 18,
+      "pitPosition": {
+        "x": -345.592801,
+        "y": -399.896435
+      },
+      "pitWidth": 15.176777,
+      "distanceToMainCenterline": 3.483014,
+      "nearestMainIndex": 1843,
+      "nearestMainP": 0.6355760439044493,
+      "tangentAngleDiffDeg": 66.08365
+    },
+    {
+      "pitIndex": 19,
+      "pitPosition": {
+        "x": -346.078772,
+        "y": -397.960069
+      },
+      "pitWidth": 15.17148,
+      "distanceToMainCenterline": 1.579664,
+      "nearestMainIndex": 1843,
+      "nearestMainP": 0.6355760439044493,
+      "tangentAngleDiffDeg": 66.083291
+    },
+    {
+      "pitIndex": 20,
+      "pitPosition": {
+        "x": -346.564733,
+        "y": -396.023701
+      },
+      "pitWidth": 15.166165,
+      "distanceToMainCenterline": 0.657457,
+      "nearestMainIndex": 1844,
+      "nearestMainP": 0.6359215459978714,
+      "tangentAngleDiffDeg": 63.823464
+    },
+    {
+      "pitIndex": 21,
+      "pitPosition": {
+        "x": -347.050677,
+        "y": -394.087329
+      },
+      "pitWidth": 15.160812,
+      "distanceToMainCenterline": 2.052551,
+      "nearestMainIndex": 1844,
+      "nearestMainP": 0.6359215459978714,
+      "tangentAngleDiffDeg": 63.823583
+    },
+    {
+      "pitIndex": 22,
+      "pitPosition": {
+        "x": -347.536646,
+        "y": -392.150963
+      },
+      "pitWidth": 15.155515,
+      "distanceToMainCenterline": 3.811149,
+      "nearestMainIndex": 1845,
+      "nearestMainP": 0.636267047778522,
+      "tangentAngleDiffDeg": 61.631702
+    },
+    {
+      "pitIndex": 23,
+      "pitPosition": {
+        "x": -348.02261,
+        "y": -390.214596
+      },
+      "pitWidth": 15.150225,
+      "distanceToMainCenterline": 5.58696,
+      "nearestMainIndex": 1846,
+      "nearestMainP": 0.6366127342149274,
+      "tangentAngleDiffDeg": 59.953214
+    },
+    {
+      "pitIndex": 24,
+      "pitPosition": {
+        "x": -348.508556,
+        "y": -388.278224
+      },
+      "pitWidth": 15.144912,
+      "distanceToMainCenterline": 7.295605,
+      "nearestMainIndex": 1846,
+      "nearestMainP": 0.6366127342149274,
+      "tangentAngleDiffDeg": 59.952905
+    },
+    {
+      "pitIndex": 25,
+      "pitPosition": {
+        "x": -348.994499,
+        "y": -386.341852
+      },
+      "pitWidth": 15.139575,
+      "distanceToMainCenterline": 8.994916,
+      "nearestMainIndex": 1847,
+      "nearestMainP": 0.6369586758059835,
+      "tangentAngleDiffDeg": 58.845722
+    },
+    {
+      "pitIndex": 26,
+      "pitPosition": {
+        "x": -349.480453,
+        "y": -384.405482
+      },
+      "pitWidth": 15.13426,
+      "distanceToMainCenterline": 10.698497,
+      "nearestMainIndex": 1848,
+      "nearestMainP": 0.6373047249614056,
+      "tangentAngleDiffDeg": 58.071752
+    },
+    {
+      "pitIndex": 27,
+      "pitPosition": {
+        "x": -349.966401,
+        "y": -382.469111
+      },
+      "pitWidth": 15.128932,
+      "distanceToMainCenterline": 12.40004,
+      "nearestMainIndex": 1849,
+      "nearestMainP": 0.6376507538016395,
+      "tangentAngleDiffDeg": 57.355979
+    },
+    {
+      "pitIndex": 28,
+      "pitPosition": {
+        "x": -350.45237,
+        "y": -380.532745
+      },
+      "pitWidth": 15.123648,
+      "distanceToMainCenterline": 14.08067,
+      "nearestMainIndex": 1849,
+      "nearestMainP": 0.6376507538016395,
+      "tangentAngleDiffDeg": 57.356497
+    },
+    {
+      "pitIndex": 29,
+      "pitPosition": {
+        "x": -350.938353,
+        "y": -378.596383
+      },
+      "pitWidth": 15.118351,
+      "distanceToMainCenterline": 15.741699,
+      "nearestMainIndex": 1850,
+      "nearestMainP": 0.637996790006355,
+      "tangentAngleDiffDeg": 56.744873
+    },
+    {
+      "pitIndex": 30,
+      "pitPosition": {
+        "x": -351.424322,
+        "y": -376.660017
+      },
+      "pitWidth": 15.112987,
+      "distanceToMainCenterline": 17.402542,
+      "nearestMainIndex": 1851,
+      "nearestMainP": 0.6383428592173933,
+      "tangentAngleDiffDeg": 56.40645
+    },
+    {
+      "pitIndex": 31,
+      "pitPosition": {
+        "x": -351.910299,
+        "y": -374.723653
+      },
+      "pitWidth": 15.107704,
+      "distanceToMainCenterline": 19.06713,
+      "nearestMainIndex": 1852,
+      "nearestMainP": 0.6386889455199228,
+      "tangentAngleDiffDeg": 56.305195
+    },
+    {
+      "pitIndex": 32,
+      "pitPosition": {
+        "x": -352.396256,
+        "y": -372.787284
+      },
+      "pitWidth": 15.102382,
+      "distanceToMainCenterline": 20.73773,
+      "nearestMainIndex": 1852,
+      "nearestMainP": 0.6386889455199228,
+      "tangentAngleDiffDeg": 56.305094
+    },
+    {
+      "pitIndex": 33,
+      "pitPosition": {
+        "x": -352.882226,
+        "y": -370.850919
+      },
+      "pitWidth": 15.097083,
+      "distanceToMainCenterline": 22.388281,
+      "nearestMainIndex": 1853,
+      "nearestMainP": 0.6390350320849616,
+      "tangentAngleDiffDeg": 56.305398
+    },
+    {
+      "pitIndex": 34,
+      "pitPosition": {
+        "x": -353.368189,
+        "y": -368.914551
+      },
+      "pitWidth": 15.091771,
+      "distanceToMainCenterline": 24.046689,
+      "nearestMainIndex": 1854,
+      "nearestMainP": 0.639381118586634,
+      "tangentAngleDiffDeg": 56.305655
+    },
+    {
+      "pitIndex": 35,
+      "pitPosition": {
+        "x": -353.854162,
+        "y": -366.978186
+      },
+      "pitWidth": 15.086515,
+      "distanceToMainCenterline": 25.711442,
+      "nearestMainIndex": 1855,
+      "nearestMainP": 0.6397272050249453,
+      "tangentAngleDiffDeg": 56.305643
+    },
+    {
+      "pitIndex": 36,
+      "pitPosition": {
+        "x": -354.340113,
+        "y": -365.041816
+      },
+      "pitWidth": 15.081279,
+      "distanceToMainCenterline": 27.376864,
+      "nearestMainIndex": 1855,
+      "nearestMainP": 0.6397272050249453,
+      "tangentAngleDiffDeg": 56.305689
+    },
+    {
+      "pitIndex": 37,
+      "pitPosition": {
+        "x": -354.826089,
+        "y": -363.105452
+      },
+      "pitWidth": 15.075999,
+      "distanceToMainCenterline": 29.031065,
+      "nearestMainIndex": 1856,
+      "nearestMainP": 0.6400732914315778,
+      "tangentAngleDiffDeg": 56.306381
+    },
+    {
+      "pitIndex": 38,
+      "pitPosition": {
+        "x": -355.312084,
+        "y": -361.169093
+      },
+      "pitWidth": 15.070759,
+      "distanceToMainCenterline": 29.006835,
+      "nearestMainIndex": 1791,
+      "nearestMainP": 0.6176277168760038,
+      "tangentAngleDiffDeg": 26.811401
+    },
+    {
+      "pitIndex": 39,
+      "pitPosition": {
+        "x": -355.798058,
+        "y": -359.232728
+      },
+      "pitWidth": 15.065474,
+      "distanceToMainCenterline": 28.112005,
+      "nearestMainIndex": 1790,
+      "nearestMainP": 0.6172816306367862,
+      "tangentAngleDiffDeg": 26.807292
+    },
+    {
+      "pitIndex": 40,
+      "pitPosition": {
+        "x": -356.284032,
+        "y": -357.296364
+      },
+      "pitWidth": 15.060191,
+      "distanceToMainCenterline": 27.207995,
+      "nearestMainIndex": 1788,
+      "nearestMainP": 0.6165894585491802,
+      "tangentAngleDiffDeg": 26.897528
+    },
+    {
+      "pitIndex": 41,
+      "pitPosition": {
+        "x": -356.770038,
+        "y": -355.360007
+      },
+      "pitWidth": 15.05497,
+      "distanceToMainCenterline": 26.299373,
+      "nearestMainIndex": 1787,
+      "nearestMainP": 0.6162433801504125,
+      "tangentAngleDiffDeg": 27.107
+    },
+    {
+      "pitIndex": 42,
+      "pitPosition": {
+        "x": -357.256051,
+        "y": -353.423653
+      },
+      "pitWidth": 15.049747,
+      "distanceToMainCenterline": 25.386379,
+      "nearestMainIndex": 1786,
+      "nearestMainP": 0.6158973094978368,
+      "tangentAngleDiffDeg": 27.430472
+    },
+    {
+      "pitIndex": 43,
+      "pitPosition": {
+        "x": -357.742056,
+        "y": -351.487296
+      },
+      "pitWidth": 15.044521,
+      "distanceToMainCenterline": 24.465647,
+      "nearestMainIndex": 1784,
+      "nearestMainP": 0.6152051576540238,
+      "tangentAngleDiffDeg": 27.938455
+    },
+    {
+      "pitIndex": 44,
+      "pitPosition": {
+        "x": -358.228069,
+        "y": -349.550942
+      },
+      "pitWidth": 15.039314,
+      "distanceToMainCenterline": 23.522621,
+      "nearestMainIndex": 1783,
+      "nearestMainP": 0.614859071281713,
+      "tangentAngleDiffDeg": 28.006727
+    },
+    {
+      "pitIndex": 45,
+      "pitPosition": {
+        "x": -358.714076,
+        "y": -347.614586
+      },
+      "pitWidth": 15.034093,
+      "distanceToMainCenterline": 22.581898,
+      "nearestMainIndex": 1782,
+      "nearestMainP": 0.6145129848200972,
+      "tangentAngleDiffDeg": 28.012308
+    },
+    {
+      "pitIndex": 46,
+      "pitPosition": {
+        "x": -359.200093,
+        "y": -345.678232
+      },
+      "pitWidth": 15.028892,
+      "distanceToMainCenterline": 21.64407,
+      "nearestMainIndex": 1781,
+      "nearestMainP": 0.6141668983067479,
+      "tangentAngleDiffDeg": 28.012909
+    },
+    {
+      "pitIndex": 47,
+      "pitPosition": {
+        "x": -359.686123,
+        "y": -343.741882
+      },
+      "pitWidth": 15.023716,
+      "distanceToMainCenterline": 20.709533,
+      "nearestMainIndex": 1780,
+      "nearestMainP": 0.6138208120192088,
+      "tangentAngleDiffDeg": 28.01324
+    },
+    {
+      "pitIndex": 48,
+      "pitPosition": {
+        "x": -360.172178,
+        "y": -341.805539
+      },
+      "pitWidth": 15.018556,
+      "distanceToMainCenterline": 19.778769,
+      "nearestMainIndex": 1779,
+      "nearestMainP": 0.6134747255001922,
+      "tangentAngleDiffDeg": 28.012121
+    },
+    {
+      "pitIndex": 49,
+      "pitPosition": {
+        "x": -360.658202,
+        "y": -339.869187
+      },
+      "pitWidth": 15.013376,
+      "distanceToMainCenterline": 18.840414,
+      "nearestMainIndex": 1777,
+      "nearestMainP": 0.6127825525770105,
+      "tangentAngleDiffDeg": 28.00932
+    },
+    {
+      "pitIndex": 50,
+      "pitPosition": {
+        "x": -361.144255,
+        "y": -337.932843
+      },
+      "pitWidth": 15.008255,
+      "distanceToMainCenterline": 17.896501,
+      "nearestMainIndex": 1776,
+      "nearestMainP": 0.612436466120838,
+      "tangentAngleDiffDeg": 28.009037
+    },
+    {
+      "pitIndex": 51,
+      "pitPosition": {
+        "x": -361.630313,
+        "y": -335.9965
+      },
+      "pitWidth": 15.003144,
+      "distanceToMainCenterline": 16.955951,
+      "nearestMainIndex": 1775,
+      "nearestMainP": 0.6120903797142658,
+      "tangentAngleDiffDeg": 28.00827
+    },
+    {
+      "pitIndex": 52,
+      "pitPosition": {
+        "x": -362.116342,
+        "y": -334.06015
+      },
+      "pitWidth": 14.997974,
+      "distanceToMainCenterline": 16.019384,
+      "nearestMainIndex": 1774,
+      "nearestMainP": 0.6117442933037525,
+      "tangentAngleDiffDeg": 28.008323
+    },
+    {
+      "pitIndex": 53,
+      "pitPosition": {
+        "x": -362.602429,
+        "y": -332.123814
+      },
+      "pitWidth": 14.992923,
+      "distanceToMainCenterline": 15.087457,
+      "nearestMainIndex": 1773,
+      "nearestMainP": 0.6113982068318196,
+      "tangentAngleDiffDeg": 28.008296
+    },
+    {
+      "pitIndex": 54,
+      "pitPosition": {
+        "x": -363.088491,
+        "y": -330.187472
+      },
+      "pitWidth": 14.98778,
+      "distanceToMainCenterline": 14.161174,
+      "nearestMainIndex": 1772,
+      "nearestMainP": 0.6110521202964583,
+      "tangentAngleDiffDeg": 28.020604
+    },
+    {
+      "pitIndex": 55,
+      "pitPosition": {
+        "x": -363.574568,
+        "y": -328.251134
+      },
+      "pitWidth": 14.982719,
+      "distanceToMainCenterline": 13.211173,
+      "nearestMainIndex": 1770,
+      "nearestMainP": 0.6103599566033967,
+      "tangentAngleDiffDeg": 28.346853
+    },
+    {
+      "pitIndex": 56,
+      "pitPosition": {
+        "x": -364.060667,
+        "y": -326.314802
+      },
+      "pitWidth": 14.977703,
+      "distanceToMainCenterline": 12.252658,
+      "nearestMainIndex": 1769,
+      "nearestMainP": 0.6100138940307291,
+      "tangentAngleDiffDeg": 28.764135
+    },
+    {
+      "pitIndex": 57,
+      "pitPosition": {
+        "x": -364.546733,
+        "y": -324.378461
+      },
+      "pitWidth": 14.97262,
+      "distanceToMainCenterline": 11.286109,
+      "nearestMainIndex": 1768,
+      "nearestMainP": 0.609667837528524,
+      "tangentAngleDiffDeg": 29.241304
+    },
+    {
+      "pitIndex": 58,
+      "pitPosition": {
+        "x": -365.032845,
+        "y": -322.442132
+      },
+      "pitWidth": 14.96763,
+      "distanceToMainCenterline": 10.313598,
+      "nearestMainIndex": 1767,
+      "nearestMainP": 0.6093217699145489,
+      "tangentAngleDiffDeg": 29.605011
+    },
+    {
+      "pitIndex": 59,
+      "pitPosition": {
+        "x": -365.518944,
+        "y": -320.5058
+      },
+      "pitWidth": 14.962614,
+      "distanceToMainCenterline": 9.328091,
+      "nearestMainIndex": 1765,
+      "nearestMainP": 0.6086296066076584,
+      "tangentAngleDiffDeg": 30.082476
+    },
+    {
+      "pitIndex": 60,
+      "pitPosition": {
+        "x": -366.005072,
+        "y": -318.569475
+      },
+      "pitWidth": 14.9576,
+      "distanceToMainCenterline": 8.311722,
+      "nearestMainIndex": 1764,
+      "nearestMainP": 0.6082835402677746,
+      "tangentAngleDiffDeg": 30.482266
+    },
+    {
+      "pitIndex": 61,
+      "pitPosition": {
+        "x": -366.491221,
+        "y": -316.633155
+      },
+      "pitWidth": 14.952672,
+      "distanceToMainCenterline": 7.28626,
+      "nearestMainIndex": 1763,
+      "nearestMainP": 0.6079374814563467,
+      "tangentAngleDiffDeg": 31.030397
+    },
+    {
+      "pitIndex": 62,
+      "pitPosition": {
+        "x": -366.977344,
+        "y": -314.696829
+      },
+      "pitWidth": 14.947691,
+      "distanceToMainCenterline": 6.250771,
+      "nearestMainIndex": 1762,
+      "nearestMainP": 0.6075914243882811,
+      "tangentAngleDiffDeg": 31.673128
+    },
+    {
+      "pitIndex": 63,
+      "pitPosition": {
+        "x": -367.463482,
+        "y": -312.760507
+      },
+      "pitWidth": 14.94274,
+      "distanceToMainCenterline": 5.206556,
+      "nearestMainIndex": 1761,
+      "nearestMainP": 0.6072453839757658,
+      "tangentAngleDiffDeg": 32.403779
+    },
+    {
+      "pitIndex": 64,
+      "pitPosition": {
+        "x": -367.949648,
+        "y": -310.824192
+      },
+      "pitWidth": 14.937847,
+      "distanceToMainCenterline": 4.158126,
+      "nearestMainIndex": 1759,
+      "nearestMainP": 0.606553315360673,
+      "tangentAngleDiffDeg": 33.756848
+    },
+    {
+      "pitIndex": 65,
+      "pitPosition": {
+        "x": -368.435829,
+        "y": -308.887881
+      },
+      "pitWidth": 14.932986,
+      "distanceToMainCenterline": 3.032273,
+      "nearestMainIndex": 1758,
+      "nearestMainP": 0.6062072422750209,
+      "tangentAngleDiffDeg": 34.167435
+    },
+    {
+      "pitIndex": 66,
+      "pitPosition": {
+        "x": -368.922,
+        "y": -306.951567
+      },
+      "pitWidth": 14.928124,
+      "distanceToMainCenterline": 1.898366,
+      "nearestMainIndex": 1757,
+      "nearestMainP": 0.6058611751259562,
+      "tangentAngleDiffDeg": 34.606555
+    },
+    {
+      "pitIndex": 67,
+      "pitPosition": {
+        "x": -369.408196,
+        "y": -305.01526
+      },
+      "pitWidth": 14.923304,
+      "distanceToMainCenterline": 0.757915,
+      "nearestMainIndex": 1756,
+      "nearestMainP": 0.6055151569037307,
+      "tangentAngleDiffDeg": 35.303799
+    },
+    {
+      "pitIndex": 68,
+      "pitPosition": {
+        "x": -369.894374,
+        "y": -303.078948
+      },
+      "pitWidth": 14.918445,
+      "distanceToMainCenterline": 0.456213,
+      "nearestMainIndex": 1755,
+      "nearestMainP": 0.6051691701773304,
+      "tangentAngleDiffDeg": 36.235673
+    },
+    {
+      "pitIndex": 69,
+      "pitPosition": {
+        "x": -370.380593,
+        "y": -301.142646
+      },
+      "pitWidth": 14.913673,
+      "distanceToMainCenterline": 1.635492,
+      "nearestMainIndex": 1754,
+      "nearestMainP": 0.6048231755629363,
+      "tangentAngleDiffDeg": 37.231273
+    },
+    {
+      "pitIndex": 70,
+      "pitPosition": {
+        "x": -370.866807,
+        "y": -299.206344
+      },
+      "pitWidth": 14.908889,
+      "distanceToMainCenterline": 2.856888,
+      "nearestMainIndex": 1753,
+      "nearestMainP": 0.604477178015652,
+      "tangentAngleDiffDeg": 38.245505
+    },
+    {
+      "pitIndex": 71,
+      "pitPosition": {
+        "x": -371.353042,
+        "y": -297.270046
+      },
+      "pitWidth": 14.90415,
+      "distanceToMainCenterline": 4.106906,
+      "nearestMainIndex": 1752,
+      "nearestMainP": 0.6041312026251046,
+      "tangentAngleDiffDeg": 39.315466
+    },
+    {
+      "pitIndex": 72,
+      "pitPosition": {
+        "x": -371.83928,
+        "y": -295.33375
+      },
+      "pitWidth": 14.899482,
+      "distanceToMainCenterline": 5.386584,
+      "nearestMainIndex": 1751,
+      "nearestMainP": 0.6037852391085149,
+      "tangentAngleDiffDeg": 40.450649
+    },
+    {
+      "pitIndex": 73,
+      "pitPosition": {
+        "x": -372.325547,
+        "y": -293.397461
+      },
+      "pitWidth": 14.8948,
+      "distanceToMainCenterline": 6.696777,
+      "nearestMainIndex": 1750,
+      "nearestMainP": 0.603439276687497,
+      "tangentAngleDiffDeg": 41.615832
+    },
+    {
+      "pitIndex": 74,
+      "pitPosition": {
+        "x": -372.811827,
+        "y": -291.461175
+      },
+      "pitWidth": 14.890146,
+      "distanceToMainCenterline": 8.037781,
+      "nearestMainIndex": 1749,
+      "nearestMainP": 0.6030933211024776,
+      "tangentAngleDiffDeg": 42.74452
+    },
+    {
+      "pitIndex": 75,
+      "pitPosition": {
+        "x": -373.298124,
+        "y": -289.524894
+      },
+      "pitWidth": 14.885526,
+      "distanceToMainCenterline": 9.407215,
+      "nearestMainIndex": 1748,
+      "nearestMainP": 0.6027473450115964,
+      "tangentAngleDiffDeg": 43.682593
+    },
+    {
+      "pitIndex": 76,
+      "pitPosition": {
+        "x": -373.784431,
+        "y": -287.588615
+      },
+      "pitWidth": 14.880927,
+      "distanceToMainCenterline": 10.797408,
+      "nearestMainIndex": 1747,
+      "nearestMainP": 0.6024013104167636,
+      "tangentAngleDiffDeg": 44.272263
+    },
+    {
+      "pitIndex": 77,
+      "pitPosition": {
+        "x": -374.270748,
+        "y": -285.652339
+      },
+      "pitWidth": 14.876349,
+      "distanceToMainCenterline": 12.190743,
+      "nearestMainIndex": 1747,
+      "nearestMainP": 0.6024013104167636,
+      "tangentAngleDiffDeg": 44.273154
+    },
+    {
+      "pitIndex": 78,
+      "pitPosition": {
+        "x": -374.757115,
+        "y": -283.716076
+      },
+      "pitWidth": 14.871809,
+      "distanceToMainCenterline": 13.583577,
+      "nearestMainIndex": 1746,
+      "nearestMainP": 0.602055233054919,
+      "tangentAngleDiffDeg": 44.514448
+    },
+    {
+      "pitIndex": 79,
+      "pitPosition": {
+        "x": -375.243488,
+        "y": -281.779814
+      },
+      "pitWidth": 14.867344,
+      "distanceToMainCenterline": 14.980302,
+      "nearestMainIndex": 1745,
+      "nearestMainP": 0.6017091467623584,
+      "tangentAngleDiffDeg": 44.560913
+    },
+    {
+      "pitIndex": 80,
+      "pitPosition": {
+        "x": -375.729857,
+        "y": -279.843551
+      },
+      "pitWidth": 14.862873,
+      "distanceToMainCenterline": 16.378071,
+      "nearestMainIndex": 1744,
+      "nearestMainP": 0.6013630603055794,
+      "tangentAngleDiffDeg": 44.560861
+    },
+    {
+      "pitIndex": 81,
+      "pitPosition": {
+        "x": -376.21626,
+        "y": -277.907297
+      },
+      "pitWidth": 14.858469,
+      "distanceToMainCenterline": 17.776678,
+      "nearestMainIndex": 1743,
+      "nearestMainP": 0.6010169738019311,
+      "tangentAngleDiffDeg": 44.561799
+    },
+    {
+      "pitIndex": 82,
+      "pitPosition": {
+        "x": -376.702691,
+        "y": -275.971051
+      },
+      "pitWidth": 14.854125,
+      "distanceToMainCenterline": 19.175948,
+      "nearestMainIndex": 1742,
+      "nearestMainP": 0.6006708872281993,
+      "tangentAngleDiffDeg": 44.573633
+    },
+    {
+      "pitIndex": 83,
+      "pitPosition": {
+        "x": -377.189137,
+        "y": -274.034808
+      },
+      "pitWidth": 14.84981,
+      "distanceToMainCenterline": 20.57632,
+      "nearestMainIndex": 1741,
+      "nearestMainP": 0.600324802243737,
+      "tangentAngleDiffDeg": 44.687541
+    },
+    {
+      "pitIndex": 84,
+      "pitPosition": {
+        "x": -377.675617,
+        "y": -272.098574
+      },
+      "pitWidth": 14.845578,
+      "distanceToMainCenterline": 21.982473,
+      "nearestMainIndex": 1740,
+      "nearestMainP": 0.599978745523801,
+      "tangentAngleDiffDeg": 45.251306
+    },
+    {
+      "pitIndex": 85,
+      "pitPosition": {
+        "x": -378.162115,
+        "y": -270.162344
+      },
+      "pitWidth": 14.841372,
+      "distanceToMainCenterline": 23.4131,
+      "nearestMainIndex": 1739,
+      "nearestMainP": 0.5996328980609132,
+      "tangentAngleDiffDeg": 46.511707
+    },
+    {
+      "pitIndex": 86,
+      "pitPosition": {
+        "x": -378.648634,
+        "y": -268.22612
+      },
+      "pitWidth": 14.837209,
+      "distanceToMainCenterline": 24.857782,
+      "nearestMainIndex": 1739,
+      "nearestMainP": 0.5996328980609132,
+      "tangentAngleDiffDeg": 46.512288
+    },
+    {
+      "pitIndex": 87,
+      "pitPosition": {
+        "x": -379.135171,
+        "y": -266.289901
+      },
+      "pitWidth": 14.833083,
+      "distanceToMainCenterline": 26.32399,
+      "nearestMainIndex": 1738,
+      "nearestMainP": 0.5992872409437142,
+      "tangentAngleDiffDeg": 48.288243
+    },
+    {
+      "pitIndex": 88,
+      "pitPosition": {
+        "x": -379.621733,
+        "y": -264.353687
+      },
+      "pitWidth": 14.829008,
+      "distanceToMainCenterline": 27.831217,
+      "nearestMainIndex": 1738,
+      "nearestMainP": 0.5992872409437142,
+      "tangentAngleDiffDeg": 48.289207
+    },
+    {
+      "pitIndex": 89,
+      "pitPosition": {
+        "x": -380.108335,
+        "y": -262.417485
+      },
+      "pitWidth": 14.825016,
+      "distanceToMainCenterline": 29.340723,
+      "nearestMainIndex": 1737,
+      "nearestMainP": 0.5989415215653555,
+      "tangentAngleDiffDeg": 49.882041
+    },
+    {
+      "pitIndex": 90,
+      "pitPosition": {
+        "x": -380.59496,
+        "y": -260.481288
+      },
+      "pitWidth": 14.821134,
+      "distanceToMainCenterline": 30.884025,
+      "nearestMainIndex": 1736,
+      "nearestMainP": 0.5985955704043314,
+      "tangentAngleDiffDeg": 50.765486
+    },
+    {
+      "pitIndex": 91,
+      "pitPosition": {
+        "x": -381.081645,
+        "y": -258.545107
+      },
+      "pitWidth": 14.817324,
+      "distanceToMainCenterline": 32.429197,
+      "nearestMainIndex": 1736,
+      "nearestMainP": 0.5985955704043314,
+      "tangentAngleDiffDeg": 50.766982
+    },
+    {
+      "pitIndex": 92,
+      "pitPosition": {
+        "x": -381.568371,
+        "y": -256.608936
+      },
+      "pitWidth": 14.813599,
+      "distanceToMainCenterline": 33.978886,
+      "nearestMainIndex": 1735,
+      "nearestMainP": 0.598249483862328,
+      "tangentAngleDiffDeg": 51.033062
+    },
+    {
+      "pitIndex": 93,
+      "pitPosition": {
+        "x": -382.05512,
+        "y": -254.672771
+      },
+      "pitWidth": 14.809919,
+      "distanceToMainCenterline": 35.530417,
+      "nearestMainIndex": 1734,
+      "nearestMainP": 0.5979033974297746,
+      "tangentAngleDiffDeg": 51.043066
+    },
+    {
+      "pitIndex": 94,
+      "pitPosition": {
+        "x": -382.541914,
+        "y": -252.736618
+      },
+      "pitWidth": 14.806335,
+      "distanceToMainCenterline": 37.084199,
+      "nearestMainIndex": 1733,
+      "nearestMainP": 0.5975573114614744,
+      "tangentAngleDiffDeg": 51.211243
+    },
+    {
+      "pitIndex": 95,
+      "pitPosition": {
+        "x": -383.028756,
+        "y": -250.800477
+      },
+      "pitWidth": 14.802849,
+      "distanceToMainCenterline": 38.647658,
+      "nearestMainIndex": 1732,
+      "nearestMainP": 0.5972112741933303,
+      "tangentAngleDiffDeg": 51.769694
+    },
+    {
+      "pitIndex": 96,
+      "pitPosition": {
+        "x": -383.515687,
+        "y": -248.864359
+      },
+      "pitWidth": 14.79942,
+      "distanceToMainCenterline": 40.203257,
+      "nearestMainIndex": 1732,
+      "nearestMainP": 0.5972112741933303,
+      "tangentAngleDiffDeg": 51.771431
+    },
+    {
+      "pitIndex": 97,
+      "pitPosition": {
+        "x": -384.002646,
+        "y": -246.928249
+      },
+      "pitWidth": 14.796171,
+      "distanceToMainCenterline": 41.781425,
+      "nearestMainIndex": 1731,
+      "nearestMainP": 0.5968653435855105,
+      "tangentAngleDiffDeg": 52.814047
+    },
+    {
+      "pitIndex": 98,
+      "pitPosition": {
+        "x": -384.48967,
+        "y": -244.992155
+      },
+      "pitWidth": 14.793056,
+      "distanceToMainCenterline": 43.366157,
+      "nearestMainIndex": 1731,
+      "nearestMainP": 0.5968653435855105,
+      "tangentAngleDiffDeg": 52.815512
+    },
+    {
+      "pitIndex": 99,
+      "pitPosition": {
+        "x": -384.976728,
+        "y": -243.05607
+      },
+      "pitWidth": 14.790012,
+      "distanceToMainCenterline": 44.971714,
+      "nearestMainIndex": 1730,
+      "nearestMainP": 0.5965194727199681,
+      "tangentAngleDiffDeg": 54.073361
+    },
+    {
+      "pitIndex": 100,
+      "pitPosition": {
+        "x": -385.463907,
+        "y": -241.120015
+      },
+      "pitWidth": 14.787215,
+      "distanceToMainCenterline": 46.580877,
+      "nearestMainIndex": 1730,
+      "nearestMainP": 0.5965194727199681,
+      "tangentAngleDiffDeg": 54.07634
+    },
+    {
+      "pitIndex": 101,
+      "pitPosition": {
+        "x": -385.951166,
+        "y": -239.183982
+      },
+      "pitWidth": 14.784585,
+      "distanceToMainCenterline": 48.21272,
+      "nearestMainIndex": 1729,
+      "nearestMainP": 0.596173532338657,
+      "tangentAngleDiffDeg": 55.084602
+    },
+    {
+      "pitIndex": 102,
+      "pitPosition": {
+        "x": -386.438498,
+        "y": -237.247967
+      },
+      "pitWidth": 14.782144,
+      "distanceToMainCenterline": 49.842554,
+      "nearestMainIndex": 1729,
+      "nearestMainP": 0.596173532338657,
+      "tangentAngleDiffDeg": 55.087714
+    },
+    {
+      "pitIndex": 103,
+      "pitPosition": {
+        "x": -386.925967,
+        "y": -235.311988
+      },
+      "pitWidth": 14.779942,
+      "distanceToMainCenterline": 51.48932,
+      "nearestMainIndex": 1728,
+      "nearestMainP": 0.5958274864718899,
+      "tangentAngleDiffDeg": 55.622122
+    },
+    {
+      "pitIndex": 104,
+      "pitPosition": {
+        "x": -387.413563,
+        "y": -233.376042
+      },
+      "pitWidth": 14.778005,
+      "distanceToMainCenterline": 53.136882,
+      "nearestMainIndex": 1728,
+      "nearestMainP": 0.5958274864718899,
+      "tangentAngleDiffDeg": 55.626316
+    },
+    {
+      "pitIndex": 105,
+      "pitPosition": {
+        "x": -387.901315,
+        "y": -231.440136
+      },
+      "pitWidth": 14.776387,
+      "distanceToMainCenterline": 54.785712,
+      "nearestMainIndex": 1727,
+      "nearestMainP": 0.5954814021285963,
+      "tangentAngleDiffDeg": 55.790671
+    },
+    {
+      "pitIndex": 106,
+      "pitPosition": {
+        "x": -388.389264,
+        "y": -229.50428
+      },
+      "pitWidth": 14.775177,
+      "distanceToMainCenterline": 56.438333,
+      "nearestMainIndex": 1726,
+      "nearestMainP": 0.5951353158722786,
+      "tangentAngleDiffDeg": 55.838151
+    },
+    {
+      "pitIndex": 107,
+      "pitPosition": {
+        "x": -388.877487,
+        "y": -227.568495
+      },
+      "pitWidth": 14.774532,
+      "distanceToMainCenterline": 58.093736,
+      "nearestMainIndex": 1726,
+      "nearestMainP": 0.5951353158722786,
+      "tangentAngleDiffDeg": 55.846925
+    },
+    {
+      "pitIndex": 108,
+      "pitPosition": {
+        "x": -389.366028,
+        "y": -225.632792
+      },
+      "pitWidth": 14.774502,
+      "distanceToMainCenterline": 56.265934,
+      "nearestMainIndex": 1553,
+      "nearestMainP": 0.5353089714951693,
+      "tangentAngleDiffDeg": 80.272909
+    },
+    {
+      "pitIndex": 109,
+      "pitPosition": {
+        "x": -389.854993,
+        "y": -223.697198
+      },
+      "pitWidth": 14.775395,
+      "distanceToMainCenterline": 54.304542,
+      "nearestMainIndex": 1552,
+      "nearestMainP": 0.5349634787133879,
+      "tangentAngleDiffDeg": 77.827232
+    },
+    {
+      "pitIndex": 110,
+      "pitPosition": {
+        "x": -390.344619,
+        "y": -221.761775
+      },
+      "pitWidth": 14.777655,
+      "distanceToMainCenterline": 52.343135,
+      "nearestMainIndex": 1552,
+      "nearestMainP": 0.5349634787133879,
+      "tangentAngleDiffDeg": 77.796751
+    },
+    {
+      "pitIndex": 111,
+      "pitPosition": {
+        "x": -390.835641,
+        "y": -219.826711
+      },
+      "pitWidth": 14.782796,
+      "distanceToMainCenterline": 50.384767,
+      "nearestMainIndex": 1552,
+      "nearestMainP": 0.5349634787133879,
+      "tangentAngleDiffDeg": 77.729119
+    },
+    {
+      "pitIndex": 112,
+      "pitPosition": {
+        "x": -391.329831,
+        "y": -217.892464
+      },
+      "pitWidth": 14.794481,
+      "distanceToMainCenterline": 48.43019,
+      "nearestMainIndex": 1552,
+      "nearestMainP": 0.5349634787133879,
+      "tangentAngleDiffDeg": 77.640291
+    },
+    {
+      "pitIndex": 113,
+      "pitPosition": {
+        "x": -391.826847,
+        "y": -215.958946
+      },
+      "pitWidth": 14.812003,
+      "distanceToMainCenterline": 46.479805,
+      "nearestMainIndex": 1552,
+      "nearestMainP": 0.5349634787133879,
+      "tangentAngleDiffDeg": 77.587625
+    },
+    {
+      "pitIndex": 114,
+      "pitPosition": {
+        "x": -392.324591,
+        "y": -214.025615
+      },
+      "pitWidth": 14.83107,
+      "distanceToMainCenterline": 44.533667,
+      "nearestMainIndex": 1552,
+      "nearestMainP": 0.5349634787133879,
+      "tangentAngleDiffDeg": 77.569506
+    },
+    {
+      "pitIndex": 115,
+      "pitPosition": {
+        "x": -392.82283,
+        "y": -212.092411
+      },
+      "pitWidth": 14.851116,
+      "distanceToMainCenterline": 42.592301,
+      "nearestMainIndex": 1552,
+      "nearestMainP": 0.5349634787133879,
+      "tangentAngleDiffDeg": 77.55762
+    },
+    {
+      "pitIndex": 116,
+      "pitPosition": {
+        "x": -393.321376,
+        "y": -210.159287
+      },
+      "pitWidth": 14.871798,
+      "distanceToMainCenterline": 40.656343,
+      "nearestMainIndex": 1552,
+      "nearestMainP": 0.5349634787133879,
+      "tangentAngleDiffDeg": 77.550046
+    },
+    {
+      "pitIndex": 117,
+      "pitPosition": {
+        "x": -393.820126,
+        "y": -208.226215
+      },
+      "pitWidth": 14.892901,
+      "distanceToMainCenterline": 38.7133,
+      "nearestMainIndex": 1551,
+      "nearestMainP": 0.5346178275774014,
+      "tangentAngleDiffDeg": 75.345352
+    },
+    {
+      "pitIndex": 118,
+      "pitPosition": {
+        "x": -394.319052,
+        "y": -206.293188
+      },
+      "pitWidth": 14.914368,
+      "distanceToMainCenterline": 36.770865,
+      "nearestMainIndex": 1551,
+      "nearestMainP": 0.5346178275774014,
+      "tangentAngleDiffDeg": 75.341081
+    },
+    {
+      "pitIndex": 119,
+      "pitPosition": {
+        "x": -394.81809,
+        "y": -204.360191
+      },
+      "pitWidth": 14.936066,
+      "distanceToMainCenterline": 34.83456,
+      "nearestMainIndex": 1551,
+      "nearestMainP": 0.5346178275774014,
+      "tangentAngleDiffDeg": 75.338192
+    },
+    {
+      "pitIndex": 120,
+      "pitPosition": {
+        "x": -395.317211,
+        "y": -202.427214
+      },
+      "pitWidth": 14.957974,
+      "distanceToMainCenterline": 32.905457,
+      "nearestMainIndex": 1551,
+      "nearestMainP": 0.5346178275774014,
+      "tangentAngleDiffDeg": 75.335112
+    },
+    {
+      "pitIndex": 121,
+      "pitPosition": {
+        "x": -395.816457,
+        "y": -200.49427
+      },
+      "pitWidth": 14.980098,
+      "distanceToMainCenterline": 30.984915,
+      "nearestMainIndex": 1551,
+      "nearestMainP": 0.5346178275774014,
+      "tangentAngleDiffDeg": 75.332457
+    },
+    {
+      "pitIndex": 122,
+      "pitPosition": {
+        "x": -396.315757,
+        "y": -198.56134
+      },
+      "pitWidth": 15.00233,
+      "distanceToMainCenterline": 29.068055,
+      "nearestMainIndex": 1550,
+      "nearestMainP": 0.5342722051758346,
+      "tangentAngleDiffDeg": 73.101798
+    },
+    {
+      "pitIndex": 123,
+      "pitPosition": {
+        "x": -396.815078,
+        "y": -196.628416
+      },
+      "pitWidth": 15.024608,
+      "distanceToMainCenterline": 27.139829,
+      "nearestMainIndex": 1550,
+      "nearestMainP": 0.5342722051758346,
+      "tangentAngleDiffDeg": 73.100319
+    },
+    {
+      "pitIndex": 124,
+      "pitPosition": {
+        "x": -397.314478,
+        "y": -194.695511
+      },
+      "pitWidth": 15.047049,
+      "distanceToMainCenterline": 25.222232,
+      "nearestMainIndex": 1550,
+      "nearestMainP": 0.5342722051758346,
+      "tangentAngleDiffDeg": 73.098808
+    },
+    {
+      "pitIndex": 125,
+      "pitPosition": {
+        "x": -397.813901,
+        "y": -192.762613
+      },
+      "pitWidth": 15.069536,
+      "distanceToMainCenterline": 23.317871,
+      "nearestMainIndex": 1550,
+      "nearestMainP": 0.5342722051758346,
+      "tangentAngleDiffDeg": 73.09774
+    },
+    {
+      "pitIndex": 126,
+      "pitPosition": {
+        "x": -398.313373,
+        "y": -190.829727
+      },
+      "pitWidth": 15.092083,
+      "distanceToMainCenterline": 21.430282,
+      "nearestMainIndex": 1550,
+      "nearestMainP": 0.5342722051758346,
+      "tangentAngleDiffDeg": 73.097535
+    },
+    {
+      "pitIndex": 127,
+      "pitPosition": {
+        "x": -398.81281,
+        "y": -188.896832
+      },
+      "pitWidth": 15.114617,
+      "distanceToMainCenterline": 19.523412,
+      "nearestMainIndex": 1549,
+      "nearestMainP": 0.5339267113871589,
+      "tangentAngleDiffDeg": 70.521291
+    },
+    {
+      "pitIndex": 128,
+      "pitPosition": {
+        "x": -399.312324,
+        "y": -186.963957
+      },
+      "pitWidth": 15.137307,
+      "distanceToMainCenterline": 17.629077,
+      "nearestMainIndex": 1549,
+      "nearestMainP": 0.5339267113871589,
+      "tangentAngleDiffDeg": 70.520368
+    },
+    {
+      "pitIndex": 129,
+      "pitPosition": {
+        "x": -399.811823,
+        "y": -185.031079
+      },
+      "pitWidth": 15.159969,
+      "distanceToMainCenterline": 15.759948,
+      "nearestMainIndex": 1549,
+      "nearestMainP": 0.5339267113871589,
+      "tangentAngleDiffDeg": 70.520859
+    },
+    {
+      "pitIndex": 130,
+      "pitPosition": {
+        "x": -400.311304,
+        "y": -183.098195
+      },
+      "pitWidth": 15.182592,
+      "distanceToMainCenterline": 13.902688,
+      "nearestMainIndex": 1548,
+      "nearestMainP": 0.5335813375035264,
+      "tangentAngleDiffDeg": 67.663626
+    },
+    {
+      "pitIndex": 131,
+      "pitPosition": {
+        "x": -400.810807,
+        "y": -181.165317
+      },
+      "pitWidth": 15.205259,
+      "distanceToMainCenterline": 12.028643,
+      "nearestMainIndex": 1548,
+      "nearestMainP": 0.5335813375035264,
+      "tangentAngleDiffDeg": 67.663267
+    },
+    {
+      "pitIndex": 132,
+      "pitPosition": {
+        "x": -401.310312,
+        "y": -179.23244
+      },
+      "pitWidth": 15.227909,
+      "distanceToMainCenterline": 10.201119,
+      "nearestMainIndex": 1548,
+      "nearestMainP": 0.5335813375035264,
+      "tangentAngleDiffDeg": 67.663326
+    },
+    {
+      "pitIndex": 133,
+      "pitPosition": {
+        "x": -401.809811,
+        "y": -177.299561
+      },
+      "pitWidth": 15.250559,
+      "distanceToMainCenterline": 8.373582,
+      "nearestMainIndex": 1547,
+      "nearestMainP": 0.533236004200594,
+      "tangentAngleDiffDeg": 64.753871
+    },
+    {
+      "pitIndex": 134,
+      "pitPosition": {
+        "x": -402.309294,
+        "y": -175.366678
+      },
+      "pitWidth": 15.273175,
+      "distanceToMainCenterline": 6.559115,
+      "nearestMainIndex": 1547,
+      "nearestMainP": 0.533236004200594,
+      "tangentAngleDiffDeg": 64.754431
+    },
+    {
+      "pitIndex": 135,
+      "pitPosition": {
+        "x": -402.808755,
+        "y": -173.43379
+      },
+      "pitWidth": 15.295746,
+      "distanceToMainCenterline": 4.794254,
+      "nearestMainIndex": 1546,
+      "nearestMainP": 0.5328905477820239,
+      "tangentAngleDiffDeg": 62.026967
+    },
+    {
+      "pitIndex": 136,
+      "pitPosition": {
+        "x": -403.308203,
+        "y": -171.500898
+      },
+      "pitWidth": 15.318291,
+      "distanceToMainCenterline": 3.024221,
+      "nearestMainIndex": 1546,
+      "nearestMainP": 0.5328905477820239,
+      "tangentAngleDiffDeg": 62.027785
+    },
+    {
+      "pitIndex": 137,
+      "pitPosition": {
+        "x": -403.807609,
+        "y": -169.567995
+      },
+      "pitWidth": 15.340749,
+      "distanceToMainCenterline": 1.281646,
+      "nearestMainIndex": 1545,
+      "nearestMainP": 0.5325449967311563,
+      "tangentAngleDiffDeg": 59.397407
+    },
+    {
+      "pitIndex": 138,
+      "pitPosition": {
+        "x": -404.302967,
+        "y": -167.634049
+      },
+      "pitWidth": 15.371485,
+      "distanceToMainCenterline": 0.831218,
+      "nearestMainIndex": 1544,
+      "nearestMainP": 0.5321997029874639,
+      "tangentAngleDiffDeg": 56.548867
+    },
+    {
+      "pitIndex": 139,
+      "pitPosition": {
+        "x": -404.795015,
+        "y": -165.69925
+      },
+      "pitWidth": 15.408915,
+      "distanceToMainCenterline": 2.163782,
+      "nearestMainIndex": 1544,
+      "nearestMainP": 0.5321997029874639,
+      "tangentAngleDiffDeg": 6.701385
+    },
+    {
+      "pitIndex": 140,
+      "pitPosition": {
+        "x": -409.860675,
+        "y": -164.943184
+      },
+      "pitWidth": 6.000102,
+      "distanceToMainCenterline": 0.718052,
+      "nearestMainIndex": 1540,
+      "nearestMainP": 0.5308189091285307,
+      "tangentAngleDiffDeg": 5.165913
+    },
+    {
+      "pitIndex": 141,
+      "pitPosition": {
+        "x": -410.37068,
+        "y": -163.013013
+      },
+      "pitWidth": 6.000102,
+      "distanceToMainCenterline": 2.023342,
+      "nearestMainIndex": 1539,
+      "nearestMainP": 0.5304733887090087,
+      "tangentAngleDiffDeg": 41.826657
+    },
+    {
+      "pitIndex": 142,
+      "pitPosition": {
+        "x": -410.880629,
+        "y": -161.082827
+      },
+      "pitWidth": 6.000112,
+      "distanceToMainCenterline": 3.307529,
+      "nearestMainIndex": 1538,
+      "nearestMainP": 0.5301283615093287,
+      "tangentAngleDiffDeg": 38.620791
+    },
+    {
+      "pitIndex": 143,
+      "pitPosition": {
+        "x": -411.390431,
+        "y": -159.152604
+      },
+      "pitWidth": 6.000105,
+      "distanceToMainCenterline": 4.501224,
+      "nearestMainIndex": 1537,
+      "nearestMainP": 0.5297837666048895,
+      "tangentAngleDiffDeg": 34.718811
+    },
+    {
+      "pitIndex": 144,
+      "pitPosition": {
+        "x": -411.900105,
+        "y": -157.222347
+      },
+      "pitWidth": 6.000113,
+      "distanceToMainCenterline": 5.530338,
+      "nearestMainIndex": 1535,
+      "nearestMainP": 0.5290951581112789,
+      "tangentAngleDiffDeg": 26.004771
+    },
+    {
+      "pitIndex": 145,
+      "pitPosition": {
+        "x": -412.409651,
+        "y": -155.292058
+      },
+      "pitWidth": 6.000095,
+      "distanceToMainCenterline": 6.341622,
+      "nearestMainIndex": 1534,
+      "nearestMainP": 0.5287506279794394,
+      "tangentAngleDiffDeg": 21.983711
+    },
+    {
+      "pitIndex": 146,
+      "pitPosition": {
+        "x": -412.918998,
+        "y": -153.361717
+      },
+      "pitWidth": 6.00007,
+      "distanceToMainCenterline": 6.927334,
+      "nearestMainIndex": 1532,
+      "nearestMainP": 0.5280603932193466,
+      "tangentAngleDiffDeg": 15.214272
+    },
+    {
+      "pitIndex": 147,
+      "pitPosition": {
+        "x": -413.42822,
+        "y": -151.431344
+      },
+      "pitWidth": 6.0001,
+      "distanceToMainCenterline": 7.3358,
+      "nearestMainIndex": 1530,
+      "nearestMainP": 0.5273706624991885,
+      "tangentAngleDiffDeg": 8.478689
+    },
+    {
+      "pitIndex": 148,
+      "pitPosition": {
+        "x": -413.937229,
+        "y": -149.500916
+      },
+      "pitWidth": 6.000085,
+      "distanceToMainCenterline": 7.536469,
+      "nearestMainIndex": 1528,
+      "nearestMainP": 0.5266803945284991,
+      "tangentAngleDiffDeg": 1.844329
+    },
+    {
+      "pitIndex": 149,
+      "pitPosition": {
+        "x": -414.445963,
+        "y": -147.570418
+      },
+      "pitWidth": 6.000077,
+      "distanceToMainCenterline": 7.529092,
+      "nearestMainIndex": 1526,
+      "nearestMainP": 0.5259899695175936,
+      "tangentAngleDiffDeg": 3.826146
+    },
+    {
+      "pitIndex": 150,
+      "pitPosition": {
+        "x": -414.954419,
+        "y": -145.639847
+      },
+      "pitWidth": 6.000074,
+      "distanceToMainCenterline": 7.354808,
+      "nearestMainIndex": 1525,
+      "nearestMainP": 0.5256440862714454,
+      "tangentAngleDiffDeg": 5.488109
+    },
+    {
+      "pitIndex": 151,
+      "pitPosition": {
+        "x": -415.462589,
+        "y": -143.709203
+      },
+      "pitWidth": 6.000061,
+      "distanceToMainCenterline": 7.130078,
+      "nearestMainIndex": 1523,
+      "nearestMainP": 0.5249524058653677,
+      "tangentAngleDiffDeg": 8.490165
+    },
+    {
+      "pitIndex": 152,
+      "pitPosition": {
+        "x": -415.970359,
+        "y": -141.778456
+      },
+      "pitWidth": 6.000068,
+      "distanceToMainCenterline": 6.80097,
+      "nearestMainIndex": 1522,
+      "nearestMainP": 0.5246066557067242,
+      "tangentAngleDiffDeg": 10.191783
+    },
+    {
+      "pitIndex": 153,
+      "pitPosition": {
+        "x": -416.477698,
+        "y": -139.847598
+      },
+      "pitWidth": 6.000075,
+      "distanceToMainCenterline": 6.417479,
+      "nearestMainIndex": 1520,
+      "nearestMainP": 0.5239147214591391,
+      "tangentAngleDiffDeg": 12.257038
+    },
+    {
+      "pitIndex": 154,
+      "pitPosition": {
+        "x": -416.98446,
+        "y": -137.916591
+      },
+      "pitWidth": 6.000058,
+      "distanceToMainCenterline": 5.966746,
+      "nearestMainIndex": 1519,
+      "nearestMainP": 0.5235686435918704,
+      "tangentAngleDiffDeg": 12.755719
+    },
+    {
+      "pitIndex": 155,
+      "pitPosition": {
+        "x": -417.490586,
+        "y": -135.98542
+      },
+      "pitWidth": 6.00006,
+      "distanceToMainCenterline": 5.535691,
+      "nearestMainIndex": 1518,
+      "nearestMainP": 0.5232226216211526,
+      "tangentAngleDiffDeg": 13.515561
+    },
+    {
+      "pitIndex": 156,
+      "pitPosition": {
+        "x": -417.995868,
+        "y": -134.054032
+      },
+      "pitWidth": 6.000069,
+      "distanceToMainCenterline": 5.012276,
+      "nearestMainIndex": 1516,
+      "nearestMainP": 0.5225308602726539,
+      "tangentAngleDiffDeg": 16.101195
+    },
+    {
+      "pitIndex": 157,
+      "pitPosition": {
+        "x": -418.49976,
+        "y": -132.122285
+      },
+      "pitWidth": 6.000011,
+      "distanceToMainCenterline": 4.432805,
+      "nearestMainIndex": 1515,
+      "nearestMainP": 0.5221849106807982,
+      "tangentAngleDiffDeg": 17.088426
+    },
+    {
+      "pitIndex": 158,
+      "pitPosition": {
+        "x": -419.001847,
+        "y": -130.190073
+      },
+      "pitWidth": 6.000012,
+      "distanceToMainCenterline": 3.877783,
+      "nearestMainIndex": 1514,
+      "nearestMainP": 0.5218388534682924,
+      "tangentAngleDiffDeg": 17.522867
+    },
+    {
+      "pitIndex": 159,
+      "pitPosition": {
+        "x": -419.500934,
+        "y": -128.257088
+      },
+      "pitWidth": 5.999994,
+      "distanceToMainCenterline": 3.253462,
+      "nearestMainIndex": 1512,
+      "nearestMainP": 0.521146691025228,
+      "tangentAngleDiffDeg": 17.855639
+    },
+    {
+      "pitIndex": 160,
+      "pitPosition": {
+        "x": -419.993155,
+        "y": -126.322334
+      },
+      "pitWidth": 6.000104,
+      "distanceToMainCenterline": 2.608527,
+      "nearestMainIndex": 1511,
+      "nearestMainP": 0.5208006428527396,
+      "tangentAngleDiffDeg": 18.185934
+    },
+    {
+      "pitIndex": 161,
+      "pitPosition": {
+        "x": -420.478517,
+        "y": -124.385811
+      },
+      "pitWidth": 6.000153,
+      "distanceToMainCenterline": 2.014563,
+      "nearestMainIndex": 1510,
+      "nearestMainP": 0.5204546136690922,
+      "tangentAngleDiffDeg": 18.728435
+    },
+    {
+      "pitIndex": 162,
+      "pitPosition": {
+        "x": -420.961483,
+        "y": -122.448672
+      },
+      "pitWidth": 6.000208,
+      "distanceToMainCenterline": 1.488217,
+      "nearestMainIndex": 1508,
+      "nearestMainP": 0.5197624949552582,
+      "tangentAngleDiffDeg": 19.524192
+    },
+    {
+      "pitIndex": 163,
+      "pitPosition": {
+        "x": -421.443196,
+        "y": -120.511209
+      },
+      "pitWidth": 6.000263,
+      "distanceToMainCenterline": 0.719222,
+      "nearestMainIndex": 1507,
+      "nearestMainP": 0.519416409613825,
+      "tangentAngleDiffDeg": 19.679686
+    },
+    {
+      "pitIndex": 164,
+      "pitPosition": {
+        "x": -421.92393,
+        "y": -118.573494
+      },
+      "pitWidth": 6.000251,
+      "distanceToMainCenterline": 0.074741,
+      "nearestMainIndex": 1506,
+      "nearestMainP": 0.5190703443376029,
+      "tangentAngleDiffDeg": 19.992688
+    },
+    {
+      "pitIndex": 165,
+      "pitPosition": {
+        "x": -422.404181,
+        "y": -116.635654
+      },
+      "pitWidth": 6.000267,
+      "distanceToMainCenterline": 0.842292,
+      "nearestMainIndex": 1505,
+      "nearestMainP": 0.5187243056894234,
+      "tangentAngleDiffDeg": 20.536365
+    },
+    {
+      "pitIndex": 166,
+      "pitPosition": {
+        "x": -422.883993,
+        "y": -114.697702
+      },
+      "pitWidth": 6.000275,
+      "distanceToMainCenterline": 1.604545,
+      "nearestMainIndex": 1503,
+      "nearestMainP": 0.5180322018431918,
+      "tangentAngleDiffDeg": 21.430563
+    },
+    {
+      "pitIndex": 167,
+      "pitPosition": {
+        "x": -423.363458,
+        "y": -112.75966
+      },
+      "pitWidth": 6.000266,
+      "distanceToMainCenterline": 2.198326,
+      "nearestMainIndex": 1502,
+      "nearestMainP": 0.5176861151709673,
+      "tangentAngleDiffDeg": 21.538258
+    },
+    {
+      "pitIndex": 168,
+      "pitPosition": {
+        "x": -423.842625,
+        "y": -110.821541
+      },
+      "pitWidth": 6.000294,
+      "distanceToMainCenterline": 2.901589,
+      "nearestMainIndex": 1501,
+      "nearestMainP": 0.5173400288966881,
+      "tangentAngleDiffDeg": 21.533817
+    },
+    {
+      "pitIndex": 169,
+      "pitPosition": {
+        "x": -424.32159,
+        "y": -108.88337
+      },
+      "pitWidth": 6.000328,
+      "distanceToMainCenterline": 3.651531,
+      "nearestMainIndex": 1500,
+      "nearestMainP": 0.5169939422982589,
+      "tangentAngleDiffDeg": 21.528542
+    },
+    {
+      "pitIndex": 170,
+      "pitPosition": {
+        "x": -424.800323,
+        "y": -106.945139
+      },
+      "pitWidth": 6.000304,
+      "distanceToMainCenterline": 4.42441,
+      "nearestMainIndex": 1499,
+      "nearestMainP": 0.5166478560103202,
+      "tangentAngleDiffDeg": 21.525036
+    },
+    {
+      "pitIndex": 171,
+      "pitPosition": {
+        "x": -425.27892,
+        "y": -105.006873
+      },
+      "pitWidth": 6.000293,
+      "distanceToMainCenterline": 5.117727,
+      "nearestMainIndex": 1497,
+      "nearestMainP": 0.5159556828859068,
+      "tangentAngleDiffDeg": 21.525535
+    },
+    {
+      "pitIndex": 172,
+      "pitPosition": {
+        "x": -425.757337,
+        "y": -103.068561
+      },
+      "pitWidth": 6.000311,
+      "distanceToMainCenterline": 5.832408,
+      "nearestMainIndex": 1496,
+      "nearestMainP": 0.515609596457435,
+      "tangentAngleDiffDeg": 21.523766
+    },
+    {
+      "pitIndex": 173,
+      "pitPosition": {
+        "x": -426.235653,
+        "y": -101.130223
+      },
+      "pitWidth": 6.000327,
+      "distanceToMainCenterline": 6.570426,
+      "nearestMainIndex": 1495,
+      "nearestMainP": 0.5152635101359146,
+      "tangentAngleDiffDeg": 21.543855
+    },
+    {
+      "pitIndex": 174,
+      "pitPosition": {
+        "x": -426.713853,
+        "y": -99.191855
+      },
+      "pitWidth": 6.000305,
+      "distanceToMainCenterline": 7.325815,
+      "nearestMainIndex": 1494,
+      "nearestMainP": 0.5149174243720525,
+      "tangentAngleDiffDeg": 21.629036
+    },
+    {
+      "pitIndex": 175,
+      "pitPosition": {
+        "x": -427.191925,
+        "y": -97.253454
+      },
+      "pitWidth": 6.000303,
+      "distanceToMainCenterline": 8.061158,
+      "nearestMainIndex": 1492,
+      "nearestMainP": 0.5142252618045893,
+      "tangentAngleDiffDeg": 22.037231
+    },
+    {
+      "pitIndex": 176,
+      "pitPosition": {
+        "x": -427.669951,
+        "y": -95.315041
+      },
+      "pitWidth": 6.000336,
+      "distanceToMainCenterline": 8.795536,
+      "nearestMainIndex": 1491,
+      "nearestMainP": 0.5138791802298721,
+      "tangentAngleDiffDeg": 22.246286
+    },
+    {
+      "pitIndex": 177,
+      "pitPosition": {
+        "x": -428.147884,
+        "y": -93.376604
+      },
+      "pitWidth": 6.000352,
+      "distanceToMainCenterline": 9.550386,
+      "nearestMainIndex": 1490,
+      "nearestMainP": 0.5135330962024413,
+      "tangentAngleDiffDeg": 22.447534
+    },
+    {
+      "pitIndex": 178,
+      "pitPosition": {
+        "x": -428.625691,
+        "y": -91.438134
+      },
+      "pitWidth": 6.000332,
+      "distanceToMainCenterline": 10.323144,
+      "nearestMainIndex": 1489,
+      "nearestMainP": 0.5131870181894655,
+      "tangentAngleDiffDeg": 22.717819
+    },
+    {
+      "pitIndex": 179,
+      "pitPosition": {
+        "x": -429.103464,
+        "y": -89.499656
+      },
+      "pitWidth": 6.00033,
+      "distanceToMainCenterline": 11.114015,
+      "nearestMainIndex": 1488,
+      "nearestMainP": 0.512840948503153,
+      "tangentAngleDiffDeg": 23.076918
+    },
+    {
+      "pitIndex": 180,
+      "pitPosition": {
+        "x": -429.581164,
+        "y": -87.561159
+      },
+      "pitWidth": 6.000314,
+      "distanceToMainCenterline": 11.909524,
+      "nearestMainIndex": 1486,
+      "nearestMainP": 0.5121488001007568,
+      "tangentAngleDiffDeg": 23.639757
+    },
+    {
+      "pitIndex": 181,
+      "pitPosition": {
+        "x": -430.058836,
+        "y": -85.622655
+      },
+      "pitWidth": 6.000339,
+      "distanceToMainCenterline": 12.697994,
+      "nearestMainIndex": 1485,
+      "nearestMainP": 0.5118027148798497,
+      "tangentAngleDiffDeg": 23.722173
+    },
+    {
+      "pitIndex": 182,
+      "pitPosition": {
+        "x": -430.536468,
+        "y": -83.684141
+      },
+      "pitWidth": 6.000357,
+      "distanceToMainCenterline": 13.496751,
+      "nearestMainIndex": 1484,
+      "nearestMainP": 0.5114566283851908,
+      "tangentAngleDiffDeg": 23.733291
+    },
+    {
+      "pitIndex": 183,
+      "pitPosition": {
+        "x": -431.014031,
+        "y": -81.745608
+      },
+      "pitWidth": 6.000352,
+      "distanceToMainCenterline": 14.303484,
+      "nearestMainIndex": 1483,
+      "nearestMainP": 0.5111105418905318,
+      "tangentAngleDiffDeg": 23.731234
+    },
+    {
+      "pitIndex": 184,
+      "pitPosition": {
+        "x": -431.491524,
+        "y": -79.807058
+      },
+      "pitWidth": 6.000329,
+      "distanceToMainCenterline": 15.116909,
+      "nearestMainIndex": 1482,
+      "nearestMainP": 0.5107644556231469,
+      "tangentAngleDiffDeg": 23.73011
+    },
+    {
+      "pitIndex": 185,
+      "pitPosition": {
+        "x": -431.969011,
+        "y": -77.868506
+      },
+      "pitWidth": 6.000331,
+      "distanceToMainCenterline": 15.916321,
+      "nearestMainIndex": 1480,
+      "nearestMainP": 0.5100722826338291,
+      "tangentAngleDiffDeg": 23.72983
+    },
+    {
+      "pitIndex": 186,
+      "pitPosition": {
+        "x": -432.446484,
+        "y": -75.929951
+      },
+      "pitWidth": 6.000332,
+      "distanceToMainCenterline": 16.711926,
+      "nearestMainIndex": 1479,
+      "nearestMainP": 0.5097261960995334,
+      "tangentAngleDiffDeg": 23.728365
+    },
+    {
+      "pitIndex": 187,
+      "pitPosition": {
+        "x": -432.923872,
+        "y": -73.991373
+      },
+      "pitWidth": 6.000344,
+      "distanceToMainCenterline": 17.514292,
+      "nearestMainIndex": 1478,
+      "nearestMainP": 0.5093801098321484,
+      "tangentAngleDiffDeg": 23.727255
+    },
+    {
+      "pitIndex": 188,
+      "pitPosition": {
+        "x": -433.40127,
+        "y": -72.052799
+      },
+      "pitWidth": 6.000361,
+      "distanceToMainCenterline": 18.322613,
+      "nearestMainIndex": 1477,
+      "nearestMainP": 0.5090340232978529,
+      "tangentAngleDiffDeg": 23.72696
+    },
+    {
+      "pitIndex": 189,
+      "pitPosition": {
+        "x": -433.878637,
+        "y": -70.114216
+      },
+      "pitWidth": 6.000376,
+      "distanceToMainCenterline": 19.134554,
+      "nearestMainIndex": 1475,
+      "nearestMainP": 0.5083418502292617,
+      "tangentAngleDiffDeg": 23.726364
+    },
+    {
+      "pitIndex": 190,
+      "pitPosition": {
+        "x": -434.355996,
+        "y": -68.175631
+      },
+      "pitWidth": 6.000344,
+      "distanceToMainCenterline": 19.928002,
+      "nearestMainIndex": 1474,
+      "nearestMainP": 0.5079957639618767,
+      "tangentAngleDiffDeg": 23.726141
+    },
+    {
+      "pitIndex": 191,
+      "pitPosition": {
+        "x": -434.833348,
+        "y": -66.237044
+      },
+      "pitWidth": 6.000363,
+      "distanceToMainCenterline": 20.727385,
+      "nearestMainIndex": 1473,
+      "nearestMainP": 0.507649677427581,
+      "tangentAngleDiffDeg": 23.726052
+    }
+  ]
+}

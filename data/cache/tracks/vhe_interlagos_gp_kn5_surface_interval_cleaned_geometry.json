@@ -1,7 +1,7 @@
 {
   "trackName": "vhe_interlagos",
   "trackLength": 4334.551825812956,
-  "generatedAt": "2026-05-19T20:24:53.660859",
+  "generatedAt": "2026-05-21T13:30:43.470754",
   "version": 1,
   "source": "assetto_corsa_track_files",
   "provider": "kn5_surface_interval",
@@ -415,7 +415,10 @@
     "visualRenderMode": "ribbon",
     "ribbonWidthMeters": 12.538807,
     "centerlineMaxDisplacement": 0.950001,
-    "physicsUnaffected": true
+    "physicsUnaffected": true,
+    "physicsDisplayEnabled": true,
+    "physicsDisplaySource": "track_physics_geometry_smoothed_display",
+    "physicsDisplayMaxDisplacement": 0.5
   },
   "centerline": [
     {

@@ -18,6 +18,7 @@ from fastapi import Body, FastAPI, File, HTTPException, UploadFile, WebSocket, W
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.debug.ac_shared_memory_full_inventory import build_ac_shared_memory_full_inventory
+from core.debug.pitlane_debug import build_pitlane_debug_payload
 from core.cache.track_cache import TrackCache
 from core.debug.spatial_debug import projection_debug_payload
 from core.geometry.track_geometry_provider import (
@@ -756,6 +757,61 @@ async def get_track_visual_geometry_debug():
             "fixedFalseCurvesSvg": str(DEBUG_DIR / "track_visual_fixed_false_curves.svg"),
             "physicsVsVisualAfterFalseCurveFixSvg": str(DEBUG_DIR / "track_physics_vs_visual_after_false_curve_fix.svg"),
         },
+    }
+
+
+@app.get("/api/debug/pitlane/current")
+async def get_pitlane_debug_current():
+    payload = build_pitlane_debug_payload(REPO_ROOT)
+    return {"status": "success", "pitlane": payload}
+
+
+@app.get("/api/debug/pitlane/overview")
+async def get_pitlane_debug_overview():
+    payload = build_pitlane_debug_payload(REPO_ROOT)
+    return {
+        "status": "success",
+        "trackName": payload["trackName"],
+        "trackConfig": payload["trackConfig"],
+        "debugOnly": True,
+        "runtimeChanged": False,
+        "activePitlaneDebugVersion": payload.get("activePitlaneDebugVersion"),
+        "mainTrack": payload["mainTrack"],
+        "pitAreaGeometry": payload.get("pitAreaGeometry"),
+        "pitLaneCorridorV2": payload.get("pitLaneCorridorV2"),
+        "pitlaneV2": payload.get("pitlaneV2"),
+        "pitEntryAccess": payload.get("pitEntryAccess"),
+        "pitExitAccess": payload.get("pitExitAccess"),
+        "pitAccessLocalMeshInventory": payload.get("pitAccessLocalMeshInventory"),
+        "pitlaneOverlayAlignmentCheck": payload.get("pitlaneOverlayAlignmentCheck"),
+        "pitAccessFinalReport": payload.get("pitAccessFinalReport"),
+        "pitlaneLegacy": payload.get("pitlaneLegacy"),
+        "pitlaneSurface": payload["pitlaneSurface"],
+        "pitlaneRaw": payload["pitlaneRaw"],
+        "pitlaneTrimmedManual": payload["pitlaneTrimmedManual"],
+        "trimCandidates": payload["trimCandidates"],
+        "entryExitBreaksFinalReport": payload.get("entryExitBreaksFinalReport"),
+        "entryExitBreaksCombinedAnalysis": payload.get("entryExitBreaksCombinedAnalysis"),
+        "mainTrackEntryZoneCandidate": payload.get("mainTrackEntryZoneCandidate"),
+        "mainTrackExitZoneCandidateV2": payload.get("mainTrackExitZoneCandidateV2"),
+        "pitEntryTransitionCandidates": payload.get("pitEntryTransitionCandidates"),
+        "pitExitTransitionCandidatesV2": payload.get("pitExitTransitionCandidatesV2"),
+        "validationMetadata": payload["validationMetadata"],
+        "exports": payload["exports"],
+    }
+
+
+@app.get("/api/debug/pitlane/validation-metadata")
+async def get_pitlane_debug_validation_metadata():
+    payload = build_pitlane_debug_payload(REPO_ROOT)
+    return {
+        "status": "success",
+        "trackName": payload["trackName"],
+        "trackConfig": payload["trackConfig"],
+        "canonicalMapSpace": payload["canonicalMapSpace"],
+        "sourceOfTruth": payload["sourceOfTruth"],
+        "validationMetadata": payload["validationMetadata"],
+        "exports": payload["exports"],
     }
 
 

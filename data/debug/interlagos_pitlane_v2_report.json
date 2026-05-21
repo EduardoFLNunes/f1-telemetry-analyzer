@@ -1,0 +1,57 @@
+{
+  "generatedAt": "2026-05-21T04:45:43.639057+00:00",
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "provider": "pitlane_surface_interval_v2",
+  "method": "open_loop_pitlane_surface_interval_raycast",
+  "transformUsed": {
+    "internalMapSpace": "mapX = worldX, mapY = -worldZ",
+    "outputCoordinateSystem": "world_xz",
+    "outputEquivalentTransform": "mapX = worldX, mapY = worldZ",
+    "sharedWithMainTrack": true,
+    "note": "The KN5 surface helper uses the same internal map-space as MainTrackGeometry; output points are converted to world_xz like the main track cache."
+  },
+  "sources": {
+    "surface": "surfaces.ini IS_PITLANE=1 / PITLANE surface",
+    "meshes": [
+      "1pitlane001",
+      "1pitlane002",
+      "1pitlane003"
+    ],
+    "reference": "pit_lane.ai longitudinal run inside 1pitlane* surface"
+  },
+  "pointCount": 254,
+  "lengthMeters": 387.256626,
+  "widthMin": 5.989615,
+  "widthAvg": 12.584169,
+  "widthMax": 15.40705,
+  "openLoop": true,
+  "comparisonWithCurrentPitlane": {
+    "legacySource": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_trimmed_manual_05_05.json",
+    "legacyPointCount": 182,
+    "legacyLengthMeters": 364.47656,
+    "legacyDistanceToMainStraightAvg": 226.135096,
+    "legacyAngleToMainStraightDeg": 29.159238,
+    "v2DistanceToMainStraightAvg": 19.136339,
+    "v2AngleToMainStraightDeg": 0.705567,
+    "spatiallyBetterThanLegacy": true
+  },
+  "runtimeChanged": false,
+  "authoritativeGeometryChanged": false,
+  "readyForRuntimeIntegration": false,
+  "confidence": "high",
+  "notes": [
+    "V2 is the pitlane corridor only. Pit entry and pit exit access branches must be evaluated as separate geometries.",
+    "The corridor uses the same surface interval concept as MainTrackGeometry, but remains open-loop and uses the pit_lane.ai segment only as longitudinal reference.",
+    "No projection, car mapPosition, TrackPhysicsGeometry, or MainTrackGeometry runtime path was changed."
+  ],
+  "exports": {
+    "geometryJson": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_v2_geometry.json",
+    "geometrySvg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_v2_geometry.svg",
+    "overviewCleanSvg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_v2_overview_clean.svg",
+    "entryZoomSvg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_v2_entry_zoom.svg",
+    "exitZoomSvg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_v2_exit_zoom.svg",
+    "vsLegacySvg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_v2_vs_legacy.svg",
+    "assessmentJson": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_v2_final_assessment.json"
+  }
+}

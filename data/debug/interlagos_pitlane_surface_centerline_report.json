@@ -1,0 +1,68 @@
+{
+  "generatedAt": "2026-05-20T01:25:22.323016+00:00",
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "runtimeChanged": false,
+  "mainTrackGeometryChanged": false,
+  "trackPhysicsGeometryChanged": false,
+  "pitLaneAiUsedForGeometry": false,
+  "pitSurfaceTriangleCount": 1326,
+  "pitBoundaryEdgeCount": 346,
+  "pitBoundaryLoopCount": 1,
+  "pitCenterlinePointCount": 192,
+  "pitWidthMin": 5.999994,
+  "pitWidthAvg": 12.569731,
+  "pitWidthMax": 15.408915,
+  "pitEntryCandidate": {
+    "point": {
+      "x": -336.841362,
+      "y": -434.749989
+    },
+    "nearestMainTrack": {
+      "index": 1838,
+      "p": 0.6338513652999561,
+      "distanceToMain": 37.851195,
+      "point": {
+        "x": -353.420478,
+        "y": -400.722855
+      }
+    }
+  },
+  "pitExitCandidate": {
+    "point": {
+      "x": -434.833348,
+      "y": -66.237044
+    },
+    "nearestMainTrack": {
+      "index": 1473,
+      "p": 0.507649677427581,
+      "distanceToMain": 20.727385,
+      "point": {
+        "x": -414.40139,
+        "y": -69.724103
+      }
+    }
+  },
+  "distanceFromPitAiToDerivedCenterlineAvg": 290.54439,
+  "distanceFromPitAiToDerivedCenterlineP95": 662.537948,
+  "pitLaneAiOverlay": {
+    "path": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\gp\\ai\\pit_lane.ai",
+    "pointCount": 1361,
+    "usage": "AI route, not physical pit centerline",
+    "bboxOverlapWithPitSurface": {
+      "area": 40934.740594,
+      "ratioA": 0.067738,
+      "ratioB": 1.0
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "pitlane_surface_derived_geometry_debug_only",
+      "message": "PitLaneGeometry was derived from 1pitlane* surface cross-sections. Runtime is untouched."
+    },
+    {
+      "code": "debug_only_surface_derived",
+      "message": "PitLaneGeometry is derived from 1pitlane* surface slices only; pit_lane.ai is not used for geometry."
+    }
+  ]
+}

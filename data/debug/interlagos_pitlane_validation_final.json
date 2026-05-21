@@ -1,0 +1,52 @@
+{
+  "generatedAt": "2026-05-20T01:32:40.218876+00:00",
+  "runtimeChanged": false,
+  "mainTrackGeometryChanged": false,
+  "trackPhysicsGeometryChanged": false,
+  "canonicalMapSpaceChanged": false,
+  "candidateSelectedAutomatically": false,
+  "rawPointCount": 192,
+  "trimmedPointCount": 115,
+  "rawLengthMeters": 384.441084,
+  "trimmedLengthMeters": 227.590081,
+  "trimmedStartIndex": 25,
+  "trimmedEndIndex": 139,
+  "trimmedStartDistanceFromRawStartMeters": 49.910385,
+  "trimmedEndDistanceFromRawEndMeters": 106.940618,
+  "trimmedContainedInSurfaceRatio": 1.0,
+  "trimmedStartToMainTrackMinDistance": 3.476534,
+  "trimmedEndToMainTrackMinDistance": 5.856463,
+  "candidate05StartDistance": 9.982062,
+  "candidate05EndDistance": 9.982463,
+  "candidate08StartDistance": 15.971308,
+  "candidate08EndDistance": 15.971936,
+  "candidateDistancesToCurrentTrimmed": {
+    "candidate_05_05": {
+      "startToCurrentTrimmedStartMeters": 39.928323,
+      "endToCurrentTrimmedEndMeters": 96.958155,
+      "startToMainTrackMinDistance": 21.224057,
+      "endToMainTrackMinDistance": 10.924888
+    },
+    "candidate_08_08": {
+      "startToCurrentTrimmedStartMeters": 33.939077,
+      "endToCurrentTrimmedEndMeters": 90.968682,
+      "startToMainTrackMinDistance": 15.549556,
+      "endToMainTrackMinDistance": 8.514095
+    }
+  },
+  "manualAssessmentHints": {
+    "too_far_back_start": false,
+    "too_far_forward_start": true,
+    "too_far_back_end": true,
+    "too_far_forward_end": false
+  },
+  "notes": [
+    "This report is debug/export only.",
+    "Current trimmed geometry is shown for validation but no candidate is selected automatically.",
+    "Distances named candidate05/08StartDistance and candidate05/08EndDistance are meters removed from raw start/end."
+  ],
+  "exports": {
+    "svg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_validation_final.svg",
+    "json": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_validation_final.json"
+  }
+}

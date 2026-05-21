@@ -335,21 +335,37 @@ export function drawHud(ctx, width, height, trackData, frame, camera, debugEnabl
   ctx.fillText(`FPS ${Math.round(metrics.fps || 0)} | Path cache ${metrics.pathCacheEnabled ? 'ON' : 'OFF'} | Interp ${metrics.interpolationEnabled ? 'ON' : 'OFF'} | Visual ${metrics.visualGeometryEnabled ? 'ON' : 'OFF'}:${metrics.visualRenderMode || 'polygon'} | mirrorMode ${metrics.mirrorMode || 'off'}`, 24, 80);
   ctx.fillText(`Track fetches ${metrics.trackFetchCount || 0} | Payload ${formatBytes(metrics.trackPayloadBytes || 0)} | Poll ${metrics.trackPollingEnabled ? 'ON' : 'OFF'}`, 24, 96);
   const debugFlags = metrics.debugOverlaysEnabled
-    ? `${metrics.debugProjectionEnabled ? 'P' : '-'}${metrics.debugPhysicsEnabled ? 'E' : '-'}${metrics.debugTrajectoryEnabled ? 'T' : '-'}${metrics.debugCenterlineEnabled ? 'C' : '-'}`
+    ? `${metrics.debugProjectionEnabled ? 'P' : '-'}${metrics.debugPhysicsEnabled ? 'E' : '-'}${metrics.debugTrajectoryEnabled ? 'T' : '-'}${metrics.debugCenterlineEnabled ? 'C' : '-'}${metrics.debugPitLaneEnabled ? 'L' : '-'}`
     : 'OFF';
   ctx.fillText(`Path builds ${metrics.pathCacheBuildCount || 0} | Static layer ${metrics.staticTrackLayerCacheEnabled ? 'ON' : 'OFF'}:${metrics.staticTrackLayerBuildCount || 0} | Offscreen create ${metrics.offscreenCanvasRecreatedCount || 0} | Debug ${debugFlags}`, 24, 112);
   ctx.fillText(`Telemetry ${Number(metrics.telemetryHz || 0).toFixed(1)}Hz | Render ${Number(metrics.renderHz || metrics.fps || 0).toFixed(1)}Hz | age ${formatMs(metrics.lastPacketAgeMs)} | pkt ${formatMs(metrics.packetDeltaMs)}`, 24, 128);
   ctx.fillText(`Backend sample ${formatMs(metrics.backendSampleDeltaMs)} | read ${formatMs(metrics.backendReadDeltaMs)} | latency ${formatMs(metrics.responseLatencyMs)} | interpBuf ${metrics.interpolationBufferSize || 0}`, 24, 144);
   ctx.fillText(`maxFrame ${formatMs(metrics.maxFrameDeltaMs)} | dropped ${metrics.droppedFrames || 0} | outOfOrder ${metrics.outOfOrderPackets || 0} | dup ${metrics.duplicatePackets || 0}`, 24, 160);
 
+  const meta = trackData?.metadata || {};
+  const filterMode = meta.meshFilterMode || 'default';
+  const geoVer = meta.geometryVersion || trackData?.version || 1;
+  const edgeBefore = meta.boundaryEdgeCountBefore ?? '-';
+  const edgeAfter = meta.boundaryEdgeCountAfter ?? '-';
+  const strict = meta.meshFilterMode === 'strict_main_track' ? 'YES' : 'NO';
+  ctx.fillStyle = '#67e8f9';
+  
+  let modeLabel = 'Ribbon';
+  if (metrics.geometryMode === 'PHYSICS') modeLabel = 'Phys Display';
+  else if (metrics.geometryMode === 'RAW_PHYSICS') modeLabel = 'Raw Phys';
+  else if (metrics.geometryMode === 'OVERLAY') modeLabel = 'Overlay';
+  
+  ctx.fillText(`Filter ${filterMode} (Strict:${strict}) | Geo v${geoVer} | Mode ${modeLabel}`, 24, 176);
+  ctx.fillText(`Edges ${edgeBefore} -> ${edgeAfter}`, 24, 188);
+
   if (debugEnabled && frame) {
     ctx.fillStyle = '#cbd5e1';
     const lateral = Number.isFinite(frame.L) ? `${Number(frame.L).toFixed(2)}m` : 'pending';
     const drift = Number.isFinite(frame.alignment_drift) ? `${Number(frame.alignment_drift).toFixed(3)}m` : 'pending';
-    ctx.fillText(`s ${Number(frame.s || 0).toFixed(2)}m   L ${lateral}`, 24, 182);
-    ctx.fillText(`drift ${drift}`, 24, 198);
-    ctx.fillText(`segment ${frame.projectionDebug?.nearestSegmentIndex ?? '-'}`, 24, 214);
-    ctx.fillText(`rendered ${metrics.renderedPointCount || 0} pts | camera easing ${metrics.cameraEasingEnabled ? 'ON' : 'OFF'}`, 24, 230);
+    ctx.fillText(`s ${Number(frame.s || 0).toFixed(2)}m   L ${lateral}`, 24, 208);
+    ctx.fillText(`drift ${drift}`, 24, 224);
+    ctx.fillText(`segment ${frame.projectionDebug?.nearestSegmentIndex ?? '-'}`, 24, 240);
+    ctx.fillText(`rendered ${metrics.renderedPointCount || 0} pts | camera easing ${metrics.cameraEasingEnabled ? 'ON' : 'OFF'}`, 24, 256);
   }
   ctx.restore();
 }

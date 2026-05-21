@@ -1,0 +1,2466 @@
+{
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "source": "debug_local_pit_exit_analysis",
+  "runtimeChanged": false,
+  "readyForRuntimeIntegration": false,
+  "canonicalMapSpaceChanged": false,
+  "pitManualEnd": {
+    "x": -432.446484,
+    "y": -75.929951
+  },
+  "radiusMeters": 80.0,
+  "nearestMainPoint": {
+    "index": 1479,
+    "t": 0.14203331050592558,
+    "point": {
+      "x": -415.98439267121665,
+      "y": -78.8009452350651
+    },
+    "distance": 16.710567279867576
+  },
+  "nearestPitExitDistance": 16.710567279867576,
+  "directionCompatibleMergePoint": {
+    "index": 2697,
+    "point": {
+      "x": -482.343057,
+      "y": -70.924888
+    },
+    "distance": 50.14697052443245,
+    "directionDiffDeg": 19.510121746482028
+  },
+  "spatialRuns": [
+    {
+      "startIndex": 1428,
+      "endIndex": 1530,
+      "pointCount": 103,
+      "minDistanceToPitExit": 16.711925591386517,
+      "maxDistanceToPitExit": 79.27577943145118,
+      "maxAbsCurvature": 0.040304560879174924,
+      "avgAbsCurvature": 0.006048422761803492,
+      "headingChangeDeg": 51.319582647957006,
+      "widthMin": 10.99039,
+      "widthAvg": 11.706487126213592,
+      "widthMax": 14.557422,
+      "curvatureSignChanges": 0
+    },
+    {
+      "startIndex": 2652,
+      "endIndex": 2742,
+      "pointCount": 91,
+      "minDistanceToPitExit": 50.14697052443245,
+      "maxDistanceToPitExit": 79.91586155547456,
+      "maxAbsCurvature": 0.012468522707877055,
+      "avgAbsCurvature": 0.002517492988586515,
+      "headingChangeDeg": 19.465400200538618,
+      "widthMin": 16.431234,
+      "widthAvg": 18.162903714285715,
+      "widthMax": 19.315926,
+      "curvatureSignChanges": 0
+    }
+  ],
+  "suspectedFalseChicaneStartIndex": 1435,
+  "suspectedFalseChicaneEndIndex": 1491,
+  "suspectedFalseChicaneIndices": [
+    1435,
+    1436,
+    1437,
+    1438,
+    1439,
+    1440,
+    1441,
+    1442,
+    1443,
+    1444,
+    1445,
+    1446,
+    1447,
+    1448,
+    1449,
+    1450,
+    1451,
+    1452,
+    1453,
+    1454,
+    1455,
+    1456,
+    1457,
+    1458,
+    1459,
+    1460,
+    1461,
+    1462,
+    1463,
+    1464,
+    1465,
+    1466,
+    1467,
+    1468,
+    1469,
+    1470,
+    1471,
+    1472,
+    1473,
+    1474,
+    1475,
+    1476,
+    1477,
+    1478,
+    1479,
+    1480,
+    1481,
+    1482,
+    1483,
+    1484,
+    1485,
+    1486,
+    1487,
+    1488,
+    1489,
+    1490,
+    1491
+  ],
+  "maxCurvatureSpike": 0.022970789860875883,
+  "widthVariationInZone": 8.325536000000001,
+  "headingChangeInZone": 70.78498284849562,
+  "localMainTrackSamples": [
+    {
+      "index": 1428,
+      "point": {
+        "x": -398.280917,
+        "y": -4.415078
+      },
+      "distanceToPitExit": 79.25694309420228,
+      "width": 12.453881,
+      "curvature": 0.01048171358923504,
+      "headingDeg": -118.05989451483343,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1429,
+      "point": {
+        "x": -398.976048,
+        "y": -5.744196
+      },
+      "distanceToPitExit": 77.75802396505534,
+      "width": 12.305118,
+      "curvature": 0.009943070946794804,
+      "headingDeg": -117.18256294018066,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1430,
+      "point": {
+        "x": -399.651019,
+        "y": -7.083005
+      },
+      "distanceToPitExit": 76.2590617441176,
+      "width": 12.162957,
+      "curvature": 0.018187290952236736,
+      "headingDeg": -115.97500657597918,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1431,
+      "point": {
+        "x": -400.288533,
+        "y": -8.438171
+      },
+      "distanceToPitExit": 74.76144848842084,
+      "width": 12.023249,
+      "curvature": 0.027069247645697337,
+      "headingDeg": -114.03320488739116,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1432,
+      "point": {
+        "x": -400.870233,
+        "y": -9.817139
+      },
+      "distanceToPitExit": 73.26638750315418,
+      "width": 11.891572,
+      "curvature": 0.026631296631452334,
+      "headingDeg": -111.72912788794396,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1433,
+      "point": {
+        "x": -401.396902,
+        "y": -11.219263
+      },
+      "distanceToPitExit": 71.7742968186249,
+      "width": 11.775092,
+      "curvature": 0.0155219884848212,
+      "headingDeg": -109.92054007175298,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1434,
+      "point": {
+        "x": -401.891363,
+        "y": -12.634823
+      },
+      "distanceToPitExit": 70.28434141301335,
+      "width": 11.670642,
+      "curvature": 0.005291377028175255,
+      "headingDeg": -109.02712104689037,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1435,
+      "point": {
+        "x": -402.374799,
+        "y": -14.054921
+      },
+      "distanceToPitExit": 68.79553456613391,
+      "width": 11.572371,
+      "curvature": 4.77941771012945e-06,
+      "headingDeg": -108.79962129507875,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1436,
+      "point": {
+        "x": -402.858225,
+        "y": -15.475023
+      },
+      "distanceToPitExit": 67.30723133613702,
+      "width": 11.475159,
+      "curvature": 0.0006127031100818729,
+      "headingDeg": -108.7730855950346,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1437,
+      "point": {
+        "x": -403.340328,
+        "y": -16.895517
+      },
+      "distanceToPitExit": 65.81969853164547,
+      "width": 11.379141,
+      "curvature": 0.006626036245030166,
+      "headingDeg": -108.46210613300516,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1438,
+      "point": {
+        "x": -403.808128,
+        "y": -18.320236
+      },
+      "distanceToPitExit": 64.3353300820316,
+      "width": 11.284557,
+      "curvature": 0.015399213568425569,
+      "headingDeg": -107.51626413675524,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1439,
+      "point": {
+        "x": -404.242628,
+        "y": -19.754417
+      },
+      "distanceToPitExit": 62.85815868647355,
+      "width": 11.204171,
+      "curvature": 0.022970789860875883,
+      "headingDeg": -105.86871045439375,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1440,
+      "point": {
+        "x": -404.627465,
+        "y": -21.202514
+      },
+      "distanceToPitExit": 61.392101924525534,
+      "width": 11.150648,
+      "curvature": 0.019677275735747606,
+      "headingDeg": -104.03747676213204,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1441,
+      "point": {
+        "x": -404.969614,
+        "y": -22.662095
+      },
+      "distanceToPitExit": 59.936990813967604,
+      "width": 11.136353,
+      "curvature": 0.010885391069546502,
+      "headingDeg": -102.7250596195966,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1442,
+      "point": {
+        "x": -405.288079,
+        "y": -24.127923
+      },
+      "distanceToPitExit": 58.4895637447982,
+      "width": 11.148237,
+      "curvature": 0.0027361168473716046,
+      "headingDeg": -102.13997419787755,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1443,
+      "point": {
+        "x": -405.600547,
+        "y": -25.595149
+      },
+      "distanceToPitExit": 57.04644270931512,
+      "width": 11.173277,
+      "curvature": -5.8351880699048e-06,
+      "headingDeg": -102.02264713479299,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1444,
+      "point": {
+        "x": -405.913028,
+        "y": -27.062373
+      },
+      "distanceToPitExit": 55.60633477302762,
+      "width": 11.198765,
+      "curvature": -2.792846748483202e-06,
+      "headingDeg": -102.02301792928046,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1445,
+      "point": {
+        "x": -406.225515,
+        "y": -28.529595
+      },
+      "distanceToPitExit": 54.16948369908743,
+      "width": 11.224964,
+      "curvature": 5.927751201726067e-06,
+      "headingDeg": -102.02288320507242,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1446,
+      "point": {
+        "x": -406.537989,
+        "y": -29.99682
+      },
+      "distanceToPitExit": 52.73616061705845,
+      "width": 11.252273,
+      "curvature": 1.229011729830861e-05,
+      "headingDeg": -102.02210028208657,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1447,
+      "point": {
+        "x": -406.850436,
+        "y": -31.464051
+      },
+      "distanceToPitExit": 51.30666561011643,
+      "width": 11.280966,
+      "curvature": 1.4028611052852118e-05,
+      "headingDeg": -102.02096922037013,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1448,
+      "point": {
+        "x": -407.162852,
+        "y": -32.931288
+      },
+      "distanceToPitExit": 49.881329842928146,
+      "width": 11.311034,
+      "curvature": 9.589826432601914e-06,
+      "headingDeg": -102.01995420485767,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1449,
+      "point": {
+        "x": -407.475247,
+        "y": -34.39853
+      },
+      "distanceToPitExit": 48.46051596495242,
+      "width": 11.342158,
+      "curvature": -1.3964142326882111e-06,
+      "headingDeg": -102.01960208854035,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1450,
+      "point": {
+        "x": -407.787645,
+        "y": -35.865771
+      },
+      "distanceToPitExit": 47.04462625954553,
+      "width": 11.373838,
+      "curvature": -1.0024455046448338e-05,
+      "headingDeg": -102.02009290655805,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1451,
+      "point": {
+        "x": -408.100065,
+        "y": -37.333007
+      },
+      "distanceToPitExit": 45.634112287440175,
+      "width": 11.405712,
+      "curvature": -1.4897854811245281e-05,
+      "headingDeg": -102.02116395672695,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1452,
+      "point": {
+        "x": -408.412518,
+        "y": -38.800237
+      },
+      "distanceToPitExit": 44.229483191768736,
+      "width": 11.437729,
+      "curvature": -7.758788154203247e-06,
+      "headingDeg": -102.02213763826761,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1453,
+      "point": {
+        "x": -408.724988,
+        "y": -40.267463
+      },
+      "distanceToPitExit": 42.83132525183129,
+      "width": 11.470194,
+      "curvature": 4.3462081889736784e-07,
+      "headingDeg": -102.02245239851052,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1454,
+      "point": {
+        "x": -409.037457,
+        "y": -41.734689
+      },
+      "distanceToPitExit": 41.44030029253374,
+      "width": 11.503411,
+      "curvature": 6.796993153874372e-06,
+      "headingDeg": -102.02214161596247,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1455,
+      "point": {
+        "x": -409.349911,
+        "y": -43.201918
+      },
+      "distanceToPitExit": 40.057157018358375,
+      "width": 11.53757,
+      "curvature": 1.0459079091019715e-05,
+      "headingDeg": -102.02140002680676,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1456,
+      "point": {
+        "x": -409.662342,
+        "y": -44.669152
+      },
+      "distanceToPitExit": 38.682743966716785,
+      "width": 11.572687,
+      "curvature": 1.2724742544881594e-05,
+      "headingDeg": -102.02040368941441,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1457,
+      "point": {
+        "x": -409.974745,
+        "y": -46.136392
+      },
+      "distanceToPitExit": 37.31802797001206,
+      "width": 11.608737,
+      "curvature": 1.4555779629564492e-05,
+      "headingDeg": -102.01923129396869,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1458,
+      "point": {
+        "x": -410.287116,
+        "y": -47.603639
+      },
+      "distanceToPitExit": 35.96411463779926,
+      "width": 11.64567,
+      "curvature": 0.0002915882957202866,
+      "headingDeg": -102.00607463005784,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1459,
+      "point": {
+        "x": -410.598844,
+        "y": -49.071017
+      },
+      "distanceToPitExit": 34.62256069654521,
+      "width": 11.682153,
+      "curvature": 0.0016817775853540378,
+      "headingDeg": -101.9212698272604,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1460,
+      "point": {
+        "x": -410.906863,
+        "y": -50.539148
+      },
+      "distanceToPitExit": 33.296368417718625,
+      "width": 11.711772,
+      "curvature": 0.003595502397534621,
+      "headingDeg": -101.69448440426861,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1461,
+      "point": {
+        "x": -411.20695,
+        "y": -52.008874
+      },
+      "distanceToPitExit": 31.989619087714768,
+      "width": 11.725735,
+      "curvature": 0.004955945956544809,
+      "headingDeg": -101.32699674530579,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1462,
+      "point": {
+        "x": -411.496102,
+        "y": -53.480787
+      },
+      "distanceToPitExit": 30.706407641481277,
+      "width": 11.717791,
+      "curvature": 0.004091643924338593,
+      "headingDeg": -100.93818814973433,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1463,
+      "point": {
+        "x": -411.776222,
+        "y": -54.954487
+      },
+      "distanceToPitExit": 29.44876603805224,
+      "width": 11.691881,
+      "curvature": 0.0023021241206784655,
+      "headingDeg": -100.66342266159157,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1464,
+      "point": {
+        "x": -412.051258,
+        "y": -56.429183
+      },
+      "distanceToPitExit": 28.21781699885551,
+      "width": 11.657306,
+      "curvature": 0.0014869338695513636,
+      "headingDeg": -100.50058910813415,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1465,
+      "point": {
+        "x": -412.323003,
+        "y": -57.904484
+      },
+      "distanceToPitExit": 27.016142362029576,
+      "width": 11.625254,
+      "curvature": 0.0017745872801504666,
+      "headingDeg": -100.36042466455231,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1466,
+      "point": {
+        "x": -412.590818,
+        "y": -59.380494
+      },
+      "distanceToPitExit": 25.848249443596846,
+      "width": 11.601728,
+      "curvature": 0.0023407494739995194,
+      "headingDeg": -100.1835674523521,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1467,
+      "point": {
+        "x": -412.853449,
+        "y": -60.857438
+      },
+      "distanceToPitExit": 24.719782940923924,
+      "width": 11.589161,
+      "curvature": 0.0015151968237396255,
+      "headingDeg": -100.01785764682565,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1468,
+      "point": {
+        "x": -413.112724,
+        "y": -62.334985
+      },
+      "distanceToPitExit": 23.63508782041555,
+      "width": 11.583662,
+      "curvature": 0.000696102492524832,
+      "headingDeg": -99.9228265857516,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1469,
+      "point": {
+        "x": -413.370457,
+        "y": -63.812808
+      },
+      "distanceToPitExit": 22.59911415492161,
+      "width": 11.581432,
+      "curvature": -3.6141447530341714e-07,
+      "headingDeg": -99.8929268660369,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1470,
+      "point": {
+        "x": -413.628191,
+        "y": -65.290632
+      },
+      "distanceToPitExit": 21.617660840562962,
+      "width": 11.579329,
+      "curvature": 4.377598816205178e-07,
+      "headingDeg": -99.89292358504015,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1471,
+      "point": {
+        "x": -413.885924,
+        "y": -66.768456
+      },
+      "distanceToPitExit": 20.698487339625217,
+      "width": 11.57743,
+      "curvature": -7.634557876969842e-08,
+      "headingDeg": -99.892908053054,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1472,
+      "point": {
+        "x": -414.143657,
+        "y": -68.246279
+      },
+      "distanceToPitExit": 19.850246638153198,
+      "width": 11.575818,
+      "curvature": 7.634557876969842e-08,
+      "headingDeg": -99.892908053054,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1473,
+      "point": {
+        "x": -414.40139,
+        "y": -69.724103
+      },
+      "distanceToPitExit": 19.082399400178698,
+      "width": 11.574531,
+      "curvature": -2.4878973454858538e-14,
+      "headingDeg": -99.89290477206326,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1474,
+      "point": {
+        "x": -414.659123,
+        "y": -71.201927
+      },
+      "distanceToPitExit": 18.405010792957885,
+      "width": 11.573543,
+      "curvature": 3.6141489679467274e-07,
+      "headingDeg": -99.89288924006895,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1475,
+      "point": {
+        "x": -414.916855,
+        "y": -72.67975
+      },
+      "distanceToPitExit": 17.828395873382497,
+      "width": 11.572802,
+      "curvature": -3.6141489679467274e-07,
+      "headingDeg": -99.89288924006895,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1476,
+      "point": {
+        "x": -415.174588,
+        "y": -74.157574
+      },
+      "distanceToPitExit": 17.362595188074387,
+      "width": 11.57225,
+      "curvature": 2.4878973454858538e-14,
+      "headingDeg": -99.89290477206326,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1477,
+      "point": {
+        "x": -415.432321,
+        "y": -75.635398
+      },
+      "distanceToPitExit": 17.01671249273425,
+      "width": 11.571859,
+      "curvature": 0.0,
+      "headingDeg": -99.8929047720622,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1478,
+      "point": {
+        "x": -415.690054,
+        "y": -77.113222
+      },
+      "distanceToPitExit": 16.798156940698636,
+      "width": 11.571627,
+      "curvature": 3.614148470202248e-07,
+      "headingDeg": -99.89288924006895,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1479,
+      "point": {
+        "x": -415.947786,
+        "y": -78.591045
+      },
+      "distanceToPitExit": 16.711925591386517,
+      "width": 11.571554,
+      "curvature": -3.6141484593494925e-07,
+      "headingDeg": -99.8928892400689,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1480,
+      "point": {
+        "x": -416.205519,
+        "y": -80.068869
+      },
+      "distanceToPitExit": 16.760059258306622,
+      "width": 11.571634,
+      "curvature": 4.3775998172743127e-07,
+      "headingDeg": -99.89288595908415,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1481,
+      "point": {
+        "x": -416.463251,
+        "y": -81.546693
+      },
+      "distanceToPitExit": 16.94141457573282,
+      "width": 11.571837,
+      "curvature": 2.4878982002872395e-14,
+      "headingDeg": -99.89286714610299,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1482,
+      "point": {
+        "x": -416.720983,
+        "y": -83.024517
+      },
+      "distanceToPitExit": 17.25178971670352,
+      "width": 11.572129,
+      "curvature": -7.634530877127921e-08,
+      "headingDeg": -99.89287042708173,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1483,
+      "point": {
+        "x": -416.978715,
+        "y": -84.50234
+      },
+      "distanceToPitExit": 17.68439229955842,
+      "width": 11.572479,
+      "curvature": 7.634530877127921e-08,
+      "headingDeg": -99.89287042708173,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1484,
+      "point": {
+        "x": -417.236447,
+        "y": -85.980164
+      },
+      "distanceToPitExit": 18.230524043118947,
+      "width": 11.57286,
+      "curvature": 0.0,
+      "headingDeg": -99.89286714610192,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1485,
+      "point": {
+        "x": -417.494179,
+        "y": -87.457988
+      },
+      "distanceToPitExit": 18.880335322403432,
+      "width": 11.573261,
+      "curvature": 0.0002963694089236772,
+      "headingDeg": -99.88013055329714,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1486,
+      "point": {
+        "x": -417.751253,
+        "y": -88.935921
+      },
+      "distanceToPitExit": 19.624094113723064,
+      "width": 11.572347,
+      "curvature": 0.0016448009207825588,
+      "headingDeg": -99.79670922344916,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1487,
+      "point": {
+        "x": -418.004675,
+        "y": -90.414457
+      },
+      "distanceToPitExit": 20.454015773351603,
+      "width": 11.564056,
+      "curvature": 0.0034306669225118375,
+      "headingDeg": -99.57859569788985,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1488,
+      "point": {
+        "x": -418.250478,
+        "y": -91.894237
+      },
+      "distanceToPitExit": 21.363169564505927,
+      "width": 11.540356,
+      "curvature": 0.004625883830834656,
+      "headingDeg": -99.23237383215321,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1489,
+      "point": {
+        "x": -418.486007,
+        "y": -93.375688
+      },
+      "distanceToPitExit": 22.343872930642497,
+      "width": 11.495882,
+      "curvature": 0.003767176246994895,
+      "headingDeg": -98.87169117727325,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1490,
+      "point": {
+        "x": -418.713166,
+        "y": -94.858482
+      },
+      "distanceToPitExit": 23.38575012923649,
+      "width": 11.434972,
+      "curvature": 0.0025774579927742578,
+      "headingDeg": -98.59903565527556,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1491,
+      "point": {
+        "x": -418.934594,
+        "y": -96.342169
+      },
+      "distanceToPitExit": 24.47917104502568,
+      "width": 11.368311,
+      "curvature": 0.0021810171965243336,
+      "headingDeg": -98.39454159260174,
+      "suspectedFalseChicane": true
+    },
+    {
+      "index": 1492,
+      "point": {
+        "x": -419.151165,
+        "y": -97.826562
+      },
+      "distanceToPitExit": 25.616929570053507,
+      "width": 11.307504,
+      "curvature": 0.0027314997731888867,
+      "headingDeg": -98.18342625865968,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1493,
+      "point": {
+        "x": -419.361651,
+        "y": -99.311824
+      },
+      "distanceToPitExit": 26.79411949712134,
+      "width": 11.258958,
+      "curvature": 0.002638923543007471,
+      "headingDeg": -97.95263235665932,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1494,
+      "point": {
+        "x": -419.566257,
+        "y": -100.797917
+      },
+      "distanceToPitExit": 28.00564194137825,
+      "width": 11.222279,
+      "curvature": 0.001549092825083814,
+      "headingDeg": -97.77265223769561,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1495,
+      "point": {
+        "x": -419.767411,
+        "y": -102.284496
+      },
+      "distanceToPitExit": 29.245870380215298,
+      "width": 11.192584,
+      "curvature": 0.0005171441877065094,
+      "headingDeg": -97.6838553594131,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1496,
+      "point": {
+        "x": -419.967412,
+        "y": -103.771233
+      },
+      "distanceToPitExit": 30.510067541464192,
+      "width": 11.165255,
+      "curvature": 2.513639555042723e-05,
+      "headingDeg": -97.66055059779647,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1497,
+      "point": {
+        "x": -420.167357,
+        "y": -105.257978
+      },
+      "distanceToPitExit": 31.794812903913403,
+      "width": 11.138175,
+      "curvature": 3.053964805914877e-05,
+      "headingDeg": -97.65815788899941,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1498,
+      "point": {
+        "x": -420.367234,
+        "y": -106.744733
+      },
+      "distanceToPitExit": 33.09772001618879,
+      "width": 11.111584,
+      "curvature": 3.180164728447343e-05,
+      "headingDeg": -97.6554787374942,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1499,
+      "point": {
+        "x": -420.56704,
+        "y": -108.231497
+      },
+      "distanceToPitExit": 34.416726511091255,
+      "width": 11.085824,
+      "curvature": 2.6398416710121847e-05,
+      "headingDeg": -97.65297755763847,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1500,
+      "point": {
+        "x": -420.766787,
+        "y": -109.718268
+      },
+      "distanceToPitExit": 35.75004458324908,
+      "width": 11.061232,
+      "curvature": 1.8911426011396236e-05,
+      "headingDeg": -97.65103034176236,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1501,
+      "point": {
+        "x": -420.966492,
+        "y": -111.205046
+      },
+      "distanceToPitExit": 37.096125721954955,
+      "width": 11.038061,
+      "curvature": 7.986584308512537e-06,
+      "headingDeg": -97.64987438555829,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1502,
+      "point": {
+        "x": -421.166179,
+        "y": -112.691825
+      },
+      "distanceToPitExit": 38.45361700653009,
+      "width": 11.016363,
+      "curvature": 6.107916559919996e-05,
+      "headingDeg": -97.64690624521032,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1503,
+      "point": {
+        "x": -421.36573,
+        "y": -114.178624
+      },
+      "distanceToPitExit": 39.82140247994093,
+      "width": 10.996454,
+      "curvature": 0.0026674914227463233,
+      "headingDeg": -97.52965148931965,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1504,
+      "point": {
+        "x": -421.559318,
+        "y": -115.666117
+      },
+      "distanceToPitExit": 41.20064649846057,
+      "width": 10.99039,
+      "curvature": 0.005306144151547776,
+      "headingDeg": -97.18701150212605,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1505,
+      "point": {
+        "x": -421.741047,
+        "y": -117.15499
+      },
+      "distanceToPitExit": 42.592372813832405,
+      "width": 11.010932,
+      "curvature": 0.007800453140849206,
+      "headingDeg": -96.62380863775337,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1506,
+      "point": {
+        "x": -421.905344,
+        "y": -118.645887
+      },
+      "distanceToPitExit": 43.99735015720487,
+      "width": 11.070696,
+      "curvature": 0.005169631444465146,
+      "headingDeg": -96.06647196248501,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1507,
+      "point": {
+        "x": -422.058087,
+        "y": -120.138128
+      },
+      "distanceToPitExit": 45.41235190884675,
+      "width": 11.15924,
+      "curvature": 0.0026184488786514036,
+      "headingDeg": -95.73180598193171,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1508,
+      "point": {
+        "x": -422.204976,
+        "y": -121.631044
+      },
+      "distanceToPitExit": 46.834585377781586,
+      "width": 11.265379,
+      "curvature": 0.0017696224325887352,
+      "headingDeg": -95.54323566276568,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1509,
+      "point": {
+        "x": -422.347897,
+        "y": -123.124299
+      },
+      "distanceToPitExit": 48.262697215776,
+      "width": 11.37104,
+      "curvature": 0.005000383444416787,
+      "headingDeg": -95.25231757224142,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1510,
+      "point": {
+        "x": -422.479602,
+        "y": -124.618451
+      },
+      "distanceToPitExit": 49.69817671758113,
+      "width": 11.463035,
+      "curvature": 0.008006375735637833,
+      "headingDeg": -94.69340915155992,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1511,
+      "point": {
+        "x": -422.59335,
+        "y": -126.114013
+      },
+      "distanceToPitExit": 51.14219714132157,
+      "width": 11.528801,
+      "curvature": 0.007810121062531598,
+      "headingDeg": -94.01376588770552,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1512,
+      "point": {
+        "x": -422.689576,
+        "y": -127.610887
+      },
+      "distanceToPitExit": 52.59388176923776,
+      "width": 11.569806,
+      "curvature": 0.00460960961301377,
+      "headingDeg": -93.48008147294003,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1513,
+      "point": {
+        "x": -422.775457,
+        "y": -129.10852
+      },
+      "distanceToPitExit": 54.05079984720383,
+      "width": 11.601483,
+      "curvature": 0.0018357274538274343,
+      "headingDeg": -93.20311196059914,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1514,
+      "point": {
+        "x": -422.857215,
+        "y": -130.606411
+      },
+      "distanceToPitExit": 55.51098412103646,
+      "width": 11.64119,
+      "curvature": 0.0028649575464503732,
+      "headingDeg": -93.00110975142667,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1515,
+      "point": {
+        "x": -422.932529,
+        "y": -132.104522
+      },
+      "distanceToPitExit": 56.97453612602797,
+      "width": 11.707021,
+      "curvature": 0.00890443725501411,
+      "headingDeg": -92.49546561913115,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1516,
+      "point": {
+        "x": -422.987813,
+        "y": -133.603039
+      },
+      "distanceToPitExit": 58.44357566526866,
+      "width": 11.806164,
+      "curvature": 0.015179941950961845,
+      "headingDeg": -91.4608861433164,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1517,
+      "point": {
+        "x": -423.008974,
+        "y": -135.102036
+      },
+      "distanceToPitExit": 59.91996527241421,
+      "width": 11.937144,
+      "curvature": 0.01700497748587982,
+      "headingDeg": -90.07836954590458,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1518,
+      "point": {
+        "x": -422.991914,
+        "y": -136.601268
+      },
+      "distanceToPitExit": 61.4035634177642,
+      "width": 12.081616,
+      "curvature": 0.011774095242899869,
+      "headingDeg": -88.84214639046105,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1519,
+      "point": {
+        "x": -422.948372,
+        "y": -138.100486
+      },
+      "distanceToPitExit": 62.891887821489085,
+      "width": 12.227777,
+      "curvature": 0.006423417169287364,
+      "headingDeg": -88.06037519545706,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1520,
+      "point": {
+        "x": -422.890378,
+        "y": -139.599457
+      },
+      "distanceToPitExit": 64.38264638990286,
+      "width": 12.379348,
+      "curvature": 0.005600654427724472,
+      "headingDeg": -87.54371784440764,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1521,
+      "point": {
+        "x": -422.819801,
+        "y": -141.097724
+      },
+      "distanceToPitExit": 65.87496993063465,
+      "width": 12.561429,
+      "curvature": 0.0120196692680781,
+      "headingDeg": -86.78676762442564,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1522,
+      "point": {
+        "x": -422.722272,
+        "y": -142.593845
+      },
+      "distanceToPitExit": 67.36939262205188,
+      "width": 12.785372,
+      "curvature": 0.018790803684817947,
+      "headingDeg": -85.46352464346616,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1523,
+      "point": {
+        "x": -422.582704,
+        "y": -144.086004
+      },
+      "distanceToPitExit": 68.86611442812212,
+      "width": 13.038914,
+      "curvature": 0.021120368111639216,
+      "headingDeg": -83.7495935473969,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1524,
+      "point": {
+        "x": -422.39597,
+        "y": -145.573092
+      },
+      "distanceToPitExit": 70.364621224093,
+      "width": 13.285128,
+      "curvature": 0.016834400442312367,
+      "headingDeg": -82.11972049721858,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1525,
+      "point": {
+        "x": -422.171683,
+        "y": -147.05558
+      },
+      "distanceToPitExit": 71.8639453149856,
+      "width": 13.510748,
+      "curvature": 0.01535579302047421,
+      "headingDeg": -80.73737426716629,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1526,
+      "point": {
+        "x": -421.913346,
+        "y": -148.532404
+      },
+      "distanceToPitExit": 73.36254615090903,
+      "width": 13.73961,
+      "curvature": 0.02356736796558136,
+      "headingDeg": -79.06705148382436,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1527,
+      "point": {
+        "x": -421.603494,
+        "y": -149.997033
+      },
+      "distanceToPitExit": 74.85654993475735,
+      "width": 13.977279,
+      "curvature": 0.034284072222275336,
+      "headingDeg": -76.58586125894527,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1528,
+      "point": {
+        "x": -421.219308,
+        "y": -151.442485
+      },
+      "distanceToPitExit": 76.34259801733324,
+      "width": 14.213297,
+      "curvature": 0.040304560879174924,
+      "headingDeg": -73.38838013571997,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1529,
+      "point": {
+        "x": -420.748677,
+        "y": -152.862337
+      },
+      "distanceToPitExit": 77.81664798911763,
+      "width": 14.402765,
+      "curvature": 0.03740550687203848,
+      "headingDeg": -70.05816300130218,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 1530,
+      "point": {
+        "x": -420.199237,
+        "y": -154.253984
+      },
+      "distanceToPitExit": 79.27577943145118,
+      "width": 14.557422,
+      "curvature": 0.03989368161171743,
+      "headingDeg": -66.74679170173786,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2652,
+      "point": {
+        "x": -481.700674,
+        "y": -138.319666
+      },
+      "distanceToPitExit": 79.48868957491578,
+      "width": 17.939077,
+      "curvature": -0.0028977841659476506,
+      "headingDeg": 95.36075629426857,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2653,
+      "point": {
+        "x": -481.837579,
+        "y": -136.8258
+      },
+      "distanceToPitExit": 78.40781013859414,
+      "width": 18.058564,
+      "curvature": -9.78433033604262e-05,
+      "headingDeg": 95.23202683623724,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2654,
+      "point": {
+        "x": -481.974265,
+        "y": -135.331911
+      },
+      "distanceToPitExit": 77.34076507654653,
+      "width": 18.178106,
+      "curvature": -8.97184649800142e-06,
+      "headingDeg": 95.227436406063,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2655,
+      "point": {
+        "x": -482.110931,
+        "y": -133.838019
+      },
+      "distanceToPitExit": 76.2882798030499,
+      "width": 18.297742,
+      "curvature": -0.0004486585773031789,
+      "headingDeg": 95.2077695521168,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2656,
+      "point": {
+        "x": -482.246591,
+        "y": -132.344041
+      },
+      "distanceToPitExit": 75.25025054934736,
+      "width": 18.414299,
+      "curvature": -0.0019954016874044887,
+      "headingDeg": 95.10273725935795,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2657,
+      "point": {
+        "x": -482.377775,
+        "y": -130.849703
+      },
+      "distanceToPitExit": 74.22474641700154,
+      "width": 18.52056,
+      "curvature": -0.004212401250680564,
+      "headingDeg": 94.8359665812373,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2658,
+      "point": {
+        "x": -482.499509,
+        "y": -129.354627
+      },
+      "distanceToPitExit": 73.20861504874682,
+      "width": 18.607584,
+      "curvature": -0.005479825083911687,
+      "headingDeg": 94.41946141994372,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2659,
+      "point": {
+        "x": -482.608949,
+        "y": -127.858611
+      },
+      "distanceToPitExit": 72.2001289768365,
+      "width": 18.672521,
+      "curvature": -0.0044869681427802035,
+      "headingDeg": 93.9911576713526,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2660,
+      "point": {
+        "x": -482.708321,
+        "y": -126.361839
+      },
+      "distanceToPitExit": 71.20131730424035,
+      "width": 18.720395,
+      "curvature": -0.0021558906658369482,
+      "headingDeg": 93.70569288211489,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2661,
+      "point": {
+        "x": -482.802855,
+        "y": -124.864704
+      },
+      "distanceToPitExit": 70.21662304227291,
+      "width": 18.759648,
+      "curvature": -0.00039707857872124376,
+      "headingDeg": 93.595981493249,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2662,
+      "point": {
+        "x": -482.896498,
+        "y": -123.3675
+      },
+      "distanceToPitExit": 69.2497290083333,
+      "width": 18.796075,
+      "curvature": 0.00015896796360795497,
+      "headingDeg": 93.58574870399276,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2663,
+      "point": {
+        "x": -482.990498,
+        "y": -121.870319
+      },
+      "distanceToPitExit": 68.30237743451995,
+      "width": 18.831849,
+      "curvature": 4.448864391693967e-05,
+      "headingDeg": 93.59449236392825,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2664,
+      "point": {
+        "x": -483.084598,
+        "y": -120.373143
+      },
+      "distanceToPitExit": 67.37518760364132,
+      "width": 18.86744,
+      "curvature": -4.6262626439430384e-05,
+      "headingDeg": 93.59441612642213,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2665,
+      "point": {
+        "x": -483.178594,
+        "y": -118.875962
+      },
+      "distanceToPitExit": 66.46884116534768,
+      "width": 18.902867,
+      "curvature": -0.0007633835289982046,
+      "headingDeg": 93.55962130385447,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2666,
+      "point": {
+        "x": -483.270875,
+        "y": -117.378681
+      },
+      "distanceToPitExit": 65.582893647153,
+      "width": 18.934903,
+      "curvature": -0.0025515933992427743,
+      "headingDeg": 93.41716180037625,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2667,
+      "point": {
+        "x": -483.357422,
+        "y": -115.881097
+      },
+      "distanceToPitExit": 64.71489530821447,
+      "width": 18.955504,
+      "curvature": -0.004259547497968863,
+      "headingDeg": 93.12445866892072,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2668,
+      "point": {
+        "x": -483.434397,
+        "y": -114.383016
+      },
+      "distanceToPitExit": 63.862394881415085,
+      "width": 18.957032,
+      "curvature": -0.004619455052122523,
+      "headingDeg": 92.74289190039023,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2669,
+      "point": {
+        "x": -483.50099,
+        "y": -112.884422
+      },
+      "distanceToPitExit": 63.02535608621246,
+      "width": 18.937955,
+      "curvature": -0.0028336277483171843,
+      "headingDeg": 92.42260239448593,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2670,
+      "point": {
+        "x": -483.561214,
+        "y": -111.385517
+      },
+      "distanceToPitExit": 62.207819310382966,
+      "width": 18.906414,
+      "curvature": -0.0011845443031866288,
+      "headingDeg": 92.2499238519592,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2671,
+      "point": {
+        "x": -483.618775,
+        "y": -109.886492
+      },
+      "distanceToPitExit": 61.41376102204916,
+      "width": 18.870781,
+      "curvature": -0.0022522105628696673,
+      "headingDeg": 92.10223387247088,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2672,
+      "point": {
+        "x": -483.671268,
+        "y": -108.387373
+      },
+      "distanceToPitExit": 60.64208718977885,
+      "width": 18.845554,
+      "curvature": -0.005392715095972665,
+      "headingDeg": 91.77372769153361,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2673,
+      "point": {
+        "x": -483.711629,
+        "y": -106.888037
+      },
+      "distanceToPitExit": 59.887546123166736,
+      "width": 18.84484,
+      "curvature": -0.008341603377863325,
+      "headingDeg": 91.1835777940881,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2674,
+      "point": {
+        "x": -483.733228,
+        "y": -105.38838
+      },
+      "distanceToPitExit": 59.144984142948054,
+      "width": 18.881836,
+      "curvature": -0.007195801053000929,
+      "headingDeg": 90.51594811101083,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2675,
+      "point": {
+        "x": -483.738641,
+        "y": -103.888449
+      },
+      "distanceToPitExit": 58.417146285389954,
+      "width": 18.951305,
+      "curvature": -0.004411077481929884,
+      "headingDeg": 90.01720780898594,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2676,
+      "point": {
+        "x": -483.734129,
+        "y": -102.388376
+      },
+      "distanceToPitExit": 57.71023118240517,
+      "width": 19.037457,
+      "curvature": -0.002642794253229782,
+      "headingDeg": 89.71409010553647,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2677,
+      "point": {
+        "x": -483.72367,
+        "y": -100.888315
+      },
+      "distanceToPitExit": 57.02867469646384,
+      "width": 19.120828,
+      "curvature": -0.003693824392360944,
+      "headingDeg": 89.44178302220354,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2678,
+      "point": {
+        "x": -483.7049,
+        "y": -99.388386
+      },
+      "distanceToPitExit": 56.37129928854117,
+      "width": 19.187712,
+      "curvature": -0.0050280580909943555,
+      "headingDeg": 89.06697256767306,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2679,
+      "point": {
+        "x": -483.674818,
+        "y": -97.888654
+      },
+      "distanceToPitExit": 55.736225579579454,
+      "width": 19.232102,
+      "curvature": -0.004520962146089499,
+      "headingDeg": 88.65661748296145,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2680,
+      "point": {
+        "x": -483.634565,
+        "y": -96.389121
+      },
+      "distanceToPitExit": 55.12528706094383,
+      "width": 19.256272,
+      "curvature": -0.0024690265042631742,
+      "headingDeg": 88.35623217060633,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2681,
+      "point": {
+        "x": -483.588757,
+        "y": -94.889703
+      },
+      "distanceToPitExit": 54.54359984001818,
+      "width": 19.269449,
+      "curvature": -0.0007747446462311639,
+      "headingDeg": 88.21683331608352,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2682,
+      "point": {
+        "x": -483.541206,
+        "y": -93.390327
+      },
+      "distanceToPitExit": 53.99569747969424,
+      "width": 19.279245,
+      "curvature": -8.882883913848296e-07,
+      "headingDeg": 88.1835003332223,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2683,
+      "point": {
+        "x": -483.493653,
+        "y": -91.890951
+      },
+      "distanceToPitExit": 53.484268564827175,
+      "width": 19.289136,
+      "curvature": -1.4086132299726657e-08,
+      "headingDeg": 88.18346155317778,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2684,
+      "point": {
+        "x": -483.4461,
+        "y": -90.391576
+      },
+      "distanceToPitExit": 53.01037096444507,
+      "width": 19.299123,
+      "curvature": -4.300581692717258e-07,
+      "headingDeg": 88.18344246582926,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2685,
+      "point": {
+        "x": -483.398546,
+        "y": -88.8922
+      },
+      "distanceToPitExit": 52.575018033186126,
+      "width": 19.309212,
+      "curvature": -0.0007728748745457619,
+      "headingDeg": 88.15020949652896,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2686,
+      "point": {
+        "x": -483.349254,
+        "y": -87.392891
+      },
+      "distanceToPitExit": 52.177495025312375,
+      "width": 19.315926,
+      "curvature": -0.0026433963911400068,
+      "headingDeg": 88.00339800637045,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2687,
+      "point": {
+        "x": -483.294019,
+        "y": -85.89384
+      },
+      "distanceToPitExit": 51.814581920348886,
+      "width": 19.310847,
+      "curvature": -0.004877933906532706,
+      "headingDeg": 87.6801809029806,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2688,
+      "point": {
+        "x": -483.227819,
+        "y": -84.395282
+      },
+      "distanceToPitExit": 51.482092161467044,
+      "width": 19.283928,
+      "curvature": -0.005566143030167458,
+      "headingDeg": 87.23136567597994,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2689,
+      "point": {
+        "x": -483.149109,
+        "y": -82.89732
+      },
+      "distanceToPitExit": 51.17910132732684,
+      "width": 19.232082,
+      "curvature": -0.00405777423275827,
+      "headingDeg": 86.81779478915713,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2690,
+      "point": {
+        "x": -483.061279,
+        "y": -81.399804
+      },
+      "distanceToPitExit": 50.909495820854836,
+      "width": 19.162117,
+      "curvature": -0.001826137383520711,
+      "headingDeg": 86.56494258300181,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2691,
+      "point": {
+        "x": -482.969345,
+        "y": -79.902501
+      },
+      "distanceToPitExit": 50.67879869460027,
+      "width": 19.084085,
+      "curvature": -0.0003648681897754173,
+      "headingDeg": 86.47078501400043,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2692,
+      "point": {
+        "x": -482.876591,
+        "y": -78.405241
+      },
+      "distanceToPitExit": 50.49081849817402,
+      "width": 19.004559,
+      "curvature": -2.7475560405183328e-08,
+      "headingDeg": 86.45510349509559,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2693,
+      "point": {
+        "x": -482.783837,
+        "y": -76.907982
+      },
+      "distanceToPitExit": 50.34685344372149,
+      "width": 18.925165,
+      "curvature": -0.0002909102271634223,
+      "headingDeg": 86.44260034410536,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2694,
+      "point": {
+        "x": -482.69043,
+        "y": -75.41077
+      },
+      "distanceToPitExit": 50.24662833028378,
+      "width": 18.847219,
+      "curvature": -0.002155596290887189,
+      "headingDeg": 86.33746446481541,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2695,
+      "point": {
+        "x": -482.592186,
+        "y": -73.913927
+      },
+      "distanceToPitExit": 50.186211072777574,
+      "width": 18.778121,
+      "curvature": -0.006273426018341677,
+      "headingDeg": 85.97527224847012,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2696,
+      "point": {
+        "x": -482.479877,
+        "y": -72.418282
+      },
+      "distanceToPitExit": 50.15647749052966,
+      "width": 18.726771,
+      "curvature": -0.010942971543937894,
+      "headingDeg": 85.23555084825152,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2697,
+      "point": {
+        "x": -482.343057,
+        "y": -70.924888
+      },
+      "distanceToPitExit": 50.14697052443245,
+      "width": 18.694295,
+      "curvature": -0.012468522707877055,
+      "headingDeg": 84.22966440995555,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2698,
+      "point": {
+        "x": -482.178331,
+        "y": -69.434251
+      },
+      "distanceToPitExit": 50.15426925518316,
+      "width": 18.669665,
+      "curvature": -0.00948673059605033,
+      "headingDeg": 83.28634345814129,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2699,
+      "point": {
+        "x": -481.992382,
+        "y": -67.945862
+      },
+      "distanceToPitExit": 50.18507433277675,
+      "width": 18.63886,
+      "curvature": -0.004525814489940139,
+      "headingDeg": 82.68426274114611,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2700,
+      "point": {
+        "x": -481.796313,
+        "y": -66.458619
+      },
+      "distanceToPitExit": 50.25049006908753,
+      "width": 18.599438,
+      "curvature": -0.0009049480532223208,
+      "headingDeg": 82.45089482174993,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2701,
+      "point": {
+        "x": -481.598223,
+        "y": -64.971627
+      },
+      "distanceToPitExit": 50.358497908626106,
+      "width": 18.553997,
+      "curvature": 0.0010702093616252312,
+      "headingDeg": 82.45799709983525,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2702,
+      "point": {
+        "x": -481.402522,
+        "y": -63.48433
+      },
+      "distanceToPitExit": 50.5132372624551,
+      "width": 18.503911,
+      "curvature": 0.0011599954812823979,
+      "headingDeg": 82.55384023723093,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2703,
+      "point": {
+        "x": -481.209412,
+        "y": -61.996715
+      },
+      "distanceToPitExit": 50.714477346857066,
+      "width": 18.448801,
+      "curvature": -4.058946841906687e-05,
+      "headingDeg": 82.60194698694639,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2704,
+      "point": {
+        "x": -481.016216,
+        "y": -60.509147
+      },
+      "distanceToPitExit": 50.95900374377662,
+      "width": 18.394099,
+      "curvature": -0.0025797508033060298,
+      "headingDeg": 82.48934378667921,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2705,
+      "point": {
+        "x": -480.817269,
+        "y": -59.022368
+      },
+      "distanceToPitExit": 51.24060113248199,
+      "width": 18.347169,
+      "curvature": -0.00426315819190933,
+      "headingDeg": 82.19528286080438,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2706,
+      "point": {
+        "x": -480.608818,
+        "y": -57.536889
+      },
+      "distanceToPitExit": 51.554972078970216,
+      "width": 18.301993,
+      "curvature": -0.004814273584249673,
+      "headingDeg": 81.80519784904517,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2707,
+      "point": {
+        "x": -480.389642,
+        "y": -56.052934
+      },
+      "distanceToPitExit": 51.90031024792869,
+      "width": 18.240656,
+      "curvature": -0.00450435252217811,
+      "headingDeg": 81.40474596886801,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2708,
+      "point": {
+        "x": -480.160442,
+        "y": -54.570479
+      },
+      "distanceToPitExit": 52.27665666571025,
+      "width": 18.149535,
+      "curvature": -0.0036595922049231385,
+      "headingDeg": 81.05391001614367,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2709,
+      "point": {
+        "x": -479.923104,
+        "y": -53.089284
+      },
+      "distanceToPitExit": 52.68515460382831,
+      "width": 18.031633,
+      "curvature": -0.002132592065373363,
+      "headingDeg": 80.8049948087667,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2710,
+      "point": {
+        "x": -479.681024,
+        "y": -51.608827
+      },
+      "distanceToPitExit": 53.128324287850205,
+      "width": 17.900473,
+      "curvature": -0.0014841082890352224,
+      "headingDeg": 80.6495679062754,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2711,
+      "point": {
+        "x": -479.435648,
+        "y": -50.128909
+      },
+      "distanceToPitExit": 53.60667217524943,
+      "width": 17.769435,
+      "curvature": -0.0036595313468013417,
+      "headingDeg": 80.4285304096542,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2712,
+      "point": {
+        "x": -479.182171,
+        "y": -48.650473
+      },
+      "distanceToPitExit": 54.114640896105485,
+      "width": 17.655102,
+      "curvature": -0.00681386120856035,
+      "headingDeg": 79.97847782273678,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2713,
+      "point": {
+        "x": -478.913618,
+        "y": -47.174819
+      },
+      "distanceToPitExit": 54.64478162195709,
+      "width": 17.571658,
+      "curvature": -0.00847260640790668,
+      "headingDeg": 79.32161181204197,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2714,
+      "point": {
+        "x": -478.626332,
+        "y": -45.702684
+      },
+      "distanceToPitExit": 55.19298897135752,
+      "width": 17.526549,
+      "curvature": -0.005768503920557268,
+      "headingDeg": 78.7096647437428,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2715,
+      "point": {
+        "x": -478.326292,
+        "y": -44.232957
+      },
+      "distanceToPitExit": 55.764291538159995,
+      "width": 17.507567,
+      "curvature": -0.003111501498083387,
+      "headingDeg": 78.32808003903251,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2716,
+      "point": {
+        "x": -478.01938,
+        "y": -42.764573
+      },
+      "distanceToPitExit": 56.36338481416549,
+      "width": 17.49831,
+      "curvature": -0.0019597504003088313,
+      "headingDeg": 78.11014988758502,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2717,
+      "point": {
+        "x": -477.708156,
+        "y": -41.297114
+      },
+      "distanceToPitExit": 56.99168668239387,
+      "width": 17.48233,
+      "curvature": -0.003396265456925724,
+      "headingDeg": 77.87997879084807,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2718,
+      "point": {
+        "x": -477.389466,
+        "y": -39.831288
+      },
+      "distanceToPitExit": 57.64533893941378,
+      "width": 17.451138,
+      "curvature": -0.004074543701338152,
+      "headingDeg": 77.55892628030882,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2719,
+      "point": {
+        "x": -477.061822,
+        "y": -38.367434
+      },
+      "distanceToPitExit": 58.32213189029987,
+      "width": 17.401635,
+      "curvature": -0.0032370177791363544,
+      "headingDeg": 77.24471737681424,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2720,
+      "point": {
+        "x": -476.727067,
+        "y": -36.905159
+      },
+      "distanceToPitExit": 59.0229143762247,
+      "width": 17.337545,
+      "curvature": -0.001580578622770568,
+      "headingDeg": 77.03768401456723,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2721,
+      "point": {
+        "x": -476.388841,
+        "y": -35.443661
+      },
+      "distanceToPitExit": 59.75006624832772,
+      "width": 17.266309,
+      "curvature": -0.0004593336590773401,
+      "headingDeg": 76.95001887978444,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2722,
+      "point": {
+        "x": -476.049607,
+        "y": -33.982392
+      },
+      "distanceToPitExit": 60.50479354077335,
+      "width": 17.193431,
+      "curvature": -0.000799640969734039,
+      "headingDeg": 76.89591400478412,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2723,
+      "point": {
+        "x": -475.708622,
+        "y": -32.521538
+      },
+      "distanceToPitExit": 61.28542162300601,
+      "width": 17.124214,
+      "curvature": -0.0017203274484695705,
+      "headingDeg": 76.78761800204164,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2724,
+      "point": {
+        "x": -475.363871,
+        "y": -31.061581
+      },
+      "distanceToPitExit": 62.08923202427834,
+      "width": 17.062887,
+      "curvature": -0.002552337466277416,
+      "headingDeg": 76.60399986603248,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2725,
+      "point": {
+        "x": -475.013533,
+        "y": -29.602956
+      },
+      "distanceToPitExit": 62.91378327758096,
+      "width": 17.013226,
+      "curvature": -0.0019770573780013836,
+      "headingDeg": 76.40934875479691,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2726,
+      "point": {
+        "x": -474.658868,
+        "y": -28.145366
+      },
+      "distanceToPitExit": 63.75932815349986,
+      "width": 16.972612,
+      "curvature": -0.0010586173485391125,
+      "headingDeg": 76.27889019026122,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2727,
+      "point": {
+        "x": -474.301886,
+        "y": -26.68833
+      },
+      "distanceToPitExit": 64.62671208787623,
+      "width": 16.93689,
+      "curvature": -0.00017804485714314303,
+      "headingDeg": 76.22574428910823,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2728,
+      "point": {
+        "x": -473.944515,
+        "y": -25.23139
+      },
+      "distanceToPitExit": 65.51664417800781,
+      "width": 16.90211,
+      "curvature": -8.631480732680391e-07,
+      "headingDeg": 76.21805561754024,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2729,
+      "point": {
+        "x": -473.587142,
+        "y": -23.77445
+      },
+      "distanceToPitExit": 66.42853321603573,
+      "width": 16.86752,
+      "curvature": 4.095886839387837e-06,
+      "headingDeg": 76.21819454627139,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2730,
+      "point": {
+        "x": -473.229778,
+        "y": -22.317508
+      },
+      "distanceToPitExit": 67.36149578148252,
+      "width": 16.833129,
+      "curvature": 4.52746419168229e-06,
+      "headingDeg": 76.21856513948572,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2731,
+      "point": {
+        "x": -472.872424,
+        "y": -20.860564
+      },
+      "distanceToPitExit": 68.31466906484559,
+      "width": 16.798942,
+      "curvature": 4.633319025586692e-06,
+      "headingDeg": 76.21895882918905,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2732,
+      "point": {
+        "x": -472.51508,
+        "y": -19.403617
+      },
+      "distanceToPitExit": 69.28721975148643,
+      "width": 16.764948,
+      "curvature": 4.095889170503697e-06,
+      "headingDeg": 76.21933397163535,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2733,
+      "point": {
+        "x": -472.157745,
+        "y": -17.946668
+      },
+      "distanceToPitExit": 70.27834202418416,
+      "width": 16.731133,
+      "curvature": 4.633313916953915e-06,
+      "headingDeg": 76.21970911400011,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2734,
+      "point": {
+        "x": -471.80042,
+        "y": -16.489716
+      },
+      "distanceToPitExit": 71.28726264591255,
+      "width": 16.697486,
+      "curvature": 2.6953108909508506e-06,
+      "headingDeg": 76.2200240656598,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2735,
+      "point": {
+        "x": -471.443101,
+        "y": -15.032763
+      },
+      "distanceToPitExit": 72.31323283986157,
+      "width": 16.66398,
+      "curvature": 3.2327339128608033e-06,
+      "headingDeg": 76.22027882669649,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2736,
+      "point": {
+        "x": -471.085789,
+        "y": -13.575808
+      },
+      "distanceToPitExit": 73.35553857853866,
+      "width": 16.630579,
+      "curvature": 8.631568951745186e-07,
+      "headingDeg": 76.2204548498448,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2737,
+      "point": {
+        "x": -470.728479,
+        "y": -12.118853
+      },
+      "distanceToPitExit": 74.41348916121075,
+      "width": 16.597241,
+      "curvature": 9.689990308865092e-07,
+      "headingDeg": 76.22053358776527,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2738,
+      "point": {
+        "x": -470.371171,
+        "y": -10.661897
+      },
+      "distanceToPitExit": 75.4864276343429,
+      "width": 16.563941,
+      "curvature": 8.6315743097315e-07,
+      "headingDeg": 76.2206123256837,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2739,
+      "point": {
+        "x": -470.013865,
+        "y": -9.204941
+      },
+      "distanceToPitExit": 76.5737231346319,
+      "width": 16.530672,
+      "curvature": 1.4005774438134208e-06,
+      "headingDeg": 76.22070961094141,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2740,
+      "point": {
+        "x": -469.656562,
+        "y": -7.747984
+      },
+      "distanceToPitExit": 77.67477408242122,
+      "width": 16.497452,
+      "curvature": 1.4005767248852126e-06,
+      "headingDeg": 76.22082999208362,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2741,
+      "point": {
+        "x": -469.299262,
+        "y": -6.291026
+      },
+      "distanceToPitExit": 78.78900381063914,
+      "width": 16.464301,
+      "curvature": 1.8321554018614818e-06,
+      "headingDeg": 76.2209689205406,
+      "suspectedFalseChicane": false
+    },
+    {
+      "index": 2742,
+      "point": {
+        "x": -468.941966,
+        "y": -4.834067
+      },
+      "distanceToPitExit": 79.91586155547456,
+      "width": 16.431234,
+      "curvature": 2.6953153278461847e-06,
+      "headingDeg": 76.22116349108663,
+      "suspectedFalseChicane": false
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "debug_only",
+      "message": "Analysis only; MainTrackGeometry and runtime projection are unchanged."
+    },
+    {
+      "code": "two_maintrack_runs_near_pit_exit",
+      "message": "The nearest main-track branch is not direction-compatible with pit exit; transition candidate uses the closest direction-compatible main-track point."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "generatedAt": "2026-05-21T04:45:43.639057+00:00",
+  "spatiallyBetterThanLegacy": true,
+  "visuallyCleaner": true,
+  "readyForDeeperIntegration": true,
+  "rollbackRecommended": false,
+  "reason": "PitLane Corridor V2 uses PITLANE surface interval raycast and an open-loop pit_lane.ai reference segment. It has 254 points, length 387.256626m, avg width 12.584169m, and is spatially closer to the pit straight than the legacy Transform A pipeline. It does not include the entry/exit access branches.",
+  "runtimeChanged": false,
+  "authoritativeGeometryChanged": false
+}

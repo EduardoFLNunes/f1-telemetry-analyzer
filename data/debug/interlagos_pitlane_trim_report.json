@@ -1,0 +1,92 @@
+{
+  "generatedAt": "2026-05-20T01:25:22.323016+00:00",
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "runtimeChanged": false,
+  "pitLaneAiUsedForGeometry": false,
+  "rawPointCount": 192,
+  "trimmedPointCount": 115,
+  "removedStartPoints": 25,
+  "removedEndPoints": 52,
+  "rawLength": 384.441084,
+  "trimmedLength": 227.590081,
+  "startTrimReason": "selected first stable/separate segment after the initial main-track merge valley; distance threshold 8.0m",
+  "endTrimReason": "selected point before sustained width drop / final merge extension; width drop threshold 9.682m",
+  "selectedStartIndex": 25,
+  "selectedEndIndex": 139,
+  "candidateStartIndices": {
+    "byDistanceToMain": 25,
+    "byWidthStability": 25,
+    "byTangentDivergence": 25,
+    "bySurfaceEndpointMargin": 7
+  },
+  "candidateEndIndices": {
+    "byDistanceToMain": 139,
+    "byWidthStability": 139,
+    "byTangentDivergence": 139,
+    "bySurfaceEndpointMargin": 184
+  },
+  "rawStart": {
+    "x": -336.841362,
+    "y": -434.749989
+  },
+  "rawEnd": {
+    "x": -434.833348,
+    "y": -66.237044
+  },
+  "trimmedStart": {
+    "x": -348.994499,
+    "y": -386.341852
+  },
+  "trimmedEnd": {
+    "x": -404.795015,
+    "y": -165.69925
+  },
+  "trimmedStartNearestMain": {
+    "index": 1847,
+    "p": 0.6369586758059835,
+    "distanceToMain": 8.994916,
+    "point": {
+      "x": -342.667599,
+      "y": -392.735509
+    }
+  },
+  "trimmedEndNearestMain": {
+    "index": 1544,
+    "p": 0.5321997029874639,
+    "distanceToMain": 2.163782,
+    "point": {
+      "x": -405.108204,
+      "y": -167.840246
+    }
+  },
+  "widthStatsRaw": {
+    "min": 5.999994,
+    "avg": 12.569731,
+    "p95": 15.253607,
+    "max": 15.408915
+  },
+  "widthStatsTrimmed": {
+    "min": 14.774502,
+    "avg": 14.966876,
+    "p95": 15.273175,
+    "max": 15.408915
+  },
+  "trimDiagnostics": {
+    "widthMedian": 14.8948,
+    "distanceThreshold": 8.0,
+    "widthDropThreshold": 9.68162,
+    "initialMergeMinIndex": 20,
+    "initialMergeMinDistance": 0.657457
+  },
+  "diagnostics": [
+    {
+      "code": "debug_only_trim",
+      "message": "PitLaneGeometryTrimmed is exported for validation only; runtime and main track geometries are unchanged."
+    },
+    {
+      "code": "debug_only_trimmed_pitlane",
+      "message": "Trimmed pitlane geometry is debug/export only and is not connected to runtime."
+    }
+  ]
+}

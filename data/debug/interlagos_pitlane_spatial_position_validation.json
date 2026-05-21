@@ -1,0 +1,80 @@
+{
+  "generatedAt": "2026-05-20T11:08:35.270605+00:00",
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "source": "debug_pitlane_spatial_position_validation",
+  "runtimeChanged": false,
+  "authoritativeGeometryChanged": false,
+  "pitLaneGeometryChanged": false,
+  "projectionChanged": false,
+  "mapSpaceChanged": false,
+  "selectedAutomatically": false,
+  "mainTrackGeometry": {
+    "path": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\cache\\tracks\\vhe_interlagos_gp_kn5_surface_interval_cleaned_geometry.json",
+    "pointCount": 2897
+  },
+  "fastLaneAi": {
+    "path": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\gp\\ai\\fast_lane.ai",
+    "pointCount": 2680,
+    "pitStraightStartIndex": 2592,
+    "pitStraightEndIndex": 136,
+    "pitStraightPointCount": 225,
+    "pitStraightLengthMeters": 365.58441
+  },
+  "pitLaneAiDiagnostic": {
+    "path": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\gp\\ai\\pit_lane.ai",
+    "pointCount": 1361,
+    "distanceFromCurrentPitLane": {
+      "min": 0.009526,
+      "avg": 3.712448,
+      "p95": 5.122491,
+      "max": 5.130662
+    },
+    "usedForGeometry": false
+  },
+  "pitLaneSurfaceMeshes": {
+    "source": "KN5 1pitlane001/1pitlane002/1pitlane003",
+    "bounds": {
+      "minX": -438.215912,
+      "maxX": -328.963989,
+      "minY": -438.294189,
+      "maxY": -63.612083,
+      "width": 109.251923,
+      "height": 374.682106
+    },
+    "triangleCount": 1326,
+    "meshTriangleCounts": {
+      "1pitlane003": 330,
+      "1pitlane001": 786,
+      "1pitlane002": 210
+    }
+  },
+  "currentPitLaneGeometry": {
+    "source": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_trimmed_manual_05_05.json",
+    "pointCount": 182,
+    "lengthMeters": 364.47656,
+    "manualStart": {
+      "x": -339.274471,
+      "y": -425.069001
+    },
+    "manualEnd": {
+      "x": -432.446484,
+      "y": -75.929951
+    },
+    "distanceToFastLanePitStraight": {
+      "min": 18.208061,
+      "avg": 25.022394,
+      "p95": 27.255332,
+      "max": 27.2685
+    },
+    "parallelAngleVsFastLanePitStraightDeg": 0.879795
+  },
+  "spatialConclusion": {
+    "pitlaneCandidateIsOnPitStraightRegion": true,
+    "explanation": "The current PitLaneGeometry sits on the exported KN5 1pitlane* surface and runs parallel to the fast_lane.ai pit straight. pit_lane.ai is drawn only as diagnostic overlay and is not used as geometry."
+  },
+  "exports": {
+    "svg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_spatial_position_validation.svg",
+    "json": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_spatial_position_validation.json"
+  }
+}

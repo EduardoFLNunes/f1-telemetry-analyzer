@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTelemetryStore } from '../../store/useTelemetryStore';
 import { useInterpolatedCarState } from '../../hooks/useInterpolatedCarState';
+import { usePitLaneDebugData } from '../../hooks/usePitLaneDebugData';
 import { drawCar, drawTrajectory } from './CarRenderer.jsx';
 import { applyCameraTransform, computeTrackBounds } from './CameraController.jsx';
 import {
@@ -10,6 +11,8 @@ import {
   drawProjectionDebug,
   drawTrackSurface,
 } from './OverlayRenderer.jsx';
+import { createPitLanePathCache, drawPitLaneOverlay } from './PitLaneOverlay.jsx';
+import { PitLaneDebugPanel } from './PitLaneDebugPanel.jsx';
 import { ProjectionDebugOverlay } from '../debug/ProjectionDebugOverlay.jsx';
 import { mirrorMode, resolveMirrorX } from './renderTransform.js';
 
@@ -72,6 +75,31 @@ function normalizeVisualTrack(trackData) {
   };
 }
 
+function normalizePhysicsDisplayTrack(trackData) {
+  const display = trackData?.physicsDisplayGeometry;
+  if (!display || !display.leftEdge || !display.rightEdge) return null;
+  return {
+    ...trackData,
+    source: display.source || trackData.source,
+    visualRenderMode: 'polygon',
+    centerline: {
+      x: display.centerline.map((p) => p.x),
+      y: display.centerline.map((p) => p.y),
+    },
+    left_edge: {
+      x: display.leftEdge.map((p) => p.x),
+      y: display.leftEdge.map((p) => p.y),
+    },
+    right_edge: {
+      x: display.rightEdge.map((p) => p.x),
+      y: display.rightEdge.map((p) => p.y),
+    },
+    localWidth: display.width,
+    visualGeometryEnabled: true,
+    physicsDisplayEnabled: true,
+  };
+}
+
 function selectDebugTrajectory(history = [], frame = null, maxPoints = 260) {
   if (!frame || !history?.length) return [];
   const frameLap = Number(frame.lap_number);
@@ -99,12 +127,26 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
     resized: 0,
   });
   const [cameraMode, setCameraMode] = useState('OVERVIEW');
+  const [geometryMode, setGeometryMode] = useState('RIBBON');
   const [debugEnabled, setDebugEnabled] = useState(false);
   const [debugLayers, setDebugLayers] = useState({
     projection: true,
     physics: false,
     trajectory: false,
     centerline: false,
+    pitlane: false,
+  });
+  const [pitLaneOptions, setPitLaneOptions] = useState({
+    showMainTrack: true,
+    showPitArea: true,
+    showPitCorridorV2: true,
+    showEntryAccess: true,
+    showExitAccess: true,
+    showEntryExit: true,
+    showAiReferences: true,
+    showSurface: false,
+    showLabels: true,
+    showAdvancedLegacy: false,
   });
   const [debugOverlayFrame, setDebugOverlayFrame] = useState(null);
 
@@ -156,9 +198,14 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
   const renderOptions = useMemo(() => ({
     mirrorX: resolveMirrorX(mirrorX),
   }), [mirrorX]);
+  const pitLaneEnabled = Boolean(debugEnabled && debugLayers.pitlane);
+  const pitLaneDebugState = usePitLaneDebugData(pitLaneEnabled);
   const normalizedTrack = useMemo(() => normalizeTrack(trackData), [trackData]);
   const visualTrack = useMemo(() => normalizeVisualTrack(normalizedTrack) || normalizedTrack, [normalizedTrack]);
+  const physicsDisplayTrack = useMemo(() => normalizePhysicsDisplayTrack(normalizedTrack) || normalizedTrack, [normalizedTrack]);
+  
   const fixedBounds = useMemo(() => computeTrackBounds(visualTrack), [visualTrack]);
+
   const trackPathCache = useMemo(() => {
     const cache = createTrackPathCache(visualTrack, { logBuild: Boolean(import.meta.env?.DEV) });
     if (cache.pathCacheEnabled) {
@@ -167,6 +214,21 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
     }
     return cache;
   }, [visualTrack]);
+
+  const rawPhysicsPathCache = useMemo(() => {
+    const cache = createTrackPathCache(normalizedTrack, { logBuild: Boolean(import.meta.env?.DEV) });
+    return cache;
+  }, [normalizedTrack]);
+
+  const physicsDisplayPathCache = useMemo(() => {
+    const cache = createTrackPathCache(physicsDisplayTrack, { logBuild: Boolean(import.meta.env?.DEV) });
+    return cache;
+  }, [physicsDisplayTrack]);
+
+  const pitLanePathCache = useMemo(
+    () => createPitLanePathCache(pitLaneDebugState.data),
+    [pitLaneDebugState.data],
+  );
 
   useEffect(() => {
     cameraRef.current.mode = cameraMode;
@@ -263,6 +325,8 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
       metrics.debugPhysicsEnabled = Boolean(debugEnabled && debugLayers.physics);
       metrics.debugTrajectoryEnabled = Boolean(debugEnabled && debugLayers.trajectory);
       metrics.debugCenterlineEnabled = Boolean(debugEnabled && debugLayers.centerline);
+      metrics.debugPitLaneEnabled = pitLaneEnabled;
+      metrics.pitLanePathCacheEnabled = Boolean(pitLanePathCache?.pathCacheEnabled);
       metrics.visualRenderMode = visualTrack?.visualRenderMode || 'polygon';
       metrics.ribbonWidthMeters = visualTrack?.ribbonWidthMeters;
       metrics.trackFetchCount = trackDiagnostics?.trackFetchCount || 0;
@@ -281,8 +345,19 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
       metrics.duplicatePackets = telemetryPerf.duplicatePackets || 0;
       metrics.interpolationBufferSize = interpolatedCar.metricsRef.current.bufferSize || 0;
 
+      let activeTrack = visualTrack;
+      let activeCache = trackPathCache;
+
+      if (geometryMode === 'PHYSICS') {
+        activeTrack = physicsDisplayTrack;
+        activeCache = physicsDisplayPathCache;
+      } else if (geometryMode === 'RAW_PHYSICS') {
+        activeTrack = normalizedTrack;
+        activeCache = rawPhysicsPathCache;
+      }
+
       let scale = 1;
-      const useStaticTrackLayer = Boolean(visualTrack) && cameraRef.current.mode === 'OVERVIEW';
+      const useStaticTrackLayer = Boolean(activeTrack) && cameraRef.current.mode === 'OVERVIEW';
       if (useStaticTrackLayer) {
         if (!trackLayerCanvasRef.current) {
           trackLayerCanvasRef.current = document.createElement('canvas');
@@ -304,10 +379,23 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
           cameraRef.current.offset.y.toFixed(1),
           debugLayers.physics ? 'physics' : 'physics-off',
           debugLayers.centerline ? 'centerline' : 'centerline-off',
-          trackPathCache?.pathCacheBuildCount || 0,
-          visualTrack?.visualRenderMode || 'polygon',
-          visualTrack?.ribbonWidthMeters || 0,
-          visualTrack?.cachePath || visualTrack?.trackName || '',
+          geometryMode,
+          activeCache?.pathCacheBuildCount || 0,
+          activeTrack?.visualRenderMode || 'polygon',
+          activeTrack?.ribbonWidthMeters || 0,
+          activeTrack?.cachePath || activeTrack?.trackName || '',
+          pitLaneEnabled ? 'pitlane-on' : 'pitlane-off',
+          pitLaneOptions.showMainTrack ? 'pit-main' : 'pit-main-off',
+          pitLaneOptions.showPitArea ? 'pit-area' : 'pit-area-off',
+          pitLaneOptions.showPitCorridorV2 ? 'pit-corridor-v2' : 'pit-corridor-v2-off',
+          pitLaneOptions.showEntryAccess ? 'pit-entry-access' : 'pit-entry-access-off',
+          pitLaneOptions.showExitAccess ? 'pit-exit-access' : 'pit-exit-access-off',
+          pitLaneOptions.showEntryExit ? 'pit-entry-exit' : 'pit-entry-exit-off',
+          pitLaneOptions.showAiReferences ? 'pit-ai-references' : 'pit-ai-references-off',
+          pitLaneOptions.showSurface ? 'pit-surface' : 'pit-surface-off',
+          pitLaneOptions.showLabels ? 'pit-labels' : 'pit-labels-off',
+          pitLaneOptions.showAdvancedLegacy ? 'pit-legacy' : 'pit-legacy-off',
+          pitLanePathCache?.cacheKey || 'pitlane-none',
         ].join('|');
 
         if (trackLayerKeyRef.current !== staticTrackKey) {
@@ -318,11 +406,16 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
             trackLayerCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
             trackLayerCtx.save();
             const layerScale = applyCameraTransform(trackLayerCtx, rect.width, rect.height, renderBounds, cameraRef.current, null);
-            drawTrackSurface(trackLayerCtx, visualTrack, renderBounds, layerScale, trackPathCache, {
+            drawTrackSurface(trackLayerCtx, activeTrack, renderBounds, layerScale, activeCache, {
               showCenterline: debugEnabled && debugLayers.centerline,
               logPathCacheReuse: Boolean(import.meta.env?.DEV),
             });
-            if (debugEnabled && debugLayers.physics && normalizedTrack?.visualGeometry) drawPhysicsEdges(trackLayerCtx, normalizedTrack, layerScale);
+            if (geometryMode === 'OVERLAY' || (debugEnabled && debugLayers.physics)) {
+              drawPhysicsEdges(trackLayerCtx, normalizedTrack, layerScale);
+            }
+            if (pitLaneEnabled && pitLaneDebugState.data) {
+              drawPitLaneOverlay(trackLayerCtx, pitLaneDebugState.data, layerScale, pitLanePathCache, pitLaneOptions);
+            }
             trackLayerCtx.restore();
             trackLayerMetricsRef.current.builds += 1;
             metrics.staticTrackLayerBuildCount = trackLayerMetricsRef.current.builds;
@@ -345,14 +438,19 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
         scale = applyCameraTransform(mapCtx, rect.width, rect.height, renderBounds, cameraRef.current, renderFrame);
         metrics.cameraEasingEnabled = Boolean(cameraRef.current.cameraEasingEnabled);
 
-        if (visualTrack) {
-          drawTrackSurface(mapCtx, visualTrack, renderBounds, scale, trackPathCache, {
+        if (activeTrack) {
+          drawTrackSurface(mapCtx, activeTrack, renderBounds, scale, activeCache, {
             showCenterline: debugEnabled && debugLayers.centerline,
             logPathCacheReuse: Boolean(import.meta.env?.DEV),
           });
         }
-        if (debugEnabled && debugLayers.physics && normalizedTrack?.visualGeometry) drawPhysicsEdges(mapCtx, normalizedTrack, scale);
+        if (geometryMode === 'OVERLAY' || (debugEnabled && debugLayers.physics)) {
+          drawPhysicsEdges(mapCtx, normalizedTrack, scale);
+        }
         if (debugEnabled && debugLayers.trajectory) drawTrajectory(mapCtx, liveDebugHistory, scale, { maxSegmentDistance: 35 });
+        if (pitLaneEnabled && pitLaneDebugState.data) {
+          drawPitLaneOverlay(mapCtx, pitLaneDebugState.data, scale, pitLanePathCache, pitLaneOptions);
+        }
         if (debugEnabled && debugLayers.projection && normalizedTrack && renderFrame) drawProjectionDebug(mapCtx, renderFrame, scale);
         if (renderFrame) drawCar(mapCtx, renderFrame, scale);
         mapCtx.restore();
@@ -368,7 +466,8 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
       ctx.drawImage(mapCanvas, 0, 0);
       ctx.restore();
 
-      drawHud(ctx, rect.width, rect.height, visualTrack, renderFrame, cameraRef.current, debugEnabled, metrics);
+      metrics.geometryMode = geometryMode;
+      drawHud(ctx, rect.width, rect.height, activeTrack, renderFrame, cameraRef.current, debugEnabled, metrics);
       animationRef.current = requestAnimationFrame(render);
     };
 
@@ -386,6 +485,14 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
     trackDiagnostics,
     trackPathCache,
     visualTrack,
+    physicsDisplayTrack,
+    geometryMode,
+    rawPhysicsPathCache,
+    physicsDisplayPathCache,
+    pitLaneEnabled,
+    pitLaneDebugState.data,
+    pitLaneOptions,
+    pitLanePathCache,
   ]);
 
   const handleWheel = useCallback((event) => {
@@ -412,6 +519,10 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
     cameraRef.current.isPanning = false;
   }, []);
 
+  const togglePitLaneOption = useCallback((key) => {
+    setPitLaneOptions((options) => ({ ...options, [key]: !options[key] }));
+  }, []);
+
   return (
     <div
       ref={containerRef}
@@ -425,6 +536,24 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
       <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
 
       <div className="absolute top-3 right-3 flex flex-col gap-1">
+        <div className="panel px-1.5 py-1 flex gap-1">
+          {[
+            ['RIBBON', 'Ribbon'],
+            ['PHYSICS', 'Phys'],
+            ['RAW_PHYSICS', 'Raw Phys'],
+            ['OVERLAY', 'Overlay'],
+          ].map(([mode, label]) => (
+            <button
+              key={mode}
+              onClick={() => setGeometryMode(mode)}
+              className={`px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all ${
+                geometryMode === mode ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30' : 'text-slate-600 hover:text-slate-400'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <div className="panel px-1.5 py-1 flex gap-1">
           {['OVERVIEW', 'FOLLOW'].map((mode) => (
             <button
@@ -455,6 +584,7 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
               ['physics', 'Phys'],
               ['trajectory', 'Trail'],
               ['centerline', 'Ctr'],
+              ['pitlane', 'Pit'],
             ].map(([key, label]) => (
               <button
                 key={key}
@@ -471,6 +601,13 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
       </div>
 
       {debugEnabled && debugLayers.projection && <ProjectionDebugOverlay frame={debugOverlayFrame} renderOptions={renderOptions} />}
+      {debugEnabled && debugLayers.pitlane && (
+        <PitLaneDebugPanel
+          state={pitLaneDebugState}
+          options={pitLaneOptions}
+          onToggle={togglePitLaneOption}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,154 @@
+{
+  "generatedAt": "2026-05-21T03:59:24.801169+00:00",
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "source": "debug_transform_b_trim_decision",
+  "selectedTransform": "B",
+  "transformUsed": "mapX = worldX, mapY = worldZ",
+  "oldTransformInvalidated": true,
+  "debugOnly": true,
+  "runtimeChanged": false,
+  "geometryChanged": false,
+  "authoritativeGeometryChanged": false,
+  "pitLaneGeometryChanged": false,
+  "projectionChanged": false,
+  "mapSpaceChanged": false,
+  "readyForRuntimeIntegration": false,
+  "selectedAutomatically": false,
+  "recommendedManualTrimCandidate": null,
+  "trimCandidatesValidation": {
+    "source": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_trim_candidates_minimal_transform_b.json",
+    "requiredCandidates": [
+      "candidate_00_00",
+      "candidate_05_05",
+      "candidate_08_08",
+      "candidate_10_10",
+      "candidate_12_12"
+    ],
+    "presentCandidates": [
+      "candidate_00_00",
+      "candidate_05_05",
+      "candidate_08_08",
+      "candidate_10_10",
+      "candidate_12_12"
+    ],
+    "missingCandidates": [],
+    "valid": true
+  },
+  "highlightedCandidates": [
+    "candidate_05_05",
+    "candidate_08_08"
+  ],
+  "mainStraightCandidate": {
+    "startIndex": 2714,
+    "endIndex": 141,
+    "lengthMeters": 486.041318,
+    "startPoint": {
+      "x": -478.626332,
+      "y": -45.702684
+    },
+    "endPoint": {
+      "x": -359.258096,
+      "y": 425.435595
+    }
+  },
+  "sennaSolCandidate": {
+    "source": "fast_lane.ai x/z diagnostic segment",
+    "startIndex": 100,
+    "endIndex": 260,
+    "startPoint": {
+      "x": -378.331848,
+      "y": 379.468506
+    },
+    "endPoint": {
+      "x": -202.666824,
+      "y": 443.563324
+    }
+  },
+  "candidates": [
+    {
+      "name": "candidate_00_00",
+      "pointCount": 192,
+      "lengthMeters": 384.441084,
+      "removedStartMeters": 0.0,
+      "removedEndMeters": 0.0,
+      "startCoordinate": {
+        "x": -434.833348,
+        "y": 66.237044
+      },
+      "endCoordinate": {
+        "x": -336.841362,
+        "y": 434.749989
+      },
+      "highlightedForComparison": false
+    },
+    {
+      "name": "candidate_05_05",
+      "pointCount": 182,
+      "lengthMeters": 364.47656,
+      "removedStartMeters": 9.982463,
+      "removedEndMeters": 9.982062,
+      "startCoordinate": {
+        "x": -432.446484,
+        "y": 75.929951
+      },
+      "endCoordinate": {
+        "x": -339.274471,
+        "y": 425.069001
+      },
+      "highlightedForComparison": true
+    },
+    {
+      "name": "candidate_08_08",
+      "pointCount": 176,
+      "lengthMeters": 352.49784,
+      "removedStartMeters": 15.971936,
+      "removedEndMeters": 15.971308,
+      "startCoordinate": {
+        "x": -431.014031,
+        "y": 81.745608
+      },
+      "endCoordinate": {
+        "x": -340.732778,
+        "y": 419.260007
+      },
+      "highlightedForComparison": true
+    },
+    {
+      "name": "candidate_10_10",
+      "pointCount": 172,
+      "lengthMeters": 344.512029,
+      "removedStartMeters": 19.964916,
+      "removedEndMeters": 19.964139,
+      "startCoordinate": {
+        "x": -430.058836,
+        "y": 85.622655
+      },
+      "endCoordinate": {
+        "x": -341.704861,
+        "y": 415.387313
+      },
+      "highlightedForComparison": false
+    },
+    {
+      "name": "candidate_12_12",
+      "pointCount": 168,
+      "lengthMeters": 336.526218,
+      "removedStartMeters": 23.957894,
+      "removedEndMeters": 23.956972,
+      "startCoordinate": {
+        "x": -429.103464,
+        "y": 89.499656
+      },
+      "endCoordinate": {
+        "x": -342.676928,
+        "y": 411.514614
+      },
+      "highlightedForComparison": false
+    }
+  ],
+  "exports": {
+    "json": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_transform_b_trim_decision.json",
+    "svg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_transform_b_trim_decision.svg"
+  }
+}

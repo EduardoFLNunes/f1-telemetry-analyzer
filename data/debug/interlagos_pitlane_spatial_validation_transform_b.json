@@ -1,0 +1,107 @@
+{
+  "generatedAt": "2026-05-21T03:58:16.717735+00:00",
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "source": "debug_transform_b_spatial_validation",
+  "debugOnly": true,
+  "runtimeChanged": false,
+  "geometryChanged": false,
+  "authoritativeGeometryChanged": false,
+  "pitLaneGeometryChanged": false,
+  "projectionChanged": false,
+  "mapSpaceChanged": false,
+  "selectedAutomatically": false,
+  "transformUsed": "mapX = worldX, mapY = worldZ",
+  "oldInvalidTransform": "mapX = worldX, mapY = -worldZ",
+  "pitlaneSpatiallyPlausible": true,
+  "distanceToMainStraightAvg": 19.118835,
+  "distanceToMainStraightP95": 20.626669,
+  "distanceToMainStraight": {
+    "min": 15.58105,
+    "avg": 19.118835,
+    "p95": 20.626669,
+    "max": 24.274841
+  },
+  "distanceToSennaSolRegion": {
+    "min": 22.166532,
+    "avg": 139.96968,
+    "p95": 300.355977,
+    "max": 318.286613
+  },
+  "distanceToAnyMainTrackSegment": {
+    "min": 15.58105,
+    "avg": 19.021127,
+    "p95": 20.616232,
+    "max": 20.634084
+  },
+  "angleDiffToMainStraight": 0.673674,
+  "appearsInInfield": false,
+  "confidence": "high",
+  "reason": "Transform B places the 1pitlane* derived centerline near and parallel to the MainTrack pit straight (avg 19.12m, p95 20.63m, angle 0.67deg) and appearsInInfield=False. The old invalid transform A remains only as a red comparison overlay.",
+  "oldInvalidTransformComparison": {
+    "distanceToMainStraightAvg": 226.365635,
+    "distanceToMainStraightP95": 396.210769,
+    "angleDiffToMainStraight": 29.108399
+  },
+  "mainStraightCandidate": {
+    "source": "MainTrackGeometry longest low-curvature run",
+    "pointCount": 325,
+    "startPoint": {
+      "x": -478.626332,
+      "y": -45.702684
+    },
+    "endPoint": {
+      "x": -359.258096,
+      "y": 425.435595
+    }
+  },
+  "sennaSolCandidate": {
+    "source": "fast_lane.ai x/z diagnostic segment",
+    "startIndex": 100,
+    "endIndex": 260,
+    "pointCount": 161,
+    "startPoint": {
+      "x": -378.331848,
+      "y": 379.468506
+    },
+    "endPoint": {
+      "x": -202.666824,
+      "y": 443.563324
+    }
+  },
+  "pitLaneGeometryB": {
+    "pointCount": 192,
+    "lengthMeters": 384.441084,
+    "bbox": {
+      "minX": -434.833348,
+      "maxX": -336.841362,
+      "minY": 66.237044,
+      "maxY": 434.749989,
+      "width": 97.991986,
+      "height": 368.512945,
+      "centroid": {
+        "x": -384.716043,
+        "y": 250.204527
+      }
+    }
+  },
+  "pitLaneSurfaceMeshesB": {
+    "triangleCount": 1326,
+    "bbox": {
+      "minX": -438.215912,
+      "maxX": -328.963989,
+      "minY": 63.612083,
+      "maxY": 438.294189,
+      "width": 109.251923,
+      "height": 374.682106,
+      "centroid": {
+        "x": -377.652098,
+        "y": 282.304706
+      }
+    }
+  },
+  "exports": {
+    "json": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_spatial_validation_transform_b.json",
+    "svg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_spatial_validation_transform_b.svg"
+  }
+}

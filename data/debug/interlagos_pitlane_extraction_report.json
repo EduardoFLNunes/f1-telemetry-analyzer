@@ -1,0 +1,38 @@
+{
+  "pitLaneAiFound": true,
+  "pitLaneAiPointCount": 1739,
+  "pitMeshesFound": true,
+  "pitMeshNames": [
+    "1pitlane001",
+    "1pitlane002",
+    "1pitlane003"
+  ],
+  "pitSurfaceTriangleCount": 1326,
+  "pitSurfaceBounds": {
+    "minX": -438.2159118652344,
+    "maxX": -328.9639892578125,
+    "minY": -438.294189453125,
+    "maxY": -63.612083435058594
+  },
+  "pitLaneStartPoint": {
+    "x": 0.0,
+    "y": 363.02691650390625
+  },
+  "pitLaneEndPoint": {
+    "x": 0.0,
+    "y": -0.0
+  },
+  "raycastValidCount": 73,
+  "raycastFailedCount": 1666,
+  "pitWidthMin": 0.20604407685225945,
+  "pitWidthAvg": 626.2656026365248,
+  "pitWidthMax": 8149.652998821799,
+  "pitEntryCandidate": {
+    "x": 0.0,
+    "y": 363.02691650390625
+  },
+  "pitExitCandidate": {
+    "x": 0.0,
+    "y": -0.0
+  }
+}

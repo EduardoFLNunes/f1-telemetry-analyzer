@@ -1,0 +1,625 @@
+{
+  "generatedAt": "2026-05-21T04:46:00.888783+00:00",
+  "debugOnly": true,
+  "runtimeChanged": false,
+  "authoritativeGeometryChanged": false,
+  "radiusMeters": 120.0,
+  "coordinateSystem": "map_xy_from_world_x_negative_z",
+  "pitEntryEndpoint": {
+    "x": -435.072029,
+    "y": -65.264487
+  },
+  "pitExitEndpoint": {
+    "x": -336.233553,
+    "y": -436.129427
+  },
+  "meshCount": 23,
+  "meshes": [
+    {
+      "meshName": "1pitlane001",
+      "material": "CRETEG",
+      "surface": "PITLANE",
+      "triangleCount": 786,
+      "bbox": {
+        "minX": -438.215912,
+        "maxX": -337.999969,
+        "minY": -438.294189,
+        "maxY": -63.612083,
+        "width": 100.215943,
+        "height": 374.682106
+      },
+      "distanceToPitLaneV2": 0.014634,
+      "distanceToMainTrack": 12.333563,
+      "distanceToPitEntryEndpoint": 1.021405,
+      "distanceToPitExitEndpoint": 2.162474,
+      "isPitlaneSurface": true,
+      "isRoadSurface": false,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_pitlane_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "entry"
+    },
+    {
+      "meshName": "1pitlane002",
+      "material": "CRETEG",
+      "surface": "PITLANE",
+      "triangleCount": 210,
+      "bbox": {
+        "minX": -406.507935,
+        "maxX": -328.963989,
+        "minY": -436.869568,
+        "maxY": -163.496826,
+        "width": 77.543946,
+        "height": 273.372742
+      },
+      "distanceToPitLaneV2": 1.417478,
+      "distanceToMainTrack": 19.562584,
+      "distanceToPitEntryEndpoint": 106.034471,
+      "distanceToPitExitEndpoint": 1.210953,
+      "isPitlaneSurface": true,
+      "isRoadSurface": false,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_pitlane_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "exit"
+    },
+    {
+      "meshName": "roadline004",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 15370,
+      "bbox": {
+        "minX": -493.586029,
+        "maxX": 190.557312,
+        "minY": -494.918762,
+        "maxY": 563.54126,
+        "width": 684.143341,
+        "height": 1058.460022
+      },
+      "distanceToPitLaneV2": 1.675353,
+      "distanceToMainTrack": 1.488536,
+      "distanceToPitEntryEndpoint": 4.675824,
+      "distanceToPitExitEndpoint": 1.306557,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "exit"
+    },
+    {
+      "meshName": "1pitlane003",
+      "material": "CRETEG",
+      "surface": "PITLANE",
+      "triangleCount": 330,
+      "bbox": {
+        "minX": -407.565369,
+        "maxX": -338.310547,
+        "minY": -437.359131,
+        "maxY": -165.986908,
+        "width": 69.254822,
+        "height": 271.372223
+      },
+      "distanceToPitLaneV2": 0.383751,
+      "distanceToMainTrack": 15.583767,
+      "distanceToPitEntryEndpoint": 105.130011,
+      "distanceToPitExitEndpoint": 2.548529,
+      "isPitlaneSurface": true,
+      "isRoadSurface": false,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_pitlane_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "exit"
+    },
+    {
+      "meshName": "1road003",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 3003,
+      "bbox": {
+        "minX": -493.644928,
+        "maxX": 171.070862,
+        "minY": -537.400757,
+        "maxY": 515.819336,
+        "width": 664.71579,
+        "height": 1053.220093
+      },
+      "distanceToPitLaneV2": 3.33944,
+      "distanceToMainTrack": 0.123615,
+      "distanceToPitEntryEndpoint": 3.914915,
+      "distanceToPitExitEndpoint": 8.255754,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "entry"
+    },
+    {
+      "meshName": "1road001",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 30287,
+      "bbox": {
+        "minX": -485.354248,
+        "maxX": 188.78772,
+        "minY": -488.598663,
+        "maxY": 558.173401,
+        "width": 674.141968,
+        "height": 1046.772064
+      },
+      "distanceToPitLaneV2": 3.975486,
+      "distanceToMainTrack": 0.001107,
+      "distanceToPitEntryEndpoint": 3.975486,
+      "distanceToPitExitEndpoint": 10.076353,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "entry"
+    },
+    {
+      "meshName": "roadline005",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 92,
+      "bbox": {
+        "minX": -402.901428,
+        "maxX": -333.042664,
+        "minY": -433.650391,
+        "maxY": -167.641937,
+        "width": 69.858764,
+        "height": 266.008454
+      },
+      "distanceToPitLaneV2": 1.883312,
+      "distanceToMainTrack": 20.809662,
+      "distanceToPitEntryEndpoint": 109.593208,
+      "distanceToPitExitEndpoint": 4.759597,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "exit"
+    },
+    {
+      "meshName": "roadline006",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 92,
+      "bbox": {
+        "minX": -402.901428,
+        "maxX": -333.042664,
+        "minY": -433.650391,
+        "maxY": -167.641937,
+        "width": 69.858764,
+        "height": 266.008454
+      },
+      "distanceToPitLaneV2": 1.883312,
+      "distanceToMainTrack": 20.809662,
+      "distanceToPitEntryEndpoint": 109.593208,
+      "distanceToPitExitEndpoint": 4.759597,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "exit"
+    },
+    {
+      "meshName": "1road002",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 9606,
+      "bbox": {
+        "minX": -493.686035,
+        "maxX": 190.657349,
+        "minY": -495.018799,
+        "maxY": 563.641235,
+        "width": 684.343384,
+        "height": 1058.660034
+      },
+      "distanceToPitLaneV2": 8.854693,
+      "distanceToMainTrack": 0.03428,
+      "distanceToPitEntryEndpoint": 9.723414,
+      "distanceToPitExitEndpoint": 13.384421,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "entry"
+    },
+    {
+      "meshName": "roadline003",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 408,
+      "bbox": {
+        "minX": -477.964539,
+        "maxX": -416.902313,
+        "minY": -188.76947,
+        "maxY": 25.054592,
+        "width": 61.062226,
+        "height": 213.824062
+      },
+      "distanceToPitLaneV2": 11.012002,
+      "distanceToMainTrack": 1.676077,
+      "distanceToPitEntryEndpoint": 11.352346,
+      "distanceToPitExitEndpoint": 263.358658,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "entry"
+    },
+    {
+      "meshName": "roadverge",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 11459,
+      "bbox": {
+        "minX": -493.992126,
+        "maxX": 323.105743,
+        "minY": -549.530334,
+        "maxY": 642.826233,
+        "width": 817.097869,
+        "height": 1192.356567
+      },
+      "distanceToPitLaneV2": 20.287422,
+      "distanceToMainTrack": 3.009667,
+      "distanceToPitEntryEndpoint": 73.68886,
+      "distanceToPitExitEndpoint": 19.128444,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "exit"
+    },
+    {
+      "meshName": "1curb001",
+      "material": "CRETEG",
+      "surface": "CURB",
+      "triangleCount": 5749,
+      "bbox": {
+        "minX": -431.946198,
+        "maxX": 176.955139,
+        "minY": -465.272919,
+        "maxY": 560.35083,
+        "width": 608.901337,
+        "height": 1025.623749
+      },
+      "distanceToPitLaneV2": 20.703186,
+      "distanceToMainTrack": 0.009365,
+      "distanceToPitEntryEndpoint": 80.096639,
+      "distanceToPitExitEndpoint": 19.322554,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "exit"
+    },
+    {
+      "meshName": "1kerb002",
+      "material": "CRETEG",
+      "surface": "KERB",
+      "triangleCount": 1500,
+      "bbox": {
+        "minX": -412.364471,
+        "maxX": 193.438416,
+        "minY": -541.527039,
+        "maxY": 453.841583,
+        "width": 605.802887,
+        "height": 995.368622
+      },
+      "distanceToPitLaneV2": 26.613262,
+      "distanceToMainTrack": 0.024644,
+      "distanceToPitEntryEndpoint": 55.520505,
+      "distanceToPitExitEndpoint": 26.548329,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "exit"
+    },
+    {
+      "meshName": "1kerb001",
+      "material": "CRETEG",
+      "surface": "KERB",
+      "triangleCount": 12724,
+      "bbox": {
+        "minX": -430.312866,
+        "maxX": 169.453186,
+        "minY": -478.371124,
+        "maxY": 559.520996,
+        "width": 599.766052,
+        "height": 1037.89212
+      },
+      "distanceToPitLaneV2": 30.153368,
+      "distanceToMainTrack": 4.88316,
+      "distanceToPitEntryEndpoint": 88.952757,
+      "distanceToPitExitEndpoint": 28.734515,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": false,
+      "localZone": "exit"
+    },
+    {
+      "meshName": "roadlineout",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 1990,
+      "bbox": {
+        "minX": -416.347534,
+        "maxX": 291.165405,
+        "minY": -384.295654,
+        "maxY": 636.607788,
+        "width": 707.512939,
+        "height": 1020.903442
+      },
+      "distanceToPitLaneV2": 8.648434,
+      "distanceToMainTrack": 11.695516,
+      "distanceToPitEntryEndpoint": 49.194304,
+      "distanceToPitExitEndpoint": 104.863977,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "near_both_pit_corridor_and_maintrack",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": true,
+      "localZone": "entry"
+    },
+    {
+      "meshName": "1kerb003",
+      "material": "CRETEG",
+      "surface": "KERB",
+      "triangleCount": 1186,
+      "bbox": {
+        "minX": -415.829803,
+        "maxX": 152.410522,
+        "minY": -486.782501,
+        "maxY": 455.09967,
+        "width": 568.240325,
+        "height": 941.882171
+      },
+      "distanceToPitLaneV2": 70.749477,
+      "distanceToMainTrack": 4.515877,
+      "distanceToPitEntryEndpoint": 70.749477,
+      "distanceToPitExitEndpoint": 71.415338,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": false,
+      "localZone": "entry"
+    },
+    {
+      "meshName": "1curb004",
+      "material": "CRETEG",
+      "surface": "CURB",
+      "triangleCount": 1288,
+      "bbox": {
+        "minX": -415.365051,
+        "maxX": 175.773315,
+        "minY": -451.754608,
+        "maxY": 527.394348,
+        "width": 591.138366,
+        "height": 979.148956
+      },
+      "distanceToPitLaneV2": 86.995814,
+      "distanceToMainTrack": 7.297289,
+      "distanceToPitEntryEndpoint": 207.645346,
+      "distanceToPitExitEndpoint": 86.168259,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "within_120m_of_pitlane_v2_endpoint",
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": false,
+      "localZone": "exit"
+    },
+    {
+      "meshName": "1road004",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 314,
+      "bbox": {
+        "minX": -495.749939,
+        "maxX": -402.790222,
+        "minY": 62.551983,
+        "maxY": 416.799194,
+        "width": 92.959717,
+        "height": 354.247211
+      },
+      "distanceToPitLaneV2": 140.585478,
+      "distanceToMainTrack": 5.463971,
+      "distanceToPitEntryEndpoint": 140.585478,
+      "distanceToPitExitEndpoint": 523.145189,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": false,
+      "localZone": "entry"
+    },
+    {
+      "meshName": "1curb002",
+      "material": "CRETEG",
+      "surface": "CURB",
+      "triangleCount": 692,
+      "bbox": {
+        "minX": -359.582703,
+        "maxX": -250.843552,
+        "minY": 292.169312,
+        "maxY": 529.251831,
+        "width": 108.739151,
+        "height": 237.082519
+      },
+      "distanceToPitLaneV2": 366.651607,
+      "distanceToMainTrack": 5.715346,
+      "distanceToPitEntryEndpoint": 366.651607,
+      "distanceToPitExitEndpoint": 729.205403,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": false,
+      "localZone": "entry"
+    },
+    {
+      "meshName": "roadline001",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 6162,
+      "bbox": {
+        "minX": 130.075897,
+        "maxX": 325.542969,
+        "minY": -370.494507,
+        "maxY": -26.783997,
+        "width": 195.467072,
+        "height": 343.71051
+      },
+      "distanceToPitLaneV2": 475.182458,
+      "distanceToMainTrack": 85.75929,
+      "distanceToPitEntryEndpoint": 610.038834,
+      "distanceToPitExitEndpoint": 474.840103,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": false,
+      "localZone": "exit"
+    },
+    {
+      "meshName": "roadline002",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 66,
+      "bbox": {
+        "minX": 148.359375,
+        "maxX": 169.288696,
+        "minY": -319.234436,
+        "maxY": -241.627029,
+        "width": 20.929321,
+        "height": 77.607407
+      },
+      "distanceToPitLaneV2": 499.512293,
+      "distanceToMainTrack": 100.000288,
+      "distanceToPitEntryEndpoint": 625.549264,
+      "distanceToPitExitEndpoint": 499.250563,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": false,
+      "localZone": "exit"
+    },
+    {
+      "meshName": "1road005",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 720,
+      "bbox": {
+        "minX": -377.190063,
+        "maxX": -253.76355,
+        "minY": 460.114258,
+        "maxY": 528.27417,
+        "width": 123.426513,
+        "height": 68.159912
+      },
+      "distanceToPitLaneV2": 529.319951,
+      "distanceToMainTrack": 7.954218,
+      "distanceToPitEntryEndpoint": 529.319951,
+      "distanceToPitExitEndpoint": 897.838192,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": false,
+      "localZone": "entry"
+    },
+    {
+      "meshName": "1road006",
+      "material": "CRETEG",
+      "surface": "ROAD",
+      "triangleCount": 99,
+      "bbox": {
+        "minX": -375.191803,
+        "maxX": -274.154785,
+        "minY": 461.044312,
+        "maxY": 484.533569,
+        "width": 101.037018,
+        "height": 23.489257
+      },
+      "distanceToPitLaneV2": 530.357557,
+      "distanceToMainTrack": 8.232723,
+      "distanceToPitEntryEndpoint": 530.357557,
+      "distanceToPitExitEndpoint": 898.416731,
+      "isPitlaneSurface": false,
+      "isRoadSurface": true,
+      "includeCandidateReason": [
+        "is_road_like_surface"
+      ],
+      "connectsPitlaneToMainTrack": false,
+      "localZone": "entry"
+    }
+  ]
+}

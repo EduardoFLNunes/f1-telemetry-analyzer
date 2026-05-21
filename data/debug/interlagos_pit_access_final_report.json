@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-05-21T04:46:02.440422+00:00",
+  "mainOverlayVerticalFlipFixed": true,
+  "pitLaneCorridorV2Valid": true,
+  "pitLaneCorridorIsCompleteSolution": false,
+  "entryAccessGenerated": true,
+  "exitAccessGenerated": true,
+  "entryAccessConfidence": "high",
+  "exitAccessConfidence": "medium",
+  "accessUsesPhysicalSurface": true,
+  "runtimeChanged": false,
+  "authoritativeGeometryChanged": false,
+  "readyForRuntimeIntegration": false,
+  "recommendedNextStep": "Validate PitLane Debug visually with Main + Pit Corridor V2 + Entry/Exit Access enabled before any runtime integration."
+}

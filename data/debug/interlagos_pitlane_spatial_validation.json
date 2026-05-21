@@ -1,0 +1,154 @@
+{
+  "generatedAt": "2026-05-21T03:09:57.377456+00:00",
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "source": "debug_pitlane_spatial_validation",
+  "debugOnly": true,
+  "runtimeChanged": false,
+  "authoritativeGeometryChanged": false,
+  "mainTrackGeometryChanged": false,
+  "trackPhysicsGeometryChanged": false,
+  "pitLaneGeometryChanged": false,
+  "projectionChanged": false,
+  "mapSpaceChanged": false,
+  "selectedAutomatically": false,
+  "coordinateNote": "MainTrackGeometry uses x/z. AI splines are plotted as x/z to align with MainTrack. PitLaneGeometry and 1pitlane* meshes are plotted exactly as currently exported.",
+  "pitLaneGeometryBBox": {
+    "minX": -432.446484,
+    "maxX": -339.274471,
+    "minY": -425.069001,
+    "maxY": -75.929951,
+    "width": 93.172013,
+    "height": 349.13905,
+    "centroid": {
+      "x": -384.653907,
+      "y": -250.188513
+    }
+  },
+  "mainTrackBBox": {
+    "minX": -483.738641,
+    "maxX": 183.575365,
+    "minY": -556.858466,
+    "maxY": 486.516573,
+    "width": 667.314006,
+    "height": 1043.375039,
+    "centroid": {
+      "x": -206.216591,
+      "y": -83.775518
+    }
+  },
+  "longestMainTrackStraightCandidate": {
+    "startIndex": 2714,
+    "endIndex": 141,
+    "pointCount": 325,
+    "lengthMeters": 486.041318,
+    "curvatureThreshold": 0.006,
+    "startPoint": {
+      "x": -478.626332,
+      "y": -45.702684
+    },
+    "endPoint": {
+      "x": -359.258096,
+      "y": 425.435595
+    }
+  },
+  "sennaSolCandidate": {
+    "source": "fast_lane.ai x/z diagnostic segment",
+    "startIndex": 100,
+    "endIndex": 260,
+    "pointCount": 161,
+    "startPoint": {
+      "x": -378.331848,
+      "y": 379.468506
+    },
+    "endPoint": {
+      "x": -202.666824,
+      "y": 443.563324
+    }
+  },
+  "distancePitLaneToLongestMainTrackStraight": {
+    "min": 55.192989,
+    "avg": 226.135096,
+    "p95": 386.288617,
+    "max": 404.150645
+  },
+  "distancePitLaneToSennaSolCandidate": {
+    "min": 458.602386,
+    "avg": 630.364782,
+    "p95": 787.87416,
+    "max": 805.484996
+  },
+  "distancePitLaneToAnyMainTrackSegment": {
+    "min": 0.026404,
+    "avg": 17.671612,
+    "p95": 49.842554,
+    "max": 58.089305
+  },
+  "pitLaneAppearsParallelToPitStraight": false,
+  "parallelAngleDeg": 29.159238,
+  "pitLaneAppearsInInfield": true,
+  "pitlaneSpatiallyPlausible": false,
+  "reason": "PitLaneGeometry atual is close to some MainTrack segments but is far from the longest MainTrack straight candidate (avg 226.1m) and far from the S do Senna / Curva do Sol candidate (avg 630.4m). It also is not strongly parallel to the pit straight candidate (29.2deg). This suggests the current extracted pitlane is spatially suspicious rather than confirmed.",
+  "sourceDiagnosis": {
+    "aiGeneratedImageUsedAsGeometryReference": false,
+    "aiGeneratedImageIgnored": true,
+    "primaryLikelyWrongSource": "b) transforma\u00e7\u00e3o/map-space errada",
+    "secondaryLikelyWrongSource": "d) SVG/export visual invertido",
+    "meshPitlaneWrongOrDisplaced": {
+      "classification": "unlikely_primary",
+      "reason": "PitLaneGeometry atual and 1pitlane001/002/003 surface agree with each other; the group appears displaced relative to MainTrack/fast_lane.ai, which points more to transform/map-space than to isolated mesh names."
+    },
+    "mapSpaceTransformWrong": {
+      "classification": "likely_primary",
+      "reason": "MainTrackGeometry and fast_lane.ai align in x/z, while current PitLaneGeometry/1pitlane* exports sit on the opposite side/infield. A diagnostic y-sign mirror, not used as correction, makes the pitlane much closer and more parallel to the pit straight."
+    },
+    "incorrectPitlaneComponentExtracted": {
+      "classification": "less_likely",
+      "reason": "The extracted component is from explicitly named 1pitlane001/002/003 meshes and is internally coherent."
+    },
+    "svgExportVisualInverted": {
+      "classification": "possible_symptom",
+      "reason": "The visual mismatch is consistent with an axis/sign inversion; because the exported PitLaneGeometry coordinates themselves carry that position, it is not treated as SVG-only until proven otherwise."
+    },
+    "previousVisualInterpretationWrong": {
+      "classification": "possible_consequence",
+      "reason": "Earlier visual plausibility can be explained by comparing layers in inconsistent map-space conventions."
+    },
+    "diagnosticMirrorYOnlyNotCorrection": {
+      "distancePitLaneToPitStraightAfterMirror": {
+        "min": 15.58105,
+        "avg": 19.116032,
+        "p95": 20.616232,
+        "max": 20.634084
+      },
+      "parallelAngleAfterMirrorDeg": 0.724513,
+      "usedForCorrection": false
+    }
+  },
+  "aiFiles": {
+    "fastLaneAi": {
+      "path": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\gp\\ai\\fast_lane.ai",
+      "pointCount": 2680,
+      "coordinateSpace": "x,z aligned to MainTrackGeometry"
+    },
+    "pitLaneAi": {
+      "path": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\gp\\ai\\pit_lane.ai",
+      "pointCount": 1361,
+      "coordinateSpace": "x,z aligned to MainTrackGeometry",
+      "usedAsOverlayOnly": true
+    }
+  },
+  "pitLaneSurfaceMeshes": {
+    "source": "current exported 1pitlane001/002/003 debug surface",
+    "triangleCount": 1326,
+    "meshTriangleCounts": {
+      "1pitlane003": 330,
+      "1pitlane001": 786,
+      "1pitlane002": 210
+    }
+  },
+  "exports": {
+    "json": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_spatial_validation.json",
+    "svg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_spatial_validation.svg"
+  }
+}

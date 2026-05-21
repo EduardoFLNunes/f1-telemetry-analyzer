@@ -1,0 +1,646 @@
+{
+  "generatedAt": "2026-05-21T03:59:24.801169+00:00",
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "source": "debug_transform_b_entry_exit_analysis",
+  "selectedTransform": "B",
+  "transformUsed": "mapX = worldX, mapY = worldZ",
+  "oldTransformInvalidated": true,
+  "debugOnly": true,
+  "runtimeChanged": false,
+  "geometryChanged": false,
+  "authoritativeGeometryChanged": false,
+  "pitLaneGeometryChanged": false,
+  "projectionChanged": false,
+  "mapSpaceChanged": false,
+  "readyForRuntimeIntegration": false,
+  "selectedAutomatically": false,
+  "recommendedManualTrimCandidate": null,
+  "analysisWindowMeters": 35.0,
+  "mainStraightCandidate": {
+    "startIndex": 2714,
+    "endIndex": 141,
+    "lengthMeters": 486.041318,
+    "startPoint": {
+      "x": -478.626332,
+      "y": -45.702684
+    },
+    "endPoint": {
+      "x": -359.258096,
+      "y": 425.435595
+    }
+  },
+  "sennaSolCandidate": {
+    "source": "fast_lane.ai x/z diagnostic segment",
+    "startIndex": 100,
+    "endIndex": 260,
+    "startPoint": {
+      "x": -378.331848,
+      "y": 379.468506
+    },
+    "endPoint": {
+      "x": -202.666824,
+      "y": 443.563324
+    }
+  },
+  "candidates": {
+    "candidate_00_00": {
+      "name": "candidate_00_00",
+      "pointCount": 192,
+      "lengthMeters": 384.441084,
+      "startTrimPoints": 0,
+      "endTrimPoints": 0,
+      "removedStartMeters": 0.0,
+      "removedEndMeters": 0.0,
+      "start": {
+        "point": {
+          "x": -434.833348,
+          "y": 66.237044
+        },
+        "distanceToMainCenterline": {
+          "distance": 16.114341,
+          "segmentIndex": 2793,
+          "point": {
+            "x": -450.443914,
+            "y": 70.234816
+          },
+          "t": 0.538721
+        },
+        "distanceToMainEdges": {
+          "left": {
+            "distance": 8.673668,
+            "segmentIndex": 2793,
+            "point": {
+              "x": -443.236852,
+              "y": 68.384985
+            },
+            "t": 0.218938
+          },
+          "right": {
+            "distance": 23.554572,
+            "segmentIndex": 2793,
+            "point": {
+              "x": -457.648862,
+              "y": 72.091116
+            },
+            "t": 0.860129
+          },
+          "nearestSide": "left",
+          "nearestDistance": 8.673668,
+          "nearestPoint": {
+            "x": -443.236852,
+            "y": 68.384985
+          }
+        },
+        "tangent": {
+          "x": 0.239121,
+          "y": 0.97099
+        },
+        "mainTrackTangent": {
+          "x": 0.248088,
+          "y": 0.968738
+        },
+        "tangentAngleDiffToMainTrackDeg": 0.529718,
+        "proximityToPitStraight": {
+          "distance": 16.114341,
+          "segmentIndex": 79,
+          "point": {
+            "x": -450.443914,
+            "y": 70.234816
+          },
+          "t": 0.538721
+        },
+        "proximityToSennaSol": {
+          "distance": 318.286613,
+          "segmentIndex": 0,
+          "point": {
+            "x": -378.331848,
+            "y": 379.468506
+          },
+          "t": 0.0
+        }
+      },
+      "end": {
+        "point": {
+          "x": -336.841362,
+          "y": 434.749989
+        },
+        "distanceToMainCenterline": {
+          "distance": 18.397107,
+          "segmentIndex": 151,
+          "point": {
+            "x": -354.159898,
+            "y": 440.956585
+          },
+          "t": 0.892469
+        },
+        "distanceToMainEdges": {
+          "left": {
+            "distance": 12.913443,
+            "segmentIndex": 151,
+            "point": {
+              "x": -349.195599,
+              "y": 438.508958
+            },
+            "t": 0.845773
+          },
+          "right": {
+            "distance": 23.89411,
+            "segmentIndex": 152,
+            "point": {
+              "x": -358.951989,
+              "y": 443.80806
+            },
+            "t": 0.214545
+          },
+          "nearestSide": "left",
+          "nearestDistance": 12.913443,
+          "nearestPoint": {
+            "x": -349.195599,
+            "y": 438.508958
+          }
+        },
+        "tangent": {
+          "x": 0.243676,
+          "y": 0.969857
+        },
+        "mainTrackTangent": {
+          "x": 0.337368,
+          "y": 0.941373
+        },
+        "tangentAngleDiffToMainTrackDeg": 5.612978,
+        "proximityToPitStraight": {
+          "distance": 24.274841,
+          "segmentIndex": 323,
+          "point": {
+            "x": -359.258096,
+            "y": 425.435595
+          },
+          "t": 1.0
+        },
+        "proximityToSennaSol": {
+          "distance": 22.166532,
+          "segmentIndex": 43,
+          "point": {
+            "x": -356.692622,
+            "y": 444.613182
+          },
+          "t": 0.792273
+        }
+      },
+      "first35m": {
+        "windowMeters": 35.0,
+        "sampleCount": 19,
+        "actualWindowLength": 35.93681,
+        "width": {
+          "min": 6.000303,
+          "avg": 6.000338,
+          "p95": 6.000376,
+          "max": 6.000376
+        }
+      },
+      "last35m": {
+        "windowMeters": 35.0,
+        "sampleCount": 19,
+        "actualWindowLength": 35.935469,
+        "width": {
+          "min": 15.176776,
+          "avg": 15.223021,
+          "p95": 15.263871,
+          "max": 15.263871
+        }
+      },
+      "fullCandidateDistanceToMainCenterline": {
+        "min": 15.58105,
+        "avg": 19.021127,
+        "p95": 20.616232,
+        "max": 20.634084
+      },
+      "fullCandidateDistanceToMainLeftEdge": {
+        "min": 8.169917,
+        "avg": 11.77663,
+        "p95": 13.247332,
+        "max": 13.266317
+      },
+      "fullCandidateDistanceToMainRightEdge": {
+        "min": 22.991917,
+        "avg": 26.264876,
+        "p95": 27.98771,
+        "max": 28.001812
+      },
+      "fullCandidateProximityToPitStraight": {
+        "min": 15.58105,
+        "avg": 19.118835,
+        "p95": 20.626669,
+        "max": 24.274841
+      },
+      "fullCandidateProximityToSennaSol": {
+        "min": 22.166532,
+        "avg": 139.96968,
+        "p95": 300.355977,
+        "max": 318.286613
+      },
+      "selectedAutomatically": false
+    },
+    "candidate_05_05": {
+      "name": "candidate_05_05",
+      "pointCount": 182,
+      "lengthMeters": 364.47656,
+      "startTrimPoints": 5,
+      "endTrimPoints": 5,
+      "removedStartMeters": 9.982463,
+      "removedEndMeters": 9.982062,
+      "start": {
+        "point": {
+          "x": -432.446484,
+          "y": 75.929951
+        },
+        "distanceToMainCenterline": {
+          "distance": 16.021889,
+          "segmentIndex": 2800,
+          "point": {
+            "x": -447.96749,
+            "y": 79.904787
+          },
+          "t": 0.192835
+        },
+        "distanceToMainEdges": {
+          "left": {
+            "distance": 8.585844,
+            "segmentIndex": 2799,
+            "point": {
+              "x": -440.7649,
+              "y": 78.056139
+            },
+            "t": 0.906561
+          },
+          "right": {
+            "distance": 23.457543,
+            "segmentIndex": 2800,
+            "point": {
+              "x": -455.168011,
+              "y": 81.759921
+            },
+            "t": 0.480889
+          },
+          "nearestSide": "left",
+          "nearestDistance": 8.585844,
+          "nearestPoint": {
+            "x": -440.7649,
+            "y": 78.056139
+          }
+        },
+        "tangent": {
+          "x": 0.239207,
+          "y": 0.970969
+        },
+        "mainTrackTangent": {
+          "x": 0.248088,
+          "y": 0.968738
+        },
+        "tangentAngleDiffToMainTrackDeg": 0.524654,
+        "proximityToPitStraight": {
+          "distance": 16.021889,
+          "segmentIndex": 86,
+          "point": {
+            "x": -447.96749,
+            "y": 79.904787
+          },
+          "t": 0.192835
+        },
+        "proximityToSennaSol": {
+          "distance": 308.324582,
+          "segmentIndex": 0,
+          "point": {
+            "x": -378.331848,
+            "y": 379.468506
+          },
+          "t": 0.0
+        }
+      },
+      "end": {
+        "point": {
+          "x": -339.274471,
+          "y": 425.069001
+        },
+        "distanceToMainCenterline": {
+          "distance": 19.193461,
+          "segmentIndex": 144,
+          "point": {
+            "x": -357.515671,
+            "y": 431.03956
+          },
+          "t": 0.912936
+        },
+        "distanceToMainEdges": {
+          "left": {
+            "distance": 13.028142,
+            "segmentIndex": 144,
+            "point": {
+              "x": -351.916153,
+              "y": 428.218662
+            },
+            "t": 0.523993
+          },
+          "right": {
+            "distance": 25.312596,
+            "segmentIndex": 145,
+            "point": {
+              "x": -362.697704,
+              "y": 434.664814
+            },
+            "t": 0.860624
+          },
+          "nearestSide": "left",
+          "nearestDistance": 13.028142,
+          "nearestPoint": {
+            "x": -351.916153,
+            "y": 428.218662
+          }
+        },
+        "tangent": {
+          "x": 0.243469,
+          "y": 0.969909
+        },
+        "mainTrackTangent": {
+          "x": 0.311073,
+          "y": 0.950386
+        },
+        "tangentAngleDiffToMainTrackDeg": 4.032506,
+        "proximityToPitStraight": {
+          "distance": 19.986987,
+          "segmentIndex": 323,
+          "point": {
+            "x": -359.258096,
+            "y": 425.435595
+          },
+          "t": 1.0
+        },
+        "proximityToSennaSol": {
+          "distance": 23.887204,
+          "segmentIndex": 36,
+          "point": {
+            "x": -361.409586,
+            "y": 434.048711
+          },
+          "t": 0.303904
+        }
+      },
+      "first35m": {
+        "windowMeters": 35.0,
+        "sampleCount": 19,
+        "actualWindowLength": 35.936743,
+        "width": {
+          "min": 6.000293,
+          "avg": 6.000325,
+          "p95": 6.000357,
+          "max": 6.000357
+        }
+      },
+      "last35m": {
+        "windowMeters": 35.0,
+        "sampleCount": 19,
+        "actualWindowLength": 35.935491,
+        "width": {
+          "min": 15.150225,
+          "avg": 15.197668,
+          "p95": 15.244127,
+          "max": 15.244127
+        }
+      },
+      "fullCandidateDistanceToMainCenterline": {
+        "min": 15.58105,
+        "avg": 19.109776,
+        "p95": 20.616232,
+        "max": 20.634084
+      },
+      "fullCandidateDistanceToMainLeftEdge": {
+        "min": 8.169917,
+        "avg": 11.829182,
+        "p95": 13.247332,
+        "max": 13.266317
+      },
+      "fullCandidateDistanceToMainRightEdge": {
+        "min": 22.991917,
+        "avg": 26.389961,
+        "p95": 27.98771,
+        "max": 28.001812
+      },
+      "fullCandidateProximityToPitStraight": {
+        "min": 15.58105,
+        "avg": 19.116032,
+        "p95": 20.616232,
+        "max": 20.634084
+      },
+      "fullCandidateProximityToSennaSol": {
+        "min": 23.887204,
+        "avg": 138.396035,
+        "p95": 290.396649,
+        "max": 308.324582
+      },
+      "selectedAutomatically": false
+    },
+    "candidate_08_08": {
+      "name": "candidate_08_08",
+      "pointCount": 176,
+      "lengthMeters": 352.49784,
+      "startTrimPoints": 8,
+      "endTrimPoints": 8,
+      "removedStartMeters": 15.971936,
+      "removedEndMeters": 15.971308,
+      "start": {
+        "point": {
+          "x": -431.014031,
+          "y": 81.745608
+        },
+        "distanceToMainCenterline": {
+          "distance": 15.966769,
+          "segmentIndex": 2804,
+          "point": {
+            "x": -446.481642,
+            "y": 85.706757
+          },
+          "t": 0.185295
+        },
+        "distanceToMainEdges": {
+          "left": {
+            "distance": 8.533494,
+            "segmentIndex": 2803,
+            "point": {
+              "x": -439.281727,
+              "y": 83.858832
+            },
+            "t": 0.91529
+          },
+          "right": {
+            "distance": 23.399672,
+            "segmentIndex": 2804,
+            "point": {
+              "x": -453.679504,
+              "y": 87.561188
+            },
+            "t": 0.458172
+          },
+          "nearestSide": "left",
+          "nearestDistance": 8.533494,
+          "nearestPoint": {
+            "x": -439.281727,
+            "y": 83.858832
+          }
+        },
+        "tangent": {
+          "x": 0.239283,
+          "y": 0.97095
+        },
+        "mainTrackTangent": {
+          "x": 0.248087,
+          "y": 0.968738
+        },
+        "tangentAngleDiffToMainTrackDeg": 0.520121,
+        "proximityToPitStraight": {
+          "distance": 15.966769,
+          "segmentIndex": 90,
+          "point": {
+            "x": -446.481642,
+            "y": 85.706757
+          },
+          "t": 0.185295
+        },
+        "proximityToSennaSol": {
+          "distance": 302.348038,
+          "segmentIndex": 0,
+          "point": {
+            "x": -378.331848,
+            "y": 379.468506
+          },
+          "t": 0.0
+        }
+      },
+      "end": {
+        "point": {
+          "x": -340.732778,
+          "y": 419.260007
+        },
+        "distanceToMainCenterline": {
+          "distance": 19.506849,
+          "segmentIndex": 140,
+          "point": {
+            "x": -359.502834,
+            "y": 424.570577
+          },
+          "t": 0.400702
+        },
+        "distanceToMainEdges": {
+          "left": {
+            "distance": 13.017464,
+            "segmentIndex": 140,
+            "point": {
+              "x": -353.364099,
+              "y": 422.407084
+            },
+            "t": 0.429631
+          },
+          "right": {
+            "distance": 26.00593,
+            "segmentIndex": 140,
+            "point": {
+              "x": -365.532837,
+              "y": 427.087234
+            },
+            "t": 0.613424
+          },
+          "nearestSide": "left",
+          "nearestDistance": 13.017464,
+          "nearestPoint": {
+            "x": -353.364099,
+            "y": 422.407084
+          }
+        },
+        "tangent": {
+          "x": 0.243444,
+          "y": 0.969915
+        },
+        "mainTrackTangent": {
+          "x": 0.272241,
+          "y": 0.962229
+        },
+        "tangentAngleDiffToMainTrackDeg": 1.70777,
+        "proximityToPitStraight": {
+          "distance": 19.506849,
+          "segmentIndex": 323,
+          "point": {
+            "x": -359.502834,
+            "y": 424.570577
+          },
+          "t": 0.400702
+        },
+        "proximityToSennaSol": {
+          "distance": 24.608851,
+          "segmentIndex": 31,
+          "point": {
+            "x": -363.858639,
+            "y": 427.673691
+          },
+          "t": 0.858386
+        }
+      },
+      "first35m": {
+        "windowMeters": 35.0,
+        "sampleCount": 19,
+        "actualWindowLength": 35.93668,
+        "width": {
+          "min": 6.000266,
+          "avg": 6.000315,
+          "p95": 6.000357,
+          "max": 6.000357
+        }
+      },
+      "last35m": {
+        "windowMeters": 35.0,
+        "sampleCount": 19,
+        "actualWindowLength": 35.935494,
+        "width": {
+          "min": 15.13426,
+          "avg": 15.181945,
+          "p95": 15.229072,
+          "max": 15.229072
+        }
+      },
+      "fullCandidateDistanceToMainCenterline": {
+        "min": 15.58105,
+        "avg": 19.159142,
+        "p95": 20.619699,
+        "max": 20.634084
+      },
+      "fullCandidateDistanceToMainLeftEdge": {
+        "min": 8.169917,
+        "avg": 11.864388,
+        "p95": 13.251843,
+        "max": 13.266317
+      },
+      "fullCandidateDistanceToMainRightEdge": {
+        "min": 22.991917,
+        "avg": 26.45402,
+        "p95": 27.989179,
+        "max": 28.001812
+      },
+      "fullCandidateProximityToPitStraight": {
+        "min": 15.58105,
+        "avg": 19.159142,
+        "p95": 20.619699,
+        "max": 20.634084
+      },
+      "fullCandidateProximityToSennaSol": {
+        "min": 24.608851,
+        "avg": 137.481001,
+        "p95": 286.413412,
+        "max": 302.348038
+      },
+      "selectedAutomatically": false
+    }
+  },
+  "exports": {
+    "json": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_transform_b_entry_exit_analysis.json",
+    "svg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_transform_b_entry_exit_analysis.svg"
+  }
+}

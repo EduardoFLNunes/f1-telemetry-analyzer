@@ -1,0 +1,16 @@
+{
+  "rawPointCount": 3202,
+  "displayPointCount": 4755,
+  "rawMaxSegmentLength": 1.500155,
+  "displayMaxSegmentLength": 1.122774,
+  "widthRaw": {
+    "min": 0.343417,
+    "avg": 11.249303,
+    "max": 30.992889
+  },
+  "widthDisplay": {
+    "min": 1.936969,
+    "avg": 11.264314,
+    "max": 28.11471
+  }
+}

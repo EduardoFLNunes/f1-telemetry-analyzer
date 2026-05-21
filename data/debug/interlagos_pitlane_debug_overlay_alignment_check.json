@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-05-21T04:45:52.852883+00:00",
+  "debugOnly": true,
+  "runtimeChanged": false,
+  "authoritativeGeometryChanged": false,
+  "renderCoordinateSystem": "map_xy_from_world_x_negative_z",
+  "singleFrontendTransform": "mapToCanvasPoint(point) after shared camera transform",
+  "mainTrackConvertedFromWorldXz": true,
+  "pitLaneCorridorConvertedFromWorldXz": true,
+  "fastLaneConvertedFromWorldXz": true,
+  "meanFastLaneToMainTrackDistance": 3.719733,
+  "meanFastLaneToVerticallyFlippedMainTrackDistance": 57.789794,
+  "pitLaneCorridorDistanceToMainTrack": {
+    "min": 15.587745,
+    "avg": 19.014036,
+    "max": 20.629039
+  },
+  "verticalFlipDetectedAfterFix": false,
+  "mainOverlayVerticalFlipFixed": true,
+  "reason": "All PitLane Debug overlay layers are converted to map_xy_from_world_x_negative_z before the shared frontend camera transform."
+}

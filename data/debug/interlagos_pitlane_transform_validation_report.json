@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-05-21T03:27:27.139576+00:00",
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "debugOnly": true,
+  "currentTransform": {
+    "transform": "A",
+    "label": "mapX = x, mapY = -z"
+  },
+  "bestTransformCandidate": {
+    "transform": "B",
+    "label": "mapX = x, mapY = z",
+    "selectedAutomatically": false,
+    "score": 37.3787
+  },
+  "confidence": "high",
+  "currentDistanceToMainStraightAvg": 226.365635,
+  "bestDistanceToMainStraightAvg": 19.118835,
+  "currentAngleDiff": 29.108399,
+  "bestAngleDiff": 0.673674,
+  "likelyRootCause": "current 1pitlane* map-space transform uses inverted Z relative to MainTrackGeometry/fast_lane.ai",
+  "recommendedFix": "Do not apply automatically. For a future manual/runtime review, validate replacing the 1pitlane* extraction map transform with B (mapX = x, mapY = z) before regenerating any official PitLaneGeometry.",
+  "reason": "Transform B has the lowest score, mean distance 19.1m to the pit straight, p95 20.6m, angle difference 0.67deg, and appearsInInfield=False. Current transform A is 226.4m from the pit straight with 29.11deg angle difference.",
+  "runtimeChanged": false,
+  "geometryChanged": false,
+  "authoritativeGeometryChanged": false,
+  "pitLaneGeometryChanged": false,
+  "projectionChanged": false,
+  "mapSpaceChanged": false,
+  "selectedAutomatically": false,
+  "exports": {
+    "json": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_transform_candidates.json",
+    "svg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_transform_candidates.svg",
+    "report": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_transform_validation_report.json"
+  }
+}

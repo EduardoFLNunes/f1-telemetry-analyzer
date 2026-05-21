@@ -1,0 +1,90 @@
+{
+  "generatedAt": "2026-05-21T03:58:16.717735+00:00",
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "debugOnly": true,
+  "transformUsed": "mapX = worldX, mapY = worldZ",
+  "sourceMeshes": [
+    "1pitlane001",
+    "1pitlane002",
+    "1pitlane003"
+  ],
+  "sourceVertexNote": "worldX=oldMapX and worldZ=-oldMapY recovered from the prior debug A projection; worldY is not used in this 2D map-space validation.",
+  "rawPointCount": 192,
+  "rawLength": 384.441084,
+  "trimCandidates": [
+    {
+      "name": "candidate_00_00",
+      "pointCount": 192,
+      "length": 384.441084,
+      "removedStartMeters": 0.0,
+      "removedEndMeters": 0.0,
+      "highlightedForComparisonOnly": false,
+      "selectedAutomatically": false
+    },
+    {
+      "name": "candidate_05_05",
+      "pointCount": 182,
+      "length": 364.47656,
+      "removedStartMeters": 9.982463,
+      "removedEndMeters": 9.982062,
+      "highlightedForComparisonOnly": true,
+      "selectedAutomatically": false
+    },
+    {
+      "name": "candidate_08_08",
+      "pointCount": 176,
+      "length": 352.49784,
+      "removedStartMeters": 15.971936,
+      "removedEndMeters": 15.971308,
+      "highlightedForComparisonOnly": false,
+      "selectedAutomatically": false
+    },
+    {
+      "name": "candidate_10_10",
+      "pointCount": 172,
+      "length": 344.512029,
+      "removedStartMeters": 19.964916,
+      "removedEndMeters": 19.964139,
+      "highlightedForComparisonOnly": false,
+      "selectedAutomatically": false
+    },
+    {
+      "name": "candidate_12_12",
+      "pointCount": 168,
+      "length": 336.526218,
+      "removedStartMeters": 23.957894,
+      "removedEndMeters": 23.956972,
+      "highlightedForComparisonOnly": false,
+      "selectedAutomatically": false
+    }
+  ],
+  "spatialValidation": {
+    "pitlaneSpatiallyPlausible": true,
+    "distanceToMainStraightAvg": 19.118835,
+    "distanceToMainStraightP95": 20.626669,
+    "angleDiffToMainStraight": 0.673674,
+    "appearsInInfield": false,
+    "confidence": "high"
+  },
+  "oldTransformInvalidated": true,
+  "runtimeChanged": false,
+  "geometryChanged": false,
+  "authoritativeGeometryChanged": false,
+  "pitLaneGeometryChanged": false,
+  "projectionChanged": false,
+  "mapSpaceChanged": false,
+  "readyForRuntimeIntegration": false,
+  "recommendedNextStep": "revalidate pit entry/exit using transform B geometry",
+  "exports": {
+    "surfaceBoundaryJson": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_surface_boundary_transform_b.json",
+    "surfaceBoundarySvg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_surface_boundary_transform_b.svg",
+    "derivedGeometryJson": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_surface_derived_geometry_transform_b.json",
+    "derivedGeometrySvg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_surface_derived_geometry_transform_b.svg",
+    "trimCandidatesJson": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_trim_candidates_minimal_transform_b.json",
+    "trimCandidatesSvg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_trim_candidates_minimal_transform_b.svg",
+    "spatialValidationJson": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_spatial_validation_transform_b.json",
+    "spatialValidationSvg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_spatial_validation_transform_b.svg",
+    "reportJson": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_transform_b_regeneration_report.json"
+  }
+}

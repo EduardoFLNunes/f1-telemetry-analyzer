@@ -1,0 +1,38 @@
+{
+  "track": "vhe_interlagos",
+  "config": "gp",
+  "current": {
+    "triangleCount": 102810,
+    "meshCount": 20,
+    "boundaryEdgeCount": 47431
+  },
+  "strict": {
+    "triangleCount": 67171,
+    "meshCount": 12,
+    "boundaryEdgeCount": 12028
+  },
+  "keptMeshes": [
+    "1curb001",
+    "1curb002",
+    "1curb004",
+    "1kerb001",
+    "1kerb002",
+    "1kerb003",
+    "1road001",
+    "1road002",
+    "1road003",
+    "1road004",
+    "1road005",
+    "1road006"
+  ],
+  "removedMeshes": [
+    "roadline001",
+    "roadline002",
+    "roadline003",
+    "roadline004",
+    "roadline005",
+    "roadline006",
+    "roadlineout",
+    "roadverge"
+  ]
+}

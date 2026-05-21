@@ -1,0 +1,22 @@
+﻿{
+    "generatedAt":  "2026-05-20T01:38:12.1503642Z",
+    "visualValidation":  {
+                             "trimmedManualSvg":  "data/debug/interlagos_pitlane_trimmed_manual_05_05.svg",
+                             "comparisonSvg":  "data/debug/interlagos_pitlane_raw_vs_manual_05_05_vs_08_08.svg",
+                             "result":  "visually_validated_as_debug_candidate",
+                             "notes":  [
+                                           "PitLaneGeometryRaw remains the audit baseline.",
+                                           "PitLaneGeometryTrimmedManual 05_05 remains on the physical pitlane corridor.",
+                                           "Aggressive automatic trim is rejected and must not be used as final result.",
+                                           "No runtime integration was performed."
+                                       ]
+                         },
+    "selectedManualTrim":  "candidate_05_05",
+    "rawLength":  384.441084,
+    "selectedLength":  364.47656,
+    "removedStartMeters":  9.982062,
+    "removedEndMeters":  9.982463,
+    "aggressiveTrimRejected":  true,
+    "runtimeChanged":  false,
+    "readyForRuntimeIntegration":  false
+}

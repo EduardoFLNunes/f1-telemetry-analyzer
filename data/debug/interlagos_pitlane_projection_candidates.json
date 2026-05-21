@@ -1,0 +1,177 @@
+{
+  "generatedAt": "2026-05-20T00:22:54.577405+00:00",
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "projectionNote": "map-space debug only; runtime mapping is not changed",
+  "manifest": {
+    "mainVisual": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5",
+    "pitLaneAi": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\gp\\ai\\pit_lane.ai",
+    "surfacesIni": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\gp\\data\\surfaces.ini"
+  },
+  "pitLaneSurface": {
+    "triangleCount": 1326,
+    "meshCount": 3,
+    "bounds": {
+      "minX": -438.215912,
+      "maxX": -328.963989,
+      "minY": -438.294189,
+      "maxY": -63.612083,
+      "width": 109.251923,
+      "height": 374.682106
+    },
+    "meshes": [
+      {
+        "meshName": "1pitlane003",
+        "capturedTriangles": 330,
+        "bounds": {
+          "minX": -407.565369,
+          "maxX": -338.310547,
+          "minY": -437.359131,
+          "maxY": -165.986908,
+          "width": 69.254822,
+          "height": 271.372223
+        },
+        "matchedSurface": "PITLANE"
+      },
+      {
+        "meshName": "1pitlane001",
+        "capturedTriangles": 786,
+        "bounds": {
+          "minX": -438.215912,
+          "maxX": -337.999969,
+          "minY": -438.294189,
+          "maxY": -63.612083,
+          "width": 100.215943,
+          "height": 374.682106
+        },
+        "matchedSurface": "PITLANE"
+      },
+      {
+        "meshName": "1pitlane002",
+        "capturedTriangles": 210,
+        "bounds": {
+          "minX": -406.507935,
+          "maxX": -328.963989,
+          "minY": -436.869568,
+          "maxY": -163.496826,
+          "width": 77.543946,
+          "height": 273.372742
+        },
+        "matchedSurface": "PITLANE"
+      }
+    ]
+  },
+  "pitLaneAi": {
+    "path": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\gp\\ai\\pit_lane.ai",
+    "version": 7,
+    "declaredPointCount": 1361,
+    "pointCount": 1361,
+    "diagnostics": []
+  },
+  "candidates": [
+    {
+      "projection": "A",
+      "label": "mapX = x, mapY = -z",
+      "pointCount": 1361,
+      "pointsInsideSurfaceCount": 254,
+      "pointsOutsideSurfaceCount": 1107,
+      "nearestDistanceMin": 0.0,
+      "nearestDistanceAvg": 285.69083,
+      "nearestDistanceP95": 659.26173,
+      "nearestDistanceMax": 683.272467,
+      "pointsWithin1mCount": 255,
+      "pointsOutsideOver1mCount": 1106,
+      "bbox": {
+        "minX": -465.941284,
+        "maxX": 179.806732,
+        "minY": -459.058258,
+        "maxY": 476.775909,
+        "width": 645.748016,
+        "height": 935.834167
+      },
+      "bboxOverlapWithPitLaneSurface": {
+        "area": 40934.740594,
+        "ratioAi": 0.067738,
+        "ratioSurface": 1.0
+      }
+    },
+    {
+      "projection": "B",
+      "label": "mapX = x, mapY = z",
+      "pointCount": 1361,
+      "pointsInsideSurfaceCount": 0,
+      "pointsOutsideSurfaceCount": 1361,
+      "nearestDistanceMin": 12.071192,
+      "nearestDistanceAvg": 374.490762,
+      "nearestDistanceP95": 615.469394,
+      "nearestDistanceMax": 625.409055,
+      "pointsWithin1mCount": 0,
+      "pointsOutsideOver1mCount": 1361,
+      "bbox": {
+        "minX": -465.941284,
+        "maxX": 179.806732,
+        "minY": -476.775909,
+        "maxY": 459.058258,
+        "width": 645.748016,
+        "height": 935.834167
+      },
+      "bboxOverlapWithPitLaneSurface": {
+        "area": 40934.740594,
+        "ratioAi": 0.067738,
+        "ratioSurface": 1.0
+      }
+    },
+    {
+      "projection": "C",
+      "label": "mapX = z, mapY = -x",
+      "pointCount": 1361,
+      "pointsInsideSurfaceCount": 0,
+      "pointsOutsideSurfaceCount": 1361,
+      "nearestDistanceMin": 117.713304,
+      "nearestDistanceAvg": 636.503424,
+      "nearestDistanceP95": 938.103346,
+      "nearestDistanceMax": 971.728087,
+      "pointsWithin1mCount": 0,
+      "pointsOutsideOver1mCount": 1361,
+      "bbox": {
+        "minX": -476.775909,
+        "maxX": 459.058258,
+        "minY": -179.806732,
+        "maxY": 465.941284,
+        "width": 935.834167,
+        "height": 645.748016
+      },
+      "bboxOverlapWithPitLaneSurface": {
+        "area": 12694.488846,
+        "ratioAi": 0.021006,
+        "ratioSurface": 0.310115
+      }
+    },
+    {
+      "projection": "D",
+      "label": "mapX = -x, mapY = -z",
+      "pointCount": 1361,
+      "pointsInsideSurfaceCount": 0,
+      "pointsOutsideSurfaceCount": 1361,
+      "nearestDistanceMin": 312.869927,
+      "nearestDistanceAvg": 606.430753,
+      "nearestDistanceP95": 965.298335,
+      "nearestDistanceMax": 969.510262,
+      "pointsWithin1mCount": 0,
+      "pointsOutsideOver1mCount": 1361,
+      "bbox": {
+        "minX": -179.806732,
+        "maxX": 465.941284,
+        "minY": -459.058258,
+        "maxY": 476.775909,
+        "width": 645.748016,
+        "height": 935.834167
+      },
+      "bboxOverlapWithPitLaneSurface": {
+        "area": 0.0,
+        "ratioAi": 0.0,
+        "ratioSurface": 0.0
+      }
+    }
+  ]
+}

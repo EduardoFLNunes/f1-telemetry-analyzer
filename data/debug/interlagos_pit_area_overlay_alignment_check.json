@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-05-21T13:30:00.597857+00:00",
+  "debugOnly": true,
+  "runtimeChanged": false,
+  "authoritativeGeometryChanged": false,
+  "renderCoordinateSystem": "map_xy_from_world_x_negative_z",
+  "mainTrackConvertedFromWorldXz": true,
+  "pitAreaGeometryCoordinateSystem": "map_xy_from_world_x_negative_z",
+  "pitLaneCorridorConvertedFromWorldXz": true,
+  "fastLaneConvertedFromWorldXz": true,
+  "pitLaneAiConvertedFromWorldXz": true,
+  "meanFastLaneToMainTrackDistance": 3.735064,
+  "meanFastLaneToVerticallyFlippedMainTrackDistance": 57.715511,
+  "verticalFlipDetectedAfterFix": false,
+  "mainOverlayVerticalFlipFixed": true,
+  "reason": "MainTrack, PitAreaGeometry, PitLaneCorridorV2, fast_lane.ai, and pit_lane.ai are exported in the same map_xy render space."
+}

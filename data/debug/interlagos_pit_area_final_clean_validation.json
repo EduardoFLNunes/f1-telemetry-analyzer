@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-05-21T13:38:40.539303+00:00",
+  "pitAreaGenerated": true,
+  "pitAreaIncludesCorridor": true,
+  "pitAreaIncludesEntryAccess": true,
+  "pitAreaIncludesExitAccess": true,
+  "entryAccessConfidence": "high",
+  "exitAccessConfidence": "high",
+  "runtimeChanged": false,
+  "authoritativeGeometryChanged": false,
+  "readyForRuntimeIntegration": false,
+  "sourceFiles": {
+    "pitAreaSurface": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pit_area_surface.json",
+    "pitAreaComponents": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pit_area_components.json",
+    "pitAreaCenterlines": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pit_area_centerlines.json",
+    "pitAreaFinalReport": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pit_area_final_report.json"
+  },
+  "exports": {
+    "overviewSvg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pit_area_final_clean_validation.svg",
+    "entryZoomSvg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pit_area_entry_access_clean_zoom.svg",
+    "exitZoomSvg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pit_area_exit_access_clean_zoom.svg"
+  }
+}

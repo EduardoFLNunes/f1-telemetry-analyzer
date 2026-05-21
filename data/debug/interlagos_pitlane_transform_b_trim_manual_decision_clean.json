@@ -1,0 +1,86 @@
+{
+  "generatedAt": "2026-05-21T04:06:02.362577+00:00",
+  "trackName": "vhe_interlagos",
+  "trackConfig": "gp",
+  "source": "debug_transform_b_trim_manual_decision_clean",
+  "debugOnly": true,
+  "selectedTransform": "B",
+  "transformUsed": "mapX = worldX, mapY = worldZ",
+  "oldTransformInvalidated": true,
+  "candidatesCompared": [
+    "candidate_00_00",
+    "candidate_05_05",
+    "candidate_08_08"
+  ],
+  "recommendedManualTrimCandidate": null,
+  "selectedAutomatically": false,
+  "runtimeChanged": false,
+  "geometryChanged": false,
+  "authoritativeGeometryChanged": false,
+  "mainTrackGeometryChanged": false,
+  "trackPhysicsGeometryChanged": false,
+  "pitLaneGeometryChanged": false,
+  "projectionChanged": false,
+  "mapSpaceChanged": false,
+  "readyForRuntimeIntegration": false,
+  "entryExitTransitionsChanged": false,
+  "candidates": [
+    {
+      "name": "candidate_00_00",
+      "pointCount": 192,
+      "lengthMeters": 384.441084,
+      "removedStartMeters": 0.0,
+      "removedEndMeters": 0.0,
+      "startCoordinate": {
+        "x": -434.833348,
+        "y": 66.237044
+      },
+      "endCoordinate": {
+        "x": -336.841362,
+        "y": 434.749989
+      }
+    },
+    {
+      "name": "candidate_05_05",
+      "pointCount": 182,
+      "lengthMeters": 364.47656,
+      "removedStartMeters": 9.982463,
+      "removedEndMeters": 9.982062,
+      "startCoordinate": {
+        "x": -432.446484,
+        "y": 75.929951
+      },
+      "endCoordinate": {
+        "x": -339.274471,
+        "y": 425.069001
+      }
+    },
+    {
+      "name": "candidate_08_08",
+      "pointCount": 176,
+      "lengthMeters": 352.49784,
+      "removedStartMeters": 15.971936,
+      "removedEndMeters": 15.971308,
+      "startCoordinate": {
+        "x": -431.014031,
+        "y": 81.745608
+      },
+      "endCoordinate": {
+        "x": -340.732778,
+        "y": 419.260007
+      }
+    }
+  ],
+  "visualLayers": {
+    "mainTrackGeometry": "gray",
+    "fastLaneAi": "purple dashed",
+    "pitLaneBRawCandidate0000": "yellow translucent",
+    "candidate0505": "green",
+    "candidate0808": "magenta",
+    "oldTransformA": "red weak comparison only"
+  },
+  "exports": {
+    "json": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_transform_b_trim_manual_decision_clean.json",
+    "svg": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_transform_b_trim_manual_decision_clean.svg"
+  }
+}
