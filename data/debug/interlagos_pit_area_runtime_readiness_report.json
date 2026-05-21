@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-05-21T14:30:59.554967+00:00",
+  "spatialValidationPassed": true,
+  "overlayValidationPassed": true,
+  "carPathValidationPassed": true,
+  "classificationDebugPassed": true,
+  "mainTrackUnaffected": true,
+  "runtimeChanged": false,
+  "authoritativeGeometryChanged": false,
+  "readyForRuntimeIntegration": false,
+  "pitAreaSpatiallyCoherent": true,
+  "entryAccessConnectsMainTrackToPitArea": true,
+  "exitAccessConnectsPitAreaToMainTrack": true,
+  "carPassesVisuallyThroughExpectedRegions": true,
+  "ambiguityRatio": 0.882987,
+  "recommendedNextStep": "Use Debug > Pit with live/replay car path enabled for manual review; only then design a separate PitArea runtime mode without changing MainTrackGeometry.",
+  "missingBeforeRuntime": [
+    "manual review of live Assetto Corsa pit entry/exit laps",
+    "formal arbitration between MainTrack and PitArea when regions overlap",
+    "separate opt-in runtime mode for PitArea projection, if approved"
+  ]
+}

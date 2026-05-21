@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-05-21T14:56:46.861480+00:00",
+  "source": "frontend_debug_pit_recording",
+  "samplesAnalyzed": 0,
+  "samplesInsideExitAccess": 0,
+  "samplesInsidePitCorridor": 0,
+  "samplesOnMainTrack": 0,
+  "ambiguousSamples": 0,
+  "classificationCounts": {
+    "main_track": 0,
+    "pit_entry_access": 0,
+    "pit_corridor": 0,
+    "pit_exit_access": 0,
+    "pit_area_other": 0,
+    "unknown": 0
+  },
+  "transitionSequence": [],
+  "hadSamplesInsideExitAccess": false,
+  "carPassedVisuallyThroughExitAccess": false,
+  "exitAccessValidated": false,
+  "changedPitCorridorToPitExitToMainTrack": false,
+  "unknownOrAmbiguousInExit": false,
+  "runtimeChanged": false,
+  "readyForRuntimeIntegration": false,
+  "answers": {
+    "houveAmostrasDentroDoExitAccess": false,
+    "carroPassouVisualmentePeloExitAccess": false,
+    "classificacaoMudouPitCorridorPitExitMainTrack": false,
+    "houveAmbiguidadeUnknownNaSaida": false
+  }
+}

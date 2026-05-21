@@ -1,3 +1,5 @@
+import { classifyPointInTrackArea, colorForTrackArea } from './PitAreaClassifier.js';
+
 export function mapToCanvasPoint(point) {
   if (!point) return null;
   const x = Number(point.x);
@@ -60,6 +62,25 @@ function buildTrianglePaths(triangles = []) {
     .filter(Boolean);
 }
 
+function buildBoundaryLoopPaths(loops = []) {
+  if (typeof Path2D === 'undefined') return [];
+  return loops
+    .map((loop) => {
+      const points = loop.points || [];
+      if (points.length < 3) return null;
+      const path = buildPolyline(points, true);
+      return path ? { loopId: loop.loopId, path } : null;
+    })
+    .filter(Boolean);
+}
+
+function accessGeometryV2(pitlaneData, pitArea, kind) {
+  if (kind === 'entry') {
+    return pitlaneData.pitEntryAccessGeometryV2 || pitArea.entryAccessGeometryV2 || pitlaneData.pitEntryAccess || {};
+  }
+  return pitlaneData.pitExitAccessGeometryV2 || pitArea.exitAccessGeometryV2 || pitlaneData.pitExitAccess || {};
+}
+
 export function createPitLanePathCache(pitlaneData) {
   if (!pitlaneData || typeof Path2D === 'undefined') {
     return {
@@ -86,6 +107,8 @@ export function createPitLanePathCache(pitlaneData) {
   const aiReferences = pitArea.centerlines?.aiReferences || {};
   const entryAccess = pitlaneData.pitEntryAccess || {};
   const exitAccess = pitlaneData.pitExitAccess || {};
+  const entryAccessV2 = accessGeometryV2(pitlaneData, pitArea, 'entry');
+  const exitAccessV2 = accessGeometryV2(pitlaneData, pitArea, 'exit');
   const legacy = pitlaneData.pitlaneLegacy?.geometry || pitlaneData.pitlaneTrimmedManual || {};
   const surfaceLoops = pitlaneV2.surface?.boundaryLoops || [];
   const cacheKey = [
@@ -94,6 +117,10 @@ export function createPitLanePathCache(pitlaneData) {
     v2.lengthMeters || 0,
     entryAccess.pointCount || 0,
     exitAccess.pointCount || 0,
+    entryAccessV2.triangleCount || entryAccessV2.surfaceFootprint?.triangleCount || 0,
+    exitAccessV2.triangleCount || exitAccessV2.surfaceFootprint?.triangleCount || 0,
+    entryAccessV2.boundaryLoopCount || entryAccessV2.boundaryLoops?.length || 0,
+    exitAccessV2.boundaryLoopCount || exitAccessV2.boundaryLoops?.length || 0,
     legacy.pointCount || 0,
     surfaceLoops.length,
     pitAreaSurface.triangleCount || 0,
@@ -119,6 +146,12 @@ export function createPitLanePathCache(pitlaneData) {
     exitAccessCenterline: buildPolyline(exitAccess.centerline, false),
     entryAccessFootprint: buildTrianglePaths(entryAccess.surfaceFootprint?.sampleTriangles || []),
     exitAccessFootprint: buildTrianglePaths(exitAccess.surfaceFootprint?.sampleTriangles || []),
+    entryAccessV2Centerline: buildPolyline(entryAccessV2.centerline, false),
+    exitAccessV2Centerline: buildPolyline(exitAccessV2.centerline, false),
+    entryAccessV2Footprint: buildTrianglePaths(entryAccessV2.surfaceFootprint?.sampleTriangles || []),
+    exitAccessV2Footprint: buildTrianglePaths(exitAccessV2.surfaceFootprint?.sampleTriangles || []),
+    entryAccessV2BoundaryLoops: buildBoundaryLoopPaths(entryAccessV2.boundaryLoops || []),
+    exitAccessV2BoundaryLoops: buildBoundaryLoopPaths(exitAccessV2.boundaryLoops || []),
     v2SurfaceLoops: surfaceLoops.map((loop) => ({
       loopId: loop.loopId,
       path: buildPolyline(loop.points, true),
@@ -177,6 +210,30 @@ function fillTrianglePaths(ctx, paths = []) {
   });
 }
 
+function strokeBoundaryLoops(ctx, loops = []) {
+  loops.forEach((loop) => {
+    if (loop.path) ctx.stroke(loop.path);
+  });
+}
+
+function accessLabelPoint(geometry, fallback = []) {
+  const centerline = geometry?.centerline || fallback || [];
+  if (centerline.length) return centerline[Math.floor(centerline.length / 2)];
+  const loop = geometry?.boundaryLoops?.find((item) => item.points?.length);
+  if (loop?.points?.length) return loop.points[Math.floor(loop.points.length / 2)];
+  const triangle = geometry?.surfaceFootprint?.sampleTriangles?.find((item) => item.vertices?.length >= 3);
+  if (triangle) {
+    const points = triangle.vertices.map(mapToCanvasPoint).filter(Boolean);
+    if (points.length >= 3) {
+      return {
+        x: (points[0].x + points[1].x + points[2].x) / 3,
+        y: (points[0].y + points[1].y + points[2].y) / 3,
+      };
+    }
+  }
+  return null;
+}
+
 function drawMarker(ctx, point, scale, color, radius = 5.5) {
   const canvasPoint = mapToCanvasPoint(point);
   if (!canvasPoint) return;
@@ -191,15 +248,17 @@ function drawMarker(ctx, point, scale, color, radius = 5.5) {
   ctx.restore();
 }
 
-function drawLabel(ctx, point, scale, text, color = '#e2e8f0') {
+function drawLabel(ctx, point, scale, text, color = '#e2e8f0', options = {}) {
   const canvasPoint = mapToCanvasPoint(point);
   if (!canvasPoint || !text) return;
   ctx.save();
+  ctx.translate(canvasPoint.x, canvasPoint.y);
+  if (options.screenMirrorX) ctx.scale(-1, 1);
   const fontSize = 9 / scale;
   ctx.font = `${fontSize}px Consolas, monospace`;
   ctx.textBaseline = 'middle';
-  const x = canvasPoint.x + 7 / scale;
-  const y = canvasPoint.y - 7 / scale;
+  const x = 7 / scale;
+  const y = -7 / scale;
   const metrics = ctx.measureText(text);
   ctx.fillStyle = 'rgba(2,6,23,0.74)';
   ctx.fillRect(x - 3 / scale, y - 6 / scale, metrics.width + 6 / scale, 12 / scale);
@@ -247,6 +306,8 @@ export function drawPitLaneOverlay(ctx, pitlaneData, scale, pathCache, options =
   const aiReferences = pitArea.centerlines?.aiReferences || {};
   const entryAccess = pitlaneData.pitEntryAccess || {};
   const exitAccess = pitlaneData.pitExitAccess || {};
+  const entryAccessV2 = accessGeometryV2(pitlaneData, pitArea, 'entry');
+  const exitAccessV2 = accessGeometryV2(pitlaneData, pitArea, 'exit');
   const legacy = pitlaneData.pitlaneLegacy?.geometry || pitlaneData.pitlaneTrimmedManual || {};
   const cache = pathCache?.pathCacheEnabled ? pathCache : null;
   const {
@@ -265,6 +326,7 @@ export function drawPitLaneOverlay(ctx, pitlaneData, scale, pathCache, options =
   } = options;
   const pitCorridorVisible = showPitCorridorV2 ?? showPitV2 ?? true;
   const legacyVisible = showAdvancedLegacy ?? showLegacy ?? false;
+  const labelOptions = { screenMirrorX: Boolean(options.screenMirrorX) };
 
   ctx.save();
   ctx.lineCap = 'round';
@@ -310,16 +372,38 @@ export function drawPitLaneOverlay(ctx, pitlaneData, scale, pathCache, options =
         fillTrianglePaths(ctx, componentPaths.PitLaneCorridor || []);
       }
       if (showEntryAccess) {
-        ctx.fillStyle = 'rgba(34,197,94,0.12)';
-        ctx.strokeStyle = 'rgba(34,197,94,0.22)';
+        ctx.fillStyle = 'rgba(34,197,94,0.07)';
+        ctx.strokeStyle = 'rgba(34,197,94,0.12)';
         fillTrianglePaths(ctx, componentPaths.PitEntryAccessArea || []);
       }
       if (showExitAccess) {
-        ctx.fillStyle = 'rgba(251,146,60,0.12)';
-        ctx.strokeStyle = 'rgba(251,146,60,0.22)';
+        ctx.fillStyle = 'rgba(251,146,60,0.07)';
+        ctx.strokeStyle = 'rgba(251,146,60,0.12)';
         fillTrianglePaths(ctx, componentPaths.PitExitAccessArea || []);
       }
     }
+  }
+
+  if (showEntryAccess && entryAccessV2.surfaceFootprint?.sampleTriangles?.length) {
+    ctx.fillStyle = 'rgba(34,197,94,0.24)';
+    ctx.strokeStyle = 'rgba(34,197,94,0.36)';
+    ctx.lineWidth = 0.32 / scale;
+    fillTrianglePaths(ctx, cache?.entryAccessV2Footprint || buildTrianglePaths(entryAccessV2.surfaceFootprint.sampleTriangles));
+
+    ctx.strokeStyle = 'rgba(134,239,172,0.92)';
+    ctx.lineWidth = 2.2 / scale;
+    strokeBoundaryLoops(ctx, cache?.entryAccessV2BoundaryLoops || buildBoundaryLoopPaths(entryAccessV2.boundaryLoops || []));
+  }
+
+  if (showExitAccess && exitAccessV2.surfaceFootprint?.sampleTriangles?.length) {
+    ctx.fillStyle = 'rgba(251,146,60,0.25)';
+    ctx.strokeStyle = 'rgba(251,146,60,0.38)';
+    ctx.lineWidth = 0.32 / scale;
+    fillTrianglePaths(ctx, cache?.exitAccessV2Footprint || buildTrianglePaths(exitAccessV2.surfaceFootprint.sampleTriangles));
+
+    ctx.strokeStyle = 'rgba(253,186,116,0.94)';
+    ctx.lineWidth = 2.2 / scale;
+    strokeBoundaryLoops(ctx, cache?.exitAccessV2BoundaryLoops || buildBoundaryLoopPaths(exitAccessV2.boundaryLoops || []));
   }
 
   if (showSurface) {
@@ -361,7 +445,7 @@ export function drawPitLaneOverlay(ctx, pitlaneData, scale, pathCache, options =
     drawPathOrPolyline(ctx, cache?.legacyCenterline, legacy.centerline, false);
     ctx.setLineDash([]);
     if (showLabels) {
-      drawLabel(ctx, legacy.centerline[Math.floor(legacy.centerline.length / 2)], scale, 'Legacy', '#fecaca');
+      drawLabel(ctx, legacy.centerline[Math.floor(legacy.centerline.length / 2)], scale, 'Legacy', '#fecaca', labelOptions);
     }
   }
 
@@ -380,40 +464,90 @@ export function drawPitLaneOverlay(ctx, pitlaneData, scale, pathCache, options =
     drawDirectionTicks(ctx, v2.centerline, scale, '#fde047');
   }
 
-  if (showEntryAccess && entryAccess.centerline?.length) {
-    ctx.strokeStyle = '#22c55e';
-    ctx.lineWidth = 3.0 / scale;
+  if (showEntryAccess && (entryAccessV2.centerline?.length || entryAccess.centerline?.length)) {
+    const centerline = entryAccessV2.centerline?.length ? entryAccessV2.centerline : entryAccess.centerline;
+    ctx.strokeStyle = 'rgba(187,247,208,0.74)';
+    ctx.lineWidth = 1.55 / scale;
     ctx.setLineDash([]);
-    drawPathOrPolyline(ctx, cache?.entryAccessCenterline, entryAccess.centerline, false);
+    drawPathOrPolyline(ctx, cache?.entryAccessV2Centerline || cache?.entryAccessCenterline, centerline, false);
   }
 
-  if (showExitAccess && exitAccess.centerline?.length) {
-    ctx.strokeStyle = '#fb923c';
-    ctx.lineWidth = 3.0 / scale;
+  if (showExitAccess && (exitAccessV2.centerline?.length || exitAccess.centerline?.length)) {
+    const centerline = exitAccessV2.centerline?.length ? exitAccessV2.centerline : exitAccess.centerline;
+    ctx.strokeStyle = 'rgba(254,215,170,0.76)';
+    ctx.lineWidth = 1.55 / scale;
     ctx.setLineDash([]);
-    drawPathOrPolyline(ctx, cache?.exitAccessCenterline, exitAccess.centerline, false);
+    drawPathOrPolyline(ctx, cache?.exitAccessV2Centerline || cache?.exitAccessCenterline, centerline, false);
   }
 
   if (pitCorridorVisible && showEntryExit && v2.centerline?.length) {
     drawMarker(ctx, v2.start, scale, '#22c55e', 5.8);
     drawMarker(ctx, v2.end, scale, '#fb923c', 5.8);
     if (showLabels) {
-      drawLabel(ctx, v2.start, scale, 'Entry', '#bbf7d0');
-      drawLabel(ctx, v2.end, scale, 'Exit', '#fed7aa');
+      drawLabel(ctx, v2.start, scale, 'Entry', '#bbf7d0', labelOptions);
+      drawLabel(ctx, v2.end, scale, 'Exit', '#fed7aa', labelOptions);
     }
   }
 
   if (showLabels) {
     if (pitCorridorVisible && v2.centerline?.length) {
-      drawLabel(ctx, v2.centerline[Math.floor(v2.centerline.length / 2)], scale, 'Pit Corridor V2', '#fef08a');
+      drawLabel(ctx, v2.centerline[Math.floor(v2.centerline.length / 2)], scale, 'Pit Corridor V2', '#fef08a', labelOptions);
     }
-    if (showEntryAccess && entryAccess.centerline?.length) {
-      drawLabel(ctx, entryAccess.centerline[Math.floor(entryAccess.centerline.length / 2)], scale, 'Entry Access', '#bbf7d0');
+    if (showEntryAccess) {
+      const point = accessLabelPoint(entryAccessV2, entryAccess.centerline);
+      if (point) drawLabel(ctx, point, scale, 'Entry Access Area', '#bbf7d0', labelOptions);
     }
-    if (showExitAccess && exitAccess.centerline?.length) {
-      drawLabel(ctx, exitAccess.centerline[Math.floor(exitAccess.centerline.length / 2)], scale, 'Exit Access', '#fed7aa');
+    if (showExitAccess) {
+      const point = accessLabelPoint(exitAccessV2, exitAccess.centerline);
+      if (point) drawLabel(ctx, point, scale, 'Exit Access Area', '#fed7aa', labelOptions);
     }
   }
 
+  ctx.restore();
+}
+
+export function drawPitAreaCarPath(ctx, pitlaneData, history = [], scale, options = {}) {
+  if (!pitlaneData || !history?.length || !options.showCarPath) return;
+
+  const step = Math.max(1, Math.ceil(history.length / 260));
+  const samples = history
+    .filter((_, index) => index % step === 0)
+    .map((frame) => {
+      const point = frame.mapPosition || { x: frame.x, y: frame.y ?? frame.z };
+      const canvasPoint = mapToCanvasPoint(point);
+      if (!canvasPoint) return null;
+      return {
+        point: canvasPoint,
+        classification: classifyPointInTrackArea(point, pitlaneData),
+      };
+    })
+    .filter(Boolean);
+  if (!samples.length) return;
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.globalAlpha = 0.78;
+  for (let index = 1; index < samples.length; index += 1) {
+    const prev = samples[index - 1];
+    const current = samples[index];
+    const segmentDistance = Math.hypot(current.point.x - prev.point.x, current.point.y - prev.point.y);
+    if (!Number.isFinite(segmentDistance) || segmentDistance > 38) continue;
+    ctx.beginPath();
+    ctx.moveTo(prev.point.x, prev.point.y);
+    ctx.lineTo(current.point.x, current.point.y);
+    ctx.strokeStyle = colorForTrackArea(current.classification.area);
+    ctx.lineWidth = 1.7 / scale;
+    ctx.stroke();
+  }
+
+  const markerStep = Math.max(1, Math.ceil(samples.length / 190));
+  for (let index = 0; index < samples.length; index += markerStep) {
+    const sample = samples[index];
+    ctx.beginPath();
+    ctx.arc(sample.point.x, sample.point.y, 2.1 / scale, 0, Math.PI * 2);
+    ctx.fillStyle = colorForTrackArea(sample.classification.area);
+    ctx.fill();
+  }
   ctx.restore();
 }

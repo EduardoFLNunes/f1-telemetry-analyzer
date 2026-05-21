@@ -1,0 +1,343 @@
+{
+  "generatedAt": "2026-05-21T14:56:46.846649+00:00",
+  "source": "frontend_debug_pit_recording",
+  "samplesAnalyzed": 22,
+  "samplesInsideExitAccess": 0,
+  "samplesInsidePitCorridor": 0,
+  "samplesOnMainTrack": 22,
+  "ambiguousSamples": 0,
+  "classificationCounts": {
+    "main_track": 22,
+    "pit_entry_access": 0,
+    "pit_corridor": 0,
+    "pit_exit_access": 0,
+    "pit_area_other": 0,
+    "unknown": 0
+  },
+  "transitionSequence": [
+    "main_track"
+  ],
+  "hadSamplesInsideExitAccess": false,
+  "carPassedVisuallyThroughExitAccess": false,
+  "exitAccessValidated": false,
+  "changedPitCorridorToPitExitToMainTrack": false,
+  "unknownOrAmbiguousInExit": false,
+  "runtimeChanged": false,
+  "readyForRuntimeIntegration": false,
+  "answers": {
+    "houveAmostrasDentroDoExitAccess": false,
+    "carroPassouVisualmentePeloExitAccess": false,
+    "classificacaoMudouPitCorridorPitExitMainTrack": false,
+    "houveAmbiguidadeUnknownNaSaida": false
+  },
+  "samples": [
+    {
+      "index": 0,
+      "timestamp": "1779375404211",
+      "mapPosition": {
+        "x": 128.649061,
+        "y": 286.822104
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 647.997932,
+      "distanceToExitAccess": 863.442364,
+      "distanceToPitCorridor": 664.640079,
+      "distanceToMainTrack": 2.91511,
+      "confidence": "medium"
+    },
+    {
+      "index": 1,
+      "timestamp": "1779375404316",
+      "mapPosition": {
+        "x": 122.909108,
+        "y": 288.863045
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 643.852717,
+      "distanceToExitAccess": 862.051379,
+      "distanceToPitCorridor": 660.870076,
+      "distanceToMainTrack": 3.78958,
+      "confidence": "medium"
+    },
+    {
+      "index": 2,
+      "timestamp": "1779375404417",
+      "mapPosition": {
+        "x": 118.586798,
+        "y": 290.239891
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 640.676578,
+      "distanceToExitAccess": 860.89561,
+      "distanceToPitCorridor": 657.967674,
+      "distanceToMainTrack": 4.291366,
+      "confidence": "medium"
+    },
+    {
+      "index": 3,
+      "timestamp": "1779375404528",
+      "mapPosition": {
+        "x": 113.172473,
+        "y": 291.763756
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 636.62574,
+      "distanceToExitAccess": 859.308963,
+      "distanceToPitCorridor": 654.248577,
+      "distanceToMainTrack": 4.722983,
+      "confidence": "medium"
+    },
+    {
+      "index": 4,
+      "timestamp": "1779375404637",
+      "mapPosition": {
+        "x": 107.916855,
+        "y": 293.041587
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 632.619893,
+      "distanceToExitAccess": 857.629743,
+      "distanceToPitCorridor": 650.553742,
+      "distanceToMainTrack": 4.944501,
+      "confidence": "medium"
+    },
+    {
+      "index": 5,
+      "timestamp": "1779375404737",
+      "mapPosition": {
+        "x": 102.635512,
+        "y": 294.136418
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 628.523735,
+      "distanceToExitAccess": 855.811598,
+      "distanceToPitCorridor": 646.759932,
+      "distanceToMainTrack": 4.981574,
+      "confidence": "medium"
+    },
+    {
+      "index": 6,
+      "timestamp": "1779375404840",
+      "mapPosition": {
+        "x": 97.123882,
+        "y": 295.116041
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 624.1901,
+      "distanceToExitAccess": 853.806539,
+      "distanceToPitCorridor": 642.733703,
+      "distanceToMainTrack": 4.860722,
+      "confidence": "medium"
+    },
+    {
+      "index": 7,
+      "timestamp": "1779375404942",
+      "mapPosition": {
+        "x": 91.526892,
+        "y": 295.937206
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 619.7241,
+      "distanceToExitAccess": 851.653699,
+      "distanceToPitCorridor": 638.571129,
+      "distanceToMainTrack": 4.567714,
+      "confidence": "medium"
+    },
+    {
+      "index": 8,
+      "timestamp": "1779375405049",
+      "mapPosition": {
+        "x": 85.577805,
+        "y": 296.624706
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 614.905939,
+      "distanceToExitAccess": 849.240526,
+      "distanceToPitCorridor": 634.066272,
+      "distanceToMainTrack": 4.07459,
+      "confidence": "medium"
+    },
+    {
+      "index": 9,
+      "timestamp": "1779375405149",
+      "mapPosition": {
+        "x": 80.670811,
+        "y": 297.056661
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 610.879227,
+      "distanceToExitAccess": 847.159579,
+      "distanceToPitCorridor": 630.291434,
+      "distanceToMainTrack": 3.537582,
+      "confidence": "medium"
+    },
+    {
+      "index": 10,
+      "timestamp": "1779375405249",
+      "mapPosition": {
+        "x": 74.644608,
+        "y": 297.418859
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 605.866611,
+      "distanceToExitAccess": 844.489826,
+      "distanceToPitCorridor": 625.579939,
+      "distanceToMainTrack": 2.74414,
+      "confidence": "medium"
+    },
+    {
+      "index": 11,
+      "timestamp": "1779375405350",
+      "mapPosition": {
+        "x": 69.397065,
+        "y": 297.574168
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 601.434892,
+      "distanceToExitAccess": 842.053627,
+      "distanceToPitCorridor": 621.40241,
+      "distanceToMainTrack": 1.988604,
+      "confidence": "medium"
+    },
+    {
+      "index": 12,
+      "timestamp": "1779375405465",
+      "mapPosition": {
+        "x": 62.586966,
+        "y": 297.562956
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 595.593152,
+      "distanceToExitAccess": 838.743948,
+      "distanceToPitCorridor": 615.880044,
+      "distanceToMainTrack": 0.911044,
+      "confidence": "medium"
+    },
+    {
+      "index": 13,
+      "timestamp": "1779375405568",
+      "mapPosition": {
+        "x": 56.664492,
+        "y": 297.333773
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 590.415103,
+      "distanceToExitAccess": 835.707133,
+      "distanceToPitCorridor": 610.968333,
+      "distanceToMainTrack": 0.043074,
+      "confidence": "medium"
+    },
+    {
+      "index": 14,
+      "timestamp": "1779375405679",
+      "mapPosition": {
+        "x": 50.487479,
+        "y": 296.850741
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 584.901237,
+      "distanceToExitAccess": 832.357651,
+      "distanceToPitCorridor": 605.718973,
+      "distanceToMainTrack": 0.903507,
+      "confidence": "medium"
+    },
+    {
+      "index": 15,
+      "timestamp": "1779375405784",
+      "mapPosition": {
+        "x": 44.457037,
+        "y": 296.145586
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 579.407686,
+      "distanceToExitAccess": 828.912495,
+      "distanceToPitCorridor": 600.470953,
+      "distanceToMainTrack": 1.78694,
+      "confidence": "medium"
+    },
+    {
+      "index": 16,
+      "timestamp": "1779375405886",
+      "mapPosition": {
+        "x": 37.957966,
+        "y": 295.108046
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 573.352081,
+      "distanceToExitAccess": 824.986986,
+      "distanceToPitCorridor": 594.664392,
+      "distanceToMainTrack": 2.620222,
+      "confidence": "medium"
+    },
+    {
+      "index": 17,
+      "timestamp": "1779375405996",
+      "mapPosition": {
+        "x": 31.439862,
+        "y": 293.77337
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 567.132459,
+      "distanceToExitAccess": 820.822066,
+      "distanceToPitCorridor": 588.677779,
+      "distanceToMainTrack": 3.466159,
+      "confidence": "medium"
+    },
+    {
+      "index": 18,
+      "timestamp": "1779375406105",
+      "mapPosition": {
+        "x": 25.519752,
+        "y": 292.305435
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 561.35391,
+      "distanceToExitAccess": 816.83931,
+      "distanceToPitCorridor": 583.096079,
+      "distanceToMainTrack": 4.140351,
+      "confidence": "medium"
+    },
+    {
+      "index": 19,
+      "timestamp": "1779375406220",
+      "mapPosition": {
+        "x": 18.452472,
+        "y": 290.174542
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 554.25893,
+      "distanceToExitAccess": 811.779861,
+      "distanceToPitCorridor": 576.21296,
+      "distanceToMainTrack": 4.859011,
+      "confidence": "medium"
+    },
+    {
+      "index": 20,
+      "timestamp": "1779375406333",
+      "mapPosition": {
+        "x": 12.120521,
+        "y": 287.894752
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 547.706327,
+      "distanceToExitAccess": 806.944022,
+      "distanceToPitCorridor": 569.826838,
+      "distanceToMainTrack": 5.456422,
+      "confidence": "medium"
+    },
+    {
+      "index": 21,
+      "timestamp": "1779375406435",
+      "mapPosition": {
+        "x": 6.211839,
+        "y": 285.460588
+      },
+      "areaClassification": "main_track",
+      "distanceToEntryAccess": 541.427691,
+      "distanceToExitAccess": 802.17955,
+      "distanceToPitCorridor": 563.683893,
+      "distanceToMainTrack": 5.875011,
+      "confidence": "medium"
+    }
+  ]
+}

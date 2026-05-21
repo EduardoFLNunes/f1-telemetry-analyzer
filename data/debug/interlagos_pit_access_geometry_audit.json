@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-05-21T15:06:11.294186+00:00",
+  "debugOnly": true,
+  "runtimeChanged": false,
+  "authoritativeGeometryChanged": false,
+  "pitEntryAccessGeometryExistsAsSurfaceFootprint": true,
+  "pitExitAccessGeometryExistsAsSurfaceFootprint": true,
+  "pitEntryAccessGeometryV2Built": true,
+  "pitExitAccessGeometryV2Built": true,
+  "pitEntryAccessGeometryV2HasSurface": true,
+  "pitExitAccessGeometryV2HasSurface": true,
+  "oldEntryAccessWasOnlyCenterlineOrAiReference": false,
+  "oldExitAccessWasOnlyCenterlineOrAiReference": false,
+  "oldEntryAccessSurfaceTriangleCount": 1711,
+  "oldExitAccessSurfaceTriangleCount": 1342,
+  "componentEntryAccessSurfaceTriangleCount": 1424,
+  "componentExitAccessSurfaceTriangleCount": 1043,
+  "blueCyanDottedLine": {
+    "source": "pit_lane.ai",
+    "usage": "auxiliary_reference_only",
+    "pointCount": 1361,
+    "isConstructedAccessGeometry": false,
+    "answer": "A linha azul/ciano pontilhada vem de pit_lane.ai e deve ser lida somente como referência auxiliar."
+  },
+  "pitLaneAiUsedAsReferenceOnly": true,
+  "entryExitAccessRenderedBefore": "PitArea component triangles existed, but the UI also drew prominent centerlines/AI references, making the access read as a dotted/path overlay instead of an explicit built area.",
+  "entryExitAccessRenderedNow": "PitEntryAccessGeometryV2 and PitExitAccessGeometryV2 expose physical surfaceFootprint triangles plus boundary loops for solid translucent area rendering.",
+  "answer": {
+    "PitEntryAccessGeometryExisteComoPolygonSurfaceFootprint": true,
+    "PitExitAccessGeometryExisteComoPolygonSurfaceFootprint": true,
+    "OuSoExisteCenterlineAiReference": false,
+    "OQueEstaSendoDesenhadoEmAzulCianoPontilhado": "pit_lane.ai auxiliary_reference_only",
+    "LinhaPontilhadaVemDePitLaneAi": true,
+    "EntryExitAccessRenderizadosComoAreaSolida": true
+  }
+}

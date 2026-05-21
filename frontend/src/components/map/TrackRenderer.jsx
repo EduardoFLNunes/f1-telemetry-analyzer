@@ -11,8 +11,9 @@ import {
   drawProjectionDebug,
   drawTrackSurface,
 } from './OverlayRenderer.jsx';
-import { createPitLanePathCache, drawPitLaneOverlay } from './PitLaneOverlay.jsx';
+import { createPitLanePathCache, drawPitAreaCarPath, drawPitLaneOverlay } from './PitLaneOverlay.jsx';
 import { PitLaneDebugPanel } from './PitLaneDebugPanel.jsx';
+import { classifyPointInTrackArea } from './PitAreaClassifier.js';
 import { ProjectionDebugOverlay } from '../debug/ProjectionDebugOverlay.jsx';
 import { mirrorMode, resolveMirrorX } from './renderTransform.js';
 
@@ -126,6 +127,11 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
     builds: 0,
     resized: 0,
   });
+  const pitPathRecordingRef = useRef({
+    recording: false,
+    samples: [],
+    lastRecordedAt: 0,
+  });
   const [cameraMode, setCameraMode] = useState('OVERVIEW');
   const [geometryMode, setGeometryMode] = useState('RIBBON');
   const [debugEnabled, setDebugEnabled] = useState(false);
@@ -144,10 +150,14 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
     showExitAccess: true,
     showEntryExit: true,
     showAiReferences: true,
+    showCarPath: false,
     showSurface: false,
     showLabels: true,
     showAdvancedLegacy: false,
   });
+  const [pitPathRecording, setPitPathRecording] = useState(false);
+  const [recordedPitPathCount, setRecordedPitPathCount] = useState(0);
+  const [pitPathExportStatus, setPitPathExportStatus] = useState('');
   const [debugOverlayFrame, setDebugOverlayFrame] = useState(null);
 
   const cameraRef = useRef({
@@ -229,6 +239,20 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
     () => createPitLanePathCache(pitLaneDebugState.data),
     [pitLaneDebugState.data],
   );
+  const pitAreaClassification = useMemo(
+    () => classifyPointInTrackArea(debugOverlayFrame?.mapPosition, pitLaneDebugState.data),
+    [debugOverlayFrame, pitLaneDebugState.data],
+  );
+
+  useEffect(() => {
+    pitPathRecordingRef.current.recording = pitPathRecording;
+    if (pitPathRecording) {
+      pitPathRecordingRef.current.samples = [];
+      pitPathRecordingRef.current.lastRecordedAt = 0;
+      setRecordedPitPathCount(0);
+      setPitPathExportStatus('recording started');
+    }
+  }, [pitPathRecording]);
 
   useEffect(() => {
     cameraRef.current.mode = cameraMode;
@@ -297,6 +321,33 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
       const liveDebugHistory = debugEnabled && debugLayers.trajectory
         ? selectDebugTrajectory(liveHistory, renderFrame)
         : [];
+      const pitLaneDriverHistory = pitLaneEnabled && pitLaneOptions.showCarPath
+        ? selectDebugTrajectory(liveHistory, renderFrame, 900)
+        : [];
+      if (pitLaneEnabled && pitPathRecordingRef.current.recording && renderFrame?.mapPosition) {
+        const now = Date.now();
+        if (now - pitPathRecordingRef.current.lastRecordedAt >= 100) {
+          const classification = classifyPointInTrackArea(renderFrame.mapPosition, pitLaneDebugState.data);
+          pitPathRecordingRef.current.samples.push({
+            timestamp: now,
+            lap: renderFrame.lap_number,
+            mapPosition: {
+              x: Number(renderFrame.mapPosition.x),
+              y: Number(renderFrame.mapPosition.y),
+            },
+            areaClassification: classification.area,
+            distanceToExitAccess: classification.distanceToExitAccess,
+            distanceToPitCorridor: classification.distanceToPitCorridor,
+            distanceToMainTrack: classification.distanceToMainTrack,
+            confidence: classification.confidence,
+          });
+          if (pitPathRecordingRef.current.samples.length > 6000) {
+            pitPathRecordingRef.current.samples = pitPathRecordingRef.current.samples.slice(-6000);
+          }
+          pitPathRecordingRef.current.lastRecordedAt = now;
+          setRecordedPitPathCount(pitPathRecordingRef.current.samples.length);
+        }
+      }
       const renderBounds = visualTrack ? fixedBounds : computeTrackBounds(null, liveDebugHistory, renderFrame);
       const metrics = renderMetricsRef.current;
       if (metrics.lastFrameAt) {
@@ -392,9 +443,11 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
           pitLaneOptions.showExitAccess ? 'pit-exit-access' : 'pit-exit-access-off',
           pitLaneOptions.showEntryExit ? 'pit-entry-exit' : 'pit-entry-exit-off',
           pitLaneOptions.showAiReferences ? 'pit-ai-references' : 'pit-ai-references-off',
+          pitLaneOptions.showCarPath ? 'pit-car-path' : 'pit-car-path-off',
           pitLaneOptions.showSurface ? 'pit-surface' : 'pit-surface-off',
           pitLaneOptions.showLabels ? 'pit-labels' : 'pit-labels-off',
           pitLaneOptions.showAdvancedLegacy ? 'pit-legacy' : 'pit-legacy-off',
+          renderOptions.mirrorX ? 'screen-mirror-x' : 'screen-mirror-off',
           pitLanePathCache?.cacheKey || 'pitlane-none',
         ].join('|');
 
@@ -414,7 +467,10 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
               drawPhysicsEdges(trackLayerCtx, normalizedTrack, layerScale);
             }
             if (pitLaneEnabled && pitLaneDebugState.data) {
-              drawPitLaneOverlay(trackLayerCtx, pitLaneDebugState.data, layerScale, pitLanePathCache, pitLaneOptions);
+              drawPitLaneOverlay(trackLayerCtx, pitLaneDebugState.data, layerScale, pitLanePathCache, {
+                ...pitLaneOptions,
+                screenMirrorX: renderOptions.mirrorX,
+              });
             }
             trackLayerCtx.restore();
             trackLayerMetricsRef.current.builds += 1;
@@ -430,6 +486,9 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
         scale = applyCameraTransform(mapCtx, rect.width, rect.height, renderBounds, cameraRef.current, renderFrame);
         metrics.cameraEasingEnabled = Boolean(cameraRef.current.cameraEasingEnabled);
         if (debugEnabled && debugLayers.trajectory) drawTrajectory(mapCtx, liveDebugHistory, scale, { maxSegmentDistance: 35 });
+        if (pitLaneEnabled && pitLaneDebugState.data && pitLaneOptions.showCarPath) {
+          drawPitAreaCarPath(mapCtx, pitLaneDebugState.data, pitLaneDriverHistory, scale, pitLaneOptions);
+        }
         if (debugEnabled && debugLayers.projection && normalizedTrack && renderFrame) drawProjectionDebug(mapCtx, renderFrame, scale);
         if (renderFrame) drawCar(mapCtx, renderFrame, scale);
         mapCtx.restore();
@@ -449,7 +508,13 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
         }
         if (debugEnabled && debugLayers.trajectory) drawTrajectory(mapCtx, liveDebugHistory, scale, { maxSegmentDistance: 35 });
         if (pitLaneEnabled && pitLaneDebugState.data) {
-          drawPitLaneOverlay(mapCtx, pitLaneDebugState.data, scale, pitLanePathCache, pitLaneOptions);
+          drawPitLaneOverlay(mapCtx, pitLaneDebugState.data, scale, pitLanePathCache, {
+            ...pitLaneOptions,
+            screenMirrorX: renderOptions.mirrorX,
+          });
+        }
+        if (pitLaneEnabled && pitLaneDebugState.data && pitLaneOptions.showCarPath) {
+          drawPitAreaCarPath(mapCtx, pitLaneDebugState.data, pitLaneDriverHistory, scale, pitLaneOptions);
         }
         if (debugEnabled && debugLayers.projection && normalizedTrack && renderFrame) drawProjectionDebug(mapCtx, renderFrame, scale);
         if (renderFrame) drawCar(mapCtx, renderFrame, scale);
@@ -522,6 +587,34 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
   const togglePitLaneOption = useCallback((key) => {
     setPitLaneOptions((options) => ({ ...options, [key]: !options[key] }));
   }, []);
+
+  const togglePitPathRecording = useCallback(() => {
+    setPitPathRecording((value) => !value);
+  }, []);
+
+  const exportPitPathRecording = useCallback(async () => {
+    const samples = pitPathRecordingRef.current.samples;
+    if (!samples.length) {
+      setPitPathExportStatus('no samples recorded');
+      return;
+    }
+    setPitPathExportStatus('exporting...');
+    try {
+      const response = await fetch(`http://${window.location.hostname}:8000/api/debug/pitlane/recorded-car-path`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: 'frontend_debug_pit_recording', samples }),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      const exitSamples = payload.recordedPath?.samplesInsideExitAccess ?? 0;
+      const validated = Boolean(payload.recordedPath?.exitAccessValidated);
+      setPitPathExportStatus(`exported ${samples.length} samples, exit=${exitSamples}, validated=${validated}`);
+      pitLaneDebugState.reload();
+    } catch (error) {
+      setPitPathExportStatus(`export failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, [pitLaneDebugState]);
 
   return (
     <div
@@ -606,6 +699,12 @@ function TrackRendererComponent({ trackData, mirrorX, trackDiagnostics }) {
           state={pitLaneDebugState}
           options={pitLaneOptions}
           onToggle={togglePitLaneOption}
+          classification={pitAreaClassification}
+          recording={pitPathRecording}
+          recordedCount={recordedPitPathCount || pitPathRecordingRef.current.samples.length}
+          exportStatus={pitPathExportStatus}
+          onToggleRecording={togglePitPathRecording}
+          onExportRecording={exportPitPathRecording}
         />
       )}
     </div>

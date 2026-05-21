@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-05-21T14:30:53.128991+00:00",
+  "commonTransformUsedByLayers": "mapToCanvasPoint({x,y}) using canonical map-space mapX=worldX,mapY=-worldZ; optional final screen mirror applies to the whole map canvas, not individual layers.",
+  "mainTrackVerticallyFlipped": false,
+  "pitAreaAlignedWithMainTrack": true,
+  "carMapPositionAligned": true,
+  "meanFastLaneToMainTrackDistance": 3.664068,
+  "meanFastLaneToVerticallyFlippedMainTrackDistance": 57.892696,
+  "checkedLayers": [
+    "MainTrackGeometry",
+    "PitAreaGeometry",
+    "PitLaneCorridorV2",
+    "PitEntryAccessGeometry",
+    "PitExitAccessGeometry",
+    "fast_lane.ai",
+    "pit_lane.ai",
+    "car.mapPosition",
+    "debug markers"
+  ],
+  "runtimeChanged": false,
+  "geometryChanged": false
+}

@@ -39,6 +39,10 @@ PITLANE_OVERLAY_ALIGNMENT_CHECK_JSON = "interlagos_pitlane_debug_overlay_alignme
 PIT_ACCESS_LOCAL_MESH_INVENTORY_JSON = "interlagos_pit_access_local_mesh_inventory.json"
 PIT_ENTRY_ACCESS_GEOMETRY_JSON = "interlagos_pit_entry_access_geometry.json"
 PIT_EXIT_ACCESS_GEOMETRY_JSON = "interlagos_pit_exit_access_geometry.json"
+PIT_ACCESS_GEOMETRY_AUDIT_JSON = "interlagos_pit_access_geometry_audit.json"
+PIT_ENTRY_ACCESS_GEOMETRY_V2_JSON = "interlagos_pit_entry_access_geometry_v2.json"
+PIT_EXIT_ACCESS_GEOMETRY_V2_JSON = "interlagos_pit_exit_access_geometry_v2.json"
+PIT_AREA_CONSTRUCTED_ACCESS_VALIDATION_JSON = "interlagos_pit_area_constructed_access_validation.json"
 PIT_ACCESS_FINAL_REPORT_JSON = "interlagos_pit_access_final_report.json"
 PIT_AREA_MESH_INVENTORY_JSON = "interlagos_pit_area_mesh_inventory.json"
 PIT_AREA_SURFACE_JSON = "interlagos_pit_area_surface.json"
@@ -46,6 +50,12 @@ PIT_AREA_COMPONENTS_JSON = "interlagos_pit_area_components.json"
 PIT_AREA_CENTERLINES_JSON = "interlagos_pit_area_centerlines.json"
 PIT_AREA_OVERLAY_ALIGNMENT_CHECK_JSON = "interlagos_pit_area_overlay_alignment_check.json"
 PIT_AREA_FINAL_REPORT_JSON = "interlagos_pit_area_final_report.json"
+PIT_AREA_OVERLAY_ALIGNMENT_REPORT_JSON = "interlagos_pit_area_overlay_alignment_report.json"
+PIT_AREA_CAR_PATH_VALIDATION_JSON = "interlagos_pit_area_car_path_validation.json"
+PIT_AREA_RUNTIME_READINESS_REPORT_JSON = "interlagos_pit_area_runtime_readiness_report.json"
+PIT_AREA_EXIT_ACCESS_LIVE_VALIDATION_JSON = "interlagos_pit_area_exit_access_live_validation.json"
+PIT_AREA_RECORDED_CAR_PATH_JSON = "interlagos_pit_area_recorded_car_path.json"
+PIT_AREA_EXIT_ACCESS_VALIDATION_REPORT_JSON = "interlagos_pit_area_exit_access_validation_report.json"
 
 
 def _read_json(path: Path) -> Dict[str, Any]:
@@ -160,6 +170,20 @@ def _normalize_access_geometry(data: Dict[str, Any]) -> Dict[str, Any]:
     if sample_triangles:
         footprint["sampleTriangles"] = sample_triangles
         normalized["surfaceFootprint"] = footprint
+    normalized["boundaryLoops"] = _normalize_boundary_loops(normalized.get("boundaryLoops", []), flip_y=flip_y)
+    normalized["rawBoundaryLoops"] = _normalize_boundary_loops(normalized.get("rawBoundaryLoops", []), flip_y=flip_y)
+    if isinstance(normalized.get("polygon"), dict):
+        polygon = dict(normalized["polygon"])
+        polygon["points"] = _points_xy(polygon.get("points", []), flip_y=flip_y)
+        normalized["polygon"] = polygon
+    boundary_edges = []
+    for edge in normalized.get("boundaryEdges", []) or []:
+        item = dict(edge)
+        item["from"] = _point_xy(item.get("from"), flip_y=flip_y)
+        item["to"] = _point_xy(item.get("to"), flip_y=flip_y)
+        boundary_edges.append(item)
+    if boundary_edges:
+        normalized["boundaryEdges"] = boundary_edges
     normalized["renderCoordinateSystem"] = "map_xy_from_world_x_negative_z"
     return normalized
 
@@ -402,6 +426,10 @@ def build_pitlane_debug_payload(repo_root: Path) -> Dict[str, Any]:
     pit_access_inventory = _read_json(debug_dir / PIT_ACCESS_LOCAL_MESH_INVENTORY_JSON)
     pit_entry_access = _normalize_access_geometry(_read_json(debug_dir / PIT_ENTRY_ACCESS_GEOMETRY_JSON))
     pit_exit_access = _normalize_access_geometry(_read_json(debug_dir / PIT_EXIT_ACCESS_GEOMETRY_JSON))
+    pit_access_geometry_audit = _read_json(debug_dir / PIT_ACCESS_GEOMETRY_AUDIT_JSON)
+    pit_entry_access_v2 = _normalize_access_geometry(_read_json(debug_dir / PIT_ENTRY_ACCESS_GEOMETRY_V2_JSON))
+    pit_exit_access_v2 = _normalize_access_geometry(_read_json(debug_dir / PIT_EXIT_ACCESS_GEOMETRY_V2_JSON))
+    pit_area_constructed_access_validation = _read_json(debug_dir / PIT_AREA_CONSTRUCTED_ACCESS_VALIDATION_JSON)
     pit_access_final_report = _read_json(debug_dir / PIT_ACCESS_FINAL_REPORT_JSON)
     pit_area_mesh_inventory = _read_json(debug_dir / PIT_AREA_MESH_INVENTORY_JSON)
     pit_area_surface = _normalize_pit_area_surface(_read_json(debug_dir / PIT_AREA_SURFACE_JSON))
@@ -409,6 +437,12 @@ def build_pitlane_debug_payload(repo_root: Path) -> Dict[str, Any]:
     pit_area_centerlines = _normalize_pit_area_centerlines(_read_json(debug_dir / PIT_AREA_CENTERLINES_JSON))
     pit_area_overlay_alignment_check = _read_json(debug_dir / PIT_AREA_OVERLAY_ALIGNMENT_CHECK_JSON)
     pit_area_final_report = _read_json(debug_dir / PIT_AREA_FINAL_REPORT_JSON)
+    pit_area_overlay_alignment_report = _read_json(debug_dir / PIT_AREA_OVERLAY_ALIGNMENT_REPORT_JSON)
+    pit_area_car_path_validation = _read_json(debug_dir / PIT_AREA_CAR_PATH_VALIDATION_JSON)
+    pit_area_runtime_readiness_report = _read_json(debug_dir / PIT_AREA_RUNTIME_READINESS_REPORT_JSON)
+    pit_area_exit_access_live_validation = _read_json(debug_dir / PIT_AREA_EXIT_ACCESS_LIVE_VALIDATION_JSON)
+    pit_area_recorded_car_path = _read_json(debug_dir / PIT_AREA_RECORDED_CAR_PATH_JSON)
+    pit_area_exit_access_validation_report = _read_json(debug_dir / PIT_AREA_EXIT_ACCESS_VALIDATION_REPORT_JSON)
     main_track_data = _read_json(cache_dir / MAIN_TRACK_CACHE)
 
     pitlane_raw = _geometry_from_artifact(raw_data, "PitLaneGeometryRaw", "raw_surface_derived")
@@ -524,6 +558,13 @@ def build_pitlane_debug_payload(repo_root: Path) -> Dict[str, Any]:
         "pitEntryAccessGeometrySvg": str(debug_dir / "interlagos_pit_entry_access_geometry.svg"),
         "pitExitAccessGeometryJson": str(debug_dir / PIT_EXIT_ACCESS_GEOMETRY_JSON),
         "pitExitAccessGeometrySvg": str(debug_dir / "interlagos_pit_exit_access_geometry.svg"),
+        "pitAccessGeometryAuditJson": str(debug_dir / PIT_ACCESS_GEOMETRY_AUDIT_JSON),
+        "pitEntryAccessGeometryV2Json": str(debug_dir / PIT_ENTRY_ACCESS_GEOMETRY_V2_JSON),
+        "pitEntryAccessGeometryV2Svg": str(debug_dir / "interlagos_pit_entry_access_geometry_v2.svg"),
+        "pitExitAccessGeometryV2Json": str(debug_dir / PIT_EXIT_ACCESS_GEOMETRY_V2_JSON),
+        "pitExitAccessGeometryV2Svg": str(debug_dir / "interlagos_pit_exit_access_geometry_v2.svg"),
+        "pitAreaConstructedAccessValidationJson": str(debug_dir / PIT_AREA_CONSTRUCTED_ACCESS_VALIDATION_JSON),
+        "pitAreaConstructedAccessValidationSvg": str(debug_dir / "interlagos_pit_area_constructed_access_validation.svg"),
         "pitAccessOverviewCleanSvg": str(debug_dir / "interlagos_pit_access_overview_clean.svg"),
         "pitEntryAccessZoomSvg": str(debug_dir / "interlagos_pit_entry_access_zoom.svg"),
         "pitExitAccessZoomSvg": str(debug_dir / "interlagos_pit_exit_access_zoom.svg"),
@@ -540,6 +581,15 @@ def build_pitlane_debug_payload(repo_root: Path) -> Dict[str, Any]:
         "pitAreaOverlayAlignmentCheckJson": str(debug_dir / PIT_AREA_OVERLAY_ALIGNMENT_CHECK_JSON),
         "pitAreaOverlayAlignmentCheckSvg": str(debug_dir / "interlagos_pit_area_overlay_alignment_check.svg"),
         "pitAreaFinalReportJson": str(debug_dir / PIT_AREA_FINAL_REPORT_JSON),
+        "pitAreaOverlayAlignmentReportJson": str(debug_dir / PIT_AREA_OVERLAY_ALIGNMENT_REPORT_JSON),
+        "pitAreaCarPathValidationJson": str(debug_dir / PIT_AREA_CAR_PATH_VALIDATION_JSON),
+        "pitAreaCarPathValidationSvg": str(debug_dir / "interlagos_pit_area_car_path_validation.svg"),
+        "pitAreaRuntimeReadinessReportJson": str(debug_dir / PIT_AREA_RUNTIME_READINESS_REPORT_JSON),
+        "pitAreaExitAccessLiveValidationJson": str(debug_dir / PIT_AREA_EXIT_ACCESS_LIVE_VALIDATION_JSON),
+        "pitAreaExitAccessLiveValidationSvg": str(debug_dir / "interlagos_pit_area_exit_access_live_validation.svg"),
+        "pitAreaRecordedCarPathJson": str(debug_dir / PIT_AREA_RECORDED_CAR_PATH_JSON),
+        "pitAreaRecordedCarPathSvg": str(debug_dir / "interlagos_pit_area_recorded_car_path.svg"),
+        "pitAreaExitAccessValidationReportJson": str(debug_dir / PIT_AREA_EXIT_ACCESS_VALIDATION_REPORT_JSON),
         "manualTrimSvg": str(debug_dir / "interlagos_pitlane_trimmed_manual_05_05.svg"),
         "manualVsCandidateSvg": str(debug_dir / "interlagos_pitlane_raw_vs_manual_05_05_vs_08_08.svg"),
         "pitExitAnalysisSvg": str(debug_dir / "interlagos_pit_exit_core_problem_analysis.svg"),
@@ -608,6 +658,10 @@ def build_pitlane_debug_payload(repo_root: Path) -> Dict[str, Any]:
             str(debug_dir / PIT_ACCESS_LOCAL_MESH_INVENTORY_JSON),
             str(debug_dir / PIT_ENTRY_ACCESS_GEOMETRY_JSON),
             str(debug_dir / PIT_EXIT_ACCESS_GEOMETRY_JSON),
+            str(debug_dir / PIT_ACCESS_GEOMETRY_AUDIT_JSON),
+            str(debug_dir / PIT_ENTRY_ACCESS_GEOMETRY_V2_JSON),
+            str(debug_dir / PIT_EXIT_ACCESS_GEOMETRY_V2_JSON),
+            str(debug_dir / PIT_AREA_CONSTRUCTED_ACCESS_VALIDATION_JSON),
             str(debug_dir / PIT_ACCESS_FINAL_REPORT_JSON),
             str(debug_dir / PIT_AREA_MESH_INVENTORY_JSON),
             str(debug_dir / PIT_AREA_SURFACE_JSON),
@@ -615,6 +669,12 @@ def build_pitlane_debug_payload(repo_root: Path) -> Dict[str, Any]:
             str(debug_dir / PIT_AREA_CENTERLINES_JSON),
             str(debug_dir / PIT_AREA_OVERLAY_ALIGNMENT_CHECK_JSON),
             str(debug_dir / PIT_AREA_FINAL_REPORT_JSON),
+            str(debug_dir / PIT_AREA_OVERLAY_ALIGNMENT_REPORT_JSON),
+            str(debug_dir / PIT_AREA_CAR_PATH_VALIDATION_JSON),
+            str(debug_dir / PIT_AREA_RUNTIME_READINESS_REPORT_JSON),
+            str(debug_dir / PIT_AREA_EXIT_ACCESS_LIVE_VALIDATION_JSON),
+            str(debug_dir / PIT_AREA_RECORDED_CAR_PATH_JSON),
+            str(debug_dir / PIT_AREA_EXIT_ACCESS_VALIDATION_REPORT_JSON),
             str(debug_dir / MANUAL_TRIM_JSON),
             str(debug_dir / MANUAL_FINAL_REPORT_JSON),
             str(debug_dir / ENTRY_EXIT_BREAKS_COMBINED_JSON),
@@ -639,6 +699,16 @@ def build_pitlane_debug_payload(repo_root: Path) -> Dict[str, Any]:
             "centerlines": pit_area_centerlines,
             "meshInventory": pit_area_mesh_inventory,
             "overlayAlignmentCheck": pit_area_overlay_alignment_check,
+            "overlayAlignmentReport": pit_area_overlay_alignment_report,
+            "carPathValidation": pit_area_car_path_validation,
+            "runtimeReadinessReport": pit_area_runtime_readiness_report,
+            "exitAccessLiveValidation": pit_area_exit_access_live_validation,
+            "recordedCarPath": pit_area_recorded_car_path,
+            "exitAccessValidationReport": pit_area_exit_access_validation_report,
+            "accessGeometryAudit": pit_access_geometry_audit,
+            "constructedAccessValidation": pit_area_constructed_access_validation,
+            "entryAccessGeometryV2": pit_entry_access_v2,
+            "exitAccessGeometryV2": pit_exit_access_v2,
             "finalReport": pit_area_final_report,
             "provider": "debug_export",
             "method": pit_area_surface.get("method"),
@@ -686,6 +756,10 @@ def build_pitlane_debug_payload(repo_root: Path) -> Dict[str, Any]:
         },
         "pitEntryAccess": pit_entry_access,
         "pitExitAccess": pit_exit_access,
+        "pitEntryAccessGeometryV2": pit_entry_access_v2,
+        "pitExitAccessGeometryV2": pit_exit_access_v2,
+        "pitAccessGeometryAudit": pit_access_geometry_audit,
+        "pitAreaConstructedAccessValidation": pit_area_constructed_access_validation,
         "pitAccessLocalMeshInventory": pit_access_inventory,
         "pitlaneOverlayAlignmentCheck": overlay_alignment_check,
         "pitAccessFinalReport": pit_access_final_report,
