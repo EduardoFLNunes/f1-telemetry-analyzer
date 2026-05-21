@@ -18,6 +18,7 @@ from fastapi import Body, FastAPI, File, HTTPException, UploadFile, WebSocket, W
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.debug.ac_shared_memory_full_inventory import build_ac_shared_memory_full_inventory
+from core.debug.pit_area_exit_validation import export_exit_access_live_validation, export_recorded_car_path
 from core.debug.pitlane_debug import build_pitlane_debug_payload
 from core.cache.track_cache import TrackCache
 from core.debug.spatial_debug import projection_debug_payload
@@ -782,6 +783,10 @@ async def get_pitlane_debug_overview():
         "pitlaneV2": payload.get("pitlaneV2"),
         "pitEntryAccess": payload.get("pitEntryAccess"),
         "pitExitAccess": payload.get("pitExitAccess"),
+        "pitEntryAccessGeometryV2": payload.get("pitEntryAccessGeometryV2"),
+        "pitExitAccessGeometryV2": payload.get("pitExitAccessGeometryV2"),
+        "pitAccessGeometryAudit": payload.get("pitAccessGeometryAudit"),
+        "pitAreaConstructedAccessValidation": payload.get("pitAreaConstructedAccessValidation"),
         "pitAccessLocalMeshInventory": payload.get("pitAccessLocalMeshInventory"),
         "pitlaneOverlayAlignmentCheck": payload.get("pitlaneOverlayAlignmentCheck"),
         "pitAccessFinalReport": payload.get("pitAccessFinalReport"),
@@ -813,6 +818,35 @@ async def get_pitlane_debug_validation_metadata():
         "validationMetadata": payload["validationMetadata"],
         "exports": payload["exports"],
     }
+
+
+@app.post("/api/debug/pitlane/exit-access/live-validation")
+async def export_pitlane_exit_access_live_validation(payload: Any = Body(default=None)):
+    if isinstance(payload, dict) and isinstance(payload.get("samples"), list):
+        samples = payload["samples"]
+        source = str(payload.get("source") or "posted_samples")
+    else:
+        samples = telemetry_buffer.get_samples()[-2400:]
+        source = "telemetry_buffer"
+    result = export_exit_access_live_validation(REPO_ROOT, samples, source=source)
+    return {"status": "success", "debugOnly": True, "runtimeChanged": False, "validation": result}
+
+
+@app.get("/api/debug/pitlane/exit-access/live-validation")
+async def get_pitlane_exit_access_live_validation():
+    samples = telemetry_buffer.get_samples()[-2400:]
+    result = export_exit_access_live_validation(REPO_ROOT, samples, source="telemetry_buffer")
+    return {"status": "success", "debugOnly": True, "runtimeChanged": False, "validation": result}
+
+
+@app.post("/api/debug/pitlane/recorded-car-path")
+async def export_pitlane_recorded_car_path(payload: Any = Body(...)):
+    samples = payload.get("samples", payload) if isinstance(payload, dict) else payload
+    if not isinstance(samples, list):
+        raise HTTPException(status_code=400, detail="Expected a list of recorded mapPosition samples")
+    source = str(payload.get("source") or "frontend_recording") if isinstance(payload, dict) else "frontend_recording"
+    result = export_recorded_car_path(REPO_ROOT, samples, source=source)
+    return {"status": "success", "debugOnly": True, "runtimeChanged": False, "recordedPath": result}
 
 
 @app.get("/api/debug/ac-shared-memory-full-inventory")

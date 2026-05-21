@@ -31,6 +31,11 @@ export interface PitAccessGeometry {
   name: string;
   kind: 'entry' | 'exit';
   coordinateSystem: string;
+  debugOnly?: boolean;
+  geometryBuilt?: boolean;
+  hasSurface?: boolean;
+  source?: string;
+  method?: string;
   centerline: PitLaneDebugPoint[];
   leftEdge?: PitLaneDebugPoint[];
   rightEdge?: PitLaneDebugPoint[];
@@ -40,13 +45,21 @@ export interface PitAccessGeometry {
   endPoint?: PitLaneDebugPoint;
   confidence?: string;
   usesPhysicalSurface?: boolean;
+  pitLaneAiUsedAsReferenceOnly?: boolean;
+  pitLaneAiUsedForGeometry?: boolean;
   edgesGenerated?: boolean;
+  leftRightEdgesGenerated?: boolean;
   runtimeChanged?: boolean;
   authoritativeGeometryChanged?: boolean;
   readyForRuntimeIntegration?: boolean;
+  triangleCount?: number;
+  boundaryLoopCount?: number;
+  boundaryLoops?: Array<{ loopId?: number; points: PitLaneDebugPoint[]; area?: number; perimeter?: number }>;
+  polygon?: { type?: string; pointCount?: number; points: PitLaneDebugPoint[] };
   surfaceFootprint?: {
     triangleCount?: number;
-    sampleTriangles?: Array<{ meshName?: string; surface?: string; vertices: PitLaneDebugPoint[] }>;
+    sampleTriangleCount?: number;
+    sampleTriangles?: Array<{ meshName?: string; surface?: string; surfaceName?: string; vertices: PitLaneDebugPoint[] }>;
   };
 }
 
@@ -86,6 +99,16 @@ export interface PitAreaGeometry {
   };
   meshInventory?: Record<string, unknown>;
   overlayAlignmentCheck?: Record<string, unknown>;
+  overlayAlignmentReport?: Record<string, unknown>;
+  carPathValidation?: Record<string, unknown>;
+  runtimeReadinessReport?: Record<string, unknown>;
+  exitAccessLiveValidation?: Record<string, unknown>;
+  recordedCarPath?: Record<string, unknown>;
+  exitAccessValidationReport?: Record<string, unknown>;
+  accessGeometryAudit?: Record<string, unknown>;
+  constructedAccessValidation?: Record<string, unknown>;
+  entryAccessGeometryV2?: PitAccessGeometry;
+  exitAccessGeometryV2?: PitAccessGeometry;
   finalReport?: Record<string, unknown>;
 }
 
@@ -167,6 +190,10 @@ export interface PitLaneDebugPayload {
   };
   pitEntryAccess?: PitAccessGeometry;
   pitExitAccess?: PitAccessGeometry;
+  pitEntryAccessGeometryV2?: PitAccessGeometry;
+  pitExitAccessGeometryV2?: PitAccessGeometry;
+  pitAccessGeometryAudit?: Record<string, unknown>;
+  pitAreaConstructedAccessValidation?: Record<string, unknown>;
   pitAccessLocalMeshInventory?: Record<string, unknown>;
   pitlaneOverlayAlignmentCheck?: Record<string, unknown>;
   pitAccessFinalReport?: Record<string, unknown>;
