@@ -110,6 +110,7 @@ class Kn5SurfaceCandidateMesh:
     material: Optional[str]
     matchedSurface: str
     includedForRoadGeometry: bool
+    includedForPitLaneGeometry: bool
     vertices: int
     triangles: int
     vertexBounds: Dict[str, List[float]]
@@ -130,6 +131,7 @@ class Kn5SurfaceCandidateMesh:
             "material": self.material,
             "matchedSurface": self.matchedSurface,
             "includedForRoadGeometry": self.includedForRoadGeometry,
+            "includedForPitLaneGeometry": self.includedForPitLaneGeometry,
             "vertices": self.vertices,
             "triangles": self.triangles,
             "vertexBounds": self.vertexBounds,

@@ -1,5 +1,6 @@
 import json
 import math
+import os
 import struct
 from collections import defaultdict
 from pathlib import Path
@@ -19,6 +20,13 @@ from .kn5_reader import (
 
 
 INCLUDED_SURFACES = ["ROAD", "CURB", "KERB"]
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _map_point(world: Sequence[float]) -> List[float]:
@@ -177,6 +185,26 @@ class Kn5TrackSurfacePolygonBuilder:
         material = self.materials[material_index] if 0 <= material_index < len(self.materials) else None
         matched_surface = _match_surface(mesh_name, material, self.included_surfaces)
         should_capture = matched_surface is not None
+
+        if should_capture and matched_surface in ["ROAD", "CURB", "KERB"]:
+            name_lower = mesh_name.lower()
+            
+            # Strict mode: Only ^1road, ^1curb, ^1kerb
+            if _env_bool("TRACK_KN5_STRICT_MAIN_TRACK", False):
+                # Check if it starts with 1road, 1curb, or 1kerb
+                if not (name_lower.startswith("1road") or name_lower.startswith("1curb") or name_lower.startswith("1kerb")):
+                    should_capture = False
+            
+            # Additional explicit exclusions
+            if should_capture:
+                if _env_bool("TRACK_KN5_EXCLUDE_AUX_ROADLINE", False) and "roadline" in name_lower:
+                    should_capture = False
+                if _env_bool("TRACK_KN5_EXCLUDE_ROADVERGE", False) and "roadverge" in name_lower:
+                    should_capture = False
+                
+                # Pitlane is NEVER part of main track in strict mode or when explicitly excluded
+                if not _env_bool("TRACK_KN5_INCLUDE_PITLANE_IN_MAIN", False) and "pitlane" in name_lower:
+                    should_capture = False
 
         vertices: List[List[float]] = []
         for _ in range(vertex_count):

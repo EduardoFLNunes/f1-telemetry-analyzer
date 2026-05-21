@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from ..cache.cache_serializer import CacheSerializer
 from ..cache.track_cache import TrackCache
+from .physics_display import generate_physics_display_geometry
 from .track_geometry_cleanup import DEFAULT_CONFIG as CLEANUP_DEFAULT_CONFIG
 from .track_geometry_cleanup import audit_geometry, cleanup_geometry, segment_lengths
 from .track_visual_geometry import DEFAULT_VISUAL_CONFIG, VISUAL_GEOMETRY_VERSION, TrackVisualGeometryBuilder
@@ -82,6 +83,10 @@ def track_geometry_cleanup_config() -> Dict[str, Any]:
 
 def track_visual_geometry_enabled() -> bool:
     return _env_bool("TRACK_VISUAL_GEOMETRY_ENABLED", True)
+
+
+def track_kn5_strict_main_track_enabled() -> bool:
+    return _env_bool("TRACK_KN5_STRICT_MAIN_TRACK", False)
 
 
 def track_visual_geometry_config() -> Dict[str, Any]:
@@ -231,7 +236,13 @@ def track_visual_geometry_config() -> Dict[str, Any]:
 
 
 def kn5_surface_cache_name(track_name: str, track_config: Optional[str], *, cleaned: bool = False) -> str:
-    suffix = "kn5_surface_interval_cleaned_geometry" if cleaned else "kn5_surface_interval_geometry"
+    parts = ["kn5_surface_interval"]
+    if track_kn5_strict_main_track_enabled():
+        parts.append("strict")
+    if cleaned:
+        parts.append("cleaned")
+    parts.append("geometry")
+    suffix = "_".join(parts)
     return f"{_safe_fragment(track_name)}_{_safe_fragment(track_config)}_{suffix}"
 
 
@@ -407,6 +418,10 @@ def track_data_from_interval_edges(result: Dict[str, Any], cache_path: Optional[
     widths = [float(sample["localWidth"]) for sample in samples if sample.get("localWidth") is not None]
     track_name = result.get("trackName") or "unknown"
     track_config = result.get("trackConfig") or "default"
+    
+    strict_enabled = track_kn5_strict_main_track_enabled()
+    geometry_version = 2 if strict_enabled else 1
+    
     metadata = {
         "trackConfig": track_config,
         "surfaceSource": result.get("surfaceSource"),
@@ -419,8 +434,15 @@ def track_data_from_interval_edges(result: Dict[str, Any], cache_path: Optional[
         "cleanedPointCount": len(center_map),
         "rawMaxSegmentLength": _max_segment_length(center_map),
         "cleanedMaxSegmentLength": _max_segment_length(center_map),
+        "meshFilterMode": "strict_main_track" if strict_enabled else "default",
+        "excludedAuxMeshes": ["roadline*", "roadlineout", "roadverge"] if strict_enabled else [],
+        "includedMeshPatterns": ["^1road", "^1curb", "^1kerb"] if strict_enabled else ["ROAD", "CURB", "KERB"],
+        "pitlaneIncludedInMain": _env_bool("TRACK_KN5_INCLUDE_PITLANE_IN_MAIN", False),
+        "boundaryEdgeCountBefore": result.get("metrics", {}).get("rawBoundaryLoopCount"), # Heuristic
+        "boundaryEdgeCountAfter": result.get("metrics", {}).get("boundaryLoopCount"),
+        "geometryVersion": geometry_version,
     }
-    return _track_data_from_map_geometry(
+    track_data = _track_data_from_map_geometry(
         track_name=track_name,
         track_config=track_config,
         center_map=center_map,
@@ -430,6 +452,8 @@ def track_data_from_interval_edges(result: Dict[str, Any], cache_path: Optional[
         cache_path=cache_path,
         metadata=metadata,
     )
+    track_data["version"] = geometry_version
+    return track_data
 
 
 def apply_kn5_geometry_cleanup(track_data: Dict[str, Any], *, target_spacing: float, smoothing_window: int) -> Dict[str, Any]:
@@ -486,6 +510,37 @@ def apply_kn5_geometry_cleanup(track_data: Dict[str, Any], *, target_spacing: fl
     cleaned_track["targetSpacing"] = target_spacing
     cleaned_track["smoothingWindow"] = smoothing_window
     return cleaned_track
+
+
+from .physics_display import calculate_physics_display_metrics, generate_physics_display_geometry
+
+
+def apply_physics_display_geometry(track_data: Dict[str, Any]) -> Dict[str, Any]:
+    auth_centerline = track_data.get("centerline", [])
+    auth_widths = track_data.get("localWidth", [])
+    if not auth_centerline:
+        return track_data
+    
+    display_geo = generate_physics_display_geometry(
+        auth_centerline, 
+        auth_widths,
+        target_spacing=1.0,
+        smoothing_window=21,
+        width_smoothing_window=31,
+        max_displacement=0.5
+    )
+    
+    metrics = calculate_physics_display_metrics(track_data, display_geo)
+    
+    track_data["physicsDisplayGeometry"] = display_geo
+    track_data["physicsDisplayMetrics"] = metrics
+    
+    metadata = track_data.setdefault("metadata", {})
+    metadata["physicsDisplayEnabled"] = True
+    metadata["physicsDisplaySource"] = "track_physics_geometry_smoothed_display"
+    metadata["physicsDisplayMaxDisplacement"] = 0.5
+    
+    return track_data
 
 
 def apply_track_visual_geometry(
@@ -635,8 +690,14 @@ class Kn5SurfaceTrackGeometryProvider:
                         logger.warning("Visual ROAD-only reference unavailable for cached geometry: %s", exc)
                 cached = apply_track_visual_geometry(cached, config=visual_cfg, visual_reference_track=visual_reference)
                 self.cache.save_track(cache_name, cached)
-                cached["cachePath"] = str(cache_path)
-                cached.setdefault("metadata", {})["cachePath"] = str(cache_path)
+            
+            # Ensure physics display is present even if visual was already there
+            if not cached.get("physicsDisplayGeometry"):
+                cached = apply_physics_display_geometry(cached)
+                self.cache.save_track(cache_name, cached)
+
+            cached["cachePath"] = str(cache_path)
+            cached.setdefault("metadata", {})["cachePath"] = str(cache_path)
             return TrackGeometryProviderResult(cache_name, cached, cache_path, self.provider, self.source, from_cache=True)
 
         resolver = TrackFileResolver(ac_root=self.ac_root)
@@ -682,6 +743,10 @@ class Kn5SurfaceTrackGeometryProvider:
                     smoothing_window=smoothing_window,
                 )
             track_data = apply_track_visual_geometry(track_data, config=visual_cfg, visual_reference_track=visual_reference)
+        
+        # Add physics display layer
+        track_data = apply_physics_display_geometry(track_data)
+        
         self.cache.save_track(cache_name, track_data)
         track_data["cachePath"] = str(cache_path)
         track_data.setdefault("metadata", {})["cachePath"] = str(cache_path)

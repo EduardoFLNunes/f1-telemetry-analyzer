@@ -1,5 +1,6 @@
 import json
 import math
+import os
 import struct
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -20,6 +21,13 @@ from .kn5_reader import (
 
 DEFAULT_SURFACES = ["ROAD", "CURB", "KERB"]
 OPTIONAL_SURFACES = ["PITLANE"]
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _empty_bounds() -> Tuple[List[float], List[float]]:
@@ -197,7 +205,29 @@ class Kn5SurfaceExtractor:
             if len(sample_triangles) < 5:
                 sample_triangles.append([int(index) for index in triangle])
 
-        included = matched_surface in self.included_surface_keys or (matched_surface == "PITLANE" and self.include_pitlane)
+        is_pit = matched_surface == "PITLANE"
+        included_road = matched_surface in self.included_surface_keys and not is_pit
+        included_pit = is_pit and self.include_pitlane
+
+        if included_road:
+            name_lower = mesh_name.lower()
+            
+            # Strict mode: Only ^1road, ^1curb, ^1kerb
+            if _env_bool("TRACK_KN5_STRICT_MAIN_TRACK", False):
+                # Check if it starts with 1road, 1curb, or 1kerb
+                if not (name_lower.startswith("1road") or name_lower.startswith("1curb") or name_lower.startswith("1kerb")):
+                    included_road = False
+            
+            # Additional explicit exclusions
+            if _env_bool("TRACK_KN5_EXCLUDE_AUX_ROADLINE", False) and "roadline" in name_lower:
+                included_road = False
+            if _env_bool("TRACK_KN5_EXCLUDE_ROADVERGE", False) and "roadverge" in name_lower:
+                included_road = False
+            
+            # Pitlane is NEVER part of main track in strict mode or when explicitly excluded
+            if not _env_bool("TRACK_KN5_INCLUDE_PITLANE_IN_MAIN", False) and "pitlane" in name_lower:
+                included_road = False
+
         self.candidates.append(
             Kn5SurfaceCandidateMesh(
                 sourceFile=self.path.name,
@@ -207,7 +237,8 @@ class Kn5SurfaceExtractor:
                 nodePath=node_path,
                 material=material,
                 matchedSurface=matched_surface or "UNKNOWN",
-                includedForRoadGeometry=included,
+                includedForRoadGeometry=included_road,
+                includedForPitLaneGeometry=included_pit,
                 vertices=vertex_count,
                 triangles=index_count // 3,
                 vertexBounds=_bounds_dict(vertex_min, vertex_max),
