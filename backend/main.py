@@ -80,6 +80,7 @@ def active_track_cache_name() -> str:
 def clear_loaded_track():
     runtime_state.current_track_name = None
     runtime_state.track_data = None
+    runtime_state.api_track_cache = None
     runtime_state.projection_engine = None
     runtime_state.last_distance_along_track = None
     runtime_state.track_build_state = TrackBuildState.NO_TRACK
@@ -126,7 +127,7 @@ def initialize_spatial_state():
                 if result:
                     runtime_state.update_track(result.track_name, result.track_data)
                     runtime_state.track_build_state = TrackBuildState.TRACK_READY
-                    runtime_state.build_method = "kn5_surface_interval"
+                    runtime_state.build_method = result.provider
                     logger.info(
                         "Loaded fixed ActiveTrackGeometry via %s from %s",
                         result.provider,
@@ -168,6 +169,19 @@ def initialize_spatial_state():
             runtime_state.track_build_state = TrackBuildState.TRACK_READY
             runtime_state.build_method = "reconstructed_closed_loop"
             logger.info("Generated debug replay track cache: %.1fm", track["trackLength"])
+            return
+
+    if source_manager.get_active_source_name() == "mock":
+        fixed_interlagos = Kn5SurfaceTrackGeometryProvider(track_cache).load_or_build("vhe_interlagos", "gp")
+        if fixed_interlagos:
+            runtime_state.update_track(fixed_interlagos.track_name, fixed_interlagos.track_data)
+            runtime_state.track_build_state = TrackBuildState.TRACK_READY
+            runtime_state.build_method = fixed_interlagos.provider
+            logger.info(
+                "Loaded default Interlagos track-only geometry via %s from %s",
+                fixed_interlagos.provider,
+                fixed_interlagos.cache_path,
+            )
             return
 
     if source_manager.get_active_source_name() == "assetto_corsa" and not DebugTrajectoryTrackGeometryProvider.enabled():
@@ -256,6 +270,10 @@ def telemetry_status_payload() -> Dict[str, Any]:
     return {
         "trackCache": runtime_state.current_track_name,
         "trackGeometryProvider": track.get("provider", track.get("reconstruction", {}).get("provider")),
+        "geometryName": track.get("geometryName"),
+        "visualGeometryName": track.get("visualGeometryName"),
+        "renderMode": track.get("renderMode"),
+        "updatedAt": track.get("updatedAt"),
         "providerSource": track.get("providerSource", track.get("source")),
         "centerlineCount": len(track.get("centerline", [])),
         "widthMin": width_min,
@@ -334,6 +352,18 @@ async def get_current_track():
         "track": track if status["activeTrackReady"] else None,
         "centerline": track["centerline"] if track and status["activeTrackReady"] else None,
         "liveTrajectory": live_trajectory_api(),
+    }
+
+
+@app.get("/api/track/geometry")
+async def get_track_geometry():
+    track = runtime_state.api_track()
+    status = telemetry_status_payload()
+    return {
+        "status": "success",
+        "source": source_manager.get_active_source_name(),
+        **status,
+        "track": track if status["activeTrackReady"] else None,
     }
 
 
