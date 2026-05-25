@@ -1,0 +1,73 @@
+{
+  "name": "InterlagosEdgeContinuityFixValidation",
+  "generatedAt": "2026-05-25T14:16:37.286840",
+  "candidateGeometry": "InterlagosMainTrackEdgeContinuityFix",
+  "passed": true,
+  "edgeSwitchCountBefore": 6,
+  "edgeSwitchCountAfter": 0,
+  "leftEdgeJumpCountBefore": 4,
+  "leftEdgeJumpCountAfter": 0,
+  "rightEdgeJumpCountBefore": 4,
+  "rightEdgeJumpCountAfter": 0,
+  "widthCollapseCountBefore": 13,
+  "widthCollapseCountAfter": 0,
+  "sSennaFixed": true,
+  "curvaSolFixed": true,
+  "retaOpostaPitExitFixed": true,
+  "entradaBoxesFixed": true,
+  "fakeChicaneRemoved": true,
+  "pitExitNotUsedAsMainTrackEdge": true,
+  "internalHoleEdgesRejected": true,
+  "roadline004RejectedWhenContaminating": true,
+  "mainTrackStillFollowsFastLane": true,
+  "widthPreserved": true,
+  "holesRemaining": 0,
+  "linesCrossingTrack": false,
+  "newCutsCreated": false,
+  "projectionChanged": false,
+  "mapPositionChanged": false,
+  "lateralOffsetChanged": false,
+  "physicsChanged": false,
+  "metrics": {
+    "widthDeltaP95CorrectedZones": 0.129399,
+    "centerlineShiftP95": 0.0,
+    "maxLeftSegmentAfter": 5.033221,
+    "maxRightSegmentAfter": 5.033616,
+    "correctedIndexGroups": [
+      {
+        "startIndex": 283,
+        "endIndex": 298,
+        "sampleCount": 16
+      },
+      {
+        "startIndex": 420,
+        "endIndex": 455,
+        "sampleCount": 36
+      },
+      {
+        "startIndex": 484,
+        "endIndex": 582,
+        "sampleCount": 99
+      },
+      {
+        "startIndex": 805,
+        "endIndex": 870,
+        "sampleCount": 66
+      },
+      {
+        "startIndex": 2405,
+        "endIndex": 2427,
+        "sampleCount": 23
+      }
+    ],
+    "selectionSummary": {
+      "raw": 2440,
+      "interpolated": 240
+    }
+  },
+  "notes": [
+    "This is a candidate-only validation; the default app geometry is not changed by this script.",
+    "fast_lane.ai is kept as the candidate centerline.",
+    "pit_lane.ai is used only for proximity penalties and validation of pit-exit contamination."
+  ]
+}

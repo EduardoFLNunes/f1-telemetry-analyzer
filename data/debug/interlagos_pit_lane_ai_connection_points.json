@@ -1,0 +1,71 @@
+{
+  "projection": "mapX = worldX, mapY = -worldZ",
+  "connectionPoints": {
+    "pitEntryDivergencePoint": {
+      "name": "pitEntryDivergencePoint",
+      "pitLaneIndex": 193,
+      "position": {
+        "x": -462.477997,
+        "y": 208.227707
+      },
+      "nearestMainIndex": 2409,
+      "nearestMainDistance": 3905.856523,
+      "distanceToMain": 8.56493,
+      "mainTrackWidth": 11.71758,
+      "distanceToHalfWidthRatio": 1.461894
+    },
+    "pitCorridorStartPoint": {
+      "name": "pitCorridorStartPoint",
+      "pitLaneIndex": 236,
+      "position": {
+        "x": -465.265015,
+        "y": 143.307663
+      },
+      "nearestMainIndex": 2451,
+      "nearestMainDistance": 3970.654255,
+      "distanceToMain": 15.725764,
+      "mainTrackWidth": 17.285846,
+      "distanceToHalfWidthRatio": 1.819496
+    },
+    "pitCorridorEndPoint": {
+      "name": "pitCorridorEndPoint",
+      "pitLaneIndex": 959,
+      "position": {
+        "x": 32.246014,
+        "y": -293.017914
+      },
+      "nearestMainIndex": 484,
+      "nearestMainDistance": 819.57711,
+      "distanceToMain": 12.813121,
+      "mainTrackWidth": 7.237589,
+      "distanceToHalfWidthRatio": 3.540715
+    },
+    "pitExitMergePoint": {
+      "name": "pitExitMergePoint",
+      "pitLaneIndex": 1162,
+      "position": {
+        "x": 119.592094,
+        "y": 3.115888
+      },
+      "nearestMainIndex": 673,
+      "nearestMainDistance": 1120.565713,
+      "distanceToMain": 1.241068,
+      "mainTrackWidth": 9.94032,
+      "distanceToHalfWidthRatio": 0.249704
+    },
+    "pitExitMergeStartPoint": {
+      "name": "pitExitMergeStartPoint",
+      "pitLaneIndex": 1110,
+      "position": {
+        "x": 97.848625,
+        "y": -73.004204
+      },
+      "nearestMainIndex": 623,
+      "nearestMainDistance": 1041.453014,
+      "distanceToMain": 2.08431,
+      "mainTrackWidth": 9.966397,
+      "distanceToHalfWidthRatio": 0.418267
+    }
+  },
+  "method": "pit_lane.ai distance/width ratio against MainTrackGeometry"
+}

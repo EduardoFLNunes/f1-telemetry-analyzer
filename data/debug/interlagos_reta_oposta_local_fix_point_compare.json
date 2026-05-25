@@ -1,0 +1,23 @@
+{
+  "leftEdge": {
+    "changedGt1cm": 107,
+    "avg": 5.118825,
+    "p95": 6.872262,
+    "max": 6.951554,
+    "maxIndex": 483
+  },
+  "rightEdge": {
+    "changedGt1cm": 107,
+    "avg": 5.119544,
+    "p95": 6.872262,
+    "max": 6.951553,
+    "maxIndex": 483
+  },
+  "projectionCenterToVisualCenter": {
+    "changedGt1cm": 107,
+    "avg": 3.31139,
+    "p95": 6.510224,
+    "max": 6.951553,
+    "maxIndex": 483
+  }
+}

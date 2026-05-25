@@ -1,0 +1,56 @@
+{
+  "name": "InterlagosRetaOpostaLocalFixAppCheck",
+  "appUrl": "http://127.0.0.1:5173/",
+  "apiUrl": "http://127.0.0.1:8000/api/track/current",
+  "screenshot": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_reta_oposta_local_fix_app_check.png",
+  "screenshotSize": {
+    "width": 1400,
+    "height": 1000
+  },
+  "trackGeometryProvider": "InterlagosRetaOpostaLocalFix",
+  "geometryName": "InterlagosRetaOpostaLocalFix",
+  "visualGeometryName": "InterlagosRetaOpostaLocalFix",
+  "renderMode": "visual_local_reta_oposta_fix",
+  "updatedAt": "2026-05-25T18:41:10.804485",
+  "trackGeometryName": "InterlagosRetaOpostaLocalFix",
+  "trackVisualGeometryName": "InterlagosRetaOpostaLocalFix",
+  "trackRenderMode": "visual_local_reta_oposta_fix",
+  "trackUpdatedAt": "2026-05-25T18:41:10.804485",
+  "window": {
+    "startIndex": 423,
+    "endIndex": 529
+  },
+  "pointDeltaVsInterlagosMainTrackEdgeContinuityFix": {
+    "leftEdge": {
+      "changedGt1cm": 107,
+      "avg": 5.118825,
+      "p95": 6.872262,
+      "max": 6.951554,
+      "maxIndex": 483
+    },
+    "rightEdge": {
+      "changedGt1cm": 107,
+      "avg": 5.119544,
+      "p95": 6.872262,
+      "max": 6.951553,
+      "maxIndex": 483
+    },
+    "projectionCenterToVisualCenter": {
+      "changedGt1cm": 107,
+      "avg": 3.31139,
+      "p95": 6.510224,
+      "max": 6.951553,
+      "maxIndex": 483
+    }
+  },
+  "appUsesRetaOpostaLocalFix": true,
+  "pointsChangedInWindow": true,
+  "holesVisible": false,
+  "linesCrossingTrack": false,
+  "retaOpostaEntryLooksStraight": true,
+  "widthPreserved": true,
+  "projectionChanged": false,
+  "mapPositionChanged": false,
+  "lateralOffsetChanged": false,
+  "physicsChanged": false
+}

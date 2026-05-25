@@ -81,9 +81,17 @@ class CacheSerializer:
             "reconstruction": data.get("reconstruction", {}),
             "provider": data.get("provider"),
             "providerSource": data.get("providerSource"),
+            "geometryName": data.get("geometryName"),
+            "visualGeometryName": data.get("visualGeometryName"),
+            "renderMode": data.get("renderMode"),
+            "updatedAt": data.get("updatedAt"),
             "trackConfig": data.get("trackConfig"),
             "cachePath": data.get("cachePath"),
             "metadata": data.get("metadata", {}),
+            "validation": data.get("validation", {}),
+            "asphaltPolygon": data.get("asphaltPolygon"),
+            "pitVisualGeometry": data.get("pitVisualGeometry"),
+            "visualCenterline": data.get("visualCenterline"),
             "sourceHash": data.get("sourceHash", ""),
             "coordinate_system": data.get("coordinateSystem", "world_xz"),
             "closedLoop": bool(data.get("closedLoop", True)),
@@ -120,11 +128,19 @@ class CacheSerializer:
             "source": track_data.get("source", "telemetry_reconstruction"),
             "provider": track_data.get("provider"),
             "providerSource": track_data.get("providerSource"),
+            "geometryName": track_data.get("geometryName"),
+            "visualGeometryName": track_data.get("visualGeometryName"),
+            "renderMode": track_data.get("renderMode"),
+            "updatedAt": track_data.get("updatedAt"),
             "trackConfig": track_data.get("trackConfig"),
             "cachePath": track_data.get("cachePath"),
             "version": track_data.get("version", 1),
             "reconstruction": track_data.get("reconstruction", {}),
             "metadata": track_data.get("metadata", {}),
+            "validation": track_data.get("validation", {}),
+            "asphaltPolygon": track_data.get("asphaltPolygon"),
+            "pitVisualGeometry": track_data.get("pitVisualGeometry"),
+            "visualCenterline": CacheSerializer._visual_centerline_to_arrays(track_data.get("visualCenterline")),
             "generatedAt": track_data.get("generatedAt"),
             "coordinateSystem": "map_xy_from_world_x_negative_z",
             "closedLoop": bool(track_data.get("closedLoop", True)),
@@ -160,3 +176,18 @@ class CacheSerializer:
             "y": [-value for value in world_z],
             "z": world_z,
         }
+
+    @staticmethod
+    def _visual_centerline_to_arrays(visual: Any) -> Any:
+        if not visual:
+            return None
+        if isinstance(visual, dict) and "x" in visual:
+            x = [float(value) for value in visual.get("x", [])]
+            y = [float(value) for value in visual.get("y", [])]
+            return {"x": x, "y": y, "z": [-value for value in y]}
+        points = visual.get("points", []) if isinstance(visual, dict) else visual
+        if not isinstance(points, list):
+            return None
+        x = [float(point[0]) for point in points]
+        y = [float(point[1]) for point in points]
+        return {"x": x, "y": y, "z": [-value for value in y]}

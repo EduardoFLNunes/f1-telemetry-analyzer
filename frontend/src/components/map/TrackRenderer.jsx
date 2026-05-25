@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTelemetryStore } from '../../store/useTelemetryStore';
-import { drawCar, drawTrajectory } from './CarRenderer.jsx';
+import { drawCar } from './CarRenderer.jsx';
 import { applyCameraTransform, computeTrackBounds } from './CameraController.jsx';
-import { drawHud, drawProjectionDebug, drawTrackSurface } from './OverlayRenderer.jsx';
-import { ProjectionDebugOverlay } from '../debug/ProjectionDebugOverlay.jsx';
+import { drawHud, drawTrackSurface } from './OverlayRenderer.jsx';
 
 function normalizeTrack(trackData) {
   if (!trackData) return null;
 
   const centerY = trackData.centerline?.y || trackData.centerline?.z || [];
+  const visualCenterY = trackData.visualCenterline?.y || trackData.visualCenterline?.z || [];
   const leftY = trackData.left_edge?.y || trackData.left_edge?.z || [];
   const rightY = trackData.right_edge?.y || trackData.right_edge?.z || [];
 
@@ -19,6 +19,12 @@ function normalizeTrack(trackData) {
       ...trackData.centerline,
       y: centerY,
     },
+    visualCenterline: trackData.visualCenterline
+      ? {
+          ...trackData.visualCenterline,
+          y: visualCenterY,
+        }
+      : null,
     left_edge: {
       ...trackData.left_edge,
       y: leftY,
@@ -34,9 +40,7 @@ export function TrackRenderer({ trackData }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const animationRef = useRef(null);
-  const latestFrame = useTelemetryStore((state) => state.latestFrame);
   const [cameraMode, setCameraMode] = useState('OVERVIEW');
-  const [debugEnabled, setDebugEnabled] = useState(false);
 
   const cameraRef = useRef({
     mode: 'OVERVIEW',
@@ -75,10 +79,9 @@ export function TrackRenderer({ trackData }) {
       ctx.fillRect(0, 0, rect.width, rect.height);
 
       const { latestFrame: liveFrame, history: liveHistory } = useTelemetryStore.getState();
-      const liveDebugHistory = liveHistory.slice(-1200);
       const renderBounds = normalizedTrack
-        ? computeTrackBounds(normalizedTrack, liveDebugHistory, liveFrame)
-        : computeTrackBounds(null, liveDebugHistory, liveFrame);
+        ? computeTrackBounds(normalizedTrack, liveHistory.slice(-1200), liveFrame)
+        : computeTrackBounds(null, liveHistory.slice(-1200), liveFrame);
 
       ctx.save();
       const scale = applyCameraTransform(ctx, rect.width, rect.height, renderBounds, cameraRef.current, liveFrame);
@@ -86,12 +89,10 @@ export function TrackRenderer({ trackData }) {
       if (normalizedTrack) {
         drawTrackSurface(ctx, normalizedTrack, renderBounds, scale);
       }
-      if (debugEnabled) drawTrajectory(ctx, liveDebugHistory, scale);
-      if (debugEnabled && normalizedTrack && liveFrame) drawProjectionDebug(ctx, liveFrame, scale);
       if (liveFrame) drawCar(ctx, liveFrame, scale);
 
       ctx.restore();
-      drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current, debugEnabled);
+      drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current);
       animationRef.current = requestAnimationFrame(render);
     };
 
@@ -99,7 +100,7 @@ export function TrackRenderer({ trackData }) {
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [bounds, debugEnabled, normalizedTrack]);
+  }, [bounds, normalizedTrack]);
 
   const handleWheel = useCallback((event) => {
     event.preventDefault();
@@ -151,19 +152,7 @@ export function TrackRenderer({ trackData }) {
             </button>
           ))}
         </div>
-        <div className="panel px-1.5 py-1 flex gap-1">
-          <button
-            onClick={() => setDebugEnabled((value) => !value)}
-            className={`px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all ${
-              debugEnabled ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30' : 'text-slate-600 hover:text-slate-400'
-            }`}
-          >
-            Debug
-          </button>
-        </div>
       </div>
-
-      {debugEnabled && <ProjectionDebugOverlay frame={latestFrame} />}
     </div>
   );
 }

@@ -1,0 +1,237 @@
+{
+  "geometryName": "InterlagosTrackOnlyFixedGeometry",
+  "sourceProvider": "kn5_surface_interval",
+  "generatedAt": "2026-05-25T13:10:32.771072",
+  "validation": {
+    "pitlaneExcluded": true,
+    "pitAreaExcluded": true,
+    "usesPitLaneAiAsGeometry": false,
+    "usesBoundaryLoopsAsFinalVisual": false,
+    "usesRawTrianglesAsFinalVisual": false,
+    "asphaltPolygonGenerated": true,
+    "holesRemaining": 0,
+    "linesCrossingTrack": false,
+    "shapeLooksLikeInterlagos": true,
+    "widthPreserved": true,
+    "appUsesTrackOnlyFixedGeometry": false,
+    "debugRequired": false,
+    "projectionChanged": false,
+    "mapPositionChanged": false,
+    "lateralOffsetChanged": false,
+    "physicsChanged": false
+  },
+  "metrics": {
+    "widthDeltaAvg": 0.036836,
+    "widthDeltaP95": 1e-06,
+    "widthDeltaMax": 9.580401,
+    "widthDeltaMaxNonInvalidSpike": 2e-06,
+    "oldInvalidSpikeExceptionCount": 22,
+    "centerlineShiftAvg": 0.0,
+    "centerlineShiftP95": 0.0,
+    "maxSegmentLength": 13.998621,
+    "segmentLengths": {
+      "centerMax": 12.103819,
+      "leftMax": 10.64405,
+      "rightMax": 13.998621
+    },
+    "correctedSampleCount": 22,
+    "correctedGroups": [
+      {
+        "startIndex": 287,
+        "endIndex": 298,
+        "sampleCount": 12,
+        "samples": [
+          {
+            "index": 287,
+            "oldWidth": 9.615617,
+            "newWidth": 10.106887
+          },
+          {
+            "index": 288,
+            "oldWidth": 9.21813,
+            "newWidth": 10.286747
+          },
+          {
+            "index": 289,
+            "oldWidth": 8.817694,
+            "newWidth": 10.561748
+          },
+          {
+            "index": 290,
+            "oldWidth": 8.41429,
+            "newWidth": 10.911676
+          },
+          {
+            "index": 291,
+            "oldWidth": 8.007071,
+            "newWidth": 11.316067
+          },
+          {
+            "index": 292,
+            "oldWidth": 7.595547,
+            "newWidth": 11.754088
+          },
+          {
+            "index": 293,
+            "oldWidth": 7.137003,
+            "newWidth": 12.204521
+          },
+          {
+            "index": 294,
+            "oldWidth": 6.580914,
+            "newWidth": 12.645822
+          },
+          {
+            "index": 295,
+            "oldWidth": 6.018593,
+            "newWidth": 13.056193
+          },
+          {
+            "index": 296,
+            "oldWidth": 5.450997,
+            "newWidth": 13.41368
+          },
+          {
+            "index": 297,
+            "oldWidth": 4.878557,
+            "newWidth": 13.696246
+          },
+          {
+            "index": 298,
+            "oldWidth": 4.301463,
+            "newWidth": 13.881864
+          }
+        ]
+      },
+      {
+        "startIndex": 582,
+        "endIndex": 582,
+        "sampleCount": 1,
+        "samples": [
+          {
+            "index": 582,
+            "oldWidth": 4.946766,
+            "newWidth": 7.611362
+          }
+        ]
+      },
+      {
+        "startIndex": 2405,
+        "endIndex": 2413,
+        "sampleCount": 9,
+        "samples": [
+          {
+            "index": 2405,
+            "oldWidth": 6.960991,
+            "newWidth": 14.953993
+          },
+          {
+            "index": 2406,
+            "oldWidth": 7.081305,
+            "newWidth": 14.432854
+          },
+          {
+            "index": 2407,
+            "oldWidth": 7.201657,
+            "newWidth": 13.664872
+          },
+          {
+            "index": 2408,
+            "oldWidth": 7.322142,
+            "newWidth": 12.732348
+          },
+          {
+            "index": 2409,
+            "oldWidth": 7.442819,
+            "newWidth": 11.71758
+          },
+          {
+            "index": 2410,
+            "oldWidth": 7.563746,
+            "newWidth": 10.702862
+          },
+          {
+            "index": 2411,
+            "oldWidth": 7.674618,
+            "newWidth": 9.770476
+          },
+          {
+            "index": 2412,
+            "oldWidth": 7.875438,
+            "newWidth": 9.002683
+          },
+          {
+            "index": 2413,
+            "oldWidth": 8.082472,
+            "newWidth": 8.481716
+          }
+        ]
+      }
+    ],
+    "correctedRegions": [
+      {
+        "name": "Subida dos Boxes",
+        "ranges": [
+          [
+            3800.0,
+            4346.0
+          ],
+          [
+            0.0,
+            120.0
+          ]
+        ],
+        "sampleCount": 408,
+        "correctedSampleCount": 9,
+        "validated": true
+      },
+      {
+        "name": "S do Senna",
+        "ranges": [
+          [
+            420.0,
+            850.0
+          ]
+        ],
+        "sampleCount": 246,
+        "correctedSampleCount": 12,
+        "validated": true
+      },
+      {
+        "name": "Curva do Sol",
+        "ranges": [
+          [
+            850.0,
+            1120.0
+          ]
+        ],
+        "sampleCount": 169,
+        "correctedSampleCount": 1,
+        "validated": true
+      },
+      {
+        "name": "Reta Oposta",
+        "ranges": [
+          [
+            1120.0,
+            1900.0
+          ]
+        ],
+        "sampleCount": 489,
+        "correctedSampleCount": 0,
+        "validated": true
+      }
+    ]
+  },
+  "excludedSources": [
+    "PITLANE",
+    "IS_PITLANE=1",
+    "1pitlane*",
+    "meshLayers.pit",
+    "pit_lane.ai",
+    "roadline*",
+    "roadlineout",
+    "roadverge",
+    "visual/decorative objects"
+  ]
+}

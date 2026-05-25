@@ -11,6 +11,7 @@ from ..cache.track_cache import TrackCache
 from ..kn5.track_edges_from_surface import build_track_edges_interval_raycast_from_manifest
 from ..telemetry.telemetry_models import TrackPoint
 from ..track_file_resolver import TrackFileResolver
+from .interlagos_track_only_fixed import GEOMETRY_NAME, is_interlagos_track, load_fixed_geometry
 
 
 logger = logging.getLogger(__name__)
@@ -189,6 +190,21 @@ class Kn5SurfaceTrackGeometryProvider:
         source: str = "assetto_corsa",
         game_code: str = "assetto_corsa",
     ) -> Optional[TrackGeometryProviderResult]:
+        repo_root = Path(__file__).resolve().parents[3]
+        if is_interlagos_track(track_name, track_config):
+            fixed = load_fixed_geometry(repo_root)
+            if fixed:
+                fixed_provider = fixed.get("provider") or GEOMETRY_NAME
+                fixed_path = Path(fixed.get("cachePath") or repo_root / "data" / "debug" / "interlagos_track_only_fixed_geometry.json")
+                return TrackGeometryProviderResult(
+                    f"vhe_interlagos_gp_{_safe_fragment(fixed_provider)}",
+                    fixed,
+                    fixed_path,
+                    fixed_provider,
+                    self.source,
+                    from_cache=True,
+                )
+
         cache_name = kn5_surface_cache_name(track_name, track_config)
         cache_path = self.cache.cache_dir / f"{self.cache._safe_name(cache_name)}.json"
         cached = self.cache.load_track(cache_name)

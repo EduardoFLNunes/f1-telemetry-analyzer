@@ -10,6 +10,7 @@ class RuntimeState:
     current_track_name: Optional[str] = None
     track_data: Optional[Dict[str, Any]] = None
     projection_engine: Optional[ProjectionEngine] = None
+    api_track_cache: Optional[Dict[str, Any]] = None
     last_sample: Optional[TelemetrySample] = None
     car_projected_state: Optional[Dict[str, Any]] = None
     last_distance_along_track: Optional[float] = None
@@ -20,6 +21,7 @@ class RuntimeState:
     def update_track(self, name: str, data: Dict[str, Any]):
         self.current_track_name = name
         self.track_data = data
+        self.api_track_cache = CacheSerializer.to_api_track(data)
         self.projection_engine = ProjectionEngine(data["centerline"], closed_loop=bool(data.get("closedLoop", True)))
         self.track_build_state = TrackBuildState.TRACK_READY
         self.build_method = data.get("reconstruction", {}).get("method", "cached_closed_loop")
@@ -118,4 +120,6 @@ class RuntimeState:
     def api_track(self) -> Optional[Dict[str, Any]]:
         if not self.track_data:
             return None
-        return CacheSerializer.to_api_track(self.track_data)
+        if not self.api_track_cache:
+            self.api_track_cache = CacheSerializer.to_api_track(self.track_data)
+        return self.api_track_cache

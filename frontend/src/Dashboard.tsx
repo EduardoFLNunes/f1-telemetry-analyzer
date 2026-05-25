@@ -15,6 +15,7 @@ import { CognitiveDashboard } from './components/CognitiveDashboard';
 import { Header } from './components/Header';
 import { useTelemetryStore } from './store/useTelemetryStore';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { api } from './api/client';
 
 /* ─── Safe number formatter ───────────────────────────────────── */
 const sf = (v: any, fb = 0, d = 0) => {
@@ -84,11 +85,13 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
+    let inFlight = false;
     const loadTrack = async () => {
+      if (inFlight) return;
+      inFlight = true;
       try {
-        const res = await fetch(`http://${window.location.hostname}:8000/api/track/current`);
-        const data = await res.json();
-        if (!cancelled && res.ok && data.track) {
+        const data = await api.getTrackGeometry();
+        if (!cancelled && data.track) {
           setTrackData(data.track);
           return;
         }
@@ -97,10 +100,12 @@ const Dashboard: React.FC = () => {
         }
       } catch {
         if (!cancelled) setTrackData(null);
+      } finally {
+        inFlight = false;
       }
     };
     loadTrack();
-    const interval = setInterval(loadTrack, 500);
+    const interval = setInterval(loadTrack, 5000);
     return () => {
       cancelled = true;
       clearInterval(interval);

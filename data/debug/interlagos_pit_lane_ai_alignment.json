@@ -1,0 +1,28 @@
+{
+  "projection": "mapX = worldX, mapY = -worldZ",
+  "mainTrackGeometry": "InterlagosTrackOnlyFixedGeometry",
+  "fastLaneAi": {
+    "path": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\gp\\ai\\fast_lane.ai",
+    "pointCount": 2680,
+    "diagnostics": []
+  },
+  "pitLaneAi": {
+    "path": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\gp\\ai\\pit_lane.ai",
+    "pointCount": 1361,
+    "diagnostics": []
+  },
+  "metrics": {
+    "fastLaneMainDistanceAvg": 3.763949,
+    "fastLaneMainDistanceP95": 6.848712,
+    "pitLaneMainDistanceMin": 0.129486,
+    "pitLaneMainDistanceAvg": 12.591686,
+    "pitLaneMainDistanceMax": 40.710181,
+    "maxVisualSegmentLength": 1.546116
+  },
+  "validation": {
+    "fastLaneAlignedWithMainTrack": true,
+    "pitLanePassesBoxesRegion": true,
+    "mapSpaceConversion": "mapX = worldX, mapY = -worldZ",
+    "mirroringCorrectionApplied": false
+  }
+}

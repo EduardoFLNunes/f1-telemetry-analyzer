@@ -1,0 +1,58 @@
+{
+  "bodyIncludesDebug": false,
+  "canvasCount": 4,
+  "canvases": [
+    {
+      "cssHeight": 158,
+      "cssWidth": 158,
+      "height": 158,
+      "tagName": "CANVAS",
+      "width": 158
+    },
+    {
+      "cssHeight": 429,
+      "cssWidth": 846,
+      "height": 429,
+      "tagName": "CANVAS",
+      "width": 846
+    },
+    {
+      "cssHeight": 198,
+      "cssWidth": 846,
+      "height": 198,
+      "tagName": "CANVAS",
+      "width": 846
+    },
+    {
+      "cssHeight": 46,
+      "cssWidth": 678,
+      "height": 46,
+      "tagName": "CANVAS",
+      "width": 677
+    }
+  ],
+  "debugButtonCount": 0,
+  "title": "Motorsport Intelligence Workstation",
+  "url": "http://127.0.0.1:5173/",
+  "screenshotBytes": 47684,
+  "trackGeometryProvider": "InterlagosTrackOnlyFixedGeometry",
+  "trackName": "vhe_interlagos",
+  "geometryName": "InterlagosTrackOnlyFixedGeometry",
+  "totalPoints": 2680,
+  "pitlaneExcluded": true,
+  "pitAreaExcluded": true,
+  "usesPitLaneAiAsGeometry": false,
+  "usesBoundaryLoopsAsFinalVisual": false,
+  "usesRawTrianglesAsFinalVisual": false,
+  "asphaltPolygonGenerated": true,
+  "holesRemaining": 0,
+  "linesCrossingTrack": false,
+  "shapeLooksLikeInterlagos": true,
+  "widthPreserved": true,
+  "appUsesTrackOnlyFixedGeometry": true,
+  "debugRequired": false,
+  "projectionChanged": false,
+  "mapPositionChanged": false,
+  "lateralOffsetChanged": false,
+  "physicsChanged": false
+}

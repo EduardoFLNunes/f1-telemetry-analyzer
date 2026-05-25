@@ -1,6 +1,11 @@
 export function computeTrackBounds(trackData, history = [], carFrame = null) {
   const left = trackData?.left_edge || {};
   const right = trackData?.right_edge || {};
+  const pitGeometries = Object.values(trackData?.pitVisualGeometry?.geometries || {});
+  const pitPoints = pitGeometries.flatMap((geometry) => [
+    ...(geometry.leftEdge?.points || []),
+    ...(geometry.rightEdge?.points || []),
+  ]);
   const livePositions = history
     .map((frame) => frame?.mapPosition || { x: frame?.x, y: frame?.z })
     .filter((point) => Number.isFinite(point?.x) && Number.isFinite(point?.y));
@@ -12,11 +17,13 @@ export function computeTrackBounds(trackData, history = [], carFrame = null) {
   const xs = [
     ...(left.x || []),
     ...(right.x || []),
+    ...pitPoints.map((point) => point?.[0]),
     ...livePositions.map((point) => point.x),
   ].filter(Number.isFinite);
   const ys = [
     ...(left.y || left.z || []),
     ...(right.y || right.z || []),
+    ...pitPoints.map((point) => point?.[1]),
     ...livePositions.map((point) => point.y),
   ].filter(Number.isFinite);
 

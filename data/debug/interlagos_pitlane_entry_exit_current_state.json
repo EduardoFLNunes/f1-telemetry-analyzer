@@ -1,0 +1,137 @@
+{
+  "name": "InterlagosPitlaneEntryExitCurrentState",
+  "generatedAt": "2026-05-25T19:53:37.692682",
+  "mainTrackGeometry": "InterlagosRetaOpostaFinalLocalFix",
+  "visualGeometryName": "InterlagosRetaOpostaFinalLocalFix",
+  "renderMode": "visual_final_local_reta_oposta_fix",
+  "structures": {
+    "MainTrackGeometry": {
+      "pointCount": 2680,
+      "geometryName": "InterlagosRetaOpostaFinalLocalFix"
+    },
+    "currentPitVisualGeometry": {
+      "name": "InterlagosPitLaneAiVisualIntegration",
+      "branches": [
+        "PitEntryAccessGeometry",
+        "PitLaneCorridorVisualGeometry"
+      ]
+    },
+    "originalPitVisualGeometry": {
+      "name": "InterlagosPitLaneAiVisualIntegration",
+      "branches": [
+        "PitEntryAccessGeometry",
+        "PitLaneCorridorVisualGeometry",
+        "PitExitAccessGeometry"
+      ]
+    },
+    "PitLaneCorridorGeometry": {
+      "exists": true,
+      "pointCount": 724,
+      "leftEdgePointCount": 724,
+      "rightEdgePointCount": 724,
+      "openStart": false,
+      "openEnd": false,
+      "selfIntersects": false
+    },
+    "PitEntryAccessGeometry": {
+      "exists": true,
+      "pointCount": 44,
+      "leftEdgePointCount": 44,
+      "rightEdgePointCount": 44,
+      "openStart": false,
+      "openEnd": false,
+      "selfIntersects": false
+    },
+    "PitExitAccessGeometry": {
+      "exists": false
+    },
+    "OriginalPitExitAccessGeometry": {
+      "exists": true,
+      "pointCount": 204,
+      "leftEdgePointCount": 204,
+      "rightEdgePointCount": 204,
+      "openStart": false,
+      "openEnd": false,
+      "selfIntersects": false
+    }
+  },
+  "diagnosis": {
+    "pitExitAccessMissingFromCurrentVisual": true,
+    "corridorEndCapRenderedAsClosure": true,
+    "pitExitClosedByWallLikely": true,
+    "pitlaneVisualMixWithMainTrackRisk": true,
+    "mainTrackDeformed": false,
+    "projectionChanged": false,
+    "mapPositionChanged": false,
+    "lateralOffsetChanged": false,
+    "physicsChanged": false
+  },
+  "residualClosures": {
+    "corridorEndCap": {
+      "from": [
+        28.761159,
+        -291.632892
+      ],
+      "to": [
+        35.730869,
+        -294.402936
+      ],
+      "lengthMeters": 7.5,
+      "reason": "Current renderer closes pit visual polygons when no exit access continues the corridor"
+    }
+  },
+  "connectionPoints": {
+    "pitEntryDivergencePoint": {
+      "name": "pitEntryDivergencePoint",
+      "pitLaneIndex": 193,
+      "position": {
+        "x": -462.477997,
+        "y": 208.227707
+      },
+      "nearestMainIndex": 2409,
+      "nearestMainDistance": 3885.270978,
+      "distanceToMain": 8.56493,
+      "mainTrackWidth": 14.817192,
+      "distanceToHalfWidthRatio": 1.15608
+    },
+    "pitCorridorStartPoint": {
+      "name": "pitCorridorStartPoint",
+      "pitLaneIndex": 236,
+      "position": {
+        "x": -465.265015,
+        "y": 143.307663
+      },
+      "nearestMainIndex": 2451,
+      "nearestMainDistance": 3950.06871,
+      "distanceToMain": 15.725764,
+      "mainTrackWidth": 17.285846,
+      "distanceToHalfWidthRatio": 1.819496
+    },
+    "pitCorridorEndPoint": {
+      "name": "pitCorridorEndPoint",
+      "pitLaneIndex": 961,
+      "position": {
+        "x": 33.363697,
+        "y": -290.191406
+      },
+      "nearestMainIndex": 480,
+      "nearestMainDistance": 794.437402,
+      "distanceToMain": 12.306744,
+      "mainTrackWidth": 13.551943,
+      "distanceToHalfWidthRatio": 1.816233
+    },
+    "pitExitMergePoint": {
+      "name": "pitExitMergePoint",
+      "pitLaneIndex": 1176,
+      "position": {
+        "x": 125.466713,
+        "y": 23.745678
+      },
+      "nearestMainIndex": 686,
+      "nearestMainDistance": 1120.901955,
+      "distanceToMain": 1.13739,
+      "mainTrackWidth": 9.951345,
+      "distanceToHalfWidthRatio": 0.22859
+    }
+  }
+}

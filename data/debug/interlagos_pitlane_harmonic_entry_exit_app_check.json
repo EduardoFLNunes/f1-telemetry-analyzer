@@ -1,0 +1,21 @@
+{
+  "name": "InterlagosPitlaneHarmonicEntryExitAppCheck",
+  "generatedAt": "2026-05-25T19:55:47.454490",
+  "geometryName": "InterlagosPitlaneHarmonicEntryExit",
+  "visualGeometryName": "InterlagosPitlaneHarmonicEntryExit",
+  "renderMode": "visual_pitlane_harmonic_entry_exit",
+  "updatedAt": "2026-05-25T19:53:38.255564",
+  "appUsesPitlaneHarmonicEntryExit": true,
+  "debugRequired": false,
+  "pitExitClosedByWall": false,
+  "pitlaneVisibleButClean": true,
+  "mainTrackStillClean": true,
+  "retaOpostaStillStraight": true,
+  "projectionChanged": false,
+  "mapPositionChanged": false,
+  "lateralOffsetChanged": false,
+  "physicsChanged": false,
+  "screenshot": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_harmonic_entry_exit_app_check.png",
+  "screenshotExists": true,
+  "sourceValidation": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pitlane_harmonic_entry_exit_validation.json"
+}
