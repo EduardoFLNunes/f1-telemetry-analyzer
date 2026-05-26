@@ -17,6 +17,12 @@ PITLANE_HARMONIC_ENTRY_EXIT_GEOMETRY_NAME = "InterlagosPitlaneHarmonicEntryExit"
 PIT_BIFURCATION_FIX_GEOMETRY_NAME = "InterlagosPitBifurcationFix"
 PIT_BIFURCATION_TAPER_REFINE_GEOMETRY_NAME = "InterlagosPitBifurcationTaperRefine"
 PIT_ACCESS_CENTERLINE_FIX_GEOMETRY_NAME = "InterlagosPitAccessCenterlineFix"
+PIT_ACCESS_SURFACE_UNION_FIX_GEOMETRY_NAME = "InterlagosPitAccessSurfaceUnionFix"
+PIT_ACCESS_EDGE_STITCH_FIX_GEOMETRY_NAME = "InterlagosPitAccessEdgeStitchFix"
+PIT_ACCESS_SMOOTH_STITCH_FIX_GEOMETRY_NAME = "InterlagosPitAccessSmoothStitchFix"
+PIT_ACCESS_MICRO_SMOOTH_STITCH_FIX_GEOMETRY_NAME = "InterlagosPitAccessMicroSmoothStitchFix"
+PIT_ACCESS_OPEN_EXIT_MOUTH_FIX_GEOMETRY_NAME = "InterlagosPitAccessOpenExitMouthFix"
+PIT_ACCESS_ASPHALT_MERGE_FIX_GEOMETRY_NAME = "InterlagosPitAccessAsphaltMergeFix"
 FIXED_GEOMETRY_FILE = "interlagos_track_only_fixed_geometry.json"
 FIXED_REPORT_FILE = "interlagos_track_only_fixed_report.json"
 FIXED_GEOMETRY_SVG_FILE = "interlagos_track_only_fixed_geometry.svg"
@@ -35,6 +41,18 @@ PIT_BIFURCATION_TAPER_REFINE_CANDIDATE_FILE = "interlagos_pit_bifurcation_taper_
 PIT_BIFURCATION_TAPER_REFINE_VALIDATION_FILE = "interlagos_pit_bifurcation_taper_refine_validation.json"
 PIT_ACCESS_CENTERLINE_FIX_CANDIDATE_FILE = "interlagos_pit_access_centerline_fix_candidate.json"
 PIT_ACCESS_CENTERLINE_FIX_VALIDATION_FILE = "interlagos_pit_access_centerline_fix_validation.json"
+PIT_ACCESS_SURFACE_UNION_FIX_CANDIDATE_FILE = "interlagos_pit_access_surface_union_candidate.json"
+PIT_ACCESS_SURFACE_UNION_FIX_VALIDATION_FILE = "interlagos_pit_access_surface_union_validation.json"
+PIT_ACCESS_EDGE_STITCH_FIX_CANDIDATE_FILE = "interlagos_pit_access_edge_stitch_fix_candidate.json"
+PIT_ACCESS_EDGE_STITCH_FIX_VALIDATION_FILE = "interlagos_pit_access_edge_stitch_fix_validation.json"
+PIT_ACCESS_SMOOTH_STITCH_FIX_CANDIDATE_FILE = "interlagos_pit_access_smooth_stitch_fix_candidate.json"
+PIT_ACCESS_SMOOTH_STITCH_FIX_VALIDATION_FILE = "interlagos_pit_access_smooth_stitch_fix_validation.json"
+PIT_ACCESS_MICRO_SMOOTH_STITCH_FIX_CANDIDATE_FILE = "interlagos_pit_access_micro_smooth_stitch_fix_candidate.json"
+PIT_ACCESS_MICRO_SMOOTH_STITCH_FIX_VALIDATION_FILE = "interlagos_pit_access_micro_smooth_stitch_fix_validation.json"
+PIT_ACCESS_OPEN_EXIT_MOUTH_FIX_CANDIDATE_FILE = "interlagos_pit_access_open_exit_mouth_fix_candidate.json"
+PIT_ACCESS_OPEN_EXIT_MOUTH_FIX_VALIDATION_FILE = "interlagos_pit_access_open_exit_mouth_fix_validation.json"
+PIT_ACCESS_ASPHALT_MERGE_FIX_CANDIDATE_FILE = "interlagos_pit_access_asphalt_merge_fix_candidate.json"
+PIT_ACCESS_ASPHALT_MERGE_FIX_VALIDATION_FILE = "interlagos_pit_access_asphalt_merge_fix_validation.json"
 
 MAX_SEGMENT_LENGTH_M = 30.0
 WIDTH_LOW_RATIO = 0.72
@@ -75,7 +93,13 @@ def load_fixed_geometry(repo_root: Path) -> Optional[Dict[str, Any]]:
         or _mark_track_only_geometry(track_data, path)
     )
     track_data = (
-        _apply_pit_access_centerline_fix(repo_root, track_data)
+        _apply_pit_access_asphalt_merge_fix(repo_root, track_data)
+        or _apply_pit_access_open_exit_mouth_fix(repo_root, track_data)
+        or _apply_pit_access_micro_smooth_stitch_fix(repo_root, track_data)
+        or _apply_pit_access_smooth_stitch_fix(repo_root, track_data)
+        or _apply_pit_access_edge_stitch_fix(repo_root, track_data)
+        or _apply_pit_access_surface_union_fix(repo_root, track_data)
+        or _apply_pit_access_centerline_fix(repo_root, track_data)
         or _apply_pit_bifurcation_taper_refine(repo_root, track_data)
         or _apply_pit_bifurcation_fix(repo_root, track_data)
         or _apply_pitlane_harmonic_entry_exit(repo_root, track_data)
@@ -91,6 +115,443 @@ def load_fixed_geometry(repo_root: Path) -> Optional[Dict[str, Any]]:
         if pit_visual:
             track_data["pitVisualGeometry"] = pit_visual
             metadata["pitVisualGeometry"] = pit_visual.get("name")
+    return track_data
+
+
+def _apply_pit_access_asphalt_merge_fix(repo_root: Path, track_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    debug_dir = repo_root / "data" / "debug"
+    candidate_path = debug_dir / PIT_ACCESS_ASPHALT_MERGE_FIX_CANDIDATE_FILE
+    validation_path = debug_dir / PIT_ACCESS_ASPHALT_MERGE_FIX_VALIDATION_FILE
+    if not candidate_path.exists() or not validation_path.exists():
+        return None
+
+    validation = json.loads(validation_path.read_text(encoding="utf-8"))
+    if not validation.get("passed"):
+        return None
+
+    candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
+    pit_visual_geometry = candidate.get("visualGeometry")
+    if not pit_visual_geometry or not pit_visual_geometry.get("geometries"):
+        return None
+
+    previous_validation = track_data.get("validation", {})
+    track_data["geometryName"] = PIT_ACCESS_ASPHALT_MERGE_FIX_GEOMETRY_NAME
+    track_data["visualGeometryName"] = PIT_ACCESS_ASPHALT_MERGE_FIX_GEOMETRY_NAME
+    track_data["renderMode"] = "visual_pit_access_asphalt_merge_fix"
+    track_data["updatedAt"] = candidate.get("updatedAt") or candidate.get("generatedAt")
+    track_data["provider"] = PIT_ACCESS_ASPHALT_MERGE_FIX_GEOMETRY_NAME
+    track_data["providerSource"] = "assetto_corsa_track_files"
+    track_data["cachePath"] = str(candidate_path)
+    track_data["pitVisualGeometry"] = pit_visual_geometry
+    track_data.setdefault("reconstruction", {})["pitlaneVisualMethod"] = PIT_ACCESS_ASPHALT_MERGE_FIX_GEOMETRY_NAME
+
+    app_validation = {
+        "appUsesPitAccessAsphaltMergeFix": True,
+        "asphaltMergeFillGenerated": bool(validation.get("asphaltMergeFillGenerated")),
+        "pitExitGapFilled": bool(validation.get("pitExitGapFilled")),
+        "pitEntryGapFilled": bool(validation.get("pitEntryGapFilled")),
+        "blackVoidBetweenMainAndPitRemoved": bool(validation.get("blackVoidBetweenMainAndPitRemoved")),
+        "mainTrackInnerEdgeReplacedAtPitExit": bool(validation.get("mainTrackInnerEdgeReplacedAtPitExit")),
+        "mainTrackInnerEdgeReplacedAtPitEntry": bool(validation.get("mainTrackInnerEdgeReplacedAtPitEntry")),
+        "pitAccessInnerEdgeSuppressedAtMerge": bool(validation.get("pitAccessInnerEdgeSuppressedAtMerge")),
+        "noInternalStrokeBetweenMainAndPitAccess": bool(validation.get("noInternalStrokeBetweenMainAndPitAccess")),
+        "noTransverseCapAtPitExit": bool(validation.get("noTransverseCapAtPitExit")),
+        "noWallClosingPitlane": bool(validation.get("noWallClosingPitlane")),
+        "noRibbonOverlapVisible": bool(validation.get("noRibbonOverlapVisible")),
+        "noGapBetweenMainAndPitAccess": bool(validation.get("noGapBetweenMainAndPitAccess")),
+        "noBlackSeamVisible": bool(validation.get("noBlackSeamVisible")),
+        "noRectangularBlock": bool(validation.get("noRectangularBlock")),
+        "noFakeChicane": bool(validation.get("noFakeChicane")),
+        "mainTrackStillClean": bool(validation.get("mainTrackPreserved")),
+        "mainTrackPreserved": bool(validation.get("mainTrackPreserved")),
+        "pitlanePreserved": bool(validation.get("pitlanePreserved")),
+        "retaOpostaStillStraight": bool(validation.get("retaOpostaStillStraight")),
+        "debugRequired": False,
+        "projectionChanged": False,
+        "mapPositionChanged": False,
+        "lateralOffsetChanged": False,
+        "physicsChanged": False,
+        "boundaryLoopsUsedAsFinalVisual": False,
+        "rawTrianglesRendered": False,
+        "sourceValidation": validation,
+        "mainTrackValidation": previous_validation,
+    }
+    metadata = track_data.setdefault("metadata", {})
+    metadata["cachePath"] = str(candidate_path)
+    metadata["geometryName"] = PIT_ACCESS_ASPHALT_MERGE_FIX_GEOMETRY_NAME
+    metadata["visualGeometryName"] = PIT_ACCESS_ASPHALT_MERGE_FIX_GEOMETRY_NAME
+    metadata["renderMode"] = "visual_pit_access_asphalt_merge_fix"
+    metadata["updatedAt"] = track_data["updatedAt"]
+    metadata["mainTrackGeometryName"] = candidate.get("mainTrackGeometry")
+    metadata["mainTrackVisualGeometryName"] = candidate.get("mainTrackVisualGeometry")
+    metadata["pitAccessAsphaltMergeFixCandidate"] = str(candidate_path)
+    metadata["pitAccessAsphaltMergeFixValidation"] = str(validation_path)
+    metadata["pitVisualGeometryFiltered"] = True
+    metadata["pitVisualGeometryManaged"] = True
+    metadata["projectionCenterlinePreserved"] = True
+    metadata["validation"] = app_validation
+    track_data["validation"] = app_validation
+    return track_data
+
+
+def _apply_pit_access_open_exit_mouth_fix(repo_root: Path, track_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    debug_dir = repo_root / "data" / "debug"
+    candidate_path = debug_dir / PIT_ACCESS_OPEN_EXIT_MOUTH_FIX_CANDIDATE_FILE
+    validation_path = debug_dir / PIT_ACCESS_OPEN_EXIT_MOUTH_FIX_VALIDATION_FILE
+    if not candidate_path.exists() or not validation_path.exists():
+        return None
+
+    validation = json.loads(validation_path.read_text(encoding="utf-8"))
+    if not validation.get("passed"):
+        return None
+
+    candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
+    pit_visual_geometry = candidate.get("visualGeometry")
+    if not pit_visual_geometry or not pit_visual_geometry.get("geometries"):
+        return None
+
+    previous_validation = track_data.get("validation", {})
+    track_data["geometryName"] = PIT_ACCESS_OPEN_EXIT_MOUTH_FIX_GEOMETRY_NAME
+    track_data["visualGeometryName"] = PIT_ACCESS_OPEN_EXIT_MOUTH_FIX_GEOMETRY_NAME
+    track_data["renderMode"] = "visual_pit_access_open_exit_mouth_fix"
+    track_data["updatedAt"] = candidate.get("updatedAt") or candidate.get("generatedAt")
+    track_data["provider"] = PIT_ACCESS_OPEN_EXIT_MOUTH_FIX_GEOMETRY_NAME
+    track_data["providerSource"] = "assetto_corsa_track_files"
+    track_data["cachePath"] = str(candidate_path)
+    track_data["pitVisualGeometry"] = pit_visual_geometry
+    track_data.setdefault("reconstruction", {})["pitlaneVisualMethod"] = PIT_ACCESS_OPEN_EXIT_MOUTH_FIX_GEOMETRY_NAME
+
+    app_validation = {
+        "appUsesPitAccessOpenExitMouthFix": True,
+        "pitExitOpenCaps": bool(validation.get("pitExitOpenCaps")),
+        "pitExitStartStitchSuppressed": bool(validation.get("pitExitStartStitchSuppressed")),
+        "pitExitEndStitchSuppressed": bool(validation.get("pitExitEndStitchSuppressed")),
+        "pitExitTransverseStitchesSuppressed": bool(validation.get("pitExitTransverseStitchesSuppressed")),
+        "pitExitMouthClosedByStroke": bool(validation.get("pitExitMouthClosedByStroke")),
+        "pitExitMouthNotClosedByStroke": bool(validation.get("pitExitMouthNotClosedByStroke")),
+        "noTransverseLineCuttingPitlane": bool(validation.get("noTransverseLineCuttingPitlane")),
+        "pitExitStartOverlapGenerated": bool(validation.get("pitExitStartOverlapGenerated")),
+        "pitExitCorridorJoinCapCovered": bool(validation.get("pitExitCorridorJoinCapCovered")),
+        "mainTrackInnerEdgeSuppressedAtPitExit": bool(validation.get("mainTrackInnerEdgeSuppressedAtPitExit")),
+        "pitExitInnerEdgeSuppressed": bool(validation.get("pitExitInnerEdgeSuppressed")),
+        "pitExitEndCapSuppressed": bool(validation.get("pitExitEndCapSuppressed")),
+        "maxEndpointGapAfterMeters": validation.get("maxEndpointGapAfterMeters"),
+        "maxStitchHeadingStepBefore": validation.get("maxStitchHeadingStepBefore"),
+        "maxStitchHeadingStepAfter": validation.get("maxStitchHeadingStepAfter"),
+        "noSharpStitchAngle": bool(validation.get("noSharpStitchAngle")),
+        "noGapBetweenMainAndPitAccess": bool(validation.get("noGapBetweenMainAndPitAccess")),
+        "noDoubleStrokeAtContact": bool(validation.get("noDoubleStrokeAtContact")),
+        "noWallClosingPitlane": bool(validation.get("noWallClosingPitlane")),
+        "mainTrackStillClean": bool(validation.get("mainTrackPreserved")),
+        "mainTrackPreserved": bool(validation.get("mainTrackPreserved")),
+        "pitlanePreserved": bool(validation.get("pitlanePreserved")),
+        "retaOpostaStillStraight": bool(validation.get("retaOpostaStillStraight")),
+        "debugRequired": False,
+        "projectionChanged": False,
+        "mapPositionChanged": False,
+        "lateralOffsetChanged": False,
+        "physicsChanged": False,
+        "boundaryLoopsUsedAsFinalVisual": False,
+        "rawTrianglesRendered": False,
+        "sourceValidation": validation,
+        "mainTrackValidation": previous_validation,
+    }
+    metadata = track_data.setdefault("metadata", {})
+    metadata["cachePath"] = str(candidate_path)
+    metadata["geometryName"] = PIT_ACCESS_OPEN_EXIT_MOUTH_FIX_GEOMETRY_NAME
+    metadata["visualGeometryName"] = PIT_ACCESS_OPEN_EXIT_MOUTH_FIX_GEOMETRY_NAME
+    metadata["renderMode"] = "visual_pit_access_open_exit_mouth_fix"
+    metadata["updatedAt"] = track_data["updatedAt"]
+    metadata["mainTrackGeometryName"] = candidate.get("mainTrackGeometry")
+    metadata["mainTrackVisualGeometryName"] = candidate.get("mainTrackVisualGeometry")
+    metadata["pitAccessOpenExitMouthFixCandidate"] = str(candidate_path)
+    metadata["pitAccessOpenExitMouthFixValidation"] = str(validation_path)
+    metadata["pitVisualGeometryFiltered"] = True
+    metadata["pitVisualGeometryManaged"] = True
+    metadata["projectionCenterlinePreserved"] = True
+    metadata["validation"] = app_validation
+    track_data["validation"] = app_validation
+    return track_data
+
+
+def _apply_pit_access_micro_smooth_stitch_fix(repo_root: Path, track_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    debug_dir = repo_root / "data" / "debug"
+    candidate_path = debug_dir / PIT_ACCESS_MICRO_SMOOTH_STITCH_FIX_CANDIDATE_FILE
+    validation_path = debug_dir / PIT_ACCESS_MICRO_SMOOTH_STITCH_FIX_VALIDATION_FILE
+    if not candidate_path.exists() or not validation_path.exists():
+        return None
+
+    validation = json.loads(validation_path.read_text(encoding="utf-8"))
+    if not validation.get("passed"):
+        return None
+
+    candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
+    pit_visual_geometry = candidate.get("visualGeometry")
+    if not pit_visual_geometry or not pit_visual_geometry.get("geometries"):
+        return None
+
+    previous_validation = track_data.get("validation", {})
+    track_data["geometryName"] = PIT_ACCESS_MICRO_SMOOTH_STITCH_FIX_GEOMETRY_NAME
+    track_data["visualGeometryName"] = PIT_ACCESS_MICRO_SMOOTH_STITCH_FIX_GEOMETRY_NAME
+    track_data["renderMode"] = "visual_pit_access_micro_smooth_stitch_fix"
+    track_data["updatedAt"] = candidate.get("updatedAt") or candidate.get("generatedAt")
+    track_data["provider"] = PIT_ACCESS_MICRO_SMOOTH_STITCH_FIX_GEOMETRY_NAME
+    track_data["providerSource"] = "assetto_corsa_track_files"
+    track_data["cachePath"] = str(candidate_path)
+    track_data["pitVisualGeometry"] = pit_visual_geometry
+    track_data.setdefault("reconstruction", {})["pitlaneVisualMethod"] = PIT_ACCESS_MICRO_SMOOTH_STITCH_FIX_GEOMETRY_NAME
+
+    app_validation = {
+        "appUsesPitAccessMicroSmoothStitchFix": True,
+        "microSmoothStitchEdgesGenerated": bool(validation.get("microSmoothStitchEdgesGenerated")),
+        "maxEndpointGapAfterMeters": validation.get("maxEndpointGapAfterMeters"),
+        "maxStitchHeadingStepBefore": validation.get("maxStitchHeadingStepBefore"),
+        "maxStitchHeadingStepAfter": validation.get("maxStitchHeadingStepAfter"),
+        "noSharpStitchAngle": bool(validation.get("noSharpStitchAngle")),
+        "noGapBetweenMainAndPitAccess": bool(validation.get("noGapBetweenMainAndPitAccess")),
+        "noDoubleStrokeAtContact": bool(validation.get("noDoubleStrokeAtContact")),
+        "noWallClosingPitlane": bool(validation.get("noWallClosingPitlane")),
+        "mainTrackStillClean": bool(validation.get("mainTrackPreserved")),
+        "mainTrackPreserved": bool(validation.get("mainTrackPreserved")),
+        "pitlanePreserved": bool(validation.get("pitlanePreserved")),
+        "retaOpostaStillStraight": bool(validation.get("retaOpostaStillStraight")),
+        "debugRequired": False,
+        "projectionChanged": False,
+        "mapPositionChanged": False,
+        "lateralOffsetChanged": False,
+        "physicsChanged": False,
+        "boundaryLoopsUsedAsFinalVisual": False,
+        "rawTrianglesRendered": False,
+        "sourceValidation": validation,
+        "mainTrackValidation": previous_validation,
+    }
+    metadata = track_data.setdefault("metadata", {})
+    metadata["cachePath"] = str(candidate_path)
+    metadata["geometryName"] = PIT_ACCESS_MICRO_SMOOTH_STITCH_FIX_GEOMETRY_NAME
+    metadata["visualGeometryName"] = PIT_ACCESS_MICRO_SMOOTH_STITCH_FIX_GEOMETRY_NAME
+    metadata["renderMode"] = "visual_pit_access_micro_smooth_stitch_fix"
+    metadata["updatedAt"] = track_data["updatedAt"]
+    metadata["mainTrackGeometryName"] = candidate.get("mainTrackGeometry")
+    metadata["mainTrackVisualGeometryName"] = candidate.get("mainTrackVisualGeometry")
+    metadata["pitAccessMicroSmoothStitchFixCandidate"] = str(candidate_path)
+    metadata["pitAccessMicroSmoothStitchFixValidation"] = str(validation_path)
+    metadata["pitVisualGeometryFiltered"] = True
+    metadata["pitVisualGeometryManaged"] = True
+    metadata["projectionCenterlinePreserved"] = True
+    metadata["validation"] = app_validation
+    track_data["validation"] = app_validation
+    return track_data
+
+
+def _apply_pit_access_smooth_stitch_fix(repo_root: Path, track_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    debug_dir = repo_root / "data" / "debug"
+    candidate_path = debug_dir / PIT_ACCESS_SMOOTH_STITCH_FIX_CANDIDATE_FILE
+    validation_path = debug_dir / PIT_ACCESS_SMOOTH_STITCH_FIX_VALIDATION_FILE
+    if not candidate_path.exists() or not validation_path.exists():
+        return None
+
+    validation = json.loads(validation_path.read_text(encoding="utf-8"))
+    if not validation.get("passed"):
+        return None
+
+    candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
+    pit_visual_geometry = candidate.get("visualGeometry")
+    if not pit_visual_geometry or not pit_visual_geometry.get("geometries"):
+        return None
+
+    previous_validation = track_data.get("validation", {})
+    track_data["geometryName"] = PIT_ACCESS_SMOOTH_STITCH_FIX_GEOMETRY_NAME
+    track_data["visualGeometryName"] = PIT_ACCESS_SMOOTH_STITCH_FIX_GEOMETRY_NAME
+    track_data["renderMode"] = "visual_pit_access_smooth_stitch_fix"
+    track_data["updatedAt"] = candidate.get("updatedAt") or candidate.get("generatedAt")
+    track_data["provider"] = PIT_ACCESS_SMOOTH_STITCH_FIX_GEOMETRY_NAME
+    track_data["providerSource"] = "assetto_corsa_track_files"
+    track_data["cachePath"] = str(candidate_path)
+    track_data["pitVisualGeometry"] = pit_visual_geometry
+    track_data.setdefault("reconstruction", {})["pitlaneVisualMethod"] = PIT_ACCESS_SMOOTH_STITCH_FIX_GEOMETRY_NAME
+
+    app_validation = {
+        "appUsesPitAccessSmoothStitchFix": True,
+        "smoothStitchEdgesGenerated": bool(validation.get("smoothStitchEdgesGenerated")),
+        "maxEndpointGapAfterMeters": validation.get("maxEndpointGapAfterMeters"),
+        "maxStitchHeadingStepBefore": validation.get("maxStitchHeadingStepBefore"),
+        "maxStitchHeadingStepAfter": validation.get("maxStitchHeadingStepAfter"),
+        "noSharpStitchAngle": bool(validation.get("noSharpStitchAngle")),
+        "noInternalEdgeBreakAtEntry": bool(validation.get("noInternalEdgeBreakAtEntry")),
+        "noInternalEdgeBreakAtExit": bool(validation.get("noInternalEdgeBreakAtExit")),
+        "noEdgeStepAtEntry": bool(validation.get("noEdgeStepAtEntry")),
+        "noEdgeStepAtExit": bool(validation.get("noEdgeStepAtExit")),
+        "noGapBetweenMainAndPitAccess": bool(validation.get("noGapBetweenMainAndPitAccess")),
+        "noDoubleStrokeAtContact": bool(validation.get("noDoubleStrokeAtContact")),
+        "noWallClosingPitlane": bool(validation.get("noWallClosingPitlane")),
+        "noRibbonOverlapVisible": bool(validation.get("noRibbonOverlapVisible")),
+        "mainTrackStillClean": bool(validation.get("mainTrackPreserved")),
+        "mainTrackPreserved": bool(validation.get("mainTrackPreserved")),
+        "pitlanePreserved": bool(validation.get("pitlanePreserved")),
+        "retaOpostaStillStraight": bool(validation.get("retaOpostaStillStraight")),
+        "debugRequired": False,
+        "projectionChanged": False,
+        "mapPositionChanged": False,
+        "lateralOffsetChanged": False,
+        "physicsChanged": False,
+        "boundaryLoopsUsedAsFinalVisual": False,
+        "rawTrianglesRendered": False,
+        "sourceValidation": validation,
+        "mainTrackValidation": previous_validation,
+    }
+    metadata = track_data.setdefault("metadata", {})
+    metadata["cachePath"] = str(candidate_path)
+    metadata["geometryName"] = PIT_ACCESS_SMOOTH_STITCH_FIX_GEOMETRY_NAME
+    metadata["visualGeometryName"] = PIT_ACCESS_SMOOTH_STITCH_FIX_GEOMETRY_NAME
+    metadata["renderMode"] = "visual_pit_access_smooth_stitch_fix"
+    metadata["updatedAt"] = track_data["updatedAt"]
+    metadata["mainTrackGeometryName"] = candidate.get("mainTrackGeometry")
+    metadata["mainTrackVisualGeometryName"] = candidate.get("mainTrackVisualGeometry")
+    metadata["pitAccessSmoothStitchFixCandidate"] = str(candidate_path)
+    metadata["pitAccessSmoothStitchFixValidation"] = str(validation_path)
+    metadata["pitVisualGeometryFiltered"] = True
+    metadata["pitVisualGeometryManaged"] = True
+    metadata["projectionCenterlinePreserved"] = True
+    metadata["validation"] = app_validation
+    track_data["validation"] = app_validation
+    return track_data
+
+
+def _apply_pit_access_edge_stitch_fix(repo_root: Path, track_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    debug_dir = repo_root / "data" / "debug"
+    candidate_path = debug_dir / PIT_ACCESS_EDGE_STITCH_FIX_CANDIDATE_FILE
+    validation_path = debug_dir / PIT_ACCESS_EDGE_STITCH_FIX_VALIDATION_FILE
+    if not candidate_path.exists() or not validation_path.exists():
+        return None
+
+    validation = json.loads(validation_path.read_text(encoding="utf-8"))
+    if not validation.get("passed"):
+        return None
+
+    candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
+    pit_visual_geometry = candidate.get("visualGeometry")
+    if not pit_visual_geometry or not pit_visual_geometry.get("geometries"):
+        return None
+
+    previous_validation = track_data.get("validation", {})
+    track_data["geometryName"] = PIT_ACCESS_EDGE_STITCH_FIX_GEOMETRY_NAME
+    track_data["visualGeometryName"] = PIT_ACCESS_EDGE_STITCH_FIX_GEOMETRY_NAME
+    track_data["renderMode"] = "visual_pit_access_edge_stitch_fix"
+    track_data["updatedAt"] = candidate.get("updatedAt") or candidate.get("generatedAt")
+    track_data["provider"] = PIT_ACCESS_EDGE_STITCH_FIX_GEOMETRY_NAME
+    track_data["providerSource"] = "assetto_corsa_track_files"
+    track_data["cachePath"] = str(candidate_path)
+    track_data["pitVisualGeometry"] = pit_visual_geometry
+    track_data.setdefault("reconstruction", {})["pitlaneVisualMethod"] = PIT_ACCESS_EDGE_STITCH_FIX_GEOMETRY_NAME
+
+    app_validation = {
+        "appUsesPitAccessEdgeStitchFix": True,
+        "entryEdgeStitched": bool(validation.get("entryEdgeStitched")),
+        "exitEdgeStitched": bool(validation.get("exitEdgeStitched")),
+        "noInternalEdgeBreakAtEntry": bool(validation.get("noInternalEdgeBreakAtEntry")),
+        "noInternalEdgeBreakAtExit": bool(validation.get("noInternalEdgeBreakAtExit")),
+        "noEdgeStepAtEntry": bool(validation.get("noEdgeStepAtEntry")),
+        "noEdgeStepAtExit": bool(validation.get("noEdgeStepAtExit")),
+        "noGapBetweenMainAndPitAccess": bool(validation.get("noGapBetweenMainAndPitAccess")),
+        "noDoubleStrokeAtContact": bool(validation.get("noDoubleStrokeAtContact")),
+        "noWallClosingPitlane": bool(validation.get("noWallClosingPitlane")),
+        "noRibbonOverlapVisible": bool(validation.get("noRibbonOverlapVisible")),
+        "mainTrackStillClean": bool(validation.get("mainTrackPreserved")),
+        "mainTrackPreserved": bool(validation.get("mainTrackPreserved")),
+        "pitlanePreserved": bool(validation.get("pitlanePreserved")),
+        "retaOpostaStillStraight": bool(validation.get("retaOpostaStillStraight")),
+        "debugRequired": False,
+        "projectionChanged": False,
+        "mapPositionChanged": False,
+        "lateralOffsetChanged": False,
+        "physicsChanged": False,
+        "boundaryLoopsUsedAsFinalVisual": False,
+        "rawTrianglesRendered": False,
+        "sourceValidation": validation,
+        "mainTrackValidation": previous_validation,
+    }
+    metadata = track_data.setdefault("metadata", {})
+    metadata["cachePath"] = str(candidate_path)
+    metadata["geometryName"] = PIT_ACCESS_EDGE_STITCH_FIX_GEOMETRY_NAME
+    metadata["visualGeometryName"] = PIT_ACCESS_EDGE_STITCH_FIX_GEOMETRY_NAME
+    metadata["renderMode"] = "visual_pit_access_edge_stitch_fix"
+    metadata["updatedAt"] = track_data["updatedAt"]
+    metadata["mainTrackGeometryName"] = candidate.get("mainTrackGeometry")
+    metadata["mainTrackVisualGeometryName"] = candidate.get("mainTrackVisualGeometry")
+    metadata["pitAccessEdgeStitchFixCandidate"] = str(candidate_path)
+    metadata["pitAccessEdgeStitchFixValidation"] = str(validation_path)
+    metadata["pitVisualGeometryFiltered"] = True
+    metadata["pitVisualGeometryManaged"] = True
+    metadata["projectionCenterlinePreserved"] = True
+    metadata["validation"] = app_validation
+    track_data["validation"] = app_validation
+    return track_data
+
+
+def _apply_pit_access_surface_union_fix(repo_root: Path, track_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    debug_dir = repo_root / "data" / "debug"
+    candidate_path = debug_dir / PIT_ACCESS_SURFACE_UNION_FIX_CANDIDATE_FILE
+    validation_path = debug_dir / PIT_ACCESS_SURFACE_UNION_FIX_VALIDATION_FILE
+    if not candidate_path.exists() or not validation_path.exists():
+        return None
+
+    validation = json.loads(validation_path.read_text(encoding="utf-8"))
+    if not validation.get("passed"):
+        return None
+
+    candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
+    pit_visual_geometry = candidate.get("visualGeometry")
+    if not pit_visual_geometry or not pit_visual_geometry.get("geometries"):
+        return None
+
+    previous_validation = track_data.get("validation", {})
+    track_data["geometryName"] = PIT_ACCESS_SURFACE_UNION_FIX_GEOMETRY_NAME
+    track_data["visualGeometryName"] = PIT_ACCESS_SURFACE_UNION_FIX_GEOMETRY_NAME
+    track_data["renderMode"] = "visual_pit_access_surface_union_fix"
+    track_data["updatedAt"] = candidate.get("updatedAt") or candidate.get("generatedAt")
+    track_data["provider"] = PIT_ACCESS_SURFACE_UNION_FIX_GEOMETRY_NAME
+    track_data["providerSource"] = "assetto_corsa_track_files"
+    track_data["cachePath"] = str(candidate_path)
+    track_data["pitVisualGeometry"] = pit_visual_geometry
+    track_data.setdefault("reconstruction", {})["pitlaneVisualMethod"] = PIT_ACCESS_SURFACE_UNION_FIX_GEOMETRY_NAME
+
+    app_validation = {
+        "appUsesPitAccessSurfaceUnionFix": True,
+        "pitlaneEntryMergedVisually": bool(validation.get("noVisualSeamAtEntry")),
+        "pitlaneExitMergedVisually": bool(validation.get("noVisualSeamAtExit")),
+        "internalSeamsVisible": not bool(validation.get("internalEdgesRemoved")),
+        "internalEdgesRemoved": bool(validation.get("internalEdgesRemoved")),
+        "noRibbonOverlapVisible": bool(validation.get("noRibbonOverlapVisible")),
+        "noWallClosingPitlane": bool(validation.get("noWallClosingPitlane")),
+        "noGapBetweenMainAndPitAccess": bool(validation.get("noGapBetweenMainAndPitAccess")),
+        "mainTrackStillClean": bool(validation.get("mainTrackPreserved")),
+        "mainTrackPreserved": bool(validation.get("mainTrackPreserved")),
+        "retaOpostaStillStraight": bool(validation.get("retaOpostaStillStraight")),
+        "debugRequired": False,
+        "projectionChanged": False,
+        "mapPositionChanged": False,
+        "lateralOffsetChanged": False,
+        "physicsChanged": False,
+        "boundaryLoopsUsedAsFinalVisual": False,
+        "rawTrianglesRendered": False,
+        "sourceValidation": validation,
+        "mainTrackValidation": previous_validation,
+    }
+    metadata = track_data.setdefault("metadata", {})
+    metadata["cachePath"] = str(candidate_path)
+    metadata["geometryName"] = PIT_ACCESS_SURFACE_UNION_FIX_GEOMETRY_NAME
+    metadata["visualGeometryName"] = PIT_ACCESS_SURFACE_UNION_FIX_GEOMETRY_NAME
+    metadata["renderMode"] = "visual_pit_access_surface_union_fix"
+    metadata["updatedAt"] = track_data["updatedAt"]
+    metadata["mainTrackGeometryName"] = candidate.get("mainTrackGeometry")
+    metadata["mainTrackVisualGeometryName"] = candidate.get("mainTrackVisualGeometry")
+    metadata["pitAccessSurfaceUnionFixCandidate"] = str(candidate_path)
+    metadata["pitAccessSurfaceUnionFixValidation"] = str(validation_path)
+    metadata["pitVisualGeometryFiltered"] = True
+    metadata["pitVisualGeometryManaged"] = True
+    metadata["projectionCenterlinePreserved"] = True
+    metadata["validation"] = app_validation
+    track_data["validation"] = app_validation
     return track_data
 
 
@@ -123,6 +584,13 @@ def _apply_pit_access_centerline_fix(repo_root: Path, track_data: Dict[str, Any]
 
     app_validation = {
         "appUsesPitAccessCenterlineFix": True,
+        "accessRibbonGenerated": bool(validation.get("accessRibbonGenerated")),
+        "entryAccessHasArea": bool(validation.get("entryAccessHasArea")),
+        "exitAccessHasArea": bool(validation.get("exitAccessHasArea")),
+        "entryNotRenderedAsThinLine": bool(validation.get("entryNotRenderedAsThinLine")),
+        "exitNotRenderedAsThinLine": bool(validation.get("exitNotRenderedAsThinLine")),
+        "noNeedleShape": bool(validation.get("noNeedleShape")),
+        "noTriangularSpike": bool(validation.get("noTriangularSpike")),
         "entryAccessCenterlineUsed": bool(validation.get("entryAccessCenterlineUsed")),
         "exitAccessCenterlineUsed": bool(validation.get("exitAccessCenterlineUsed")),
         "sharedDividerNotUsedAsOnlyVisual": bool(validation.get("sharedDividerNotUsedAsOnlyVisual")),

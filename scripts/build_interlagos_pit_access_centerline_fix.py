@@ -56,10 +56,12 @@ ENTRY_NAME = "PitEntryAccessGeometry"
 CORRIDOR_NAME = "PitLaneCorridorBifurcationGeometry"
 EXIT_NAME = "PitExitAccessGeometry"
 
-MIN_ACCESS_WIDTH_M = 1.65
+MIN_ACCESS_WIDTH_M = 4.75
 CORRIDOR_WIDTH_M = 7.5
 ENTRY_POINT_COUNT = 96
 EXIT_POINT_COUNT = 92
+MAIN_CONNECTION_CLEARANCE_M = 0.02
+MIN_USEFUL_RIBBON_WIDTH_M = 4.25
 
 Point = Tuple[float, float]
 
@@ -155,7 +157,7 @@ def _build_candidate(context: Dict[str, Any], audit: Dict[str, Any], base: Dict[
         "minAccessWidthMeters": MIN_ACCESS_WIDTH_M,
         "entryPointCount": ENTRY_POINT_COUNT,
         "exitPointCount": EXIT_POINT_COUNT,
-        "method": "centerline-guided offset ribbon with smoothstep width, no visible zero-width point",
+        "method": "centerline-guided offset ribbon with real left/right edges and useful minimum visual width",
     }
     visual["geometries"] = geometries
     visual["bifurcationTopology"]["entry"]["pitBranchCenterline"] = entry["centerline"]
@@ -242,6 +244,10 @@ def _validate_candidate(context: Dict[str, Any], candidate: Dict[str, Any]) -> D
     corridor_center = _line_points(corridor["centerline"])
     entry_widths = [float(value) for value in entry["width"]]
     exit_widths = [float(value) for value in exit_access["width"]]
+    entry_area = abs(_polygon_area(_line_points(entry["polygon"])))
+    exit_area = abs(_polygon_area(_line_points(exit_access["polygon"])))
+    entry_length = _polyline_length(entry_center)
+    exit_length = _polyline_length(exit_center)
     entry_gap = _distance(entry_center[-1], corridor_center[0])
     exit_gap = _distance(corridor_center[-1], exit_center[0])
     entry_overlap = _geometry_overlap_count(context, entry)
@@ -251,7 +257,21 @@ def _validate_candidate(context: Dict[str, Any], candidate: Dict[str, Any]) -> D
     width_smooth = max(_width_deltas(entry_widths) + _width_deltas(exit_widths) or [0.0]) <= 0.12
     entry_natural = _max_heading_step(entry_center) <= 8.5 and _heading_oscillation(entry_center, 0, len(entry_center) - 1) <= 95.0
     exit_natural = _max_heading_step(exit_center) <= 8.5 and _heading_oscillation(exit_center, 0, len(exit_center) - 1) <= 80.0
+    entry_has_area = entry_area >= entry_length * MIN_USEFUL_RIBBON_WIDTH_M
+    exit_has_area = exit_area >= exit_length * MIN_USEFUL_RIBBON_WIDTH_M
+    entry_not_thin = min(entry_widths) >= MIN_USEFUL_RIBBON_WIDTH_M and entry_area / max(entry_length, 1.0) >= MIN_USEFUL_RIBBON_WIDTH_M
+    exit_not_thin = min(exit_widths) >= MIN_USEFUL_RIBBON_WIDTH_M and exit_area / max(exit_length, 1.0) >= MIN_USEFUL_RIBBON_WIDTH_M
     fields = {
+        "accessRibbonGenerated": len(entry["leftEdge"]["points"]) == len(entry_center)
+        and len(entry["rightEdge"]["points"]) == len(entry_center)
+        and len(exit_access["leftEdge"]["points"]) == len(exit_center)
+        and len(exit_access["rightEdge"]["points"]) == len(exit_center),
+        "entryAccessHasArea": entry_has_area,
+        "exitAccessHasArea": exit_has_area,
+        "entryNotRenderedAsThinLine": entry_not_thin,
+        "exitNotRenderedAsThinLine": exit_not_thin,
+        "noNeedleShape": entry_not_thin and exit_not_thin and min(entry_widths) / max(entry_widths) >= 0.55 and min(exit_widths) / max(exit_widths) >= 0.55,
+        "noTriangularSpike": min(entry_widths) >= MIN_USEFUL_RIBBON_WIDTH_M and min(exit_widths) >= MIN_USEFUL_RIBBON_WIDTH_M,
         "entryAccessCenterlineUsed": "PitEntryAccessCenterline" in entry and bool(entry.get("renderHints", {}).get("accessCenterlineUsed")),
         "exitAccessCenterlineUsed": "PitExitAccessCenterline" in exit_access and bool(exit_access.get("renderHints", {}).get("accessCenterlineUsed")),
         "sharedDividerNotUsedAsOnlyVisual": _line_points(entry["centerline"]) != _line_points(entry["sharedDividerEdge"])
@@ -274,17 +294,28 @@ def _validate_candidate(context: Dict[str, Any], candidate: Dict[str, Any]) -> D
         "entryRibbonOverlapPointCount": entry_overlap,
         "corridorRibbonOverlapPointCount": corridor_overlap,
         "exitRibbonOverlapPointCount": exit_overlap,
+        "entryRibbonArea": round(entry_area, 6),
+        "exitRibbonArea": round(exit_area, 6),
+        "entryAreaPerMeter": round(entry_area / max(entry_length, 1.0), 6),
+        "exitAreaPerMeter": round(exit_area / max(exit_length, 1.0), 6),
         "entryMinWidth": round(min(entry_widths), 6),
         "exitMinWidth": round(min(exit_widths), 6),
         "maxWidthDelta": round(max(_width_deltas(entry_widths) + _width_deltas(exit_widths) or [0.0]), 6),
         "entryCenterlineMaxHeadingStep": round(_max_heading_step(entry_center), 6),
         "exitCenterlineMaxHeadingStep": round(_max_heading_step(exit_center), 6),
-        "entryTaperLength": round(_polyline_length(entry_center), 6),
-        "exitTaperLength": round(_polyline_length(exit_center), 6),
+        "entryTaperLength": round(entry_length, 6),
+        "exitTaperLength": round(exit_length, 6),
         "maxVisualSegmentLength": round(max(_max_segment(entry_center), _max_segment(corridor_center), _max_segment(exit_center)), 6),
     }
     passed = (
-        fields["entryAccessCenterlineUsed"]
+        fields["accessRibbonGenerated"]
+        and fields["entryAccessHasArea"]
+        and fields["exitAccessHasArea"]
+        and fields["entryNotRenderedAsThinLine"]
+        and fields["exitNotRenderedAsThinLine"]
+        and fields["noNeedleShape"]
+        and fields["noTriangularSpike"]
+        and fields["entryAccessCenterlineUsed"]
         and fields["exitAccessCenterlineUsed"]
         and fields["sharedDividerNotUsedAsOnlyVisual"]
         and fields["noTriangularTaper"]
@@ -331,6 +362,12 @@ def _push_center_outside(point: Point, width: float, context: Dict[str, Any]) ->
 
 
 def _clamp_centerline_outside_main(points: Sequence[Point], widths: Sequence[float], context: Dict[str, Any]) -> List[Point]:
+    adjusted = _clamp_points_outside_main(points, widths, context)
+    smoothed = _smooth_polyline(adjusted, passes=1, keep_ends=True)
+    return _clamp_points_outside_main(smoothed, widths, context)
+
+
+def _clamp_points_outside_main(points: Sequence[Point], widths: Sequence[float], context: Dict[str, Any]) -> List[Point]:
     adjusted: List[Point] = []
     for point, width in zip(points, widths):
         index, distance = _nearest_index(point, context["mainCenter"])
@@ -339,12 +376,12 @@ def _clamp_centerline_outside_main(points: Sequence[Point], widths: Sequence[flo
         direction = _unit((point[0] - main_center[0], point[1] - main_center[1]))
         if direction == (0.0, 0.0):
             direction = _unit((main_left[0] - main_center[0], main_left[1] - main_center[1]))
-        required = context["widths"][index] * 0.5 + float(width) * 0.5 + 0.16
+        required = context["widths"][index] * 0.5 + float(width) * 0.5 + MAIN_CONNECTION_CLEARANCE_M
         if distance < required:
             adjusted.append((main_center[0] + direction[0] * required, main_center[1] + direction[1] * required))
         else:
             adjusted.append(point)
-    return _smooth_polyline(adjusted, passes=1, keep_ends=True)
+    return adjusted
 
 
 def _bezier(start: Point, end: Point, guide: Sequence[Point], guide_start: int, guide_end: int, count: int) -> List[Point]:
@@ -422,6 +459,15 @@ def _polygon_self_intersects(points: Sequence[Point]) -> bool:
     return False
 
 
+def _polygon_area(points: Sequence[Point]) -> float:
+    if len(points) < 3:
+        return 0.0
+    total = 0.0
+    for point, next_point in zip(points, list(points[1:]) + [points[0]]):
+        total += point[0] * next_point[1] - next_point[0] * point[1]
+    return total * 0.5
+
+
 def _width_deltas(widths: Sequence[float]) -> List[float]:
     return [abs(float(widths[index]) - float(widths[index - 1])) for index in range(1, len(widths))]
 
@@ -454,6 +500,13 @@ def _build_app_check() -> Dict[str, Any]:
         "renderMode": render_mode,
         "updatedAt": updated_at,
         "appUsesPitAccessCenterlineFix": geometry_name == GEOMETRY_NAME or visual_geometry_name == GEOMETRY_NAME,
+        "accessRibbonGenerated": bool(validation.get("accessRibbonGenerated")),
+        "entryAccessHasArea": bool(validation.get("entryAccessHasArea")),
+        "exitAccessHasArea": bool(validation.get("exitAccessHasArea")),
+        "entryNotRenderedAsThinLine": bool(validation.get("entryNotRenderedAsThinLine")),
+        "exitNotRenderedAsThinLine": bool(validation.get("exitNotRenderedAsThinLine")),
+        "noNeedleShape": bool(validation.get("noNeedleShape")),
+        "noTriangularSpike": bool(validation.get("noTriangularSpike")),
         "entryAccessCenterlineUsed": bool(validation.get("entryAccessCenterlineUsed")),
         "exitAccessCenterlineUsed": bool(validation.get("exitAccessCenterlineUsed")),
         "sharedDividerNotUsedAsOnlyVisual": bool(validation.get("sharedDividerNotUsedAsOnlyVisual")),
@@ -477,7 +530,12 @@ def _candidate_svg(context: Dict[str, Any], base: Dict[str, Any], candidate: Dic
 
 
 def _validation_svg(context: Dict[str, Any], base: Dict[str, Any], candidate: Dict[str, Any], validation: Dict[str, Any]) -> str:
-    footer = f"passed={validation['passed']} entryCenter={validation['entryAccessCenterlineUsed']} exitCenter={validation['exitAccessCenterlineUsed']} natural={validation['pitEntryLooksNatural']}/{validation['pitExitLooksNatural']}"
+    footer = (
+        f"passed={validation['passed']} ribbons={validation['accessRibbonGenerated']} "
+        f"area={validation['entryAccessHasArea']}/{validation['exitAccessHasArea']} "
+        f"notThin={validation['entryNotRenderedAsThinLine']}/{validation['exitNotRenderedAsThinLine']} "
+        f"minWidth={validation['entryMinWidth']:.2f}/{validation['exitMinWidth']:.2f}m"
+    )
     return _svg("Interlagos pit access centerline fix validation", context, base, candidate, footer=footer)
 
 

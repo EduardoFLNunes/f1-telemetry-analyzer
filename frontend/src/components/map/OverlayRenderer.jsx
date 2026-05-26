@@ -8,6 +8,46 @@ function drawPolyline(ctx, x = [], y = [], close = false) {
   if (close) ctx.closePath();
 }
 
+function indexInRanges(index, ranges = []) {
+  return ranges.some((range) => {
+    const start = Number(range?.[0]);
+    const end = Number(range?.[1]);
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return false;
+    if (start <= end) return index >= start && index <= end;
+    return index >= start || index <= end;
+  });
+}
+
+function strokePolylineSegments(ctx, x = [], y = [], close = false, suppressedRanges = []) {
+  if (!x.length || !y.length) return;
+  if (!suppressedRanges.length) {
+    drawPolyline(ctx, x, y, close);
+    ctx.stroke();
+    return;
+  }
+
+  let drawing = false;
+  const segmentCount = close ? x.length : x.length - 1;
+  for (let i = 0; i < segmentCount; i += 1) {
+    const next = (i + 1) % x.length;
+    const suppressed = indexInRanges(i, suppressedRanges) || indexInRanges(next, suppressedRanges);
+    if (suppressed) {
+      if (drawing) {
+        ctx.stroke();
+        drawing = false;
+      }
+      continue;
+    }
+    if (!drawing) {
+      ctx.beginPath();
+      ctx.moveTo(x[i], y[i]);
+      drawing = true;
+    }
+    ctx.lineTo(x[next], y[next]);
+  }
+  if (drawing) ctx.stroke();
+}
+
 function drawEdgePolygon(ctx, leftPoints = [], rightPoints = []) {
   if (!leftPoints.length || !rightPoints.length) return;
   ctx.beginPath();
@@ -54,6 +94,7 @@ function strokePitGeometry(ctx, geometry, left = [], right = []) {
 function drawPitVisualGeometry(ctx, trackData, asphalt, scale) {
   const geometries = Object.values(trackData?.pitVisualGeometry?.geometries || {});
   if (!geometries.length) return;
+  const surfaceUnion = trackData?.pitVisualGeometry?.surfaceUnionFix;
 
   ctx.save();
   ctx.fillStyle = asphalt;
@@ -61,6 +102,28 @@ function drawPitVisualGeometry(ctx, trackData, asphalt, scale) {
   ctx.lineWidth = 1.25 / scale;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
+
+  if (surfaceUnion?.suppressInternalEdges) {
+    geometries.forEach((geometry) => {
+      drawEdgePolygon(ctx, geometry.leftEdge?.points || [], geometry.rightEdge?.points || []);
+      ctx.fill();
+    });
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.42)';
+    ctx.lineWidth = 1.25 / scale;
+    const policy = surfaceUnion.pitGeometryStrokePolicy || {};
+    geometries.forEach((geometry) => {
+      const strokeEdges = policy[geometry.name]?.strokeEdges || geometry.renderHints?.strokeEdges || ['leftEdge', 'rightEdge'];
+      strokeEdges.forEach((edgeName) => {
+        strokePointLine(ctx, geometry[edgeName]?.points || []);
+      });
+    });
+    (surfaceUnion.stitchEdges || []).forEach((edge) => {
+      strokePointLine(ctx, edge.points?.points || []);
+    });
+    ctx.restore();
+    return;
+  }
 
   geometries.forEach((geometry) => {
     const left = geometry.leftEdge?.points || [];
@@ -102,10 +165,9 @@ export function drawTrackSurface(ctx, trackData, bounds, scale) {
   ctx.strokeStyle = 'rgba(255,255,255,0.48)';
   ctx.lineWidth = 1.4 / scale;
   const closed = trackData.closedLoop !== false;
-  drawPolyline(ctx, left.x, left.y, closed);
-  ctx.stroke();
-  drawPolyline(ctx, right.x, right.y, closed);
-  ctx.stroke();
+  const surfaceUnion = trackData?.pitVisualGeometry?.surfaceUnionFix;
+  strokePolylineSegments(ctx, left.x, left.y, closed, surfaceUnion?.mainTrackStrokeSuppression?.leftRanges || []);
+  strokePolylineSegments(ctx, right.x, right.y, closed, surfaceUnion?.mainTrackStrokeSuppression?.rightRanges || []);
 
   ctx.setLineDash([10 / scale, 16 / scale]);
   ctx.strokeStyle = 'rgba(255,255,255,0.12)';
