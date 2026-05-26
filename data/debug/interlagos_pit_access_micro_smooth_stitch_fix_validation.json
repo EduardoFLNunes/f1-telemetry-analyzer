@@ -1,0 +1,31 @@
+{
+  "name": "InterlagosPitAccessMicroSmoothStitchFixValidation",
+  "generatedAt": "2026-05-26T01:31:31.571561",
+  "candidateGeometry": "InterlagosPitAccessMicroSmoothStitchFix",
+  "passed": true,
+  "microSmoothStitchEdgesGenerated": true,
+  "maxStitchHeadingStepBefore": 17.952924,
+  "maxStitchHeadingStepAfter": 10.092362,
+  "maxStitchHeadingStepLimit": 12.0,
+  "maxEndpointGapAfterMeters": 0.0,
+  "noSharpStitchAngle": true,
+  "noGapBetweenMainAndPitAccess": true,
+  "noDoubleStrokeAtContact": true,
+  "noWallClosingPitlane": true,
+  "mainTrackPreserved": true,
+  "pitlanePreserved": true,
+  "retaOpostaStillStraight": true,
+  "projectionChanged": false,
+  "mapPositionChanged": false,
+  "lateralOffsetChanged": false,
+  "physicsChanged": false,
+  "stitchEdgeCount": 4,
+  "entryStitchHeadingSteps": [
+    10.092362,
+    6.818654
+  ],
+  "exitStitchHeadingSteps": [
+    6.70912,
+    9.619931
+  ]
+}

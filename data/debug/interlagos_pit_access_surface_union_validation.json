@@ -1,0 +1,35 @@
+{
+  "name": "InterlagosPitAccessSurfaceUnionValidation",
+  "generatedAt": "2026-05-26T00:44:11.920334",
+  "candidateGeometry": "InterlagosPitAccessSurfaceUnionFix",
+  "passed": true,
+  "pitEntryConnectedToMainTrack": true,
+  "pitExitConnectedToMainTrack": true,
+  "pitCorridorConnectedToAccesses": true,
+  "internalEdgesRemoved": true,
+  "noVisualSeamAtEntry": true,
+  "noVisualSeamAtExit": true,
+  "noRibbonOverlapVisible": true,
+  "noWallClosingPitlane": true,
+  "noGapBetweenMainAndPitAccess": true,
+  "noFakeChicane": true,
+  "noRectangularBlock": true,
+  "mainTrackPreserved": true,
+  "retaOpostaStillStraight": true,
+  "projectionChanged": false,
+  "mapPositionChanged": false,
+  "lateralOffsetChanged": false,
+  "physicsChanged": false,
+  "entryMainRange": [
+    2394,
+    2452
+  ],
+  "exitMainRange": [
+    480,
+    532
+  ],
+  "entryMinDistanceToMainEdge": 0.024596,
+  "exitMinDistanceToMainEdge": 0.021409,
+  "entryCorridorGapMeters": 0.0,
+  "corridorExitGapMeters": 0.0
+}

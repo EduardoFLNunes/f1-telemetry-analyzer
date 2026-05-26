@@ -1,0 +1,91 @@
+{
+  "name": "InterlagosPitAccessSurfaceUnionAudit",
+  "generatedAt": "2026-05-26T00:44:11.880236",
+  "baseGeometry": "InterlagosPitAccessCenterlineFix",
+  "mainTrackAsphaltPolygonPointCount": 5360,
+  "pitEntryPolygonPointCount": 192,
+  "pitCorridorPolygonPointCount": 1452,
+  "pitExitPolygonPointCount": 184,
+  "internalEdges": [
+    {
+      "between": "MainTrack/PitEntryAccess",
+      "edge": "mainLeft + PitEntryAccess.innerEdge",
+      "status": "visible_before_union",
+      "mainRange": [
+        2394,
+        2452
+      ],
+      "minDistanceToMainEdge": 0.024596,
+      "avgDistanceToMainEdge": 1.725141,
+      "p95DistanceToMainEdge": 3.15925,
+      "nearestMainIndexStart": 2394,
+      "nearestMainIndexEnd": 2452,
+      "contactSampleCount": 96
+    },
+    {
+      "between": "PitEntryAccess/PitLaneCorridor",
+      "edge": "access end caps",
+      "status": "touching_without_union",
+      "centerGapMeters": 0.0,
+      "leftEdgeGapMeters": 0.084197,
+      "rightEdgeGapMeters": 0.084197
+    },
+    {
+      "between": "PitLaneCorridor/PitExitAccess",
+      "edge": "access end caps",
+      "status": "touching_without_union",
+      "centerGapMeters": 0.0,
+      "leftEdgeGapMeters": 0.020252,
+      "rightEdgeGapMeters": 0.020252
+    },
+    {
+      "between": "PitExitAccess/MainTrack",
+      "edge": "PitExitAccess.innerEdge + mainLeft",
+      "status": "visible_before_union",
+      "mainRange": [
+        480,
+        532
+      ],
+      "minDistanceToMainEdge": 0.021409,
+      "avgDistanceToMainEdge": 0.503064,
+      "p95DistanceToMainEdge": 1.356475,
+      "nearestMainIndexStart": 480,
+      "nearestMainIndexEnd": 532,
+      "contactSampleCount": 92
+    }
+  ],
+  "overlapRegions": [
+    {
+      "name": "entryMainContact",
+      "nearestMainRange": [
+        2394,
+        2452
+      ],
+      "minDistanceToMainEdge": 0.024596
+    },
+    {
+      "name": "exitMainContact",
+      "nearestMainRange": [
+        480,
+        532
+      ],
+      "minDistanceToMainEdge": 0.021409
+    }
+  ],
+  "gapRegions": [
+    {
+      "name": "entryToCorridor",
+      "gapMeters": 0.0
+    },
+    {
+      "name": "corridorToExit",
+      "gapMeters": 0.0
+    }
+  ],
+  "touchOnlyRegions": [
+    "MainTrack/PitEntryAccess",
+    "PitEntryAccess/PitLaneCorridor",
+    "PitLaneCorridor/PitExitAccess",
+    "PitExitAccess/MainTrack"
+  ]
+}

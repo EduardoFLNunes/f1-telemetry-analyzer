@@ -1,0 +1,34 @@
+{
+  "name": "InterlagosPitAccessEdgeStitchFixValidation",
+  "generatedAt": "2026-05-26T00:57:16.674757",
+  "candidateGeometry": "InterlagosPitAccessEdgeStitchFix",
+  "passed": true,
+  "entryEdgeStitched": true,
+  "exitEdgeStitched": true,
+  "noInternalEdgeBreakAtEntry": true,
+  "noInternalEdgeBreakAtExit": true,
+  "noEdgeStepAtEntry": true,
+  "noEdgeStepAtExit": true,
+  "noGapBetweenMainAndPitAccess": true,
+  "noDoubleStrokeAtContact": true,
+  "noWallClosingPitlane": true,
+  "noRibbonOverlapVisible": true,
+  "mainTrackPreserved": true,
+  "pitlanePreserved": true,
+  "retaOpostaStillStraight": true,
+  "projectionChanged": false,
+  "mapPositionChanged": false,
+  "lateralOffsetChanged": false,
+  "physicsChanged": false,
+  "stitchEdgeCount": 4,
+  "maxStitchHeadingStep": 56.907981,
+  "maxEndpointGapAfterMeters": 0.0,
+  "entryEndpointGapBeforeMeters": [
+    4.946044,
+    10.988554
+  ],
+  "exitEndpointGapBeforeMeters": [
+    9.488007,
+    5.039926
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "InterlagosPitAccessSurfaceUnionAppCheck",
+  "generatedAt": "2026-05-26T00:47:19.038111",
+  "geometryName": "InterlagosPitAccessSurfaceUnionFix",
+  "visualGeometryName": "InterlagosPitAccessSurfaceUnionFix",
+  "renderMode": "visual_pit_access_surface_union_fix",
+  "updatedAt": "2026-05-26T00:44:11.917800",
+  "appUsesPitAccessSurfaceUnionFix": true,
+  "pitlaneEntryMergedVisually": true,
+  "pitlaneExitMergedVisually": true,
+  "internalSeamsVisible": false,
+  "mainTrackStillClean": true,
+  "projectionChanged": false,
+  "mapPositionChanged": false,
+  "lateralOffsetChanged": false,
+  "physicsChanged": false,
+  "screenshot": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pit_access_surface_union_app_check.png",
+  "screenshotExists": true,
+  "sourceValidation": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pit_access_surface_union_validation.json"
+}

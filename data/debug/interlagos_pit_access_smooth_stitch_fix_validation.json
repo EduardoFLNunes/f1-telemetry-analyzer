@@ -1,0 +1,46 @@
+{
+  "name": "InterlagosPitAccessSmoothStitchFixValidation",
+  "generatedAt": "2026-05-26T01:18:39.301442",
+  "candidateGeometry": "InterlagosPitAccessSmoothStitchFix",
+  "passed": true,
+  "smoothStitchEdgesGenerated": true,
+  "maxEndpointGapAfterMeters": 0.0,
+  "maxStitchHeadingStepBefore": 56.907981,
+  "maxStitchHeadingStepAfter": 17.952924,
+  "maxStitchHeadingStepLimit": 18.0,
+  "noSharpStitchAngle": true,
+  "entryEdgeStitched": true,
+  "exitEdgeStitched": true,
+  "noInternalEdgeBreakAtEntry": true,
+  "noInternalEdgeBreakAtExit": true,
+  "noEdgeStepAtEntry": true,
+  "noEdgeStepAtExit": true,
+  "noGapBetweenMainAndPitAccess": true,
+  "noDoubleStrokeAtContact": true,
+  "noWallClosingPitlane": true,
+  "noRibbonOverlapVisible": true,
+  "mainTrackPreserved": true,
+  "pitlanePreserved": true,
+  "retaOpostaStillStraight": true,
+  "projectionChanged": false,
+  "mapPositionChanged": false,
+  "lateralOffsetChanged": false,
+  "physicsChanged": false,
+  "stitchEdgeCount": 4,
+  "entryEndpointGapBeforeMeters": [
+    4.946044,
+    10.988554
+  ],
+  "exitEndpointGapBeforeMeters": [
+    9.488007,
+    5.039926
+  ],
+  "entryStitchHeadingSteps": [
+    15.400702,
+    17.952924
+  ],
+  "exitStitchHeadingSteps": [
+    17.376336,
+    14.770283
+  ]
+}
