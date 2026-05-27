@@ -1,4 +1,4 @@
-export function computeTrackBounds(trackData, history = [], carFrame = null) {
+export function computeTrackBounds(trackData, history = [], carFrame = null, extraPositions = []) {
   const left = trackData?.left_edge || {};
   const right = trackData?.right_edge || {};
   const pitGeometries = Object.values(trackData?.pitVisualGeometry?.geometries || {});
@@ -13,6 +13,11 @@ export function computeTrackBounds(trackData, history = [], carFrame = null) {
   if (carPosition && Number.isFinite(carPosition.x) && Number.isFinite(carPosition.y)) {
     livePositions.push(carPosition);
   }
+  extraPositions.forEach((point) => {
+    if (Number.isFinite(point?.x) && Number.isFinite(point?.y)) {
+      livePositions.push(point);
+    }
+  });
 
   const xs = [
     ...(left.x || []),

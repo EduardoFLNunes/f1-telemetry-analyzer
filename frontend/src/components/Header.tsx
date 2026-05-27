@@ -2,9 +2,10 @@
  * Professional Motorsport Engineering HUD Header
  * F1 pitwall-inspired tactical information bar.
  */
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useTelemetryStore } from '../store/useTelemetryStore';
 import { useTelemetryWS } from '../hooks/useTelemetryWS';
+import { deltaTone, formatDelta, formatLapTime } from '../utils/lapFormat';
 
 interface HeaderProps {
   time?: Date;
@@ -15,13 +16,11 @@ export const Header: React.FC<HeaderProps> = ({ time = new Date() }) => {
   const isStreaming  = useTelemetryStore(s => s.isStreaming);
   const latestFrame  = useTelemetryStore(s => s.latestFrame);
   const historyLen   = useTelemetryStore(s => s.history.length);
+  const lapMetrics   = useTelemetryStore(s => s.lapMetrics);
 
   const timeStr = time.toLocaleTimeString('en', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-  const lapTime = latestFrame ? (latestFrame.lap_time ?? 0) : 0;
-  const lapMin  = Math.floor(lapTime / 60);
-  const lapSec  = (lapTime % 60).toFixed(3);
-  const lapStr  = lapTime > 0 ? `${lapMin}:${lapSec.padStart(6, '0')}` : '--:--.---';
+  const lapStr = formatLapTime(lapMetrics.currentLapTime);
+  const deltaValue = lapMetrics.delta;
 
   return (
     <header
@@ -71,7 +70,7 @@ export const Header: React.FC<HeaderProps> = ({ time = new Date() }) => {
         <div className="flex flex-col items-center">
           <span className="label" style={{ fontSize: 6 }}>LAP</span>
           <span className="num font-bold text-[13px] text-slate-300 leading-none">
-            {latestFrame?.lap_number ?? '--'}
+            {lapMetrics.currentLapNumber ?? latestFrame?.lap_number ?? '--'}
           </span>
         </div>
 
@@ -80,10 +79,8 @@ export const Header: React.FC<HeaderProps> = ({ time = new Date() }) => {
         {/* Delta */}
         <div className="flex flex-col items-center">
           <span className="label" style={{ fontSize: 6 }}>DELTA</span>
-          <span className={`num font-bold text-[13px] leading-none ${
-            (latestFrame?.delta ?? 0) <= 0 ? 'text-emerald-400' : 'text-rose-400'
-          }`}>
-            {latestFrame ? `${(latestFrame.delta ?? 0) > 0 ? '+' : ''}${(latestFrame.delta ?? 0).toFixed(3)}` : '--'}
+          <span className={`num font-bold text-[13px] leading-none ${deltaTone(deltaValue)}`}>
+            {formatDelta(deltaValue)}
           </span>
         </div>
 

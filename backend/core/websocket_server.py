@@ -8,7 +8,7 @@ import json
 import logging
 import asyncio
 
-from core.telemetry_events import event_bus
+from core.telemetry_events import OPPONENTS_FRAME, event_bus
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +48,7 @@ class TelemetryBroadcaster:
         
         # Subscribe to events we want to stream to the UI
         event_bus.subscribe("processed_frame", self.on_frame)
+        event_bus.subscribe(OPPONENTS_FRAME, self.on_opponents)
         event_bus.subscribe("sector_split", self.on_event)
         event_bus.subscribe("lap_finalized", self.on_event)
         
@@ -59,6 +60,12 @@ class TelemetryBroadcaster:
         await self.manager.broadcast({
             "type": "telemetry",
             "data": frame
+        })
+
+    async def on_opponents(self, data: Dict[str, Any]):
+        await self.manager.broadcast({
+            "type": "opponents",
+            "data": data
         })
 
     async def on_event(self, data: Dict[str, Any]):

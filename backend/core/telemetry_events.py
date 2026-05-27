@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 RAW_PACKET = "raw_packet"
 NORMALIZED_FRAME = "normalized_frame"
 PROCESSED_FRAME = "processed_frame"
+OPPONENTS_FRAME = "opponents_frame"
 SECTOR_SPLIT = "sector_split"
 LAP_FINALIZED = "lap_finalized"
 
