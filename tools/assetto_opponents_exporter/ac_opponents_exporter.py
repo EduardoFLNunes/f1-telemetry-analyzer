@@ -18,6 +18,7 @@ DEFAULT_PLAYER_CAR_ID = 0
 DEFAULT_SEND_HZ = 20.0
 DEBUG_LOG_INTERVAL_SECONDS = 2.0
 ERROR_LOG_INTERVAL_SECONDS = 5.0
+LABEL_UPDATE_INTERVAL_SECONDS = 0.2
 
 _app_window = None
 _labels = {}
@@ -30,12 +31,14 @@ _ctypes_path_logged = False
 _elapsed = 0.0
 _last_error_log = 0.0
 _last_debug_log = 0.0
+_last_label_update = 0.0
 _last_player_log = 0.0
 _last_udp_error_log = 0.0
 _last_udp_error = None
 _last_sent_timestamp = None
 _udp_ok = False
 _read_error_log = {}
+_unavailable_car_state_fields = set()
 _snapshot_debug = {
     "cars_detected": 0,
     "player_car_id": DEFAULT_PLAYER_CAR_ID,
@@ -64,7 +67,7 @@ def _env_bool(name, default):
 
 
 SEND_HZ = _env_float("AC_OPPONENTS_SEND_HZ", DEFAULT_SEND_HZ)
-DEBUG_ENABLED = _env_bool("AC_OPPONENTS_DEBUG", True)
+DEBUG_ENABLED = _env_bool("AC_OPPONENTS_DEBUG", False)
 
 
 def _log(message):
@@ -377,12 +380,17 @@ def _car_state(car_id, state_name, record=True):
         if record:
             _record_field(car_id, state_name, False)
         return None
+    if state_name in _unavailable_car_state_fields:
+        if record:
+            _record_field(car_id, state_name, False)
+        return None
 
     state_id = getattr(acsys.CS, state_name, None)
     if state_id is None:
+        _unavailable_car_state_fields.add(state_name)
         if record:
             _record_field(car_id, state_name, False)
-        _log_read_error(car_id, state_name, "acsys.CS field unavailable")
+        _log_read_error("global", state_name, "acsys.CS field unavailable; field disabled for this app run")
         return None
 
     value = _safe_call(ac.getCarState, car_id, state_id, error_context=(car_id, state_name))
@@ -623,9 +631,15 @@ def _short_text(text, limit):
     return text[: max(0, limit - 3)] + "..."
 
 
-def _update_labels():
+def _update_labels(force=False):
+    global _last_label_update
     if not _labels:
         return
+    now = time.time()
+    if not force and now - _last_label_update < LABEL_UPDATE_INTERVAL_SECONDS:
+        return
+    _last_label_update = now
+
     sent_count = len(_snapshot_debug.get("sent_ids", []))
     udp_text = "OK" if _udp_ok else "ERROR"
     if _last_udp_error:
@@ -685,7 +699,7 @@ def acMain(ac_version):
     _create_label("last", "Last sent: never", 62)
     _create_label("udp", "UDP: INIT", 80)
     _create_label("error", "Err: -", 98)
-    _update_labels()
+    _update_labels(force=True)
 
     _log("started, sending UDP to %s:%s at %.1f Hz" % (UDP_HOST, UDP_PORT, SEND_HZ))
     _log("debug=%s, field diagnostics enabled" % ("ON" if DEBUG_ENABLED else "OFF"))
@@ -698,9 +712,10 @@ def acUpdate(delta_t):
 
     _elapsed += delta_t
     _update_labels()
-    if _elapsed < _send_interval_seconds():
+    send_interval = _send_interval_seconds()
+    if _elapsed < send_interval:
         return
-    _elapsed = 0.0
+    _elapsed = min(_elapsed - send_interval, send_interval)
 
     try:
         _send_snapshot()

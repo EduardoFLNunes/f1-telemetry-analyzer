@@ -4,7 +4,6 @@
  */
 import React from 'react';
 import { useTelemetryStore } from '../store/useTelemetryStore';
-import { useTelemetryWS } from '../hooks/useTelemetryWS';
 import { deltaTone, formatDelta, formatLapTime } from '../utils/lapFormat';
 
 interface HeaderProps {
@@ -12,11 +11,11 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ time = new Date() }) => {
-  const { isConnected } = useTelemetryWS();
   const isStreaming  = useTelemetryStore(s => s.isStreaming);
   const latestFrame  = useTelemetryStore(s => s.latestFrame);
   const historyLen   = useTelemetryStore(s => s.history.length);
   const lapMetrics   = useTelemetryStore(s => s.lapMetrics);
+  const isConnected  = isStreaming;
 
   const timeStr = time.toLocaleTimeString('en', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const lapStr = formatLapTime(lapMetrics.currentLapTime);

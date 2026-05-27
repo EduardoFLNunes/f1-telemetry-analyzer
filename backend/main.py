@@ -32,6 +32,7 @@ from core.kn5.kn5_surface_extraction import build_kn5_surface_extraction_from_ma
 from core.kn5.track_edges_from_surface import build_track_edges_from_surface_from_manifest
 from core.kn5.track_surface_polygon import build_track_surface_polygon_from_manifest
 from core.opponents import OpponentsRuntime, OpponentsStateBuffer, SOURCE_NAME as OPPONENTS_SOURCE_NAME
+from core.performance_metrics import performance_metrics
 from core.recording.recording_runtime import RecordingRuntime, config_from_env as recording_config_from_env
 from core.reconstruction.track_reconstruction import TrackReconstructor
 from core.telemetry.telemetry_buffer import TelemetryBuffer
@@ -532,6 +533,20 @@ async def stop_recording():
     if not recording_runtime:
         raise HTTPException(status_code=503, detail="Recording runtime is not available")
     return recording_runtime.stop_recording().to_api()
+
+
+@app.get("/api/debug/performance")
+async def get_performance_metrics():
+    recording_status = recording_runtime.status().to_api() if recording_runtime else {}
+    metrics = performance_metrics.snapshot()
+    return {
+        "status": "success",
+        **metrics,
+        "recordingQueueSize": recording_status.get("queueSize", 0),
+        "recordingDroppedFrames": recording_status.get("droppedFrames", 0),
+        "eventBusQueueSize": None,
+        "websocketConnections": len(ws_manager.active_connections),
+    }
 
 
 @app.get("/api/live/source")

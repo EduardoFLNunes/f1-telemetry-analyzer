@@ -3,10 +3,12 @@ import json
 import logging
 import socket
 import threading
+import time
 from typing import Any, Mapping, Optional
 
 from .opponent_models import OpponentsUpdateResult, safe_float, safe_int, safe_str
 from .opponents_buffer import OpponentsStateBuffer
+from ..performance_metrics import performance_metrics
 from ..telemetry_events import OPPONENTS_FRAME, event_bus as default_event_bus
 
 
@@ -29,6 +31,12 @@ class OpponentsTelemetryReceiver:
         self._thread: Optional[threading.Thread] = None
         self._socket: Optional[socket.socket] = None
         self._loop_ref: Optional[asyncio.AbstractEventLoop] = None
+        self._last_packet_log_at = 0.0
+        self._packets_since_log = 0
+        self._last_summary_log_at = 0.0
+        self._received_since_summary = 0
+        self._accepted_since_summary = 0
+        self._ignored_since_summary = 0
 
     def start(self, loop: Optional[asyncio.AbstractEventLoop] = None):
         if self.running:
@@ -69,12 +77,7 @@ class OpponentsTelemetryReceiver:
                         logger.error("Opponents telemetry receiver socket error: %s", exc)
                     break
 
-                logger.info(
-                    "Opponents telemetry packet received from %s:%s (%s bytes)",
-                    address[0],
-                    address[1],
-                    len(data),
-                )
+                self._log_packet_received(address, len(data))
                 self.handle_packet(data)
         except OSError as exc:
             logger.error("Opponents telemetry receiver socket error: %s", exc)
@@ -124,16 +127,60 @@ class OpponentsTelemetryReceiver:
             player_car_id=player_car_id,
             track=track,
         )
-        logger.info(
-            "Opponents telemetry cars received=%s accepted=%s ignored_player=%s",
-            result.received_count,
-            result.accepted_count,
-            result.ignored_player_count,
-        )
+        self._log_update_summary(result)
         if result.reset_reason:
             logger.info("Opponents telemetry session reset applied: %s", result.reset_reason)
+        performance_metrics.mark_opponents_snapshot()
         self._emit(result)
         return result
+
+    def _log_update_summary(self, result: OpponentsUpdateResult):
+        self._received_since_summary += result.received_count
+        self._accepted_since_summary += result.accepted_count
+        self._ignored_since_summary += result.ignored_player_count
+
+        now = time.monotonic()
+        if now - self._last_summary_log_at < 2.0:
+            logger.debug(
+                "Opponents telemetry cars received=%s accepted=%s ignored_player=%s",
+                result.received_count,
+                result.accepted_count,
+                result.ignored_player_count,
+            )
+            return
+
+        logger.info(
+            "Opponents telemetry summary received=%s accepted=%s ignored_player=%s",
+            self._received_since_summary,
+            self._accepted_since_summary,
+            self._ignored_since_summary,
+        )
+        self._received_since_summary = 0
+        self._accepted_since_summary = 0
+        self._ignored_since_summary = 0
+        self._last_summary_log_at = now
+
+    def _log_packet_received(self, address, byte_count: int):
+        self._packets_since_log += 1
+        now = time.monotonic()
+        if now - self._last_packet_log_at < 2.0:
+            logger.debug(
+                "Opponents telemetry packet received from %s:%s (%s bytes)",
+                address[0],
+                address[1],
+                byte_count,
+            )
+            return
+
+        logger.info(
+            "Opponents telemetry packets received=%s last_from=%s:%s last_bytes=%s",
+            self._packets_since_log,
+            address[0],
+            address[1],
+            byte_count,
+        )
+        self._packets_since_log = 0
+        self._last_packet_log_at = now
 
     def _emit(self, result: OpponentsUpdateResult):
         if not self.event_bus or not self._loop_ref:

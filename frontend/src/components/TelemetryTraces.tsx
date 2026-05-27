@@ -27,6 +27,20 @@ const PAD_BOTTOM = 10;
 const ROW_GAP = 8;
 const MAX_POINTS = 650;
 
+function tracePerf() {
+  const target = window as any;
+  if (!target.__telemetryPerf) target.__telemetryPerf = {};
+  target.__telemetryPerf.traceFrames = target.__telemetryPerf.traceFrames || 0;
+  target.__telemetryPerf.traceRenderMs = target.__telemetryPerf.traceRenderMs || 0;
+  return target.__telemetryPerf;
+}
+
+function recordTraceRender(durationMs: number) {
+  const metrics = tracePerf();
+  metrics.traceFrames += 1;
+  metrics.traceRenderMs += durationMs;
+}
+
 function finite(value: unknown): number | null {
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
@@ -106,8 +120,23 @@ function seriesPoints(samples: TelemetryFrame[], trace: TraceConfig) {
   return points.filter((_, index) => index % step === 0 || index === points.length - 1);
 }
 
+const SERIES_CACHE = new WeakMap<TelemetryFrame[], Map<TraceId, ReturnType<typeof seriesPoints>>>();
+
+function cachedSeriesPoints(samples: TelemetryFrame[], trace: TraceConfig) {
+  let traces = SERIES_CACHE.get(samples);
+  if (!traces) {
+    traces = new Map();
+    SERIES_CACHE.set(samples, traces);
+  }
+  const cached = traces.get(trace.id);
+  if (cached) return cached;
+  const points = seriesPoints(samples, trace);
+  traces.set(trace.id, points);
+  return points;
+}
+
 function nearestSampleAtProgress(samples: TelemetryFrame[], progress: number): TelemetryFrame | null {
-  const points = seriesPoints(samples, TRACES[0]);
+  const points = cachedSeriesPoints(samples, TRACES[0]);
   if (!points.length) return null;
   return points.reduce((best, point) => (
     Math.abs(point.x - progress) < Math.abs(best.x - progress) ? point : best
@@ -178,8 +207,8 @@ function drawRow(
   ctx.font = '600 7px "JetBrains Mono"';
   ctx.fillText(trace.unit, 10, y0 + 21);
 
-  const currentPoints = seriesPoints(current, trace);
-  const previousPoints = seriesPoints(previous, trace);
+  const currentPoints = cachedSeriesPoints(current, trace);
+  const previousPoints = cachedSeriesPoints(previous, trace);
   drawTrace(ctx, previousPoints, trace, x0, y0, width, height, PREVIOUS_COLOR, 1.1, 0.62);
   drawTrace(ctx, currentPoints, trace, x0, y0, width, height, CURRENT_COLOR, 1.7, 1);
 
@@ -211,12 +240,16 @@ export const TelemetryTraces: React.FC = () => {
   const [lapDebug, setLapDebug] = useState<LapDebugState | null>(null);
 
   useEffect(() => {
+    if (!showLapDebug) {
+      setLapDebug(null);
+      return undefined;
+    }
     const interval = setInterval(() => {
       const { lapDebug: debug } = useTelemetryStore.getState();
       setLapDebug(debug);
     }, 500);
     return () => clearInterval(interval);
-  }, []);
+  }, [showLapDebug]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -231,6 +264,7 @@ export const TelemetryTraces: React.FC = () => {
         return;
       }
       lastRenderRef.current = frameTime;
+      const renderStart = performance.now();
 
       const {
         currentLapSamples,
@@ -282,6 +316,7 @@ export const TelemetryTraces: React.FC = () => {
         ctx.font = '700 9px "JetBrains Mono"';
         ctx.textAlign = 'center';
         ctx.fillText('WAITING FOR CURRENT LAP TELEMETRY', width / 2, height / 2);
+        recordTraceRender(performance.now() - renderStart);
         animRef.current = requestAnimationFrame(loop);
         return;
       }
@@ -313,6 +348,7 @@ export const TelemetryTraces: React.FC = () => {
       ctx.textAlign = 'right';
       ctx.fillText('100%', graphX + graphW, height - 2);
 
+      recordTraceRender(performance.now() - renderStart);
       animRef.current = requestAnimationFrame(loop);
     };
 

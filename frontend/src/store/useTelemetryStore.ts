@@ -231,7 +231,7 @@ interface TelemetryState {
 // Increased for professional analysis (approx 2 minutes of 60Hz data)
 export const MAX_HISTORY = 7200; 
 const MAX_LAP_SAMPLES = 5000;
-const MAX_COMPLETED_LAPS = 12;
+const MAX_COMPLETED_LAPS = 10;
 const MIN_VALID_LAP_SAMPLES = 40;
 const MIN_VALID_LAP_DURATION = 20;
 const MAX_VALID_LAP_DURATION = 900;
@@ -538,6 +538,33 @@ const finalizeLap = (
   };
 };
 
+const pruneCompletedLapsByNumber = (
+  lapsByNumber: Record<number, CompletedLap>,
+  history: CompletedLap[],
+  keepLapNumbers: Array<number | null | undefined>,
+): Record<number, CompletedLap> => {
+  const keep = new Set<number>();
+  history.slice(-MAX_COMPLETED_LAPS).forEach((lap) => keep.add(lap.lapNumber));
+  keepLapNumbers.forEach((lapNumber) => {
+    if (typeof lapNumber === 'number' && Number.isFinite(lapNumber)) {
+      keep.add(lapNumber);
+    }
+  });
+
+  let changed = false;
+  const next: Record<number, CompletedLap> = {};
+  Object.entries(lapsByNumber).forEach(([key, lap]) => {
+    const lapNumber = Number(key);
+    if (keep.has(lapNumber)) {
+      next[lapNumber] = lap;
+    } else {
+      changed = true;
+    }
+  });
+
+  return changed ? next : lapsByNumber;
+};
+
 const calculateLapMetrics = (
   currentLapSamples: TelemetryFrame[],
   previousLapSamples: TelemetryFrame[],
@@ -764,6 +791,11 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
       referenceLapNumber = referenceLap.lapNumber;
       previousLapSamples = referenceLap.samples;
     }
+    completedLapsByNumber = pruneCompletedLapsByNumber(
+      completedLapsByNumber,
+      completedLapsHistory,
+      [referenceLapNumber, currentLapNumber !== null ? currentLapNumber - 1 : null, lastCompletedLapNumber],
+    );
 
     const lapMetrics = calculateLapMetrics(
       currentLapSamples,

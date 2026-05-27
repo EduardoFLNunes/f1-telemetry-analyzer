@@ -13,15 +13,23 @@ const OPPONENTS_VISUAL_FLUSH_MS = 100;
 
 const perf = () => {
   const target = window as any;
-  if (!target.__telemetryPerf) {
-    target.__telemetryPerf = {
-      wsMessages: 0,
-      wsTelemetryMessages: 0,
-      wsOpponentsMessages: 0,
-      lastWsAt: 0,
-    };
-  }
-  return target.__telemetryPerf;
+  const metrics = target.__telemetryPerf || {};
+  target.__telemetryPerf = metrics;
+  [
+    'wsMessages',
+    'wsTelemetryMessages',
+    'wsOpponentsMessages',
+    'telemetryStoreUpdates',
+    'opponentsStoreUpdates',
+    'telemetryFramesDroppedForRender',
+    'opponentsFramesDroppedForRender',
+    'lastWsAt',
+  ].forEach((key) => {
+    if (typeof metrics[key] !== 'number' || Number.isNaN(metrics[key])) {
+      metrics[key] = 0;
+    }
+  });
+  return metrics;
 };
 
 const recordWsMessage = (type: string) => {
@@ -34,14 +42,12 @@ const recordWsMessage = (type: string) => {
 
 export const useTelemetryWS = () => {
   const socketRef = useRef<WebSocket | null>(null);
-  const {
-    addFrame,
-    addCoachingEvent,
-    addEngineerSpeech,
-    setCognitiveState,
-    setStreaming,
-    setOpponentsSnapshot,
-  } = useTelemetryStore();
+  const addFrame = useTelemetryStore((state) => state.addFrame);
+  const addCoachingEvent = useTelemetryStore((state) => state.addCoachingEvent);
+  const addEngineerSpeech = useTelemetryStore((state) => state.addEngineerSpeech);
+  const setCognitiveState = useTelemetryStore((state) => state.setCognitiveState);
+  const setStreaming = useTelemetryStore((state) => state.setStreaming);
+  const setOpponentsSnapshot = useTelemetryStore((state) => state.setOpponentsSnapshot);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   const opponentsPollRef = useRef<NodeJS.Timeout>();
   const playerFlushRef = useRef<NodeJS.Timeout>();
@@ -93,6 +99,7 @@ export const useTelemetryWS = () => {
                 : (raw.accel_g || { x: 0, y: 0, z: 0 }),
             timestamp: raw.timestamp || Date.now()
           };
+          if (pendingFrameRef.current) perf().telemetryFramesDroppedForRender += 1;
           pendingFrameRef.current = frame;
         } else if (payload.type === 'opponents') {
           const raw = payload.data || {};
@@ -100,6 +107,7 @@ export const useTelemetryWS = () => {
             ? raw.opponents
             : (Array.isArray(raw.cars) ? raw.cars : []);
           lastOpponentsWsAtRef.current = Date.now();
+          if (pendingOpponentsRef.current) perf().opponentsFramesDroppedForRender += 1;
           pendingOpponentsRef.current = {
             ...raw,
             opponents,
@@ -143,6 +151,7 @@ export const useTelemetryWS = () => {
       if (!frame) return;
       pendingFrameRef.current = null;
       addFrame(frame);
+      perf().telemetryStoreUpdates += 1;
     }, PLAYER_VISUAL_FLUSH_MS);
 
     opponentsFlushRef.current = setInterval(() => {
@@ -150,6 +159,7 @@ export const useTelemetryWS = () => {
       if (!snapshot) return;
       pendingOpponentsRef.current = null;
       setOpponentsSnapshot(snapshot);
+      perf().opponentsStoreUpdates += 1;
     }, OPPONENTS_VISUAL_FLUSH_MS);
 
     return () => {
@@ -168,6 +178,7 @@ export const useTelemetryWS = () => {
         if (!response.ok) return;
         const data = await response.json();
         if (cancelled || data?.status !== 'success') return;
+        if (pendingOpponentsRef.current) perf().opponentsFramesDroppedForRender += 1;
         pendingOpponentsRef.current = {
           ...data,
           opponents: Array.isArray(data.opponents) ? data.opponents : [],
