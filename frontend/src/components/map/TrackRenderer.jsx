@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTelemetryStore } from '../../store/useTelemetryStore';
-import { drawCar } from './CarRenderer.jsx';
+import { drawCar, drawOpponentCar } from './CarRenderer.jsx';
 import { applyCameraTransform, computeTrackBounds } from './CameraController.jsx';
 import { drawHud, drawTrackSurface } from './OverlayRenderer.jsx';
+
+const MAP_RENDER_FRAME_MS = 1000 / 30;
 
 function normalizeTrack(trackData) {
   if (!trackData) return null;
@@ -36,11 +38,241 @@ function normalizeTrack(trackData) {
   };
 }
 
-export function TrackRenderer({ trackData }) {
+function isFiniteNumber(value) {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function positionFromSpline(trackData, splinePosition) {
+  if (!trackData || !isFiniteNumber(splinePosition)) return null;
+
+  const center = trackData.centerline || {};
+  const xs = center.x || [];
+  const ys = center.y || [];
+  if (!xs.length || xs.length !== ys.length) return null;
+
+  const p = Math.max(0, Math.min(1, splinePosition));
+  const spline = Array.isArray(center.spline_t) ? center.spline_t : null;
+
+  if (spline && spline.length === xs.length && spline.length > 1) {
+    for (let i = 1; i < spline.length; i += 1) {
+      const prevP = Number(spline[i - 1]);
+      const nextP = Number(spline[i]);
+      if (!Number.isFinite(prevP) || !Number.isFinite(nextP)) continue;
+      if (p <= nextP) {
+        const t = nextP === prevP ? 0 : Math.max(0, Math.min(1, (p - prevP) / (nextP - prevP)));
+        return {
+          x: lerp(xs[i - 1], xs[i], t),
+          y: lerp(ys[i - 1], ys[i], t),
+        };
+      }
+    }
+  }
+
+  const idx = p * (xs.length - 1);
+  const lo = Math.floor(idx);
+  const hi = Math.min(xs.length - 1, lo + 1);
+  const t = idx - lo;
+  return {
+    x: lerp(xs[lo], xs[hi], t),
+    y: lerp(ys[lo], ys[hi], t),
+  };
+}
+
+function resolveOpponentRenderState(opponent, trackData) {
+  const mapPosition = opponent?.mapPosition;
+  if (mapPosition && isFiniteNumber(mapPosition.x) && isFiniteNumber(mapPosition.y)) {
+    return opponent;
+  }
+
+  const fallbackPosition = positionFromSpline(trackData, opponent?.splinePosition);
+  if (!fallbackPosition) return null;
+  return {
+    ...opponent,
+    mapPosition: fallbackPosition,
+  };
+}
+
+function formatOpponentNumber(value, digits = 0) {
+  return isFiniteNumber(value) ? value.toFixed(digits) : '--';
+}
+
+function opponentDisplayName(opponent) {
+  const name = typeof opponent?.driverName === 'string' ? opponent.driverName.trim() : '';
+  return name || 'Unknown';
+}
+
+function opponentSplinePercent(opponent) {
+  return isFiniteNumber(opponent?.splinePosition) ? opponent.splinePosition * 100 : null;
+}
+
+function isStaleOpponent(opponent, staleAfterSeconds) {
+  if (opponent?.status === 'stale') return true;
+  if (!isFiniteNumber(opponent?.lastSeenTimestamp) || !isFiniteNumber(staleAfterSeconds)) return false;
+  return (Date.now() / 1000) - opponent.lastSeenTimestamp > staleAfterSeconds;
+}
+
+function withEstimatedHeadings(opponents, motionCache) {
+  return opponents.map((opponent) => {
+    const position = opponent?.mapPosition;
+    if (!position || !isFiniteNumber(position.x) || !isFiniteNumber(position.y)) return opponent;
+
+    const previous = motionCache.get(opponent.carId);
+    let estimatedHeading = previous?.estimatedHeading;
+    if (previous && isFiniteNumber(previous.x) && isFiniteNumber(previous.y)) {
+      const dx = position.x - previous.x;
+      const dy = position.y - previous.y;
+      if (Math.hypot(dx, dy) > 0.15) {
+        estimatedHeading = Math.atan2(dy, dx) + Math.PI / 2;
+      }
+    }
+    motionCache.set(opponent.carId, {
+      x: position.x,
+      y: position.y,
+      estimatedHeading,
+    });
+
+    return isFiniteNumber(estimatedHeading)
+      ? { ...opponent, estimatedHeading }
+      : opponent;
+  });
+}
+
+function worldToScreen(point, width, height, bounds, camera, carFrame) {
+  if (!point || !isFiniteNumber(point.x) || !isFiniteNumber(point.y)) return null;
+
+  if (camera.mode === 'FOLLOW' && carFrame) {
+    const carPosition = carFrame.mapPosition || { x: carFrame.x, y: carFrame.z };
+    if (!carPosition || !isFiniteNumber(carPosition.x) || !isFiniteNumber(carPosition.y)) return null;
+    const scale = (height / 90) * camera.zoom;
+    const angle = -(carFrame.heading || 0) + Math.PI / 2;
+    const dx = point.x - carPosition.x;
+    const dy = point.y - carPosition.y;
+    const rx = dx * Math.cos(angle) - dy * Math.sin(angle);
+    const ry = dx * Math.sin(angle) + dy * Math.cos(angle);
+    return { x: width / 2 + rx * scale, y: height * 0.68 + ry * scale, scale };
+  }
+
+  const scale = Math.min(width / bounds.w, height / bounds.h) * 0.84 * camera.zoom;
+  return {
+    x: width / 2 + camera.offset.x + (point.x - bounds.cx) * scale,
+    y: height / 2 + camera.offset.y + (point.y - bounds.cy) * scale,
+    scale,
+  };
+}
+
+function labelText(opponent, mode) {
+  const carId = Number.isFinite(opponent?.carId) ? `#${opponent.carId}` : '#?';
+  if (mode === 'id') return carId;
+  const name = opponentDisplayName(opponent);
+  const compactName = name.length > 13 ? `${name.slice(0, 12)}...` : name;
+  const speed = isFiniteNumber(opponent?.speedKmh) ? `${Math.round(opponent.speedKmh)} km/h` : '-- km/h';
+  const spline = isFiniteNumber(opponent?.splinePosition) ? `p${(opponent.splinePosition * 100).toFixed(1)}%` : 'p--';
+  return `${carId} ${compactName} ${speed} ${spline}`;
+}
+
+function labelRect(screen, mode, text) {
+  if (mode === 'none') return null;
+  const width = mode === 'id' ? Math.max(22, text.length * 7 + 8) : Math.min(174, text.length * 6.3 + 12);
+  const height = mode === 'id' ? 15 : 18;
+  const x = mode === 'id' ? screen.x - width / 2 : screen.x + 10;
+  const y = mode === 'id' ? screen.y - 25 : screen.y - 28;
+  return { x, y, width, height };
+}
+
+function intersects(a, b, padding = 3) {
+  return !(
+    a.x + a.width + padding < b.x ||
+    b.x + b.width + padding < a.x ||
+    a.y + a.height + padding < b.y ||
+    b.y + b.height + padding < a.y
+  );
+}
+
+function buildLabelModes(screenOpponents, scale) {
+  const baseMode = scale < 0.42 ? 'none' : (scale < 1.05 ? 'id' : 'full');
+  const occupied = [];
+  const modes = new Map();
+
+  screenOpponents.forEach(({ opponent, screen }) => {
+    let mode = baseMode;
+    if (mode === 'none') {
+      modes.set(opponent.carId, 'none');
+      return;
+    }
+
+    let text = labelText(opponent, mode);
+    let rect = labelRect(screen, mode, text);
+    if (rect && occupied.some((box) => intersects(box, rect))) {
+      mode = mode === 'full' ? 'id' : 'none';
+      text = labelText(opponent, mode);
+      rect = labelRect(screen, mode, text);
+    }
+    if (rect && occupied.some((box) => intersects(box, rect))) {
+      mode = 'none';
+      rect = null;
+    }
+    if (rect) occupied.push(rect);
+    modes.set(opponent.carId, mode);
+  });
+
+  return modes;
+}
+
+function findOpponentHit(screenOpponents, x, y) {
+  let best = null;
+  screenOpponents.forEach((entry) => {
+    const distance = Math.hypot(entry.screen.x - x, entry.screen.y - y);
+    if (distance <= 16 && (!best || distance < best.distance)) {
+      best = { ...entry, distance };
+    }
+  });
+  return best;
+}
+
+export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const animationRef = useRef(null);
+  const lastCanvasRenderRef = useRef(0);
+  const opponentMotionRef = useRef(new Map());
+  const screenOpponentsRef = useRef([]);
   const [cameraMode, setCameraMode] = useState('OVERVIEW');
+  const [hoveredOpponent, setHoveredOpponent] = useState(null);
+  const [selectedOpponent, setSelectedOpponent] = useState(null);
+  const hoveredOpponentRef = useRef(null);
+  const selectedOpponentRef = useRef(null);
+  const perfRef = useRef({
+    frames: 0,
+    renderMs: 0,
+    lastAt: performance.now(),
+    lastWsMessages: 0,
+    lastTelemetryMessages: 0,
+    lastOpponentsMessages: 0,
+  });
+  const [opponentsPanelOpen, setOpponentsPanelOpen] = useState(true);
+  const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
+  const [panelOpponents, setPanelOpponents] = useState([]);
+  const [panelOpponentsMeta, setPanelOpponentsMeta] = useState({
+    source: 'opponents_collector',
+    count: 0,
+    track: null,
+    sessionTime: null,
+    lastUpdateTimestamp: null,
+    staleAfterSeconds: null,
+  });
+  const [showPerf, setShowPerf] = useState(false);
+  const [perfStats, setPerfStats] = useState({
+    fps: 0,
+    avgRenderMs: 0,
+    opponentsRendered: 0,
+    wsHz: 0,
+    telemetryHz: 0,
+    opponentsHz: 0,
+  });
 
   const cameraRef = useRef({
     mode: 'OVERVIEW',
@@ -52,10 +284,61 @@ export function TrackRenderer({ trackData }) {
 
   const normalizedTrack = useMemo(() => normalizeTrack(trackData), [trackData]);
   const bounds = useMemo(() => computeTrackBounds(normalizedTrack), [normalizedTrack]);
+  const visibleOpponents = useMemo(
+    () => panelOpponents
+      .map((opponent) => resolveOpponentRenderState(opponent, normalizedTrack))
+      .filter(Boolean),
+    [panelOpponents, normalizedTrack],
+  );
+  const sortedOpponents = useMemo(
+    () => [...visibleOpponents].sort((a, b) => {
+      const ap = opponentSplinePercent(a);
+      const bp = opponentSplinePercent(b);
+      if (isFiniteNumber(ap) && isFiniteNumber(bp)) return ap - bp;
+      return (a.carId ?? 0) - (b.carId ?? 0);
+    }),
+    [visibleOpponents],
+  );
 
   useEffect(() => {
     cameraRef.current.mode = cameraMode;
   }, [cameraMode]);
+
+  useEffect(() => {
+    hoveredOpponentRef.current = hoveredOpponent;
+  }, [hoveredOpponent]);
+
+  useEffect(() => {
+    selectedOpponentRef.current = selectedOpponent;
+  }, [selectedOpponent]);
+
+  useEffect(() => {
+    let lastOpponentsStamp = null;
+    const interval = setInterval(() => {
+      const { opponents, opponentsMeta } = useTelemetryStore.getState();
+      const stamp = `${opponentsMeta?.lastUpdateTimestamp ?? 'none'}:${opponents.length}`;
+      if (stamp === lastOpponentsStamp) return;
+      lastOpponentsStamp = stamp;
+      setPanelOpponents(opponents);
+      setPanelOpponentsMeta(opponentsMeta);
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof ResizeObserver === 'undefined') return undefined;
+
+    const updateSize = () => {
+      const rect = container.getBoundingClientRect();
+      setMapSize({ width: rect.width, height: rect.height });
+    };
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -65,7 +348,14 @@ export function TrackRenderer({ trackData }) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return undefined;
 
-    const render = () => {
+    const render = (frameTime = performance.now()) => {
+      if (frameTime - lastCanvasRenderRef.current < MAP_RENDER_FRAME_MS) {
+        animationRef.current = requestAnimationFrame(render);
+        return;
+      }
+      lastCanvasRenderRef.current = frameTime;
+
+      const renderStart = performance.now();
       const rect = container.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       if (canvas.width !== Math.round(rect.width * dpr) || canvas.height !== Math.round(rect.height * dpr)) {
@@ -78,10 +368,21 @@ export function TrackRenderer({ trackData }) {
       ctx.fillStyle = '#070a12';
       ctx.fillRect(0, 0, rect.width, rect.height);
 
-      const { latestFrame: liveFrame, history: liveHistory } = useTelemetryStore.getState();
+      const {
+        latestFrame: liveFrame,
+        history: liveHistory,
+        opponents: liveOpponents,
+        opponentsMeta: liveOpponentsMeta,
+      } = useTelemetryStore.getState();
+      const renderOpponents = withEstimatedHeadings(liveOpponents
+        .map((opponent) => resolveOpponentRenderState(opponent, normalizedTrack))
+        .filter(Boolean), opponentMotionRef.current);
+      const opponentPositions = renderOpponents
+        .map((opponent) => opponent.mapPosition)
+        .filter((position) => Number.isFinite(position?.x) && Number.isFinite(position?.y));
       const renderBounds = normalizedTrack
-        ? computeTrackBounds(normalizedTrack, liveHistory.slice(-1200), liveFrame)
-        : computeTrackBounds(null, liveHistory.slice(-1200), liveFrame);
+        ? computeTrackBounds(normalizedTrack, liveHistory.slice(-1200), liveFrame, opponentPositions)
+        : computeTrackBounds(null, liveHistory.slice(-1200), liveFrame, opponentPositions);
 
       ctx.save();
       const scale = applyCameraTransform(ctx, rect.width, rect.height, renderBounds, cameraRef.current, liveFrame);
@@ -89,10 +390,57 @@ export function TrackRenderer({ trackData }) {
       if (normalizedTrack) {
         drawTrackSurface(ctx, normalizedTrack, renderBounds, scale);
       }
+
+      const screenOpponents = renderOpponents
+        .map((opponent) => ({
+          opponent,
+          screen: worldToScreen(opponent.mapPosition, rect.width, rect.height, renderBounds, cameraRef.current, liveFrame),
+        }))
+        .filter((entry) => Number.isFinite(entry.screen?.x) && Number.isFinite(entry.screen?.y));
+      screenOpponentsRef.current = screenOpponents;
+      const labelModes = buildLabelModes(screenOpponents, scale);
+
+      renderOpponents.forEach((opponent, index) => {
+        const isHovered =
+          hoveredOpponentRef.current?.opponent?.carId === opponent.carId ||
+          selectedOpponentRef.current?.opponent?.carId === opponent.carId;
+        drawOpponentCar(ctx, opponent, scale, index, {
+          labelMode: labelModes.get(opponent.carId) || 'none',
+          isHovered,
+          isStale: isStaleOpponent(opponent, liveOpponentsMeta?.staleAfterSeconds),
+        });
+      });
       if (liveFrame) drawCar(ctx, liveFrame, scale);
 
       ctx.restore();
       drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current);
+
+      const renderDuration = performance.now() - renderStart;
+      const perf = perfRef.current;
+      perf.frames += 1;
+      perf.renderMs += renderDuration;
+      const now = performance.now();
+      if (now - perf.lastAt >= 1000) {
+        const seconds = (now - perf.lastAt) / 1000;
+        const wsMetrics = window.__telemetryPerf || {};
+        const wsMessages = Number(wsMetrics.wsMessages || 0);
+        const telemetryMessages = Number(wsMetrics.wsTelemetryMessages || 0);
+        const opponentsMessages = Number(wsMetrics.wsOpponentsMessages || 0);
+        setPerfStats({
+          fps: perf.frames / seconds,
+          avgRenderMs: perf.renderMs / Math.max(perf.frames, 1),
+          opponentsRendered: renderOpponents.length,
+          wsHz: (wsMessages - perf.lastWsMessages) / seconds,
+          telemetryHz: (telemetryMessages - perf.lastTelemetryMessages) / seconds,
+          opponentsHz: (opponentsMessages - perf.lastOpponentsMessages) / seconds,
+        });
+        perf.frames = 0;
+        perf.renderMs = 0;
+        perf.lastAt = now;
+        perf.lastWsMessages = wsMessages;
+        perf.lastTelemetryMessages = telemetryMessages;
+        perf.lastOpponentsMessages = opponentsMessages;
+      }
       animationRef.current = requestAnimationFrame(render);
     };
 
@@ -108,23 +456,73 @@ export function TrackRenderer({ trackData }) {
     cameraRef.current.zoom = Math.max(0.2, Math.min(28, cameraRef.current.zoom * factor));
   }, []);
 
+  const getOpponentHitFromEvent = useCallback((event) => {
+    const container = containerRef.current;
+    if (!container) return null;
+    const rect = container.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const hit = findOpponentHit(screenOpponentsRef.current, x, y);
+    if (!hit) return null;
+    return {
+      opponent: hit.opponent,
+      x: Math.max(8, Math.min(event.clientX + 14, window.innerWidth - 236)),
+      y: Math.max(8, Math.min(event.clientY - 12, window.innerHeight - 178)),
+    };
+  }, []);
+
   const handleMouseDown = useCallback((event) => {
     if (cameraRef.current.mode !== 'OVERVIEW') return;
+    if (getOpponentHitFromEvent(event)) return;
     cameraRef.current.isPanning = true;
     cameraRef.current.lastMouse = { x: event.clientX, y: event.clientY };
-  }, []);
+  }, [getOpponentHitFromEvent]);
 
   const handleMouseMove = useCallback((event) => {
     const camera = cameraRef.current;
-    if (!camera.isPanning) return;
-    camera.offset.x += event.clientX - camera.lastMouse.x;
-    camera.offset.y += event.clientY - camera.lastMouse.y;
-    camera.lastMouse = { x: event.clientX, y: event.clientY };
-  }, []);
+    if (camera.isPanning) {
+      camera.offset.x += event.clientX - camera.lastMouse.x;
+      camera.offset.y += event.clientY - camera.lastMouse.y;
+      camera.lastMouse = { x: event.clientX, y: event.clientY };
+      setHoveredOpponent(null);
+      return;
+    }
+
+    const hit = getOpponentHitFromEvent(event);
+    setHoveredOpponent((previous) => {
+      if (!hit && !previous) return previous;
+      if (
+        hit &&
+        previous &&
+        hit.opponent?.carId === previous.opponent?.carId &&
+        Math.abs(hit.x - previous.x) < 2 &&
+        Math.abs(hit.y - previous.y) < 2
+      ) {
+        return previous;
+      }
+      return hit;
+    });
+  }, [getOpponentHitFromEvent]);
+
+  const handleClick = useCallback((event) => {
+    const hit = getOpponentHitFromEvent(event);
+    setSelectedOpponent(hit);
+  }, [getOpponentHitFromEvent]);
 
   const stopPan = useCallback(() => {
     cameraRef.current.isPanning = false;
   }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredOpponent(null);
+    stopPan();
+  }, [stopPan]);
+
+  const activeOpponentTooltip = hoveredOpponent || selectedOpponent;
+  const tooltipOpponent = activeOpponentTooltip?.opponent;
+  const tooltipWorld = tooltipOpponent?.worldPosition || {};
+  const totalOpponents = panelOpponentsMeta.count || visibleOpponents.length;
+  const compactOpponentsPanel = mapSize.width > 0 && mapSize.width < 260;
 
   return (
     <div
@@ -134,11 +532,17 @@ export function TrackRenderer({ trackData }) {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={stopPan}
-      onMouseLeave={stopPan}
+      onMouseLeave={handleMouseLeave}
+      onClick={handleClick}
     >
       <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
 
-      <div className="absolute top-3 right-3 flex flex-col gap-1">
+      <div
+        className="absolute top-3 right-3 flex flex-col gap-1"
+        style={{ zIndex: 70, pointerEvents: 'auto' }}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="panel px-1.5 py-1 flex gap-1">
           {['OVERVIEW', 'FOLLOW'].map((mode) => (
             <button
@@ -152,9 +556,131 @@ export function TrackRenderer({ trackData }) {
             </button>
           ))}
         </div>
+        <div className="panel px-1.5 py-1">
+          <button
+            type="button"
+            onClick={() => setShowPerf((visible) => !visible)}
+            className="num text-[7px] uppercase rounded-sm transition-all text-slate-500 hover:text-cyan-300"
+            style={{ background: 'transparent', border: 0, padding: '1px 4px', cursor: 'pointer' }}
+          >
+            PERF
+          </button>
+        </div>
+        {showPerf && (
+          <div className="panel px-2 py-1.5 w-[132px]">
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+              <span className="label" style={{ fontSize: 6 }}>FPS</span>
+              <span className="num text-[8px] text-cyan-300 text-right">{perfStats.fps.toFixed(0)}</span>
+              <span className="label" style={{ fontSize: 6 }}>Render</span>
+              <span className="num text-[8px] text-slate-300 text-right">{perfStats.avgRenderMs.toFixed(1)}ms</span>
+              <span className="label" style={{ fontSize: 6 }}>Opp</span>
+              <span className="num text-[8px] text-orange-300 text-right">{perfStats.opponentsRendered}</span>
+              <span className="label" style={{ fontSize: 6 }}>WS</span>
+              <span className="num text-[8px] text-slate-300 text-right">{perfStats.wsHz.toFixed(0)}hz</span>
+              <span className="label" style={{ fontSize: 6 }}>PLY</span>
+              <span className="num text-[8px] text-slate-300 text-right">{perfStats.telemetryHz.toFixed(0)}hz</span>
+              <span className="label" style={{ fontSize: 6 }}>OPP</span>
+              <span className="num text-[8px] text-slate-300 text-right">{perfStats.opponentsHz.toFixed(0)}hz</span>
+            </div>
+          </div>
+        )}
       </div>
+
+      {visibleOpponents.length > 0 && (
+        <div
+          className="absolute left-3 bottom-3 panel px-2 py-2 overflow-hidden"
+          style={{
+            width: compactOpponentsPanel ? '44px' : 'min(218px, calc(100% - 24px))',
+            pointerEvents: 'auto',
+          }}
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => setOpponentsPanelOpen((open) => !open)}
+              className="num text-[8px] text-orange-300 font-bold uppercase hover:text-orange-200"
+              style={{ background: 'transparent', border: 0, padding: 0, cursor: 'pointer' }}
+            >
+              {compactOpponentsPanel ? 'OP' : `Opponents ${opponentsPanelOpen ? '-' : '+'}`}
+            </button>
+            <span className="num text-[8px] text-slate-400">{totalOpponents}</span>
+          </div>
+          {opponentsPanelOpen && !compactOpponentsPanel && (
+            <div className="flex flex-col gap-1 mt-1" style={{ maxHeight: 168, overflow: 'hidden' }}>
+              {sortedOpponents.slice(0, 8).map((opponent) => {
+              const world = opponent.worldPosition || {};
+              const splinePercent = isFiniteNumber(opponent.splinePosition) ? opponent.splinePosition * 100 : null;
+              const stale = isStaleOpponent(opponent, panelOpponentsMeta.staleAfterSeconds);
+              return (
+                <div
+                  key={opponent.carId}
+                  className="grid gap-1 items-center"
+                  style={{
+                    gridTemplateColumns: '24px minmax(0, 1fr) 48px',
+                    opacity: stale ? 0.45 : 1,
+                  }}
+                >
+                  <span className="num text-[8px] text-orange-200">#{opponent.carId}</span>
+                  <span className="text-[9px] text-slate-200 truncate">
+                    {opponentDisplayName(opponent)}
+                  </span>
+                  <span className="num text-[8px] text-slate-400 text-right">
+                    {formatOpponentNumber(opponent.speedKmh)} km/h
+                  </span>
+                  <span className="num text-[7px] text-slate-600 col-start-2 col-span-2 truncate">
+                    p {formatOpponentNumber(splinePercent, 1)}% / x {formatOpponentNumber(world.x, 0)} z {formatOpponentNumber(world.z, 0)}
+                  </span>
+                </div>
+              );
+              })}
+            </div>
+          )}
+          {panelOpponentsMeta.track && opponentsPanelOpen && !compactOpponentsPanel && (
+            <div className="num text-[7px] text-slate-600 mt-1 truncate">{panelOpponentsMeta.track}</div>
+          )}
+        </div>
+      )}
+
+      {tooltipOpponent && (
+        <div
+          className="absolute panel px-2 py-2 pointer-events-none"
+          style={{
+            position: 'fixed',
+            left: activeOpponentTooltip.x,
+            top: activeOpponentTooltip.y,
+            width: 224,
+            background: 'rgba(8, 12, 22, 0.94)',
+            borderColor: 'rgba(251,146,60,0.32)',
+            boxShadow: '0 10px 28px rgba(0,0,0,0.35)',
+            zIndex: 80,
+          }}
+        >
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <span className="num text-[9px] text-orange-200 font-bold">#{tooltipOpponent.carId}</span>
+            <span className="num text-[8px] text-slate-500 truncate">{tooltipOpponent.status || 'on_track'}</span>
+          </div>
+          <div className="text-[10px] text-slate-100 truncate">{opponentDisplayName(tooltipOpponent)}</div>
+          {tooltipOpponent.carModel && (
+            <div className="text-[8px] text-slate-500 truncate mt-0.5">{tooltipOpponent.carModel}</div>
+          )}
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-2">
+            <span className="label" style={{ fontSize: 6 }}>Speed</span>
+            <span className="num text-[8px] text-slate-300 text-right">{formatOpponentNumber(tooltipOpponent.speedKmh)} km/h</span>
+            <span className="label" style={{ fontSize: 6 }}>Spline</span>
+            <span className="num text-[8px] text-slate-300 text-right">{formatOpponentNumber(opponentSplinePercent(tooltipOpponent), 1)}%</span>
+            <span className="label" style={{ fontSize: 6 }}>World X</span>
+            <span className="num text-[8px] text-slate-300 text-right">{formatOpponentNumber(tooltipWorld.x, 2)}</span>
+            <span className="label" style={{ fontSize: 6 }}>World Y</span>
+            <span className="num text-[8px] text-slate-300 text-right">{formatOpponentNumber(tooltipWorld.y, 2)}</span>
+            <span className="label" style={{ fontSize: 6 }}>World Z</span>
+            <span className="num text-[8px] text-slate-300 text-right">{formatOpponentNumber(tooltipWorld.z, 2)}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+});
 
 export default TrackRenderer;

@@ -10,12 +10,12 @@ import { CoachingFeed } from './components/CoachingFeed';
 import { AIDebriefPanel } from './components/AIDebriefPanel';
 import { AIEngineerPanel } from './components/AIEngineerPanel';
 import { ReplayControls } from './components/ReplayControls';
-import { SessionTimeline } from './components/SessionTimeline';
 import { CognitiveDashboard } from './components/CognitiveDashboard';
 import { Header } from './components/Header';
 import { useTelemetryStore } from './store/useTelemetryStore';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { api } from './api/client';
+import { deltaTone, formatDelta, formatLapTime } from './utils/lapFormat';
 
 /* ─── Safe number formatter ───────────────────────────────────── */
 const sf = (v: any, fb = 0, d = 0) => {
@@ -80,6 +80,7 @@ const Dashboard: React.FC = () => {
   const [trackData, setTrackData] = useState<any>(null);
   const latestFrame  = useTelemetryStore(s => s.latestFrame);
   const isStreaming  = useTelemetryStore(s => s.isStreaming);
+  const lapMetrics   = useTelemetryStore(s => s.lapMetrics);
   const [rightPanel, setRightPanel] = useState<'engineer'|'debrief'>('engineer');
   const [time, setTime] = useState(() => new Date());
 
@@ -118,19 +119,19 @@ const Dashboard: React.FC = () => {
   }, []);
 
   /* Live telemetry values */
-  const speed    = latestFrame ? latestFrame.speed * 3.6 : 0;
+  const speed    = latestFrame ? ((latestFrame as any).speedKmh ?? latestFrame.speed * 3.6) : 0;
   const gear     = latestFrame ? (latestFrame.gear ?? 'N') : 'N';
   const throttle = latestFrame ? latestFrame.throttle : 0;
   const brake    = latestFrame ? latestFrame.brake : 0;
-  const delta    = latestFrame ? (latestFrame.delta ?? 0) : 0;
+  const delta    = lapMetrics.delta;
+  const lapDelta = lapMetrics.lapDelta;
   const latG     = latestFrame ? (latestFrame.accel_g?.x ?? 0) : 0;
   const lonG     = latestFrame ? (latestFrame.accel_g?.z ?? 0) : 0;
   const rpm      = latestFrame ? ((latestFrame as any).rpm ?? 0) : 0;
   const steering = latestFrame ? (latestFrame.steering ?? 0) : 0;
   const stability = 1 - Math.min(1, Math.abs(latestFrame?.yaw_rate ?? 0) / 0.5);
 
-  const deltaColor = delta <= 0 ? 'text-emerald-400' : 'text-rose-400';
-  const deltaStr   = delta === 0 ? '0.000' : `${delta > 0 ? '+' : ''}${delta.toFixed(3)}`;
+  const deltaColor = deltaTone(delta);
 
   return (
     <ErrorBoundary>
@@ -171,8 +172,10 @@ const Dashboard: React.FC = () => {
 
             {/* Timing & G-forces */}
             <div className="panel" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div className="label" style={{ fontSize: 6 }}>Lap Delta</div>
-              <Metric label="DELTA_T" value={deltaStr} unit="SEC" color={deltaColor} size="md" />
+              <div className="label" style={{ fontSize: 6 }}>Lap Timing</div>
+              <Metric label="LAP TIME" value={formatLapTime(lapMetrics.currentLapTime)} color="text-white" size="md" />
+              <Metric label="DELTA" value={formatDelta(delta)} unit={delta === null ? undefined : 'SEC'} color={deltaColor} size="sm" />
+              <Metric label="LAP DELTA" value={formatDelta(lapDelta)} unit={lapDelta === null ? undefined : 'SEC'} color={deltaTone(lapDelta)} size="sm" />
 
               <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
 
@@ -227,7 +230,7 @@ const Dashboard: React.FC = () => {
               <TrackRenderer trackData={trackData} />
             </div>
 
-            {/* Telemetry multi-trace panel */}
+            {/* Lap comparison panel */}
             <div className="panel" style={{ height: 200, overflow: 'hidden' }}>
               <TelemetryTraces />
             </div>
@@ -305,17 +308,8 @@ const Dashboard: React.FC = () => {
             flexShrink: 0,
           }}
         >
-          {/* Replay controls take ~60% */}
-          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', height: '100%' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', height: '100%', minWidth: 0 }}>
             <ReplayControls />
-          </div>
-
-          {/* Divider */}
-          <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.06)', margin: '0 12px', flexShrink: 0 }} />
-
-          {/* Session timeline takes remaining */}
-          <div style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-            <SessionTimeline />
           </div>
         </div>
 

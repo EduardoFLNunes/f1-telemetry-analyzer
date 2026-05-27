@@ -31,6 +31,8 @@ from core.kn5.kn5_inventory import build_kn5_inventory_from_manifest
 from core.kn5.kn5_surface_extraction import build_kn5_surface_extraction_from_manifest
 from core.kn5.track_edges_from_surface import build_track_edges_from_surface_from_manifest
 from core.kn5.track_surface_polygon import build_track_surface_polygon_from_manifest
+from core.opponents import OpponentsRuntime, OpponentsStateBuffer, SOURCE_NAME as OPPONENTS_SOURCE_NAME
+from core.recording.recording_runtime import RecordingRuntime, config_from_env as recording_config_from_env
 from core.reconstruction.track_reconstruction import TrackReconstructor
 from core.telemetry.telemetry_buffer import TelemetryBuffer
 from core.telemetry.telemetry_models import TelemetrySample
@@ -60,6 +62,9 @@ track_cache = TrackCache(cache_dir=str(TRACK_CACHE_DIR))
 reconstructor = TrackReconstructor()
 source_manager = TelemetrySourceManager.from_env((PRIMARY_TELEMETRY_FIXTURE, DEBUG_TELEMETRY_FIXTURE))
 telemetry_runtime: Optional[TelemetryRuntime] = None
+opponents_buffer = OpponentsStateBuffer()
+opponents_runtime: Optional[OpponentsRuntime] = None
+recording_runtime: Optional[RecordingRuntime] = None
 
 
 def _safe_cache_fragment(value: str) -> str:
@@ -228,6 +233,31 @@ def build_telemetry_runtime() -> TelemetryRuntime:
     )
 
 
+def build_opponents_runtime() -> OpponentsRuntime:
+    return OpponentsRuntime(buffer=opponents_buffer)
+
+
+def current_recording_track() -> Optional[str]:
+    return source_manager.current_track_name() or runtime_state.current_track_name
+
+
+def recording_metadata() -> Dict[str, Any]:
+    return {
+        "source": source_manager.get_active_source_name(),
+        "trackCache": runtime_state.current_track_name,
+        "trackState": runtime_state.track_build_state.value,
+        "buildMethod": runtime_state.build_method,
+    }
+
+
+def build_recording_runtime() -> RecordingRuntime:
+    return RecordingRuntime(
+        config=recording_config_from_env(REPO_ROOT),
+        track_provider=current_recording_track,
+        metadata_provider=recording_metadata,
+    )
+
+
 def live_trajectory_api() -> List[Dict[str, Any]]:
     if telemetry_runtime:
         return telemetry_runtime.live_trajectory_api()
@@ -287,18 +317,29 @@ def telemetry_status_payload() -> Dict[str, Any]:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global telemetry_runtime
+    global telemetry_runtime, opponents_runtime, recording_runtime
 
     source_manager.select_source()
     prime_active_source()
     initialize_spatial_state()
+    recording_runtime = build_recording_runtime()
+    recording_runtime.start()
     telemetry_runtime = build_telemetry_runtime()
-    telemetry_runtime.start(asyncio.get_running_loop())
+    loop = asyncio.get_running_loop()
+    telemetry_runtime.start(loop)
+    opponents_runtime = build_opponents_runtime()
+    opponents_runtime.start(loop)
     yield
 
+    if opponents_runtime:
+        opponents_runtime.stop()
+        opponents_runtime = None
     if telemetry_runtime:
         telemetry_runtime.stop()
         telemetry_runtime = None
+    if recording_runtime:
+        recording_runtime.stop()
+        recording_runtime = None
 
 
 app = FastAPI(
@@ -443,6 +484,54 @@ async def get_live_telemetry():
         "liveTrajectory": live_trajectory_api(),
         "car": car,
     }
+
+
+@app.get("/api/live/opponents")
+async def get_live_opponents():
+    latest = opponents_buffer.latest()
+    metadata = opponents_buffer.metadata()
+    opponents = [latest[car_id].to_api() for car_id in sorted(latest)]
+    return {
+        "status": "success",
+        "source": OPPONENTS_SOURCE_NAME,
+        "count": len(opponents),
+        "track": metadata["track"],
+        "sessionTime": metadata["sessionTime"],
+        "lastUpdateTimestamp": metadata["lastUpdateTimestamp"],
+        "staleAfterSeconds": metadata["staleAfterSeconds"],
+        "opponents": opponents,
+    }
+
+
+@app.get("/api/recording/status")
+async def get_recording_status():
+    if not recording_runtime:
+        return {
+            "enabled": False,
+            "recording": False,
+            "sessionId": None,
+            "directory": None,
+            "playerSamplesWritten": 0,
+            "opponentSnapshotsWritten": 0,
+            "eventsWritten": 0,
+            "queueSize": 0,
+            "droppedFrames": 0,
+        }
+    return recording_runtime.status().to_api()
+
+
+@app.post("/api/recording/start")
+async def start_recording():
+    if not recording_runtime:
+        raise HTTPException(status_code=503, detail="Recording runtime is not available")
+    return recording_runtime.start_recording().to_api()
+
+
+@app.post("/api/recording/stop")
+async def stop_recording():
+    if not recording_runtime:
+        raise HTTPException(status_code=503, detail="Recording runtime is not available")
+    return recording_runtime.stop_recording().to_api()
 
 
 @app.get("/api/live/source")

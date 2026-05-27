@@ -8,6 +8,51 @@ function drawPolyline(ctx, x = [], y = [], close = false) {
   if (close) ctx.closePath();
 }
 
+const TRACK_SURFACE_CACHE = new WeakMap();
+
+function buildPath(x = [], y = [], close = false) {
+  if (typeof Path2D === 'undefined' || !x.length || !y.length) return null;
+  const path = new Path2D();
+  path.moveTo(x[0], y[0]);
+  for (let i = 1; i < x.length; i += 1) {
+    path.lineTo(x[i], y[i]);
+  }
+  if (close) path.closePath();
+  return path;
+}
+
+function getTrackSurfaceCache(trackData) {
+  if (!trackData || typeof Path2D === 'undefined') return null;
+  const cached = TRACK_SURFACE_CACHE.get(trackData);
+  if (cached) return cached;
+
+  const left = trackData.left_edge || {};
+  const right = trackData.right_edge || {};
+  const center = trackData.visualCenterline || trackData.centerline || {};
+  const closed = trackData.closedLoop !== false;
+
+  const asphaltPath = new Path2D();
+  if (left.x?.length && right.x?.length) {
+    asphaltPath.moveTo(left.x[0], left.y[0]);
+    for (let i = 1; i < left.x.length; i += 1) {
+      asphaltPath.lineTo(left.x[i], left.y[i]);
+    }
+    for (let i = right.x.length - 1; i >= 0; i -= 1) {
+      asphaltPath.lineTo(right.x[i], right.y[i]);
+    }
+    asphaltPath.closePath();
+  }
+
+  const cache = {
+    asphaltPath,
+    leftPath: buildPath(left.x, left.y, closed),
+    rightPath: buildPath(right.x, right.y, closed),
+    centerPath: buildPath(center.x, center.y, closed),
+  };
+  TRACK_SURFACE_CACHE.set(trackData, cache);
+  return cache;
+}
+
 function indexInRanges(index, ranges = []) {
   return ranges.some((range) => {
     const start = Number(range?.[0]);
@@ -139,24 +184,29 @@ export function drawTrackSurface(ctx, trackData, bounds, scale) {
   const left = trackData.left_edge;
   const right = trackData.right_edge;
   const center = trackData.visualCenterline || trackData.centerline;
+  const cache = getTrackSurfaceCache(trackData);
 
   ctx.save();
-  ctx.beginPath();
-  for (let i = 0; i < left.x.length; i += 1) {
-    const op = i === 0 ? 'moveTo' : 'lineTo';
-    ctx[op](left.x[i], left.y[i]);
-  }
-  for (let i = right.x.length - 1; i >= 0; i -= 1) {
-    ctx.lineTo(right.x[i], right.y[i]);
-  }
-  ctx.closePath();
 
   const asphalt = ctx.createLinearGradient(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY);
   asphalt.addColorStop(0, '#1b1f2b');
   asphalt.addColorStop(0.5, '#262a36');
   asphalt.addColorStop(1, '#171b25');
   ctx.fillStyle = asphalt;
-  ctx.fill();
+  if (cache?.asphaltPath) {
+    ctx.fill(cache.asphaltPath);
+  } else {
+    ctx.beginPath();
+    for (let i = 0; i < left.x.length; i += 1) {
+      const op = i === 0 ? 'moveTo' : 'lineTo';
+      ctx[op](left.x[i], left.y[i]);
+    }
+    for (let i = right.x.length - 1; i >= 0; i -= 1) {
+      ctx.lineTo(right.x[i], right.y[i]);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
   drawPitVisualGeometry(ctx, trackData, asphalt, scale);
 
   ctx.lineCap = 'round';
@@ -166,14 +216,28 @@ export function drawTrackSurface(ctx, trackData, bounds, scale) {
   ctx.lineWidth = 1.4 / scale;
   const closed = trackData.closedLoop !== false;
   const surfaceUnion = trackData?.pitVisualGeometry?.surfaceUnionFix;
-  strokePolylineSegments(ctx, left.x, left.y, closed, surfaceUnion?.mainTrackStrokeSuppression?.leftRanges || []);
-  strokePolylineSegments(ctx, right.x, right.y, closed, surfaceUnion?.mainTrackStrokeSuppression?.rightRanges || []);
+  const leftSuppression = surfaceUnion?.mainTrackStrokeSuppression?.leftRanges || [];
+  const rightSuppression = surfaceUnion?.mainTrackStrokeSuppression?.rightRanges || [];
+  if (cache?.leftPath && !leftSuppression.length) {
+    ctx.stroke(cache.leftPath);
+  } else {
+    strokePolylineSegments(ctx, left.x, left.y, closed, leftSuppression);
+  }
+  if (cache?.rightPath && !rightSuppression.length) {
+    ctx.stroke(cache.rightPath);
+  } else {
+    strokePolylineSegments(ctx, right.x, right.y, closed, rightSuppression);
+  }
 
   ctx.setLineDash([10 / scale, 16 / scale]);
   ctx.strokeStyle = 'rgba(255,255,255,0.12)';
   ctx.lineWidth = 0.8 / scale;
-  drawPolyline(ctx, center.x, center.y, closed);
-  ctx.stroke();
+  if (cache?.centerPath) {
+    ctx.stroke(cache.centerPath);
+  } else {
+    drawPolyline(ctx, center.x, center.y, closed);
+    ctx.stroke();
+  }
   ctx.setLineDash([]);
   ctx.restore();
 }
