@@ -7,6 +7,7 @@ from typing import Optional
 from .lap_collector import LapCollector, TrackBuildState
 from .runtime_state import RuntimeState
 from ..cache.track_cache import TrackCache
+from ..performance_metrics import performance_metrics
 from ..reconstruction.track_reconstruction import TrackReconstructor
 from ..telemetry.telemetry_buffer import TelemetryBuffer
 from ..telemetry.telemetry_reader_impl import TelemetrySourceManager
@@ -60,6 +61,7 @@ class TelemetryRuntime:
 
     def _loop(self):
         while self.running:
+            frame_started = time.perf_counter()
             try:
                 sample = self.source_manager.read_sample()
                 if not sample:
@@ -79,6 +81,7 @@ class TelemetryRuntime:
                 frame = self.state.update_car(sample)
                 if frame and self._loop_ref:
                     asyncio.run_coroutine_threadsafe(event_bus.emit("processed_frame", frame), self._loop_ref)
+                performance_metrics.mark_player_frame(time.perf_counter() - frame_started)
             except Exception as exc:
                 logger.warning("Telemetry runtime loop error: %s", exc)
                 self.state.track_build_state = TrackBuildState.TRACK_INVALID

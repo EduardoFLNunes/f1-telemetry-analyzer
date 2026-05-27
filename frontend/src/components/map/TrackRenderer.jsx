@@ -4,7 +4,7 @@ import { drawCar, drawOpponentCar } from './CarRenderer.jsx';
 import { applyCameraTransform, computeTrackBounds } from './CameraController.jsx';
 import { drawHud, drawTrackSurface } from './OverlayRenderer.jsx';
 
-const MAP_RENDER_FRAME_MS = 1000 / 30;
+const MAP_RENDER_FRAME_MS = 1000 / 20;
 
 function normalizeTrack(trackData) {
   if (!trackData) return null;
@@ -252,6 +252,12 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     lastWsMessages: 0,
     lastTelemetryMessages: 0,
     lastOpponentsMessages: 0,
+    lastTelemetryStoreUpdates: 0,
+    lastOpponentsStoreUpdates: 0,
+    lastTraceFrames: 0,
+    lastTraceRenderMs: 0,
+    lastTelemetryDropped: 0,
+    lastOpponentsDropped: 0,
   });
   const [opponentsPanelOpen, setOpponentsPanelOpen] = useState(true);
   const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
@@ -272,6 +278,14 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     wsHz: 0,
     telemetryHz: 0,
     opponentsHz: 0,
+    telemetryStoreHz: 0,
+    opponentsStoreHz: 0,
+    traceFps: 0,
+    avgTraceRenderMs: 0,
+    telemetryDroppedHz: 0,
+    opponentsDroppedHz: 0,
+    currentLapSamples: 0,
+    previousLapSamples: 0,
   });
 
   const cameraRef = useRef({
@@ -426,6 +440,15 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         const wsMessages = Number(wsMetrics.wsMessages || 0);
         const telemetryMessages = Number(wsMetrics.wsTelemetryMessages || 0);
         const opponentsMessages = Number(wsMetrics.wsOpponentsMessages || 0);
+        const telemetryStoreUpdates = Number(wsMetrics.telemetryStoreUpdates || 0);
+        const opponentsStoreUpdates = Number(wsMetrics.opponentsStoreUpdates || 0);
+        const traceFrames = Number(wsMetrics.traceFrames || 0);
+        const traceRenderMs = Number(wsMetrics.traceRenderMs || 0);
+        const telemetryDropped = Number(wsMetrics.telemetryFramesDroppedForRender || 0);
+        const opponentsDropped = Number(wsMetrics.opponentsFramesDroppedForRender || 0);
+        const storeState = useTelemetryStore.getState();
+        const traceFramesDelta = traceFrames - perf.lastTraceFrames;
+        const traceRenderDelta = traceRenderMs - perf.lastTraceRenderMs;
         setPerfStats({
           fps: perf.frames / seconds,
           avgRenderMs: perf.renderMs / Math.max(perf.frames, 1),
@@ -433,6 +456,14 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           wsHz: (wsMessages - perf.lastWsMessages) / seconds,
           telemetryHz: (telemetryMessages - perf.lastTelemetryMessages) / seconds,
           opponentsHz: (opponentsMessages - perf.lastOpponentsMessages) / seconds,
+          telemetryStoreHz: (telemetryStoreUpdates - perf.lastTelemetryStoreUpdates) / seconds,
+          opponentsStoreHz: (opponentsStoreUpdates - perf.lastOpponentsStoreUpdates) / seconds,
+          traceFps: traceFramesDelta / seconds,
+          avgTraceRenderMs: traceRenderDelta / Math.max(traceFramesDelta, 1),
+          telemetryDroppedHz: (telemetryDropped - perf.lastTelemetryDropped) / seconds,
+          opponentsDroppedHz: (opponentsDropped - perf.lastOpponentsDropped) / seconds,
+          currentLapSamples: storeState.currentLapSamples?.length || 0,
+          previousLapSamples: storeState.previousLapSamples?.length || 0,
         });
         perf.frames = 0;
         perf.renderMs = 0;
@@ -440,6 +471,12 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         perf.lastWsMessages = wsMessages;
         perf.lastTelemetryMessages = telemetryMessages;
         perf.lastOpponentsMessages = opponentsMessages;
+        perf.lastTelemetryStoreUpdates = telemetryStoreUpdates;
+        perf.lastOpponentsStoreUpdates = opponentsStoreUpdates;
+        perf.lastTraceFrames = traceFrames;
+        perf.lastTraceRenderMs = traceRenderMs;
+        perf.lastTelemetryDropped = telemetryDropped;
+        perf.lastOpponentsDropped = opponentsDropped;
       }
       animationRef.current = requestAnimationFrame(render);
     };
@@ -567,7 +604,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           </button>
         </div>
         {showPerf && (
-          <div className="panel px-2 py-1.5 w-[132px]">
+          <div className="panel px-2 py-1.5 w-[156px]">
             <div className="grid grid-cols-2 gap-x-2 gap-y-1">
               <span className="label" style={{ fontSize: 6 }}>FPS</span>
               <span className="num text-[8px] text-cyan-300 text-right">{perfStats.fps.toFixed(0)}</span>
@@ -581,6 +618,22 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
               <span className="num text-[8px] text-slate-300 text-right">{perfStats.telemetryHz.toFixed(0)}hz</span>
               <span className="label" style={{ fontSize: 6 }}>OPP</span>
               <span className="num text-[8px] text-slate-300 text-right">{perfStats.opponentsHz.toFixed(0)}hz</span>
+              <span className="label" style={{ fontSize: 6 }}>Store P/O</span>
+              <span className="num text-[8px] text-slate-300 text-right">
+                {perfStats.telemetryStoreHz.toFixed(0)}/{perfStats.opponentsStoreHz.toFixed(0)}hz
+              </span>
+              <span className="label" style={{ fontSize: 6 }}>Trace</span>
+              <span className="num text-[8px] text-slate-300 text-right">
+                {perfStats.traceFps.toFixed(0)}hz {perfStats.avgTraceRenderMs.toFixed(1)}ms
+              </span>
+              <span className="label" style={{ fontSize: 6 }}>Dropped P/O</span>
+              <span className="num text-[8px] text-slate-300 text-right">
+                {perfStats.telemetryDroppedHz.toFixed(0)}/{perfStats.opponentsDroppedHz.toFixed(0)}hz
+              </span>
+              <span className="label" style={{ fontSize: 6 }}>Lap Samples</span>
+              <span className="num text-[8px] text-slate-300 text-right">
+                {perfStats.currentLapSamples}/{perfStats.previousLapSamples}
+              </span>
             </div>
           </div>
         )}

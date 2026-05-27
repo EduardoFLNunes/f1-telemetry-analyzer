@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
+from ..performance_metrics import performance_metrics
 from .recording_models import RecordingConfig, RecordingStatus, build_session_id
 
 
@@ -32,6 +33,7 @@ class SessionRecorder:
         self._dropped_frames = 0
         self._last_player_recorded_at = 0.0
         self._last_opponents_recorded_at = 0.0
+        self._last_queue_warning_at = 0.0
 
     def start(self, track: Optional[str] = None, metadata: Optional[Mapping[str, Any]] = None) -> RecordingStatus:
         if not self.config.enabled:
@@ -52,6 +54,7 @@ class SessionRecorder:
             self._dropped_frames = 0
             self._last_player_recorded_at = 0.0
             self._last_opponents_recorded_at = 0.0
+            self._last_queue_warning_at = 0.0
             self._drain_queue()
 
             self._write_metadata(track=track, metadata=metadata)
@@ -165,11 +168,31 @@ class SessionRecorder:
     def _enqueue(self, stream: str, payload: Dict[str, Any]) -> bool:
         try:
             self._queue.put_nowait((stream, payload))
+            self._warn_if_queue_is_high(stream)
             return True
         except queue.Full:
             self._dropped_frames += 1
             logger.warning("Session recorder queue full, dropped %s frame", stream)
             return False
+
+    def _warn_if_queue_is_high(self, stream: str):
+        max_size = max(int(self.config.max_queue_size), 1)
+        queue_size = self._queue.qsize()
+        if queue_size < max_size * 0.7:
+            return
+
+        now = time.monotonic()
+        if now - self._last_queue_warning_at < 5.0:
+            return
+
+        self._last_queue_warning_at = now
+        logger.warning(
+            "Session recorder queue high: stream=%s queue=%s/%s dropped=%s",
+            stream,
+            queue_size,
+            max_size,
+            self._dropped_frames,
+        )
 
     def _writer_loop(self):
         batch = []
@@ -194,6 +217,7 @@ class SessionRecorder:
         self._flush_files()
 
     def _write_batch(self, batch):
+        started = time.perf_counter()
         for stream, payload in batch:
             try:
                 handle = self._file_for_stream(stream)
@@ -208,6 +232,7 @@ class SessionRecorder:
                 self._dropped_frames += 1
                 logger.warning("Session recorder write error for %s: %s", stream, exc)
         self._flush_files()
+        performance_metrics.record_disk_write(time.perf_counter() - started)
 
     def _file_for_stream(self, stream: str):
         if stream not in self._files:

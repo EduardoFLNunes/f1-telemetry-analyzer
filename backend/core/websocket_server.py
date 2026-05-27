@@ -8,6 +8,7 @@ import json
 import logging
 import asyncio
 
+from core.performance_metrics import performance_metrics
 from core.telemetry_events import OPPONENTS_FRAME, event_bus
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,8 @@ class ConnectionManager:
         logger.info(f"New client connected. Total: {len(self.active_connections)}")
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
         logger.info(f"Client disconnected. Remaining: {len(self.active_connections)}")
 
     async def broadcast(self, message: Dict[str, Any]):
@@ -32,11 +34,17 @@ class ConnectionManager:
             
         # Serialize to JSON
         msg_str = json.dumps(message)
+        performance_metrics.mark_websocket_message()
         
         # Broadcast to all connected clients
         # In production, we'd use a per-driver subscription model
-        tasks = [conn.send_text(msg_str) for conn in self.active_connections]
-        await asyncio.gather(*tasks, return_exceptions=True)
+        connections = list(self.active_connections)
+        tasks = [conn.send_text(msg_str) for conn in connections]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for conn, result in zip(connections, results):
+            if isinstance(result, Exception):
+                logger.debug("Dropping stale websocket connection: %s", result)
+                self.disconnect(conn)
 
 class TelemetryBroadcaster:
     """
