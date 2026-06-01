@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useTelemetryStore, TelemetryFrame, LapDebugState } from '../store/useTelemetryStore';
+import { PerformanceMode, useTelemetryStore, TelemetryFrame, LapDebugState } from '../store/useTelemetryStore';
+import { useRenderCounter } from '../hooks/useRenderCounter';
 import { formatDelta, formatLapTime } from '../utils/lapFormat';
 
 type TraceId = 'speed' | 'throttle' | 'brake';
@@ -19,13 +20,22 @@ const PREVIOUS_COLOR = '#f59e0b';
 const GRID_COLOR = 'rgba(255,255,255,0.055)';
 const TEXT_MUTED = 'rgba(148,163,184,0.62)';
 const TEXT_DIM = 'rgba(71,85,105,0.9)';
-const TRACE_RENDER_MS = 1000 / 20;
+const TRACE_RENDER_MS: Record<PerformanceMode, number> = {
+  QUALITY: 1000 / 20,
+  BALANCED: 1000 / 10,
+  PERFORMANCE: 1000 / 5,
+};
 const PAD_LEFT = 54;
 const PAD_RIGHT = 18;
 const PAD_TOP = 28;
 const PAD_BOTTOM = 10;
 const ROW_GAP = 8;
-const MAX_POINTS = 650;
+const MAX_POINTS: Record<PerformanceMode, number> = {
+  QUALITY: 1000,
+  BALANCED: 650,
+  PERFORMANCE: 320,
+};
+const MAX_SERIES_CACHE_ENTRIES = 96;
 
 function tracePerf() {
   const target = window as any;
@@ -96,7 +106,18 @@ function sampleProgress(frame: TelemetryFrame, minS: number, rangeS: number): nu
   return clamp((distance - minS) / rangeS, 0, 1);
 }
 
-function seriesPoints(samples: TelemetryFrame[], trace: TraceConfig) {
+function sampleVersion(sample: TelemetryFrame | undefined): string {
+  if (!sample) return 'none';
+  return [
+    sample.timestamp,
+    sample.lapSampleTime,
+    sample.lapProgress,
+    sample.s,
+    sample.speed,
+  ].join(':');
+}
+
+function seriesPoints(samples: TelemetryFrame[], trace: TraceConfig, maxPoints: number) {
   if (samples.length < 2) return [];
   const distances = samples
     .map((sample) => finite(sample.s ?? sample.distanceAlongTrack))
@@ -115,28 +136,37 @@ function seriesPoints(samples: TelemetryFrame[], trace: TraceConfig) {
     .filter((point): point is { x: number; value: number; sample: TelemetryFrame } => Boolean(point))
     .sort((a, b) => a.x - b.x);
 
-  if (points.length <= MAX_POINTS) return points;
-  const step = Math.ceil(points.length / MAX_POINTS);
+  if (points.length <= maxPoints) return points;
+  const step = Math.ceil(points.length / maxPoints);
   return points.filter((_, index) => index % step === 0 || index === points.length - 1);
 }
 
-const SERIES_CACHE = new WeakMap<TelemetryFrame[], Map<TraceId, ReturnType<typeof seriesPoints>>>();
+type SeriesPoints = ReturnType<typeof seriesPoints>;
+const SERIES_CACHE = new Map<string, SeriesPoints>();
 
-function cachedSeriesPoints(samples: TelemetryFrame[], trace: TraceConfig) {
-  let traces = SERIES_CACHE.get(samples);
-  if (!traces) {
-    traces = new Map();
-    SERIES_CACHE.set(samples, traces);
-  }
-  const cached = traces.get(trace.id);
+function cachedSeriesPoints(samples: TelemetryFrame[], trace: TraceConfig, performanceMode: PerformanceMode) {
+  const maxPoints = MAX_POINTS[performanceMode] ?? MAX_POINTS.BALANCED;
+  const key = [
+    trace.id,
+    performanceMode,
+    maxPoints,
+    samples.length,
+    sampleVersion(samples[0]),
+    sampleVersion(samples[samples.length - 1]),
+  ].join('|');
+  const cached = SERIES_CACHE.get(key);
   if (cached) return cached;
-  const points = seriesPoints(samples, trace);
-  traces.set(trace.id, points);
+  const points = seriesPoints(samples, trace, maxPoints);
+  SERIES_CACHE.set(key, points);
+  if (SERIES_CACHE.size > MAX_SERIES_CACHE_ENTRIES) {
+    const firstKey = SERIES_CACHE.keys().next().value;
+    if (firstKey) SERIES_CACHE.delete(firstKey);
+  }
   return points;
 }
 
-function nearestSampleAtProgress(samples: TelemetryFrame[], progress: number): TelemetryFrame | null {
-  const points = cachedSeriesPoints(samples, TRACES[0]);
+function nearestSampleAtProgress(samples: TelemetryFrame[], progress: number, performanceMode: PerformanceMode): TelemetryFrame | null {
+  const points = cachedSeriesPoints(samples, TRACES[0], performanceMode);
   if (!points.length) return null;
   return points.reduce((best, point) => (
     Math.abs(point.x - progress) < Math.abs(best.x - progress) ? point : best
@@ -185,6 +215,7 @@ function drawRow(
   width: number,
   height: number,
   cursorProgress: number | null,
+  performanceMode: PerformanceMode,
 ) {
   ctx.fillStyle = 'rgba(255,255,255,0.018)';
   ctx.fillRect(x0, y0, width, height);
@@ -207,8 +238,8 @@ function drawRow(
   ctx.font = '600 7px "JetBrains Mono"';
   ctx.fillText(trace.unit, 10, y0 + 21);
 
-  const currentPoints = cachedSeriesPoints(current, trace);
-  const previousPoints = cachedSeriesPoints(previous, trace);
+  const currentPoints = cachedSeriesPoints(current, trace, performanceMode);
+  const previousPoints = cachedSeriesPoints(previous, trace, performanceMode);
   drawTrace(ctx, previousPoints, trace, x0, y0, width, height, PREVIOUS_COLOR, 1.1, 0.62);
   drawTrace(ctx, currentPoints, trace, x0, y0, width, height, CURRENT_COLOR, 1.7, 1);
 
@@ -231,13 +262,20 @@ function drawRow(
 }
 
 export const TelemetryTraces: React.FC = () => {
+  useRenderCounter('TelemetryTraces');
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>();
   const lastRenderRef = useRef(0);
   const cursorProgressRef = useRef<number | null>(null);
+  const performanceMode = useTelemetryStore((state) => state.performanceMode);
+  const performanceModeRef = useRef<PerformanceMode>('BALANCED');
   const [showLapDebug, setShowLapDebug] = useState(false);
   const [lapDebug, setLapDebug] = useState<LapDebugState | null>(null);
+
+  useEffect(() => {
+    performanceModeRef.current = performanceMode;
+  }, [performanceMode]);
 
   useEffect(() => {
     if (!showLapDebug) {
@@ -259,7 +297,9 @@ export const TelemetryTraces: React.FC = () => {
     if (!ctx) return undefined;
 
     const loop = (frameTime = performance.now()) => {
-      if (frameTime - lastRenderRef.current < TRACE_RENDER_MS) {
+      const mode = performanceModeRef.current;
+      const renderMs = TRACE_RENDER_MS[mode] ?? TRACE_RENDER_MS.BALANCED;
+      if (frameTime - lastRenderRef.current < renderMs) {
         animRef.current = requestAnimationFrame(loop);
         return;
       }
@@ -336,8 +376,12 @@ export const TelemetryTraces: React.FC = () => {
           graphW,
           rowH,
           cursorProgressRef.current,
+          mode,
         );
       });
+      const perf = tracePerf();
+      perf.graphPoints = currentLapSamples.length + previousLapSamples.length;
+      perf.traceCacheEntries = SERIES_CACHE.size;
 
       ctx.fillStyle = TEXT_DIM;
       ctx.font = '600 7px "JetBrains Mono"';
@@ -372,7 +416,11 @@ export const TelemetryTraces: React.FC = () => {
 
     const progress = clamp((x - PAD_LEFT) / graphW, 0, 1);
     cursorProgressRef.current = progress;
-    const nearest = nearestSampleAtProgress(useTelemetryStore.getState().currentLapSamples, progress);
+    const nearest = nearestSampleAtProgress(
+      useTelemetryStore.getState().currentLapSamples,
+      progress,
+      performanceModeRef.current,
+    );
     useTelemetryStore.getState().setGlobalCursor(nearest?.s ?? null);
   }, []);
 

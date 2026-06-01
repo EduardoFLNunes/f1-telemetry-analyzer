@@ -3,6 +3,7 @@ import { Activity, Gauge, Thermometer, Wrench } from 'lucide-react';
 import { api } from '../api/client';
 import { useTelemetryStore } from '../store/useTelemetryStore';
 import { CarPhysicsResponse, CarPhysicsTelemetry } from '../types/carPhysics';
+import { useRenderCounter } from '../hooks/useRenderCounter';
 
 const BORDER = 'rgba(255,255,255,0.06)';
 const SURFACE = 'rgba(255,255,255,0.025)';
@@ -128,12 +129,14 @@ const fallbackFromFrame = (frame: ReturnType<typeof useTelemetryStore.getState>[
   };
 };
 
-export const CarPhysicsDebugPanel: React.FC = () => {
-  const latestFrame = useTelemetryStore((state) => state.latestFrame);
+export const CarPhysicsDebugPanel = React.memo(function CarPhysicsDebugPanel({ active = true }: { active?: boolean }) {
+  useRenderCounter('CarPhysicsDebugPanel');
+  const latestFrame = useTelemetryStore((state) => active ? state.latestFrame : null);
   const [payload, setPayload] = useState<CarPhysicsResponse | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    if (!active) return undefined;
     let cancelled = false;
     const load = async () => {
       try {
@@ -152,7 +155,7 @@ export const CarPhysicsDebugPanel: React.FC = () => {
       cancelled = true;
       clearInterval(interval);
     };
-  }, []);
+  }, [active]);
 
   const physics = useMemo(() => payload?.player ?? fallbackFromFrame(latestFrame), [payload, latestFrame]);
   const firstOpponent = payload?.opponents?.[0] ?? null;
@@ -228,4 +231,4 @@ export const CarPhysicsDebugPanel: React.FC = () => {
       </div>
     </div>
   );
-};
+});

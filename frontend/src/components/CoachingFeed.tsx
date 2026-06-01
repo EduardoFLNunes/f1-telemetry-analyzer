@@ -16,23 +16,35 @@ const EVENT_META: Record<string, { label: string; color: string; dot: string }> 
   predictive_warning:   { label: 'PREDICTIVE WARN',  color: 'text-amber-300',   dot: '#fcd34d' },
 };
 
-function getEventMeta(type: string) {
-  return EVENT_META[type] ?? { label: type.replace(/_/g, ' ').toUpperCase(), color: 'text-slate-400', dot: '#64748b' };
+const finiteNumber = (value: unknown, fallback = 0): number => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+};
+
+const boundedSeverity = (value: unknown): number => Math.max(0, Math.min(1, finiteNumber(value)));
+
+function getEventMeta(type: unknown) {
+  const key = typeof type === 'string' && type.trim() ? type.trim() : 'unknown_event';
+  return EVENT_META[key] ?? { label: key.replace(/_/g, ' ').toUpperCase(), color: 'text-slate-400', dot: '#64748b' };
 }
 
-function renderEvidence(event: CoachingEvent): string {
+function renderEvidence(event: Partial<CoachingEvent>): string {
   const e = event.evidence;
   if (!e) return 'Physical anomaly detected.';
-  if (event.event === 'late_brake' || event.event === 'early_brake') {
-    return `BRAKE_DELTA: ${(e.delta_m ?? 0).toFixed(1)}m  REF_S: ${(e.ref_s ?? 0).toFixed(0)}m`;
+  if (typeof e === 'string') return e;
+  const evidence = typeof e === 'object' && !Array.isArray(e) ? e as Record<string, unknown> : {};
+  const eventName = typeof event.event === 'string' ? event.event : 'unknown_event';
+
+  if (eventName === 'late_brake' || eventName === 'early_brake') {
+    return `BRAKE_DELTA: ${finiteNumber(evidence.delta_m).toFixed(1)}m  REF_S: ${finiteNumber(evidence.ref_s).toFixed(0)}m`;
   }
-  if (event.event === 'throttle_hesitation') {
-    return `TPS: ${((e.curr_throttle ?? 0) * 100).toFixed(0)}% @ APEX_EXIT`;
+  if (eventName === 'throttle_hesitation') {
+    return `TPS: ${(finiteNumber(evidence.curr_throttle) * 100).toFixed(0)}% @ APEX_EXIT`;
   }
-  if (event.event === 'poor_apex') {
-    return `APEX_OFFSET: ${(e.l_offset ?? 0).toFixed(2)}m  CORNER_T${e.corner_id ?? 0}`;
+  if (eventName === 'poor_apex') {
+    return `APEX_OFFSET: ${finiteNumber(evidence.l_offset).toFixed(2)}m  CORNER_T${finiteNumber(evidence.corner_id).toFixed(0)}`;
   }
-  return typeof e === 'string' ? e : JSON.stringify(e).slice(0, 60);
+  return Object.keys(evidence).length ? JSON.stringify(evidence).slice(0, 60) : 'Physical anomaly detected.';
 }
 
 export const CoachingFeed: React.FC = () => {
@@ -76,14 +88,18 @@ export const CoachingFeed: React.FC = () => {
           </div>
         ) : (
           events.slice(0, 20).map((ev, i) => {
-            const meta = getEventMeta(ev.event);
+            const eventName = typeof ev.event === 'string' ? ev.event : 'unknown_event';
+            const severity = boundedSeverity(ev.severity);
+            const distance = finiteNumber(ev.s);
+            const timestamp = finiteNumber(ev.timestamp, Date.now());
+            const meta = getEventMeta(eventName);
             return (
               <div
-                key={`${ev.timestamp}-${i}`}
+                key={`${timestamp}-${i}`}
                 className="flex flex-col gap-1 px-2 py-1.5 rounded-sm transition-all cursor-pointer hover:opacity-90"
                 style={{
                   background: i === 0 ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
-                  border: `1px solid rgba(255,255,255,${ev.severity > 0.8 ? 0.08 : 0.04})`,
+                  border: `1px solid rgba(255,255,255,${severity > 0.8 ? 0.08 : 0.04})`,
                   opacity: Math.max(0.35, 1 - i * 0.08)
                 }}
               >
@@ -92,7 +108,7 @@ export const CoachingFeed: React.FC = () => {
                     <div className="w-1.5 h-1.5 rounded-full" style={{ background: meta.dot }} />
                     <span className={`num text-[8px] font-bold uppercase ${meta.color}`}>{meta.label}</span>
                   </div>
-                  <span className="num text-[7px] text-slate-700">S:{ev.s.toFixed(0)}m</span>
+                  <span className="num text-[7px] text-slate-700">S:{distance.toFixed(0)}m</span>
                 </div>
 
                 <div className="num text-[7px] text-slate-600 pl-3 leading-snug">
@@ -104,9 +120,9 @@ export const CoachingFeed: React.FC = () => {
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
-                      width: `${ev.severity * 100}%`,
-                      background: ev.severity > 0.8 ? '#fb7185' : ev.severity > 0.5 ? '#fbbf24' : '#60a5fa',
-                      boxShadow: ev.severity > 0.8 ? '0 0 6px rgba(251,113,133,0.5)' : 'none'
+                      width: `${severity * 100}%`,
+                      background: severity > 0.8 ? '#fb7185' : severity > 0.5 ? '#fbbf24' : '#60a5fa',
+                      boxShadow: severity > 0.8 ? '0 0 6px rgba(251,113,133,0.5)' : 'none'
                     }}
                   />
                 </div>

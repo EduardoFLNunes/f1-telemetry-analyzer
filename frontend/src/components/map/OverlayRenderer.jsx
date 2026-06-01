@@ -242,14 +242,16 @@ export function drawTrackSurface(ctx, trackData, bounds, scale) {
   ctx.restore();
 }
 
-export function drawHud(ctx, width, height, trackData, frame, camera) {
+export function drawHud(ctx, width, height, trackData, frame, camera, options = {}) {
+  const performanceMode = options.performanceMode || 'BALANCED';
+  const compact = performanceMode === 'PERFORMANCE';
   ctx.save();
   ctx.resetTransform();
   ctx.fillStyle = 'rgba(6,8,16,0.78)';
   ctx.strokeStyle = 'rgba(148,163,184,0.16)';
   ctx.lineWidth = 1;
-  ctx.fillRect(12, 12, 260, 62);
-  ctx.strokeRect(12, 12, 260, 62);
+  ctx.fillRect(12, 12, compact ? 170 : 260, compact ? 42 : 62);
+  ctx.strokeRect(12, 12, compact ? 170 : 260, compact ? 42 : 62);
 
   ctx.fillStyle = '#22d3ee';
   ctx.font = 'bold 9px "JetBrains Mono", monospace';
@@ -257,8 +259,12 @@ export function drawHud(ctx, width, height, trackData, frame, camera) {
 
   ctx.fillStyle = '#94a3b8';
   ctx.font = '8px "JetBrains Mono", monospace';
-  ctx.fillText(`${Math.round(trackData?.trackLength || trackData?.length_meters || 0)} m | ${trackData?.total_points || 0} pts | ${trackData?.source || 'track geometry'}`, 24, 48);
-  ctx.fillText(`Camera ${camera.mode}  Zoom x${camera.zoom.toFixed(1)}`, 24, 64);
+  if (compact) {
+    ctx.fillText(`${camera.mode} x${camera.zoom.toFixed(1)}`, 24, 50);
+  } else {
+    ctx.fillText(`${Math.round(trackData?.trackLength || trackData?.length_meters || 0)} m | ${trackData?.total_points || 0} pts | ${trackData?.source || 'track geometry'}`, 24, 48);
+    ctx.fillText(`Camera ${camera.mode}  Zoom x${camera.zoom.toFixed(1)}`, 24, 64);
+  }
 
   ctx.restore();
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Activity, AlertTriangle, BarChart3, Gauge, Timer, Trophy } from 'lucide-react';
 import { api } from '../api/client';
 import { RacingLineComparisonSegment, RacingLinePayload } from '../types/racingLine';
+import { useRenderCounter } from '../hooks/useRenderCounter';
 
 const PANEL_BG = '#0c0c16';
 const SURFACE = 'rgba(255,255,255,0.025)';
@@ -115,7 +116,8 @@ const SegmentRow = ({ segment }: { segment: RacingLineComparisonSegment }) => (
   </div>
 );
 
-export const RacingLineAnalysisPanel: React.FC<{ active?: boolean }> = ({ active = true }) => {
+export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPanel({ active = true }: { active?: boolean }) {
+  useRenderCounter('RacingLineAnalysisPanel');
   const [microSectorCount, setMicroSectorCount] = useState(50);
   const [payload, setPayload] = useState<RacingLinePayload | null>(null);
   const [failed, setFailed] = useState(false);
@@ -255,7 +257,7 @@ export const RacingLineAnalysisPanel: React.FC<{ active?: boolean }> = ({ active
           <span className="label" style={{ fontSize: 6 }}>MICROSETORES</span>
         </div>
         <div className="num" style={{ fontSize: 8, color: MUTED }}>
-          P {comparison?.debug.playerSamples ?? 0} / REF {racingLine?.debug.inputSamples ?? 0}
+          P {comparison?.debug?.playerSamples ?? 0} / REF {racingLine?.debug?.inputSamples ?? 0}
         </div>
       </div>
 
@@ -292,9 +294,9 @@ export const RacingLineAnalysisPanel: React.FC<{ active?: boolean }> = ({ active
         <div className="num" style={{ fontSize: 7, color: MUTED }}>TRACK {payload?.track ?? '--'}</div>
         <div className="num" style={{ fontSize: 7, color: ready ? EMERALD : AMBER, textAlign: 'right' }}>{status}</div>
         <div className="num" style={{ gridColumn: '1 / -1', fontSize: 7, color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {comparison?.debug.reasonForRejectedSegments.join(', ') || payload?.debug?.reason || 'ready'}
+          {comparison?.debug?.reasonForRejectedSegments?.join(', ') || payload?.debug?.reason || 'ready'}
         </div>
       </div>
     </div>
   );
-};
+});

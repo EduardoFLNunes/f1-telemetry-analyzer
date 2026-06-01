@@ -3,13 +3,17 @@
  * Handles backpressure, reconnection, and event dispatching.
  */
 import { useEffect, useRef, useCallback } from 'react';
-import { useTelemetryStore, TelemetryFrame, CoachingEvent, EngineerSpeech, CognitiveState } from '../store/useTelemetryStore';
+import { PerformanceMode, useTelemetryStore, TelemetryFrame, CoachingEvent, EngineerSpeech, CognitiveState } from '../store/useTelemetryStore';
 
 const WS_URL = `ws://${window.location.hostname}:8000/ws`;
 const OPPONENTS_POLL_MS = 2000;
 const OPPONENTS_WS_FRESH_MS = 2500;
-const PLAYER_VISUAL_FLUSH_MS = 50;
-const OPPONENTS_VISUAL_FLUSH_MS = 100;
+const FLUSH_TICK_MS = 50;
+const STORE_FLUSH_MS: Record<PerformanceMode, number> = {
+  QUALITY: 50,
+  BALANCED: 100,
+  PERFORMANCE: 200,
+};
 
 const perf = () => {
   const target = window as any;
@@ -48,14 +52,22 @@ export const useTelemetryWS = () => {
   const setCognitiveState = useTelemetryStore((state) => state.setCognitiveState);
   const setStreaming = useTelemetryStore((state) => state.setStreaming);
   const setOpponentsSnapshot = useTelemetryStore((state) => state.setOpponentsSnapshot);
+  const performanceMode = useTelemetryStore((state) => state.performanceMode);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   const opponentsPollRef = useRef<NodeJS.Timeout>();
   const playerFlushRef = useRef<NodeJS.Timeout>();
   const opponentsFlushRef = useRef<NodeJS.Timeout>();
   const shouldReconnectRef = useRef(true);
   const lastOpponentsWsAtRef = useRef(0);
+  const lastPlayerFlushAtRef = useRef(0);
+  const lastOpponentsFlushAtRef = useRef(0);
+  const performanceModeRef = useRef<PerformanceMode>('BALANCED');
   const pendingFrameRef = useRef<TelemetryFrame | null>(null);
   const pendingOpponentsRef = useRef<any | null>(null);
+
+  useEffect(() => {
+    performanceModeRef.current = performanceMode;
+  }, [performanceMode]);
 
   const connect = useCallback(() => {
     if (socketRef.current?.readyState === WebSocket.OPEN) return;
@@ -99,6 +111,7 @@ export const useTelemetryWS = () => {
                 : (raw.accel_g || { x: 0, y: 0, z: 0 }),
             timestamp: raw.timestamp || Date.now()
           };
+          (window as any).__latestFrame = frame;
           if (pendingFrameRef.current) perf().telemetryFramesDroppedForRender += 1;
           pendingFrameRef.current = frame;
         } else if (payload.type === 'opponents') {
@@ -149,18 +162,28 @@ export const useTelemetryWS = () => {
     playerFlushRef.current = setInterval(() => {
       const frame = pendingFrameRef.current;
       if (!frame) return;
+      const now = performance.now();
+      const flushMs = STORE_FLUSH_MS[performanceModeRef.current] ?? STORE_FLUSH_MS.BALANCED;
+      if (now - lastPlayerFlushAtRef.current < flushMs) return;
       pendingFrameRef.current = null;
+      lastPlayerFlushAtRef.current = now;
       addFrame(frame);
       perf().telemetryStoreUpdates += 1;
-    }, PLAYER_VISUAL_FLUSH_MS);
+      perf().telemetryFlushIntervalMs = flushMs;
+    }, FLUSH_TICK_MS);
 
     opponentsFlushRef.current = setInterval(() => {
       const snapshot = pendingOpponentsRef.current;
       if (!snapshot) return;
+      const now = performance.now();
+      const flushMs = STORE_FLUSH_MS[performanceModeRef.current] ?? STORE_FLUSH_MS.BALANCED;
+      if (now - lastOpponentsFlushAtRef.current < flushMs) return;
       pendingOpponentsRef.current = null;
+      lastOpponentsFlushAtRef.current = now;
       setOpponentsSnapshot(snapshot);
       perf().opponentsStoreUpdates += 1;
-    }, OPPONENTS_VISUAL_FLUSH_MS);
+      perf().opponentsFlushIntervalMs = flushMs;
+    }, FLUSH_TICK_MS);
 
     return () => {
       if (playerFlushRef.current) clearInterval(playerFlushRef.current);

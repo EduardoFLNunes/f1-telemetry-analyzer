@@ -2,7 +2,11 @@
  * Session Debrief Panel — Post-session performance intelligence
  */
 import React, { useMemo } from 'react';
-import { useTelemetryStore } from '../store/useTelemetryStore';
+import { CoachingEvent, TelemetryFrame, useTelemetryStore } from '../store/useTelemetryStore';
+import { useRenderCounter } from '../hooks/useRenderCounter';
+
+const EMPTY_HISTORY: TelemetryFrame[] = [];
+const EMPTY_EVENTS: CoachingEvent[] = [];
 
 const StatRow = ({ label, value, sub, color = 'text-slate-300' }: any) => (
   <div className="flex items-center justify-between py-1.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
@@ -27,13 +31,14 @@ const ScoreBar = ({ label, value, color }: { label: string; value: number; color
   </div>
 );
 
-export const AIDebriefPanel: React.FC = () => {
-  const history = useTelemetryStore(s => s.history);
-  const events  = useTelemetryStore(s => s.coachingEvents);
-  const cognitive = useTelemetryStore(s => s.cognitiveState);
+export const AIDebriefPanel = React.memo(function AIDebriefPanel({ active = true }: { active?: boolean }) {
+  useRenderCounter('AIDebriefPanel');
+  const history = useTelemetryStore(s => active ? s.history : EMPTY_HISTORY);
+  const events  = useTelemetryStore(s => active ? s.coachingEvents : EMPTY_EVENTS);
+  const cognitive = useTelemetryStore(s => active ? s.cognitiveState : null);
 
-  const analysis = useMemo(() => {
-    if (history.length < 10) return null;
+  const metrics = useMemo(() => {
+    if (!active || history.length < 10) return null;
     const speeds = history.map(f => f.speed * 3.6);
     const avgSpeed = speeds.reduce((a, b) => a + b, 0) / speeds.length;
     const maxSpeed = Math.max(...speeds);
@@ -41,9 +46,9 @@ export const AIDebriefPanel: React.FC = () => {
     const avgBrake    = history.reduce((a, f) => a + f.brake, 0) / history.length;
     const severe = events.filter(e => e.severity > 0.8).length;
     return { avgSpeed, maxSpeed, avgThrottle, avgBrake, mistakes: events.length, severe };
-  }, [history, events]);
+  }, [active, history, events]);
 
-  if (!analysis) {
+  if (!metrics) {
     return (
       <div className="panel flex flex-col h-full items-center justify-center gap-3">
         <div className="w-10 h-10 rounded-full border border-slate-800 flex items-center justify-center opacity-30">
@@ -69,15 +74,15 @@ export const AIDebriefPanel: React.FC = () => {
         {/* Core metrics */}
         <div>
           <span className="label block mb-1" style={{ fontSize: 6 }}>PERFORMANCE METRICS</span>
-          <StatRow label="Avg Speed" value={`${analysis.avgSpeed.toFixed(1)} km/h`} color="text-cyan-400" />
-          <StatRow label="Max Speed" value={`${analysis.maxSpeed.toFixed(0)} km/h`} color="text-white" />
-          <StatRow label="Throttle Avg" value={`${(analysis.avgThrottle * 100).toFixed(1)}%`} color="text-emerald-400" />
-          <StatRow label="Brake Avg" value={`${(analysis.avgBrake * 100).toFixed(1)}%`} color="text-rose-400" />
+          <StatRow label="Avg Speed" value={`${metrics.avgSpeed.toFixed(1)} km/h`} color="text-cyan-400" />
+          <StatRow label="Max Speed" value={`${metrics.maxSpeed.toFixed(0)} km/h`} color="text-white" />
+          <StatRow label="Throttle Avg" value={`${(metrics.avgThrottle * 100).toFixed(1)}%`} color="text-emerald-400" />
+          <StatRow label="Brake Avg" value={`${(metrics.avgBrake * 100).toFixed(1)}%`} color="text-rose-400" />
           <StatRow
             label="Events"
-            value={`${analysis.mistakes} total`}
-            sub={`${analysis.severe} critical`}
-            color={analysis.severe > 3 ? 'text-rose-400' : 'text-amber-400'}
+            value={`${metrics.mistakes} total`}
+            sub={`${metrics.severe} critical`}
+            color={metrics.severe > 3 ? 'text-rose-400' : 'text-amber-400'}
           />
         </div>
 
@@ -118,4 +123,4 @@ export const AIDebriefPanel: React.FC = () => {
       </div>
     </div>
   );
-};
+});

@@ -2,10 +2,14 @@
  * AI Race Engineer Panel — Neural-linked coaching console
  */
 import React from 'react';
-import { useTelemetryStore } from '../store/useTelemetryStore';
+import { EngineerSpeech, useTelemetryStore } from '../store/useTelemetryStore';
+import { useRenderCounter } from '../hooks/useRenderCounter';
 
-export const AIEngineerPanel: React.FC = () => {
-  const speech = useTelemetryStore(s => s.engineerSpeech);
+const EMPTY_SPEECH: EngineerSpeech[] = [];
+
+export const AIEngineerPanel = React.memo(function AIEngineerPanel({ active = true }: { active?: boolean }) {
+  useRenderCounter('AIEngineerPanel');
+  const speech = useTelemetryStore(s => active ? s.engineerSpeech : EMPTY_SPEECH);
   const isStreaming = useTelemetryStore(s => s.isStreaming);
 
   const priorityStyle = (p: string) => {
@@ -85,4 +89,4 @@ export const AIEngineerPanel: React.FC = () => {
       </div>
     </div>
   );
-};
+});
