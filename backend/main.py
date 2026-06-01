@@ -5,6 +5,7 @@ The backend owns reconstruction, projection, boundaries, caching, and live car
 state. CSV track maps are deliberately not used as a source of truth.
 """
 from contextlib import asynccontextmanager
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import asyncio
@@ -13,9 +14,11 @@ import logging
 import re
 
 import pandas as pd
-from fastapi import Body, FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import Body, FastAPI, File, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
+from core.car_physics import build_car_physics_debug, build_opponent_car_physics, build_player_car_physics
+from core.comparison_analysis import build_live_comparison_payload
 from core.debug.ac_shared_memory_full_inventory import build_ac_shared_memory_full_inventory
 from core.cache.track_cache import TrackCache
 from core.debug.spatial_debug import projection_debug_payload
@@ -35,6 +38,7 @@ from core.opponents import OpponentsRuntime, OpponentsStateBuffer, SOURCE_NAME a
 from core.performance_metrics import performance_metrics
 from core.recording.recording_runtime import RecordingRuntime, config_from_env as recording_config_from_env
 from core.reconstruction.track_reconstruction import TrackReconstructor
+from core.racing_line_analysis import build_live_racing_line_payload
 from core.telemetry.telemetry_buffer import TelemetryBuffer
 from core.telemetry.telemetry_models import TelemetrySample
 from core.telemetry.telemetry_reader_impl import TelemetrySourceManager, telemetry_samples_from_dataframe
@@ -470,19 +474,22 @@ async def get_car_state():
 
 
 @app.get("/api/live/telemetry")
-async def get_live_telemetry():
+async def get_live_telemetry(
+    includeTrack: bool = Query(False),
+    includeTrajectory: bool = Query(False),
+):
     car = runtime_state.car_projected_state
-    track = runtime_state.api_track()
     if not car:
         car = ingest_one_active_sample()
     status = telemetry_status_payload()
+    track = runtime_state.api_track() if includeTrack else None
     return {
         "status": "success",
         "source": source_manager.get_active_source_name(),
         **status,
-        "track": track if status["activeTrackReady"] else None,
-        "centerline": track["centerline"] if track and status["activeTrackReady"] else None,
-        "liveTrajectory": live_trajectory_api(),
+        "track": track if includeTrack and status["activeTrackReady"] else None,
+        "centerline": track["centerline"] if includeTrack and track and status["activeTrackReady"] else None,
+        "liveTrajectory": live_trajectory_api() if includeTrajectory else [],
         "car": car,
     }
 
@@ -502,6 +509,143 @@ async def get_live_opponents():
         "staleAfterSeconds": metadata["staleAfterSeconds"],
         "opponents": opponents,
     }
+
+
+def live_comparison_payload(micro_sectors: int = 50) -> Dict[str, Any]:
+    micro_sector_count = max(1, min(200, int(micro_sectors or 50)))
+    payload = build_live_comparison_payload(
+        telemetry_samples=telemetry_buffer.get_samples(),
+        opponent_history=opponents_buffer.history(),
+        track_data=runtime_state.track_data,
+        track_name=runtime_state.current_track_name or source_manager.current_track_name(),
+        micro_sector_count=micro_sector_count,
+    )
+    logger.debug(
+        "Live comparison generated: player=%s reference=%s opponents=%s validMicroSectors=%s",
+        payload.get("debug", {}).get("playerSamples"),
+        payload.get("debug", {}).get("referenceSamples"),
+        payload.get("debug", {}).get("opponentsAnalyzed"),
+        payload.get("debug", {}).get("validMicroSectors"),
+    )
+    return payload
+
+
+def live_racing_line_payload(
+    micro_sectors: int = 50,
+    *,
+    include_visual_line: bool = True,
+    include_comparison: bool = True,
+) -> Dict[str, Any]:
+    micro_sector_count = max(1, min(200, int(micro_sectors or 50)))
+    payload = build_live_racing_line_payload(
+        telemetry_samples=telemetry_buffer.get_samples(),
+        track_data=runtime_state.track_data,
+        track_name=runtime_state.current_track_name or source_manager.current_track_name(),
+        micro_sector_count=micro_sector_count,
+        include_visual_line=include_visual_line,
+        include_comparison=include_comparison,
+    )
+    logger.debug(
+        "Racing Line generated: status=%s reference=%s player=%s validSegments=%s",
+        payload.get("status"),
+        payload.get("debug", {}).get("referenceSamples"),
+        payload.get("debug", {}).get("currentLapSamples"),
+        (payload.get("racingLine") or {}).get("debug", {}).get("validSegments"),
+    )
+    return payload
+
+
+def live_player_physics_payload() -> Dict[str, Any]:
+    samples = telemetry_buffer.get_samples()
+    player_samples = [sample for sample in samples if int(getattr(sample, "carId", 0) or 0) == 0]
+    latest_sample = player_samples[-1] if player_samples else runtime_state.last_sample
+    if latest_sample is None:
+        ingest_one_active_sample()
+        samples = telemetry_buffer.get_samples()
+        player_samples = [sample for sample in samples if int(getattr(sample, "carId", 0) or 0) == 0]
+        latest_sample = player_samples[-1] if player_samples else runtime_state.last_sample
+
+    recent_player_samples = player_samples[-20:]
+    player_physics = build_player_car_physics(latest_sample, recent_player_samples)
+
+    opponent_history = opponents_buffer.history()
+    latest_opponents = opponents_buffer.latest()
+    opponent_physics = []
+    opponent_sample_count = 0
+    for car_id in sorted(latest_opponents):
+        if car_id == 0:
+            continue
+        history = opponent_history.get(car_id, [])
+        opponent_sample_count += len(history)
+        opponent_physics.append(
+            {
+                "carId": car_id,
+                "physics": build_opponent_car_physics(latest_opponents[car_id], history[-20:]),
+            }
+        )
+
+    debug = build_car_physics_debug(
+        player_physics,
+        [item["physics"] for item in opponent_physics],
+        player_sample_count=len(player_samples),
+        opponent_sample_count=opponent_sample_count,
+    )
+    logger.debug(
+        "Car physics generated: playerSamples=%s opponentSamples=%s completeness=%s",
+        debug["playerPhysicsSamples"],
+        debug["opponentPhysicsSamples"],
+        debug["playerDataCompleteness"],
+    )
+    return {
+        "status": "success",
+        "source": source_manager.get_active_source_name(),
+        "track": source_manager.current_track_name() or runtime_state.current_track_name,
+        "generatedAt": datetime.utcnow().isoformat(),
+        "player": player_physics,
+        "opponents": opponent_physics,
+        "carPhysicsDebug": debug,
+    }
+
+
+@app.get("/api/live/comparison")
+async def get_live_comparison(microSectors: int = Query(50, ge=1, le=200)):
+    return live_comparison_payload(microSectors)
+
+
+@app.get("/api/analysis/comparison")
+async def get_analysis_comparison(microSectors: int = Query(50, ge=1, le=200)):
+    return live_comparison_payload(microSectors)
+
+
+@app.get("/api/live/racing-line")
+async def get_live_racing_line(
+    microSectors: int = Query(50, ge=1, le=200),
+    includeVisualLine: bool = Query(True),
+    includeComparison: bool = Query(True),
+):
+    return live_racing_line_payload(
+        microSectors,
+        include_visual_line=includeVisualLine,
+        include_comparison=includeComparison,
+    )
+
+
+@app.get("/api/analysis/racing-line")
+async def get_analysis_racing_line(
+    microSectors: int = Query(50, ge=1, le=200),
+    includeVisualLine: bool = Query(False),
+    includeComparison: bool = Query(True),
+):
+    return live_racing_line_payload(
+        microSectors,
+        include_visual_line=includeVisualLine,
+        include_comparison=includeComparison,
+    )
+
+
+@app.get("/api/live/player-physics")
+async def get_live_player_physics():
+    return live_player_physics_payload()
 
 
 @app.get("/api/recording/status")

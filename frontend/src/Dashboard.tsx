@@ -9,6 +9,9 @@ import { GGDiagram } from './components/GGDiagram';
 import { CoachingFeed } from './components/CoachingFeed';
 import { AIDebriefPanel } from './components/AIDebriefPanel';
 import { AIEngineerPanel } from './components/AIEngineerPanel';
+import { CarPhysicsDebugPanel } from './components/CarPhysicsDebugPanel';
+import { LiveComparisonPanel } from './components/LiveComparisonPanel';
+import { RacingLineAnalysisPanel } from './components/RacingLineAnalysisPanel';
 import { ReplayControls } from './components/ReplayControls';
 import { CognitiveDashboard } from './components/CognitiveDashboard';
 import { Header } from './components/Header';
@@ -81,7 +84,7 @@ const Dashboard: React.FC = () => {
   const latestFrame  = useTelemetryStore(s => s.latestFrame);
   const isStreaming  = useTelemetryStore(s => s.isStreaming);
   const lapMetrics   = useTelemetryStore(s => s.lapMetrics);
-  const [rightPanel, setRightPanel] = useState<'engineer'|'debrief'>('engineer');
+  const [rightPanel, setRightPanel] = useState<'engineer'|'debrief'|'comparison'|'racingLine'|'physics'>('engineer');
   const [time, setTime] = useState(() => new Date());
 
   useEffect(() => {
@@ -144,7 +147,7 @@ const Dashboard: React.FC = () => {
         <Header time={time} />
 
         {/* ─ Main Content ─ */}
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '176px 1fr 252px', gap: 1, padding: 1, overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr)', gap: 1, padding: 1, overflow: 'hidden' }}>
 
           {/* ═══ LEFT COLUMN — Engineering Metrics ═══ */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1, overflow: 'hidden' }}>
@@ -242,7 +245,7 @@ const Dashboard: React.FC = () => {
 
             {/* Panel selector tabs */}
             <div className="panel" style={{ display: 'flex', gap: 1, padding: 1 }}>
-              {(['engineer', 'debrief'] as const).map(tab => (
+              {(['engineer', 'debrief', 'comparison', 'racingLine', 'physics'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setRightPanel(tab)}
@@ -263,7 +266,7 @@ const Dashboard: React.FC = () => {
                     outline: rightPanel === tab ? '1px solid rgba(34,211,238,0.2)' : '1px solid transparent',
                   }}
                 >
-                  {tab === 'engineer' ? 'AI Engineer' : 'Debrief'}
+                  {tab === 'engineer' ? 'Engineer' : (tab === 'debrief' ? 'Debrief' : (tab === 'comparison' ? 'Compare' : (tab === 'racingLine' ? 'Line' : 'Physics')))}
                 </button>
               ))}
             </div>
@@ -285,6 +288,30 @@ const Dashboard: React.FC = () => {
                 transition: 'opacity 0.3s',
               }}>
                 <AIDebriefPanel />
+              </div>
+              <div style={{
+                position: 'absolute', inset: 0,
+                opacity: rightPanel === 'comparison' ? 1 : 0,
+                pointerEvents: rightPanel === 'comparison' ? 'auto' : 'none',
+                transition: 'opacity 0.3s',
+              }}>
+                <LiveComparisonPanel />
+              </div>
+              <div style={{
+                position: 'absolute', inset: 0,
+                opacity: rightPanel === 'racingLine' ? 1 : 0,
+                pointerEvents: rightPanel === 'racingLine' ? 'auto' : 'none',
+                transition: 'opacity 0.3s',
+              }}>
+                <RacingLineAnalysisPanel active={rightPanel === 'racingLine'} />
+              </div>
+              <div style={{
+                position: 'absolute', inset: 0,
+                opacity: rightPanel === 'physics' ? 1 : 0,
+                pointerEvents: rightPanel === 'physics' ? 'auto' : 'none',
+                transition: 'opacity 0.3s',
+              }}>
+                <CarPhysicsDebugPanel />
               </div>
             </div>
 

@@ -1,7 +1,7 @@
 import threading
 import time
 import logging
-from typing import Any, Callable, Dict, Iterable, Mapping, Optional
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional
 
 from .opponent_models import OpponentCarState, OpponentsUpdateResult, safe_bool, safe_float, safe_int, safe_str
 
@@ -14,12 +14,15 @@ class OpponentsStateBuffer:
         self,
         stale_after_seconds: float = 5.0,
         session_reset_threshold_seconds: float = 5.0,
+        max_history_per_car: int = 1200,
         time_provider: Callable[[], float] = time.time,
     ):
         self.stale_after_seconds = float(stale_after_seconds)
         self.session_reset_threshold_seconds = float(session_reset_threshold_seconds)
+        self.max_history_per_car = int(max(1, max_history_per_car))
         self._time = time_provider
         self._cars: Dict[int, OpponentCarState] = {}
+        self._history: Dict[int, List[OpponentCarState]] = {}
         self._track: Optional[str] = None
         self._session_time: Optional[float] = None
         self._last_update_timestamp: Optional[float] = None
@@ -29,6 +32,11 @@ class OpponentsStateBuffer:
         with self._lock:
             self._prune_stale_locked(self._time())
             return dict(self._cars)
+
+    def history(self) -> Dict[int, List[OpponentCarState]]:
+        with self._lock:
+            self._prune_stale_locked(self._time())
+            return {car_id: list(samples) for car_id, samples in self._history.items() if car_id in self._cars}
 
     def metadata(self) -> Dict[str, Any]:
         with self._lock:
@@ -74,7 +82,7 @@ class OpponentsStateBuffer:
                     continue
 
                 is_player = safe_bool(car_payload.get("isPlayer")) is True
-                if is_player or (resolved_player_car_id is not None and car_id == resolved_player_car_id):
+                if car_id == 0 or is_player or (resolved_player_car_id is not None and car_id == resolved_player_car_id):
                     ignored_player_count += 1
                     continue
 
@@ -91,6 +99,10 @@ class OpponentsStateBuffer:
                     continue
 
                 self._cars[state.carId] = state
+                car_history = self._history.setdefault(state.carId, [])
+                car_history.append(state)
+                if len(car_history) > self.max_history_per_car:
+                    self._history[state.carId] = car_history[-self.max_history_per_car :]
                 accepted.append(state)
 
             if resolved_track is not None:
@@ -114,6 +126,7 @@ class OpponentsStateBuffer:
     def clear(self):
         with self._lock:
             self._cars = {}
+            self._history = {}
             self._track = None
             self._session_time = None
             self._last_update_timestamp = None
@@ -122,6 +135,7 @@ class OpponentsStateBuffer:
         if track and self._track and track != self._track:
             previous_track = self._track
             self._cars = {}
+            self._history = {}
             self._session_time = None
             self._last_update_timestamp = None
             logger.info("Opponents telemetry buffer cleared: track changed from %s to %s", previous_track, track)
@@ -134,6 +148,7 @@ class OpponentsStateBuffer:
         ):
             previous_session_time = self._session_time
             self._cars = {}
+            self._history = {}
             self._last_update_timestamp = None
             logger.info(
                 "Opponents telemetry buffer cleared: sessionTime reset from %.3f to %.3f",
@@ -154,5 +169,6 @@ class OpponentsStateBuffer:
         ]
         for car_id in stale_ids:
             del self._cars[car_id]
+            self._history.pop(car_id, None)
         if stale_ids:
             logger.info("Opponents telemetry stale cars removed: %s", stale_ids)

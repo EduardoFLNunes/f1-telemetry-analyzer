@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, List
+from ..car_physics import build_player_car_physics
 from ..telemetry.telemetry_models import TelemetrySample, TrackPoint
 from ..projection.spatial_projection import ProjectionEngine
 from ..cache.cache_serializer import CacheSerializer
@@ -82,6 +83,7 @@ class RuntimeState:
                 "dz": map_position["y"] - projected["y"],
                 "alignment_drift": drift,
                 "accel_g": {"x": sample.accelX, "y": sample.accelY, "z": sample.accelZ},
+                "carPhysics": build_player_car_physics(sample),
                 "delta": 0.0,
                 "timestamp": sample.timestamp_ms,
                 "projectionDebug": proj["debug"],
@@ -111,6 +113,7 @@ class RuntimeState:
                 "L": None,
                 "alignment_drift": None,
                 "accel_g": {"x": sample.accelX, "y": sample.accelY, "z": sample.accelZ},
+                "carPhysics": build_player_car_physics(sample),
                 "delta": 0.0,
                 "timestamp": sample.timestamp_ms,
             }

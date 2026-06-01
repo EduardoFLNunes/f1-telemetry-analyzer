@@ -1,10 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTelemetryStore } from '../../store/useTelemetryStore';
+import { api } from '../../api/client';
 import { drawCar, drawOpponentCar } from './CarRenderer.jsx';
 import { applyCameraTransform, computeTrackBounds } from './CameraController.jsx';
 import { drawHud, drawTrackSurface } from './OverlayRenderer.jsx';
+import {
+  drawPreparedRacingLineOverlay,
+  drawRacingLineLegend,
+  prepareRacingLineOverlay,
+  racingLineModeLabel,
+  RACING_LINE_OVERLAY_MODES,
+} from './RacingLineOverlay.jsx';
 
 const MAP_RENDER_FRAME_MS = 1000 / 20;
+const RACING_LINE_POLL_MS = 6000;
 
 function normalizeTrack(trackData) {
   if (!trackData) return null;
@@ -240,7 +249,12 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const lastCanvasRenderRef = useRef(0);
   const opponentMotionRef = useRef(new Map());
   const screenOpponentsRef = useRef([]);
+  const racingLineOverlayRef = useRef(null);
   const [cameraMode, setCameraMode] = useState('OVERVIEW');
+  const [showRacingLine, setShowRacingLine] = useState(true);
+  const [racingLineMode, setRacingLineMode] = useState('LINE_ONLY');
+  const showRacingLineRef = useRef(true);
+  const racingLineModeRef = useRef('LINE_ONLY');
   const [hoveredOpponent, setHoveredOpponent] = useState(null);
   const [selectedOpponent, setSelectedOpponent] = useState(null);
   const hoveredOpponentRef = useRef(null);
@@ -258,6 +272,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     lastTraceRenderMs: 0,
     lastTelemetryDropped: 0,
     lastOpponentsDropped: 0,
+    lastRacingLineOverlayMs: 0,
+    lastHttpRequests: 0,
+    lastHttpDurationMs: 0,
   });
   const [opponentsPanelOpen, setOpponentsPanelOpen] = useState(true);
   const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
@@ -284,6 +301,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     avgTraceRenderMs: 0,
     telemetryDroppedHz: 0,
     opponentsDroppedHz: 0,
+    racingLineOverlayMs: 0,
+    httpHz: 0,
+    httpAvgMs: 0,
     currentLapSamples: 0,
     previousLapSamples: 0,
   });
@@ -317,6 +337,51 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   useEffect(() => {
     cameraRef.current.mode = cameraMode;
   }, [cameraMode]);
+
+  useEffect(() => {
+    showRacingLineRef.current = showRacingLine;
+  }, [showRacingLine]);
+
+  useEffect(() => {
+    racingLineModeRef.current = racingLineMode;
+  }, [racingLineMode]);
+
+  useEffect(() => {
+    if (!showRacingLine) {
+      racingLineOverlayRef.current = null;
+      return undefined;
+    }
+
+    let cancelled = false;
+    const loadRacingLine = async () => {
+      try {
+        const needsComparison = racingLineModeRef.current === 'DIAGNOSTIC';
+        const payload = await api.getRacingLine(50, {
+          includeVisualLine: true,
+          includeComparison: needsComparison,
+        });
+        if (!cancelled) {
+          racingLineOverlayRef.current = prepareRacingLineOverlay(payload);
+        }
+      } catch {
+        if (!cancelled) {
+          racingLineOverlayRef.current = prepareRacingLineOverlay({
+            status: 'INSUFFICIENT_DATA',
+            racingLine: null,
+            comparison: null,
+            debug: { reason: 'endpoint_unavailable' },
+          });
+        }
+      }
+    };
+
+    loadRacingLine();
+    const interval = setInterval(loadRacingLine, RACING_LINE_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [showRacingLine, racingLineMode]);
 
   useEffect(() => {
     hoveredOpponentRef.current = hoveredOpponent;
@@ -404,6 +469,18 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       if (normalizedTrack) {
         drawTrackSurface(ctx, normalizedTrack, renderBounds, scale);
       }
+      if (showRacingLineRef.current && racingLineOverlayRef.current) {
+        const overlayCost = drawPreparedRacingLineOverlay(
+          ctx,
+          racingLineOverlayRef.current,
+          liveFrame,
+          scale,
+          racingLineModeRef.current,
+        );
+        perfRef.current.lastRacingLineOverlayMs = overlayCost;
+        window.__telemetryPerf = window.__telemetryPerf || {};
+        window.__telemetryPerf.racingLineOverlayMs = overlayCost;
+      }
 
       const screenOpponents = renderOpponents
         .map((opponent) => ({
@@ -428,6 +505,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
 
       ctx.restore();
       drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current);
+      if (showRacingLineRef.current && racingLineOverlayRef.current) {
+        drawRacingLineLegend(ctx, rect.width, rect.height, racingLineOverlayRef.current, racingLineModeRef.current);
+      }
 
       const renderDuration = performance.now() - renderStart;
       const perf = perfRef.current;
@@ -446,9 +526,13 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         const traceRenderMs = Number(wsMetrics.traceRenderMs || 0);
         const telemetryDropped = Number(wsMetrics.telemetryFramesDroppedForRender || 0);
         const opponentsDropped = Number(wsMetrics.opponentsFramesDroppedForRender || 0);
+        const httpRequests = Number(wsMetrics.httpRequests || 0);
+        const httpDurationMs = Number(wsMetrics.httpDurationMs || 0);
         const storeState = useTelemetryStore.getState();
         const traceFramesDelta = traceFrames - perf.lastTraceFrames;
         const traceRenderDelta = traceRenderMs - perf.lastTraceRenderMs;
+        const httpRequestsDelta = httpRequests - perf.lastHttpRequests;
+        const httpDurationDelta = httpDurationMs - perf.lastHttpDurationMs;
         setPerfStats({
           fps: perf.frames / seconds,
           avgRenderMs: perf.renderMs / Math.max(perf.frames, 1),
@@ -462,6 +546,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           avgTraceRenderMs: traceRenderDelta / Math.max(traceFramesDelta, 1),
           telemetryDroppedHz: (telemetryDropped - perf.lastTelemetryDropped) / seconds,
           opponentsDroppedHz: (opponentsDropped - perf.lastOpponentsDropped) / seconds,
+          racingLineOverlayMs: perf.lastRacingLineOverlayMs || 0,
+          httpHz: httpRequestsDelta / seconds,
+          httpAvgMs: httpDurationDelta / Math.max(httpRequestsDelta, 1),
           currentLapSamples: storeState.currentLapSamples?.length || 0,
           previousLapSamples: storeState.previousLapSamples?.length || 0,
         });
@@ -477,6 +564,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         perf.lastTraceRenderMs = traceRenderMs;
         perf.lastTelemetryDropped = telemetryDropped;
         perf.lastOpponentsDropped = opponentsDropped;
+        perf.lastRacingLineOverlayMs = 0;
+        perf.lastHttpRequests = httpRequests;
+        perf.lastHttpDurationMs = httpDurationMs;
       }
       animationRef.current = requestAnimationFrame(render);
     };
@@ -596,6 +686,45 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         <div className="panel px-1.5 py-1">
           <button
             type="button"
+            onClick={() => setShowRacingLine((visible) => !visible)}
+            className={`num text-[7px] uppercase rounded-sm transition-all ${
+              showRacingLine ? 'text-cyan-300' : 'text-slate-600 hover:text-slate-400'
+            }`}
+            style={{
+              background: showRacingLine ? 'rgba(34,211,238,0.08)' : 'transparent',
+              border: showRacingLine ? '1px solid rgba(34,211,238,0.22)' : '1px solid transparent',
+              padding: '2px 6px',
+              cursor: 'pointer',
+            }}
+          >
+            RACING LINE
+          </button>
+        </div>
+        {showRacingLine && (
+          <div className="panel px-1.5 py-1 grid grid-cols-4 gap-1">
+            {RACING_LINE_OVERLAY_MODES.map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setRacingLineMode(mode)}
+                className={`num text-[7px] uppercase rounded-sm transition-all ${
+                  racingLineMode === mode ? 'text-cyan-300' : 'text-slate-600 hover:text-slate-400'
+                }`}
+                style={{
+                  background: racingLineMode === mode ? 'rgba(34,211,238,0.08)' : 'transparent',
+                  border: racingLineMode === mode ? '1px solid rgba(34,211,238,0.22)' : '1px solid transparent',
+                  padding: '2px 4px',
+                  cursor: 'pointer',
+                }}
+              >
+                {racingLineModeLabel(mode)}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="panel px-1.5 py-1">
+          <button
+            type="button"
             onClick={() => setShowPerf((visible) => !visible)}
             className="num text-[7px] uppercase rounded-sm transition-all text-slate-500 hover:text-cyan-300"
             style={{ background: 'transparent', border: 0, padding: '1px 4px', cursor: 'pointer' }}
@@ -629,6 +758,12 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
               <span className="label" style={{ fontSize: 6 }}>Dropped P/O</span>
               <span className="num text-[8px] text-slate-300 text-right">
                 {perfStats.telemetryDroppedHz.toFixed(0)}/{perfStats.opponentsDroppedHz.toFixed(0)}hz
+              </span>
+              <span className="label" style={{ fontSize: 6 }}>Line</span>
+              <span className="num text-[8px] text-slate-300 text-right">{perfStats.racingLineOverlayMs.toFixed(2)}ms</span>
+              <span className="label" style={{ fontSize: 6 }}>HTTP</span>
+              <span className="num text-[8px] text-slate-300 text-right">
+                {perfStats.httpHz.toFixed(1)}hz {perfStats.httpAvgMs.toFixed(0)}ms
               </span>
               <span className="label" style={{ fontSize: 6 }}>Lap Samples</span>
               <span className="num text-[8px] text-slate-300 text-right">
