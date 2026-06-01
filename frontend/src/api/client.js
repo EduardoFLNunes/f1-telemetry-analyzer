@@ -7,6 +7,48 @@ const client = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+function perfTarget() {
+  if (typeof window === 'undefined') return null
+  window.__telemetryPerf = window.__telemetryPerf || {}
+  return window.__telemetryPerf
+}
+
+function nowMs() {
+  return typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
+}
+
+function recordHttpPerf(config, status = 'success') {
+  const metrics = perfTarget()
+  if (!metrics || !config?.metadata?.startedAt) return
+  const duration = nowMs() - config.metadata.startedAt
+  metrics.httpRequests = (metrics.httpRequests || 0) + 1
+  metrics.httpDurationMs = (metrics.httpDurationMs || 0) + duration
+  metrics.httpErrors = (metrics.httpErrors || 0) + (status === 'error' ? 1 : 0)
+  metrics.httpEndpoints = metrics.httpEndpoints || {}
+  const key = config.url || 'unknown'
+  const endpoint = metrics.httpEndpoints[key] || { count: 0, durationMs: 0, errors: 0 }
+  endpoint.count += 1
+  endpoint.durationMs += duration
+  endpoint.errors += status === 'error' ? 1 : 0
+  metrics.httpEndpoints[key] = endpoint
+}
+
+client.interceptors.request.use((config) => {
+  config.metadata = { ...(config.metadata || {}), startedAt: nowMs() }
+  return config
+})
+
+client.interceptors.response.use(
+  (response) => {
+    recordHttpPerf(response.config)
+    return response
+  },
+  (error) => {
+    recordHttpPerf(error.config, 'error')
+    return Promise.reject(error)
+  },
+)
+
 export const api = {
   // ─── Track / Telemetry ───────────────────────────────────────────────────
   uploadTrack: async (file) => {
@@ -32,7 +74,25 @@ export const api = {
   getTrackGeometry: async () => (await client.get('/api/track/geometry')).data,
   getTrackCache:   async () => (await client.get('/api/track/cache')).data,
   getCarState:     async () => (await client.get('/api/car/state')).data,
-  getLiveTelemetry:async () => (await client.get('/api/live/telemetry')).data,
+  getLiveTelemetry: async (options = {}) => (
+    await client.get('/api/live/telemetry', {
+      params: {
+        includeTrack: options.includeTrack,
+        includeTrajectory: options.includeTrajectory,
+      },
+    })
+  ).data,
+  getLiveComparison: async (microSectors = 50) => (await client.get('/api/live/comparison', { params: { microSectors } })).data,
+  getRacingLine: async (microSectors = 50, options = {}) => (
+    await client.get('/api/live/racing-line', {
+      params: {
+        microSectors,
+        includeVisualLine: options.includeVisualLine,
+        includeComparison: options.includeComparison,
+      },
+    })
+  ).data,
+  getPlayerPhysics: async () => (await client.get('/api/live/player-physics')).data,
   getTelemetryData:async () => (await client.get('/api/data/telemetry')).data,
   getAiRaceline:   async () => (await client.get('/api/data/ai-raceline')).data,
   getComparison:   async () => (await client.get('/api/data/comparison')).data,

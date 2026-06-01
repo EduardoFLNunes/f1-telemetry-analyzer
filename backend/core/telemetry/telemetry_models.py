@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -33,10 +33,71 @@ class TelemetrySample:
     accelX: float = 0.0
     accelY: float = 0.0
     accelZ: float = 0.0
+    velocityX: Optional[float] = None
+    velocityY: Optional[float] = None
+    velocityZ: Optional[float] = None
+    clutch: Optional[float] = None
+    fuel: Optional[float] = None
+    maxFuel: Optional[float] = None
+    ballast: Optional[float] = None
+    abs: Optional[float] = None
+    tc: Optional[float] = None
+    drs: Optional[bool] = None
+    turboBoost: Optional[float] = None
+    airTemp: Optional[float] = None
+    roadTemp: Optional[float] = None
+    surfaceGrip: Optional[float] = None
+    airDensity: Optional[float] = None
+    tyreCoreTemperature: List[Optional[float]] = field(default_factory=list)
+    tyrePressure: List[Optional[float]] = field(default_factory=list)
+    tyreWear: List[Optional[float]] = field(default_factory=list)
+    tyreDirtyLevel: List[Optional[float]] = field(default_factory=list)
+    wheelSlip: List[Optional[float]] = field(default_factory=list)
+    wheelLoad: List[Optional[float]] = field(default_factory=list)
+    suspensionTravel: List[Optional[float]] = field(default_factory=list)
+    rideHeight: List[Optional[float]] = field(default_factory=list)
+    camberRad: List[Optional[float]] = field(default_factory=list)
+    carDamage: List[Optional[float]] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "TelemetrySample":
         world = data.get("worldPosition") or data.get("world_position")
+
+        def nullable_float(value: Any) -> Optional[float]:
+            if value is None:
+                return None
+            try:
+                number = float(value)
+            except (TypeError, ValueError):
+                return None
+            return number if number == number and number not in (float("inf"), float("-inf")) else None
+
+        def nullable_bool(value: Any) -> Optional[bool]:
+            if value is None:
+                return None
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, (int, float)):
+                return bool(value)
+            if isinstance(value, str):
+                normalized = value.strip().lower()
+                if normalized in {"1", "true", "yes", "on"}:
+                    return True
+                if normalized in {"0", "false", "no", "off"}:
+                    return False
+            return None
+
+        def nullable_float_list(value: Any) -> List[Optional[float]]:
+            if value is None:
+                return []
+            if not isinstance(value, (list, tuple)):
+                return []
+            return [nullable_float(item) for item in value]
+
+        velocity = data.get("velocity") or {}
+        if not isinstance(velocity, dict):
+            velocity = {}
+
         return cls(
             timestamp=data.get("timestamp", datetime.utcnow().isoformat()),
             worldPositionX=float(data.get("worldPositionX", data.get("x", world[0] if world else 0.0))),
@@ -57,6 +118,31 @@ class TelemetrySample:
             accelX=float(data.get("accelX", data.get("accel_x", 0.0))),
             accelY=float(data.get("accelY", data.get("accel_y", 0.0))),
             accelZ=float(data.get("accelZ", data.get("accel_z", 0.0))),
+            velocityX=nullable_float(data.get("velocityX", data.get("velocity_x", velocity.get("x")))),
+            velocityY=nullable_float(data.get("velocityY", data.get("velocity_y", velocity.get("y")))),
+            velocityZ=nullable_float(data.get("velocityZ", data.get("velocity_z", velocity.get("z")))),
+            clutch=nullable_float(data.get("clutch")),
+            fuel=nullable_float(data.get("fuel")),
+            maxFuel=nullable_float(data.get("maxFuel", data.get("max_fuel"))),
+            ballast=nullable_float(data.get("ballast")),
+            abs=nullable_float(data.get("abs")),
+            tc=nullable_float(data.get("tc")),
+            drs=nullable_bool(data.get("drs")),
+            turboBoost=nullable_float(data.get("turboBoost", data.get("turbo_boost"))),
+            airTemp=nullable_float(data.get("airTemp", data.get("air_temp"))),
+            roadTemp=nullable_float(data.get("roadTemp", data.get("road_temp"))),
+            surfaceGrip=nullable_float(data.get("surfaceGrip", data.get("surface_grip"))),
+            airDensity=nullable_float(data.get("airDensity", data.get("air_density"))),
+            tyreCoreTemperature=nullable_float_list(data.get("tyreCoreTemperature", data.get("tyre_core_temperature"))),
+            tyrePressure=nullable_float_list(data.get("tyrePressure", data.get("wheelsPressure", data.get("wheels_pressure")))),
+            tyreWear=nullable_float_list(data.get("tyreWear", data.get("tyre_wear"))),
+            tyreDirtyLevel=nullable_float_list(data.get("tyreDirtyLevel", data.get("tyre_dirty_level"))),
+            wheelSlip=nullable_float_list(data.get("wheelSlip", data.get("wheel_slip"))),
+            wheelLoad=nullable_float_list(data.get("wheelLoad", data.get("wheel_load"))),
+            suspensionTravel=nullable_float_list(data.get("suspensionTravel", data.get("suspension_travel"))),
+            rideHeight=nullable_float_list(data.get("rideHeight", data.get("ride_height"))),
+            camberRad=nullable_float_list(data.get("camberRad", data.get("camberRAD", data.get("camber_rad")))),
+            carDamage=nullable_float_list(data.get("carDamage", data.get("car_damage"))),
         )
 
     @property
