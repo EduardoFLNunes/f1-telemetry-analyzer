@@ -17,20 +17,39 @@ function nowMs() {
   return typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
 }
 
-function recordHttpPerf(config, status = 'success') {
+function payloadKbFromResponse(response) {
+  const headerValue = response?.headers?.['content-length']
+  const headerNumber = Number(headerValue)
+  if (Number.isFinite(headerNumber) && headerNumber >= 0) {
+    return headerNumber / 1024
+  }
+  try {
+    return JSON.stringify(response?.data ?? '').length / 1024
+  } catch {
+    return 0
+  }
+}
+
+function recordHttpPerf(config, status = 'success', response = null) {
   const metrics = perfTarget()
   if (!metrics || !config?.metadata?.startedAt) return
   const duration = nowMs() - config.metadata.startedAt
+  const payloadKb = response ? payloadKbFromResponse(response) : 0
   metrics.httpRequests = (metrics.httpRequests || 0) + 1
   metrics.httpDurationMs = (metrics.httpDurationMs || 0) + duration
+  metrics.httpPayloadKb = (metrics.httpPayloadKb || 0) + payloadKb
   metrics.httpErrors = (metrics.httpErrors || 0) + (status === 'error' ? 1 : 0)
   metrics.httpEndpoints = metrics.httpEndpoints || {}
   const key = config.url || 'unknown'
-  const endpoint = metrics.httpEndpoints[key] || { count: 0, durationMs: 0, errors: 0 }
+  const endpoint = metrics.httpEndpoints[key] || { count: 0, durationMs: 0, errors: 0, payloadKb: 0, lastPayloadKb: 0 }
   endpoint.count += 1
   endpoint.durationMs += duration
+  endpoint.payloadKb += payloadKb
+  endpoint.lastPayloadKb = payloadKb
   endpoint.errors += status === 'error' ? 1 : 0
   metrics.httpEndpoints[key] = endpoint
+  if (key.includes('/api/live/telemetry')) metrics.telemetryPayloadKb = payloadKb
+  if (key.includes('/api/live/racing-line')) metrics.racingLinePayloadKb = payloadKb
 }
 
 client.interceptors.request.use((config) => {
@@ -40,7 +59,7 @@ client.interceptors.request.use((config) => {
 
 client.interceptors.response.use(
   (response) => {
-    recordHttpPerf(response.config)
+    recordHttpPerf(response.config, 'success', response)
     return response
   },
   (error) => {

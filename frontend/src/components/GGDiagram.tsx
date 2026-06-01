@@ -3,14 +3,32 @@
  * Phase 6: Physically-accurate G-force envelope display.
  */
 import React, { useRef, useEffect } from 'react';
-import { useTelemetryStore } from '../store/useTelemetryStore';
+import { PerformanceMode, useTelemetryStore } from '../store/useTelemetryStore';
+import { useRenderCounter } from '../hooks/useRenderCounter';
 
 const G_RANGE = 4;
-const TRAIL_LEN = 80;
+const TRAIL_LEN: Record<PerformanceMode, number> = {
+  QUALITY: 120,
+  BALANCED: 80,
+  PERFORMANCE: 40,
+};
+const GG_RENDER_MS: Record<PerformanceMode, number> = {
+  QUALITY: 1000 / 20,
+  BALANCED: 1000 / 10,
+  PERFORMANCE: 1000 / 5,
+};
 
 export const GGDiagram: React.FC = () => {
+  useRenderCounter('GGDiagram');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef   = useRef<number>();
+  const lastRenderRef = useRef(0);
+  const performanceMode = useTelemetryStore((state) => state.performanceMode);
+  const performanceModeRef = useRef<PerformanceMode>('BALANCED');
+
+  useEffect(() => {
+    performanceModeRef.current = performanceMode;
+  }, [performanceMode]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -18,8 +36,18 @@ export const GGDiagram: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const loop = () => {
-      const { latestFrame, history } = useTelemetryStore.getState();
+    const loop = (frameTime: number = performance.now()) => {
+      const mode = performanceModeRef.current;
+      const renderMs = GG_RENDER_MS[mode] ?? GG_RENDER_MS.BALANCED;
+      const simple = mode === 'PERFORMANCE';
+      if (frameTime - lastRenderRef.current < renderMs) {
+        animRef.current = requestAnimationFrame(loop);
+        return;
+      }
+      lastRenderRef.current = frameTime;
+
+      const { latestFrame: storeFrame, history } = useTelemetryStore.getState();
+      const latestFrame = (window as any).__latestFrame || storeFrame;
 
       const dpr  = window.devicePixelRatio || 1;
       const size = canvas.offsetWidth;
@@ -47,7 +75,7 @@ export const GGDiagram: React.FC = () => {
         ctx.strokeStyle = g === 4 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)';
         ctx.lineWidth = g === 4 ? 1 : 0.6;
         ctx.stroke();
-        if (g < 4) {
+        if (!simple && g < 4) {
           ctx.fillStyle = 'rgba(255,255,255,0.2)';
           ctx.font = `500 5.5px "JetBrains Mono"`;
           ctx.textAlign = 'left';
@@ -63,16 +91,17 @@ export const GGDiagram: React.FC = () => {
       ctx.beginPath(); ctx.moveTo(cx, cy - R); ctx.lineTo(cx, cy + R); ctx.stroke();
       ctx.setLineDash([]);
 
-      // Axis labels
-      ctx.fillStyle = 'rgba(255,255,255,0.2)';
-      ctx.font = `500 5px "JetBrains Mono"`;
-      ctx.textAlign = 'center';
-      ctx.fillText('LAT', cx, cy + R + 8);
-      ctx.save(); ctx.translate(cx - R - 7, cy); ctx.rotate(-Math.PI/2);
-      ctx.fillText('LON', 0, 0); ctx.restore();
+      if (!simple) {
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.font = `500 5px "JetBrains Mono"`;
+        ctx.textAlign = 'center';
+        ctx.fillText('LAT', cx, cy + R + 8);
+        ctx.save(); ctx.translate(cx - R - 7, cy); ctx.rotate(-Math.PI/2);
+        ctx.fillText('LON', 0, 0); ctx.restore();
+      }
 
       // Trail
-      const trail = history.slice(-TRAIL_LEN);
+      const trail = history.slice(-(TRAIL_LEN[mode] ?? TRAIL_LEN.BALANCED));
       if (trail.length > 1) {
         for (let i = 1; i < trail.length; i++) {
           const f = trail[i];
@@ -102,14 +131,15 @@ export const GGDiagram: React.FC = () => {
         ctx.lineWidth = 0.8;
         ctx.stroke();
 
-        // Outer glow
-        ctx.beginPath();
-        ctx.arc(px, py, 5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(34,211,238,${0.1 + intensity * 0.1})`;
-        ctx.fill();
+        if (!simple) {
+          ctx.beginPath();
+          ctx.arc(px, py, 5, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(34,211,238,${0.1 + intensity * 0.1})`;
+          ctx.fill();
+        }
 
         // Core dot
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = simple ? 0 : 8;
         ctx.shadowColor = '#22d3ee';
         ctx.beginPath();
         ctx.arc(px, py, 2.5, 0, Math.PI * 2);
@@ -117,12 +147,17 @@ export const GGDiagram: React.FC = () => {
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // G readout
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.font = `bold 6px "JetBrains Mono"`;
-        ctx.textAlign = 'center';
-        ctx.fillText(`${totalG.toFixed(2)}G`, cx, S - 4);
+        if (!simple) {
+          ctx.fillStyle = 'rgba(255,255,255,0.6)';
+          ctx.font = `bold 6px "JetBrains Mono"`;
+          ctx.textAlign = 'center';
+          ctx.fillText(`${totalG.toFixed(2)}G`, cx, S - 4);
+        }
       }
+
+      const perf = (window as any).__telemetryPerf || {};
+      (window as any).__telemetryPerf = perf;
+      perf.ggFrames = (perf.ggFrames || 0) + 1;
 
       animRef.current = requestAnimationFrame(loop);
     };
