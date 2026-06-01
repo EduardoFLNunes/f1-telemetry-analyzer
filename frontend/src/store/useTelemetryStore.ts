@@ -3,6 +3,7 @@
  * Manages live frames, ring buffers, and intelligence events.
  */
 import { create } from 'zustand';
+import { CarPhysicsTelemetry } from '../types/carPhysics';
 
 export interface TelemetryFrame {
   driver_id: string;
@@ -61,6 +62,7 @@ export interface TelemetryFrame {
   tire_slip?: number;
   yaw_rate?: number;
   drs?: boolean;
+  carPhysics?: CarPhysicsTelemetry;
 }
 
 export interface OpponentWorldPosition {
@@ -193,6 +195,7 @@ interface TelemetryState {
   lapMetrics: LapMetrics;
   lapDebug: LapDebugState;
   opponents: OpponentCarState[];
+  opponentHistoryByCarId: Record<number, OpponentCarState[]>;
   opponentsMeta: {
     source: string;
     count: number;
@@ -232,6 +235,7 @@ interface TelemetryState {
 export const MAX_HISTORY = 7200; 
 const MAX_LAP_SAMPLES = 5000;
 const MAX_COMPLETED_LAPS = 10;
+const MAX_OPPONENT_HISTORY_SAMPLES = 1200;
 const MIN_VALID_LAP_SAMPLES = 40;
 const MIN_VALID_LAP_DURATION = 20;
 const MAX_VALID_LAP_DURATION = 900;
@@ -598,6 +602,7 @@ const calculateLapMetrics = (
 const normalizeOpponent = (raw: any): OpponentCarState | null => {
   const carId = Number(raw?.carId);
   if (!Number.isFinite(carId)) return null;
+  if (carId === 0) return null;
   if (raw?.isPlayer === true) return null;
 
   const world = raw?.worldPosition && typeof raw.worldPosition === 'object'
@@ -651,6 +656,7 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
   lapMetrics: EMPTY_LAP_METRICS,
   lapDebug: EMPTY_LAP_DEBUG,
   opponents: [],
+  opponentHistoryByCarId: {},
   opponentsMeta: {
     source: 'opponents_collector',
     count: 0,
@@ -843,16 +849,22 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
     };
   }),
 
-  setOpponentsSnapshot: (snapshot) => set(() => {
+  setOpponentsSnapshot: (snapshot) => set((state) => {
     const rawOpponents = Array.isArray(snapshot.opponents)
       ? snapshot.opponents
       : (Array.isArray(snapshot.cars) ? snapshot.cars : []);
     const opponents = rawOpponents
       .map(normalizeOpponent)
       .filter((car): car is OpponentCarState => Boolean(car));
+    const opponentHistoryByCarId = { ...state.opponentHistoryByCarId };
+    opponents.forEach((opponent) => {
+      const history = opponentHistoryByCarId[opponent.carId] || [];
+      opponentHistoryByCarId[opponent.carId] = [...history, opponent].slice(-MAX_OPPONENT_HISTORY_SAMPLES);
+    });
 
     return {
       opponents,
+      opponentHistoryByCarId,
       opponentsMeta: {
         source: snapshot.source || 'opponents_collector',
         count: Number.isFinite(snapshot.count) ? Number(snapshot.count) : opponents.length,
@@ -867,6 +879,7 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
 
   clearOpponents: () => set((state) => ({
     opponents: [],
+    opponentHistoryByCarId: {},
     opponentsMeta: {
       ...state.opponentsMeta,
       count: 0,
@@ -907,6 +920,7 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
     lapMetrics: EMPTY_LAP_METRICS,
     lapDebug: EMPTY_LAP_DEBUG,
     opponents: [],
+    opponentHistoryByCarId: {},
     opponentsMeta: {
       source: 'opponents_collector',
       count: 0,

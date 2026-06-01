@@ -48,6 +48,22 @@ class OpponentsTelemetryTests(unittest.TestCase):
         self.assertNotIn(0, latest)
         self.assertIn(1, latest)
 
+    def test_car_id_zero_is_ignored_even_without_player_flag(self):
+        buffer = OpponentsStateBuffer()
+        result = buffer.update_snapshot(
+            [
+                {"carId": 0, "driverName": "Player exported as opponent", "speedKmh": 200.0},
+                {"carId": 6, "driverName": "AI 6", "isPlayer": False},
+            ],
+            timestamp=123456.789,
+        )
+
+        latest = buffer.latest()
+        self.assertEqual(result.accepted_count, 1)
+        self.assertEqual(result.ignored_player_count, 1)
+        self.assertNotIn(0, latest)
+        self.assertIn(6, latest)
+
     def test_payload_with_missing_fields_does_not_break(self):
         buffer = OpponentsStateBuffer()
         result = buffer.update_snapshot(
