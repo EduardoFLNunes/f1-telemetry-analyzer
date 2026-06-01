@@ -1,4 +1,4 @@
-export function drawCar(ctx, frame, scale, color = '#22d3ee') {
+export function drawCar(ctx, frame, scale, color = '#22d3ee', options = {}) {
   const position = frame?.mapPosition;
   if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return;
 
@@ -9,7 +9,7 @@ export function drawCar(ctx, frame, scale, color = '#22d3ee') {
   ctx.save();
   ctx.translate(position.x, position.y);
   ctx.rotate(heading - Math.PI / 2);
-  ctx.shadowBlur = 14 / scale;
+  ctx.shadowBlur = options.noGlow ? 0 : 14 / scale;
   ctx.shadowColor = color;
 
   ctx.beginPath();
@@ -79,7 +79,7 @@ export function drawOpponentCar(ctx, opponent, scale, index = 0, options = {}) {
   ctx.save();
   if (isStale) ctx.globalAlpha = 0.42;
   ctx.translate(position.x, position.y);
-  ctx.shadowBlur = (options.isHovered ? 12 : 7) / scale;
+  ctx.shadowBlur = options.noGlow ? 0 : (options.isHovered ? 12 : 7) / scale;
   ctx.shadowColor = color;
 
   ctx.beginPath();

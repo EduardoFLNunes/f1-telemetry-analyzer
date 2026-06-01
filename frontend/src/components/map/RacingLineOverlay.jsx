@@ -419,12 +419,14 @@ function strokeChunks(ctx, chunks, scale, strokeStyle, lineWidth) {
   chunks.forEach((chunk) => drawPathOrPolyline(ctx, chunk));
 }
 
-function drawBaseLine(ctx, prepared, scale, alpha = 1) {
+function drawBaseLine(ctx, prepared, scale, alpha = 1, options = {}) {
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  strokeChunks(ctx, prepared.baseChunks, scale, `rgba(34,211,238,${0.14 * alpha})`, 3.2);
-  strokeChunks(ctx, prepared.baseChunks, scale, `rgba(34,211,238,${0.82 * alpha})`, 1.25);
+  if (!options.simple) {
+    strokeChunks(ctx, prepared.baseChunks, scale, `rgba(34,211,238,${0.14 * alpha})`, 3.2);
+  }
+  strokeChunks(ctx, prepared.baseChunks, scale, `rgba(34,211,238,${0.82 * alpha})`, options.simple ? 1.05 : 1.25);
   ctx.restore();
 }
 
@@ -547,13 +549,14 @@ function drawSpeedGradientLegend(ctx, x, y, width, prepared) {
   ctx.fillText('ALTA', x + width * 0.76, y + 19);
 }
 
-export function drawPreparedRacingLineOverlay(ctx, prepared, frame, scale, mode = 'LINE_ONLY') {
+export function drawPreparedRacingLineOverlay(ctx, prepared, frame, scale, mode = 'LINE_ONLY', options = {}) {
   if (!prepared || !Number.isFinite(scale) || scale <= 0) return 0;
   const ready = prepared.status === 'READY' && (prepared.baseChunks.length || prepared.rawEntries.length || prepared.entries.length);
   if (!ready) return 0;
 
   const start = performance.now();
-  const safeMode = RACING_LINE_OVERLAY_MODES.includes(mode) ? mode : 'LINE_ONLY';
+  const simple = Boolean(options.simple);
+  const safeMode = simple ? 'LINE_ONLY' : (RACING_LINE_OVERLAY_MODES.includes(mode) ? mode : 'LINE_ONLY');
   const progress = currentProgress(frame);
   const currentIndex = currentSegmentIndex(frame, prepared.microSectorCount);
 
@@ -568,16 +571,16 @@ export function drawPreparedRacingLineOverlay(ctx, prepared, frame, scale, mode 
     drawRacingLinePoints(ctx, prepared, scale, currentIndex);
     drawCurrentMarker(ctx, prepared, scale, currentIndex, progress);
   } else if (safeMode === 'SMOOTHED_LINE') {
-    drawBaseLine(ctx, prepared, scale, 0.35);
+    drawBaseLine(ctx, prepared, scale, 0.35, options);
     drawSmoothedLine(ctx, prepared, scale);
     drawRacingLinePoints(ctx, prepared, scale, currentIndex);
     drawCurrentMarker(ctx, prepared, scale, currentIndex, progress);
   } else if (safeMode === 'PLAYER_INPUT_GRADIENT') {
-    drawBaseLine(ctx, prepared, scale, 0.22);
+    drawBaseLine(ctx, prepared, scale, 0.22, options);
     drawPlayerInputGradient(ctx, prepared, scale);
     drawCurrentMarker(ctx, prepared, scale, currentIndex, progress);
   } else {
-    drawBaseLine(ctx, prepared, scale);
+    drawBaseLine(ctx, prepared, scale, 1, options);
     drawCurrentMarker(ctx, prepared, scale, currentIndex, progress);
     if (safeMode === 'DIAGNOSTIC') {
       drawDiagnosticMarkers(ctx, prepared, scale, currentIndex);

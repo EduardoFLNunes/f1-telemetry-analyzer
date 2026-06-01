@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTelemetryStore } from '../../store/useTelemetryStore';
+import { useRenderCounter } from '../../hooks/useRenderCounter';
 import { api } from '../../api/client';
 import { drawCar, drawOpponentCar } from './CarRenderer.jsx';
 import { applyCameraTransform, computeTrackBounds } from './CameraController.jsx';
@@ -12,8 +13,19 @@ import {
   RACING_LINE_OVERLAY_MODES,
 } from './RacingLineOverlay.jsx';
 
-const MAP_RENDER_FRAME_MS = 1000 / 20;
+const MAP_RENDER_FRAME_MS = 1000 / 60;
+const MAP_RENDER_FRAME_MS_BY_MODE = {
+  QUALITY: 1000 / 60,
+  BALANCED: 1000 / 60,
+  PERFORMANCE: 1000 / 60,
+};
 const RACING_LINE_POLL_MS = 6000;
+const HISTORY_WINDOW_BY_MODE = {
+  QUALITY: 1800,
+  BALANCED: 1200,
+  PERFORMANCE: 600,
+};
+const PERFORMANCE_MODES = ['QUALITY', 'BALANCED', 'PERFORMANCE'];
 
 function normalizeTrack(trackData) {
   if (!trackData) return null;
@@ -243,6 +255,9 @@ function findOpponentHit(screenOpponents, x, y) {
 }
 
 export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
+  useRenderCounter('TrackRenderer');
+  const performanceMode = useTelemetryStore((state) => state.performanceMode);
+  const setPerformanceMode = useTelemetryStore((state) => state.setPerformanceMode);
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const animationRef = useRef(null);
@@ -255,6 +270,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const [racingLineMode, setRacingLineMode] = useState('LINE_ONLY');
   const showRacingLineRef = useRef(true);
   const racingLineModeRef = useRef('LINE_ONLY');
+  const performanceModeRef = useRef('BALANCED');
   const [hoveredOpponent, setHoveredOpponent] = useState(null);
   const [selectedOpponent, setSelectedOpponent] = useState(null);
   const hoveredOpponentRef = useRef(null);
@@ -275,6 +291,8 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     lastRacingLineOverlayMs: 0,
     lastHttpRequests: 0,
     lastHttpDurationMs: 0,
+    frameDeltas: [],
+    previousFrameTime: 0,
   });
   const [opponentsPanelOpen, setOpponentsPanelOpen] = useState(true);
   const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
@@ -306,6 +324,24 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     httpAvgMs: 0,
     currentLapSamples: 0,
     previousLapSamples: 0,
+    dashboardRps: 0,
+    trackRendererRps: 0,
+    tracesRps: 0,
+    comparisonRps: 0,
+    ggDiagramRps: 0,
+    linePanelRps: 0,
+    hiddenPanelRps: 0,
+    p95FrameMs: 0,
+    graphPoints: 0,
+    traceCacheEntries: 0,
+    liveTrajectoryPoints: 0,
+    completedLapsHistory: 0,
+    racingLineVisualPoints: 0,
+    opponentSamples: 0,
+    telemetryPayloadKb: 0,
+    racingLinePayloadKb: 0,
+    memoryEstimateMb: 0,
+    performanceMode: 'BALANCED',
   });
 
   const cameraRef = useRef({
@@ -345,6 +381,13 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   useEffect(() => {
     racingLineModeRef.current = racingLineMode;
   }, [racingLineMode]);
+
+  useEffect(() => {
+    performanceModeRef.current = performanceMode;
+    if (performanceMode === 'PERFORMANCE' && racingLineModeRef.current !== 'LINE_ONLY') {
+      setRacingLineMode('LINE_ONLY');
+    }
+  }, [performanceMode]);
 
   useEffect(() => {
     if (!showRacingLine) {
@@ -428,11 +471,20 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     if (!ctx) return undefined;
 
     const render = (frameTime = performance.now()) => {
-      if (frameTime - lastCanvasRenderRef.current < MAP_RENDER_FRAME_MS) {
+      const activePerformanceMode = performanceModeRef.current || 'BALANCED';
+      const frameBudgetMs = MAP_RENDER_FRAME_MS_BY_MODE[activePerformanceMode] || MAP_RENDER_FRAME_MS;
+      const simpleVisuals = activePerformanceMode === 'PERFORMANCE';
+      if (frameTime - lastCanvasRenderRef.current < frameBudgetMs) {
         animationRef.current = requestAnimationFrame(render);
         return;
       }
       lastCanvasRenderRef.current = frameTime;
+      const perf = perfRef.current;
+      if (perf.previousFrameTime) {
+        perf.frameDeltas.push(frameTime - perf.previousFrameTime);
+        if (perf.frameDeltas.length > 180) perf.frameDeltas.shift();
+      }
+      perf.previousFrameTime = frameTime;
 
       const renderStart = performance.now();
       const rect = container.getBoundingClientRect();
@@ -448,11 +500,15 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       ctx.fillRect(0, 0, rect.width, rect.height);
 
       const {
-        latestFrame: liveFrame,
+        latestFrame: storeFrame,
         history: liveHistory,
         opponents: liveOpponents,
         opponentsMeta: liveOpponentsMeta,
       } = useTelemetryStore.getState();
+
+      const liveFrame = window.__latestFrame || storeFrame;
+      const historyWindow = HISTORY_WINDOW_BY_MODE[activePerformanceMode] || HISTORY_WINDOW_BY_MODE.BALANCED;
+
       const renderOpponents = withEstimatedHeadings(liveOpponents
         .map((opponent) => resolveOpponentRenderState(opponent, normalizedTrack))
         .filter(Boolean), opponentMotionRef.current);
@@ -460,8 +516,8 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         .map((opponent) => opponent.mapPosition)
         .filter((position) => Number.isFinite(position?.x) && Number.isFinite(position?.y));
       const renderBounds = normalizedTrack
-        ? computeTrackBounds(normalizedTrack, liveHistory.slice(-1200), liveFrame, opponentPositions)
-        : computeTrackBounds(null, liveHistory.slice(-1200), liveFrame, opponentPositions);
+        ? computeTrackBounds(normalizedTrack, liveHistory.slice(-historyWindow), liveFrame, opponentPositions)
+        : computeTrackBounds(null, liveHistory.slice(-historyWindow), liveFrame, opponentPositions);
 
       ctx.save();
       const scale = applyCameraTransform(ctx, rect.width, rect.height, renderBounds, cameraRef.current, liveFrame);
@@ -476,8 +532,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           liveFrame,
           scale,
           racingLineModeRef.current,
+          { simple: simpleVisuals },
         );
-        perfRef.current.lastRacingLineOverlayMs = overlayCost;
+        perf.lastRacingLineOverlayMs = overlayCost;
         window.__telemetryPerf = window.__telemetryPerf || {};
         window.__telemetryPerf.racingLineOverlayMs = overlayCost;
       }
@@ -489,28 +546,28 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         }))
         .filter((entry) => Number.isFinite(entry.screen?.x) && Number.isFinite(entry.screen?.y));
       screenOpponentsRef.current = screenOpponents;
-      const labelModes = buildLabelModes(screenOpponents, scale);
+      const labelModes = simpleVisuals ? new Map() : buildLabelModes(screenOpponents, scale);
 
       renderOpponents.forEach((opponent, index) => {
         const isHovered =
           hoveredOpponentRef.current?.opponent?.carId === opponent.carId ||
           selectedOpponentRef.current?.opponent?.carId === opponent.carId;
         drawOpponentCar(ctx, opponent, scale, index, {
-          labelMode: labelModes.get(opponent.carId) || 'none',
+          labelMode: simpleVisuals ? 'none' : (labelModes.get(opponent.carId) || 'none'),
           isHovered,
           isStale: isStaleOpponent(opponent, liveOpponentsMeta?.staleAfterSeconds),
+          noGlow: simpleVisuals,
         });
       });
-      if (liveFrame) drawCar(ctx, liveFrame, scale);
+      if (liveFrame) drawCar(ctx, liveFrame, scale, '#22d3ee', { noGlow: simpleVisuals });
 
       ctx.restore();
-      drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current);
-      if (showRacingLineRef.current && racingLineOverlayRef.current) {
+      drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current, { performanceMode: activePerformanceMode });
+      if (!simpleVisuals && showRacingLineRef.current && racingLineOverlayRef.current) {
         drawRacingLineLegend(ctx, rect.width, rect.height, racingLineOverlayRef.current, racingLineModeRef.current);
       }
 
       const renderDuration = performance.now() - renderStart;
-      const perf = perfRef.current;
       perf.frames += 1;
       perf.renderMs += renderDuration;
       const now = performance.now();
@@ -533,9 +590,31 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         const traceRenderDelta = traceRenderMs - perf.lastTraceRenderMs;
         const httpRequestsDelta = httpRequests - perf.lastHttpRequests;
         const httpDurationDelta = httpDurationMs - perf.lastHttpDurationMs;
+        const renderMetrics = window.__renderMetrics || {};
+        const sortedFrameDeltas = perf.frameDeltas
+          .filter((value) => Number.isFinite(value) && value > 0)
+          .slice()
+          .sort((a, b) => a - b);
+        const p95FrameMs = sortedFrameDeltas.length
+          ? sortedFrameDeltas[Math.floor(sortedFrameDeltas.length * 0.95)]
+          : 0;
+        const opponentSamples = Object.values(storeState.opponentHistoryByCarId || {})
+          .reduce((sum, samples) => sum + (Array.isArray(samples) ? samples.length : 0), 0);
+        const panelRps = [
+          renderMetrics['AIEngineerPanel']?.fps || 0,
+          renderMetrics['AIDebriefPanel']?.fps || 0,
+          renderMetrics['LiveComparisonPanel']?.fps || 0,
+          renderMetrics['RacingLineAnalysisPanel']?.fps || 0,
+          renderMetrics['CarPhysicsDebugPanel']?.fps || 0,
+        ].reduce((sum, value) => sum + value, 0);
+        const memory = performance.memory?.usedJSHeapSize
+          ? performance.memory.usedJSHeapSize / 1024 / 1024
+          : 0;
         setPerfStats({
+          performanceMode: activePerformanceMode,
           fps: perf.frames / seconds,
           avgRenderMs: perf.renderMs / Math.max(perf.frames, 1),
+          p95FrameMs,
           opponentsRendered: renderOpponents.length,
           wsHz: (wsMessages - perf.lastWsMessages) / seconds,
           telemetryHz: (telemetryMessages - perf.lastTelemetryMessages) / seconds,
@@ -551,6 +630,22 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           httpAvgMs: httpDurationDelta / Math.max(httpRequestsDelta, 1),
           currentLapSamples: storeState.currentLapSamples?.length || 0,
           previousLapSamples: storeState.previousLapSamples?.length || 0,
+          liveTrajectoryPoints: storeState.history?.length || 0,
+          completedLapsHistory: storeState.completedLapsHistory?.length || 0,
+          racingLineVisualPoints: racingLineOverlayRef.current?.debug?.rawDisplayPointCount || 0,
+          opponentSamples,
+          graphPoints: Number(wsMetrics.graphPoints || 0),
+          traceCacheEntries: Number(wsMetrics.traceCacheEntries || 0),
+          telemetryPayloadKb: Number(wsMetrics.telemetryPayloadKb || 0),
+          racingLinePayloadKb: Number(wsMetrics.racingLinePayloadKb || 0),
+          memoryEstimateMb: memory,
+          dashboardRps: renderMetrics['Dashboard']?.fps || 0,
+          trackRendererRps: renderMetrics['TrackRenderer']?.fps || 0,
+          tracesRps: renderMetrics['TelemetryTraces']?.fps || 0,
+          ggDiagramRps: renderMetrics['GGDiagram']?.fps || 0,
+          linePanelRps: renderMetrics['RacingLineAnalysisPanel']?.fps || 0,
+          comparisonRps: renderMetrics['LiveComparisonPanel']?.fps || 0,
+          hiddenPanelRps: panelRps,
         });
         perf.frames = 0;
         perf.renderMs = 0;
@@ -567,6 +662,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         perf.lastRacingLineOverlayMs = 0;
         perf.lastHttpRequests = httpRequests;
         perf.lastHttpDurationMs = httpDurationMs;
+        perf.frameDeltas = [];
       }
       animationRef.current = requestAnimationFrame(render);
     };
@@ -650,6 +746,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const tooltipWorld = tooltipOpponent?.worldPosition || {};
   const totalOpponents = panelOpponentsMeta.count || visibleOpponents.length;
   const compactOpponentsPanel = mapSize.width > 0 && mapSize.width < 260;
+  const availableRacingLineModes = performanceMode === 'PERFORMANCE'
+    ? ['LINE_ONLY']
+    : RACING_LINE_OVERLAY_MODES;
 
   return (
     <div
@@ -702,7 +801,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         </div>
         {showRacingLine && (
           <div className="panel px-1.5 py-1 grid grid-cols-4 gap-1">
-            {RACING_LINE_OVERLAY_MODES.map((mode) => (
+            {availableRacingLineModes.map((mode) => (
               <button
                 key={mode}
                 type="button"
@@ -733,10 +832,33 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           </button>
         </div>
         {showPerf && (
-          <div className="panel px-2 py-1.5 w-[156px]">
+          <div className="panel px-2 py-1.5 w-[184px]">
+            <div className="grid grid-cols-3 gap-1 mb-1.5">
+              {PERFORMANCE_MODES.map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setPerformanceMode(mode)}
+                  className="num text-[6px] uppercase rounded-sm transition-all"
+                  style={{
+                    height: 18,
+                    border: performanceMode === mode ? '1px solid rgba(34,211,238,0.34)' : '1px solid rgba(255,255,255,0.05)',
+                    background: performanceMode === mode ? 'rgba(34,211,238,0.10)' : 'rgba(255,255,255,0.02)',
+                    color: performanceMode === mode ? '#22d3ee' : '#64748b',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {mode === 'PERFORMANCE' ? 'PERF' : mode}
+                </button>
+              ))}
+            </div>
             <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+              <span className="label" style={{ fontSize: 6 }}>MODE</span>
+              <span className="num text-[8px] text-cyan-300 text-right">{perfStats.performanceMode}</span>
               <span className="label" style={{ fontSize: 6 }}>FPS</span>
               <span className="num text-[8px] text-cyan-300 text-right">{perfStats.fps.toFixed(0)}</span>
+              <span className="label" style={{ fontSize: 6 }}>P95</span>
+              <span className="num text-[8px] text-slate-300 text-right">{perfStats.p95FrameMs.toFixed(1)}ms</span>
               <span className="label" style={{ fontSize: 6 }}>Render</span>
               <span className="num text-[8px] text-slate-300 text-right">{perfStats.avgRenderMs.toFixed(1)}ms</span>
               <span className="label" style={{ fontSize: 6 }}>Opp</span>
@@ -765,10 +887,45 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
               <span className="num text-[8px] text-slate-300 text-right">
                 {perfStats.httpHz.toFixed(1)}hz {perfStats.httpAvgMs.toFixed(0)}ms
               </span>
+              <span className="label" style={{ fontSize: 6 }}>Payload T/R</span>
+              <span className="num text-[8px] text-slate-300 text-right">
+                {perfStats.telemetryPayloadKb.toFixed(1)}/{perfStats.racingLinePayloadKb.toFixed(1)}kb
+              </span>
               <span className="label" style={{ fontSize: 6 }}>Lap Samples</span>
               <span className="num text-[8px] text-slate-300 text-right">
                 {perfStats.currentLapSamples}/{perfStats.previousLapSamples}
               </span>
+              <span className="label" style={{ fontSize: 6 }}>Buffers</span>
+              <span className="num text-[8px] text-slate-300 text-right">
+                H{perfStats.liveTrajectoryPoints} L{perfStats.completedLapsHistory}
+              </span>
+              <span className="label" style={{ fontSize: 6 }}>Graph/cache</span>
+              <span className="num text-[8px] text-slate-300 text-right">
+                {perfStats.graphPoints}/{perfStats.traceCacheEntries}
+              </span>
+              <span className="label" style={{ fontSize: 6 }}>Line pts</span>
+              <span className="num text-[8px] text-slate-300 text-right">{perfStats.racingLineVisualPoints}</span>
+              <span className="label" style={{ fontSize: 6 }}>Opp samples</span>
+              <span className="num text-[8px] text-slate-300 text-right">{perfStats.opponentSamples}</span>
+              <span className="label" style={{ fontSize: 6 }}>Heap</span>
+              <span className="num text-[8px] text-slate-300 text-right">
+                {perfStats.memoryEstimateMb ? `${perfStats.memoryEstimateMb.toFixed(0)}mb` : '--'}
+              </span>
+              <div className="col-span-2 h-[1px] bg-slate-800 my-0.5" />
+              <span className="label text-orange-200" style={{ fontSize: 6 }}>DASH RENDERS</span>
+              <span className="num text-[8px] text-orange-200 text-right">{perfStats.dashboardRps.toFixed(1)}/s</span>
+              <span className="label text-orange-200" style={{ fontSize: 6 }}>MAP RENDERS</span>
+              <span className="num text-[8px] text-orange-200 text-right">{perfStats.trackRendererRps.toFixed(1)}/s</span>
+              <span className="label text-orange-200" style={{ fontSize: 6 }}>TRACE RENDERS</span>
+              <span className="num text-[8px] text-orange-200 text-right">{perfStats.tracesRps.toFixed(1)}/s</span>
+              <span className="label text-orange-200" style={{ fontSize: 6 }}>GG RENDERS</span>
+              <span className="num text-[8px] text-orange-200 text-right">{perfStats.ggDiagramRps.toFixed(1)}/s</span>
+              <span className="label text-orange-200" style={{ fontSize: 6 }}>LINE RENDERS</span>
+              <span className="num text-[8px] text-orange-200 text-right">{perfStats.linePanelRps.toFixed(1)}/s</span>
+              <span className="label text-orange-200" style={{ fontSize: 6 }}>COMP RENDERS</span>
+              <span className="num text-[8px] text-orange-200 text-right">{perfStats.comparisonRps.toFixed(1)}/s</span>
+              <span className="label text-orange-200" style={{ fontSize: 6 }}>PANEL RENDERS</span>
+              <span className="num text-[8px] text-orange-200 text-right">{perfStats.hiddenPanelRps.toFixed(1)}/s</span>
             </div>
           </div>
         )}

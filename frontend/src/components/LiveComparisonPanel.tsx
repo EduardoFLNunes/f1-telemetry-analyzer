@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { AlertTriangle, BarChart3, Gauge, Timer, Trophy } from 'lucide-react';
-import { useTelemetryStore } from '../store/useTelemetryStore';
+import { LapDebugState, OpponentCarState, TelemetryFrame, useTelemetryStore } from '../store/useTelemetryStore';
+import { useRenderCounter } from '../hooks/useRenderCounter';
 import { buildComparisonAnalysisFromStore, ComparisonSegment, LossReason } from '../utils/comparisonAnalysis';
 
 const PANEL_BG = '#0c0c16';
@@ -12,6 +13,9 @@ const ROSE = '#fb7185';
 const AMBER = '#fbbf24';
 const TEXT = '#e2e8f0';
 const MUTED = '#64748b';
+
+const EMPTY_FRAMES: TelemetryFrame[] = [];
+const EMPTY_OPPONENT_HISTORY: Record<number, OpponentCarState[]> = {};
 
 const formatSeconds = (value: number | null | undefined) => {
   if (value === null || value === undefined || !Number.isFinite(value)) return '--';
@@ -119,22 +123,33 @@ const SegmentRow = ({ segment, selectedOpponentId }: { segment: ComparisonSegmen
   );
 };
 
-export const LiveComparisonPanel: React.FC = () => {
+export const LiveComparisonPanel = React.memo(function LiveComparisonPanel({ active = true }: { active?: boolean }) {
+  useRenderCounter('LiveComparisonPanel');
   const [microSectorCount, setMicroSectorCount] = useState(50);
   const [selectedOpponentId, setSelectedOpponentId] = useState<number | null>(null);
-  const currentLapSamples = useTelemetryStore((state) => state.currentLapSamples);
-  const previousLapSamples = useTelemetryStore((state) => state.previousLapSamples);
-  const opponentHistoryByCarId = useTelemetryStore((state) => state.opponentHistoryByCarId);
-  const opponentsMeta = useTelemetryStore((state) => state.opponentsMeta);
-  const lapDebug = useTelemetryStore((state) => state.lapDebug);
+  const currentLapSamples = useTelemetryStore((state) => active ? state.currentLapSamples : EMPTY_FRAMES);
+  const previousLapSamples = useTelemetryStore((state) => active ? state.previousLapSamples : EMPTY_FRAMES);
+  const opponentHistoryByCarId = useTelemetryStore((state) => active ? state.opponentHistoryByCarId : EMPTY_OPPONENT_HISTORY);
+  const opponentsMeta = useTelemetryStore((state) => active ? state.opponentsMeta : null);
+  const lapDebug = useTelemetryStore((state): LapDebugState | null => active ? state.lapDebug : null);
 
-  const analysis = useMemo(() => buildComparisonAnalysisFromStore({
-    currentLapSamples,
-    referenceLapSamples: previousLapSamples,
-    opponentHistoryByCarId,
-    track: opponentsMeta.track,
-    microSectorCount,
-  }), [currentLapSamples, previousLapSamples, opponentHistoryByCarId, opponentsMeta.track, microSectorCount]);
+  const analysis = useMemo(() => {
+    if (!active) return {
+      segments: [],
+      sectors: [],
+      biggestLosses: [],
+      biggestGains: [],
+      opponentRanking: [],
+      debug: { playerSamples: 0, referenceSamples: 0, opponentsAnalyzed: 0, validMicroSectors: 0 }
+    };
+    return buildComparisonAnalysisFromStore({
+      currentLapSamples,
+      referenceLapSamples: previousLapSamples,
+      opponentHistoryByCarId,
+      track: opponentsMeta?.track ?? null,
+      microSectorCount,
+    });
+  }, [active, currentLapSamples, previousLapSamples, opponentHistoryByCarId, opponentsMeta?.track, microSectorCount]);
 
   const opponentIds = useMemo(() => (
     Object.keys(opponentHistoryByCarId)
@@ -151,6 +166,7 @@ export const LiveComparisonPanel: React.FC = () => {
     || (previousLapSamples.length
       ? 'Dados insuficientes para classificar perdas neste trecho.'
       : 'Aguardando volta de referencia valida do store.');
+  const hasReferenceLap = Boolean(lapDebug?.previousLapValid);
 
   return (
     <div className="panel" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: PANEL_BG, overflow: 'hidden' }}>
@@ -275,10 +291,10 @@ export const LiveComparisonPanel: React.FC = () => {
       <div style={{ borderTop: `1px solid ${BORDER}`, padding: '6px 9px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
         <div className="num" style={{ fontSize: 7, color: MUTED }}>P {analysis.debug.playerSamples} / REF {analysis.debug.referenceSamples}</div>
         <div className="num" style={{ fontSize: 7, color: MUTED, textAlign: 'right' }}>OPP {analysis.debug.opponentsAnalyzed} / VALID {analysis.debug.validMicroSectors}</div>
-        <div className="num" style={{ gridColumn: '1 / -1', fontSize: 7, color: lapDebug.previousLapValid ? EMERALD : AMBER, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {lapDebug.previousLapValid ? `Reference lap ${lapDebug.referenceLapNumber}` : 'Reference lap unavailable or incomplete'}
+        <div className="num" style={{ gridColumn: '1 / -1', fontSize: 7, color: hasReferenceLap ? EMERALD : AMBER, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {hasReferenceLap ? `Reference lap ${lapDebug?.referenceLapNumber}` : 'Reference lap unavailable or incomplete'}
         </div>
       </div>
     </div>
   );
-};
+});

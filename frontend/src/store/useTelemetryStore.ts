@@ -5,6 +5,8 @@
 import { create } from 'zustand';
 import { CarPhysicsTelemetry } from '../types/carPhysics';
 
+export type PerformanceMode = 'QUALITY' | 'BALANCED' | 'PERFORMANCE';
+
 export interface TelemetryFrame {
   driver_id: string;
   lap_number: number;
@@ -215,19 +217,21 @@ interface TelemetryState {
   globalCursorS: number | null;
   selectedLap: number | null;
   viewMode: 'live' | 'analysis' | 'replay';
-  
+  performanceMode: PerformanceMode;
+
   // Actions
   addFrame: (frame: TelemetryFrame) => void;
   setOpponentsSnapshot: (snapshot: OpponentsSnapshot) => void;
   clearOpponents: () => void;
   setGhostHistory: (history: TelemetryFrame[]) => void;
-  addCoachingEvent: (event: CoachingEvent) => void;
+  addCoachingEvent: (event: Partial<CoachingEvent> & Record<string, unknown>) => void;
   addEngineerSpeech: (speech: EngineerSpeech) => void;
   setCognitiveState: (state: CognitiveState) => void;
   setStreaming: (status: boolean) => void;
   setGlobalCursor: (s: number | null) => void;
   setSectors: (sectors: SectorData[]) => void;
   setViewMode: (mode: 'live' | 'analysis' | 'replay') => void;
+  setPerformanceMode: (mode: PerformanceMode) => void;
   clearHistory: () => void;
 }
 
@@ -642,6 +646,47 @@ const normalizeOpponent = (raw: any): OpponentCarState | null => {
   };
 };
 
+const recordOrEmpty = (value: unknown): Record<string, unknown> => (
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {}
+);
+
+const normalizeCoachingEvent = (
+  rawEvent: Partial<CoachingEvent> & Record<string, unknown>,
+): CoachingEvent => {
+  const raw = recordOrEmpty(rawEvent);
+  const evidence = raw.evidence ?? {};
+  const evidenceRecord = recordOrEmpty(evidence);
+  const eventName = nullableString(raw.event) ?? nullableString(raw.type) ?? 'unknown_event';
+  const eventType = nullableString(raw.type) ?? 'coaching_event';
+  const severity = numericOrNull(raw.severity)
+    ?? numericOrNull(evidenceRecord.severity)
+    ?? 0;
+  const lapNumber = numericOrNull(raw.lap_number)
+    ?? numericOrNull(raw.lap)
+    ?? 0;
+  const distance = numericOrNull(raw.s)
+    ?? numericOrNull(evidenceRecord.s)
+    ?? numericOrNull(evidenceRecord.ref_s)
+    ?? 0;
+  const timestamp = numericOrNull(raw.timestamp) ?? Date.now() / 1000;
+  const cornerId = numericOrNull(raw.corner_id)
+    ?? numericOrNull(evidenceRecord.corner_id);
+
+  return {
+    type: eventType,
+    event: eventName,
+    severity: clamp01(severity),
+    evidence,
+    driver_id: nullableString(raw.driver_id) ?? 'player',
+    lap_number: lapNumber,
+    s: distance,
+    timestamp,
+    corner_id: cornerId ?? undefined,
+  };
+};
+
 export const useTelemetryStore = create<TelemetryState>((set) => ({
   latestFrame: null,
   history: [],
@@ -674,6 +719,7 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
   globalCursorS: null,
   selectedLap: null,
   viewMode: 'live',
+  performanceMode: 'BALANCED',
 
   addFrame: (frame) => set((state) => {
     const mapPosition = frame.mapPosition && isFinite(frame.mapPosition.x) && isFinite(frame.mapPosition.y)
@@ -891,7 +937,7 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
   setGhostHistory: (ghostHistory) => set({ ghostHistory }),
 
   addCoachingEvent: (event) => set((state) => ({
-    coachingEvents: [event, ...state.coachingEvents].slice(0, 100)
+    coachingEvents: [normalizeCoachingEvent(event), ...state.coachingEvents].slice(0, 100)
   })),
 
   addEngineerSpeech: (speech) => set((state) => ({
@@ -907,6 +953,8 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
   setSectors: (sectors) => set({ sectors }),
 
   setViewMode: (viewMode) => set({ viewMode }),
+
+  setPerformanceMode: (performanceMode) => set({ performanceMode }),
 
   clearHistory: () => set({ 
     history: [], 
