@@ -79,10 +79,27 @@ def player_analysis_samples(samples: Iterable[TelemetrySample]) -> List[Analysis
     be contaminated by side-channel opponent telemetry.
     """
 
-    converted: List[AnalysisSample] = []
+    raw_samples = []
+    lap_elapsed_times: Dict[int, List[float]] = defaultdict(list)
     for sample in samples:
         if int(getattr(sample, "carId", 0) or 0) != 0:
             continue
+        lap = _safe_int(getattr(sample, "lap", None))
+        lap_time = _safe_float(getattr(sample, "sessionTime", None))
+        timestamp = _telemetry_timestamp_seconds(sample)
+        raw_samples.append((sample, lap, lap_time, timestamp))
+        if lap is not None and lap_time is not None:
+            lap_elapsed_times[lap].append(lap_time)
+
+    laps_with_elapsed_time = {
+        lap
+        for lap, values in lap_elapsed_times.items()
+        if len(values) >= 2 and max(values) - min(values) > 0.5
+    }
+
+    converted: List[AnalysisSample] = []
+    for sample, lap, lap_time, timestamp in raw_samples:
+        analysis_time = lap_time if lap in laps_with_elapsed_time and lap_time is not None else timestamp
         converted.append(
             AnalysisSample(
                 progress=_valid_progress(getattr(sample, "normalizedSplinePosition", None)),
@@ -92,8 +109,8 @@ def player_analysis_samples(samples: Iterable[TelemetrySample]) -> List[Analysis
                     float(sample.worldPositionY),
                     float(sample.worldPositionZ),
                 ),
-                timestamp=_telemetry_timestamp_seconds(sample),
-                lap=_safe_int(getattr(sample, "lap", None)),
+                timestamp=analysis_time,
+                lap=lap,
                 throttle=_safe_float(getattr(sample, "throttle", None)),
                 brake=_safe_float(getattr(sample, "brake", None)),
             )

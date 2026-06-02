@@ -7,9 +7,13 @@ import { useTelemetryStore } from '../store/useTelemetryStore';
 const StateColor: Record<string, string> = {
   steady:      '#22d3ee',
   pushing:     '#34d399',
+  confident_push: '#34d399',
   overdriving: '#fb7185',
+  hesitating:  '#fbbf24',
   recovering:  '#fbbf24',
+  unstable:    '#fb7185',
   fatigued:    '#a78bfa',
+  observing:   '#94a3b8',
 };
 
 export const CognitiveDashboard: React.FC = () => {

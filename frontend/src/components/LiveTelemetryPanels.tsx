@@ -17,10 +17,10 @@ const Metric = ({
   const sizeClass = { xs: 'text-xs', sm: 'text-sm', md: 'text-xl', lg: 'text-3xl', xl: 'text-[38px]' }[size];
   return (
     <div className="flex flex-col gap-0.5">
-      <div className="label">{label}</div>
+      <div className="label" style={{ fontSize: 8 }}>{label}</div>
       <div className={`num font-bold ${sizeClass} ${color} leading-none tracking-tight`}>
         {value}
-        {unit && <span className="text-[7px] font-normal text-slate-700 ml-1">{unit}</span>}
+        {unit && <span className="text-[9px] font-normal text-slate-600 ml-1">{unit}</span>}
       </div>
     </div>
   );
@@ -32,10 +32,10 @@ const GaugeBar = ({
 }: { value: number; color: string; label: string; labelRight?: string }) => (
   <div className="flex flex-col gap-[3px]">
     <div className="flex justify-between">
-      <span className="label" style={{ fontSize: 6 }}>{label}</span>
-      {labelRight && <span className="num text-[7px] text-slate-600">{labelRight}</span>}
+      <span className="label" style={{ fontSize: 8 }}>{label}</span>
+      {labelRight && <span className="num text-[9px] text-slate-500">{labelRight}</span>}
     </div>
-    <div className="h-[3px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+    <div className="h-[4px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
       <div
         className={`h-full rounded-full transition-all duration-75 ${color}`}
         style={{ width: `${Math.max(0, Math.min(1, value)) * 100}%` }}
@@ -72,8 +72,8 @@ export const VehicleStatePanel: React.FC = () => {
   const steering = latestFrame ? (latestFrame.steering ?? 0) : 0;
 
   return (
-    <div className="panel corner-accent" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div className="label" style={{ color: 'var(--cyan)', fontSize: 6 }}>Vehicle State</div>
+    <div className="panel corner-accent" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="label" style={{ color: 'var(--cyan)', fontSize: 8 }}>Vehicle State</div>
 
       {/* Speed — hero number */}
       <Metric label="SPEED" value={sf(speed, 0, 1)} unit="KM/H" color="text-cyan-300" size="xl" />
@@ -82,7 +82,7 @@ export const VehicleStatePanel: React.FC = () => {
         {/* Gear */}
         <Metric label="GEAR" value={String(gear)} color="text-white" size="lg" />
         {/* Gauges */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <GaugeBar label="THROTTLE" value={throttle}
             labelRight={`${(throttle * 100).toFixed(0)}%`} color="bg-emerald-400" />
           <GaugeBar label="BRAKE" value={brake}
@@ -107,8 +107,8 @@ export const LapTimingPanel: React.FC = () => {
   const deltaColor = deltaTone(delta);
 
   return (
-    <div className="panel" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div className="label" style={{ fontSize: 6 }}>Lap Timing</div>
+    <div className="panel" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 11 }}>
+      <div className="label" style={{ fontSize: 8 }}>Lap Timing</div>
       <Metric label="LAP TIME" value={formatLapTime(lapMetrics.currentLapTime)} color="text-white" size="md" />
       <Metric label="DELTA" value={formatDelta(delta)} unit={delta === null ? undefined : 'SEC'} color={deltaColor} size="sm" />
       <Metric label="LAP DELTA" value={formatDelta(lapDelta)} unit={lapDelta === null ? undefined : 'SEC'} color={deltaTone(lapDelta)} size="sm" />
@@ -132,9 +132,9 @@ export const StabilityPanel: React.FC = () => {
   const stability = 1 - Math.min(1, Math.abs(latestFrame?.yaw_rate ?? 0) / 0.5);
 
   return (
-    <div className="panel" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div className="panel" style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 9 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span className="label" style={{ fontSize: 6 }}>Stability</span>
+        <span className="label" style={{ fontSize: 8 }}>Stability</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <div
             className={isStreaming ? 'status-live' : ''}
@@ -143,7 +143,7 @@ export const StabilityPanel: React.FC = () => {
               background: isStreaming ? '#34d399' : '#1e293b',
             }}
           />
-          <span className="num" style={{ fontSize: 7, color: isStreaming ? '#34d399' : '#334155', fontWeight: 700 }}>
+          <span className="num" style={{ fontSize: 9, color: isStreaming ? '#34d399' : '#334155', fontWeight: 700 }}>
             {isStreaming ? 'LIVE' : 'OFFLINE'}
           </span>
         </div>
