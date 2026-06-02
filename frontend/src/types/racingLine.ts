@@ -114,10 +114,29 @@ export interface RacingLineComparison {
   };
 }
 
+export interface RacingLineLapSummary {
+  lapNumber: number;
+  durationSeconds: number | null;
+  valid: boolean;
+  isCurrent: boolean;
+  sampleCount: number;
+  avgSpeedKmh: number | null;
+  maxSpeedKmh: number | null;
+  progressStart: number | null;
+  progressEnd: number | null;
+  progressMin: number | null;
+  progressMax: number | null;
+  usedForRacingLine: boolean;
+  deltaToBestSeconds: number | null;
+  rejectedReason: string | null;
+}
+
 export interface RacingLinePayload {
   track: string;
   status: RacingLineStatus;
   racingLine: RacingLineModel | null;
   comparison: RacingLineComparison | null;
+  lapHistory?: RacingLineLapSummary[];
+  fastestLaps?: RacingLineLapSummary[];
   debug: Record<string, any>;
 }

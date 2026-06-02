@@ -18,6 +18,7 @@ from fastapi import Body, FastAPI, File, HTTPException, Query, UploadFile, WebSo
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.car_physics import build_car_physics_debug, build_opponent_car_physics, build_player_car_physics
+from core.cognitive_runtime import CognitiveRuntime
 from core.comparison_analysis import build_live_comparison_payload
 from core.debug.ac_shared_memory_full_inventory import build_ac_shared_memory_full_inventory
 from core.cache.track_cache import TrackCache
@@ -37,6 +38,7 @@ from core.kn5.track_surface_polygon import build_track_surface_polygon_from_mani
 from core.opponents import OpponentsRuntime, OpponentsStateBuffer, SOURCE_NAME as OPPONENTS_SOURCE_NAME
 from core.performance_metrics import performance_metrics
 from core.recording.recording_runtime import RecordingRuntime, config_from_env as recording_config_from_env
+from core.race_coach_analysis import build_coaching_report
 from core.reconstruction.track_reconstruction import TrackReconstructor
 from core.racing_line_analysis import build_live_racing_line_payload
 from core.telemetry.telemetry_buffer import TelemetryBuffer
@@ -70,6 +72,7 @@ telemetry_runtime: Optional[TelemetryRuntime] = None
 opponents_buffer = OpponentsStateBuffer()
 opponents_runtime: Optional[OpponentsRuntime] = None
 recording_runtime: Optional[RecordingRuntime] = None
+cognitive_runtime: Optional[CognitiveRuntime] = None
 
 
 def _safe_cache_fragment(value: str) -> str:
@@ -322,13 +325,15 @@ def telemetry_status_payload() -> Dict[str, Any]:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global telemetry_runtime, opponents_runtime, recording_runtime
+    global telemetry_runtime, opponents_runtime, recording_runtime, cognitive_runtime
 
     source_manager.select_source()
     prime_active_source()
     initialize_spatial_state()
     recording_runtime = build_recording_runtime()
     recording_runtime.start()
+    cognitive_runtime = CognitiveRuntime(min_interval_seconds=0.5)
+    cognitive_runtime.start()
     telemetry_runtime = build_telemetry_runtime()
     loop = asyncio.get_running_loop()
     telemetry_runtime.start(loop)
@@ -345,6 +350,9 @@ async def lifespan(app: FastAPI):
     if recording_runtime:
         recording_runtime.stop()
         recording_runtime = None
+    if cognitive_runtime:
+        cognitive_runtime.stop()
+        cognitive_runtime = None
 
 
 app = FastAPI(
@@ -555,6 +563,24 @@ def live_racing_line_payload(
     return payload
 
 
+def live_coach_payload(
+    micro_sectors: int = 50,
+    *,
+    performance_mode: Optional[str] = None,
+) -> Dict[str, Any]:
+    micro_sector_count = max(1, min(200, int(micro_sectors or 50)))
+    racing_line_payload = live_racing_line_payload(
+        micro_sector_count,
+        include_visual_line=False,
+        include_comparison=True,
+    )
+    return build_coaching_report(
+        racing_line_payload,
+        micro_sectors=micro_sector_count,
+        performance_mode=performance_mode,
+    )
+
+
 def live_player_physics_payload() -> Dict[str, Any]:
     samples = telemetry_buffer.get_samples()
     player_samples = [sample for sample in samples if int(getattr(sample, "carId", 0) or 0) == 0]
@@ -641,6 +667,22 @@ async def get_analysis_racing_line(
         include_visual_line=includeVisualLine,
         include_comparison=includeComparison,
     )
+
+
+@app.get("/api/live/coach")
+async def get_live_coach(
+    microSectors: int = Query(50, ge=1, le=200),
+    performanceMode: Optional[str] = Query(None),
+):
+    return live_coach_payload(microSectors, performance_mode=performanceMode)
+
+
+@app.get("/api/analysis/coach")
+async def get_analysis_coach(
+    microSectors: int = Query(50, ge=1, le=200),
+    performanceMode: Optional[str] = Query(None),
+):
+    return live_coach_payload(microSectors, performance_mode=performanceMode)
 
 
 @app.get("/api/live/player-physics")

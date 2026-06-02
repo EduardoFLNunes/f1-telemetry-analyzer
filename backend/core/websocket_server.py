@@ -9,7 +9,7 @@ import logging
 import asyncio
 
 from core.performance_metrics import performance_metrics
-from core.telemetry_events import OPPONENTS_FRAME, event_bus
+from core.telemetry_events import DRIVER_COG_STATE, ENGINEER_SPEECH, OPPONENTS_FRAME, event_bus
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +63,8 @@ class TelemetryBroadcaster:
         # Phase 3 Events
         event_bus.subscribe("coaching_event", self.on_event)
         event_bus.subscribe("physics_anomaly", self.on_event)
+        event_bus.subscribe(DRIVER_COG_STATE, self.on_event)
+        event_bus.subscribe(ENGINEER_SPEECH, self.on_event)
 
     async def on_frame(self, frame: Dict[str, Any]):
         await self.manager.broadcast({

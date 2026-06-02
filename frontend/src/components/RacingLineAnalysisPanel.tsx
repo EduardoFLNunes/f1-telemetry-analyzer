@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Activity, AlertTriangle, BarChart3, Gauge, Timer, Trophy } from 'lucide-react';
 import { api } from '../api/client';
-import { RacingLineComparisonSegment, RacingLinePayload } from '../types/racingLine';
+import { RacingLineComparisonSegment, RacingLineLapSummary, RacingLinePayload } from '../types/racingLine';
 import { useRenderCounter } from '../hooks/useRenderCounter';
+import { RaceCoachPanel } from './RaceCoachPanel';
 
 const PANEL_BG = '#0c0c16';
 const SURFACE = 'rgba(255,255,255,0.025)';
@@ -22,6 +23,19 @@ const formatSeconds = (value: number | null | undefined) => {
   if (value === null || value === undefined || !Number.isFinite(value)) return '--';
   const sign = value > 0 ? '+' : '';
   return `${sign}${value.toFixed(3)}s`;
+};
+
+const formatLapTime = (value: number | null | undefined) => {
+  if (value === null || value === undefined || !Number.isFinite(value)) return '--:--.---';
+  const minutes = Math.floor(value / 60);
+  const seconds = value - minutes * 60;
+  return `${minutes}:${seconds.toFixed(3).padStart(6, '0')}`;
+};
+
+const formatDeltaCompact = (value: number | null | undefined) => {
+  if (value === null || value === undefined || !Number.isFinite(value)) return '--';
+  if (Math.abs(value) < 0.0005) return 'BEST';
+  return `${value > 0 ? '+' : ''}${value.toFixed(3)}`;
 };
 
 const deltaColor = (value: number | null | undefined) => {
@@ -52,21 +66,21 @@ const sourceLabel = (source: string | null | undefined) => {
 };
 
 const pillStyle = (active: boolean): React.CSSProperties => ({
-  height: 22,
-  minWidth: 34,
+  height: 26,
+  minWidth: 42,
   border: `1px solid ${active ? 'rgba(34,211,238,0.45)' : BORDER}`,
   borderRadius: 4,
   background: active ? 'rgba(34,211,238,0.1)' : 'transparent',
   color: active ? CYAN : MUTED,
   cursor: 'pointer',
-  fontSize: 8,
+  fontSize: 9,
   fontWeight: 800,
 });
 
 const Stat = ({ label, value, color = TEXT }: { label: string; value: string; color?: string }) => (
-  <div style={{ padding: 8, border: `1px solid ${BORDER}`, background: SURFACE, borderRadius: 4, minWidth: 0 }}>
-    <div className="label" style={{ fontSize: 6, marginBottom: 4 }}>{label}</div>
-    <div className="num" style={{ fontSize: 11, color, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+  <div style={{ padding: 10, border: `1px solid ${BORDER}`, background: SURFACE, borderRadius: 4, minWidth: 0 }}>
+    <div className="label" style={{ fontSize: 8, marginBottom: 5 }}>{label}</div>
+    <div className="num" style={{ fontSize: 14, color, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
       {value}
     </div>
   </div>
@@ -83,13 +97,13 @@ const SectorCard = ({
   issue: string | null;
   worstSegment: number | null;
 }) => (
-  <div style={{ padding: 8, border: `1px solid ${BORDER}`, background: SURFACE, borderRadius: 4, display: 'flex', flexDirection: 'column', gap: 5 }}>
+  <div style={{ padding: 9, border: `1px solid ${BORDER}`, background: SURFACE, borderRadius: 4, display: 'flex', flexDirection: 'column', gap: 6 }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span className="label" style={{ fontSize: 6 }}>SETOR {sector}</span>
-      <span className="num" style={{ fontSize: 9, color: deltaColor(delta), fontWeight: 800 }}>{formatSeconds(delta)}</span>
+      <span className="label" style={{ fontSize: 8 }}>SETOR {sector}</span>
+      <span className="num" style={{ fontSize: 11, color: deltaColor(delta), fontWeight: 900 }}>{formatSeconds(delta)}</span>
     </div>
-    <div className="num" style={{ fontSize: 8, color: TEXT, lineHeight: 1.35 }}>{issueLabel(issue)}</div>
-    <div className="num" style={{ fontSize: 7, color: MUTED }}>MICRO {worstSegment ?? '--'}</div>
+    <div className="num" style={{ fontSize: 10, color: TEXT, lineHeight: 1.35 }}>{issueLabel(issue)}</div>
+    <div className="num" style={{ fontSize: 8, color: MUTED }}>MICRO {worstSegment ?? '--'}</div>
   </div>
 );
 
@@ -98,13 +112,13 @@ const SegmentRow = ({ segment }: { segment: RacingLineComparisonSegment }) => (
     className="num"
     style={{
       display: 'grid',
-      gridTemplateColumns: '34px 44px 44px 42px 1fr',
-      gap: 6,
+      gridTemplateColumns: '42px 58px 54px 54px minmax(0, 1fr)',
+      gap: 8,
       alignItems: 'center',
-      minHeight: 24,
-      padding: '4px 6px',
+      minHeight: 30,
+      padding: '6px 8px',
       borderBottom: `1px solid ${BORDER}`,
-      fontSize: 7,
+      fontSize: 9,
       color: TEXT,
     }}
   >
@@ -113,6 +127,36 @@ const SegmentRow = ({ segment }: { segment: RacingLineComparisonSegment }) => (
     <span>{formatNumber(segment.playerSpeedKmh, 0)}</span>
     <span>{formatNumber(segment.trajectoryDeviationMeters, 1)}</span>
     <span style={{ color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{issueLabel(segment.mainIssue)}</span>
+  </div>
+);
+
+const LapRow = ({ lap, rank }: { lap: RacingLineLapSummary; rank?: number }) => (
+  <div
+    className="num"
+    style={{
+      display: 'grid',
+      gridTemplateColumns: '38px minmax(0, 1fr) 70px 56px',
+      gap: 8,
+      alignItems: 'center',
+      minHeight: 28,
+      padding: '5px 0',
+      borderBottom: `1px solid ${BORDER}`,
+      fontSize: 9,
+      color: lap.valid ? TEXT : MUTED,
+    }}
+  >
+    <span style={{ color: lap.usedForRacingLine ? CYAN : MUTED }}>{rank ? `#${rank}` : `V${lap.lapNumber}`}</span>
+    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      V{lap.lapNumber}
+      {lap.usedForRacingLine ? ' REF' : ''}
+      {!lap.valid && lap.rejectedReason ? ` ${lap.rejectedReason}` : ''}
+    </span>
+    <span style={{ color: lap.valid ? TEXT : MUTED, fontWeight: lap.usedForRacingLine ? 900 : 700 }}>
+      {formatLapTime(lap.durationSeconds)}
+    </span>
+    <span style={{ color: deltaColor(lap.deltaToBestSeconds), textAlign: 'right', fontWeight: 800 }}>
+      {formatDeltaCompact(lap.deltaToBestSeconds)}
+    </span>
   </div>
 );
 
@@ -149,6 +193,10 @@ export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPan
 
   const racingLine = payload?.racingLine ?? null;
   const comparison = payload?.comparison ?? null;
+  const fastestLaps = payload?.fastestLaps ?? [];
+  const lapHistory = payload?.lapHistory ?? [];
+  const bestLap = fastestLaps[0] ?? lapHistory.find((lap) => lap.usedForRacingLine) ?? null;
+  const validLapCount = lapHistory.filter((lap) => lap.valid).length;
   const status = payload?.status ?? 'INSUFFICIENT_DATA';
   const ready = status === 'READY' && Boolean(racingLine);
 
@@ -161,11 +209,14 @@ export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPan
       }
       return 'Racing Line ainda indisponivel: nenhuma volta de referencia valida.';
     }
+    if (bestLap) {
+      return `Racing Line usando a melhor volta valida: V${bestLap.lapNumber} (${formatLapTime(bestLap.durationSeconds)}).`;
+    }
     if (racingLine?.referenceLapNumber !== null && racingLine?.referenceLapNumber !== undefined) {
       return `Racing Line gerada a partir da volta ${racingLine.referenceLapNumber}.`;
     }
     return 'Racing Line gerada a partir da volta de referencia.';
-  }, [failed, payload, racingLine?.referenceLapNumber]);
+  }, [bestLap, failed, payload, racingLine?.referenceLapNumber]);
 
   const sectorSummary = comparison?.sectorSummary ?? ([1, 2, 3] as const).map((sector) => ({
     sector,
@@ -178,12 +229,12 @@ export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPan
   const segments = comparison?.segments ?? [];
 
   return (
-    <div className="panel" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: PANEL_BG, overflow: 'hidden' }}>
-      <div style={{ padding: '8px 9px', borderBottom: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', gap: 7 }}>
+    <div className="panel" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: PANEL_BG, overflow: 'auto' }}>
+      <div style={{ padding: '10px 11px', borderBottom: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', gap: 9 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
             <Activity size={14} color={ready ? CYAN : AMBER} />
-            <span className="num" style={{ fontSize: 8, fontWeight: 800, color: TEXT, textTransform: 'uppercase' }}>Racing Line</span>
+            <span className="num" style={{ fontSize: 10, fontWeight: 900, color: TEXT, textTransform: 'uppercase' }}>Racing Line</span>
           </div>
           <div style={{ display: 'flex', gap: 3 }}>
             {[20, 50, 100].map((count) => (
@@ -197,17 +248,36 @@ export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPan
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
           <Stat label="STATUS" value={ready ? 'READY' : 'WAITING'} color={ready ? EMERALD : AMBER} />
           <Stat label="FONTE" value={sourceLabel(racingLine?.source)} color={ready ? CYAN : MUTED} />
-          <Stat label="VOLTA REF" value={racingLine?.referenceLapNumber === null || racingLine?.referenceLapNumber === undefined ? '--' : String(racingLine.referenceLapNumber)} />
+          <Stat label="MELHOR" value={formatLapTime(bestLap?.durationSeconds)} color={bestLap ? EMERALD : MUTED} />
+          <Stat label="HIST" value={`${validLapCount}/${lapHistory.length}`} />
+          <Stat label="VOLTA BASE" value={racingLine?.referenceLapNumber === null || racingLine?.referenceLapNumber === undefined ? '--' : `V${racingLine.referenceLapNumber}`} />
           <Stat label="VALIDOS" value={`${racingLine?.debug.validSegments ?? 0}/${racingLine?.microSectorCount ?? microSectorCount}`} color={ready ? EMERALD : MUTED} />
         </div>
 
         <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start', border: `1px solid ${BORDER}`, background: ready ? 'rgba(34,211,238,0.035)' : 'rgba(251,191,36,0.035)', padding: 7, borderRadius: 4 }}>
           <AlertTriangle size={13} color={ready ? CYAN : AMBER} style={{ flexShrink: 0, marginTop: 1 }} />
-          <div className="num" style={{ fontSize: 8, lineHeight: 1.45, color: TEXT }}>{keyMessage}</div>
+          <div className="num" style={{ fontSize: 10, lineHeight: 1.45, color: TEXT }}>{keyMessage}</div>
         </div>
+
+        <div style={{ border: `1px solid ${BORDER}`, background: SURFACE, borderRadius: 4, padding: '6px 7px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <Trophy size={12} color={EMERALD} />
+              <span className="label" style={{ fontSize: 8 }}>TOP VOLTAS</span>
+            </div>
+            <span className="num" style={{ fontSize: 9, color: MUTED }}>{fastestLaps.length} validas</span>
+          </div>
+          {fastestLaps.length ? (
+            fastestLaps.slice(0, 3).map((lap, index) => <LapRow key={lap.lapNumber} lap={lap} rank={index + 1} />)
+          ) : (
+            <div className="num" style={{ fontSize: 10, color: MUTED, padding: '4px 0' }}>Aguardando voltas validas.</div>
+          )}
+        </div>
+
+        <RaceCoachPanel active={active} microSectorCount={microSectorCount} />
       </div>
 
-      <div style={{ padding: '7px 9px', borderBottom: `1px solid ${BORDER}`, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 5 }}>
+      <div style={{ padding: '9px 11px', borderBottom: `1px solid ${BORDER}`, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 7 }}>
         {sectorSummary.map((sector) => (
           <SectorCard
             key={sector.sector}
@@ -219,15 +289,15 @@ export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPan
         ))}
       </div>
 
-      <div style={{ padding: '7px 9px', borderBottom: `1px solid ${BORDER}`, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+      <div style={{ padding: '9px 11px', borderBottom: `1px solid ${BORDER}`, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <Timer size={12} color={ROSE} />
-            <span className="label" style={{ fontSize: 6 }}>PERDAS</span>
+            <span className="label" style={{ fontSize: 8 }}>PERDAS</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {(losses.length ? losses : [{ segmentIndex: '--', estimatedDeltaSeconds: null, mainIssue: null }]).slice(0, 3).map((loss, index) => (
-              <div key={`${loss.segmentIndex}-${index}`} className="num" style={{ display: 'flex', justifyContent: 'space-between', gap: 5, fontSize: 7, color: TEXT }}>
+              <div key={`${loss.segmentIndex}-${index}`} className="num" style={{ display: 'flex', justifyContent: 'space-between', gap: 5, fontSize: 9, color: TEXT }}>
                 <span>SEG {loss.segmentIndex}</span>
                 <span style={{ color: deltaColor(loss.estimatedDeltaSeconds), fontWeight: 800 }}>{formatSeconds(loss.estimatedDeltaSeconds)}</span>
               </div>
@@ -238,11 +308,11 @@ export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPan
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <Trophy size={12} color={EMERALD} />
-            <span className="label" style={{ fontSize: 6 }}>GANHOS</span>
+            <span className="label" style={{ fontSize: 8 }}>GANHOS</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {(gains.length ? gains : [{ segmentIndex: '--', estimatedDeltaSeconds: null, mainIssue: null }]).slice(0, 3).map((gain, index) => (
-              <div key={`${gain.segmentIndex}-${index}`} className="num" style={{ display: 'flex', justifyContent: 'space-between', gap: 5, fontSize: 7, color: TEXT }}>
+              <div key={`${gain.segmentIndex}-${index}`} className="num" style={{ display: 'flex', justifyContent: 'space-between', gap: 5, fontSize: 9, color: TEXT }}>
                 <span>SEG {gain.segmentIndex}</span>
                 <span style={{ color: deltaColor(gain.estimatedDeltaSeconds), fontWeight: 800 }}>{formatSeconds(gain.estimatedDeltaSeconds)}</span>
               </div>
@@ -251,30 +321,45 @@ export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPan
         </div>
       </div>
 
-      <div style={{ padding: '7px 9px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+      <div style={{ padding: '9px 11px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
           <Gauge size={12} color={CYAN} />
-          <span className="label" style={{ fontSize: 6 }}>MICROSETORES</span>
+          <span className="label" style={{ fontSize: 8 }}>MICROSETORES</span>
         </div>
-        <div className="num" style={{ fontSize: 8, color: MUTED }}>
+        <div className="num" style={{ fontSize: 10, color: MUTED }}>
           P {comparison?.debug?.playerSamples ?? 0} / REF {racingLine?.debug?.inputSamples ?? 0}
         </div>
       </div>
 
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+        <div style={{ padding: '9px 11px', borderBottom: `1px solid ${BORDER}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <BarChart3 size={12} color={CYAN} />
+              <span className="label" style={{ fontSize: 8 }}>HISTORICO DE VOLTAS</span>
+            </div>
+            <span className="num" style={{ fontSize: 9, color: MUTED }}>{lapHistory.length} voltas</span>
+          </div>
+          {lapHistory.length ? (
+            lapHistory.slice(-8).reverse().map((lap) => <LapRow key={lap.lapNumber} lap={lap} />)
+          ) : (
+            <div className="num" style={{ fontSize: 10, color: MUTED, padding: '4px 0' }}>Nenhuma volta completa ainda.</div>
+          )}
+        </div>
+
         <div
           className="label"
           style={{
             display: 'grid',
-            gridTemplateColumns: '34px 44px 44px 42px 1fr',
-            gap: 6,
-            padding: '5px 6px',
+            gridTemplateColumns: '42px 58px 54px 54px minmax(0, 1fr)',
+            gap: 8,
+            padding: '7px 8px',
             position: 'sticky',
             top: 0,
             background: '#08080f',
             borderBottom: `1px solid ${BORDER}`,
             zIndex: 1,
-            fontSize: 6,
+            fontSize: 8,
           }}
         >
           <span>SEG</span>
@@ -286,14 +371,14 @@ export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPan
         {segments.length ? (
           segments.map((segment) => <SegmentRow key={segment.segmentIndex} segment={segment} />)
         ) : (
-          <div className="num" style={{ padding: 10, fontSize: 8, color: MUTED }}>Sem microsetores comparaveis.</div>
+          <div className="num" style={{ padding: 12, fontSize: 10, color: MUTED }}>Sem microsetores comparaveis.</div>
         )}
       </div>
 
       <div style={{ borderTop: `1px solid ${BORDER}`, padding: '6px 9px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
-        <div className="num" style={{ fontSize: 7, color: MUTED }}>TRACK {payload?.track ?? '--'}</div>
-        <div className="num" style={{ fontSize: 7, color: ready ? EMERALD : AMBER, textAlign: 'right' }}>{status}</div>
-        <div className="num" style={{ gridColumn: '1 / -1', fontSize: 7, color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div className="num" style={{ fontSize: 8, color: MUTED }}>TRACK {payload?.track ?? '--'}</div>
+        <div className="num" style={{ fontSize: 8, color: ready ? EMERALD : AMBER, textAlign: 'right' }}>{status}</div>
+        <div className="num" style={{ gridColumn: '1 / -1', fontSize: 8, color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {comparison?.debug?.reasonForRejectedSegments?.join(', ') || payload?.debug?.reason || 'ready'}
         </div>
       </div>

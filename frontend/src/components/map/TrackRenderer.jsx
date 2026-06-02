@@ -25,6 +25,19 @@ const HISTORY_WINDOW_BY_MODE = {
   BALANCED: 1200,
   PERFORMANCE: 600,
 };
+const PLAYER_RENDER_LAG_MS_BY_MODE = {
+  QUALITY: 70,
+  BALANCED: 90,
+  PERFORMANCE: 115,
+};
+const PLAYER_SMOOTHING_MS_BY_MODE = {
+  QUALITY: 32,
+  BALANCED: 42,
+  PERFORMANCE: 56,
+};
+const PLAYER_BUFFER_MAX = 28;
+const PLAYER_SNAP_DISTANCE_M = 170;
+const PLAYER_EXTRAPOLATE_RATIO = 0.65;
 const PERFORMANCE_MODES = ['QUALITY', 'BALANCED', 'PERFORMANCE'];
 
 function normalizeTrack(trackData) {
@@ -65,6 +78,168 @@ function isFiniteNumber(value) {
 
 function lerp(a, b, t) {
   return a + (b - a) * t;
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function angleLerp(a, b, t) {
+  if (!isFiniteNumber(a)) return isFiniteNumber(b) ? b : 0;
+  if (!isFiniteNumber(b)) return a;
+  let delta = b - a;
+  while (delta > Math.PI) delta -= Math.PI * 2;
+  while (delta < -Math.PI) delta += Math.PI * 2;
+  return a + delta * t;
+}
+
+function frameMapPosition(frame) {
+  const mapPosition = frame?.mapPosition;
+  if (mapPosition && isFiniteNumber(mapPosition.x) && isFiniteNumber(mapPosition.y)) {
+    return mapPosition;
+  }
+
+  const x = frame?.x;
+  const y = frame?.y ?? frame?.z;
+  if (isFiniteNumber(x) && isFiniteNumber(y)) {
+    return { x, y };
+  }
+
+  return null;
+}
+
+function frameLapNumber(frame) {
+  const lap = Number(frame?.lap_number ?? frame?.lap);
+  return Number.isFinite(lap) ? lap : null;
+}
+
+function playerSampleKey(frame, position) {
+  const timestamp = isFiniteNumber(frame?.timestamp) ? frame.timestamp.toFixed(3) : 'no-ts';
+  const heading = isFiniteNumber(frame?.heading) ? frame.heading.toFixed(4) : 'no-heading';
+  return [
+    timestamp,
+    frameLapNumber(frame) ?? 'no-lap',
+    position.x.toFixed(3),
+    position.y.toFixed(3),
+    heading,
+  ].join(':');
+}
+
+function interpolatePlayerSamples(a, b, t) {
+  return {
+    frame: t >= 0.5 ? b.frame : a.frame,
+    x: lerp(a.x, b.x, t),
+    y: lerp(a.y, b.y, t),
+    heading: angleLerp(a.heading, b.heading, t),
+  };
+}
+
+function pushPlayerSample(frame, state, frameTime) {
+  const position = frameMapPosition(frame);
+  if (!position) return null;
+
+  const key = playerSampleKey(frame, position);
+  if (key === state.lastKey) return state.samples[state.samples.length - 1] || null;
+
+  const previous = state.samples[state.samples.length - 1];
+  if (previous) {
+    const gapMs = frameTime - previous.receivedAt;
+    const jumpM = Math.hypot(position.x - previous.x, position.y - previous.y);
+    const lap = frameLapNumber(frame);
+    if (gapMs > 1200 || jumpM > PLAYER_SNAP_DISTANCE_M || (previous.lap !== null && lap !== null && lap < previous.lap)) {
+      state.samples = [];
+      state.visual = null;
+    }
+  }
+
+  const sample = {
+    frame,
+    key,
+    lap: frameLapNumber(frame),
+    receivedAt: frameTime,
+    x: position.x,
+    y: position.y,
+    heading: isFiniteNumber(frame?.heading) ? frame.heading : previous?.heading ?? 0,
+  };
+  state.samples.push(sample);
+  if (state.samples.length > PLAYER_BUFFER_MAX) {
+    state.samples.splice(0, state.samples.length - PLAYER_BUFFER_MAX);
+  }
+  state.lastKey = key;
+  return sample;
+}
+
+function resolvePlayerTarget(state, frameTime, mode) {
+  const samples = state.samples;
+  if (!samples.length) return null;
+
+  const lagMs = PLAYER_RENDER_LAG_MS_BY_MODE[mode] || PLAYER_RENDER_LAG_MS_BY_MODE.BALANCED;
+  const renderAt = frameTime - lagMs;
+  let before = null;
+  let after = null;
+
+  for (let index = samples.length - 1; index >= 0; index -= 1) {
+    if (samples[index].receivedAt <= renderAt) {
+      before = samples[index];
+      after = samples[index + 1] || null;
+      break;
+    }
+  }
+
+  if (!before) return samples[0];
+
+  if (after && after.receivedAt > before.receivedAt) {
+    const t = clamp((renderAt - before.receivedAt) / (after.receivedAt - before.receivedAt), 0, 1);
+    return interpolatePlayerSamples(before, after, t);
+  }
+
+  const last = samples[samples.length - 1];
+  const previous = samples[samples.length - 2];
+  if (previous && renderAt > last.receivedAt && last.receivedAt > previous.receivedAt) {
+    const interval = Math.max(16, last.receivedAt - previous.receivedAt);
+    const t = 1 + clamp((renderAt - last.receivedAt) / interval, 0, PLAYER_EXTRAPOLATE_RATIO);
+    return interpolatePlayerSamples(previous, last, t);
+  }
+
+  return before;
+}
+
+function smoothedPlayerFrame(rawFrame, state, frameTime, mode) {
+  if (!rawFrame) return null;
+  if (!frameMapPosition(rawFrame)) return rawFrame;
+
+  pushPlayerSample(rawFrame, state, frameTime);
+  const target = resolvePlayerTarget(state, frameTime, mode);
+  if (!target) return rawFrame;
+
+  const previousRenderAt = state.lastRenderAt || frameTime;
+  const dtMs = clamp(frameTime - previousRenderAt, 0, 80);
+  state.lastRenderAt = frameTime;
+
+  if (!state.visual) {
+    state.visual = { x: target.x, y: target.y, heading: target.heading };
+  } else {
+    const targetJump = Math.hypot(target.x - state.visual.x, target.y - state.visual.y);
+    if (targetJump > PLAYER_SNAP_DISTANCE_M * 0.75) {
+      state.visual = { x: target.x, y: target.y, heading: target.heading };
+    } else {
+      const smoothingMs = PLAYER_SMOOTHING_MS_BY_MODE[mode] || PLAYER_SMOOTHING_MS_BY_MODE.BALANCED;
+      const alpha = clamp(1 - Math.exp(-dtMs / smoothingMs), 0.08, 1);
+      state.visual.x = lerp(state.visual.x, target.x, alpha);
+      state.visual.y = lerp(state.visual.y, target.y, alpha);
+      state.visual.heading = angleLerp(state.visual.heading, target.heading, alpha);
+    }
+  }
+
+  const mapPosition = { x: state.visual.x, y: state.visual.y };
+  return {
+    ...rawFrame,
+    mapPosition,
+    x: mapPosition.x,
+    y: mapPosition.y,
+    z: mapPosition.y,
+    heading: isFiniteNumber(state.visual.heading) ? state.visual.heading : rawFrame.heading,
+  };
 }
 
 function positionFromSpline(trackData, splinePosition) {
@@ -262,6 +437,12 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const containerRef = useRef(null);
   const animationRef = useRef(null);
   const lastCanvasRenderRef = useRef(0);
+  const playerMotionRef = useRef({
+    samples: [],
+    visual: null,
+    lastKey: null,
+    lastRenderAt: 0,
+  });
   const opponentMotionRef = useRef(new Map());
   const screenOpponentsRef = useRef([]);
   const racingLineOverlayRef = useRef(null);
@@ -506,7 +687,8 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         opponentsMeta: liveOpponentsMeta,
       } = useTelemetryStore.getState();
 
-      const liveFrame = window.__latestFrame || storeFrame;
+      const rawLiveFrame = window.__latestFrame || storeFrame;
+      const liveFrame = smoothedPlayerFrame(rawLiveFrame, playerMotionRef.current, frameTime, activePerformanceMode);
       const historyWindow = HISTORY_WINDOW_BY_MODE[activePerformanceMode] || HISTORY_WINDOW_BY_MODE.BALANCED;
 
       const renderOpponents = withEstimatedHeadings(liveOpponents

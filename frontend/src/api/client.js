@@ -50,6 +50,7 @@ function recordHttpPerf(config, status = 'success', response = null) {
   metrics.httpEndpoints[key] = endpoint
   if (key.includes('/api/live/telemetry')) metrics.telemetryPayloadKb = payloadKb
   if (key.includes('/api/live/racing-line')) metrics.racingLinePayloadKb = payloadKb
+  if (key.includes('/api/live/coach')) metrics.raceCoachPayloadKb = payloadKb
 }
 
 client.interceptors.request.use((config) => {
@@ -108,6 +109,14 @@ export const api = {
         microSectors,
         includeVisualLine: options.includeVisualLine,
         includeComparison: options.includeComparison,
+      },
+    })
+  ).data,
+  getRaceCoach: async (microSectors = 50, options = {}) => (
+    await client.get('/api/live/coach', {
+      params: {
+        microSectors,
+        performanceMode: options.performanceMode,
       },
     })
   ).data,
