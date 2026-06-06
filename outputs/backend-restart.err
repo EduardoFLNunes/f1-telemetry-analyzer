@@ -1,0 +1,15 @@
+INFO:     Will watch for changes in these directories: ['C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [37544] using WatchFiles
+INFO:     Started server process [16864]
+INFO:     Waiting for application startup.
+2026-06-02 13:25:33,353 - core.assetto_adapter - INFO - Connected to Assetto Corsa Shared Memory
+2026-06-02 13:25:33,354 - core.telemetry.telemetry_reader_impl - INFO - Telemetry source selected: assetto_corsa
+2026-06-02 13:25:33,356 - main - WARNING - No fixed KN5/cache TrackGeometry loaded; driver trajectory fallback is disabled
+2026-06-02 13:25:33,358 - core.recording.session_recorder - INFO - Session recording started: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\recordings\2026-06-02_13-25-33_unknown_track
+2026-06-02 13:25:33,358 - core.cognitive_runtime - INFO - Cognitive runtime started
+INFO:     Application startup complete.
+2026-06-02 13:25:33,360 - core.opponents.opponents_receiver - INFO - Opponents telemetry receiver started on 127.0.0.1:8765
+INFO:     ('127.0.0.1', 62038) - "WebSocket /ws" [accepted]
+2026-06-02 13:25:33,767 - core.websocket_server - INFO - New client connected. Total: 1
+INFO:     connection open

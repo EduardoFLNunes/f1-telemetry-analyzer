@@ -99,6 +99,14 @@
   50%       { opacity: 0; }
 }
 
+.backend-spin {
+  animation: backendSpin 0.85s linear infinite;
+}
+@keyframes backendSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 /* ── Slide-in ── */
 .slide-in {
   animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);

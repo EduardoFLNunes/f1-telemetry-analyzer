@@ -51,6 +51,7 @@ function recordHttpPerf(config, status = 'success', response = null) {
   if (key.includes('/api/live/telemetry')) metrics.telemetryPayloadKb = payloadKb
   if (key.includes('/api/live/racing-line')) metrics.racingLinePayloadKb = payloadKb
   if (key.includes('/api/live/coach')) metrics.raceCoachPayloadKb = payloadKb
+  if (key.includes('/api/live/physics-fast-lap')) metrics.physicsFastLapPayloadKb = payloadKb
 }
 
 client.interceptors.request.use((config) => {
@@ -102,6 +103,9 @@ export const api = {
       },
     })
   ).data,
+  getLiveSource: async () => (await client.get('/api/live/source')).data,
+  setLiveSource: async (source) => (await client.post(`/api/live/source/${source}`)).data,
+  shutdownBackend: async () => (await client.post('/api/system/shutdown', null, { timeout: 1500 })).data,
   getLiveComparison: async (microSectors = 50) => (await client.get('/api/live/comparison', { params: { microSectors } })).data,
   getRacingLine: async (microSectors = 50, options = {}) => (
     await client.get('/api/live/racing-line', {
@@ -119,6 +123,9 @@ export const api = {
         performanceMode: options.performanceMode,
       },
     })
+  ).data,
+  getPhysicsFastLap: async (microSectors = 50) => (
+    await client.get('/api/live/physics-fast-lap', { params: { microSectors } })
   ).data,
   getPlayerPhysics: async () => (await client.get('/api/live/player-physics')).data,
   getTelemetryData:async () => (await client.get('/api/data/telemetry')).data,

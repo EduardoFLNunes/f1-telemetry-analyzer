@@ -339,6 +339,7 @@ class TelemetrySourceConfig:
     requested_source: str = "auto"
     allow_replay_fallback: bool = False
     debug_replay_enabled: bool = False
+    assetto_auto_connect: bool = False
     replay_paths: Tuple[Path, ...] = ()
 
     @classmethod
@@ -347,6 +348,7 @@ class TelemetrySourceConfig:
             requested_source=_canonical_source_name(os.getenv("TELEMETRY_SOURCE", "auto")),
             allow_replay_fallback=_env_bool("ALLOW_REPLAY_FALLBACK", False),
             debug_replay_enabled=_env_bool("TELEMETRY_DEBUG_REPLAY", False),
+            assetto_auto_connect=_env_bool("ASSETTO_AUTO_CONNECT", False),
             replay_paths=tuple(Path(path) for path in replay_paths),
         )
 
@@ -360,6 +362,8 @@ class TelemetrySourceManager:
         self.sample_count = 0
         self.last_sample_time: Optional[str] = None
         self.last_world_position: Optional[List[float]] = None
+        self.last_auto_ac_probe_at = 0.0
+        self.auto_promote_enabled = config.requested_source == "auto" and config.assetto_auto_connect
 
     @staticmethod
     def detect_ac_available() -> bool:
@@ -375,6 +379,7 @@ class TelemetrySourceManager:
 
     def select_source(self, requested_source: Optional[str] = None) -> str:
         requested = _canonical_source_name(requested_source or self.config.requested_source)
+        self.auto_promote_enabled = requested == "auto" and self.config.assetto_auto_connect
         self.reader.stop()
         self.sample_count = 0
         self.last_sample_time = None
@@ -385,13 +390,20 @@ class TelemetrySourceManager:
         if requested == "replay":
             return self._select_replay()
         if requested == "mock":
-            return self._select_mock(ac_available=self.detect_ac_available())
+            return self._select_mock(ac_available=False)
         if requested != "auto":
             raise ValueError("TELEMETRY_SOURCE must be one of: auto, assetto_corsa, replay, mock")
 
+        if not self.config.assetto_auto_connect:
+            logger.warning("Telemetry source selected: mock; Assetto auto-connect is disabled")
+            if self.config.allow_replay_fallback or self.config.debug_replay_enabled:
+                return self._select_replay()
+            return self._select_mock(ac_available=False)
+
         ac_reader = ACSharedMemoryReader()
-        self.ac_available = ac_reader.connect()
-        if self.ac_available:
+        sample = ac_reader.read_sample()
+        self.ac_available = ac_reader.connected
+        if sample:
             self.reader = ac_reader
             self.active_source_name = "assetto_corsa"
             logger.info("Telemetry source selected: assetto_corsa")
@@ -405,11 +417,12 @@ class TelemetrySourceManager:
 
     def _select_assetto_corsa(self, fail_loudly: bool) -> str:
         ac_reader = ACSharedMemoryReader()
-        self.ac_available = ac_reader.connect()
-        if not self.ac_available:
+        sample = ac_reader.read_sample()
+        self.ac_available = ac_reader.connected
+        if not sample:
             ac_reader.stop()
             if fail_loudly:
-                raise RuntimeError("TELEMETRY_SOURCE=assetto_corsa requested, but Assetto Corsa shared memory is unavailable")
+                raise RuntimeError("Assetto Corsa telemetry is not ready. Open AC and enter a driving session before selecting assetto_corsa.")
             return self._select_mock(ac_available=False)
 
         self.reader = ac_reader
@@ -418,7 +431,7 @@ class TelemetrySourceManager:
         return self.active_source_name
 
     def _select_replay(self) -> str:
-        self.ac_available = self.detect_ac_available()
+        self.ac_available = False
         self.reader = ReplayCSVReader(self.config.replay_paths)
         self.active_source_name = "replay"
         logger.warning("Telemetry source selected: replay CSV fixture (%s)", getattr(self.reader, "loaded_from", None))
@@ -432,13 +445,38 @@ class TelemetrySourceManager:
         return self.active_source_name
 
     def read_sample(self) -> Optional[TelemetrySample]:
-        sample = self.reader.read_sample()
+        sample = self._read_sample_with_auto_promotion()
         if not sample:
             return None
 
         self.sample_count += 1
         self.last_sample_time = str(sample.timestamp)
         self.last_world_position = sample.worldPosition
+        return sample
+
+    def _read_sample_with_auto_promotion(self) -> Optional[TelemetrySample]:
+        if self.active_source_name != "mock" or not self.auto_promote_enabled:
+            return self.reader.read_sample()
+
+        now = time.monotonic()
+        if now - self.last_auto_ac_probe_at < 2.0:
+            return self.reader.read_sample()
+        self.last_auto_ac_probe_at = now
+
+        ac_reader = ACSharedMemoryReader()
+        sample = ac_reader.read_sample()
+        self.ac_available = ac_reader.connected
+        if not sample:
+            ac_reader.stop()
+            return self.reader.read_sample()
+
+        self.reader.stop()
+        self.reader = ac_reader
+        self.active_source_name = "assetto_corsa"
+        self.sample_count = 0
+        self.last_sample_time = None
+        self.last_world_position = None
+        logger.info("Telemetry source auto-promoted to assetto_corsa")
         return sample
 
     def stop(self):
@@ -480,7 +518,7 @@ class TelemetrySourceManager:
             self.reader = ReplayCSVReader(self.config.replay_paths)
         self.reader.replace_samples(reconstruction_samples, replay_samples)
         self.active_source_name = "replay"
-        self.ac_available = self.detect_ac_available()
+        self.ac_available = False
         self.sample_count = 0
         self.last_sample_time = None
         self.last_world_position = None

@@ -1,0 +1,23 @@
+auto : O termo 'auto' n∆o Ç reconhecido como nome de cmdlet, funá∆o, arquivo de script ou programa oper†vel. Verifique 
+a grafia do nome ou, se um caminho tiver sido inclu°do, veja se o caminho est† correto e tente novamente.
+No linha:1 caractere:23
++ $env:TELEMETRY_SOURCE=auto; $env:ASSETTO_AUTO_CONNECT=0; & C:\Users\D ...
++                       ~~~~
+    + CategoryInfo          : ObjectNotFound: (auto:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+INFO:     Will watch for changes in these directories: ['C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [27460] using WatchFiles
+INFO:     Started server process [28904]
+INFO:     Waiting for application startup.
+2026-06-02 13:30:19,607 - core.telemetry.telemetry_reader_impl - WARNING - Telemetry source selected: mock; Assetto auto-connect is disabled
+2026-06-02 13:30:19,607 - core.telemetry.telemetry_reader_impl - WARNING - Telemetry source selected: mock; replay fallback is disabled
+2026-06-02 13:30:19,803 - main - INFO - Loaded default Interlagos track-only geometry via InterlagosPitAccessAsphaltMergeFix from C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\debug\interlagos_pit_access_asphalt_merge_fix_candidate.json
+2026-06-02 13:30:19,806 - core.recording.session_recorder - INFO - Session recording started: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\recordings\2026-06-02_13-30-19_vhe_interlagos_gp_InterlagosPitAccessAsphaltMergeFix
+2026-06-02 13:30:19,806 - core.cognitive_runtime - INFO - Cognitive runtime started
+INFO:     Application startup complete.
+2026-06-02 13:30:19,807 - core.opponents.opponents_receiver - INFO - Opponents telemetry receiver started on 127.0.0.1:8765
+INFO:     ('127.0.0.1', 51904) - "WebSocket /ws" [accepted]
+2026-06-02 13:30:21,025 - core.websocket_server - INFO - New client connected. Total: 1
+INFO:     connection open

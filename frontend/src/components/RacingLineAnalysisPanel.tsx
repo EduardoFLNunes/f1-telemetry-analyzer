@@ -4,6 +4,7 @@ import { api } from '../api/client';
 import { RacingLineComparisonSegment, RacingLineLapSummary, RacingLinePayload } from '../types/racingLine';
 import { useRenderCounter } from '../hooks/useRenderCounter';
 import { RaceCoachPanel } from './RaceCoachPanel';
+import { PhysicsFastLapPanel } from './PhysicsFastLapPanel';
 
 const PANEL_BG = '#0c0c16';
 const SURFACE = 'rgba(255,255,255,0.025)';
@@ -273,6 +274,8 @@ export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPan
             <div className="num" style={{ fontSize: 10, color: MUTED, padding: '4px 0' }}>Aguardando voltas validas.</div>
           )}
         </div>
+
+        <PhysicsFastLapPanel active={active} microSectorCount={microSectorCount} />
 
         <RaceCoachPanel active={active} microSectorCount={microSectorCount} />
       </div>

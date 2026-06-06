@@ -11,6 +11,43 @@ from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
+FILE_MAP_READ = 0x0004
+AC_SHARED_MEMORY_TAGS = {
+    "physics": "acpmf_physics",
+    "graphics": "acpmf_graphics",
+    "static": "acpmf_static",
+}
+
+
+def _existing_shared_memory_tag(base_name: str) -> Optional[str]:
+    """Return an existing Windows mapping tag without creating it.
+
+    Python's mmap can create a named mapping when it is missing. Assetto Corsa
+    owns these pages, so we first probe with OpenFileMappingW to avoid
+    occupying acpmf_* names before the sim starts.
+    """
+
+    kernel32 = getattr(getattr(ctypes, "windll", None), "kernel32", None)
+    if kernel32 is None:
+        return base_name
+
+    for candidate in (f"Local\\{base_name}", base_name):
+        handle = kernel32.OpenFileMappingW(FILE_MAP_READ, False, candidate)
+        if handle:
+            kernel32.CloseHandle(handle)
+            return candidate
+    return None
+
+
+def _existing_ac_shared_memory_tags() -> Optional[Dict[str, str]]:
+    tags: Dict[str, str] = {}
+    for key, base_name in AC_SHARED_MEMORY_TAGS.items():
+        tag = _existing_shared_memory_tag(base_name)
+        if tag is None:
+            return None
+        tags[key] = tag
+    return tags
+
 # --- AC Shared Memory Structures ---
 
 class SPageFilePhysics(Structure):
@@ -207,17 +244,24 @@ class AssettoAdapter:
 
     def connect(self) -> bool:
         """Connects to the AC shared memory pages."""
+        tags = _existing_ac_shared_memory_tags()
+        if tags is None:
+            self.is_connected = False
+            logger.debug("Assetto Corsa shared memory pages are not available yet")
+            return False
+
         try:
-            # AC shared memory uses naming convention: acpmf_physics, acpmf_graphics, acpmf_static
-            self._mmap_physics = mmap.mmap(-1, ctypes.sizeof(SPageFilePhysics), tagname="acpmf_physics", access=mmap.ACCESS_READ)
-            self._mmap_graphics = mmap.mmap(-1, ctypes.sizeof(SPageFileGraphics), tagname="acpmf_graphics", access=mmap.ACCESS_READ)
-            self._mmap_static = mmap.mmap(-1, ctypes.sizeof(SPageFileStatic), tagname="acpmf_static", access=mmap.ACCESS_READ)
+            self.close()
+            self._mmap_physics = mmap.mmap(-1, ctypes.sizeof(SPageFilePhysics), tagname=tags["physics"], access=mmap.ACCESS_READ)
+            self._mmap_graphics = mmap.mmap(-1, ctypes.sizeof(SPageFileGraphics), tagname=tags["graphics"], access=mmap.ACCESS_READ)
+            self._mmap_static = mmap.mmap(-1, ctypes.sizeof(SPageFileStatic), tagname=tags["static"], access=mmap.ACCESS_READ)
             
             self.is_connected = True
             logger.info("Connected to Assetto Corsa Shared Memory")
             return True
         except Exception as e:
-            logger.error(f"Failed to connect to AC Shared Memory: {e}")
+            logger.warning(f"Failed to connect to AC Shared Memory: {e}")
+            self.close()
             self.is_connected = False
             return False
 
@@ -308,7 +352,12 @@ class AssettoAdapter:
 
     def close(self):
         """Closes memory mappings."""
-        if self._mmap_physics: self._mmap_physics.close()
-        if self._mmap_graphics: self._mmap_graphics.close()
-        if self._mmap_static: self._mmap_static.close()
+        for attr in ("_mmap_physics", "_mmap_graphics", "_mmap_static"):
+            mapping = getattr(self, attr)
+            if mapping:
+                try:
+                    mapping.close()
+                except Exception:
+                    pass
+                setattr(self, attr, None)
         self.is_connected = False

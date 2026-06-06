@@ -12,6 +12,7 @@ import { RacingLineAnalysisPanel } from './components/RacingLineAnalysisPanel';
 import { ReplayControls } from './components/ReplayControls';
 import { CognitiveDashboard } from './components/CognitiveDashboard';
 import { Header } from './components/Header';
+import { BackendControlBar } from './components/BackendControlBar';
 import { VehicleStatePanel, LapTimingPanel, StabilityPanel } from './components/LiveTelemetryPanels';
 import { useRenderCounter } from './hooks/useRenderCounter';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -94,6 +95,7 @@ const Dashboard: React.FC = () => {
         style={{ width: '100vw', height: '100vh', background: '#06060d', color: '#f1f5f9', overflow: 'hidden' }}
       >
         <Header time={time} />
+        <BackendControlBar />
 
         <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
           {!leftPanelOpen && (

@@ -11,7 +11,10 @@ from typing import Any, Dict, List, Optional
 import asyncio
 import io
 import logging
+import os
 import re
+import signal
+import subprocess
 
 import pandas as pd
 from fastapi import Body, FastAPI, File, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
@@ -37,6 +40,7 @@ from core.kn5.track_edges_from_surface import build_track_edges_from_surface_fro
 from core.kn5.track_surface_polygon import build_track_surface_polygon_from_manifest
 from core.opponents import OpponentsRuntime, OpponentsStateBuffer, SOURCE_NAME as OPPONENTS_SOURCE_NAME
 from core.performance_metrics import performance_metrics
+from core.physics_lap_model import build_physics_fast_lap_report
 from core.recording.recording_runtime import RecordingRuntime, config_from_env as recording_config_from_env
 from core.race_coach_analysis import build_coaching_report
 from core.reconstruction.track_reconstruction import TrackReconstructor
@@ -229,6 +233,90 @@ def prime_active_source():
     ingest_one_active_sample()
 
 
+def stop_runtime_components():
+    global telemetry_runtime, opponents_runtime, recording_runtime, cognitive_runtime
+
+    if opponents_runtime:
+        opponents_runtime.stop()
+        opponents_runtime = None
+    if telemetry_runtime:
+        telemetry_runtime.stop()
+        telemetry_runtime = None
+    if recording_runtime:
+        recording_runtime.stop()
+        recording_runtime = None
+    if cognitive_runtime:
+        cognitive_runtime.stop()
+        cognitive_runtime = None
+    source_manager.stop()
+
+
+def _backend_process_root_pid() -> int:
+    current_pid = os.getpid()
+    if os.name != "nt":
+        return current_pid
+
+    try:
+        completed = subprocess.run(
+            [
+                "powershell",
+                "-NoProfile",
+                "-Command",
+                (
+                    f"$p=Get-CimInstance Win32_Process -Filter \"ProcessId={current_pid}\"; "
+                    "if ($null -eq $p) { exit 1 }; "
+                    "$pp=Get-CimInstance Win32_Process -Filter \"ProcessId=$($p.ParentProcessId)\"; "
+                    "[Console]::Out.WriteLine($p.ParentProcessId); "
+                    "[Console]::Out.WriteLine($pp.Name); "
+                    "[Console]::Out.WriteLine($pp.CommandLine)"
+                ),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        lines = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
+        if completed.returncode != 0 or len(lines) < 2:
+            return current_pid
+        parent_pid = int(lines[0])
+        parent_name = lines[1].lower()
+        parent_command = " ".join(lines[2:]).lower()
+        parent_looks_like_backend = (
+            ("python" in parent_name or "uvicorn" in parent_command)
+            and ("main.py" in parent_command or "uvicorn" in parent_command or "f1-telemetry-analyzer" in parent_command)
+        )
+        return parent_pid if parent_looks_like_backend else current_pid
+    except Exception as exc:
+        logger.warning("Could not resolve backend parent process; shutting down current process only: %s", exc)
+        return current_pid
+
+
+def terminate_backend_process():
+    root_pid = _backend_process_root_pid()
+    logger.warning("Backend shutdown requested; terminating process tree rooted at PID %s", root_pid)
+    if os.name == "nt":
+        try:
+            subprocess.Popen(
+                ["taskkill", "/PID", str(root_pid), "/T", "/F"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+        finally:
+            os._exit(0)
+    os.kill(root_pid, signal.SIGTERM)
+
+
+async def shutdown_backend_soon():
+    await asyncio.sleep(0.35)
+    try:
+        stop_runtime_components()
+    except Exception as exc:
+        logger.warning("Runtime cleanup during backend shutdown failed: %s", exc)
+    terminate_backend_process()
+
+
 def build_telemetry_runtime() -> TelemetryRuntime:
     return TelemetryRuntime(
         source_manager=source_manager,
@@ -327,7 +415,7 @@ def telemetry_status_payload() -> Dict[str, Any]:
 async def lifespan(app: FastAPI):
     global telemetry_runtime, opponents_runtime, recording_runtime, cognitive_runtime
 
-    source_manager.select_source()
+    source_manager.select_source("mock")
     prime_active_source()
     initialize_spatial_state()
     recording_runtime = build_recording_runtime()
@@ -341,18 +429,7 @@ async def lifespan(app: FastAPI):
     opponents_runtime.start(loop)
     yield
 
-    if opponents_runtime:
-        opponents_runtime.stop()
-        opponents_runtime = None
-    if telemetry_runtime:
-        telemetry_runtime.stop()
-        telemetry_runtime = None
-    if recording_runtime:
-        recording_runtime.stop()
-        recording_runtime = None
-    if cognitive_runtime:
-        cognitive_runtime.stop()
-        cognitive_runtime = None
+    stop_runtime_components()
 
 
 app = FastAPI(
@@ -581,6 +658,27 @@ def live_coach_payload(
     )
 
 
+def live_physics_fast_lap_payload(micro_sectors: int = 50) -> Dict[str, Any]:
+    micro_sector_count = max(1, min(200, int(micro_sectors or 50)))
+    racing_line_payload = live_racing_line_payload(
+        micro_sector_count,
+        include_visual_line=True,
+        include_comparison=True,
+    )
+    payload = build_physics_fast_lap_report(
+        racing_line_payload,
+        micro_sectors=micro_sector_count,
+    )
+    logger.debug(
+        "Physics Fast Lap generated: status=%s reference=%s physicsTime=%s cacheHit=%s",
+        payload.get("status"),
+        payload.get("referenceLapNumber"),
+        payload.get("summary", {}).get("estimatedPhysicsLapTimeSeconds"),
+        payload.get("debug", {}).get("physicsTargetCacheHit"),
+    )
+    return payload
+
+
 def live_player_physics_payload() -> Dict[str, Any]:
     samples = telemetry_buffer.get_samples()
     player_samples = [sample for sample in samples if int(getattr(sample, "carId", 0) or 0) == 0]
@@ -685,6 +783,16 @@ async def get_analysis_coach(
     return live_coach_payload(microSectors, performance_mode=performanceMode)
 
 
+@app.get("/api/live/physics-fast-lap")
+async def get_live_physics_fast_lap(microSectors: int = Query(50, ge=1, le=200)):
+    return live_physics_fast_lap_payload(microSectors)
+
+
+@app.get("/api/analysis/physics-fast-lap")
+async def get_analysis_physics_fast_lap(microSectors: int = Query(50, ge=1, le=200)):
+    return live_physics_fast_lap_payload(microSectors)
+
+
 @app.get("/api/live/player-physics")
 async def get_live_player_physics():
     return live_player_physics_payload()
@@ -757,6 +865,17 @@ async def set_live_source(source: str):
         return {"status": "success", "source": selected, **telemetry_status_payload()}
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/api/system/shutdown")
+async def shutdown_backend():
+    asyncio.create_task(shutdown_backend_soon())
+    return {
+        "status": "shutting_down",
+        "source": source_manager.get_active_source_name(),
+        "pid": os.getpid(),
+        "message": "Backend shutdown requested",
+    }
 
 
 @app.post("/api/live/telemetry")
