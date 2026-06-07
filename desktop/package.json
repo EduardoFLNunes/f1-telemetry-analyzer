@@ -1,0 +1,16 @@
+{
+  "name": "automobilista-telemetria-desktop",
+  "private": true,
+  "version": "0.1.0-phase-12",
+  "description": "Desktop shell preparation for Automobilista Telemetria.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node scripts/start.js --dev",
+    "desktop:dev": "node scripts/start.js --dev",
+    "desktop:prod": "node scripts/start.js --production",
+    "desktop:build": "echo Installer packaging is planned for Phase 12.2"
+  },
+  "devDependencies": {
+    "electron": "^42.3.3"
+  }
+}

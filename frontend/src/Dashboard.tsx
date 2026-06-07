@@ -9,6 +9,7 @@ import { GGDiagram } from './components/GGDiagram';
 import { CoachingFeed } from './components/CoachingFeed';
 import { AIDebriefPanel } from './components/AIDebriefPanel';
 import { AIEngineerPanel } from './components/AIEngineerPanel';
+import { DesktopRuntimePanel } from './components/DesktopRuntimePanel';
 import { ReplayControls } from './components/ReplayControls';
 import { CognitiveDashboard } from './components/CognitiveDashboard';
 import { Header } from './components/Header';
@@ -291,6 +292,10 @@ const Dashboard: React.FC = () => {
             {/* Coaching feed */}
             <div style={{ height: 220, overflow: 'hidden' }}>
               <CoachingFeed />
+            </div>
+
+            <div style={{ height: 156, overflow: 'hidden' }}>
+              <DesktopRuntimePanel />
             </div>
 
           </div>
