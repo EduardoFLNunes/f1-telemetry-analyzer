@@ -6,7 +6,7 @@ state. CSV track maps are deliberately not used as a source of truth.
 """
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 import asyncio
 import io
 import logging
@@ -24,6 +24,7 @@ from core.geometry.track_geometry_provider import (
     DebugTrajectoryTrackGeometryProvider,
     Kn5SurfaceTrackGeometryProvider,
 )
+from core.ideal_line_overlay import build_racing_line_response
 from core.live.lap_collector import TrackBuildState
 from core.live.runtime_state import RuntimeState
 from core.live.telemetry_runtime import TelemetryRuntime
@@ -39,7 +40,7 @@ from core.telemetry.telemetry_buffer import TelemetryBuffer
 from core.telemetry.telemetry_models import TelemetrySample
 from core.telemetry.telemetry_reader_impl import TelemetrySourceManager, telemetry_samples_from_dataframe
 from core.track_file_resolver import TrackFileResolver
-from core.telemetry_events import event_bus
+from core.telemetry_events import COACHING_EVENT, event_bus
 from core.websocket_server import manager as ws_manager
 
 
@@ -66,6 +67,16 @@ telemetry_runtime: Optional[TelemetryRuntime] = None
 opponents_buffer = OpponentsStateBuffer()
 opponents_runtime: Optional[OpponentsRuntime] = None
 recording_runtime: Optional[RecordingRuntime] = None
+reference_line_fixture_cache: Optional[List[TelemetrySample]] = None
+recent_coaching_events: List[Dict[str, Any]] = []
+
+
+async def remember_coaching_event(event: Dict[str, Any]):
+    recent_coaching_events.insert(0, event)
+    del recent_coaching_events[50:]
+
+
+event_bus.subscribe(COACHING_EVENT, remember_coaching_event)
 
 
 def _safe_cache_fragment(value: str) -> str:
@@ -273,6 +284,47 @@ def live_trajectory_api() -> List[Dict[str, Any]]:
         }
         for sample in samples[::3]
     ]
+
+
+def reference_line_fixture_samples() -> List[TelemetrySample]:
+    global reference_line_fixture_cache
+
+    if reference_line_fixture_cache is not None:
+        return reference_line_fixture_cache
+
+    for path in (PRIMARY_TELEMETRY_FIXTURE, DEBUG_TELEMETRY_FIXTURE):
+        if not path.exists():
+            continue
+        try:
+            samples = telemetry_samples_from_dataframe(
+                pd.read_csv(path),
+                source_name=path.name,
+                lap_mode="representative",
+            )
+            if samples:
+                reference_line_fixture_cache = samples
+                return reference_line_fixture_cache
+        except Exception as exc:
+            logger.warning("Reference line fixture %s could not be loaded: %s", path, exc)
+
+    reference_line_fixture_cache = []
+    return reference_line_fixture_cache
+
+
+def ideal_line_candidate_samples() -> Tuple[List[TelemetrySample], str, Optional[int], str]:
+    if telemetry_runtime and telemetry_runtime.lap_collector.completed_lap_samples:
+        samples = list(telemetry_runtime.lap_collector.completed_lap_samples)
+        return samples, "REFERENCE_LAP", None, "completed_live_lap"
+
+    replay_reference = source_manager.get_reconstruction_samples()
+    if replay_reference:
+        return replay_reference, "REFERENCE_LAP", None, "active_replay_reference"
+
+    fixture_reference = reference_line_fixture_samples()
+    if fixture_reference:
+        return fixture_reference, "REFERENCE_LAP", None, "reference_fixture"
+
+    return [], "UNKNOWN", None, "none"
 
 
 def telemetry_status_payload() -> Dict[str, Any]:
@@ -484,6 +536,28 @@ async def get_live_telemetry():
         "centerline": track["centerline"] if track and status["activeTrackReady"] else None,
         "liveTrajectory": live_trajectory_api(),
         "car": car,
+    }
+
+
+@app.get("/api/live/racing-line")
+async def get_live_racing_line():
+    samples, source, reference_lap_number, provider = ideal_line_candidate_samples()
+    response = build_racing_line_response(
+        samples,
+        source=source,
+        reference_lap_number=reference_lap_number,
+    )
+    response["debug"]["candidateProvider"] = provider
+    return response
+
+
+@app.get("/api/live/coach")
+async def get_live_coach():
+    return {
+        "status": "success",
+        "source": "event_bus",
+        "eventCount": len(recent_coaching_events),
+        "events": recent_coaching_events[:20],
     }
 
 

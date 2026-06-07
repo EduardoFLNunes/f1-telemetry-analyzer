@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "test:overlay": "node --test tests/idealLineOverlay.test.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },

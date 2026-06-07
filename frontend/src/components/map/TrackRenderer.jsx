@@ -1,10 +1,23 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { api } from '../../api/client';
 import { useTelemetryStore } from '../../store/useTelemetryStore';
 import { drawCar, drawOpponentCar } from './CarRenderer.jsx';
 import { applyCameraTransform, computeTrackBounds } from './CameraController.jsx';
 import { drawHud, drawTrackSurface } from './OverlayRenderer.jsx';
+import {
+  LINE_OVERLAY_MODES,
+  LINE_PERFORMANCE_MODES,
+  LINE_VISUAL_MODES,
+  buildCurrentLinePathCache,
+  buildIdealLineOverlayCache,
+  drawCurrentLineOverlay,
+  drawIdealLineOverlay,
+  drawPreviousLineOverlay,
+  formatIdealLineSourceLabel,
+} from './idealLineOverlay.js';
 
 const MAP_RENDER_FRAME_MS = 1000 / 20;
+const LINE_OVERLAY_REFRESH_MS = 8000;
 
 function normalizeTrack(trackData) {
   if (!trackData) return null;
@@ -238,6 +251,8 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const containerRef = useRef(null);
   const animationRef = useRef(null);
   const lastCanvasRenderRef = useRef(0);
+  const currentLineCacheRef = useRef(null);
+  const previousLineCacheRef = useRef(null);
   const opponentMotionRef = useRef(new Map());
   const screenOpponentsRef = useRef([]);
   const [cameraMode, setCameraMode] = useState('OVERVIEW');
@@ -271,6 +286,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     staleAfterSeconds: null,
   });
   const [showPerf, setShowPerf] = useState(false);
+  const [lineOverlayMode, setLineOverlayMode] = useState(LINE_OVERLAY_MODES.OFF);
+  const [lineVisualMode, setLineVisualMode] = useState(LINE_VISUAL_MODES.LINES);
+  const [linePerformanceMode, setLinePerformanceMode] = useState(LINE_PERFORMANCE_MODES.BALANCED);
+  const [idealLineData, setIdealLineData] = useState(null);
+  const [idealLineStatus, setIdealLineStatus] = useState('idle');
   const [perfStats, setPerfStats] = useState({
     fps: 0,
     avgRenderMs: 0,
@@ -313,6 +333,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     }),
     [visibleOpponents],
   );
+  const idealLineCache = useMemo(
+    () => buildIdealLineOverlayCache(idealLineData, linePerformanceMode),
+    [idealLineData, linePerformanceMode],
+  );
+  const lineOverlayActive = lineOverlayMode !== LINE_OVERLAY_MODES.OFF;
 
   useEffect(() => {
     cameraRef.current.mode = cameraMode;
@@ -325,6 +350,38 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   useEffect(() => {
     selectedOpponentRef.current = selectedOpponent;
   }, [selectedOpponent]);
+
+  useEffect(() => {
+    if (!lineOverlayActive) {
+      setIdealLineStatus('idle');
+      return undefined;
+    }
+
+    let cancelled = false;
+    let inFlight = false;
+    const loadRacingLine = async () => {
+      if (inFlight) return;
+      inFlight = true;
+      setIdealLineStatus((status) => (status === 'ready' ? status : 'loading'));
+      try {
+        const data = await api.getLiveRacingLine();
+        if (cancelled) return;
+        setIdealLineData(data?.idealLineOverlay || null);
+        setIdealLineStatus('ready');
+      } catch {
+        if (!cancelled) setIdealLineStatus('error');
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    loadRacingLine();
+    const interval = setInterval(loadRacingLine, LINE_OVERLAY_REFRESH_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [lineOverlayActive]);
 
   useEffect(() => {
     let lastOpponentsStamp = null;
@@ -382,12 +439,15 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       ctx.fillStyle = '#070a12';
       ctx.fillRect(0, 0, rect.width, rect.height);
 
+      const telemetryState = useTelemetryStore.getState();
       const {
         latestFrame: liveFrame,
         history: liveHistory,
+        currentLapSamples: liveCurrentLapSamples,
+        previousLapSamples: livePreviousLapSamples,
         opponents: liveOpponents,
         opponentsMeta: liveOpponentsMeta,
-      } = useTelemetryStore.getState();
+      } = telemetryState;
       const renderOpponents = withEstimatedHeadings(liveOpponents
         .map((opponent) => resolveOpponentRenderState(opponent, normalizedTrack))
         .filter(Boolean), opponentMotionRef.current);
@@ -403,6 +463,22 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
 
       if (normalizedTrack) {
         drawTrackSurface(ctx, normalizedTrack, renderBounds, scale);
+      }
+      if (lineOverlayMode === LINE_OVERLAY_MODES.LINE) {
+        const speedContour = lineVisualMode === LINE_VISUAL_MODES.SPEED;
+        drawIdealLineOverlay(ctx, idealLineCache, scale, { speedContour });
+        previousLineCacheRef.current = buildCurrentLinePathCache(
+          livePreviousLapSamples || [],
+          linePerformanceMode,
+          previousLineCacheRef.current,
+        );
+        currentLineCacheRef.current = buildCurrentLinePathCache(
+          liveCurrentLapSamples || [],
+          linePerformanceMode,
+          currentLineCacheRef.current,
+        );
+        drawPreviousLineOverlay(ctx, previousLineCacheRef.current, scale, { speedContour });
+        drawCurrentLineOverlay(ctx, currentLineCacheRef.current, scale, { speedContour });
       }
 
       const screenOpponents = renderOpponents
@@ -485,7 +561,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [bounds, normalizedTrack]);
+  }, [bounds, idealLineCache, lineOverlayMode, linePerformanceMode, lineVisualMode, normalizedTrack]);
 
   const handleWheel = useCallback((event) => {
     event.preventDefault();
@@ -560,6 +636,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const tooltipWorld = tooltipOpponent?.worldPosition || {};
   const totalOpponents = panelOpponentsMeta.count || visibleOpponents.length;
   const compactOpponentsPanel = mapSize.width > 0 && mapSize.width < 260;
+  const idealLinePointCount = Array.isArray(idealLineData?.points) ? idealLineData.points.length : 0;
+  const idealLineSource = idealLineData?.source || 'UNKNOWN';
+  const idealLineSourceLabel = idealLineStatus === 'error'
+    ? 'Unavailable'
+    : formatIdealLineSourceLabel(idealLineData);
 
   return (
     <div
@@ -593,6 +674,60 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
             </button>
           ))}
         </div>
+        <div className="panel px-1.5 py-1 flex gap-1">
+          {[
+            { mode: LINE_OVERLAY_MODES.OFF, label: 'MAP' },
+            { mode: LINE_OVERLAY_MODES.LINE, label: 'LINE' },
+          ].map((item) => (
+            <button
+              key={item.mode}
+              onClick={() => setLineOverlayMode(item.mode)}
+              className={`px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all ${
+                lineOverlayMode === item.mode ? 'bg-violet-500/15 text-violet-300 border border-violet-500/30' : 'text-slate-600 hover:text-slate-400'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        {lineOverlayActive && (
+          <div className="panel px-1.5 py-1 flex gap-1">
+            {[
+              { mode: LINE_VISUAL_MODES.LINES, label: 'LINES' },
+              { mode: LINE_VISUAL_MODES.SPEED, label: 'SPEED' },
+            ].map((item) => (
+              <button
+                key={item.mode}
+                onClick={() => setLineVisualMode(item.mode)}
+                className={`px-2 py-0.5 num text-[7px] uppercase rounded-sm transition-all ${
+                  lineVisualMode === item.mode ? 'bg-violet-500/15 text-violet-300 border border-violet-500/30' : 'text-slate-600 hover:text-slate-400'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+        {lineOverlayActive && (
+          <div className="panel px-1.5 py-1 flex gap-1">
+            {[
+              { mode: LINE_PERFORMANCE_MODES.QUALITY, label: 'Q' },
+              { mode: LINE_PERFORMANCE_MODES.BALANCED, label: 'B' },
+              { mode: LINE_PERFORMANCE_MODES.PERFORMANCE, label: 'P' },
+            ].map((item) => (
+              <button
+                key={item.mode}
+                onClick={() => setLinePerformanceMode(item.mode)}
+                className={`px-1.5 py-0.5 num text-[7px] uppercase rounded-sm transition-all ${
+                  linePerformanceMode === item.mode ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30' : 'text-slate-600 hover:text-slate-400'
+                }`}
+                title={item.mode}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="panel px-1.5 py-1">
           <button
             type="button"
@@ -638,6 +773,42 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           </div>
         )}
       </div>
+
+      {lineOverlayActive && (
+        <div
+          className="absolute right-3 bottom-3 panel px-2 py-2"
+          style={{
+            zIndex: 65,
+            width: 198,
+            pointerEvents: 'none',
+            background: 'rgba(8, 12, 22, 0.86)',
+          }}
+        >
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <span className="label" style={{ fontSize: 6 }}>LINE OVERLAY</span>
+            <span className="num text-[7px] text-violet-300">{idealLineStatus.toUpperCase()}</span>
+          </div>
+          <div className="grid gap-1" style={{ gridTemplateColumns: '12px 1fr' }}>
+            <span style={{ width: 10, height: 3, marginTop: 5, borderRadius: 2, background: '#a855f7' }} />
+            <span className="num text-[8px] text-slate-300">IDEAL: purple line</span>
+            <>
+              {lineVisualMode === LINE_VISUAL_MODES.SPEED && (
+                <>
+                <span style={{ width: 10, height: 3, marginTop: 5, borderRadius: 2, background: 'linear-gradient(90deg, #ef4444, #f59e0b, #22c55e)' }} />
+                <span className="num text-[8px] text-slate-400">speed contour on all lines</span>
+                </>
+              )}
+              <span style={{ width: 10, height: 3, marginTop: 5, borderRadius: 2, background: '#fbbf24' }} />
+              <span className="num text-[8px] text-slate-300">PREVIOUS: yellow lap trace</span>
+              <span style={{ width: 10, height: 3, marginTop: 5, borderRadius: 2, background: '#38bdf8' }} />
+              <span className="num text-[8px] text-slate-300">CURRENT: blue lap trace</span>
+            </>
+          </div>
+          <div className="num text-[7px] text-slate-500 mt-1 truncate">
+            Fonte: {idealLineSourceLabel} / {idealLineSource} / {idealLinePointCount} pts
+          </div>
+        </div>
+      )}
 
       {visibleOpponents.length > 0 && (
         <div

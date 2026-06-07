@@ -33,6 +33,7 @@ export const api = {
   getTrackCache:   async () => (await client.get('/api/track/cache')).data,
   getCarState:     async () => (await client.get('/api/car/state')).data,
   getLiveTelemetry:async () => (await client.get('/api/live/telemetry')).data,
+  getLiveRacingLine:async () => (await client.get('/api/live/racing-line')).data,
   getTelemetryData:async () => (await client.get('/api/data/telemetry')).data,
   getAiRaceline:   async () => (await client.get('/api/data/ai-raceline')).data,
   getComparison:   async () => (await client.get('/api/data/comparison')).data,
