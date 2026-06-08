@@ -57,6 +57,8 @@ LIVE_TRACK_CACHE_PREFIX = "assetto_corsa"
 TRACK_CACHE_DIR = REPO_ROOT / "data" / "cache" / "tracks"
 PRIMARY_TELEMETRY_FIXTURE = REPO_ROOT / "data" / "example_telemetry.csv"
 DEBUG_TELEMETRY_FIXTURE = REPO_ROOT / "data" / "example_telemetryOld.csv"
+BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
+BACKEND_PHASE_VERSION = "phase-12-prep"
 
 runtime_state = RuntimeState()
 telemetry_buffer = TelemetryBuffer(max_size=20000)
@@ -368,6 +370,69 @@ def telemetry_status_payload() -> Dict[str, Any]:
     }
 
 
+def runtime_status_payload() -> Dict[str, Any]:
+    telemetry_status = telemetry_runtime.status() if telemetry_runtime else {
+        **source_manager.status(),
+        "trackState": runtime_state.track_build_state.value,
+        "method": runtime_state.build_method,
+        "sampleCount": source_manager.sample_count,
+        "lapComplete": runtime_state.lap_complete,
+        "activeTrackReady": runtime_state.track_build_state == TrackBuildState.TRACK_READY,
+        "candidateLapSampleCount": 0,
+        "liveTrajectoryCount": len(telemetry_buffer.get_samples()),
+    }
+    opponents_meta = opponents_buffer.metadata()
+    completed_live_lap = bool(
+        telemetry_runtime and telemetry_runtime.lap_collector.completed_lap_samples
+    )
+    replay_reference_ready = bool(source_manager.get_reconstruction_samples())
+    fixture_reference_ready = reference_line_fixture_cache is not None and bool(reference_line_fixture_cache)
+
+    return {
+        "status": "ok",
+        "service": BACKEND_SERVICE_NAME,
+        "version": BACKEND_PHASE_VERSION,
+        "backend": {
+            "online": True,
+            "trackState": runtime_state.track_build_state.value,
+            "buildMethod": runtime_state.build_method,
+            "trackCache": runtime_state.current_track_name,
+        },
+        "telemetry": {
+            "online": telemetry_runtime is not None,
+            "source": telemetry_status.get("source"),
+            "activeReader": telemetry_status.get("active_reader"),
+            "sampleCount": telemetry_status.get("sampleCount", telemetry_status.get("sample_count")),
+            "liveTrajectoryCount": telemetry_status.get("liveTrajectoryCount"),
+            "activeTrackReady": telemetry_status.get("activeTrackReady"),
+        },
+        "opponents": {
+            "online": opponents_runtime is not None,
+            "count": len(opponents_buffer.latest()),
+            "track": opponents_meta.get("track"),
+            "lastUpdateTimestamp": opponents_meta.get("lastUpdateTimestamp"),
+            "staleAfterSeconds": opponents_meta.get("staleAfterSeconds"),
+            "udpPort": 8765,
+        },
+        "racingLine": {
+            "available": completed_live_lap or replay_reference_ready or fixture_reference_ready,
+            "sourceCandidates": {
+                "completedLiveLap": completed_live_lap,
+                "activeReplayReference": replay_reference_ready,
+                "fixtureReferenceLoaded": fixture_reference_ready,
+            },
+        },
+        "coach": {
+            "online": True,
+            "eventCount": len(recent_coaching_events),
+        },
+        "websocket": {
+            "path": "/ws",
+            "connections": len(ws_manager.active_connections),
+        },
+    }
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global telemetry_runtime, opponents_runtime, recording_runtime
@@ -420,6 +485,20 @@ async def health_check():
         "track_cache": runtime_state.current_track_name,
         "telemetry": telemetry_status_payload(),
     }
+
+
+@app.get("/api/health")
+async def api_health_check():
+    return {
+        "status": "ok",
+        "service": BACKEND_SERVICE_NAME,
+        "version": BACKEND_PHASE_VERSION,
+    }
+
+
+@app.get("/api/runtime/status")
+async def get_runtime_status():
+    return runtime_status_payload()
 
 
 @app.websocket("/ws")
