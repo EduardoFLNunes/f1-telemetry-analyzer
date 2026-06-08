@@ -113,8 +113,15 @@ Desktop shell variables:
 - `AT_BACKEND_URL`
 - `AT_BACKEND_WS_URL`
 - `AT_BACKEND_HEALTH_URL`
+- `AT_DESKTOP_AUTOSTART_BACKEND`
 - `AT_DESKTOP_START_BACKEND`
 - `DESKTOP_AUTOSTART_BACKEND`
+- `AT_BACKEND_EXE_PATH`
+- `AT_BACKEND_USE_PYTHON_RUNNER`
+- `AT_BACKEND_RUNNER`
+- `AT_BACKEND_PYTHON`
+- `AT_BACKEND_RUNNER_PATH`
+- `AT_BACKEND_REPO_ROOT`
 - `AT_BACKEND_COMMAND`
 - `AT_BACKEND_ARGS`
 - `AT_UDP_OPPONENTS_PORT`
@@ -281,6 +288,110 @@ PyInstaller has not been run in Phase 12.1. The next phase should create a
 dedicated production runner with `reload=False`, then validate hidden imports,
 native dependencies, logs, writable cache paths, and Electron autostart.
 
+## Phase 12.2 Status
+
+Phase 12.2 adds a real packaged backend runner and controlled Electron
+autostart.
+
+### Backend Runner
+
+Created:
+
+```text
+backend/desktop_backend_runner.py
+```
+
+The runner imports the existing FastAPI app and starts Uvicorn
+programmatically. It supports:
+
+- `AT_BACKEND_HOST`, default `127.0.0.1`.
+- `AT_BACKEND_PORT`, default `8000`.
+- `AT_BACKEND_LOG_LEVEL`, default `info`.
+- `AT_BACKEND_REPO_ROOT`, used for cache, recordings, and data paths.
+
+`backend/main.py` now resolves `REPO_ROOT` from `AT_BACKEND_REPO_ROOT` when
+present. This prevents PyInstaller onefile runs from writing runtime data under
+the temporary extraction directory.
+
+### PyInstaller Build
+
+Created:
+
+```text
+backend/packaging/build_backend.ps1
+```
+
+Build command:
+
+```bash
+powershell -ExecutionPolicy Bypass -File backend\packaging\build_backend.ps1
+```
+
+Generated executable:
+
+```text
+backend/dist/automobilista-backend.exe
+```
+
+The executable was validated against:
+
+- `GET /api/health`
+- `GET /api/runtime/status`
+- `GET /api/live/telemetry`
+- `GET /api/live/opponents`
+- `GET /api/live/racing-line`
+- `GET /api/live/coach`
+
+PyInstaller currently emits warnings about optional test modules from pandas
+and pyarrow hooks. The executable still runs; Phase 12.3 should trim hook
+collection and package size.
+
+### Controlled Autostart
+
+Added:
+
+```bash
+cd desktop
+npm run desktop:prod:autostart
+```
+
+Behavior:
+
+1. Electron checks `/api/health`.
+2. If backend is already online, Electron records `already-running`, does not
+   start another backend, and does not stop the existing backend on close.
+3. If backend is offline and autostart is enabled, Electron locates:
+
+```text
+backend/dist/automobilista-backend.exe
+```
+
+or a path from `AT_BACKEND_EXE_PATH`, starts it, captures stdout/stderr, waits
+for health, and stops only the process tree it started.
+
+Python runner autostart is available for development by setting:
+
+```text
+AT_BACKEND_RUNNER=python
+```
+
+or:
+
+```text
+AT_BACKEND_USE_PYTHON_RUNNER=true
+```
+
+### Runtime Diagnostics
+
+The dashboard runtime panel now also reports:
+
+- Backend source: `already-running`, `packaged-exe`, `python-runner`,
+  `custom-command`, or `unavailable`.
+- Autostart enabled/disabled.
+- Whether the backend was started by Electron.
+- Backend executable/runner path when available.
+- Last backend error when present.
+
 ## Build Commands
 
 Frontend production build:
@@ -314,6 +425,13 @@ npm.cmd run build
 ```bash
 cd desktop
 npm run desktop:prod
+```
+
+Desktop production with controlled backend autostart:
+
+```bash
+cd desktop
+npm run desktop:prod:autostart
 ```
 
 ## Logs Plan
@@ -362,10 +480,11 @@ by this phase.
 6. Add port conflict detection and a diagnostics view.
 7. Add installer flow and Assetto Corsa exporter checks.
 
-## Recommended Phase 12.2
+## Recommended Phase 12.3
 
-- Create and validate a PyInstaller runner for the backend.
-- Replace the command stub with the packaged executable path.
-- Expand port probing and user-facing recovery for conflicts.
+- Add Electron Builder packaging and include `automobilista-backend.exe` as a
+  resource.
+- Trim PyInstaller hook collection and reduce executable size.
+- Expand user-facing recovery for port conflicts.
 - Add installer planning without packaging the Assetto Corsa exporter yet.
 - Define runtime config file location for user-selected ports and paths.

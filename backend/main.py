@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import asyncio
 import io
 import logging
+import os
 import re
 
 import pandas as pd
@@ -51,7 +52,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 BACKEND_DIR = Path(__file__).resolve().parent
-REPO_ROOT = BACKEND_DIR.parent
+REPO_ROOT = Path(os.environ.get("AT_BACKEND_REPO_ROOT", BACKEND_DIR.parent)).resolve()
 REPLAY_TRACK_CACHE_NAME = "telemetry_reconstructed_multilap_v1"
 LIVE_TRACK_CACHE_PREFIX = "assetto_corsa"
 TRACK_CACHE_DIR = REPO_ROOT / "data" / "cache" / "tracks"

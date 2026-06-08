@@ -294,7 +294,7 @@ const Dashboard: React.FC = () => {
               <CoachingFeed />
             </div>
 
-            <div style={{ height: 156, overflow: 'hidden' }}>
+            <div style={{ height: 214, overflow: 'hidden' }}>
               <DesktopRuntimePanel />
             </div>
 

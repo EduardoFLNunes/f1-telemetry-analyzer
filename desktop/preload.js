@@ -30,6 +30,10 @@ function portFromUrl(url, fallback) {
   }
 }
 
+function flagEnabled(value) {
+  return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
+}
+
 const apiBaseUrl = stripTrailingSlash(
   process.env.AT_BACKEND_URL ||
   process.env.VITE_API_BASE_URL ||
@@ -39,6 +43,9 @@ const apiBaseUrl = stripTrailingSlash(
 const frontendDevUrl = process.env.AT_DESKTOP_FRONTEND_URL || DEFAULT_FRONTEND_DEV_URL;
 const wsUrl = process.env.VITE_WS_URL || process.env.AT_BACKEND_WS_URL || apiBaseToWebSocketUrl(apiBaseUrl);
 const mode = process.env.AT_DESKTOP_MODE === 'production' ? 'production' : 'development';
+const autostartEnabled = flagEnabled(process.env.AT_DESKTOP_AUTOSTART_BACKEND)
+  || flagEnabled(process.env.AT_DESKTOP_START_BACKEND)
+  || flagEnabled(process.env.DESKTOP_AUTOSTART_BACKEND);
 
 contextBridge.exposeInMainWorld('desktopRuntime', {
   apiBaseUrl,
@@ -47,10 +54,12 @@ contextBridge.exposeInMainWorld('desktopRuntime', {
   frontendDevPort: portFromUrl(frontendDevUrl, 5173),
   udpOpponentsPort: Number(process.env.AT_UDP_OPPONENTS_PORT || DEFAULT_UDP_OPPONENTS_PORT),
   mode,
-  phase: 'phase-12.1-prep',
+  autostartEnabled,
+  phase: 'phase-12.2-prep',
 });
 
 contextBridge.exposeInMainWorld('automobilistaDesktop', {
   backendHealth: () => ipcRenderer.invoke('backend:health'),
-  phase: 'phase-12.1-prep',
+  runtimeStatus: () => ipcRenderer.invoke('desktop:runtime'),
+  phase: 'phase-12.2-prep',
 });
