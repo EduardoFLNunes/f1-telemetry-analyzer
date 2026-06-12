@@ -1,8 +1,8 @@
 # Automobilista Telemetria Desktop Shell
 
-Phase 12.2 prepares the Electron shell to run with a packaged backend runner and
-controlled autostart. It does not create the final Windows installer and does
-not enable backend autostart by default.
+Phase 12.3 packages the Electron shell with a copied backend executable and
+frontend build under Electron `resources/`. Packaged builds start the bundled
+backend by default; development builds still require an explicit autostart flag.
 
 ## Current Terminal Flow
 
@@ -70,6 +70,52 @@ stop another process. If the backend is offline, it searches for
 `automobilista-backend.exe`, starts it, waits for health, captures logs, and
 stops only the backend process tree it started.
 
+## Electron Builder Packaging
+
+Build prerequisites:
+
+```bash
+cd frontend
+npm.cmd run build
+```
+
+```bash
+powershell -ExecutionPolicy Bypass -File backend\packaging\build_backend.ps1
+```
+
+Create an unpacked Windows app:
+
+```bash
+cd desktop
+npm run pack
+```
+
+Create the NSIS installer:
+
+```bash
+cd desktop
+npm run dist:win
+```
+
+The packaged app expects these resources:
+
+```text
+desktop/dist/win-unpacked/resources/backend/automobilista-backend.exe
+desktop/dist/win-unpacked/resources/frontend/index.html
+desktop/dist/win-unpacked/resources/data/example_telemetry.csv
+```
+
+When packaged, Electron resolves the backend in this order:
+
+1. `AT_BACKEND_EXE_PATH`
+2. `process.resourcesPath\backend\automobilista-backend.exe`
+3. Development fallbacks under the repository.
+
+The frontend static build resolves from:
+
+1. `process.resourcesPath\frontend\index.html`
+2. Development fallback `frontend\dist\index.html`.
+
 ## Runtime Config
 
 The preload exposes `window.desktopRuntime` with:
@@ -103,12 +149,15 @@ The frontend also continues to support:
 - `AT_BACKEND_RUNNER=python`: alternate Python-runner selector.
 - `AT_BACKEND_PYTHON`: Python executable used by the Python runner mode.
 - `AT_BACKEND_RUNNER_PATH`: explicit path to `desktop_backend_runner.py`.
-- `AT_BACKEND_REPO_ROOT`: runtime root for cache, recordings, and data files.
+- `AT_BACKEND_RESOURCE_ROOT`: read-only root for packaged fixtures/resources.
+- `AT_BACKEND_RUNTIME_ROOT`: writable root for cache and recordings.
+- `AT_BACKEND_REPO_ROOT`: legacy fallback root for local development.
+- `AT_DESKTOP_DISABLE_BACKEND_AUTOSTART=true`: disable packaged autostart.
 - `AT_BACKEND_COMMAND`: backend command for future local process startup.
 - `AT_BACKEND_ARGS`: backend command arguments. JSON arrays are supported.
 - `AT_UDP_OPPONENTS_PORT`: UDP opponents port shown in diagnostics.
 
-Backend autostart is intentionally disabled by default.
+Backend autostart is enabled by default only when `app.isPackaged` is true.
 
 ## Health Validation
 
@@ -119,11 +168,17 @@ GET /api/runtime/status
 
 ## Logs
 
-The shell writes runtime logs to:
+The shell writes development logs to:
 
 ```text
 logs/desktop.log
 logs/backend.log
+```
+
+Packaged logs are written under:
+
+```text
+%APPDATA%\Automobilista Telemetria\logs\
 ```
 
 The `logs/` directory is runtime output and should not be committed.
@@ -134,14 +189,15 @@ The `logs/` directory is runtime output and should not be committed.
   backend startup if `/api/health` is OK.
 - Backend exe missing: build it with `backend\packaging\build_backend.ps1` or set
   `AT_BACKEND_EXE_PATH`.
-- Health timeout: inspect `logs/desktop.log` and `logs/backend.log`.
+- Health timeout: inspect the development logs or the packaged app logs under
+  `%APPDATA%\Automobilista Telemetria\logs\`.
 - Static frontend missing: run `npm.cmd run build` from `frontend/`.
 - Need Python runner for development: set `AT_BACKEND_RUNNER=python` or
   `AT_BACKEND_USE_PYTHON_RUNNER=true`.
 
 ## Still Planned
 
-- Windows installer.
 - Assetto Corsa plugin packaging/checks.
+- Application icon and polished installer metadata.
 - Digital signing.
 - Auto-update.

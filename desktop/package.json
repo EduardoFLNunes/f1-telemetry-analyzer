@@ -1,6 +1,7 @@
 {
   "name": "automobilista-telemetria-desktop",
   "private": true,
+  "productName": "Automobilista Telemetria",
   "version": "0.1.0-phase-12",
   "description": "Desktop shell preparation for Automobilista Telemetria.",
   "main": "main.js",
@@ -9,9 +10,60 @@
     "desktop:dev": "node scripts/start.js --dev",
     "desktop:prod": "node scripts/start.js --production",
     "desktop:prod:autostart": "node scripts/start.js --production --autostart",
-    "desktop:build": "echo Installer packaging is planned for Phase 12.3"
+    "build:frontend": "cd ../frontend && npm.cmd run build",
+    "build:backend": "powershell -ExecutionPolicy Bypass -File ../backend/packaging/build_backend.ps1",
+    "desktop:build": "npm run build:frontend && npm run build:backend && npm run pack",
+    "pack": "electron-builder --dir",
+    "dist:win": "electron-builder --win nsis"
   },
   "devDependencies": {
-    "electron": "^42.3.3"
+    "electron": "^42.3.3",
+    "electron-builder": "^26.15.2"
+  },
+  "build": {
+    "appId": "br.dev.automobilista.telemetria",
+    "productName": "Automobilista Telemetria",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "scripts/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend/dist/automobilista-backend.exe",
+        "to": "backend/automobilista-backend.exe"
+      },
+      {
+        "from": "../frontend/dist",
+        "to": "frontend"
+      },
+      {
+        "from": "../data/example_telemetry.csv",
+        "to": "data/example_telemetry.csv"
+      },
+      {
+        "from": "../data/example_telemetryOld.csv",
+        "to": "data/example_telemetryOld.csv"
+      },
+      {
+        "from": "../data/SaoPaulo.csv",
+        "to": "data/SaoPaulo.csv"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

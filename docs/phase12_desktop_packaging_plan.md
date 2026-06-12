@@ -121,7 +121,10 @@ Desktop shell variables:
 - `AT_BACKEND_RUNNER`
 - `AT_BACKEND_PYTHON`
 - `AT_BACKEND_RUNNER_PATH`
+- `AT_BACKEND_RESOURCE_ROOT`
+- `AT_BACKEND_RUNTIME_ROOT`
 - `AT_BACKEND_REPO_ROOT`
+- `AT_DESKTOP_DISABLE_BACKEND_AUTOSTART`
 - `AT_BACKEND_COMMAND`
 - `AT_BACKEND_ARGS`
 - `AT_UDP_OPPONENTS_PORT`
@@ -155,10 +158,8 @@ Implemented in this preparation phase:
 - Centralized frontend API and websocket URL configuration.
 - Documented desktop packaging architecture, risks, and migration steps.
 
-Not implemented in Phase 12:
+Still outside the completed Phase 12.3 scope:
 
-- PyInstaller backend bundle.
-- Windows installer.
 - Assetto Corsa exporter packaging/copy validation.
 - Auto-update.
 - Digital signing.
@@ -392,6 +393,95 @@ The dashboard runtime panel now also reports:
 - Backend executable/runner path when available.
 - Last backend error when present.
 
+## Phase 12.3 Status
+
+Phase 12.3 adds Electron Builder packaging and proves that the unpacked app can
+run from copied resources instead of the repository structure.
+
+### Electron Builder
+
+Added desktop scripts:
+
+```bash
+cd desktop
+npm run pack
+npm run dist:win
+```
+
+`npm run pack` creates:
+
+```text
+desktop/dist/win-unpacked/
+```
+
+`npm run dist:win` creates:
+
+```text
+desktop/dist/Automobilista Telemetria Setup 0.1.0-phase-12.exe
+```
+
+The build copies:
+
+- `backend/dist/automobilista-backend.exe` to
+  `resources/backend/automobilista-backend.exe`.
+- `frontend/dist` to `resources/frontend`.
+- Fixture CSV files to `resources/data`.
+
+### Packaged Runtime Paths
+
+When `app.isPackaged` is true, Electron starts the bundled backend by default
+unless `AT_DESKTOP_DISABLE_BACKEND_AUTOSTART=true` is set.
+
+Backend executable lookup order:
+
+1. `AT_BACKEND_EXE_PATH`.
+2. `process.resourcesPath\backend\automobilista-backend.exe`.
+3. Repository fallback for development.
+
+Frontend static lookup order:
+
+1. `process.resourcesPath\frontend\index.html`.
+2. Repository fallback `frontend\dist\index.html`.
+
+Electron passes:
+
+```text
+AT_BACKEND_RESOURCE_ROOT=<process.resourcesPath>
+AT_BACKEND_RUNTIME_ROOT=<app.getPath("userData")>
+```
+
+The backend reads fixtures from `RESOURCE_ROOT` and writes cache/recordings to
+`RUNTIME_ROOT`.
+
+Packaged logs are written under:
+
+```text
+%APPDATA%\Automobilista Telemetria\logs\
+```
+
+### Validation Result
+
+Baseline validation:
+
+- `npm.cmd run build` from `frontend/`: passed.
+- `.venv\Scripts\python.exe -m unittest discover -s backend\tests`: 13 tests OK.
+- `backend\packaging\build_backend.ps1`: regenerated the backend executable.
+
+Packaged resource validation:
+
+- `npm run pack`: passed.
+- `npm run dist:win`: passed.
+- Repository `backend/dist/automobilista-backend.exe` was temporarily hidden.
+- Repository `frontend/dist` was temporarily hidden.
+- `desktop/dist/win-unpacked/Automobilista Telemetria.exe` still started the
+  backend and returned OK from `/api/health`.
+- `/api/runtime/status` reported `backend.resourceRoot` as
+  `desktop/dist/win-unpacked/resources`.
+- `/api/runtime/status` reported `backend.runtimeRoot` under
+  `%APPDATA%\Automobilista Telemetria`.
+- Desktop log confirmed the frontend loaded from
+  `desktop/dist/win-unpacked/resources/frontend/index.html`.
+
 ## Build Commands
 
 Frontend production build:
@@ -434,9 +524,23 @@ cd desktop
 npm run desktop:prod:autostart
 ```
 
+Unpacked desktop package:
+
+```bash
+cd desktop
+npm run pack
+```
+
+Windows installer:
+
+```bash
+cd desktop
+npm run dist:win
+```
+
 ## Logs Plan
 
-Future desktop logs should be written to:
+Development desktop logs are written to:
 
 ```text
 logs/backend.log
@@ -445,14 +549,21 @@ logs/desktop.log
 
 This directory is runtime output and should not be committed.
 
+Packaged desktop logs are written to:
+
+```text
+%APPDATA%\Automobilista Telemetria\logs\
+```
+
 ## Risks
 
 - Backend subprocess packaging needs careful handling of Python dependencies,
   native libraries, and Assetto Corsa shared-memory access.
 - Port conflicts on `8000`, `5173`, and UDP `8765` need a diagnostic screen or
   explicit recovery path.
-- Loading frontend assets from `file://` may expose assumptions that only work
-  behind Vite. Phase 12 keeps dev and production paths separate.
+- Loading frontend assets from `file://` can expose assumptions that only work
+  behind Vite. Phase 12.3 sets Vite `base: './'` and validates packaged
+  `resources/frontend/index.html`.
 - The Assetto Corsa exporter still targets UDP `127.0.0.1:8765`; changing that
   later will require exporter-side configuration.
 - Large runtime caches, recordings, and logs must stay outside packaged app
@@ -475,8 +586,8 @@ by this phase.
 1. Keep frontend/backend terminal startup as the source of truth.
 2. Use the Electron shell only as a wrapper around the dev server.
 3. Validate `frontend/dist` static loading in production mode.
-4. Package backend with PyInstaller in a later phase.
-5. Replace the backend command stub with the packaged executable path.
+4. Package backend with PyInstaller.
+5. Package Electron with backend/frontend copied into `resources`.
 6. Add port conflict detection and a diagnostics view.
 7. Add installer flow and Assetto Corsa exporter checks.
 

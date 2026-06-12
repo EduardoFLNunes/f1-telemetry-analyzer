@@ -42,10 +42,16 @@ const apiBaseUrl = stripTrailingSlash(
 );
 const frontendDevUrl = process.env.AT_DESKTOP_FRONTEND_URL || DEFAULT_FRONTEND_DEV_URL;
 const wsUrl = process.env.VITE_WS_URL || process.env.AT_BACKEND_WS_URL || apiBaseToWebSocketUrl(apiBaseUrl);
-const mode = process.env.AT_DESKTOP_MODE === 'production' ? 'production' : 'development';
-const autostartEnabled = flagEnabled(process.env.AT_DESKTOP_AUTOSTART_BACKEND)
-  || flagEnabled(process.env.AT_DESKTOP_START_BACKEND)
-  || flagEnabled(process.env.DESKTOP_AUTOSTART_BACKEND);
+const isPackagedRuntime = process.defaultApp === false
+  || Boolean(process.resourcesPath && !/[\\/]node_modules[\\/]electron[\\/]/i.test(process.resourcesPath));
+const mode = isPackagedRuntime || process.env.AT_DESKTOP_MODE === 'production' ? 'production' : 'development';
+const autostartEnabled = !flagEnabled(process.env.AT_DESKTOP_DISABLE_BACKEND_AUTOSTART)
+  && (
+    isPackagedRuntime
+    || flagEnabled(process.env.AT_DESKTOP_AUTOSTART_BACKEND)
+    || flagEnabled(process.env.AT_DESKTOP_START_BACKEND)
+    || flagEnabled(process.env.DESKTOP_AUTOSTART_BACKEND)
+  );
 
 contextBridge.exposeInMainWorld('desktopRuntime', {
   apiBaseUrl,
@@ -55,11 +61,11 @@ contextBridge.exposeInMainWorld('desktopRuntime', {
   udpOpponentsPort: Number(process.env.AT_UDP_OPPONENTS_PORT || DEFAULT_UDP_OPPONENTS_PORT),
   mode,
   autostartEnabled,
-  phase: 'phase-12.2-prep',
+  phase: 'phase-12.3-packaging',
 });
 
 contextBridge.exposeInMainWorld('automobilistaDesktop', {
   backendHealth: () => ipcRenderer.invoke('backend:health'),
   runtimeStatus: () => ipcRenderer.invoke('desktop:runtime'),
-  phase: 'phase-12.2-prep',
+  phase: 'phase-12.3-packaging',
 });

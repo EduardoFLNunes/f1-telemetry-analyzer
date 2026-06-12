@@ -52,12 +52,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 BACKEND_DIR = Path(__file__).resolve().parent
-REPO_ROOT = Path(os.environ.get("AT_BACKEND_REPO_ROOT", BACKEND_DIR.parent)).resolve()
+RESOURCE_ROOT = Path(
+    os.environ.get("AT_BACKEND_RESOURCE_ROOT")
+    or os.environ.get("AT_BACKEND_REPO_ROOT", BACKEND_DIR.parent)
+).resolve()
+RUNTIME_ROOT = Path(
+    os.environ.get("AT_BACKEND_RUNTIME_ROOT")
+    or os.environ.get("AT_BACKEND_REPO_ROOT")
+    or RESOURCE_ROOT
+).resolve()
+REPO_ROOT = RESOURCE_ROOT
 REPLAY_TRACK_CACHE_NAME = "telemetry_reconstructed_multilap_v1"
 LIVE_TRACK_CACHE_PREFIX = "assetto_corsa"
-TRACK_CACHE_DIR = REPO_ROOT / "data" / "cache" / "tracks"
-PRIMARY_TELEMETRY_FIXTURE = REPO_ROOT / "data" / "example_telemetry.csv"
-DEBUG_TELEMETRY_FIXTURE = REPO_ROOT / "data" / "example_telemetryOld.csv"
+TRACK_CACHE_DIR = RUNTIME_ROOT / "data" / "cache" / "tracks"
+PRIMARY_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetry.csv"
+DEBUG_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetryOld.csv"
 BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
 BACKEND_PHASE_VERSION = "phase-12-prep"
 
@@ -267,7 +276,7 @@ def recording_metadata() -> Dict[str, Any]:
 
 def build_recording_runtime() -> RecordingRuntime:
     return RecordingRuntime(
-        config=recording_config_from_env(REPO_ROOT),
+        config=recording_config_from_env(RUNTIME_ROOT),
         track_provider=current_recording_track,
         metadata_provider=recording_metadata,
     )
@@ -398,6 +407,8 @@ def runtime_status_payload() -> Dict[str, Any]:
             "trackState": runtime_state.track_build_state.value,
             "buildMethod": runtime_state.build_method,
             "trackCache": runtime_state.current_track_name,
+            "resourceRoot": str(RESOURCE_ROOT),
+            "runtimeRoot": str(RUNTIME_ROOT),
         },
         "telemetry": {
             "online": telemetry_runtime is not None,

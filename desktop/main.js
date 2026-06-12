@@ -5,8 +5,9 @@ const http = require('node:http');
 const https = require('node:https');
 const path = require('node:path');
 
-const APP_ROOT = path.resolve(__dirname, '..');
-const FRONTEND_DIST = path.join(APP_ROOT, 'frontend', 'dist', 'index.html');
+const APP_ROOT = app.isPackaged ? path.dirname(process.execPath) : path.resolve(__dirname, '..');
+const REPO_ROOT = path.resolve(__dirname, '..');
+const REPO_FRONTEND_DIST = path.join(REPO_ROOT, 'frontend', 'dist', 'index.html');
 const DEFAULT_FRONTEND_DEV_URL = 'http://127.0.0.1:5173';
 const DEFAULT_BACKEND_URL = 'http://127.0.0.1:8000';
 const BACKEND_EXE_NAME = process.platform === 'win32' ? 'automobilista-backend.exe' : 'automobilista-backend';
@@ -16,9 +17,13 @@ const BACKEND_URL = stripTrailingSlash(process.env.AT_BACKEND_URL || DEFAULT_BAC
 const HEALTH_URL = process.env.AT_BACKEND_HEALTH_URL || `${BACKEND_URL}/api/health`;
 const BACKEND_HOST = backendHostFromUrl(BACKEND_URL);
 const BACKEND_PORT = backendPortFromUrl(BACKEND_URL);
-const SHOULD_START_BACKEND = flagEnabled(process.env.AT_DESKTOP_AUTOSTART_BACKEND)
-  || flagEnabled(process.env.AT_DESKTOP_START_BACKEND)
-  || flagEnabled(process.env.DESKTOP_AUTOSTART_BACKEND);
+const SHOULD_START_BACKEND = !flagEnabled(process.env.AT_DESKTOP_DISABLE_BACKEND_AUTOSTART)
+  && (
+    app.isPackaged
+    || flagEnabled(process.env.AT_DESKTOP_AUTOSTART_BACKEND)
+    || flagEnabled(process.env.AT_DESKTOP_START_BACKEND)
+    || flagEnabled(process.env.DESKTOP_AUTOSTART_BACKEND)
+  );
 const BACKEND_COMMAND = process.env.AT_BACKEND_COMMAND || '';
 const BACKEND_ARGS = parseBackendArgs(process.env.AT_BACKEND_ARGS);
 
@@ -40,11 +45,37 @@ const desktopRuntimeState = {
   lastBackendError: null,
   lastHealth: null,
   lastCheckedAt: null,
+  frontendIndexPath: null,
+  backendResourceRoot: null,
+  backendRuntimeRoot: null,
+  logsDir: null,
 };
 
+function resolveBackendResourceRoot() {
+  const configured = resolveMaybeRelativePath(process.env.AT_BACKEND_RESOURCE_ROOT);
+  if (configured) return configured;
+  if (app.isPackaged && process.resourcesPath) return process.resourcesPath;
+  return REPO_ROOT;
+}
+
+function resolveBackendRuntimeRoot() {
+  const configured = resolveMaybeRelativePath(process.env.AT_BACKEND_RUNTIME_ROOT);
+  if (configured) return configured;
+  if (app.isPackaged) return app.getPath('userData');
+  return REPO_ROOT;
+}
+
+function resolveLogsDir() {
+  const configured = resolveMaybeRelativePath(process.env.AT_DESKTOP_LOG_DIR);
+  if (configured) return configured;
+  if (app.isPackaged) return path.join(app.getPath('userData'), 'logs');
+  return path.join(REPO_ROOT, 'logs');
+}
+
 function ensureLogsDir() {
-  const logsDir = path.join(APP_ROOT, 'logs');
+  const logsDir = resolveLogsDir();
   fs.mkdirSync(logsDir, { recursive: true });
+  desktopRuntimeState.logsDir = logsDir;
   return logsDir;
 }
 
@@ -100,18 +131,29 @@ function resolveMaybeRelativePath(value) {
   return path.join(APP_ROOT, value);
 }
 
+function frontendIndexCandidates() {
+  const candidates = [];
+  if (app.isPackaged && process.resourcesPath) {
+    candidates.push(path.join(process.resourcesPath, 'frontend', 'index.html'));
+  }
+  candidates.push(path.join(__dirname, 'resources', 'frontend', 'index.html'));
+  candidates.push(REPO_FRONTEND_DIST);
+  return candidates;
+}
+
+function resolveFrontendIndexPath() {
+  return frontendIndexCandidates().find((candidate) => fs.existsSync(candidate)) || null;
+}
+
 function packagedBackendCandidates() {
   const candidates = [];
   const configured = resolveMaybeRelativePath(process.env.AT_BACKEND_EXE_PATH);
   if (configured) candidates.push(configured);
 
-  if (app.isPackaged && process.resourcesPath) {
-    candidates.push(path.join(process.resourcesPath, 'backend', BACKEND_EXE_NAME));
-  }
-
+  candidates.push(path.join(resolveBackendResourceRoot(), 'backend', BACKEND_EXE_NAME));
   candidates.push(path.join(__dirname, 'resources', 'backend', BACKEND_EXE_NAME));
-  candidates.push(path.join(APP_ROOT, 'backend', 'dist', BACKEND_EXE_NAME));
-  candidates.push(path.join(APP_ROOT, 'dist', BACKEND_EXE_NAME));
+  candidates.push(path.join(REPO_ROOT, 'backend', 'dist', BACKEND_EXE_NAME));
+  candidates.push(path.join(REPO_ROOT, 'dist', BACKEND_EXE_NAME));
   return candidates;
 }
 
@@ -121,9 +163,9 @@ function resolvePythonRunnerLaunch() {
   if (!usePythonRunner) return null;
 
   const pythonPath = resolveMaybeRelativePath(process.env.AT_BACKEND_PYTHON)
-    || path.join(APP_ROOT, '.venv', process.platform === 'win32' ? 'Scripts' : 'bin', process.platform === 'win32' ? 'python.exe' : 'python');
+    || path.join(REPO_ROOT, '.venv', process.platform === 'win32' ? 'Scripts' : 'bin', process.platform === 'win32' ? 'python.exe' : 'python');
   const runnerPath = resolveMaybeRelativePath(process.env.AT_BACKEND_RUNNER_PATH)
-    || path.join(APP_ROOT, 'backend', 'desktop_backend_runner.py');
+    || path.join(REPO_ROOT, 'backend', 'desktop_backend_runner.py');
 
   if (!fs.existsSync(pythonPath)) {
     return { error: `Python runner requested but Python was not found: ${pythonPath}` };
@@ -136,7 +178,7 @@ function resolvePythonRunnerLaunch() {
     source: 'python-runner',
     command: pythonPath,
     args: [runnerPath],
-    cwd: APP_ROOT,
+    cwd: REPO_ROOT,
     runnerPath,
     useShell: false,
   };
@@ -259,6 +301,8 @@ function startBackendProcess() {
   }
 
   const logsDir = ensureLogsDir();
+  const backendResourceRoot = resolveBackendResourceRoot();
+  const backendRuntimeRoot = resolveBackendRuntimeRoot();
   const backendLog = fs.createWriteStream(path.join(logsDir, 'backend.log'), { flags: 'a' });
   backendLog.write(`\n[${new Date().toISOString()}] Starting ${launch.source}: ${launch.command} ${launch.args.join(' ')}\n`);
   backendProcess = spawn(launch.command, launch.args, {
@@ -268,7 +312,9 @@ function startBackendProcess() {
       ...process.env,
       AT_BACKEND_HOST: process.env.AT_BACKEND_HOST || BACKEND_HOST,
       AT_BACKEND_PORT: process.env.AT_BACKEND_PORT || String(BACKEND_PORT),
-      AT_BACKEND_REPO_ROOT: process.env.AT_BACKEND_REPO_ROOT || APP_ROOT,
+      AT_BACKEND_RESOURCE_ROOT: process.env.AT_BACKEND_RESOURCE_ROOT || backendResourceRoot,
+      AT_BACKEND_RUNTIME_ROOT: process.env.AT_BACKEND_RUNTIME_ROOT || backendRuntimeRoot,
+      AT_BACKEND_REPO_ROOT: process.env.AT_BACKEND_REPO_ROOT || backendResourceRoot,
       PYTHONUNBUFFERED: '1',
     },
   });
@@ -279,6 +325,9 @@ function startBackendProcess() {
   desktopRuntimeState.backendRunnerPath = launch.runnerPath || null;
   desktopRuntimeState.backendCommand = launch.command;
   desktopRuntimeState.backendPid = backendProcess.pid;
+  desktopRuntimeState.backendResourceRoot = backendResourceRoot;
+  desktopRuntimeState.backendRuntimeRoot = backendRuntimeRoot;
+  desktopRuntimeState.logsDir = logsDir;
   desktopRuntimeState.lastBackendError = null;
 
   backendProcess.stdout?.pipe(backendLog);
@@ -359,10 +408,15 @@ async function desktopRuntimeStatus() {
   const health = await backendHealth();
   return {
     ...desktopRuntimeState,
+    frontendIndexPath: desktopRuntimeState.frontendIndexPath || resolveFrontendIndexPath(),
+    backendResourceRoot: desktopRuntimeState.backendResourceRoot || resolveBackendResourceRoot(),
+    backendRuntimeRoot: desktopRuntimeState.backendRuntimeRoot || resolveBackendRuntimeRoot(),
+    logsDir: desktopRuntimeState.logsDir || resolveLogsDir(),
     backendOnline: health.ok,
     healthStatusCode: health.statusCode,
     healthOk: health.ok,
-    mode: process.env.AT_DESKTOP_MODE === 'production' ? 'production' : 'development',
+    mode: app.isPackaged || process.env.AT_DESKTOP_MODE === 'production' ? 'production' : 'development',
+    packaged: app.isPackaged,
   };
 }
 
@@ -380,7 +434,7 @@ async function createWindow() {
     },
   });
 
-  const useDevServer = process.env.AT_DESKTOP_MODE !== 'production';
+  const useDevServer = !app.isPackaged && process.env.AT_DESKTOP_MODE !== 'production';
   try {
     if (useDevServer) {
       appendDesktopLog(`Loading frontend dev server: ${FRONTEND_URL}`);
@@ -388,13 +442,15 @@ async function createWindow() {
       return;
     }
 
-    if (fs.existsSync(FRONTEND_DIST)) {
-      appendDesktopLog(`Loading frontend static build: ${FRONTEND_DIST}`);
-      await mainWindow.loadFile(FRONTEND_DIST);
+    const frontendIndexPath = resolveFrontendIndexPath();
+    desktopRuntimeState.frontendIndexPath = frontendIndexPath;
+    if (frontendIndexPath) {
+      appendDesktopLog(`Loading frontend static build: ${frontendIndexPath}`);
+      await mainWindow.loadFile(frontendIndexPath);
       return;
     }
 
-    appendDesktopLog('frontend/dist is missing; falling back to dev server URL.');
+    appendDesktopLog(`Frontend static build is missing. Searched: ${frontendIndexCandidates().join('; ')}. Falling back to dev server URL.`);
     await mainWindow.loadURL(FRONTEND_URL);
   } catch (error) {
     appendDesktopLog(`Frontend load failed: ${error.message}`);

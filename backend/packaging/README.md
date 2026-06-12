@@ -26,7 +26,9 @@ with `reload=False`. It accepts:
 - `AT_BACKEND_HOST`, default `127.0.0.1`
 - `AT_BACKEND_PORT`, default `8000`
 - `AT_BACKEND_LOG_LEVEL`, default `info`
-- `AT_BACKEND_REPO_ROOT`, default resolved by the runner
+- `AT_BACKEND_RESOURCE_ROOT`, read-only root for packaged fixtures/resources
+- `AT_BACKEND_RUNTIME_ROOT`, writable root for cache and recordings
+- `AT_BACKEND_REPO_ROOT`, legacy fallback used by local development
 
 No FastAPI logic is duplicated in the runner.
 
@@ -48,8 +50,10 @@ These paths must remain writable outside a read-only packaged app directory:
 
 Do not bake machine-specific absolute paths into the executable.
 
-`AT_BACKEND_REPO_ROOT` is used so a PyInstaller onefile executable does not
-write recordings/cache under the temporary extraction directory.
+`AT_BACKEND_RESOURCE_ROOT` and `AT_BACKEND_RUNTIME_ROOT` keep PyInstaller
+onefile runs from reading or writing under the temporary extraction directory.
+In the Electron package, resources come from `process.resourcesPath` while
+cache and recordings go to Electron `userData`.
 
 ## Dependency Risks
 
@@ -86,6 +90,24 @@ backend/dist/automobilista-backend.exe
 `backend/build/`, `backend/dist/`, and generated PyInstaller `.spec` files are
 build artifacts. Do not commit machine-specific generated specs.
 
+## Electron Resource Packaging
+
+Electron Builder copies the backend executable into:
+
+```text
+desktop/dist/win-unpacked/resources/backend/automobilista-backend.exe
+```
+
+At runtime, Electron passes:
+
+```text
+AT_BACKEND_RESOURCE_ROOT=<process.resourcesPath>
+AT_BACKEND_RUNTIME_ROOT=<app.getPath("userData")>
+```
+
+This lets the packaged backend read bundled fixture data from `resources/data`
+and write cache/recordings under `%APPDATA%\Automobilista Telemetria\`.
+
 ## Test Runner
 
 From `backend/`:
@@ -110,11 +132,22 @@ GET /api/live/coach
 - Python runner validated.
 - PyInstaller `automobilista-backend.exe` generated.
 - Packaged backend validated against `/api/health` and live endpoints.
-- `AT_BACKEND_REPO_ROOT` keeps runtime data under the project/app root during
-  the current desktop packaging prep.
+- Phase 12.2 used `AT_BACKEND_REPO_ROOT` to keep runtime data under the
+  project/app root during early packaging prep.
 - PyInstaller still emits hook warnings for optional test modules in pandas and
   pyarrow. The executable runs despite those warnings; Phase 12.3 should trim
   hook collection further.
+
+## Phase 12.3 Result
+
+- Electron Builder `pack` creates `desktop/dist/win-unpacked`.
+- Electron Builder `dist:win` creates the NSIS installer in `desktop/dist`.
+- Packaged backend lookup was validated with repository `backend/dist` hidden.
+- Packaged frontend lookup was validated with repository `frontend/dist` hidden.
+- Runtime status reported `backend.resourceRoot` as
+  `desktop/dist/win-unpacked/resources`.
+- Runtime status reported `backend.runtimeRoot` under
+  `%APPDATA%\Automobilista Telemetria`.
 
 ## Validation Checklist For Phase 12.2
 

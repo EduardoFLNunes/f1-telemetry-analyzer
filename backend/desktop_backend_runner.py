@@ -34,12 +34,19 @@ def main() -> None:
     backend_dir = _backend_dir()
     if str(backend_dir) not in sys.path:
         sys.path.insert(0, str(backend_dir))
-    repo_root = Path(
-        os.environ.get("AT_BACKEND_REPO_ROOT")
+    resource_root = Path(
+        os.environ.get("AT_BACKEND_RESOURCE_ROOT")
+        or os.environ.get("AT_BACKEND_REPO_ROOT")
         or (Path.cwd() if getattr(sys, "frozen", False) else backend_dir.parent)
     ).resolve()
-    os.environ.setdefault("AT_BACKEND_REPO_ROOT", str(repo_root))
-
+    runtime_root = Path(
+        os.environ.get("AT_BACKEND_RUNTIME_ROOT")
+        or os.environ.get("AT_BACKEND_REPO_ROOT")
+        or resource_root
+    ).resolve()
+    os.environ.setdefault("AT_BACKEND_RESOURCE_ROOT", str(resource_root))
+    os.environ.setdefault("AT_BACKEND_RUNTIME_ROOT", str(runtime_root))
+    os.environ.setdefault("AT_BACKEND_REPO_ROOT", str(resource_root))
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -50,10 +57,12 @@ def main() -> None:
     log_level = os.environ.get("AT_BACKEND_LOG_LEVEL", "info")
 
     logging.getLogger(__name__).info(
-        "Starting desktop backend runner on %s:%s from %s",
+        "Starting desktop backend runner on %s:%s from %s resource=%s runtime=%s",
         host,
         port,
         backend_dir,
+        resource_root,
+        runtime_root,
     )
     from main import app as fastapi_app
 
