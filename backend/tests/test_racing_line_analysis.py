@@ -42,13 +42,14 @@ def make_telemetry_sample(progress, speed, lap=1, timestamp_seconds=0.0, x=None,
     )
 
 
-def valid_reference_lap(lap=1, samples=60, speed_base=160.0):
+def valid_reference_lap(lap=1, samples=60, speed_base=160.0, duration_seconds=None):
+    duration = float(samples - 1) if duration_seconds is None else float(duration_seconds)
     return [
         make_telemetry_sample(
             progress=i / (samples - 1),
             speed=speed_base + (i % 10),
             lap=lap,
-            timestamp_seconds=float(i),
+            timestamp_seconds=duration * i / (samples - 1),
         )
         for i in range(samples)
     ]
@@ -118,9 +119,36 @@ class RacingLineAnalysisTests(unittest.TestCase):
         )
 
         self.assertEqual(payload["status"], "READY")
-        self.assertEqual(payload["racingLine"]["source"], "REFERENCE_LAP")
+        self.assertEqual(payload["racingLine"]["source"], "BEST_LAP")
         self.assertEqual(payload["racingLine"]["referenceLapNumber"], 1)
         self.assertGreater(payload["racingLine"]["debug"]["validSegments"], 0)
+        self.assertEqual(payload["fastestLaps"][0]["lapNumber"], 1)
+        self.assertTrue(payload["lapHistory"][0]["usedForRacingLine"])
+
+    def test_live_payload_uses_fastest_valid_lap_as_racing_line(self):
+        lap_one = valid_reference_lap(lap=1, duration_seconds=64.0, speed_base=150.0)
+        lap_two = valid_reference_lap(lap=2, duration_seconds=58.5, speed_base=170.0)
+        current = [
+            make_telemetry_sample(0.02 * i, 150.0, lap=3, timestamp_seconds=70.0 + i)
+            for i in range(20)
+        ]
+
+        payload = build_live_racing_line_payload(
+            telemetry_samples=lap_one + lap_two + current,
+            track_name="test_track",
+            track_data={"trackLength": 1000.0},
+            micro_sector_count=10,
+        )
+
+        self.assertEqual(payload["status"], "READY")
+        self.assertEqual(payload["racingLine"]["source"], "BEST_LAP")
+        self.assertEqual(payload["racingLine"]["referenceLapNumber"], 2)
+        self.assertEqual([lap["lapNumber"] for lap in payload["fastestLaps"][:2]], [2, 1])
+        self.assertEqual(payload["fastestLaps"][0]["durationSeconds"], 58.5)
+        self.assertEqual(payload["fastestLaps"][0]["deltaToBestSeconds"], 0.0)
+        self.assertEqual(payload["fastestLaps"][1]["deltaToBestSeconds"], 5.5)
+        self.assertEqual(len(payload["lapHistory"]), 2)
+        self.assertTrue(payload["lapHistory"][1]["usedForRacingLine"])
 
     def test_live_payload_exposes_reference_samples_for_visual_line(self):
         reference = valid_reference_lap(lap=1, samples=120)

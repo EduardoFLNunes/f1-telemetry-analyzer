@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections import Counter
+from collections import Counter, defaultdict
 from copy import deepcopy
 from datetime import datetime, timezone
 import math
@@ -16,7 +16,6 @@ from .comparison_analysis import (
     estimate_segment_time_seconds,
     player_analysis_samples,
     samples_in_segment,
-    select_current_and_reference_samples,
     speed_stats,
 )
 from .telemetry.telemetry_models import TelemetrySample
@@ -178,12 +177,166 @@ def _confidence(sample_count: int, speed_count: int, position_count: int) -> str
     return "LOW"
 
 
+def _lap_duration(samples: Sequence[AnalysisSample]) -> Optional[float]:
+    timestamps = [sample.timestamp for sample in samples if sample.timestamp is not None]
+    if len(timestamps) < 2:
+        return None
+    duration = max(timestamps) - min(timestamps)
+    return duration if duration >= 0.0 and math.isfinite(duration) else None
+
+
+def _progress_range(samples: Sequence[AnalysisSample]) -> Dict[str, Optional[float]]:
+    values = [sample.progress for sample in samples if sample.progress is not None]
+    if not values:
+        return {"start": None, "end": None, "min": None, "max": None}
+    return {
+        "start": _round_or_none(values[0], 6),
+        "end": _round_or_none(values[-1], 6),
+        "min": _round_or_none(min(values), 6),
+        "max": _round_or_none(max(values), 6),
+    }
+
+
+def _lap_rejected_reason(samples: Sequence[AnalysisSample], *, is_current: bool = False) -> Optional[str]:
+    if is_current:
+        return "current_lap_in_progress"
+    if len(samples) < 40:
+        return "too_few_samples"
+
+    progress = _progress_range(samples)
+    if progress["min"] is None or progress["max"] is None:
+        return "missing_progress"
+    if progress["min"] > 0.18 or progress["max"] < 0.82:
+        return "insufficient_progress_coverage"
+
+    duration = _lap_duration(samples)
+    if duration is None:
+        return "missing_lap_duration"
+    if duration < 20.0:
+        return "lap_too_short"
+    if duration > 900.0:
+        return "lap_too_long"
+    return None
+
+
+def _lap_summary(lap_number: int, samples: Sequence[AnalysisSample], *, is_current: bool) -> Dict[str, Any]:
+    speeds = [sample.speed_kmh for sample in samples if sample.speed_kmh is not None]
+    duration = _lap_duration(samples)
+    rejected_reason = _lap_rejected_reason(samples, is_current=is_current)
+    progress = _progress_range(samples)
+    return {
+        "lapNumber": lap_number,
+        "durationSeconds": _round_or_none(duration, 4),
+        "valid": rejected_reason is None,
+        "isCurrent": is_current,
+        "sampleCount": len(samples),
+        "avgSpeedKmh": _round_or_none(sum(speeds) / len(speeds), 3) if speeds else None,
+        "maxSpeedKmh": _round_or_none(max(speeds), 3) if speeds else None,
+        "progressStart": progress["start"],
+        "progressEnd": progress["end"],
+        "progressMin": progress["min"],
+        "progressMax": progress["max"],
+        "usedForRacingLine": False,
+        "deltaToBestSeconds": None,
+        "rejectedReason": rejected_reason,
+    }
+
+
+def _ranked_lap_summaries(lap_history: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    valid = [
+        deepcopy(lap)
+        for lap in lap_history
+        if lap.get("valid") and _safe_float(lap.get("durationSeconds")) is not None
+    ]
+    valid.sort(key=lambda lap: (_safe_float(lap.get("durationSeconds")) or float("inf"), int(lap.get("lapNumber") or 0)))
+    if not valid:
+        return []
+
+    best_duration = _safe_float(valid[0].get("durationSeconds"))
+    for lap in valid:
+        duration = _safe_float(lap.get("durationSeconds"))
+        lap["deltaToBestSeconds"] = _round_or_none(duration - best_duration, 4) if duration is not None and best_duration is not None else None
+    return valid
+
+
+def select_current_and_fastest_lap_samples(
+    samples: Iterable[TelemetrySample],
+) -> Tuple[List[AnalysisSample], List[AnalysisSample], Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]]]:
+    player_samples = player_analysis_samples(samples)
+    if not player_samples:
+        debug = {
+            "currentLap": None,
+            "referenceLap": None,
+            "referenceRejected": "missing_player_samples",
+            "selectionMode": "FASTEST_VALID_LAP",
+        }
+        return [], [], debug, [], []
+
+    latest_lap = player_samples[-1].lap
+    if latest_lap is None:
+        debug = {
+            "currentLap": None,
+            "referenceLap": None,
+            "referenceRejected": "missing_lap_number",
+            "selectionMode": "FASTEST_VALID_LAP",
+        }
+        return player_samples[-1200:], [], debug, [], []
+
+    laps: Dict[int, List[AnalysisSample]] = defaultdict(list)
+    for sample in player_samples:
+        if sample.lap is not None:
+            laps[sample.lap].append(sample)
+
+    current = laps.get(latest_lap, [])
+    lap_history = [
+        _lap_summary(lap_number, lap_samples, is_current=False)
+        for lap_number, lap_samples in sorted(laps.items())
+        if lap_number < latest_lap
+    ]
+    fastest_laps = _ranked_lap_summaries(lap_history)
+
+    reference_lap_number: Optional[int] = None
+    reference: List[AnalysisSample] = []
+    rejected_reason: Optional[str] = "no_previous_complete_lap"
+    if lap_history:
+        rejected_reason = "previous_lap_not_valid_reference"
+    if fastest_laps:
+        reference_lap_number = int(fastest_laps[0]["lapNumber"])
+        reference = laps.get(reference_lap_number, [])
+        rejected_reason = None
+
+    for lap in lap_history:
+        if lap["lapNumber"] == reference_lap_number:
+            lap["usedForRacingLine"] = True
+        if fastest_laps:
+            duration = _safe_float(lap.get("durationSeconds"))
+            best_duration = _safe_float(fastest_laps[0].get("durationSeconds"))
+            lap["deltaToBestSeconds"] = (
+                _round_or_none(duration - best_duration, 4)
+                if duration is not None and best_duration is not None and lap.get("valid")
+                else None
+            )
+
+    for lap in fastest_laps:
+        lap["usedForRacingLine"] = lap["lapNumber"] == reference_lap_number
+
+    return current, reference, {
+        "currentLap": latest_lap,
+        "referenceLap": reference_lap_number,
+        "referenceRejected": rejected_reason,
+        "selectionMode": "FASTEST_VALID_LAP",
+        "validLapCount": len(fastest_laps),
+        "completedLapCount": len(lap_history),
+    }, lap_history, fastest_laps
+
+
 def build_racing_line_model(
     *,
     reference_samples: Sequence[AnalysisSample],
     track: str,
     reference_lap_number: Optional[int],
     micro_sector_count: int = 50,
+    source: str = "REFERENCE_LAP",
 ) -> Dict[str, Any]:
     microsectors = build_microsectors(micro_sector_count)
     count = len(microsectors)
@@ -231,7 +384,7 @@ def build_racing_line_model(
 
     return {
         "track": track,
-        "source": "REFERENCE_LAP",
+        "source": source,
         "referenceLapNumber": reference_lap_number,
         "microSectorCount": count,
         "generatedAt": _now_iso(),
@@ -475,7 +628,7 @@ def build_live_racing_line_payload(
     include_visual_line: bool = True,
     include_comparison: bool = True,
 ) -> Dict[str, Any]:
-    current_samples, reference_samples, lap_debug = select_current_and_reference_samples(telemetry_samples)
+    current_samples, reference_samples, lap_debug, lap_history, fastest_laps = select_current_and_fastest_lap_samples(telemetry_samples)
     player_samples = player_analysis_samples(telemetry_samples)
     track = _track_name(track_name, track_data)
     base_debug = {
@@ -495,6 +648,8 @@ def build_live_racing_line_payload(
             "status": "INSUFFICIENT_DATA",
             "racingLine": None,
             "comparison": None,
+            "lapHistory": lap_history,
+            "fastestLaps": fastest_laps[:5],
             "debug": {
                 **base_debug,
                 "reason": lap_debug.get("referenceRejected") or "no_valid_reference_lap",
@@ -503,6 +658,7 @@ def build_live_racing_line_payload(
 
     reference_key = (
         track,
+        "BEST_LAP",
         lap_debug.get("referenceLap"),
         max(1, min(200, int(micro_sector_count or 50))),
         len(reference_samples),
@@ -519,6 +675,7 @@ def build_live_racing_line_payload(
             track=track,
             reference_lap_number=lap_debug.get("referenceLap"),
             micro_sector_count=micro_sector_count,
+            source="BEST_LAP",
         )
         _RACING_LINE_MODEL_CACHE.clear()
         _RACING_LINE_MODEL_CACHE[reference_key] = cached
@@ -531,6 +688,8 @@ def build_live_racing_line_payload(
             "status": "INSUFFICIENT_DATA",
             "racingLine": None,
             "comparison": None,
+            "lapHistory": lap_history,
+            "fastestLaps": fastest_laps[:5],
             "debug": {
                 **base_debug,
                 "reason": "reference_lap_has_no_valid_racing_line_segments",
@@ -551,6 +710,8 @@ def build_live_racing_line_payload(
         "status": "READY",
         "racingLine": racing_line,
         "comparison": comparison,
+        "lapHistory": lap_history,
+        "fastestLaps": fastest_laps[:5],
         "debug": {
             **base_debug,
             "racingLineCacheHit": cache_hit,

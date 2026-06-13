@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Activity, AlertTriangle, BarChart3, Gauge, Timer, Trophy } from 'lucide-react';
 import { api } from '../api/client';
-import { RacingLineComparisonSegment, RacingLinePayload } from '../types/racingLine';
+import { RacingLineComparisonSegment, RacingLineLapSummary, RacingLinePayload } from '../types/racingLine';
 import { useRenderCounter } from '../hooks/useRenderCounter';
 
 const PANEL_BG = '#0c0c16';
@@ -22,6 +22,19 @@ const formatSeconds = (value: number | null | undefined) => {
   if (value === null || value === undefined || !Number.isFinite(value)) return '--';
   const sign = value > 0 ? '+' : '';
   return `${sign}${value.toFixed(3)}s`;
+};
+
+const formatLapTime = (value: number | null | undefined) => {
+  if (value === null || value === undefined || !Number.isFinite(value)) return '--:--.---';
+  const minutes = Math.floor(value / 60);
+  const seconds = value - minutes * 60;
+  return `${minutes}:${seconds.toFixed(3).padStart(6, '0')}`;
+};
+
+const formatDeltaCompact = (value: number | null | undefined) => {
+  if (value === null || value === undefined || !Number.isFinite(value)) return '--';
+  if (Math.abs(value) < 0.0005) return 'BEST';
+  return `${value > 0 ? '+' : ''}${value.toFixed(3)}`;
 };
 
 const deltaColor = (value: number | null | undefined) => {
@@ -116,6 +129,34 @@ const SegmentRow = ({ segment }: { segment: RacingLineComparisonSegment }) => (
   </div>
 );
 
+const LapRow = ({ lap, rank }: { lap: RacingLineLapSummary; rank: number }) => (
+  <div
+    className="num"
+    style={{
+      display: 'grid',
+      gridTemplateColumns: '28px minmax(0, 1fr) 58px 42px',
+      gap: 5,
+      alignItems: 'center',
+      minHeight: 22,
+      padding: '3px 0',
+      borderBottom: `1px solid ${BORDER}`,
+      fontSize: 7,
+      color: lap.valid ? TEXT : MUTED,
+    }}
+  >
+    <span style={{ color: lap.usedForRacingLine ? CYAN : MUTED }}>#{rank}</span>
+    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      V{lap.lapNumber}{lap.usedForRacingLine ? ' REF' : ''}
+    </span>
+    <span style={{ color: lap.usedForRacingLine ? EMERALD : TEXT, fontWeight: 800 }}>
+      {formatLapTime(lap.durationSeconds)}
+    </span>
+    <span style={{ color: deltaColor(lap.deltaToBestSeconds), textAlign: 'right', fontWeight: 800 }}>
+      {formatDeltaCompact(lap.deltaToBestSeconds)}
+    </span>
+  </div>
+);
+
 export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPanel({ active = true }: { active?: boolean }) {
   useRenderCounter('RacingLineAnalysisPanel');
   const [microSectorCount, setMicroSectorCount] = useState(50);
@@ -149,6 +190,10 @@ export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPan
 
   const racingLine = payload?.racingLine ?? null;
   const comparison = payload?.comparison ?? null;
+  const fastestLaps = payload?.fastestLaps ?? [];
+  const lapHistory = payload?.lapHistory ?? [];
+  const bestLap = fastestLaps[0] ?? lapHistory.find((lap) => lap.usedForRacingLine) ?? null;
+  const validLapCount = lapHistory.filter((lap) => lap.valid).length;
   const status = payload?.status ?? 'INSUFFICIENT_DATA';
   const ready = status === 'READY' && Boolean(racingLine);
 
@@ -161,11 +206,14 @@ export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPan
       }
       return 'Racing Line ainda indisponivel: nenhuma volta de referencia valida.';
     }
+    if (bestLap) {
+      return `Racing Line usando a melhor volta valida: V${bestLap.lapNumber} (${formatLapTime(bestLap.durationSeconds)}).`;
+    }
     if (racingLine?.referenceLapNumber !== null && racingLine?.referenceLapNumber !== undefined) {
       return `Racing Line gerada a partir da volta ${racingLine.referenceLapNumber}.`;
     }
     return 'Racing Line gerada a partir da volta de referencia.';
-  }, [failed, payload, racingLine?.referenceLapNumber]);
+  }, [bestLap, failed, payload, racingLine?.referenceLapNumber]);
 
   const sectorSummary = comparison?.sectorSummary ?? ([1, 2, 3] as const).map((sector) => ({
     sector,
@@ -197,13 +245,30 @@ export const RacingLineAnalysisPanel = React.memo(function RacingLineAnalysisPan
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
           <Stat label="STATUS" value={ready ? 'READY' : 'WAITING'} color={ready ? EMERALD : AMBER} />
           <Stat label="FONTE" value={sourceLabel(racingLine?.source)} color={ready ? CYAN : MUTED} />
-          <Stat label="VOLTA REF" value={racingLine?.referenceLapNumber === null || racingLine?.referenceLapNumber === undefined ? '--' : String(racingLine.referenceLapNumber)} />
+          <Stat label="MELHOR" value={formatLapTime(bestLap?.durationSeconds)} color={bestLap ? EMERALD : MUTED} />
+          <Stat label="HIST" value={`${validLapCount}/${lapHistory.length}`} />
+          <Stat label="VOLTA BASE" value={racingLine?.referenceLapNumber === null || racingLine?.referenceLapNumber === undefined ? '--' : `V${racingLine.referenceLapNumber}`} />
           <Stat label="VALIDOS" value={`${racingLine?.debug.validSegments ?? 0}/${racingLine?.microSectorCount ?? microSectorCount}`} color={ready ? EMERALD : MUTED} />
         </div>
 
         <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start', border: `1px solid ${BORDER}`, background: ready ? 'rgba(34,211,238,0.035)' : 'rgba(251,191,36,0.035)', padding: 7, borderRadius: 4 }}>
           <AlertTriangle size={13} color={ready ? CYAN : AMBER} style={{ flexShrink: 0, marginTop: 1 }} />
           <div className="num" style={{ fontSize: 8, lineHeight: 1.45, color: TEXT }}>{keyMessage}</div>
+        </div>
+
+        <div style={{ border: `1px solid ${BORDER}`, background: SURFACE, borderRadius: 4, padding: '5px 7px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <BarChart3 size={12} color={EMERALD} />
+              <span className="label" style={{ fontSize: 6 }}>TOP VOLTAS</span>
+            </div>
+            <span className="num" style={{ fontSize: 7, color: MUTED }}>{fastestLaps.length} validas</span>
+          </div>
+          {fastestLaps.length ? (
+            fastestLaps.slice(0, 3).map((lap, index) => <LapRow key={lap.lapNumber} lap={lap} rank={index + 1} />)
+          ) : (
+            <div className="num" style={{ fontSize: 7, color: MUTED, padding: '3px 0' }}>Aguardando voltas validas.</div>
+          )}
         </div>
       </div>
 
