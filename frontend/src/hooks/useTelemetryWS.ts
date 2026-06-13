@@ -4,8 +4,8 @@
  */
 import { useEffect, useRef, useCallback } from 'react';
 import { PerformanceMode, useTelemetryStore, TelemetryFrame, CoachingEvent, EngineerSpeech, CognitiveState } from '../store/useTelemetryStore';
+import { WS_URL, apiUrl } from '../config/runtime';
 
-const WS_URL = `ws://${window.location.hostname}:8000/ws`;
 const OPPONENTS_POLL_MS = 2000;
 const OPPONENTS_WS_FRESH_MS = 2500;
 const FLUSH_TICK_MS = 50;
@@ -197,7 +197,7 @@ export const useTelemetryWS = () => {
     const pollOpponents = async () => {
       if (Date.now() - lastOpponentsWsAtRef.current < OPPONENTS_WS_FRESH_MS) return;
       try {
-        const response = await fetch('/api/live/opponents');
+        const response = await fetch(apiUrl('/api/live/opponents'));
         if (!response.ok) return;
         const data = await response.json();
         if (cancelled || data?.status !== 'success') return;
