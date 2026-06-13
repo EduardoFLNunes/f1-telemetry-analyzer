@@ -61,11 +61,12 @@ contextBridge.exposeInMainWorld('desktopRuntime', {
   udpOpponentsPort: Number(process.env.AT_UDP_OPPONENTS_PORT || DEFAULT_UDP_OPPONENTS_PORT),
   mode,
   autostartEnabled,
-  phase: 'phase-12.3-packaging',
+  phase: 'phase-12.4-installer-validation',
 });
 
 contextBridge.exposeInMainWorld('automobilistaDesktop', {
   backendHealth: () => ipcRenderer.invoke('backend:health'),
   runtimeStatus: () => ipcRenderer.invoke('desktop:runtime'),
-  phase: 'phase-12.3-packaging',
+  openLogsDir: () => ipcRenderer.invoke('desktop:open-logs'),
+  phase: 'phase-12.4-installer-validation',
 });

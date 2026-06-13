@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const { spawn, spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -11,6 +11,7 @@ const REPO_FRONTEND_DIST = path.join(REPO_ROOT, 'frontend', 'dist', 'index.html'
 const DEFAULT_FRONTEND_DEV_URL = 'http://127.0.0.1:5173';
 const DEFAULT_BACKEND_URL = 'http://127.0.0.1:8000';
 const BACKEND_EXE_NAME = process.platform === 'win32' ? 'automobilista-backend.exe' : 'automobilista-backend';
+const EXPECTED_BACKEND_SERVICE = 'automobilista-telemetria-backend';
 
 const FRONTEND_URL = process.env.AT_DESKTOP_FRONTEND_URL || DEFAULT_FRONTEND_DEV_URL;
 const BACKEND_URL = stripTrailingSlash(process.env.AT_BACKEND_URL || DEFAULT_BACKEND_URL);
@@ -40,9 +41,17 @@ const desktopRuntimeState = {
   backendRunnerPath: null,
   backendCommand: null,
   backendPid: null,
+  backendStartedAt: null,
+  backendStatus: 'offline',
+  backendStatusMessage: 'Backend ainda nao verificado.',
+  backendPort: BACKEND_PORT,
   apiBaseUrl: BACKEND_URL,
   healthUrl: HEALTH_URL,
+  portConflict: false,
+  portConflictMessage: null,
   lastBackendError: null,
+  lastBackendExitCode: null,
+  lastBackendExitSignal: null,
   lastHealth: null,
   lastCheckedAt: null,
   frontendIndexPath: null,
@@ -77,6 +86,20 @@ function ensureLogsDir() {
   fs.mkdirSync(logsDir, { recursive: true });
   desktopRuntimeState.logsDir = logsDir;
   return logsDir;
+}
+
+function setBackendStatus(status, message, extra = {}) {
+  desktopRuntimeState.backendStatus = status;
+  desktopRuntimeState.backendStatusMessage = message;
+  if (Object.prototype.hasOwnProperty.call(extra, 'lastBackendError')) {
+    desktopRuntimeState.lastBackendError = extra.lastBackendError;
+  }
+  if (Object.prototype.hasOwnProperty.call(extra, 'portConflict')) {
+    desktopRuntimeState.portConflict = Boolean(extra.portConflict);
+  }
+  if (Object.prototype.hasOwnProperty.call(extra, 'portConflictMessage')) {
+    desktopRuntimeState.portConflictMessage = extra.portConflictMessage;
+  }
 }
 
 function appendDesktopLog(message) {
@@ -145,12 +168,21 @@ function resolveFrontendIndexPath() {
   return frontendIndexCandidates().find((candidate) => fs.existsSync(candidate)) || null;
 }
 
+function packagedResourceBackendPath() {
+  return path.join(resolveBackendResourceRoot(), 'backend', BACKEND_EXE_NAME);
+}
+
+function samePath(left, right) {
+  if (!left || !right) return false;
+  return path.resolve(left).toLowerCase() === path.resolve(right).toLowerCase();
+}
+
 function packagedBackendCandidates() {
   const candidates = [];
   const configured = resolveMaybeRelativePath(process.env.AT_BACKEND_EXE_PATH);
   if (configured) candidates.push(configured);
 
-  candidates.push(path.join(resolveBackendResourceRoot(), 'backend', BACKEND_EXE_NAME));
+  candidates.push(packagedResourceBackendPath());
   candidates.push(path.join(__dirname, 'resources', 'backend', BACKEND_EXE_NAME));
   candidates.push(path.join(REPO_ROOT, 'backend', 'dist', BACKEND_EXE_NAME));
   candidates.push(path.join(REPO_ROOT, 'dist', BACKEND_EXE_NAME));
@@ -168,10 +200,10 @@ function resolvePythonRunnerLaunch() {
     || path.join(REPO_ROOT, 'backend', 'desktop_backend_runner.py');
 
   if (!fs.existsSync(pythonPath)) {
-    return { error: `Python runner requested but Python was not found: ${pythonPath}` };
+    return { error: `Python runner requested but Python was not found: ${pythonPath}`, status: 'executable-not-found' };
   }
   if (!fs.existsSync(runnerPath)) {
-    return { error: `Python runner requested but runner was not found: ${runnerPath}` };
+    return { error: `Python runner requested but runner was not found: ${runnerPath}`, status: 'executable-not-found' };
   }
 
   return {
@@ -204,7 +236,7 @@ function resolveBackendLaunch() {
   const executablePath = candidates.find((candidate) => fs.existsSync(candidate));
   if (executablePath) {
     return {
-      source: 'packaged-exe',
+      source: samePath(executablePath, packagedResourceBackendPath()) ? 'packaged-resource' : 'packaged-exe',
       command: executablePath,
       args: [],
       cwd: APP_ROOT,
@@ -215,7 +247,7 @@ function resolveBackendLaunch() {
 
   const configuredPath = resolveMaybeRelativePath(process.env.AT_BACKEND_EXE_PATH);
   const searched = configuredPath || candidates.join('; ');
-  return { error: `Backend executable not found. Searched: ${searched}` };
+  return { error: `Backend executable not found. Searched: ${searched}`, status: 'executable-not-found' };
 }
 
 function requestJson(url, timeoutMs = 2500) {
@@ -251,16 +283,43 @@ function requestJson(url, timeoutMs = 2500) {
   });
 }
 
+function normalizeBackendHealth(response) {
+  const service = response?.data?.service || null;
+  const status = response?.data?.status || null;
+  const expectedService = service === EXPECTED_BACKEND_SERVICE && status === 'ok';
+  const reachable = Boolean(response?.statusCode);
+  const portMessage = `Porta ${BACKEND_PORT} respondeu, mas nao parece ser o backend ${EXPECTED_BACKEND_SERVICE}.`;
+  return {
+    ...response,
+    ok: Boolean(response?.ok && expectedService),
+    reachable,
+    expectedService,
+    service,
+    error: response?.ok && !expectedService ? portMessage : response?.error,
+  };
+}
+
+function healthLooksLikePortConflict(health) {
+  return Boolean(health && !health.ok && (health.reachable || health.statusCode));
+}
+
 async function backendHealth() {
   try {
-    const health = await requestJson(HEALTH_URL);
+    const health = normalizeBackendHealth(await requestJson(HEALTH_URL));
     desktopRuntimeState.lastHealth = health;
     desktopRuntimeState.lastCheckedAt = new Date().toISOString();
-    if (health.ok) desktopRuntimeState.lastBackendError = null;
+    if (health.ok) {
+      desktopRuntimeState.lastBackendError = null;
+      desktopRuntimeState.portConflict = false;
+      desktopRuntimeState.portConflictMessage = null;
+    }
     return health;
   } catch (error) {
     const health = {
       ok: false,
+      reachable: false,
+      expectedService: false,
+      service: null,
       statusCode: null,
       error: error.message,
     };
@@ -270,7 +329,7 @@ async function backendHealth() {
   }
 }
 
-async function waitForBackendHealth(timeoutMs = 15000, intervalMs = 500) {
+async function waitForBackendHealth(timeoutMs = 60000, intervalMs = 500) {
   const startedAt = Date.now();
   let lastHealth = null;
   while (Date.now() - startedAt < timeoutMs) {
@@ -280,6 +339,8 @@ async function waitForBackendHealth(timeoutMs = 15000, intervalMs = 500) {
   }
   return {
     ok: false,
+    reachable: lastHealth?.reachable ?? false,
+    expectedService: lastHealth?.expectedService ?? false,
     statusCode: lastHealth?.statusCode ?? null,
     error: lastHealth?.error || `Backend health did not become ready within ${timeoutMs}ms`,
   };
@@ -287,17 +348,20 @@ async function waitForBackendHealth(timeoutMs = 15000, intervalMs = 500) {
 
 function startBackendProcess() {
   if (!SHOULD_START_BACKEND) {
+    setBackendStatus('offline', 'Backend autostart desativado.', { lastBackendError: 'Backend autostart disabled.' });
     appendDesktopLog('Backend autostart disabled.');
-    return;
+    return false;
   }
-  if (backendProcess) return;
+  if (backendProcess) return true;
 
   const launch = resolveBackendLaunch();
   if (!launch || launch.error) {
     desktopRuntimeState.backendSource = 'unavailable';
-    desktopRuntimeState.lastBackendError = launch?.error || 'Backend launch configuration is unavailable.';
+    const status = launch?.status || 'offline';
+    const message = launch?.error || 'Backend launch configuration is unavailable.';
+    setBackendStatus(status, message, { lastBackendError: message, portConflict: false, portConflictMessage: null });
     appendDesktopLog(desktopRuntimeState.lastBackendError);
-    return;
+    return false;
   }
 
   const logsDir = ensureLogsDir();
@@ -325,34 +389,46 @@ function startBackendProcess() {
   desktopRuntimeState.backendRunnerPath = launch.runnerPath || null;
   desktopRuntimeState.backendCommand = launch.command;
   desktopRuntimeState.backendPid = backendProcess.pid;
+  desktopRuntimeState.backendStartedAt = new Date().toISOString();
   desktopRuntimeState.backendResourceRoot = backendResourceRoot;
   desktopRuntimeState.backendRuntimeRoot = backendRuntimeRoot;
   desktopRuntimeState.logsDir = logsDir;
+  desktopRuntimeState.lastBackendExitCode = null;
+  desktopRuntimeState.lastBackendExitSignal = null;
   desktopRuntimeState.lastBackendError = null;
+  setBackendStatus('starting', 'Backend empacotado iniciando.', { portConflict: false, portConflictMessage: null });
 
   backendProcess.stdout?.pipe(backendLog);
   backendProcess.stderr?.pipe(backendLog);
   backendProcess.on('error', (error) => {
     appendDesktopLog(`Backend process failed to start: ${error.message}`);
-    desktopRuntimeState.lastBackendError = error.message;
+    setBackendStatus('crashed', `Backend falhou ao iniciar: ${error.message}`, { lastBackendError: error.message });
     desktopRuntimeState.backendSource = 'unavailable';
     desktopRuntimeState.backendStartedByElectron = false;
     desktopRuntimeState.backendPid = null;
+    desktopRuntimeState.backendStartedAt = null;
     backendStartedByElectron = false;
     backendProcess = null;
   });
   backendProcess.on('exit', (code, signal) => {
     appendDesktopLog(`Backend process exited code=${code} signal=${signal}`);
     desktopRuntimeState.backendPid = null;
+    desktopRuntimeState.lastBackendExitCode = code;
+    desktopRuntimeState.lastBackendExitSignal = signal;
     if (backendStartedByElectron && !backendStopping) {
-      desktopRuntimeState.lastBackendError = `Backend process exited code=${code} signal=${signal}`;
+      const message = `Backend process exited code=${code} signal=${signal}`;
+      setBackendStatus('crashed', message, { lastBackendError: message });
+    } else if (backendStopping) {
+      setBackendStatus('offline', 'Backend encerrado junto com o aplicativo.', { lastBackendError: null });
     }
     desktopRuntimeState.backendStartedByElectron = false;
+    desktopRuntimeState.backendStartedAt = null;
     backendStartedByElectron = false;
     backendStopping = false;
     backendProcess = null;
   });
   appendDesktopLog(`Backend process started by Electron source=${launch.source} pid=${backendProcess.pid}`);
+  return true;
 }
 
 async function prepareBackendRuntime() {
@@ -361,32 +437,81 @@ async function prepareBackendRuntime() {
     desktopRuntimeState.backendSource = 'already-running';
     desktopRuntimeState.backendStartedByElectron = false;
     desktopRuntimeState.backendPid = null;
+    setBackendStatus('already-running', `Backend valido ja esta online em ${HEALTH_URL}.`, { portConflict: false, portConflictMessage: null });
     appendDesktopLog(`Backend already online at ${HEALTH_URL}.`);
     return existingHealth;
   }
 
-  if (existingHealth.statusCode) {
-    appendDesktopLog(`Backend port responded without a valid health payload. status=${existingHealth.statusCode} error=${existingHealth.error || 'none'}`);
-  } else {
-    appendDesktopLog(`Backend health unavailable before startup. error=${existingHealth.error || 'connection unavailable'}`);
+  if (healthLooksLikePortConflict(existingHealth)) {
+    const message = existingHealth.error || `Porta ${BACKEND_PORT} ocupada por processo desconhecido.`;
+    desktopRuntimeState.backendSource = 'unavailable';
+    desktopRuntimeState.backendStartedByElectron = false;
+    desktopRuntimeState.backendPid = null;
+    setBackendStatus('port-conflict', message, {
+      lastBackendError: message,
+      portConflict: true,
+      portConflictMessage: message,
+    });
+    appendDesktopLog(`Backend port conflict before startup. status=${existingHealth.statusCode || 'none'} error=${message}`);
+    return existingHealth;
   }
+
+  appendDesktopLog(`Backend health unavailable before startup. error=${existingHealth.error || 'connection unavailable'}`);
 
   if (!SHOULD_START_BACKEND) {
     desktopRuntimeState.backendSource = 'unavailable';
-    desktopRuntimeState.lastBackendError = existingHealth.error || 'Backend is offline and autostart is disabled.';
+    const message = existingHealth.error || 'Backend is offline and autostart is disabled.';
+    setBackendStatus('offline', message, { lastBackendError: message, portConflict: false, portConflictMessage: null });
     appendDesktopLog('Backend autostart remains disabled; user must start FastAPI separately.');
     return existingHealth;
   }
 
-  startBackendProcess();
+  const launched = startBackendProcess();
+  if (!launched) return existingHealth;
   const startedHealth = await waitForBackendHealth();
   if (startedHealth.ok) {
+    setBackendStatus('online', `Backend respondeu ao health check em ${HEALTH_URL}.`, { portConflict: false, portConflictMessage: null });
     appendDesktopLog(`Backend health OK after autostart at ${HEALTH_URL}.`);
+  } else if (healthLooksLikePortConflict(startedHealth)) {
+    const message = startedHealth.error || `Porta ${BACKEND_PORT} ocupada por processo desconhecido.`;
+    setBackendStatus('port-conflict', message, {
+      lastBackendError: message,
+      portConflict: true,
+      portConflictMessage: message,
+    });
+    appendDesktopLog(`Backend autostart hit a port conflict. error=${message}`);
   } else {
-    desktopRuntimeState.lastBackendError = startedHealth.error || 'Backend health timeout after autostart.';
+    const message = startedHealth.error || 'Backend health timeout after autostart.';
+    setBackendStatus('health-timeout', message, { lastBackendError: message, portConflict: false, portConflictMessage: null });
     appendDesktopLog(`Backend autostart did not reach health OK. error=${startedHealth.error || 'unknown'}`);
   }
   return startedHealth;
+}
+
+function stopStartedBackendChildren() {
+  if (process.platform !== 'win32') return;
+  const executablePath = desktopRuntimeState.backendExecutablePath;
+  const startedAt = desktopRuntimeState.backendStartedAt;
+  if (!executablePath || !startedAt) return;
+
+  const command = [
+    '$exe=$env:AT_BACKEND_STOP_EXE;',
+    '$cutoff=[datetime]$env:AT_BACKEND_STOP_CUTOFF;',
+    "Get-CimInstance Win32_Process -Filter \"Name = 'automobilista-backend.exe'\"",
+    '| Where-Object { $_.ExecutablePath -eq $exe -and $_.CreationDate -ge $cutoff }',
+    '| ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }',
+  ].join(' ');
+  const result = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', command], {
+    windowsHide: true,
+    env: {
+      ...process.env,
+      AT_BACKEND_STOP_EXE: executablePath,
+      AT_BACKEND_STOP_CUTOFF: new Date(Date.parse(startedAt) - 5000).toISOString(),
+    },
+  });
+  if (result.status && result.status !== 0) {
+    appendDesktopLog(`Backend child cleanup failed: ${String(result.stderr || result.error || result.status)}`);
+  }
 }
 
 function stopBackendProcess() {
@@ -394,6 +519,7 @@ function stopBackendProcess() {
   backendStopping = true;
   if (process.platform === 'win32' && backendProcess.pid) {
     spawnSync('taskkill', ['/PID', String(backendProcess.pid), '/T', '/F'], { windowsHide: true });
+    stopStartedBackendChildren();
   } else {
     backendProcess.kill();
   }
@@ -401,11 +527,41 @@ function stopBackendProcess() {
   backendStartedByElectron = false;
   desktopRuntimeState.backendStartedByElectron = false;
   desktopRuntimeState.backendPid = null;
+  desktopRuntimeState.backendStartedAt = null;
+  setBackendStatus('offline', 'Backend encerrado junto com o aplicativo.', { portConflict: false, portConflictMessage: null });
   appendDesktopLog('Backend process stopped.');
+}
+
+function refreshBackendStatusFromHealth(health) {
+  if (health.ok) {
+    const onlineStatus = desktopRuntimeState.backendSource === 'already-running' ? 'already-running' : 'online';
+    const message = onlineStatus === 'already-running'
+      ? `Backend valido ja esta online em ${HEALTH_URL}.`
+      : `Backend online em ${HEALTH_URL}.`;
+    setBackendStatus(onlineStatus, message, { portConflict: false, portConflictMessage: null, lastBackendError: null });
+    return;
+  }
+
+  if (healthLooksLikePortConflict(health)) {
+    const message = health.error || `Porta ${BACKEND_PORT} ocupada por processo desconhecido.`;
+    setBackendStatus('port-conflict', message, {
+      lastBackendError: message,
+      portConflict: true,
+      portConflictMessage: message,
+    });
+    return;
+  }
+
+  if (desktopRuntimeState.backendStatus === 'starting') return;
+  if (['crashed', 'health-timeout', 'executable-not-found'].includes(desktopRuntimeState.backendStatus)) return;
+
+  const message = health.error || 'Backend offline. A API local ainda nao respondeu.';
+  setBackendStatus('offline', message, { lastBackendError: message, portConflict: false, portConflictMessage: null });
 }
 
 async function desktopRuntimeStatus() {
   const health = await backendHealth();
+  refreshBackendStatusFromHealth(health);
   return {
     ...desktopRuntimeState,
     frontendIndexPath: desktopRuntimeState.frontendIndexPath || resolveFrontendIndexPath(),
@@ -418,6 +574,17 @@ async function desktopRuntimeStatus() {
     mode: app.isPackaged || process.env.AT_DESKTOP_MODE === 'production' ? 'production' : 'development',
     packaged: app.isPackaged,
   };
+}
+
+async function openLogsDir() {
+  const logsDir = ensureLogsDir();
+  const error = await shell.openPath(logsDir);
+  if (error) {
+    appendDesktopLog(`Failed to open logs directory: ${error}`);
+    return { ok: false, path: logsDir, error };
+  }
+  appendDesktopLog(`Opened logs directory: ${logsDir}`);
+  return { ok: true, path: logsDir, error: null };
 }
 
 async function createWindow() {
@@ -479,3 +646,4 @@ app.on('window-all-closed', () => {
 
 ipcMain.handle('backend:health', backendHealth);
 ipcMain.handle('desktop:runtime', desktopRuntimeStatus);
+ipcMain.handle('desktop:open-logs', openLogsDir);

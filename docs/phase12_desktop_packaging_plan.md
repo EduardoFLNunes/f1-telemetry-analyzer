@@ -482,6 +482,104 @@ Packaged resource validation:
 - Desktop log confirmed the frontend loaded from
   `desktop/dist/win-unpacked/resources/frontend/index.html`.
 
+## Phase 12.4 Status
+
+Phase 12.4 validates the NSIS installer as real installed software and improves
+runtime recovery when the backend, port, health check, or packaged executable is
+not healthy.
+
+### Installer Validation
+
+Installer path:
+
+```text
+desktop/dist/Automobilista Telemetria Setup 0.1.0-phase-12.exe
+```
+
+Silent install command used for validation:
+
+```bash
+desktop\dist\Automobilista Telemetria Setup 0.1.0-phase-12.exe /S
+```
+
+Installed app path:
+
+```text
+%LOCALAPPDATA%\Programs\Automobilista Telemetria\Automobilista Telemetria.exe
+```
+
+The installed app was opened with repository `frontend/dist` and `backend/dist`
+temporarily renamed. It still loaded and reported:
+
+```text
+resourceRoot=%LOCALAPPDATA%\Programs\Automobilista Telemetria\resources
+runtimeRoot=%APPDATA%\Automobilista Telemetria
+frontend=%LOCALAPPDATA%\Programs\Automobilista Telemetria\resources\frontend\index.html
+backend source=packaged-resource
+logs=%APPDATA%\Automobilista Telemetria\logs
+```
+
+Validated installed endpoints:
+
+- `GET /api/health`
+- `GET /api/runtime/status`
+- `GET /api/live/telemetry`
+- `GET /api/live/opponents`
+- `GET /api/live/racing-line`
+- `GET /api/live/coach`
+
+### Runtime Recovery
+
+`desktop/main.js` now tracks:
+
+```text
+backendStatus=online|offline|starting|already-running|port-conflict|health-timeout|executable-not-found|crashed
+```
+
+Recovery behavior validated:
+
+- Valid backend already running: Electron marks `already-running`, does not
+  start another backend, and does not stop the external backend on close.
+- Unknown process on backend port: Electron marks `port-conflict`, logs the
+  conflict, and does not start the packaged backend.
+- Packaged backend exe missing: Electron marks `executable-not-found`, logs the
+  searched paths, and does not enter a restart loop.
+- Backend startup can take longer in PyInstaller onefile mode, so health wait
+  was increased to 60 seconds before reporting `health-timeout`.
+- Normal app close stops the PyInstaller backend process tree started by
+  Electron, including child processes.
+
+### Runtime Panel
+
+The dashboard runtime panel now shows:
+
+- backend status;
+- backend source;
+- autostart enabled/disabled;
+- started-by-Electron;
+- API URL and backend port;
+- health status;
+- runtime root;
+- resource root;
+- logs directory;
+- backend executable path;
+- last backend error and port conflict message.
+
+It polls lightweight runtime/health endpoints every 4 seconds and exposes a
+safe `openLogsDir()` IPC bridge through the preload to open the logs directory.
+
+### Uninstall/Reinstall
+
+Silent uninstall and reinstall were validated:
+
+```text
+%LOCALAPPDATA%\Programs\Automobilista Telemetria\Uninstall Automobilista Telemetria.exe /S
+desktop\dist\Automobilista Telemetria Setup 0.1.0-phase-12.exe /S
+```
+
+After reinstall, the app opened, backend health returned OK, and normal window
+close left no backend process orphan.
+
 ## Build Commands
 
 Frontend production build:
@@ -538,6 +636,12 @@ cd desktop
 npm run dist:win
 ```
 
+Silent installer validation:
+
+```bash
+desktop\dist\Automobilista Telemetria Setup 0.1.0-phase-12.exe /S
+```
+
 ## Logs Plan
 
 Development desktop logs are written to:
@@ -560,7 +664,8 @@ Packaged desktop logs are written to:
 - Backend subprocess packaging needs careful handling of Python dependencies,
   native libraries, and Assetto Corsa shared-memory access.
 - Port conflicts on `8000`, `5173`, and UDP `8765` need a diagnostic screen or
-  explicit recovery path.
+  explicit recovery path. Phase 12.4 covers backend HTTP port diagnostics, but
+  not a full visual port configuration screen.
 - Loading frontend assets from `file://` can expose assumptions that only work
   behind Vite. Phase 12.3 sets Vite `base: './'` and validates packaged
   `resources/frontend/index.html`.
@@ -589,13 +694,15 @@ by this phase.
 4. Package backend with PyInstaller.
 5. Package Electron with backend/frontend copied into `resources`.
 6. Add port conflict detection and a diagnostics view.
-7. Add installer flow and Assetto Corsa exporter checks.
+7. Validate the Windows installer as installed software.
+8. Add Assetto Corsa exporter/plugin setup checks.
 
-## Recommended Phase 12.3
+## Recommended Phase 12.5
 
-- Add Electron Builder packaging and include `automobilista-backend.exe` as a
-  resource.
 - Trim PyInstaller hook collection and reduce executable size.
-- Expand user-facing recovery for port conflicts.
-- Add installer planning without packaging the Assetto Corsa exporter yet.
+- Add Assetto Corsa plugin/exporter setup wizard.
+- Detect the Assetto Corsa install folder automatically where possible.
+- Add application icon and polished installer metadata.
 - Define runtime config file location for user-selected ports and paths.
+- Keep auto-update, public signing, and crash reporting out of scope until the
+  local installer flow is stable.

@@ -108,6 +108,14 @@ AT_BACKEND_RUNTIME_ROOT=<app.getPath("userData")>
 This lets the packaged backend read bundled fixture data from `resources/data`
 and write cache/recordings under `%APPDATA%\Automobilista Telemetria\`.
 
+Installed apps use:
+
+```text
+resourceRoot=%LOCALAPPDATA%\Programs\Automobilista Telemetria\resources
+runtimeRoot=%APPDATA%\Automobilista Telemetria
+logs=%APPDATA%\Automobilista Telemetria\logs
+```
+
 ## Test Runner
 
 From `backend/`:
@@ -149,6 +157,25 @@ GET /api/live/coach
 - Runtime status reported `backend.runtimeRoot` under
   `%APPDATA%\Automobilista Telemetria`.
 
+## Phase 12.4 Result
+
+- NSIS installer was installed silently with `/S`.
+- Installed app opened without repository `frontend/dist` or `backend/dist`.
+- Installed backend started from
+  `%LOCALAPPDATA%\Programs\Automobilista Telemetria\resources\backend`.
+- Installed frontend loaded from
+  `%LOCALAPPDATA%\Programs\Automobilista Telemetria\resources\frontend`.
+- Logs were created under `%APPDATA%\Automobilista Telemetria\logs`.
+- `/api/health`, `/api/runtime/status`, telemetry, opponents, Racing Line, and
+  Coach endpoints returned.
+- Unknown service on the backend port was detected as `port-conflict`.
+- Missing packaged backend exe was detected as `executable-not-found`.
+- Valid backend already running was treated as `already-running`; Electron did
+  not start another backend and did not stop that external backend.
+- Normal app close stopped the PyInstaller backend process tree started by
+  Electron, including child processes.
+- Silent uninstall/reinstall was validated without deleting user data.
+
 ## Validation Checklist For Phase 12.2
 
 - Packaged backend starts from `backend/dist/automobilista-backend.exe`.
@@ -167,9 +194,14 @@ GET /api/live/coach
 
 - Port 8000 occupied: Electron will treat the existing healthy backend as
   `already-running` and will not start another process.
+- Port 8000 occupied by another service: Electron reports `port-conflict` and
+  leaves the unknown process alone.
 - Backend executable missing: build with `backend\packaging\build_backend.ps1`
-  or set `AT_BACKEND_EXE_PATH`.
-- Health timeout: inspect `logs/desktop.log` and `logs/backend.log`.
+  or set `AT_BACKEND_EXE_PATH`. Installed apps report
+  `executable-not-found` if `resources/backend/automobilista-backend.exe` is
+  missing.
+- Health timeout: inspect development logs or installed logs under
+  `%APPDATA%\Automobilista Telemetria\logs`.
 - PyInstaller missing: run `.venv\Scripts\python.exe -m pip install pyinstaller`.
 - Python dependency missing at runtime: rebuild after installing the dependency
   in `.venv`, then inspect `backend/build/automobilista-backend/warn-*.txt`.

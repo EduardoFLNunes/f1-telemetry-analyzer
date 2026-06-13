@@ -1,8 +1,9 @@
 # Automobilista Telemetria Desktop Shell
 
-Phase 12.3 packages the Electron shell with a copied backend executable and
-frontend build under Electron `resources/`. Packaged builds start the bundled
-backend by default; development builds still require an explicit autostart flag.
+Phase 12.4 validates the Windows installer as installed software. Packaged
+builds start the bundled backend from Electron `resources/`, write runtime data
+to AppData, expose clearer backend recovery states, and provide a safe action to
+open the logs directory.
 
 ## Current Terminal Flow
 
@@ -97,6 +98,18 @@ cd desktop
 npm run dist:win
 ```
 
+Install silently for validation:
+
+```bash
+desktop\dist\Automobilista Telemetria Setup 0.1.0-phase-12.exe /S
+```
+
+Default per-user install path:
+
+```text
+%LOCALAPPDATA%\Programs\Automobilista Telemetria\
+```
+
 The packaged app expects these resources:
 
 ```text
@@ -116,6 +129,22 @@ The frontend static build resolves from:
 1. `process.resourcesPath\frontend\index.html`
 2. Development fallback `frontend\dist\index.html`.
 
+## Installed App Validation
+
+Phase 12.4 validated the installed app with repository `frontend/dist` and
+`backend/dist` temporarily renamed. The installed app still opened and reported:
+
+```text
+resourceRoot=%LOCALAPPDATA%\Programs\Automobilista Telemetria\resources
+runtimeRoot=%APPDATA%\Automobilista Telemetria
+frontend=%LOCALAPPDATA%\Programs\Automobilista Telemetria\resources\frontend\index.html
+backend source=packaged-resource
+```
+
+The app was also uninstalled and reinstalled silently. After reinstall, it
+opened, `/api/health` returned OK, and normal window close stopped the backend
+process tree started by Electron.
+
 ## Runtime Config
 
 The preload exposes `window.desktopRuntime` with:
@@ -127,6 +156,25 @@ The preload exposes `window.desktopRuntime` with:
 - `udpOpponentsPort`
 - `mode`
 - `autostartEnabled`
+
+The preload also exposes `window.automobilistaDesktop` with:
+
+- `runtimeStatus()`
+- `backendHealth()`
+- `openLogsDir()`
+
+`runtimeStatus()` includes `backendStatus`:
+
+```text
+online
+offline
+starting
+already-running
+port-conflict
+health-timeout
+executable-not-found
+crashed
+```
 
 The frontend also continues to support:
 
@@ -164,6 +212,10 @@ Backend autostart is enabled by default only when `app.isPackaged` is true.
 ```http
 GET /api/health
 GET /api/runtime/status
+GET /api/live/telemetry
+GET /api/live/opponents
+GET /api/live/racing-line
+GET /api/live/coach
 ```
 
 ## Logs
@@ -187,10 +239,14 @@ The `logs/` directory is runtime output and should not be committed.
 
 - Port 8000 occupied: Electron reports `already-running` and avoids duplicate
   backend startup if `/api/health` is OK.
+- Port 8000 occupied by an unknown service: Electron reports `port-conflict`
+  and does not start the packaged backend.
 - Backend exe missing: build it with `backend\packaging\build_backend.ps1` or set
-  `AT_BACKEND_EXE_PATH`.
+  `AT_BACKEND_EXE_PATH`. Packaged apps report `executable-not-found` if the exe
+  is missing from `resources/backend`.
 - Health timeout: inspect the development logs or the packaged app logs under
   `%APPDATA%\Automobilista Telemetria\logs\`.
+- Backend crash: Electron reports `crashed` and avoids aggressive restart loops.
 - Static frontend missing: run `npm.cmd run build` from `frontend/`.
 - Need Python runner for development: set `AT_BACKEND_RUNNER=python` or
   `AT_BACKEND_USE_PYTHON_RUNNER=true`.

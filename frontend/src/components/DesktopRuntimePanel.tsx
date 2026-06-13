@@ -1,6 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { FolderOpen } from 'lucide-react';
 import { API_BASE_URL, apiUrl } from '../config/runtime';
 import { useTelemetryStore } from '../store/useTelemetryStore';
+
+type BackendStatus =
+  | 'online'
+  | 'offline'
+  | 'starting'
+  | 'already-running'
+  | 'port-conflict'
+  | 'health-timeout'
+  | 'executable-not-found'
+  | 'crashed';
 
 declare global {
   interface Window {
@@ -17,6 +28,7 @@ declare global {
     automobilistaDesktop?: {
       runtimeStatus?: () => Promise<DesktopRuntimeStatus>;
       backendHealth?: () => Promise<unknown>;
+      openLogsDir?: () => Promise<{ ok?: boolean; path?: string; error?: string | null }>;
       phase?: string;
     };
   }
@@ -30,12 +42,22 @@ type DesktopRuntimeStatus = {
   backendRunnerPath?: string | null;
   backendCommand?: string | null;
   backendPid?: number | null;
+  backendStatus?: BackendStatus;
+  backendStatusMessage?: string | null;
+  backendPort?: number | null;
+  backendResourceRoot?: string | null;
+  backendRuntimeRoot?: string | null;
+  frontendIndexPath?: string | null;
+  logsDir?: string | null;
   apiBaseUrl?: string;
   healthUrl?: string;
+  portConflict?: boolean;
+  portConflictMessage?: string | null;
   lastBackendError?: string | null;
   healthOk?: boolean;
   healthStatusCode?: number | null;
   mode?: string;
+  packaged?: boolean;
 };
 
 type RuntimeStatus = {
@@ -43,6 +65,8 @@ type RuntimeStatus = {
   backend?: {
     online?: boolean;
     trackState?: string | null;
+    resourceRoot?: string | null;
+    runtimeRoot?: string | null;
   };
   telemetry?: {
     online?: boolean;
@@ -65,7 +89,7 @@ type RuntimeStatus = {
   };
 };
 
-const POLL_MS = 5000;
+const POLL_MS = 4000;
 
 const statusColor = {
   ok: '#34d399',
@@ -88,18 +112,39 @@ function runtimePorts() {
   };
 }
 
-function compactPath(value?: string | null): string {
+function compactPath(value?: string | null, max = 34): string {
   if (!value) return '--';
-  return value.length > 28 ? `...${value.slice(-25)}` : value;
+  return value.length > max ? `...${value.slice(-(max - 3))}` : value;
+}
+
+function statusTone(status: BackendStatus, healthOk: boolean): keyof typeof statusColor {
+  if (healthOk || status === 'online' || status === 'already-running') return 'ok';
+  if (status === 'starting') return 'warn';
+  if (status === 'offline') return 'warn';
+  return 'bad';
+}
+
+function statusLabel(status: BackendStatus): string {
+  return status.replace(/-/g, ' ').toUpperCase();
+}
+
+function friendlyMessage(status: BackendStatus, port: number, error?: string | null): string {
+  if (status === 'online' || status === 'already-running') return 'Backend online. API local respondendo normalmente.';
+  if (status === 'starting') return 'Backend iniciando. Aguardando health check local.';
+  if (status === 'port-conflict') return `Porta ${port} ocupada por outro processo. Feche o processo ou altere a porta configurada.`;
+  if (status === 'executable-not-found') return 'Backend empacotado nao encontrado nos resources do aplicativo.';
+  if (status === 'health-timeout') return 'Backend iniciou, mas nao respondeu ao health check dentro do tempo esperado.';
+  if (status === 'crashed') return 'Backend parou durante o uso. Consulte os logs locais.';
+  return error || 'Backend offline. O app esta aberto, mas a API local ainda nao respondeu.';
 }
 
 function Pill({ label, value, tone = 'quiet' }: { label: string; value: string; tone?: keyof typeof statusColor }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
-      <span className="label" style={{ fontSize: 6, letterSpacing: '0.08em', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, minWidth: 0 }} title={`${label}: ${value}`}>
+      <span className="label" style={{ fontSize: 6, letterSpacing: 0, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {label}
       </span>
-      <span className="num" style={{ fontSize: 7, color: statusColor[tone], fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap', letterSpacing: 0 }}>
+      <span className="num" style={{ fontSize: 7, color: statusColor[tone], fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap', letterSpacing: 0, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
         {value}
       </span>
     </div>
@@ -115,6 +160,7 @@ export const DesktopRuntimePanel: React.FC = () => {
   const [desktopStatus, setDesktopStatus] = useState<DesktopRuntimeStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
+  const [logsOpenError, setLogsOpenError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -155,8 +201,11 @@ export const DesktopRuntimePanel: React.FC = () => {
   }, []);
 
   const ports = useMemo(runtimePorts, []);
+  const backendPort = numeric(desktopStatus?.backendPort, ports.backend);
   const healthOk = !error && runtime?.status === 'ok';
   const desktopHealthOk = desktopStatus?.healthOk ?? healthOk;
+  const backendStatus: BackendStatus = desktopStatus?.backendStatus || (desktopHealthOk ? 'online' : 'offline');
+  const backendTone = statusTone(backendStatus, desktopHealthOk);
   const telemetryReceiving = isStreaming || Boolean(latestFrame) || numeric(runtime?.telemetry?.sampleCount, 0) > 0;
   const opponentsReceiving = numeric(runtime?.opponents?.count ?? opponentsMeta.count, 0) > 0
     || Boolean(lastOpponentsUpdateAt && Date.now() - lastOpponentsUpdateAt < 10000);
@@ -167,37 +216,74 @@ export const DesktopRuntimePanel: React.FC = () => {
   const autostartEnabled = desktopStatus?.autostartEnabled ?? window.desktopRuntime?.autostartEnabled ?? false;
   const startedByElectron = Boolean(desktopStatus?.backendStartedByElectron);
   const backendPath = desktopStatus?.backendExecutablePath || desktopStatus?.backendRunnerPath || desktopStatus?.backendCommand;
-  const lastBackendError = desktopStatus?.lastBackendError || error;
+  const resourceRoot = desktopStatus?.backendResourceRoot || runtime?.backend?.resourceRoot;
+  const runtimeRoot = desktopStatus?.backendRuntimeRoot || runtime?.backend?.runtimeRoot;
+  const logsDir = desktopStatus?.logsDir;
+  const lastBackendError = desktopStatus?.portConflictMessage || desktopStatus?.lastBackendError || error || logsOpenError;
+  const message = friendlyMessage(backendStatus, backendPort, lastBackendError || desktopStatus?.backendStatusMessage);
+
+  const openLogs = async () => {
+    setLogsOpenError(null);
+    const result = await window.automobilistaDesktop?.openLogsDir?.();
+    if (result && result.ok === false) setLogsOpenError(result.error || 'Falha ao abrir logs');
+  };
 
   return (
-    <div className="panel" style={{ height: '100%', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 7, minHeight: 124, overflow: 'hidden' }}>
+    <div className="panel" style={{ height: '100%', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 124, overflow: 'hidden' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-        <span className="label" style={{ color: 'var(--cyan)', fontSize: 6, letterSpacing: '0.08em' }}>Runtime</span>
-        <span className="num" style={{ fontSize: 7, color: desktopHealthOk ? statusColor.ok : statusColor.bad, fontWeight: 800, letterSpacing: 0 }}>
-          {desktopHealthOk ? 'ONLINE' : 'OFFLINE'}
-        </span>
+        <span className="label" style={{ color: 'var(--cyan)', fontSize: 6, letterSpacing: 0 }}>Runtime</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+          <span className="num" style={{ fontSize: 7, color: statusColor[backendTone], fontWeight: 800, letterSpacing: 0, whiteSpace: 'nowrap' }}>
+            {statusLabel(backendStatus)}
+          </span>
+          <button
+            type="button"
+            title={logsDir ? `Abrir logs: ${logsDir}` : 'Abrir pasta de logs'}
+            aria-label="Abrir pasta de logs"
+            onClick={openLogs}
+            disabled={!window.automobilistaDesktop?.openLogsDir}
+            style={{
+              width: 20,
+              height: 20,
+              display: 'grid',
+              placeItems: 'center',
+              border: '1px solid rgba(34, 211, 238, 0.28)',
+              background: 'rgba(15, 23, 42, 0.66)',
+              color: 'var(--cyan)',
+              opacity: window.automobilistaDesktop?.openLogsDir ? 1 : 0.35,
+              cursor: window.automobilistaDesktop?.openLogsDir ? 'pointer' : 'default',
+            }}
+          >
+            <FolderOpen size={12} strokeWidth={1.8} />
+          </button>
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4, minWidth: 0 }}>
-        <Pill label="Backend" value={runtime?.backend?.online || desktopHealthOk ? 'online' : 'offline'} tone={desktopHealthOk ? 'ok' : 'bad'} />
+      <div className="num" title={message} style={{ fontSize: 7, lineHeight: 1.25, color: statusColor[backendTone], minHeight: 18, overflow: 'hidden' }}>
+        {message}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 8, rowGap: 3, minWidth: 0 }}>
+        <Pill label="Backend" value={desktopHealthOk ? 'online' : 'offline'} tone={desktopHealthOk ? 'ok' : backendTone} />
         <Pill label="Source" value={backendSource} tone={backendSource === 'unavailable' ? 'bad' : 'ok'} />
         <Pill label="Autostart" value={autostartEnabled ? 'enabled' : 'disabled'} tone={autostartEnabled ? 'ok' : 'quiet'} />
         <Pill label="Started Here" value={startedByElectron ? 'yes' : 'no'} tone={startedByElectron ? 'ok' : 'quiet'} />
-        <Pill label="Health" value={desktopHealthOk ? 'OK' : (lastBackendError || 'erro')} tone={desktopHealthOk ? 'ok' : 'bad'} />
+        <Pill label="Health" value={desktopHealthOk ? 'OK' : (desktopStatus?.healthStatusCode ? `HTTP ${desktopStatus.healthStatusCode}` : 'waiting')} tone={desktopHealthOk ? 'ok' : backendTone} />
+        <Pill label="API" value={(desktopStatus?.apiBaseUrl || API_BASE_URL).replace(/^https?:\/\//, '')} tone="quiet" />
+        <Pill label="Track" value={trackState} tone={trackState === 'TRACK_READY' ? 'ok' : 'warn'} />
+        <Pill label="Backend Port" value={String(backendPort)} tone={desktopStatus?.portConflict ? 'bad' : 'quiet'} />
         <Pill label="Telemetry" value={telemetryReceiving ? 'recebendo' : 'aguardando'} tone={telemetryReceiving ? 'ok' : 'warn'} />
         <Pill label="Opponents" value={opponentsReceiving ? 'recebendo' : 'aguardando'} tone={opponentsReceiving ? 'ok' : 'warn'} />
-        <Pill label="Racing Line" value={racingLineReady ? 'READY' : 'INSUFFICIENT_DATA'} tone={racingLineReady ? 'ok' : 'warn'} />
-        <Pill label="Coach" value={coachReady ? 'READY' : 'INSUFFICIENT_DATA'} tone={coachReady ? 'ok' : 'warn'} />
+        <Pill label="Racing Line" value={racingLineReady ? 'READY' : 'INSUFFICIENT'} tone={racingLineReady ? 'ok' : 'warn'} />
+        <Pill label="Coach" value={coachReady ? 'READY' : 'INSUFFICIENT'} tone={coachReady ? 'ok' : 'warn'} />
       </div>
 
       <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 8, rowGap: 3 }}>
-        <Pill label="API" value={API_BASE_URL.replace(/^https?:\/\//, '')} tone="quiet" />
-        <Pill label="Track" value={trackState} tone={trackState === 'TRACK_READY' ? 'ok' : 'warn'} />
-        <Pill label="Backend Port" value={String(ports.backend)} tone="quiet" />
-        <Pill label="Vite Port" value={String(ports.frontend)} tone="quiet" />
-        <Pill label="UDP Opp" value={String(ports.opponents)} tone="quiet" />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 8, rowGap: 3, minWidth: 0 }}>
+        <Pill label="Resource Root" value={compactPath(resourceRoot)} tone={resourceRoot ? 'quiet' : 'warn'} />
+        <Pill label="Runtime Root" value={compactPath(runtimeRoot)} tone={runtimeRoot ? 'quiet' : 'warn'} />
+        <Pill label="Logs" value={compactPath(logsDir)} tone={logsDir ? 'quiet' : 'warn'} />
         <Pill label="Backend Path" value={compactPath(backendPath)} tone={backendPath ? 'quiet' : 'warn'} />
         <Pill label="Last Error" value={lastBackendError ? compactPath(lastBackendError) : '--'} tone={lastBackendError ? 'bad' : 'quiet'} />
         <Pill label="Refresh" value={updatedAt ? `${Math.max(0, Math.round((Date.now() - updatedAt) / 1000))}s` : '--'} tone="quiet" />
