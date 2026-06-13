@@ -259,6 +259,11 @@ def _ranked_lap_summaries(lap_history: Sequence[Dict[str, Any]]) -> List[Dict[st
     return valid
 
 
+def _single_lap_number(samples: Sequence[AnalysisSample]) -> Optional[int]:
+    lap_values = {sample.lap for sample in samples if sample.lap is not None}
+    return lap_values.pop() if len(lap_values) == 1 else None
+
+
 def select_current_and_fastest_lap_samples(
     samples: Iterable[TelemetrySample],
 ) -> Tuple[List[AnalysisSample], List[AnalysisSample], Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]]]:
@@ -627,9 +632,51 @@ def build_live_racing_line_payload(
     micro_sector_count: int = 50,
     include_visual_line: bool = True,
     include_comparison: bool = True,
+    fallback_reference_samples: Optional[Sequence[TelemetrySample]] = None,
 ) -> Dict[str, Any]:
     current_samples, reference_samples, lap_debug, lap_history, fastest_laps = select_current_and_fastest_lap_samples(telemetry_samples)
     player_samples = player_analysis_samples(telemetry_samples)
+    fallback_reference = player_analysis_samples(fallback_reference_samples or [])
+    reference_source = "BEST_LAP"
+
+    if not reference_samples and fallback_reference:
+        fallback_rejected_reason = _lap_rejected_reason(fallback_reference, is_current=False)
+        fallback_lap_number = _single_lap_number(fallback_reference)
+        lap_debug = {
+            **lap_debug,
+            "fallbackReferenceSamples": len(fallback_reference),
+            "fallbackReferenceLap": fallback_lap_number,
+            "fallbackReferenceRejected": fallback_rejected_reason,
+        }
+
+        if fallback_rejected_reason is None:
+            reference_samples = fallback_reference
+            reference_source = "REFERENCE_LAP"
+            lap_debug = {
+                **lap_debug,
+                "referenceLap": fallback_lap_number,
+                "referenceRejected": None,
+                "selectionMode": "COMPLETED_LIVE_LAP_FALLBACK",
+                "fallbackReferenceUsed": True,
+            }
+
+            if fallback_lap_number is not None:
+                has_existing_summary = any(lap.get("lapNumber") == fallback_lap_number for lap in lap_history)
+                if not has_existing_summary:
+                    fallback_summary = _lap_summary(fallback_lap_number, fallback_reference, is_current=False)
+                    fallback_summary["usedForRacingLine"] = True
+                    lap_history.append(fallback_summary)
+                fastest_laps = _ranked_lap_summaries(lap_history)
+                for lap in lap_history:
+                    lap["usedForRacingLine"] = lap.get("lapNumber") == fallback_lap_number
+                for lap in fastest_laps:
+                    lap["usedForRacingLine"] = lap.get("lapNumber") == fallback_lap_number
+    else:
+        lap_debug = {
+            **lap_debug,
+            "fallbackReferenceSamples": len(fallback_reference),
+        }
+
     track = _track_name(track_name, track_data)
     base_debug = {
         "inputSamples": len(telemetry_samples),
@@ -658,7 +705,7 @@ def build_live_racing_line_payload(
 
     reference_key = (
         track,
-        "BEST_LAP",
+        reference_source,
         lap_debug.get("referenceLap"),
         max(1, min(200, int(micro_sector_count or 50))),
         len(reference_samples),
@@ -675,7 +722,7 @@ def build_live_racing_line_payload(
             track=track,
             reference_lap_number=lap_debug.get("referenceLap"),
             micro_sector_count=micro_sector_count,
-            source="BEST_LAP",
+            source=reference_source,
         )
         _RACING_LINE_MODEL_CACHE.clear()
         _RACING_LINE_MODEL_CACHE[reference_key] = cached

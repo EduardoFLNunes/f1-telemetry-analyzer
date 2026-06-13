@@ -537,6 +537,11 @@ def live_racing_line_payload(
     include_comparison: bool = True,
 ) -> Dict[str, Any]:
     micro_sector_count = max(1, min(200, int(micro_sectors or 50)))
+    completed_live_lap = (
+        list(telemetry_runtime.lap_collector.completed_lap_samples)
+        if telemetry_runtime and telemetry_runtime.lap_collector.completed_lap_samples
+        else []
+    )
     payload = build_live_racing_line_payload(
         telemetry_samples=telemetry_buffer.get_samples(),
         track_data=runtime_state.track_data,
@@ -544,6 +549,7 @@ def live_racing_line_payload(
         micro_sector_count=micro_sector_count,
         include_visual_line=include_visual_line,
         include_comparison=include_comparison,
+        fallback_reference_samples=completed_live_lap,
     )
     logger.debug(
         "Racing Line generated: status=%s reference=%s player=%s validSegments=%s",

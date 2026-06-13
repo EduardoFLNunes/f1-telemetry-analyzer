@@ -125,6 +125,24 @@ class RacingLineAnalysisTests(unittest.TestCase):
         self.assertEqual(payload["fastestLaps"][0]["lapNumber"], 1)
         self.assertTrue(payload["lapHistory"][0]["usedForRacingLine"])
 
+    def test_live_payload_uses_completed_lap_fallback_as_reference(self):
+        reference = valid_reference_lap(lap=4)
+        current = [make_telemetry_sample(0.02 * i, 150.0, lap=5, timestamp_seconds=70.0 + i) for i in range(20)]
+
+        payload = build_live_racing_line_payload(
+            telemetry_samples=current,
+            fallback_reference_samples=reference,
+            track_name="test_track",
+            track_data={"trackLength": 1000.0},
+            micro_sector_count=10,
+        )
+
+        self.assertEqual(payload["status"], "READY")
+        self.assertEqual(payload["racingLine"]["source"], "REFERENCE_LAP")
+        self.assertEqual(payload["racingLine"]["referenceLapNumber"], 4)
+        self.assertEqual(payload["debug"]["lapSelection"]["selectionMode"], "COMPLETED_LIVE_LAP_FALLBACK")
+        self.assertTrue(payload["debug"]["lapSelection"]["fallbackReferenceUsed"])
+
     def test_live_payload_uses_fastest_valid_lap_as_racing_line(self):
         lap_one = valid_reference_lap(lap=1, duration_seconds=64.0, speed_base=150.0)
         lap_two = valid_reference_lap(lap=2, duration_seconds=58.5, speed_base=170.0)
