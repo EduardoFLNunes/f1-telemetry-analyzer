@@ -5,6 +5,7 @@ The backend owns reconstruction, projection, boundaries, caching, and live car
 state. CSV track maps are deliberately not used as a source of truth.
 """
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 import asyncio
@@ -12,6 +13,7 @@ import io
 import logging
 import os
 import re
+import time
 
 import pandas as pd
 from fastapi import Body, FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
@@ -380,23 +382,66 @@ def telemetry_status_payload() -> Dict[str, Any]:
     }
 
 
+def iso_from_epoch(timestamp: Optional[float]) -> Optional[str]:
+    if timestamp is None:
+        return None
+    try:
+        return datetime.fromtimestamp(float(timestamp), timezone.utc).isoformat()
+    except (OSError, OverflowError, TypeError, ValueError):
+        return None
+
+
+def seconds_since(timestamp: Optional[float]) -> Optional[float]:
+    if timestamp is None:
+        return None
+    try:
+        return round(max(0.0, time.time() - float(timestamp)), 3)
+    except (TypeError, ValueError):
+        return None
+
+
+def stream_status_from_age(
+    timestamp: Optional[float],
+    stale_after_seconds: float = 5.0,
+    *,
+    unknown_when_missing: bool = False,
+) -> str:
+    age = seconds_since(timestamp)
+    if age is None:
+        return "unknown" if unknown_when_missing else "waiting"
+    return "receiving" if age <= stale_after_seconds else "stale"
+
+
 def runtime_status_payload() -> Dict[str, Any]:
     telemetry_status = telemetry_runtime.status() if telemetry_runtime else {
         **source_manager.status(),
         "trackState": runtime_state.track_build_state.value,
         "method": runtime_state.build_method,
-        "sampleCount": source_manager.sample_count,
-        "lapComplete": runtime_state.lap_complete,
-        "activeTrackReady": runtime_state.track_build_state == TrackBuildState.TRACK_READY,
-        "candidateLapSampleCount": 0,
-        "liveTrajectoryCount": len(telemetry_buffer.get_samples()),
-    }
+            "sampleCount": source_manager.sample_count,
+            "playerStatus": "unknown",
+            "lastPlayerSampleAt": None,
+            "secondsSinceLastPlayerSample": None,
+            "lapComplete": runtime_state.lap_complete,
+            "activeTrackReady": runtime_state.track_build_state == TrackBuildState.TRACK_READY,
+            "candidateLapSampleCount": 0,
+            "liveTrajectoryCount": len(telemetry_buffer.get_samples()),
+        }
     opponents_meta = opponents_buffer.metadata()
     completed_live_lap = bool(
         telemetry_runtime and telemetry_runtime.lap_collector.completed_lap_samples
     )
     replay_reference_ready = bool(source_manager.get_reconstruction_samples())
     fixture_reference_ready = reference_line_fixture_cache is not None and bool(reference_line_fixture_cache)
+    telemetry_player_status = telemetry_status.get("playerStatus")
+    if not telemetry_player_status:
+        telemetry_player_status = "receiving" if telemetry_status.get("sampleCount", 0) else "waiting"
+    last_opponent_timestamp = opponents_meta.get("lastUpdateTimestamp")
+    opponents_status = stream_status_from_age(
+        last_opponent_timestamp,
+        float(opponents_meta.get("staleAfterSeconds") or 5.0),
+    )
+    racing_line_ready = completed_live_lap or replay_reference_ready or fixture_reference_ready
+    coach_status = "READY" if recent_coaching_events else "INSUFFICIENT_DATA"
 
     return {
         "status": "ok",
@@ -417,6 +462,9 @@ def runtime_status_payload() -> Dict[str, Any]:
             "sampleCount": telemetry_status.get("sampleCount", telemetry_status.get("sample_count")),
             "liveTrajectoryCount": telemetry_status.get("liveTrajectoryCount"),
             "activeTrackReady": telemetry_status.get("activeTrackReady"),
+            "playerStatus": telemetry_player_status,
+            "lastPlayerSampleAt": telemetry_status.get("lastPlayerSampleAt"),
+            "secondsSinceLastPlayerSample": telemetry_status.get("secondsSinceLastPlayerSample"),
         },
         "opponents": {
             "online": opponents_runtime is not None,
@@ -424,10 +472,14 @@ def runtime_status_payload() -> Dict[str, Any]:
             "track": opponents_meta.get("track"),
             "lastUpdateTimestamp": opponents_meta.get("lastUpdateTimestamp"),
             "staleAfterSeconds": opponents_meta.get("staleAfterSeconds"),
+            "status": opponents_status,
+            "lastOpponentSampleAt": iso_from_epoch(last_opponent_timestamp),
+            "secondsSinceLastOpponentSample": seconds_since(last_opponent_timestamp),
             "udpPort": 8765,
         },
         "racingLine": {
-            "available": completed_live_lap or replay_reference_ready or fixture_reference_ready,
+            "available": racing_line_ready,
+            "status": "READY" if racing_line_ready else "INSUFFICIENT_DATA",
             "sourceCandidates": {
                 "completedLiveLap": completed_live_lap,
                 "activeReplayReference": replay_reference_ready,
@@ -437,6 +489,7 @@ def runtime_status_payload() -> Dict[str, Any]:
         "coach": {
             "online": True,
             "eventCount": len(recent_coaching_events),
+            "status": coach_status,
         },
         "websocket": {
             "path": "/ws",

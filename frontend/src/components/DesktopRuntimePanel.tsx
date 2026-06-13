@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { FolderOpen } from 'lucide-react';
 import { API_BASE_URL, apiUrl } from '../config/runtime';
 import { useTelemetryStore } from '../store/useTelemetryStore';
+import { AssettoCorsaSetupPanel } from './AssettoCorsaSetupPanel';
 
 type BackendStatus =
   | 'online'
@@ -23,16 +24,66 @@ declare global {
       udpOpponentsPort?: number;
       mode?: string;
       autostartEnabled?: boolean;
+      detectAssettoCorsa?: () => Promise<AssettoDetectionResult>;
+      getAssettoPluginStatus?: () => Promise<AssettoPluginStatus>;
+      openAssettoFolderPicker?: () => Promise<unknown>;
+      openAssettoFolder?: (assettoPath?: string | null) => Promise<{ ok?: boolean; path?: string; error?: string | null }>;
+      copyAssettoSetupInstructions?: () => Promise<{ ok?: boolean; length?: number; error?: string | null }>;
       phase?: string;
     };
     automobilistaDesktop?: {
       runtimeStatus?: () => Promise<DesktopRuntimeStatus>;
       backendHealth?: () => Promise<unknown>;
       openLogsDir?: () => Promise<{ ok?: boolean; path?: string; error?: string | null }>;
+      detectAssettoCorsa?: () => Promise<AssettoDetectionResult>;
+      getAssettoPluginStatus?: () => Promise<AssettoPluginStatus>;
+      openAssettoFolderPicker?: () => Promise<unknown>;
+      openAssettoFolder?: (assettoPath?: string | null) => Promise<{ ok?: boolean; path?: string; error?: string | null }>;
+      copyAssettoSetupInstructions?: () => Promise<{ ok?: boolean; length?: number; error?: string | null }>;
       phase?: string;
     };
   }
 }
+
+export type AssettoDetectionCandidate = {
+  path: string;
+  exists: boolean;
+  hasAssettoExecutable: boolean;
+  hasAppsPythonFolder: boolean;
+  confidence: 'HIGH' | 'MEDIUM' | 'LOW';
+  source: 'steam-default' | 'steam-library' | 'manual' | 'unknown';
+};
+
+export type AssettoDetectionResult = {
+  candidates: AssettoDetectionCandidate[];
+  selectedPath: string | null;
+};
+
+export type AssettoPluginStatus = {
+  assetto?: AssettoDetectionResult;
+  gamePath?: string | null;
+  pluginId?: string;
+  pluginName?: string;
+  status?: 'installed' | 'not-installed' | 'unknown';
+  installed?: boolean;
+  expectedPluginDir?: string | null;
+  targetFiles?: Array<{ name: string; path: string; required: boolean; exists: boolean }>;
+  source?: {
+    available?: boolean;
+    path?: string | null;
+    files?: Array<{ name: string; path: string; required: boolean; exists: boolean }>;
+  };
+  canInstall?: boolean;
+  transport?: {
+    playerTelemetry?: string;
+    opponents?: string;
+    host?: string;
+    backendApiPort?: number;
+    udpOpponentsPort?: number;
+    websocketPath?: string;
+  };
+  instructions?: string;
+};
 
 type DesktopRuntimeStatus = {
   autostartEnabled?: boolean;
@@ -73,19 +124,27 @@ type RuntimeStatus = {
     sampleCount?: number | null;
     liveTrajectoryCount?: number | null;
     activeTrackReady?: boolean | null;
+    playerStatus?: 'receiving' | 'waiting' | 'stale' | 'unknown';
+    lastPlayerSampleAt?: string | null;
+    secondsSinceLastPlayerSample?: number | null;
   };
   opponents?: {
     online?: boolean;
     count?: number | null;
     lastUpdateTimestamp?: number | null;
     udpPort?: number | null;
+    status?: 'receiving' | 'waiting' | 'stale' | 'unknown';
+    lastOpponentSampleAt?: string | null;
+    secondsSinceLastOpponentSample?: number | null;
   };
   racingLine?: {
     available?: boolean;
+    status?: 'READY' | 'INSUFFICIENT_DATA' | 'UNKNOWN';
   };
   coach?: {
     online?: boolean;
     eventCount?: number | null;
+    status?: 'READY' | 'INSUFFICIENT_DATA' | 'UNKNOWN';
   };
 };
 
@@ -161,6 +220,7 @@ export const DesktopRuntimePanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   const [logsOpenError, setLogsOpenError] = useState<string | null>(null);
+  const [view, setView] = useState<'runtime' | 'assetto'>('runtime');
 
   useEffect(() => {
     let cancelled = false;
@@ -206,11 +266,17 @@ export const DesktopRuntimePanel: React.FC = () => {
   const desktopHealthOk = desktopStatus?.healthOk ?? healthOk;
   const backendStatus: BackendStatus = desktopStatus?.backendStatus || (desktopHealthOk ? 'online' : 'offline');
   const backendTone = statusTone(backendStatus, desktopHealthOk);
-  const telemetryReceiving = isStreaming || Boolean(latestFrame) || numeric(runtime?.telemetry?.sampleCount, 0) > 0;
-  const opponentsReceiving = numeric(runtime?.opponents?.count ?? opponentsMeta.count, 0) > 0
+  const telemetryState = runtime?.telemetry?.playerStatus || (telemetryReceivingFallback() ? 'receiving' : 'waiting');
+  function telemetryReceivingFallback() {
+    return isStreaming || Boolean(latestFrame) || numeric(runtime?.telemetry?.sampleCount, 0) > 0;
+  }
+  const telemetryReceiving = telemetryState === 'receiving' || telemetryReceivingFallback();
+  const opponentsState = runtime?.opponents?.status;
+  const opponentsReceiving = opponentsState === 'receiving'
+    || numeric(runtime?.opponents?.count ?? opponentsMeta.count, 0) > 0
     || Boolean(lastOpponentsUpdateAt && Date.now() - lastOpponentsUpdateAt < 10000);
-  const racingLineReady = Boolean(runtime?.racingLine?.available);
-  const coachReady = Boolean(runtime?.coach?.online && runtime?.telemetry?.activeTrackReady);
+  const racingLineReady = runtime?.racingLine?.status === 'READY' || Boolean(runtime?.racingLine?.available);
+  const coachReady = runtime?.coach?.status === 'READY' || Boolean(runtime?.coach?.online && runtime?.telemetry?.activeTrackReady);
   const trackState = runtime?.backend?.trackState || 'UNKNOWN';
   const backendSource = desktopStatus?.backendSource || (healthOk ? 'already-running' : 'unavailable');
   const autostartEnabled = desktopStatus?.autostartEnabled ?? window.desktopRuntime?.autostartEnabled ?? false;
@@ -231,7 +297,30 @@ export const DesktopRuntimePanel: React.FC = () => {
   return (
     <div className="panel" style={{ height: '100%', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 124, overflow: 'hidden' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-        <span className="label" style={{ color: 'var(--cyan)', fontSize: 6, letterSpacing: 0 }}>Runtime</span>
+        <div style={{ display: 'flex', gap: 2, minWidth: 0 }}>
+          {(['runtime', 'assetto'] as const).map((item) => (
+            <button
+              key={item}
+              type="button"
+              className="num"
+              onClick={() => setView(item)}
+              style={{
+                height: 20,
+                padding: '0 7px',
+                border: '1px solid rgba(34, 211, 238, 0.18)',
+                background: view === item ? 'rgba(34, 211, 238, 0.12)' : 'rgba(15, 23, 42, 0.34)',
+                color: view === item ? 'var(--cyan)' : '#64748b',
+                fontSize: 7,
+                fontWeight: 800,
+                letterSpacing: 0,
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+              }}
+            >
+              {item === 'runtime' ? 'Runtime' : 'Assetto'}
+            </button>
+          ))}
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
           <span className="num" style={{ fontSize: 7, color: statusColor[backendTone], fontWeight: 800, letterSpacing: 0, whiteSpace: 'nowrap' }}>
             {statusLabel(backendStatus)}
@@ -259,6 +348,10 @@ export const DesktopRuntimePanel: React.FC = () => {
         </div>
       </div>
 
+      {view === 'assetto' ? (
+        <AssettoCorsaSetupPanel />
+      ) : (
+        <>
       <div className="num" title={message} style={{ fontSize: 7, lineHeight: 1.25, color: statusColor[backendTone], minHeight: 18, overflow: 'hidden' }}>
         {message}
       </div>
@@ -272,8 +365,8 @@ export const DesktopRuntimePanel: React.FC = () => {
         <Pill label="API" value={(desktopStatus?.apiBaseUrl || API_BASE_URL).replace(/^https?:\/\//, '')} tone="quiet" />
         <Pill label="Track" value={trackState} tone={trackState === 'TRACK_READY' ? 'ok' : 'warn'} />
         <Pill label="Backend Port" value={String(backendPort)} tone={desktopStatus?.portConflict ? 'bad' : 'quiet'} />
-        <Pill label="Telemetry" value={telemetryReceiving ? 'recebendo' : 'aguardando'} tone={telemetryReceiving ? 'ok' : 'warn'} />
-        <Pill label="Opponents" value={opponentsReceiving ? 'recebendo' : 'aguardando'} tone={opponentsReceiving ? 'ok' : 'warn'} />
+        <Pill label="Telemetry" value={telemetryReceiving ? telemetryState : 'waiting'} tone={telemetryReceiving ? 'ok' : 'warn'} />
+        <Pill label="Opponents" value={opponentsReceiving ? (opponentsState || 'receiving') : 'waiting'} tone={opponentsReceiving ? 'ok' : 'warn'} />
         <Pill label="Racing Line" value={racingLineReady ? 'READY' : 'INSUFFICIENT'} tone={racingLineReady ? 'ok' : 'warn'} />
         <Pill label="Coach" value={coachReady ? 'READY' : 'INSUFFICIENT'} tone={coachReady ? 'ok' : 'warn'} />
       </div>
@@ -288,6 +381,8 @@ export const DesktopRuntimePanel: React.FC = () => {
         <Pill label="Last Error" value={lastBackendError ? compactPath(lastBackendError) : '--'} tone={lastBackendError ? 'bad' : 'quiet'} />
         <Pill label="Refresh" value={updatedAt ? `${Math.max(0, Math.round((Date.now() - updatedAt) / 1000))}s` : '--'} tone="quiet" />
       </div>
+        </>
+      )}
     </div>
   );
 };

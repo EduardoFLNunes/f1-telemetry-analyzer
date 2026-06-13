@@ -3,7 +3,9 @@
   "private": true,
   "productName": "Automobilista Telemetria",
   "version": "0.1.0-phase-12",
-  "description": "Desktop shell preparation for Automobilista Telemetria.",
+  "description": "Installed desktop telemetry workstation for Assetto Corsa diagnostics and race analysis.",
+  "author": "Automobilista Telemetria Project",
+  "copyright": "Copyright (c) 2026 Automobilista Telemetria Project",
   "main": "main.js",
   "scripts": {
     "dev": "node scripts/start.js --dev",
@@ -23,6 +25,7 @@
   "build": {
     "appId": "br.dev.automobilista.telemetria",
     "productName": "Automobilista Telemetria",
+    "artifactName": "Automobilista-Telemetria-Setup-${version}.${ext}",
     "asar": true,
     "directories": {
       "output": "dist"
@@ -53,6 +56,15 @@
       {
         "from": "../data/SaoPaulo.csv",
         "to": "data/SaoPaulo.csv"
+      },
+      {
+        "from": "../tools/assetto_opponents_exporter",
+        "to": "assetto_plugin/ac_opponents_exporter",
+        "filter": [
+          "ac_opponents_exporter.py",
+          "icon.png",
+          "README.md"
+        ]
       }
     ],
     "win": {
@@ -63,7 +75,11 @@
     "nsis": {
       "oneClick": false,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Automobilista Telemetria",
+      "uninstallDisplayName": "Automobilista Telemetria"
     }
   }
 }

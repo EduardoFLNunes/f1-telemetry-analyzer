@@ -204,8 +204,43 @@ The frontend also continues to support:
 - `AT_BACKEND_COMMAND`: backend command for future local process startup.
 - `AT_BACKEND_ARGS`: backend command arguments. JSON arrays are supported.
 - `AT_UDP_OPPONENTS_PORT`: UDP opponents port shown in diagnostics.
+- `ASSETTO_CORSA_ROOT` / `AT_ASSETTO_CORSA_ROOT`: optional Assetto Corsa root
+  used by the setup diagnostics before Steam/default path detection.
 
 Backend autostart is enabled by default only when `app.isPackaged` is true.
+
+## Assetto Corsa Setup Diagnostics
+
+Phase 12.5 adds an `Assetto` tab inside the runtime panel. The tab is
+diagnostic-first and does not install the plugin automatically.
+
+It reports:
+
+- Assetto Corsa detected or not found.
+- Detected game path.
+- Opponents exporter installed, not installed, or unknown.
+- Bundled exporter source availability.
+- Backend, player telemetry, and opponents status.
+- API/UDP ports.
+
+Safe actions exposed through the preload bridge:
+
+- Find Assetto Corsa folder.
+- Open detected folder.
+- Copy manual plugin installation instructions.
+- Validate plugin status.
+
+The installed app bundles the exporter source under:
+
+```text
+resources\assetto_plugin\ac_opponents_exporter\
+```
+
+Expected manual destination:
+
+```text
+<Assetto Corsa>\apps\python\ac_opponents_exporter\
+```
 
 ## Health Validation
 
@@ -253,7 +288,7 @@ The `logs/` directory is runtime output and should not be committed.
 
 ## Still Planned
 
-- Assetto Corsa plugin packaging/checks.
+- Confirmed-copy plugin install flow with explicit user approval.
 - Application icon and polished installer metadata.
 - Digital signing.
 - Auto-update.

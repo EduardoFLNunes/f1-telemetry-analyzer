@@ -61,12 +61,22 @@ contextBridge.exposeInMainWorld('desktopRuntime', {
   udpOpponentsPort: Number(process.env.AT_UDP_OPPONENTS_PORT || DEFAULT_UDP_OPPONENTS_PORT),
   mode,
   autostartEnabled,
-  phase: 'phase-12.4-installer-validation',
+  detectAssettoCorsa: () => ipcRenderer.invoke('assetto:detect'),
+  getAssettoPluginStatus: () => ipcRenderer.invoke('assetto:plugin-status'),
+  openAssettoFolderPicker: () => ipcRenderer.invoke('assetto:open-folder-picker'),
+  openAssettoFolder: (assettoPath) => ipcRenderer.invoke('assetto:open-folder', assettoPath),
+  copyAssettoSetupInstructions: () => ipcRenderer.invoke('assetto:copy-instructions'),
+  phase: 'phase-12.5-assetto-setup',
 });
 
 contextBridge.exposeInMainWorld('automobilistaDesktop', {
   backendHealth: () => ipcRenderer.invoke('backend:health'),
   runtimeStatus: () => ipcRenderer.invoke('desktop:runtime'),
   openLogsDir: () => ipcRenderer.invoke('desktop:open-logs'),
-  phase: 'phase-12.4-installer-validation',
+  detectAssettoCorsa: () => ipcRenderer.invoke('assetto:detect'),
+  getAssettoPluginStatus: () => ipcRenderer.invoke('assetto:plugin-status'),
+  openAssettoFolderPicker: () => ipcRenderer.invoke('assetto:open-folder-picker'),
+  openAssettoFolder: (assettoPath) => ipcRenderer.invoke('assetto:open-folder', assettoPath),
+  copyAssettoSetupInstructions: () => ipcRenderer.invoke('assetto:copy-instructions'),
+  phase: 'phase-12.5-assetto-setup',
 });

@@ -176,6 +176,25 @@ GET /api/live/coach
   Electron, including child processes.
 - Silent uninstall/reinstall was validated without deleting user data.
 
+## Phase 12.5 Runtime Status Additions
+
+`GET /api/runtime/status` now includes lightweight stream diagnostics for the
+desktop setup panel:
+
+```text
+telemetry.playerStatus
+telemetry.lastPlayerSampleAt
+telemetry.secondsSinceLastPlayerSample
+opponents.status
+opponents.lastOpponentSampleAt
+opponents.secondsSinceLastOpponentSample
+racingLine.status
+coach.status
+```
+
+These fields use existing runtime timestamps and buffers. They do not trigger
+Racing Line recalculation, Coach analysis, or any heavy reconstruction work.
+
 ## Validation Checklist For Phase 12.2
 
 - Packaged backend starts from `backend/dist/automobilista-backend.exe`.

@@ -697,12 +697,65 @@ by this phase.
 7. Validate the Windows installer as installed software.
 8. Add Assetto Corsa exporter/plugin setup checks.
 
-## Recommended Phase 12.5
+## Phase 12.5 - Assetto Corsa Setup And Distribution Polish
 
-- Trim PyInstaller hook collection and reduce executable size.
-- Add Assetto Corsa plugin/exporter setup wizard.
-- Detect the Assetto Corsa install folder automatically where possible.
-- Add application icon and polished installer metadata.
-- Define runtime config file location for user-selected ports and paths.
-- Keep auto-update, public signing, and crash reporting out of scope until the
-  local installer flow is stable.
+Phase 12.5 keeps the installed app diagnostic-first. It does not copy files
+into the user's Assetto Corsa folder automatically.
+
+Added desktop diagnostics:
+
+- Detect Assetto Corsa candidates from env/manual config, Steam registry,
+  `libraryfolders.vdf`, and common Steam paths.
+- Validate `acs.exe` and `apps/python` to classify candidates as `HIGH`,
+  `MEDIUM`, or `LOW` confidence.
+- Validate the opponents exporter destination:
+  `<Assetto Corsa>/apps/python/ac_opponents_exporter/ac_opponents_exporter.py`.
+- Expose safe preload APIs for detection, plugin status, folder picker, folder
+  open, and copying install instructions.
+- Add an `Assetto` tab to the desktop runtime panel.
+- Bundle the exporter source under Electron resources:
+  `resources/assetto_plugin/ac_opponents_exporter`.
+
+Backend runtime status now includes lightweight stream state:
+
+- `telemetry.playerStatus`
+- `telemetry.lastPlayerSampleAt`
+- `telemetry.secondsSinceLastPlayerSample`
+- `opponents.status`
+- `opponents.lastOpponentSampleAt`
+- `opponents.secondsSinceLastOpponentSample`
+- `racingLine.status`
+- `coach.status`
+
+New docs:
+
+- `docs/phase12_assetto_plugin_setup.md`
+- `docs/phase12_distribution_checklist.md`
+
+Installer metadata was improved with author/copyright, stable artifact naming,
+desktop/start-menu shortcuts, and uninstall display name. An application icon is
+still pending; the default Electron icon remains until a project-owned icon is
+created.
+
+PyInstaller size reduction was investigated as a follow-up item only. No module
+exclusions were applied in this step because the installed backend/runtime
+validation is higher priority than risky dependency trimming.
+
+Observed backend EXE size:
+
+```text
+Before Phase 12.5 rebuild: 157,483,912 bytes
+After Phase 12.5 rebuild:  157,485,176 bytes
+Delta:                     +1,264 bytes
+```
+
+Installed validation was repeated with the app launched from:
+
+```text
+%LOCALAPPDATA%\Programs\Automobilista Telemetria\Automobilista Telemetria.exe
+```
+
+For isolation, the test used `AT_BACKEND_URL=http://127.0.0.1:8125`.
+`/api/health`, `/api/runtime/status`, `/api/live/telemetry`,
+`/api/live/opponents`, `/api/live/racing-line`, and `/api/live/coach` returned
+success from the installed resources.
