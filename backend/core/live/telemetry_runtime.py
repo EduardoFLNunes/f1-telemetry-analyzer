@@ -2,6 +2,7 @@ import asyncio
 import logging
 import threading
 import time
+from datetime import datetime, timezone
 from typing import Optional
 
 from .lap_collector import LapCollector, TrackBuildState
@@ -15,6 +16,19 @@ from ..telemetry_events import event_bus
 
 
 logger = logging.getLogger(__name__)
+
+
+def _iso_from_timestamp(timestamp: Optional[float]) -> Optional[str]:
+    if timestamp is None:
+        return None
+    return datetime.fromtimestamp(timestamp, timezone.utc).isoformat()
+
+
+def _stream_status(last_sample_at: Optional[float], stale_after_seconds: float = 5.0) -> str:
+    if last_sample_at is None:
+        return "waiting"
+    age = time.time() - last_sample_at
+    return "receiving" if age <= stale_after_seconds else "stale"
 
 
 class TelemetryRuntime:
@@ -42,6 +56,7 @@ class TelemetryRuntime:
         self.running = False
         self._thread: Optional[threading.Thread] = None
         self._loop_ref: Optional[asyncio.AbstractEventLoop] = None
+        self.last_sample_wall_time: Optional[float] = None
 
     def start(self, loop: Optional[asyncio.AbstractEventLoop] = None):
         if self.running:
@@ -68,6 +83,7 @@ class TelemetryRuntime:
                     time.sleep(self.poll_interval)
                     continue
 
+                self.last_sample_wall_time = time.time()
                 self.buffer.add_sample(sample)
                 lap_wrapped = self.lap_collector.add_sample(sample)
 
@@ -161,11 +177,17 @@ class TelemetryRuntime:
         return False
 
     def status(self):
+        seconds_since_sample = None
+        if self.last_sample_wall_time is not None:
+            seconds_since_sample = round(max(0.0, time.time() - self.last_sample_wall_time), 3)
         return {
             **self.source_manager.status(),
             "trackState": self.state.track_build_state.value,
             "method": self.state.build_method,
             "sampleCount": self.source_manager.sample_count,
+            "playerStatus": _stream_status(self.last_sample_wall_time),
+            "lastPlayerSampleAt": _iso_from_timestamp(self.last_sample_wall_time),
+            "secondsSinceLastPlayerSample": seconds_since_sample,
             "lapComplete": self.state.lap_complete,
             "activeTrackReady": self.state.track_build_state == TrackBuildState.TRACK_READY,
             "candidateLapSampleCount": len(self.lap_collector.candidate_lap_samples),

@@ -12,6 +12,7 @@ import { AIEngineerPanel } from './components/AIEngineerPanel';
 import { CarPhysicsDebugPanel } from './components/CarPhysicsDebugPanel';
 import { LiveComparisonPanel } from './components/LiveComparisonPanel';
 import { RacingLineAnalysisPanel } from './components/RacingLineAnalysisPanel';
+import { DesktopRuntimePanel } from './components/DesktopRuntimePanel';
 import { ReplayControls } from './components/ReplayControls';
 import { CognitiveDashboard } from './components/CognitiveDashboard';
 import { Header } from './components/Header';
@@ -196,6 +197,10 @@ const Dashboard: React.FC = () => {
             {/* Coaching feed */}
             <div style={{ height: 220, overflow: 'hidden' }}>
               <CoachingFeed />
+            </div>
+
+            <div style={{ height: 214, overflow: 'hidden' }}>
+              <DesktopRuntimePanel />
             </div>
 
           </div>

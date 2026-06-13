@@ -1,6 +1,7 @@
 import axios from 'axios'
+import { API_BASE_URL } from '../config/runtime'
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const BASE_URL = API_BASE_URL
 
 const client = axios.create({
   baseURL: BASE_URL,
@@ -93,6 +94,8 @@ export const api = {
   getTrackGeometry: async () => (await client.get('/api/track/geometry')).data,
   getTrackCache:   async () => (await client.get('/api/track/cache')).data,
   getCarState:     async () => (await client.get('/api/car/state')).data,
+  getHealth:       async () => (await client.get('/api/health')).data,
+  getRuntimeStatus: async () => (await client.get('/api/runtime/status')).data,
   getLiveTelemetry: async (options = {}) => (
     await client.get('/api/live/telemetry', {
       params: {

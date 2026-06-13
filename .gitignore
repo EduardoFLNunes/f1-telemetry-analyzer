@@ -14,9 +14,17 @@ node_modules/
 # Build
 dist/
 build/
+backend/dist/
+backend/build/
+desktop/dist/
+desktop/out/
+desktop/release/
+frontend/dist/
+*.spec
 
 # Logs
 *.log
+logs/
 
 # Runtime recordings
 data/recordings/

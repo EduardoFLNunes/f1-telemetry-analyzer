@@ -5,13 +5,15 @@ The backend owns reconstruction, projection, boundaries, caching, and live car
 state. CSV track maps are deliberately not used as a source of truth.
 """
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import asyncio
 import io
 import logging
+import os
 import re
+import time
 
 import pandas as pd
 from fastapi import Body, FastAPI, File, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
@@ -43,7 +45,7 @@ from core.telemetry.telemetry_buffer import TelemetryBuffer
 from core.telemetry.telemetry_models import TelemetrySample
 from core.telemetry.telemetry_reader_impl import TelemetrySourceManager, telemetry_samples_from_dataframe
 from core.track_file_resolver import TrackFileResolver
-from core.telemetry_events import event_bus
+from core.telemetry_events import COACHING_EVENT, event_bus
 from core.websocket_server import manager as ws_manager
 
 
@@ -54,12 +56,23 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 BACKEND_DIR = Path(__file__).resolve().parent
-REPO_ROOT = BACKEND_DIR.parent
+RESOURCE_ROOT = Path(
+    os.environ.get("AT_BACKEND_RESOURCE_ROOT")
+    or os.environ.get("AT_BACKEND_REPO_ROOT", BACKEND_DIR.parent)
+).resolve()
+RUNTIME_ROOT = Path(
+    os.environ.get("AT_BACKEND_RUNTIME_ROOT")
+    or os.environ.get("AT_BACKEND_REPO_ROOT")
+    or RESOURCE_ROOT
+).resolve()
+REPO_ROOT = RESOURCE_ROOT
 REPLAY_TRACK_CACHE_NAME = "telemetry_reconstructed_multilap_v1"
 LIVE_TRACK_CACHE_PREFIX = "assetto_corsa"
-TRACK_CACHE_DIR = REPO_ROOT / "data" / "cache" / "tracks"
-PRIMARY_TELEMETRY_FIXTURE = REPO_ROOT / "data" / "example_telemetry.csv"
-DEBUG_TELEMETRY_FIXTURE = REPO_ROOT / "data" / "example_telemetryOld.csv"
+TRACK_CACHE_DIR = RUNTIME_ROOT / "data" / "cache" / "tracks"
+PRIMARY_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetry.csv"
+DEBUG_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetryOld.csv"
+BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
+BACKEND_PHASE_VERSION = "phase-12-main-integration"
 
 runtime_state = RuntimeState()
 telemetry_buffer = TelemetryBuffer(max_size=20000)
@@ -70,6 +83,12 @@ telemetry_runtime: Optional[TelemetryRuntime] = None
 opponents_buffer = OpponentsStateBuffer()
 opponents_runtime: Optional[OpponentsRuntime] = None
 recording_runtime: Optional[RecordingRuntime] = None
+recent_coaching_events: List[Dict[str, Any]] = []
+
+
+async def remember_coaching_event(event: Dict[str, Any]):
+    recent_coaching_events.insert(0, event)
+    del recent_coaching_events[50:]
 
 
 def _safe_cache_fragment(value: str) -> str:
@@ -257,7 +276,7 @@ def recording_metadata() -> Dict[str, Any]:
 
 def build_recording_runtime() -> RecordingRuntime:
     return RecordingRuntime(
-        config=recording_config_from_env(REPO_ROOT),
+        config=recording_config_from_env(RUNTIME_ROOT),
         track_provider=current_recording_track,
         metadata_provider=recording_metadata,
     )
@@ -320,6 +339,111 @@ def telemetry_status_payload() -> Dict[str, Any]:
     }
 
 
+def iso_from_epoch(timestamp: Optional[float]) -> Optional[str]:
+    if timestamp is None:
+        return None
+    try:
+        return datetime.fromtimestamp(float(timestamp), timezone.utc).isoformat()
+    except (OSError, OverflowError, TypeError, ValueError):
+        return None
+
+
+def seconds_since(timestamp: Optional[float]) -> Optional[float]:
+    if timestamp is None:
+        return None
+    try:
+        return round(max(0.0, time.time() - float(timestamp)), 3)
+    except (TypeError, ValueError):
+        return None
+
+
+def stream_status_from_age(
+    timestamp: Optional[float],
+    stale_after_seconds: float = 5.0,
+    *,
+    unknown_when_missing: bool = False,
+) -> str:
+    age = seconds_since(timestamp)
+    if age is None:
+        return "unknown" if unknown_when_missing else "waiting"
+    return "receiving" if age <= stale_after_seconds else "stale"
+
+
+def runtime_status_payload() -> Dict[str, Any]:
+    telemetry_status = telemetry_runtime.status() if telemetry_runtime else {
+        **source_manager.status(),
+        "trackState": runtime_state.track_build_state.value,
+        "method": runtime_state.build_method,
+        "sampleCount": source_manager.sample_count,
+        "playerStatus": "unknown",
+        "lastPlayerSampleAt": None,
+        "secondsSinceLastPlayerSample": None,
+        "lapComplete": runtime_state.lap_complete,
+        "activeTrackReady": runtime_state.track_build_state == TrackBuildState.TRACK_READY,
+        "candidateLapSampleCount": 0,
+        "liveTrajectoryCount": len(telemetry_buffer.get_samples()),
+    }
+    opponents_meta = opponents_buffer.metadata()
+    last_opponent_timestamp = opponents_meta.get("lastUpdateTimestamp")
+    opponents_status = stream_status_from_age(
+        last_opponent_timestamp,
+        float(opponents_meta.get("staleAfterSeconds") or 5.0),
+    )
+    racing_line_status = "READY" if runtime_state.track_build_state == TrackBuildState.TRACK_READY else "INSUFFICIENT_DATA"
+    coach_status = "READY" if recent_coaching_events else "INSUFFICIENT_DATA"
+    telemetry_player_status = telemetry_status.get("playerStatus")
+    if not telemetry_player_status:
+        telemetry_player_status = "receiving" if telemetry_status.get("sampleCount", 0) else "waiting"
+
+    return {
+        "status": "ok",
+        "service": BACKEND_SERVICE_NAME,
+        "version": BACKEND_PHASE_VERSION,
+        "backend": {
+            "online": True,
+            "trackState": runtime_state.track_build_state.value,
+            "buildMethod": runtime_state.build_method,
+            "trackCache": runtime_state.current_track_name,
+            "resourceRoot": str(RESOURCE_ROOT),
+            "runtimeRoot": str(RUNTIME_ROOT),
+        },
+        "telemetry": {
+            "online": telemetry_runtime is not None,
+            "source": telemetry_status.get("source"),
+            "activeReader": telemetry_status.get("active_reader"),
+            "sampleCount": telemetry_status.get("sampleCount", telemetry_status.get("sample_count")),
+            "liveTrajectoryCount": telemetry_status.get("liveTrajectoryCount"),
+            "activeTrackReady": telemetry_status.get("activeTrackReady"),
+            "playerStatus": telemetry_player_status,
+            "lastPlayerSampleAt": telemetry_status.get("lastPlayerSampleAt"),
+            "secondsSinceLastPlayerSample": telemetry_status.get("secondsSinceLastPlayerSample"),
+        },
+        "opponents": {
+            "online": opponents_runtime is not None,
+            "count": len(opponents_buffer.latest()),
+            "track": opponents_meta.get("track"),
+            "lastUpdateTimestamp": opponents_meta.get("lastUpdateTimestamp"),
+            "staleAfterSeconds": opponents_meta.get("staleAfterSeconds"),
+            "status": opponents_status,
+            "lastOpponentSampleAt": iso_from_epoch(last_opponent_timestamp),
+            "secondsSinceLastOpponentSample": seconds_since(last_opponent_timestamp),
+            "udpPort": 8765,
+        },
+        "racingLine": {
+            "available": runtime_state.track_build_state == TrackBuildState.TRACK_READY,
+            "status": racing_line_status,
+        },
+        "coach": {
+            "online": True,
+            "status": coach_status,
+        },
+        "websocket": {
+            "path": "/ws",
+            "connections": len(ws_manager.active_connections),
+        },
+    }
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global telemetry_runtime, opponents_runtime, recording_runtime
@@ -329,6 +453,7 @@ async def lifespan(app: FastAPI):
     initialize_spatial_state()
     recording_runtime = build_recording_runtime()
     recording_runtime.start()
+    event_bus.subscribe(COACHING_EVENT, remember_coaching_event)
     telemetry_runtime = build_telemetry_runtime()
     loop = asyncio.get_running_loop()
     telemetry_runtime.start(loop)
@@ -345,6 +470,7 @@ async def lifespan(app: FastAPI):
     if recording_runtime:
         recording_runtime.stop()
         recording_runtime = None
+    event_bus.unsubscribe(COACHING_EVENT, remember_coaching_event)
 
 
 app = FastAPI(
@@ -372,6 +498,20 @@ async def health_check():
         "track_cache": runtime_state.current_track_name,
         "telemetry": telemetry_status_payload(),
     }
+
+
+@app.get("/api/health")
+async def api_health_check():
+    return {
+        "status": "ok",
+        "service": BACKEND_SERVICE_NAME,
+        "version": BACKEND_PHASE_VERSION,
+    }
+
+
+@app.get("/api/runtime/status")
+async def get_runtime_status():
+    return runtime_status_payload()
 
 
 @app.websocket("/ws")
@@ -652,6 +792,16 @@ async def get_analysis_racing_line(
 @app.get("/api/live/player-physics")
 async def get_live_player_physics():
     return live_player_physics_payload()
+
+
+@app.get("/api/live/coach")
+async def get_live_coach():
+    return {
+        "status": "success",
+        "source": "event_bus",
+        "eventCount": len(recent_coaching_events),
+        "events": recent_coaching_events[:20],
+    }
 
 
 @app.get("/api/recording/status")
