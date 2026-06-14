@@ -13,6 +13,8 @@ import { CarPhysicsDebugPanel } from './components/CarPhysicsDebugPanel';
 import { LiveComparisonPanel } from './components/LiveComparisonPanel';
 import { RacingLineAnalysisPanel } from './components/RacingLineAnalysisPanel';
 import { DesktopRuntimePanel } from './components/DesktopRuntimePanel';
+import { SessionLapsPanel } from './components/SessionLapsPanel';
+import { LiveSessionStrip } from './components/LiveSessionStrip';
 import { ReplayControls } from './components/ReplayControls';
 import { CognitiveDashboard } from './components/CognitiveDashboard';
 import { Header } from './components/Header';
@@ -27,7 +29,7 @@ import { deltaTone, formatDelta, formatLapTime } from './utils/lapFormat';
 const Dashboard: React.FC = () => {
   useRenderCounter('Dashboard');
   const [trackData, setTrackData] = useState<any>(null);
-  const [rightPanel, setRightPanel] = useState<'engineer'|'debrief'|'comparison'|'racingLine'|'physics'>('engineer');
+  const [rightPanel, setRightPanel] = useState<'laps'|'engineer'|'debrief'|'comparison'|'racingLine'|'physics'>('laps');
   const [time, setTime] = useState(() => new Date());
 
   useEffect(() => {
@@ -67,18 +69,16 @@ const Dashboard: React.FC = () => {
   return (
     <ErrorBoundary>
       {/* Full workstation shell */}
-      <div
-        className="flex flex-col select-none"
-        style={{ width: '100vw', height: '100vh', background: '#06060d', color: '#f1f5f9', overflow: 'hidden' }}
-      >
+      <div className="workstation-shell">
         {/* ─ Header ─ */}
         <Header time={time} />
+        <LiveSessionStrip />
 
         {/* ─ Main Content ─ */}
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr)', gap: 1, padding: 1, overflow: 'hidden' }}>
+        <div className="dashboard-grid">
 
           {/* ═══ LEFT COLUMN — Engineering Metrics ═══ */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, overflow: 'hidden' }}>
+          <div className="dashboard-column">
 
             {/* Primary vehicle state block */}
             <VehicleStatePanel />
@@ -87,7 +87,7 @@ const Dashboard: React.FC = () => {
             <LapTimingPanel />
 
             {/* G-G Diagram */}
-            <div className="panel" style={{ padding: '8px', flex: 1, display: 'flex', flexDirection: 'column', gap: 6, overflow: 'hidden' }}>
+            <div className="panel dashboard-flex-panel" style={{ padding: '8px' }}>
               <div className="label" style={{ fontSize: 6, paddingLeft: 4 }}>G-G Diagram</div>
               <div style={{ flex: 1 }}>
                 <GGDiagram />
@@ -105,32 +105,31 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* ═══ CENTER — Track Map + Telemetry Traces ═══ */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, overflow: 'hidden' }}>
+          <div className="dashboard-column">
 
             {/* Track map — primary viewport */}
-            <div className="panel" style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+            <div className="panel track-stage">
               <TrackRenderer trackData={trackData} />
             </div>
 
             {/* Lap comparison panel */}
-            <div className="panel" style={{ height: 200, overflow: 'hidden' }}>
+            <div className="panel telemetry-stage">
               <TelemetryTraces />
             </div>
 
           </div>
 
           {/* ═══ RIGHT COLUMN — Intelligence Hub ═══ */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, overflow: 'hidden' }}>
+          <div className="dashboard-column">
 
             {/* Panel selector tabs */}
-            <div className="panel" style={{ display: 'flex', gap: 1, padding: 1 }}>
-              {(['engineer', 'debrief', 'comparison', 'racingLine', 'physics'] as const).map(tab => (
+            <div className="panel intelligence-tabs">
+              {(['laps', 'engineer', 'debrief', 'comparison', 'racingLine', 'physics'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setRightPanel(tab)}
                   className="num"
                   style={{
-                    flex: 1,
                     padding: '6px 0',
                     fontSize: 8,
                     fontWeight: 700,
@@ -145,13 +144,21 @@ const Dashboard: React.FC = () => {
                     outline: rightPanel === tab ? '1px solid rgba(34,211,238,0.2)' : '1px solid transparent',
                   }}
                 >
-                  {tab === 'engineer' ? 'Engineer' : (tab === 'debrief' ? 'Debrief' : (tab === 'comparison' ? 'Compare' : (tab === 'racingLine' ? 'Line' : 'Physics')))}
+                  {tab === 'laps' ? 'Voltas' : (tab === 'engineer' ? 'Engineer' : (tab === 'debrief' ? 'Debrief' : (tab === 'comparison' ? 'Compare' : (tab === 'racingLine' ? 'Line' : 'Physics'))))}
                 </button>
               ))}
             </div>
 
             {/* Panel content (stacked, toggled by opacity) */}
             <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+              <div style={{
+                position: 'absolute', inset: 0,
+                opacity: rightPanel === 'laps' ? 1 : 0,
+                pointerEvents: rightPanel === 'laps' ? 'auto' : 'none',
+                transition: 'opacity 0.3s',
+              }}>
+                <SessionLapsPanel active={rightPanel === 'laps'} />
+              </div>
               <div style={{
                 position: 'absolute', inset: 0,
                 opacity: rightPanel === 'engineer' ? 1 : 0,
@@ -195,11 +202,21 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Coaching feed */}
-            <div style={{ height: 220, overflow: 'hidden' }}>
+            <div style={{
+              height: rightPanel === 'laps' ? 0 : 150,
+              overflow: 'hidden',
+              opacity: rightPanel === 'laps' ? 0 : 1,
+              transition: 'height 0.25s ease, opacity 0.2s ease',
+            }}>
               <CoachingFeed />
             </div>
 
-            <div style={{ height: 214, overflow: 'hidden' }}>
+            <div style={{
+              height: rightPanel === 'laps' ? 0 : 160,
+              overflow: 'hidden',
+              opacity: rightPanel === 'laps' ? 0 : 1,
+              transition: 'height 0.25s ease, opacity 0.2s ease',
+            }}>
               <DesktopRuntimePanel />
             </div>
 
@@ -207,17 +224,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* ─ Bottom Bar — Controls + Timeline ─ */}
-        <div
-          className="panel"
-          style={{
-            height: 48,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0,
-            padding: '0 12px',
-            flexShrink: 0,
-          }}
-        >
+        <div className="panel dashboard-bottom-bar">
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', height: '100%', minWidth: 0 }}>
             <ReplayControls />
           </div>

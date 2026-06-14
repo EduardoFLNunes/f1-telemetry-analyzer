@@ -26,7 +26,18 @@ class SessionRecorderTests(unittest.TestCase):
             )
 
             status = recorder.start(track="vhe_interlagos")
-            recorder.enqueue_player({"timestamp": 1.0, "sessionTime": None, "speedKmh": 123.0}, track="vhe_interlagos")
+            recorder.enqueue_player(
+                {
+                    "timestamp": 1.0,
+                    "sessionTime": None,
+                    "speedKmh": 123.0,
+                    "carPhysics": {
+                        "tyres": {"tyreCoreTemperature": [81.0, 82.0, 83.0, 84.0]},
+                        "carState": {"fuel": 31.5},
+                    },
+                },
+                track="vhe_interlagos",
+            )
             recorder.enqueue_opponents(
                 {
                     "timestamp": 1.1,
@@ -49,8 +60,16 @@ class SessionRecorderTests(unittest.TestCase):
             opponents = json.loads((session_dir / "opponents.jsonl").read_text(encoding="utf-8").strip())
 
             self.assertEqual(metadata["track"], "vhe_interlagos")
+            self.assertEqual(metadata["schemaVersion"], 2)
+            self.assertIsNotNone(metadata["endedAt"])
+            self.assertEqual(metadata["playerSamplesWritten"], 1)
             self.assertEqual(player["type"], "player")
             self.assertIsNone(player["sessionTime"])
+            self.assertEqual(player["sample"]["carPhysics"]["carState"]["fuel"], 31.5)
+            self.assertEqual(
+                player["sample"]["carPhysics"]["tyres"]["tyreCoreTemperature"],
+                [81.0, 82.0, 83.0, 84.0],
+            )
             self.assertEqual(opponents["type"], "opponents")
             self.assertEqual(opponents["count"], 1)
             self.assertIsNone(opponents["cars"][0]["yaw"])

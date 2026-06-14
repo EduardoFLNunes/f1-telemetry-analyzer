@@ -24,6 +24,10 @@ class RecordingRuntime:
         self.event_bus = bus
         self.recorder = SessionRecorder(config)
         self._subscribed = False
+        self._auto_start_pending = False
+        self._recording_track: Optional[str] = None
+        self._last_lap: Optional[int] = None
+        self._last_session_time: Optional[float] = None
 
     def start(self):
         if not self._subscribed:
@@ -35,7 +39,11 @@ class RecordingRuntime:
             self._subscribed = True
 
         if self.config.auto_start:
-            self.start_recording()
+            track = self._safe_track()
+            if track:
+                self.start_recording(track=track)
+            else:
+                self._auto_start_pending = True
 
     def stop(self):
         if self._subscribed:
@@ -47,20 +55,42 @@ class RecordingRuntime:
             self._subscribed = False
         self.recorder.stop()
 
-    def start_recording(self):
-        track = self._safe_track()
+    def start_recording(self, track: Optional[str] = None):
+        track = track or self._safe_track()
         metadata = self._safe_metadata()
-        return self.recorder.start(track=track, metadata=metadata)
+        status = self.recorder.start(track=track, metadata=metadata)
+        self._recording_track = track
+        self._auto_start_pending = False
+        self._last_lap = None
+        self._last_session_time = None
+        return status
 
     def stop_recording(self):
-        return self.recorder.stop()
+        status = self.recorder.stop()
+        self._recording_track = None
+        self._last_lap = None
+        self._last_session_time = None
+        return status
 
     def status(self):
         return self.recorder.status()
 
     async def on_player_frame(self, frame: Mapping[str, Any]):
         try:
-            self.recorder.enqueue_player(frame, track=self._safe_track())
+            track = self._safe_track() or self._track_from_frame(frame)
+            if self._auto_start_pending and not self.recorder.recording:
+                self.start_recording(track=track)
+            if self.recorder.recording and self._should_rotate(frame, track):
+                self.recorder.stop()
+                self.recorder.start(track=track, metadata=self._safe_metadata())
+                self._recording_track = track
+                self._last_lap = None
+                self._last_session_time = None
+
+            self.recorder.enqueue_player(frame, track=track)
+            self._recording_track = self._recording_track or track
+            self._last_lap = self._frame_int(frame, "lap_number", "lap")
+            self._last_session_time = self._frame_float(frame, "sessionTime", "session_time")
         except Exception as exc:
             logger.warning("Recording player frame enqueue failed: %s", exc)
 
@@ -89,6 +119,51 @@ class RecordingRuntime:
         except Exception:
             return {}
 
+    def _should_rotate(self, frame: Mapping[str, Any], track: Optional[str]) -> bool:
+        if track and self._recording_track and track != self._recording_track:
+            return True
+
+        lap = self._frame_int(frame, "lap_number", "lap")
+        session_time = self._frame_float(frame, "sessionTime", "session_time")
+        return bool(
+            lap is not None
+            and self._last_lap is not None
+            and lap + 1 < self._last_lap
+            and session_time is not None
+            and self._last_session_time is not None
+            and session_time + 5.0 < self._last_session_time
+        )
+
+    @staticmethod
+    def _track_from_frame(frame: Mapping[str, Any]) -> Optional[str]:
+        for key in ("trackName", "track", "track_name"):
+            value = frame.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        return None
+
+    @staticmethod
+    def _frame_int(frame: Mapping[str, Any], *keys: str) -> Optional[int]:
+        for key in keys:
+            try:
+                value = frame.get(key)
+                if value is not None:
+                    return int(value)
+            except (TypeError, ValueError):
+                continue
+        return None
+
+    @staticmethod
+    def _frame_float(frame: Mapping[str, Any], *keys: str) -> Optional[float]:
+        for key in keys:
+            try:
+                value = frame.get(key)
+                if value is not None:
+                    return float(value)
+            except (TypeError, ValueError):
+                continue
+        return None
+
 
 def config_from_env(repo_root: Path) -> RecordingConfig:
     import os
@@ -116,7 +191,7 @@ def config_from_env(repo_root: Path) -> RecordingConfig:
         output_root=output_root,
         enabled=env_bool("TELEMETRY_RECORDING_ENABLED", True),
         auto_start=env_bool("TELEMETRY_RECORDING_AUTO_START", True),
-        player_record_hz=env_float("TELEMETRY_RECORDING_PLAYER_HZ", 20.0),
+        player_record_hz=env_float("TELEMETRY_RECORDING_PLAYER_HZ", 60.0),
         opponents_record_hz=env_float("TELEMETRY_RECORDING_OPPONENTS_HZ", 20.0),
         batch_size=env_int("TELEMETRY_RECORDING_BATCH_SIZE", 128),
         flush_interval_seconds=env_float("TELEMETRY_RECORDING_FLUSH_SECONDS", 1.0),

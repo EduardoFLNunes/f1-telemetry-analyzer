@@ -115,6 +115,14 @@ export const api = {
     })
   ).data,
   getPlayerPhysics: async () => (await client.get('/api/live/player-physics')).data,
+  getRecordingStatus: async () => (await client.get('/api/recording/status')).data,
+  getSessions: async (limit = 30) => (await client.get('/api/sessions', { params: { limit } })).data,
+  getSession: async (sessionId) => (
+    await client.get(`/api/sessions/${encodeURIComponent(sessionId)}`)
+  ).data,
+  getSessionLap: async (sessionId, lapNumber) => (
+    await client.get(`/api/sessions/${encodeURIComponent(sessionId)}/laps/${lapNumber}`)
+  ).data,
   getTelemetryData:async () => (await client.get('/api/data/telemetry')).data,
   getAiRaceline:   async () => (await client.get('/api/data/ai-raceline')).data,
   getComparison:   async () => (await client.get('/api/data/comparison')).data,

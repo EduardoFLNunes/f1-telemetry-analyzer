@@ -65,6 +65,8 @@ export interface TelemetryFrame {
   yaw_rate?: number;
   drs?: boolean;
   carPhysics?: CarPhysicsTelemetry;
+  trackName?: string | null;
+  trackConfig?: string | null;
 }
 
 export interface OpponentWorldPosition {
@@ -216,6 +218,7 @@ interface TelemetryState {
   isStreaming: boolean;
   globalCursorS: number | null;
   selectedLap: number | null;
+  selectedSessionId: string | null;
   viewMode: 'live' | 'analysis' | 'replay';
   performanceMode: PerformanceMode;
 
@@ -232,12 +235,14 @@ interface TelemetryState {
   setSectors: (sectors: SectorData[]) => void;
   setViewMode: (mode: 'live' | 'analysis' | 'replay') => void;
   setPerformanceMode: (mode: PerformanceMode) => void;
+  setReferenceLap: (samples: TelemetryFrame[], lapNumber: number, sessionId?: string | null) => void;
+  clearReferenceLap: () => void;
   clearHistory: () => void;
 }
 
 // Increased for professional analysis (approx 2 minutes of 60Hz data)
 export const MAX_HISTORY = 7200; 
-const MAX_LAP_SAMPLES = 5000;
+const MAX_LAP_SAMPLES = 36_000;
 const MAX_COMPLETED_LAPS = 10;
 const MAX_OPPONENT_HISTORY_SAMPLES = 1200;
 const MIN_VALID_LAP_SAMPLES = 40;
@@ -718,6 +723,7 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
   isStreaming: false,
   globalCursorS: null,
   selectedLap: null,
+  selectedSessionId: null,
   viewMode: 'live',
   performanceMode: 'BALANCED',
 
@@ -766,6 +772,9 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
     let finalizedProgressStart = state.lapDebug.finalizedProgressStart;
     let finalizedProgressEnd = state.lapDebug.finalizedProgressEnd;
     let finalizedLapDuration = state.lapDebug.finalizedLapDuration;
+    let selectedLap = state.selectedLap;
+    let selectedSessionId = state.selectedSessionId;
+    const manualReferenceActive = selectedLap !== null;
     const nextLapNumber = frameLapNumber(safeFrame);
     const lapReset = (
       nextLapNumber !== null &&
@@ -784,6 +793,8 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
       currentLapIsPartial = isInitialPartialLap(safeFrame);
       lastLapTransitionAtTime = lapReset ? safeFrame.lapSampleTime ?? null : lastLapTransitionAtTime;
       if (lapReset) {
+        selectedLap = null;
+        selectedSessionId = null;
         lastLapTransitionReason = "lap_counter_reset";
         lastRejectedLapReason = "session_reset";
         lastCompletedLapNumber = null;
@@ -821,9 +832,11 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
         }
 
         const newLapNumber = nextLapNumber ?? (currentLapNumber !== null ? currentLapNumber + 1 : null);
-        const referenceLap = newLapNumber !== null ? completedLapsByNumber[newLapNumber - 1] : undefined;
-        referenceLapNumber = referenceLap?.valid ? referenceLap.lapNumber : null;
-        previousLapSamples = referenceLap?.valid ? referenceLap.samples : [];
+        if (!manualReferenceActive) {
+          const referenceLap = newLapNumber !== null ? completedLapsByNumber[newLapNumber - 1] : undefined;
+          referenceLapNumber = referenceLap?.valid ? referenceLap.lapNumber : null;
+          previousLapSamples = referenceLap?.valid ? referenceLap.samples : [];
+        }
         currentLapSamples = [safeFrame];
         currentLapNumber = newLapNumber;
         currentLapStartTime = safeFrame.lapSampleTime ?? null;
@@ -838,7 +851,12 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
       }
     }
 
-    if (currentLapNumber !== null && referenceLapNumber === null && completedLapsByNumber[currentLapNumber - 1]?.valid) {
+    if (
+      !manualReferenceActive
+      && currentLapNumber !== null
+      && referenceLapNumber === null
+      && completedLapsByNumber[currentLapNumber - 1]?.valid
+    ) {
       const referenceLap = completedLapsByNumber[currentLapNumber - 1];
       referenceLapNumber = referenceLap.lapNumber;
       previousLapSamples = referenceLap.samples;
@@ -891,6 +909,8 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
       lastLapTransitionAtTime,
       lapMetrics,
       lapDebug,
+      selectedLap,
+      selectedSessionId,
       globalCursorS: state.isStreaming ? safeFrame.s : state.globalCursorS
     };
   }),
@@ -956,6 +976,41 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
 
   setPerformanceMode: (performanceMode) => set({ performanceMode }),
 
+  setReferenceLap: (samples, lapNumber, sessionId = null) => set((state) => ({
+    previousLapSamples: samples,
+    ghostHistory: samples,
+    selectedLap: lapNumber,
+    selectedSessionId: sessionId,
+    lapMetrics: {
+      ...state.lapMetrics,
+      previousLapNumber: lapNumber,
+      referenceLapNumber: lapNumber,
+      hasPreviousLap: samples.length > 1,
+    },
+  })),
+
+  clearReferenceLap: () => set((state) => {
+    const automaticReference = [...state.completedLapsHistory]
+      .reverse()
+      .find((lap) => lap.valid);
+    const samples = automaticReference?.samples || [];
+    const lapNumber = automaticReference?.lapNumber ?? null;
+    return {
+      previousLapSamples: samples,
+      ghostHistory: samples,
+      selectedLap: null,
+      selectedSessionId: null,
+      lapMetrics: {
+        ...state.lapMetrics,
+        previousLapNumber: lapNumber,
+        referenceLapNumber: lapNumber,
+        delta: null,
+        lapDelta: null,
+        hasPreviousLap: samples.length > 1,
+      },
+    };
+  }),
+
   clearHistory: () => set({ 
     history: [], 
     currentLapSamples: [],
@@ -984,5 +1039,7 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
     latestFrame: null,
     ghostHistory: [],
     globalCursorS: null,
+    selectedLap: null,
+    selectedSessionId: null,
   })
 }));

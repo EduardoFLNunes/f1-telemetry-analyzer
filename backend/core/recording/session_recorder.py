@@ -44,8 +44,14 @@ class SessionRecorder:
             if self.recording:
                 return self.status()
 
-            self.session_id = build_session_id(track)
+            base_session_id = build_session_id(track)
+            self.session_id = base_session_id
             self.directory = self.config.output_root / self.session_id
+            suffix = 2
+            while self.directory.exists():
+                self.session_id = f"{base_session_id}_{suffix:02d}"
+                self.directory = self.config.output_root / self.session_id
+                suffix += 1
             self.directory.mkdir(parents=True, exist_ok=True)
 
             self._player_samples_written = 0
@@ -79,6 +85,7 @@ class SessionRecorder:
         with self._lock:
             self._thread = None
             self._close_files()
+            self._finalize_metadata()
             logger.info("Session recording stopped: %s", self.directory)
             return self.status()
 
@@ -266,6 +273,7 @@ class SessionRecorder:
         if not self.directory:
             return
         payload = {
+            "schemaVersion": 2,
             "sessionId": self.session_id,
             "track": track,
             "startedAt": datetime.now().isoformat(),
@@ -275,6 +283,28 @@ class SessionRecorder:
         }
         with open(self.directory / "metadata.json", "w", encoding="utf-8") as handle:
             json.dump(payload, handle, ensure_ascii=False, indent=2, default=self._json_default)
+
+    def _finalize_metadata(self):
+        if not self.directory:
+            return
+        path = self.directory / "metadata.json"
+        try:
+            metadata = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+            metadata.update(
+                {
+                    "endedAt": datetime.now().isoformat(),
+                    "playerSamplesWritten": self._player_samples_written,
+                    "opponentSnapshotsWritten": self._opponent_snapshots_written,
+                    "eventsWritten": self._events_written,
+                    "droppedFrames": self._dropped_frames,
+                }
+            )
+            path.write_text(
+                json.dumps(metadata, ensure_ascii=False, indent=2, default=self._json_default),
+                encoding="utf-8",
+            )
+        except (OSError, json.JSONDecodeError) as exc:
+            logger.warning("Session metadata finalization failed: %s", exc)
 
     def _drain_queue(self):
         try:

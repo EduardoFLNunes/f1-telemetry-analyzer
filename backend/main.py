@@ -39,6 +39,7 @@ from core.kn5.track_surface_polygon import build_track_surface_polygon_from_mani
 from core.opponents import OpponentsRuntime, OpponentsStateBuffer, SOURCE_NAME as OPPONENTS_SOURCE_NAME
 from core.performance_metrics import performance_metrics
 from core.recording.recording_runtime import RecordingRuntime, config_from_env as recording_config_from_env
+from core.recording.session_repository import SessionRepository
 from core.reconstruction.track_reconstruction import TrackReconstructor
 from core.racing_line_analysis import build_live_racing_line_payload
 from core.telemetry.telemetry_buffer import TelemetryBuffer
@@ -72,7 +73,7 @@ TRACK_CACHE_DIR = RUNTIME_ROOT / "data" / "cache" / "tracks"
 PRIMARY_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetry.csv"
 DEBUG_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetryOld.csv"
 BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
-BACKEND_PHASE_VERSION = "phase-12-main-integration"
+BACKEND_PHASE_VERSION = "phase-12-lap-sessions"
 
 runtime_state = RuntimeState()
 telemetry_buffer = TelemetryBuffer(max_size=20000)
@@ -84,6 +85,7 @@ opponents_buffer = OpponentsStateBuffer()
 opponents_runtime: Optional[OpponentsRuntime] = None
 recording_runtime: Optional[RecordingRuntime] = None
 recent_coaching_events: List[Dict[str, Any]] = []
+session_repository = SessionRepository(recording_config_from_env(RUNTIME_ROOT).output_root)
 
 
 async def remember_coaching_event(event: Dict[str, Any]):
@@ -833,6 +835,51 @@ async def stop_recording():
     if not recording_runtime:
         raise HTTPException(status_code=503, detail="Recording runtime is not available")
     return recording_runtime.stop_recording().to_api()
+
+
+@app.get("/api/sessions")
+async def list_recorded_sessions(limit: int = Query(30, ge=1, le=200)):
+    active_session_id = recording_runtime.status().sessionId if recording_runtime else None
+    sessions = await asyncio.to_thread(session_repository.list_sessions, limit)
+    for session in sessions:
+        session["active"] = session["sessionId"] == active_session_id
+    return {
+        "status": "success",
+        "recordingRoot": str(session_repository.root),
+        "activeSessionId": active_session_id,
+        "sessions": sessions,
+    }
+
+
+@app.get("/api/sessions/{session_id}")
+async def get_recorded_session(session_id: str):
+    try:
+        session = await asyncio.to_thread(session_repository.session_summary, session_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if not session:
+        raise HTTPException(status_code=404, detail="Recorded session not found")
+    return {"status": "success", "session": session}
+
+
+@app.get("/api/sessions/{session_id}/laps/{lap_number}")
+async def get_recorded_lap(
+    session_id: str,
+    lap_number: int,
+    max_samples: int = Query(36_000, alias="maxSamples", ge=1_000, le=100_000),
+):
+    try:
+        lap = await asyncio.to_thread(
+            session_repository.lap_detail,
+            session_id,
+            lap_number,
+            max_samples,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if not lap:
+        raise HTTPException(status_code=404, detail="Recorded lap not found")
+    return {"status": "success", **lap}
 
 
 @app.get("/api/debug/performance")
