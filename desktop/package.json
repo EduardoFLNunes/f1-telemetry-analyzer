@@ -2,10 +2,10 @@
   "name": "automobilista-telemetria-desktop",
   "private": true,
   "productName": "Automobilista Telemetria",
-  "version": "0.1.0-phase-12",
-  "description": "Installed desktop telemetry workstation for Assetto Corsa diagnostics and race analysis.",
-  "author": "Automobilista Telemetria Project",
-  "copyright": "Copyright (c) 2026 Automobilista Telemetria Project",
+  "version": "0.1.1-phase-12",
+  "description": "Sistema desktop de telemetria e análise de desempenho para simulação automobilística.",
+  "author": "Eduardo Francisco",
+  "copyright": "Copyright (c) 2026 Eduardo Francisco",
   "main": "main.js",
   "scripts": {
     "dev": "node scripts/start.js --dev",
@@ -23,7 +23,7 @@
     "electron-builder": "^26.15.2"
   },
   "build": {
-    "appId": "br.dev.automobilista.telemetria",
+    "appId": "br.edu.automobilista.telemetria",
     "productName": "Automobilista Telemetria",
     "artifactName": "Automobilista-Telemetria-Setup-${version}.${ext}",
     "asar": true,
@@ -34,6 +34,7 @@
       "main.js",
       "preload.js",
       "package.json",
+      "assets/**/*",
       "scripts/**/*"
     ],
     "extraResources": [
@@ -58,6 +59,17 @@
         "to": "data/SaoPaulo.csv"
       },
       {
+        "from": "../data/debug",
+        "to": "data/debug",
+        "filter": [
+          "interlagos_track_only_fixed_geometry.json",
+          "interlagos_reta_oposta_final_local_fix_candidate.json",
+          "interlagos_reta_oposta_final_local_fix_validation.json",
+          "interlagos_pit_access_asphalt_merge_fix_candidate.json",
+          "interlagos_pit_access_asphalt_merge_fix_validation.json"
+        ]
+      },
+      {
         "from": "../tools/assetto_opponents_exporter",
         "to": "assetto_plugin/ac_opponents_exporter",
         "filter": [
@@ -70,7 +82,8 @@
     "win": {
       "target": [
         "nsis"
-      ]
+      ],
+      "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -79,7 +92,10 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Automobilista Telemetria",
-      "uninstallDisplayName": "Automobilista Telemetria"
+      "uninstallDisplayName": "Automobilista Telemetria",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico"
     }
   }
 }

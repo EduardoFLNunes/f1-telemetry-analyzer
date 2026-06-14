@@ -17,6 +17,13 @@ from .interlagos_track_only_fixed import GEOMETRY_NAME, is_interlagos_track, loa
 logger = logging.getLogger(__name__)
 
 
+def resolve_geometry_resource_root() -> Path:
+    configured = os.getenv("AT_BACKEND_RESOURCE_ROOT")
+    if configured:
+        return Path(configured).expanduser().resolve()
+    return Path(__file__).resolve().parents[3]
+
+
 @dataclass
 class TrackGeometryProviderResult:
     track_name: str
@@ -190,12 +197,15 @@ class Kn5SurfaceTrackGeometryProvider:
         source: str = "assetto_corsa",
         game_code: str = "assetto_corsa",
     ) -> Optional[TrackGeometryProviderResult]:
-        repo_root = Path(__file__).resolve().parents[3]
+        resource_root = resolve_geometry_resource_root()
         if is_interlagos_track(track_name, track_config):
-            fixed = load_fixed_geometry(repo_root)
+            fixed = load_fixed_geometry(resource_root)
             if fixed:
                 fixed_provider = fixed.get("provider") or GEOMETRY_NAME
-                fixed_path = Path(fixed.get("cachePath") or repo_root / "data" / "debug" / "interlagos_track_only_fixed_geometry.json")
+                fixed_path = Path(
+                    fixed.get("cachePath")
+                    or resource_root / "data" / "debug" / "interlagos_track_only_fixed_geometry.json"
+                )
                 return TrackGeometryProviderResult(
                     f"vhe_interlagos_gp_{_safe_fragment(fixed_provider)}",
                     fixed,

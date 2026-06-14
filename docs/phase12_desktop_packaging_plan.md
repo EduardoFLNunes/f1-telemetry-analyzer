@@ -759,3 +759,144 @@ For isolation, the test used `AT_BACKEND_URL=http://127.0.0.1:8125`.
 `/api/health`, `/api/runtime/status`, `/api/live/telemetry`,
 `/api/live/opponents`, `/api/live/racing-line`, and `/api/live/coach` returned
 success from the installed resources.
+
+## Phase 12.6 - Installer Final Validation And Visual Identity
+
+Phase 12.6 starts from the `main` integration merge commit:
+
+```text
+2b157429 Integrate desktop packaging and runtime diagnostics into main
+```
+
+Branch:
+
+```text
+feature/phase-12-6-installer-visual-identity
+```
+
+### Baseline Validation
+
+- `npm.cmd run build` from `frontend/`: passed, 1501 modules transformed.
+- Backend tests: passed, 36 tests OK.
+- `node --check desktop/main.js`: passed.
+- `node --check desktop/preload.js`: passed.
+
+### Packaging Validation
+
+- PyInstaller build passed and generated:
+
+```text
+backend/dist/automobilista-backend.exe
+```
+
+- `npm.cmd run pack` passed and generated:
+
+```text
+desktop/dist/win-unpacked
+```
+
+- `npm.cmd run dist:win` passed and generated:
+
+```text
+desktop/dist/Automobilista-Telemetria-Setup-0.1.1-phase-12.exe
+```
+
+### Installed Setup Validation
+
+The setup was installed silently and the installed app was opened from:
+
+```text
+%LOCALAPPDATA%\Programs\Automobilista Telemetria\Automobilista Telemetria.exe
+```
+
+Observed runtime paths:
+
+```text
+resourceRoot=%LOCALAPPDATA%\Programs\Automobilista Telemetria\resources
+runtimeRoot=%APPDATA%\Automobilista Telemetria
+logs=%APPDATA%\Automobilista Telemetria\logs
+```
+
+The installed app opened without Vite and without a manual backend. It was also
+opened while repository `frontend/dist` and `backend/dist` were temporarily
+hidden. In that state, the app still loaded the frontend and backend from
+installed resources.
+
+Validated endpoints:
+
+```http
+GET /api/health
+GET /api/runtime/status
+GET /api/live/telemetry
+GET /api/live/opponents
+GET /api/live/racing-line
+GET /api/live/coach
+GET /api/live/comparison
+GET /api/live/player-physics
+```
+
+Observed stream state during local validation:
+
+```text
+telemetry.playerStatus=receiving
+opponents.status=receiving
+racingLine.status=READY
+coach.status=INSUFFICIENT_DATA
+```
+
+Silent uninstall/reinstall was validated. The uninstall removed the installed
+program directory, left no backend process orphaned, and intentionally preserved
+`%APPDATA%\Automobilista Telemetria`.
+
+### Visual Identity
+
+No existing project-owned icon was found. Phase 12.6 adds provisional local icon
+assets:
+
+```text
+desktop/assets/icon.ico
+desktop/assets/icon.png
+```
+
+The icon is a simple local placeholder with a track outline, live trace, speed
+bars, and dashboard grid. It does not use external images or protected brand
+marks.
+
+Electron Builder metadata now uses:
+
+```text
+productName=Automobilista Telemetria
+appId=br.edu.automobilista.telemetria
+author=Eduardo Francisco
+win.icon=assets/icon.ico
+nsis.shortcutName=Automobilista Telemetria
+nsis.uninstallDisplayName=Automobilista Telemetria
+```
+
+The Electron window also resolves the packaged icon asset when possible.
+
+### Packaged Map Parity Fix
+
+The initial Phase 12.6 installer could load an old Interlagos cache from AppData
+or rebuild the track directly from KN5 because the fixed visual geometry used
+by `main` was not present in installed resources.
+
+The corrected `0.1.1-phase-12` package:
+
+- resolves geometry assets from `AT_BACKEND_RESOURCE_ROOT`;
+- includes the base Interlagos geometry;
+- includes the final Reta Oposta candidate and validation;
+- includes the final pit-access asphalt-merge candidate and validation;
+- loads `InterlagosPitAccessAsphaltMergeFix` before user track caches.
+
+This keeps the installed Interlagos map aligned with the map rendered by
+`main`, while avoiding packaging the full `data/debug` directory.
+
+### Remaining Limits
+
+- Test on another clean Windows machine is still pending.
+- The icon is provisional and should be replaced by final designed artwork.
+- Digital signing is still pending.
+- Auto-update is still out of scope.
+- Crash reporting is still out of scope.
+- Confirmed-copy plugin installation remains a future opt-in flow.

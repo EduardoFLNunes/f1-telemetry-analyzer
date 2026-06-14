@@ -12,6 +12,7 @@ const DEFAULT_FRONTEND_DEV_URL = 'http://127.0.0.1:5173';
 const DEFAULT_BACKEND_URL = 'http://127.0.0.1:8000';
 const BACKEND_EXE_NAME = process.platform === 'win32' ? 'automobilista-backend.exe' : 'automobilista-backend';
 const EXPECTED_BACKEND_SERVICE = 'automobilista-telemetria-backend';
+const WINDOW_ICON_NAME = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
 const ASSETTO_PLUGIN_ID = 'ac_opponents_exporter';
 const ASSETTO_PLUGIN_DISPLAY_NAME = 'Opponents Exporter';
 const ASSETTO_PLUGIN_FILE = 'ac_opponents_exporter.py';
@@ -83,6 +84,11 @@ function resolveLogsDir() {
   if (configured) return configured;
   if (app.isPackaged) return path.join(app.getPath('userData'), 'logs');
   return path.join(REPO_ROOT, 'logs');
+}
+
+function resolveWindowIconPath() {
+  const iconPath = path.join(__dirname, 'assets', WINDOW_ICON_NAME);
+  return fs.existsSync(iconPath) ? iconPath : null;
 }
 
 function ensureLogsDir() {
@@ -884,6 +890,7 @@ async function createWindow() {
     minWidth: 1024,
     minHeight: 640,
     backgroundColor: '#06060d',
+    ...(resolveWindowIconPath() ? { icon: resolveWindowIconPath() } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
