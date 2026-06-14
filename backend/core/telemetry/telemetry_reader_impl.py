@@ -208,11 +208,16 @@ class ACSharedMemoryReader(PollingTelemetryReader):
         self.latest_track_length: Optional[float] = None
         self.latest_game_code: Optional[str] = "assetto_corsa"
         self.latest_ac_install_path: Optional[str] = None
+        self._next_connect_attempt_at = 0.0
 
     def connect(self) -> bool:
         if self.connected and self.adapter.is_connected:
             return True
+        if time.monotonic() < self._next_connect_attempt_at:
+            return False
         self.connected = self.adapter.connect()
+        if not self.connected:
+            self._next_connect_attempt_at = time.monotonic() + 1.0
         return self.connected
 
     def read_sample(self) -> Optional[TelemetrySample]:
@@ -447,6 +452,11 @@ class TelemetrySourceManager:
     def get_active_source_name(self) -> str:
         return self.active_source_name
 
+    def player_source_name(self) -> str:
+        if self.active_source_name == "assetto_corsa":
+            return "shared_memory"
+        return self.active_source_name
+
     def active_reader_name(self) -> str:
         return self.reader.active_reader_name
 
@@ -488,6 +498,7 @@ class TelemetrySourceManager:
     def status(self) -> Dict[str, Any]:
         return {
             "source": self.active_source_name,
+            "player_source": self.player_source_name(),
             "ac_available": self.ac_available,
             "active_reader": self.active_reader_name(),
             "sample_count": self.sample_count,

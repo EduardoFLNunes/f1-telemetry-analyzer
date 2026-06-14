@@ -8,10 +8,13 @@ type RuntimeStatus = {
   status?: string;
   telemetry?: {
     source?: string | null;
+    playerSource?: string | null;
     playerStatus?: 'receiving' | 'waiting' | 'stale' | 'unknown';
     secondsSinceLastPlayerSample?: number | null;
   };
   opponents?: {
+    source?: string | null;
+    enabled?: boolean;
     status?: 'receiving' | 'waiting' | 'stale' | 'unknown';
     secondsSinceLastOpponentSample?: number | null;
     udpPort?: number | null;
@@ -156,6 +159,8 @@ export const AssettoCorsaSetupPanel: React.FC = () => {
   const backendStatus = runtime?.status === 'ok' ? 'online' : 'offline';
   const telemetryStatus = runtime?.telemetry?.playerStatus || 'unknown';
   const opponentsStatus = runtime?.opponents?.status || 'unknown';
+  const playerSource = runtime?.telemetry?.playerSource || 'shared_memory';
+  const opponentsSource = runtime?.opponents?.source || 'udp';
   const sourceStatus = plugin?.source?.available ? 'ready' : 'missing';
   const ports = `${plugin?.transport?.backendApiPort || 8000}/${plugin?.transport?.udpOpponentsPort || runtime?.opponents?.udpPort || 8765}`;
 
@@ -185,6 +190,8 @@ export const AssettoCorsaSetupPanel: React.FC = () => {
         <Row label="Backend" value={backendStatus} tone={statusTone(backendStatus)} />
         <Row label="Telemetry" value={telemetryStatus} tone={statusTone(telemetryStatus)} />
         <Row label="Opponents" value={opponentsStatus} tone={statusTone(opponentsStatus)} />
+        <Row label="Player Source" value={playerSource} tone="ok" />
+        <Row label="Opp Source" value={opponentsSource} tone={runtime?.opponents?.enabled === false ? 'warn' : 'ok'} />
         <Row label="Source Files" value={sourceStatus} tone={statusTone(sourceStatus)} />
         <Row label="Player Age" value={ageText(runtime?.telemetry?.secondsSinceLastPlayerSample)} tone={telemetryStatus === 'receiving' ? 'ok' : 'warn'} />
         <Row label="Opp Age" value={ageText(runtime?.opponents?.secondsSinceLastOpponentSample)} tone={opponentsStatus === 'receiving' ? 'ok' : 'warn'} />

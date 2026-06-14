@@ -45,6 +45,13 @@ UDP: OK
 `Cars detected` includes the player car. `Sending` excludes the player and
 only includes opponents with a valid `WorldPosition`.
 
+The packet is compact UTF-8 JSON sent to `127.0.0.1:8765` at 20 Hz. It only
+contains opponent identity, position, speed, track progress and timing fields.
+Player telemetry remains exclusively on Assetto Corsa shared memory.
+
+`isMultiplayer` is populated when Assetto exposes a server address. `isAI`
+remains `null` when the Python API cannot identify the opponent type safely.
+
 ## Backend Check
 
 With the backend running:

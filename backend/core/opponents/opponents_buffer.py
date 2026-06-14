@@ -26,6 +26,7 @@ class OpponentsStateBuffer:
         self._track: Optional[str] = None
         self._session_time: Optional[float] = None
         self._last_update_timestamp: Optional[float] = None
+        self._discarded_out_of_order_count = 0
         self._lock = threading.Lock()
 
     def latest(self) -> Dict[int, OpponentCarState]:
@@ -47,6 +48,7 @@ class OpponentsStateBuffer:
                 "sessionTime": self._session_time,
                 "lastUpdateTimestamp": self._last_update_timestamp,
                 "staleAfterSeconds": self.stale_after_seconds,
+                "discardedOutOfOrderCount": self._discarded_out_of_order_count,
             }
 
     def update_snapshot(
@@ -71,6 +73,23 @@ class OpponentsStateBuffer:
         reset_reason = None
 
         with self._lock:
+            if (
+                parsed_timestamp is not None
+                and self._last_update_timestamp is not None
+                and parsed_timestamp < self._last_update_timestamp
+            ):
+                self._discarded_out_of_order_count += 1
+                return OpponentsUpdateResult(
+                    timestamp=resolved_timestamp,
+                    sessionTime=self._session_time,
+                    track=self._track,
+                    cars=[],
+                    received_count=0,
+                    accepted_count=0,
+                    ignored_player_count=0,
+                    ignored_out_of_order=True,
+                )
+
             reset_reason = self._maybe_reset_session_locked(resolved_track, resolved_session_time)
             for car_payload in cars:
                 received_count += 1
@@ -130,6 +149,7 @@ class OpponentsStateBuffer:
             self._track = None
             self._session_time = None
             self._last_update_timestamp = None
+            self._discarded_out_of_order_count = 0
 
     def _maybe_reset_session_locked(self, track: Optional[str], session_time: Optional[float]) -> Optional[str]:
         if track and self._track and track != self._track:

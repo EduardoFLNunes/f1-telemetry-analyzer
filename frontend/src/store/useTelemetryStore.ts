@@ -76,11 +76,13 @@ export interface OpponentWorldPosition {
 }
 
 export interface OpponentCarState {
+  source?: 'udp' | string;
   carId: number;
   driverName?: string | null;
   carModel?: string | null;
   isPlayer: boolean;
   isAI?: boolean | null;
+  isMultiplayer?: boolean | null;
   worldPosition?: OpponentWorldPosition | null;
   mapPosition?: { x: number; y: number } | null;
   speedKmh?: number | null;
@@ -93,6 +95,8 @@ export interface OpponentCarState {
   timestamp?: number | null;
   sessionTime?: number | null;
   lastSeenTimestamp?: number | null;
+  inferredState?: 'accelerating' | 'braking' | 'coasting' | 'unknown';
+  dataCompleteness?: number | null;
 }
 
 export interface OpponentsSnapshot {
@@ -629,11 +633,13 @@ const normalizeOpponent = (raw: any): OpponentCarState | null => {
     worldPosition?.z !== null;
 
   return {
+    source: nullableString(raw?.source) || 'udp',
     carId,
     driverName: nullableString(raw?.driverName),
     carModel: nullableString(raw?.carModel),
     isPlayer: false,
     isAI: typeof raw?.isAI === 'boolean' ? raw.isAI : null,
+    isMultiplayer: typeof raw?.isMultiplayer === 'boolean' ? raw.isMultiplayer : null,
     worldPosition,
     mapPosition: hasWorldPosition
       ? { x: worldPosition.x as number, y: -(worldPosition.z as number) }
@@ -648,6 +654,10 @@ const normalizeOpponent = (raw: any): OpponentCarState | null => {
     timestamp: finiteNumberOrNull(raw?.timestamp),
     sessionTime: finiteNumberOrNull(raw?.sessionTime),
     lastSeenTimestamp: finiteNumberOrNull(raw?.lastSeenTimestamp),
+    inferredState: ['accelerating', 'braking', 'coasting'].includes(raw?.inferredState)
+      ? raw.inferredState
+      : 'unknown',
+    dataCompleteness: finiteNumberOrNull(raw?.dataCompleteness),
   };
 };
 
@@ -708,7 +718,7 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
   opponents: [],
   opponentHistoryByCarId: {},
   opponentsMeta: {
-    source: 'opponents_collector',
+    source: 'udp',
     count: 0,
     track: null,
     sessionTime: null,
@@ -932,7 +942,7 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
       opponents,
       opponentHistoryByCarId,
       opponentsMeta: {
-        source: snapshot.source || 'opponents_collector',
+        source: snapshot.source || 'udp',
         count: Number.isFinite(snapshot.count) ? Number(snapshot.count) : opponents.length,
         track: nullableString(snapshot.track),
         sessionTime: finiteNumberOrNull(snapshot.sessionTime),
@@ -1025,7 +1035,7 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
     opponents: [],
     opponentHistoryByCarId: {},
     opponentsMeta: {
-      source: 'opponents_collector',
+      source: 'udp',
       count: 0,
       track: null,
       sessionTime: null,

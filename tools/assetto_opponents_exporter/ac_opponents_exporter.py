@@ -449,6 +449,16 @@ def _track_name(player_car_id):
     return value or None
 
 
+def _session_is_multiplayer():
+    getter = getattr(ac, "getServerIP", None)
+    if getter is None:
+        return None
+    value = _safe_call(getter, error_context=("session", "ServerIP"))
+    if value is None:
+        return None
+    return bool(str(value).strip())
+
+
 def _is_connected(car_id):
     getter = getattr(ac, "isConnected", None)
     if getter is None:
@@ -512,7 +522,7 @@ def _lap_time_seconds(car_id):
     return value
 
 
-def _build_car(car_id):
+def _build_car(car_id, is_multiplayer):
     world_position = _world_position(car_id)
     status = _status(car_id)
     if world_position is None:
@@ -524,7 +534,8 @@ def _build_car(car_id):
         "driverName": _driver_name(car_id),
         "carModel": _car_model(car_id),
         "isPlayer": False,
-        "isAI": None,
+        "isAI": False if is_multiplayer is True else None,
+        "isMultiplayer": is_multiplayer,
         "worldPosition": world_position,
         "speedKmh": _safe_float(_car_state(car_id, "SpeedKMH")),
         "yaw": _safe_float(_car_state(car_id, "Heading")),
@@ -533,11 +544,6 @@ def _build_car(car_id):
         "lapTime": _lap_time_seconds(car_id),
         "racePosition": _safe_int(_car_state(car_id, "RacePosition")),
         "status": status,
-        "gear": _safe_int(_car_state(car_id, "Gear")),
-        "rpm": _safe_int(_car_state(car_id, "RPM")),
-        "gas": _safe_float(_car_state(car_id, "Gas")),
-        "brake": _safe_float(_car_state(car_id, "Brake")),
-        "steer": _safe_float(_car_state(car_id, "Steer")),
     }
 
 
@@ -558,6 +564,7 @@ def _send_snapshot():
     cars = []
     count = _cars_count()
     player_car_id = _player_car_id()
+    is_multiplayer = _session_is_multiplayer()
     _reset_snapshot_debug(count, player_car_id)
 
     for car_id in range(count):
@@ -565,7 +572,7 @@ def _send_snapshot():
         if car_id == player_car_id:
             continue
         try:
-            car_payload = _build_car(car_id)
+            car_payload = _build_car(car_id, is_multiplayer)
             if car_payload is None:
                 continue
             cars.append(car_payload)
@@ -581,6 +588,7 @@ def _send_snapshot():
         "timestamp": sent_timestamp,
         "sessionTime": None,
         "playerCarId": player_car_id,
+        "isMultiplayer": is_multiplayer,
         "track": _track_name(player_car_id),
         "cars": cars,
     }
