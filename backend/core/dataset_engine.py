@@ -2,15 +2,19 @@
 Telemetry Dataset Engine
 Implements automated generation of model-ready sequence datasets.
 """
-import pandas as pd
-import numpy as np
-from typing import List, Dict, Any, Tuple, Optional
-from pathlib import Path
 import logging
-from core.telemetry_store import TelemetryStore
+from pathlib import Path
+from typing import Any, List, Tuple
 
+import numpy as np
+import pandas as pd
 from core.telemetry_store import telemetry_store
-...
+
+
+logger = logging.getLogger(__name__)
+
+
+class TelemetryDatasetEngine:
     def __init__(self, output_dir: str = "data/datasets"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
