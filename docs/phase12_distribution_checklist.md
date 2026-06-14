@@ -11,6 +11,8 @@ Use this checklist before handing a build to another Windows machine.
 - [ ] Run `node --check desktop/preload.js`.
 - [ ] Run `npm.cmd run pack` from `desktop`.
 - [ ] Run `npm.cmd run dist:win` from `desktop`.
+- [ ] Confirm `desktop\dist\Automobilista-Telemetria-Setup-<version>.exe` was generated.
+- [ ] Confirm `desktop\dist\win-unpacked` was generated.
 - [ ] Confirm `desktop/dist`, `backend/dist`, logs, caches, and installers are ignored by Git.
 
 ## Install
@@ -24,6 +26,9 @@ Use this checklist before handing a build to another Windows machine.
 - [ ] Confirm `resources\frontend\index.html` is used.
 - [ ] Confirm `resources\backend\automobilista-backend.exe` is used.
 - [ ] Confirm `resources\assetto_plugin\ac_opponents_exporter` exists.
+- [ ] Confirm installed app path is `%LOCALAPPDATA%\Programs\Automobilista Telemetria\Automobilista Telemetria.exe`.
+- [ ] Confirm `resourceRoot` is `%LOCALAPPDATA%\Programs\Automobilista Telemetria\resources`.
+- [ ] Confirm `runtimeRoot` is `%APPDATA%\Automobilista Telemetria`.
 
 ## Runtime
 
@@ -33,9 +38,24 @@ Use this checklist before handing a build to another Windows machine.
 - [ ] `GET /api/live/opponents` returns a valid payload.
 - [ ] `GET /api/live/racing-line` returns a valid payload.
 - [ ] `GET /api/live/coach` returns a valid payload.
+- [ ] `GET /api/live/comparison` returns a valid payload.
+- [ ] `GET /api/live/player-physics` returns a valid payload.
 - [ ] Runtime panel shows backend status.
 - [ ] Runtime panel opens logs.
 - [ ] Logs are written under `%APPDATA%\Automobilista Telemetria\logs`.
+
+## Visual Identity
+
+- [ ] `desktop/assets/icon.ico` exists.
+- [ ] `desktop/assets/icon.png` exists.
+- [ ] Electron Builder `win.icon` points to `assets/icon.ico`.
+- [ ] NSIS installer and uninstaller icons point to `assets/icon.ico`.
+- [ ] BrowserWindow resolves the local icon asset.
+- [ ] Installed app name is `Automobilista Telemetria`.
+- [ ] Desktop shortcut name is `Automobilista Telemetria`.
+- [ ] Start Menu shortcut name is `Automobilista Telemetria`.
+- [ ] Uninstall display name is `Automobilista Telemetria`.
+- [ ] Document whether any shell surface still shows the default Electron icon.
 
 ## Assetto Corsa
 
@@ -69,6 +89,8 @@ Use this checklist before handing a build to another Windows machine.
 - [ ] Temporarily hide packaged backend EXE; the app should report `executable-not-found`.
 - [ ] Uninstall and reinstall.
 - [ ] Confirm the app opens after reinstall.
+- [ ] Confirm uninstall does not delete `%APPDATA%\Automobilista Telemetria`.
+- [ ] Confirm reinstall creates logs again.
 
 ## Other Machine
 
@@ -78,3 +100,18 @@ Use this checklist before handing a build to another Windows machine.
 - [ ] Confirm logs are created under AppData.
 - [ ] Confirm Assetto Corsa detection succeeds or fails clearly.
 - [ ] Confirm no unhandled crash occurs when Assetto Corsa is missing.
+
+## Phase 12.6 Local Result
+
+- [x] Frontend build passed with 1501 modules transformed.
+- [x] Backend tests passed with 36 tests.
+- [x] Electron syntax checks passed.
+- [x] PyInstaller generated `backend/dist/automobilista-backend.exe`.
+- [x] `npm.cmd run pack` generated `desktop/dist/win-unpacked`.
+- [x] `npm.cmd run dist:win` generated the NSIS installer.
+- [x] Installed app opened without repo `frontend/dist` or `backend/dist`.
+- [x] Uninstall/reinstall left no backend process orphaned.
+- [x] AppData user data was preserved by uninstall.
+- [x] Endpoints listed above returned successfully from the installed backend.
+- [x] Provisional local icon and metadata were added.
+- [ ] Test on another clean Windows machine is still pending.

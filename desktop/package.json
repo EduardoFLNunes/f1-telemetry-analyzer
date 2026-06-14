@@ -3,9 +3,9 @@
   "private": true,
   "productName": "Automobilista Telemetria",
   "version": "0.1.0-phase-12",
-  "description": "Installed desktop telemetry workstation for Assetto Corsa diagnostics and race analysis.",
-  "author": "Automobilista Telemetria Project",
-  "copyright": "Copyright (c) 2026 Automobilista Telemetria Project",
+  "description": "Sistema desktop de telemetria e análise de desempenho para simulação automobilística.",
+  "author": "Eduardo Francisco",
+  "copyright": "Copyright (c) 2026 Eduardo Francisco",
   "main": "main.js",
   "scripts": {
     "dev": "node scripts/start.js --dev",
@@ -23,7 +23,7 @@
     "electron-builder": "^26.15.2"
   },
   "build": {
-    "appId": "br.dev.automobilista.telemetria",
+    "appId": "br.edu.automobilista.telemetria",
     "productName": "Automobilista Telemetria",
     "artifactName": "Automobilista-Telemetria-Setup-${version}.${ext}",
     "asar": true,
@@ -34,6 +34,7 @@
       "main.js",
       "preload.js",
       "package.json",
+      "assets/**/*",
       "scripts/**/*"
     ],
     "extraResources": [
@@ -70,7 +71,8 @@
     "win": {
       "target": [
         "nsis"
-      ]
+      ],
+      "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -79,7 +81,10 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Automobilista Telemetria",
-      "uninstallDisplayName": "Automobilista Telemetria"
+      "uninstallDisplayName": "Automobilista Telemetria",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico"
     }
   }
 }

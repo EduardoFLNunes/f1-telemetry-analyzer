@@ -1,9 +1,10 @@
 # Automobilista Telemetria Desktop Shell
 
-Phase 12.4 validates the Windows installer as installed software. Packaged
-builds start the bundled backend from Electron `resources/`, write runtime data
-to AppData, expose clearer backend recovery states, and provide a safe action to
-open the logs directory.
+Phase 12.6 validates the Windows installer after the desktop packaging merge to
+`main` and adds a project-owned provisional icon. Packaged builds start the
+bundled backend from Electron `resources/`, write runtime data to AppData,
+expose clearer backend recovery states, and provide a safe action to open the
+logs directory.
 
 ## Current Terminal Flow
 
@@ -101,7 +102,7 @@ npm run dist:win
 Install silently for validation:
 
 ```bash
-desktop\dist\Automobilista Telemetria Setup 0.1.0-phase-12.exe /S
+desktop\dist\Automobilista-Telemetria-Setup-0.1.0-phase-12.exe /S
 ```
 
 Default per-user install path:
@@ -131,19 +132,62 @@ The frontend static build resolves from:
 
 ## Installed App Validation
 
-Phase 12.4 validated the installed app with repository `frontend/dist` and
-`backend/dist` temporarily renamed. The installed app still opened and reported:
+Phase 12.6 revalidated the installed app from the merge commit on `main`. It was
+installed with the generated NSIS setup, opened without Vite or a manual
+backend, and then opened again while repository `frontend/dist` and
+`backend/dist` were temporarily renamed.
+
+Observed installed app path:
+
+```text
+%LOCALAPPDATA%\Programs\Automobilista Telemetria\Automobilista Telemetria.exe
+```
+
+The installed app reported:
 
 ```text
 resourceRoot=%LOCALAPPDATA%\Programs\Automobilista Telemetria\resources
 runtimeRoot=%APPDATA%\Automobilista Telemetria
 frontend=%LOCALAPPDATA%\Programs\Automobilista Telemetria\resources\frontend\index.html
 backend source=packaged-resource
+logs=%APPDATA%\Automobilista Telemetria\logs
+```
+
+Validated endpoints:
+
+```http
+GET /api/health
+GET /api/runtime/status
+GET /api/live/telemetry
+GET /api/live/opponents
+GET /api/live/racing-line
+GET /api/live/coach
+GET /api/live/comparison
+GET /api/live/player-physics
 ```
 
 The app was also uninstalled and reinstalled silently. After reinstall, it
-opened, `/api/health` returned OK, and normal window close stopped the backend
-process tree started by Electron.
+opened, `/api/health` returned OK, logs were present in AppData, and normal
+window close stopped the backend process tree started by Electron. User data in
+`%APPDATA%\Automobilista Telemetria` was intentionally preserved.
+
+## Visual Identity
+
+Phase 12.6 adds provisional local icon assets:
+
+```text
+desktop/assets/icon.ico
+desktop/assets/icon.png
+```
+
+The icon is a simple project-owned placeholder inspired by telemetry, a track
+trace, and speed bars. It does not use external images or protected motorsport,
+game, storefront, or sponsor marks.
+
+Electron Builder uses `assets/icon.ico` for the Windows executable, installer,
+uninstaller, and shortcuts. The Electron window also resolves the icon from the
+packaged `assets` directory when possible. Replace these provisional assets
+later with a polished final identity without changing the package layout.
 
 ## Runtime Config
 
@@ -251,6 +295,8 @@ GET /api/live/telemetry
 GET /api/live/opponents
 GET /api/live/racing-line
 GET /api/live/coach
+GET /api/live/comparison
+GET /api/live/player-physics
 ```
 
 ## Logs
@@ -289,6 +335,7 @@ The `logs/` directory is runtime output and should not be committed.
 ## Still Planned
 
 - Confirmed-copy plugin install flow with explicit user approval.
-- Application icon and polished installer metadata.
+- Polished final icon and signed visual identity assets.
+- Test on another clean Windows machine with only the installer copied.
 - Digital signing.
 - Auto-update.

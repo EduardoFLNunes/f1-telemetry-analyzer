@@ -133,6 +133,8 @@ GET /api/live/telemetry
 GET /api/live/opponents
 GET /api/live/racing-line
 GET /api/live/coach
+GET /api/live/comparison
+GET /api/live/player-physics
 ```
 
 ## Phase 12.2 Result
@@ -194,6 +196,62 @@ coach.status
 
 These fields use existing runtime timestamps and buffers. They do not trigger
 Racing Line recalculation, Coach analysis, or any heavy reconstruction work.
+
+## Phase 12.6 Installer Validation
+
+Phase 12.6 revalidates the installer after the desktop packaging branch was
+merged into `main`.
+
+Baseline validation:
+
+- Frontend build from `frontend/`: passed, 1501 modules transformed.
+- Backend tests: passed, 36 tests OK.
+- `node --check desktop/main.js`: passed.
+- `node --check desktop/preload.js`: passed.
+
+Packaging validation:
+
+- `backend\packaging\build_backend.ps1`: passed and generated
+  `backend/dist/automobilista-backend.exe`.
+- `npm.cmd run pack` from `desktop/`: passed and generated
+  `desktop/dist/win-unpacked`.
+- `npm.cmd run dist:win` from `desktop/`: passed and generated
+  `desktop/dist/Automobilista-Telemetria-Setup-0.1.0-phase-12.exe`.
+
+Installed validation:
+
+```text
+app=%LOCALAPPDATA%\Programs\Automobilista Telemetria\Automobilista Telemetria.exe
+resourceRoot=%LOCALAPPDATA%\Programs\Automobilista Telemetria\resources
+runtimeRoot=%APPDATA%\Automobilista Telemetria
+logs=%APPDATA%\Automobilista Telemetria\logs
+```
+
+The installed app opened without Vite, without a manual backend, and with the
+repository `frontend/dist` and `backend/dist` temporarily hidden. The backend
+started from packaged resources and the frontend loaded from packaged
+resources.
+
+Validated installed endpoints:
+
+```http
+GET /api/health
+GET /api/runtime/status
+GET /api/live/telemetry
+GET /api/live/opponents
+GET /api/live/racing-line
+GET /api/live/coach
+GET /api/live/comparison
+GET /api/live/player-physics
+```
+
+Silent uninstall/reinstall was validated. The uninstall removed the installed
+program directory, left no `automobilista-backend.exe` process orphaned, and did
+not remove user data under `%APPDATA%\Automobilista Telemetria`.
+
+PyInstaller still emits known warnings about optional pandas/pyarrow test
+modules and a rapidfuzz hook entry point. The executable is generated and runs
+despite those warnings.
 
 ## Validation Checklist For Phase 12.2
 
