@@ -102,7 +102,7 @@ npm run dist:win
 Install silently for validation:
 
 ```bash
-desktop\dist\Automobilista-Telemetria-Setup-0.1.0-phase-12.exe /S
+desktop\dist\Automobilista-Telemetria-Setup-0.1.1-phase-12.exe /S
 ```
 
 Default per-user install path:
@@ -117,7 +117,12 @@ The packaged app expects these resources:
 desktop/dist/win-unpacked/resources/backend/automobilista-backend.exe
 desktop/dist/win-unpacked/resources/frontend/index.html
 desktop/dist/win-unpacked/resources/data/example_telemetry.csv
+desktop/dist/win-unpacked/resources/data/debug/interlagos_track_only_fixed_geometry.json
 ```
+
+The package also includes the minimal validated Interlagos geometry candidates
+needed to render the same final map used by `main`. The backend resolves these
+files through `AT_BACKEND_RESOURCE_ROOT`, ahead of stale user track caches.
 
 When packaged, Electron resolves the backend in this order:
 

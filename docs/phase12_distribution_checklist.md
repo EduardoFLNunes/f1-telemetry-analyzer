@@ -114,4 +114,5 @@ Use this checklist before handing a build to another Windows machine.
 - [x] AppData user data was preserved by uninstall.
 - [x] Endpoints listed above returned successfully from the installed backend.
 - [x] Provisional local icon and metadata were added.
+- [x] Installed Interlagos map uses the same final packaged geometry as `main`.
 - [ ] Test on another clean Windows machine is still pending.

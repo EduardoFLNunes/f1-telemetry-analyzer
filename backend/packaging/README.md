@@ -216,7 +216,7 @@ Packaging validation:
 - `npm.cmd run pack` from `desktop/`: passed and generated
   `desktop/dist/win-unpacked`.
 - `npm.cmd run dist:win` from `desktop/`: passed and generated
-  `desktop/dist/Automobilista-Telemetria-Setup-0.1.0-phase-12.exe`.
+  `desktop/dist/Automobilista-Telemetria-Setup-0.1.1-phase-12.exe`.
 
 Installed validation:
 
@@ -252,6 +252,11 @@ not remove user data under `%APPDATA%\Automobilista Telemetria`.
 PyInstaller still emits known warnings about optional pandas/pyarrow test
 modules and a rapidfuzz hook entry point. The executable is generated and runs
 despite those warnings.
+
+The packaged backend resolves fixed track geometry from
+`AT_BACKEND_RESOURCE_ROOT`. Electron Builder includes only the validated JSON
+assets required for the final Interlagos map, preventing an old AppData cache
+or a raw KN5 rebuild from replacing the visual geometry used by `main`.
 
 ## Validation Checklist For Phase 12.2
 

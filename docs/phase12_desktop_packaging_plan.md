@@ -798,7 +798,7 @@ desktop/dist/win-unpacked
 - `npm.cmd run dist:win` passed and generated:
 
 ```text
-desktop/dist/Automobilista-Telemetria-Setup-0.1.0-phase-12.exe
+desktop/dist/Automobilista-Telemetria-Setup-0.1.1-phase-12.exe
 ```
 
 ### Installed Setup Validation
@@ -874,6 +874,23 @@ nsis.uninstallDisplayName=Automobilista Telemetria
 ```
 
 The Electron window also resolves the packaged icon asset when possible.
+
+### Packaged Map Parity Fix
+
+The initial Phase 12.6 installer could load an old Interlagos cache from AppData
+or rebuild the track directly from KN5 because the fixed visual geometry used
+by `main` was not present in installed resources.
+
+The corrected `0.1.1-phase-12` package:
+
+- resolves geometry assets from `AT_BACKEND_RESOURCE_ROOT`;
+- includes the base Interlagos geometry;
+- includes the final Reta Oposta candidate and validation;
+- includes the final pit-access asphalt-merge candidate and validation;
+- loads `InterlagosPitAccessAsphaltMergeFix` before user track caches.
+
+This keeps the installed Interlagos map aligned with the map rendered by
+`main`, while avoiding packaging the full `data/debug` directory.
 
 ### Remaining Limits
 
