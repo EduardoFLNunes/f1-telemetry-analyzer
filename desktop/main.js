@@ -16,6 +16,8 @@ const ASSETTO_PLUGIN_ID = 'ac_opponents_exporter';
 const ASSETTO_PLUGIN_DISPLAY_NAME = 'Opponents Exporter';
 const ASSETTO_PLUGIN_FILE = 'ac_opponents_exporter.py';
 const ASSETTO_CONFIG_FILE = 'assetto-corsa-setup.json';
+const UDP_OPPONENTS_HOST = process.env.AT_UDP_OPPONENTS_HOST || '127.0.0.1';
+const UDP_OPPONENTS_PORT = Number(process.env.AT_UDP_OPPONENTS_PORT || 8765);
 
 const FRONTEND_URL = process.env.AT_DESKTOP_FRONTEND_URL || DEFAULT_FRONTEND_DEV_URL;
 const BACKEND_URL = stripTrailingSlash(process.env.AT_BACKEND_URL || DEFAULT_BACKEND_URL);
@@ -288,7 +290,7 @@ function assettoSetupInstructions(gamePath, expectedPluginDir) {
     '4. Open Assetto Corsa or Content Manager.',
     `5. Enable the Python app/module named ${ASSETTO_PLUGIN_ID} or ${ASSETTO_PLUGIN_DISPLAY_NAME}.`,
     `6. Start a session and open ${ASSETTO_PLUGIN_DISPLAY_NAME} from the in-game app bar.`,
-    `7. Keep Automobilista Telemetria running. Opponents are sent to UDP 127.0.0.1:8765.`,
+    `7. Keep Automobilista Telemetria running. Opponents are sent to UDP ${UDP_OPPONENTS_HOST}:${UDP_OPPONENTS_PORT}.`,
     '',
     'Player telemetry uses Assetto Corsa shared memory and does not require this opponents exporter.',
   ].join('\n');
@@ -330,9 +332,9 @@ async function getAssettoPluginStatus() {
     transport: {
       playerTelemetry: 'assetto-corsa-shared-memory',
       opponents: 'udp',
-      host: '127.0.0.1',
+      host: UDP_OPPONENTS_HOST,
       backendApiPort: BACKEND_PORT,
-      udpOpponentsPort: 8765,
+      udpOpponentsPort: UDP_OPPONENTS_PORT,
       websocketPath: '/ws',
     },
     instructions: assettoSetupInstructions(gamePath, expectedPluginDir),

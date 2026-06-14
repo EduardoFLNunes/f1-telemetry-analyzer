@@ -130,15 +130,21 @@ API/UDP ports
 Backend `/api/runtime/status` now returns lightweight stream status fields:
 
 ```ts
+telemetry.playerSource // shared_memory for Assetto Corsa
 telemetry.playerStatus
 telemetry.lastPlayerSampleAt
 telemetry.secondsSinceLastPlayerSample
+opponents.source // udp
+opponents.enabled
 opponents.status
 opponents.lastOpponentSampleAt
 opponents.secondsSinceLastOpponentSample
 racingLine.status
 coach.status
 ```
+
+The receiver can be configured with `AT_UDP_OPPONENTS_ENABLED`,
+`AT_UDP_OPPONENTS_HOST`, and `AT_UDP_OPPONENTS_PORT`.
 
 ## Risks
 

@@ -37,6 +37,8 @@ No FastAPI logic is duplicated in the runner.
 - HTTP API: `127.0.0.1:8000`
 - WebSocket: `ws://127.0.0.1:8000/ws`
 - Opponents UDP receiver: `127.0.0.1:8765`
+- Optional overrides: `AT_UDP_OPPONENTS_ENABLED`,
+  `AT_UDP_OPPONENTS_HOST`, and `AT_UDP_OPPONENTS_PORT`
 - Vite dev server, frontend only: `127.0.0.1:5173`
 
 ## Runtime Data Paths

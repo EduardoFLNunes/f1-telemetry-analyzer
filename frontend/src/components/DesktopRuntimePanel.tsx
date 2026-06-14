@@ -121,6 +121,7 @@ type RuntimeStatus = {
   };
   telemetry?: {
     online?: boolean;
+    playerSource?: string | null;
     sampleCount?: number | null;
     liveTrajectoryCount?: number | null;
     activeTrackReady?: boolean | null;
@@ -130,6 +131,8 @@ type RuntimeStatus = {
   };
   opponents?: {
     online?: boolean;
+    source?: string | null;
+    enabled?: boolean;
     count?: number | null;
     lastUpdateTimestamp?: number | null;
     udpPort?: number | null;
@@ -367,6 +370,8 @@ export const DesktopRuntimePanel: React.FC = () => {
         <Pill label="Backend Port" value={String(backendPort)} tone={desktopStatus?.portConflict ? 'bad' : 'quiet'} />
         <Pill label="Telemetry" value={telemetryReceiving ? telemetryState : 'waiting'} tone={telemetryReceiving ? 'ok' : 'warn'} />
         <Pill label="Opponents" value={opponentsReceiving ? (opponentsState || 'receiving') : 'waiting'} tone={opponentsReceiving ? 'ok' : 'warn'} />
+        <Pill label="Player Source" value={runtime?.telemetry?.playerSource || 'shared_memory'} tone="ok" />
+        <Pill label="Opp Source" value={runtime?.opponents?.source || 'udp'} tone={runtime?.opponents?.enabled === false ? 'warn' : 'ok'} />
         <Pill label="Racing Line" value={racingLineReady ? 'READY' : 'INSUFFICIENT'} tone={racingLineReady ? 'ok' : 'warn'} />
         <Pill label="Coach" value={coachReady ? 'READY' : 'INSUFFICIENT'} tone={coachReady ? 'ok' : 'warn'} />
       </div>

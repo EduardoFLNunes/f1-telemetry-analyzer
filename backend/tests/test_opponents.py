@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 import sys
 
@@ -6,10 +7,25 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-from core.opponents import OpponentsStateBuffer, OpponentsTelemetryReceiver
+from core.opponents import (
+    OpponentsRuntimeConfig,
+    OpponentsStateBuffer,
+    OpponentsTelemetryReceiver,
+)
 
 
 class OpponentsTelemetryTests(unittest.TestCase):
+    def test_invalid_udp_packet_is_discarded(self):
+        buffer = OpponentsStateBuffer()
+        receiver = OpponentsTelemetryReceiver(buffer, event_bus=None)
+
+        self.assertIsNone(receiver.handle_packet(b"{invalid-json"))
+        self.assertEqual(buffer.latest(), {})
+        self.assertEqual(receiver.status()["invalidPackets"], 1)
+
+    def test_no_udp_data_returns_empty_buffer(self):
+        self.assertEqual(OpponentsStateBuffer().latest(), {})
+
     def test_valid_payload_with_two_opponents(self):
         buffer = OpponentsStateBuffer()
         receiver = OpponentsTelemetryReceiver(buffer, event_bus=None)
@@ -64,6 +80,20 @@ class OpponentsTelemetryTests(unittest.TestCase):
         self.assertNotIn(0, latest)
         self.assertIn(6, latest)
 
+    def test_declared_nonzero_player_car_id_is_ignored(self):
+        buffer = OpponentsStateBuffer()
+        result = buffer.update_snapshot(
+            [
+                {"carId": 4, "driverName": "Local Player"},
+                {"carId": 7, "driverName": "Remote Driver"},
+            ],
+            timestamp=123456.789,
+            player_car_id=4,
+        )
+
+        self.assertEqual(result.ignored_player_count, 1)
+        self.assertEqual(set(buffer.latest()), {7})
+
     def test_payload_with_missing_fields_does_not_break(self):
         buffer = OpponentsStateBuffer()
         result = buffer.update_snapshot(
@@ -110,6 +140,18 @@ class OpponentsTelemetryTests(unittest.TestCase):
         self.assertEqual(car.driverName, "AI Driver")
         self.assertEqual(car.worldPositionX, 9.0)
         self.assertEqual(car.worldPositionY, 2.0)
+        self.assertEqual(car.source, "udp")
+        self.assertEqual(car.inferredState, "accelerating")
+        self.assertGreater(car.dataCompleteness, 0)
+
+    def test_out_of_order_snapshot_does_not_replace_newer_state(self):
+        buffer = OpponentsStateBuffer()
+        buffer.update_snapshot([{"carId": 1, "speedKmh": 180.0}], timestamp=20.0)
+        result = buffer.update_snapshot([{"carId": 1, "speedKmh": 80.0}], timestamp=19.0)
+
+        self.assertTrue(result.ignored_out_of_order)
+        self.assertEqual(buffer.latest()[1].speedKmh, 180.0)
+        self.assertEqual(buffer.metadata()["discardedOutOfOrderCount"], 1)
 
     def test_stale_car_is_hidden_from_latest(self):
         now = [100.0]
@@ -155,6 +197,22 @@ class OpponentsTelemetryTests(unittest.TestCase):
         self.assertEqual(result.reset_reason, "session_reset")
         self.assertNotIn(1, latest)
         self.assertIn(2, latest)
+
+    def test_runtime_config_reads_udp_environment(self):
+        with patch.dict(
+            "os.environ",
+            {
+                "AT_UDP_OPPONENTS_ENABLED": "false",
+                "AT_UDP_OPPONENTS_HOST": "0.0.0.0",
+                "AT_UDP_OPPONENTS_PORT": "9876",
+            },
+            clear=False,
+        ):
+            config = OpponentsRuntimeConfig.from_env()
+
+        self.assertFalse(config.enabled)
+        self.assertEqual(config.host, "0.0.0.0")
+        self.assertEqual(config.port, 9876)
 
 
 if __name__ == "__main__":

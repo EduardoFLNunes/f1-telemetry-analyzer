@@ -55,6 +55,7 @@ class PerformanceMetrics:
         self._player_samples = RateCounter()
         self._opponent_snapshots = RateCounter()
         self._websocket_messages = RateCounter()
+        self._websocket_frames_coalesced = RateCounter()
         self._frame_processing_seconds = RollingAverage()
         self._disk_write_seconds = RollingAverage()
 
@@ -69,6 +70,9 @@ class PerformanceMetrics:
     def mark_websocket_message(self, count: int = 1):
         self._websocket_messages.mark(count=count)
 
+    def mark_websocket_frame_coalesced(self):
+        self._websocket_frames_coalesced.mark()
+
     def record_disk_write(self, seconds: float):
         self._disk_write_seconds.add(seconds)
 
@@ -77,6 +81,7 @@ class PerformanceMetrics:
             "playerSamplesPerSecond": round(self._player_samples.rate(), 2),
             "opponentSnapshotsPerSecond": round(self._opponent_snapshots.rate(), 2),
             "websocketMessagesPerSecond": round(self._websocket_messages.rate(), 2),
+            "websocketFramesCoalescedPerSecond": round(self._websocket_frames_coalesced.rate(), 2),
             "averageFrameProcessingMs": round(self._frame_processing_seconds.average() * 1000.0, 3),
             "averageDiskWriteMs": round(self._disk_write_seconds.average() * 1000.0, 3),
         }

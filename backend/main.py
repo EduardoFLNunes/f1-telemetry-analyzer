@@ -36,7 +36,12 @@ from core.kn5.kn5_inventory import build_kn5_inventory_from_manifest
 from core.kn5.kn5_surface_extraction import build_kn5_surface_extraction_from_manifest
 from core.kn5.track_edges_from_surface import build_track_edges_from_surface_from_manifest
 from core.kn5.track_surface_polygon import build_track_surface_polygon_from_manifest
-from core.opponents import OpponentsRuntime, OpponentsStateBuffer, SOURCE_NAME as OPPONENTS_SOURCE_NAME
+from core.opponents import (
+    OpponentsRuntime,
+    OpponentsRuntimeConfig,
+    OpponentsStateBuffer,
+    SOURCE_NAME as OPPONENTS_SOURCE_NAME,
+)
 from core.performance_metrics import performance_metrics
 from core.recording.recording_runtime import RecordingRuntime, config_from_env as recording_config_from_env
 from core.reconstruction.track_reconstruction import TrackReconstructor
@@ -81,6 +86,7 @@ reconstructor = TrackReconstructor()
 source_manager = TelemetrySourceManager.from_env((PRIMARY_TELEMETRY_FIXTURE, DEBUG_TELEMETRY_FIXTURE))
 telemetry_runtime: Optional[TelemetryRuntime] = None
 opponents_buffer = OpponentsStateBuffer()
+opponents_config = OpponentsRuntimeConfig.from_env()
 opponents_runtime: Optional[OpponentsRuntime] = None
 recording_runtime: Optional[RecordingRuntime] = None
 recent_coaching_events: List[Dict[str, Any]] = []
@@ -258,7 +264,12 @@ def build_telemetry_runtime() -> TelemetryRuntime:
 
 
 def build_opponents_runtime() -> OpponentsRuntime:
-    return OpponentsRuntime(buffer=opponents_buffer)
+    return OpponentsRuntime(
+        buffer=opponents_buffer,
+        host=opponents_config.host,
+        port=opponents_config.port,
+        enabled=opponents_config.enabled,
+    )
 
 
 def current_recording_track() -> Optional[str]:
@@ -384,6 +395,16 @@ def runtime_status_payload() -> Dict[str, Any]:
         "liveTrajectoryCount": len(telemetry_buffer.get_samples()),
     }
     opponents_meta = opponents_buffer.metadata()
+    opponents_transport = opponents_runtime.status() if opponents_runtime else {
+        "source": OPPONENTS_SOURCE_NAME,
+        "enabled": opponents_config.enabled,
+        "running": False,
+        "host": opponents_config.host,
+        "port": opponents_config.port,
+        "acceptedSnapshots": 0,
+        "invalidPackets": 0,
+        "discardedOutOfOrder": 0,
+    }
     last_opponent_timestamp = opponents_meta.get("lastUpdateTimestamp")
     opponents_status = stream_status_from_age(
         last_opponent_timestamp,
@@ -410,6 +431,10 @@ def runtime_status_payload() -> Dict[str, Any]:
         "telemetry": {
             "online": telemetry_runtime is not None,
             "source": telemetry_status.get("source"),
+            "playerSource": telemetry_status.get(
+                "player_source",
+                source_manager.player_source_name(),
+            ),
             "activeReader": telemetry_status.get("active_reader"),
             "sampleCount": telemetry_status.get("sampleCount", telemetry_status.get("sample_count")),
             "liveTrajectoryCount": telemetry_status.get("liveTrajectoryCount"),
@@ -419,7 +444,9 @@ def runtime_status_payload() -> Dict[str, Any]:
             "secondsSinceLastPlayerSample": telemetry_status.get("secondsSinceLastPlayerSample"),
         },
         "opponents": {
-            "online": opponents_runtime is not None,
+            "source": OPPONENTS_SOURCE_NAME,
+            "enabled": opponents_transport.get("enabled", opponents_config.enabled),
+            "online": opponents_transport.get("running", False),
             "count": len(opponents_buffer.latest()),
             "track": opponents_meta.get("track"),
             "lastUpdateTimestamp": opponents_meta.get("lastUpdateTimestamp"),
@@ -427,7 +454,14 @@ def runtime_status_payload() -> Dict[str, Any]:
             "status": opponents_status,
             "lastOpponentSampleAt": iso_from_epoch(last_opponent_timestamp),
             "secondsSinceLastOpponentSample": seconds_since(last_opponent_timestamp),
-            "udpPort": 8765,
+            "udpHost": opponents_transport.get("host", opponents_config.host),
+            "udpPort": opponents_transport.get("port", opponents_config.port),
+            "acceptedSnapshots": opponents_transport.get("acceptedSnapshots", 0),
+            "invalidPackets": opponents_transport.get("invalidPackets", 0),
+            "discardedOutOfOrder": opponents_meta.get(
+                "discardedOutOfOrderCount",
+                opponents_transport.get("discardedOutOfOrder", 0),
+            ),
         },
         "racingLine": {
             "available": runtime_state.track_build_state == TrackBuildState.TRACK_READY,
@@ -534,6 +568,7 @@ async def get_current_track():
     return {
         "status": "success",
         "source": source_manager.get_active_source_name(),
+        "playerSource": source_manager.player_source_name(),
         **status,
         "track": track if status["activeTrackReady"] else None,
         "centerline": track["centerline"] if track and status["activeTrackReady"] else None,
@@ -626,6 +661,7 @@ async def get_live_telemetry(
     return {
         "status": "success",
         "source": source_manager.get_active_source_name(),
+        "playerSource": source_manager.player_source_name(),
         **status,
         "track": track if includeTrack and status["activeTrackReady"] else None,
         "centerline": track["centerline"] if includeTrack and track and status["activeTrackReady"] else None,
@@ -642,11 +678,17 @@ async def get_live_opponents():
     return {
         "status": "success",
         "source": OPPONENTS_SOURCE_NAME,
+        "enabled": opponents_config.enabled,
+        "receiverStatus": stream_status_from_age(
+            metadata["lastUpdateTimestamp"],
+            float(metadata["staleAfterSeconds"]),
+        ),
         "count": len(opponents),
         "track": metadata["track"],
         "sessionTime": metadata["sessionTime"],
         "lastUpdateTimestamp": metadata["lastUpdateTimestamp"],
         "staleAfterSeconds": metadata["staleAfterSeconds"],
+        "discardedOutOfOrderCount": metadata["discardedOutOfOrderCount"],
         "opponents": opponents,
     }
 

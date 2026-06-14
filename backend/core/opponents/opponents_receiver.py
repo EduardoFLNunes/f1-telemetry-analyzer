@@ -37,6 +37,12 @@ class OpponentsTelemetryReceiver:
         self._received_since_summary = 0
         self._accepted_since_summary = 0
         self._ignored_since_summary = 0
+        self._last_invalid_log_at = 0.0
+        self._invalid_packet_count = 0
+        self._out_of_order_count = 0
+        self._accepted_snapshot_count = 0
+        self._last_packet_received_at: Optional[float] = None
+        self._last_valid_snapshot_at: Optional[float] = None
 
     def start(self, loop: Optional[asyncio.AbstractEventLoop] = None):
         if self.running:
@@ -97,22 +103,22 @@ class OpponentsTelemetryReceiver:
         try:
             payload = json.loads(data.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            logger.warning("Opponents telemetry JSON parse error: %s", exc)
+            self._log_invalid("JSON parse error: %s" % exc)
             return None
 
         return self.handle_payload(payload)
 
     def handle_payload(self, payload: Any) -> Optional[OpponentsUpdateResult]:
         if not isinstance(payload, Mapping):
-            logger.warning("Opponents telemetry payload ignored: expected JSON object")
+            self._log_invalid("expected JSON object")
             return None
         if payload.get("type") != "opponents_snapshot":
-            logger.warning("Opponents telemetry payload ignored: unexpected type=%s", payload.get("type"))
+            self._log_invalid("unexpected type=%s" % payload.get("type"))
             return None
 
         cars = payload.get("cars", [])
         if not isinstance(cars, list):
-            logger.warning("Opponents telemetry payload ignored: cars must be a list")
+            self._log_invalid("cars must be a list")
             return None
 
         timestamp = safe_float(payload.get("timestamp"))
@@ -127,12 +133,32 @@ class OpponentsTelemetryReceiver:
             player_car_id=player_car_id,
             track=track,
         )
+        if result.ignored_out_of_order:
+            self._out_of_order_count += 1
+            logger.debug("Opponents telemetry out-of-order snapshot ignored: timestamp=%s", timestamp)
+            return result
+
+        self._accepted_snapshot_count += 1
+        self._last_valid_snapshot_at = time.time()
         self._log_update_summary(result)
         if result.reset_reason:
             logger.info("Opponents telemetry session reset applied: %s", result.reset_reason)
         performance_metrics.mark_opponents_snapshot()
         self._emit(result)
         return result
+
+    def status(self):
+        return {
+            "source": "udp",
+            "running": self.running,
+            "host": self.host,
+            "port": self.port,
+            "lastPacketReceivedAt": self._last_packet_received_at,
+            "lastValidSnapshotAt": self._last_valid_snapshot_at,
+            "acceptedSnapshots": self._accepted_snapshot_count,
+            "invalidPackets": self._invalid_packet_count,
+            "discardedOutOfOrder": self._out_of_order_count,
+        }
 
     def _log_update_summary(self, result: OpponentsUpdateResult):
         self._received_since_summary += result.received_count
@@ -161,6 +187,7 @@ class OpponentsTelemetryReceiver:
         self._last_summary_log_at = now
 
     def _log_packet_received(self, address, byte_count: int):
+        self._last_packet_received_at = time.time()
         self._packets_since_log += 1
         now = time.monotonic()
         if now - self._last_packet_log_at < 2.0:
@@ -181,6 +208,19 @@ class OpponentsTelemetryReceiver:
         )
         self._packets_since_log = 0
         self._last_packet_log_at = now
+
+    def _log_invalid(self, reason: str):
+        self._invalid_packet_count += 1
+        now = time.monotonic()
+        if now - self._last_invalid_log_at >= 2.0:
+            logger.warning(
+                "Opponents telemetry invalid packets=%s last_error=%s",
+                self._invalid_packet_count,
+                reason,
+            )
+            self._last_invalid_log_at = now
+        else:
+            logger.debug("Opponents telemetry payload ignored: %s", reason)
 
     def _emit(self, result: OpponentsUpdateResult):
         if not self.event_bus or not self._loop_ref:
