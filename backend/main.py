@@ -23,6 +23,12 @@ from core.car_physics import build_car_physics_debug, build_opponent_car_physics
 from core.comparison_analysis import build_live_comparison_payload
 from core.debug.ac_shared_memory_full_inventory import build_ac_shared_memory_full_inventory
 from core.cache.track_cache import TrackCache
+from core.data_quality import (
+    DataQualityReporter,
+    TelemetryReliabilityMonitor,
+    UdpReliabilityMonitor,
+    validate_track,
+)
 from core.debug.spatial_debug import projection_debug_payload
 from core.geometry.track_geometry_provider import (
     CacheTrackGeometryProvider,
@@ -78,10 +84,13 @@ TRACK_CACHE_DIR = RUNTIME_ROOT / "data" / "cache" / "tracks"
 PRIMARY_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetry.csv"
 DEBUG_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetryOld.csv"
 BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
-BACKEND_PHASE_VERSION = "phase-12-lap-sessions"
+BACKEND_PHASE_VERSION = "phase-13-data-reliability"
 
 runtime_state = RuntimeState()
 telemetry_buffer = TelemetryBuffer(max_size=20000)
+player_reliability = TelemetryReliabilityMonitor(target_hz=60.0)
+udp_reliability = UdpReliabilityMonitor()
+data_quality_reporter = DataQualityReporter()
 track_cache = TrackCache(cache_dir=str(TRACK_CACHE_DIR))
 reconstructor = TrackReconstructor()
 source_manager = TelemetrySourceManager.from_env((PRIMARY_TELEMETRY_FIXTURE, DEBUG_TELEMETRY_FIXTURE))
@@ -92,6 +101,8 @@ opponents_runtime: Optional[OpponentsRuntime] = None
 recording_runtime: Optional[RecordingRuntime] = None
 recent_coaching_events: List[Dict[str, Any]] = []
 session_repository = SessionRepository(recording_config_from_env(RUNTIME_ROOT).output_root)
+_validation_sessions_cache: List[Dict[str, Any]] = []
+_validation_sessions_cache_at = 0.0
 
 
 async def remember_coaching_event(event: Dict[str, Any]):
@@ -234,6 +245,7 @@ def initialize_spatial_state():
 
 def reset_runtime_state():
     telemetry_buffer.clear()
+    player_reliability.reset()
     runtime_state.last_sample = None
     runtime_state.car_projected_state = None
     runtime_state.last_distance_along_track = None
@@ -243,6 +255,7 @@ def ingest_one_active_sample() -> Optional[Dict[str, Any]]:
     sample = source_manager.read_sample()
     if not sample:
         return None
+    player_reliability.observe(sample)
     telemetry_buffer.add_sample(sample)
     return runtime_state.update_car(sample)
 
@@ -262,6 +275,7 @@ def build_telemetry_runtime() -> TelemetryRuntime:
         reconstructor=reconstructor,
         track_name=active_track_cache_name(),
         allow_debug_trajectory_track=DebugTrajectoryTrackGeometryProvider.enabled(),
+        reliability_monitor=player_reliability,
     )
 
 
@@ -271,6 +285,7 @@ def build_opponents_runtime() -> OpponentsRuntime:
         host=opponents_config.host,
         port=opponents_config.port,
         enabled=opponents_config.enabled,
+        reliability_monitor=udp_reliability,
     )
 
 
@@ -444,6 +459,12 @@ def runtime_status_payload() -> Dict[str, Any]:
             "playerStatus": telemetry_player_status,
             "lastPlayerSampleAt": telemetry_status.get("lastPlayerSampleAt"),
             "secondsSinceLastPlayerSample": telemetry_status.get("secondsSinceLastPlayerSample"),
+            "targetHz": telemetry_status.get("targetHz"),
+            "estimatedHz": telemetry_status.get("estimatedHz"),
+            "stableHz": telemetry_status.get("stableHz"),
+            "frequencyStatus": telemetry_status.get("frequencyStatus"),
+            "droppedSamplesEstimate": telemetry_status.get("droppedSamplesEstimate"),
+            "sampleValidation": telemetry_status.get("sampleValidation"),
         },
         "opponents": {
             "source": OPPONENTS_SOURCE_NAME,
@@ -464,6 +485,11 @@ def runtime_status_payload() -> Dict[str, Any]:
                 "discardedOutOfOrderCount",
                 opponents_transport.get("discardedOutOfOrder", 0),
             ),
+            "packetsReceived": opponents_transport.get("packetsReceived", 0),
+            "packetsAccepted": opponents_transport.get("packetsAccepted", 0),
+            "packetsDropped": opponents_transport.get("packetsDropped", 0),
+            "playerFilteredCount": opponents_transport.get("playerFilteredCount", 0),
+            "estimatedHz": opponents_transport.get("estimatedHz"),
         },
         "racingLine": {
             "available": runtime_state.track_build_state == TrackBuildState.TRACK_READY,
@@ -548,6 +574,81 @@ async def api_health_check():
 @app.get("/api/runtime/status")
 async def get_runtime_status():
     return runtime_status_payload()
+
+
+async def validation_sessions_payload(force: bool = False) -> List[Dict[str, Any]]:
+    global _validation_sessions_cache, _validation_sessions_cache_at
+    now = time.monotonic()
+    if not force and now - _validation_sessions_cache_at < 5.0:
+        return list(_validation_sessions_cache)
+    sessions = await asyncio.to_thread(session_repository.list_sessions, 200)
+    _validation_sessions_cache = sessions
+    _validation_sessions_cache_at = now
+    return list(sessions)
+
+
+async def data_quality_payload(force_sessions: bool = False) -> Dict[str, Any]:
+    player = player_reliability.snapshot()
+    latest_validation = player.get("latestSampleValidation")
+    opponents = udp_reliability.snapshot(opponents_count=len(opponents_buffer.latest()))
+    sessions = await validation_sessions_payload(force=force_sessions)
+    track = validate_track(
+        runtime_state.track_build_state.value,
+        runtime_state.track_data,
+        runtime_state.current_track_name or source_manager.current_track_name(),
+        runtime_state.build_method,
+    )
+    comparison = {
+        "status": (
+            "READY"
+            if telemetry_runtime
+            and bool(telemetry_runtime.lap_collector.completed_lap_samples)
+            else "INSUFFICIENT_DATA"
+        ),
+        "selectedReferenceLapId": None,
+        "selectedComparisonLapId": None,
+        "issues": [],
+    }
+    current_lap_valid = None
+    if latest_validation:
+        current_lap_valid = latest_validation.get("status") != "INVALID"
+    return data_quality_reporter.build(
+        player=player,
+        opponents=opponents,
+        sessions=sessions,
+        track=track,
+        comparison=comparison,
+        current_lap_valid=current_lap_valid,
+    )
+
+
+@app.get("/api/validation/data-quality")
+async def get_data_quality():
+    return await data_quality_payload()
+
+
+@app.get("/api/validation/laps")
+async def get_lap_validation():
+    return {
+        "status": "success",
+        "laps": (await data_quality_payload())["laps"],
+    }
+
+
+@app.get("/api/validation/udp")
+async def get_udp_validation():
+    return {
+        "status": "success",
+        "opponents": (await data_quality_payload())["opponents"],
+    }
+
+
+@app.get("/api/validation/track")
+async def get_track_validation():
+    return {
+        "status": "success",
+        "track": (await data_quality_payload())["track"],
+    }
 
 
 @app.websocket("/ws")
@@ -966,6 +1067,8 @@ async def set_live_source(source: str):
 async def ingest_live_telemetry(payload: Any = Body(...)):
     raw_samples = payload if isinstance(payload, list) else payload.get("samples", payload)
     samples = [TelemetrySample.from_dict(item) for item in raw_samples] if isinstance(raw_samples, list) else [TelemetrySample.from_dict(raw_samples)]
+    for sample in samples:
+        player_reliability.observe(sample)
     telemetry_buffer.add_samples(samples)
     frame = runtime_state.update_car(samples[-1]) if samples else None
     if frame:

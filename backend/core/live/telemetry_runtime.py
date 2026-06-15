@@ -8,6 +8,7 @@ from typing import Optional
 from .lap_collector import LapCollector, TrackBuildState
 from .runtime_state import RuntimeState
 from ..cache.track_cache import TrackCache
+from ..data_quality.telemetry_reliability import TelemetryReliabilityMonitor
 from ..performance_metrics import performance_metrics
 from ..reconstruction.track_reconstruction import TrackReconstructor
 from ..telemetry.telemetry_buffer import TelemetryBuffer
@@ -42,6 +43,7 @@ class TelemetryRuntime:
         track_name: str = "telemetry_reconstructed_live",
         poll_hz: float = 60.0,
         allow_debug_trajectory_track: bool = False,
+        reliability_monitor: Optional[TelemetryReliabilityMonitor] = None,
     ):
         self.source_manager = source_manager
         self.state = state or RuntimeState()
@@ -50,6 +52,9 @@ class TelemetryRuntime:
         self.reconstructor = reconstructor or TrackReconstructor()
         self.track_name = track_name
         self.poll_interval = 1.0 / max(poll_hz, 1.0)
+        self.reliability_monitor = reliability_monitor or TelemetryReliabilityMonitor(
+            target_hz=poll_hz
+        )
         self.lap_collector = LapCollector()
         self.allow_debug_trajectory_track = allow_debug_trajectory_track
 
@@ -84,6 +89,10 @@ class TelemetryRuntime:
                     continue
 
                 self.last_sample_wall_time = time.time()
+                self.reliability_monitor.observe(
+                    sample,
+                    received_at=self.last_sample_wall_time,
+                )
                 self.buffer.add_sample(sample)
                 lap_wrapped = self.lap_collector.add_sample(sample)
 
@@ -177,6 +186,7 @@ class TelemetryRuntime:
         return False
 
     def status(self):
+        reliability = self.reliability_monitor.snapshot()
         seconds_since_sample = None
         if self.last_sample_wall_time is not None:
             seconds_since_sample = round(max(0.0, time.time() - self.last_sample_wall_time), 3)
@@ -192,6 +202,12 @@ class TelemetryRuntime:
             "activeTrackReady": self.state.track_build_state == TrackBuildState.TRACK_READY,
             "candidateLapSampleCount": len(self.lap_collector.candidate_lap_samples),
             "liveTrajectoryCount": len(self.lap_collector.live_trajectory),
+            "targetHz": reliability["targetHz"],
+            "estimatedHz": reliability["estimatedHz"],
+            "stableHz": reliability["stableHz"],
+            "frequencyStatus": reliability["frequencyStatus"],
+            "droppedSamplesEstimate": reliability["droppedSamplesEstimate"],
+            "sampleValidation": reliability["latestSampleValidation"],
         }
 
     def live_trajectory_api(self):

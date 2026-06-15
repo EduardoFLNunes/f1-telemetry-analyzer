@@ -5,9 +5,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
+from ..data_quality.lap_validation import validate_lap
+
 
 MAX_EAGER_INDEX_BYTES = 8 * 1024 * 1024
 INDEX_FILENAME = "session-index.json"
+INDEX_VERSION = 2
 
 
 def _number(value: Any) -> Optional[float]:
@@ -85,6 +88,9 @@ class _LapAggregate:
     progress_end: Optional[float] = None
     progress_min: Optional[float] = None
     progress_max: Optional[float] = None
+    max_gap_seconds: Optional[float] = None
+    timestamp_inversions: int = 0
+    previous_order_time: Optional[float] = None
     start_offset: Optional[int] = None
     end_offset: Optional[int] = None
 
@@ -121,6 +127,16 @@ class _LapAggregate:
                 timestamp,
             )
 
+        order_time = session_time if session_time is not None else timestamp
+        if order_time is not None and self.previous_order_time is not None:
+            gap = order_time - self.previous_order_time
+            if gap < -1e-3:
+                self.timestamp_inversions += 1
+            elif gap >= 0.0:
+                self.max_gap_seconds = max(self.max_gap_seconds or 0.0, gap)
+        if order_time is not None:
+            self.previous_order_time = order_time
+
         speed = _speed_kmh(sample)
         if speed is not None:
             self.speed_sum += speed
@@ -141,7 +157,7 @@ class _LapAggregate:
                 progress,
             )
 
-    def summary(self, completed: bool) -> Dict[str, Any]:
+    def summary(self, completed: bool, session_id: Optional[str] = None) -> Dict[str, Any]:
         duration = self.lap_elapsed_max
         if duration is None and self.session_time_min is not None and self.session_time_max is not None:
             duration = self.session_time_max - self.session_time_min
@@ -153,23 +169,38 @@ class _LapAggregate:
             if self.progress_min is not None and self.progress_max is not None
             else None
         )
-        valid = (
-            completed
-            and self.sample_count >= 40
-            and duration is not None
-            and 10.0 <= duration <= 1800.0
-            and (progress_span is None or progress_span >= 0.65)
+        validation = validate_lap(
+            {
+                "lapId": f"{session_id or 'session'}:{self.lap_number}",
+                "lapNumber": self.lap_number,
+                "sampleCount": self.sample_count,
+                "durationSeconds": duration,
+                "progressStart": self.progress_start,
+                "progressEnd": self.progress_end,
+                "progressMin": self.progress_min,
+                "progressMax": self.progress_max,
+                "maxGapSeconds": self.max_gap_seconds,
+                "timestampInversions": self.timestamp_inversions,
+                "completed": completed,
+            }
         )
         return {
             "lapNumber": self.lap_number,
             "sampleCount": self.sample_count,
             "duration": round(duration, 3) if duration is not None else None,
+            "durationSeconds": validation.durationSeconds,
             "maxSpeedKmh": round(self.speed_max, 2) if self.speed_max is not None else None,
             "avgSpeedKmh": round(self.speed_sum / self.speed_count, 2) if self.speed_count else None,
             "progressStart": self.progress_start,
             "progressEnd": self.progress_end,
+            "coveragePercent": validation.coveragePercent,
             "completed": completed,
-            "valid": valid,
+            "valid": validation.status == "VALID",
+            "lapId": validation.lapId,
+            "validationStatus": validation.status,
+            "issues": list(validation.issues),
+            "maxGapSeconds": self.max_gap_seconds,
+            "timestampInversions": self.timestamp_inversions,
         }
 
 
@@ -243,7 +274,7 @@ class SessionRepository:
                     and aggregate.progress_end is not None
                     and aggregate.progress_end >= 0.98
                 )
-                laps.append(aggregate.summary(completed=completed))
+                laps.append(aggregate.summary(completed=completed, session_id=session_id))
 
             valid_durations = [
                 lap["duration"]
@@ -267,6 +298,12 @@ class SessionRepository:
                 "lapCount": len(laps),
                 "completedLapCount": sum(1 for lap in laps if lap["completed"]),
                 "validLapCount": sum(1 for lap in laps if lap["valid"]),
+                "invalidLapCount": sum(
+                    1 for lap in laps if lap["validationStatus"] == "INVALID"
+                ),
+                "partialLapCount": sum(
+                    1 for lap in laps if lap["validationStatus"] == "PARTIAL"
+                ),
                 "bestLapTime": min(valid_durations, default=None),
                 "indexed": file_size == 0 or index.offset > 0,
                 "laps": laps,
@@ -384,6 +421,8 @@ class SessionRepository:
         payload = SessionRepository._read_json(directory / INDEX_FILENAME)
         if not payload:
             return None
+        if int(payload.get("version") or 0) != INDEX_VERSION:
+            return None
         try:
             laps = {
                 int(number): _LapAggregate(**lap)
@@ -405,7 +444,7 @@ class SessionRepository:
         path = directory / INDEX_FILENAME
         temp_path = directory / f"{INDEX_FILENAME}.tmp"
         payload = {
-            "version": 1,
+            "version": INDEX_VERSION,
             "offset": index.offset,
             "sampleCount": index.sample_count,
             "track": index.track,
