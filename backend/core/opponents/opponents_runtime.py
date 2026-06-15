@@ -4,6 +4,7 @@ import logging
 import os
 from typing import Optional
 
+from ..data_quality.udp_reliability import UdpReliabilityMonitor
 from .opponents_buffer import OpponentsStateBuffer
 from .opponents_receiver import OpponentsTelemetryReceiver
 
@@ -41,10 +42,16 @@ class OpponentsRuntime:
         port: int = 8765,
         enabled: bool = True,
         receiver: Optional[OpponentsTelemetryReceiver] = None,
+        reliability_monitor: Optional[UdpReliabilityMonitor] = None,
     ):
         self.buffer = buffer
         self.enabled = bool(enabled)
-        self.receiver = receiver or OpponentsTelemetryReceiver(buffer, host=host, port=port)
+        self.receiver = receiver or OpponentsTelemetryReceiver(
+            buffer,
+            host=host,
+            port=port,
+            reliability_monitor=reliability_monitor,
+        )
 
     def start(self, loop: Optional[asyncio.AbstractEventLoop] = None):
         if not self.enabled:

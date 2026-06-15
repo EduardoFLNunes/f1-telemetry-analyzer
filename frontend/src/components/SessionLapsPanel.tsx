@@ -12,6 +12,8 @@ type LapSummary = {
   avgSpeedKmh: number | null;
   completed: boolean;
   valid: boolean;
+  validationStatus?: 'VALID' | 'PARTIAL' | 'INVALID';
+  issues?: string[];
 };
 
 type SessionSummary = {
@@ -106,13 +108,15 @@ const LapButton = ({
     onClick={onClick}
     className="lap-row"
     data-selected={selected ? 'true' : 'false'}
-    disabled={loading}
+    data-valid={lap.valid ? 'true' : 'false'}
+    disabled={loading || !lap.valid}
+    title={!lap.valid ? (lap.issues?.join('; ') || 'Volta indisponivel para referencia') : undefined}
   >
     <span className="lap-row-number">L{lap.lapNumber}</span>
     <span className="lap-row-time">{loading ? 'CARREGANDO' : formatLapTime(lap.duration)}</span>
     <span className="lap-row-speed">{lap.maxSpeedKmh ? `${Math.round(lap.maxSpeedKmh)} km/h` : '--'}</span>
     <span className={`lap-row-state ${lap.valid ? 'is-valid' : ''}`}>
-      {lap.valid ? 'VÁLIDA' : lap.completed ? 'INCOMPLETA' : 'EM CURSO'}
+      {lap.valid ? 'VALIDA' : lap.validationStatus === 'INVALID' ? 'INVALIDA' : lap.completed ? 'PARCIAL' : 'EM CURSO'}
     </span>
   </button>
 );

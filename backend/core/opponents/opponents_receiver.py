@@ -8,6 +8,7 @@ from typing import Any, Mapping, Optional
 
 from .opponent_models import OpponentsUpdateResult, safe_float, safe_int, safe_str
 from .opponents_buffer import OpponentsStateBuffer
+from ..data_quality.udp_reliability import UdpReliabilityMonitor
 from ..performance_metrics import performance_metrics
 from ..telemetry_events import OPPONENTS_FRAME, event_bus as default_event_bus
 
@@ -22,11 +23,13 @@ class OpponentsTelemetryReceiver:
         host: str = "127.0.0.1",
         port: int = 8765,
         event_bus=default_event_bus,
+        reliability_monitor: Optional[UdpReliabilityMonitor] = None,
     ):
         self.buffer = buffer
         self.host = host
         self.port = int(port)
         self.event_bus = event_bus
+        self.reliability_monitor = reliability_monitor or UdpReliabilityMonitor()
         self.running = False
         self._thread: Optional[threading.Thread] = None
         self._socket: Optional[socket.socket] = None
@@ -100,6 +103,8 @@ class OpponentsTelemetryReceiver:
             logger.info("Opponents telemetry receiver stopped")
 
     def handle_packet(self, data: bytes) -> Optional[OpponentsUpdateResult]:
+        self._last_packet_received_at = time.time()
+        self.reliability_monitor.packet_received(self._last_packet_received_at)
         try:
             payload = json.loads(data.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -135,11 +140,13 @@ class OpponentsTelemetryReceiver:
         )
         if result.ignored_out_of_order:
             self._out_of_order_count += 1
+            self.reliability_monitor.out_of_order()
             logger.debug("Opponents telemetry out-of-order snapshot ignored: timestamp=%s", timestamp)
             return result
 
         self._accepted_snapshot_count += 1
         self._last_valid_snapshot_at = time.time()
+        self.reliability_monitor.accepted(result.ignored_player_count)
         self._log_update_summary(result)
         if result.reset_reason:
             logger.info("Opponents telemetry session reset applied: %s", result.reset_reason)
@@ -148,6 +155,9 @@ class OpponentsTelemetryReceiver:
         return result
 
     def status(self):
+        reliability = self.reliability_monitor.snapshot(
+            opponents_count=len(self.buffer.latest())
+        )
         return {
             "source": "udp",
             "running": self.running,
@@ -158,6 +168,7 @@ class OpponentsTelemetryReceiver:
             "acceptedSnapshots": self._accepted_snapshot_count,
             "invalidPackets": self._invalid_packet_count,
             "discardedOutOfOrder": self._out_of_order_count,
+            **reliability,
         }
 
     def _log_update_summary(self, result: OpponentsUpdateResult):
@@ -187,7 +198,6 @@ class OpponentsTelemetryReceiver:
         self._last_summary_log_at = now
 
     def _log_packet_received(self, address, byte_count: int):
-        self._last_packet_received_at = time.time()
         self._packets_since_log += 1
         now = time.monotonic()
         if now - self._last_packet_log_at < 2.0:
@@ -211,6 +221,7 @@ class OpponentsTelemetryReceiver:
 
     def _log_invalid(self, reason: str):
         self._invalid_packet_count += 1
+        self.reliability_monitor.invalid()
         now = time.monotonic()
         if now - self._last_invalid_log_at >= 2.0:
             logger.warning(

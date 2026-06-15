@@ -259,6 +259,7 @@ class ACSharedMemoryReader(PollingTelemetryReader):
                 "lap": int(_safe_float(data.get("lap_number", 0))),
                 "sector": int(_safe_float(data.get("sector", 0))),
                 "session_time": _safe_float(data.get("lap_time")),
+                "lap_time": _safe_float(data.get("lap_time")),
                 "accel_x": _safe_float(data.get("lat_g")),
                 "accel_y": _safe_float(data.get("vertical_g")),
                 "accel_z": _safe_float(data.get("accel_g")),
