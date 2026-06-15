@@ -53,6 +53,7 @@ from core.recording.recording_runtime import RecordingRuntime, config_from_env a
 from core.recording.session_repository import SessionRepository
 from core.reconstruction.track_reconstruction import TrackReconstructor
 from core.racing_line_analysis import build_live_racing_line_payload
+from core.session_audit import SessionAuditService
 from core.telemetry.telemetry_buffer import TelemetryBuffer
 from core.telemetry.telemetry_models import TelemetrySample
 from core.telemetry.telemetry_reader_impl import TelemetrySourceManager, telemetry_samples_from_dataframe
@@ -84,7 +85,7 @@ TRACK_CACHE_DIR = RUNTIME_ROOT / "data" / "cache" / "tracks"
 PRIMARY_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetry.csv"
 DEBUG_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetryOld.csv"
 BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
-BACKEND_PHASE_VERSION = "phase-13-data-reliability"
+BACKEND_PHASE_VERSION = "phase-14-real-session-audit"
 
 runtime_state = RuntimeState()
 telemetry_buffer = TelemetryBuffer(max_size=20000)
@@ -101,6 +102,10 @@ opponents_runtime: Optional[OpponentsRuntime] = None
 recording_runtime: Optional[RecordingRuntime] = None
 recent_coaching_events: List[Dict[str, Any]] = []
 session_repository = SessionRepository(recording_config_from_env(RUNTIME_ROOT).output_root)
+session_audit_service = SessionAuditService(
+    repository=session_repository,
+    reports_root=RUNTIME_ROOT / "reports" / "session_audit",
+)
 _validation_sessions_cache: List[Dict[str, Any]] = []
 _validation_sessions_cache_at = 0.0
 
@@ -294,11 +299,21 @@ def current_recording_track() -> Optional[str]:
 
 
 def recording_metadata() -> Dict[str, Any]:
+    track_validation = validate_track(
+        runtime_state.track_build_state.value,
+        runtime_state.track_data,
+        runtime_state.current_track_name or source_manager.current_track_name(),
+        runtime_state.build_method,
+    )
     return {
         "source": source_manager.get_active_source_name(),
         "trackCache": runtime_state.current_track_name,
         "trackState": runtime_state.track_build_state.value,
         "buildMethod": runtime_state.build_method,
+        "hasCenterline": track_validation["hasCenterline"],
+        "hasBounds": track_validation["hasBounds"],
+        "hasSectors": track_validation["hasSectors"],
+        "trackSampleCount": track_validation["sampleCount"],
     }
 
 
@@ -649,6 +664,98 @@ async def get_track_validation():
         "status": "success",
         "track": (await data_quality_payload())["track"],
     }
+
+
+def current_track_validation_payload() -> Dict[str, Any]:
+    return validate_track(
+        runtime_state.track_build_state.value,
+        runtime_state.track_data,
+        runtime_state.current_track_name or source_manager.current_track_name(),
+        runtime_state.build_method,
+    )
+
+
+@app.get("/api/audit/session/latest")
+async def get_latest_session_audit(
+    include_samples: bool = Query(False, alias="includeSamples"),
+):
+    report = await asyncio.to_thread(
+        session_audit_service.audit_latest,
+        current_track_validation_payload(),
+    )
+    if not report:
+        return {
+            "status": "empty",
+            "audit": None,
+            "includeSamples": include_samples,
+        }
+    return {
+        "status": "success",
+        "audit": report,
+        "includeSamples": False,
+    }
+
+
+@app.get("/api/audit/session/{session_id}")
+async def get_session_audit(
+    session_id: str,
+    include_samples: bool = Query(False, alias="includeSamples"),
+):
+    try:
+        report = await asyncio.to_thread(
+            session_audit_service.audit_session,
+            session_id,
+            track_validation=current_track_validation_payload(),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if not report:
+        raise HTTPException(status_code=404, detail="Recorded session not found")
+    return {
+        "status": "success",
+        "audit": report,
+        "includeSamples": False,
+    }
+
+
+@app.get("/api/audit/laps")
+async def get_audited_laps(session_id: Optional[str] = Query(None, alias="sessionId")):
+    try:
+        report = await asyncio.to_thread(
+            session_audit_service.audit_session,
+            session_id,
+            track_validation=current_track_validation_payload(),
+        ) if session_id else await asyncio.to_thread(
+            session_audit_service.audit_latest,
+            current_track_validation_payload(),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return {
+        "status": "success" if report else "empty",
+        "sessionId": report.get("sessionId") if report else None,
+        "laps": report.get("laps") if report else None,
+    }
+
+
+@app.get("/api/audit/export/latest")
+async def get_latest_audit_export():
+    export = await asyncio.to_thread(session_audit_service.exporter.latest)
+    return {
+        "status": "success" if export else "empty",
+        "export": export,
+    }
+
+
+@app.post("/api/audit/export/latest")
+async def export_latest_session_audit():
+    export = await asyncio.to_thread(
+        session_audit_service.export_latest,
+        current_track_validation_payload(),
+    )
+    if not export:
+        raise HTTPException(status_code=404, detail="No recorded session is available")
+    return export
 
 
 @app.websocket("/ws")

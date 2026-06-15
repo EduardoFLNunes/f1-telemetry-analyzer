@@ -10,7 +10,7 @@ from ..data_quality.lap_validation import validate_lap
 
 MAX_EAGER_INDEX_BYTES = 8 * 1024 * 1024
 INDEX_FILENAME = "session-index.json"
-INDEX_VERSION = 2
+INDEX_VERSION = 3
 
 
 def _number(value: Any) -> Optional[float]:
@@ -127,7 +127,8 @@ class _LapAggregate:
                 timestamp,
             )
 
-        order_time = session_time if session_time is not None else timestamp
+        # The persisted wall timestamp is monotonic across lap-time resets.
+        order_time = timestamp if timestamp is not None else session_time
         if order_time is not None and self.previous_order_time is not None:
             gap = order_time - self.previous_order_time
             if gap < -1e-3:
@@ -358,6 +359,45 @@ class SessionRepository:
             "samples": samples,
         }
 
+    def session_directory(self, session_id: str) -> Path:
+        return self._session_dir(session_id)
+
+    def session_metadata(self, session_id: str) -> Dict[str, Any]:
+        directory = self._session_dir(session_id)
+        if not directory.exists():
+            return {}
+        return self._read_json(directory / "metadata.json") or {}
+
+    def list_session_ids(self) -> List[str]:
+        return [
+            directory.name
+            for directory in sorted(
+                (item for item in self.root.iterdir() if item.is_dir()),
+                key=lambda item: item.name,
+                reverse=True,
+            )
+        ]
+
+    def iter_stream_rows(self, session_id: str, stream: str) -> Iterable[Dict[str, Any]]:
+        if stream not in {"player", "opponents", "events"}:
+            raise ValueError("Invalid session stream")
+        path = self._session_dir(session_id) / f"{stream}.jsonl"
+        return self._iter_json_rows(path)
+
+    def session_signature(self, session_id: str) -> tuple:
+        directory = self._session_dir(session_id)
+        if not directory.exists():
+            return ()
+        signature = []
+        for filename in ("metadata.json", "player.jsonl", "opponents.jsonl"):
+            path = directory / filename
+            if path.exists():
+                stat = path.stat()
+                signature.append((filename, stat.st_size, stat.st_mtime_ns))
+            else:
+                signature.append((filename, 0, 0))
+        return tuple(signature)
+
     def _session_dir(self, session_id: str) -> Path:
         if not session_id or Path(session_id).name != session_id:
             raise ValueError("Invalid session id")
@@ -502,6 +542,23 @@ class SessionRepository:
                         continue
                     sample = payload.get("sample")
                     if isinstance(sample, dict):
+                        yield payload
+
+        return rows()
+
+    @staticmethod
+    def _iter_json_rows(path: Path) -> Iterable[Dict[str, Any]]:
+        if not path.exists():
+            return []
+
+        def rows():
+            with path.open("rb") as handle:
+                for line in handle:
+                    try:
+                        payload = json.loads(line.decode("utf-8"))
+                    except (UnicodeDecodeError, json.JSONDecodeError):
+                        continue
+                    if isinstance(payload, dict):
                         yield payload
 
         return rows()

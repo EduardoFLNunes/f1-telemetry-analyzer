@@ -823,6 +823,57 @@ select {
   font: 650 6px 'JetBrains Mono', monospace;
 }
 
+.audit-empty {
+  margin: 10px;
+  padding: 18px 10px;
+  border: 1px dashed rgba(148,163,184,0.12);
+  border-radius: 6px;
+  color: #64748b;
+  font: 650 7px/1.5 'JetBrains Mono', monospace;
+  text-align: center;
+}
+
+.audit-session-summary > strong,
+.audit-session-summary > small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.audit-session-summary > strong {
+  color: #e2e8f0;
+  font: 800 9px 'JetBrains Mono', monospace;
+}
+
+.audit-session-summary > small {
+  margin-top: 2px;
+  color: #475569;
+  font: 600 5px 'JetBrains Mono', monospace;
+}
+
+.audit-meta-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  color: #64748b;
+  font: 650 6px 'JetBrains Mono', monospace;
+}
+
+.audit-compact-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.audit-recommendations {
+  border-color: rgba(34,211,238,0.1);
+}
+
+.session-audit-panel .quality-header-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
 @media (max-width: 1180px) {
   .dashboard-grid {
     grid-template-columns: 220px minmax(430px, 1fr) 285px;

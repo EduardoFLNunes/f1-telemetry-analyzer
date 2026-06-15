@@ -152,6 +152,39 @@ class SessionRepositoryTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 repository.session_summary("../outside")
 
+    def test_uses_persisted_timestamp_when_session_clock_resets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            session = root / "clock_reset"
+            session.mkdir()
+            (session / "metadata.json").write_text(
+                json.dumps({"sessionId": session.name, "endedAt": "2026-06-14T10:02:00"}),
+                encoding="utf-8",
+            )
+            rows = []
+            for index in range(50):
+                rows.append(
+                    {
+                        "type": "player",
+                        "sample": {
+                            "lap_number": 1,
+                            "sessionTime": index if index < 25 else index - 25,
+                            "lap_time": index,
+                            "lapProgress": index / 49,
+                            "timestamp": (1_700_000_000 + index) * 1000,
+                        },
+                    }
+                )
+            (session / "player.jsonl").write_text(
+                "\n".join(json.dumps(row) for row in rows) + "\n",
+                encoding="utf-8",
+            )
+
+            summary = SessionRepository(root).session_summary(session.name)
+
+            self.assertEqual(summary["laps"][0]["timestampInversions"], 0)
+            self.assertEqual(summary["laps"][0]["validationStatus"], "VALID")
+
 
 if __name__ == "__main__":
     unittest.main()

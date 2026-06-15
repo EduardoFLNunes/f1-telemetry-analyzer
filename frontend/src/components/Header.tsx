@@ -48,7 +48,7 @@ export const Header: React.FC<HeaderProps> = ({ time = new Date() }) => {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="num text-[7px] text-slate-700 tracking-widest">BUILD v13.0 // DATA RELIABILITY</span>
+            <span className="num text-[7px] text-slate-700 tracking-widest">BUILD v14.0 // SESSION AUDIT</span>
             <div className="w-1 h-1 rounded-full bg-emerald-400 status-live" />
           </div>
         </div>

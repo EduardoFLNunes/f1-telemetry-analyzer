@@ -97,6 +97,15 @@ export const api = {
   getHealth:       async () => (await client.get('/api/health')).data,
   getRuntimeStatus: async () => (await client.get('/api/runtime/status')).data,
   getDataQuality: async () => (await client.get('/api/validation/data-quality')).data,
+  getLatestSessionAudit: async () => (await client.get('/api/audit/session/latest')).data,
+  getSessionAudit: async (sessionId) => (
+    await client.get(`/api/audit/session/${encodeURIComponent(sessionId)}`)
+  ).data,
+  getAuditedLaps: async (sessionId = null) => (
+    await client.get('/api/audit/laps', { params: { sessionId } })
+  ).data,
+  getLatestAuditExport: async () => (await client.get('/api/audit/export/latest')).data,
+  exportLatestSessionAudit: async () => (await client.post('/api/audit/export/latest')).data,
   getLiveTelemetry: async (options = {}) => (
     await client.get('/api/live/telemetry', {
       params: {

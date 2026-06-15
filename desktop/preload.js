@@ -66,7 +66,7 @@ contextBridge.exposeInMainWorld('desktopRuntime', {
   openAssettoFolderPicker: () => ipcRenderer.invoke('assetto:open-folder-picker'),
   openAssettoFolder: (assettoPath) => ipcRenderer.invoke('assetto:open-folder', assettoPath),
   copyAssettoSetupInstructions: () => ipcRenderer.invoke('assetto:copy-instructions'),
-  phase: 'phase-13-data-reliability',
+  phase: 'phase-14-real-session-audit',
 });
 
 contextBridge.exposeInMainWorld('automobilistaDesktop', {
@@ -78,5 +78,5 @@ contextBridge.exposeInMainWorld('automobilistaDesktop', {
   openAssettoFolderPicker: () => ipcRenderer.invoke('assetto:open-folder-picker'),
   openAssettoFolder: (assettoPath) => ipcRenderer.invoke('assetto:open-folder', assettoPath),
   copyAssettoSetupInstructions: () => ipcRenderer.invoke('assetto:copy-instructions'),
-  phase: 'phase-13-data-reliability',
+  phase: 'phase-14-real-session-audit',
 });
