@@ -24,6 +24,7 @@ class TelemetrySample:
     carId: int = 0
     sector: int = 0
     sessionTime: float = 0.0
+    lapTime: Optional[float] = None
     lap: int = 0
     throttle: float = 0.0
     brake: float = 0.0
@@ -109,6 +110,9 @@ class TelemetrySample:
             carId=int(data.get("carId", data.get("car_id", 0))),
             sector=int(data.get("sector", 0)),
             sessionTime=float(data.get("sessionTime", data.get("session_time", 0.0))),
+            lapTime=nullable_float(
+                data.get("lapTime", data.get("lap_time", data.get("currentLapTime")))
+            ),
             lap=int(data.get("lap", data.get("lap_number", 0))),
             throttle=float(data.get("throttle", 0.0)),
             brake=float(data.get("brake", 0.0)),

@@ -96,6 +96,7 @@ export const api = {
   getCarState:     async () => (await client.get('/api/car/state')).data,
   getHealth:       async () => (await client.get('/api/health')).data,
   getRuntimeStatus: async () => (await client.get('/api/runtime/status')).data,
+  getDataQuality: async () => (await client.get('/api/validation/data-quality')).data,
   getLiveTelemetry: async (options = {}) => (
     await client.get('/api/live/telemetry', {
       params: {
