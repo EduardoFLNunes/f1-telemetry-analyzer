@@ -129,6 +129,22 @@ export const api = {
   getComparison:   async () => (await client.get('/api/data/comparison')).data,
   getTrackLimits:  async () => (await client.get('/api/data/track-limits')).data,
 
+  listAssistedAnalysisLaps: async () => (await client.get('/api/assisted-analysis/laps')).data,
+  getAssistedAnalysis: async (lapId, referenceLapId = null) => {
+    const res = await client.get(`/api/analysis/assisted/lap/${encodeURIComponent(lapId)}`, {
+      params: referenceLapId ? { reference_lap_id: referenceLapId } : {},
+    })
+    return res.data
+  },
+  requestAssistedAnalysis: async (lapId, { referenceLapId = null, force = false } = {}) => {
+    const res = await client.post(
+      `/api/analysis/assisted/lap/${encodeURIComponent(lapId)}`,
+      { referenceLapId, force },
+      { timeout: 120_000 },
+    )
+    return res.data
+  },
+
   // ─── FastF1 ──────────────────────────────────────────────────────────────
   /**
    * Busca a volta mais rápida via FastF1 e regenera a IA com referência real.

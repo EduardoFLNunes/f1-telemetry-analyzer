@@ -19,6 +19,7 @@ import pandas as pd
 from fastapi import Body, FastAPI, File, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
+from core.assisted_analysis import AssistedAnalysisService
 from core.car_physics import build_car_physics_debug, build_opponent_car_physics, build_player_car_physics
 from core.comparison_analysis import build_live_comparison_payload
 from core.debug.ac_shared_memory_full_inventory import build_ac_shared_memory_full_inventory
@@ -103,6 +104,7 @@ recent_coaching_events: List[Dict[str, Any]] = []
 session_repository = SessionRepository(recording_config_from_env(RUNTIME_ROOT).output_root)
 _validation_sessions_cache: List[Dict[str, Any]] = []
 _validation_sessions_cache_at = 0.0
+assisted_analysis_service = AssistedAnalysisService(REPO_ROOT, telemetry_buffer, runtime_state, track_cache)
 
 
 async def remember_coaching_event(event: Dict[str, Any]):
@@ -1023,6 +1025,65 @@ async def get_recorded_lap(
     if not lap:
         raise HTTPException(status_code=404, detail="Recorded lap not found")
     return {"status": "success", **lap}
+
+
+@app.get("/api/assisted-analysis/laps")
+async def list_assisted_analysis_laps():
+    return assisted_analysis_service.list_laps()
+
+
+@app.get("/api/assisted-analysis/laps/{lap_id}/analysis")
+async def get_assisted_analysis(lap_id: str, reference_lap_id: Optional[str] = None):
+    return _get_assisted_analysis_or_404(lap_id, reference_lap_id)
+
+
+@app.post("/api/assisted-analysis/laps/{lap_id}/analysis")
+async def request_assisted_analysis(
+    lap_id: str,
+    reference_lap_id: Optional[str] = None,
+    force: bool = False,
+    payload: Optional[Dict[str, Any]] = Body(None),
+):
+    return _run_assisted_analysis(lap_id, reference_lap_id, force, payload)
+
+
+@app.get("/api/analysis/assisted/lap/{lapId}")
+async def get_phase14_assisted_analysis(lapId: str, reference_lap_id: Optional[str] = None):
+    return _get_assisted_analysis_or_404(lapId, reference_lap_id)
+
+
+@app.post("/api/analysis/assisted/lap/{lapId}")
+async def request_phase14_assisted_analysis(
+    lapId: str,
+    reference_lap_id: Optional[str] = None,
+    force: bool = False,
+    payload: Optional[Dict[str, Any]] = Body(None),
+):
+    return _run_assisted_analysis(lapId, reference_lap_id, force, payload)
+
+
+def _get_assisted_analysis_or_404(lap_id: str, reference_lap_id: Optional[str] = None):
+    cached = assisted_analysis_service.get_cached_analysis(lap_id, reference_lap_id=reference_lap_id)
+    if not cached:
+        raise HTTPException(status_code=404, detail="Assisted analysis is not available for this lap yet")
+    return cached
+
+
+def _run_assisted_analysis(
+    lap_id: str,
+    reference_lap_id: Optional[str] = None,
+    force: bool = False,
+    payload: Optional[Dict[str, Any]] = None,
+):
+    try:
+        body = payload or {}
+        reference = reference_lap_id or body.get("referenceLapId") or body.get("reference_lap_id")
+        force_analysis = bool(force or body.get("force", False))
+        return assisted_analysis_service.analyze_lap(lap_id, reference_lap_id=reference, force=force_analysis)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 @app.get("/api/debug/performance")
