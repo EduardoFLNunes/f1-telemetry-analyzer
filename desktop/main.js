@@ -12,6 +12,7 @@ const DEFAULT_FRONTEND_DEV_URL = 'http://127.0.0.1:5173';
 const DEFAULT_BACKEND_URL = 'http://127.0.0.1:8000';
 const BACKEND_EXE_NAME = process.platform === 'win32' ? 'automobilista-backend.exe' : 'automobilista-backend';
 const EXPECTED_BACKEND_SERVICE = 'automobilista-telemetria-backend';
+const EXPECTED_BACKEND_VERSION = 'phase-14.2-real-session-assisted-validation';
 const WINDOW_ICON_NAME = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
 const ASSETTO_PLUGIN_ID = 'ac_opponents_exporter';
 const ASSETTO_PLUGIN_DISPLAY_NAME = 'Opponents Exporter';
@@ -586,16 +587,22 @@ function requestJson(url, timeoutMs = 2500) {
 function normalizeBackendHealth(response) {
   const service = response?.data?.service || null;
   const status = response?.data?.status || null;
+  const version = response?.data?.version || null;
   const expectedService = service === EXPECTED_BACKEND_SERVICE && status === 'ok';
+  const expectedVersion = version === EXPECTED_BACKEND_VERSION;
   const reachable = Boolean(response?.statusCode);
-  const portMessage = `Porta ${BACKEND_PORT} respondeu, mas nao parece ser o backend ${EXPECTED_BACKEND_SERVICE}.`;
+  const portMessage = expectedService
+    ? `Porta ${BACKEND_PORT} respondeu com backend ${version || 'sem versao'}, mas esta build exige ${EXPECTED_BACKEND_VERSION}.`
+    : `Porta ${BACKEND_PORT} respondeu, mas nao parece ser o backend ${EXPECTED_BACKEND_SERVICE}.`;
   return {
     ...response,
-    ok: Boolean(response?.ok && expectedService),
+    ok: Boolean(response?.ok && expectedService && expectedVersion),
     reachable,
     expectedService,
+    expectedVersion,
     service,
-    error: response?.ok && !expectedService ? portMessage : response?.error,
+    version,
+    error: response?.ok && (!expectedService || !expectedVersion) ? portMessage : response?.error,
   };
 }
 

@@ -1208,6 +1208,12 @@ async def set_live_source(source: str):
         if requested_source in {"ac", "assetto", "assetto_corsa", "assetto_corsa_shared_memory"}:
             gate_status = shared_memory_gate_status()
             if not gate_status.get("allowed", True):
+                reason = gate_status.get("reason")
+                if reason == "waiting_for_assetto_corsa_shared_memory_pages":
+                    raise RuntimeError(
+                        "Assetto Corsa is running, but shared memory pages are not ready. "
+                        "Load a driving session first, then the backend will connect."
+                    )
                 raise RuntimeError(
                     "Assetto Corsa is not running. Open Assetto Corsa first, then the backend will connect to shared memory."
                 )

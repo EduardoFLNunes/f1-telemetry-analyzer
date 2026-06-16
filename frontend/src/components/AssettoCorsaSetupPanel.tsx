@@ -176,6 +176,7 @@ export const AssettoCorsaSetupPanel: React.FC = () => {
     : sharedMemoryGate?.allowed
       ? 'open'
       : 'waiting';
+  const gateReason = sharedMemoryGate?.reason || '--';
   const sourceStatus = plugin?.source?.available ? 'ready' : 'missing';
   const ports = `${plugin?.transport?.backendApiPort || 8000}/${plugin?.transport?.udpOpponentsPort || runtime?.opponents?.udpPort || 8765}`;
 
@@ -207,6 +208,7 @@ export const AssettoCorsaSetupPanel: React.FC = () => {
         <Row label="Opponents" value={opponentsStatus} tone={statusTone(opponentsStatus)} />
         <Row label="Player Source" value={playerSource} tone="ok" />
         <Row label="SM Gate" value={gateStatus} tone={gateStatus === 'open' ? 'ok' : gateStatus === 'waiting' ? 'warn' : 'quiet'} />
+        <Row label="SM Reason" value={gateReason.replace('waiting_for_assetto_corsa_', '')} tone={gateReason === '--' ? 'quiet' : 'warn'} />
         <Row label="Opp Source" value={opponentsSource} tone={runtime?.opponents?.enabled === false ? 'warn' : 'ok'} />
         <Row label="Source Files" value={sourceStatus} tone={statusTone(sourceStatus)} />
         <Row label="Player Age" value={ageText(runtime?.telemetry?.secondsSinceLastPlayerSample)} tone={telemetryStatus === 'receiving' ? 'ok' : 'warn'} />
