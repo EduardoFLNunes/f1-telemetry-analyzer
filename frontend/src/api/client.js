@@ -130,20 +130,33 @@ export const api = {
   getTrackLimits:  async () => (await client.get('/api/data/track-limits')).data,
 
   listAssistedAnalysisLaps: async () => (await client.get('/api/assisted-analysis/laps')).data,
-  getAssistedAnalysis: async (lapId, referenceLapId = null) => {
+  getAssistedAnalysis: async (lapId, referenceLapId = null, options = {}) => {
     const res = await client.get(`/api/analysis/assisted/lap/${encodeURIComponent(lapId)}`, {
-      params: referenceLapId ? { reference_lap_id: referenceLapId } : {},
+      params: {
+        ...(referenceLapId ? { reference_lap_id: referenceLapId } : {}),
+        ...(options.includeExternalReference ? { includeExternalReference: true } : {}),
+        ...(options.externalReferenceId ? { externalReferenceId: options.externalReferenceId } : {}),
+      },
     })
     return res.data
   },
-  requestAssistedAnalysis: async (lapId, { referenceLapId = null, force = false } = {}) => {
+  requestAssistedAnalysis: async (lapId, {
+    referenceLapId = null,
+    force = false,
+    includeExternalReference = false,
+    externalReferenceId = null,
+  } = {}) => {
     const res = await client.post(
       `/api/analysis/assisted/lap/${encodeURIComponent(lapId)}`,
-      { referenceLapId, force },
+      { referenceLapId, force, includeExternalReference, externalReferenceId },
       { timeout: 120_000 },
     )
     return res.data
   },
+  listExternalReferences: async () => (await client.get('/api/references/external')).data,
+  importFastF1Reference: async (payload) => (
+    await client.post('/api/references/external/fastf1/import', payload, { timeout: 180_000 })
+  ).data,
 
   // ─── FastF1 ──────────────────────────────────────────────────────────────
   /**

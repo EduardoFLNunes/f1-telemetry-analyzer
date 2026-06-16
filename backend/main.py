@@ -31,6 +31,7 @@ from core.data_quality import (
     validate_track,
 )
 from core.debug.spatial_debug import projection_debug_payload
+from core.external_references import ExternalReferenceError, ExternalReferenceRepository, FastF1ReferenceProvider
 from core.geometry.track_geometry_provider import (
     CacheTrackGeometryProvider,
     DebugTrajectoryTrackGeometryProvider,
@@ -104,7 +105,15 @@ recent_coaching_events: List[Dict[str, Any]] = []
 session_repository = SessionRepository(recording_config_from_env(RUNTIME_ROOT).output_root)
 _validation_sessions_cache: List[Dict[str, Any]] = []
 _validation_sessions_cache_at = 0.0
-assisted_analysis_service = AssistedAnalysisService(REPO_ROOT, telemetry_buffer, runtime_state, track_cache)
+external_reference_repository = ExternalReferenceRepository(REPO_ROOT)
+fastf1_reference_provider = FastF1ReferenceProvider(REPO_ROOT, external_reference_repository)
+assisted_analysis_service = AssistedAnalysisService(
+    REPO_ROOT,
+    telemetry_buffer,
+    runtime_state,
+    track_cache,
+    external_reference_repository=external_reference_repository,
+)
 
 
 async def remember_coaching_event(event: Dict[str, Any]):
@@ -1048,22 +1057,56 @@ async def request_assisted_analysis(
 
 
 @app.get("/api/analysis/assisted/lap/{lapId}")
-async def get_phase14_assisted_analysis(lapId: str, reference_lap_id: Optional[str] = None):
-    return _get_assisted_analysis_or_404(lapId, reference_lap_id)
+async def get_phase14_assisted_analysis(
+    lapId: str,
+    reference_lap_id: Optional[str] = None,
+    include_external_reference: bool = Query(False, alias="includeExternalReference"),
+    external_reference_id: Optional[str] = Query(None, alias="externalReferenceId"),
+):
+    return _get_assisted_analysis_or_404(
+        lapId,
+        reference_lap_id,
+        include_external_reference=include_external_reference,
+        external_reference_id=external_reference_id,
+    )
 
 
 @app.post("/api/analysis/assisted/lap/{lapId}")
 async def request_phase14_assisted_analysis(
     lapId: str,
     reference_lap_id: Optional[str] = None,
+    include_external_reference: bool = Query(False, alias="includeExternalReference"),
+    external_reference_id: Optional[str] = Query(None, alias="externalReferenceId"),
     force: bool = False,
     payload: Optional[Dict[str, Any]] = Body(None),
 ):
-    return _run_assisted_analysis(lapId, reference_lap_id, force, payload)
+    return _run_assisted_analysis(
+        lapId,
+        reference_lap_id,
+        force,
+        payload,
+        include_external_reference=include_external_reference,
+        external_reference_id=external_reference_id,
+    )
 
 
-def _get_assisted_analysis_or_404(lap_id: str, reference_lap_id: Optional[str] = None):
-    cached = assisted_analysis_service.get_cached_analysis(lap_id, reference_lap_id=reference_lap_id)
+def _get_assisted_analysis_or_404(
+    lap_id: str,
+    reference_lap_id: Optional[str] = None,
+    *,
+    include_external_reference: bool = False,
+    external_reference_id: Optional[str] = None,
+):
+    if not isinstance(include_external_reference, bool):
+        include_external_reference = False
+    if not isinstance(external_reference_id, str):
+        external_reference_id = None
+    cached = assisted_analysis_service.get_cached_analysis(
+        lap_id,
+        reference_lap_id=reference_lap_id,
+        include_external_reference=include_external_reference,
+        external_reference_id=external_reference_id,
+    )
     if not cached:
         raise HTTPException(status_code=404, detail="Assisted analysis is not available for this lap yet")
     return cached
@@ -1074,16 +1117,63 @@ def _run_assisted_analysis(
     reference_lap_id: Optional[str] = None,
     force: bool = False,
     payload: Optional[Dict[str, Any]] = None,
+    include_external_reference: bool = False,
+    external_reference_id: Optional[str] = None,
 ):
     try:
         body = payload or {}
+        if not isinstance(include_external_reference, bool):
+            include_external_reference = False
+        if not isinstance(external_reference_id, str):
+            external_reference_id = None
         reference = reference_lap_id or body.get("referenceLapId") or body.get("reference_lap_id")
         force_analysis = bool(force or body.get("force", False))
-        return assisted_analysis_service.analyze_lap(lap_id, reference_lap_id=reference, force=force_analysis)
+        external = bool(include_external_reference or body.get("includeExternalReference") or body.get("include_external_reference"))
+        external_id = external_reference_id or body.get("externalReferenceId") or body.get("external_reference_id")
+        return assisted_analysis_service.analyze_lap(
+            lap_id,
+            reference_lap_id=reference,
+            include_external_reference=external,
+            external_reference_id=external_id,
+            force=force_analysis,
+        )
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/api/references/external/fastf1/import")
+async def import_external_fastf1_reference(payload: Optional[Dict[str, Any]] = Body(None)):
+    body = payload or {}
+    try:
+        reference = await asyncio.to_thread(
+            fastf1_reference_provider.import_reference,
+            year=int(body.get("year", 2024)),
+            event=str(body.get("event") or "Brazil"),
+            session=str(body.get("session") or "Q"),
+            driver=body.get("driver"),
+            force=bool(body.get("force", False)),
+        )
+        return {"status": "success", "reference": reference.to_api(include_samples=False)}
+    except ExternalReferenceError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.get("/api/references/external")
+async def list_external_references(include_samples: bool = False):
+    return {
+        "status": "success",
+        "references": external_reference_repository.list_references(include_samples=include_samples),
+    }
+
+
+@app.get("/api/references/external/{reference_id}")
+async def get_external_reference(reference_id: str, include_samples: bool = True):
+    reference = external_reference_repository.get(reference_id)
+    if not reference:
+        raise HTTPException(status_code=404, detail="External reference not found")
+    return {"status": "success", "reference": reference.to_api(include_samples=include_samples)}
 
 
 @app.get("/api/debug/performance")

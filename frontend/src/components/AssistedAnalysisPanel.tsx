@@ -53,6 +53,13 @@ const fmtEvidence = (evidence: any) => {
     .join(' | ');
 };
 
+const fmtRefLabel = (metadata: any) => {
+  if (!metadata) return '--';
+  return [metadata.source, metadata.year, metadata.event, metadata.session, metadata.driver]
+    .filter(Boolean)
+    .join(' / ');
+};
+
 const severityColor = (severity: number) => {
   if (severity > 0.72) return '#fb7185';
   if (severity > 0.38) return '#fbbf24';
@@ -113,7 +120,9 @@ export const AssistedAnalysisPanel: React.FC = () => {
   const loadCached = async (targetLapId = lapId, refLapId = referenceLapId) => {
     if (!targetLapId) return;
     try {
-      const payload = await api.getAssistedAnalysis(targetLapId, refLapId || null);
+      const payload = await api.getAssistedAnalysis(targetLapId, refLapId || null, {
+        includeExternalReference: true,
+      });
       setAnalysis(payload.analysis);
       setError(null);
     } catch {
@@ -128,6 +137,7 @@ export const AssistedAnalysisPanel: React.FC = () => {
     try {
       const payload = await api.requestAssistedAnalysis(lapId, {
         referenceLapId: referenceLapId || null,
+        includeExternalReference: true,
         force,
       });
       setAnalysis(payload.analysis);
@@ -151,6 +161,8 @@ export const AssistedAnalysisPanel: React.FC = () => {
   const summary = analysis?.summary;
   const topLosses = Array.isArray(analysis?.topLosses) ? analysis.topLosses : [];
   const corners = Array.isArray(analysis?.corners) ? analysis.corners : [];
+  const externalReference = analysis?.externalReference?.available ? analysis.externalReference : null;
+  const externalMetadata = externalReference?.metadata;
 
   return (
     <div className="panel flex flex-col h-full overflow-hidden">
@@ -262,6 +274,43 @@ export const AssistedAnalysisPanel: React.FC = () => {
                 <span className="num text-[8px] text-slate-300">{Math.round((summary?.confidence ?? 0) * 100)}%</span>
               </div>
             </div>
+
+            {externalReference && (
+              <details className="rounded-sm px-2 py-2"
+                style={{ background: 'rgba(34,211,238,0.035)', border: '1px solid rgba(34,211,238,0.12)' }}>
+                <summary className="num text-[7px] text-cyan-300 uppercase cursor-pointer">
+                  External Reference
+                </summary>
+                <div className="mt-1 grid grid-cols-2 gap-1">
+                  <div>
+                    <span className="num text-[6px] text-slate-600 uppercase block">Source</span>
+                    <span className="num text-[7px] text-slate-300">{fmtRefLabel(externalMetadata)}</span>
+                  </div>
+                  <div>
+                    <span className="num text-[6px] text-slate-600 uppercase block">Type</span>
+                    <span className="num text-[7px] text-slate-300">{externalMetadata?.referenceType || '--'}</span>
+                  </div>
+                  <div>
+                    <span className="num text-[6px] text-slate-600 uppercase block">Calibration</span>
+                    <span className="num text-[7px] text-slate-300">{externalMetadata?.calibrationStatus || '--'}</span>
+                  </div>
+                  <div>
+                    <span className="num text-[6px] text-slate-600 uppercase block">Comparable</span>
+                    <span className="num text-[7px] text-slate-300">{externalMetadata?.comparableToAssetto || '--'}</span>
+                  </div>
+                </div>
+                <p className="mt-1 text-[8px] text-slate-500 leading-snug font-sans">{externalReference.comparabilityNotice}</p>
+                {Array.isArray(externalReference.macroCornerContext) && externalReference.macroCornerContext.length > 0 && (
+                  <div className="mt-1 flex flex-col gap-1">
+                    {externalReference.macroCornerContext.slice(0, 3).map((item: any) => (
+                      <div key={`external-${item.cornerId}`} className="num text-[7px] text-slate-500 leading-snug">
+                        <span className="text-cyan-400">{item.name}</span> {item.summary}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </details>
+            )}
 
             {topLosses.length > 0 && (
               <div>
