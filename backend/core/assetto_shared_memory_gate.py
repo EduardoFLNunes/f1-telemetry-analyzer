@@ -24,6 +24,20 @@ SHARED_MEMORY_PAGES_ENV = "ASSETTO_CORSA_SHARED_MEMORY_PAGES"
 FILE_MAP_READ = 0x0004
 
 
+if os.name == "nt":
+    class _ACStaticProbe(ctypes.Structure):
+        _pack_ = 4
+        _fields_ = [
+            ("smVersion", ctypes.c_wchar * 15),
+            ("acVersion", ctypes.c_wchar * 15),
+            ("numberOfSessions", ctypes.c_int),
+            ("numCars", ctypes.c_int),
+            ("carModel", ctypes.c_wchar * 33),
+            ("track", ctypes.c_wchar * 33),
+            ("playerName", ctypes.c_wchar * 33),
+        ]
+
+
 def _env_bool(name: str, default: bool) -> bool:
     raw = os.getenv(name)
     if raw is None:
@@ -118,6 +132,55 @@ def _open_file_mapping_exists(page_name: str) -> bool:
     return True
 
 
+def _read_static_mapping(alias: str) -> Dict[str, Any]:
+    if os.name != "nt":
+        return {"exists": False, "error": "unsupported_platform"}
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.OpenFileMappingW.argtypes = [ctypes.c_uint32, ctypes.c_int, ctypes.c_wchar_p]
+    kernel32.OpenFileMappingW.restype = ctypes.c_void_p
+    kernel32.MapViewOfFile.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_uint32,
+        ctypes.c_uint32,
+        ctypes.c_uint32,
+        ctypes.c_size_t,
+    ]
+    kernel32.MapViewOfFile.restype = ctypes.c_void_p
+    kernel32.UnmapViewOfFile.argtypes = [ctypes.c_void_p]
+    kernel32.UnmapViewOfFile.restype = ctypes.c_int
+    kernel32.CloseHandle.argtypes = [ctypes.c_void_p]
+    kernel32.CloseHandle.restype = ctypes.c_int
+
+    handle = kernel32.OpenFileMappingW(FILE_MAP_READ, False, alias)
+    if not handle:
+        return {"exists": False, "error": f"open_failed:{ctypes.get_last_error()}"}
+
+    view = kernel32.MapViewOfFile(handle, FILE_MAP_READ, 0, 0, ctypes.sizeof(_ACStaticProbe))
+    if not view:
+        error = ctypes.get_last_error()
+        kernel32.CloseHandle(handle)
+        return {"exists": True, "error": f"map_failed:{error}"}
+
+    try:
+        data = _ACStaticProbe.from_address(view)
+        return {
+            "exists": True,
+            "error": None,
+            "alias": alias,
+            "smVersion": str(data.smVersion).rstrip("\x00").strip(),
+            "acVersion": str(data.acVersion).rstrip("\x00").strip(),
+            "carModel": str(data.carModel).rstrip("\x00").strip(),
+            "track": str(data.track).rstrip("\x00").strip(),
+            "playerName": str(data.playerName).rstrip("\x00").strip(),
+            "numberOfSessions": int(data.numberOfSessions),
+            "numCars": int(data.numCars),
+        }
+    finally:
+        kernel32.UnmapViewOfFile(view)
+        kernel32.CloseHandle(handle)
+
+
 def shared_memory_pages_status(page_names: Iterable[str] | None = None) -> Dict[str, Any]:
     pages = tuple(page_names or assetto_corsa_shared_memory_pages())
     available: Dict[str, str] = {}
@@ -142,27 +205,67 @@ def shared_memory_pages_status(page_names: Iterable[str] | None = None) -> Dict[
     }
 
 
+def shared_memory_static_status() -> Dict[str, Any]:
+    checked_aliases = list(_page_aliases("acpmf_static"))
+    snapshots = [_read_static_mapping(alias) for alias in checked_aliases]
+    snapshot = next((item for item in snapshots if item.get("exists") and not item.get("error")), None)
+
+    if not snapshot:
+        existing_error = next((item.get("error") for item in snapshots if item.get("exists")), None)
+        return {
+            "checked": True,
+            "ready": False,
+            "aliases": checked_aliases,
+            "reason": existing_error or "static_page_missing",
+        }
+
+    track = str(snapshot.get("track") or "").strip()
+    car_model = str(snapshot.get("carModel") or "").strip()
+    ready = bool(track and car_model)
+    return {
+        "checked": True,
+        "ready": ready,
+        "reason": None if ready else "static_page_has_no_session_data",
+        "alias": snapshot.get("alias"),
+        "track": track,
+        "carModel": car_model,
+        "smVersion": snapshot.get("smVersion"),
+        "acVersion": snapshot.get("acVersion"),
+        "numberOfSessions": snapshot.get("numberOfSessions"),
+        "numCars": snapshot.get("numCars"),
+    }
+
+
 def shared_memory_gate_status() -> Dict[str, Any]:
     enabled = shared_memory_process_gate_enabled()
     process_names = assetto_corsa_process_names()
     process_running = assetto_corsa_process_running(process_names) if enabled else True
-    pages_status = {
+    pages_status = shared_memory_pages_status() if enabled else {
         "checked": False,
         "required": list(assetto_corsa_shared_memory_pages()),
         "available": {},
         "missing": [],
-        "ready": not enabled,
+        "ready": True,
     }
+    static_status = {"checked": False, "ready": not enabled}
     reason = None
 
     if enabled and not process_running:
         allowed = False
-        reason = "waiting_for_assetto_corsa_process"
+        reason = (
+            "stale_assetto_corsa_shared_memory_without_process"
+            if pages_status.get("available")
+            else "waiting_for_assetto_corsa_process"
+        )
     elif enabled:
-        pages_status = shared_memory_pages_status()
-        allowed = bool(pages_status["ready"])
-        if not allowed:
+        if not pages_status.get("ready"):
+            allowed = False
             reason = "waiting_for_assetto_corsa_shared_memory_pages"
+        else:
+            static_status = shared_memory_static_status()
+            allowed = bool(static_status.get("ready"))
+            if not allowed:
+                reason = "waiting_for_assetto_corsa_static_data"
     else:
         allowed = True
 
@@ -172,6 +275,7 @@ def shared_memory_gate_status() -> Dict[str, Any]:
         "processRunning": process_running,
         "processNames": list(process_names),
         "pages": pages_status,
+        "static": static_status,
         "reason": reason,
     }
 
@@ -187,5 +291,6 @@ __all__ = [
     "shared_memory_access_allowed",
     "shared_memory_gate_status",
     "shared_memory_pages_status",
+    "shared_memory_static_status",
     "shared_memory_process_gate_enabled",
 ]

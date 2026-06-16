@@ -1209,10 +1209,20 @@ async def set_live_source(source: str):
             gate_status = shared_memory_gate_status()
             if not gate_status.get("allowed", True):
                 reason = gate_status.get("reason")
+                if reason == "stale_assetto_corsa_shared_memory_without_process":
+                    raise RuntimeError(
+                        "Stale Assetto Corsa shared memory pages exist without acs.exe. "
+                        "Close the process that created them before opening Assetto Corsa."
+                    )
                 if reason == "waiting_for_assetto_corsa_shared_memory_pages":
                     raise RuntimeError(
                         "Assetto Corsa is running, but shared memory pages are not ready. "
                         "Load a driving session first, then the backend will connect."
+                    )
+                if reason == "waiting_for_assetto_corsa_static_data":
+                    raise RuntimeError(
+                        "Assetto Corsa is running, but static telemetry is not ready. "
+                        "Wait until a car/track session is loaded."
                     )
                 raise RuntimeError(
                     "Assetto Corsa is not running. Open Assetto Corsa first, then the backend will connect to shared memory."

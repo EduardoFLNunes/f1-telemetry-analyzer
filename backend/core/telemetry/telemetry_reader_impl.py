@@ -444,10 +444,20 @@ class TelemetrySourceManager:
                         "TELEMETRY_SOURCE=assetto_corsa requested, but Assetto Corsa is not running. "
                         "Open Assetto Corsa first, then the backend will connect to shared memory."
                     )
+                if self.last_shared_memory_gate_status.get("reason") == "stale_assetto_corsa_shared_memory_without_process":
+                    raise RuntimeError(
+                        "TELEMETRY_SOURCE=assetto_corsa requested, but stale Assetto Corsa shared memory pages exist "
+                        "without acs.exe. Close the process that created them before opening Assetto Corsa."
+                    )
                 if self.last_shared_memory_gate_status.get("reason") == "waiting_for_assetto_corsa_shared_memory_pages":
                     raise RuntimeError(
                         "TELEMETRY_SOURCE=assetto_corsa requested, but Assetto Corsa shared memory pages are not ready. "
                         "Load a driving session first, then the backend will connect."
+                    )
+                if self.last_shared_memory_gate_status.get("reason") == "waiting_for_assetto_corsa_static_data":
+                    raise RuntimeError(
+                        "TELEMETRY_SOURCE=assetto_corsa requested, but Assetto Corsa static telemetry is not ready. "
+                        "Wait until a car/track session is loaded."
                     )
                 raise RuntimeError("TELEMETRY_SOURCE=assetto_corsa requested, but Assetto Corsa shared memory is unavailable")
             return self._select_mock(ac_available=False)
