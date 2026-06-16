@@ -9,6 +9,7 @@ import { GGDiagram } from './components/GGDiagram';
 import { CoachingFeed } from './components/CoachingFeed';
 import { AIDebriefPanel } from './components/AIDebriefPanel';
 import { AIEngineerPanel } from './components/AIEngineerPanel';
+import { AssistedAnalysisPanel } from './components/AssistedAnalysisPanel';
 import { CarPhysicsDebugPanel } from './components/CarPhysicsDebugPanel';
 import { LiveComparisonPanel } from './components/LiveComparisonPanel';
 import { RacingLineAnalysisPanel } from './components/RacingLineAnalysisPanel';
@@ -20,17 +21,15 @@ import { ReplayControls } from './components/ReplayControls';
 import { CognitiveDashboard } from './components/CognitiveDashboard';
 import { Header } from './components/Header';
 import { VehicleStatePanel, LapTimingPanel, StabilityPanel } from './components/LiveTelemetryPanels';
-import { useTelemetryStore } from './store/useTelemetryStore';
 import { useRenderCounter } from './hooks/useRenderCounter';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { api } from './api/client';
-import { deltaTone, formatDelta, formatLapTime } from './utils/lapFormat';
 
 /* ─── Dashboard ───────────────────────────────────────────────── */
 const Dashboard: React.FC = () => {
   useRenderCounter('Dashboard');
   const [trackData, setTrackData] = useState<any>(null);
-  const [rightPanel, setRightPanel] = useState<'laps'|'quality'|'engineer'|'debrief'|'comparison'|'racingLine'|'physics'>('laps');
+  const [rightPanel, setRightPanel] = useState<'laps'|'quality'|'assisted'|'engineer'|'debrief'|'comparison'|'racingLine'|'physics'>('laps');
   const [time, setTime] = useState(() => new Date());
 
   useEffect(() => {
@@ -125,7 +124,7 @@ const Dashboard: React.FC = () => {
 
             {/* Panel selector tabs */}
             <div className="panel intelligence-tabs">
-              {(['laps', 'quality', 'engineer', 'debrief', 'comparison', 'racingLine', 'physics'] as const).map(tab => (
+              {(['laps', 'quality', 'assisted', 'engineer', 'debrief', 'comparison', 'racingLine', 'physics'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setRightPanel(tab)}
@@ -145,7 +144,7 @@ const Dashboard: React.FC = () => {
                     outline: rightPanel === tab ? '1px solid rgba(34,211,238,0.2)' : '1px solid transparent',
                   }}
                 >
-                  {tab === 'laps' ? 'Voltas' : (tab === 'quality' ? 'Qualidade' : (tab === 'engineer' ? 'Engineer' : (tab === 'debrief' ? 'Debrief' : (tab === 'comparison' ? 'Compare' : (tab === 'racingLine' ? 'Line' : 'Physics')))))}
+                  {tab === 'laps' ? 'Voltas' : (tab === 'quality' ? 'Qualidade' : (tab === 'assisted' ? 'Assist' : (tab === 'engineer' ? 'Engineer' : (tab === 'debrief' ? 'Debrief' : (tab === 'comparison' ? 'Compare' : (tab === 'racingLine' ? 'Line' : 'Physics'))))))}
                 </button>
               ))}
             </div>
@@ -208,22 +207,30 @@ const Dashboard: React.FC = () => {
               }}>
                 <CarPhysicsDebugPanel active={rightPanel === 'physics'} />
               </div>
+              <div style={{
+                position: 'absolute', inset: 0,
+                opacity: rightPanel === 'assisted' ? 1 : 0,
+                pointerEvents: rightPanel === 'assisted' ? 'auto' : 'none',
+                transition: 'opacity 0.3s',
+              }}>
+                <AssistedAnalysisPanel />
+              </div>
             </div>
 
             {/* Coaching feed */}
             <div style={{
-              height: rightPanel === 'laps' || rightPanel === 'quality' ? 0 : 150,
+              height: rightPanel === 'laps' || rightPanel === 'quality' || rightPanel === 'assisted' ? 0 : 150,
               overflow: 'hidden',
-              opacity: rightPanel === 'laps' || rightPanel === 'quality' ? 0 : 1,
+              opacity: rightPanel === 'laps' || rightPanel === 'quality' || rightPanel === 'assisted' ? 0 : 1,
               transition: 'height 0.25s ease, opacity 0.2s ease',
             }}>
               <CoachingFeed />
             </div>
 
             <div style={{
-              height: rightPanel === 'laps' || rightPanel === 'quality' ? 0 : 160,
+              height: rightPanel === 'laps' || rightPanel === 'quality' || rightPanel === 'assisted' ? 0 : 160,
               overflow: 'hidden',
-              opacity: rightPanel === 'laps' || rightPanel === 'quality' ? 0 : 1,
+              opacity: rightPanel === 'laps' || rightPanel === 'quality' || rightPanel === 'assisted' ? 0 : 1,
               transition: 'height 0.25s ease, opacity 0.2s ease',
             }}>
               <DesktopRuntimePanel />
