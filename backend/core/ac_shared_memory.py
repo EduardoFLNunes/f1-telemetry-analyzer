@@ -4,6 +4,8 @@ import time
 import threading
 import logging
 
+from .assetto_shared_memory_gate import shared_memory_gate_status
+
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +107,12 @@ class AssettoCorsaTelemetryReader:
         }
 
     def connect(self):
+        gate_status = shared_memory_gate_status()
+        if not gate_status.get("allowed", True):
+            logger.debug("Assetto Corsa shared memory gate blocked legacy reader: %s", gate_status.get("reason"))
+            self.is_connected = False
+            return False
+
         try:
             self.shm_static = mmap.mmap(0, ctypes.sizeof(SPageFileStatic), "Local\\acpmf_static", mmap.ACCESS_READ)
             self.shm_physics = mmap.mmap(0, ctypes.sizeof(SPageFilePhysics), "Local\\acpmf_physics", mmap.ACCESS_READ)

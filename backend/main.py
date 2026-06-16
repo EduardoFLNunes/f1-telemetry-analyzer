@@ -20,6 +20,7 @@ from fastapi import Body, FastAPI, File, HTTPException, Query, UploadFile, WebSo
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.assisted_analysis import AssistedAnalysisService
+from core.assetto_shared_memory_gate import shared_memory_gate_status
 from core.car_physics import build_car_physics_debug, build_opponent_car_physics, build_player_car_physics
 from core.comparison_analysis import build_live_comparison_payload
 from core.debug.ac_shared_memory_full_inventory import build_ac_shared_memory_full_inventory
@@ -86,7 +87,7 @@ TRACK_CACHE_DIR = RUNTIME_ROOT / "data" / "cache" / "tracks"
 PRIMARY_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetry.csv"
 DEBUG_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetryOld.csv"
 BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
-BACKEND_PHASE_VERSION = "phase-13-data-reliability"
+BACKEND_PHASE_VERSION = "phase-14.2-real-session-assisted-validation"
 
 runtime_state = RuntimeState()
 telemetry_buffer = TelemetryBuffer(max_size=20000)
@@ -463,6 +464,9 @@ def runtime_status_payload() -> Dict[str, Any]:
                 "player_source",
                 source_manager.player_source_name(),
             ),
+            "assettoProcessRunning": telemetry_status.get("ac_process_running"),
+            "sharedMemoryAllowed": telemetry_status.get("shared_memory_allowed"),
+            "sharedMemoryGate": telemetry_status.get("shared_memory_gate"),
             "activeReader": telemetry_status.get("active_reader"),
             "sampleCount": telemetry_status.get("sampleCount", telemetry_status.get("sample_count")),
             "liveTrajectoryCount": telemetry_status.get("liveTrajectoryCount"),
@@ -1200,6 +1204,14 @@ async def set_live_source(source: str):
     global telemetry_runtime
 
     try:
+        requested_source = (source or "").strip().lower().replace("-", "_")
+        if requested_source in {"ac", "assetto", "assetto_corsa", "assetto_corsa_shared_memory"}:
+            gate_status = shared_memory_gate_status()
+            if not gate_status.get("allowed", True):
+                raise RuntimeError(
+                    "Assetto Corsa is not running. Open Assetto Corsa first, then the backend will connect to shared memory."
+                )
+
         if telemetry_runtime:
             telemetry_runtime.stop()
             telemetry_runtime = None
