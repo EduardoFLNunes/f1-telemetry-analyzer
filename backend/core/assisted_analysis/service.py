@@ -167,6 +167,7 @@ class AssistedAnalysisService:
         analysis = self._json_safe({
             "status": "success",
             "analysis": {
+                "status": "ANALYZED",
                 "version": ANALYSIS_VERSION,
                 "createdAt": datetime.utcnow().isoformat() + "Z",
                 "pipeline": "post_lap_only",
