@@ -28,3 +28,4 @@ logs/
 
 # Runtime recordings
 data/recordings/
+data/assisted_analysis/

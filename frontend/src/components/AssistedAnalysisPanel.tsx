@@ -35,6 +35,24 @@ const fmtLap = (lap: LapItem) => {
   return `${source} L${lap.lapNumber}${time} (${lap.sampleCount})`;
 };
 
+const compactValue = (value: unknown) => {
+  if (value === null || value === undefined || value === '') return '--';
+  const text = String(value).replace(/^rec__/, '');
+  return text.length > 28 ? `...${text.slice(-25)}` : text;
+};
+
+const fmtEvidence = (evidence: any) => {
+  if (!evidence || typeof evidence !== 'object') return '';
+  return Object.entries(evidence)
+    .slice(0, 4)
+    .map(([key, value]) => {
+      const n = Number(value);
+      const formatted = Number.isFinite(n) ? n.toFixed(Math.abs(n) >= 10 ? 1 : 3) : String(value);
+      return `${key}: ${formatted}`;
+    })
+    .join(' | ');
+};
+
 const severityColor = (severity: number) => {
   if (severity > 0.72) return '#fb7185';
   if (severity > 0.38) return '#fbbf24';
@@ -221,6 +239,24 @@ export const AssistedAnalysisPanel: React.FC = () => {
                 <span className="num text-[8px] text-violet-300">{fmtSec(summary?.totalEstimatedGainS)}</span>
               </div>
               <p className="text-[9px] text-slate-300 leading-relaxed font-sans">{summary?.headline}</p>
+              <div className="mt-2 grid grid-cols-2 gap-1">
+                <div>
+                  <span className="num text-[6px] text-slate-600 uppercase block">Status</span>
+                  <span className="num text-[7px] text-slate-300">{analysis.status || 'ANALYZED'}</span>
+                </div>
+                <div>
+                  <span className="num text-[6px] text-slate-600 uppercase block">Reference</span>
+                  <span className="num text-[7px] text-slate-300">{analysis.reference?.lapNumber ? `L${analysis.reference.lapNumber}` : compactValue(analysis.reference?.lapId)}</span>
+                </div>
+                <div>
+                  <span className="num text-[6px] text-slate-600 uppercase block">Lap</span>
+                  <span className="num text-[7px] text-slate-300">{analysis.lapNumber ? `L${analysis.lapNumber}` : compactValue(analysis.lapId)}</span>
+                </div>
+                <div>
+                  <span className="num text-[6px] text-slate-600 uppercase block">Corners</span>
+                  <span className="num text-[7px] text-slate-300">{summary?.cornerCount ?? corners.length}</span>
+                </div>
+              </div>
               <div className="mt-2 flex items-center justify-between">
                 <span className="num text-[7px] text-slate-600 uppercase">Confidence</span>
                 <span className="num text-[8px] text-slate-300">{Math.round((summary?.confidence ?? 0) * 100)}%</span>
@@ -255,6 +291,7 @@ export const AssistedAnalysisPanel: React.FC = () => {
                 {corners.map((corner: any) => {
                   const primary = Array.isArray(corner.errors) ? corner.errors[0] : null;
                   const severity = Number(primary?.severity ?? 0);
+                  const evidenceText = fmtEvidence(primary?.evidence || corner.evidenceTelemetry);
                   return (
                     <div key={corner.cornerId} className="rounded-sm px-2 py-2"
                       style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -276,6 +313,13 @@ export const AssistedAnalysisPanel: React.FC = () => {
                       )}
                       {corner.physicalBehavior && (
                         <div className="mt-1 text-[8px] text-slate-500 leading-snug font-sans">{corner.physicalBehavior}</div>
+                      )}
+                      {evidenceText && (
+                        <div className="mt-1 px-1.5 py-1 rounded-sm"
+                          style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.08)' }}>
+                          <span className="num text-[6px] text-cyan-500 uppercase block mb-0.5">Evidence</span>
+                          <span className="num text-[7px] text-slate-500 leading-snug">{evidenceText}</span>
+                        </div>
                       )}
                       <p className="text-[8.5px] text-slate-400 leading-relaxed mt-1.5 font-sans">{corner.feedback}</p>
                     </div>
