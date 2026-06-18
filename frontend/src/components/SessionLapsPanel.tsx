@@ -297,14 +297,20 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
         sessionId: session.sessionId,
         lapNumber: lap.lapNumber,
         track: session.track,
+        car: session.car ?? payload?.summary?.car ?? null,
         samples,
         referenceLapId: reference.referenceLapId,
         referenceLapNumber: reference.referenceLapNumber,
         referenceSamples: reference.referenceSamples,
         duration: summary?.lapTime ?? summary?.duration ?? lap.duration,
+        lapTime: summary?.lapTime ?? summary?.duration ?? lap.lapTime ?? lap.duration,
+        sampleCount: summary?.sampleCount ?? payload?.totalSampleCount ?? lap.sampleCount ?? samples.length,
         assettoClosed,
         assistAvailable: Boolean(lap.acceptedByPhase13 ?? lap.valid),
+        acceptedByPhase13: Boolean(lap.acceptedByPhase13 ?? lap.valid),
+        canAnalyze: Boolean(lap.canAnalyze ?? lap.acceptedByPhase13 ?? lap.valid),
         validationStatus: lap.validationStatus ?? null,
+        issues: Array.isArray(lap.issues) ? lap.issues : [],
         message: assettoClosed
           ? 'Replay offline usando samples persistidos; Assetto Corsa fechado.'
           : 'Replay offline usando samples persistidos.',
@@ -340,6 +346,24 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
       headline: lap.hasAssistedAnalysis
         ? 'Analise assistida offline disponivel'
         : 'Volta persistida pronta para analise assistida',
+    });
+    setError(null);
+    onOpenAssistedAnalysis?.();
+  };
+
+  const openCurrentReplayInAssist = () => {
+    if (!offlineReplay.lapId) return;
+    if (!offlineReplay.canAnalyze && !offlineReplay.assistAvailable) {
+      setError(offlineReplay.issues?.join('; ') || 'Volta rejeitada pela Phase 13; ASSIST usa apenas voltas validas.');
+      return;
+    }
+    setAssistedTraceContext({
+      analyzedLapId: offlineReplay.lapId,
+      analyzedLapNumber: offlineReplay.lapNumber,
+      referenceLapId: offlineReplay.referenceLapId,
+      referenceLapNumber: offlineReplay.referenceLapNumber,
+      track: offlineReplay.track,
+      headline: offlineReplay.message || 'Replay offline selecionado para Assisted Analysis',
     });
     setError(null);
     onOpenAssistedAnalysis?.();
@@ -427,6 +451,39 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
         </div>
         <small>{assettoLabel}</small>
       </div>
+
+      {offlineReplay.active && (
+        <div className="session-replay-card">
+          <div className="session-replay-card-header">
+            <div>
+              <span>Selected persisted lap</span>
+              <strong>L{offlineReplay.lapNumber ?? '--'} / {compactTrack(offlineReplay.track)}</strong>
+            </div>
+            <small>{offlineReplay.source || 'persisted_lap'}</small>
+          </div>
+          <div className="session-replay-card-grid">
+            <div><span>Car</span><strong>{offlineReplay.car || '--'}</strong></div>
+            <div><span>Lap time</span><strong>{formatLapTime(offlineReplay.lapTime ?? offlineReplay.duration)}</strong></div>
+            <div><span>Samples</span><strong>{Number(offlineReplay.sampleCount || offlineReplay.samples.length).toLocaleString()}</strong></div>
+            <div><span>Phase 13</span><strong>{offlineReplay.acceptedByPhase13 === false ? 'Rejected' : offlineReplay.validationStatus || 'Accepted'}</strong></div>
+            <div><span>Reference</span><strong>{offlineReplay.referenceLapNumber ? `L${offlineReplay.referenceLapNumber}` : '--'}</strong></div>
+            <div><span>ASSIST</span><strong>{offlineReplay.canAnalyze || offlineReplay.assistAvailable ? 'Ready' : 'Blocked'}</strong></div>
+          </div>
+          <div className="session-replay-card-actions">
+            <button type="button" onClick={() => openCurrentReplayInAssist()} disabled={!offlineReplay.lapId}>
+              <Target size={10} />
+              ASSIST
+            </button>
+            <button type="button" onClick={clearOfflineReplay}>
+              <XCircle size={10} />
+              CLOSE
+            </button>
+          </div>
+          {offlineReplay.issues.length > 0 && (
+            <p>{offlineReplay.issues.slice(0, 2).join('; ')}</p>
+          )}
+        </div>
+      )}
 
       <div className="session-laps-scroll">
         <section>

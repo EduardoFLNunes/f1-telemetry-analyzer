@@ -22,6 +22,7 @@ export const ReplayControls: React.FC = () => {
   const history = useTelemetryStore(s => s.history);
   const lapMetrics = useTelemetryStore(s => s.lapMetrics);
   const offlineReplay = useTelemetryStore(s => s.offlineReplay);
+  const setOfflineReplayIndex = useTelemetryStore(s => s.setOfflineReplayIndex);
   const setOfflineReplayTime = useTelemetryStore(s => s.setOfflineReplayTime);
   const setOfflineReplayPlaying = useTelemetryStore(s => s.setOfflineReplayPlaying);
   const setOfflineReplayPlaybackRate = useTelemetryStore(s => s.setOfflineReplayPlaybackRate);
@@ -47,6 +48,9 @@ export const ReplayControls: React.FC = () => {
   const replaySample = offlineReplay.currentSample;
   const replaySpeed = replaySample?.speedKmh ?? (replaySample?.speed !== undefined ? replaySample.speed * 3.6 : null);
   const replayProgress = lapMetrics.progress !== null ? `${(lapMetrics.progress * 100).toFixed(1)}%` : '--';
+  const handleReplayScrub = (value: string) => {
+    setOfflineReplayTime(Number(value));
+  };
 
   if (offlineReplay.active) {
     return (
@@ -59,6 +63,23 @@ export const ReplayControls: React.FC = () => {
           <span className="num text-[8px] text-slate-400">L{offlineReplay.lapNumber ?? '--'}</span>
           <span className="num text-[7px] text-slate-600">Fonte: persisted lap</span>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setOfflineReplayIndex(0)}
+          className="num text-[7px] uppercase rounded-sm transition-all"
+          style={{
+            height: 24,
+            minWidth: 38,
+            border: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(255,255,255,0.02)',
+            color: '#94a3b8',
+            cursor: 'pointer',
+          }}
+          title="Voltar ao inicio do replay"
+        >
+          START
+        </button>
 
         <button
           type="button"
@@ -100,12 +121,30 @@ export const ReplayControls: React.FC = () => {
             max={Math.max(offlineReplay.duration, 0.01)}
             step={0.01}
             value={Math.min(offlineReplay.currentTime, Math.max(offlineReplay.duration, 0.01))}
-            onChange={(event) => setOfflineReplayTime(Number(event.target.value))}
+            onInput={(event) => handleReplayScrub(event.currentTarget.value)}
+            onChange={(event) => handleReplayScrub(event.target.value)}
             style={{ width: '100%' }}
             aria-label="Offline replay timeline"
           />
           <span className="num text-[8px] text-slate-500" style={{ minWidth: 54, textAlign: 'right' }}>{formatLapTime(offlineReplay.duration)}</span>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setOfflineReplayTime(offlineReplay.duration)}
+          className="num text-[7px] uppercase rounded-sm transition-all"
+          style={{
+            height: 24,
+            minWidth: 34,
+            border: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(255,255,255,0.02)',
+            color: '#94a3b8',
+            cursor: 'pointer',
+          }}
+          title="Ir para o fim do replay"
+        >
+          END
+        </button>
 
         <div className="flex items-center gap-4 min-w-0" style={{ flexShrink: 0 }}>
           <Stat label="Speed" value={replaySpeed === null || replaySpeed === undefined ? '--' : `${replaySpeed.toFixed(0)} km/h`} color="text-white" />

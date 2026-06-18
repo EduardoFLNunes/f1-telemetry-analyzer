@@ -207,16 +207,22 @@ export interface OfflineReplayState {
   referenceLapId: string | null;
   referenceLapNumber: number | null;
   track: string | null;
+  car: string | null;
   source: 'persisted_lap' | null;
   samples: TelemetryFrame[];
   referenceSamples: TelemetryFrame[];
   currentIndex: number;
   currentTime: number;
   duration: number;
+  lapTime: number | null;
+  sampleCount: number;
   currentSample: TelemetryFrame | null;
   assettoClosed: boolean | null;
   assistAvailable: boolean;
+  acceptedByPhase13: boolean | null;
+  canAnalyze: boolean;
   validationStatus: string | null;
+  issues: string[];
   message: string | null;
 }
 
@@ -280,18 +286,25 @@ interface TelemetryState {
     sessionId?: string | null;
     lapNumber?: number | null;
     track?: string | null;
+    car?: string | null;
     samples: TelemetryFrame[];
     referenceLapId?: string | null;
     referenceLapNumber?: number | null;
     referenceSamples?: TelemetryFrame[];
     duration?: number | null;
+    lapTime?: number | null;
+    sampleCount?: number | null;
     assettoClosed?: boolean | null;
     assistAvailable?: boolean;
+    acceptedByPhase13?: boolean | null;
+    canAnalyze?: boolean;
     validationStatus?: string | null;
+    issues?: string[];
     message?: string | null;
   }) => void;
   setOfflineReplayIndex: (index: number) => void;
   setOfflineReplayTime: (timeSeconds: number) => void;
+  advanceOfflineReplay: (deltaSeconds: number) => void;
   setOfflineReplayPlaying: (playing: boolean) => void;
   setOfflineReplayPlaybackRate: (rate: number) => void;
   clearOfflineReplay: () => void;
@@ -358,16 +371,22 @@ const EMPTY_OFFLINE_REPLAY: OfflineReplayState = {
   referenceLapId: null,
   referenceLapNumber: null,
   track: null,
+  car: null,
   source: null,
   samples: [],
   referenceSamples: [],
   currentIndex: 0,
   currentTime: 0,
   duration: 0,
+  lapTime: null,
+  sampleCount: 0,
   currentSample: null,
   assettoClosed: null,
   assistAvailable: false,
+  acceptedByPhase13: null,
+  canAnalyze: false,
   validationStatus: null,
+  issues: [],
   message: null,
 };
 
@@ -623,6 +642,43 @@ const lapMetricsForReplay = (
   };
 };
 
+let offlineReplayTimer: number | null = null;
+let offlineReplayLastTick: number | null = null;
+
+const replayClockNow = (): number => (
+  typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now()
+    : Date.now()
+);
+
+const stopOfflineReplayClock = () => {
+  if (typeof window !== 'undefined' && offlineReplayTimer !== null) {
+    window.clearInterval(offlineReplayTimer);
+  }
+  offlineReplayTimer = null;
+  offlineReplayLastTick = null;
+};
+
+const startOfflineReplayClock = (get: () => TelemetryState) => {
+  if (typeof window === 'undefined' || offlineReplayTimer !== null) return;
+  offlineReplayLastTick = replayClockNow();
+  offlineReplayTimer = window.setInterval(() => {
+    const state = get();
+    if (!state.offlineReplay.active || !state.offlineReplay.playing) {
+      stopOfflineReplayClock();
+      return;
+    }
+
+    const now = replayClockNow();
+    const lastTick = offlineReplayLastTick ?? now;
+    offlineReplayLastTick = now;
+    const elapsedSeconds = Math.max(0, (now - lastTick) / 1000);
+    if (elapsedSeconds > 0) {
+      state.advanceOfflineReplay(elapsedSeconds);
+    }
+  }, 50);
+};
+
 const isInitialPartialLap = (frame: TelemetryFrame): boolean => {
   const progress = numericOrNull(frame.lapProgress);
   if (progress !== null) return progress > INITIAL_LAP_PARTIAL_PROGRESS;
@@ -855,7 +911,7 @@ const normalizeCoachingEvent = (
   };
 };
 
-export const useTelemetryStore = create<TelemetryState>((set) => ({
+export const useTelemetryStore = create<TelemetryState>((set, get) => ({
   latestFrame: null,
   history: [],
   ghostHistory: [],
@@ -1152,63 +1208,78 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
     assistedTraceContext: { ...EMPTY_ASSISTED_TRACE_CONTEXT },
   }),
 
-  startOfflineReplay: (replay) => set((state) => {
+  startOfflineReplay: (replay) => {
     const samples = Array.isArray(replay.samples) ? replay.samples : [];
-    const referenceSamples = Array.isArray(replay.referenceSamples) ? replay.referenceSamples : [];
-    const firstSample = samples[0] ?? null;
-    const lapNumber = replay.lapNumber ?? (firstSample ? frameLapNumber(firstSample) : null);
-    const referenceLapNumber = replay.referenceLapNumber ?? (referenceSamples[0] ? frameLapNumber(referenceSamples[0]) : null);
-    const duration = replayDuration(samples, replay.duration);
-    const currentTime = firstSample ? replaySampleElapsed(firstSample, samples) : 0;
-    const lapMetrics = firstSample
-      ? lapMetricsForReplay(firstSample, samples, referenceSamples, lapNumber, referenceLapNumber)
-      : EMPTY_LAP_METRICS;
-    return {
-      latestFrame: firstSample,
-      history: samples,
-      currentLapSamples: samples,
-      previousLapSamples: referenceSamples,
-      ghostHistory: referenceSamples,
-      selectedLap: lapNumber,
-      selectedSessionId: replay.sessionId ?? null,
-      viewMode: 'replay',
-      isStreaming: false,
-      globalCursorS: firstSample ? numericOrNull(firstSample.s ?? firstSample.distanceAlongTrack) : null,
-      lapMetrics,
-      lapDebug: {
-        ...state.lapDebug,
-        currentLapNumber: lapNumber,
-        referenceLapNumber,
-        currentLapSamplesLength: samples.length,
-        previousLapSamplesLength: referenceSamples.length,
-        currentLapIsPartial: false,
-        previousLapValid: referenceSamples.length > 1 && referenceLapNumber !== null,
-        finalizedLapDuration: duration,
-      },
-      offlineReplay: {
-        active: samples.length > 0,
-        playing: samples.length > 1,
-        playbackRate: state.offlineReplay.playbackRate || 1,
-        lapId: replay.lapId,
-        sessionId: replay.sessionId ?? null,
-        lapNumber,
-        referenceLapId: replay.referenceLapId ?? null,
-        referenceLapNumber,
-        track: replay.track ?? null,
-        source: 'persisted_lap',
-        samples,
-        referenceSamples,
-        currentIndex: 0,
-        currentTime,
-        duration,
-        currentSample: firstSample,
-        assettoClosed: replay.assettoClosed ?? null,
-        assistAvailable: Boolean(replay.assistAvailable),
-        validationStatus: replay.validationStatus ?? null,
-        message: replay.message ?? null,
-      },
-    };
-  }),
+    stopOfflineReplayClock();
+
+    set((state) => {
+      const referenceSamples = Array.isArray(replay.referenceSamples) ? replay.referenceSamples : [];
+      const firstSample = samples[0] ?? null;
+      const lapNumber = replay.lapNumber ?? (firstSample ? frameLapNumber(firstSample) : null);
+      const referenceLapNumber = replay.referenceLapNumber ?? (referenceSamples[0] ? frameLapNumber(referenceSamples[0]) : null);
+      const duration = replayDuration(samples, replay.duration);
+      const lapTime = numericOrNull(replay.lapTime) ?? duration;
+      const currentTime = firstSample ? replaySampleElapsed(firstSample, samples) : 0;
+      const lapMetrics = firstSample
+        ? lapMetricsForReplay(firstSample, samples, referenceSamples, lapNumber, referenceLapNumber)
+        : EMPTY_LAP_METRICS;
+      return {
+        latestFrame: firstSample,
+        history: samples,
+        currentLapSamples: samples,
+        previousLapSamples: referenceSamples,
+        ghostHistory: referenceSamples,
+        selectedLap: lapNumber,
+        selectedSessionId: replay.sessionId ?? null,
+        viewMode: 'replay',
+        isStreaming: false,
+        globalCursorS: firstSample ? numericOrNull(firstSample.s ?? firstSample.distanceAlongTrack) : null,
+        lapMetrics,
+        lapDebug: {
+          ...state.lapDebug,
+          currentLapNumber: lapNumber,
+          referenceLapNumber,
+          currentLapSamplesLength: samples.length,
+          previousLapSamplesLength: referenceSamples.length,
+          currentLapIsPartial: false,
+          previousLapValid: referenceSamples.length > 1 && referenceLapNumber !== null,
+          finalizedLapDuration: duration,
+        },
+        offlineReplay: {
+          active: samples.length > 0,
+          playing: samples.length > 1,
+          playbackRate: state.offlineReplay.playbackRate || 1,
+          lapId: replay.lapId,
+          sessionId: replay.sessionId ?? null,
+          lapNumber,
+          referenceLapId: replay.referenceLapId ?? null,
+          referenceLapNumber,
+          track: replay.track ?? null,
+          car: replay.car ?? null,
+          source: 'persisted_lap',
+          samples,
+          referenceSamples,
+          currentIndex: 0,
+          currentTime,
+          duration,
+          lapTime,
+          sampleCount: numericOrNull(replay.sampleCount) ?? samples.length,
+          currentSample: firstSample,
+          assettoClosed: replay.assettoClosed ?? null,
+          assistAvailable: Boolean(replay.assistAvailable),
+          acceptedByPhase13: replay.acceptedByPhase13 ?? null,
+          canAnalyze: Boolean(replay.canAnalyze ?? replay.assistAvailable ?? replay.acceptedByPhase13),
+          validationStatus: replay.validationStatus ?? null,
+          issues: Array.isArray(replay.issues) ? replay.issues : [],
+          message: replay.message ?? null,
+        },
+      };
+    });
+
+    if (samples.length > 1) {
+      startOfflineReplayClock(get);
+    }
+  },
 
   setOfflineReplayIndex: (index) => set((state) => {
     const replay = state.offlineReplay;
@@ -1239,9 +1310,10 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
   setOfflineReplayTime: (timeSeconds) => set((state) => {
     const replay = state.offlineReplay;
     if (!replay.active || replay.samples.length === 0) return state;
-    const currentIndex = replayIndexAtTime(replay.samples, Math.max(0, Math.min(replay.duration, timeSeconds)));
+    const targetTime = Math.max(0, Math.min(replay.duration, timeSeconds));
+    const currentIndex = replayIndexAtTime(replay.samples, targetTime);
     const currentSample = replay.samples[currentIndex];
-    const currentTime = replaySampleElapsed(currentSample, replay.samples);
+    const reachedEnd = replay.duration > 0 && targetTime >= replay.duration;
     return {
       latestFrame: currentSample,
       globalCursorS: numericOrNull(currentSample.s ?? currentSample.distanceAlongTrack),
@@ -1255,18 +1327,101 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
       offlineReplay: {
         ...replay,
         currentIndex,
-        currentTime,
+        currentTime: targetTime,
         currentSample,
+        playing: reachedEnd ? false : replay.playing,
       },
     };
   }),
 
-  setOfflineReplayPlaying: (playing) => set((state) => ({
-    offlineReplay: {
-      ...state.offlineReplay,
-      playing: state.offlineReplay.active && state.offlineReplay.samples.length > 1 ? playing : false,
-    },
-  })),
+  advanceOfflineReplay: (deltaSeconds) => set((state) => {
+    const replay = state.offlineReplay;
+    const delta = Number(deltaSeconds);
+    if (
+      !replay.active ||
+      !replay.playing ||
+      replay.samples.length === 0 ||
+      !Number.isFinite(delta) ||
+      delta <= 0
+    ) {
+      return state;
+    }
+
+    const duration = replay.duration || replayDuration(replay.samples, null);
+    const targetTime = Math.max(0, Math.min(duration, replay.currentTime + delta * (replay.playbackRate || 1)));
+    const currentIndex = replayIndexAtTime(replay.samples, targetTime);
+    const currentSample = replay.samples[currentIndex];
+    const reachedEnd = duration > 0 && (targetTime >= duration || currentIndex >= replay.samples.length - 1);
+    return {
+      latestFrame: currentSample,
+      globalCursorS: numericOrNull(currentSample.s ?? currentSample.distanceAlongTrack),
+      lapMetrics: lapMetricsForReplay(
+        currentSample,
+        replay.samples,
+        replay.referenceSamples,
+        replay.lapNumber,
+        replay.referenceLapNumber,
+      ),
+      offlineReplay: {
+        ...replay,
+        currentIndex,
+        currentTime: reachedEnd ? duration : targetTime,
+        currentSample,
+        playing: !reachedEnd,
+      },
+    };
+  }),
+
+  setOfflineReplayPlaying: (playing) => {
+    set((state) => {
+      const replay = state.offlineReplay;
+      if (!replay.active || replay.samples.length <= 1) {
+        return {
+          offlineReplay: {
+            ...replay,
+            playing: false,
+          },
+        };
+      }
+
+      if (!playing) {
+        return {
+          offlineReplay: {
+            ...replay,
+            playing: false,
+          },
+        };
+      }
+
+      const atEnd = replay.duration > 0 && replay.currentTime >= replay.duration;
+      const currentIndex = atEnd ? 0 : replay.currentIndex;
+      const currentSample = replay.samples[currentIndex] || replay.samples[0];
+      return {
+        latestFrame: currentSample,
+        globalCursorS: numericOrNull(currentSample.s ?? currentSample.distanceAlongTrack),
+        lapMetrics: lapMetricsForReplay(
+          currentSample,
+          replay.samples,
+          replay.referenceSamples,
+          replay.lapNumber,
+          replay.referenceLapNumber,
+        ),
+        offlineReplay: {
+          ...replay,
+          currentIndex,
+          currentTime: atEnd ? 0 : replay.currentTime,
+          currentSample,
+          playing: true,
+        },
+      };
+    });
+
+    if (playing) {
+      startOfflineReplayClock(get);
+    } else {
+      stopOfflineReplayClock();
+    }
+  },
 
   setOfflineReplayPlaybackRate: (rate) => set((state) => ({
     offlineReplay: {
@@ -1275,18 +1430,21 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
     },
   })),
 
-  clearOfflineReplay: () => set((state) => ({
-    offlineReplay: { ...EMPTY_OFFLINE_REPLAY },
-    viewMode: 'live',
-    selectedLap: null,
-    selectedSessionId: null,
-    globalCursorS: null,
-    lapMetrics: {
-      ...state.lapMetrics,
-      delta: null,
-      lapDelta: null,
-    },
-  })),
+  clearOfflineReplay: () => {
+    stopOfflineReplayClock();
+    set((state) => ({
+      offlineReplay: { ...EMPTY_OFFLINE_REPLAY },
+      viewMode: 'live',
+      selectedLap: null,
+      selectedSessionId: null,
+      globalCursorS: null,
+      lapMetrics: {
+        ...state.lapMetrics,
+        delta: null,
+        lapDelta: null,
+      },
+    }));
+  },
 
   setReferenceLap: (samples, lapNumber, sessionId = null) => set((state) => ({
     previousLapSamples: samples,
@@ -1323,37 +1481,40 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
     };
   }),
 
-  clearHistory: () => set({ 
-    history: [], 
-    currentLapSamples: [],
-    previousLapSamples: [],
-    completedLapsByNumber: {},
-    completedLapsHistory: [],
-    currentLapStartTime: null,
-    currentLapIsPartial: false,
-    lastLapTransitionAtTime: null,
-    lapMetrics: EMPTY_LAP_METRICS,
-    lapDebug: EMPTY_LAP_DEBUG,
-    opponents: [],
-    opponentHistoryByCarId: {},
-    opponentsMeta: {
-      source: 'udp',
-      count: 0,
-      track: null,
-      sessionTime: null,
-      lastUpdateTimestamp: null,
-      staleAfterSeconds: null,
-    },
-    lastOpponentsUpdateAt: null,
-    coachingEvents: [], 
-    engineerSpeech: [], 
-    cognitiveState: null, 
-    latestFrame: null,
-    ghostHistory: [],
-    globalCursorS: null,
-    selectedLap: null,
-    selectedSessionId: null,
-    assistedTraceContext: { ...EMPTY_ASSISTED_TRACE_CONTEXT },
-    offlineReplay: { ...EMPTY_OFFLINE_REPLAY },
-  })
+  clearHistory: () => {
+    stopOfflineReplayClock();
+    set({
+      history: [],
+      currentLapSamples: [],
+      previousLapSamples: [],
+      completedLapsByNumber: {},
+      completedLapsHistory: [],
+      currentLapStartTime: null,
+      currentLapIsPartial: false,
+      lastLapTransitionAtTime: null,
+      lapMetrics: EMPTY_LAP_METRICS,
+      lapDebug: EMPTY_LAP_DEBUG,
+      opponents: [],
+      opponentHistoryByCarId: {},
+      opponentsMeta: {
+        source: 'udp',
+        count: 0,
+        track: null,
+        sessionTime: null,
+        lastUpdateTimestamp: null,
+        staleAfterSeconds: null,
+      },
+      lastOpponentsUpdateAt: null,
+      coachingEvents: [],
+      engineerSpeech: [],
+      cognitiveState: null,
+      latestFrame: null,
+      ghostHistory: [],
+      globalCursorS: null,
+      selectedLap: null,
+      selectedSessionId: null,
+      assistedTraceContext: { ...EMPTY_ASSISTED_TRACE_CONTEXT },
+      offlineReplay: { ...EMPTY_OFFLINE_REPLAY },
+    });
+  }
 }));
