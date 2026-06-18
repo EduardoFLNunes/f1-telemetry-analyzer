@@ -5,6 +5,7 @@ import { api } from '../../api/client';
 import { drawCar, drawOpponentCar } from './CarRenderer.jsx';
 import { applyCameraTransform, computeTrackBounds } from './CameraController.jsx';
 import { drawHud, drawTrackSurface } from './OverlayRenderer.jsx';
+import { resolveSampleMapPosition } from '../../utils/spatialTransform';
 import {
   drawPreparedRacingLineOverlay,
   drawRacingLineLegend,
@@ -26,6 +27,8 @@ const HISTORY_WINDOW_BY_MODE = {
   PERFORMANCE: 600,
 };
 const PERFORMANCE_MODES = ['QUALITY', 'BALANCED', 'PERFORMANCE'];
+const MAX_REPLAY_TRACE_GAP_METERS = 180;
+const REPLAY_TRACK_BOUNDS_MARGIN_METERS = 80;
 
 function normalizeTrack(trackData) {
   if (!trackData) return null;
@@ -118,20 +121,15 @@ function resolveOpponentRenderState(opponent, trackData) {
 }
 
 function sampleMapPosition(sample) {
-  const position = sample?.mapPosition;
-  if (position && isFiniteNumber(position.x) && isFiniteNumber(position.y)) {
-    return position;
-  }
-  const x = isFiniteNumber(sample?.x) ? sample.x : sample?.world_x;
-  const y = isFiniteNumber(sample?.z) ? sample.z : sample?.world_z;
-  if (isFiniteNumber(x) && isFiniteNumber(y)) return { x, y };
-  return null;
+  return resolveSampleMapPosition(sample);
 }
 
 function drawLapTrace(ctx, samples, scale, color, options = {}) {
   if (!Array.isArray(samples) || samples.length < 2) return;
   const entries = sampleTraceEntries(samples, options.maxPoints || 2200);
   if (entries.length < 2) return;
+  const segments = traceEntrySegments(entries, options);
+  if (!segments.length) return;
   const width = options.width || 2.2;
   const alpha = options.alpha || 0.72;
   ctx.save();
@@ -141,17 +139,17 @@ function drawLapTrace(ctx, samples, scale, color, options = {}) {
   ctx.globalAlpha = alpha;
   ctx.lineWidth = width / scale;
   if (options.dashed) ctx.setLineDash([10 / scale, 8 / scale]);
-  ctx.beginPath();
-  let started = false;
-  entries.forEach(({ position }) => {
-    if (!started) {
-      ctx.moveTo(position.x, position.y);
-      started = true;
-    } else {
-      ctx.lineTo(position.x, position.y);
-    }
+  segments.forEach((segment) => {
+    ctx.beginPath();
+    segment.forEach(({ position }, index) => {
+      if (index === 0) {
+        ctx.moveTo(position.x, position.y);
+      } else {
+        ctx.lineTo(position.x, position.y);
+      }
+    });
+    ctx.stroke();
   });
-  if (started) ctx.stroke();
   ctx.restore();
 }
 
@@ -169,6 +167,65 @@ function sampleTraceEntries(samples, maxPoints = 2200) {
     if (position) entries.push({ sample: samples[lastIndex], position, index: lastIndex });
   }
   return entries;
+}
+
+function sampleLapTime(sample) {
+  const candidates = [sample?.lapTime, sample?.lap_time, sample?.currentLapTime, sample?.sessionTime, sample?.session_time];
+  for (const candidate of candidates) {
+    const number = Number(candidate);
+    if (Number.isFinite(number)) return number;
+  }
+  return null;
+}
+
+function sampleDistance(sample) {
+  const candidates = [sample?.s, sample?.distanceAlongTrack, sample?.lapDistance];
+  for (const candidate of candidates) {
+    const number = Number(candidate);
+    if (Number.isFinite(number)) return number;
+  }
+  return null;
+}
+
+function shouldBreakTrace(previous, current, options = {}) {
+  if (!previous || !current) return false;
+  const maxGap = options.maxGapMeters || MAX_REPLAY_TRACE_GAP_METERS;
+  const distance = Math.hypot(
+    current.position.x - previous.position.x,
+    current.position.y - previous.position.y,
+  );
+  if (distance > maxGap) return true;
+
+  const previousProgress = sampleProgress(previous.sample);
+  const currentProgress = sampleProgress(current.sample);
+  if (isFiniteNumber(previousProgress) && isFiniteNumber(currentProgress) && currentProgress < previousProgress - 0.18) {
+    return true;
+  }
+
+  const previousLapTime = sampleLapTime(previous.sample);
+  const currentLapTime = sampleLapTime(current.sample);
+  if (isFiniteNumber(previousLapTime) && isFiniteNumber(currentLapTime) && currentLapTime + 0.35 < previousLapTime) {
+    return true;
+  }
+
+  const previousDistance = sampleDistance(previous.sample);
+  const currentDistance = sampleDistance(current.sample);
+  return isFiniteNumber(previousDistance) && isFiniteNumber(currentDistance) && currentDistance + 120 < previousDistance;
+}
+
+function traceEntrySegments(entries, options = {}) {
+  const segments = [];
+  let current = [];
+  entries.forEach((entry) => {
+    if (current.length > 0 && shouldBreakTrace(current[current.length - 1], entry, options)) {
+      if (current.length > 1) segments.push(current);
+      current = [entry];
+    } else {
+      current.push(entry);
+    }
+  });
+  if (current.length > 1) segments.push(current);
+  return segments;
 }
 
 function sampleSpeedKmh(sample) {
@@ -225,20 +282,24 @@ function replayPedalColor(sample) {
 
 function drawTraceSegments(ctx, entries, scale, colorForEntry, options = {}) {
   if (entries.length < 2) return;
+  const segments = traceEntrySegments(entries, options);
+  if (!segments.length) return;
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.lineWidth = (options.width || 2.5) / scale;
-  for (let index = 1; index < entries.length; index += 1) {
-    const previous = entries[index - 1];
-    const current = entries[index];
-    const colorEntry = options.usePrevious ? previous : current;
-    ctx.strokeStyle = colorForEntry(colorEntry, previous, current);
-    ctx.beginPath();
-    ctx.moveTo(previous.position.x, previous.position.y);
-    ctx.lineTo(current.position.x, current.position.y);
-    ctx.stroke();
-  }
+  segments.forEach((segment) => {
+    for (let index = 1; index < segment.length; index += 1) {
+      const previous = segment[index - 1];
+      const current = segment[index];
+      const colorEntry = options.usePrevious ? previous : current;
+      ctx.strokeStyle = colorForEntry(colorEntry, previous, current);
+      ctx.beginPath();
+      ctx.moveTo(previous.position.x, previous.position.y);
+      ctx.lineTo(current.position.x, current.position.y);
+      ctx.stroke();
+    }
+  });
   ctx.restore();
 }
 
@@ -334,12 +395,65 @@ function drawReplayCurrentMarker(ctx, frame, scale) {
   ctx.restore();
 }
 
+function trackMapBounds(trackData) {
+  if (!trackData) return null;
+  const xs = [
+    ...(trackData.left_edge?.x || []),
+    ...(trackData.right_edge?.x || []),
+    ...(trackData.centerline?.x || []),
+  ].filter(Number.isFinite);
+  const ys = [
+    ...(trackData.left_edge?.y || trackData.left_edge?.z || []),
+    ...(trackData.right_edge?.y || trackData.right_edge?.z || []),
+    ...(trackData.centerline?.y || trackData.centerline?.z || []),
+  ].filter(Number.isFinite);
+  if (!xs.length || !ys.length) return null;
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys),
+  };
+}
+
+function replayMapDiagnostics(entries, bounds, replayTrack, activeTrack) {
+  if (!bounds || !entries.length) return null;
+  const margin = REPLAY_TRACK_BOUNDS_MARGIN_METERS;
+  const outsideCount = entries.filter((entry) => (
+    entry.position.x < bounds.minX - margin
+    || entry.position.x > bounds.maxX + margin
+    || entry.position.y < bounds.minY - margin
+    || entry.position.y > bounds.maxY + margin
+  )).length;
+  const outsideRatio = outsideCount / entries.length;
+  const normalizedReplayTrack = typeof replayTrack === 'string' ? replayTrack.trim().toLowerCase() : '';
+  const normalizedActiveTrack = typeof activeTrack === 'string' ? activeTrack.trim().toLowerCase() : '';
+  const trackMismatch = Boolean(
+    normalizedReplayTrack
+    && normalizedActiveTrack
+    && !normalizedActiveTrack.includes(normalizedReplayTrack.split('_')[0]),
+  );
+  if (trackMismatch) {
+    return { warning: 'Persisted lap track differs from active map', outsideRatio };
+  }
+  if (outsideRatio > 0.08) {
+    return { warning: 'Replay coordinates out of track bounds', outsideRatio };
+  }
+  return { warning: null, outsideRatio };
+}
+
 function drawReplayLapOverlay(ctx, replay, frame, scale, mode = 'LINE_ONLY', options = {}) {
   if (!replay?.active || !Number.isFinite(scale) || scale <= 0) return 0;
   const start = performance.now();
   const safeMode = options.simple ? 'LINE_ONLY' : (RACING_LINE_OVERLAY_MODES.includes(mode) ? mode : 'LINE_ONLY');
   const lapEntries = sampleTraceEntries(replay.samples, safeMode === 'RAW_REFERENCE_SAMPLES' ? 3000 : 2200);
   const referenceEntries = sampleTraceEntries(replay.referenceSamples || [], 2200);
+  window.__replayMapDiagnostics = replayMapDiagnostics(
+    lapEntries,
+    options.trackBounds,
+    replay.track,
+    options.activeTrack,
+  );
 
   drawLapTrace(ctx, replay.referenceSamples || [], scale, '#a78bfa', { width: 2.0, alpha: 0.62, dashed: true });
 
@@ -360,8 +474,10 @@ function drawReplayLapOverlay(ctx, replay, frame, scale, mode = 'LINE_ONLY', opt
     drawReplaySegmentMarkers(ctx, lapEntries, scale);
   } else if (safeMode === 'SMOOTHED_LINE') {
     drawLapTrace(ctx, replay.samples || [], scale, '#facc15', { width: 1.2, alpha: 0.28 });
-    const smoothed = smoothTraceEntries(lapEntries);
-    drawTraceSegments(ctx, smoothed, scale, () => 'rgba(250,204,21,0.9)', { width: 2.8 });
+    traceEntrySegments(lapEntries).forEach((segment) => {
+      const smoothed = smoothTraceEntries(segment);
+      drawTraceSegments(ctx, smoothed, scale, () => 'rgba(250,204,21,0.9)', { width: 2.8 });
+    });
   } else {
     drawLapTrace(ctx, replay.samples || [], scale, '#facc15', { width: 2.8, alpha: 0.82 });
     if (safeMode === 'DIAGNOSTIC') {
@@ -380,7 +496,9 @@ function drawReplayLegend(ctx, width, height, replay, mode = 'LINE_ONLY') {
 
   const safeMode = RACING_LINE_OVERLAY_MODES.includes(mode) ? mode : 'LINE_ONLY';
   const panelWidth = Math.min(292, Math.max(230, width - 28));
-  const panelHeight = safeMode === 'PLAYER_INPUT_GRADIENT' ? 72 : 58;
+  const diagnostics = window.__replayMapDiagnostics || null;
+  const hasWarning = Boolean(diagnostics?.warning);
+  const panelHeight = (safeMode === 'PLAYER_INPUT_GRADIENT' ? 72 : 58) + (hasWarning ? 14 : 0);
   const x = 14;
   const y = height - panelHeight - 14;
   ctx.fillStyle = 'rgba(6,8,16,0.76)';
@@ -397,18 +515,24 @@ function drawReplayLegend(ctx, width, height, replay, mode = 'LINE_ONLY') {
   const refText = replay.referenceSamples?.length ? `REF ROXA ${replay.referenceSamples.length}` : 'REF ROXA --';
   ctx.fillText(`USADA AMARELA ${replay.samples?.length || 0} / ${refText}`, x + 10, y + 32);
 
+  if (hasWarning) {
+    ctx.fillStyle = '#fb7185';
+    ctx.fillText(diagnostics.warning, x + 10, y + 46);
+  }
+
   if (safeMode === 'PLAYER_INPUT_GRADIENT') {
-    const gradient = ctx.createLinearGradient(x + 10, y + 43, x + panelWidth - 10, y + 43);
+    const gradientY = y + (hasWarning ? 56 : 43);
+    const gradient = ctx.createLinearGradient(x + 10, gradientY, x + panelWidth - 10, gradientY);
     gradient.addColorStop(0, '#7f1d1d');
     gradient.addColorStop(0.32, '#ef4444');
     gradient.addColorStop(0.5, '#facc15');
     gradient.addColorStop(0.76, '#22c55e');
     gradient.addColorStop(1, '#047857');
     ctx.fillStyle = gradient;
-    ctx.fillRect(x + 10, y + 43, panelWidth - 20, 7);
+    ctx.fillRect(x + 10, gradientY, panelWidth - 20, 7);
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText('BAIXA', x + 10, y + 63);
-    ctx.fillText('ALTA', x + panelWidth - 42, y + 63);
+    ctx.fillText('BAIXA', x + 10, gradientY + 20);
+    ctx.fillText('ALTA', x + panelWidth - 42, gradientY + 20);
     ctx.restore();
     return;
   }
@@ -420,7 +544,7 @@ function drawReplayLegend(ctx, width, height, replay, mode = 'LINE_ONLY') {
       : [['REF', '#a78bfa'], ['USADA', '#facc15'], ['ATUAL', '#facc15']];
   items.forEach(([label, color], index) => {
     const lx = x + 10 + index * 82;
-    const ly = y + 47;
+    const ly = y + (hasWarning ? 61 : 47);
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -844,7 +968,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         : (window.__latestFrame || storeFrame);
       const renderHistory = replayActive ? offlineReplay.samples : liveHistory;
       const historyWindow = HISTORY_WINDOW_BY_MODE[activePerformanceMode] || HISTORY_WINDOW_BY_MODE.BALANCED;
-      const boundsHistory = replayActive ? renderHistory : renderHistory.slice(-historyWindow);
+      const boundsHistory = replayActive && normalizedTrack
+        ? []
+        : (replayActive ? renderHistory : renderHistory.slice(-historyWindow));
 
       const liveOpponentsForRender = (!replayActive && showOpponentsRef.current) ? liveOpponents : [];
       const renderOpponents = withEstimatedHeadings(liveOpponentsForRender
@@ -853,8 +979,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       const opponentPositions = renderOpponents
         .map((opponent) => opponent.mapPosition)
         .filter((position) => Number.isFinite(position?.x) && Number.isFinite(position?.y));
+      const boundsFrame = replayActive && normalizedTrack ? null : liveFrame;
       const renderBounds = normalizedTrack
-        ? computeTrackBounds(normalizedTrack, boundsHistory, liveFrame, opponentPositions)
+        ? computeTrackBounds(normalizedTrack, boundsHistory, boundsFrame, opponentPositions)
         : computeTrackBounds(null, boundsHistory, liveFrame, opponentPositions);
 
       ctx.save();
@@ -870,7 +997,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           liveFrame,
           scale,
           showRacingLineRef.current ? racingLineModeRef.current : 'LINE_ONLY',
-          { simple: simpleVisuals },
+          {
+            simple: simpleVisuals,
+            trackBounds: trackMapBounds(normalizedTrack),
+            activeTrack: normalizedTrack?.trackName || normalizedTrack?.name || normalizedTrack?.metadata?.trackName,
+          },
         );
         perf.lastRacingLineOverlayMs = overlayCost;
         window.__telemetryPerf = window.__telemetryPerf || {};

@@ -224,21 +224,48 @@ def _finite_float(value: Any) -> Optional[float]:
     return number if math.isfinite(number) else None
 
 
+def _first_finite_float(*values: Any) -> Optional[float]:
+    for value in values:
+        number = _finite_float(value)
+        if number is not None:
+            return number
+    return None
+
+
+def _world_to_map_position(sample: Dict[str, Any]) -> Optional[Dict[str, float]]:
+    world = sample.get("worldPosition") or sample.get("world_position")
+    if isinstance(world, (list, tuple)) and len(world) >= 3:
+        x = _finite_float(world[0])
+        z = _finite_float(world[2])
+    elif isinstance(world, dict):
+        x = _first_finite_float(
+            world.get("x"),
+            sample.get("worldPositionX"),
+            sample.get("world_x"),
+            sample.get("worldX"),
+        )
+        z = _first_finite_float(
+            world.get("z"),
+            sample.get("worldPositionZ"),
+            sample.get("world_z"),
+            sample.get("worldZ"),
+        )
+    else:
+        x = _first_finite_float(sample.get("worldPositionX"), sample.get("world_x"), sample.get("worldX"))
+        z = _first_finite_float(sample.get("worldPositionZ"), sample.get("world_z"), sample.get("worldZ"))
+    if x is None or z is None:
+        return None
+    return {"x": x, "y": -z}
+
+
 def _replay_map_position(sample: Dict[str, Any]) -> Dict[str, float]:
+    world_position = _world_to_map_position(sample)
+    if world_position is not None:
+        return world_position
+
     map_position = sample.get("mapPosition") if isinstance(sample.get("mapPosition"), dict) else {}
-    x = _finite_float(
-        map_position.get("x")
-        or sample.get("x")
-        or sample.get("world_x")
-        or sample.get("worldPositionX")
-    )
-    y = _finite_float(
-        map_position.get("y")
-        or sample.get("y")
-        or sample.get("z")
-        or sample.get("world_z")
-        or sample.get("worldPositionZ")
-    )
+    x = _first_finite_float(map_position.get("x"), sample.get("x"))
+    y = _first_finite_float(map_position.get("y"), sample.get("y"), sample.get("z"))
     return {"x": x or 0.0, "y": y or 0.0}
 
 
@@ -273,8 +300,9 @@ def _normalize_replay_sample(sample: Dict[str, Any]) -> Dict[str, Any]:
         "timestamp": sample.get("timestamp"),
         "sessionTime": sample.get("sessionTime") or sample.get("session_time"),
         "mapPosition": map_position,
-        "worldX": _finite_float(sample.get("world_x") or sample.get("worldPositionX") or sample.get("x")),
-        "worldZ": _finite_float(sample.get("world_z") or sample.get("worldPositionZ") or sample.get("z")),
+        "worldX": _first_finite_float(sample.get("world_x"), sample.get("worldPositionX"), sample.get("worldX"), sample.get("x")),
+        "worldY": _first_finite_float(sample.get("world_y"), sample.get("worldPositionY"), sample.get("worldY")),
+        "worldZ": _first_finite_float(sample.get("world_z"), sample.get("worldPositionZ"), sample.get("worldZ"), sample.get("z")),
         "x": map_position["x"],
         "z": map_position["y"],
         "lapProgress": progress,

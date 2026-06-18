@@ -257,6 +257,18 @@ class AssistedAnalysisValidationFlowTests(unittest.TestCase):
                 self.assertIn("gear", replay_sample)
                 self.assertIn("rpm", replay_sample)
 
+                transformed = next(
+                    (
+                        sample for sample in replay["samples"]
+                        if abs(float(sample.get("worldZ") or sample.get("world_z") or 0.0)) > 0.001
+                    ),
+                    None,
+                )
+                if transformed:
+                    world_z = float(transformed.get("worldZ") or transformed.get("world_z"))
+                    self.assertAlmostEqual(-world_z, transformed["mapPosition"]["y"], places=6)
+                    self.assertAlmostEqual(transformed["mapPosition"]["y"], transformed["z"], places=6)
+
                 analysis = asyncio.run(
                     backend_main.request_phase14_assisted_analysis(
                         fixture.target_lap_id,
@@ -271,6 +283,27 @@ class AssistedAnalysisValidationFlowTests(unittest.TestCase):
                 backend_main.assisted_analysis_service = previous_service
                 backend_main.session_repository = previous_repository
                 backend_main.recording_runtime = previous_recording_runtime
+
+    def test_replay_sample_uses_live_world_to_map_transform(self):
+        sample = {
+            "timestamp": 1000,
+            "lap_time": 1.0,
+            "lap_number": 1,
+            "world_x": 10.0,
+            "world_y": 0.0,
+            "world_z": 25.0,
+            "x": 10.0,
+            "z": 25.0,
+            "speedKmh": 120.0,
+        }
+
+        normalized = backend_main._normalize_replay_sample(sample)
+
+        self.assertEqual({"x": 10.0, "y": -25.0}, normalized["mapPosition"])
+        self.assertEqual(10.0, normalized["x"])
+        self.assertEqual(-25.0, normalized["z"])
+        self.assertEqual(10.0, normalized["worldX"])
+        self.assertEqual(25.0, normalized["worldZ"])
 
 
 if __name__ == "__main__":

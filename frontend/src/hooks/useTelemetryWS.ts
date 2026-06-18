@@ -5,6 +5,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { PerformanceMode, useTelemetryStore, TelemetryFrame, CoachingEvent, EngineerSpeech, CognitiveState } from '../store/useTelemetryStore';
 import { WS_URL, apiUrl } from '../config/runtime';
+import { resolveSampleMapPosition } from '../utils/spatialTransform';
 
 const OPPONENTS_POLL_MS = 2000;
 const OPPONENTS_WS_FRESH_MS = 2500;
@@ -88,7 +89,7 @@ export const useTelemetryWS = () => {
         
         if (payload.type === 'telemetry') {
           const raw = payload.data;
-          const mapPosition = raw.mapPosition || { x: raw.x, y: raw.y ?? raw.z };
+          const mapPosition = resolveSampleMapPosition(raw) || { x: 0, y: 0 };
           const projectedPosition = raw.projectedPosition || (
             raw.projected_x !== undefined && (raw.projected_y !== undefined || raw.projected_z !== undefined)
               ? { x: raw.projected_x, y: raw.projected_y ?? raw.projected_z }

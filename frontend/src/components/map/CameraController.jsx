@@ -1,3 +1,5 @@
+import { resolveSampleMapPosition } from '../../utils/spatialTransform';
+
 export function computeTrackBounds(trackData, history = [], carFrame = null, extraPositions = []) {
   const left = trackData?.left_edge || {};
   const right = trackData?.right_edge || {};
@@ -7,9 +9,9 @@ export function computeTrackBounds(trackData, history = [], carFrame = null, ext
     ...(geometry.rightEdge?.points || []),
   ]);
   const livePositions = history
-    .map((frame) => frame?.mapPosition || { x: frame?.x, y: frame?.z })
+    .map((frame) => resolveSampleMapPosition(frame))
     .filter((point) => Number.isFinite(point?.x) && Number.isFinite(point?.y));
-  const carPosition = carFrame?.mapPosition || (carFrame ? { x: carFrame.x, y: carFrame.z } : null);
+  const carPosition = resolveSampleMapPosition(carFrame);
   if (carPosition && Number.isFinite(carPosition.x) && Number.isFinite(carPosition.y)) {
     livePositions.push(carPosition);
   }
@@ -58,7 +60,10 @@ export function applyCameraTransform(ctx, width, height, bounds, camera, carFram
   const zoom = camera.zoom;
 
   if (mode === 'FOLLOW' && carFrame) {
-    const carPosition = carFrame.mapPosition || { x: carFrame.x, y: carFrame.z };
+    const carPosition = resolveSampleMapPosition(carFrame);
+    if (!carPosition) {
+      return applyCameraTransform(ctx, width, height, bounds, { ...camera, mode: 'OVERVIEW' }, null);
+    }
     const scale = (height / 90) * zoom;
     ctx.translate(width / 2, height * 0.68);
     ctx.scale(scale, scale);

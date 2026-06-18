@@ -3,6 +3,7 @@ import { Archive, Gauge, PlayCircle, Radio, RefreshCw, Target, XCircle } from 'l
 import { api } from '../api/client';
 import { TelemetryFrame, useTelemetryStore } from '../store/useTelemetryStore';
 import { formatLapTime } from '../utils/lapFormat';
+import { resolveSampleMapPosition } from '../utils/spatialTransform';
 
 type LapSummary = {
   lapId?: string;
@@ -63,10 +64,7 @@ const progressOrNull = (raw: any): number | null => {
 };
 
 const normalizeStoredFrame = (raw: any): TelemetryFrame => {
-  const mapPosition = raw?.mapPosition || {
-    x: numberOr(raw?.x ?? raw?.world_x),
-    y: numberOr(raw?.y ?? raw?.z ?? -(raw?.world_z ?? 0)),
-  };
+  const mapPosition = resolveSampleMapPosition(raw) || { x: 0, y: 0 };
   const timestamp = numberOr(raw?.timestamp, Date.now());
   const lapProgress = progressOrNull(raw);
   return {
