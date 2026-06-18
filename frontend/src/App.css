@@ -475,6 +475,40 @@ select {
 .lap-row-state { color: #fbbf24; font-size: 6px; font-weight: 800; text-align: right; }
 .lap-row-state.is-valid { color: #34d399; }
 
+.lap-library-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 61px;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.lap-assist-button {
+  min-width: 0;
+  min-height: 31px;
+  margin-bottom: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 5px;
+  color: #c4b5fd;
+  background: rgba(167,139,250,0.055);
+  cursor: pointer;
+  font: 800 6px 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+}
+
+.lap-assist-button:hover:not(:disabled) {
+  border-color: rgba(167,139,250,0.38);
+  background: rgba(167,139,250,0.1);
+}
+
+.lap-assist-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
 .session-card {
   margin-bottom: 5px;
   border: 1px solid rgba(255,255,255,0.05);

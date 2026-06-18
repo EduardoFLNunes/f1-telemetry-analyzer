@@ -22,6 +22,7 @@ from ..assetto_adapter import (
     SPageFilePhysics as AdapterPhysics,
     SPageFileStatic as AdapterStatic,
 )
+from ..assetto_shared_memory_gate import shared_memory_gate_status
 
 try:
     from .. import ac_shared_memory as legacy_shared_memory
@@ -432,6 +433,19 @@ def _collect_current_values(sources: Iterable[StructureSource]) -> Dict[str, Any
     return {"by_source": by_source, "connection": connection}
 
 
+def _blocked_current_values(sources: Iterable[StructureSource], gate_status: Dict[str, Any]) -> Dict[str, Any]:
+    connection: Dict[str, Dict[str, Any]] = {}
+    reason = gate_status.get("reason") or "shared_memory_gate_blocked"
+    for source in sources:
+        connection[f"{source.structure}:{source.module}"] = {
+            "connected": False,
+            "error": reason,
+            "size_bytes": ctypes.sizeof(source.ctypes_class),
+            "primary": source.primary,
+        }
+    return {"by_source": {}, "connection": connection}
+
+
 def _field_descriptor(source: StructureSource, index: int, field_name: str, field_type: Any) -> Dict[str, Any]:
     shape = _array_shape(field_type)
     base_type = _base_type(field_type)
@@ -616,7 +630,12 @@ def build_ac_shared_memory_full_inventory() -> Dict[str, Any]:
     """Return a complete read-only inventory of implemented AC shared memory fields."""
     generated_at = datetime.now(timezone.utc).isoformat()
     sources = PRIMARY_SOURCES + _legacy_sources()
-    current_values = _collect_current_values(sources)
+    gate_status = shared_memory_gate_status()
+    current_values = (
+        _collect_current_values(sources)
+        if gate_status.get("allowed", True)
+        else _blocked_current_values(sources, gate_status)
+    )
     fields = _all_field_metadata(sources, current_values)
     raw = _raw_primary_values(current_values)
     categories: Dict[str, Dict[str, Any]] = {}
@@ -641,6 +660,7 @@ def build_ac_shared_memory_full_inventory() -> Dict[str, Any]:
         "generated_at": generated_at,
         "source": "assetto_corsa_shared_memory",
         "mode": "read_only_debug_inventory",
+        "shared_memory_gate": gate_status,
         "structures": structures,
         "fields": fields,
         "field_categories": dict(sorted(categories.items())),

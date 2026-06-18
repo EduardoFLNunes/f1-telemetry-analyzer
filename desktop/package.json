@@ -1,9 +1,9 @@
 {
   "name": "automobilista-telemetria-desktop",
   "private": true,
-  "productName": "Automobilista Telemetria",
-  "version": "0.1.3-phase-13-reliability",
-  "description": "Sistema desktop de telemetria e análise de desempenho para simulação automobilística.",
+  "productName": "Automobilista Telemetria - feature-phase-14-2-real-session-assisted-validation",
+  "version": "0.1.5-phase-14-2-shared-memory-gate",
+  "description": "Sistema desktop de telemetria e analise de desempenho para simulacao automobilistica. Branch: feature/phase-14-2-real-session-assisted-validation.",
   "author": "Eduardo Francisco",
   "copyright": "Copyright (c) 2026 Eduardo Francisco",
   "main": "main.js",
@@ -24,8 +24,8 @@
   },
   "build": {
     "appId": "br.edu.automobilista.telemetria",
-    "productName": "Automobilista Telemetria",
-    "artifactName": "Automobilista-Telemetria-Setup-${version}.${ext}",
+    "productName": "Automobilista Telemetria - feature-phase-14-2-real-session-assisted-validation",
+    "artifactName": "Automobilista-Telemetria-feature-phase-14-2-real-session-assisted-validation-Setup-${version}.${ext}",
     "asar": true,
     "directories": {
       "output": "dist"
@@ -91,8 +91,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Automobilista Telemetria",
-      "uninstallDisplayName": "Automobilista Telemetria",
+      "shortcutName": "Automobilista Telemetria - feature-phase-14-2-real-session-assisted-validation",
+      "uninstallDisplayName": "Automobilista Telemetria - feature-phase-14-2-real-session-assisted-validation",
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",
       "installerHeaderIcon": "assets/icon.ico"

@@ -10,6 +10,7 @@ import pandas as pd
 
 from .telemetry_reader import TelemetryReader
 from .telemetry_models import TelemetrySample
+from ..assetto_shared_memory_gate import shared_memory_gate_status
 from ..assetto_adapter import AssettoAdapter
 
 
@@ -208,13 +209,29 @@ class ACSharedMemoryReader(PollingTelemetryReader):
         self.latest_track_length: Optional[float] = None
         self.latest_game_code: Optional[str] = "assetto_corsa"
         self.latest_ac_install_path: Optional[str] = None
+        self.latest_shared_memory_gate_status: Dict[str, Any] = {}
         self._next_connect_attempt_at = 0.0
+        self._last_gate_log_at = 0.0
 
     def connect(self) -> bool:
         if self.connected and self.adapter.is_connected:
             return True
         if time.monotonic() < self._next_connect_attempt_at:
             return False
+
+        gate_status = shared_memory_gate_status()
+        self.latest_shared_memory_gate_status = gate_status
+        if not gate_status.get("allowed", True):
+            self.connected = False
+            self._next_connect_attempt_at = time.monotonic() + 2.0
+            if time.monotonic() - self._last_gate_log_at > 10.0:
+                logger.info(
+                    "Assetto Corsa shared memory gate is waiting for process: %s",
+                    ", ".join(gate_status.get("processNames") or []),
+                )
+                self._last_gate_log_at = time.monotonic()
+            return False
+
         self.connected = self.adapter.connect()
         if not self.connected:
             self._next_connect_attempt_at = time.monotonic() + 1.0
@@ -366,9 +383,14 @@ class TelemetrySourceManager:
         self.sample_count = 0
         self.last_sample_time: Optional[str] = None
         self.last_world_position: Optional[List[float]] = None
+        self.last_shared_memory_gate_status: Dict[str, Any] = {}
+        self._next_ac_autoselect_at = 0.0
 
     @staticmethod
     def detect_ac_available() -> bool:
+        gate_status = shared_memory_gate_status()
+        if not gate_status.get("allowed", True):
+            return False
         reader = ACSharedMemoryReader()
         try:
             return reader.connect()
@@ -397,6 +419,7 @@ class TelemetrySourceManager:
 
         ac_reader = ACSharedMemoryReader()
         self.ac_available = ac_reader.connect()
+        self.last_shared_memory_gate_status = dict(ac_reader.latest_shared_memory_gate_status)
         if self.ac_available:
             self.reader = ac_reader
             self.active_source_name = "assetto_corsa"
@@ -412,9 +435,30 @@ class TelemetrySourceManager:
     def _select_assetto_corsa(self, fail_loudly: bool) -> str:
         ac_reader = ACSharedMemoryReader()
         self.ac_available = ac_reader.connect()
+        self.last_shared_memory_gate_status = dict(ac_reader.latest_shared_memory_gate_status)
         if not self.ac_available:
             ac_reader.stop()
             if fail_loudly:
+                if self.last_shared_memory_gate_status.get("reason") == "waiting_for_assetto_corsa_process":
+                    raise RuntimeError(
+                        "TELEMETRY_SOURCE=assetto_corsa requested, but Assetto Corsa is not running. "
+                        "Open Assetto Corsa first, then the backend will connect to shared memory."
+                    )
+                if self.last_shared_memory_gate_status.get("reason") == "stale_assetto_corsa_shared_memory_without_process":
+                    raise RuntimeError(
+                        "TELEMETRY_SOURCE=assetto_corsa requested, but stale Assetto Corsa shared memory pages exist "
+                        "without acs.exe. Close the process that created them before opening Assetto Corsa."
+                    )
+                if self.last_shared_memory_gate_status.get("reason") == "waiting_for_assetto_corsa_shared_memory_pages":
+                    raise RuntimeError(
+                        "TELEMETRY_SOURCE=assetto_corsa requested, but Assetto Corsa shared memory pages are not ready. "
+                        "Load a driving session first, then the backend will connect."
+                    )
+                if self.last_shared_memory_gate_status.get("reason") == "waiting_for_assetto_corsa_static_data":
+                    raise RuntimeError(
+                        "TELEMETRY_SOURCE=assetto_corsa requested, but Assetto Corsa static telemetry is not ready. "
+                        "Wait until a car/track session is loaded."
+                    )
                 raise RuntimeError("TELEMETRY_SOURCE=assetto_corsa requested, but Assetto Corsa shared memory is unavailable")
             return self._select_mock(ac_available=False)
 
@@ -432,12 +476,43 @@ class TelemetrySourceManager:
 
     def _select_mock(self, ac_available: bool) -> str:
         self.ac_available = ac_available
+        self.last_shared_memory_gate_status = shared_memory_gate_status()
         self.reader = MockTelemetryReader()
         self.active_source_name = "mock"
         logger.warning("Telemetry source selected: mock; replay fallback is disabled")
         return self.active_source_name
 
+    def _promote_assetto_corsa_when_ready(self):
+        if self.active_source_name != "mock" or self.config.requested_source != "auto":
+            return
+        now = time.monotonic()
+        if now < self._next_ac_autoselect_at:
+            return
+        self._next_ac_autoselect_at = now + 2.0
+
+        gate_status = shared_memory_gate_status()
+        self.last_shared_memory_gate_status = gate_status
+        if not gate_status.get("allowed", True):
+            self.ac_available = False
+            return
+
+        ac_reader = ACSharedMemoryReader()
+        self.ac_available = ac_reader.connect()
+        self.last_shared_memory_gate_status = dict(ac_reader.latest_shared_memory_gate_status)
+        if not self.ac_available:
+            ac_reader.stop()
+            return
+
+        self.reader.stop()
+        self.reader = ac_reader
+        self.active_source_name = "assetto_corsa"
+        self.sample_count = 0
+        self.last_sample_time = None
+        self.last_world_position = None
+        logger.info("Telemetry source auto-promoted to assetto_corsa after Assetto Corsa process became available")
+
     def read_sample(self) -> Optional[TelemetrySample]:
+        self._promote_assetto_corsa_when_ready()
         sample = self.reader.read_sample()
         if not sample:
             return None
@@ -497,10 +572,17 @@ class TelemetrySourceManager:
         self.last_world_position = None
 
     def status(self) -> Dict[str, Any]:
+        gate_status = getattr(self.reader, "latest_shared_memory_gate_status", None) or self.last_shared_memory_gate_status
+        if self.active_source_name != "assetto_corsa":
+            gate_status = shared_memory_gate_status()
+            self.last_shared_memory_gate_status = gate_status
         return {
             "source": self.active_source_name,
             "player_source": self.player_source_name(),
             "ac_available": self.ac_available,
+            "ac_process_running": gate_status.get("processRunning"),
+            "shared_memory_allowed": gate_status.get("allowed"),
+            "shared_memory_gate": gate_status,
             "active_reader": self.active_reader_name(),
             "sample_count": self.sample_count,
             "last_sample_time": self.last_sample_time,

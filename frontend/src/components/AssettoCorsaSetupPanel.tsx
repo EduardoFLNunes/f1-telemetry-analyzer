@@ -11,6 +11,15 @@ type RuntimeStatus = {
     playerSource?: string | null;
     playerStatus?: 'receiving' | 'waiting' | 'stale' | 'unknown';
     secondsSinceLastPlayerSample?: number | null;
+    assettoProcessRunning?: boolean | null;
+    sharedMemoryAllowed?: boolean | null;
+    sharedMemoryGate?: {
+      enabled?: boolean;
+      allowed?: boolean;
+      processRunning?: boolean;
+      reason?: string | null;
+      processNames?: string[];
+    } | null;
   };
   opponents?: {
     source?: string | null;
@@ -159,8 +168,15 @@ export const AssettoCorsaSetupPanel: React.FC = () => {
   const backendStatus = runtime?.status === 'ok' ? 'online' : 'offline';
   const telemetryStatus = runtime?.telemetry?.playerStatus || 'unknown';
   const opponentsStatus = runtime?.opponents?.status || 'unknown';
-  const playerSource = runtime?.telemetry?.playerSource || 'shared_memory';
+  const playerSource = runtime?.telemetry?.playerSource || '--';
   const opponentsSource = runtime?.opponents?.source || 'udp';
+  const sharedMemoryGate = runtime?.telemetry?.sharedMemoryGate;
+  const gateStatus = sharedMemoryGate?.enabled === false
+    ? 'off'
+    : sharedMemoryGate?.allowed
+      ? 'open'
+      : 'waiting';
+  const gateReason = sharedMemoryGate?.reason || '--';
   const sourceStatus = plugin?.source?.available ? 'ready' : 'missing';
   const ports = `${plugin?.transport?.backendApiPort || 8000}/${plugin?.transport?.udpOpponentsPort || runtime?.opponents?.udpPort || 8765}`;
 
@@ -191,6 +207,8 @@ export const AssettoCorsaSetupPanel: React.FC = () => {
         <Row label="Telemetry" value={telemetryStatus} tone={statusTone(telemetryStatus)} />
         <Row label="Opponents" value={opponentsStatus} tone={statusTone(opponentsStatus)} />
         <Row label="Player Source" value={playerSource} tone="ok" />
+        <Row label="SM Gate" value={gateStatus} tone={gateStatus === 'open' ? 'ok' : gateStatus === 'waiting' ? 'warn' : 'quiet'} />
+        <Row label="SM Reason" value={gateReason.replace('waiting_for_assetto_corsa_', '')} tone={gateReason === '--' ? 'quiet' : 'warn'} />
         <Row label="Opp Source" value={opponentsSource} tone={runtime?.opponents?.enabled === false ? 'warn' : 'ok'} />
         <Row label="Source Files" value={sourceStatus} tone={statusTone(sourceStatus)} />
         <Row label="Player Age" value={ageText(runtime?.telemetry?.secondsSinceLastPlayerSample)} tone={telemetryStatus === 'receiving' ? 'ok' : 'warn'} />

@@ -12,6 +12,7 @@ const DEFAULT_FRONTEND_DEV_URL = 'http://127.0.0.1:5173';
 const DEFAULT_BACKEND_URL = 'http://127.0.0.1:8000';
 const BACKEND_EXE_NAME = process.platform === 'win32' ? 'automobilista-backend.exe' : 'automobilista-backend';
 const EXPECTED_BACKEND_SERVICE = 'automobilista-telemetria-backend';
+const EXPECTED_BACKEND_VERSION = 'phase-14.2-real-session-assisted-validation';
 const WINDOW_ICON_NAME = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
 const ASSETTO_PLUGIN_ID = 'ac_opponents_exporter';
 const ASSETTO_PLUGIN_DISPLAY_NAME = 'Opponents Exporter';
@@ -19,6 +20,8 @@ const ASSETTO_PLUGIN_FILE = 'ac_opponents_exporter.py';
 const ASSETTO_CONFIG_FILE = 'assetto-corsa-setup.json';
 const UDP_OPPONENTS_HOST = process.env.AT_UDP_OPPONENTS_HOST || '127.0.0.1';
 const UDP_OPPONENTS_PORT = Number(process.env.AT_UDP_OPPONENTS_PORT || 8765);
+const DESKTOP_BRANCH_NAME = process.env.AT_DESKTOP_BRANCH_NAME || 'feature/phase-14-2-real-session-assisted-validation';
+const DESKTOP_WINDOW_TITLE = `Automobilista Telemetria - ${DESKTOP_BRANCH_NAME}`;
 
 const FRONTEND_URL = process.env.AT_DESKTOP_FRONTEND_URL || DEFAULT_FRONTEND_DEV_URL;
 const BACKEND_URL = stripTrailingSlash(process.env.AT_BACKEND_URL || DEFAULT_BACKEND_URL);
@@ -584,16 +587,22 @@ function requestJson(url, timeoutMs = 2500) {
 function normalizeBackendHealth(response) {
   const service = response?.data?.service || null;
   const status = response?.data?.status || null;
+  const version = response?.data?.version || null;
   const expectedService = service === EXPECTED_BACKEND_SERVICE && status === 'ok';
+  const expectedVersion = version === EXPECTED_BACKEND_VERSION;
   const reachable = Boolean(response?.statusCode);
-  const portMessage = `Porta ${BACKEND_PORT} respondeu, mas nao parece ser o backend ${EXPECTED_BACKEND_SERVICE}.`;
+  const portMessage = expectedService
+    ? `Porta ${BACKEND_PORT} respondeu com backend ${version || 'sem versao'}, mas esta build exige ${EXPECTED_BACKEND_VERSION}.`
+    : `Porta ${BACKEND_PORT} respondeu, mas nao parece ser o backend ${EXPECTED_BACKEND_SERVICE}.`;
   return {
     ...response,
-    ok: Boolean(response?.ok && expectedService),
+    ok: Boolean(response?.ok && expectedService && expectedVersion),
     reachable,
     expectedService,
+    expectedVersion,
     service,
-    error: response?.ok && !expectedService ? portMessage : response?.error,
+    version,
+    error: response?.ok && (!expectedService || !expectedVersion) ? portMessage : response?.error,
   };
 }
 
@@ -862,6 +871,8 @@ async function desktopRuntimeStatus() {
   refreshBackendStatusFromHealth(health);
   return {
     ...desktopRuntimeState,
+    softwareName: DESKTOP_WINDOW_TITLE,
+    branchName: DESKTOP_BRANCH_NAME,
     frontendIndexPath: desktopRuntimeState.frontendIndexPath || resolveFrontendIndexPath(),
     backendResourceRoot: desktopRuntimeState.backendResourceRoot || resolveBackendResourceRoot(),
     backendRuntimeRoot: desktopRuntimeState.backendRuntimeRoot || resolveBackendRuntimeRoot(),
@@ -891,6 +902,7 @@ async function createWindow() {
     height: 820,
     minWidth: 1024,
     minHeight: 640,
+    title: DESKTOP_WINDOW_TITLE,
     backgroundColor: '#06060d',
     ...(resolveWindowIconPath() ? { icon: resolveWindowIconPath() } : {}),
     webPreferences: {
@@ -898,6 +910,10 @@ async function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
     },
+  });
+  mainWindow.on('page-title-updated', (event) => {
+    event.preventDefault();
+    mainWindow.setTitle(DESKTOP_WINDOW_TITLE);
   });
 
   const useDevServer = !app.isPackaged && process.env.AT_DESKTOP_MODE !== 'production';

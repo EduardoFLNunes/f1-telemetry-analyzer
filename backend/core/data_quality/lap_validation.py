@@ -115,6 +115,19 @@ def validate_lap(
     coverage = _number(lap.get("coveragePercent"))
     if coverage is None and progress_min is not None and progress_max is not None:
         coverage = max(0.0, min(100.0, (progress_max - progress_min) * 100.0))
+    wrapped_complete_lap = (
+        completed
+        and coverage is not None
+        and coverage >= 98.0
+        and progress_min is not None
+        and progress_min <= 0.02
+        and progress_max is not None
+        and progress_max >= 0.98
+        and progress_start is not None
+        and progress_start <= 0.05
+        and progress_end is not None
+        and progress_end <= 0.05
+    )
 
     invalid = []
     partial = []
@@ -140,7 +153,7 @@ def validate_lap(
         partial.append(f"spline coverage is too low: {coverage:.1f}%")
     if progress_start is not None and progress_start > 0.25:
         partial.append(f"lap starts too late on spline: {progress_start:.3f}")
-    if progress_end is not None and progress_end < 0.75:
+    if progress_end is not None and progress_end < 0.75 and not wrapped_complete_lap:
         partial.append(f"lap ends too early on spline: {progress_end:.3f}")
     if not completed:
         partial.append("lap is not completed")

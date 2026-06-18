@@ -188,6 +188,15 @@ export interface LapDebugState {
   finalizedLapDuration: number | null;
 }
 
+export interface AssistedTraceContext {
+  analyzedLapId: string | null;
+  analyzedLapNumber: number | null;
+  referenceLapId: string | null;
+  referenceLapNumber: number | null;
+  track: string | null;
+  headline: string | null;
+}
+
 interface TelemetryState {
   // Live Data
   latestFrame: TelemetryFrame | null;
@@ -225,6 +234,7 @@ interface TelemetryState {
   selectedSessionId: string | null;
   viewMode: 'live' | 'analysis' | 'replay';
   performanceMode: PerformanceMode;
+  assistedTraceContext: AssistedTraceContext;
 
   // Actions
   addFrame: (frame: TelemetryFrame) => void;
@@ -239,6 +249,8 @@ interface TelemetryState {
   setSectors: (sectors: SectorData[]) => void;
   setViewMode: (mode: 'live' | 'analysis' | 'replay') => void;
   setPerformanceMode: (mode: PerformanceMode) => void;
+  setAssistedTraceContext: (context: Partial<AssistedTraceContext>) => void;
+  clearAssistedTraceContext: () => void;
   setReferenceLap: (samples: TelemetryFrame[], lapNumber: number, sessionId?: string | null) => void;
   clearReferenceLap: () => void;
   clearHistory: () => void;
@@ -281,6 +293,15 @@ const EMPTY_LAP_DEBUG: LapDebugState = {
   finalizedProgressStart: null,
   finalizedProgressEnd: null,
   finalizedLapDuration: null,
+};
+
+const EMPTY_ASSISTED_TRACE_CONTEXT: AssistedTraceContext = {
+  analyzedLapId: null,
+  analyzedLapNumber: null,
+  referenceLapId: null,
+  referenceLapNumber: null,
+  track: null,
+  headline: null,
 };
 
 const finiteNumberOrNull = (value: unknown): number | null => {
@@ -736,6 +757,7 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
   selectedSessionId: null,
   viewMode: 'live',
   performanceMode: 'BALANCED',
+  assistedTraceContext: EMPTY_ASSISTED_TRACE_CONTEXT,
 
   addFrame: (frame) => set((state) => {
     const mapPosition = frame.mapPosition && isFinite(frame.mapPosition.x) && isFinite(frame.mapPosition.y)
@@ -986,6 +1008,17 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
 
   setPerformanceMode: (performanceMode) => set({ performanceMode }),
 
+  setAssistedTraceContext: (context) => set((state) => ({
+    assistedTraceContext: {
+      ...state.assistedTraceContext,
+      ...context,
+    },
+  })),
+
+  clearAssistedTraceContext: () => set({
+    assistedTraceContext: { ...EMPTY_ASSISTED_TRACE_CONTEXT },
+  }),
+
   setReferenceLap: (samples, lapNumber, sessionId = null) => set((state) => ({
     previousLapSamples: samples,
     ghostHistory: samples,
@@ -1051,5 +1084,6 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
     globalCursorS: null,
     selectedLap: null,
     selectedSessionId: null,
+    assistedTraceContext: { ...EMPTY_ASSISTED_TRACE_CONTEXT },
   })
 }));

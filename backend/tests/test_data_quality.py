@@ -188,6 +188,24 @@ class LapAndTrackValidationTests(unittest.TestCase):
         self.assertEqual(result.status, "VALID")
         self.assertGreater(result.coveragePercent, 98.0)
 
+    def test_valid_lap_with_progress_wrap_after_finish_line(self):
+        result = validate_lap(
+            {
+                "sessionId": "real_interlagos",
+                "lapNumber": 72,
+                "sampleCount": 2200,
+                "durationSeconds": 89.5,
+                "progressStart": 0.001,
+                "progressEnd": 0.0005,
+                "progressMin": 0.0005,
+                "progressMax": 0.9998,
+                "maxGapSeconds": 0.2,
+                "completed": True,
+            }
+        )
+        self.assertEqual(result.status, "VALID")
+        self.assertGreater(result.coveragePercent, 99.0)
+
     def test_partial_lap(self):
         result = validate_lap(
             {

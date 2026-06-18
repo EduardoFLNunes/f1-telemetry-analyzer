@@ -20,6 +20,7 @@ from fastapi import Body, FastAPI, File, HTTPException, Query, UploadFile, WebSo
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.assisted_analysis import AssistedAnalysisService
+from core.assetto_shared_memory_gate import shared_memory_gate_status
 from core.car_physics import build_car_physics_debug, build_opponent_car_physics, build_player_car_physics
 from core.comparison_analysis import build_live_comparison_payload
 from core.debug.ac_shared_memory_full_inventory import build_ac_shared_memory_full_inventory
@@ -31,6 +32,7 @@ from core.data_quality import (
     validate_track,
 )
 from core.debug.spatial_debug import projection_debug_payload
+from core.external_references import ExternalReferenceError, ExternalReferenceRepository, FastF1ReferenceProvider
 from core.geometry.track_geometry_provider import (
     CacheTrackGeometryProvider,
     DebugTrajectoryTrackGeometryProvider,
@@ -85,7 +87,7 @@ TRACK_CACHE_DIR = RUNTIME_ROOT / "data" / "cache" / "tracks"
 PRIMARY_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetry.csv"
 DEBUG_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetryOld.csv"
 BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
-BACKEND_PHASE_VERSION = "phase-13-data-reliability"
+BACKEND_PHASE_VERSION = "phase-14.2-real-session-assisted-validation"
 
 runtime_state = RuntimeState()
 telemetry_buffer = TelemetryBuffer(max_size=20000)
@@ -104,7 +106,16 @@ recent_coaching_events: List[Dict[str, Any]] = []
 session_repository = SessionRepository(recording_config_from_env(RUNTIME_ROOT).output_root)
 _validation_sessions_cache: List[Dict[str, Any]] = []
 _validation_sessions_cache_at = 0.0
-assisted_analysis_service = AssistedAnalysisService(REPO_ROOT, telemetry_buffer, runtime_state, track_cache)
+external_reference_repository = ExternalReferenceRepository(REPO_ROOT)
+fastf1_reference_provider = FastF1ReferenceProvider(REPO_ROOT, external_reference_repository)
+assisted_analysis_service = AssistedAnalysisService(
+    REPO_ROOT,
+    telemetry_buffer,
+    runtime_state,
+    track_cache,
+    external_reference_repository=external_reference_repository,
+    runtime_root=RUNTIME_ROOT,
+)
 
 
 async def remember_coaching_event(event: Dict[str, Any]):
@@ -115,6 +126,92 @@ async def remember_coaching_event(event: Dict[str, Any]):
 def _safe_cache_fragment(value: str) -> str:
     cleaned = re.sub(r"[^a-zA-Z0-9_.-]+", "_", value.strip())
     return cleaned.strip("_") or "live"
+
+
+def _recording_lap_id(session_id: str, lap_number: int) -> str:
+    return f"rec__{_safe_cache_fragment(session_id)}__{int(lap_number)}"
+
+
+def _parse_recording_lap_id(lap_id: str) -> tuple[str, int]:
+    if not isinstance(lap_id, str) or not lap_id.startswith("rec__"):
+        raise ValueError("Offline lap id must use the rec__<session>__<lap> format")
+    body = lap_id[len("rec__"):]
+    if "__" not in body:
+        raise ValueError("Offline lap id must include a session id and lap number")
+    session_id, lap_number_text = body.rsplit("__", 1)
+    if not session_id:
+        raise ValueError("Offline lap id is missing the session id")
+    try:
+        lap_number = int(lap_number_text)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Offline lap id has an invalid lap number") from exc
+    return session_id, lap_number
+
+
+def _has_assisted_analysis(lap_id: str) -> bool:
+    try:
+        return assisted_analysis_service.has_cached_analysis(lap_id)
+    except Exception:
+        return False
+
+
+def _enrich_recorded_lap(lap: Dict[str, Any], session: Dict[str, Any]) -> Dict[str, Any]:
+    lap_number = int(lap.get("lapNumber") or 0)
+    lap_id = str(lap.get("lapId") or _recording_lap_id(session["sessionId"], lap_number))
+    accepted = bool(lap.get("acceptedByPhase13", lap.get("valid", False)))
+    best_lap_time = session.get("bestLapTime")
+    lap_time = lap.get("lapTime", lap.get("duration"))
+    try:
+        best_candidate = accepted and lap_time is not None and best_lap_time is not None and abs(float(lap_time) - float(best_lap_time)) <= 0.001
+    except (TypeError, ValueError):
+        best_candidate = False
+    has_analysis = _has_assisted_analysis(lap_id) if accepted else False
+    return {
+        **lap,
+        "lapId": lap_id,
+        "sessionId": session.get("sessionId"),
+        "track": session.get("track"),
+        "car": session.get("car"),
+        "startedAt": session.get("startedAt"),
+        "completedAt": session.get("endedAt") if lap.get("completed") else None,
+        "lapTime": lap_time,
+        "reliabilityStatus": lap.get("reliabilityStatus") or lap.get("validationStatus"),
+        "acceptedByPhase13": accepted,
+        "hasAssistedAnalysis": has_analysis,
+        "analysisStatus": "AVAILABLE" if has_analysis else ("NOT_GENERATED" if accepted else "NOT_ELIGIBLE"),
+        "canAnalyze": accepted,
+        "bestLapCandidate": best_candidate,
+        "referenceCandidate": accepted and int(lap.get("sampleCount") or 0) >= 40,
+    }
+
+
+def _enrich_recorded_session(session: Dict[str, Any]) -> Dict[str, Any]:
+    enriched = dict(session)
+    enriched["offlineAvailable"] = True
+    enriched["storageMode"] = "recordings"
+    enriched["liveDependency"] = False
+    enriched["recordingRoot"] = str(session_repository.root)
+    enriched["laps"] = [
+        _enrich_recorded_lap(lap, enriched)
+        for lap in (session.get("laps") or [])
+        if isinstance(lap, dict)
+    ]
+    return enriched
+
+
+def _offline_lap_summary_from_id(lap_id: str) -> tuple[Dict[str, Any], Dict[str, Any]]:
+    session_id, lap_number = _parse_recording_lap_id(lap_id)
+    session = session_repository.session_summary(session_id, allow_large_scan=True)
+    if not session:
+        raise FileNotFoundError("Recorded session not found")
+    enriched_session = _enrich_recorded_session(session)
+    lap = next(
+        (item for item in enriched_session.get("laps", []) if int(item.get("lapNumber") or -1) == lap_number),
+        None,
+    )
+    if not lap:
+        raise FileNotFoundError("Recorded lap not found")
+    return enriched_session, lap
 
 
 def active_track_cache_name() -> str:
@@ -454,6 +551,9 @@ def runtime_status_payload() -> Dict[str, Any]:
                 "player_source",
                 source_manager.player_source_name(),
             ),
+            "assettoProcessRunning": telemetry_status.get("ac_process_running"),
+            "sharedMemoryAllowed": telemetry_status.get("shared_memory_allowed"),
+            "sharedMemoryGate": telemetry_status.get("shared_memory_gate"),
             "activeReader": telemetry_status.get("active_reader"),
             "sampleCount": telemetry_status.get("sampleCount", telemetry_status.get("sample_count")),
             "liveTrajectoryCount": telemetry_status.get("liveTrajectoryCount"),
@@ -986,12 +1086,15 @@ async def stop_recording():
 async def list_recorded_sessions(limit: int = Query(30, ge=1, le=200)):
     active_session_id = recording_runtime.status().sessionId if recording_runtime else None
     sessions = await asyncio.to_thread(session_repository.list_sessions, limit)
+    sessions = [_enrich_recorded_session(session) for session in sessions]
     for session in sessions:
         session["active"] = session["sessionId"] == active_session_id
     return {
         "status": "success",
         "recordingRoot": str(session_repository.root),
         "activeSessionId": active_session_id,
+        "offlineAvailable": True,
+        "liveDependency": False,
         "sessions": sessions,
     }
 
@@ -1004,7 +1107,29 @@ async def get_recorded_session(session_id: str):
         raise HTTPException(status_code=400, detail=str(exc))
     if not session:
         raise HTTPException(status_code=404, detail="Recorded session not found")
+    session = _enrich_recorded_session(session)
     return {"status": "success", "session": session}
+
+
+@app.get("/api/sessions/{session_id}/laps")
+async def get_recorded_session_laps(session_id: str):
+    try:
+        session = await asyncio.to_thread(session_repository.session_summary, session_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if not session:
+        raise HTTPException(status_code=404, detail="Recorded session not found")
+    enriched = _enrich_recorded_session(session)
+    return {
+        "status": "success",
+        "sessionId": enriched["sessionId"],
+        "track": enriched.get("track"),
+        "car": enriched.get("car"),
+        "recordingRoot": str(session_repository.root),
+        "offlineAvailable": True,
+        "liveDependency": False,
+        "laps": enriched.get("laps", []),
+    }
 
 
 @app.get("/api/sessions/{session_id}/laps/{lap_number}")
@@ -1025,6 +1150,85 @@ async def get_recorded_lap(
     if not lap:
         raise HTTPException(status_code=404, detail="Recorded lap not found")
     return {"status": "success", **lap}
+
+
+@app.get("/api/laps/{lap_id}")
+async def get_offline_recorded_lap(lap_id: str):
+    try:
+        session, lap = await asyncio.to_thread(_offline_lap_summary_from_id, lap_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return {
+        "status": "success",
+        "recordingRoot": str(session_repository.root),
+        "offlineAvailable": True,
+        "liveDependency": False,
+        "session": {
+            "sessionId": session.get("sessionId"),
+            "track": session.get("track"),
+            "car": session.get("car"),
+            "startedAt": session.get("startedAt"),
+            "endedAt": session.get("endedAt"),
+            "bestLapTime": session.get("bestLapTime"),
+        },
+        "lap": lap,
+    }
+
+
+@app.get("/api/laps/{lap_id}/summary")
+async def get_offline_recorded_lap_summary(lap_id: str):
+    try:
+        _, lap = await asyncio.to_thread(_offline_lap_summary_from_id, lap_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return {
+        "status": "success",
+        "recordingRoot": str(session_repository.root),
+        "offlineAvailable": True,
+        "liveDependency": False,
+        "lap": lap,
+    }
+
+
+@app.get("/api/laps/{lap_id}/samples")
+async def get_offline_recorded_lap_samples(
+    lap_id: str,
+    limit: int = Query(10_000, ge=100, le=100_000),
+):
+    try:
+        session_id, lap_number = _parse_recording_lap_id(lap_id)
+        lap = await asyncio.to_thread(
+            session_repository.lap_detail,
+            session_id,
+            lap_number,
+            limit,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if not lap:
+        raise HTTPException(status_code=404, detail="Recorded lap not found")
+    summary = dict(lap.get("summary") or {})
+    if summary:
+        summary = _enrich_recorded_lap(summary, {"sessionId": session_id, "track": None, "car": None, "bestLapTime": None})
+    return {
+        "status": "success",
+        "recordingRoot": str(session_repository.root),
+        "offlineAvailable": True,
+        "liveDependency": False,
+        "lapId": lap_id,
+        "sessionId": session_id,
+        "lapNumber": lap_number,
+        "summary": summary or lap.get("summary"),
+        "totalSampleCount": lap.get("totalSampleCount"),
+        "returnedSampleCount": lap.get("returnedSampleCount"),
+        "sampleStride": lap.get("sampleStride"),
+        "truncated": lap.get("truncated"),
+        "samples": lap.get("samples", []),
+    }
 
 
 @app.get("/api/assisted-analysis/laps")
@@ -1048,22 +1252,73 @@ async def request_assisted_analysis(
 
 
 @app.get("/api/analysis/assisted/lap/{lapId}")
-async def get_phase14_assisted_analysis(lapId: str, reference_lap_id: Optional[str] = None):
-    return _get_assisted_analysis_or_404(lapId, reference_lap_id)
+async def get_phase14_assisted_analysis(
+    lapId: str,
+    reference_lap_id: Optional[str] = None,
+    include_external_reference: bool = Query(False, alias="includeExternalReference"),
+    external_reference_id: Optional[str] = Query(None, alias="externalReferenceId"),
+):
+    return _get_assisted_analysis_or_404(
+        lapId,
+        reference_lap_id,
+        include_external_reference=include_external_reference,
+        external_reference_id=external_reference_id,
+    )
 
 
 @app.post("/api/analysis/assisted/lap/{lapId}")
 async def request_phase14_assisted_analysis(
     lapId: str,
     reference_lap_id: Optional[str] = None,
+    include_external_reference: bool = Query(False, alias="includeExternalReference"),
+    external_reference_id: Optional[str] = Query(None, alias="externalReferenceId"),
     force: bool = False,
     payload: Optional[Dict[str, Any]] = Body(None),
 ):
-    return _run_assisted_analysis(lapId, reference_lap_id, force, payload)
+    return _run_assisted_analysis(
+        lapId,
+        reference_lap_id,
+        force,
+        payload,
+        include_external_reference=include_external_reference,
+        external_reference_id=external_reference_id,
+    )
 
 
-def _get_assisted_analysis_or_404(lap_id: str, reference_lap_id: Optional[str] = None):
-    cached = assisted_analysis_service.get_cached_analysis(lap_id, reference_lap_id=reference_lap_id)
+@app.get("/api/analysis/assisted/lap/{lapId}/telemetry")
+async def get_phase14_assisted_lap_telemetry(
+    lapId: str,
+    max_samples: int = Query(36_000, alias="maxSamples", ge=100, le=100_000),
+):
+    try:
+        return await asyncio.to_thread(
+            assisted_analysis_service.lap_telemetry,
+            lapId,
+            max_samples,
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+def _get_assisted_analysis_or_404(
+    lap_id: str,
+    reference_lap_id: Optional[str] = None,
+    *,
+    include_external_reference: bool = False,
+    external_reference_id: Optional[str] = None,
+):
+    if not isinstance(include_external_reference, bool):
+        include_external_reference = False
+    if not isinstance(external_reference_id, str):
+        external_reference_id = None
+    cached = assisted_analysis_service.get_cached_analysis(
+        lap_id,
+        reference_lap_id=reference_lap_id,
+        include_external_reference=include_external_reference,
+        external_reference_id=external_reference_id,
+    )
     if not cached:
         raise HTTPException(status_code=404, detail="Assisted analysis is not available for this lap yet")
     return cached
@@ -1074,16 +1329,63 @@ def _run_assisted_analysis(
     reference_lap_id: Optional[str] = None,
     force: bool = False,
     payload: Optional[Dict[str, Any]] = None,
+    include_external_reference: bool = False,
+    external_reference_id: Optional[str] = None,
 ):
     try:
         body = payload or {}
+        if not isinstance(include_external_reference, bool):
+            include_external_reference = False
+        if not isinstance(external_reference_id, str):
+            external_reference_id = None
         reference = reference_lap_id or body.get("referenceLapId") or body.get("reference_lap_id")
         force_analysis = bool(force or body.get("force", False))
-        return assisted_analysis_service.analyze_lap(lap_id, reference_lap_id=reference, force=force_analysis)
+        external = bool(include_external_reference or body.get("includeExternalReference") or body.get("include_external_reference"))
+        external_id = external_reference_id or body.get("externalReferenceId") or body.get("external_reference_id")
+        return assisted_analysis_service.analyze_lap(
+            lap_id,
+            reference_lap_id=reference,
+            include_external_reference=external,
+            external_reference_id=external_id,
+            force=force_analysis,
+        )
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/api/references/external/fastf1/import")
+async def import_external_fastf1_reference(payload: Optional[Dict[str, Any]] = Body(None)):
+    body = payload or {}
+    try:
+        reference = await asyncio.to_thread(
+            fastf1_reference_provider.import_reference,
+            year=int(body.get("year", 2024)),
+            event=str(body.get("event") or "Brazil"),
+            session=str(body.get("session") or "Q"),
+            driver=body.get("driver"),
+            force=bool(body.get("force", False)),
+        )
+        return {"status": "success", "reference": reference.to_api(include_samples=False)}
+    except ExternalReferenceError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.get("/api/references/external")
+async def list_external_references(include_samples: bool = False):
+    return {
+        "status": "success",
+        "references": external_reference_repository.list_references(include_samples=include_samples),
+    }
+
+
+@app.get("/api/references/external/{reference_id}")
+async def get_external_reference(reference_id: str, include_samples: bool = True):
+    reference = external_reference_repository.get(reference_id)
+    if not reference:
+        raise HTTPException(status_code=404, detail="External reference not found")
+    return {"status": "success", "reference": reference.to_api(include_samples=include_samples)}
 
 
 @app.get("/api/debug/performance")
@@ -1110,6 +1412,30 @@ async def set_live_source(source: str):
     global telemetry_runtime
 
     try:
+        requested_source = (source or "").strip().lower().replace("-", "_")
+        if requested_source in {"ac", "assetto", "assetto_corsa", "assetto_corsa_shared_memory"}:
+            gate_status = shared_memory_gate_status()
+            if not gate_status.get("allowed", True):
+                reason = gate_status.get("reason")
+                if reason == "stale_assetto_corsa_shared_memory_without_process":
+                    raise RuntimeError(
+                        "Stale Assetto Corsa shared memory pages exist without acs.exe. "
+                        "Close the process that created them before opening Assetto Corsa."
+                    )
+                if reason == "waiting_for_assetto_corsa_shared_memory_pages":
+                    raise RuntimeError(
+                        "Assetto Corsa is running, but shared memory pages are not ready. "
+                        "Load a driving session first, then the backend will connect."
+                    )
+                if reason == "waiting_for_assetto_corsa_static_data":
+                    raise RuntimeError(
+                        "Assetto Corsa is running, but static telemetry is not ready. "
+                        "Wait until a car/track session is loaded."
+                    )
+                raise RuntimeError(
+                    "Assetto Corsa is not running. Open Assetto Corsa first, then the backend will connect to shared memory."
+                )
+
         if telemetry_runtime:
             telemetry_runtime.stop()
             telemetry_runtime = None

@@ -4,7 +4,7 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import duckdb
 import pandas as pd
@@ -32,11 +32,16 @@ class LapDataLoader:
         repo_root: Path,
         buffer_provider: Callable[[], TelemetryBuffer],
         runtime_state_provider: Callable[[], RuntimeState],
+        recordings_roots: Optional[Sequence[Path]] = None,
     ):
         self.repo_root = Path(repo_root)
         self.buffer_provider = buffer_provider
         self.runtime_state_provider = runtime_state_provider
-        self.recordings_root = self.repo_root / "data" / "recordings"
+        self.recordings_roots = self._unique_paths(
+            recordings_roots or [self.repo_root / "data" / "recordings"]
+        )
+        self.recordings_root = self.recordings_roots[0]
+        self._recorded_lap_paths: Dict[str, Path] = {}
         self.telemetry_db_paths = [
             self.repo_root / "data" / "telemetry_db" / "telemetry.duckdb",
             self.repo_root / "backend" / "data" / "telemetry_db" / "telemetry.duckdb",
@@ -139,11 +144,18 @@ class LapDataLoader:
         return descriptor, df
 
     def _list_recorded_laps(self) -> List[LapDescriptor]:
-        if not self.recordings_root.exists():
+        laps: List[LapDescriptor] = []
+        self._recorded_lap_paths = {}
+        for recordings_root in self.recordings_roots:
+            laps.extend(self._list_recorded_laps_from_root(recordings_root))
+        return laps
+
+    def _list_recorded_laps_from_root(self, recordings_root: Path) -> List[LapDescriptor]:
+        if not recordings_root.exists():
             return []
 
         laps: List[LapDescriptor] = []
-        for session_dir in sorted(self.recordings_root.iterdir(), reverse=True):
+        for session_dir in sorted(recordings_root.iterdir(), reverse=True):
             if not session_dir.is_dir():
                 continue
             player_path = session_dir / "player.jsonl"
@@ -189,7 +201,7 @@ class LapDataLoader:
                         continue
                     laps.append(
                         LapDescriptor(
-                            lap_id=f"rec__{safe_fragment(session_dir.name)}__{lap_number}",
+                            lap_id=self._recording_lap_id(session_dir.name, lap_number),
                             source="recording_jsonl",
                             driver_id="player_1",
                             lap_number=lap_number,
@@ -205,10 +217,12 @@ class LapDataLoader:
                                 "progressEnd": lap_info.get("progress_end"),
                                 "progressMin": lap_info.get("progress_min"),
                                 "progressMax": lap_info.get("progress_max"),
+                                "recordingRoot": str(recordings_root),
                                 "validation": validation.to_api(),
                             },
                         )
                     )
+                    self._recorded_lap_paths[laps[-1].lap_id] = session_dir
                 continue
 
             try:
@@ -217,7 +231,10 @@ class LapDataLoader:
                     continue
             except OSError:
                 continue
-            laps.extend(self._scan_recording_laps(session_dir, player_path, metadata))
+            scanned_laps = self._scan_recording_laps(session_dir, player_path, metadata, recordings_root)
+            laps.extend(scanned_laps)
+            for lap in scanned_laps:
+                self._recorded_lap_paths[lap.lap_id] = session_dir
         return laps
 
     def _load_recorded_lap(self, lap_id: str) -> Tuple[LapDescriptor, pd.DataFrame]:
@@ -225,7 +242,7 @@ class LapDataLoader:
         if len(parts) != 3:
             raise ValueError(f"Invalid recording lap id: {lap_id}")
         _, session_id, lap_text = parts
-        session_dir = self.recordings_root / session_id
+        session_dir = self._recorded_lap_paths.get(lap_id) or self._find_recording_session_dir(session_id)
         player_path = session_dir / "player.jsonl"
         if not player_path.exists():
             raise FileNotFoundError(f"Recording player stream not found: {player_path}")
@@ -340,7 +357,13 @@ class LapDataLoader:
         )
         return descriptor, df
 
-    def _scan_recording_laps(self, session_dir: Path, player_path: Path, metadata: Dict) -> List[LapDescriptor]:
+    def _scan_recording_laps(
+        self,
+        session_dir: Path,
+        player_path: Path,
+        metadata: Dict,
+        recordings_root: Optional[Path] = None,
+    ) -> List[LapDescriptor]:
         grouped: Dict[int, Dict[str, object]] = {}
         for payload in self._read_jsonl(player_path):
             sample = payload.get("sample", payload)
@@ -400,7 +423,7 @@ class LapDataLoader:
                 continue
             laps.append(
                 LapDescriptor(
-                    lap_id=f"rec__{safe_fragment(session_dir.name)}__{lap_number}",
+                    lap_id=self._recording_lap_id(session_dir.name, lap_number),
                     source="recording_jsonl",
                     driver_id="player_1",
                     lap_number=lap_number,
@@ -412,11 +435,28 @@ class LapDataLoader:
                     metadata={
                         "playerPath": str(player_path),
                         "sessionMetadata": metadata.get("metadata", {}),
+                        "recordingRoot": str(recordings_root) if recordings_root else None,
                         "validation": validation.to_api(),
                     },
                 )
             )
         return laps
+
+    def _find_recording_session_dir(self, session_fragment: str) -> Path:
+        for recordings_root in reversed(self.recordings_roots):
+            direct = recordings_root / session_fragment
+            if (direct / "player.jsonl").exists():
+                return direct
+            if not recordings_root.exists():
+                continue
+            for session_dir in recordings_root.iterdir():
+                if (
+                    session_dir.is_dir()
+                    and safe_fragment(session_dir.name) == session_fragment
+                    and (session_dir / "player.jsonl").exists()
+                ):
+                    return session_dir
+        return self.recordings_root / session_fragment
 
     def _flatten_recording_sample(self, payload: Dict) -> Dict:
         sample = dict(payload.get("sample", payload))
@@ -472,6 +512,23 @@ class LapDataLoader:
         if path.is_absolute():
             return path
         return (self.repo_root / path).resolve()
+
+    @staticmethod
+    def _recording_lap_id(session_name: str, lap_number: int) -> str:
+        return f"rec__{safe_fragment(session_name)}__{lap_number}"
+
+    @staticmethod
+    def _unique_paths(paths: Sequence[Path]) -> List[Path]:
+        unique: List[Path] = []
+        seen = set()
+        for path in paths:
+            resolved = Path(path).resolve()
+            key = str(resolved).lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            unique.append(resolved)
+        return unique
 
     def _active_track_length(self) -> Optional[float]:
         track = self.runtime_state_provider().track_data or {}

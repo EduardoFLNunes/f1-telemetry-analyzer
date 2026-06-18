@@ -9,6 +9,8 @@ import logging
 import time
 from typing import Dict, Any, Optional
 
+from .assetto_shared_memory_gate import shared_memory_gate_status
+
 logger = logging.getLogger(__name__)
 
 # --- AC Shared Memory Structures ---
@@ -207,6 +209,12 @@ class AssettoAdapter:
 
     def connect(self) -> bool:
         """Connects to the AC shared memory pages."""
+        gate_status = shared_memory_gate_status()
+        if not gate_status.get("allowed", True):
+            logger.debug("Assetto Corsa shared memory gate blocked adapter: %s", gate_status.get("reason"))
+            self.is_connected = False
+            return False
+
         try:
             # AC shared memory uses naming convention: acpmf_physics, acpmf_graphics, acpmf_static
             self._mmap_physics = mmap.mmap(-1, ctypes.sizeof(SPageFilePhysics), tagname="acpmf_physics", access=mmap.ACCESS_READ)

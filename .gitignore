@@ -29,3 +29,5 @@ logs/
 # Runtime recordings
 data/recordings/
 data/assisted_analysis/
+data/external_references/
+data/fastf1_cache/

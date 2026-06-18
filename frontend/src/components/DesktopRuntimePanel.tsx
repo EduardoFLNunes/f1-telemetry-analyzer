@@ -100,6 +100,8 @@ type DesktopRuntimeStatus = {
   backendRuntimeRoot?: string | null;
   frontendIndexPath?: string | null;
   logsDir?: string | null;
+  softwareName?: string | null;
+  branchName?: string | null;
   apiBaseUrl?: string;
   healthUrl?: string;
   portConflict?: boolean;
@@ -128,6 +130,15 @@ type RuntimeStatus = {
     playerStatus?: 'receiving' | 'waiting' | 'stale' | 'unknown';
     lastPlayerSampleAt?: string | null;
     secondsSinceLastPlayerSample?: number | null;
+    assettoProcessRunning?: boolean | null;
+    sharedMemoryAllowed?: boolean | null;
+    sharedMemoryGate?: {
+      enabled?: boolean;
+      allowed?: boolean;
+      processRunning?: boolean;
+      reason?: string | null;
+      processNames?: string[];
+    } | null;
   };
   opponents?: {
     online?: boolean;
@@ -282,6 +293,14 @@ export const DesktopRuntimePanel: React.FC = () => {
   const coachReady = runtime?.coach?.status === 'READY' || Boolean(runtime?.coach?.online && runtime?.telemetry?.activeTrackReady);
   const trackState = runtime?.backend?.trackState || 'UNKNOWN';
   const backendSource = desktopStatus?.backendSource || (healthOk ? 'already-running' : 'unavailable');
+  const softwareName = desktopStatus?.softwareName || 'Automobilista Telemetria';
+  const branchName = desktopStatus?.branchName || '--';
+  const sharedMemoryGate = runtime?.telemetry?.sharedMemoryGate;
+  const gateStatus = sharedMemoryGate?.enabled === false
+    ? 'off'
+    : sharedMemoryGate?.allowed
+      ? 'open'
+      : 'waiting';
   const autostartEnabled = desktopStatus?.autostartEnabled ?? window.desktopRuntime?.autostartEnabled ?? false;
   const startedByElectron = Boolean(desktopStatus?.backendStartedByElectron);
   const backendPath = desktopStatus?.backendExecutablePath || desktopStatus?.backendRunnerPath || desktopStatus?.backendCommand;
@@ -362,6 +381,8 @@ export const DesktopRuntimePanel: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 8, rowGap: 3, minWidth: 0 }}>
         <Pill label="Backend" value={desktopHealthOk ? 'online' : 'offline'} tone={desktopHealthOk ? 'ok' : backendTone} />
         <Pill label="Source" value={backendSource} tone={backendSource === 'unavailable' ? 'bad' : 'ok'} />
+        <Pill label="Software" value={compactPath(softwareName)} tone="quiet" />
+        <Pill label="Branch" value={compactPath(branchName)} tone="quiet" />
         <Pill label="Autostart" value={autostartEnabled ? 'enabled' : 'disabled'} tone={autostartEnabled ? 'ok' : 'quiet'} />
         <Pill label="Started Here" value={startedByElectron ? 'yes' : 'no'} tone={startedByElectron ? 'ok' : 'quiet'} />
         <Pill label="Health" value={desktopHealthOk ? 'OK' : (desktopStatus?.healthStatusCode ? `HTTP ${desktopStatus.healthStatusCode}` : 'waiting')} tone={desktopHealthOk ? 'ok' : backendTone} />
@@ -370,7 +391,8 @@ export const DesktopRuntimePanel: React.FC = () => {
         <Pill label="Backend Port" value={String(backendPort)} tone={desktopStatus?.portConflict ? 'bad' : 'quiet'} />
         <Pill label="Telemetry" value={telemetryReceiving ? telemetryState : 'waiting'} tone={telemetryReceiving ? 'ok' : 'warn'} />
         <Pill label="Opponents" value={opponentsReceiving ? (opponentsState || 'receiving') : 'waiting'} tone={opponentsReceiving ? 'ok' : 'warn'} />
-        <Pill label="Player Source" value={runtime?.telemetry?.playerSource || 'shared_memory'} tone="ok" />
+        <Pill label="Player Source" value={runtime?.telemetry?.playerSource || '--'} tone={runtime?.telemetry?.playerSource === 'shared_memory' ? 'ok' : 'warn'} />
+        <Pill label="SM Gate" value={gateStatus} tone={gateStatus === 'open' ? 'ok' : gateStatus === 'waiting' ? 'warn' : 'quiet'} />
         <Pill label="Opp Source" value={runtime?.opponents?.source || 'udp'} tone={runtime?.opponents?.enabled === false ? 'warn' : 'ok'} />
         <Pill label="Racing Line" value={racingLineReady ? 'READY' : 'INSUFFICIENT'} tone={racingLineReady ? 'ok' : 'warn'} />
         <Pill label="Coach" value={coachReady ? 'READY' : 'INSUFFICIENT'} tone={coachReady ? 'ok' : 'warn'} />

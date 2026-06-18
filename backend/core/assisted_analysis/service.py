@@ -4,12 +4,13 @@ import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import pandas as pd
 
 from ..cache.track_cache import TrackCache
 from ..data_quality.lap_validation import validate_lap
+from ..external_references import ExternalReferenceRepository, InterlagosReferenceMapper
 from ..live.runtime_state import RuntimeState
 from ..telemetry.telemetry_buffer import TelemetryBuffer
 from .driver_error_classifier import DrivingErrorClassifier
@@ -34,18 +35,28 @@ class AssistedAnalysisService:
         telemetry_buffer: TelemetryBuffer,
         runtime_state: RuntimeState,
         track_cache: TrackCache,
+        external_reference_repository: Optional[ExternalReferenceRepository] = None,
+        runtime_root: Optional[Path] = None,
+        recordings_roots: Optional[Sequence[Path]] = None,
     ):
         self.repo_root = Path(repo_root)
+        self.runtime_root = Path(runtime_root) if runtime_root else self.repo_root
         self.telemetry_buffer = telemetry_buffer
         self.runtime_state = runtime_state
         self.track_cache = track_cache
-        self.analysis_dir = self.repo_root / "data" / "assisted_analysis"
+        self.analysis_dir = self.runtime_root / "data" / "assisted_analysis"
         self.analysis_dir.mkdir(parents=True, exist_ok=True)
 
+        recording_roots = list(recordings_roots or [])
+        recording_roots.extend([
+            self.repo_root / "data" / "recordings",
+            self.runtime_root / "data" / "recordings",
+        ])
         self.loader = LapDataLoader(
             repo_root=self.repo_root,
             buffer_provider=lambda: self.telemetry_buffer,
             runtime_state_provider=lambda: self.runtime_state,
+            recordings_roots=recording_roots,
         )
         self.segmenter = CornerSegmenter()
         self.metrics = CornerMetricsCalculator()
@@ -54,14 +65,57 @@ class AssistedAnalysisService:
         self.classifier = DrivingErrorClassifier(self.knowledge_base)
         self.dynamics = VehicleDynamicsAnalyzer()
         self.feedback = FeedbackGenerator()
+        self.external_references = external_reference_repository or ExternalReferenceRepository(self.repo_root)
+        self.external_mapper = InterlagosReferenceMapper()
         self._memory_cache: Dict[str, Dict[str, Any]] = {}
 
     def list_laps(self) -> Dict[str, Any]:
         laps = [lap.to_api() for lap in self.loader.list_laps(include_buffer=False)]
         return {"status": "success", "laps": laps}
 
-    def get_cached_analysis(self, lap_id: str, reference_lap_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
-        cache_key = self._cache_key(lap_id, reference_lap_id)
+    def lap_telemetry(self, lap_id: str, max_samples: int = 36_000) -> Dict[str, Any]:
+        descriptor, df = self.loader.load_lap(lap_id)
+        validation = self._validate_loaded_lap(descriptor, df)
+        limited = df
+        if max_samples > 0 and len(df) > max_samples:
+            step = max(1, len(df) // max_samples)
+            limited = df.iloc[::step]
+            if limited.index[-1] != df.index[-1]:
+                limited = pd.concat([limited, df.tail(1)])
+
+        def row_float(row, key: str):
+            return finite_float(row.get(key))
+
+        samples = [
+            {
+                "index": int(index),
+                "elapsedS": row_float(row, "elapsed_s"),
+                "progress": row_float(row, "p"),
+                "distance": row_float(row, "s"),
+                "speedKmh": row_float(row, "speed_kmh"),
+                "throttle": row_float(row, "throttle"),
+                "brake": row_float(row, "brake"),
+            }
+            for index, row in limited.iterrows()
+        ]
+        return self._json_safe({
+            "status": "success",
+            "lap": descriptor.to_api(),
+            "validation": validation,
+            "sampleCount": len(df),
+            "returnedSampleCount": len(samples),
+            "samples": samples,
+        })
+
+    def get_cached_analysis(
+        self,
+        lap_id: str,
+        reference_lap_id: Optional[str] = None,
+        *,
+        include_external_reference: bool = False,
+        external_reference_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        cache_key = self._cache_key(lap_id, reference_lap_id, self._external_cache_key(include_external_reference, external_reference_id))
         if cache_key in self._memory_cache:
             return self._memory_cache[cache_key]
         path = self._cache_path(cache_key)
@@ -77,14 +131,24 @@ class AssistedAnalysisService:
         except Exception:
             return None
 
+    def has_cached_analysis(self, lap_id: str) -> bool:
+        return self.get_cached_analysis(lap_id) is not None
+
     def analyze_lap(
         self,
         lap_id: str,
         reference_lap_id: Optional[str] = None,
+        include_external_reference: bool = False,
+        external_reference_id: Optional[str] = None,
         force: bool = False,
     ) -> Dict[str, Any]:
         if not force:
-            cached = self.get_cached_analysis(lap_id, reference_lap_id)
+            cached = self.get_cached_analysis(
+                lap_id,
+                reference_lap_id,
+                include_external_reference=include_external_reference,
+                external_reference_id=external_reference_id,
+            )
             if cached:
                 return cached
 
@@ -163,6 +227,11 @@ class AssistedAnalysisService:
             "headline": self.feedback.headline(top_losses, total_gain),
             "dataQuality": data_quality,
         }
+        external_reference_context = (
+            self._external_reference_context(target.track, track_length, corner_payloads, external_reference_id)
+            if include_external_reference
+            else None
+        )
 
         analysis = self._json_safe({
             "status": "success",
@@ -191,11 +260,12 @@ class AssistedAnalysisService:
                 "trackLength": track_length,
                 "summary": summary,
                 "knowledgeBase": [concept.to_api() for concept in self.knowledge_base.all()],
+                "externalReference": external_reference_context,
                 "topLosses": top_losses,
                 "corners": corner_payloads,
             },
         })
-        cache_key = self._cache_key(lap_id, reference_lap_id)
+        cache_key = self._cache_key(lap_id, reference_lap_id, self._external_cache_key(include_external_reference, external_reference_id))
         self._memory_cache[cache_key] = analysis
         self._cache_path(cache_key).write_text(json.dumps(analysis, ensure_ascii=False, indent=2), encoding="utf-8")
         return analysis
@@ -336,8 +406,34 @@ class AssistedAnalysisService:
             if float(item.get("estimatedGainS") or item.get("lossS") or 0.0) > 0.0 or item.get("primaryError")
         ]
 
-    def _cache_key(self, lap_id: str, reference_lap_id: Optional[str]) -> str:
-        return f"{self._hash(lap_id)}__{self._hash(reference_lap_id or 'default')}"
+    def _external_reference_context(
+        self,
+        track: Optional[str],
+        track_length: float,
+        corners: List[Dict[str, Any]],
+        external_reference_id: Optional[str],
+    ) -> Dict[str, Any]:
+        reference = (
+            self.external_references.get(external_reference_id)
+            if external_reference_id
+            else self.external_references.select_best_for_track(track)
+        )
+        if not reference:
+            return {
+                "available": False,
+                "reason": "no_external_reference_available",
+                "comparisonMode": "internal_reference_only",
+            }
+        return self.external_mapper.build_context(reference, corners=corners, track_length=track_length)
+
+    @staticmethod
+    def _external_cache_key(include_external_reference: bool, external_reference_id: Optional[str]) -> str:
+        if not include_external_reference:
+            return "internal_only"
+        return external_reference_id or "external_auto"
+
+    def _cache_key(self, lap_id: str, reference_lap_id: Optional[str], external_key: str = "internal_only") -> str:
+        return f"{self._hash(lap_id)}__{self._hash(reference_lap_id or 'default')}__{self._hash(external_key)}"
 
     @staticmethod
     def _hash(value: str) -> str:
