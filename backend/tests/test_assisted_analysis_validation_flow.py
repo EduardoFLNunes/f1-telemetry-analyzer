@@ -232,6 +232,31 @@ class AssistedAnalysisValidationFlowTests(unittest.TestCase):
                 self.assertIn("throttle", samples["samples"][0])
                 self.assertIn("brake", samples["samples"][0])
 
+                replay = asyncio.run(
+                    backend_main.get_offline_recorded_lap_replay(
+                        fixture.target_lap_id,
+                        max_samples=120,
+                    )
+                )
+                self.assertEqual("success", replay["status"])
+                self.assertEqual("offline_lap_replay", replay["mode"])
+                self.assertEqual("persisted_lap", replay["source"])
+                self.assertEqual(fixture.target_lap_id, replay["lapId"])
+                self.assertTrue(replay["offlineAvailable"])
+                self.assertFalse(replay["liveDependency"])
+                self.assertFalse(replay["sharedMemoryDependency"])
+                self.assertGreater(replay["totalSampleCount"], 120)
+                self.assertLessEqual(replay["returnedSampleCount"], 121)
+                replay_sample = replay["samples"][0]
+                self.assertIn("mapPosition", replay_sample)
+                self.assertIn("lapTime", replay_sample)
+                self.assertIn("trackProgress", replay_sample)
+                self.assertIn("speedKmh", replay_sample)
+                self.assertIn("throttle", replay_sample)
+                self.assertIn("brake", replay_sample)
+                self.assertIn("gear", replay_sample)
+                self.assertIn("rpm", replay_sample)
+
                 analysis = asyncio.run(
                     backend_main.request_phase14_assisted_analysis(
                         fixture.target_lap_id,

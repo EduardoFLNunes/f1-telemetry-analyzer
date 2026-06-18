@@ -106,6 +106,21 @@ function sampleProgress(frame: TelemetryFrame, minS: number, rangeS: number): nu
   return clamp((distance - minS) / rangeS, 0, 1);
 }
 
+function progressForSampleInLap(frame: TelemetryFrame | null | undefined, samples: TelemetryFrame[]): number | null {
+  if (!frame) return null;
+  const explicit = finite(frame.lapProgress);
+  if (explicit !== null) return clamp(explicit, 0, 1);
+
+  const distances = samples
+    .map((sample) => finite(sample.s ?? sample.distanceAlongTrack))
+    .filter((value): value is number => value !== null);
+  const distance = finite(frame.s ?? frame.distanceAlongTrack);
+  if (distance === null || distances.length < 2) return null;
+  const minS = Math.min(...distances);
+  const maxS = Math.max(...distances);
+  return sampleProgress(frame, minS, Math.max(1, maxS - minS));
+}
+
 function sampleVersion(sample: TelemetryFrame | undefined): string {
   if (!sample) return 'none';
   return [
@@ -216,6 +231,7 @@ function drawRow(
   height: number,
   cursorProgress: number | null,
   performanceMode: PerformanceMode,
+  currentValueFrame?: TelemetryFrame | null,
 ) {
   ctx.fillStyle = 'rgba(255,255,255,0.018)';
   ctx.fillRect(x0, y0, width, height);
@@ -243,7 +259,9 @@ function drawRow(
   drawTrace(ctx, previousPoints, trace, x0, y0, width, height, PREVIOUS_COLOR, 1.1, 0.62);
   drawTrace(ctx, currentPoints, trace, x0, y0, width, height, CURRENT_COLOR, 1.7, 1);
 
-  const currentValue = current.length ? trace.value(current[current.length - 1]) : null;
+  const currentValue = currentValueFrame
+    ? trace.value(currentValueFrame)
+    : current.length ? trace.value(current[current.length - 1]) : null;
   ctx.fillStyle = CURRENT_COLOR;
   ctx.font = '700 8px "JetBrains Mono"';
   ctx.textAlign = 'right';
@@ -310,7 +328,12 @@ export const TelemetryTraces: React.FC = () => {
         currentLapSamples,
         previousLapSamples,
         lapMetrics,
+        offlineReplay,
       } = useTelemetryStore.getState();
+      const replayFrame = offlineReplay?.active ? offlineReplay.currentSample : null;
+      const effectiveCursorProgress = replayFrame
+        ? progressForSampleInLap(replayFrame, currentLapSamples)
+        : cursorProgressRef.current;
 
       const rect = container.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
@@ -375,8 +398,9 @@ export const TelemetryTraces: React.FC = () => {
           PAD_TOP + index * (rowH + ROW_GAP),
           graphW,
           rowH,
-          cursorProgressRef.current,
+          effectiveCursorProgress,
           mode,
+          replayFrame,
         );
       });
       const perf = tracePerf();

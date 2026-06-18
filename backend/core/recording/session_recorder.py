@@ -225,6 +225,7 @@ class SessionRecorder:
 
     def _write_batch(self, batch):
         started = time.perf_counter()
+        written_by_stream = {"player": 0, "opponents": 0, "events": 0}
         for stream, payload in batch:
             try:
                 handle = self._file_for_stream(stream)
@@ -235,11 +236,14 @@ class SessionRecorder:
                     self._opponent_snapshots_written += 1
                 elif stream == "events":
                     self._events_written += 1
+                written_by_stream[stream] = written_by_stream.get(stream, 0) + 1
             except Exception as exc:
                 self._dropped_frames += 1
                 logger.warning("Session recorder write error for %s: %s", stream, exc)
         self._flush_files()
         performance_metrics.record_disk_write(time.perf_counter() - started)
+        for stream, count in written_by_stream.items():
+            performance_metrics.mark_persisted_samples(stream, count=count)
 
     def _file_for_stream(self, stream: str):
         if stream not in self._files:

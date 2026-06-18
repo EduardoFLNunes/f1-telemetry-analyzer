@@ -401,6 +401,102 @@ select {
   font: 700 10px 'JetBrains Mono', monospace;
 }
 
+.session-replay-card {
+  margin: 0 9px 8px;
+  padding: 8px;
+  border: 1px solid rgba(250,204,21,0.18);
+  border-radius: 4px;
+  background: rgba(250,204,21,0.045);
+}
+
+.session-replay-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 7px;
+}
+
+.session-replay-card-header div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.session-replay-card span,
+.session-replay-card small {
+  color: #64748b;
+  font: 700 6px 'JetBrains Mono', monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.session-replay-card strong {
+  color: #fde68a;
+  font: 700 9px 'JetBrains Mono', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-replay-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.session-replay-card-grid div {
+  min-width: 0;
+  padding: 5px;
+  border: 1px solid rgba(255,255,255,0.055);
+  border-radius: 3px;
+  background: rgba(8,12,22,0.36);
+}
+
+.session-replay-card-grid span,
+.session-replay-card-grid strong {
+  display: block;
+}
+
+.session-replay-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.session-replay-card-actions button {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid rgba(250,204,21,0.22);
+  border-radius: 3px;
+  background: rgba(250,204,21,0.055);
+  color: #fde68a;
+  font: 800 7px 'JetBrains Mono', monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.session-replay-card-actions button:hover:not(:disabled) {
+  border-color: rgba(250,204,21,0.4);
+  background: rgba(250,204,21,0.1);
+}
+
+.session-replay-card-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.session-replay-card p {
+  margin: 6px 0 0;
+  color: #fca5a5;
+  font: 700 7px 'JetBrains Mono', monospace;
+  line-height: 1.35;
+}
+
 .session-laps-scroll {
   flex: 1;
   min-height: 0;
@@ -477,11 +573,12 @@ select {
 
 .lap-library-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 61px;
+  grid-template-columns: minmax(0, 1fr) 58px 61px;
   align-items: stretch;
   gap: 4px;
 }
 
+.lap-replay-button,
 .lap-assist-button {
   min-width: 0;
   min-height: 31px;
@@ -499,11 +596,23 @@ select {
   text-transform: uppercase;
 }
 
+.lap-replay-button {
+  border-color: rgba(250,204,21,0.22);
+  color: #fde68a;
+  background: rgba(250,204,21,0.055);
+}
+
+.lap-replay-button:hover:not(:disabled) {
+  border-color: rgba(250,204,21,0.42);
+  background: rgba(250,204,21,0.11);
+}
+
 .lap-assist-button:hover:not(:disabled) {
   border-color: rgba(167,139,250,0.38);
   background: rgba(167,139,250,0.1);
 }
 
+.lap-replay-button:disabled,
 .lap-assist-button:disabled {
   cursor: not-allowed;
   opacity: 0.42;

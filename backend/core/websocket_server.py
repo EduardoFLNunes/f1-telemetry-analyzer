@@ -36,9 +36,10 @@ class ConnectionManager:
         if not self.active_connections:
             return
 
+        started = time.perf_counter()
         msg_str = json.dumps(message, separators=(",", ":"), default=str)
         async with self._broadcast_lock:
-            performance_metrics.mark_websocket_message()
+            performance_metrics.mark_websocket_message(message_type=message.get("type"))
             connections = list(self.active_connections)
             tasks = [
                 asyncio.wait_for(conn.send_text(msg_str), timeout=self.send_timeout_seconds)
@@ -49,6 +50,7 @@ class ConnectionManager:
                 if isinstance(result, Exception):
                     logger.debug("Dropping stale websocket connection: %s", result)
                     self.disconnect(conn)
+            performance_metrics.record_websocket_send(time.perf_counter() - started)
 
 class TelemetryBroadcaster:
     """
@@ -135,6 +137,9 @@ class TelemetryBroadcaster:
             raise
         except Exception:
             logger.exception("Opponents websocket sender failed")
+
+    def pending_depth(self) -> int:
+        return int(self._latest_frame is not None) + int(self._latest_opponents is not None)
 
     async def on_event(self, data: Dict[str, Any]):
         await self.manager.broadcast({
