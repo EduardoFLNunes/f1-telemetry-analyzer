@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 import asyncio
 import io
 import logging
+import math
 import os
 import re
 import time
@@ -213,6 +214,88 @@ def _offline_lap_summary_from_id(lap_id: str) -> tuple[Dict[str, Any], Dict[str,
     if not lap:
         raise FileNotFoundError("Recorded lap not found")
     return enriched_session, lap
+
+
+def _finite_float(value: Any) -> Optional[float]:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def _replay_map_position(sample: Dict[str, Any]) -> Dict[str, float]:
+    map_position = sample.get("mapPosition") if isinstance(sample.get("mapPosition"), dict) else {}
+    x = _finite_float(
+        map_position.get("x")
+        or sample.get("x")
+        or sample.get("world_x")
+        or sample.get("worldPositionX")
+    )
+    y = _finite_float(
+        map_position.get("y")
+        or sample.get("y")
+        or sample.get("z")
+        or sample.get("world_z")
+        or sample.get("worldPositionZ")
+    )
+    return {"x": x or 0.0, "y": y or 0.0}
+
+
+def _normalize_replay_sample(sample: Dict[str, Any]) -> Dict[str, Any]:
+    normalized = dict(sample)
+    lap_time = _finite_float(sample.get("lap_time") or sample.get("lapTime") or sample.get("currentLapTime"))
+    speed_kmh = _finite_float(sample.get("speedKmh"))
+    speed_ms = _finite_float(sample.get("speed"))
+    if speed_kmh is None and speed_ms is not None:
+        speed_kmh = speed_ms * 3.6
+    if speed_ms is None and speed_kmh is not None:
+        speed_ms = speed_kmh / 3.6
+    progress = _finite_float(
+        sample.get("lapProgress")
+        or sample.get("p")
+        or sample.get("spline_t")
+        or sample.get("normalizedSplinePosition")
+        or sample.get("splinePosition")
+    )
+    if progress is not None:
+        progress = max(0.0, min(1.0, progress))
+    map_position = _replay_map_position(sample)
+    accel_g = sample.get("accel_g") if isinstance(sample.get("accel_g"), dict) else {}
+    acceleration = {
+        "lateralG": _finite_float(sample.get("lateral_g") or accel_g.get("x")),
+        "longitudinalG": _finite_float(sample.get("longitudinal_g") or accel_g.get("z")),
+    }
+    normalized.update({
+        "source": "persisted_lap",
+        "lapTime": lap_time,
+        "lap_time": lap_time,
+        "timestamp": sample.get("timestamp"),
+        "sessionTime": sample.get("sessionTime") or sample.get("session_time"),
+        "mapPosition": map_position,
+        "worldX": _finite_float(sample.get("world_x") or sample.get("worldPositionX") or sample.get("x")),
+        "worldZ": _finite_float(sample.get("world_z") or sample.get("worldPositionZ") or sample.get("z")),
+        "x": map_position["x"],
+        "z": map_position["y"],
+        "lapProgress": progress,
+        "splinePosition": progress,
+        "trackProgress": progress,
+        "lapDistance": _finite_float(sample.get("s") or sample.get("distanceAlongTrack")),
+        "speed": speed_ms,
+        "speedKmh": speed_kmh,
+        "throttle": _finite_float(sample.get("throttle")) or 0.0,
+        "brake": _finite_float(sample.get("brake")) or 0.0,
+        "steering": _finite_float(sample.get("steering")) or 0.0,
+        "gear": sample.get("gear"),
+        "rpm": sample.get("rpm"),
+        "acceleration": acceleration,
+        "accel_g": {
+            "x": acceleration["lateralG"] or 0.0,
+            "y": _finite_float(accel_g.get("y")) or 0.0,
+            "z": acceleration["longitudinalG"] or 0.0,
+        },
+    })
+    return normalized
 
 
 def active_track_cache_name() -> str:
@@ -1243,6 +1326,59 @@ async def get_offline_recorded_lap_summary(lap_id: str):
         "offlineAvailable": True,
         "liveDependency": False,
         "lap": lap,
+    }
+
+
+@app.get("/api/laps/{lap_id}/replay")
+async def get_offline_recorded_lap_replay(
+    lap_id: str,
+    max_samples: int = Query(36_000, alias="maxSamples", ge=100, le=100_000),
+):
+    try:
+        session_id, lap_number = _parse_recording_lap_id(lap_id)
+        session = await asyncio.to_thread(session_repository.session_summary, session_id, True)
+        lap = await asyncio.to_thread(
+            session_repository.lap_detail,
+            session_id,
+            lap_number,
+            max_samples,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if not session or not lap:
+        raise HTTPException(status_code=404, detail="Recorded lap not found")
+
+    enriched_session = _enrich_recorded_session(session)
+    summary = dict(lap.get("summary") or {})
+    if summary:
+        summary = _enrich_recorded_lap(summary, enriched_session)
+    samples = [
+        _normalize_replay_sample(sample)
+        for sample in (lap.get("samples") or [])
+        if isinstance(sample, dict)
+    ]
+    return {
+        "status": "success",
+        "mode": "offline_lap_replay",
+        "source": "persisted_lap",
+        "recordingRoot": str(session_repository.root),
+        "offlineAvailable": True,
+        "liveDependency": False,
+        "sharedMemoryDependency": False,
+        "lapId": lap_id,
+        "session": {
+            "sessionId": enriched_session.get("sessionId"),
+            "track": enriched_session.get("track"),
+            "car": enriched_session.get("car"),
+            "startedAt": enriched_session.get("startedAt"),
+            "endedAt": enriched_session.get("endedAt"),
+        },
+        "summary": summary or lap.get("summary"),
+        "totalSampleCount": lap.get("totalSampleCount"),
+        "returnedSampleCount": len(samples),
+        "sampleStride": lap.get("sampleStride"),
+        "truncated": lap.get("truncated"),
+        "samples": samples,
     }
 
 

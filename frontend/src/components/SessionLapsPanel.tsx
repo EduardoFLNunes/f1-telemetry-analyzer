@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Archive, Gauge, Radio, RefreshCw, Target, XCircle } from 'lucide-react';
+import { Archive, Gauge, PlayCircle, Radio, RefreshCw, Target, XCircle } from 'lucide-react';
 import { api } from '../api/client';
 import { TelemetryFrame, useTelemetryStore } from '../store/useTelemetryStore';
 import { formatLapTime } from '../utils/lapFormat';
@@ -149,6 +149,9 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
   const setReferenceLap = useTelemetryStore((state) => state.setReferenceLap);
   const clearReferenceLap = useTelemetryStore((state) => state.clearReferenceLap);
   const setAssistedTraceContext = useTelemetryStore((state) => state.setAssistedTraceContext);
+  const startOfflineReplay = useTelemetryStore((state) => state.startOfflineReplay);
+  const offlineReplay = useTelemetryStore((state) => state.offlineReplay);
+  const clearOfflineReplay = useTelemetryStore((state) => state.clearOfflineReplay);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [runtimeStatus, setRuntimeStatus] = useState<any>(null);
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
@@ -208,6 +211,115 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
       setError(null);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : 'Volta indisponível');
+    } finally {
+      setLoadingKey(null);
+    }
+  };
+
+  const replayLapId = (session: SessionSummary, lap: LapSummary) => recordingLapId(session.sessionId, lap);
+
+  const findFallbackReference = (session: SessionSummary, lap: LapSummary) => (
+    [...session.laps]
+      .filter((candidate) => (
+        candidate.lapNumber !== lap.lapNumber
+        && Boolean(candidate.acceptedByPhase13 ?? candidate.valid)
+        && candidate.sampleCount > 0
+        && candidate.lapNumber < lap.lapNumber
+      ))
+      .sort((a, b) => b.lapNumber - a.lapNumber)[0]
+    || [...session.laps]
+      .filter((candidate) => (
+        candidate.lapNumber !== lap.lapNumber
+        && Boolean(candidate.acceptedByPhase13 ?? candidate.valid)
+        && candidate.sampleCount > 0
+      ))
+      .sort((a, b) => (a.lapTime ?? a.duration ?? Infinity) - (b.lapTime ?? b.duration ?? Infinity))[0]
+    || null
+  );
+
+  const loadReferenceForReplay = async (session: SessionSummary, lap: LapSummary) => {
+    const lapId = replayLapId(session, lap);
+    let referenceLapId: string | null = null;
+    let referenceLapNumber: number | null = null;
+
+    if (lap.hasAssistedAnalysis || lap.analysisStatus === 'AVAILABLE') {
+      try {
+        const analysisPayload = await api.getAssistedAnalysis(lapId);
+        const reference = analysisPayload?.analysis?.reference;
+        if (reference?.lapId) {
+          referenceLapId = reference.lapId;
+          referenceLapNumber = Number.isFinite(Number(reference.lapNumber)) ? Number(reference.lapNumber) : null;
+        }
+      } catch {
+        referenceLapId = null;
+        referenceLapNumber = null;
+      }
+    }
+
+    if (!referenceLapId) {
+      const fallback = findFallbackReference(session, lap);
+      if (fallback) {
+        referenceLapId = replayLapId(session, fallback);
+        referenceLapNumber = fallback.lapNumber;
+      }
+    }
+
+    if (!referenceLapId) {
+      return { referenceLapId: null, referenceLapNumber: null, referenceSamples: [] as TelemetryFrame[] };
+    }
+
+    try {
+      const referencePayload = await api.getOfflineLapReplay(referenceLapId, 36_000);
+      return {
+        referenceLapId,
+        referenceLapNumber,
+        referenceSamples: (referencePayload?.samples || []).map(normalizeStoredFrame),
+      };
+    } catch {
+      return { referenceLapId, referenceLapNumber, referenceSamples: [] as TelemetryFrame[] };
+    }
+  };
+
+  const openReplayLap = async (session: SessionSummary, lap: LapSummary) => {
+    const lapId = replayLapId(session, lap);
+    const key = `replay:${session.sessionId}:${lap.lapNumber}`;
+    setLoadingKey(key);
+    try {
+      const [payload, reference] = await Promise.all([
+        api.getOfflineLapReplay(lapId, 36_000),
+        loadReferenceForReplay(session, lap),
+      ]);
+      const samples = (payload?.samples || []).map(normalizeStoredFrame);
+      if (!samples.length) throw new Error('Volta persistida sem samples para replay');
+      const summary = payload?.summary || lap;
+      startOfflineReplay({
+        lapId,
+        sessionId: session.sessionId,
+        lapNumber: lap.lapNumber,
+        track: session.track,
+        samples,
+        referenceLapId: reference.referenceLapId,
+        referenceLapNumber: reference.referenceLapNumber,
+        referenceSamples: reference.referenceSamples,
+        duration: summary?.lapTime ?? summary?.duration ?? lap.duration,
+        assettoClosed,
+        assistAvailable: Boolean(lap.acceptedByPhase13 ?? lap.valid),
+        validationStatus: lap.validationStatus ?? null,
+        message: assettoClosed
+          ? 'Replay offline usando samples persistidos; Assetto Corsa fechado.'
+          : 'Replay offline usando samples persistidos.',
+      });
+      setAssistedTraceContext({
+        analyzedLapId: lapId,
+        analyzedLapNumber: lap.lapNumber,
+        referenceLapId: reference.referenceLapId,
+        referenceLapNumber: reference.referenceLapNumber,
+        track: session.track,
+        headline: 'Replay offline pronto para abrir no ASSIST',
+      });
+      setError(null);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Replay offline indisponivel');
     } finally {
       setLoadingKey(null);
     }
@@ -273,8 +385,12 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
           <strong>Voltas capturadas</strong>
         </div>
         <div className="session-laps-actions">
-          {selectedLap !== null && (
-            <button type="button" title="Voltar à referência automática" onClick={clearReferenceLap}>
+          {(selectedLap !== null || offlineReplay.active) && (
+            <button
+              type="button"
+              title={offlineReplay.active ? 'Fechar replay offline' : 'Voltar à referência automática'}
+              onClick={offlineReplay.active ? clearOfflineReplay : clearReferenceLap}
+            >
               <XCircle size={13} />
             </button>
           )}
@@ -293,10 +409,14 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
       <div className="session-reference-card">
         <Gauge size={14} />
         <div>
-          <span>Referência do comparativo</span>
-          <strong>{selectedLap !== null ? `Volta ${selectedLap}` : 'Última volta válida'}</strong>
+          <span>Referencia do comparativo</span>
+          <strong>
+            {offlineReplay.active
+              ? `Replay L${offlineReplay.lapNumber ?? '--'}`
+              : selectedLap !== null ? `Volta ${selectedLap}` : 'Ultima volta valida'}
+          </strong>
         </div>
-        <small>{selectedSessionId ? 'ARQUIVO' : selectedLap !== null ? 'AO VIVO' : 'AUTO'}</small>
+        <small>{offlineReplay.active ? 'REPLAY' : selectedSessionId ? 'ARQUIVO' : selectedLap !== null ? 'AO VIVO' : 'AUTO'}</small>
       </div>
 
       <div className="session-reference-card">
@@ -365,6 +485,18 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
                         selected={selectedSessionId === session.sessionId && selectedLap === lap.lapNumber}
                         onClick={() => chooseArchivedLap(session, lap)}
                       />
+                      <button
+                        type="button"
+                        className="lap-replay-button"
+                        disabled={!lap.sampleCount || loadingKey === `replay:${session.sessionId}:${lap.lapNumber}`}
+                        title={lap.sampleCount
+                          ? 'Reproduzir volta salva no mapa usando samples persistidos'
+                          : 'Volta sem samples persistidos'}
+                        onClick={() => openReplayLap(session, lap)}
+                      >
+                        <PlayCircle size={10} />
+                        {loadingKey === `replay:${session.sessionId}:${lap.lapNumber}` ? 'LOAD' : 'REPLAY'}
+                      </button>
                       <button
                         type="button"
                         className="lap-assist-button"

@@ -117,6 +117,44 @@ function resolveOpponentRenderState(opponent, trackData) {
   };
 }
 
+function sampleMapPosition(sample) {
+  const position = sample?.mapPosition;
+  if (position && isFiniteNumber(position.x) && isFiniteNumber(position.y)) {
+    return position;
+  }
+  const x = isFiniteNumber(sample?.x) ? sample.x : sample?.world_x;
+  const y = isFiniteNumber(sample?.z) ? sample.z : sample?.world_z;
+  if (isFiniteNumber(x) && isFiniteNumber(y)) return { x, y };
+  return null;
+}
+
+function drawLapTrace(ctx, samples, scale, color, options = {}) {
+  if (!Array.isArray(samples) || samples.length < 2) return;
+  const width = options.width || 2.2;
+  const alpha = options.alpha || 0.72;
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = alpha;
+  ctx.lineWidth = width / scale;
+  if (options.dashed) ctx.setLineDash([10 / scale, 8 / scale]);
+  ctx.beginPath();
+  let started = false;
+  samples.forEach((sample) => {
+    const position = sampleMapPosition(sample);
+    if (!position) return;
+    if (!started) {
+      ctx.moveTo(position.x, position.y);
+      started = true;
+    } else {
+      ctx.lineTo(position.x, position.y);
+    }
+  });
+  if (started) ctx.stroke();
+  ctx.restore();
+}
+
 function formatOpponentNumber(value, digits = 0) {
   return isFiniteNumber(value) ? value.toFixed(digits) : '--';
 }
@@ -258,6 +296,10 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   useRenderCounter('TrackRenderer');
   const performanceMode = useTelemetryStore((state) => state.performanceMode);
   const setPerformanceMode = useTelemetryStore((state) => state.setPerformanceMode);
+  const replayActive = useTelemetryStore((state) => state.offlineReplay.active);
+  const replayLapNumber = useTelemetryStore((state) => state.offlineReplay.lapNumber);
+  const replayTrack = useTelemetryStore((state) => state.offlineReplay.track);
+  const replaySource = useTelemetryStore((state) => state.offlineReplay.source);
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const animationRef = useRef(null);
@@ -265,6 +307,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const opponentMotionRef = useRef(new Map());
   const screenOpponentsRef = useRef([]);
   const racingLineOverlayRef = useRef(null);
+  const replayClockRef = useRef(null);
   const [cameraMode, setCameraMode] = useState('OVERVIEW');
   const [showRacingLine, setShowRacingLine] = useState(true);
   const [showOpponents, setShowOpponents] = useState(true);
@@ -515,12 +558,37 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         history: liveHistory,
         opponents: liveOpponents,
         opponentsMeta: liveOpponentsMeta,
+        offlineReplay,
       } = useTelemetryStore.getState();
 
-      const liveFrame = window.__latestFrame || storeFrame;
+      const replayActive = Boolean(offlineReplay?.active && offlineReplay.samples?.length);
+      if (replayActive && offlineReplay.playing) {
+        const lastReplayClock = replayClockRef.current ?? frameTime;
+        replayClockRef.current = frameTime;
+        const elapsedReplaySeconds = Math.max(0, (frameTime - lastReplayClock) / 1000);
+        if (elapsedReplaySeconds > 0) {
+          const nextReplayTime = offlineReplay.currentTime + (elapsedReplaySeconds * (offlineReplay.playbackRate || 1));
+          if (nextReplayTime >= offlineReplay.duration) {
+            const store = useTelemetryStore.getState();
+            store.setOfflineReplayTime(offlineReplay.duration);
+            store.setOfflineReplayPlaying(false);
+            replayClockRef.current = null;
+          } else {
+            useTelemetryStore.getState().setOfflineReplayTime(nextReplayTime);
+          }
+        }
+      } else {
+        replayClockRef.current = null;
+      }
+      const liveFrame = replayActive
+        ? (offlineReplay.currentSample || offlineReplay.samples[offlineReplay.currentIndex || 0])
+        : (window.__latestFrame || storeFrame);
+      const renderHistory = replayActive ? offlineReplay.samples : liveHistory;
+      const referenceHistory = replayActive ? (offlineReplay.referenceSamples || []) : [];
       const historyWindow = HISTORY_WINDOW_BY_MODE[activePerformanceMode] || HISTORY_WINDOW_BY_MODE.BALANCED;
+      const boundsHistory = replayActive ? renderHistory : renderHistory.slice(-historyWindow);
 
-      const liveOpponentsForRender = showOpponentsRef.current ? liveOpponents : [];
+      const liveOpponentsForRender = (!replayActive && showOpponentsRef.current) ? liveOpponents : [];
       const renderOpponents = withEstimatedHeadings(liveOpponentsForRender
         .map((opponent) => resolveOpponentRenderState(opponent, normalizedTrack))
         .filter(Boolean), opponentMotionRef.current);
@@ -528,8 +596,8 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         .map((opponent) => opponent.mapPosition)
         .filter((position) => Number.isFinite(position?.x) && Number.isFinite(position?.y));
       const renderBounds = normalizedTrack
-        ? computeTrackBounds(normalizedTrack, liveHistory.slice(-historyWindow), liveFrame, opponentPositions)
-        : computeTrackBounds(null, liveHistory.slice(-historyWindow), liveFrame, opponentPositions);
+        ? computeTrackBounds(normalizedTrack, boundsHistory, liveFrame, opponentPositions)
+        : computeTrackBounds(null, boundsHistory, liveFrame, opponentPositions);
 
       ctx.save();
       const scale = applyCameraTransform(ctx, rect.width, rect.height, renderBounds, cameraRef.current, liveFrame);
@@ -549,6 +617,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         perf.lastRacingLineOverlayMs = overlayCost;
         window.__telemetryPerf = window.__telemetryPerf || {};
         window.__telemetryPerf.racingLineOverlayMs = overlayCost;
+      }
+
+      if (replayActive) {
+        drawLapTrace(ctx, referenceHistory, scale, '#a78bfa', { width: 2.0, alpha: 0.62, dashed: true });
+        drawLapTrace(ctx, renderHistory, scale, '#facc15', { width: 2.8, alpha: 0.82 });
       }
 
       const screenOpponents = renderOpponents
@@ -571,7 +644,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           noGlow: simpleVisuals,
         });
       });
-      if (liveFrame) drawCar(ctx, liveFrame, scale, '#22d3ee', { noGlow: simpleVisuals });
+      if (liveFrame) drawCar(ctx, liveFrame, scale, replayActive ? '#facc15' : '#22d3ee', { noGlow: simpleVisuals });
 
       ctx.restore();
       drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current, { performanceMode: activePerformanceMode });
@@ -775,6 +848,28 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     >
       <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
 
+      {replayActive && (
+        <div
+          className="absolute top-3 left-3 panel px-2 py-1.5"
+          style={{
+            zIndex: 72,
+            background: 'rgba(8,12,22,0.88)',
+            borderColor: 'rgba(250,204,21,0.28)',
+            pointerEvents: 'none',
+          }}
+        >
+          <div className="num text-[8px] font-bold uppercase text-yellow-200">Replay offline</div>
+          <div className="num text-[7px] uppercase text-slate-500">
+            L{replayLapNumber ?? '--'} / Fonte: {replaySource || 'persisted lap'}
+          </div>
+          {replayTrack && (
+            <div className="num text-[7px] uppercase text-slate-600 truncate" style={{ maxWidth: 220 }}>
+              {String(replayTrack).replace(/[_-]+/g, ' ')}
+            </div>
+          )}
+        </div>
+      )}
+
       <div
         className="absolute top-3 right-3 flex flex-col gap-1"
         style={{ zIndex: 70, pointerEvents: 'auto' }}
@@ -961,7 +1056,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         )}
       </div>
 
-      {showOpponents && visibleOpponents.length > 0 && (
+      {!replayActive && showOpponents && visibleOpponents.length > 0 && (
         <div
           className="absolute left-3 bottom-3 panel px-2 py-2 overflow-hidden"
           style={{

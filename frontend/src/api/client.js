@@ -136,6 +136,9 @@ export const api = {
   getOfflineLapSamples: async (lapId, limit = 10_000) => (
     await client.get(`/api/laps/${encodeURIComponent(lapId)}/samples`, { params: { limit } })
   ).data,
+  getOfflineLapReplay: async (lapId, maxSamples = 36_000) => (
+    await client.get(`/api/laps/${encodeURIComponent(lapId)}/replay`, { params: { maxSamples } })
+  ).data,
   getTelemetryData:async () => (await client.get('/api/data/telemetry')).data,
   getAiRaceline:   async () => (await client.get('/api/data/ai-raceline')).data,
   getComparison:   async () => (await client.get('/api/data/comparison')).data,
