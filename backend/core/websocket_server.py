@@ -46,10 +46,14 @@ class ConnectionManager:
                 for conn in connections
             ]
             results = await asyncio.gather(*tasks, return_exceptions=True)
+            failed_sends = 0
             for conn, result in zip(connections, results):
                 if isinstance(result, Exception):
+                    failed_sends += 1
                     logger.debug("Dropping stale websocket connection: %s", result)
                     self.disconnect(conn)
+            if failed_sends:
+                performance_metrics.mark_websocket_send_failure(failed_sends)
             performance_metrics.record_websocket_send(time.perf_counter() - started)
 
 class TelemetryBroadcaster:

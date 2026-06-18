@@ -705,13 +705,26 @@ def runtime_performance_payload() -> Dict[str, Any]:
     sampling = performance_metrics.runtime_snapshot(
         target_hz=float(telemetry.get("targetHz") or 60.0),
         source=telemetry.get("source"),
+        player_source=telemetry.get("playerSource"),
         player_status=telemetry.get("playerStatus"),
         last_sample_age_ms=last_age_ms,
         recording_queue_depth=recording_status.get("queueSize"),
+        recording_dropped_frames=recording_status.get("droppedFrames"),
         websocket_queue_depth=ws_broadcaster.pending_depth(),
     )
     return {
         "status": "success",
+        "source": telemetry.get("source"),
+        "playerSource": telemetry.get("playerSource"),
+        "targetHz": sampling.get("targetHz"),
+        "windows": sampling.get("windows"),
+        "durationsMs": sampling.get("durationsMs"),
+        "counters": sampling.get("counters"),
+        "queues": sampling.get("queues"),
+        "bottleneck": sampling.get("bottleneckDetails"),
+        "bottleneckReason": sampling.get("bottleneckReason"),
+        "sourceLimited": sampling.get("sourceLimited"),
+        "backpressureDetected": sampling.get("backpressureDetected"),
         "sampling": sampling,
         "telemetry": {
             "source": telemetry.get("source"),

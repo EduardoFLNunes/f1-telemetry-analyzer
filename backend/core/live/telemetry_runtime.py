@@ -83,15 +83,21 @@ class TelemetryRuntime:
         next_tick = time.perf_counter()
         while self.running:
             frame_started = time.perf_counter()
+            performance_metrics.mark_read_loop_start(frame_started)
             try:
                 read_started = time.perf_counter()
                 sample = self.source_manager.read_sample()
                 performance_metrics.mark_read_attempt(time.perf_counter() - read_started)
                 if not sample:
+                    if (
+                        self.last_sample_wall_time is not None
+                        and time.time() - self.last_sample_wall_time > max(self.poll_interval * 3.0, 0.25)
+                    ):
+                        performance_metrics.mark_stale_sample()
                     next_tick = self._sleep_until_next_tick(next_tick)
                     continue
 
-                performance_metrics.mark_raw_read()
+                performance_metrics.mark_raw_read(sample)
                 self.last_sample_wall_time = time.time()
                 validation_started = time.perf_counter()
                 validation = self.reliability_monitor.observe(

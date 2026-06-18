@@ -179,6 +179,8 @@ class SessionRecorder:
             return True
         except queue.Full:
             self._dropped_frames += 1
+            if stream == "player":
+                performance_metrics.mark_dropped_samples()
             logger.warning("Session recorder queue full, dropped %s frame", stream)
             return False
 
@@ -239,6 +241,8 @@ class SessionRecorder:
                 written_by_stream[stream] = written_by_stream.get(stream, 0) + 1
             except Exception as exc:
                 self._dropped_frames += 1
+                if stream == "player":
+                    performance_metrics.mark_dropped_samples()
                 logger.warning("Session recorder write error for %s: %s", stream, exc)
         self._flush_files()
         performance_metrics.record_disk_write(time.perf_counter() - started)
