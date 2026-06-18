@@ -94,8 +94,11 @@ const TinyButton = ({ children, onClick, disabled, title }: any) => (
   </button>
 );
 
-export const AssistedAnalysisPanel: React.FC = () => {
+export const AssistedAnalysisPanel: React.FC<{ active?: boolean }> = ({ active = true }) => {
   const lastCompletedLapNumber = useTelemetryStore(s => s.lapDebug.lastCompletedLapNumber);
+  const assistedTraceContext = useTelemetryStore(s => s.assistedTraceContext);
+  const setAssistedTraceContext = useTelemetryStore(s => s.setAssistedTraceContext);
+  const clearAssistedTraceContext = useTelemetryStore(s => s.clearAssistedTraceContext);
   const [laps, setLaps] = useState<LapItem[]>([]);
   const [lapId, setLapId] = useState('');
   const [referenceLapId, setReferenceLapId] = useState('');
@@ -106,24 +109,50 @@ export const AssistedAnalysisPanel: React.FC = () => {
   const selectedLap = useMemo(() => laps.find(lap => lap.lapId === lapId) || null, [laps, lapId]);
   const referenceOptions = useMemo(() => laps.filter(lap => lap.lapId !== lapId && lap.sampleCount >= 40), [laps, lapId]);
 
+  const publishAnalysisContext = (nextAnalysis: any) => {
+    if (!nextAnalysis?.lapId) {
+      clearAssistedTraceContext();
+      return;
+    }
+
+    const lapNumber = Number(nextAnalysis.lapNumber);
+    const referenceLapNumber = Number(nextAnalysis.reference?.lapNumber);
+    setAssistedTraceContext({
+      analyzedLapId: nextAnalysis.lapId,
+      analyzedLapNumber: Number.isFinite(lapNumber) ? lapNumber : null,
+      referenceLapId: nextAnalysis.reference?.lapId || null,
+      referenceLapNumber: Number.isFinite(referenceLapNumber) ? referenceLapNumber : null,
+      track: nextAnalysis.track || null,
+      headline: nextAnalysis.summary?.headline || null,
+    });
+  };
+
   const loadLaps = async () => {
     try {
       const payload = await api.listAssistedAnalysisLaps();
       const next = Array.isArray(payload.laps) ? payload.laps : [];
       setLaps(next);
-      setLapId(current => current || next.find((lap: LapItem) => lap.sampleCount >= 40)?.lapId || next[0]?.lapId || '');
+      const preferredLapId = assistedTraceContext.analyzedLapId
+        && next.some((lap: LapItem) => lap.lapId === assistedTraceContext.analyzedLapId)
+        ? assistedTraceContext.analyzedLapId
+        : null;
+      setLapId(current => preferredLapId || current || next.find((lap: LapItem) => lap.sampleCount >= 40)?.lapId || next[0]?.lapId || '');
     } catch (exc: any) {
       setError(exc?.response?.data?.detail || 'Lap list unavailable');
     }
   };
 
   const loadCached = async (targetLapId = lapId, refLapId = referenceLapId) => {
-    if (!targetLapId) return;
+    if (!targetLapId) {
+      clearAssistedTraceContext();
+      return;
+    }
     try {
       const payload = await api.getAssistedAnalysis(targetLapId, refLapId || null, {
         includeExternalReference: true,
       });
       setAnalysis(payload.analysis);
+      publishAnalysisContext(payload.analysis);
       setError(null);
     } catch {
       setAnalysis(null);
@@ -141,6 +170,7 @@ export const AssistedAnalysisPanel: React.FC = () => {
         force,
       });
       setAnalysis(payload.analysis);
+      publishAnalysisContext(payload.analysis);
       await loadLaps();
     } catch (exc: any) {
       setError(exc?.response?.data?.detail || 'Analysis failed');
@@ -150,13 +180,22 @@ export const AssistedAnalysisPanel: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!active) return undefined;
     loadLaps();
-  }, [lastCompletedLapNumber]);
+    return undefined;
+  }, [lastCompletedLapNumber, active, assistedTraceContext.analyzedLapId]);
 
   useEffect(() => {
+    if (!active || !assistedTraceContext.analyzedLapId) return;
+    setLapId(assistedTraceContext.analyzedLapId);
+    setReferenceLapId(assistedTraceContext.referenceLapId || '');
+  }, [active, assistedTraceContext.analyzedLapId, assistedTraceContext.referenceLapId]);
+
+  useEffect(() => {
+    if (!active) return;
     setAnalysis(null);
     loadCached();
-  }, [lapId, referenceLapId]);
+  }, [lapId, referenceLapId, active]);
 
   const summary = analysis?.summary;
   const topLosses = Array.isArray(analysis?.topLosses) ? analysis.topLosses : [];

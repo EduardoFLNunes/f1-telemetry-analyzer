@@ -4,7 +4,7 @@ import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import pandas as pd
 
@@ -36,18 +36,27 @@ class AssistedAnalysisService:
         runtime_state: RuntimeState,
         track_cache: TrackCache,
         external_reference_repository: Optional[ExternalReferenceRepository] = None,
+        runtime_root: Optional[Path] = None,
+        recordings_roots: Optional[Sequence[Path]] = None,
     ):
         self.repo_root = Path(repo_root)
+        self.runtime_root = Path(runtime_root) if runtime_root else self.repo_root
         self.telemetry_buffer = telemetry_buffer
         self.runtime_state = runtime_state
         self.track_cache = track_cache
-        self.analysis_dir = self.repo_root / "data" / "assisted_analysis"
+        self.analysis_dir = self.runtime_root / "data" / "assisted_analysis"
         self.analysis_dir.mkdir(parents=True, exist_ok=True)
 
+        recording_roots = list(recordings_roots or [])
+        recording_roots.extend([
+            self.repo_root / "data" / "recordings",
+            self.runtime_root / "data" / "recordings",
+        ])
         self.loader = LapDataLoader(
             repo_root=self.repo_root,
             buffer_provider=lambda: self.telemetry_buffer,
             runtime_state_provider=lambda: self.runtime_state,
+            recordings_roots=recording_roots,
         )
         self.segmenter = CornerSegmenter()
         self.metrics = CornerMetricsCalculator()
@@ -63,6 +72,40 @@ class AssistedAnalysisService:
     def list_laps(self) -> Dict[str, Any]:
         laps = [lap.to_api() for lap in self.loader.list_laps(include_buffer=False)]
         return {"status": "success", "laps": laps}
+
+    def lap_telemetry(self, lap_id: str, max_samples: int = 36_000) -> Dict[str, Any]:
+        descriptor, df = self.loader.load_lap(lap_id)
+        validation = self._validate_loaded_lap(descriptor, df)
+        limited = df
+        if max_samples > 0 and len(df) > max_samples:
+            step = max(1, len(df) // max_samples)
+            limited = df.iloc[::step]
+            if limited.index[-1] != df.index[-1]:
+                limited = pd.concat([limited, df.tail(1)])
+
+        def row_float(row, key: str):
+            return finite_float(row.get(key))
+
+        samples = [
+            {
+                "index": int(index),
+                "elapsedS": row_float(row, "elapsed_s"),
+                "progress": row_float(row, "p"),
+                "distance": row_float(row, "s"),
+                "speedKmh": row_float(row, "speed_kmh"),
+                "throttle": row_float(row, "throttle"),
+                "brake": row_float(row, "brake"),
+            }
+            for index, row in limited.iterrows()
+        ]
+        return self._json_safe({
+            "status": "success",
+            "lap": descriptor.to_api(),
+            "validation": validation,
+            "sampleCount": len(df),
+            "returnedSampleCount": len(samples),
+            "samples": samples,
+        })
 
     def get_cached_analysis(
         self,
@@ -87,6 +130,9 @@ class AssistedAnalysisService:
             return payload
         except Exception:
             return None
+
+    def has_cached_analysis(self, lap_id: str) -> bool:
+        return self.get_cached_analysis(lap_id) is not None
 
     def analyze_lap(
         self,

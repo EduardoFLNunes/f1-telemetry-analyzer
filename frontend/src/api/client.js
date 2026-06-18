@@ -121,8 +121,20 @@ export const api = {
   getSession: async (sessionId) => (
     await client.get(`/api/sessions/${encodeURIComponent(sessionId)}`)
   ).data,
+  getSessionLaps: async (sessionId) => (
+    await client.get(`/api/sessions/${encodeURIComponent(sessionId)}/laps`)
+  ).data,
   getSessionLap: async (sessionId, lapNumber) => (
     await client.get(`/api/sessions/${encodeURIComponent(sessionId)}/laps/${lapNumber}`)
+  ).data,
+  getOfflineLap: async (lapId) => (
+    await client.get(`/api/laps/${encodeURIComponent(lapId)}`)
+  ).data,
+  getOfflineLapSummary: async (lapId) => (
+    await client.get(`/api/laps/${encodeURIComponent(lapId)}/summary`)
+  ).data,
+  getOfflineLapSamples: async (lapId, limit = 10_000) => (
+    await client.get(`/api/laps/${encodeURIComponent(lapId)}/samples`, { params: { limit } })
   ).data,
   getTelemetryData:async () => (await client.get('/api/data/telemetry')).data,
   getAiRaceline:   async () => (await client.get('/api/data/ai-raceline')).data,
@@ -130,6 +142,11 @@ export const api = {
   getTrackLimits:  async () => (await client.get('/api/data/track-limits')).data,
 
   listAssistedAnalysisLaps: async () => (await client.get('/api/assisted-analysis/laps')).data,
+  getAssistedLapTelemetry: async (lapId, maxSamples = 36_000) => (
+    await client.get(`/api/analysis/assisted/lap/${encodeURIComponent(lapId)}/telemetry`, {
+      params: { maxSamples },
+    })
+  ).data,
   getAssistedAnalysis: async (lapId, referenceLapId = null, options = {}) => {
     const res = await client.get(`/api/analysis/assisted/lap/${encodeURIComponent(lapId)}`, {
       params: {

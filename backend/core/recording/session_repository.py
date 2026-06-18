@@ -1,5 +1,6 @@
 import json
 import math
+import re
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -11,6 +12,11 @@ from ..data_quality.lap_validation import validate_lap
 MAX_EAGER_INDEX_BYTES = 8 * 1024 * 1024
 INDEX_FILENAME = "session-index.json"
 INDEX_VERSION = 2
+
+
+def _safe_fragment(value: Any) -> str:
+    text = str(value or "").strip()
+    return re.sub(r"[^A-Za-z0-9_.-]+", "_", text).strip("._") or "session"
 
 
 def _number(value: Any) -> Optional[float]:
@@ -184,11 +190,14 @@ class _LapAggregate:
                 "completed": completed,
             }
         )
+        canonical_lap_id = f"rec__{_safe_fragment(session_id or 'session')}__{self.lap_number}"
+        duration_api = round(duration, 3) if duration is not None else None
         return {
             "lapNumber": self.lap_number,
             "sampleCount": self.sample_count,
-            "duration": round(duration, 3) if duration is not None else None,
+            "duration": duration_api,
             "durationSeconds": validation.durationSeconds,
+            "lapTime": duration_api,
             "maxSpeedKmh": round(self.speed_max, 2) if self.speed_max is not None else None,
             "avgSpeedKmh": round(self.speed_sum / self.speed_count, 2) if self.speed_count else None,
             "progressStart": self.progress_start,
@@ -196,8 +205,11 @@ class _LapAggregate:
             "coveragePercent": validation.coveragePercent,
             "completed": completed,
             "valid": validation.status == "VALID",
-            "lapId": validation.lapId,
+            "lapId": canonical_lap_id,
+            "sessionLapKey": validation.lapId,
             "validationStatus": validation.status,
+            "reliabilityStatus": validation.status,
+            "acceptedByPhase13": validation.status == "VALID",
             "issues": list(validation.issues),
             "maxGapSeconds": self.max_gap_seconds,
             "timestampInversions": self.timestamp_inversions,
@@ -286,9 +298,17 @@ class SessionRepository:
                 duration = max(0.0, index.timestamp_max - index.timestamp_min)
 
             nested_metadata = metadata.get("metadata") or {}
+            car = (
+                metadata.get("car")
+                or metadata.get("carModel")
+                or nested_metadata.get("car")
+                or nested_metadata.get("carModel")
+                or nested_metadata.get("car_model")
+            )
             return {
                 "sessionId": session_id,
                 "track": metadata.get("track") or index.track,
+                "car": car,
                 "startedAt": metadata.get("startedAt"),
                 "endedAt": metadata.get("endedAt"),
                 "source": nested_metadata.get("source"),

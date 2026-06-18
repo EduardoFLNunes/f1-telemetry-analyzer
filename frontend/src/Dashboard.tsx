@@ -5,6 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import { TrackRenderer } from './components/map/TrackRenderer.jsx';
 import { TelemetryTraces } from './components/TelemetryTraces';
+import { AssistedLapTraces } from './components/AssistedLapTraces';
 import { GGDiagram } from './components/GGDiagram';
 import { CoachingFeed } from './components/CoachingFeed';
 import { AIDebriefPanel } from './components/AIDebriefPanel';
@@ -30,6 +31,7 @@ const Dashboard: React.FC = () => {
   useRenderCounter('Dashboard');
   const [trackData, setTrackData] = useState<any>(null);
   const [rightPanel, setRightPanel] = useState<'laps'|'quality'|'assisted'|'engineer'|'debrief'|'comparison'|'racingLine'|'physics'>('laps');
+  const [tracePanel, setTracePanel] = useState<'lapComparison'|'assistTraces'>('lapComparison');
   const [time, setTime] = useState(() => new Date());
 
   useEffect(() => {
@@ -113,8 +115,49 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Lap comparison panel */}
-            <div className="panel telemetry-stage">
-              <TelemetryTraces />
+            <div className="panel telemetry-stage" style={{ position: 'relative' }}>
+              <div
+                className="panel px-1 py-0.5 flex gap-0.5"
+                style={{
+                  position: 'absolute',
+                  top: 3,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  zIndex: 10,
+                  background: 'rgba(8,12,22,0.9)',
+                  borderColor: 'rgba(148,163,184,0.12)',
+                }}
+              >
+                {([
+                  ['lapComparison', 'Lap Comparison'],
+                  ['assistTraces', 'Lap Traces'],
+                ] as const).map(([mode, label]) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setTracePanel(mode)}
+                    className="num"
+                    style={{
+                      height: 17,
+                      padding: '0 7px',
+                      borderRadius: 2,
+                      border: '1px solid transparent',
+                      background: tracePanel === mode ? 'rgba(34,211,238,0.1)' : 'transparent',
+                      color: tracePanel === mode ? '#67e8f9' : '#64748b',
+                      cursor: 'pointer',
+                      fontSize: 7,
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {tracePanel === 'lapComparison'
+                ? <TelemetryTraces />
+                : <AssistedLapTraces active={tracePanel === 'assistTraces'} />}
             </div>
 
           </div>
@@ -157,7 +200,10 @@ const Dashboard: React.FC = () => {
                 pointerEvents: rightPanel === 'laps' ? 'auto' : 'none',
                 transition: 'opacity 0.3s',
               }}>
-                <SessionLapsPanel active={rightPanel === 'laps'} />
+                <SessionLapsPanel
+                  active={rightPanel === 'laps'}
+                  onOpenAssistedAnalysis={() => setRightPanel('assisted')}
+                />
               </div>
               <div style={{
                 position: 'absolute', inset: 0,
@@ -213,7 +259,7 @@ const Dashboard: React.FC = () => {
                 pointerEvents: rightPanel === 'assisted' ? 'auto' : 'none',
                 transition: 'opacity 0.3s',
               }}>
-                <AssistedAnalysisPanel />
+                <AssistedAnalysisPanel active={rightPanel === 'assisted'} />
               </div>
             </div>
 

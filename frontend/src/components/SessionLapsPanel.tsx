@@ -1,24 +1,33 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Archive, Gauge, Radio, RefreshCw, XCircle } from 'lucide-react';
+import { Archive, Gauge, Radio, RefreshCw, Target, XCircle } from 'lucide-react';
 import { api } from '../api/client';
 import { TelemetryFrame, useTelemetryStore } from '../store/useTelemetryStore';
 import { formatLapTime } from '../utils/lapFormat';
 
 type LapSummary = {
+  lapId?: string;
+  sessionId?: string;
   lapNumber: number;
   sampleCount: number;
   duration: number | null;
+  lapTime?: number | null;
   maxSpeedKmh: number | null;
   avgSpeedKmh: number | null;
   completed: boolean;
   valid: boolean;
+  acceptedByPhase13?: boolean;
+  hasAssistedAnalysis?: boolean;
+  canAnalyze?: boolean;
+  analysisStatus?: 'AVAILABLE' | 'NOT_GENERATED' | 'NOT_ELIGIBLE';
   validationStatus?: 'VALID' | 'PARTIAL' | 'INVALID';
+  reliabilityStatus?: 'VALID' | 'PARTIAL' | 'INVALID';
   issues?: string[];
 };
 
 type SessionSummary = {
   sessionId: string;
   track: string | null;
+  car?: string | null;
   startedAt: string | null;
   endedAt: string | null;
   sampleRateHz: number | null;
@@ -28,6 +37,7 @@ type SessionSummary = {
   validLapCount: number;
   bestLapTime: number | null;
   indexed: boolean;
+  offlineAvailable?: boolean;
   active?: boolean;
   laps: LapSummary[];
 };
@@ -92,6 +102,14 @@ const compactTrack = (value: string | null) => (
   (value || 'Pista desconhecida').replace(/[_-]+/g, ' ')
 );
 
+const safeLapFragment = (value: string) => (
+  value.trim().replace(/[^A-Za-z0-9_.-]+/g, '_').replace(/^_+|_+$/g, '') || 'session'
+);
+
+const recordingLapId = (sessionId: string, lap: LapSummary) => (
+  lap.lapId || `rec__${safeLapFragment(sessionId)}__${lap.lapNumber}`
+);
+
 const LapButton = ({
   lap,
   selected,
@@ -121,13 +139,18 @@ const LapButton = ({
   </button>
 );
 
-export const SessionLapsPanel: React.FC<{ active?: boolean }> = ({ active = true }) => {
+export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalysis?: () => void }> = ({
+  active = true,
+  onOpenAssistedAnalysis,
+}) => {
   const completedLaps = useTelemetryStore((state) => state.completedLapsHistory);
   const selectedLap = useTelemetryStore((state) => state.selectedLap);
   const selectedSessionId = useTelemetryStore((state) => state.selectedSessionId);
   const setReferenceLap = useTelemetryStore((state) => state.setReferenceLap);
   const clearReferenceLap = useTelemetryStore((state) => state.clearReferenceLap);
+  const setAssistedTraceContext = useTelemetryStore((state) => state.setAssistedTraceContext);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
+  const [runtimeStatus, setRuntimeStatus] = useState<any>(null);
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [loadingSessionId, setLoadingSessionId] = useState<string | null>(null);
@@ -144,6 +167,11 @@ export const SessionLapsPanel: React.FC<{ active?: boolean }> = ({ active = true
       setError(null);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : 'Sessões indisponíveis');
+    }
+    try {
+      setRuntimeStatus(await api.getRuntimeStatus());
+    } catch {
+      setRuntimeStatus(null);
     }
   };
 
@@ -168,11 +196,13 @@ export const SessionLapsPanel: React.FC<{ active?: boolean }> = ({ active = true
     [completedLaps],
   );
 
-  const chooseArchivedLap = async (sessionId: string, lapNumber: number) => {
+  const chooseArchivedLap = async (session: SessionSummary, lap: LapSummary) => {
+    const sessionId = session.sessionId;
+    const lapNumber = lap.lapNumber;
     const key = `${sessionId}:${lapNumber}`;
     setLoadingKey(key);
     try {
-      const payload = await api.getSessionLap(sessionId, lapNumber);
+      const payload = await api.getOfflineLapSamples(recordingLapId(sessionId, lap), 36_000);
       const samples = (payload?.samples || []).map(normalizeStoredFrame);
       setReferenceLap(samples, lapNumber, sessionId);
       setError(null);
@@ -181,6 +211,26 @@ export const SessionLapsPanel: React.FC<{ active?: boolean }> = ({ active = true
     } finally {
       setLoadingKey(null);
     }
+  };
+
+  const openAssistedLap = (session: SessionSummary, lap: LapSummary) => {
+    const accepted = Boolean(lap.acceptedByPhase13 ?? lap.valid);
+    if (!accepted) {
+      setError('Volta rejeitada pela Phase 13; ASSIST usa apenas voltas validas.');
+      return;
+    }
+    setAssistedTraceContext({
+      analyzedLapId: recordingLapId(session.sessionId, lap),
+      analyzedLapNumber: lap.lapNumber,
+      referenceLapId: null,
+      referenceLapNumber: null,
+      track: session.track,
+      headline: lap.hasAssistedAnalysis
+        ? 'Analise assistida offline disponivel'
+        : 'Volta persistida pronta para analise assistida',
+    });
+    setError(null);
+    onOpenAssistedAnalysis?.();
   };
 
   const toggleSession = async (session: SessionSummary) => {
@@ -193,11 +243,13 @@ export const SessionLapsPanel: React.FC<{ active?: boolean }> = ({ active = true
 
     setLoadingSessionId(session.sessionId);
     try {
-      const payload = await api.getSession(session.sessionId);
-      const indexedSession = payload?.session;
-      if (indexedSession) {
+      const payload = await api.getSessionLaps(session.sessionId);
+      const indexedLaps = Array.isArray(payload?.laps) ? payload.laps : null;
+      if (indexedLaps) {
         setSessions((current) => current.map((item) => (
-          item.sessionId === session.sessionId ? indexedSession : item
+          item.sessionId === session.sessionId
+            ? { ...item, indexed: true, track: payload.track ?? item.track, car: payload.car ?? item.car, laps: indexedLaps }
+            : item
         )));
       }
       setError(null);
@@ -209,6 +261,9 @@ export const SessionLapsPanel: React.FC<{ active?: boolean }> = ({ active = true
   };
 
   const activeSession = sessions.find((session) => session.active);
+  const telemetryRuntime = runtimeStatus?.telemetry || {};
+  const assettoClosed = telemetryRuntime.assettoProcessRunning === false || telemetryRuntime.sharedMemoryAllowed === false;
+  const assettoLabel = runtimeStatus ? (assettoClosed ? 'AC OFF' : 'AC ON') : 'LOCAL';
 
   return (
     <div className="session-laps-panel">
@@ -242,6 +297,15 @@ export const SessionLapsPanel: React.FC<{ active?: boolean }> = ({ active = true
           <strong>{selectedLap !== null ? `Volta ${selectedLap}` : 'Última volta válida'}</strong>
         </div>
         <small>{selectedSessionId ? 'ARQUIVO' : selectedLap !== null ? 'AO VIVO' : 'AUTO'}</small>
+      </div>
+
+      <div className="session-reference-card">
+        <Archive size={14} />
+        <div>
+          <span>Biblioteca offline</span>
+          <strong>{sessions.length ? `${sessions.length} sessoes locais` : 'Sem voltas persistidas'}</strong>
+        </div>
+        <small>{assettoLabel}</small>
       </div>
 
       <div className="session-laps-scroll">
@@ -294,13 +358,26 @@ export const SessionLapsPanel: React.FC<{ active?: boolean }> = ({ active = true
               {expandedSession === session.sessionId && (
                 <div className="session-card-laps">
                   {session.laps.map((lap) => (
-                    <LapButton
-                      key={`${session.sessionId}-${lap.lapNumber}`}
-                      lap={lap}
-                      loading={loadingKey === `${session.sessionId}:${lap.lapNumber}`}
-                      selected={selectedSessionId === session.sessionId && selectedLap === lap.lapNumber}
-                      onClick={() => chooseArchivedLap(session.sessionId, lap.lapNumber)}
-                    />
+                    <div className="lap-library-row" key={`${session.sessionId}-${lap.lapNumber}`}>
+                      <LapButton
+                        lap={lap}
+                        loading={loadingKey === `${session.sessionId}:${lap.lapNumber}`}
+                        selected={selectedSessionId === session.sessionId && selectedLap === lap.lapNumber}
+                        onClick={() => chooseArchivedLap(session, lap)}
+                      />
+                      <button
+                        type="button"
+                        className="lap-assist-button"
+                        disabled={!(lap.acceptedByPhase13 ?? lap.valid)}
+                        title={(lap.acceptedByPhase13 ?? lap.valid)
+                          ? 'Abrir volta persistida no Assisted Analysis'
+                          : 'Volta rejeitada pela Phase 13'}
+                        onClick={() => openAssistedLap(session, lap)}
+                      >
+                        <Target size={10} />
+                        {lap.hasAssistedAnalysis ? 'OPEN' : 'ASSIST'}
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}

@@ -267,8 +267,10 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const racingLineOverlayRef = useRef(null);
   const [cameraMode, setCameraMode] = useState('OVERVIEW');
   const [showRacingLine, setShowRacingLine] = useState(true);
+  const [showOpponents, setShowOpponents] = useState(true);
   const [racingLineMode, setRacingLineMode] = useState('LINE_ONLY');
   const showRacingLineRef = useRef(true);
+  const showOpponentsRef = useRef(true);
   const racingLineModeRef = useRef('LINE_ONLY');
   const performanceModeRef = useRef('BALANCED');
   const [hoveredOpponent, setHoveredOpponent] = useState(null);
@@ -355,10 +357,10 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const normalizedTrack = useMemo(() => normalizeTrack(trackData), [trackData]);
   const bounds = useMemo(() => computeTrackBounds(normalizedTrack), [normalizedTrack]);
   const visibleOpponents = useMemo(
-    () => panelOpponents
+    () => (showOpponents ? panelOpponents : [])
       .map((opponent) => resolveOpponentRenderState(opponent, normalizedTrack))
       .filter(Boolean),
-    [panelOpponents, normalizedTrack],
+    [panelOpponents, normalizedTrack, showOpponents],
   );
   const sortedOpponents = useMemo(
     () => [...visibleOpponents].sort((a, b) => {
@@ -377,6 +379,15 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   useEffect(() => {
     showRacingLineRef.current = showRacingLine;
   }, [showRacingLine]);
+
+  useEffect(() => {
+    showOpponentsRef.current = showOpponents;
+    if (!showOpponents) {
+      setHoveredOpponent(null);
+      setSelectedOpponent(null);
+      screenOpponentsRef.current = [];
+    }
+  }, [showOpponents]);
 
   useEffect(() => {
     racingLineModeRef.current = racingLineMode;
@@ -509,7 +520,8 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       const liveFrame = window.__latestFrame || storeFrame;
       const historyWindow = HISTORY_WINDOW_BY_MODE[activePerformanceMode] || HISTORY_WINDOW_BY_MODE.BALANCED;
 
-      const renderOpponents = withEstimatedHeadings(liveOpponents
+      const liveOpponentsForRender = showOpponentsRef.current ? liveOpponents : [];
+      const renderOpponents = withEstimatedHeadings(liveOpponentsForRender
         .map((opponent) => resolveOpponentRenderState(opponent, normalizedTrack))
         .filter(Boolean), opponentMotionRef.current);
       const opponentPositions = renderOpponents
@@ -799,6 +811,24 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
             RACING LINE
           </button>
         </div>
+        <div className="panel px-1.5 py-1">
+          <button
+            type="button"
+            onClick={() => setShowOpponents((visible) => !visible)}
+            className={`num text-[7px] uppercase rounded-sm transition-all ${
+              showOpponents ? 'text-orange-300' : 'text-sky-300'
+            }`}
+            style={{
+              background: showOpponents ? 'rgba(249,115,22,0.08)' : 'rgba(56,189,248,0.09)',
+              border: showOpponents ? '1px solid rgba(249,115,22,0.22)' : '1px solid rgba(56,189,248,0.24)',
+              padding: '2px 6px',
+              cursor: 'pointer',
+            }}
+            title="Alternar visualizacao de oponentes no mapa"
+          >
+            {showOpponents ? 'OPPONENTS ON' : 'PLAYER ONLY'}
+          </button>
+        </div>
         {showRacingLine && (
           <div className="panel px-1.5 py-1 grid grid-cols-4 gap-1">
             {availableRacingLineModes.map((mode) => (
@@ -931,7 +961,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         )}
       </div>
 
-      {visibleOpponents.length > 0 && (
+      {showOpponents && visibleOpponents.length > 0 && (
         <div
           className="absolute left-3 bottom-3 panel px-2 py-2 overflow-hidden"
           style={{
