@@ -80,18 +80,27 @@ class TelemetryRuntime:
         self.source_manager.stop()
 
     def _loop(self):
+        next_tick = time.perf_counter()
         while self.running:
             frame_started = time.perf_counter()
             try:
+                read_started = time.perf_counter()
                 sample = self.source_manager.read_sample()
+                performance_metrics.mark_read_attempt(time.perf_counter() - read_started)
                 if not sample:
-                    time.sleep(self.poll_interval)
+                    next_tick = self._sleep_until_next_tick(next_tick)
                     continue
 
+                performance_metrics.mark_raw_read()
                 self.last_sample_wall_time = time.time()
-                self.reliability_monitor.observe(
+                validation_started = time.perf_counter()
+                validation = self.reliability_monitor.observe(
                     sample,
                     received_at=self.last_sample_wall_time,
+                )
+                performance_metrics.mark_sample_validation(
+                    validation.status,
+                    time.perf_counter() - validation_started,
                 )
                 self.buffer.add_sample(sample)
                 lap_wrapped = self.lap_collector.add_sample(sample)
@@ -111,8 +120,20 @@ class TelemetryRuntime:
                 logger.warning("Telemetry runtime loop error: %s", exc)
                 self.state.track_build_state = TrackBuildState.TRACK_INVALID
                 time.sleep(0.5)
+                next_tick = time.perf_counter()
 
-            time.sleep(self.poll_interval)
+            next_tick = self._sleep_until_next_tick(next_tick)
+
+    def _sleep_until_next_tick(self, next_tick: float) -> float:
+        next_tick += self.poll_interval
+        now = time.perf_counter()
+        sleep_for = next_tick - now
+        if sleep_for > 0:
+            time.sleep(sleep_for)
+            return next_tick
+        if now - next_tick > self.poll_interval * 3.0:
+            return now
+        return next_tick
 
     def _try_finalize_lap(self) -> bool:
         expected_length = self.source_manager.current_track_length()

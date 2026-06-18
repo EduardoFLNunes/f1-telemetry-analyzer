@@ -61,6 +61,7 @@ from core.telemetry.telemetry_models import TelemetrySample
 from core.telemetry.telemetry_reader_impl import TelemetrySourceManager, telemetry_samples_from_dataframe
 from core.track_file_resolver import TrackFileResolver
 from core.telemetry_events import COACHING_EVENT, event_bus
+from core.websocket_server import broadcaster as ws_broadcaster
 from core.websocket_server import manager as ws_manager
 
 
@@ -87,7 +88,7 @@ TRACK_CACHE_DIR = RUNTIME_ROOT / "data" / "cache" / "tracks"
 PRIMARY_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetry.csv"
 DEBUG_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetryOld.csv"
 BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
-BACKEND_PHASE_VERSION = "phase-14.2-real-session-assisted-validation"
+BACKEND_PHASE_VERSION = "phase-15-runtime-sampling-performance"
 
 runtime_state = RuntimeState()
 telemetry_buffer = TelemetryBuffer(max_size=20000)
@@ -604,6 +605,57 @@ def runtime_status_payload() -> Dict[str, Any]:
         "websocket": {
             "path": "/ws",
             "connections": len(ws_manager.active_connections),
+        },
+    }
+
+
+def runtime_performance_payload() -> Dict[str, Any]:
+    runtime = runtime_status_payload()
+    telemetry = runtime.get("telemetry", {})
+    recording_status = recording_runtime.status().to_api() if recording_runtime else {}
+    last_age_seconds = telemetry.get("secondsSinceLastPlayerSample")
+    last_age_ms = (
+        round(float(last_age_seconds) * 1000.0, 3)
+        if isinstance(last_age_seconds, (int, float))
+        else None
+    )
+    sampling = performance_metrics.runtime_snapshot(
+        target_hz=float(telemetry.get("targetHz") or 60.0),
+        source=telemetry.get("source"),
+        player_status=telemetry.get("playerStatus"),
+        last_sample_age_ms=last_age_ms,
+        recording_queue_depth=recording_status.get("queueSize"),
+        websocket_queue_depth=ws_broadcaster.pending_depth(),
+    )
+    return {
+        "status": "success",
+        "sampling": sampling,
+        "telemetry": {
+            "source": telemetry.get("source"),
+            "playerSource": telemetry.get("playerSource"),
+            "playerStatus": telemetry.get("playerStatus"),
+            "sampleCount": telemetry.get("sampleCount"),
+            "targetHz": telemetry.get("targetHz"),
+            "estimatedHz": telemetry.get("estimatedHz"),
+            "stableHz": telemetry.get("stableHz"),
+            "frequencyStatus": telemetry.get("frequencyStatus"),
+            "sharedMemoryAllowed": telemetry.get("sharedMemoryAllowed"),
+            "assettoProcessRunning": telemetry.get("assettoProcessRunning"),
+            "sharedMemoryGate": telemetry.get("sharedMemoryGate"),
+        },
+        "recording": {
+            "recording": recording_status.get("recording", False),
+            "queueSize": recording_status.get("queueSize", 0),
+            "droppedFrames": recording_status.get("droppedFrames", 0),
+            "playerSamplesWritten": recording_status.get("playerSamplesWritten", 0),
+        },
+        "websocket": {
+            "connections": len(ws_manager.active_connections),
+            "pendingDepth": ws_broadcaster.pending_depth(),
+        },
+        "runtime": {
+            "backend": runtime.get("backend", {}),
+            "racingLine": runtime.get("racingLine", {}),
         },
     }
 
@@ -1400,6 +1452,11 @@ async def get_performance_metrics():
         "eventBusQueueSize": None,
         "websocketConnections": len(ws_manager.active_connections),
     }
+
+
+@app.get("/api/runtime/performance")
+async def get_runtime_performance():
+    return runtime_performance_payload()
 
 
 @app.get("/api/live/source")

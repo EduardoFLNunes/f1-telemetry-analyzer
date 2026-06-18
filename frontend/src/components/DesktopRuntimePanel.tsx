@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FolderOpen } from 'lucide-react';
 import { API_BASE_URL, apiUrl } from '../config/runtime';
 import { useTelemetryStore } from '../store/useTelemetryStore';
@@ -42,6 +42,7 @@ declare global {
       copyAssettoSetupInstructions?: () => Promise<{ ok?: boolean; length?: number; error?: string | null }>;
       phase?: string;
     };
+    __telemetryPerf?: Record<string, number>;
   }
 }
 
@@ -162,6 +163,35 @@ type RuntimeStatus = {
   };
 };
 
+type RuntimePerformanceStatus = {
+  status?: string;
+  sampling?: {
+    targetHz?: number | null;
+    status?: 'OK' | 'WARNING' | 'ERROR' | 'WAITING' | string;
+    bottleneck?: string | null;
+    readAttemptHz?: number | null;
+    rawReadHz?: number | null;
+    acceptedSampleHz?: number | null;
+    persistedSampleHz?: number | null;
+    websocketEmitHz?: number | null;
+    frontendReceiveHz?: number | null;
+    droppedSamples?: number | null;
+    staleSamples?: number | null;
+    invalidSamples?: number | null;
+    readLoopDurationMs?: number | null;
+    persistenceDurationMs?: number | null;
+    websocketQueueDepth?: number | null;
+    recordingQueueDepth?: number | null;
+    lastSampleAgeMs?: number | null;
+  };
+};
+
+type FrontendPerfSnapshot = {
+  frontendReceiveHz: number | null;
+  frontendStoreHz: number | null;
+  framesDroppedForRender: number;
+};
+
 const POLL_MS = 4000;
 
 const statusColor = {
@@ -201,6 +231,26 @@ function statusLabel(status: BackendStatus): string {
   return status.replace(/-/g, ' ').toUpperCase();
 }
 
+function hz(value?: number | null): string {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? `${parsed.toFixed(1)} Hz` : '--';
+}
+
+function perfTone(value: unknown, target = 60): keyof typeof statusColor {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return 'warn';
+  if (parsed >= target * 0.83) return 'ok';
+  if (parsed >= target * 0.5) return 'warn';
+  return 'bad';
+}
+
+function samplingTone(status?: string | null): keyof typeof statusColor {
+  if (status === 'OK') return 'ok';
+  if (status === 'WARNING' || status === 'WAITING') return 'warn';
+  if (status === 'ERROR') return 'bad';
+  return 'quiet';
+}
+
 function friendlyMessage(status: BackendStatus, port: number, error?: string | null): string {
   if (status === 'online' || status === 'already-running') return 'Backend online. API local respondendo normalmente.';
   if (status === 'starting') return 'Backend iniciando. Aguardando health check local.';
@@ -231,10 +281,22 @@ export const DesktopRuntimePanel: React.FC = () => {
   const lastOpponentsUpdateAt = useTelemetryStore((state) => state.lastOpponentsUpdateAt);
   const [runtime, setRuntime] = useState<RuntimeStatus | null>(null);
   const [desktopStatus, setDesktopStatus] = useState<DesktopRuntimeStatus | null>(null);
+  const [performanceStatus, setPerformanceStatus] = useState<RuntimePerformanceStatus | null>(null);
+  const [frontendPerf, setFrontendPerf] = useState<FrontendPerfSnapshot>({
+    frontendReceiveHz: null,
+    frontendStoreHz: null,
+    framesDroppedForRender: 0,
+  });
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   const [logsOpenError, setLogsOpenError] = useState<string | null>(null);
   const [view, setView] = useState<'runtime' | 'assetto'>('runtime');
+  const frontendPerfPreviousRef = useRef<{
+    at: number;
+    wsTelemetryMessages: number;
+    telemetryStoreUpdates: number;
+    telemetryFramesDroppedForRender: number;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -262,6 +324,33 @@ export const DesktopRuntimePanel: React.FC = () => {
         setRuntime(null);
         setError(nextError instanceof Error ? nextError.message : 'offline');
         setUpdatedAt(Date.now());
+      }
+      try {
+        const response = await fetch(apiUrl('/api/runtime/performance'), { signal: controller.signal });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        if (!cancelled) setPerformanceStatus(payload);
+      } catch {
+        if (!cancelled) setPerformanceStatus(null);
+      }
+
+      const metrics = window.__telemetryPerf || {};
+      const now = performance.now();
+      const current = {
+        at: now,
+        wsTelemetryMessages: numeric(metrics.wsTelemetryMessages, 0),
+        telemetryStoreUpdates: numeric(metrics.telemetryStoreUpdates, 0),
+        telemetryFramesDroppedForRender: numeric(metrics.telemetryFramesDroppedForRender, 0),
+      };
+      const previous = frontendPerfPreviousRef.current;
+      frontendPerfPreviousRef.current = current;
+      if (previous) {
+        const elapsedSeconds = Math.max((current.at - previous.at) / 1000, 0.001);
+        setFrontendPerf({
+          frontendReceiveHz: (current.wsTelemetryMessages - previous.wsTelemetryMessages) / elapsedSeconds,
+          frontendStoreHz: (current.telemetryStoreUpdates - previous.telemetryStoreUpdates) / elapsedSeconds,
+          framesDroppedForRender: current.telemetryFramesDroppedForRender,
+        });
       }
     };
 
@@ -309,6 +398,10 @@ export const DesktopRuntimePanel: React.FC = () => {
   const logsDir = desktopStatus?.logsDir;
   const lastBackendError = desktopStatus?.portConflictMessage || desktopStatus?.lastBackendError || error || logsOpenError;
   const message = friendlyMessage(backendStatus, backendPort, lastBackendError || desktopStatus?.backendStatusMessage);
+  const sampling = performanceStatus?.sampling;
+  const samplingTargetHz = numeric(sampling?.targetHz, 60);
+  const samplingStatus = sampling?.status || '--';
+  const bottleneck = (sampling?.bottleneck || '--').replace(/_/g, ' ');
 
   const openLogs = async () => {
     setLogsOpenError(null);
@@ -317,7 +410,7 @@ export const DesktopRuntimePanel: React.FC = () => {
   };
 
   return (
-    <div className="panel" style={{ height: '100%', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 124, overflow: 'hidden' }}>
+    <div className="panel" style={{ height: '100%', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 124, overflow: 'auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
         <div style={{ display: 'flex', gap: 2, minWidth: 0 }}>
           {(['runtime', 'assetto'] as const).map((item) => (
@@ -396,6 +489,23 @@ export const DesktopRuntimePanel: React.FC = () => {
         <Pill label="Opp Source" value={runtime?.opponents?.source || 'udp'} tone={runtime?.opponents?.enabled === false ? 'warn' : 'ok'} />
         <Pill label="Racing Line" value={racingLineReady ? 'READY' : 'INSUFFICIENT'} tone={racingLineReady ? 'ok' : 'warn'} />
         <Pill label="Coach" value={coachReady ? 'READY' : 'INSUFFICIENT'} tone={coachReady ? 'ok' : 'warn'} />
+      </div>
+
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 8, rowGap: 3, minWidth: 0 }}>
+        <Pill label="Sampling" value={samplingStatus} tone={samplingTone(sampling?.status)} />
+        <Pill label="Bottleneck" value={compactPath(bottleneck, 28)} tone={samplingTone(sampling?.status)} />
+        <Pill label="Target" value={hz(samplingTargetHz)} tone="quiet" />
+        <Pill label="Read Raw" value={hz(sampling?.rawReadHz)} tone={perfTone(sampling?.rawReadHz, samplingTargetHz)} />
+        <Pill label="Accepted" value={hz(sampling?.acceptedSampleHz)} tone={perfTone(sampling?.acceptedSampleHz, samplingTargetHz)} />
+        <Pill label="Persisted" value={hz(sampling?.persistedSampleHz)} tone={sampling?.persistedSampleHz ? perfTone(sampling.persistedSampleHz, samplingTargetHz) : 'quiet'} />
+        <Pill label="WebSocket" value={hz(sampling?.websocketEmitHz)} tone={sampling?.websocketEmitHz ? 'ok' : 'quiet'} />
+        <Pill label="Frontend Rx" value={hz(frontendPerf.frontendReceiveHz)} tone={frontendPerf.frontendReceiveHz ? 'ok' : 'quiet'} />
+        <Pill label="Frontend Store" value={hz(frontendPerf.frontendStoreHz)} tone={frontendPerf.frontendStoreHz ? 'ok' : 'quiet'} />
+        <Pill label="Dropped Render" value={String(frontendPerf.framesDroppedForRender || 0)} tone={frontendPerf.framesDroppedForRender ? 'warn' : 'quiet'} />
+        <Pill label="Loop Ms" value={numeric(sampling?.readLoopDurationMs, 0).toFixed(2)} tone="quiet" />
+        <Pill label="Disk Ms" value={numeric(sampling?.persistenceDurationMs, 0).toFixed(2)} tone="quiet" />
       </div>
 
       <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
