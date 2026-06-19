@@ -15,6 +15,20 @@ from core.telemetry_events import OPPONENTS_FRAME, event_bus
 
 logger = logging.getLogger(__name__)
 
+
+def split_live_frame(frame: Dict[str, Any]):
+    """Keep the high-frequency map frame small without changing internal frames."""
+    live_frame = dict(frame)
+    car_physics = live_frame.pop("carPhysics", None)
+    live_frame.pop("projectionDebug", None)
+    detail = None
+    if car_physics is not None:
+        detail = {
+            "timestamp": frame.get("timestamp"),
+            "carPhysics": car_physics,
+        }
+    return live_frame, detail
+
 class ConnectionManager:
     """Manages active websocket connections."""
     def __init__(self):
@@ -54,7 +68,10 @@ class ConnectionManager:
                     self.disconnect(conn)
             if failed_sends:
                 performance_metrics.mark_websocket_send_failure(failed_sends)
-            performance_metrics.record_websocket_send(time.perf_counter() - started)
+            performance_metrics.record_websocket_send(
+                time.perf_counter() - started,
+                payload_bytes=len(msg_str.encode("utf-8")),
+            )
 
 class TelemetryBroadcaster:
     """
@@ -67,15 +84,19 @@ class TelemetryBroadcaster:
         *,
         subscribe: bool = True,
         frame_hz: Optional[float] = None,
+        detail_hz: Optional[float] = None,
     ):
         self.manager = manager
-        configured_hz = frame_hz if frame_hz is not None else float(os.getenv("TELEMETRY_WS_HZ", "90"))
+        configured_hz = frame_hz if frame_hz is not None else float(os.getenv("TELEMETRY_WS_HZ", "30"))
         self.frame_interval = 1.0 / max(configured_hz, 1.0)
+        configured_detail_hz = detail_hz if detail_hz is not None else float(os.getenv("TELEMETRY_DETAIL_WS_HZ", "2"))
+        self.detail_interval = 1.0 / max(configured_detail_hz, 0.1)
         opponents_hz = float(os.getenv("OPPONENTS_WS_HZ", "10"))
         self.opponents_interval = 1.0 / max(opponents_hz, 1.0)
         self._latest_frame: Optional[Dict[str, Any]] = None
         self._frame_sender_task: Optional[asyncio.Task] = None
         self._last_frame_sent_at = 0.0
+        self._last_detail_sent_at = 0.0
         self._latest_opponents: Optional[Dict[str, Any]] = None
         self._opponents_sender_task: Optional[asyncio.Task] = None
         self._last_opponents_sent_at = 0.0
@@ -104,7 +125,12 @@ class TelemetryBroadcaster:
                 frame = self._latest_frame
                 self._latest_frame = None
                 self._last_frame_sent_at = time.monotonic()
-                await self.manager.broadcast({"type": "telemetry", "data": frame})
+                live_frame, detail = split_live_frame(frame)
+                await self.manager.broadcast({"type": "telemetry", "data": live_frame})
+                now = time.monotonic()
+                if detail is not None and now - self._last_detail_sent_at >= self.detail_interval:
+                    self._last_detail_sent_at = now
+                    await self.manager.broadcast({"type": "telemetry_detail", "data": detail})
                 await self._broadcast_pending_opponents()
         except asyncio.CancelledError:
             raise

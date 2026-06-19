@@ -103,6 +103,7 @@ class PerformanceMetrics:
         self._validation_seconds = RollingAverage()
         self._disk_write_seconds = RollingAverage()
         self._websocket_send_seconds = RollingAverage()
+        self._websocket_payload_bytes = RollingAverage()
         self._last_loop_started_at: Optional[float] = None
         self._last_sample_identity: Optional[Tuple[Any, ...]] = None
         self._identity_lock = threading.Lock()
@@ -181,8 +182,10 @@ class PerformanceMetrics:
     def record_disk_write(self, seconds: float):
         self._disk_write_seconds.add(seconds)
 
-    def record_websocket_send(self, seconds: float):
+    def record_websocket_send(self, seconds: float, payload_bytes: Optional[int] = None):
         self._websocket_send_seconds.add(seconds)
+        if payload_bytes is not None:
+            self._websocket_payload_bytes.add(float(payload_bytes))
 
     def snapshot(self) -> Dict[str, object]:
         runtime_sampling = self.runtime_snapshot()
@@ -235,6 +238,7 @@ class PerformanceMetrics:
             "validationAvg": round(self._validation_seconds.average() * 1000.0, 3),
             "persistenceAvg": round(self._disk_write_seconds.average() * 1000.0, 3),
             "websocketEmitAvg": round(self._websocket_send_seconds.average() * 1000.0, 3),
+            "websocketPayloadAvgBytes": round(self._websocket_payload_bytes.average(), 1),
         }
         read_attempt_hz = float(five["readAttemptHz"] or 0.0)
         raw_hz = float(five["rawReadHz"] or 0.0)
@@ -294,6 +298,7 @@ class PerformanceMetrics:
             "validationDurationMs": durations["validationAvg"],
             "persistenceDurationMs": durations["persistenceAvg"],
             "websocketDurationMs": durations["websocketEmitAvg"],
+            "websocketPayloadAvgBytes": durations["websocketPayloadAvgBytes"],
             "websocketQueueDepth": websocket_queue_depth,
             "recordingQueueDepth": recording_queue_depth,
             "lastSampleAgeMs": last_sample_age_ms,

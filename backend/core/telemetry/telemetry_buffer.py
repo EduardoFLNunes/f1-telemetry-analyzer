@@ -1,24 +1,22 @@
-from typing import List, Optional
-from .telemetry_models import TelemetrySample
+from collections import deque
 import threading
+from typing import Deque, Iterable, List, Optional
+
+from .telemetry_models import TelemetrySample
 
 class TelemetryBuffer:
     def __init__(self, max_size: int = 10000):
-        self.max_size = max_size
-        self.samples: List[TelemetrySample] = []
+        self.max_size = max(int(max_size), 1)
+        self.samples: Deque[TelemetrySample] = deque(maxlen=self.max_size)
         self._lock = threading.Lock()
 
     def add_sample(self, sample: TelemetrySample):
         with self._lock:
             self.samples.append(sample)
-            if len(self.samples) > self.max_size:
-                self.samples.pop(0)
 
-    def add_samples(self, samples: List[TelemetrySample]):
+    def add_samples(self, samples: Iterable[TelemetrySample]):
         with self._lock:
             self.samples.extend(samples)
-            if len(self.samples) > self.max_size:
-                self.samples = self.samples[-self.max_size:]
 
     def get_samples(self) -> List[TelemetrySample]:
         with self._lock:
@@ -26,7 +24,7 @@ class TelemetryBuffer:
 
     def clear(self):
         with self._lock:
-            self.samples = []
+            self.samples.clear()
 
     def get_latest_sample(self) -> Optional[TelemetrySample]:
         with self._lock:

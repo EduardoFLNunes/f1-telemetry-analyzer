@@ -184,6 +184,8 @@ class RuntimePerformanceMetricsTests(unittest.TestCase):
         self.assertIn("persistedSampleHz", payload["sampling"])
         self.assertIn("websocketEmitHz", payload["sampling"])
         self.assertIn("bottleneck", payload["sampling"])
+        self.assertIn("adaptivePollMode", payload["sampling"])
+        self.assertIn("adaptivePollHz", payload["sampling"])
         self.assertIn("windows", payload)
         self.assertIn("5s", payload["windows"])
         self.assertIn("30s", payload["windows"])

@@ -251,6 +251,14 @@ type FrontendPerfSnapshot = {
 };
 
 const POLL_MS = 4000;
+const EMPTY_OPPONENTS_META = {
+  source: 'opponents_collector',
+  count: 0,
+  track: null,
+  sessionTime: null,
+  lastUpdateTimestamp: null,
+  staleAfterSeconds: null,
+};
 
 const statusColor = {
   ok: '#34d399',
@@ -342,11 +350,11 @@ function Pill({ label, value, tone = 'quiet' }: { label: string; value: string; 
   );
 }
 
-export const DesktopRuntimePanel: React.FC = () => {
-  const isStreaming = useTelemetryStore((state) => state.isStreaming);
-  const latestFrame = useTelemetryStore((state) => state.latestFrame);
-  const opponentsMeta = useTelemetryStore((state) => state.opponentsMeta);
-  const lastOpponentsUpdateAt = useTelemetryStore((state) => state.lastOpponentsUpdateAt);
+export const DesktopRuntimePanel: React.FC<{ active?: boolean }> = ({ active = true }) => {
+  const isStreaming = useTelemetryStore((state) => active ? state.isStreaming : false);
+  const latestFrame = useTelemetryStore((state) => active ? state.latestFrame : null);
+  const opponentsMeta = useTelemetryStore((state) => active ? state.opponentsMeta : EMPTY_OPPONENTS_META);
+  const lastOpponentsUpdateAt = useTelemetryStore((state) => active ? state.lastOpponentsUpdateAt : null);
   const [runtime, setRuntime] = useState<RuntimeStatus | null>(null);
   const [desktopStatus, setDesktopStatus] = useState<DesktopRuntimeStatus | null>(null);
   const [performanceStatus, setPerformanceStatus] = useState<RuntimePerformanceStatus | null>(null);
@@ -367,6 +375,7 @@ export const DesktopRuntimePanel: React.FC = () => {
   } | null>(null);
 
   useEffect(() => {
+    if (!active) return undefined;
     let cancelled = false;
     let controller: AbortController | null = null;
 
@@ -429,7 +438,7 @@ export const DesktopRuntimePanel: React.FC = () => {
       controller?.abort();
       window.clearInterval(interval);
     };
-  }, []);
+  }, [active]);
 
   const ports = useMemo(runtimePorts, []);
   const backendPort = numeric(desktopStatus?.backendPort, ports.backend);

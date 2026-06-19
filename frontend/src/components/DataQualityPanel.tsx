@@ -145,9 +145,9 @@ export const DataQualityPanel = React.memo(function DataQualityPanel({
 }: {
   active?: boolean;
 }) {
-  const performanceMode = useTelemetryStore((state) => state.performanceMode);
-  const selectedLap = useTelemetryStore((state) => state.selectedLap);
-  const selectedSessionId = useTelemetryStore((state) => state.selectedSessionId);
+  const performanceMode = useTelemetryStore((state) => active ? state.performanceMode : 'BALANCED');
+  const selectedLap = useTelemetryStore((state) => active ? state.selectedLap : null);
+  const selectedSessionId = useTelemetryStore((state) => active ? state.selectedSessionId : null);
   const [report, setReport] = useState<DataQualityReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);

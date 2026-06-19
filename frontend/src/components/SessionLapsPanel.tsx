@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Archive, Gauge, PlayCircle, Radio, RefreshCw, Target, XCircle } from 'lucide-react';
 import { api } from '../api/client';
-import { TelemetryFrame, useTelemetryStore } from '../store/useTelemetryStore';
+import { OfflineReplayState, TelemetryFrame, useTelemetryStore } from '../store/useTelemetryStore';
 import { formatLapTime } from '../utils/lapFormat';
 import { resolveSampleMapPosition } from '../utils/spatialTransform';
 
@@ -41,6 +41,36 @@ type SessionSummary = {
   offlineAvailable?: boolean;
   active?: boolean;
   laps: LapSummary[];
+};
+
+const EMPTY_COMPLETED_LAPS: never[] = [];
+const INACTIVE_OFFLINE_REPLAY: OfflineReplayState = {
+  active: false,
+  playing: false,
+  playbackRate: 1,
+  lapId: null,
+  sessionId: null,
+  lapNumber: null,
+  referenceLapId: null,
+  referenceLapNumber: null,
+  track: null,
+  car: null,
+  source: null,
+  samples: [],
+  referenceSamples: [],
+  currentIndex: 0,
+  currentTime: 0,
+  duration: 0,
+  lapTime: null,
+  sampleCount: 0,
+  currentSample: null,
+  assettoClosed: null,
+  assistAvailable: false,
+  acceptedByPhase13: null,
+  canAnalyze: false,
+  validationStatus: null,
+  issues: [],
+  message: null,
 };
 
 const numberOr = (value: unknown, fallback = 0) => {
@@ -141,14 +171,14 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
   active = true,
   onOpenAssistedAnalysis,
 }) => {
-  const completedLaps = useTelemetryStore((state) => state.completedLapsHistory);
-  const selectedLap = useTelemetryStore((state) => state.selectedLap);
-  const selectedSessionId = useTelemetryStore((state) => state.selectedSessionId);
+  const completedLaps = useTelemetryStore((state) => active ? state.completedLapsHistory : EMPTY_COMPLETED_LAPS);
+  const selectedLap = useTelemetryStore((state) => active ? state.selectedLap : null);
+  const selectedSessionId = useTelemetryStore((state) => active ? state.selectedSessionId : null);
   const setReferenceLap = useTelemetryStore((state) => state.setReferenceLap);
   const clearReferenceLap = useTelemetryStore((state) => state.clearReferenceLap);
   const setAssistedTraceContext = useTelemetryStore((state) => state.setAssistedTraceContext);
   const startOfflineReplay = useTelemetryStore((state) => state.startOfflineReplay);
-  const offlineReplay = useTelemetryStore((state) => state.offlineReplay);
+  const offlineReplay = useTelemetryStore((state) => active ? state.offlineReplay : INACTIVE_OFFLINE_REPLAY);
   const clearOfflineReplay = useTelemetryStore((state) => state.clearOfflineReplay);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [runtimeStatus, setRuntimeStatus] = useState<any>(null);

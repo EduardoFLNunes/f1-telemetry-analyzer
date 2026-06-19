@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Activity, AlertTriangle, RefreshCw, Target, Zap } from 'lucide-react';
 import { api } from '../api/client';
-import { useTelemetryStore } from '../store/useTelemetryStore';
+import { AssistedTraceContext, useTelemetryStore } from '../store/useTelemetryStore';
 
 type LapItem = {
   lapId: string;
@@ -12,6 +12,15 @@ type LapItem = {
   lapTime?: number | null;
   sampleCount: number;
   sessionId?: string | null;
+};
+
+const INACTIVE_ASSISTED_CONTEXT: AssistedTraceContext = {
+  analyzedLapId: null,
+  analyzedLapNumber: null,
+  referenceLapId: null,
+  referenceLapNumber: null,
+  track: null,
+  headline: null,
 };
 
 const phaseLabel: Record<string, string> = {
@@ -95,8 +104,8 @@ const TinyButton = ({ children, onClick, disabled, title }: any) => (
 );
 
 export const AssistedAnalysisPanel: React.FC<{ active?: boolean }> = ({ active = true }) => {
-  const lastCompletedLapNumber = useTelemetryStore(s => s.lapDebug.lastCompletedLapNumber);
-  const assistedTraceContext = useTelemetryStore(s => s.assistedTraceContext);
+  const lastCompletedLapNumber = useTelemetryStore(s => active ? s.lapDebug.lastCompletedLapNumber : null);
+  const assistedTraceContext = useTelemetryStore(s => active ? s.assistedTraceContext : INACTIVE_ASSISTED_CONTEXT);
   const setAssistedTraceContext = useTelemetryStore(s => s.setAssistedTraceContext);
   const clearAssistedTraceContext = useTelemetryStore(s => s.clearAssistedTraceContext);
   const [laps, setLaps] = useState<LapItem[]>([]);

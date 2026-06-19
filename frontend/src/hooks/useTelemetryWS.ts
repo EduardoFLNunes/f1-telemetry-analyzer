@@ -65,13 +65,17 @@ export const useTelemetryWS = () => {
   const performanceModeRef = useRef<PerformanceMode>('BALANCED');
   const pendingFrameRef = useRef<TelemetryFrame | null>(null);
   const pendingOpponentsRef = useRef<any | null>(null);
+  const latestCarPhysicsRef = useRef<TelemetryFrame['carPhysics'] | undefined>();
 
   useEffect(() => {
     performanceModeRef.current = performanceMode;
   }, [performanceMode]);
 
   const connect = useCallback(() => {
-    if (socketRef.current?.readyState === WebSocket.OPEN) return;
+    if (
+      socketRef.current?.readyState === WebSocket.OPEN
+      || socketRef.current?.readyState === WebSocket.CONNECTING
+    ) return;
 
     shouldReconnectRef.current = true;
     console.log('Connecting to telemetry stream...', WS_URL);
@@ -98,6 +102,7 @@ export const useTelemetryWS = () => {
           // Map to professional structure
           const frame: TelemetryFrame = {
             ...raw,
+            carPhysics: raw.carPhysics ?? latestCarPhysicsRef.current,
             mapPosition,
             projectedPosition,
             x: mapPosition.x,
@@ -115,6 +120,14 @@ export const useTelemetryWS = () => {
           (window as any).__latestFrame = frame;
           if (pendingFrameRef.current) perf().telemetryFramesDroppedForRender += 1;
           pendingFrameRef.current = frame;
+        } else if (payload.type === 'telemetry_detail') {
+          const carPhysics = payload.data?.carPhysics;
+          if (carPhysics) {
+            latestCarPhysicsRef.current = carPhysics;
+            if (pendingFrameRef.current) {
+              pendingFrameRef.current = { ...pendingFrameRef.current, carPhysics };
+            }
+          }
         } else if (payload.type === 'opponents') {
           const raw = payload.data || {};
           const opponents = Array.isArray(raw.opponents)
@@ -142,6 +155,8 @@ export const useTelemetryWS = () => {
     };
 
     ws.onclose = () => {
+      if (socketRef.current !== ws) return;
+      socketRef.current = null;
       console.log('Telemetry stream closed');
       setStreaming(false);
       if (shouldReconnectRef.current) {
@@ -225,8 +240,9 @@ export const useTelemetryWS = () => {
     return () => {
       shouldReconnectRef.current = false;
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-      socketRef.current?.close();
+      const socket = socketRef.current;
       socketRef.current = null;
+      socket?.close();
     };
   }, [connect]);
 

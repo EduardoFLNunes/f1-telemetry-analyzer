@@ -677,6 +677,8 @@ def runtime_status_payload() -> Dict[str, Any]:
             "estimatedHz": telemetry_status.get("estimatedHz"),
             "stableHz": telemetry_status.get("stableHz"),
             "frequencyStatus": telemetry_status.get("frequencyStatus"),
+            "adaptivePollMode": telemetry_status.get("adaptivePollMode"),
+            "adaptivePollHz": telemetry_status.get("adaptivePollHz"),
             "droppedSamplesEstimate": telemetry_status.get("droppedSamplesEstimate"),
             "sampleValidation": telemetry_status.get("sampleValidation"),
         },
@@ -740,6 +742,8 @@ def runtime_performance_payload() -> Dict[str, Any]:
         recording_dropped_frames=recording_status.get("droppedFrames"),
         websocket_queue_depth=ws_broadcaster.pending_depth(),
     )
+    sampling["adaptivePollMode"] = telemetry.get("adaptivePollMode")
+    sampling["adaptivePollHz"] = telemetry.get("adaptivePollHz")
     return {
         "status": "success",
         "source": telemetry.get("source"),
@@ -763,6 +767,8 @@ def runtime_performance_payload() -> Dict[str, Any]:
             "estimatedHz": telemetry.get("estimatedHz"),
             "stableHz": telemetry.get("stableHz"),
             "frequencyStatus": telemetry.get("frequencyStatus"),
+            "adaptivePollMode": telemetry.get("adaptivePollMode"),
+            "adaptivePollHz": telemetry.get("adaptivePollHz"),
             "sharedMemoryAllowed": telemetry.get("sharedMemoryAllowed"),
             "assettoProcessRunning": telemetry.get("assettoProcessRunning"),
             "sharedMemoryGate": telemetry.get("sharedMemoryGate"),

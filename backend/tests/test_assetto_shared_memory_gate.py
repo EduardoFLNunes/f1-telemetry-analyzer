@@ -2,7 +2,7 @@ import asyncio
 from pathlib import Path
 import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from fastapi import HTTPException
 
@@ -84,6 +84,52 @@ STATIC_MISSING_GATE = {
 
 
 class AssettoSharedMemoryGateTests(unittest.TestCase):
+    def test_reader_returns_only_new_shared_memory_packets(self):
+        reader = ACSharedMemoryReader()
+        reader.connected = True
+        reader.adapter.is_connected = True
+        reader.connect = Mock(return_value=True)
+        frame = {
+            "packet_id": 10,
+            "x": 12.0,
+            "y": 0.0,
+            "z": 34.0,
+            "speed": 20.0,
+        }
+        reader.adapter.poll = Mock(side_effect=[frame, frame, {**frame, "packet_id": 11}])
+
+        self.assertIsNotNone(reader.read_sample())
+        self.assertIsNone(reader.read_sample())
+        self.assertIsNotNone(reader.read_sample())
+
+    def test_reader_falls_back_to_payload_when_packet_id_is_missing_or_stuck(self):
+        reader = ACSharedMemoryReader()
+        reader.connected = True
+        reader.adapter.is_connected = True
+        reader.connect = Mock(return_value=True)
+        frame = {
+            "packet_id": 10,
+            "x": 12.0,
+            "y": 0.0,
+            "z": 34.0,
+            "speed": 20.0,
+            "lap_time": 1.0,
+        }
+        frame_without_id = {key: value for key, value in frame.items() if key != "packet_id"}
+        reader.adapter.poll = Mock(side_effect=[
+            frame,
+            {**frame, "speed": 21.0},
+            frame_without_id,
+            frame_without_id,
+            {**frame_without_id, "speed": 22.0},
+        ])
+
+        self.assertIsNotNone(reader.read_sample())
+        self.assertIsNotNone(reader.read_sample())
+        self.assertIsNotNone(reader.read_sample())
+        self.assertIsNone(reader.read_sample())
+        self.assertIsNotNone(reader.read_sample())
+
     def test_gate_reports_stale_pages_when_process_is_absent(self):
         pages_ready = {
             "checked": True,
