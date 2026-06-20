@@ -103,6 +103,8 @@ class OpponentsTelemetryReceiver:
             logger.info("Opponents telemetry receiver stopped")
 
     def handle_packet(self, data: bytes) -> Optional[OpponentsUpdateResult]:
+        packet_started = time.perf_counter()
+        performance_metrics.mark_opponents_udp_packet(len(data))
         self._last_packet_received_at = time.time()
         self.reliability_monitor.packet_received(self._last_packet_received_at)
         try:
@@ -111,9 +113,13 @@ class OpponentsTelemetryReceiver:
             self._log_invalid("JSON parse error: %s" % exc)
             return None
 
-        return self.handle_payload(payload)
+        return self.handle_payload(payload, processing_started=packet_started)
 
-    def handle_payload(self, payload: Any) -> Optional[OpponentsUpdateResult]:
+    def handle_payload(
+        self,
+        payload: Any,
+        processing_started: Optional[float] = None,
+    ) -> Optional[OpponentsUpdateResult]:
         if not isinstance(payload, Mapping):
             self._log_invalid("expected JSON object")
             return None
@@ -150,7 +156,12 @@ class OpponentsTelemetryReceiver:
         self._log_update_summary(result)
         if result.reset_reason:
             logger.info("Opponents telemetry session reset applied: %s", result.reset_reason)
-        performance_metrics.mark_opponents_snapshot()
+        processing_seconds = (
+            time.perf_counter() - processing_started
+            if processing_started is not None
+            else None
+        )
+        performance_metrics.mark_opponents_snapshot(processing_seconds=processing_seconds)
         self._emit(result)
         return result
 
@@ -237,9 +248,6 @@ class OpponentsTelemetryReceiver:
         if not self.event_bus or not self._loop_ref:
             return
         try:
-            asyncio.run_coroutine_threadsafe(
-                self.event_bus.emit(OPPONENTS_FRAME, result.event_payload()),
-                self._loop_ref,
-            )
+            self.event_bus.schedule(OPPONENTS_FRAME, result.event_payload(), self._loop_ref)
         except Exception as exc:
             logger.warning("Opponents telemetry event emit error: %s", exc)

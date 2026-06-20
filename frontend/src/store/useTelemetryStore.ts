@@ -4,6 +4,7 @@
  */
 import { create } from 'zustand';
 import { CarPhysicsTelemetry } from '../types/carPhysics';
+import { resolveSampleMapPosition, transformWorldToMapPoint } from '../utils/spatialTransform';
 
 export type PerformanceMode = 'QUALITY' | 'BALANCED' | 'PERFORMANCE';
 
@@ -821,7 +822,7 @@ const calculateLapMetrics = (
   };
 };
 
-const normalizeOpponent = (raw: any): OpponentCarState | null => {
+export const normalizeOpponent = (raw: any): OpponentCarState | null => {
   const carId = Number(raw?.carId);
   if (!Number.isFinite(carId)) return null;
   if (carId === 0) return null;
@@ -840,6 +841,7 @@ const normalizeOpponent = (raw: any): OpponentCarState | null => {
   const hasWorldPosition =
     worldPosition?.x !== null &&
     worldPosition?.z !== null;
+  const mapPosition = hasWorldPosition ? transformWorldToMapPoint({ worldPosition }) : null;
 
   return {
     source: nullableString(raw?.source) || 'udp',
@@ -850,9 +852,7 @@ const normalizeOpponent = (raw: any): OpponentCarState | null => {
     isAI: typeof raw?.isAI === 'boolean' ? raw.isAI : null,
     isMultiplayer: typeof raw?.isMultiplayer === 'boolean' ? raw.isMultiplayer : null,
     worldPosition,
-    mapPosition: hasWorldPosition
-      ? { x: worldPosition.x as number, y: -(worldPosition.z as number) }
-      : null,
+    mapPosition,
     speedKmh: finiteNumberOrNull(raw?.speedKmh),
     yaw: finiteNumberOrNull(raw?.yaw),
     splinePosition: finiteNumberOrNull(raw?.splinePosition),
@@ -949,9 +949,9 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
   offlineReplay: EMPTY_OFFLINE_REPLAY,
 
   addFrame: (frame) => set((state) => {
-    const mapPosition = frame.mapPosition && isFinite(frame.mapPosition.x) && isFinite(frame.mapPosition.y)
-      ? frame.mapPosition
-      : { x: frame.x, y: frame.y ?? frame.z };
+    const mapPosition = resolveSampleMapPosition(frame)
+      ?? state.latestFrame?.mapPosition
+      ?? { x: 0, y: 0 };
     const projectedPosition = frame.projectedPosition && isFinite(frame.projectedPosition.x) && isFinite(frame.projectedPosition.y)
       ? frame.projectedPosition
       : undefined;

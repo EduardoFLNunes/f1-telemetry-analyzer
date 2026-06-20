@@ -3,8 +3,9 @@
  * Handles backpressure, reconnection, and event dispatching.
  */
 import { useEffect, useRef, useCallback } from 'react';
-import { PerformanceMode, useTelemetryStore, TelemetryFrame, CoachingEvent, EngineerSpeech, CognitiveState } from '../store/useTelemetryStore';
+import { PerformanceMode, useTelemetryStore, TelemetryFrame, CoachingEvent, EngineerSpeech, CognitiveState, normalizeOpponent } from '../store/useTelemetryStore';
 import { WS_URL, apiUrl } from '../config/runtime';
+import { resolveSampleMapPosition } from '../utils/spatialTransform';
 
 const OPPONENTS_POLL_MS = 2000;
 const OPPONENTS_WS_FRESH_MS = 2500;
@@ -22,12 +23,15 @@ const perf = () => {
   [
     'wsMessages',
     'wsTelemetryMessages',
+    'wsTelemetryDetailMessages',
     'wsOpponentsMessages',
     'telemetryStoreUpdates',
     'opponentsStoreUpdates',
     'telemetryFramesDroppedForRender',
     'opponentsFramesDroppedForRender',
     'lastWsAt',
+    'telemetryStoreUpdateMs',
+    'opponentsStoreUpdateMs',
   ].forEach((key) => {
     if (typeof metrics[key] !== 'number' || Number.isNaN(metrics[key])) {
       metrics[key] = 0;
@@ -36,12 +40,28 @@ const perf = () => {
   return metrics;
 };
 
-const recordWsMessage = (type: string) => {
+const recordWsMessage = (type: string, payloadBytes: number, parseMs: number) => {
   const metrics = perf();
   metrics.wsMessages += 1;
   metrics.lastWsAt = performance.now();
   if (type === 'telemetry') metrics.wsTelemetryMessages += 1;
+  if (type === 'telemetry_detail') metrics.wsTelemetryDetailMessages += 1;
   if (type === 'opponents') metrics.wsOpponentsMessages += 1;
+  metrics.wsPayloadByType = metrics.wsPayloadByType || {};
+  const payload = metrics.wsPayloadByType[type] || { count: 0, totalBytes: 0, lastBytes: 0, maxBytes: 0 };
+  payload.count += 1;
+  payload.totalBytes += payloadBytes;
+  payload.lastBytes = payloadBytes;
+  payload.maxBytes = Math.max(payload.maxBytes, payloadBytes);
+  payload.avgBytes = payload.totalBytes / Math.max(payload.count, 1);
+  metrics.wsPayloadByType[type] = payload;
+  metrics.wsParseByType = metrics.wsParseByType || {};
+  const parsing = metrics.wsParseByType[type] || { count: 0, totalMs: 0, maxMs: 0 };
+  parsing.count += 1;
+  parsing.totalMs += parseMs;
+  parsing.maxMs = Math.max(parsing.maxMs, parseMs);
+  parsing.avgMs = parsing.totalMs / Math.max(parsing.count, 1);
+  metrics.wsParseByType[type] = parsing;
 };
 
 export const useTelemetryWS = () => {
@@ -64,13 +84,17 @@ export const useTelemetryWS = () => {
   const performanceModeRef = useRef<PerformanceMode>('BALANCED');
   const pendingFrameRef = useRef<TelemetryFrame | null>(null);
   const pendingOpponentsRef = useRef<any | null>(null);
+  const latestCarPhysicsRef = useRef<TelemetryFrame['carPhysics'] | undefined>();
 
   useEffect(() => {
     performanceModeRef.current = performanceMode;
   }, [performanceMode]);
 
   const connect = useCallback(() => {
-    if (socketRef.current?.readyState === WebSocket.OPEN) return;
+    if (
+      socketRef.current?.readyState === WebSocket.OPEN
+      || socketRef.current?.readyState === WebSocket.CONNECTING
+    ) return;
 
     shouldReconnectRef.current = true;
     console.log('Connecting to telemetry stream...', WS_URL);
@@ -83,12 +107,15 @@ export const useTelemetryWS = () => {
 
     ws.onmessage = (event) => {
       try {
+        const parseStarted = performance.now();
         const payload = JSON.parse(event.data);
-        recordWsMessage(payload.type);
+        const parseMs = performance.now() - parseStarted;
+        const payloadBytes = typeof event.data === 'string' ? event.data.length : Number(event.data?.byteLength || 0);
+        recordWsMessage(payload.type, payloadBytes, parseMs);
         
         if (payload.type === 'telemetry') {
           const raw = payload.data;
-          const mapPosition = raw.mapPosition || { x: raw.x, y: raw.y ?? raw.z };
+          const mapPosition = resolveSampleMapPosition(raw) || { x: 0, y: 0 };
           const projectedPosition = raw.projectedPosition || (
             raw.projected_x !== undefined && (raw.projected_y !== undefined || raw.projected_z !== undefined)
               ? { x: raw.projected_x, y: raw.projected_y ?? raw.projected_z }
@@ -97,6 +124,7 @@ export const useTelemetryWS = () => {
           // Map to professional structure
           const frame: TelemetryFrame = {
             ...raw,
+            carPhysics: raw.carPhysics ?? latestCarPhysicsRef.current,
             mapPosition,
             projectedPosition,
             x: mapPosition.x,
@@ -114,6 +142,14 @@ export const useTelemetryWS = () => {
           (window as any).__latestFrame = frame;
           if (pendingFrameRef.current) perf().telemetryFramesDroppedForRender += 1;
           pendingFrameRef.current = frame;
+        } else if (payload.type === 'telemetry_detail') {
+          const carPhysics = payload.data?.carPhysics;
+          if (carPhysics) {
+            latestCarPhysicsRef.current = carPhysics;
+            if (pendingFrameRef.current) {
+              pendingFrameRef.current = { ...pendingFrameRef.current, carPhysics };
+            }
+          }
         } else if (payload.type === 'opponents') {
           const raw = payload.data || {};
           const opponents = Array.isArray(raw.opponents)
@@ -125,6 +161,10 @@ export const useTelemetryWS = () => {
             ...raw,
             opponents,
             count: typeof raw.count === 'number' ? raw.count : opponents.length,
+          };
+          (window as any).__latestOpponents = {
+            ...pendingOpponentsRef.current,
+            opponents: opponents.map(normalizeOpponent).filter(Boolean),
           };
         } else if (payload.data?.type === 'coaching_event' || payload.data?.type === 'predictive_warning' || payload.type === 'coaching_event') {
           addCoachingEvent(payload.data || payload);
@@ -141,6 +181,8 @@ export const useTelemetryWS = () => {
     };
 
     ws.onclose = () => {
+      if (socketRef.current !== ws) return;
+      socketRef.current = null;
       console.log('Telemetry stream closed');
       setStreaming(false);
       if (shouldReconnectRef.current) {
@@ -167,9 +209,12 @@ export const useTelemetryWS = () => {
       if (now - lastPlayerFlushAtRef.current < flushMs) return;
       pendingFrameRef.current = null;
       lastPlayerFlushAtRef.current = now;
+      const storeStarted = performance.now();
       addFrame(frame);
-      perf().telemetryStoreUpdates += 1;
-      perf().telemetryFlushIntervalMs = flushMs;
+      const metrics = perf();
+      metrics.telemetryStoreUpdates += 1;
+      metrics.telemetryStoreUpdateMs += performance.now() - storeStarted;
+      metrics.telemetryFlushIntervalMs = flushMs;
     }, FLUSH_TICK_MS);
 
     opponentsFlushRef.current = setInterval(() => {
@@ -180,9 +225,12 @@ export const useTelemetryWS = () => {
       if (now - lastOpponentsFlushAtRef.current < flushMs) return;
       pendingOpponentsRef.current = null;
       lastOpponentsFlushAtRef.current = now;
+      const storeStarted = performance.now();
       setOpponentsSnapshot(snapshot);
-      perf().opponentsStoreUpdates += 1;
-      perf().opponentsFlushIntervalMs = flushMs;
+      const metrics = perf();
+      metrics.opponentsStoreUpdates += 1;
+      metrics.opponentsStoreUpdateMs += performance.now() - storeStarted;
+      metrics.opponentsFlushIntervalMs = flushMs;
     }, FLUSH_TICK_MS);
 
     return () => {
@@ -206,6 +254,10 @@ export const useTelemetryWS = () => {
           ...data,
           opponents: Array.isArray(data.opponents) ? data.opponents : [],
         };
+        (window as any).__latestOpponents = {
+          ...pendingOpponentsRef.current,
+          opponents: pendingOpponentsRef.current.opponents.map(normalizeOpponent).filter(Boolean),
+        };
       } catch {
         // Keep the player telemetry stream quiet if the optional opponents endpoint is unavailable.
       }
@@ -224,8 +276,9 @@ export const useTelemetryWS = () => {
     return () => {
       shouldReconnectRef.current = false;
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-      socketRef.current?.close();
+      const socket = socketRef.current;
       socketRef.current = null;
+      socket?.close();
     };
   }, [connect]);
 

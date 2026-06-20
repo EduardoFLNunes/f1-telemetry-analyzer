@@ -165,10 +165,30 @@ type RuntimeStatus = {
 
 type RuntimePerformanceStatus = {
   status?: string;
+  source?: string | null;
+  playerSource?: string | null;
+  targetHz?: number | null;
+  windows?: Record<string, SamplingWindow>;
+  durationsMs?: RuntimeDurations;
+  counters?: RuntimeCounters;
+  bottleneck?: {
+    reason?: string | null;
+    sourceLimited?: boolean;
+    backpressureDetected?: boolean;
+  } | null;
+  bottleneckReason?: string | null;
+  sourceLimited?: boolean;
+  backpressureDetected?: boolean;
   sampling?: {
     targetHz?: number | null;
-    status?: 'OK' | 'WARNING' | 'ERROR' | 'WAITING' | string;
+    status?: 'OK' | 'WARNING' | 'ERROR' | 'WAITING' | 'SOURCE_LIMITED' | 'OFFLINE_MOCK' | string;
     bottleneck?: string | null;
+    bottleneckReason?: string | null;
+    sourceLimited?: boolean;
+    backpressureDetected?: boolean;
+    windows?: Record<string, SamplingWindow>;
+    durationsMs?: RuntimeDurations;
+    counters?: RuntimeCounters;
     readAttemptHz?: number | null;
     rawReadHz?: number | null;
     acceptedSampleHz?: number | null;
@@ -177,13 +197,51 @@ type RuntimePerformanceStatus = {
     frontendReceiveHz?: number | null;
     droppedSamples?: number | null;
     staleSamples?: number | null;
+    duplicateSamples?: number | null;
     invalidSamples?: number | null;
+    readLoopIntervalMs?: number | null;
     readLoopDurationMs?: number | null;
+    readDurationMs?: number | null;
+    validationDurationMs?: number | null;
     persistenceDurationMs?: number | null;
+    websocketDurationMs?: number | null;
     websocketQueueDepth?: number | null;
     recordingQueueDepth?: number | null;
     lastSampleAgeMs?: number | null;
   };
+};
+
+type SamplingWindow = {
+  readAttemptHz?: number | null;
+  rawReadHz?: number | null;
+  acceptedSampleHz?: number | null;
+  persistedSampleHz?: number | null;
+  websocketEmitHz?: number | null;
+  duplicateSampleHz?: number | null;
+  invalidSampleHz?: number | null;
+  staleSampleHz?: number | null;
+};
+
+type RuntimeDurations = {
+  readLoopAvg?: number | null;
+  readLoopIntervalAvg?: number | null;
+  readAvg?: number | null;
+  validationAvg?: number | null;
+  persistenceAvg?: number | null;
+  websocketEmitAvg?: number | null;
+};
+
+type RuntimeCounters = {
+  rawSamples?: number | null;
+  acceptedSamples?: number | null;
+  persistedSamples?: number | null;
+  invalidSamples?: number | null;
+  staleSamples?: number | null;
+  duplicateSamples?: number | null;
+  droppedSamples?: number | null;
+  websocketMessagesSent?: number | null;
+  websocketMessagesCoalesced?: number | null;
+  websocketSendFailures?: number | null;
 };
 
 type FrontendPerfSnapshot = {
@@ -193,6 +251,14 @@ type FrontendPerfSnapshot = {
 };
 
 const POLL_MS = 4000;
+const EMPTY_OPPONENTS_META = {
+  source: 'opponents_collector',
+  count: 0,
+  track: null,
+  sessionTime: null,
+  lastUpdateTimestamp: null,
+  staleAfterSeconds: null,
+};
 
 const statusColor = {
   ok: '#34d399',
@@ -246,9 +312,19 @@ function perfTone(value: unknown, target = 60): keyof typeof statusColor {
 
 function samplingTone(status?: string | null): keyof typeof statusColor {
   if (status === 'OK') return 'ok';
-  if (status === 'WARNING' || status === 'WAITING') return 'warn';
+  if (status === 'WARNING' || status === 'WAITING' || status === 'SOURCE_LIMITED' || status === 'OFFLINE_MOCK') return 'warn';
   if (status === 'ERROR') return 'bad';
   return 'quiet';
+}
+
+function countValue(value?: number | null): string {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed.toLocaleString() : '0';
+}
+
+function msValue(value?: number | null): string {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? `${parsed.toFixed(2)} ms` : '--';
 }
 
 function friendlyMessage(status: BackendStatus, port: number, error?: string | null): string {
@@ -274,11 +350,11 @@ function Pill({ label, value, tone = 'quiet' }: { label: string; value: string; 
   );
 }
 
-export const DesktopRuntimePanel: React.FC = () => {
-  const isStreaming = useTelemetryStore((state) => state.isStreaming);
-  const latestFrame = useTelemetryStore((state) => state.latestFrame);
-  const opponentsMeta = useTelemetryStore((state) => state.opponentsMeta);
-  const lastOpponentsUpdateAt = useTelemetryStore((state) => state.lastOpponentsUpdateAt);
+export const DesktopRuntimePanel: React.FC<{ active?: boolean }> = ({ active = true }) => {
+  const isStreaming = useTelemetryStore((state) => active ? state.isStreaming : false);
+  const latestFrame = useTelemetryStore((state) => active ? state.latestFrame : null);
+  const opponentsMeta = useTelemetryStore((state) => active ? state.opponentsMeta : EMPTY_OPPONENTS_META);
+  const lastOpponentsUpdateAt = useTelemetryStore((state) => active ? state.lastOpponentsUpdateAt : null);
   const [runtime, setRuntime] = useState<RuntimeStatus | null>(null);
   const [desktopStatus, setDesktopStatus] = useState<DesktopRuntimeStatus | null>(null);
   const [performanceStatus, setPerformanceStatus] = useState<RuntimePerformanceStatus | null>(null);
@@ -299,6 +375,7 @@ export const DesktopRuntimePanel: React.FC = () => {
   } | null>(null);
 
   useEffect(() => {
+    if (!active) return undefined;
     let cancelled = false;
     let controller: AbortController | null = null;
 
@@ -361,7 +438,7 @@ export const DesktopRuntimePanel: React.FC = () => {
       controller?.abort();
       window.clearInterval(interval);
     };
-  }, []);
+  }, [active]);
 
   const ports = useMemo(runtimePorts, []);
   const backendPort = numeric(desktopStatus?.backendPort, ports.backend);
@@ -399,9 +476,22 @@ export const DesktopRuntimePanel: React.FC = () => {
   const lastBackendError = desktopStatus?.portConflictMessage || desktopStatus?.lastBackendError || error || logsOpenError;
   const message = friendlyMessage(backendStatus, backendPort, lastBackendError || desktopStatus?.backendStatusMessage);
   const sampling = performanceStatus?.sampling;
-  const samplingTargetHz = numeric(sampling?.targetHz, 60);
+  const samplingTargetHz = numeric(performanceStatus?.targetHz ?? sampling?.targetHz, 60);
   const samplingStatus = sampling?.status || '--';
-  const bottleneck = (sampling?.bottleneck || '--').replace(/_/g, ' ');
+  const windows = performanceStatus?.windows || sampling?.windows || {};
+  const window5 = windows['5s'] || {};
+  const window30 = windows['30s'] || {};
+  const durations = performanceStatus?.durationsMs || sampling?.durationsMs || {};
+  const counters = performanceStatus?.counters || sampling?.counters || {};
+  const bottleneckDetails = performanceStatus?.bottleneck || null;
+  const bottleneckReason = performanceStatus?.bottleneckReason
+    || bottleneckDetails?.reason
+    || sampling?.bottleneckReason
+    || sampling?.bottleneck
+    || '--';
+  const bottleneck = bottleneckReason.replace(/_/g, ' ');
+  const sourceLimited = Boolean(performanceStatus?.sourceLimited ?? sampling?.sourceLimited ?? bottleneckDetails?.sourceLimited);
+  const backpressureDetected = Boolean(performanceStatus?.backpressureDetected ?? sampling?.backpressureDetected ?? bottleneckDetails?.backpressureDetected);
 
   const openLogs = async () => {
     setLogsOpenError(null);
@@ -497,15 +587,32 @@ export const DesktopRuntimePanel: React.FC = () => {
         <Pill label="Sampling" value={samplingStatus} tone={samplingTone(sampling?.status)} />
         <Pill label="Bottleneck" value={compactPath(bottleneck, 28)} tone={samplingTone(sampling?.status)} />
         <Pill label="Target" value={hz(samplingTargetHz)} tone="quiet" />
-        <Pill label="Read Raw" value={hz(sampling?.rawReadHz)} tone={perfTone(sampling?.rawReadHz, samplingTargetHz)} />
-        <Pill label="Accepted" value={hz(sampling?.acceptedSampleHz)} tone={perfTone(sampling?.acceptedSampleHz, samplingTargetHz)} />
-        <Pill label="Persisted" value={hz(sampling?.persistedSampleHz)} tone={sampling?.persistedSampleHz ? perfTone(sampling.persistedSampleHz, samplingTargetHz) : 'quiet'} />
-        <Pill label="WebSocket" value={hz(sampling?.websocketEmitHz)} tone={sampling?.websocketEmitHz ? 'ok' : 'quiet'} />
+        <Pill label="Source Limited" value={sourceLimited ? 'yes' : 'no'} tone={sourceLimited ? 'warn' : 'quiet'} />
+        <Pill label="Backpressure" value={backpressureDetected ? 'yes' : 'no'} tone={backpressureDetected ? 'bad' : 'quiet'} />
+        <Pill label="Last Sample" value={msValue(sampling?.lastSampleAgeMs)} tone={numeric(sampling?.lastSampleAgeMs, 0) > 5000 ? 'bad' : 'quiet'} />
+        <Pill label="Raw 5s" value={hz(window5.rawReadHz ?? sampling?.rawReadHz)} tone={perfTone(window5.rawReadHz ?? sampling?.rawReadHz, samplingTargetHz)} />
+        <Pill label="Raw 30s" value={hz(window30.rawReadHz)} tone={perfTone(window30.rawReadHz, samplingTargetHz)} />
+        <Pill label="Accept 5s" value={hz(window5.acceptedSampleHz ?? sampling?.acceptedSampleHz)} tone={perfTone(window5.acceptedSampleHz ?? sampling?.acceptedSampleHz, samplingTargetHz)} />
+        <Pill label="Accept 30s" value={hz(window30.acceptedSampleHz)} tone={perfTone(window30.acceptedSampleHz, samplingTargetHz)} />
+        <Pill label="Persist 5s" value={hz(window5.persistedSampleHz ?? sampling?.persistedSampleHz)} tone={(window5.persistedSampleHz ?? sampling?.persistedSampleHz) ? perfTone(window5.persistedSampleHz ?? sampling?.persistedSampleHz, samplingTargetHz) : 'quiet'} />
+        <Pill label="Persist 30s" value={hz(window30.persistedSampleHz)} tone={window30.persistedSampleHz ? perfTone(window30.persistedSampleHz, samplingTargetHz) : 'quiet'} />
+        <Pill label="WS 5s" value={hz(window5.websocketEmitHz ?? sampling?.websocketEmitHz)} tone={(window5.websocketEmitHz ?? sampling?.websocketEmitHz) ? 'ok' : 'quiet'} />
+        <Pill label="WS 30s" value={hz(window30.websocketEmitHz)} tone={window30.websocketEmitHz ? 'ok' : 'quiet'} />
         <Pill label="Frontend Rx" value={hz(frontendPerf.frontendReceiveHz)} tone={frontendPerf.frontendReceiveHz ? 'ok' : 'quiet'} />
         <Pill label="Frontend Store" value={hz(frontendPerf.frontendStoreHz)} tone={frontendPerf.frontendStoreHz ? 'ok' : 'quiet'} />
         <Pill label="Dropped Render" value={String(frontendPerf.framesDroppedForRender || 0)} tone={frontendPerf.framesDroppedForRender ? 'warn' : 'quiet'} />
-        <Pill label="Loop Ms" value={numeric(sampling?.readLoopDurationMs, 0).toFixed(2)} tone="quiet" />
-        <Pill label="Disk Ms" value={numeric(sampling?.persistenceDurationMs, 0).toFixed(2)} tone="quiet" />
+        <Pill label="Loop Interval" value={msValue(durations.readLoopIntervalAvg ?? sampling?.readLoopIntervalMs)} tone="quiet" />
+        <Pill label="Loop Work" value={msValue(durations.readLoopAvg ?? sampling?.readLoopDurationMs)} tone="quiet" />
+        <Pill label="Read" value={msValue(durations.readAvg ?? sampling?.readDurationMs)} tone="quiet" />
+        <Pill label="Validation" value={msValue(durations.validationAvg ?? sampling?.validationDurationMs)} tone="quiet" />
+        <Pill label="Disk" value={msValue(durations.persistenceAvg ?? sampling?.persistenceDurationMs)} tone="quiet" />
+        <Pill label="WS Emit" value={msValue(durations.websocketEmitAvg ?? sampling?.websocketDurationMs)} tone="quiet" />
+        <Pill label="Invalid" value={countValue(counters.invalidSamples ?? sampling?.invalidSamples)} tone={(counters.invalidSamples ?? sampling?.invalidSamples) ? 'warn' : 'quiet'} />
+        <Pill label="Stale" value={countValue(counters.staleSamples ?? sampling?.staleSamples)} tone={(counters.staleSamples ?? sampling?.staleSamples) ? 'warn' : 'quiet'} />
+        <Pill label="Duplicate" value={countValue(counters.duplicateSamples ?? sampling?.duplicateSamples)} tone={(counters.duplicateSamples ?? sampling?.duplicateSamples) ? 'warn' : 'quiet'} />
+        <Pill label="Dropped" value={countValue(counters.droppedSamples ?? sampling?.droppedSamples)} tone={(counters.droppedSamples ?? sampling?.droppedSamples) ? 'bad' : 'quiet'} />
+        <Pill label="WS Coalesced" value={countValue(counters.websocketMessagesCoalesced)} tone={counters.websocketMessagesCoalesced ? 'quiet' : 'quiet'} />
+        <Pill label="WS Failures" value={countValue(counters.websocketSendFailures)} tone={counters.websocketSendFailures ? 'bad' : 'quiet'} />
       </div>
 
       <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />

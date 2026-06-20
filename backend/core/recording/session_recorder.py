@@ -31,9 +31,19 @@ class SessionRecorder:
         self._opponent_snapshots_written = 0
         self._events_written = 0
         self._dropped_frames = 0
-        self._last_player_recorded_at = 0.0
+        self._player_samples_received = 0
+        self._player_samples_enqueued = 0
+        self._player_samples_downsampled = 0
+        self._player_samples_dropped = 0
+        self._next_player_source_record_at: Optional[float] = None
         self._last_opponents_recorded_at = 0.0
         self._last_queue_warning_at = 0.0
+        self._persisted_lap_number: Optional[int] = None
+        self._persisted_lap_sample_count = 0
+        self._persisted_lap_duration_seconds = 0.0
+        self._last_persisted_lap_sample_count: Optional[int] = None
+        self._last_persisted_lap_duration_seconds: Optional[float] = None
+        self._last_persisted_lap_effective_hz: Optional[float] = None
 
     def start(self, track: Optional[str] = None, metadata: Optional[Mapping[str, Any]] = None) -> RecordingStatus:
         if not self.config.enabled:
@@ -58,9 +68,19 @@ class SessionRecorder:
             self._opponent_snapshots_written = 0
             self._events_written = 0
             self._dropped_frames = 0
-            self._last_player_recorded_at = 0.0
+            self._player_samples_received = 0
+            self._player_samples_enqueued = 0
+            self._player_samples_downsampled = 0
+            self._player_samples_dropped = 0
+            self._next_player_source_record_at = None
             self._last_opponents_recorded_at = 0.0
             self._last_queue_warning_at = 0.0
+            self._persisted_lap_number = None
+            self._persisted_lap_sample_count = 0
+            self._persisted_lap_duration_seconds = 0.0
+            self._last_persisted_lap_sample_count = None
+            self._last_persisted_lap_duration_seconds = None
+            self._last_persisted_lap_effective_hz = None
             self._drain_queue()
 
             self._write_metadata(track=track, metadata=metadata)
@@ -90,7 +110,13 @@ class SessionRecorder:
             return self.status()
 
     def enqueue_player(self, frame: Mapping[str, Any], track: Optional[str] = None) -> bool:
-        if not self._should_record("player"):
+        if not self.recording:
+            return False
+        self._player_samples_received += 1
+        performance_metrics.mark_recorder_sample_received()
+        if not self._should_record("player", source_time=self._sampling_time_from(frame)):
+            self._player_samples_downsampled += 1
+            performance_metrics.mark_recorder_sample_downsampled()
             return False
 
         payload = {
@@ -100,7 +126,11 @@ class SessionRecorder:
             "sessionTime": self._session_time_from(frame),
             "sample": dict(frame),
         }
-        return self._enqueue("player", payload)
+        enqueued = self._enqueue("player", payload)
+        if enqueued:
+            self._player_samples_enqueued += 1
+            performance_metrics.mark_recorder_sample()
+        return enqueued
 
     def enqueue_opponents(self, snapshot: Mapping[str, Any], track: Optional[str] = None) -> bool:
         if not self._should_record("opponents"):
@@ -135,6 +165,11 @@ class SessionRecorder:
         return self._enqueue("events", payload)
 
     def status(self) -> RecordingStatus:
+        downsample_ratio = (
+            self._player_samples_enqueued / self._player_samples_received
+            if self._player_samples_received > 0
+            else 1.0
+        )
         return RecordingStatus(
             enabled=self.config.enabled,
             recording=self.recording,
@@ -145,9 +180,18 @@ class SessionRecorder:
             eventsWritten=self._events_written,
             queueSize=self._queue.qsize(),
             droppedFrames=self._dropped_frames,
+            playerSamplesReceived=self._player_samples_received,
+            playerSamplesEnqueued=self._player_samples_enqueued,
+            playerSamplesDownsampled=self._player_samples_downsampled,
+            playerSamplesDropped=self._player_samples_dropped,
+            playerDownsamplingEnabled=self._player_downsampling_enabled(),
+            recorderDownsampleRatio=round(downsample_ratio, 4),
+            lastPersistedLapSampleCount=self._last_persisted_lap_sample_count,
+            lastPersistedLapDurationSeconds=self._last_persisted_lap_duration_seconds,
+            lastPersistedLapEffectiveHz=self._last_persisted_lap_effective_hz,
         )
 
-    def _should_record(self, stream: str) -> bool:
+    def _should_record(self, stream: str, source_time: Optional[float] = None) -> bool:
         if not self.recording:
             return False
 
@@ -156,9 +200,21 @@ class SessionRecorder:
             hz = max(float(self.config.player_record_hz), 0.0)
             if hz <= 0:
                 return False
-            if now - self._last_player_recorded_at < 1.0 / hz:
+
+            # At the source target rate the recorder is lossless. This avoids a
+            # second event-loop clock gate dropping frames delivered in bursts.
+            if not self._player_downsampling_enabled():
+                return True
+
+            interval = 1.0 / hz
+            sample_time = source_time if source_time is not None else now
+            if self._next_player_source_record_at is None or sample_time < self._next_player_source_record_at - 5.0:
+                self._next_player_source_record_at = sample_time + interval
+                return True
+            if sample_time + 1e-6 < self._next_player_source_record_at:
                 return False
-            self._last_player_recorded_at = now
+            skipped_intervals = max(int((sample_time - self._next_player_source_record_at) / interval), 0)
+            self._next_player_source_record_at += (skipped_intervals + 1) * interval
             return True
 
         if stream == "opponents":
@@ -179,6 +235,10 @@ class SessionRecorder:
             return True
         except queue.Full:
             self._dropped_frames += 1
+            if stream == "player":
+                self._player_samples_dropped += 1
+                performance_metrics.mark_recorder_sample_dropped()
+                performance_metrics.mark_dropped_samples()
             logger.warning("Session recorder queue full, dropped %s frame", stream)
             return False
 
@@ -232,6 +292,7 @@ class SessionRecorder:
                 handle.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), default=self._json_default) + "\n")
                 if stream == "player":
                     self._player_samples_written += 1
+                    self._track_persisted_lap(payload)
                 elif stream == "opponents":
                     self._opponent_snapshots_written += 1
                 elif stream == "events":
@@ -239,6 +300,10 @@ class SessionRecorder:
                 written_by_stream[stream] = written_by_stream.get(stream, 0) + 1
             except Exception as exc:
                 self._dropped_frames += 1
+                if stream == "player":
+                    self._player_samples_dropped += 1
+                    performance_metrics.mark_recorder_sample_dropped()
+                    performance_metrics.mark_dropped_samples()
                 logger.warning("Session recorder write error for %s: %s", stream, exc)
         self._flush_files()
         performance_metrics.record_disk_write(time.perf_counter() - started)
@@ -282,6 +347,9 @@ class SessionRecorder:
             "track": track,
             "startedAt": datetime.now().isoformat(),
             "playerRecordHz": self.config.player_record_hz,
+            "sourceTargetHz": self.config.source_sample_hz,
+            "playerDownsamplingEnabled": self._player_downsampling_enabled(),
+            "playerRecordPolicy": self._player_record_policy(),
             "opponentsRecordHz": self.config.opponents_record_hz,
             "metadata": dict(metadata or {}),
         }
@@ -301,6 +369,11 @@ class SessionRecorder:
                     "opponentSnapshotsWritten": self._opponent_snapshots_written,
                     "eventsWritten": self._events_written,
                     "droppedFrames": self._dropped_frames,
+                    "playerSamplesReceived": self._player_samples_received,
+                    "playerSamplesEnqueued": self._player_samples_enqueued,
+                    "playerSamplesDownsampled": self._player_samples_downsampled,
+                    "playerSamplesDropped": self._player_samples_dropped,
+                    "recorderDownsampleRatio": self.status().recorderDownsampleRatio,
                 }
             )
             path.write_text(
@@ -340,6 +413,65 @@ class SessionRecorder:
             if isinstance(value, str) and value.strip():
                 return value.strip()
         return None
+
+    def _player_downsampling_enabled(self) -> bool:
+        record_hz = max(float(self.config.player_record_hz), 0.0)
+        source_hz = max(float(self.config.source_sample_hz), 1.0)
+        return 0.0 < record_hz < source_hz
+
+    def _player_record_policy(self) -> str:
+        if float(self.config.player_record_hz) <= 0.0:
+            return "disabled"
+        if self._player_downsampling_enabled():
+            return "source_timestamp_cap"
+        return "all_accepted_samples"
+
+    @staticmethod
+    def _sampling_time_from(data: Mapping[str, Any]) -> Optional[float]:
+        value = SessionRecorder._timestamp_from(data)
+        if not isinstance(value, (int, float)):
+            return None
+        timestamp = float(value)
+        return timestamp / 1000.0 if timestamp > 100_000_000_000.0 else timestamp
+
+    def _track_persisted_lap(self, payload: Mapping[str, Any]):
+        sample = payload.get("sample")
+        if not isinstance(sample, Mapping):
+            return
+        try:
+            lap_number = int(sample.get("lap_number", sample.get("lap")))
+        except (TypeError, ValueError):
+            return
+
+        if self._persisted_lap_number is None:
+            self._persisted_lap_number = lap_number
+        elif lap_number != self._persisted_lap_number:
+            self._finalize_persisted_lap_metrics()
+            self._persisted_lap_number = lap_number
+            self._persisted_lap_sample_count = 0
+            self._persisted_lap_duration_seconds = 0.0
+
+        self._persisted_lap_sample_count += 1
+        for key in ("lap_time", "lapTime", "currentLapTime"):
+            try:
+                elapsed = float(sample.get(key))
+            except (TypeError, ValueError):
+                continue
+            if elapsed > 10_000.0:
+                elapsed /= 1000.0
+            if elapsed >= 0.0:
+                self._persisted_lap_duration_seconds = max(self._persisted_lap_duration_seconds, elapsed)
+                break
+
+    def _finalize_persisted_lap_metrics(self):
+        if self._persisted_lap_sample_count <= 0 or self._persisted_lap_duration_seconds <= 0.0:
+            return
+        self._last_persisted_lap_sample_count = self._persisted_lap_sample_count
+        self._last_persisted_lap_duration_seconds = round(self._persisted_lap_duration_seconds, 3)
+        self._last_persisted_lap_effective_hz = round(
+            self._persisted_lap_sample_count / self._persisted_lap_duration_seconds,
+            2,
+        )
 
     @staticmethod
     def _json_default(value: Any):

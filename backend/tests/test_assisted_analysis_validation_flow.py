@@ -1,4 +1,5 @@
 import asyncio
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -100,6 +101,44 @@ class AssistedAnalysisValidationFlowTests(unittest.TestCase):
             cached = service.get_cached_analysis(fixture.target_lap_id)
             self.assertIsNotNone(cached)
             self.assertEqual("ANALYZED", cached["analysis"]["status"])
+
+            explicit_reference_cache = service.get_cached_analysis(
+                fixture.target_lap_id,
+                reference_lap_id=fixture.reference_lap_id,
+                include_external_reference=True,
+            )
+            self.assertIsNotNone(explicit_reference_cache)
+            self.assertEqual(
+                fixture.reference_lap_id,
+                explicit_reference_cache["analysis"]["reference"]["lapId"],
+            )
+
+    def test_assisted_analysis_ignores_assetto_lap_counter_lag_frame(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            fixture = write_phase14_1_validation_recording(root)
+            lagging_payload = {
+                "timestamp": 1_700_000_200_006,
+                "sessionTime": 0.006,
+                "track": fixture.track_name,
+                "sample": {
+                    "timestamp": 1_700_000_200_006,
+                    "sessionTime": 0.006,
+                    "lap_time": 0.006,
+                    "lap_number": 2,
+                    "lap": 2,
+                    "lapProgress": 0.000448,
+                    "p": 0.000448,
+                },
+            }
+            with (fixture.session_dir / "player.jsonl").open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(lagging_payload) + "\n")
+
+            service = _make_service(root)
+            payload = service.analyze_lap(fixture.target_lap_id, force=True)
+
+            self.assertEqual("ANALYZED", payload["analysis"]["status"])
+            self.assertEqual(361, payload["analysis"]["validation"]["sampleCount"])
 
     def test_desktop_runtime_recordings_are_listed_from_runtime_root(self):
         with tempfile.TemporaryDirectory() as resource_tmp, tempfile.TemporaryDirectory() as runtime_tmp:
@@ -257,6 +296,18 @@ class AssistedAnalysisValidationFlowTests(unittest.TestCase):
                 self.assertIn("gear", replay_sample)
                 self.assertIn("rpm", replay_sample)
 
+                transformed = next(
+                    (
+                        sample for sample in replay["samples"]
+                        if abs(float(sample.get("worldZ") or sample.get("world_z") or 0.0)) > 0.001
+                    ),
+                    None,
+                )
+                if transformed:
+                    world_z = float(transformed.get("worldZ") or transformed.get("world_z"))
+                    self.assertAlmostEqual(-world_z, transformed["mapPosition"]["y"], places=6)
+                    self.assertAlmostEqual(transformed["mapPosition"]["y"], transformed["z"], places=6)
+
                 analysis = asyncio.run(
                     backend_main.request_phase14_assisted_analysis(
                         fixture.target_lap_id,
@@ -271,6 +322,27 @@ class AssistedAnalysisValidationFlowTests(unittest.TestCase):
                 backend_main.assisted_analysis_service = previous_service
                 backend_main.session_repository = previous_repository
                 backend_main.recording_runtime = previous_recording_runtime
+
+    def test_replay_sample_uses_live_world_to_map_transform(self):
+        sample = {
+            "timestamp": 1000,
+            "lap_time": 1.0,
+            "lap_number": 1,
+            "world_x": 10.0,
+            "world_y": 0.0,
+            "world_z": 25.0,
+            "x": 10.0,
+            "z": 25.0,
+            "speedKmh": 120.0,
+        }
+
+        normalized = backend_main._normalize_replay_sample(sample)
+
+        self.assertEqual({"x": 10.0, "y": -25.0}, normalized["mapPosition"])
+        self.assertEqual(10.0, normalized["x"])
+        self.assertEqual(-25.0, normalized["z"])
+        self.assertEqual(10.0, normalized["worldX"])
+        self.assertEqual(25.0, normalized["worldZ"])
 
 
 if __name__ == "__main__":

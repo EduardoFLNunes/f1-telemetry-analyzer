@@ -5,6 +5,7 @@ import { api } from '../../api/client';
 import { drawCar, drawOpponentCar } from './CarRenderer.jsx';
 import { applyCameraTransform, computeTrackBounds } from './CameraController.jsx';
 import { drawHud, drawTrackSurface } from './OverlayRenderer.jsx';
+import { resolveSampleMapPosition } from '../../utils/spatialTransform';
 import {
   drawPreparedRacingLineOverlay,
   drawRacingLineLegend,
@@ -26,6 +27,8 @@ const HISTORY_WINDOW_BY_MODE = {
   PERFORMANCE: 600,
 };
 const PERFORMANCE_MODES = ['QUALITY', 'BALANCED', 'PERFORMANCE'];
+const MAX_REPLAY_TRACE_GAP_METERS = 180;
+const REPLAY_TRACK_BOUNDS_MARGIN_METERS = 80;
 
 function normalizeTrack(trackData) {
   if (!trackData) return null;
@@ -61,6 +64,16 @@ function normalizeTrack(trackData) {
 
 function isFiniteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value);
+}
+
+function percentile(values, ratio) {
+  if (!values.length) return 0;
+  const sorted = values
+    .filter((value) => Number.isFinite(value) && value >= 0)
+    .slice()
+    .sort((a, b) => a - b);
+  if (!sorted.length) return 0;
+  return sorted[Math.min(Math.floor((sorted.length - 1) * ratio), sorted.length - 1)];
 }
 
 function lerp(a, b, t) {
@@ -118,20 +131,15 @@ function resolveOpponentRenderState(opponent, trackData) {
 }
 
 function sampleMapPosition(sample) {
-  const position = sample?.mapPosition;
-  if (position && isFiniteNumber(position.x) && isFiniteNumber(position.y)) {
-    return position;
-  }
-  const x = isFiniteNumber(sample?.x) ? sample.x : sample?.world_x;
-  const y = isFiniteNumber(sample?.z) ? sample.z : sample?.world_z;
-  if (isFiniteNumber(x) && isFiniteNumber(y)) return { x, y };
-  return null;
+  return resolveSampleMapPosition(sample);
 }
 
 function drawLapTrace(ctx, samples, scale, color, options = {}) {
   if (!Array.isArray(samples) || samples.length < 2) return;
   const entries = sampleTraceEntries(samples, options.maxPoints || 2200);
   if (entries.length < 2) return;
+  const segments = traceEntrySegments(entries, options);
+  if (!segments.length) return;
   const width = options.width || 2.2;
   const alpha = options.alpha || 0.72;
   ctx.save();
@@ -141,17 +149,17 @@ function drawLapTrace(ctx, samples, scale, color, options = {}) {
   ctx.globalAlpha = alpha;
   ctx.lineWidth = width / scale;
   if (options.dashed) ctx.setLineDash([10 / scale, 8 / scale]);
-  ctx.beginPath();
-  let started = false;
-  entries.forEach(({ position }) => {
-    if (!started) {
-      ctx.moveTo(position.x, position.y);
-      started = true;
-    } else {
-      ctx.lineTo(position.x, position.y);
-    }
+  segments.forEach((segment) => {
+    ctx.beginPath();
+    segment.forEach(({ position }, index) => {
+      if (index === 0) {
+        ctx.moveTo(position.x, position.y);
+      } else {
+        ctx.lineTo(position.x, position.y);
+      }
+    });
+    ctx.stroke();
   });
-  if (started) ctx.stroke();
   ctx.restore();
 }
 
@@ -169,6 +177,65 @@ function sampleTraceEntries(samples, maxPoints = 2200) {
     if (position) entries.push({ sample: samples[lastIndex], position, index: lastIndex });
   }
   return entries;
+}
+
+function sampleLapTime(sample) {
+  const candidates = [sample?.lapTime, sample?.lap_time, sample?.currentLapTime, sample?.sessionTime, sample?.session_time];
+  for (const candidate of candidates) {
+    const number = Number(candidate);
+    if (Number.isFinite(number)) return number;
+  }
+  return null;
+}
+
+function sampleDistance(sample) {
+  const candidates = [sample?.s, sample?.distanceAlongTrack, sample?.lapDistance];
+  for (const candidate of candidates) {
+    const number = Number(candidate);
+    if (Number.isFinite(number)) return number;
+  }
+  return null;
+}
+
+function shouldBreakTrace(previous, current, options = {}) {
+  if (!previous || !current) return false;
+  const maxGap = options.maxGapMeters || MAX_REPLAY_TRACE_GAP_METERS;
+  const distance = Math.hypot(
+    current.position.x - previous.position.x,
+    current.position.y - previous.position.y,
+  );
+  if (distance > maxGap) return true;
+
+  const previousProgress = sampleProgress(previous.sample);
+  const currentProgress = sampleProgress(current.sample);
+  if (isFiniteNumber(previousProgress) && isFiniteNumber(currentProgress) && currentProgress < previousProgress - 0.18) {
+    return true;
+  }
+
+  const previousLapTime = sampleLapTime(previous.sample);
+  const currentLapTime = sampleLapTime(current.sample);
+  if (isFiniteNumber(previousLapTime) && isFiniteNumber(currentLapTime) && currentLapTime + 0.35 < previousLapTime) {
+    return true;
+  }
+
+  const previousDistance = sampleDistance(previous.sample);
+  const currentDistance = sampleDistance(current.sample);
+  return isFiniteNumber(previousDistance) && isFiniteNumber(currentDistance) && currentDistance + 120 < previousDistance;
+}
+
+function traceEntrySegments(entries, options = {}) {
+  const segments = [];
+  let current = [];
+  entries.forEach((entry) => {
+    if (current.length > 0 && shouldBreakTrace(current[current.length - 1], entry, options)) {
+      if (current.length > 1) segments.push(current);
+      current = [entry];
+    } else {
+      current.push(entry);
+    }
+  });
+  if (current.length > 1) segments.push(current);
+  return segments;
 }
 
 function sampleSpeedKmh(sample) {
@@ -225,20 +292,24 @@ function replayPedalColor(sample) {
 
 function drawTraceSegments(ctx, entries, scale, colorForEntry, options = {}) {
   if (entries.length < 2) return;
+  const segments = traceEntrySegments(entries, options);
+  if (!segments.length) return;
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.lineWidth = (options.width || 2.5) / scale;
-  for (let index = 1; index < entries.length; index += 1) {
-    const previous = entries[index - 1];
-    const current = entries[index];
-    const colorEntry = options.usePrevious ? previous : current;
-    ctx.strokeStyle = colorForEntry(colorEntry, previous, current);
-    ctx.beginPath();
-    ctx.moveTo(previous.position.x, previous.position.y);
-    ctx.lineTo(current.position.x, current.position.y);
-    ctx.stroke();
-  }
+  segments.forEach((segment) => {
+    for (let index = 1; index < segment.length; index += 1) {
+      const previous = segment[index - 1];
+      const current = segment[index];
+      const colorEntry = options.usePrevious ? previous : current;
+      ctx.strokeStyle = colorForEntry(colorEntry, previous, current);
+      ctx.beginPath();
+      ctx.moveTo(previous.position.x, previous.position.y);
+      ctx.lineTo(current.position.x, current.position.y);
+      ctx.stroke();
+    }
+  });
   ctx.restore();
 }
 
@@ -334,12 +405,65 @@ function drawReplayCurrentMarker(ctx, frame, scale) {
   ctx.restore();
 }
 
+function trackMapBounds(trackData) {
+  if (!trackData) return null;
+  const xs = [
+    ...(trackData.left_edge?.x || []),
+    ...(trackData.right_edge?.x || []),
+    ...(trackData.centerline?.x || []),
+  ].filter(Number.isFinite);
+  const ys = [
+    ...(trackData.left_edge?.y || trackData.left_edge?.z || []),
+    ...(trackData.right_edge?.y || trackData.right_edge?.z || []),
+    ...(trackData.centerline?.y || trackData.centerline?.z || []),
+  ].filter(Number.isFinite);
+  if (!xs.length || !ys.length) return null;
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys),
+  };
+}
+
+function replayMapDiagnostics(entries, bounds, replayTrack, activeTrack) {
+  if (!bounds || !entries.length) return null;
+  const margin = REPLAY_TRACK_BOUNDS_MARGIN_METERS;
+  const outsideCount = entries.filter((entry) => (
+    entry.position.x < bounds.minX - margin
+    || entry.position.x > bounds.maxX + margin
+    || entry.position.y < bounds.minY - margin
+    || entry.position.y > bounds.maxY + margin
+  )).length;
+  const outsideRatio = outsideCount / entries.length;
+  const normalizedReplayTrack = typeof replayTrack === 'string' ? replayTrack.trim().toLowerCase() : '';
+  const normalizedActiveTrack = typeof activeTrack === 'string' ? activeTrack.trim().toLowerCase() : '';
+  const trackMismatch = Boolean(
+    normalizedReplayTrack
+    && normalizedActiveTrack
+    && !normalizedActiveTrack.includes(normalizedReplayTrack.split('_')[0]),
+  );
+  if (trackMismatch) {
+    return { warning: 'Persisted lap track differs from active map', outsideRatio };
+  }
+  if (outsideRatio > 0.08) {
+    return { warning: 'Replay coordinates out of track bounds', outsideRatio };
+  }
+  return { warning: null, outsideRatio };
+}
+
 function drawReplayLapOverlay(ctx, replay, frame, scale, mode = 'LINE_ONLY', options = {}) {
   if (!replay?.active || !Number.isFinite(scale) || scale <= 0) return 0;
   const start = performance.now();
   const safeMode = options.simple ? 'LINE_ONLY' : (RACING_LINE_OVERLAY_MODES.includes(mode) ? mode : 'LINE_ONLY');
   const lapEntries = sampleTraceEntries(replay.samples, safeMode === 'RAW_REFERENCE_SAMPLES' ? 3000 : 2200);
   const referenceEntries = sampleTraceEntries(replay.referenceSamples || [], 2200);
+  window.__replayMapDiagnostics = replayMapDiagnostics(
+    lapEntries,
+    options.trackBounds,
+    replay.track,
+    options.activeTrack,
+  );
 
   drawLapTrace(ctx, replay.referenceSamples || [], scale, '#a78bfa', { width: 2.0, alpha: 0.62, dashed: true });
 
@@ -360,8 +484,10 @@ function drawReplayLapOverlay(ctx, replay, frame, scale, mode = 'LINE_ONLY', opt
     drawReplaySegmentMarkers(ctx, lapEntries, scale);
   } else if (safeMode === 'SMOOTHED_LINE') {
     drawLapTrace(ctx, replay.samples || [], scale, '#facc15', { width: 1.2, alpha: 0.28 });
-    const smoothed = smoothTraceEntries(lapEntries);
-    drawTraceSegments(ctx, smoothed, scale, () => 'rgba(250,204,21,0.9)', { width: 2.8 });
+    traceEntrySegments(lapEntries).forEach((segment) => {
+      const smoothed = smoothTraceEntries(segment);
+      drawTraceSegments(ctx, smoothed, scale, () => 'rgba(250,204,21,0.9)', { width: 2.8 });
+    });
   } else {
     drawLapTrace(ctx, replay.samples || [], scale, '#facc15', { width: 2.8, alpha: 0.82 });
     if (safeMode === 'DIAGNOSTIC') {
@@ -380,7 +506,9 @@ function drawReplayLegend(ctx, width, height, replay, mode = 'LINE_ONLY') {
 
   const safeMode = RACING_LINE_OVERLAY_MODES.includes(mode) ? mode : 'LINE_ONLY';
   const panelWidth = Math.min(292, Math.max(230, width - 28));
-  const panelHeight = safeMode === 'PLAYER_INPUT_GRADIENT' ? 72 : 58;
+  const diagnostics = window.__replayMapDiagnostics || null;
+  const hasWarning = Boolean(diagnostics?.warning);
+  const panelHeight = (safeMode === 'PLAYER_INPUT_GRADIENT' ? 72 : 58) + (hasWarning ? 14 : 0);
   const x = 14;
   const y = height - panelHeight - 14;
   ctx.fillStyle = 'rgba(6,8,16,0.76)';
@@ -397,18 +525,24 @@ function drawReplayLegend(ctx, width, height, replay, mode = 'LINE_ONLY') {
   const refText = replay.referenceSamples?.length ? `REF ROXA ${replay.referenceSamples.length}` : 'REF ROXA --';
   ctx.fillText(`USADA AMARELA ${replay.samples?.length || 0} / ${refText}`, x + 10, y + 32);
 
+  if (hasWarning) {
+    ctx.fillStyle = '#fb7185';
+    ctx.fillText(diagnostics.warning, x + 10, y + 46);
+  }
+
   if (safeMode === 'PLAYER_INPUT_GRADIENT') {
-    const gradient = ctx.createLinearGradient(x + 10, y + 43, x + panelWidth - 10, y + 43);
+    const gradientY = y + (hasWarning ? 56 : 43);
+    const gradient = ctx.createLinearGradient(x + 10, gradientY, x + panelWidth - 10, gradientY);
     gradient.addColorStop(0, '#7f1d1d');
     gradient.addColorStop(0.32, '#ef4444');
     gradient.addColorStop(0.5, '#facc15');
     gradient.addColorStop(0.76, '#22c55e');
     gradient.addColorStop(1, '#047857');
     ctx.fillStyle = gradient;
-    ctx.fillRect(x + 10, y + 43, panelWidth - 20, 7);
+    ctx.fillRect(x + 10, gradientY, panelWidth - 20, 7);
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText('BAIXA', x + 10, y + 63);
-    ctx.fillText('ALTA', x + panelWidth - 42, y + 63);
+    ctx.fillText('BAIXA', x + 10, gradientY + 20);
+    ctx.fillText('ALTA', x + panelWidth - 42, gradientY + 20);
     ctx.restore();
     return;
   }
@@ -420,7 +554,7 @@ function drawReplayLegend(ctx, width, height, replay, mode = 'LINE_ONLY') {
       : [['REF', '#a78bfa'], ['USADA', '#facc15'], ['ATUAL', '#facc15']];
   items.forEach(([label, color], index) => {
     const lx = x + 10 + index * 82;
-    const ly = y + 47;
+    const ly = y + (hasWarning ? 61 : 47);
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -476,6 +610,68 @@ function withEstimatedHeadings(opponents, motionCache) {
       ? { ...opponent, estimatedHeading }
       : opponent;
   });
+}
+
+function interpolateMotionState(item, key, cache, now, defaultDurationMs, snapDistance = 120) {
+  const position = item?.mapPosition;
+  if (!position || !isFiniteNumber(position.x) || !isFiniteNumber(position.y)) return item;
+  const sampleStamp = item.timestamp ?? item.sessionTime ?? `${position.x}:${position.y}`;
+  let state = cache.get(key);
+  if (!state) {
+    state = {
+      from: position,
+      to: position,
+      startedAt: now,
+      durationMs: defaultDurationMs,
+      targetReceivedAt: now,
+      sampleStamp,
+    };
+    cache.set(key, state);
+    return item;
+  }
+
+  const currentProgress = Math.max(0, Math.min(1, (now - state.startedAt) / Math.max(state.durationMs, 1)));
+  const current = {
+    x: lerp(state.from.x, state.to.x, currentProgress),
+    y: lerp(state.from.y, state.to.y, currentProgress),
+  };
+  const targetChanged = sampleStamp !== state.sampleStamp
+    || Math.hypot(position.x - state.to.x, position.y - state.to.y) > 0.001;
+  if (targetChanged) {
+    const distance = Math.hypot(position.x - current.x, position.y - current.y);
+    const observedInterval = Math.max(now - state.targetReceivedAt, 1);
+    const durationMs = Math.max(
+      defaultDurationMs * 0.55,
+      Math.min(observedInterval, defaultDurationMs * 1.8),
+    );
+    state = distance > snapDistance
+      ? {
+          from: position,
+          to: position,
+          startedAt: now,
+          durationMs: 1,
+          targetReceivedAt: now,
+          sampleStamp,
+        }
+      : {
+          from: current,
+          to: position,
+          startedAt: now,
+          durationMs,
+          targetReceivedAt: now,
+          sampleStamp,
+        };
+    cache.set(key, state);
+  }
+
+  const progress = Math.max(0, Math.min(1, (now - state.startedAt) / Math.max(state.durationMs, 1)));
+  return {
+    ...item,
+    mapPosition: {
+      x: lerp(state.from.x, state.to.x, progress),
+      y: lerp(state.from.y, state.to.y, progress),
+    },
+  };
 }
 
 function worldToScreen(point, width, height, bounds, camera, carFrame) {
@@ -582,6 +778,8 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const containerRef = useRef(null);
   const animationRef = useRef(null);
   const lastCanvasRenderRef = useRef(0);
+  const playerInterpolationRef = useRef(new Map());
+  const opponentInterpolationRef = useRef(new Map());
   const opponentMotionRef = useRef(new Map());
   const screenOpponentsRef = useRef([]);
   const racingLineOverlayRef = useRef(null);
@@ -614,6 +812,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     lastHttpRequests: 0,
     lastHttpDurationMs: 0,
     frameDeltas: [],
+    renderDurations: [],
+    staticDrawDurations: [],
+    opponentsTransformDurations: [],
+    opponentsDrawDurations: [],
+    playerDrawDurations: [],
     previousFrameTime: 0,
   });
   const [opponentsPanelOpen, setOpponentsPanelOpen] = useState(true);
@@ -654,6 +857,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     linePanelRps: 0,
     hiddenPanelRps: 0,
     p95FrameMs: 0,
+    p99FrameMs: 0,
+    staticDrawMs: 0,
+    opponentsTransformMs: 0,
+    opponentsDrawMs: 0,
+    playerDrawMs: 0,
     graphPoints: 0,
     traceCacheEntries: 0,
     liveTrajectoryPoints: 0,
@@ -818,6 +1026,10 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       perf.previousFrameTime = frameTime;
 
       const renderStart = performance.now();
+      let staticDrawMs = 0;
+      let opponentsTransformMs = 0;
+      let opponentsDrawMs = 0;
+      let playerDrawMs = 0;
       const rect = container.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       if (canvas.width !== Math.round(rect.width * dpr) || canvas.height !== Math.round(rect.height * dpr)) {
@@ -839,29 +1051,57 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       } = useTelemetryStore.getState();
 
       const replayActive = Boolean(offlineReplay?.active && offlineReplay.samples?.length);
-      const liveFrame = replayActive
+      const rawLiveFrame = replayActive
         ? (offlineReplay.currentSample || offlineReplay.samples[offlineReplay.currentIndex || 0])
         : (window.__latestFrame || storeFrame);
+      const liveFrame = replayActive
+        ? rawLiveFrame
+        : interpolateMotionState(
+            rawLiveFrame,
+            'player',
+            playerInterpolationRef.current,
+            frameTime,
+            1000 / 30,
+            160,
+          );
       const renderHistory = replayActive ? offlineReplay.samples : liveHistory;
       const historyWindow = HISTORY_WINDOW_BY_MODE[activePerformanceMode] || HISTORY_WINDOW_BY_MODE.BALANCED;
-      const boundsHistory = replayActive ? renderHistory : renderHistory.slice(-historyWindow);
+      const boundsHistory = replayActive && normalizedTrack
+        ? []
+        : (replayActive ? renderHistory : renderHistory.slice(-historyWindow));
 
-      const liveOpponentsForRender = (!replayActive && showOpponentsRef.current) ? liveOpponents : [];
+      const opponentsTransformStarted = performance.now();
+      const latestOpponents = Array.isArray(window.__latestOpponents?.opponents)
+        ? window.__latestOpponents.opponents
+        : liveOpponents;
+      const liveOpponentsForRender = (!replayActive && showOpponentsRef.current) ? latestOpponents : [];
       const renderOpponents = withEstimatedHeadings(liveOpponentsForRender
         .map((opponent) => resolveOpponentRenderState(opponent, normalizedTrack))
-        .filter(Boolean), opponentMotionRef.current);
+        .filter(Boolean)
+        .map((opponent) => interpolateMotionState(
+          opponent,
+          opponent.carId,
+          opponentInterpolationRef.current,
+          frameTime,
+          1000 / 10,
+          200,
+        )), opponentMotionRef.current);
       const opponentPositions = renderOpponents
         .map((opponent) => opponent.mapPosition)
         .filter((position) => Number.isFinite(position?.x) && Number.isFinite(position?.y));
+      opponentsTransformMs = performance.now() - opponentsTransformStarted;
+      const boundsFrame = replayActive && normalizedTrack ? null : liveFrame;
       const renderBounds = normalizedTrack
-        ? computeTrackBounds(normalizedTrack, boundsHistory, liveFrame, opponentPositions)
+        ? computeTrackBounds(normalizedTrack, boundsHistory, boundsFrame, opponentPositions)
         : computeTrackBounds(null, boundsHistory, liveFrame, opponentPositions);
 
       ctx.save();
       const scale = applyCameraTransform(ctx, rect.width, rect.height, renderBounds, cameraRef.current, liveFrame);
 
       if (normalizedTrack) {
+        const staticDrawStarted = performance.now();
         drawTrackSurface(ctx, normalizedTrack, renderBounds, scale);
+        staticDrawMs = performance.now() - staticDrawStarted;
       }
       if (replayActive) {
         const overlayCost = drawReplayLapOverlay(
@@ -870,7 +1110,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           liveFrame,
           scale,
           showRacingLineRef.current ? racingLineModeRef.current : 'LINE_ONLY',
-          { simple: simpleVisuals },
+          {
+            simple: simpleVisuals,
+            trackBounds: trackMapBounds(normalizedTrack),
+            activeTrack: normalizedTrack?.trackName || normalizedTrack?.name || normalizedTrack?.metadata?.trackName,
+          },
         );
         perf.lastRacingLineOverlayMs = overlayCost;
         window.__telemetryPerf = window.__telemetryPerf || {};
@@ -898,6 +1142,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       screenOpponentsRef.current = screenOpponents;
       const labelModes = simpleVisuals ? new Map() : buildLabelModes(screenOpponents, scale);
 
+      const opponentsDrawStarted = performance.now();
       renderOpponents.forEach((opponent, index) => {
         const isHovered =
           hoveredOpponentRef.current?.opponent?.carId === opponent.carId ||
@@ -909,7 +1154,12 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           noGlow: simpleVisuals,
         });
       });
-      if (liveFrame) drawCar(ctx, liveFrame, scale, replayActive ? '#facc15' : '#22d3ee', { noGlow: simpleVisuals });
+      opponentsDrawMs = performance.now() - opponentsDrawStarted;
+      if (liveFrame) {
+        const playerDrawStarted = performance.now();
+        drawCar(ctx, liveFrame, scale, replayActive ? '#facc15' : '#22d3ee', { noGlow: simpleVisuals });
+        playerDrawMs = performance.now() - playerDrawStarted;
+      }
 
       ctx.restore();
       drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current, { performanceMode: activePerformanceMode });
@@ -920,6 +1170,20 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       }
 
       const renderDuration = performance.now() - renderStart;
+      perf.renderDurations.push(renderDuration);
+      perf.staticDrawDurations.push(staticDrawMs);
+      perf.opponentsTransformDurations.push(opponentsTransformMs);
+      perf.opponentsDrawDurations.push(opponentsDrawMs);
+      perf.playerDrawDurations.push(playerDrawMs);
+      [
+        perf.renderDurations,
+        perf.staticDrawDurations,
+        perf.opponentsTransformDurations,
+        perf.opponentsDrawDurations,
+        perf.playerDrawDurations,
+      ].forEach((values) => {
+        if (values.length > 180) values.shift();
+      });
       perf.frames += 1;
       perf.renderMs += renderDuration;
       const now = performance.now();
@@ -943,13 +1207,14 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         const httpRequestsDelta = httpRequests - perf.lastHttpRequests;
         const httpDurationDelta = httpDurationMs - perf.lastHttpDurationMs;
         const renderMetrics = window.__renderMetrics || {};
-        const sortedFrameDeltas = perf.frameDeltas
-          .filter((value) => Number.isFinite(value) && value > 0)
-          .slice()
-          .sort((a, b) => a - b);
-        const p95FrameMs = sortedFrameDeltas.length
-          ? sortedFrameDeltas[Math.floor(sortedFrameDeltas.length * 0.95)]
-          : 0;
+        const p50FrameMs = percentile(perf.frameDeltas, 0.50);
+        const p95FrameMs = percentile(perf.frameDeltas, 0.95);
+        const p99FrameMs = percentile(perf.frameDeltas, 0.99);
+        const p95RenderMs = percentile(perf.renderDurations, 0.95);
+        const staticDrawP95 = percentile(perf.staticDrawDurations, 0.95);
+        const opponentsTransformP95 = percentile(perf.opponentsTransformDurations, 0.95);
+        const opponentsDrawP95 = percentile(perf.opponentsDrawDurations, 0.95);
+        const playerDrawP95 = percentile(perf.playerDrawDurations, 0.95);
         const opponentSamples = Object.values(storeState.opponentHistoryByCarId || {})
           .reduce((sum, samples) => sum + (Array.isArray(samples) ? samples.length : 0), 0);
         const panelRps = [
@@ -967,6 +1232,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           fps: perf.frames / seconds,
           avgRenderMs: perf.renderMs / Math.max(perf.frames, 1),
           p95FrameMs,
+          p99FrameMs,
+          staticDrawMs: staticDrawP95,
+          opponentsTransformMs: opponentsTransformP95,
+          opponentsDrawMs: opponentsDrawP95,
+          playerDrawMs: playerDrawP95,
           opponentsRendered: renderOpponents.length,
           wsHz: (wsMessages - perf.lastWsMessages) / seconds,
           telemetryHz: (telemetryMessages - perf.lastTelemetryMessages) / seconds,
@@ -1001,6 +1271,32 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           comparisonRps: renderMetrics['LiveComparisonPanel']?.fps || 0,
           hiddenPanelRps: panelRps,
         });
+        const trackPointCount = (normalizedTrack?.centerline?.x?.length || 0)
+          + (normalizedTrack?.left_edge?.x?.length || 0)
+          + (normalizedTrack?.right_edge?.x?.length || 0);
+        window.__telemetryPerf = window.__telemetryPerf || {};
+        window.__telemetryPerf.trackRenderer = {
+          fps: perf.frames / seconds,
+          frameMs: { p50: p50FrameMs, p95: p95FrameMs, p99: p99FrameMs },
+          renderMs: {
+            avg: perf.renderMs / Math.max(perf.frames, 1),
+            p95: p95RenderMs,
+          },
+          staticTrackDrawMsP95: staticDrawP95,
+          opponentsTransformMsP95: opponentsTransformP95,
+          opponentsDrawMsP95: opponentsDrawP95,
+          playerDrawMsP95: playerDrawP95,
+          opponentsDrawnPerFrame: renderOpponents.length,
+          trackPointsDrawnPerFrame: trackPointCount,
+          racingLinePointsDrawnPerFrame: racingLineOverlayRef.current?.debug?.rawDisplayPointCount || 0,
+          opponentsOverlayEnabled: showOpponentsRef.current,
+          storeUpdateMs: {
+            playerAvg: Number(wsMetrics.telemetryStoreUpdateMs || 0) / Math.max(telemetryStoreUpdates, 1),
+            opponentsAvg: Number(wsMetrics.opponentsStoreUpdateMs || 0) / Math.max(opponentsStoreUpdates, 1),
+          },
+          payloadByType: wsMetrics.wsPayloadByType || {},
+          parseByType: wsMetrics.wsParseByType || {},
+        };
         perf.frames = 0;
         perf.renderMs = 0;
         perf.lastAt = now;
@@ -1017,6 +1313,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         perf.lastHttpRequests = httpRequests;
         perf.lastHttpDurationMs = httpDurationMs;
         perf.frameDeltas = [];
+        perf.renderDurations = [];
+        perf.staticDrawDurations = [];
+        perf.opponentsTransformDurations = [];
+        perf.opponentsDrawDurations = [];
+        perf.playerDrawDurations = [];
       }
       animationRef.current = requestAnimationFrame(render);
     };

@@ -22,6 +22,7 @@ class RecordingConfig:
     enabled: bool = True
     auto_start: bool = True
     player_record_hz: float = 20.0
+    source_sample_hz: float = 60.0
     opponents_record_hz: float = 20.0
     batch_size: int = 128
     flush_interval_seconds: float = 1.0
@@ -39,6 +40,15 @@ class RecordingStatus:
     eventsWritten: int
     queueSize: int
     droppedFrames: int
+    playerSamplesReceived: int
+    playerSamplesEnqueued: int
+    playerSamplesDownsampled: int
+    playerSamplesDropped: int
+    playerDownsamplingEnabled: bool
+    recorderDownsampleRatio: float
+    lastPersistedLapSampleCount: Optional[int]
+    lastPersistedLapDurationSeconds: Optional[float]
+    lastPersistedLapEffectiveHz: Optional[float]
 
     def to_api(self) -> Dict[str, Any]:
         return {
@@ -51,4 +61,13 @@ class RecordingStatus:
             "eventsWritten": self.eventsWritten,
             "queueSize": self.queueSize,
             "droppedFrames": self.droppedFrames,
+            "playerSamplesReceived": self.playerSamplesReceived,
+            "playerSamplesEnqueued": self.playerSamplesEnqueued,
+            "playerSamplesDownsampled": self.playerSamplesDownsampled,
+            "playerSamplesDropped": self.playerSamplesDropped,
+            "playerDownsamplingEnabled": self.playerDownsamplingEnabled,
+            "recorderDownsampleRatio": self.recorderDownsampleRatio,
+            "lastPersistedLapSampleCount": self.lastPersistedLapSampleCount,
+            "lastPersistedLapDurationSeconds": self.lastPersistedLapDurationSeconds,
+            "lastPersistedLapEffectiveHz": self.lastPersistedLapEffectiveHz,
         }

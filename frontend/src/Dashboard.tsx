@@ -30,38 +30,46 @@ import { api } from './api/client';
 const Dashboard: React.FC = () => {
   useRenderCounter('Dashboard');
   const [trackData, setTrackData] = useState<any>(null);
+  const [trackKey, setTrackKey] = useState<string | null>(null);
   const [rightPanel, setRightPanel] = useState<'laps'|'quality'|'assisted'|'engineer'|'debrief'|'comparison'|'racingLine'|'physics'>('laps');
   const [tracePanel, setTracePanel] = useState<'lapComparison'|'assistTraces'>('lapComparison');
   const [time, setTime] = useState(() => new Date());
 
   useEffect(() => {
+    if (!trackKey) {
+      setTrackData(null);
+      return undefined;
+    }
     let cancelled = false;
     let inFlight = false;
+    let refreshTimer: number | undefined;
     const loadTrack = async () => {
       if (inFlight) return;
       inFlight = true;
+      let loaded = false;
       try {
         const data = await api.getTrackGeometry();
         if (!cancelled && data.track) {
           setTrackData(data.track);
-          return;
-        }
-        if (!cancelled) {
+          loaded = true;
+        } else if (!cancelled) {
           setTrackData(null);
         }
       } catch {
         if (!cancelled) setTrackData(null);
       } finally {
         inFlight = false;
+        if (!cancelled && !loaded) {
+          refreshTimer = window.setTimeout(loadTrack, 5000);
+        }
       }
     };
     loadTrack();
-    const interval = setInterval(loadTrack, 5000);
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      if (refreshTimer !== undefined) window.clearTimeout(refreshTimer);
     };
-  }, []);
+  }, [trackKey]);
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);
@@ -74,7 +82,7 @@ const Dashboard: React.FC = () => {
       <div className="workstation-shell">
         {/* ─ Header ─ */}
         <Header time={time} />
-        <LiveSessionStrip />
+        <LiveSessionStrip onTrackKeyChange={setTrackKey} />
 
         {/* ─ Main Content ─ */}
         <div className="dashboard-grid">
@@ -192,7 +200,7 @@ const Dashboard: React.FC = () => {
               ))}
             </div>
 
-            {/* Panel content (stacked, toggled by opacity) */}
+            {/* Keep panel state mounted; active props suspend hidden polling and subscriptions. */}
             <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
               <div style={{
                 position: 'absolute', inset: 0,
@@ -270,7 +278,7 @@ const Dashboard: React.FC = () => {
               opacity: rightPanel === 'laps' || rightPanel === 'quality' || rightPanel === 'assisted' ? 0 : 1,
               transition: 'height 0.25s ease, opacity 0.2s ease',
             }}>
-              <CoachingFeed />
+              {rightPanel !== 'laps' && rightPanel !== 'quality' && rightPanel !== 'assisted' && <CoachingFeed />}
             </div>
 
             <div style={{
@@ -279,7 +287,7 @@ const Dashboard: React.FC = () => {
               opacity: rightPanel === 'laps' || rightPanel === 'quality' || rightPanel === 'assisted' ? 0 : 1,
               transition: 'height 0.25s ease, opacity 0.2s ease',
             }}>
-              <DesktopRuntimePanel />
+              <DesktopRuntimePanel active={rightPanel !== 'laps' && rightPanel !== 'quality' && rightPanel !== 'assisted'} />
             </div>
 
           </div>

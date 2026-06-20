@@ -212,6 +212,31 @@ class ACSharedMemoryReader(PollingTelemetryReader):
         self.latest_shared_memory_gate_status: Dict[str, Any] = {}
         self._next_connect_attempt_at = 0.0
         self._last_gate_log_at = 0.0
+        self._last_packet_id: Optional[int] = None
+        self._last_packet_signature: Optional[Tuple[Any, ...]] = None
+
+    @staticmethod
+    def _packet_signature(data: Dict[str, Any]) -> Tuple[Any, ...]:
+        return tuple(
+            round(_safe_float(data.get(key)), 5)
+            for key in (
+                "x",
+                "y",
+                "z",
+                "speed",
+                "heading",
+                "throttle",
+                "brake",
+                "steer",
+                "clutch",
+                "gear",
+                "rpm",
+                "lat_g",
+                "accel_g",
+                "lap_time",
+                "lap_dist_pct",
+            )
+        )
 
     def connect(self) -> bool:
         if self.connected and self.adapter.is_connected:
@@ -253,6 +278,19 @@ class ACSharedMemoryReader(PollingTelemetryReader):
         track_length = _safe_float(data.get("track_length"))
         if track_length > 0:
             self.latest_track_length = track_length
+
+        raw_packet_id = data.get("packet_id")
+        try:
+            packet_id = int(raw_packet_id) if raw_packet_id is not None else None
+        except (TypeError, ValueError):
+            packet_id = None
+        packet_signature = self._packet_signature(data)
+        same_payload = packet_signature == self._last_packet_signature
+        same_packet = packet_id is not None and packet_id == self._last_packet_id
+        if same_payload and (packet_id is None or same_packet):
+            return None
+        self._last_packet_id = packet_id
+        self._last_packet_signature = packet_signature
 
         x = _safe_float(data.get("x"))
         z = _safe_float(data.get("z"))
@@ -309,6 +347,8 @@ class ACSharedMemoryReader(PollingTelemetryReader):
     def stop(self):
         self.adapter.close()
         self.connected = False
+        self._last_packet_id = None
+        self._last_packet_signature = None
 
 
 class ReplayCSVReader(PollingTelemetryReader):

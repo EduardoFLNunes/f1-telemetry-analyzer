@@ -259,6 +259,7 @@ class AssettoAdapter:
         """Converts raw AC data into the platform's standardized format."""
         return {
             "type": "ac_frame",
+            "packet_id": self.physics.packetId,
             "sim_type": "AC1",
             "status": self.graphics.status,
             "session_type": self.graphics.session,

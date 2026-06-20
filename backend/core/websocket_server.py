@@ -15,12 +15,85 @@ from core.telemetry_events import OPPONENTS_FRAME, event_bus
 
 logger = logging.getLogger(__name__)
 
+
+def _is_normal_disconnect(error: Exception) -> bool:
+    if isinstance(error, WebSocketDisconnect):
+        return True
+    message = str(error).lower()
+    return isinstance(error, RuntimeError) and any(
+        marker in message
+        for marker in (
+            "close message has been sent",
+            "websocket is not connected",
+            "websocket.close",
+        )
+    )
+
+
+def split_live_frame(frame: Dict[str, Any]):
+    """Keep the high-frequency map frame small without changing internal frames."""
+    live_frame = dict(frame)
+    car_physics = live_frame.pop("carPhysics", None)
+    live_frame.pop("projectionDebug", None)
+    detail = None
+    if car_physics is not None:
+        detail = {
+            "timestamp": frame.get("timestamp"),
+            "carPhysics": car_physics,
+        }
+    return live_frame, detail
+
+
+def compact_opponents_frame(frame: Dict[str, Any]) -> Dict[str, Any]:
+    """Keep identity and motion on WS; detailed opponent state stays on HTTP."""
+    cars = frame.get("cars")
+    if not isinstance(cars, list):
+        cars = frame.get("opponents") if isinstance(frame.get("opponents"), list) else []
+    compact_cars = []
+    for car in cars:
+        if not isinstance(car, dict):
+            continue
+        world = car.get("worldPosition") if isinstance(car.get("worldPosition"), dict) else {}
+        compact_car = {
+            "carId": car.get("carId"),
+            "driverName": car.get("driverName"),
+            "carModel": car.get("carModel"),
+            "worldPosition": {
+                "x": world.get("x", car.get("worldPositionX")),
+                "z": world.get("z", car.get("worldPositionZ")),
+            },
+            "speedKmh": car.get("speedKmh"),
+            "yaw": car.get("yaw", car.get("heading")),
+            "splinePosition": car.get("splinePosition"),
+            "relativePosition": car.get("relativePosition"),
+            "lap": car.get("lap"),
+            "racePosition": car.get("racePosition"),
+            "status": car.get("status"),
+            "timestamp": car.get("timestamp", frame.get("timestamp")),
+            "lastSeenTimestamp": car.get("lastSeenTimestamp"),
+        }
+        compact_car["worldPosition"] = {
+            key: value for key, value in compact_car["worldPosition"].items() if value is not None
+        }
+        compact_cars.append({key: value for key, value in compact_car.items() if value is not None})
+    payload = {
+        "source": frame.get("source", "udp"),
+        "timestamp": frame.get("timestamp"),
+        "sessionTime": frame.get("sessionTime"),
+        "track": frame.get("track"),
+        "count": len(compact_cars),
+        "cars": compact_cars,
+    }
+    return {key: value for key, value in payload.items() if value is not None}
+
+
 class ConnectionManager:
     """Manages active websocket connections."""
     def __init__(self):
         self.active_connections: List[WebSocket] = []
         self._broadcast_lock = asyncio.Lock()
         self.send_timeout_seconds = max(float(os.getenv("TELEMETRY_WS_SEND_TIMEOUT", "0.25")), 0.05)
+        self._pending_broadcasts = 0
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -37,20 +110,47 @@ class ConnectionManager:
             return
 
         started = time.perf_counter()
+        serialization_started = time.perf_counter()
         msg_str = json.dumps(message, separators=(",", ":"), default=str)
-        async with self._broadcast_lock:
-            performance_metrics.mark_websocket_message(message_type=message.get("type"))
-            connections = list(self.active_connections)
-            tasks = [
-                asyncio.wait_for(conn.send_text(msg_str), timeout=self.send_timeout_seconds)
-                for conn in connections
-            ]
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            for conn, result in zip(connections, results):
-                if isinstance(result, Exception):
-                    logger.debug("Dropping stale websocket connection: %s", result)
-                    self.disconnect(conn)
-            performance_metrics.record_websocket_send(time.perf_counter() - started)
+        payload_bytes = len(msg_str.encode("utf-8"))
+        performance_metrics.record_websocket_serialization(
+            message.get("type"),
+            time.perf_counter() - serialization_started,
+            payload_bytes,
+        )
+        self._pending_broadcasts += 1
+        try:
+            async with self._broadcast_lock:
+                performance_metrics.mark_websocket_message(message_type=message.get("type"))
+                connections = list(self.active_connections)
+                tasks = [
+                    asyncio.wait_for(conn.send_text(msg_str), timeout=self.send_timeout_seconds)
+                    for conn in connections
+                ]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                failed_sends = 0
+                normal_disconnects = 0
+                for conn, result in zip(connections, results):
+                    if isinstance(result, Exception):
+                        if _is_normal_disconnect(result):
+                            normal_disconnects += 1
+                        else:
+                            failed_sends += 1
+                        logger.debug("Dropping stale websocket connection: %s", result)
+                        self.disconnect(conn)
+                if failed_sends:
+                    performance_metrics.mark_websocket_send_failure(failed_sends)
+                if normal_disconnects:
+                    performance_metrics.mark_websocket_disconnect(normal_disconnects)
+                performance_metrics.record_websocket_send(
+                    time.perf_counter() - started,
+                    payload_bytes=payload_bytes,
+                )
+        finally:
+            self._pending_broadcasts = max(0, self._pending_broadcasts - 1)
+
+    def pending_tasks(self) -> int:
+        return self._pending_broadcasts
 
 class TelemetryBroadcaster:
     """
@@ -63,15 +163,19 @@ class TelemetryBroadcaster:
         *,
         subscribe: bool = True,
         frame_hz: Optional[float] = None,
+        detail_hz: Optional[float] = None,
     ):
         self.manager = manager
-        configured_hz = frame_hz if frame_hz is not None else float(os.getenv("TELEMETRY_WS_HZ", "90"))
+        configured_hz = frame_hz if frame_hz is not None else float(os.getenv("TELEMETRY_WS_HZ", "30"))
         self.frame_interval = 1.0 / max(configured_hz, 1.0)
+        configured_detail_hz = detail_hz if detail_hz is not None else float(os.getenv("TELEMETRY_DETAIL_WS_HZ", "2"))
+        self.detail_interval = 1.0 / max(configured_detail_hz, 0.1)
         opponents_hz = float(os.getenv("OPPONENTS_WS_HZ", "10"))
         self.opponents_interval = 1.0 / max(opponents_hz, 1.0)
         self._latest_frame: Optional[Dict[str, Any]] = None
         self._frame_sender_task: Optional[asyncio.Task] = None
         self._last_frame_sent_at = 0.0
+        self._last_detail_sent_at = 0.0
         self._latest_opponents: Optional[Dict[str, Any]] = None
         self._opponents_sender_task: Optional[asyncio.Task] = None
         self._last_opponents_sent_at = 0.0
@@ -100,7 +204,12 @@ class TelemetryBroadcaster:
                 frame = self._latest_frame
                 self._latest_frame = None
                 self._last_frame_sent_at = time.monotonic()
-                await self.manager.broadcast({"type": "telemetry", "data": frame})
+                live_frame, detail = split_live_frame(frame)
+                await self.manager.broadcast({"type": "telemetry", "data": live_frame})
+                now = time.monotonic()
+                if detail is not None and now - self._last_detail_sent_at >= self.detail_interval:
+                    self._last_detail_sent_at = now
+                    await self.manager.broadcast({"type": "telemetry_detail", "data": detail})
                 await self._broadcast_pending_opponents()
         except asyncio.CancelledError:
             raise
@@ -108,6 +217,8 @@ class TelemetryBroadcaster:
             logger.exception("Telemetry websocket sender failed")
 
     async def on_opponents(self, data: Dict[str, Any]):
+        if self._latest_opponents is not None:
+            performance_metrics.mark_websocket_frame_coalesced("opponents")
         self._latest_opponents = data
         if self._frame_sender_task is not None and not self._frame_sender_task.done():
             return
@@ -122,7 +233,7 @@ class TelemetryBroadcaster:
         opponents = self._latest_opponents
         self._latest_opponents = None
         self._last_opponents_sent_at = time.monotonic()
-        await self.manager.broadcast({"type": "opponents", "data": opponents})
+        await self.manager.broadcast({"type": "opponents", "data": compact_opponents_frame(opponents)})
 
     async def _drain_opponents(self):
         try:

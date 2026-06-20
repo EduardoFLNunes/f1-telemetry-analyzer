@@ -10,7 +10,7 @@ const EMPTY_SPEECH: EngineerSpeech[] = [];
 export const AIEngineerPanel = React.memo(function AIEngineerPanel({ active = true }: { active?: boolean }) {
   useRenderCounter('AIEngineerPanel');
   const speech = useTelemetryStore(s => active ? s.engineerSpeech : EMPTY_SPEECH);
-  const isStreaming = useTelemetryStore(s => s.isStreaming);
+  const isStreaming = useTelemetryStore(s => active ? s.isStreaming : false);
 
   const priorityStyle = (p: string) => {
     if (p === 'high')   return { bg: 'rgba(251,113,133,0.08)', border: 'rgba(251,113,133,0.2)',  text: '#fb7185' };

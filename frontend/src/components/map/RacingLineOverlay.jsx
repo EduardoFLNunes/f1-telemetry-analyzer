@@ -1,3 +1,5 @@
+import { transformWorldToMapPoint } from '../../utils/spatialTransform';
+
 export const RACING_LINE_OVERLAY_MODES = [
   'LINE_ONLY',
   'DIAGNOSTIC',
@@ -31,16 +33,6 @@ const ISSUE_COLORS = {
 
 function finiteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value);
-}
-
-// Same map-space convention used by ProjectionEngine/mapPosition:
-// Assetto world X/Z becomes canvas/map X/Y with Y = -worldZ.
-function worldPositionToMapPosition(position) {
-  if (!position) return null;
-  const x = Number(position.x);
-  const z = Number(position.z);
-  if (!Number.isFinite(x) || !Number.isFinite(z)) return null;
-  return { x, y: -z };
 }
 
 function currentProgress(frame) {
@@ -278,7 +270,7 @@ function buildMicroEntries(payload, comparisons) {
       source: 'microsector',
       point,
       progress: pointProgress(point),
-      map: worldPositionToMapPosition(point.position),
+      map: transformWorldToMapPoint({ worldPosition: point.position }),
       connectable: point.confidence !== 'INSUFFICIENT_DATA',
       comparison: comparisons.get(point.segmentIndex) || null,
     }))
@@ -305,7 +297,7 @@ function buildRawReferenceEntries(payload, microSectorCount) {
             : index,
         },
         progress,
-        map: worldPositionToMapPosition(point.position),
+        map: transformWorldToMapPoint({ worldPosition: point.position }),
         connectable: true,
         comparison: null,
       };

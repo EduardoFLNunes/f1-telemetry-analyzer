@@ -224,21 +224,48 @@ def _finite_float(value: Any) -> Optional[float]:
     return number if math.isfinite(number) else None
 
 
+def _first_finite_float(*values: Any) -> Optional[float]:
+    for value in values:
+        number = _finite_float(value)
+        if number is not None:
+            return number
+    return None
+
+
+def _world_to_map_position(sample: Dict[str, Any]) -> Optional[Dict[str, float]]:
+    world = sample.get("worldPosition") or sample.get("world_position")
+    if isinstance(world, (list, tuple)) and len(world) >= 3:
+        x = _finite_float(world[0])
+        z = _finite_float(world[2])
+    elif isinstance(world, dict):
+        x = _first_finite_float(
+            world.get("x"),
+            sample.get("worldPositionX"),
+            sample.get("world_x"),
+            sample.get("worldX"),
+        )
+        z = _first_finite_float(
+            world.get("z"),
+            sample.get("worldPositionZ"),
+            sample.get("world_z"),
+            sample.get("worldZ"),
+        )
+    else:
+        x = _first_finite_float(sample.get("worldPositionX"), sample.get("world_x"), sample.get("worldX"))
+        z = _first_finite_float(sample.get("worldPositionZ"), sample.get("world_z"), sample.get("worldZ"))
+    if x is None or z is None:
+        return None
+    return {"x": x, "y": -z}
+
+
 def _replay_map_position(sample: Dict[str, Any]) -> Dict[str, float]:
+    world_position = _world_to_map_position(sample)
+    if world_position is not None:
+        return world_position
+
     map_position = sample.get("mapPosition") if isinstance(sample.get("mapPosition"), dict) else {}
-    x = _finite_float(
-        map_position.get("x")
-        or sample.get("x")
-        or sample.get("world_x")
-        or sample.get("worldPositionX")
-    )
-    y = _finite_float(
-        map_position.get("y")
-        or sample.get("y")
-        or sample.get("z")
-        or sample.get("world_z")
-        or sample.get("worldPositionZ")
-    )
+    x = _first_finite_float(map_position.get("x"), sample.get("x"))
+    y = _first_finite_float(map_position.get("y"), sample.get("y"), sample.get("z"))
     return {"x": x or 0.0, "y": y or 0.0}
 
 
@@ -273,8 +300,9 @@ def _normalize_replay_sample(sample: Dict[str, Any]) -> Dict[str, Any]:
         "timestamp": sample.get("timestamp"),
         "sessionTime": sample.get("sessionTime") or sample.get("session_time"),
         "mapPosition": map_position,
-        "worldX": _finite_float(sample.get("world_x") or sample.get("worldPositionX") or sample.get("x")),
-        "worldZ": _finite_float(sample.get("world_z") or sample.get("worldPositionZ") or sample.get("z")),
+        "worldX": _first_finite_float(sample.get("world_x"), sample.get("worldPositionX"), sample.get("worldX"), sample.get("x")),
+        "worldY": _first_finite_float(sample.get("world_y"), sample.get("worldPositionY"), sample.get("worldY")),
+        "worldZ": _first_finite_float(sample.get("world_z"), sample.get("worldPositionZ"), sample.get("worldZ"), sample.get("z")),
         "x": map_position["x"],
         "z": map_position["y"],
         "lapProgress": progress,
@@ -649,6 +677,8 @@ def runtime_status_payload() -> Dict[str, Any]:
             "estimatedHz": telemetry_status.get("estimatedHz"),
             "stableHz": telemetry_status.get("stableHz"),
             "frequencyStatus": telemetry_status.get("frequencyStatus"),
+            "adaptivePollMode": telemetry_status.get("adaptivePollMode"),
+            "adaptivePollHz": telemetry_status.get("adaptivePollHz"),
             "droppedSamplesEstimate": telemetry_status.get("droppedSamplesEstimate"),
             "sampleValidation": telemetry_status.get("sampleValidation"),
         },
@@ -705,13 +735,45 @@ def runtime_performance_payload() -> Dict[str, Any]:
     sampling = performance_metrics.runtime_snapshot(
         target_hz=float(telemetry.get("targetHz") or 60.0),
         source=telemetry.get("source"),
+        player_source=telemetry.get("playerSource"),
         player_status=telemetry.get("playerStatus"),
         last_sample_age_ms=last_age_ms,
         recording_queue_depth=recording_status.get("queueSize"),
+        recording_dropped_frames=recording_status.get("droppedFrames"),
+        recorder_dropped_samples=recording_status.get("playerSamplesDropped"),
+        recorder_downsampling_enabled=recording_status.get("playerDownsamplingEnabled"),
+        recorder_configured_hz=(
+            recording_runtime.config.player_record_hz if recording_runtime else None
+        ),
+        last_persisted_lap_sample_count=recording_status.get("lastPersistedLapSampleCount"),
+        last_persisted_lap_duration_seconds=recording_status.get("lastPersistedLapDurationSeconds"),
+        last_persisted_lap_effective_hz=recording_status.get("lastPersistedLapEffectiveHz"),
         websocket_queue_depth=ws_broadcaster.pending_depth(),
     )
+    sampling["adaptivePollMode"] = telemetry.get("adaptivePollMode")
+    sampling["adaptivePollHz"] = telemetry.get("adaptivePollHz")
+    event_bus_status = event_bus.snapshot()
+    websocket_pending_tasks = ws_manager.pending_tasks()
+    sampling["sharedMemoryReadHz"] = sampling.get("rawReadHz")
+    sampling["collectorSampleHz"] = sampling.get("lapCollectorSampleHz")
+    sampling["eventBusPendingTasks"] = event_bus_status.get("pendingTasks", 0)
+    sampling["eventBusPendingByTopic"] = event_bus_status.get("pendingByTopic", {})
+    sampling["websocketPendingTasks"] = websocket_pending_tasks
+    sampling["websocketBackpressureRecent"] = bool(sampling.get("websocketRecentSendFailures"))
+    sampling["resources"] = process_resource_snapshot()
     return {
         "status": "success",
+        "source": telemetry.get("source"),
+        "playerSource": telemetry.get("playerSource"),
+        "targetHz": sampling.get("targetHz"),
+        "windows": sampling.get("windows"),
+        "durationsMs": sampling.get("durationsMs"),
+        "counters": sampling.get("counters"),
+        "queues": sampling.get("queues"),
+        "bottleneck": sampling.get("bottleneckDetails"),
+        "bottleneckReason": sampling.get("bottleneckReason"),
+        "sourceLimited": sampling.get("sourceLimited"),
+        "backpressureDetected": sampling.get("backpressureDetected"),
         "sampling": sampling,
         "telemetry": {
             "source": telemetry.get("source"),
@@ -722,6 +784,8 @@ def runtime_performance_payload() -> Dict[str, Any]:
             "estimatedHz": telemetry.get("estimatedHz"),
             "stableHz": telemetry.get("stableHz"),
             "frequencyStatus": telemetry.get("frequencyStatus"),
+            "adaptivePollMode": telemetry.get("adaptivePollMode"),
+            "adaptivePollHz": telemetry.get("adaptivePollHz"),
             "sharedMemoryAllowed": telemetry.get("sharedMemoryAllowed"),
             "assettoProcessRunning": telemetry.get("assettoProcessRunning"),
             "sharedMemoryGate": telemetry.get("sharedMemoryGate"),
@@ -731,16 +795,41 @@ def runtime_performance_payload() -> Dict[str, Any]:
             "queueSize": recording_status.get("queueSize", 0),
             "droppedFrames": recording_status.get("droppedFrames", 0),
             "playerSamplesWritten": recording_status.get("playerSamplesWritten", 0),
+            "playerSamplesReceived": recording_status.get("playerSamplesReceived", 0),
+            "playerSamplesEnqueued": recording_status.get("playerSamplesEnqueued", 0),
+            "playerSamplesDownsampled": recording_status.get("playerSamplesDownsampled", 0),
+            "playerSamplesDropped": recording_status.get("playerSamplesDropped", 0),
+            "playerDownsamplingEnabled": recording_status.get("playerDownsamplingEnabled", False),
+            "recorderDownsampleRatio": recording_status.get("recorderDownsampleRatio", 1.0),
+            "lastPersistedLapSampleCount": recording_status.get("lastPersistedLapSampleCount"),
+            "lastPersistedLapDurationSeconds": recording_status.get("lastPersistedLapDurationSeconds"),
+            "lastPersistedLapEffectiveHz": recording_status.get("lastPersistedLapEffectiveHz"),
         },
         "websocket": {
             "connections": len(ws_manager.active_connections),
             "pendingDepth": ws_broadcaster.pending_depth(),
+            "pendingTasks": websocket_pending_tasks,
+            "backpressureRecent": sampling.get("websocketBackpressureRecent", False),
         },
+        "eventBus": event_bus_status,
         "runtime": {
             "backend": runtime.get("backend", {}),
             "racingLine": runtime.get("racingLine", {}),
         },
     }
+
+
+def process_resource_snapshot() -> Dict[str, Optional[float]]:
+    try:
+        import psutil
+
+        process = psutil.Process(os.getpid())
+        return {
+            "cpuPercent": round(float(process.cpu_percent(interval=None)), 2),
+            "memoryRssMb": round(float(process.memory_info().rss) / (1024.0 * 1024.0), 2),
+        }
+    except Exception:
+        return {"cpuPercent": None, "memoryRssMb": None}
 
 
 @asynccontextmanager
@@ -1585,8 +1674,9 @@ async def get_performance_metrics():
         **metrics,
         "recordingQueueSize": recording_status.get("queueSize", 0),
         "recordingDroppedFrames": recording_status.get("droppedFrames", 0),
-        "eventBusQueueSize": None,
+        "eventBusQueueSize": event_bus.snapshot().get("pendingTasks", 0),
         "websocketConnections": len(ws_manager.active_connections),
+        "websocketPendingTasks": ws_manager.pending_tasks(),
     }
 
 

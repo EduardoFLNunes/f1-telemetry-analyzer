@@ -1,5 +1,7 @@
+import { resolveSampleMapPosition } from '../../utils/spatialTransform';
+
 export function drawCar(ctx, frame, scale, color = '#22d3ee', options = {}) {
-  const position = frame?.mapPosition;
+  const position = resolveSampleMapPosition(frame);
   if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return;
 
   const heading = Number.isFinite(frame.heading) ? frame.heading : 0;
@@ -64,7 +66,7 @@ function opponentColor(opponent, index) {
 }
 
 export function drawOpponentCar(ctx, opponent, scale, index = 0, options = {}) {
-  const position = opponent?.mapPosition;
+  const position = resolveSampleMapPosition(opponent);
   if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return;
 
   const labelMode = options.labelMode || 'none';
@@ -142,10 +144,12 @@ export function drawTrajectory(ctx, history, scale) {
   for (let i = 1; i < history.length; i += 1) {
     const a = history[i - 1];
     const b = history[i];
-    const ax = a.mapPosition?.x ?? a.x;
-    const ay = a.mapPosition?.y ?? a.z;
-    const bx = b.mapPosition?.x ?? b.x;
-    const by = b.mapPosition?.y ?? b.z;
+    const previous = resolveSampleMapPosition(a);
+    const current = resolveSampleMapPosition(b);
+    const ax = previous?.x;
+    const ay = previous?.y;
+    const bx = current?.x;
+    const by = current?.y;
     if (!Number.isFinite(ax) || !Number.isFinite(ay) || !Number.isFinite(bx) || !Number.isFinite(by)) continue;
     const alpha = Math.max(0.08, i / history.length);
     ctx.beginPath();
