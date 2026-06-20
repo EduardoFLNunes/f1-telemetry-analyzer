@@ -9,7 +9,12 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-from core.websocket_server import TelemetryBroadcaster, split_live_frame
+from core.websocket_server import (
+    TelemetryBroadcaster,
+    _is_normal_disconnect,
+    compact_opponents_frame,
+    split_live_frame,
+)
 
 
 class _BlockingManager:
@@ -26,6 +31,10 @@ class _BlockingManager:
 
 
 class TelemetryBroadcasterTests(unittest.IsolatedAsyncioTestCase):
+    def test_classifies_closed_connection_separately_from_send_failure(self):
+        self.assertTrue(_is_normal_disconnect(RuntimeError("close message has been sent")))
+        self.assertFalse(_is_normal_disconnect(asyncio.TimeoutError()))
+
     def test_live_frame_omits_heavy_physics_and_projection_debug(self):
         frame = {
             "timestamp": 123,
@@ -44,6 +53,38 @@ class TelemetryBroadcasterTests(unittest.IsolatedAsyncioTestCase):
         full_size = len(json.dumps(frame, separators=(",", ":")))
         live_size = len(json.dumps(live, separators=(",", ":")))
         self.assertLess(live_size, full_size)
+
+    def test_opponents_live_frame_keeps_motion_and_omits_detailed_metadata(self):
+        frame = {
+            "source": "udp",
+            "timestamp": 10.0,
+            "track": "interlagos",
+            "cars": [
+                {
+                    "carId": 7,
+                    "driverName": "Driver",
+                    "worldPosition": {"x": 12.0, "y": 3.0, "z": 44.0},
+                    "speedKmh": 180.0,
+                    "yaw": 1.2,
+                    "splinePosition": 0.4,
+                    "lap": 2,
+                    "provenance": {"unavailablePhysics": ["fuel", "setup"]},
+                    "dataCompleteness": 0.8,
+                }
+            ],
+        }
+
+        compact = compact_opponents_frame(frame)
+
+        self.assertEqual(1, compact["count"])
+        self.assertEqual({"x": 12.0, "z": 44.0}, compact["cars"][0]["worldPosition"])
+        self.assertEqual(180.0, compact["cars"][0]["speedKmh"])
+        self.assertNotIn("provenance", compact["cars"][0])
+        self.assertNotIn("dataCompleteness", compact["cars"][0])
+        self.assertLess(
+            len(json.dumps(compact, separators=(",", ":"))),
+            len(json.dumps(frame, separators=(",", ":"))),
+        )
 
     async def test_keeps_only_latest_frame_while_client_is_slow(self):
         manager = _BlockingManager()

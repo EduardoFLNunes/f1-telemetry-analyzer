@@ -11,7 +11,7 @@ from ..data_quality.lap_validation import validate_lap
 
 MAX_EAGER_INDEX_BYTES = 8 * 1024 * 1024
 INDEX_FILENAME = "session-index.json"
-INDEX_VERSION = 2
+INDEX_VERSION = 3
 
 
 def _safe_fragment(value: Any) -> str:
@@ -78,6 +78,22 @@ def _progress(sample: Dict[str, Any]) -> Optional[float]:
     return None
 
 
+def is_assetto_lap_counter_lag_frame(
+    sample: Dict[str, Any],
+    previous_lap_elapsed: Optional[float],
+) -> bool:
+    lap_elapsed = _lap_elapsed(sample)
+    progress = _progress(sample)
+    return bool(
+        previous_lap_elapsed is not None
+        and previous_lap_elapsed >= 10.0
+        and lap_elapsed is not None
+        and lap_elapsed <= 1.0
+        and progress is not None
+        and progress <= 0.02
+    )
+
+
 @dataclass
 class _LapAggregate:
     lap_number: int
@@ -100,14 +116,18 @@ class _LapAggregate:
     start_offset: Optional[int] = None
     end_offset: Optional[int] = None
 
-    def add(self, sample: Dict[str, Any], start_offset: Optional[int] = None, end_offset: Optional[int] = None):
+    def add(self, sample: Dict[str, Any], start_offset: Optional[int] = None, end_offset: Optional[int] = None) -> bool:
+        lap_elapsed = _lap_elapsed(sample)
+        progress = _progress(sample)
+        if self.sample_count > 0 and is_assetto_lap_counter_lag_frame(sample, self.lap_elapsed_max):
+            return False
+
         self.sample_count += 1
         if start_offset is not None and self.start_offset is None:
             self.start_offset = start_offset
         if end_offset is not None:
             self.end_offset = end_offset
 
-        lap_elapsed = _lap_elapsed(sample)
         if lap_elapsed is not None:
             self.lap_elapsed_max = max(self.lap_elapsed_max or lap_elapsed, lap_elapsed)
 
@@ -149,7 +169,6 @@ class _LapAggregate:
             self.speed_count += 1
             self.speed_max = max(self.speed_max or speed, speed)
 
-        progress = _progress(sample)
         if progress is not None:
             if self.progress_start is None:
                 self.progress_start = progress
@@ -162,6 +181,7 @@ class _LapAggregate:
                 self.progress_max if self.progress_max is not None else progress,
                 progress,
             )
+        return True
 
     def summary(self, completed: bool, session_id: Optional[str] = None) -> Dict[str, Any]:
         duration = self.lap_elapsed_max

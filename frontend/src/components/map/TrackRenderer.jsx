@@ -66,6 +66,16 @@ function isFiniteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+function percentile(values, ratio) {
+  if (!values.length) return 0;
+  const sorted = values
+    .filter((value) => Number.isFinite(value) && value >= 0)
+    .slice()
+    .sort((a, b) => a - b);
+  if (!sorted.length) return 0;
+  return sorted[Math.min(Math.floor((sorted.length - 1) * ratio), sorted.length - 1)];
+}
+
 function lerp(a, b, t) {
   return a + (b - a) * t;
 }
@@ -602,6 +612,68 @@ function withEstimatedHeadings(opponents, motionCache) {
   });
 }
 
+function interpolateMotionState(item, key, cache, now, defaultDurationMs, snapDistance = 120) {
+  const position = item?.mapPosition;
+  if (!position || !isFiniteNumber(position.x) || !isFiniteNumber(position.y)) return item;
+  const sampleStamp = item.timestamp ?? item.sessionTime ?? `${position.x}:${position.y}`;
+  let state = cache.get(key);
+  if (!state) {
+    state = {
+      from: position,
+      to: position,
+      startedAt: now,
+      durationMs: defaultDurationMs,
+      targetReceivedAt: now,
+      sampleStamp,
+    };
+    cache.set(key, state);
+    return item;
+  }
+
+  const currentProgress = Math.max(0, Math.min(1, (now - state.startedAt) / Math.max(state.durationMs, 1)));
+  const current = {
+    x: lerp(state.from.x, state.to.x, currentProgress),
+    y: lerp(state.from.y, state.to.y, currentProgress),
+  };
+  const targetChanged = sampleStamp !== state.sampleStamp
+    || Math.hypot(position.x - state.to.x, position.y - state.to.y) > 0.001;
+  if (targetChanged) {
+    const distance = Math.hypot(position.x - current.x, position.y - current.y);
+    const observedInterval = Math.max(now - state.targetReceivedAt, 1);
+    const durationMs = Math.max(
+      defaultDurationMs * 0.55,
+      Math.min(observedInterval, defaultDurationMs * 1.8),
+    );
+    state = distance > snapDistance
+      ? {
+          from: position,
+          to: position,
+          startedAt: now,
+          durationMs: 1,
+          targetReceivedAt: now,
+          sampleStamp,
+        }
+      : {
+          from: current,
+          to: position,
+          startedAt: now,
+          durationMs,
+          targetReceivedAt: now,
+          sampleStamp,
+        };
+    cache.set(key, state);
+  }
+
+  const progress = Math.max(0, Math.min(1, (now - state.startedAt) / Math.max(state.durationMs, 1)));
+  return {
+    ...item,
+    mapPosition: {
+      x: lerp(state.from.x, state.to.x, progress),
+      y: lerp(state.from.y, state.to.y, progress),
+    },
+  };
+}
+
 function worldToScreen(point, width, height, bounds, camera, carFrame) {
   if (!point || !isFiniteNumber(point.x) || !isFiniteNumber(point.y)) return null;
 
@@ -706,6 +778,8 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const containerRef = useRef(null);
   const animationRef = useRef(null);
   const lastCanvasRenderRef = useRef(0);
+  const playerInterpolationRef = useRef(new Map());
+  const opponentInterpolationRef = useRef(new Map());
   const opponentMotionRef = useRef(new Map());
   const screenOpponentsRef = useRef([]);
   const racingLineOverlayRef = useRef(null);
@@ -738,6 +812,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     lastHttpRequests: 0,
     lastHttpDurationMs: 0,
     frameDeltas: [],
+    renderDurations: [],
+    staticDrawDurations: [],
+    opponentsTransformDurations: [],
+    opponentsDrawDurations: [],
+    playerDrawDurations: [],
     previousFrameTime: 0,
   });
   const [opponentsPanelOpen, setOpponentsPanelOpen] = useState(true);
@@ -778,6 +857,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     linePanelRps: 0,
     hiddenPanelRps: 0,
     p95FrameMs: 0,
+    p99FrameMs: 0,
+    staticDrawMs: 0,
+    opponentsTransformMs: 0,
+    opponentsDrawMs: 0,
+    playerDrawMs: 0,
     graphPoints: 0,
     traceCacheEntries: 0,
     liveTrajectoryPoints: 0,
@@ -942,6 +1026,10 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       perf.previousFrameTime = frameTime;
 
       const renderStart = performance.now();
+      let staticDrawMs = 0;
+      let opponentsTransformMs = 0;
+      let opponentsDrawMs = 0;
+      let playerDrawMs = 0;
       const rect = container.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       if (canvas.width !== Math.round(rect.width * dpr) || canvas.height !== Math.round(rect.height * dpr)) {
@@ -963,22 +1051,45 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       } = useTelemetryStore.getState();
 
       const replayActive = Boolean(offlineReplay?.active && offlineReplay.samples?.length);
-      const liveFrame = replayActive
+      const rawLiveFrame = replayActive
         ? (offlineReplay.currentSample || offlineReplay.samples[offlineReplay.currentIndex || 0])
         : (window.__latestFrame || storeFrame);
+      const liveFrame = replayActive
+        ? rawLiveFrame
+        : interpolateMotionState(
+            rawLiveFrame,
+            'player',
+            playerInterpolationRef.current,
+            frameTime,
+            1000 / 30,
+            160,
+          );
       const renderHistory = replayActive ? offlineReplay.samples : liveHistory;
       const historyWindow = HISTORY_WINDOW_BY_MODE[activePerformanceMode] || HISTORY_WINDOW_BY_MODE.BALANCED;
       const boundsHistory = replayActive && normalizedTrack
         ? []
         : (replayActive ? renderHistory : renderHistory.slice(-historyWindow));
 
-      const liveOpponentsForRender = (!replayActive && showOpponentsRef.current) ? liveOpponents : [];
+      const opponentsTransformStarted = performance.now();
+      const latestOpponents = Array.isArray(window.__latestOpponents?.opponents)
+        ? window.__latestOpponents.opponents
+        : liveOpponents;
+      const liveOpponentsForRender = (!replayActive && showOpponentsRef.current) ? latestOpponents : [];
       const renderOpponents = withEstimatedHeadings(liveOpponentsForRender
         .map((opponent) => resolveOpponentRenderState(opponent, normalizedTrack))
-        .filter(Boolean), opponentMotionRef.current);
+        .filter(Boolean)
+        .map((opponent) => interpolateMotionState(
+          opponent,
+          opponent.carId,
+          opponentInterpolationRef.current,
+          frameTime,
+          1000 / 10,
+          200,
+        )), opponentMotionRef.current);
       const opponentPositions = renderOpponents
         .map((opponent) => opponent.mapPosition)
         .filter((position) => Number.isFinite(position?.x) && Number.isFinite(position?.y));
+      opponentsTransformMs = performance.now() - opponentsTransformStarted;
       const boundsFrame = replayActive && normalizedTrack ? null : liveFrame;
       const renderBounds = normalizedTrack
         ? computeTrackBounds(normalizedTrack, boundsHistory, boundsFrame, opponentPositions)
@@ -988,7 +1099,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       const scale = applyCameraTransform(ctx, rect.width, rect.height, renderBounds, cameraRef.current, liveFrame);
 
       if (normalizedTrack) {
+        const staticDrawStarted = performance.now();
         drawTrackSurface(ctx, normalizedTrack, renderBounds, scale);
+        staticDrawMs = performance.now() - staticDrawStarted;
       }
       if (replayActive) {
         const overlayCost = drawReplayLapOverlay(
@@ -1029,6 +1142,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       screenOpponentsRef.current = screenOpponents;
       const labelModes = simpleVisuals ? new Map() : buildLabelModes(screenOpponents, scale);
 
+      const opponentsDrawStarted = performance.now();
       renderOpponents.forEach((opponent, index) => {
         const isHovered =
           hoveredOpponentRef.current?.opponent?.carId === opponent.carId ||
@@ -1040,7 +1154,12 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           noGlow: simpleVisuals,
         });
       });
-      if (liveFrame) drawCar(ctx, liveFrame, scale, replayActive ? '#facc15' : '#22d3ee', { noGlow: simpleVisuals });
+      opponentsDrawMs = performance.now() - opponentsDrawStarted;
+      if (liveFrame) {
+        const playerDrawStarted = performance.now();
+        drawCar(ctx, liveFrame, scale, replayActive ? '#facc15' : '#22d3ee', { noGlow: simpleVisuals });
+        playerDrawMs = performance.now() - playerDrawStarted;
+      }
 
       ctx.restore();
       drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current, { performanceMode: activePerformanceMode });
@@ -1051,6 +1170,20 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       }
 
       const renderDuration = performance.now() - renderStart;
+      perf.renderDurations.push(renderDuration);
+      perf.staticDrawDurations.push(staticDrawMs);
+      perf.opponentsTransformDurations.push(opponentsTransformMs);
+      perf.opponentsDrawDurations.push(opponentsDrawMs);
+      perf.playerDrawDurations.push(playerDrawMs);
+      [
+        perf.renderDurations,
+        perf.staticDrawDurations,
+        perf.opponentsTransformDurations,
+        perf.opponentsDrawDurations,
+        perf.playerDrawDurations,
+      ].forEach((values) => {
+        if (values.length > 180) values.shift();
+      });
       perf.frames += 1;
       perf.renderMs += renderDuration;
       const now = performance.now();
@@ -1074,13 +1207,14 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         const httpRequestsDelta = httpRequests - perf.lastHttpRequests;
         const httpDurationDelta = httpDurationMs - perf.lastHttpDurationMs;
         const renderMetrics = window.__renderMetrics || {};
-        const sortedFrameDeltas = perf.frameDeltas
-          .filter((value) => Number.isFinite(value) && value > 0)
-          .slice()
-          .sort((a, b) => a - b);
-        const p95FrameMs = sortedFrameDeltas.length
-          ? sortedFrameDeltas[Math.floor(sortedFrameDeltas.length * 0.95)]
-          : 0;
+        const p50FrameMs = percentile(perf.frameDeltas, 0.50);
+        const p95FrameMs = percentile(perf.frameDeltas, 0.95);
+        const p99FrameMs = percentile(perf.frameDeltas, 0.99);
+        const p95RenderMs = percentile(perf.renderDurations, 0.95);
+        const staticDrawP95 = percentile(perf.staticDrawDurations, 0.95);
+        const opponentsTransformP95 = percentile(perf.opponentsTransformDurations, 0.95);
+        const opponentsDrawP95 = percentile(perf.opponentsDrawDurations, 0.95);
+        const playerDrawP95 = percentile(perf.playerDrawDurations, 0.95);
         const opponentSamples = Object.values(storeState.opponentHistoryByCarId || {})
           .reduce((sum, samples) => sum + (Array.isArray(samples) ? samples.length : 0), 0);
         const panelRps = [
@@ -1098,6 +1232,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           fps: perf.frames / seconds,
           avgRenderMs: perf.renderMs / Math.max(perf.frames, 1),
           p95FrameMs,
+          p99FrameMs,
+          staticDrawMs: staticDrawP95,
+          opponentsTransformMs: opponentsTransformP95,
+          opponentsDrawMs: opponentsDrawP95,
+          playerDrawMs: playerDrawP95,
           opponentsRendered: renderOpponents.length,
           wsHz: (wsMessages - perf.lastWsMessages) / seconds,
           telemetryHz: (telemetryMessages - perf.lastTelemetryMessages) / seconds,
@@ -1132,6 +1271,32 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           comparisonRps: renderMetrics['LiveComparisonPanel']?.fps || 0,
           hiddenPanelRps: panelRps,
         });
+        const trackPointCount = (normalizedTrack?.centerline?.x?.length || 0)
+          + (normalizedTrack?.left_edge?.x?.length || 0)
+          + (normalizedTrack?.right_edge?.x?.length || 0);
+        window.__telemetryPerf = window.__telemetryPerf || {};
+        window.__telemetryPerf.trackRenderer = {
+          fps: perf.frames / seconds,
+          frameMs: { p50: p50FrameMs, p95: p95FrameMs, p99: p99FrameMs },
+          renderMs: {
+            avg: perf.renderMs / Math.max(perf.frames, 1),
+            p95: p95RenderMs,
+          },
+          staticTrackDrawMsP95: staticDrawP95,
+          opponentsTransformMsP95: opponentsTransformP95,
+          opponentsDrawMsP95: opponentsDrawP95,
+          playerDrawMsP95: playerDrawP95,
+          opponentsDrawnPerFrame: renderOpponents.length,
+          trackPointsDrawnPerFrame: trackPointCount,
+          racingLinePointsDrawnPerFrame: racingLineOverlayRef.current?.debug?.rawDisplayPointCount || 0,
+          opponentsOverlayEnabled: showOpponentsRef.current,
+          storeUpdateMs: {
+            playerAvg: Number(wsMetrics.telemetryStoreUpdateMs || 0) / Math.max(telemetryStoreUpdates, 1),
+            opponentsAvg: Number(wsMetrics.opponentsStoreUpdateMs || 0) / Math.max(opponentsStoreUpdates, 1),
+          },
+          payloadByType: wsMetrics.wsPayloadByType || {},
+          parseByType: wsMetrics.wsParseByType || {},
+        };
         perf.frames = 0;
         perf.renderMs = 0;
         perf.lastAt = now;
@@ -1148,6 +1313,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         perf.lastHttpRequests = httpRequests;
         perf.lastHttpDurationMs = httpDurationMs;
         perf.frameDeltas = [];
+        perf.renderDurations = [];
+        perf.staticDrawDurations = [];
+        perf.opponentsTransformDurations = [];
+        perf.opponentsDrawDurations = [];
+        perf.playerDrawDurations = [];
       }
       animationRef.current = requestAnimationFrame(render);
     };

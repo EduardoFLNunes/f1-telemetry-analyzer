@@ -119,17 +119,26 @@ class AssistedAnalysisService:
         if cache_key in self._memory_cache:
             return self._memory_cache[cache_key]
         path = self._cache_path(cache_key)
-        if not path.exists() and reference_lap_id is None:
-            candidates = sorted(self.analysis_dir.glob(f"{self._hash(lap_id)}__*.json"), key=lambda item: item.stat().st_mtime, reverse=True)
-            path = candidates[0] if candidates else path
+        candidates = [path]
         if not path.exists():
-            return None
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
+            candidates = sorted(
+                self.analysis_dir.glob(f"{self._hash(lap_id)}__*.json"),
+                key=lambda item: item.stat().st_mtime,
+                reverse=True,
+            )
+        for candidate in candidates:
+            if not candidate.exists():
+                continue
+            try:
+                payload = json.loads(candidate.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            cached_reference_id = (payload.get("analysis") or {}).get("reference", {}).get("lapId")
+            if reference_lap_id is not None and cached_reference_id != reference_lap_id:
+                continue
             self._memory_cache[cache_key] = payload
             return payload
-        except Exception:
-            return None
+        return None
 
     def has_cached_analysis(self, lap_id: str) -> bool:
         return self.get_cached_analysis(lap_id) is not None

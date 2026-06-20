@@ -74,6 +74,79 @@ class SessionRecorderTests(unittest.TestCase):
             self.assertEqual(opponents["count"], 1)
             self.assertIsNone(opponents["cars"][0]["yaw"])
 
+    def test_source_rate_recording_keeps_bursty_accepted_samples(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            recorder = SessionRecorder(
+                RecordingConfig(
+                    output_root=Path(tmp),
+                    player_record_hz=60.0,
+                    source_sample_hz=60.0,
+                    batch_size=128,
+                    flush_interval_seconds=0.01,
+                )
+            )
+            recorder.start(track="test")
+            base_timestamp = 1_781_000_000_000.0
+            for index in range(60):
+                self.assertTrue(
+                    recorder.enqueue_player(
+                        {
+                            "timestamp": base_timestamp + index * (1000.0 / 60.0),
+                            "lap_number": 2,
+                            "lap_time": index / 60.0,
+                        }
+                    )
+                )
+            recorder.enqueue_player(
+                {
+                    "timestamp": base_timestamp + 1000.0,
+                    "lap_number": 3,
+                    "lap_time": 0.0,
+                }
+            )
+            status = recorder.stop()
+
+            self.assertEqual(61, status.playerSamplesReceived)
+            self.assertEqual(61, status.playerSamplesEnqueued)
+            self.assertEqual(0, status.playerSamplesDownsampled)
+            self.assertEqual(0, status.playerSamplesDropped)
+            self.assertFalse(status.playerDownsamplingEnabled)
+            self.assertEqual(1.0, status.recorderDownsampleRatio)
+            self.assertEqual(60, status.lastPersistedLapSampleCount)
+            self.assertAlmostEqual(59.0 / 60.0, status.lastPersistedLapDurationSeconds, places=3)
+
+    def test_explicit_downsampling_uses_source_timestamps(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            recorder = SessionRecorder(
+                RecordingConfig(
+                    output_root=Path(tmp),
+                    player_record_hz=20.0,
+                    source_sample_hz=60.0,
+                    batch_size=128,
+                    flush_interval_seconds=0.01,
+                )
+            )
+            recorder.start(track="test")
+            base_timestamp = 1_781_000_000_000.0
+            for index in range(60):
+                recorder.enqueue_player(
+                    {
+                        "timestamp": base_timestamp + index * (1000.0 / 60.0),
+                        "lap_number": 1,
+                        "lap_time": index / 60.0,
+                    }
+                )
+            status = recorder.stop()
+
+            self.assertTrue(status.playerDownsamplingEnabled)
+            self.assertEqual(60, status.playerSamplesReceived)
+            self.assertGreaterEqual(status.playerSamplesEnqueued, 19)
+            self.assertLessEqual(status.playerSamplesEnqueued, 21)
+            self.assertEqual(
+                status.playerSamplesReceived - status.playerSamplesEnqueued,
+                status.playerSamplesDownsampled,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

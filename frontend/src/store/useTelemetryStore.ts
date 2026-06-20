@@ -822,7 +822,7 @@ const calculateLapMetrics = (
   };
 };
 
-const normalizeOpponent = (raw: any): OpponentCarState | null => {
+export const normalizeOpponent = (raw: any): OpponentCarState | null => {
   const carId = Number(raw?.carId);
   if (!Number.isFinite(carId)) return null;
   if (carId === 0) return null;

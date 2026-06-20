@@ -740,10 +740,27 @@ def runtime_performance_payload() -> Dict[str, Any]:
         last_sample_age_ms=last_age_ms,
         recording_queue_depth=recording_status.get("queueSize"),
         recording_dropped_frames=recording_status.get("droppedFrames"),
+        recorder_dropped_samples=recording_status.get("playerSamplesDropped"),
+        recorder_downsampling_enabled=recording_status.get("playerDownsamplingEnabled"),
+        recorder_configured_hz=(
+            recording_runtime.config.player_record_hz if recording_runtime else None
+        ),
+        last_persisted_lap_sample_count=recording_status.get("lastPersistedLapSampleCount"),
+        last_persisted_lap_duration_seconds=recording_status.get("lastPersistedLapDurationSeconds"),
+        last_persisted_lap_effective_hz=recording_status.get("lastPersistedLapEffectiveHz"),
         websocket_queue_depth=ws_broadcaster.pending_depth(),
     )
     sampling["adaptivePollMode"] = telemetry.get("adaptivePollMode")
     sampling["adaptivePollHz"] = telemetry.get("adaptivePollHz")
+    event_bus_status = event_bus.snapshot()
+    websocket_pending_tasks = ws_manager.pending_tasks()
+    sampling["sharedMemoryReadHz"] = sampling.get("rawReadHz")
+    sampling["collectorSampleHz"] = sampling.get("lapCollectorSampleHz")
+    sampling["eventBusPendingTasks"] = event_bus_status.get("pendingTasks", 0)
+    sampling["eventBusPendingByTopic"] = event_bus_status.get("pendingByTopic", {})
+    sampling["websocketPendingTasks"] = websocket_pending_tasks
+    sampling["websocketBackpressureRecent"] = bool(sampling.get("websocketRecentSendFailures"))
+    sampling["resources"] = process_resource_snapshot()
     return {
         "status": "success",
         "source": telemetry.get("source"),
@@ -778,16 +795,41 @@ def runtime_performance_payload() -> Dict[str, Any]:
             "queueSize": recording_status.get("queueSize", 0),
             "droppedFrames": recording_status.get("droppedFrames", 0),
             "playerSamplesWritten": recording_status.get("playerSamplesWritten", 0),
+            "playerSamplesReceived": recording_status.get("playerSamplesReceived", 0),
+            "playerSamplesEnqueued": recording_status.get("playerSamplesEnqueued", 0),
+            "playerSamplesDownsampled": recording_status.get("playerSamplesDownsampled", 0),
+            "playerSamplesDropped": recording_status.get("playerSamplesDropped", 0),
+            "playerDownsamplingEnabled": recording_status.get("playerDownsamplingEnabled", False),
+            "recorderDownsampleRatio": recording_status.get("recorderDownsampleRatio", 1.0),
+            "lastPersistedLapSampleCount": recording_status.get("lastPersistedLapSampleCount"),
+            "lastPersistedLapDurationSeconds": recording_status.get("lastPersistedLapDurationSeconds"),
+            "lastPersistedLapEffectiveHz": recording_status.get("lastPersistedLapEffectiveHz"),
         },
         "websocket": {
             "connections": len(ws_manager.active_connections),
             "pendingDepth": ws_broadcaster.pending_depth(),
+            "pendingTasks": websocket_pending_tasks,
+            "backpressureRecent": sampling.get("websocketBackpressureRecent", False),
         },
+        "eventBus": event_bus_status,
         "runtime": {
             "backend": runtime.get("backend", {}),
             "racingLine": runtime.get("racingLine", {}),
         },
     }
+
+
+def process_resource_snapshot() -> Dict[str, Optional[float]]:
+    try:
+        import psutil
+
+        process = psutil.Process(os.getpid())
+        return {
+            "cpuPercent": round(float(process.cpu_percent(interval=None)), 2),
+            "memoryRssMb": round(float(process.memory_info().rss) / (1024.0 * 1024.0), 2),
+        }
+    except Exception:
+        return {"cpuPercent": None, "memoryRssMb": None}
 
 
 @asynccontextmanager
@@ -1632,8 +1674,9 @@ async def get_performance_metrics():
         **metrics,
         "recordingQueueSize": recording_status.get("queueSize", 0),
         "recordingDroppedFrames": recording_status.get("droppedFrames", 0),
-        "eventBusQueueSize": None,
+        "eventBusQueueSize": event_bus.snapshot().get("pendingTasks", 0),
         "websocketConnections": len(ws_manager.active_connections),
+        "websocketPendingTasks": ws_manager.pending_tasks(),
     }
 
 

@@ -130,6 +130,33 @@ class AssettoSharedMemoryGateTests(unittest.TestCase):
         self.assertIsNone(reader.read_sample())
         self.assertIsNotNone(reader.read_sample())
 
+    def test_reader_accepts_packet_restart_and_small_physics_changes(self):
+        reader = ACSharedMemoryReader()
+        reader.connected = True
+        reader.adapter.is_connected = True
+        reader.connect = Mock(return_value=True)
+        frame = {
+            "packet_id": 99,
+            "x": 12.0,
+            "y": 0.0,
+            "z": 34.0,
+            "speed": 70.0,
+            "heading": 1.0,
+            "lat_g": 0.4,
+            "lap_time": 10.0,
+        }
+        reader.adapter.poll = Mock(side_effect=[
+            frame,
+            {**frame, "packet_id": 0},
+            {**frame, "packet_id": 0, "heading": 1.001},
+            {**frame, "packet_id": 0, "lat_g": 0.401},
+        ])
+
+        self.assertIsNotNone(reader.read_sample())
+        self.assertIsNotNone(reader.read_sample())
+        self.assertIsNotNone(reader.read_sample())
+        self.assertIsNotNone(reader.read_sample())
+
     def test_gate_reports_stale_pages_when_process_is_absent(self):
         pages_ready = {
             "checked": True,

@@ -10,6 +10,7 @@ import duckdb
 import pandas as pd
 
 from ..live.runtime_state import RuntimeState
+from ..recording.session_repository import is_assetto_lap_counter_lag_frame
 from ..telemetry.telemetry_buffer import TelemetryBuffer
 from ..telemetry.telemetry_models import TelemetrySample
 from ..data_quality.lap_validation import validate_lap
@@ -249,13 +250,23 @@ class LapDataLoader:
 
         rows = []
         lap_number = finite_int(lap_text, 0)
+        previous_lap_elapsed: Optional[float] = None
         metadata = self._read_json(session_dir / "metadata.json")
         for payload in self._read_jsonl(player_path):
             sample = payload.get("sample", payload)
             sample_lap = finite_int(sample.get("lap_number", sample.get("lap")), 0)
             if sample_lap != lap_number:
                 continue
+            if is_assetto_lap_counter_lag_frame(sample, previous_lap_elapsed):
+                continue
             rows.append(self._flatten_recording_sample(payload))
+            sample_elapsed = finite_float(
+                sample.get("lap_time", sample.get("lapTime", sample.get("currentLapTime")))
+            )
+            if sample_elapsed is not None:
+                if sample_elapsed > 10_000.0:
+                    sample_elapsed /= 1000.0
+                previous_lap_elapsed = max(previous_lap_elapsed or sample_elapsed, sample_elapsed)
         if not rows:
             raise FileNotFoundError(f"Lap {lap_number} not found in recording {session_id}")
 

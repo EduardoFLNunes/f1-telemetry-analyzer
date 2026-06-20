@@ -146,6 +146,66 @@ class SessionRepositoryTests(unittest.TestCase):
             self.assertEqual(second["sampleCount"], 50)
             self.assertEqual(second["laps"][0]["sampleCount"], 50)
 
+    def test_ignores_assetto_lap_counter_lag_frame_at_finish_line(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            session = root / "assetto_finish_line_lag"
+            session.mkdir()
+            rows = []
+            for index in range(60):
+                elapsed = index * (86.868 / 59)
+                rows.append(
+                    {
+                        "type": "player",
+                        "sample": {
+                            "lap_number": 2,
+                            "lap_time": elapsed,
+                            "sessionTime": elapsed,
+                            "p": index / 59,
+                            "timestamp": 1_700_000_000_000 + index * 16,
+                        },
+                    }
+                )
+            rows.append(
+                {
+                    "type": "player",
+                    "sample": {
+                        "lap_number": 2,
+                        "lap_time": 0.006,
+                        "sessionTime": 0.006,
+                        "p": 0.000448,
+                        "timestamp": 1_700_000_000_960,
+                    },
+                }
+            )
+            rows.append(
+                {
+                    "type": "player",
+                    "sample": {
+                        "lap_number": 3,
+                        "lap_time": 0.024,
+                        "sessionTime": 0.024,
+                        "p": 0.0008,
+                        "timestamp": 1_700_000_000_976,
+                    },
+                }
+            )
+            (session / "player.jsonl").write_text(
+                "\n".join(json.dumps(row) for row in rows) + "\n",
+                encoding="utf-8",
+            )
+
+            repository = SessionRepository(root)
+            summary = repository.session_summary(session.name)
+            lap = repository.lap_detail(session.name, 2)
+
+            completed = summary["laps"][0]
+            self.assertEqual("VALID", completed["validationStatus"])
+            self.assertEqual(60, completed["sampleCount"])
+            self.assertEqual(0, completed["timestampInversions"])
+            self.assertEqual(60, lap["totalSampleCount"])
+            self.assertEqual(1.0, lap["samples"][-1]["p"])
+
     def test_rejects_path_traversal(self):
         with tempfile.TemporaryDirectory() as tmp:
             repository = SessionRepository(Path(tmp))

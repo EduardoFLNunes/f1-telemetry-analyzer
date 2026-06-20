@@ -124,6 +124,7 @@ class TelemetryRuntime:
                     self._activate_polling()
                 self.buffer.add_sample(sample)
                 lap_wrapped = self.lap_collector.add_sample(sample)
+                performance_metrics.mark_lap_collector_sample()
 
                 if self.state.track_build_state != TrackBuildState.TRACK_READY:
                     self.state.track_build_state = TrackBuildState.COLLECTING_LAP
@@ -134,7 +135,7 @@ class TelemetryRuntime:
 
                 frame = self.state.update_car(sample)
                 if frame and self._loop_ref:
-                    asyncio.run_coroutine_threadsafe(event_bus.emit("processed_frame", frame), self._loop_ref)
+                    event_bus.schedule("processed_frame", frame, self._loop_ref)
                 performance_metrics.mark_player_frame(time.perf_counter() - frame_started)
             except Exception as exc:
                 logger.warning("Telemetry runtime loop error: %s", exc)

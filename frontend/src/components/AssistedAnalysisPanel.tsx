@@ -164,6 +164,21 @@ export const AssistedAnalysisPanel: React.FC<{ active?: boolean }> = ({ active =
       publishAnalysisContext(payload.analysis);
       setError(null);
     } catch {
+      if (refLapId) {
+        try {
+          const payload = await api.getAssistedAnalysis(targetLapId, null, {
+            includeExternalReference: true,
+          });
+          if (payload.analysis?.reference?.lapId === refLapId) {
+            setAnalysis(payload.analysis);
+            publishAnalysisContext(payload.analysis);
+            setError(null);
+            return;
+          }
+        } catch {
+          // The requested lap has no cached automatic-reference analysis either.
+        }
+      }
       setAnalysis(null);
     }
   };

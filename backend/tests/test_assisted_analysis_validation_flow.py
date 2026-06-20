@@ -1,4 +1,5 @@
 import asyncio
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -100,6 +101,44 @@ class AssistedAnalysisValidationFlowTests(unittest.TestCase):
             cached = service.get_cached_analysis(fixture.target_lap_id)
             self.assertIsNotNone(cached)
             self.assertEqual("ANALYZED", cached["analysis"]["status"])
+
+            explicit_reference_cache = service.get_cached_analysis(
+                fixture.target_lap_id,
+                reference_lap_id=fixture.reference_lap_id,
+                include_external_reference=True,
+            )
+            self.assertIsNotNone(explicit_reference_cache)
+            self.assertEqual(
+                fixture.reference_lap_id,
+                explicit_reference_cache["analysis"]["reference"]["lapId"],
+            )
+
+    def test_assisted_analysis_ignores_assetto_lap_counter_lag_frame(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            fixture = write_phase14_1_validation_recording(root)
+            lagging_payload = {
+                "timestamp": 1_700_000_200_006,
+                "sessionTime": 0.006,
+                "track": fixture.track_name,
+                "sample": {
+                    "timestamp": 1_700_000_200_006,
+                    "sessionTime": 0.006,
+                    "lap_time": 0.006,
+                    "lap_number": 2,
+                    "lap": 2,
+                    "lapProgress": 0.000448,
+                    "p": 0.000448,
+                },
+            }
+            with (fixture.session_dir / "player.jsonl").open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(lagging_payload) + "\n")
+
+            service = _make_service(root)
+            payload = service.analyze_lap(fixture.target_lap_id, force=True)
+
+            self.assertEqual("ANALYZED", payload["analysis"]["status"])
+            self.assertEqual(361, payload["analysis"]["validation"]["sampleCount"])
 
     def test_desktop_runtime_recordings_are_listed_from_runtime_root(self):
         with tempfile.TemporaryDirectory() as resource_tmp, tempfile.TemporaryDirectory() as runtime_tmp:

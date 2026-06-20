@@ -119,19 +119,79 @@ class RuntimePerformanceMetricsTests(unittest.TestCase):
         for index in range(100):
             now = base + index / 20.0
             metrics.mark_persisted_samples("player", now=now)
+        for index in range(300):
+            now = base + index / 60.0
+            metrics.mark_lap_collector_sample(now=now)
+            metrics.mark_recorder_sample_received(now=now)
+            metrics.mark_recorder_sample(now=now)
+        for index in range(150):
+            metrics.mark_websocket_message(message_type="telemetry", now=base + index / 30.0)
+        for index in range(10):
+            metrics.mark_websocket_message(message_type="telemetry_detail", now=base + index / 2.0)
 
         snapshot = metrics.runtime_snapshot(
             target_hz=60.0,
             source="assetto_corsa",
             player_source="shared_memory",
             player_status="receiving",
+            recorder_configured_hz=60.0,
+            recorder_downsampling_enabled=False,
+            last_persisted_lap_sample_count=4571,
+            last_persisted_lap_duration_seconds=88.224,
+            last_persisted_lap_effective_hz=51.81,
             now=base + 5.0,
         )
 
         self.assertAlmostEqual(60.0, snapshot["windows"]["5s"]["acceptedSampleHz"], delta=0.1)
         self.assertAlmostEqual(20.0, snapshot["windows"]["5s"]["persistedSampleHz"], delta=0.1)
+        self.assertAlmostEqual(60.0, snapshot["windows"]["5s"]["lapCollectorSampleHz"], delta=0.1)
+        self.assertAlmostEqual(60.0, snapshot["windows"]["5s"]["recorderSampleHz"], delta=0.1)
+        self.assertEqual(1.0, snapshot["windows"]["5s"]["recorderDownsampleRatio"])
+        self.assertAlmostEqual(30.0, snapshot["windows"]["5s"]["liveWebSocketEmitHz"], delta=0.1)
+        self.assertAlmostEqual(2.0, snapshot["windows"]["5s"]["telemetryDetailEmitHz"], delta=0.1)
+        self.assertEqual(60.0, snapshot["recorderConfiguredHz"])
+        self.assertFalse(snapshot["recorderDownsamplingEnabled"])
+        self.assertEqual(4571, snapshot["lastPersistedLapSampleCount"])
+        self.assertEqual(51.81, snapshot["lastPersistedLapEffectiveHz"])
         self.assertEqual(300, snapshot["counters"]["acceptedSamples"])
         self.assertEqual(100, snapshot["counters"]["persistedSamples"])
+
+    def test_old_websocket_failure_does_not_leave_permanent_backpressure(self):
+        metrics = PerformanceMetrics()
+        base = 3750.0
+        metrics.mark_websocket_send_failure(now=base)
+
+        recent = metrics.runtime_snapshot(now=base + 1.0)
+        expired = metrics.runtime_snapshot(now=base + 6.0)
+
+        self.assertTrue(recent["backpressureDetected"])
+        self.assertEqual(1, recent["websocketRecentSendFailures"])
+        self.assertFalse(expired["backpressureDetected"])
+        self.assertEqual(0, expired["websocketRecentSendFailures"])
+        self.assertEqual(1, expired["counters"]["websocketSendFailures"])
+
+    def test_opponents_pipeline_metrics_report_rate_payload_and_drops(self):
+        metrics = PerformanceMetrics()
+        base = 3900.0
+        for index in range(100):
+            now = base + index / 20.0
+            metrics.mark_opponents_udp_packet(5000, now=now)
+            metrics.mark_opponents_snapshot(now=now)
+            if index % 2 == 0:
+                metrics.mark_websocket_message(message_type="opponents", now=now)
+                metrics.record_websocket_serialization("opponents", 0.0005, 6500)
+            else:
+                metrics.mark_websocket_frame_coalesced("opponents", now=now)
+
+        snapshot = metrics.runtime_snapshot(now=base + 5.0)
+
+        self.assertAlmostEqual(20.0, snapshot["opponentsUdpReceiveHz"], delta=0.1)
+        self.assertAlmostEqual(20.0, snapshot["opponentsAcceptedHz"], delta=0.1)
+        self.assertAlmostEqual(10.0, snapshot["opponentsWebSocketEmitHz"], delta=0.1)
+        self.assertEqual(6500.0, snapshot["opponentsSnapshotBytesAvg"])
+        self.assertEqual(6500.0, snapshot["opponentsSnapshotBytesP95"])
+        self.assertEqual(50, snapshot["droppedOpponentFrames"])
+        self.assertEqual(0.5, snapshot["serializationTimeMs"]["opponents"]["p95"])
 
     def test_mock_source_reports_offline_mock_without_error(self):
         metrics = PerformanceMetrics()
@@ -181,7 +241,19 @@ class RuntimePerformanceMetricsTests(unittest.TestCase):
         self.assertIn("sampling", payload)
         self.assertIn("rawReadHz", payload["sampling"])
         self.assertIn("acceptedSampleHz", payload["sampling"])
+        self.assertIn("lapCollectorSampleHz", payload["sampling"])
+        self.assertIn("recorderSampleHz", payload["sampling"])
         self.assertIn("persistedSampleHz", payload["sampling"])
+        self.assertIn("liveWebSocketEmitHz", payload["sampling"])
+        self.assertIn("telemetryDetailEmitHz", payload["sampling"])
+        self.assertIn("recorderDroppedSamples", payload["sampling"])
+        self.assertIn("lastPersistedLapEffectiveHz", payload["sampling"])
+        self.assertIn("opponentsUdpReceiveHz", payload["sampling"])
+        self.assertIn("opponentsAcceptedHz", payload["sampling"])
+        self.assertIn("opponentsWebSocketEmitHz", payload["sampling"])
+        self.assertIn("opponentsSnapshotBytesP95", payload["sampling"])
+        self.assertIn("eventBusPendingTasks", payload["sampling"])
+        self.assertIn("websocketPendingTasks", payload["sampling"])
         self.assertIn("websocketEmitHz", payload["sampling"])
         self.assertIn("bottleneck", payload["sampling"])
         self.assertIn("adaptivePollMode", payload["sampling"])

@@ -192,6 +192,7 @@ def config_from_env(repo_root: Path) -> RecordingConfig:
         enabled=env_bool("TELEMETRY_RECORDING_ENABLED", True),
         auto_start=env_bool("TELEMETRY_RECORDING_AUTO_START", True),
         player_record_hz=env_float("TELEMETRY_RECORDING_PLAYER_HZ", 60.0),
+        source_sample_hz=env_float("TELEMETRY_SOURCE_TARGET_HZ", 60.0),
         opponents_record_hz=env_float("TELEMETRY_RECORDING_OPPONENTS_HZ", 20.0),
         batch_size=env_int("TELEMETRY_RECORDING_BATCH_SIZE", 128),
         flush_interval_seconds=env_float("TELEMETRY_RECORDING_FLUSH_SECONDS", 1.0),

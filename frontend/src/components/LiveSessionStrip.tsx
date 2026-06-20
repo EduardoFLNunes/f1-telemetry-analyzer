@@ -40,7 +40,9 @@ const Item = ({
   </div>
 );
 
-export const LiveSessionStrip: React.FC = () => {
+export const LiveSessionStrip: React.FC<{
+  onTrackKeyChange?: (trackKey: string | null) => void;
+}> = ({ onTrackKeyChange }) => {
   const lapMetrics = useTelemetryStore((state) => state.lapMetrics);
   const [runtime, setRuntime] = useState<RuntimePayload | null>(null);
   const [recording, setRecording] = useState<any>(null);
@@ -69,10 +71,15 @@ export const LiveSessionStrip: React.FC = () => {
     };
   }, []);
 
+  const trackKey = runtime?.backend?.trackCache || null;
+  useEffect(() => {
+    onTrackKeyChange?.(trackKey);
+  }, [onTrackKeyChange, trackKey]);
+
   const playerLive = runtime?.telemetry?.playerStatus === 'receiving';
   const opponentsLive = runtime?.opponents?.status === 'receiving';
   const trackReady = runtime?.backend?.trackState === 'TRACK_READY';
-  const track = String(runtime?.backend?.trackCache || 'Aguardando pista').replace(/[_-]+/g, ' ');
+  const track = String(trackKey || 'Aguardando pista').replace(/[_-]+/g, ' ');
   const source = String(runtime?.telemetry?.source || 'Assetto Corsa').replace(/[_-]+/g, ' ');
 
   return (

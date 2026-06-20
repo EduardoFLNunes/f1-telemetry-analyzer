@@ -209,7 +209,7 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
   useEffect(() => {
     if (!active) return undefined;
     loadSessions();
-    const interval = window.setInterval(loadSessions, 5000);
+    const interval = window.setInterval(loadSessions, 10000);
     return () => window.clearInterval(interval);
   }, [active]);
 
