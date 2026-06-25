@@ -1,5 +1,6 @@
 param(
-  [switch]$InstallPyInstaller
+  [switch]$InstallPyInstaller,
+  [string]$PythonExecutable = $env:AT_PACKAGING_PYTHON
 )
 
 $ErrorActionPreference = "Stop"
@@ -7,13 +8,34 @@ $ErrorActionPreference = "Stop"
 $PackagingDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BackendDir = Resolve-Path (Join-Path $PackagingDir "..")
 $RepoRoot = Resolve-Path (Join-Path $BackendDir "..")
-$Python = Join-Path $RepoRoot ".venv\Scripts\python.exe"
+$DefaultPython = Join-Path $RepoRoot ".venv\Scripts\python.exe"
+$Python = if ($PythonExecutable) { $PythonExecutable } else { $DefaultPython }
+$SitePackages = Join-Path $RepoRoot ".venv\Lib\site-packages"
 $Runner = Join-Path $BackendDir "desktop_backend_runner.py"
 $DistDir = Join-Path $BackendDir "dist"
 $BuildDir = Join-Path $BackendDir "build"
 
 if (-not (Test-Path $Python)) {
   throw "Python virtualenv was not found at $Python"
+}
+
+if ($PythonExecutable -and (Test-Path $SitePackages)) {
+  $FallbackPythonPaths = @(
+    $SitePackages,
+    (Join-Path $SitePackages "win32"),
+    (Join-Path $SitePackages "win32\lib"),
+    (Join-Path $SitePackages "Pythonwin"),
+    (Join-Path $SitePackages "pywin32_system32")
+  ) | Where-Object { Test-Path $_ }
+  if ($env:PYTHONPATH) {
+    $FallbackPythonPaths += $env:PYTHONPATH
+  }
+  $env:PYTHONPATH = $FallbackPythonPaths -join ";"
+
+  $PyWin32System32 = Join-Path $SitePackages "pywin32_system32"
+  if (Test-Path $PyWin32System32) {
+    $env:PATH = "$PyWin32System32;$env:PATH"
+  }
 }
 
 if (-not (Test-Path $Runner)) {
