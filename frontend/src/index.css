@@ -1,0 +1,11 @@
+/**
+ * Tailwind entry point.
+ *
+ * These utilities used to be pulled from cdn.tailwindcss.com at runtime, which
+ * meant the packaged desktop app lost its entire layout without internet access.
+ * They are compiled into the bundle now; App.css is imported after this file so
+ * the project's own tokens and component classes still win over preflight.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
