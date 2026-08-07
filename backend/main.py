@@ -3,28 +3,31 @@ Telemetry-driven spatial backend for F1 Telemetry Analyzer.
 
 The backend owns reconstruction, projection, boundaries, caching, and live car
 state. CSV track maps are deliberately not used as a source of truth.
+
+Endpoints are grouped by domain into `routers/` (health, live telemetry,
+recording, assisted analysis, etc). This module is the composition root: it
+owns the shared runtime state/singletons, the cross-domain payload builders
+that more than one router depends on, and app/lifespan wiring. Router modules
+reach back into this module's state via `import main; main.<name>` rather
+than `from main import <name>`, so state reassigned here (or monkeypatched by
+tests as `backend_main.<name> = ...`) stays a single source of truth.
 """
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import asyncio
-import io
 import logging
 import math
 import os
 import re
 import time
 
-import pandas as pd
-from fastapi import Body, FastAPI, File, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.assisted_analysis import AssistedAnalysisService
 from core.assetto_shared_memory_gate import shared_memory_gate_status
-from core.car_physics import build_car_physics_debug, build_opponent_car_physics, build_player_car_physics
-from core.comparison_analysis import build_live_comparison_payload
-from core.debug.ac_shared_memory_full_inventory import build_ac_shared_memory_full_inventory
 from core.cache.track_cache import TrackCache
 from core.data_quality import (
     DataQualityReporter,
@@ -32,8 +35,7 @@ from core.data_quality import (
     UdpReliabilityMonitor,
     validate_track,
 )
-from core.debug.spatial_debug import projection_debug_payload
-from core.external_references import ExternalReferenceError, ExternalReferenceRepository, FastF1ReferenceProvider
+from core.external_references import ExternalReferenceRepository, FastF1ReferenceProvider
 from core.geometry.track_geometry_provider import (
     CacheTrackGeometryProvider,
     DebugTrajectoryTrackGeometryProvider,
@@ -42,10 +44,6 @@ from core.geometry.track_geometry_provider import (
 from core.live.lap_collector import TrackBuildState
 from core.live.runtime_state import RuntimeState
 from core.live.telemetry_runtime import TelemetryRuntime
-from core.kn5.kn5_inventory import build_kn5_inventory_from_manifest
-from core.kn5.kn5_surface_extraction import build_kn5_surface_extraction_from_manifest
-from core.kn5.track_edges_from_surface import build_track_edges_from_surface_from_manifest
-from core.kn5.track_surface_polygon import build_track_surface_polygon_from_manifest
 from core.opponents import (
     OpponentsRuntime,
     OpponentsRuntimeConfig,
@@ -56,11 +54,9 @@ from core.performance_metrics import performance_metrics
 from core.recording.recording_runtime import RecordingRuntime, config_from_env as recording_config_from_env
 from core.recording.session_repository import SessionRepository
 from core.reconstruction.track_reconstruction import TrackReconstructor
-from core.racing_line_analysis import build_live_racing_line_payload
 from core.telemetry.telemetry_buffer import TelemetryBuffer
 from core.telemetry.telemetry_models import TelemetrySample
 from core.telemetry.telemetry_reader_impl import TelemetrySourceManager, telemetry_samples_from_dataframe
-from core.track_file_resolver import TrackFileResolver
 from core.telemetry_events import COACHING_EVENT, event_bus
 from core.websocket_server import broadcaster as ws_broadcaster
 from core.websocket_server import manager as ws_manager
@@ -128,92 +124,6 @@ async def remember_coaching_event(event: Dict[str, Any]):
 def _safe_cache_fragment(value: str) -> str:
     cleaned = re.sub(r"[^a-zA-Z0-9_.-]+", "_", value.strip())
     return cleaned.strip("_") or "live"
-
-
-def _recording_lap_id(session_id: str, lap_number: int) -> str:
-    return f"rec__{_safe_cache_fragment(session_id)}__{int(lap_number)}"
-
-
-def _parse_recording_lap_id(lap_id: str) -> tuple[str, int]:
-    if not isinstance(lap_id, str) or not lap_id.startswith("rec__"):
-        raise ValueError("Offline lap id must use the rec__<session>__<lap> format")
-    body = lap_id[len("rec__"):]
-    if "__" not in body:
-        raise ValueError("Offline lap id must include a session id and lap number")
-    session_id, lap_number_text = body.rsplit("__", 1)
-    if not session_id:
-        raise ValueError("Offline lap id is missing the session id")
-    try:
-        lap_number = int(lap_number_text)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("Offline lap id has an invalid lap number") from exc
-    return session_id, lap_number
-
-
-def _has_assisted_analysis(lap_id: str) -> bool:
-    try:
-        return assisted_analysis_service.has_cached_analysis(lap_id)
-    except Exception:
-        return False
-
-
-def _enrich_recorded_lap(lap: Dict[str, Any], session: Dict[str, Any]) -> Dict[str, Any]:
-    lap_number = int(lap.get("lapNumber") or 0)
-    lap_id = str(lap.get("lapId") or _recording_lap_id(session["sessionId"], lap_number))
-    accepted = bool(lap.get("acceptedByPhase13", lap.get("valid", False)))
-    best_lap_time = session.get("bestLapTime")
-    lap_time = lap.get("lapTime", lap.get("duration"))
-    try:
-        best_candidate = accepted and lap_time is not None and best_lap_time is not None and abs(float(lap_time) - float(best_lap_time)) <= 0.001
-    except (TypeError, ValueError):
-        best_candidate = False
-    has_analysis = _has_assisted_analysis(lap_id) if accepted else False
-    return {
-        **lap,
-        "lapId": lap_id,
-        "sessionId": session.get("sessionId"),
-        "track": session.get("track"),
-        "car": session.get("car"),
-        "startedAt": session.get("startedAt"),
-        "completedAt": session.get("endedAt") if lap.get("completed") else None,
-        "lapTime": lap_time,
-        "reliabilityStatus": lap.get("reliabilityStatus") or lap.get("validationStatus"),
-        "acceptedByPhase13": accepted,
-        "hasAssistedAnalysis": has_analysis,
-        "analysisStatus": "AVAILABLE" if has_analysis else ("NOT_GENERATED" if accepted else "NOT_ELIGIBLE"),
-        "canAnalyze": accepted,
-        "bestLapCandidate": best_candidate,
-        "referenceCandidate": accepted and int(lap.get("sampleCount") or 0) >= 40,
-    }
-
-
-def _enrich_recorded_session(session: Dict[str, Any]) -> Dict[str, Any]:
-    enriched = dict(session)
-    enriched["offlineAvailable"] = True
-    enriched["storageMode"] = "recordings"
-    enriched["liveDependency"] = False
-    enriched["recordingRoot"] = str(session_repository.root)
-    enriched["laps"] = [
-        _enrich_recorded_lap(lap, enriched)
-        for lap in (session.get("laps") or [])
-        if isinstance(lap, dict)
-    ]
-    return enriched
-
-
-def _offline_lap_summary_from_id(lap_id: str) -> tuple[Dict[str, Any], Dict[str, Any]]:
-    session_id, lap_number = _parse_recording_lap_id(lap_id)
-    session = session_repository.session_summary(session_id, allow_large_scan=True)
-    if not session:
-        raise FileNotFoundError("Recorded session not found")
-    enriched_session = _enrich_recorded_session(session)
-    lap = next(
-        (item for item in enriched_session.get("laps", []) if int(item.get("lapNumber") or -1) == lap_number),
-        None,
-    )
-    if not lap:
-        raise FileNotFoundError("Recorded lap not found")
-    return enriched_session, lap
 
 
 def _finite_float(value: Any) -> Optional[float]:
@@ -832,76 +742,6 @@ def process_resource_snapshot() -> Dict[str, Optional[float]]:
         return {"cpuPercent": None, "memoryRssMb": None}
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    global telemetry_runtime, opponents_runtime, recording_runtime
-
-    source_manager.select_source()
-    prime_active_source()
-    initialize_spatial_state()
-    recording_runtime = build_recording_runtime()
-    recording_runtime.start()
-    event_bus.subscribe(COACHING_EVENT, remember_coaching_event)
-    telemetry_runtime = build_telemetry_runtime()
-    loop = asyncio.get_running_loop()
-    telemetry_runtime.start(loop)
-    opponents_runtime = build_opponents_runtime()
-    opponents_runtime.start(loop)
-    yield
-
-    if opponents_runtime:
-        opponents_runtime.stop()
-        opponents_runtime = None
-    if telemetry_runtime:
-        telemetry_runtime.stop()
-        telemetry_runtime = None
-    if recording_runtime:
-        recording_runtime.stop()
-        recording_runtime = None
-    event_bus.unsubscribe(COACHING_EVENT, remember_coaching_event)
-
-
-app = FastAPI(
-    title="F1 Telemetry Analyzer API",
-    version="3.0.0-telemetry-reconstruction",
-    lifespan=lifespan,
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.get("/health")
-async def health_check():
-    return {
-        "status": "ok",
-        "message": "Backend is running",
-        "spatial_source": "telemetry_reconstruction",
-        "track_loaded": runtime_state.track_data is not None,
-        "track_cache": runtime_state.current_track_name,
-        "telemetry": telemetry_status_payload(),
-    }
-
-
-@app.get("/api/health")
-async def api_health_check():
-    return {
-        "status": "ok",
-        "service": BACKEND_SERVICE_NAME,
-        "version": BACKEND_PHASE_VERSION,
-    }
-
-
-@app.get("/api/runtime/status")
-async def get_runtime_status():
-    return runtime_status_payload()
-
-
 async def validation_sessions_payload(force: bool = False) -> List[Dict[str, Any]]:
     global _validation_sessions_cache, _validation_sessions_cache_at
     now = time.monotonic()
@@ -948,1026 +788,93 @@ async def data_quality_payload(force_sessions: bool = False) -> Dict[str, Any]:
     )
 
 
-@app.get("/api/validation/data-quality")
-async def get_data_quality():
-    return await data_quality_payload()
-
-
-@app.get("/api/validation/laps")
-async def get_lap_validation():
-    return {
-        "status": "success",
-        "laps": (await data_quality_payload())["laps"],
-    }
-
-
-@app.get("/api/validation/udp")
-async def get_udp_validation():
-    return {
-        "status": "success",
-        "opponents": (await data_quality_payload())["opponents"],
-    }
-
-
-@app.get("/api/validation/track")
-async def get_track_validation():
-    return {
-        "status": "success",
-        "track": (await data_quality_payload())["track"],
-    }
-
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await ws_manager.connect(websocket)
-    try:
-        while True:
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        ws_manager.disconnect(websocket)
-    except Exception as e:
-        logger.error("WS Error: %s", e)
-        ws_manager.disconnect(websocket)
-
-
-@app.get("/api/track/current")
-async def get_current_track():
-    track = runtime_state.api_track()
-    status = telemetry_status_payload()
-    return {
-        "status": "success",
-        "source": source_manager.get_active_source_name(),
-        "playerSource": source_manager.player_source_name(),
-        **status,
-        "track": track if status["activeTrackReady"] else None,
-        "centerline": track["centerline"] if track and status["activeTrackReady"] else None,
-        "liveTrajectory": live_trajectory_api(),
-    }
-
-
-@app.get("/api/track/geometry")
-async def get_track_geometry():
-    track = runtime_state.api_track()
-    status = telemetry_status_payload()
-    return {
-        "status": "success",
-        "source": source_manager.get_active_source_name(),
-        **status,
-        "track": track if status["activeTrackReady"] else None,
-    }
-
-
-@app.get("/api/track/cache")
-async def get_track_cache():
-    return {"status": "success", "tracks": track_cache.list_cached_tracks()}
-
-
-@app.post("/api/track/cache")
-async def rebuild_track_cache():
-    samples = telemetry_buffer.get_samples()
-    if not samples and source_manager.get_active_source_name() == "replay":
-        samples = source_manager.get_reconstruction_samples()
-    if not samples:
-        raise HTTPException(status_code=400, detail="No telemetry samples available for reconstruction")
-    if source_manager.get_active_source_name() == "assetto_corsa" and telemetry_runtime:
-        if runtime_state.track_build_state == TrackBuildState.TRACK_READY:
-            track = runtime_state.track_data
-            return {
-                "status": "success",
-                "source": source_manager.get_active_source_name(),
-                **telemetry_status_payload(),
-                "trackCache": runtime_state.current_track_name,
-                "track": runtime_state.api_track(),
-                "trackLength": track["trackLength"] if track else 0,
-            }
-        if not DebugTrajectoryTrackGeometryProvider.enabled():
-            raise HTTPException(
-                status_code=400,
-                detail="Driver trajectory TrackGeometry reconstruction is disabled. Set DEBUG_ALLOW_TRAJECTORY_TRACK=true for debug-only use.",
-            )
-        if not telemetry_runtime.lap_collector.completed_lap_samples:
-            raise HTTPException(status_code=400, detail="A complete lap is required before building active TrackGeometry")
-        ok = telemetry_runtime.trigger_reconstruction(active_track_cache_name(), save_to_cache=True)
-        if not ok:
-            raise HTTPException(status_code=400, detail="Candidate lap failed reconstruction")
-        track = runtime_state.track_data
-    else:
-        track = reconstruct_track_from_samples(samples, active_track_cache_name(), closed_loop=True)
-    return {
-        "status": "success",
-        "source": source_manager.get_active_source_name(),
-        **telemetry_status_payload(),
-        "trackCache": runtime_state.current_track_name,
-        "track": runtime_state.api_track(),
-        "trackLength": track["trackLength"] if track else 0,
-    }
-
-
-@app.post("/api/track/reconstruct")
-async def reconstruct_current_track():
-    return await rebuild_track_cache()
-
-
-@app.get("/api/car/state")
-async def get_car_state():
-    if not runtime_state.car_projected_state:
-        ingest_one_active_sample()
-    if not runtime_state.car_projected_state:
-        raise HTTPException(status_code=404, detail="No car state available yet")
-    return {"status": "success", "car": runtime_state.car_projected_state}
-
-
-@app.get("/api/live/telemetry")
-async def get_live_telemetry(
-    includeTrack: bool = Query(False),
-    includeTrajectory: bool = Query(False),
-):
-    car = runtime_state.car_projected_state
-    if not car:
-        car = ingest_one_active_sample()
-    status = telemetry_status_payload()
-    track = runtime_state.api_track() if includeTrack else None
-    return {
-        "status": "success",
-        "source": source_manager.get_active_source_name(),
-        "playerSource": source_manager.player_source_name(),
-        **status,
-        "track": track if includeTrack and status["activeTrackReady"] else None,
-        "centerline": track["centerline"] if includeTrack and track and status["activeTrackReady"] else None,
-        "liveTrajectory": live_trajectory_api() if includeTrajectory else [],
-        "car": car,
-    }
-
-
-@app.get("/api/live/opponents")
-async def get_live_opponents():
-    latest = opponents_buffer.latest()
-    metadata = opponents_buffer.metadata()
-    opponents = [latest[car_id].to_api() for car_id in sorted(latest)]
-    return {
-        "status": "success",
-        "source": OPPONENTS_SOURCE_NAME,
-        "enabled": opponents_config.enabled,
-        "receiverStatus": stream_status_from_age(
-            metadata["lastUpdateTimestamp"],
-            float(metadata["staleAfterSeconds"]),
-        ),
-        "count": len(opponents),
-        "track": metadata["track"],
-        "sessionTime": metadata["sessionTime"],
-        "lastUpdateTimestamp": metadata["lastUpdateTimestamp"],
-        "staleAfterSeconds": metadata["staleAfterSeconds"],
-        "discardedOutOfOrderCount": metadata["discardedOutOfOrderCount"],
-        "opponents": opponents,
-    }
-
-
-def live_comparison_payload(micro_sectors: int = 50) -> Dict[str, Any]:
-    micro_sector_count = max(1, min(200, int(micro_sectors or 50)))
-    payload = build_live_comparison_payload(
-        telemetry_samples=telemetry_buffer.get_samples(),
-        opponent_history=opponents_buffer.history(),
-        track_data=runtime_state.track_data,
-        track_name=runtime_state.current_track_name or source_manager.current_track_name(),
-        micro_sector_count=micro_sector_count,
-    )
-    logger.debug(
-        "Live comparison generated: player=%s reference=%s opponents=%s validMicroSectors=%s",
-        payload.get("debug", {}).get("playerSamples"),
-        payload.get("debug", {}).get("referenceSamples"),
-        payload.get("debug", {}).get("opponentsAnalyzed"),
-        payload.get("debug", {}).get("validMicroSectors"),
-    )
-    return payload
-
-
-def live_racing_line_payload(
-    micro_sectors: int = 50,
-    *,
-    include_visual_line: bool = True,
-    include_comparison: bool = True,
-) -> Dict[str, Any]:
-    micro_sector_count = max(1, min(200, int(micro_sectors or 50)))
-    completed_live_lap = (
-        list(telemetry_runtime.lap_collector.completed_lap_samples)
-        if telemetry_runtime and telemetry_runtime.lap_collector.completed_lap_samples
-        else []
-    )
-    payload = build_live_racing_line_payload(
-        telemetry_samples=telemetry_buffer.get_samples(),
-        track_data=runtime_state.track_data,
-        track_name=runtime_state.current_track_name or source_manager.current_track_name(),
-        micro_sector_count=micro_sector_count,
-        include_visual_line=include_visual_line,
-        include_comparison=include_comparison,
-        fallback_reference_samples=completed_live_lap,
-    )
-    logger.debug(
-        "Racing Line generated: status=%s reference=%s player=%s validSegments=%s",
-        payload.get("status"),
-        payload.get("debug", {}).get("referenceSamples"),
-        payload.get("debug", {}).get("currentLapSamples"),
-        (payload.get("racingLine") or {}).get("debug", {}).get("validSegments"),
-    )
-    return payload
-
-
-def live_player_physics_payload() -> Dict[str, Any]:
-    samples = telemetry_buffer.get_samples()
-    player_samples = [sample for sample in samples if int(getattr(sample, "carId", 0) or 0) == 0]
-    latest_sample = player_samples[-1] if player_samples else runtime_state.last_sample
-    if latest_sample is None:
-        ingest_one_active_sample()
-        samples = telemetry_buffer.get_samples()
-        player_samples = [sample for sample in samples if int(getattr(sample, "carId", 0) or 0) == 0]
-        latest_sample = player_samples[-1] if player_samples else runtime_state.last_sample
-
-    recent_player_samples = player_samples[-20:]
-    player_physics = build_player_car_physics(latest_sample, recent_player_samples)
-
-    opponent_history = opponents_buffer.history()
-    latest_opponents = opponents_buffer.latest()
-    opponent_physics = []
-    opponent_sample_count = 0
-    for car_id in sorted(latest_opponents):
-        if car_id == 0:
-            continue
-        history = opponent_history.get(car_id, [])
-        opponent_sample_count += len(history)
-        opponent_physics.append(
-            {
-                "carId": car_id,
-                "physics": build_opponent_car_physics(latest_opponents[car_id], history[-20:]),
-            }
-        )
-
-    debug = build_car_physics_debug(
-        player_physics,
-        [item["physics"] for item in opponent_physics],
-        player_sample_count=len(player_samples),
-        opponent_sample_count=opponent_sample_count,
-    )
-    logger.debug(
-        "Car physics generated: playerSamples=%s opponentSamples=%s completeness=%s",
-        debug["playerPhysicsSamples"],
-        debug["opponentPhysicsSamples"],
-        debug["playerDataCompleteness"],
-    )
-    return {
-        "status": "success",
-        "source": source_manager.get_active_source_name(),
-        "track": source_manager.current_track_name() or runtime_state.current_track_name,
-        "generatedAt": datetime.utcnow().isoformat(),
-        "player": player_physics,
-        "opponents": opponent_physics,
-        "carPhysicsDebug": debug,
-    }
-
-
-@app.get("/api/live/comparison")
-async def get_live_comparison(microSectors: int = Query(50, ge=1, le=200)):
-    return live_comparison_payload(microSectors)
-
-
-@app.get("/api/analysis/comparison")
-async def get_analysis_comparison(microSectors: int = Query(50, ge=1, le=200)):
-    return live_comparison_payload(microSectors)
-
-
-@app.get("/api/live/racing-line")
-async def get_live_racing_line(
-    microSectors: int = Query(50, ge=1, le=200),
-    includeVisualLine: bool = Query(True),
-    includeComparison: bool = Query(True),
-):
-    return live_racing_line_payload(
-        microSectors,
-        include_visual_line=includeVisualLine,
-        include_comparison=includeComparison,
-    )
-
-
-@app.get("/api/analysis/racing-line")
-async def get_analysis_racing_line(
-    microSectors: int = Query(50, ge=1, le=200),
-    includeVisualLine: bool = Query(False),
-    includeComparison: bool = Query(True),
-):
-    return live_racing_line_payload(
-        microSectors,
-        include_visual_line=includeVisualLine,
-        include_comparison=includeComparison,
-    )
-
-
-@app.get("/api/live/player-physics")
-async def get_live_player_physics():
-    return live_player_physics_payload()
-
-
-@app.get("/api/live/coach")
-async def get_live_coach():
-    return {
-        "status": "success",
-        "source": "event_bus",
-        "eventCount": len(recent_coaching_events),
-        "events": recent_coaching_events[:20],
-    }
-
-
-@app.get("/api/recording/status")
-async def get_recording_status():
-    if not recording_runtime:
-        return {
-            "enabled": False,
-            "recording": False,
-            "sessionId": None,
-            "directory": None,
-            "playerSamplesWritten": 0,
-            "opponentSnapshotsWritten": 0,
-            "eventsWritten": 0,
-            "queueSize": 0,
-            "droppedFrames": 0,
-        }
-    return recording_runtime.status().to_api()
-
-
-@app.post("/api/recording/start")
-async def start_recording():
-    if not recording_runtime:
-        raise HTTPException(status_code=503, detail="Recording runtime is not available")
-    return recording_runtime.start_recording().to_api()
-
-
-@app.post("/api/recording/stop")
-async def stop_recording():
-    if not recording_runtime:
-        raise HTTPException(status_code=503, detail="Recording runtime is not available")
-    return recording_runtime.stop_recording().to_api()
-
-
-@app.get("/api/sessions")
-async def list_recorded_sessions(limit: int = Query(30, ge=1, le=200)):
-    active_session_id = recording_runtime.status().sessionId if recording_runtime else None
-    sessions = await asyncio.to_thread(session_repository.list_sessions, limit)
-    sessions = [_enrich_recorded_session(session) for session in sessions]
-    for session in sessions:
-        session["active"] = session["sessionId"] == active_session_id
-    return {
-        "status": "success",
-        "recordingRoot": str(session_repository.root),
-        "activeSessionId": active_session_id,
-        "offlineAvailable": True,
-        "liveDependency": False,
-        "sessions": sessions,
-    }
-
-
-@app.get("/api/sessions/{session_id}")
-async def get_recorded_session(session_id: str):
-    try:
-        session = await asyncio.to_thread(session_repository.session_summary, session_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    if not session:
-        raise HTTPException(status_code=404, detail="Recorded session not found")
-    session = _enrich_recorded_session(session)
-    return {"status": "success", "session": session}
-
-
-@app.get("/api/sessions/{session_id}/laps")
-async def get_recorded_session_laps(session_id: str):
-    try:
-        session = await asyncio.to_thread(session_repository.session_summary, session_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    if not session:
-        raise HTTPException(status_code=404, detail="Recorded session not found")
-    enriched = _enrich_recorded_session(session)
-    return {
-        "status": "success",
-        "sessionId": enriched["sessionId"],
-        "track": enriched.get("track"),
-        "car": enriched.get("car"),
-        "recordingRoot": str(session_repository.root),
-        "offlineAvailable": True,
-        "liveDependency": False,
-        "laps": enriched.get("laps", []),
-    }
-
-
-@app.get("/api/sessions/{session_id}/laps/{lap_number}")
-async def get_recorded_lap(
-    session_id: str,
-    lap_number: int,
-    max_samples: int = Query(36_000, alias="maxSamples", ge=1_000, le=100_000),
-):
-    try:
-        lap = await asyncio.to_thread(
-            session_repository.lap_detail,
-            session_id,
-            lap_number,
-            max_samples,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    if not lap:
-        raise HTTPException(status_code=404, detail="Recorded lap not found")
-    return {"status": "success", **lap}
-
-
-@app.get("/api/laps/{lap_id}")
-async def get_offline_recorded_lap(lap_id: str):
-    try:
-        session, lap = await asyncio.to_thread(_offline_lap_summary_from_id, lap_id)
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    return {
-        "status": "success",
-        "recordingRoot": str(session_repository.root),
-        "offlineAvailable": True,
-        "liveDependency": False,
-        "session": {
-            "sessionId": session.get("sessionId"),
-            "track": session.get("track"),
-            "car": session.get("car"),
-            "startedAt": session.get("startedAt"),
-            "endedAt": session.get("endedAt"),
-            "bestLapTime": session.get("bestLapTime"),
-        },
-        "lap": lap,
-    }
-
-
-@app.get("/api/laps/{lap_id}/summary")
-async def get_offline_recorded_lap_summary(lap_id: str):
-    try:
-        _, lap = await asyncio.to_thread(_offline_lap_summary_from_id, lap_id)
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    return {
-        "status": "success",
-        "recordingRoot": str(session_repository.root),
-        "offlineAvailable": True,
-        "liveDependency": False,
-        "lap": lap,
-    }
-
-
-@app.get("/api/laps/{lap_id}/replay")
-async def get_offline_recorded_lap_replay(
-    lap_id: str,
-    max_samples: int = Query(36_000, alias="maxSamples", ge=100, le=100_000),
-):
-    try:
-        session_id, lap_number = _parse_recording_lap_id(lap_id)
-        session = await asyncio.to_thread(session_repository.session_summary, session_id, True)
-        lap = await asyncio.to_thread(
-            session_repository.lap_detail,
-            session_id,
-            lap_number,
-            max_samples,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    if not session or not lap:
-        raise HTTPException(status_code=404, detail="Recorded lap not found")
-
-    enriched_session = _enrich_recorded_session(session)
-    summary = dict(lap.get("summary") or {})
-    if summary:
-        summary = _enrich_recorded_lap(summary, enriched_session)
-    samples = [
-        _normalize_replay_sample(sample)
-        for sample in (lap.get("samples") or [])
-        if isinstance(sample, dict)
-    ]
-    return {
-        "status": "success",
-        "mode": "offline_lap_replay",
-        "source": "persisted_lap",
-        "recordingRoot": str(session_repository.root),
-        "offlineAvailable": True,
-        "liveDependency": False,
-        "sharedMemoryDependency": False,
-        "lapId": lap_id,
-        "session": {
-            "sessionId": enriched_session.get("sessionId"),
-            "track": enriched_session.get("track"),
-            "car": enriched_session.get("car"),
-            "startedAt": enriched_session.get("startedAt"),
-            "endedAt": enriched_session.get("endedAt"),
-        },
-        "summary": summary or lap.get("summary"),
-        "totalSampleCount": lap.get("totalSampleCount"),
-        "returnedSampleCount": len(samples),
-        "sampleStride": lap.get("sampleStride"),
-        "truncated": lap.get("truncated"),
-        "samples": samples,
-    }
-
-
-@app.get("/api/laps/{lap_id}/samples")
-async def get_offline_recorded_lap_samples(
-    lap_id: str,
-    limit: int = Query(10_000, ge=100, le=100_000),
-):
-    try:
-        session_id, lap_number = _parse_recording_lap_id(lap_id)
-        lap = await asyncio.to_thread(
-            session_repository.lap_detail,
-            session_id,
-            lap_number,
-            limit,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    if not lap:
-        raise HTTPException(status_code=404, detail="Recorded lap not found")
-    summary = dict(lap.get("summary") or {})
-    if summary:
-        summary = _enrich_recorded_lap(summary, {"sessionId": session_id, "track": None, "car": None, "bestLapTime": None})
-    return {
-        "status": "success",
-        "recordingRoot": str(session_repository.root),
-        "offlineAvailable": True,
-        "liveDependency": False,
-        "lapId": lap_id,
-        "sessionId": session_id,
-        "lapNumber": lap_number,
-        "summary": summary or lap.get("summary"),
-        "totalSampleCount": lap.get("totalSampleCount"),
-        "returnedSampleCount": lap.get("returnedSampleCount"),
-        "sampleStride": lap.get("sampleStride"),
-        "truncated": lap.get("truncated"),
-        "samples": lap.get("samples", []),
-    }
-
-
-@app.get("/api/assisted-analysis/laps")
-async def list_assisted_analysis_laps():
-    return assisted_analysis_service.list_laps()
-
-
-@app.get("/api/assisted-analysis/laps/{lap_id}/analysis")
-async def get_assisted_analysis(lap_id: str, reference_lap_id: Optional[str] = None):
-    return _get_assisted_analysis_or_404(lap_id, reference_lap_id)
-
-
-@app.post("/api/assisted-analysis/laps/{lap_id}/analysis")
-async def request_assisted_analysis(
-    lap_id: str,
-    reference_lap_id: Optional[str] = None,
-    force: bool = False,
-    payload: Optional[Dict[str, Any]] = Body(None),
-):
-    return _run_assisted_analysis(lap_id, reference_lap_id, force, payload)
-
-
-@app.get("/api/analysis/assisted/lap/{lapId}")
-async def get_phase14_assisted_analysis(
-    lapId: str,
-    reference_lap_id: Optional[str] = None,
-    include_external_reference: bool = Query(False, alias="includeExternalReference"),
-    external_reference_id: Optional[str] = Query(None, alias="externalReferenceId"),
-):
-    return _get_assisted_analysis_or_404(
-        lapId,
-        reference_lap_id,
-        include_external_reference=include_external_reference,
-        external_reference_id=external_reference_id,
-    )
-
-
-@app.post("/api/analysis/assisted/lap/{lapId}")
-async def request_phase14_assisted_analysis(
-    lapId: str,
-    reference_lap_id: Optional[str] = None,
-    include_external_reference: bool = Query(False, alias="includeExternalReference"),
-    external_reference_id: Optional[str] = Query(None, alias="externalReferenceId"),
-    force: bool = False,
-    payload: Optional[Dict[str, Any]] = Body(None),
-):
-    return _run_assisted_analysis(
-        lapId,
-        reference_lap_id,
-        force,
-        payload,
-        include_external_reference=include_external_reference,
-        external_reference_id=external_reference_id,
-    )
-
-
-@app.get("/api/analysis/assisted/lap/{lapId}/telemetry")
-async def get_phase14_assisted_lap_telemetry(
-    lapId: str,
-    max_samples: int = Query(36_000, alias="maxSamples", ge=100, le=100_000),
-):
-    try:
-        return await asyncio.to_thread(
-            assisted_analysis_service.lap_telemetry,
-            lapId,
-            max_samples,
-        )
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-
-def _get_assisted_analysis_or_404(
-    lap_id: str,
-    reference_lap_id: Optional[str] = None,
-    *,
-    include_external_reference: bool = False,
-    external_reference_id: Optional[str] = None,
-):
-    if not isinstance(include_external_reference, bool):
-        include_external_reference = False
-    if not isinstance(external_reference_id, str):
-        external_reference_id = None
-    cached = assisted_analysis_service.get_cached_analysis(
-        lap_id,
-        reference_lap_id=reference_lap_id,
-        include_external_reference=include_external_reference,
-        external_reference_id=external_reference_id,
-    )
-    if not cached:
-        raise HTTPException(status_code=404, detail="Assisted analysis is not available for this lap yet")
-    return cached
-
-
-def _run_assisted_analysis(
-    lap_id: str,
-    reference_lap_id: Optional[str] = None,
-    force: bool = False,
-    payload: Optional[Dict[str, Any]] = None,
-    include_external_reference: bool = False,
-    external_reference_id: Optional[str] = None,
-):
-    try:
-        body = payload or {}
-        if not isinstance(include_external_reference, bool):
-            include_external_reference = False
-        if not isinstance(external_reference_id, str):
-            external_reference_id = None
-        reference = reference_lap_id or body.get("referenceLapId") or body.get("reference_lap_id")
-        force_analysis = bool(force or body.get("force", False))
-        external = bool(include_external_reference or body.get("includeExternalReference") or body.get("include_external_reference"))
-        external_id = external_reference_id or body.get("externalReferenceId") or body.get("external_reference_id")
-        return assisted_analysis_service.analyze_lap(
-            lap_id,
-            reference_lap_id=reference,
-            include_external_reference=external,
-            external_reference_id=external_id,
-            force=force_analysis,
-        )
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-
-@app.post("/api/references/external/fastf1/import")
-async def import_external_fastf1_reference(payload: Optional[Dict[str, Any]] = Body(None)):
-    body = payload or {}
-    try:
-        reference = await asyncio.to_thread(
-            fastf1_reference_provider.import_reference,
-            year=int(body.get("year", 2024)),
-            event=str(body.get("event") or "Brazil"),
-            session=str(body.get("session") or "Q"),
-            driver=body.get("driver"),
-            force=bool(body.get("force", False)),
-        )
-        return {"status": "success", "reference": reference.to_api(include_samples=False)}
-    except ExternalReferenceError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-
-@app.get("/api/references/external")
-async def list_external_references(include_samples: bool = False):
-    return {
-        "status": "success",
-        "references": external_reference_repository.list_references(include_samples=include_samples),
-    }
-
-
-@app.get("/api/references/external/{reference_id}")
-async def get_external_reference(reference_id: str, include_samples: bool = True):
-    reference = external_reference_repository.get(reference_id)
-    if not reference:
-        raise HTTPException(status_code=404, detail="External reference not found")
-    return {"status": "success", "reference": reference.to_api(include_samples=include_samples)}
-
-
-@app.get("/api/debug/performance")
-async def get_performance_metrics():
-    recording_status = recording_runtime.status().to_api() if recording_runtime else {}
-    metrics = performance_metrics.snapshot()
-    return {
-        "status": "success",
-        **metrics,
-        "recordingQueueSize": recording_status.get("queueSize", 0),
-        "recordingDroppedFrames": recording_status.get("droppedFrames", 0),
-        "eventBusQueueSize": event_bus.snapshot().get("pendingTasks", 0),
-        "websocketConnections": len(ws_manager.active_connections),
-        "websocketPendingTasks": ws_manager.pending_tasks(),
-    }
-
-
-@app.get("/api/runtime/performance")
-async def get_runtime_performance():
-    return runtime_performance_payload()
-
-
-@app.get("/api/live/source")
-async def get_live_source():
-    return {"status": "success", **telemetry_status_payload()}
-
-
-@app.post("/api/live/source/{source}")
-async def set_live_source(source: str):
-    global telemetry_runtime
-
-    try:
-        requested_source = (source or "").strip().lower().replace("-", "_")
-        if requested_source in {"ac", "assetto", "assetto_corsa", "assetto_corsa_shared_memory"}:
-            gate_status = shared_memory_gate_status()
-            if not gate_status.get("allowed", True):
-                reason = gate_status.get("reason")
-                if reason == "stale_assetto_corsa_shared_memory_without_process":
-                    raise RuntimeError(
-                        "Stale Assetto Corsa shared memory pages exist without acs.exe. "
-                        "Close the process that created them before opening Assetto Corsa."
-                    )
-                if reason == "waiting_for_assetto_corsa_shared_memory_pages":
-                    raise RuntimeError(
-                        "Assetto Corsa is running, but shared memory pages are not ready. "
-                        "Load a driving session first, then the backend will connect."
-                    )
-                if reason == "waiting_for_assetto_corsa_static_data":
-                    raise RuntimeError(
-                        "Assetto Corsa is running, but static telemetry is not ready. "
-                        "Wait until a car/track session is loaded."
-                    )
-                raise RuntimeError(
-                    "Assetto Corsa is not running. Open Assetto Corsa first, then the backend will connect to shared memory."
-                )
-
-        if telemetry_runtime:
-            telemetry_runtime.stop()
-            telemetry_runtime = None
-        selected = source_manager.select_source(source)
-        reset_runtime_state()
-        prime_active_source()
-        initialize_spatial_state()
-        telemetry_runtime = build_telemetry_runtime()
-        telemetry_runtime.start(asyncio.get_running_loop())
-        return {"status": "success", "source": selected, **telemetry_status_payload()}
-    except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-
-@app.post("/api/live/telemetry")
-async def ingest_live_telemetry(payload: Any = Body(...)):
-    raw_samples = payload if isinstance(payload, list) else payload.get("samples", payload)
-    samples = [TelemetrySample.from_dict(item) for item in raw_samples] if isinstance(raw_samples, list) else [TelemetrySample.from_dict(raw_samples)]
-    for sample in samples:
-        player_reliability.observe(sample)
-    telemetry_buffer.add_samples(samples)
-    frame = runtime_state.update_car(samples[-1]) if samples else None
-    if frame:
-        await event_bus.emit("processed_frame", frame)
-    return {"status": "success", "ingested": len(samples), "car": frame}
-
-
-@app.get("/api/telemetry/live")
-async def get_legacy_live_telemetry():
-    car_response = await get_car_state()
-    car = car_response["car"]
-    return {
-        "car_x": car["mapPosition"]["x"],
-        "car_y": car["mapPosition"]["y"],
-        "car_z": car["mapPosition"]["y"],
-        "mapPosition": car["mapPosition"],
-        "projectedPosition": car.get("projectedPosition"),
-        "snapped_x": car.get("projected_x", car["mapPosition"]["x"]),
-        "snapped_y": car.get("projected_y", car["mapPosition"]["y"]),
-        "snapped_z": car.get("projected_y", car["mapPosition"]["y"]),
-        "heading": car.get("heading", 0.0),
-        "lateral_offset": car.get("L"),
-        "distance_along_track": car.get("s"),
-    }
-
-
-@app.post("/api/upload/telemetry")
-async def upload_telemetry(file: UploadFile = File(...)):
-    contents = await file.read()
-    try:
-        filename = file.filename or "telemetry_upload"
-        if filename.lower().endswith(".json"):
-            df = pd.read_json(io.BytesIO(contents))
-        else:
-            df = pd.read_csv(io.BytesIO(contents))
-        samples = telemetry_samples_from_dataframe(df, source_name=filename, lap_mode="all")
-        replay = telemetry_samples_from_dataframe(df, source_name=filename, lap_mode="representative")
-        if not samples:
-            raise ValueError("No telemetry samples found")
-        telemetry_buffer.clear()
-        telemetry_buffer.add_samples(samples)
-        source_manager.replace_replay_samples(samples, replay or samples)
-        track = reconstruct_track_from_samples(samples, filename.rsplit(".", 1)[0] or active_track_cache_name(), closed_loop=True)
-        return {"status": "success", "track": runtime_state.api_track(), "trackLength": track["trackLength"]}
-    except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-
-@app.post("/api/upload/track")
-async def upload_track_deprecated(file: UploadFile = File(...)):
-    raise HTTPException(
-        status_code=410,
-        detail="Static track CSV upload is deprecated. Upload telemetry samples so the backend can reconstruct the track.",
-    )
-
-
-@app.get("/api/data/track")
-async def get_track_data():
-    return await get_current_track()
-
-
-@app.get("/api/data/comparison")
-async def get_comparison():
-    track = runtime_state.api_track()
-    if not track:
-        raise HTTPException(status_code=404, detail="No reconstructed track available yet")
-    return {
-        "track": track,
-        "player": None,
-        "ai": None,
-        "f1_loaded": False,
-        "spatial_source": "telemetry_reconstruction",
-    }
-
-
-@app.get("/api/data/telemetry")
-async def get_telemetry_data():
-    samples = telemetry_buffer.get_samples()
-    return {"status": "success", "samples": len(samples)}
-
-
-@app.get("/api/data/ai-raceline")
-async def get_ai_raceline():
-    return {"status": "not_ready", "message": "Raceline generation will consume reconstructed track-space in a later phase"}
-
-
-@app.get("/api/data/track-limits")
-async def get_track_limits():
-    track = runtime_state.api_track()
-    if not track:
-        raise HTTPException(status_code=404, detail="No reconstructed track available yet")
-    return {"status": "success", "left": track["boundsLeft"], "right": track["boundsRight"]}
-
-
-@app.get("/api/debug/projection")
-async def get_projection_debug():
-    if not runtime_state.car_projected_state:
-        raise HTTPException(status_code=404, detail="No projected car state available")
-    return {"status": "success", "debug": projection_debug_payload(runtime_state.car_projected_state)}
-
-
-@app.get("/api/debug/ac-shared-memory-full-inventory")
-async def get_ac_shared_memory_full_inventory():
-    return {"status": "success", "inventory": build_ac_shared_memory_full_inventory()}
-
-
-@app.get("/api/debug/track-file-manifest")
-async def get_track_file_manifest():
-    if source_manager.get_active_source_name() == "assetto_corsa" and not source_manager.current_track_name():
-        ingest_one_active_sample()
-
-    track_name = source_manager.current_track_name()
-    track_config = source_manager.current_track_config()
-    ac_install_path = source_manager.current_ac_install_path()
-    game_code = source_manager.current_game_code() or "assetto_corsa"
-    source = source_manager.get_active_source_name()
-
-    logger.info(
-        "Track file manifest requested: source=%s game=%s track=%s config=%s acInstallPath=%s",
-        source,
-        game_code,
-        track_name,
-        track_config,
-        ac_install_path,
-    )
-    resolver = TrackFileResolver(ac_root=ac_install_path)
-    manifest = resolver.build_track_file_manifest(
-        track_name or "",
-        track_config,
-        source=source,
-        game_code=game_code,
-    )
-    return {
-        "status": "success",
-        "source": source,
-        "gameCode": game_code,
-        "trackName": track_name,
-        "trackConfig": track_config,
-        "acInstallPath": ac_install_path,
-        "manifest": manifest.to_dict(),
-    }
-
-
-@app.get("/api/debug/kn5-inventory")
-async def get_kn5_inventory():
-    if source_manager.get_active_source_name() == "assetto_corsa" and not source_manager.current_track_name():
-        ingest_one_active_sample()
-
-    resolver = TrackFileResolver(ac_root=source_manager.current_ac_install_path())
-    manifest = resolver.build_track_file_manifest(
-        source_manager.current_track_name() or "",
-        source_manager.current_track_config(),
-        source=source_manager.get_active_source_name(),
-        game_code=source_manager.current_game_code() or "assetto_corsa",
-    )
-    inventory = build_kn5_inventory_from_manifest(manifest.to_dict())
-    return {"status": "success", **inventory.to_dict()}
-
-
-@app.get("/api/debug/kn5-surface-candidates")
-async def get_kn5_surface_candidates(include_pitlane: bool = False):
-    if source_manager.get_active_source_name() == "assetto_corsa" and not source_manager.current_track_name():
-        ingest_one_active_sample()
-
-    resolver = TrackFileResolver(ac_root=source_manager.current_ac_install_path())
-    manifest = resolver.build_track_file_manifest(
-        source_manager.current_track_name() or "",
-        source_manager.current_track_config(),
-        source=source_manager.get_active_source_name(),
-        game_code=source_manager.current_game_code() or "assetto_corsa",
-    )
-    extraction = build_kn5_surface_extraction_from_manifest(
-        manifest.to_dict(),
-        include_pitlane=include_pitlane,
-    )
-    return {"status": "success", **extraction.to_dict()}
-
-
-@app.get("/api/debug/track-surface-polygon")
-async def get_track_surface_polygon():
-    if source_manager.get_active_source_name() == "assetto_corsa" and not source_manager.current_track_name():
-        ingest_one_active_sample()
-
-    resolver = TrackFileResolver(ac_root=source_manager.current_ac_install_path())
-    manifest = resolver.build_track_file_manifest(
-        source_manager.current_track_name() or "",
-        source_manager.current_track_config(),
-        source=source_manager.get_active_source_name(),
-        game_code=source_manager.current_game_code() or "assetto_corsa",
-    )
-    surface = build_track_surface_polygon_from_manifest(manifest.to_dict())
-    return {"status": "success", **surface}
-
-
-@app.get("/api/debug/track-edges-from-surface")
-async def get_track_edges_from_surface():
-    if source_manager.get_active_source_name() == "assetto_corsa" and not source_manager.current_track_name():
-        ingest_one_active_sample()
-
-    resolver = TrackFileResolver(ac_root=source_manager.current_ac_install_path())
-    manifest = resolver.build_track_file_manifest(
-        source_manager.current_track_name() or "",
-        source_manager.current_track_config(),
-        source=source_manager.get_active_source_name(),
-        game_code=source_manager.current_game_code() or "assetto_corsa",
-    )
-    result = build_track_edges_from_surface_from_manifest(manifest.to_dict())
-    return {"status": "success", **result}
-
-
-@app.post("/api/test/simulate")
-async def start_simulation():
-    async def simulate():
-        previous_source = source_manager.get_active_source_name()
-        if previous_source != "replay":
-            source_manager.select_source("replay")
-        try:
-            for _ in range(900):
-                frame = ingest_one_active_sample()
-                if not frame:
-                    return
-                await event_bus.emit("processed_frame", frame)
-                await asyncio.sleep(1 / 30)
-        finally:
-            if previous_source != "replay":
-                source_manager.select_source(previous_source)
-
-    asyncio.create_task(simulate())
-    return {"status": "success", "message": "Telemetry replay simulation started", **source_manager.status()}
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global telemetry_runtime, opponents_runtime, recording_runtime
+
+    source_manager.select_source()
+    prime_active_source()
+    initialize_spatial_state()
+    recording_runtime = build_recording_runtime()
+    recording_runtime.start()
+    event_bus.subscribe(COACHING_EVENT, remember_coaching_event)
+    telemetry_runtime = build_telemetry_runtime()
+    loop = asyncio.get_running_loop()
+    telemetry_runtime.start(loop)
+    opponents_runtime = build_opponents_runtime()
+    opponents_runtime.start(loop)
+    yield
+
+    if opponents_runtime:
+        opponents_runtime.stop()
+        opponents_runtime = None
+    if telemetry_runtime:
+        telemetry_runtime.stop()
+        telemetry_runtime = None
+    if recording_runtime:
+        recording_runtime.stop()
+        recording_runtime = None
+    event_bus.unsubscribe(COACHING_EVENT, remember_coaching_event)
+
+
+app = FastAPI(
+    title="F1 Telemetry Analyzer API",
+    version="3.0.0-telemetry-reconstruction",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Domain routers. Each router module does `import main` and reaches shared
+# state via `main.<name>` (never `from main import <name>`), so this import
+# must happen after all the state/helpers/app above are already defined.
+from routers import (  # noqa: E402
+    assisted_analysis,
+    debug,
+    external_references,
+    health,
+    legacy,
+    live,
+    recording as recording_router,
+    track,
+    validation,
+    websocket,
+)
+
+app.include_router(health.router)
+app.include_router(validation.router)
+app.include_router(websocket.router)
+app.include_router(track.router)
+app.include_router(live.router)
+app.include_router(recording_router.router)
+app.include_router(assisted_analysis.router)
+app.include_router(external_references.router)
+app.include_router(debug.router)
+app.include_router(legacy.router)
+
+# Re-exported so existing tests that call `backend_main.<name>(...)` directly
+# (bypassing HTTP) keep working after the endpoint bodies moved into routers.
+from routers.live import get_live_telemetry, get_live_opponents, set_live_source  # noqa: E402,F401
+from routers.recording import (  # noqa: E402,F401
+    list_recorded_sessions,
+    get_recorded_session_laps,
+    get_offline_recorded_lap_summary,
+    get_offline_recorded_lap_samples,
+    get_offline_recorded_lap_replay,
+)
+from routers.assisted_analysis import (  # noqa: E402,F401
+    request_phase14_assisted_analysis,
+    get_phase14_assisted_analysis,
+    get_phase14_assisted_lap_telemetry,
+)
+from routers.external_references import import_external_fastf1_reference  # noqa: E402,F401
+from routers.health import get_runtime_performance  # noqa: E402,F401
 
 
 if __name__ == "__main__":
