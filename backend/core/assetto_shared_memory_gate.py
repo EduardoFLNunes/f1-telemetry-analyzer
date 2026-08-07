@@ -9,6 +9,8 @@ not exist yet, so this module probes existing pages with OpenFileMappingW first.
 from __future__ import annotations
 
 import os
+import threading
+import time
 import subprocess
 from typing import Any, Dict, Iterable, Tuple
 
@@ -236,7 +238,7 @@ def shared_memory_static_status() -> Dict[str, Any]:
     }
 
 
-def shared_memory_gate_status() -> Dict[str, Any]:
+def _compute_shared_memory_gate_status() -> Dict[str, Any]:
     enabled = shared_memory_process_gate_enabled()
     process_names = assetto_corsa_process_names()
     process_running = assetto_corsa_process_running(process_names) if enabled else True
@@ -280,6 +282,58 @@ def shared_memory_gate_status() -> Dict[str, Any]:
     }
 
 
+_GATE_CACHE_TTL_ENV = "AT_GATE_STATUS_TTL_SECONDS"
+_DEFAULT_GATE_CACHE_TTL = 1.0
+
+_gate_cache_lock = threading.Lock()
+_gate_cache_value: Dict[str, Any] | None = None
+_gate_cache_at: float = 0.0
+
+
+def _gate_cache_ttl() -> float:
+    raw = os.environ.get(_GATE_CACHE_TTL_ENV)
+    if raw is None:
+        return _DEFAULT_GATE_CACHE_TTL
+    try:
+        return max(0.0, float(raw))
+    except (TypeError, ValueError):
+        return _DEFAULT_GATE_CACHE_TTL
+
+
+def reset_gate_status_cache() -> None:
+    """Drop the memoized gate status. Tests use this between scenarios."""
+    global _gate_cache_value, _gate_cache_at
+    with _gate_cache_lock:
+        _gate_cache_value = None
+        _gate_cache_at = 0.0
+
+
+def shared_memory_gate_status(*, force_refresh: bool = False) -> Dict[str, Any]:
+    """Gate status, memoized for a short TTL.
+
+    Probing the game process shells out to `tasklist`, which costs tens to
+    hundreds of milliseconds. This is called from request handlers that the
+    desktop UI polls every few seconds, and those handlers are async, so an
+    uncached probe blocks the event loop and can stall every other endpoint --
+    including /api/health, which is what Electron waits on at startup. The gate
+    state does not change faster than the TTL in practice.
+    """
+    global _gate_cache_value, _gate_cache_at
+    ttl = _gate_cache_ttl()
+    if not force_refresh and ttl > 0.0:
+        with _gate_cache_lock:
+            cached = _gate_cache_value
+            cached_at = _gate_cache_at
+        if cached is not None and (time.monotonic() - cached_at) < ttl:
+            return dict(cached)
+
+    status = _compute_shared_memory_gate_status()
+    with _gate_cache_lock:
+        _gate_cache_value = status
+        _gate_cache_at = time.monotonic()
+    return dict(status)
+
+
 def shared_memory_access_allowed() -> bool:
     return bool(shared_memory_gate_status()["allowed"])
 
@@ -288,6 +342,7 @@ __all__ = [
     "assetto_corsa_process_names",
     "assetto_corsa_process_running",
     "assetto_corsa_shared_memory_pages",
+    "reset_gate_status_cache",
     "shared_memory_access_allowed",
     "shared_memory_gate_status",
     "shared_memory_pages_status",

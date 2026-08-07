@@ -13,7 +13,7 @@ if str(BACKEND_DIR) not in sys.path:
 
 import main as backend_main
 from core.assetto_adapter import AssettoAdapter
-from core.assetto_shared_memory_gate import shared_memory_gate_status
+from core.assetto_shared_memory_gate import reset_gate_status_cache, shared_memory_gate_status
 from core.debug.ac_shared_memory_full_inventory import build_ac_shared_memory_full_inventory
 from core.telemetry.telemetry_reader_impl import (
     ACSharedMemoryReader,
@@ -84,6 +84,12 @@ STATIC_MISSING_GATE = {
 
 
 class AssettoSharedMemoryGateTests(unittest.TestCase):
+    def setUp(self):
+        # shared_memory_gate_status() memoizes for a short TTL; each scenario
+        # patches different process/page probes, so start from a cold cache.
+        reset_gate_status_cache()
+        self.addCleanup(reset_gate_status_cache)
+
     def test_reader_returns_only_new_shared_memory_packets(self):
         reader = ACSharedMemoryReader()
         reader.connected = True
