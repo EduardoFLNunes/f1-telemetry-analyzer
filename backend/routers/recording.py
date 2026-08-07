@@ -5,8 +5,40 @@ from typing import Any, Dict, Tuple
 from fastapi import APIRouter, HTTPException, Query
 
 import main
+from core.recording.recording_runtime import CaptureGateClosed
 
 router = APIRouter()
+
+# Human-readable (pt-BR) explanation per capture-gate reason, consumed by the desktop UI.
+CAPTURE_GATE_MESSAGES = {
+    "waiting_for_assetto_corsa_process": "Aguardando o Assetto Corsa ser aberto.",
+    "stale_assetto_corsa_shared_memory_without_process": (
+        "Ha memoria compartilhada do Assetto Corsa sem o jogo aberto. "
+        "Feche o processo que a criou e abra o Assetto Corsa novamente."
+    ),
+    "waiting_for_assetto_corsa_shared_memory_pages": (
+        "Assetto Corsa aberto, mas a memoria compartilhada ainda nao esta pronta."
+    ),
+    "waiting_for_assetto_corsa_static_data": (
+        "Assetto Corsa aberto, mas nenhuma sessao de pilotagem foi carregada ainda."
+    ),
+    "telemetry_source_is_not_assetto_corsa": (
+        "A fonte de telemetria ativa nao e o Assetto Corsa; a gravacao fica desativada."
+    ),
+    "capture_gate_error": "Nao foi possivel verificar o estado do Assetto Corsa.",
+}
+
+
+def capture_gate_payload() -> dict:
+    status = dict(main.recording_runtime.capture_gate_status()) if main.recording_runtime else {
+        "allowed": False,
+        "reason": "recording_runtime_unavailable",
+    }
+    reason = status.get("reason")
+    status["message"] = (
+        None if status.get("allowed") else CAPTURE_GATE_MESSAGES.get(reason, "Aguardando o Assetto Corsa.")
+    )
+    return status
 
 
 def _recording_lap_id(session_id: str, lap_number: int) -> str:
@@ -108,15 +140,22 @@ async def get_recording_status():
             "eventsWritten": 0,
             "queueSize": 0,
             "droppedFrames": 0,
+            "captureGate": capture_gate_payload(),
         }
-    return main.recording_runtime.status().to_api()
+    return {**main.recording_runtime.status().to_api(), "captureGate": capture_gate_payload()}
 
 
 @router.post("/api/recording/start")
 async def start_recording():
     if not main.recording_runtime:
         raise HTTPException(status_code=503, detail="Recording runtime is not available")
-    return main.recording_runtime.start_recording().to_api()
+    try:
+        return main.recording_runtime.start_recording().to_api()
+    except CaptureGateClosed as exc:
+        raise HTTPException(
+            status_code=409,
+            detail=CAPTURE_GATE_MESSAGES.get(exc.reason, "Aguardando o Assetto Corsa para iniciar a coleta."),
+        )
 
 
 @router.post("/api/recording/stop")

@@ -423,11 +423,38 @@ def recording_metadata() -> Dict[str, Any]:
     }
 
 
+def capture_gate_status() -> Dict[str, Any]:
+    """Whether telemetry capture/recording is allowed right now.
+
+    Capture requires a real Assetto Corsa session: the shared-memory gate must be open
+    (game process running, pages mapped, static data populated) and the active player
+    source must actually be Assetto Corsa. Without this, the mock/replay fallbacks would
+    happily produce recordings with no game running.
+    """
+    gate = shared_memory_gate_status()
+    if not gate.get("allowed", False):
+        return {
+            "allowed": False,
+            "reason": gate.get("reason") or "waiting_for_assetto_corsa_process",
+            "sharedMemoryGate": gate,
+        }
+    active_source = source_manager.get_active_source_name()
+    if active_source != "assetto_corsa":
+        return {
+            "allowed": False,
+            "reason": "telemetry_source_is_not_assetto_corsa",
+            "activeSource": active_source,
+            "sharedMemoryGate": gate,
+        }
+    return {"allowed": True, "reason": None, "activeSource": active_source, "sharedMemoryGate": gate}
+
+
 def build_recording_runtime() -> RecordingRuntime:
     return RecordingRuntime(
         config=recording_config_from_env(RUNTIME_ROOT),
         track_provider=current_recording_track,
         metadata_provider=recording_metadata,
+        capture_gate=capture_gate_status,
     )
 
 
@@ -617,6 +644,7 @@ def runtime_status_payload() -> Dict[str, Any]:
             "playerFilteredCount": opponents_transport.get("playerFilteredCount", 0),
             "estimatedHz": opponents_transport.get("estimatedHz"),
         },
+        "capture": capture_gate_status(),
         "racingLine": {
             "available": runtime_state.track_build_state == TrackBuildState.TRACK_READY,
             "status": racing_line_status,
