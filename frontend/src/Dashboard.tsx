@@ -3,7 +3,7 @@
  * Complete 9-Phase reformulation
  */
 import React, { useEffect, useState } from 'react';
-import { TrackRenderer } from './components/map/TrackRenderer.jsx';
+import { TrackRenderer } from './components/map/TrackRenderer';
 import { TelemetryTraces } from './components/TelemetryTraces';
 import { AssistedLapTraces } from './components/AssistedLapTraces';
 import { GGDiagram } from './components/GGDiagram';

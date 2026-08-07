@@ -42,7 +42,7 @@ declare global {
       copyAssettoSetupInstructions?: () => Promise<{ ok?: boolean; length?: number; error?: string | null }>;
       phase?: string;
     };
-    __telemetryPerf?: Record<string, number>;
+    __telemetryPerf?: Record<string, any>;
   }
 }
 

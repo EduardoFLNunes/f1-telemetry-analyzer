@@ -21,6 +21,7 @@ export interface TelemetryFrame {
   brake: number;
   steering: number;
   gear: number;
+  rpm?: number | null;
   p?: number | null;
   spline_t?: number | null;
   splinePosition?: number | null;
@@ -63,7 +64,6 @@ export interface TelemetryFrame {
   corner_type?: string;
   predicted_lap_time?: number;
   tire_slip?: number;
-  yaw_rate?: number;
   drs?: boolean;
   carPhysics?: CarPhysicsTelemetry;
   trackName?: string | null;

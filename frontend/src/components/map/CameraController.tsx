@@ -1,16 +1,38 @@
-import { resolveSampleMapPosition } from '../../utils/spatialTransform';
+import { resolveSampleMapPosition, MapPosition } from '../../utils/spatialTransform';
 
-export function computeTrackBounds(trackData, history = [], carFrame = null, extraPositions = []) {
+export type TrackBounds = {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+  cx: number;
+  cy: number;
+  w: number;
+  h: number;
+};
+
+export type CameraState = {
+  mode: 'FOLLOW' | 'OVERVIEW' | string;
+  zoom: number;
+  offset: { x: number; y: number };
+};
+
+export function computeTrackBounds(
+  trackData: any,
+  history: unknown[] = [],
+  carFrame: unknown = null,
+  extraPositions: MapPosition[] = [],
+): TrackBounds {
   const left = trackData?.left_edge || {};
   const right = trackData?.right_edge || {};
-  const pitGeometries = Object.values(trackData?.pitVisualGeometry?.geometries || {});
+  const pitGeometries = Object.values(trackData?.pitVisualGeometry?.geometries || {}) as any[];
   const pitPoints = pitGeometries.flatMap((geometry) => [
     ...(geometry.leftEdge?.points || []),
     ...(geometry.rightEdge?.points || []),
   ]);
-  const livePositions = history
+  const livePositions: MapPosition[] = history
     .map((frame) => resolveSampleMapPosition(frame))
-    .filter((point) => Number.isFinite(point?.x) && Number.isFinite(point?.y));
+    .filter((point): point is MapPosition => Boolean(point) && Number.isFinite(point?.x) && Number.isFinite(point?.y));
   const carPosition = resolveSampleMapPosition(carFrame);
   if (carPosition && Number.isFinite(carPosition.x) && Number.isFinite(carPosition.y)) {
     livePositions.push(carPosition);
@@ -24,13 +46,13 @@ export function computeTrackBounds(trackData, history = [], carFrame = null, ext
   const xs = [
     ...(left.x || []),
     ...(right.x || []),
-    ...pitPoints.map((point) => point?.[0]),
+    ...pitPoints.map((point: any) => point?.[0]),
     ...livePositions.map((point) => point.x),
   ].filter(Number.isFinite);
   const ys = [
     ...(left.y || left.z || []),
     ...(right.y || right.z || []),
-    ...pitPoints.map((point) => point?.[1]),
+    ...pitPoints.map((point: any) => point?.[1]),
     ...livePositions.map((point) => point.y),
   ].filter(Number.isFinite);
 
@@ -55,7 +77,14 @@ export function computeTrackBounds(trackData, history = [], carFrame = null, ext
   };
 }
 
-export function applyCameraTransform(ctx, width, height, bounds, camera, carFrame) {
+export function applyCameraTransform(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  bounds: TrackBounds,
+  camera: CameraState,
+  carFrame: unknown,
+): number {
   const mode = camera.mode;
   const zoom = camera.zoom;
 
@@ -67,7 +96,7 @@ export function applyCameraTransform(ctx, width, height, bounds, camera, carFram
     const scale = (height / 90) * zoom;
     ctx.translate(width / 2, height * 0.68);
     ctx.scale(scale, scale);
-    ctx.rotate(-(carFrame.heading || 0) + Math.PI / 2);
+    ctx.rotate(-((carFrame as any).heading || 0) + Math.PI / 2);
     ctx.translate(-carPosition.x, -carPosition.y);
     return scale;
   }

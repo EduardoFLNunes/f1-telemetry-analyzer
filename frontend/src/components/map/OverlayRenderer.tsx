@@ -1,4 +1,4 @@
-function drawPolyline(ctx, x = [], y = [], close = false) {
+function drawPolyline(ctx: CanvasRenderingContext2D, x: number[] = [], y: number[] = [], close = false) {
   if (!x.length || !y.length) return;
   ctx.beginPath();
   ctx.moveTo(x[0], y[0]);
@@ -8,9 +8,16 @@ function drawPolyline(ctx, x = [], y = [], close = false) {
   if (close) ctx.closePath();
 }
 
-const TRACK_SURFACE_CACHE = new WeakMap();
+type TrackSurfaceCache = {
+  asphaltPath: Path2D;
+  leftPath: Path2D | null;
+  rightPath: Path2D | null;
+  centerPath: Path2D | null;
+};
 
-function buildPath(x = [], y = [], close = false) {
+const TRACK_SURFACE_CACHE = new WeakMap<object, TrackSurfaceCache>();
+
+function buildPath(x: number[] = [], y: number[] = [], close = false): Path2D | null {
   if (typeof Path2D === 'undefined' || !x.length || !y.length) return null;
   const path = new Path2D();
   path.moveTo(x[0], y[0]);
@@ -21,7 +28,7 @@ function buildPath(x = [], y = [], close = false) {
   return path;
 }
 
-function getTrackSurfaceCache(trackData) {
+function getTrackSurfaceCache(trackData: any): TrackSurfaceCache | null {
   if (!trackData || typeof Path2D === 'undefined') return null;
   const cached = TRACK_SURFACE_CACHE.get(trackData);
   if (cached) return cached;
@@ -43,7 +50,7 @@ function getTrackSurfaceCache(trackData) {
     asphaltPath.closePath();
   }
 
-  const cache = {
+  const cache: TrackSurfaceCache = {
     asphaltPath,
     leftPath: buildPath(left.x, left.y, closed),
     rightPath: buildPath(right.x, right.y, closed),
@@ -53,7 +60,7 @@ function getTrackSurfaceCache(trackData) {
   return cache;
 }
 
-function indexInRanges(index, ranges = []) {
+function indexInRanges(index: number, ranges: any[] = []): boolean {
   return ranges.some((range) => {
     const start = Number(range?.[0]);
     const end = Number(range?.[1]);
@@ -63,7 +70,13 @@ function indexInRanges(index, ranges = []) {
   });
 }
 
-function strokePolylineSegments(ctx, x = [], y = [], close = false, suppressedRanges = []) {
+function strokePolylineSegments(
+  ctx: CanvasRenderingContext2D,
+  x: number[] = [],
+  y: number[] = [],
+  close = false,
+  suppressedRanges: any[] = [],
+) {
   if (!x.length || !y.length) return;
   if (!suppressedRanges.length) {
     drawPolyline(ctx, x, y, close);
@@ -93,12 +106,15 @@ function strokePolylineSegments(ctx, x = [], y = [], close = false, suppressedRa
   if (drawing) ctx.stroke();
 }
 
-function drawEdgePolygon(ctx, leftPoints = [], rightPoints = []) {
+function drawEdgePolygon(ctx: CanvasRenderingContext2D, leftPoints: number[][] = [], rightPoints: number[][] = []) {
   if (!leftPoints.length || !rightPoints.length) return;
   ctx.beginPath();
   leftPoints.forEach((point, index) => {
-    const op = index === 0 ? 'moveTo' : 'lineTo';
-    ctx[op](point[0], point[1]);
+    if (index === 0) {
+      ctx.moveTo(point[0], point[1]);
+    } else {
+      ctx.lineTo(point[0], point[1]);
+    }
   });
   for (let i = rightPoints.length - 1; i >= 0; i -= 1) {
     ctx.lineTo(rightPoints[i][0], rightPoints[i][1]);
@@ -106,17 +122,20 @@ function drawEdgePolygon(ctx, leftPoints = [], rightPoints = []) {
   ctx.closePath();
 }
 
-function strokePointLine(ctx, points = []) {
+function strokePointLine(ctx: CanvasRenderingContext2D, points: number[][] = []) {
   if (!points.length) return;
   ctx.beginPath();
   points.forEach((point, index) => {
-    const op = index === 0 ? 'moveTo' : 'lineTo';
-    ctx[op](point[0], point[1]);
+    if (index === 0) {
+      ctx.moveTo(point[0], point[1]);
+    } else {
+      ctx.lineTo(point[0], point[1]);
+    }
   });
   ctx.stroke();
 }
 
-function strokePitGeometry(ctx, geometry, left = [], right = []) {
+function strokePitGeometry(ctx: CanvasRenderingContext2D, geometry: any, left: number[][] = [], right: number[][] = []) {
   const hints = geometry?.renderHints || {};
   const openStart = Boolean(geometry?.openStart || hints.openStart);
   const openEnd = Boolean(geometry?.openEnd || hints.openEnd);
@@ -136,8 +155,8 @@ function strokePitGeometry(ctx, geometry, left = [], right = []) {
   }
 }
 
-function drawPitVisualGeometry(ctx, trackData, asphalt, scale) {
-  const geometries = Object.values(trackData?.pitVisualGeometry?.geometries || {});
+function drawPitVisualGeometry(ctx: CanvasRenderingContext2D, trackData: any, asphalt: CanvasGradient, scale: number) {
+  const geometries = Object.values(trackData?.pitVisualGeometry?.geometries || {}) as any[];
   if (!geometries.length) return;
   const surfaceUnion = trackData?.pitVisualGeometry?.surfaceUnionFix;
 
@@ -159,11 +178,11 @@ function drawPitVisualGeometry(ctx, trackData, asphalt, scale) {
     const policy = surfaceUnion.pitGeometryStrokePolicy || {};
     geometries.forEach((geometry) => {
       const strokeEdges = policy[geometry.name]?.strokeEdges || geometry.renderHints?.strokeEdges || ['leftEdge', 'rightEdge'];
-      strokeEdges.forEach((edgeName) => {
+      strokeEdges.forEach((edgeName: string) => {
         strokePointLine(ctx, geometry[edgeName]?.points || []);
       });
     });
-    (surfaceUnion.stitchEdges || []).forEach((edge) => {
+    (surfaceUnion.stitchEdges || []).forEach((edge: any) => {
       strokePointLine(ctx, edge.points?.points || []);
     });
     ctx.restore();
@@ -180,7 +199,7 @@ function drawPitVisualGeometry(ctx, trackData, asphalt, scale) {
   ctx.restore();
 }
 
-export function drawTrackSurface(ctx, trackData, bounds, scale) {
+export function drawTrackSurface(ctx: CanvasRenderingContext2D, trackData: any, bounds: any, scale: number) {
   const left = trackData.left_edge;
   const right = trackData.right_edge;
   const center = trackData.visualCenterline || trackData.centerline;
@@ -198,8 +217,11 @@ export function drawTrackSurface(ctx, trackData, bounds, scale) {
   } else {
     ctx.beginPath();
     for (let i = 0; i < left.x.length; i += 1) {
-      const op = i === 0 ? 'moveTo' : 'lineTo';
-      ctx[op](left.x[i], left.y[i]);
+      if (i === 0) {
+        ctx.moveTo(left.x[i], left.y[i]);
+      } else {
+        ctx.lineTo(left.x[i], left.y[i]);
+      }
     }
     for (let i = right.x.length - 1; i >= 0; i -= 1) {
       ctx.lineTo(right.x[i], right.y[i]);
@@ -242,7 +264,15 @@ export function drawTrackSurface(ctx, trackData, bounds, scale) {
   ctx.restore();
 }
 
-export function drawHud(ctx, width, height, trackData, frame, camera, options = {}) {
+export function drawHud(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  trackData: any,
+  frame: any,
+  camera: { mode: string; zoom: number },
+  options: { performanceMode?: string } = {},
+) {
   const performanceMode = options.performanceMode || 'BALANCED';
   const compact = performanceMode === 'PERFORMANCE';
   ctx.save();

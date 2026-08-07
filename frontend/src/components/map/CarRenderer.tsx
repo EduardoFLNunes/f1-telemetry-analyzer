@@ -1,10 +1,20 @@
 import { resolveSampleMapPosition } from '../../utils/spatialTransform';
 
-export function drawCar(ctx, frame, scale, color = '#22d3ee', options = {}) {
+export type CarRenderOptions = {
+  noGlow?: boolean;
+};
+
+export function drawCar(
+  ctx: CanvasRenderingContext2D,
+  frame: any,
+  scale: number,
+  color = '#22d3ee',
+  options: CarRenderOptions = {},
+) {
   const position = resolveSampleMapPosition(frame);
   if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return;
 
-  const heading = Number.isFinite(frame.heading) ? frame.heading : 0;
+  const heading = Number.isFinite(frame?.heading) ? frame.heading : 0;
   const length = 9 / scale;
   const width = 4.5 / scale;
 
@@ -48,24 +58,38 @@ const OPPONENT_COLORS = [
   '#c084fc',
 ];
 
-function safeLabel(value, fallback = '') {
+function safeLabel(value: unknown, fallback = ''): string {
   if (value === null || value === undefined) return fallback;
   const text = String(value).trim();
   return text || fallback;
 }
 
-function shortName(name) {
+function shortName(name: unknown): string {
   const text = safeLabel(name, '');
   if (!text) return '';
   return text.length > 14 ? `${text.slice(0, 13)}...` : text;
 }
 
-function opponentColor(opponent, index) {
+function opponentColor(opponent: any, index: number): string {
   if (opponent?.status === 'stale') return '#64748b';
   return OPPONENT_COLORS[Math.abs(opponent?.carId ?? index) % OPPONENT_COLORS.length];
 }
 
-export function drawOpponentCar(ctx, opponent, scale, index = 0, options = {}) {
+export type OpponentRenderOptions = {
+  labelMode?: 'none' | 'id' | string;
+  color?: string;
+  isStale?: boolean;
+  isHovered?: boolean;
+  noGlow?: boolean;
+};
+
+export function drawOpponentCar(
+  ctx: CanvasRenderingContext2D,
+  opponent: any,
+  scale: number,
+  index = 0,
+  options: OpponentRenderOptions = {},
+) {
   const position = resolveSampleMapPosition(opponent);
   if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return;
 
@@ -132,7 +156,7 @@ export function drawOpponentCar(ctx, opponent, scale, index = 0, options = {}) {
   ctx.restore();
 }
 
-export function drawTrajectory(ctx, history, scale) {
+export function drawTrajectory(ctx: CanvasRenderingContext2D, history: unknown[], scale: number) {
   if (!history || history.length < 2) return;
 
   ctx.save();
@@ -153,8 +177,8 @@ export function drawTrajectory(ctx, history, scale) {
     if (!Number.isFinite(ax) || !Number.isFinite(ay) || !Number.isFinite(bx) || !Number.isFinite(by)) continue;
     const alpha = Math.max(0.08, i / history.length);
     ctx.beginPath();
-    ctx.moveTo(ax, ay);
-    ctx.lineTo(bx, by);
+    ctx.moveTo(ax as number, ay as number);
+    ctx.lineTo(bx as number, by as number);
     ctx.strokeStyle = `rgba(34,211,238,${alpha * 0.55})`;
     ctx.lineWidth = 3 / scale;
     ctx.stroke();

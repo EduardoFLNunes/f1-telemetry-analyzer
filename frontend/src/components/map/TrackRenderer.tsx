@@ -2,35 +2,36 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTelemetryStore } from '../../store/useTelemetryStore';
 import { useRenderCounter } from '../../hooks/useRenderCounter';
 import { api } from '../../api/client';
-import { drawCar, drawOpponentCar } from './CarRenderer.jsx';
-import { applyCameraTransform, computeTrackBounds } from './CameraController.jsx';
-import { drawHud, drawTrackSurface } from './OverlayRenderer.jsx';
-import { resolveSampleMapPosition } from '../../utils/spatialTransform';
+import { drawCar, drawOpponentCar } from './CarRenderer';
+import { applyCameraTransform, computeTrackBounds, CameraState } from './CameraController';
+import { drawHud, drawTrackSurface } from './OverlayRenderer';
+import { resolveSampleMapPosition, MapPosition } from '../../utils/spatialTransform';
 import {
   drawPreparedRacingLineOverlay,
   drawRacingLineLegend,
   prepareRacingLineOverlay,
   racingLineModeLabel,
   RACING_LINE_OVERLAY_MODES,
-} from './RacingLineOverlay.jsx';
+  PreparedRacingLineOverlay,
+} from './RacingLineOverlay';
 
 const MAP_RENDER_FRAME_MS = 1000 / 60;
-const MAP_RENDER_FRAME_MS_BY_MODE = {
+const MAP_RENDER_FRAME_MS_BY_MODE: Record<string, number> = {
   QUALITY: 1000 / 60,
   BALANCED: 1000 / 60,
   PERFORMANCE: 1000 / 60,
 };
 const RACING_LINE_POLL_MS = 6000;
-const HISTORY_WINDOW_BY_MODE = {
+const HISTORY_WINDOW_BY_MODE: Record<string, number> = {
   QUALITY: 1800,
   BALANCED: 1200,
   PERFORMANCE: 600,
 };
-const PERFORMANCE_MODES = ['QUALITY', 'BALANCED', 'PERFORMANCE'];
+const PERFORMANCE_MODES = ['QUALITY', 'BALANCED', 'PERFORMANCE'] as const;
 const MAX_REPLAY_TRACE_GAP_METERS = 180;
 const REPLAY_TRACK_BOUNDS_MARGIN_METERS = 80;
 
-function normalizeTrack(trackData) {
+function normalizeTrack(trackData: any): any {
   if (!trackData) return null;
 
   const centerY = trackData.centerline?.y || trackData.centerline?.z || [];
@@ -62,11 +63,11 @@ function normalizeTrack(trackData) {
   };
 }
 
-function isFiniteNumber(value) {
+function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-function percentile(values, ratio) {
+function percentile(values: number[], ratio: number): number {
   if (!values.length) return 0;
   const sorted = values
     .filter((value) => Number.isFinite(value) && value >= 0)
@@ -76,11 +77,11 @@ function percentile(values, ratio) {
   return sorted[Math.min(Math.floor((sorted.length - 1) * ratio), sorted.length - 1)];
 }
 
-function lerp(a, b, t) {
+function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
-function positionFromSpline(trackData, splinePosition) {
+function positionFromSpline(trackData: any, splinePosition: unknown): MapPosition | null {
   if (!trackData || !isFiniteNumber(splinePosition)) return null;
 
   const center = trackData.centerline || {};
@@ -116,7 +117,7 @@ function positionFromSpline(trackData, splinePosition) {
   };
 }
 
-function resolveOpponentRenderState(opponent, trackData) {
+function resolveOpponentRenderState(opponent: any, trackData: any): any {
   const mapPosition = opponent?.mapPosition;
   if (mapPosition && isFiniteNumber(mapPosition.x) && isFiniteNumber(mapPosition.y)) {
     return opponent;
@@ -130,11 +131,23 @@ function resolveOpponentRenderState(opponent, trackData) {
   };
 }
 
-function sampleMapPosition(sample) {
+function sampleMapPosition(sample: unknown): MapPosition | null {
   return resolveSampleMapPosition(sample);
 }
 
-function drawLapTrace(ctx, samples, scale, color, options = {}) {
+type TraceEntry = { sample: any; position: MapPosition; index: number };
+type TraceOptions = {
+  maxPoints?: number;
+  width?: number;
+  alpha?: number;
+  dashed?: boolean;
+  maxGapMeters?: number;
+  usePrevious?: boolean;
+  maxMarkers?: number;
+  radius?: number;
+};
+
+function drawLapTrace(ctx: CanvasRenderingContext2D, samples: any[], scale: number, color: string, options: TraceOptions = {}) {
   if (!Array.isArray(samples) || samples.length < 2) return;
   const entries = sampleTraceEntries(samples, options.maxPoints || 2200);
   if (entries.length < 2) return;
@@ -163,10 +176,10 @@ function drawLapTrace(ctx, samples, scale, color, options = {}) {
   ctx.restore();
 }
 
-function sampleTraceEntries(samples, maxPoints = 2200) {
+function sampleTraceEntries(samples: any[], maxPoints = 2200): TraceEntry[] {
   if (!Array.isArray(samples) || samples.length === 0) return [];
   const stride = Math.max(1, Math.ceil(samples.length / Math.max(1, maxPoints)));
-  const entries = [];
+  const entries: TraceEntry[] = [];
   for (let index = 0; index < samples.length; index += stride) {
     const position = sampleMapPosition(samples[index]);
     if (position) entries.push({ sample: samples[index], position, index });
@@ -179,7 +192,7 @@ function sampleTraceEntries(samples, maxPoints = 2200) {
   return entries;
 }
 
-function sampleLapTime(sample) {
+function sampleLapTime(sample: any): number | null {
   const candidates = [sample?.lapTime, sample?.lap_time, sample?.currentLapTime, sample?.sessionTime, sample?.session_time];
   for (const candidate of candidates) {
     const number = Number(candidate);
@@ -188,7 +201,7 @@ function sampleLapTime(sample) {
   return null;
 }
 
-function sampleDistance(sample) {
+function sampleDistance(sample: any): number | null {
   const candidates = [sample?.s, sample?.distanceAlongTrack, sample?.lapDistance];
   for (const candidate of candidates) {
     const number = Number(candidate);
@@ -197,7 +210,7 @@ function sampleDistance(sample) {
   return null;
 }
 
-function shouldBreakTrace(previous, current, options = {}) {
+function shouldBreakTrace(previous: TraceEntry | undefined, current: TraceEntry | undefined, options: TraceOptions = {}): boolean {
   if (!previous || !current) return false;
   const maxGap = options.maxGapMeters || MAX_REPLAY_TRACE_GAP_METERS;
   const distance = Math.hypot(
@@ -223,9 +236,9 @@ function shouldBreakTrace(previous, current, options = {}) {
   return isFiniteNumber(previousDistance) && isFiniteNumber(currentDistance) && currentDistance + 120 < previousDistance;
 }
 
-function traceEntrySegments(entries, options = {}) {
-  const segments = [];
-  let current = [];
+function traceEntrySegments(entries: TraceEntry[], options: TraceOptions = {}): TraceEntry[][] {
+  const segments: TraceEntry[][] = [];
+  let current: TraceEntry[] = [];
   entries.forEach((entry) => {
     if (current.length > 0 && shouldBreakTrace(current[current.length - 1], entry, options)) {
       if (current.length > 1) segments.push(current);
@@ -238,19 +251,19 @@ function traceEntrySegments(entries, options = {}) {
   return segments;
 }
 
-function sampleSpeedKmh(sample) {
+function sampleSpeedKmh(sample: any): number | null {
   if (isFiniteNumber(sample?.speedKmh)) return sample.speedKmh;
   if (isFiniteNumber(sample?.speed)) return sample.speed * 3.6;
   return null;
 }
 
-function normalizedPedal(value) {
+function normalizedPedal(value: unknown): number {
   const number = Number(value);
   if (!Number.isFinite(number)) return 0;
   return Math.max(0, Math.min(1, number > 1 ? number / 100 : number));
 }
 
-function sampleProgress(sample) {
+function sampleProgress(sample: any): number | null {
   const candidates = [
     sample?.lapProgress,
     sample?.p,
@@ -265,15 +278,15 @@ function sampleProgress(sample) {
   return null;
 }
 
-function speedStats(entries) {
+function speedStats(entries: TraceEntry[]): { min: number; max: number } {
   const speeds = entries
     .map((entry) => sampleSpeedKmh(entry.sample))
-    .filter((value) => isFiniteNumber(value));
+    .filter((value): value is number => isFiniteNumber(value));
   if (!speeds.length) return { min: 0, max: 1 };
   return { min: Math.min(...speeds), max: Math.max(...speeds) };
 }
 
-function replaySpeedColor(speed, stats) {
+function replaySpeedColor(speed: number | null, stats: { min: number; max: number }): string {
   if (!isFiniteNumber(speed)) return 'rgba(148,163,184,0.42)';
   const range = Math.max(1, stats.max - stats.min);
   const t = Math.max(0, Math.min(1, (speed - stats.min) / range));
@@ -282,7 +295,7 @@ function replaySpeedColor(speed, stats) {
   return `hsla(${hue.toFixed(1)}, 82%, ${lightness.toFixed(1)}%, 0.94)`;
 }
 
-function replayPedalColor(sample) {
+function replayPedalColor(sample: any): string {
   const brake = normalizedPedal(sample?.brake);
   const throttle = normalizedPedal(sample?.throttle);
   if (brake > 0.05) return `rgba(251,113,133,${Math.max(0.38, Math.min(0.95, brake)).toFixed(2)})`;
@@ -290,7 +303,13 @@ function replayPedalColor(sample) {
   return 'rgba(203,213,225,0.34)';
 }
 
-function drawTraceSegments(ctx, entries, scale, colorForEntry, options = {}) {
+function drawTraceSegments(
+  ctx: CanvasRenderingContext2D,
+  entries: TraceEntry[],
+  scale: number,
+  colorForEntry: (entry: TraceEntry, previous: TraceEntry, current: TraceEntry) => string,
+  options: TraceOptions = {},
+) {
   if (entries.length < 2) return;
   const segments = traceEntrySegments(entries, options);
   if (!segments.length) return;
@@ -313,7 +332,7 @@ function drawTraceSegments(ctx, entries, scale, colorForEntry, options = {}) {
   ctx.restore();
 }
 
-function drawReplayPoints(ctx, entries, scale, color, options = {}) {
+function drawReplayPoints(ctx: CanvasRenderingContext2D, entries: TraceEntry[], scale: number, color: string, options: TraceOptions = {}) {
   if (!entries.length) return;
   const stride = Math.max(1, Math.ceil(entries.length / (options.maxMarkers || 180)));
   ctx.save();
@@ -327,7 +346,7 @@ function drawReplayPoints(ctx, entries, scale, color, options = {}) {
   ctx.restore();
 }
 
-function smoothTraceEntries(entries) {
+function smoothTraceEntries(entries: TraceEntry[]): TraceEntry[] {
   if (entries.length < 5) return entries;
   return entries.map((entry, index) => {
     const start = Math.max(0, index - 2);
@@ -347,9 +366,9 @@ function smoothTraceEntries(entries) {
   });
 }
 
-function drawReplaySegmentMarkers(ctx, entries, scale) {
+function drawReplaySegmentMarkers(ctx: CanvasRenderingContext2D, entries: TraceEntry[], scale: number) {
   if (!entries.length) return;
-  const seen = new Set();
+  const seen = new Set<number>();
   ctx.save();
   ctx.font = `${Math.max(7 / scale, 4)}px "JetBrains Mono", monospace`;
   entries.forEach((entry) => {
@@ -371,7 +390,7 @@ function drawReplaySegmentMarkers(ctx, entries, scale) {
   ctx.restore();
 }
 
-function drawReplayDiagnosticMarkers(ctx, entries, scale) {
+function drawReplayDiagnosticMarkers(ctx: CanvasRenderingContext2D, entries: TraceEntry[], scale: number) {
   if (!entries.length) return;
   ctx.save();
   const stride = Math.max(1, Math.ceil(entries.length / 220));
@@ -391,7 +410,7 @@ function drawReplayDiagnosticMarkers(ctx, entries, scale) {
   ctx.restore();
 }
 
-function drawReplayCurrentMarker(ctx, frame, scale) {
+function drawReplayCurrentMarker(ctx: CanvasRenderingContext2D, frame: any, scale: number) {
   const position = sampleMapPosition(frame);
   if (!position) return;
   ctx.save();
@@ -405,7 +424,7 @@ function drawReplayCurrentMarker(ctx, frame, scale) {
   ctx.restore();
 }
 
-function trackMapBounds(trackData) {
+function trackMapBounds(trackData: any): { minX: number; maxX: number; minY: number; maxY: number } | null {
   if (!trackData) return null;
   const xs = [
     ...(trackData.left_edge?.x || []),
@@ -426,7 +445,12 @@ function trackMapBounds(trackData) {
   };
 }
 
-function replayMapDiagnostics(entries, bounds, replayTrack, activeTrack) {
+function replayMapDiagnostics(
+  entries: TraceEntry[],
+  bounds: { minX: number; maxX: number; minY: number; maxY: number } | null,
+  replayTrack: unknown,
+  activeTrack: unknown,
+): { warning: string | null; outsideRatio: number } | null {
   if (!bounds || !entries.length) return null;
   const margin = REPLAY_TRACK_BOUNDS_MARGIN_METERS;
   const outsideCount = entries.filter((entry) => (
@@ -452,13 +476,20 @@ function replayMapDiagnostics(entries, bounds, replayTrack, activeTrack) {
   return { warning: null, outsideRatio };
 }
 
-function drawReplayLapOverlay(ctx, replay, frame, scale, mode = 'LINE_ONLY', options = {}) {
+function drawReplayLapOverlay(
+  ctx: CanvasRenderingContext2D,
+  replay: any,
+  frame: any,
+  scale: number,
+  mode: string = 'LINE_ONLY',
+  options: { simple?: boolean; trackBounds?: any; activeTrack?: any } = {},
+): number {
   if (!replay?.active || !Number.isFinite(scale) || scale <= 0) return 0;
   const start = performance.now();
-  const safeMode = options.simple ? 'LINE_ONLY' : (RACING_LINE_OVERLAY_MODES.includes(mode) ? mode : 'LINE_ONLY');
+  const safeMode = options.simple ? 'LINE_ONLY' : ((RACING_LINE_OVERLAY_MODES as readonly string[]).includes(mode) ? mode : 'LINE_ONLY');
   const lapEntries = sampleTraceEntries(replay.samples, safeMode === 'RAW_REFERENCE_SAMPLES' ? 3000 : 2200);
   const referenceEntries = sampleTraceEntries(replay.referenceSamples || [], 2200);
-  window.__replayMapDiagnostics = replayMapDiagnostics(
+  (window as any).__replayMapDiagnostics = replayMapDiagnostics(
     lapEntries,
     options.trackBounds,
     replay.track,
@@ -499,14 +530,14 @@ function drawReplayLapOverlay(ctx, replay, frame, scale, mode = 'LINE_ONLY', opt
   return performance.now() - start;
 }
 
-function drawReplayLegend(ctx, width, height, replay, mode = 'LINE_ONLY') {
+function drawReplayLegend(ctx: CanvasRenderingContext2D, width: number, height: number, replay: any, mode: string = 'LINE_ONLY') {
   if (!replay?.active) return;
   ctx.save();
   ctx.resetTransform();
 
-  const safeMode = RACING_LINE_OVERLAY_MODES.includes(mode) ? mode : 'LINE_ONLY';
+  const safeMode = (RACING_LINE_OVERLAY_MODES as readonly string[]).includes(mode) ? mode : 'LINE_ONLY';
   const panelWidth = Math.min(292, Math.max(230, width - 28));
-  const diagnostics = window.__replayMapDiagnostics || null;
+  const diagnostics = (window as any).__replayMapDiagnostics || null;
   const hasWarning = Boolean(diagnostics?.warning);
   const panelHeight = (safeMode === 'PLAYER_INPUT_GRADIENT' ? 72 : 58) + (hasWarning ? 14 : 0);
   const x = 14;
@@ -547,7 +578,7 @@ function drawReplayLegend(ctx, width, height, replay, mode = 'LINE_ONLY') {
     return;
   }
 
-  const items = safeMode === 'BRAKE_ACCEL'
+  const items: Array<[string, string]> = safeMode === 'BRAKE_ACCEL'
     ? [['FREIO', '#fb7185'], ['ACEL', '#34d399'], ['COAST', '#cbd5e1']]
     : safeMode === 'DIAGNOSTIC'
       ? [['COAST', '#fbbf24'], ['FREIO+VOL', '#fb7185'], ['ATUAL', '#facc15']]
@@ -567,26 +598,26 @@ function drawReplayLegend(ctx, width, height, replay, mode = 'LINE_ONLY') {
   ctx.restore();
 }
 
-function formatOpponentNumber(value, digits = 0) {
+function formatOpponentNumber(value: unknown, digits = 0): string {
   return isFiniteNumber(value) ? value.toFixed(digits) : '--';
 }
 
-function opponentDisplayName(opponent) {
+function opponentDisplayName(opponent: any): string {
   const name = typeof opponent?.driverName === 'string' ? opponent.driverName.trim() : '';
   return name || 'Unknown';
 }
 
-function opponentSplinePercent(opponent) {
+function opponentSplinePercent(opponent: any): number | null {
   return isFiniteNumber(opponent?.splinePosition) ? opponent.splinePosition * 100 : null;
 }
 
-function isStaleOpponent(opponent, staleAfterSeconds) {
+function isStaleOpponent(opponent: any, staleAfterSeconds: unknown): boolean {
   if (opponent?.status === 'stale') return true;
   if (!isFiniteNumber(opponent?.lastSeenTimestamp) || !isFiniteNumber(staleAfterSeconds)) return false;
   return (Date.now() / 1000) - opponent.lastSeenTimestamp > staleAfterSeconds;
 }
 
-function withEstimatedHeadings(opponents, motionCache) {
+function withEstimatedHeadings(opponents: any[], motionCache: Map<number, any>): any[] {
   return opponents.map((opponent) => {
     const position = opponent?.mapPosition;
     if (!position || !isFiniteNumber(position.x) || !isFiniteNumber(position.y)) return opponent;
@@ -612,7 +643,14 @@ function withEstimatedHeadings(opponents, motionCache) {
   });
 }
 
-function interpolateMotionState(item, key, cache, now, defaultDurationMs, snapDistance = 120) {
+function interpolateMotionState(
+  item: any,
+  key: string | number,
+  cache: Map<string | number, any>,
+  now: number,
+  defaultDurationMs: number,
+  snapDistance = 120,
+): any {
   const position = item?.mapPosition;
   if (!position || !isFiniteNumber(position.x) || !isFiniteNumber(position.y)) return item;
   const sampleStamp = item.timestamp ?? item.sessionTime ?? `${position.x}:${position.y}`;
@@ -674,7 +712,14 @@ function interpolateMotionState(item, key, cache, now, defaultDurationMs, snapDi
   };
 }
 
-function worldToScreen(point, width, height, bounds, camera, carFrame) {
+function worldToScreen(
+  point: MapPosition | null | undefined,
+  width: number,
+  height: number,
+  bounds: any,
+  camera: CameraState,
+  carFrame: any,
+): { x: number; y: number; scale: number } | null {
   if (!point || !isFiniteNumber(point.x) || !isFiniteNumber(point.y)) return null;
 
   if (camera.mode === 'FOLLOW' && carFrame) {
@@ -697,7 +742,7 @@ function worldToScreen(point, width, height, bounds, camera, carFrame) {
   };
 }
 
-function labelText(opponent, mode) {
+function labelText(opponent: any, mode: string): string {
   const carId = Number.isFinite(opponent?.carId) ? `#${opponent.carId}` : '#?';
   if (mode === 'id') return carId;
   const name = opponentDisplayName(opponent);
@@ -707,7 +752,9 @@ function labelText(opponent, mode) {
   return `${carId} ${compactName} ${speed} ${spline}`;
 }
 
-function labelRect(screen, mode, text) {
+type LabelRect = { x: number; y: number; width: number; height: number };
+
+function labelRect(screen: { x: number; y: number }, mode: string, text: string): LabelRect | null {
   if (mode === 'none') return null;
   const width = mode === 'id' ? Math.max(22, text.length * 7 + 8) : Math.min(174, text.length * 6.3 + 12);
   const height = mode === 'id' ? 15 : 18;
@@ -716,7 +763,7 @@ function labelRect(screen, mode, text) {
   return { x, y, width, height };
 }
 
-function intersects(a, b, padding = 3) {
+function intersects(a: LabelRect, b: LabelRect, padding = 3): boolean {
   return !(
     a.x + a.width + padding < b.x ||
     b.x + b.width + padding < a.x ||
@@ -725,10 +772,12 @@ function intersects(a, b, padding = 3) {
   );
 }
 
-function buildLabelModes(screenOpponents, scale) {
+type ScreenOpponent = { opponent: any; screen: { x: number; y: number; scale: number } };
+
+function buildLabelModes(screenOpponents: ScreenOpponent[], scale: number): Map<number, string> {
   const baseMode = scale < 0.42 ? 'none' : (scale < 1.05 ? 'id' : 'full');
-  const occupied = [];
-  const modes = new Map();
+  const occupied: LabelRect[] = [];
+  const modes = new Map<number, string>();
 
   screenOpponents.forEach(({ opponent, screen }) => {
     let mode = baseMode;
@@ -739,12 +788,12 @@ function buildLabelModes(screenOpponents, scale) {
 
     let text = labelText(opponent, mode);
     let rect = labelRect(screen, mode, text);
-    if (rect && occupied.some((box) => intersects(box, rect))) {
+    if (rect && occupied.some((box) => intersects(box, rect as LabelRect))) {
       mode = mode === 'full' ? 'id' : 'none';
       text = labelText(opponent, mode);
       rect = labelRect(screen, mode, text);
     }
-    if (rect && occupied.some((box) => intersects(box, rect))) {
+    if (rect && occupied.some((box) => intersects(box, rect as LabelRect))) {
       mode = 'none';
       rect = null;
     }
@@ -755,8 +804,8 @@ function buildLabelModes(screenOpponents, scale) {
   return modes;
 }
 
-function findOpponentHit(screenOpponents, x, y) {
-  let best = null;
+function findOpponentHit(screenOpponents: ScreenOpponent[], x: number, y: number): (ScreenOpponent & { distance: number }) | null {
+  let best: (ScreenOpponent & { distance: number }) | null = null;
   screenOpponents.forEach((entry) => {
     const distance = Math.hypot(entry.screen.x - x, entry.screen.y - y);
     if (distance <= 16 && (!best || distance < best.distance)) {
@@ -766,7 +815,7 @@ function findOpponentHit(screenOpponents, x, y) {
   return best;
 }
 
-export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
+export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { trackData: any }) {
   useRenderCounter('TrackRenderer');
   const performanceMode = useTelemetryStore((state) => state.performanceMode);
   const setPerformanceMode = useTelemetryStore((state) => state.setPerformanceMode);
@@ -774,16 +823,16 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const replayLapNumber = useTelemetryStore((state) => state.offlineReplay.lapNumber);
   const replayTrack = useTelemetryStore((state) => state.offlineReplay.track);
   const replaySource = useTelemetryStore((state) => state.offlineReplay.source);
-  const canvasRef = useRef(null);
-  const containerRef = useRef(null);
-  const animationRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const animationRef = useRef<number | null>(null);
   const lastCanvasRenderRef = useRef(0);
-  const playerInterpolationRef = useRef(new Map());
-  const opponentInterpolationRef = useRef(new Map());
-  const opponentMotionRef = useRef(new Map());
-  const screenOpponentsRef = useRef([]);
-  const racingLineOverlayRef = useRef(null);
-  const [cameraMode, setCameraMode] = useState('OVERVIEW');
+  const playerInterpolationRef = useRef(new Map<string | number, any>());
+  const opponentInterpolationRef = useRef(new Map<string | number, any>());
+  const opponentMotionRef = useRef(new Map<number, any>());
+  const screenOpponentsRef = useRef<ScreenOpponent[]>([]);
+  const racingLineOverlayRef = useRef<PreparedRacingLineOverlay | null>(null);
+  const [cameraMode, setCameraMode] = useState<'OVERVIEW' | 'FOLLOW'>('OVERVIEW');
   const [showRacingLine, setShowRacingLine] = useState(true);
   const [showOpponents, setShowOpponents] = useState(true);
   const [racingLineMode, setRacingLineMode] = useState('LINE_ONLY');
@@ -791,10 +840,10 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   const showOpponentsRef = useRef(true);
   const racingLineModeRef = useRef('LINE_ONLY');
   const performanceModeRef = useRef('BALANCED');
-  const [hoveredOpponent, setHoveredOpponent] = useState(null);
-  const [selectedOpponent, setSelectedOpponent] = useState(null);
-  const hoveredOpponentRef = useRef(null);
-  const selectedOpponentRef = useRef(null);
+  const [hoveredOpponent, setHoveredOpponent] = useState<{ opponent: any; x: number; y: number } | null>(null);
+  const [selectedOpponent, setSelectedOpponent] = useState<{ opponent: any; x: number; y: number } | null>(null);
+  const hoveredOpponentRef = useRef<{ opponent: any; x: number; y: number } | null>(null);
+  const selectedOpponentRef = useRef<{ opponent: any; x: number; y: number } | null>(null);
   const perfRef = useRef({
     frames: 0,
     renderMs: 0,
@@ -811,18 +860,18 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     lastRacingLineOverlayMs: 0,
     lastHttpRequests: 0,
     lastHttpDurationMs: 0,
-    frameDeltas: [],
-    renderDurations: [],
-    staticDrawDurations: [],
-    opponentsTransformDurations: [],
-    opponentsDrawDurations: [],
-    playerDrawDurations: [],
+    frameDeltas: [] as number[],
+    renderDurations: [] as number[],
+    staticDrawDurations: [] as number[],
+    opponentsTransformDurations: [] as number[],
+    opponentsDrawDurations: [] as number[],
+    playerDrawDurations: [] as number[],
     previousFrameTime: 0,
   });
   const [opponentsPanelOpen, setOpponentsPanelOpen] = useState(true);
   const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
-  const [panelOpponents, setPanelOpponents] = useState([]);
-  const [panelOpponentsMeta, setPanelOpponentsMeta] = useState({
+  const [panelOpponents, setPanelOpponents] = useState<any[]>([]);
+  const [panelOpponentsMeta, setPanelOpponentsMeta] = useState<any>({
     source: 'opponents_collector',
     count: 0,
     track: null,
@@ -874,7 +923,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     performanceMode: 'BALANCED',
   });
 
-  const cameraRef = useRef({
+  const cameraRef = useRef<CameraState & { isPanning: boolean; lastMouse: { x: number; y: number } }>({
     mode: 'OVERVIEW',
     zoom: 1,
     offset: { x: 0, y: 0 },
@@ -974,7 +1023,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
   }, [selectedOpponent]);
 
   useEffect(() => {
-    let lastOpponentsStamp = null;
+    let lastOpponentsStamp: string | null = null;
     const interval = setInterval(() => {
       const { opponents, opponentsMeta } = useTelemetryStore.getState();
       const stamp = `${opponentsMeta?.lastUpdateTimestamp ?? 'none'}:${opponents.length}`;
@@ -1009,7 +1058,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return undefined;
 
-    const render = (frameTime = performance.now()) => {
+    const render = (frameTime: number = performance.now()) => {
       const activePerformanceMode = performanceModeRef.current || 'BALANCED';
       const frameBudgetMs = MAP_RENDER_FRAME_MS_BY_MODE[activePerformanceMode] || MAP_RENDER_FRAME_MS;
       const simpleVisuals = activePerformanceMode === 'PERFORMANCE';
@@ -1050,11 +1099,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         offlineReplay,
       } = useTelemetryStore.getState();
 
-      const replayActive = Boolean(offlineReplay?.active && offlineReplay.samples?.length);
-      const rawLiveFrame = replayActive
+      const replayActiveNow = Boolean(offlineReplay?.active && offlineReplay.samples?.length);
+      const rawLiveFrame: any = replayActiveNow
         ? (offlineReplay.currentSample || offlineReplay.samples[offlineReplay.currentIndex || 0])
-        : (window.__latestFrame || storeFrame);
-      const liveFrame = replayActive
+        : ((window as any).__latestFrame || storeFrame);
+      const liveFrame = replayActiveNow
         ? rawLiveFrame
         : interpolateMotionState(
             rawLiveFrame,
@@ -1064,21 +1113,21 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
             1000 / 30,
             160,
           );
-      const renderHistory = replayActive ? offlineReplay.samples : liveHistory;
+      const renderHistory = replayActiveNow ? offlineReplay.samples : liveHistory;
       const historyWindow = HISTORY_WINDOW_BY_MODE[activePerformanceMode] || HISTORY_WINDOW_BY_MODE.BALANCED;
-      const boundsHistory = replayActive && normalizedTrack
+      const boundsHistory = replayActiveNow && normalizedTrack
         ? []
-        : (replayActive ? renderHistory : renderHistory.slice(-historyWindow));
+        : (replayActiveNow ? renderHistory : renderHistory.slice(-historyWindow));
 
       const opponentsTransformStarted = performance.now();
-      const latestOpponents = Array.isArray(window.__latestOpponents?.opponents)
-        ? window.__latestOpponents.opponents
+      const latestOpponents = Array.isArray((window as any).__latestOpponents?.opponents)
+        ? (window as any).__latestOpponents.opponents
         : liveOpponents;
-      const liveOpponentsForRender = (!replayActive && showOpponentsRef.current) ? latestOpponents : [];
+      const liveOpponentsForRender = (!replayActiveNow && showOpponentsRef.current) ? latestOpponents : [];
       const renderOpponents = withEstimatedHeadings(liveOpponentsForRender
-        .map((opponent) => resolveOpponentRenderState(opponent, normalizedTrack))
+        .map((opponent: any) => resolveOpponentRenderState(opponent, normalizedTrack))
         .filter(Boolean)
-        .map((opponent) => interpolateMotionState(
+        .map((opponent: any) => interpolateMotionState(
           opponent,
           opponent.carId,
           opponentInterpolationRef.current,
@@ -1087,10 +1136,10 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           200,
         )), opponentMotionRef.current);
       const opponentPositions = renderOpponents
-        .map((opponent) => opponent.mapPosition)
-        .filter((position) => Number.isFinite(position?.x) && Number.isFinite(position?.y));
+        .map((opponent: any) => opponent.mapPosition)
+        .filter((position: any) => Number.isFinite(position?.x) && Number.isFinite(position?.y));
       opponentsTransformMs = performance.now() - opponentsTransformStarted;
-      const boundsFrame = replayActive && normalizedTrack ? null : liveFrame;
+      const boundsFrame = replayActiveNow && normalizedTrack ? null : liveFrame;
       const renderBounds = normalizedTrack
         ? computeTrackBounds(normalizedTrack, boundsHistory, boundsFrame, opponentPositions)
         : computeTrackBounds(null, boundsHistory, liveFrame, opponentPositions);
@@ -1103,7 +1152,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         drawTrackSurface(ctx, normalizedTrack, renderBounds, scale);
         staticDrawMs = performance.now() - staticDrawStarted;
       }
-      if (replayActive) {
+      if (replayActiveNow) {
         const overlayCost = drawReplayLapOverlay(
           ctx,
           offlineReplay,
@@ -1117,8 +1166,8 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           },
         );
         perf.lastRacingLineOverlayMs = overlayCost;
-        window.__telemetryPerf = window.__telemetryPerf || {};
-        window.__telemetryPerf.racingLineOverlayMs = overlayCost;
+        (window as any).__telemetryPerf = (window as any).__telemetryPerf || {};
+        (window as any).__telemetryPerf.racingLineOverlayMs = overlayCost;
       } else if (showRacingLineRef.current && racingLineOverlayRef.current) {
         const overlayCost = drawPreparedRacingLineOverlay(
           ctx,
@@ -1129,21 +1178,21 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           { simple: simpleVisuals },
         );
         perf.lastRacingLineOverlayMs = overlayCost;
-        window.__telemetryPerf = window.__telemetryPerf || {};
-        window.__telemetryPerf.racingLineOverlayMs = overlayCost;
+        (window as any).__telemetryPerf = (window as any).__telemetryPerf || {};
+        (window as any).__telemetryPerf.racingLineOverlayMs = overlayCost;
       }
 
-      const screenOpponents = renderOpponents
-        .map((opponent) => ({
+      const screenOpponents: ScreenOpponent[] = renderOpponents
+        .map((opponent: any) => ({
           opponent,
           screen: worldToScreen(opponent.mapPosition, rect.width, rect.height, renderBounds, cameraRef.current, liveFrame),
         }))
-        .filter((entry) => Number.isFinite(entry.screen?.x) && Number.isFinite(entry.screen?.y));
+        .filter((entry: any): entry is ScreenOpponent => Number.isFinite(entry.screen?.x) && Number.isFinite(entry.screen?.y));
       screenOpponentsRef.current = screenOpponents;
-      const labelModes = simpleVisuals ? new Map() : buildLabelModes(screenOpponents, scale);
+      const labelModes = simpleVisuals ? new Map<number, string>() : buildLabelModes(screenOpponents, scale);
 
       const opponentsDrawStarted = performance.now();
-      renderOpponents.forEach((opponent, index) => {
+      renderOpponents.forEach((opponent: any, index: number) => {
         const isHovered =
           hoveredOpponentRef.current?.opponent?.carId === opponent.carId ||
           selectedOpponentRef.current?.opponent?.carId === opponent.carId;
@@ -1157,13 +1206,13 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       opponentsDrawMs = performance.now() - opponentsDrawStarted;
       if (liveFrame) {
         const playerDrawStarted = performance.now();
-        drawCar(ctx, liveFrame, scale, replayActive ? '#facc15' : '#22d3ee', { noGlow: simpleVisuals });
+        drawCar(ctx, liveFrame, scale, replayActiveNow ? '#facc15' : '#22d3ee', { noGlow: simpleVisuals });
         playerDrawMs = performance.now() - playerDrawStarted;
       }
 
       ctx.restore();
       drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current, { performanceMode: activePerformanceMode });
-      if (!simpleVisuals && replayActive) {
+      if (!simpleVisuals && replayActiveNow) {
         drawReplayLegend(ctx, rect.width, rect.height, offlineReplay, showRacingLineRef.current ? racingLineModeRef.current : 'LINE_ONLY');
       } else if (!simpleVisuals && showRacingLineRef.current && racingLineOverlayRef.current) {
         drawRacingLineLegend(ctx, rect.width, rect.height, racingLineOverlayRef.current, racingLineModeRef.current);
@@ -1189,7 +1238,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
       const now = performance.now();
       if (now - perf.lastAt >= 1000) {
         const seconds = (now - perf.lastAt) / 1000;
-        const wsMetrics = window.__telemetryPerf || {};
+        const wsMetrics = (window as any).__telemetryPerf || {};
         const wsMessages = Number(wsMetrics.wsMessages || 0);
         const telemetryMessages = Number(wsMetrics.wsTelemetryMessages || 0);
         const opponentsMessages = Number(wsMetrics.wsOpponentsMessages || 0);
@@ -1206,7 +1255,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         const traceRenderDelta = traceRenderMs - perf.lastTraceRenderMs;
         const httpRequestsDelta = httpRequests - perf.lastHttpRequests;
         const httpDurationDelta = httpDurationMs - perf.lastHttpDurationMs;
-        const renderMetrics = window.__renderMetrics || {};
+        const renderMetrics = (window as any).__renderMetrics || {};
         const p50FrameMs = percentile(perf.frameDeltas, 0.50);
         const p95FrameMs = percentile(perf.frameDeltas, 0.95);
         const p99FrameMs = percentile(perf.frameDeltas, 0.99);
@@ -1216,7 +1265,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         const opponentsDrawP95 = percentile(perf.opponentsDrawDurations, 0.95);
         const playerDrawP95 = percentile(perf.playerDrawDurations, 0.95);
         const opponentSamples = Object.values(storeState.opponentHistoryByCarId || {})
-          .reduce((sum, samples) => sum + (Array.isArray(samples) ? samples.length : 0), 0);
+          .reduce((sum: number, samples: any) => sum + (Array.isArray(samples) ? samples.length : 0), 0);
         const panelRps = [
           renderMetrics['AIEngineerPanel']?.fps || 0,
           renderMetrics['AIDebriefPanel']?.fps || 0,
@@ -1224,8 +1273,8 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
           renderMetrics['RacingLineAnalysisPanel']?.fps || 0,
           renderMetrics['CarPhysicsDebugPanel']?.fps || 0,
         ].reduce((sum, value) => sum + value, 0);
-        const memory = performance.memory?.usedJSHeapSize
-          ? performance.memory.usedJSHeapSize / 1024 / 1024
+        const memory = (performance as any).memory?.usedJSHeapSize
+          ? (performance as any).memory.usedJSHeapSize / 1024 / 1024
           : 0;
         setPerfStats({
           performanceMode: activePerformanceMode,
@@ -1274,8 +1323,8 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         const trackPointCount = (normalizedTrack?.centerline?.x?.length || 0)
           + (normalizedTrack?.left_edge?.x?.length || 0)
           + (normalizedTrack?.right_edge?.x?.length || 0);
-        window.__telemetryPerf = window.__telemetryPerf || {};
-        window.__telemetryPerf.trackRenderer = {
+        (window as any).__telemetryPerf = (window as any).__telemetryPerf || {};
+        (window as any).__telemetryPerf.trackRenderer = {
           fps: perf.frames / seconds,
           frameMs: { p50: p50FrameMs, p95: p95FrameMs, p99: p99FrameMs },
           renderMs: {
@@ -1328,13 +1377,13 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     };
   }, [bounds, normalizedTrack]);
 
-  const handleWheel = useCallback((event) => {
+  const handleWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
     event.preventDefault();
     const factor = event.deltaY < 0 ? 1.12 : 0.9;
     cameraRef.current.zoom = Math.max(0.2, Math.min(28, cameraRef.current.zoom * factor));
   }, []);
 
-  const getOpponentHitFromEvent = useCallback((event) => {
+  const getOpponentHitFromEvent = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     const container = containerRef.current;
     if (!container) return null;
     const rect = container.getBoundingClientRect();
@@ -1349,14 +1398,14 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     };
   }, []);
 
-  const handleMouseDown = useCallback((event) => {
+  const handleMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (cameraRef.current.mode !== 'OVERVIEW') return;
     if (getOpponentHitFromEvent(event)) return;
     cameraRef.current.isPanning = true;
     cameraRef.current.lastMouse = { x: event.clientX, y: event.clientY };
   }, [getOpponentHitFromEvent]);
 
-  const handleMouseMove = useCallback((event) => {
+  const handleMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     const camera = cameraRef.current;
     if (camera.isPanning) {
       camera.offset.x += event.clientX - camera.lastMouse.x;
@@ -1382,7 +1431,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
     });
   }, [getOpponentHitFromEvent]);
 
-  const handleClick = useCallback((event) => {
+  const handleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     const hit = getOpponentHitFromEvent(event);
     setSelectedOpponent(hit);
   }, [getOpponentHitFromEvent]);
@@ -1447,7 +1496,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }) {
         onClick={(event) => event.stopPropagation()}
       >
         <div className="panel px-1.5 py-1 flex gap-1">
-          {['OVERVIEW', 'FOLLOW'].map((mode) => (
+          {(['OVERVIEW', 'FOLLOW'] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => setCameraMode(mode)}

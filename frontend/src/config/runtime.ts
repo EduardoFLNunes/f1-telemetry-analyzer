@@ -6,11 +6,11 @@ function desktopRuntime() {
   return window.desktopRuntime || null;
 }
 
-function stripTrailingSlash(value) {
+function stripTrailingSlash(value: unknown): string {
   return String(value || '').replace(/\/+$/, '');
 }
 
-function resolveApiBaseUrl() {
+function resolveApiBaseUrl(): string {
   const runtime = desktopRuntime();
   return stripTrailingSlash(
     import.meta.env.VITE_API_BASE_URL ||
@@ -20,7 +20,7 @@ function resolveApiBaseUrl() {
   );
 }
 
-function apiBaseToWebSocketUrl(apiBaseUrl) {
+function apiBaseToWebSocketUrl(apiBaseUrl: string): string {
   try {
     const url = new URL(apiBaseUrl);
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -36,7 +36,7 @@ function apiBaseToWebSocketUrl(apiBaseUrl) {
 export const API_BASE_URL = resolveApiBaseUrl();
 export const WS_URL = import.meta.env.VITE_WS_URL || desktopRuntime()?.wsUrl || apiBaseToWebSocketUrl(API_BASE_URL);
 
-export function apiUrl(path) {
+export function apiUrl(path: string): string {
   const normalizedPath = String(path || '').startsWith('/') ? path : `/${path}`;
   return `${API_BASE_URL}${normalizedPath}`;
 }

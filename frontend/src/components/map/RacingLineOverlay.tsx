@@ -1,4 +1,4 @@
-import { transformWorldToMapPoint } from '../../utils/spatialTransform';
+import { transformWorldToMapPoint, MapPosition } from '../../utils/spatialTransform';
 
 export const RACING_LINE_OVERLAY_MODES = [
   'LINE_ONLY',
@@ -9,9 +9,11 @@ export const RACING_LINE_OVERLAY_MODES = [
   'SEGMENT_CONNECTIONS',
   'SMOOTHED_LINE',
   'PLAYER_INPUT_GRADIENT',
-];
+] as const;
 
-const MODE_LABELS = {
+export type RacingLineOverlayMode = typeof RACING_LINE_OVERLAY_MODES[number];
+
+const MODE_LABELS: Record<string, string> = {
   LINE_ONLY: 'LINE',
   DIAGNOSTIC: 'DIAG',
   BRAKE_ACCEL: 'PEDAL',
@@ -22,7 +24,7 @@ const MODE_LABELS = {
   PLAYER_INPUT_GRADIENT: 'SPEED',
 };
 
-const ISSUE_COLORS = {
+const ISSUE_COLORS: Record<string, string> = {
   LOW_CORNER_SPEED: '#fbbf24',
   LOW_EXIT_SPEED: '#fb923c',
   BRAKING_TOO_EARLY: '#fb7185',
@@ -31,11 +33,25 @@ const ISSUE_COLORS = {
   TRAJECTORY: '#a855f7',
 };
 
-function finiteNumber(value) {
+type OverlayEntry = {
+  source: string;
+  point: any;
+  progress: number | null;
+  map: MapPosition | null;
+  connectable: boolean;
+  comparison: any;
+};
+
+type Chunk = {
+  points: MapPosition[];
+  path: Path2D | null;
+};
+
+function finiteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-function currentProgress(frame) {
+function currentProgress(frame: any): number | null {
   const candidates = [
     frame?.lapProgress,
     frame?.p,
@@ -50,17 +66,17 @@ function currentProgress(frame) {
   return null;
 }
 
-function clamp01(value) {
+function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
-function normalizePedal(value) {
+function normalizePedal(value: unknown): number {
   const number = Number(value);
   if (!Number.isFinite(number)) return 0;
   return clamp01(number > 1 ? number / 100 : number);
 }
 
-function entrySpeedKmh(entry) {
+function entrySpeedKmh(entry: any): number | null {
   const candidates = [
     entry?.point?.speedKmh,
     entry?.point?.avgSpeedKmh,
@@ -73,10 +89,10 @@ function entrySpeedKmh(entry) {
   return null;
 }
 
-function speedGradientStats(entries) {
+function speedGradientStats(entries: OverlayEntry[]): { minSpeed: number; maxSpeed: number } {
   const speeds = entries
     .map((entry) => entrySpeedKmh(entry))
-    .filter((value) => finiteNumber(value));
+    .filter((value): value is number => finiteNumber(value));
   if (!speeds.length) return { minSpeed: 0, maxSpeed: 1 };
   return {
     minSpeed: Math.min(...speeds),
@@ -84,7 +100,7 @@ function speedGradientStats(entries) {
   };
 }
 
-function speedBrakeGradientColor(entry, stats) {
+function speedBrakeGradientColor(entry: any, stats: { minSpeed?: number; maxSpeed?: number }): string {
   const brake = normalizePedal(entry?.point?.brake);
   if (brake > 0.05) {
     const t = clamp01(brake);
@@ -102,13 +118,13 @@ function speedBrakeGradientColor(entry, stats) {
   return `hsla(${hue.toFixed(1)}, ${saturation.toFixed(1)}%, ${lightness.toFixed(1)}%, 0.98)`;
 }
 
-function currentSegmentIndex(frame, microSectorCount) {
+function currentSegmentIndex(frame: any, microSectorCount: number): number | null {
   const progress = currentProgress(frame);
   if (!finiteNumber(progress) || !Number.isFinite(microSectorCount) || microSectorCount <= 0) return null;
   return Math.min(microSectorCount - 1, Math.max(0, Math.floor(progress * microSectorCount)));
 }
 
-function pointProgress(point, fallback = null) {
+function pointProgress(point: any, fallback: number | null = null): number | null {
   const candidates = [
     point?.splinePosition,
     point?.normalizedSplinePosition,
@@ -124,17 +140,17 @@ function pointProgress(point, fallback = null) {
   return null;
 }
 
-function distance(a, b) {
+function distance(a: MapPosition, b: MapPosition): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-function median(values) {
+function median(values: number[]): number {
   if (!values.length) return 0;
   const sorted = [...values].sort((a, b) => a - b);
   return sorted[Math.floor(sorted.length / 2)];
 }
 
-function buildLinearPath(points) {
+function buildLinearPath(points: MapPosition[]): Path2D | null {
   if (typeof Path2D === 'undefined' || points.length < 2) return null;
   const path = new Path2D();
   path.moveTo(points[0].x, points[0].y);
@@ -144,7 +160,7 @@ function buildLinearPath(points) {
   return path;
 }
 
-function buildSmoothPath(points) {
+function buildSmoothPath(points: MapPosition[]): Path2D | null {
   if (typeof Path2D === 'undefined' || points.length < 2) return null;
   const path = new Path2D();
   path.moveTo(points[0].x, points[0].y);
@@ -168,7 +184,7 @@ function buildSmoothPath(points) {
   return path;
 }
 
-function drawPolyline(ctx, points) {
+function drawPolyline(ctx: CanvasRenderingContext2D, points: MapPosition[]) {
   if (points.length < 2) return;
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
@@ -178,7 +194,7 @@ function drawPolyline(ctx, points) {
   ctx.stroke();
 }
 
-function drawPathOrPolyline(ctx, chunk) {
+function drawPathOrPolyline(ctx: CanvasRenderingContext2D, chunk: Chunk) {
   if (chunk.path) {
     ctx.stroke(chunk.path);
     return;
@@ -186,7 +202,7 @@ function drawPathOrPolyline(ctx, chunk) {
   drawPolyline(ctx, chunk.points);
 }
 
-function marker(ctx, point, radius, fill, scale, stroke = 'rgba(2,6,23,0.78)') {
+function marker(ctx: CanvasRenderingContext2D, point: MapPosition, radius: number, fill: string, scale: number, stroke = 'rgba(2,6,23,0.78)') {
   ctx.beginPath();
   ctx.arc(point.x, point.y, radius / scale, 0, Math.PI * 2);
   ctx.fillStyle = fill;
@@ -196,19 +212,22 @@ function marker(ctx, point, radius, fill, scale, stroke = 'rgba(2,6,23,0.78)') {
   ctx.stroke();
 }
 
-function issueColor(segment) {
+function issueColor(segment: any): string | null {
   if (!segment) return null;
   if (finiteNumber(segment.estimatedDeltaSeconds) && segment.estimatedDeltaSeconds < -0.03) return '#34d399';
   if (segment.mainIssue === 'GOOD' || segment.mainIssue === 'UNKNOWN' || segment.mainIssue === 'INSUFFICIENT_DATA') return null;
   return ISSUE_COLORS[segment.mainIssue] || '#fbbf24';
 }
 
-function buildChunks(entries, { smooth = false, breakOnSegmentGap = false } = {}) {
-  const distances = [];
+function buildChunks(
+  entries: OverlayEntry[],
+  { smooth = false, breakOnSegmentGap = false }: { smooth?: boolean; breakOnSegmentGap?: boolean } = {},
+): { chunks: Chunk[]; typicalDistance: number; maxJump: number; abnormalConnectionCount: number } {
+  const distances: number[] = [];
   for (let index = 1; index < entries.length; index += 1) {
     const previous = entries[index - 1];
     const entry = entries[index];
-    if (previous.connectable && entry.connectable) {
+    if (previous.connectable && entry.connectable && previous.map && entry.map) {
       distances.push(distance(previous.map, entry.map));
     }
   }
@@ -216,8 +235,8 @@ function buildChunks(entries, { smooth = false, breakOnSegmentGap = false } = {}
   const typical = median(distances.filter((value) => value > 0));
   const maxJump = Math.max(typical * 4.5, 180);
   let abnormalConnectionCount = 0;
-  const chunks = [];
-  let current = [];
+  const chunks: Chunk[] = [];
+  let current: MapPosition[] = [];
 
   entries.forEach((entry, index) => {
     const previous = entries[index - 1];
@@ -228,7 +247,7 @@ function buildChunks(entries, { smooth = false, breakOnSegmentGap = false } = {}
       finiteNumber(previousSegment) &&
       finiteNumber(currentSegment) &&
       currentSegment - previousSegment > 1;
-    const hasJump = previous && typical > 0 && distance(previous.map, entry.map) > maxJump;
+    const hasJump = Boolean(previous?.map && entry.map && typical > 0 && distance(previous.map, entry.map) > maxJump);
     const breaks = !entry.connectable || (previous && !previous.connectable) || hasSegmentGap || hasJump;
 
     if (hasJump) abnormalConnectionCount += 1;
@@ -239,11 +258,11 @@ function buildChunks(entries, { smooth = false, breakOnSegmentGap = false } = {}
           path: smooth ? buildSmoothPath(current) : buildLinearPath(current),
         });
       }
-      current = entry.connectable ? [entry.map] : [];
+      current = entry.connectable && entry.map ? [entry.map] : [];
       return;
     }
 
-    current.push(entry.map);
+    if (entry.map) current.push(entry.map);
   });
 
   if (current.length >= 2) {
@@ -261,12 +280,12 @@ function buildChunks(entries, { smooth = false, breakOnSegmentGap = false } = {}
   };
 }
 
-function buildMicroEntries(payload, comparisons) {
+function buildMicroEntries(payload: any, comparisons: Map<number, any>): OverlayEntry[] {
   const points = payload?.racingLine?.points || [];
   return points
     .slice()
-    .sort((a, b) => a.segmentIndex - b.segmentIndex)
-    .map((point) => ({
+    .sort((a: any, b: any) => a.segmentIndex - b.segmentIndex)
+    .map((point: any) => ({
       source: 'microsector',
       point,
       progress: pointProgress(point),
@@ -274,19 +293,19 @@ function buildMicroEntries(payload, comparisons) {
       connectable: point.confidence !== 'INSUFFICIENT_DATA',
       comparison: comparisons.get(point.segmentIndex) || null,
     }))
-    .filter((entry) => entry.map);
+    .filter((entry: OverlayEntry) => entry.map);
 }
 
-function buildRawReferenceEntries(payload, microSectorCount) {
+function buildRawReferenceEntries(payload: any, microSectorCount: number): OverlayEntry[] {
   const visualPoints = payload?.racingLine?.visualLine?.points || [];
   return visualPoints
     .slice()
-    .sort((a, b) => {
-      const ap = pointProgress(a, 0);
-      const bp = pointProgress(b, 0);
+    .sort((a: any, b: any) => {
+      const ap = pointProgress(a, 0) ?? 0;
+      const bp = pointProgress(b, 0) ?? 0;
       return ap - bp;
     })
-    .map((point, index) => {
+    .map((point: any, index: number) => {
       const progress = pointProgress(point, index / Math.max(1, visualPoints.length - 1));
       return {
         source: 'raw_reference_sample',
@@ -302,16 +321,16 @@ function buildRawReferenceEntries(payload, microSectorCount) {
         comparison: null,
       };
     })
-    .filter((entry) => entry.map);
+    .filter((entry: OverlayEntry) => entry.map);
 }
 
-function nearestByProgress(entries, progress) {
+function nearestByProgress(entries: OverlayEntry[], progress: number | null): OverlayEntry | null {
   if (!finiteNumber(progress) || !entries.length) return null;
-  let nearest = null;
+  let nearest: OverlayEntry | null = null;
   let best = Number.POSITIVE_INFINITY;
   entries.forEach((entry) => {
     if (!finiteNumber(entry.progress)) return;
-    const delta = Math.abs(entry.progress - progress);
+    const delta = Math.abs((entry.progress as number) - progress);
     if (delta < best) {
       best = delta;
       nearest = entry;
@@ -320,7 +339,22 @@ function nearestByProgress(entries, progress) {
   return nearest;
 }
 
-export function prepareRacingLineOverlay(payload) {
+export type PreparedRacingLineOverlay = {
+  status: string;
+  payload: any;
+  microSectorCount: number;
+  baseChunks: Chunk[];
+  smoothedChunks: Chunk[];
+  segmentChunks: Chunk[];
+  baseEntries: OverlayEntry[];
+  rawEntries: OverlayEntry[];
+  entries: OverlayEntry[];
+  mapPositions: (MapPosition | null)[];
+  biggestLossSegmentIndex: number | null;
+  debug: Record<string, any>;
+};
+
+export function prepareRacingLineOverlay(payload: any): PreparedRacingLineOverlay {
   if (payload?.status !== 'READY' || !payload?.racingLine?.points?.length) {
     return {
       status: payload?.status || 'INSUFFICIENT_DATA',
@@ -346,8 +380,8 @@ export function prepareRacingLineOverlay(payload) {
     };
   }
 
-  const comparisons = new Map(
-    (payload.comparison?.segments || []).map((segment) => [segment.segmentIndex, segment]),
+  const comparisons = new Map<number, any>(
+    (payload.comparison?.segments || []).map((segment: any) => [segment.segmentIndex, segment]),
   );
   const microSectorCount = payload.racingLine.microSectorCount || payload.racingLine.points.length;
   const microEntries = buildMicroEntries(payload, comparisons);
@@ -397,21 +431,21 @@ export function prepareRacingLineOverlay(payload) {
   };
 }
 
-export function racingLineMapPositions(prepared) {
+export function racingLineMapPositions(prepared: PreparedRacingLineOverlay | null | undefined): (MapPosition | null)[] {
   return prepared?.mapPositions || [];
 }
 
-export function racingLineModeLabel(mode) {
+export function racingLineModeLabel(mode: string): string {
   return MODE_LABELS[mode] || MODE_LABELS.LINE_ONLY;
 }
 
-function strokeChunks(ctx, chunks, scale, strokeStyle, lineWidth) {
+function strokeChunks(ctx: CanvasRenderingContext2D, chunks: Chunk[], scale: number, strokeStyle: string, lineWidth: number) {
   ctx.strokeStyle = strokeStyle;
   ctx.lineWidth = lineWidth / scale;
   chunks.forEach((chunk) => drawPathOrPolyline(ctx, chunk));
 }
 
-function drawBaseLine(ctx, prepared, scale, alpha = 1, options = {}) {
+function drawBaseLine(ctx: CanvasRenderingContext2D, prepared: PreparedRacingLineOverlay, scale: number, alpha = 1, options: { simple?: boolean } = {}) {
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -422,17 +456,18 @@ function drawBaseLine(ctx, prepared, scale, alpha = 1, options = {}) {
   ctx.restore();
 }
 
-function drawDiagnosticMarkers(ctx, prepared, scale, currentIndex) {
+function drawDiagnosticMarkers(ctx: CanvasRenderingContext2D, prepared: PreparedRacingLineOverlay, scale: number, currentIndex: number | null) {
   prepared.entries.forEach((entry) => {
     const color = issueColor(entry.comparison);
-    if (!color) return;
+    if (!color || !entry.map) return;
     const isCurrent = entry.point.segmentIndex === currentIndex;
     marker(ctx, entry.map, isCurrent ? 3.6 : 2.6, `${color}cc`, scale, `${color}ee`);
   });
 }
 
-function drawBrakeAccelMarkers(ctx, prepared, scale, currentIndex) {
+function drawBrakeAccelMarkers(ctx: CanvasRenderingContext2D, prepared: PreparedRacingLineOverlay, scale: number, currentIndex: number | null) {
   prepared.entries.forEach((entry) => {
+    if (!entry.map) return;
     const isCurrent = entry.point.segmentIndex === currentIndex;
     if (entry.point.brakingZone) {
       marker(ctx, entry.map, isCurrent ? 3.8 : 2.4, 'rgba(251,113,133,0.78)', scale, 'rgba(251,113,133,0.92)');
@@ -442,20 +477,22 @@ function drawBrakeAccelMarkers(ctx, prepared, scale, currentIndex) {
   });
 }
 
-function drawRawReferenceSamples(ctx, prepared, scale) {
+function drawRawReferenceSamples(ctx: CanvasRenderingContext2D, prepared: PreparedRacingLineOverlay, scale: number) {
   prepared.rawEntries.forEach((entry) => {
+    if (!entry.map) return;
     marker(ctx, entry.map, 1.45, 'rgba(125,211,252,0.62)', scale, 'rgba(125,211,252,0.20)');
   });
 }
 
-function drawRacingLinePoints(ctx, prepared, scale, currentIndex) {
+function drawRacingLinePoints(ctx: CanvasRenderingContext2D, prepared: PreparedRacingLineOverlay, scale: number, currentIndex: number | null) {
   prepared.entries.forEach((entry) => {
+    if (!entry.map) return;
     const isCurrent = entry.point.segmentIndex === currentIndex;
     marker(ctx, entry.map, isCurrent ? 3.8 : 2.3, 'rgba(251,191,36,0.78)', scale, 'rgba(251,191,36,0.92)');
   });
 }
 
-function drawSegmentConnections(ctx, prepared, scale) {
+function drawSegmentConnections(ctx: CanvasRenderingContext2D, prepared: PreparedRacingLineOverlay, scale: number) {
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -463,7 +500,7 @@ function drawSegmentConnections(ctx, prepared, scale) {
   ctx.restore();
 }
 
-function drawSmoothedLine(ctx, prepared, scale) {
+function drawSmoothedLine(ctx: CanvasRenderingContext2D, prepared: PreparedRacingLineOverlay, scale: number) {
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -472,8 +509,8 @@ function drawSmoothedLine(ctx, prepared, scale) {
   ctx.restore();
 }
 
-function drawPlayerInputGradient(ctx, prepared, scale) {
-  const entries = prepared.baseEntries || prepared.rawEntries || [];
+function drawPlayerInputGradient(ctx: CanvasRenderingContext2D, prepared: PreparedRacingLineOverlay, scale: number) {
+  const entries = prepared.baseEntries?.length ? prepared.baseEntries : prepared.rawEntries;
   if (entries.length < 2) return;
 
   const maxJump = prepared.debug?.baseMaxJump || 180;
@@ -508,14 +545,14 @@ function drawPlayerInputGradient(ctx, prepared, scale) {
   ctx.restore();
 }
 
-function drawCurrentMarker(ctx, prepared, scale, currentIndex, progress) {
+function drawCurrentMarker(ctx: CanvasRenderingContext2D, prepared: PreparedRacingLineOverlay, scale: number, currentIndex: number | null, progress: number | null) {
   const rawCurrent = nearestByProgress(prepared.rawEntries, progress);
   const current = rawCurrent || prepared.entries.find((entry) => entry.point.segmentIndex === currentIndex);
-  if (!current) return;
+  if (!current || !current.map) return;
   marker(ctx, current.map, 5.3, 'rgba(34,211,238,0.18)', scale, 'rgba(34,211,238,0.78)');
 }
 
-function drawSpeedGradientLegend(ctx, x, y, width, prepared) {
+function drawSpeedGradientLegend(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, prepared: PreparedRacingLineOverlay) {
   const gradient = ctx.createLinearGradient(x, y, x + width, y);
   gradient.addColorStop(0, '#7f1d1d');
   gradient.addColorStop(0.24, '#dc2626');
@@ -541,14 +578,21 @@ function drawSpeedGradientLegend(ctx, x, y, width, prepared) {
   ctx.fillText('ALTA', x + width * 0.76, y + 19);
 }
 
-export function drawPreparedRacingLineOverlay(ctx, prepared, frame, scale, mode = 'LINE_ONLY', options = {}) {
+export function drawPreparedRacingLineOverlay(
+  ctx: CanvasRenderingContext2D,
+  prepared: PreparedRacingLineOverlay | null | undefined,
+  frame: any,
+  scale: number,
+  mode: string = 'LINE_ONLY',
+  options: { simple?: boolean } = {},
+): number {
   if (!prepared || !Number.isFinite(scale) || scale <= 0) return 0;
   const ready = prepared.status === 'READY' && (prepared.baseChunks.length || prepared.rawEntries.length || prepared.entries.length);
   if (!ready) return 0;
 
   const start = performance.now();
   const simple = Boolean(options.simple);
-  const safeMode = simple ? 'LINE_ONLY' : (RACING_LINE_OVERLAY_MODES.includes(mode) ? mode : 'LINE_ONLY');
+  const safeMode = simple ? 'LINE_ONLY' : ((RACING_LINE_OVERLAY_MODES as readonly string[]).includes(mode) ? mode : 'LINE_ONLY');
   const progress = currentProgress(frame);
   const currentIndex = currentSegmentIndex(frame, prepared.microSectorCount);
 
@@ -584,7 +628,7 @@ export function drawPreparedRacingLineOverlay(ctx, prepared, frame, scale, mode 
   return performance.now() - start;
 }
 
-export function drawRacingLineLegend(ctx, width, height, prepared, mode = 'LINE_ONLY') {
+export function drawRacingLineLegend(ctx: CanvasRenderingContext2D, width: number, height: number, prepared: PreparedRacingLineOverlay | null | undefined, mode: string = 'LINE_ONLY') {
   if (!prepared) return;
   ctx.save();
   ctx.resetTransform();
@@ -592,7 +636,7 @@ export function drawRacingLineLegend(ctx, width, height, prepared, mode = 'LINE_
   const status = prepared.status || 'INSUFFICIENT_DATA';
   const ready = status === 'READY' && (prepared.baseChunks.length || prepared.rawEntries.length || prepared.entries.length);
   const panelWidth = Math.min(280, Math.max(220, width - 28));
-  const safeMode = RACING_LINE_OVERLAY_MODES.includes(mode) ? mode : 'LINE_ONLY';
+  const safeMode = (RACING_LINE_OVERLAY_MODES as readonly string[]).includes(mode) ? mode : 'LINE_ONLY';
   const panelHeight = safeMode === 'PLAYER_INPUT_GRADIENT' ? 72 : 58;
   const x = 14;
   const y = height - panelHeight - 14;
@@ -625,7 +669,7 @@ export function drawRacingLineLegend(ctx, width, height, prepared, mode = 'LINE_
     return;
   }
 
-  const items = safeMode === 'BRAKE_ACCEL'
+  const items: Array<[string, string]> = safeMode === 'BRAKE_ACCEL'
     ? [['REF', '#22d3ee'], ['FREIO', '#fb7185'], ['ACEL', '#34d399']]
     : safeMode === 'DIAGNOSTIC'
       ? [['REF', '#22d3ee'], ['PERDA', '#fbbf24'], ['TRAJ', '#a855f7']]
