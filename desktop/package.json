@@ -1,9 +1,9 @@
 {
   "name": "automobilista-telemetria-desktop",
   "private": true,
-  "productName": "Automobilista Telemetria - Phase 15.1",
-  "version": "0.1.6-phase-15-1",
-  "description": "Sistema desktop de telemetria e analise de desempenho para simulacao automobilistica. Release: Phase 15.1.",
+  "productName": "Automobilista Telemetria",
+  "version": "0.1.7-phase-16",
+  "description": "Sistema desktop de telemetria e analise de desempenho para simulacao automobilistica com Assetto Corsa.",
   "author": "Eduardo Francisco",
   "copyright": "Copyright (c) 2026 Eduardo Francisco",
   "main": "main.js",
@@ -24,8 +24,8 @@
   },
   "build": {
     "appId": "br.edu.automobilista.telemetria",
-    "productName": "Automobilista Telemetria - Phase 15.1",
-    "artifactName": "Automobilista-Telemetria-Phase-15.1-Setup-${version}.${ext}",
+    "productName": "Automobilista Telemetria",
+    "artifactName": "Automobilista-Telemetria-Setup-${version}.${ext}",
     "asar": true,
     "directories": {
       "output": "dist"
@@ -91,8 +91,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Automobilista Telemetria - Phase 15.1",
-      "uninstallDisplayName": "Automobilista Telemetria - Phase 15.1",
+      "shortcutName": "Automobilista Telemetria",
+      "uninstallDisplayName": "Automobilista Telemetria",
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",
       "installerHeaderIcon": "assets/icon.ico"
