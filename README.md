@@ -1,405 +1,222 @@
-# 🏎️ F1 Telemetry Analyzer - AI Raceline
+# 🏎️ Automobilista Telemetria — Telemetria Assistida para Simulação Automobilística
 
-Sistema completo de análise de telemetria de corrida com IA de raceline ideal baseada em **princípios reais de física e corrida**.
+Trabalho de Conclusão de Curso: um sistema de telemetria assistida para simulação
+automobilística, usando **Assetto Corsa** como simulador e o autódromo de
+**Interlagos** como ambiente de testes.
 
-## 🎯 Características
+O sistema lê a telemetria do carro do jogador diretamente da memória
+compartilhada do Assetto Corsa em tempo real, recebe a telemetria dos
+oponentes por UDP, reconstrói a geometria da pista a partir dos arquivos 3D
+do próprio jogo (KN5), e oferece análise de racing line, comparação por
+microsetor e feedback assistido de pilotagem pós-volta — tudo através de um
+aplicativo desktop (Electron) ou de um dashboard web.
 
-### ✅ CORRETO - Implementação Baseada em Princípios Reais
+> Este README descreve a arquitetura atual do projeto (Phase 15.1). Ele **não**
+> usa upload de CSV nem pistas geradas manualmente — esse fluxo existia nas
+> fases iniciais do projeto e foi substituído pela captura em tempo real.
 
-- **Trackmap gerado EXCLUSIVAMENTE do CSV da pista** (nunca da raceline)
-- **IA de raceline baseada em física real**:
-  - Velocidade em curva: `v² = μ * g * r` (grip × gravidade × raio)
-  - Racing line: Outside → Apex → Outside
-  - Apex calculado geometricamente (20-40% da largura interna)
-  - Considera curvatura, raio e forças laterais
-- **SEM valores mágicos**: Sem scaling 0.96, sem ruído aleatório, sem offsets arbitrários
-- **Análise real de performance**: Driving style, track limits, métricas detalhadas
-- **✨ NOVO: Captura UDP em tempo real** de F1 2025 e Automobilista 2
+## 🎯 O que o sistema faz
 
-### 🚫 Evitado - Implementações Incorretas
+- **Telemetria em tempo real do jogador**: lê posição, velocidade, inputs e
+  física do carro direto da memória compartilhada do Assetto Corsa (sem
+  arquivos intermediários).
+- **Telemetria dos oponentes**: recebe dados de outros carros na pista via um
+  exportador Python que roda dentro do próprio Assetto Corsa
+  (`tools/assetto_opponents_exporter/`), enviado por UDP para o backend.
+- **Geometria de pista real**: a pista (centerline, bordas, largura,
+  curvatura) é reconstruída a partir dos arquivos `.kn5`/`fast_lane.ai` do
+  Assetto Corsa — não de um CSV nem da trajetória do jogador.
+- **Racing Line e análise comparativa**: calcula a linha ideal por microsetor
+  e compara contra a volta do jogador, com base física (não em valores
+  mágicos).
+- **Análise assistida pós-volta**: classifica erros de pilotagem (frenagem,
+  entrada/saída de curva, uso de acelerador) comparando com uma volta de
+  referência e com dados reais externos (FastF1) para Interlagos.
+- **Gravação e replay de sessões**: sessões e voltas são persistidas
+  (DuckDB) e podem ser reproduzidas depois, offline, no mesmo mapa.
+- **Diagnóstico de qualidade de dados**: monitoramento de confiabilidade da
+  telemetria do jogador, dos oponentes (UDP) e validação da pista/volta.
+- **Aplicativo desktop**: empacotado com Electron + PyInstaller + instalador
+  NSIS para Windows, com autostart do backend e diagnóstico de runtime.
 
-❌ Trackmap derivado da raceline  
-❌ Raceline automaticamente no "meio da pista"  
-❌ Valores mágicos (0.96, ruído aleatório)  
-❌ IA que só escala dados sem física  
+## 🏗️ Arquitetura resumida
+
+```
+Assetto Corsa (memória compartilhada + exportador UDP de oponentes)
+        │
+        ▼
+Backend (FastAPI) ── WebSocket + REST ──▶ Frontend (React + Vite + TS)
+        │                                        │
+        ▼                                        ▼
+Cache/DB local (DuckDB, cache de pista)   Electron shell (app desktop)
+```
+
+Veja o detalhamento completo em [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## 📦 Estrutura do Projeto
 
 ```
-f1-telemetry-ai/
-├── backend/                    # FastAPI Backend
-│   ├── main.py                 # API principal
+f1-telemetry-analyzer/
+├── backend/                    # FastAPI backend
+│   ├── main.py                  # API principal (~60 endpoints)
+│   ├── desktop_backend_runner.py # entry point usado no build PyInstaller
 │   ├── core/
-│   │   ├── trackmap.py         # Geração de trackmap
-│   │   ├── telemetry.py        # Processamento de telemetria
-│   │   └── raceline_ai.py      # IA de raceline ideal
-│   └── requirements.txt
+│   │   ├── assetto_adapter.py, ac_shared_memory.py, assetto_shared_memory_gate.py
+│   │   ├── live/                # runtime de telemetria do jogador (WS + polling)
+│   │   ├── opponents/           # runtime de telemetria dos oponentes (UDP)
+│   │   ├── geometry/, kn5/      # reconstrução da pista a partir dos arquivos do jogo
+│   │   ├── racing_line_analysis.py, comparison_analysis.py, car_physics.py
+│   │   ├── assisted_analysis/   # feedback de pilotagem pós-volta
+│   │   ├── data_quality/        # monitoramento de confiabilidade
+│   │   ├── external_references/ # referências reais (FastF1) para Interlagos
+│   │   ├── recording/           # gravação e persistência de sessões/voltas
+│   │   └── websocket_server.py
+│   ├── packaging/               # build do executável (PyInstaller)
+│   └── tests/                    # 134 testes automatizados (unittest)
 │
-├── frontend/                   # React + Vite Frontend
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── TrackMap.jsx    # Visualização do mapa
-│   │   │   ├── TelemetryCharts.jsx
-│   │   │   ├── ComparisonPanel.jsx
-│   │   │   └── UploadPanel.jsx
-│   │   ├── api/
-│   │   │   └── client.js       # Cliente API
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── package.json
-│   └── vite.config.js
+├── frontend/                    # React + Vite (migração JS → TS em andamento)
+│   └── src/
+│       ├── components/           # painéis (Racing Line, Comparação, Análise Assistida...)
+│       ├── components/map/       # renderização 2D em canvas do mapa da pista
+│       ├── store/                # estado global (Zustand)
+│       └── hooks/useTelemetryWS.ts # cliente WebSocket
 │
-├── data/                       # Dados de exemplo
-│   └── SaoPaulo.csv            # Pista de Interlagos
+├── desktop/                     # Shell Electron + empacotamento (electron-builder/NSIS)
+│   ├── main.js, preload.js
+│   └── dist/                     # instaladores gerados (.exe)
 │
-├── README.md
-├── .gitignore
-├── run-backend.sh              # Script para rodar backend (Linux/Mac)
-├── run-frontend.sh             # Script para rodar frontend (Linux/Mac)
-├── run-backend.bat             # Script para rodar backend (Windows)
-└── run-frontend.bat            # Script para rodar frontend (Windows)
+├── tools/
+│   ├── assetto_opponents_exporter/ # plugin Python que roda dentro do Assetto Corsa
+│   ├── runtime_performance_probe.py
+│   └── send_fake_opponents_udp.py
+│
+├── scripts/                     # scripts de geração/validação da geometria de Interlagos
+├── docs/                        # notas técnicas por fase (empacotamento, performance)
+└── data/                        # cache de pista, fixtures de teste, referências externas
 ```
 
-## 🚀 Instalação e Execução
+## 🚀 Como executar
 
-### Pré-requisitos
+### Requisitos
 
+- **Assetto Corsa** instalado (Steam) — necessário para telemetria real do
+  jogador e dos oponentes. Sem o jogo aberto, o backend ainda sobe, mas fica
+  em modo de espera (`waiting`/mock).
 - **Python 3.9+**
 - **Node.js 18+** e npm
-- Sistema operacional: Windows, Linux ou macOS
+- Windows (o empacotamento desktop/instalador é Windows-only hoje; backend e
+  frontend também rodam em Linux/macOS em modo desenvolvimento)
 
-### 1️⃣ Backend (FastAPI)
+### Opção 1 — Aplicativo desktop (recomendado)
+
+Instalador pronto (gerado por fase) em `desktop/dist/*.exe`, ou para
+desenvolver o shell Electron:
 
 ```bash
-# Navegar para o diretório do backend
+cd desktop
+npm install
+npm run desktop:dev
+```
+
+Isso abre o Electron carregando o Vite dev server. Para simular o
+empacotamento final sem instalar:
+
+```bash
+cd frontend && npm run build
+cd ../desktop && npm run desktop:prod
+```
+
+Detalhes completos de build/instalador em
+[docs/phase12_desktop_packaging_plan.md](docs/phase12_desktop_packaging_plan.md).
+
+### Opção 2 — Backend e frontend manualmente (desenvolvimento)
+
+```bash
+# Terminal 1 — Backend
 cd backend
-
-# Criar ambiente virtual (opcional mas recomendado)
 python -m venv venv
-
-# Ativar ambiente virtual
-# Windows:
-venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
-
-# Instalar dependências
+venv\Scripts\activate        # Windows
 pip install -r requirements.txt
+python main.py                # http://localhost:8000 (docs em /docs)
 
-# Rodar servidor
-python main.py
-```
-
-O backend estará rodando em: **http://localhost:8000**
-
-### 2️⃣ Frontend (React + Vite)
-
-```bash
-# Navegar para o diretório do frontend (em outro terminal)
+# Terminal 2 — Frontend
 cd frontend
-
-# Instalar dependências
 npm install
-
-# Rodar aplicação
-npm run dev
+npm run dev                   # http://localhost:5173
 ```
 
-O frontend estará rodando em: **http://localhost:5173**
+Os scripts legados `run-backend.bat/.sh` e `run-frontend.bat/.sh` continuam
+funcionando e fazem exatamente isso.
 
-### 🎮 Uso Rápido (Scripts)
+### Configurar o Assetto Corsa
 
-**Linux/Mac:**
+1. Abra o Assetto Corsa e carregue Interlagos (`ks_interlagos`).
+2. Para telemetria dos **oponentes**, copie o plugin Python
+   `tools/assetto_opponents_exporter/` para
+   `<Assetto Corsa>/apps/python/ac_opponents_exporter/` e ative-o no menu de
+   apps do jogo (envia dados por UDP em `127.0.0.1:8765`).
+3. A telemetria do **jogador** é lida automaticamente via memória
+   compartilhada — não precisa de plugin.
+
+Guia detalhado em [docs/phase12_assetto_plugin_setup.md](docs/phase12_assetto_plugin_setup.md).
+
+## 🧪 Testes
+
 ```bash
-# Terminal 1 - Backend
-./run-backend.sh
-
-# Terminal 2 - Frontend
-./run-frontend.sh
+cd backend
+python -m unittest discover -s tests
 ```
 
-**Windows:**
-```cmd
-# Terminal 1 - Backend
-run-backend.bat
+134 testes cobrem análise de racing line, comparação, qualidade de dados,
+gravação de sessão, física do carro, telemetria de oponentes e o gate de
+memória compartilhada.
 
-# Terminal 2 - Frontend
-run-frontend.bat
-```
-
-## 📊 Como Usar
-
-### Passo 1: Carregar Pista
-
-1. Acesse http://localhost:5173
-2. Faça upload do CSV da pista (ex: `data/SaoPaulo.csv`)
-3. O sistema gerará o trackmap real
-
-**Formato do CSV da Pista:**
-```csv
-# x_m,y_m,w_tr_right_m,w_tr_left_m
--0.518788,-0.519763,7.241,7.513
-0.755319,-5.352122,7.156,7.327
-...
-```
-
-### Passo 2: Carregar Telemetria
-
-1. Faça upload do CSV de telemetria do jogador
-2. O sistema processará automaticamente e gerará a raceline ideal
-
-**Formato do CSV de Telemetria:**
-```csv
-session_time,lap,pos_x,pos_z,speed,throttle,brake
-0.0,1,-123.45,456.78,120,0.85,0.0
-0.05,1,-123.50,456.90,125,0.90,0.0
-...
-```
-
-### Passo 3: Análise
-
-O sistema mostrará:
-
-- **Mapa interativo** com trackmap, raceline do jogador e raceline ideal da IA
-- **Comparação de tempos** (player vs IA)
-- **Métricas detalhadas**: velocidade, throttle, freio, delta
-- **Insights da IA**: sugestões de melhoria baseadas em análise física
-- **Driving style**: classificação (agressivo/suave/conservador)
-- **Oportunidades de melhoria**: curvas específicas onde ganhar tempo
-
-## 🧠 Como Funciona a IA
-
-### 1. Análise da Pista
-- Identifica curvas e retas usando curvatura geométrica
-- Calcula apex ideal para cada curva (maximiza raio)
-- Determina direção das curvas (esquerda/direita)
-
-### 2. Geração da Raceline Ideal
-- **Outside → Apex → Outside**: Princípio clássico de racing line
-- Apex posicionado 20-40% da largura interna
-- Trajetória suavizada com splines
-
-### 3. Cálculo de Velocidade Ideal
-- Baseado em física: `v = √(μ * g * r)`
-  - μ = grip factor (1.5-2.0 para F1)
-  - g = gravidade (9.81 m/s²)
-  - r = raio da curva (1/curvatura)
-- Considera limites de aceleração (~1.5g) e frenagem (~4.5g)
-- Suaviza transições para serem realistas
-
-### 4. Análise Comparativa
-- Compara trajetória do jogador vs ideal
-- Identifica áreas de melhoria
-- Gera insights acionáveis
-
-## 📝 Estrutura dos Dados
-
-### Track Data (Pista)
-```json
-{
-  "name": "Interlagos",
-  "centerline": {"x": [...], "y": [...]},
-  "left_edge": {"x": [...], "y": [...]},
-  "right_edge": {"x": [...], "y": [...]},
-  "curvatures": [...],
-  "corners": [
-    {
-      "corner_id": 1,
-      "apex_idx": 123,
-      "direction": "left",
-      "curvature": 0.015
-    }
-  ],
-  "length_meters": 4309.0
-}
-```
-
-### Telemetry Data (Jogador)
-```json
-{
-  "best_lap_time": 72.345,
-  "best_lap_number": 3,
-  "best_lap_data": {
-    "x": [...],
-    "z": [...],
-    "speed": [...],
-    "throttle": [...],
-    "brake": [...],
-    "distance": [...]
-  },
-  "metrics": {
-    "avg_speed": 185.5,
-    "max_speed": 310.2,
-    "full_throttle_pct": 45.3
-  },
-  "driving_style": {
-    "classification": "suave",
-    "description": "Transições graduais..."
-  }
-}
-```
-
-### AI Raceline (IA)
-```json
-{
-  "trajectory": {"x": [...], "z": [...], "distance": [...]},
-  "speed": [...],
-  "throttle": [...],
-  "brake": [...],
-  "estimated_time": 70.123,
-  "insights": [
-    "Velocidade média 5.2 km/h abaixo do ideal...",
-    "Tente levar mais velocidade nas curvas..."
-  ],
-  "improvements": [
-    {
-      "corner": 1,
-      "current": 145.0,
-      "target": 160.0,
-      "gain": 15.0,
-      "suggestion": "Curva 1: Carregue 15 km/h a mais"
-    }
-  ]
-}
-```
-
-## 🔧 API Endpoints
-
-### Backend (FastAPI)
-
-**Base URL:** `http://localhost:8000`
-
-#### Upload Track
-```http
-POST /api/upload/track
-Content-Type: multipart/form-data
-Body: file (CSV)
-```
-
-#### Upload Telemetry
-```http
-POST /api/upload/telemetry
-Content-Type: multipart/form-data
-Body: file (CSV)
-```
-
-#### Get Track Data
-```http
-GET /api/data/track
-```
-
-#### Get Telemetry Data
-```http
-GET /api/data/telemetry
-```
-
-#### Get AI Raceline
-```http
-GET /api/data/ai-raceline
-```
-
-#### Get Full Comparison
-```http
-GET /api/data/comparison
-```
-
-## 🎨 Tecnologias Utilizadas
-
-### Backend
-- **FastAPI**: Framework web moderno e rápido
-- **Pandas**: Manipulação de dados
-- **NumPy**: Cálculos matemáticos e vetoriais
-- **SciPy**: Interpolação e otimização
-
-### Frontend
-- **React 18**: Framework UI
-- **Vite**: Build tool rápido
-- **Plotly.js**: Visualizações interativas
-- **Axios**: Cliente HTTP
-- **Lucide React**: Ícones
-
-## 🔬 Princípios Científicos
-
-### Física das Corridas
-1. **Força Lateral Máxima**: `F_lat = m * v² / r`
-2. **Velocidade em Curva**: `v_max = √(μ * g * r)`
-3. **Raio Ótimo**: Maximizar raio = maximizar velocidade
-4. **Momentum**: Conservar velocidade ao longo da pista
-
-### Geometria da Pista
-1. **Vetor Tangente**: Direção da trajetória
-2. **Vetor Normal**: Perpendicular à trajetória
-3. **Curvatura**: `κ = |x'y'' - y'x''| / (x'² + y'²)^(3/2)`
-4. **Raio**: `r = 1 / κ`
-
-## 🐛 Troubleshooting
-
-### Backend não inicia
 ```bash
-# Verificar instalação do Python
-python --version
-
-# Reinstalar dependências
-pip install --upgrade -r requirements.txt
+cd frontend
+npm run build     # build de produção
+npx tsc --noEmit  # checagem de tipos (não está em CI ainda — rodar manualmente)
 ```
 
-### Frontend não compila
-```bash
-# Limpar cache e reinstalar
-rm -rf node_modules package-lock.json
-npm install
+## 🔧 Principais endpoints da API
+
+Base local: `http://127.0.0.1:8000` (docs interativas em `/docs`).
+
+```
+GET  /api/health, /api/runtime/status
+GET  /api/live/telemetry, /api/live/opponents, /api/live/player-physics
+GET  /api/live/racing-line, /api/live/comparison, /api/live/coach
+POST /api/recording/start, /api/recording/stop
+GET  /api/sessions, /api/sessions/{id}/laps, /api/laps/{lap_id}/replay
+GET  /api/assisted-analysis/laps, /api/analysis/assisted/lap/{lapId}
+GET  /api/validation/data-quality, /api/validation/track
+GET  /api/references/external  (referências FastF1 para Interlagos)
 ```
 
-### CORS Error
-Certifique-se de que:
-1. Backend está rodando em `http://localhost:8000`
-2. Frontend está rodando em `http://localhost:5173`
-3. Ambos estão rodando simultaneamente
+## 🎨 Tecnologias
 
-### CSV Inválido
-Verifique que:
-- CSV da pista tem colunas: `# x_m, y_m, w_tr_right_m, w_tr_left_m`
-- CSV de telemetria tem: `session_time, lap, pos_x, pos_z, speed, throttle, brake`
-- Arquivos estão em UTF-8
+**Backend:** FastAPI, Pandas, NumPy, SciPy, DuckDB, Pydantic, Uvicorn,
+FastF1 (referências externas), PyInstaller (empacotamento).
 
-## 📄 Licença
+**Frontend:** React 18, TypeScript (migração de JS em andamento), Vite,
+Zustand, Plotly.js / Recharts, Axios, Lucide React.
 
-Este projeto é um exemplo educacional de análise de telemetria com IA.
+**Desktop:** Electron, electron-builder (instalador NSIS).
 
-## 👨‍💻 Desenvolvimento
+## 📝 Status do projeto
 
-### Adicionar Nova Pista
+O sistema está na Phase 15.1 (diagnóstico e otimização de amostragem em
+tempo real). O empacotamento desktop está validado como instalador real do
+Windows. Pontos conhecidos em aberto:
 
-1. Coloque o CSV da pista em `data/`
-2. Formato obrigatório: `x_m, y_m, w_tr_right_m, w_tr_left_m`
-3. Faça upload pela interface
+- Migração do frontend de JavaScript para TypeScript ainda incompleta
+  (alguns componentes `.jsx`/`.js` convivem com `.tsx`/`.ts`).
+- Não há CI configurado; testes e build são executados manualmente.
+- `BRANCH_STATUS.md` documenta branches antigas com trabalho não integrado —
+  não fazer merge direto delas sem revisão.
 
-### Melhorar a IA
+## 🙏 Contexto acadêmico
 
-A IA está em `backend/core/raceline_ai.py`. Áreas de melhoria:
-
-- Ajustar `GRIP_FACTOR` (1.5-2.0)
-- Modificar posição do apex (20-40% default)
-- Refinar limites de aceleração/frenagem
-- Adicionar análise de setores
-
-### Customizar Frontend
-
-Estilos estão nos arquivos `.css` de cada componente. Cores principais:
-
-- Purple/AI: `#9d4edd`, `#c77dff`
-- Player: `#ffd000`
-- Green: `#00e676`
-- Red: `#e8192c`
-
-## 🙏 Agradecimentos
-
-Baseado em princípios de:
-- Física de corridas de motorsport
-- Geometria diferencial
-- Análise de telemetria profissional
-- FastF1 (inspiração de estrutura de dados)
-
----
-
-**Desenvolvido com foco em precisão física e análise real de performance.**
+Projeto desenvolvido como Trabalho de Conclusão de Curso, com foco em
+telemetria assistida e análise de performance baseada em física real
+(sem valores mágicos ou escalonamentos arbitrários), usando Interlagos como
+ambiente de validação.
