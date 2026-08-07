@@ -26,8 +26,30 @@ frontend/dist/
 *.log
 logs/
 
-# Runtime recordings
+# Runtime recordings and generated caches (regenerated on demand, not source)
 data/recordings/
 data/assisted_analysis/
 data/external_references/
 data/fastf1_cache/
+data/cache/
+data/feature_store/
+data/telemetry_db/
+backend/data/fastf1_cache/
+backend/data/feature_store/
+backend/data/telemetry_db/
+
+# Old pre-Assetto-Corsa snapshot, superseded and unreferenced by current code
+backup/
+
+# Geometry-authoring scratch artifacts (candidate/validation/audit dumps from
+# scripts/build_interlagos_*). Only the fixed geometry files the app actually
+# loads at runtime (see core/geometry/interlagos_track_only_fixed.py and
+# desktop/package.json extraResources) are kept tracked below.
+data/debug/*
+!data/debug/interlagos_track_only_fixed_geometry.json
+!data/debug/interlagos_reta_oposta_final_local_fix_candidate.json
+!data/debug/interlagos_reta_oposta_final_local_fix_validation.json
+!data/debug/interlagos_pit_access_asphalt_merge_fix_candidate.json
+!data/debug/interlagos_pit_access_asphalt_merge_fix_validation.json
+!data/debug/interlagos_pit_access_from_pit_lane_ai.json
+!data/debug/track_edges_interval_raycast_vhe_interlagos.json
