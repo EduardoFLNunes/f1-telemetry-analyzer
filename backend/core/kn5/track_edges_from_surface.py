@@ -356,6 +356,8 @@ def _choose_next_edge(
 def _build_boundary_loops(
     boundary_edges: Sequence[Dict[str, Any]],
     node_points: Dict[Tuple[int, int], List[float]],
+    min_area: float = MIN_LOOP_AREA,
+    min_perimeter: float = MIN_LOOP_PERIMETER,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     adjacency: Dict[Tuple[int, int], List[int]] = defaultdict(list)
     normalized_edges: List[Dict[str, Any]] = []
@@ -420,7 +422,7 @@ def _build_boundary_loops(
     significant = [
         loop
         for loop in raw_loops
-        if loop["closed"] and loop["area"] >= MIN_LOOP_AREA and loop["perimeter"] >= MIN_LOOP_PERIMETER
+        if loop["closed"] and loop["area"] >= min_area and loop["perimeter"] >= min_perimeter
     ]
     significant.sort(key=lambda loop: (loop["area"], loop["perimeter"]), reverse=True)
     clean_loops: List[Dict[str, Any]] = []
@@ -1102,6 +1104,68 @@ def build_track_edges_from_surface_from_manifest(manifest: Dict[str, Any]) -> Di
     }
 
 
+KERB_SURFACES = ("KERB", "CURB")
+MIN_KERB_LOOP_AREA = 2.0
+MIN_KERB_LOOP_PERIMETER = 6.0
+
+
+def build_kerb_geometry(triangles: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """Outline the kerbs as their own polygons.
+
+    KERB and CURB triangles are already parsed out of the KN5 alongside ROAD, but
+    they were being fused into the single drivable surface and never surfaced, so
+    the map had no kerbs to draw. Kerb strips are far smaller than the track body,
+    so the default loop area/perimeter floors would discard them; this uses floors
+    sized for them instead.
+    """
+    kerb_triangles = [
+        triangle for triangle in triangles
+        if str(triangle.get("surface", "")).upper() in KERB_SURFACES
+    ]
+    if not kerb_triangles:
+        return {"polygons": [], "triangleCount": 0, "componentCount": 0, "surfaces": list(KERB_SURFACES)}
+
+    components, triangle_to_component = _component_analysis(kerb_triangles)
+    polygons: List[Dict[str, Any]] = []
+    for component in components:
+        component_id = int(component["componentId"])
+        indices = _selected_triangle_indices(triangle_to_component, component_id)
+        if not indices:
+            continue
+        boundary, node_points = _boundary_edges(kerb_triangles, indices)
+        if not boundary:
+            continue
+        _, clean_loops = _build_boundary_loops(
+            boundary, node_points, MIN_KERB_LOOP_AREA, MIN_KERB_LOOP_PERIMETER
+        )
+        surfaces = {str(kerb_triangles[i].get("surface", "")).upper() for i in indices}
+        for loop in clean_loops:
+            # Only the outer ring of each strip is useful for filling it.
+            if loop.get("classification") != "external":
+                continue
+            # Simplification recomputes area, and it can collapse a very thin strip
+            # to nothing after it passed the pre-simplification floor.
+            if float(loop.get("area") or 0.0) < MIN_KERB_LOOP_AREA or len(loop.get("points") or []) < 4:
+                continue
+            polygons.append(
+                {
+                    "componentId": component_id,
+                    "surface": "KERB" if "KERB" in surfaces else "CURB",
+                    "area": loop.get("area"),
+                    "perimeter": loop.get("perimeter"),
+                    "points": loop.get("points", []),
+                }
+            )
+
+    polygons.sort(key=lambda item: float(item.get("area") or 0.0), reverse=True)
+    return {
+        "polygons": polygons,
+        "triangleCount": len(kerb_triangles),
+        "componentCount": len(components),
+        "surfaces": sorted({str(p.get("surface")) for p in polygons}),
+    }
+
+
 def build_track_edges_interval_raycast_from_manifest(manifest: Dict[str, Any]) -> Dict[str, Any]:
     diagnostics: List[Dict[str, Any]] = []
     surface = build_track_surface_polygon_from_manifest(manifest)
@@ -1150,10 +1214,17 @@ def build_track_edges_interval_raycast_from_manifest(manifest: Dict[str, Any]) -
         }
     )
 
+    # Kerbs come from the same parsed surface, but as their own outlines so the
+    # map can draw them instead of fusing them into the drivable asphalt.
+    kerbs = build_kerb_geometry(triangles)
+    metrics["kerbPolygonCount"] = len(kerbs.get("polygons", []))
+    metrics["kerbTriangleCount"] = kerbs.get("triangleCount", 0)
+
     centerline = _closed_points(samples, "centerline")
     left_edge = _closed_points(samples, "leftEdge")
     right_edge = _closed_points(samples, "rightEdge")
     return {
+        "kerbs": kerbs,
         "trackName": manifest.get("trackNameFromSharedMemory"),
         "trackConfig": manifest.get("trackConfigFromSharedMemory"),
         "projection": "mapX = worldX, mapY = -worldZ",

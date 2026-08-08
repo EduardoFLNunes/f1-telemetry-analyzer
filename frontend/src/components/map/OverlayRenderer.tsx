@@ -199,6 +199,83 @@ function drawPitVisualGeometry(ctx: CanvasRenderingContext2D, trackData: any, as
   ctx.restore();
 }
 
+const KERB_STRIPE_METERS = 1.6;
+
+function polygonPath(ctx: CanvasRenderingContext2D, points: number[][]) {
+  ctx.beginPath();
+  points.forEach((point, index) => {
+    if (index === 0) ctx.moveTo(point[0], point[1]);
+    else ctx.lineTo(point[0], point[1]);
+  });
+  ctx.closePath();
+}
+
+/** Dominant direction of a ring, so stripes run across the kerb rather than along it. */
+function dominantAngle(points: number[][]): number {
+  let sx = 0;
+  let sy = 0;
+  for (let i = 1; i < points.length; i += 1) {
+    let dx = points[i][0] - points[i - 1][0];
+    let dy = points[i][1] - points[i - 1][1];
+    // Fold to a half-circle so opposite sides of the ring reinforce instead of cancel.
+    if (dx < 0) { dx = -dx; dy = -dy; }
+    sx += dx;
+    sy += dy;
+  }
+  return Math.atan2(sy, sx);
+}
+
+export function drawKerbs(ctx: CanvasRenderingContext2D, trackData: any, scale: number) {
+  const polygons = trackData?.kerbGeometry?.polygons;
+  if (!Array.isArray(polygons) || !polygons.length) return;
+
+  ctx.save();
+  for (const polygon of polygons) {
+    const points = polygon?.points;
+    if (!Array.isArray(points) || points.length < 4) continue;
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const point of points) {
+      if (point[0] < minX) minX = point[0];
+      if (point[0] > maxX) maxX = point[0];
+      if (point[1] < minY) minY = point[1];
+      if (point[1] > maxY) maxY = point[1];
+    }
+    if (!Number.isFinite(minX) || !Number.isFinite(minY)) continue;
+
+    ctx.save();
+    polygonPath(ctx, points);
+    ctx.clip();
+
+    // Base colour, then white bars across it: the red/white kerb reads instantly
+    // even when the map is zoomed out far enough that the strip is a few pixels.
+    ctx.fillStyle = '#b3382f';
+    ctx.fillRect(minX, minY, maxX - minX, maxY - minY);
+
+    const angle = dominantAngle(points);
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    const span = Math.hypot(maxX - minX, maxY - minY);
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    ctx.fillStyle = '#e8e8e8';
+    for (let offset = -span; offset <= span; offset += KERB_STRIPE_METERS * 2) {
+      ctx.fillRect(offset, -span, KERB_STRIPE_METERS, span * 2);
+    }
+    ctx.restore();
+
+    // Thin outline keeps adjacent kerb segments distinguishable.
+    ctx.lineWidth = 0.5 / scale;
+    ctx.strokeStyle = 'rgba(15,23,42,0.55)';
+    polygonPath(ctx, points);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 export function drawTrackSurface(ctx: CanvasRenderingContext2D, trackData: any, bounds: any, scale: number) {
   const left = trackData.left_edge;
   const right = trackData.right_edge;
@@ -230,6 +307,9 @@ export function drawTrackSurface(ctx: CanvasRenderingContext2D, trackData: any, 
     ctx.fill();
   }
   drawPitVisualGeometry(ctx, trackData, asphalt, scale);
+  // After the asphalt so the kerbs sit on top of it, before the edge strokes so
+  // the track outline still reads as the outermost line.
+  drawKerbs(ctx, trackData, scale);
 
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
