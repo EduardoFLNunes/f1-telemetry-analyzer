@@ -764,6 +764,63 @@ def _run_interval_raycast(
     return samples, metrics
 
 
+MAX_FALLBACK_EDGE_JUMP = 4.0
+
+
+def _reject_discontinuous_fallback_samples(
+    samples: List[Dict[str, Any]],
+    max_jump: float = MAX_FALLBACK_EDGE_JUMP,
+) -> int:
+    """Drop fallback samples that jumped onto a different strip of asphalt.
+
+    When no plausible inside interval contains the racing line, the selection
+    falls back to the interval nearest the ray origin. Around run-off and
+    service asphalt that nearest interval can belong to a *different* strip, so
+    the edge leaps sideways and back within a couple of samples -- the boxy
+    excursions seen when overlaying the extraction on the KN5 surface. A track
+    edge is continuous, so a fallback that cannot be reconciled with its
+    neighbours is discarded and left for interpolation, which reconstructs it
+    from the samples on either side.
+    """
+    rejected = 0
+    for index, sample in enumerate(samples):
+        if not sample.get("valid") or sample.get("correctionReason") != "corrected_from_nearest_interval":
+            continue
+
+        neighbour = None
+        for offset in range(1, 6):
+            previous = samples[index - offset] if index - offset >= 0 else None
+            if previous and previous.get("valid") and previous.get("correctionReason") != "corrected_from_nearest_interval":
+                neighbour = previous
+                break
+        if neighbour is None:
+            continue
+
+        jumped = False
+        for key in ("leftEdge", "rightEdge"):
+            current_edge = sample.get(key)
+            neighbour_edge = neighbour.get(key)
+            if current_edge and neighbour_edge and _distance(current_edge, neighbour_edge) > max_jump:
+                jumped = True
+                break
+        if not jumped:
+            continue
+
+        sample.update(
+            {
+                "valid": False,
+                "leftEdge": None,
+                "rightEdge": None,
+                "centerline": None,
+                "localWidth": None,
+                "lateralReferenceOffset": None,
+                "invalidReason": "discontinuous_fallback_interval",
+            }
+        )
+        rejected += 1
+    return rejected
+
+
 def _run_raycast(
     fast_lane: Dict[str, Any],
     segments: Sequence[Tuple[List[float], List[float]]],
@@ -1062,6 +1119,13 @@ def build_track_edges_interval_raycast_from_manifest(manifest: Dict[str, Any]) -
     surface_index = _TriangleSurfaceIndex(triangles, selected_indices)
     samples, raycast_metrics = _run_interval_raycast(fast_lane, clean_loops, surface_index)
     original_invalid = raycast_metrics.get("invalid", 0)
+    discontinuous = _reject_discontinuous_fallback_samples(samples)
+    if discontinuous:
+        diagnostics.append({
+            "code": "discontinuous_fallback_samples_rejected",
+            "message": "Samples that fell back to the nearest interval and jumped to a different asphalt strip were dropped for interpolation",
+            "count": discontinuous,
+        })
     interpolated = _interpolate_samples(samples)
     orientation_swaps = _enforce_left_right_orientation(samples)
     if interpolated:
