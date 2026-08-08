@@ -18,8 +18,12 @@ from core.data_quality import (
     validate_telemetry_sample,
     validate_track,
 )
+from core.geometry.paint_agreement import (
+    evaluate_paint_agreement_cached,
+    reset_paint_agreement_cache,
+)
 from core.opponents import OpponentsStateBuffer, OpponentsTelemetryReceiver
-from core.telemetry.telemetry_models import TelemetrySample
+from core.telemetry.telemetry_models import TelemetrySample, TrackPoint
 
 
 def complete_sample(**overrides):
@@ -253,6 +257,69 @@ class LapAndTrackValidationTests(unittest.TestCase):
         result = validate_track("NO_TRACK", None)
         self.assertEqual(result["status"], "TRACK_MISSING")
         self.assertTrue(result["issues"])
+
+    def test_track_without_paint_still_reports_ready(self):
+        reset_paint_agreement_cache()
+        result = validate_track(
+            "TRACK_READY",
+            {
+                "centerline": [{"x": 0}, {"x": 1}],
+                "boundsLeft": [{"x": 0}, {"x": 1}],
+                "boundsRight": [{"x": 0}, {"x": 1}],
+                "sectors": [{"index": 1}],
+            },
+            "no_paint",
+        )
+        self.assertEqual(result["status"], "TRACK_READY")
+        self.assertEqual(result["paintAgreement"]["status"], "UNAVAILABLE")
+
+    def test_edges_that_disagree_with_the_paint_are_reported(self):
+        reset_paint_agreement_cache()
+        centerline = [
+            TrackPoint(x=float(i), y=0.0, z=0.0, distance=float(i), spline_t=i / 200,
+                       tangent=(1.0, 0.0), normal=(0.0, 1.0))
+            for i in range(200)
+        ]
+        paint = {"rings": [[[float(i), 6.0] for i in range(200)]]}
+        result = validate_track(
+            "TRACK_READY",
+            {
+                "trackName": "paint_mismatch",
+                "centerline": centerline,
+                "localWidth": [9.0] * 200,  # paint says 12 m
+                "boundsLeft": [{"x": 0}, {"x": 1}],
+                "boundsRight": [{"x": 0}, {"x": 1}],
+                "sectors": [{"index": 1}],
+                "markingGeometry": {"polygons": [paint]},
+            },
+            "paint_mismatch",
+        )
+        self.assertEqual(result["paintAgreement"]["status"], "DIVERGENT")
+        self.assertTrue(any(issue.startswith("paint check:") for issue in result["issues"]))
+        self.assertEqual(result["status"], "TRACK_READY", "paint is a warning, not a structural failure")
+
+    def test_paint_check_is_computed_once_per_track(self):
+        reset_paint_agreement_cache()
+        track = {
+            "trackName": "cached",
+            "generatedAt": "2026-01-01T00:00:00",
+            "centerline": [{"x": 0}, {"x": 1}],
+            "boundsLeft": [{"x": 0}, {"x": 1}],
+            "boundsRight": [{"x": 0}, {"x": 1}],
+            "sectors": [{"index": 1}],
+        }
+        with patch(
+            "core.data_quality.track_validation.evaluate_paint_agreement_cached",
+            wraps=evaluate_paint_agreement_cached,
+        ) as spy:
+            validate_track("TRACK_READY", track, "cached")
+            validate_track("TRACK_READY", track, "cached")
+        self.assertEqual(spy.call_count, 2, "the payload asks every time")
+        self.assertIs(
+            evaluate_paint_agreement_cached(track),
+            evaluate_paint_agreement_cached(track),
+            "but the answer is reused -- the evaluation blocks the event loop for ~0.2s",
+        )
 
 
 class DataQualityEndpointTests(unittest.TestCase):

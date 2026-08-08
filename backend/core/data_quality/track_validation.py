@@ -1,5 +1,7 @@
 from typing import Any, Dict, Mapping, Optional
 
+from ..geometry.paint_agreement import evaluate_paint_agreement_cached
+
 
 def validate_track(
     track_state: Optional[str],
@@ -36,9 +38,19 @@ def validate_track(
     if track and not has_sectors:
         issues.append("sector metadata is unavailable")
 
+    # The painted limit lines come from the track files, independent of the
+    # raycast that produced the edges, so they can say whether the edges landed
+    # where the circuit says they should. Reported alongside the structural
+    # checks -- it never downgrades status, because paint covers under 20% of a
+    # lap and absent paint is not a defect.
+    paint = evaluate_paint_agreement_cached(track) if track else {"status": "UNAVAILABLE"}
+    for issue in paint.get("issues", []):
+        issues.append(f"paint check: {issue}")
+
     method = build_method or track.get("reconstruction", {}).get("method")
     return {
         "status": status,
+        "paintAgreement": paint,
         "trackName": track_name or track.get("trackName") or track.get("name"),
         "sampleCount": len(centerline),
         "hasCenterline": has_centerline,

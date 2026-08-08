@@ -78,6 +78,11 @@ type DataQualityReport = {
     hasBounds: boolean;
     hasSectors: boolean;
     issues: string[];
+    paintAgreement?: {
+      status: 'OK' | 'DIVERGENT' | 'INSUFFICIENT_PAINT' | 'UNAVAILABLE';
+      measuredSides?: number;
+      sides?: Record<string, { coveragePercent: number; ratioMedian: number | null }>;
+    };
   };
   comparison: {
     status: QualityStatus;
@@ -177,6 +182,23 @@ export const DataQualityPanel = React.memo(function DataQualityPanel({
     return selectedSessionId ? `${selectedSessionId}:L${selectedLap}` : `LIVE:L${selectedLap}`;
   }, [selectedLap, selectedSessionId]);
 
+  // The painted limit lines are an independent check on the extracted edges:
+  // where paint exists, the edge should sit on it. Only part of a lap is
+  // painted, so having too little is not a defect -- only disagreeing is.
+  const paint = report?.track.paintAgreement;
+  const paintLabel = useMemo(() => {
+    if (!paint || paint.status === 'UNAVAILABLE') return '--';
+    if (paint.status === 'INSUFFICIENT_PAINT') return 'sem pintura util';
+    const ratios = Object.values(paint.sides || {})
+      .filter((side) => side.ratioMedian !== null)
+      .map((side) => `${Math.round((side.ratioMedian as number) * 100)}%`);
+    if (!ratios.length) return paint.status;
+    return `${paint.status === 'OK' ? 'OK' : 'DIVERGE'} ${ratios.join(' / ')}`;
+  }, [paint]);
+  const paintTone: Tone = paint?.status === 'DIVERGENT'
+    ? 'warning'
+    : paint?.status === 'OK' ? 'ok' : 'quiet';
+
   const issues = [
     ...(report?.laps.issues || []),
     ...(report?.track.issues || []),
@@ -274,6 +296,11 @@ export const DataQualityPanel = React.memo(function DataQualityPanel({
               <BooleanMetric label="Limites" value={Boolean(report?.track.hasBounds)} />
               <BooleanMetric label="Setores" value={Boolean(report?.track.hasSectors)} />
             </div>
+            <Metric
+              label="Confere com a pintura"
+              value={paintLabel}
+              tone={paintTone}
+            />
           </section>
         </div>
 
