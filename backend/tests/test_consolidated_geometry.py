@@ -53,7 +53,10 @@ class ConsolidatedGeometryTests(unittest.TestCase):
             fx.serialize_consolidated_geometry(original)
         )
 
-        self.assertEqual(set(original.keys()), set(restored.keys()))
+        # cachePath is deliberately normalized to None on write and stamped by the
+        # loader, so it may appear even when the input had none.
+        self.assertTrue(set(original.keys()) <= set(restored.keys()))
+        self.assertEqual(set(restored.keys()) - set(original.keys()), {"cachePath"})
 
     def test_round_trip_preserves_pit_visual_geometry(self):
         original = make_geometry()
@@ -106,6 +109,30 @@ class ConsolidatedGeometryTests(unittest.TestCase):
 
         self.assertIsNotNone(loaded)
         self.assertEqual(loaded["provider"], "ConsolidatedMarker")
+
+    def test_no_machine_specific_path_is_baked_into_the_asset(self):
+        """The file is shipped to other machines; an absolute path from the
+        machine that resolved the cascade would name a file that is not there."""
+        geometry = make_geometry()
+        geometry["cachePath"] = r"C:\somewhere\data\debug\a_candidate.json"
+        geometry["metadata"] = {"cachePath": r"C:\somewhere\data\debug\a_candidate.json"}
+
+        payload = json.loads(fx.serialize_consolidated_geometry(geometry))
+
+        self.assertIsNone(payload["cachePath"])
+        self.assertNotIn("cachePath", payload["metadata"])
+
+    def test_loader_stamps_the_path_it_actually_read(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            target = fx.consolidated_geometry_path(repo)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(fx.serialize_consolidated_geometry(make_geometry()), encoding="utf-8")
+
+            loaded = fx.load_fixed_geometry(repo)
+
+        self.assertEqual(loaded["cachePath"], str(target))
+        self.assertEqual(loaded["metadata"]["cachePath"], str(target))
 
     def test_missing_consolidated_file_falls_back_to_the_cascade(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -58979,7 +58979,7 @@
       "z": 220.679184
     }
   ],
-  "cachePath": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pit_access_asphalt_merge_fix_candidate.json",
+  "cachePath": null,
   "centerline": [
     {
       "curvature": 1.2482831860241281e-06,
@@ -120635,7 +120635,6 @@
     14.739557
   ],
   "metadata": {
-    "cachePath": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\interlagos_pit_access_asphalt_merge_fix_candidate.json",
     "correctedRegions": [
       {
         "correctedSampleCount": 9,

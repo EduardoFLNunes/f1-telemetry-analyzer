@@ -102,6 +102,14 @@ def serialize_consolidated_geometry(track_data: Dict[str, Any]) -> str:
     # API-facing view that renames y to worldY and puts mapY in "y", so using it
     # here would quietly corrupt the vertical coordinate on the way back in.
     payload["centerline"] = [asdict(point) for point in track_data["centerline"]]
+    # cachePath is an absolute path on whichever machine resolved the cascade, and
+    # it names a candidate file the consolidated build no longer ships. Baking it
+    # into a distributed asset points logs and /api/runtime/status at a file that
+    # does not exist on the target machine, so the loader stamps the real one.
+    payload["cachePath"] = None
+    metadata = dict(payload.get("metadata") or {})
+    metadata.pop("cachePath", None)
+    payload["metadata"] = metadata
     return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
 
 
@@ -130,7 +138,12 @@ def load_fixed_geometry(repo_root: Path) -> Optional[Dict[str, Any]]:
     # falling through to a different fix.
     consolidated = consolidated_geometry_path(repo_root)
     if consolidated.exists():
-        return deserialize_consolidated_geometry(consolidated.read_text(encoding="utf-8"))
+        track_data = deserialize_consolidated_geometry(consolidated.read_text(encoding="utf-8"))
+        # Stamp where it actually came from on this machine, so logs and
+        # /api/runtime/status name a file that exists here.
+        track_data["cachePath"] = str(consolidated)
+        track_data.setdefault("metadata", {})["cachePath"] = str(consolidated)
+        return track_data
     return resolve_fixed_geometry_from_cascade(repo_root)
 
 
