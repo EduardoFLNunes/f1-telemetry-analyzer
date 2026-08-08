@@ -62,11 +62,7 @@
         "from": "../data/debug",
         "to": "data/debug",
         "filter": [
-          "interlagos_track_only_fixed_geometry.json",
-          "interlagos_reta_oposta_final_local_fix_candidate.json",
-          "interlagos_reta_oposta_final_local_fix_validation.json",
-          "interlagos_pit_access_asphalt_merge_fix_candidate.json",
-          "interlagos_pit_access_asphalt_merge_fix_validation.json"
+          "interlagos_consolidated_geometry.json"
         ]
       },
       {

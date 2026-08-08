@@ -42,10 +42,11 @@ backend/data/telemetry_db/
 backup/
 
 # Geometry-authoring scratch artifacts (candidate/validation/audit dumps from
-# scripts/build_interlagos_*). Only the fixed geometry files the app actually
-# loads at runtime (see core/geometry/interlagos_track_only_fixed.py and
-# desktop/package.json extraResources) are kept tracked below.
+# scripts/build_interlagos_*). The app loads a single consolidated geometry at
+# runtime; the cascade inputs below stay tracked only so it can be regenerated
+# via resolve_fixed_geometry_from_cascade().
 data/debug/*
+!data/debug/interlagos_consolidated_geometry.json
 !data/debug/interlagos_track_only_fixed_geometry.json
 !data/debug/interlagos_reta_oposta_final_local_fix_candidate.json
 !data/debug/interlagos_reta_oposta_final_local_fix_validation.json

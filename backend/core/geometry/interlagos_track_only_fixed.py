@@ -1,11 +1,13 @@
 import json
 import math
 import statistics
+from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from ..cache.cache_serializer import CacheSerializer
+from ..telemetry.telemetry_models import TrackPoint
 from .interlagos_pit_lane_ai_visual import load_pit_visual_geometry
 
 
@@ -81,7 +83,59 @@ def fixed_geometry_path(repo_root: Path) -> Path:
     return repo_root / "data" / "debug" / FIXED_GEOMETRY_FILE
 
 
+CONSOLIDATED_GEOMETRY_FILE = "interlagos_consolidated_geometry.json"
+
+
+def consolidated_geometry_path(repo_root: Path) -> Path:
+    return repo_root / "data" / "debug" / CONSOLIDATED_GEOMETRY_FILE
+
+
+def serialize_consolidated_geometry(track_data: Dict[str, Any]) -> str:
+    """Full-fidelity dump of a resolved geometry.
+
+    CacheSerializer keeps a fixed key whitelist and would silently drop
+    pitVisualGeometry and the render metadata, so consolidation needs its own
+    encoder that preserves every key.
+    """
+    payload = dict(track_data)
+    # asdict() mirrors the constructor fields exactly. TrackPoint.to_dict() is an
+    # API-facing view that renames y to worldY and puts mapY in "y", so using it
+    # here would quietly corrupt the vertical coordinate on the way back in.
+    payload["centerline"] = [asdict(point) for point in track_data["centerline"]]
+    return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
+
+
+def deserialize_consolidated_geometry(raw: str) -> Dict[str, Any]:
+    data = json.loads(raw)
+    data["centerline"] = [
+        TrackPoint(
+            x=float(point["x"]),
+            y=float(point.get("y", 0.0)),
+            z=float(point["z"]),
+            distance=float(point.get("distance", 0.0)),
+            spline_t=float(point.get("spline_t", 0.0)),
+            curvature=float(point.get("curvature", 0.0)),
+            tangent=tuple(float(value) for value in point.get("tangent", (1.0, 0.0))),
+            normal=tuple(float(value) for value in point.get("normal", (0.0, 1.0))),
+        )
+        for point in data.get("centerline", [])
+    ]
+    return data
+
+
 def load_fixed_geometry(repo_root: Path) -> Optional[Dict[str, Any]]:
+    # A single consolidated file is the normal path. The legacy cascade below is
+    # kept only so the consolidated file can be regenerated from source; without
+    # it, a candidate missing from a package would silently change the map by
+    # falling through to a different fix.
+    consolidated = consolidated_geometry_path(repo_root)
+    if consolidated.exists():
+        return deserialize_consolidated_geometry(consolidated.read_text(encoding="utf-8"))
+    return resolve_fixed_geometry_from_cascade(repo_root)
+
+
+def resolve_fixed_geometry_from_cascade(repo_root: Path) -> Optional[Dict[str, Any]]:
+    """Original 13-file precedence chain, retained to regenerate the consolidated file."""
     path = fixed_geometry_path(repo_root)
     if not path.exists():
         return None
