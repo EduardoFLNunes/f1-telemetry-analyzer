@@ -1113,7 +1113,10 @@ MIN_KERB_LOOP_PERIMETER = 6.0
 KERB_SIMPLIFY_TOLERANCE = 0.06
 
 
-MAX_KERB_DISTANCE_FROM_LANE = 20.0
+# Measured against the asphalt that actually gets drawn, not the AI spine. The
+# spine runs on past where the surface is rendered -- at pit entry and exit
+# especially -- which left kerbs and paint floating in empty space on the map.
+MAX_KERB_DISTANCE_FROM_LANE = 6.0
 # Painted lines measure well under a metre across; the narrowest drivable mesh at
 # Interlagos is the verge at 1.30 m, so this separates paint from surface without
 # naming any mesh. Mesh names do not work: roadline003 is 3.47 m of asphalt.
@@ -1363,13 +1366,21 @@ def build_track_edges_interval_raycast_from_manifest(manifest: Dict[str, Any]) -
     pit_lane_path = (manifest.get("aiFiles") or {}).get("pit_lane")
     pit_lane = parse_fast_lane_ai(pit_lane_path) if pit_lane_path else None
     reference_lanes = []
-    for lane in (fast_lane, pit_lane):
-        if not lane:
-            continue
-        coords = [point.get("mapPosition") for point in lane.get("points", []) or []]
-        array = np.array([c for c in coords if c], dtype=float)
-        if len(array) >= 2:
-            reference_lanes.append(array)
+    for edge_key in ("leftEdge", "rightEdge"):
+        edge = np.array(
+            [sample[edge_key] for sample in samples if sample.get(edge_key)], dtype=float
+        )
+        if len(edge) >= 2:
+            reference_lanes.append(edge)
+    if not reference_lanes:
+        # No usable band yet, so fall back to the lanes rather than dropping everything.
+        for lane in (fast_lane, pit_lane):
+            if not lane:
+                continue
+            coords = [point.get("mapPosition") for point in lane.get("points", []) or []]
+            array = np.array([c for c in coords if c], dtype=float)
+            if len(array) >= 2:
+                reference_lanes.append(array)
     kerbs = build_kerb_geometry(triangles, reference_lanes)
     markings = build_marking_geometry(
         triangles,
