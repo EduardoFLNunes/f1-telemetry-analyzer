@@ -29,6 +29,15 @@ const HISTORY_WINDOW_BY_MODE: Record<string, number> = {
 };
 const PERFORMANCE_MODES = ['QUALITY', 'BALANCED', 'PERFORMANCE'] as const;
 const MAX_REPLAY_TRACE_GAP_METERS = 180;
+// Same reasoning as the racing line: trace weights are metres, not pixels, so the
+// trace stays proportional to the track when zoomed in, with a floor so it stays
+// visible when the whole circuit is on screen.
+const TRACE_METERS_PER_UNIT = 0.72;
+const MIN_TRACE_SCREEN_PX = 1.2;
+
+function scaledTraceWidth(weight: number, scale: number): number {
+  return Math.max(weight * TRACE_METERS_PER_UNIT, MIN_TRACE_SCREEN_PX / Math.max(scale, 1e-6));
+}
 const REPLAY_TRACK_BOUNDS_MARGIN_METERS = 80;
 
 function normalizeTrack(trackData: any): any {
@@ -160,7 +169,7 @@ function drawLapTrace(ctx: CanvasRenderingContext2D, samples: any[], scale: numb
   ctx.lineJoin = 'round';
   ctx.strokeStyle = color;
   ctx.globalAlpha = alpha;
-  ctx.lineWidth = width / scale;
+  ctx.lineWidth = scaledTraceWidth(width, scale);
   if (options.dashed) ctx.setLineDash([10 / scale, 8 / scale]);
   segments.forEach((segment) => {
     ctx.beginPath();
@@ -316,7 +325,7 @@ function drawTraceSegments(
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.lineWidth = (options.width || 2.5) / scale;
+  ctx.lineWidth = scaledTraceWidth(options.width || 2.5, scale);
   segments.forEach((segment) => {
     for (let index = 1; index < segment.length; index += 1) {
       const previous = segment[index - 1];

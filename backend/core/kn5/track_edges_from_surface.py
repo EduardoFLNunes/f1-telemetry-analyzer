@@ -358,6 +358,7 @@ def _build_boundary_loops(
     node_points: Dict[Tuple[int, int], List[float]],
     min_area: float = MIN_LOOP_AREA,
     min_perimeter: float = MIN_LOOP_PERIMETER,
+    simplify_tolerance: float = SIMPLIFY_TOLERANCE,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     adjacency: Dict[Tuple[int, int], List[int]] = defaultdict(list)
     normalized_edges: List[Dict[str, Any]] = []
@@ -427,7 +428,7 @@ def _build_boundary_loops(
     significant.sort(key=lambda loop: (loop["area"], loop["perimeter"]), reverse=True)
     clean_loops: List[Dict[str, Any]] = []
     for index, loop in enumerate(significant):
-        simplified = _simplify_closed_loop(loop["points"], SIMPLIFY_TOLERANCE)
+        simplified = _simplify_closed_loop(loop["points"], simplify_tolerance)
         area = abs(_signed_area(simplified))
         perimeter = _perimeter(simplified)
         clean_loops.append(
@@ -1107,6 +1108,9 @@ def build_track_edges_from_surface_from_manifest(manifest: Dict[str, Any]) -> Di
 KERB_SURFACES = ("KERB", "CURB")
 MIN_KERB_LOOP_AREA = 2.0
 MIN_KERB_LOOP_PERIMETER = 6.0
+# Kerbs are narrow strips, so the track-body tolerance flattens their curvature
+# into visible straight facets. A tighter one keeps the arc of a corner kerb.
+KERB_SIMPLIFY_TOLERANCE = 0.06
 
 
 def build_kerb_geometry(triangles: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
@@ -1136,7 +1140,8 @@ def build_kerb_geometry(triangles: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
         if not boundary:
             continue
         _, clean_loops = _build_boundary_loops(
-            boundary, node_points, MIN_KERB_LOOP_AREA, MIN_KERB_LOOP_PERIMETER
+            boundary, node_points, MIN_KERB_LOOP_AREA, MIN_KERB_LOOP_PERIMETER,
+            KERB_SIMPLIFY_TOLERANCE,
         )
         surfaces = {str(kerb_triangles[i].get("surface", "")).upper() for i in indices}
         for loop in clean_loops:

@@ -439,9 +439,20 @@ export function racingLineModeLabel(mode: string): string {
   return MODE_LABELS[mode] || MODE_LABELS.LINE_ONLY;
 }
 
+// Line weights used to be fixed pixels, so zoomed in (FOLLOW) the racing line
+// stayed hairline while the track filled the screen. Treating the existing
+// weights as metres keeps the line proportional to the asphalt, with a pixel
+// floor so it does not vanish when the whole circuit is on screen.
+const LINE_METERS_PER_UNIT = 0.72;
+const MIN_LINE_SCREEN_PX = 1.2;
+
+function scaledLineWidth(weight: number, scale: number): number {
+  return Math.max(weight * LINE_METERS_PER_UNIT, MIN_LINE_SCREEN_PX / Math.max(scale, 1e-6));
+}
+
 function strokeChunks(ctx: CanvasRenderingContext2D, chunks: Chunk[], scale: number, strokeStyle: string, lineWidth: number) {
   ctx.strokeStyle = strokeStyle;
-  ctx.lineWidth = lineWidth / scale;
+  ctx.lineWidth = scaledLineWidth(lineWidth, scale);
   chunks.forEach((chunk) => drawPathOrPolyline(ctx, chunk));
 }
 
@@ -521,7 +532,7 @@ function drawPlayerInputGradient(ctx: CanvasRenderingContext2D, prepared: Prepar
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.lineWidth = 2.45 / scale;
+  ctx.lineWidth = scaledLineWidth(2.45, scale);
   for (let index = 1; index < entries.length; index += 1) {
     const previous = entries[index - 1];
     const current = entries[index];

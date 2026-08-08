@@ -4,6 +4,27 @@ export type CarRenderOptions = {
   noGlow?: boolean;
 };
 
+// Real single-seater footprint. The marker used to be a fixed pixel size, so in
+// FOLLOW (about 4 px per metre) it drew roughly 2.3 m long -- half a real car --
+// and looked lost on the track. Sizing in metres keeps it proportional to the
+// asphalt at every zoom.
+const CAR_LENGTH_METERS = 4.8;
+const CAR_WIDTH_METERS = 2.0;
+// The body polygon spans 1.82x its length unit and 1.16x its width unit.
+const LENGTH_UNIT_SPAN = 1.82;
+const WIDTH_UNIT_SPAN = 1.16;
+// Floor so the car is still findable when the whole circuit is on screen.
+const MIN_CAR_SCREEN_PX = 11;
+
+export function carBodyUnits(scale: number): { length: number; width: number; zoomFloor: number } {
+  const zoomFloor = Math.max(1, MIN_CAR_SCREEN_PX / Math.max(CAR_LENGTH_METERS * scale, 1e-6));
+  return {
+    length: (CAR_LENGTH_METERS / LENGTH_UNIT_SPAN) * zoomFloor,
+    width: (CAR_WIDTH_METERS / WIDTH_UNIT_SPAN) * zoomFloor,
+    zoomFloor,
+  };
+}
+
 export function drawCar(
   ctx: CanvasRenderingContext2D,
   frame: any,
@@ -15,8 +36,7 @@ export function drawCar(
   if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return;
 
   const heading = Number.isFinite(frame?.heading) ? frame.heading : 0;
-  const length = 9 / scale;
-  const width = 4.5 / scale;
+  const { length, width } = carBodyUnits(scale);
 
   ctx.save();
   ctx.translate(position.x, position.y);
@@ -102,8 +122,11 @@ export function drawOpponentCar(
   const labelMode = options.labelMode || 'none';
   const color = options.color || opponentColor(opponent, index);
   const isStale = opponent?.status === 'stale' || options.isStale;
-  const radius = (options.isHovered ? 5.2 : 4.3) / scale;
-  const ring = 1.25 / scale;
+  // Also in metres, for the same reason as the player marker, so a pack of cars
+  // reads at the right size against the track width.
+  const { length: carLength, zoomFloor } = carBodyUnits(scale);
+  const radius = carLength * 0.55 * (options.isHovered ? 1.2 : 1.0);
+  const ring = Math.max(0.18 * zoomFloor, 1.0 / scale);
   // Two heading sources with different frames, so resolve to a map-space nose
   // angle here instead of rotating by a raw value.
   //   yaw            - world heading from the exporter, same frame as the player's,
