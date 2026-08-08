@@ -104551,6 +104551,7 @@
   "geometryName": "InterlagosPitAccessAsphaltMergeFix",
   "kerbGeometry": {
     "componentCount": 67,
+    "maxDistanceFromLane": 20.0,
     "polygons": [
       {
         "area": 685.584862,
@@ -110181,102 +110182,6 @@
         "surface": "CURB"
       },
       {
-        "area": 21.509652,
-        "componentId": 28,
-        "perimeter": 33.824065,
-        "points": [
-          [
-            -279.265778,
-            494.177765
-          ],
-          [
-            -278.990082,
-            493.185883
-          ],
-          [
-            -277.054932,
-            493.465302
-          ],
-          [
-            -275.636597,
-            493.760864
-          ],
-          [
-            -274.163788,
-            494.280182
-          ],
-          [
-            -273.485626,
-            494.667053
-          ],
-          [
-            -272.583221,
-            495.499481
-          ],
-          [
-            -272.128052,
-            496.204132
-          ],
-          [
-            -271.780121,
-            497.03717
-          ],
-          [
-            -271.526245,
-            498.008362
-          ],
-          [
-            -271.349304,
-            499.167938
-          ],
-          [
-            -270.868103,
-            505.405823
-          ],
-          [
-            -271.021667,
-            505.417816
-          ],
-          [
-            -272.309937,
-            499.922943
-          ],
-          [
-            -273.181732,
-            499.162659
-          ],
-          [
-            -273.499573,
-            497.618652
-          ],
-          [
-            -274.013947,
-            496.621429
-          ],
-          [
-            -274.52182,
-            496.155273
-          ],
-          [
-            -275.2612,
-            495.779358
-          ],
-          [
-            -276.095001,
-            495.514954
-          ],
-          [
-            -278.364502,
-            495.104187
-          ],
-          [
-            -279.265778,
-            494.177765
-          ]
-        ],
-        "surface": "CURB"
-      },
-      {
         "area": 20.682078,
         "componentId": 29,
         "perimeter": 138.482569,
@@ -110465,42 +110370,6 @@
         "surface": "CURB"
       },
       {
-        "area": 18.215555,
-        "componentId": 32,
-        "perimeter": 122.042268,
-        "points": [
-          [
-            14.365295,
-            325.464874
-          ],
-          [
-            37.160492,
-            325.464294
-          ],
-          [
-            75.086914,
-            325.284698
-          ],
-          [
-            75.086914,
-            324.984711
-          ],
-          [
-            37.15918,
-            325.164307
-          ],
-          [
-            14.367096,
-            325.164886
-          ],
-          [
-            14.365295,
-            325.464874
-          ]
-        ],
-        "surface": "KERB"
-      },
-      {
         "area": 3.312032,
         "componentId": 33,
         "perimeter": 22.68108,
@@ -110529,6 +110398,7 @@
         "surface": "KERB"
       }
     ],
+    "rejectedOffLane": 2,
     "surfaces": [
       "CURB",
       "KERB"
@@ -126676,7 +126546,7 @@
       }
     ],
     "geometryName": "InterlagosPitAccessAsphaltMergeFix",
-    "kerbSource": "kn5_surface_kerb_curb",
+    "kerbSource": "kn5_surface_kerb_curb_lane_filtered",
     "lateralOffsetChanged": false,
     "longitudinalReference": "fast_lane.ai centerline from kn5_surface_interval",
     "mainTrackGeometryName": "InterlagosPitlaneHarmonicEntryExit",

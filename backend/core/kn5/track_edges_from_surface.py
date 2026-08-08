@@ -1113,7 +1113,24 @@ MIN_KERB_LOOP_PERIMETER = 6.0
 KERB_SIMPLIFY_TOLERANCE = 0.06
 
 
-def build_kerb_geometry(triangles: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+MAX_KERB_DISTANCE_FROM_LANE = 20.0
+
+
+def _min_distance_to_paths(points: np.ndarray, paths: Sequence[np.ndarray]) -> float:
+    best = float("inf")
+    for path in paths:
+        if not len(path):
+            continue
+        deltas = points[:, None, :] - path[None, :, :]
+        best = min(best, float(np.sqrt((deltas * deltas).sum(axis=2)).min()))
+    return best
+
+
+def build_kerb_geometry(
+    triangles: Sequence[Dict[str, Any]],
+    reference_lanes: Optional[Sequence[np.ndarray]] = None,
+    max_distance_from_lane: float = MAX_KERB_DISTANCE_FROM_LANE,
+) -> Dict[str, Any]:
     """Outline the kerbs as their own polygons.
 
     KERB and CURB triangles are already parsed out of the KN5 alongside ROAD, but
@@ -1131,6 +1148,7 @@ def build_kerb_geometry(triangles: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
 
     components, triangle_to_component = _component_analysis(kerb_triangles)
     polygons: List[Dict[str, Any]] = []
+    rejected_far = 0
     for component in components:
         component_id = int(component["componentId"])
         indices = _selected_triangle_indices(triangle_to_component, component_id)
@@ -1152,6 +1170,16 @@ def build_kerb_geometry(triangles: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
             # to nothing after it passed the pre-simplification floor.
             if float(loop.get("area") or 0.0) < MIN_KERB_LOOP_AREA or len(loop.get("points") or []) < 4:
                 continue
+            # A track model covers the whole venue, so KERB/CURB also matches kerbs
+            # on layouts and service areas the driver never sees. Keeping only those
+            # that hug a lane the car can actually use -- the racing line or the pit
+            # lane -- drops those without hand-listing anything track-specific.
+            if reference_lanes:
+                ring = np.array(loop.get("points"), dtype=float)
+                distance = _min_distance_to_paths(ring, reference_lanes)
+                if distance > max_distance_from_lane:
+                    rejected_far += 1
+                    continue
             polygons.append(
                 {
                     "componentId": component_id,
@@ -1167,6 +1195,8 @@ def build_kerb_geometry(triangles: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
         "polygons": polygons,
         "triangleCount": len(kerb_triangles),
         "componentCount": len(components),
+        "rejectedOffLane": rejected_far,
+        "maxDistanceFromLane": max_distance_from_lane if reference_lanes else None,
         "surfaces": sorted({str(p.get("surface")) for p in polygons}),
     }
 
@@ -1221,7 +1251,19 @@ def build_track_edges_interval_raycast_from_manifest(manifest: Dict[str, Any]) -
 
     # Kerbs come from the same parsed surface, but as their own outlines so the
     # map can draw them instead of fusing them into the drivable asphalt.
-    kerbs = build_kerb_geometry(triangles)
+    # The racing line and the pit lane are the two lanes a car can be on; kerbs
+    # that hug neither belong to another part of the venue in the same model.
+    pit_lane_path = (manifest.get("aiFiles") or {}).get("pit_lane")
+    pit_lane = parse_fast_lane_ai(pit_lane_path) if pit_lane_path else None
+    reference_lanes = []
+    for lane in (fast_lane, pit_lane):
+        if not lane:
+            continue
+        coords = [point.get("mapPosition") for point in lane.get("points", []) or []]
+        array = np.array([c for c in coords if c], dtype=float)
+        if len(array) >= 2:
+            reference_lanes.append(array)
+    kerbs = build_kerb_geometry(triangles, reference_lanes)
     metrics["kerbPolygonCount"] = len(kerbs.get("polygons", []))
     metrics["kerbTriangleCount"] = kerbs.get("triangleCount", 0)
 
