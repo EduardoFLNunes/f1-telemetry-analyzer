@@ -20,7 +20,13 @@ export function drawCar(
 
   ctx.save();
   ctx.translate(position.x, position.y);
-  ctx.rotate(heading - Math.PI / 2);
+  // The map mirrors the Z axis (mapY = -worldZ), so a world heading has to be
+  // negated to rotate correctly in map space -- applyCameraTransform already does
+  // this. Without the negation the marker turns the wrong way round the lap:
+  // measured against the track tangent while driving, the un-negated form was off
+  // by 87 degrees on average (27 to 172), the negated form by 6.5, and that
+  // remainder is slip angle -- near zero on the straight, largest mid-corner.
+  ctx.rotate(-heading - Math.PI / 2);
   ctx.shadowBlur = options.noGlow ? 0 : 14 / scale;
   ctx.shadowColor = color;
 
@@ -98,9 +104,19 @@ export function drawOpponentCar(
   const isStale = opponent?.status === 'stale' || options.isStale;
   const radius = (options.isHovered ? 5.2 : 4.3) / scale;
   const ring = 1.25 / scale;
-  const heading = Number.isFinite(opponent.yaw)
-    ? opponent.yaw
-    : (Number.isFinite(opponent.estimatedHeading) ? opponent.estimatedHeading : null);
+  // Two heading sources with different frames, so resolve to a map-space nose
+  // angle here instead of rotating by a raw value.
+  //   yaw            - world heading from the exporter, same frame as the player's,
+  //                    so it needs the Z-mirror negation (see drawCar).
+  //   estimatedHeading - already derived from successive *map* positions in
+  //                    withEstimatedHeadings as atan2(dy, dx) + PI/2, so it is
+  //                    map-space already and must not be negated.
+  // Only the player's frame could be measured against the track tangent; no
+  // opponents were on track at the time, so the yaw branch follows the player's
+  // convention by construction rather than by measurement.
+  const noseAngle = Number.isFinite(opponent.yaw)
+    ? -opponent.yaw - Math.PI / 2
+    : (Number.isFinite(opponent.estimatedHeading) ? opponent.estimatedHeading - Math.PI / 2 : null);
 
   ctx.save();
   if (isStale) ctx.globalAlpha = 0.42;
@@ -116,8 +132,8 @@ export function drawOpponentCar(
   ctx.strokeStyle = 'rgba(15,23,42,0.9)';
   ctx.stroke();
 
-  if (heading !== null) {
-    ctx.rotate(heading - Math.PI / 2);
+  if (noseAngle !== null) {
+    ctx.rotate(noseAngle);
     ctx.beginPath();
     ctx.moveTo(radius * 1.65, 0);
     ctx.lineTo(radius * 0.45, radius * 0.52);
@@ -125,7 +141,7 @@ export function drawOpponentCar(
     ctx.closePath();
     ctx.fillStyle = 'rgba(255,255,255,0.92)';
     ctx.fill();
-    ctx.rotate(-(heading - Math.PI / 2));
+    ctx.rotate(-noseAngle);
   }
 
   ctx.shadowBlur = 0;
