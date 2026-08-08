@@ -1114,6 +1114,113 @@ KERB_SIMPLIFY_TOLERANCE = 0.06
 
 
 MAX_KERB_DISTANCE_FROM_LANE = 20.0
+# Painted lines measure well under a metre across; the narrowest drivable mesh at
+# Interlagos is the verge at 1.30 m, so this separates paint from surface without
+# naming any mesh. Mesh names do not work: roadline003 is 3.47 m of asphalt.
+MARKING_MAX_WIDTH_METERS = 1.2
+MARKING_SIMPLIFY_TOLERANCE = 0.05
+MIN_MARKING_LOOP_AREA = 0.5
+MIN_MARKING_LOOP_PERIMETER = 4.0
+
+
+def _mesh_effective_widths(
+    triangles: Sequence[Dict[str, Any]],
+    spine: np.ndarray,
+) -> Dict[str, float]:
+    """Area divided by the length of racing line each mesh actually spans.
+
+    Dividing by a bounding-box diagonal instead makes any mesh that wraps the
+    circuit look several times wider than it is, which is what made painted
+    lines indistinguishable from asphalt on the first attempt.
+    """
+    if not len(spine):
+        return {}
+    segment_lengths = np.hypot(*(np.diff(spine, axis=0).T))
+    arc = np.concatenate([[0.0], np.cumsum(segment_lengths)])
+
+    areas: Dict[str, float] = defaultdict(float)
+    centroids: Dict[str, List[np.ndarray]] = defaultdict(list)
+    for triangle in triangles:
+        mesh = str(triangle.get("mesh"))
+        areas[mesh] += float(triangle.get("area") or 0.0)
+        centroids[mesh].append(np.array(triangle["vertices"], dtype=float)[:, :2].mean(axis=0))
+
+    widths: Dict[str, float] = {}
+    for mesh, area in areas.items():
+        points = np.array(centroids[mesh])
+        deltas = points[:, None, :] - spine[None, :, :]
+        nearest = np.sqrt((deltas * deltas).sum(axis=2)).argmin(axis=1)
+        covered = arc[nearest]
+        span = max(float(np.percentile(covered, 99) - np.percentile(covered, 1)), 1.0)
+        widths[mesh] = area / span
+    return widths
+
+
+def build_marking_geometry(
+    triangles: Sequence[Dict[str, Any]],
+    spine: np.ndarray,
+    reference_lanes: Optional[Sequence[np.ndarray]] = None,
+    max_width: float = MARKING_MAX_WIDTH_METERS,
+) -> Dict[str, Any]:
+    """Outline the painted track markings.
+
+    They arrive as ROAD surface like the asphalt itself, so they are told apart
+    by how wide they actually are rather than by mesh name or surface key.
+    """
+    widths = _mesh_effective_widths(
+        [t for t in triangles if str(t.get("surface", "")).upper() == "ROAD"], spine
+    )
+    marking_meshes = {mesh for mesh, width in widths.items() if width < max_width}
+    marking_triangles = [
+        triangle for triangle in triangles
+        if str(triangle.get("surface", "")).upper() == "ROAD"
+        and str(triangle.get("mesh")) in marking_meshes
+    ]
+    if not marking_triangles:
+        return {"polygons": [], "triangleCount": 0, "meshes": [], "widths": {}}
+
+    components, triangle_to_component = _component_analysis(marking_triangles)
+    polygons: List[Dict[str, Any]] = []
+    rejected_far = 0
+    for component in components:
+        indices = _selected_triangle_indices(triangle_to_component, int(component["componentId"]))
+        if not indices:
+            continue
+        boundary, node_points = _boundary_edges(marking_triangles, indices)
+        if not boundary:
+            continue
+        _, clean_loops = _build_boundary_loops(
+            boundary, node_points, MIN_MARKING_LOOP_AREA, MIN_MARKING_LOOP_PERIMETER,
+            MARKING_SIMPLIFY_TOLERANCE,
+        )
+        # A line that runs the whole lap closes a ring around the entire infield,
+        # so its outer boundary alone would paint the middle of the circuit. The
+        # paint is the band between the outer ring and its holes, so every ring of
+        # the component is kept and filled with the even-odd rule.
+        rings = [
+            loop.get("points", [])
+            for loop in clean_loops
+            if len(loop.get("points") or []) >= 4
+        ]
+        if not rings:
+            continue
+        if reference_lanes:
+            outer = np.array(rings[0], dtype=float)
+            if _min_distance_to_paths(outer, reference_lanes) > MAX_KERB_DISTANCE_FROM_LANE:
+                rejected_far += 1
+                continue
+        painted = sum(float(marking_triangles[i].get("area") or 0.0) for i in indices)
+        polygons.append({"area": round(painted, 3), "rings": rings})
+
+    polygons.sort(key=lambda item: float(item.get("area") or 0.0), reverse=True)
+    return {
+        "polygons": polygons,
+        "triangleCount": len(marking_triangles),
+        "rejectedOffLane": rejected_far,
+        "maxWidthMeters": max_width,
+        "meshes": sorted(marking_meshes),
+        "widths": {mesh: round(widths[mesh], 3) for mesh in sorted(marking_meshes)},
+    }
 
 
 def _min_distance_to_paths(points: np.ndarray, paths: Sequence[np.ndarray]) -> float:
@@ -1264,6 +1371,12 @@ def build_track_edges_interval_raycast_from_manifest(manifest: Dict[str, Any]) -
         if len(array) >= 2:
             reference_lanes.append(array)
     kerbs = build_kerb_geometry(triangles, reference_lanes)
+    markings = build_marking_geometry(
+        triangles,
+        reference_lanes[0] if reference_lanes else np.empty((0, 2)),
+        reference_lanes,
+    )
+    metrics["markingGroupCount"] = len(markings.get("polygons", []))
     metrics["kerbPolygonCount"] = len(kerbs.get("polygons", []))
     metrics["kerbTriangleCount"] = kerbs.get("triangleCount", 0)
 
@@ -1272,6 +1385,7 @@ def build_track_edges_interval_raycast_from_manifest(manifest: Dict[str, Any]) -
     right_edge = _closed_points(samples, "rightEdge")
     return {
         "kerbs": kerbs,
+        "markings": markings,
         "trackName": manifest.get("trackNameFromSharedMemory"),
         "trackConfig": manifest.get("trackConfigFromSharedMemory"),
         "projection": "mapX = worldX, mapY = -worldZ",

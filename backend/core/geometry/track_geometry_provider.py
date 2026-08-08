@@ -170,6 +170,7 @@ def track_data_from_interval_edges(result: Dict[str, Any], cache_path: Optional[
         "right_edge": _map_to_world_edge(right_map),
         "localWidth": widths,
         "kerbGeometry": result.get("kerbs") or {"polygons": []},
+        "markingGeometry": result.get("markings") or {"polygons": []},
         "widthMin": width_stats["min"],
         "widthAvg": width_stats["avg"],
         "widthMax": width_stats["max"],

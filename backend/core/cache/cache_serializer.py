@@ -141,6 +141,7 @@ class CacheSerializer:
             "asphaltPolygon": track_data.get("asphaltPolygon"),
             "pitVisualGeometry": track_data.get("pitVisualGeometry"),
             "kerbGeometry": track_data.get("kerbGeometry"),
+            "markingGeometry": track_data.get("markingGeometry"),
             "visualCenterline": CacheSerializer._visual_centerline_to_arrays(track_data.get("visualCenterline")),
             "generatedAt": track_data.get("generatedAt"),
             "coordinateSystem": "map_xy_from_world_x_negative_z",

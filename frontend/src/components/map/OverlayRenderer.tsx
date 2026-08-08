@@ -276,6 +276,34 @@ export function drawKerbs(ctx: CanvasRenderingContext2D, trackData: any, scale: 
   ctx.restore();
 }
 
+export function drawMarkings(ctx: CanvasRenderingContext2D, trackData: any, scale: number) {
+  const groups = trackData?.markingGeometry?.polygons;
+  if (!Array.isArray(groups) || !groups.length) return;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(236,240,245,0.82)';
+  for (const group of groups) {
+    const rings = group?.rings;
+    if (!Array.isArray(rings) || !rings.length) continue;
+
+    // A line running the whole lap encloses the infield, and the paint is the
+    // band between that ring and its holes -- so all rings go into one path and
+    // are filled even-odd. Filling the outer ring alone would flood the middle
+    // of the circuit.
+    ctx.beginPath();
+    for (const ring of rings) {
+      if (!Array.isArray(ring) || ring.length < 4) continue;
+      ring.forEach((point: number[], index: number) => {
+        if (index === 0) ctx.moveTo(point[0], point[1]);
+        else ctx.lineTo(point[0], point[1]);
+      });
+      ctx.closePath();
+    }
+    ctx.fill('evenodd');
+  }
+  ctx.restore();
+}
+
 export function drawTrackSurface(ctx: CanvasRenderingContext2D, trackData: any, bounds: any, scale: number) {
   const left = trackData.left_edge;
   const right = trackData.right_edge;
@@ -307,8 +335,9 @@ export function drawTrackSurface(ctx: CanvasRenderingContext2D, trackData: any, 
     ctx.fill();
   }
   drawPitVisualGeometry(ctx, trackData, asphalt, scale);
-  // After the asphalt so the kerbs sit on top of it, before the edge strokes so
-  // the track outline still reads as the outermost line.
+  // Paint sits on the asphalt, kerbs on top of the paint, and the edge strokes
+  // last so the track outline still reads as the outermost line.
+  drawMarkings(ctx, trackData, scale);
   drawKerbs(ctx, trackData, scale);
 
   ctx.lineCap = 'round';
