@@ -24,6 +24,7 @@ import numpy as np
 from .paint_boundary_rings import (
     MAX_BOUNDARY_RATIO_SPREAD,
     build_track_frame,
+    edge_side_signs,
     identify_boundary_rings,
     painted_limit_profile,
 )
@@ -131,10 +132,44 @@ def _distance_array(track_data: Dict[str, Any], sample_count: int) -> np.ndarray
     return np.arange(sample_count, dtype=float)
 
 
-def _edge_points(center: np.ndarray, normals: np.ndarray, half: np.ndarray, sign: float) -> List[Dict[str, float]]:
+def _to_world(points: np.ndarray) -> List[Dict[str, float]]:
     """Map-space edge back to the world_xz dicts the cache and renderer expect."""
-    points = center + normals * (sign * half)[:, None]
     return [{"x": float(x), "y": float(-y), "z": float(-y)} for x, y in points]
+
+
+def _edge_to_map(points: Optional[Sequence[Any]], expected: int) -> Optional[np.ndarray]:
+    if not points or len(points) != expected:
+        return None
+    out = []
+    for point in points:
+        if isinstance(point, dict):
+            x, z = point.get("x"), point.get("z", point.get("y"))
+        else:
+            x, z = getattr(point, "x", None), getattr(point, "z", None)
+        if x is None or z is None:
+            return None
+        out.append([float(x), -float(z)])
+    return np.array(out, dtype=float)
+
+
+def _shift_edge(
+    existing: Optional[np.ndarray],
+    frame,
+    outward: np.ndarray,
+    half: np.ndarray,
+    sign: float,
+) -> np.ndarray:
+    """Push the edge outward along the normal, from wherever it already is.
+
+    Rebuilding it from the centreline instead would silently discard whatever
+    shape the edge already had. The shipped Interlagos edges are not a plain
+    normal offset -- the pit merge pushes them out asymmetrically and off the
+    perpendicular, by up to 18 m -- so rebuilding flattened those regions even
+    at samples where the correction was zero.
+    """
+    if existing is not None:
+        return existing + frame.normals * (sign * outward)[:, None]
+    return frame.center + frame.normals * (sign * np.maximum(half + outward, 0.5))[:, None]
 
 
 CORRECTION_MARKER = "paintEdgeCorrection"
@@ -221,14 +256,24 @@ def correct_edges_from_paint(track_data: Dict[str, Any]) -> Dict[str, Any]:
             metadata[CORRECTION_MARKER] = report
         return report
 
-    left_half = np.maximum(half + corrections["left"], 0.5)
-    right_half = np.maximum(half + corrections["right"], 0.5)
-    widths = left_half + right_half
+    widths = frame.widths + corrections["left"] + corrections["right"]
 
-    # The normal points to the right in map space, so the left edge is negative.
-    left_edge = _edge_points(frame.center, frame.normals, left_half, -1.0)
-    right_edge = _edge_points(frame.center, frame.normals, right_half, 1.0)
+    # Each edge moves on the side it was already on. Hardcoding the signs here
+    # put boundsLeft where boundsRight had been: every point moved by about a
+    # full track width and the band crossed itself.
+    signs = edge_side_signs(track_data, frame)
+    count = len(frame.center)
+    left_map = _shift_edge(
+        _edge_to_map(track_data.get("boundsLeft") or track_data.get("left_edge"), count),
+        frame, corrections["left"], half, signs["left"],
+    )
+    right_map = _shift_edge(
+        _edge_to_map(track_data.get("boundsRight") or track_data.get("right_edge"), count),
+        frame, corrections["right"], half, signs["right"],
+    )
 
+    left_edge = _to_world(left_map)
+    right_edge = _to_world(right_map)
     track_data["boundsLeft"] = left_edge
     track_data["left_edge"] = left_edge
     track_data["boundsRight"] = right_edge
@@ -241,10 +286,7 @@ def correct_edges_from_paint(track_data: Dict[str, Any]) -> Dict[str, Any]:
     # The dash draws asphaltPolygon, not the edges. Leaving it stale would
     # correct the numbers and change nothing on screen.
     if track_data.get("asphaltPolygon"):
-        band = np.vstack([
-            frame.center + frame.normals * (-left_half)[:, None],
-            (frame.center + frame.normals * right_half[:, None])[::-1],
-        ])
+        band = np.vstack([left_map, right_map[::-1]])
         track_data["asphaltPolygon"] = {
             "points": [[float(x), float(y)] for x, y in band],
             "x": [float(x) for x in band[:, 0]],

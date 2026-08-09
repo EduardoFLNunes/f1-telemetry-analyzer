@@ -1,3 +1,4 @@
+import math
 import sys
 import unittest
 from pathlib import Path
@@ -9,10 +10,17 @@ from core.geometry.paint_boundary_rings import (  # noqa: E402
     identify_boundary_rings,
     painted_limit_profile,
 )
-from core.geometry.paint_edge_correction import correct_edges_from_paint  # noqa: E402
+from core.geometry.paint_edge_correction import (  # noqa: E402
+    MAX_CORRECTION_METERS,
+    correct_edges_from_paint,
+)
 from core.telemetry.telemetry_models import TrackPoint  # noqa: E402
 
 POINTS = 400
+
+
+def _sign(value):
+    return 1 if value > 0 else (-1 if value < 0 else 0)
 
 
 def straight_track(width=12.0, points=POINTS):
@@ -137,6 +145,48 @@ class PaintEdgeCorrectionTests(unittest.TestCase):
         self.assertAlmostEqual(abs(left["z"]), 6.0, delta=0.15)
         self.assertEqual(len(track["asphaltPolygon"]["x"]), POINTS * 2)
         self.assertAlmostEqual(max(track["asphaltPolygon"]["y"]), 6.0, delta=0.15)
+
+    def test_each_edge_stays_on_its_own_side(self):
+        """Nothing guarantees boundsLeft sits at +normal. Assuming the wrong sign
+        rebuilt each edge on the opposite side: every point moved by about a full
+        track width, the band crossed itself, and the map broke worst where the
+        track is widest."""
+        track = straight_track(width=9.0)
+        track["markingGeometry"] = {"polygons": [line(6.0), line(-6.0)]}
+        before_left = [dict(p) for p in track["boundsLeft"]]
+        before_right = [dict(p) for p in track["boundsRight"]]
+
+        correct_edges_from_paint(track)
+
+        for before, after in zip(before_left, track["boundsLeft"]):
+            self.assertEqual(_sign(after["z"]), _sign(before["z"]), "left edge changed sides")
+        for before, after in zip(before_right, track["boundsRight"]):
+            self.assertEqual(_sign(after["z"]), _sign(before["z"]), "right edge changed sides")
+
+    def test_no_edge_moves_further_than_a_correction_may(self):
+        track = straight_track(width=9.0)
+        track["markingGeometry"] = {"polygons": [line(6.0), line(-6.0)]}
+        before = [(p["x"], p["z"]) for p in track["boundsLeft"] + track["boundsRight"]]
+
+        correct_edges_from_paint(track)
+
+        after = [(p["x"], p["z"]) for p in track["boundsLeft"] + track["boundsRight"]]
+        moves = [math.hypot(bx - ax, bz - az) for (bx, bz), (ax, az) in zip(before, after)]
+        self.assertLessEqual(max(moves), MAX_CORRECTION_METERS,
+                             "a correction that moves an edge further than its own cap is a rewrite")
+
+    def test_a_geometry_with_the_other_sign_convention_is_honoured(self):
+        track = straight_track(width=9.0)
+        track["markingGeometry"] = {"polygons": [line(6.0), line(-6.0)]}
+        # Same track, edges stored the other way round.
+        track["boundsLeft"], track["boundsRight"] = track["boundsRight"], track["boundsLeft"]
+        track["left_edge"], track["right_edge"] = track["boundsLeft"], track["boundsRight"]
+        before_left_sign = _sign(track["boundsLeft"][0]["z"])
+
+        correct_edges_from_paint(track)
+
+        self.assertEqual(_sign(track["boundsLeft"][0]["z"]), before_left_sign)
+        self.assertAlmostEqual(widths(track)[POINTS // 2], 12.0, delta=0.2)
 
     def test_track_without_paint_is_left_alone(self):
         track = straight_track(width=9.0)

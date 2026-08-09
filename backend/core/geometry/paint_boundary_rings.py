@@ -97,6 +97,45 @@ def build_track_frame(track_data: Dict[str, Any]) -> Optional[TrackFrame]:
     return TrackFrame(np.array(points, dtype=float), np.array(normals, dtype=float), widths)
 
 
+def edge_side_signs(track_data: Dict[str, Any], frame: TrackFrame) -> Dict[str, float]:
+    """Which lateral direction each bounds array actually lies on.
+
+    Nothing in the payload guarantees that boundsLeft sits at +normal. In the
+    shipped Interlagos geometry it does, and hardcoding the opposite swapped the
+    two edges: every point moved by roughly a full track width, the band crossed
+    itself, and the map broke worst where the track is widest. So the sign is
+    measured from the geometry rather than assumed.
+    """
+    signs: Dict[str, float] = {}
+    for side, keys in (("left", ("boundsLeft", "left_edge")), ("right", ("boundsRight", "right_edge"))):
+        points = next((track_data.get(key) for key in keys if track_data.get(key)), None)
+        signs[side] = _median_side_sign(points, frame)
+
+    # A degenerate or missing pair must not put both edges on one side.
+    if signs["left"] == signs["right"]:
+        signs = {"left": 1.0, "right": -1.0}
+    return signs
+
+
+def _median_side_sign(points: Optional[Sequence[Any]], frame: TrackFrame) -> float:
+    if not points or len(points) != len(frame.center):
+        return 0.0
+    offsets = []
+    for index, point in enumerate(points):
+        if isinstance(point, dict):
+            x, z = point.get("x"), point.get("z", point.get("y"))
+        else:
+            x, z = getattr(point, "x", None), getattr(point, "z", None)
+        if x is None or z is None:
+            continue
+        delta = np.array([float(x), -float(z)]) - frame.center[index]
+        offsets.append(float(delta @ frame.normals[index]))
+    if not offsets:
+        return 0.0
+    median = float(np.median(offsets))
+    return 1.0 if median > 0 else (-1.0 if median < 0 else 0.0)
+
+
 def _rings_of(track_data: Dict[str, Any]):
     groups = ((track_data.get("markingGeometry") or {}).get("polygons")) or []
     for group_index, group in enumerate(groups):
@@ -127,6 +166,7 @@ def identify_boundary_rings(
         return []
 
     half = frame.half_widths
+    signs = edge_side_signs(track_data, frame)
     found: List[BoundaryRing] = []
     for group_index, ring_index, ring in _rings_of(track_data):
         points = np.array(ring, dtype=float)
@@ -136,7 +176,10 @@ def identify_boundary_rings(
         with np.errstate(divide="ignore", invalid="ignore"):
             ratios = np.abs(offsets) / np.where(half[indices] > 0, half[indices], np.nan)
 
-        for side, mask in (("left", offsets < 0), ("right", offsets > 0)):
+        # A side is named after the bounds array that lies on it, so a correction
+        # measured here lands on the edge it was measured against.
+        for side, sign in signs.items():
+            mask = offsets * sign > 0
             if mask.sum() < MIN_RING_POINTS:
                 continue
             side_ratios = ratios[mask]
@@ -194,6 +237,7 @@ def painted_limit_profile(
     spans, which is the difference between correcting a corner and skipping it.
     """
     segments = _ring_segments(track_data, boundary_rings)
+    signs = edge_side_signs(track_data, frame)
     profile = {
         "left": np.full(len(frame.center), np.nan),
         "right": np.full(len(frame.center), np.nan),
@@ -218,7 +262,8 @@ def painted_limit_profile(
         a, e = seg_a[reachable], edge[reachable]
         rel = a - origin
 
-        for side, direction in (("left", -normal), ("right", normal)):
+        for side, sign in signs.items():
+            direction = normal * sign
             denom = direction[0] * e[:, 1] - direction[1] * e[:, 0]
             with np.errstate(divide="ignore", invalid="ignore"):
                 t = (rel[:, 0] * e[:, 1] - rel[:, 1] * e[:, 0]) / denom
