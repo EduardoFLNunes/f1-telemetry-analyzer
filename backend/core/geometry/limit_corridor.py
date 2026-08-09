@@ -78,6 +78,33 @@ def identify_limit_rings(track_data: Dict[str, Any], frame: TrackFrame) -> List[
     return accepted
 
 
+# How far a reading may sit from what the limit does around it before it is
+# treated as the ray having found something else.
+PLAUSIBILITY_WINDOW_METERS = 120.0
+MAX_PLAUSIBLE_DEVIATION = 0.35
+MIN_PLAUSIBILITY_NEIGHBOURS = 15
+
+
+def _reject_implausible(values: np.ndarray, source: List[str],
+                        distance: np.ndarray) -> tuple:
+    """Drop readings that disagree with the limit either side of them."""
+    known = np.where(~np.isnan(values))[0]
+    if len(known) < MIN_PLAUSIBILITY_NEIGHBOURS:
+        return values, source
+    cleaned = values.copy()
+    for index in known:
+        window = known[np.abs(distance[known] - distance[index]) <= PLAUSIBILITY_WINDOW_METERS]
+        if len(window) < MIN_PLAUSIBILITY_NEIGHBOURS:
+            continue
+        median = float(np.median(values[window]))
+        if median <= 0:
+            continue
+        if abs(values[index] - median) / median > MAX_PLAUSIBLE_DEVIATION:
+            cleaned[index] = np.nan
+            source[index] = UNKNOWN
+    return cleaned, source
+
+
 def _fill_gaps(values: np.ndarray, source: List[str], distance: np.ndarray) -> np.ndarray:
     known = np.where(~np.isnan(values))[0]
     if not len(known):
@@ -161,6 +188,11 @@ def build_limit_corridor(track_data: Dict[str, Any]) -> Dict[str, Any]:
                 values[index] = kerbed
                 source[index] = KERB
 
+        # A reading has to be plausible as the limit *here*, not merely the
+        # first thing the ray met. The window reaches 2.2 half widths, so it can
+        # come back with a pit line or a neighbouring corner's kerb; taken at
+        # face value those put edges at 1.9 m and at 13 m from the centre.
+        values, source = _reject_implausible(values, source, distance)
         measured = int(sum(1 for s in source if s in (PAINT, KERB)))
         values = _fill_gaps(values, source, distance)
         if np.isnan(values).any():
@@ -243,18 +275,29 @@ def rebuild_edges_from_limit_corridor(track_data: Dict[str, Any]) -> Dict[str, A
             continue
 
         current = np.array([[float(p["x"]), -float(p.get("z", p.get("y", 0.0)))] for p in points])
-        offsets = np.abs(((current - frame.center) * frame.normals).sum(axis=1))
+        signed = ((current - frame.center) * frame.normals).sum(axis=1)
+        offsets = np.abs(signed)
+        # Per sample, not per side. Twenty samples of the shipped geometry have
+        # both edges on the same side of the centreline, and a side-wide median
+        # sign pushes those two the wrong way -- widening the track everywhere
+        # else while collapsing it there.
+        sample_sign = np.where(signed >= 0, 1.0, -1.0)
         target = np.array(data["limit"], dtype=float)
         measured = np.array([s in (PAINT, KERB) for s in data["source"]])
 
-        delta = np.where(measured, target - offsets, 0.0)
-        delta[np.abs(delta) > MAX_REBUILD_METERS] = 0.0
+        # Widen only, as everywhere else. A limit proves the surface reaches at
+        # least that far; it does not prove the asphalt stops there. Letting the
+        # delta go negative pulled edges inward and, where the limit was
+        # underread, straight past the centreline -- which is how one pass
+        # produced a 3.84 m minimum and a 25.95 m maximum at the same time.
+        delta = np.where(measured, np.maximum(target - offsets, 0.0), 0.0)
+        delta[delta > MAX_REBUILD_METERS] = 0.0
         delta = _limit_rate(delta, distance)
 
         moved = int((np.abs(delta) > 0.05).sum())
         moved_total += moved
         if moved:
-            updated = current + frame.normals * (signs[side] * delta)[:, None]
+            updated = current + frame.normals * (sample_sign * delta)[:, None]
             payload = [{"x": float(x), "y": float(-y), "z": float(-y)} for x, y in updated]
             for key in side_keys:
                 track_data[key] = payload
