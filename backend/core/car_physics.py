@@ -277,6 +277,9 @@ def _base_unavailable_physics() -> Dict[str, Any]:
             "roadTemp": None,
             "surfaceGrip": None,
             "airDensity": None,
+            "tyresOut": None,
+            "offTrack": None,
+            "penaltyTime": None,
         },
     }
 
@@ -382,6 +385,11 @@ def build_player_car_physics(
             "roadTemp": _safe_float(sample.roadTemp),
             "surfaceGrip": surface_grip,
             "airDensity": _safe_float(sample.airDensity),
+            # The simulator's track-limits verdict, the ground truth the
+            # reconstructed limit gets scored against.
+            "tyresOut": sample.tyresOut,
+            "offTrack": sample.offTrack,
+            "penaltyTime": _safe_float(sample.penaltyTime),
         },
         "inferred": {
             "estimatedAccelerationState": acceleration_state,
