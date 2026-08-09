@@ -195,4 +195,101 @@ def build_limit_corridor(track_data: Dict[str, Any]) -> Dict[str, Any]:
     return report
 
 
-__all__ = ["build_limit_corridor", "identify_limit_rings"]
+REBUILD_MARKER = "limitCorridorRebuild"
+# A limit that would move an edge further than this is a misread, not a track.
+MAX_REBUILD_METERS = 6.0
+
+
+def rebuild_edges_from_limit_corridor(track_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Put the edges where the limit says, wherever the limit was measured.
+
+    Only measured samples move. On an estimated stretch there is nothing to
+    reconstruct from, so the extraction's own edge stays -- taking an
+    interpolated limit as authority would replace a real reading with a guess.
+
+    Edges slide along the normal from where they already are rather than being
+    redrawn from the centreline, so whatever shape the extraction found survives
+    and only the distance changes.
+    """
+    metadata = track_data.setdefault("metadata", {})
+    if isinstance(metadata, dict) and metadata.get(REBUILD_MARKER):
+        return {"status": "ALREADY_APPLIED", **{
+            key: value for key, value in metadata[REBUILD_MARKER].items() if key != "status"
+        }}
+
+    frame = build_track_frame(track_data)
+    if frame is None:
+        return {"status": "UNAVAILABLE", "reason": "no_centerline"}
+
+    corridor = build_limit_corridor(track_data)
+    if corridor["status"] == "UNAVAILABLE":
+        return {"status": "NO_CORRIDOR"}
+
+    count = len(frame.center)
+    distance = _distances(track_data, count)
+    signs = edge_side_signs(track_data, frame)
+    keys = {"left": ("boundsLeft", "left_edge"), "right": ("boundsRight", "right_edge")}
+
+    moved_total = 0
+    details: Dict[str, Any] = {}
+    for side, side_keys in keys.items():
+        data = corridor["sides"].get(side) or {}
+        if data.get("status") != "OK":
+            details[side] = {"movedSamples": 0, "reason": data.get("status", "missing")}
+            continue
+        points = next((track_data.get(key) for key in side_keys if track_data.get(key)), None)
+        if not points or len(points) != count:
+            details[side] = {"movedSamples": 0, "reason": "edge_missing"}
+            continue
+
+        current = np.array([[float(p["x"]), -float(p.get("z", p.get("y", 0.0)))] for p in points])
+        offsets = np.abs(((current - frame.center) * frame.normals).sum(axis=1))
+        target = np.array(data["limit"], dtype=float)
+        measured = np.array([s in (PAINT, KERB) for s in data["source"]])
+
+        delta = np.where(measured, target - offsets, 0.0)
+        delta[np.abs(delta) > MAX_REBUILD_METERS] = 0.0
+        delta = _limit_rate(delta, distance)
+
+        moved = int((np.abs(delta) > 0.05).sum())
+        moved_total += moved
+        if moved:
+            updated = current + frame.normals * (signs[side] * delta)[:, None]
+            payload = [{"x": float(x), "y": float(-y), "z": float(-y)} for x, y in updated]
+            for key in side_keys:
+                track_data[key] = payload
+        details[side] = {
+            "movedSamples": moved,
+            "measuredPercent": data["measuredPercent"],
+            "maxMeters": round(float(np.abs(delta).max()), 3) if moved else 0.0,
+        }
+
+    if not moved_total:
+        return {"status": "NO_CHANGE", "sides": details}
+
+    left = np.abs(((np.array([[float(p["x"]), -float(p.get("z", p.get("y", 0.0)))]
+                              for p in track_data["boundsLeft"]]) - frame.center)
+                   * frame.normals).sum(axis=1))
+    right = np.abs(((np.array([[float(p["x"]), -float(p.get("z", p.get("y", 0.0)))]
+                               for p in track_data["boundsRight"]]) - frame.center)
+                    * frame.normals).sum(axis=1))
+    widths = left + right
+    track_data["localWidth"] = [float(value) for value in widths]
+    track_data["widthMin"] = round(float(widths.min()), 6)
+    track_data["widthAvg"] = round(float(widths.mean()), 6)
+    track_data["widthMax"] = round(float(widths.max()), 6)
+
+    report = {
+        "status": "REBUILT",
+        "limitRings": corridor["limitRings"],
+        "movedSamples": moved_total,
+        "widthAvg": round(float(widths.mean()), 3),
+        "sides": details,
+    }
+    if isinstance(metadata, dict):
+        metadata[REBUILD_MARKER] = report
+    logger.info("Edges rebuilt from the limit corridor: %s samples moved", moved_total)
+    return report
+
+
+__all__ = ["build_limit_corridor", "identify_limit_rings", "rebuild_edges_from_limit_corridor"]

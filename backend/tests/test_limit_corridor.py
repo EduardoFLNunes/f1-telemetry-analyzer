@@ -4,7 +4,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from core.geometry.limit_corridor import build_limit_corridor, identify_limit_rings  # noqa: E402
+from core.geometry.limit_corridor import (  # noqa: E402
+    build_limit_corridor,
+    identify_limit_rings,
+    rebuild_edges_from_limit_corridor,
+)
 from core.geometry.paint_boundary_rings import build_track_frame  # noqa: E402
 from core.telemetry.telemetry_models import TrackPoint  # noqa: E402
 
@@ -111,6 +115,52 @@ class LimitCorridorTests(unittest.TestCase):
         report = build_limit_corridor(straight())
 
         self.assertIn(report["status"], {"UNAVAILABLE", "PARTIAL"})
+
+
+class RebuildFromCorridorTests(unittest.TestCase):
+    def test_edges_move_to_the_measured_limit(self):
+        track = straight(width=9.0)          # paint puts the limit at 12 m
+        track["markingGeometry"]["polygons"] = [line(6.0), line(-6.0)]
+
+        report = rebuild_edges_from_limit_corridor(track)
+
+        self.assertEqual(report["status"], "REBUILT")
+        self.assertAlmostEqual(track["localWidth"][150], 12.0, delta=0.4)
+
+    def test_an_estimated_stretch_keeps_the_extraction(self):
+        """There is nothing to reconstruct from where nothing was measured, and
+        an interpolated limit is not authority over a real reading."""
+        track = straight(width=9.0)
+        track["markingGeometry"]["polygons"] = [line(6.0, 0, 60), line(-6.0, 0, 60)]
+        before = list(track["localWidth"])
+
+        rebuild_edges_from_limit_corridor(track)
+
+        self.assertAlmostEqual(track["localWidth"][280], before[280], delta=0.6)
+
+    def test_running_twice_does_not_walk_the_edges(self):
+        track = straight(width=9.0)
+        track["markingGeometry"]["polygons"] = [line(6.0), line(-6.0)]
+
+        rebuild_edges_from_limit_corridor(track)
+        first = list(track["localWidth"])
+        report = rebuild_edges_from_limit_corridor(track)
+
+        self.assertEqual(report["status"], "ALREADY_APPLIED")
+        self.assertEqual(first, track["localWidth"])
+
+    def test_an_absurd_limit_is_refused(self):
+        track = straight(width=9.0)
+        track["markingGeometry"]["polygons"] = [line(6.0), line(-6.0)]
+        # A limit 8 m out from a 4.5 m edge is past the rebuild cap.
+        track["kerbGeometry"]["polygons"] = [
+            {"points": [[float(i), 12.4] for i in range(POINTS)] +
+                       [[float(i), 12.8] for i in range(POINTS - 1, -1, -1)]},
+        ]
+
+        rebuild_edges_from_limit_corridor(track)
+
+        self.assertLess(max(track["localWidth"]), 9.0 + 2 * 6.0)
 
 
 if __name__ == "__main__":
