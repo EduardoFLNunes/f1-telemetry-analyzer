@@ -188,6 +188,29 @@ class PaintEdgeCorrectionTests(unittest.TestCase):
         self.assertEqual(_sign(track["boundsLeft"][0]["z"]), before_left_sign)
         self.assertAlmostEqual(widths(track)[POINTS // 2], 12.0, delta=0.2)
 
+    def test_a_guide_that_steps_produces_a_ramp_not_a_notch(self):
+        """A kerb reading may sit up to 1.5 m from its neighbourhood median, so
+        two adjacent samples can differ by 3 m. Applied straight, that cut four
+        notches into the edge -- one gained 1.72 m of width in a single 1.6 m
+        step, which reads as a break in the track."""
+        track = straight_track(width=9.0)
+        stepped = [[float(i), 6.0 if i < 200 else 9.0] for i in range(0, POINTS, 2)]
+        track["markingGeometry"] = {"polygons": [{"rings": [stepped]}]}
+
+        correct_edges_from_paint(track)
+        values = widths(track)
+
+        rates = [abs(b - a) for a, b in zip(values, values[1:])]  # samples are 1 m apart
+        self.assertLess(max(rates), 0.30, "the corrected width steps between neighbouring samples")
+
+    def test_widening_survives_the_rate_limit(self):
+        track = straight_track(width=9.0)
+        track["markingGeometry"] = {"polygons": [line(6.0), line(-6.0)]}
+
+        correct_edges_from_paint(track)
+
+        self.assertAlmostEqual(widths(track)[POINTS // 2], 12.0, delta=0.2)
+
     def test_track_without_paint_is_left_alone(self):
         track = straight_track(width=9.0)
 

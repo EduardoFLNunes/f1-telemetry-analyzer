@@ -150,6 +150,35 @@ def _steady_kerb_profile(profile: Dict[str, np.ndarray], distance: np.ndarray) -
     return steady
 
 
+# How fast the correction may grow along the track, per metre travelled.
+# A track edge does not step. The shipped geometry changes width by 0.22 m per
+# metre at its 99th percentile, so a correction that moves faster than this is
+# building a corner that is not there.
+MAX_CORRECTION_RATE = 0.12
+
+
+def _limit_rate(correction: np.ndarray, distance: np.ndarray) -> np.ndarray:
+    """Stop the correction from stepping between neighbouring samples.
+
+    The stability filter bounds how far a kerb reading may sit from its
+    neighbourhood median, which still lets two adjacent samples differ by 3 m.
+    That is what tore four notches into the edge: the band gained 1.72 m of
+    width in a single 1.6 m step. Limiting the rate in both directions turns
+    every notch into a ramp.
+    """
+    limited = correction.astype(float).copy()
+    count = len(limited)
+    if count < 2:
+        return limited
+    for index in range(1, count):
+        run = abs(distance[index] - distance[index - 1]) or 1.0
+        limited[index] = min(limited[index], limited[index - 1] + MAX_CORRECTION_RATE * run)
+    for index in range(count - 2, -1, -1):
+        run = abs(distance[index + 1] - distance[index]) or 1.0
+        limited[index] = min(limited[index], limited[index + 1] + MAX_CORRECTION_RATE * run)
+    return limited
+
+
 def _distance_array(track_data: Dict[str, Any], sample_count: int) -> np.ndarray:
     centerline = track_data.get("centerline") or []
     values = []
@@ -278,7 +307,7 @@ def correct_edges_from_paint(track_data: Dict[str, Any]) -> Dict[str, Any]:
             if end - start + 1 < MIN_PAINTED_RUN_SAMPLES:
                 delta[start:end + 1] = np.nan
 
-        spread = _spread_correction(delta, distance)
+        spread = _limit_rate(_spread_correction(delta, distance), distance)
         corrections[side] = spread
         # Count what actually moved the edge, not the tails of the ramps.
         moved = np.abs(spread) > 0.05
