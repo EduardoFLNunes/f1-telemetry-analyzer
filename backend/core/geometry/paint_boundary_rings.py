@@ -237,6 +237,7 @@ def cast_to_segments(
     min_ratio: float,
     max_ratio: float,
     band_tolerance: Optional[float] = None,
+    absolute: bool = False,
 ) -> Dict[str, np.ndarray]:
     """Distance from the centreline to the first thing the lateral normal hits.
 
@@ -257,7 +258,8 @@ def cast_to_segments(
         limit = half[index]
         if not np.isfinite(limit) or limit <= 0:
             continue
-        near, far = limit * min_ratio, limit * max_ratio
+        near, far = ((min_ratio, max_ratio) if absolute
+                     else (limit * min_ratio, limit * max_ratio))
         reachable = ((np.abs(seg_a[:, 0] - origin[0]) < far + 5.0)
                      & (np.abs(seg_a[:, 1] - origin[1]) < far + 5.0))
         if not reachable.any():
@@ -289,6 +291,7 @@ def kerb_limit_profile(
     signs: Dict[str, float],
     min_ratio: float = 0.6,
     max_ratio: float = 2.5,
+    absolute: bool = False,
 ) -> Dict[str, np.ndarray]:
     """Where the kerbs say the racing surface ends.
 
@@ -298,7 +301,8 @@ def kerb_limit_profile(
     the lap. Its inner edge is the one that matters, so the nearest hit wins.
     """
     polygons = ((track_data.get("kerbGeometry") or {}).get("polygons")) or []
-    return cast_to_segments(frame, _segments_of(polygons), signs, min_ratio, max_ratio)
+    return cast_to_segments(frame, _segments_of(polygons), signs, min_ratio, max_ratio,
+                            absolute=absolute)
 
 
 def _ring_segments(track_data: Dict[str, Any], boundary_rings: Sequence[BoundaryRing]) -> np.ndarray:

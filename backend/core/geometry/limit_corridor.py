@@ -37,12 +37,16 @@ logger = logging.getLogger(__name__)
 
 # A limit line sits about one half width out. This is where it may sit, not how
 # steady it has to stay -- steadiness was the test that discarded 15 of the 18.
-LIMIT_RATIO_MAX = 1.35
-LIMIT_RATIO_MIN = 0.55
+# Absolute metres, not a fraction of the extracted width. Tying the test to
+# that width made the extraction the arbiter of its own replacement: a stretch
+# the raycast read as 5 m wide would only accept paint 3 m out, which is the
+# paint that agrees with the fault.
+LIMIT_DISTANCE_MIN = 2.5
+LIMIT_DISTANCE_MAX = 13.0
 MIN_RING_POINTS = 6
 # The ray window, as a fraction of the current half width.
-MIN_HIT_RATIO = 0.45
-MAX_HIT_RATIO = 2.2
+MIN_HIT_METERS = 2.0
+MAX_HIT_METERS = 16.0
 PAINT_BAND_TOLERANCE_METERS = 0.6
 # Beyond this an interpolated limit is a guess about a stretch nothing measured.
 MAX_INTERPOLATED_GAP_METERS = 120.0
@@ -69,11 +73,10 @@ def identify_limit_rings(track_data: Dict[str, Any], frame: TrackFrame) -> List[
             deltas = sample[:, None, :] - frame.center[None, :, :]
             distance = np.sqrt((deltas * deltas).sum(axis=2))
             nearest = distance.argmin(axis=1)
-            ratio = distance.min(axis=1) / np.maximum(half[nearest], 1e-6)
-            median = float(np.median(ratio))
-            if LIMIT_RATIO_MIN <= median <= LIMIT_RATIO_MAX:
+            median = float(np.median(distance.min(axis=1)))
+            if LIMIT_DISTANCE_MIN <= median <= LIMIT_DISTANCE_MAX:
                 accepted.append({"group": group_index, "ring": ring_index,
-                                 "ratio": round(median, 3), "points": len(points),
+                                 "metres": round(median, 3), "points": len(points),
                                  "rings": [ring]})
     return accepted
 
@@ -167,9 +170,12 @@ def build_limit_corridor(track_data: Dict[str, Any]) -> Dict[str, Any]:
     paint = {side: np.full(count, np.nan) for side in signs}
     if rings:
         segments = _segments_of([{"rings": entry["rings"]} for entry in rings])
-        paint = cast_to_segments(frame, segments, signs, MIN_HIT_RATIO, MAX_HIT_RATIO,
-                                 band_tolerance=PAINT_BAND_TOLERANCE_METERS)
-    kerb = kerb_limit_profile(track_data, frame, signs)
+        paint = cast_to_segments(frame, segments, signs, MIN_HIT_METERS, MAX_HIT_METERS,
+                                 band_tolerance=PAINT_BAND_TOLERANCE_METERS,
+                                 absolute=True)
+    kerb = kerb_limit_profile(track_data, frame, signs,
+                              min_ratio=MIN_HIT_METERS, max_ratio=MAX_HIT_METERS,
+                              absolute=True)
 
     sides: Dict[str, Any] = {}
     for side in signs:

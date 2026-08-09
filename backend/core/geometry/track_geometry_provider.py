@@ -31,11 +31,14 @@ def resolve_geometry_resource_root() -> Path:
 def track_built_from_limits() -> bool:
     """Whether the edges come from the painted limit or from the raycast.
 
-    Set AT_TRACK_FROM_LIMITS=1 to build the track from its limits. Off by
-    default while the narrowest point is still read at 5.61 m against the
-    extraction's 8.21 m.
+    The limits are the geometry now. The extracted asphalt supplies the
+    centreline the measurements are taken along and nothing else: its raycast
+    loses the road at bifurcations and catches run-off beside it, and every
+    attempt to correct that from within kept the fault.
+
+    Set AT_TRACK_FROM_LIMITS=0 to go back to the raycast edges.
     """
-    return os.getenv("AT_TRACK_FROM_LIMITS", "").strip().lower() in {"1", "true", "yes", "on"}
+    return os.getenv("AT_TRACK_FROM_LIMITS", "1").strip().lower() not in {"0", "false", "no", "off"}
 
 
 def prefer_shipped_interlagos_geometry() -> bool:
