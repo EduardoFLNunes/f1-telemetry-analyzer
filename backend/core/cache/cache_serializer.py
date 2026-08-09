@@ -4,6 +4,17 @@ from typing import Dict, Any, List
 from ..telemetry.telemetry_models import TrackPoint
 
 class CacheSerializer:
+    """Cache round-trip for track geometry.
+
+    to_cache_dict and deserialize_track are two halves of one contract: a key
+    the writer omits is gone after the next restart, silently, because the
+    reader still has a default for it. That asymmetry has cost real features
+    twice -- kerbs and markings reached the geometry but not the renderer
+    through to_api_track, and reached the cache file not at all, so on every
+    track but Interlagos they appeared once and vanished on reload.
+    test_cache_round_trip pins the two halves together.
+    """
+
     @staticmethod
     def to_cache_dict(track_data: Dict[str, Any], source_hash: str = "") -> Dict[str, Any]:
         centerline: List[TrackPoint] = track_data["centerline"]
@@ -15,6 +26,11 @@ class CacheSerializer:
             "source": track_data.get("source", "telemetry_reconstruction"),
             "provider": track_data.get("provider"),
             "providerSource": track_data.get("providerSource"),
+            "gameCode": track_data.get("gameCode", track_data.get("game_code", "AssettoCorsa")),
+            "geometryName": track_data.get("geometryName"),
+            "visualGeometryName": track_data.get("visualGeometryName"),
+            "renderMode": track_data.get("renderMode"),
+            "updatedAt": track_data.get("updatedAt"),
             "trackConfig": track_data.get("trackConfig"),
             "cachePath": track_data.get("cachePath"),
             "sourceHash": source_hash,
@@ -22,6 +38,12 @@ class CacheSerializer:
             "closedLoop": bool(track_data.get("closedLoop", True)),
             "reconstruction": track_data.get("reconstruction", {}),
             "metadata": track_data.get("metadata", {}),
+            "validation": track_data.get("validation", {}),
+            "asphaltPolygon": track_data.get("asphaltPolygon"),
+            "pitVisualGeometry": track_data.get("pitVisualGeometry"),
+            "visualCenterline": track_data.get("visualCenterline"),
+            "kerbGeometry": track_data.get("kerbGeometry"),
+            "markingGeometry": track_data.get("markingGeometry"),
             "centerline": [p.to_dict() for p in centerline],
             "normals": [{"x": float(p.normal[0]), "z": float(p.normal[1])} for p in centerline],
             "curvature": [float(p.curvature) for p in centerline],
@@ -92,6 +114,8 @@ class CacheSerializer:
             "asphaltPolygon": data.get("asphaltPolygon"),
             "pitVisualGeometry": data.get("pitVisualGeometry"),
             "visualCenterline": data.get("visualCenterline"),
+            "kerbGeometry": data.get("kerbGeometry"),
+            "markingGeometry": data.get("markingGeometry"),
             "sourceHash": data.get("sourceHash", ""),
             "coordinate_system": data.get("coordinateSystem", "world_xz"),
             "closedLoop": bool(data.get("closedLoop", True)),

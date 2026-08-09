@@ -25,6 +25,21 @@ def resolve_geometry_resource_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
 
+def _cache_predates_decoration(cached: Dict[str, Any]) -> bool:
+    """Was this cache written before kerbs and markings were persisted?
+
+    The writer used to drop both, so a track cached then comes back with the
+    keys missing and the map loses its kerbs on the first reload -- on every
+    track except Interlagos, which is served from a shipped asset instead. A
+    fresh build always writes a dict, empty at worst, so None means old file
+    rather than a track with nothing painted on it.
+    """
+    stale = cached.get("kerbGeometry") is None and cached.get("markingGeometry") is None
+    if stale:
+        logger.info("Rebuilding track cache written before kerbs and markings were persisted")
+    return stale
+
+
 def apply_paint_correction(track_data: Dict[str, Any], track_name: str) -> Dict[str, Any]:
     """Pull the edges out to the painted limit before anyone draws or measures them.
 
@@ -239,7 +254,7 @@ class Kn5SurfaceTrackGeometryProvider:
         cache_name = kn5_surface_cache_name(track_name, track_config)
         cache_path = self.cache.cache_dir / f"{self.cache._safe_name(cache_name)}.json"
         cached = self.cache.load_track(cache_name)
-        if cached and cached.get("provider") == self.provider:
+        if cached and cached.get("provider") == self.provider and not _cache_predates_decoration(cached):
             # Caches written before the correction existed carry no marker and
             # get corrected here; everything else short-circuits on it.
             apply_paint_correction(cached, track_name)
