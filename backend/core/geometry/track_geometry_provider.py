@@ -151,7 +151,9 @@ def track_data_from_interval_edges(result: Dict[str, Any], cache_path: Optional[
         centerline.append(
             TrackPoint(
                 x=float(point[0]),
-                y=0.0,
+                # Height above sea level, straight from the AI line. The map is
+                # flat, so this rides along unused by the projection.
+                y=float(sample.get("elevation") or 0.0),
                 z=-float(point[1]),
                 distance=float(distances[index]),
                 spline_t=float(spline_t),

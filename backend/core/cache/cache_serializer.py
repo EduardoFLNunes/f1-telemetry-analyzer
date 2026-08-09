@@ -142,6 +142,10 @@ class CacheSerializer:
         x = [float(p["x"]) for p in center]
         world_z = [float(p.get("z", p.get("y", 0.0))) for p in center]
         map_y = [-value for value in world_z]
+        # to_dict renames the vertical axis to worldY, because y is taken by the
+        # map projection. Reading the wrong one flattens the whole track.
+        elevation = [float(p.get("worldY", 0.0)) for p in center]
+        distance = [float(p.get("distance", 0.0)) for p in center]
 
         return {
             "name": track_data.get("name", track_data.get("trackName", "Unknown Track")),
@@ -174,7 +178,11 @@ class CacheSerializer:
                 "x": x,
                 "y": map_y,
                 "z": world_z,
-                "distance": [float(p.get("distance", 0.0)) for p in center],
+                # Height rides beside the flat projection: y is map space, this
+                # is metres above sea level.
+                "elevation": elevation,
+                "gradient": CacheSerializer._gradient(elevation, distance),
+                "distance": distance,
                 "spline_t": [float(p.get("spline_t", 0.0)) for p in center],
                 "curvature": [float(p.get("curvature", 0.0)) for p in center],
             },
@@ -192,6 +200,46 @@ class CacheSerializer:
             "widthAvg": track_data.get("widthAvg"),
             "widthMax": track_data.get("widthMax"),
         }
+
+    GRADIENT_WINDOW_METERS = 12.0
+
+    @staticmethod
+    def _gradient(elevation: List[float], distance: List[float]) -> List[float]:
+        """Slope as a fraction of run, measured over a fixed window in metres.
+
+        Elevation on its own is a picture; the gradient is what the analysis
+        wants -- braking downhill and traction uphill are gradient questions.
+
+        The window matters. Samples sit about 1.6 m apart and the AI line rises
+        and falls by about 4 cm between them, so differencing neighbours reads
+        that undulation as whole percent of slope. Fitting a line across the
+        window uses every sample in it rather than the two endpoints, which are
+        just as noisy as any other pair.
+        """
+        count = len(elevation)
+        if count < 3 or len(distance) != count:
+            return [0.0] * count
+
+        half = CacheSerializer.GRADIENT_WINDOW_METERS / 2.0
+        gradient = []
+        for index in range(count):
+            back = index
+            while back > 0 and distance[index] - distance[back] < half:
+                back -= 1
+            forward = index
+            while forward < count - 1 and distance[forward] - distance[index] < half:
+                forward += 1
+            span = range(back, forward + 1)
+            n = forward - back + 1
+            if n < 2:
+                gradient.append(0.0)
+                continue
+            mean_d = sum(distance[i] for i in span) / n
+            mean_e = sum(elevation[i] for i in span) / n
+            numerator = sum((distance[i] - mean_d) * (elevation[i] - mean_e) for i in span)
+            denominator = sum((distance[i] - mean_d) ** 2 for i in span)
+            gradient.append(round(numerator / denominator, 6) if denominator > 1e-9 else 0.0)
+        return gradient
 
     @staticmethod
     def _edge_to_arrays(edge: List[Dict[str, Any]]) -> Dict[str, List[float]]:

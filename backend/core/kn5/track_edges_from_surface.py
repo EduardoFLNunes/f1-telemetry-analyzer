@@ -733,6 +733,10 @@ def _run_interval_raycast(
             {
                 "index": index,
                 "fastLane": _round_point(map_position),
+                # The map projection is flat, so the height would end here. It
+                # rides alongside rather than inside the projection, which
+                # everything downstream reads as two dimensional.
+                "elevation": round(float(fast_point["worldPosition"][1]), 4),
                 "tangent": _round_point([tx, ty]),
                 "normal": _round_point(normal),
                 "leftEdge": _round_point(left_edge) if left_edge else None,

@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { AssistedAnalysisPanel } from '../components/AssistedAnalysisPanel';
 import { AssistedLapTraces } from '../components/AssistedLapTraces';
 import { SessionLapsPanel } from '../components/SessionLapsPanel';
+import { ElevationProfile } from '../components/ElevationProfile';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
-type Tab = 'laps' | 'assisted' | 'traces';
+type Tab = 'laps' | 'assisted' | 'traces' | 'elevation';
 
 const TABS: Array<[Tab, string]> = [
   ['laps', 'Voltas'],
   ['assisted', 'Analise assistida'],
   ['traces', 'Tracados'],
+  ['elevation', 'Elevacao'],
 ];
 
 /**
@@ -66,6 +68,9 @@ export const AnalysisPage: React.FC = () => {
           </div>
           <div style={{ position: 'absolute', inset: 0, opacity: tab === 'traces' ? 1 : 0, pointerEvents: tab === 'traces' ? 'auto' : 'none', transition: 'opacity 0.2s' }}>
             <AssistedLapTraces active={tab === 'traces'} />
+          </div>
+          <div style={{ position: 'absolute', inset: 0, opacity: tab === 'elevation' ? 1 : 0, pointerEvents: tab === 'elevation' ? 'auto' : 'none', transition: 'opacity 0.2s' }}>
+            <ElevationProfile active={tab === 'elevation'} />
           </div>
         </div>
       </div>

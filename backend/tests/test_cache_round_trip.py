@@ -130,6 +130,39 @@ class CacheRoundTripTests(unittest.TestCase):
 
         self.assertFalse(_cache_predates_decoration(self.round_trip(bare)))
 
+    def test_api_payload_exposes_elevation_beside_the_flat_projection(self):
+        """centerline.y is map space, not height. The vertical axis has to travel
+        under its own name or it gets read as a coordinate and flattened."""
+        original = full_track()
+
+        payload = CacheSerializer.to_api_track(self.round_trip(original))
+
+        self.assertEqual(payload["centerline"]["elevation"],
+                         [p.y for p in original["centerline"]])
+        self.assertNotEqual(payload["centerline"]["elevation"], payload["centerline"]["y"])
+
+    def test_gradient_is_rise_over_run(self):
+        original = full_track()
+        # 4 samples 1 m apart climbing 1 m each: a 100% slope, whatever the window.
+        for index, point in enumerate(original["centerline"]):
+            point.y = float(index)
+            point.distance = float(index)
+
+        payload = CacheSerializer.to_api_track(self.round_trip(original))
+
+        for value in payload["centerline"]["gradient"]:
+            self.assertAlmostEqual(value, 1.0, places=3)
+
+    def test_a_flat_track_reports_no_slope_rather_than_dividing_by_zero(self):
+        original = full_track()
+        for point in original["centerline"]:
+            point.y = 0.0
+            point.distance = 0.0
+
+        payload = CacheSerializer.to_api_track(self.round_trip(original))
+
+        self.assertEqual(payload["centerline"]["gradient"], [0.0] * len(original["centerline"]))
+
     def test_api_payload_carries_the_decoration_too(self):
         """The API whitelist is a third place the same omission can happen."""
         original = full_track()

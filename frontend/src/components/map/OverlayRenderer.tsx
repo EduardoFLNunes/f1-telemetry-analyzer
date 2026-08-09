@@ -15,6 +15,124 @@ type TrackSurfaceCache = {
   centerPath: Path2D | null;
 };
 
+export type ReliefMode = 'NONE' | 'ELEVATION' | 'GRADIENT';
+
+// The band is shaded by filling one path per colour band rather than one per
+// sample: 2680 quads per frame is a lot of fill calls for a 24-step scale.
+const RELIEF_STEPS = 24;
+const RELIEF_ALPHA = 0.62;
+// Anything past this reads as full climb or full descent. Interlagos peaks near
+// 13% over a 12 m window, but almost all of the lap sits inside this.
+const GRADIENT_FULL_SCALE = 0.08;
+
+type ReliefCache = { paths: Path2D[]; colors: string[] };
+const RELIEF_CACHE = new WeakMap<object, Partial<Record<ReliefMode, ReliefCache | null>>>();
+
+function mixChannel(from: number, to: number, t: number): number {
+  return Math.round(from + (to - from) * t);
+}
+
+function rampColor(stops: Array<[number, number, number]>, t: number): string {
+  const clamped = Math.max(0, Math.min(1, t));
+  const scaled = clamped * (stops.length - 1);
+  const index = Math.min(stops.length - 2, Math.floor(scaled));
+  const local = scaled - index;
+  const [r1, g1, b1] = stops[index];
+  const [r2, g2, b2] = stops[index + 1];
+  return `rgba(${mixChannel(r1, r2, local)},${mixChannel(g1, g2, local)},${mixChannel(b1, b2, local)},${RELIEF_ALPHA})`;
+}
+
+const ELEVATION_STOPS: Array<[number, number, number]> = [
+  [26, 54, 93], [31, 106, 122], [86, 168, 130], [201, 190, 96], [244, 162, 74],
+];
+const GRADIENT_STOPS: Array<[number, number, number]> = [
+  [56, 152, 220], [70, 96, 130], [70, 76, 92], [160, 96, 60], [232, 122, 48],
+];
+
+function reliefValues(trackData: any, mode: ReliefMode): number[] | null {
+  const center = trackData?.centerline;
+  if (!center) return null;
+  const values = mode === 'ELEVATION' ? center.elevation : center.gradient;
+  if (!Array.isArray(values) || values.length < 2) return null;
+  return values.map((value: unknown) => Number(value)).filter((v: number) => Number.isFinite(v)).length === values.length
+    ? values
+    : null;
+}
+
+function buildReliefCache(trackData: any, mode: ReliefMode): ReliefCache | null {
+  if (typeof Path2D === 'undefined') return null;
+  const left = trackData?.left_edge;
+  const right = trackData?.right_edge;
+  const values = reliefValues(trackData, mode);
+  if (!values || !left?.x?.length || !right?.x?.length) return null;
+
+  const count = Math.min(values.length, left.x.length, right.x.length);
+  if (count < 2) return null;
+
+  let low: number;
+  let high: number;
+  if (mode === 'GRADIENT') {
+    low = -GRADIENT_FULL_SCALE;
+    high = GRADIENT_FULL_SCALE;
+  } else {
+    low = Math.min(...values.slice(0, count));
+    high = Math.max(...values.slice(0, count));
+  }
+  const span = high - low;
+  if (!(span > 1e-9)) return null;
+
+  const stops = mode === 'GRADIENT' ? GRADIENT_STOPS : ELEVATION_STOPS;
+  const paths: Path2D[] = [];
+  const colors: string[] = [];
+  for (let step = 0; step < RELIEF_STEPS; step += 1) {
+    paths.push(new Path2D());
+    colors.push(rampColor(stops, step / (RELIEF_STEPS - 1)));
+  }
+
+  for (let i = 0; i < count; i += 1) {
+    const next = (i + 1) % count;
+    const value = (values[i] + values[next]) / 2;
+    const t = Math.max(0, Math.min(1, (value - low) / span));
+    const step = Math.min(RELIEF_STEPS - 1, Math.floor(t * RELIEF_STEPS));
+    const path = paths[step];
+    // A quad spanning this sample and the next, edge to edge.
+    path.moveTo(left.x[i], left.y[i]);
+    path.lineTo(left.x[next], left.y[next]);
+    path.lineTo(right.x[next], right.y[next]);
+    path.lineTo(right.x[i], right.y[i]);
+    path.closePath();
+  }
+  return { paths, colors };
+}
+
+function getReliefCache(trackData: any, mode: ReliefMode): ReliefCache | null {
+  if (mode === 'NONE' || !trackData) return null;
+  let byMode = RELIEF_CACHE.get(trackData);
+  if (!byMode) {
+    byMode = {};
+    RELIEF_CACHE.set(trackData, byMode);
+  }
+  if (byMode[mode] === undefined) {
+    byMode[mode] = buildReliefCache(trackData, mode);
+  }
+  return byMode[mode] || null;
+}
+
+export function trackHasRelief(trackData: any): boolean {
+  return Boolean(reliefValues(trackData, 'ELEVATION'));
+}
+
+export function reliefRange(trackData: any, mode: ReliefMode): { low: number; high: number } | null {
+  if (mode === 'GRADIENT') return { low: -GRADIENT_FULL_SCALE, high: GRADIENT_FULL_SCALE };
+  const values = reliefValues(trackData, 'ELEVATION');
+  if (!values) return null;
+  return { low: Math.min(...values), high: Math.max(...values) };
+}
+
+export function reliefColorAt(mode: ReliefMode, t: number): string {
+  return rampColor(mode === 'GRADIENT' ? GRADIENT_STOPS : ELEVATION_STOPS, t);
+}
+
 const TRACK_SURFACE_CACHE = new WeakMap<object, TrackSurfaceCache>();
 
 function buildPath(x: number[] = [], y: number[] = [], close = false): Path2D | null {
@@ -304,7 +422,13 @@ export function drawMarkings(ctx: CanvasRenderingContext2D, trackData: any, scal
   ctx.restore();
 }
 
-export function drawTrackSurface(ctx: CanvasRenderingContext2D, trackData: any, bounds: any, scale: number) {
+export function drawTrackSurface(
+  ctx: CanvasRenderingContext2D,
+  trackData: any,
+  bounds: any,
+  scale: number,
+  reliefMode: ReliefMode = 'NONE',
+) {
   const left = trackData.left_edge;
   const right = trackData.right_edge;
   const center = trackData.visualCenterline || trackData.centerline;
@@ -335,6 +459,17 @@ export function drawTrackSurface(ctx: CanvasRenderingContext2D, trackData: any, 
     ctx.fill();
   }
   drawPitVisualGeometry(ctx, trackData, asphalt, scale);
+
+  // Relief goes straight onto the asphalt, under the paint: the shading is a
+  // property of the surface, not something painted on it.
+  const relief = getReliefCache(trackData, reliefMode);
+  if (relief) {
+    for (let step = 0; step < relief.paths.length; step += 1) {
+      ctx.fillStyle = relief.colors[step];
+      ctx.fill(relief.paths[step]);
+    }
+  }
+
   // Paint sits on the asphalt, kerbs on top of the paint, and the edge strokes
   // last so the track outline still reads as the outermost line.
   drawMarkings(ctx, trackData, scale);
