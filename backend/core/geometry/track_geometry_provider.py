@@ -14,6 +14,7 @@ from ..track_file_resolver import TrackFileResolver
 from .interlagos_track_only_fixed import GEOMETRY_NAME, is_interlagos_track, load_fixed_geometry
 from .paint_edge_correction import correct_edges_from_paint, paint_correction_enabled
 from .pit_corridor_width import correct_pit_corridor_from_markings
+from .width_continuity import enforce_width_continuity
 
 
 logger = logging.getLogger(__name__)
@@ -64,6 +65,12 @@ def apply_paint_correction(track_data: Dict[str, Any], track_name: str) -> Dict[
     """
     if not paint_correction_enabled():
         return track_data
+    try:
+        # First, because a width the track cannot have is not a width the paint
+        # should be asked to correct.
+        enforce_width_continuity(track_data)
+    except Exception:
+        logger.exception("Width continuity pass failed for %s; keeping raw widths", track_name)
     try:
         correct_edges_from_paint(track_data)
     except Exception:  # geometry must still load if the correction cannot run
