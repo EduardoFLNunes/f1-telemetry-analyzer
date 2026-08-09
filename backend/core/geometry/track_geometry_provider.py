@@ -11,7 +11,6 @@ from ..cache.track_cache import TrackCache
 from ..kn5.track_edges_from_surface import build_track_edges_interval_raycast_from_manifest
 from ..telemetry.telemetry_models import TrackPoint
 from ..track_file_resolver import TrackFileResolver
-from .interlagos_track_only_fixed import GEOMETRY_NAME, is_interlagos_track, load_fixed_geometry
 from .paint_edge_correction import correct_edges_from_paint, paint_correction_enabled
 from .limit_corridor import construct_track_from_limits, rebuild_edges_from_limit_corridor
 from .pit_corridor_width import correct_pit_corridor_from_markings
@@ -39,19 +38,6 @@ def track_built_from_limits() -> bool:
     Set AT_TRACK_FROM_LIMITS=0 to go back to the raycast edges.
     """
     return os.getenv("AT_TRACK_FROM_LIMITS", "1").strip().lower() not in {"0", "false", "no", "off"}
-
-
-def prefer_shipped_interlagos_geometry() -> bool:
-    """Whether Interlagos loads the shipped hand-authored file or is extracted.
-
-    The shipped file exists for its pit merge, and it costs accuracy elsewhere:
-    against the painted limit the extraction is within 0.6 m everywhere while
-    the shipped file misses by up to 4.4 m, and it draws one corner at 13.1 m
-    that the extraction reads at 15.5 m. Set AT_INTERLAGOS_SOURCE=extraction to
-    compare the two in the same build.
-    """
-    source = os.getenv("AT_INTERLAGOS_SOURCE", "shipped").strip().lower()
-    return source not in {"extraction", "kn5", "extracted"}
 
 
 def _cache_predates_decoration(cached: Dict[str, Any]) -> bool:
@@ -287,25 +273,10 @@ class Kn5SurfaceTrackGeometryProvider:
         source: str = "assetto_corsa",
         game_code: str = "assetto_corsa",
     ) -> Optional[TrackGeometryProviderResult]:
-        resource_root = resolve_geometry_resource_root()
-        if is_interlagos_track(track_name, track_config) and prefer_shipped_interlagos_geometry():
-            fixed = load_fixed_geometry(resource_root)
-            if fixed:
-                apply_paint_correction(fixed, track_name)
-                fixed_provider = fixed.get("provider") or GEOMETRY_NAME
-                fixed_path = Path(
-                    fixed.get("cachePath")
-                    or resource_root / "data" / "debug" / "interlagos_track_only_fixed_geometry.json"
-                )
-                return TrackGeometryProviderResult(
-                    f"vhe_interlagos_gp_{_safe_fragment(fixed_provider)}",
-                    fixed,
-                    fixed_path,
-                    fixed_provider,
-                    self.source,
-                    from_cache=True,
-                )
-
+        # Interlagos used to load a hand-authored file here instead of being
+        # extracted. It was thirteen scripts of corrections layered over a
+        # raycast, and the corrections could never replace what they were
+        # correcting -- every track now comes from its own files.
         cache_name = kn5_surface_cache_name(track_name, track_config)
         cache_path = self.cache.cache_dir / f"{self.cache._safe_name(cache_name)}.json"
         cached = self.cache.load_track(cache_name)
