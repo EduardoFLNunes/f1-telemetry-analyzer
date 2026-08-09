@@ -50,8 +50,18 @@ class PaintAgreementTests(unittest.TestCase):
         self.assertEqual(result["status"], "DIVERGENT")
         self.assertTrue(result["issues"])
 
-    def test_track_wider_than_the_paint_is_flagged(self):
-        track = straight_track(width=16.0)
+    def test_a_little_asphalt_past_the_line_is_not_a_defect(self):
+        """The band draws asphalt, and asphalt continues past the white line out
+        to the kerb -- a median 1.8 m of it on one side of Interlagos."""
+        track = straight_track(width=15.0)  # paint at 12 m
+        track["markingGeometry"] = {"polygons": [painted_line(6.0), painted_line(-6.0)]}
+
+        result = evaluate_paint_agreement(track)
+
+        self.assertEqual(result["status"], "OK")
+
+    def test_a_track_far_wider_than_its_paint_is_still_flagged(self):
+        track = straight_track(width=20.0)
         track["markingGeometry"] = {"polygons": [painted_line(6.0), painted_line(-6.0)]}
 
         result = evaluate_paint_agreement(track)

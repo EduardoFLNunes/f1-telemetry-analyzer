@@ -27,7 +27,14 @@ from .paint_boundary_rings import (
 # Below this there is too little paint on a side to say anything.
 MIN_SIDE_COVERAGE_PERCENT = 3.0
 # How far the edge may sit from the paint before it is called out.
-AGREEMENT_RATIO_RANGE = (0.90, 1.10)
+#
+# Asymmetric, and the loose end is the low one. The ratio is the painted limit
+# over the drawn half width, so above 1 the paint lies outside the edge: the
+# track has been drawn short of a limit the circuit painted, which is the defect
+# this exists to catch. Below 1 the edge is outside the paint, which is just
+# asphalt -- it legitimately continues past the white line to the kerb, a median
+# 1.8 m of it on one side of Interlagos.
+AGREEMENT_RATIO_RANGE = (0.65, 1.10)
 
 
 def _side_summary(indices: np.ndarray, ratios: np.ndarray, total_points: int) -> Dict[str, Any]:

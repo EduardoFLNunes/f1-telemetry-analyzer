@@ -26,6 +26,7 @@ from .paint_boundary_rings import (
     build_track_frame,
     edge_side_signs,
     identify_boundary_rings,
+    kerb_limit_profile,
     painted_limit_profile,
 )
 
@@ -119,6 +120,36 @@ def _spread_correction(delta: np.ndarray, distance: np.ndarray) -> np.ndarray:
     return np.where(filled, out, decay)
 
 
+# A kerb is a noisier guide than a painted line. The ray can reach the kerb of
+# a neighbouring corner and come back with a limit 14 m out, so a reading only
+# counts when it agrees with its neighbours along the lap.
+KERB_NEIGHBOURHOOD_METERS = 30.0
+MAX_KERB_DEVIATION_METERS = 1.5
+MIN_KERB_NEIGHBOURS = 5
+
+
+def _steady_kerb_profile(profile: Dict[str, np.ndarray], distance: np.ndarray) -> Dict[str, np.ndarray]:
+    """Keep kerb readings that agree with the kerb either side of them.
+
+    A real kerb runs alongside the track, so its distance changes smoothly. A
+    stray hit on some other corner's kerb does not, and it is the stray hits
+    that would tear the edge open.
+    """
+    steady = {}
+    for side, values in profile.items():
+        out = np.full_like(values, np.nan)
+        known = np.where(~np.isnan(values))[0]
+        for index in known:
+            window = known[np.abs(distance[known] - distance[index]) <= KERB_NEIGHBOURHOOD_METERS]
+            if len(window) < MIN_KERB_NEIGHBOURS:
+                continue
+            median = float(np.median(values[window]))
+            if abs(values[index] - median) <= MAX_KERB_DEVIATION_METERS:
+                out[index] = values[index]
+        steady[side] = out
+    return steady
+
+
 def _distance_array(track_data: Dict[str, Any], sample_count: int) -> np.ndarray:
     centerline = track_data.get("centerline") or []
     values = []
@@ -201,12 +232,28 @@ def correct_edges_from_paint(track_data: Dict[str, Any]) -> Dict[str, Any]:
         ratio_range=CORRECTION_RATIO_RANGE,
         max_spread=MAX_CORRECTION_RATIO_SPREAD,
     )
-    if not rings:
+    has_kerbs = bool(((track_data.get("kerbGeometry") or {}).get("polygons")))
+    if not rings and not has_kerbs:
         return {"status": "NO_BOUNDARY_PAINT", "sides": {}, "correctedSamples": 0}
 
     sample_count = len(frame.center)
     distance = _distance_array(track_data, sample_count)
-    profile = painted_limit_profile(track_data, frame, rings)
+    signs = edge_side_signs(track_data, frame)
+    paint = painted_limit_profile(track_data, frame, rings)
+    kerb = _steady_kerb_profile(kerb_limit_profile(track_data, frame, signs), distance)
+    # Both are floors, and the outermost wins. They measure different things:
+    # the white line is the regulatory limit, the kerb is where the asphalt
+    # actually ends, and there is real surface between them -- at Interlagos the
+    # kerb sits a median 1.8 m outside the paint on one side. The band draws the
+    # asphalt, so it reaches the furthest either source can prove.
+    profile = {
+        side: np.fmax(paint[side], kerb[side])
+        for side in ("left", "right")
+    }
+    guided_by_kerb = {
+        side: int((np.isnan(paint[side]) & ~np.isnan(kerb[side])).sum())
+        for side in ("left", "right")
+    }
     half = frame.half_widths.copy()
 
     report_sides: Dict[str, Any] = {}
@@ -236,7 +283,9 @@ def correct_edges_from_paint(track_data: Dict[str, Any]) -> Dict[str, Any]:
         # Count what actually moved the edge, not the tails of the ramps.
         moved = np.abs(spread) > 0.05
         report_sides[side] = {
-            "paintedSamples": int((~np.isnan(target)).sum()),
+            "guidedSamples": int((~np.isnan(target)).sum()),
+            "paintedSamples": int((~np.isnan(paint[side])).sum()),
+            "kerbGuidedSamples": guided_by_kerb[side],
             "correctedSamples": int(moved.sum()),
             "maxCorrectionMeters": round(float(np.abs(spread).max()), 3) if moved.any() else 0.0,
             "meanCorrectionMeters": round(float(spread[moved].mean()), 3) if moved.any() else 0.0,
@@ -261,7 +310,6 @@ def correct_edges_from_paint(track_data: Dict[str, Any]) -> Dict[str, Any]:
     # Each edge moves on the side it was already on. Hardcoding the signs here
     # put boundsLeft where boundsRight had been: every point moved by about a
     # full track width and the band crossed itself.
-    signs = edge_side_signs(track_data, frame)
     count = len(frame.center)
     left_map = _shift_edge(
         _edge_to_map(track_data.get("boundsLeft") or track_data.get("left_edge"), count),

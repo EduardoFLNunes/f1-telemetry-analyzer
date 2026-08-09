@@ -206,6 +206,101 @@ MIN_HIT_RATIO = 0.45
 MAX_HIT_RATIO = 2.2
 
 
+def _polygon_rings(polygon: Dict[str, Any]) -> List[Any]:
+    rings = polygon.get("rings")
+    if rings:
+        return list(rings)
+    points = polygon.get("points")
+    return [points] if isinstance(points, list) else []
+
+
+def _segments_of(polygons: Sequence[Dict[str, Any]]) -> np.ndarray:
+    starts, ends = [], []
+    for polygon in polygons:
+        for ring in _polygon_rings(polygon):
+            points = np.array(ring, dtype=float)
+            if points.ndim != 2 or len(points) < 2:
+                continue
+            points = points[:, :2]
+            closed = np.vstack([points, points[:1]])
+            starts.append(closed[:-1])
+            ends.append(closed[1:])
+    if not starts:
+        return np.empty((0, 2, 2), dtype=float)
+    return np.stack([np.vstack(starts), np.vstack(ends)], axis=1)
+
+
+def cast_to_segments(
+    frame: TrackFrame,
+    segments: np.ndarray,
+    signs: Dict[str, float],
+    min_ratio: float,
+    max_ratio: float,
+    band_tolerance: Optional[float] = None,
+) -> Dict[str, np.ndarray]:
+    """Distance from the centreline to the first thing the lateral normal hits.
+
+    With a band tolerance the far side of the same stripe wins, which is what a
+    painted line needs -- the limit is its outer edge. Without one the nearest
+    hit wins, which is what a kerb needs: its inner edge is where the asphalt
+    ends, and its outer edge is already off the track.
+    """
+    profile = {side: np.full(len(frame.center), np.nan) for side in signs}
+    if not len(segments):
+        return profile
+
+    seg_a = segments[:, 0, :]
+    edge = segments[:, 1, :] - seg_a
+    half = frame.half_widths
+
+    for index, (origin, normal) in enumerate(zip(frame.center, frame.normals)):
+        limit = half[index]
+        if not np.isfinite(limit) or limit <= 0:
+            continue
+        near, far = limit * min_ratio, limit * max_ratio
+        reachable = ((np.abs(seg_a[:, 0] - origin[0]) < far + 5.0)
+                     & (np.abs(seg_a[:, 1] - origin[1]) < far + 5.0))
+        if not reachable.any():
+            continue
+        a, e = seg_a[reachable], edge[reachable]
+        rel = a - origin
+
+        for side, sign in signs.items():
+            direction = normal * sign
+            denom = direction[0] * e[:, 1] - direction[1] * e[:, 0]
+            with np.errstate(divide="ignore", invalid="ignore"):
+                t = (rel[:, 0] * e[:, 1] - rel[:, 1] * e[:, 0]) / denom
+                u = (rel[:, 0] * direction[1] - rel[:, 1] * direction[0]) / denom
+            hit = np.isfinite(t) & (u >= 0.0) & (u <= 1.0) & (t >= near) & (t <= far)
+            if not hit.any():
+                continue
+            distances = t[hit]
+            first = distances.min()
+            if band_tolerance is None:
+                profile[side][index] = float(first)
+            else:
+                profile[side][index] = float(distances[distances <= first + band_tolerance].max())
+    return profile
+
+
+def kerb_limit_profile(
+    track_data: Dict[str, Any],
+    frame: TrackFrame,
+    signs: Dict[str, float],
+    min_ratio: float = 0.6,
+    max_ratio: float = 2.5,
+) -> Dict[str, np.ndarray]:
+    """Where the kerbs say the racing surface ends.
+
+    A kerb marks the edge of the track by construction, and it covers different
+    parts of a lap than the paint does: at Interlagos the painted limit is
+    missing for 2970 m straight on one side, while kerbs are present for 43% of
+    the lap. Its inner edge is the one that matters, so the nearest hit wins.
+    """
+    polygons = ((track_data.get("kerbGeometry") or {}).get("polygons")) or []
+    return cast_to_segments(frame, _segments_of(polygons), signs, min_ratio, max_ratio)
+
+
 def _ring_segments(track_data: Dict[str, Any], boundary_rings: Sequence[BoundaryRing]) -> np.ndarray:
     """Segments of every accepted ring, as (start, end) pairs in map space."""
     wanted = {(ring.group, ring.ring) for ring in boundary_rings}
@@ -236,48 +331,14 @@ def painted_limit_profile(
     mattering: a sparsely tesselated line still yields a limit at every sample it
     spans, which is the difference between correcting a corner and skipping it.
     """
-    segments = _ring_segments(track_data, boundary_rings)
-    signs = edge_side_signs(track_data, frame)
-    profile = {
-        "left": np.full(len(frame.center), np.nan),
-        "right": np.full(len(frame.center), np.nan),
-    }
-    if not len(segments):
-        return profile
-
-    seg_a = segments[:, 0, :]
-    seg_b = segments[:, 1, :]
-    edge = seg_b - seg_a
-    half = frame.half_widths
-
-    for index, (origin, normal) in enumerate(zip(frame.center, frame.normals)):
-        limit = half[index]
-        if not np.isfinite(limit) or limit <= 0:
-            continue
-        near, far = limit * MIN_HIT_RATIO, limit * MAX_HIT_RATIO
-        # Only segments that could possibly be reached.
-        reachable = (np.abs(seg_a[:, 0] - origin[0]) < far + 5.0) & (np.abs(seg_a[:, 1] - origin[1]) < far + 5.0)
-        if not reachable.any():
-            continue
-        a, e = seg_a[reachable], edge[reachable]
-        rel = a - origin
-
-        for side, sign in signs.items():
-            direction = normal * sign
-            denom = direction[0] * e[:, 1] - direction[1] * e[:, 0]
-            with np.errstate(divide="ignore", invalid="ignore"):
-                t = (rel[:, 0] * e[:, 1] - rel[:, 1] * e[:, 0]) / denom
-                u = (rel[:, 0] * direction[1] - rel[:, 1] * direction[0]) / denom
-            hit = np.isfinite(t) & (u >= 0.0) & (u <= 1.0) & (t >= near) & (t <= far)
-            if not hit.any():
-                continue
-            distances = t[hit]
-            first = distances.min()
-            # The far side of the same painted band is the track limit.
-            same_line = distances[distances <= first + PAINT_BAND_TOLERANCE_METERS]
-            profile[side][index] = float(same_line.max())
-
-    return profile
+    return cast_to_segments(
+        frame,
+        _ring_segments(track_data, boundary_rings),
+        edge_side_signs(track_data, frame),
+        MIN_HIT_RATIO,
+        MAX_HIT_RATIO,
+        band_tolerance=PAINT_BAND_TOLERANCE_METERS,
+    )
 
 
 __all__ = [
