@@ -156,7 +156,7 @@ def _distances(track_data: Dict[str, Any], count: int) -> np.ndarray:
     return np.arange(count, dtype=float)
 
 
-def build_limit_corridor(track_data: Dict[str, Any]) -> Dict[str, Any]:
+def build_limit_corridor(track_data: Dict[str, Any], smooth: bool = True) -> Dict[str, Any]:
     """A limit distance for every sample and side, with where each one came from."""
     frame = build_track_frame(track_data)
     if frame is None:
@@ -198,13 +198,15 @@ def build_limit_corridor(track_data: Dict[str, Any]) -> Dict[str, Any]:
         # first thing the ray met. The window reaches 2.2 half widths, so it can
         # come back with a pit line or a neighbouring corner's kerb; taken at
         # face value those put edges at 1.9 m and at 13 m from the centre.
-        values, source = _reject_implausible(values, source, distance)
+        if smooth:
+            values, source = _reject_implausible(values, source, distance)
         measured = int(sum(1 for s in source if s in (PAINT, KERB)))
         values = _fill_gaps(values, source, distance)
         if np.isnan(values).any():
             sides[side] = {"status": "NO_LIMIT_FOUND", "measuredSamples": 0}
             continue
-        values = _limit_rate(values, distance)
+        if smooth:
+            values = _limit_rate(values, distance)
 
         sides[side] = {
             "status": "OK",
@@ -367,7 +369,11 @@ def construct_track_from_limits(track_data: Dict[str, Any]) -> Dict[str, Any]:
     if frame is None:
         return {"status": "UNAVAILABLE", "reason": "no_centerline"}
 
-    corridor = build_limit_corridor(track_data)
+    # Unsmoothed. The filters exist to stop the *correction* stepping; applied
+    # to a construction they drag the edge off the line it was measured on --
+    # 2.32 m and 4.07 m of median drift from the paint it is meant to follow.
+    # Here the edge is the intersection point, so there is nothing to smooth.
+    corridor = build_limit_corridor(track_data, smooth=False)
     sides = corridor.get("sides") or {}
     if any((sides.get(side) or {}).get("status") != "OK" for side in ("left", "right")):
         return {"status": "NO_CORRIDOR", "corridor": corridor.get("status")}
