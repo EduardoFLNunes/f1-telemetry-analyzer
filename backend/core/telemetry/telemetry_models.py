@@ -48,6 +48,11 @@ class TelemetrySample:
     airTemp: Optional[float] = None
     roadTemp: Optional[float] = None
     surfaceGrip: Optional[float] = None
+    # The simulator's own track-limits verdict. Typed here or it dies at this
+    # model, which is where the last three additions were silently dropped.
+    tyresOut: Optional[int] = None
+    offTrack: Optional[bool] = None
+    penaltyTime: Optional[float] = None
     airDensity: Optional[float] = None
     tyreCoreTemperature: List[Optional[float]] = field(default_factory=list)
     tyrePressure: List[Optional[float]] = field(default_factory=list)
@@ -136,6 +141,11 @@ class TelemetrySample:
             airTemp=nullable_float(data.get("airTemp", data.get("air_temp"))),
             roadTemp=nullable_float(data.get("roadTemp", data.get("road_temp"))),
             surfaceGrip=nullable_float(data.get("surfaceGrip", data.get("surface_grip"))),
+            tyresOut=(lambda v: None if v is None else int(v))(
+                data.get("tyresOut", data.get("tyres_out"))),
+            offTrack=(lambda v: None if v is None else bool(v))(
+                data.get("offTrack", data.get("off_track"))),
+            penaltyTime=nullable_float(data.get("penaltyTime", data.get("penalty_time"))),
             airDensity=nullable_float(data.get("airDensity", data.get("air_density"))),
             tyreCoreTemperature=nullable_float_list(data.get("tyreCoreTemperature", data.get("tyre_core_temperature"))),
             tyrePressure=nullable_float_list(data.get("tyrePressure", data.get("wheelsPressure", data.get("wheels_pressure")))),

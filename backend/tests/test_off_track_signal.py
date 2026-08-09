@@ -23,6 +23,26 @@ class OffTrackSignalTests(unittest.TestCase):
         for key in ('"tyres_out"', '"off_track"', '"penalty_time"'):
             self.assertIn(key, source, f"{key} is dropped between the adapter and the sample")
 
+    def test_the_sample_model_types_the_fields(self):
+        """Three earlier additions died here: the reader passes a dict, the model
+        keeps only what it declares, and the rest vanishes without a word."""
+        from core.telemetry.telemetry_models import TelemetrySample
+
+        sample = TelemetrySample.from_dict({
+            "timestamp": 1, "tyres_out": 4, "off_track": True, "penalty_time": 2.5,
+        })
+
+        self.assertEqual(sample.tyresOut, 4)
+        self.assertTrue(sample.offTrack)
+        self.assertEqual(sample.penaltyTime, 2.5)
+
+    def test_the_field_survives_camel_case_too(self):
+        from core.telemetry.telemetry_models import TelemetrySample
+
+        sample = TelemetrySample.from_dict({"timestamp": 1, "tyresOut": 2})
+
+        self.assertEqual(sample.tyresOut, 2)
+
     def test_off_track_means_all_four_wheels(self):
         """One wheel over the line is not a violation under any rule the FIA
         writes; four is."""
