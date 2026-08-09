@@ -13,7 +13,7 @@ from ..telemetry.telemetry_models import TrackPoint
 from ..track_file_resolver import TrackFileResolver
 from .interlagos_track_only_fixed import GEOMETRY_NAME, is_interlagos_track, load_fixed_geometry
 from .paint_edge_correction import correct_edges_from_paint, paint_correction_enabled
-from .limit_corridor import rebuild_edges_from_limit_corridor
+from .limit_corridor import construct_track_from_limits, rebuild_edges_from_limit_corridor
 from .pit_corridor_width import correct_pit_corridor_from_markings
 from .width_continuity import enforce_width_continuity
 
@@ -26,6 +26,16 @@ def resolve_geometry_resource_root() -> Path:
     if configured:
         return Path(configured).expanduser().resolve()
     return Path(__file__).resolve().parents[3]
+
+
+def track_built_from_limits() -> bool:
+    """Whether the edges come from the painted limit or from the raycast.
+
+    Set AT_TRACK_FROM_LIMITS=1 to build the track from its limits. Off by
+    default while the narrowest point is still read at 5.61 m against the
+    extraction's 8.21 m.
+    """
+    return os.getenv("AT_TRACK_FROM_LIMITS", "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def prefer_shipped_interlagos_geometry() -> bool:
@@ -72,6 +82,15 @@ def apply_paint_correction(track_data: Dict[str, Any], track_name: str) -> Dict[
         enforce_width_continuity(track_data)
     except Exception:
         logger.exception("Width continuity pass failed for %s; keeping raw widths", track_name)
+    if track_built_from_limits():
+        try:
+            # The limit is the geometry, not a correction applied to the
+            # extraction. Every attempt that started from the extracted edge
+            # carried that edge's faults into the result.
+            construct_track_from_limits(track_data)
+        except Exception:
+            logger.exception("Building %s from limits failed; keeping extracted edges", track_name)
+
     # The limit corridor rebuild is deliberately not wired in. Measured on
     # Interlagos it takes the narrowest point from 8.21 m to 3.84 m, the widest
     # from 19.33 m to 25.95 m, and the worst width step from 0.37 to 11.27 m per

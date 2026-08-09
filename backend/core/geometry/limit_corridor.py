@@ -335,4 +335,73 @@ def rebuild_edges_from_limit_corridor(track_data: Dict[str, Any]) -> Dict[str, A
     return report
 
 
-__all__ = ["build_limit_corridor", "identify_limit_rings", "rebuild_edges_from_limit_corridor"]
+CONSTRUCT_MARKER = "builtFromLimits"
+
+
+def construct_track_from_limits(track_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Build the edges from the limit, rather than nudging the extraction toward it.
+
+    Every earlier attempt started from the extracted edge and applied a
+    correction to it, which meant carrying that edge's faults into the result
+    and reasoning about two frames at once. Sixty samples came out narrower
+    under a rule that could only widen, and that contradiction was the shape of
+    the mistake: the arithmetic was fine, the starting point was wrong.
+
+    Here the limit is the geometry. Each edge is placed at the corridor
+    distance along the lateral normal, so the extracted asphalt contributes
+    nothing but the centreline it was measured along.
+    """
+    metadata = track_data.setdefault("metadata", {})
+    if isinstance(metadata, dict) and metadata.get(CONSTRUCT_MARKER):
+        return {"status": "ALREADY_APPLIED", **{
+            key: value for key, value in metadata[CONSTRUCT_MARKER].items() if key != "status"
+        }}
+
+    frame = build_track_frame(track_data)
+    if frame is None:
+        return {"status": "UNAVAILABLE", "reason": "no_centerline"}
+
+    corridor = build_limit_corridor(track_data)
+    sides = corridor.get("sides") or {}
+    if any((sides.get(side) or {}).get("status") != "OK" for side in ("left", "right")):
+        return {"status": "NO_CORRIDOR", "corridor": corridor.get("status")}
+
+    signs = edge_side_signs(track_data, frame)
+    built = {}
+    for side in ("left", "right"):
+        limit = np.array(sides[side]["limit"], dtype=float)
+        points = frame.center + frame.normals * (signs[side] * limit)[:, None]
+        built[side] = ([{"x": float(x), "y": float(-y), "z": float(-y)} for x, y in points], limit)
+
+    widths = built["left"][1] + built["right"][1]
+    before = np.array(track_data.get("localWidth") or widths, dtype=float)
+
+    track_data["boundsLeft"] = built["left"][0]
+    track_data["left_edge"] = built["left"][0]
+    track_data["boundsRight"] = built["right"][0]
+    track_data["right_edge"] = built["right"][0]
+    track_data["localWidth"] = [float(value) for value in widths]
+    track_data["widthMin"] = round(float(widths.min()), 6)
+    track_data["widthAvg"] = round(float(widths.mean()), 6)
+    track_data["widthMax"] = round(float(widths.max()), 6)
+
+    report = {
+        "status": "BUILT",
+        "limitRings": corridor["limitRings"],
+        "widthBefore": round(float(before.mean()), 3),
+        "widthAfter": round(float(widths.mean()), 3),
+        "widthMin": round(float(widths.min()), 3),
+        "widthMax": round(float(widths.max()), 3),
+        "sides": {side: {"measuredPercent": sides[side]["measuredPercent"],
+                         "fromPaint": sides[side]["fromPaint"],
+                         "fromKerb": sides[side]["fromKerb"],
+                         "estimated": sides[side]["estimated"]} for side in ("left", "right")},
+    }
+    if isinstance(metadata, dict):
+        metadata[CONSTRUCT_MARKER] = report
+    logger.info("Track built from limits: width %.2f -> %.2f m", report["widthBefore"], report["widthAfter"])
+    return report
+
+
+__all__ = ["build_limit_corridor", "identify_limit_rings",
+           "rebuild_edges_from_limit_corridor", "construct_track_from_limits"]
