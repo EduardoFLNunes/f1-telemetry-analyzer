@@ -13,6 +13,7 @@ from ..telemetry.telemetry_models import TrackPoint
 from ..track_file_resolver import TrackFileResolver
 from .interlagos_track_only_fixed import GEOMETRY_NAME, is_interlagos_track, load_fixed_geometry
 from .paint_edge_correction import correct_edges_from_paint, paint_correction_enabled
+from .pit_corridor_width import correct_pit_corridor_from_markings
 
 
 logger = logging.getLogger(__name__)
@@ -54,6 +55,10 @@ def apply_paint_correction(track_data: Dict[str, Any], track_name: str) -> Dict[
         correct_edges_from_paint(track_data)
     except Exception:  # geometry must still load if the correction cannot run
         logger.exception("Paint edge correction failed for %s; keeping extracted edges", track_name)
+    try:
+        correct_pit_corridor_from_markings(track_data)
+    except Exception:
+        logger.exception("Pit corridor width measurement failed for %s; keeping assumed width", track_name)
     return track_data
 
 
