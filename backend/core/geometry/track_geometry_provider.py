@@ -12,6 +12,7 @@ from ..kn5.track_edges_from_surface import build_track_edges_interval_raycast_fr
 from ..telemetry.telemetry_models import TrackPoint
 from ..track_file_resolver import TrackFileResolver
 from .interlagos_track_only_fixed import GEOMETRY_NAME, is_interlagos_track, load_fixed_geometry
+from .paint_edge_correction import correct_edges_from_paint, paint_correction_enabled
 
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,23 @@ def resolve_geometry_resource_root() -> Path:
     if configured:
         return Path(configured).expanduser().resolve()
     return Path(__file__).resolve().parents[3]
+
+
+def apply_paint_correction(track_data: Dict[str, Any], track_name: str) -> Dict[str, Any]:
+    """Pull the edges out to the painted limit before anyone draws or measures them.
+
+    Applied to every source, hand-authored or extracted, because the defect it
+    fixes is not specific to either: at Interlagos the shipped geometry cut a
+    corner from 15.4 m to 13.1 m while the white line marking the real limit sat
+    drawn right beside it.
+    """
+    if not paint_correction_enabled():
+        return track_data
+    try:
+        correct_edges_from_paint(track_data)
+    except Exception:  # geometry must still load if the correction cannot run
+        logger.exception("Paint edge correction failed for %s; keeping extracted edges", track_name)
+    return track_data
 
 
 @dataclass
@@ -203,6 +221,7 @@ class Kn5SurfaceTrackGeometryProvider:
         if is_interlagos_track(track_name, track_config):
             fixed = load_fixed_geometry(resource_root)
             if fixed:
+                apply_paint_correction(fixed, track_name)
                 fixed_provider = fixed.get("provider") or GEOMETRY_NAME
                 fixed_path = Path(
                     fixed.get("cachePath")
@@ -221,6 +240,9 @@ class Kn5SurfaceTrackGeometryProvider:
         cache_path = self.cache.cache_dir / f"{self.cache._safe_name(cache_name)}.json"
         cached = self.cache.load_track(cache_name)
         if cached and cached.get("provider") == self.provider:
+            # Caches written before the correction existed carry no marker and
+            # get corrected here; everything else short-circuits on it.
+            apply_paint_correction(cached, track_name)
             cached["cachePath"] = str(cache_path)
             cached.setdefault("metadata", {})["cachePath"] = str(cache_path)
             return TrackGeometryProviderResult(cache_name, cached, cache_path, self.provider, self.source, from_cache=True)
@@ -247,6 +269,7 @@ class Kn5SurfaceTrackGeometryProvider:
             return None
 
         track_data = track_data_from_interval_edges(result, cache_path=cache_path)
+        apply_paint_correction(track_data, track_name)
         self.cache.save_track(cache_name, track_data)
         track_data["cachePath"] = str(cache_path)
         track_data.setdefault("metadata", {})["cachePath"] = str(cache_path)

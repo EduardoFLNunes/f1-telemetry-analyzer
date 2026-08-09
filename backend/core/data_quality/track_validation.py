@@ -47,10 +47,15 @@ def validate_track(
     for issue in paint.get("issues", []):
         issues.append(f"paint check: {issue}")
 
+    # What the correction pass already moved, so the reported agreement is read
+    # against a track that may have been widened to the paint on load.
+    correction = (track.get("metadata") or {}).get("paintEdgeCorrection") or {"status": "NOT_APPLIED"}
+
     method = build_method or track.get("reconstruction", {}).get("method")
     return {
         "status": status,
         "paintAgreement": paint,
+        "paintCorrection": correction,
         "trackName": track_name or track.get("trackName") or track.get("name"),
         "sampleCount": len(centerline),
         "hasCenterline": has_centerline,

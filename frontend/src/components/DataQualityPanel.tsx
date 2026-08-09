@@ -83,6 +83,13 @@ type DataQualityReport = {
       measuredSides?: number;
       sides?: Record<string, { coveragePercent: number; ratioMedian: number | null }>;
     };
+    paintCorrection?: {
+      status: 'CORRECTED' | 'NO_CHANGE' | 'NO_BOUNDARY_PAINT' | 'ALREADY_APPLIED' | 'UNAVAILABLE' | 'NOT_APPLIED';
+      correctedSamples?: number;
+      correctedPercent?: number;
+      widthBefore?: number;
+      widthAfter?: number;
+    };
   };
   comparison: {
     status: QualityStatus;
@@ -199,6 +206,13 @@ export const DataQualityPanel = React.memo(function DataQualityPanel({
     ? 'warning'
     : paint?.status === 'OK' ? 'ok' : 'quiet';
 
+  // How much of the track was pulled out to the paint on load. Worth showing:
+  // it is the difference between the drawn edge and the circuit's real limit.
+  const correction = report?.track.paintCorrection;
+  const correctionLabel = correction?.status === 'CORRECTED' || correction?.status === 'ALREADY_APPLIED'
+    ? `${numberOr(correction.correctedPercent).toFixed(1)}% da volta`
+    : correction?.status === 'NO_CHANGE' ? 'nada a ajustar' : '--';
+
   const issues = [
     ...(report?.laps.issues || []),
     ...(report?.track.issues || []),
@@ -300,6 +314,11 @@ export const DataQualityPanel = React.memo(function DataQualityPanel({
               label="Confere com a pintura"
               value={paintLabel}
               tone={paintTone}
+            />
+            <Metric
+              label="Largura ajustada"
+              value={correctionLabel}
+              tone={correction?.status === 'CORRECTED' || correction?.status === 'ALREADY_APPLIED' ? 'ok' : 'quiet'}
             />
           </section>
         </div>
