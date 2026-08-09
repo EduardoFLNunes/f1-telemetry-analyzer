@@ -16,7 +16,8 @@
     "build:backend": "powershell -ExecutionPolicy Bypass -File ../backend/packaging/build_backend.ps1",
     "desktop:build": "npm run build:frontend && npm run build:backend && npm run pack",
     "pack": "electron-builder --dir",
-    "dist:win": "electron-builder --win nsis"
+    "dist:win": "npm run build:frontend && npm run build:backend && npm run dist:win:package",
+    "dist:win:package": "electron-builder --win nsis"
   },
   "devDependencies": {
     "electron": "^42.3.3",

@@ -74,29 +74,38 @@ stops only the backend process tree it started.
 
 ## Electron Builder Packaging
 
-Build prerequisites:
-
-```bash
-cd frontend
-npm.cmd run build
-```
-
-```bash
-powershell -ExecutionPolicy Bypass -File backend\packaging\build_backend.ps1
-```
-
-Create an unpacked Windows app:
-
-```bash
-cd desktop
-npm run pack
-```
-
 Create the NSIS installer:
 
 ```bash
 cd desktop
 npm run dist:win
+```
+
+`dist:win` builds the frontend bundle and the backend executable before
+packaging. It used to call electron-builder alone, which happily produced an
+installer around whatever `frontend/dist` and `backend/dist` already held --
+shipping a build that looked current and contained none of the day's changes.
+
+Repackage without rebuilding, when you know both are current:
+
+```bash
+cd desktop
+npm run dist:win:package
+```
+
+Create an unpacked Windows app instead of an installer (also builds first):
+
+```bash
+cd desktop
+npm run desktop:build
+```
+
+The two build steps on their own, if you need them separately:
+
+```bash
+cd desktop
+npm run build:frontend
+npm run build:backend
 ```
 
 Install silently for validation:
