@@ -276,6 +276,12 @@ class AssettoAdapter:
             "lap_number": self.graphics.completedLaps + 1,
             "lap_time": self.graphics.iCurrentTime / 1000.0,
             "lap_dist_pct": self.graphics.normalizedCarPosition,
+            # The simulator's own verdict on track limits. Parsed from shared
+            # memory since the struct was written and never surfaced, which left
+            # the reconstructed limit with nothing to be checked against.
+            "tyres_out": self.physics.numberOfTyresOut,
+            "off_track": self.physics.numberOfTyresOut >= 4,
+            "penalty_time": self.graphics.penaltyTime,
             "heading": self.physics.heading,
             "accel_g": self.physics.accG[2], # Z is longitudinal in AC physics? Need to verify
             "lat_g": self.physics.accG[0],

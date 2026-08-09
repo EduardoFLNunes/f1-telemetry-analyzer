@@ -330,6 +330,11 @@ class ACSharedMemoryReader(PollingTelemetryReader):
                 "air_temp": data.get("air_temp"),
                 "road_temp": data.get("road_temp"),
                 "surface_grip": data.get("surface_grip"),
+                # The simulator's own track-limits verdict, carried through so
+                # the reconstructed limit has something to be measured against.
+                "tyres_out": data.get("tyres_out"),
+                "off_track": data.get("off_track"),
+                "penalty_time": data.get("penalty_time"),
                 "air_density": data.get("air_density"),
                 "wheel_slip": data.get("wheel_slip"),
                 "wheel_load": data.get("wheel_load"),
