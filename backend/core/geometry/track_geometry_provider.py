@@ -26,6 +26,19 @@ def resolve_geometry_resource_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
 
+def prefer_shipped_interlagos_geometry() -> bool:
+    """Whether Interlagos loads the shipped hand-authored file or is extracted.
+
+    The shipped file exists for its pit merge, and it costs accuracy elsewhere:
+    against the painted limit the extraction is within 0.6 m everywhere while
+    the shipped file misses by up to 4.4 m, and it draws one corner at 13.1 m
+    that the extraction reads at 15.5 m. Set AT_INTERLAGOS_SOURCE=extraction to
+    compare the two in the same build.
+    """
+    source = os.getenv("AT_INTERLAGOS_SOURCE", "shipped").strip().lower()
+    return source not in {"extraction", "kn5", "extracted"}
+
+
 def _cache_predates_decoration(cached: Dict[str, Any]) -> bool:
     """Was this cache written before kerbs and markings were persisted?
 
@@ -240,7 +253,7 @@ class Kn5SurfaceTrackGeometryProvider:
         game_code: str = "assetto_corsa",
     ) -> Optional[TrackGeometryProviderResult]:
         resource_root = resolve_geometry_resource_root()
-        if is_interlagos_track(track_name, track_config):
+        if is_interlagos_track(track_name, track_config) and prefer_shipped_interlagos_geometry():
             fixed = load_fixed_geometry(resource_root)
             if fixed:
                 apply_paint_correction(fixed, track_name)

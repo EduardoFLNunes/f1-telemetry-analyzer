@@ -163,6 +163,23 @@ class CacheRoundTripTests(unittest.TestCase):
 
         self.assertEqual(payload["centerline"]["gradient"], [0.0] * len(original["centerline"]))
 
+    def test_interlagos_source_can_be_switched_to_the_extraction(self):
+        """The shipped Interlagos file exists for its pit merge and costs
+        accuracy elsewhere, so the two sources have to be comparable in one
+        build rather than swapped blind."""
+        import os
+        from unittest.mock import patch
+
+        from core.geometry.track_geometry_provider import prefer_shipped_interlagos_geometry
+
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AT_INTERLAGOS_SOURCE", None)
+            self.assertTrue(prefer_shipped_interlagos_geometry(), "the shipped file stays the default")
+        with patch.dict(os.environ, {"AT_INTERLAGOS_SOURCE": "extraction"}):
+            self.assertFalse(prefer_shipped_interlagos_geometry())
+        with patch.dict(os.environ, {"AT_INTERLAGOS_SOURCE": "shipped"}):
+            self.assertTrue(prefer_shipped_interlagos_geometry())
+
     def test_api_payload_carries_the_decoration_too(self):
         """The API whitelist is a third place the same omission can happen."""
         original = full_track()
