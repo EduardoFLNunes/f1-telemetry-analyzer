@@ -55,6 +55,27 @@ def _cache_predates_decoration(cached: Dict[str, Any]) -> bool:
     return stale
 
 
+def _cache_predates_marking_classification(cached: Dict[str, Any]) -> bool:
+    """Was this cache written before the paint was told apart?
+
+    The map draws the paint by class now -- track limit, pit lane, access road --
+    and a cache from before the classifier has the rings but no verdicts, which
+    would leave the map with nothing to draw. Rebuilding is cheap next to serving
+    an empty track.
+    """
+    markings = cached.get("markingGeometry") or {}
+    if not markings.get("polygons"):
+        return False
+    # `componentCount` only exists on asphalt traced after the paint and kerb
+    # strips were excluded; a cache from before that carries loops that stain the
+    # infield when filled.
+    asphalt = cached.get("asphaltSurface") or {}
+    stale = markings.get("features") is None or asphalt.get("componentCount") is None
+    if stale:
+        logger.info("Rebuilding track cache written before the drawn map had its own geometry")
+    return stale
+
+
 def apply_paint_correction(track_data: Dict[str, Any], track_name: str) -> Dict[str, Any]:
     """Pull the edges out to the painted limit before anyone draws or measures them.
 
@@ -243,6 +264,7 @@ def track_data_from_interval_edges(result: Dict[str, Any], cache_path: Optional[
         "left_edge": _map_to_world_edge(left_map),
         "right_edge": _map_to_world_edge(right_map),
         "localWidth": widths,
+        "asphaltSurface": result.get("asphaltSurface") or {"loops": []},
         "kerbGeometry": result.get("kerbs") or {"polygons": []},
         "markingGeometry": result.get("markings") or {"polygons": []},
         "widthMin": width_stats["min"],
@@ -280,7 +302,12 @@ class Kn5SurfaceTrackGeometryProvider:
         cache_name = kn5_surface_cache_name(track_name, track_config)
         cache_path = self.cache.cache_dir / f"{self.cache._safe_name(cache_name)}.json"
         cached = self.cache.load_track(cache_name)
-        if cached and cached.get("provider") == self.provider and not _cache_predates_decoration(cached):
+        if (
+            cached
+            and cached.get("provider") == self.provider
+            and not _cache_predates_decoration(cached)
+            and not _cache_predates_marking_classification(cached)
+        ):
             # Caches written before the correction existed carry no marker and
             # get corrected here; everything else short-circuits on it.
             apply_paint_correction(cached, track_name)

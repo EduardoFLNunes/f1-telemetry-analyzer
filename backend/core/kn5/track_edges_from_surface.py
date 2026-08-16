@@ -1,4 +1,5 @@
 import json
+import logging
 import math
 import struct
 from collections import Counter, defaultdict
@@ -6,8 +7,12 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
+from scipy.spatial import KDTree
 
+from ..geometry.marking_classification import classify_marking_rings
 from .track_surface_polygon import build_track_surface_polygon_from_manifest
+
+logger = logging.getLogger(__name__)
 
 
 COMPONENT_PRECISION = 1
@@ -1230,6 +1235,109 @@ def build_marking_geometry(
     }
 
 
+# Small enough to keep the asphalt islands the track is made of -- a 77 m2 piece
+# by the infield entry was being dropped at 150 -- and large enough to leave the
+# stray slivers out.
+MIN_DRAWN_ASPHALT_AREA = 20.0
+
+# How far from the track's own edges asphalt may sit and still be drawn. The
+# venue is one connected sheet of ROAD in the model -- the paddock and the
+# service roads run into the circuit, so a component filter cannot separate them.
+# Measured by area against distance from the extracted edges: 84% of the asphalt
+# lies within 10 m, 96% within 25 m, and what is past that is the 5271 slivers of
+# paddock and access road that were staining the infield. Cutting at 25 m keeps
+# the track and its run-off aprons and drops the rest.
+MAX_DRAWN_ASPHALT_DISTANCE = 25.0
+
+
+def _asphalt_reference_lanes(
+    reference_lanes: Optional[Sequence[np.ndarray]],
+    pit_lane: Optional[Dict[str, Any]],
+) -> List[np.ndarray]:
+    """What the drawn asphalt is allowed to sit near: the track and the pit lane."""
+    lanes = [np.asarray(lane, dtype=float) for lane in (reference_lanes or []) if len(lane)]
+    coords = [point.get("mapPosition") for point in ((pit_lane or {}).get("points") or [])]
+    pit = np.array([c for c in coords if c], dtype=float)
+    if len(pit) >= 2:
+        lanes.append(pit)
+    return lanes
+
+
+def build_drawn_asphalt(
+    triangles: Sequence[Dict[str, Any]],
+    marking_meshes: Sequence[str],
+    reference_lanes: Optional[Sequence[np.ndarray]] = None,
+    min_area: float = MIN_DRAWN_ASPHALT_AREA,
+    max_distance: float = MAX_DRAWN_ASPHALT_DISTANCE,
+) -> Dict[str, Any]:
+    """Boundary loops of the drivable asphalt, for filling on the map.
+
+    The surface read from the KN5 covers ROAD, CURB and KERB, and the painted
+    lines are ROAD like the asphalt is. Every one of those thin strips brings its
+    own pair of boundary loops -- the two sides of a stripe a quarter of a metre
+    apart -- and each pair flips the even-odd parity of whatever contains it, so
+    filling the raw loops paints the infield and hollows out the track.
+
+    So the paint and the kerbs come out before the boundary is traced, which
+    removes the cause instead of trying to sort the loops out afterwards. This is
+    built only for drawing: the loops the raycast measures against are left
+    exactly as they were, kerbs and stripes included.
+
+    Distance from the track's own edges does the rest. The venue is one connected
+    sheet of ROAD -- paddock and service roads run into the circuit, so they share
+    a component with it and no component filter can tell them apart. Cutting the
+    triangles by distance first means the boundary is traced around the track and
+    its aprons alone, and the infield comes out empty.
+    """
+    excluded = {str(mesh) for mesh in marking_meshes or []}
+    road = [
+        triangle for triangle in triangles
+        if str(triangle.get("surface", "")).upper() == "ROAD"
+        and str(triangle.get("mesh")) not in excluded
+    ]
+    lanes = [np.asarray(lane, dtype=float) for lane in (reference_lanes or []) if len(lane)]
+    if road and lanes:
+        reference = np.vstack(lanes)
+        centroids = np.array([np.asarray(t["vertices"], dtype=float).mean(axis=0) for t in road])
+        tree = KDTree(reference)
+        distances, _ = tree.query(centroids)
+        road = [triangle for triangle, distance in zip(road, distances) if distance <= max_distance]
+    if not road:
+        return {"loops": [], "loopCount": 0, "componentCount": 0, "excludedMeshes": sorted(excluded)}
+
+    components, triangle_to_component = _component_analysis(road)
+    loops: List[Dict[str, Any]] = []
+    kept_components = 0
+    for component in components:
+        if float(component.get("area") or 0.0) < min_area:
+            continue
+        indices = _selected_triangle_indices(triangle_to_component, int(component["componentId"]))
+        if not indices:
+            continue
+        boundary, node_points = _boundary_edges(road, indices)
+        if not boundary:
+            continue
+        _, clean_loops = _build_boundary_loops(boundary, node_points)
+        component_loops = [loop for loop in clean_loops if len(loop.get("points") or []) >= 3]
+        if not component_loops:
+            continue
+        kept_components += 1
+        for loop in component_loops:
+            loops.append({
+                "points": loop.get("points"),
+                "area": loop.get("area"),
+                "classification": loop.get("classification"),
+                "componentId": int(component["componentId"]),
+            })
+    return {
+        "loops": loops,
+        "loopCount": len(loops),
+        "componentCount": kept_components,
+        "triangleCount": len(road),
+        "excludedMeshes": sorted(excluded),
+    }
+
+
 def _min_distance_to_paths(points: np.ndarray, paths: Sequence[np.ndarray]) -> float:
     best = float("inf")
     for path in paths:
@@ -1391,7 +1499,17 @@ def build_track_edges_interval_raycast_from_manifest(manifest: Dict[str, Any]) -
         reference_lanes[0] if reference_lanes else np.empty((0, 2)),
         reference_lanes,
     )
+    # The paint arrives undifferentiated: the track limit, the pit lane limit and
+    # the paint around an access road are all just rings. The map has to tell them
+    # apart, so classify them here against the two lanes the game ships.
+    try:
+        classify_marking_rings(markings, fast_lane, pit_lane)
+    except Exception:
+        logger.exception("Marking classification failed; the map will fall back to unclassified paint")
+        markings.setdefault("features", [])
+        markings.setdefault("classification", {"status": "FAILED"})
     metrics["markingGroupCount"] = len(markings.get("polygons", []))
+    metrics["markingFeatureCount"] = len(markings.get("features", []))
     metrics["kerbPolygonCount"] = len(kerbs.get("polygons", []))
     metrics["kerbTriangleCount"] = kerbs.get("triangleCount", 0)
 
@@ -1401,6 +1519,21 @@ def build_track_edges_interval_raycast_from_manifest(manifest: Dict[str, Any]) -
     return {
         "kerbs": kerbs,
         "markings": markings,
+        # The asphalt as the game models it, for the map to fill. Kept apart from
+        # `asphaltPolygon`, which the paint correction rewrites into a band built
+        # from the reconstructed edges -- these loops are the mesh itself and
+        # must not be overwritten by anything the raycast produced.
+        "asphaltSurface": {
+            # The pit lane joins the track's own edges as a reference: it runs far
+            # enough from them that a cut measured on the edges alone took the pit
+            # asphalt out from under its own paint.
+            **build_drawn_asphalt(
+                triangles,
+                markings.get("meshes") or [],
+                _asphalt_reference_lanes(reference_lanes, pit_lane),
+            ),
+            "source": surface.get("source"),
+        },
         "trackName": manifest.get("trackNameFromSharedMemory"),
         "trackConfig": manifest.get("trackConfigFromSharedMemory"),
         "projection": "mapX = worldX, mapY = -worldZ",
