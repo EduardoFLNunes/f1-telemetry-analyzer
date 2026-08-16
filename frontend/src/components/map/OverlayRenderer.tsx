@@ -343,11 +343,56 @@ function dominantAngle(points: number[][]): number {
   return Math.atan2(sy, sx);
 }
 
+/**
+ * The road surface as the game models it.
+ *
+ * The outer boundary of the asphalt and its holes, filled even-odd -- the same
+ * trick the paint needs, and for the same reason: a line that runs the whole lap
+ * encloses the infield, so filling the outer loop alone would flood the middle
+ * of the circuit. This is the mesh, not the reconstructed band between the
+ * extracted edges.
+ */
+/**
+ * The road surface as the game models it.
+ *
+ * Outer boundaries and holes together in one path, filled even-odd: a line that
+ * runs the whole lap encloses the infield, so filling an outer loop on its own
+ * would flood the middle of the circuit. The loops arrive already free of the
+ * paint and kerb strips -- `build_drawn_asphalt` takes those out before tracing
+ * the boundary, because each thin strip contributed a pair of loops that flipped
+ * the parity and stained the infield.
+ */
+export function drawAsphaltSurface(ctx: CanvasRenderingContext2D, trackData: any) {
+  const loops = trackData?.asphaltSurface?.loops;
+  if (!Array.isArray(loops) || !loops.length) return false;
+
+  ctx.save();
+  ctx.fillStyle = '#1a1e27';
+  ctx.beginPath();
+  for (const loop of loops) {
+    const points = loop?.points;
+    if (!Array.isArray(points) || points.length < 3) continue;
+    points.forEach((point: number[], index: number) => {
+      if (index === 0) ctx.moveTo(point[0], point[1]);
+      else ctx.lineTo(point[0], point[1]);
+    });
+    ctx.closePath();
+  }
+  ctx.fill('evenodd');
+  ctx.restore();
+  return true;
+}
+
 export function drawKerbs(ctx: CanvasRenderingContext2D, trackData: any, scale: number) {
   const polygons = trackData?.kerbGeometry?.polygons;
   if (!Array.isArray(polygons) || !polygons.length) return;
 
+  const detail = mapDetail(scale);
+  const widthFactor = lerp(DETAIL_MIN_WIDTH, 1, detail);
+  const alphaFactor = lerp(DETAIL_MIN_ALPHA, 1, detail);
+
   ctx.save();
+  ctx.globalAlpha = alphaFactor;
   for (const polygon of polygons) {
     const points = polygon?.points;
     if (!Array.isArray(points) || points.length < 4) continue;
@@ -385,13 +430,92 @@ export function drawKerbs(ctx: CanvasRenderingContext2D, trackData: any, scale: 
     }
     ctx.restore();
 
-    // Thin outline keeps adjacent kerb segments distinguishable.
-    ctx.lineWidth = 0.5 / scale;
-    ctx.strokeStyle = 'rgba(15,23,42,0.55)';
+    // The striped fill is clipped to the real kerb, about a metre and a half
+    // across, which is under a pixel at map zoom and rasterises to nothing. So
+    // the outline carries the kerb when zoomed out and thins to its real edge as
+    // you close in, handing the job over to the stripes once there is room.
+    ctx.lineWidth = Math.max(0.15, (1.2 * widthFactor) / Math.max(scale, 1e-6));
+    ctx.strokeStyle = '#c2453a';
     polygonPath(ctx, points);
     ctx.stroke();
   }
   ctx.restore();
+}
+
+/**
+ * How each class of paint is drawn.
+ *
+ * The colours are the circuit's, not a legend's: the paint that bounds the track
+ * is white because that is what it is, the pit lane reads warm so it separates
+ * from the track without competing with it, and access roads sit back in grey.
+ * An earlier pass used a debug palette here -- green, pink, blue -- which made
+ * every class shout equally and left the eye with no idea which line was the
+ * track.
+ *
+ * `metres` is the paint's real width and `minPx` the floor in screen space. Zoom
+ * in far enough and the line takes its true width; zoomed out, where a quarter
+ * of a metre is a fraction of a pixel and would vanish, the floor keeps it
+ * legible. `order` is the painting order, lowest first, so the track limit ends
+ * up on top of everything else.
+ */
+const MARKING_STYLES: Record<string, { colour: [number, number, number]; alpha: number; metres: number; minPx: number; order: number }> = {
+  servico: { colour: [148, 163, 184], alpha: 0.42, metres: 0.12, minPx: 0.9, order: 0 },
+  boxes: { colour: [234, 179, 8], alpha: 0.78, metres: 0.15, minPx: 1.1, order: 1 },
+  limite: { colour: [240, 244, 250], alpha: 0.94, metres: 0.18, minPx: 1.5, order: 2 },
+};
+const DEFAULT_MARKING_STYLE = MARKING_STYLES.limite;
+
+// Pulling back, every line holds its screen width and the circuit closes into a
+// solid mass with the car lost inside it. So past the point where the whole
+// track fits, the paint thins and fades with the zoom: the shape stays readable
+// and the car stays the brightest thing on the map.
+const DETAIL_FULL_SCALE = 0.30;   // px per metre, roughly a whole lap on screen
+const DETAIL_MIN_SCALE = 0.08;    // below this the map is a thumbnail
+const DETAIL_MIN_WIDTH = 0.42;    // how thin the lines get down there
+const DETAIL_MIN_ALPHA = 0.34;    // and how faint
+
+function mapDetail(scale: number): number {
+  const span = DETAIL_FULL_SCALE - DETAIL_MIN_SCALE;
+  return Math.max(0, Math.min(1, (scale - DETAIL_MIN_SCALE) / span));
+}
+
+function lerp(from: number, to: number, t: number): number {
+  return from + (to - from) * t;
+}
+
+export function drawClassifiedMarkings(ctx: CanvasRenderingContext2D, trackData: any, scale: number) {
+  const features = trackData?.markingGeometry?.features;
+  if (!Array.isArray(features) || !features.length) return false;
+
+  const ordered = [...features].sort(
+    (a, b) => (MARKING_STYLES[a?.kind] || DEFAULT_MARKING_STYLE).order
+      - (MARKING_STYLES[b?.kind] || DEFAULT_MARKING_STYLE).order,
+  );
+
+  const detail = mapDetail(scale);
+  const widthFactor = lerp(DETAIL_MIN_WIDTH, 1, detail);
+  const alphaFactor = lerp(DETAIL_MIN_ALPHA, 1, detail);
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (const feature of ordered) {
+    const points = feature?.points;
+    if (!Array.isArray(points) || points.length < 2) continue;
+    const style = MARKING_STYLES[feature.kind] || DEFAULT_MARKING_STYLE;
+    const [r, g, b] = style.colour;
+    ctx.strokeStyle = `rgba(${r},${g},${b},${(style.alpha * alphaFactor).toFixed(3)})`;
+    ctx.lineWidth = Math.max(style.metres, (style.minPx * widthFactor) / Math.max(scale, 1e-6));
+    ctx.beginPath();
+    points.forEach((point: number[], index: number) => {
+      if (index === 0) ctx.moveTo(point[0], point[1]);
+      else ctx.lineTo(point[0], point[1]);
+    });
+    if (feature.closed) ctx.closePath();
+    ctx.stroke();
+  }
+  ctx.restore();
+  return true;
 }
 
 export function drawMarkings(ctx: CanvasRenderingContext2D, trackData: any, scale: number) {
@@ -422,89 +546,35 @@ export function drawMarkings(ctx: CanvasRenderingContext2D, trackData: any, scal
   ctx.restore();
 }
 
+/**
+ * The map the user sees.
+ *
+ * Only what the game's own meshes carry: the painted markings, told apart by
+ * what they mark, and the kerbs. The reconstructed corridor -- centreline, left
+ * and right edge, width -- is deliberately not drawn. That geometry exists to
+ * project telemetry onto the track, and it is good enough for that; asking it to
+ * also *be* the picture is what produced a map that disagreed with the circuit.
+ * The two live in the same world X/Z space, so the car placed by the projection
+ * lands where the paint says it should.
+ *
+ * `reliefMode` is accepted and ignored: relief was shading painted across the
+ * reconstructed asphalt band, and there is no band any more.
+ */
 export function drawTrackSurface(
   ctx: CanvasRenderingContext2D,
   trackData: any,
-  bounds: any,
+  _bounds: any,
   scale: number,
-  reliefMode: ReliefMode = 'NONE',
+  _reliefMode: ReliefMode = 'NONE',
 ) {
-  const left = trackData.left_edge;
-  const right = trackData.right_edge;
-  const center = trackData.visualCenterline || trackData.centerline;
-  const cache = getTrackSurfaceCache(trackData);
-
   ctx.save();
-
-  const asphalt = ctx.createLinearGradient(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY);
-  asphalt.addColorStop(0, '#1b1f2b');
-  asphalt.addColorStop(0.5, '#262a36');
-  asphalt.addColorStop(1, '#171b25');
-  ctx.fillStyle = asphalt;
-  if (cache?.asphaltPath) {
-    ctx.fill(cache.asphaltPath);
-  } else {
-    ctx.beginPath();
-    for (let i = 0; i < left.x.length; i += 1) {
-      if (i === 0) {
-        ctx.moveTo(left.x[i], left.y[i]);
-      } else {
-        ctx.lineTo(left.x[i], left.y[i]);
-      }
-    }
-    for (let i = right.x.length - 1; i >= 0; i -= 1) {
-      ctx.lineTo(right.x[i], right.y[i]);
-    }
-    ctx.closePath();
-    ctx.fill();
+  drawAsphaltSurface(ctx, trackData);
+  // Falls back to the unclassified fill when the paint has no verdicts yet --
+  // an older cache, or a track whose AI lines the classifier could not read.
+  if (!drawClassifiedMarkings(ctx, trackData, scale)) {
+    drawMarkings(ctx, trackData, scale);
   }
-  drawPitVisualGeometry(ctx, trackData, asphalt, scale);
-
-  // Relief goes straight onto the asphalt, under the paint: the shading is a
-  // property of the surface, not something painted on it.
-  const relief = getReliefCache(trackData, reliefMode);
-  if (relief) {
-    for (let step = 0; step < relief.paths.length; step += 1) {
-      ctx.fillStyle = relief.colors[step];
-      ctx.fill(relief.paths[step]);
-    }
-  }
-
-  // Paint sits on the asphalt, kerbs on top of the paint, and the edge strokes
-  // last so the track outline still reads as the outermost line.
-  drawMarkings(ctx, trackData, scale);
   drawKerbs(ctx, trackData, scale);
-
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.48)';
-  ctx.lineWidth = 1.4 / scale;
-  const closed = trackData.closedLoop !== false;
-  const surfaceUnion = trackData?.pitVisualGeometry?.surfaceUnionFix;
-  const leftSuppression = surfaceUnion?.mainTrackStrokeSuppression?.leftRanges || [];
-  const rightSuppression = surfaceUnion?.mainTrackStrokeSuppression?.rightRanges || [];
-  if (cache?.leftPath && !leftSuppression.length) {
-    ctx.stroke(cache.leftPath);
-  } else {
-    strokePolylineSegments(ctx, left.x, left.y, closed, leftSuppression);
-  }
-  if (cache?.rightPath && !rightSuppression.length) {
-    ctx.stroke(cache.rightPath);
-  } else {
-    strokePolylineSegments(ctx, right.x, right.y, closed, rightSuppression);
-  }
-
-  ctx.setLineDash([10 / scale, 16 / scale]);
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-  ctx.lineWidth = 0.8 / scale;
-  if (cache?.centerPath) {
-    ctx.stroke(cache.centerPath);
-  } else {
-    drawPolyline(ctx, center.x, center.y, closed);
-    ctx.stroke();
-  }
-  ctx.setLineDash([]);
   ctx.restore();
 }
 

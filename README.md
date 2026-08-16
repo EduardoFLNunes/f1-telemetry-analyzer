@@ -72,7 +72,7 @@ f1-telemetry-analyzer/
 │   │   ├── recording/           # gravação e persistência de sessões/voltas
 │   │   └── websocket_server.py
 │   ├── packaging/               # build do executável (PyInstaller)
-│   └── tests/                    # 134 testes automatizados (unittest)
+│   └── tests/                    # 242 testes automatizados (unittest)
 │
 ├── frontend/                    # React + Vite (migração JS → TS em andamento)
 │   └── src/
@@ -167,7 +167,7 @@ cd backend
 python -m unittest discover -s tests
 ```
 
-134 testes cobrem análise de racing line, comparação, qualidade de dados,
+242 testes cobrem análise de racing line, comparação, qualidade de dados,
 gravação de sessão, física do carro, telemetria de oponentes e o gate de
 memória compartilhada.
 

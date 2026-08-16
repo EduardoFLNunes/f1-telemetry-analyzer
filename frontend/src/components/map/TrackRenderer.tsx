@@ -4,14 +4,7 @@ import { useRenderCounter } from '../../hooks/useRenderCounter';
 import { api } from '../../api/client';
 import { drawCar, drawOpponentCar } from './CarRenderer';
 import { applyCameraTransform, computeTrackBounds, CameraState } from './CameraController';
-import {
-  drawHud,
-  drawTrackSurface,
-  reliefColorAt,
-  reliefRange,
-  trackHasRelief,
-  ReliefMode,
-} from './OverlayRenderer';
+import { drawHud, drawTrackSurface } from './OverlayRenderer';
 import { resolveSampleMapPosition, MapPosition } from '../../utils/spatialTransform';
 import {
   drawPreparedRacingLineOverlay,
@@ -46,12 +39,6 @@ function scaledTraceWidth(weight: number, scale: number): number {
   return Math.max(weight * TRACE_METERS_PER_UNIT, MIN_TRACE_SCREEN_PX / Math.max(scale, 1e-6));
 }
 const REPLAY_TRACK_BOUNDS_MARGIN_METERS = 80;
-const RELIEF_MODES: Array<[ReliefMode, string]> = [
-  ['NONE', 'PLANO'],
-  ['ELEVATION', 'ALTURA'],
-  ['GRADIENT', 'INCLINACAO'],
-];
-const RELIEF_LEGEND_STOPS = [0, 0.25, 0.5, 0.75, 1];
 
 function normalizeTrack(trackData: any): any {
   if (!trackData) return null;
@@ -855,10 +842,6 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
   const screenOpponentsRef = useRef<ScreenOpponent[]>([]);
   const racingLineOverlayRef = useRef<PreparedRacingLineOverlay | null>(null);
   const [cameraMode, setCameraMode] = useState<'OVERVIEW' | 'FOLLOW'>('OVERVIEW');
-  const [reliefMode, setReliefMode] = useState<ReliefMode>('NONE');
-  const reliefModeRef = useRef<ReliefMode>('NONE');
-  // Once the driver picks a mode, stop overriding it when the track reloads.
-  const reliefChosenRef = useRef(false);
   const [showRacingLine, setShowRacingLine] = useState(true);
   const [showOpponents, setShowOpponents] = useState(true);
   const [racingLineMode, setRacingLineMode] = useState('LINE_ONLY');
@@ -979,24 +962,6 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
     cameraRef.current.mode = cameraMode;
   }, [cameraMode]);
 
-  // The render loop reads refs, not state: it runs outside React's update cycle.
-  useEffect(() => {
-    reliefModeRef.current = reliefMode;
-  }, [reliefMode]);
-
-  const hasRelief = useMemo(() => trackHasRelief(normalizedTrack), [normalizedTrack]);
-  const reliefRangeValues = useMemo(
-    () => (hasRelief ? reliefRange(normalizedTrack, reliefMode) : null),
-    [normalizedTrack, reliefMode, hasRelief],
-  );
-
-  // Shown by default once a track carries height. Shipped off, it looked exactly
-  // like a track with no elevation at all.
-  useEffect(() => {
-    if (hasRelief && !reliefChosenRef.current) {
-      setReliefMode('ELEVATION');
-    }
-  }, [hasRelief]);
 
   useEffect(() => {
     showRacingLineRef.current = showRacingLine;
@@ -1194,7 +1159,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
 
       if (normalizedTrack) {
         const staticDrawStarted = performance.now();
-        drawTrackSurface(ctx, normalizedTrack, renderBounds, scale, reliefModeRef.current);
+        drawTrackSurface(ctx, normalizedTrack, renderBounds, scale);
         staticDrawMs = performance.now() - staticDrawStarted;
       }
       if (replayActiveNow) {
@@ -1570,53 +1535,6 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
             RACING LINE
           </button>
         </div>
-        {hasRelief && reliefMode !== 'NONE' && reliefRangeValues && (
-          <div className="panel px-1.5 py-1" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span className="num" style={{ fontSize: 7, color: 'var(--text-3)' }}>
-              {reliefMode === 'GRADIENT'
-                ? `${(reliefRangeValues.low * 100).toFixed(0)}%`
-                : `${reliefRangeValues.low.toFixed(0)}m`}
-            </span>
-            <span
-              style={{
-                width: 74,
-                height: 7,
-                borderRadius: 2,
-                background: `linear-gradient(to right, ${RELIEF_LEGEND_STOPS
-                  .map((t) => reliefColorAt(reliefMode, t))
-                  .join(',')})`,
-              }}
-            />
-            <span className="num" style={{ fontSize: 7, color: 'var(--text-3)' }}>
-              {reliefMode === 'GRADIENT'
-                ? `+${(reliefRangeValues.high * 100).toFixed(0)}%`
-                : `${reliefRangeValues.high.toFixed(0)}m`}
-            </span>
-          </div>
-        )}
-        {hasRelief && (
-          <div className="panel px-1.5 py-1 flex gap-1">
-            {RELIEF_MODES.map(([mode, label]) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => { reliefChosenRef.current = true; setReliefMode(mode); }}
-                className={`num text-[7px] uppercase rounded-sm transition-all ${
-                  reliefMode === mode ? 'text-emerald-300' : 'text-slate-600 hover:text-slate-400'
-                }`}
-                style={{
-                  background: reliefMode === mode ? 'rgba(52,211,153,0.10)' : 'transparent',
-                  border: reliefMode === mode ? '1px solid rgba(52,211,153,0.26)' : '1px solid transparent',
-                  padding: '2px 6px',
-                  cursor: 'pointer',
-                }}
-                title="Sombrear a pista por altura ou inclinacao"
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
         <div className="panel px-1.5 py-1">
           <button
             type="button"

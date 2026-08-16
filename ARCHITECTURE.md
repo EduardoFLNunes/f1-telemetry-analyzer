@@ -120,6 +120,41 @@ Para Interlagos especificamente existe uma geometria corrigida e travada em
 em `scripts/build_interlagos_*` — ela é carregada antes de qualquer cache do
 usuário para garantir paridade visual entre o app instalado e o `main`.
 
+#### Duas geometrias, uma medida e outra desenhada
+
+O `track_data` carrega duas coisas de origens diferentes, e elas não se
+misturam:
+
+| | origem | serve para | é desenhada? |
+| --- | --- | --- | --- |
+| `centerline`, `left_edge`, `right_edge`, `localWidth` | raycast sobre a malha | projeção do carro, offset lateral, segmentação de curvas, racing line | não |
+| `asphaltSurface`, `markingGeometry`, `kerbGeometry` | malha do jogo, direto | o mapa que o usuário vê | sim |
+
+A reconstrução é boa o bastante para medir e não para desenhar: usá-la como
+imagem entregava uma pista quebrada. As duas vivem no mesmo espaço world X/Z,
+então o carro posicionado pela projeção cai onde a pintura diz.
+
+O que o mapa desenha, e por quê cada peça existe:
+
+- **`asphaltSurface`** (`build_drawn_asphalt`) — o contorno do asfalto para
+  preencher. Duas coisas saem antes de traçar o contorno, e cada uma por um
+  motivo medido. A tinta e as zebras, porque no KN5 também são superfície
+  `ROAD`: cada faixa fina entrega um par de contornos a 0,25 m um do outro, e
+  esse par inverte a paridade do preenchimento even-odd — era o que enchia o
+  miolo e esvaziava a pista. E o que estiver a mais de 25 m das bordas da pista
+  ou do pit lane, porque o autódromo é uma folha conectada de `ROAD` (paddock e
+  vias de serviço entram na pista, então nenhum filtro por componente as separa);
+  84% da área do asfalto está a até 10 m das bordas e 96% a até 25 m.
+- **`markingGeometry`** — a pintura, classificada em `limite`, `boxes` e
+  `servico` por `core/geometry/marking_classification.py`, medindo contra
+  `fast_lane.ai` e `pit_lane.ai` e nunca contra a reconstrução. O corte é por
+  trecho de contorno, porque uma mesma linha pintada é limite de pista em parte
+  do percurso e limite de boxe no resto.
+- **`kerbGeometry`** — as zebras, desenhadas com listras vermelho/branco.
+
+Caches gravados antes disso são reconstruídos sozinhos: o provedor rejeita o
+cache que não tenha `markingGeometry.features` nem `asphaltSurface.componentCount`.
+
 ### 4. Análise assistida pós-volta
 
 ```
@@ -159,7 +194,7 @@ core/assisted_analysis/lap_analysis_service.py
 
 | Componente | Responsabilidade |
 | --- | --- |
-| `components/map/TrackRenderer.jsx` | Renderização 2D em canvas da pista, carro do jogador e oponentes |
+| `components/map/TrackRenderer.tsx` | Renderização 2D em canvas: pintura e zebras da malha do jogo, carro do jogador e oponentes. O corredor reconstruído não é desenhado |
 | `components/RacingLineAnalysisPanel.tsx` | Visualização da racing line e ganhos por curva |
 | `components/LiveComparisonPanel.tsx` | Comparação por microsetor em tempo real |
 | `components/AssistedAnalysisPanel.tsx` | Feedback de pilotagem pós-volta |
@@ -239,7 +274,7 @@ electron-builder → Empacotamento e instalador NSIS
 
 ## Testes
 
-134 testes automatizados (`backend/tests`, `unittest`) cobrem análise de
+242 testes automatizados (`backend/tests`, `unittest`) cobrem análise de
 racing line, comparação, qualidade de dados, gravação de sessão, física do
 carro, protocolo UDP de oponentes e o gate de memória compartilhada. Não há
 testes automatizados de frontend nem CI configurado até o momento.
