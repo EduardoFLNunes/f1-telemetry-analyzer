@@ -15,9 +15,20 @@ import {
   parseRgba,
 } from '../../test/fakeCanvas';
 
-const LIMITE = [240, 244, 250];
+const LIMITE = [255, 255, 255];
 const BOXES = [234, 179, 8];
 const SERVICO = [148, 163, 184];
+
+/** 0 for black, 1 for white -- enough to say "light" or "dark" without a hex. */
+function brightness(colour: any): number {
+  const text = String(colour);
+  const rgba = parseRgba(text);
+  if (rgba) return (rgba.r + rgba.g + rgba.b) / (3 * 255);
+  const hex = /^#([0-9a-f]{6})$/i.exec(text.trim());
+  if (!hex) return NaN;
+  const value = parseInt(hex[1], 16);
+  return ((value >> 16 & 255) + (value >> 8 & 255) + (value & 255)) / (3 * 255);
+}
 
 function line(from: number, count = 6): number[][] {
   return Array.from({ length: count }, (_, index) => [from + index, index * 2]);
@@ -100,8 +111,8 @@ describe('drawClassifiedMarkings', () => {
   it('takes the paint down to its real width once there is room for it', () => {
     const ctx = createFakeContext();
     drawClassifiedMarkings(ctx, track(), 40);
-    // 0.18 m is the track limit line as it is painted on the circuit.
-    expect(callsOf(ctx, 'stroke').at(-1)!.lineWidth).toBeCloseTo(0.18, 6);
+    // The track limit line as it is painted on the circuit, in metres.
+    expect(callsOf(ctx, 'stroke').at(-1)!.lineWidth).toBeCloseTo(0.22, 6);
   });
 
   it('closes a ring and leaves an open line open', () => {
@@ -217,7 +228,9 @@ describe('drawKerbs', () => {
     drawKerbs(ctx, kerbs, 0.1);
     const outline = callsOf(ctx, 'stroke');
     expect(outline.length).toBe(1);
-    expect(outline[0].strokeStyle).toBe('#c2453a');
+    // Light against the near-black background, so the kerb still marks the
+    // corner when it is a couple of pixels wide.
+    expect(brightness(outline[0].strokeStyle)).toBeGreaterThan(0.7);
     expect(outline[0].lineWidth * 0.1).toBeGreaterThan(0.4);
   });
 
@@ -225,10 +238,12 @@ describe('drawKerbs', () => {
     const close = createFakeContext();
     drawKerbs(close, kerbs, 30);
     expect(callsOf(close, 'stroke')[0].lineWidth).toBeCloseTo(0.15, 6);
-    // Red base plus white bars across it.
+    // Dark base with light teeth across it: one base fill, then the bars.
     const bars = callsOf(close, 'fillRect');
-    expect(bars.some((call) => call.fillStyle === '#b3382f')).toBe(true);
-    expect(bars.filter((call) => call.fillStyle === '#e8e8e8').length).toBeGreaterThan(1);
+    expect(brightness(bars[0].fillStyle)).toBeLessThan(0.2);
+    const teeth = bars.slice(1);
+    expect(teeth.length).toBeGreaterThan(1);
+    expect(teeth.every((call) => brightness(call.fillStyle) > 0.85)).toBe(true);
   });
 
   it('fades with the rest of the map', () => {

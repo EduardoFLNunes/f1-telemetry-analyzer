@@ -317,7 +317,19 @@ function drawPitVisualGeometry(ctx: CanvasRenderingContext2D, trackData: any, as
   ctx.restore();
 }
 
-const KERB_STRIPE_METERS = 1.6;
+/**
+ * The circuit as a broadcast graphic.
+ *
+ * Grey asphalt, a hard white line down each side and kerbs as white teeth
+ * against the dark. It is the palette a lap looks like on television, and it
+ * survives being small: three tones, maximum contrast between them, no hue to
+ * confuse with the car or its trail.
+ */
+const ASPHALT_FILL = '#2c2c2c';
+const KERB_STRIPE_METERS = 1.1;
+const KERB_DARK = '#111111';
+const KERB_LIGHT = '#f4f4f5';
+const KERB_EDGE = 'rgba(228,228,231,0.85)';
 
 function polygonPath(ctx: CanvasRenderingContext2D, points: number[][]) {
   ctx.beginPath();
@@ -358,7 +370,7 @@ export function drawAsphaltSurface(ctx: CanvasRenderingContext2D, trackData: any
   if (!Array.isArray(loops) || !loops.length) return false;
 
   ctx.save();
-  ctx.fillStyle = '#1a1e27';
+  ctx.fillStyle = ASPHALT_FILL;
   ctx.beginPath();
   for (const loop of loops) {
     const points = loop?.points;
@@ -404,9 +416,9 @@ export function drawKerbs(ctx: CanvasRenderingContext2D, trackData: any, scale: 
     polygonPath(ctx, points);
     ctx.clip();
 
-    // Base colour, then white bars across it: the red/white kerb reads instantly
-    // even when the map is zoomed out far enough that the strip is a few pixels.
-    ctx.fillStyle = '#b3382f';
+    // Dark base, then white bars across it: the kerb reads as teeth, which is
+    // what tells a corner apart from a straight at a glance.
+    ctx.fillStyle = KERB_DARK;
     ctx.fillRect(minX, minY, maxX - minX, maxY - minY);
 
     const angle = dominantAngle(points);
@@ -415,7 +427,7 @@ export function drawKerbs(ctx: CanvasRenderingContext2D, trackData: any, scale: 
     const span = Math.hypot(maxX - minX, maxY - minY);
     ctx.translate(cx, cy);
     ctx.rotate(angle);
-    ctx.fillStyle = '#e8e8e8';
+    ctx.fillStyle = KERB_LIGHT;
     for (let offset = -span; offset <= span; offset += KERB_STRIPE_METERS * 2) {
       ctx.fillRect(offset, -span, KERB_STRIPE_METERS, span * 2);
     }
@@ -426,7 +438,7 @@ export function drawKerbs(ctx: CanvasRenderingContext2D, trackData: any, scale: 
     // the outline carries the kerb when zoomed out and thins to its real edge as
     // you close in, handing the job over to the stripes once there is room.
     ctx.lineWidth = Math.max(0.15, (1.2 * widthFactor) / Math.max(scale, 1e-6));
-    ctx.strokeStyle = '#c2453a';
+    ctx.strokeStyle = KERB_EDGE;
     polygonPath(ctx, points);
     ctx.stroke();
   }
@@ -450,9 +462,9 @@ export function drawKerbs(ctx: CanvasRenderingContext2D, trackData: any, scale: 
  * up on top of everything else.
  */
 const MARKING_STYLES: Record<string, { colour: [number, number, number]; alpha: number; metres: number; minPx: number; order: number }> = {
-  servico: { colour: [148, 163, 184], alpha: 0.42, metres: 0.12, minPx: 0.9, order: 0 },
-  boxes: { colour: [234, 179, 8], alpha: 0.78, metres: 0.15, minPx: 1.1, order: 1 },
-  limite: { colour: [240, 244, 250], alpha: 0.94, metres: 0.18, minPx: 1.5, order: 2 },
+  servico: { colour: [148, 163, 184], alpha: 0.34, metres: 0.12, minPx: 0.9, order: 0 },
+  boxes: { colour: [234, 179, 8], alpha: 0.62, metres: 0.15, minPx: 1.1, order: 1 },
+  limite: { colour: [255, 255, 255], alpha: 1, metres: 0.22, minPx: 2.1, order: 2 },
 };
 const DEFAULT_MARKING_STYLE = MARKING_STYLES.limite;
 
@@ -622,7 +634,12 @@ export function drawMiniMap(
   height: number,
   trackData: any,
   carPosition: { x: number; y: number } | null,
-  options: { size?: number; margin?: number } = {},
+  options: {
+    size?: number;
+    margin?: number;
+    corner?: 'top-right' | 'top-left' | 'bottom-left' | 'bottom-right';
+    bare?: boolean;
+  } = {},
 ) {
   const outline = miniMapPath(trackData);
   if (!outline) return;
@@ -633,19 +650,31 @@ export function drawMiniMap(
   const span = Math.max(maxX - minX, maxY - minY, 1);
   const scale = (size * 0.86) / span;
 
-  const left = width - size - margin;
-  const top = margin;
+  // Top right by default. The follow view has three corners spoken for -- the
+  // camera controls, the replay badge, the readout across the bottom middle --
+  // so it puts the inset in the one that is left.
+  const corner = options.corner || 'top-right';
+  const left = corner.endsWith('left') ? margin : width - size - margin;
+  const top = corner.startsWith('bottom') ? height - size - margin : margin;
 
   ctx.save();
   ctx.resetTransform();
 
-  ctx.fillStyle = 'rgba(6,8,16,0.72)';
-  ctx.strokeStyle = 'rgba(148,163,184,0.18)';
-  ctx.lineWidth = 1;
+  // A framed panel reads as a control. Bare, it reads as the lap -- but the
+  // follow camera often has grey asphalt behind this corner, so it still needs
+  // something to sit on: a scrim, with no border to call itself a widget.
   ctx.beginPath();
   ctx.rect(left, top, size, size);
-  ctx.fill();
-  ctx.stroke();
+  if (options.bare) {
+    ctx.fillStyle = 'rgba(7,7,7,0.62)';
+    ctx.fill();
+  } else {
+    ctx.fillStyle = 'rgba(6,8,16,0.72)';
+    ctx.strokeStyle = 'rgba(148,163,184,0.18)';
+    ctx.lineWidth = 1;
+    ctx.fill();
+    ctx.stroke();
+  }
 
   ctx.save();
   ctx.beginPath();

@@ -77,6 +77,14 @@ export function computeTrackBounds(
   };
 }
 
+/**
+ * How much road the follow camera holds across the height of the panel.
+ *
+ * Close enough that the kerbs and the paint read as themselves, wide enough
+ * that the corner the car is in arrives before the car does.
+ */
+export const FOLLOW_VIEW_METERS = 90;
+
 export function applyCameraTransform(
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -88,15 +96,19 @@ export function applyCameraTransform(
   const mode = camera.mode;
   const zoom = camera.zoom;
 
+  // Follow pans with the car and keeps the circuit's own orientation. Turning
+  // the map to put the car's nose up looks right for a lap of one corner and
+  // wrong for everything else: the whole world spins under a car that never
+  // appears to turn, and the corner stops being recognisable as itself. Held
+  // still, the esses look like the esses whichever way the car is pointing.
   if (mode === 'FOLLOW' && carFrame) {
     const carPosition = resolveSampleMapPosition(carFrame);
     if (!carPosition) {
       return applyCameraTransform(ctx, width, height, bounds, { ...camera, mode: 'OVERVIEW' }, null);
     }
-    const scale = (height / 90) * zoom;
-    ctx.translate(width / 2, height * 0.68);
+    const scale = (height / FOLLOW_VIEW_METERS) * zoom;
+    ctx.translate(width / 2, height / 2);
     ctx.scale(scale, scale);
-    ctx.rotate(-((carFrame as any).heading || 0) + Math.PI / 2);
     ctx.translate(-carPosition.x, -carPosition.y);
     return scale;
   }

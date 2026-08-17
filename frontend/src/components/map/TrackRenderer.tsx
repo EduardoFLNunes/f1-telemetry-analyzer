@@ -3,8 +3,9 @@ import { useTelemetryStore } from '../../store/useTelemetryStore';
 import { useRenderCounter } from '../../hooks/useRenderCounter';
 import { api } from '../../api/client';
 import { drawCar, drawOpponentCar } from './CarRenderer';
-import { applyCameraTransform, computeTrackBounds, CameraState } from './CameraController';
+import { applyCameraTransform, computeTrackBounds, CameraState, FOLLOW_VIEW_METERS } from './CameraController';
 import { drawHud, drawMiniMap, drawTrackSurface } from './OverlayRenderer';
+import { drawBroadcastCar, drawBroadcastHud, drawBroadcastTrail } from './BroadcastOverlay';
 import { resolveSampleMapPosition, MapPosition } from '../../utils/spatialTransform';
 import {
   drawPreparedRacingLineOverlay,
@@ -74,6 +75,14 @@ function normalizeTrack(trackData: any): any {
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
+}
+
+/** The circuit's name, for the line the broadcast look keeps at the bottom. */
+export function trackCaption(trackData: any): string | null {
+  const raw = trackData?.trackName || trackData?.name || trackData?.metadata?.trackName;
+  if (typeof raw !== 'string') return null;
+  const cleaned = raw.replace(/[_-]+/g, ' ').trim();
+  return cleaned ? cleaned.toUpperCase() : null;
 }
 
 function percentile(values: number[], ratio: number): number {
@@ -731,16 +740,16 @@ function worldToScreen(
 ): { x: number; y: number; scale: number } | null {
   if (!point || !isFiniteNumber(point.x) || !isFiniteNumber(point.y)) return null;
 
+  // Mirrors applyCameraTransform's follow branch: pan only, no rotation.
   if (camera.mode === 'FOLLOW' && carFrame) {
     const carPosition = carFrame.mapPosition || { x: carFrame.x, y: carFrame.z };
     if (!carPosition || !isFiniteNumber(carPosition.x) || !isFiniteNumber(carPosition.y)) return null;
-    const scale = (height / 90) * camera.zoom;
-    const angle = -(carFrame.heading || 0) + Math.PI / 2;
-    const dx = point.x - carPosition.x;
-    const dy = point.y - carPosition.y;
-    const rx = dx * Math.cos(angle) - dy * Math.sin(angle);
-    const ry = dx * Math.sin(angle) + dy * Math.cos(angle);
-    return { x: width / 2 + rx * scale, y: height * 0.68 + ry * scale, scale };
+    const scale = (height / FOLLOW_VIEW_METERS) * camera.zoom;
+    return {
+      x: width / 2 + (point.x - carPosition.x) * scale,
+      y: height / 2 + (point.y - carPosition.y) * scale,
+      scale,
+    };
   }
 
   const scale = Math.min(width / bounds.w, height / bounds.h) * 0.84 * camera.zoom;
@@ -841,7 +850,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
   const opponentMotionRef = useRef(new Map<number, any>());
   const screenOpponentsRef = useRef<ScreenOpponent[]>([]);
   const racingLineOverlayRef = useRef<PreparedRacingLineOverlay | null>(null);
-  const [cameraMode, setCameraMode] = useState<'OVERVIEW' | 'FOLLOW'>('OVERVIEW');
+  // Follow is what the map is for: one car, the road it is on, and where that
+  // road goes next. The whole circuit at once is the exception, not the default.
+  const [cameraMode, setCameraMode] = useState<'OVERVIEW' | 'FOLLOW'>('FOLLOW');
   const [showRacingLine, setShowRacingLine] = useState(true);
   const [showOpponents, setShowOpponents] = useState(true);
   const [racingLineMode, setRacingLineMode] = useState('LINE_ONLY');
@@ -933,7 +944,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
   });
 
   const cameraRef = useRef<CameraState & { isPanning: boolean; lastMouse: { x: number; y: number } }>({
-    mode: 'OVERVIEW',
+    mode: 'FOLLOW',
     zoom: 1,
     offset: { x: 0, y: 0 },
     isPanning: false,
@@ -1098,7 +1109,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, rect.width, rect.height);
-      ctx.fillStyle = '#070a12';
+      // Near black, so the grey of the asphalt is the lightest thing on screen
+      // until the paint and the car arrive on top of it.
+      ctx.fillStyle = '#070707';
       ctx.fillRect(0, 0, rect.width, rect.height);
 
       const {
@@ -1156,13 +1169,19 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
 
       ctx.save();
       const scale = applyCameraTransform(ctx, rect.width, rect.height, renderBounds, cameraRef.current, liveFrame);
+      // Following one car is what the broadcast look is for; the overview keeps
+      // the analytical HUD, where the whole lap and every rival are on screen.
+      const broadcast = cameraRef.current.mode === 'FOLLOW' && Boolean(liveFrame);
 
       if (normalizedTrack) {
         const staticDrawStarted = performance.now();
         drawTrackSurface(ctx, normalizedTrack, renderBounds, scale);
         staticDrawMs = performance.now() - staticDrawStarted;
       }
-      if (replayActiveNow) {
+      // Following the car, the whole lap drawn in yellow competes with the trail
+      // for the same road; the racing line switch turns it off and leaves the
+      // broadcast view clean. In overview it is the point of the picture.
+      if (replayActiveNow && (!broadcast || showRacingLineRef.current)) {
         const overlayCost = drawReplayLapOverlay(
           ctx,
           offlineReplay,
@@ -1192,6 +1211,14 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
         (window as any).__telemetryPerf.racingLineOverlayMs = overlayCost;
       }
 
+      // The road just driven, on top of the reference lines and under the car.
+      if (broadcast) {
+        const trailSamples = replayActiveNow
+          ? offlineReplay.samples.slice(0, (offlineReplay.currentIndex || 0) + 1)
+          : renderHistory;
+        drawBroadcastTrail(ctx, trailSamples, scale);
+      }
+
       const screenOpponents: ScreenOpponent[] = renderOpponents
         .map((opponent: any) => ({
           opponent,
@@ -1216,21 +1243,30 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
       opponentsDrawMs = performance.now() - opponentsDrawStarted;
       if (liveFrame) {
         const playerDrawStarted = performance.now();
-        drawCar(ctx, liveFrame, scale, replayActiveNow ? '#facc15' : '#22d3ee', { noGlow: simpleVisuals });
+        // A car shape is a smudge at follow zoom; a disc is a position.
+        if (broadcast) {
+          drawBroadcastCar(ctx, liveFrame, scale);
+        } else {
+          drawCar(ctx, liveFrame, scale, replayActiveNow ? '#facc15' : '#22d3ee', { noGlow: simpleVisuals });
+        }
         playerDrawMs = performance.now() - playerDrawStarted;
       }
 
       ctx.restore();
-      drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current, { performanceMode: activePerformanceMode });
-      // Only while following: in overview the whole lap is already on screen and
-      // a second copy of it in the corner is noise.
-      if (cameraRef.current.mode === 'FOLLOW') {
-        drawMiniMap(ctx, rect.width, rect.height, normalizedTrack, resolveSampleMapPosition(liveFrame));
-      }
-      if (!simpleVisuals && replayActiveNow) {
-        drawReplayLegend(ctx, rect.width, rect.height, offlineReplay, showRacingLineRef.current ? racingLineModeRef.current : 'LINE_ONLY');
-      } else if (!simpleVisuals && showRacingLineRef.current && racingLineOverlayRef.current) {
-        drawRacingLineLegend(ctx, rect.width, rect.height, racingLineOverlayRef.current, racingLineModeRef.current);
+      if (broadcast) {
+        drawBroadcastHud(ctx, rect.width, rect.height, liveFrame, { caption: trackCaption(normalizedTrack) });
+        // The inset moves to the free corner: the camera controls own the right.
+        drawMiniMap(ctx, rect.width, rect.height, normalizedTrack, resolveSampleMapPosition(liveFrame), {
+          corner: 'bottom-left',
+          bare: true,
+        });
+      } else {
+        drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current, { performanceMode: activePerformanceMode });
+        if (!simpleVisuals && replayActiveNow) {
+          drawReplayLegend(ctx, rect.width, rect.height, offlineReplay, showRacingLineRef.current ? racingLineModeRef.current : 'LINE_ONLY');
+        } else if (!simpleVisuals && showRacingLineRef.current && racingLineOverlayRef.current) {
+          drawRacingLineLegend(ctx, rect.width, rect.height, racingLineOverlayRef.current, racingLineModeRef.current);
+        }
       }
 
       const renderDuration = performance.now() - renderStart;

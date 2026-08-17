@@ -174,16 +174,18 @@ memória compartilhada.
 
 ```bash
 cd frontend
-npm test          # 73 testes (Vitest)
+npm test          # 103 testes (Vitest)
 npm run build     # build de produção
 npx tsc --noEmit  # checagem de tipos (não está em CI ainda — rodar manualmente)
 ```
 
 Os testes de frontend cobrem a matemática que o usuário enxerga: a câmera da
 fita 3D (altura sobe na tela, o chão não inclina junto, uma volta da câmera por
-volta da pista), o desenho do mapa (ordem das camadas de tinta, preenchimento
-even-odd do asfalto, afinamento no zoom out, mini-mapa) e o replay offline de
-sessões gravadas — este último roda inteiro sem o Assetto Corsa aberto.
+volta da pista), a câmera follow do mapa (segue sem girar, centraliza o carro),
+o rastro e a leitura de transmissão, o desenho do mapa (ordem das camadas de
+tinta, preenchimento even-odd do asfalto, afinamento no zoom out, mini-mapa) e o
+replay offline de sessões gravadas — este último roda inteiro sem o Assetto
+Corsa aberto.
 
 ## 🔧 Principais endpoints da API
 

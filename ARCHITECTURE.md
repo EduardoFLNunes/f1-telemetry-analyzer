@@ -150,7 +150,33 @@ O que o mapa desenha, e por quê cada peça existe:
   `fast_lane.ai` e `pit_lane.ai` e nunca contra a reconstrução. O corte é por
   trecho de contorno, porque uma mesma linha pintada é limite de pista em parte
   do percurso e limite de boxe no resto.
-- **`kerbGeometry`** — as zebras, desenhadas com listras vermelho/branco.
+- **`kerbGeometry`** — as zebras, desenhadas como dentes brancos sobre base
+  escura, que é o que separa uma curva de uma reta num relance.
+
+#### A câmera padrão é o follow, no formato de transmissão
+
+O mapa abre seguindo o carro, e não com o traçado inteiro na tela: o piloto
+precisa da estrada em que está e da curva que vem, e a volta completa cabe no
+mini-mapa do canto. O follow acompanha o carro **sem girar** o traçado. Girar o
+mapa para manter o bico do carro para cima faz o mundo inteiro rodar em volta de
+um carro que nunca parece virar, e nenhuma curva fica reconhecível como ela
+mesma; parado, o S do Senna continua com a cara do S do Senna.
+
+O desenho segue a gramática de uma transmissão (`BroadcastOverlay.ts`):
+
+- o carro é um disco, não a silhueta de um carro — nesse zoom uma silhueta é um
+  borrão e um disco é uma posição;
+- atrás dele ficam os últimos 14 segundos de estrada, coloridos pelo que o
+  piloto fazia ali (acelerando, freando ou de inércia) e apagando para trás, o
+  que transforma o mapa numa memória curta em vez de um diagrama;
+- no meio, grande, a velocidade, o estado e o tempo de volta.
+
+As cores dizem o que os pedais fizeram. Uma transmissão diria DEPLOY e REGEN ali;
+não modelamos ERS, e inventar um em cima do acelerador e do freio seria um
+gráfico que mente.
+
+O modo `OVERVIEW` continua existindo e mantém o HUD analítico — a volta inteira,
+os oponentes, as legendas de linha de corrida.
 
 Caches gravados antes disso são reconstruídos sozinhos: o provedor rejeita o
 cache que não tenha `markingGeometry.features` nem `asphaltSurface.componentCount`.
@@ -278,7 +304,7 @@ electron-builder → Empacotamento e instalador NSIS
 racing line, comparação, qualidade de dados, gravação de sessão, física do
 carro, protocolo UDP de oponentes e o gate de memória compartilhada.
 
-73 testes de frontend (`frontend/src/**/*.test.ts`, Vitest, `npm test`) cobrem
+103 testes de frontend (`frontend/src/**/*.test.ts`, Vitest, `npm test`) cobrem
 o que o desenho promete, não o que ele parece:
 
 - **Câmera da fita 3D** (`TrackElevationRibbon.test.ts`) — altura sobe na tela
@@ -286,6 +312,10 @@ o que o desenho promete, não o que ele parece:
   entre inclinar a câmera e inclinar a pista), banking lê igual em qualquer
   ângulo, o carro fica parado no mesmo lugar da tela e a câmera dá exatamente
   uma volta por volta da pista, sem salto na emenda entre elas.
+- **Câmera e transmissão** (`CameraController.test.ts`, `BroadcastOverlay.test.ts`)
+  — o follow acompanha sem girar e centraliza o carro, o rastro apaga para trás
+  e não cruza o miolo quando a volta vira, o freio ganha do acelerador na cor, e
+  a leitura central diz `--` em vez de um número errado quando não sabe.
 - **Mapa** (`OverlayRenderer.test.ts`) — o limite de pista fica por cima do pit
   e do serviço, o asfalto é preenchido em um único caminho even-odd (o que
   mantém o miolo limpo), a tinta afina e desbota no zoom out até a largura real
