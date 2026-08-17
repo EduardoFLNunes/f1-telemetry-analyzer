@@ -8,6 +8,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { TrackRenderer } from './components/map/TrackRenderer';
+import { TrackElevationRibbon } from './components/map/TrackElevationRibbon';
 import { TelemetryTraces } from './components/TelemetryTraces';
 import { GGDiagram } from './components/GGDiagram';
 import { CoachingFeed } from './components/CoachingFeed';
@@ -23,6 +24,7 @@ import { VehicleStatePanel, LapTimingPanel, StabilityPanel } from './components/
 import { useRenderCounter } from './hooks/useRenderCounter';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { api } from './api/client';
+import { useTelemetryStore } from './store/useTelemetryStore';
 
 type LivePanel = 'comparison' | 'racingLine' | 'engineer' | 'debrief';
 
@@ -37,6 +39,7 @@ const Dashboard: React.FC = () => {
   useRenderCounter('Dashboard');
   const [trackData, setTrackData] = useState<any>(null);
   const [trackKey, setTrackKey] = useState<string | null>(null);
+  const latestFrame = useTelemetryStore((state) => state.latestFrame);
   const [rightPanel, setRightPanel] = useState<LivePanel>('comparison');
   const [time, setTime] = useState(() => new Date());
 
@@ -107,13 +110,19 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* ═══ CENTER — track map + traces ═══ */}
+          {/* ═══ CENTER — track map, road relief, traces ═══ */}
           <div className="dashboard-column">
-            <div className="panel track-stage">
+            {/* The map says where the car is; the ribbon under it says what the
+                road is doing there -- climbing, dropping, leaning into a corner. */}
+            <div className="panel track-stage" style={{ flex: '1 1 52%', minHeight: 0 }}>
               <TrackRenderer trackData={trackData} />
             </div>
 
-            <div className="panel telemetry-stage">
+            <div className="panel" style={{ flex: '1 1 34%', minHeight: 190, padding: 0, overflow: 'hidden' }}>
+              <TrackElevationRibbon trackData={trackData} car={latestFrame} />
+            </div>
+
+            <div className="panel telemetry-stage" style={{ flex: '1 1 30%', minHeight: 0 }}>
               <TelemetryTraces />
             </div>
           </div>

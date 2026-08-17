@@ -578,6 +578,106 @@ export function drawTrackSurface(
   ctx.restore();
 }
 
+const MINI_MAP_CACHE = new WeakMap<object, { path: Path2D; bounds: any } | null>();
+
+function miniMapPath(trackData: any): { path: Path2D; bounds: any } | null {
+  if (!trackData || typeof Path2D === 'undefined') return null;
+  const cached = MINI_MAP_CACHE.get(trackData);
+  if (cached !== undefined) return cached;
+
+  // The track limit paint already traces the circuit, so the inset is the same
+  // shape the map draws rather than a second idea of where the track is.
+  const features = (trackData?.markingGeometry?.features || [])
+    .filter((feature: any) => feature?.kind === 'limite' && Array.isArray(feature.points) && feature.points.length > 8);
+  const path = new Path2D();
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  let drawn = 0;
+
+  for (const feature of features) {
+    feature.points.forEach((point: number[], index: number) => {
+      if (index === 0) path.moveTo(point[0], point[1]);
+      else path.lineTo(point[0], point[1]);
+      if (point[0] < minX) minX = point[0];
+      if (point[0] > maxX) maxX = point[0];
+      if (point[1] < minY) minY = point[1];
+      if (point[1] > maxY) maxY = point[1];
+    });
+    if (feature.closed) path.closePath();
+    drawn += 1;
+  }
+
+  const result = drawn ? { path, bounds: { minX, maxX, minY, maxY } } : null;
+  MINI_MAP_CACHE.set(trackData, result);
+  return result;
+}
+
+/**
+ * The whole lap in a corner of the map, with the car on it.
+ *
+ * Following the car is the right way to read the road ahead and the wrong way to
+ * know where in the lap you are -- at follow zoom every corner looks like any
+ * other. This is the answer to that second question, and nothing more: no kerbs,
+ * no paint classes, no scale bar.
+ *
+ * Drawn in screen space, after the camera transform has been restored, so it
+ * stays pinned to the corner while the map pans and rotates underneath.
+ */
+export function drawMiniMap(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  trackData: any,
+  carPosition: { x: number; y: number } | null,
+  options: { size?: number; margin?: number } = {},
+) {
+  const outline = miniMapPath(trackData);
+  if (!outline) return;
+
+  const size = options.size ?? Math.max(84, Math.min(150, Math.round(Math.min(width, height) * 0.24)));
+  const margin = options.margin ?? 14;
+  const { minX, maxX, minY, maxY } = outline.bounds;
+  const span = Math.max(maxX - minX, maxY - minY, 1);
+  const scale = (size * 0.86) / span;
+
+  const left = width - size - margin;
+  const top = margin;
+
+  ctx.save();
+  ctx.resetTransform();
+
+  ctx.fillStyle = 'rgba(6,8,16,0.72)';
+  ctx.strokeStyle = 'rgba(148,163,184,0.18)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.rect(left, top, size, size);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(left, top, size, size);
+  ctx.clip();
+  ctx.translate(left + size / 2, top + size / 2);
+  ctx.scale(scale, -scale);
+  ctx.translate(-(minX + maxX) / 2, -(minY + maxY) / 2);
+
+  ctx.strokeStyle = 'rgba(226,232,240,0.55)';
+  ctx.lineWidth = 1.6 / scale;
+  ctx.stroke(outline.path);
+
+  if (carPosition && Number.isFinite(carPosition.x) && Number.isFinite(carPosition.y)) {
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.arc(carPosition.x, carPosition.y, 4.5 / scale, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+  ctx.restore();
+}
+
 export function drawHud(
   ctx: CanvasRenderingContext2D,
   width: number,

@@ -4,7 +4,7 @@ import { useRenderCounter } from '../../hooks/useRenderCounter';
 import { api } from '../../api/client';
 import { drawCar, drawOpponentCar } from './CarRenderer';
 import { applyCameraTransform, computeTrackBounds, CameraState } from './CameraController';
-import { drawHud, drawTrackSurface } from './OverlayRenderer';
+import { drawHud, drawMiniMap, drawTrackSurface } from './OverlayRenderer';
 import { resolveSampleMapPosition, MapPosition } from '../../utils/spatialTransform';
 import {
   drawPreparedRacingLineOverlay,
@@ -1222,6 +1222,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
 
       ctx.restore();
       drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current, { performanceMode: activePerformanceMode });
+      // Only while following: in overview the whole lap is already on screen and
+      // a second copy of it in the corner is noise.
+      if (cameraRef.current.mode === 'FOLLOW') {
+        drawMiniMap(ctx, rect.width, rect.height, normalizedTrack, resolveSampleMapPosition(liveFrame));
+      }
       if (!simpleVisuals && replayActiveNow) {
         drawReplayLegend(ctx, rect.width, rect.height, offlineReplay, showRacingLineRef.current ? racingLineModeRef.current : 'LINE_ONLY');
       } else if (!simpleVisuals && showRacingLineRef.current && racingLineOverlayRef.current) {
