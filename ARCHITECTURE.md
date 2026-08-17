@@ -276,15 +276,37 @@ electron-builder → Empacotamento e instalador NSIS
 
 242 testes automatizados (`backend/tests`, `unittest`) cobrem análise de
 racing line, comparação, qualidade de dados, gravação de sessão, física do
-carro, protocolo UDP de oponentes e o gate de memória compartilhada. Não há
-testes automatizados de frontend nem CI configurado até o momento.
+carro, protocolo UDP de oponentes e o gate de memória compartilhada.
+
+73 testes de frontend (`frontend/src/**/*.test.ts`, Vitest, `npm test`) cobrem
+o que o desenho promete, não o que ele parece:
+
+- **Câmera da fita 3D** (`TrackElevationRibbon.test.ts`) — altura sobe na tela
+  em vez de descer, a profundidade não desloca o ponto lateralmente (a diferença
+  entre inclinar a câmera e inclinar a pista), banking lê igual em qualquer
+  ângulo, o carro fica parado no mesmo lugar da tela e a câmera dá exatamente
+  uma volta por volta da pista, sem salto na emenda entre elas.
+- **Mapa** (`OverlayRenderer.test.ts`) — o limite de pista fica por cima do pit
+  e do serviço, o asfalto é preenchido em um único caminho even-odd (o que
+  mantém o miolo limpo), a tinta afina e desbota no zoom out até a largura real
+  quando há espaço, o kerb sobrevive ao zoom pelo contorno e o mini-mapa é
+  traçado só do limite de pista, uma vez e reaproveitado.
+- **Replay offline** (`offlineReplay.test.ts`) — carregar uma volta gravada,
+  tocar, pausar, arrastar, trocar a velocidade e voltar ao vivo, tudo sem o
+  simulador aberto.
+
+Os testes rodam em Node contra um canvas que registra as chamadas em vez de
+desenhar (`frontend/src/test/fakeCanvas.ts`): o que se afirma é a ordem, a
+largura, a cor e a regra de preenchimento pedidas. Não há CI configurado até o
+momento.
 
 ## Limitações e Débitos Técnicos Conhecidos
 
 - **Migração TypeScript incompleta**: componentes `.jsx`/`.js` e
   `.tsx`/`.ts` coexistem; `npx tsc --noEmit` aponta erros de tipo reais que
   não bloqueiam o build (Vite não faz type-check completo).
-- **Sem CI**: testes, build e type-check são executados manualmente.
+- **Sem CI**: testes (backend e frontend), build e type-check são executados
+  manualmente.
 - **Histórico do git**: commits antigos incluem artefatos grandes
   (ambiente virtual, cache do FastF1) que hoje estão no `.gitignore` mas
   continuam na história, inflando o tamanho do repositório.

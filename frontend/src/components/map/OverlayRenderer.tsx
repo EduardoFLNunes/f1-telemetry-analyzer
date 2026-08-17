@@ -346,15 +346,6 @@ function dominantAngle(points: number[][]): number {
 /**
  * The road surface as the game models it.
  *
- * The outer boundary of the asphalt and its holes, filled even-odd -- the same
- * trick the paint needs, and for the same reason: a line that runs the whole lap
- * encloses the infield, so filling the outer loop alone would flood the middle
- * of the circuit. This is the mesh, not the reconstructed band between the
- * extracted edges.
- */
-/**
- * The road surface as the game models it.
- *
  * Outer boundaries and holes together in one path, filled even-odd: a line that
  * runs the whole lap encloses the infield, so filling an outer loop on its own
  * would flood the middle of the circuit. The loops arrive already free of the
@@ -474,7 +465,7 @@ const DETAIL_MIN_SCALE = 0.08;    // below this the map is a thumbnail
 const DETAIL_MIN_WIDTH = 0.42;    // how thin the lines get down there
 const DETAIL_MIN_ALPHA = 0.34;    // and how faint
 
-function mapDetail(scale: number): number {
+export function mapDetail(scale: number): number {
   const span = DETAIL_FULL_SCALE - DETAIL_MIN_SCALE;
   return Math.max(0, Math.min(1, (scale - DETAIL_MIN_SCALE) / span));
 }

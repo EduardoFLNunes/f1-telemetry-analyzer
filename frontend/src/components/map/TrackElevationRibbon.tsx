@@ -18,13 +18,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
  * followed exactly -- otherwise the view snaps back and forth in the esses.
  */
 
-type Station = {
+export type Station = {
   left: [number, number, number];   // x, y, height
   right: [number, number, number];
   shade: number;
 };
 
-type Geometry = {
+export type Geometry = {
   stations: Station[];
   centre: { x: number; y: number };
   radius: number;
@@ -65,7 +65,50 @@ function rampColour(t: number): string {
   return `rgb(${mix(r1, r2)},${mix(g1, g2)},${mix(b1, b2)})`;
 }
 
-function buildGeometry(trackData: any): Geometry | null {
+/**
+ * The camera at a given yaw: where a point of road lands, and how far away it is.
+ *
+ * `project` turns the circuit around its centre, flattens the depth by the pitch
+ * and lifts the height by what is left of it. `depth` is the same rotation's
+ * far-to-near axis, which is all the painter's sort needs.
+ */
+export function makeProjector(yaw: number, centre: { x: number; y: number }) {
+  const cos = Math.cos(yaw);
+  const sin = Math.sin(yaw);
+  return {
+    // The canvas is drawn with a negated vertical scale, so a larger Y here is
+    // higher on screen -- height has to be added. Subtracting it, as the first
+    // version did, drew every climb as a descent.
+    project(x: number, y: number, height: number): [number, number] {
+      const dx = x - centre.x;
+      const dy = y - centre.y;
+      const rx = dx * cos - dy * sin;
+      const ry = dx * sin + dy * cos;
+      return [rx, ry * PITCH_SIN + height * HEIGHT_EXAGGERATION * PITCH_COS];
+    },
+    depth(x: number, y: number): number {
+      return (x - centre.x) * sin + (y - centre.y) * cos;
+    },
+  };
+}
+
+/** The yaw that puts the car at the front of the view. */
+export function yawTarget(position: { x: number; y: number }, centre: { x: number; y: number }): number {
+  return -Math.atan2(position.y - centre.y, position.x - centre.x) - Math.PI / 2;
+}
+
+/**
+ * A step of the view towards `target`, unwrapped so the turn never doubles back
+ * across the +/-pi seam.
+ */
+export function advanceYaw(current: number, target: number): number {
+  let delta = target - current;
+  while (delta > Math.PI) delta -= Math.PI * 2;
+  while (delta < -Math.PI) delta += Math.PI * 2;
+  return current + delta * YAW_EASING;
+}
+
+export function buildGeometry(trackData: any): Geometry | null {
   const left = trackData?.left_edge;
   const right = trackData?.right_edge;
   const elevation = trackData?.edgeElevation;
@@ -111,7 +154,7 @@ function buildGeometry(trackData: any): Geometry | null {
   return { stations, centre, radius, heightSpan: Math.max(highest - lowest, 1) };
 }
 
-function carPosition(car: any): { x: number; y: number } | null {
+export function carPosition(car: any): { x: number; y: number } | null {
   const map = car?.mapPosition;
   const x = Number(map?.x ?? car?.x);
   const y = Number(map?.y ?? car?.y);
@@ -119,7 +162,7 @@ function carPosition(car: any): { x: number; y: number } | null {
 }
 
 /** Nearest station to the car, so the marker sits on the ribbon itself. */
-function nearestStation(geometry: Geometry, position: { x: number; y: number } | null): number | null {
+export function nearestStation(geometry: Geometry, position: { x: number; y: number } | null): number | null {
   if (!position) return null;
   let best = -1;
   let bestDistance = Infinity;
@@ -162,31 +205,11 @@ export const TrackElevationRibbon: React.FC<{ trackData: any; car?: any }> = ({ 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Ease towards the car's bearing, unwrapped so the turn never doubles back
-    // across the +/-pi seam.
+    // Ease towards the car's bearing rather than snapping to it.
     if (position) {
-      const bearing = Math.atan2(position.y - geometry.centre.y, position.x - geometry.centre.x);
-      const target = -bearing - Math.PI / 2;
-      let delta = target - yawRef.current;
-      while (delta > Math.PI) delta -= Math.PI * 2;
-      while (delta < -Math.PI) delta += Math.PI * 2;
-      yawRef.current += delta * YAW_EASING;
+      yawRef.current = advanceYaw(yawRef.current, yawTarget(position, geometry.centre));
     }
-    const yaw = yawRef.current;
-    const cos = Math.cos(yaw);
-    const sin = Math.sin(yaw);
-    const { centre } = geometry;
-
-    // The canvas is drawn with a negated vertical scale, so a larger Y here is
-    // higher on screen -- height has to be added. Subtracting it, as the first
-    // version did, drew every climb as a descent.
-    const project = (x: number, y: number, height: number): [number, number] => {
-      const dx = x - centre.x;
-      const dy = y - centre.y;
-      const rx = dx * cos - dy * sin;
-      const ry = dx * sin + dy * cos;
-      return [rx, ry * PITCH_SIN + height * HEIGHT_EXAGGERATION * PITCH_COS];
-    };
+    const { project, depth } = makeProjector(yawRef.current, geometry.centre);
 
     const quads = geometry.stations.map((station, index) => {
       const next = geometry.stations[(index + 1) % geometry.stations.length];
@@ -196,9 +219,9 @@ export const TrackElevationRibbon: React.FC<{ trackData: any; car?: any }> = ({ 
         project(next.right[0], next.right[1], next.right[2]),
         project(station.right[0], station.right[1], station.right[2]),
       ];
-      const dy = ((station.left[1] + station.right[1]) / 2) - centre.y;
-      const dx = ((station.left[0] + station.right[0]) / 2) - centre.x;
-      return { corners, depth: dx * sin + dy * cos, shade: station.shade, station: index };
+      const mx = (station.left[0] + station.right[0]) / 2;
+      const my = (station.left[1] + station.right[1]) / 2;
+      return { corners, depth: depth(mx, my), shade: station.shade, station: index };
     });
     // Painter's algorithm: what is further from the viewer goes down first, so a
     // rise in front of a dip covers it instead of bleeding through.
