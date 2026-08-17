@@ -106,6 +106,81 @@ def _point_in_triangle(point: Sequence[float], triangle: Sequence[Sequence[float
     return alpha >= -1e-7 and beta >= -1e-7 and gamma >= -1e-7
 
 
+class _TriangleHeightIndex:
+    """Height of the road surface at any point on the map.
+
+    The AI line carries one height per station, down the middle of the road. That
+    says the track climbs; it cannot say a corner is banked, because banking is
+    the difference between the two edges at the same station. The mesh has a
+    height at every vertex, so read it there: find the triangle under the point
+    and interpolate its three corners barycentrically.
+
+    Points that land in a seam between triangles -- the edges sit right on the
+    boundary of the surface -- fall back to the nearest triangle's corner, which
+    is a few centimetres out at worst.
+    """
+
+    def __init__(
+        self,
+        triangles: Sequence[Dict[str, Any]],
+        triangle_indices: Sequence[int],
+        *,
+        cell_size: float = SURFACE_GRID_CELL_SIZE,
+    ):
+        self.cell_size = float(cell_size)
+        self.grid: Dict[Tuple[int, int], List[Tuple[Sequence[Sequence[float]], Sequence[float]]]] = defaultdict(list)
+        for triangle_index in triangle_indices:
+            triangle = triangles[triangle_index]
+            heights = triangle.get("heights")
+            if not heights:
+                continue
+            points = triangle["vertices"]
+            xs = [float(point[0]) for point in points]
+            ys = [float(point[1]) for point in points]
+            for cell_x in range(math.floor(min(xs) / self.cell_size), math.floor(max(xs) / self.cell_size) + 1):
+                for cell_y in range(math.floor(min(ys) / self.cell_size), math.floor(max(ys) / self.cell_size) + 1):
+                    self.grid[(cell_x, cell_y)].append((points, heights))
+
+    @staticmethod
+    def _interpolate(point: Sequence[float], points, heights) -> Optional[float]:
+        (x1, y1), (x2, y2), (x3, y3) = (
+            (float(points[0][0]), float(points[0][1])),
+            (float(points[1][0]), float(points[1][1])),
+            (float(points[2][0]), float(points[2][1])),
+        )
+        denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3)
+        if abs(denominator) < 1e-12:
+            return None
+        x, y = float(point[0]), float(point[1])
+        a = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / denominator
+        b = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / denominator
+        c = 1.0 - a - b
+        if a < -1e-6 or b < -1e-6 or c < -1e-6:
+            return None
+        return a * float(heights[0]) + b * float(heights[1]) + c * float(heights[2])
+
+    def height_at(self, point: Sequence[float], search_cells: int = 2) -> Optional[float]:
+        cell_x = math.floor(float(point[0]) / self.cell_size)
+        cell_y = math.floor(float(point[1]) / self.cell_size)
+        nearest: Optional[Tuple[float, float]] = None
+        for radius in range(search_cells + 1):
+            for dx in range(-radius, radius + 1):
+                for dy in range(-radius, radius + 1):
+                    if radius and max(abs(dx), abs(dy)) != radius:
+                        continue
+                    for points, heights in self.grid.get((cell_x + dx, cell_y + dy), ()):
+                        inside = self._interpolate(point, points, heights)
+                        if inside is not None:
+                            return inside
+                        for corner, height in zip(points, heights):
+                            distance = (float(corner[0]) - float(point[0])) ** 2 + (float(corner[1]) - float(point[1])) ** 2
+                            if nearest is None or distance < nearest[0]:
+                                nearest = (distance, float(height))
+            if nearest is not None and radius >= 1:
+                break
+        return nearest[1] if nearest else None
+
+
 class _TriangleSurfaceIndex:
     def __init__(
         self,
@@ -1454,7 +1529,23 @@ def build_track_edges_interval_raycast_from_manifest(manifest: Dict[str, Any]) -
     if orientation_swaps:
         diagnostics.append({"code": "left_right_orientation_corrected", "message": "Interpolated or ambiguous samples were swapped to keep left/right orientation consistent", "count": orientation_swaps})
 
+    # Banking is the difference in height between the two edges at one station,
+    # so each edge needs its own height off the mesh. The AI line cannot give it:
+    # it is a single thread down the middle of the road.
+    height_index = _TriangleHeightIndex(triangles, selected_indices)
+    sampled_heights = 0
+    for sample in samples:
+        for edge_key, height_key in (("leftEdge", "leftElevation"), ("rightEdge", "rightElevation")):
+            point = sample.get(edge_key)
+            if not point:
+                continue
+            height = height_index.height_at(point)
+            if height is not None:
+                sample[height_key] = round(float(height), 4)
+                sampled_heights += 1
+
     metrics = _edge_metrics(samples, original_invalid)
+    metrics["edgeHeightSamples"] = sampled_heights
     interval_containing = sum(1 for sample in samples if sample.get("selectedIntervalContainsFastLane"))
     corrected = sum(1 for sample in samples if sample.get("correctionReason") == "corrected_from_nearest_interval")
     metrics.update(

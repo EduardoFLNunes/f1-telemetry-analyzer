@@ -70,7 +70,13 @@ def _cache_predates_marking_classification(cached: Dict[str, Any]) -> bool:
     # strips were excluded; a cache from before that carries loops that stain the
     # infield when filled.
     asphalt = cached.get("asphaltSurface") or {}
-    stale = markings.get("features") is None or asphalt.get("componentCount") is None
+    left = cached.get("boundsLeft") or []
+    banked = bool(left) and left[0].get("elevation") is not None
+    stale = (
+        markings.get("features") is None
+        or asphalt.get("componentCount") is None
+        or not banked
+    )
     if stale:
         logger.info("Rebuilding track cache written before the drawn map had its own geometry")
     return stale
@@ -136,11 +142,23 @@ def kn5_surface_cache_name(track_name: str, track_config: Optional[str]) -> str:
     return f"{_safe_fragment(track_name)}_{_safe_fragment(track_config)}_kn5_surface_interval_geometry"
 
 
-def _map_to_world_edge(points: Sequence[Sequence[float]]) -> List[Dict[str, float]]:
+def _map_to_world_edge(
+    points: Sequence[Sequence[float]],
+    elevations: Optional[Sequence[Optional[float]]] = None,
+) -> List[Dict[str, float]]:
+    """`y` is the world Z, as everything downstream expects; height rides apart.
+
+    The map is drawn flat in X/Z and `y` has long meant the second map axis here,
+    so the surface height read off the mesh goes in its own key rather than
+    displacing anything.
+    """
     edge = []
-    for point in points:
+    for index, point in enumerate(points):
         world_z = -float(point[1])
-        edge.append({"x": float(point[0]), "y": world_z, "z": world_z})
+        vertex = {"x": float(point[0]), "y": world_z, "z": world_z}
+        if elevations is not None and index < len(elevations) and elevations[index] is not None:
+            vertex["elevation"] = float(elevations[index])
+        edge.append(vertex)
     return edge
 
 
@@ -194,6 +212,8 @@ def track_data_from_interval_edges(result: Dict[str, Any], cache_path: Optional[
     center_map = [sample["centerline"] for sample in samples]
     left_map = [sample["leftEdge"] for sample in samples if sample.get("leftEdge")]
     right_map = [sample["rightEdge"] for sample in samples if sample.get("rightEdge")]
+    left_elevation = [sample.get("leftElevation") for sample in samples if sample.get("leftEdge")]
+    right_elevation = [sample.get("rightElevation") for sample in samples if sample.get("rightEdge")]
     distances, total_length = _distances(center_map)
     track_length = float(total_length or result.get("metrics", {}).get("trackLength", 0.0))
 
@@ -259,10 +279,18 @@ def track_data_from_interval_edges(result: Dict[str, Any], cache_path: Optional[
             "source": "assetto_corsa_track_files",
         },
         "centerline": centerline,
-        "boundsLeft": _map_to_world_edge(left_map),
-        "boundsRight": _map_to_world_edge(right_map),
-        "left_edge": _map_to_world_edge(left_map),
-        "right_edge": _map_to_world_edge(right_map),
+        "boundsLeft": _map_to_world_edge(left_map, left_elevation),
+        "boundsRight": _map_to_world_edge(right_map, right_elevation),
+        "left_edge": _map_to_world_edge(left_map, left_elevation),
+        "right_edge": _map_to_world_edge(right_map, right_elevation),
+        # Height of each edge, station by station, kept as its own arrays. The
+        # paint correction rebuilds boundsLeft/boundsRight from scratch and would
+        # drop a key carried on the points; it moves the edges by a metre or two
+        # sideways, which is far less than the resolution this is drawn at.
+        "edgeElevation": {
+            "left": [None if value is None else float(value) for value in left_elevation],
+            "right": [None if value is None else float(value) for value in right_elevation],
+        },
         "localWidth": widths,
         "asphaltSurface": result.get("asphaltSurface") or {"loops": []},
         "kerbGeometry": result.get("kerbs") or {"polygons": []},

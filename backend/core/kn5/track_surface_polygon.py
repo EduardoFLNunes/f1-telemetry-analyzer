@@ -25,6 +25,18 @@ def _map_point(world: Sequence[float]) -> List[float]:
     return [round(float(world[0]), 6), round(float(-world[2]), 6)]
 
 
+def _map_height(world: Sequence[float]) -> float:
+    """The vertex height, kept beside the flattened point.
+
+    The map is drawn in X/Z and everything downstream indexes `vertices` as 2D,
+    so the height rides alongside rather than inside it. Without this the only
+    height in the system came from the AI line, which is a single thread down the
+    middle of the road -- enough to say the track climbs, not enough to say a
+    corner is banked.
+    """
+    return round(float(world[1]), 6)
+
+
 def _bounds2() -> Tuple[List[float], List[float]]:
     return [float("inf"), float("inf")], [float("-inf"), float("-inf")]
 
@@ -179,11 +191,13 @@ class Kn5TrackSurfacePolygonBuilder:
         should_capture = matched_surface is not None
 
         vertices: List[List[float]] = []
+        heights: List[float] = []
         for _ in range(vertex_count):
             x, y, z = struct.unpack_from("<3f", reader.data, reader.tell())
             world = _transform_point((x, y, z), self.model_position, self.model_rotation)
             if should_capture:
                 vertices.append(_map_point(world))
+                heights.append(_map_height(world))
             reader.seek(reader.tell() + KN5_STATIC_VERTEX_STRIDE)
 
         index_count = reader.u32()
@@ -219,6 +233,7 @@ class Kn5TrackSurfacePolygonBuilder:
                     "mesh": mesh_name,
                     "surface": matched_surface,
                     "vertices": points,
+                    "heights": [heights[index] for index in tri_indices],
                     "area": round(area, 6),
                 }
             )

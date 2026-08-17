@@ -41,6 +41,7 @@ class CacheSerializer:
             "validation": track_data.get("validation", {}),
             "asphaltPolygon": track_data.get("asphaltPolygon"),
             "asphaltSurface": track_data.get("asphaltSurface"),
+            "edgeElevation": track_data.get("edgeElevation"),
             "pitVisualGeometry": track_data.get("pitVisualGeometry"),
             "visualCenterline": track_data.get("visualCenterline"),
             "kerbGeometry": track_data.get("kerbGeometry"),
@@ -114,6 +115,7 @@ class CacheSerializer:
             "validation": data.get("validation", {}),
             "asphaltPolygon": data.get("asphaltPolygon"),
             "asphaltSurface": data.get("asphaltSurface"),
+            "edgeElevation": data.get("edgeElevation"),
             "pitVisualGeometry": data.get("pitVisualGeometry"),
             "visualCenterline": data.get("visualCenterline"),
             "kerbGeometry": data.get("kerbGeometry"),
@@ -170,6 +172,7 @@ class CacheSerializer:
             "validation": track_data.get("validation", {}),
             "asphaltPolygon": track_data.get("asphaltPolygon"),
             "asphaltSurface": track_data.get("asphaltSurface"),
+            "edgeElevation": track_data.get("edgeElevation"),
             "pitVisualGeometry": track_data.get("pitVisualGeometry"),
             "kerbGeometry": track_data.get("kerbGeometry"),
             "markingGeometry": track_data.get("markingGeometry"),
@@ -248,11 +251,18 @@ class CacheSerializer:
     def _edge_to_arrays(edge: List[Dict[str, Any]]) -> Dict[str, List[float]]:
         x = [float(p["x"]) for p in edge]
         world_z = [float(p.get("z", p.get("y", 0.0))) for p in edge]
-        return {
+        arrays = {
             "x": x,
             "y": [-value for value in world_z],
             "z": world_z,
         }
+        # Height of the surface at this edge, read off the mesh. Present only for
+        # tracks extracted since banking was sampled; the 3D view needs both
+        # edges to have it, so a partial edge is dropped rather than half drawn.
+        elevation = [p.get("elevation") for p in edge]
+        if elevation and all(value is not None for value in elevation):
+            arrays["elevation"] = [float(value) for value in elevation]
+        return arrays
 
     @staticmethod
     def _visual_centerline_to_arrays(visual: Any) -> Any:
