@@ -300,7 +300,7 @@ electron-builder → Empacotamento e instalador NSIS
 
 ## Testes
 
-242 testes automatizados (`backend/tests`, `unittest`) cobrem análise de
+245 testes automatizados (`backend/tests`, `unittest`) cobrem análise de
 racing line, comparação, qualidade de dados, gravação de sessão, física do
 carro, protocolo UDP de oponentes e o gate de memória compartilhada.
 

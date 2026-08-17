@@ -1,4 +1,7 @@
 import asyncio
+import json
+import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -93,6 +96,94 @@ class ExternalReferenceTests(unittest.TestCase):
             self.assertIsNotNone(loaded)
             self.assertEqual(reference.metadata.reference_id, loaded.metadata.reference_id)
             self.assertFalse("samples" in listed[0])
+
+    def test_repository_starts_even_where_it_cannot_write(self):
+        # The packaged app installed under Program Files cannot write inside its
+        # own directory. Creating this repository used to raise there, and the
+        # backend died on import before serving a request.
+        with tempfile.TemporaryDirectory() as tmp:
+            blocked = Path(tmp) / "not_a_directory"
+            blocked.write_text("a file where a directory would have to go", encoding="utf-8")
+
+            repository = ExternalReferenceRepository(Path(tmp), data_dir=blocked / "external_references")
+
+            self.assertEqual([], repository.list_references())
+            self.assertIsNone(repository.get("qualquer"))
+            self.assertIsNone(repository.select_best_for_track("interlagos"))
+
+    def test_repository_writes_where_it_is_told_and_not_beside_the_code(self):
+        # main.py points this at the runtime root; nothing may land under the
+        # resource root, which is the read-only install directory when packaged.
+        with tempfile.TemporaryDirectory() as tmp:
+            resource_root = Path(tmp) / "resources"
+            runtime_root = Path(tmp) / "runtime"
+            resource_root.mkdir()
+            runtime_root.mkdir()
+
+            repository = ExternalReferenceRepository(
+                resource_root,
+                data_dir=runtime_root / "data" / "external_references",
+            )
+            reference = ExternalReferenceNormalizer().normalize_fastf1_telemetry(
+                _telemetry_fixture(),
+                year=2024,
+                event="Brazil",
+                session="Q",
+                driver="VER",
+            )
+            repository.save(reference)
+
+            written = list((runtime_root / "data" / "external_references").glob("*.json"))
+            self.assertEqual(1, len(written))
+            self.assertEqual([], list(resource_root.rglob("*.json")))
+
+    def test_backend_keeps_written_data_out_of_the_install_directory(self):
+        """The wiring that broke, checked the way the packaged app is started.
+
+        In development both roots are the repository, so asserting on paths here
+        proves nothing -- the bug only appears once the resource root is a
+        read-only install and the runtime root is somewhere in the user profile.
+        So this boots `main` in a subprocess with the two roots apart, exactly as
+        `desktop_backend_runner` does, and asks it where it would write.
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            resource_root = Path(tmp) / "resources"
+            runtime_root = Path(tmp) / "runtime"
+            resource_root.mkdir()
+            runtime_root.mkdir()
+
+            script = (
+                "import json, main;"
+                "print(json.dumps({"
+                "'references': str(main.external_reference_repository.data_dir),"
+                "'fastf1': str(main.fastf1_reference_provider.cache_dir),"
+                "'trackCache': str(main.TRACK_CACHE_DIR),"
+                "}))"
+            )
+            environment = dict(os.environ)
+            environment["AT_BACKEND_RESOURCE_ROOT"] = str(resource_root)
+            environment["AT_BACKEND_RUNTIME_ROOT"] = str(runtime_root)
+            environment.pop("AT_BACKEND_REPO_ROOT", None)
+            result = subprocess.run(
+                [sys.executable, "-c", script],
+                cwd=str(BACKEND_DIR),
+                env=environment,
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+            self.assertEqual(0, result.returncode, msg=result.stderr[-2000:])
+            written = json.loads(result.stdout.strip().splitlines()[-1])
+
+            for name, directory in written.items():
+                self.assertTrue(
+                    Path(directory).is_relative_to(runtime_root),
+                    msg=f"{name} escreve fora do runtime root: {directory}",
+                )
+                self.assertFalse(
+                    Path(directory).is_relative_to(resource_root),
+                    msg=f"{name} escreve dentro da instalacao: {directory}",
+                )
 
     def test_fastf1_provider_fails_safely_without_session_data(self):
         class FakeCache:

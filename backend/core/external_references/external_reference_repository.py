@@ -1,19 +1,42 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 
 from .external_reference_models import ExternalReferenceLap, SOURCE_FASTF1
+
+logger = logging.getLogger(__name__)
 
 
 class ExternalReferenceRepository:
     def __init__(self, repo_root: Path, *, data_dir: Optional[Path] = None):
         self.repo_root = Path(repo_root)
         self.data_dir = Path(data_dir) if data_dir else self.repo_root / "data" / "external_references"
-        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self._ensure_data_dir()
+
+    def _ensure_data_dir(self) -> bool:
+        """Make the directory if we are allowed to, and carry on if we are not.
+
+        Creating it used to happen at construction and was allowed to raise,
+        which meant importing this module could take the whole backend down.
+        That is what happened when the desktop app was installed under
+        ``Program Files``: the directory sits inside the install, the user
+        running the app cannot write there, and the process died before serving
+        a single request. Where the data belongs is the caller's decision --
+        `main.py` points this at the runtime root -- but a directory that cannot
+        be made is a missing feature, not a reason to refuse to start.
+        """
+        try:
+            self.data_dir.mkdir(parents=True, exist_ok=True)
+            return True
+        except OSError as error:
+            logger.warning("External reference directory unavailable at %s: %s", self.data_dir, error)
+            return False
 
     def save(self, reference: ExternalReferenceLap) -> ExternalReferenceLap:
+        self._ensure_data_dir()
         path = self._path(reference.metadata.reference_id)
         reference.metadata.cache_path = str(path)
         path.write_text(json.dumps(reference.to_api(include_samples=True), ensure_ascii=False, indent=2), encoding="utf-8")

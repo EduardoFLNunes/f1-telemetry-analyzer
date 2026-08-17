@@ -104,8 +104,19 @@ recent_coaching_events: List[Dict[str, Any]] = []
 session_repository = SessionRepository(recording_config_from_env(RUNTIME_ROOT).output_root)
 _validation_sessions_cache: List[Dict[str, Any]] = []
 _validation_sessions_cache_at = 0.0
-external_reference_repository = ExternalReferenceRepository(REPO_ROOT)
-fastf1_reference_provider = FastF1ReferenceProvider(REPO_ROOT, external_reference_repository)
+# Anything written goes under the runtime root, never under the install. The
+# resource root is read-only for whoever runs the packaged app -- under
+# `Program Files` it is read-only outright -- and the two directories below are
+# the ones this backend writes to at runtime.
+external_reference_repository = ExternalReferenceRepository(
+    REPO_ROOT,
+    data_dir=RUNTIME_ROOT / "data" / "external_references",
+)
+fastf1_reference_provider = FastF1ReferenceProvider(
+    REPO_ROOT,
+    external_reference_repository,
+    cache_dir=RUNTIME_ROOT / "data" / "fastf1_cache",
+)
 assisted_analysis_service = AssistedAnalysisService(
     REPO_ROOT,
     telemetry_buffer,
