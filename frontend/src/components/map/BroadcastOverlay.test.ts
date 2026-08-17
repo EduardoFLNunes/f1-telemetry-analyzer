@@ -4,6 +4,8 @@ import {
   drawBroadcastCar,
   drawBroadcastHud,
   drawBroadcastTrail,
+  driveBalance,
+  driveColour,
   driverState,
   hudMetrics,
   speedKmh,
@@ -23,25 +25,74 @@ function drive(count: number, options: { throttle?: number; brake?: number; step
   }));
 }
 
-describe('driverState', () => {
-  it('reads the pedals, with the brake winning over the throttle', () => {
-    expect(driverState({ throttle: 1, brake: 0 })).toBe(DRIVER_STATES.power);
-    expect(driverState({ throttle: 0, brake: 0.9 })).toBe(DRIVER_STATES.brake);
-    // Both at once is a driver trailing the brake into a corner; that is
-    // braking, and colouring it green would say the opposite.
-    expect(driverState({ throttle: 1, brake: 0.4 })).toBe(DRIVER_STATES.brake);
-    expect(driverState({ throttle: 0.02, brake: 0 })).toBe(DRIVER_STATES.coast);
-    expect(driverState(null)).toBe(DRIVER_STATES.coast);
+describe('driveBalance', () => {
+  it('reads the pedals as one number, with the brake deciding', () => {
+    expect(driveBalance({ throttle: 1, brake: 0 })).toBeCloseTo(1, 6);
+    expect(driveBalance({ throttle: 0, brake: 1 })).toBeCloseTo(-1, 6);
+    expect(driveBalance({ throttle: 0, brake: 0 })).toBe(0);
+    // Trailing the brake into a corner is braking, whatever the throttle says.
+    expect(driveBalance({ throttle: 1, brake: 0.4 })).toBeCloseTo(-0.4, 6);
   });
 
   it('accepts pedals given as percentages', () => {
-    expect(driverState({ throttle: 80, brake: 0 })).toBe(DRIVER_STATES.power);
-    expect(driverState({ throttle: 0, brake: 45 })).toBe(DRIVER_STATES.brake);
+    expect(driveBalance({ throttle: 80, brake: 0 })).toBeCloseTo(0.8, 6);
+    expect(driveBalance({ throttle: 0, brake: 45 })).toBeCloseTo(-0.45, 6);
   });
 
-  it('keeps the three states apart by colour', () => {
-    const colours = new Set(Object.values(DRIVER_STATES).map((state) => state.colour.join(',')));
-    expect(colours.size).toBe(3);
+  it('is zero for a sample that says nothing', () => {
+    expect(driveBalance(null)).toBe(0);
+    expect(driveBalance({ throttle: 'abc' })).toBe(0);
+  });
+});
+
+describe('driveColour', () => {
+  it('moves without a step from the brake to the power', () => {
+    // The seam this replaced: green until one sample, orange from the next.
+    let previous = driveColour(-1);
+    let biggestJump = 0;
+    for (let balance = -1; balance <= 1.0001; balance += 0.02) {
+      const colour = driveColour(balance);
+      const jump = Math.abs(colour[0] - previous[0])
+        + Math.abs(colour[1] - previous[1])
+        + Math.abs(colour[2] - previous[2]);
+      biggestJump = Math.max(biggestJump, jump);
+      previous = colour;
+    }
+    expect(biggestJump).toBeLessThan(20);
+  });
+
+  it('keeps the two ends far apart, so the trail still says which is which', () => {
+    const brake = driveColour(-1);
+    const power = driveColour(1);
+    expect(brake[0]).toBeGreaterThan(power[0]);   // red channel: braking is warm
+    expect(power[1]).toBeGreaterThan(brake[1]);   // green channel: power is green
+  });
+
+  it('passes through a neutral tone at coasting', () => {
+    const [r, g, b] = driveColour(0);
+    expect(Math.abs(r - g)).toBeLessThan(20);
+    expect(Math.abs(g - b)).toBeLessThan(20);
+  });
+
+  it('clamps anything beyond the pedals', () => {
+    expect(driveColour(5)).toEqual(driveColour(1));
+    expect(driveColour(-5)).toEqual(driveColour(-1));
+    expect(driveColour(NaN)).toEqual(driveColour(0));
+  });
+});
+
+describe('driverState', () => {
+  it('names what the car is doing', () => {
+    expect(driverState({ throttle: 1, brake: 0 }).label).toBe(DRIVER_STATES.power.label);
+    expect(driverState({ throttle: 0, brake: 0.9 }).label).toBe(DRIVER_STATES.brake.label);
+    expect(driverState({ throttle: 1, brake: 0.4 }).label).toBe(DRIVER_STATES.brake.label);
+    expect(driverState({ throttle: 0.02, brake: 0 }).label).toBe(DRIVER_STATES.coast.label);
+    expect(driverState(null).label).toBe(DRIVER_STATES.coast.label);
+  });
+
+  it('carries the colour of its own balance', () => {
+    const state = driverState({ throttle: 0, brake: 0.6 });
+    expect(state.colour).toEqual(driveColour(-0.6));
   });
 });
 
@@ -106,11 +157,28 @@ describe('drawBroadcastTrail', () => {
     const samples = [...drive(20), ...drive(20, { throttle: 0, brake: 1, step: 0.1 })
       .map((sample, index) => ({ ...sample, lap_time: 2 + index * 0.1, mapPosition: { x: 80 + index * 4, y: 0 } }))];
     drawBroadcastTrail(ctx, samples, 4);
-    const colours = callsOf(ctx, 'stroke').map((call) => parseRgba(call.strokeStyle)!);
-    const power = DRIVER_STATES.power.colour;
-    const brake = DRIVER_STATES.brake.colour;
-    expect(colours.some((c) => c.r === power[0] && c.g === power[1])).toBe(true);
-    expect(colours.some((c) => c.r === brake[0] && c.g === brake[1])).toBe(true);
+    const flat = callsOf(ctx, 'stroke')
+      .map((call) => parseRgba(call.strokeStyle))
+      .filter((colour): colour is NonNullable<typeof colour> => Boolean(colour));
+    const power = driveColour(1);
+    const brake = driveColour(-1);
+    expect(flat.some((c) => c.r === power[0] && c.g === power[1])).toBe(true);
+    expect(flat.some((c) => c.r === brake[0] && c.g === brake[1])).toBe(true);
+  });
+
+  it('carries a change of pedal along the segment instead of at the joint', () => {
+    // Twenty samples a second is coarse: a lift lands between two points, and a
+    // flat colour per segment shows it as a step.
+    const ctx = createFakeContext();
+    const samples = [
+      { lap_time: 0.0, mapPosition: { x: 0, y: 0 }, throttle: 1, brake: 0 },
+      { lap_time: 0.1, mapPosition: { x: 4, y: 0 }, throttle: 1, brake: 0 },
+      { lap_time: 0.2, mapPosition: { x: 8, y: 0 }, throttle: 0, brake: 1 },
+      { lap_time: 0.3, mapPosition: { x: 12, y: 0 }, throttle: 0, brake: 1 },
+    ];
+    drawBroadcastTrail(ctx, samples, 4);
+    const gradients = callsOf(ctx, 'stroke').filter((call) => typeof call.strokeStyle === 'object');
+    expect(gradients.length).toBe(1);
   });
 
   it('does not draw a chord across the infield when the lap wraps', () => {
@@ -158,7 +226,7 @@ describe('drawBroadcastCar', () => {
     expect(discs.every((call) => call.args[0] === 10 && call.args[1] === 20)).toBe(true);
     expect(discs[0].args[2]).toBeGreaterThan(discs[1].args[2]);
     const body = callsOf(ctx, 'fill').at(-1)!;
-    const [r, g, b] = DRIVER_STATES.brake.colour;
+    const [r, g, b] = driveColour(-1);
     expect(body.fillStyle).toBe(`rgb(${r},${g},${b})`);
     expect(callsOf(ctx, 'stroke')[0].strokeStyle).toBe('#ffffff');
   });
@@ -191,22 +259,52 @@ describe('drawBroadcastHud', () => {
     expect(text.some((line) => line.includes('1:13.210'))).toBe(true);
   });
 
-  it('stacks the readout up the middle of the panel', () => {
+  it('stacks the readout into the bottom right corner, clear of the car', () => {
+    // The car sits dead centre under the follow camera; a centred readout was
+    // printed on top of the thing it describes.
     const ctx = createFakeContext();
     drawBroadcastHud(ctx, 700, 340, frame, { caption: 'INTERLAGOS' });
     const lines = callsOf(ctx, 'fillText');
-    expect(lines.every((call) => call.args[1] === 350)).toBe(true);
-    expect(ctx.textAlign).toBe('center');
-    // Top to bottom: state, speed, unit, lap time, caption.
+    expect(ctx.textAlign).toBe('right');
+
+    const xs = lines.map((call) => call.args[1]);
+    expect(new Set(xs).size).toBe(1);
+    expect(xs[0]).toBeLessThan(700);
+    expect(xs[0]).toBeGreaterThan(700 * 0.9);
+
     const ys = lines.map((call) => call.args[2]);
-    expect(ys[ys.length - 1]).toBeLessThan(340);
+    expect(Math.min(...ys)).toBeGreaterThan(340 * 0.5);
+    expect(Math.max(...ys)).toBeLessThan(340);
     expect(new Set(ys).size).toBe(lines.length);
   });
 
   it('draws in screen space so it holds still while the circuit moves', () => {
     const ctx = createFakeContext();
     drawBroadcastHud(ctx, 700, 340, frame);
-    expect(callsOf(ctx, 'resetTransform').length).toBe(1);
+    // The base device-pixel transform, not a bare reset: the numbers are laid
+    // out in CSS pixels, and resetting drops the ratio they are measured in.
+    const base = callsOf(ctx, 'setTransform');
+    expect(base.length).toBe(1);
+    expect(base[0].args).toEqual([1, 0, 0, 1, 0, 0]);
+    expect(callsOf(ctx, 'resetTransform').length).toBe(0);
+  });
+
+  it('lands in the corner whatever the pixel ratio of the screen', () => {
+    // At 2x the readout used to be drawn in device pixels while measured in CSS
+    // pixels, which parked it in the middle of the panel.
+    const previous = (globalThis as any).window;
+    (globalThis as any).window = { devicePixelRatio: 2 };
+    try {
+      const ctx = createFakeContext();
+      drawBroadcastHud(ctx, 700, 340, frame);
+      expect(callsOf(ctx, 'setTransform')[0].args).toEqual([2, 0, 0, 2, 0, 0]);
+      const xs = callsOf(ctx, 'fillText').map((call) => call.args[1]);
+      expect(new Set(xs).size).toBe(1);
+      expect(xs[0]).toBeGreaterThan(700 * 0.9);
+    } finally {
+      if (previous === undefined) delete (globalThis as any).window;
+      else (globalThis as any).window = previous;
+    }
   });
 
   it('shows the state colour, not a fixed one', () => {
@@ -214,7 +312,7 @@ describe('drawBroadcastHud', () => {
     drawBroadcastHud(braking, 700, 340, { ...frame, throttle: 0, brake: 1 });
     // The readout is drawn bottom-up, so the state label is the last line out.
     const label = callsOf(braking, 'fillText').at(-1)!;
-    const [r, g, b] = DRIVER_STATES.brake.colour;
+    const [r, g, b] = driveColour(-1);
     expect(label.args[0]).toBe(DRIVER_STATES.brake.label);
     expect(label.fillStyle).toBe(`rgb(${r},${g},${b})`);
   });

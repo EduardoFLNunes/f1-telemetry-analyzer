@@ -335,7 +335,12 @@ describe('drawMiniMap', () => {
   it('draws in screen space so it stays put while the map moves under it', () => {
     const ctx = createFakeContext();
     drawMiniMap(ctx, 900, 600, track(), { x: 400, y: 0 });
-    expect(callsOf(ctx, 'resetTransform').length).toBe(1);
+    // Screen space means the base device-pixel transform, not no transform at
+    // all: dropping it puts the inset in a corner of its own on a HiDPI screen.
+    const base = callsOf(ctx, 'setTransform');
+    expect(base.length).toBe(1);
+    expect(base[0].args).toEqual([1, 0, 0, 1, 0, 0]);
+    expect(callsOf(ctx, 'resetTransform').length).toBe(0);
     // And it clips, so a car off the far side of the outline cannot spill out.
     expect(callsOf(ctx, 'clip').length).toBe(1);
   });

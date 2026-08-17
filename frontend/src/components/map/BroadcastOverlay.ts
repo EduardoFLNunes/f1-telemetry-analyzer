@@ -1,4 +1,5 @@
 import { resolveSampleMapPosition, MapPosition } from '../../utils/spatialTransform';
+import { screenSpace } from './OverlayRenderer';
 import { formatLapTime } from '../../utils/lapFormat';
 
 /**
@@ -9,12 +10,13 @@ import { formatLapTime } from '../../utils/lapFormat';
  * shape, because at this zoom a shape is a smudge and a disc is a position. The
  * road behind it is coloured by what the driver was doing there and fades out
  * over a few seconds, which turns the map into a short memory instead of a
- * diagram. The readout sits in the middle, big enough to be read from across a
- * room, because that is the whole point of a view that only shows one car.
+ * diagram. The readout sits in the bottom right corner, big enough to be read
+ * from across a room and clear of the car it describes.
  *
- * The colours say what the pedals did: on power, braking, or neither. A
- * broadcast would say DEPLOY and REGEN there; we do not model an ERS, and
- * inventing one on top of throttle and brake would be a graphic that lies.
+ * The colours say what the pedals did, on a ramp from full brake through
+ * coasting to full power. A broadcast would say DEPLOY and REGEN there; we do
+ * not model an ERS, and inventing one on top of throttle and brake would be a
+ * graphic that lies.
  */
 
 const TRAIL_SECONDS = 14;
@@ -27,13 +29,37 @@ const TRAIL_METERS = 1.5;
 const TRAIL_MIN_PX = 3.2;
 const TRAIL_TAIL_ALPHA = 0.06;
 
+export type Rgb = [number, number, number];
+
+/**
+ * The pedals as one number, and that number as a colour.
+ *
+ * Three fixed colours drew a hard seam every time the driver lifted: green
+ * until one sample, orange from the next, with nothing in between. What the
+ * driver actually does is continuous -- ease off, coast, squeeze the brake --
+ * and the road behind the car should say so. So the pedals collapse to a single
+ * balance from -1 (full brake) through 0 (coasting) to +1 (full power), and the
+ * colour is read off a ramp at that point.
+ *
+ * The brake decides whenever it is touched, even with the throttle still open:
+ * trailing the brake into a corner is braking, and painting it green would say
+ * the opposite.
+ */
+const DRIVE_RAMP: Array<[number, Rgb]> = [
+  [-1.00, [239, 68, 68]],     // full brake
+  [-0.35, [249, 115, 22]],    // easing the brake off
+  [0.00, [161, 161, 170]],    // coasting
+  [0.35, [163, 230, 53]],     // feeding the throttle back in
+  [1.00, [34, 197, 94]],      // full power
+];
+
 export const DRIVER_STATES = {
-  power: { label: 'ACELERA', colour: [34, 197, 94] as [number, number, number] },
-  brake: { label: 'FREIO', colour: [249, 115, 22] as [number, number, number] },
-  coast: { label: 'INERCIA', colour: [161, 161, 170] as [number, number, number] },
+  power: { label: 'ACELERA' },
+  brake: { label: 'FREIO' },
+  coast: { label: 'INERCIA' },
 };
 
-export type DriverState = typeof DRIVER_STATES[keyof typeof DRIVER_STATES];
+export type DriverState = { label: string; colour: Rgb; balance: number };
 
 function pedal(value: unknown): number {
   const number = Number(value);
@@ -41,11 +67,38 @@ function pedal(value: unknown): number {
   return Math.max(0, Math.min(1, number > 1 ? number / 100 : number));
 }
 
-/** What the car is doing, in the three states a colour can carry. */
+/** -1 hard on the brake, 0 coasting, +1 hard on the power. */
+export function driveBalance(sample: any): number {
+  const brake = pedal(sample?.brake);
+  if (brake > 0.02) return -brake;
+  return pedal(sample?.throttle);
+}
+
+/** The ramp, read at one point. */
+export function driveColour(balance: number): Rgb {
+  const point = Math.max(-1, Math.min(1, Number(balance) || 0));
+  for (let index = 1; index < DRIVE_RAMP.length; index += 1) {
+    const [toStop, to] = DRIVE_RAMP[index];
+    if (point > toStop && index < DRIVE_RAMP.length - 1) continue;
+    const [fromStop, from] = DRIVE_RAMP[index - 1];
+    const span = toStop - fromStop;
+    const t = span === 0 ? 0 : Math.max(0, Math.min(1, (point - fromStop) / span));
+    return [
+      Math.round(from[0] + (to[0] - from[0]) * t),
+      Math.round(from[1] + (to[1] - from[1]) * t),
+      Math.round(from[2] + (to[2] - from[2]) * t),
+    ];
+  }
+  return DRIVE_RAMP[DRIVE_RAMP.length - 1][1];
+}
+
+/** What the car is doing: a word for the readout, a colour for the road. */
 export function driverState(sample: any): DriverState {
-  if (pedal(sample?.brake) > 0.05) return DRIVER_STATES.brake;
-  if (pedal(sample?.throttle) > 0.12) return DRIVER_STATES.power;
-  return DRIVER_STATES.coast;
+  const balance = driveBalance(sample);
+  const label = balance <= -0.02
+    ? DRIVER_STATES.brake.label
+    : (balance >= 0.12 ? DRIVER_STATES.power.label : DRIVER_STATES.coast.label);
+  return { label, colour: driveColour(balance), balance };
 }
 
 export function speedKmh(sample: any): number | null {
@@ -95,6 +148,17 @@ export function trailWindow(samples: any[], seconds = TRAIL_SECONDS): any[] {
   return thinned;
 }
 
+/** How far apart two ramp colours are, summed over the channels. */
+function colourDistance(from: Rgb, to: Rgb): number {
+  return Math.abs(from[0] - to[0]) + Math.abs(from[1] - to[1]) + Math.abs(from[2] - to[2]);
+}
+
+function rgba(colour: Rgb, alpha: number): string {
+  return `rgba(${colour[0]},${colour[1]},${colour[2]},${alpha.toFixed(3)})`;
+}
+
+const TRAIL_BLEND_DELTA = 24;
+
 type TrailPoint = { position: MapPosition; sample: any };
 
 function trailPoints(samples: any[]): TrailPoint[] {
@@ -135,8 +199,24 @@ export function drawBroadcastTrail(ctx: CanvasRenderingContext2D, samples: any[]
 
     const age = index / (points.length - 1);
     const alpha = TRAIL_TAIL_ALPHA + (1 - TRAIL_TAIL_ALPHA) * age * age;
-    const [r, g, b] = driverState(current.sample).colour;
-    ctx.strokeStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
+    const from = driveColour(driveBalance(previous.sample));
+    const to = driveColour(driveBalance(current.sample));
+
+    // Where the pedals changed between two samples, the segment carries the
+    // change along its own length instead of switching colour at the joint.
+    // Twenty samples a second is coarse enough that a lift shows up as a step
+    // otherwise, which is the seam this is here to remove.
+    if (colourDistance(from, to) > TRAIL_BLEND_DELTA) {
+      const gradient = ctx.createLinearGradient(
+        previous.position.x, previous.position.y,
+        current.position.x, current.position.y,
+      );
+      gradient.addColorStop(0, rgba(from, alpha));
+      gradient.addColorStop(1, rgba(to, alpha));
+      ctx.strokeStyle = gradient;
+    } else {
+      ctx.strokeStyle = rgba(to, alpha);
+    }
     ctx.beginPath();
     ctx.moveTo(previous.position.x, previous.position.y);
     ctx.lineTo(current.position.x, current.position.y);
@@ -177,7 +257,10 @@ export function drawBroadcastCar(ctx: CanvasRenderingContext2D, frame: any, scal
 
 /** Sizes for the readout, from the panel it has to fit in. */
 export function hudMetrics(width: number, height: number) {
-  const speed = Math.max(20, Math.min(64, Math.round(Math.min(height * 0.20, width * 0.11))));
+  // The stack is about two and a half times the speed digits tall, so this cap
+  // keeps the whole readout inside the bottom half of the panel -- clear of the
+  // camera controls, which live in the opposite corner.
+  const speed = Math.max(20, Math.min(64, Math.round(Math.min(height * 0.18, width * 0.11))));
   return {
     speed,
     label: Math.max(9, Math.round(speed * 0.26)),
@@ -187,7 +270,14 @@ export function hudMetrics(width: number, height: number) {
 }
 
 /**
- * Speed, state and lap time, centred under the car.
+ * Speed, state and lap time, stacked into the bottom right corner.
+ *
+ * It started centred, which is where a broadcast puts it -- and a broadcast can
+ * afford that because the camera keeps the car off the middle of the frame.
+ * Ours parks the car dead centre, so the number sat on top of the thing it was
+ * describing. In the corner it reads just as well and covers nothing: the car
+ * is at the centre, the lap is in the opposite corner, and the road between
+ * them stays visible.
  *
  * Drawn in screen space after the camera is restored, so it holds still while
  * the circuit moves behind it.
@@ -204,13 +294,13 @@ export function drawBroadcastHud(
   const state = driverState(frame);
   const speed = speedKmh(frame);
   const font = hudMetrics(width, height);
-  const centre = Math.round(width / 2);
+  const anchor = Math.round(width - Math.max(14, font.speed * 0.35));
   const lapTime = options.lapTime ?? Number(frame?.lap_time ?? frame?.lapTime);
   const caption = options.caption;
 
   ctx.save();
-  ctx.resetTransform();
-  ctx.textAlign = 'center';
+  screenSpace(ctx);
+  ctx.textAlign = 'right';
   ctx.textBaseline = 'alphabetic';
   // The readout sits over whatever the camera is on -- often grey asphalt, not
   // the black the numbers were designed against. The shadow is what keeps them
@@ -223,28 +313,28 @@ export function drawBroadcastHud(
   if (caption) {
     ctx.font = `${font.lap}px "JetBrains Mono", monospace`;
     ctx.fillStyle = 'rgba(148,163,184,0.6)';
-    ctx.fillText(caption, centre, Math.round(height - font.lap * 0.9));
+    ctx.fillText(caption, anchor, Math.round(height - font.lap * 0.9));
   }
 
   ctx.font = `700 ${font.lap}px "JetBrains Mono", monospace`;
   ctx.fillStyle = 'rgba(226,232,240,0.85)';
-  ctx.fillText(`VOLTA  ${formatLapTime(Number.isFinite(lapTime as number) ? (lapTime as number) : null)}`, centre, cursor);
+  ctx.fillText(`VOLTA  ${formatLapTime(Number.isFinite(lapTime as number) ? (lapTime as number) : null)}`, anchor, cursor);
 
   cursor -= Math.round(font.unit * 1.7);
   ctx.font = `${font.unit}px "JetBrains Mono", monospace`;
   ctx.fillStyle = 'rgba(226,232,240,0.72)';
-  ctx.fillText('KM/H', centre, cursor);
+  ctx.fillText('KM/H', anchor, cursor);
 
   cursor -= Math.round(font.speed * 0.95);
   ctx.font = `700 ${font.speed}px "JetBrains Mono", monospace`;
   ctx.fillStyle = '#ffffff';
-  ctx.fillText(speed === null ? '--' : String(Math.round(speed)), centre, cursor);
+  ctx.fillText(speed === null ? '--' : String(Math.round(speed)), anchor, cursor);
 
   cursor -= Math.round(font.speed * 0.62);
   const [r, g, b] = state.colour;
   ctx.font = `700 ${font.label}px "JetBrains Mono", monospace`;
   ctx.fillStyle = `rgb(${r},${g},${b})`;
-  ctx.fillText(state.label, centre, cursor);
+  ctx.fillText(state.label, anchor, cursor);
 
   ctx.restore();
   return true;

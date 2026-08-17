@@ -4,7 +4,7 @@ import { useRenderCounter } from '../../hooks/useRenderCounter';
 import { api } from '../../api/client';
 import { drawCar, drawOpponentCar } from './CarRenderer';
 import { applyCameraTransform, computeTrackBounds, CameraState, FOLLOW_VIEW_METERS } from './CameraController';
-import { drawHud, drawMiniMap, drawTrackSurface } from './OverlayRenderer';
+import { drawHud, drawMiniMap, drawTrackSurface, screenSpace } from './OverlayRenderer';
 import { drawBroadcastCar, drawBroadcastHud, drawBroadcastTrail } from './BroadcastOverlay';
 import { resolveSampleMapPosition, MapPosition } from '../../utils/spatialTransform';
 import {
@@ -551,7 +551,7 @@ function drawReplayLapOverlay(
 function drawReplayLegend(ctx: CanvasRenderingContext2D, width: number, height: number, replay: any, mode: string = 'LINE_ONLY') {
   if (!replay?.active) return;
   ctx.save();
-  ctx.resetTransform();
+  screenSpace(ctx);
 
   const safeMode = (RACING_LINE_OVERLAY_MODES as readonly string[]).includes(mode) ? mode : 'LINE_ONLY';
   const panelWidth = Math.min(292, Math.max(230, width - 28));

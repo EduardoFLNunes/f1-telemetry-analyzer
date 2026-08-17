@@ -1,4 +1,5 @@
 import { transformWorldToMapPoint, MapPosition } from '../../utils/spatialTransform';
+import { screenSpace } from './OverlayRenderer';
 
 export const RACING_LINE_OVERLAY_MODES = [
   'LINE_ONLY',
@@ -642,7 +643,7 @@ export function drawPreparedRacingLineOverlay(
 export function drawRacingLineLegend(ctx: CanvasRenderingContext2D, width: number, height: number, prepared: PreparedRacingLineOverlay | null | undefined, mode: string = 'LINE_ONLY') {
   if (!prepared) return;
   ctx.save();
-  ctx.resetTransform();
+  screenSpace(ctx);
 
   const status = prepared.status || 'INSUFFICIENT_DATA';
   const ready = status === 'READY' && (prepared.baseChunks.length || prepared.rawEntries.length || prepared.entries.length);

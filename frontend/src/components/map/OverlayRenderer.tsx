@@ -133,6 +133,20 @@ export function reliefColorAt(mode: ReliefMode, t: number): string {
   return rampColor(mode === 'GRADIENT' ? GRADIENT_STOPS : ELEVATION_STOPS, t);
 }
 
+/**
+ * Back to screen space, without throwing away the device pixel ratio.
+ *
+ * The canvas is sized in device pixels and drawn through a `dpr` transform, so
+ * everything below is authored in CSS pixels. `resetTransform` drops that
+ * transform along with the camera, which puts every screen-space overlay --
+ * readouts, insets, legends -- into the top left quadrant of a HiDPI display
+ * while looking perfect at 1x. This restores the base transform instead.
+ */
+export function screenSpace(ctx: CanvasRenderingContext2D): void {
+  const ratio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+}
+
 const TRACK_SURFACE_CACHE = new WeakMap<object, TrackSurfaceCache>();
 
 function buildPath(x: number[] = [], y: number[] = [], close = false): Path2D | null {
@@ -658,7 +672,7 @@ export function drawMiniMap(
   const top = corner.startsWith('bottom') ? height - size - margin : margin;
 
   ctx.save();
-  ctx.resetTransform();
+  screenSpace(ctx);
 
   // A framed panel reads as a control. Bare, it reads as the lap -- but the
   // follow camera often has grey asphalt behind this corner, so it still needs
@@ -710,7 +724,7 @@ export function drawHud(
   const performanceMode = options.performanceMode || 'BALANCED';
   const compact = performanceMode === 'PERFORMANCE';
   ctx.save();
-  ctx.resetTransform();
+  screenSpace(ctx);
   ctx.fillStyle = 'rgba(6,8,16,0.78)';
   ctx.strokeStyle = 'rgba(148,163,184,0.16)';
   ctx.lineWidth = 1;

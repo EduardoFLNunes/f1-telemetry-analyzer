@@ -167,13 +167,21 @@ O desenho segue a gramática de uma transmissão (`BroadcastOverlay.ts`):
 - o carro é um disco, não a silhueta de um carro — nesse zoom uma silhueta é um
   borrão e um disco é uma posição;
 - atrás dele ficam os últimos 14 segundos de estrada, coloridos pelo que o
-  piloto fazia ali (acelerando, freando ou de inércia) e apagando para trás, o
-  que transforma o mapa numa memória curta em vez de um diagrama;
-- no meio, grande, a velocidade, o estado e o tempo de volta.
+  piloto fazia ali e apagando para trás, o que transforma o mapa numa memória
+  curta em vez de um diagrama;
+- no canto inferior direito, grande, a velocidade, o estado e o tempo de volta.
+  Começou centralizado, que é onde uma transmissão põe — e uma transmissão pode,
+  porque a câmera dela mantém o carro fora do meio do quadro. A nossa põe o carro
+  exatamente no centro, então o número ficava em cima do que ele descreve.
 
-As cores dizem o que os pedais fizeram. Uma transmissão diria DEPLOY e REGEN ali;
-não modelamos ERS, e inventar um em cima do acelerador e do freio seria um
-gráfico que mente.
+As cores dizem o que os pedais fizeram, numa rampa contínua de freio a fundo até
+acelerador a fundo, passando por inércia. Três cores fixas desenhavam uma emenda
+dura a cada alívio: verde até uma amostra, laranja na seguinte. E onde os pedais
+mudam entre duas amostras, o segmento carrega a mudança ao longo do próprio
+comprimento — a 20 Hz, a troca no vértice aparece como degrau.
+
+Uma transmissão diria DEPLOY e REGEN ali; não modelamos ERS, e inventar um em
+cima do acelerador e do freio seria um gráfico que mente.
 
 O modo `OVERVIEW` continua existindo e mantém o HUD analítico — a volta inteira,
 os oponentes, as legendas de linha de corrida.
@@ -304,7 +312,7 @@ electron-builder → Empacotamento e instalador NSIS
 racing line, comparação, qualidade de dados, gravação de sessão, física do
 carro, protocolo UDP de oponentes e o gate de memória compartilhada.
 
-103 testes de frontend (`frontend/src/**/*.test.ts`, Vitest, `npm test`) cobrem
+111 testes de frontend (`frontend/src/**/*.test.ts`, Vitest, `npm test`) cobrem
 o que o desenho promete, não o que ele parece:
 
 - **Câmera da fita 3D** (`TrackElevationRibbon.test.ts`) — altura sobe na tela
@@ -314,8 +322,10 @@ o que o desenho promete, não o que ele parece:
   uma volta por volta da pista, sem salto na emenda entre elas.
 - **Câmera e transmissão** (`CameraController.test.ts`, `BroadcastOverlay.test.ts`)
   — o follow acompanha sem girar e centraliza o carro, o rastro apaga para trás
-  e não cruza o miolo quando a volta vira, o freio ganha do acelerador na cor, e
-  a leitura central diz `--` em vez de um número errado quando não sabe.
+  e não cruza o miolo quando a volta vira, o freio ganha do acelerador na cor, a
+  rampa de cor não dá salto em nenhum ponto, a leitura fica no canto inferior
+  direito em qualquer densidade de tela, e diz `--` em vez de um número errado
+  quando não sabe.
 - **Mapa** (`OverlayRenderer.test.ts`) — o limite de pista fica por cima do pit
   e do serviço, o asfalto é preenchido em um único caminho even-odd (o que
   mantém o miolo limpo), a tinta afina e desbota no zoom out até a largura real
