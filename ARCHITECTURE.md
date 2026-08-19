@@ -153,6 +153,48 @@ O que o mapa desenha, e por quê cada peça existe:
 - **`kerbGeometry`** — as zebras, desenhadas como dentes brancos sobre base
   escura, que é o que separa uma curva de uma reta num relance.
 
+#### A dashboard em tres visoes
+
+`20% / 60% / 20%`, em `minmax(0, Nfr)` e nao porcentagem — a porcentagem ignora o
+`gap` e estoura, e um `1fr` cru e `minmax(auto, 1fr)`, que deixa o conteudo
+empurrar a coluna e desfazer a proporcao. A proporcao vale em qualquer largura:
+havia um `@media (max-width:1180px)` que trocava as colunas por pixels fixos,
+desfazendo o desenho justamente nos notebooks onde o app mais roda.
+
+- **Esquerda — o carro.** Comparacao por setor, o relogio da volta, e o Vehicle
+  State ocupando o que sobra: cada leitura e uma faixa `flex:1 1 0`, de modo que
+  a coluna nao termina em espaco morto.
+- **Centro — a pista.** O mapa follow e, abaixo, o Lap Comparison.
+- **Direita — analise assistida.** Mesmo conteudo, tipografia maior (9-13 px no
+  lugar de 6-8). O aumento foi feito na origem porque os tamanhos sao inline nos
+  paineis, fora do alcance de qualquer folha de estilo.
+
+Os quatro cantos do mapa sao uma **grade de quadrantes**, nao itens posicionados
+por cima uns dos outros: relevo em cima a esquerda, controles a direita,
+minimapa embaixo a esquerda, leitura embaixo a direita. Nenhum pode crescer para
+dentro do outro, por mais alto que fique o conteudo — o que e uma garantia
+estrutural, e nao um ajuste de altura que a proxima mudanca desfaz. A leitura e
+o minimapa saem do canvas e viram DOM por isso: media por um cursor manual, a
+leitura era exatamente onde as alturas colidiam.
+
+#### Os tempos de setor sao medidos aqui, nao recebidos
+
+Nada os envia. O backend informa em que setor o carro esta e nunca quanto durou
+o anterior; `setSectors` no store nao tem chamador. `utils/sectorTimes.ts` os
+deriva do relogio da volta a cada terco de `lapProgress`, e duas coisas decidem
+se isso le uma volta ou inventa uma:
+
+- os quadros trazem `lap_time: null` explicito, e `Number(null)` e `0`, nao
+  `NaN` — uma checagem de "numero finito" escrita do jeito obvio transforma cada
+  lacuna numa volta que comecou em zero;
+- o relogio de reserva, `sessionTime`, conta desde o inicio da sessao e nao zera
+  na linha, entao so diferencas a partir da primeira amostra da volta significam
+  alguma coisa.
+
+Um setor que o carro ainda nao terminou aparece como tracos, e nao como parcial:
+metade do setor 2 nao e um tempo de setor 2, e mostra-lo como se fosse tornaria
+errada toda comparacao contra ele.
+
 #### A câmera padrão é o follow, no formato de transmissão
 
 O mapa abre seguindo o carro, e não com o traçado inteiro na tela: o piloto
@@ -312,7 +354,7 @@ electron-builder → Empacotamento e instalador NSIS
 racing line, comparação, qualidade de dados, gravação de sessão, física do
 carro, protocolo UDP de oponentes e o gate de memória compartilhada.
 
-111 testes de frontend (`frontend/src/**/*.test.ts`, Vitest, `npm test`) cobrem
+116 testes de frontend (`frontend/src/**/*.test.ts`, Vitest, `npm test`) cobrem
 o que o desenho promete, não o que ele parece:
 
 - **Câmera da fita 3D** (`TrackElevationRibbon.test.ts`) — altura sobe na tela
@@ -320,6 +362,9 @@ o que o desenho promete, não o que ele parece:
   entre inclinar a câmera e inclinar a pista), banking lê igual em qualquer
   ângulo, o carro fica parado no mesmo lugar da tela e a câmera dá exatamente
   uma volta por volta da pista, sem salto na emenda entre elas.
+- **Tempos de setor** (`sectorTimes.test.ts`) — `lap_time: null` nao vira zero, o
+  relogio de sessao e lido como diferenca, a travessia do setor e interpolada
+  entre amostras, e a cauda da volta anterior no buffer nao engole a volta atual.
 - **Câmera e transmissão** (`CameraController.test.ts`, `BroadcastOverlay.test.ts`)
   — o follow acompanha sem girar e centraliza o carro, o rastro apaga para trás
   e não cruza o miolo quando a volta vira, o freio ganha do acelerador na cor, a

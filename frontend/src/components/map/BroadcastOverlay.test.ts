@@ -2,12 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   DRIVER_STATES,
   drawBroadcastCar,
-  drawBroadcastHud,
   drawBroadcastTrail,
   driveBalance,
   driveColour,
   driverState,
-  hudMetrics,
   speedKmh,
   trailWindow,
 } from './BroadcastOverlay';
@@ -243,102 +241,5 @@ describe('drawBroadcastCar', () => {
     expect(drawBroadcastCar(ctx, null, 5)).toBe(false);
     expect(drawBroadcastCar(ctx, { speed: 50 }, 5)).toBe(false);
     expect(ctx.calls.length).toBe(0);
-  });
-});
-
-describe('drawBroadcastHud', () => {
-  const frame = { speedKmh: 198.4, lap_time: 73.21, throttle: 1, brake: 0, mapPosition: { x: 0, y: 0 } };
-
-  it('reads out the speed, the state and the lap time', () => {
-    const ctx = createFakeContext();
-    expect(drawBroadcastHud(ctx, 700, 340, frame)).toBe(true);
-    const text = callsOf(ctx, 'fillText').map((call) => String(call.args[0]));
-    expect(text).toContain('198');
-    expect(text).toContain('KM/H');
-    expect(text).toContain(DRIVER_STATES.power.label);
-    expect(text.some((line) => line.includes('1:13.210'))).toBe(true);
-  });
-
-  it('stacks the readout into the bottom right corner, clear of the car', () => {
-    // The car sits dead centre under the follow camera; a centred readout was
-    // printed on top of the thing it describes.
-    const ctx = createFakeContext();
-    drawBroadcastHud(ctx, 700, 340, frame, { caption: 'INTERLAGOS' });
-    const lines = callsOf(ctx, 'fillText');
-    expect(ctx.textAlign).toBe('right');
-
-    const xs = lines.map((call) => call.args[1]);
-    expect(new Set(xs).size).toBe(1);
-    expect(xs[0]).toBeLessThan(700);
-    expect(xs[0]).toBeGreaterThan(700 * 0.9);
-
-    const ys = lines.map((call) => call.args[2]);
-    expect(Math.min(...ys)).toBeGreaterThan(340 * 0.5);
-    expect(Math.max(...ys)).toBeLessThan(340);
-    expect(new Set(ys).size).toBe(lines.length);
-  });
-
-  it('draws in screen space so it holds still while the circuit moves', () => {
-    const ctx = createFakeContext();
-    drawBroadcastHud(ctx, 700, 340, frame);
-    // The base device-pixel transform, not a bare reset: the numbers are laid
-    // out in CSS pixels, and resetting drops the ratio they are measured in.
-    const base = callsOf(ctx, 'setTransform');
-    expect(base.length).toBe(1);
-    expect(base[0].args).toEqual([1, 0, 0, 1, 0, 0]);
-    expect(callsOf(ctx, 'resetTransform').length).toBe(0);
-  });
-
-  it('lands in the corner whatever the pixel ratio of the screen', () => {
-    // At 2x the readout used to be drawn in device pixels while measured in CSS
-    // pixels, which parked it in the middle of the panel.
-    const previous = (globalThis as any).window;
-    (globalThis as any).window = { devicePixelRatio: 2 };
-    try {
-      const ctx = createFakeContext();
-      drawBroadcastHud(ctx, 700, 340, frame);
-      expect(callsOf(ctx, 'setTransform')[0].args).toEqual([2, 0, 0, 2, 0, 0]);
-      const xs = callsOf(ctx, 'fillText').map((call) => call.args[1]);
-      expect(new Set(xs).size).toBe(1);
-      expect(xs[0]).toBeGreaterThan(700 * 0.9);
-    } finally {
-      if (previous === undefined) delete (globalThis as any).window;
-      else (globalThis as any).window = previous;
-    }
-  });
-
-  it('shows the state colour, not a fixed one', () => {
-    const braking = createFakeContext();
-    drawBroadcastHud(braking, 700, 340, { ...frame, throttle: 0, brake: 1 });
-    // The readout is drawn bottom-up, so the state label is the last line out.
-    const label = callsOf(braking, 'fillText').at(-1)!;
-    const [r, g, b] = driveColour(-1);
-    expect(label.args[0]).toBe(DRIVER_STATES.brake.label);
-    expect(label.fillStyle).toBe(`rgb(${r},${g},${b})`);
-  });
-
-  it('says it does not know rather than showing a wrong number', () => {
-    const ctx = createFakeContext();
-    drawBroadcastHud(ctx, 700, 340, { throttle: 0, brake: 0 });
-    const text = callsOf(ctx, 'fillText').map((call) => String(call.args[0]));
-    expect(text).toContain('--');
-    expect(text.some((line) => line.includes('--:--.---'))).toBe(true);
-  });
-
-  it('stays out of the way when there is no room and no car', () => {
-    const ctx = createFakeContext();
-    expect(drawBroadcastHud(ctx, 700, 40, frame)).toBe(false);
-    expect(drawBroadcastHud(ctx, 700, 340, null)).toBe(false);
-    expect(ctx.calls.length).toBe(0);
-  });
-
-  it('sizes the number to the panel it has', () => {
-    const small = hudMetrics(320, 180);
-    const large = hudMetrics(1200, 700);
-    expect(large.speed).toBeGreaterThan(small.speed);
-    expect(small.speed).toBeGreaterThanOrEqual(20);
-    expect(large.speed).toBeLessThanOrEqual(64);
-    // A narrow panel is governed by its width, not its height.
-    expect(hudMetrics(200, 900).speed).toBeLessThan(hudMetrics(900, 900).speed);
   });
 });

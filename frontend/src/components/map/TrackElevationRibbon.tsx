@@ -287,12 +287,6 @@ export const TrackElevationRibbon: React.FC<{ trackData: any; car?: any }> = ({ 
   return (
     <div ref={containerRef} style={{ position: 'relative', height: '100%', width: '100%' }}>
       <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
-      <div className="num" style={{
-        position: 'absolute', left: 10, top: 8, fontSize: 7, letterSpacing: '0.1em',
-        textTransform: 'uppercase', color: 'var(--text-3)',
-      }}>
-        Relevo e inclinacao
-      </div>
     </div>
   );
 };

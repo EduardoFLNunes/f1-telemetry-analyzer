@@ -58,9 +58,9 @@ export const CoachingFeed: React.FC = () => {
         style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-rose-400 status-live" />
-          <span className="num text-[8px] font-bold text-slate-400 uppercase tracking-widest">AI Coaching</span>
+          <span className="num text-[11px] font-bold text-slate-400 uppercase tracking-widest">AI Coaching</span>
         </div>
-        <span className="num text-[7px] text-slate-700">{events.length} EVENTS</span>
+        <span className="num text-[10px] text-slate-700">{events.length} EVENTS</span>
       </div>
 
       {/* Engineer speech */}
@@ -72,8 +72,8 @@ export const CoachingFeed: React.FC = () => {
               style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.1)' }}>
               <div style={{ width: 3, alignSelf: 'stretch', background: '#22d3ee', borderRadius: 2, opacity: i === 0 ? 1 : 0.3 }} />
               <div className="flex flex-col gap-0.5 flex-1">
-                <span className="text-[9px] text-slate-200 leading-snug">{s.message}</span>
-                <span className="num text-[7px] text-slate-600 uppercase">{s.category ?? 'strategy'} // {s.priority}</span>
+                <span className="text-[12px] text-slate-200 leading-snug">{s.message}</span>
+                <span className="num text-[10px] text-slate-600 uppercase">{s.category ?? 'strategy'} // {s.priority}</span>
               </div>
             </div>
           ))}
@@ -84,7 +84,7 @@ export const CoachingFeed: React.FC = () => {
       <div className="flex-1 overflow-y-auto px-2 py-1.5 flex flex-col gap-1">
         {events.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
-            <span className="num text-[8px] text-slate-800 uppercase tracking-wider">Awaiting events...</span>
+            <span className="num text-[11px] text-slate-800 uppercase tracking-wider">Awaiting events...</span>
           </div>
         ) : (
           events.slice(0, 20).map((ev, i) => {
@@ -106,12 +106,12 @@ export const CoachingFeed: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full" style={{ background: meta.dot }} />
-                    <span className={`num text-[8px] font-bold uppercase ${meta.color}`}>{meta.label}</span>
+                    <span className={`num text-[11px] font-bold uppercase ${meta.color}`}>{meta.label}</span>
                   </div>
-                  <span className="num text-[7px] text-slate-700">S:{distance.toFixed(0)}m</span>
+                  <span className="num text-[10px] text-slate-700">S:{distance.toFixed(0)}m</span>
                 </div>
 
-                <div className="num text-[7px] text-slate-600 pl-3 leading-snug">
+                <div className="num text-[10px] text-slate-600 pl-3 leading-snug">
                   {renderEvidence(ev)}
                 </div>
 

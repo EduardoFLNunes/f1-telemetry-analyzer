@@ -174,7 +174,7 @@ memória compartilhada.
 
 ```bash
 cd frontend
-npm test          # 111 testes (Vitest)
+npm test          # 116 testes (Vitest)
 npm run build     # build de produção
 npx tsc --noEmit  # checagem de tipos (não está em CI ainda — rodar manualmente)
 ```

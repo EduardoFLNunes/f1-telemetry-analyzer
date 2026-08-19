@@ -233,11 +233,17 @@ select {
   padding: 0 9px;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   As tres visoes: 20% leitura do carro / 60% pista / 20% inteligencia.
+   `minmax(0, Nfr)` e nao porcentagem: a porcentagem ignora o gap e
+   estoura, e um `1fr` cru e `minmax(auto, 1fr)`, que deixa o conteudo
+   empurrar a coluna e desfazer a proporcao.
+   ══════════════════════════════════════════════════════════════════ */
 .dashboard-grid {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(230px, 0.82fr) minmax(480px, 2.15fr) minmax(300px, 1.05fr);
+  grid-template-columns: minmax(0, 20fr) minmax(0, 60fr) minmax(0, 20fr);
   gap: 6px;
   padding: 6px;
   overflow: hidden;
@@ -970,10 +976,8 @@ select {
 }
 
 @media (max-width: 1180px) {
-  .dashboard-grid {
-    grid-template-columns: 220px minmax(430px, 1fr) 285px;
-  }
-
+  /* A proporcao das tres visoes vale em qualquer largura. Trocar por pixels
+     aqui desfazia justamente nos notebooks onde o app mais roda. */
   .live-session-strip {
     grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
   }
@@ -1294,3 +1298,216 @@ select {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.2);
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   VISAO ESQUERDA — o que o carro esta fazendo
+   Setores no topo, o relogio no meio, e o Vehicle State ocupando tudo
+   o que sobra: cada leitura e uma faixa que cresce com a altura, em vez
+   de um bloco fixo com vazio embaixo.
+   ══════════════════════════════════════════════════════════════════ */
+.sector-panel {
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sector-grid {
+  display: grid;
+  /* minmax(0,1fr) e nao 1fr: com fonte maior os tres cartoes esticariam a
+     coluna inteira para caber o texto. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.sector-cell {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 5px;
+  padding: 6px 7px 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.014);
+}
+
+.sector-name { font-size: 7px; }
+
+.sector-time {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sector-tick { height: 2px; border-radius: 99px; opacity: 0.85; }
+
+.sector-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font: 600 7px 'JetBrains Mono', monospace;
+  color: var(--text-3);
+}
+
+.sector-legend-item { display: flex; align-items: center; gap: 4px; }
+.sector-legend-item i { width: 5px; height: 5px; border-radius: 99px; display: block; }
+
+.lap-timing {
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.lt-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.lt-time { font-size: 21px; font-weight: 700; color: var(--text-1); letter-spacing: -0.02em; }
+.lt-delta { font-size: 15px; font-weight: 700; }
+
+.vehicle-state {
+  /* A coluna tem altura definida, entao esta e a peca que estica. */
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.vs-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 4px; }
+.vs-status { display: flex; align-items: center; gap: 4px; font-size: 7px; font-weight: 700; }
+.vs-status i { width: 5px; height: 5px; border-radius: 99px; display: block; }
+.vs-status .num { font-size: 7px; font-weight: 700; }
+
+.vs-row {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.vs-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.vs-speed { font-size: 30px; font-weight: 700; color: var(--cyan); letter-spacing: -0.03em; line-height: 1; }
+.vs-gear { font-size: 26px; font-weight: 700; color: var(--text-1); line-height: 1; }
+.vs-unit { font: 600 7px 'JetBrains Mono', monospace; color: var(--text-3); }
+.vs-pct { font-size: 10px; font-weight: 700; color: var(--text-2); }
+
+.vs-bar {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.vs-bar i { display: block; height: 100%; border-radius: 99px; transition: width 0.08s linear; }
+
+.vs-steer {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+.vs-steer i {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: #fbbf24;
+  border-radius: 99px;
+  transition: width 0.08s linear;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   VISAO CENTRO — os quatro cantos do mapa
+   O overlay e uma grade de quatro quadrantes, e nao itens posicionados
+   por cima uns dos outros: assim nenhuma peca pode crescer para dentro
+   da outra, por mais alta que fique.
+   ══════════════════════════════════════════════════════════════════ */
+.map-stage { flex: 1 1 62%; min-height: 0; position: relative; overflow: hidden; padding: 0; }
+
+.map-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  padding: 10px;
+  gap: 10px;
+  pointer-events: none;
+  z-index: 60;
+}
+
+.map-tl { grid-column: 1; grid-row: 1; justify-self: start; align-self: start; }
+.map-tr { grid-column: 2; grid-row: 1; justify-self: end; align-self: start; pointer-events: auto; }
+.map-bl { grid-column: 1; grid-row: 2; justify-self: start; align-self: end; }
+.map-br { grid-column: 2; grid-row: 2; justify-self: end; align-self: end; }
+
+/* O relevo mora no canto de cima, junto do mapa 2D em vez de num painel
+   proprio embaixo dele. */
+.relief-inset {
+  width: clamp(180px, 26%, 300px);
+  height: clamp(96px, 42%, 190px);
+  display: flex;
+  flex-direction: column;
+  padding: 7px 9px 5px;
+  gap: 3px;
+  background: rgba(7, 10, 18, 0.82);
+  pointer-events: auto;
+  overflow: hidden;
+}
+.relief-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.relief-body { flex: 1; min-height: 0; }
+
+.map-minimap {
+  width: clamp(120px, 17%, 210px);
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  gap: 3px;
+  background: rgba(7, 10, 18, 0.7);
+  pointer-events: auto;
+  overflow: hidden;
+}
+.map-minimap-body { flex: 1; min-height: 0; position: relative; }
+.map-minimap-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font: 600 6.5px 'JetBrains Mono', monospace;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.map-readout {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.8);
+}
+.ro-state { font: 700 11px 'JetBrains Mono', monospace; letter-spacing: 0.14em; }
+.ro-speed { font: 700 clamp(30px, 4.4vw, 58px) 'JetBrains Mono', monospace; color: #fff; line-height: 0.94; letter-spacing: -0.03em; }
+.ro-unit { font: 600 10px 'JetBrains Mono', monospace; color: rgba(226, 232, 240, 0.72); letter-spacing: 0.16em; }
+.ro-lap { font: 700 11px 'JetBrains Mono', monospace; color: rgba(226, 232, 240, 0.88); margin-top: 3px; }
+.ro-track { font: 600 8px 'JetBrains Mono', monospace; color: rgba(148, 163, 184, 0.62); letter-spacing: 0.14em; }
+
+.lap-comparison-stage { flex: 1 1 38%; min-height: 150px; overflow: hidden; }
+
+/* ══════════════════════════════════════════════════════════════════
+   VISAO DIREITA — tipografia
+   As fontes estavam inline nos paineis; o aumento fica escopado aqui
+   para nao inchar a esquerda e o centro.
+   ══════════════════════════════════════════════════════════════════ */
+.col-right { font-size: 11px; }
+.col-right .label { font-size: 9px; letter-spacing: 0.14em; }
+.col-right .num { font-size: 11px; }
+.col-right button { font-size: 9px; }
+.col-right table, .col-right th, .col-right td { font-size: 10px; }

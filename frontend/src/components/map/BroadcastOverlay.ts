@@ -1,6 +1,4 @@
 import { resolveSampleMapPosition, MapPosition } from '../../utils/spatialTransform';
-import { screenSpace } from './OverlayRenderer';
-import { formatLapTime } from '../../utils/lapFormat';
 
 /**
  * The follow view as a broadcast graphic.
@@ -251,91 +249,6 @@ export function drawBroadcastCar(ctx: CanvasRenderingContext2D, frame: any, scal
   ctx.lineWidth = Math.max(0.28, 2.4 / scale);
   ctx.strokeStyle = '#ffffff';
   ctx.stroke();
-  ctx.restore();
-  return true;
-}
-
-/** Sizes for the readout, from the panel it has to fit in. */
-export function hudMetrics(width: number, height: number) {
-  // The stack is about two and a half times the speed digits tall, so this cap
-  // keeps the whole readout inside the bottom half of the panel -- clear of the
-  // camera controls, which live in the opposite corner.
-  const speed = Math.max(20, Math.min(64, Math.round(Math.min(height * 0.18, width * 0.11))));
-  return {
-    speed,
-    label: Math.max(9, Math.round(speed * 0.26)),
-    unit: Math.max(8, Math.round(speed * 0.20)),
-    lap: Math.max(8, Math.round(speed * 0.21)),
-  };
-}
-
-/**
- * Speed, state and lap time, stacked into the bottom right corner.
- *
- * It started centred, which is where a broadcast puts it -- and a broadcast can
- * afford that because the camera keeps the car off the middle of the frame.
- * Ours parks the car dead centre, so the number sat on top of the thing it was
- * describing. In the corner it reads just as well and covers nothing: the car
- * is at the centre, the lap is in the opposite corner, and the road between
- * them stays visible.
- *
- * Drawn in screen space after the camera is restored, so it holds still while
- * the circuit moves behind it.
- */
-export function drawBroadcastHud(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  frame: any,
-  options: { lapTime?: number | null; caption?: string | null } = {},
-): boolean {
-  if (!frame || width < 80 || height < 70) return false;
-
-  const state = driverState(frame);
-  const speed = speedKmh(frame);
-  const font = hudMetrics(width, height);
-  const anchor = Math.round(width - Math.max(14, font.speed * 0.35));
-  const lapTime = options.lapTime ?? Number(frame?.lap_time ?? frame?.lapTime);
-  const caption = options.caption;
-
-  ctx.save();
-  screenSpace(ctx);
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'alphabetic';
-  // The readout sits over whatever the camera is on -- often grey asphalt, not
-  // the black the numbers were designed against. The shadow is what keeps them
-  // readable there without a panel behind them.
-  ctx.shadowColor = 'rgba(0,0,0,0.9)';
-  ctx.shadowBlur = Math.round(font.speed * 0.4);
-
-  let cursor = Math.round(height - (caption ? font.lap * 2.6 : font.lap * 1.4));
-
-  if (caption) {
-    ctx.font = `${font.lap}px "JetBrains Mono", monospace`;
-    ctx.fillStyle = 'rgba(148,163,184,0.6)';
-    ctx.fillText(caption, anchor, Math.round(height - font.lap * 0.9));
-  }
-
-  ctx.font = `700 ${font.lap}px "JetBrains Mono", monospace`;
-  ctx.fillStyle = 'rgba(226,232,240,0.85)';
-  ctx.fillText(`VOLTA  ${formatLapTime(Number.isFinite(lapTime as number) ? (lapTime as number) : null)}`, anchor, cursor);
-
-  cursor -= Math.round(font.unit * 1.7);
-  ctx.font = `${font.unit}px "JetBrains Mono", monospace`;
-  ctx.fillStyle = 'rgba(226,232,240,0.72)';
-  ctx.fillText('KM/H', anchor, cursor);
-
-  cursor -= Math.round(font.speed * 0.95);
-  ctx.font = `700 ${font.speed}px "JetBrains Mono", monospace`;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(speed === null ? '--' : String(Math.round(speed)), anchor, cursor);
-
-  cursor -= Math.round(font.speed * 0.62);
-  const [r, g, b] = state.colour;
-  ctx.font = `700 ${font.label}px "JetBrains Mono", monospace`;
-  ctx.fillStyle = `rgb(${r},${g},${b})`;
-  ctx.fillText(state.label, anchor, cursor);
-
   ctx.restore();
   return true;
 }

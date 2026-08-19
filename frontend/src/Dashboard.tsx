@@ -1,16 +1,18 @@
 /**
- * Live driving view.
+ * Live driving view, in three.
  *
- * Only what is useful with a car on track lives here. Recorded-session browsing,
- * assisted analysis, data-quality and runtime diagnostics moved to their own
- * pages, which is what took the right rail from eight competing tabs down to
- * four and gave the track map room to breathe.
+ * Left is what the car is doing: how the lap is going by sector, the clock, and
+ * the state of the car itself, which stretches to fill whatever the first two
+ * leave behind. Centre is the track -- the follow map with its four corners,
+ * and the lap comparison under it. Right is the assisted analysis.
+ *
+ * The proportions are 20/60/20 and hold at every width. The map is the point of
+ * the screen, so it gets three times either side.
  */
 import React, { useEffect, useState } from 'react';
 import { TrackRenderer } from './components/map/TrackRenderer';
-import { TrackElevationRibbon } from './components/map/TrackElevationRibbon';
 import { TelemetryTraces } from './components/TelemetryTraces';
-import { GGDiagram } from './components/GGDiagram';
+import { SectorComparison } from './components/SectorComparison';
 import { CoachingFeed } from './components/CoachingFeed';
 import { AIDebriefPanel } from './components/AIDebriefPanel';
 import { AIEngineerPanel } from './components/AIEngineerPanel';
@@ -18,13 +20,11 @@ import { LiveComparisonPanel } from './components/LiveComparisonPanel';
 import { RacingLineAnalysisPanel } from './components/RacingLineAnalysisPanel';
 import { LiveSessionStrip } from './components/LiveSessionStrip';
 import { ReplayControls } from './components/ReplayControls';
-import { CognitiveDashboard } from './components/CognitiveDashboard';
 import { Header } from './components/Header';
-import { VehicleStatePanel, LapTimingPanel, StabilityPanel } from './components/LiveTelemetryPanels';
+import { VehicleStatePanel, LapTimingPanel } from './components/LiveTelemetryPanels';
 import { useRenderCounter } from './hooks/useRenderCounter';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { api } from './api/client';
-import { useTelemetryStore } from './store/useTelemetryStore';
 
 type LivePanel = 'comparison' | 'racingLine' | 'engineer' | 'debrief';
 
@@ -39,7 +39,6 @@ const Dashboard: React.FC = () => {
   useRenderCounter('Dashboard');
   const [trackData, setTrackData] = useState<any>(null);
   const [trackKey, setTrackKey] = useState<string | null>(null);
-  const latestFrame = useTelemetryStore((state) => state.latestFrame);
   const [rightPanel, setRightPanel] = useState<LivePanel>('comparison');
   const [time, setTime] = useState(() => new Date());
 
@@ -91,44 +90,26 @@ const Dashboard: React.FC = () => {
         <LiveSessionStrip onTrackKeyChange={setTrackKey} />
 
         <div className="dashboard-grid">
-          {/* ═══ LEFT — vehicle state ═══ */}
+          {/* ═══ ESQUERDA — o carro ═══ */}
           <div className="dashboard-column">
-            <VehicleStatePanel />
+            <SectorComparison />
             <LapTimingPanel />
-
-            <div className="panel dashboard-flex-panel" style={{ padding: '8px' }}>
-              <div className="label" style={{ fontSize: 6, paddingLeft: 4 }}>G-G Diagram</div>
-              <div style={{ flex: 1 }}>
-                <GGDiagram />
-              </div>
-            </div>
-
-            <StabilityPanel />
-
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-              <CognitiveDashboard />
-            </div>
+            <VehicleStatePanel />
           </div>
 
-          {/* ═══ CENTER — track map, road relief, traces ═══ */}
+          {/* ═══ CENTRO — a pista ═══ */}
           <div className="dashboard-column">
-            {/* The map says where the car is; the ribbon under it says what the
-                road is doing there -- climbing, dropping, leaning into a corner. */}
-            <div className="panel track-stage" style={{ flex: '1 1 52%', minHeight: 0 }}>
+            <div className="panel map-stage">
               <TrackRenderer trackData={trackData} />
             </div>
 
-            <div className="panel" style={{ flex: '1 1 34%', minHeight: 190, padding: 0, overflow: 'hidden' }}>
-              <TrackElevationRibbon trackData={trackData} car={latestFrame} />
-            </div>
-
-            <div className="panel telemetry-stage" style={{ flex: '1 1 30%', minHeight: 0 }}>
+            <div className="panel lap-comparison-stage">
               <TelemetryTraces />
             </div>
           </div>
 
-          {/* ═══ RIGHT — live intelligence ═══ */}
-          <div className="dashboard-column">
+          {/* ═══ DIREITA — analise assistida ═══ */}
+          <div className="dashboard-column col-right">
             <div className="panel intelligence-tabs">
               {LIVE_PANELS.map(([tab, label]) => (
                 <button
@@ -136,8 +117,7 @@ const Dashboard: React.FC = () => {
                   onClick={() => setRightPanel(tab)}
                   className="num"
                   style={{
-                    padding: '6px 0',
-                    fontSize: 8,
+                    padding: '7px 0',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.1em',
@@ -176,7 +156,7 @@ const Dashboard: React.FC = () => {
               ))}
             </div>
 
-            <div style={{ height: 150, overflow: 'hidden' }}>
+            <div style={{ height: 168, overflow: 'hidden' }}>
               <CoachingFeed />
             </div>
           </div>

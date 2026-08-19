@@ -59,7 +59,7 @@ const pillStyle = (active: boolean): React.CSSProperties => ({
   background: active ? 'rgba(34,211,238,0.1)' : 'transparent',
   color: active ? CYAN : MUTED,
   cursor: 'pointer',
-  fontSize: 8,
+  fontSize: 11,
   fontWeight: 800,
 });
 
@@ -78,11 +78,11 @@ const SectorCard = ({
 }) => (
   <div style={{ padding: 8, border: `1px solid ${BORDER}`, background: SURFACE, borderRadius: 4, display: 'flex', flexDirection: 'column', gap: 5 }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span className="label" style={{ fontSize: 6 }}>SETOR {sector}</span>
-      <span className="num" style={{ fontSize: 9, color: deltaColor(delta), fontWeight: 800 }}>{formatSeconds(delta)}</span>
+      <span className="label" style={{ fontSize: 9 }}>SETOR {sector}</span>
+      <span className="num" style={{ fontSize: 12, color: deltaColor(delta), fontWeight: 800 }}>{formatSeconds(delta)}</span>
     </div>
-    <div className="num" style={{ fontSize: 8, color: TEXT, lineHeight: 1.35 }}>{reasonLabel(reason)}</div>
-    <div className="num" style={{ fontSize: 7, color: MUTED, display: 'flex', justifyContent: 'space-between' }}>
+    <div className="num" style={{ fontSize: 11, color: TEXT, lineHeight: 1.35 }}>{reasonLabel(reason)}</div>
+    <div className="num" style={{ fontSize: 10, color: MUTED, display: 'flex', justifyContent: 'space-between' }}>
       <span>OPP {bestOpponent ?? '--'}</span>
       <span>SEG {worstSegment ?? '--'}</span>
     </div>
@@ -98,13 +98,13 @@ const SegmentRow = ({ segment, selectedOpponentId }: { segment: ComparisonSegmen
       className="num"
       style={{
         display: 'grid',
-        gridTemplateColumns: '34px 44px 42px 44px 1fr',
+        gridTemplateColumns: '26px 40px 34px 40px minmax(0,1fr)',
         gap: 6,
         alignItems: 'center',
         minHeight: 24,
         padding: '4px 6px',
         borderBottom: `1px solid ${BORDER}`,
-        fontSize: 7,
+        fontSize: 10,
         color: TEXT,
       }}
     >
@@ -174,7 +174,7 @@ export const LiveComparisonPanel = React.memo(function LiveComparisonPanel({ act
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <BarChart3 size={14} color={CYAN} />
-            <span className="num" style={{ fontSize: 8, fontWeight: 800, color: TEXT, textTransform: 'uppercase' }}>Comparacao</span>
+            <span className="num" style={{ fontSize: 11, fontWeight: 800, color: TEXT, textTransform: 'uppercase' }}>Comparacao</span>
           </div>
           <div style={{ display: 'flex', gap: 3 }}>
             {[20, 50, 100].map((count) => (
@@ -185,7 +185,7 @@ export const LiveComparisonPanel = React.memo(function LiveComparisonPanel({ act
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 5 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: 5 }}>
           {analysis.sectors.map((sector) => (
             <SectorCard
               key={sector.sector}
@@ -200,19 +200,19 @@ export const LiveComparisonPanel = React.memo(function LiveComparisonPanel({ act
 
         <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start', border: `1px solid ${BORDER}`, background: 'rgba(34,211,238,0.035)', padding: 7, borderRadius: 4 }}>
           <AlertTriangle size={13} color={AMBER} style={{ flexShrink: 0, marginTop: 1 }} />
-          <div className="num" style={{ fontSize: 8, lineHeight: 1.45, color: TEXT }}>{keyMessage}</div>
+          <div className="num" style={{ fontSize: 11, lineHeight: 1.45, color: TEXT }}>{keyMessage}</div>
         </div>
       </div>
 
-      <div style={{ padding: '7px 9px', borderBottom: `1px solid ${BORDER}`, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+      <div style={{ padding: '7px 9px', borderBottom: `1px solid ${BORDER}`, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 6 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <Timer size={12} color={ROSE} />
-            <span className="label" style={{ fontSize: 6 }}>PERDAS</span>
+            <span className="label" style={{ fontSize: 9 }}>PERDAS</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {(analysis.biggestLosses.length ? analysis.biggestLosses : [{ segmentIndex: '--', deltaSeconds: null, reason: null }]).slice(0, 3).map((loss, index) => (
-              <div key={`${loss.segmentIndex}-${index}`} className="num" style={{ display: 'flex', justifyContent: 'space-between', gap: 5, fontSize: 7, color: TEXT }}>
+              <div key={`${loss.segmentIndex}-${index}`} className="num" style={{ display: 'flex', justifyContent: 'space-between', gap: 5, fontSize: 10, color: TEXT }}>
                 <span>SEG {loss.segmentIndex}</span>
                 <span style={{ color: deltaColor(loss.deltaSeconds), fontWeight: 800 }}>{formatSeconds(loss.deltaSeconds)}</span>
               </div>
@@ -223,11 +223,11 @@ export const LiveComparisonPanel = React.memo(function LiveComparisonPanel({ act
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <Trophy size={12} color={EMERALD} />
-            <span className="label" style={{ fontSize: 6 }}>GANHOS</span>
+            <span className="label" style={{ fontSize: 9 }}>GANHOS</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {(analysis.biggestGains.length ? analysis.biggestGains : [{ segmentIndex: '--', deltaSeconds: null }]).slice(0, 3).map((gain, index) => (
-              <div key={`${gain.segmentIndex}-${index}`} className="num" style={{ display: 'flex', justifyContent: 'space-between', gap: 5, fontSize: 7, color: TEXT }}>
+              <div key={`${gain.segmentIndex}-${index}`} className="num" style={{ display: 'flex', justifyContent: 'space-between', gap: 5, fontSize: 10, color: TEXT }}>
                 <span>SEG {gain.segmentIndex}</span>
                 <span style={{ color: deltaColor(gain.deltaSeconds), fontWeight: 800 }}>{formatSeconds(gain.deltaSeconds)}</span>
               </div>
@@ -239,7 +239,7 @@ export const LiveComparisonPanel = React.memo(function LiveComparisonPanel({ act
       <div style={{ padding: '7px 9px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
           <Gauge size={12} color={CYAN} />
-          <span className="label" style={{ fontSize: 6 }}>OPONENTE</span>
+          <span className="label" style={{ fontSize: 9 }}>OPONENTE</span>
         </div>
         <select
           className="num"
@@ -252,7 +252,7 @@ export const LiveComparisonPanel = React.memo(function LiveComparisonPanel({ act
             border: `1px solid ${BORDER}`,
             background: '#08080f',
             color: TEXT,
-            fontSize: 8,
+            fontSize: 11,
             padding: '0 7px',
           }}
         >
@@ -266,7 +266,7 @@ export const LiveComparisonPanel = React.memo(function LiveComparisonPanel({ act
           className="label"
           style={{
             display: 'grid',
-            gridTemplateColumns: '34px 44px 42px 44px 1fr',
+            gridTemplateColumns: '26px 40px 34px 40px minmax(0,1fr)',
             gap: 6,
             padding: '5px 6px',
             position: 'sticky',
@@ -274,7 +274,7 @@ export const LiveComparisonPanel = React.memo(function LiveComparisonPanel({ act
             background: '#08080f',
             borderBottom: `1px solid ${BORDER}`,
             zIndex: 1,
-            fontSize: 6,
+            fontSize: 9,
           }}
         >
           <span>SEG</span>
@@ -288,10 +288,10 @@ export const LiveComparisonPanel = React.memo(function LiveComparisonPanel({ act
         ))}
       </div>
 
-      <div style={{ borderTop: `1px solid ${BORDER}`, padding: '6px 9px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
-        <div className="num" style={{ fontSize: 7, color: MUTED }}>P {analysis.debug.playerSamples} / REF {analysis.debug.referenceSamples}</div>
-        <div className="num" style={{ fontSize: 7, color: MUTED, textAlign: 'right' }}>OPP {analysis.debug.opponentsAnalyzed} / VALID {analysis.debug.validMicroSectors}</div>
-        <div className="num" style={{ gridColumn: '1 / -1', fontSize: 7, color: hasReferenceLap ? EMERALD : AMBER, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <div style={{ borderTop: `1px solid ${BORDER}`, padding: '6px 9px', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 4 }}>
+        <div className="num" style={{ fontSize: 10, color: MUTED }}>P {analysis.debug.playerSamples} / REF {analysis.debug.referenceSamples}</div>
+        <div className="num" style={{ fontSize: 10, color: MUTED, textAlign: 'right' }}>OPP {analysis.debug.opponentsAnalyzed} / VALID {analysis.debug.validMicroSectors}</div>
+        <div className="num" style={{ gridColumn: '1 / -1', fontSize: 10, color: hasReferenceLap ? EMERALD : AMBER, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {hasReferenceLap ? `Reference lap ${lapDebug?.referenceLapNumber}` : 'Reference lap unavailable or incomplete'}
         </div>
       </div>

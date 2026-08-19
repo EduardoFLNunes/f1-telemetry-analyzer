@@ -4,8 +4,10 @@ import { useRenderCounter } from '../../hooks/useRenderCounter';
 import { api } from '../../api/client';
 import { drawCar, drawOpponentCar } from './CarRenderer';
 import { applyCameraTransform, computeTrackBounds, CameraState, FOLLOW_VIEW_METERS } from './CameraController';
-import { drawHud, drawMiniMap, drawTrackSurface, screenSpace } from './OverlayRenderer';
-import { drawBroadcastCar, drawBroadcastHud, drawBroadcastTrail } from './BroadcastOverlay';
+import { drawHud, drawTrackSurface, screenSpace } from './OverlayRenderer';
+import { drawBroadcastCar, drawBroadcastTrail } from './BroadcastOverlay';
+import { MapReadout, TrackMiniMap } from './MapOverlay';
+import { TrackElevationRibbon } from './TrackElevationRibbon';
 import { resolveSampleMapPosition, MapPosition } from '../../utils/spatialTransform';
 import {
   drawPreparedRacingLineOverlay,
@@ -77,13 +79,6 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-/** The circuit's name, for the line the broadcast look keeps at the bottom. */
-export function trackCaption(trackData: any): string | null {
-  const raw = trackData?.trackName || trackData?.name || trackData?.metadata?.trackName;
-  if (typeof raw !== 'string') return null;
-  const cleaned = raw.replace(/[_-]+/g, ' ').trim();
-  return cleaned ? cleaned.toUpperCase() : null;
-}
 
 function percentile(values: number[], ratio: number): number {
   if (!values.length) return 0;
@@ -841,6 +836,14 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
   const replayLapNumber = useTelemetryStore((state) => state.offlineReplay.lapNumber);
   const replayTrack = useTelemetryStore((state) => state.offlineReplay.track);
   const replaySource = useTelemetryStore((state) => state.offlineReplay.source);
+  // The canvas reads the store inside its own frame loop; the DOM corners are
+  // React and need it as state. In replay that is the sample under the cursor.
+  const overlayFrame = useTelemetryStore((state) => (
+    state.offlineReplay.active ? state.offlineReplay.currentSample : state.latestFrame
+  ));
+  const overlayLapNumber = useTelemetryStore((state) => (
+    state.offlineReplay.active ? state.offlineReplay.lapNumber : state.lapMetrics.currentLapNumber
+  ));
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const animationRef = useRef<number | null>(null);
@@ -1253,14 +1256,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
       }
 
       ctx.restore();
-      if (broadcast) {
-        drawBroadcastHud(ctx, rect.width, rect.height, liveFrame, { caption: trackCaption(normalizedTrack) });
-        // The inset moves to the free corner: the camera controls own the right.
-        drawMiniMap(ctx, rect.width, rect.height, normalizedTrack, resolveSampleMapPosition(liveFrame), {
-          corner: 'bottom-left',
-          bare: true,
-        });
-      } else {
+      // The readout and the inset are DOM now, in the overlay's own quadrants,
+      // so nothing painted here can grow into them.
+      if (!broadcast) {
         drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current, { performanceMode: activePerformanceMode });
         if (!simpleVisuals && replayActiveNow) {
           drawReplayLegend(ctx, rect.width, rect.height, offlineReplay, showRacingLineRef.current ? racingLineModeRef.current : 'LINE_ONLY');
@@ -1518,30 +1516,23 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
     >
       <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
 
-      {replayActive && (
-        <div
-          className="absolute top-3 left-3 panel px-2 py-1.5"
-          style={{
-            zIndex: 72,
-            background: 'rgba(8,12,22,0.88)',
-            borderColor: 'rgba(250,204,21,0.28)',
-            pointerEvents: 'none',
-          }}
-        >
-          <div className="num text-[8px] font-bold uppercase text-yellow-200">Replay offline</div>
-          <div className="num text-[7px] uppercase text-slate-500">
-            L{replayLapNumber ?? '--'} / Fonte: {replaySource || 'persisted lap'}
-          </div>
-          {replayTrack && (
-            <div className="num text-[7px] uppercase text-slate-600 truncate" style={{ maxWidth: 220 }}>
-              {String(replayTrack).replace(/[_-]+/g, ' ')}
+      {/* Os quatro cantos do mapa. Cada um e uma celula da grade: o relevo em
+          cima a esquerda, os controles a direita, o minimapa embaixo a
+          esquerda e a leitura embaixo a direita. Nenhum alcanca o outro. */}
+      <div className="map-overlay">
+        {trackData && (
+          <div className="panel relief-inset map-tl">
+            <div className="relief-head">
+              <span className="label">Relevo &amp; inclinacao</span>
             </div>
-          )}
-        </div>
-      )}
+            <div className="relief-body">
+              <TrackElevationRibbon trackData={trackData} car={overlayFrame} />
+            </div>
+          </div>
+        )}
 
       <div
-        className="absolute top-3 right-3 flex flex-col gap-1"
+        className="map-tr flex flex-col gap-1"
         style={{ zIndex: 70, pointerEvents: 'auto' }}
         onMouseDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
@@ -1724,13 +1715,14 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
             </div>
           </div>
         )}
-      </div>
 
-      {!replayActive && showOpponents && visibleOpponents.length > 0 && (
+        {/* Os oponentes moram junto dos controles: o canto de baixo a esquerda
+            agora e do minimapa. */}
+        {!replayActive && showOpponents && visibleOpponents.length > 0 && (
         <div
-          className="absolute left-3 bottom-3 panel px-2 py-2 overflow-hidden"
+          className="panel px-2 py-2 overflow-hidden"
           style={{
-            width: compactOpponentsPanel ? '44px' : 'min(218px, calc(100% - 24px))',
+            width: compactOpponentsPanel ? '44px' : 'min(218px, 100%)',
             pointerEvents: 'auto',
           }}
           onMouseDown={(event) => event.stopPropagation()}
@@ -1780,8 +1772,13 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
           {panelOpponentsMeta.track && opponentsPanelOpen && !compactOpponentsPanel && (
             <div className="num text-[7px] text-slate-600 mt-1 truncate">{panelOpponentsMeta.track}</div>
           )}
+          </div>
+        )}
         </div>
-      )}
+
+        <TrackMiniMap trackData={trackData} car={overlayFrame} lapNumber={overlayLapNumber} />
+        <MapReadout trackData={trackData} />
+      </div>
 
       {tooltipOpponent && (
         <div
