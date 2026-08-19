@@ -1429,7 +1429,7 @@ select {
    por cima uns dos outros: assim nenhuma peca pode crescer para dentro
    da outra, por mais alta que fique.
    ══════════════════════════════════════════════════════════════════ */
-.map-stage { flex: 1 1 62%; min-height: 0; position: relative; overflow: hidden; padding: 0; }
+.map-stage { flex: 1 1 77%; min-height: 0; position: relative; overflow: hidden; padding: 0; }
 
 .map-overlay {
   position: absolute;
@@ -1451,8 +1451,14 @@ select {
 /* O relevo mora no canto de cima, junto do mapa 2D em vez de num painel
    proprio embaixo dele. */
 .relief-inset {
-  width: clamp(180px, 26%, 300px);
-  height: clamp(96px, 42%, 190px);
+  /* Um quadro, nao uma faixa: a fita mostra o circuito visto de fora, e um
+     retangulo baixo cortava justamente a altura, que e o que ela tem a dizer.
+     A altura manda e a largura segue, com o teto no proprio quadrante -- assim
+     ela cresce ate onde pode sem nunca alcancar o canto de baixo. */
+  height: min(100%, clamp(150px, 32vh, 270px));
+  aspect-ratio: 1;
+  width: auto;
+  max-width: 48%;
   display: flex;
   flex-direction: column;
   padding: 7px 9px 5px;
@@ -1499,7 +1505,9 @@ select {
 .ro-lap { font: 700 11px 'JetBrains Mono', monospace; color: rgba(226, 232, 240, 0.88); margin-top: 3px; }
 .ro-track { font: 600 8px 'JetBrains Mono', monospace; color: rgba(148, 163, 184, 0.62); letter-spacing: 0.14em; }
 
-.lap-comparison-stage { flex: 1 1 38%; min-height: 150px; overflow: hidden; }
+/* 40% mais baixa do que era: os tracos continuam legiveis e a altura que ela
+   devolve vai toda para o mapa. */
+.lap-comparison-stage { flex: 1 1 23%; min-height: 92px; overflow: hidden; }
 
 /* ══════════════════════════════════════════════════════════════════
    VISAO DIREITA — tipografia
