@@ -47,6 +47,8 @@ const EMPTY_COMPLETED_LAPS: never[] = [];
 const INACTIVE_OFFLINE_REPLAY: OfflineReplayState = {
   active: false,
   playing: false,
+  coachEvents: [],
+  coachEmittedCount: 0,
   playbackRate: 1,
   lapId: null,
   sessionId: null,
@@ -320,8 +322,20 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
       const samples = (payload?.samples || []).map(normalizeStoredFrame);
       if (!samples.length) throw new Error('Volta persistida sem samples para replay');
       const summary = payload?.summary || lap;
+      // What the coach said over this lap, fetched once. The replay never
+      // reaches the backend, so the live coach cannot see it -- this is the
+      // same coach, walked over the recorded lap on the server.
+      let coachEvents: Array<Record<string, any>> = [];
+      try {
+        const coaching = await api.getLapCoaching(lapId);
+        if (Array.isArray(coaching?.events)) coachEvents = coaching.events;
+      } catch {
+        // No coaching is a quieter replay, not a failed one.
+      }
+
       startOfflineReplay({
         lapId,
+        coachEvents,
         sessionId: session.sessionId,
         lapNumber: lap.lapNumber,
         track: session.track,

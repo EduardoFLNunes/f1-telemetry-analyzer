@@ -258,3 +258,73 @@ describe('leaving the replay', () => {
     expect(replay.sampleCount).toBe(80);
   });
 });
+
+describe('coaching over a replayed lap', () => {
+  /** Events as the backend returns them, tagged with when in the lap they fall. */
+  const coaching = (...seconds: number[]) => seconds.map((at, index) => ({
+    type: 'coaching_event',
+    event: `perda no setor ${index}`,
+    severity: 0.5,
+    evidence: { atLapTimeSeconds: at, microsector: index, lossSeconds: 0.3 },
+    driver_id: 'dokas',
+    lap_number: 7,
+    s: at * 50,
+    timestamp: 1,
+  }));
+
+  it('says nothing before the car reaches the corner', () => {
+    play(lapSamples(200), { coachEvents: coaching(4, 9, 14) });
+    expect(store.getState().coachingEvents).toEqual([]);
+  });
+
+  it('speaks each event as the replay drives past it', () => {
+    play(lapSamples(200), { coachEvents: coaching(4, 9, 14) });
+    store.getState().setOfflineReplayTime(5);
+    expect(store.getState().coachingEvents.length).toBe(1);
+    store.getState().setOfflineReplayTime(10);
+    expect(store.getState().coachingEvents.length).toBe(2);
+    store.getState().setOfflineReplayTime(19.9);
+    expect(store.getState().coachingEvents.length).toBe(3);
+  });
+
+  it('carries the event through, not a placeholder', () => {
+    play(lapSamples(200), { coachEvents: coaching(4) });
+    store.getState().setOfflineReplayTime(5);
+    const [event] = store.getState().coachingEvents;
+    expect(event.event).toContain('perda no setor 0');
+    expect(event.severity).toBeCloseTo(0.5, 5);
+  });
+
+  it('releases them while playing, not only while scrubbing', () => {
+    play(lapSamples(200), { coachEvents: coaching(2, 6) });
+    store.getState().advanceOfflineReplay(7);
+    expect(store.getState().coachingEvents.length).toBe(2);
+  });
+
+  it('says them again after the slider goes back', () => {
+    // Dragging back and playing again has to replay the commentary too;
+    // swallowing it would make the second watch quieter than the first.
+    play(lapSamples(200), { coachEvents: coaching(3) });
+    store.getState().setOfflineReplayTime(5);
+    expect(store.getState().coachingEvents.length).toBe(1);
+    store.getState().setOfflineReplayTime(0);
+    expect(store.getState().offlineReplay.coachEmittedCount).toBe(0);
+    store.getState().setOfflineReplayTime(5);
+    expect(store.getState().coachingEvents.length).toBe(2);
+  });
+
+  it('a lap with no coaching plays exactly as before', () => {
+    play(lapSamples(200));
+    store.getState().advanceOfflineReplay(5);
+    expect(store.getState().coachingEvents).toEqual([]);
+    expect(store.getState().offlineReplay.coachEvents).toEqual([]);
+  });
+
+  it('forgets the previous lap when another replay starts', () => {
+    play(lapSamples(200), { coachEvents: coaching(2) });
+    store.getState().setOfflineReplayTime(5);
+    play(lapSamples(200), { coachEvents: coaching(3) });
+    expect(store.getState().offlineReplay.coachEmittedCount).toBe(0);
+    expect(store.getState().offlineReplay.coachEvents.length).toBe(1);
+  });
+});

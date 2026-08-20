@@ -131,3 +131,61 @@ async def get_phase14_assisted_lap_telemetry(
         raise HTTPException(status_code=404, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.get("/api/analysis/coach/lap/{lapId}")
+async def get_lap_coaching(lapId: str):
+    """
+    Everything the coach would have said over a recorded lap.
+
+    The replay plays in the browser and its samples never reach this process,
+    so the live coach -- which listens for `processed_frame` -- cannot see a
+    recorded lap. Rather than write a second coach in TypeScript that would
+    drift from this one, the lap is walked through the same object here and the
+    events come back tagged with the lap time they belong to, for the player to
+    surface as the car reaches them.
+
+    Walking a lap is CPU work, so it runs off the event loop: a second of
+    blocking here costs the collector samples, which is how this backend already
+    lost 4.6% of a session.
+    """
+    from core.live.driving_coach import coach_recorded_lap
+
+    def work() -> Dict[str, Any]:
+        try:
+            descriptor, df = main.assisted_analysis_service.loader.load_lap(lapId)
+        except Exception as error:
+            raise HTTPException(status_code=404, detail=f"Lap not available: {error}")
+
+        model = main.assisted_analysis_service._reference_model(descriptor.track)  # noqa: SLF001
+        if model is None or not model.targets:
+            return {
+                "status": "NO_MODEL",
+                "reason": "reference_model_not_trained_for_track",
+                "track": descriptor.track,
+                "events": [],
+                "speech": [],
+            }
+
+        result = coach_recorded_lap(
+            df,
+            model,
+            lap_number=descriptor.lap_number or 0,
+            track=descriptor.track or "",
+            driver_id=descriptor.driver_id or "player_1",
+        )
+        result.update({
+            "lapId": lapId,
+            "lapNumber": descriptor.lap_number,
+            "lapTime": descriptor.lap_time,
+            "track": descriptor.track,
+            "model": {
+                "lapsInModel": model.lap_count,
+                "idealLapSeconds": model.ideal_lap_seconds,
+                "bestLapSeconds": model.best_lap_seconds,
+                "builtAt": model.built_at,
+            },
+        })
+        return result
+
+    return await asyncio.to_thread(work)

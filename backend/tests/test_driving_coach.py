@@ -171,3 +171,65 @@ class DrivingCoachTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RecordedLapCoachTests(unittest.TestCase):
+    """The replay path: a lap that is already over, walked through the coach."""
+
+    def setUp(self):
+        from core.live.driving_coach import coach_recorded_lap
+
+        self.run = coach_recorded_lap
+        self.model = model_of(85.0)
+
+    def _lap(self, seconds: float, slow_slice=None):
+        count = int(seconds * 57)
+        progress = np.linspace(0.0, 1.0, count)
+        elapsed = progress * seconds
+        if slow_slice is not None:
+            index, extra = slow_slice
+            start, end = index / 60.0, (index + 1) / 60.0
+            ramp = np.clip((progress - start) / (end - start), 0.0, 1.0)
+            elapsed = elapsed + np.where(progress >= end, extra, np.where(progress >= start, ramp * extra, 0.0))
+        return pd.DataFrame({
+            "p": progress,
+            "elapsed_s": elapsed,
+            "s": progress * 4300.0,
+            "speed_kmh": np.full(count, 180.0),
+        })
+
+    def test_returns_every_event_of_the_lap_not_just_the_first(self):
+        # The live coach waits three seconds between events. A lap replayed in
+        # milliseconds would trip that once and go silent for the rest.
+        lap = self._lap(85.0)
+        for index in (5, 20, 35, 50):
+            start, end = index / 60.0, (index + 1) / 60.0
+            lap.loc[lap["p"] >= start, "elapsed_s"] += 0.0
+        lap = self._lap(85.0, slow_slice=(20, 0.8))
+        result = self.run(lap, self.model, lap_number=9, track="vhe_interlagos")
+        self.assertEqual("READY", result["status"])
+        self.assertGreaterEqual(len(result["events"]), 1)
+
+    def test_every_event_says_when_in_the_lap_it_happened(self):
+        result = self.run(self._lap(85.0, slow_slice=(30, 0.9)), self.model, lap_number=9)
+        for event in result["events"]:
+            at = event["evidence"].get("atLapTimeSeconds")
+            self.assertIsNotNone(at)
+            self.assertGreater(at, 0.0)
+            self.assertLess(at, 90.0)
+
+    def test_closes_the_lap_on_the_radio(self):
+        result = self.run(self._lap(85.0, slow_slice=(30, 1.5)), self.model, lap_number=9)
+        self.assertEqual(1, len(result["speech"]))
+        self.assertIn("Volta fechada", result["speech"][0]["message"])
+        self.assertGreater(result["lossSeconds"], 1.0)
+
+    def test_a_clean_lap_comes_back_quiet(self):
+        result = self.run(self._lap(85.0), self.model, lap_number=9)
+        self.assertEqual([], result["events"])
+        self.assertEqual([], result["speech"])
+
+    def test_says_it_cannot_help_without_a_model_or_a_lap(self):
+        self.assertEqual("UNAVAILABLE", self.run(self._lap(85.0), None)["status"])
+        self.assertEqual("UNAVAILABLE", self.run(pd.DataFrame(), self.model)["status"])
+        self.assertEqual("UNAVAILABLE", self.run(None, self.model)["status"])

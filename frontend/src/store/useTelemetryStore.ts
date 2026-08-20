@@ -218,6 +218,16 @@ export interface OfflineReplayState {
   lapTime: number | null;
   sampleCount: number;
   currentSample: TelemetryFrame | null;
+  /**
+   * What the coach said over this lap, loaded once when the replay starts.
+   *
+   * The replay plays in the browser and never reaches the backend, so the live
+   * coach cannot see it. The events arrive tagged with the lap time they belong
+   * to and are released as the playback passes them, which is what makes the
+   * feed read like a session instead of a report.
+   */
+  coachEvents: Array<Record<string, any>>;
+  coachEmittedCount: number;
   assettoClosed: boolean | null;
   assistAvailable: boolean;
   acceptedByPhase13: boolean | null;
@@ -282,6 +292,7 @@ interface TelemetryState {
   setPerformanceMode: (mode: PerformanceMode) => void;
   setAssistedTraceContext: (context: Partial<AssistedTraceContext>) => void;
   clearAssistedTraceContext: () => void;
+  setReplayCoachEvents: (events: Array<Record<string, any>>) => void;
   startOfflineReplay: (replay: {
     lapId: string;
     sessionId?: string | null;
@@ -302,6 +313,7 @@ interface TelemetryState {
     validationStatus?: string | null;
     issues?: string[];
     message?: string | null;
+    coachEvents?: Array<Record<string, any>>;
   }) => void;
   setOfflineReplayIndex: (index: number) => void;
   setOfflineReplayTime: (timeSeconds: number) => void;
@@ -382,6 +394,8 @@ const EMPTY_OFFLINE_REPLAY: OfflineReplayState = {
   lapTime: null,
   sampleCount: 0,
   currentSample: null,
+  coachEvents: [],
+  coachEmittedCount: 0,
   assettoClosed: null,
   assistAvailable: false,
   acceptedByPhase13: null,
@@ -614,6 +628,33 @@ const replayIndexAtTime = (samples: TelemetryFrame[], timeSeconds: number): numb
     return Math.abs(target - before) <= Math.abs(after - target) ? low - 1 : low;
   }
   return low;
+};
+
+/**
+ * The coaching a replay has driven past but not yet said out loud.
+ *
+ * Every event carries the lap time it belongs to. Playing forwards releases the
+ * ones the car has now reached; scrubbing backwards rewinds the marker, so
+ * dragging the slider back and playing again says them again rather than
+ * swallowing them.
+ */
+const coachEventsUpTo = (
+  events: Array<Record<string, any>>,
+  seconds: number,
+  alreadySaid: number,
+): { due: Array<Record<string, any>>; count: number } => {
+  if (!Array.isArray(events) || !events.length) return { due: [], count: 0 };
+  let count = 0;
+  for (const event of events) {
+    const at = Number(event?.evidence?.atLapTimeSeconds);
+    if (!Number.isFinite(at) || at > seconds) break;
+    count += 1;
+  }
+  // Only what has not been said yet. Every clock move re-counts from the start
+  // of the lap, so without this the feed repeats everything it already said on
+  // each tick -- sixty times a second.
+  const from = Math.min(Math.max(alreadySaid, 0), count);
+  return { due: events.slice(from, count), count };
 };
 
 const lapMetricsForReplay = (
@@ -1265,6 +1306,8 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
           lapTime,
           sampleCount: numericOrNull(replay.sampleCount) ?? samples.length,
           currentSample: firstSample,
+          coachEvents: Array.isArray((replay as any).coachEvents) ? (replay as any).coachEvents : [],
+          coachEmittedCount: 0,
           assettoClosed: replay.assettoClosed ?? null,
           assistAvailable: Boolean(replay.assistAvailable),
           acceptedByPhase13: replay.acceptedByPhase13 ?? null,
@@ -1281,12 +1324,21 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
     }
   },
 
+  setReplayCoachEvents: (events) => set((state) => ({
+    offlineReplay: {
+      ...state.offlineReplay,
+      coachEvents: Array.isArray(events) ? events : [],
+      coachEmittedCount: 0,
+    },
+  })),
+
   setOfflineReplayIndex: (index) => set((state) => {
     const replay = state.offlineReplay;
     if (!replay.active || replay.samples.length === 0) return state;
     const currentIndex = Math.max(0, Math.min(replay.samples.length - 1, Math.round(index)));
     const currentSample = replay.samples[currentIndex];
     const currentTime = replaySampleElapsed(currentSample, replay.samples);
+    const coachRelease = coachEventsUpTo(replay.coachEvents, currentTime, replay.coachEmittedCount);
     return {
       latestFrame: currentSample,
       globalCursorS: numericOrNull(currentSample.s ?? currentSample.distanceAlongTrack),
@@ -1297,8 +1349,12 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
         replay.lapNumber,
         replay.referenceLapNumber,
       ),
+      coachingEvents: coachRelease.due.length
+        ? [...coachRelease.due.map(normalizeCoachingEvent).reverse(), ...state.coachingEvents].slice(0, 100)
+        : state.coachingEvents,
       offlineReplay: {
         ...replay,
+        coachEmittedCount: coachRelease.count,
         currentIndex,
         currentTime,
         currentSample,
@@ -1313,6 +1369,7 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
     const targetTime = Math.max(0, Math.min(replay.duration, timeSeconds));
     const currentIndex = replayIndexAtTime(replay.samples, targetTime);
     const currentSample = replay.samples[currentIndex];
+    const coachRelease = coachEventsUpTo(replay.coachEvents, targetTime, replay.coachEmittedCount);
     const reachedEnd = replay.duration > 0 && targetTime >= replay.duration;
     return {
       latestFrame: currentSample,
@@ -1324,8 +1381,12 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
         replay.lapNumber,
         replay.referenceLapNumber,
       ),
+      coachingEvents: coachRelease.due.length
+        ? [...coachRelease.due.map(normalizeCoachingEvent).reverse(), ...state.coachingEvents].slice(0, 100)
+        : state.coachingEvents,
       offlineReplay: {
         ...replay,
+        coachEmittedCount: coachRelease.count,
         currentIndex,
         currentTime: targetTime,
         currentSample,
@@ -1351,6 +1412,7 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
     const targetTime = Math.max(0, Math.min(duration, replay.currentTime + delta * (replay.playbackRate || 1)));
     const currentIndex = replayIndexAtTime(replay.samples, targetTime);
     const currentSample = replay.samples[currentIndex];
+    const coachRelease = coachEventsUpTo(replay.coachEvents, targetTime, replay.coachEmittedCount);
     const reachedEnd = duration > 0 && (targetTime >= duration || currentIndex >= replay.samples.length - 1);
     return {
       latestFrame: currentSample,
@@ -1362,8 +1424,12 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
         replay.lapNumber,
         replay.referenceLapNumber,
       ),
+      coachingEvents: coachRelease.due.length
+        ? [...coachRelease.due.map(normalizeCoachingEvent).reverse(), ...state.coachingEvents].slice(0, 100)
+        : state.coachingEvents,
       offlineReplay: {
         ...replay,
+        coachEmittedCount: coachRelease.count,
         currentIndex,
         currentTime: reachedEnd ? duration : targetTime,
         currentSample,

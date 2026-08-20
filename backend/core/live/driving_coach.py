@@ -182,6 +182,11 @@ class LiveDrivingCoach:
                 evidence["yourSpeedKmh"] = round(speed, 1)
         if target.brake_point_p is not None:
             evidence["bestBrakePointP"] = target.brake_point_p
+        # Where in the lap this happened, so a replay can say it at the moment
+        # the car reaches the corner instead of dumping the lap at once.
+        at_lap_time = _number(frame.get("lap_time"))
+        if at_lap_time is not None:
+            evidence["atLapTimeSeconds"] = round(at_lap_time, 3)
 
         message = (
             f"Setor {target.index}: {loss:.2f}s atras do seu melhor "
@@ -245,3 +250,86 @@ class LiveDrivingCoach:
             self.event_bus.schedule(topic, payload, self.loop_ref_provider())
         except Exception as error:
             logger.warning("Could not publish %s: %s", topic, error)
+
+
+# ── the same coach, over a lap that is already in the past ───────────────
+
+
+class _CollectingBus:
+    """Keeps what the coach says instead of broadcasting it."""
+
+    def __init__(self) -> None:
+        self.events: list[Dict[str, Any]] = []
+        self.speech: list[Dict[str, Any]] = []
+
+    def schedule(self, topic: str, payload: Dict[str, Any], loop_ref: Any = None) -> None:
+        if topic == COACHING_EVENT:
+            self.events.append(payload)
+        elif topic == ENGINEER_SPEECH:
+            self.speech.append(payload)
+
+
+def coach_recorded_lap(
+    df: Any,
+    model: Any,
+    *,
+    lap_number: int = 0,
+    track: str = "",
+    driver_id: str = "player_1",
+    min_loss_seconds: float = MIN_LOSS_SECONDS,
+) -> Dict[str, Any]:
+    """
+    Run a finished lap through the coach and collect everything it would say.
+
+    The replay plays entirely in the browser -- the samples never pass through
+    the backend, so `processed_frame` is never published and the live coach
+    cannot see a recorded lap at all. This walks the lap through the same object
+    instead, so the replay and the live session are commented by one
+    implementation rather than two that drift.
+
+    The wall-clock gate that stops the live coach talking over itself is off
+    here: a lap replayed in twenty milliseconds would trip it once and go quiet
+    for the rest of the lap. Spacing is the player's job; this returns
+    everything, each tagged with the lap time it belongs to.
+    """
+    if df is None or getattr(df, "empty", True) or model is None or not getattr(model, "targets", None):
+        return {"status": "UNAVAILABLE", "events": [], "speech": [], "lossSeconds": 0.0}
+
+    bus = _CollectingBus()
+    coach = LiveDrivingCoach(
+        bus,
+        model_provider=lambda _track: model,
+        min_loss_seconds=min_loss_seconds,
+        min_gap_seconds=0.0,
+    )
+
+    columns = set(df.columns)
+    for row in df.itertuples(index=False):
+        data = row._asdict()
+        clock = data.get("elapsed_s")
+        progress = data.get("p")
+        if clock is None or progress is None:
+            continue
+        coach.on_frame({
+            "p": float(progress),
+            "lap_time": float(clock),
+            "lap_number": lap_number,
+            "lap": lap_number,
+            "s": float(data.get("s") or 0.0),
+            "speedKmh": float(data.get("speed_kmh")) if "speed_kmh" in columns and data.get("speed_kmh") == data.get("speed_kmh") else None,
+            "driver_id": driver_id,
+            "track": track,
+        })
+
+    # The radio call lands on the flag, which the walk above never crosses.
+    coach._speak_lap_summary({"driver_id": driver_id}, model)   # noqa: SLF001
+
+    for event in bus.events:
+        event["lapTimeSeconds"] = event.get("evidence", {}).get("atLapTimeSeconds")
+    return {
+        "status": "READY",
+        "events": bus.events,
+        "speech": bus.speech,
+        "lossSeconds": round(coach._lap_loss, 3),   # noqa: SLF001
+        "worst": coach._lap_worst,                  # noqa: SLF001
+    }

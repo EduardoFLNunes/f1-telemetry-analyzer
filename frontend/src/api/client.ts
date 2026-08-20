@@ -177,6 +177,12 @@ export const api = {
       params: { maxSamples },
     })
   ).data,
+  /** Everything the coach would have said over a recorded lap. */
+  getLapCoaching: async (lapId: string): Promise<any> => {
+    const res = await client.get(`/api/analysis/coach/lap/${encodeURIComponent(lapId)}`);
+    return res.data;
+  },
+
   getAssistedAnalysis: async (lapId: string, referenceLapId: string | null = null, options: AssistedAnalysisOptions = {}): Promise<any> => {
     const res = await client.get(`/api/analysis/assisted/lap/${encodeURIComponent(lapId)}`, {
       params: {
