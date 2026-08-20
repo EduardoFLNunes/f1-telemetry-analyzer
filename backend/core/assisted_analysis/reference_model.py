@@ -202,8 +202,21 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
         return splits
 
     # Crossing time for every boundary, including the flag at 1.0.
+    #
+    # The two ends are not observed. A recorded lap does not start exactly on
+    # the line -- its first sample lands somewhere inside the first microsector
+    # -- and it does not end exactly on it either. Taking the first sample's
+    # clock as the crossing therefore makes the first sector short by however
+    # late the recording began, which is not a lap record, it is a recording
+    # offset: sector 0 came out with eight times the spread of any other sector
+    # and its target was set by whichever lap happened to start latest. The last
+    # sector had the mirror problem and simply never got a target at all, which
+    # left the ideal lap missing a slice and the gap to it overstated.
+    #
+    # So both ends are extrapolated from the rate at the ends, and only when the
+    # gap is small enough for that rate to mean anything.
     crossings: List[Optional[float]] = [None] * (microsectors + 1)
-    crossings[0] = float(elapsed[0])
+    crossings[0] = _edge_crossing(progress, elapsed, at=0.0, microsectors=microsectors)
     boundary = 1
     for index in range(1, progress.size):
         while boundary <= microsectors and progress[index] >= boundary / microsectors:
@@ -218,6 +231,13 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
         if boundary > microsectors:
             break
 
+    # The flag. The walk above can never reach it: a recorded lap ends a sample
+    # or two past the line, so its progress has already wrapped to nearly zero
+    # and `progress >= 1.0` is never true. Left like that the last microsector
+    # never closes, and the ideal lap is the sum of 59 slices out of 60.
+    if crossings[microsectors] is None:
+        crossings[microsectors] = _edge_crossing(progress, elapsed, at=1.0, microsectors=microsectors)
+
     for index in range(microsectors):
         start, end = crossings[index], crossings[index + 1]
         if start is None or end is None:
@@ -226,6 +246,55 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
         if split > 0:
             splits[index] = round(split, 4)
     return splits
+
+
+def _edge_crossing(progress, elapsed, *, at: float, microsectors: int) -> Optional[float]:
+    """
+    When the lap crossed `at` (0.0 or 1.0), which no sample sits exactly on.
+
+    Extrapolated from the rate at that end of the lap, and only when the sample
+    is within a fifth of a microsector of the line -- past that the rate is a
+    guess and no target is better than a wrong one.
+    """
+    tolerance = 0.2 / microsectors
+    if at <= 0.0:
+        if progress.size < 2 or progress[0] > tolerance:
+            return None
+        span = progress[1] - progress[0]
+        if span <= 0:
+            return float(elapsed[0])
+        rate = (elapsed[1] - elapsed[0]) / span
+        return float(elapsed[0] - progress[0] * rate)
+
+    if progress.size < 2:
+        return None
+
+    # A recorded lap usually ends *past* the line, with anything from one to a
+    # dozen samples already into the next lap and their progress back near zero.
+    # Read literally that is a lap that stopped at the start, and the final
+    # microsector never closes -- which is why the ideal lap was the sum of 59
+    # slices out of 60. So find where progress actually fell off the cliff and
+    # interpolate the crossing there, wherever in the tail it happened.
+    for index in range(progress.size - 1, max(0, progress.size - 60), -1):
+        before, after = float(progress[index - 1]), float(progress[index])
+        if after >= before - 0.5:
+            continue
+        span = (after + 1.0) - before
+        if span <= 0:
+            return float(elapsed[index])
+        t = (1.0 - before) / span
+        return float(elapsed[index - 1] + (elapsed[index] - elapsed[index - 1]) * t)
+
+    # No wrap in the tail: the lap simply stops, and only counts if it stopped
+    # on the line.
+    last, previous = float(progress[-1]), float(progress[-2])
+    if last < 1.0 - tolerance:
+        return None
+    span = last - previous
+    if span <= 0:
+        return float(elapsed[-1])
+    rate = (elapsed[-1] - elapsed[-2]) / span
+    return float(elapsed[-1] + (1.0 - last) * rate)
 
 
 def _channel_summary(df: pd.DataFrame, start_p: float, end_p: float) -> Dict[str, Optional[float]]:

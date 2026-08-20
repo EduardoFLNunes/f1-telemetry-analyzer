@@ -29,9 +29,21 @@ from ..telemetry_events import COACHING_EVENT, ENGINEER_SPEECH
 
 logger = logging.getLogger(__name__)
 
-# What is worth interrupting the driver for. Below this a microsector is noise:
-# the driver cannot act on 80 ms and the feed becomes wallpaper.
-MIN_LOSS_SECONDS = 0.15
+# What is worth interrupting the driver for.
+#
+# A fixed threshold assumes mistakes arrive in lumps. A consistent driver loses
+# his lap in slivers instead: the best clean lap in this library is 1.47s off
+# its own ideal with no single microsector worse than 0.14s, so a 0.15s bar
+# reports nothing at all and the feed stays empty on a lap that had a second and
+# a half in it.
+#
+# So the bar is the driver's own spread through that microsector, which the
+# model already measures as the distance between his median and his best there.
+# Twice that is him being unusually slow *for him*, which is the thing worth
+# hearing. The floor keeps it from firing on rounding in a sector he never
+# varies in.
+MIN_LOSS_SECONDS = 0.06
+LOSS_SPREAD_MULTIPLE = 2.0
 # And even above it, not more often than this -- a coach talking every corner is
 # a coach nobody listens to.
 MIN_SECONDS_BETWEEN_EVENTS = 3.0
@@ -156,7 +168,7 @@ class LiveDrivingCoach:
         self._lap_loss += loss
         if self._lap_worst is None or loss > self._lap_worst["lossS"]:
             self._lap_worst = {"index": finished, "lossS": round(loss, 3)}
-        if loss < self.min_loss_seconds:
+        if loss < self._threshold_for(target):
             return
 
         now = time.monotonic()
@@ -164,6 +176,17 @@ class LiveDrivingCoach:
             return
         self._last_event_at = now
         self._emit_coaching_event(frame, target, split, loss)
+
+    def _threshold_for(self, target: Any) -> float:
+        """How far off his own best this driver has to be, here, to hear about it."""
+        spread = None
+        median = getattr(target, "median_seconds", None)
+        best = getattr(target, "best_seconds", None)
+        if median is not None and best is not None:
+            spread = max(0.0, median - best)
+        if not spread:
+            return self.min_loss_seconds
+        return max(self.min_loss_seconds, spread * LOSS_SPREAD_MULTIPLE)
 
     # ── what it says ─────────────────────────────────────────────────────
 
