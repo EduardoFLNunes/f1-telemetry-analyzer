@@ -20,6 +20,7 @@ from .lap_loader import LapDataLoader
 from .reference_lap_comparator import ReferenceComparator
 from .corner_metrics import CornerMetricsCalculator
 from .models import CornerComparison, CornerMetrics, DrivingError, LapDescriptor
+from .reference_model import DriverReferenceModel, lap_is_usable, microsector_splits, model_path
 from .corner_segmentation import CornerSegmenter
 from .utils import finite_float
 from .vehicle_dynamics_analyzer import VehicleDynamicsAnalyzer
@@ -268,6 +269,7 @@ class AssistedAnalysisService:
                 },
                 "trackLength": track_length,
                 "summary": summary,
+                "referenceModel": self._reference_model_context(target, target_df),
                 "knowledgeBase": [concept.to_api() for concept in self.knowledge_base.all()],
                 "externalReference": external_reference_context,
                 "topLosses": top_losses,
@@ -278,6 +280,58 @@ class AssistedAnalysisService:
         self._memory_cache[cache_key] = analysis
         self._cache_path(cache_key).write_text(json.dumps(analysis, ensure_ascii=False, indent=2), encoding="utf-8")
         return analysis
+
+    def _reference_model_context(self, target: LapDescriptor, target_df) -> Dict[str, Any]:
+        """
+        Where this lap stands against the model fitted from the driver's laps.
+
+        The model is optional: without it the analysis still runs against the
+        reference lap, it just cannot say how much of the lap is on the table.
+        """
+        model = self._reference_model(target.track)
+        if model is None or not model.targets:
+            return {"status": "UNAVAILABLE", "reason": "no_model_for_track"}
+
+        splits = microsector_splits(target_df, model.microsectors)
+        losses = model.loss_against_ideal(splits)
+        ranked = sorted(
+            (
+                {
+                    "index": index,
+                    "startP": round(index / model.microsectors, 4),
+                    "endP": round((index + 1) / model.microsectors, 4),
+                    "lossS": round(loss, 3),
+                    "bestS": (model.target_at((index + 0.5) / model.microsectors) or {}).best_seconds
+                    if model.target_at((index + 0.5) / model.microsectors) else None,
+                }
+                for index, loss in enumerate(losses)
+                if loss is not None and loss > 0.0
+            ),
+            key=lambda item: item["lossS"],
+            reverse=True,
+        )
+        total_loss = round(sum(item["lossS"] for item in ranked), 3)
+        return {
+            "status": "READY",
+            "version": model.version,
+            "lapsInModel": model.lap_count,
+            "builtAt": model.built_at,
+            "idealLapSeconds": model.ideal_lap_seconds,
+            "bestLapSeconds": model.best_lap_seconds,
+            "gapBestToIdeal": model.gap_best_to_ideal,
+            "lapLossAgainstIdeal": total_loss,
+            "worstMicrosectors": ranked[:8],
+        }
+
+    def _reference_model(self, track: Optional[str]) -> Optional[DriverReferenceModel]:
+        key = (track or "unknown").strip()
+        cached = getattr(self, "_reference_models", None)
+        if cached is None:
+            cached = {}
+            self._reference_models = cached
+        if key not in cached:
+            cached[key] = DriverReferenceModel.load(model_path(self.runtime_root, key))
+        return cached[key]
 
     def _load_reference(
         self,
@@ -294,6 +348,22 @@ class AssistedAnalysisService:
         ]
         same_track = [lap for lap in candidates if self._same_track(lap.track, target.track)]
         candidates = same_track or candidates
+
+        # The driver's own best lap, not the one that happens to precede this
+        # one. Preferring adjacency scored lap 349 (85.740s) against lap 348
+        # (85.845s) -- a slower lap -- and reported the whole opportunity as
+        # eleven milliseconds. A reference has to be something worth chasing.
+        #
+        # The sampling filter matters as much as the time: a 74s lap recorded at
+        # 13 Hz was the fastest thing in the library and it was a broken file.
+        personal_best = [
+            lap for lap in candidates
+            if lap.lap_time is not None and lap_is_usable(lap.lap_time, lap.sample_count)[0]
+        ]
+        if personal_best:
+            best = min(personal_best, key=lambda lap: float(lap.lap_time or 9999.0))
+            descriptor, df = self.loader.load_lap(best.lap_id)
+            return descriptor, df, "personal_best"
 
         previous = [
             lap for lap in candidates

@@ -186,6 +186,9 @@ class TelemetryBroadcaster:
             event_bus.subscribe("sector_split", self.on_event)
             event_bus.subscribe("lap_finalized", self.on_event)
             event_bus.subscribe("coaching_event", self.on_event)
+            # The Engineer panel reads `engineerSpeech` from the store and the
+            # store fills it from this socket -- which never listened for it.
+            event_bus.subscribe("engineer_speech", self.on_event)
             event_bus.subscribe("physics_anomaly", self.on_event)
 
     async def on_frame(self, frame: Dict[str, Any]):

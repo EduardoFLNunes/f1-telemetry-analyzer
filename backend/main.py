@@ -57,7 +57,7 @@ from core.reconstruction.track_reconstruction import TrackReconstructor
 from core.telemetry.telemetry_buffer import TelemetryBuffer
 from core.telemetry.telemetry_models import TelemetrySample
 from core.telemetry.telemetry_reader_impl import TelemetrySourceManager, telemetry_samples_from_dataframe
-from core.telemetry_events import COACHING_EVENT, event_bus
+from core.telemetry_events import COACHING_EVENT, PROCESSED_FRAME, event_bus
 from core.websocket_server import broadcaster as ws_broadcaster
 from core.websocket_server import manager as ws_manager
 
@@ -108,6 +108,7 @@ _validation_sessions_cache_at = 0.0
 # resource root is read-only for whoever runs the packaged app -- under
 # `Program Files` it is read-only outright -- and the two directories below are
 # the ones this backend writes to at runtime.
+live_driving_coach: Optional[Any] = None
 external_reference_repository = ExternalReferenceRepository(
     REPO_ROOT,
     data_dir=RUNTIME_ROOT / "data" / "external_references",
@@ -836,6 +837,23 @@ async def lifespan(app: FastAPI):
     initialize_spatial_state()
     recording_runtime = build_recording_runtime()
     recording_runtime.start()
+    # The producer the coaching panels were waiting for: it measures the lap
+    # against the reference model fitted from the driver's own laps and speaks
+    # when a microsector costs real time.
+    global live_driving_coach
+    try:
+        from core.live.driving_coach import LiveDrivingCoach
+
+        live_driving_coach = LiveDrivingCoach(
+            event_bus,
+            model_provider=lambda track: assisted_analysis_service._reference_model(track),
+            loop_ref_provider=lambda: asyncio.get_event_loop(),
+        )
+        event_bus.subscribe(PROCESSED_FRAME, live_driving_coach.on_frame)
+        logger.info("Live driving coach subscribed to processed frames")
+    except Exception as error:
+        logger.warning("Live driving coach unavailable: %s", error)
+
     event_bus.subscribe(COACHING_EVENT, remember_coaching_event)
     telemetry_runtime = build_telemetry_runtime()
     loop = asyncio.get_running_loop()
@@ -853,6 +871,8 @@ async def lifespan(app: FastAPI):
     if recording_runtime:
         recording_runtime.stop()
         recording_runtime = None
+    if live_driving_coach is not None:
+        event_bus.unsubscribe(PROCESSED_FRAME, live_driving_coach.on_frame)
     event_bus.unsubscribe(COACHING_EVENT, remember_coaching_event)
 
 
