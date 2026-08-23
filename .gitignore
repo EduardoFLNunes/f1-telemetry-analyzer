@@ -57,3 +57,6 @@ data/debug/*
 
 # Bundle de branches nao mescladas: backup de objetos git, 114 MB
 archives/
+
+# Artefatos do subsistema de aprendizado de tracado (regenerados por script)
+data/ml/

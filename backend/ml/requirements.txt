@@ -1,0 +1,23 @@
+# Dependencias do subsistema de aprendizado de tracado.
+#
+# Separadas de `backend/requirements.txt` de proposito: o backend e empacotado
+# com PyInstaller e distribuido como executavel, e o PyTorch acrescentaria
+# ~200 MB a um aplicativo que nao roda inferencia em tempo real. O `ml/` roda
+# offline, na maquina de quem analisa.
+#
+# Instalar por cima das dependencias do backend:
+#   pip install -r requirements.txt -r ml/requirements.txt
+
+# CPU basta: as redes tem ~150 mil parametros e o dataset cabe na memoria.
+# Para instalar so a roda de CPU:
+#   pip install --index-url https://download.pytorch.org/whl/cpu torch
+torch>=2.0,<3.0
+
+# Graficos de conferencia do pipeline (mapa da pista, telemetria, evolucao).
+matplotlib>=3.7
+
+# Ja vem do backend, repetidos aqui para o modulo poder ser instalado sozinho.
+numpy>=1.24
+pandas>=2.0
+scipy>=1.10
+pyarrow>=14.0
