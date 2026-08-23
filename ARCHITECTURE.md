@@ -246,6 +246,43 @@ core/assisted_analysis/lap_analysis_service.py
         └──▶ feedback_generator.py                          → gera texto de feedback
 ```
 
+### 5. Aprendizado de traçado (offline)
+
+Roda fora do runtime, sobre as sessões já gravadas. Não entra no executável
+empacotado — o PyTorch acrescentaria ~200 MB a um aplicativo que não faz
+inferência em tempo real.
+
+```
+data/recordings/*/player.jsonl   (58 sessões, 11 GB, 1009 voltas brutas)
+        │
+        ▼
+ml/data/           → identidade de volta, inventário, store na grade da pista
+ml/preprocessing/  → limpeza, alinhamento por distância, reamostragem, splits
+        │            (122 voltas passam nos gates, em 11 sessões)
+        ▼
+ml/features/       → atributos + referência do piloto por microsetor
+        │
+        ├──▶ ml/models/  LSTM geradora  → traçado de referência
+        │                LSTM substituta → tempo a partir da forma da linha
+        ▼
+ml/optimization/   → envelope do carro medido, simulador de tempo de volta,
+        │            algoritmo evolutivo sobre pontos de controle
+        ▼
+ml/comparison/     → volta do piloto × traçado, por microsetor e por curva
+```
+
+Duas coisas separam isto do que `core/assisted_analysis/` já faz. Aquele módulo
+monta a volta ideal **no tempo** (soma dos melhores microsetores do piloto);
+este monta a volta ideal **na trajetória**, e vai além do que o piloto já fez —
+o algoritmo evolutivo busca linhas que ninguém dirigiu, com a física medida do
+próprio carro como juiz.
+
+Os diagramas deste subsistema estão em
+[docs/arquitetura_ml.md](docs/arquitetura_ml.md) — oito figuras, do funil de
+qualidade ao laço evolutivo — e a formulação matemática das redes, em
+[docs/lstm_matematica.md](docs/lstm_matematica.md). O detalhamento, incluindo os defeitos de dados que
+o pipeline teve de contornar, está em [backend/ml/README.md](backend/ml/README.md).
+
 ## Componentes Principais
 
 ### Backend

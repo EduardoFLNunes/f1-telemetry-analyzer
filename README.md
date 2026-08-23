@@ -38,6 +38,10 @@ aplicativo desktop (Electron) ou de um dashboard web.
   telemetria do jogador, dos oponentes (UDP) e validação da pista/volta.
 - **Aplicativo desktop**: empacotado com Electron + PyInstaller + instalador
   NSIS para Windows, com autostart do backend e diagnóstico de runtime.
+- **Aprendizado de traçado** (offline): aprende das voltas gravadas a relação
+  entre pilotagem e tempo, gera um traçado de referência com LSTM e o otimiza
+  com algoritmo evolutivo sobre a física medida do próprio carro. Detalhes em
+  [backend/ml/README.md](backend/ml/README.md).
 
 ## 🏗️ Arquitetura resumida
 
@@ -71,8 +75,14 @@ f1-telemetry-analyzer/
 │   │   ├── external_references/ # referências reais (FastF1) para Interlagos
 │   │   ├── recording/           # gravação e persistência de sessões/voltas
 │   │   └── websocket_server.py
+│   ├── ml/                      # aprendizado de traçado (offline, fora do .exe)
+│   │   ├── data/, preprocessing/ # inventário, limpeza, alinhamento por distância
+│   │   ├── track/, features/     # geometria, microsetores, atributos
+│   │   ├── models/               # LSTM geradora + LSTM substituta
+│   │   ├── optimization/         # envelope do carro, simulador, algoritmo evolutivo
+│   │   └── comparison/, visualization/
 │   ├── packaging/               # build do executável (PyInstaller)
-│   └── tests/                    # 245 testes automatizados (unittest)
+│   └── tests/                    # testes automatizados (unittest)
 │
 ├── frontend/                    # React + Vite (migração JS → TS em andamento)
 │   └── src/
