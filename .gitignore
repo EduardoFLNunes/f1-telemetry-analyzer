@@ -54,3 +54,6 @@ data/debug/*
 !data/debug/interlagos_pit_access_asphalt_merge_fix_validation.json
 !data/debug/interlagos_pit_access_from_pit_lane_ai.json
 !data/debug/track_edges_interval_raycast_vhe_interlagos.json
+
+# Bundle de branches nao mescladas: backup de objetos git, 114 MB
+archives/
