@@ -439,10 +439,27 @@ outro setup, outra carga de combustível e outra condição de pista. É a medid
 honesta de generalização; um corte por volta em vez de por sessão daria números
 muito melhores e sem significado.
 
-O caso a olhar com atenção é a **posição lateral no teste: perícia 0,11**. A
-rede mal supera prever a posição média em sessões novas. A velocidade generaliza
-bem (0,79), os pedais razoavelmente (0,29 e 0,44), mas a trajetória em si é o
-alvo mais difícil — e é justamente o que a rede geradora existe para produzir.
+O caso a olhar com atenção é a **posição lateral no teste: perícia 0,11**. É
+tentador ler isso como "a rede mal supera prever a posição média" — foi o que
+esta página afirmou até a auditoria medir. A afirmação está errada, e vale
+registrar por quê.
+
+A perícia usa o **RMSE**, que eleva o erro ao quadrado e portanto é dominado por
+poucos pontos muito ruins. O MAE conta outra história: 1,591 m contra 3,613 m do
+preditor da média — a rede ganha da média por **56 %**. A perícia é baixa por
+causa de uma cauda, não do centro da distribuição.
+
+E a cauda tem dono. O erro por volta correlaciona **0,924** com o tempo da volta:
+nas voltas abaixo de 88 s o erro lateral médio é **0,502 m**; acima de 88 s,
+**3,044 m**. A rede reproduz bem a trajetória de quem está no ritmo e erra muito
+em quem está fora dele — coerente com o que ela foi treinada para fazer (gerar a
+linha *de referência*, condicionada a um pedido de desempenho), mas quer dizer
+que ela **não** serve para prever o que um piloto fora de ritmo vai fazer.
+
+A velocidade generaliza bem (0,79), os pedais razoavelmente (0,29 e 0,44), e a
+trajetória continua sendo o alvo mais difícil — só não pelo motivo que estava
+escrito aqui. Os números e o método estão em
+[`auditoria_ml.md`](auditoria_ml.md) §3.
 
 Isso tem consequência prática, e ela já é tratada no sistema: a linha da rede é
 usada como **semente** do algoritmo evolutivo, não como resposta. Projetada no

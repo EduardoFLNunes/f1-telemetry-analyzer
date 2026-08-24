@@ -22,7 +22,16 @@ data/recordings/*/player.jsonl
 
 Os diagramas da arquitetura estão em
 [docs/arquitetura_ml.md](../../docs/arquitetura_ml.md); a formulação matemática
-das redes, em [docs/lstm_matematica.md](../../docs/lstm_matematica.md).
+das redes, em [docs/lstm_matematica.md](../../docs/lstm_matematica.md). O que foi
+medido — e não apenas escrito — está em
+[docs/auditoria_ml.md](../../docs/auditoria_ml.md).
+
+Para reproduzir as medições:
+
+```
+python -m ml.scripts.run_pipeline   # o fluxo inteiro, dataset -> traçado
+python -m ml.scripts.validate       # as evidências de aprendizado e de busca
+```
 
 ## O dataset real
 
