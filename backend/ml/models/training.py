@@ -68,6 +68,9 @@ class TrainedModel:
     history: List[Dict[str, float]] = field(default_factory=list)
     best_epoch: int = 0
     best_validation: float = float("nan")
+    seconds: float = float("nan")
+    """Tempo de parede do treino. Fica no artefato porque "quanto custa treinar"
+    e uma pergunta que se faz depois, quando ninguem lembra mais."""
 
     def predict(self, inputs: np.ndarray, batch_size: int = 256) -> np.ndarray:
         """(n, passos, n_in) cru -> (n, passos, n_out) nas unidades originais."""
@@ -80,11 +83,18 @@ def _loaders(train: SequenceSet, validation: Optional[SequenceSet], scaler, tran
     _require_torch()
     inputs = torch.as_tensor(scaler.transform(train.inputs).astype(np.float32))
     targets = torch.as_tensor(transform.forward(train.targets).astype(np.float32))
+    # Gerador proprio para o embaralhamento. Sem ele o `RandomSampler` puxa do
+    # RNG global, que o dropout tambem consome a cada passagem -- a ordem das
+    # amostras passaria a depender de quantos numeros o dropout gastou antes,
+    # que e um acoplamento sem motivo entre duas coisas independentes.
+    shuffling = torch.Generator()
+    shuffling.manual_seed(config.seed)
     train_loader = DataLoader(
         TensorDataset(inputs, targets),
         batch_size=config.batch_size,
         shuffle=True,
         drop_last=False,
+        generator=shuffling,
     )
     validation_loader = None
     if validation is not None and len(validation):
@@ -203,6 +213,7 @@ def train_model(
         history=history,
         best_epoch=best_epoch,
         best_validation=best_score,
+        seconds=time.time() - started,
     )
 
 
@@ -243,6 +254,7 @@ def save_model(trained: TrainedModel, directory: Path) -> Path:
                 "transform": trained.transform.to_dict(),
                 "best_epoch": trained.best_epoch,
                 "best_validation": trained.best_validation,
+                "seconds": trained.seconds,
                 "history": trained.history,
             },
             indent=2,
@@ -270,4 +282,5 @@ def load_model(directory: Path) -> TrainedModel:
         history=list(payload.get("history", [])),
         best_epoch=int(payload.get("best_epoch", 0)),
         best_validation=float(payload.get("best_validation", float("nan"))),
+        seconds=float(payload.get("seconds", float("nan"))),
     )
