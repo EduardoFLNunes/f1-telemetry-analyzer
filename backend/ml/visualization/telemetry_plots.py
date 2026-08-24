@@ -121,12 +121,22 @@ def plot_time_delta(
     return path
 
 
-def plot_evolution_history(history: Sequence[dict], path: Path) -> Path:
+def plot_evolution_history(
+    history: Sequence[dict],
+    path: Path,
+    baseline: Optional[float] = None,
+    baseline_label: str = "controle sem selecao",
+) -> Path:
     """Custo e diversidade ao longo das geracoes.
 
     A diversidade e o que diz se a busca ainda esta procurando: quando ela cai a
     zero, a populacao virou copias do mesmo individuo e as geracoes seguintes
     nao vao achar nada.
+
+    `baseline` desenha o melhor custo que um controle alcancou com o mesmo
+    orcamento de avaliacoes. Sem essa linha o grafico nao distingue evolucao de
+    sorteio com memoria: guardar o melhor de muitas amostras faz o custo cair de
+    qualquer jeito.
     """
     frame = pd.DataFrame(list(history))
     figure, axes = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
@@ -134,6 +144,14 @@ def plot_evolution_history(history: Sequence[dict], path: Path) -> Path:
 
     axes[0].plot(frame["generation"], frame["best_cost"], color="#06d6a0", label="melhor")
     axes[0].plot(frame["generation"], frame["mean_cost"], color="#ffd166", label="medio")
+    if baseline is not None and np.isfinite(baseline):
+        axes[0].axhline(
+            baseline,
+            color="#ef476f",
+            linestyle="--",
+            linewidth=1.3,
+            label=f"{baseline_label} ({baseline:.2f} s)",
+        )
     _style(axes[0], "custo (s)")
     axes[0].legend(fontsize=8, facecolor=BACKGROUND, labelcolor=FOREGROUND)
 
