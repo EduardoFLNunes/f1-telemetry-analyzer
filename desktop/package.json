@@ -44,6 +44,13 @@
         "to": "backend/automobilista-backend.exe"
       },
       {
+        "from": "../data/reference_models",
+        "to": "data/reference_models",
+        "filter": [
+          "*.optimal.json"
+        ]
+      },
+      {
         "from": "../frontend/dist",
         "to": "frontend"
       },

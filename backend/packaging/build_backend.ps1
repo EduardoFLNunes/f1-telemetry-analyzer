@@ -51,6 +51,20 @@ if ($LASTEXITCODE -ne 0) {
   throw "PyInstaller is not installed. Run: .venv\Scripts\python.exe -m pip install pyinstaller"
 }
 
+# The optimised racing lines do NOT belong in this bundle, and the reason is
+# worth writing down because it is not obvious.
+#
+# `--add-data` puts a file inside the executable, where it lands in `_MEIPASS`
+# at run time. But `desktop_backend_runner` sets the resource root from the
+# working directory when frozen, and the packaged app overrides it with
+# `AT_BACKEND_RESOURCE_ROOT` pointing at Electron's resources folder. Neither is
+# `_MEIPASS`, so a file embedded here is carried around and never read --
+# verified by running this exe from an empty directory: the copy was present in
+# `_MEIPASS\data\reference_models` and the coach still found nothing.
+#
+# The lines ship through electron-builder's `extraResources` instead, which puts
+# them where the backend actually looks. See desktop/package.json.
+
 Push-Location $RepoRoot
 try {
   & $Python -m PyInstaller `
