@@ -304,13 +304,21 @@ describe('coaching over a replayed lap', () => {
   it('says them again after the slider goes back', () => {
     // Dragging back and playing again has to replay the commentary too;
     // swallowing it would make the second watch quieter than the first.
+    //
+    // This asserted two events at the end, which is the same event twice: the
+    // feed was appended to on the second pass instead of rebuilt. Watching a
+    // lap three times showed each corner three times. The commentary still
+    // plays again -- the event below is released a second time -- it just does
+    // not stack.
     play(lapSamples(200), { coachEvents: coaching(3) });
     store.getState().setOfflineReplayTime(5);
     expect(store.getState().coachingEvents.length).toBe(1);
     store.getState().setOfflineReplayTime(0);
     expect(store.getState().offlineReplay.coachEmittedCount).toBe(0);
+    expect(store.getState().coachingEvents).toEqual([]);
     store.getState().setOfflineReplayTime(5);
-    expect(store.getState().coachingEvents.length).toBe(2);
+    expect(store.getState().coachingEvents.length).toBe(1);
+    expect(store.getState().offlineReplay.coachEmittedCount).toBe(1);
   });
 
   it('a lap with no coaching plays exactly as before', () => {
@@ -326,5 +334,47 @@ describe('coaching over a replayed lap', () => {
     play(lapSamples(200), { coachEvents: coaching(3) });
     expect(store.getState().offlineReplay.coachEmittedCount).toBe(0);
     expect(store.getState().offlineReplay.coachEvents.length).toBe(1);
+    // And the panel, not only the replay's own copy: the feed used to keep the
+    // previous lap's events above the new lap's.
+    expect(store.getState().coachingEvents).toEqual([]);
+  });
+
+  /**
+   * Watching the same lap twice.
+   *
+   * The clock re-counts from the start of the lap on every move, so a rewind
+   * makes it say everything again. The feed has to start over when that
+   * happens -- six events became twelve on the second run, then eighteen.
+   */
+  it('does not stack a second copy when the lap is replayed', () => {
+    play(lapSamples(200), { coachEvents: coaching(4, 9, 14) });
+    store.getState().setOfflineReplayTime(19.9);
+    expect(store.getState().coachingEvents.length).toBe(3);
+
+    store.getState().setOfflineReplayTime(0);
+    expect(store.getState().coachingEvents).toEqual([]);
+
+    store.getState().setOfflineReplayTime(19.9);
+    expect(store.getState().coachingEvents.length).toBe(3);
+  });
+
+  it('does not stack when scrubbing back over an event and forward again', () => {
+    play(lapSamples(200), { coachEvents: coaching(4, 9) });
+    store.getState().setOfflineReplayTime(10);
+    expect(store.getState().coachingEvents.length).toBe(2);
+
+    store.getState().setOfflineReplayTime(6);   // atras do segundo evento
+    expect(store.getState().coachingEvents.length).toBe(1);
+
+    store.getState().setOfflineReplayTime(10);
+    expect(store.getState().coachingEvents.length).toBe(2);
+  });
+
+  it('keeps what it has said while the lap only moves forward', () => {
+    play(lapSamples(200), { coachEvents: coaching(4, 9) });
+    store.getState().setOfflineReplayTime(5);
+    store.getState().setOfflineReplayTime(6);
+    store.getState().setOfflineReplayTime(7);
+    expect(store.getState().coachingEvents.length).toBe(1);
   });
 });

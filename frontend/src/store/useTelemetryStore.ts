@@ -657,6 +657,33 @@ const coachEventsUpTo = (
   return { due: events.slice(from, count), count };
 };
 
+/**
+ * The feed after a replay tick released whatever was due.
+ *
+ * `coachEventsUpTo` re-counts from the start of the lap on every clock move, so
+ * rewinding to the line drops its count back to zero and the lap says all of it
+ * again. The feed itself was never cleared, so a second run stacked a second
+ * copy on top of the first -- six events became twelve, then eighteen.
+ *
+ * A count lower than what had already been said means the clock went backwards
+ * past events it had spoken: a rewind, or a scrub to earlier in the lap. The
+ * feed is then rebuilt from the start of the lap up to where the clock now is,
+ * rather than appended to. Clearing it outright would be wrong for a scrub --
+ * dragging back to mid-lap should still show the corners already passed.
+ */
+const feedAfterRelease = (
+  existing: CoachingEvent[],
+  events: Array<Record<string, any>>,
+  release: { due: Array<Record<string, any>>; count: number },
+  alreadySaid: number,
+): CoachingEvent[] => {
+  if (release.count < alreadySaid) {
+    return events.slice(0, release.count).map(normalizeCoachingEvent).reverse().slice(0, 100);
+  }
+  if (!release.due.length) return existing;
+  return [...release.due.map(normalizeCoachingEvent).reverse(), ...existing].slice(0, 100);
+};
+
 const lapMetricsForReplay = (
   sample: TelemetryFrame,
   samples: TelemetryFrame[],
@@ -1272,6 +1299,11 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
         ghostHistory: referenceSamples,
         selectedLap: lapNumber,
         selectedSessionId: replay.sessionId ?? null,
+        // A fresh replay starts with an empty panel. Without this the feed
+        // carries over whatever the live session -- or the previous replay --
+        // had said, above events from a different lap.
+        coachingEvents: [],
+        engineerSpeech: [],
         viewMode: 'replay',
         isStreaming: false,
         globalCursorS: firstSample ? numericOrNull(firstSample.s ?? firstSample.distanceAlongTrack) : null,
@@ -1349,9 +1381,7 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
         replay.lapNumber,
         replay.referenceLapNumber,
       ),
-      coachingEvents: coachRelease.due.length
-        ? [...coachRelease.due.map(normalizeCoachingEvent).reverse(), ...state.coachingEvents].slice(0, 100)
-        : state.coachingEvents,
+      coachingEvents: feedAfterRelease(state.coachingEvents, replay.coachEvents, coachRelease, replay.coachEmittedCount),
       offlineReplay: {
         ...replay,
         coachEmittedCount: coachRelease.count,
@@ -1381,9 +1411,7 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
         replay.lapNumber,
         replay.referenceLapNumber,
       ),
-      coachingEvents: coachRelease.due.length
-        ? [...coachRelease.due.map(normalizeCoachingEvent).reverse(), ...state.coachingEvents].slice(0, 100)
-        : state.coachingEvents,
+      coachingEvents: feedAfterRelease(state.coachingEvents, replay.coachEvents, coachRelease, replay.coachEmittedCount),
       offlineReplay: {
         ...replay,
         coachEmittedCount: coachRelease.count,
@@ -1424,9 +1452,7 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
         replay.lapNumber,
         replay.referenceLapNumber,
       ),
-      coachingEvents: coachRelease.due.length
-        ? [...coachRelease.due.map(normalizeCoachingEvent).reverse(), ...state.coachingEvents].slice(0, 100)
-        : state.coachingEvents,
+      coachingEvents: feedAfterRelease(state.coachingEvents, replay.coachEvents, coachRelease, replay.coachEmittedCount),
       offlineReplay: {
         ...replay,
         coachEmittedCount: coachRelease.count,
