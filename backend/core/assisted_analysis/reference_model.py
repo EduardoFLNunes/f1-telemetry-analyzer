@@ -72,6 +72,20 @@ class MicrosectorTarget:
     brake_point_p: Optional[float] = None
     throttle_point_p: Optional[float] = None
 
+    # What the optimised racing line does through the same slice. Not fitted
+    # from anything the driver did -- it comes from `optimal_line.attach`, which
+    # reads an artefact the ML pipeline produced offline. Stays None for tracks
+    # the search has never been run on, and the coach carries on without it.
+    optimal_seconds: Optional[float] = None
+    optimal_min_speed_kmh: Optional[float] = None
+
+    @property
+    def gap_best_to_optimal(self) -> Optional[float]:
+        """How much the driver's own best still gives away here."""
+        if self.optimal_seconds is None:
+            return None
+        return round(self.best_seconds - self.optimal_seconds, 4)
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
@@ -89,6 +103,10 @@ class DriverReferenceModel:
     targets: List[MicrosectorTarget] = field(default_factory=list)
     rejected_reasons: Dict[str, int] = field(default_factory=dict)
     built_at: Optional[str] = None
+
+    # Filled by `optimal_line.attach` after loading, when the track has one.
+    optimal_lap_seconds: Optional[float] = None
+    optimal_source: Optional[str] = None
 
     # ── what the analysis asks it ────────────────────────────────────────
 
@@ -119,6 +137,31 @@ class DriverReferenceModel:
         if self.best_lap_seconds is None or self.ideal_lap_seconds is None:
             return None
         return round(self.best_lap_seconds - self.ideal_lap_seconds, 3)
+
+    @property
+    def gap_ideal_to_optimal(self) -> Optional[float]:
+        """What is left after stitching his best microsectors together.
+
+        `ideal_lap_seconds` is the driver's ceiling under his current line -- the
+        best he has done in every slice, added up. The optimal line is a
+        different line entirely, so this gap is the part of the lap he cannot
+        reach by driving his own way better.
+        """
+        if self.ideal_lap_seconds is None or self.optimal_lap_seconds is None:
+            return None
+        return round(self.ideal_lap_seconds - self.optimal_lap_seconds, 3)
+
+    def loss_against_optimal(self, splits: Sequence[Optional[float]]) -> List[Optional[float]]:
+        """Per-microsector time the lap gave away against the optimised line."""
+        losses: List[Optional[float]] = []
+        by_index = {target.index: target for target in self.targets}
+        for index, split in enumerate(splits):
+            target = by_index.get(index)
+            if split is None or target is None or target.optimal_seconds is None:
+                losses.append(None)
+                continue
+            losses.append(round(split - target.optimal_seconds, 4))
+        return losses
 
     # ── persistence ──────────────────────────────────────────────────────
 

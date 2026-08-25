@@ -36,7 +36,11 @@ if TORCH_AVAILABLE:  # pragma: no cover - depende do ambiente
 
 @dataclass
 class TrainConfig:
-    epochs: int = 60
+    # Teto alto de proposito. Com 60 a rede geradora terminava na ultima epoca
+    # com a melhor validacao sendo a ultima -- ou seja, quem parava o treino era
+    # o orcamento, e nao o sinal de que nao havia mais o que aprender. Quem deve
+    # decidir isso e `patience`.
+    epochs: int = 200
     batch_size: int = 64
     learning_rate: float = 2e-3
     weight_decay: float = 1e-4

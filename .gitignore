@@ -60,3 +60,10 @@ archives/
 
 # Artefatos do subsistema de aprendizado de tracado (regenerados por script)
 data/ml/
+
+# Modelo de referencia do piloto: reconstruido a partir de data/recordings/ toda
+# vez que ele grava voltas, e portanto dado de execucao, nao fonte. O tracado
+# otimo ao lado dele e o oposto -- sai da busca offline e e o artefato que o
+# instalador precisa levar junto.
+data/reference_models/*.json
+!data/reference_models/*.optimal.json

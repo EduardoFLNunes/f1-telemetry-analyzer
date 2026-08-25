@@ -28,7 +28,7 @@ from ml.track.microsectors import build_microsectors
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Treino das redes de tracado")
-    parser.add_argument("--epochs", type=int, default=60)
+    parser.add_argument("--epochs", type=int, default=TrainConfig.epochs)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--hidden", type=int, default=96)
     parser.add_argument("--layers", type=int, default=2)

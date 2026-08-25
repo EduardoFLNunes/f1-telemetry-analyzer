@@ -23,17 +23,52 @@ const finiteNumber = (value: unknown, fallback = 0): number => {
 
 const boundedSeverity = (value: unknown): number => Math.max(0, Math.min(1, finiteNumber(value)));
 
+/**
+ * A real number, or null.
+ *
+ * `Number.isFinite(Number(x))` is not enough on its own: `Number(null)` and
+ * `Number('')` are both 0, so a missing value would render as a confident
+ * `0.00s` target. Anything the driver reads as a time has to come through here.
+ */
+const finiteOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+
 function getEventMeta(type: unknown) {
   const key = typeof type === 'string' && type.trim() ? type.trim() : 'unknown_event';
   return EVENT_META[key] ?? { label: key.replace(/_/g, ' ').toUpperCase(), color: 'text-slate-400', dot: '#64748b' };
 }
 
-function renderEvidence(event: Partial<CoachingEvent>): string {
+/** The microsector events carry `microsector`; nothing else the feed shows does. */
+export function microsectorEvidence(event: Partial<CoachingEvent>): Record<string, unknown> | null {
+  const e = event.evidence;
+  if (!e || typeof e !== 'object' || Array.isArray(e)) return null;
+  const evidence = e as Record<string, unknown>;
+  return finiteOrNull(evidence.microsector) === null ? null : evidence;
+}
+
+export function renderEvidence(event: Partial<CoachingEvent>): string {
   const e = event.evidence;
   if (!e) return 'Physical anomaly detected.';
   if (typeof e === 'string') return e;
   const evidence = typeof e === 'object' && !Array.isArray(e) ? e as Record<string, unknown> : {};
   const eventName = typeof event.event === 'string' ? event.event : 'unknown_event';
+
+  // The driving coach's own events. Two targets side by side: his own best
+  // through this slice, and the optimised line when the track has one. Dumping
+  // the raw JSON here was unreadable, and the second target made it worse.
+  const microsector = microsectorEvidence(event);
+  if (microsector) {
+    const parts = [`VOCE ${finiteNumber(microsector.yourSeconds).toFixed(2)}s`];
+    parts.push(`MELHOR ${finiteNumber(microsector.bestSeconds).toFixed(2)}s`);
+    const optimal = finiteOrNull(microsector.optimalSeconds);
+    if (optimal !== null) {
+      parts.push(`OTIMO ${optimal.toFixed(2)}s`);
+    }
+    return parts.join('   ');
+  }
 
   if (eventName === 'late_brake' || eventName === 'early_brake') {
     return `BRAKE_DELTA: ${finiteNumber(evidence.delta_m).toFixed(1)}m  REF_S: ${finiteNumber(evidence.ref_s).toFixed(0)}m`;
@@ -92,7 +127,16 @@ export const CoachingFeed: React.FC = () => {
             const severity = boundedSeverity(ev.severity);
             const distance = finiteNumber(ev.s);
             const timestamp = finiteNumber(ev.timestamp, Date.now());
-            const meta = getEventMeta(eventName);
+            const microsector = microsectorEvidence(ev);
+            // A whole Portuguese sentence uppercased made a useless label; the
+            // slice number is what the driver needs to place the loss.
+            const meta = microsector
+              ? {
+                  label: `SETOR ${finiteNumber(microsector.microsector).toFixed(0)}`,
+                  color: 'text-cyan-400',
+                  dot: '#22d3ee',
+                }
+              : getEventMeta(eventName);
             return (
               <div
                 key={`${timestamp}-${i}`}

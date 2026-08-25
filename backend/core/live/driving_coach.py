@@ -86,6 +86,7 @@ class LiveDrivingCoach:
         self._last_clock: Optional[float] = None
         self._last_event_at: float = 0.0
         self._lap_loss: float = 0.0
+        self._lap_loss_optimal: float = 0.0
         self._lap_worst: Optional[Dict[str, Any]] = None
 
     # ── the hot path ─────────────────────────────────────────────────────
@@ -115,6 +116,7 @@ class LiveDrivingCoach:
             self._last_progress = progress
             self._last_clock = clock
             self._lap_loss = 0.0
+            self._lap_loss_optimal = 0.0
             self._lap_worst = None
             return
 
@@ -161,6 +163,13 @@ class LiveDrivingCoach:
         target = model.target_at((finished + 0.5) / model.microsectors)
         if target is None:
             return
+
+        # Against the optimised line this is counted whether or not he beat his
+        # own best here: the two targets answer different questions, and a slice
+        # where he set a personal best can still be half a second off the line.
+        optimal = getattr(target, "optimal_seconds", None)
+        if optimal is not None:
+            self._lap_loss_optimal += max(0.0, split - float(optimal))
 
         loss = split - target.best_seconds
         if loss <= 0:
@@ -211,12 +220,27 @@ class LiveDrivingCoach:
         if at_lap_time is not None:
             evidence["atLapTimeSeconds"] = round(at_lap_time, 3)
 
+        # The optimised line, when this track has one. It is a second opinion,
+        # not a replacement: the driver's own best is what decided that this was
+        # worth saying, and it stays the headline. The line says how much of the
+        # corner is still there after he matches himself.
+        optimal = getattr(target, "optimal_seconds", None)
+        if optimal is not None:
+            optimal = float(optimal)
+            evidence["optimalSeconds"] = round(optimal, 3)
+            evidence["optimalLossSeconds"] = round(split - optimal, 3)
+            optimal_speed = getattr(target, "optimal_min_speed_kmh", None)
+            if optimal_speed is not None:
+                evidence["optimalMinSpeedKmh"] = round(float(optimal_speed), 1)
+
         message = (
             f"Setor {target.index}: {loss:.2f}s atras do seu melhor "
             f"({split:.2f}s contra {target.best_seconds:.2f}s)."
         )
         if target.min_speed_kmh is not None:
             message += f" No melhor, minima de {target.min_speed_kmh:.0f} km/h."
+        if optimal is not None:
+            message += f" O tracado otimo faz em {optimal:.2f}s."
 
         self._publish(COACHING_EVENT, {
             "type": "coaching_event",
@@ -234,7 +258,8 @@ class LiveDrivingCoach:
 
     def _speak_lap_summary(self, frame: Dict[str, Any], model: Any) -> None:
         """The radio call at the line: what the lap cost and where."""
-        if self._lap_loss <= 0.0:
+        optimal_lap = getattr(model, "optimal_lap_seconds", None)
+        if self._lap_loss <= 0.0 and not (optimal_lap and self._lap_loss_optimal > 0.0):
             return
         worst = self._lap_worst or {}
         message = f"Volta fechada. {self._lap_loss:.2f}s acima do seu ideal"
@@ -245,6 +270,13 @@ class LiveDrivingCoach:
             message += (
                 f" Ideal {model.ideal_lap_seconds:.2f}s, seu melhor {model.best_lap_seconds:.2f}s."
             )
+        # The second target: how far the lap was from the line the search found,
+        # and how much of that his own ideal would still not reach.
+        if optimal_lap:
+            message += f" Contra o tracado otimo, {self._lap_loss_optimal:.2f}s."
+            remaining = getattr(model, "gap_ideal_to_optimal", None)
+            if remaining and remaining > 0.0:
+                message += f" Mesmo no seu ideal sobrariam {remaining:.2f}s."
 
         self._publish(ENGINEER_SPEECH, {
             "message": message,

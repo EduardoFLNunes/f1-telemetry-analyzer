@@ -21,6 +21,7 @@ from .reference_lap_comparator import ReferenceComparator
 from .corner_metrics import CornerMetricsCalculator
 from .models import CornerComparison, CornerMetrics, DrivingError, LapDescriptor
 from .reference_model import DriverReferenceModel, lap_is_usable, microsector_splits, model_path
+from .optimal_line import attach, find_optimal_line
 from .corner_segmentation import CornerSegmenter
 from .utils import finite_float
 from .vehicle_dynamics_analyzer import VehicleDynamicsAnalyzer
@@ -321,6 +322,28 @@ class AssistedAnalysisService:
             "gapBestToIdeal": model.gap_best_to_ideal,
             "lapLossAgainstIdeal": total_loss,
             "worstMicrosectors": ranked[:8],
+            # The second target, when the search has been run for this track.
+            # `optimalLine` stays absent otherwise, and every consumer above
+            # keeps working off the driver's own numbers.
+            **self._optimal_line_context(model, splits),
+        }
+
+    def _optimal_line_context(self, model: DriverReferenceModel, splits) -> Dict[str, Any]:
+        """What the optimised line says about this lap, if there is one."""
+        if not model.optimal_lap_seconds:
+            return {}
+        losses = model.loss_against_optimal(splits)
+        against = [loss for loss in losses if loss is not None]
+        return {
+            "optimalLine": {
+                "lapSeconds": model.optimal_lap_seconds,
+                "source": model.optimal_source,
+                "lapLossAgainstOptimal": round(sum(value for value in against if value > 0.0), 3),
+                # What stitching his own best microsectors together still would
+                # not reach -- the part of the lap that needs a different line,
+                # not a cleaner version of this one.
+                "gapIdealToOptimal": model.gap_ideal_to_optimal,
+            }
         }
 
     def _reference_model(self, track: Optional[str]) -> Optional[DriverReferenceModel]:
@@ -330,7 +353,13 @@ class AssistedAnalysisService:
             cached = {}
             self._reference_models = cached
         if key not in cached:
-            cached[key] = DriverReferenceModel.load(model_path(self.runtime_root, key))
+            model = DriverReferenceModel.load(model_path(self.runtime_root, key))
+            # The optimised line lives in its own file and is optional. Attaching
+            # it here means everything downstream -- the live coach, the debrief,
+            # the analysis payload -- sees it without asking for it, and tracks
+            # without one behave exactly as they did before.
+            attach(model, find_optimal_line([self.runtime_root, self.repo_root], key))
+            cached[key] = model
         return cached[key]
 
     def _load_reference(
