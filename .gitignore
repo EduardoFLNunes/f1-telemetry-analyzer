@@ -67,3 +67,8 @@ data/ml/
 # instalador precisa levar junto.
 data/reference_models/*.json
 !data/reference_models/*.optimal.json
+
+# Carimbo de build: regenerado por desktop/scripts/stamp-build-info.js a cada
+# empacotamento, e datado. Versionar guardaria a hora de um build de outra
+# maquina como se fosse a desta.
+desktop/build-info.json

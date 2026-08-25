@@ -959,9 +959,114 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+// ── versions, and pulling the project forward ───────────────────────────────
+//
+// The repository is the yardstick, so this only does anything on a machine that
+// has one -- which is the machine the project is developed on. Everywhere else
+// it reports the installed versions and says the repository is unavailable,
+// rather than pretending it could update.
+
+const versionService = require('./version-service');
+
+function resolveProjectRepo() {
+  const configured = resolveMaybeRelativePath(process.env.AT_REPO_PATH);
+  if (configured) return configured;
+  // In a dev run REPO_ROOT is the checkout. In a packaged app it is the folder
+  // the executable sits in, which is only a repository if the user installed
+  // into one -- `collect` checks for `.git` and reports honestly either way.
+  return REPO_ROOT;
+}
+
+async function versionStatus(_event, options = {}) {
+  try {
+    return await versionService.collect({
+      appRoot: __dirname,
+      resourceRoot: resolveBackendResourceRoot(),
+      repoPath: resolveProjectRepo(),
+      fallbackVersion: app.getVersion(),
+      fetch: Boolean(options && options.fetch),
+    });
+  } catch (error) {
+    return { error: String(error?.message || error) };
+  }
+}
+
+let updateInProgress = false;
+
+/**
+ * Pull the repository and rebuild what the app runs from.
+ *
+ * Deliberately not silent and not automatic: it reports each step to the
+ * renderer and stops at the first failure. A half-applied update -- code pulled
+ * but backend not rebuilt -- is worse than no update, because the two halves
+ * disagree about what the app is.
+ */
+async function runProjectUpdate(event) {
+  if (updateInProgress) return { ok: false, error: 'Uma atualizacao ja esta em andamento.' };
+  const repoPath = resolveProjectRepo();
+  const state = await versionService.repositoryState(repoPath);
+  if (!state.available) {
+    return { ok: false, error: 'Nenhum repositorio git encontrado nesta maquina.', repo: state };
+  }
+  if (state.dirty) {
+    // Rebasing over uncommitted work is how people lose it.
+    return { ok: false, error: 'A arvore tem mudancas nao commitadas. Commite ou guarde antes de atualizar.' };
+  }
+
+  updateInProgress = true;
+  const steps = [];
+  const report = (step, ok, detail) => {
+    const entry = { step, ok, detail: detail || null, at: new Date().toISOString() };
+    steps.push(entry);
+    try {
+      event?.sender?.send('update:progress', entry);
+    } catch { /* a closed window must not fail the update */ }
+    return entry;
+  };
+
+  try {
+    const pull = await versionService.runGit(['pull', '--ff-only'], repoPath, 120000);
+    report('git pull', pull.ok, pull.ok ? pull.stdout : pull.stderr || pull.error);
+    if (!pull.ok) return { ok: false, steps, error: 'git pull falhou.' };
+
+    const commands = [
+      { step: 'frontend', command: 'npm', args: ['--prefix', 'frontend', 'run', 'build'], cwd: repoPath },
+      {
+        step: 'backend',
+        command: 'powershell',
+        args: ['-ExecutionPolicy', 'Bypass', '-File', path.join(repoPath, 'backend', 'packaging', 'build_backend.ps1')],
+        cwd: repoPath,
+      },
+    ];
+
+    for (const item of commands) {
+      const result = await new Promise((resolve) => {
+        const child = spawn(item.command, item.args, { cwd: item.cwd, shell: true, windowsHide: true });
+        let tail = '';
+        const keep = (chunk) => { tail = (tail + String(chunk)).slice(-4000); };
+        child.stdout?.on('data', keep);
+        child.stderr?.on('data', keep);
+        child.on('error', (error) => resolve({ ok: false, tail: String(error?.message || error) }));
+        child.on('close', (code) => resolve({ ok: code === 0, tail }));
+      });
+      report(item.step, result.ok, result.tail);
+      if (!result.ok) return { ok: false, steps, error: `Build de ${item.step} falhou.` };
+    }
+
+    report('concluido', true, 'Reinicie o aplicativo para rodar a versao nova.');
+    return { ok: true, steps, restartRequired: true };
+  } catch (error) {
+    return { ok: false, steps, error: String(error?.message || error) };
+  } finally {
+    updateInProgress = false;
+  }
+}
+
 ipcMain.handle('backend:health', backendHealth);
 ipcMain.handle('desktop:runtime', desktopRuntimeStatus);
 ipcMain.handle('desktop:open-logs', openLogsDir);
+ipcMain.handle('version:status', versionStatus);
+ipcMain.handle('update:run', (event) => runProjectUpdate(event));
 ipcMain.handle('assetto:detect', detectAssettoCorsaInstallPaths);
 ipcMain.handle('assetto:plugin-status', getAssettoPluginStatus);
 ipcMain.handle('assetto:open-folder-picker', openAssettoFolderPicker);

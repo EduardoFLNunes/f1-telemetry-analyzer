@@ -1,6 +1,7 @@
 import React from 'react';
 import { DataQualityPanel } from '../components/DataQualityPanel';
 import { DesktopRuntimePanel } from '../components/DesktopRuntimePanel';
+import { VersionPanel } from '../components/VersionPanel';
 import { CarPhysicsDebugPanel } from '../components/CarPhysicsDebugPanel';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
@@ -21,6 +22,7 @@ export const DiagnosticsPage: React.FC = () => (
 
       <div className="panel" style={{ minHeight: 300, overflow: 'hidden' }}>
         <DesktopRuntimePanel active />
+        <VersionPanel />
       </div>
 
       <div className="home-columns">

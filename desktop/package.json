@@ -14,10 +14,11 @@
     "desktop:prod:autostart": "node scripts/start.js --production --autostart",
     "build:frontend": "cd ../frontend && npm.cmd run build",
     "build:backend": "powershell -ExecutionPolicy Bypass -File ../backend/packaging/build_backend.ps1",
-    "desktop:build": "npm run build:frontend && npm run build:backend && npm run pack",
+    "desktop:build": "npm run stamp && npm run build:frontend && npm run build:backend && npm run pack",
     "pack": "electron-builder --dir",
-    "dist:win": "npm run build:frontend && npm run build:backend && npm run dist:win:package",
-    "dist:win:package": "electron-builder --win nsis"
+    "dist:win": "npm run stamp && npm run build:frontend && npm run build:backend && npm run dist:win:package",
+    "dist:win:package": "electron-builder --win nsis",
+    "stamp": "node scripts/stamp-build-info.js"
   },
   "devDependencies": {
     "electron": "^42.3.3",
@@ -35,6 +36,7 @@
       "main.js",
       "preload.js",
       "package.json",
+      "build-info.json",
       "assets/**/*",
       "scripts/**/*"
     ],

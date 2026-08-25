@@ -34,6 +34,9 @@ declare global {
     automobilistaDesktop?: {
       runtimeStatus?: () => Promise<DesktopRuntimeStatus>;
       backendHealth?: () => Promise<unknown>;
+      versionStatus?: (options?: { fetch?: boolean }) => Promise<any>;
+      runUpdate?: () => Promise<{ ok?: boolean; error?: string; steps?: unknown[]; restartRequired?: boolean }>;
+      onUpdateProgress?: (listener: (entry: any) => void) => () => void;
       openLogsDir?: () => Promise<{ ok?: boolean; path?: string; error?: string | null }>;
       detectAssettoCorsa?: () => Promise<AssettoDetectionResult>;
       getAssettoPluginStatus?: () => Promise<AssettoPluginStatus>;

@@ -72,6 +72,16 @@ contextBridge.exposeInMainWorld('desktopRuntime', {
 contextBridge.exposeInMainWorld('automobilistaDesktop', {
   backendHealth: () => ipcRenderer.invoke('backend:health'),
   runtimeStatus: () => ipcRenderer.invoke('desktop:runtime'),
+  // `fetch: true` vai ate o remoto antes de contar; sem isso a contagem e
+  // contra o que foi puxado da ultima vez, que e o numero que o usuario esta
+  // tentando parar de adivinhar.
+  versionStatus: (options) => ipcRenderer.invoke('version:status', options || {}),
+  runUpdate: () => ipcRenderer.invoke('update:run'),
+  onUpdateProgress: (listener) => {
+    const handler = (_event, entry) => listener(entry);
+    ipcRenderer.on('update:progress', handler);
+    return () => ipcRenderer.removeListener('update:progress', handler);
+  },
   openLogsDir: () => ipcRenderer.invoke('desktop:open-logs'),
   detectAssettoCorsa: () => ipcRenderer.invoke('assetto:detect'),
   getAssettoPluginStatus: () => ipcRenderer.invoke('assetto:plugin-status'),
