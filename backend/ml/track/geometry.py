@@ -17,6 +17,7 @@ Convencao de coordenadas, herdada do cache e verificada contra as gravacoes:
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -75,6 +76,11 @@ class TrackGeometry:
     curvature: np.ndarray     # (N,)   1/m, positivo = curva para a esquerda
     width_left: np.ndarray    # (N,)   centerline -> borda esquerda, em metros
     width_right: np.ndarray   # (N,)   centerline -> borda direita, em metros
+    # Identidade do que foi carregado: `geometry_id` muda quando a centerline,
+    # as bordas ou os parametros de processamento mudam; `source_hash` e o
+    # hash dos arquivos do jogo que o cache declara. Ver `geometry_fingerprint`.
+    geometry_id: str = ""
+    source_hash: str = ""
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "_tree", cKDTree(np.column_stack([self.x, self.z])))
@@ -417,6 +423,32 @@ def _resample_closed(
     )
 
 
+def geometry_fingerprint(raw: dict, parameters: dict) -> str:
+    """Identidade da geometria como o pipeline a usa.
+
+    Nao e o hash do arquivo: o cache reescreve `generatedAt` a cada
+    regeneracao, entao o mesmo conteudo teria outro hash. E tambem nao e o
+    `sourceHash` do cache, que descreve os arquivos do jogo -- uma mudanca no
+    algoritmo de reconstrucao muda a centerline sem mudar o jogo. Entram as
+    coordenadas que o pipeline le (arredondadas ao milimetro, para que uma
+    regravacao identica de o mesmo id) e os parametros que transformam essas
+    coordenadas na grade.
+    """
+    digest = hashlib.sha256()
+
+    def feed(points, keys):
+        values = np.array([[float(p.get(k) or 0.0) for k in keys] for p in points], dtype=float)
+        digest.update(np.round(values, 3).tobytes())
+
+    feed(raw["centerline"], ("x", "z", "distance"))
+    feed(raw["normals"], ("x", "z"))
+    feed(raw["boundsLeft"], ("x", "z"))
+    feed(raw["boundsRight"], ("x", "z"))
+    digest.update(f"{float(raw['trackLength']):.3f}".encode())
+    digest.update(json.dumps(parameters, sort_keys=True).encode())
+    return digest.hexdigest()[:16]
+
+
 def load_geometry(
     path: Optional[Path] = None,
     step: Optional[float] = None,
@@ -446,6 +478,16 @@ def load_geometry(
     distances = np.array([p["distance"] for p in centerline], dtype=float)
     centre, _ = _clean_centerline(
         centre, distances, config.CENTERLINE_SPIKE_TOLERANCE_M, total_length
+    )
+
+    fingerprint = geometry_fingerprint(
+        raw,
+        {
+            "step": float(step or config.RESAMPLE_STEP_M),
+            "curvature_smoothing_m": float(curvature_smoothing_m),
+            "centerline_smoothing_m": float(centerline_smoothing_m),
+            "spike_tolerance_m": float(config.CENTERLINE_SPIKE_TOLERANCE_M),
+        },
     )
 
     count = config.grid_size(total_length, step)
@@ -521,4 +563,6 @@ def load_geometry(
         curvature=curvature,
         width_left=grid_left,
         width_right=grid_right,
+        geometry_id=fingerprint,
+        source_hash=str(raw.get("sourceHash") or ""),
     )

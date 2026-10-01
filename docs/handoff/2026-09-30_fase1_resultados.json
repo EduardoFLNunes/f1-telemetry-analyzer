@@ -1,0 +1,2114 @@
+{
+  "etapa": "fase1",
+  "data": "2026-09-30",
+  "commit_base": "13617a0a756a0b263651b3743bf18653679e27a2",
+  "patch": {
+    "arquivo": "2026-09-30_fase1.patch",
+    "sha256": "c96b67c0ee026806821cb332b8049b8181cc69108a5da15e1fffaabb738dc12b"
+  },
+  "testes": {
+    "arquivo": "2026-09-30_fase1_testes.txt",
+    "comando": "python -m pytest tests -v -p no:cacheprovider (em backend/, worktree limpo em commit_base + patch)"
+  },
+  "ambiente": {
+    "python": "3.9.7",
+    "numpy": "1.26.3",
+    "pandas": "2.1.4",
+    "scipy": "1.11.4",
+    "torch": "2.8.0+cpu"
+  },
+  "comandos": {
+    "integridade": "cd backend && python -m ml.scripts.measure_integrity",
+    "contrafactual": "cd backend && python -m ml.scripts.validate_counterfactual",
+    "dataset": "cd backend && python -m ml.scripts.build_inventory && python -m ml.scripts.build_lap_store"
+  },
+  "integridade": {
+    "geometry_id": "0ed16f0dd2225990",
+    "source_hash": "8c3e058486e0d691a52769eca59d209ea170a3e988da078ae6ec7c726b909609",
+    "inventario": {
+      "voltas": 1009,
+      "validas": 122,
+      "sessoes_com_validas": 11,
+      "validas_por_sessao": {
+        "2026-06-14_12-23-46_vhe_interlagos": 9,
+        "2026-06-18_20-06-03_vhe_interlagos": 3,
+        "2026-06-19_11-08-15_vhe_interlagos": 1,
+        "2026-06-19_23-24-46_vhe_interlagos": 4,
+        "2026-06-20_13-04-20_vhe_interlagos": 2,
+        "2026-06-20_13-09-57_vhe_interlagos": 1,
+        "2026-06-20_13-13-02_vhe_interlagos": 39,
+        "2026-08-09_19-10-41_vhe_interlagos": 3,
+        "2026-08-09_19-15-35_vhe_interlagos": 1,
+        "2026-08-09_19-20-59_vhe_interlagos": 52,
+        "2026-08-16_03-30-14_vhe_interlagos": 7
+      },
+      "associacao_replay": {
+        "rejeitada:exact": 848,
+        "rejeitada:replay_has_more": 39,
+        "valida:exact": 122
+      },
+      "concordancia_projecao_validas": {
+        "voltas_com_projecao_gravada": 66,
+        "recorded_s_p95_m": {
+          "media": 29.538338826652744,
+          "min": 18.85844362796224,
+          "max": 30.9329288911008
+        },
+        "recorded_lateral_p95_m": {
+          "media": 0.4172423090299343,
+          "min": 0.38169558303071405,
+          "max": 0.46314545790505335
+        },
+        "recorded_lateral_correlation": {
+          "media": 0.9567895322846965,
+          "min": 0.9367046061347785,
+          "max": 0.986636466625905
+        },
+        "mediana_por_sessao": {
+          "2026-06-14_12-23-46_vhe_interlagos": {
+            "recorded_s_p95_m": 30.797703799272835,
+            "recorded_lateral_p95_m": 0.41426739296048026,
+            "recorded_lateral_correlation": 0.9527357705425555
+          },
+          "2026-06-18_20-06-03_vhe_interlagos": {
+            "recorded_s_p95_m": 30.80932833942086,
+            "recorded_lateral_p95_m": 0.4166603507712153,
+            "recorded_lateral_correlation": 0.9567399367895405
+          },
+          "2026-06-19_11-08-15_vhe_interlagos": {
+            "recorded_s_p95_m": 30.720171169116792,
+            "recorded_lateral_p95_m": 0.4465700177942935,
+            "recorded_lateral_correlation": 0.9476290041888119
+          },
+          "2026-06-19_23-24-46_vhe_interlagos": {
+            "recorded_s_p95_m": 30.864743280015965,
+            "recorded_lateral_p95_m": 0.44448824297066636,
+            "recorded_lateral_correlation": 0.9543410888595791
+          },
+          "2026-06-20_13-04-20_vhe_interlagos": {
+            "recorded_s_p95_m": 30.810303800782833,
+            "recorded_lateral_p95_m": 0.4315969261460474,
+            "recorded_lateral_correlation": 0.9505317875530318
+          },
+          "2026-06-20_13-09-57_vhe_interlagos": {
+            "recorded_s_p95_m": 30.82518736057559,
+            "recorded_lateral_p95_m": 0.43547516731658165,
+            "recorded_lateral_correlation": 0.9489520217732949
+          },
+          "2026-06-20_13-13-02_vhe_interlagos": {
+            "recorded_s_p95_m": 30.79933295704009,
+            "recorded_lateral_p95_m": 0.41640921017966503,
+            "recorded_lateral_correlation": 0.9529059795782195
+          },
+          "2026-08-09_19-10-41_vhe_interlagos": {
+            "recorded_s_p95_m": null,
+            "recorded_lateral_p95_m": null,
+            "recorded_lateral_correlation": null
+          },
+          "2026-08-09_19-15-35_vhe_interlagos": {
+            "recorded_s_p95_m": null,
+            "recorded_lateral_p95_m": null,
+            "recorded_lateral_correlation": null
+          },
+          "2026-08-09_19-20-59_vhe_interlagos": {
+            "recorded_s_p95_m": null,
+            "recorded_lateral_p95_m": null,
+            "recorded_lateral_correlation": null
+          },
+          "2026-08-16_03-30-14_vhe_interlagos": {
+            "recorded_s_p95_m": 18.98150732162048,
+            "recorded_lateral_p95_m": 0.4175531109047102,
+            "recorded_lateral_correlation": 0.953415205460804
+          }
+        }
+      }
+    },
+    "formatos_e_sinal": {
+      "2026-05-26_19-06-59_vhe_interlagos": {
+        "rotulo": "maio, so topo",
+        "controles": {
+          "amostras_lidas": 30000,
+          "formatos": {
+            "top_level": 30000
+          },
+          "amostras_com_os_dois": {
+            "throttle": 0,
+            "brake": 0,
+            "clutch": 0,
+            "steering": 0,
+            "gear": 0,
+            "rpm": 0
+          },
+          "diferenca_maxima": {
+            "throttle": 0.0,
+            "brake": 0.0,
+            "clutch": 0.0,
+            "steering": 0.0,
+            "gear": 0.0,
+            "rpm": 0.0
+          }
+        },
+        "volta_usada": "2026-05-26_19-06-59_vhe_interlagos#0025",
+        "projecao": {
+          "amostras": 3954,
+          "correlacao_gravado_bruto_x_ml": -0.9894193193423936,
+          "p95_abs_ml_mais_gravado_bruto_m": 0.48156167952361173,
+          "s_gravado_menos_s_ml_mediana_por_trecho_m": {
+            "0": -0.20441235700400284,
+            "500": 14.04144623166917,
+            "1000": 31.345251303618625,
+            "2000": 24.251011564289456,
+            "3000": 18.556841120528134,
+            "4000": 14.208460190260212,
+            "4300": 11.939901114819804
+          }
+        }
+      },
+      "2026-05-29_20-22-25_vhe_interlagos": {
+        "rotulo": "maio, ambos",
+        "controles": {
+          "amostras_lidas": 30000,
+          "formatos": {
+            "both": 30000
+          },
+          "amostras_com_os_dois": {
+            "throttle": 30000,
+            "brake": 30000,
+            "clutch": 0,
+            "steering": 30000,
+            "gear": 30000,
+            "rpm": 30000
+          },
+          "diferenca_maxima": {
+            "throttle": 0.0,
+            "brake": 0.0,
+            "clutch": 0.0,
+            "steering": 0.0,
+            "gear": 0.0,
+            "rpm": 0.0
+          }
+        },
+        "volta_usada": "2026-05-29_20-22-25_vhe_interlagos#0000",
+        "projecao": {
+          "amostras": 2436,
+          "correlacao_gravado_bruto_x_ml": -0.9848058028797821,
+          "p95_abs_ml_mais_gravado_bruto_m": 0.2558133605125577,
+          "s_gravado_menos_s_ml_mediana_por_trecho_m": {
+            "0": null,
+            "500": 13.733145991023775,
+            "1000": 31.461301067708973,
+            "2000": 24.203036761163048,
+            "3000": 18.562365647033857,
+            "4000": 13.9609224014971,
+            "4300": 11.911870150755021
+          }
+        }
+      },
+      "2026-06-14_12-23-46_vhe_interlagos": {
+        "rotulo": "junho, so topo",
+        "controles": {
+          "amostras_lidas": 30000,
+          "formatos": {
+            "top_level": 30000
+          },
+          "amostras_com_os_dois": {
+            "throttle": 0,
+            "brake": 0,
+            "clutch": 0,
+            "steering": 0,
+            "gear": 0,
+            "rpm": 0
+          },
+          "diferenca_maxima": {
+            "throttle": 0.0,
+            "brake": 0.0,
+            "clutch": 0.0,
+            "steering": 0.0,
+            "gear": 0.0,
+            "rpm": 0.0
+          }
+        },
+        "volta_usada": "2026-06-14_12-23-46_vhe_interlagos#0000",
+        "projecao": {
+          "amostras": 2934,
+          "correlacao_gravado_bruto_x_ml": -0.9744055692797557,
+          "p95_abs_ml_mais_gravado_bruto_m": 0.46356104647840424,
+          "s_gravado_menos_s_ml_mediana_por_trecho_m": {
+            "0": null,
+            "500": 13.738640368889719,
+            "1000": 31.437287330156778,
+            "2000": 24.27275855289281,
+            "3000": 18.5635789781154,
+            "4000": 14.13314477257427,
+            "4300": 11.926528271135794
+          }
+        }
+      },
+      "2026-06-18_20-06-03_vhe_interlagos": {
+        "rotulo": "junho, ambos",
+        "controles": {
+          "amostras_lidas": 30000,
+          "formatos": {
+            "both": 30000
+          },
+          "amostras_com_os_dois": {
+            "throttle": 30000,
+            "brake": 30000,
+            "clutch": 0,
+            "steering": 30000,
+            "gear": 30000,
+            "rpm": 30000
+          },
+          "diferenca_maxima": {
+            "throttle": 0.0,
+            "brake": 0.0,
+            "clutch": 0.0,
+            "steering": 0.0,
+            "gear": 0.0,
+            "rpm": 0.0
+          }
+        },
+        "volta_usada": "2026-06-18_20-06-03_vhe_interlagos#0000",
+        "projecao": {
+          "amostras": 3151,
+          "correlacao_gravado_bruto_x_ml": -0.9889881823839334,
+          "p95_abs_ml_mais_gravado_bruto_m": 0.36109067532105854,
+          "s_gravado_menos_s_ml_mediana_por_trecho_m": {
+            "0": null,
+            "500": 13.710344280127401,
+            "1000": 31.42880996463191,
+            "2000": 24.274863966558314,
+            "3000": 18.577462371283673,
+            "4000": 14.125140288480452,
+            "4300": 11.936540296405838
+          }
+        }
+      },
+      "2026-06-20_13-13-02_vhe_interlagos": {
+        "rotulo": "junho, ambos",
+        "controles": {
+          "amostras_lidas": 30000,
+          "formatos": {
+            "both": 30000
+          },
+          "amostras_com_os_dois": {
+            "throttle": 30000,
+            "brake": 30000,
+            "clutch": 0,
+            "steering": 30000,
+            "gear": 30000,
+            "rpm": 30000
+          },
+          "diferenca_maxima": {
+            "throttle": 0.0,
+            "brake": 0.0,
+            "clutch": 0.0,
+            "steering": 0.0,
+            "gear": 0.0,
+            "rpm": 0.0
+          }
+        },
+        "volta_usada": "2026-06-20_13-13-02_vhe_interlagos#0000",
+        "projecao": {
+          "amostras": 4504,
+          "correlacao_gravado_bruto_x_ml": -0.9547304601141868,
+          "p95_abs_ml_mais_gravado_bruto_m": 0.38424995574043846,
+          "s_gravado_menos_s_ml_mediana_por_trecho_m": {
+            "0": -0.005732413668283698,
+            "500": 14.11070334331248,
+            "1000": 31.447069978580657,
+            "2000": 24.27367003067684,
+            "3000": 18.569083566569134,
+            "4000": 14.097875708000629,
+            "4300": 11.890252782210155
+          }
+        }
+      },
+      "2026-08-09_19-20-59_vhe_interlagos": {
+        "rotulo": "agosto, so aninhado",
+        "controles": {
+          "amostras_lidas": 30000,
+          "formatos": {
+            "nested": 30000
+          },
+          "amostras_com_os_dois": {
+            "throttle": 0,
+            "brake": 0,
+            "clutch": 0,
+            "steering": 0,
+            "gear": 0,
+            "rpm": 0
+          },
+          "diferenca_maxima": {
+            "throttle": 0.0,
+            "brake": 0.0,
+            "clutch": 0.0,
+            "steering": 0.0,
+            "gear": 0.0,
+            "rpm": 0.0
+          }
+        },
+        "volta_usada": "2026-08-09_19-20-59_vhe_interlagos#0000",
+        "projecao": {
+          "sem_projecao_gravada": true
+        }
+      },
+      "2026-08-16_03-30-14_vhe_interlagos": {
+        "rotulo": "agosto, ambos",
+        "controles": {
+          "amostras_lidas": 30000,
+          "formatos": {
+            "both": 30000
+          },
+          "amostras_com_os_dois": {
+            "throttle": 30000,
+            "brake": 30000,
+            "clutch": 0,
+            "steering": 30000,
+            "gear": 30000,
+            "rpm": 30000
+          },
+          "diferenca_maxima": {
+            "throttle": 0.0,
+            "brake": 0.0,
+            "clutch": 0.0,
+            "steering": 0.0,
+            "gear": 0.0,
+            "rpm": 0.0
+          }
+        },
+        "volta_usada": "2026-08-16_03-30-14_vhe_interlagos#0000",
+        "projecao": {
+          "amostras": 8442,
+          "correlacao_gravado_bruto_x_ml": -0.982776338548783,
+          "p95_abs_ml_mais_gravado_bruto_m": 0.5088012085293422,
+          "s_gravado_menos_s_ml_mediana_por_trecho_m": {
+            "0": -0.008010398232272564,
+            "500": 6.485305777069016,
+            "1000": 19.634759720614966,
+            "2000": 12.503847846200642,
+            "3000": 6.801356062751893,
+            "4000": 2.2960579069231244,
+            "4300": 0.12667902362454697
+          }
+        }
+      }
+    },
+    "store_contra_backup": {
+      "backup": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\_backup_pre_fase1",
+      "voltas_comuns": 113,
+      "voltas_novas": [
+        "2026-06-14_12-23-46_vhe_interlagos#0001",
+        "2026-06-14_12-23-46_vhe_interlagos#0002",
+        "2026-06-14_12-23-46_vhe_interlagos#0003",
+        "2026-06-14_12-23-46_vhe_interlagos#0004",
+        "2026-06-14_12-23-46_vhe_interlagos#0005",
+        "2026-06-14_12-23-46_vhe_interlagos#0006",
+        "2026-06-14_12-23-46_vhe_interlagos#0007",
+        "2026-06-14_12-23-46_vhe_interlagos#0009",
+        "2026-06-14_12-23-46_vhe_interlagos#0011"
+      ],
+      "voltas_removidas": [],
+      "max_abs_diff_lateral": 0.0,
+      "max_abs_diff_elapsed_s": 0.0,
+      "max_abs_diff_speed_kmh": 0.0,
+      "max_abs_diff_throttle": 0.0,
+      "max_abs_diff_brake": 0.0
+    },
+    "simulador_dentro_da_sessao": {
+      "2026-08-09_19-20-59_vhe_interlagos": {
+        "voltas_abaixo_de_88s": 40,
+        "dp_real_s": 0.15892651174713712,
+        "dp_simulado_s": 0.09469663004764932,
+        "correlacao": 0.07085929659278795
+      },
+      "2026-06-20_13-13-02_vhe_interlagos": {
+        "voltas_abaixo_de_88s": 26,
+        "dp_real_s": 0.6490615659442551,
+        "dp_simulado_s": 1.218963085152847,
+        "correlacao": 0.5786845343426295
+      }
+    }
+  },
+  "contrafactual": {
+    "geometry_id": "0ed16f0dd2225990",
+    "store": {
+      "voltas": 122,
+      "sessoes": 11,
+      "voltas_por_sessao": {
+        "2026-06-14_12-23-46_vhe_interlagos": 9,
+        "2026-06-18_20-06-03_vhe_interlagos": 3,
+        "2026-06-19_11-08-15_vhe_interlagos": 1,
+        "2026-06-19_23-24-46_vhe_interlagos": 4,
+        "2026-06-20_13-04-20_vhe_interlagos": 2,
+        "2026-06-20_13-09-57_vhe_interlagos": 1,
+        "2026-06-20_13-13-02_vhe_interlagos": 39,
+        "2026-08-09_19-10-41_vhe_interlagos": 3,
+        "2026-08-09_19-15-35_vhe_interlagos": 1,
+        "2026-08-09_19-20-59_vhe_interlagos": 52,
+        "2026-08-16_03-30-14_vhe_interlagos": 7
+      },
+      "sessoes_testaveis": [
+        "2026-06-14_12-23-46_vhe_interlagos",
+        "2026-06-18_20-06-03_vhe_interlagos",
+        "2026-06-19_23-24-46_vhe_interlagos",
+        "2026-06-20_13-04-20_vhe_interlagos",
+        "2026-06-20_13-13-02_vhe_interlagos",
+        "2026-08-09_19-10-41_vhe_interlagos",
+        "2026-08-09_19-20-59_vhe_interlagos",
+        "2026-08-16_03-30-14_vhe_interlagos"
+      ]
+    },
+    "pares": {
+      "total_possivel": 7381,
+      "dentro_da_sessao": 2137,
+      "exclusoes_de_par": {
+        "combustivel difere mais de 5 L": 1262,
+        "comparavel": 875,
+        "sessoes diferentes (par nao formado)": 5244
+      },
+      "exclusoes_de_microsetor": {
+        "combustivel difere mais de 5 L": 75720,
+        "comparavel": 42805,
+        "velocidade de entrada difere mais de 3 km/h": 9484,
+        "incidente (eficiencia < 0,6)": 211
+      },
+      "microsetores_comparaveis": 42805,
+      "microsetores_primarios": 6728
+    },
+    "comparabilidade": {
+      "max_fuel_diff_l": 5.0,
+      "max_tyre_wear_diff": 1.0,
+      "max_entry_speed_diff_kmh": 3.0,
+      "min_efficiency": 0.6,
+      "primario_min_diferenca_de_linha_m": 0.5
+    },
+    "substituta": "avaliada so em ['2026-06-14_12-23-46_vhe_interlagos', '2026-06-19_23-24-46_vhe_interlagos', '2026-08-09_19-10-41_vhe_interlagos', '2026-08-16_03-30-14_vhe_interlagos']",
+    "dobras": [
+      {
+        "session_id": "2026-06-14_12-23-46_vhe_interlagos",
+        "test_laps": 9,
+        "train_laps": 113,
+        "pairs": 36,
+        "window_points": 5,
+        "slope": 0.11469193804236348,
+        "train_mae_by_window": {
+          "0": 0.014209898808979679,
+          "5": 0.014172058956183078,
+          "18": 0.014224043627191207,
+          "36": 0.014363879517970088,
+          "100": 0.015311978721777466,
+          "None": 0.018148427401902773
+        },
+        "envelope_top_speed_kmh": 280.2413607379397
+      },
+      {
+        "session_id": "2026-06-18_20-06-03_vhe_interlagos",
+        "test_laps": 3,
+        "train_laps": 119,
+        "pairs": 3,
+        "window_points": 5,
+        "slope": 0.1134683038259444,
+        "train_mae_by_window": {
+          "0": 0.014205844412695333,
+          "5": 0.014168284759126433,
+          "18": 0.014215707701045384,
+          "36": 0.014348455249919963,
+          "100": 0.01524914024625367,
+          "None": 0.018051283398343002
+        },
+        "envelope_top_speed_kmh": 280.10816268447263
+      },
+      {
+        "session_id": "2026-06-19_23-24-46_vhe_interlagos",
+        "test_laps": 4,
+        "train_laps": 118,
+        "pairs": 6,
+        "window_points": 5,
+        "slope": 0.11285895157700022,
+        "train_mae_by_window": {
+          "0": 0.014168497315878463,
+          "5": 0.014130965556356215,
+          "18": 0.014178623371038823,
+          "36": 0.01431164641029387,
+          "100": 0.015213614914008005,
+          "None": 0.018016907445870384
+        },
+        "envelope_top_speed_kmh": 280.12831607138446
+      },
+      {
+        "session_id": "2026-06-20_13-04-20_vhe_interlagos",
+        "test_laps": 2,
+        "train_laps": 120,
+        "pairs": 1,
+        "window_points": 5,
+        "slope": 0.11368012051711485,
+        "train_mae_by_window": {
+          "0": 0.014199434751487945,
+          "5": 0.014161901992028584,
+          "18": 0.014209475553823897,
+          "36": 0.014342126978923276,
+          "100": 0.015240434444283675,
+          "None": 0.01803810955702649
+        },
+        "envelope_top_speed_kmh": 279.9547914470432
+      },
+      {
+        "session_id": "2026-06-20_13-13-02_vhe_interlagos",
+        "test_laps": 39,
+        "train_laps": 83,
+        "pairs": 741,
+        "window_points": 5,
+        "slope": 0.009627217283650593,
+        "train_mae_by_window": {
+          "0": 0.010590518323230949,
+          "5": 0.010552581739414878,
+          "18": 0.01058342538856211,
+          "36": 0.01068946455068018,
+          "100": 0.011360856609314688,
+          "None": 0.013893744161124542
+        },
+        "envelope_top_speed_kmh": 279.4375005637523
+      },
+      {
+        "session_id": "2026-08-09_19-10-41_vhe_interlagos",
+        "test_laps": 3,
+        "train_laps": 119,
+        "pairs": 3,
+        "window_points": 5,
+        "slope": 0.11335759173352121,
+        "train_mae_by_window": {
+          "0": 0.014266590348846277,
+          "5": 0.014228936661834723,
+          "18": 0.014276736806344507,
+          "36": 0.014410002845000795,
+          "100": 0.01531240888668511,
+          "None": 0.018120641063837227
+        },
+        "envelope_top_speed_kmh": 280.10816268447263
+      },
+      {
+        "session_id": "2026-08-09_19-20-59_vhe_interlagos",
+        "test_laps": 52,
+        "train_laps": 70,
+        "pairs": 1326,
+        "window_points": 5,
+        "slope": 0.28847580406959883,
+        "train_mae_by_window": {
+          "0": 0.023636892219685242,
+          "5": 0.023601931314939283,
+          "18": 0.023674517075750787,
+          "36": 0.023845490974695308,
+          "100": 0.025125885398486588,
+          "None": 0.02846150829418593
+        },
+        "envelope_top_speed_kmh": 281.22733514455774
+      },
+      {
+        "session_id": "2026-08-16_03-30-14_vhe_interlagos",
+        "test_laps": 7,
+        "train_laps": 115,
+        "pairs": 21,
+        "window_points": 5,
+        "slope": 0.11385219075387178,
+        "train_mae_by_window": {
+          "0": 0.014150963343077248,
+          "5": 0.014113335539510118,
+          "18": 0.014161625424951592,
+          "36": 0.014295698433502183,
+          "100": 0.015199480565793877,
+          "None": 0.01799228862200572
+        },
+        "envelope_top_speed_kmh": 279.17395136331334
+      }
+    ],
+    "metricas": {
+      "primario": {
+        "zero": {
+          "n": 6728,
+          "mae_s": 0.017173077264230174,
+          "bias_s": 0.006778746284869623,
+          "std_error_s": 0.1006789736623739,
+          "rmse_s": 0.10090692314654931,
+          "median_ae_s": 0.003439847357498138,
+          "p95_ae_s": 0.050465910162835206,
+          "mae_zero_s": 0.017173077264230174,
+          "skill": 0.0,
+          "spearman": NaN,
+          "sign_agreement": 0.0
+        },
+        "physics": {
+          "n": 6728,
+          "mae_s": 0.04622717781925283,
+          "bias_s": -0.023431581782688105,
+          "std_error_s": 0.2092295267650333,
+          "rmse_s": 0.21053748809928977,
+          "median_ae_s": 0.0037898503096979175,
+          "p95_ae_s": 0.18139310100246683,
+          "mae_zero_s": 0.017173077264230174,
+          "skill": -1.6918400882956184,
+          "spearman": 0.2999430609431785,
+          "sign_agreement": 0.768503937007874
+        },
+        "efficiency": {
+          "n": 6728,
+          "mae_s": 0.028562659822238004,
+          "bias_s": -0.007328369787888881,
+          "std_error_s": 0.09095229150546706,
+          "rmse_s": 0.09124705109669844,
+          "median_ae_s": 0.003873983946436621,
+          "p95_ae_s": 0.15699018310929286,
+          "mae_zero_s": 0.017173077264230174,
+          "skill": -0.6632231592954634,
+          "spearman": 0.3021507149822422,
+          "sign_agreement": 0.7700787401574803
+        },
+        "physics_cal": {
+          "n": 6728,
+          "mae_s": 0.021856102695709846,
+          "bias_s": 0.0019571936822858527,
+          "std_error_s": 0.11130041939912834,
+          "rmse_s": 0.11131762648175643,
+          "median_ae_s": 0.003547347538342216,
+          "p95_ae_s": 0.06536259922810755,
+          "mae_zero_s": 0.017173077264230174,
+          "skill": -0.2726957643889456,
+          "spearman": 0.27568999142076983,
+          "sign_agreement": 0.768503937007874
+        },
+        "surrogate": {
+          "n": 435,
+          "mae_s": 0.021512253882170953,
+          "bias_s": 0.007234896721611806,
+          "std_error_s": 0.0458673715223483,
+          "rmse_s": 0.04643446458118707,
+          "median_ae_s": 0.008620856290798784,
+          "p95_ae_s": 0.10853365046893758,
+          "mae_zero_s": 0.013690740170250685,
+          "skill": -0.5712995509852739,
+          "spearman": 0.28157615057942637,
+          "sign_agreement": 0.6666666666666666
+        }
+      },
+      "todos_comparaveis": {
+        "zero": {
+          "n": 42805,
+          "mae_s": 0.008970446383787698,
+          "bias_s": 0.0030302657377033458,
+          "std_error_s": 0.0435082093414697,
+          "rmse_s": 0.0436136078597294,
+          "median_ae_s": 0.0030226344340178457,
+          "p95_ae_s": 0.027530358461964933,
+          "mae_zero_s": 0.008970446383787698,
+          "skill": 0.0,
+          "spearman": NaN,
+          "sign_agreement": 0.0
+        },
+        "physics": {
+          "n": 42805,
+          "mae_s": 0.018721804559497842,
+          "bias_s": -0.004566164515688481,
+          "std_error_s": 0.1026721704684376,
+          "rmse_s": 0.10277365638666477,
+          "median_ae_s": 0.003763071605033641,
+          "p95_ae_s": 0.05568247498998472,
+          "mae_zero_s": 0.008970446383787698,
+          "skill": -1.0870538386287878,
+          "spearman": 0.16486998372122583,
+          "sign_agreement": 0.6532007458048478
+        },
+        "efficiency": {
+          "n": 42805,
+          "mae_s": 0.01420750781076643,
+          "bias_s": -0.0006650395626985877,
+          "std_error_s": 0.046771363451104865,
+          "rmse_s": 0.0467760912934728,
+          "median_ae_s": 0.00374045096283826,
+          "p95_ae_s": 0.052686869893397194,
+          "mae_zero_s": 0.008970446383787698,
+          "skill": -0.5838128007145422,
+          "spearman": 0.1686445466466511,
+          "sign_agreement": 0.6556867619639528
+        },
+        "physics_cal": {
+          "n": 42805,
+          "mae_s": 0.010324116016858535,
+          "bias_s": 0.0016445988851006687,
+          "std_error_s": 0.049213010157759696,
+          "rmse_s": 0.049240482067914745,
+          "median_ae_s": 0.0032404509592876885,
+          "p95_ae_s": 0.03044663104012108,
+          "mae_zero_s": 0.008970446383787698,
+          "skill": -0.15090326335569282,
+          "spearman": 0.1419926125251578,
+          "sign_agreement": 0.6532007458048478
+        },
+        "surrogate": {
+          "n": 2648,
+          "mae_s": 0.008918447540120479,
+          "bias_s": 0.0026181598372656003,
+          "std_error_s": 0.023135598446356945,
+          "rmse_s": 0.02328327031163244,
+          "median_ae_s": 0.0037441756844599494,
+          "p95_ae_s": 0.026321942315407146,
+          "mae_zero_s": 0.007370878657967602,
+          "skill": -0.20995717796548208,
+          "spearman": 0.18434245337003216,
+          "sign_agreement": 0.7288135593220338
+        }
+      },
+      "por_diferenca_de_linha": {
+        "0,5-1,5 m": {
+          "zero": {
+            "n": 4438,
+            "mae_s": 0.010211870874968308,
+            "bias_s": 0.0018996062234419289,
+            "std_error_s": 0.03909653773720593,
+            "rmse_s": 0.03914265916926067,
+            "median_ae_s": 0.0029075801247131494,
+            "p95_ae_s": 0.028467227288962192,
+            "mae_zero_s": 0.010211870874968308,
+            "skill": 0.0,
+            "spearman": NaN,
+            "sign_agreement": 0.0
+          },
+          "physics": {
+            "n": 4438,
+            "mae_s": 0.03541696171694301,
+            "bias_s": -0.018436500481402582,
+            "std_error_s": 0.17435053411928303,
+            "rmse_s": 0.17532259779526432,
+            "median_ae_s": 0.002915398378975087,
+            "p95_ae_s": 0.15052191792882108,
+            "mae_zero_s": 0.010211870874968308,
+            "skill": -2.468214801242571,
+            "spearman": 0.2420382269945175,
+            "sign_agreement": 0.7568493150684932
+          },
+          "efficiency": {
+            "n": 4438,
+            "mae_s": 0.02260417153352709,
+            "bias_s": -0.006288715507072731,
+            "std_error_s": 0.07690977093392479,
+            "rmse_s": 0.07716644871858287,
+            "median_ae_s": 0.0029264308077349144,
+            "p95_ae_s": 0.1293412961323889,
+            "mae_zero_s": 0.010211870874968308,
+            "skill": -1.2135191298721981,
+            "spearman": 0.24192513724623946,
+            "sign_agreement": 0.7534246575342466
+          },
+          "physics_cal": {
+            "n": 4438,
+            "mae_s": 0.014152517477938418,
+            "bias_s": -0.001985704434655033,
+            "std_error_s": 0.056924275064924146,
+            "rmse_s": 0.05695889845993297,
+            "median_ae_s": 0.0030101020318830897,
+            "p95_ae_s": 0.050336357558087005,
+            "mae_zero_s": 0.010211870874968308,
+            "skill": -0.3858888005164225,
+            "spearman": 0.23163142957845073,
+            "sign_agreement": 0.7568493150684932
+          },
+          "surrogate": {
+            "n": 288,
+            "mae_s": 0.01444269304392907,
+            "bias_s": 0.004616255134914908,
+            "std_error_s": 0.031265098054031486,
+            "rmse_s": 0.031604053028034734,
+            "median_ae_s": 0.007311250475897368,
+            "p95_ae_s": 0.04104267578588263,
+            "mae_zero_s": 0.007427808450533202,
+            "skill": -0.9444083864187838,
+            "spearman": 0.19527516889108587,
+            "sign_agreement": 0.6666666666666666
+          }
+        },
+        "< 0,5 m": {
+          "zero": {
+            "n": 36077,
+            "mae_s": 0.007440737689505552,
+            "bias_s": 0.002331211572408707,
+            "std_error_s": 0.018776680399183905,
+            "rmse_s": 0.018920842322910185,
+            "median_ae_s": 0.002925237211790943,
+            "p95_ae_s": 0.025892198558496192,
+            "mae_zero_s": 0.007440737689505552,
+            "skill": 0.0,
+            "spearman": NaN,
+            "sign_agreement": 0.0
+          },
+          "physics": {
+            "n": 36077,
+            "mae_s": 0.013592327294436128,
+            "bias_s": -0.0010479527083770786,
+            "std_error_s": 0.06530505695233149,
+            "rmse_s": 0.06531346467939253,
+            "median_ae_s": 0.0037607112132453935,
+            "p95_ae_s": 0.04654812087317557,
+            "mae_zero_s": 0.007440737689505552,
+            "skill": -0.8267445865759795,
+            "spearman": 0.13719268019979686,
+            "sign_agreement": 0.6248548199767712
+          },
+          "efficiency": {
+            "n": 36077,
+            "mae_s": 0.011530415404713246,
+            "bias_s": 0.0005776049408654641,
+            "std_error_s": 0.032295346288725796,
+            "rmse_s": 0.0323005111318138,
+            "median_ae_s": 0.003710628040403563,
+            "p95_ae_s": 0.04469633147167799,
+            "mae_zero_s": 0.007440737689505552,
+            "skill": -0.5496333678011245,
+            "spearman": 0.1411488710188634,
+            "sign_agreement": 0.6275648470770422
+          },
+          "physics_cal": {
+            "n": 36077,
+            "mae_s": 0.00817351573481425,
+            "bias_s": 0.001586303079034147,
+            "std_error_s": 0.0237353088014412,
+            "rmse_s": 0.02378825847678483,
+            "median_ae_s": 0.0031842373488471134,
+            "p95_ae_s": 0.027447289479121437,
+            "mae_zero_s": 0.007440737689505552,
+            "skill": -0.0984819080965873,
+            "spearman": 0.11705013430579214,
+            "sign_agreement": 0.6248548199767712
+          },
+          "surrogate": {
+            "n": 2213,
+            "mae_s": 0.0064429365781720135,
+            "bias_s": 0.0017106674989508246,
+            "std_error_s": 0.014896898296130508,
+            "rmse_s": 0.014994797835823685,
+            "median_ae_s": 0.003107238318437844,
+            "p95_ae_s": 0.021139350741255395,
+            "mae_zero_s": 0.006128610353474542,
+            "skill": -0.05128833562069546,
+            "spearman": 0.15566584189468105,
+            "sign_agreement": 0.7583333333333333
+          }
+        },
+        ">= 1,5 m": {
+          "zero": {
+            "n": 2290,
+            "mae_s": 0.030663834450057322,
+            "bias_s": 0.016234477111339542,
+            "std_error_s": 0.16334744689927805,
+            "rmse_s": 0.1641522057591401,
+            "median_ae_s": 0.004670654400731777,
+            "p95_ae_s": 0.11339535638025149,
+            "mae_zero_s": 0.030663834450057322,
+            "skill": 0.0,
+            "spearman": NaN,
+            "sign_agreement": 0.0
+          },
+          "physics": {
+            "n": 2290,
+            "mae_s": 0.06717728221316153,
+            "bias_s": -0.03311200571941524,
+            "std_error_s": 0.26374816438724363,
+            "rmse_s": 0.2658185455163034,
+            "median_ae_s": 0.005590279420688182,
+            "p95_ae_s": 0.31079715872727015,
+            "mae_zero_s": 0.030663834450057322,
+            "skill": -1.1907658783696555,
+            "spearman": 0.4007659868581869,
+            "sign_agreement": 0.7784256559766763
+          },
+          "efficiency": {
+            "n": 2290,
+            "mae_s": 0.04011015808656074,
+            "bias_s": -0.009343210704160531,
+            "std_error_s": 0.11328905750504746,
+            "rmse_s": 0.11367368269148444,
+            "median_ae_s": 0.005719462913073348,
+            "p95_ae_s": 0.24560650380821136,
+            "mae_zero_s": 0.030663834450057322,
+            "skill": -0.30806074341057355,
+            "spearman": 0.4075670595858291,
+            "sign_agreement": 0.7842565597667639
+          },
+          "physics_cal": {
+            "n": 2290,
+            "mae_s": 0.03678558356753063,
+            "bias_s": 0.00959849579712588,
+            "std_error_s": 0.17328261941584522,
+            "rmse_s": 0.1735482564394817,
+            "median_ae_s": 0.004859373014433363,
+            "p95_ae_s": 0.15069573659167812,
+            "mae_zero_s": 0.030663834450057322,
+            "skill": -0.19964069162465314,
+            "spearman": 0.34664469189007874,
+            "sign_agreement": 0.7784256559766763
+          },
+          "surrogate": {
+            "n": 147,
+            "mae_s": 0.035362822055053006,
+            "bias_s": 0.01236529656493634,
+            "std_error_s": 0.06535064731656821,
+            "rmse_s": 0.06651020721538393,
+            "median_ae_s": 0.014742165620045933,
+            "p95_ae_s": 0.1572212881203196,
+            "mae_zero_s": 0.02596097374357473,
+            "skill": -0.362153145885185,
+            "spearman": 0.35154024586509913,
+            "sign_agreement": 0.6666666666666666
+          }
+        }
+      },
+      "por_ritmo": {
+        "86-88 s": {
+          "zero": {
+            "n": 1820,
+            "mae_s": 0.01424195951720521,
+            "bias_s": 0.0037138297403311554,
+            "std_error_s": 0.04344605257003259,
+            "rmse_s": 0.04360449535607772,
+            "median_ae_s": 0.004152373113072372,
+            "p95_ae_s": 0.04857710353780075,
+            "mae_zero_s": 0.01424195951720521,
+            "skill": 0.0,
+            "spearman": NaN,
+            "sign_agreement": 0.0
+          },
+          "physics": {
+            "n": 1820,
+            "mae_s": 0.04052472627941832,
+            "bias_s": -0.013923127456663457,
+            "std_error_s": 0.140153077587948,
+            "rmse_s": 0.14084295735161156,
+            "median_ae_s": 0.004451416952516607,
+            "p95_ae_s": 0.1984456061006286,
+            "mae_zero_s": 0.01424195951720521,
+            "skill": -1.8454459676326018,
+            "spearman": 0.3661391923211831,
+            "sign_agreement": 0.7902439024390244
+          },
+          "efficiency": {
+            "n": 1820,
+            "mae_s": 0.03133278761756961,
+            "bias_s": -0.004972122543564558,
+            "std_error_s": 0.09326988264633457,
+            "rmse_s": 0.09340231801967894,
+            "median_ae_s": 0.004462794962455108,
+            "p95_ae_s": 0.18315685713156052,
+            "mae_zero_s": 0.01424195951720521,
+            "skill": -1.200033470093604,
+            "spearman": 0.3682075508043938,
+            "sign_agreement": 0.8
+          },
+          "physics_cal": {
+            "n": 1820,
+            "mae_s": 0.014197697061443129,
+            "bias_s": 0.003646540161016049,
+            "std_error_s": 0.043000760527576,
+            "rmse_s": 0.043155100058925144,
+            "median_ae_s": 0.004345134312117689,
+            "p95_ae_s": 0.04788523361219176,
+            "mae_zero_s": 0.01424195951720521,
+            "skill": 0.0031078908564941,
+            "spearman": 0.35097266063354393,
+            "sign_agreement": 0.7902439024390244
+          },
+          "surrogate": {
+            "n": 96,
+            "mae_s": 0.018551205146124027,
+            "bias_s": 0.007487252524203725,
+            "std_error_s": 0.034932092818250375,
+            "rmse_s": 0.035725481928506636,
+            "median_ae_s": 0.009961838442915316,
+            "p95_ae_s": 0.07276214217112886,
+            "mae_zero_s": 0.00742579694751222,
+            "skill": -1.498210667117558,
+            "spearman": 0.15621269669017904,
+            "sign_agreement": 0.5
+          }
+        },
+        "< 86 s": {
+          "zero": {
+            "n": 3136,
+            "mae_s": 0.0034958519763675397,
+            "bias_s": 0.0009302448182572988,
+            "std_error_s": 0.005995097865793952,
+            "rmse_s": 0.006066840515650773,
+            "median_ae_s": 0.002595172474059382,
+            "p95_ae_s": 0.008071646206715855,
+            "mae_zero_s": 0.0034958519763675397,
+            "skill": 0.0,
+            "spearman": NaN,
+            "sign_agreement": 0.0
+          },
+          "physics": {
+            "n": 3136,
+            "mae_s": 0.007292104970108688,
+            "bias_s": 0.0013690652307496375,
+            "std_error_s": 0.03326158821863393,
+            "rmse_s": 0.03328975203320107,
+            "median_ae_s": 0.002656890976193982,
+            "p95_ae_s": 0.008897875171049063,
+            "mae_zero_s": 0.0034958519763675397,
+            "skill": -1.0859307028456473,
+            "spearman": 0.26348628239535576,
+            "sign_agreement": 0.8666666666666667
+          },
+          "efficiency": {
+            "n": 3136,
+            "mae_s": 0.007071107133217011,
+            "bias_s": 0.0017078426786509672,
+            "std_error_s": 0.03222225900574636,
+            "rmse_s": 0.03226748676374446,
+            "median_ae_s": 0.0027034559697003413,
+            "p95_ae_s": 0.00884686118922079,
+            "mae_zero_s": 0.0034958519763675397,
+            "skill": -1.0227135419401931,
+            "spearman": 0.2637654860078048,
+            "sign_agreement": 0.8666666666666667
+          },
+          "physics_cal": {
+            "n": 3136,
+            "mae_s": 0.003617189644792499,
+            "bias_s": 0.0009126216809540408,
+            "std_error_s": 0.006275821265450629,
+            "rmse_s": 0.006341830247525529,
+            "median_ae_s": 0.002524565974440988,
+            "p95_ae_s": 0.008623236488761513,
+            "mae_zero_s": 0.0034958519763675397,
+            "skill": -0.034709040670262814,
+            "spearman": 0.24899960676731264,
+            "sign_agreement": 0.8666666666666667
+          },
+          "surrogate": {
+            "n": 188,
+            "mae_s": 0.007190023054160385,
+            "bias_s": 0.0016143954074807206,
+            "std_error_s": 0.00870916229802092,
+            "rmse_s": 0.008857526769079723,
+            "median_ae_s": 0.006126288711721495,
+            "p95_ae_s": 0.016368042257315342,
+            "mae_zero_s": 0.0016720502266564933,
+            "skill": -3.3001238476776367,
+            "spearman": 0.291320138629275,
+            "sign_agreement": NaN
+          }
+        },
+        ">= 88 s": {
+          "zero": {
+            "n": 1772,
+            "mae_s": 0.044388885843419025,
+            "bias_s": 0.020277080771526658,
+            "std_error_s": 0.19034456709400557,
+            "rmse_s": 0.19142156155151227,
+            "median_ae_s": 0.0057789384258342125,
+            "p95_ae_s": 0.2498970237437916,
+            "mae_zero_s": 0.044388885843419025,
+            "skill": 0.0,
+            "spearman": NaN,
+            "sign_agreement": 0.0
+          },
+          "physics": {
+            "n": 1772,
+            "mae_s": 0.12098950866429506,
+            "bias_s": -0.07708858850249939,
+            "std_error_s": 0.3741936221565121,
+            "rmse_s": 0.38205172076555055,
+            "median_ae_s": 0.009819429457120776,
+            "p95_ae_s": 0.6217565920773149,
+            "mae_zero_s": 0.044388885843419025,
+            "skill": -1.725671220743934,
+            "spearman": 0.3362425027981543,
+            "sign_agreement": 0.75
+          },
+          "efficiency": {
+            "n": 1772,
+            "mae_s": 0.06375220646177884,
+            "bias_s": -0.025740295453655946,
+            "std_error_s": 0.14194033714696042,
+            "rmse_s": 0.14425540585861693,
+            "median_ae_s": 0.009983715898010337,
+            "p95_ae_s": 0.38654185552000203,
+            "mae_zero_s": 0.044388885843419025,
+            "skill": -0.4362200188277663,
+            "spearman": 0.34565540476114887,
+            "sign_agreement": 0.7475
+          },
+          "physics_cal": {
+            "n": 1772,
+            "mae_s": 0.06200030674878107,
+            "bias_s": 0.0020707191929447734,
+            "std_error_s": 0.2122750494464326,
+            "rmse_s": 0.2122851490223973,
+            "median_ae_s": 0.0073732965912698695,
+            "p95_ae_s": 0.3446989733705402,
+            "mae_zero_s": 0.044388885843419025,
+            "skill": -0.39675293873078976,
+            "spearman": 0.3025960919693237,
+            "sign_agreement": 0.75
+          },
+          "surrogate": {
+            "n": 151,
+            "mae_s": 0.04122642655982983,
+            "bias_s": 0.014072168840868891,
+            "std_error_s": 0.07144450975977783,
+            "rmse_s": 0.07281719515815555,
+            "median_ae_s": 0.018442169520593632,
+            "p95_ae_s": 0.17732521853851724,
+            "mae_zero_s": 0.03263741738070499,
+            "skill": -0.2631644862991702,
+            "spearman": 0.31719762983617983,
+            "sign_agreement": 0.6862745098039216
+          }
+        }
+      },
+      "por_sessao": {
+        "2026-06-14_12-23-46_vhe_interlagos": {
+          "zero": {
+            "n": 274,
+            "mae_s": 0.0018352505091186204,
+            "bias_s": 0.0002744550859120499,
+            "std_error_s": 0.0025343193368935874,
+            "rmse_s": 0.002549137127644518,
+            "median_ae_s": 0.0013570789428811736,
+            "p95_ae_s": 0.005574097405200716,
+            "mae_zero_s": 0.0018352505091186204,
+            "skill": 0.0,
+            "spearman": NaN,
+            "sign_agreement": NaN
+          },
+          "physics": {
+            "n": 274,
+            "mae_s": 0.03615682800594656,
+            "bias_s": -0.002908278255266167,
+            "std_error_s": 0.10437616176185285,
+            "rmse_s": 0.1044166712098529,
+            "median_ae_s": 0.001295621237516531,
+            "p95_ae_s": 0.2606845501301497,
+            "mae_zero_s": 0.0018352505091186204,
+            "skill": -18.701303896278926,
+            "spearman": 0.5227977861554504,
+            "sign_agreement": NaN
+          },
+          "efficiency": {
+            "n": 274,
+            "mae_s": 0.030429794175622433,
+            "bias_s": 0.0030171555919156472,
+            "std_error_s": 0.08380759066723602,
+            "rmse_s": 0.0838618833637357,
+            "median_ae_s": 0.001310610106707244,
+            "p95_ae_s": 0.22368116116276873,
+            "mae_zero_s": 0.0018352505091186204,
+            "skill": -15.58073054573697,
+            "spearman": 0.522305431794483,
+            "sign_agreement": NaN
+          },
+          "physics_cal": {
+            "n": 274,
+            "mae_s": 0.005277200784987868,
+            "bias_s": -9.05787692597266e-05,
+            "std_error_s": 0.011928168289072796,
+            "rmse_s": 0.011928512197499004,
+            "median_ae_s": 0.0016033858521698025,
+            "p95_ae_s": 0.02721885617415711,
+            "mae_zero_s": 0.0018352505091186204,
+            "skill": -1.8754661877316385,
+            "spearman": 0.5227977861554504,
+            "sign_agreement": NaN
+          },
+          "surrogate": {
+            "n": 274,
+            "mae_s": 0.00818955205476209,
+            "bias_s": 0.0032803199488119707,
+            "std_error_s": 0.00953172815452899,
+            "rmse_s": 0.010080393870202414,
+            "median_ae_s": 0.006980357577457297,
+            "p95_ae_s": 0.020337068097165265,
+            "mae_zero_s": 0.0018352505091186204,
+            "skill": -3.46236195771177,
+            "spearman": 0.33431823650801756,
+            "sign_agreement": NaN
+          }
+        },
+        "2026-06-18_20-06-03_vhe_interlagos": {
+          "zero": {
+            "n": 39,
+            "mae_s": 0.01069617965811053,
+            "bias_s": 0.00587498560507431,
+            "std_error_s": 0.018698526086916516,
+            "rmse_s": 0.019599753408727563,
+            "median_ae_s": 0.003856543416119962,
+            "p95_ae_s": 0.04233411475904563,
+            "mae_zero_s": 0.01069617965811053,
+            "skill": 0.0,
+            "spearman": NaN,
+            "sign_agreement": 0.0
+          },
+          "physics": {
+            "n": 39,
+            "mae_s": 0.025901087638353103,
+            "bias_s": -0.02082812501693864,
+            "std_error_s": 0.05684929937632392,
+            "rmse_s": 0.060544641639868745,
+            "median_ae_s": 0.004500901663415879,
+            "p95_ae_s": 0.11168265694012515,
+            "mae_zero_s": 0.01069617965811053,
+            "skill": -1.4215269812444893,
+            "spearman": 0.504251012145749,
+            "sign_agreement": 1.0
+          },
+          "efficiency": {
+            "n": 39,
+            "mae_s": 0.02361441929382289,
+            "bias_s": -0.018567764528961334,
+            "std_error_s": 0.04846851998604215,
+            "rmse_s": 0.05190336510516753,
+            "median_ae_s": 0.004555387576081316,
+            "p95_ae_s": 0.09346353278903617,
+            "mae_zero_s": 0.01069617965811053,
+            "skill": -1.2077433297333338,
+            "spearman": 0.5133603238866397,
+            "sign_agreement": 1.0
+          },
+          "physics_cal": {
+            "n": 39,
+            "mae_s": 0.010346190959199144,
+            "bias_s": 0.0028450289359179416,
+            "std_error_s": 0.016885920827371666,
+            "rmse_s": 0.01712391636964146,
+            "median_ae_s": 0.00392341672337259,
+            "p95_ae_s": 0.03712004310414227,
+            "mae_zero_s": 0.01069617965811053,
+            "skill": 0.03272090691240426,
+            "spearman": 0.504251012145749,
+            "sign_agreement": 1.0
+          },
+          "surrogate": {
+            "n": 0
+          }
+        },
+        "2026-06-19_23-24-46_vhe_interlagos": {
+          "zero": {
+            "n": 95,
+            "mae_s": 0.03574643568962772,
+            "bias_s": 0.01840408012276018,
+            "std_error_s": 0.061058030234482114,
+            "rmse_s": 0.06377141382531759,
+            "median_ae_s": 0.01203178463336485,
+            "p95_ae_s": 0.18001965825788838,
+            "mae_zero_s": 0.03574643568962772,
+            "skill": 0.0,
+            "spearman": NaN,
+            "sign_agreement": 0.0
+          },
+          "physics": {
+            "n": 95,
+            "mae_s": 0.046732388042023544,
+            "bias_s": 0.008210937351722949,
+            "std_error_s": 0.08805372189116271,
+            "rmse_s": 0.0884357248575492,
+            "median_ae_s": 0.01010728215592005,
+            "p95_ae_s": 0.1660229410741941,
+            "mae_zero_s": 0.03574643568962772,
+            "skill": -0.3073300076064236,
+            "spearman": 0.49377099664053753,
+            "sign_agreement": 0.7297297297297297
+          },
+          "efficiency": {
+            "n": 95,
+            "mae_s": 0.04206832254525062,
+            "bias_s": 0.006786380935578391,
+            "std_error_s": 0.07844578570980003,
+            "rmse_s": 0.07873878499082043,
+            "median_ae_s": 0.009859657334866267,
+            "p95_ae_s": 0.14793260200037764,
+            "mae_zero_s": 0.03574643568962772,
+            "skill": -0.1768536284432205,
+            "spearman": 0.50743281075028,
+            "sign_agreement": 0.7297297297297297
+          },
+          "physics_cal": {
+            "n": 95,
+            "mae_s": 0.033409957764758434,
+            "bias_s": 0.01725369271634624,
+            "std_error_s": 0.05576498038053935,
+            "rmse_s": 0.0583731355093423,
+            "median_ae_s": 0.013520712852099648,
+            "p95_ae_s": 0.1617825282179464,
+            "mae_zero_s": 0.03574643568962772,
+            "skill": 0.0653625425806369,
+            "spearman": 0.49377099664053753,
+            "sign_agreement": 0.7297297297297297
+          },
+          "surrogate": {
+            "n": 95,
+            "mae_s": 0.04563866123254966,
+            "bias_s": 0.01561776151073332,
+            "std_error_s": 0.0662676224392059,
+            "rmse_s": 0.06808312756000041,
+            "median_ae_s": 0.022651055814704613,
+            "p95_ae_s": 0.16644756349099482,
+            "mae_zero_s": 0.03574643568962772,
+            "skill": -0.2767332001660878,
+            "spearman": 0.24703247480403137,
+            "sign_agreement": 0.6486486486486487
+          }
+        },
+        "2026-06-20_13-04-20_vhe_interlagos": {
+          "zero": {
+            "n": 17,
+            "mae_s": 0.020758313008679776,
+            "bias_s": 0.019753623321295235,
+            "std_error_s": 0.03754496076494545,
+            "rmse_s": 0.04242439997408228,
+            "median_ae_s": 0.0085398623427686,
+            "p95_ae_s": 0.07296364994366505,
+            "mae_zero_s": 0.020758313008679776,
+            "skill": 0.0,
+            "spearman": NaN,
+            "sign_agreement": 0.0
+          },
+          "physics": {
+            "n": 17,
+            "mae_s": 0.075748116352637,
+            "bias_s": 0.0013984800537674997,
+            "std_error_s": 0.1727523352270989,
+            "rmse_s": 0.17275799568435826,
+            "median_ae_s": 0.0067226957344919125,
+            "p95_ae_s": 0.3786839795089357,
+            "mae_zero_s": 0.020758313008679776,
+            "skill": -2.6490497238847905,
+            "spearman": -0.12500000000000003,
+            "sign_agreement": 0.5
+          },
+          "efficiency": {
+            "n": 17,
+            "mae_s": 0.06262524905292392,
+            "bias_s": 0.009571070351305399,
+            "std_error_s": 0.1461136571725921,
+            "rmse_s": 0.1464267946791823,
+            "median_ae_s": 0.007613647186547556,
+            "p95_ae_s": 0.27153176752869274,
+            "mae_zero_s": 0.020758313008679776,
+            "skill": -2.016875650094404,
+            "spearman": -0.10784313725490197,
+            "sign_agreement": 0.5
+          },
+          "physics_cal": {
+            "n": 17,
+            "mae_s": 0.025134567912795138,
+            "bias_s": 0.01766700842253377,
+            "std_error_s": 0.05137084587892849,
+            "rmse_s": 0.0543239081152903,
+            "median_ae_s": 0.009190685480366168,
+            "p95_ae_s": 0.08386456127920426,
+            "mae_zero_s": 0.020758313008679776,
+            "skill": -0.21081939087658497,
+            "spearman": -0.12500000000000003,
+            "sign_agreement": 0.5
+          },
+          "surrogate": {
+            "n": 0
+          }
+        },
+        "2026-06-20_13-13-02_vhe_interlagos": {
+          "zero": {
+            "n": 2566,
+            "mae_s": 0.03804672735599343,
+            "bias_s": 0.01582401345889873,
+            "std_error_s": 0.1616047383924732,
+            "rmse_s": 0.16237761814008456,
+            "median_ae_s": 0.007367013326764038,
+            "p95_ae_s": 0.19641078614850116,
+            "mae_zero_s": 0.03804672735599343,
+            "skill": 0.0,
+            "spearman": NaN,
+            "sign_agreement": 0.0
+          },
+          "physics": {
+            "n": 2566,
+            "mae_s": 0.06609246059020675,
+            "bias_s": -0.019999132390956787,
+            "std_error_s": 0.19856676611186852,
+            "rmse_s": 0.1995713554108317,
+            "median_ae_s": 0.00965911438882161,
+            "p95_ae_s": 0.34149674914854905,
+            "mae_zero_s": 0.03804672735599343,
+            "skill": -0.7371391755142727,
+            "spearman": 0.4027964811954312,
+            "sign_agreement": 0.7712765957446809
+          },
+          "efficiency": {
+            "n": 2566,
+            "mae_s": 0.04887788111164155,
+            "bias_s": -0.005885540081041422,
+            "std_error_s": 0.11598758933756596,
+            "rmse_s": 0.11613681785887452,
+            "median_ae_s": 0.009740760112995683,
+            "p95_ae_s": 0.2773607840980182,
+            "mae_zero_s": 0.03804672735599343,
+            "skill": -0.2846802999454803,
+            "spearman": 0.40797380162642355,
+            "sign_agreement": 0.774822695035461
+          },
+          "physics_cal": {
+            "n": 2566,
+            "mae_s": 0.03784399155718206,
+            "bias_s": 0.015479136250018264,
+            "std_error_s": 0.16046850618462125,
+            "rmse_s": 0.1612133528469973,
+            "median_ae_s": 0.007493193127661763,
+            "p95_ae_s": 0.19307924068998444,
+            "mae_zero_s": 0.03804672735599343,
+            "skill": 0.005328600195081856,
+            "spearman": 0.4027964811954312,
+            "sign_agreement": 0.7712765957446809
+          },
+          "surrogate": {
+            "n": 0
+          }
+        },
+        "2026-08-09_19-20-59_vhe_interlagos": {
+          "zero": {
+            "n": 3671,
+            "mae_s": 0.0030474113692150764,
+            "bias_s": 0.0007661690099352682,
+            "std_error_s": 0.004213886320493888,
+            "rmse_s": 0.004282972434400052,
+            "median_ae_s": 0.0026708012652019164,
+            "p95_ae_s": 0.0069175171252737755,
+            "mae_zero_s": 0.0030474113692150764,
+            "skill": 0.0,
+            "spearman": NaN,
+            "sign_agreement": 0.0
+          },
+          "physics": {
+            "n": 3671,
+            "mae_s": 0.03328743331074244,
+            "bias_s": -0.028685258711844627,
+            "std_error_s": 0.22642027799086736,
+            "rmse_s": 0.22823011710295185,
+            "median_ae_s": 0.002839094748755988,
+            "p95_ae_s": 0.008315623324862076,
+            "mae_zero_s": 0.0030474113692150764,
+            "skill": -9.923183409700378,
+            "spearman": 0.18304532791175346,
+            "sign_agreement": 0.25
+          },
+          "efficiency": {
+            "n": 3671,
+            "mae_s": 0.01360844416696071,
+            "bias_s": -0.009540107697001572,
+            "std_error_s": 0.06946651965313158,
+            "rmse_s": 0.0701185496683246,
+            "median_ae_s": 0.0028737625743416872,
+            "p95_ae_s": 0.008341944444122118,
+            "mae_zero_s": 0.0030474113692150764,
+            "skill": -3.465575046556923,
+            "spearman": 0.18353731666677023,
+            "sign_agreement": 0.25
+          },
+          "physics_cal": {
+            "n": 3671,
+            "mae_s": 0.011570163871486426,
+            "bias_s": -0.00772985528310286,
+            "std_error_s": 0.06541219288233026,
+            "rmse_s": 0.06586733363643082,
+            "median_ae_s": 0.002597941476668042,
+            "p95_ae_s": 0.008079451469965145,
+            "mae_zero_s": 0.0030474113692150764,
+            "skill": -2.796718745742082,
+            "spearman": 0.18304532791175346,
+            "sign_agreement": 0.25
+          },
+          "surrogate": {
+            "n": 0
+          }
+        },
+        "2026-08-16_03-30-14_vhe_interlagos": {
+          "zero": {
+            "n": 66,
+            "mae_s": 0.031162150667362304,
+            "bias_s": -0.0030021864646319805,
+            "std_error_s": 0.07259623677295951,
+            "rmse_s": 0.07265828732611317,
+            "median_ae_s": 0.007245430217516002,
+            "p95_ae_s": 0.129757027708159,
+            "mae_zero_s": 0.031162150667362304,
+            "skill": 0.0,
+            "spearman": NaN,
+            "sign_agreement": 0.0
+          },
+          "physics": {
+            "n": 66,
+            "mae_s": 0.03910034357901219,
+            "bias_s": -0.0033480587768638195,
+            "std_error_s": 0.08024052742615713,
+            "rmse_s": 0.08031034640195005,
+            "median_ae_s": 0.007518441305007284,
+            "p95_ae_s": 0.22903494107150207,
+            "mae_zero_s": 0.031162150667362304,
+            "skill": -0.25473828800795695,
+            "spearman": 0.4167205928399959,
+            "sign_agreement": 0.85
+          },
+          "efficiency": {
+            "n": 66,
+            "mae_s": 0.03746193912657836,
+            "bias_s": -0.0013820140860436407,
+            "std_error_s": 0.07521314158119201,
+            "rmse_s": 0.07522583751242957,
+            "median_ae_s": 0.008361872116542157,
+            "p95_ae_s": 0.1976513339220866,
+            "mae_zero_s": 0.031162150667362304,
+            "skill": -0.20216154290705424,
+            "spearman": 0.4188915562049891,
+            "sign_agreement": 0.8
+          },
+          "physics_cal": {
+            "n": 66,
+            "mae_s": 0.03053662006234836,
+            "bias_s": -0.003041564785100682,
+            "std_error_s": 0.07066042286169695,
+            "rmse_s": 0.07072585436271372,
+            "median_ae_s": 0.0082758549084466,
+            "p95_ae_s": 0.12330825476764168,
+            "mae_zero_s": 0.031162150667362304,
+            "skill": 0.020073409299990796,
+            "spearman": 0.4167205928399959,
+            "sign_agreement": 0.85
+          },
+          "surrogate": {
+            "n": 66,
+            "mae_s": 0.04209424785829293,
+            "bias_s": 0.011586137339499848,
+            "std_error_s": 0.08356386079738007,
+            "rmse_s": 0.0843632467951161,
+            "median_ae_s": 0.01142975417682146,
+            "p95_ae_s": 0.222583122043571,
+            "mae_zero_s": 0.031162150667362304,
+            "skill": -0.3508133089921923,
+            "spearman": 0.2504748982360923,
+            "sign_agreement": 0.7
+          }
+        }
+      },
+      "execucao_semelhante_diagnostico": {
+        "zero": {
+          "n": 5260,
+          "mae_s": 0.004651887652420951,
+          "bias_s": 0.0006705316979111934,
+          "std_error_s": 0.0076815447286710595,
+          "rmse_s": 0.0077107549679961826,
+          "median_ae_s": 0.0030918466655691645,
+          "p95_ae_s": 0.01466684173189183,
+          "mae_zero_s": 0.004651887652420951,
+          "skill": 0.0,
+          "spearman": NaN,
+          "sign_agreement": 0.0
+        },
+        "physics": {
+          "n": 5260,
+          "mae_s": 0.04193541623886311,
+          "bias_s": -0.03007037397723819,
+          "std_error_s": 0.22617623436558099,
+          "rmse_s": 0.22816642255802053,
+          "median_ae_s": 0.003295751821922488,
+          "p95_ae_s": 0.11265839280273579,
+          "mae_zero_s": 0.004651887652420951,
+          "skill": -8.014709591500763,
+          "spearman": 0.25245540077100115,
+          "sign_agreement": 0.8581560283687943
+        },
+        "efficiency": {
+          "n": 5260,
+          "mae_s": 0.021287313109654402,
+          "bias_s": -0.009996569367804993,
+          "std_error_s": 0.08571927565423773,
+          "rmse_s": 0.08630020636019668,
+          "median_ae_s": 0.0033635064012835225,
+          "p95_ae_s": 0.08873304964946166,
+          "mae_zero_s": 0.004651887652420951,
+          "skill": -3.5760591613978443,
+          "spearman": 0.25229450042559204,
+          "sign_agreement": 0.851063829787234
+        },
+        "physics_cal": {
+          "n": 5260,
+          "mae_s": 0.010813665119813083,
+          "bias_s": -0.005382327531330549,
+          "std_error_s": 0.055191453167375365,
+          "rmse_s": 0.05545327720145227,
+          "median_ae_s": 0.0032070099579479035,
+          "p95_ae_s": 0.021702314250624105,
+          "mae_zero_s": 0.004651887652420951,
+          "skill": -1.3245757266268887,
+          "spearman": 0.2292943376225667,
+          "sign_agreement": 0.8581560283687943
+        },
+        "surrogate": {
+          "n": 348,
+          "mae_s": 0.011920254049615804,
+          "bias_s": 0.005085941258949288,
+          "std_error_s": 0.02518670330779554,
+          "rmse_s": 0.02569507388594945,
+          "median_ae_s": 0.007401082598135322,
+          "p95_ae_s": 0.0307128680114842,
+          "mae_zero_s": 0.004413283064947457,
+          "skill": -1.7009946731703063,
+          "spearman": 0.2814896524389185,
+          "sign_agreement": 0.8235294117647058
+        }
+      },
+      "volta_inteira": {
+        "pares": 875,
+        "zero": {
+          "n": 875,
+          "mae_s": 2.8157748986443103,
+          "bias_s": 2.8157748986443103,
+          "std_error_s": 4.90885018027873,
+          "rmse_s": 5.659098724378105,
+          "median_ae_s": 0.2626022229705054,
+          "p95_ae_s": 15.719189177318578,
+          "mae_zero_s": 2.8157748986443103,
+          "skill": 0.0,
+          "spearman": NaN,
+          "sign_agreement": 0.0
+        },
+        "physics": {
+          "n": 875,
+          "mae_s": 1.0128824271297545,
+          "bias_s": -0.40125157704516357,
+          "std_error_s": 1.8678393030068845,
+          "rmse_s": 1.9104519072561013,
+          "median_ae_s": 0.2786584688173934,
+          "p95_ae_s": 5.152535120407319,
+          "mae_zero_s": 2.8157748986443103,
+          "skill": 0.6402828835439156,
+          "spearman": 0.6998258720058037,
+          "sign_agreement": 0.7173652694610778
+        },
+        "efficiency": {
+          "n": 875,
+          "mae_s": 0.8509775178263842,
+          "bias_s": 0.6812718999311452,
+          "std_error_s": 1.1848307609246245,
+          "rmse_s": 1.3667316245953398,
+          "median_ae_s": 0.3075210286075195,
+          "p95_ae_s": 2.9930294159367254,
+          "mae_zero_s": 2.8157748986443103,
+          "skill": 0.6977821209230546,
+          "spearman": 0.7120298602372519,
+          "sign_agreement": 0.7269461077844311
+        },
+        "physics_cal": {
+          "n": 875,
+          "mae_s": 2.2249309328222457,
+          "bias_s": 2.2199402313002863,
+          "std_error_s": 3.759784045165403,
+          "rmse_s": 4.3662467517108885,
+          "median_ae_s": 0.25790815100807174,
+          "p95_ae_s": 9.905359949212027,
+          "mae_zero_s": 2.8157748986443103,
+          "skill": 0.20983352259675792,
+          "spearman": 0.6065089406064298,
+          "sign_agreement": 0.7173652694610778
+        },
+        "surrogate": {
+          "n": 53,
+          "mae_s": 1.616381642326808,
+          "bias_s": 1.5992015068278744,
+          "std_error_s": 2.3520775929163293,
+          "rmse_s": 2.8442423354101916,
+          "median_ae_s": 0.28089660355156243,
+          "p95_ae_s": 6.861052949386906,
+          "mae_zero_s": 2.0827756771900914,
+          "skill": 0.22392907693857056,
+          "spearman": 0.39082406063538133,
+          "sign_agreement": 0.62
+        },
+        "por_ritmo": {
+          "86-88 s": {
+            "zero": {
+              "n": 197,
+              "mae_s": 0.5708735407553271,
+              "bias_s": 0.5708735407553271,
+              "std_error_s": 0.5583618960668637,
+              "rmse_s": 0.7985390450778893,
+              "median_ae_s": 0.35514651748625425,
+              "p95_ae_s": 1.8770290159096252,
+              "mae_zero_s": 0.5708735407553271,
+              "skill": 0.0,
+              "spearman": NaN,
+              "sign_agreement": 0.0
+            },
+            "physics": {
+              "n": 197,
+              "mae_s": 0.8410768326138692,
+              "bias_s": 0.07793289087274334,
+              "std_error_s": 1.2355502846246595,
+              "rmse_s": 1.2380056709546448,
+              "median_ae_s": 0.41464177938035884,
+              "p95_ae_s": 2.8772352685589158,
+              "mae_zero_s": 0.5708735407553271,
+              "skill": -0.47331549383254656,
+              "spearman": 0.3600105478278067,
+              "sign_agreement": 0.7076923076923077
+            },
+            "efficiency": {
+              "n": 197,
+              "mae_s": 0.6858472374697951,
+              "bias_s": 0.2647069864798544,
+              "std_error_s": 1.0061178486518043,
+              "rmse_s": 1.04035710891356,
+              "median_ae_s": 0.3741070560170431,
+              "p95_ae_s": 2.280371529769174,
+              "mae_zero_s": 0.5708735407553271,
+              "skill": -0.20139958941229863,
+              "spearman": 0.34927436595311867,
+              "sign_agreement": 0.7230769230769231
+            },
+            "physics_cal": {
+              "n": 197,
+              "mae_s": 0.5598194710440692,
+              "bias_s": 0.5598194710440692,
+              "std_error_s": 0.5558051988797702,
+              "rmse_s": 0.7888708761653217,
+              "median_ae_s": 0.34561165617829265,
+              "p95_ae_s": 1.8747576165930195,
+              "mae_zero_s": 0.5708735407553271,
+              "skill": 0.019363429765254625,
+              "spearman": 0.16033169151370746,
+              "sign_agreement": 0.7076923076923077
+            },
+            "surrogate": {
+              "n": 10,
+              "mae_s": 0.340205883457553,
+              "bias_s": 0.340205883457553,
+              "std_error_s": 0.12683634445268163,
+              "rmse_s": 0.36308057151719564,
+              "median_ae_s": 0.3558269273692711,
+              "p95_ae_s": 0.5326273379588917,
+              "mae_zero_s": 0.3541594754094076,
+              "skill": 0.039399177265338814,
+              "spearman": 0.13939393939393938,
+              "sign_agreement": 0.4
+            }
+          },
+          "< 86 s": {
+            "zero": {
+              "n": 396,
+              "mae_s": 0.1463022520146093,
+              "bias_s": 0.1463022520146093,
+              "std_error_s": 0.10166560895092916,
+              "rmse_s": 0.17815792148515175,
+              "median_ae_s": 0.13329152229339059,
+              "p95_ae_s": 0.33438506730370143,
+              "mae_zero_s": 0.1463022520146093,
+              "skill": 0.0,
+              "spearman": NaN,
+              "sign_agreement": 0.0
+            },
+            "physics": {
+              "n": 396,
+              "mae_s": 0.2482866929426496,
+              "bias_s": 0.08361620705368446,
+              "std_error_s": 0.4359689414620695,
+              "rmse_s": 0.4439150684552192,
+              "median_ae_s": 0.1579276257355403,
+              "p95_ae_s": 0.7610631006419999,
+              "mae_zero_s": 0.1463022520146093,
+              "skill": -0.6970804585964707,
+              "spearman": 0.1706498392721012,
+              "sign_agreement": 0.5662983425414365
+            },
+            "efficiency": {
+              "n": 396,
+              "mae_s": 0.22203575053628016,
+              "bias_s": 0.11011684699069302,
+              "std_error_s": 0.3325605321628402,
+              "rmse_s": 0.35031732407005384,
+              "median_ae_s": 0.16192181605307238,
+              "p95_ae_s": 0.7413193393565329,
+              "mae_zero_s": 0.1463022520146093,
+              "skill": -0.5176509416554185,
+              "spearman": 0.18731877651623852,
+              "sign_agreement": 0.5773480662983426
+            },
+            "physics_cal": {
+              "n": 396,
+              "mae_s": 0.14268462903049914,
+              "bias_s": 0.13901450029936432,
+              "std_error_s": 0.10225105818774094,
+              "rmse_s": 0.17256972560097195,
+              "median_ae_s": 0.12108303224580405,
+              "p95_ae_s": 0.3258402021903639,
+              "mae_zero_s": 0.1463022520146093,
+              "skill": 0.02472704920324076,
+              "spearman": 0.18214785034285724,
+              "sign_agreement": 0.5662983425414365
+            },
+            "surrogate": {
+              "n": 25,
+              "mae_s": 0.14937256859071396,
+              "bias_s": 0.13849815873061308,
+              "std_error_s": 0.11316528308657017,
+              "rmse_s": 0.17885223305241021,
+              "median_ae_s": 0.1217834359698966,
+              "p95_ae_s": 0.3112250309995933,
+              "mae_zero_s": 0.13703725850610218,
+              "skill": -0.09001427946737928,
+              "spearman": -0.04384615384615385,
+              "sign_agreement": 0.5454545454545454
+            }
+          },
+          ">= 88 s": {
+            "zero": {
+              "n": 282,
+              "mae_s": 8.13264275527371,
+              "bias_s": 8.13264275527371,
+              "std_error_s": 5.721859559570282,
+              "rmse_s": 9.943819940261982,
+              "median_ae_s": 7.488149120108191,
+              "p95_ae_s": 15.870919771320466,
+              "mae_zero_s": 8.13264275527371,
+              "skill": 0.0,
+              "spearman": NaN,
+              "sign_agreement": 0.0
+            },
+            "physics": {
+              "n": 282,
+              "mae_s": 2.206590274142957,
+              "bias_s": -1.4168791752117291,
+              "std_error_s": 2.82309397905612,
+              "rmse_s": 3.1587032484441435,
+              "median_ae_s": 1.1255764741601642,
+              "p95_ae_s": 6.5537839991710785,
+              "mae_zero_s": 8.13264275527371,
+              "skill": 0.7286748796740068,
+              "spearman": 0.9358949010068277,
+              "sign_agreement": 0.920863309352518
+            },
+            "efficiency": {
+              "n": 282,
+              "mae_s": 1.8495293088800344,
+              "bias_s": 1.7743239882798096,
+              "std_error_s": 1.3112196385728494,
+              "rmse_s": 2.206246259138876,
+              "median_ae_s": 1.6892374713802352,
+              "p95_ae_s": 4.166601176388133,
+              "mae_zero_s": 8.13264275527371,
+              "skill": 0.7725795458455759,
+              "spearman": 0.9496610240687762,
+              "sign_agreement": 0.9244604316546763
+            },
+            "physics_cal": {
+              "n": 282,
+              "mae_s": 6.312152543715269,
+              "bias_s": 6.30182100877135,
+              "std_error_s": 4.354689334056218,
+              "rmse_s": 7.660043552274029,
+              "median_ae_s": 5.42160128169667,
+              "p95_ae_s": 14.656913940690833,
+              "mae_zero_s": 8.13264275527371,
+              "skill": 0.22384977015963514,
+              "spearman": 0.7730505372325042,
+              "sign_agreement": 0.920863309352518
+            },
+            "surrogate": {
+              "n": 18,
+              "mae_s": 4.362880777443192,
+              "bias_s": 4.3273981699464725,
+              "std_error_s": 2.2306219845863873,
+              "rmse_s": 4.8684750548170825,
+              "median_ae_s": 4.09228990933639,
+              "p95_ae_s": 8.52202584673024,
+              "mae_zero_s": 5.745532481907122,
+              "skill": 0.2406481398926814,
+              "spearman": 0.2672858617131063,
+              "sign_agreement": 0.8333333333333334
+            }
+          }
+        }
+      }
+    },
+    "criterios": {
+      "min_skill": 0.2,
+      "min_skill_ci_low": 0.0,
+      "max_abs_bias_fraction": 0.25,
+      "min_spearman": 0.3,
+      "min_sign_agreement": 0.65,
+      "min_session_share_positive": 0.7,
+      "min_sessions": 5
+    },
+    "decisao": {
+      "physics": {
+        "ic95_pericia": [
+          -9.232312146270582,
+          -0.7039267258677719
+        ],
+        "checks": {
+          "pericia": {
+            "valor": -1.6918400882956184,
+            "passou": false
+          },
+          "ic95_pericia_inferior": {
+            "valor": -9.232312146270582,
+            "passou": false
+          },
+          "vies_relativo": {
+            "valor": 1.3644369859963175,
+            "passou": false
+          },
+          "spearman": {
+            "valor": 0.2999430609431785,
+            "passou": false
+          },
+          "concordancia_de_sinal": {
+            "valor": 0.768503937007874,
+            "passou": true
+          },
+          "sessoes_com_pericia_positiva": {
+            "valor": 0.0,
+            "passou": false
+          },
+          "sessoes_testaveis": {
+            "valor": 7,
+            "passou": true
+          }
+        },
+        "aprovado": false
+      },
+      "efficiency": {
+        "ic95_pericia": [
+          -3.769261297959944,
+          -0.2851404709513061
+        ],
+        "checks": {
+          "pericia": {
+            "valor": -0.6632231592954634,
+            "passou": false
+          },
+          "ic95_pericia_inferior": {
+            "valor": -3.769261297959944,
+            "passou": false
+          },
+          "vies_relativo": {
+            "valor": 0.42673597021269755,
+            "passou": false
+          },
+          "spearman": {
+            "valor": 0.3021507149822422,
+            "passou": true
+          },
+          "concordancia_de_sinal": {
+            "valor": 0.7700787401574803,
+            "passou": true
+          },
+          "sessoes_com_pericia_positiva": {
+            "valor": 0.0,
+            "passou": false
+          },
+          "sessoes_testaveis": {
+            "valor": 7,
+            "passou": true
+          }
+        },
+        "aprovado": false
+      },
+      "physics_cal": {
+        "ic95_pericia": [
+          -2.462721954406034,
+          0.009647392643134856
+        ],
+        "checks": {
+          "pericia": {
+            "valor": -0.2726957643889456,
+            "passou": false
+          },
+          "ic95_pericia_inferior": {
+            "valor": -2.462721954406034,
+            "passou": false
+          },
+          "vies_relativo": {
+            "valor": 0.11396872279626284,
+            "passou": true
+          },
+          "spearman": {
+            "valor": 0.27568999142076983,
+            "passou": false
+          },
+          "concordancia_de_sinal": {
+            "valor": 0.768503937007874,
+            "passou": true
+          },
+          "sessoes_com_pericia_positiva": {
+            "valor": 0.5714285714285714,
+            "passou": false
+          },
+          "sessoes_testaveis": {
+            "valor": 7,
+            "passou": true
+          }
+        },
+        "aprovado": false
+      },
+      "surrogate": {
+        "ic95_pericia": [
+          -3.46236195771177,
+          -0.2767332001660878
+        ],
+        "checks": {
+          "pericia": {
+            "valor": -0.5712995509852739,
+            "passou": false
+          },
+          "ic95_pericia_inferior": {
+            "valor": -3.46236195771177,
+            "passou": false
+          },
+          "vies_relativo": {
+            "valor": 0.5284518317959818,
+            "passou": false
+          },
+          "spearman": {
+            "valor": 0.28157615057942637,
+            "passou": false
+          },
+          "concordancia_de_sinal": {
+            "valor": 0.6666666666666666,
+            "passou": true
+          },
+          "sessoes_com_pericia_positiva": {
+            "valor": 0.0,
+            "passou": false
+          },
+          "sessoes_testaveis": {
+            "valor": 3,
+            "passou": false
+          }
+        },
+        "aprovado": false
+      }
+    },
+    "decomposicao": {
+      "setores": 42805,
+      "identidade_total_menos_observado_max_s": 1.1102230246251565e-16,
+      "media_abs_linha_s": 0.012328951055841557,
+      "media_abs_execucao_s": 0.018037383634313342,
+      "media_abs_interacao_s": 0.004494799653928513,
+      "mediana_interacao_relativa": 0.0007961471075082041,
+      "p90_interacao_relativa": 0.009926821606736132,
+      "fracao_interacao_acima_de_25pct": 0.005069501226492232,
+      "correlacao_linha_execucao": -0.6013059537643161,
+      "volta_inteira": {
+        "media_abs_linha_s": 2.4747238445037003,
+        "media_abs_execucao_s": 0.8899341410732128,
+        "media_abs_interacao_s": 0.8831070612599435,
+        "media_abs_total_s": 2.8157748986443103
+      }
+    },
+    "segundos": 11.6
+  }
+}

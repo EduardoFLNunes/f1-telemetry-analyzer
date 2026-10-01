@@ -58,7 +58,7 @@ def main(argv=None) -> int:
     from ml.data.lap_store import load_store
     from ml.export.coaching import beats_recorded_laps
 
-    verdict = beats_recorded_laps(track, lateral, envelope, load_store())
+    verdict = beats_recorded_laps(track, lateral, envelope, load_store(track=track))
     print(
         f"  tracado {verdict['line_seconds']:.3f} s   "
         f"melhor volta gravada {verdict['quickest_recorded_seconds']:.3f} s   "

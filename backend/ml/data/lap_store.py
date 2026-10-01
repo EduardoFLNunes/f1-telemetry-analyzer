@@ -29,6 +29,15 @@ from ..track.geometry import TrackGeometry, load_geometry
 from .inventory import load_inventory
 from .recordings import Session, iter_laps, list_sessions
 
+# Associacao com o replay, calculada no inventario (`lap_identity`).
+IDENTITY_COLUMNS = (
+    "replay_lap_id",
+    "replay_match",
+    "game_lap_number",
+    "replay_share_of_lap",
+    "replay_share_of_replay",
+)
+
 STORE_FILENAME = "laps_grid.parquet"
 STORE_METADATA = "laps_grid_meta.json"
 
@@ -57,6 +66,32 @@ STORE_COLUMNS = (
 )
 
 
+class GeometryMismatchError(ValueError):
+    """O store (ou o inventario) foi construido contra outra geometria.
+
+    Cada volta do store e uma projecao na grade de *uma* geometria: `lateral`
+    e medido contra aquela centerline, e a linha `i` e aquele ponto da pista.
+    Lido contra outra geometria, o arquivo continua abrindo e os numeros
+    continuam plausiveis -- so que medem outra pista. O cache de Interlagos foi
+    regravado em 2026-08-25 e o store em uso era de 2026-08-23, sem nada que
+    registrasse a diferenca; e isso que este erro existe para impedir.
+    """
+
+
+def check_geometry(recorded_id: Optional[str], track: TrackGeometry, what: str) -> None:
+    if not recorded_id:
+        raise GeometryMismatchError(
+            f"{what} nao registra a geometria com que foi construido. "
+            "Reconstrua com `python -m ml.scripts.build_inventory` e "
+            "`python -m ml.scripts.build_lap_store`."
+        )
+    if str(recorded_id) != track.geometry_id:
+        raise GeometryMismatchError(
+            f"{what} foi construido com a geometria {recorded_id}, e a carregada e "
+            f"{track.geometry_id}. Reconstrua o inventario e o store."
+        )
+
+
 @dataclass
 class StoredLaps:
     """As voltas na grade, mais o que descreve cada uma."""
@@ -65,6 +100,8 @@ class StoredLaps:
     laps: pd.DataFrame           # uma linha por volta: tempo, sessao, Hz...
     grid_size: int
     track_length: float
+    geometry_id: str = ""
+    source_hash: str = ""
 
     @property
     def lap_ids(self) -> List[str]:
@@ -94,10 +131,20 @@ def build_store(
     wanted = catalogue[catalogue["valid"]]
     if wanted.empty:
         raise ValueError("o inventario nao tem nenhuma volta valida")
+    # Quais voltas sao validas foi decidido projetando contra uma geometria;
+    # materializar contra outra misturaria as duas decisoes.
+    recorded = wanted["geometry_id"].dropna().unique() if "geometry_id" in wanted else []
+    check_geometry(recorded[0] if len(recorded) == 1 else None, geometry, "o inventario")
 
     by_session: Dict[str, set] = {}
+    identity: Dict[str, Dict[str, object]] = {}
     for _, row in wanted.iterrows():
         by_session.setdefault(str(row["session_id"]), set()).add(int(row["sequence"]))
+        identity[str(row["lap_id"])] = {
+            key: (None if isinstance(row.get(key), float) and np.isnan(row.get(key)) else row.get(key))
+            for key in IDENTITY_COLUMNS
+            if key in row
+        }
 
     available = {s.session_id: s for s in (sessions if sessions is not None else list_sessions())}
 
@@ -132,12 +179,14 @@ def build_store(
                     "driver_id": lap.driver_id,
                     "track": lap.track,
                     "lap_time_s": lap_time,
+                    "geometry_id": geometry.geometry_id,
                     "sample_hz": float(quality.metrics.get("sample_hz", np.nan)),
                     "raw_samples": int(lap.sample_count),
                     "coverage": float(alignment.coverage),
                     "speed_mean_kmh": float(np.nanmean(grid["speed_kmh"])),
                     "speed_min_kmh": float(np.nanmin(grid["speed_kmh"])),
                     "speed_max_kmh": float(np.nanmax(grid["speed_kmh"])),
+                    **identity.get(lap.lap_id, {}),
                 }
             )
             found += 1
@@ -150,7 +199,12 @@ def build_store(
     frame = pd.concat(blocks, ignore_index=True)
     laps = pd.DataFrame(records).sort_values("lap_time_s").reset_index(drop=True)
     return StoredLaps(
-        frame=frame, laps=laps, grid_size=geometry.size, track_length=geometry.length
+        frame=frame,
+        laps=laps,
+        grid_size=geometry.size,
+        track_length=geometry.length,
+        geometry_id=geometry.geometry_id,
+        source_hash=geometry.source_hash,
     )
 
 
@@ -165,6 +219,8 @@ def save_store(store: StoredLaps, root: Optional[Path] = None) -> Path:
     meta = {
         "grid_size": store.grid_size,
         "track_length": store.track_length,
+        "geometry_id": store.geometry_id,
+        "source_hash": store.source_hash,
         "columns": [c for c in store.frame.columns if c not in ("lap_id", "grid_index")],
         "laps": store.laps.to_dict(orient="records"),
     }
@@ -174,7 +230,8 @@ def save_store(store: StoredLaps, root: Optional[Path] = None) -> Path:
     return path
 
 
-def load_store(root: Optional[Path] = None) -> StoredLaps:
+def load_store(root: Optional[Path] = None, track: Optional[TrackGeometry] = None) -> StoredLaps:
+    """Le o store. Com `track`, recusa um store construido com outra geometria."""
     path = store_path(root)
     meta_path = path.parent / STORE_METADATA
     if not path.exists() or not meta_path.exists():
@@ -182,9 +239,13 @@ def load_store(root: Optional[Path] = None) -> StoredLaps:
             f"store nao encontrado em {path}. Rode `python -m ml.scripts.build_lap_store`."
         )
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    if track is not None:
+        check_geometry(meta.get("geometry_id"), track, f"o store em {path}")
     return StoredLaps(
         frame=pd.read_parquet(path),
         laps=pd.DataFrame(meta["laps"]),
         grid_size=int(meta["grid_size"]),
         track_length=float(meta["track_length"]),
+        geometry_id=str(meta.get("geometry_id") or ""),
+        source_hash=str(meta.get("source_hash") or ""),
     )

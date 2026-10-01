@@ -142,16 +142,16 @@ def main(argv=None) -> int:
 
     # ---------------------------------------------- 2. pre-processamento ----
     def preprocessing() -> Stage:
+        track = load_geometry()
         if args.from_scratch:
             from ml.data.lap_store import build_store, save_store
 
-            store = build_store()
+            store = build_store(track=track)
             path = save_store(store)
             outputs = [str(path)]
         else:
-            store = load_store()
+            store = load_store(track=track)
             outputs = []
-        track = load_geometry()
         pipeline.state["store"] = store
         pipeline.state["track"] = track
         pipeline.state["sectors"] = build_microsectors(track)

@@ -25,6 +25,7 @@ from ..preprocessing.alignment import align_lap
 from ..preprocessing.cleaning import clean_lap
 from ..preprocessing.quality import evaluate_lap
 from ..track.geometry import TrackGeometry, load_geometry
+from .lap_identity import classify, counter_counts
 from .recordings import RawLap, Session, iter_laps, list_sessions
 
 INVENTORY_FILENAME = "lap_inventory.parquet"
@@ -64,7 +65,15 @@ def scan_sessions(
     rows: List[Dict[str, Any]] = []
     for position, session in enumerate(available, start=1):
         count = 0
-        for lap in iter_laps(session):
+        first_row = len(rows)
+        counters: Dict[tuple, Dict[int, int]] = {}
+        # `min_samples=1`: um trecho de uma amostra so nao vira linha do
+        # inventario, mas a amostra dele esta dentro de algum replay e precisa
+        # entrar na contagem que associa as duas identidades.
+        for lap in iter_laps(session, min_samples=1):
+            counters[(lap.lap_id, lap.sequence)] = counter_counts(lap.frame)
+            if lap.sample_count < 2:
+                continue
             cleaned, cleaning = clean_lap(lap.frame)
             if cleaned.empty or len(cleaned) < 4:
                 rows.append(
@@ -80,14 +89,22 @@ def scan_sessions(
                         "valid": False,
                         "reasons": "amostras insuficientes apos limpeza",
                         "cleaned_samples": int(len(cleaned)),
+                        "geometry_id": geometry.geometry_id,
                     }
                 )
                 count += 1
                 continue
             aligned, alignment = align_lap(cleaned, geometry)
             quality = evaluate_lap(aligned, geometry, alignment, gates)
-            rows.append(_record(lap, quality, cleaning, alignment))
+            row = _record(lap, quality, cleaning, alignment)
+            row["geometry_id"] = geometry.geometry_id
+            rows.append(row)
             count += 1
+        identities = classify(session.session_id, counters)
+        for row in rows[first_row:]:
+            identity = identities.get(row["lap_id"])
+            if identity is not None:
+                row.update({k: v for k, v in identity.to_dict().items() if k != "lap_id"})
         if progress:
             progress(f"[{position}/{len(available)}] {session.session_id}: {count} voltas")
 

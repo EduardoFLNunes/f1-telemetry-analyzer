@@ -60,7 +60,7 @@ def main(argv=None) -> int:
     track = load_geometry()
     sectors = build_microsectors(track)
     corners = detect_corners(track)
-    store = load_store()
+    store = load_store(track=track)
     envelope = load_envelope()
 
     if args.lap:

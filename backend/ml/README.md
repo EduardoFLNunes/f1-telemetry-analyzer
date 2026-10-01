@@ -58,13 +58,20 @@ limiar tem, no comentário, a volta concreta do dataset que passaria sem ele.
 
 **A distância é recalculada, nunca lida.** Seis sessões gravaram
 `distanceAlongTrack` como `null`, e as que gravaram usaram versões diferentes da
-geometria. A projeção é refeita aqui contra o cache atual, e bate com o que o
-runtime gravou dentro de 0,15 m (p95).
+geometria. A projeção é refeita aqui contra o cache atual. O `lateral` bate com o
+que o runtime gravou dentro de ~0,42 m (p95), **com o sinal trocado** — o runtime
+grava positivo à direita, o `ml` mede positivo à esquerda
+(`core.projection.lateral_offset.to_left_positive`). O `s` **não** bate: o
+runtime mede a poligonal bruta do cache e o `ml` a centerline suavizada e
+reparametrizada, e as duas réguas se afastam até ~31 m no meio da volta.
 
-**Os canais de pilotagem estão aninhados.** `throttle`, `brake` e `steerAngle`
-vivem em `sample.carPhysics.controls`, e não no topo da amostra. O caminho que o
-resto do backend usa (`core.assisted_analysis.utils.normalize_lap_dataframe`)
-procura no topo e devolve zeros, sem erro. `ml/data/samples.py` existe por isso.
+**Os canais de pilotagem mudaram de lugar entre versões do gravador.** Maio e
+junho: só no topo da amostra. Do fim de maio em diante: no topo e em
+`sample.carPhysics.controls`, com valores idênticos. `2026-08-09_*`: só em
+`carPhysics.controls`. Os dois leitores do projeto (`ml/data/samples.py` e
+`core.assisted_analysis.utils.normalize_lap_dataframe`) liam um lugar cada um e
+devolviam vazio ou zero no outro; agora os dois passam por
+`core.telemetry.channels.driver_inputs`.
 
 **A identidade da volta é a ordem no arquivo, não o número do jogo.** O contador
 de voltas do Assetto Corsa trava durante a parada de box: a sessão

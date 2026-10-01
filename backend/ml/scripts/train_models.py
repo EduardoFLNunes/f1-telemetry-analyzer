@@ -40,7 +40,7 @@ def main(argv=None) -> int:
     track = load_geometry()
     sectors = build_microsectors(track)
     corners = detect_corners(track)
-    store = load_store()
+    store = load_store(track=track)
     print(f"pista: {track.name} | {store.laps.shape[0]} voltas | {len(corners)} curvas")
 
     split = split_by_session(store.laps)

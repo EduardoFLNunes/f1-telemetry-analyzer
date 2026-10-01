@@ -27,7 +27,7 @@ from ml.track.geometry import load_geometry
 def main() -> int:
     started = time.time()
     track = load_geometry()
-    store = load_store()
+    store = load_store(track=track)
     split = split_by_session(store.laps)
 
     train_ids = set(split.train)

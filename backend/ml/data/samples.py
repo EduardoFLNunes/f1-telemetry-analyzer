@@ -4,18 +4,21 @@ O formato do disco tem duas camadas: um envelope (`type`, `timestamp`, `track`,
 `sessionTime`, `sample`) e, dentro de `sample`, um bloco `carPhysics` com a
 fisica agrupada por assunto (`motion`, `controls`, `tyres`, `environment`...).
 
-Isto importa mais do que parece. `core.assisted_analysis.utils.
-normalize_lap_dataframe` procura `throttle`, `brake` e `steering` no topo da
-amostra, e no arquivo gravado eles nao estao la -- estao em
-`carPhysics.controls`. Uma volta carregada de gravacao por aquele caminho sai
-com acelerador e freio zerados, sem erro nenhum, e e por isso que este modulo
-existe em vez de reaproveitar aquele.
+Os pedais, o volante, a marcha e o RPM estao em lugares diferentes conforme a
+versao do gravador -- no topo da amostra, em `carPhysics.controls`, ou nos dois
+(ver `core.telemetry.channels`). Ler so um dos lugares devolve `None` para as
+outras sessoes sem erro nenhum: a versao anterior deste modulo lia so
+`carPhysics.controls`, e as sessoes de maio e junho caiam no gate de canais
+ausentes com os pedais gravados no topo. A regra agora e a mesma do runtime.
 """
 
 from __future__ import annotations
 
 import math
 from typing import Any, Dict, Mapping, Optional
+
+from core.projection.lateral_offset import to_left_positive
+from core.telemetry.channels import driver_inputs
 
 
 def number(value: Any) -> Optional[float]:
@@ -74,7 +77,7 @@ def flatten(envelope: Mapping[str, Any]) -> Dict[str, Any]:
 
     physics = sample.get("carPhysics") if isinstance(sample.get("carPhysics"), Mapping) else {}
     motion = physics.get("motion") if isinstance(physics.get("motion"), Mapping) else {}
-    controls = physics.get("controls") if isinstance(physics.get("controls"), Mapping) else {}
+    controls = driver_inputs(sample)
     tyres = physics.get("tyres") if isinstance(physics.get("tyres"), Mapping) else {}
     state = physics.get("carState") if isinstance(physics.get("carState"), Mapping) else {}
     ambient = physics.get("environment") if isinstance(physics.get("environment"), Mapping) else {}
@@ -102,12 +105,12 @@ def flatten(envelope: Mapping[str, Any]) -> Dict[str, Any]:
         "z": number(_first(sample, "world_z")),
         "heading": number(sample.get("heading")),
         "speed_kmh": speed_kmh,
-        "throttle": number(controls.get("throttle")),
-        "brake": number(controls.get("brake")),
-        "clutch": number(controls.get("clutch")),
-        "steering": number(controls.get("steerAngle")),
-        "gear": number(controls.get("gear")),
-        "rpm": number(controls.get("rpm")),
+        "throttle": controls["throttle"],
+        "brake": controls["brake"],
+        "clutch": controls["clutch"],
+        "steering": controls["steering"],
+        "gear": controls["gear"],
+        "rpm": controls["rpm"],
         "lateral_g": number(acc.get("lateral")) if acc else number(legacy_acc.get("x")),
         "longitudinal_g": number(acc.get("longitudinal")) if acc else number(legacy_acc.get("z")),
         "vertical_g": number(acc.get("vertical")) if acc else number(legacy_acc.get("y")),
@@ -125,7 +128,12 @@ def flatten(envelope: Mapping[str, Any]) -> Dict[str, Any]:
         # seu proprio: 6 sessoes gravaram `null` aqui, e as que gravaram algo o
         # fizeram contra versoes diferentes da geometria.
         "s_recorded": number(_first(sample, "distanceAlongTrack")),
-        "lateral_offset_recorded": number(_first(sample, "lateralOffset", "lateral_offset")),
+        # O runtime grava o offset positivo a direita; aqui ele ja entra na
+        # convencao do `ml` (positivo a esquerda), para poder ser comparado com
+        # `lateral` sem ninguem lembrar de trocar o sinal.
+        "lateral_recorded": to_left_positive(
+            number(_first(sample, "lateralOffset", "lateral_offset"))
+        ),
     }
     return row
 

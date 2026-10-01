@@ -6,6 +6,8 @@ from typing import Any, Iterable, Optional
 import numpy as np
 import pandas as pd
 
+from ..telemetry.channels import INPUT_CHANNELS, driver_inputs
+
 
 def finite_float(value: Any, default: Optional[float] = None) -> Optional[float]:
     try:
@@ -129,6 +131,29 @@ def min_or_none(series: pd.Series) -> Optional[float]:
     return value if math.isfinite(value) else None
 
 
+def _driver_input_frame(df: pd.DataFrame) -> pd.DataFrame:
+    """Driver inputs per row, wherever the recorder put them.
+
+    Recordings from `2026-08-09` carry the pedals only in `carPhysics.controls`;
+    reading the top-level columns alone gave those laps a throttle and brake of
+    zero, silently. `driver_inputs` holds the rule shared with the `ml` reader.
+    """
+    top_keys = [top for _, top in INPUT_CHANNELS.values() if top in df.columns]
+    columns = top_keys + (["carPhysics"] if "carPhysics" in df.columns else [])
+    if not columns:
+        return pd.DataFrame({name: np.nan for name in INPUT_CHANNELS}, index=df.index)
+    records = [
+        driver_inputs({key: value for key, value in row.items() if not _is_missing(value)})
+        for row in df[columns].to_dict("records")
+    ]
+    frame = pd.DataFrame.from_records(records, index=df.index, columns=list(INPUT_CHANNELS))
+    return frame.apply(pd.to_numeric, errors="coerce")
+
+
+def _is_missing(value: Any) -> bool:
+    return value is None or (isinstance(value, float) and math.isnan(value))
+
+
 def normalize_lap_dataframe(raw_df: pd.DataFrame, track_length: Optional[float] = None) -> pd.DataFrame:
     df = raw_df.copy()
     if df.empty:
@@ -169,15 +194,16 @@ def normalize_lap_dataframe(raw_df: pd.DataFrame, track_length: Optional[float] 
     out["speed_kmh"] = speed_kmh.fillna(0.0).clip(lower=0.0)
     out["speed_mps"] = out["speed_kmh"] / 3.6
 
+    inputs = _driver_input_frame(df)
     for channel in ("throttle", "brake"):
-        values = pd.to_numeric(col(channel, default=0.0), errors="coerce").fillna(0.0)
+        values = inputs[channel].fillna(0.0)
         if values.max(skipna=True) > 1.5:
             values = values / 100.0
         out[channel] = values.clip(lower=0.0, upper=1.0)
 
-    out["steering"] = pd.to_numeric(col("steering", default=np.nan), errors="coerce")
-    out["gear"] = pd.to_numeric(col("gear", default=np.nan), errors="coerce")
-    out["rpm"] = pd.to_numeric(col("rpm", "rpms", default=np.nan), errors="coerce")
+    out["steering"] = inputs["steering"]
+    out["gear"] = inputs["gear"]
+    out["rpm"] = inputs["rpm"].fillna(pd.to_numeric(col("rpms", default=np.nan), errors="coerce"))
     out["yaw"] = pd.to_numeric(col("yaw", "heading", default=np.nan), errors="coerce")
     out["yaw_rate"] = pd.to_numeric(col("yaw_rate", "yawRate", default=np.nan), errors="coerce")
 

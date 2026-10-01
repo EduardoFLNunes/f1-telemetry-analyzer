@@ -34,7 +34,7 @@ DROPPED_CHANNELS = (
     "s",
     "s_unwrapped",
     "s_recorded",
-    "lateral_offset_recorded",
+    "lateral_recorded",
 )
 
 

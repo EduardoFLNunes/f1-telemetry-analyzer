@@ -11,8 +11,15 @@ tem sinal oposto ao da propria normal do arquivo de geometria.
 
 Sinal de `lateral`: positivo e a esquerda da centerline, o mesmo lado para onde
 aponta a normal do cache de geometria (`boundsLeft` cai em +normal). E o
-**oposto** do `lateralOffset` que o runtime grava -- nao alinhe um com o outro
-sem trocar o sinal.
+**oposto** do `lateralOffset` que o runtime grava; `samples.flatten` ja entrega
+o gravado convertido (`lateral_recorded`), pela funcao unica
+`core.projection.lateral_offset.to_left_positive`.
+
+A projecao gravada nao e usada, mas e medida: `recorded_s_p95_m` e
+`recorded_lateral_p95_m` dizem o quanto ela concorda com a recalculada. Uma
+volta gravada contra a mesma geometria concorda dentro de centimetros a meio
+metro; uma gravada contra outra versao da geometria aparece aqui com metros de
+diferenca, e e assim que se identifica com que geometria cada volta foi gravada.
 """
 
 from __future__ import annotations
@@ -34,6 +41,11 @@ class AlignmentReport:
     backward_steps: int      # amostras em que o carro andou para tras
     backward_meters: float
     span_m: float
+    # Concordancia entre a projecao gravada pelo runtime e a recalculada aqui.
+    # NaN quando a volta nao gravou a projecao.
+    recorded_s_p95_m: float = float("nan")
+    recorded_lateral_p95_m: float = float("nan")
+    recorded_lateral_correlation: float = float("nan")
 
     def to_dict(self) -> Dict[str, float]:
         return {
@@ -43,7 +55,48 @@ class AlignmentReport:
             "backward_steps": self.backward_steps,
             "backward_meters": self.backward_meters,
             "span_m": self.span_m,
+            "recorded_s_p95_m": self.recorded_s_p95_m,
+            "recorded_lateral_p95_m": self.recorded_lateral_p95_m,
+            "recorded_lateral_correlation": self.recorded_lateral_correlation,
         }
+
+
+# Abaixo disto a comparacao nao tem amostras suficientes para um percentil.
+MIN_RECORDED_SAMPLES = 50
+
+
+def recorded_agreement(
+    frame: pd.DataFrame, s_values: np.ndarray, lateral: np.ndarray, track_length: float
+) -> Dict[str, float]:
+    """O quanto a projecao gravada concorda com a recalculada.
+
+    `s` e comparado circularmente (a linha de chegada e o mesmo ponto em 0 e em
+    `track_length`). `lateral_recorded` ja esta na convencao do `ml`; uma
+    correlacao negativa aqui quer dizer que alguem trocou o sinal de novo.
+    """
+    out = {
+        "recorded_s_p95_m": float("nan"),
+        "recorded_lateral_p95_m": float("nan"),
+        "recorded_lateral_correlation": float("nan"),
+    }
+    if "s_recorded" in frame.columns:
+        recorded = frame["s_recorded"].to_numpy(dtype=float)
+        usable = np.isfinite(recorded)
+        if usable.sum() >= MIN_RECORDED_SAMPLES:
+            diff = np.mod(recorded[usable] - s_values[usable] + track_length / 2.0, track_length)
+            out["recorded_s_p95_m"] = float(np.percentile(np.abs(diff - track_length / 2.0), 95))
+    if "lateral_recorded" in frame.columns:
+        recorded = frame["lateral_recorded"].to_numpy(dtype=float)
+        usable = np.isfinite(recorded) & np.isfinite(lateral)
+        if usable.sum() >= MIN_RECORDED_SAMPLES:
+            out["recorded_lateral_p95_m"] = float(
+                np.percentile(np.abs(recorded[usable] - lateral[usable]), 95)
+            )
+            if np.std(recorded[usable]) > 1e-9 and np.std(lateral[usable]) > 1e-9:
+                out["recorded_lateral_correlation"] = float(
+                    np.corrcoef(recorded[usable], lateral[usable])[0, 1]
+                )
+    return out
 
 
 def _elapsed(frame: pd.DataFrame) -> np.ndarray:
@@ -113,5 +166,6 @@ def align_lap(frame: pd.DataFrame, track: TrackGeometry) -> tuple:
         backward_steps=int(backward.sum()),
         backward_meters=float(-steps[backward].sum()) if backward.any() else 0.0,
         span_m=span,
+        **recorded_agreement(out, s_values, lateral, track.length),
     )
     return out, report

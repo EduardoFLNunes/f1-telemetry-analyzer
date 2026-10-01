@@ -165,10 +165,10 @@ MAX_STOPPED_FRACTION = 0.02
 # Canais sem os quais a volta nao ensina pilotagem. Posicao e velocidade nao
 # bastam: o sistema aprende o que o piloto *faz*, e isso esta nos pedais.
 #
-# A sessao `2026-06-14_12-23-46` gravou 12 voltas limpas -- posicao e velocidade
-# perfeitas, tempo plausivel, cobertura completa -- e nenhum bloco `carPhysics`.
-# Elas passavam por todos os outros gates e nove delas caiam no conjunto de
-# teste, que assim media a rede contra um alvo que nao existia.
+# Este gate ja rejeitou por engano: a sessao `2026-06-14_12-23-46` nao tem bloco
+# `carPhysics`, e o leitor so procurava os pedais la. Eles estavam no topo da
+# amostra, que e o formato das gravacoes de maio e junho
+# (`core.telemetry.channels`). Com o leitor corrigido, 9 voltas dela passam.
 REQUIRED_CHANNELS = ("throttle", "brake", "steering", "lateral_g", "longitudinal_g")
 
 # Fracao das amostras em que o canal precisa existir.
