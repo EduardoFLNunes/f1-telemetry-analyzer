@@ -1,0 +1,1439 @@
+diff --git a/backend/ml/requirements.txt b/backend/ml/requirements.txt
+index 3bc88faa..a4d57282 100644
+--- a/backend/ml/requirements.txt
++++ b/backend/ml/requirements.txt
+@@ -21,3 +21,7 @@ numpy>=1.24
+ pandas>=2.0
+ scipy>=1.10
+ pyarrow>=14.0
++
++# Estimadores da Fase 2b (ADR 0010): ridge (E2), KNN de regressao (E3) e
++# Processo Gaussiano (E4). Versao fixada na que foi instalada e validada.
++scikit-learn==1.6.1
+diff --git a/backend/ml/scripts/validate_empirical.py b/backend/ml/scripts/validate_empirical.py
+new file mode 100644
+index 00000000..dd6d4a14
+--- /dev/null
++++ b/backend/ml/scripts/validate_empirical.py
+@@ -0,0 +1,350 @@
++"""Fase 2b: o estimador empirico preve o ganho numa janela de curva?
++
++    python -m ml.scripts.validate_empirical
++
++Deixa uma sessao inteira de fora por vez. Janelas, envelope, calibracao do E1,
++regularizacao do E2, k do E3 e hiperparametros do E4 saem so das sessoes de
++treino. Roda duas vezes: com todas as sessoes e sem as duas dominantes
++(ADR 0006). Escreve em `data/ml/validation/empirical/`.
++
++Regra de decisao, fixada antes da primeira execucao
++---------------------------------------------------
++* Um estimador e **aprovado** quando passa em todos os criterios do ADR 0006
++  (`counterfactual.AcceptanceCriteria`, sem alteracao) nos pares-janela
++  comparaveis e dentro da distribuicao, com a previsao pontual em todos eles
++  (cobertura total, variante "todas as sessoes").
++* Os mesmos criterios aplicados so aos casos em que o estimador responde
++  (faixa de 95 % exclui zero) sao relatados como resultado **secundario**: dizem
++  se a abstencao ajuda, mas nao aprovam sozinhos.
++* E2-teto nunca e candidato (ADR 0005).
++* Fora da distribuicao (alguma entrada fora de 2,5-97,5 % do treino naquela
++  janela) e abstencao contada a parte, igual para todos os estimadores.
++"""
++
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import platform
++import subprocess
++import sys
++import time
++from pathlib import Path
++from typing import Dict, List, Optional
++
++import numpy as np
++import pandas as pd
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
++
++from ml import config
++from ml.data.lap_store import load_store
++from ml.track.corners import detect_corners
++from ml.track.geometry import load_geometry
++from ml.track.microsectors import build_microsectors
++from ml.validation import counterfactual as cf
++from ml.validation import empirical as em
++
++DOMINANT = ("2026-08-09_19-20-59_vhe_interlagos", "2026-06-20_13-13-02_vhe_interlagos")
++CANDIDATES = ("E1", "E2", "E3", "E4")
++WITH_INTERVAL = ("E2", "E3", "E4", "E2_teto")
++BRAKING_BINS = (("< 5 m", 0.0, 5.0), ("5-15 m", 5.0, 15.0), (">= 15 m", 15.0, np.inf))
++APEX_BINS = (("< 0,5 m", 0.0, 0.5), ("0,5-1,5 m", 0.5, 1.5), (">= 1,5 m", 1.5, np.inf))
++
++
++def run_variant(name, store, track, corners, profiles, laps_by_session, log) -> Dict[str, object]:
++    sessions = sorted(laps_by_session)
++    testable = [s for s in sessions if laps_by_session[s] >= 2]
++    rows: List[pd.DataFrame] = []
++    folds = []
++    for session_id in testable:
++        started = time.time()
++        train_ids = [k for k, p in profiles.items() if p.session_id != session_id]
++        windows = em.define_windows([store.lap(i)["brake"].to_numpy(dtype=float) for i in train_ids], track, corners)
++        envelope = cf.envelope_from(store, train_ids)
++        cf.simulate_profiles(track, envelope, list(profiles.values()))
++        features = {k: em.lap_window_features(store.lap(k), windows, track) for k in profiles}
++
++        train = em.build_pair_windows({k: p for k, p in profiles.items() if p.session_id != session_id}, windows, features, track)
++        test = em.build_pair_windows({k: p for k, p in profiles.items() if p.session_id == session_id}, windows, features, track)
++
++        tr = np.flatnonzero(np.array(train.reason) == "")
++        te = np.flatnonzero(np.array(test.reason) == "")
++        x_tr = em.design(train, tr, em.ACTIONABLE)
++        x_te = em.design(test, te, em.ACTIONABLE)
++        c_tr = em.design(train, tr, em.ACTIONABLE + em.CEILING_EXTRA)
++        c_te = em.design(test, te, em.ACTIONABLE + em.CEILING_EXTRA)
++        y_tr = np.array(train.observed_s)[tr]
++        w_tr = np.array(train.window)[tr]
++        w_te = np.array(test.window)[te]
++        s_tr = np.array(train.session)[tr]
++
++        ood = np.zeros(te.size, dtype=bool)
++        for k in range(windows.count):
++            mask = w_te == k
++            ood[mask] = em.ood_mask(x_tr[w_tr == k], x_te[mask])
++
++        physics_tr = np.array(train.physics_s)[tr]
++        slopes = {k: cf.fit_slope(physics_tr[w_tr == k], y_tr[w_tr == k]) for k in range(windows.count)}
++        e1 = np.array([slopes[k] for k in w_te]) * np.array(test.physics_s)[te]
++
++        e2, e2_info = em.fit_ridge(x_tr, y_tr, w_tr, s_tr, x_te, w_te, windows.count)
++        e3, e3_info = em.fit_knn(x_tr, y_tr, w_tr, s_tr, x_te, w_te, windows.count)
++        e4, e4_info = em.fit_gp(x_tr, y_tr, w_tr, x_te, w_te, windows.count)
++        teto, teto_info = em.fit_ridge(c_tr, y_tr, w_tr, s_tr, c_te, w_te, windows.count)
++
++        labels = windows.labels()
++        frame = pd.DataFrame(
++            {
++                "variant": name,
++                "fold": session_id,
++                "session_id": np.array(test.session)[te],
++                "slow": np.array(test.slow)[te],
++                "fast": np.array(test.fast)[te],
++                "window": w_te,
++                "window_label": [labels[k] for k in w_te],
++                "pace_s": np.array(test.pace_s)[te],
++                "observed_s": np.array(test.observed_s)[te],
++                "ood": ood,
++                "pred_E0": 0.0,
++                "pred_E1": e1,
++                **{f"x_{c}": c_te[:, i] for i, c in enumerate(em.ACTIONABLE + em.CEILING_EXTRA)},
++            }
++        )
++        for label, prediction in (("E2", e2), ("E3", e3), ("E4", e4), ("E2_teto", teto)):
++            frame[f"pred_{label}"] = prediction.point
++            frame[f"low_{label}"] = prediction.low
++            frame[f"high_{label}"] = prediction.high
++        rows.append(frame)
++
++        reasons = pd.Series(test.reason).replace("", "comparavel").value_counts().to_dict()
++        folds.append(
++            {
++                "sessao_de_teste": session_id,
++                "voltas_de_teste": int(laps_by_session[session_id]),
++                "janelas": windows.describe(),
++                "pares_janela_teste": int(len(test)),
++                "motivos_teste": reasons,
++                "comparaveis_teste": int(te.size),
++                "fora_da_distribuicao_teste": int(ood.sum()),
++                "comparaveis_treino": int(tr.size),
++                "e1_inclinacao_por_janela": {labels[k]: v for k, v in slopes.items()},
++                "e2": e2_info,
++                "e3": e3_info,
++                "e4": e4_info,
++                "e2_teto": teto_info,
++                "segundos": round(time.time() - started, 1),
++            }
++        )
++        log(f"  [{name}] {session_id}: {te.size} comparaveis, {int(ood.sum())} fora da distribuicao ({folds[-1]['segundos']} s)")
++
++    data = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
++    return {"testaveis": testable, "dobras": folds, "data": data}
++
++
++def evaluate(data: pd.DataFrame, bootstrap: int) -> Dict[str, object]:
++    criteria = cf.AcceptanceCriteria()
++    inside = data[~data["ood"]]
++    observed = inside["observed_s"].to_numpy()
++    estimators = ["E0", "E1", "E2", "E3", "E4", "E2_teto"]
++
++    def block(subset: pd.DataFrame) -> Dict[str, Dict[str, float]]:
++        return {
++            e: cf.error_metrics(subset[f"pred_{e}"].to_numpy(), subset["observed_s"].to_numpy())
++            for e in estimators
++        }
++
++    out: Dict[str, object] = {
++        "pares_janela_comparaveis": int(len(data)),
++        "fora_da_distribuicao": int(data["ood"].sum()),
++        "dentro_da_distribuicao": int(len(inside)),
++        "cobertura_total": block(inside),
++        "fora_da_distribuicao_se_respondesse": block(data[data["ood"]]),
++        "por_ritmo": {},
++        "por_janela": {k: block(g) for k, g in inside.groupby("window_label")},
++        "por_sessao": {k: block(g) for k, g in inside.groupby("session_id")},
++        "por_diferenca_de_frenagem": {},
++        "por_diferenca_lateral_no_apice": {},
++        "decisao": {},
++        "seletivo": {},
++        "risco_cobertura": {},
++        "calibracao_faixa_95": {},
++    }
++    pace = pd.cut(inside["pace_s"], [b[1] for b in cf.PACE_BANDS] + [np.inf], labels=[b[0] for b in cf.PACE_BANDS], right=False)
++    out["por_ritmo"] = {str(k): block(g) for k, g in inside.groupby(pace.astype(str))}
++    for key, column, bins in (
++        ("por_diferenca_de_frenagem", "x_braking_point_m", BRAKING_BINS),
++        ("por_diferenca_lateral_no_apice", "x_lateral_apex_m", APEX_BINS),
++    ):
++        binned = pd.cut(inside[column].abs(), [b[1] for b in bins] + [np.inf], labels=[b[0] for b in bins], right=False)
++        out[key] = {str(k): block(g) for k, g in inside.groupby(binned.astype(str))}
++
++    for e in CANDIDATES + ("E2_teto",):
++        predicted = inside[f"pred_{e}"].to_numpy()
++        pooled = cf.error_metrics(predicted, observed)
++        ci = cf.cluster_bootstrap_skill(predicted, observed, inside["session_id"].to_numpy(), repetitions=bootstrap)
++        per_session = {
++            s: cf.error_metrics(g[f"pred_{e}"].to_numpy(), g["observed_s"].to_numpy())
++            for s, g in inside.groupby("session_id")
++        }
++        verdict = criteria.evaluate(pooled, ci[0], per_session)
++        out["decisao"][e] = {
++            "candidato": e != "E2_teto",
++            "ic95_skill": ci,
++            **verdict,
++        }
++
++    for e in WITH_INTERVAL:
++        prediction = em.Prediction(
++            inside[f"pred_{e}"].to_numpy(), inside[f"low_{e}"].to_numpy(), inside[f"high_{e}"].to_numpy()
++        )
++        responds = em.answered(prediction)
++        chosen = inside[responds]
++        pooled = cf.error_metrics(chosen[f"pred_{e}"].to_numpy(), chosen["observed_s"].to_numpy())
++        ci = (
++            cf.cluster_bootstrap_skill(
++                chosen[f"pred_{e}"].to_numpy(), chosen["observed_s"].to_numpy(), chosen["session_id"].to_numpy(), repetitions=bootstrap
++            )
++            if len(chosen)
++            else (float("nan"), float("nan"))
++        )
++        per_session = {
++            s: cf.error_metrics(g[f"pred_{e}"].to_numpy(), g["observed_s"].to_numpy())
++            for s, g in chosen.groupby("session_id")
++        }
++        out["seletivo"][e] = {
++            "responde": int(responds.sum()),
++            "nao_conclusivo": int((~responds).sum()),
++            "cobertura": float(responds.mean()) if responds.size else float("nan"),
++            "metricas_quando_responde": pooled,
++            "ic95_skill_quando_responde": ci,
++            "criterios_quando_responde_secundario": criteria.evaluate(pooled, ci[0], per_session) if len(chosen) else None,
++        }
++        out["risco_cobertura"][e] = em.risk_coverage(prediction, observed)
++        out["calibracao_faixa_95"][e] = {
++            "dentro_da_distribuicao": em.interval_coverage(prediction, observed),
++            "fora_da_distribuicao": em.interval_coverage(
++                em.Prediction(
++                    data.loc[data["ood"], f"pred_{e}"].to_numpy(),
++                    data.loc[data["ood"], f"low_{e}"].to_numpy(),
++                    data.loc[data["ood"], f"high_{e}"].to_numpy(),
++                ),
++                data.loc[data["ood"], "observed_s"].to_numpy(),
++            ),
++        }
++    return out
++
++
++def file_record(path: Path) -> Dict[str, object]:
++    digest = hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
++    return {"caminho": str(path.relative_to(config.repo_root())), "sha256": digest, "bytes": path.stat().st_size if path.exists() else None}
++
++
++def main(argv: Optional[List[str]] = None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--bootstrap", type=int, default=2000)
++    args = parser.parse_args(argv)
++    started = time.time()
++
++    track = load_geometry()
++    corners = detect_corners(track)
++    store = load_store(track=track)
++    profiles = cf.lap_profiles(store, track, build_microsectors(track))
++    counts = store.laps.groupby("session_id").size()
++    print(f"geometria {track.geometry_id} | {len(profiles)} voltas | {counts.size} sessoes", flush=True)
++
++    variants = {}
++    data_frames = []
++    for name, excluded in (("todas", ()), ("sem_dominantes", DOMINANT)):
++        subset = {k: p for k, p in profiles.items() if p.session_id not in excluded}
++        per_session = {s: int(n) for s, n in counts.items() if s not in excluded}
++        run = run_variant(name, store, track, corners, subset, per_session, lambda m: print(m, flush=True))
++        evaluation = evaluate(run["data"], args.bootstrap)
++        variants[name] = {"sessoes_testaveis": run["testaveis"], "dobras": run["dobras"], **evaluation}
++        data_frames.append(run["data"])
++
++    # Informativo: o modelo da variante completa, avaliado so fora das dominantes.
++    main_data = data_frames[0]
++    variants["todas_avaliado_sem_dominantes"] = evaluate(
++        main_data[~main_data["session_id"].isin(DOMINANT)], args.bootstrap
++    )
++
++    import sklearn
++
++    root = config.repo_root()
++    result = {
++        "etapa": "fase2b",
++        "commit_base": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip(),
++        "geometry_id": track.geometry_id,
++        "dados": [
++            file_record(config.artifacts_root() / "laps_grid.parquet"),
++            file_record(config.artifacts_root() / "laps_grid_meta.json"),
++            file_record(config.artifacts_root() / "lap_inventory.parquet"),
++            file_record(config.track_cache_root() / config.INTERLAGOS_GEOMETRY_FILE),
++        ],
++        "ambiente": {
++            "python": platform.python_version(),
++            "numpy": np.__version__,
++            "pandas": pd.__version__,
++            "scikit_learn": sklearn.__version__,
++        },
++        "comando": "cd backend && python -m ml.scripts.validate_empirical",
++        "regra_de_decisao": __doc__.split("Regra de decisao")[1].strip(),
++        "criterios_adr_0006": cf.AcceptanceCriteria().to_dict(),
++        "parametros": {
++            "janelas": {
++                "limiar_freio": em.BRAKE_ONSET,
++                "limiar_acelerador": em.THROTTLE_ONSET,
++                "fracao_minima_de_voltas": em.MIN_LAP_SHARE,
++                "juntar_zonas_a_menos_de_m": em.MERGE_ZONES_M,
++                "margem_inicio_m": em.START_MARGIN_M,
++                "quantil_inicio": em.START_QUANTILE,
++            },
++            "filtros": {
++                "combustivel_l": cf.MAX_FUEL_DIFF_L,
++                "desgaste_pneu": cf.MAX_TYRE_WEAR_DIFF,
++                "velocidade_entrada_kmh": cf.MAX_ENTRY_SPEED_DIFF_KMH,
++                "eficiencia_minima": cf.MIN_EFFICIENCY,
++            },
++            "entradas": list(em.ACTIONABLE),
++            "entradas_teto": list(em.ACTIONABLE + em.CEILING_EXTRA),
++            "ridge_alphas": list(em.RIDGE_ALPHAS),
++            "knn_ks": list(em.KNN_KS),
++            "gp_max_treino_por_janela": em.GP_MAX_TRAIN,
++            "fora_da_distribuicao_percentis": [em.OOD_LOW, em.OOD_HIGH],
++            "bootstrap": args.bootstrap,
++        },
++        "variantes": variants,
++        "segundos": round(time.time() - started, 1),
++    }
++
++    out_dir = config.artifacts_root() / "validation" / "empirical"
++    out_dir.mkdir(parents=True, exist_ok=True)
++    (out_dir / "resultado.json").write_text(
++        json.dumps(result, indent=2, ensure_ascii=False, default=_jsonable), encoding="utf-8"
++    )
++    pd.concat(data_frames, ignore_index=True).to_parquet(out_dir / "pares_por_janela.parquet", index=False)
++    for name in ("todas", "sem_dominantes"):
++        print(f"\n[{name}]")
++        for e, d in variants[name]["decisao"].items():
++            m = variants[name]["cobertura_total"][e]
++            print(f"  {e:8s} skill={m.get('skill', float('nan')):+.3f} IC={np.round(d['ic95_skill'], 3)} {'APROVADO' if d['aprovado'] else 'reprovado'}")
++    print(f"\n-> {out_dir}  ({result['segundos']} s)")
++    return 0
++
++
++def _jsonable(value):
++    if isinstance(value, (np.floating,)):
++        return float(value)
++    if isinstance(value, (np.integer,)):
++        return int(value)
++    if isinstance(value, (np.bool_,)):
++        return bool(value)
++    if isinstance(value, np.ndarray):
++        return value.tolist()
++    return str(value)
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/ml/validation/empirical.py b/backend/ml/validation/empirical.py
+new file mode 100644
+index 00000000..c014ebd0
+--- /dev/null
++++ b/backend/ml/validation/empirical.py
+@@ -0,0 +1,545 @@
++"""Estimador empirico de ganho numa janela de curva (Fase 2b, ADRs 0005 e 0010).
++
++A Fase 2 mostrou que o simulador nao preve a diferenca de tempo entre duas
++linhas proximas melhor que "ganho zero" (ADR 0004). Aqui a pergunta e outra:
++usando so as voltas do proprio piloto, as diferencas de pilotagem que um coach
++poderia pedir -- onde frear, por onde passar, quando acelerar -- explicam a
++diferenca de tempo numa janela de curva?
++
++Janela de curva
++---------------
++Do inicio de uma zona de frenagem ate o inicio da proxima: a curva **e** a reta
++que vem depois dela, porque frear tarde parece ganhar na entrada e perde na
++saida e na reta (ADR 0005). As janelas cobrem a volta inteira, entao a soma dos
++tempos delas e o tempo da volta.
++
++As zonas de frenagem saem das voltas de treino, nao da geometria: um limiar de
++curvatura acha 14 curvas, mas o piloto freia em 7 lugares (curvas encadeadas
++como o S do Senna compartilham uma frenagem). Uma zona e um aglomerado de
++inicios de frenagem ao longo da pista feito por pelo menos metade das voltas.
++
++Estimadores
++-----------
++E0 zero; E1 simulador calibrado por janela; E2 ridge; E3 KNN de regressao;
++E4 Processo Gaussiano; E2-teto = E2 com velocidades minima e de saida (quase
++tautologico, so como teto). E2, E3 e E4 sao ajustados por janela -- o efeito de
++frear 5 m mais tarde nao e o mesmo na Juncao e no S do Senna.
++
++Os pares de treino entram nas duas ordens, (A, B) e (B, A), com entradas e alvo
++de sinal trocado. A relacao e antissimetrica por natureza (trocar as voltas
++troca o sinal do ganho), e sem isso o modelo aprenderia a ordenacao dos pares
++-- A e sempre a volta mais lenta -- em vez da pilotagem.
++"""
++
++from __future__ import annotations
++
++from dataclasses import dataclass, field
++from typing import Dict, List, Optional, Sequence, Tuple
++
++import numpy as np
++
++from ..comparison.lap_vs_reference import (
++    BRAKE_ONSET,
++    THROTTLE_ONSET,
++    _first_crossing,
++    _signed_distance,
++    _window,
++)
++from ..track.corners import Corner
++from ..track.geometry import TrackGeometry
++from . import counterfactual as cf
++
++# ------------------------------------------------------------ janelas ---
++#
++# Fixados antes de rodar qualquer estimador, a partir da distribuicao dos
++# inicios de frenagem (nenhum tempo olhado).
++
++# Um inicio de frenagem conta quando o pedal fica abaixo do limiar por pelo
++# menos 20 m antes e acima por pelo menos 10 m depois: um toque de 2 m no freio
++# nao e frenagem.
++ONSET_OFF_BEFORE_M = 20.0
++ONSET_ON_AFTER_M = 10.0
++# Inicios a menos de 30 m entre si pertencem ao mesmo aglomerado.
++CLUSTER_GAP_M = 30.0
++# Uma zona de frenagem existe quando pelo menos metade das voltas freia ali.
++MIN_LAP_SHARE = 0.5
++# Dois aglomerados a menos de 150 m (pela mediana) sao a mesma curva: o segundo
++# toque no S do Senna e na Ferradura nao tem reta entre eles. A menor reta entre
++# zonas distintas de Interlagos medida nas voltas e de 158 m.
++MERGE_ZONES_M = 150.0
++# A janela comeca um pouco antes do inicio de frenagem mais precoce (p5), para
++# a frenagem de quase toda volta cair dentro dela.
++START_MARGIN_M = 10.0
++START_QUANTILE = 5.0
++ROUND_TO_M = 10.0
++
++# ------------------------------------------------------------ entradas ---
++
++ACTIONABLE = (
++    "braking_point_m",     # B freou x m depois de A (positivo = mais tarde)
++    "lateral_entry_m",     # posicao lateral no inicio da curva, B - A
++    "lateral_apex_m",
++    "lateral_exit_m",
++    "throttle_point_m",    # B acelerou x m depois de A
++)
++CEILING_EXTRA = ("min_speed_kmh", "exit_speed_kmh")
++
++# Abstencao por entrada fora da distribuicao de treino (ADR 0010).
++OOD_LOW, OOD_HIGH = 2.5, 97.5
++INTERVAL_LEVEL = 0.95
++
++
++@dataclass
++class Windows:
++    """Janelas de curva na grade da pista. Compativel com o que `counterfactual`
++    espera de um corte em setores (`index`, `count`)."""
++
++    start_s: np.ndarray            # (n,) inicio de cada janela
++    end_s: np.ndarray              # (n,) fim = inicio da seguinte
++    corner: List[Corner]           # a curva que define entrada/apice/saida
++    index: np.ndarray              # (grade,) janela de cada ponto
++    entry_index: np.ndarray        # (n,) ponto da grade onde a janela comeca
++    zone_median_s: np.ndarray      # (n,) mediana dos inicios de frenagem da zona
++    track_length: float
++
++    @property
++    def count(self) -> int:
++        return int(self.start_s.size)
++
++    @property
++    def lengths_m(self) -> np.ndarray:
++        return np.mod(self.end_s - self.start_s, self.track_length)
++
++    def labels(self) -> List[str]:
++        return [f"J{k + 1}:{c.label}" for k, c in enumerate(self.corner)]
++
++    def describe(self) -> List[Dict[str, object]]:
++        return [
++            {
++                "janela": label,
++                "inicio_m": float(s),
++                "fim_m": float(e),
++                "comprimento_m": float(length),
++                "curva": c.label,
++                "apice_m": float(c.apex_s),
++                "mediana_inicio_frenagem_m": float(z),
++            }
++            for label, s, e, length, c, z in zip(
++                self.labels(), self.start_s, self.end_s, self.lengths_m, self.corner, self.zone_median_s
++            )
++        ]
++
++
++def brake_onsets(brake: np.ndarray, track: TrackGeometry) -> np.ndarray:
++    """Distancias em que a frenagem comeca de verdade, numa volta na grade."""
++    on = np.asarray(brake, dtype=float) >= BRAKE_ONSET
++    before = int(round(ONSET_OFF_BEFORE_M / track.step))
++    after = int(round(ONSET_ON_AFTER_M / track.step))
++    out = []
++    for i in np.flatnonzero(on & ~np.roll(on, 1)):
++        previous = on[(i - before + np.arange(before)) % on.size]
++        following = on[(i + np.arange(after)) % on.size]
++        if not previous.any() and following.all():
++            out.append(float(track.s[i]))
++    return np.asarray(out)
++
++
++def define_windows(
++    brakes: Sequence[np.ndarray], track: TrackGeometry, corners: Sequence[Corner]
++) -> Windows:
++    """Zonas de frenagem a partir das voltas dadas (so as de treino, na validacao)."""
++    laps = len(brakes)
++    onsets = np.sort(np.concatenate([brake_onsets(b, track) for b in brakes]))
++    if onsets.size == 0:
++        raise ValueError("nenhum inicio de frenagem nas voltas dadas")
++
++    clusters: List[np.ndarray] = []
++    current = [onsets[0]]
++    for value in onsets[1:]:
++        if value - current[-1] > CLUSTER_GAP_M:
++            clusters.append(np.asarray(current))
++            current = []
++        current.append(value)
++    clusters.append(np.asarray(current))
++    # O aglomerado que cruza a linha de chegada aparece partido nas duas pontas.
++    if len(clusters) > 1 and clusters[0][0] + track.length - clusters[-1][-1] <= CLUSTER_GAP_M:
++        clusters[0] = np.concatenate([clusters[-1] - track.length, clusters[0]])
++        clusters.pop()
++
++    zones = [c for c in clusters if c.size >= MIN_LAP_SHARE * laps]
++    if not zones:
++        raise ValueError("nenhuma zona de frenagem feita por metade das voltas")
++    merged = [zones[0]]
++    for zone in zones[1:]:
++        if np.median(zone) - np.median(merged[-1]) < MERGE_ZONES_M:
++            merged[-1] = np.concatenate([merged[-1], zone])
++        else:
++            merged.append(zone)
++    if len(merged) > 1 and np.median(merged[0]) + track.length - np.median(merged[-1]) < MERGE_ZONES_M:
++        merged[-1] = np.concatenate([merged[-1], merged[0] + track.length])
++        merged.pop(0)
++
++    starts, medians, chosen = [], [], []
++    apexes = np.array([c.apex_s for c in corners])
++    for zone in merged:
++        start = np.floor((np.percentile(zone, START_QUANTILE) - START_MARGIN_M) / ROUND_TO_M) * ROUND_TO_M
++        median = float(np.median(zone))
++        ahead = np.mod(apexes - median, track.length)
++        starts.append(float(np.mod(start, track.length)))
++        medians.append(float(np.mod(median, track.length)))
++        chosen.append(corners[int(np.argmin(ahead))])
++    order = np.argsort(starts)
++    starts = np.asarray(starts)[order]
++    medians = np.asarray(medians)[order]
++    chosen = [chosen[i] for i in order]
++    ends = np.roll(starts, -1)
++
++    index = np.empty(track.size, dtype=int)
++    entry = np.empty(starts.size, dtype=int)
++    for k, (start, end) in enumerate(zip(starts, ends)):
++        points = _window(track, start, end)[:-1]
++        index[points] = k
++        entry[k] = points[0]
++    return Windows(starts, ends, chosen, index, entry, medians, track.length)
++
++
++# ---------------------------------------------------- entradas por volta ---
++
++def lap_window_features(
++    frame, windows: Windows, track: TrackGeometry
++) -> List[Dict[str, Optional[float]]]:
++    """Por janela: ponto de frenagem, lateral na entrada/apice/saida, retomada."""
++    brake = frame["brake"].to_numpy(dtype=float)
++    throttle = frame["throttle"].to_numpy(dtype=float)
++    lateral = frame["lateral"].to_numpy(dtype=float)
++    speed = frame["speed_kmh"].to_numpy(dtype=float)
++    out = []
++    for k in range(windows.count):
++        corner = windows.corner[k]
++        approach = _window(track, windows.start_s[k], corner.apex_s)
++        after_apex = _window(track, corner.apex_s, windows.end_s[k])
++        inside = _window(track, corner.start_s, corner.end_s)
++        out.append(
++            {
++                "braking_point_s": _first_crossing(np.nan_to_num(brake), BRAKE_ONSET, approach, track),
++                "throttle_point_s": _first_crossing(np.nan_to_num(throttle), THROTTLE_ONSET, after_apex, track),
++                "lateral_entry_m": float(lateral[track.index_of(corner.start_s)]),
++                "lateral_apex_m": float(lateral[track.index_of(corner.apex_s)]),
++                "lateral_exit_m": float(lateral[track.index_of(corner.end_s)]),
++                "min_speed_kmh": float(np.nanmin(speed[inside])),
++                "exit_speed_kmh": float(speed[track.index_of(corner.end_s)]),
++            }
++        )
++    return out
++
++
++def pair_features(
++    a: Dict[str, Optional[float]], b: Dict[str, Optional[float]], track: TrackGeometry
++) -> Optional[Dict[str, float]]:
++    """Diferencas B - A. None quando a frenagem ou a retomada nao foi achada."""
++    if None in (a["braking_point_s"], b["braking_point_s"], a["throttle_point_s"], b["throttle_point_s"]):
++        return None
++    return {
++        "braking_point_m": _signed_distance(track, b["braking_point_s"], a["braking_point_s"]),
++        "throttle_point_m": _signed_distance(track, b["throttle_point_s"], a["throttle_point_s"]),
++        "lateral_entry_m": b["lateral_entry_m"] - a["lateral_entry_m"],
++        "lateral_apex_m": b["lateral_apex_m"] - a["lateral_apex_m"],
++        "lateral_exit_m": b["lateral_exit_m"] - a["lateral_exit_m"],
++        "min_speed_kmh": b["min_speed_kmh"] - a["min_speed_kmh"],
++        "exit_speed_kmh": b["exit_speed_kmh"] - a["exit_speed_kmh"],
++    }
++
++
++# ---------------------------------------------------------- pares ---
++
++@dataclass
++class PairWindows:
++    """Uma linha por (par, janela)."""
++
++    session: List[str] = field(default_factory=list)
++    slow: List[str] = field(default_factory=list)
++    fast: List[str] = field(default_factory=list)
++    window: List[int] = field(default_factory=list)
++    pace_s: List[float] = field(default_factory=list)
++    reason: List[str] = field(default_factory=list)       # "" = comparavel
++    observed_s: List[float] = field(default_factory=list)  # t_B - t_A na janela
++    physics_s: List[float] = field(default_factory=list)   # T_sim(B) - T_sim(A)
++    features: List[Optional[Dict[str, float]]] = field(default_factory=list)
++
++    def __len__(self) -> int:
++        return len(self.session)
++
++
++def window_sum(values: np.ndarray, windows: Windows) -> np.ndarray:
++    return np.bincount(windows.index, weights=values, minlength=windows.count)
++
++
++def build_pair_windows(
++    profiles: Dict[str, "cf.LapProfile"],
++    windows: Windows,
++    lap_features: Dict[str, List[Dict[str, Optional[float]]]],
++    track: TrackGeometry,
++) -> PairWindows:
++    """Pares dentro da sessao (A = mais lenta), com os filtros da Fase 2.
++
++    Exige `profiles` ja simulados (`cf.simulate_profiles`): o filtro de
++    incidente e o E1 dependem da velocidade simulada.
++    """
++    from ..optimization.lap_time_model import step_times
++
++    sim_window: Dict[str, np.ndarray] = {}
++    low: Dict[str, np.ndarray] = {}
++    for lap_id, p in profiles.items():
++        sim_window[lap_id] = window_sum(
++            step_times(p.sim_speed_mps[None, :], p.step_length_m[None, :])[0], windows
++        )
++        flag = np.zeros(windows.count, dtype=bool)
++        np.logical_or.at(flag, windows.index, p.efficiency < cf.MIN_EFFICIENCY)
++        low[lap_id] = flag
++
++    by_session: Dict[str, List] = {}
++    for p in profiles.values():
++        by_session.setdefault(p.session_id, []).append(p)
++
++    out = PairWindows()
++    for session_id, laps in sorted(by_session.items()):
++        laps = sorted(laps, key=lambda p: p.lap_time_s)
++        for j in range(len(laps)):
++            for i in range(j):
++                b, a = laps[i], laps[j]
++                lap_reason = cf.lap_compatibility(a, b)
++                observed = window_sum(b.observed_step_s, windows) - window_sum(a.observed_step_s, windows)
++                physics = sim_window[b.lap_id] - sim_window[a.lap_id]
++                for k in range(windows.count):
++                    entry = windows.entry_index[k]
++                    features = pair_features(lap_features[a.lap_id][k], lap_features[b.lap_id][k], track)
++                    if lap_reason:
++                        reason = lap_reason
++                    elif abs(b.speed_kmh[entry] - a.speed_kmh[entry]) > cf.MAX_ENTRY_SPEED_DIFF_KMH:
++                        reason = f"velocidade de entrada difere mais de {cf.MAX_ENTRY_SPEED_DIFF_KMH:.0f} km/h"
++                    elif low[a.lap_id][k] or low[b.lap_id][k]:
++                        reason = "incidente (eficiencia < 0,6)"
++                    elif features is None:
++                        reason = "frenagem ou retomada nao detectada"
++                    else:
++                        reason = ""
++                    out.session.append(session_id)
++                    out.slow.append(a.lap_id)
++                    out.fast.append(b.lap_id)
++                    out.window.append(k)
++                    out.pace_s.append(a.lap_time_s)
++                    out.reason.append(reason)
++                    out.observed_s.append(float(observed[k]))
++                    out.physics_s.append(float(physics[k]))
++                    out.features.append(features)
++    return out
++
++
++def design(pairs: PairWindows, rows: np.ndarray, columns: Sequence[str]) -> np.ndarray:
++    return np.array([[pairs.features[r][c] for c in columns] for r in rows], dtype=float)
++
++
++def symmetrize(x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
++    """(A, B) e (B, A): entradas e alvo com o sinal trocado."""
++    return np.vstack([x, -x]), np.concatenate([y, -y])
++
++
++def ood_mask(train_x: np.ndarray, test_x: np.ndarray) -> np.ndarray:
++    """True onde alguma entrada cai fora da faixa 2,5-97,5 % do treino."""
++    if train_x.shape[0] == 0:
++        return np.ones(test_x.shape[0], dtype=bool)
++    low = np.percentile(train_x, OOD_LOW, axis=0)
++    high = np.percentile(train_x, OOD_HIGH, axis=0)
++    return np.any((test_x < low) | (test_x > high), axis=1)
++
++
++# ------------------------------------------------------- estimadores ---
++
++RIDGE_ALPHAS = (0.01, 0.1, 1.0, 10.0, 100.0, 1000.0)
++KNN_KS = (3, 5, 10, 20, 40, 80)
++# O GP e O(n^3): por janela e dobra, no maximo este numero de pontos de treino
++# (sorteados com semente fixa) entra no ajuste.
++GP_MAX_TRAIN = 600
++GP_RESTARTS = 2
++SEED = 20261002
++MIN_WINDOW_RESIDUALS = 30
++
++
++def _ridge(alpha: float):
++    from sklearn.linear_model import Ridge
++    from sklearn.pipeline import make_pipeline
++    from sklearn.preprocessing import StandardScaler
++
++    # Sem intercepto: sem diferenca de pilotagem, a previsao e zero.
++    return make_pipeline(StandardScaler(with_mean=False), Ridge(alpha=alpha, fit_intercept=False))
++
++
++def _knn(k: int):
++    from sklearn.neighbors import KNeighborsRegressor
++    from sklearn.pipeline import make_pipeline
++    from sklearn.preprocessing import StandardScaler
++
++    return make_pipeline(StandardScaler(with_mean=False), KNeighborsRegressor(n_neighbors=k))
++
++
++def _gp():
++    from sklearn.gaussian_process import GaussianProcessRegressor
++    from sklearn.gaussian_process.kernels import RBF, ConstantKernel, WhiteKernel
++
++    kernel = ConstantKernel(1.0, (1e-3, 1e3)) * RBF(
++        length_scale=np.ones(len(ACTIONABLE)), length_scale_bounds=(1e-2, 1e3)
++    ) + WhiteKernel(1.0, (1e-5, 1e2))
++    return GaussianProcessRegressor(
++        kernel=kernel, normalize_y=True, n_restarts_optimizer=GP_RESTARTS, random_state=SEED
++    )
++
++
++@dataclass
++class Prediction:
++    point: np.ndarray
++    low: np.ndarray       # NaN quando o estimador nao tem incerteza
++    high: np.ndarray
++
++
++def _fit_predict_windowed(make, train, test, windows_train, windows_test, count):
++    """Ajusta um modelo por janela e preve. `train`/`test` = (x, y)."""
++    point = np.full(test[0].shape[0], np.nan)
++    for k in range(count):
++        tr = windows_train == k
++        te = windows_test == k
++        if not te.any() or tr.sum() < 2:
++            continue
++        x, y = symmetrize(train[0][tr], train[1][tr])
++        model = make(int(x.shape[0]))
++        model.fit(x, y)
++        point[te] = model.predict(test[0][te])
++    return point
++
++
++def _inner_residuals(make, x, y, windows, sessions, count) -> np.ndarray:
++    """Residuos fora da amostra: deixa uma sessao de treino de fora por vez."""
++    residual = np.full(y.size, np.nan)
++    for session in np.unique(sessions):
++        held = sessions == session
++        if held.all():
++            continue
++        predicted = _fit_predict_windowed(
++            make, (x[~held], y[~held]), (x[held], y[held]), windows[~held], windows[held], count
++        )
++        residual[held] = y[held] - predicted
++    return residual
++
++
++def _quantile_interval(residual, windows, count, point, test_windows):
++    """Faixa de 95 % pelos quantis dos residuos de treino, por janela."""
++    alpha = (1.0 - INTERVAL_LEVEL) / 2.0
++    finite = np.isfinite(residual)
++    global_q = np.quantile(residual[finite], [alpha, 1.0 - alpha]) if finite.any() else (np.nan, np.nan)
++    low = np.full(point.size, np.nan)
++    high = np.full(point.size, np.nan)
++    for k in range(count):
++        te = test_windows == k
++        own = residual[(windows == k) & finite]
++        q = np.quantile(own, [alpha, 1.0 - alpha]) if own.size >= MIN_WINDOW_RESIDUALS else global_q
++        low[te] = point[te] + q[0]
++        high[te] = point[te] + q[1]
++    return low, high
++
++
++def choose(make_for, candidates, x, y, windows, sessions, count) -> Tuple[object, Dict[str, float]]:
++    """Hiperparametro pelo menor MAE fora da amostra, so nas sessoes de treino."""
++    scores = {}
++    for value in candidates:
++        residual = _inner_residuals(make_for(value), x, y, windows, sessions, count)
++        scores[str(value)] = float(np.nanmean(np.abs(residual)))
++    best = min(candidates, key=lambda v: scores[str(v)])
++    return best, scores
++
++
++def fit_ridge(x, y, windows, sessions, test_x, test_windows, count):
++    alpha, scores = choose(lambda a: (lambda n: _ridge(a)), RIDGE_ALPHAS, x, y, windows, sessions, count)
++    make = lambda n: _ridge(alpha)  # noqa: E731
++    point = _fit_predict_windowed(make, (x, y), (test_x, None), windows, test_windows, count)
++    residual = _inner_residuals(make, x, y, windows, sessions, count)
++    low, high = _quantile_interval(residual, windows, count, point, test_windows)
++    return Prediction(point, low, high), {"alpha": alpha, "inner_mae": scores}
++
++
++def fit_knn(x, y, windows, sessions, test_x, test_windows, count):
++    def make_for(k):
++        return lambda n: _knn(max(1, min(int(k), n)))
++
++    k, scores = choose(make_for, KNN_KS, x, y, windows, sessions, count)
++    make = make_for(k)
++    point = _fit_predict_windowed(make, (x, y), (test_x, None), windows, test_windows, count)
++    residual = _inner_residuals(make, x, y, windows, sessions, count)
++    low, high = _quantile_interval(residual, windows, count, point, test_windows)
++    return Prediction(point, low, high), {"k": k, "inner_mae": scores}
++
++
++def fit_gp(x, y, windows, test_x, test_windows, count):
++    """Um GP por janela; hiperparametros pela verossimilhanca no treino."""
++    rng = np.random.default_rng(SEED)
++    z = 1.959963984540054
++    point = np.full(test_x.shape[0], np.nan)
++    sd = np.full(test_x.shape[0], np.nan)
++    kernels = {}
++    for k in range(count):
++        tr = np.flatnonzero(windows == k)
++        te = test_windows == k
++        if not te.any() or tr.size < 2:
++            continue
++        if tr.size > GP_MAX_TRAIN // 2:
++            tr = rng.choice(tr, GP_MAX_TRAIN // 2, replace=False)
++        xs, ys = symmetrize(x[tr], y[tr])
++        scale = np.std(xs, axis=0)
++        scale = np.where(scale > 1e-9, scale, 1.0)
++        model = _gp()
++        model.fit(xs / scale, ys)
++        mean, std = model.predict(test_x[te] / scale, return_std=True)
++        point[te], sd[te] = mean, std
++        kernels[str(k)] = str(model.kernel_)
++    return Prediction(point, point - z * sd, point + z * sd), {"kernels": kernels, "max_train": GP_MAX_TRAIN}
++
++
++# ------------------------------------------------------- avaliacao ---
++
++COVERAGE_LEVELS = tuple(np.round(np.arange(0.1, 1.01, 0.1), 2))
++
++
++def answered(prediction: Prediction) -> np.ndarray:
++    """Responde quando a faixa de 95 % nao inclui zero."""
++    return (prediction.low > 0) | (prediction.high < 0)
++
++
++def risk_coverage(prediction: Prediction, observed: np.ndarray) -> List[Dict[str, float]]:
++    """Erro nos casos mais confiantes, por cobertura.
++
++    Confianca = quanto a faixa se afasta de zero, em meias-larguras: |centro| /
++    meia-largura. Acima de 1 a faixa exclui zero e o estimador responde.
++    """
++    half = (prediction.high - prediction.low) / 2.0
++    score = np.abs(prediction.point) / np.maximum(half, 1e-12)
++    order = np.argsort(-score)
++    out = []
++    for level in COVERAGE_LEVELS:
++        n = max(1, int(round(level * order.size)))
++        chosen = order[:n]
++        metrics = cf.error_metrics(prediction.point[chosen], observed[chosen])
++        out.append(
++            {
++                "cobertura": float(level),
++                "n": int(n),
++                "limiar_confianca": float(score[order[n - 1]]),
++                "mae_s": metrics.get("mae_s"),
++                "mae_zero_s": metrics.get("mae_zero_s"),
++                "skill": metrics.get("skill"),
++            }
++        )
++    return out
++
++
++def interval_coverage(prediction: Prediction, observed: np.ndarray) -> float:
++    """Fracao dos ΔT reais dentro da faixa de 95 % (calibracao)."""
++    inside = (observed >= prediction.low) & (observed <= prediction.high)
++    return float(np.mean(inside)) if inside.size else float("nan")
+diff --git a/backend/tests/test_ml_empirical.py b/backend/tests/test_ml_empirical.py
+new file mode 100644
+index 00000000..e1f7d49f
+--- /dev/null
++++ b/backend/tests/test_ml_empirical.py
+@@ -0,0 +1,140 @@
++"""Estimador empirico da Fase 2b (`ml.validation.empirical`), com dados sinteticos."""
++
++from __future__ import annotations
++
++import sys
++import unittest
++from pathlib import Path
++
++import numpy as np
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from ml.track.corners import Corner
++from ml.validation import empirical as em
++from tests.test_ml_pipeline import circular_track
++
++
++def corner(index, start, apex, end):
++    return Corner(index, start, apex, end, 1, 30.0, 40.0, end - start)
++
++
++def brake_trace(track, onsets, length_m=40.0):
++    brake = np.zeros(track.size)
++    for onset in onsets:
++        span = (track.index_of(onset) + np.arange(int(length_m / track.step))) % track.size
++        brake[span] = 0.8
++    return brake
++
++
++class WindowTest(unittest.TestCase):
++    def setUp(self):
++        self.track = circular_track()           # 1256,6 m
++        self.corners = [corner(0, 60, 100, 140), corner(1, 310, 340, 380), corner(2, 720, 760, 800)]
++
++    def test_onsets_ignore_short_taps(self):
++        brake = brake_trace(self.track, [100.0])
++        brake[self.track.index_of(500.0)] = 0.9    # toque de 2 m
++        np.testing.assert_allclose(em.brake_onsets(brake, self.track), [100.0], atol=self.track.step)
++
++    def test_windows_tile_the_lap_and_merge_close_taps(self):
++        # Uma zona cruza a linha de chegada (~1255 m); outra em ~300 m com um
++        # segundo toque 60 m depois, que nao abre janela; outra em ~700 m.
++        rng = np.random.default_rng(0)
++        brakes = [
++            brake_trace(
++                self.track,
++                [np.mod(1255 + rng.normal(0, 3), self.track.length), 300 + rng.normal(0, 3), 360, 700],
++            )
++            for _ in range(10)
++        ]
++        windows = em.define_windows(brakes, self.track, self.corners)
++        self.assertEqual(windows.count, 3)
++        self.assertAlmostEqual(float(windows.lengths_m.sum()), self.track.length, places=6)
++        self.assertEqual(np.bincount(windows.index, minlength=3).sum(), self.track.size)
++        # Cada janela comeca antes da frenagem e usa a curva logo depois dela.
++        self.assertTrue(np.all(np.mod(windows.zone_median_s - windows.start_s, self.track.length) < 30))
++        labels = {round(s): c.index for s, c in zip(windows.start_s, windows.corner)}
++        self.assertEqual(sorted(labels.values()), [0, 1, 2])
++
++    def test_zones_braked_by_few_laps_do_not_open_a_window(self):
++        brakes = [brake_trace(self.track, [300, 700]) for _ in range(9)]
++        brakes.append(brake_trace(self.track, [300, 700, 1000]))
++        self.assertEqual(em.define_windows(brakes, self.track, self.corners).count, 2)
++
++
++class PairFeatureTest(unittest.TestCase):
++    def test_differences_are_b_minus_a_across_the_line(self):
++        track = circular_track()
++        base = {
++            "braking_point_s": track.length - 4.0, "throttle_point_s": 50.0,
++            "lateral_entry_m": 1.0, "lateral_apex_m": -2.0, "lateral_exit_m": 0.5,
++            "min_speed_kmh": 90.0, "exit_speed_kmh": 150.0,
++        }
++        later = dict(base, braking_point_s=6.0, lateral_apex_m=-1.5, min_speed_kmh=93.0)
++        diff = em.pair_features(base, later, track)
++        self.assertAlmostEqual(diff["braking_point_m"], 10.0)
++        self.assertAlmostEqual(diff["lateral_apex_m"], 0.5)
++        self.assertAlmostEqual(diff["min_speed_kmh"], 3.0)
++        self.assertIsNone(em.pair_features(base, dict(base, throttle_point_s=None), track))
++
++    def test_symmetrize_and_out_of_distribution(self):
++        x, y = em.symmetrize(np.array([[1.0, 2.0]]), np.array([0.3]))
++        np.testing.assert_allclose(x, [[1, 2], [-1, -2]])
++        np.testing.assert_allclose(y, [0.3, -0.3])
++        train = np.random.default_rng(1).normal(size=(500, 2))
++        flags = em.ood_mask(train, np.array([[0.0, 0.0], [5.0, 0.0]]))
++        self.assertEqual(flags.tolist(), [False, True])
++
++
++class EstimatorTest(unittest.TestCase):
++    """Uma relacao linear conhecida, por janela, com ruido e sessoes."""
++
++    def setUp(self):
++        rng = np.random.default_rng(7)
++        n = 360
++        self.windows = np.tile([0, 1], n // 2)
++        self.sessions = np.repeat(["s1", "s2", "s3", "s4"], n // 4)
++        self.x = rng.normal(size=(n, len(em.ACTIONABLE)))
++        slope = np.where(self.windows == 0, 0.02, -0.01)
++        self.y = slope * self.x[:, 0] + rng.normal(0, 0.005, n)
++        self.test_x = rng.normal(size=(200, len(em.ACTIONABLE)))
++        self.test_w = np.tile([0, 1], 100)
++        self.test_y = np.where(self.test_w == 0, 0.02, -0.01) * self.test_x[:, 0] + rng.normal(0, 0.005, 200)
++
++    def check(self, prediction, max_mae, min_cover=0.85):
++        mae = np.mean(np.abs(prediction.point - self.test_y))
++        zero = np.mean(np.abs(self.test_y))
++        self.assertLess(mae, max_mae * zero)
++        self.assertGreater(em.interval_coverage(prediction, self.test_y), min_cover)
++
++    def test_ridge_recovers_a_per_window_effect(self):
++        prediction, info = em.fit_ridge(self.x, self.y, self.windows, self.sessions, self.test_x, self.test_w, 2)
++        self.check(prediction, 0.4)
++        self.assertIn(info["alpha"], em.RIDGE_ALPHAS)
++
++    def test_knn_and_gp_learn_the_relation(self):
++        knn, info = em.fit_knn(self.x, self.y, self.windows, self.sessions, self.test_x, self.test_w, 2)
++        self.check(knn, 0.9)
++        self.assertIn(info["k"], em.KNN_KS)
++        gp, _ = em.fit_gp(self.x, self.y, self.windows, self.test_x, self.test_w, 2)
++        self.check(gp, 0.5)
++
++    def test_answering_and_risk_coverage(self):
++        prediction = em.Prediction(
++            point=np.array([0.10, 0.01, -0.20, 0.0]),
++            low=np.array([0.05, -0.02, -0.30, -0.1]),
++            high=np.array([0.15, 0.04, -0.10, 0.1]),
++        )
++        self.assertEqual(em.answered(prediction).tolist(), [True, False, True, False])
++        observed = np.array([0.10, 0.0, -0.20, 0.05])
++        curve = em.risk_coverage(prediction, observed)
++        self.assertEqual(curve[-1]["n"], 4)
++        # Os mais confiantes primeiro: na metade de cobertura, so os dois certos.
++        half = [c for c in curve if c["cobertura"] == 0.5][0]
++        self.assertAlmostEqual(half["mae_s"], 0.0)
++        self.assertAlmostEqual(em.interval_coverage(prediction, observed), 1.0)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/docs/fase2b_estimador_empirico.md b/docs/fase2b_estimador_empirico.md
+new file mode 100644
+index 00000000..43e2c130
+--- /dev/null
++++ b/docs/fase2b_estimador_empirico.md
+@@ -0,0 +1,368 @@
++# Fase 2b — Estimador empírico de ganho por janela de curva
++
++Relatório de 2026-10-02. Segue os ADRs 0005, 0006 e 0010. Branch
++`etapa/fase2b-estimador-empirico`, a partir de `handoff/coach-mapeamento`.
++
++Convenção: **medido** = número que saiu da execução registrada em
++`docs/handoff/2026-10-02_fase2b_resultados.json`; **hipótese** = interpretação
++não testada.
++
++---
++
++## Resumo
++
++**Pergunta.** Só com as voltas do próprio piloto, sem depender do simulador, dá
++para prever a diferença de tempo de uma correção local melhor do que "ganho
++zero"?
++
++**Resposta (medida): não, pelos critérios fixados antes de rodar.** Nenhum dos
++quatro estimadores candidatos (E1 a E4) passou em todos os critérios do ADR
++0006. Os dois melhores (KNN e Processo Gaussiano) erram menos que "prever zero",
++com intervalo de confiança acima de zero. Mas o ganho é pequeno (skill +0,08 e
+++0,11, contra o mínimo de 0,20), carregam viés, e o resultado desaparece sem as
++duas sessões dominantes.
++
++O teto (E2-teto, que usa velocidades e por isso é quase tautológico) passou nos
++critérios com todas as sessões. Ele mostra que existe informação nas
++diferenças de velocidade. Não é candidato e não foi aprovado como estimador.
++
++Pela regra do pedido, isso é um resultado válido: relatado aqui, e a fase para.
++
++---
++
++## 1. O que foi feito
++
++### Janela de curva
++
++Do início de uma zona de frenagem até o início da próxima: a curva **mais** a
++reta seguinte (ADR 0005). As janelas cobrem a volta inteira, então os tempos
++delas somam o tempo da volta.
++
++As zonas de frenagem saem das voltas, não da geometria. O detector de curvas
++acha 14 curvas, mas o piloto freia em 7 lugares: curvas encadeadas, como o S do
++Senna, dividem uma frenagem só. A regra, fixada antes de olhar qualquer tempo:
++
++- início de frenagem = freio ≥ 0,15, com 20 m sem freio antes e 10 m com freio
++  depois (descarta toques);
++- inícios a menos de 30 m entre si formam um aglomerado;
++- um aglomerado é zona de frenagem se pelo menos metade das voltas freia ali;
++- zonas a menos de 150 m (pela mediana) se juntam: são o segundo toque na mesma
++  curva, sem reta entre eles;
++- a janela começa 10 m antes do início mais precoce (5º percentil) da zona,
++  arredondado a 10 m.
++
++As janelas são definidas **só com as sessões de treino de cada rodada**.
++
++**Janelas medidas, com todas as sessões no treino (7 por volta):**
++
++| janela | curva de referência | início–fim (m) | comprimento |
++|---|---|---|---:|
++| J1 | C01 (S do Senna) | 90–1150 | 1060 m |
++| J2 | C04 (Descida do Lago) | 1150–1870 | 720 m |
++| J3 | C06 (Ferradura) | 1870–2170 | 300 m |
++| J4 | C07 (Laranjinha) | 2170–2350 | 180 m |
++| J5 | C08 (Pinheirinho) | 2350–2590 | 240 m |
++| J6 | C10 (Bico de Pato) | 2590–3080 | 490 m |
++| J7 | C12 (Junção, + reta principal) | 3080–90 | 1344 m |
++
++Em 1 das 8 rodadas com todas as sessões (a que testa `2026-06-20_13-13-02`) e
++em 5 das 6 sem as dominantes, surgiu uma 8ª janela: o segundo toque de freio no
++S do Senna (~350 m) passou da metade das voltas de treino daquela rodada. As
++fronteiras de todas as rodadas estão no JSON (`dobras[].janelas`).
++
++### Pares
++
++Os mesmos da Fase 2. Na mesma sessão, A = a volta mais lenta, B = a mais
++rápida. Um par-janela entra quando:
++
++- a diferença de combustível é ≤ 5 L e a de desgaste de pneu ≤ 1 p.p.;
++- nenhuma das duas voltas tem amostra fora de pista;
++- a velocidade de entrada na janela difere ≤ 3 km/h;
++- não há incidente (velocidade observada < 0,6 × a simulada);
++- a frenagem e a retomada do acelerador foram detectadas nas duas voltas.
++
++**Alvo:** ΔT = tempo de B − tempo de A naquela janela, pelo cronômetro.
++
++### Entradas (diferenças B − A)
++
++- ponto de frenagem (m; positivo = B freou depois);
++- posição lateral na entrada, no ápice e na saída da curva (m, positivo à
++  esquerda, convenção do ML);
++- ponto de retomada do acelerador ≥ 0,6 (m).
++
++Para o E2-teto, também a diferença de velocidade mínima na curva e de velocidade
++na saída (km/h).
++
++### Estimadores
++
++| | o que é | incerteza (faixa de 95 %) |
++|---|---|---|
++| E0 | prever zero | — |
++| E1 | ΔT do simulador na janela × inclinação ajustada por janela no treino | — |
++| E2 | ridge por janela, sem intercepto; α escolhido no treino | quantis dos resíduos fora da amostra no treino |
++| E3 | KNN de regressão por janela; k escolhido no treino | quantis dos resíduos fora da amostra no treino |
++| E4 | Processo Gaussiano por janela (RBF com escala por entrada + ruído) | desvio previsto pelo modelo |
++| E2-teto | E2 + velocidades mínima e de saída | quantis dos resíduos; só teto |
++
++Detalhes que valem explicação:
++
++- **Pares nas duas ordens no treino.** Cada par entra como (A, B) e (B, A), com
++  entradas e alvo de sinal trocado. Trocar as voltas troca o sinal do ganho. Sem
++  isso, o modelo aprenderia que "A é sempre a mais lenta" em vez da pilotagem.
++- **Resíduos fora da amostra.** Os quantis do E2 e do E3 vêm de uma validação
++  interna, deixando uma sessão de treino de fora por vez. Resíduos dentro da
++  amostra dariam faixas estreitas demais.
++- **GP com no máximo 600 pontos de treino por janela** (300 pares nas duas
++  ordens, sorteados com semente fixa), porque o custo cresce com o cubo do
++  número de pontos.
++- Hiperparâmetros testados: α ∈ {0,01; 0,1; 1; 10; 100; 1000}; k ∈ {3, 5, 10,
++  20, 40, 80}.
++
++### Abstenção ("não conclusivo")
++
++- **Faixa inclui zero:** o estimador não diz se a correção ganha ou perde.
++- **Fora da distribuição:** alguma entrada do par de teste está fora da faixa
++  2,5 %–97,5 % das diferenças vistas no treino naquela janela. É contado à
++  parte, igual para todos os estimadores.
++
++### Validação
++
++- Uma sessão inteira fora por rodada: 8 rodadas com todas as sessões, 6 sem as
++  duas dominantes. As janelas, o envelope do carro, a inclinação do E1, o α, o k
++  e os hiperparâmetros do GP saem só das sessões de treino.
++- Critérios do ADR 0006, idênticos aos da Fase 2. A regra de decisão foi
++  commitada antes da primeira execução (commit `2c792a01`): **aprova quem passa
++  em todos os critérios com previsão em todos os casos dentro da distribuição.**
++  Os critérios aplicados só aos casos em que o estimador responde são resultado
++  secundário.
++
++---
++
++## 2. Dados (medido)
++
++| | todas as sessões | sem as dominantes |
++|---|---:|---:|
++| voltas | 122 | 31 |
++| rodadas (sessões testáveis) | 8 | 6 |
++| pares-janela comparáveis no teste | 4 703 | 331 |
++| — fora da distribuição | 1 341 (29 %) | 130 (39 %) |
++| — dentro da distribuição (avaliados) | **3 362** | **201** |
++| exclusões por combustível | 9 312 | 104 |
++| por velocidade de entrada | 1 425 | 75 |
++| por incidente | 246 | 8 |
++| por frenagem/retomada não detectada | 14 | 6 |
++
++A sessão `2026-08-09_19-20-59` responde por 2 770 dos 3 362 casos avaliados
++(82 %).
++
++Hashes dos dados lidos (ADR 0007), no JSON em `dados`:
++
++- `laps_grid.parquet` `a9798c3a…`
++- `laps_grid_meta.json` `5a4d3823…`
++- `lap_inventory.parquet` `78f23117…`
++- cache da geometria `6ee98614…`
++
++Geometria `0ed16f0dd2225990`. Ambiente: Python 3.9.7, numpy 1.26.3,
++pandas 2.1.4, scikit-learn 1.6.1.
++
++---
++
++## 3. Resultados (medido)
++
++### 3.1 Decisão — todas as sessões, todos os casos dentro da distribuição (3 362)
++
++| | MAE (s) | viés (s) | skill | IC 95 % | Spearman | sinal | sessões com skill > 0 | **resultado** |
++|---|---:|---:|---:|---|---:|---:|---:|---|
++| E0 zero | 0,0352 | +0,0202 | 0 | — | — | — | — | referência |
++| E1 simulador | 0,0440 | +0,0107 | −0,25 | [−0,35; −0,11] | 0,29 | 0,65 | 38 % | reprovado |
++| E2 ridge | 0,0383 | +0,0198 | −0,09 | [−0,11; +0,09] | −0,16 | 0,44 | 50 % | reprovado |
++| E3 KNN | 0,0323 | +0,0128 | **+0,08** | [+0,06; +0,27] | 0,41 | 0,71 | 88 % | reprovado |
++| E4 GP | 0,0313 | +0,0137 | **+0,11** | [+0,08; +0,29] | 0,43 | 0,71 | 75 % | reprovado |
++| E2-teto | 0,0218 | +0,0068 | +0,38 | [+0,31; +0,55] | 0,73 | 0,89 | 88 % | passou (não candidato) |
++
++**Por que E3 e E4 reprovam:**
++
++- skill abaixo de 0,20 (+0,08 e +0,11);
++- viés acima de 25 % do erro de prever zero (36 % e 39 %).
++
++Eles passam no limite inferior do IC, no Spearman, na concordância de sinal e na
++fração de sessões com skill positivo.
++
++### 3.2 Sem as duas sessões dominantes (201 casos, 5 sessões avaliáveis)
++
++| | skill | IC 95 % | Spearman | sinal | resultado |
++|---|---:|---|---:|---:|---|
++| E1 | −0,50 | [−1,57; −0,16] | 0,08 | 0,49 | reprovado |
++| E2 | +0,005 | [−0,01; +0,03] | 0,06 | 0,60 | reprovado |
++| E3 | −0,02 | [−0,47; +0,01] | 0,07 | 0,08 | reprovado |
++| E4 | −0,61 | [−0,68; −0,11] | 0,35 | 0,72 | reprovado |
++| E2-teto | +0,05 | [+0,04; +0,23] | 0,55 | 0,87 | reprovado |
++
++Sem as duas sessões grandes, sobram 31 voltas. Nenhum estimador, nem o teto,
++bate prever zero de forma útil. O GP piora muito: com poucos dados, a faixa
++dele erra para menos (seção 3.4).
++
++Informativo: os modelos treinados com todas as sessões, **avaliados** só nas
++outras 6 (298 casos), dão skill +0,25 (E3) e +0,26 (E4), mas com IC [−0,10;
+++0,37] e [−0,03; +0,44]: não passam no limite inferior do IC.
++
++### 3.3 Abstenção — o que acontece quando o estimador só responde quando a faixa exclui zero
++
++Todas as sessões, 3 362 casos dentro da distribuição:
++
++| | responde | skill quando responde | IC 95 % | critérios no subconjunto (secundário) |
++|---|---:|---:|---|---|
++| E2 | 9 (0,3 %) | +0,42 | [+0,30; +0,61] | não passa |
++| E3 | 61 (1,8 %) | +0,62 | [+0,52; +0,83] | passa |
++| E4 | 424 (12,6 %) | +0,59 | [+0,47; +0,61] | passa |
++| E2-teto | 120 (3,6 %) | +0,60 | [+0,52; +0,82] | não passa |
++
++Quando E3 e E4 respondem, acertam bem: erro 59–62 % menor que prever zero. Mas:
++
++- **respondem pouco:** 1,8 % e 12,6 % dos casos;
++- **não se sustenta sem as dominantes:** sem as duas sessões, E2 e E3 não
++  respondem nenhuma vez, e o E4 responde 60 % dos casos com skill **−0,84**.
++
++Pela regra pré-registrada, esse resultado é secundário e não aprova ninguém.
++
++### 3.4 Calibração da faixa de 95 % (fração dos ΔT reais dentro da faixa)
++
++| | todas, dentro da distr. | todas, fora | sem dominantes, dentro |
++|---|---:|---:|---:|
++| E2 | 0,99 | 0,63 | 0,98 |
++| E3 | 0,99 | 0,63 | 0,99 |
++| E4 | 0,89 | 0,72 | **0,36** |
++| E2-teto | 0,99 | 0,63 | 0,98 |
++
++- E2 e E3 têm faixas **largas demais** (99 % em vez de 95 %). Por isso quase
++  nunca respondem.
++- O E4 fica perto do nominal com todos os dados (89 %), mas **erra muito para
++  menos** com poucos dados (36 %): a faixa dele promete 95 % e acerta um terço.
++  É o risco que o ADR 0010 apontou.
++- Fora da distribuição, todas as faixas falham (63–72 %). Isso confirma que o
++  filtro de distribuição é necessário.
++
++### 3.5 Curva risco × cobertura (skill nos casos mais confiantes, todas as sessões)
++
++| cobertura | 10 % | 20 % | 30 % | 50 % | 70 % | 100 % |
++|---|---:|---:|---:|---:|---:|---:|
++| E2 | +0,06 | −0,06 | −0,10 | −0,12 | −0,11 | −0,09 |
++| E3 | +0,18 | +0,33 | +0,29 | +0,14 | +0,10 | +0,08 |
++| E4 | **+0,62** | +0,48 | +0,32 | +0,19 | +0,15 | +0,11 |
++| E2-teto | +0,60 | +0,60 | +0,58 | +0,52 | +0,45 | +0,38 |
++
++A confiança do E4 ordena bem os casos: nos 10 % mais confiantes, o erro é 62 %
++menor que prever zero, e cai suavemente com a cobertura. O E2 (linear) não tem
++essa propriedade.
++
++### 3.6 Por faixa de ritmo (skill, todas as sessões)
++
++| ritmo da volta mais lenta | casos | E1 | E2 | E3 | E4 | teto |
++|---|---:|---:|---:|---:|---:|---:|
++| < 86 s | 2 106 | −0,12 | −0,14 | +0,05 | +0,07 | +0,36 |
++| 86–88 s | 572 | +0,12 | −0,03 | +0,25 | +0,20 | +0,41 |
++| ≥ 88 s | 684 | −0,83 | −0,00 | +0,04 | +0,15 | +0,41 |
++
++### 3.7 Por sessão (skill, todas as sessões)
++
++| sessão | casos | E3 | E4 | teto |
++|---|---:|---:|---:|---:|
++| 2026-06-14_12-23-46 | 235 | +0,26 | +0,26 | +0,58 |
++| 2026-06-18_20-06-03 | 14 | −0,68 | −0,39 | +0,15 |
++| 2026-06-19_23-24-46 | 4 | +0,49 | +0,55 | +0,58 |
++| 2026-06-20_13-04-20 | 1 | +0,25 | +0,49 | −0,27 |
++| 2026-06-20_13-13-02 | 294 | +0,11 | +0,07 | +0,31 |
++| 2026-08-09_19-10-41 | 18 | +0,23 | +0,28 | +0,19 |
++| 2026-08-09_19-20-59 | 2 770 | +0,06 | +0,10 | +0,37 |
++| 2026-08-16_03-30-14 | 26 | +0,08 | −0,02 | +0,38 |
++
++### 3.8 Tamanho das diferenças de pilotagem
++
++Dos 3 362 casos avaliados:
++
++- 3 331 (99 %) têm diferença de ponto de frenagem **abaixo de 5 m**;
++- 3 361 têm diferença de posição lateral no ápice **abaixo de 0,5 m**.
++
++As voltas comparáveis do piloto são muito parecidas entre si. Os estimadores
++aprendem quase só com diferenças pequenas. Nos 30 casos com frenagem de 5 a
++15 m de diferença, E3 e E4 dão skill +0,46 e +0,64. Mas 30 casos é pouco para
++afirmar qualquer coisa.
++
++---
++
++## 4. Leitura (hipóteses)
++
++- **As diferenças acionáveis entre voltas parecidas são pequenas demais para
++  separar sinal de ruído.** Num par típico, as duas voltas freiam a menos de 5 m
++  uma da outra e passam a menos de 0,5 m no ápice. Nessa escala, o tempo na
++  janela depende mais de detalhes de execução que essas 5 entradas não
++  descrevem: modulação do freio, escorregamento, pequenas correções de volante.
++- **O teto mostra onde está a informação.** Com velocidade mínima e de saída, o
++  erro cai 38 %. A velocidade é o *resultado* da execução, não uma instrução que
++  o coach possa dar. A distância entre o teto e o E3/E4 é o que falta descrever
++  em termos acionáveis.
++- **O viés positivo é o mesmo em todos** (+0,01 a +0,02 s por janela). A volta
++  mais rápida do par é mais rápida em quase toda janela por algo que as
++  entradas acionáveis não capturam. É coerente com a leitura acima.
++- **O ridge ficou quase sempre no maior α testado (1000).** Ele encolheu os
++  coeficientes até perto de zero: nenhuma relação linear estável foi achada. O α
++  ficou no limite da grade pré-registrada; não ampliei a grade depois de ver o
++  resultado.
++
++---
++
++## 5. Limitações
++
++- **Concentração.** 82 % dos casos avaliados vêm de uma sessão. Sem as duas
++  dominantes sobram 31 voltas e 201 casos, e os resultados mudam de sinal.
++- **Pares dependentes.** Cada volta entra em muitos pares. O IC é por sessão,
++  com 5 a 8 grupos, e por isso é largo.
++- **O filtro de combustível descarta a maior parte dos pares** (9 312
++  pares-janela). Ele foi fixado antes, na Fase 2.
++- **Janelas variam entre rodadas.** É o preço de não vazar informação do teste.
++  O recorte "por janela" no JSON mistura definições; ele não é usado para
++  decidir nada.
++- **GP subamostrado** (até 300 pares por janela e rodada). Com mais pontos, o
++  resultado do E4 poderia mudar; não testado.
++- **Um piloto, um carro, uma pista.**
++
++---
++
++## 6. Quando o ganho estimado não é confiável (medido)
++
++| situação | evidência |
++|---|---|
++| qualquer previsão pontual, sem abstenção | nenhum candidato passa; melhor skill +0,11 |
++| poucos dados (sem as dominantes) | E4 skill −0,61, faixa de 95 % acerta 36 % |
++| entradas fora da distribuição de treino | faixas acertam 63–72 % |
++| E2 linear em qualquer cobertura | skill negativo de 20 % a 100 % de cobertura |
++
++Onde há sinal (medido, mas secundário pela regra): E4 respondendo só quando a
++faixa exclui zero, com todas as sessões no treino. São 12,6 % dos casos, skill
+++0,59, e não se repete sem as dominantes.
++
++---
++
++## 7. Arquivos
++
++| arquivo | conteúdo |
++|---|---|
++| `backend/ml/requirements.txt` | `scikit-learn==1.6.1` (commit `ecde4190`) |
++| `backend/ml/validation/empirical.py` | janelas, entradas, pares, E2–E4, abstenção, risco × cobertura, calibração |
++| `backend/ml/scripts/validate_empirical.py` | execução e regra de decisão (pré-registro, commit `2c792a01`) |
++| `backend/tests/test_ml_empirical.py` | 8 testes sintéticos |
++| `docs/handoff/2026-10-02_fase2b.patch` | diff contra `handoff/coach-mapeamento` |
++| `docs/handoff/2026-10-02_fase2b_testes.txt` | saída completa do pytest |
++| `docs/handoff/2026-10-02_fase2b_resultados.json` | todos os números, hashes dos dados e ambiente |
++
++Reproduzir: `cd backend && python -m ml.scripts.validate_empirical` (748 s).
++
++Reutilizado sem duplicar:
++
++- filtros, métricas, bootstrap e critérios de `ml/validation/counterfactual.py`;
++- limiares de pedal e auxiliares de janela de `ml/comparison/lap_vs_reference.py`;
++- curvas de `ml/track/corners.py`;
++- simulador e envelope existentes, para o E1 e o filtro de incidente.
++
++Nenhuma LSTM foi retreinada; `optimal.json`, interface e algoritmo evolutivo
++não foram tocados.
