@@ -14,3 +14,4 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
 | [0008](0008-uma-sessao-de-implementacao.md) | Uma única sessão de implementação por vez | aceita |
 | [0009](0009-alvos-do-coach-e-tracado-otimizado.md) | O traçado otimizado não vira alvo do coach enquanto for mais lento que voltas reais | aceita |
 | [0010](0010-fase-2b-ajustada-pelos-artigos.md) | Fase 2b ajustada pela leitura dos artigos | aceita; complementa 0005 |
+| [0011](0011-resultado-fase-2b-e-experimento-controlado.md) | Dados observacionais não medem o efeito das instruções de controle; próximo passo é o experimento controlado | aceita |
