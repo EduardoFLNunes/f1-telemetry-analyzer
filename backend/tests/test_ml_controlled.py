@@ -116,14 +116,23 @@ class EffectRecoveryTest(unittest.TestCase):
         self.assertGreater(effects["frenagem"]["ic95_s"][0], 0.0)
 
     def test_intervals_have_their_nominal_coverage(self):
+        # IC pela t com os graus de liberdade do residuo: 32 voltas - 4 condicoes
+        # - 7 blocos = 21. Em 1000 sessoes o erro-padrao da cobertura e 0,7
+        # ponto, entao 93-97 % e o nominal com folga de ~3 erros-padrao.
         plan = ct.make_plan(seed=2026)
-        hits = 0
-        runs = 300
+        measured = plan[plan["condicao"] != ct.WARMUP]
+        truth = {"frenagem": BRAKING_COST_S, "linha": LINE_COST_S, "interacao": 0.0}
+        hits = dict.fromkeys(truth, 0)
+        runs = 1000
         for seed in range(runs):
-            _, _, effects = analyse(synthetic_session(seed=seed, plan=plan), plan)
-            hits += inside(effects["frenagem"], BRAKING_COST_S)
-        self.assertGreater(hits / runs, 0.90)
-        self.assertLess(hits / runs, 0.99)
+            times = synthetic_session(seed=seed, plan=plan)["tempo_janela_s"].to_numpy()[1:][len(plan) - len(measured):]
+            effects = ct.estimate_effects(times, measured["condicao"].to_numpy(), measured["bloco"].to_numpy())
+            self.assertEqual(effects["_modelo"]["graus_de_liberdade"], 21)
+            for name, value in truth.items():
+                hits[name] += inside(effects[name], value)
+        for name in truth:
+            self.assertGreater(hits[name] / runs, 0.93, name)
+            self.assertLess(hits[name] / runs, 0.97, name)
 
     def test_an_interaction_is_detected(self):
         plan = ct.make_plan(seed=2026)
@@ -189,6 +198,17 @@ class MatchingTest(unittest.TestCase):
         self.assertIn("Nada foi casado", message)
         self.assertIn("S#0000", message)            # lista cada volta, com o motivo
         self.assertIn("faltam 900 m", message)
+
+    def test_the_lap_list_shows_what_the_driver_saw(self):
+        table = self.table.iloc[:-1].copy()
+        table["lap_time_s"] = 85.0 + np.arange(len(table)) * 0.1
+        table["clock"] = [f"20:{i // 60:02d}:{i % 60:02d}" for i in range(len(table))]
+        table.loc[table.index[0], "lap_time_s"] = np.nan          # volta sem cronometro
+        with self.assertRaises(ct.PlanMismatchError) as caught:
+            ct.match_laps(table, self.plan)
+        message = str(caught.exception)
+        self.assertIn("(volta 2 no jogo, tempo 1:25.100, as 20:00:01)", message)
+        self.assertIn("(volta 1 no jogo, as 20:00:00)", message)
 
     def test_a_declared_invalid_lap_is_removed_and_the_rest_matches(self):
         extra = pd.DataFrame(

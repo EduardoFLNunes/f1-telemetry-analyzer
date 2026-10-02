@@ -178,3 +178,36 @@ em ~15 linhas o que `validate_empirical.py` faz dentro de cada rodada. Preferi
 isso a mexer no código de uma fase já entregue.
 
 Nada da interface, do `optimal.json` ou das LSTMs foi tocado.
+
+---
+
+## 8. Ajustes de 2026-10-02 (branch `etapa/fase2c-ajustes`)
+
+**Intervalo de confiança.** Conferido: o IC já usava a distribuição t com os
+graus de liberdade do resíduo. Com 8 blocos são 32 voltas − 4 condições −
+7 blocos = 21, e não a normal. Os "90 % a 99 %" citados antes eram só a
+tolerância folgada do teste com 300 sessões, não a cobertura medida. Medida com
+4000 sessões sintéticas (erro-padrão de ±0,3 ponto), a cobertura ficou em:
+
+| contraste | cobertura do IC 95 % |
+|---|---:|
+| frenagem | 95,3 % |
+| linha | 94,8 % |
+| interação | 95,2 % |
+| B − A | 95,1 % |
+| C − A | 94,9 % |
+| D − A | 94,9 % |
+
+O teste passou a usar 1000 sessões, os três efeitos principais e tolerância de
+93 % a 97 %.
+
+**Lista de voltas.** Quando a análise para, cada volta gravada aparece com o
+número da volta no jogo, o tempo de volta (o cronômetro do jogo) e a hora. Por
+exemplo: `(volta 4 no jogo, tempo 1:34.290, as 03:36:10)`. A lista também vai
+para o JSON do resultado (`voltas_gravadas`).
+
+A hora vem do `startedAt` do `metadata.json`, que é o relógio do PC, somado ao
+tempo decorrido desde a primeira amostra. Ela **não** vem direto do `timestamp`
+gravado: nas 5 sessões conferidas (maio a agosto), converter o `timestamp` pelo
+fuso local dá sempre 3 h a mais que o `startedAt`. A causa no gravador não foi
+investigada nesta etapa.

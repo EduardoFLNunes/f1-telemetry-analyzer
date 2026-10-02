@@ -140,6 +140,24 @@ def plan_text(plan: pd.DataFrame) -> str:
 
 # ------------------------------------------------------- casar voltas ---
 
+def lap_label(row) -> str:
+    """O que o piloto viu na tela: numero da volta no jogo, tempo e hora.
+
+    `lap_time_s` (cronometro do jogo no fim da volta) e `clock` (hora do relogio
+    no inicio dela) sao opcionais; o script de analise os preenche a partir da
+    gravacao.
+    """
+    parts = [f"volta {int(row['lap_number'])} no jogo"]
+    lap_time = row.get("lap_time_s")
+    if lap_time is not None and np.isfinite(lap_time):
+        minutes, seconds = divmod(float(lap_time), 60.0)
+        parts.append(f"tempo {int(minutes)}:{seconds:06.3f}")
+    clock = row.get("clock")
+    if isinstance(clock, str) and clock:
+        parts.append(f"as {clock}")
+    return "(" + ", ".join(parts) + ")"
+
+
 class PlanMismatchError(ValueError):
     """As voltas da gravacao nao casam com o plano. Nunca se adivinha."""
 
@@ -181,7 +199,7 @@ def match_laps(laps: pd.DataFrame, plan: pd.DataFrame, invalid: Sequence[int] = 
 
     if len(usable) != len(plan):
         listing = "\n".join(
-            f"  gravada n. {i + 1:>2}  {r['lap_id']}  (volta {int(r['lap_number'])} no jogo): {r['status']}"
+            f"  gravada n. {i + 1:>2}  {lap_label(r)}  {r['lap_id']}: {r['status']}"
             for i, (_, r) in enumerate(ordered.iterrows())
         )
         raise PlanMismatchError(
