@@ -1,0 +1,1269 @@
+diff --git a/backend/ml/scripts/analyze_controlled_session.py b/backend/ml/scripts/analyze_controlled_session.py
+new file mode 100644
+index 00000000..8bc0fc19
+--- /dev/null
++++ b/backend/ml/scripts/analyze_controlled_session.py
+@@ -0,0 +1,284 @@
++"""Analisa uma sessao controlada (Fase 2c) contra o plano sorteado.
++
++    python -m ml.scripts.analyze_controlled_session --sessao <id> --plano docs/experimentos/<data>_plano.csv
++        [--invalidas 7,19]  [--data AAAA-MM-DD]
++
++`--invalidas` sao os numeros de volta **do jogo** que o piloto anotou como
++invalidos durante a sessao.
++
++Passos:
++1. le a sessao pelo pipeline existente (`scan_sessions` + `build_store`: leitor,
++   gates e alinhamento na grade de 2 m);
++2. casa as voltas aproveitaveis com o plano, em ordem -- e para com a lista de
++   voltas se a contagem nao bater;
++3. usa a janela de curva da Fase 2b (zonas de frenagem das outras sessoes);
++4. confere a execucao: frenagem e linha reais de cada condicao contra A;
++5. mede os efeitos do 2 x 2 com IC 95 % (modelo linear com efeito de bloco);
++6. compara com E1 a E4 da Fase 2b, treinados com todas as outras sessoes.
++
++Escreve `docs/experimentos/<data>_resultado.json` e `<data>_resultado.md`.
++"""
++
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import platform
++import subprocess
++import sys
++from pathlib import Path
++from typing import Dict, List, Optional
++
++import numpy as np
++import pandas as pd
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
++
++from ml import config
++from ml.data.inventory import scan_sessions
++from ml.data.lap_store import build_store, load_store
++from ml.data.recordings import list_sessions
++from ml.optimization.lap_time_model import step_times
++from ml.track.corners import detect_corners
++from ml.track.geometry import load_geometry
++from ml.track.microsectors import build_microsectors
++from ml.validation import controlled as ct
++from ml.validation import counterfactual as cf
++from ml.validation import empirical as em
++
++
++def _sha256(path: Path) -> Dict[str, object]:
++    digest = hashlib.sha256()
++    with path.open("rb") as handle:
++        for chunk in iter(lambda: handle.read(1 << 20), b""):
++            digest.update(chunk)
++    return {"caminho": str(path.relative_to(config.repo_root())), "sha256": digest.hexdigest(), "bytes": path.stat().st_size}
++
++
++def lap_measures(store, windows, k, track) -> pd.DataFrame:
++    """Medidas da janela-alvo em cada volta do store da sessao."""
++    profiles = cf.lap_profiles(store, track, build_microsectors(track))
++    rows = []
++    for lap_id in store.lap_ids:
++        features = em.lap_window_features(store.lap(lap_id), windows, track)[k]
++        rows.append(
++            {
++                "lap_id": lap_id,
++                "tempo_janela_s": float(em.window_sum(profiles[lap_id].observed_step_s, windows)[k]),
++                **{m: features[m] for m in ct.MEASURES},
++            }
++        )
++    return pd.DataFrame(rows)
++
++
++def estimator_predictions(store, track, corners, windows, k, session_id, controlled_store, matched):
++    """E1 a E4 da Fase 2b, treinados sem a sessao controlada, para as diferencas medidas."""
++    microsectors = build_microsectors(track)
++    profiles = cf.lap_profiles(store, track, microsectors)
++    train = {key: p for key, p in profiles.items() if p.session_id != session_id}
++    controlled = cf.lap_profiles(controlled_store, track, microsectors)
++
++    envelope = cf.envelope_from(store, list(train))
++    cf.simulate_profiles(track, envelope, list(train.values()) + list(controlled.values()))
++    features = {key: em.lap_window_features(store.lap(key), windows, track) for key in train}
++    pairs = em.build_pair_windows(train, windows, features, track)
++    rows = np.flatnonzero(np.array(pairs.reason) == "")
++    x_tr = em.design(pairs, rows, em.ACTIONABLE)
++    y_tr = np.array(pairs.observed_s)[rows]
++    w_tr = np.array(pairs.window)[rows]
++    s_tr = np.array(pairs.session)[rows]
++
++    differences = ct.condition_differences(matched)
++    codes = ("B", "C", "D")
++    x_te = np.vstack([differences[c] for c in codes])
++    w_te = np.full(len(codes), k)
++    ood = em.ood_mask(x_tr[w_tr == k], x_te)
++
++    predictions: Dict[str, Dict[str, tuple]] = {}
++    physics = np.array(pairs.physics_s)[rows]
++    slope = cf.fit_slope(physics[w_tr == k], y_tr[w_tr == k])
++    sim = {
++        lap_id: float(
++            em.window_sum(step_times(p.sim_speed_mps[None, :], p.step_length_m[None, :])[0], windows)[k]
++        )
++        for lap_id, p in controlled.items()
++    }
++    measured = matched[matched["condicao"] != ct.WARMUP]
++    sim_mean = {c: float(np.mean([sim[i] for i in measured.loc[measured["condicao"] == c, "lap_id"]])) for c in "ABCD"}
++    predictions["E1"] = {c: (slope * (sim_mean[c] - sim_mean["A"]), np.nan, np.nan) for c in codes}
++
++    for name, fit in (
++        ("E2", lambda: em.fit_ridge(x_tr, y_tr, w_tr, s_tr, x_te, w_te, windows.count)),
++        ("E3", lambda: em.fit_knn(x_tr, y_tr, w_tr, s_tr, x_te, w_te, windows.count)),
++        ("E4", lambda: em.fit_gp(x_tr, y_tr, w_tr, x_te, w_te, windows.count)),
++    ):
++        prediction, _ = fit()
++        predictions[name] = {
++            c: (float(prediction.point[i]), float(prediction.low[i]), float(prediction.high[i]))
++            for i, c in enumerate(codes)
++        }
++    inputs = {c: dict(zip(em.ACTIONABLE, map(float, differences[c]))) for c in codes}
++    training_range = {
++        name: [float(np.percentile(x_tr[w_tr == k][:, j], em.OOD_LOW)), float(np.percentile(x_tr[w_tr == k][:, j], em.OOD_HIGH))]
++        for j, name in enumerate(em.ACTIONABLE)
++    }
++    return predictions, {c: bool(ood[i]) for i, c in enumerate(codes)}, inputs, training_range, int(rows.size), slope
++
++
++def write_markdown(path: Path, result: Dict[str, object]) -> None:
++    ex = result["conferencia_da_execucao"]
++    ef = result["efeitos"]
++    lines = [
++        f"# Sessao controlada {result['sessao']} - {result['curva']}",
++        "",
++        "Gerado por `python -m ml.scripts.analyze_controlled_session`. Numeros em segundos na janela de curva.",
++        "",
++        "## 1. Voce executou as condicoes?",
++        "",
++        "| condicao | voltas | frenagem vs A (pedido) | para dentro na entrada vs A (pedido) | longe do pedido? |",
++        "|---|---:|---|---|---|",
++    ]
++    for code in sorted(ex):
++        e = ex[code]
++        lines.append(
++            f"| {code} | {e['voltas']} | {e['frenagem_vs_A_m']:+.1f} m ({e['pedido']['frenagem_m']:+.0f}) | "
++            f"{e['para_dentro_vs_A_m']['entry']:+.2f} m ({e['pedido']['para_dentro_m']:+.1f}) | "
++            f"{'SIM: ' + '; '.join(e['observacoes']) if e['longe_do_pedido'] else 'nao'} |"
++        )
++    lines += [
++        "",
++        "## 2. Efeitos medidos (IC 95 %, modelo linear com efeito de bloco)",
++        "",
++        "| efeito | estimativa | IC 95 % |",
++        "|---|---:|---|",
++    ]
++    for name in ("frenagem", "linha", "interacao", "B_menos_A", "C_menos_A", "D_menos_A"):
++        e = ef[name]
++        lines.append(f"| {name} | {e['estimativa_s'] * 1000:+.0f} ms | [{e['ic95_s'][0] * 1000:+.0f}; {e['ic95_s'][1] * 1000:+.0f}] ms |")
++    lines += ["", "## 3. Os estimadores da Fase 2b acertam?", ""]
++    for estimator, rows in result["comparacao_com_estimadores"].items():
++        lines.append(f"**{estimator}**")
++        for name, row in rows.items():
++            if "medido_dentro_da_faixa" in row:
++                inside = row["medido_dentro_da_faixa"]
++                check = (
++                    f", medido dentro da faixa de 95 % do estimador: {'sim' if inside else 'nao'}"
++                    if inside is not None
++                    else ", estimador sem faixa"
++                )
++            else:
++                check = f", previsto dentro do IC 95 % medido: {'sim' if row['previsto_dentro_do_ic_medido'] else 'nao'}"
++            lines.append(
++                f"- {name}: medido {row['medido_s'] * 1000:+.0f} ms, previsto {row['previsto_s'] * 1000:+.0f} ms, "
++                f"erro {row['erro_s'] * 1000:+.0f} ms"
++                + check
++                + (" (entrada fora da distribuicao de treino)" if row.get("fora_da_distribuicao") else "")
++            )
++        lines.append("")
++    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
++
++
++def main(argv: Optional[List[str]] = None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("--sessao", required=True)
++    parser.add_argument("--plano", type=Path, required=True)
++    parser.add_argument("--invalidas", default="")
++    parser.add_argument("--data", default=None, help="padrao: a data no inicio do id da sessao")
++    parser.add_argument("--saida", type=Path, default=config.repo_root() / "docs" / "experimentos")
++    args = parser.parse_args(argv)
++
++    invalid = [int(v) for v in args.invalidas.split(",") if v.strip()]
++    plan = pd.read_csv(args.plano)
++    missing = [c for c in ct.PLAN_COLUMNS if c not in plan.columns]
++    if missing:
++        print(f"PARADO: o plano nao tem as colunas {missing}")
++        return 2
++    curve = str(plan["curva"].iloc[0])
++
++    sessions = {s.session_id: s for s in list_sessions()}
++    session = sessions.get(args.sessao)
++    if session is None:
++        print(f"PARADO: sessao {args.sessao} nao encontrada em {config.recordings_root()}")
++        return 2
++
++    track = load_geometry()
++    corners = detect_corners(track)
++    print(f"lendo {session.session_id}...", flush=True)
++    inventory = scan_sessions([session], track)
++    try:
++        matched = ct.match_laps(inventory, plan, invalid)
++    except ct.PlanMismatchError as error:
++        print(f"PARADO: {error}")
++        return 2
++
++    store = load_store(track=track)
++    train_ids = [i for i in store.lap_ids if not i.startswith(session.session_id + "#")]
++    windows = em.define_windows([store.lap(i)["brake"].to_numpy(dtype=float) for i in train_ids], track, corners)
++    label = ct.CORNER_NAMES[curve]
++    targets = [k for k, c in enumerate(windows.corner) if c.label == label]
++    if not targets:
++        print(f"PARADO: nenhuma janela da Fase 2b comeca na curva {curve} ({label}); janelas: {windows.labels()}")
++        return 2
++    k = targets[0]
++    direction = int(windows.corner[k].direction)
++
++    controlled_store = build_store(inventory=inventory, track=track, sessions=[session])
++    measures = lap_measures(controlled_store, windows, k, track)
++    matched = matched.merge(measures, on="lap_id", how="left")
++    undetected = matched[(matched["condicao"] != ct.WARMUP) & matched[list(ct.MEASURES)].isna().any(axis=1)]
++    if len(undetected):
++        print(
++            "PARADO: frenagem ou retomada nao detectada na janela em "
++            + ", ".join(f"ordem {r.ordem} ({r.lap_id})" for r in undetected.itertuples())
++        )
++        return 2
++
++    measured = matched[matched["condicao"] != ct.WARMUP]
++    execution = ct.execution_check(matched, direction)
++    effects = ct.estimate_effects(
++        measured["tempo_janela_s"].to_numpy(), measured["condicao"].to_numpy(), measured["bloco"].to_numpy()
++    )
++    predictions, ood, inputs, training_range, training_rows, slope = estimator_predictions(
++        store, track, corners, windows, k, session.session_id, controlled_store, matched
++    )
++    comparison = ct.compare_with_estimators(effects, predictions, ood)
++
++    import sklearn
++
++    date = args.data or session.session_id[:10]
++    result = {
++        "sessao": session.session_id,
++        "curva": curve,
++        "janela": windows.describe()[k],
++        "geometry_id": track.geometry_id,
++        "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=config.repo_root(), text=True).strip(),
++        "ambiente": {"python": platform.python_version(), "numpy": np.__version__, "scikit_learn": sklearn.__version__},
++        "plano": {"arquivo": str(args.plano), "semente": int(plan["semente"].iloc[0]), "voltas": int(len(plan))},
++        "invalidas_anotadas": invalid,
++        "dados": [
++            _sha256(session.player_stream),
++            _sha256(config.artifacts_root() / "laps_grid.parquet"),
++            _sha256(config.artifacts_root() / "laps_grid_meta.json"),
++        ],
++        "voltas": matched.drop(columns=["status"], errors="ignore").to_dict(orient="records"),
++        "conferencia_da_execucao": execution,
++        "efeitos": effects,
++        "entradas_para_os_estimadores": inputs,
++        "faixa_de_treino_2_5_a_97_5": training_range,
++        "pares_janela_de_treino": training_rows,
++        "e1_inclinacao": slope,
++        "comparacao_com_estimadores": comparison,
++    }
++    args.saida.mkdir(parents=True, exist_ok=True)
++    json_path = args.saida / f"{date}_resultado.json"
++    md_path = args.saida / f"{date}_resultado.md"
++    json_path.write_text(json.dumps(result, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
++    write_markdown(md_path, result)
++    print(md_path.read_text(encoding="utf-8"))
++    print(f"-> {json_path}\n-> {md_path}")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/ml/scripts/plan_controlled_session.py b/backend/ml/scripts/plan_controlled_session.py
+new file mode 100644
+index 00000000..a5c2cd54
+--- /dev/null
++++ b/backend/ml/scripts/plan_controlled_session.py
+@@ -0,0 +1,54 @@
++"""Gera o plano sorteado da sessao controlada (Fase 2c).
++
++    python -m ml.scripts.plan_controlled_session --semente 2026 [--curva "Bico de Pato"]
++        [--condicoes A,B,C,D] [--voltas-por-condicao 8] [--aquecimento 5] [--data AAAA-MM-DD]
++
++Grava `docs/experimentos/<data>_plano.csv` (com a semente em cada linha, para o
++plano poder ser refeito igual) e `<data>_plano.txt`, para imprimir ou deixar na
++tela durante a sessao.
++"""
++
++from __future__ import annotations
++
++import argparse
++import datetime as dt
++import sys
++from pathlib import Path
++from typing import List, Optional
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
++
++from ml import config
++from ml.validation.controlled import make_plan, plan_text
++
++
++def main(argv: Optional[List[str]] = None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("--curva", default="Bico de Pato")
++    parser.add_argument("--condicoes", default="A,B,C,D")
++    parser.add_argument("--voltas-por-condicao", type=int, default=8)
++    parser.add_argument("--aquecimento", type=int, default=5)
++    parser.add_argument("--semente", type=int, required=True)
++    parser.add_argument("--data", default=dt.date.today().isoformat())
++    parser.add_argument("--saida", type=Path, default=config.repo_root() / "docs" / "experimentos")
++    args = parser.parse_args(argv)
++
++    plan = make_plan(
++        curve=args.curva,
++        conditions=[c.strip() for c in args.condicoes.split(",") if c.strip()],
++        laps_per_condition=args.voltas_por_condicao,
++        warmup=args.aquecimento,
++        seed=args.semente,
++    )
++    args.saida.mkdir(parents=True, exist_ok=True)
++    csv_path = args.saida / f"{args.data}_plano.csv"
++    txt_path = args.saida / f"{args.data}_plano.txt"
++    plan.to_csv(csv_path, index=False, encoding="utf-8")
++    txt_path.write_text(plan_text(plan), encoding="utf-8")
++    print(plan_text(plan))
++    print(f"-> {csv_path}\n-> {txt_path}")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/ml/validation/controlled.py b/backend/ml/validation/controlled.py
+new file mode 100644
+index 00000000..34d689d4
+--- /dev/null
++++ b/backend/ml/validation/controlled.py
+@@ -0,0 +1,380 @@
++"""Sessao controlada (Fase 2c, ADR 0011): plano sorteado e analise do 2 x 2.
++
++A Fase 2b mostrou que as voltas do dia a dia nao identificam o efeito de mudar
++o ponto de frenagem ou a linha: o piloto quase nunca muda essas coisas. Aqui as
++mudancas sao feitas de proposito, numa curva, em blocos de quatro voltas com as
++quatro condicoes em ordem sorteada (`docs/experimentos/protocolo_sessao_controlada.md`).
++
++Tudo que depende so de numeros fica neste modulo, sem gravacao nem cache de
++geometria, para poder ser testado com dados sinteticos. Os scripts
++`plan_controlled_session` e `analyze_controlled_session` ligam isto ao pipeline
++existente (leitor, store, janelas da Fase 2b).
++
++Convencoes
++----------
++* Ponto de frenagem: diferenca em metros, positiva = freou depois. "10 m mais
++  cedo" e -10 m.
++* Linha: medida no `lateral` do `ml` (positivo a esquerda, ADR 0003) e relatada
++  como deslocamento **para dentro da curva**: `lateral * direcao`, com a direcao
++  da curva +1 a esquerda e -1 a direita.
++"""
++
++from __future__ import annotations
++
++from dataclasses import dataclass
++from typing import Dict, List, Optional, Sequence, Tuple
++
++import numpy as np
++import pandas as pd
++
++# ----------------------------------------------------------- condicoes ---
++
++@dataclass(frozen=True)
++class Condition:
++    code: str
++    braking_m: float          # pedido, em relacao a A (negativo = mais cedo)
++    inward_m: float           # pedido, para dentro da curva
++    braking_text: str
++    line_text: str
++
++
++CONDITIONS: Dict[str, Condition] = {
++    "A": Condition("A", 0.0, 0.0, "habitual", "habitual"),
++    "B": Condition("B", -10.0, 0.0, "10 m mais cedo", "habitual"),
++    "C": Condition("C", 0.0, 2.0, "habitual", "2 m para dentro"),
++    "D": Condition("D", -10.0, 2.0, "10 m mais cedo", "2 m para dentro"),
++}
++WARMUP = "AQ"
++
++# Nomes das curvas -> rotulo de `ml.track.corners.detect_corners` na geometria
++# `0ed16f0dd2225990`. Sao as curvas que abrem as janelas da Fase 2b.
++CORNER_NAMES = {
++    "S do Senna": "C01-esq",
++    "Descida do Lago": "C04-esq",
++    "Ferradura": "C06-dir",
++    "Laranjinha": "C07-dir",
++    "Pinheirinho": "C08-esq",
++    "Bico de Pato": "C10-dir",
++    "Juncao": "C12-esq",
++}
++
++# "Longe do pedido": a execucao media errou o alvo por mais da metade dele.
++BRAKING_TOLERANCE_M = 5.0
++INWARD_TOLERANCE_M = 1.0
++
++PLAN_COLUMNS = ("ordem", "bloco", "condicao", "freada", "linha", "curva", "semente")
++
++
++# --------------------------------------------------------------- plano ---
++
++def make_plan(
++    curve: str = "Bico de Pato",
++    conditions: Sequence[str] = ("A", "B", "C", "D"),
++    laps_per_condition: int = 8,
++    warmup: int = 5,
++    seed: int = 2026,
++) -> pd.DataFrame:
++    """Aquecimento, depois blocos com todas as condicoes em ordem sorteada."""
++    unknown = [c for c in conditions if c not in CONDITIONS]
++    if unknown:
++        raise ValueError(f"condicoes desconhecidas: {unknown}; validas: {sorted(CONDITIONS)}")
++    if len(set(conditions)) != len(conditions):
++        raise ValueError("condicao repetida na lista")
++    if curve not in CORNER_NAMES:
++        raise ValueError(f"curva desconhecida: {curve}; validas: {sorted(CORNER_NAMES)}")
++
++    rng = np.random.default_rng(seed)
++    rows: List[Dict[str, object]] = []
++    for _ in range(int(warmup)):
++        rows.append({"bloco": 0, "condicao": WARMUP, "freada": "livre", "linha": "livre"})
++    for block in range(1, int(laps_per_condition) + 1):
++        for code in rng.permutation(list(conditions)):
++            condition = CONDITIONS[str(code)]
++            rows.append(
++                {
++                    "bloco": block,
++                    "condicao": condition.code,
++                    "freada": condition.braking_text,
++                    "linha": condition.line_text,
++                }
++            )
++    plan = pd.DataFrame(rows)
++    plan.insert(0, "ordem", np.arange(1, len(plan) + 1))
++    plan["curva"] = curve
++    plan["semente"] = int(seed)
++    return plan[list(PLAN_COLUMNS)]
++
++
++def plan_text(plan: pd.DataFrame) -> str:
++    """O plano para imprimir ou deixar na tela durante a sessao."""
++    curve = str(plan["curva"].iloc[0])
++    seed = int(plan["semente"].iloc[0])
++    measured = plan[plan["condicao"] != WARMUP]
++    lines = [
++        f"PLANO DA SESSAO CONTROLADA - {curve}",
++        f"semente {seed} | {len(plan) - len(measured)} voltas de aquecimento | "
++        f"{len(measured)} voltas medidas em {measured['bloco'].nunique()} blocos",
++        "",
++        "Volta errada (passou reto, rodou, freou fora do ponto): anote o numero da",
++        "volta no jogo como invalida e REPITA A MESMA CONDICAO na volta seguinte.",
++        "",
++        "Condicoes:",
++    ]
++    for code in sorted(measured["condicao"].unique()):
++        c = CONDITIONS[code]
++        lines.append(f"  {code}: freada {c.braking_text}; linha {c.line_text}")
++    lines.append("")
++    current = None
++    for _, row in plan.iterrows():
++        if row["bloco"] != current:
++            current = row["bloco"]
++            lines.append("AQUECIMENTO" if current == 0 else f"BLOCO {current}")
++        if row["condicao"] == WARMUP:
++            lines.append(f"  volta {row['ordem']:>2}  livre")
++        else:
++            lines.append(
++                f"  volta {row['ordem']:>2}  [{row['condicao']}]  freada {row['freada']:<15} linha {row['linha']}"
++            )
++    return "\n".join(lines) + "\n"
++
++
++# ------------------------------------------------------- casar voltas ---
++
++class PlanMismatchError(ValueError):
++    """As voltas da gravacao nao casam com o plano. Nunca se adivinha."""
++
++
++def match_laps(laps: pd.DataFrame, plan: pd.DataFrame, invalid: Sequence[int] = ()) -> pd.DataFrame:
++    """Casa, em ordem, as voltas aproveitaveis da gravacao com as linhas do plano.
++
++    `laps`: uma linha por volta gravada, com `lap_id`, `sequence`, `lap_number`
++    (numero do jogo), `valid` (gates de qualidade) e `reasons`. Aproveitavel e a
++    volta que passou nos gates e nao foi anotada como invalida pelo piloto.
++
++    Se a contagem nao bater, levanta `PlanMismatchError` com a lista de voltas e
++    o motivo de cada exclusao -- quem resolve e o piloto, nao o script.
++    """
++    invalid = [int(v) for v in invalid]
++    ordered = laps.sort_values("sequence").reset_index(drop=True)
++
++    repeated = ordered["lap_number"].value_counts()
++    ambiguous = sorted(int(n) for n in invalid if repeated.get(n, 0) > 1)
++    if ambiguous:
++        raise PlanMismatchError(
++            f"as voltas anotadas como invalidas {ambiguous} aparecem mais de uma vez com o "
++            "mesmo numero do jogo (o contador trava no box); diga qual delas, pelo lap_id."
++        )
++    missing = sorted(set(invalid) - set(int(n) for n in ordered["lap_number"]))
++    if missing:
++        raise PlanMismatchError(f"voltas anotadas como invalidas que nao existem na gravacao: {missing}")
++
++    status = []
++    for _, row in ordered.iterrows():
++        if int(row["lap_number"]) in invalid:
++            status.append("invalida (anotada pelo piloto)")
++        elif not bool(row["valid"]):
++            status.append(f"excluida pelos gates: {row.get('reasons', '')}")
++        else:
++            status.append("aproveitavel")
++    ordered["status"] = status
++    usable = ordered[ordered["status"] == "aproveitavel"].reset_index(drop=True)
++
++    if len(usable) != len(plan):
++        listing = "\n".join(
++            f"  gravada n. {i + 1:>2}  {r['lap_id']}  (volta {int(r['lap_number'])} no jogo): {r['status']}"
++            for i, (_, r) in enumerate(ordered.iterrows())
++        )
++        raise PlanMismatchError(
++            f"o plano tem {len(plan)} voltas ({int((plan['condicao'] == WARMUP).sum())} de aquecimento + "
++            f"{int((plan['condicao'] != WARMUP).sum())} medidas), mas a gravacao tem {len(usable)} voltas "
++            f"aproveitaveis de {len(ordered)} gravadas. Nada foi casado.\n"
++            "Confira se alguma volta errada nao foi anotada como invalida, se alguma volta do plano "
++            "caiu nos gates de qualidade, ou se o aquecimento teve mais ou menos voltas que o plano.\n"
++            f"Voltas gravadas:\n{listing}"
++        )
++    matched = pd.concat(
++        [usable.reset_index(drop=True), plan.reset_index(drop=True)[["ordem", "bloco", "condicao"]]],
++        axis=1,
++    )
++    return matched
++
++
++# ------------------------------------------------- conferencia da execucao ---
++
++MEASURES = ("braking_point_s", "lateral_entry_m", "lateral_apex_m", "lateral_exit_m", "throttle_point_s")
++
++
++def execution_check(matched: pd.DataFrame, direction: int) -> Dict[str, object]:
++    """Por condicao, quanto o piloto de fato mudou em relacao a A.
++
++    `matched` precisa das colunas de `MEASURES` (em metros) e `condicao`.
++    """
++    measured = matched[matched["condicao"] != WARMUP]
++    if "A" not in set(measured["condicao"]):
++        raise PlanMismatchError("a analise compara tudo com a condicao A, e nao ha voltas A")
++    base = measured[measured["condicao"] == "A"][list(MEASURES)].mean()
++    out: Dict[str, object] = {}
++    for code, group in measured.groupby("condicao"):
++        means = group[list(MEASURES)].mean()
++        spread = group[list(MEASURES)].std(ddof=1)
++        braking = float(means["braking_point_s"] - base["braking_point_s"])
++        inward = {
++            where: float((means[f"lateral_{where}_m"] - base[f"lateral_{where}_m"]) * direction)
++            for where in ("entry", "apex", "exit")
++        }
++        requested = CONDITIONS[code]
++        notes = []
++        if abs(braking - requested.braking_m) > BRAKING_TOLERANCE_M:
++            notes.append(
++                f"frenagem: pedido {requested.braking_m:+.0f} m, executado {braking:+.1f} m em media"
++            )
++        if abs(inward["entry"] - requested.inward_m) > INWARD_TOLERANCE_M:
++            notes.append(
++                f"linha na entrada: pedido {requested.inward_m:+.1f} m para dentro, executado {inward['entry']:+.2f} m"
++            )
++        out[code] = {
++            "voltas": int(len(group)),
++            "frenagem_vs_A_m": braking,
++            "frenagem_dp_m": float(spread["braking_point_s"]) if len(group) > 1 else float("nan"),
++            "para_dentro_vs_A_m": inward,
++            "lateral_entrada_dp_m": float(spread["lateral_entry_m"]) if len(group) > 1 else float("nan"),
++            "retomada_vs_A_m": float(means["throttle_point_s"] - base["throttle_point_s"]),
++            "pedido": {"frenagem_m": requested.braking_m, "para_dentro_m": requested.inward_m},
++            "longe_do_pedido": bool(notes),
++            "observacoes": notes,
++        }
++    return out
++
++
++# ------------------------------------------------------------ efeitos ---
++
++CONTRASTS: Dict[str, Dict[str, float]] = {
++    # media de B e D menos media de A e C
++    "frenagem": {"A": -0.5, "B": 0.5, "C": -0.5, "D": 0.5},
++    # media de C e D menos media de A e B
++    "linha": {"A": -0.5, "B": -0.5, "C": 0.5, "D": 0.5},
++    # (D - C) - (B - A)
++    "interacao": {"A": 1.0, "B": -1.0, "C": -1.0, "D": 1.0},
++    "B_menos_A": {"A": -1.0, "B": 1.0},
++    "C_menos_A": {"A": -1.0, "C": 1.0},
++    "D_menos_A": {"A": -1.0, "D": 1.0},
++}
++
++
++def estimate_effects(times: np.ndarray, conditions: Sequence[str], blocks: Sequence[int]) -> Dict[str, Dict[str, float]]:
++    """Efeitos com IC 95 % por modelo linear com efeito de bloco.
++
++    `tempo = media da condicao + efeito do bloco + erro`. E o modelo do
++    delineamento em blocos casualizados: o bloco absorve o que muda ao longo da
++    sessao (pneu, combustivel, cansaco), e os contrastes entre condicoes saem
++    livres dele porque toda condicao aparece em todo bloco. Funciona tambem com
++    um bloco incompleto (volta perdida e nao repetida), o que o bootstrap dentro
++    dos blocos nao faz. O IC usa a distribuicao t com os graus de liberdade do
++    residuo.
++    """
++    from scipy import stats
++
++    y = np.asarray(times, dtype=float)
++    conditions = np.asarray(conditions)
++    blocks = np.asarray(blocks)
++    codes = [c for c in ("A", "B", "C", "D") if c in set(conditions)]
++    if set(codes) != {"A", "B", "C", "D"}:
++        raise PlanMismatchError(f"o 2 x 2 precisa das quatro condicoes; ha so {codes}")
++    levels = sorted(set(blocks.tolist()))
++    columns = [(conditions == c).astype(float) for c in codes]
++    columns += [(blocks == b).astype(float) for b in levels[1:]]
++    x = np.column_stack(columns)
++    beta, _, rank, _ = np.linalg.lstsq(x, y, rcond=None)
++    dof = len(y) - rank
++    if dof <= 0:
++        raise PlanMismatchError("voltas insuficientes para estimar o erro (graus de liberdade <= 0)")
++    residual = y - x @ beta
++    sigma2 = float(residual @ residual) / dof
++    covariance = sigma2 * np.linalg.pinv(x.T @ x)
++    t = float(stats.t.ppf(0.975, dof))
++
++    out: Dict[str, Dict[str, float]] = {}
++    for name, weights in CONTRASTS.items():
++        c = np.zeros(x.shape[1])
++        for code, weight in weights.items():
++            c[codes.index(code)] = weight
++        estimate = float(c @ beta)
++        se = float(np.sqrt(c @ covariance @ c))
++        out[name] = {"estimativa_s": estimate, "ep_s": se, "ic95_s": [estimate - t * se, estimate + t * se]}
++    out["_modelo"] = {
++        "voltas": int(len(y)),
++        "blocos": int(len(levels)),
++        "graus_de_liberdade": int(dof),
++        "dp_residuo_s": float(np.sqrt(sigma2)),
++    }
++    return out
++
++
++# ------------------------------------------------ comparacao com estimadores ---
++
++def condition_differences(matched: pd.DataFrame) -> Dict[str, np.ndarray]:
++    """Diferencas medias X - A nas cinco entradas acionaveis da Fase 2b."""
++    measured = matched[matched["condicao"] != WARMUP]
++    base = measured[measured["condicao"] == "A"][list(MEASURES)].mean()
++    out = {}
++    for code in ("B", "C", "D"):
++        group = measured[measured["condicao"] == code][list(MEASURES)].mean()
++        diff = group - base
++        # Ordem de `empirical.ACTIONABLE`.
++        out[code] = np.array(
++            [
++                diff["braking_point_s"],
++                diff["lateral_entry_m"],
++                diff["lateral_apex_m"],
++                diff["lateral_exit_m"],
++                diff["throttle_point_s"],
++            ],
++            dtype=float,
++        )
++    return out
++
++
++def compare_with_estimators(
++    effects: Dict[str, Dict[str, float]],
++    predictions: Dict[str, Dict[str, Tuple[float, float, float]]],
++    out_of_distribution: Dict[str, bool],
++) -> Dict[str, object]:
++    """Efeito medido contra o previsto, condicao a condicao e nos contrastes.
++
++    `predictions[estimador][codigo] = (centro, baixo, alto)` para X - A; baixo e
++    alto sao NaN quando o estimador nao tem faixa. Os efeitos principais e a
++    interacao previstos saem das mesmas combinacoes lineares das previsoes; para
++    eles so o erro e relatado, porque a faixa de uma soma de faixas nao e a soma
++    delas.
++    """
++    out: Dict[str, object] = {}
++    for estimator, by_code in predictions.items():
++        rows = {}
++        for code in ("B", "C", "D"):
++            centre, low, high = by_code[code]
++            measured = effects[f"{code}_menos_A"]["estimativa_s"]
++            rows[f"{code}_menos_A"] = {
++                "medido_s": measured,
++                "previsto_s": centre,
++                "faixa95_s": [low, high],
++                "erro_s": centre - measured,
++                "medido_dentro_da_faixa": (bool(low <= measured <= high) if np.isfinite(low) else None),
++                "fora_da_distribuicao": bool(out_of_distribution.get(code, False)),
++            }
++        p = {code: by_code[code][0] for code in ("B", "C", "D")}
++        derived = {
++            "frenagem": (p["B"] + p["D"] - p["C"]) / 2.0,
++            "linha": (p["C"] + p["D"] - p["B"]) / 2.0,
++            "interacao": p["D"] - p["C"] - p["B"],
++        }
++        for name, value in derived.items():
++            rows[name] = {
++                "medido_s": effects[name]["estimativa_s"],
++                "previsto_s": value,
++                "erro_s": value - effects[name]["estimativa_s"],
++                "previsto_dentro_do_ic_medido": bool(
++                    effects[name]["ic95_s"][0] <= value <= effects[name]["ic95_s"][1]
++                ),
++            }
++        out[estimator] = rows
++    return out
+diff --git a/backend/tests/test_ml_controlled.py b/backend/tests/test_ml_controlled.py
+new file mode 100644
+index 00000000..f0a103d0
+--- /dev/null
++++ b/backend/tests/test_ml_controlled.py
+@@ -0,0 +1,233 @@
++"""Sessao controlada (Fase 2c): plano, casamento de voltas, execucao e efeitos.
++
++A sessao sintetica tem efeitos conhecidos: frear 10 m mais cedo custa 40 ms,
++mudar a linha custa 20 ms, sem interacao, e cada volta tem 20 ms de ruido.
++"""
++
++from __future__ import annotations
++
++import sys
++import unittest
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from ml.validation import controlled as ct
++
++BRAKING_COST_S = 0.040
++LINE_COST_S = 0.020
++NOISE_S = 0.020
++BASE_S = 14.0
++
++
++def synthetic_session(seed=0, plan=None, interaction=0.0, braking_done=-10.0, inward_done=2.0, direction=-1):
++    """Voltas gravadas que seguem o plano, com medidas e tempo da janela."""
++    plan = plan if plan is not None else ct.make_plan(seed=2026)
++    rng = np.random.default_rng(seed)
++    rows = []
++    for i, row in plan.iterrows():
++        code = row["condicao"]
++        early = code in ("B", "D")
++        inside = code in ("C", "D")
++        time = BASE_S + 0.004 * row["bloco"] + rng.normal(0, NOISE_S)
++        time += BRAKING_COST_S * early + LINE_COST_S * inside + interaction * (early and inside)
++        rows.append(
++            {
++                "lap_id": f"S#{i + 1:04d}",
++                "sequence": i + 1,
++                "lap_number": i + 2,
++                "valid": True,
++                "reasons": "",
++                "tempo_janela_s": time,
++                "braking_point_s": 2620.0 + braking_done * early + rng.normal(0, 1.0),
++                "lateral_entry_m": 1.0 + direction * inward_done * inside + rng.normal(0, 0.2),
++                "lateral_apex_m": -3.0 + direction * inward_done * inside + rng.normal(0, 0.2),
++                "lateral_exit_m": 2.0 + rng.normal(0, 0.2),
++                "throttle_point_s": 2740.0 + rng.normal(0, 2.0),
++            }
++        )
++    laps = pd.DataFrame(rows)
++    # Volta de saida dos boxes, que os gates rejeitam.
++    out_lap = {"lap_id": "S#0000", "sequence": 0, "lap_number": 1, "valid": False, "reasons": "faltam 900 m de pista"}
++    return pd.concat([pd.DataFrame([out_lap]), laps], ignore_index=True)
++
++
++def analyse(laps, plan, invalid=(), direction=-1):
++    matched = ct.match_laps(laps[["lap_id", "sequence", "lap_number", "valid", "reasons"]], plan, invalid)
++    matched = matched.merge(laps.drop(columns=["sequence", "lap_number", "valid", "reasons"]), on="lap_id")
++    measured = matched[matched["condicao"] != ct.WARMUP]
++    effects = ct.estimate_effects(
++        measured["tempo_janela_s"].to_numpy(), measured["condicao"].to_numpy(), measured["bloco"].to_numpy()
++    )
++    return matched, ct.execution_check(matched, direction), effects
++
++
++def inside(effect, value):
++    low, high = effect["ic95_s"]
++    return low <= value <= high
++
++
++class PlanTest(unittest.TestCase):
++    def test_same_seed_same_plan_and_other_seed_other_order(self):
++        a, b = ct.make_plan(seed=2026), ct.make_plan(seed=2026)
++        pd.testing.assert_frame_equal(a, b)
++        self.assertFalse(a["condicao"].equals(ct.make_plan(seed=7)["condicao"]))
++        self.assertEqual(list(a.columns), list(ct.PLAN_COLUMNS))
++        self.assertTrue((a["semente"] == 2026).all())
++
++    def test_every_block_has_the_four_conditions_once(self):
++        plan = ct.make_plan(seed=2026, laps_per_condition=8, warmup=5)
++        self.assertEqual(len(plan), 5 + 32)
++        self.assertEqual((plan["condicao"] == ct.WARMUP).sum(), 5)
++        for block, group in plan[plan["bloco"] > 0].groupby("bloco"):
++            self.assertEqual(sorted(group["condicao"]), ["A", "B", "C", "D"], block)
++        self.assertEqual(plan["ordem"].tolist(), list(range(1, 38)))
++
++    def test_orders_differ_between_blocks(self):
++        plan = ct.make_plan(seed=2026)
++        orders = {tuple(g["condicao"]) for _, g in plan[plan["bloco"] > 0].groupby("bloco")}
++        self.assertGreater(len(orders), 1)
++
++    def test_text_version_lists_every_lap(self):
++        text = ct.plan_text(ct.make_plan(seed=2026))
++        self.assertIn("semente 2026", text)
++        self.assertIn("REPITA A MESMA CONDICAO", text)
++        self.assertEqual(text.count("  volta "), 37)
++
++    def test_unknown_inputs_are_refused(self):
++        with self.assertRaises(ValueError):
++            ct.make_plan(conditions=("A", "E"))
++        with self.assertRaises(ValueError):
++            ct.make_plan(curve="Curva inexistente")
++
++
++class EffectRecoveryTest(unittest.TestCase):
++    def test_known_effects_fall_inside_the_intervals(self):
++        plan = ct.make_plan(seed=2026)
++        _, _, effects = analyse(synthetic_session(seed=1, plan=plan), plan)
++        self.assertTrue(inside(effects["frenagem"], BRAKING_COST_S), effects["frenagem"])
++        self.assertTrue(inside(effects["linha"], LINE_COST_S), effects["linha"])
++        self.assertTrue(inside(effects["interacao"], 0.0), effects["interacao"])
++        self.assertTrue(inside(effects["D_menos_A"], BRAKING_COST_S + LINE_COST_S))
++        # Com 20 ms de ruido e 16 contra 16 voltas, o efeito de 40 ms nao inclui zero.
++        self.assertGreater(effects["frenagem"]["ic95_s"][0], 0.0)
++
++    def test_intervals_have_their_nominal_coverage(self):
++        plan = ct.make_plan(seed=2026)
++        hits = 0
++        runs = 300
++        for seed in range(runs):
++            _, _, effects = analyse(synthetic_session(seed=seed, plan=plan), plan)
++            hits += inside(effects["frenagem"], BRAKING_COST_S)
++        self.assertGreater(hits / runs, 0.90)
++        self.assertLess(hits / runs, 0.99)
++
++    def test_an_interaction_is_detected(self):
++        plan = ct.make_plan(seed=2026)
++        _, _, effects = analyse(synthetic_session(seed=3, plan=plan, interaction=0.080), plan)
++        self.assertTrue(inside(effects["interacao"], 0.080))
++        self.assertGreater(effects["interacao"]["ic95_s"][0], 0.0)
++
++    def test_an_incomplete_block_still_fits(self):
++        plan = ct.make_plan(seed=2026)
++        laps = synthetic_session(seed=4, plan=plan)
++        matched = ct.match_laps(laps[["lap_id", "sequence", "lap_number", "valid", "reasons"]], plan)
++        matched = matched.merge(laps[["lap_id", "tempo_janela_s"]], on="lap_id")
++        measured = matched[matched["condicao"] != ct.WARMUP].iloc[:-1]   # ultima volta perdida
++        effects = ct.estimate_effects(
++            measured["tempo_janela_s"].to_numpy(), measured["condicao"].to_numpy(), measured["bloco"].to_numpy()
++        )
++        self.assertTrue(inside(effects["frenagem"], BRAKING_COST_S))
++
++
++class ExecutionCheckTest(unittest.TestCase):
++    def test_executed_as_asked(self):
++        plan = ct.make_plan(seed=2026)
++        _, execution, _ = analyse(synthetic_session(seed=5, plan=plan), plan)
++        self.assertAlmostEqual(execution["B"]["frenagem_vs_A_m"], -10.0, delta=1.5)
++        self.assertAlmostEqual(execution["C"]["para_dentro_vs_A_m"]["entry"], 2.0, delta=0.3)
++        self.assertFalse(any(e["longe_do_pedido"] for e in execution.values()))
++
++    def test_far_from_the_request_is_said_clearly(self):
++        plan = ct.make_plan(seed=2026)
++        laps = synthetic_session(seed=6, plan=plan, braking_done=-3.0, inward_done=0.5)
++        _, execution, _ = analyse(laps, plan)
++        self.assertTrue(execution["B"]["longe_do_pedido"])
++        self.assertTrue(execution["D"]["longe_do_pedido"])
++        self.assertIn("frenagem", " ".join(execution["B"]["observacoes"]))
++        self.assertIn("linha", " ".join(execution["C"]["observacoes"]))
++
++    def test_inward_follows_the_corner_direction(self):
++        plan = ct.make_plan(seed=2026)
++        # Curva a esquerda: para dentro e lateral positivo.
++        laps = synthetic_session(seed=7, plan=plan, direction=+1)
++        _, execution, _ = analyse(laps, plan, direction=+1)
++        self.assertGreater(execution["C"]["para_dentro_vs_A_m"]["entry"], 1.5)
++
++
++class MatchingTest(unittest.TestCase):
++    def setUp(self):
++        self.plan = ct.make_plan(seed=2026)
++        self.laps = synthetic_session(seed=8, plan=self.plan)
++        self.table = self.laps[["lap_id", "sequence", "lap_number", "valid", "reasons"]]
++
++    def test_out_lap_rejected_by_gates_is_skipped(self):
++        matched = ct.match_laps(self.table, self.plan)
++        self.assertEqual(len(matched), len(self.plan))
++        self.assertEqual(matched["lap_id"].iloc[0], "S#0001")
++
++    def test_lap_count_mismatch_stops_with_the_lap_list(self):
++        short = self.table.iloc[:-1]
++        with self.assertRaises(ct.PlanMismatchError) as caught:
++            ct.match_laps(short, self.plan)
++        message = str(caught.exception)
++        self.assertIn("37 voltas", message)
++        self.assertIn("36 voltas", message)
++        self.assertIn("Nada foi casado", message)
++        self.assertIn("S#0000", message)            # lista cada volta, com o motivo
++        self.assertIn("faltam 900 m", message)
++
++    def test_a_declared_invalid_lap_is_removed_and_the_rest_matches(self):
++        extra = pd.DataFrame(
++            [{"lap_id": "S#9999", "sequence": 10.5, "lap_number": 99, "valid": True, "reasons": ""}]
++        )
++        table = pd.concat([self.table, extra], ignore_index=True)
++        with self.assertRaises(ct.PlanMismatchError):
++            ct.match_laps(table, self.plan)                      # sem anotar, nao bate
++        matched = ct.match_laps(table, self.plan, invalid=[99])  # anotada, bate
++        self.assertNotIn("S#9999", set(matched["lap_id"]))
++
++    def test_invalid_lap_with_a_repeated_game_number_is_not_guessed(self):
++        table = self.table.copy()
++        table.loc[table.index[-1], "lap_number"] = table["lap_number"].iloc[5]
++        with self.assertRaises(ct.PlanMismatchError) as caught:
++            ct.match_laps(table, self.plan, invalid=[int(table["lap_number"].iloc[5])])
++        self.assertIn("mais de uma vez", str(caught.exception))
++
++
++class EstimatorComparisonTest(unittest.TestCase):
++    def test_contrasts_and_bands(self):
++        plan = ct.make_plan(seed=2026)
++        _, _, effects = analyse(synthetic_session(seed=9, plan=plan), plan)
++        perfect = {c: (effects[f"{c}_menos_A"]["estimativa_s"], -1.0, 1.0) for c in "BCD"}
++        wrong = {c: (0.0, -0.001, 0.001) for c in "BCD"}
++        out = ct.compare_with_estimators(effects, {"perfeito": perfect, "zero": wrong}, {"B": True})
++        self.assertAlmostEqual(out["perfeito"]["frenagem"]["erro_s"], 0.0, places=9)
++        self.assertAlmostEqual(out["perfeito"]["interacao"]["erro_s"], 0.0, places=9)
++        self.assertTrue(out["perfeito"]["B_menos_A"]["medido_dentro_da_faixa"])
++        self.assertFalse(out["zero"]["D_menos_A"]["medido_dentro_da_faixa"])
++        self.assertTrue(out["zero"]["B_menos_A"]["fora_da_distribuicao"])
++
++    def test_condition_differences_are_x_minus_a(self):
++        plan = ct.make_plan(seed=2026)
++        matched, _, _ = analyse(synthetic_session(seed=10, plan=plan), plan)
++        diff = ct.condition_differences(matched)
++        self.assertAlmostEqual(diff["B"][0], -10.0, delta=1.5)    # frenagem
++        self.assertAlmostEqual(diff["C"][1], -2.0, delta=0.3)     # entrada, curva a direita
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/docs/experimentos/2026-10-02_plano.csv b/docs/experimentos/2026-10-02_plano.csv
+new file mode 100644
+index 00000000..53c0e3d6
+--- /dev/null
++++ b/docs/experimentos/2026-10-02_plano.csv
+@@ -0,0 +1,38 @@
++ordem,bloco,condicao,freada,linha,curva,semente
++1,0,AQ,livre,livre,Bico de Pato,2026
++2,0,AQ,livre,livre,Bico de Pato,2026
++3,0,AQ,livre,livre,Bico de Pato,2026
++4,0,AQ,livre,livre,Bico de Pato,2026
++5,0,AQ,livre,livre,Bico de Pato,2026
++6,1,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
++7,1,B,10 m mais cedo,habitual,Bico de Pato,2026
++8,1,A,habitual,habitual,Bico de Pato,2026
++9,1,C,habitual,2 m para dentro,Bico de Pato,2026
++10,2,A,habitual,habitual,Bico de Pato,2026
++11,2,B,10 m mais cedo,habitual,Bico de Pato,2026
++12,2,C,habitual,2 m para dentro,Bico de Pato,2026
++13,2,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
++14,3,A,habitual,habitual,Bico de Pato,2026
++15,3,B,10 m mais cedo,habitual,Bico de Pato,2026
++16,3,C,habitual,2 m para dentro,Bico de Pato,2026
++17,3,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
++18,4,B,10 m mais cedo,habitual,Bico de Pato,2026
++19,4,C,habitual,2 m para dentro,Bico de Pato,2026
++20,4,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
++21,4,A,habitual,habitual,Bico de Pato,2026
++22,5,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
++23,5,B,10 m mais cedo,habitual,Bico de Pato,2026
++24,5,C,habitual,2 m para dentro,Bico de Pato,2026
++25,5,A,habitual,habitual,Bico de Pato,2026
++26,6,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
++27,6,A,habitual,habitual,Bico de Pato,2026
++28,6,B,10 m mais cedo,habitual,Bico de Pato,2026
++29,6,C,habitual,2 m para dentro,Bico de Pato,2026
++30,7,A,habitual,habitual,Bico de Pato,2026
++31,7,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
++32,7,C,habitual,2 m para dentro,Bico de Pato,2026
++33,7,B,10 m mais cedo,habitual,Bico de Pato,2026
++34,8,B,10 m mais cedo,habitual,Bico de Pato,2026
++35,8,C,habitual,2 m para dentro,Bico de Pato,2026
++36,8,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
++37,8,A,habitual,habitual,Bico de Pato,2026
+diff --git a/docs/experimentos/2026-10-02_plano.txt b/docs/experimentos/2026-10-02_plano.txt
+new file mode 100644
+index 00000000..fb92f3e3
+--- /dev/null
++++ b/docs/experimentos/2026-10-02_plano.txt
+@@ -0,0 +1,58 @@
++PLANO DA SESSAO CONTROLADA - Bico de Pato
++semente 2026 | 5 voltas de aquecimento | 32 voltas medidas em 8 blocos
++
++Volta errada (passou reto, rodou, freou fora do ponto): anote o numero da
++volta no jogo como invalida e REPITA A MESMA CONDICAO na volta seguinte.
++
++Condicoes:
++  A: freada habitual; linha habitual
++  B: freada 10 m mais cedo; linha habitual
++  C: freada habitual; linha 2 m para dentro
++  D: freada 10 m mais cedo; linha 2 m para dentro
++
++AQUECIMENTO
++  volta  1  livre
++  volta  2  livre
++  volta  3  livre
++  volta  4  livre
++  volta  5  livre
++BLOCO 1
++  volta  6  [D]  freada 10 m mais cedo  linha 2 m para dentro
++  volta  7  [B]  freada 10 m mais cedo  linha habitual
++  volta  8  [A]  freada habitual        linha habitual
++  volta  9  [C]  freada habitual        linha 2 m para dentro
++BLOCO 2
++  volta 10  [A]  freada habitual        linha habitual
++  volta 11  [B]  freada 10 m mais cedo  linha habitual
++  volta 12  [C]  freada habitual        linha 2 m para dentro
++  volta 13  [D]  freada 10 m mais cedo  linha 2 m para dentro
++BLOCO 3
++  volta 14  [A]  freada habitual        linha habitual
++  volta 15  [B]  freada 10 m mais cedo  linha habitual
++  volta 16  [C]  freada habitual        linha 2 m para dentro
++  volta 17  [D]  freada 10 m mais cedo  linha 2 m para dentro
++BLOCO 4
++  volta 18  [B]  freada 10 m mais cedo  linha habitual
++  volta 19  [C]  freada habitual        linha 2 m para dentro
++  volta 20  [D]  freada 10 m mais cedo  linha 2 m para dentro
++  volta 21  [A]  freada habitual        linha habitual
++BLOCO 5
++  volta 22  [D]  freada 10 m mais cedo  linha 2 m para dentro
++  volta 23  [B]  freada 10 m mais cedo  linha habitual
++  volta 24  [C]  freada habitual        linha 2 m para dentro
++  volta 25  [A]  freada habitual        linha habitual
++BLOCO 6
++  volta 26  [D]  freada 10 m mais cedo  linha 2 m para dentro
++  volta 27  [A]  freada habitual        linha habitual
++  volta 28  [B]  freada 10 m mais cedo  linha habitual
++  volta 29  [C]  freada habitual        linha 2 m para dentro
++BLOCO 7
++  volta 30  [A]  freada habitual        linha habitual
++  volta 31  [D]  freada 10 m mais cedo  linha 2 m para dentro
++  volta 32  [C]  freada habitual        linha 2 m para dentro
++  volta 33  [B]  freada 10 m mais cedo  linha habitual
++BLOCO 8
++  volta 34  [B]  freada 10 m mais cedo  linha habitual
++  volta 35  [C]  freada habitual        linha 2 m para dentro
++  volta 36  [D]  freada 10 m mais cedo  linha 2 m para dentro
++  volta 37  [A]  freada habitual        linha habitual
+diff --git a/docs/fase2c_ferramentas_experimento.md b/docs/fase2c_ferramentas_experimento.md
+new file mode 100644
+index 00000000..ec818b32
+--- /dev/null
++++ b/docs/fase2c_ferramentas_experimento.md
+@@ -0,0 +1,180 @@
++# Fase 2c — Ferramentas da sessão controlada
++
++Relatório de 2026-10-02. Segue o ADR 0011 e o
++[protocolo](experimentos/protocolo_sessao_controlada.md). Branch
++`etapa/fase2c-ferramentas-experimento`, a partir de `handoff/fase2b`.
++
++Ainda não existe sessão gravada com o protocolo. Esta etapa só prepara as
++ferramentas e as testa com dados sintéticos e com dois ensaios em sessões reais
++já existentes.
++
++---
++
++## 1. Antes da sessão: o plano
++
++```bash
++cd backend && python -m ml.scripts.plan_controlled_session --semente 2026
++```
++
++Opções: `--curva` (padrão "Bico de Pato"), `--condicoes` (padrão `A,B,C,D`),
++`--voltas-por-condicao` (padrão 8), `--aquecimento` (padrão 5) e `--data`.
++
++O comando grava dois arquivos em `docs/experimentos/`:
++
++- `<data>_plano.csv`, com as colunas `ordem`, `bloco`, `condicao`, `freada` e
++  `linha`, mais `curva` e `semente` em todas as linhas. Com a mesma semente, o
++  plano sai idêntico.
++- `<data>_plano.txt`, para imprimir ou deixar na tela.
++
++O aquecimento entra no plano como bloco 0, com a condição `AQ`. Depois vêm 8
++blocos, cada um com A, B, C e D numa ordem sorteada.
++
++**Plano de exemplo** (semente 2026, para você conferir):
++[`2026-10-02_plano.txt`](experimentos/2026-10-02_plano.txt). São 37 voltas:
++5 de aquecimento e 32 medidas, em 8 blocos. Os blocos têm 6 ordens distintas
++(DBAC, ABCD, ABCD, BCDA, DBCA, DABC, ADCB, BCDA). Repetir uma ordem é normal num
++sorteio entre 24 possíveis, e não prejudica nada: o que o desenho exige é cada
++condição uma vez por bloco.
++
++## 2. Depois da sessão: a análise
++
++```bash
++cd backend && python -m ml.scripts.analyze_controlled_session --sessao <id> --plano ../docs/experimentos/<data>_plano.csv --invalidas 7,19
++```
++
++`--invalidas` recebe os números de volta **do jogo** que você anotou como
++inválidos.
++
++O que a análise faz, em ordem:
++
++1. **Lê a sessão pelo pipeline existente.** `scan_sessions` aplica os gates de
++   qualidade e `build_store` faz o alinhamento na grade de 2 m. Nenhum leitor
++   novo.
++2. **Casa as voltas com o plano, em ordem.** Volta aproveitável = passou nos
++   gates e não foi anotada como inválida. A volta de saída dos boxes cai nos
++   gates sozinha. **Se a contagem não bater, a análise para** e lista cada volta
++   gravada com o motivo de ela ter sido usada ou não. Nunca adivinha.
++3. **Janela de curva da Fase 2b,** com as zonas de frenagem tiradas das outras
++   sessões. O Bico de Pato é a janela da curva C10, de 2590 a 3080 m.
++4. **Conferência da execução,** a parte mais importante. Para cada volta, mede o
++   ponto de frenagem e a posição lateral na entrada, no ápice e na saída. Por
++   condição, relata a diferença real contra A. A linha aparece como "para dentro
++   da curva": no Bico de Pato, que é à direita, para dentro é lateral negativo.
++   Se a média da condição errar o pedido por mais de 5 m na frenagem ou mais de
++   1 m na linha de entrada, o relatório diz **"longe do pedido"** e explica o que
++   foi executado.
++5. **Efeitos com IC 95 %** (ver seção 3):
++   - frenagem = média(B, D) − média(A, C);
++   - linha = média(C, D) − média(A, B);
++   - interação = (D − C) − (B − A);
++   - e também B − A, C − A e D − A.
++6. **Comparação com os estimadores.** E1 a E4 da Fase 2b são treinados com todas
++   as outras sessões, sem a controlada. Cada um recebe as diferenças **reais**
++   medidas no passo 4: as médias de B, C e D menos as de A, nas 5 entradas
++   acionáveis. Para cada X − A, o relatório dá o erro e se o efeito medido cai
++   dentro da faixa de 95 % do estimador. Também marca quando a entrada está fora
++   da faixa de treino. Para os efeitos principais e a interação, as previsões
++   são combinadas da mesma forma e comparadas com o IC medido.
++7. **Saída:** `docs/experimentos/<data>_resultado.json` e `<data>_resultado.md`.
++   A data padrão é a do id da sessão.
++
++## 3. Por que modelo linear com efeito de bloco, e não bootstrap
++
++O pedido deixou escolher entre bootstrap dentro dos blocos e modelo linear com
++efeito de bloco. Escolhi o **modelo linear**:
++
++`tempo da janela = média da condição + efeito do bloco + erro`
++
++- **É o modelo do delineamento.** A sessão é um experimento em blocos
++  casualizados: toda condição aparece em todo bloco, em ordem sorteada. O efeito
++  do bloco absorve o que muda ao longo da sessão (pneu, combustível, cansaço), e
++  os contrastes entre condições saem livres dele.
++- **Aguenta um bloco incompleto.** Se uma volta se perder e não for repetida, o
++  modelo continua valendo. O bootstrap dentro dos blocos precisa de blocos
++  completos.
++- **Com 8 blocos, o bootstrap é instável.** Reamostrar 8 grupos dá poucas
++  combinações distintas, e o intervalo fica irregular. O IC do modelo usa a
++  distribuição t com os graus de liberdade do resíduo (32 voltas − 4 condições
++  − 7 blocos = 21).
++- **A premissa foi testada.** O modelo supõe erro aproximadamente normal e com a
++  mesma dispersão nas condições. No teste com 300 sessões sintéticas, o IC de
++  95 % conteve o efeito verdadeiro em 90–99 % delas, dentro do esperado. Se uma
++  sessão real mostrar voltas muito discrepantes, isso aparece no desvio do
++  resíduo, que vai para o JSON.
++
++## 4. Testes (sintéticos)
++
++18 testes em `backend/tests/test_ml_controlled.py`. A sessão sintética tem
++efeitos conhecidos: frear 10 m antes custa 40 ms, mudar a linha custa 20 ms, sem
++interação, e cada volta tem 20 ms de ruído.
++
++| o que | resultado |
++|---|---|
++| plano reproduzível pela semente; outra semente muda a ordem | passa |
++| cada bloco tem as 4 condições uma vez; 37 linhas, ordem 1..37 | passa |
++| efeitos conhecidos dentro do IC; frenagem de 40 ms com IC que exclui zero | passa |
++| cobertura do IC em 300 sessões sintéticas entre 90 % e 99 % | passa |
++| interação de 80 ms detectada | passa |
++| bloco incompleto (última volta perdida) ainda estima | passa |
++| conferência: executado como pedido não é marcado; −3 m e 0,5 m são marcados "longe do pedido" | passa |
++| "para dentro" segue o lado da curva | passa |
++| contagem diferente do plano: para e lista as voltas com o motivo | passa |
++| volta anotada como inválida é retirada e o resto casa | passa |
++| volta inválida com número do jogo repetido: para e pede o `lap_id` | passa |
++| contrastes previstos a partir de previsões por condição | passa |
++
++## 5. Ensaios com sessões reais (não são resultados)
++
++Os dois ensaios só verificam que as ferramentas rodam com dados reais. Nada
++neles mede efeito, porque nenhuma das sessões foi pilotada com o protocolo.
++
++1. **Parada.** O plano de exemplo (37 voltas) contra a sessão
++   `2026-08-16_03-30-14`, que tem 7 voltas aproveitáveis de 16. A análise
++   **parou** e listou as 16 voltas com o motivo de cada exclusão. Ela também
++   mostrou que o **número de volta do jogo se repete**: há duas voltas 4 e duas
++   10, ambas aproveitáveis. Por isso a anotação de inválidas pelo número do jogo
++   pode ser ambígua, e nesse caso a análise para e pede o `lap_id`.
++2. **Caminho completo.** Um plano fabricado de 52 voltas (13 por condição, sem
++   aquecimento), com rótulos sorteados, contra as 52 voltas aproveitáveis de
++   `2026-08-09_19-20-59`. O piloto não mudou nada, e é isso que a análise
++   mostra:
++   - a conferência marca B, C e D como "longe do pedido" (frenagem +1,1 m em vez
++     de −10 m; linha 0,0 m em vez de 2 m para dentro);
++   - os efeitos ficam com IC que inclui zero (frenagem −12 ms [−30; +6]);
++   - os quatro estimadores rodaram.
++
++## 6. O que vale saber antes da sessão
++
++- **A linha pedida está fora do que os dados já viram.** Na janela do Bico de
++  Pato, a diferença de posição lateral **na entrada** entre voltas de treino vai
++  de −0,7 a +1,5 m (2,5 % a 97,5 %). Os 2 m para dentro pedidos ficam fora disso.
++  A frenagem de 10 m mais cedo fica dentro (faixa de −18 a +24 m). Os
++  estimadores vão extrapolar na linha, como o ADR 0011 previa, e o relatório
++  marca isso.
++- **Anote as voltas inválidas pelo número do jogo, e se possível também pela
++  ordem no plano.** O número do jogo pode se repetir.
++- **Repita a condição depois de uma volta inválida.** Senão a contagem não bate
++  e a análise para.
++- **A análise exige as quatro condições,** com A como referência.
++
++## 7. Arquivos
++
++| arquivo | conteúdo |
++|---|---|
++| `backend/ml/validation/controlled.py` | condições, plano, casamento de voltas, conferência, efeitos, comparação |
++| `backend/ml/scripts/plan_controlled_session.py` | gerador do plano |
++| `backend/ml/scripts/analyze_controlled_session.py` | análise da sessão |
++| `backend/tests/test_ml_controlled.py` | 18 testes sintéticos |
++| `docs/experimentos/2026-10-02_plano.csv` e `.txt` | plano de exemplo, semente 2026 |
++
++Reutilizado sem duplicar:
++
++- leitor, gates e store (`scan_sessions`, `build_store`);
++- janelas, entradas e estimadores da Fase 2b (`empirical.py`);
++- envelope, simulador e filtros (`counterfactual.py`).
++
++O preparo dos dados de treino dos estimadores (pares, entradas, envelope) repete
++em ~15 linhas o que `validate_empirical.py` faz dentro de cada rodada. Preferi
++isso a mexer no código de uma fase já entregue.
++
++Nada da interface, do `optimal.json` ou das LSTMs foi tocado.

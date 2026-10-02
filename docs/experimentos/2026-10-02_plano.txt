@@ -1,0 +1,58 @@
+PLANO DA SESSAO CONTROLADA - Bico de Pato
+semente 2026 | 5 voltas de aquecimento | 32 voltas medidas em 8 blocos
+
+Volta errada (passou reto, rodou, freou fora do ponto): anote o numero da
+volta no jogo como invalida e REPITA A MESMA CONDICAO na volta seguinte.
+
+Condicoes:
+  A: freada habitual; linha habitual
+  B: freada 10 m mais cedo; linha habitual
+  C: freada habitual; linha 2 m para dentro
+  D: freada 10 m mais cedo; linha 2 m para dentro
+
+AQUECIMENTO
+  volta  1  livre
+  volta  2  livre
+  volta  3  livre
+  volta  4  livre
+  volta  5  livre
+BLOCO 1
+  volta  6  [D]  freada 10 m mais cedo  linha 2 m para dentro
+  volta  7  [B]  freada 10 m mais cedo  linha habitual
+  volta  8  [A]  freada habitual        linha habitual
+  volta  9  [C]  freada habitual        linha 2 m para dentro
+BLOCO 2
+  volta 10  [A]  freada habitual        linha habitual
+  volta 11  [B]  freada 10 m mais cedo  linha habitual
+  volta 12  [C]  freada habitual        linha 2 m para dentro
+  volta 13  [D]  freada 10 m mais cedo  linha 2 m para dentro
+BLOCO 3
+  volta 14  [A]  freada habitual        linha habitual
+  volta 15  [B]  freada 10 m mais cedo  linha habitual
+  volta 16  [C]  freada habitual        linha 2 m para dentro
+  volta 17  [D]  freada 10 m mais cedo  linha 2 m para dentro
+BLOCO 4
+  volta 18  [B]  freada 10 m mais cedo  linha habitual
+  volta 19  [C]  freada habitual        linha 2 m para dentro
+  volta 20  [D]  freada 10 m mais cedo  linha 2 m para dentro
+  volta 21  [A]  freada habitual        linha habitual
+BLOCO 5
+  volta 22  [D]  freada 10 m mais cedo  linha 2 m para dentro
+  volta 23  [B]  freada 10 m mais cedo  linha habitual
+  volta 24  [C]  freada habitual        linha 2 m para dentro
+  volta 25  [A]  freada habitual        linha habitual
+BLOCO 6
+  volta 26  [D]  freada 10 m mais cedo  linha 2 m para dentro
+  volta 27  [A]  freada habitual        linha habitual
+  volta 28  [B]  freada 10 m mais cedo  linha habitual
+  volta 29  [C]  freada habitual        linha 2 m para dentro
+BLOCO 7
+  volta 30  [A]  freada habitual        linha habitual
+  volta 31  [D]  freada 10 m mais cedo  linha 2 m para dentro
+  volta 32  [C]  freada habitual        linha 2 m para dentro
+  volta 33  [B]  freada 10 m mais cedo  linha habitual
+BLOCO 8
+  volta 34  [B]  freada 10 m mais cedo  linha habitual
+  volta 35  [C]  freada habitual        linha 2 m para dentro
+  volta 36  [D]  freada 10 m mais cedo  linha 2 m para dentro
+  volta 37  [A]  freada habitual        linha habitual

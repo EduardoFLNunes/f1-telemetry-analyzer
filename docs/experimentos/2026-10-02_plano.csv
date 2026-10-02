@@ -1,0 +1,38 @@
+ordem,bloco,condicao,freada,linha,curva,semente
+1,0,AQ,livre,livre,Bico de Pato,2026
+2,0,AQ,livre,livre,Bico de Pato,2026
+3,0,AQ,livre,livre,Bico de Pato,2026
+4,0,AQ,livre,livre,Bico de Pato,2026
+5,0,AQ,livre,livre,Bico de Pato,2026
+6,1,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
+7,1,B,10 m mais cedo,habitual,Bico de Pato,2026
+8,1,A,habitual,habitual,Bico de Pato,2026
+9,1,C,habitual,2 m para dentro,Bico de Pato,2026
+10,2,A,habitual,habitual,Bico de Pato,2026
+11,2,B,10 m mais cedo,habitual,Bico de Pato,2026
+12,2,C,habitual,2 m para dentro,Bico de Pato,2026
+13,2,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
+14,3,A,habitual,habitual,Bico de Pato,2026
+15,3,B,10 m mais cedo,habitual,Bico de Pato,2026
+16,3,C,habitual,2 m para dentro,Bico de Pato,2026
+17,3,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
+18,4,B,10 m mais cedo,habitual,Bico de Pato,2026
+19,4,C,habitual,2 m para dentro,Bico de Pato,2026
+20,4,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
+21,4,A,habitual,habitual,Bico de Pato,2026
+22,5,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
+23,5,B,10 m mais cedo,habitual,Bico de Pato,2026
+24,5,C,habitual,2 m para dentro,Bico de Pato,2026
+25,5,A,habitual,habitual,Bico de Pato,2026
+26,6,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
+27,6,A,habitual,habitual,Bico de Pato,2026
+28,6,B,10 m mais cedo,habitual,Bico de Pato,2026
+29,6,C,habitual,2 m para dentro,Bico de Pato,2026
+30,7,A,habitual,habitual,Bico de Pato,2026
+31,7,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
+32,7,C,habitual,2 m para dentro,Bico de Pato,2026
+33,7,B,10 m mais cedo,habitual,Bico de Pato,2026
+34,8,B,10 m mais cedo,habitual,Bico de Pato,2026
+35,8,C,habitual,2 m para dentro,Bico de Pato,2026
+36,8,D,10 m mais cedo,2 m para dentro,Bico de Pato,2026
+37,8,A,habitual,habitual,Bico de Pato,2026
