@@ -21,3 +21,7 @@ numpy>=1.24
 pandas>=2.0
 scipy>=1.10
 pyarrow>=14.0
+
+# Estimadores da Fase 2b (ADR 0010): ridge (E2), KNN de regressao (E3) e
+# Processo Gaussiano (E4). Versao fixada na que foi instalada e validada.
+scikit-learn==1.6.1
