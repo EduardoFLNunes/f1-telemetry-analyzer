@@ -38,7 +38,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from ml import config
 from ml.data.inventory import scan_sessions
 from ml.data.lap_store import build_store, load_store
-from ml.data.recordings import list_sessions
+from ml.data.recordings import iter_laps, list_sessions
 from ml.optimization.lap_time_model import step_times
 from ml.track.corners import detect_corners
 from ml.track.geometry import load_geometry
@@ -54,6 +54,46 @@ def _sha256(path: Path) -> Dict[str, object]:
         for chunk in iter(lambda: handle.read(1 << 20), b""):
             digest.update(chunk)
     return {"caminho": str(path.relative_to(config.repo_root())), "sha256": digest.hexdigest(), "bytes": path.stat().st_size}
+
+
+def lap_clock(session) -> pd.DataFrame:
+    """Tempo de volta (cronometro do jogo) e hora do relogio de cada volta gravada.
+
+    E o que o piloto viu na tela, e serve para ele reconhecer na lista uma volta
+    que anotou como invalida.
+
+    A hora e ancorada no `startedAt` do `metadata.json` (o relogio do PC, o
+    mesmo do nome da sessao), e nao no `timestamp` das amostras: medido em 5
+    sessoes de maio a agosto, convertido pelo fuso local o `timestamp` da 3 h a
+    mais que o `startedAt`. A diferenca entre timestamps continua valendo, entao
+    hora = startedAt + (inicio da volta - primeira amostra da sessao). Sem
+    `startedAt`, a hora sai vazia em vez de errada.
+    """
+    import datetime as dt
+
+    laps = list(iter_laps(session, min_samples=1))
+    started = session.metadata().get("startedAt")
+    try:
+        anchor = dt.datetime.fromisoformat(str(started)) if started else None
+    except ValueError:
+        anchor = None
+    stamps = [lap.frame["timestamp_s"].dropna() for lap in laps]
+    first = min((float(s.iloc[0]) for s in stamps if len(s)), default=None)
+
+    rows = []
+    for lap, stamp in zip(laps, stamps):
+        chrono = lap.frame["lap_time_s"].dropna()
+        clock = ""
+        if anchor is not None and first is not None and len(stamp):
+            clock = (anchor + dt.timedelta(seconds=float(stamp.iloc[0]) - first)).strftime("%H:%M:%S")
+        rows.append(
+            {
+                "lap_id": lap.lap_id,
+                "lap_time_s": float(chrono.max()) if len(chrono) else float("nan"),
+                "clock": clock,
+            }
+        )
+    return pd.DataFrame(rows, columns=["lap_id", "lap_time_s", "clock"])
 
 
 def lap_measures(store, windows, k, track) -> pd.DataFrame:
@@ -206,6 +246,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     corners = detect_corners(track)
     print(f"lendo {session.session_id}...", flush=True)
     inventory = scan_sessions([session], track)
+    inventory = inventory.merge(lap_clock(session), on="lap_id", how="left")
     try:
         matched = ct.match_laps(inventory, plan, invalid)
     except ct.PlanMismatchError as error:
@@ -262,6 +303,16 @@ def main(argv: Optional[List[str]] = None) -> int:
             _sha256(config.artifacts_root() / "laps_grid_meta.json"),
         ],
         "voltas": matched.drop(columns=["status"], errors="ignore").to_dict(orient="records"),
+        "voltas_gravadas": [
+            {
+                "lap_id": r["lap_id"],
+                "volta_no_jogo": int(r["lap_number"]),
+                "tempo_s": r.get("lap_time_s"),
+                "hora": r.get("clock"),
+                "valida_nos_gates": bool(r["valid"]),
+            }
+            for _, r in inventory.sort_values("sequence").iterrows()
+        ],
         "conferencia_da_execucao": execution,
         "efeitos": effects,
         "entradas_para_os_estimadores": inputs,

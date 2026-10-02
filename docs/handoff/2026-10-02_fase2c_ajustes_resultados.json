@@ -1,0 +1,28 @@
+{
+  "etapa": "fase2c-ajustes",
+  "base_do_patch": "handoff/fase2c-ferramentas",
+  "patch_sha256": "1f035a774969cdfe0b2f06a6d92b728dce563d945a109d1ef1ec6738c1a73672",
+  "pytest": "427 passed, 4 warnings",
+  "ic": {
+    "distribuicao": "t",
+    "graus_de_liberdade": 21,
+    "sessoes_sinteticas": 4000,
+    "erro_padrao_cobertura": 0.0034,
+    "cobertura": {
+      "frenagem": 0.9533,
+      "linha": 0.948,
+      "interacao": 0.952,
+      "B_menos_A": 0.9507,
+      "C_menos_A": 0.949,
+      "D_menos_A": 0.949
+    }
+  },
+  "lista_de_voltas": {
+    "campos": [
+      "volta no jogo",
+      "tempo de volta (cronometro do jogo)",
+      "hora"
+    ],
+    "hora": "startedAt + (timestamp - primeira amostra); timestamp convertido pelo fuso local da +3 h em 5 sessoes conferidas"
+  }
+}

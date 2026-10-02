@@ -1,0 +1,216 @@
+diff --git a/backend/ml/scripts/analyze_controlled_session.py b/backend/ml/scripts/analyze_controlled_session.py
+index 8bc0fc19..2885a62f 100644
+--- a/backend/ml/scripts/analyze_controlled_session.py
++++ b/backend/ml/scripts/analyze_controlled_session.py
+@@ -38,7 +38,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+ from ml import config
+ from ml.data.inventory import scan_sessions
+ from ml.data.lap_store import build_store, load_store
+-from ml.data.recordings import list_sessions
++from ml.data.recordings import iter_laps, list_sessions
+ from ml.optimization.lap_time_model import step_times
+ from ml.track.corners import detect_corners
+ from ml.track.geometry import load_geometry
+@@ -56,6 +56,46 @@ def _sha256(path: Path) -> Dict[str, object]:
+     return {"caminho": str(path.relative_to(config.repo_root())), "sha256": digest.hexdigest(), "bytes": path.stat().st_size}
+ 
+ 
++def lap_clock(session) -> pd.DataFrame:
++    """Tempo de volta (cronometro do jogo) e hora do relogio de cada volta gravada.
++
++    E o que o piloto viu na tela, e serve para ele reconhecer na lista uma volta
++    que anotou como invalida.
++
++    A hora e ancorada no `startedAt` do `metadata.json` (o relogio do PC, o
++    mesmo do nome da sessao), e nao no `timestamp` das amostras: medido em 5
++    sessoes de maio a agosto, convertido pelo fuso local o `timestamp` da 3 h a
++    mais que o `startedAt`. A diferenca entre timestamps continua valendo, entao
++    hora = startedAt + (inicio da volta - primeira amostra da sessao). Sem
++    `startedAt`, a hora sai vazia em vez de errada.
++    """
++    import datetime as dt
++
++    laps = list(iter_laps(session, min_samples=1))
++    started = session.metadata().get("startedAt")
++    try:
++        anchor = dt.datetime.fromisoformat(str(started)) if started else None
++    except ValueError:
++        anchor = None
++    stamps = [lap.frame["timestamp_s"].dropna() for lap in laps]
++    first = min((float(s.iloc[0]) for s in stamps if len(s)), default=None)
++
++    rows = []
++    for lap, stamp in zip(laps, stamps):
++        chrono = lap.frame["lap_time_s"].dropna()
++        clock = ""
++        if anchor is not None and first is not None and len(stamp):
++            clock = (anchor + dt.timedelta(seconds=float(stamp.iloc[0]) - first)).strftime("%H:%M:%S")
++        rows.append(
++            {
++                "lap_id": lap.lap_id,
++                "lap_time_s": float(chrono.max()) if len(chrono) else float("nan"),
++                "clock": clock,
++            }
++        )
++    return pd.DataFrame(rows, columns=["lap_id", "lap_time_s", "clock"])
++
++
+ def lap_measures(store, windows, k, track) -> pd.DataFrame:
+     """Medidas da janela-alvo em cada volta do store da sessao."""
+     profiles = cf.lap_profiles(store, track, build_microsectors(track))
+@@ -206,6 +246,7 @@ def main(argv: Optional[List[str]] = None) -> int:
+     corners = detect_corners(track)
+     print(f"lendo {session.session_id}...", flush=True)
+     inventory = scan_sessions([session], track)
++    inventory = inventory.merge(lap_clock(session), on="lap_id", how="left")
+     try:
+         matched = ct.match_laps(inventory, plan, invalid)
+     except ct.PlanMismatchError as error:
+@@ -262,6 +303,16 @@ def main(argv: Optional[List[str]] = None) -> int:
+             _sha256(config.artifacts_root() / "laps_grid_meta.json"),
+         ],
+         "voltas": matched.drop(columns=["status"], errors="ignore").to_dict(orient="records"),
++        "voltas_gravadas": [
++            {
++                "lap_id": r["lap_id"],
++                "volta_no_jogo": int(r["lap_number"]),
++                "tempo_s": r.get("lap_time_s"),
++                "hora": r.get("clock"),
++                "valida_nos_gates": bool(r["valid"]),
++            }
++            for _, r in inventory.sort_values("sequence").iterrows()
++        ],
+         "conferencia_da_execucao": execution,
+         "efeitos": effects,
+         "entradas_para_os_estimadores": inputs,
+diff --git a/backend/ml/validation/controlled.py b/backend/ml/validation/controlled.py
+index 34d689d4..c203b3ea 100644
+--- a/backend/ml/validation/controlled.py
++++ b/backend/ml/validation/controlled.py
+@@ -140,6 +140,24 @@ def plan_text(plan: pd.DataFrame) -> str:
+ 
+ # ------------------------------------------------------- casar voltas ---
+ 
++def lap_label(row) -> str:
++    """O que o piloto viu na tela: numero da volta no jogo, tempo e hora.
++
++    `lap_time_s` (cronometro do jogo no fim da volta) e `clock` (hora do relogio
++    no inicio dela) sao opcionais; o script de analise os preenche a partir da
++    gravacao.
++    """
++    parts = [f"volta {int(row['lap_number'])} no jogo"]
++    lap_time = row.get("lap_time_s")
++    if lap_time is not None and np.isfinite(lap_time):
++        minutes, seconds = divmod(float(lap_time), 60.0)
++        parts.append(f"tempo {int(minutes)}:{seconds:06.3f}")
++    clock = row.get("clock")
++    if isinstance(clock, str) and clock:
++        parts.append(f"as {clock}")
++    return "(" + ", ".join(parts) + ")"
++
++
+ class PlanMismatchError(ValueError):
+     """As voltas da gravacao nao casam com o plano. Nunca se adivinha."""
+ 
+@@ -181,7 +199,7 @@ def match_laps(laps: pd.DataFrame, plan: pd.DataFrame, invalid: Sequence[int] =
+ 
+     if len(usable) != len(plan):
+         listing = "\n".join(
+-            f"  gravada n. {i + 1:>2}  {r['lap_id']}  (volta {int(r['lap_number'])} no jogo): {r['status']}"
++            f"  gravada n. {i + 1:>2}  {lap_label(r)}  {r['lap_id']}: {r['status']}"
+             for i, (_, r) in enumerate(ordered.iterrows())
+         )
+         raise PlanMismatchError(
+diff --git a/backend/tests/test_ml_controlled.py b/backend/tests/test_ml_controlled.py
+index f0a103d0..7a909851 100644
+--- a/backend/tests/test_ml_controlled.py
++++ b/backend/tests/test_ml_controlled.py
+@@ -116,14 +116,23 @@ class EffectRecoveryTest(unittest.TestCase):
+         self.assertGreater(effects["frenagem"]["ic95_s"][0], 0.0)
+ 
+     def test_intervals_have_their_nominal_coverage(self):
++        # IC pela t com os graus de liberdade do residuo: 32 voltas - 4 condicoes
++        # - 7 blocos = 21. Em 1000 sessoes o erro-padrao da cobertura e 0,7
++        # ponto, entao 93-97 % e o nominal com folga de ~3 erros-padrao.
+         plan = ct.make_plan(seed=2026)
+-        hits = 0
+-        runs = 300
++        measured = plan[plan["condicao"] != ct.WARMUP]
++        truth = {"frenagem": BRAKING_COST_S, "linha": LINE_COST_S, "interacao": 0.0}
++        hits = dict.fromkeys(truth, 0)
++        runs = 1000
+         for seed in range(runs):
+-            _, _, effects = analyse(synthetic_session(seed=seed, plan=plan), plan)
+-            hits += inside(effects["frenagem"], BRAKING_COST_S)
+-        self.assertGreater(hits / runs, 0.90)
+-        self.assertLess(hits / runs, 0.99)
++            times = synthetic_session(seed=seed, plan=plan)["tempo_janela_s"].to_numpy()[1:][len(plan) - len(measured):]
++            effects = ct.estimate_effects(times, measured["condicao"].to_numpy(), measured["bloco"].to_numpy())
++            self.assertEqual(effects["_modelo"]["graus_de_liberdade"], 21)
++            for name, value in truth.items():
++                hits[name] += inside(effects[name], value)
++        for name in truth:
++            self.assertGreater(hits[name] / runs, 0.93, name)
++            self.assertLess(hits[name] / runs, 0.97, name)
+ 
+     def test_an_interaction_is_detected(self):
+         plan = ct.make_plan(seed=2026)
+@@ -190,6 +199,17 @@ class MatchingTest(unittest.TestCase):
+         self.assertIn("S#0000", message)            # lista cada volta, com o motivo
+         self.assertIn("faltam 900 m", message)
+ 
++    def test_the_lap_list_shows_what_the_driver_saw(self):
++        table = self.table.iloc[:-1].copy()
++        table["lap_time_s"] = 85.0 + np.arange(len(table)) * 0.1
++        table["clock"] = [f"20:{i // 60:02d}:{i % 60:02d}" for i in range(len(table))]
++        table.loc[table.index[0], "lap_time_s"] = np.nan          # volta sem cronometro
++        with self.assertRaises(ct.PlanMismatchError) as caught:
++            ct.match_laps(table, self.plan)
++        message = str(caught.exception)
++        self.assertIn("(volta 2 no jogo, tempo 1:25.100, as 20:00:01)", message)
++        self.assertIn("(volta 1 no jogo, as 20:00:00)", message)
++
+     def test_a_declared_invalid_lap_is_removed_and_the_rest_matches(self):
+         extra = pd.DataFrame(
+             [{"lap_id": "S#9999", "sequence": 10.5, "lap_number": 99, "valid": True, "reasons": ""}]
+diff --git a/docs/fase2c_ferramentas_experimento.md b/docs/fase2c_ferramentas_experimento.md
+index ec818b32..03ba2058 100644
+--- a/docs/fase2c_ferramentas_experimento.md
++++ b/docs/fase2c_ferramentas_experimento.md
+@@ -178,3 +178,36 @@ em ~15 linhas o que `validate_empirical.py` faz dentro de cada rodada. Preferi
+ isso a mexer no código de uma fase já entregue.
+ 
+ Nada da interface, do `optimal.json` ou das LSTMs foi tocado.
++
++---
++
++## 8. Ajustes de 2026-10-02 (branch `etapa/fase2c-ajustes`)
++
++**Intervalo de confiança.** Conferido: o IC já usava a distribuição t com os
++graus de liberdade do resíduo. Com 8 blocos são 32 voltas − 4 condições −
++7 blocos = 21, e não a normal. Os "90 % a 99 %" citados antes eram só a
++tolerância folgada do teste com 300 sessões, não a cobertura medida. Medida com
++4000 sessões sintéticas (erro-padrão de ±0,3 ponto), a cobertura ficou em:
++
++| contraste | cobertura do IC 95 % |
++|---|---:|
++| frenagem | 95,3 % |
++| linha | 94,8 % |
++| interação | 95,2 % |
++| B − A | 95,1 % |
++| C − A | 94,9 % |
++| D − A | 94,9 % |
++
++O teste passou a usar 1000 sessões, os três efeitos principais e tolerância de
++93 % a 97 %.
++
++**Lista de voltas.** Quando a análise para, cada volta gravada aparece com o
++número da volta no jogo, o tempo de volta (o cronômetro do jogo) e a hora. Por
++exemplo: `(volta 4 no jogo, tempo 1:34.290, as 03:36:10)`. A lista também vai
++para o JSON do resultado (`voltas_gravadas`).
++
++A hora vem do `startedAt` do `metadata.json`, que é o relógio do PC, somado ao
++tempo decorrido desde a primeira amostra. Ela **não** vem direto do `timestamp`
++gravado: nas 5 sessões conferidas (maio a agosto), converter o `timestamp` pelo
++fuso local dá sempre 3 h a mais que o `startedAt`. A causa no gravador não foi
++investigada nesta etapa.
