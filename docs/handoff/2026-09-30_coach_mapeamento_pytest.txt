@@ -1,0 +1,48 @@
+============================= test session starts =============================
+platform win32 -- Python 3.9.7, pytest-8.4.2, pluggy-1.6.0
+rootdir: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.claude\worktrees\elastic-kepler-a8182e\backend
+plugins: anyio-4.12.1
+collected 400 items
+
+tests\test_assetto_shared_memory_gate.py ......................          [  5%]
+tests\test_assisted_analysis.py .....                                    [  6%]
+tests\test_assisted_analysis_validation_flow.py ........                 [  8%]
+tests\test_cache_round_trip.py ..........                                [ 11%]
+tests\test_car_physics.py .....                                          [ 12%]
+tests\test_comparison_analysis.py .......                                [ 14%]
+tests\test_data_quality.py ...................                           [ 19%]
+tests\test_driving_coach.py .................                            [ 23%]
+tests\test_external_references.py ........                               [ 25%]
+tests\test_gate_status_cache.py .......                                  [ 27%]
+tests\test_limit_corridor.py ..........                                  [ 29%]
+tests\test_marking_classification.py ..........                          [ 32%]
+tests\test_ml_counterfactual.py .......                                  [ 33%]
+tests\test_ml_data_integrity.py .............                            [ 37%]
+tests\test_ml_export.py ...........                                      [ 39%]
+tests\test_ml_models.py .....................                            [ 45%]
+tests\test_ml_pipeline.py ........................................       [ 55%]
+tests\test_ml_service.py ......                                          [ 56%]
+tests\test_off_track_signal.py .....                                     [ 57%]
+tests\test_opponents.py ..............                                   [ 61%]
+tests\test_optimal_line.py .................                             [ 65%]
+tests\test_paint_agreement.py ..........                                 [ 68%]
+tests\test_paint_edge_correction.py ...............                      [ 71%]
+tests\test_pit_corridor_width.py ........                                [ 73%]
+tests\test_racing_line_analysis.py ..............                        [ 77%]
+tests\test_recording.py ...                                              [ 78%]
+tests\test_recording_capture_gate.py ........                            [ 80%]
+tests\test_recording_schemas.py ........                                 [ 82%]
+tests\test_reference_model.py ...............                            [ 85%]
+tests\test_runtime_performance.py ..........                             [ 88%]
+tests\test_session_repository.py .....                                   [ 89%]
+tests\test_telemetry_buffer.py ...                                       [ 90%]
+tests\test_telemetry_event_bus.py .                                      [ 90%]
+tests\test_telemetry_runtime_backoff.py ....                             [ 91%]
+tests\test_track_edge_fallback_continuity.py .....                       [ 92%]
+tests\test_track_geometry_provider.py ..                                 [ 93%]
+tests\test_track_limits_detector.py ...........                          [ 96%]
+tests\test_udp_integration_contract.py ....                              [ 97%]
+tests\test_websocket_server.py ......                                    [ 98%]
+tests\test_width_continuity.py ......                                    [100%]
+
+============================ 400 passed in 23.74s =============================

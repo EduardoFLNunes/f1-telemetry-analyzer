@@ -5,16 +5,24 @@ microsetores tem comprimento fixo, e tudo que ele produz esta indexado por
 distancia percorrida. O coach pensa em **progresso**: recebe `p` de 0 a 1 do
 runtime e corta a volta em sessenta fatias iguais nesse eixo.
 
-Os dois eixos nao sao a mesma coisa, e a diferenca nao e desprezivel. O `p` do
-runtime e o indice da amostra da centerline sobre o total de amostras -- e a
-centerline nao e equidistante: os passos vao de 1,4 a 5,0 m. Medido no cache de
-Interlagos, `p` por indice e `p` por distancia divergem em ate 0,0059, que sao
-25 m de pista. Um microsetor tem 72 m. Converter por regra de tres colocaria o
-alvo de cada fatia a um terco de microsetor do asfalto a que ele pertence.
+Os dois eixos nao sao a mesma coisa, e a diferenca nao e desprezivel. Ha duas
+reguas no caminho, e as duas ja enganaram este modulo:
 
-Entao a conversao usa o proprio vetor `p` gravado no cache de geometria, que e
-exatamente o que o runtime projeta. E o unico jeito de os dois lados falarem do
-mesmo pedaco de pista.
+* **o `p` do runtime e distancia, nao indice.** `ProjectionEngine.project_car`
+  devolve `p = distanceAlongTrack / total`, com `distanceAlongTrack` medido no
+  campo `distance` dos vertices do cache e `total` incluindo o segmento que
+  fecha o laco. O vetor `p` gravado no cache e outra coisa -- indice do vertice
+  sobre o total -- e diverge do `p` do runtime em ate 0,0058, 25 m de pista.
+* **os metros do runtime nao sao os metros do ML.** O runtime mede a poligonal
+  crua do cache; `load_geometry` conserta degraus, aplica um passa baixo de 60
+  m e reparametriza por comprimento de arco. Os dois `s` coincidem na linha e
+  se afastam em ate ~30 m no meio da volta.
+
+Um microsetor do coach tem 72 m. Somados, os dois erros punham o alvo de uma
+fatia a ate dois tercos de microsetor do asfalto a que ele pertence. A conversao
+entao passa pelo mundo: `p` -> distancia na poligonal do runtime -> ponto
+world X/Z -> projecao na grade do ML. E o unico caminho em que os dois lados
+falam do mesmo pedaco de pista.
 
 O que sai daqui e JSON puro, de proposito: o backend empacotado le estes numeros
 sem importar `ml`, sem PyTorch e sem SciPy. A rede e a busca ja rodaram, offline;
@@ -70,15 +78,71 @@ class OptimalLineTargets:
         return path
 
 
+def _runtime_polygon(raw: Dict[str, Any]) -> Any:
+    """Vertices da centerline e o `p` que o runtime da a cada um.
+
+    Reproduz `ProjectionEngine`: a distancia vem do campo `distance` do vertice
+    e o total, num laco fechado, soma o segmento do ultimo vertice de volta ao
+    primeiro. O vertice 0 e repetido no fim com `p = 1`, porque o runtime
+    tambem percorre esse segmento e um `p` de 0,9997 tem de cair nele.
+    """
+    centre = np.array([[p["x"], p["z"]] for p in raw["centerline"]], dtype=float)
+    steps = np.linalg.norm(np.diff(centre, axis=0), axis=1)
+    cumulative = np.concatenate([[0.0], np.cumsum(steps)])
+    stored = [p.get("distance") for p in raw["centerline"]]
+    if all(value is not None for value in stored):
+        distance = np.asarray(stored, dtype=float)
+    else:
+        # Cache sem `distance`: o runtime le 0 e quebra; o melhor que da para
+        # fazer aqui e a propria poligonal.
+        distance = cumulative
+
+    if bool(raw.get("closedLoop", True)):
+        total = float(distance[-1] + np.linalg.norm(centre[-1] - centre[0]))
+        centre = np.vstack([centre, centre[:1]])
+        distance = np.append(distance, total)
+    else:
+        total = float(distance[-1])
+    if total <= 0.0:
+        raise ValueError("centerline degenerada")
+    return centre, distance / total
+
+
+def _projected_distance(track: TrackGeometry, points: np.ndarray) -> np.ndarray:
+    """`s` do ML de cada vertice cru, desenrolado numa volta so e monotono.
+
+    A projecao devolve `s` em [0, length): o vertice 0 pode cair alguns
+    centimetros antes da linha (s ~ length) e o vertice de fecho logo depois
+    dela (s ~ 0). Desenrolar pelos passos entre vertices consecutivos poe a
+    volta inteira numa regua continua ancorada no vertice 0.
+
+    O maximo acumulado e para os trechos que `load_geometry` conserta: ali o
+    vertice cru salta metros de lado e a projecao pode recuar alguns
+    centimetros. Um `s(p)` que anda para tras daria fatia de tempo negativo.
+    """
+    projected, _ = track.project_sequence(points)
+    length = float(track.length)
+    steps = np.mod(np.diff(projected) + length / 2.0, length) - length / 2.0
+    first = projected[0] if projected[0] < length / 2.0 else projected[0] - length
+    distance = first + np.concatenate([[0.0], np.cumsum(steps)])
+    return np.maximum.accumulate(distance)
+
+
 def progress_to_distance(
-    geometry_path: Optional[Path] = None, track_length: Optional[float] = None
+    geometry_path: Optional[Path] = None,
+    track_length: Optional[float] = None,
+    track: Optional[TrackGeometry] = None,
 ) -> Any:
     """Devolve `s(p)`: dado o progresso do runtime, quantos metros de pista.
 
-    Le o vetor `p` do cache -- o mesmo que o runtime projeta -- e a distancia
-    acumulada ao longo da centerline. A distancia e reescalada para o
-    `trackLength` declarado, porque a poligonal soma 4332,3 m contra 4334,1 m
-    declarados: sem isso as duas pontas do mapeamento nao fechariam.
+    Com `track`, os metros sao o `s` da grade do ML: cada vertice da poligonal
+    do runtime e projetado na centerline de `track`, e `s(p)` interpola entre
+    eles. E o modo que `build_targets` usa, e o unico que serve para cortar
+    algo indexado pela grade de `load_geometry`.
+
+    Sem `track`, os metros sao os do proprio runtime -- `p` vezes o comprimento
+    da poligonal fechada -- reescalados para `track_length` (ou o `trackLength`
+    declarado) para as pontas fecharem.
     """
     path = (
         Path(geometry_path)
@@ -86,28 +150,18 @@ def progress_to_distance(
         else config.track_cache_root() / config.INTERLAGOS_GEOMETRY_FILE
     )
     raw = json.loads(path.read_text(encoding="utf-8"))
-    centre = np.array([[p["x"], p["z"]] for p in raw["centerline"]], dtype=float)
-    stored = raw.get("p")
+    points, progress = _runtime_polygon(raw)
 
-    steps = np.linalg.norm(np.diff(centre, axis=0), axis=1)
-    cumulative = np.concatenate([[0.0], np.cumsum(steps)])
-    total = float(cumulative[-1])
-    if total <= 0.0:
-        raise ValueError(f"centerline degenerada em {path}")
-
-    length = float(track_length if track_length else raw["trackLength"])
-    distance = cumulative / total * length
-
-    if stored is not None and len(stored) == len(centre):
-        progress = np.asarray(stored, dtype=float)
+    if track is not None:
+        distance = _projected_distance(track, points)
     else:
-        # O cache antigo pode nao trazer `p`; o runtime o calcula assim.
-        progress = np.arange(len(centre), dtype=float) / max(len(centre) - 1, 1)
+        length = float(track_length if track_length else raw["trackLength"])
+        distance = progress * length
 
-    # `np.interp` exige o eixo de entrada crescente. `p` por indice ja e, mas
-    # um cache remendado poderia nao ser, e um mapeamento fora de ordem erra em
-    # silencio.
-    order = np.argsort(progress)
+    # `np.interp` exige o eixo de entrada crescente. A distancia do cache ja e,
+    # mas um cache remendado poderia nao ser, e um mapeamento fora de ordem erra
+    # em silencio.
+    order = np.argsort(progress, kind="stable")
     progress, distance = progress[order], distance[order]
 
     def s_of_p(values):
@@ -171,7 +225,7 @@ def build_targets(
     speed = frame["speed_kmh"].to_numpy(dtype=float)
     lap_seconds = float(frame["lap_time_s"].iloc[0])
 
-    s_of_p = progress_to_distance(geometry_path, track_length=track.length)
+    s_of_p = progress_to_distance(geometry_path, track_length=track.length, track=track)
     edges_p = np.arange(microsectors + 1, dtype=float) / microsectors
     edges_s = s_of_p(edges_p)
     # As pontas sao ancoradas: `p=0` e a linha de chegada e `p=1` e a mesma
