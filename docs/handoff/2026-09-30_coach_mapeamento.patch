@@ -1,0 +1,739 @@
+diff --git a/backend/ml/export/coaching.py b/backend/ml/export/coaching.py
+index 85cdc8d7..c5c8b0df 100644
+--- a/backend/ml/export/coaching.py
++++ b/backend/ml/export/coaching.py
+@@ -5,16 +5,24 @@ microsetores tem comprimento fixo, e tudo que ele produz esta indexado por
+ distancia percorrida. O coach pensa em **progresso**: recebe `p` de 0 a 1 do
+ runtime e corta a volta em sessenta fatias iguais nesse eixo.
+ 
+-Os dois eixos nao sao a mesma coisa, e a diferenca nao e desprezivel. O `p` do
+-runtime e o indice da amostra da centerline sobre o total de amostras -- e a
+-centerline nao e equidistante: os passos vao de 1,4 a 5,0 m. Medido no cache de
+-Interlagos, `p` por indice e `p` por distancia divergem em ate 0,0059, que sao
+-25 m de pista. Um microsetor tem 72 m. Converter por regra de tres colocaria o
+-alvo de cada fatia a um terco de microsetor do asfalto a que ele pertence.
+-
+-Entao a conversao usa o proprio vetor `p` gravado no cache de geometria, que e
+-exatamente o que o runtime projeta. E o unico jeito de os dois lados falarem do
+-mesmo pedaco de pista.
++Os dois eixos nao sao a mesma coisa, e a diferenca nao e desprezivel. Ha duas
++reguas no caminho, e as duas ja enganaram este modulo:
++
++* **o `p` do runtime e distancia, nao indice.** `ProjectionEngine.project_car`
++  devolve `p = distanceAlongTrack / total`, com `distanceAlongTrack` medido no
++  campo `distance` dos vertices do cache e `total` incluindo o segmento que
++  fecha o laco. O vetor `p` gravado no cache e outra coisa -- indice do vertice
++  sobre o total -- e diverge do `p` do runtime em ate 0,0058, 25 m de pista.
++* **os metros do runtime nao sao os metros do ML.** O runtime mede a poligonal
++  crua do cache; `load_geometry` conserta degraus, aplica um passa baixo de 60
++  m e reparametriza por comprimento de arco. Os dois `s` coincidem na linha e
++  se afastam em ate ~30 m no meio da volta.
++
++Um microsetor do coach tem 72 m. Somados, os dois erros punham o alvo de uma
++fatia a ate dois tercos de microsetor do asfalto a que ele pertence. A conversao
++entao passa pelo mundo: `p` -> distancia na poligonal do runtime -> ponto
++world X/Z -> projecao na grade do ML. E o unico caminho em que os dois lados
++falam do mesmo pedaco de pista.
+ 
+ O que sai daqui e JSON puro, de proposito: o backend empacotado le estes numeros
+ sem importar `ml`, sem PyTorch e sem SciPy. A rede e a busca ja rodaram, offline;
+@@ -70,15 +78,71 @@ class OptimalLineTargets:
+         return path
+ 
+ 
++def _runtime_polygon(raw: Dict[str, Any]) -> Any:
++    """Vertices da centerline e o `p` que o runtime da a cada um.
++
++    Reproduz `ProjectionEngine`: a distancia vem do campo `distance` do vertice
++    e o total, num laco fechado, soma o segmento do ultimo vertice de volta ao
++    primeiro. O vertice 0 e repetido no fim com `p = 1`, porque o runtime
++    tambem percorre esse segmento e um `p` de 0,9997 tem de cair nele.
++    """
++    centre = np.array([[p["x"], p["z"]] for p in raw["centerline"]], dtype=float)
++    steps = np.linalg.norm(np.diff(centre, axis=0), axis=1)
++    cumulative = np.concatenate([[0.0], np.cumsum(steps)])
++    stored = [p.get("distance") for p in raw["centerline"]]
++    if all(value is not None for value in stored):
++        distance = np.asarray(stored, dtype=float)
++    else:
++        # Cache sem `distance`: o runtime le 0 e quebra; o melhor que da para
++        # fazer aqui e a propria poligonal.
++        distance = cumulative
++
++    if bool(raw.get("closedLoop", True)):
++        total = float(distance[-1] + np.linalg.norm(centre[-1] - centre[0]))
++        centre = np.vstack([centre, centre[:1]])
++        distance = np.append(distance, total)
++    else:
++        total = float(distance[-1])
++    if total <= 0.0:
++        raise ValueError("centerline degenerada")
++    return centre, distance / total
++
++
++def _projected_distance(track: TrackGeometry, points: np.ndarray) -> np.ndarray:
++    """`s` do ML de cada vertice cru, desenrolado numa volta so e monotono.
++
++    A projecao devolve `s` em [0, length): o vertice 0 pode cair alguns
++    centimetros antes da linha (s ~ length) e o vertice de fecho logo depois
++    dela (s ~ 0). Desenrolar pelos passos entre vertices consecutivos poe a
++    volta inteira numa regua continua ancorada no vertice 0.
++
++    O maximo acumulado e para os trechos que `load_geometry` conserta: ali o
++    vertice cru salta metros de lado e a projecao pode recuar alguns
++    centimetros. Um `s(p)` que anda para tras daria fatia de tempo negativo.
++    """
++    projected, _ = track.project_sequence(points)
++    length = float(track.length)
++    steps = np.mod(np.diff(projected) + length / 2.0, length) - length / 2.0
++    first = projected[0] if projected[0] < length / 2.0 else projected[0] - length
++    distance = first + np.concatenate([[0.0], np.cumsum(steps)])
++    return np.maximum.accumulate(distance)
++
++
+ def progress_to_distance(
+-    geometry_path: Optional[Path] = None, track_length: Optional[float] = None
++    geometry_path: Optional[Path] = None,
++    track_length: Optional[float] = None,
++    track: Optional[TrackGeometry] = None,
+ ) -> Any:
+     """Devolve `s(p)`: dado o progresso do runtime, quantos metros de pista.
+ 
+-    Le o vetor `p` do cache -- o mesmo que o runtime projeta -- e a distancia
+-    acumulada ao longo da centerline. A distancia e reescalada para o
+-    `trackLength` declarado, porque a poligonal soma 4332,3 m contra 4334,1 m
+-    declarados: sem isso as duas pontas do mapeamento nao fechariam.
++    Com `track`, os metros sao o `s` da grade do ML: cada vertice da poligonal
++    do runtime e projetado na centerline de `track`, e `s(p)` interpola entre
++    eles. E o modo que `build_targets` usa, e o unico que serve para cortar
++    algo indexado pela grade de `load_geometry`.
++
++    Sem `track`, os metros sao os do proprio runtime -- `p` vezes o comprimento
++    da poligonal fechada -- reescalados para `track_length` (ou o `trackLength`
++    declarado) para as pontas fecharem.
+     """
+     path = (
+         Path(geometry_path)
+@@ -86,28 +150,18 @@ def progress_to_distance(
+         else config.track_cache_root() / config.INTERLAGOS_GEOMETRY_FILE
+     )
+     raw = json.loads(path.read_text(encoding="utf-8"))
+-    centre = np.array([[p["x"], p["z"]] for p in raw["centerline"]], dtype=float)
+-    stored = raw.get("p")
+-
+-    steps = np.linalg.norm(np.diff(centre, axis=0), axis=1)
+-    cumulative = np.concatenate([[0.0], np.cumsum(steps)])
+-    total = float(cumulative[-1])
+-    if total <= 0.0:
+-        raise ValueError(f"centerline degenerada em {path}")
+-
+-    length = float(track_length if track_length else raw["trackLength"])
+-    distance = cumulative / total * length
++    points, progress = _runtime_polygon(raw)
+ 
+-    if stored is not None and len(stored) == len(centre):
+-        progress = np.asarray(stored, dtype=float)
++    if track is not None:
++        distance = _projected_distance(track, points)
+     else:
+-        # O cache antigo pode nao trazer `p`; o runtime o calcula assim.
+-        progress = np.arange(len(centre), dtype=float) / max(len(centre) - 1, 1)
++        length = float(track_length if track_length else raw["trackLength"])
++        distance = progress * length
+ 
+-    # `np.interp` exige o eixo de entrada crescente. `p` por indice ja e, mas
+-    # um cache remendado poderia nao ser, e um mapeamento fora de ordem erra em
+-    # silencio.
+-    order = np.argsort(progress)
++    # `np.interp` exige o eixo de entrada crescente. A distancia do cache ja e,
++    # mas um cache remendado poderia nao ser, e um mapeamento fora de ordem erra
++    # em silencio.
++    order = np.argsort(progress, kind="stable")
+     progress, distance = progress[order], distance[order]
+ 
+     def s_of_p(values):
+@@ -171,7 +225,7 @@ def build_targets(
+     speed = frame["speed_kmh"].to_numpy(dtype=float)
+     lap_seconds = float(frame["lap_time_s"].iloc[0])
+ 
+-    s_of_p = progress_to_distance(geometry_path, track_length=track.length)
++    s_of_p = progress_to_distance(geometry_path, track_length=track.length, track=track)
+     edges_p = np.arange(microsectors + 1, dtype=float) / microsectors
+     edges_s = s_of_p(edges_p)
+     # As pontas sao ancoradas: `p=0` e a linha de chegada e `p=1` e a mesma
+diff --git a/backend/tests/test_ml_export.py b/backend/tests/test_ml_export.py
+index b5272863..04470030 100644
+--- a/backend/tests/test_ml_export.py
++++ b/backend/tests/test_ml_export.py
+@@ -1,12 +1,15 @@
+ """A conversao de metros para progresso, que e onde este caminho pode mentir.
+ 
+-O ML indexa tudo por distancia; o coach, por `p`. O `p` do runtime e o indice da
+-amostra da centerline sobre o total, e a centerline nao e equidistante -- em
+-Interlagos os passos vao de 1,4 a 5,0 m. Converter por regra de tres desloca os
+-alvos em ate 25 m, um terco de microsetor.
++O ML indexa tudo por distancia na propria grade; o coach, pelo `p` do runtime.
++Ha duas reguas no meio do caminho e as duas ja enganaram o exportador:
+ 
+-O teste principal aqui usa uma pista sintetica com espacamento propositalmente
+-desigual, porque uma conversao errada passaria despercebida numa pista uniforme.
++* o `p` do runtime e `distanceAlongTrack / total`, nao o indice do vertice sobre
++  o total -- e a centerline nao e equidistante;
++* os metros do runtime sao os da poligonal crua do cache, e os do ML sao os da
++  centerline consertada, suavizada e reparametrizada de `load_geometry`.
++
++Os testes usam pistas sinteticas em que cada uma dessas diferencas e grande,
++porque uma conversao errada passaria despercebida numa pista uniforme e lisa.
+ """
+ 
+ from __future__ import annotations
+@@ -16,30 +19,34 @@ import sys
+ import tempfile
+ import unittest
+ from pathlib import Path
++from unittest import mock
+ 
+ import numpy as np
++import pandas as pd
+ 
+ BACKEND_DIR = Path(__file__).resolve().parents[1]
+ if str(BACKEND_DIR) not in sys.path:
+     sys.path.insert(0, str(BACKEND_DIR))
+ 
+-from ml.export.coaching import progress_to_distance  # noqa: E402
++from ml.export.coaching import build_targets, progress_to_distance  # noqa: E402
++from ml.track.geometry import load_geometry  # noqa: E402
+ 
+ 
+ def geometry_with_uneven_spacing(path: Path) -> float:
+-    """Uma reta em que a primeira metade e amostrada duas vezes mais densa.
++    """Uma reta aberta em que a primeira metade e amostrada duas vezes mais densa.
+ 
+-    Metade das amostras cobre o primeiro terco da distancia. Entao `p = 0,5`
+-    cai em um terco da pista, e nao na metade -- que e exatamente a diferenca
+-    que a conversao precisa respeitar.
++    Metade dos vertices cobre o primeiro terco da distancia, e o vetor `p` do
++    cache e por indice, como o gravado pelo provider. O runtime nao usa esse
++    vetor: o `p` dele e distancia sobre o total.
+     """
+     dense = np.linspace(0.0, 300.0, 100, endpoint=False)
+     sparse = np.linspace(300.0, 900.0, 100)
+     xs = np.concatenate([dense, sparse])
+     payload = {
+-        "centerline": [{"x": float(x), "z": 0.0} for x in xs],
++        "centerline": [{"x": float(x), "z": 0.0, "distance": float(x)} for x in xs],
+         "p": [i / (len(xs) - 1) for i in range(len(xs))],
+         "trackLength": 900.0,
++        "closedLoop": False,
+     }
+     path.write_text(json.dumps(payload), encoding="utf-8")
+     return 900.0
+@@ -59,26 +66,25 @@ class ProgressToDistanceTest(unittest.TestCase):
+         self.assertAlmostEqual(float(s_of_p(0.0)), 0.0, places=6)
+         self.assertAlmostEqual(float(s_of_p(1.0)), self.length, places=4)
+ 
+-    def test_the_middle_of_the_index_is_not_the_middle_of_the_track(self):
+-        # Metade das amostras cobre um terco da pista. Uma conversao por regra
+-        # de tres devolveria 450 m aqui, e os alvos sairiam do lugar.
++    def test_progress_is_distance_not_the_vertex_index(self):
++        # `ProjectionEngine` devolve `p = distanceAlongTrack / total`. O vetor
++        # `p` do cache, por indice, poria `p = 0,5` a 300 m daqui.
+         s_of_p = progress_to_distance(self.path)
+-        middle = float(s_of_p(0.5))
+-        self.assertLess(middle, 400.0)
+-        self.assertAlmostEqual(middle, 300.0, delta=15.0)
++        self.assertAlmostEqual(float(s_of_p(0.5)), 450.0, places=6)
+ 
+     def test_the_mapping_is_monotone(self):
+         s_of_p = progress_to_distance(self.path)
+         values = s_of_p(np.linspace(0.0, 1.0, 200))
+         self.assertTrue(np.all(np.diff(values) >= -1e-9))
+ 
+-    def test_a_cache_without_p_falls_back_to_the_sample_index(self):
++    def test_a_cache_without_distance_falls_back_to_the_polyline(self):
+         body = json.loads(self.path.read_text(encoding="utf-8"))
+-        del body["p"]
++        for vertex in body["centerline"]:
++            del vertex["distance"]
+         self.path.write_text(json.dumps(body), encoding="utf-8")
+         s_of_p = progress_to_distance(self.path)
+         self.assertAlmostEqual(float(s_of_p(1.0)), self.length, places=4)
+-        self.assertAlmostEqual(float(s_of_p(0.5)), 300.0, delta=15.0)
++        self.assertAlmostEqual(float(s_of_p(0.5)), 450.0, places=4)
+ 
+     def test_the_declared_length_overrides_the_polyline_sum(self):
+         # O cache de Interlagos declara 4334,08 m e a poligonal soma 4332,32.
+@@ -87,6 +93,130 @@ class ProgressToDistanceTest(unittest.TestCase):
+         self.assertAlmostEqual(float(s_of_p(1.0)), 1000.0, places=4)
+ 
+ 
++RADIUS_M = 150.0
++HALF_WIDTH_M = 6.0
++
++
++def wiggly_circuit(path: Path) -> dict:
++    """Um circulo cuja primeira metade tem uma ondulacao que o ML apaga.
++
++    A ondulacao (0,45 m de amplitude, 4 m de comprimento de onda) fica abaixo do
++    limiar de defeito de `load_geometry`, entao nao e "consertada" -- e removida
++    pelo passa baixo de 60 m. A poligonal crua da primeira metade fica mais
++    longa que a centerline suavizada, e a segunda metade, lisa, nao: as duas
++    reguas concordam na linha e se afastam no meio da volta, que e o formato do
++    erro medido em Interlagos.
++
++    O espacamento dos vertices tambem e desigual (1 m na metade ondulada, 3 m
++    na lisa) e o vetor `p` e por indice, como no cache de verdade.
++    """
++    circumference = 2.0 * np.pi * RADIUS_M
++    half = circumference / 2.0
++    arc = np.concatenate([np.arange(0.0, half, 1.0), np.arange(half, circumference - 1.5, 3.0)])
++    theta = arc / RADIUS_M
++    envelope = np.where(theta < np.pi, np.sin(theta) ** 2, 0.0)
++    radius = RADIUS_M + 0.45 * envelope * np.sin(2.0 * np.pi * arc / 4.0)
++
++    centre = np.column_stack([radius * np.cos(theta), radius * np.sin(theta)])
++    # Anti-horario: a esquerda aponta para dentro do circulo.
++    normal = -np.column_stack([np.cos(theta), np.sin(theta)])
++    base = np.column_stack([RADIUS_M * np.cos(theta), RADIUS_M * np.sin(theta)])
++    left, right = base + normal * HALF_WIDTH_M, base - normal * HALF_WIDTH_M
++
++    steps = np.linalg.norm(np.diff(centre, axis=0), axis=1)
++    distance = np.concatenate([[0.0], np.cumsum(steps)])
++    total = float(distance[-1] + np.linalg.norm(centre[-1] - centre[0]))
++
++    def xz(points):
++        return [{"x": float(a), "z": float(b)} for a, b in points]
++
++    payload = {
++        "trackName": "sintetica",
++        "trackLength": total,
++        "closedLoop": True,
++        "centerline": [
++            {"x": float(a), "z": float(b), "worldY": 0.0, "distance": float(d)}
++            for (a, b), d in zip(centre, distance)
++        ],
++        "normals": xz(normal),
++        "boundsLeft": xz(left),
++        "boundsRight": xz(right),
++        "p": [i / (len(centre) - 1) for i in range(len(centre))],
++    }
++    path.write_text(json.dumps(payload), encoding="utf-8")
++    return {"centre": centre, "distance": distance, "total": total}
++
++
++class RuntimeProgressToMlGridTest(unittest.TestCase):
++    """O `s(p)` que `build_targets` usa tem de ser o `s` da grade do ML."""
++
++    @classmethod
++    def setUpClass(cls):
++        cls._dir = tempfile.TemporaryDirectory()
++        cls.path = Path(cls._dir.name) / "sintetica.json"
++        cls.raw = wiggly_circuit(cls.path)
++        cls.track = load_geometry(cls.path)
++
++    @classmethod
++    def tearDownClass(cls):
++        cls._dir.cleanup()
++
++    def runtime_point(self, progress: float) -> np.ndarray:
++        """Onde o runtime poe o carro que esta em `p`, sobre a poligonal crua."""
++        closed_d = np.append(self.raw["distance"], self.raw["total"])
++        closed_c = np.vstack([self.raw["centre"], self.raw["centre"][:1]])
++        target = progress * self.raw["total"]
++        return np.array([np.interp(target, closed_d, closed_c[:, axis]) for axis in (0, 1)])
++
++    def ml_s(self, progress: float) -> float:
++        s, _ = self.track.project(self.runtime_point(progress))
++        return float(s[0])
++
++    def test_the_two_rulers_really_disagree_here(self):
++        # Sem isto o teste abaixo passaria ate com o mapeamento antigo. A regua
++        # crua chega ~9,5 m a frente perto de p = 0,45; a tolerancia la e 0,5 m.
++        raw_ruler = progress_to_distance(self.path, track_length=self.track.length)
++        gaps = [abs(float(raw_ruler(p)) - self.ml_s(p)) for p in np.linspace(0.05, 0.95, 19)]
++        self.assertGreater(max(gaps), 8.0)
++
++    def test_progress_lands_on_the_ml_grid(self):
++        s_of_p = progress_to_distance(self.path, track=self.track)
++        for progress in np.linspace(0.05, 0.95, 19):
++            with self.subTest(p=round(float(progress), 3)):
++                self.assertAlmostEqual(float(s_of_p(progress)), self.ml_s(progress), delta=0.5)
++
++    def test_the_ends_meet_the_line(self):
++        s_of_p = progress_to_distance(self.path, track=self.track)
++        self.assertAlmostEqual(float(s_of_p(0.0)), 0.0, delta=0.5)
++        self.assertAlmostEqual(float(s_of_p(1.0)), self.track.length, delta=0.5)
++
++    def test_build_targets_cuts_the_slices_on_the_ml_grid(self):
++        # A volta de referencia a 1 m/s: o tempo de cada fatia e o comprimento
++        # dela na grade do ML, entao um corte na regua errada aparece direto.
++        frame = pd.DataFrame(
++            {
++                "s": self.track.s,
++                "elapsed_s": self.track.s,
++                "speed_kmh": np.full(self.track.size, 3.6),
++                "lap_time_s": float(self.track.length),
++            }
++        )
++        slices = 8
++        with mock.patch("ml.export.coaching.reference_lap_frame", return_value=frame):
++            targets = build_targets(
++                self.track,
++                np.zeros(self.track.size),
++                envelope=None,
++                track_name="sintetica",
++                microsectors=slices,
++                geometry_path=self.path,
++            )
++        edges = [0.0] + [self.ml_s(k / slices) for k in range(1, slices)] + [self.track.length]
++        for index, (expected, got) in enumerate(zip(np.diff(edges), targets.seconds)):
++            with self.subTest(slice=index):
++                self.assertAlmostEqual(got, expected, delta=0.5)
++
++
+ ARTIFACT = BACKEND_DIR.parent / "data" / "ml" / "optimization" / "optimised_lateral.npy"
+ 
+ 
+diff --git a/docs/handoff/2026-09-30_coach_mapeamento_validacao.py b/docs/handoff/2026-09-30_coach_mapeamento_validacao.py
+new file mode 100644
+index 00000000..ee8d8d6f
+--- /dev/null
++++ b/docs/handoff/2026-09-30_coach_mapeamento_validacao.py
+@@ -0,0 +1,337 @@
++"""Validacao do mapeamento p -> s dos alvos do coach, antes e depois da correcao.
++
++    cd backend
++    python ../docs/handoff/2026-09-30_coach_mapeamento_validacao.py [--recordings DIR]
++
++Le `data/ml/laps_grid.parquet` (voltas validas ja na grade `s` do ML, com a
++posicao no mundo de cada ponto) e a geometria atual. Para cada amostra real, o
++trecho do coach e o que o runtime daria hoje: `p` do `ProjectionEngine` sobre o
++cache atual, a partir da posicao no mundo. Os alvos sao cortados na volta de
++referencia do ML pelo mapeamento antigo (vetor `p` por indice + poligonal crua)
++e pelo novo (`progress_to_distance(track=...)`).
++
++Nada e gravado fora do JSON de saida; o `optimal.json` nao e tocado.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++BACKEND = Path.cwd()
++sys.path.insert(0, str(BACKEND))
++
++from ml import config  # noqa: E402
++from ml.comparison.reference_frame import reference_lap_frame  # noqa: E402
++from ml.export import coaching  # noqa: E402
++from ml.optimization.vehicle_model import load_envelope  # noqa: E402
++from ml.track.geometry import load_geometry  # noqa: E402
++from core.cache.cache_serializer import CacheSerializer  # noqa: E402
++from core.projection.spatial_projection import ProjectionEngine  # noqa: E402
++
++SLICES = coaching.COACH_MICROSECTORS
++BRAKE_ON = 0.10
++NATIVE_SESSIONS = ("2026-08-16_03-30-14_vhe_interlagos", "2026-08-16_03-58-36_vhe_interlagos")
++OUTLIER_SESSION = "2026-06-20_13-13-02_vhe_interlagos"
++
++
++def old_progress_to_distance(raw: dict, length: float):
++    """O mapeamento de `handoff/fase1`, reconstruido: `p` por indice + poligonal crua."""
++    centre = np.array([[p["x"], p["z"]] for p in raw["centerline"]], dtype=float)
++    cumulative = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(centre, axis=0), axis=1))])
++    progress = np.asarray(raw["p"], dtype=float)
++    distance = cumulative / cumulative[-1] * length
++    return lambda v: np.interp(np.asarray(v, dtype=float), progress, distance)
++
++
++def edges_for(s_of_p, length: float) -> np.ndarray:
++    edges = s_of_p(np.arange(SLICES + 1, dtype=float) / SLICES)
++    edges[0], edges[-1] = 0.0, length
++    return edges
++
++
++def first_brake(s: np.ndarray, brake: np.ndarray):
++    on = np.flatnonzero(brake >= BRAKE_ON)
++    return float(s[on[0]]) if on.size else None
++
++
++def target_slices(frame: pd.DataFrame, edges: np.ndarray) -> list:
++    s = frame["s"].to_numpy(float)
++    v = frame["speed_kmh"].to_numpy(float)
++    b = frame["brake"].to_numpy(float)
++    out = []
++    for k in range(SLICES):
++        sel = (s >= edges[k]) & (s < edges[k + 1])
++        i = np.flatnonzero(sel)
++        vmin_i = i[np.argmin(v[i])]
++        out.append(
++            {
++                "s_start": round(float(edges[k]), 2),
++                "s_end": round(float(edges[k + 1]), 2),
++                "vmin_kmh": round(float(v[vmin_i]), 1),
++                "vmin_s": round(float(s[vmin_i]), 1),
++                "brake_s": first_brake(s[i], b[i]),
++            }
++        )
++    return out
++
++
++def real_slices(lap: pd.DataFrame) -> list:
++    """Por trecho do runtime (p do ProjectionEngine), o que a volta real fez."""
++    out = []
++    for k in range(SLICES):
++        part = lap[lap["slice"] == k]
++        if part.empty:
++            out.append(None)
++            continue
++        s = part["s"].to_numpy(float)
++        v = part["speed_kmh"].to_numpy(float)
++        i = int(np.argmin(v))
++        out.append(
++            {
++                "vmin_kmh": float(v[i]),
++                "vmin_s": float(s[i]),
++                "brake_s": first_brake(s, part["brake"].to_numpy(float)),
++                "s_start": float(s[0]),
++            }
++        )
++    return out
++
++
++def wrap(d, length):
++    return (np.asarray(d, float) + length / 2.0) % length - length / 2.0
++
++
++def compare(targets: list, laps: dict, length: float) -> dict:
++    """Desvio alvo - real por trecho, mediana sobre as voltas."""
++    per_slice = []
++    for k in range(SLICES):
++        t = targets[k]
++        reals = [r[k] for r in laps.values() if r[k] is not None]
++        edge = [wrap(t["s_start"] - r["s_start"], length) for r in reals] if k else []
++        vpos = [wrap(t["vmin_s"] - r["vmin_s"], length) for r in reals]
++        vval = [t["vmin_kmh"] - r["vmin_kmh"] for r in reals]
++        both = [r for r in reals if r["brake_s"] is not None]
++        brake = (
++            [wrap(t["brake_s"] - r["brake_s"], length) for r in both] if t["brake_s"] is not None else []
++        )
++        real_brakes = len(both) / len(reals) if reals else None
++        per_slice.append(
++            {
++                "slice": k,
++                "laps": len(reals),
++                "edge_offset_m": None if not edge else round(float(np.median(edge)), 2),
++                "vmin_pos_offset_m": round(float(np.median(vpos)), 1),
++                "vmin_value_offset_kmh": round(float(np.median(vval)), 1),
++                "target_brakes": t["brake_s"] is not None,
++                "share_of_real_laps_braking": None if real_brakes is None else round(real_brakes, 3),
++                "brake_pos_offset_m": None if not brake else round(float(np.median(brake)), 1),
++            }
++        )
++
++    def agg(key):
++        values = np.abs([row[key] for row in per_slice if row[key] is not None])
++        return {
++            "median_abs": round(float(np.median(values)), 2),
++            "p90_abs": round(float(np.percentile(values, 90)), 2),
++            "max_abs": round(float(values.max()), 2),
++            "slices": int(values.size),
++        }
++
++    brake_agree = [
++        row["target_brakes"] == (row["share_of_real_laps_braking"] >= 0.5)
++        for row in per_slice
++        if row["share_of_real_laps_braking"] is not None
++    ]
++    return {
++        "summary": {
++            "edge_offset_m": agg("edge_offset_m"),
++            "vmin_pos_offset_m": agg("vmin_pos_offset_m"),
++            "vmin_value_offset_kmh": agg("vmin_value_offset_kmh"),
++            "brake_pos_offset_m": agg("brake_pos_offset_m"),
++            "slices_where_target_and_majority_agree_on_braking": int(sum(brake_agree)),
++        },
++        "per_slice": per_slice,
++    }
++
++
++def native_p_check(recordings: Path, engine, length: float) -> dict:
++    """Nas sessoes nativas, o p reprojetado tem de ser o p gravado."""
++    gaps = []
++    for session in NATIVE_SESSIONS:
++        with (recordings / session / "player.jsonl").open(encoding="utf-8") as fh:
++            for i, line in enumerate(fh):
++                if i % 400:
++                    continue
++                s = json.loads(line).get("sample") or {}
++                if s.get("world_x") is None or s.get("p") is None:
++                    continue
++                gap = abs(engine.project_car(s["world_x"], s["world_z"])["p"] - s["p"])
++                gaps.append(min(gap, 1.0 - gap) * length)
++    gaps = np.asarray(gaps)
++    return {
++        "samples": int(gaps.size),
++        "median_m": round(float(np.median(gaps)), 4),
++        "max_m": round(float(gaps.max()), 4),
++    }
++
++
++def investigate_outlier(recordings: Path, track, engine, length: float, s_of_p) -> dict:
++    """A amostra de 15,9 m: onde fica e por que."""
++    rows = []
++    path = recordings / OUTLIER_SESSION / "player.jsonl"
++    with path.open(encoding="utf-8") as fh:
++        for i, line in enumerate(fh):
++            if i % 10:
++                continue
++            s = json.loads(line).get("sample") or {}
++            if s.get("world_x") is not None:
++                rows.append((i, s["world_x"], s["world_z"], s.get("speedKmh"), s.get("lap_time")))
++    xz = np.array([[r[1], r[2]] for r in rows])
++    ml_s, ml_l = track.project_sequence(xz)
++    projections = [engine.project_car(x, z) for x, z in xz]
++    p = np.array([q["p"] for q in projections])
++    gap = np.abs(wrap(s_of_p(p) - ml_s, length))
++    on = np.abs(ml_l) < 10
++    worst = np.argsort(np.where(on, gap, -1))[::-1][:8]
++    details = []
++    for j in worst:
++        q = projections[j]
++        neighbours = []
++        for d in (-2, -1, 1, 2):
++            if 0 <= j + d < len(p):
++                neighbours.append(round(float(gap[j + d]), 2))
++        details.append(
++            {
++                "line": int(rows[j][0]),
++                "world": [round(float(xz[j, 0]), 2), round(float(xz[j, 1]), 2)],
++                "speed_kmh": rows[j][3],
++                "ml_s": round(float(ml_s[j]), 2),
++                "ml_lateral": round(float(ml_l[j]), 2),
++                "runtime_s": round(float(q["distanceAlongTrack"]), 2),
++                "runtime_segment": int(q["nearest_segment_index"]),
++                "runtime_distance_to_track": round(float(q["debug"]["distanceToTrack"]), 2),
++                "mapped_minus_ml_m": round(float(gap[j]), 2),
++                "neighbours_gap_m": neighbours,
++            }
++        )
++    # Diagnostico: onde a centerline crua (a que o runtime projeta) se afasta da
++    # centerline consertada do ML.
++    centre = np.asarray(engine.points, dtype=float)
++    distance = np.array(engine.distances, dtype=float)
++    _, vertex_lateral = track.project(centre)
++    far = np.flatnonzero(np.abs(vertex_lateral) > 2.0)
++    regions = []
++    if far.size:
++        starts = far[np.r_[True, np.diff(far) > 1]]
++        ends = far[np.r_[np.diff(far) > 1, True]]
++        for a, b in zip(starts, ends):
++            regions.append(
++                {
++                    "vertices": [int(a), int(b)],
++                    "runtime_distance_m": [round(float(distance[a]), 1), round(float(distance[b]), 1)],
++                    "max_lateral_offset_m": round(float(np.abs(vertex_lateral[a : b + 1]).max()), 2),
++                }
++            )
++    return {
++        "samples": int(on.sum()),
++        "gap_over_2m": int((gap[on] > 2).sum()),
++        "gap_over_5m": int((gap[on] > 5).sum()),
++        "raw_centerline_regions_over_2m_from_ml_line": regions,
++        "diagnosis": (
++            "Nao e erro do mapeamento. A centerline crua do cache (a que o ProjectionEngine usa) "
++            "esta deslocada ~10,8 m de lado nas regioes acima -- defeito de reconstrucao que "
++            "load_geometry conserta e o runtime nao. Um carro na pista real em s_ML ~775-784 fica "
++            "mais perto da diagonal dos segmentos 484-485 (que volta a linha certa) do que dos "
++            "vertices deslocados, e o runtime o projeta ate ~30 m a frente por algumas amostras. "
++            "O p do runtime salta; o mapeamento novo leva corretamente esse p ao s_ML do vertice."
++        ),
++        "worst": details,
++    }
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--recordings", type=Path, default=config.recordings_root())
++    parser.add_argument(
++        "--out", type=Path, default=BACKEND.parent / "docs" / "handoff" / "2026-09-30_coach_mapeamento_resultados.json"
++    )
++    args = parser.parse_args()
++
++    cache = config.track_cache_root() / config.INTERLAGOS_GEOMETRY_FILE
++    text = cache.read_text(encoding="utf-8")
++    raw = json.loads(text)
++    track = load_geometry(cache)
++    engine = ProjectionEngine(CacheSerializer.deserialize_track(text)["centerline"])
++    length = float(track.length)
++
++    lateral = np.load(config.artifacts_root() / "optimization" / "optimised_lateral.npy")
++    frame = reference_lap_frame(track, lateral, load_envelope())
++
++    mappings = {
++        "antes": old_progress_to_distance(raw, length),
++        "depois": coaching.progress_to_distance(cache, track=track),
++    }
++    targets = {name: target_slices(frame, edges_for(f, length)) for name, f in mappings.items()}
++
++    grid = pd.read_parquet(config.artifacts_root() / "laps_grid.parquet")
++    grid["s"] = track.s[grid["grid_index"].to_numpy(int)]
++    ok = grid[["x", "z"]].notna().all(axis=1)
++    grid = grid[ok].copy()
++    grid["p"] = [engine.project_car(x, z)["p"] for x, z in grid[["x", "z"]].to_numpy()]
++    grid["slice"] = np.minimum((grid["p"] * SLICES).astype(int), SLICES - 1)
++    grid = grid.sort_values(["lap_id", "grid_index"])
++    grid["session_id"] = grid["lap_id"].str.split("#").str[0]
++
++    laps_all = {lap_id: real_slices(lap) for lap_id, lap in grid.groupby("lap_id")}
++    native = {k: v for k, v in laps_all.items() if k.split("#")[0] in NATIVE_SESSIONS}
++
++    result = {
++        "description": (
++            "Alvo - volta real por trecho do coach (60). Trecho real = p do ProjectionEngine atual "
++            "sobre a posicao no mundo. Distancias em s da grade do ML. 'antes' = mapeamento de "
++            "handoff/fase1; 'depois' = progress_to_distance(track=...). Offsets: mediana sobre as "
++            "voltas; summary agrega |offset| sobre os trechos."
++        ),
++        "brake_threshold": BRAKE_ON,
++        "geometry_id": track.geometry_id,
++        "track_length_m": length,
++        "reference_lap_s": float(frame["lap_time_s"].iloc[0]),
++        "datasets": {
++            "nativo": {
++                "sessions": sorted({k.split("#")[0] for k in native}),
++                "laps": len(native),
++                "note": "gravadas com a geometria atual (total 4334,08 m)",
++            },
++            "reprojetado": {
++                "sessions": sorted({k.split("#")[0] for k in laps_all}),
++                "laps": len(laps_all),
++                "note": "todas as voltas validas do lap store; p recalculado pelo ProjectionEngine atual",
++            },
++        },
++        "targets": targets,
++        "comparison": {},
++    }
++    for dataset, laps in (("nativo", native), ("reprojetado", laps_all)):
++        result["comparison"][dataset] = {name: compare(t, laps, length) for name, t in targets.items()}
++
++    result["native_p_check"] = native_p_check(args.recordings, engine, length)
++    result["outlier_15_9m"] = investigate_outlier(args.recordings, track, engine, length, mappings["depois"])
++
++    args.out.write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8")
++    for dataset in ("nativo", "reprojetado"):
++        print(f"== {dataset}: {result['datasets'][dataset]['laps']} voltas")
++        for name in ("antes", "depois"):
++            print(f"  {name:6s}", json.dumps(result["comparison"][dataset][name]["summary"]))
++    print(json.dumps(result["outlier_15_9m"], indent=1)[:3000])
++    print(f"-> {args.out}")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())

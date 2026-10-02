@@ -1,0 +1,3606 @@
+{
+ "description": "Alvo - volta real por trecho do coach (60). Trecho real = p do ProjectionEngine atual sobre a posicao no mundo. Distancias em s da grade do ML. 'antes' = mapeamento de handoff/fase1; 'depois' = progress_to_distance(track=...). Offsets: mediana sobre as voltas; summary agrega |offset| sobre os trechos.",
+ "brake_threshold": 0.1,
+ "geometry_id": "0ed16f0dd2225990",
+ "track_length_m": 4334.079567901616,
+ "reference_lap_s": 85.10941955232222,
+ "datasets": {
+  "nativo": {
+   "sessions": [
+    "2026-08-16_03-30-14_vhe_interlagos"
+   ],
+   "laps": 7,
+   "note": "gravadas com a geometria atual (total 4334,08 m)"
+  },
+  "reprojetado": {
+   "sessions": [
+    "2026-06-14_12-23-46_vhe_interlagos",
+    "2026-06-18_20-06-03_vhe_interlagos",
+    "2026-06-19_11-08-15_vhe_interlagos",
+    "2026-06-19_23-24-46_vhe_interlagos",
+    "2026-06-20_13-04-20_vhe_interlagos",
+    "2026-06-20_13-09-57_vhe_interlagos",
+    "2026-06-20_13-13-02_vhe_interlagos",
+    "2026-08-09_19-10-41_vhe_interlagos",
+    "2026-08-09_19-15-35_vhe_interlagos",
+    "2026-08-09_19-20-59_vhe_interlagos",
+    "2026-08-16_03-30-14_vhe_interlagos"
+   ],
+   "laps": 122,
+   "note": "todas as voltas validas do lap store; p recalculado pelo ProjectionEngine atual"
+  }
+ },
+ "targets": {
+  "antes": [
+   {
+    "s_start": 0.0,
+    "s_end": 74.94,
+    "vmin_kmh": 277.5,
+    "vmin_s": 0.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 74.94,
+    "s_end": 145.76,
+    "vmin_kmh": 252.7,
+    "vmin_s": 144.0,
+    "brake_s": 126.00231323387257
+   },
+   {
+    "s_start": 145.76,
+    "s_end": 215.29,
+    "vmin_kmh": 135.0,
+    "vmin_s": 214.0,
+    "brake_s": 146.00268041385235
+   },
+   {
+    "s_start": 215.29,
+    "s_end": 286.72,
+    "vmin_kmh": 107.3,
+    "vmin_s": 280.0,
+    "brake_s": 216.00396554378153
+   },
+   {
+    "s_start": 286.72,
+    "s_end": 361.87,
+    "vmin_kmh": 107.3,
+    "vmin_s": 288.0,
+    "brake_s": 348.006388931648
+   },
+   {
+    "s_start": 361.87,
+    "s_end": 436.0,
+    "vmin_kmh": 110.5,
+    "vmin_s": 384.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 436.0,
+    "s_end": 518.34,
+    "vmin_kmh": 143.1,
+    "vmin_s": 436.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 518.34,
+    "s_end": 591.26,
+    "vmin_kmh": 173.6,
+    "vmin_s": 520.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 591.26,
+    "s_end": 664.06,
+    "vmin_kmh": 193.3,
+    "vmin_s": 592.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 664.06,
+    "s_end": 735.08,
+    "vmin_kmh": 208.2,
+    "vmin_s": 666.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 735.08,
+    "s_end": 819.18,
+    "vmin_kmh": 221.8,
+    "vmin_s": 736.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 819.18,
+    "s_end": 890.21,
+    "vmin_kmh": 236.2,
+    "vmin_s": 820.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 890.21,
+    "s_end": 963.27,
+    "vmin_kmh": 246.7,
+    "vmin_s": 892.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 963.27,
+    "s_end": 1033.35,
+    "vmin_kmh": 255.3,
+    "vmin_s": 964.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1033.35,
+    "s_end": 1104.0,
+    "vmin_kmh": 262.5,
+    "vmin_s": 1034.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1104.0,
+    "s_end": 1176.29,
+    "vmin_kmh": 268.9,
+    "vmin_s": 1104.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1176.29,
+    "s_end": 1248.59,
+    "vmin_kmh": 236.1,
+    "vmin_s": 1248.0,
+    "brake_s": 1218.022361260768
+   },
+   {
+    "s_start": 1248.59,
+    "s_end": 1318.71,
+    "vmin_kmh": 131.5,
+    "vmin_s": 1308.0,
+    "brake_s": 1250.0229487487359
+   },
+   {
+    "s_start": 1318.71,
+    "s_end": 1392.88,
+    "vmin_kmh": 130.9,
+    "vmin_s": 1336.0,
+    "brake_s": 1368.0251151106165
+   },
+   {
+    "s_start": 1392.88,
+    "s_end": 1463.3,
+    "vmin_kmh": 140.9,
+    "vmin_s": 1394.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1463.3,
+    "s_end": 1532.98,
+    "vmin_kmh": 177.5,
+    "vmin_s": 1464.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1532.98,
+    "s_end": 1605.97,
+    "vmin_kmh": 196.7,
+    "vmin_s": 1534.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1605.97,
+    "s_end": 1676.78,
+    "vmin_kmh": 211.0,
+    "vmin_s": 1606.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1676.78,
+    "s_end": 1746.93,
+    "vmin_kmh": 225.0,
+    "vmin_s": 1678.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1746.93,
+    "s_end": 1816.48,
+    "vmin_kmh": 236.8,
+    "vmin_s": 1748.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1816.48,
+    "s_end": 1887.9,
+    "vmin_kmh": 225.3,
+    "vmin_s": 1886.0,
+    "brake_s": 1866.0342578921127
+   },
+   {
+    "s_start": 1887.9,
+    "s_end": 1957.44,
+    "vmin_kmh": 168.0,
+    "vmin_s": 1956.0,
+    "brake_s": 1888.0346617900905
+   },
+   {
+    "s_start": 1957.44,
+    "s_end": 2030.43,
+    "vmin_kmh": 168.0,
+    "vmin_s": 1958.0,
+    "brake_s": 1978.0363140999996
+   },
+   {
+    "s_start": 2030.43,
+    "s_end": 2099.82,
+    "vmin_kmh": 166.2,
+    "vmin_s": 2072.0,
+    "brake_s": 2032.037305485945
+   },
+   {
+    "s_start": 2099.82,
+    "s_end": 2170.57,
+    "vmin_kmh": 166.8,
+    "vmin_s": 2100.0,
+    "brake_s": 2170.039839027805
+   },
+   {
+    "s_start": 2170.57,
+    "s_end": 2239.59,
+    "vmin_kmh": 99.1,
+    "vmin_s": 2232.0,
+    "brake_s": 2172.0398757458033
+   },
+   {
+    "s_start": 2239.59,
+    "s_end": 2314.46,
+    "vmin_kmh": 97.9,
+    "vmin_s": 2264.0,
+    "brake_s": 2242.0411608757327
+   },
+   {
+    "s_start": 2314.46,
+    "s_end": 2387.91,
+    "vmin_kmh": 103.5,
+    "vmin_s": 2316.0,
+    "brake_s": 2342.0429967756313
+   },
+   {
+    "s_start": 2387.91,
+    "s_end": 2466.56,
+    "vmin_kmh": 112.5,
+    "vmin_s": 2396.0,
+    "brake_s": 2392.0439147255806
+   },
+   {
+    "s_start": 2466.56,
+    "s_end": 2539.89,
+    "vmin_kmh": 115.0,
+    "vmin_s": 2468.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 2539.89,
+    "s_end": 2609.86,
+    "vmin_kmh": 154.9,
+    "vmin_s": 2608.0,
+    "brake_s": 2578.0473294993926
+   },
+   {
+    "s_start": 2609.86,
+    "s_end": 2677.66,
+    "vmin_kmh": 90.7,
+    "vmin_s": 2668.0,
+    "brake_s": 2612.0479537053584
+   },
+   {
+    "s_start": 2677.66,
+    "s_end": 2755.84,
+    "vmin_kmh": 90.4,
+    "vmin_s": 2698.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 2755.84,
+    "s_end": 2825.38,
+    "vmin_kmh": 112.4,
+    "vmin_s": 2756.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 2825.38,
+    "s_end": 2896.18,
+    "vmin_kmh": 165.5,
+    "vmin_s": 2826.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 2896.18,
+    "s_end": 2970.04,
+    "vmin_kmh": 185.1,
+    "vmin_s": 2898.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 2970.04,
+    "s_end": 3042.48,
+    "vmin_kmh": 196.5,
+    "vmin_s": 2970.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3042.48,
+    "s_end": 3111.94,
+    "vmin_kmh": 204.4,
+    "vmin_s": 3044.1,
+    "brake_s": 3110.057096486855
+   },
+   {
+    "s_start": 3111.94,
+    "s_end": 3180.78,
+    "vmin_kmh": 124.8,
+    "vmin_s": 3180.1,
+    "brake_s": 3112.0571332048526
+   },
+   {
+    "s_start": 3180.78,
+    "s_end": 3256.14,
+    "vmin_kmh": 98.6,
+    "vmin_s": 3196.1,
+    "brake_s": 3182.058418334782
+   },
+   {
+    "s_start": 3256.14,
+    "s_end": 3324.92,
+    "vmin_kmh": 126.4,
+    "vmin_s": 3258.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3324.92,
+    "s_end": 3395.51,
+    "vmin_kmh": 171.0,
+    "vmin_s": 3326.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3395.51,
+    "s_end": 3465.75,
+    "vmin_kmh": 193.5,
+    "vmin_s": 3396.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3465.75,
+    "s_end": 3537.48,
+    "vmin_kmh": 212.2,
+    "vmin_s": 3466.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3537.48,
+    "s_end": 3608.61,
+    "vmin_kmh": 225.3,
+    "vmin_s": 3538.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3608.61,
+    "s_end": 3683.28,
+    "vmin_kmh": 234.2,
+    "vmin_s": 3610.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3683.28,
+    "s_end": 3752.29,
+    "vmin_kmh": 242.5,
+    "vmin_s": 3684.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3752.29,
+    "s_end": 3823.52,
+    "vmin_kmh": 250.4,
+    "vmin_s": 3754.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3823.52,
+    "s_end": 3898.83,
+    "vmin_kmh": 239.2,
+    "vmin_s": 3846.1,
+    "brake_s": 3830.0703149661263
+   },
+   {
+    "s_start": 3898.83,
+    "s_end": 3967.97,
+    "vmin_kmh": 241.9,
+    "vmin_s": 3900.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3967.97,
+    "s_end": 4039.42,
+    "vmin_kmh": 248.9,
+    "vmin_s": 3968.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 4039.42,
+    "s_end": 4112.11,
+    "vmin_kmh": 257.0,
+    "vmin_s": 4040.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 4112.11,
+    "s_end": 4185.57,
+    "vmin_kmh": 264.5,
+    "vmin_s": 4114.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 4185.57,
+    "s_end": 4259.95,
+    "vmin_kmh": 270.5,
+    "vmin_s": 4186.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 4259.95,
+    "s_end": 4334.08,
+    "vmin_kmh": 276.0,
+    "vmin_s": 4260.1,
+    "brake_s": null
+   }
+  ],
+  "depois": [
+   {
+    "s_start": 0.0,
+    "s_end": 72.78,
+    "vmin_kmh": 277.5,
+    "vmin_s": 0.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 72.78,
+    "s_end": 145.55,
+    "vmin_kmh": 252.7,
+    "vmin_s": 144.0,
+    "brake_s": 126.00231323387257
+   },
+   {
+    "s_start": 145.55,
+    "s_end": 218.33,
+    "vmin_kmh": 125.7,
+    "vmin_s": 218.0,
+    "brake_s": 146.00268041385235
+   },
+   {
+    "s_start": 218.33,
+    "s_end": 290.91,
+    "vmin_kmh": 107.3,
+    "vmin_s": 280.0,
+    "brake_s": 220.0040389797775
+   },
+   {
+    "s_start": 290.91,
+    "s_end": 363.5,
+    "vmin_kmh": 107.3,
+    "vmin_s": 292.0,
+    "brake_s": 348.006388931648
+   },
+   {
+    "s_start": 363.5,
+    "s_end": 435.86,
+    "vmin_kmh": 110.5,
+    "vmin_s": 384.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 435.86,
+    "s_end": 498.29,
+    "vmin_kmh": 143.1,
+    "vmin_s": 436.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 498.29,
+    "s_end": 571.04,
+    "vmin_kmh": 166.7,
+    "vmin_s": 500.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 571.04,
+    "s_end": 643.8,
+    "vmin_kmh": 189.1,
+    "vmin_s": 572.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 643.8,
+    "s_end": 716.56,
+    "vmin_kmh": 203.8,
+    "vmin_s": 644.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 716.56,
+    "s_end": 782.03,
+    "vmin_kmh": 218.5,
+    "vmin_s": 718.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 782.03,
+    "s_end": 847.29,
+    "vmin_kmh": 230.2,
+    "vmin_s": 784.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 847.29,
+    "s_end": 920.06,
+    "vmin_kmh": 240.5,
+    "vmin_s": 848.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 920.06,
+    "s_end": 991.4,
+    "vmin_kmh": 250.5,
+    "vmin_s": 922.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 991.4,
+    "s_end": 1064.17,
+    "vmin_kmh": 258.1,
+    "vmin_s": 992.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1064.17,
+    "s_end": 1136.95,
+    "vmin_kmh": 265.6,
+    "vmin_s": 1066.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1136.95,
+    "s_end": 1209.73,
+    "vmin_kmh": 271.7,
+    "vmin_s": 1138.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1209.73,
+    "s_end": 1282.51,
+    "vmin_kmh": 179.5,
+    "vmin_s": 1282.0,
+    "brake_s": 1218.022361260768
+   },
+   {
+    "s_start": 1282.51,
+    "s_end": 1355.21,
+    "vmin_kmh": 130.9,
+    "vmin_s": 1336.0,
+    "brake_s": 1284.0235729547014
+   },
+   {
+    "s_start": 1355.21,
+    "s_end": 1427.85,
+    "vmin_kmh": 133.5,
+    "vmin_s": 1356.0,
+    "brake_s": 1368.0251151106165
+   },
+   {
+    "s_start": 1427.85,
+    "s_end": 1500.62,
+    "vmin_kmh": 162.2,
+    "vmin_s": 1428.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1500.62,
+    "s_end": 1573.37,
+    "vmin_kmh": 189.9,
+    "vmin_s": 1502.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1573.37,
+    "s_end": 1646.14,
+    "vmin_kmh": 204.4,
+    "vmin_s": 1574.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1646.14,
+    "s_end": 1718.91,
+    "vmin_kmh": 219.7,
+    "vmin_s": 1648.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1718.91,
+    "s_end": 1791.69,
+    "vmin_kmh": 232.3,
+    "vmin_s": 1720.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1791.69,
+    "s_end": 1864.47,
+    "vmin_kmh": 243.3,
+    "vmin_s": 1792.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 1864.47,
+    "s_end": 1937.25,
+    "vmin_kmh": 169.3,
+    "vmin_s": 1924.0,
+    "brake_s": 1866.0342578921127
+   },
+   {
+    "s_start": 1937.25,
+    "s_end": 2009.97,
+    "vmin_kmh": 168.0,
+    "vmin_s": 1956.0,
+    "brake_s": 1940.0356164580378
+   },
+   {
+    "s_start": 2009.97,
+    "s_end": 2082.74,
+    "vmin_kmh": 166.2,
+    "vmin_s": 2072.0,
+    "brake_s": 2012.0369383059651
+   },
+   {
+    "s_start": 2082.74,
+    "s_end": 2155.44,
+    "vmin_kmh": 166.2,
+    "vmin_s": 2084.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 2155.44,
+    "s_end": 2228.21,
+    "vmin_kmh": 99.7,
+    "vmin_s": 2220.0,
+    "brake_s": 2170.039839027805
+   },
+   {
+    "s_start": 2228.21,
+    "s_end": 2300.63,
+    "vmin_kmh": 97.9,
+    "vmin_s": 2264.0,
+    "brake_s": 2242.0411608757327
+   },
+   {
+    "s_start": 2300.63,
+    "s_end": 2373.22,
+    "vmin_kmh": 98.1,
+    "vmin_s": 2302.0,
+    "brake_s": 2342.0429967756313
+   },
+   {
+    "s_start": 2373.22,
+    "s_end": 2445.86,
+    "vmin_kmh": 112.5,
+    "vmin_s": 2396.0,
+    "brake_s": 2392.0439147255806
+   },
+   {
+    "s_start": 2445.86,
+    "s_end": 2518.54,
+    "vmin_kmh": 114.3,
+    "vmin_s": 2448.0,
+    "brake_s": null
+   },
+   {
+    "s_start": 2518.54,
+    "s_end": 2591.3,
+    "vmin_kmh": 149.4,
+    "vmin_s": 2520.0,
+    "brake_s": 2578.0473294993926
+   },
+   {
+    "s_start": 2591.3,
+    "s_end": 2664.06,
+    "vmin_kmh": 101.2,
+    "vmin_s": 2664.0,
+    "brake_s": 2592.0475865253784
+   },
+   {
+    "s_start": 2664.06,
+    "s_end": 2736.19,
+    "vmin_kmh": 90.4,
+    "vmin_s": 2698.0,
+    "brake_s": 2666.0489450913037
+   },
+   {
+    "s_start": 2736.19,
+    "s_end": 2808.82,
+    "vmin_kmh": 98.4,
+    "vmin_s": 2738.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 2808.82,
+    "s_end": 2881.58,
+    "vmin_kmh": 156.4,
+    "vmin_s": 2810.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 2881.58,
+    "s_end": 2954.33,
+    "vmin_kmh": 181.4,
+    "vmin_s": 2882.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 2954.33,
+    "s_end": 3027.07,
+    "vmin_kmh": 193.8,
+    "vmin_s": 2956.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3027.07,
+    "s_end": 3099.85,
+    "vmin_kmh": 202.5,
+    "vmin_s": 3028.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3099.85,
+    "s_end": 3172.62,
+    "vmin_kmh": 143.0,
+    "vmin_s": 3172.1,
+    "brake_s": 3110.057096486855
+   },
+   {
+    "s_start": 3172.62,
+    "s_end": 3244.99,
+    "vmin_kmh": 98.6,
+    "vmin_s": 3196.1,
+    "brake_s": 3174.05827146279
+   },
+   {
+    "s_start": 3244.99,
+    "s_end": 3317.78,
+    "vmin_kmh": 116.5,
+    "vmin_s": 3246.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3317.78,
+    "s_end": 3390.49,
+    "vmin_kmh": 166.9,
+    "vmin_s": 3318.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3390.49,
+    "s_end": 3463.26,
+    "vmin_kmh": 192.3,
+    "vmin_s": 3392.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3463.26,
+    "s_end": 3536.03,
+    "vmin_kmh": 211.7,
+    "vmin_s": 3464.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3536.03,
+    "s_end": 3608.79,
+    "vmin_kmh": 225.0,
+    "vmin_s": 3536.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3608.79,
+    "s_end": 3681.56,
+    "vmin_kmh": 234.2,
+    "vmin_s": 3610.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3681.56,
+    "s_end": 3754.33,
+    "vmin_kmh": 242.2,
+    "vmin_s": 3682.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3754.33,
+    "s_end": 3827.11,
+    "vmin_kmh": 250.5,
+    "vmin_s": 3756.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3827.11,
+    "s_end": 3897.45,
+    "vmin_kmh": 239.2,
+    "vmin_s": 3846.1,
+    "brake_s": 3830.0703149661263
+   },
+   {
+    "s_start": 3897.45,
+    "s_end": 3970.2,
+    "vmin_kmh": 241.8,
+    "vmin_s": 3898.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 3970.2,
+    "s_end": 4042.97,
+    "vmin_kmh": 249.4,
+    "vmin_s": 3972.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 4042.97,
+    "s_end": 4115.75,
+    "vmin_kmh": 257.4,
+    "vmin_s": 4044.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 4115.75,
+    "s_end": 4188.52,
+    "vmin_kmh": 264.7,
+    "vmin_s": 4116.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 4188.52,
+    "s_end": 4261.3,
+    "vmin_kmh": 270.7,
+    "vmin_s": 4190.1,
+    "brake_s": null
+   },
+   {
+    "s_start": 4261.3,
+    "s_end": 4334.08,
+    "vmin_kmh": 276.1,
+    "vmin_s": 4262.1,
+    "brake_s": null
+   }
+  ]
+ },
+ "comparison": {
+  "nativo": {
+   "antes": {
+    "summary": {
+     "edge_offset_m": {
+      "median_abs": 14.42,
+      "p90_abs": 37.33,
+      "max_abs": 42.19,
+      "slices": 59
+     },
+     "vmin_pos_offset_m": {
+      "median_abs": 16.0,
+      "p90_abs": 38.4,
+      "max_abs": 110.0,
+      "slices": 60
+     },
+     "vmin_value_offset_kmh": {
+      "median_abs": 12.35,
+      "p90_abs": 24.58,
+      "max_abs": 38.6,
+      "slices": 60
+     },
+     "brake_pos_offset_m": {
+      "median_abs": 15.0,
+      "p90_abs": 38.6,
+      "max_abs": 84.0,
+      "slices": 18
+     },
+     "slices_where_target_and_majority_agree_on_braking": 52
+    },
+    "per_slice": [
+     {
+      "slice": 0,
+      "laps": 7,
+      "edge_offset_m": null,
+      "vmin_pos_offset_m": -4.0,
+      "vmin_value_offset_kmh": 12.6,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.286,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 1,
+      "laps": 7,
+      "edge_offset_m": 0.94,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 32.3,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 38.0
+     },
+     {
+      "slice": 2,
+      "laps": 7,
+      "edge_offset_m": -0.24,
+      "vmin_pos_offset_m": -4.0,
+      "vmin_value_offset_kmh": -7.9,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 0.0
+     },
+     {
+      "slice": 3,
+      "laps": 7,
+      "edge_offset_m": -4.71,
+      "vmin_pos_offset_m": -8.0,
+      "vmin_value_offset_kmh": 5.1,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -4.0
+     },
+     {
+      "slice": 4,
+      "laps": 7,
+      "edge_offset_m": -3.29,
+      "vmin_pos_offset_m": -22.0,
+      "vmin_value_offset_kmh": 10.0,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.429,
+      "brake_pos_offset_m": -14.0
+     },
+     {
+      "slice": 5,
+      "laps": 7,
+      "edge_offset_m": -2.14,
+      "vmin_pos_offset_m": -10.0,
+      "vmin_value_offset_kmh": -2.6,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.429,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 6,
+      "laps": 7,
+      "edge_offset_m": -0.01,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 6.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 7,
+      "laps": 7,
+      "edge_offset_m": 18.33,
+      "vmin_pos_offset_m": 18.0,
+      "vmin_value_offset_kmh": 4.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 8,
+      "laps": 7,
+      "edge_offset_m": 19.25,
+      "vmin_pos_offset_m": 20.0,
+      "vmin_value_offset_kmh": 4.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 9,
+      "laps": 7,
+      "edge_offset_m": 20.05,
+      "vmin_pos_offset_m": 22.0,
+      "vmin_value_offset_kmh": 3.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 10,
+      "laps": 7,
+      "edge_offset_m": 17.07,
+      "vmin_pos_offset_m": 18.0,
+      "vmin_value_offset_kmh": 4.5,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 11,
+      "laps": 7,
+      "edge_offset_m": 37.17,
+      "vmin_pos_offset_m": 38.0,
+      "vmin_value_offset_kmh": 10.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 12,
+      "laps": 7,
+      "edge_offset_m": 42.19,
+      "vmin_pos_offset_m": 44.0,
+      "vmin_value_offset_kmh": 12.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 13,
+      "laps": 7,
+      "edge_offset_m": 41.25,
+      "vmin_pos_offset_m": 42.0,
+      "vmin_value_offset_kmh": 12.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 14,
+      "laps": 7,
+      "edge_offset_m": 41.33,
+      "vmin_pos_offset_m": 42.0,
+      "vmin_value_offset_kmh": 13.5,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 15,
+      "laps": 7,
+      "edge_offset_m": 37.98,
+      "vmin_pos_offset_m": 38.0,
+      "vmin_value_offset_kmh": 15.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.286,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 16,
+      "laps": 7,
+      "edge_offset_m": 38.27,
+      "vmin_pos_offset_m": 110.0,
+      "vmin_value_offset_kmh": -20.8,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.857,
+      "brake_pos_offset_m": 33.0
+     },
+     {
+      "slice": 17,
+      "laps": 7,
+      "edge_offset_m": 38.57,
+      "vmin_pos_offset_m": 26.0,
+      "vmin_value_offset_kmh": -38.6,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 40.0
+     },
+     {
+      "slice": 18,
+      "laps": 7,
+      "edge_offset_m": 34.69,
+      "vmin_pos_offset_m": -10.0,
+      "vmin_value_offset_kmh": 3.3,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 84.0
+     },
+     {
+      "slice": 19,
+      "laps": 7,
+      "edge_offset_m": 36.86,
+      "vmin_pos_offset_m": 18.0,
+      "vmin_value_offset_kmh": 14.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.143,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 20,
+      "laps": 7,
+      "edge_offset_m": 35.27,
+      "vmin_pos_offset_m": 36.0,
+      "vmin_value_offset_kmh": 26.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 21,
+      "laps": 7,
+      "edge_offset_m": 30.95,
+      "vmin_pos_offset_m": 32.0,
+      "vmin_value_offset_kmh": 12.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 22,
+      "laps": 7,
+      "edge_offset_m": 31.94,
+      "vmin_pos_offset_m": 32.0,
+      "vmin_value_offset_kmh": 11.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 23,
+      "laps": 7,
+      "edge_offset_m": 28.75,
+      "vmin_pos_offset_m": 30.0,
+      "vmin_value_offset_kmh": 10.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 24,
+      "laps": 7,
+      "edge_offset_m": 26.9,
+      "vmin_pos_offset_m": 28.0,
+      "vmin_value_offset_kmh": 12.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 25,
+      "laps": 7,
+      "edge_offset_m": 24.45,
+      "vmin_pos_offset_m": 94.0,
+      "vmin_value_offset_kmh": -6.9,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 26,
+      "laps": 7,
+      "edge_offset_m": 21.87,
+      "vmin_pos_offset_m": 20.0,
+      "vmin_value_offset_kmh": -21.8,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.857,
+      "brake_pos_offset_m": 1.0
+     },
+     {
+      "slice": 27,
+      "laps": 7,
+      "edge_offset_m": 19.4,
+      "vmin_pos_offset_m": -18.0,
+      "vmin_value_offset_kmh": -12.8,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 28,
+      "laps": 7,
+      "edge_offset_m": 20.39,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 14.9,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.571,
+      "brake_pos_offset_m": 16.0
+     },
+     {
+      "slice": 29,
+      "laps": 7,
+      "edge_offset_m": 15.78,
+      "vmin_pos_offset_m": 4.0,
+      "vmin_value_offset_kmh": 14.0,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 30,
+      "laps": 7,
+      "edge_offset_m": 14.53,
+      "vmin_pos_offset_m": 4.0,
+      "vmin_value_offset_kmh": -32.3,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -26.0
+     },
+     {
+      "slice": 31,
+      "laps": 7,
+      "edge_offset_m": 9.55,
+      "vmin_pos_offset_m": -34.0,
+      "vmin_value_offset_kmh": 11.3,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 12.0
+     },
+     {
+      "slice": 32,
+      "laps": 7,
+      "edge_offset_m": 12.42,
+      "vmin_pos_offset_m": 10.0,
+      "vmin_value_offset_kmh": 17.2,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.571,
+      "brake_pos_offset_m": -18.0
+     },
+     {
+      "slice": 33,
+      "laps": 7,
+      "edge_offset_m": 13.87,
+      "vmin_pos_offset_m": -20.0,
+      "vmin_value_offset_kmh": 20.8,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.571,
+      "brake_pos_offset_m": 18.0
+     },
+     {
+      "slice": 34,
+      "laps": 7,
+      "edge_offset_m": 20.52,
+      "vmin_pos_offset_m": 20.0,
+      "vmin_value_offset_kmh": 8.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.429,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 35,
+      "laps": 7,
+      "edge_offset_m": 19.84,
+      "vmin_pos_offset_m": 88.0,
+      "vmin_value_offset_kmh": 15.2,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.143,
+      "brake_pos_offset_m": -8.0
+     },
+     {
+      "slice": 36,
+      "laps": 7,
+      "edge_offset_m": 17.81,
+      "vmin_pos_offset_m": 4.0,
+      "vmin_value_offset_kmh": -35.2,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -8.0
+     },
+     {
+      "slice": 37,
+      "laps": 7,
+      "edge_offset_m": 11.61,
+      "vmin_pos_offset_m": -20.0,
+      "vmin_value_offset_kmh": 9.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 38,
+      "laps": 7,
+      "edge_offset_m": 17.79,
+      "vmin_pos_offset_m": 18.0,
+      "vmin_value_offset_kmh": 24.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 39,
+      "laps": 7,
+      "edge_offset_m": 15.33,
+      "vmin_pos_offset_m": 16.0,
+      "vmin_value_offset_kmh": 17.0,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 40,
+      "laps": 7,
+      "edge_offset_m": 14.13,
+      "vmin_pos_offset_m": 16.0,
+      "vmin_value_offset_kmh": 6.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 41,
+      "laps": 7,
+      "edge_offset_m": 13.99,
+      "vmin_pos_offset_m": 14.0,
+      "vmin_value_offset_kmh": -0.5,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 42,
+      "laps": 7,
+      "edge_offset_m": 14.42,
+      "vmin_pos_offset_m": 16.0,
+      "vmin_value_offset_kmh": -3.8,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.429,
+      "brake_pos_offset_m": 24.0
+     },
+     {
+      "slice": 43,
+      "laps": 7,
+      "edge_offset_m": 11.88,
+      "vmin_pos_offset_m": 8.0,
+      "vmin_value_offset_kmh": -29.5,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -10.0
+     },
+     {
+      "slice": 44,
+      "laps": 7,
+      "edge_offset_m": 6.72,
+      "vmin_pos_offset_m": -36.0,
+      "vmin_value_offset_kmh": 0.5,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.857,
+      "brake_pos_offset_m": 8.0
+     },
+     {
+      "slice": 45,
+      "laps": 7,
+      "edge_offset_m": 10.08,
+      "vmin_pos_offset_m": 12.0,
+      "vmin_value_offset_kmh": 24.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 46,
+      "laps": 7,
+      "edge_offset_m": 6.86,
+      "vmin_pos_offset_m": 8.0,
+      "vmin_value_offset_kmh": 19.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 47,
+      "laps": 7,
+      "edge_offset_m": 3.45,
+      "vmin_pos_offset_m": 4.0,
+      "vmin_value_offset_kmh": 15.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 48,
+      "laps": 7,
+      "edge_offset_m": 1.69,
+      "vmin_pos_offset_m": 2.0,
+      "vmin_value_offset_kmh": 16.6,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 49,
+      "laps": 7,
+      "edge_offset_m": 1.42,
+      "vmin_pos_offset_m": 2.0,
+      "vmin_value_offset_kmh": 16.5,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 50,
+      "laps": 7,
+      "edge_offset_m": -1.46,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 15.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 51,
+      "laps": 7,
+      "edge_offset_m": 1.21,
+      "vmin_pos_offset_m": 2.0,
+      "vmin_value_offset_kmh": 17.0,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 52,
+      "laps": 7,
+      "edge_offset_m": -3.78,
+      "vmin_pos_offset_m": -2.0,
+      "vmin_value_offset_kmh": 15.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 53,
+      "laps": 7,
+      "edge_offset_m": -4.55,
+      "vmin_pos_offset_m": 18.0,
+      "vmin_value_offset_kmh": -3.4,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 54,
+      "laps": 7,
+      "edge_offset_m": 0.76,
+      "vmin_pos_offset_m": 2.0,
+      "vmin_value_offset_kmh": -7.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 55,
+      "laps": 7,
+      "edge_offset_m": -4.1,
+      "vmin_pos_offset_m": -4.0,
+      "vmin_value_offset_kmh": -7.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 56,
+      "laps": 7,
+      "edge_offset_m": -4.65,
+      "vmin_pos_offset_m": -4.0,
+      "vmin_value_offset_kmh": -5.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 57,
+      "laps": 7,
+      "edge_offset_m": -3.97,
+      "vmin_pos_offset_m": -2.0,
+      "vmin_value_offset_kmh": -3.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 58,
+      "laps": 7,
+      "edge_offset_m": -4.51,
+      "vmin_pos_offset_m": -4.0,
+      "vmin_value_offset_kmh": -1.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 59,
+      "laps": 7,
+      "edge_offset_m": -2.13,
+      "vmin_pos_offset_m": -2.0,
+      "vmin_value_offset_kmh": 0.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     }
+    ]
+   },
+   "depois": {
+    "summary": {
+     "edge_offset_m": {
+      "median_abs": 0.97,
+      "p90_abs": 1.83,
+      "max_abs": 1.99,
+      "slices": 59
+     },
+     "vmin_pos_offset_m": {
+      "median_abs": 0.0,
+      "p90_abs": 18.2,
+      "max_abs": 36.0,
+      "slices": 60
+     },
+     "vmin_value_offset_kmh": {
+      "median_abs": 9.25,
+      "p90_abs": 16.75,
+      "max_abs": 32.3,
+      "slices": 60
+     },
+     "brake_pos_offset_m": {
+      "median_abs": 12.0,
+      "p90_abs": 28.0,
+      "max_abs": 38.0,
+      "slices": 18
+     },
+     "slices_where_target_and_majority_agree_on_braking": 54
+    },
+    "per_slice": [
+     {
+      "slice": 0,
+      "laps": 7,
+      "edge_offset_m": null,
+      "vmin_pos_offset_m": -4.0,
+      "vmin_value_offset_kmh": 12.6,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.286,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 1,
+      "laps": 7,
+      "edge_offset_m": -1.22,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 32.3,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 38.0
+     },
+     {
+      "slice": 2,
+      "laps": 7,
+      "edge_offset_m": -0.45,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": -17.2,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 0.0
+     },
+     {
+      "slice": 3,
+      "laps": 7,
+      "edge_offset_m": -1.67,
+      "vmin_pos_offset_m": -8.0,
+      "vmin_value_offset_kmh": 5.1,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 0.0
+     },
+     {
+      "slice": 4,
+      "laps": 7,
+      "edge_offset_m": 0.9,
+      "vmin_pos_offset_m": -18.0,
+      "vmin_value_offset_kmh": 10.0,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.429,
+      "brake_pos_offset_m": -14.0
+     },
+     {
+      "slice": 5,
+      "laps": 7,
+      "edge_offset_m": -0.51,
+      "vmin_pos_offset_m": -10.0,
+      "vmin_value_offset_kmh": -2.6,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.429,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 6,
+      "laps": 7,
+      "edge_offset_m": -0.15,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 6.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 7,
+      "laps": 7,
+      "edge_offset_m": -1.72,
+      "vmin_pos_offset_m": -2.0,
+      "vmin_value_offset_kmh": -2.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 8,
+      "laps": 7,
+      "edge_offset_m": -0.97,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": -0.0,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 9,
+      "laps": 7,
+      "edge_offset_m": -0.21,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": -0.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 10,
+      "laps": 7,
+      "edge_offset_m": -1.45,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 1.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 11,
+      "laps": 7,
+      "edge_offset_m": 0.02,
+      "vmin_pos_offset_m": 2.0,
+      "vmin_value_offset_kmh": 4.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 12,
+      "laps": 7,
+      "edge_offset_m": -0.73,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 6.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 13,
+      "laps": 7,
+      "edge_offset_m": -1.96,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 7.6,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 14,
+      "laps": 7,
+      "edge_offset_m": -0.62,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 9.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 15,
+      "laps": 7,
+      "edge_offset_m": -1.85,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 11.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.286,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 16,
+      "laps": 7,
+      "edge_offset_m": -1.07,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 14.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.857,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 17,
+      "laps": 7,
+      "edge_offset_m": -0.29,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 9.4,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 8.0
+     },
+     {
+      "slice": 18,
+      "laps": 7,
+      "edge_offset_m": -1.51,
+      "vmin_pos_offset_m": -10.0,
+      "vmin_value_offset_kmh": 3.3,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 0.0
+     },
+     {
+      "slice": 19,
+      "laps": 7,
+      "edge_offset_m": -0.81,
+      "vmin_pos_offset_m": -20.0,
+      "vmin_value_offset_kmh": 7.0,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.143,
+      "brake_pos_offset_m": 12.0
+     },
+     {
+      "slice": 20,
+      "laps": 7,
+      "edge_offset_m": -0.18,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 10.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 21,
+      "laps": 7,
+      "edge_offset_m": -1.41,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 6.0,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 22,
+      "laps": 7,
+      "edge_offset_m": -0.66,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 4.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 23,
+      "laps": 7,
+      "edge_offset_m": -1.89,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 5.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 24,
+      "laps": 7,
+      "edge_offset_m": -1.12,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 7.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 25,
+      "laps": 7,
+      "edge_offset_m": -0.34,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 11.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 26,
+      "laps": 7,
+      "edge_offset_m": -1.56,
+      "vmin_pos_offset_m": -12.0,
+      "vmin_value_offset_kmh": -20.5,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.857,
+      "brake_pos_offset_m": -21.0
+     },
+     {
+      "slice": 27,
+      "laps": 7,
+      "edge_offset_m": -0.79,
+      "vmin_pos_offset_m": -20.0,
+      "vmin_value_offset_kmh": -12.8,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 28,
+      "laps": 7,
+      "edge_offset_m": -0.07,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 14.9,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.571,
+      "brake_pos_offset_m": -4.0
+     },
+     {
+      "slice": 29,
+      "laps": 7,
+      "edge_offset_m": -1.3,
+      "vmin_pos_offset_m": -12.0,
+      "vmin_value_offset_kmh": 13.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 30,
+      "laps": 7,
+      "edge_offset_m": -0.6,
+      "vmin_pos_offset_m": -8.0,
+      "vmin_value_offset_kmh": -31.7,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -28.0
+     },
+     {
+      "slice": 31,
+      "laps": 7,
+      "edge_offset_m": -1.83,
+      "vmin_pos_offset_m": -34.0,
+      "vmin_value_offset_kmh": 11.3,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 12.0
+     },
+     {
+      "slice": 32,
+      "laps": 7,
+      "edge_offset_m": -1.41,
+      "vmin_pos_offset_m": -4.0,
+      "vmin_value_offset_kmh": 11.8,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.571,
+      "brake_pos_offset_m": -18.0
+     },
+     {
+      "slice": 33,
+      "laps": 7,
+      "edge_offset_m": -0.82,
+      "vmin_pos_offset_m": -20.0,
+      "vmin_value_offset_kmh": 20.8,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.571,
+      "brake_pos_offset_m": 18.0
+     },
+     {
+      "slice": 34,
+      "laps": 7,
+      "edge_offset_m": -0.18,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 8.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.429,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 35,
+      "laps": 7,
+      "edge_offset_m": -1.51,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 9.7,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.143,
+      "brake_pos_offset_m": -8.0
+     },
+     {
+      "slice": 36,
+      "laps": 7,
+      "edge_offset_m": -0.75,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": -24.7,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -28.0
+     },
+     {
+      "slice": 37,
+      "laps": 7,
+      "edge_offset_m": -1.99,
+      "vmin_pos_offset_m": -20.0,
+      "vmin_value_offset_kmh": 9.9,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 0.0
+     },
+     {
+      "slice": 38,
+      "laps": 7,
+      "edge_offset_m": -1.86,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 10.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 39,
+      "laps": 7,
+      "edge_offset_m": -1.23,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 7.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 40,
+      "laps": 7,
+      "edge_offset_m": -0.47,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 2.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 41,
+      "laps": 7,
+      "edge_offset_m": -1.72,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": -3.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 42,
+      "laps": 7,
+      "edge_offset_m": -0.99,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": -5.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.429,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 43,
+      "laps": 7,
+      "edge_offset_m": -0.21,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": -11.3,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -12.0
+     },
+     {
+      "slice": 44,
+      "laps": 7,
+      "edge_offset_m": -1.44,
+      "vmin_pos_offset_m": -36.0,
+      "vmin_value_offset_kmh": 0.5,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.857,
+      "brake_pos_offset_m": 0.0
+     },
+     {
+      "slice": 45,
+      "laps": 7,
+      "edge_offset_m": -1.07,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 14.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 46,
+      "laps": 7,
+      "edge_offset_m": -0.28,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 15.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 47,
+      "laps": 7,
+      "edge_offset_m": -1.57,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 13.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 48,
+      "laps": 7,
+      "edge_offset_m": -0.8,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 16.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 49,
+      "laps": 7,
+      "edge_offset_m": -0.03,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 16.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 50,
+      "laps": 7,
+      "edge_offset_m": -1.28,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 15.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 51,
+      "laps": 7,
+      "edge_offset_m": -0.51,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 16.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 52,
+      "laps": 7,
+      "edge_offset_m": -1.74,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 15.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 53,
+      "laps": 7,
+      "edge_offset_m": -0.96,
+      "vmin_pos_offset_m": 18.0,
+      "vmin_value_offset_kmh": -3.4,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 54,
+      "laps": 7,
+      "edge_offset_m": -0.62,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": -8.0,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 55,
+      "laps": 7,
+      "edge_offset_m": -1.87,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": -7.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 56,
+      "laps": 7,
+      "edge_offset_m": -1.1,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": -4.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 57,
+      "laps": 7,
+      "edge_offset_m": -0.33,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": -3.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 58,
+      "laps": 7,
+      "edge_offset_m": -1.56,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": -1.6,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 59,
+      "laps": 7,
+      "edge_offset_m": -0.78,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 0.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     }
+    ]
+   }
+  },
+  "reprojetado": {
+   "antes": {
+    "summary": {
+     "edge_offset_m": {
+      "median_abs": 14.42,
+      "p90_abs": 37.33,
+      "max_abs": 42.19,
+      "slices": 59
+     },
+     "vmin_pos_offset_m": {
+      "median_abs": 16.0,
+      "p90_abs": 38.4,
+      "max_abs": 110.0,
+      "slices": 60
+     },
+     "vmin_value_offset_kmh": {
+      "median_abs": 11.75,
+      "p90_abs": 24.94,
+      "max_abs": 42.2,
+      "slices": 60
+     },
+     "brake_pos_offset_m": {
+      "median_abs": 17.5,
+      "p90_abs": 49.0,
+      "max_abs": 86.0,
+      "slices": 22
+     },
+     "slices_where_target_and_majority_agree_on_braking": 50
+    },
+    "per_slice": [
+     {
+      "slice": 0,
+      "laps": 122,
+      "edge_offset_m": null,
+      "vmin_pos_offset_m": -2.0,
+      "vmin_value_offset_kmh": 7.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.025,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 1,
+      "laps": 122,
+      "edge_offset_m": 0.94,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": -9.7,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.918,
+      "brake_pos_offset_m": -6.0
+     },
+     {
+      "slice": 2,
+      "laps": 122,
+      "edge_offset_m": -0.24,
+      "vmin_pos_offset_m": -4.0,
+      "vmin_value_offset_kmh": -21.2,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.918,
+      "brake_pos_offset_m": 0.0
+     },
+     {
+      "slice": 3,
+      "laps": 122,
+      "edge_offset_m": -4.71,
+      "vmin_pos_offset_m": -6.0,
+      "vmin_value_offset_kmh": 1.0,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.918,
+      "brake_pos_offset_m": -4.0
+     },
+     {
+      "slice": 4,
+      "laps": 122,
+      "edge_offset_m": -3.29,
+      "vmin_pos_offset_m": -2.0,
+      "vmin_value_offset_kmh": 1.3,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.77,
+      "brake_pos_offset_m": 17.0
+     },
+     {
+      "slice": 5,
+      "laps": 122,
+      "edge_offset_m": -2.14,
+      "vmin_pos_offset_m": -10.0,
+      "vmin_value_offset_kmh": -6.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.959,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 6,
+      "laps": 122,
+      "edge_offset_m": -0.01,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 6.5,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.082,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 7,
+      "laps": 122,
+      "edge_offset_m": 16.33,
+      "vmin_pos_offset_m": 18.0,
+      "vmin_value_offset_kmh": 7.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 8,
+      "laps": 122,
+      "edge_offset_m": 19.25,
+      "vmin_pos_offset_m": 20.0,
+      "vmin_value_offset_kmh": 7.5,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.082,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 9,
+      "laps": 122,
+      "edge_offset_m": 20.05,
+      "vmin_pos_offset_m": 22.0,
+      "vmin_value_offset_kmh": 8.0,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.098,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 10,
+      "laps": 122,
+      "edge_offset_m": 17.07,
+      "vmin_pos_offset_m": 18.0,
+      "vmin_value_offset_kmh": 8.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 11,
+      "laps": 122,
+      "edge_offset_m": 37.17,
+      "vmin_pos_offset_m": 38.0,
+      "vmin_value_offset_kmh": 12.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.016,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 12,
+      "laps": 122,
+      "edge_offset_m": 42.19,
+      "vmin_pos_offset_m": 44.0,
+      "vmin_value_offset_kmh": 12.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 13,
+      "laps": 122,
+      "edge_offset_m": 41.25,
+      "vmin_pos_offset_m": 42.0,
+      "vmin_value_offset_kmh": 11.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 14,
+      "laps": 122,
+      "edge_offset_m": 41.33,
+      "vmin_pos_offset_m": 42.0,
+      "vmin_value_offset_kmh": 10.6,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 15,
+      "laps": 122,
+      "edge_offset_m": 37.98,
+      "vmin_pos_offset_m": 38.0,
+      "vmin_value_offset_kmh": 10.6,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.025,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 16,
+      "laps": 122,
+      "edge_offset_m": 38.27,
+      "vmin_pos_offset_m": 110.0,
+      "vmin_value_offset_kmh": -27.4,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.295,
+      "brake_pos_offset_m": 28.0
+     },
+     {
+      "slice": 17,
+      "laps": 122,
+      "edge_offset_m": 38.57,
+      "vmin_pos_offset_m": 26.0,
+      "vmin_value_offset_kmh": -42.2,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 40.0
+     },
+     {
+      "slice": 18,
+      "laps": 122,
+      "edge_offset_m": 34.69,
+      "vmin_pos_offset_m": -18.0,
+      "vmin_value_offset_kmh": 0.7,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 84.0
+     },
+     {
+      "slice": 19,
+      "laps": 122,
+      "edge_offset_m": 36.86,
+      "vmin_pos_offset_m": 20.0,
+      "vmin_value_offset_kmh": 13.0,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.033,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 20,
+      "laps": 122,
+      "edge_offset_m": 35.27,
+      "vmin_pos_offset_m": 36.0,
+      "vmin_value_offset_kmh": 26.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 21,
+      "laps": 122,
+      "edge_offset_m": 30.95,
+      "vmin_pos_offset_m": 32.0,
+      "vmin_value_offset_kmh": 15.5,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 22,
+      "laps": 122,
+      "edge_offset_m": 31.94,
+      "vmin_pos_offset_m": 32.0,
+      "vmin_value_offset_kmh": 15.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 23,
+      "laps": 122,
+      "edge_offset_m": 28.75,
+      "vmin_pos_offset_m": 30.0,
+      "vmin_value_offset_kmh": 15.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.033,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 24,
+      "laps": 122,
+      "edge_offset_m": 26.9,
+      "vmin_pos_offset_m": 28.0,
+      "vmin_value_offset_kmh": 16.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 25,
+      "laps": 122,
+      "edge_offset_m": 24.45,
+      "vmin_pos_offset_m": 94.0,
+      "vmin_value_offset_kmh": -1.7,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": 50.0
+     },
+     {
+      "slice": 26,
+      "laps": 122,
+      "edge_offset_m": 21.87,
+      "vmin_pos_offset_m": 20.0,
+      "vmin_value_offset_kmh": -23.8,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.992,
+      "brake_pos_offset_m": -6.0
+     },
+     {
+      "slice": 27,
+      "laps": 122,
+      "edge_offset_m": 19.4,
+      "vmin_pos_offset_m": -20.0,
+      "vmin_value_offset_kmh": -15.6,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.066,
+      "brake_pos_offset_m": -25.0
+     },
+     {
+      "slice": 28,
+      "laps": 122,
+      "edge_offset_m": 20.39,
+      "vmin_pos_offset_m": 4.0,
+      "vmin_value_offset_kmh": 9.2,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.975,
+      "brake_pos_offset_m": 14.0
+     },
+     {
+      "slice": 29,
+      "laps": 122,
+      "edge_offset_m": 15.78,
+      "vmin_pos_offset_m": -2.0,
+      "vmin_value_offset_kmh": 13.9,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.385,
+      "brake_pos_offset_m": 86.0
+     },
+     {
+      "slice": 30,
+      "laps": 122,
+      "edge_offset_m": 14.53,
+      "vmin_pos_offset_m": 4.0,
+      "vmin_value_offset_kmh": -35.4,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -29.0
+     },
+     {
+      "slice": 31,
+      "laps": 122,
+      "edge_offset_m": 9.55,
+      "vmin_pos_offset_m": -18.0,
+      "vmin_value_offset_kmh": 9.6,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 12.0
+     },
+     {
+      "slice": 32,
+      "laps": 122,
+      "edge_offset_m": 12.42,
+      "vmin_pos_offset_m": 12.0,
+      "vmin_value_offset_kmh": 15.2,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.975,
+      "brake_pos_offset_m": -18.0
+     },
+     {
+      "slice": 33,
+      "laps": 122,
+      "edge_offset_m": 13.87,
+      "vmin_pos_offset_m": -12.0,
+      "vmin_value_offset_kmh": 14.6,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.975,
+      "brake_pos_offset_m": 18.0
+     },
+     {
+      "slice": 34,
+      "laps": 122,
+      "edge_offset_m": 20.52,
+      "vmin_pos_offset_m": 22.0,
+      "vmin_value_offset_kmh": 10.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.82,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 35,
+      "laps": 122,
+      "edge_offset_m": 19.84,
+      "vmin_pos_offset_m": 88.0,
+      "vmin_value_offset_kmh": 19.1,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.033,
+      "brake_pos_offset_m": 37.0
+     },
+     {
+      "slice": 36,
+      "laps": 122,
+      "edge_offset_m": 17.81,
+      "vmin_pos_offset_m": 4.0,
+      "vmin_value_offset_kmh": -36.0,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -12.0
+     },
+     {
+      "slice": 37,
+      "laps": 122,
+      "edge_offset_m": 11.61,
+      "vmin_pos_offset_m": -22.0,
+      "vmin_value_offset_kmh": 9.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 38,
+      "laps": 122,
+      "edge_offset_m": 17.79,
+      "vmin_pos_offset_m": 18.0,
+      "vmin_value_offset_kmh": 24.0,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 39,
+      "laps": 122,
+      "edge_offset_m": 15.33,
+      "vmin_pos_offset_m": 16.0,
+      "vmin_value_offset_kmh": 18.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 40,
+      "laps": 122,
+      "edge_offset_m": 14.13,
+      "vmin_pos_offset_m": 16.0,
+      "vmin_value_offset_kmh": 10.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 41,
+      "laps": 122,
+      "edge_offset_m": 13.99,
+      "vmin_pos_offset_m": 14.0,
+      "vmin_value_offset_kmh": 3.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 42,
+      "laps": 122,
+      "edge_offset_m": 14.42,
+      "vmin_pos_offset_m": 16.0,
+      "vmin_value_offset_kmh": -0.3,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.057,
+      "brake_pos_offset_m": 16.0
+     },
+     {
+      "slice": 43,
+      "laps": 122,
+      "edge_offset_m": 11.88,
+      "vmin_pos_offset_m": 8.0,
+      "vmin_value_offset_kmh": -29.6,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -12.0
+     },
+     {
+      "slice": 44,
+      "laps": 122,
+      "edge_offset_m": 6.72,
+      "vmin_pos_offset_m": -38.0,
+      "vmin_value_offset_kmh": -0.4,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.992,
+      "brake_pos_offset_m": 8.0
+     },
+     {
+      "slice": 45,
+      "laps": 122,
+      "edge_offset_m": 10.08,
+      "vmin_pos_offset_m": 12.0,
+      "vmin_value_offset_kmh": 24.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.016,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 46,
+      "laps": 122,
+      "edge_offset_m": 6.86,
+      "vmin_pos_offset_m": 8.0,
+      "vmin_value_offset_kmh": 23.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 47,
+      "laps": 122,
+      "edge_offset_m": 3.45,
+      "vmin_pos_offset_m": 4.0,
+      "vmin_value_offset_kmh": 20.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 48,
+      "laps": 122,
+      "edge_offset_m": 1.69,
+      "vmin_pos_offset_m": 2.0,
+      "vmin_value_offset_kmh": 22.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 49,
+      "laps": 122,
+      "edge_offset_m": 1.42,
+      "vmin_pos_offset_m": 2.0,
+      "vmin_value_offset_kmh": 22.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.098,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 50,
+      "laps": 122,
+      "edge_offset_m": -1.46,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 21.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.033,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 51,
+      "laps": 122,
+      "edge_offset_m": 1.21,
+      "vmin_pos_offset_m": 2.0,
+      "vmin_value_offset_kmh": 22.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 52,
+      "laps": 122,
+      "edge_offset_m": -3.78,
+      "vmin_pos_offset_m": -2.0,
+      "vmin_value_offset_kmh": 21.6,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 53,
+      "laps": 122,
+      "edge_offset_m": -4.55,
+      "vmin_pos_offset_m": 18.0,
+      "vmin_value_offset_kmh": 2.7,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.041,
+      "brake_pos_offset_m": -40.0
+     },
+     {
+      "slice": 54,
+      "laps": 122,
+      "edge_offset_m": 0.76,
+      "vmin_pos_offset_m": 2.0,
+      "vmin_value_offset_kmh": -1.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.033,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 55,
+      "laps": 122,
+      "edge_offset_m": -4.1,
+      "vmin_pos_offset_m": -4.0,
+      "vmin_value_offset_kmh": -1.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.09,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 56,
+      "laps": 122,
+      "edge_offset_m": -4.65,
+      "vmin_pos_offset_m": -4.0,
+      "vmin_value_offset_kmh": 0.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.09,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 57,
+      "laps": 122,
+      "edge_offset_m": -3.97,
+      "vmin_pos_offset_m": -2.0,
+      "vmin_value_offset_kmh": 3.0,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.107,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 58,
+      "laps": 122,
+      "edge_offset_m": -4.51,
+      "vmin_pos_offset_m": -4.0,
+      "vmin_value_offset_kmh": 5.0,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 59,
+      "laps": 122,
+      "edge_offset_m": -2.13,
+      "vmin_pos_offset_m": -2.0,
+      "vmin_value_offset_kmh": 7.5,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     }
+    ]
+   },
+   "depois": {
+    "summary": {
+     "edge_offset_m": {
+      "median_abs": 0.97,
+      "p90_abs": 1.85,
+      "max_abs": 3.72,
+      "slices": 59
+     },
+     "vmin_pos_offset_m": {
+      "median_abs": 0.0,
+      "p90_abs": 18.0,
+      "max_abs": 38.0,
+      "slices": 60
+     },
+     "vmin_value_offset_kmh": {
+      "median_abs": 8.6,
+      "p90_abs": 21.77,
+      "max_abs": 34.8,
+      "slices": 60
+     },
+     "brake_pos_offset_m": {
+      "median_abs": 13.0,
+      "p90_abs": 37.3,
+      "max_abs": 63.0,
+      "slices": 20
+     },
+     "slices_where_target_and_majority_agree_on_braking": 54
+    },
+    "per_slice": [
+     {
+      "slice": 0,
+      "laps": 122,
+      "edge_offset_m": null,
+      "vmin_pos_offset_m": -2.0,
+      "vmin_value_offset_kmh": 7.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.025,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 1,
+      "laps": 122,
+      "edge_offset_m": -1.22,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": -9.7,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.918,
+      "brake_pos_offset_m": -6.0
+     },
+     {
+      "slice": 2,
+      "laps": 122,
+      "edge_offset_m": -0.45,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": -30.5,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.918,
+      "brake_pos_offset_m": 0.0
+     },
+     {
+      "slice": 3,
+      "laps": 122,
+      "edge_offset_m": -1.67,
+      "vmin_pos_offset_m": -6.0,
+      "vmin_value_offset_kmh": 1.0,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.918,
+      "brake_pos_offset_m": 0.0
+     },
+     {
+      "slice": 4,
+      "laps": 122,
+      "edge_offset_m": 0.9,
+      "vmin_pos_offset_m": 2.0,
+      "vmin_value_offset_kmh": 1.3,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.77,
+      "brake_pos_offset_m": 17.0
+     },
+     {
+      "slice": 5,
+      "laps": 122,
+      "edge_offset_m": -0.51,
+      "vmin_pos_offset_m": -10.0,
+      "vmin_value_offset_kmh": -6.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.959,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 6,
+      "laps": 122,
+      "edge_offset_m": -0.15,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 6.5,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.082,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 7,
+      "laps": 122,
+      "edge_offset_m": -3.72,
+      "vmin_pos_offset_m": -2.0,
+      "vmin_value_offset_kmh": 0.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 8,
+      "laps": 122,
+      "edge_offset_m": -0.97,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 3.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.082,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 9,
+      "laps": 122,
+      "edge_offset_m": -0.21,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 3.6,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.098,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 10,
+      "laps": 122,
+      "edge_offset_m": -1.45,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 5.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 11,
+      "laps": 122,
+      "edge_offset_m": 0.02,
+      "vmin_pos_offset_m": 2.0,
+      "vmin_value_offset_kmh": 6.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.016,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 12,
+      "laps": 122,
+      "edge_offset_m": -0.73,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 6.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 13,
+      "laps": 122,
+      "edge_offset_m": -1.96,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 6.6,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 14,
+      "laps": 122,
+      "edge_offset_m": -0.62,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 6.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 15,
+      "laps": 122,
+      "edge_offset_m": -1.85,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 7.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.025,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 16,
+      "laps": 122,
+      "edge_offset_m": -1.07,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 8.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.295,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 17,
+      "laps": 122,
+      "edge_offset_m": -0.29,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 5.8,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 8.0
+     },
+     {
+      "slice": 18,
+      "laps": 122,
+      "edge_offset_m": -1.51,
+      "vmin_pos_offset_m": -18.0,
+      "vmin_value_offset_kmh": 0.7,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 0.0
+     },
+     {
+      "slice": 19,
+      "laps": 122,
+      "edge_offset_m": -0.81,
+      "vmin_pos_offset_m": -18.0,
+      "vmin_value_offset_kmh": 5.6,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.033,
+      "brake_pos_offset_m": 10.0
+     },
+     {
+      "slice": 20,
+      "laps": 122,
+      "edge_offset_m": -0.18,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 10.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 21,
+      "laps": 122,
+      "edge_offset_m": -1.41,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 8.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 22,
+      "laps": 122,
+      "edge_offset_m": -0.66,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 8.5,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 23,
+      "laps": 122,
+      "edge_offset_m": -1.89,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 9.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.033,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 24,
+      "laps": 122,
+      "edge_offset_m": -1.12,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 12.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 25,
+      "laps": 122,
+      "edge_offset_m": -0.34,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 16.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 26,
+      "laps": 122,
+      "edge_offset_m": -1.56,
+      "vmin_pos_offset_m": -12.0,
+      "vmin_value_offset_kmh": -22.5,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.992,
+      "brake_pos_offset_m": -28.0
+     },
+     {
+      "slice": 27,
+      "laps": 122,
+      "edge_offset_m": -0.79,
+      "vmin_pos_offset_m": -22.0,
+      "vmin_value_offset_kmh": -15.6,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.066,
+      "brake_pos_offset_m": -63.0
+     },
+     {
+      "slice": 28,
+      "laps": 122,
+      "edge_offset_m": -0.07,
+      "vmin_pos_offset_m": 4.0,
+      "vmin_value_offset_kmh": 9.2,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.975,
+      "brake_pos_offset_m": -6.0
+     },
+     {
+      "slice": 29,
+      "laps": 122,
+      "edge_offset_m": -1.3,
+      "vmin_pos_offset_m": -18.0,
+      "vmin_value_offset_kmh": 13.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.385,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 30,
+      "laps": 122,
+      "edge_offset_m": -0.6,
+      "vmin_pos_offset_m": -8.0,
+      "vmin_value_offset_kmh": -34.8,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -31.0
+     },
+     {
+      "slice": 31,
+      "laps": 122,
+      "edge_offset_m": -1.83,
+      "vmin_pos_offset_m": -18.0,
+      "vmin_value_offset_kmh": 9.6,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": 12.0
+     },
+     {
+      "slice": 32,
+      "laps": 122,
+      "edge_offset_m": -1.41,
+      "vmin_pos_offset_m": -2.0,
+      "vmin_value_offset_kmh": 9.8,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.975,
+      "brake_pos_offset_m": -18.0
+     },
+     {
+      "slice": 33,
+      "laps": 122,
+      "edge_offset_m": -0.82,
+      "vmin_pos_offset_m": -12.0,
+      "vmin_value_offset_kmh": 14.6,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.975,
+      "brake_pos_offset_m": 18.0
+     },
+     {
+      "slice": 34,
+      "laps": 122,
+      "edge_offset_m": -0.18,
+      "vmin_pos_offset_m": 2.0,
+      "vmin_value_offset_kmh": 9.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.82,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 35,
+      "laps": 122,
+      "edge_offset_m": -1.51,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": 13.6,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.033,
+      "brake_pos_offset_m": 37.0
+     },
+     {
+      "slice": 36,
+      "laps": 122,
+      "edge_offset_m": -0.75,
+      "vmin_pos_offset_m": -0.0,
+      "vmin_value_offset_kmh": -25.5,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -32.0
+     },
+     {
+      "slice": 37,
+      "laps": 122,
+      "edge_offset_m": -1.99,
+      "vmin_pos_offset_m": -22.0,
+      "vmin_value_offset_kmh": 9.1,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -2.0
+     },
+     {
+      "slice": 38,
+      "laps": 122,
+      "edge_offset_m": -1.86,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 10.0,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 39,
+      "laps": 122,
+      "edge_offset_m": -1.23,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 9.8,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 40,
+      "laps": 122,
+      "edge_offset_m": -0.47,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 6.5,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 41,
+      "laps": 122,
+      "edge_offset_m": -1.72,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 1.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 42,
+      "laps": 122,
+      "edge_offset_m": -0.99,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": -2.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.057,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 43,
+      "laps": 122,
+      "edge_offset_m": -0.21,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": -11.4,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 1.0,
+      "brake_pos_offset_m": -14.0
+     },
+     {
+      "slice": 44,
+      "laps": 122,
+      "edge_offset_m": -1.44,
+      "vmin_pos_offset_m": -38.0,
+      "vmin_value_offset_kmh": -0.4,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.992,
+      "brake_pos_offset_m": 0.0
+     },
+     {
+      "slice": 45,
+      "laps": 122,
+      "edge_offset_m": -1.07,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 14.9,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.016,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 46,
+      "laps": 122,
+      "edge_offset_m": -0.28,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 19.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.008,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 47,
+      "laps": 122,
+      "edge_offset_m": -1.57,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 19.1,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 48,
+      "laps": 122,
+      "edge_offset_m": -0.8,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 21.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 49,
+      "laps": 122,
+      "edge_offset_m": -0.03,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 22.5,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.098,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 50,
+      "laps": 122,
+      "edge_offset_m": -1.28,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 21.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.033,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 51,
+      "laps": 122,
+      "edge_offset_m": -0.51,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 22.4,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 52,
+      "laps": 122,
+      "edge_offset_m": -1.74,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 21.7,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 53,
+      "laps": 122,
+      "edge_offset_m": -0.96,
+      "vmin_pos_offset_m": 18.0,
+      "vmin_value_offset_kmh": 2.7,
+      "target_brakes": true,
+      "share_of_real_laps_braking": 0.041,
+      "brake_pos_offset_m": -40.0
+     },
+     {
+      "slice": 54,
+      "laps": 122,
+      "edge_offset_m": -0.62,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": -1.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.033,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 55,
+      "laps": 122,
+      "edge_offset_m": -1.87,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": -1.3,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.09,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 56,
+      "laps": 122,
+      "edge_offset_m": -1.1,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 1.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.09,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 57,
+      "laps": 122,
+      "edge_offset_m": -0.33,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 3.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.107,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 58,
+      "laps": 122,
+      "edge_offset_m": -1.56,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 5.2,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     },
+     {
+      "slice": 59,
+      "laps": 122,
+      "edge_offset_m": -0.78,
+      "vmin_pos_offset_m": 0.0,
+      "vmin_value_offset_kmh": 7.6,
+      "target_brakes": false,
+      "share_of_real_laps_braking": 0.0,
+      "brake_pos_offset_m": null
+     }
+    ]
+   }
+  }
+ },
+ "native_p_check": {
+  "samples": 266,
+  "median_m": 0.0,
+  "max_m": 0.0
+ },
+ "outlier_15_9m": {
+  "samples": 19802,
+  "gap_over_2m": 118,
+  "gap_over_5m": 30,
+  "raw_centerline_regions_over_2m_from_ml_line": [
+   {
+    "vertices": [
+     283,
+     302
+    ],
+    "runtime_distance_m": [
+     462.8,
+     499.9
+    ],
+    "max_lateral_offset_m": 11.26
+   },
+   {
+    "vertices": [
+     455,
+     485
+    ],
+    "runtime_distance_m": [
+     751.0,
+     807.0
+    ],
+    "max_lateral_offset_m": 11.04
+   }
+  ],
+  "diagnosis": "Nao e erro do mapeamento. A centerline crua do cache (a que o ProjectionEngine usa) esta deslocada ~10,8 m de lado nas regioes acima -- defeito de reconstrucao que load_geometry conserta e o runtime nao. Um carro na pista real em s_ML ~775-784 fica mais perto da diagonal dos segmentos 484-485 (que volta a linha certa) do que dos vertices deslocados, e o runtime o projeta ate ~30 m a frente por algumas amostras. O p do runtime salta; o mapeamento novo leva corretamente esse p ao s_ML do vertice.",
+  "worst": [
+   {
+    "line": 25370,
+    "world": [
+     31.07,
+     295.82
+    ],
+    "speed_kmh": 180.57928466796875,
+    "ml_s": 775.07,
+    "ml_lateral": 8.73,
+    "runtime_s": 810.87,
+    "runtime_segment": 485,
+    "runtime_distance_to_track": 18.0,
+    "mapped_minus_ml_m": 15.85,
+    "neighbours_gap_m": [
+     15.58,
+     0.13,
+     6.86,
+     0.02
+    ]
+   },
+   {
+    "line": 72640,
+    "world": [
+     31.19,
+     295.39
+    ],
+    "speed_kmh": 180.73963928222656,
+    "ml_s": 775.52,
+    "ml_lateral": 8.74,
+    "runtime_s": 810.87,
+    "runtime_segment": 485,
+    "runtime_distance_to_track": 17.62,
+    "mapped_minus_ml_m": 15.4,
+    "neighbours_gap_m": [
+     16.88,
+     0.13,
+     7.78,
+     0.02
+    ]
+   },
+   {
+    "line": 175020,
+    "world": [
+     32.41,
+     292.42
+    ],
+    "speed_kmh": 181.7098388671875,
+    "ml_s": 778.74,
+    "ml_lateral": 8.46,
+    "runtime_s": 810.87,
+    "runtime_segment": 485,
+    "runtime_distance_to_track": 14.76,
+    "mapped_minus_ml_m": 12.18,
+    "neighbours_gap_m": [
+     0.15,
+     0.12,
+     4.52,
+     0.02
+    ]
+   },
+   {
+    "line": 122860,
+    "world": [
+     33.31,
+     290.12
+    ],
+    "speed_kmh": 182.64596557617188,
+    "ml_s": 781.22,
+    "ml_lateral": 8.27,
+    "runtime_s": 810.87,
+    "runtime_segment": 485,
+    "runtime_distance_to_track": 12.7,
+    "mapped_minus_ml_m": 9.7,
+    "neighbours_gap_m": [
+     0.14,
+     0.11,
+     0.92,
+     0.01
+    ]
+   },
+   {
+    "line": 168630,
+    "world": [
+     41.68,
+     293.5
+    ],
+    "speed_kmh": 222.04270935058594,
+    "ml_s": 780.46,
+    "ml_lateral": -0.72,
+    "runtime_s": 806.59,
+    "runtime_segment": 484,
+    "runtime_distance_to_track": 9.48,
+    "mapped_minus_ml_m": 8.95,
+    "neighbours_gap_m": [
+     0.06,
+     0.06,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "line": 72650,
+    "world": [
+     33.96,
+     288.33
+    ],
+    "speed_kmh": 183.38766479492188,
+    "ml_s": 783.14,
+    "ml_lateral": 8.18,
+    "runtime_s": 810.87,
+    "runtime_segment": 485,
+    "runtime_distance_to_track": 11.26,
+    "mapped_minus_ml_m": 7.78,
+    "neighbours_gap_m": [
+     0.13,
+     15.4,
+     0.02,
+     0.0
+    ]
+   },
+   {
+    "line": 25380,
+    "world": [
+     34.34,
+     287.49
+    ],
+    "speed_kmh": 183.49229431152344,
+    "ml_s": 784.06,
+    "ml_lateral": 8.06,
+    "runtime_s": 810.87,
+    "runtime_segment": 485,
+    "runtime_distance_to_track": 10.57,
+    "mapped_minus_ml_m": 6.86,
+    "neighbours_gap_m": [
+     0.13,
+     15.85,
+     0.02,
+     0.0
+    ]
+   },
+   {
+    "line": 66920,
+    "world": [
+     44.67,
+     292.5
+    ],
+    "speed_kmh": 225.05589294433594,
+    "ml_s": 782.31,
+    "ml_lateral": -3.28,
+    "runtime_s": 804.83,
+    "runtime_segment": 484,
+    "runtime_distance_to_track": 6.86,
+    "mapped_minus_ml_m": 6.48,
+    "neighbours_gap_m": [
+     0.04,
+     0.04,
+     0.01,
+     0.0
+    ]
+   }
+  ]
+ }
+}
