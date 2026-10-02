@@ -1,0 +1,597 @@
+{
+  "etapa": "fase2c-ferramentas",
+  "data": "2026-10-02",
+  "commit_base": "b19409d620cb0c2ddc0331d1a51c98e5203cfa4b",
+  "base_do_patch": "handoff/fase2b",
+  "patch": {
+    "caminho": "docs/handoff/2026-10-02_fase2c.patch",
+    "sha256": "27a2d5084f37d32a178af19b7999ead5f328afe012cd2773958bc8632620f4b5",
+    "bytes": 58185
+  },
+  "ambiente": {
+    "python": "3.9.7",
+    "numpy": "1.26.3",
+    "pandas": "2.1.4",
+    "scipy": "1.11.4",
+    "scikit_learn": "1.6.1"
+  },
+  "pytest": {
+    "arquivo": "2026-10-02_fase2c_testes.txt",
+    "comando": "cd backend && python -m pytest tests -v -p no:cacheprovider",
+    "resumo": "426 passed, 4 warnings in 42.07s"
+  },
+  "testes_novos": {
+    "arquivo": "backend/tests/test_ml_controlled.py",
+    "efeitos_sinteticos": {
+      "frenagem_10m_mais_cedo_s": 0.04,
+      "linha_2m_s": 0.02,
+      "interacao_s": 0.0,
+      "ruido_por_volta_s": 0.02
+    },
+    "casos": [
+      {
+        "classe": "PlanTest",
+        "teste": "test_every_block_has_the_four_conditions_once",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "PlanTest",
+        "teste": "test_orders_differ_between_blocks",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "PlanTest",
+        "teste": "test_same_seed_same_plan_and_other_seed_other_order",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "PlanTest",
+        "teste": "test_text_version_lists_every_lap",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "PlanTest",
+        "teste": "test_unknown_inputs_are_refused",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "EffectRecoveryTest",
+        "teste": "test_an_incomplete_block_still_fits",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "EffectRecoveryTest",
+        "teste": "test_an_interaction_is_detected",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "EffectRecoveryTest",
+        "teste": "test_intervals_have_their_nominal_coverage",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "EffectRecoveryTest",
+        "teste": "test_known_effects_fall_inside_the_intervals",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "ExecutionCheckTest",
+        "teste": "test_executed_as_asked",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "ExecutionCheckTest",
+        "teste": "test_far_from_the_request_is_said_clearly",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "ExecutionCheckTest",
+        "teste": "test_inward_follows_the_corner_direction",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "MatchingTest",
+        "teste": "test_a_declared_invalid_lap_is_removed_and_the_rest_matches",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "MatchingTest",
+        "teste": "test_invalid_lap_with_a_repeated_game_number_is_not_guessed",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "MatchingTest",
+        "teste": "test_lap_count_mismatch_stops_with_the_lap_list",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "MatchingTest",
+        "teste": "test_out_lap_rejected_by_gates_is_skipped",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "EstimatorComparisonTest",
+        "teste": "test_condition_differences_are_x_minus_a",
+        "resultado": "PASSED"
+      },
+      {
+        "classe": "EstimatorComparisonTest",
+        "teste": "test_contrasts_and_bands",
+        "resultado": "PASSED"
+      }
+    ]
+  },
+  "plano_de_exemplo": {
+    "comando": "cd backend && python -m ml.scripts.plan_controlled_session --semente 2026 --data 2026-10-02",
+    "arquivos": [
+      {
+        "caminho": "docs/experimentos/2026-10-02_plano.csv",
+        "sha256": "312337f09f5986f9a1c355830c2beaf4aa9e3dc33b3a2ab4ba82e08c87fe17e5",
+        "bytes": 1851
+      },
+      {
+        "caminho": "docs/experimentos/2026-10-02_plano.txt",
+        "sha256": "1217311d1687c9d99ee360418ec87cbf92ff86d8cbe60dc0802acfdfac12b4ff",
+        "bytes": 2544
+      }
+    ]
+  },
+  "ensaios_com_sessoes_reais": {
+    "observacao": "verificam que as ferramentas rodam com dados reais; nao medem efeito (nenhuma sessao foi pilotada com o protocolo); saidas completas guardadas fora do repositorio",
+    "parada": {
+      "comando": "python -m ml.scripts.analyze_controlled_session --sessao 2026-08-16_03-30-14_vhe_interlagos --plano ../docs/experimentos/2026-10-02_plano.csv",
+      "codigo_de_saida": 2,
+      "saida": [
+        "lendo 2026-08-16_03-30-14_vhe_interlagos...",
+        "PARADO: o plano tem 37 voltas (5 de aquecimento + 32 medidas), mas a gravacao tem 7 voltas aproveitaveis de 16 gravadas. Nada foi casado.",
+        "Confira se alguma volta errada nao foi anotada como invalida, se alguma volta do plano caiu nos gates de qualidade, ou se o aquecimento teve mais ou menos voltas que o plano.",
+        "Voltas gravadas:",
+        "  gravada n.  1  2026-08-16_03-30-14_vhe_interlagos#0000  (volta 1 no jogo): excluida pelos gates: faltam 224.9 m de pista (limite 6 m); carro parado em 21.1% das amostras",
+        "  gravada n.  2  2026-08-16_03-30-14_vhe_interlagos#0001  (volta 1 no jogo): excluida pelos gates: fora de pista em 8.2% das amostras",
+        "  gravada n.  3  2026-08-16_03-30-14_vhe_interlagos#0002  (volta 2 no jogo): aproveitavel",
+        "  gravada n.  4  2026-08-16_03-30-14_vhe_interlagos#0003  (volta 4 no jogo): aproveitavel",
+        "  gravada n.  5  2026-08-16_03-30-14_vhe_interlagos#0004  (volta 4 no jogo): aproveitavel",
+        "  gravada n.  6  2026-08-16_03-30-14_vhe_interlagos#0005  (volta 5 no jogo): excluida pelos gates: faltam 2037.8 m de pista (limite 6 m); carro parado em 18.1% das amostras",
+        "  gravada n.  7  2026-08-16_03-30-14_vhe_interlagos#0006  (volta 6 no jogo): excluida pelos gates: faltam 4334.1 m de pista (limite 6 m); carro parado em 100.0% das amostras",
+        "  gravada n.  8  2026-08-16_03-30-14_vhe_interlagos#0009  (volta 6 no jogo): excluida pelos gates: faltam 4334.1 m de pista (limite 6 m); carro parado em 100.0% das amostras",
+        "  gravada n.  9  2026-08-16_03-30-14_vhe_interlagos#0012  (volta 6 no jogo): excluida pelos gates: faltam 4334.1 m de pista (limite 6 m); carro parado em 100.0% das amostras",
+        "  gravada n. 10  2026-08-16_03-30-14_vhe_interlagos#0013  (volta 6 no jogo): excluida pelos gates: volta curta demais (54.7s < 55s); faltam 2295.0 m de pista (limite 6 m); carro parado em 8.9% das amostras",
+        "  gravada n. 11  2026-08-16_03-30-14_vhe_interlagos#0014  (volta 6 no jogo): aproveitavel",
+        "  gravada n. 12  2026-08-16_03-30-14_vhe_interlagos#0015  (volta 8 no jogo): aproveitavel",
+        "  gravada n. 13  2026-08-16_03-30-14_vhe_interlagos#0016  (volta 9 no jogo): aproveitavel",
+        "  gravada n. 14  2026-08-16_03-30-14_vhe_interlagos#0017  (volta 10 no jogo): aproveitavel",
+        "  gravada n. 15  2026-08-16_03-30-14_vhe_interlagos#0018  (volta 10 no jogo): excluida pelos gates: carro parado em 4.3% das amostras; fora de pista em 10.6% das amostras",
+        "  gravada n. 16  2026-08-16_03-30-14_vhe_interlagos#0019  (volta 11 no jogo): excluida pelos gates: carro parado em 15.0% das amostras"
+      ]
+    },
+    "caminho_completo": {
+      "comando": "plano fabricado (plan_controlled_session --semente 1 --voltas-por-condicao 13 --aquecimento 0) + analyze_controlled_session --sessao 2026-08-09_19-20-59_vhe_interlagos",
+      "codigo_de_saida": 0,
+      "janela": {
+        "janela": "J6:C10-dir",
+        "inicio_m": 2590.0,
+        "fim_m": 3080.0,
+        "comprimento_m": 490.0,
+        "curva": "C10-dir",
+        "apice_m": 2728.050083349241,
+        "mediana_inicio_frenagem_m": 2626.048210731344
+      },
+      "conferencia_da_execucao": {
+        "A": {
+          "voltas": 13,
+          "frenagem_vs_A_m": 0.0,
+          "frenagem_dp_m": 0.55471037996564,
+          "para_dentro_vs_A_m": {
+            "entry": -0.0,
+            "apex": -0.0,
+            "exit": -0.0
+          },
+          "lateral_entrada_dp_m": 0.01413635247804931,
+          "retomada_vs_A_m": 0.0,
+          "pedido": {
+            "frenagem_m": 0.0,
+            "para_dentro_m": 0.0
+          },
+          "longe_do_pedido": false,
+          "observacoes": []
+        },
+        "B": {
+          "voltas": 13,
+          "frenagem_vs_A_m": 1.0769428481530667,
+          "frenagem_dp_m": 1.3009111541641465,
+          "para_dentro_vs_A_m": {
+            "entry": -0.0028675500686046185,
+            "apex": 0.0002656860833107899,
+            "exit": 0.003098822853802613
+          },
+          "lateral_entrada_dp_m": 0.020418220937273274,
+          "retomada_vs_A_m": -0.15384897830654154,
+          "pedido": {
+            "frenagem_m": -10.0,
+            "para_dentro_m": 0.0
+          },
+          "longe_do_pedido": true,
+          "observacoes": [
+            "frenagem: pedido -10 m, executado +1.1 m em media"
+          ]
+        },
+        "C": {
+          "voltas": 13,
+          "frenagem_vs_A_m": 0.9230938698456157,
+          "frenagem_dp_m": 1.0377680953593085,
+          "para_dentro_vs_A_m": {
+            "entry": -0.006463762385324312,
+            "apex": 0.005962827415609162,
+            "exit": 0.002277668418390222
+          },
+          "lateral_entrada_dp_m": 0.01743494986896185,
+          "retomada_vs_A_m": -0.15384897830745103,
+          "pedido": {
+            "frenagem_m": 0.0,
+            "para_dentro_m": 2.0
+          },
+          "longe_do_pedido": true,
+          "observacoes": [
+            "linha na entrada: pedido +2.0 m para dentro, executado -0.01 m"
+          ]
+        },
+        "D": {
+          "voltas": 13,
+          "frenagem_vs_A_m": 1.0769428481530667,
+          "frenagem_dp_m": 1.0127579599648093,
+          "para_dentro_vs_A_m": {
+            "entry": 0.007779624908418548,
+            "apex": -0.0033636789468252104,
+            "exit": 0.003961801463689907
+          },
+          "lateral_entrada_dp_m": 0.019130243879364888,
+          "retomada_vs_A_m": 0.46154693492280785,
+          "pedido": {
+            "frenagem_m": -10.0,
+            "para_dentro_m": 2.0
+          },
+          "longe_do_pedido": true,
+          "observacoes": [
+            "frenagem: pedido -10 m, executado +1.1 m em media",
+            "linha na entrada: pedido +2.0 m para dentro, executado +0.01 m"
+          ]
+        }
+      },
+      "efeitos": {
+        "frenagem": {
+          "estimativa_s": -0.011835207340425313,
+          "ep_s": 0.008882471892054154,
+          "ic95_s": [
+            -0.02984969529857781,
+            0.006179280617727184
+          ]
+        },
+        "linha": {
+          "estimativa_s": -0.00179653292853299,
+          "ep_s": 0.008882471892054154,
+          "ic95_s": [
+            -0.019811020886685488,
+            0.016217955029619507
+          ]
+        },
+        "interacao": {
+          "estimativa_s": -0.005217724322337247,
+          "ep_s": 0.017764943784108308,
+          "ic95_s": [
+            -0.04124670023864224,
+            0.030811251593967748
+          ]
+        },
+        "B_menos_A": {
+          "estimativa_s": -0.009226345179257578,
+          "ep_s": 0.01256171221714079,
+          "ic95_s": [
+            -0.03470267836888365,
+            0.01624998801036849
+          ]
+        },
+        "C_menos_A": {
+          "estimativa_s": 0.0008123292326356335,
+          "ep_s": 0.01256171221714079,
+          "ic95_s": [
+            -0.024664003956990435,
+            0.026288662422261702
+          ]
+        },
+        "D_menos_A": {
+          "estimativa_s": -0.013631740268959192,
+          "ep_s": 0.012561712217140789,
+          "ic95_s": [
+            -0.03910807345858526,
+            0.011844592920666874
+          ]
+        },
+        "_modelo": {
+          "voltas": 52,
+          "blocos": 13,
+          "graus_de_liberdade": 36,
+          "dp_residuo_s": 0.03202620785966888
+        }
+      },
+      "entradas_para_os_estimadores": {
+        "B": {
+          "braking_point_m": 1.0769428481530667,
+          "lateral_entry_m": 0.0028675500686046185,
+          "lateral_apex_m": -0.0002656860833107899,
+          "lateral_exit_m": -0.003098822853802613,
+          "throttle_point_m": -0.15384897830654154
+        },
+        "C": {
+          "braking_point_m": 0.9230938698456157,
+          "lateral_entry_m": 0.006463762385324312,
+          "lateral_apex_m": -0.005962827415609162,
+          "lateral_exit_m": -0.002277668418390222,
+          "throttle_point_m": -0.15384897830745103
+        },
+        "D": {
+          "braking_point_m": 1.0769428481530667,
+          "lateral_entry_m": -0.007779624908418548,
+          "lateral_apex_m": 0.0033636789468252104,
+          "lateral_exit_m": -0.003961801463689907,
+          "throttle_point_m": 0.46154693492280785
+        }
+      },
+      "faixa_de_treino_2_5_a_97_5": {
+        "braking_point_m": [
+          -18.05033137993172,
+          24.000440615976004
+        ],
+        "lateral_entry_m": [
+          -0.7348652504826254,
+          1.4798176312913125
+        ],
+        "lateral_apex_m": [
+          -3.402156781862267,
+          3.34074125130083
+        ],
+        "lateral_exit_m": [
+          -3.7378083057500824,
+          3.711459408941047
+        ],
+        "throttle_point_m": [
+          -22.000403897977776,
+          12.100222143887914
+        ]
+      },
+      "pares_janela_de_treino": 1514,
+      "e1_inclinacao": 1.5018186348202949,
+      "comparacao_com_estimadores": {
+        "E1": {
+          "B_menos_A": {
+            "medido_s": -0.009226345179257578,
+            "previsto_s": 0.015457614412231922,
+            "faixa95_s": [
+              NaN,
+              NaN
+            ],
+            "erro_s": 0.0246839595914895,
+            "medido_dentro_da_faixa": null,
+            "fora_da_distribuicao": false
+          },
+          "C_menos_A": {
+            "medido_s": 0.0008123292326356335,
+            "previsto_s": 0.00314550803257054,
+            "faixa95_s": [
+              NaN,
+              NaN
+            ],
+            "erro_s": 0.0023331787999349065,
+            "medido_dentro_da_faixa": null,
+            "fora_da_distribuicao": false
+          },
+          "D_menos_A": {
+            "medido_s": -0.013631740268959192,
+            "previsto_s": 0.003040444752176753,
+            "faixa95_s": [
+              NaN,
+              NaN
+            ],
+            "erro_s": 0.016672185021135946,
+            "medido_dentro_da_faixa": null,
+            "fora_da_distribuicao": false
+          },
+          "frenagem": {
+            "medido_s": -0.011835207340425313,
+            "previsto_s": 0.0076762755659190674,
+            "erro_s": 0.01951148290634438,
+            "previsto_dentro_do_ic_medido": false
+          },
+          "linha": {
+            "medido_s": -0.00179653292853299,
+            "previsto_s": -0.0046358308137423145,
+            "erro_s": -0.0028392978852093244,
+            "previsto_dentro_do_ic_medido": true
+          },
+          "interacao": {
+            "medido_s": -0.005217724322337247,
+            "previsto_s": -0.015562677692625709,
+            "erro_s": -0.010344953370288462,
+            "previsto_dentro_do_ic_medido": true
+          }
+        },
+        "E2": {
+          "B_menos_A": {
+            "medido_s": -0.009226345179257578,
+            "previsto_s": -0.009320075062224766,
+            "faixa95_s": [
+              -1.2834019667670142,
+              0.6190488635064686
+            ],
+            "erro_s": -9.372988296718794e-05,
+            "medido_dentro_da_faixa": true,
+            "fora_da_distribuicao": false
+          },
+          "C_menos_A": {
+            "medido_s": 0.0008123292326356335,
+            "previsto_s": -0.008979646170138312,
+            "faixa95_s": [
+              -1.2830615378749277,
+              0.619389292398555
+            ],
+            "erro_s": -0.009791975402773946,
+            "medido_dentro_da_faixa": true,
+            "fora_da_distribuicao": false
+          },
+          "D_menos_A": {
+            "medido_s": -0.013631740268959192,
+            "previsto_s": -0.0022915757198299306,
+            "faixa95_s": [
+              -1.2763734674246192,
+              0.6260773628488634
+            ],
+            "erro_s": 0.011340164549129261,
+            "medido_dentro_da_faixa": true,
+            "fora_da_distribuicao": false
+          },
+          "frenagem": {
+            "medido_s": -0.011835207340425313,
+            "previsto_s": -0.001316002305958192,
+            "erro_s": 0.01051920503446712,
+            "previsto_dentro_do_ic_medido": true
+          },
+          "linha": {
+            "medido_s": -0.00179653292853299,
+            "previsto_s": -0.0009755734138717385,
+            "erro_s": 0.0008209595146612516,
+            "previsto_dentro_do_ic_medido": true
+          },
+          "interacao": {
+            "medido_s": -0.005217724322337247,
+            "previsto_s": 0.01600814551253315,
+            "erro_s": 0.021225869834870396,
+            "previsto_dentro_do_ic_medido": true
+          }
+        },
+        "E3": {
+          "B_menos_A": {
+            "medido_s": -0.009226345179257578,
+            "previsto_s": -0.009140139071884334,
+            "faixa95_s": [
+              -1.180403455256606,
+              0.5701847187755275
+            ],
+            "erro_s": 8.62061073732441e-05,
+            "medido_dentro_da_faixa": true,
+            "fora_da_distribuicao": false
+          },
+          "C_menos_A": {
+            "medido_s": 0.0008123292326356335,
+            "previsto_s": 0.004864547529570018,
+            "faixa95_s": [
+              -1.1663987686551516,
+              0.5841894053769818
+            ],
+            "erro_s": 0.004052218296934385,
+            "medido_dentro_da_faixa": true,
+            "fora_da_distribuicao": false
+          },
+          "D_menos_A": {
+            "medido_s": -0.013631740268959192,
+            "previsto_s": -0.007346010528911507,
+            "faixa95_s": [
+              -1.1786093267136333,
+              0.5719788473185003
+            ],
+            "erro_s": 0.006285729740047685,
+            "medido_dentro_da_faixa": true,
+            "fora_da_distribuicao": false
+          },
+          "frenagem": {
+            "medido_s": -0.011835207340425313,
+            "previsto_s": -0.01067534856518293,
+            "erro_s": 0.001159858775242384,
+            "previsto_dentro_do_ic_medido": true
+          },
+          "linha": {
+            "medido_s": -0.00179653292853299,
+            "previsto_s": 0.0033293380362714228,
+            "erro_s": 0.005125870964804413,
+            "previsto_dentro_do_ic_medido": true
+          },
+          "interacao": {
+            "medido_s": -0.005217724322337247,
+            "previsto_s": -0.003070418986597191,
+            "erro_s": 0.002147305335740056,
+            "previsto_dentro_do_ic_medido": true
+          }
+        },
+        "E4": {
+          "B_menos_A": {
+            "medido_s": -0.009226345179257578,
+            "previsto_s": -0.0022333711760695297,
+            "faixa95_s": [
+              -0.06858613034226474,
+              0.06411938799012568
+            ],
+            "erro_s": 0.006992974003188048,
+            "medido_dentro_da_faixa": true,
+            "fora_da_distribuicao": false
+          },
+          "C_menos_A": {
+            "medido_s": 0.0008123292326356335,
+            "previsto_s": -0.0008008261651325824,
+            "faixa95_s": [
+              -0.06714621408025503,
+              0.06554456174998988
+            ],
+            "erro_s": -0.001613155397768216,
+            "medido_dentro_da_faixa": true,
+            "fora_da_distribuicao": false
+          },
+          "D_menos_A": {
+            "medido_s": -0.013631740268959192,
+            "previsto_s": -0.0007388698999054687,
+            "faixa95_s": [
+              -0.0671042654290011,
+              0.06562652562919015
+            ],
+            "erro_s": 0.012892870369053722,
+            "medido_dentro_da_faixa": true,
+            "fora_da_distribuicao": false
+          },
+          "frenagem": {
+            "medido_s": -0.011835207340425313,
+            "previsto_s": -0.0010857074554212081,
+            "erro_s": 0.010749499885004106,
+            "previsto_dentro_do_ic_medido": true
+          },
+          "linha": {
+            "medido_s": -0.00179653292853299,
+            "previsto_s": 0.0003468375555157393,
+            "erro_s": 0.0021433704840487294,
+            "previsto_dentro_do_ic_medido": true
+          },
+          "interacao": {
+            "medido_s": -0.005217724322337247,
+            "previsto_s": 0.0022953274412966435,
+            "erro_s": 0.00751305176363389,
+            "previsto_dentro_do_ic_medido": true
+          }
+        }
+      },
+      "dados": [
+        {
+          "caminho": "data\\recordings\\2026-08-09_19-20-59_vhe_interlagos\\player.jsonl",
+          "sha256": "5ed5d4fa3561e1c175df88fdf0b7bd09cd6ef8a081c004f56c9ce694013f12ae",
+          "bytes": 786192199
+        },
+        {
+          "caminho": "data\\ml\\laps_grid.parquet",
+          "sha256": "a9798c3a338459a34cdb5760dd1ffd2da6352afa2a35bd917feb181a96634c0c",
+          "bytes": 30475930
+        },
+        {
+          "caminho": "data\\ml\\laps_grid_meta.json",
+          "sha256": "5a4d3823c9d479b16fecc03643cf355960b412c740ac5389dcf1e53c6b65b339",
+          "bytes": 96563
+        }
+      ],
+      "geometry_id": "0ed16f0dd2225990"
+    }
+  }
+}
