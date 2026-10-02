@@ -12,3 +12,5 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
 | [0006](0006-protocolo-de-validacao.md) | Protocolo de validação dos estimadores | aceita |
 | [0007](0007-versionamento-de-dados.md) | Versionamento de dados sem DVC, por enquanto | aceita |
 | [0008](0008-uma-sessao-de-implementacao.md) | Uma única sessão de implementação por vez | aceita |
+| [0009](0009-alvos-do-coach-e-tracado-otimizado.md) | O traçado otimizado não vira alvo do coach enquanto for mais lento que voltas reais | aceita |
+| [0010](0010-fase-2b-ajustada-pelos-artigos.md) | Fase 2b ajustada pela leitura dos artigos | aceita; complementa 0005 |
