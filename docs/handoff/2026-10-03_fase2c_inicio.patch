@@ -1,0 +1,303 @@
+diff --git a/backend/ml/scripts/analyze_controlled_session.py b/backend/ml/scripts/analyze_controlled_session.py
+index 2885a62f..c9714fd6 100644
+--- a/backend/ml/scripts/analyze_controlled_session.py
++++ b/backend/ml/scripts/analyze_controlled_session.py
+@@ -1,7 +1,11 @@
+ """Analisa uma sessao controlada (Fase 2c) contra o plano sorteado.
+ 
+     python -m ml.scripts.analyze_controlled_session --sessao <id> --plano docs/experimentos/<data>_plano.csv
+-        [--invalidas 7,19]  [--data AAAA-MM-DD]
++        --inicio 9 [--invalidas 7,19]  [--data AAAA-MM-DD]
++
++`--inicio` e o numero no jogo da primeira volta do bloco 1, anotado pelo piloto
++(protocolo). A partir dela as voltas aproveitaveis sao casadas com os blocos;
++o aquecimento antes dela e ignorado, tenha quantas voltas tiver.
+ 
+ `--invalidas` sao os numeros de volta **do jogo** que o piloto anotou como
+ invalidos durante a sessao.
+@@ -224,6 +228,12 @@ def main(argv: Optional[List[str]] = None) -> int:
+     parser.add_argument("--sessao", required=True)
+     parser.add_argument("--plano", type=Path, required=True)
+     parser.add_argument("--invalidas", default="")
++    parser.add_argument(
++        "--inicio",
++        type=int,
++        default=None,
++        help="numero no jogo da primeira volta do bloco 1, anotado pelo piloto; sem ele, conta pelo plano",
++    )
+     parser.add_argument("--data", default=None, help="padrao: a data no inicio do id da sessao")
+     parser.add_argument("--saida", type=Path, default=config.repo_root() / "docs" / "experimentos")
+     args = parser.parse_args(argv)
+@@ -248,7 +258,7 @@ def main(argv: Optional[List[str]] = None) -> int:
+     inventory = scan_sessions([session], track)
+     inventory = inventory.merge(lap_clock(session), on="lap_id", how="left")
+     try:
+-        matched = ct.match_laps(inventory, plan, invalid)
++        matched = ct.match_laps(inventory, plan, invalid, start=args.inicio)
+     except ct.PlanMismatchError as error:
+         print(f"PARADO: {error}")
+         return 2
+@@ -297,6 +307,7 @@ def main(argv: Optional[List[str]] = None) -> int:
+         "ambiente": {"python": platform.python_version(), "numpy": np.__version__, "scikit_learn": sklearn.__version__},
+         "plano": {"arquivo": str(args.plano), "semente": int(plan["semente"].iloc[0]), "voltas": int(len(plan))},
+         "invalidas_anotadas": invalid,
++        "inicio_anotado": args.inicio,
+         "dados": [
+             _sha256(session.player_stream),
+             _sha256(config.artifacts_root() / "laps_grid.parquet"),
+diff --git a/backend/ml/validation/controlled.py b/backend/ml/validation/controlled.py
+index c203b3ea..48b1988e 100644
+--- a/backend/ml/validation/controlled.py
++++ b/backend/ml/validation/controlled.py
+@@ -128,7 +128,12 @@ def plan_text(plan: pd.DataFrame) -> str:
+     for _, row in plan.iterrows():
+         if row["bloco"] != current:
+             current = row["bloco"]
+-            lines.append("AQUECIMENTO" if current == 0 else f"BLOCO {current}")
++            if current == 0:
++                lines.append("AQUECIMENTO (alem da volta de saida dos boxes; o numero exato nao importa)")
++            else:
++                lines.append(f"BLOCO {current}")
++                if current == 1:
++                    lines.append("  ANOTE o numero no jogo desta volta (primeira do bloco 1): ____")
+         if row["condicao"] == WARMUP:
+             lines.append(f"  volta {row['ordem']:>2}  livre")
+         else:
+@@ -162,19 +167,49 @@ class PlanMismatchError(ValueError):
+     """As voltas da gravacao nao casam com o plano. Nunca se adivinha."""
+ 
+ 
+-def match_laps(laps: pd.DataFrame, plan: pd.DataFrame, invalid: Sequence[int] = ()) -> pd.DataFrame:
++def match_laps(
++    laps: pd.DataFrame, plan: pd.DataFrame, invalid: Sequence[int] = (), start: Optional[int] = None
++) -> pd.DataFrame:
+     """Casa, em ordem, as voltas aproveitaveis da gravacao com as linhas do plano.
+ 
+     `laps`: uma linha por volta gravada, com `lap_id`, `sequence`, `lap_number`
+     (numero do jogo), `valid` (gates de qualidade) e `reasons`. Aproveitavel e a
+     volta que passou nos gates e nao foi anotada como invalida pelo piloto.
+ 
++    Com `start` (o numero no jogo da primeira volta do bloco 1, anotado pelo
++    piloto), tudo antes dessa volta e ignorado -- quantas voltas de aquecimento
++    houver -- e so as voltas medidas do plano sao casadas, a partir dela. Contar
++    o aquecimento de cabeca e facil de errar, e um erro de uma volta
++    desalinharia o plano inteiro. Sem `start`, vale a contagem pelo plano.
++
+     Se a contagem nao bater, levanta `PlanMismatchError` com a lista de voltas e
+     o motivo de cada exclusao -- quem resolve e o piloto, nao o script.
+     """
+     invalid = [int(v) for v in invalid]
+     ordered = laps.sort_values("sequence").reset_index(drop=True)
+ 
++    if start is not None:
++        start = int(start)
++        present = ordered["lap_number"].astype(int)
++        hits = ordered.index[present == start]
++        if len(hits) == 0:
++            raise PlanMismatchError(
++                f"a volta {start} informada em --inicio nao existe na gravacao. "
++                f"Numeros de volta no jogo presentes: {sorted(set(present.tolist()))}."
++            )
++        if len(hits) > 1:
++            raise PlanMismatchError(
++                f"a volta {start} informada em --inicio aparece {len(hits)} vezes na gravacao com o mesmo "
++                "numero do jogo (o contador trava no box). Nada foi casado: diga qual delas, pelo lap_id."
++            )
++        first = int(hits[0])
++        before = ordered.iloc[:first]
++        ordered = ordered.iloc[first:].reset_index(drop=True)
++        plan = plan[plan["condicao"] != WARMUP].reset_index(drop=True)
++        # Uma volta anotada como invalida antes do inicio nao muda nada; so as
++        # de depois contam.
++        invalid = [n for n in invalid if n not in set(before["lap_number"].astype(int)) or n in set(ordered["lap_number"].astype(int))]
++
+     repeated = ordered["lap_number"].value_counts()
+     ambiguous = sorted(int(n) for n in invalid if repeated.get(n, 0) > 1)
+     if ambiguous:
+@@ -202,12 +237,23 @@ def match_laps(laps: pd.DataFrame, plan: pd.DataFrame, invalid: Sequence[int] =
+             f"  gravada n. {i + 1:>2}  {lap_label(r)}  {r['lap_id']}: {r['status']}"
+             for i, (_, r) in enumerate(ordered.iterrows())
+         )
++        if start is not None:
++            raise PlanMismatchError(
++                f"a partir da volta {start} (--inicio), o plano tem {len(plan)} voltas medidas, mas a "
++                f"gravacao tem {len(usable)} voltas aproveitaveis de {len(ordered)} gravadas dali em diante. "
++                "Nada foi casado.\n"
++                "Confira se alguma volta errada nao foi anotada como invalida, se alguma volta do plano "
++                "caiu nos gates de qualidade, ou se houve volta extra depois do bloco final.\n"
++                f"Voltas gravadas a partir da volta {start}:\n{listing}"
++            )
+         raise PlanMismatchError(
+             f"o plano tem {len(plan)} voltas ({int((plan['condicao'] == WARMUP).sum())} de aquecimento + "
+             f"{int((plan['condicao'] != WARMUP).sum())} medidas), mas a gravacao tem {len(usable)} voltas "
+             f"aproveitaveis de {len(ordered)} gravadas. Nada foi casado.\n"
+             "Confira se alguma volta errada nao foi anotada como invalida, se alguma volta do plano "
+-            "caiu nos gates de qualidade, ou se o aquecimento teve mais ou menos voltas que o plano.\n"
++            "caiu nos gates de qualidade, ou se o aquecimento teve mais ou menos voltas que o plano. "
++            "Para nao depender da contagem do aquecimento, use --inicio com o numero no jogo da "
++            "primeira volta do bloco 1.\n"
+             f"Voltas gravadas:\n{listing}"
+         )
+     matched = pd.concat(
+diff --git a/backend/tests/test_ml_controlled.py b/backend/tests/test_ml_controlled.py
+index 7a909851..234b73aa 100644
+--- a/backend/tests/test_ml_controlled.py
++++ b/backend/tests/test_ml_controlled.py
+@@ -55,8 +55,8 @@ def synthetic_session(seed=0, plan=None, interaction=0.0, braking_done=-10.0, in
+     return pd.concat([pd.DataFrame([out_lap]), laps], ignore_index=True)
+ 
+ 
+-def analyse(laps, plan, invalid=(), direction=-1):
+-    matched = ct.match_laps(laps[["lap_id", "sequence", "lap_number", "valid", "reasons"]], plan, invalid)
++def analyse(laps, plan, invalid=(), direction=-1, start=None):
++    matched = ct.match_laps(laps[["lap_id", "sequence", "lap_number", "valid", "reasons"]], plan, invalid, start=start)
+     matched = matched.merge(laps.drop(columns=["sequence", "lap_number", "valid", "reasons"]), on="lap_id")
+     measured = matched[matched["condicao"] != ct.WARMUP]
+     effects = ct.estimate_effects(
+@@ -228,6 +228,90 @@ class MatchingTest(unittest.TestCase):
+         self.assertIn("mais de uma vez", str(caught.exception))
+ 
+ 
++def with_warmup(laps, plan, warmup):
++    """A mesma sessao medida, gravada com `warmup` voltas de aquecimento.
++
++    As voltas medidas sao identicas (mesmos tempos e medidas); so muda quantas
++    voltas livres vieram antes delas. Numeracao do jogo e ordem refeitas.
++    """
++    out_lap = laps.iloc[[0]]
++    plan_warmup = int((plan["condicao"] == ct.WARMUP).sum())
++    template = laps.iloc[1]
++    measured = laps.iloc[1 + plan_warmup :]
++    free = pd.DataFrame([template] * warmup)
++    recorded = pd.concat([out_lap, free, measured], ignore_index=True)
++    recorded["sequence"] = np.arange(len(recorded))
++    recorded["lap_number"] = np.arange(len(recorded)) + 1
++    recorded["lap_id"] = [f"W#{i:04d}" for i in range(len(recorded))]
++    first_measured = 1 + warmup
++    return recorded, int(recorded["lap_number"].iloc[first_measured])
++
++
++class StartLapTest(unittest.TestCase):
++    """Inicio pela volta anotada pelo piloto (pedido 10)."""
++
++    def setUp(self):
++        self.plan = ct.make_plan(seed=2026, warmup=5)
++        self.laps = synthetic_session(seed=12, plan=self.plan)
++
++    def test_four_five_and_seven_warmup_laps_give_the_same_result(self):
++        results = []
++        for warmup in (4, 5, 7):
++            recorded, start = with_warmup(self.laps, self.plan, warmup)
++            matched, execution, effects = analyse(recorded, self.plan, start=start)
++            self.assertEqual(len(matched), 32, warmup)
++            self.assertEqual(matched["condicao"].tolist(), self.plan.loc[self.plan["condicao"] != ct.WARMUP, "condicao"].tolist())
++            results.append((effects["frenagem"]["estimativa_s"], effects["linha"]["estimativa_s"], execution["B"]["frenagem_vs_A_m"]))
++        self.assertEqual(results[0], results[1])
++        self.assertEqual(results[0], results[2])
++
++    def test_without_start_a_different_warmup_still_stops(self):
++        recorded, _ = with_warmup(self.laps, self.plan, 7)
++        with self.assertRaises(ct.PlanMismatchError) as caught:
++            analyse(recorded, self.plan)
++        self.assertIn("--inicio", str(caught.exception))
++
++    def test_start_that_does_not_exist_stops_clearly(self):
++        recorded, _ = with_warmup(self.laps, self.plan, 5)
++        with self.assertRaises(ct.PlanMismatchError) as caught:
++            analyse(recorded, self.plan, start=999)
++        message = str(caught.exception)
++        self.assertIn("999", message)
++        self.assertIn("nao existe na gravacao", message)
++
++    def test_start_with_a_repeated_game_number_is_not_guessed(self):
++        recorded, start = with_warmup(self.laps, self.plan, 5)
++        recorded.loc[2, "lap_number"] = start
++        with self.assertRaises(ct.PlanMismatchError) as caught:
++            analyse(recorded, self.plan, start=start)
++        self.assertIn("aparece 2 vezes", str(caught.exception))
++
++    def test_measured_laps_are_still_counted_strictly(self):
++        recorded, start = with_warmup(self.laps, self.plan, 5)
++        with self.assertRaises(ct.PlanMismatchError) as caught:
++            analyse(recorded.iloc[:-1], self.plan, start=start)
++        self.assertIn("31 voltas aproveitaveis", str(caught.exception))
++        self.assertIn("32 voltas medidas", str(caught.exception))
++
++    def test_an_invalid_lap_after_start_is_skipped_and_one_before_is_ignored(self):
++        recorded, start = with_warmup(self.laps, self.plan, 5)
++        extra = recorded.iloc[[10]].copy()
++        extra["sequence"] = 10.5
++        extra["lap_number"] = 500
++        extra["lap_id"] = "W#extra"
++        recorded = pd.concat([recorded, extra], ignore_index=True)
++        matched, _, _ = analyse(recorded, self.plan, invalid=[2, 500], start=start)
++        self.assertNotIn("W#extra", set(matched["lap_id"]))
++        self.assertEqual(len(matched), 32)
++
++    def test_plan_text_asks_for_the_first_lap_of_block_1(self):
++        text = ct.plan_text(self.plan)
++        line = "ANOTE o numero no jogo desta volta (primeira do bloco 1): ____"
++        self.assertEqual(text.count(line), 1)
++        self.assertLess(text.index("BLOCO 1"), text.index(line))
++        self.assertLess(text.index(line), text.index("BLOCO 2"))
++
++
+ class EstimatorComparisonTest(unittest.TestCase):
+     def test_contrasts_and_bands(self):
+         plan = ct.make_plan(seed=2026)
+diff --git a/docs/experimentos/2026-10-02_plano.txt b/docs/experimentos/2026-10-02_plano.txt
+index fb92f3e3..2d6d6378 100644
+--- a/docs/experimentos/2026-10-02_plano.txt
++++ b/docs/experimentos/2026-10-02_plano.txt
+@@ -10,13 +10,14 @@ Condicoes:
+   C: freada habitual; linha 2 m para dentro
+   D: freada 10 m mais cedo; linha 2 m para dentro
+ 
+-AQUECIMENTO
++AQUECIMENTO (alem da volta de saida dos boxes; o numero exato nao importa)
+   volta  1  livre
+   volta  2  livre
+   volta  3  livre
+   volta  4  livre
+   volta  5  livre
+ BLOCO 1
++  ANOTE o numero no jogo desta volta (primeira do bloco 1): ____
+   volta  6  [D]  freada 10 m mais cedo  linha 2 m para dentro
+   volta  7  [B]  freada 10 m mais cedo  linha habitual
+   volta  8  [A]  freada habitual        linha habitual
+diff --git a/docs/fase2c_ferramentas_experimento.md b/docs/fase2c_ferramentas_experimento.md
+index 03ba2058..1890c685 100644
+--- a/docs/fase2c_ferramentas_experimento.md
++++ b/docs/fase2c_ferramentas_experimento.md
+@@ -211,3 +211,31 @@ tempo decorrido desde a primeira amostra. Ela **não** vem direto do `timestamp`
+ gravado: nas 5 sessões conferidas (maio a agosto), converter o `timestamp` pelo
+ fuso local dá sempre 3 h a mais que o `startedAt`. A causa no gravador não foi
+ investigada nesta etapa.
++
++---
++
++## 9. Início pela volta anotada (2026-10-03, branch `etapa/fase2c-inicio-por-volta`)
++
++Contar de cabeça as voltas de aquecimento é fácil de errar, e um erro de uma
++volta desalinharia o plano inteiro. Por isso:
++
++- **O plano impresso pede uma anotação.** Logo no início do bloco 1 aparece a
++  linha `ANOTE o numero no jogo desta volta (primeira do bloco 1): ____`.
++- **A análise ganha `--inicio <numero no jogo>`.** A partir dessa volta, as
++  voltas aproveitáveis são casadas com os blocos, em ordem. Tudo antes dela é
++  ignorado, seja quantas voltas forem.
++- **As voltas medidas continuam conferidas de forma estrita:** 32, mais as
++  repetidas por invalidez. Se a conta não bater, a análise para e lista as
++  voltas a partir do início.
++- **Também para com mensagem clara** se o número dado em `--inicio` não existir
++  na gravação, ou se aparecer mais de uma vez (contador travado no box).
++- **Uma volta inválida anotada antes do início é ignorada.**
++- **Sem `--inicio`,** o comportamento é o anterior (contagem pelo plano). A
++  mensagem de parada passa a sugerir `--inicio`.
++
++Testado: com 4, 5 e 7 voltas de aquecimento e `--inicio`, o casamento, os
++efeitos e a conferência da execução saem idênticos.
++
++```bash
++cd backend && python -m ml.scripts.analyze_controlled_session --sessao <id> --plano ../docs/experimentos/<data>_plano.csv --inicio 9 --invalidas 14
++```

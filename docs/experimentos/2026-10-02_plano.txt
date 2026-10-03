@@ -10,13 +10,14 @@ Condicoes:
   C: freada habitual; linha 2 m para dentro
   D: freada 10 m mais cedo; linha 2 m para dentro
 
-AQUECIMENTO
+AQUECIMENTO (alem da volta de saida dos boxes; o numero exato nao importa)
   volta  1  livre
   volta  2  livre
   volta  3  livre
   volta  4  livre
   volta  5  livre
 BLOCO 1
+  ANOTE o numero no jogo desta volta (primeira do bloco 1): ____
   volta  6  [D]  freada 10 m mais cedo  linha 2 m para dentro
   volta  7  [B]  freada 10 m mais cedo  linha habitual
   volta  8  [A]  freada habitual        linha habitual
