@@ -194,6 +194,19 @@ class ModelOnOfficialGeometryTest(unittest.TestCase):
         self.assertTrue(reasons["merge_fix"].startswith("escolhida"))
         self.assertIn("mais lenta", reasons["cache_atual"])
 
+    def test_a_lap_whose_projection_jumps_is_left_out(self):
+        # O carro "aparece" 150 m adiante por meio segundo (saida de pista longe,
+        # projecao no trecho errado): os microsetores dali nao tem tempo real.
+        bad = lap_on(self.track, 58.0)
+        world = self.track.to_world(np.full(30, 650.0), np.zeros(30))
+        bad.loc[1500:1529, ["x", "z"]] = world
+        laps = [self.entry("salto", 58.0, bad), self.entry("boa", 60.0, lap_on(self.track, 60.0))]
+        model = build_reference_model(laps, track="t", geometry=self.geometry)
+        self.assertEqual(model.lap_count, 1)
+        self.assertEqual(model.rejected_reasons, {"projection_jump": 1})
+        self.assertEqual(model.reference_lap_id, "boa")
+        self.assertGreater(min(t.best_seconds for t in model.targets), 0.5)
+
     def test_reference_reasons_explain_an_incomplete_lap(self):
         hole = lap_on(self.track, 59.0)
         hole = hole[(hole.index < 1200) | (hole.index > 1500)].reset_index(drop=True)

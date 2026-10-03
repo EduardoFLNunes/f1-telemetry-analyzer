@@ -511,7 +511,7 @@ def build_reference_model(
     the ML's equal-distance ones.
     """
     if geometry is not None:
-        from .official_geometry import project_lap
+        from .official_geometry import project_lap, projection_jumped
 
         microsectors = geometry.microsectors
         laps = [(lap_id, seconds, count, project_lap(df, geometry)) for lap_id, seconds, count, df in laps]
@@ -532,6 +532,9 @@ def build_reference_model(
         usable, reason = lap_is_usable(lap_seconds, sample_count)
         if not usable:
             rejected[reason] = rejected.get(reason, 0) + 1
+            continue
+        if geometry is not None and projection_jumped(df, geometry.length):
+            rejected["projection_jump"] = rejected.get("projection_jump", 0) + 1
             continue
 
         splits = microsector_splits(df, microsectors)

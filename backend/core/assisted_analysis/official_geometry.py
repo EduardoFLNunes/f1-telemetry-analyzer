@@ -140,6 +140,36 @@ class CoachProjector:
         return s % self.geometry.length, float(to_left_positive(float(result["L"])))
 
 
+# A projection jump: `s` moves further between two samples than the car can.
+# Two conditions, so that a recording hole (time missing, the distance covered
+# at a normal speed) is not mistaken for one -- `_has_hole` in the model handles
+# holes. 120 m/s is 432 km/h, well above this car's 277 km/h top speed, and 30 m
+# is far above the projection's own sample-to-sample noise (p99 0.04 m against
+# the ML projection on valid laps).
+MAX_IMPLIED_SPEED_MPS = 120.0
+MIN_JUMP_M = 30.0
+
+
+def projection_jumped(projected: pd.DataFrame, length: float) -> bool:
+    """Whether the projected `s` of a lap jumps further than a car can move.
+
+    Measured on lap 11 of 2026-08-16_03-30-14: the car went 43 m off the track,
+    the nearest stretch of track became a different one, `s` jumped 120 m
+    forward in one sample twice, and two microsectors came out at 0.009 s and
+    0.013 s -- which then became the "best ever" there. A lap like that cannot
+    be timed slice by slice, so it does not teach the model.
+    """
+    frame = projected[["s", "elapsed_s"]].apply(pd.to_numeric, errors="coerce").dropna() if "elapsed_s" in projected else None
+    if frame is None or len(frame) < 2:
+        return True
+    s = frame["s"].to_numpy(dtype=float)
+    t = frame["elapsed_s"].to_numpy(dtype=float)
+    steps = np.mod(np.diff(s) + length / 2.0, length) - length / 2.0     # the finish line is not a jump
+    dt = np.maximum(np.diff(t), 1e-3)
+    jumps = (np.abs(steps) > MIN_JUMP_M) & (np.abs(steps) / dt > MAX_IMPLIED_SPEED_MPS)
+    return bool(jumps.any())
+
+
 def project_lap(df: pd.DataFrame, geometry: OfficialGeometry) -> pd.DataFrame:
     """A lap with `s`, `p` and `d` recomputed on the official geometry.
 
