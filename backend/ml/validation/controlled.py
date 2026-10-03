@@ -128,7 +128,12 @@ def plan_text(plan: pd.DataFrame) -> str:
     for _, row in plan.iterrows():
         if row["bloco"] != current:
             current = row["bloco"]
-            lines.append("AQUECIMENTO" if current == 0 else f"BLOCO {current}")
+            if current == 0:
+                lines.append("AQUECIMENTO (alem da volta de saida dos boxes; o numero exato nao importa)")
+            else:
+                lines.append(f"BLOCO {current}")
+                if current == 1:
+                    lines.append("  ANOTE o numero no jogo desta volta (primeira do bloco 1): ____")
         if row["condicao"] == WARMUP:
             lines.append(f"  volta {row['ordem']:>2}  livre")
         else:
@@ -162,18 +167,48 @@ class PlanMismatchError(ValueError):
     """As voltas da gravacao nao casam com o plano. Nunca se adivinha."""
 
 
-def match_laps(laps: pd.DataFrame, plan: pd.DataFrame, invalid: Sequence[int] = ()) -> pd.DataFrame:
+def match_laps(
+    laps: pd.DataFrame, plan: pd.DataFrame, invalid: Sequence[int] = (), start: Optional[int] = None
+) -> pd.DataFrame:
     """Casa, em ordem, as voltas aproveitaveis da gravacao com as linhas do plano.
 
     `laps`: uma linha por volta gravada, com `lap_id`, `sequence`, `lap_number`
     (numero do jogo), `valid` (gates de qualidade) e `reasons`. Aproveitavel e a
     volta que passou nos gates e nao foi anotada como invalida pelo piloto.
 
+    Com `start` (o numero no jogo da primeira volta do bloco 1, anotado pelo
+    piloto), tudo antes dessa volta e ignorado -- quantas voltas de aquecimento
+    houver -- e so as voltas medidas do plano sao casadas, a partir dela. Contar
+    o aquecimento de cabeca e facil de errar, e um erro de uma volta
+    desalinharia o plano inteiro. Sem `start`, vale a contagem pelo plano.
+
     Se a contagem nao bater, levanta `PlanMismatchError` com a lista de voltas e
     o motivo de cada exclusao -- quem resolve e o piloto, nao o script.
     """
     invalid = [int(v) for v in invalid]
     ordered = laps.sort_values("sequence").reset_index(drop=True)
+
+    if start is not None:
+        start = int(start)
+        present = ordered["lap_number"].astype(int)
+        hits = ordered.index[present == start]
+        if len(hits) == 0:
+            raise PlanMismatchError(
+                f"a volta {start} informada em --inicio nao existe na gravacao. "
+                f"Numeros de volta no jogo presentes: {sorted(set(present.tolist()))}."
+            )
+        if len(hits) > 1:
+            raise PlanMismatchError(
+                f"a volta {start} informada em --inicio aparece {len(hits)} vezes na gravacao com o mesmo "
+                "numero do jogo (o contador trava no box). Nada foi casado: diga qual delas, pelo lap_id."
+            )
+        first = int(hits[0])
+        before = ordered.iloc[:first]
+        ordered = ordered.iloc[first:].reset_index(drop=True)
+        plan = plan[plan["condicao"] != WARMUP].reset_index(drop=True)
+        # Uma volta anotada como invalida antes do inicio nao muda nada; so as
+        # de depois contam.
+        invalid = [n for n in invalid if n not in set(before["lap_number"].astype(int)) or n in set(ordered["lap_number"].astype(int))]
 
     repeated = ordered["lap_number"].value_counts()
     ambiguous = sorted(int(n) for n in invalid if repeated.get(n, 0) > 1)
@@ -202,12 +237,23 @@ def match_laps(laps: pd.DataFrame, plan: pd.DataFrame, invalid: Sequence[int] = 
             f"  gravada n. {i + 1:>2}  {lap_label(r)}  {r['lap_id']}: {r['status']}"
             for i, (_, r) in enumerate(ordered.iterrows())
         )
+        if start is not None:
+            raise PlanMismatchError(
+                f"a partir da volta {start} (--inicio), o plano tem {len(plan)} voltas medidas, mas a "
+                f"gravacao tem {len(usable)} voltas aproveitaveis de {len(ordered)} gravadas dali em diante. "
+                "Nada foi casado.\n"
+                "Confira se alguma volta errada nao foi anotada como invalida, se alguma volta do plano "
+                "caiu nos gates de qualidade, ou se houve volta extra depois do bloco final.\n"
+                f"Voltas gravadas a partir da volta {start}:\n{listing}"
+            )
         raise PlanMismatchError(
             f"o plano tem {len(plan)} voltas ({int((plan['condicao'] == WARMUP).sum())} de aquecimento + "
             f"{int((plan['condicao'] != WARMUP).sum())} medidas), mas a gravacao tem {len(usable)} voltas "
             f"aproveitaveis de {len(ordered)} gravadas. Nada foi casado.\n"
             "Confira se alguma volta errada nao foi anotada como invalida, se alguma volta do plano "
-            "caiu nos gates de qualidade, ou se o aquecimento teve mais ou menos voltas que o plano.\n"
+            "caiu nos gates de qualidade, ou se o aquecimento teve mais ou menos voltas que o plano. "
+            "Para nao depender da contagem do aquecimento, use --inicio com o numero no jogo da "
+            "primeira volta do bloco 1.\n"
             f"Voltas gravadas:\n{listing}"
         )
     matched = pd.concat(

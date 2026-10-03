@@ -1,7 +1,11 @@
 """Analisa uma sessao controlada (Fase 2c) contra o plano sorteado.
 
     python -m ml.scripts.analyze_controlled_session --sessao <id> --plano docs/experimentos/<data>_plano.csv
-        [--invalidas 7,19]  [--data AAAA-MM-DD]
+        --inicio 9 [--invalidas 7,19]  [--data AAAA-MM-DD]
+
+`--inicio` e o numero no jogo da primeira volta do bloco 1, anotado pelo piloto
+(protocolo). A partir dela as voltas aproveitaveis sao casadas com os blocos;
+o aquecimento antes dela e ignorado, tenha quantas voltas tiver.
 
 `--invalidas` sao os numeros de volta **do jogo** que o piloto anotou como
 invalidos durante a sessao.
@@ -224,6 +228,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--sessao", required=True)
     parser.add_argument("--plano", type=Path, required=True)
     parser.add_argument("--invalidas", default="")
+    parser.add_argument(
+        "--inicio",
+        type=int,
+        default=None,
+        help="numero no jogo da primeira volta do bloco 1, anotado pelo piloto; sem ele, conta pelo plano",
+    )
     parser.add_argument("--data", default=None, help="padrao: a data no inicio do id da sessao")
     parser.add_argument("--saida", type=Path, default=config.repo_root() / "docs" / "experimentos")
     args = parser.parse_args(argv)
@@ -248,7 +258,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     inventory = scan_sessions([session], track)
     inventory = inventory.merge(lap_clock(session), on="lap_id", how="left")
     try:
-        matched = ct.match_laps(inventory, plan, invalid)
+        matched = ct.match_laps(inventory, plan, invalid, start=args.inicio)
     except ct.PlanMismatchError as error:
         print(f"PARADO: {error}")
         return 2
@@ -297,6 +307,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "ambiente": {"python": platform.python_version(), "numpy": np.__version__, "scikit_learn": sklearn.__version__},
         "plano": {"arquivo": str(args.plano), "semente": int(plan["semente"].iloc[0]), "voltas": int(len(plan))},
         "invalidas_anotadas": invalid,
+        "inicio_anotado": args.inicio,
         "dados": [
             _sha256(session.player_stream),
             _sha256(config.artifacts_root() / "laps_grid.parquet"),

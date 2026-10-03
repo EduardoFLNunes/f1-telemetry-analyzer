@@ -1,0 +1,41 @@
+{
+  "etapa": "fase2c-inicio-por-volta",
+  "base_do_patch": "develop 4c9acd7f",
+  "patch_sha256": "47ddff241e014be1002b67473f91f5afd060731d2ddad447c214e717d6504dc6",
+  "pytest": "434 passed, 4 warnings in 41.38s",
+  "testes_novos": [
+    {
+      "teste": "test_an_invalid_lap_after_start_is_skipped_and_one_before_is_ignored",
+      "resultado": "PASSED"
+    },
+    {
+      "teste": "test_four_five_and_seven_warmup_laps_give_the_same_result",
+      "resultado": "PASSED"
+    },
+    {
+      "teste": "test_measured_laps_are_still_counted_strictly",
+      "resultado": "PASSED"
+    },
+    {
+      "teste": "test_plan_text_asks_for_the_first_lap_of_block_1",
+      "resultado": "PASSED"
+    },
+    {
+      "teste": "test_start_that_does_not_exist_stops_clearly",
+      "resultado": "PASSED"
+    },
+    {
+      "teste": "test_start_with_a_repeated_game_number_is_not_guessed",
+      "resultado": "PASSED"
+    },
+    {
+      "teste": "test_without_start_a_different_warmup_still_stops",
+      "resultado": "PASSED"
+    }
+  ],
+  "plano_de_exemplo": {
+    "arquivo": "docs/experimentos/2026-10-02_plano.txt",
+    "sha256": "90014f9edccd3e5cc154d88dace303e7bb5b580aaa1ca4de24cbfbe10d186eee",
+    "csv_inalterado": true
+  }
+}

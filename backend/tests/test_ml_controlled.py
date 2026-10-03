@@ -55,8 +55,8 @@ def synthetic_session(seed=0, plan=None, interaction=0.0, braking_done=-10.0, in
     return pd.concat([pd.DataFrame([out_lap]), laps], ignore_index=True)
 
 
-def analyse(laps, plan, invalid=(), direction=-1):
-    matched = ct.match_laps(laps[["lap_id", "sequence", "lap_number", "valid", "reasons"]], plan, invalid)
+def analyse(laps, plan, invalid=(), direction=-1, start=None):
+    matched = ct.match_laps(laps[["lap_id", "sequence", "lap_number", "valid", "reasons"]], plan, invalid, start=start)
     matched = matched.merge(laps.drop(columns=["sequence", "lap_number", "valid", "reasons"]), on="lap_id")
     measured = matched[matched["condicao"] != ct.WARMUP]
     effects = ct.estimate_effects(
@@ -226,6 +226,90 @@ class MatchingTest(unittest.TestCase):
         with self.assertRaises(ct.PlanMismatchError) as caught:
             ct.match_laps(table, self.plan, invalid=[int(table["lap_number"].iloc[5])])
         self.assertIn("mais de uma vez", str(caught.exception))
+
+
+def with_warmup(laps, plan, warmup):
+    """A mesma sessao medida, gravada com `warmup` voltas de aquecimento.
+
+    As voltas medidas sao identicas (mesmos tempos e medidas); so muda quantas
+    voltas livres vieram antes delas. Numeracao do jogo e ordem refeitas.
+    """
+    out_lap = laps.iloc[[0]]
+    plan_warmup = int((plan["condicao"] == ct.WARMUP).sum())
+    template = laps.iloc[1]
+    measured = laps.iloc[1 + plan_warmup :]
+    free = pd.DataFrame([template] * warmup)
+    recorded = pd.concat([out_lap, free, measured], ignore_index=True)
+    recorded["sequence"] = np.arange(len(recorded))
+    recorded["lap_number"] = np.arange(len(recorded)) + 1
+    recorded["lap_id"] = [f"W#{i:04d}" for i in range(len(recorded))]
+    first_measured = 1 + warmup
+    return recorded, int(recorded["lap_number"].iloc[first_measured])
+
+
+class StartLapTest(unittest.TestCase):
+    """Inicio pela volta anotada pelo piloto (pedido 10)."""
+
+    def setUp(self):
+        self.plan = ct.make_plan(seed=2026, warmup=5)
+        self.laps = synthetic_session(seed=12, plan=self.plan)
+
+    def test_four_five_and_seven_warmup_laps_give_the_same_result(self):
+        results = []
+        for warmup in (4, 5, 7):
+            recorded, start = with_warmup(self.laps, self.plan, warmup)
+            matched, execution, effects = analyse(recorded, self.plan, start=start)
+            self.assertEqual(len(matched), 32, warmup)
+            self.assertEqual(matched["condicao"].tolist(), self.plan.loc[self.plan["condicao"] != ct.WARMUP, "condicao"].tolist())
+            results.append((effects["frenagem"]["estimativa_s"], effects["linha"]["estimativa_s"], execution["B"]["frenagem_vs_A_m"]))
+        self.assertEqual(results[0], results[1])
+        self.assertEqual(results[0], results[2])
+
+    def test_without_start_a_different_warmup_still_stops(self):
+        recorded, _ = with_warmup(self.laps, self.plan, 7)
+        with self.assertRaises(ct.PlanMismatchError) as caught:
+            analyse(recorded, self.plan)
+        self.assertIn("--inicio", str(caught.exception))
+
+    def test_start_that_does_not_exist_stops_clearly(self):
+        recorded, _ = with_warmup(self.laps, self.plan, 5)
+        with self.assertRaises(ct.PlanMismatchError) as caught:
+            analyse(recorded, self.plan, start=999)
+        message = str(caught.exception)
+        self.assertIn("999", message)
+        self.assertIn("nao existe na gravacao", message)
+
+    def test_start_with_a_repeated_game_number_is_not_guessed(self):
+        recorded, start = with_warmup(self.laps, self.plan, 5)
+        recorded.loc[2, "lap_number"] = start
+        with self.assertRaises(ct.PlanMismatchError) as caught:
+            analyse(recorded, self.plan, start=start)
+        self.assertIn("aparece 2 vezes", str(caught.exception))
+
+    def test_measured_laps_are_still_counted_strictly(self):
+        recorded, start = with_warmup(self.laps, self.plan, 5)
+        with self.assertRaises(ct.PlanMismatchError) as caught:
+            analyse(recorded.iloc[:-1], self.plan, start=start)
+        self.assertIn("31 voltas aproveitaveis", str(caught.exception))
+        self.assertIn("32 voltas medidas", str(caught.exception))
+
+    def test_an_invalid_lap_after_start_is_skipped_and_one_before_is_ignored(self):
+        recorded, start = with_warmup(self.laps, self.plan, 5)
+        extra = recorded.iloc[[10]].copy()
+        extra["sequence"] = 10.5
+        extra["lap_number"] = 500
+        extra["lap_id"] = "W#extra"
+        recorded = pd.concat([recorded, extra], ignore_index=True)
+        matched, _, _ = analyse(recorded, self.plan, invalid=[2, 500], start=start)
+        self.assertNotIn("W#extra", set(matched["lap_id"]))
+        self.assertEqual(len(matched), 32)
+
+    def test_plan_text_asks_for_the_first_lap_of_block_1(self):
+        text = ct.plan_text(self.plan)
+        line = "ANOTE o numero no jogo desta volta (primeira do bloco 1): ____"
+        self.assertEqual(text.count(line), 1)
+        self.assertLess(text.index("BLOCO 1"), text.index(line))
+        self.assertLess(text.index(line), text.index("BLOCO 2"))
 
 
 class EstimatorComparisonTest(unittest.TestCase):

@@ -211,3 +211,31 @@ tempo decorrido desde a primeira amostra. Ela **não** vem direto do `timestamp`
 gravado: nas 5 sessões conferidas (maio a agosto), converter o `timestamp` pelo
 fuso local dá sempre 3 h a mais que o `startedAt`. A causa no gravador não foi
 investigada nesta etapa.
+
+---
+
+## 9. Início pela volta anotada (2026-10-03, branch `etapa/fase2c-inicio-por-volta`)
+
+Contar de cabeça as voltas de aquecimento é fácil de errar, e um erro de uma
+volta desalinharia o plano inteiro. Por isso:
+
+- **O plano impresso pede uma anotação.** Logo no início do bloco 1 aparece a
+  linha `ANOTE o numero no jogo desta volta (primeira do bloco 1): ____`.
+- **A análise ganha `--inicio <numero no jogo>`.** A partir dessa volta, as
+  voltas aproveitáveis são casadas com os blocos, em ordem. Tudo antes dela é
+  ignorado, seja quantas voltas forem.
+- **As voltas medidas continuam conferidas de forma estrita:** 32, mais as
+  repetidas por invalidez. Se a conta não bater, a análise para e lista as
+  voltas a partir do início.
+- **Também para com mensagem clara** se o número dado em `--inicio` não existir
+  na gravação, ou se aparecer mais de uma vez (contador travado no box).
+- **Uma volta inválida anotada antes do início é ignorada.**
+- **Sem `--inicio`,** o comportamento é o anterior (contagem pelo plano). A
+  mensagem de parada passa a sugerir `--inicio`.
+
+Testado: com 4, 5 e 7 voltas de aquecimento e `--inicio`, o casamento, os
+efeitos e a conferência da execução saem idênticos.
+
+```bash
+cd backend && python -m ml.scripts.analyze_controlled_session --sessao <id> --plano ../docs/experimentos/<data>_plano.csv --inicio 9 --invalidas 14
+```
