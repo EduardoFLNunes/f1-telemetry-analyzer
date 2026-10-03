@@ -52,6 +52,7 @@ As voltas são feitas em blocos de 4, e cada bloco tem as quatro condições em 
 - Faça cerca de 5 voltas de aquecimento além da volta de saída dos boxes. O número exato não importa: o que importa é **anotar o número no jogo da primeira volta do bloco 1**. A análise começa a contar a partir dela.
 - **A conferir no Assetto Corsa:** se dá para desligar o consumo de combustível e o desgaste de pneu nas opções de realismo. Se não der, faça a sessão em blocos curtos e reabasteça sempre com a mesma quantidade.
 - Grave a sessão normalmente pelo app. Nada muda na gravação.
+- **Deixe o coach desligado durante a sessão.** Ele comenta freadas e trechos, e isso pode mudar o jeito como você executa as condições. Como desligar: (a preencher)
 
 ## O que a análise vai responder
 
