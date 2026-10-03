@@ -49,7 +49,7 @@ As voltas são feitas em blocos de 4, e cada bloco tem as quatro condições em 
 
 - Se errar a volta (passar reto, rodar, frear muito fora do ponto), anote o **número da volta mostrado no jogo** como inválida e repita a mesma condição na volta seguinte.
 - **Não entre no box durante as voltas do plano.** No box, o contador de voltas do jogo trava e repete números, e aí uma volta anotada como inválida fica ambígua. Se precisar parar, encerre a gravação e comece uma nova quando voltar.
-- A volta de saída dos boxes conta como parte do aquecimento.
+- Faça cerca de 5 voltas de aquecimento além da volta de saída dos boxes. O número exato não importa: o que importa é **anotar o número no jogo da primeira volta do bloco 1**. A análise começa a contar a partir dela.
 - **A conferir no Assetto Corsa:** se dá para desligar o consumo de combustível e o desgaste de pneu nas opções de realismo. Se não der, faça a sessão em blocos curtos e reabasteça sempre com a mesma quantidade.
 - Grave a sessão normalmente pelo app. Nada muda na gravação.
 
