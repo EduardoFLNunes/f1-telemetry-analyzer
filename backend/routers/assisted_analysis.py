@@ -173,6 +173,7 @@ async def get_lap_coaching(lapId: str):
             lap_number=descriptor.lap_number or 0,
             track=descriptor.track or "",
             driver_id=descriptor.driver_id or "player_1",
+            geometry=main.assisted_analysis_service._official_geometry(descriptor.track),  # noqa: SLF001
         )
         result.update({
             "lapId": lapId,
@@ -185,6 +186,7 @@ async def get_lap_coaching(lapId: str):
                     "lapsInModel": model.lap_count,
                     "referenceLapId": model.reference_lap_id,
                     "referenceLapSeconds": model.reference_lap_seconds,
+                    "geometryId": model.geometry_id,
                     "builtAt": model.built_at,
                 }
                 if model.mode == "reference_lap"

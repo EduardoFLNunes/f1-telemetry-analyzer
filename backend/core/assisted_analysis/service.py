@@ -21,6 +21,7 @@ from .reference_lap_comparator import ReferenceComparator
 from .corner_metrics import CornerMetricsCalculator
 from .models import CornerComparison, CornerMetrics, DrivingError, LapDescriptor
 from .reference_model import MODE_REFERENCE_LAP, DriverReferenceModel, lap_is_usable, microsector_splits, model_path
+from .official_geometry import find_official_geometry
 from .optimal_line import attach, find_optimal_line
 from .corner_segmentation import CornerSegmenter
 from .utils import finite_float
@@ -389,6 +390,17 @@ class AssistedAnalysisService:
                 "gapIdealToOptimal": model.gap_ideal_to_optimal,
             }
         }
+
+    def _official_geometry(self, track: Optional[str]):
+        """The official geometry exported by `ml.scripts.export_geometry` (ADR 0013)."""
+        key = (track or "unknown").strip()
+        cached = getattr(self, "_official_geometries", None)
+        if cached is None:
+            cached = {}
+            self._official_geometries = cached
+        if key not in cached:
+            cached[key] = find_official_geometry([self.runtime_root, self.repo_root], key)
+        return cached[key]
 
     def _reference_model(self, track: Optional[str]) -> Optional[DriverReferenceModel]:
         key = (track or "unknown").strip()

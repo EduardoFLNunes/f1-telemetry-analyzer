@@ -27,7 +27,10 @@ class FeedbackGenerator:
         concept = f" Conceito: {primary.concept}." if primary.concept else ""
         behavior = f" Comportamento observado: {primary.physical_behavior}." if primary.physical_behavior else ""
         advice = primary.feedback or primary.description
-        suffix = f" Ganho estimado: {gain:.3f}s." if gain > 0 else ""
+        # `gain` is the measured time this corner took over the reference lap's
+        # (CornerComparison.segment_time_delta_s), not a prediction: it is said as
+        # a measured difference, never as a gain on offer (ADR 0012).
+        suffix = f" Diferenca medida para a volta de referencia nesta curva: {gain:.3f}s." if gain > 0 else ""
         return f"{corner_name}: {primary.label} na {phase}.{concept}{behavior} {advice}{suffix}"
 
     def headline(self, top_losses: List[Dict[str, Any]], total_gain: float) -> str:
@@ -38,7 +41,10 @@ class FeedbackGenerator:
         error = primary.get("primaryError") or "perda tecnica"
         concept = primary.get("concept")
         concept_text = f" ({concept})" if concept else ""
-        return f"Maior oportunidade em {corner}: {error}{concept_text}. Ganho total estimado {total_gain:.3f}s."
+        return (
+            f"Maior diferenca para a volta de referencia em {corner}: {error}{concept_text}. "
+            f"Soma das curvas em que ficou atras: {total_gain:.3f}s."
+        )
 
     def data_quality(self, player_samples: int, reference_samples: int, optional_channels: Dict[str, bool], warnings: List[str]) -> Dict[str, Any]:
         channel_score = sum(1 for present in optional_channels.values() if present) / max(len(optional_channels), 1)

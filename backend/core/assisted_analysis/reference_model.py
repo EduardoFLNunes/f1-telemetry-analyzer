@@ -142,6 +142,14 @@ class DriverReferenceModel:
     reference_lap_id: Optional[str] = None
     reference_lap_seconds: Optional[float] = None
 
+    # ADR 0013. The official geometry the model was measured on. When set, the
+    # coach projects the live position on that same geometry and stays quiet if
+    # it cannot load it or finds another one; when absent (a model fitted on the
+    # runtime's `p`), the coach keeps the old behaviour.
+    geometry_id: Optional[str] = None
+    # The quickest valid laps and why each was or was not the reference.
+    reference_candidates: List[Dict[str, Any]] = field(default_factory=list)
+
     @property
     def has_reference(self) -> bool:
         return bool(self.reference_lap_id) and any(t.reference_seconds is not None for t in self.targets)
@@ -250,6 +258,8 @@ class DriverReferenceModel:
             mode=mode if mode in MODES else MODE_REFERENCE_LAP,
             reference_lap_id=payload.get("reference_lap_id"),
             reference_lap_seconds=payload.get("reference_lap_seconds"),
+            geometry_id=payload.get("geometry_id"),
+            reference_candidates=list(payload.get("reference_candidates") or []),
         )
 
     def save(self, path: Path) -> Path:
@@ -480,6 +490,7 @@ def build_reference_model(
     built_at: Optional[str] = None,
     mode: str = MODE_REFERENCE_LAP,
     reference_lap_id: Optional[str] = None,
+    geometry: Any = None,
 ) -> DriverReferenceModel:
     """
     Fit the model from `(lap_id, lap_seconds, sample_count, dataframe)` laps.
@@ -492,7 +503,18 @@ def build_reference_model(
     by `reference_lap_id`, which then has to be valid and complete too. The
     caller decides which laps are comparable (same track, car and geometry):
     this function sees only the laps it is given.
+
+    With `geometry` (an `official_geometry.OfficialGeometry`, ADR 0013), every
+    lap is projected from its world position onto the official grid before it
+    is cut: the recorded `p` is ignored, so laps from any cache -- and laps that
+    have no `p` at all -- are measured on one ruler, and the microsectors are
+    the ML's equal-distance ones.
     """
+    if geometry is not None:
+        from .official_geometry import project_lap
+
+        microsectors = geometry.microsectors
+        laps = [(lap_id, seconds, count, project_lap(df, geometry)) for lap_id, seconds, count, df in laps]
     if mode not in MODES:
         raise ValueError(f"unknown mode {mode!r}; expected one of {MODES}")
     best: Dict[int, Tuple[float, str, pd.DataFrame]] = {}
@@ -503,6 +525,8 @@ def build_reference_model(
     best_lap_seconds: Optional[float] = None
 
     complete: Dict[str, Tuple[float, List[Optional[float]], pd.DataFrame]] = {}
+    # Every lap the model accepted, and what kept it from being a reference.
+    accepted_status: Dict[str, Tuple[float, str]] = {}
 
     for lap_id, lap_seconds, sample_count, df in laps:
         usable, reason = lap_is_usable(lap_seconds, sample_count)
@@ -515,7 +539,12 @@ def build_reference_model(
         if covered < microsectors * MIN_COVERAGE:
             rejected["incomplete_lap"] = rejected.get("incomplete_lap", 0) + 1
             continue
-        if covered == microsectors and not _has_hole(df, microsectors):
+        if covered < microsectors:
+            accepted_status[lap_id] = (float(lap_seconds or 0.0), f"incompleta: {microsectors - covered} microsetores sem tempo")
+        elif _has_hole(df, microsectors):
+            accepted_status[lap_id] = (float(lap_seconds or 0.0), "incompleta: buraco na gravacao maior que meio microsetor")
+        else:
+            accepted_status[lap_id] = (float(lap_seconds or 0.0), "completa")
             complete[lap_id] = (float(lap_seconds or 0.0), splits, df)
 
         accepted += 1
@@ -547,6 +576,7 @@ def build_reference_model(
         targets.append(target)
 
     reference_seconds: Optional[float] = None
+    requested_reference = reference_lap_id
     if reference_lap_id is not None:
         if reference_lap_id not in complete:
             raise ValueError(
@@ -566,6 +596,16 @@ def build_reference_model(
             target.reference_throttle_point_p = summary.get("throttle_point_p")
             target.reference_throttle_point_m = _meters_at(reference_df, summary.get("throttle_point_p"))
 
+    candidates = []
+    for lap_id, (seconds, status) in sorted(accepted_status.items(), key=lambda item: item[1][0])[:5]:
+        if lap_id == reference_lap_id:
+            why = "escolhida: " + ("indicada por lap_id" if requested_reference else "a mais rapida valida e completa")
+        elif status != "completa":
+            why = status
+        else:
+            why = "valida e completa, mas mais lenta que a escolhida"
+        candidates.append({"lap_id": lap_id, "lap_seconds": round(seconds, 3), "motivo": why})
+
     ideal = round(sum(target.best_seconds for target in targets), 3) if targets else None
     return DriverReferenceModel(
         version=MODEL_VERSION,
@@ -582,6 +622,8 @@ def build_reference_model(
         mode=mode,
         reference_lap_id=reference_lap_id,
         reference_lap_seconds=round(reference_seconds, 3) if reference_seconds else None,
+        geometry_id=getattr(geometry, "geometry_id", None),
+        reference_candidates=candidates,
     )
 
 

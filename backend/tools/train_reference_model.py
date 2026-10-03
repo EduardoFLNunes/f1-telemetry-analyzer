@@ -3,12 +3,17 @@ Fit the driver's reference model from everything he has recorded.
 
     python tools/train_reference_model.py [--track vhe_interlagos] [--limit N]
         [--modo reference_lap|best_per_microsector] [--volta-referencia <lap_id>]
+        [--geometria-arquivo <pista>.geometry.json] [--saida ARQUIVO]
 
 Modo padrao (ADR 0012): a volta de referencia e a melhor volta valida e completa
 da pista -- ou a escolhida com --volta-referencia -- e o coach mede cada trecho
-contra ela. So entram voltas gravadas com o mesmo cache de geometria da maioria
-(`trackCache` da sessao); o carro nao e registrado nas gravacoes, e por isso nao
-pode ser filtrado.
+contra ela.
+
+Geometria (ADR 0013): toda volta e reprojetada pela posicao no mundo na
+geometria oficial exportada por `python -m ml.scripts.export_geometry`, e o
+modelo grava o `geometry_id` dela. Por isso entram voltas de qualquer cache,
+inclusive as de 2026-08-09, que nao tem `p`. O carro nao e registrado nas
+gravacoes e por isso nao pode ser filtrado.
 
 Walks the recorded laps, keeps the ones whose sampling holds up, times each
 through every microsector, and writes the model the analysis engine measures
@@ -29,6 +34,7 @@ if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 from core.assisted_analysis.lap_loader import LapDataLoader  # noqa: E402
+from core.assisted_analysis.official_geometry import OfficialGeometry, find_official_geometry  # noqa: E402
 from core.assisted_analysis.reference_model import (  # noqa: E402
     DEFAULT_MICROSECTORS,
     MODE_REFERENCE_LAP,
@@ -56,17 +62,18 @@ def runtime_root() -> Path:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Treina o modelo de referencia do piloto")
     parser.add_argument("--track", default=None, help="pista (padrao: a mais gravada)")
-    parser.add_argument("--limit", type=int, default=150,
-                        help="usar as N voltas mais rapidas (0 = todas)")
+    parser.add_argument("--limit", type=int, default=0,
+                        help="usar as N voltas mais rapidas (0 = todas, o padrao)")
     parser.add_argument("--microsectors", type=int, default=DEFAULT_MICROSECTORS)
     parser.add_argument("--dry-run", action="store_true", help="nao grava o modelo")
     parser.add_argument("--modo", default=MODE_REFERENCE_LAP, choices=MODES)
     parser.add_argument("--volta-referencia", default=None, help="lap_id da volta de referencia")
     parser.add_argument("--saida", type=Path, default=None, help="grava aqui em vez do caminho do runtime")
     parser.add_argument(
-        "--geometria",
+        "--geometria-arquivo",
+        type=Path,
         default=None,
-        help="trackCache das sessoes a usar; sem ele, usa o da maioria e avisa",
+        help="geometria oficial exportada (padrao: data/reference_models/<pista>.geometry.json)",
     )
     args = parser.parse_args()
 
@@ -95,26 +102,15 @@ def main() -> int:
 
     selected = [lap for lap in descriptors if not track or lap.track == track]
 
-    # Mesma geometria: o cache com que a sessao foi gravada. Voltas de outra
-    # versao da pista nao sao comparaveis trecho a trecho.
-    def geometry_of(lap):
-        return ((lap.metadata or {}).get("sessionMetadata") or {}).get("trackCache")
-
-    caches: dict = {}
-    for lap in selected:
-        caches[geometry_of(lap)] = caches.get(geometry_of(lap), 0) + 1
-    print("voltas por geometria gravada (trackCache):")
-    for cache, count in sorted(caches.items(), key=lambda item: -item[1]):
-        print(f"  {count:5d}  {cache}")
-    if args.geometria:
-        geometry = args.geometria
-    else:
-        geometry = max(caches, key=caches.get) if caches else None
-        print("AVISO: --geometria nao informada; usando a da maioria. O coach compara o progresso ao vivo,")
-        print("calculado com a geometria atual do app, com o do modelo: escolha a geometria de proposito.")
-    other_geometry = sum(n for cache, n in caches.items() if cache != geometry)
-    selected = [lap for lap in selected if geometry_of(lap) == geometry]
-    print(f"geometria (trackCache) : {geometry}  ({other_geometry} voltas de outra geometria fora)")
+    geometry = (
+        OfficialGeometry.load(args.geometria_arquivo)
+        if args.geometria_arquivo
+        else find_official_geometry([root, BACKEND_DIR.parent], track or "unknown")
+    )
+    if geometry is None:
+        print("PARADO: geometria oficial nao encontrada. Rode antes: python -m ml.scripts.export_geometry")
+        return 2
+    print(f"geometria oficial : {geometry.geometry_id}  ({geometry.length:.2f} m, {geometry.microsectors} microsetores)")
     # Cheapest filter first: no point loading a lap the model will refuse.
     plausible = [lap for lap in selected if lap_is_usable(lap.lap_time, lap.sample_count)[0]]
     skipped_early = len(selected) - len(plausible)
@@ -128,16 +124,20 @@ def main() -> int:
 
     laps = []
     started = time.monotonic()
-    for index, descriptor in enumerate(plausible, start=1):
-        try:
-            _, df = loader.load_lap(descriptor.lap_id)
-        except Exception as error:
-            print(f"  ! {descriptor.lap_id}: {error}")
-            continue
+    # Gravacoes em lote: cada sessao e lida uma vez (load_recorded_laps).
+    recorded = [lap for lap in plausible if lap.lap_id.startswith("rec__")]
+    frames = loader.load_recorded_laps([lap.lap_id for lap in recorded]) if recorded else {}
+    for descriptor in plausible:
+        if descriptor.lap_id in frames:
+            df = frames[descriptor.lap_id][1]
+        else:
+            try:
+                _, df = loader.load_lap(descriptor.lap_id)
+            except Exception as error:
+                print(f"  ! {descriptor.lap_id}: {error}")
+                continue
         laps.append((descriptor.lap_id, descriptor.lap_time, descriptor.sample_count, df))
-        if index % 25 == 0 or index == len(plausible):
-            elapsed = time.monotonic() - started
-            print(f"  carregadas {index}/{len(plausible)}  ({elapsed:.0f}s)")
+    print(f"  carregadas {len(laps)}/{len(plausible)}  ({time.monotonic() - started:.0f}s)")
 
     model = build_reference_model(
         laps,
@@ -146,6 +146,7 @@ def main() -> int:
         built_at=datetime.now(timezone.utc).isoformat(),
         mode=args.modo,
         reference_lap_id=args.volta_referencia,
+        geometry=geometry,
     )
 
     print()
@@ -154,10 +155,14 @@ def main() -> int:
     print(f"descartadas        : {model.rejected_count}  {model.rejected_reasons}")
     print(f"modo               : {model.mode}")
     print(f"volta de referencia: {model.reference_lap_seconds}s  ({model.reference_lap_id})")
+    print(f"geometria          : {model.geometry_id}")
     print(f"melhor volta real  : {model.best_lap_seconds}s  ({model.best_lap_id})")
     # A soma dos melhores trechos e um limite otimista, nao uma meta (ADR 0012).
     print(f"soma dos melhores trechos (limite otimista, nao meta): {model.ideal_lap_seconds}s")
     print("=" * 58)
+    print("\nas 5 voltas validas mais rapidas:")
+    for candidate in model.reference_candidates:
+        print(f"  {candidate['lap_seconds']:.3f}s  {candidate['lap_id']}  -> {candidate['motivo']}")
 
     if model.targets:
         spread = sorted(

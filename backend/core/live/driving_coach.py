@@ -18,6 +18,13 @@ measured difference ("0.12 s behind your reference lap here"), never a promised
 gain or an "ideal lap". The old comparison -- the best ever done in each slice --
 is still here as `best_per_microsector`, off unless the model asks for it.
 
+Since ADR 0013 a model carries the `geometry_id` of the official geometry it was
+measured on. The coach then works out where the car is from its world position,
+projected on that same geometry (`official_geometry.CoachProjector`), instead of
+the runtime's `p`: same ruler, same 60 microsectors as the analysis. If the
+geometry file is missing, or is another geometry, the coach says nothing and
+logs it once. A model without `geometry_id` keeps the old `p` path.
+
 It runs on every frame at ~57 Hz, so it does almost nothing per frame: read the
 progress, and only when a microsector boundary is crossed does it look up a
 target and compare. Anything heavier here shows up as a hole in the recording --
@@ -78,6 +85,7 @@ class LiveDrivingCoach:
         event_bus: Any,
         model_provider: Callable[[Optional[str]], Any],
         loop_ref_provider: Callable[[], Any] = lambda: None,
+        geometry_provider: Callable[[Optional[str]], Any] = lambda track: None,
         *,
         min_loss_seconds: float = MIN_LOSS_SECONDS,
         min_gap_seconds: float = MIN_SECONDS_BETWEEN_EVENTS,
@@ -85,6 +93,10 @@ class LiveDrivingCoach:
         self.event_bus = event_bus
         self.model_provider = model_provider
         self.loop_ref_provider = loop_ref_provider
+        self.geometry_provider = geometry_provider
+        self._projector: Any = None
+        self._projector_geometry_id: Optional[str] = None
+        self._warned_geometry: Optional[str] = None
         self.min_loss_seconds = min_loss_seconds
         self.min_gap_seconds = min_gap_seconds
 
@@ -106,15 +118,17 @@ class LiveDrivingCoach:
     def on_frame(self, frame: Dict[str, Any]) -> None:
         if not isinstance(frame, dict):
             return
-        progress = _number(frame.get("p") if frame.get("p") is not None else frame.get("lapProgress"))
         clock = _number(frame.get("lap_time"))
-        if progress is None or clock is None or not (0.0 <= progress <= 1.0):
+        if clock is None:
             return
 
         model = self._model_for(frame.get("track") or frame.get("trackName"))
         if model is None or not model.targets:
             return
         if not self._usable(model):
+            return
+        progress = self._progress(frame, model)
+        if progress is None or not (0.0 <= progress <= 1.0):
             return
 
         lap_number = _number(frame.get("lap_number") or frame.get("lap"))
@@ -208,6 +222,45 @@ class LiveDrivingCoach:
             self._emit_coaching_event(frame, target, split, loss)
         else:
             self._emit_reference_event(frame, model, target, split, loss)
+
+    def _progress(self, frame: Dict[str, Any], model: Any) -> Optional[float]:
+        """Where in the lap the car is, 0 to 1, on the ruler the model was fitted on."""
+        if not getattr(model, "geometry_id", None):
+            return _number(frame.get("p") if frame.get("p") is not None else frame.get("lapProgress"))
+        projector = self._projector_for(model)
+        if projector is None:
+            return None
+        x = _number(frame.get("world_x") if frame.get("world_x") is not None else frame.get("worldX"))
+        z = _number(frame.get("world_z") if frame.get("world_z") is not None else frame.get("worldZ"))
+        if x is None or z is None:
+            return None
+        s, _ = projector.project(x, z)
+        return s / projector.geometry.length
+
+    def _projector_for(self, model: Any) -> Any:
+        """The projector on the model's geometry, or None (and one log line) if it cannot be had."""
+        wanted = model.geometry_id
+        if self._projector is not None and self._projector_geometry_id == wanted:
+            return self._projector
+        geometry = None
+        try:
+            geometry = self.geometry_provider(self._track)
+        except Exception as error:
+            logger.warning("Official geometry unavailable for coaching: %s", error)
+        if geometry is None or geometry.geometry_id != wanted:
+            reason = "missing" if geometry is None else f"is {geometry.geometry_id}"
+            if self._warned_geometry != f"{wanted}:{reason}":
+                logger.warning(
+                    "Coach model was measured on geometry %s, but the official geometry file %s; coach is silent",
+                    wanted,
+                    reason,
+                )
+                self._warned_geometry = f"{wanted}:{reason}"
+            self._projector = None
+            return None
+        self._projector = geometry.projector()
+        self._projector_geometry_id = wanted
+        return self._projector
 
     def _usable(self, model: Any) -> bool:
         """In the reference mode, a model without a reference lap says nothing.
@@ -405,6 +458,8 @@ class LiveDrivingCoach:
         if key and key != self._track:
             self._track = key
             self._model = None
+            self._projector = None
+            self._projector_geometry_id = None
         if self._model is None:
             try:
                 self._model = self.model_provider(self._track)
@@ -445,6 +500,7 @@ def coach_recorded_lap(
     track: str = "",
     driver_id: str = "player_1",
     min_loss_seconds: float = MIN_LOSS_SECONDS,
+    geometry: Any = None,
 ) -> Dict[str, Any]:
     """
     Run a finished lap through the coach and collect everything it would say.
@@ -467,6 +523,7 @@ def coach_recorded_lap(
     coach = LiveDrivingCoach(
         bus,
         model_provider=lambda _track: model,
+        geometry_provider=lambda _track: geometry,
         min_loss_seconds=min_loss_seconds,
         min_gap_seconds=0.0,
     )
@@ -476,14 +533,16 @@ def coach_recorded_lap(
         data = row._asdict()
         clock = data.get("elapsed_s")
         progress = data.get("p")
-        if clock is None or progress is None:
+        if clock is None:
             continue
         coach.on_frame({
-            "p": float(progress),
+            "p": float(progress) if progress is not None and progress == progress else None,
             "lap_time": float(clock),
             "lap_number": lap_number,
             "lap": lap_number,
             "s": float(data.get("s") or 0.0),
+            "world_x": float(data["x"]) if "x" in columns and data.get("x") == data.get("x") else None,
+            "world_z": float(data["z"]) if "z" in columns and data.get("z") == data.get("z") else None,
             "speedKmh": float(data.get("speed_kmh")) if "speed_kmh" in columns and data.get("speed_kmh") == data.get("speed_kmh") else None,
             "driver_id": driver_id,
             "track": track,
