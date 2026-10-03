@@ -1,0 +1,236 @@
+{
+  "etapa": "coach-geometria-oficial",
+  "base_do_patch": "develop cd1254ae",
+  "commits": [
+    "46e58967 Coach: volta cuja projecao salta (saida de pista longe) fica fora do modelo",
+    "7cae8f2e Coach na geometria oficial (ADR 0013): codigo e criterios a-d (pre-registro, antes de rodar)",
+    "a2f4d143 Coach: diferenca medida contra a volta de referencia, nao ganho prometido (ADR 0012)"
+  ],
+  "parado_antes_do_passo_9": [
+    "criterio c falhou",
+    "pedido do Eduardo: rotular voltas humano/IA antes de treinar o modelo do coach"
+  ],
+  "geometria": {
+    "geometry_id": "0ed16f0dd2225990",
+    "arquivo_exportado_sha256": "207faa0dcc9b96d4ca5c4790645f31fcf462dfefe4b67a13abfb2fa7d47e3fad",
+    "comando": "python -m ml.scripts.export_geometry --saida <scratchpad>"
+  },
+  "dados": {
+    "laps_grid.parquet": "a9798c3a338459a34cdb5760dd1ffd2da6352afa2a35bd917feb181a96634c0c",
+    "laps_grid_meta.json": "5a4d3823c9d479b16fecc03643cf355960b412c740ac5389dcf1e53c6b65b339"
+  },
+  "validacao": {
+    "geometry_id": "0ed16f0dd2225990",
+    "modelo": {
+      "arquivo": "C:\\Users\\Dokas\\AppData\\Local\\Temp\\claude\\C--Users-Dokas-Desktop-f1-telemetry-analyzer\\71f85398-201e-4cbe-a4cf-301bc53f38b6\\scratchpad\\geo\\modelo_ensaio.json",
+      "referencia": "rec__2026-08-19_22-23-14_vhe_interlagos__32",
+      "voltas": 635
+    },
+    "criterios": {
+      "a": {
+        "p99_ds_m": 0.5,
+        "p99_dd_m": 0.2
+      },
+      "b": {
+        "p99_ms": 1.0
+      },
+      "c": {
+        "max_por_microsetor_s": 0.02,
+        "soma_s": 0.02
+      },
+      "d": {
+        "proibido": [
+          "ganh",
+          "ideal",
+          "otimo"
+        ]
+      }
+    },
+    "a": {
+      "sessoes": {
+        "MergeFix": {
+          "sessao": "2026-06-20_13-13-02_vhe_interlagos",
+          "voltas_validas_comparadas": 39,
+          "abs_ds_m": {
+            "n": 195350,
+            "p50": 0.018027737053216697,
+            "p99": 0.036523718807929983,
+            "max": 28.151759210116325
+          },
+          "abs_dd_m": {
+            "n": 195350,
+            "p50": 2.321523111681323e-05,
+            "p99": 0.001884340944013907,
+            "max": 0.6071603294021495
+          },
+          "passou": true
+        },
+        "cache atual": {
+          "sessao": "2026-08-16_03-30-14_vhe_interlagos",
+          "voltas_validas_comparadas": 7,
+          "abs_ds_m": {
+            "n": 36549,
+            "p50": 0.018136570274236874,
+            "p99": 0.03651656948764866,
+            "max": 7.825155345669373
+          },
+          "abs_dd_m": {
+            "n": 36549,
+            "p50": 2.3021695612079895e-05,
+            "p99": 0.0015689492672013785,
+            "max": 0.1725015714593634
+          },
+          "passou": true
+        },
+        "sem cache": {
+          "sessao": "2026-08-09_19-20-59_vhe_interlagos",
+          "voltas_validas_comparadas": 52,
+          "abs_ds_m": {
+            "n": 271245,
+            "p50": 0.01797257432826882,
+            "p99": 0.0364762575927125,
+            "max": 28.103612109844107
+          },
+          "abs_dd_m": {
+            "n": 271245,
+            "p50": 2.3349217459722738e-05,
+            "p99": 0.0019091849124766467,
+            "max": 0.17671585923181254
+          },
+          "passou": true
+        }
+      },
+      "passou": true
+    },
+    "b": {
+      "amostras": 582527,
+      "p50_ms": 0.3039000000004677,
+      "p99_ms": 0.743800000009287,
+      "max_ms": 14.928999999995085,
+      "passou": true
+    },
+    "c": {
+      "voltas": [
+        {
+          "lap_id": "2026-08-16_03-30-14_vhe_interlagos#0016",
+          "replay_lap_id": "rec__2026-08-16_03-30-14_vhe_interlagos__9",
+          "tempo_volta_store_s": 84.8478421595802,
+          "microsetores_sem_tempo_no_coach": 0,
+          "diferenca_max_por_microsetor_s": 0.025630707077945458,
+          "soma_coach_s": 84.87359999999998,
+          "soma_menos_tempo_volta_s": 0.025757840419785794
+        },
+        {
+          "lap_id": "2026-06-18_20-06-03_vhe_interlagos#0056",
+          "replay_lap_id": "rec__2026-06-18_20-06-03_vhe_interlagos__57",
+          "tempo_volta_store_s": 85.29966706645915,
+          "microsetores_sem_tempo_no_coach": 0,
+          "diferenca_max_por_microsetor_s": 0.026076255659687186,
+          "soma_coach_s": 85.32590000000002,
+          "soma_menos_tempo_volta_s": 0.026232933540867975
+        },
+        {
+          "lap_id": "2026-06-20_13-13-02_vhe_interlagos#0003",
+          "replay_lap_id": "rec__2026-06-20_13-13-02_vhe_interlagos__11",
+          "tempo_volta_store_s": 85.4414660826498,
+          "microsetores_sem_tempo_no_coach": 0,
+          "diferenca_max_por_microsetor_s": 0.0780036959864221,
+          "soma_coach_s": 85.4676,
+          "soma_menos_tempo_volta_s": 0.02613391735020798
+        },
+        {
+          "lap_id": "2026-08-09_19-20-59_vhe_interlagos#0010",
+          "replay_lap_id": "rec__2026-08-09_19-20-59_vhe_interlagos__381",
+          "tempo_volta_store_s": 85.47170372461478,
+          "microsetores_sem_tempo_no_coach": 0,
+          "diferenca_max_por_microsetor_s": 0.026512791408114467,
+          "soma_coach_s": 85.49860000000001,
+          "soma_menos_tempo_volta_s": 0.02689627538522643
+        },
+        {
+          "lap_id": "2026-06-14_12-23-46_vhe_interlagos#0007",
+          "replay_lap_id": "rec__2026-06-14_12-23-46_vhe_interlagos__100",
+          "tempo_volta_store_s": 85.53781350082261,
+          "microsetores_sem_tempo_no_coach": 0,
+          "diferenca_max_por_microsetor_s": 0.02628625781590499,
+          "soma_coach_s": 85.56400000000001,
+          "soma_menos_tempo_volta_s": 0.026186499177399014
+        }
+      ],
+      "passou": false
+    },
+    "d": {
+      "sessoes": {
+        "2026-06-20_13-13-02_vhe_interlagos": {
+          "frames": 207403,
+          "frases_de_trecho": 110,
+          "frases_de_fim_de_volta": 41,
+          "voltas_com_frase": 26,
+          "frases_por_volta": {
+            "media": 4.230769230769231,
+            "mediana": 3.0,
+            "max": 12
+          }
+        },
+        "2026-08-09_19-20-59_vhe_interlagos": {
+          "frames": 280172,
+          "frases_de_trecho": 90,
+          "frases_de_fim_de_volta": 53,
+          "voltas_com_frase": 12,
+          "frases_por_volta": {
+            "media": 7.5,
+            "mediana": 7.5,
+            "max": 11
+          }
+        }
+      },
+      "frases_proibidas": [],
+      "total_de_frases": 294,
+      "passou": true
+    }
+  },
+  "modelo_de_ensaio_nao_usar": {
+    "voltas": 635,
+    "descartadas": {
+      "projection_jump": 7
+    },
+    "referencia": "rec__2026-08-19_22-23-14_vhe_interlagos__32",
+    "referencia_s": 84.663,
+    "soma_melhores_trechos_s": 78.162,
+    "cinco_mais_rapidas": [
+      {
+        "lap_id": "rec__2026-08-19_22-23-14_vhe_interlagos__32",
+        "lap_seconds": 84.663,
+        "motivo": "escolhida: a mais rapida valida e completa"
+      },
+      {
+        "lap_id": "rec__2026-08-19_22-23-14_vhe_interlagos__30",
+        "lap_seconds": 84.756,
+        "motivo": "valida e completa, mas mais lenta que a escolhida"
+      },
+      {
+        "lap_id": "rec__2026-08-19_22-23-14_vhe_interlagos__31",
+        "lap_seconds": 84.798,
+        "motivo": "valida e completa, mas mais lenta que a escolhida"
+      },
+      {
+        "lap_id": "rec__2026-08-19_22-23-14_vhe_interlagos__42",
+        "lap_seconds": 84.807,
+        "motivo": "valida e completa, mas mais lenta que a escolhida"
+      },
+      {
+        "lap_id": "rec__2026-08-19_22-23-14_vhe_interlagos__29",
+        "lap_seconds": 84.819,
+        "motivo": "valida e completa, mas mais lenta que a escolhida"
+      }
+    ],
+    "pastas_lidas": [
+      "data/recordings (repositorio)",
+      "%APPDATA%/Automobilista Telemetria/data/recordings (app instalado, 90 sessoes, 14 GB)"
+    ]
+  },
+  "testes": {
+    "backend": "460 passed (2026-10-03_coach_geometria_testes.txt)",
+    "frontend": "136 passed (2026-10-03_coach_geometria_vitest.txt)"
+  }
+}
