@@ -20,7 +20,7 @@ from .lap_loader import LapDataLoader
 from .reference_lap_comparator import ReferenceComparator
 from .corner_metrics import CornerMetricsCalculator
 from .models import CornerComparison, CornerMetrics, DrivingError, LapDescriptor
-from .reference_model import DriverReferenceModel, lap_is_usable, microsector_splits, model_path
+from .reference_model import MODE_REFERENCE_LAP, DriverReferenceModel, lap_is_usable, microsector_splits, model_path
 from .optimal_line import attach, find_optimal_line
 from .corner_segmentation import CornerSegmenter
 from .utils import finite_float
@@ -294,6 +294,8 @@ class AssistedAnalysisService:
             return {"status": "UNAVAILABLE", "reason": "no_model_for_track"}
 
         splits = microsector_splits(target_df, model.microsectors)
+        if model.mode == MODE_REFERENCE_LAP:
+            return self._reference_lap_context(model, splits)
         losses = model.loss_against_ideal(splits)
         ranked = sorted(
             (
@@ -326,6 +328,48 @@ class AssistedAnalysisService:
             # `optimalLine` stays absent otherwise, and every consumer above
             # keeps working off the driver's own numbers.
             **self._optimal_line_context(model, splits),
+        }
+
+    def _reference_lap_context(self, model: DriverReferenceModel, splits) -> Dict[str, Any]:
+        """The lap against the driver's reference lap (ADR 0012).
+
+        A measured difference to one real, complete lap -- no "ideal lap", no
+        "time on the table", and no optimised-line seconds, which come from the
+        simulator (ADR 0004).
+        """
+        if not model.has_reference:
+            return {
+                "status": "UNAVAILABLE",
+                "reason": "reference_lap_missing_refit_model",
+                "mode": model.mode,
+            }
+        losses = model.loss_against_reference(splits)
+        known = [loss for loss in losses if loss is not None]
+        ranked = sorted(
+            (
+                {
+                    "index": index,
+                    "startP": round(index / model.microsectors, 4),
+                    "endP": round((index + 1) / model.microsectors, 4),
+                    "behindReferenceS": round(loss, 3),
+                }
+                for index, loss in enumerate(losses)
+                if loss is not None and loss > 0.0
+            ),
+            key=lambda item: item["behindReferenceS"],
+            reverse=True,
+        )
+        return {
+            "status": "READY",
+            "version": model.version,
+            "mode": model.mode,
+            "lapsInModel": model.lap_count,
+            "builtAt": model.built_at,
+            "referenceLapId": model.reference_lap_id,
+            "referenceLapSeconds": model.reference_lap_seconds,
+            "deltaToReferenceS": round(sum(known), 3) if known else None,
+            "microsectorsCompared": len(known),
+            "worstMicrosectors": ranked[:8],
         }
 
     def _optimal_line_context(self, model: DriverReferenceModel, splits) -> Dict[str, Any]:

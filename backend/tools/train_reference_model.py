@@ -2,6 +2,13 @@
 Fit the driver's reference model from everything he has recorded.
 
     python tools/train_reference_model.py [--track vhe_interlagos] [--limit N]
+        [--modo reference_lap|best_per_microsector] [--volta-referencia <lap_id>]
+
+Modo padrao (ADR 0012): a volta de referencia e a melhor volta valida e completa
+da pista -- ou a escolhida com --volta-referencia -- e o coach mede cada trecho
+contra ela. So entram voltas gravadas com o mesmo cache de geometria da maioria
+(`trackCache` da sessao); o carro nao e registrado nas gravacoes, e por isso nao
+pode ser filtrado.
 
 Walks the recorded laps, keeps the ones whose sampling holds up, times each
 through every microsector, and writes the model the analysis engine measures
@@ -24,6 +31,8 @@ if str(BACKEND_DIR) not in sys.path:
 from core.assisted_analysis.lap_loader import LapDataLoader  # noqa: E402
 from core.assisted_analysis.reference_model import (  # noqa: E402
     DEFAULT_MICROSECTORS,
+    MODE_REFERENCE_LAP,
+    MODES,
     build_reference_model,
     lap_is_usable,
     model_path,
@@ -51,6 +60,14 @@ def main() -> int:
                         help="usar as N voltas mais rapidas (0 = todas)")
     parser.add_argument("--microsectors", type=int, default=DEFAULT_MICROSECTORS)
     parser.add_argument("--dry-run", action="store_true", help="nao grava o modelo")
+    parser.add_argument("--modo", default=MODE_REFERENCE_LAP, choices=MODES)
+    parser.add_argument("--volta-referencia", default=None, help="lap_id da volta de referencia")
+    parser.add_argument("--saida", type=Path, default=None, help="grava aqui em vez do caminho do runtime")
+    parser.add_argument(
+        "--geometria",
+        default=None,
+        help="trackCache das sessoes a usar; sem ele, usa o da maioria e avisa",
+    )
     args = parser.parse_args()
 
     root = runtime_root()
@@ -77,6 +94,27 @@ def main() -> int:
         print(f"pista escolhida   : {track or '(sem pista)'}")
 
     selected = [lap for lap in descriptors if not track or lap.track == track]
+
+    # Mesma geometria: o cache com que a sessao foi gravada. Voltas de outra
+    # versao da pista nao sao comparaveis trecho a trecho.
+    def geometry_of(lap):
+        return ((lap.metadata or {}).get("sessionMetadata") or {}).get("trackCache")
+
+    caches: dict = {}
+    for lap in selected:
+        caches[geometry_of(lap)] = caches.get(geometry_of(lap), 0) + 1
+    print("voltas por geometria gravada (trackCache):")
+    for cache, count in sorted(caches.items(), key=lambda item: -item[1]):
+        print(f"  {count:5d}  {cache}")
+    if args.geometria:
+        geometry = args.geometria
+    else:
+        geometry = max(caches, key=caches.get) if caches else None
+        print("AVISO: --geometria nao informada; usando a da maioria. O coach compara o progresso ao vivo,")
+        print("calculado com a geometria atual do app, com o do modelo: escolha a geometria de proposito.")
+    other_geometry = sum(n for cache, n in caches.items() if cache != geometry)
+    selected = [lap for lap in selected if geometry_of(lap) == geometry]
+    print(f"geometria (trackCache) : {geometry}  ({other_geometry} voltas de outra geometria fora)")
     # Cheapest filter first: no point loading a lap the model will refuse.
     plausible = [lap for lap in selected if lap_is_usable(lap.lap_time, lap.sample_count)[0]]
     skipped_early = len(selected) - len(plausible)
@@ -106,15 +144,19 @@ def main() -> int:
         track=track or "",
         microsectors=args.microsectors,
         built_at=datetime.now(timezone.utc).isoformat(),
+        mode=args.modo,
+        reference_lap_id=args.volta_referencia,
     )
 
     print()
     print("=" * 58)
     print(f"voltas no modelo   : {model.lap_count}")
     print(f"descartadas        : {model.rejected_count}  {model.rejected_reasons}")
+    print(f"modo               : {model.mode}")
+    print(f"volta de referencia: {model.reference_lap_seconds}s  ({model.reference_lap_id})")
     print(f"melhor volta real  : {model.best_lap_seconds}s  ({model.best_lap_id})")
-    print(f"volta ideal        : {model.ideal_lap_seconds}s")
-    print(f"na mesa            : {model.gap_best_to_ideal}s")
+    # A soma dos melhores trechos e um limite otimista, nao uma meta (ADR 0012).
+    print(f"soma dos melhores trechos (limite otimista, nao meta): {model.ideal_lap_seconds}s")
     print("=" * 58)
 
     if model.targets:
@@ -135,7 +177,7 @@ def main() -> int:
         print("\n--dry-run: modelo nao gravado")
         return 0
 
-    path = model.save(model_path(root, track or "unknown"))
+    path = model.save(args.saida or model_path(root, track or "unknown"))
     print(f"\nmodelo gravado em: {path}")
     return 0
 

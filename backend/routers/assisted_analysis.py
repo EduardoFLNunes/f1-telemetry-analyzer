@@ -179,12 +179,24 @@ async def get_lap_coaching(lapId: str):
             "lapNumber": descriptor.lap_number,
             "lapTime": descriptor.lap_time,
             "track": descriptor.track,
-            "model": {
-                "lapsInModel": model.lap_count,
-                "idealLapSeconds": model.ideal_lap_seconds,
-                "bestLapSeconds": model.best_lap_seconds,
-                "builtAt": model.built_at,
-            },
+            "model": (
+                {
+                    "mode": model.mode,
+                    "lapsInModel": model.lap_count,
+                    "referenceLapId": model.reference_lap_id,
+                    "referenceLapSeconds": model.reference_lap_seconds,
+                    "builtAt": model.built_at,
+                }
+                if model.mode == "reference_lap"
+                # The old comparison, only when asked for (ADR 0012).
+                else {
+                    "mode": model.mode,
+                    "lapsInModel": model.lap_count,
+                    "idealLapSeconds": model.ideal_lap_seconds,
+                    "bestLapSeconds": model.best_lap_seconds,
+                    "builtAt": model.built_at,
+                }
+            ),
         })
         return result
 

@@ -65,6 +65,17 @@ describe('renderEvidence', () => {
     expect(line).toContain('REF_S: 1200m');
   });
 
+  it('labels the reference lap, not a best, in the default mode', () => {
+    const line = renderEvidence({
+      event: 'Setor 20: 0.45s atras da sua volta de referencia neste trecho (2.41s contra 1.96s).',
+      evidence: { microsector: 20, yourSeconds: 2.41, referenceSeconds: 1.96, lossSeconds: 0.45 },
+    });
+    expect(line).toContain('VOCE 2.41s');
+    expect(line).toContain('REFERENCIA 1.96s');
+    expect(line).not.toContain('MELHOR');
+    expect(line).not.toContain('OTIMO');
+  });
+
   it('survives an optimal split that arrives as null', () => {
     const line = renderEvidence(microsectorEvent({ optimalSeconds: null }));
     expect(line).not.toContain('OTIMO');

@@ -12,6 +12,12 @@ This is that producer. It measures the lap as it happens against the reference
 model fitted from the driver's own laps, and speaks when a microsector costs
 real time.
 
+Since ADR 0012 the default is the *reference lap*: every microsector is compared
+with one real, complete lap of the driver's, and what the coach says is a
+measured difference ("0.12 s behind your reference lap here"), never a promised
+gain or an "ideal lap". The old comparison -- the best ever done in each slice --
+is still here as `best_per_microsector`, off unless the model asks for it.
+
 It runs on every frame at ~57 Hz, so it does almost nothing per frame: read the
 progress, and only when a microsector boundary is crossed does it look up a
 target and compare. Anything heavier here shows up as a hole in the recording --
@@ -47,6 +53,11 @@ LOSS_SPREAD_MULTIPLE = 2.0
 # And even above it, not more often than this -- a coach talking every corner is
 # a coach nobody listens to.
 MIN_SECONDS_BETWEEN_EVENTS = 3.0
+
+
+def _legacy(model: Any) -> bool:
+    """The model asked for the old comparison against the best of each slice."""
+    return getattr(model, "mode", None) == "best_per_microsector"
 
 
 def _number(value: Any) -> Optional[float]:
@@ -88,6 +99,7 @@ class LiveDrivingCoach:
         self._lap_loss: float = 0.0
         self._lap_loss_optimal: float = 0.0
         self._lap_worst: Optional[Dict[str, Any]] = None
+        self._warned_missing_reference = False
 
     # ── the hot path ─────────────────────────────────────────────────────
 
@@ -101,6 +113,8 @@ class LiveDrivingCoach:
 
         model = self._model_for(frame.get("track") or frame.get("trackName"))
         if model is None or not model.targets:
+            return
+        if not self._usable(model):
             return
 
         lap_number = _number(frame.get("lap_number") or frame.get("lap"))
@@ -164,14 +178,20 @@ class LiveDrivingCoach:
         if target is None:
             return
 
+        legacy = _legacy(model)
         # Against the optimised line this is counted whether or not he beat his
         # own best here: the two targets answer different questions, and a slice
         # where he set a personal best can still be half a second off the line.
+        # Only in the old mode: the line's seconds come from the simulator, and
+        # ADR 0004 keeps those out of what the driver hears.
         optimal = getattr(target, "optimal_seconds", None)
-        if optimal is not None:
+        if legacy and optimal is not None:
             self._lap_loss_optimal += max(0.0, split - float(optimal))
 
-        loss = split - target.best_seconds
+        compared = target.best_seconds if legacy else getattr(target, "reference_seconds", None)
+        if compared is None:
+            return
+        loss = split - float(compared)
         if loss <= 0:
             return
         self._lap_loss += loss
@@ -184,10 +204,35 @@ class LiveDrivingCoach:
         if now - self._last_event_at < self.min_gap_seconds:
             return
         self._last_event_at = now
-        self._emit_coaching_event(frame, target, split, loss)
+        if legacy:
+            self._emit_coaching_event(frame, target, split, loss)
+        else:
+            self._emit_reference_event(frame, model, target, split, loss)
+
+    def _usable(self, model: Any) -> bool:
+        """In the reference mode, a model without a reference lap says nothing.
+
+        A model saved before ADR 0012 has no reference lap. Falling back to the
+        best-per-microsector comparison would bring back the "ideal lap" the
+        driver was told is gone, so the coach stays quiet and logs once that the
+        model needs refitting (`tools/train_reference_model.py`).
+        """
+        if _legacy(model) or getattr(model, "has_reference", False):
+            return True
+        if not self._warned_missing_reference:
+            logger.warning(
+                "Reference model for %s has no reference lap; coach is silent until it is refitted",
+                getattr(model, "track", "?"),
+            )
+            self._warned_missing_reference = True
+        return False
 
     def _threshold_for(self, target: Any) -> float:
-        """How far off his own best this driver has to be, here, to hear about it."""
+        """How far off his own best this driver has to be, here, to hear about it.
+
+        The same in both modes (ADR 0012): the driver's own spread through the
+        slice, median minus best, measured over every lap in the model.
+        """
         spread = None
         median = getattr(target, "median_seconds", None)
         best = getattr(target, "best_seconds", None)
@@ -198,6 +243,53 @@ class LiveDrivingCoach:
         return max(self.min_loss_seconds, spread * LOSS_SPREAD_MULTIPLE)
 
     # ── what it says ─────────────────────────────────────────────────────
+
+    def _emit_reference_event(self, frame: Dict[str, Any], model: Any, target: Any, split: float, loss: float) -> None:
+        """A measured difference to the reference lap, and what that lap did here."""
+        reference = float(target.reference_seconds)
+        evidence: Dict[str, Any] = {
+            "microsector": target.index,
+            "yourSeconds": round(split, 3),
+            "referenceSeconds": round(reference, 3),
+            "lossSeconds": round(loss, 3),
+            "referenceLapId": getattr(model, "reference_lap_id", None),
+        }
+        brake_m = getattr(target, "reference_brake_point_m", None)
+        min_speed = getattr(target, "reference_min_speed_kmh", None)
+        if min_speed is not None:
+            evidence["referenceMinSpeedKmh"] = min_speed
+            speed = _number(frame.get("speedKmh"))
+            if speed is not None:
+                evidence["yourSpeedKmh"] = round(speed, 1)
+        if brake_m is not None:
+            evidence["referenceBrakePointM"] = brake_m
+        at_lap_time = _number(frame.get("lap_time"))
+        if at_lap_time is not None:
+            evidence["atLapTimeSeconds"] = round(at_lap_time, 3)
+
+        message = (
+            f"Setor {target.index}: {loss:.2f}s atras da sua volta de referencia neste trecho "
+            f"({split:.2f}s contra {reference:.2f}s)."
+        )
+        goals = []
+        if brake_m is not None:
+            goals.append(f"freada em {brake_m:.0f} m")
+        if min_speed is not None:
+            goals.append(f"minima de {min_speed:.0f} km/h")
+        if goals:
+            message += " Na referencia: " + ", ".join(goals) + "."
+
+        self._publish(COACHING_EVENT, {
+            "type": "coaching_event",
+            "event": message,
+            "severity": round(min(1.0, loss / 0.5), 2),
+            "evidence": evidence,
+            "driver_id": str(frame.get("driver_id") or "player_1"),
+            "lap_number": int(_number(frame.get("lap_number") or frame.get("lap")) or 0),
+            "s": _number(frame.get("s")) or 0.0,
+            "timestamp": time.time(),
+            "corner_id": _number(frame.get("corner_id")),
+        })
 
     def _emit_coaching_event(self, frame: Dict[str, Any], target: Any, split: float, loss: float) -> None:
         evidence: Dict[str, Any] = {
@@ -258,6 +350,27 @@ class LiveDrivingCoach:
 
     def _speak_lap_summary(self, frame: Dict[str, Any], model: Any) -> None:
         """The radio call at the line: what the lap cost and where."""
+        if not _legacy(model):
+            if self._lap_loss <= 0.0 or not getattr(model, "has_reference", False):
+                return
+            worst = self._lap_worst or {}
+            message = (
+                f"Volta fechada. {self._lap_loss:.2f}s somando os trechos em que ficou atras "
+                "da sua volta de referencia"
+            )
+            if worst:
+                message += f"; a maior diferenca no setor {worst['index']} ({worst['lossS']:.2f}s)"
+            message += "."
+            if getattr(model, "reference_lap_seconds", None):
+                message += f" Volta de referencia: {model.reference_lap_seconds:.2f}s."
+            self._publish(ENGINEER_SPEECH, {
+                "message": message,
+                "priority": "high" if self._lap_loss > 1.0 else "medium",
+                "timestamp": time.time(),
+                "category": "driver",
+            })
+            return
+
         optimal_lap = getattr(model, "optimal_lap_seconds", None)
         if self._lap_loss <= 0.0 and not (optimal_lap and self._lap_loss_optimal > 0.0):
             return

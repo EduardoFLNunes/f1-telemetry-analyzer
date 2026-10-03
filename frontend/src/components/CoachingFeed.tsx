@@ -62,7 +62,12 @@ export function renderEvidence(event: Partial<CoachingEvent>): string {
   const microsector = microsectorEvidence(event);
   if (microsector) {
     const parts = [`VOCE ${finiteNumber(microsector.yourSeconds).toFixed(2)}s`];
-    parts.push(`MELHOR ${finiteNumber(microsector.bestSeconds).toFixed(2)}s`);
+    // ADR 0012: the default compares with one real reference lap. "MELHOR" (the
+    // best of each slice) only appears when the old mode is switched on.
+    const reference = finiteOrNull(microsector.referenceSeconds);
+    parts.push(reference !== null
+      ? `REFERENCIA ${reference.toFixed(2)}s`
+      : `MELHOR ${finiteNumber(microsector.bestSeconds).toFixed(2)}s`);
     const optimal = finiteOrNull(microsector.optimalSeconds);
     if (optimal !== null) {
       parts.push(`OTIMO ${optimal.toFixed(2)}s`);
