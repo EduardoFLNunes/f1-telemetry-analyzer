@@ -2,6 +2,8 @@
 
 Rascunho para aprovação do Eduardo antes de pilotar. Escrito pelo Claude (Cowork) em 2026-10-02.
 
+> **Em espera (ADR 0014).** A variação usada no cálculo das voltas veio de sessões em que a IA do jogo pode ter pilotado. Antes desta sessão, uma sessão rotulada mede a sua variação real no Bico de Pato, e o número de voltas é recalculado. Como o número de voltas cresce com o quadrado da variação, uma variação 3 vezes maior pede cerca de 9 vezes mais voltas.
+
 ## Por que esta sessão existe
 
 Nas suas voltas normais, você freia quase sempre no mesmo lugar (a menos de 5 m) e faz quase sempre a mesma linha (a menos de 0,5 m no ápice). Por isso os dados não mostram quanto vale frear antes ou depois, nem mudar a linha: é como tentar descobrir o efeito do sal numa receita em que você sempre usou a mesma quantidade. A solução é variar de propósito, de forma organizada, e medir.
@@ -52,6 +54,7 @@ As voltas são feitas em blocos de 4, e cada bloco tem as quatro condições em 
 - Faça cerca de 5 voltas de aquecimento além da volta de saída dos boxes. O número exato não importa: o que importa é **anotar o número no jogo da primeira volta do bloco 1**. A análise começa a contar a partir dela.
 - **A conferir no Assetto Corsa:** se dá para desligar o consumo de combustível e o desgaste de pneu nas opções de realismo. Se não der, faça a sessão em blocos curtos e reabasteça sempre com a mesma quantidade.
 - Grave a sessão normalmente pelo app. Nada muda na gravação.
+- **Não use a IA do jogo durante a sessão.** Todas as voltas do plano precisam ser suas.
 - **Deixe o coach desligado durante a sessão.** Ele comenta freadas e trechos, e isso pode mudar o jeito como você executa as condições. Como desligar: (a preencher)
 
 ## O que a análise vai responder
