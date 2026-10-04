@@ -38,7 +38,7 @@ from core.assisted_analysis.reference_model import (  # noqa: E402
 from core.live.runtime_state import RuntimeState  # noqa: E402
 from core.telemetry.telemetry_buffer import TelemetryBuffer  # noqa: E402
 from ml.data.inventory import inventory_path  # noqa: E402
-from ml.data.origin import ORIGINS, parse_origins, replay_selection  # noqa: E402
+from ml.data.origin import ORIGINS, parse_equipment, parse_origins, replay_selection  # noqa: E402
 
 
 def runtime_root() -> Path:
@@ -64,6 +64,8 @@ def main() -> int:
                         help="origens aceitas (padrao: humano; 'todas' = sem filtro)")
     parser.add_argument("--incluir-relogio-suspeito", action="store_true",
                         help="aceita voltas com relogio suspeito ou nao conferido")
+    parser.add_argument("--equipamento", nargs="*", default=None, choices=["atual", "anterior", "todos"],
+                        help="equipamento das voltas humano (padrao: atual, ADR 0015)")
     parser.add_argument("--inventario", type=Path, default=None,
                         help="inventario do ml com a coluna origem (padrao: data/ml/lap_inventory.parquet)")
     args = parser.parse_args()
@@ -106,7 +108,9 @@ def main() -> int:
         if "origem" not in inventory.columns:
             print(f"PARADO: o inventario {path} e anterior ao ADR 0014 (sem a coluna origem).")
             return 2
-        allowed = replay_selection(inventory, origins, args.incluir_relogio_suspeito)
+        allowed = replay_selection(
+            inventory, origins, args.incluir_relogio_suspeito, parse_equipment(args.equipamento)
+        )
         before = len(selected)
         selected = [lap for lap in selected if lap.lap_id in allowed]
         print(f"filtro de origem  : {origins if origins is not None else 'todas'}"

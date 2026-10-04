@@ -14,7 +14,7 @@ import time
 import numpy as np
 
 from ml.data.lap_store import build_store, save_store
-from ml.data.origin import ORIGINS, parse_origins
+from ml.data.origin import ORIGINS, parse_equipment, parse_origins
 from ml.track.geometry import load_geometry
 
 
@@ -24,6 +24,8 @@ def main(argv=None) -> int:
                         help="origens aceitas (padrao: humano; 'todas' = sem filtro)")
     parser.add_argument("--incluir-relogio-suspeito", action="store_true",
                         help="aceita voltas com relogio suspeito ou nao conferido")
+    parser.add_argument("--equipamento", nargs="*", default=None, choices=["atual", "anterior", "todos"],
+                        help="equipamento das voltas humano (padrao: atual, ADR 0015)")
     args = parser.parse_args(argv)
 
     started = time.time()
@@ -36,6 +38,7 @@ def main(argv=None) -> int:
         progress=lambda text: print(text, flush=True),
         origins=origins,
         include_clock_suspect=args.incluir_relogio_suspeito,
+        equipment=parse_equipment(args.equipamento),
     )
     path = save_store(store)
 

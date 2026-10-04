@@ -1,0 +1,1553 @@
+diff --git a/backend/ml/data/ai_detector.py b/backend/ml/data/ai_detector.py
+new file mode 100644
+index 00000000..d66de33f
+--- /dev/null
++++ b/backend/ml/data/ai_detector.py
+@@ -0,0 +1,291 @@
++"""Detector de volta da IA para as gravacoes antigas (pedido 13, ADR 0014/0015).
++
++O indicador do jogo (`isAIControlled`) so diz quando a IA assume: depois do
++primeiro Ctrl+C ele fica ligado ate a sessao do jogo reiniciar, mesmo com o
++piloto ao volante (medido na sessao rotulada de 2026-10-04). E as gravacoes
++antigas nem tem o campo. Por isso a origem das voltas antigas sai de sinais
++medidos, calibrados so nas voltas rotuladas da sessao nova:
++
++1. **A linha.** A referencia e a mediana, ponto a ponto da grade, da lateral
++   das voltas da IA da sessao rotulada. Em cada microsetor mede-se a distancia
++   lateral mediana ate ela. So contam os microsetores em que a propria IA se
++   repete (nas retas e perto do box ela varia ate 2,5 m, e ali a linha nao diz
++   nada). Um microsetor `parece IA` ate `lateral_ai_m`, `parece piloto` a
++   partir de `lateral_human_m`.
++2. **A frenagem.** Nas zonas em que a IA freia sempre no mesmo lugar, a
++   distancia entre o inicio de frenagem da volta e o da IA. A mediana entre as
++   zonas confirma a linha.
++3. **O tempo de volta.** Rapido demais para o piloto, lento demais para a IA.
++   Entre os dois limites o tempo nao vota e a linha decide.
++
++A volta e `ia` quando todos os microsetores parecem IA; `humano` quando nenhum
++trecho parece IA; `misturada` quando ha um trecho de cada. Um trecho e uma
++sequencia de microsetores: uma volta do piloto passa as vezes a poucos
++centimetros da linha da IA num microsetor isolado, por acaso, e a IA, quando
++pilota, pilota trechos longos. Os sinais precisam concordar; quando nao
++concordam, a volta fica `desconhecida`. Voltas com passagem pelo box ficam sem
++rotulo.
++
++Os limites estao em `LIMITS` e em `docs/detector_ia.md`, registrados antes de
++o detector ser aplicado as voltas antigas.
++"""
++
++from __future__ import annotations
++
++from dataclasses import dataclass, field
++from typing import Dict, List, Mapping, Optional, Sequence, Tuple
++
++import numpy as np
++import pandas as pd
++
++from ..track.geometry import TrackGeometry
++from ..track.microsectors import Microsectors
++from ..validation.empirical import brake_onsets
++from .origin import AI, HUMAN, MIXED, UNKNOWN
++
++AI_LIKE = "ia"
++HUMAN_LIKE = "humano"
++UNDECIDED = "indefinido"
++NOT_USED = "fora"
++
++# Um inicio de frenagem da volta so e comparado com o da IA se estiver a ate
++# esta distancia dele; sem nenhum, a distancia vale esta (longe).
++BRAKE_MATCH_WINDOW_M = 60.0
++# Zonas de frenagem da IA: inicios de varias voltas a menos disto entre si.
++BRAKE_CLUSTER_GAP_M = 30.0
++BRAKE_ZONE_SHARE = 0.5
++
++
++@dataclass(frozen=True)
++class DetectorLimits:
++    """Limites do detector, escolhidos so com a sessao rotulada (pedido 13)."""
++
++    lateral_ai_m: float                      # microsetor parece IA ate isto
++    lateral_human_m: float                   # ... e parece piloto a partir disto
++    ai_run: int                              # trecho da IA: microsetores seguidos que parecem IA
++    human_run: int                           # trecho do piloto: microsetores seguidos que parecem piloto
++    braking_ai_m: float                      # mediana da distancia ate a frenagem da IA, volta `ia`
++    braking_human_m: float                   # ... volta `humano`
++    informative_microsectors: Tuple[int, ...] = ()
++    braking_zones_m: Tuple[float, ...] = ()
++    time_ai_max_s: float = 88.0              # abaixo disto o tempo vota IA (ou misturada)
++    time_human_min_s: float = 92.0           # acima disto o tempo vota piloto (ou misturada)
++
++
++# Registrados em docs/detector_ia.md antes de olhar as voltas antigas. Saem de
++# `python -m ml.scripts.detector_ia calibrar` na sessao rotulada de 2026-10-04:
++# 13 voltas da IA, 11 do piloto e 2 misturadas, todas limpas.
++LIMITS: Optional[DetectorLimits] = DetectorLimits(
++    lateral_ai_m=0.25,
++    lateral_human_m=0.30,
++    ai_run=3,
++    human_run=2,
++    braking_ai_m=4.0,
++    braking_human_m=8.0,
++    # Onde a propria IA se repete (todas as 13 voltas a ate 0,25 m da referencia
++    # feita sem elas). Fora: as retas e a regiao do box.
++    informative_microsectors=(
++        3, 4, 5, 6, 7, 8, 9, 10, 16, 17, 18, 19, 20, 21, 22, 23, 26, 27, 28, 30,
++        31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 49, 50, 51,
++    ),
++    # Zonas em que a IA repete o inicio de frenagem a ate 4 m em 90 % das voltas.
++    braking_zones_m=(126.0, 248.0, 1206.0, 2016.0, 2200.0, 2360.0, 2622.0, 3122.1),
++    time_ai_max_s=88.0,
++    time_human_min_s=92.0,
++)
++
++
++@dataclass
++class AIReference:
++    lateral: np.ndarray                  # (grade,) mediana da lateral das voltas da IA
++    braking_s: np.ndarray                # inicios de frenagem da IA (um por zona)
++    lap_ids: List[str] = field(default_factory=list)
++
++
++def _circular_gap(a: float, b: float, length: float) -> float:
++    d = abs(a - b) % length
++    return min(d, length - d)
++
++
++def braking_zones(onsets: Sequence[np.ndarray], track: TrackGeometry, share: float = BRAKE_ZONE_SHARE) -> np.ndarray:
++    """Zonas de frenagem comuns a varias voltas: mediana dos inicios de cada zona."""
++    laps = len(onsets)
++    pooled = np.sort(np.concatenate([np.asarray(o, dtype=float) for o in onsets])) if laps else np.array([])
++    if pooled.size == 0:
++        return pooled
++    clusters: List[List[float]] = [[pooled[0]]]
++    for value in pooled[1:]:
++        if value - clusters[-1][-1] > BRAKE_CLUSTER_GAP_M:
++            clusters.append([])
++        clusters[-1].append(value)
++    if len(clusters) > 1 and clusters[0][0] + track.length - clusters[-1][-1] <= BRAKE_CLUSTER_GAP_M:
++        clusters[0] = [v - track.length for v in clusters.pop()] + clusters[0]
++    zones = [np.median(c) % track.length for c in clusters if len(c) >= share * laps]
++    return np.sort(np.asarray(zones, dtype=float))
++
++
++def build_reference(grids: Mapping[str, pd.DataFrame], track: TrackGeometry) -> AIReference:
++    """A linha da IA: mediana por ponto da grade das voltas dadas."""
++    if not grids:
++        raise ValueError("nenhuma volta da IA para a referencia")
++    lateral = np.nanmedian(np.vstack([g["lateral"].to_numpy(dtype=float) for g in grids.values()]), axis=0)
++    onsets = [brake_onsets(g["brake"].to_numpy(dtype=float), track) for g in grids.values()]
++    return AIReference(lateral=lateral, braking_s=braking_zones(onsets, track), lap_ids=list(grids))
++
++
++def zone_distances(grid: pd.DataFrame, zones: Sequence[float], track: TrackGeometry) -> np.ndarray:
++    """Distancia do inicio de frenagem da volta mais perto de cada zona (limitada a janela)."""
++    onsets = brake_onsets(grid["brake"].to_numpy(dtype=float), track)
++    out = []
++    for zone in zones:
++        gaps = [_circular_gap(o, zone, track.length) for o in onsets]
++        out.append(min(min(gaps) if gaps else BRAKE_MATCH_WINDOW_M, BRAKE_MATCH_WINDOW_M))
++    return np.asarray(out, dtype=float)
++
++
++def microsector_distances(
++    grid: pd.DataFrame, reference: AIReference, track: TrackGeometry, sectors: Microsectors,
++    zones: Optional[Sequence[float]] = None,
++) -> pd.DataFrame:
++    """Por microsetor: distancia lateral mediana ate a IA e distancia ate a frenagem da IA."""
++    gap = np.abs(grid["lateral"].to_numpy(dtype=float) - reference.lateral)
++    lateral = np.full(sectors.count, np.nan)
++    for k in range(sectors.count):
++        values = gap[sectors.index == k]
++        values = values[np.isfinite(values)]
++        if values.size:
++            lateral[k] = float(np.median(values))
++    braking = np.full(sectors.count, np.nan)
++    zones = reference.braking_s if zones is None else np.asarray(zones, dtype=float)
++    for zone, value in zip(zones, zone_distances(grid, zones, track)):
++        k = int(sectors.of(zone))
++        braking[k] = value if np.isnan(braking[k]) else max(braking[k], value)
++    return pd.DataFrame({"microsetor": np.arange(sectors.count), "lateral_m": lateral, "frenagem_m": braking})
++
++
++# ------------------------------------------------------------ calibracao ---
++
++def informative_microsectors(ai_distances: Sequence[np.ndarray], limit_m: float) -> Tuple[int, ...]:
++    """Microsetores em que toda volta da IA fica ate `limit_m` da referencia sem ela."""
++    stacked = np.vstack([np.asarray(d, dtype=float) for d in ai_distances])
++    return tuple(int(k) for k in np.flatnonzero(np.nanmax(stacked, axis=0) <= limit_m))
++
++
++def reliable_zones(ai_zone_distances: np.ndarray, zones: Sequence[float], limit_m: float, share: float = 0.9) -> Tuple[float, ...]:
++    """Zonas em que a IA freia a ate `limit_m` da referencia em pelo menos `share` das voltas."""
++    d = np.asarray(ai_zone_distances, dtype=float)
++    keep = np.mean(d <= limit_m, axis=0) >= share
++    return tuple(round(float(z), 1) for z, ok in zip(zones, keep) if ok)
++
++
++# ------------------------------------------------------------ decisao ---
++
++def _longest_run(mask: Sequence[bool]) -> int:
++    best = current = 0
++    for value in mask:
++        current = current + 1 if value else 0
++        best = max(best, current)
++    return best
++
++
++def microsector_states(lateral_m: Sequence[float], limits: DetectorLimits) -> List[str]:
++    """`ia`, `humano`, `indefinido` nos microsetores informativos; `fora` nos outros."""
++    informative = set(limits.informative_microsectors)
++    states = []
++    for k, value in enumerate(lateral_m):
++        if k not in informative:
++            states.append(NOT_USED)
++        elif not np.isfinite(value):
++            states.append(UNDECIDED)
++        elif value <= limits.lateral_ai_m:
++            states.append(AI_LIKE)
++        elif value >= limits.lateral_human_m:
++            states.append(HUMAN_LIKE)
++        else:
++            states.append(UNDECIDED)
++    return states
++
++
++def line_label(states: Sequence[str], limits: DetectorLimits) -> str:
++    """Origem pela linha, contando trechos (sequencias) nos microsetores informativos."""
++    used = [s for s in states if s != NOT_USED]
++    if not used:
++        return UNKNOWN
++    ai_run = _longest_run([s == AI_LIKE for s in used])
++    human_run = _longest_run([s == HUMAN_LIKE for s in used])
++    if all(s == AI_LIKE for s in used):
++        return AI
++    if ai_run < limits.ai_run and human_run >= limits.human_run:
++        return HUMAN
++    if ai_run >= limits.ai_run and human_run >= limits.human_run:
++        return MIXED
++    return UNKNOWN
++
++
++def braking_agrees(line: str, median_m: float, limits: DetectorLimits) -> bool:
++    """A frenagem confirma a linha? So vale para `ia` e `humano`."""
++    if line == AI:
++        return bool(np.isfinite(median_m) and median_m <= limits.braking_ai_m)
++    if line == HUMAN:
++        return bool(np.isfinite(median_m) and median_m >= limits.braking_human_m)
++    return True
++
++
++def time_votes(lap_time_s: float, limits: DetectorLimits) -> Tuple[str, ...]:
++    """Origens compativeis com o tempo de volta.
++
++    Rapida (abaixo do limite da IA): IA, ou misturada com um trecho curto do
++    piloto (a volta 8 da sessao rotulada fechou em 86,1 s). Lenta (acima do
++    limite do piloto): piloto, ou misturada. Entre os dois: o tempo nao vota.
++    """
++    if not np.isfinite(lap_time_s):
++        return (AI, HUMAN, MIXED)
++    if lap_time_s < limits.time_ai_max_s:
++        return (AI, MIXED)
++    if lap_time_s > limits.time_human_min_s:
++        return (HUMAN, MIXED)
++    return (AI, HUMAN, MIXED)
++
++
++def pit_lap(grid: pd.DataFrame, sectors: Microsectors, lateral_m: float = 10.0, speed_kmh: float = 90.0) -> bool:
++    """Passou pelo box: longe da pista e devagar perto da linha de chegada (pedido 12)."""
++    near_line = np.isin(sectors.index, [0, 1, 2, 3, sectors.count - 3, sectors.count - 2, sectors.count - 1])
++    lateral = np.abs(grid["lateral"].to_numpy(dtype=float))[near_line]
++    speed = grid["speed_kmh"].to_numpy(dtype=float)[near_line]
++    return bool(np.nanmax(lateral) > lateral_m and np.nanmin(speed) < speed_kmh)
++
++
++def classify_lap(
++    grid: pd.DataFrame,
++    lap_time_s: float,
++    reference: AIReference,
++    track: TrackGeometry,
++    sectors: Microsectors,
++    limits: DetectorLimits,
++) -> Dict[str, object]:
++    """Tudo o que o detector diz de uma volta."""
++    empty = {"linha": None, "frenagem_mediana_m": None, "microsetores_ia": None,
++             "microsetores_humano": None, "trecho_ia": None, "trecho_humano": None}
++    if pit_lap(grid, sectors):
++        return {"origem_detector": UNKNOWN, "motivo": "box", **empty}
++    distances = microsector_distances(grid, reference, track, sectors, zones=limits.braking_zones_m)
++    states = microsector_states(distances["lateral_m"].to_numpy(dtype=float), limits)
++    used = [s for s in states if s != NOT_USED]
++    line = line_label(states, limits)
++    braking = zone_distances(grid, limits.braking_zones_m, track)
++    median = float(np.median(braking)) if braking.size else float("nan")
++    details = {
++        "linha": line,
++        "frenagem_mediana_m": median,
++        "microsetores_ia": int(sum(s == AI_LIKE for s in used)),
++        "microsetores_humano": int(sum(s == HUMAN_LIKE for s in used)),
++        "trecho_ia": _longest_run([s == AI_LIKE for s in used]),
++        "trecho_humano": _longest_run([s == HUMAN_LIKE for s in used]),
++    }
++    if line == UNKNOWN:
++        return {"origem_detector": UNKNOWN, "motivo": "linha indefinida", **details}
++    if not braking_agrees(line, median, limits):
++        return {"origem_detector": UNKNOWN, "motivo": f"linha diz {line}, frenagem discorda", **details}
++    if line not in time_votes(lap_time_s, limits):
++        return {"origem_detector": UNKNOWN, "motivo": f"linha diz {line}, tempo de {lap_time_s:.1f} s discorda", **details}
++    return {"origem_detector": line, "motivo": "sinais concordam", **details}
+diff --git a/backend/ml/data/inventory.py b/backend/ml/data/inventory.py
+index 25dc9134..ce28f120 100644
+--- a/backend/ml/data/inventory.py
++++ b/backend/ml/data/inventory.py
+@@ -33,7 +33,10 @@ from ..track.geometry import TrackGeometry, load_geometry
+ from ..track.microsectors import build_microsectors
+ from .lap_identity import classify, counter_counts
+ from .origin import (
++    SOURCE_INDICATOR,
++    UNKNOWN,
+     ai_share,
++    equipment_for,
+     clock_check,
+     clock_summary,
+     lap_origin,
+@@ -79,8 +82,13 @@ def _provenance(lap: RawLap, folder: str) -> Dict[str, Any]:
+         if "timestamp_s" in lap.frame.columns
+         else pd.Series(dtype=float)
+     )
++    indicated = lap_origin(flags)
+     return {
+-        "origem": lap_origin(flags),
++        "origem": indicated,
++        # O indicador sozinho, guardado mesmo quando outra fonte da o rotulo.
++        "origem_indicador": indicated,
++        "origem_fonte": SOURCE_INDICATOR if indicated != UNKNOWN else None,
++        "equipamento": equipment_for(lap.session_id),
+         "ia_fracao": ai_share(flags),
+         "ia_amostras_com_campo": int(sum(1 for f in flags if f is not None and f == f)),
+         "pasta": folder,
+diff --git a/backend/ml/data/lap_store.py b/backend/ml/data/lap_store.py
+index a27e79db..73736e66 100644
+--- a/backend/ml/data/lap_store.py
++++ b/backend/ml/data/lap_store.py
+@@ -27,7 +27,7 @@ from ..preprocessing.quality import evaluate_lap
+ from ..preprocessing.resampling import lap_time_from_grid, resample_lap
+ from ..track.geometry import TrackGeometry, load_geometry
+ from .inventory import load_inventory
+-from .origin import DRIVER_ORIGINS, select_laps
++from .origin import DRIVER_EQUIPMENT, DRIVER_ORIGINS, select_laps
+ from .recordings import Session, iter_laps, list_all_sessions
+ 
+ # Associacao com o replay, calculada no inventario (`lap_identity`).
+@@ -42,6 +42,8 @@ IDENTITY_COLUMNS = (
+ # Quem pilotou e o que se sabe do relogio (ADR 0014), copiados do inventario.
+ ORIGIN_COLUMNS = (
+     "origem",
++    "origem_fonte",
++    "equipamento",
+     "pasta",
+     "relogio_verificado",
+     "relogio_suspeito",
+@@ -138,6 +140,7 @@ def build_store(
+     progress: Optional[Callable[[str], None]] = None,
+     origins: Optional[Sequence[str]] = DRIVER_ORIGINS,
+     include_clock_suspect: bool = False,
++    equipment: Optional[Sequence[str]] = DRIVER_EQUIPMENT,
+ ) -> StoredLaps:
+     """Le as voltas marcadas como validas no inventario e devolve o store.
+ 
+@@ -150,7 +153,7 @@ def build_store(
+     valid = catalogue[catalogue["valid"]]
+     if valid.empty:
+         raise ValueError("o inventario nao tem nenhuma volta valida")
+-    wanted = select_laps(valid, origins, include_clock_suspect)
++    wanted = select_laps(valid, origins, include_clock_suspect, equipment)
+     if wanted.empty:
+         hint = (
+             "Inventario anterior ao ADR 0014 nao tem a coluna `origem`: reconstrua-o."
+@@ -160,7 +163,8 @@ def build_store(
+         raise ValueError(
+             f"nenhuma das {len(valid)} voltas validas passa no filtro de origem "
+             f"{list(origins) if origins is not None else 'todas'}"
+-            f"{'' if include_clock_suspect else ', relogio conferido e nao suspeito'} (ADR 0014). {hint}"
++            f"{'' if include_clock_suspect else ', relogio conferido e nao suspeito'}"
++            f"{'' if equipment is None else f', equipamento {list(equipment)} (ADR 0015)'} (ADR 0014). {hint}"
+         )
+     # Quais voltas sao validas foi decidido projetando contra uma geometria;
+     # materializar contra outra misturaria as duas decisoes.
+@@ -239,6 +243,7 @@ def build_store(
+         selection={
+             "origens": list(origins) if origins is not None else None,
+             "inclui_relogio_suspeito": bool(include_clock_suspect),
++            "equipamento": list(equipment) if equipment is not None else None,
+         },
+     )
+ 
+diff --git a/backend/ml/data/origin.py b/backend/ml/data/origin.py
+index a8d98cd1..154c9193 100644
+--- a/backend/ml/data/origin.py
++++ b/backend/ml/data/origin.py
+@@ -17,6 +17,12 @@ trecho, a referencia do coach. Por isso cada volta carrega:
+ 
+ Para tudo o que fala do piloto, o padrao e `humano`, com relogio conferido e
+ sem relogio suspeito (`select_laps`). Na duvida, a volta fica de fora.
++
++Desde o ADR 0015 cada volta diz tambem com que `equipamento` foi feita: o
++volante RS50 com pedais de celula de carga a partir de 2026-10-01 (`atual`),
++o controle de antes (`anterior`). Uma volta `humano` so fala do piloto de hoje
++com o equipamento `atual`. E `origem_fonte` diz de onde veio o rotulo: o
++indicador do jogo, as anotacoes do piloto numa sessao rotulada ou o detector.
+ """
+ 
+ from __future__ import annotations
+@@ -42,6 +48,17 @@ ORIGINS = (HUMAN, AI, MIXED, UNKNOWN)
+ # O que conta como volta do piloto, para tudo o que fala dele.
+ DRIVER_ORIGINS = (HUMAN,)
+ 
++# Equipamento (ADR 0015).
++CURRENT_EQUIPMENT = "atual"
++PREVIOUS_EQUIPMENT = "anterior"
++EQUIPMENT_SINCE = "2026-10-01"
++DRIVER_EQUIPMENT = (CURRENT_EQUIPMENT,)
++
++# De onde veio o rotulo de origem.
++SOURCE_INDICATOR = "indicador"
++SOURCE_ANNOTATION = "anotacao"
++SOURCE_DETECTOR = "detector"
++
+ # Diferenca maxima, em segundos, entre o tempo do relogio e o tempo explicado
+ # pela velocidade, em qualquer microsetor. Proposta a partir da distribuicao
+ # medida nas duas pastas (688 voltas validas e unicas) e registrada em
+@@ -93,6 +110,19 @@ def ai_share(flags: Iterable) -> float:
+     return float(sum(known)) / len(known) if known else float("nan")
+ 
+ 
++def equipment_for(session_id: str) -> str:
++    """`atual` para sessoes de 2026-10-01 em diante, `anterior` antes (ADR 0015).
++
++    A data e a do nome da sessao, que o gravador escreve com a hora local do
++    inicio da gravacao. Sem data no nome, `anterior`: na duvida, a volta nao
++    fala do piloto de hoje.
++    """
++    prefix = str(session_id or "")[:10]
++    if len(prefix) == 10 and prefix[4] == "-" and prefix[7] == "-" and prefix.replace("-", "").isdigit():
++        return CURRENT_EQUIPMENT if prefix >= EQUIPMENT_SINCE else PREVIOUS_EQUIPMENT
++    return PREVIOUS_EQUIPMENT
++
++
+ # ------------------------------------------------------------- pastas ---
+ 
+ def recording_folder(directory: Path) -> str:
+@@ -245,17 +275,24 @@ def driver_mask(
+     laps: pd.DataFrame,
+     origins: Optional[Sequence[str]] = DRIVER_ORIGINS,
+     include_clock_suspect: bool = False,
++    equipment: Optional[Sequence[str]] = DRIVER_EQUIPMENT,
+ ) -> pd.Series:
+-    """Quais linhas passam no filtro de origem, relogio e duplicata.
++    """Quais linhas passam no filtro de origem, equipamento, relogio e duplicata.
+ 
+     `origins=None` aceita qualquer origem. Sem as colunas do ADR 0014 (um
+     inventario antigo), a origem e `desconhecida` e o relogio nao foi
+-    conferido: com o filtro padrao, nada passa.
++    conferido: com o filtro padrao, nada passa. O equipamento so filtra voltas
++    `humano` (ADR 0015): a volta da IA e a mesma com qualquer controle na mao
++    do piloto. `equipment=None` aceita qualquer um.
+     """
+     mask = pd.Series(True, index=laps.index)
++    origin = laps["origem"] if "origem" in laps.columns else pd.Series(UNKNOWN, index=laps.index)
++    origin = origin.fillna(UNKNOWN)
+     if origins is not None:
+-        origin = laps["origem"] if "origem" in laps.columns else pd.Series(UNKNOWN, index=laps.index)
+-        mask &= origin.fillna(UNKNOWN).isin(list(origins))
++        mask &= origin.isin(list(origins))
++    if equipment is not None:
++        kit = laps["equipamento"] if "equipamento" in laps.columns else pd.Series(PREVIOUS_EQUIPMENT, index=laps.index)
++        mask &= ~((origin == HUMAN) & ~kit.fillna(PREVIOUS_EQUIPMENT).isin(list(equipment)))
+     if not include_clock_suspect:
+         verified = laps["relogio_verificado"] if "relogio_verificado" in laps.columns else pd.Series(False, index=laps.index)
+         suspect = laps["relogio_suspeito"] if "relogio_suspeito" in laps.columns else pd.Series(True, index=laps.index)
+@@ -269,14 +306,16 @@ def select_laps(
+     laps: pd.DataFrame,
+     origins: Optional[Sequence[str]] = DRIVER_ORIGINS,
+     include_clock_suspect: bool = False,
++    equipment: Optional[Sequence[str]] = DRIVER_EQUIPMENT,
+ ) -> pd.DataFrame:
+-    return laps[driver_mask(laps, origins, include_clock_suspect)]
++    return laps[driver_mask(laps, origins, include_clock_suspect, equipment)]
+ 
+ 
+ def replay_selection(
+     inventory: pd.DataFrame,
+     origins: Optional[Sequence[str]] = DRIVER_ORIGINS,
+     include_clock_suspect: bool = False,
++    equipment: Optional[Sequence[str]] = DRIVER_EQUIPMENT,
+ ) -> Set[str]:
+     """Voltas do replay (`rec__<sessao>__<n>`, a identidade do coach) que passam.
+ 
+@@ -286,7 +325,7 @@ def replay_selection(
+     """
+     if "replay_lap_id" not in inventory.columns:
+         return set()
+-    mask = driver_mask(inventory, origins, include_clock_suspect)
++    mask = driver_mask(inventory, origins, include_clock_suspect, equipment)
+     ok: dict = {}
+     for replay, passed in zip(inventory["replay_lap_id"], mask):
+         if not isinstance(replay, str) or not replay:
+@@ -295,6 +334,18 @@ def replay_selection(
+     return {replay for replay, passed in ok.items() if passed}
+ 
+ 
++def parse_equipment(values: Optional[List[str]]) -> Optional[List[str]]:
++    """Argumento de linha de comando -> equipamentos (`todos` = sem filtro)."""
++    if not values:
++        return list(DRIVER_EQUIPMENT)
++    if any(v == "todos" for v in values):
++        return None
++    unknown = [v for v in values if v not in (CURRENT_EQUIPMENT, PREVIOUS_EQUIPMENT)]
++    if unknown:
++        raise ValueError(f"equipamento desconhecido: {unknown}; use atual, anterior ou 'todos'")
++    return list(values)
++
++
+ def parse_origins(values: Optional[List[str]]) -> Optional[List[str]]:
+     """Argumento de linha de comando -> lista de origens (`todas` = sem filtro)."""
+     if not values:
+diff --git a/backend/ml/scripts/build_lap_store.py b/backend/ml/scripts/build_lap_store.py
+index b273fd49..aa0c363f 100644
+--- a/backend/ml/scripts/build_lap_store.py
++++ b/backend/ml/scripts/build_lap_store.py
+@@ -14,7 +14,7 @@ import time
+ import numpy as np
+ 
+ from ml.data.lap_store import build_store, save_store
+-from ml.data.origin import ORIGINS, parse_origins
++from ml.data.origin import ORIGINS, parse_equipment, parse_origins
+ from ml.track.geometry import load_geometry
+ 
+ 
+@@ -24,6 +24,8 @@ def main(argv=None) -> int:
+                         help="origens aceitas (padrao: humano; 'todas' = sem filtro)")
+     parser.add_argument("--incluir-relogio-suspeito", action="store_true",
+                         help="aceita voltas com relogio suspeito ou nao conferido")
++    parser.add_argument("--equipamento", nargs="*", default=None, choices=["atual", "anterior", "todos"],
++                        help="equipamento das voltas humano (padrao: atual, ADR 0015)")
+     args = parser.parse_args(argv)
+ 
+     started = time.time()
+@@ -36,6 +38,7 @@ def main(argv=None) -> int:
+         progress=lambda text: print(text, flush=True),
+         origins=origins,
+         include_clock_suspect=args.incluir_relogio_suspeito,
++        equipment=parse_equipment(args.equipamento),
+     )
+     path = save_store(store)
+ 
+diff --git a/backend/ml/scripts/detector_ia.py b/backend/ml/scripts/detector_ia.py
+new file mode 100644
+index 00000000..5fbedf73
+--- /dev/null
++++ b/backend/ml/scripts/detector_ia.py
+@@ -0,0 +1,460 @@
++"""Pedido 13: sessao rotulada, variacao do piloto e detector da IA.
++
++    python -m ml.scripts.detector_ia calibrar [--saida data/ml/origem] [--json ARQUIVO]
++    python -m ml.scripts.detector_ia variacao [--saida ...] [--json ARQUIVO]
++    python -m ml.scripts.detector_ia aplicar  [--saida ...] [--json ARQUIVO]
++
++Le o inventario e a grade de `ml.scripts.report_lap_origin` (que ja inclui as
++sessoes de 2026-10-04). A ordem importa:
++
++1. `calibrar` olha **so** a sessao rotulada: rotulos pelas anotacoes, conferidos
++   com o indicador, e as distancias ate a linha da IA, para escolher os limites;
++2. os limites vao para `ml/data/ai_detector.py` e `docs/detector_ia.md` num
++   commit proprio;
++3. `aplicar` recusa rodar sem os limites, e so entao olha as voltas antigas.
++"""
++
++from __future__ import annotations
++
++import argparse
++import csv
++import json
++import sys
++from pathlib import Path
++from typing import Dict, List, Optional
++
++import numpy as np
++import pandas as pd
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
++
++from ml import config  # noqa: E402
++from ml.data import ai_detector as det  # noqa: E402
++from ml.data import origin  # noqa: E402
++from ml.data.inventory import inventory_path, save_inventory  # noqa: E402
++from ml.track.corners import detect_corners  # noqa: E402
++from ml.track.geometry import load_geometry  # noqa: E402
++from ml.track.microsectors import build_microsectors  # noqa: E402
++from ml.validation import controlled as ctl  # noqa: E402
++from ml.validation import empirical as em  # noqa: E402
++
++SESSION_DATE = "2026-10-04"
++ANNOTATIONS = config.repo_root() / "docs" / "experimentos" / "2026-10-04_sessao_rotulada_anotacoes.csv"
++BICO_DE_PATO_M = (2590.0, 3080.0)
++# As datas que o piloto lembra de ter usado a IA (pedido 12/13) e as 4 sessoes
++# que mais variam nos sinais do pedido 12.
++AI_DATES_CITED = ("2026-06-14", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-19",
++                  "2026-06-20", "2026-08-09")
++VARIABLE_SESSIONS = ("2026-06-19_23-24-46", "2026-06-20_13-13-02", "2026-08-16_03-30-14", "2026-08-19_20-58-36")
++EFFECTS_MS = (15, 30, 50)
++
++# Escolhidos olhando so a sessao rotulada (docs/detector_ia.md):
++# * 0,25 m: em 40 dos 60 microsetores toda volta da IA fica ate 0,25 m da
++#   referencia sem ela; o piloto tem mediana de 1 a 2 m;
++# * 0,30 m: abaixo disto e acima de 0,25 m o microsetor fica indefinido;
++# * trechos: as voltas do piloto passam perto da IA em no maximo 2
++#   microsetores seguidos, e a IA pilota trechos de 20 ou mais;
++# * frenagem: a IA repete o inicio de frenagem com ate 4 m nas zonas
++#   confiaveis; o piloto tem mediana de 44 a 117 m.
++CALIBRATION = {
++    "lateral_ai_m": 0.25,
++    "lateral_human_m": 0.30,
++    "ai_run": 3,
++    "human_run": 2,
++    "braking_ai_m": 4.0,
++    "braking_human_m": 8.0,
++}
++
++
++# ------------------------------------------------------------- dados ---
++
++def load(out_dir: Path):
++    inventory = pd.read_parquet(inventory_path(out_dir))
++    grids = {
++        lap_id: frame.sort_values("grid_index").reset_index(drop=True)
++        for lap_id, frame in pd.read_parquet(out_dir / "grade_voltas.parquet").groupby("lap_id")
++    }
++    return inventory, grids
++
++
++def annotations() -> Dict[tuple, Dict[str, str]]:
++    with ANNOTATIONS.open(encoding="utf-8") as handle:
++        return {(int(r["parte"]), int(r["volta_jogo"])): r for r in csv.DictReader(handle)}
++
++
++def labelled_session(inventory: pd.DataFrame) -> pd.DataFrame:
++    """Voltas de 2026-10-04 com a parte (1 = antes do reinicio) e a anotacao.
++
++    O jogo foi reiniciado no meio da primeira gravacao: o contador volta a 1 e
++    as voltas seguintes sao da parte 2, assim como todas as gravacoes depois.
++    """
++    rows = inventory[inventory["session_id"].str.startswith(SESSION_DATE)].copy()
++    rows = rows.sort_values(["session_id", "sequence"])
++    first = sorted(rows["session_id"].unique())[0]
++    number = rows["game_lap_number"].fillna(rows["lap_number"]).astype(float)
++    rows["volta_jogo"] = number
++    part = []
++    seen_reset = False
++    previous = None
++    for session_id, value in zip(rows["session_id"], number):
++        if session_id != first:
++            part.append(2)
++            continue
++        if previous is not None and value < previous:
++            seen_reset = True
++        previous = value
++        part.append(2 if seen_reset else 1)
++    rows["parte"] = part
++    notes = annotations()
++    rows["origem_anotada"] = [notes.get((p, int(v)), {}).get("origem_anotada") for p, v in zip(rows["parte"], number)]
++    rows["box_anotado"] = [notes.get((p, int(v)), {}).get("box") == "sim" for p, v in zip(rows["parte"], number)]
++    return rows
++
++
++def clean_mask(rows: pd.DataFrame, grids, sectors) -> pd.Series:
++    """Valida, unica, relogio conferido e sem box (anotado ou medido)."""
++    ok = origin.driver_mask(rows, origins=None, equipment=None) & rows["valid"].astype(bool)
++    measured_box = [bool(lap in grids and det.pit_lap(grids[lap], sectors)) for lap in rows["lap_id"]]
++    return ok & ~rows.get("box_anotado", pd.Series(False, index=rows.index)).astype(bool) & ~pd.Series(measured_box, index=rows.index)
++
++
++# --------------------------------------------------------- calibrar ---
++
++def candidate_limits(ai_ids: List[str], grids, track, sectors) -> det.DetectorLimits:
++    """Os parametros que dependem das voltas da IA: microsetores e zonas em que ela se repete.
++
++    Cada volta da IA e medida contra a referencia feita sem ela (deixa-uma-fora).
++    """
++    reference = det.build_reference({i: grids[i] for i in ai_ids}, track)
++    lateral, zones = [], []
++    for lap_id in ai_ids:
++        loo = det.build_reference({i: grids[i] for i in ai_ids if i != lap_id}, track)
++        lateral.append(det.microsector_distances(grids[lap_id], loo, track, sectors)["lateral_m"].to_numpy(dtype=float))
++        zones.append(det.zone_distances(grids[lap_id], reference.braking_s, track))
++    return det.DetectorLimits(
++        lateral_ai_m=CALIBRATION["lateral_ai_m"],
++        lateral_human_m=CALIBRATION["lateral_human_m"],
++        ai_run=CALIBRATION["ai_run"],
++        human_run=CALIBRATION["human_run"],
++        braking_ai_m=CALIBRATION["braking_ai_m"],
++        braking_human_m=CALIBRATION["braking_human_m"],
++        informative_microsectors=det.informative_microsectors(lateral, CALIBRATION["lateral_ai_m"]),
++        braking_zones_m=det.reliable_zones(np.vstack(zones), reference.braking_s, CALIBRATION["braking_ai_m"]),
++    )
++
++
++def evaluate(rows: pd.DataFrame, lap_ids: List[str], ai_ids: List[str], grids, track, sectors, limits) -> List[Dict[str, object]]:
++    """O detector nas voltas rotuladas; as da IA contra a referencia sem elas."""
++    reference = det.build_reference({i: grids[i] for i in ai_ids}, track)
++    out = []
++    for lap_id in lap_ids:
++        r = rows.loc[rows["lap_id"] == lap_id].iloc[0]
++        ref = det.build_reference({i: grids[i] for i in ai_ids if i != lap_id}, track) if lap_id in ai_ids else reference
++        verdict = det.classify_lap(grids[lap_id], float(r["duration_s"]), ref, track, sectors, limits)
++        out.append({"lap_id": lap_id, "parte": int(r["parte"]), "volta_jogo": int(r["volta_jogo"]),
++                    "anotada": r["origem_anotada"], "tempo_s": float(r["duration_s"]), **verdict})
++    return out
++
++
++def accuracy(results: List[Dict[str, object]]) -> Dict[str, Dict[str, int]]:
++    table = {}
++    for label in (origin.AI, origin.HUMAN, origin.MIXED):
++        subset = [r for r in results if r["anotada"] == label]
++        table[label] = {
++            "voltas": len(subset),
++            "acertos": sum(r["origem_detector"] == label for r in subset),
++            "desconhecidas": sum(r["origem_detector"] == origin.UNKNOWN for r in subset),
++            "erradas": sum(r["origem_detector"] not in (label, origin.UNKNOWN) for r in subset),
++        }
++    return table
++
++
++def calibrate(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
++    inventory, grids = load(out_dir)
++    sectors = build_microsectors(track)
++    rows = labelled_session(inventory)
++    rows["limpa"] = clean_mask(rows, grids, sectors)
++
++    # Indicador contra anotacao, em todas as voltas da sessao.
++    comparison = []
++    for _, r in rows.iterrows():
++        comparison.append({
++            "lap_id": r["lap_id"], "parte": int(r["parte"]), "volta_jogo": int(r["volta_jogo"]),
++            "anotada": r["origem_anotada"], "indicador": r["origem_indicador"],
++            "concorda": r["origem_anotada"] == r["origem_indicador"],
++            "valida": bool(r["valid"]), "limpa": bool(r["limpa"]), "tempo_s": float(r["duration_s"]),
++        })
++
++    clean = rows[rows["limpa"]]
++    ai_ids = [i for i in clean.loc[clean["origem_anotada"] == origin.AI, "lap_id"] if i in grids]
++    human_ids = [i for i in clean.loc[clean["origem_anotada"] == origin.HUMAN, "lap_id"] if i in grids]
++    mixed_ids = [i for i in rows.loc[(rows["origem_anotada"] == origin.MIXED) & rows["valid"].astype(bool), "lap_id"]
++                 if i in grids]
++    labelled = ai_ids + human_ids + mixed_ids
++
++    limits = candidate_limits(ai_ids, grids, track, sectors)
++    results = evaluate(rows, labelled, ai_ids, grids, track, sectors, limits)
++
++    # Fora da amostra: calibra com a parte 2, testa na parte 1.
++    part = dict(zip(rows["lap_id"], rows["parte"]))
++    ai_2 = [i for i in ai_ids if part[i] == 2]
++    limits_2 = candidate_limits(ai_2, grids, track, sectors)
++    results_1 = evaluate(rows, [i for i in labelled if part[i] == 1], ai_2, grids, track, sectors, limits_2)
++
++    result = {
++        "voltas_da_sessao": len(rows),
++        "indicador_contra_anotacao": comparison,
++        "voltas_limpas": {"ia": ai_ids, "humano": human_ids},
++        "voltas_misturadas_validas": mixed_ids,
++        "limites_candidatos": limits.__dict__,
++        "acerto_na_sessao": accuracy(results),
++        "por_volta": results,
++        "fora_da_amostra_calibra_parte2_testa_parte1": {
++            "limites": limits_2.__dict__, "acerto": accuracy(results_1), "por_volta": results_1,
++        },
++    }
++    json_path.parent.mkdir(parents=True, exist_ok=True)
++    json_path.write_text(json.dumps(result, indent=1, ensure_ascii=False, default=float), encoding="utf-8")
++    return result
++
++
++# --------------------------------------------------------- variacao ---
++
++def section_time(grid: pd.DataFrame, track, span) -> float:
++    a, b = np.interp(span, track.s, grid["elapsed_s"].to_numpy(dtype=float))
++    return float(b - a)
++
++
++def spread_stats(values: np.ndarray) -> Dict[str, float]:
++    values = np.asarray(values, dtype=float)
++    values = values[np.isfinite(values)]
++    if values.size < 3:
++        return {"n": int(values.size)}
++    successive = np.diff(values)
++    return {
++        "n": int(values.size),
++        "media": float(values.mean()),
++        "dp": float(values.std(ddof=1)),
++        "dp_robusto": float(1.4826 * np.median(np.abs(values - np.median(values)))),
++        # Sem a tendencia da sessao (aprendizado, pneu, combustivel): o que os
++        # blocos do experimento enxergam.
++        "dp_diferencas_sucessivas": float(np.std(successive, ddof=1) / np.sqrt(2)),
++    }
++
++
++def power(n: int, sigma: float, effect: float, contrast: str, sims: int = 2000, seed: int = 13) -> float:
++    """Chance de o IC 95 % do contraste excluir zero, no desenho em blocos do plano."""
++    rng = np.random.default_rng(seed)
++    plan = ctl.make_plan(laps_per_condition=n, warmup=0, seed=seed)
++    conditions = plan["condicao"].to_numpy()
++    blocks = plan["bloco"].to_numpy()
++    shift = np.zeros(len(conditions))
++    for code, weight in ctl.CONTRASTS[contrast].items():
++        # Efeito so na condicao "tratada" do contraste.
++        if weight > 0:
++            shift[conditions == code] = effect
++    hits = 0
++    for _ in range(sims):
++        times = 30.0 + shift + rng.normal(0.0, sigma, len(conditions))
++        low, high = ctl.estimate_effects(times, conditions, blocks)[contrast]["ic95_s"]
++        hits += int(low > 0 or high < 0)
++    return hits / sims
++
++
++Z_80 = 1.96 + 0.8416   # IC 95 % e poder de 80 %, como no protocolo
++
++
++def contrast_scale(contrast: str) -> float:
++    """Efeito principal compara 2n contra 2n voltas; uma condicao contra outra, n contra n."""
++    return 1.0 if contrast in ("frenagem", "linha") else 2.0
++
++
++def laps_needed(sigma: float, effect: float, contrast: str) -> int:
++    """Voltas por condicao para detectar `effect` com 80 % de chance (formula do protocolo)."""
++    return int(np.ceil(contrast_scale(contrast) * (Z_80 * sigma / effect) ** 2))
++
++
++def detectable(n: int, sigma: float, contrast: str) -> float:
++    """Menor efeito detectavel com 80 % de chance com n voltas por condicao."""
++    return float(Z_80 * sigma * np.sqrt(contrast_scale(contrast) / n))
++
++
++def variation(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
++    inventory, grids = load(out_dir)
++    sectors = build_microsectors(track)
++    rows = labelled_session(inventory)
++    rows["limpa"] = clean_mask(rows, grids, sectors)
++    clean = rows[rows["limpa"]].sort_values("inicio_epoch_s")
++    corners = detect_corners(track)
++    all_clean = [i for i in clean["lap_id"] if i in grids]
++    windows = em.define_windows([grids[i]["brake"].to_numpy(dtype=float) for i in all_clean], track, corners)
++
++    out: Dict[str, object] = {"janelas": windows.describe()}
++    for label in (origin.HUMAN, origin.AI):
++        ids = [i for i in clean.loc[clean["origem_anotada"] == label, "lap_id"] if i in grids]
++        bico = np.array([section_time(grids[i], track, BICO_DE_PATO_M) for i in ids])
++        feats = [em.lap_window_features(grids[i], windows, track) for i in ids]
++        brake_sd, apex_sd = [], []
++        for k in range(windows.count):
++            b = np.array([f[k]["braking_point_s"] for f in feats], dtype=float)
++            a = np.array([f[k]["lateral_apex_m"] for f in feats], dtype=float)
++            b, a = b[np.isfinite(b)], a[np.isfinite(a)]
++            brake_sd.append(float(np.std(b, ddof=1)) if b.size >= 3 else float("nan"))
++            apex_sd.append(float(np.std(a, ddof=1)) if a.size >= 3 else float("nan"))
++        times = clean.set_index("lap_id").loc[ids, "duration_s"].to_numpy(dtype=float)
++        best = clean.set_index("lap_id").loc[ids, "duration_s"].idxmin() if ids else None
++        out[label] = {
++            "voltas_limpas": ids,
++            "bico_de_pato_s": spread_stats(bico),
++            "frenagem_dp_m_por_janela": dict(zip(windows.labels(), brake_sd)),
++            "frenagem_dp_m_mediana": float(np.nanmedian(brake_sd)) if brake_sd else None,
++            "apice_dp_m_por_janela": dict(zip(windows.labels(), apex_sd)),
++            "apice_dp_m_mediana": float(np.nanmedian(apex_sd)) if apex_sd else None,
++            "tempo_volta_s": spread_stats(times),
++            "melhor_volta": {"lap_id": best, "tempo_s": float(times.min()) if ids else None},
++        }
++
++    human = out[origin.HUMAN]["bico_de_pato_s"]
++    sizes, check = {}, {}
++    for key in ("dp_diferencas_sucessivas", "dp"):
++        sigma = human.get(key)
++        if not sigma:
++            continue
++        sizes[key] = {
++            f"{ms}_ms": {contrast: laps_needed(sigma, ms / 1000.0, contrast) for contrast in ("frenagem", "B_menos_A")}
++            for ms in EFFECTS_MS
++        }
++        sizes[key]["detectavel_com_8_voltas_s"] = {c: detectable(8, sigma, c) for c in ("frenagem", "B_menos_A")}
++        sizes[key]["detectavel_com_32_voltas_s"] = {c: detectable(32, sigma, c) for c in ("frenagem", "B_menos_A")}
++        # A formula conferida no proprio plano: com o efeito detectavel, o poder
++        # simulado tem de dar perto de 80 %.
++        check[key] = {
++            f"{n}_voltas_{c}": power(n, sigma, detectable(n, sigma, c), c)
++            for n in (8, 32) for c in ("frenagem", "B_menos_A")
++        }
++    out["tamanho_do_experimento"] = {
++        "sigma_bico_de_pato_s": {k: human.get(k) for k in ("dp_diferencas_sucessivas", "dp")},
++        "voltas_por_condicao_para_80pct": sizes,
++        "poder_simulado_no_efeito_detectavel": check,
++        "como": "formula do protocolo (z = 1,96 + 0,84), conferida simulando o plano em blocos "
++                "(make_plan) analisado por estimate_effects, 2000 sessoes por ponto",
++    }
++    json_path.parent.mkdir(parents=True, exist_ok=True)
++    json_path.write_text(json.dumps(out, indent=1, ensure_ascii=False, default=float), encoding="utf-8")
++    return out
++
++
++# ----------------------------------------------------------- aplicar ---
++
++def apply(out_dir: Path, track, json_path: Path, promote: bool = False) -> Dict[str, object]:
++    """Aplica o detector registrado. Sem `promote`, o resultado fica so nas colunas
++    `*_detector`: a `origem` das voltas antigas so muda quando o piloto decidir."""
++    limits = det.LIMITS
++    if limits is None:
++        raise SystemExit("PARADO: os limites do detector ainda nao foram registrados (ai_detector.LIMITS).")
++    inventory, grids = load(out_dir)
++    sectors = build_microsectors(track)
++    rows = labelled_session(inventory)
++    rows["limpa"] = clean_mask(rows, grids, sectors)
++    ai_ids = [i for i in rows.loc[rows["limpa"] & (rows["origem_anotada"] == origin.AI), "lap_id"] if i in grids]
++    reference = det.build_reference({i: grids[i] for i in ai_ids}, track)
++    # Os microsetores e as zonas registrados tem de ser os que a sessao da hoje.
++    recomputed = candidate_limits(ai_ids, grids, track, sectors)
++    if (recomputed.informative_microsectors != limits.informative_microsectors
++            or recomputed.braking_zones_m != limits.braking_zones_m):
++        raise SystemExit("PARADO: os microsetores ou as zonas registrados nao batem com a sessao rotulada.")
++
++    # 1. Quanto o detector acerta na sessao rotulada (IA deixa-uma-fora).
++    human_ids = [i for i in rows.loc[rows["limpa"] & (rows["origem_anotada"] == origin.HUMAN), "lap_id"] if i in grids]
++    mixed_ids = [i for i in rows.loc[(rows["origem_anotada"] == origin.MIXED) & rows["valid"].astype(bool), "lap_id"]
++                 if i in grids]
++    scored = evaluate(rows, ai_ids + human_ids + mixed_ids, ai_ids, grids, track, sectors, limits)
++    hits = accuracy(scored)
++
++    # 2. Rotulos finais no inventario.
++    out_inv = inventory.copy()
++    for column in ("origem_detector", "motivo_detector", "linha_detector"):
++        out_inv[column] = None
++    by_id = out_inv.set_index("lap_id")
++    session_rows = rows.set_index("lap_id")
++    for lap_id, r in session_rows.iterrows():
++        note = r["origem_anotada"]
++        if note is None:
++            continue
++        by_id.at[lap_id, "origem"] = note
++        by_id.at[lap_id, "origem_fonte"] = (
++            origin.SOURCE_INDICATOR if r["origem_indicador"] == note else origin.SOURCE_ANNOTATION
++        )
++    # Volta ao que o indicador diz antes de aplicar: rodar de novo da o mesmo resultado.
++    previous = by_id["equipamento"] == origin.PREVIOUS_EQUIPMENT
++    by_id.loc[previous, "origem"] = by_id.loc[previous, "origem_indicador"]
++    by_id.loc[previous, "origem_fonte"] = [
++        origin.SOURCE_INDICATOR if value != origin.UNKNOWN else None for value in by_id.loc[previous, "origem_indicador"]
++    ]
++    old = by_id[previous & by_id["valid"].astype(bool) & by_id["duplicada_de"].isna()]
++    for lap_id, r in old.iterrows():
++        if lap_id not in grids:
++            continue
++        verdict = det.classify_lap(grids[lap_id], float(r["duration_s"]), reference, track, sectors, limits)
++        by_id.at[lap_id, "origem_detector"] = verdict["origem_detector"]
++        by_id.at[lap_id, "motivo_detector"] = verdict["motivo"]
++        by_id.at[lap_id, "linha_detector"] = verdict["linha"]
++        if promote and verdict["origem_detector"] != origin.UNKNOWN:
++            by_id.at[lap_id, "origem"] = verdict["origem_detector"]
++            by_id.at[lap_id, "origem_fonte"] = origin.SOURCE_DETECTOR
++    out_inv = by_id.reset_index()
++    save_inventory(out_inv, out_dir)
++
++    # 3. Por sessao.
++    applied = out_inv[out_inv["lap_id"].isin(old.index)]
++    sessions = []
++    for session_id, laps in applied.groupby("session_id"):
++        counts = laps["origem_detector"].fillna(origin.UNKNOWN).value_counts().to_dict()
++        reasons = laps["motivo_detector"].fillna("-").value_counts().to_dict()
++        sessions.append({
++            "sessao": session_id, "pasta": laps["pasta"].iloc[0], "voltas": int(len(laps)),
++            "humano": int(counts.get(origin.HUMAN, 0)), "ia": int(counts.get(origin.AI, 0)),
++            "misturada": int(counts.get(origin.MIXED, 0)), "desconhecida": int(counts.get(origin.UNKNOWN, 0)),
++            "box": int(reasons.get("box", 0)),
++            "data_citada_com_ia": session_id[:10] in AI_DATES_CITED,
++            "sessao_variavel_pedido_12": session_id[:19] in VARIABLE_SESSIONS,
++            "motivos": reasons,
++        })
++    totals = applied["origem_detector"].fillna(origin.UNKNOWN).value_counts().to_dict()
++    result = {
++        "limites": limits.__dict__,
++        "promovido_a_origem": bool(promote),
++        "referencia_ia": {"voltas": ai_ids, "zonas_de_frenagem_m": [round(float(z), 1) for z in reference.braking_s]},
++        "sessao_rotulada": {"acerto": hits, "voltas": scored},
++        "voltas_antigas": {"aplicadas": int(len(applied)), "totais": totals,
++                           "motivos": applied["motivo_detector"].fillna("-").value_counts().to_dict()},
++        "sessoes": sessions,
++    }
++    json_path.parent.mkdir(parents=True, exist_ok=True)
++    json_path.write_text(json.dumps(result, indent=1, ensure_ascii=False, default=float), encoding="utf-8")
++    return result
++
++
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("comando", choices=["calibrar", "variacao", "aplicar"])
++    parser.add_argument("--saida", type=Path, default=config.artifacts_root() / "origem")
++    parser.add_argument("--json", type=Path, default=None)
++    parser.add_argument("--promover", action="store_true",
++                        help="aplicar: grava o rotulo do detector tambem em `origem` (decisao do piloto)")
++    args = parser.parse_args(argv)
++    track = load_geometry()
++    json_path = args.json or (args.saida / f"detector_{args.comando}.json")
++    if args.comando == "aplicar":
++        result = apply(args.saida, track, json_path, promote=args.promover)
++    else:
++        result = {"calibrar": calibrate, "variacao": variation}[args.comando](args.saida, track, json_path)
++    print(json.dumps({k: v for k, v in result.items() if k not in ("por_volta", "indicador_contra_anotacao",
++                                                                     "microsetores_das_misturadas", "sessoes")},
++                     indent=1, ensure_ascii=False, default=float)[:6000])
++    print(f"\n-> {json_path}")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/tests/test_ai_detector.py b/backend/tests/test_ai_detector.py
+new file mode 100644
+index 00000000..d89cbf9c
+--- /dev/null
++++ b/backend/tests/test_ai_detector.py
+@@ -0,0 +1,193 @@
++"""Detector de volta da IA (pedido 13): linha por trechos, frenagem, tempo e box. Tudo sintetico."""
++
++from __future__ import annotations
++
++import math
++import sys
++import unittest
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++BACKEND = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(BACKEND))
++
++from ml.data import ai_detector as det  # noqa: E402
++from ml.track.geometry import TrackGeometry  # noqa: E402
++from ml.track.microsectors import build_microsectors  # noqa: E402
++
++BRAKE_AT = (300.0, 900.0)
++LIMITS = det.DetectorLimits(
++    lateral_ai_m=0.10, lateral_human_m=0.30, ai_run=3, human_run=2,
++    braking_ai_m=3.0, braking_human_m=8.0,
++    informative_microsectors=tuple(range(20)), braking_zones_m=BRAKE_AT,
++)
++
++
++def circular_track(radius: float = 200.0, step: float = 2.0) -> TrackGeometry:
++    length = 2.0 * math.pi * radius
++    count = int(round(length / step))
++    used = length / count
++    s = np.arange(count, dtype=float) * used
++    theta = s / radius
++    tangent = np.column_stack([-np.sin(theta), np.cos(theta)])
++    return TrackGeometry(
++        name="circulo", length=length, step=used, s=s,
++        x=radius * np.cos(theta), z=radius * np.sin(theta), elevation=np.zeros(count),
++        tangent=tangent, normal=np.column_stack([tangent[:, 1], -tangent[:, 0]]),
++        curvature=np.full(count, -1.0 / radius),
++        width_left=np.full(count, 6.0), width_right=np.full(count, 6.0),
++    )
++
++
++TRACK = circular_track()
++SECTORS = build_microsectors(TRACK, 20)
++AI_LINE = 2.0 * np.sin(TRACK.s / TRACK.length * 2 * math.pi * 3)
++
++
++def lap(offset=0.0, noise=0.0, brake_shift=0.0, seed=0, speed=200.0):
++    rng = np.random.default_rng(seed)
++    brake = np.zeros(TRACK.size)
++    for start in BRAKE_AT:
++        on = (TRACK.s >= start + brake_shift) & (TRACK.s < start + brake_shift + 60)
++        brake[on] = 1.0
++    return pd.DataFrame({
++        "lateral": AI_LINE + offset + rng.normal(0.0, noise, TRACK.size),
++        "brake": brake,
++        "speed_kmh": np.full(TRACK.size, speed),
++    })
++
++
++REFERENCE = det.build_reference({f"ia#{i}": lap(noise=0.01, seed=i) for i in range(5)}, TRACK)
++
++
++def verdict(grid, lap_time):
++    return det.classify_lap(grid, lap_time, REFERENCE, TRACK, SECTORS, LIMITS)
++
++
++class ReferenceTests(unittest.TestCase):
++    def test_the_reference_is_the_median_line_and_the_common_braking_points(self):
++        self.assertLess(np.max(np.abs(REFERENCE.lateral - AI_LINE)), 0.03)
++        self.assertEqual(len(REFERENCE.braking_s), 2)
++        for found, expected in zip(REFERENCE.braking_s, BRAKE_AT):
++            self.assertLess(abs(found - expected), 2.5)
++
++    def test_a_missing_braking_counts_as_far(self):
++        grid = lap(noise=0.01, seed=5)
++        grid["brake"] = 0.0
++        self.assertEqual(det.zone_distances(grid, BRAKE_AT, TRACK).tolist(), [det.BRAKE_MATCH_WINDOW_M] * 2)
++
++
++class CalibrationTests(unittest.TestCase):
++    def test_only_microsectors_where_the_ai_repeats_itself_are_used(self):
++        steady = np.full(5, 0.05)
++        loose = np.array([0.05, 0.05, 0.9, 0.05, 0.05])
++        self.assertEqual(det.informative_microsectors([steady, loose], 0.25), (0, 1, 3, 4))
++
++    def test_only_braking_zones_the_ai_repeats_are_used(self):
++        distances = np.array([[0.0, 2.0], [1.0, 60.0], [2.0, 60.0]])
++        self.assertEqual(det.reliable_zones(distances, (100.0, 500.0), 4.0), (100.0,))
++
++
++class LineTests(unittest.TestCase):
++    def test_an_ai_lap(self):
++        result = verdict(lap(noise=0.01, seed=9), 85.0)
++        self.assertEqual((result["linha"], result["origem_detector"]), ("ia", "ia"))
++
++    def test_a_human_lap(self):
++        result = verdict(lap(offset=0.8, noise=0.2, brake_shift=-12, seed=3), 94.0)
++        self.assertEqual((result["linha"], result["origem_detector"]), ("humano", "humano"))
++
++    def test_a_lap_handed_over_halfway_is_mixed(self):
++        grid = lap(noise=0.01, seed=4)
++        grid.loc[TRACK.s > TRACK.length / 2, "lateral"] += 1.0
++        self.assertEqual(verdict(grid, 89.0)["origem_detector"], "misturada")
++
++    def test_isolated_near_misses_do_not_make_a_human_lap_mixed(self):
++        """Medido: as voltas do piloto passam perto da IA em ate 2 microsetores seguidos."""
++        states = ["humano"] * 8 + ["ia", "ia"] + ["humano"] * 8 + ["ia"] + ["humano"]
++        self.assertEqual(det.line_label(states, LIMITS), "humano")
++
++    def test_a_long_ai_stretch_and_a_human_stretch_are_mixed(self):
++        states = ["ia"] * 15 + ["humano"] * 4 + ["fora"]
++        self.assertEqual(det.line_label(states, LIMITS), "misturada")
++
++    def test_unclear_laps_stay_unknown(self):
++        self.assertEqual(det.line_label(["ia"] * 18 + ["indefinido", "indefinido"], LIMITS), "desconhecida")
++        self.assertEqual(det.line_label(["indefinido"] * 20, LIMITS), "desconhecida")
++        self.assertEqual(det.line_label(["fora"] * 20, LIMITS), "desconhecida")
++
++    def test_states_use_only_informative_microsectors(self):
++        limits = det.DetectorLimits(0.10, 0.30, 3, 2, 3.0, 8.0, informative_microsectors=(0, 2))
++        self.assertEqual(det.microsector_states([0.05, 0.05, 0.5, 0.2], limits), ["ia", "fora", "humano", "fora"])
++
++
++class AgreementTests(unittest.TestCase):
++    def test_braking_must_confirm_the_line(self):
++        grid = lap(noise=0.01, seed=6, brake_shift=-20)   # linha da IA, freia 20 m antes
++        result = verdict(grid, 85.0)
++        self.assertEqual(result["linha"], "ia")
++        self.assertEqual(result["origem_detector"], "desconhecida")
++        self.assertIn("frenagem", result["motivo"])
++
++    def test_time_votes(self):
++        self.assertEqual(det.time_votes(85.0, LIMITS), ("ia", "misturada"))
++        self.assertEqual(det.time_votes(94.0, LIMITS), ("humano", "misturada"))
++        self.assertEqual(det.time_votes(90.0, LIMITS), ("ia", "humano", "misturada"))
++
++    def test_line_and_time_must_agree(self):
++        self.assertEqual(verdict(lap(noise=0.01, seed=9), 94.0)["origem_detector"], "desconhecida")
++        self.assertEqual(verdict(lap(offset=0.8, noise=0.2, brake_shift=-12, seed=3), 85.0)["origem_detector"], "desconhecida")
++
++    def test_between_88_and_92_the_line_decides(self):
++        self.assertEqual(verdict(lap(offset=0.8, noise=0.2, brake_shift=-12, seed=3), 91.7)["origem_detector"], "humano")
++
++
++class PitTests(unittest.TestCase):
++    def test_a_lap_through_the_pit_lane_is_left_out(self):
++        grid = lap()
++        near = np.isin(SECTORS.index, [0, 1])
++        grid.loc[near, "lateral"] = 15.0
++        grid.loc[near, "speed_kmh"] = 80.0
++        self.assertTrue(det.pit_lap(grid, SECTORS))
++        self.assertEqual(verdict(grid, 101.7)["motivo"], "box")
++
++    def test_a_normal_lap_is_not_a_pit_lap(self):
++        self.assertFalse(det.pit_lap(lap(), SECTORS))
++
++
++class RegisteredLimitsTests(unittest.TestCase):
++    def test_the_registered_limits_are_the_ones_in_the_stage_document(self):
++        limits = det.LIMITS
++        self.assertIsNotNone(limits)
++        self.assertEqual((limits.lateral_ai_m, limits.lateral_human_m, limits.ai_run, limits.human_run),
++                         (0.25, 0.30, 3, 2))
++        self.assertEqual((limits.braking_ai_m, limits.braking_human_m), (4.0, 8.0))
++        self.assertEqual((limits.time_ai_max_s, limits.time_human_min_s), (88.0, 92.0))
++        self.assertEqual(len(limits.informative_microsectors), 40)
++        self.assertEqual(len(limits.braking_zones_m), 8)
++
++
++if __name__ == "__main__":
++    unittest.main()
++
++
++class ExperimentSizeTests(unittest.TestCase):
++    """O tamanho do experimento usa a formula do protocolo, conferida no plano em blocos."""
++
++    def test_the_protocol_numbers_come_back(self):
++        from ml.scripts.detector_ia import detectable, laps_needed
++
++        # Protocolo: 8 voltas por condicao, efeito principal detecta cerca de 1 desvio.
++        self.assertEqual(laps_needed(0.014, 0.014, "frenagem"), 8)
++        self.assertAlmostEqual(detectable(8, 0.014, "frenagem"), 0.0139, places=4)
++        # Uma condicao contra outra precisa do dobro de voltas.
++        self.assertEqual(laps_needed(0.014, 0.014, "B_menos_A"), 16)
++
++    def test_the_simulated_plan_agrees_with_the_formula(self):
++        from ml.scripts.detector_ia import detectable, power
++
++        achieved = power(8, 0.05, detectable(8, 0.05, "frenagem"), "frenagem", sims=600)
++        self.assertGreater(achieved, 0.68)
++        self.assertLess(achieved, 0.88)
+diff --git a/backend/tests/test_lap_origin.py b/backend/tests/test_lap_origin.py
+index 42b19123..adf7aa4a 100644
+--- a/backend/tests/test_lap_origin.py
++++ b/backend/tests/test_lap_origin.py
+@@ -215,6 +215,7 @@ class SelectionTests(unittest.TestCase):
+                 "relogio_verificado": [True, True, True, False, True, True],
+                 "relogio_suspeito": [False, False, True, False, False, False],
+                 "duplicada_de": [None, None, None, None, None, None],
++                "equipamento": ["atual"] * 6,
+             }
+         )
+ 
+@@ -232,6 +233,26 @@ class SelectionTests(unittest.TestCase):
+         inventory.loc[0, "duplicada_de"] = "x#9"
+         self.assertNotIn("s#1", origin.select_laps(inventory, origins=None, include_clock_suspect=True)["lap_id"].tolist())
+ 
++    def test_human_laps_count_only_with_the_current_equipment(self):
++        """ADR 0015: a volta humana com o controle antigo descreve outro piloto."""
++        inventory = self.inventory()
++        inventory.loc[0, "equipamento"] = "anterior"
++        self.assertEqual(origin.select_laps(inventory)["lap_id"].tolist(), ["s#5"])
++        self.assertEqual(origin.select_laps(inventory, equipment=None)["lap_id"].tolist(), ["s#1", "s#5"])
++
++    def test_the_equipment_does_not_filter_ai_laps(self):
++        inventory = self.inventory()
++        inventory["equipamento"] = "anterior"
++        self.assertEqual(origin.select_laps(inventory, origins=["ia"])["lap_id"].tolist(), ["s#2"])
++
++    def test_equipment_follows_the_session_date(self):
++        self.assertEqual(origin.equipment_for("2026-10-04_02-24-04_vhe_interlagos"), "atual")
++        self.assertEqual(origin.equipment_for("2026-10-01_00-00-00_vhe_interlagos"), "atual")
++        self.assertEqual(origin.equipment_for("2026-09-30_23-59-59_vhe_interlagos"), "anterior")
++        self.assertEqual(origin.equipment_for("phase14_1_assisted_validation"), "anterior")
++        self.assertEqual(origin.parse_equipment(None), ["atual"])
++        self.assertIsNone(origin.parse_equipment(["todos"]))
++
+     def test_an_old_inventory_gives_nothing_by_default(self):
+         old = pd.DataFrame({"lap_id": ["s#1"], "valid": [True]})
+         self.assertTrue(origin.select_laps(old).empty)
+@@ -256,9 +277,9 @@ class SelectionTests(unittest.TestCase):
+ class CoachTrainingFilterTests(unittest.TestCase):
+     def test_the_trainer_filters_by_origin_before_loading_anything(self):
+         source = (BACKEND / "tools" / "train_reference_model.py").read_text(encoding="utf-8")
+-        self.assertIn("replay_selection(inventory, origins, args.incluir_relogio_suspeito)", source)
++        self.assertIn("inventory, origins, args.incluir_relogio_suspeito, parse_equipment(args.equipamento)", source)
+         self.assertIn('"origem" not in inventory.columns', source)
+-        self.assertLess(source.index("replay_selection(inventory"), source.index("loader.load_lap("))
++        self.assertLess(source.index("replay_selection("), source.index("loader.load_lap("))
+ 
+ 
+ class FolderTests(unittest.TestCase):
+diff --git a/backend/tools/train_reference_model.py b/backend/tools/train_reference_model.py
+index 8b114042..33697713 100644
+--- a/backend/tools/train_reference_model.py
++++ b/backend/tools/train_reference_model.py
+@@ -38,7 +38,7 @@ from core.assisted_analysis.reference_model import (  # noqa: E402
+ from core.live.runtime_state import RuntimeState  # noqa: E402
+ from core.telemetry.telemetry_buffer import TelemetryBuffer  # noqa: E402
+ from ml.data.inventory import inventory_path  # noqa: E402
+-from ml.data.origin import ORIGINS, parse_origins, replay_selection  # noqa: E402
++from ml.data.origin import ORIGINS, parse_equipment, parse_origins, replay_selection  # noqa: E402
+ 
+ 
+ def runtime_root() -> Path:
+@@ -64,6 +64,8 @@ def main() -> int:
+                         help="origens aceitas (padrao: humano; 'todas' = sem filtro)")
+     parser.add_argument("--incluir-relogio-suspeito", action="store_true",
+                         help="aceita voltas com relogio suspeito ou nao conferido")
++    parser.add_argument("--equipamento", nargs="*", default=None, choices=["atual", "anterior", "todos"],
++                        help="equipamento das voltas humano (padrao: atual, ADR 0015)")
+     parser.add_argument("--inventario", type=Path, default=None,
+                         help="inventario do ml com a coluna origem (padrao: data/ml/lap_inventory.parquet)")
+     args = parser.parse_args()
+@@ -106,7 +108,9 @@ def main() -> int:
+         if "origem" not in inventory.columns:
+             print(f"PARADO: o inventario {path} e anterior ao ADR 0014 (sem a coluna origem).")
+             return 2
+-        allowed = replay_selection(inventory, origins, args.incluir_relogio_suspeito)
++        allowed = replay_selection(
++            inventory, origins, args.incluir_relogio_suspeito, parse_equipment(args.equipamento)
++        )
+         before = len(selected)
+         selected = [lap for lap in selected if lap.lap_id in allowed]
+         print(f"filtro de origem  : {origins if origins is not None else 'todas'}"
+diff --git a/docs/detector_ia.md b/docs/detector_ia.md
+new file mode 100644
+index 00000000..970e3286
+--- /dev/null
++++ b/docs/detector_ia.md
+@@ -0,0 +1,199 @@
++# Sessão rotulada e detector da IA (pedido 13, ADR 0014 e 0015)
++
++Datas: 2026-10-04. Branch: `etapa/detector-ia`.
++
++## 1. A sessão rotulada
++
++- **Pista e carro:** Interlagos, com o carro `rss_formula_rss_3_v6_2026`. Esse valor aparece no `metadata.json` de todas as gravações da sessão (campo novo do pedido 12) e é o mesmo carro das sessões antigas que o registravam.
++- **Equipamento:** volante RS50 e pedais com célula de carga, em uso desde 01/10/2026 (ADR 0015).
++- **Gravação:** feita com o app aberto a partir do repositório (`develop`), com o backend em Python, porque o executável empacotado ainda não grava o indicador. O coach ficou calado durante toda a sessão: o modelo do repositório, `data/reference_models/vhe_interlagos.json`, foi renomeado antes e voltou ao nome original no fim, com o mesmo hash (`9d08d705…`).
++- **Sessões desde 01/10:** só esta. Ela ficou em sete arquivos em `data/recordings`, porque a gravação se divide quando o jogo pausa ou vai ao menu:
++
++| arquivo | o que tem |
++|---|---|
++| `2026-10-04_02-24-04` | parte 1 (voltas 1 a 14 do jogo); depois do reinício da sessão do jogo, voltas 1 a 6 da parte 2 |
++| `2026-10-04_03-21-52` | parte 2, voltas 6 a 13 |
++| `2026-10-04_03-35-57`, `03-36-35`, `03-40-32` | carro parado (pausa na volta 13) |
++| `2026-10-04_03-42-10` | parte 2, voltas 13 a 33 |
++| `2026-10-04_04-22-39` | parte 2, voltas 33 e 34 (box). A gravação foi parada pela API depois do fim da sessão |
++
++- **O que foi pilotado** (anotações do Eduardo, em `docs/experimentos/2026-10-04_sessao_rotulada_anotacoes.csv`):
++
++| parte | voltas | quem |
++|---|---|---|
++| 1 | 1 a 3 | piloto (a 1 sai do box) |
++| 1 | 4 e 7 | volta ao box pelo menu e saída com a IA |
++| 1 | 5, 6, 11 a 14 | IA |
++| 1 | 8 | IA nos setores 1 e 2, piloto no setor 3 |
++| 1 | 9 e 10 | piloto, com erros (na 9 o carro voltou ao box) |
++| 2 | 1 a 20 | piloto, sem box (várias voltas com erros) |
++| 2 | 21 | piloto entra no box, a IA sai |
++| 2 | 22 a 31 | IA (nas 27 e 28 ela mesma parou no box) |
++| 2 | 32 | IA até o setor 3, depois o piloto |
++| 2 | 33 e 34 | piloto (a 34 entra no box) |
++
++São 53 voltas no inventário, das quais 28 são válidas. Muitas voltas do piloto têm erros e não passam nos portões de qualidade.
++
++### O indicador do jogo contra as anotações
++
++O indicador `isAIControlled` **liga quando a IA assume, mas não desliga quando o piloto retoma**. Depois do primeiro Ctrl+C ele fica em "IA" até a sessão do jogo ser reiniciada. Ele só sai de "IA" por uma amostra, às vezes, com o carro parado.
++
++| volta | anotação | indicador |
++|---|---|---|
++| parte 1, volta 8 | misturada | ia |
++| parte 1, volta 9 | humano | misturada (piscadas de uma amostra com o carro parado) |
++| parte 1, volta 10 | humano | ia |
++| parte 2, volta 32 | misturada | ia |
++| parte 2, volta 33 | humano | ia / misturada |
++
++Todas as outras voltas concordam. Por isso **o rótulo da sessão vem das anotações**. Na coluna `origem_fonte`, a volta fica `indicador` quando o indicador concorda com a anotação e `anotacao` quando não concorda. O indicador continua útil de uma forma: em "piloto" a sessão toda, ele prova que a IA nunca foi ligada.
++
++## 2. A variação do piloto e a da IA
++
++Contam só as voltas limpas da sessão rotulada (válidas, únicas, com o relógio conferido e sem box): 11 voltas suas e 13 da IA. As janelas são as da Fase 2b.
++
++| | suas voltas (equipamento atual) | IA |
++|---|---:|---:|
++| Bico de Pato (2.590 a 3.080 m), tempo médio | 13,54 s | 11,43 s |
++| desvio entre voltas no Bico de Pato | **0,91 s** (robusto 0,62 s) | **0,012 s** |
++| o mesmo, sem a tendência da sessão (diferenças sucessivas) | 0,82 s | 0,010 s |
++| dispersão do ponto de frenagem (mediana das janelas) | 14,7 m | 1,0 m |
++| dispersão da lateral no ápice (mediana das janelas) | 1,84 m | 0,04 m |
++| tempo de volta: média e desvio | 93,58 s ± 2,40 s | 84,99 s ± 0,13 s |
++| melhor volta válida e completa | 89,379 s (parte 2, volta 5) | 84,816 s (parte 2, volta 25) |
++
++Nas janelas da Fase 2b, a sua dispersão da frenagem vai de 7,0 m (Bico de Pato) a 50,3 m (Ferradura), e a do ápice vai de 1,1 m a 7,9 m. No Pinheirinho, menos de 3 das suas voltas tiveram início de frenagem detectado.
++
++**A sua variação é de outra ordem que a usada até agora.** O cálculo do experimento usava de 14 a 35 ms no Bico de Pato, números que vinham das sessões de 09/08 e 20/06, ou seja, da IA (ADR 0014). A sua variação, com o equipamento novo e no começo da curva de aprendizado (ADR 0015), é cerca de 0,8 a 0,9 s: umas 60 vezes maior.
++
++### Tamanho do experimento controlado
++
++Voltas por condição para detectar o efeito com 80 % de chance, no desenho em blocos de 4 do protocolo. A fórmula é a do protocolo; usando o próprio plano (`make_plan`) analisado por `estimate_effects`, o poder simulado dá de 76 a 79 % no efeito previsto.
++
++| efeito | efeito principal (frenagem ou linha) | uma condição contra outra |
++|---|---:|---:|
++| 15 ms | 23.448 | 46.895 |
++| 30 ms | 5.862 | 11.724 |
++| 50 ms | 2.111 | 4.221 |
++
++O desvio usado é 0,82 s, sem a tendência da sessão. Com o desvio simples (0,91 s), os números crescem cerca de 22 %.
++
++Ao contrário: com as 8 voltas por condição do protocolo, o experimento só detecta um efeito principal a partir de 0,81 s, ou uma diferença entre duas condições a partir de 1,15 s. Com 32 voltas por condição, a partir de 0,41 s e 0,57 s.
++
++**Com a variação de hoje, o experimento não mede efeitos de 15 a 50 ms.** Isso combina com o ADR 0015: o experimento espera a curva de aprendizado estabilizar. Quando a mediana do tempo de volta das últimas 3 sessões variar menos de 0,5 s, a variação no Bico de Pato deve ser medida de novo e o cálculo refeito. Não gerei um plano novo, porque nenhum tamanho viável chega lá hoje.
++
++## 3. O detector (registrado antes de olhar as voltas antigas)
++
++### Como funciona
++
++As voltas antigas não têm indicador. A origem delas sai de três sinais, calibrados **só** com as voltas limpas da sessão rotulada (válidas, únicas, com o relógio conferido e sem box): 13 voltas da IA, 11 do piloto e 2 misturadas (a 8 da parte 1 e a 32 da parte 2).
++
++1. **Linha.** A referência é a mediana, ponto a ponto da grade de 2 m, da lateral das 13 voltas da IA. Em cada um dos 60 microsetores mede-se a distância lateral mediana até ela.
++   - **Microsetores que contam:** só aqueles em que a própria IA se repete. São 40 dos 60, onde as 13 voltas da IA ficam a até 0,25 m da referência feita sem cada uma delas. Ficam fora as retas e a região do box, onde a IA varia até 2,5 m e a linha não diz nada. Os que contam são 3–10, 16–23, 26–28, 30–47 e 49–51.
++   - **Estado de cada microsetor:** até 0,25 m, **parece IA**; a partir de 0,30 m, **parece piloto**; entre os dois, **indefinido**.
++2. **Frenagem.** São 8 zonas em que a IA repete o início de frenagem a até 4 m em pelo menos 90 % das voltas: 126, 248, 1.206, 2.016, 2.200, 2.360, 2.622 e 3.122 m. Para cada volta, mede-se a distância do início de frenagem mais próximo de cada zona, limitada a 60 m, e toma-se a mediana entre as zonas.
++3. **Tempo de volta.** Abaixo de 88 s, o tempo vota IA ou misturada. Acima de 92 s, vota piloto ou misturada. Entre 88 e 92 s ele não vota, e a linha decide.
++
++### Regra da volta
++
++Pela linha, contando **trechos**, isto é, sequências de microsetores que contam:
++
++| volta | quando |
++|---|---|
++| `ia` | todos os 40 microsetores parecem IA |
++| `humano` | nenhum trecho de 3 ou mais microsetores seguidos parece IA, e há um trecho de 2 ou mais que parece piloto |
++| `misturada` | há um trecho de 3 ou mais que parece IA e um de 2 ou mais que parece piloto |
++| `desconhecida` | qualquer outro caso |
++
++Os trechos são necessários pelo que se mediu. As voltas do piloto passam às vezes a poucos centímetros da linha da IA, mas em no máximo 2 microsetores seguidos (de 0 a 4 microsetores na volta). Já a IA, quando pilota, ocupa trechos de 20 a 40 microsetores. Se um único microsetor bastasse, 8 das 11 voltas do piloto virariam `misturada`.
++
++A volta recebe o rótulo só se os sinais concordarem:
++
++- **frenagem:** uma volta `ia` precisa de mediana até 4 m, e uma volta `humano` precisa de mediana a partir de 8 m;
++- **tempo:** o tempo tem de votar no mesmo rótulo da linha;
++- **caso contrário:** a volta fica `desconhecida`, com o motivo registrado.
++
++Voltas com passagem pelo box ficam sem rótulo (motivo `box`). Elas saem da pista e ficam abaixo de 90 km/h perto da linha de chegada.
++
++Os limites estão em `backend/ml/data/ai_detector.py` (`LIMITS`). O comando `python -m ml.scripts.detector_ia aplicar` para se os microsetores e as zonas registrados não baterem com os que a sessão rotulada dá.
++
++### Quanto acerta na sessão rotulada
++
++Cada volta da IA é medida contra a referência feita sem ela.
++
++| origem | voltas | acertos | desconhecidas | erradas |
++|---|---:|---:|---:|---:|
++| ia | 13 | 13 | 0 | 0 |
++| humano | 11 | 11 | 0 | 0 |
++| misturada | 2 | 2 | 0 | 0 |
++
++- **Fora da amostra:** calibrando só com a parte 2 (8 voltas da IA) e testando na parte 1, o detector acerta 5 de 5 voltas da IA, 3 de 3 do piloto e a misturada.
++- **Margem:** as voltas da IA têm mediana de frenagem de 0 a 2 m; as do piloto, de 44 a 60 m.
++- **Tempo:** as voltas da IA fecham em 84,8 a 85,2 s, e as do piloto em 89,4 a 98,8 s. As duas misturadas (86,1 s e 85,6 s) são rápidas, porque o piloto fez só o fim da volta. Elas recebem o rótulo porque o tempo rápido é compatível com `misturada`.
++
++Os limites cumprem a meta do pedido: pelo menos 95 % de acerto em cada origem. A amostra, porém, é de um dia, um carro e uma configuração da IA. A prova de verdade vem nas voltas antigas, conferidas abaixo com as datas lembradas e com as sessões mais variáveis do pedido 12.
++
++## 4. As voltas antigas: parei aqui
++
++A regra registrada foi aplicada, depois do commit `0fe5471a`, às 688 voltas antigas válidas e únicas das duas pastas:
++
++| resultado | voltas |
++|---|---:|
++| box (ficam sem rótulo) | 136 |
++| linha indefinida | 467 |
++| linha diz `ia`, frenagem discorda | 10 |
++| rotuladas | **75**: 35 `ia`, 8 `humano`, 32 `misturada` |
++
++**89 % das voltas antigas ficaram `desconhecida`.** Pelo pedido, quando a separação não é clara, eu não forço: relato as distribuições e paro. Por isso nada foi promovido. As voltas antigas continuam com `origem = desconhecida` no inventário novo, e o que o detector disse está só nas colunas `origem_detector`, `motivo_detector` e `linha_detector`. Também não fiz o merge.
++
++### Por que a regra se absteve
++
++A minha primeira hipótese era que a IA antiga andasse por outra linha. As distribuições mostram o contrário:
++
++- **Linha:** nas 552 voltas antigas sem box, a distância lateral mediana até a linha da IA de hoje, nos 40 microsetores que contam, é **0,031 m** (p10 0,023 m, p90 0,044 m). É o mesmo que as voltas da IA de hoje têm entre si (cerca de 0,03 m), e muito longe das suas voltas de hoje (1,1 a 2,1 m).
++- **Sessões de 07/08, 08/08 e 09/08:** todas as voltas ficam a 2,5–4,4 cm da IA de hoje e a 0,5–2 cm das outras voltas da mesma sessão. Fecham em 85,8 a 86,3 s (medianas por sessão) e ficam perto da IA em 39 dos 40 microsetores.
++- **O que falha:**
++  - o **microsetor 41** (2.962 a 3.034 m) fica a mais de 0,25 m da IA de hoje em 469 das 534 voltas antigas rápidas. A IA de hoje se repete ali a até 0,024 m;
++  - nas zonas de frenagem de **126 m e 1.206 m**, as voltas antigas freiam a 8 m e 6 m da IA de hoje (medianas). Por isso a mediana da volta fica em 2 a 5 m, em torno do limite de 4 m.
++
++Ou seja, essas voltas antigas se comportam como a IA, a 3 cm da linha dela. Mas num lugar da pista e em duas freadas a IA daquela época fazia um pouco diferente, talvez por acerto, combustível, pneu ou configuração da IA. A regra registrada exige os 40 microsetores e frenagem até 4 m, então ela se abstém. Afrouxá-la agora, depois de ver as voltas antigas, seria forçar.
++
++### O que o detector disse (registrado, não promovido)
++
++| grupo | voltas | ia | humano | misturada | desconhecida (box) |
++|---|---:|---:|---:|---:|---:|
++| datas que você lembra (14/06 a 20/06 e 09/08) | 428 | 11 | 0 | 29 | 388 (86) |
++| outras datas | 260 | 24 | 8 | 3 | 225 (50) |
++
++As 4 sessões que mais variavam no pedido 12:
++
++| sessão | ia | humano | misturada | desconhecida (box) |
++|---|---:|---:|---:|---:|
++| `2026-06-19_23-24-46` | 0 | 0 | 3 | 1 (0) |
++| `2026-06-20_13-13-02` | 0 | 0 | 22 | 17 (8) |
++| `2026-08-16_03-30-14` | 3 | 3 | 1 | 0 (0) |
++| `2026-08-19_20-58-36` | 2 | 5 | 0 | 3 (3) |
++
++O que bate com o que você lembra e com o pedido 12:
++
++- As 8 voltas `humano` estão todas nas sessões variáveis de 16/08 e 19/08. Nenhuma está nas datas que você lembra como IA.
++- As `misturada` se concentram em 18/06, 19/06 e 20/06, datas em que você lembra de alternar.
++
++O que não bate:
++
++- **07/08 e 08/08**, que você não lembra como IA, são iguais às de 09/08 em todas as medidas: 2,5–3,1 cm da IA de hoje, 39 de 40 microsetores e 85,8–86,0 s. O detector se absteve nelas pelo mesmo motivo, mas as distribuições apontam IA.
++- **`2026-08-19_22-23-14`**, também fora das datas lembradas, tem 14 voltas `ia`. É dela a volta de referência do modelo de ensaio do pedido 11.
++
++Quantas voltas antigas são suas: pelo detector, 8 com certeza e talvez parte das 32 misturadas. Pelo ADR 0015, elas são do equipamento anterior e não entram nos números sobre você de qualquer jeito.
++
++### Para decidir
++
++1. **Deixar como está.** As voltas antigas ficam `desconhecida`; para o piloto valem só as voltas novas (ADR 0015); a referência da IA é a sessão de hoje. É o que o inventário novo tem agora.
++2. **Promover os 75 rótulos atuais** (`python -m ml.scripts.detector_ia aplicar --promover`). As 35 `ia` são as mais sólidas, porque batem com a IA de hoje em todos os 40 microsetores e nas freadas. As `misturada` de 20/06 são as mais incertas.
++3. **Uma regra nova para as voltas antigas**, por exemplo aceitando 1 microsetor fora e frenagem até 8 m. Como seria desenhada depois de ver as voltas antigas, precisaria ser validada numa sessão rotulada nova antes de ser aplicada.
++
++## O que falta
++
++- A sua decisão sobre as voltas antigas (acima) e sobre o merge desta branch.
++- **Medir de novo a variação no Bico de Pato** quando a curva de aprendizado estabilizar (ADR 0015), e refazer o tamanho do experimento.
++- **Reempacotar o app instalado** com o gravador novo. Lembrando que o indicador do jogo só prova que a IA nunca foi ligada; depois do primeiro Ctrl+C, quem pilota sai da linha e das anotações.
+diff --git a/docs/experimentos/2026-10-04_sessao_rotulada_anotacoes.csv b/docs/experimentos/2026-10-04_sessao_rotulada_anotacoes.csv
+new file mode 100644
+index 00000000..df7f3201
+--- /dev/null
++++ b/docs/experimentos/2026-10-04_sessao_rotulada_anotacoes.csv
+@@ -0,0 +1,49 @@
++parte,volta_jogo,origem_anotada,box,observacao
++1,1,humano,sim,"Saida dos boxes"
++1,2,humano,nao,"Primeira volta pilotando"
++1,3,humano,nao,"Segunda volta pilotando"
++1,4,misturada,sim,"Retorno ao box pelo menu e saida dos boxes da IA (Ctrl+C)"
++1,5,ia,nao,"Primeira volta IA"
++1,6,ia,nao,"Segunda volta IA"
++1,7,ia,sim,"Retorno ao box pelo menu e saida dos boxes da IA"
++1,8,misturada,nao,"IA pilotando setores 1 e 2, piloto no setor 3"
++1,9,humano,sim,"Piloto; voltou ao box; erros de pilotagem"
++1,10,humano,nao,"Piloto; erros de pilotagem e velocidade abaixo do esperado"
++1,11,ia,nao,"Nao numerada pelo piloto: 'agora quem esta dirigindo e a IA' (mensagem durante esta volta)"
++1,12,ia,nao,"Nao numerada pelo piloto: IA ate o reinicio da sessao"
++1,13,ia,nao,"Nao numerada pelo piloto: IA ate o reinicio da sessao"
++1,14,ia,nao,"Nao numerada pelo piloto: IA; interrompida pelo reinicio da sessao"
++2,1,humano,sim,"Sessao reiniciada; saida dos boxes; inicio das 20 voltas do piloto"
++2,2,humano,nao,"20 voltas do piloto, sem box (varias com falhas e erros)"
++2,3,humano,nao,"20 voltas do piloto"
++2,4,humano,nao,"20 voltas do piloto"
++2,5,humano,nao,"20 voltas do piloto"
++2,6,humano,nao,"20 voltas do piloto"
++2,7,humano,nao,"20 voltas do piloto"
++2,8,humano,nao,"20 voltas do piloto"
++2,9,humano,nao,"20 voltas do piloto"
++2,10,humano,nao,"20 voltas do piloto"
++2,11,humano,nao,"20 voltas do piloto"
++2,12,humano,nao,"20 voltas do piloto"
++2,13,humano,nao,"20 voltas do piloto (pausa: a gravacao foi dividida)"
++2,14,humano,nao,"20 voltas do piloto"
++2,15,humano,nao,"20 voltas do piloto"
++2,16,humano,nao,"20 voltas do piloto"
++2,17,humano,nao,"20 voltas do piloto"
++2,18,humano,nao,"20 voltas do piloto"
++2,19,humano,nao,"20 voltas do piloto"
++2,20,humano,nao,"20 voltas do piloto"
++2,21,misturada,sim,"Saida dos boxes BOT (IA ligada com Ctrl+C no box)"
++2,22,ia,nao,"Bloco da IA"
++2,23,ia,nao,"Bloco da IA"
++2,24,ia,nao,"Bloco da IA"
++2,25,ia,nao,"Bloco da IA"
++2,26,ia,nao,"Bloco da IA"
++2,27,ia,nao,"Bloco da IA"
++2,28,ia,nao,"Bloco da IA"
++2,29,ia,nao,"Bloco da IA"
++2,30,ia,nao,"Bloco da IA"
++2,31,ia,nao,"Bloco da IA"
++2,32,misturada,nao,"IA ate o 3o setor, depois o piloto (Ctrl+C)"
++2,33,humano,nao,"Piloto humano"
++2,34,humano,sim,"Boxes"
