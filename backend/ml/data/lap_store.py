@@ -27,7 +27,7 @@ from ..preprocessing.quality import evaluate_lap
 from ..preprocessing.resampling import lap_time_from_grid, resample_lap
 from ..track.geometry import TrackGeometry, load_geometry
 from .inventory import load_inventory
-from .origin import DRIVER_ORIGINS, select_laps
+from .origin import DRIVER_EQUIPMENT, DRIVER_ORIGINS, select_laps
 from .recordings import Session, iter_laps, list_all_sessions
 
 # Associacao com o replay, calculada no inventario (`lap_identity`).
@@ -42,6 +42,8 @@ IDENTITY_COLUMNS = (
 # Quem pilotou e o que se sabe do relogio (ADR 0014), copiados do inventario.
 ORIGIN_COLUMNS = (
     "origem",
+    "origem_fonte",
+    "equipamento",
     "pasta",
     "relogio_verificado",
     "relogio_suspeito",
@@ -138,6 +140,7 @@ def build_store(
     progress: Optional[Callable[[str], None]] = None,
     origins: Optional[Sequence[str]] = DRIVER_ORIGINS,
     include_clock_suspect: bool = False,
+    equipment: Optional[Sequence[str]] = DRIVER_EQUIPMENT,
 ) -> StoredLaps:
     """Le as voltas marcadas como validas no inventario e devolve o store.
 
@@ -150,7 +153,7 @@ def build_store(
     valid = catalogue[catalogue["valid"]]
     if valid.empty:
         raise ValueError("o inventario nao tem nenhuma volta valida")
-    wanted = select_laps(valid, origins, include_clock_suspect)
+    wanted = select_laps(valid, origins, include_clock_suspect, equipment)
     if wanted.empty:
         hint = (
             "Inventario anterior ao ADR 0014 nao tem a coluna `origem`: reconstrua-o."
@@ -160,7 +163,8 @@ def build_store(
         raise ValueError(
             f"nenhuma das {len(valid)} voltas validas passa no filtro de origem "
             f"{list(origins) if origins is not None else 'todas'}"
-            f"{'' if include_clock_suspect else ', relogio conferido e nao suspeito'} (ADR 0014). {hint}"
+            f"{'' if include_clock_suspect else ', relogio conferido e nao suspeito'}"
+            f"{'' if equipment is None else f', equipamento {list(equipment)} (ADR 0015)'} (ADR 0014). {hint}"
         )
     # Quais voltas sao validas foi decidido projetando contra uma geometria;
     # materializar contra outra misturaria as duas decisoes.
@@ -239,6 +243,7 @@ def build_store(
         selection={
             "origens": list(origins) if origins is not None else None,
             "inclui_relogio_suspeito": bool(include_clock_suspect),
+            "equipamento": list(equipment) if equipment is not None else None,
         },
     )
 

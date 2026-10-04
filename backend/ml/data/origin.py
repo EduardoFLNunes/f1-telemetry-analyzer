@@ -17,6 +17,12 @@ trecho, a referencia do coach. Por isso cada volta carrega:
 
 Para tudo o que fala do piloto, o padrao e `humano`, com relogio conferido e
 sem relogio suspeito (`select_laps`). Na duvida, a volta fica de fora.
+
+Desde o ADR 0015 cada volta diz tambem com que `equipamento` foi feita: o
+volante RS50 com pedais de celula de carga a partir de 2026-10-01 (`atual`),
+o controle de antes (`anterior`). Uma volta `humano` so fala do piloto de hoje
+com o equipamento `atual`. E `origem_fonte` diz de onde veio o rotulo: o
+indicador do jogo, as anotacoes do piloto numa sessao rotulada ou o detector.
 """
 
 from __future__ import annotations
@@ -41,6 +47,17 @@ ORIGINS = (HUMAN, AI, MIXED, UNKNOWN)
 
 # O que conta como volta do piloto, para tudo o que fala dele.
 DRIVER_ORIGINS = (HUMAN,)
+
+# Equipamento (ADR 0015).
+CURRENT_EQUIPMENT = "atual"
+PREVIOUS_EQUIPMENT = "anterior"
+EQUIPMENT_SINCE = "2026-10-01"
+DRIVER_EQUIPMENT = (CURRENT_EQUIPMENT,)
+
+# De onde veio o rotulo de origem.
+SOURCE_INDICATOR = "indicador"
+SOURCE_ANNOTATION = "anotacao"
+SOURCE_DETECTOR = "detector"
 
 # Diferenca maxima, em segundos, entre o tempo do relogio e o tempo explicado
 # pela velocidade, em qualquer microsetor. Proposta a partir da distribuicao
@@ -91,6 +108,19 @@ def ai_share(flags: Iterable) -> float:
     """Fracao das amostras com o campo que indicam IA. NaN sem o campo."""
     known = [v for v in (_known(f) for f in flags) if v is not None]
     return float(sum(known)) / len(known) if known else float("nan")
+
+
+def equipment_for(session_id: str) -> str:
+    """`atual` para sessoes de 2026-10-01 em diante, `anterior` antes (ADR 0015).
+
+    A data e a do nome da sessao, que o gravador escreve com a hora local do
+    inicio da gravacao. Sem data no nome, `anterior`: na duvida, a volta nao
+    fala do piloto de hoje.
+    """
+    prefix = str(session_id or "")[:10]
+    if len(prefix) == 10 and prefix[4] == "-" and prefix[7] == "-" and prefix.replace("-", "").isdigit():
+        return CURRENT_EQUIPMENT if prefix >= EQUIPMENT_SINCE else PREVIOUS_EQUIPMENT
+    return PREVIOUS_EQUIPMENT
 
 
 # ------------------------------------------------------------- pastas ---
@@ -245,17 +275,24 @@ def driver_mask(
     laps: pd.DataFrame,
     origins: Optional[Sequence[str]] = DRIVER_ORIGINS,
     include_clock_suspect: bool = False,
+    equipment: Optional[Sequence[str]] = DRIVER_EQUIPMENT,
 ) -> pd.Series:
-    """Quais linhas passam no filtro de origem, relogio e duplicata.
+    """Quais linhas passam no filtro de origem, equipamento, relogio e duplicata.
 
     `origins=None` aceita qualquer origem. Sem as colunas do ADR 0014 (um
     inventario antigo), a origem e `desconhecida` e o relogio nao foi
-    conferido: com o filtro padrao, nada passa.
+    conferido: com o filtro padrao, nada passa. O equipamento so filtra voltas
+    `humano` (ADR 0015): a volta da IA e a mesma com qualquer controle na mao
+    do piloto. `equipment=None` aceita qualquer um.
     """
     mask = pd.Series(True, index=laps.index)
+    origin = laps["origem"] if "origem" in laps.columns else pd.Series(UNKNOWN, index=laps.index)
+    origin = origin.fillna(UNKNOWN)
     if origins is not None:
-        origin = laps["origem"] if "origem" in laps.columns else pd.Series(UNKNOWN, index=laps.index)
-        mask &= origin.fillna(UNKNOWN).isin(list(origins))
+        mask &= origin.isin(list(origins))
+    if equipment is not None:
+        kit = laps["equipamento"] if "equipamento" in laps.columns else pd.Series(PREVIOUS_EQUIPMENT, index=laps.index)
+        mask &= ~((origin == HUMAN) & ~kit.fillna(PREVIOUS_EQUIPMENT).isin(list(equipment)))
     if not include_clock_suspect:
         verified = laps["relogio_verificado"] if "relogio_verificado" in laps.columns else pd.Series(False, index=laps.index)
         suspect = laps["relogio_suspeito"] if "relogio_suspeito" in laps.columns else pd.Series(True, index=laps.index)
@@ -269,14 +306,16 @@ def select_laps(
     laps: pd.DataFrame,
     origins: Optional[Sequence[str]] = DRIVER_ORIGINS,
     include_clock_suspect: bool = False,
+    equipment: Optional[Sequence[str]] = DRIVER_EQUIPMENT,
 ) -> pd.DataFrame:
-    return laps[driver_mask(laps, origins, include_clock_suspect)]
+    return laps[driver_mask(laps, origins, include_clock_suspect, equipment)]
 
 
 def replay_selection(
     inventory: pd.DataFrame,
     origins: Optional[Sequence[str]] = DRIVER_ORIGINS,
     include_clock_suspect: bool = False,
+    equipment: Optional[Sequence[str]] = DRIVER_EQUIPMENT,
 ) -> Set[str]:
     """Voltas do replay (`rec__<sessao>__<n>`, a identidade do coach) que passam.
 
@@ -286,13 +325,25 @@ def replay_selection(
     """
     if "replay_lap_id" not in inventory.columns:
         return set()
-    mask = driver_mask(inventory, origins, include_clock_suspect)
+    mask = driver_mask(inventory, origins, include_clock_suspect, equipment)
     ok: dict = {}
     for replay, passed in zip(inventory["replay_lap_id"], mask):
         if not isinstance(replay, str) or not replay:
             continue
         ok[replay] = ok.get(replay, True) and bool(passed)
     return {replay for replay, passed in ok.items() if passed}
+
+
+def parse_equipment(values: Optional[List[str]]) -> Optional[List[str]]:
+    """Argumento de linha de comando -> equipamentos (`todos` = sem filtro)."""
+    if not values:
+        return list(DRIVER_EQUIPMENT)
+    if any(v == "todos" for v in values):
+        return None
+    unknown = [v for v in values if v not in (CURRENT_EQUIPMENT, PREVIOUS_EQUIPMENT)]
+    if unknown:
+        raise ValueError(f"equipamento desconhecido: {unknown}; use atual, anterior ou 'todos'")
+    return list(values)
 
 
 def parse_origins(values: Optional[List[str]]) -> Optional[List[str]]:

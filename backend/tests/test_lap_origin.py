@@ -215,6 +215,7 @@ class SelectionTests(unittest.TestCase):
                 "relogio_verificado": [True, True, True, False, True, True],
                 "relogio_suspeito": [False, False, True, False, False, False],
                 "duplicada_de": [None, None, None, None, None, None],
+                "equipamento": ["atual"] * 6,
             }
         )
 
@@ -231,6 +232,26 @@ class SelectionTests(unittest.TestCase):
         inventory = self.inventory()
         inventory.loc[0, "duplicada_de"] = "x#9"
         self.assertNotIn("s#1", origin.select_laps(inventory, origins=None, include_clock_suspect=True)["lap_id"].tolist())
+
+    def test_human_laps_count_only_with_the_current_equipment(self):
+        """ADR 0015: a volta humana com o controle antigo descreve outro piloto."""
+        inventory = self.inventory()
+        inventory.loc[0, "equipamento"] = "anterior"
+        self.assertEqual(origin.select_laps(inventory)["lap_id"].tolist(), ["s#5"])
+        self.assertEqual(origin.select_laps(inventory, equipment=None)["lap_id"].tolist(), ["s#1", "s#5"])
+
+    def test_the_equipment_does_not_filter_ai_laps(self):
+        inventory = self.inventory()
+        inventory["equipamento"] = "anterior"
+        self.assertEqual(origin.select_laps(inventory, origins=["ia"])["lap_id"].tolist(), ["s#2"])
+
+    def test_equipment_follows_the_session_date(self):
+        self.assertEqual(origin.equipment_for("2026-10-04_02-24-04_vhe_interlagos"), "atual")
+        self.assertEqual(origin.equipment_for("2026-10-01_00-00-00_vhe_interlagos"), "atual")
+        self.assertEqual(origin.equipment_for("2026-09-30_23-59-59_vhe_interlagos"), "anterior")
+        self.assertEqual(origin.equipment_for("phase14_1_assisted_validation"), "anterior")
+        self.assertEqual(origin.parse_equipment(None), ["atual"])
+        self.assertIsNone(origin.parse_equipment(["todos"]))
 
     def test_an_old_inventory_gives_nothing_by_default(self):
         old = pd.DataFrame({"lap_id": ["s#1"], "valid": [True]})
@@ -256,9 +277,9 @@ class SelectionTests(unittest.TestCase):
 class CoachTrainingFilterTests(unittest.TestCase):
     def test_the_trainer_filters_by_origin_before_loading_anything(self):
         source = (BACKEND / "tools" / "train_reference_model.py").read_text(encoding="utf-8")
-        self.assertIn("replay_selection(inventory, origins, args.incluir_relogio_suspeito)", source)
+        self.assertIn("inventory, origins, args.incluir_relogio_suspeito, parse_equipment(args.equipamento)", source)
         self.assertIn('"origem" not in inventory.columns', source)
-        self.assertLess(source.index("replay_selection(inventory"), source.index("loader.load_lap("))
+        self.assertLess(source.index("replay_selection("), source.index("loader.load_lap("))
 
 
 class FolderTests(unittest.TestCase):

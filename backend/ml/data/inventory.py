@@ -33,7 +33,10 @@ from ..track.geometry import TrackGeometry, load_geometry
 from ..track.microsectors import build_microsectors
 from .lap_identity import classify, counter_counts
 from .origin import (
+    SOURCE_INDICATOR,
+    UNKNOWN,
     ai_share,
+    equipment_for,
     clock_check,
     clock_summary,
     lap_origin,
@@ -79,8 +82,13 @@ def _provenance(lap: RawLap, folder: str) -> Dict[str, Any]:
         if "timestamp_s" in lap.frame.columns
         else pd.Series(dtype=float)
     )
+    indicated = lap_origin(flags)
     return {
-        "origem": lap_origin(flags),
+        "origem": indicated,
+        # O indicador sozinho, guardado mesmo quando outra fonte da o rotulo.
+        "origem_indicador": indicated,
+        "origem_fonte": SOURCE_INDICATOR if indicated != UNKNOWN else None,
+        "equipamento": equipment_for(lap.session_id),
         "ia_fracao": ai_share(flags),
         "ia_amostras_com_campo": int(sum(1 for f in flags if f is not None and f == f)),
         "pasta": folder,
