@@ -16,12 +16,16 @@ Em ordem:
 4. copia o modelo do repositorio para `data/reference_models/backup/` e o
    treina de novo;
 5. imprime o resumo: as duas referencias, as voltas de cada origem, o limiar e
-   o foco inicial.
+   o foco inicial;
+6. refaz o store v2 com as checagens (`ml.scripts.build_lap_store_v2`, pedido
+   16), para as sessoes novas entrarem no relatorio de evolucao;
+7. roda o relatorio de evolucao (`tools/relatorio_evolucao.py`).
 
-Nao toca no store do ML nem no app instalado: o modelo gravado e o do
-repositorio, lido pelo app de desenvolvimento. Qualquer trava dos passos (os
-rotulos de 04/10 que nao batem com o inventario, os limites do detector que nao
-batem com a sessao rotulada, nenhuma volta limpa para treinar) para o comando.
+Nao toca no store antigo (`laps_grid.parquet`) nem no app instalado: o modelo
+gravado e o do repositorio, lido pelo app de desenvolvimento. Qualquer trava
+dos passos (os rotulos de 04/10 que nao batem com o inventario, os limites do
+detector que nao batem com a sessao rotulada, nenhuma volta limpa para
+treinar, uma checagem do store v2 que falha) para o comando.
 """
 
 from __future__ import annotations
@@ -53,7 +57,7 @@ from core.live.driving_coach import LiveDrivingCoach  # noqa: E402
 from ml import config  # noqa: E402
 from ml.data import origin  # noqa: E402
 from ml.data.inventory import inventory_path  # noqa: E402
-from ml.scripts import detector_ia, report_lap_origin  # noqa: E402
+from ml.scripts import build_lap_store_v2, detector_ia, report_lap_origin  # noqa: E402
 from ml.track.geometry import load_geometry  # noqa: E402
 
 TRACK = "vhe_interlagos"
@@ -61,11 +65,19 @@ TRACK = "vhe_interlagos"
 INSTALLED_APP_FOLDER = "Automobilista Telemetria"
 
 
-def _train_script():
-    spec = importlib.util.spec_from_file_location("train_reference_model", BACKEND_DIR / "tools" / "train_reference_model.py")
+def _tool(name: str):
+    spec = importlib.util.spec_from_file_location(name, BACKEND_DIR / "tools" / f"{name}.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _train_script():
+    return _tool("train_reference_model")
+
+
+def _evolution_script():
+    return _tool("relatorio_evolucao")
 
 
 def backup_model(path: Path, now: Optional[datetime] = None) -> Optional[Path]:
@@ -181,14 +193,14 @@ def main(argv=None) -> int:
     track = load_geometry()
     args.saida.mkdir(parents=True, exist_ok=True)
 
-    print("1/5 inventario novo" + (" (pulado: --sem-varrer)" if args.sem_varrer else ""), flush=True)
+    print("1/7 inventario novo" + (" (pulado: --sem-varrer)" if args.sem_varrer else ""), flush=True)
     if not args.sem_varrer:
         report_lap_origin.scan(args.saida, track)
     if not inventory_path(args.saida).exists():
         print(f"PARADO: nenhum inventario em {args.saida}.")
         return 2
 
-    print("2/5 anotacoes versionadas de 04/10 e 3/5 sessoes novas sem anotacao", flush=True)
+    print("2/7 anotacoes versionadas de 04/10 e 3/7 sessoes novas sem anotacao", flush=True)
     applied = detector_ia.apply(args.saida, track, args.saida / "detector_aplicar.json", promote=False)
     labelled = applied["sessao_rotulada_aplicada"]
     print(f"   sessao de 04/10: {labelled['voltas']} voltas, {labelled['origem']}")
@@ -197,7 +209,7 @@ def main(argv=None) -> int:
     for row in news:
         print(f"     {row['sessao']}: {row['voltas']} voltas, origem {row['origem']}, fonte {row['fonte']}")
 
-    print("4/5 backup e treino do modelo do repositorio", flush=True)
+    print("4/7 backup e treino do modelo do repositorio", flush=True)
     backup = backup_model(args.modelo)
     print(f"   backup: {backup if backup else '(nao havia modelo)'}")
     train_args = ["--track", TRACK, "--inventario", str(inventory_path(args.saida)), "--saida", str(args.modelo)]
@@ -208,7 +220,7 @@ def main(argv=None) -> int:
         print("PARADO: o treino nao gravou o modelo (acima, o motivo). O backup ficou onde estava.")
         return code
 
-    print("5/5 resumo", flush=True)
+    print("5/7 resumo", flush=True)
     model = DriverReferenceModel.load(args.modelo)
     if model is None:
         print(f"PARADO: o modelo gravado em {args.modelo} nao abre.")
@@ -223,7 +235,15 @@ def main(argv=None) -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
     print(f"-> {out}")
-    return 0
+
+    print("6/7 store v2, com as checagens", flush=True)
+    code = build_lap_store_v2.main(["--inventario", str(inventory_path(args.saida))])
+    if code != 0:
+        print("PARADO: o store v2 nao passou nas checagens (acima); o relatorio de evolucao nao rodou.")
+        return code
+
+    print("7/7 relatorio de evolucao", flush=True)
+    return _evolution_script().main(["--modelo", str(args.modelo)])
 
 
 if __name__ == "__main__":
