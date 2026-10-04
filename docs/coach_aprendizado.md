@@ -289,7 +289,7 @@ O comando faz, em ordem:
 
    O resumo também fica em `data/ml/origem/atualizar_coach.json`.
 6. **Refaz o store v2** (pedido 16) com as checagens. Se uma checagem falhar, o comando para antes do passo 7.
-7. **Roda o relatório de evolução** (`tools/relatorio_evolucao.py`), que grava os JSONs em `data/ml/evolucao/`. Ver `docs/store_v2_e_evolucao.md`.
+7. **Roda o relatório de evolução** (`tools/relatorio_evolucao.py`), que grava os JSONs e o `painel.html` em `data/ml/evolucao/` e imprime o caminho do painel. Ver `docs/store_v2_e_evolucao.md`.
 
 **O que o comando não faz:**
 

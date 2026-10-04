@@ -194,7 +194,7 @@ O store v2 entra no comando para as sessões novas chegarem ao relatório.
   - `diferenca_consistente`: o intervalo de 90% da perda mediana não inclui zero. O campo `lado` diz se você perde ou ganha.
   - `sem_diferenca_consistente`: o intervalo inclui zero.
   - `poucos_dados`: menos de 5 voltas na sessão.
-- **Frenagem:** em metros, positivo é frear depois da IA. Fica vazia quando a IA não freia no trecho (`ia_freia: false`) ou quando nenhuma volta sua tem um início de frenagem dentro do trecho.
+- **Frenagem:** em metros, positivo é frear depois da IA. Desde o pedido 17, o início é procurado do ápice da curva anterior ao ápice da curva (seção 1.5). Fica vazia quando a IA não freia nessa janela (`ia_freia: false`) ou quando nenhuma volta sua começa a frear dentro dela.
 - **Lateral no ápice:** positivo é mais à esquerda que a IA. A interface deve dizer o lado em palavras (ADR 0003).
 
 ### Primeira rodada: a linha de base, sessão de 04/10
@@ -202,6 +202,8 @@ O store v2 entra no comando para as sessões novas chegarem ao relatório.
 - **Voltas:** 11.
 - **Tempos:** melhor de 89,39 s, mediana de 93,46 s e desvio de 2,40 s.
 - **Diferença para a volta da IA (84,83 s):** a mediana fica 8,63 s acima, e a melhor, 4,56 s acima.
+
+A coluna de frenagem desta tabela é da regra original. A versão com a janela emendada está na seção 6.
 
 | curva | perda mediana (s) | intervalo de 90% (s) | situação | frenagem vs IA (m) | lateral no ápice (m) | mínima vs IA (km/h) |
 |---|---:|---|---|---:|---:|---:|
@@ -235,6 +237,8 @@ O store v2 entra no comando para as sessões novas chegarem ao relatório.
 
 A regra não foi mudada depois de ver o resultado. Uma opção para a próxima versão é começar a janela de frenagem no ápice da curva anterior, e ela fica para decisão sua.
 
+O Eduardo decidiu adotar essa opção no pedido 17 (seções 1.5 e 6).
+
 ## 5. Formato dos JSONs
 
 Os arquivos ficam em `data/ml/evolucao/`, fora do git:
@@ -267,8 +271,8 @@ Campos de cada item de `curvas[]`:
 | `curva_m`, `apice_m` | início e fim da curva, e o ápice, pela curvatura da linha central |
 | `perda_para_ia_s` | `mediana`, `p25`, `p75`, `iqr` e `voltas` |
 | `situacao`, `lado`, `intervalo_90_s` | `diferenca_consistente`, `sem_diferenca_consistente` ou `poucos_dados`. `lado` é `perde`, `ganha` ou `null`. `intervalo_90_s` é `[baixo, alto]` ou `null` com poucos dados |
-| `ia_freia` | se a volta da IA tem início de frenagem no trecho |
-| `frenagem_vs_ia_m` | `mediana`, `p25`, `p75`, `iqr` e `voltas`, só das voltas com frenagem no trecho; `null` quando a IA não freia ou nenhuma volta freia |
+| `ia_freia` | se a volta da IA tem início de frenagem na janela de busca (do ápice da curva anterior ao ápice da curva) |
+| `frenagem_vs_ia_m` | `mediana`, `p25`, `p75`, `iqr` e `voltas`, só das voltas com início de frenagem na janela; `null` quando a IA não freia ou nenhuma volta freia nela |
 | `lateral_apice_vs_ia_m` | `mediana`, `p25`, `p75`, `iqr` e `voltas` |
 | `velocidade_minima_vs_ia_kmh` | `mediana` |
 | `por_volta[]` | `volta`, `perda_s`, `frenagem_vs_ia_m`, `lateral_apice_vs_ia_m` e `velocidade_minima_vs_ia_kmh` de cada volta |
@@ -283,3 +287,57 @@ Campos de cada item de `curvas[]`:
 | `criterio_adr_0015` | `limite_s` (0,5), `sessoes_necessarias` (3), `sessoes_disponiveis`, `amplitude_s` (maior menos menor mediana das últimas 3), `estabilizou` (`true`, `false` ou `null`) e `situacao` em texto |
 | `referencia`, `store`, `regras` | como no JSON da sessão |
 | `arquivos_de_sessao` | os caminhos dos JSONs de sessão |
+
+## 6. Pedido 17: janela de frenagem e painel
+
+### Janela de frenagem: antes e depois, sessão de 04/10
+
+- **Antes:** a regra do pedido 16, do início do trecho ao ápice.
+- **Depois:** a emenda da seção 1.5, do ápice da curva anterior ao ápice.
+- **O que ficou igual:** o tempo dos trechos. As perdas, os intervalos de 90% e a situação das 14 curvas não mudaram.
+
+| curva | antes: mediana (voltas com ponto) | depois: mediana (voltas com ponto) | depois: p25 a p75 |
+|---|---|---|---|
+| C01-esq | −66 m (11 de 11) | −66 m (11 de 11) | −95 a −58 m |
+| C02-dir | sem ponto (0) | sem ponto (0) | — |
+| C07-dir | +40 m (5) | −28 m (10) | −38 a −14,5 m |
+| C08-esq | +32 m (1) | −17 m (2) | −41,5 a +7,5 m |
+| C10-dir | sem ponto (0) | −11 m (4) | −12 a −9,5 m |
+| C12-esq | −2 m (3) | −34 m (10) | −42 a −30 m |
+
+- **C07 e C12:** antes, só entravam as voltas em que você freava já dentro do trecho, que são as mais tardias. Por isso a mediana saía perto de zero ou positiva. Com a janela nova, quase todas as voltas entram, e você freia antes da IA: 28 m na C07 e 34 m na C12.
+- **C02:** você não freia entre o ápice da C01 e o da C02 em nenhuma volta, e a IA só dá um toque em 360 m.
+- **C10 (Bico de Pato):**
+  - A IA começa a frear em 2.622 m, logo depois do ápice da C09 (2.610 m).
+  - Em 7 das 11 voltas, você começa antes desse ápice, entre 2.588 e 2.608 m. Essas voltas continuam sem ponto pela regra, e por isso só 4 entram.
+  - **Diagnóstico, fora da regra:** procurando desde o ápice da C08, você começa a frear de 2.588 a 2.614 m, uma mediana de 14 m antes da IA.
+- **C08:** só 2 voltas têm ponto.
+
+**Correção de implementação feita junto:**
+
+- **A falha:** a busca não via uma freada que começa exatamente no primeiro ponto da janela, porque não olhava o ponto anterior. A definição inclui o ápice da curva anterior, então era um erro do código, não da regra.
+- **Onde aparecia:** em 2 voltas da C10, a freada começa exatamente em 2.610 m.
+- **A correção:** o ponto anterior entra só para ver a subida do pedal. Com ela, a C10 passou de 2 para 4 voltas com ponto.
+
+O arquivo com as 14 curvas e o diagnóstico é `docs/handoff/2026-10-04_painel-evolucao_frenagem_antes_depois.json`.
+
+### Painel local
+
+- **O modelo:** o Claude (Cowork) desenhou o painel, e ele fica em `backend/tools/painel_evolucao.html`, ao lado do `relatorio_evolucao.py`. A pasta de anexos do pedido foi apagada.
+- **Como é gerado:** o `relatorio_evolucao.py` grava `data/ml/evolucao/painel.html` trocando o marcador `/*DADOS*/` por um JSON com:
+  - `resumo`: o `resumo.json`;
+  - `sessoes`: cada sessão pela data;
+  - `pista`: `x` e `z` da linha central da geometria oficial exportada (`data/reference_models/vhe_interlagos.geometry.json`, 2.167 pontos), `ds` (2,00004 m) e `L` (4.334,08 m);
+  - `carro`: o `carModel` das sessões;
+  - `pista_nome`: "Interlagos".
+- **Proteção do JSON:** o `<` dos dados é escrito como `\u003c`, para nenhum texto fechar o `<script>`.
+- **Travas:** o relatório para se a geometria exportada faltar ou não for a do store v2.
+- **Para abrir:** abra o `painel.html` no navegador. Ele não precisa de servidor; as fontes vêm do Google Fonts quando há internet.
+- **No `atualizar_coach.py`:** ele imprime no fim o caminho do painel.
+
+**O que mudou no modelo:** só uma frase. Quando não há ponto de frenagem, ela dizia "A busca começa no trecho da curva, e a freada desta curva começa antes dele (correção em andamento)", o que deixou de ser verdade. Agora diz "Sem ponto de frenagem medido aqui: em nenhuma volta você começa a frear entre o ápice da curva anterior e o ápice desta." O desenho não mudou.
+
+**Conferido no navegador do app,** com os dados de 04/10:
+
+- o painel desenha os números, o mapa de Interlagos com as curvas coloridas, as listas e o detalhe, sem erro no console;
+- depois da correção de implementação, a C10 mostra "Você freia 11 m antes da IA; metade das voltas entre 9 e 12 m antes. Medido em 4 de 11 voltas."
