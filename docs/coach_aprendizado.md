@@ -66,7 +66,7 @@ Os critérios e os limites não mudaram entre as rodadas. Cada correção resolv
 | **b** (582.527 amostras) | p99 ≤ 1 ms | p50 0,33 ms, p99 0,91 ms | passou |
 | **c** (5 voltas) | ≤ 0,02 s por microsetor; soma = tempo do store ± 0,02 s | microsetor 0: +0,026 a +0,029 s; microsetores 1 a 59: no máximo 0,002 a 0,004 s; soma − store: +0,026 a +0,029 s | **falhou** |
 | **d** (20/06 e 09/08) | nenhuma frase proibida | 303 frases, 0 proibidas | passou |
-| **e** (voltas limpas de 7 arquivos com voltas limpas) | \|Δs\| máx. ≤ 2 m por sessão | 0,04 a 0,31 m | passou |
+| **e** (voltas limpas: 3 sessões de (a) e 3 arquivos de 04/10; os outros 4 arquivos de 04/10 não têm volta limpa) | \|Δs\| máx. ≤ 2 m por sessão | 0,04 a 0,31 m | passou |
 
 **Diagnóstico do (c), que não vale como critério.** Contra os microsetores do ML com o período verdadeiro, a diferença máxima por microsetor fica entre 0,002 e 0,004 s, e a soma bate com o período com diferença de 0,1 a 1,4 ms. Nas 5 voltas, o (c) só falha pelo passo do store no microsetor 0. Os ±78 ms entre os microsetores 25 e 26 da volta de 20/06, vistos no pedido 11, sumiram com a continuidade rígida.
 
