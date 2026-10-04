@@ -78,6 +78,7 @@ JUMP_PROGRESS = 0.05
 # sums up the worst ones at the line.
 MAX_PHRASES_PER_LAP = 3
 SUMMARY_SECTORS = 3
+SUMMARY_MIN_LOSS = 0.005
 # A braking point of the lap is compared with the reference's only within this.
 BRAKE_MATCH_M = 60.0
 BRAKE_ONSET = 0.15
@@ -595,7 +596,12 @@ class LiveDrivingCoach:
             if self._lap_loss <= 0.0 or not getattr(model, "has_reference", False) or not self._lap_losses:
                 return
             label = getattr(model, "reference_label", "sua volta de referencia")
-            worst = sorted(self._lap_losses.items(), key=lambda item: item[1], reverse=True)[:SUMMARY_SECTORS]
+            # Differences that round to 0.00 s are not differences worth naming
+            # (measured: the reference lap against itself listed "setor 0 (0.00s)").
+            worst = [item for item in sorted(self._lap_losses.items(), key=lambda item: item[1], reverse=True)
+                     if item[1] >= SUMMARY_MIN_LOSS][:SUMMARY_SECTORS]
+            if not worst:
+                return
             parts = [f"setor {index} ({loss:.2f}s)" for index, loss in worst]
             listed = parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " e " + parts[-1]
             message = f"Volta fechada. Maiores diferencas para a {label}: {listed}."

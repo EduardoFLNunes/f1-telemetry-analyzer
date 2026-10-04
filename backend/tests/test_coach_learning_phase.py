@@ -381,5 +381,13 @@ class NotComparableSlicesTest(TwoReferencesTest):
         self.assertFalse([e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == 10])
 
 
+class SummaryRoundingTest(TwoReferencesTest):
+    def test_no_summary_when_the_lap_matches_the_reference(self):
+        """Medido: a melhor volta contra ela mesma listava "setor 0 (0.00s)"."""
+        self.model.use_reference(REFERENCE_OWN_BEST)
+        bus = self.drive(synthetic_lap(self.track, 60.5, brake_at=296.0))
+        self.assertEqual(bus.of(ENGINEER_SPEECH), [])
+
+
 if __name__ == "__main__":
     unittest.main()
