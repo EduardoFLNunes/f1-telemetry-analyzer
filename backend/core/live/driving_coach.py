@@ -18,6 +18,13 @@ measured difference ("0.12 s behind your reference lap here"), never a promised
 gain or an "ideal lap". The old comparison -- the best ever done in each slice --
 is still here as `best_per_microsector`, off unless the model asks for it.
 
+Since ADR 0016 (the learning phase) the reference is either the AI's lap
+(`volta_ia`, the default) or the driver's best (`minha_melhor`), and every
+phrase names it: "0.60s atras da volta da IA neste trecho". Braking is said
+relative to the reference ("a IA freia 12 m depois de voce"), at most three
+phrases a lap -- the first that clear the bar -- and the lap closes with the
+three slices furthest from the reference.
+
 Since ADR 0013 a model carries the `geometry_id` of the official geometry it was
 measured on. The coach then works out where the car is from its world position,
 projected on that same geometry (`official_geometry.CoachProjector`), instead of
@@ -66,6 +73,21 @@ MIN_SECONDS_BETWEEN_EVENTS = 3.0
 # from the menu, a reset), and the count starts again without a word.
 LINE_WINDOW = 0.05
 JUMP_PROGRESS = 0.05
+# ADR 0016: against the AI the gap shows up in nearly every slice, so the coach
+# speaks at most this often a lap -- the first slices that clear the bar -- and
+# sums up the worst ones at the line.
+MAX_PHRASES_PER_LAP = 3
+SUMMARY_SECTORS = 3
+# A braking point of the lap is compared with the reference's only within this.
+BRAKE_MATCH_M = 60.0
+BRAKE_ONSET = 0.15
+# A slice is not compared when the car stopped in it, or went through the pit
+# lane (far off the line and slow, the rule `ml` uses to spot a pit lap):
+# measured on 2026-10-04, starting from the box gave "52.84s behind ... yours
+# 0 km/h".
+STOPPED_KMH = 5.0
+PIT_LATERAL_M = 10.0
+PIT_SPEED_KMH = 90.0
 
 
 def _legacy(model: Any) -> bool:
@@ -121,6 +143,19 @@ class LiveDrivingCoach:
         self._last_lap_clock: Optional[float] = None
         self._last_clock_s: Optional[float] = None
         self._clock_offset = 0.0
+        # What the lap has done so far (ADR 0016): phrases said, loss per slice,
+        # where it started braking, and the lowest speed in the current slice.
+        self._lap_phrases = 0
+        self._lap_losses: Dict[int, float] = {}
+        self._lap_onsets: list = []
+        self._last_brake: Optional[float] = None
+        self._sector_min_speed: Optional[float] = None
+        self._closing_min_speed: Optional[float] = None
+        self._last_lateral: Optional[float] = None
+        self._sector_max_lateral: Optional[float] = None
+        self._closing_max_lateral: Optional[float] = None
+        # The slice the count started in is partial: never compared.
+        self._partial_sector: Optional[int] = None
 
     # ── the hot path ─────────────────────────────────────────────────────
 
@@ -160,6 +195,26 @@ class LiveDrivingCoach:
 
         lap_number = _number(frame.get("lap_number") or frame.get("lap"))
         index = min(int(progress * model.microsectors), model.microsectors - 1)
+        position_m = self._position_m(frame, progress)
+        brake = _number(frame.get("brake"))
+        if brake is not None and position_m is not None:
+            if self._last_brake is not None and self._last_brake < BRAKE_ONSET <= brake:
+                self._lap_onsets.append(position_m)
+            self._last_brake = brake
+        speed_now = _number(frame.get("speedKmh"))
+        # The lowest speed of the slice being closed excludes this frame, which
+        # already lies in the next one.
+        self._closing_min_speed = self._sector_min_speed
+        self._closing_max_lateral = self._sector_max_lateral
+        lateral_now = abs(self._last_lateral) if on_geometry and self._last_lateral is not None else None
+        if self._sector_index is not None and index != self._sector_index:
+            self._sector_min_speed = speed_now
+            self._sector_max_lateral = lateral_now
+        else:
+            if speed_now is not None:
+                self._sector_min_speed = speed_now if self._sector_min_speed is None else min(self._sector_min_speed, speed_now)
+            if lateral_now is not None:
+                self._sector_max_lateral = lateral_now if self._sector_max_lateral is None else max(self._sector_max_lateral, lateral_now)
 
         if on_geometry:
             if self._sector_index is None or self._last_progress is None:
@@ -174,7 +229,7 @@ class LiveDrivingCoach:
                     crossing = self._last_clock + (clock - self._last_clock) * t
                     self._close_sector(frame, model, self._sector_index, self._sector_entry_clock, crossing)
                     self._speak_lap_summary(frame, model)
-                    self._start_lap(lap_number, 0, crossing, 0.0)
+                    self._start_lap(lap_number, 0, crossing, 0.0, at_line=True)
                     self._last_progress, self._last_clock = progress, clock
                     if index == 0:
                         return
@@ -231,8 +286,10 @@ class LiveDrivingCoach:
         self._last_clock = clock
         self._close_sector(frame, model, finished, entry, crossing)
 
-    def _start_lap(self, lap_number: Optional[float], index: int, clock: float, progress: float) -> None:
+    def _start_lap(self, lap_number: Optional[float], index: int, clock: float, progress: float,
+                   at_line: bool = False) -> None:
         """Start counting from here; nothing is said about the slice it starts in."""
+        self._partial_sector = None if at_line else index
         self._lap_number = lap_number
         self._sector_index = index
         self._sector_entry_clock = clock
@@ -241,11 +298,30 @@ class LiveDrivingCoach:
         self._lap_loss = 0.0
         self._lap_loss_optimal = 0.0
         self._lap_worst = None
+        self._lap_phrases = 0
+        self._lap_losses = {}
+        self._lap_onsets = [onset for onset in self._lap_onsets[-1:] if progress < LINE_WINDOW]
+
+    def _position_m(self, frame: Dict[str, Any], progress: float) -> Optional[float]:
+        """Where the car is along the lap, in metres, on the model's ruler."""
+        if self._projector is not None:
+            return progress * self._projector.geometry.length
+        return _number(frame.get("s"))
 
     def _close_sector(self, frame: Dict[str, Any], model: Any, finished: Optional[int],
                       entry: Optional[float], crossing: float) -> None:
         """A slice was completed: compare it with the model and speak if it is worth it."""
         if entry is None or finished is None:
+            return
+        if finished == self._partial_sector:
+            self._partial_sector = None
+            return
+        stopped = self._closing_min_speed is not None and self._closing_min_speed < STOPPED_KMH
+        in_pits = (
+            self._closing_max_lateral is not None and self._closing_max_lateral > PIT_LATERAL_M
+            and self._closing_min_speed is not None and self._closing_min_speed < PIT_SPEED_KMH
+        )
+        if stopped or in_pits:
             return
 
         split = crossing - entry
@@ -272,9 +348,12 @@ class LiveDrivingCoach:
         if loss <= 0:
             return
         self._lap_loss += loss
+        self._lap_losses[finished] = loss
         if self._lap_worst is None or loss > self._lap_worst["lossS"]:
             self._lap_worst = {"index": finished, "lossS": round(loss, 3)}
         if loss < self._threshold_for(target):
+            return
+        if not legacy and self._lap_phrases >= MAX_PHRASES_PER_LAP:
             return
 
         now = time.monotonic()
@@ -284,6 +363,7 @@ class LiveDrivingCoach:
         if legacy:
             self._emit_coaching_event(frame, target, split, loss)
         else:
+            self._lap_phrases += 1
             self._emit_reference_event(frame, model, target, split, loss)
 
     def _physics_clock(self, frame: Dict[str, Any], lap_clock: float, progress: float) -> float:
@@ -320,7 +400,8 @@ class LiveDrivingCoach:
         # Speed and interval size the projection's hard continuity (pedido 14).
         speed_kmh = _number(frame.get("speedKmh"))
         speed = speed_kmh / 3.6 if speed_kmh is not None else _number(frame.get("speed"))
-        s, _ = projector.project(x, z, speed_mps=speed, dt_s=dt)
+        s, lateral = projector.project(x, z, speed_mps=speed, dt_s=dt)
+        self._last_lateral = lateral
         return s / projector.geometry.length
 
     def _projector_for(self, model: Any) -> Any:
@@ -383,40 +464,61 @@ class LiveDrivingCoach:
 
     # ── what it says ─────────────────────────────────────────────────────
 
+    def _your_brake_onset(self, reference_onset: Optional[float]) -> Optional[float]:
+        """The lap's start of braking nearest the reference's, within `BRAKE_MATCH_M`."""
+        if reference_onset is None or not self._lap_onsets:
+            return None
+        length = self._projector.geometry.length if self._projector is not None else None
+
+        def gap(onset: float) -> float:
+            d = onset - reference_onset
+            if length:
+                d = (d + length / 2.0) % length - length / 2.0
+            return d
+
+        nearest = min(self._lap_onsets, key=lambda onset: abs(gap(onset)))
+        return nearest if abs(gap(nearest)) <= BRAKE_MATCH_M else None
+
     def _emit_reference_event(self, frame: Dict[str, Any], model: Any, target: Any, split: float, loss: float) -> None:
-        """A measured difference to the reference lap, and what that lap did here."""
+        """A measured difference to the reference, which is named, and what it did here."""
         reference = float(target.reference_seconds)
+        kind = getattr(model, "reference_kind", None)
+        label = getattr(model, "reference_label", "sua volta de referencia")
         evidence: Dict[str, Any] = {
             "microsector": target.index,
             "yourSeconds": round(split, 3),
             "referenceSeconds": round(reference, 3),
             "lossSeconds": round(loss, 3),
             "referenceLapId": getattr(model, "reference_lap_id", None),
+            "referenceKind": kind,
+            "referenceLabel": label,
         }
-        brake_m = getattr(target, "reference_brake_point_m", None)
-        min_speed = getattr(target, "reference_min_speed_kmh", None)
-        if min_speed is not None:
-            evidence["referenceMinSpeedKmh"] = min_speed
-            speed = _number(frame.get("speedKmh"))
-            if speed is not None:
-                evidence["yourSpeedKmh"] = round(speed, 1)
-        if brake_m is not None:
-            evidence["referenceBrakePointM"] = brake_m
         at_lap_time = _number(frame.get("lap_time"))
         if at_lap_time is not None:
             evidence["atLapTimeSeconds"] = round(at_lap_time, 3)
 
-        message = (
-            f"Setor {target.index}: {loss:.2f}s atras da sua volta de referencia neste trecho "
-            f"({split:.2f}s contra {reference:.2f}s)."
-        )
-        goals = []
-        if brake_m is not None:
-            goals.append(f"freada em {brake_m:.0f} m")
-        if min_speed is not None:
-            goals.append(f"minima de {min_speed:.0f} km/h")
-        if goals:
-            message += " Na referencia: " + ", ".join(goals) + "."
+        message = f"Setor {target.index}: {loss:.2f}s atras da {label} neste trecho ({split:.2f}s contra {reference:.2f}s)."
+        clauses = []
+        reference_onset = getattr(target, "reference_brake_onset_m", None)
+        your_onset = self._your_brake_onset(reference_onset)
+        if reference_onset is not None and your_onset is not None:
+            delta = reference_onset - your_onset
+            if self._projector is not None:
+                length = self._projector.geometry.length
+                delta = (delta + length / 2.0) % length - length / 2.0
+            evidence["referenceBrakeOnsetM"] = round(reference_onset, 1)
+            evidence["yourBrakeOnsetM"] = round(your_onset, 1)
+            evidence["brakeDeltaM"] = round(delta, 1)
+            clauses.append(_braking_clause(kind, delta))
+        reference_min = getattr(target, "reference_min_speed_kmh", None)
+        your_min = self._closing_min_speed
+        if reference_min is not None and your_min is not None:
+            evidence["referenceMinSpeedKmh"] = round(float(reference_min), 1)
+            evidence["yourMinSpeedKmh"] = round(float(your_min), 1)
+            clauses.append(_min_speed_clause(kind, float(reference_min), float(your_min)))
+        if clauses:
+            sentence = "; ".join(clauses)
+            message += " " + sentence[0].upper() + sentence[1:] + "."
 
         self._publish(COACHING_EVENT, {
             "type": "coaching_event",
@@ -490,18 +592,15 @@ class LiveDrivingCoach:
     def _speak_lap_summary(self, frame: Dict[str, Any], model: Any) -> None:
         """The radio call at the line: what the lap cost and where."""
         if not _legacy(model):
-            if self._lap_loss <= 0.0 or not getattr(model, "has_reference", False):
+            if self._lap_loss <= 0.0 or not getattr(model, "has_reference", False) or not self._lap_losses:
                 return
-            worst = self._lap_worst or {}
-            message = (
-                f"Volta fechada. {self._lap_loss:.2f}s somando os trechos em que ficou atras "
-                "da sua volta de referencia"
-            )
-            if worst:
-                message += f"; a maior diferenca no setor {worst['index']} ({worst['lossS']:.2f}s)"
-            message += "."
+            label = getattr(model, "reference_label", "sua volta de referencia")
+            worst = sorted(self._lap_losses.items(), key=lambda item: item[1], reverse=True)[:SUMMARY_SECTORS]
+            parts = [f"setor {index} ({loss:.2f}s)" for index, loss in worst]
+            listed = parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " e " + parts[-1]
+            message = f"Volta fechada. Maiores diferencas para a {label}: {listed}."
             if getattr(model, "reference_lap_seconds", None):
-                message += f" Volta de referencia: {model.reference_lap_seconds:.2f}s."
+                message += f" {label[0].upper() + label[1:]}: {model.reference_lap_seconds:.2f}s."
             self._publish(ENGINEER_SPEECH, {
                 "message": message,
                 "priority": "high" if self._lap_loss > 1.0 else "medium",
@@ -578,6 +677,27 @@ class _CollectingBus:
             self.speech.append(payload)
 
 
+def _braking_clause(kind: Optional[str], delta_m: float) -> str:
+    """Where the reference starts braking, relative to the driver (positive = later)."""
+    metres = abs(round(delta_m))
+    if kind == "minha_melhor":
+        if metres < 1:
+            return "na sua melhor volta voce freou no mesmo ponto"
+        return f"na sua melhor volta voce freou {metres:.0f} m {'depois' if delta_m > 0 else 'antes'}"
+    subject = "a IA" if kind == "volta_ia" else "a referencia"
+    if metres < 1:
+        return f"{subject} freia no mesmo ponto que voce"
+    return f"{subject} freia {metres:.0f} m {'depois' if delta_m > 0 else 'antes'} de voce"
+
+
+def _min_speed_clause(kind: Optional[str], reference_kmh: float, yours_kmh: float) -> str:
+    if kind == "volta_ia":
+        return f"minima da IA {reference_kmh:.0f} km/h, a sua {yours_kmh:.0f} km/h"
+    if kind == "minha_melhor":
+        return f"minima na sua melhor volta {reference_kmh:.0f} km/h, agora {yours_kmh:.0f} km/h"
+    return f"minima na referencia {reference_kmh:.0f} km/h, a sua {yours_kmh:.0f} km/h"
+
+
 def coach_recorded_lap(
     df: Any,
     model: Any,
@@ -630,6 +750,7 @@ def coach_recorded_lap(
             "world_x": float(data["x"]) if "x" in columns and data.get("x") == data.get("x") else None,
             "world_z": float(data["z"]) if "z" in columns and data.get("z") == data.get("z") else None,
             "speedKmh": float(data.get("speed_kmh")) if "speed_kmh" in columns and data.get("speed_kmh") == data.get("speed_kmh") else None,
+            "brake": float(data.get("brake")) if "brake" in columns and data.get("brake") == data.get("brake") else None,
             "driver_id": driver_id,
             "track": track,
         })

@@ -190,9 +190,6 @@ class LiveFinishLineTest(unittest.TestCase):
         self.assertEqual(bus.of(COACHING_EVENT), [])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class WallClockStutterTest(LiveFinishLineTest):
     def test_a_stutter_in_the_recorder_clock_changes_nothing(self):
@@ -209,3 +206,180 @@ class WallClockStutterTest(LiveFinishLineTest):
             [e["evidence"]["yourSeconds"] for e in stuttered.of(COACHING_EVENT)],
         )
         self.assertTrue(clean.of(COACHING_EVENT))
+
+
+# ── Parte C: as duas referencias (ADR 0016) ─────────────────────────────────
+
+from core.assisted_analysis.reference_model import (  # noqa: E402
+    REFERENCE_AI,
+    REFERENCE_OWN_BEST,
+    configured_reference_kind,
+    reference_from_laps,
+)
+from ml.data.coach_references import ai_laps, driver_laps  # noqa: E402
+
+FORBIDDEN = ("ganh", "ideal", "otimo")
+
+
+def inventory_row(lap_id, origem, equipamento, **extra):
+    session = lap_id.split("#")[0]
+    row = {"lap_id": lap_id, "session_id": session, "origem": origem, "equipamento": equipamento,
+           "valid": True, "relogio_verificado": True, "relogio_suspeito": False, "duplicada_de": None}
+    row.update(extra)
+    return row
+
+
+class ReferenceSelectionTest(unittest.TestCase):
+    def setUp(self):
+        self.inventory = pd.DataFrame([
+            inventory_row("2026-10-04_03-42-10_x#0013", "ia", "atual"),          # IA nova
+            inventory_row("2026-08-09_19-20-59_x#0001", "ia", "anterior"),       # IA antiga
+            inventory_row("2026-10-04_02-24-04_x#0018", "humano", "atual"),      # piloto de hoje
+            inventory_row("2026-08-16_03-30-14_x#0004", "humano", "anterior"),   # piloto com o controle antigo
+            inventory_row("2026-10-04_02-24-04_x#0007", "misturada", "atual"),
+            inventory_row("2026-10-04_03-42-10_x#0014", "ia", "atual", relogio_suspeito=True),  # box
+            inventory_row("2026-10-04_03-42-10_x#0015", "ia", "atual", valid=False),
+        ])
+        self.cars = {lap.split("#")[0]: "rss_formula_rss_3_v6_2026" for lap in self.inventory["lap_id"]}
+
+    def test_volta_ia_uses_only_ai_laps_from_new_sessions(self):
+        chosen = ai_laps(self.inventory, cars=self.cars, car="rss_formula_rss_3_v6_2026")["lap_id"].tolist()
+        self.assertEqual(chosen, ["2026-10-04_03-42-10_x#0013"])
+
+    def test_minha_melhor_uses_only_human_laps_with_the_current_equipment(self):
+        chosen = driver_laps(self.inventory, cars=self.cars, car="rss_formula_rss_3_v6_2026")["lap_id"].tolist()
+        self.assertEqual(chosen, ["2026-10-04_02-24-04_x#0018"])
+
+    def test_pit_laps_and_other_cars_stay_out(self):
+        self.assertTrue(ai_laps(self.inventory, ["2026-10-04_03-42-10_x#0013"]).empty)
+        self.cars["2026-10-04_03-42-10_x"] = "outro_carro"
+        self.assertTrue(ai_laps(self.inventory, cars=self.cars, car="rss_formula_rss_3_v6_2026").empty)
+
+
+def synthetic_lap(track, seconds, *, slow=(), brake_at=None):
+    """Volta sintetica a velocidade constante; `slow` = microsetores com tempo a mais."""
+    count = int(seconds * HZ)
+    s = np.linspace(0.0, track.length - 0.01, count)
+    elapsed = s / track.length * seconds
+    for index, extra in slow:
+        start, end = index / 60 * track.length, (index + 1) / 60 * track.length
+        elapsed = elapsed + np.where(s >= end, extra, np.where(s >= start, extra * (s - start) / (end - start), 0.0))
+    world = track.to_world(s, np.zeros(count))
+    brake = np.zeros(count)
+    if brake_at is not None:
+        brake[(s >= brake_at) & (s < brake_at + 40.0)] = 1.0
+    return pd.DataFrame({"x": world[:, 0], "z": world[:, 1], "elapsed_s": elapsed, "s": s,
+                         "speed_kmh": track.length / seconds * 3.6, "brake": brake, "throttle": 1.0})
+
+
+class TwoReferencesTest(unittest.TestCase):
+    """A IA freia em 300 m; o piloto freia em outro ponto."""
+
+    def setUp(self):
+        self.track = circular_track()
+        self.geometry = exported(self.track, "geo-1")
+        seconds = 60.0
+        # As voltas do piloto freiam em 296 m, dentro do mesmo microsetor da IA (293-314 m).
+        mine = [(f"h{i}", seconds + 0.5, int((seconds + 0.5) * HZ),
+                 synthetic_lap(self.track, seconds + 0.5, brake_at=296.0)) for i in range(3)]
+        ai = [("ia", seconds, int(seconds * HZ), synthetic_lap(self.track, seconds, brake_at=300.0))]
+        self.model = build_reference_model(mine, track="t", geometry=self.geometry)
+        for kind, laps in ((REFERENCE_OWN_BEST, mine), (REFERENCE_AI, ai)):
+            reference, _ = reference_from_laps(laps, geometry=self.geometry, kind=kind)
+            self.model.references[kind] = reference
+        self.model.use_reference(REFERENCE_AI)
+        self.sector = int(300.0 / self.track.length * 60)
+
+    def drive(self, lap):
+        bus = FakeBus()
+        coach = LiveDrivingCoach(bus, lambda _t: self.model, geometry_provider=lambda _t: self.geometry,
+                                 min_gap_seconds=0.0)
+        for number, frame in ((1, lap), (2, synthetic_lap(self.track, 60.5, brake_at=290.0))):
+            for row in frame.itertuples():
+                coach.on_frame({"world_x": row.x, "world_z": row.z, "lap_time": row.elapsed_s, "lap_number": number,
+                                "speedKmh": row.speed_kmh, "brake": row.brake, "track": "t"})
+        return bus
+
+    def test_at_most_three_phrases_a_lap(self):
+        slow = [(i, 0.3) for i in (5, 10, 20, 30, 40, 50)]
+        bus = self.drive(synthetic_lap(self.track, 62.0, slow=slow, brake_at=290.0))
+        lap_one = [e for e in bus.of(COACHING_EVENT) if e["lap_number"] == 1]
+        self.assertEqual(len(lap_one), 3)
+        self.assertEqual([e["evidence"]["microsector"] for e in lap_one], [5, 10, 20])
+
+    def test_the_lap_summary_lists_the_three_largest(self):
+        slow = [(5, 0.2), (10, 0.5), (20, 0.4), (30, 0.3), (40, 0.25)]
+        bus = self.drive(synthetic_lap(self.track, 62.0, slow=slow, brake_at=290.0))
+        summary = bus.of(ENGINEER_SPEECH)[0]["message"]
+        self.assertIn("Maiores diferencas para a volta da IA", summary)
+        self.assertLess(summary.index("setor 10"), summary.index("setor 20"))
+        self.assertLess(summary.index("setor 20"), summary.index("setor 30"))
+        self.assertNotIn("setor 40", summary)
+
+    def test_braking_is_said_relative_to_the_reference(self):
+        for driver_at, word in ((288.0, "depois"), (312.0, "antes")):
+            bus = self.drive(synthetic_lap(self.track, 60.5, slow=[(self.sector, 0.4)], brake_at=driver_at))
+            event = [e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == self.sector][0]
+            self.assertIn(f"A IA freia 12 m {word} de voce", event["event"])
+            self.assertAlmostEqual(event["evidence"]["brakeDeltaM"], 300.0 - driver_at, delta=1.5)
+
+    def test_phrases_name_the_reference_and_never_promise(self):
+        texts = []
+        for kind in (REFERENCE_AI, REFERENCE_OWN_BEST):
+            self.model.use_reference(kind)
+            bus = self.drive(synthetic_lap(self.track, 62.0, slow=[(self.sector, 0.5), (40, 0.4)], brake_at=288.0))
+            events = bus.of(COACHING_EVENT)
+            self.assertTrue(events)
+            name = "volta da IA" if kind == REFERENCE_AI else "sua melhor volta"
+            for event in events:
+                self.assertIn(f"atras da {name} neste trecho", event["event"])
+                self.assertEqual(event["evidence"]["referenceKind"], kind)
+            texts += [e["event"] for e in events] + [m["message"] for m in bus.of(ENGINEER_SPEECH)]
+        for text in texts:
+            for word in FORBIDDEN:
+                self.assertNotIn(word, text.lower())
+        self.assertTrue(any("na sua melhor volta voce freou" in t.lower() for t in texts))
+
+    def test_the_reference_comes_from_configuration(self):
+        import os
+        previous = os.environ.get("AT_COACH_REFERENCE")
+        try:
+            os.environ["AT_COACH_REFERENCE"] = "minha_melhor"
+            self.assertEqual(configured_reference_kind(), REFERENCE_OWN_BEST)
+            os.environ["AT_COACH_REFERENCE"] = "qualquer"
+            self.assertEqual(configured_reference_kind(), REFERENCE_AI)
+        finally:
+            if previous is None:
+                os.environ.pop("AT_COACH_REFERENCE", None)
+            else:
+                os.environ["AT_COACH_REFERENCE"] = previous
+
+    def test_a_model_without_the_reference_stays_silent(self):
+        del self.model.references[REFERENCE_OWN_BEST]
+        self.assertFalse(self.model.use_reference(REFERENCE_OWN_BEST))
+        self.assertFalse(self.model.has_reference)
+
+
+class NotComparableSlicesTest(TwoReferencesTest):
+    def test_a_slice_where_the_car_stopped_is_not_compared(self):
+        """Medido em 04/10: saindo do box, "52.84s atras ... a sua 0 km/h"."""
+        lap = synthetic_lap(self.track, 60.5, brake_at=288.0)
+        stop = int(len(lap) * 0.4)
+        parked = pd.concat([lap.iloc[[stop]]] * int(20 * HZ), ignore_index=True)
+        parked["speed_kmh"] = 0.0
+        lap = pd.concat([lap.iloc[:stop], parked, lap.iloc[stop:]], ignore_index=True)
+        lap.loc[stop:, "elapsed_s"] = lap.loc[stop:, "elapsed_s"].to_numpy() + np.r_[
+            np.arange(len(parked)) / HZ, np.full(len(lap) - stop - len(parked), len(parked) / HZ)]
+        bus = self.drive(lap)
+        sector = int(0.4 * 60)
+        self.assertFalse([e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == sector])
+
+    def test_the_slice_the_count_starts_in_is_not_compared(self):
+        lap = synthetic_lap(self.track, 60.5, slow=[(10, 2.0)], brake_at=288.0)
+        start = int(len(lap) * 10.5 / 60)                   # comeca no meio do microsetor 10
+        bus = self.drive(lap.iloc[start:].reset_index(drop=True))
+        self.assertFalse([e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == 10])
+
+
+if __name__ == "__main__":
+    unittest.main()

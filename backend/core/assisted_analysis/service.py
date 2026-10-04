@@ -20,7 +20,14 @@ from .lap_loader import LapDataLoader
 from .reference_lap_comparator import ReferenceComparator
 from .corner_metrics import CornerMetricsCalculator
 from .models import CornerComparison, CornerMetrics, DrivingError, LapDescriptor
-from .reference_model import MODE_REFERENCE_LAP, DriverReferenceModel, lap_is_usable, microsector_splits, model_path
+from .reference_model import (
+    MODE_REFERENCE_LAP,
+    DriverReferenceModel,
+    configured_reference_kind,
+    lap_is_usable,
+    microsector_splits,
+    model_path,
+)
 from .official_geometry import find_official_geometry
 from .optimal_line import attach, find_optimal_line
 from .corner_segmentation import CornerSegmenter
@@ -410,6 +417,9 @@ class AssistedAnalysisService:
             self._reference_models = cached
         if key not in cached:
             model = DriverReferenceModel.load(model_path(self.runtime_root, key))
+            # ADR 0016: the reference by configuration (`AT_COACH_REFERENCE`).
+            if model is not None:
+                model.use_reference(configured_reference_kind())
             # The optimised line lives in its own file and is optional. Attaching
             # it here means everything downstream -- the live coach, the debrief,
             # the analysis payload -- sees it without asking for it, and tracks

@@ -34,6 +34,19 @@ Two modes, since ADR 0012:
   the second half of a session realised none of the "time on the table" fitted
   on the first half, and each microsector best was matched by 3-5 % of laps.
 
+Two references, since ADR 0016 (the learning phase):
+
+* ``volta_ia`` (the default): the best clean lap of the game's AI, in the same
+  car, from sessions recorded with the current recorder. The AI repeats its
+  line within centimetres, so the reference does not move while the driver
+  learns.
+* ``minha_melhor``: the driver's best clean lap, `humano` with the current
+  equipment (ADR 0015).
+
+The model keeps both (`references`) and one is active (`use_reference`), chosen
+by configuration. The driver's spread through each slice -- the speaking
+threshold -- always comes from his own laps.
+
 Laps get in only if their sampling holds up. A lap of 937 samples over 74
 seconds is 13 Hz of a 57 Hz signal, and it was ranking as the driver's personal
 best -- a corrupt recording is not a lap record.
@@ -58,6 +71,27 @@ MODEL_VERSION = "driver_reference_model.v1"
 MODE_REFERENCE_LAP = "reference_lap"
 MODE_BEST_PER_MICROSECTOR = "best_per_microsector"
 MODES = (MODE_REFERENCE_LAP, MODE_BEST_PER_MICROSECTOR)
+
+# The two references of the learning phase (ADR 0016) and how the coach names them.
+REFERENCE_AI = "volta_ia"
+REFERENCE_OWN_BEST = "minha_melhor"
+REFERENCE_KINDS = (REFERENCE_AI, REFERENCE_OWN_BEST)
+DEFAULT_REFERENCE = REFERENCE_AI
+REFERENCE_LABELS = {REFERENCE_AI: "volta da IA", REFERENCE_OWN_BEST: "sua melhor volta"}
+
+
+
+def configured_reference_kind() -> str:
+    """Which reference the coach uses: `AT_COACH_REFERENCE`, `volta_ia` by default."""
+    import os
+
+    value = (os.environ.get("AT_COACH_REFERENCE") or "").strip().lower()
+    return value if value in REFERENCE_KINDS else DEFAULT_REFERENCE
+
+
+# Start of braking: the pedal crosses this, as in Phase 2b (`empirical.BRAKE_ONSET`).
+# The live coach uses the same number, so "12 m later" compares like with like.
+BRAKE_ONSET = 0.15
 
 # 60 microsectors puts a boundary every ~72 m at Interlagos: short enough that a
 # single corner does not hide inside one, long enough that the crossing time is
@@ -105,6 +139,9 @@ class MicrosectorTarget:
     reference_brake_point_m: Optional[float] = None
     reference_throttle_point_p: Optional[float] = None
     reference_throttle_point_m: Optional[float] = None
+    # Where the active reference starts braking inside this slice, on the
+    # official geometry (metres), if it does (ADR 0016).
+    reference_brake_onset_m: Optional[float] = None
 
     @property
     def gap_best_to_optimal(self) -> Optional[float]:
@@ -149,6 +186,39 @@ class DriverReferenceModel:
     geometry_id: Optional[str] = None
     # The quickest valid laps and why each was or was not the reference.
     reference_candidates: List[Dict[str, Any]] = field(default_factory=list)
+    # ADR 0016: every reference the model carries, by kind, and the active one.
+    references: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    reference_kind: Optional[str] = None
+
+    @property
+    def reference_label(self) -> str:
+        """How the coach names the active reference."""
+        return REFERENCE_LABELS.get(self.reference_kind or "", "sua volta de referencia")
+
+    def use_reference(self, kind: str) -> bool:
+        """Make `kind` the reference every slice is measured against.
+
+        A model without that reference keeps none active: the coach then says
+        nothing rather than measure against something else.
+        """
+        if not self.references:
+            return self.has_reference          # a model from before ADR 0016: its single reference
+        reference = self.references.get(kind)
+        sectors = (reference or {}).get("sectors") or []
+        by_index = {int(sector["index"]): sector for sector in sectors}
+        for target in self.targets:
+            sector = by_index.get(target.index) or {}
+            target.reference_seconds = sector.get("seconds")
+            target.reference_min_speed_kmh = sector.get("min_speed_kmh")
+            target.reference_brake_onset_m = sector.get("brake_onset_m")
+            target.reference_brake_point_m = sector.get("brake_onset_m")
+            target.reference_brake_point_p = None
+            target.reference_throttle_point_p = None
+            target.reference_throttle_point_m = None
+        self.reference_kind = kind if reference else None
+        self.reference_lap_id = (reference or {}).get("lap_id")
+        self.reference_lap_seconds = (reference or {}).get("lap_seconds")
+        return reference is not None
 
     @property
     def has_reference(self) -> bool:
@@ -260,6 +330,8 @@ class DriverReferenceModel:
             reference_lap_seconds=payload.get("reference_lap_seconds"),
             geometry_id=payload.get("geometry_id"),
             reference_candidates=list(payload.get("reference_candidates") or []),
+            references=dict(payload.get("references") or {}),
+            reference_kind=payload.get("reference_kind"),
         )
 
     def save(self, path: Path) -> Path:
@@ -456,6 +528,93 @@ def _meters_at(df: pd.DataFrame, progress: Optional[float]) -> Optional[float]:
     return round(float(s[good][index]), 1)
 
 
+def _brake_onset_m(df: pd.DataFrame, start_p: float, end_p: float) -> Optional[float]:
+    """Where the brake first crosses `BRAKE_ONSET` inside the slice, in metres (`s`)."""
+    if df is None or "brake" not in df.columns or "p" not in df.columns or "s" not in df.columns:
+        return None
+    p = pd.to_numeric(df["p"], errors="coerce").to_numpy(dtype=float)
+    s = pd.to_numeric(df["s"], errors="coerce").to_numpy(dtype=float)
+    brake = pd.to_numeric(df["brake"], errors="coerce").fillna(0.0).to_numpy(dtype=float)
+    on = brake >= BRAKE_ONSET
+    starts = np.flatnonzero(on[1:] & ~on[:-1]) + 1
+    for index in starts:
+        if start_p <= p[index] < end_p and np.isfinite(s[index]):
+            return round(float(s[index]), 1)
+    return None
+
+
+def reference_from_laps(
+    laps: Sequence[Tuple[str, Optional[float], Optional[int], pd.DataFrame]],
+    *,
+    geometry: Any,
+    kind: str,
+) -> Tuple[Optional[Dict[str, Any]], List[Dict[str, Any]]]:
+    """The best valid and complete lap among `laps`, as a reference of `kind`.
+
+    Same rules as the model's own reference: usable sampling, no projection
+    jump, every microsector timed and no recording hole. Its time is the sum of
+    its slices, which is the lap from `s = 0` to `s = 0` (pedido 14). Returns the
+    reference (or None) and the five quickest candidates with the reason each
+    was or was not chosen.
+    """
+    from .official_geometry import project_lap, projection_jumped
+
+    microsectors = geometry.microsectors
+    status: Dict[str, Tuple[float, str]] = {}
+    complete: Dict[str, Tuple[float, List[Optional[float]], pd.DataFrame]] = {}
+    for lap_id, lap_seconds, sample_count, df in laps:
+        usable, reason = lap_is_usable(lap_seconds, sample_count)
+        if not usable:
+            status[lap_id] = (float(lap_seconds or 0.0), f"recusada: {reason}")
+            continue
+        projected = project_lap(df, geometry)
+        if projection_jumped(projected, geometry.length):
+            status[lap_id] = (float(lap_seconds or 0.0), "recusada: salto de projecao")
+            continue
+        splits = microsector_splits(projected, microsectors)
+        missing = sum(1 for split in splits if split is None)
+        if missing:
+            status[lap_id] = (float(lap_seconds or 0.0), f"incompleta: {missing} microsetores sem tempo")
+        elif _has_hole(projected, microsectors):
+            status[lap_id] = (float(lap_seconds or 0.0), "incompleta: buraco na gravacao maior que meio microsetor")
+        else:
+            seconds = float(sum(splits))
+            status[lap_id] = (seconds, "completa")
+            complete[lap_id] = (seconds, splits, projected)
+
+    chosen = min(complete, key=lambda key: complete[key][0]) if complete else None
+    candidates = []
+    for lap_id, (seconds, why) in sorted(status.items(), key=lambda item: item[1][0])[:5]:
+        if lap_id == chosen:
+            why = "escolhida: a mais rapida valida e completa"
+        elif why == "completa":
+            why = "valida e completa, mas mais lenta que a escolhida"
+        candidates.append({"lap_id": lap_id, "lap_seconds": round(seconds, 3), "motivo": why})
+    if chosen is None:
+        return None, candidates
+
+    seconds, splits, df = complete[chosen]
+    sectors = []
+    for index, split in enumerate(splits):
+        start_p, end_p = index / microsectors, (index + 1) / microsectors
+        summary = _channel_summary(df, start_p, end_p)
+        sectors.append({
+            "index": index,
+            "seconds": round(float(split), 4),
+            "min_speed_kmh": summary.get("min_speed_kmh"),
+            "brake_onset_m": _brake_onset_m(df, start_p, end_p),
+        })
+    reference = {
+        "kind": kind,
+        "label": REFERENCE_LABELS.get(kind, kind),
+        "lap_id": chosen,
+        "lap_seconds": round(seconds, 3),
+        "sectors": sectors,
+        "candidates": candidates,
+    }
+    return reference, candidates
+
+
 def build_reference_model(
     laps: Sequence[Tuple[str, Optional[float], Optional[int], pd.DataFrame]],
     *,
@@ -570,6 +729,7 @@ def build_reference_model(
             target.reference_min_speed_kmh = summary.get("min_speed_kmh")
             target.reference_brake_point_p = summary.get("brake_point_p")
             target.reference_brake_point_m = _meters_at(reference_df, summary.get("brake_point_p"))
+            target.reference_brake_onset_m = _brake_onset_m(reference_df, target.start_p, target.end_p)
             target.reference_throttle_point_p = summary.get("throttle_point_p")
             target.reference_throttle_point_m = _meters_at(reference_df, summary.get("throttle_point_p"))
 

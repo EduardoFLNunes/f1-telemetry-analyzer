@@ -143,13 +143,23 @@ class CoachWordsTest(unittest.TestCase):
         self.assertEqual(event["evidence"]["referenceLapId"], "ref")
         self.assertIn("referenceSeconds", event["evidence"])
         self.assertNotIn("bestSeconds", event["evidence"])
-        self.assertIn("Volta de referencia: 85.00s", self.bus.of(ENGINEER_SPEECH)[0]["message"])
+        # ADR 0016: o fim da volta lista os trechos de maior diferenca e nomeia a referencia.
+        summary = self.bus.of(ENGINEER_SPEECH)[0]["message"]
+        self.assertIn("Maiores diferencas para a sua volta de referencia: setor 22", summary)
+        self.assertIn("Sua volta de referencia: 85.00s", summary)
 
-    def test_the_reference_goal_is_said_when_there_is_one(self):
-        drive(self.coach, seconds=85.0, slow_slice=(22, 0.6))
+    def test_the_reference_braking_is_said_relative_to_the_driver(self):
+        """ADR 0016: a freada aparece em relacao a referencia, nao como posicao absoluta."""
+        driven = lap(85.0, slow=(22, 0.6), brake_at=0.3640, min_speed=100.0)
+        for number, frame in ((5, driven), (6, lap(85.0))):
+            for row in frame.itertuples():
+                self.coach.on_frame({"p": row.p, "s": row.s, "lap_time": row.elapsed_s, "lap_number": number,
+                                     "speedKmh": row.speed_kmh, "brake": row.brake, "track": "vhe_interlagos"})
         event = self.bus.of(COACHING_EVENT)[0]
-        self.assertIn("Na referencia: freada em", event["event"])
-        self.assertIn("minima de 110 km/h", event["event"])
+        self.assertNotIn("freada em", event["event"])
+        self.assertIn("A referencia freia", event["event"])
+        self.assertIn("depois de voce", event["event"])
+        self.assertIn("minima na referencia 110 km/h, a sua 100 km/h", event["event"])
 
     def test_threshold_is_unchanged(self):
         # Mesmo limiar nos dois modos: 2 x (mediana - melhor) do microsetor.
