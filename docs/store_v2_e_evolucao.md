@@ -75,7 +75,7 @@ E no store:
   - O relatório diz o lado: perde ou ganha para a IA.
 - **Poucos dados:** com menos de 5 voltas na sessão, a curva fica "poucos dados", sem intervalo.
 - **Ponto de frenagem em relação à IA:**
-  - **Onde procurar:** no trecho, do início do trecho ao ápice da curva.
+  - **Onde procurar:** no trecho, do início do trecho ao ápice da curva. Esta regra foi trocada pela emenda da seção 1.5.
   - **O ponto de frenagem:** o primeiro ponto em que o freio passa de abaixo de 0,15 para 0,15 ou mais. É o limiar da Fase 2b.
   - **A diferença:** em metros de pista, volta menos IA; positivo é frear depois da IA.
   - **Casos sem número:**
@@ -92,6 +92,18 @@ E no store:
   - a série das medianas de volta, com a tendência: a inclinação da reta de mínimos quadrados, em segundos por sessão, a partir de 2 sessões;
   - as 3 curvas de maior perda mediana na sessão mais recente, com a série delas.
 - **Critério do ADR 0015:** com 3 sessões ou mais, a diferença entre a maior e a menor mediana de volta das últimas 3 sessões é menor que 0,5 s. Com menos de 3 sessões, ainda não dá para avaliar.
+
+### 1.5 Emenda de 04/10/2026 (pedido 17): janela de frenagem
+
+Registrada antes de rodar de novo, depois de ver a falha na C10 na primeira rodada (seção 4).
+
+- **Onde procurar o início da frenagem de uma curva:** passa a ir do ápice da curva anterior até o ápice da curva. Para a C01, a anterior é a C14, e a janela cruza a linha de chegada.
+- **O que não muda:**
+  - o trecho usado para o tempo de cada curva;
+  - o ponto de frenagem, que continua sendo o primeiro em que o freio passa de abaixo de 0,15 para 0,15 ou mais;
+  - os casos sem número;
+  - os critérios de "diferença consistente" e de "poucos dados".
+- **Natureza da mudança:** é uma definição de medida, e não um limite de decisão. Nenhum critério foi mexido.
 
 ## 2. O que mudou no store (Parte B)
 
