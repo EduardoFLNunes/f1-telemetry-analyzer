@@ -1,0 +1,2127 @@
+{
+ "formato": "evolucao-sessao/1",
+ "sessao": "2026-10-04",
+ "gravacoes": [
+  "2026-10-04_02-24-04_vhe_interlagos",
+  "2026-10-04_03-21-52_vhe_interlagos",
+  "2026-10-04_03-42-10_vhe_interlagos"
+ ],
+ "resumo": {
+  "voltas": 11,
+  "melhor_s": 89.39,
+  "mediana_s": 93.458,
+  "desvio_s": 2.397,
+  "volta_da_ia_s": 84.829,
+  "mediana_menos_ia_s": 8.629,
+  "melhor_menos_ia_s": 4.561,
+  "poucos_dados": false
+ },
+ "voltas": [
+  {
+   "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+   "gravacao": "2026-10-04_02-24-04_vhe_interlagos",
+   "tempo_s": 93.004
+  },
+  {
+   "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+   "gravacao": "2026-10-04_02-24-04_vhe_interlagos",
+   "tempo_s": 95.312
+  },
+  {
+   "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+   "gravacao": "2026-10-04_02-24-04_vhe_interlagos",
+   "tempo_s": 94.025
+  },
+  {
+   "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+   "gravacao": "2026-10-04_02-24-04_vhe_interlagos",
+   "tempo_s": 89.39
+  },
+  {
+   "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+   "gravacao": "2026-10-04_03-21-52_vhe_interlagos",
+   "tempo_s": 95.239
+  },
+  {
+   "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+   "gravacao": "2026-10-04_03-21-52_vhe_interlagos",
+   "tempo_s": 91.742
+  },
+  {
+   "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+   "gravacao": "2026-10-04_03-21-52_vhe_interlagos",
+   "tempo_s": 92.675
+  },
+  {
+   "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+   "gravacao": "2026-10-04_03-21-52_vhe_interlagos",
+   "tempo_s": 93.458
+  },
+  {
+   "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+   "gravacao": "2026-10-04_03-42-10_vhe_interlagos",
+   "tempo_s": 93.739
+  },
+  {
+   "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+   "gravacao": "2026-10-04_03-42-10_vhe_interlagos",
+   "tempo_s": 92.188
+  },
+  {
+   "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+   "gravacao": "2026-10-04_03-42-10_vhe_interlagos",
+   "tempo_s": 98.818
+  }
+ ],
+ "curvas": [
+  {
+   "curva": "C01-esq",
+   "indice": 1,
+   "trecho_m": [
+    4112.1,
+    346.0
+   ],
+   "curva_m": [
+    224.0,
+    334.0
+   ],
+   "apice_m": 298.0,
+   "perda_para_ia_s": {
+    "mediana": 1.2669,
+    "p25": 1.0307,
+    "p75": 1.5738,
+    "iqr": 0.5431,
+    "voltas": 11
+   },
+   "situacao": "diferenca_consistente",
+   "lado": "perde",
+   "intervalo_90_s": [
+    1.0345,
+    1.5911
+   ],
+   "ia_freia": true,
+   "frenagem_vs_ia_m": {
+    "mediana": -66.0,
+    "p25": -95.0,
+    "p75": -58.0,
+    "iqr": 37.0,
+    "voltas": 11
+   },
+   "lateral_apice_vs_ia_m": {
+    "mediana": -0.85,
+    "p25": -1.38,
+    "p75": -0.22,
+    "iqr": 1.16,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": -4.1
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 1.5566,
+     "frenagem_vs_ia_m": -104.0019,
+     "lateral_apice_vs_ia_m": -0.4686,
+     "velocidade_minima_vs_ia_kmh": -5.6949
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": 1.5911,
+     "frenagem_vs_ia_m": -66.0012,
+     "lateral_apice_vs_ia_m": -2.543,
+     "velocidade_minima_vs_ia_kmh": -4.6301
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 1.3342,
+     "frenagem_vs_ia_m": -118.0022,
+     "lateral_apice_vs_ia_m": -1.4479,
+     "velocidade_minima_vs_ia_kmh": -1.7364
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 1.0194,
+     "frenagem_vs_ia_m": -66.0012,
+     "lateral_apice_vs_ia_m": -0.4792,
+     "velocidade_minima_vs_ia_kmh": -0.1189
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 1.2177,
+     "frenagem_vs_ia_m": -60.0011,
+     "lateral_apice_vs_ia_m": -0.865,
+     "velocidade_minima_vs_ia_kmh": -9.9895
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 1.0345,
+     "frenagem_vs_ia_m": -56.001,
+     "lateral_apice_vs_ia_m": -0.8458,
+     "velocidade_minima_vs_ia_kmh": -4.0953
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": 1.0269,
+     "frenagem_vs_ia_m": -86.0016,
+     "lateral_apice_vs_ia_m": 0.2654,
+     "velocidade_minima_vs_ia_kmh": -0.8804
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": 1.2669,
+     "frenagem_vs_ia_m": -110.002,
+     "lateral_apice_vs_ia_m": 0.1104,
+     "velocidade_minima_vs_ia_kmh": -0.4621
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 0.9078,
+     "frenagem_vs_ia_m": -70.0013,
+     "lateral_apice_vs_ia_m": -3.255,
+     "velocidade_minima_vs_ia_kmh": 0.9217
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": 1.7443,
+     "frenagem_vs_ia_m": -46.0008,
+     "lateral_apice_vs_ia_m": -1.3145,
+     "velocidade_minima_vs_ia_kmh": -12.4672
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": 2.0234,
+     "frenagem_vs_ia_m": -34.0006,
+     "lateral_apice_vs_ia_m": 0.0338,
+     "velocidade_minima_vs_ia_kmh": -40.0896
+    }
+   ]
+  },
+  {
+   "curva": "C02-dir",
+   "indice": 2,
+   "trecho_m": [
+    346.0,
+    428.0
+   ],
+   "curva_m": [
+    358.0,
+    422.0
+   ],
+   "apice_m": 390.0,
+   "perda_para_ia_s": {
+    "mediana": 0.0617,
+    "p25": -0.021,
+    "p75": 0.1062,
+    "iqr": 0.1272,
+    "voltas": 11
+   },
+   "situacao": "sem_diferenca_consistente",
+   "lado": null,
+   "intervalo_90_s": [
+    -0.0384,
+    0.0672
+   ],
+   "ia_freia": true,
+   "frenagem_vs_ia_m": null,
+   "lateral_apice_vs_ia_m": {
+    "mediana": -0.11,
+    "p25": -0.67,
+    "p75": 0.24,
+    "iqr": 0.9,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": -1.5
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 0.1452,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.3594,
+     "velocidade_minima_vs_ia_kmh": -7.6065
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": -0.0035,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.8612,
+     "velocidade_minima_vs_ia_kmh": 5.5289
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 0.2051,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.073,
+     "velocidade_minima_vs_ia_kmh": -10.7378
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 0.0617,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.1124,
+     "velocidade_minima_vs_ia_kmh": -8.1011
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 0.0665,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.2515,
+     "velocidade_minima_vs_ia_kmh": -7.7547
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 0.0672,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.2114,
+     "velocidade_minima_vs_ia_kmh": -1.5025
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": -0.0439,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.0778,
+     "velocidade_minima_vs_ia_kmh": 2.9018
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": -0.0384,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.5748,
+     "velocidade_minima_vs_ia_kmh": 2.5447
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 0.0499,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.1033,
+     "velocidade_minima_vs_ia_kmh": 0.9819
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": 0.2609,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.2609,
+     "velocidade_minima_vs_ia_kmh": -21.0175
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": -0.151,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.7575,
+     "velocidade_minima_vs_ia_kmh": 7.2413
+    }
+   ]
+  },
+  {
+   "curva": "C03-esq",
+   "indice": 3,
+   "trecho_m": [
+    428.0,
+    1002.0
+   ],
+   "curva_m": [
+    434.0,
+    692.0
+   ],
+   "apice_m": 490.0,
+   "perda_para_ia_s": {
+    "mediana": 0.5121,
+    "p25": 0.3998,
+    "p75": 0.6976,
+    "iqr": 0.2978,
+    "voltas": 11
+   },
+   "situacao": "diferenca_consistente",
+   "lado": "perde",
+   "intervalo_90_s": [
+    0.3642,
+    0.5939
+   ],
+   "ia_freia": false,
+   "frenagem_vs_ia_m": null,
+   "lateral_apice_vs_ia_m": {
+    "mediana": -0.78,
+    "p25": -1.59,
+    "p75": 0.41,
+    "iqr": 2.0,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": -0.6
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 0.8012,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.4404,
+     "velocidade_minima_vs_ia_kmh": -5.1868
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": 0.4744,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.2923,
+     "velocidade_minima_vs_ia_kmh": 0.9385
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 0.9915,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.3709,
+     "velocidade_minima_vs_ia_kmh": -13.4645
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 0.1302,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.445,
+     "velocidade_minima_vs_ia_kmh": 3.7236
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 1.402,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 2.0636,
+     "velocidade_minima_vs_ia_kmh": -2.5027
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 0.5583,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.4239,
+     "velocidade_minima_vs_ia_kmh": -9.3147
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": 0.3642,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.469,
+     "velocidade_minima_vs_ia_kmh": 1.5294
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": 0.5121,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.7834,
+     "velocidade_minima_vs_ia_kmh": -0.6116
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 0.4353,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.7434,
+     "velocidade_minima_vs_ia_kmh": -2.1877
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": 0.2809,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.3699,
+     "velocidade_minima_vs_ia_kmh": 6.2379
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": 0.5939,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.943,
+     "velocidade_minima_vs_ia_kmh": 7.485
+    }
+   ]
+  },
+  {
+   "curva": "C04-esq",
+   "indice": 4,
+   "trecho_m": [
+    1002.0,
+    1441.0
+   ],
+   "curva_m": [
+    1312.0,
+    1402.0
+   ],
+   "apice_m": 1372.0,
+   "perda_para_ia_s": {
+    "mediana": 0.7277,
+    "p25": 0.5882,
+    "p75": 0.818,
+    "iqr": 0.2298,
+    "voltas": 11
+   },
+   "situacao": "diferenca_consistente",
+   "lado": "perde",
+   "intervalo_90_s": [
+    0.5585,
+    0.7936
+   ],
+   "ia_freia": true,
+   "frenagem_vs_ia_m": {
+    "mediana": -48.0,
+    "p25": -48.0,
+    "p75": -36.0,
+    "iqr": 12.0,
+    "voltas": 11
+   },
+   "lateral_apice_vs_ia_m": {
+    "mediana": -0.47,
+    "p25": -3.73,
+    "p75": 0.18,
+    "iqr": 3.92,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": -11.4
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 1.4386,
+     "frenagem_vs_ia_m": -42.0008,
+     "lateral_apice_vs_ia_m": -8.9637,
+     "velocidade_minima_vs_ia_kmh": -32.9928
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": 0.6179,
+     "frenagem_vs_ia_m": -48.0009,
+     "lateral_apice_vs_ia_m": -3.3824,
+     "velocidade_minima_vs_ia_kmh": -8.1096
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 0.8425,
+     "frenagem_vs_ia_m": -22.0004,
+     "lateral_apice_vs_ia_m": -0.4677,
+     "velocidade_minima_vs_ia_kmh": -23.5422
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 0.3924,
+     "frenagem_vs_ia_m": -64.0012,
+     "lateral_apice_vs_ia_m": 0.1275,
+     "velocidade_minima_vs_ia_kmh": 5.175
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 1.1043,
+     "frenagem_vs_ia_m": -62.0011,
+     "lateral_apice_vs_ia_m": 0.2396,
+     "velocidade_minima_vs_ia_kmh": -11.9043
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 0.5585,
+     "frenagem_vs_ia_m": -48.0009,
+     "lateral_apice_vs_ia_m": -1.6578,
+     "velocidade_minima_vs_ia_kmh": 0.804
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": 0.7885,
+     "frenagem_vs_ia_m": -46.0008,
+     "lateral_apice_vs_ia_m": 1.8014,
+     "velocidade_minima_vs_ia_kmh": -8.2793
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": 0.7277,
+     "frenagem_vs_ia_m": -30.0006,
+     "lateral_apice_vs_ia_m": 1.8,
+     "velocidade_minima_vs_ia_kmh": -20.7975
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 0.5039,
+     "frenagem_vs_ia_m": -30.0006,
+     "lateral_apice_vs_ia_m": 0.0792,
+     "velocidade_minima_vs_ia_kmh": -12.341
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": 0.6449,
+     "frenagem_vs_ia_m": -48.0009,
+     "lateral_apice_vs_ia_m": -4.0859,
+     "velocidade_minima_vs_ia_kmh": -2.2216
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": 0.7936,
+     "frenagem_vs_ia_m": -48.0009,
+     "lateral_apice_vs_ia_m": -7.2837,
+     "velocidade_minima_vs_ia_kmh": -11.4092
+    }
+   ]
+  },
+  {
+   "curva": "C05-esq",
+   "indice": 5,
+   "trecho_m": [
+    1441.0,
+    1772.0
+   ],
+   "curva_m": [
+    1480.0,
+    1606.0
+   ],
+   "apice_m": 1520.0,
+   "perda_para_ia_s": {
+    "mediana": 0.3217,
+    "p25": 0.1743,
+    "p75": 0.559,
+    "iqr": 0.3847,
+    "voltas": 11
+   },
+   "situacao": "diferenca_consistente",
+   "lado": "perde",
+   "intervalo_90_s": [
+    0.188,
+    0.5109
+   ],
+   "ia_freia": false,
+   "frenagem_vs_ia_m": null,
+   "lateral_apice_vs_ia_m": {
+    "mediana": -2.21,
+    "p25": -3.34,
+    "p75": -1.4,
+    "iqr": 1.94,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": -11.9
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 0.6281,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.2128,
+     "velocidade_minima_vs_ia_kmh": -26.3673
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": 0.1575,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.9252,
+     "velocidade_minima_vs_ia_kmh": -4.5425
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 0.1436,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -4.4853,
+     "velocidade_minima_vs_ia_kmh": -1.6858
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 0.3217,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.9827,
+     "velocidade_minima_vs_ia_kmh": -11.8851
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 0.7711,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -3.7608,
+     "velocidade_minima_vs_ia_kmh": -29.5824
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 0.188,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.7205,
+     "velocidade_minima_vs_ia_kmh": -8.8475
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": 0.607,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.0036,
+     "velocidade_minima_vs_ia_kmh": -25.9198
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": 0.1606,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -5.8066,
+     "velocidade_minima_vs_ia_kmh": -2.6085
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 0.2679,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.8271,
+     "velocidade_minima_vs_ia_kmh": -9.3913
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": 0.4098,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.286,
+     "velocidade_minima_vs_ia_kmh": -16.8465
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": 0.5109,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.4355,
+     "velocidade_minima_vs_ia_kmh": -25.0959
+    }
+   ]
+  },
+  {
+   "curva": "C06-dir",
+   "indice": 6,
+   "trecho_m": [
+    1772.0,
+    2193.0
+   ],
+   "curva_m": [
+    1938.0,
+    2140.0
+   ],
+   "apice_m": 2102.0,
+   "perda_para_ia_s": {
+    "mediana": 0.5581,
+    "p25": 0.2443,
+    "p75": 0.669,
+    "iqr": 0.4247,
+    "voltas": 11
+   },
+   "situacao": "diferenca_consistente",
+   "lado": "perde",
+   "intervalo_90_s": [
+    0.2961,
+    0.707
+   ],
+   "ia_freia": true,
+   "frenagem_vs_ia_m": {
+    "mediana": -72.0,
+    "p25": -76.0,
+    "p75": -60.0,
+    "iqr": 16.0,
+    "voltas": 9
+   },
+   "lateral_apice_vs_ia_m": {
+    "mediana": -3.85,
+    "p25": -4.53,
+    "p75": -2.89,
+    "iqr": 1.65,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": -3.5
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 0.6309,
+     "frenagem_vs_ia_m": 78.0014,
+     "lateral_apice_vs_ia_m": -0.7221,
+     "velocidade_minima_vs_ia_kmh": -7.2437
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": 0.6197,
+     "frenagem_vs_ia_m": -60.0011,
+     "lateral_apice_vs_ia_m": -4.2646,
+     "velocidade_minima_vs_ia_kmh": -6.1357
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 1.0394,
+     "frenagem_vs_ia_m": -72.0013,
+     "lateral_apice_vs_ia_m": -4.2025,
+     "velocidade_minima_vs_ia_kmh": -21.3904
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 0.1867,
+     "frenagem_vs_ia_m": -76.0014,
+     "lateral_apice_vs_ia_m": -4.8015,
+     "velocidade_minima_vs_ia_kmh": 11.254
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 0.707,
+     "frenagem_vs_ia_m": -80.0015,
+     "lateral_apice_vs_ia_m": -3.8482,
+     "velocidade_minima_vs_ia_kmh": -0.1508
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 0.5581,
+     "frenagem_vs_ia_m": -72.0013,
+     "lateral_apice_vs_ia_m": -3.117,
+     "velocidade_minima_vs_ia_kmh": -3.4944
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": 0.3905,
+     "frenagem_vs_ia_m": -80.0015,
+     "lateral_apice_vs_ia_m": -3.8166,
+     "velocidade_minima_vs_ia_kmh": -4.463
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": 0.0846,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -5.8776,
+     "velocidade_minima_vs_ia_kmh": 4.2631
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 0.3019,
+     "frenagem_vs_ia_m": -68.0012,
+     "lateral_apice_vs_ia_m": -2.4731,
+     "velocidade_minima_vs_ia_kmh": -1.8202
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": -0.012,
+     "frenagem_vs_ia_m": -42.0008,
+     "lateral_apice_vs_ia_m": -2.654,
+     "velocidade_minima_vs_ia_kmh": 16.8414
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": 4.281,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -29.3867,
+     "velocidade_minima_vs_ia_kmh": -91.3513
+    }
+   ]
+  },
+  {
+   "curva": "C07-dir",
+   "indice": 7,
+   "trecho_m": [
+    2193.0,
+    2342.0
+   ],
+   "curva_m": [
+    2246.0,
+    2334.0
+   ],
+   "apice_m": 2282.0,
+   "perda_para_ia_s": {
+    "mediana": 0.5097,
+    "p25": 0.3523,
+    "p75": 0.6284,
+    "iqr": 0.2761,
+    "voltas": 11
+   },
+   "situacao": "diferenca_consistente",
+   "lado": "perde",
+   "intervalo_90_s": [
+    0.3985,
+    0.7297
+   ],
+   "ia_freia": true,
+   "frenagem_vs_ia_m": {
+    "mediana": 40.0,
+    "p25": 0.0,
+    "p75": 50.0,
+    "iqr": 50.0,
+    "voltas": 5
+   },
+   "lateral_apice_vs_ia_m": {
+    "mediana": 1.06,
+    "p25": 0.2,
+    "p75": 1.38,
+    "iqr": 1.18,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": -6.7
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 0.4905,
+     "frenagem_vs_ia_m": 40.0007,
+     "lateral_apice_vs_ia_m": 0.1857,
+     "velocidade_minima_vs_ia_kmh": -7.3319
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": 0.527,
+     "frenagem_vs_ia_m": 50.0009,
+     "lateral_apice_vs_ia_m": 1.0869,
+     "velocidade_minima_vs_ia_kmh": -8.839
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 0.7777,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.4902,
+     "velocidade_minima_vs_ia_kmh": -6.0988
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 0.5097,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 3.1345,
+     "velocidade_minima_vs_ia_kmh": -6.9172
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 0.3985,
+     "frenagem_vs_ia_m": 0.0,
+     "lateral_apice_vs_ia_m": 0.3433,
+     "velocidade_minima_vs_ia_kmh": 1.9225
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 0.7297,
+     "frenagem_vs_ia_m": -4.0001,
+     "lateral_apice_vs_ia_m": 5.212,
+     "velocidade_minima_vs_ia_kmh": -11.0773
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": 0.2176,
+     "frenagem_vs_ia_m": 58.0011,
+     "lateral_apice_vs_ia_m": -0.2015,
+     "velocidade_minima_vs_ia_kmh": -6.6947
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": 0.5183,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.2095,
+     "velocidade_minima_vs_ia_kmh": 2.215
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 0.3061,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.2645,
+     "velocidade_minima_vs_ia_kmh": -9.4297
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": 0.1518,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.0605,
+     "velocidade_minima_vs_ia_kmh": -0.4792
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": 1.0611,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.4427,
+     "velocidade_minima_vs_ia_kmh": 1.8862
+    }
+   ]
+  },
+  {
+   "curva": "C08-esq",
+   "indice": 8,
+   "trecho_m": [
+    2342.0,
+    2532.0
+   ],
+   "curva_m": [
+    2350.0,
+    2498.0
+   ],
+   "apice_m": 2394.0,
+   "perda_para_ia_s": {
+    "mediana": 0.2781,
+    "p25": 0.2301,
+    "p75": 0.4531,
+    "iqr": 0.223,
+    "voltas": 11
+   },
+   "situacao": "diferenca_consistente",
+   "lado": "perde",
+   "intervalo_90_s": [
+    0.2292,
+    0.5538
+   ],
+   "ia_freia": true,
+   "frenagem_vs_ia_m": {
+    "mediana": 32.0,
+    "p25": 32.0,
+    "p75": 32.0,
+    "iqr": 0.0,
+    "voltas": 1
+   },
+   "lateral_apice_vs_ia_m": {
+    "mediana": -0.04,
+    "p25": -1.81,
+    "p75": 0.66,
+    "iqr": 2.47,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": 3.6
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 0.231,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.8492,
+     "velocidade_minima_vs_ia_kmh": 5.8807
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": 0.0575,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.8054,
+     "velocidade_minima_vs_ia_kmh": 3.7629
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 0.6377,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.0423,
+     "velocidade_minima_vs_ia_kmh": -3.1803
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 0.1653,
+     "frenagem_vs_ia_m": 32.0006,
+     "lateral_apice_vs_ia_m": -2.1169,
+     "velocidade_minima_vs_ia_kmh": 5.4275
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 0.2781,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.8713,
+     "velocidade_minima_vs_ia_kmh": -0.2377
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 0.5538,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.8114,
+     "velocidade_minima_vs_ia_kmh": -6.854
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": 0.2452,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.5139,
+     "velocidade_minima_vs_ia_kmh": 8.6281
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": 0.3523,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.3438,
+     "velocidade_minima_vs_ia_kmh": 3.5923
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 0.2292,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.4987,
+     "velocidade_minima_vs_ia_kmh": -3.2307
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": 0.316,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -3.6134,
+     "velocidade_minima_vs_ia_kmh": 4.6333
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": 1.2956,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.8523,
+     "velocidade_minima_vs_ia_kmh": -15.2595
+    }
+   ]
+  },
+  {
+   "curva": "C09-dir",
+   "indice": 9,
+   "trecho_m": [
+    2532.0,
+    2649.0
+   ],
+   "curva_m": [
+    2566.0,
+    2626.0
+   ],
+   "apice_m": 2610.0,
+   "perda_para_ia_s": {
+    "mediana": 0.3458,
+    "p25": 0.2352,
+    "p75": 0.3537,
+    "iqr": 0.1185,
+    "voltas": 11
+   },
+   "situacao": "diferenca_consistente",
+   "lado": "perde",
+   "intervalo_90_s": [
+    0.1799,
+    0.3532
+   ],
+   "ia_freia": false,
+   "frenagem_vs_ia_m": null,
+   "lateral_apice_vs_ia_m": {
+    "mediana": -1.69,
+    "p25": -2.14,
+    "p75": -0.49,
+    "iqr": 1.66,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": -20.3
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 0.3626,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.1051,
+     "velocidade_minima_vs_ia_kmh": -16.4942
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": 0.3458,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.1537,
+     "velocidade_minima_vs_ia_kmh": -24.2426
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 0.5127,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.3857,
+     "velocidade_minima_vs_ia_kmh": -30.7292
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 0.117,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.0841,
+     "velocidade_minima_vs_ia_kmh": -5.7036
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 0.3109,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.4977,
+     "velocidade_minima_vs_ia_kmh": -25.9066
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 0.1799,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.786,
+     "velocidade_minima_vs_ia_kmh": -9.1706
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": 0.3542,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.7387,
+     "velocidade_minima_vs_ia_kmh": -28.0045
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": 0.3532,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.8887,
+     "velocidade_minima_vs_ia_kmh": -19.9563
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 0.1216,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.717,
+     "velocidade_minima_vs_ia_kmh": -11.4563
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": 0.2906,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.502,
+     "velocidade_minima_vs_ia_kmh": -20.2887
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": 0.3477,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.6913,
+     "velocidade_minima_vs_ia_kmh": -24.8518
+    }
+   ]
+  },
+  {
+   "curva": "C10-dir",
+   "indice": 10,
+   "trecho_m": [
+    2649.0,
+    2804.1
+   ],
+   "curva_m": [
+    2672.0,
+    2758.1
+   ],
+   "apice_m": 2728.1,
+   "perda_para_ia_s": {
+    "mediana": 0.7915,
+    "p25": 0.6544,
+    "p75": 0.9912,
+    "iqr": 0.3368,
+    "voltas": 11
+   },
+   "situacao": "diferenca_consistente",
+   "lado": "perde",
+   "intervalo_90_s": [
+    0.6297,
+    0.8941
+   ],
+   "ia_freia": true,
+   "frenagem_vs_ia_m": null,
+   "lateral_apice_vs_ia_m": {
+    "mediana": 1.21,
+    "p25": 0.32,
+    "p75": 1.37,
+    "iqr": 1.05,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": -7.3
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 0.6791,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 2.4202,
+     "velocidade_minima_vs_ia_kmh": -11.0401
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": 0.6041,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.2137,
+     "velocidade_minima_vs_ia_kmh": -2.349
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 0.6871,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.0886,
+     "velocidade_minima_vs_ia_kmh": -1.1894
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 0.6297,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.4033,
+     "velocidade_minima_vs_ia_kmh": -7.0426
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 1.0991,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.6559,
+     "velocidade_minima_vs_ia_kmh": -10.5149
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 0.8279,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 3.8174,
+     "velocidade_minima_vs_ia_kmh": -7.3386
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": 1.3785,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.3433,
+     "velocidade_minima_vs_ia_kmh": -6.6221
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": 1.6002,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.2219,
+     "velocidade_minima_vs_ia_kmh": -8.7281
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 0.4647,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.0095,
+     "velocidade_minima_vs_ia_kmh": -9.6374
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": 0.8833,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.7865,
+     "velocidade_minima_vs_ia_kmh": -0.8538
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": 0.7915,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.3359,
+     "velocidade_minima_vs_ia_kmh": -13.39
+    }
+   ]
+  },
+  {
+   "curva": "C11-esq",
+   "indice": 11,
+   "trecho_m": [
+    2804.1,
+    3106.1
+   ],
+   "curva_m": [
+    2850.1,
+    3024.1
+   ],
+   "apice_m": 2884.1,
+   "perda_para_ia_s": {
+    "mediana": 0.7918,
+    "p25": 0.6357,
+    "p75": 1.4038,
+    "iqr": 0.7681,
+    "voltas": 11
+   },
+   "situacao": "diferenca_consistente",
+   "lado": "perde",
+   "intervalo_90_s": [
+    0.6177,
+    1.42
+   ],
+   "ia_freia": false,
+   "frenagem_vs_ia_m": null,
+   "lateral_apice_vs_ia_m": {
+    "mediana": -0.57,
+    "p25": -1.01,
+    "p75": 0.02,
+    "iqr": 1.03,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": -20.4
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 0.434,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.3357,
+     "velocidade_minima_vs_ia_kmh": -2.757
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": 0.765,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.1764,
+     "velocidade_minima_vs_ia_kmh": -20.361
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 0.9617,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.7756,
+     "velocidade_minima_vs_ia_kmh": -23.774
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 0.3797,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.6862,
+     "velocidade_minima_vs_ia_kmh": -7.9825
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 1.42,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.8355,
+     "velocidade_minima_vs_ia_kmh": -32.7314
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 0.7918,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.5663,
+     "velocidade_minima_vs_ia_kmh": -17.7858
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": 1.7315,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.0114,
+     "velocidade_minima_vs_ia_kmh": -36.6582
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": 1.3875,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.0109,
+     "velocidade_minima_vs_ia_kmh": -33.6455
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 3.7146,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.0289,
+     "velocidade_minima_vs_ia_kmh": -105.3347
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": 0.6177,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -5.0711,
+     "velocidade_minima_vs_ia_kmh": -16.6309
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": 0.6536,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -3.1915,
+     "velocidade_minima_vs_ia_kmh": -11.802
+    }
+   ]
+  },
+  {
+   "curva": "C12-esq",
+   "indice": 12,
+   "trecho_m": [
+    3106.1,
+    3298.1
+   ],
+   "curva_m": [
+    3188.1,
+    3262.1
+   ],
+   "apice_m": 3222.1,
+   "perda_para_ia_s": {
+    "mediana": 0.6385,
+    "p25": 0.512,
+    "p75": 0.9736,
+    "iqr": 0.4616,
+    "voltas": 11
+   },
+   "situacao": "diferenca_consistente",
+   "lado": "perde",
+   "intervalo_90_s": [
+    0.5041,
+    1.071
+   ],
+   "ia_freia": true,
+   "frenagem_vs_ia_m": {
+    "mediana": -2.0,
+    "p25": -6.0,
+    "p75": 6.0,
+    "iqr": 12.0,
+    "voltas": 3
+   },
+   "lateral_apice_vs_ia_m": {
+    "mediana": -0.89,
+    "p25": -2.23,
+    "p75": -0.06,
+    "iqr": 2.17,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": 0.4
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 0.5198,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.6234,
+     "velocidade_minima_vs_ia_kmh": -0.2162
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": 0.8761,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.1132,
+     "velocidade_minima_vs_ia_kmh": 4.0242
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 0.6586,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.8921,
+     "velocidade_minima_vs_ia_kmh": 0.4126
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 0.1067,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.6633,
+     "velocidade_minima_vs_ia_kmh": 8.2257
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 1.0764,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.2984,
+     "velocidade_minima_vs_ia_kmh": -2.1519
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 0.4953,
+     "frenagem_vs_ia_m": 14.0003,
+     "lateral_apice_vs_ia_m": -1.0872,
+     "velocidade_minima_vs_ia_kmh": 10.0829
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": 0.6343,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.2362,
+     "velocidade_minima_vs_ia_kmh": 6.1121
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": 1.0973,
+     "frenagem_vs_ia_m": -2.0,
+     "lateral_apice_vs_ia_m": -5.4338,
+     "velocidade_minima_vs_ia_kmh": -9.567
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 1.071,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 1.2243,
+     "velocidade_minima_vs_ia_kmh": -4.1003
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": 0.6385,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.8349,
+     "velocidade_minima_vs_ia_kmh": -4.406
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": 0.5041,
+     "frenagem_vs_ia_m": -10.0002,
+     "lateral_apice_vs_ia_m": -3.0053,
+     "velocidade_minima_vs_ia_kmh": 6.463
+    }
+   ]
+  },
+  {
+   "curva": "C13-esq",
+   "indice": 13,
+   "trecho_m": [
+    3298.1,
+    3479.1
+   ],
+   "curva_m": [
+    3334.1,
+    3380.1
+   ],
+   "apice_m": 3356.1,
+   "perda_para_ia_s": {
+    "mediana": 0.1722,
+    "p25": 0.1594,
+    "p75": 0.2844,
+    "iqr": 0.125,
+    "voltas": 11
+   },
+   "situacao": "diferenca_consistente",
+   "lado": "perde",
+   "intervalo_90_s": [
+    0.1633,
+    0.2329
+   ],
+   "ia_freia": false,
+   "frenagem_vs_ia_m": null,
+   "lateral_apice_vs_ia_m": {
+    "mediana": -2.23,
+    "p25": -3.68,
+    "p75": -1.14,
+    "iqr": 2.54,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": -5.6
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 0.0887,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.4874,
+     "velocidade_minima_vs_ia_kmh": -3.2982
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": 0.8171,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.2297,
+     "velocidade_minima_vs_ia_kmh": -19.128
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 0.1637,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.4396,
+     "velocidade_minima_vs_ia_kmh": -5.0167
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 0.1551,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.287,
+     "velocidade_minima_vs_ia_kmh": -5.6346
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 0.2068,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -6.0868,
+     "velocidade_minima_vs_ia_kmh": -1.3323
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 0.1692,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -4.8803,
+     "velocidade_minima_vs_ia_kmh": -5.534
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": 0.029,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -1.6748,
+     "velocidade_minima_vs_ia_kmh": 1.3188
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": 0.3359,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -4.6772,
+     "velocidade_minima_vs_ia_kmh": -8.72
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 0.1722,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.5915,
+     "velocidade_minima_vs_ia_kmh": -7.8813
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": 0.4066,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.683,
+     "velocidade_minima_vs_ia_kmh": -12.2356
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": 0.2329,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.7984,
+     "velocidade_minima_vs_ia_kmh": -10.0321
+    }
+   ]
+  },
+  {
+   "curva": "C14-esq",
+   "indice": 14,
+   "trecho_m": [
+    3479.1,
+    4112.1
+   ],
+   "curva_m": [
+    3578.1,
+    3666.1
+   ],
+   "apice_m": 3640.1,
+   "perda_para_ia_s": {
+    "mediana": 0.3517,
+    "p25": 0.2204,
+    "p75": 0.5556,
+    "iqr": 0.3352,
+    "voltas": 11
+   },
+   "situacao": "diferenca_consistente",
+   "lado": "perde",
+   "intervalo_90_s": [
+    0.2406,
+    0.7258
+   ],
+   "ia_freia": false,
+   "frenagem_vs_ia_m": null,
+   "lateral_apice_vs_ia_m": {
+    "mediana": -2.49,
+    "p25": -4.33,
+    "p75": 0.31,
+    "iqr": 4.64,
+    "voltas": 11
+   },
+   "velocidade_minima_vs_ia_kmh": {
+    "mediana": -6.6
+   },
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "perda_s": 0.1684,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -0.881,
+     "velocidade_minima_vs_ia_kmh": -1.2276
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "perda_s": 3.0328,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -14.3423,
+     "velocidade_minima_vs_ia_kmh": -56.2298
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "perda_s": 0.2406,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -3.4173,
+     "velocidade_minima_vs_ia_kmh": -3.095
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "perda_s": 0.3855,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.4292,
+     "velocidade_minima_vs_ia_kmh": -8.4291
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "perda_s": 0.3517,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.4858,
+     "velocidade_minima_vs_ia_kmh": -7.976
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "perda_s": 0.2002,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.3052,
+     "velocidade_minima_vs_ia_kmh": -1.331
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "perda_s": 0.1223,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.896,
+     "velocidade_minima_vs_ia_kmh": -0.8953
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "perda_s": 0.2709,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": 0.3182,
+     "velocidade_minima_vs_ia_kmh": -6.6149
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "perda_s": 0.3636,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -2.8716,
+     "velocidade_minima_vs_ia_kmh": -8.1141
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "perda_s": 0.7258,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -5.2394,
+     "velocidade_minima_vs_ia_kmh": -16.55
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "perda_s": 1.0505,
+     "frenagem_vs_ia_m": null,
+     "lateral_apice_vs_ia_m": -8.8188,
+     "velocidade_minima_vs_ia_kmh": -5.5084
+    }
+   ]
+  }
+ ],
+ "microsetores": [
+  {
+   "microsetor": 0,
+   "perda_mediana_s": 0.0603,
+   "p25_s": 0.0529,
+   "p75_s": 0.0668
+  },
+  {
+   "microsetor": 1,
+   "perda_mediana_s": 0.1974,
+   "p25_s": 0.1669,
+   "p75_s": 0.2511
+  },
+  {
+   "microsetor": 2,
+   "perda_mediana_s": 0.3595,
+   "p25_s": 0.311,
+   "p75_s": 0.4438
+  },
+  {
+   "microsetor": 3,
+   "perda_mediana_s": 0.2306,
+   "p25_s": 0.1731,
+   "p75_s": 0.3559
+  },
+  {
+   "microsetor": 4,
+   "perda_mediana_s": 0.2091,
+   "p25_s": 0.1509,
+   "p75_s": 0.2408
+  },
+  {
+   "microsetor": 5,
+   "perda_mediana_s": -0.038,
+   "p25_s": -0.0698,
+   "p75_s": 0.0456
+  },
+  {
+   "microsetor": 6,
+   "perda_mediana_s": 0.0915,
+   "p25_s": 0.0447,
+   "p75_s": 0.1313
+  },
+  {
+   "microsetor": 7,
+   "perda_mediana_s": 0.1168,
+   "p25_s": 0.0667,
+   "p75_s": 0.1558
+  },
+  {
+   "microsetor": 8,
+   "perda_mediana_s": 0.0586,
+   "p25_s": 0.054,
+   "p75_s": 0.1312
+  },
+  {
+   "microsetor": 9,
+   "perda_mediana_s": 0.0483,
+   "p25_s": 0.0364,
+   "p75_s": 0.0842
+  },
+  {
+   "microsetor": 10,
+   "perda_mediana_s": 0.0378,
+   "p25_s": 0.0342,
+   "p75_s": 0.0617
+  },
+  {
+   "microsetor": 11,
+   "perda_mediana_s": 0.0431,
+   "p25_s": 0.0367,
+   "p75_s": 0.0729
+  },
+  {
+   "microsetor": 12,
+   "perda_mediana_s": 0.0533,
+   "p25_s": 0.0411,
+   "p75_s": 0.0702
+  },
+  {
+   "microsetor": 13,
+   "perda_mediana_s": 0.0539,
+   "p25_s": 0.0428,
+   "p75_s": 0.0624
+  },
+  {
+   "microsetor": 14,
+   "perda_mediana_s": 0.0537,
+   "p25_s": 0.0431,
+   "p75_s": 0.0592
+  },
+  {
+   "microsetor": 15,
+   "perda_mediana_s": 0.055,
+   "p25_s": 0.0479,
+   "p75_s": 0.0592
+  },
+  {
+   "microsetor": 16,
+   "perda_mediana_s": 0.1396,
+   "p25_s": 0.1105,
+   "p75_s": 0.1577
+  },
+  {
+   "microsetor": 17,
+   "perda_mediana_s": 0.173,
+   "p25_s": 0.1016,
+   "p75_s": 0.2437
+  },
+  {
+   "microsetor": 18,
+   "perda_mediana_s": 0.1432,
+   "p25_s": 0.1104,
+   "p75_s": 0.2352
+  },
+  {
+   "microsetor": 19,
+   "perda_mediana_s": 0.1031,
+   "p25_s": 0.0295,
+   "p75_s": 0.1379
+  },
+  {
+   "microsetor": 20,
+   "perda_mediana_s": 0.1126,
+   "p25_s": 0.0523,
+   "p75_s": 0.2513
+  },
+  {
+   "microsetor": 21,
+   "perda_mediana_s": 0.0837,
+   "p25_s": 0.0696,
+   "p75_s": 0.1357
+  },
+  {
+   "microsetor": 22,
+   "perda_mediana_s": 0.0588,
+   "p25_s": 0.0325,
+   "p75_s": 0.0811
+  },
+  {
+   "microsetor": 23,
+   "perda_mediana_s": 0.0364,
+   "p25_s": 0.0241,
+   "p75_s": 0.0532
+  },
+  {
+   "microsetor": 24,
+   "perda_mediana_s": 0.0348,
+   "p25_s": 0.0224,
+   "p75_s": 0.0461
+  },
+  {
+   "microsetor": 25,
+   "perda_mediana_s": 0.1101,
+   "p25_s": 0.0724,
+   "p75_s": 0.1179
+  },
+  {
+   "microsetor": 26,
+   "perda_mediana_s": 0.1421,
+   "p25_s": 0.1007,
+   "p75_s": 0.3494
+  },
+  {
+   "microsetor": 27,
+   "perda_mediana_s": 0.1521,
+   "p25_s": 0.1289,
+   "p75_s": 0.2637
+  },
+  {
+   "microsetor": 28,
+   "perda_mediana_s": -0.081,
+   "p25_s": -0.1235,
+   "p75_s": 0.0029
+  },
+  {
+   "microsetor": 29,
+   "perda_mediana_s": -0.0698,
+   "p25_s": -0.1042,
+   "p75_s": -0.0261
+  },
+  {
+   "microsetor": 30,
+   "perda_mediana_s": 0.3281,
+   "p25_s": 0.1436,
+   "p75_s": 0.3898
+  },
+  {
+   "microsetor": 31,
+   "perda_mediana_s": 0.2172,
+   "p25_s": 0.0301,
+   "p75_s": 0.2523
+  },
+  {
+   "microsetor": 32,
+   "perda_mediana_s": 0.2422,
+   "p25_s": 0.0446,
+   "p75_s": 0.468
+  },
+  {
+   "microsetor": 33,
+   "perda_mediana_s": 0.0366,
+   "p25_s": -0.027,
+   "p75_s": 0.1783
+  },
+  {
+   "microsetor": 34,
+   "perda_mediana_s": 0.1358,
+   "p25_s": 0.0495,
+   "p75_s": 0.2069
+  },
+  {
+   "microsetor": 35,
+   "perda_mediana_s": 0.1012,
+   "p25_s": 0.0747,
+   "p75_s": 0.149
+  },
+  {
+   "microsetor": 36,
+   "perda_mediana_s": 0.4153,
+   "p25_s": 0.2411,
+   "p75_s": 0.4607
+  },
+  {
+   "microsetor": 37,
+   "perda_mediana_s": 0.2322,
+   "p25_s": 0.1289,
+   "p75_s": 0.3369
+  },
+  {
+   "microsetor": 38,
+   "perda_mediana_s": 0.4297,
+   "p25_s": 0.2917,
+   "p75_s": 0.668
+  },
+  {
+   "microsetor": 39,
+   "perda_mediana_s": 0.2004,
+   "p25_s": 0.1109,
+   "p75_s": 0.2914
+  },
+  {
+   "microsetor": 40,
+   "perda_mediana_s": 0.1857,
+   "p25_s": 0.1498,
+   "p75_s": 0.2877
+  },
+  {
+   "microsetor": 41,
+   "perda_mediana_s": 0.1531,
+   "p25_s": 0.1151,
+   "p75_s": 0.258
+  },
+  {
+   "microsetor": 42,
+   "perda_mediana_s": 0.203,
+   "p25_s": 0.1618,
+   "p75_s": 0.344
+  },
+  {
+   "microsetor": 43,
+   "perda_mediana_s": 0.4774,
+   "p25_s": 0.3614,
+   "p75_s": 0.7054
+  },
+  {
+   "microsetor": 44,
+   "perda_mediana_s": 0.065,
+   "p25_s": 0.042,
+   "p75_s": 0.1929
+  },
+  {
+   "microsetor": 45,
+   "perda_mediana_s": 0.0608,
+   "p25_s": 0.0273,
+   "p75_s": 0.1414
+  },
+  {
+   "microsetor": 46,
+   "perda_mediana_s": 0.0718,
+   "p25_s": 0.0574,
+   "p75_s": 0.1349
+  },
+  {
+   "microsetor": 47,
+   "perda_mediana_s": 0.067,
+   "p25_s": 0.05,
+   "p75_s": 0.1101
+  },
+  {
+   "microsetor": 48,
+   "perda_mediana_s": 0.0593,
+   "p25_s": 0.0356,
+   "p75_s": 0.0843
+  },
+  {
+   "microsetor": 49,
+   "perda_mediana_s": 0.0555,
+   "p25_s": 0.0279,
+   "p75_s": 0.0746
+  },
+  {
+   "microsetor": 50,
+   "perda_mediana_s": 0.0391,
+   "p25_s": 0.0191,
+   "p75_s": 0.0735
+  },
+  {
+   "microsetor": 51,
+   "perda_mediana_s": 0.0229,
+   "p25_s": 0.0148,
+   "p75_s": 0.0572
+  },
+  {
+   "microsetor": 52,
+   "perda_mediana_s": 0.0214,
+   "p25_s": 0.015,
+   "p75_s": 0.0567
+  },
+  {
+   "microsetor": 53,
+   "perda_mediana_s": 0.0145,
+   "p25_s": 0.0116,
+   "p75_s": 0.0494
+  },
+  {
+   "microsetor": 54,
+   "perda_mediana_s": 0.0312,
+   "p25_s": 0.0254,
+   "p75_s": 0.049
+  },
+  {
+   "microsetor": 55,
+   "perda_mediana_s": 0.0403,
+   "p25_s": 0.0357,
+   "p75_s": 0.0539
+  },
+  {
+   "microsetor": 56,
+   "perda_mediana_s": 0.0418,
+   "p25_s": 0.0391,
+   "p75_s": 0.0563
+  },
+  {
+   "microsetor": 57,
+   "perda_mediana_s": 0.0392,
+   "p25_s": 0.0374,
+   "p75_s": 0.0538
+  },
+  {
+   "microsetor": 58,
+   "perda_mediana_s": 0.0439,
+   "p25_s": 0.0428,
+   "p75_s": 0.0558
+  },
+  {
+   "microsetor": 59,
+   "perda_mediana_s": 0.049,
+   "p25_s": 0.0471,
+   "p75_s": 0.0585
+  }
+ ],
+ "store": {
+  "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2.parquet",
+  "sha256": "348bcb470baa16b6c582e980bee6d1b62b78ec418e4e8ec4b429f48e5b439e27",
+  "commit_do_store": "3687bfc0549c9223641143107ba550d63e1c4ae8",
+  "geometry_id": "0ed16f0dd2225990"
+ },
+ "referencia": {
+  "tipo": "volta_ia",
+  "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+  "tempo_s": 84.829,
+  "modelo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\reference_models\\vhe_interlagos.json"
+ },
+ "regras": "docs/store_v2_e_evolucao.md, secao 1.4"
+}

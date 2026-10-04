@@ -1,0 +1,2117 @@
+diff --git a/backend/ml/comparison/evolution.py b/backend/ml/comparison/evolution.py
+new file mode 100644
+index 00000000..866e3224
+--- /dev/null
++++ b/backend/ml/comparison/evolution.py
+@@ -0,0 +1,313 @@
++"""Evolucao do piloto, sessao a sessao (peca B, primeira versao; pedido 16).
++
++As regras foram registradas antes da primeira rodada, em
++`docs/store_v2_e_evolucao.md` (secao 1.4):
++
++* **voltas** -- do store v2, `humano`, equipamento `atual`, com o relogio
++  conferido e sem `relogio_suspeito`;
++* **sessao** -- as gravacoes do mesmo dia;
++* **referencia** -- a volta da IA do coach (`volta_ia`);
++* **unidades** -- as 14 curvas de `detect_corners`, cada uma com o trecho que
++  vai do meio da reta anterior ao meio da seguinte; os 14 trechos cobrem a
++  volta, e a soma das perdas e a diferenca de tempo de volta;
++* **diferenca consistente** -- o intervalo de 90% (bootstrap) da perda mediana
++  para a IA nao inclui zero; com menos de 5 voltas na sessao, "poucos dados".
++"""
++
++from __future__ import annotations
++
++from dataclasses import dataclass
++from typing import Dict, List, Optional, Sequence, Tuple
++
++import numpy as np
++import pandas as pd
++
++from ..data.origin import CURRENT_EQUIPMENT, HUMAN
++from ..track.corners import Corner
++from ..track.geometry import TrackGeometry
++from ..track.microsectors import Microsectors, split_times
++from .lap_vs_reference import BRAKE_ONSET, _signed_distance, _window
++
++MIN_LAPS = 5
++BOOTSTRAP_RESAMPLES = 2000
++BOOTSTRAP_LEVEL = 0.90
++BOOTSTRAP_SEED = 20261004
++STABILITY_SESSIONS = 3
++STABILITY_LIMIT_S = 0.5
++TOP_CORNERS = 3
++
++CONSISTENT = "diferenca_consistente"
++NOT_CONSISTENT = "sem_diferenca_consistente"
++FEW_DATA = "poucos_dados"
++
++
++# ------------------------------------------------------------ voltas ---
++
++def driver_laps(laps: pd.DataFrame) -> pd.DataFrame:
++    """As voltas que falam do piloto de hoje: humano, equipamento atual, relogio conferido e nao suspeito."""
++    mask = (
++        (laps["origem"] == HUMAN)
++        & (laps["equipamento"] == CURRENT_EQUIPMENT)
++        & laps["relogio_verificado"].fillna(False).astype(bool)
++        & ~laps["relogio_suspeito"].fillna(True).astype(bool)
++    )
++    if "valid" in laps.columns:
++        mask &= laps["valid"].astype(bool)
++    return laps[mask]
++
++
++def session_of(session_id: str) -> str:
++    """A sessao e o dia: `2026-10-04_03-21-52_vhe_interlagos` -> `2026-10-04`."""
++    return str(session_id)[:10]
++
++
++# ------------------------------------------------------------ trechos ---
++
++def _midpoint(a: float, b: float, length: float) -> float:
++    return float(np.mod(a + np.mod(b - a, length) / 2.0, length))
++
++
++@dataclass(frozen=True)
++class Segment:
++    corner: Corner
++    start_s: float
++    end_s: float
++
++
++def corner_segments(track: TrackGeometry, corners: Sequence[Corner]) -> List[Segment]:
++    """Um trecho por curva, do meio da reta anterior ao meio da seguinte; juntos cobrem a volta."""
++    out = []
++    count = len(corners)
++    for k, corner in enumerate(corners):
++        previous, following = corners[k - 1], corners[(k + 1) % count]
++        out.append(Segment(
++            corner=corner,
++            start_s=_midpoint(previous.end_s, corner.start_s, track.length),
++            end_s=_midpoint(corner.end_s, following.start_s, track.length),
++        ))
++    return out
++
++
++def time_at(elapsed: np.ndarray, total: float, track: TrackGeometry, s_value: float) -> float:
++    """Tempo da volta no ponto `s` (o relogio vai de 0 em s = 0 ao periodo na linha)."""
++    xs = np.append(track.s, track.length)
++    ys = np.append(np.asarray(elapsed, dtype=float), float(total))
++    return float(np.interp(np.mod(s_value, track.length), xs, ys))
++
++
++def segment_time(elapsed: np.ndarray, total: float, track: TrackGeometry, segment: Segment) -> float:
++    """Tempo do trecho; o que cruza a linha soma o fim e o comeco da mesma volta."""
++    start = time_at(elapsed, total, track, segment.start_s)
++    end = time_at(elapsed, total, track, segment.end_s)
++    return float(np.mod(end - start, total))
++
++
++def braking_point(brake: np.ndarray, track: TrackGeometry, start_s: float, apex_s: float) -> Optional[float]:
++    """Primeiro ponto, do inicio do trecho ao apice, em que o freio passa de < 0,15 para >= 0,15."""
++    indices = _window(track, start_s, apex_s)
++    on = np.nan_to_num(np.asarray(brake, dtype=float)[indices]) >= BRAKE_ONSET
++    rising = np.flatnonzero(on[1:] & ~on[:-1]) + 1
++    return float(track.s[indices[rising[0]]]) if rising.size else None
++
++
++def lap_corner_features(
++    lap: pd.DataFrame, lap_total: float, ref: pd.DataFrame, ref_total: float,
++    track: TrackGeometry, segments: Sequence[Segment],
++) -> List[Dict[str, Optional[float]]]:
++    """Por curva: perda para a IA, frenagem, lateral no apice e minima, volta menos IA."""
++    lap_elapsed, ref_elapsed = lap["elapsed_s"].to_numpy(dtype=float), ref["elapsed_s"].to_numpy(dtype=float)
++    lap_speed, ref_speed = lap["speed_kmh"].to_numpy(dtype=float), ref["speed_kmh"].to_numpy(dtype=float)
++    lap_lateral, ref_lateral = lap["lateral"].to_numpy(dtype=float), ref["lateral"].to_numpy(dtype=float)
++    out = []
++    for segment in segments:
++        corner = segment.corner
++        lap_brake = braking_point(lap["brake"].to_numpy(dtype=float), track, segment.start_s, corner.apex_s)
++        ref_brake = braking_point(ref["brake"].to_numpy(dtype=float), track, segment.start_s, corner.apex_s)
++        inside = _window(track, corner.start_s, corner.end_s)
++        apex = int(track.index_of(corner.apex_s))
++        out.append({
++            "perda_s": segment_time(lap_elapsed, lap_total, track, segment)
++            - segment_time(ref_elapsed, ref_total, track, segment),
++            "ia_freia": ref_brake is not None,
++            "frenagem_vs_ia_m": (
++                _signed_distance(track, lap_brake, ref_brake) if lap_brake is not None and ref_brake is not None
++                else None
++            ),
++            "lateral_apice_vs_ia_m": float(lap_lateral[apex] - ref_lateral[apex]),
++            "velocidade_minima_vs_ia_kmh": float(np.nanmin(lap_speed[inside]) - np.nanmin(ref_speed[inside])),
++        })
++    return out
++
++
++# --------------------------------------------------------- estatistica ---
++
++def bootstrap_median_interval(values: Sequence[float], resamples: int = BOOTSTRAP_RESAMPLES,
++                              level: float = BOOTSTRAP_LEVEL, seed: int = BOOTSTRAP_SEED) -> Tuple[float, float]:
++    """Intervalo percentil da mediana, reamostrando as voltas com reposicao."""
++    values = np.asarray(values, dtype=float)
++    rng = np.random.default_rng(seed)
++    medians = np.median(values[rng.integers(0, values.size, size=(resamples, values.size))], axis=1)
++    tail = (1.0 - level) / 2.0 * 100.0
++    return float(np.percentile(medians, tail)), float(np.percentile(medians, 100.0 - tail))
++
++
++def consistency(losses: Sequence[float], min_laps: int = MIN_LAPS) -> Dict[str, object]:
++    """A situacao de uma curva na sessao: consistente (e de que lado), nao consistente ou poucos dados."""
++    losses = np.asarray([v for v in losses if v is not None and np.isfinite(v)], dtype=float)
++    if losses.size < min_laps:
++        return {"situacao": FEW_DATA, "lado": None, "intervalo_90_s": None}
++    low, high = bootstrap_median_interval(losses)
++    if low > 0.0:
++        side = "perde"
++    elif high < 0.0:
++        side = "ganha"
++    else:
++        side = None
++    return {
++        "situacao": CONSISTENT if side else NOT_CONSISTENT,
++        "lado": side,
++        "intervalo_90_s": [round(low, 4), round(high, 4)],
++    }
++
++
++def spread(values: Sequence[Optional[float]], digits: int = 4) -> Optional[Dict[str, float]]:
++    """Mediana e intervalo interquartil dos valores que existem."""
++    values = np.asarray([v for v in values if v is not None and np.isfinite(v)], dtype=float)
++    if values.size == 0:
++        return None
++    p25, median, p75 = np.percentile(values, [25, 50, 75])
++    return {"mediana": round(float(median), digits), "p25": round(float(p25), digits),
++            "p75": round(float(p75), digits), "iqr": round(float(p75 - p25), digits), "voltas": int(values.size)}
++
++
++def trend(values: Sequence[float]) -> Optional[float]:
++    """Inclinacao da reta de minimos quadrados, por sessao. None com menos de 2 sessoes."""
++    values = np.asarray(values, dtype=float)
++    if values.size < 2:
++        return None
++    return float(np.polyfit(np.arange(values.size, dtype=float), values, 1)[0])
++
++
++def stability(medians: Sequence[float], sessions: int = STABILITY_SESSIONS,
++              limit_s: float = STABILITY_LIMIT_S) -> Dict[str, object]:
++    """Criterio do ADR 0015: a mediana das ultimas 3 sessoes varia menos de 0,5 s."""
++    medians = [float(m) for m in medians]
++    if len(medians) < sessions:
++        return {"limite_s": limit_s, "sessoes_necessarias": sessions, "sessoes_disponiveis": len(medians),
++                "amplitude_s": None, "estabilizou": None,
++                "situacao": f"ainda nao avaliavel: {len(medians)} de {sessions} sessoes"}
++    last = medians[-sessions:]
++    amplitude = max(last) - min(last)
++    return {"limite_s": limit_s, "sessoes_necessarias": sessions, "sessoes_disponiveis": len(medians),
++            "amplitude_s": round(amplitude, 3), "estabilizou": bool(amplitude < limit_s),
++            "situacao": "estabilizou" if amplitude < limit_s else "ainda variando"}
++
++
++# ------------------------------------------------------------ sessao ---
++
++def session_report(
++    session: str, laps: pd.DataFrame, lap_grids: Dict[str, pd.DataFrame], ref: pd.DataFrame,
++    ref_total: float, track: TrackGeometry, segments: Sequence[Segment], sectors: Microsectors,
++) -> Dict[str, object]:
++    """O JSON de uma sessao (formato em `docs/store_v2_e_evolucao.md`)."""
++    laps = laps.sort_values(["session_id", "sequence"])
++    times = laps["lap_time_s"].to_numpy(dtype=float)
++    per_lap = {}
++    for lap_id, total in zip(laps["lap_id"], times):
++        per_lap[lap_id] = lap_corner_features(lap_grids[lap_id], float(total), ref, ref_total, track, segments)
++
++    corners = []
++    for k, segment in enumerate(segments):
++        rows = [per_lap[lap_id][k] for lap_id in laps["lap_id"]]
++        losses = [r["perda_s"] for r in rows]
++        corner = segment.corner
++        ai_brakes = bool(rows and rows[0]["ia_freia"])
++        loss_spread = spread(losses)
++        corners.append({
++            "curva": corner.label,
++            "indice": k + 1,
++            "trecho_m": [round(segment.start_s, 1), round(segment.end_s, 1)],
++            "curva_m": [round(corner.start_s, 1), round(corner.end_s, 1)],
++            "apice_m": round(corner.apex_s, 1),
++            "perda_para_ia_s": loss_spread,
++            **consistency(losses),
++            "ia_freia": ai_brakes,
++            "frenagem_vs_ia_m": spread([r["frenagem_vs_ia_m"] for r in rows], 1) if ai_brakes else None,
++            "lateral_apice_vs_ia_m": spread([r["lateral_apice_vs_ia_m"] for r in rows], 2),
++            "velocidade_minima_vs_ia_kmh": (
++                {"mediana": round(float(np.median([r["velocidade_minima_vs_ia_kmh"] for r in rows])), 1)}
++                if rows else None
++            ),
++            "por_volta": [
++                {"volta": lap_id, **{key: (None if value is None else round(float(value), 4))
++                                     for key, value in per_lap[lap_id][k].items() if key != "ia_freia"}}
++                for lap_id in laps["lap_id"]
++            ],
++        })
++
++    ref_splits = split_times(ref["elapsed_s"].to_numpy(dtype=float), sectors, track, total=ref_total)
++    sector_losses = np.array([
++        split_times(lap_grids[lap_id]["elapsed_s"].to_numpy(dtype=float), sectors, track, total=float(total))
++        - ref_splits
++        for lap_id, total in zip(laps["lap_id"], times)
++    ])
++    best, median = float(times.min()), float(np.median(times))
++    return {
++        "formato": "evolucao-sessao/1",
++        "sessao": session,
++        "gravacoes": sorted(laps["session_id"].unique().tolist()),
++        "resumo": {
++            "voltas": int(times.size),
++            "melhor_s": round(best, 3),
++            "mediana_s": round(median, 3),
++            "desvio_s": round(float(np.std(times, ddof=1)), 3) if times.size > 1 else None,
++            "volta_da_ia_s": round(ref_total, 3),
++            "mediana_menos_ia_s": round(median - ref_total, 3),
++            "melhor_menos_ia_s": round(best - ref_total, 3),
++            "poucos_dados": bool(times.size < MIN_LAPS),
++        },
++        "voltas": [
++            {"volta": lap_id, "gravacao": sid, "tempo_s": round(float(t), 3)}
++            for lap_id, sid, t in zip(laps["lap_id"], laps["session_id"], times)
++        ],
++        "curvas": corners,
++        "microsetores": [
++            {"microsetor": i, "perda_mediana_s": round(float(np.median(sector_losses[:, i])), 4),
++             "p25_s": round(float(np.percentile(sector_losses[:, i], 25)), 4),
++             "p75_s": round(float(np.percentile(sector_losses[:, i], 75)), 4)}
++            for i in range(sector_losses.shape[1])
++        ],
++    }
++
++
++def summary_report(sessions: Sequence[Dict[str, object]]) -> Dict[str, object]:
++    """O JSON de resumo: a serie das sessoes, a tendencia e o criterio do ADR 0015."""
++    ordered = sorted(sessions, key=lambda r: r["sessao"])
++    medians = [r["resumo"]["mediana_s"] for r in ordered]
++    latest = ordered[-1] if ordered else None
++    top = []
++    if latest:
++        ranked = sorted(latest["curvas"], key=lambda c: -(c["perda_para_ia_s"] or {}).get("mediana", float("-inf")))
++        for corner in ranked[:TOP_CORNERS]:
++            series = []
++            for report in ordered:
++                match = next(c for c in report["curvas"] if c["curva"] == corner["curva"])
++                series.append({"sessao": report["sessao"],
++                               "perda_mediana_s": (match["perda_para_ia_s"] or {}).get("mediana"),
++                               "situacao": match["situacao"]})
++            values = [p["perda_mediana_s"] for p in series if p["perda_mediana_s"] is not None]
++            top.append({"curva": corner["curva"], "serie": series,
++                        "tendencia_s_por_sessao": None if trend(values) is None else round(trend(values), 4)})
++    slope = trend(medians)
++    return {
++        "formato": "evolucao-resumo/1",
++        "sessoes": [
++            {"sessao": r["sessao"], **{k: r["resumo"][k] for k in (
++                "voltas", "melhor_s", "mediana_s", "desvio_s", "mediana_menos_ia_s", "melhor_menos_ia_s", "poucos_dados")},
++             "curvas_com_diferenca_consistente": [c["curva"] for c in r["curvas"] if c["situacao"] == CONSISTENT]}
++            for r in ordered
++        ],
++        "tendencia_mediana_s_por_sessao": None if slope is None else round(slope, 4),
++        "curvas_de_maior_perda": top,
++        "criterio_adr_0015": stability(medians),
++    }
+diff --git a/backend/ml/data/lap_store.py b/backend/ml/data/lap_store.py
+index 73736e66..1f07982c 100644
+--- a/backend/ml/data/lap_store.py
++++ b/backend/ml/data/lap_store.py
+@@ -248,12 +248,19 @@ def build_store(
+     )
+ 
+ 
+-def store_path(root: Optional[Path] = None) -> Path:
+-    return (Path(root) if root else config.artifacts_root()) / STORE_FILENAME
+-
+-
+-def save_store(store: StoredLaps, root: Optional[Path] = None) -> Path:
+-    path = store_path(root)
++def store_path(root: Optional[Path] = None, filename: str = STORE_FILENAME) -> Path:
++    return (Path(root) if root else config.artifacts_root()) / filename
++
++
++def save_store(
++    store: StoredLaps,
++    root: Optional[Path] = None,
++    filename: str = STORE_FILENAME,
++    metadata: str = STORE_METADATA,
++    extra: Optional[Dict[str, object]] = None,
++) -> Path:
++    """Grava o store. `filename`, `metadata` e `extra` existem para o store v2 (pedido 16)."""
++    path = store_path(root, filename)
+     path.parent.mkdir(parents=True, exist_ok=True)
+     store.frame.to_parquet(path, index=False)
+     meta = {
+@@ -263,18 +270,34 @@ def save_store(store: StoredLaps, root: Optional[Path] = None) -> Path:
+         "source_hash": store.source_hash,
+         "selection": store.selection,
+         "columns": [c for c in store.frame.columns if c not in ("lap_id", "grid_index")],
++        **(extra or {}),
+         "laps": store.laps.to_dict(orient="records"),
+     }
+-    (path.parent / STORE_METADATA).write_text(
+-        json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8"
++    (path.parent / metadata).write_text(
++        json.dumps(meta, indent=2, ensure_ascii=False, default=_json_default), encoding="utf-8"
+     )
+     return path
+ 
+ 
+-def load_store(root: Optional[Path] = None, track: Optional[TrackGeometry] = None) -> StoredLaps:
++def _json_default(value):
++    if isinstance(value, (np.integer,)):
++        return int(value)
++    if isinstance(value, (np.floating,)):
++        return None if np.isnan(value) else float(value)
++    if isinstance(value, (np.bool_,)):
++        return bool(value)
++    return str(value)
++
++
++def load_store(
++    root: Optional[Path] = None,
++    track: Optional[TrackGeometry] = None,
++    filename: str = STORE_FILENAME,
++    metadata: str = STORE_METADATA,
++) -> StoredLaps:
+     """Le o store. Com `track`, recusa um store construido com outra geometria."""
+-    path = store_path(root)
+-    meta_path = path.parent / STORE_METADATA
++    path = store_path(root, filename)
++    meta_path = path.parent / metadata
+     if not path.exists() or not meta_path.exists():
+         raise FileNotFoundError(
+             f"store nao encontrado em {path}. Rode `python -m ml.scripts.build_lap_store`."
+diff --git a/backend/ml/data/store_checks.py b/backend/ml/data/store_checks.py
+new file mode 100644
+index 00000000..eabce850
+--- /dev/null
++++ b/backend/ml/data/store_checks.py
+@@ -0,0 +1,198 @@
++"""Checagens do store v2, registradas antes de construir (pedido 16).
++
++`docs/store_v2_e_evolucao.md`, secao 1.3:
++
++* **principal** -- o periodo de s = 0 a s = 0 bate com o cronometro do jogo:
++  p99 de |periodo - tempo do jogo| <= 5 ms nas voltas com o fechamento medido;
++* nenhuma volta passa pelo box;
++* nenhuma volta aparece duas vezes;
++* uma geometria so.
++
++E os efeitos esperados contra o store antigo (secao 1.2), que sao relatados
++mas nao travam: toda volta e o microsetor 0 sobem ~26 ms, o resto quase nao muda.
++"""
++
++from __future__ import annotations
++
++from typing import Dict, List, Optional
++
++import numpy as np
++import pandas as pd
++
++from ..track.geometry import TrackGeometry
++from ..track.microsectors import Microsectors, split_times
++from .ai_detector import pit_lap
++from .lap_store import StoredLaps
++
++PERIOD_LIMIT_MS = 5.0
++OVERLAP_LIMIT = 0.5
++EXPECTED_SHIFT_MS = (20.0, 35.0)
++OTHER_SECTORS_LIMIT_MS = 5.0
++
++
++def _stats(values: np.ndarray) -> Dict[str, float]:
++    values = np.asarray(values, dtype=float)
++    if values.size == 0:
++        return {}
++    return {
++        "n": int(values.size),
++        "min": round(float(values.min()), 2),
++        "p1": round(float(np.percentile(values, 1)), 2),
++        "mediana": round(float(np.median(values)), 2),
++        "p99": round(float(np.percentile(values, 99)), 2),
++        "max": round(float(values.max()), 2),
++    }
++
++
++def period_differences_ms(laps: pd.DataFrame) -> pd.Series:
++    """Periodo (lap_time_s) menos o tempo do jogo, em ms, das voltas com o fechamento medido."""
++    measured = laps.dropna(subset=["tempo_jogo_s"])
++    return pd.Series(
++        1000.0 * (measured["lap_time_s"].astype(float) - measured["tempo_jogo_s"].astype(float)).to_numpy(),
++        index=measured["lap_id"].to_numpy(),
++    )
++
++
++def check_period(laps: pd.DataFrame, limit_ms: float = PERIOD_LIMIT_MS) -> Dict[str, object]:
++    """Checagem principal: p99 de |periodo - tempo do jogo| <= `limit_ms`."""
++    diffs = period_differences_ms(laps)
++    absolute = diffs.abs()
++    p99 = float(np.percentile(absolute, 99)) if len(absolute) else float("nan")
++    worst = absolute.sort_values(ascending=False).head(5)
++    return {
++        "checagem": "periodo de s = 0 a s = 0 contra o cronometro do jogo",
++        "limite_ms": limit_ms,
++        "voltas_medidas": int(len(diffs)),
++        "voltas_sem_fechamento_medido": int(laps["tempo_jogo_s"].isna().sum()),
++        "diferenca_ms": _stats(diffs.to_numpy()),
++        "abs_diferenca_ms": _stats(absolute.to_numpy()),
++        "piores": [{"volta": k, "diferenca_ms": round(float(diffs[k]), 2)} for k in worst.index],
++        "passou": bool(len(diffs) > 0 and p99 <= limit_ms),
++    }
++
++
++def check_no_box(store: StoredLaps, sectors: Microsectors) -> Dict[str, object]:
++    flagged = [lap_id for lap_id in store.lap_ids if pit_lap(store.lap(lap_id), sectors)]
++    return {"checagem": "nenhuma volta passa pelo box", "voltas_com_box": flagged, "passou": not flagged}
++
++
++def overlapping_pairs(laps: pd.DataFrame, limit: float = OVERLAP_LIMIT) -> List[Dict[str, object]]:
++    """Pares de voltas de sessoes diferentes com mais de `limit` do intervalo em comum."""
++    rows = laps.dropna(subset=["inicio_epoch_s", "fim_epoch_s"]).sort_values("inicio_epoch_s")
++    start = rows["inicio_epoch_s"].to_numpy(dtype=float)
++    end = rows["fim_epoch_s"].to_numpy(dtype=float)
++    ids = rows["lap_id"].to_numpy()
++    sessions = rows["session_id"].to_numpy()
++    folders = rows["pasta"].to_numpy() if "pasta" in rows else np.array([None] * len(rows))
++    out = []
++    for i in range(len(rows)):
++        j = i + 1
++        while j < len(rows) and start[j] < end[i]:
++            if sessions[i] != sessions[j]:
++                overlap = min(end[i], end[j]) - max(start[i], start[j])
++                shorter = min(end[i] - start[i], end[j] - start[j])
++                if shorter > 0 and overlap / shorter > limit:
++                    out.append({"a": ids[i], "b": ids[j], "pastas_diferentes": bool(folders[i] != folders[j]),
++                                "fracao_em_comum": round(float(overlap / shorter), 3)})
++            j += 1
++    return out
++
++
++def check_no_duplicates(laps: pd.DataFrame) -> Dict[str, object]:
++    repeated = laps["lap_id"][laps["lap_id"].duplicated()].tolist()
++    marked = laps["lap_id"][laps["duplicada_de"].notna()].tolist() if "duplicada_de" in laps else []
++    pairs = overlapping_pairs(laps)
++    across = [p for p in pairs if p["pastas_diferentes"]]
++    return {
++        "checagem": "nenhuma volta aparece duas vezes",
++        "lap_id_repetido": repeated,
++        "com_duplicada_de": marked,
++        "pares_de_pastas_diferentes_sobrepostos": across,
++        "pares_da_mesma_pasta_sobrepostos (informativo)": [p for p in pairs if not p["pastas_diferentes"]],
++        "passou": not repeated and not marked and not across,
++    }
++
++
++def check_single_geometry(laps: pd.DataFrame, track: TrackGeometry) -> Dict[str, object]:
++    ids = sorted(laps["geometry_id"].dropna().astype(str).unique())
++    return {
++        "checagem": "uma geometria so",
++        "geometry_ids": ids,
++        "geometria_carregada": track.geometry_id,
++        "passou": ids == [track.geometry_id],
++    }
++
++
++def expected_effects(new: StoredLaps, old: StoredLaps, sectors: Microsectors, track: TrackGeometry) -> Dict[str, object]:
++    """Contra o store antigo, nas voltas dos dois: volta e microsetor 0 (~ +26 ms) e o resto."""
++    common = sorted(set(new.lap_ids) & set(old.lap_ids))
++    new_laps = new.laps.set_index("lap_id")
++    old_laps = old.laps.set_index("lap_id")
++    lap_ms, first_ms, others = [], [], []
++    for lap_id in common:
++        a_total, b_total = float(old_laps.at[lap_id, "lap_time_s"]), float(new_laps.at[lap_id, "lap_time_s"])
++        a = split_times(old.lap(lap_id)["elapsed_s"].to_numpy(dtype=float), sectors, track, total=a_total)
++        b = split_times(new.lap(lap_id)["elapsed_s"].to_numpy(dtype=float), sectors, track, total=b_total)
++        lap_ms.append(1000.0 * (b_total - a_total))
++        first_ms.append(1000.0 * (b[0] - a[0]))
++        others.append(np.abs(1000.0 * (b[1:] - a[1:])))
++    other_values = np.concatenate(others) if others else np.array([])
++    lap_stats, first_stats = _stats(np.array(lap_ms)), _stats(np.array(first_ms))
++    low, high = EXPECTED_SHIFT_MS
++    return {
++        "voltas_nos_dois_stores": len(common),
++        "voltas_so_no_antigo": len(set(old.lap_ids) - set(new.lap_ids)),
++        "volta_v2_menos_antigo_ms": lap_stats,
++        "microsetor_0_v2_menos_antigo_ms": first_stats,
++        "outros_microsetores_abs_ms": _stats(other_values),
++        "como_esperado": bool(
++            common
++            and low <= lap_stats["mediana"] <= high
++            and low <= first_stats["mediana"] <= high
++            and float(np.percentile(other_values, 99)) < OTHER_SECTORS_LIMIT_MS
++        ),
++    }
++
++
++def control_old_period(old: StoredLaps, new_laps: pd.DataFrame) -> Dict[str, object]:
++    """Controle: a checagem principal aplicada ao store antigo (espera-se ~ -26 ms)."""
++    game = new_laps.set_index("lap_id")["tempo_jogo_s"].dropna()
++    old_laps = old.laps.set_index("lap_id")
++    common = [i for i in old_laps.index if i in game.index]
++    diffs = np.array([1000.0 * (float(old_laps.at[i, "lap_time_s"]) - float(game[i])) for i in common])
++    return {
++        "controle": "store antigo contra o mesmo cronometro do jogo",
++        "voltas": len(common),
++        "diferenca_ms": _stats(diffs),
++        "passaria": bool(diffs.size and float(np.percentile(np.abs(diffs), 99)) <= PERIOD_LIMIT_MS),
++    }
++
++
++def run_checks(store: StoredLaps, track: TrackGeometry, sectors: Microsectors,
++               old: Optional[StoredLaps] = None) -> Dict[str, object]:
++    laps = store.laps
++    checks = {
++        "principal_periodo": check_period(laps),
++        "sem_box": check_no_box(store, sectors),
++        "sem_duplicatas": check_no_duplicates(laps),
++        "uma_geometria": check_single_geometry(laps, track),
++    }
++    out: Dict[str, object] = {
++        "checagens": checks,
++        "todas_passaram": all(c["passou"] for c in checks.values()),
++        "principal_passou": checks["principal_periodo"]["passou"],
++    }
++    if old is not None:
++        out["efeitos_esperados"] = expected_effects(store, old, sectors, track)
++        out["controle_store_antigo"] = control_old_period(old, laps)
++    return out
++
++
++def counts_by(laps: pd.DataFrame) -> Dict[str, object]:
++    """Voltas por origem, equipamento e pasta (e combinadas)."""
++    out: Dict[str, object] = {"voltas": int(len(laps))}
++    for column in ("origem", "equipamento", "pasta"):
++        out[f"por_{column}"] = {str(k): int(v) for k, v in laps[column].fillna("-").value_counts().items()}
++    combo = laps.groupby([laps["origem"].fillna("-"), laps["equipamento"].fillna("-"), laps["pasta"].fillna("-")]).size()
++    out["por_origem_equipamento_pasta"] = {" / ".join(map(str, k)): int(v) for k, v in combo.items()}
++    return out
+diff --git a/backend/ml/data/store_v2.py b/backend/ml/data/store_v2.py
+new file mode 100644
+index 00000000..d5fd6364
+--- /dev/null
++++ b/backend/ml/data/store_v2.py
+@@ -0,0 +1,296 @@
++"""Store v2: as voltas na grade, uma vez so, com todas as correcoes (pedido 16).
++
++O store antigo (`laps_grid.parquet`) continua como esta, para os resultados das
++Fases 1, 2 e 2b continuarem reproduziveis. O v2 junta o que o pedido 12, o 13
++e o 14 acharam:
++
++* **o periodo da volta** -- o relogio da grade e zerado na linha com o periodo
++  verdadeiro (`resample_lap(..., line_clock=True)`); o antigo encurtava toda
++  volta e o microsetor 0 em um passo da grade (25,7 a 28,0 ms);
++* **o portao do box** -- volta com passagem pelo box (`ai_detector.pit_lap`,
++  a deteccao do pedido 12) deixa de entrar;
++* **as duas pastas** de gravacoes, sem as copias marcadas com `duplicada_de`;
++* **os rotulos** -- `origem`, `origem_fonte`, `equipamento`, o relogio, a
++  `pasta` e o `carModel` de cada volta vao junto, e quem le filtra.
++
++Cada volta leva tambem o tempo de volta do jogo (`tempo_jogo_s`), medido pelo
++cronometro do jogo costurado na troca de volta (`game_lap_time`): e a regua
++da checagem principal (`store_checks`).
++"""
++
++from __future__ import annotations
++
++import hashlib
++import subprocess
++from dataclasses import dataclass, field
++from pathlib import Path
++from typing import Callable, Dict, List, Optional, Sequence
++
++import numpy as np
++import pandas as pd
++
++from .. import config
++from ..preprocessing.alignment import align_lap
++from ..preprocessing.cleaning import clean_lap
++from ..preprocessing.quality import evaluate_lap
++from ..preprocessing.resampling import lap_time_from_grid, resample_lap
++from ..track.geometry import TrackGeometry, load_geometry
++from ..track.microsectors import Microsectors, build_microsectors
++from .ai_detector import pit_lap
++from .lap_store import IDENTITY_COLUMNS, STORE_COLUMNS, StoredLaps, check_geometry, load_store, save_store
++from .recordings import RawLap, Session, iter_laps, list_all_sessions
++
++STORE_V2_FILENAME = "laps_grid_v2.parquet"
++STORE_V2_METADATA = "laps_grid_v2_meta.json"
++STORE_V2_VERSION = 2
++
++# Copiados do inventario rotulado para cada volta.
++CARRIED_COLUMNS = IDENTITY_COLUMNS + (
++    "origem",
++    "origem_fonte",
++    "origem_indicador",
++    "equipamento",
++    "pasta",
++    "relogio_verificado",
++    "relogio_suspeito",
++    "relogio_pior_s",
++    "inicio_epoch_s",
++    "fim_epoch_s",
++)
++
++# Tempo do jogo: amostras de cada lado da troca de volta, e a distancia e o
++# intervalo maximos entre a ultima amostra de uma volta e a primeira da outra.
++GAME_TIME_SAMPLES = 5
++GAME_TIME_MAX_GAP_M = 50.0
++GAME_TIME_MAX_GAP_S = 0.5
++
++
++def default_inventory_path() -> Path:
++    return config.artifacts_root() / "origem" / "lap_inventory.parquet"
++
++
++def sha256(path: Path) -> str:
++    digest = hashlib.sha256()
++    with Path(path).open("rb") as handle:
++        for block in iter(lambda: handle.read(1 << 22), b""):
++            digest.update(block)
++    return digest.hexdigest()
++
++
++def file_entry(path: Path) -> Dict[str, object]:
++    path = Path(path)
++    return {"arquivo": str(path), "bytes": int(path.stat().st_size), "sha256": sha256(path)}
++
++
++def git_commit() -> Optional[str]:
++    try:
++        out = subprocess.run(["git", "rev-parse", "HEAD"], cwd=str(config.repo_root()),
++                             capture_output=True, text=True, timeout=10)
++        return out.stdout.strip() or None
++    except (OSError, subprocess.SubprocessError):
++        return None
++
++
++# ------------------------------------------------------------ selecao ---
++
++def select_v2(inventory: pd.DataFrame) -> tuple:
++    """Voltas validas e unicas do inventario, e quantas cada filtro tirou."""
++    valid = inventory[inventory["valid"].astype(bool)]
++    duplicated = valid["duplicada_de"].notna() if "duplicada_de" in valid else pd.Series(False, index=valid.index)
++    wanted = valid[~duplicated]
++    return wanted, {
++        "voltas_no_inventario": int(len(inventory)),
++        "validas": int(len(valid)),
++        "duplicadas_tiradas": int(duplicated.sum()),
++    }
++
++
++# ------------------------------------------------------ tempo do jogo ---
++
++def _game_side(frame: pd.DataFrame, track: TrackGeometry, tail: bool) -> Optional[pd.DataFrame]:
++    """As amostras de uma ponta da volta crua com cronometro, posicao e velocidade."""
++    needed = ["lap_time_s", "x", "z", "speed_kmh"]
++    if any(c not in frame.columns for c in needed):
++        return None
++    side = frame.tail(GAME_TIME_SAMPLES * 3) if tail else frame.head(GAME_TIME_SAMPLES * 3)
++    side = side.copy()
++    for column in needed + (["timestamp_s"] if "timestamp_s" in side.columns else []):
++        side[column] = pd.to_numeric(side[column], errors="coerce")
++    side = side.dropna(subset=needed)
++    side = side[side["speed_kmh"] > 3.6]
++    side = side.tail(GAME_TIME_SAMPLES) if tail else side.head(GAME_TIME_SAMPLES)
++    if side.empty:
++        return None
++    s_values, _ = track.project_sequence(side[["x", "z"]].to_numpy(dtype=float))
++    side["s"] = s_values
++    return side
++
++
++def game_lap_time(lap: RawLap, following: RawLap, track: TrackGeometry) -> Optional[float]:
++    """Tempo de volta pelo cronometro do jogo, costurado na troca de volta.
++
++    O gravador so tem o cronometro da volta corrente, que zera na linha. Para
++    cada par (uma das ultimas amostras da volta, uma das primeiras da seguinte)
++    o tempo de volta e `t_antes + distancia / velocidade media - t_depois`; vale
++    a mediana dos pares, que ignora uma amostra com o cronometro repetido. So
++    quando a seguinte comeca logo depois (`GAME_TIME_MAX_GAP_*`).
++    """
++    if following is None or following.sequence != lap.sequence + 1:
++        return None
++    before = _game_side(lap.frame, track, tail=True)
++    after = _game_side(following.frame, track, tail=False)
++    if before is None or after is None:
++        return None
++    gap_m = float(np.mod(after["s"].iloc[0] - before["s"].iloc[-1], track.length))
++    if gap_m > GAME_TIME_MAX_GAP_M:
++        return None
++    if "timestamp_s" in before.columns and "timestamp_s" in after.columns:
++        gap_s = float(after["timestamp_s"].iloc[0] - before["timestamp_s"].iloc[-1])
++        if np.isfinite(gap_s) and gap_s > GAME_TIME_MAX_GAP_S:
++            return None
++    estimates = []
++    for _, a in before.iterrows():
++        for _, b in after.iterrows():
++            distance = float(np.mod(b["s"] - a["s"], track.length))
++            speed = (float(a["speed_kmh"]) + float(b["speed_kmh"])) / 2.0 / 3.6
++            if distance > GAME_TIME_MAX_GAP_M * 2 or speed <= 1.0:
++                continue
++            estimates.append(float(a["lap_time_s"]) + distance / speed - float(b["lap_time_s"]))
++    return float(np.median(estimates)) if estimates else None
++
++
++# ------------------------------------------------------------- build ---
++
++@dataclass
++class BuildDetails:
++    """O que o build fez, para o relatorio."""
++
++    selection: Dict[str, int] = field(default_factory=dict)
++    box_removed: List[str] = field(default_factory=list)
++    not_found: List[str] = field(default_factory=list)
++    sessions: List[str] = field(default_factory=list)
++
++
++def _clean_value(value):
++    if isinstance(value, float) and np.isnan(value):
++        return None
++    if isinstance(value, (np.bool_,)):
++        return bool(value)
++    return value
++
++
++def build_store_v2(
++    inventory: pd.DataFrame,
++    track: Optional[TrackGeometry] = None,
++    sessions: Optional[Sequence[Session]] = None,
++    progress: Optional[Callable[[str], None]] = None,
++    sectors: Optional[Microsectors] = None,
++) -> tuple:
++    """Le as voltas validas e unicas do inventario rotulado e devolve (store, detalhes)."""
++    geometry = track or load_geometry()
++    sectors = sectors or build_microsectors(geometry)
++    wanted, counts = select_v2(inventory)
++    if wanted.empty:
++        raise ValueError("o inventario nao tem nenhuma volta valida e unica")
++    recorded = wanted["geometry_id"].dropna().unique() if "geometry_id" in wanted else []
++    check_geometry(recorded[0] if len(recorded) == 1 else None, geometry, "o inventario")
++
++    by_session: Dict[str, set] = {}
++    carried: Dict[str, Dict[str, object]] = {}
++    for _, row in wanted.iterrows():
++        by_session.setdefault(str(row["session_id"]), set()).add(int(row["sequence"]))
++        carried[str(row["lap_id"])] = {k: _clean_value(row.get(k)) for k in CARRIED_COLUMNS if k in row}
++
++    available = {s.session_id: s for s in (sessions if sessions is not None else list_all_sessions())}
++    details = BuildDetails(selection=counts)
++    blocks: List[pd.DataFrame] = []
++    records: List[Dict[str, object]] = []
++    for position, (session_id, sequences) in enumerate(sorted(by_session.items()), start=1):
++        session = available.get(session_id)
++        if session is None:
++            details.not_found.extend(f"{session_id}#{q:04d}" for q in sorted(sequences))
++            continue
++        details.sessions.append(session_id)
++        car = (session.metadata().get("metadata") or {}).get("carModel")
++        found = 0
++        pending: Optional[tuple] = None          # (volta crua, registro) esperando a seguinte
++        for lap in iter_laps(session):
++            if pending is not None:
++                previous, record = pending
++                record["tempo_jogo_s"] = game_lap_time(previous, lap, geometry)
++                pending = None
++            if lap.sequence not in sequences:
++                continue
++            cleaned, _ = clean_lap(lap.frame)
++            aligned, alignment = align_lap(cleaned, geometry)
++            quality = evaluate_lap(aligned, geometry, alignment)
++            grid = resample_lap(aligned, geometry, line_clock=True)
++            if pit_lap(grid, sectors):
++                details.box_removed.append(lap.lap_id)
++                continue
++            block = grid.reindex(columns=[c for c in STORE_COLUMNS if c in grid.columns]).copy()
++            block.insert(0, "grid_index", np.arange(geometry.size))
++            block.insert(0, "lap_id", lap.lap_id)
++            blocks.append(block)
++            record = {
++                "lap_id": lap.lap_id,
++                "session_id": session_id,
++                "sequence": lap.sequence,
++                "lap_number": lap.lap_number,
++                "driver_id": lap.driver_id,
++                "track": lap.track,
++                "lap_time_s": lap_time_from_grid(grid),
++                "tempo_jogo_s": None,
++                "geometry_id": geometry.geometry_id,
++                "carModel": car,
++                "sample_hz": float(quality.metrics.get("sample_hz", np.nan)),
++                "raw_samples": int(lap.sample_count),
++                "coverage": float(alignment.coverage),
++                "speed_mean_kmh": float(np.nanmean(grid["speed_kmh"])),
++                "speed_min_kmh": float(np.nanmin(grid["speed_kmh"])),
++                "speed_max_kmh": float(np.nanmax(grid["speed_kmh"])),
++                **carried.get(lap.lap_id, {}),
++            }
++            records.append(record)
++            pending = (lap, record)
++            found += 1
++        missing = sequences - {r["sequence"] for r in records if r["session_id"] == session_id} - {
++            int(i.split("#")[1]) for i in details.box_removed if i.startswith(session_id + "#")
++        }
++        details.not_found.extend(f"{session_id}#{q:04d}" for q in sorted(missing))
++        if progress:
++            progress(f"[{position}/{len(by_session)}] {session_id}: {found} voltas")
++
++    if not blocks:
++        raise ValueError("nenhuma volta pode ser materializada")
++    frame = pd.concat(blocks, ignore_index=True)
++    laps = pd.DataFrame(records).sort_values("lap_time_s").reset_index(drop=True)
++    store = StoredLaps(
++        frame=frame,
++        laps=laps,
++        grid_size=geometry.size,
++        track_length=geometry.length,
++        geometry_id=geometry.geometry_id,
++        source_hash=geometry.source_hash,
++        selection={
++            "versao": STORE_V2_VERSION,
++            "regra": "validas, sem duplicada_de, sem passagem pelo box (pit_lap); todas as origens",
++            "relogio": "zerado na linha com o periodo verdadeiro (line_clock)",
++        },
++    )
++    return store, details
++
++
++def save_store_v2(store: StoredLaps, extra: Dict[str, object], root: Optional[Path] = None) -> Path:
++    return save_store(store, root, filename=STORE_V2_FILENAME, metadata=STORE_V2_METADATA, extra=extra)
++
++
++def load_store_v2(root: Optional[Path] = None, track: Optional[TrackGeometry] = None) -> StoredLaps:
++    return load_store(root, track, filename=STORE_V2_FILENAME, metadata=STORE_V2_METADATA)
++
++
++def store_v2_meta(root: Optional[Path] = None) -> Dict[str, object]:
++    import json
++
++    path = (Path(root) if root else config.artifacts_root()) / STORE_V2_METADATA
++    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+diff --git a/backend/ml/preprocessing/resampling.py b/backend/ml/preprocessing/resampling.py
+index aa9403b0..713abe32 100644
+--- a/backend/ml/preprocessing/resampling.py
++++ b/backend/ml/preprocessing/resampling.py
+@@ -79,15 +79,51 @@ def _closing_time(
+     return float(elapsed[-1] + uncovered * step_time / step_distance)
+ 
+ 
++# Store v2 (pedido 16): amostras usadas para achar a passagem por um ponto.
++LINE_WINDOW_M = 15.0
++
++
++def crossing_time(
++    positions: np.ndarray,
++    elapsed: np.ndarray,
++    speed_ms: np.ndarray,
++    target: float,
++    window_m: float = LINE_WINDOW_M,
++) -> Optional[float]:
++    """Instante, no relogio da volta, em que o carro passa pela distancia `target`.
++
++    Cada amostra a ate `window_m` do ponto da uma estimativa, `t + (alvo - s)/v`,
++    com a velocidade gravada; vale a mediana. O cronometro do jogo as vezes
++    repete o valor de uma amostra para a seguinte, e com uma amostra so (como
++    em `_closing_time`) essa repeticao virava ate 15 ms de erro na volta.
++    """
++    near = (
++        (np.abs(positions - target) <= window_m)
++        & np.isfinite(elapsed)
++        & np.isfinite(speed_ms)
++        & (speed_ms > 1.0)
++    )
++    if not near.any():
++        return None
++    return float(np.median(elapsed[near] + (target - positions[near]) / speed_ms[near]))
++
++
+ def resample_lap(
+     frame: pd.DataFrame,
+     track: TrackGeometry,
+     channels: Optional[Sequence[str]] = None,
++    line_clock: bool = False,
+ ) -> pd.DataFrame:
+     """Volta alinhada -> volta na grade da pista, com `track.size` linhas.
+ 
+     Exige as colunas que `align_lap` produz. O indice do resultado e o indice da
+     grade, entao `frame.loc[i]` e o mesmo ponto de pista em todas as voltas.
++
++    `line_clock` (store v2, pedido 16): o relogio da grade e zerado na linha
++    com o periodo verdadeiro da volta, o tempo entre duas passagens por s = 0
++    (`crossing_time`), e `lap_time_s` passa a ser esse periodo. Sem ele, o
++    comportamento e o de sempre (`_reference_clock_to_grid`), que o store
++    antigo e as Fases 1, 2 e 2b continuam usando.
+     """
+     for required in ("s_unwrapped", "lateral", "elapsed_s"):
+         if required not in frame.columns:
+@@ -113,6 +149,11 @@ def resample_lap(
+             for column in frame.columns
+             if column not in DROPPED_CHANNELS and pd.api.types.is_numeric_dtype(frame[column])
+         ]
++    speed_ms = (
++        frame["speed_kmh"].to_numpy(dtype=float) / 3.6
++        if line_clock and "speed_kmh" in frame.columns
++        else None
++    )
+ 
+     data: Dict[str, np.ndarray] = {
+         "s": track.s.copy(),
+@@ -158,11 +199,18 @@ def resample_lap(
+             #
+             # O fechamento e extrapolado pela ultima velocidade observada, que e
+             # a unica informacao que a volta tem sobre o trecho que nao gravou.
++            closing = (
++                crossing_time(sub_positions, sub_values, speed_ms[finite], wrap_position)
++                if speed_ms is not None
++                else None
++            )
++            if closing is None:
++                closing = _closing_time(sub_positions, sub_values, wrap_position)
+             data[channel] = _interp_circular(
+                 grid_targets,
+                 sub_positions,
+                 sub_values,
+-                _closing_time(sub_positions, sub_values, wrap_position),
++                closing,
+                 wrap_position,
+             )
+         else:
+@@ -171,7 +219,18 @@ def resample_lap(
+             )
+ 
+     resampled = pd.DataFrame(data)
+-    if "elapsed_s" in resampled.columns:
++    if "elapsed_s" in resampled.columns and line_clock:
++        elapsed, total = _line_clock_to_grid(
++            resampled["elapsed_s"].to_numpy(dtype=float),
++            grid_targets,
++            positions,
++            frame["elapsed_s"].to_numpy(dtype=float),
++            speed_ms,
++            track.length,
++        )
++        resampled["elapsed_s"] = elapsed
++        resampled["lap_time_s"] = total
++    elif "elapsed_s" in resampled.columns:
+         elapsed, total = _reference_clock_to_grid(resampled["elapsed_s"].to_numpy(dtype=float))
+         resampled["elapsed_s"] = elapsed
+         resampled["lap_time_s"] = total
+@@ -205,6 +264,53 @@ def _reference_clock_to_grid(elapsed: np.ndarray) -> tuple:
+     return shifted, float(shifted[-1] + closing)
+ 
+ 
++def _extrapolated_time(positions: np.ndarray, elapsed: np.ndarray, target: float) -> float:
++    """Tempo em `target` pela reta das duas amostras mais proximas (sem velocidade gravada)."""
++    if positions[0] <= target <= positions[-1]:
++        return float(np.interp(target, positions, elapsed))
++    pair = slice(0, 2) if target < positions[0] else slice(-2, None)
++    (u0, u1), (t0, t1) = positions[pair], elapsed[pair]
++    if u1 - u0 <= 1e-6:
++        return float(t0 if target < positions[0] else t1)
++    return float(t0 + (target - u0) * (t1 - t0) / (u1 - u0))
++
++
++def _line_clock_to_grid(
++    grid_elapsed: np.ndarray,
++    grid_targets: np.ndarray,
++    positions: np.ndarray,
++    elapsed: np.ndarray,
++    speed_ms: Optional[np.ndarray],
++    length: float,
++) -> tuple:
++    """Store v2: relogio zerado na linha, com o periodo verdadeiro (pedido 16).
++
++    `_reference_clock_to_grid` usa como periodo o `span` dos tempos na grade,
++    que fica um passo da grade mais curto que a volta: toda volta e o
++    microsetor 0 saiam de 25,7 a 28,0 ms curtos (pedido 14). Aqui o periodo e o
++    tempo entre as duas passagens por s = 0, cada uma achada por
++    `crossing_time`, e cada ponto da grade sabe, pela distancia, se cai antes
++    ou depois da segunda passagem -- nada de `mod` sobre tempos, que no ponto
++    s = 0 podia dar o periodo inteiro em vez de zero.
++    """
++    finite = np.isfinite(elapsed)
++    u, t = positions[finite], elapsed[finite]
++    v = speed_ms[finite] if speed_ms is not None else None
++    first = float(np.round(u[0] / length) * length)
++    second = first + length
++    start = crossing_time(u, t, v, first) if v is not None else None
++    end = crossing_time(u, t, v, second) if v is not None else None
++    if start is None:
++        start = _extrapolated_time(u, t, first)
++    if end is None:
++        end = _extrapolated_time(u, t, second)
++    period = float(end - start)
++    laps_ahead = np.floor((grid_targets - first) / length)
++    line = grid_elapsed - start - period * laps_ahead
++    line = np.maximum.accumulate(np.maximum(line, 0.0))
++    return line, period
++
++
+ def lap_time_from_grid(resampled: pd.DataFrame) -> float:
+     """Tempo da volta lido da propria volta reamostrada."""
+     if "lap_time_s" in resampled.columns:
+diff --git a/backend/ml/scripts/build_lap_store_v2.py b/backend/ml/scripts/build_lap_store_v2.py
+new file mode 100644
+index 00000000..9f29eb14
+--- /dev/null
++++ b/backend/ml/scripts/build_lap_store_v2.py
+@@ -0,0 +1,134 @@
++"""Constroi o store v2 e roda as checagens registradas (pedido 16).
++
++    python -m ml.scripts.build_lap_store_v2 [--inventario data/ml/origem/lap_inventory.parquet]
++        [--relatorio ARQUIVO]
++
++Le o inventario rotulado (o do `atualizar_coach`), materializa as voltas
++validas e unicas sem box na grade, com o relogio zerado na linha pelo periodo
++verdadeiro, e grava `data/ml/laps_grid_v2.parquet` e o meta. O store antigo
++(`laps_grid.parquet`) nao e tocado.
++
++As checagens (`ml.data.store_checks`) vao para o meta e para o relatorio. Se
++alguma falhar, o meta fica com `aprovado: false` -- o relatorio de evolucao
++recusa ler um store assim -- e o comando sai com codigo 2.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++import time
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
++
++import pandas as pd  # noqa: E402
++
++from ml import config  # noqa: E402
++from ml.data import store_checks  # noqa: E402
++from ml.data.lap_store import load_store, store_path  # noqa: E402
++from ml.data.recordings import list_all_sessions  # noqa: E402
++from ml.data.store_v2 import (  # noqa: E402
++    STORE_V2_FILENAME,
++    build_store_v2,
++    default_inventory_path,
++    file_entry,
++    git_commit,
++    save_store_v2,
++)
++from ml.track.geometry import load_geometry  # noqa: E402
++from ml.track.microsectors import build_microsectors  # noqa: E402
++
++
++def lap_labels_path() -> Path:
++    return config.repo_root() / "docs" / "experimentos" / "2026-10-04_rotulos_por_volta.csv"
++
++
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("--inventario", type=Path, default=default_inventory_path())
++    parser.add_argument("--relatorio", type=Path, default=config.artifacts_root() / "store_v2_relatorio.json")
++    args = parser.parse_args(argv)
++
++    started = time.time()
++    if not args.inventario.exists():
++        print(f"PARADO: inventario nao encontrado em {args.inventario}. Rode tools/atualizar_coach.py.")
++        return 2
++    inventory = pd.read_parquet(args.inventario)
++    missing = {"origem", "equipamento", "duplicada_de", "pasta", "relogio_suspeito"} - set(inventory.columns)
++    if missing:
++        print(f"PARADO: o inventario nao tem {sorted(missing)}.")
++        return 2
++    track = load_geometry()
++    sectors = build_microsectors(track)
++    sessions = list_all_sessions()
++    store, details = build_store_v2(inventory, track=track, sessions=sessions,
++                                    progress=lambda text: print(text, flush=True), sectors=sectors)
++
++    old = None
++    if store_path().exists():
++        old = load_store()
++    result = store_checks.run_checks(store, track, sectors, old=old)
++    result["contagens"] = store_checks.counts_by(store.laps)
++    result["selecao"] = {
++        **details.selection,
++        "box_tiradas": len(details.box_removed),
++        "voltas_com_box_tiradas": details.box_removed,
++        "nao_encontradas": details.not_found,
++        "no_store_v2": int(len(store.laps)),
++    }
++
++    by_id = {s.session_id: s for s in sessions}
++    used = sorted(store.laps["session_id"].unique())
++    inputs = {
++        "inventario": file_entry(args.inventario),
++        "rotulos_04_10": file_entry(lap_labels_path()) if lap_labels_path().exists() else None,
++        "gravacoes": {sid: file_entry(by_id[sid].player_stream) for sid in used if sid in by_id},
++    }
++    extra = {
++        "versao": 2,
++        "construido_em": pd.Timestamp.now(tz="UTC").isoformat(),
++        "commit": git_commit(),
++        "entradas": inputs,
++        "aprovado": bool(result["todas_passaram"]),
++        "checagens": result["checagens"],
++    }
++    path = save_store_v2(store, extra)
++    result["store"] = {"arquivo": str(path), **file_entry(path)}
++    result["meta"] = {"commit": extra["commit"], "geometry_id": store.geometry_id, "source_hash": store.source_hash,
++                      "aprovado": extra["aprovado"], "entradas": {"inventario": inputs["inventario"],
++                                                                   "rotulos_04_10": inputs["rotulos_04_10"],
++                                                                   "gravacoes": len(inputs["gravacoes"])}}
++    result["segundos"] = round(time.time() - started, 1)
++    args.relatorio.parent.mkdir(parents=True, exist_ok=True)
++    args.relatorio.write_text(json.dumps(result, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
++
++    checks = result["checagens"]
++    print(f"\nstore v2 -> {path}  ({result['segundos']:.0f} s)")
++    print(f"voltas: {len(store.laps)}  {result['contagens']['por_origem']}  {result['contagens']['por_equipamento']}"
++          f"  {result['contagens']['por_pasta']}")
++    print(f"selecao: {json.dumps({k: v for k, v in result['selecao'].items() if not isinstance(v, list)})}")
++    for name, check in checks.items():
++        print(f"  [{'ok' if check['passou'] else 'FALHOU'}] {check['checagem']}")
++    period = checks["principal_periodo"]
++    print(f"     periodo - jogo (ms): {period['diferenca_ms']}  sem fechamento medido: "
++          f"{period['voltas_sem_fechamento_medido']}")
++    if "efeitos_esperados" in result:
++        effects = result["efeitos_esperados"]
++        print(f"  efeitos: volta {effects['volta_v2_menos_antigo_ms'].get('mediana')} ms, microsetor 0 "
++              f"{effects['microsetor_0_v2_menos_antigo_ms'].get('mediana')} ms, outros p99 "
++              f"{effects['outros_microsetores_abs_ms'].get('p99')} ms ({effects['voltas_nos_dois_stores']} voltas)")
++        print(f"  controle (store antigo contra o jogo): {result['controle_store_antigo']['diferenca_ms']}")
++    print(f"-> {args.relatorio}")
++    if not result["principal_passou"]:
++        print("PARADO: a checagem principal falhou. O store v2 ficou gravado com aprovado: false.")
++        return 2
++    if not result["todas_passaram"]:
++        print("PARADO: uma checagem falhou. O store v2 ficou gravado com aprovado: false.")
++        return 2
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/tests/test_atualizar_coach.py b/backend/tests/test_atualizar_coach.py
+index 08910ffe..613fb46e 100644
+--- a/backend/tests/test_atualizar_coach.py
++++ b/backend/tests/test_atualizar_coach.py
+@@ -181,7 +181,16 @@ class CommandTest(unittest.TestCase):
+         c.load_geometry = lambda: None
+         c.report_lap_origin.scan, original_scan = scan, c.report_lap_origin.scan
+         c.detector_ia.apply, original_apply = apply, c.detector_ia.apply
++        original_store = c.build_lap_store_v2.main
++
++        def store_v2(args):
++            calls.append(("store v2", args[args.index("--inventario") + 1].endswith("lap_inventory.parquet")))
++            return 0
++
++        c.build_lap_store_v2.main = store_v2
+         try:
++            c._evolution_script = lambda: type("E", (), {"main": staticmethod(
++                lambda args: calls.append(("evolucao", args[args.index("--modelo") + 1])) or 0)})
+             c._train_script = lambda: Train
+             c.DriverReferenceModel = Loaded
+             c.summary = lambda m, inv: {"referencias": {}, "referencia_padrao": "volta_ia",
+@@ -194,8 +203,10 @@ class CommandTest(unittest.TestCase):
+         finally:
+             c.report_lap_origin.scan = original_scan
+             c.detector_ia.apply = original_apply
++            c.build_lap_store_v2.main = original_store
+         self.assertEqual(code, 0)
+-        self.assertEqual(calls, ["inventario", ("rotulos", False), ("treino", str(model), True), "resumo"])
++        self.assertEqual(calls, ["inventario", ("rotulos", False), ("treino", str(model), True), "resumo",
++                                 ("store v2", True), ("evolucao", str(model))])
+         self.assertTrue((self.tmp / "r.json").exists())
+ 
+     def test_a_failed_training_stops_the_command(self):
+@@ -215,6 +226,37 @@ class CommandTest(unittest.TestCase):
+             c.detector_ia.apply = original_apply
+         self.assertEqual(code, 2)
+ 
++    def test_a_failed_store_v2_check_stops_before_the_evolution_report(self):
++        c = self.command
++        out_dir = self.tmp / "origem"
++        out_dir.mkdir()
++        inventory_rows("2026-10-05_20-00-00_vhe_interlagos", ["humano"]).to_parquet(
++            out_dir / "lap_inventory.parquet", index=False)
++        model = self.tmp / "m.json"
++        model.write_text("{}", encoding="utf-8")
++        reached = []
++        c.load_geometry = lambda: None
++        original_apply, original_store = c.detector_ia.apply, c.build_lap_store_v2.main
++        c.detector_ia.apply = lambda *a, **k: {"sessao_rotulada_aplicada": {"voltas": 53, "origem": {}},
++                                               "sessoes_novas_sem_anotacao": []}
++        c.build_lap_store_v2.main = lambda args: 2
++        try:
++            c._train_script = lambda: type("T", (), {"main": staticmethod(lambda args: 0)})
++            c.DriverReferenceModel = type("L", (), {"load": staticmethod(lambda path: object())})
++            c.summary = lambda m, inv: {"referencias": {}, "referencia_padrao": "volta_ia",
++                                        "voltas_por_origem": {"equipamento_atual": {}, "equipamento_atual_por_fonte": {},
++                                                              "todas": {}},
++                                        "voltas_do_piloto_no_modelo": 0,
++                                        "limiar_s": {"mediana": 0, "min": 0, "max": 0, "microsetores_no_minimo": 0},
++                                        "foco_inicial": {}}
++            c._evolution_script = lambda: reached.append("evolucao")
++            code = c.main(["--sem-varrer", "--saida", str(out_dir), "--modelo", str(model),
++                           "--resumo", str(self.tmp / "r.json")])
++        finally:
++            c.detector_ia.apply, c.build_lap_store_v2.main = original_apply, original_store
++        self.assertEqual(code, 2)
++        self.assertEqual(reached, [])
++
+ 
+ if __name__ == "__main__":
+     unittest.main()
+diff --git a/backend/tests/test_store_v2_e_evolucao.py b/backend/tests/test_store_v2_e_evolucao.py
+new file mode 100644
+index 00000000..3eb1b543
+--- /dev/null
++++ b/backend/tests/test_store_v2_e_evolucao.py
+@@ -0,0 +1,281 @@
++"""Pedido 16: store v2 (periodo, box, duplicatas) e relatorio de evolucao.
++
++Tudo sintetico, numa pista circular: nenhum teste depende das gravacoes.
++"""
++
++from __future__ import annotations
++
++import json
++import sys
++import tempfile
++import unittest
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++BACKEND = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(BACKEND))
++sys.path.insert(0, str(BACKEND / "tests"))
++
++from ml.comparison import evolution as ev  # noqa: E402
++from ml.data import store_checks  # noqa: E402
++from ml.data.ai_detector import pit_lap  # noqa: E402
++from ml.data.lap_store import StoredLaps  # noqa: E402
++from ml.data.recordings import RawLap, Session  # noqa: E402
++from ml.data.store_v2 import build_store_v2, game_lap_time, select_v2  # noqa: E402
++from ml.preprocessing.resampling import resample_lap  # noqa: E402
++from ml.track.corners import Corner  # noqa: E402
++from ml.track.microsectors import build_microsectors  # noqa: E402
++from test_lap_origin import circular_track  # noqa: E402
++
++SPEED = 40.0          # m/s
++HZ = 60.0
++
++
++def aligned_lap(track, *, start_m=1.3, end_gap_m=0.7, speed=SPEED, stale_last=False):
++    """Uma volta alinhada a velocidade constante, do inicio (logo depois da linha) a pouco antes dela."""
++    step = speed / HZ
++    u = np.arange(start_m, track.length - end_gap_m, step)
++    t = (u - 0.0) / speed
++    if stale_last:
++        t[-1] = t[-2]                       # o cronometro do jogo repetiu o valor
++    return pd.DataFrame({
++        "s": np.mod(u, track.length), "s_unwrapped": u, "lateral": np.zeros(u.size),
++        "elapsed_s": t - t.min(), "speed_kmh": np.full(u.size, speed * 3.6),
++        "brake": np.zeros(u.size), "throttle": np.ones(u.size),
++    })
++
++
++def raw_lap(track, sequence, *, start_m, end_m, timer_zero_m=0.0, speed=SPEED, t0=1000.0, lap_number=1):
++    """Volta crua: posicao no circulo, cronometro do jogo zerado na linha, relogio de parede."""
++    step = speed / HZ
++    u = np.arange(start_m, end_m, step)
++    theta = np.mod(u, track.length) / 200.0
++    timer = np.mod(u - timer_zero_m, track.length) / speed
++    return RawLap(
++        session_id="2026-10-05_20-00-00_vhe_interlagos", lap_number=lap_number, track="vhe_interlagos",
++        sequence=sequence,
++        frame=pd.DataFrame({"x": 200.0 * np.cos(theta), "z": 200.0 * np.sin(theta), "lap_time_s": timer,
++                            "speed_kmh": np.full(u.size, speed * 3.6), "timestamp_s": t0 + u / speed}),
++    )
++
++
++class PeriodTest(unittest.TestCase):
++    def setUp(self):
++        self.track = circular_track()
++        self.period = self.track.length / SPEED
++
++    def test_the_line_clock_gives_the_true_period(self):
++        grid = resample_lap(aligned_lap(self.track), self.track, line_clock=True)
++        self.assertAlmostEqual(grid["lap_time_s"].iloc[0], self.period, places=6)
++        self.assertEqual(grid["elapsed_s"].iloc[0], 0.0)
++        self.assertTrue(np.all(np.diff(grid["elapsed_s"]) >= 0))
++
++    def test_the_old_clock_is_one_grid_step_short(self):
++        """O erro que o store v2 corrige: o store antigo perde o tempo de um passo da grade."""
++        old = resample_lap(aligned_lap(self.track), self.track)["lap_time_s"].iloc[0]
++        self.assertAlmostEqual(self.period - old, self.track.step / SPEED, delta=0.2 * self.track.step / SPEED)
++
++    def test_a_repeated_game_timer_does_not_move_the_period(self):
++        grid = resample_lap(aligned_lap(self.track, stale_last=True), self.track, line_clock=True)
++        self.assertLess(abs(grid["lap_time_s"].iloc[0] - self.period), 0.001)
++
++    def test_the_game_time_is_stitched_at_the_reset(self):
++        lap = raw_lap(self.track, 3, start_m=0.4, end_m=self.track.length - 0.3)
++        following = raw_lap(self.track, 4, start_m=self.track.length + 0.4, end_m=self.track.length + 60.0,
++                            t0=1000.0, lap_number=2)
++        self.assertAlmostEqual(game_lap_time(lap, following, self.track), self.period, places=4)
++
++    def test_no_game_time_without_the_following_lap_right_after(self):
++        lap = raw_lap(self.track, 3, start_m=0.4, end_m=self.track.length - 0.3)
++        far = raw_lap(self.track, 4, start_m=self.track.length + 120.0, end_m=self.track.length + 200.0)
++        later = raw_lap(self.track, 6, start_m=self.track.length + 0.4, end_m=self.track.length + 60.0)
++        self.assertIsNone(game_lap_time(lap, far, self.track))
++        self.assertIsNone(game_lap_time(lap, later, self.track))
++
++    def test_the_main_check(self):
++        laps = pd.DataFrame({"lap_id": ["a", "b", "c", "d"], "lap_time_s": [85.001, 86.0, 84.9985, 90.0],
++                             "tempo_jogo_s": [85.0, 86.002, 85.0, None]})
++        ok = store_checks.check_period(laps)
++        self.assertTrue(ok["passou"])
++        self.assertEqual((ok["voltas_medidas"], ok["voltas_sem_fechamento_medido"]), (3, 1))
++        short = laps.assign(lap_time_s=laps["lap_time_s"] - 0.026)
++        self.assertFalse(store_checks.check_period(short)["passou"])
++        self.assertFalse(store_checks.check_period(laps.assign(tempo_jogo_s=None))["passou"])
++
++
++def grid_frame(track, *, pit=False):
++    sectors = build_microsectors(track)
++    lateral = np.zeros(track.size)
++    speed = np.full(track.size, 200.0)
++    if pit:
++        near = np.isin(sectors.index, [58, 59])
++        lateral[near], speed[near] = 25.0, 60.0
++    return pd.DataFrame({"lateral": lateral, "speed_kmh": speed, "elapsed_s": track.s / SPEED,
++                         "brake": np.zeros(track.size)})
++
++
++class BoxAndDuplicatesTest(unittest.TestCase):
++    def setUp(self):
++        self.track = circular_track()
++        self.sectors = build_microsectors(self.track)
++
++    def test_the_box_gate(self):
++        self.assertFalse(pit_lap(grid_frame(self.track), self.sectors))
++        self.assertTrue(pit_lap(grid_frame(self.track, pit=True), self.sectors))
++        frames = []
++        for lap_id, pit in (("a#0000", False), ("a#0001", True)):
++            frame = grid_frame(self.track, pit=pit)
++            frame.insert(0, "grid_index", np.arange(self.track.size))
++            frame.insert(0, "lap_id", lap_id)
++            frames.append(frame)
++        store = StoredLaps(frame=pd.concat(frames, ignore_index=True),
++                           laps=pd.DataFrame({"lap_id": ["a#0000", "a#0001"]}),
++                           grid_size=self.track.size, track_length=self.track.length)
++        check = store_checks.check_no_box(store, self.sectors)
++        self.assertEqual((check["passou"], check["voltas_com_box"]), (False, ["a#0001"]))
++
++    def test_duplicates_are_left_out(self):
++        inventory = pd.DataFrame({"lap_id": ["a#0", "a#1", "b#0", "c#0"], "valid": [True, True, True, False],
++                                  "duplicada_de": [None, None, "a#0", None]})
++        wanted, counts = select_v2(inventory)
++        self.assertEqual(wanted["lap_id"].tolist(), ["a#0", "a#1"])
++        self.assertEqual((counts["validas"], counts["duplicadas_tiradas"]), (3, 1))
++
++    def test_the_duplicate_check(self):
++        laps = pd.DataFrame({
++            "lap_id": ["s1#0", "s2#0", "s3#0"], "session_id": ["s1", "s2", "s3"],
++            "pasta": ["repositorio", "app_instalado", "repositorio"], "duplicada_de": [None, None, None],
++            "inicio_epoch_s": [0.0, 1.0, 200.0], "fim_epoch_s": [85.0, 86.0, 285.0],
++        })
++        check = store_checks.check_no_duplicates(laps)
++        self.assertFalse(check["passou"])
++        self.assertEqual(len(check["pares_de_pastas_diferentes_sobrepostos"]), 1)
++        self.assertTrue(store_checks.check_no_duplicates(laps.drop(index=1))["passou"])
++
++
++def write_session(directory: Path, track, laps):
++    """Grava um player.jsonl com as voltas dadas: (numero, s_inicio, s_fim, pit_no_fim)."""
++    lines = []
++    clock = 1_790_000_000.0
++    for number, start, end, pit in laps:
++        u = np.arange(start, end, SPEED / HZ)
++        for value in u:
++            lateral = 25.0 if pit and np.mod(value, track.length) > track.length - 120.0 else 0.0
++            speed = 60.0 / 3.6 if lateral else SPEED
++            radius = 200.0 - lateral          # pista anti-horaria, normal para fora: lateral positivo e para dentro
++            theta = np.mod(value, track.length) / 200.0
++            clock += (SPEED / HZ) / SPEED
++            lines.append(json.dumps({"timestamp": clock * 1000.0, "track": "vhe_interlagos", "sample": {
++                "lap": number, "lap_number": number, "lap_time": float(np.mod(value, track.length) / SPEED),
++                "world_x": radius * np.cos(theta), "world_z": radius * np.sin(theta), "speedKmh": speed * 3.6,
++                "carPhysics": {"controls": {"throttle": 1.0, "brake": 0.0}},
++            }}))
++    directory.mkdir(parents=True)
++    (directory / "player.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
++
++
++class BuildTest(unittest.TestCase):
++    def test_box_laps_and_duplicates_stay_out_and_the_game_time_is_measured(self):
++        import dataclasses
++
++        track = dataclasses.replace(circular_track(), geometry_id="circulo-1")
++        root = Path(tempfile.mkdtemp())
++        session_id = "2026-10-05_20-00-00_vhe_interlagos"
++        L = track.length
++        write_session(root / session_id, track, [
++            (1, 0.4, L - 0.3, False),
++            (2, L + 0.4, 2 * L - 0.3, True),          # entra no box no fim
++            (3, 2 * L + 0.4, 3 * L - 0.3, False),
++            (4, 3 * L + 0.4, 3 * L + 50.0, False),
++        ])
++        inventory = pd.DataFrame({
++            "lap_id": [f"{session_id}#{i:04d}" for i in range(3)], "session_id": session_id, "sequence": [0, 1, 2],
++            "valid": True, "duplicada_de": [None, None, "outra#0000"], "geometry_id": track.geometry_id,
++            "origem": "humano", "equipamento": "atual", "pasta": "repositorio",
++            "relogio_verificado": True, "relogio_suspeito": False,
++        })
++        session = Session(session_id=session_id, directory=root / session_id, track="vhe_interlagos")
++        store, details = build_store_v2(inventory, track=track, sessions=[session])
++        self.assertEqual(store.lap_ids, [f"{session_id}#0000"])
++        self.assertEqual(details.box_removed, [f"{session_id}#0001"])
++        self.assertEqual(details.selection["duplicadas_tiradas"], 1)
++        lap = store.laps.iloc[0]
++        self.assertAlmostEqual(lap["lap_time_s"], L / SPEED, delta=0.002)
++        self.assertAlmostEqual(lap["tempo_jogo_s"], L / SPEED, delta=0.002)
++        self.assertEqual(lap["origem"], "humano")
++        self.assertTrue(store_checks.check_period(store.laps)["passou"])
++
++
++class EvolutionRulesTest(unittest.TestCase):
++    def test_consistent_difference_needs_an_interval_without_zero(self):
++        losing = ev.consistency([0.30, 0.32, 0.29, 0.35, 0.31, 0.33])
++        self.assertEqual((losing["situacao"], losing["lado"]), ("diferenca_consistente", "perde"))
++        self.assertGreater(losing["intervalo_90_s"][0], 0.0)
++        gaining = ev.consistency([-0.2, -0.25, -0.22, -0.18, -0.21])
++        self.assertEqual((gaining["situacao"], gaining["lado"]), ("diferenca_consistente", "ganha"))
++        mixed = ev.consistency([0.4, -0.3, 0.1, -0.2, 0.05, -0.1])
++        self.assertEqual(mixed["situacao"], "sem_diferenca_consistente")
++        low, high = mixed["intervalo_90_s"]
++        self.assertLessEqual(low, 0.0)
++        self.assertGreaterEqual(high, 0.0)
++
++    def test_fewer_than_five_laps_is_few_data(self):
++        few = ev.consistency([0.5, 0.6, 0.55, 0.52])
++        self.assertEqual((few["situacao"], few["intervalo_90_s"]), ("poucos_dados", None))
++        self.assertEqual(ev.consistency([0.5, 0.6, 0.55, 0.52, 0.51])["situacao"], "diferenca_consistente")
++
++    def test_the_bootstrap_is_reproducible(self):
++        values = [0.1, 0.4, 0.2, 0.3, 0.25, 0.15]
++        self.assertEqual(ev.bootstrap_median_interval(values), ev.bootstrap_median_interval(values))
++
++    def test_only_human_laps_with_the_current_equipment_and_a_checked_clock(self):
++        laps = pd.DataFrame({
++            "lap_id": list("abcdef"),
++            "origem": ["humano", "ia", "humano", "humano", "humano", "misturada"],
++            "equipamento": ["atual", "atual", "anterior", "atual", "atual", "atual"],
++            "relogio_verificado": [True, True, True, False, True, True],
++            "relogio_suspeito": [False, False, False, False, True, False],
++        })
++        self.assertEqual(ev.driver_laps(laps)["lap_id"].tolist(), ["a"])
++
++    def test_sessions_are_days(self):
++        self.assertEqual(ev.session_of("2026-10-04_03-21-52_vhe_interlagos"), "2026-10-04")
++
++    def test_the_corner_segments_cover_the_lap_and_add_up(self):
++        track = circular_track()
++        corners = [Corner(i, a, (a + b) / 2, b, 1, 50.0, 50.0, b - a)
++                   for i, (a, b) in enumerate([(100.0, 200.0), (500.0, 600.0), (1000.0, 1100.0)])]
++        segments = ev.corner_segments(track, corners)
++        lengths = [np.mod(s.end_s - s.start_s, track.length) for s in segments]
++        self.assertAlmostEqual(sum(lengths), track.length, places=6)
++        self.assertAlmostEqual(segments[1].start_s, 350.0)
++        # Uma volta 1 s mais lenta, toda no trecho da segunda curva: a perda aparece ali e soma 1 s.
++        ref = pd.DataFrame({"elapsed_s": track.s / SPEED, "speed_kmh": np.full(track.size, 144.0),
++                            "lateral": np.zeros(track.size), "brake": np.zeros(track.size)})
++        lap = ref.copy()
++        inside = (track.s >= 450.0) & (track.s < 600.0)
++        lap["elapsed_s"] = ref["elapsed_s"] + np.where(track.s >= 600.0, 1.0, np.where(inside, (track.s - 450.0) / 150.0, 0.0))
++        total = track.length / SPEED
++        features = ev.lap_corner_features(lap, total + 1.0, ref, total, track, segments)
++        losses = [f["perda_s"] for f in features]
++        self.assertAlmostEqual(sum(losses), 1.0, places=6)
++        self.assertAlmostEqual(losses[1], 1.0, places=3)
++
++    def test_braking_point_is_a_rising_edge(self):
++        track = circular_track()
++        brake = np.zeros(track.size)
++        brake[(track.s >= 300.0) & (track.s < 340.0)] = 0.8
++        self.assertAlmostEqual(ev.braking_point(brake, track, 250.0, 400.0), 300.0, delta=track.step)
++        # Freio ja apertado no comeco do trecho (vindo da curva anterior): sem ponto de frenagem.
++        self.assertIsNone(ev.braking_point(brake, track, 310.0, 400.0))
++
++    def test_stability_of_adr_0015(self):
++        self.assertIsNone(ev.stability([93.0, 92.5])["estabilizou"])
++        self.assertTrue(ev.stability([95.0, 92.1, 92.3, 92.4])["estabilizou"])
++        self.assertFalse(ev.stability([93.0, 92.4, 91.9])["estabilizou"])
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/backend/tools/atualizar_coach.py b/backend/tools/atualizar_coach.py
+index 7416bf13..5dc645b0 100644
+--- a/backend/tools/atualizar_coach.py
++++ b/backend/tools/atualizar_coach.py
+@@ -16,12 +16,16 @@ Em ordem:
+ 4. copia o modelo do repositorio para `data/reference_models/backup/` e o
+    treina de novo;
+ 5. imprime o resumo: as duas referencias, as voltas de cada origem, o limiar e
+-   o foco inicial.
+-
+-Nao toca no store do ML nem no app instalado: o modelo gravado e o do
+-repositorio, lido pelo app de desenvolvimento. Qualquer trava dos passos (os
+-rotulos de 04/10 que nao batem com o inventario, os limites do detector que nao
+-batem com a sessao rotulada, nenhuma volta limpa para treinar) para o comando.
++   o foco inicial;
++6. refaz o store v2 com as checagens (`ml.scripts.build_lap_store_v2`, pedido
++   16), para as sessoes novas entrarem no relatorio de evolucao;
++7. roda o relatorio de evolucao (`tools/relatorio_evolucao.py`).
++
++Nao toca no store antigo (`laps_grid.parquet`) nem no app instalado: o modelo
++gravado e o do repositorio, lido pelo app de desenvolvimento. Qualquer trava
++dos passos (os rotulos de 04/10 que nao batem com o inventario, os limites do
++detector que nao batem com a sessao rotulada, nenhuma volta limpa para
++treinar, uma checagem do store v2 que falha) para o comando.
+ """
+ 
+ from __future__ import annotations
+@@ -53,7 +57,7 @@ from core.live.driving_coach import LiveDrivingCoach  # noqa: E402
+ from ml import config  # noqa: E402
+ from ml.data import origin  # noqa: E402
+ from ml.data.inventory import inventory_path  # noqa: E402
+-from ml.scripts import detector_ia, report_lap_origin  # noqa: E402
++from ml.scripts import build_lap_store_v2, detector_ia, report_lap_origin  # noqa: E402
+ from ml.track.geometry import load_geometry  # noqa: E402
+ 
+ TRACK = "vhe_interlagos"
+@@ -61,13 +65,21 @@ TRACK = "vhe_interlagos"
+ INSTALLED_APP_FOLDER = "Automobilista Telemetria"
+ 
+ 
+-def _train_script():
+-    spec = importlib.util.spec_from_file_location("train_reference_model", BACKEND_DIR / "tools" / "train_reference_model.py")
++def _tool(name: str):
++    spec = importlib.util.spec_from_file_location(name, BACKEND_DIR / "tools" / f"{name}.py")
+     module = importlib.util.module_from_spec(spec)
+     spec.loader.exec_module(module)
+     return module
+ 
+ 
++def _train_script():
++    return _tool("train_reference_model")
++
++
++def _evolution_script():
++    return _tool("relatorio_evolucao")
++
++
+ def backup_model(path: Path, now: Optional[datetime] = None) -> Optional[Path]:
+     """Copia o modelo para `backup/<nome>.<data_hora>.antes-de-atualizar.json`. Nada a copiar -> None."""
+     if not path.exists():
+@@ -181,14 +193,14 @@ def main(argv=None) -> int:
+     track = load_geometry()
+     args.saida.mkdir(parents=True, exist_ok=True)
+ 
+-    print("1/5 inventario novo" + (" (pulado: --sem-varrer)" if args.sem_varrer else ""), flush=True)
++    print("1/7 inventario novo" + (" (pulado: --sem-varrer)" if args.sem_varrer else ""), flush=True)
+     if not args.sem_varrer:
+         report_lap_origin.scan(args.saida, track)
+     if not inventory_path(args.saida).exists():
+         print(f"PARADO: nenhum inventario em {args.saida}.")
+         return 2
+ 
+-    print("2/5 anotacoes versionadas de 04/10 e 3/5 sessoes novas sem anotacao", flush=True)
++    print("2/7 anotacoes versionadas de 04/10 e 3/7 sessoes novas sem anotacao", flush=True)
+     applied = detector_ia.apply(args.saida, track, args.saida / "detector_aplicar.json", promote=False)
+     labelled = applied["sessao_rotulada_aplicada"]
+     print(f"   sessao de 04/10: {labelled['voltas']} voltas, {labelled['origem']}")
+@@ -197,7 +209,7 @@ def main(argv=None) -> int:
+     for row in news:
+         print(f"     {row['sessao']}: {row['voltas']} voltas, origem {row['origem']}, fonte {row['fonte']}")
+ 
+-    print("4/5 backup e treino do modelo do repositorio", flush=True)
++    print("4/7 backup e treino do modelo do repositorio", flush=True)
+     backup = backup_model(args.modelo)
+     print(f"   backup: {backup if backup else '(nao havia modelo)'}")
+     train_args = ["--track", TRACK, "--inventario", str(inventory_path(args.saida)), "--saida", str(args.modelo)]
+@@ -208,7 +220,7 @@ def main(argv=None) -> int:
+         print("PARADO: o treino nao gravou o modelo (acima, o motivo). O backup ficou onde estava.")
+         return code
+ 
+-    print("5/5 resumo", flush=True)
++    print("5/7 resumo", flush=True)
+     model = DriverReferenceModel.load(args.modelo)
+     if model is None:
+         print(f"PARADO: o modelo gravado em {args.modelo} nao abre.")
+@@ -223,7 +235,15 @@ def main(argv=None) -> int:
+     out.parent.mkdir(parents=True, exist_ok=True)
+     out.write_text(json.dumps(result, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
+     print(f"-> {out}")
+-    return 0
++
++    print("6/7 store v2, com as checagens", flush=True)
++    code = build_lap_store_v2.main(["--inventario", str(inventory_path(args.saida))])
++    if code != 0:
++        print("PARADO: o store v2 nao passou nas checagens (acima); o relatorio de evolucao nao rodou.")
++        return code
++
++    print("7/7 relatorio de evolucao", flush=True)
++    return _evolution_script().main(["--modelo", str(args.modelo)])
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/backend/tools/relatorio_evolucao.py b/backend/tools/relatorio_evolucao.py
+new file mode 100644
+index 00000000..3cbd4c99
+--- /dev/null
++++ b/backend/tools/relatorio_evolucao.py
+@@ -0,0 +1,133 @@
++"""Relatorio da evolucao do piloto, todas as sessoes (pedido 16, peca B).
++
++    python tools/relatorio_evolucao.py [--saida data/ml/evolucao] [--modelo ARQUIVO]
++
++Le o store v2 (recusa um store cujas checagens nao passaram), pega a volta da
++IA do coach (`volta_ia` do modelo do repositorio) como referencia e escreve,
++fora do git:
++
++* `sessao_<AAAA-MM-DD>.json` -- uma sessao (as gravacoes do mesmo dia): as
++  voltas, o resumo, as 14 curvas e os 60 microsetores;
++* `resumo.json` -- a serie das sessoes, a tendencia, as 3 curvas de maior
++  perda e o criterio de estabilizacao do ADR 0015.
++
++O formato dos campos esta em `docs/store_v2_e_evolucao.md`. As regras foram
++registradas antes da primeira rodada, no mesmo documento.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++from pathlib import Path
++from typing import Dict, Optional
++
++BACKEND_DIR = Path(__file__).resolve().parents[1]
++if str(BACKEND_DIR) not in sys.path:
++    sys.path.insert(0, str(BACKEND_DIR))
++
++import pandas as pd  # noqa: E402
++
++from core.assisted_analysis.reference_model import REFERENCE_AI, DriverReferenceModel, model_path  # noqa: E402
++from ml import config  # noqa: E402
++from ml.comparison import evolution as ev  # noqa: E402
++from ml.data.store_v2 import STORE_V2_FILENAME, file_entry, load_store_v2, store_v2_meta  # noqa: E402
++from ml.track.corners import detect_corners  # noqa: E402
++from ml.track.geometry import load_geometry  # noqa: E402
++from ml.track.microsectors import build_microsectors  # noqa: E402
++
++TRACK = "vhe_interlagos"
++
++
++def run(out_dir: Path, model_file: Path, store_root: Optional[Path] = None) -> Dict[str, object]:
++    """Roda o relatorio; levanta SystemExit("PARADO: ...") nas travas."""
++    meta = store_v2_meta(store_root)
++    if not meta:
++        raise SystemExit("PARADO: store v2 nao encontrado. Rode: python -m ml.scripts.build_lap_store_v2")
++    if not meta.get("aprovado"):
++        raise SystemExit("PARADO: as checagens do store v2 nao passaram (aprovado: false no meta).")
++    track = load_geometry()
++    store = load_store_v2(store_root, track=track)
++    model = DriverReferenceModel.load(model_file)
++    reference = (model.references or {}).get(REFERENCE_AI) if model is not None else None
++    if not reference:
++        raise SystemExit(f"PARADO: o modelo {model_file} nao tem a referencia {REFERENCE_AI}.")
++    ref_id = reference["lap_id"]
++    if ref_id not in set(store.lap_ids):
++        raise SystemExit(f"PARADO: a volta da IA do coach ({ref_id}) nao esta no store v2.")
++    ref_grid = store.lap(ref_id)
++    ref_total = float(store.laps.set_index("lap_id").at[ref_id, "lap_time_s"])
++
++    corners = detect_corners(track)
++    segments = ev.corner_segments(track, corners)
++    sectors = build_microsectors(track)
++    laps = ev.driver_laps(store.laps)
++    laps = laps.assign(sessao=laps["session_id"].map(ev.session_of))
++
++    out_dir.mkdir(parents=True, exist_ok=True)
++    store_file = (Path(store_root) if store_root else config.artifacts_root()) / STORE_V2_FILENAME
++    common = {
++        "store": {"arquivo": str(store_file), "sha256": file_entry(store_file)["sha256"],
++                  "commit_do_store": meta.get("commit"), "geometry_id": store.geometry_id},
++        "referencia": {"tipo": REFERENCE_AI, "volta": ref_id, "tempo_s": round(ref_total, 3),
++                       "modelo": str(model_file)},
++        "regras": "docs/store_v2_e_evolucao.md, secao 1.4",
++    }
++    reports = []
++    written = []
++    for session, rows in sorted(laps.groupby("sessao")):
++        grids = {lap_id: store.lap(lap_id) for lap_id in rows["lap_id"]}
++        report = {**ev.session_report(session, rows, grids, ref_grid, ref_total, track, segments, sectors), **common}
++        path = out_dir / f"sessao_{session}.json"
++        path.write_text(json.dumps(report, indent=1, ensure_ascii=False), encoding="utf-8")
++        reports.append(report)
++        written.append(str(path))
++    summary = {**ev.summary_report(reports), **common, "arquivos_de_sessao": written}
++    (out_dir / "resumo.json").write_text(json.dumps(summary, indent=1, ensure_ascii=False), encoding="utf-8")
++    return {"resumo": summary, "sessoes": reports, "saida": str(out_dir)}
++
++
++def print_report(result: Dict[str, object]) -> None:
++    summary = result["resumo"]
++    print("=" * 70)
++    print(f"EVOLUCAO  (referencia: volta da IA {summary['referencia']['volta']}, {summary['referencia']['tempo_s']} s)")
++    for session in summary["sessoes"]:
++        print(f"  {session['sessao']}: {session['voltas']} voltas, melhor {session['melhor_s']} s, mediana "
++              f"{session['mediana_s']} s (desvio {session['desvio_s']}), mediana - IA {session['mediana_menos_ia_s']} s"
++              f"{'  [poucos dados]' if session['poucos_dados'] else ''}")
++    for report in result["sessoes"]:
++        print(f"\n  curvas em {report['sessao']} (perda mediana para a IA, intervalo de 90%):")
++        for c in report["curvas"]:
++            loss = c["perda_para_ia_s"] or {}
++            braking = c["frenagem_vs_ia_m"]
++            brake_text = "-" if braking is None else "%+.0f m" % braking["mediana"]
++            side = " (%s)" % c["lado"] if c["lado"] else ""
++            print(f"    {c['curva']:8s} {loss.get('mediana', float('nan')):+.3f} s  {c['intervalo_90_s']}  "
++                  f"{c['situacao']}{side}  freio {brake_text}  "
++                  f"apice {c['lateral_apice_vs_ia_m']['mediana']:+.2f} m  "
++                  f"minima {c['velocidade_minima_vs_ia_kmh']['mediana']:+.1f} km/h")
++    print(f"\n  tendencia da mediana: {summary['tendencia_mediana_s_por_sessao']} s por sessao")
++    print(f"  3 curvas de maior perda: {[c['curva'] for c in summary['curvas_de_maior_perda']]}")
++    print(f"  criterio do ADR 0015: {summary['criterio_adr_0015']['situacao']}")
++    print("=" * 70)
++    print(f"-> {result['saida']}")
++
++
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("--saida", type=Path, default=config.artifacts_root() / "evolucao")
++    parser.add_argument("--modelo", type=Path, default=model_path(BACKEND_DIR.parent, TRACK),
++                        help="modelo do coach com a volta da IA (padrao: o do repositorio)")
++    args = parser.parse_args(argv)
++    try:
++        result = run(args.saida, args.modelo)
++    except SystemExit as stop:
++        print(stop)
++        return 2
++    print_report(result)
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/docs/backlog.md b/docs/backlog.md
+index 4f703f5a..d7512c16 100644
+--- a/docs/backlog.md
++++ b/docs/backlog.md
+@@ -18,7 +18,6 @@ Lista viva de problemas conhecidos e tarefas adiadas, mantida pelo Claude (Cowor
+ | Corrigir textos publicados que dizem "você" sobre voltas da IA: vídeo "Modelo em Movimento", apresentação, aula, documento "Dados de corrida e estilos" e ADR 0011 | ADR 0014 | Os números certos já existem: Eduardo 89,379 s, 14,7 m de dispersão na freada e 1,84 m no ápice; IA 84,816 s, 1,0 m e 0,04 m | Próxima rodada de documentação |
+ | Decidir se o Assetto Corsa vira o simulador do ganho (AssettoCorsaGym ou a própria IA do jogo) | Conversa de 03/10; ADR 0016 | Caminho para a peça D e para a pergunta do experimento suspenso. Com o desvio da IA (12 ms no Bico de Pato), poucas voltas bastariam | ADR 0017, depois do coach |
+ | Duas pastas de gravações e de modelo: a do repositório e a do app instalado (`%APPDATA%\Automobilista Telemetria`), com 90 sessões e 14 GB que o ML nunca viu | Pedido 11 (03/10) | O ML pode estar deixando de fora boa parte dos dados; a volta de referência do teste (84,663 s) veio de lá | Inventário no pedido 12; entrada no store do ML depois da rotulagem |
+-| Voltas com passagem pelo box aceitas como válidas pelos portões do ML: 21 das 122 do store em uso e 135 das 688 nas duas pastas | Pedido 12 (03/10) | Os resultados das Fases 1, 2 e 2b incluem essas voltas, principalmente nos trechos perto da linha de chegada | Corrigir o portão quando o store for refeito com voltas rotuladas |
+ | São 688 voltas válidas e únicas nas 125 sessões de Interlagos das duas pastas; o store em uso tem 122 | Pedido 12 (03/10) | Quase todas são da IA ou de antes do equipamento novo | Só entram no modelo do piloto as voltas novas (ADR 0015) |
+ | O app instalado só grava o indicador de IA depois de reempacotado | Pedido 12 (03/10) | Até lá, gravar com o app aberto a partir do repositório | Reempacotar depois do pedido 14 |
+ | A IA de agosto fazia diferente da de hoje no microsetor 41 (2.962 a 3.034 m) e freava 6 a 8 m longe em duas zonas | Pedido 13 (04/10) | Voltas antigas da IA não servem de referência | Referência da IA só de sessões novas |
+@@ -26,5 +25,5 @@ Lista viva de problemas conhecidos e tarefas adiadas, mantida pelo Claude (Cowor
+ | Hipótese: a IA em níveis mais fracos daria referências no ritmo do piloto (a "trajetória coerente com o ritmo" do pedido original) | ADR 0016 | Pode substituir parte da peça A por dados do próprio jogo | Testar depois do coach |
+ | Hipótese: a variação natural do piloto pode mostrar efeitos que as voltas da IA não mostravam, com o risco de confusão (quem freia tarde também erra o ápice) | ADR 0016 | Pode reabrir os estimadores da Fase 2b com voltas humanas | Quando houver voltas humanas suficientes |
+ | Acompanhar a evolução do piloto sessão a sessão: tempo, consistência e distância até a linha da IA por curva | ADR 0015 | Resultado do próprio TCC e critério para retomar experimentos | Junto com a peça B (pedido 15) |
+-| Reconstrução do store, juntando quatro correções: (1) o período da volta: o ML zera o relógio com o período da grade e encurta toda volta e o microsetor 0 em um passo (25,7 a 28,0 ms; +26 ms em toda volta, no microsetor 0, ao corrigir); (2) o portão que deixa passar voltas com box; (3) as voltas rotuladas (origem e equipamento); (4) a pasta do app instalado | Pedidos 12, 13 e 14 (04/10) | Store, inventário e tudo o que lê deles; os resultados antigos ficam como registro | Um pedido próprio depois do coach, para reconstruir uma vez só |
+ | O `timestamp` do gravador engasga: +357 ms numa amostra e +2 ms na seguinte, com o cronômetro do jogo certo e o carro andando 21 m | Pedido 14 (04/10) | O coach agora usa o cronômetro do jogo. Falta conferir o que mais usa esse `timestamp`, como o cálculo de frequência nos portões | A conferir |
++| atualizar_coach leva ~16 min; criar um modo incremental | Pedido 16 (04/10) | Com o store v2 e o relatório de evolução, o comando completo passa a levar cerca de 26 min: a varredura do inventário (~13 min) e o store v2 (~10 min) leem todas as gravações de novo a cada sessão | Pedido próprio |
+diff --git a/docs/coach_aprendizado.md b/docs/coach_aprendizado.md
+index ac4cf358..fa388f10 100644
+--- a/docs/coach_aprendizado.md
++++ b/docs/coach_aprendizado.md
+@@ -288,10 +288,12 @@ O comando faz, em ordem:
+    - o foco inicial de cada modo.
+ 
+    O resumo também fica em `data/ml/origem/atualizar_coach.json`.
++6. **Refaz o store v2** (pedido 16) com as checagens. Se uma checagem falhar, o comando para antes do passo 7.
++7. **Roda o relatório de evolução** (`tools/relatorio_evolucao.py`), que grava os JSONs em `data/ml/evolucao/`. Ver `docs/store_v2_e_evolucao.md`.
+ 
+ **O que o comando não faz:**
+ 
+-- não reconstrói o store do ML;
++- não mexe no store antigo do ML (`laps_grid.parquet`); desde o pedido 16, ele refaz o store v2;
+ - não grava o modelo do app instalado, e recusa um `--modelo` dentro da pasta dele.
+ 
+ **Quando ele para:** qualquer trava dos passos para o comando antes de treinar:
+diff --git a/docs/store_v2_e_evolucao.md b/docs/store_v2_e_evolucao.md
+new file mode 100644
+index 00000000..6b3d85c6
+--- /dev/null
++++ b/docs/store_v2_e_evolucao.md
+@@ -0,0 +1,268 @@
++# Store v2 e relatório de evolução (pedido 16)
++
++Branch: `etapa/store-v2`, a partir de `develop` (`40937092`).
++
++## 1. Registrado antes de construir e de rodar
++
++Esta seção foi commitada antes de o store v2 ser construído e antes de o relatório de evolução rodar pela primeira vez. Nada nela muda depois de olhar os resultados.
++
++### 1.1 O que entra no store v2
++
++- **De onde vêm as voltas:** do inventário rotulado (`data/ml/origem/lap_inventory.parquet`, o do `atualizar_coach`), com as duas pastas de gravações.
++- **Quais entram:**
++  - só voltas válidas pelos portões de qualidade (`valid`);
++  - sem as marcadas com `duplicada_de`;
++  - sem passagem pelo box (portão novo, detalhado a seguir).
++- **Todas as origens entram.** O store guarda as colunas `origem`, `origem_fonte`, `equipamento`, `relogio_verificado`, `relogio_suspeito`, `pasta` e `carModel` (da gravação, quando houver), e quem lê filtra.
++- **Portão do box:** é a detecção do pedido 12 (`ai_detector.pit_lap`). A volta passa pelo box quando, nos microsetores perto da linha (0 a 3 e 57 a 59), fica a mais de 10 m da linha central e abaixo de 90 km/h. Ela é medida na grade da própria volta.
++- **Correção do período:** o relógio da grade passa a ser zerado na linha (s = 0) com o período verdadeiro da volta.
++  - **Antes:** o período era o `span` dos tempos na grade, um passo mais curto que a volta.
++  - **O período verdadeiro** é o tempo entre duas passagens por s = 0, no cronômetro do jogo. Em cada ponta, o tempo da passagem é a mediana, entre as amostras a até 15 m da linha, de `t + (s_linha − s)/v`, com a velocidade gravada. Uma amostra com o cronômetro repetido não desloca a passagem.
++  - O tempo de volta do store v2 (`lap_time_s`) é esse período.
++- **Onde fica:** `data/ml/laps_grid_v2.parquet` e `data/ml/laps_grid_v2_meta.json`. O store antigo (`laps_grid.parquet`) e os scripts das Fases 1, 2 e 2b não mudam.
++- **Meta (ADR 0007):**
++  - `geometry_id` e `source_hash` da geometria;
++  - o commit;
++  - o sha256 e o tamanho de cada entrada lida: o inventário, os rótulos de 04/10 e cada `player.jsonl` que deu volta ao store.
++
++### 1.2 Efeitos esperados
++
++Nas voltas que estão nos dois stores:
++
++- **Toda volta e o microsetor 0 sobem cerca de 26 ms:** a mediana da diferença v2 − antigo fica entre +20 e +35 ms, e é o tempo de um passo da grade na reta.
++- **Os outros 59 microsetores quase não mudam:** p99 de \|diferença\| abaixo de 5 ms.
++
++E no store:
++
++- **As voltas com box saem.** O relatório conta quantas o portão tirou.
++- **As duplicatas saem.** O relatório conta quantas.
++
++### 1.3 Checagens
++
++| | checagem | passa quando |
++|---|---|---|
++| **principal** | O período de s = 0 a s = 0 bate com o cronômetro do jogo | em toda volta do store v2 com o fechamento medido, p99 de \|período − tempo do jogo\| ≤ 5 ms |
++| 2 | Nenhuma volta passa pelo box | `pit_lap` falso em todas as voltas do store v2 |
++| 3 | Nenhuma volta aparece duas vezes | `lap_id` único, nenhuma volta com `duplicada_de`, e nenhum par de voltas de pastas diferentes com mais de 50% do intervalo de relógio de parede em comum |
++| 4 | Uma geometria só | todas as voltas com o mesmo `geometry_id`, igual ao da geometria carregada |
++
++**O tempo do jogo,** para a checagem principal:
++
++- **Como é medido:** o gravador só tem o cronômetro da volta corrente (`lap_time`), que zera na linha. Por isso o tempo de volta do jogo é o cronômetro no instante em que zera, costurado pela distância e pela velocidade entre as últimas amostras da volta e as primeiras da seguinte.
++  - Para cada par (uma das 5 últimas amostras da volta e uma das 5 primeiras da seguinte), vale `t_antes + distância/velocidade média − t_depois`.
++  - O tempo do jogo é a mediana dos pares.
++- **Quando é medido:** só quando a volta seguinte começa na mesma gravação, a até 50 m e 0,5 s da última amostra.
++- **Voltas sem fechamento medido** (a última de uma gravação, por exemplo) ficam fora da checagem e são contadas no relatório.
++- **Controle:** a mesma conta, feita no store antigo, deve dar cerca de −26 ms. Isso mostra que a checagem enxerga o erro que veio corrigir.
++
++**Se a checagem principal falhar, o trabalho para aqui** e o relatório vai para o Eduardo, sem merge.
++
++### 1.4 Regras do relatório de evolução
++
++- **Voltas:**
++  - do store v2;
++  - `humano`, equipamento `atual`;
++  - válidas (todas as do store v2 são), relógio conferido e sem `relogio_suspeito`.
++- **Sessão:** as gravações do mesmo dia, pela data no nome da gravação. A sessão de 04/10 junta as 7 gravações daquele dia.
++- **Referência:** a volta da IA do coach (`volta_ia`) do modelo do repositório (`data/reference_models/vhe_interlagos.json`), lida do store v2 pelo `lap_id`. Se ela não estiver no store v2, o relatório para.
++- **Unidades:** as 14 curvas de `detect_corners`. Os microsetores ficam como detalhe.
++  - **Trecho de cada curva:** vai do meio da reta anterior ao meio da reta seguinte. A fronteira é o ponto médio entre o fim de uma curva e o início da próxima.
++  - Os 14 trechos cobrem a volta inteira, então a soma das perdas por curva é a diferença de tempo de volta.
++- **Perda para a IA, por curva e volta:** o tempo do trecho na volta menos o tempo do trecho na volta da IA, com o relógio do store v2.
++  - Por sessão: a mediana e o intervalo interquartil (p25 a p75).
++- **Diferença consistente:** o intervalo de 90% da perda mediana não inclui zero.
++  - O intervalo é por bootstrap: 2000 reamostragens das voltas da sessão, com reposição e semente fixa, pelos percentis 5 e 95.
++  - O relatório diz o lado: perde ou ganha para a IA.
++- **Poucos dados:** com menos de 5 voltas na sessão, a curva fica "poucos dados", sem intervalo.
++- **Ponto de frenagem em relação à IA:**
++  - **Onde procurar:** no trecho, do início do trecho ao ápice da curva.
++  - **O ponto de frenagem:** o primeiro ponto em que o freio passa de abaixo de 0,15 para 0,15 ou mais. É o limiar da Fase 2b.
++  - **A diferença:** em metros de pista, volta menos IA; positivo é frear depois da IA.
++  - **Casos sem número:**
++    - curva em que a IA não freia: fica sem número;
++    - volta sem frenagem no trecho: fica fora da mediana daquela curva.
++  - **Por sessão:** a mediana e o intervalo interquartil.
++- **Posição lateral no ápice em relação à linha da IA:** a lateral da volta menos a da IA, no ápice da curva. Positivo é mais à esquerda (ADR 0003). Por sessão: a mediana e o intervalo interquartil.
++- **Velocidade mínima em relação à IA:** a mínima dentro da curva (do início ao fim dela), volta menos IA. Por sessão: a mediana.
++- **Por sessão:**
++  - o número de voltas;
++  - a melhor volta, a mediana e o desvio-padrão;
++  - a diferença para a volta da IA: a mediana menos a IA, e a melhor menos a IA.
++- **Entre sessões:**
++  - a série das medianas de volta, com a tendência: a inclinação da reta de mínimos quadrados, em segundos por sessão, a partir de 2 sessões;
++  - as 3 curvas de maior perda mediana na sessão mais recente, com a série delas.
++- **Critério do ADR 0015:** com 3 sessões ou mais, a diferença entre a maior e a menor mediana de volta das últimas 3 sessões é menor que 0,5 s. Com menos de 3 sessões, ainda não dá para avaliar.
++
++## 2. O que mudou no store (Parte B)
++
++O store v2 é um arquivo novo: `data/ml/laps_grid_v2.parquet`, com o meta em `laps_grid_v2_meta.json`. Ele é construído por `python -m ml.scripts.build_lap_store_v2`, e o `atualizar_coach` também o refaz.
++
++O store antigo (`laps_grid.parquet`, 122 voltas) continua intacto, e os scripts das Fases 1, 2 e 2b continuam lendo ele.
++
++| | store antigo | store v2 |
++|---|---|---|
++| relógio da grade | zerado em s = 0 com o `span` da grade, um passo mais curto que a volta | zerado em s = 0 com o período verdadeiro (`resample_lap(..., line_clock=True)`) |
++| voltas com box | entravam | saem (`pit_lap`, a detecção do pedido 12) |
++| pastas | só a do repositório | as duas, sem as cópias `duplicada_de` |
++| origens | só `humano` (na prática, o rótulo antigo) | todas, com `origem`, `origem_fonte`, `equipamento`, `relogio_*`, `pasta` e `carModel` em cada volta |
++| tempo do jogo | não tinha | `tempo_jogo_s`, o cronômetro do jogo costurado na troca de volta |
++| meta | geometria | geometria, commit, sha256 e tamanho do inventário, dos rótulos de 04/10 e de cada gravação usada (ADR 0007), e o resultado das checagens (`aprovado`) |
++
++### Contagem
++
++- **Entrada:** 1.952 voltas no inventário, 720 válidas.
++- **Saídas:**
++  - 4 duplicatas;
++  - 138 voltas com passagem pelo box.
++- **Resultado:** 578 voltas no store v2.
++
++| origem | equipamento | pasta | voltas |
++|---|---|---|---:|
++| desconhecida | anterior | app_instalado | 451 |
++| desconhecida | anterior | repositorio | 101 |
++| humano | atual | repositorio | 11 |
++| ia | atual | repositorio | 13 |
++| misturada | atual | repositorio | 2 |
++
++As 101 voltas antigas do repositório são exatamente as 122 do store antigo menos as 21 com box que o pedido 12 tinha apontado.
++
++## 3. As checagens
++
++Todas passaram. O meta saiu com `aprovado: true`.
++
++| checagem | resultado |
++|---|---|
++| **principal:** período contra o cronômetro do jogo, p99 de \|diferença\| ≤ 5 ms | **passou.** As 578 voltas têm o fechamento medido. A diferença tem mediana de +0,7 ms e vai de −3,1 a +3,3 ms entre o p1 e o p99; o p99 de \|diferença\| é 3,9 ms. |
++| nenhuma volta passa pelo box | passou: 0 voltas com `pit_lap` |
++| nenhuma volta duas vezes | passou: `lap_id` únicos, nenhuma `duplicada_de` e nenhum par sobreposto entre as pastas |
++| uma geometria só | passou: `0ed16f0dd2225990` |
++
++**As 4 voltas acima de 5 ms:**
++
++- uma volta de 125,1 s com parada no meio, já marcada com `relogio_suspeito` (`2026-08-19_20-58-36#0011`, −20,1 ms);
++- três gravações de 14/06 a 31 Hz, com metade da amostragem: −8,2, −5,5 e +7,4 ms.
++
++**Efeitos esperados,** nas 101 voltas que estão nos dois stores:
++
++- **a volta sobe** 27,8 ms (mediana);
++- **o microsetor 0 sobe** 27,2 ms (mediana);
++- **os outros microsetores** mudam no máximo 0,6 ms (p99).
++
++Tudo isso dentro do registrado.
++
++**Controle:** o store antigo, contra o mesmo cronômetro do jogo, fica 27,3 ms curto (mediana) e não passaria na checagem principal. A checagem enxerga o erro que veio corrigir.
++
++O relatório completo fica em `data/ml/store_v2_relatorio.json`.
++
++## 4. Relatório de evolução (Parte C)
++
++```
++..\.venv\Scripts\python.exe tools\relatorio_evolucao.py
++```
++
++O comando roda na pasta `backend`, em cerca de 5 segundos. Ele lê o store v2 e para se o meta não estiver `aprovado`. Também para se a volta da IA do coach não estiver no store v2.
++
++O `atualizar_coach.py` agora faz, no fim, dois passos novos:
++
++- o passo 6 refaz o store v2 com as checagens;
++- o passo 7 chama este relatório.
++
++O store v2 entra no comando para as sessões novas chegarem ao relatório.
++
++### Como ler
++
++- **Sessão:** as gravações do mesmo dia.
++- **Perda para a IA por curva:** quanto tempo você gasta a mais que a volta da IA do coach no trecho da curva, do meio da reta anterior ao meio da seguinte. Positivo é mais lento que a IA.
++- **Situação de cada curva:**
++  - `diferenca_consistente`: o intervalo de 90% da perda mediana não inclui zero. O campo `lado` diz se você perde ou ganha.
++  - `sem_diferenca_consistente`: o intervalo inclui zero.
++  - `poucos_dados`: menos de 5 voltas na sessão.
++- **Frenagem:** em metros, positivo é frear depois da IA. Fica vazia quando a IA não freia no trecho (`ia_freia: false`) ou quando nenhuma volta sua tem um início de frenagem dentro do trecho.
++- **Lateral no ápice:** positivo é mais à esquerda que a IA. A interface deve dizer o lado em palavras (ADR 0003).
++
++### Primeira rodada: a linha de base, sessão de 04/10
++
++- **Voltas:** 11.
++- **Tempos:** melhor de 89,39 s, mediana de 93,46 s e desvio de 2,40 s.
++- **Diferença para a volta da IA (84,83 s):** a mediana fica 8,63 s acima, e a melhor, 4,56 s acima.
++
++| curva | perda mediana (s) | intervalo de 90% (s) | situação | frenagem vs IA (m) | lateral no ápice (m) | mínima vs IA (km/h) |
++|---|---:|---|---|---:|---:|---:|
++| C01-esq | +1,27 | 1,03 a 1,59 | perde | −66 (11 voltas) | −0,85 | −4,1 |
++| C02-dir | +0,06 | −0,04 a 0,07 | sem diferença consistente | — | −0,11 | −1,5 |
++| C03-esq | +0,51 | 0,36 a 0,59 | perde | IA não freia | −0,78 | −0,6 |
++| C04-esq | +0,73 | 0,56 a 0,79 | perde | −48 (11) | −0,47 | −11,4 |
++| C05-esq | +0,32 | 0,19 a 0,51 | perde | IA não freia | −2,21 | −11,9 |
++| C06-dir | +0,56 | 0,30 a 0,71 | perde | −72 (9) | −3,85 | −3,5 |
++| C07-dir | +0,51 | 0,40 a 0,73 | perde | +40 (5) | +1,06 | −6,7 |
++| C08-esq | +0,28 | 0,23 a 0,55 | perde | +32 (1) | −0,04 | +3,6 |
++| C09-dir | +0,35 | 0,18 a 0,35 | perde | IA não freia | −1,69 | −20,3 |
++| C10-dir | +0,79 | 0,63 a 0,89 | perde | — | +1,21 | −7,3 |
++| C11-esq | +0,79 | 0,62 a 1,42 | perde | IA não freia | −0,57 | −20,4 |
++| C12-esq | +0,64 | 0,50 a 1,07 | perde | −2 (3) | −0,89 | +0,4 |
++| C13-esq | +0,17 | 0,16 a 0,23 | perde | IA não freia | −2,23 | −5,6 |
++| C14-esq | +0,35 | 0,24 a 0,73 | perde | IA não freia | −2,49 | −6,6 |
++
++- **Diferença consistente:** 13 das 14 curvas. A exceção é a C02.
++- **As 3 de maior perda:** C01, o S do Senna (1,27 s); C11 (0,79 s); e C10 (0,79 s).
++- **Tendência e critério do ADR 0015:** ainda não dá para calcular, com uma sessão só (1 de 3).
++- **A soma das perdas medianas por curva** é 7,33 s. Ela não precisa bater com a mediana da volta menos a IA (8,63 s), porque a soma de medianas não é a mediana das somas. Volta a volta, a soma das 14 perdas é exatamente a diferença para a IA.
++
++### Limitação encontrada na primeira rodada
++
++**A janela de frenagem perde frenagens que começam no trecho anterior.** A regra registrada procura o início da frenagem do começo do trecho até o ápice da curva. Com duas curvas próximas, a frenagem da segunda pode começar ainda no trecho da primeira, depois do ápice dela.
++
++- **Na C10,** a IA começa a frear em 2.622 m, depois do ápice da C09 (2.610 m) e antes do trecho da C10 (2.649 m). Dentro do trecho, o pedal da IA pulsa em torno de 0,15, e nenhuma volta sua tem um início de frenagem ali.
++- **Na C02,** você vem freando da C01.
++- **Na C07, C08 e C12,** só algumas voltas têm ponto de frenagem.
++
++A regra não foi mudada depois de ver o resultado. Uma opção para a próxima versão é começar a janela de frenagem no ápice da curva anterior, e ela fica para decisão sua.
++
++## 5. Formato dos JSONs
++
++Os arquivos ficam em `data/ml/evolucao/`, fora do git:
++
++- `sessao_<AAAA-MM-DD>.json`, um por sessão;
++- `resumo.json`.
++
++Todos os tempos estão em segundos, as distâncias em metros e as velocidades em km/h. Valor `null` quer dizer que não deu para medir.
++
++### `sessao_<AAAA-MM-DD>.json` (`formato: "evolucao-sessao/1"`)
++
++| campo | o que é |
++|---|---|
++| `sessao` | o dia (`2026-10-04`) |
++| `gravacoes` | as gravações do dia que deram voltas |
++| `resumo` | `voltas`, `melhor_s`, `mediana_s`, `desvio_s` (desvio-padrão amostral), `volta_da_ia_s`, `mediana_menos_ia_s`, `melhor_menos_ia_s` e `poucos_dados` (menos de 5 voltas) |
++| `voltas[]` | `volta` (o `lap_id`), `gravacao` e `tempo_s` (o período do store v2), na ordem em que foram feitas |
++| `curvas[]` | uma por curva, na ordem da pista (a tabela abaixo) |
++| `microsetores[]` | `microsetor` (0 a 59), `perda_mediana_s`, `p25_s` e `p75_s` contra a volta da IA |
++| `referencia` | `tipo` (`volta_ia`), `volta`, `tempo_s` e `modelo`, o arquivo do coach de onde veio |
++| `store` | `arquivo`, `sha256`, `commit_do_store` e `geometry_id` do store v2 lido |
++| `regras` | onde estão as regras (este documento, seção 1.4) |
++
++Campos de cada item de `curvas[]`:
++
++| campo | o que é |
++|---|---|
++| `curva`, `indice` | o rótulo (`C01-esq`) e a posição (1 a 14) |
++| `trecho_m` | `[início, fim]` do trecho; o da C01 cruza a linha (`[4112.1, 346.0]`) |
++| `curva_m`, `apice_m` | início e fim da curva, e o ápice, pela curvatura da linha central |
++| `perda_para_ia_s` | `mediana`, `p25`, `p75`, `iqr` e `voltas` |
++| `situacao`, `lado`, `intervalo_90_s` | `diferenca_consistente`, `sem_diferenca_consistente` ou `poucos_dados`. `lado` é `perde`, `ganha` ou `null`. `intervalo_90_s` é `[baixo, alto]` ou `null` com poucos dados |
++| `ia_freia` | se a volta da IA tem início de frenagem no trecho |
++| `frenagem_vs_ia_m` | `mediana`, `p25`, `p75`, `iqr` e `voltas`, só das voltas com frenagem no trecho; `null` quando a IA não freia ou nenhuma volta freia |
++| `lateral_apice_vs_ia_m` | `mediana`, `p25`, `p75`, `iqr` e `voltas` |
++| `velocidade_minima_vs_ia_kmh` | `mediana` |
++| `por_volta[]` | `volta`, `perda_s`, `frenagem_vs_ia_m`, `lateral_apice_vs_ia_m` e `velocidade_minima_vs_ia_kmh` de cada volta |
++
++### `resumo.json` (`formato: "evolucao-resumo/1"`)
++
++| campo | o que é |
++|---|---|
++| `sessoes[]` | por sessão, em ordem de data: `sessao`, `voltas`, `melhor_s`, `mediana_s`, `desvio_s`, `mediana_menos_ia_s`, `melhor_menos_ia_s`, `poucos_dados` e `curvas_com_diferenca_consistente` |
++| `tendencia_mediana_s_por_sessao` | inclinação da reta da mediana de volta, em s por sessão; `null` com menos de 2 sessões. Negativo é melhorar |
++| `curvas_de_maior_perda[]` | as 3 de maior perda mediana na sessão mais recente, cada uma com `serie[]` (`sessao`, `perda_mediana_s`, `situacao`) e `tendencia_s_por_sessao` |
++| `criterio_adr_0015` | `limite_s` (0,5), `sessoes_necessarias` (3), `sessoes_disponiveis`, `amplitude_s` (maior menos menor mediana das últimas 3), `estabilizou` (`true`, `false` ou `null`) e `situacao` em texto |
++| `referencia`, `store`, `regras` | como no JSON da sessão |
++| `arquivos_de_sessao` | os caminhos dos JSONs de sessão |

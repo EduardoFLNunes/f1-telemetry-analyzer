@@ -1,0 +1,90 @@
+{
+ "formato": "evolucao-resumo/1",
+ "sessoes": [
+  {
+   "sessao": "2026-10-04",
+   "voltas": 11,
+   "melhor_s": 89.39,
+   "mediana_s": 93.458,
+   "desvio_s": 2.397,
+   "mediana_menos_ia_s": 8.629,
+   "melhor_menos_ia_s": 4.561,
+   "poucos_dados": false,
+   "curvas_com_diferenca_consistente": [
+    "C01-esq",
+    "C03-esq",
+    "C04-esq",
+    "C05-esq",
+    "C06-dir",
+    "C07-dir",
+    "C08-esq",
+    "C09-dir",
+    "C10-dir",
+    "C11-esq",
+    "C12-esq",
+    "C13-esq",
+    "C14-esq"
+   ]
+  }
+ ],
+ "tendencia_mediana_s_por_sessao": null,
+ "curvas_de_maior_perda": [
+  {
+   "curva": "C01-esq",
+   "serie": [
+    {
+     "sessao": "2026-10-04",
+     "perda_mediana_s": 1.2669,
+     "situacao": "diferenca_consistente"
+    }
+   ],
+   "tendencia_s_por_sessao": null
+  },
+  {
+   "curva": "C11-esq",
+   "serie": [
+    {
+     "sessao": "2026-10-04",
+     "perda_mediana_s": 0.7918,
+     "situacao": "diferenca_consistente"
+    }
+   ],
+   "tendencia_s_por_sessao": null
+  },
+  {
+   "curva": "C10-dir",
+   "serie": [
+    {
+     "sessao": "2026-10-04",
+     "perda_mediana_s": 0.7915,
+     "situacao": "diferenca_consistente"
+    }
+   ],
+   "tendencia_s_por_sessao": null
+  }
+ ],
+ "criterio_adr_0015": {
+  "limite_s": 0.5,
+  "sessoes_necessarias": 3,
+  "sessoes_disponiveis": 1,
+  "amplitude_s": null,
+  "estabilizou": null,
+  "situacao": "ainda nao avaliavel: 1 de 3 sessoes"
+ },
+ "store": {
+  "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2.parquet",
+  "sha256": "348bcb470baa16b6c582e980bee6d1b62b78ec418e4e8ec4b429f48e5b439e27",
+  "commit_do_store": "3687bfc0549c9223641143107ba550d63e1c4ae8",
+  "geometry_id": "0ed16f0dd2225990"
+ },
+ "referencia": {
+  "tipo": "volta_ia",
+  "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+  "tempo_s": 84.829,
+  "modelo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\reference_models\\vhe_interlagos.json"
+ },
+ "regras": "docs/store_v2_e_evolucao.md, secao 1.4",
+ "arquivos_de_sessao": [
+  "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\evolucao\\sessao_2026-10-04.json"
+ ]
+}

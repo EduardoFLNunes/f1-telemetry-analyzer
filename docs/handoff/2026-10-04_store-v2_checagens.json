@@ -1,0 +1,311 @@
+{
+ "checagens": {
+  "principal_periodo": {
+   "checagem": "periodo de s = 0 a s = 0 contra o cronometro do jogo",
+   "limite_ms": 5.0,
+   "voltas_medidas": 578,
+   "voltas_sem_fechamento_medido": 0,
+   "diferenca_ms": {
+    "n": 578,
+    "min": -20.15,
+    "p1": -3.13,
+    "mediana": 0.73,
+    "p99": 3.34,
+    "max": 7.45
+   },
+   "abs_diferenca_ms": {
+    "n": 578,
+    "min": 0.0,
+    "p1": 0.02,
+    "mediana": 1.03,
+    "p99": 3.91,
+    "max": 20.15
+   },
+   "piores": [
+    {
+     "volta": "2026-08-19_20-58-36_vhe_interlagos#0011",
+     "diferenca_ms": -20.15
+    },
+    {
+     "volta": "2026-06-14_12-23-46_vhe_interlagos#0007",
+     "diferenca_ms": -8.17
+    },
+    {
+     "volta": "2026-06-14_12-23-46_vhe_interlagos#0005",
+     "diferenca_ms": 7.45
+    },
+    {
+     "volta": "2026-06-14_12-44-04_vhe_interlagos#0002",
+     "diferenca_ms": -5.47
+    },
+    {
+     "volta": "2026-06-14_12-23-46_vhe_interlagos#0001",
+     "diferenca_ms": -4.81
+    }
+   ],
+   "passou": true
+  },
+  "sem_box": {
+   "checagem": "nenhuma volta passa pelo box",
+   "voltas_com_box": [],
+   "passou": true
+  },
+  "sem_duplicatas": {
+   "checagem": "nenhuma volta aparece duas vezes",
+   "lap_id_repetido": [],
+   "com_duplicada_de": [],
+   "pares_de_pastas_diferentes_sobrepostos": [],
+   "pares_da_mesma_pasta_sobrepostos (informativo)": [],
+   "passou": true
+  },
+  "uma_geometria": {
+   "checagem": "uma geometria so",
+   "geometry_ids": [
+    "0ed16f0dd2225990"
+   ],
+   "geometria_carregada": "0ed16f0dd2225990",
+   "passou": true
+  }
+ },
+ "todas_passaram": true,
+ "principal_passou": true,
+ "efeitos_esperados": {
+  "voltas_nos_dois_stores": 101,
+  "voltas_so_no_antigo": 21,
+  "volta_v2_menos_antigo_ms": {
+   "n": 101,
+   "min": 11.54,
+   "p1": 17.26,
+   "mediana": 27.78,
+   "p99": 47.66,
+   "max": 53.71
+  },
+  "microsetor_0_v2_menos_antigo_ms": {
+   "n": 101,
+   "min": 10.98,
+   "p1": 16.39,
+   "mediana": 27.16,
+   "p99": 47.07,
+   "max": 51.06
+  },
+  "outros_microsetores_abs_ms": {
+   "n": 5959,
+   "min": 0.0,
+   "p1": 0.0,
+   "mediana": 0.0,
+   "p99": 0.6,
+   "max": 5.02
+  },
+  "como_esperado": true
+ },
+ "controle_store_antigo": {
+  "controle": "store antigo contra o mesmo cronometro do jogo",
+  "voltas": 101,
+  "diferenca_ms": {
+   "n": 101,
+   "min": -52.22,
+   "p1": -45.03,
+   "mediana": -27.25,
+   "p99": -15.68,
+   "max": -14.89
+  },
+  "passaria": false
+ },
+ "contagens": {
+  "voltas": 578,
+  "por_origem": {
+   "desconhecida": 552,
+   "ia": 13,
+   "humano": 11,
+   "misturada": 2
+  },
+  "por_equipamento": {
+   "anterior": 552,
+   "atual": 26
+  },
+  "por_pasta": {
+   "app_instalado": 451,
+   "repositorio": 127
+  },
+  "por_origem_equipamento_pasta": {
+   "desconhecida / anterior / app_instalado": 451,
+   "desconhecida / anterior / repositorio": 101,
+   "humano / atual / repositorio": 11,
+   "ia / atual / repositorio": 13,
+   "misturada / atual / repositorio": 2
+  }
+ },
+ "selecao": {
+  "voltas_no_inventario": 1952,
+  "validas": 720,
+  "duplicadas_tiradas": 4,
+  "box_tiradas": 138,
+  "voltas_com_box_tiradas": [
+   "2026-06-14_10-15-25_vhe_interlagos#0007",
+   "2026-06-14_10-15-25_vhe_interlagos#0008",
+   "2026-06-14_11-45-28_vhe_interlagos#0006",
+   "2026-06-14_11-45-28_vhe_interlagos#0007",
+   "2026-06-14_12-23-46_vhe_interlagos#0009",
+   "2026-06-20_13-13-02_vhe_interlagos#0004",
+   "2026-06-20_13-13-02_vhe_interlagos#0005",
+   "2026-06-20_13-13-02_vhe_interlagos#0014",
+   "2026-06-20_13-13-02_vhe_interlagos#0015",
+   "2026-06-20_13-13-02_vhe_interlagos#0024",
+   "2026-06-20_13-13-02_vhe_interlagos#0025",
+   "2026-06-20_13-13-02_vhe_interlagos#0034",
+   "2026-06-20_13-13-02_vhe_interlagos#0035",
+   "2026-08-07_20-27-52_vhe_interlagos#0009",
+   "2026-08-07_20-27-52_vhe_interlagos#0010",
+   "2026-08-07_20-27-52_vhe_interlagos#0019",
+   "2026-08-07_20-27-52_vhe_interlagos#0020",
+   "2026-08-07_20-27-52_vhe_interlagos#0029",
+   "2026-08-07_20-27-52_vhe_interlagos#0030",
+   "2026-08-07_20-27-52_vhe_interlagos#0040",
+   "2026-08-07_20-27-52_vhe_interlagos#0049",
+   "2026-08-07_20-27-52_vhe_interlagos#0050",
+   "2026-08-07_20-27-52_vhe_interlagos#0059",
+   "2026-08-07_20-27-52_vhe_interlagos#0060",
+   "2026-08-08_11-58-41_vhe_interlagos#0009",
+   "2026-08-08_11-58-41_vhe_interlagos#0010",
+   "2026-08-08_12-23-51_vhe_interlagos#0002",
+   "2026-08-08_12-23-51_vhe_interlagos#0003",
+   "2026-08-08_12-23-51_vhe_interlagos#0012",
+   "2026-08-08_12-23-51_vhe_interlagos#0013",
+   "2026-08-08_12-23-51_vhe_interlagos#0022",
+   "2026-08-08_12-23-51_vhe_interlagos#0032",
+   "2026-08-08_12-23-51_vhe_interlagos#0033",
+   "2026-08-08_13-22-07_vhe_interlagos#0003",
+   "2026-08-08_13-22-07_vhe_interlagos#0004",
+   "2026-08-08_13-22-07_vhe_interlagos#0013",
+   "2026-08-08_16-52-13_vhe_interlagos#0002",
+   "2026-08-08_16-52-13_vhe_interlagos#0003",
+   "2026-08-08_17-04-15_vhe_interlagos#0004",
+   "2026-08-08_17-04-15_vhe_interlagos#0005",
+   "2026-08-08_17-04-15_vhe_interlagos#0014",
+   "2026-08-08_17-04-15_vhe_interlagos#0015",
+   "2026-08-08_17-04-15_vhe_interlagos#0024",
+   "2026-08-08_17-04-15_vhe_interlagos#0025",
+   "2026-08-08_17-04-15_vhe_interlagos#0034",
+   "2026-08-08_17-04-15_vhe_interlagos#0035",
+   "2026-08-08_17-04-15_vhe_interlagos#0044",
+   "2026-08-08_17-04-15_vhe_interlagos#0045",
+   "2026-08-08_17-04-15_vhe_interlagos#0054",
+   "2026-08-08_17-04-15_vhe_interlagos#0055",
+   "2026-08-08_17-04-15_vhe_interlagos#0064",
+   "2026-08-08_17-04-15_vhe_interlagos#0065",
+   "2026-08-08_17-04-15_vhe_interlagos#0074",
+   "2026-08-08_17-04-15_vhe_interlagos#0075",
+   "2026-08-08_17-04-15_vhe_interlagos#0084",
+   "2026-08-08_17-04-15_vhe_interlagos#0085",
+   "2026-08-09_10-27-39_vhe_interlagos#0003",
+   "2026-08-09_10-27-39_vhe_interlagos#0004",
+   "2026-08-09_10-27-39_vhe_interlagos#0013",
+   "2026-08-09_10-27-39_vhe_interlagos#0014",
+   "2026-08-09_10-27-39_vhe_interlagos#0023",
+   "2026-08-09_10-27-39_vhe_interlagos#0024",
+   "2026-08-09_10-27-39_vhe_interlagos#0033",
+   "2026-08-09_10-27-39_vhe_interlagos#0034",
+   "2026-08-09_10-27-39_vhe_interlagos#0043",
+   "2026-08-09_10-27-39_vhe_interlagos#0044",
+   "2026-08-09_10-27-39_vhe_interlagos#0053",
+   "2026-08-09_10-27-39_vhe_interlagos#0054",
+   "2026-08-09_12-04-40_vhe_interlagos#0007",
+   "2026-08-09_12-21-19_vhe_interlagos#0006",
+   "2026-08-09_12-21-19_vhe_interlagos#0007",
+   "2026-08-09_12-37-42_vhe_interlagos#0005",
+   "2026-08-09_12-37-42_vhe_interlagos#0006",
+   "2026-08-09_12-37-42_vhe_interlagos#0015",
+   "2026-08-09_13-02-49_vhe_interlagos#0008",
+   "2026-08-09_13-02-49_vhe_interlagos#0009",
+   "2026-08-09_13-02-49_vhe_interlagos#0018",
+   "2026-08-09_13-02-49_vhe_interlagos#0019",
+   "2026-08-09_13-42-29_vhe_interlagos#0001",
+   "2026-08-09_13-42-29_vhe_interlagos#0002",
+   "2026-08-09_13-42-29_vhe_interlagos#0011",
+   "2026-08-09_13-42-29_vhe_interlagos#0012",
+   "2026-08-09_13-42-29_vhe_interlagos#0021",
+   "2026-08-09_13-42-29_vhe_interlagos#0022",
+   "2026-08-09_14-16-51_vhe_interlagos#0008",
+   "2026-08-09_14-16-51_vhe_interlagos#0009",
+   "2026-08-09_15-10-52_vhe_interlagos#0001",
+   "2026-08-09_15-10-52_vhe_interlagos#0002",
+   "2026-08-09_15-10-52_vhe_interlagos#0011",
+   "2026-08-09_15-10-52_vhe_interlagos#0012",
+   "2026-08-09_15-10-52_vhe_interlagos#0021",
+   "2026-08-09_15-10-52_vhe_interlagos#0022",
+   "2026-08-09_15-10-52_vhe_interlagos#0032",
+   "2026-08-09_15-10-52_vhe_interlagos#0041",
+   "2026-08-09_15-10-52_vhe_interlagos#0042",
+   "2026-08-09_15-10-52_vhe_interlagos#0051",
+   "2026-08-09_15-10-52_vhe_interlagos#0052",
+   "2026-08-09_15-10-52_vhe_interlagos#0062",
+   "2026-08-09_16-53-03_vhe_interlagos#0002",
+   "2026-08-09_16-53-03_vhe_interlagos#0003",
+   "2026-08-09_17-06-41_vhe_interlagos#0002",
+   "2026-08-09_17-06-41_vhe_interlagos#0003",
+   "2026-08-09_17-23-56_vhe_interlagos#0001",
+   "2026-08-09_17-23-56_vhe_interlagos#0002",
+   "2026-08-09_17-37-33_vhe_interlagos#0001",
+   "2026-08-09_17-37-33_vhe_interlagos#0002",
+   "2026-08-09_17-37-33_vhe_interlagos#0011",
+   "2026-08-09_17-37-33_vhe_interlagos#0012",
+   "2026-08-09_17-37-33_vhe_interlagos#0021",
+   "2026-08-09_17-37-33_vhe_interlagos#0022",
+   "2026-08-09_18-22-00_vhe_interlagos#0001",
+   "2026-08-09_18-22-00_vhe_interlagos#0002",
+   "2026-08-09_18-22-00_vhe_interlagos#0011",
+   "2026-08-09_18-47-11_vhe_interlagos#0005",
+   "2026-08-09_18-47-11_vhe_interlagos#0006",
+   "2026-08-09_18-47-11_vhe_interlagos#0015",
+   "2026-08-09_18-47-11_vhe_interlagos#0016",
+   "2026-08-09_19-20-59_vhe_interlagos#0001",
+   "2026-08-09_19-20-59_vhe_interlagos#0002",
+   "2026-08-09_19-20-59_vhe_interlagos#0011",
+   "2026-08-09_19-20-59_vhe_interlagos#0012",
+   "2026-08-09_19-20-59_vhe_interlagos#0021",
+   "2026-08-09_19-20-59_vhe_interlagos#0022",
+   "2026-08-09_19-20-59_vhe_interlagos#0031",
+   "2026-08-09_19-20-59_vhe_interlagos#0032",
+   "2026-08-09_19-20-59_vhe_interlagos#0041",
+   "2026-08-09_19-20-59_vhe_interlagos#0042",
+   "2026-08-09_19-20-59_vhe_interlagos#0051",
+   "2026-08-09_19-20-59_vhe_interlagos#0052",
+   "2026-08-19_20-58-36_vhe_interlagos#0012",
+   "2026-08-19_20-58-36_vhe_interlagos#0016",
+   "2026-08-19_20-58-36_vhe_interlagos#0017",
+   "2026-08-19_22-23-14_vhe_interlagos#0005",
+   "2026-08-19_22-23-14_vhe_interlagos#0006",
+   "2026-08-19_22-23-14_vhe_interlagos#0015",
+   "2026-08-19_22-23-14_vhe_interlagos#0016",
+   "2026-10-04_03-42-10_vhe_interlagos#0014",
+   "2026-10-04_03-42-10_vhe_interlagos#0015"
+  ],
+  "nao_encontradas": [],
+  "no_store_v2": 578
+ },
+ "store": {
+  "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2.parquet",
+  "bytes": 135737899,
+  "sha256": "348bcb470baa16b6c582e980bee6d1b62b78ec418e4e8ec4b429f48e5b439e27"
+ },
+ "meta": {
+  "commit": "3687bfc0549c9223641143107ba550d63e1c4ae8",
+  "geometry_id": "0ed16f0dd2225990",
+  "source_hash": "8c3e058486e0d691a52769eca59d209ea170a3e988da078ae6ec7c726b909609",
+  "aprovado": true,
+  "entradas": {
+   "inventario": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\origem\\lap_inventory.parquet",
+    "bytes": 428401,
+    "sha256": "dda39846704abc5db8d30345f88a022db995228156fedbb76a92aaec21b52790"
+   },
+   "rotulos_04_10": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\docs\\experimentos\\2026-10-04_rotulos_por_volta.csv",
+    "bytes": 4610,
+    "sha256": "f5054121654dca530c8f916d454a60fd5b23a659a9520eec9bd25c84c755889f"
+   },
+   "gravacoes": 50
+  }
+ },
+ "segundos": 521.7
+}

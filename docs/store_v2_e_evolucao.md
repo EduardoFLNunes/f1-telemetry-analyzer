@@ -169,6 +169,11 @@ O `atualizar_coach.py` agora faz, no fim, dois passos novos:
 
 O store v2 entra no comando para as sessões novas chegarem ao relatório.
 
+**Conferido de ponta a ponta:** `atualizar_coach.py --sem-varrer` rodou os 7 passos em `develop`, depois do merge. Levou 667 s e saiu com código 0; com a varredura, o comando completo leva cerca de 26 minutos.
+
+- O store v2 e o relatório saíram iguais aos da primeira rodada.
+- O modelo do app instalado (`9d08d705…`) e o store antigo (`laps_grid.parquet`, `a9798c3a…`) não mudaram.
+
 ### Como ler
 
 - **Sessão:** as gravações do mesmo dia.
