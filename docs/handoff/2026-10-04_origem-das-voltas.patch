@@ -1,0 +1,2076 @@
+diff --git a/backend/core/assetto_adapter.py b/backend/core/assetto_adapter.py
+index d69b5492..bf46c072 100644
+--- a/backend/core/assetto_adapter.py
++++ b/backend/core/assetto_adapter.py
+@@ -282,6 +282,9 @@ class AssettoAdapter:
+             "tyres_out": self.physics.numberOfTyresOut,
+             "off_track": self.physics.numberOfTyresOut >= 4,
+             "penalty_time": self.graphics.penaltyTime,
++            # Who is driving (ADR 0014): the game's AI can take the car over from
++            # a key, and laps it drove must never be read as the driver's.
++            "is_ai_controlled": bool(self.physics.isAIControlled),
+             "heading": self.physics.heading,
+             "accel_g": self.physics.accG[2], # Z is longitudinal in AC physics? Need to verify
+             "lat_g": self.physics.accG[0],
+diff --git a/backend/core/car_physics.py b/backend/core/car_physics.py
+index 0a93a6b0..759749b9 100644
+--- a/backend/core/car_physics.py
++++ b/backend/core/car_physics.py
+@@ -247,6 +247,7 @@ def _base_unavailable_physics() -> Dict[str, Any]:
+             "steerAngle": None,
+             "gear": None,
+             "rpm": None,
++            "isAIControlled": None,
+         },
+         "tyres": {
+             "tyreCoreTemperature": [None, None, None, None],
+@@ -355,6 +356,9 @@ def build_player_car_physics(
+             "steerAngle": _safe_float(sample.steering),
+             "gear": _safe_float(sample.gear),
+             "rpm": _safe_float(sample.rpm),
++            # The game's AI at the wheel (ADR 0014): recorded on every sample, so
++            # a lap where it took over is never mistaken for the driver's.
++            "isAIControlled": sample.isAIControlled,
+         },
+         "tyres": {
+             "tyreCoreTemperature": tyre_temp,
+diff --git a/backend/core/telemetry/channels.py b/backend/core/telemetry/channels.py
+index ce6c114d..5d9b435a 100644
+--- a/backend/core/telemetry/channels.py
++++ b/backend/core/telemetry/channels.py
+@@ -83,3 +83,28 @@ def input_schema(sample: Mapping[str, Any]) -> str:
+     if top:
+         return "top_level"
+     return "none"
++
++
++def ai_controlled(sample: Mapping[str, Any]) -> Optional[bool]:
++    """Whether the game's AI was driving at this sample (ADR 0014).
++
++    Assetto Corsa publishes `isAIControlled` on the physics page. The recorder
++    writes it in `carPhysics.controls` since 2026-10-03; nothing before that
++    date carries it, and those samples come back as None -- "not recorded",
++    never "the driver".
++    """
++    if isinstance(sample.get("sample"), Mapping):
++        sample = sample["sample"]
++    for value in (
++        _controls(sample).get("isAIControlled"),
++        sample.get("isAIControlled"),
++        sample.get("is_ai_controlled"),
++    ):
++        if value is None:
++            continue
++        if isinstance(value, bool):
++            return value
++        number = _finite(value)
++        if number is not None:
++            return number != 0.0
++    return None
+diff --git a/backend/core/telemetry/telemetry_models.py b/backend/core/telemetry/telemetry_models.py
+index a5b5d047..5619d83f 100644
+--- a/backend/core/telemetry/telemetry_models.py
++++ b/backend/core/telemetry/telemetry_models.py
+@@ -53,6 +53,9 @@ class TelemetrySample:
+     tyresOut: Optional[int] = None
+     offTrack: Optional[bool] = None
+     penaltyTime: Optional[float] = None
++    # Whether the game's AI is driving the car (physics page `isAIControlled`,
++    # ADR 0014). None when the source does not say.
++    isAIControlled: Optional[bool] = None
+     airDensity: Optional[float] = None
+     tyreCoreTemperature: List[Optional[float]] = field(default_factory=list)
+     tyrePressure: List[Optional[float]] = field(default_factory=list)
+@@ -146,6 +149,8 @@ class TelemetrySample:
+             offTrack=(lambda v: None if v is None else bool(v))(
+                 data.get("offTrack", data.get("off_track"))),
+             penaltyTime=nullable_float(data.get("penaltyTime", data.get("penalty_time"))),
++            isAIControlled=(lambda v: None if v is None else bool(v))(
++                data.get("isAIControlled", data.get("is_ai_controlled"))),
+             airDensity=nullable_float(data.get("airDensity", data.get("air_density"))),
+             tyreCoreTemperature=nullable_float_list(data.get("tyreCoreTemperature", data.get("tyre_core_temperature"))),
+             tyrePressure=nullable_float_list(data.get("tyrePressure", data.get("wheelsPressure", data.get("wheels_pressure")))),
+diff --git a/backend/core/telemetry/telemetry_reader_impl.py b/backend/core/telemetry/telemetry_reader_impl.py
+index 42edf09b..c798496c 100644
+--- a/backend/core/telemetry/telemetry_reader_impl.py
++++ b/backend/core/telemetry/telemetry_reader_impl.py
+@@ -335,6 +335,7 @@ class ACSharedMemoryReader(PollingTelemetryReader):
+                 "tyres_out": data.get("tyres_out"),
+                 "off_track": data.get("off_track"),
+                 "penalty_time": data.get("penalty_time"),
++                "is_ai_controlled": data.get("is_ai_controlled"),
+                 "air_density": data.get("air_density"),
+                 "wheel_slip": data.get("wheel_slip"),
+                 "wheel_load": data.get("wheel_load"),
+diff --git a/backend/main.py b/backend/main.py
+index d0ef2b9a..207e8292 100644
+--- a/backend/main.py
++++ b/backend/main.py
+@@ -432,6 +432,9 @@ def recording_metadata() -> Dict[str, Any]:
+         "trackCache": runtime_state.current_track_name,
+         "trackState": runtime_state.track_build_state.value,
+         "buildMethod": runtime_state.build_method,
++        # The car, from the static page (ADR 0014): without it a reference lap
++        # cannot be restricted to the same car.
++        "carModel": source_manager.current_car_model(),
+     }
+ 
+ 
+diff --git a/backend/ml/config.py b/backend/ml/config.py
+index 8c81b208..c719df10 100644
+--- a/backend/ml/config.py
++++ b/backend/ml/config.py
+@@ -24,6 +24,28 @@ def recordings_root() -> Path:
+     return repo_root() / "data" / "recordings"
+ 
+ 
++def installed_app_recordings_root() -> Optional[Path]:
++    """Onde o app instalado grava: `%APPDATA%/Automobilista Telemetria/data/recordings`.
++
++    As sessoes desta pasta nunca passaram pelo `ml` ate o ADR 0014, e nenhuma
++    delas esta tambem na pasta do repositorio (conferido por id e por hash em
++    2026-10-03).
++    """
++    import os
++
++    appdata = os.environ.get("APPDATA")
++    return Path(appdata) / "Automobilista Telemetria" / "data" / "recordings" if appdata else None
++
++
++RECORDING_FOLDERS = ("repositorio", "app_instalado")
++
++
++def recordings_roots() -> "dict[str, Path]":
++    """As pastas de gravacoes que existem nesta maquina, pelo rotulo de origem."""
++    roots = {"repositorio": recordings_root(), "app_instalado": installed_app_recordings_root()}
++    return {label: path for label, path in roots.items() if path is not None and path.exists()}
++
++
+ def track_cache_root() -> Path:
+     return repo_root() / "data" / "cache" / "tracks"
+ 
+diff --git a/backend/ml/data/inventory.py b/backend/ml/data/inventory.py
+index a71b8d65..25dc9134 100644
+--- a/backend/ml/data/inventory.py
++++ b/backend/ml/data/inventory.py
+@@ -8,6 +8,10 @@ resultado e persistido -- todo o resto do pipeline le a tabela, nao os JSONL.
+ A tabela e a analise exploratoria. Ela responde, sem abrir um unico arquivo de
+ novo: quantas voltas utilizaveis existem, de quantas sessoes, com que
+ frequencia de amostragem, e quanto tempo separa a melhor da mediana.
++
++Desde o ADR 0014 cada volta diz tambem quem pilotou (`origem`), de que pasta
++veio (`pasta`), se o relogio dela bate com a velocidade (`relogio_*`) e se e
++a copia de uma volta gravada duas vezes (`duplicada_de`). Ver `origin`.
+ """
+ 
+ from __future__ import annotations
+@@ -24,10 +28,25 @@ from .. import config
+ from ..preprocessing.alignment import align_lap
+ from ..preprocessing.cleaning import clean_lap
+ from ..preprocessing.quality import evaluate_lap
++from ..preprocessing.resampling import resample_lap
+ from ..track.geometry import TrackGeometry, load_geometry
++from ..track.microsectors import build_microsectors
+ from .lap_identity import classify, counter_counts
++from .origin import (
++    ai_share,
++    clock_check,
++    clock_summary,
++    lap_origin,
++    mark_clock,
++    mark_duplicates,
++    recording_folder,
++)
+ from .recordings import RawLap, Session, iter_laps, list_sessions
+ 
++# Chamado para cada volta valida com (volta crua, volta alinhada, grade,
++# conferencia do relogio por microsetor, linha do inventario).
++LapHook = Callable[[RawLap, pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, Any]], None]
++
+ INVENTORY_FILENAME = "lap_inventory.parquet"
+ INVENTORY_SUMMARY = "lap_inventory_summary.json"
+ 
+@@ -52,21 +71,43 @@ def _record(lap: RawLap, quality, cleaning, alignment) -> Dict[str, Any]:
+     return row
+ 
+ 
++def _provenance(lap: RawLap, folder: str) -> Dict[str, Any]:
++    """Quem pilotou, de que pasta veio e quando foi gravada (ADR 0014)."""
++    flags = lap.frame["ai_controlled"] if "ai_controlled" in lap.frame.columns else [None] * lap.sample_count
++    stamps = (
++        pd.to_numeric(lap.frame["timestamp_s"], errors="coerce")
++        if "timestamp_s" in lap.frame.columns
++        else pd.Series(dtype=float)
++    )
++    return {
++        "origem": lap_origin(flags),
++        "ia_fracao": ai_share(flags),
++        "ia_amostras_com_campo": int(sum(1 for f in flags if f is not None and f == f)),
++        "pasta": folder,
++        "inicio_epoch_s": float(stamps.min()) if stamps.notna().any() else float("nan"),
++        "fim_epoch_s": float(stamps.max()) if stamps.notna().any() else float("nan"),
++        "relogio_verificado": False,
++    }
++
++
+ def scan_sessions(
+     sessions: Optional[Sequence[Session]] = None,
+     track: Optional[TrackGeometry] = None,
+     gates: config.LapQualityGates = config.DEFAULT_GATES,
+     progress: Optional[Callable[[str], None]] = None,
++    lap_hook: Optional[LapHook] = None,
+ ) -> pd.DataFrame:
+     """Percorre as sessoes e devolve uma linha por volta."""
+     geometry = track or load_geometry()
+     available = list(sessions) if sessions is not None else list_sessions()
++    sectors = build_microsectors(geometry)
+ 
+     rows: List[Dict[str, Any]] = []
+     for position, session in enumerate(available, start=1):
+         count = 0
+         first_row = len(rows)
+         counters: Dict[tuple, Dict[int, int]] = {}
++        folder = recording_folder(session.directory)
+         # `min_samples=1`: um trecho de uma amostra so nao vira linha do
+         # inventario, mas a amostra dele esta dentro de algum replay e precisa
+         # entrar na contagem que associa as duas identidades.
+@@ -90,6 +131,7 @@ def scan_sessions(
+                         "reasons": "amostras insuficientes apos limpeza",
+                         "cleaned_samples": int(len(cleaned)),
+                         "geometry_id": geometry.geometry_id,
++                        **_provenance(lap, folder),
+                     }
+                 )
+                 count += 1
+@@ -98,6 +140,14 @@ def scan_sessions(
+             quality = evaluate_lap(aligned, geometry, alignment, gates)
+             row = _record(lap, quality, cleaning, alignment)
+             row["geometry_id"] = geometry.geometry_id
++            row.update(_provenance(lap, folder))
++            if quality.valid:
++                # O relogio so e conferido onde a volta inteira esta na grade.
++                grid = resample_lap(aligned, geometry)
++                check = clock_check(grid, geometry, sectors)
++                row.update(clock_summary(check))
++                if lap_hook is not None:
++                    lap_hook(lap, aligned, grid, check, row)
+             rows.append(row)
+             count += 1
+         identities = classify(session.session_id, counters)
+@@ -111,6 +161,7 @@ def scan_sessions(
+     frame = pd.DataFrame(rows)
+     if not frame.empty:
+         frame = frame.sort_values(["session_id", "sequence"]).reset_index(drop=True)
++        frame = mark_clock(mark_duplicates(frame))
+     return frame
+ 
+ 
+@@ -137,6 +188,16 @@ def summarise(inventory: pd.DataFrame) -> Dict[str, Any]:
+             causes[key] = causes.get(key, 0) + 1
+     summary["rejection_causes"] = dict(sorted(causes.items(), key=lambda kv: -kv[1]))
+ 
++    # ADR 0014: quem pilotou, de onde veio, relogio e duplicatas.
++    for column, label in (("origem", "laps_by_origin"), ("pasta", "laps_by_folder")):
++        if column in inventory.columns:
++            summary[label] = inventory[column].fillna("?").value_counts().to_dict()
++    if "duplicada_de" in inventory.columns:
++        summary["laps_duplicated"] = int(inventory["duplicada_de"].notna().sum())
++    if "relogio_suspeito" in inventory.columns:
++        summary["valid_laps_clock_suspect"] = int(valid["relogio_suspeito"].fillna(False).astype(bool).sum())
++        summary["clock_limit_s"] = float(inventory["relogio_limite_s"].iloc[0])
++
+     if len(valid):
+         for column, label in (
+             ("duration_s", "lap_time_s"),
+diff --git a/backend/ml/data/lap_store.py b/backend/ml/data/lap_store.py
+index 10a784fc..a27e79db 100644
+--- a/backend/ml/data/lap_store.py
++++ b/backend/ml/data/lap_store.py
+@@ -27,7 +27,8 @@ from ..preprocessing.quality import evaluate_lap
+ from ..preprocessing.resampling import lap_time_from_grid, resample_lap
+ from ..track.geometry import TrackGeometry, load_geometry
+ from .inventory import load_inventory
+-from .recordings import Session, iter_laps, list_sessions
++from .origin import DRIVER_ORIGINS, select_laps
++from .recordings import Session, iter_laps, list_all_sessions
+ 
+ # Associacao com o replay, calculada no inventario (`lap_identity`).
+ IDENTITY_COLUMNS = (
+@@ -38,6 +39,15 @@ IDENTITY_COLUMNS = (
+     "replay_share_of_replay",
+ )
+ 
++# Quem pilotou e o que se sabe do relogio (ADR 0014), copiados do inventario.
++ORIGIN_COLUMNS = (
++    "origem",
++    "pasta",
++    "relogio_verificado",
++    "relogio_suspeito",
++    "relogio_pior_s",
++)
++
+ STORE_FILENAME = "laps_grid.parquet"
+ STORE_METADATA = "laps_grid_meta.json"
+ 
+@@ -102,6 +112,8 @@ class StoredLaps:
+     track_length: float
+     geometry_id: str = ""
+     source_hash: str = ""
++    # O filtro com que o store foi construido (ADR 0014); vazio nos antigos.
++    selection: Optional[Dict[str, object]] = None
+ 
+     @property
+     def lap_ids(self) -> List[str]:
+@@ -124,13 +136,32 @@ def build_store(
+     track: Optional[TrackGeometry] = None,
+     sessions: Optional[Sequence[Session]] = None,
+     progress: Optional[Callable[[str], None]] = None,
++    origins: Optional[Sequence[str]] = DRIVER_ORIGINS,
++    include_clock_suspect: bool = False,
+ ) -> StoredLaps:
+-    """Le as voltas marcadas como validas no inventario e devolve o store."""
++    """Le as voltas marcadas como validas no inventario e devolve o store.
++
++    O store fala do piloto, entao por padrao so entram voltas `humano`, com o
++    relogio conferido e sem `relogio_suspeito`, e nenhuma copia duplicada
++    (ADR 0014). `origins=None` aceita qualquer origem.
++    """
+     geometry = track or load_geometry()
+     catalogue = inventory if inventory is not None else load_inventory()
+-    wanted = catalogue[catalogue["valid"]]
+-    if wanted.empty:
++    valid = catalogue[catalogue["valid"]]
++    if valid.empty:
+         raise ValueError("o inventario nao tem nenhuma volta valida")
++    wanted = select_laps(valid, origins, include_clock_suspect)
++    if wanted.empty:
++        hint = (
++            "Inventario anterior ao ADR 0014 nao tem a coluna `origem`: reconstrua-o."
++            if "origem" not in valid.columns
++            else "Ainda nao ha voltas com essa origem: grave sessoes com o gravador do ADR 0014."
++        )
++        raise ValueError(
++            f"nenhuma das {len(valid)} voltas validas passa no filtro de origem "
++            f"{list(origins) if origins is not None else 'todas'}"
++            f"{'' if include_clock_suspect else ', relogio conferido e nao suspeito'} (ADR 0014). {hint}"
++        )
+     # Quais voltas sao validas foi decidido projetando contra uma geometria;
+     # materializar contra outra misturaria as duas decisoes.
+     recorded = wanted["geometry_id"].dropna().unique() if "geometry_id" in wanted else []
+@@ -142,11 +173,11 @@ def build_store(
+         by_session.setdefault(str(row["session_id"]), set()).add(int(row["sequence"]))
+         identity[str(row["lap_id"])] = {
+             key: (None if isinstance(row.get(key), float) and np.isnan(row.get(key)) else row.get(key))
+-            for key in IDENTITY_COLUMNS
++            for key in IDENTITY_COLUMNS + ORIGIN_COLUMNS
+             if key in row
+         }
+ 
+-    available = {s.session_id: s for s in (sessions if sessions is not None else list_sessions())}
++    available = {s.session_id: s for s in (sessions if sessions is not None else list_all_sessions())}
+ 
+     blocks: List[pd.DataFrame] = []
+     records: List[Dict[str, object]] = []
+@@ -205,6 +236,10 @@ def build_store(
+         track_length=geometry.length,
+         geometry_id=geometry.geometry_id,
+         source_hash=geometry.source_hash,
++        selection={
++            "origens": list(origins) if origins is not None else None,
++            "inclui_relogio_suspeito": bool(include_clock_suspect),
++        },
+     )
+ 
+ 
+@@ -221,6 +256,7 @@ def save_store(store: StoredLaps, root: Optional[Path] = None) -> Path:
+         "track_length": store.track_length,
+         "geometry_id": store.geometry_id,
+         "source_hash": store.source_hash,
++        "selection": store.selection,
+         "columns": [c for c in store.frame.columns if c not in ("lap_id", "grid_index")],
+         "laps": store.laps.to_dict(orient="records"),
+     }
+@@ -248,4 +284,5 @@ def load_store(root: Optional[Path] = None, track: Optional[TrackGeometry] = Non
+         track_length=float(meta["track_length"]),
+         geometry_id=str(meta.get("geometry_id") or ""),
+         source_hash=str(meta.get("source_hash") or ""),
++        selection=meta.get("selection"),
+     )
+diff --git a/backend/ml/data/origin.py b/backend/ml/data/origin.py
+new file mode 100644
+index 00000000..a8d98cd1
+--- /dev/null
++++ b/backend/ml/data/origin.py
+@@ -0,0 +1,307 @@
++"""Quem pilotou cada volta, e se o relogio dela e plausivel (ADR 0014).
++
++Muitas sessoes foram gravadas com a IA do Assetto Corsa no volante, as vezes
++alternando com o piloto dentro da mesma sessao. Uma volta da IA lida como volta
++do piloto contamina tudo o que fala dele: a variacao entre voltas, o melhor
++trecho, a referencia do coach. Por isso cada volta carrega:
++
++* `origem`: `humano` ou `ia` quando o gravador registrou quem pilotava e o
++  valor nao mudou na volta; `misturada` quando mudou; `desconhecida` quando o
++  campo nao existe -- todas as gravacoes anteriores a 2026-10-03;
++* `pasta`: de que pasta de gravacoes a volta veio (`repositorio` ou
++  `app_instalado`);
++* `relogio_suspeito`: algum microsetor em que o tempo do relogio gravado e o
++  tempo que a velocidade explica discordam alem do limite;
++* `duplicada_de`: a mesma volta gravada duas vezes, por dois backends abertos
++  ao mesmo tempo.
++
++Para tudo o que fala do piloto, o padrao e `humano`, com relogio conferido e
++sem relogio suspeito (`select_laps`). Na duvida, a volta fica de fora.
++"""
++
++from __future__ import annotations
++
++import math
++from pathlib import Path
++from typing import Iterable, List, Optional, Sequence, Set
++
++import numpy as np
++import pandas as pd
++
++from .. import config
++from ..track.geometry import TrackGeometry
++from ..track.microsectors import Microsectors, split_times
++from ..track.trajectory import step_lengths
++
++HUMAN = "humano"
++AI = "ia"
++MIXED = "misturada"
++UNKNOWN = "desconhecida"
++ORIGINS = (HUMAN, AI, MIXED, UNKNOWN)
++
++# O que conta como volta do piloto, para tudo o que fala dele.
++DRIVER_ORIGINS = (HUMAN,)
++
++# Diferenca maxima, em segundos, entre o tempo do relogio e o tempo explicado
++# pela velocidade, em qualquer microsetor. Proposta a partir da distribuicao
++# medida nas duas pastas (688 voltas validas e unicas) e registrada em
++# docs/origem_das_voltas.md antes de ser aplicada: fora dos microsetores do box
++# o p99,9 da diferenca e 0,068 s, o microsetor 0 tem vies fixo de -0,034 s, e
++# de 0,10 a 0,20 s o numero de voltas marcadas quase nao muda (144 -> 141).
++CLOCK_LIMIT_S: Optional[float] = 0.10
++
++# Abaixo disto a velocidade nao explica tempo nenhum (carro quase parado).
++MIN_SPEED_MS = 1.0
++
++
++# ------------------------------------------------------------- origem ---
++
++def _known(value) -> Optional[bool]:
++    if value is None:
++        return None
++    if isinstance(value, (bool, np.bool_)):
++        return bool(value)
++    try:
++        number = float(value)
++    except (TypeError, ValueError):
++        return None
++    return None if math.isnan(number) else number != 0.0
++
++
++def lap_origin(flags: Iterable) -> str:
++    """Origem de uma volta a partir do indicador de IA de cada amostra.
++
++    Constante em todas as amostras -> `humano` ou `ia`. Muda dentro da volta ->
++    `misturada`. Nenhuma amostra com o campo -> `desconhecida`. Campo ausente
++    em parte da volta e o resto constante -> `desconhecida`: nao da para dizer
++    quem pilotou o trecho sem registro.
++    """
++    values = [_known(v) for v in flags]
++    known = [v for v in values if v is not None]
++    if not known:
++        return UNKNOWN
++    if any(known) and not all(known):
++        return MIXED
++    if len(known) < len(values):
++        return UNKNOWN
++    return AI if known[0] else HUMAN
++
++
++def ai_share(flags: Iterable) -> float:
++    """Fracao das amostras com o campo que indicam IA. NaN sem o campo."""
++    known = [v for v in (_known(f) for f in flags) if v is not None]
++    return float(sum(known)) / len(known) if known else float("nan")
++
++
++# ------------------------------------------------------------- pastas ---
++
++def recording_folder(directory: Path) -> str:
++    """Rotulo da pasta de gravacoes de uma sessao (`repositorio`, `app_instalado`)."""
++    parent = Path(directory).resolve().parent
++    for label, root in config.recordings_roots().items():
++        try:
++            if parent == Path(root).resolve():
++                return label
++        except OSError:
++            continue
++    return str(parent)
++
++
++# ------------------------------------------------------------- relogio ---
++
++def speed_time_on_grid(grid: pd.DataFrame, track: TrackGeometry) -> tuple:
++    """Tempo acumulado que a velocidade explica, ponto a ponto na grade.
++
++    Cada passo da grade custa o comprimento percorrido pela trajetoria do carro
++    (`step_lengths`, que segue a linha e nao a centerline) dividido pela
++    velocidade media nas duas pontas. Devolve (acumulado na grade, total com o
++    passo que fecha a volta), na mesma forma que `elapsed_s` e `lap_time_s`.
++    """
++    speed = grid["speed_kmh"].to_numpy(dtype=float) / 3.6
++    lateral = grid["lateral"].to_numpy(dtype=float) if "lateral" in grid.columns else np.zeros(track.size)
++    steps = step_lengths(track, np.nan_to_num(lateral))
++    ahead = np.roll(speed, -1)
++    mean = np.maximum(0.5 * (speed + ahead), MIN_SPEED_MS)
++    dt = steps / mean                    # passo i: do ponto i ao i+1 (o ultimo fecha a volta)
++    cumulative = np.concatenate([[0.0], np.cumsum(dt[:-1])])
++    return cumulative, float(np.sum(dt))
++
++
++def clock_check(
++    grid: pd.DataFrame, track: TrackGeometry, sectors: Microsectors
++) -> pd.DataFrame:
++    """Por microsetor: tempo pelo relogio gravado, tempo pela velocidade, diferenca.
++
++    O relogio e o `elapsed_s` da grade (cronometro do jogo). As duas medidas
++    usam as mesmas fronteiras (`split_times`). Uma diferenca grande quer dizer
++    que o relogio e a distancia percorrida nao contam a mesma historia: relogio
++    que pula, posicao que salta, projecao que escorrega.
++    """
++    from ..preprocessing.resampling import lap_time_from_grid
++
++    clock = split_times(grid["elapsed_s"].to_numpy(dtype=float), sectors, track, total=lap_time_from_grid(grid))
++    cumulative, total = speed_time_on_grid(grid, track)
++    by_speed = split_times(cumulative, sectors, track, total=total)
++    return pd.DataFrame(
++        {
++            "microsetor": np.arange(sectors.count),
++            "t_relogio_s": clock,
++            "t_velocidade_s": by_speed,
++            "diferenca_s": clock - by_speed,
++        }
++    )
++
++
++def clock_summary(check: pd.DataFrame) -> dict:
++    """O pior microsetor de uma volta, para o inventario."""
++    difference = check["diferenca_s"].to_numpy(dtype=float)
++    finite = np.isfinite(difference)
++    if not finite.all():
++        return {"relogio_verificado": False, "relogio_pior_s": float("nan"), "relogio_pior_microsetor": -1}
++    worst = int(np.argmax(np.abs(difference)))
++    return {
++        "relogio_verificado": True,
++        "relogio_pior_s": float(difference[worst]),
++        "relogio_pior_microsetor": worst,
++    }
++
++
++def mark_clock(inventory: pd.DataFrame, limit: Optional[float] = None) -> pd.DataFrame:
++    """Marca `relogio_suspeito` nas voltas com algum microsetor alem do limite."""
++    limit = CLOCK_LIMIT_S if limit is None else limit
++    out = inventory.copy()
++    if limit is None or "relogio_pior_s" not in out.columns:
++        return out
++    verified = out.get("relogio_verificado", pd.Series(False, index=out.index)).fillna(False).astype(bool)
++    worst = out["relogio_pior_s"].abs()
++    out["relogio_suspeito"] = verified & (worst > float(limit))
++    out["relogio_limite_s"] = float(limit)
++    return out
++
++
++# ----------------------------------------------------------- duplicatas ---
++
++# Fracao minima de sobreposicao no relogio de parede (da volta mais curta)
++# para duas voltas de sessoes diferentes serem a mesma volta gravada duas vezes.
++DUPLICATE_OVERLAP = 0.5
++
++
++def mark_duplicates(inventory: pd.DataFrame) -> pd.DataFrame:
++    """Marca `duplicada_de` nas voltas gravadas duas vezes ao mesmo tempo.
++
++    Medido em 2026-10-03: dois backends abertos gravaram os mesmos instantes em
++    sessoes de ids diferentes, uma em cada pasta (3 casos) ou na mesma pasta
++    (2026-06-01). Mesmo instante, mesmas posicoes: e a mesma volta. Fica a
++    copia com mais amostras; empate, a de sessao de nome menor.
++    """
++    out = inventory.copy()
++    out["duplicada_de"] = None
++    needed = {"inicio_epoch_s", "fim_epoch_s", "session_id", "raw_samples", "lap_number"}
++    if out.empty or not needed.issubset(out.columns):
++        return out
++    rows = out.dropna(subset=["inicio_epoch_s", "fim_epoch_s"]).sort_values("inicio_epoch_s")
++    start = rows["inicio_epoch_s"].to_numpy(dtype=float)
++    end = rows["fim_epoch_s"].to_numpy(dtype=float)
++    session = rows["session_id"].to_numpy()
++    samples = rows["raw_samples"].to_numpy(dtype=float)
++    number = rows["lap_number"].to_numpy(dtype=float)
++    lap_ids = rows["lap_id"].to_numpy()
++    index = rows.index.to_numpy()
++
++    parent = {i: i for i in range(len(rows))}
++
++    def find(i):
++        while parent[i] != i:
++            parent[i] = parent[parent[i]]
++            i = parent[i]
++        return i
++
++    for i in range(len(rows)):
++        j = i + 1
++        while j < len(rows) and start[j] < end[i]:
++            if session[i] != session[j] and abs(number[i] - number[j]) <= 1:
++                overlap = min(end[i], end[j]) - max(start[i], start[j])
++                shorter = min(end[i] - start[i], end[j] - start[j])
++                if shorter > 0 and overlap / shorter > DUPLICATE_OVERLAP:
++                    parent[find(j)] = find(i)
++            j += 1
++
++    groups = {}
++    for i in range(len(rows)):
++        groups.setdefault(find(i), []).append(i)
++    for members in groups.values():
++        if len(members) < 2:
++            continue
++        kept = sorted(members, key=lambda k: (-samples[k], str(session[k])))[0]
++        for k in members:
++            if k != kept:
++                out.at[index[k], "duplicada_de"] = lap_ids[kept]
++    return out
++
++
++# ------------------------------------------------------------- selecao ---
++
++def driver_mask(
++    laps: pd.DataFrame,
++    origins: Optional[Sequence[str]] = DRIVER_ORIGINS,
++    include_clock_suspect: bool = False,
++) -> pd.Series:
++    """Quais linhas passam no filtro de origem, relogio e duplicata.
++
++    `origins=None` aceita qualquer origem. Sem as colunas do ADR 0014 (um
++    inventario antigo), a origem e `desconhecida` e o relogio nao foi
++    conferido: com o filtro padrao, nada passa.
++    """
++    mask = pd.Series(True, index=laps.index)
++    if origins is not None:
++        origin = laps["origem"] if "origem" in laps.columns else pd.Series(UNKNOWN, index=laps.index)
++        mask &= origin.fillna(UNKNOWN).isin(list(origins))
++    if not include_clock_suspect:
++        verified = laps["relogio_verificado"] if "relogio_verificado" in laps.columns else pd.Series(False, index=laps.index)
++        suspect = laps["relogio_suspeito"] if "relogio_suspeito" in laps.columns else pd.Series(True, index=laps.index)
++        mask &= verified.fillna(False).astype(bool) & ~suspect.fillna(True).astype(bool)
++    if "duplicada_de" in laps.columns:
++        mask &= laps["duplicada_de"].isna()
++    return mask
++
++
++def select_laps(
++    laps: pd.DataFrame,
++    origins: Optional[Sequence[str]] = DRIVER_ORIGINS,
++    include_clock_suspect: bool = False,
++) -> pd.DataFrame:
++    return laps[driver_mask(laps, origins, include_clock_suspect)]
++
++
++def replay_selection(
++    inventory: pd.DataFrame,
++    origins: Optional[Sequence[str]] = DRIVER_ORIGINS,
++    include_clock_suspect: bool = False,
++) -> Set[str]:
++    """Voltas do replay (`rec__<sessao>__<n>`, a identidade do coach) que passam.
++
++    Uma volta do replay pode conter mais de uma volta do `ml` (o contador do
++    jogo trava no box). Ela so passa se todas as voltas do `ml` dentro dela
++    passarem: um trecho sem conferencia contamina a volta inteira.
++    """
++    if "replay_lap_id" not in inventory.columns:
++        return set()
++    mask = driver_mask(inventory, origins, include_clock_suspect)
++    ok: dict = {}
++    for replay, passed in zip(inventory["replay_lap_id"], mask):
++        if not isinstance(replay, str) or not replay:
++            continue
++        ok[replay] = ok.get(replay, True) and bool(passed)
++    return {replay for replay, passed in ok.items() if passed}
++
++
++def parse_origins(values: Optional[List[str]]) -> Optional[List[str]]:
++    """Argumento de linha de comando -> lista de origens (`todas` = sem filtro)."""
++    if not values:
++        return list(DRIVER_ORIGINS)
++    if any(v == "todas" for v in values):
++        return None
++    unknown = [v for v in values if v not in ORIGINS]
++    if unknown:
++        raise ValueError(f"origem desconhecida: {unknown}; use {ORIGINS} ou 'todas'")
++    return list(values)
+diff --git a/backend/ml/data/origin_signals.py b/backend/ml/data/origin_signals.py
+new file mode 100644
+index 00000000..d1f73c7b
+--- /dev/null
++++ b/backend/ml/data/origin_signals.py
+@@ -0,0 +1,116 @@
++"""Sinais candidatos para separar volta da IA de volta do piloto (ADR 0014).
++
++As gravacoes antigas nao dizem quem pilotou. Antes de treinar qualquer
++detector, que precisa de sessoes novas rotuladas, este modulo so mede, volta a
++volta, coisas em que a IA do jogo e uma pessoa tendem a diferir:
++
++* volante: quao rapido ele gira e quantas vezes muda de sentido por km;
++* pedais: quanto tempo o acelerador e o freio passam em valores parciais, o
++  pico de cada frenagem e quanto tempo o freio leva para chegar nele;
++* trocas de marcha: o RPM em que cada marcha sobe, e quanto ele varia;
++* (por sessao, fora daqui) a dispersao do ponto de frenagem e do apice entre
++  voltas, e a do tempo de volta.
++
++Nenhum destes numeros e um rotulo. Eles so viram detector quando houver voltas
++com `origem` conhecida para calibrar.
++"""
++
++from __future__ import annotations
++
++from typing import Dict
++
++import numpy as np
++import pandas as pd
++
++# Abaixo disto o pedal esta solto; acima do complemento, no fundo.
++PEDAL_PARTIAL_LOW = 0.05
++PEDAL_PARTIAL_HIGH = 0.95
++# Mudanca minima do volante para contar como mudanca de sentido. Medido: numa
++# volta de 2026-08-19 o volante vai de -0,52 a +0,73; 0,01 e ~1 % disso.
++STEERING_REVERSAL = 0.01
++# Inicio de frenagem: o mesmo limiar da Fase 2b (`empirical.BRAKE_ONSET`).
++BRAKE_ON = 0.15
++
++
++def _time_weights(time_s: np.ndarray) -> np.ndarray:
++    dt = np.diff(time_s, append=time_s[-1])
++    return np.clip(np.nan_to_num(dt), 0.0, 1.0)
++
++
++def steering_reversals(steering: np.ndarray, threshold: float = STEERING_REVERSAL) -> int:
++    """Mudancas de sentido do volante maiores que `threshold` (com histerese)."""
++    values = steering[np.isfinite(steering)]
++    if values.size < 3:
++        return 0
++    count, direction = 0, 0
++    low = high = extreme = values[0]
++    for value in values[1:]:
++        if direction == 0:
++            low, high = min(low, value), max(high, value)
++            if value - low > threshold:
++                direction, extreme = 1, value
++            elif high - value > threshold:
++                direction, extreme = -1, value
++        elif direction == 1:
++            if value > extreme:
++                extreme = value
++            elif extreme - value > threshold:
++                count, direction, extreme = count + 1, -1, value
++        else:
++            if value < extreme:
++                extreme = value
++            elif value - extreme > threshold:
++                count, direction, extreme = count + 1, 1, value
++    return count
++
++
++def lap_signals(aligned: pd.DataFrame, track_length: float) -> Dict[str, float]:
++    """Sinais de uma volta limpa e alinhada (amostras no tempo, nao na grade)."""
++    time_s = aligned["elapsed_s"].to_numpy(dtype=float)
++    weights = _time_weights(time_s)
++    total = float(weights.sum()) or float("nan")
++    out: Dict[str, float] = {}
++
++    steering = aligned["steering"].to_numpy(dtype=float) if "steering" in aligned else np.full(len(aligned), np.nan)
++    dt = np.diff(time_s)
++    with np.errstate(divide="ignore", invalid="ignore"):
++        rate = np.abs(np.diff(steering)) / dt
++    rate = rate[np.isfinite(rate) & (dt > 1e-4)]
++    out["volante_taxa_p95"] = float(np.percentile(rate, 95)) if rate.size else float("nan")
++    out["volante_reversoes_km"] = steering_reversals(steering) / (track_length / 1000.0)
++
++    for pedal in ("throttle", "brake"):
++        values = aligned[pedal].to_numpy(dtype=float) if pedal in aligned else np.full(len(aligned), np.nan)
++        partial = (values > PEDAL_PARTIAL_LOW) & (values < PEDAL_PARTIAL_HIGH)
++        name = "acelerador" if pedal == "throttle" else "freio"
++        out[f"{name}_parcial"] = float(weights[partial].sum() / total) if total == total else float("nan")
++
++    brake = np.nan_to_num(aligned["brake"].to_numpy(dtype=float)) if "brake" in aligned else np.zeros(len(aligned))
++    on = brake >= BRAKE_ON
++    starts = np.flatnonzero(on & ~np.r_[False, on[:-1]])
++    ends = np.flatnonzero(on & ~np.r_[on[1:], False])
++    peaks, rises = [], []
++    for start, end in zip(starts, ends):
++        segment = brake[start : end + 1]
++        peak = float(segment.max())
++        peaks.append(peak)
++        reach = start + int(np.argmax(segment >= 0.9 * peak))
++        rises.append(float(time_s[reach] - time_s[start]))
++    out["freio_eventos"] = float(len(peaks))
++    out["freio_pico_mediano"] = float(np.median(peaks)) if peaks else float("nan")
++    out["freio_subida_s"] = float(np.median(rises)) if rises else float("nan")
++
++    gear = aligned["gear"].to_numpy(dtype=float) if "gear" in aligned else np.full(len(aligned), np.nan)
++    rpm = aligned["rpm"].to_numpy(dtype=float) if "rpm" in aligned else np.full(len(aligned), np.nan)
++    # RPM na ultima amostra antes de a marcha subir. Medido em 2026-08-19: toda
++    # troca passa uma amostra por 0 (6 -> 0 -> 5), e 0 e 1 nao sao marchas de
++    # andar. Compara-se, entao, uma marcha engatada com a seguinte.
++    engaged = np.flatnonzero(np.isfinite(gear) & (gear >= 2))
++    up = engaged[np.flatnonzero(np.diff(gear[engaged]) > 0)]
++    shift_rpm = rpm[up]
++    shift_rpm = shift_rpm[np.isfinite(shift_rpm)]
++    out["troca_rpm_mediana"] = float(np.median(shift_rpm)) if shift_rpm.size else float("nan")
++    out["troca_rpm_dp"] = (
++        float(1.4826 * np.median(np.abs(shift_rpm - np.median(shift_rpm)))) if shift_rpm.size > 2 else float("nan")
++    )
++    return out
+diff --git a/backend/ml/data/recordings.py b/backend/ml/data/recordings.py
+index a80a498d..64f001fe 100644
+--- a/backend/ml/data/recordings.py
++++ b/backend/ml/data/recordings.py
+@@ -122,6 +122,32 @@ def list_sessions(
+     return sessions
+ 
+ 
++def list_all_sessions(
++    roots: Optional[Sequence[Path]] = None,
++    track_prefixes: Sequence[str] = config.INTERLAGOS_TRACK_PREFIXES,
++) -> List[Session]:
++    """Sessoes das duas pastas de gravacoes: a do repositorio e a do app instalado.
++
++    Desde o ADR 0014 o `ml` le as duas. O id da sessao e o nome do diretorio e
++    precisa ser unico entre as pastas; um id repetido para tudo, porque nao da
++    para saber sozinho qual das duas copias vale (em 2026-10-03 nao havia
++    nenhum).
++    """
++    bases = list(roots) if roots is not None else list(config.recordings_roots().values())
++    sessions: List[Session] = []
++    seen: Dict[str, Path] = {}
++    for base in bases:
++        for session in list_sessions(root=base, track_prefixes=track_prefixes):
++            if session.session_id in seen:
++                raise ValueError(
++                    f"sessao {session.session_id} existe em {seen[session.session_id]} e em "
++                    f"{session.directory}; compare as duas antes de seguir"
++                )
++            seen[session.session_id] = session.directory
++            sessions.append(session)
++    return sorted(sessions, key=lambda s: s.session_id)
++
++
+ def _session_track(directory: Path, stream: Path) -> Optional[str]:
+     index_path = directory / SESSION_INDEX
+     if index_path.exists():
+diff --git a/backend/ml/data/samples.py b/backend/ml/data/samples.py
+index e1abaed7..866c2096 100644
+--- a/backend/ml/data/samples.py
++++ b/backend/ml/data/samples.py
+@@ -18,7 +18,7 @@ import math
+ from typing import Any, Dict, Mapping, Optional
+ 
+ from core.projection.lateral_offset import to_left_positive
+-from core.telemetry.channels import driver_inputs
++from core.telemetry.channels import ai_controlled, driver_inputs
+ 
+ 
+ def number(value: Any) -> Optional[float]:
+@@ -124,6 +124,9 @@ def flatten(envelope: Mapping[str, Any]) -> Dict[str, Any]:
+         "road_temp": number(ambient.get("roadTemp")),
+         "off_track": bool(ambient.get("offTrack")) if ambient else None,
+         "tyres_out": number(ambient.get("tyresOut")),
++        # Quem pilotava (ADR 0014): True/False quando o gravador registrou,
++        # None nas gravacoes anteriores ao campo.
++        "ai_controlled": ai_controlled(sample),
+         # O `s` do gravador entra so como conferencia. O pipeline recalcula o
+         # seu proprio: 6 sessoes gravaram `null` aqui, e as que gravaram algo o
+         # fizeram contra versoes diferentes da geometria.
+diff --git a/backend/ml/preprocessing/resampling.py b/backend/ml/preprocessing/resampling.py
+index 1224e2dd..aa9403b0 100644
+--- a/backend/ml/preprocessing/resampling.py
++++ b/backend/ml/preprocessing/resampling.py
+@@ -24,8 +24,9 @@ from ..track.geometry import TrackGeometry
+ # media da uma direcao para o lado oposto do correto.
+ ANGULAR_CHANNELS = ("heading",)
+ 
+-# Canais que nao devem ser interpolados: o valor entre duas marchas nao e 3,5.
+-DISCRETE_CHANNELS = ("gear", "lap_number")
++# Canais que nao devem ser interpolados: o valor entre duas marchas nao e 3,5,
++# e entre "IA no volante" e "piloto no volante" nao ha meio-termo (ADR 0014).
++DISCRETE_CHANNELS = ("gear", "lap_number", "ai_controlled")
+ 
+ # Colunas que descrevem a amostragem original e nao a pilotagem.
+ DROPPED_CHANNELS = (
+diff --git a/backend/ml/scripts/build_inventory.py b/backend/ml/scripts/build_inventory.py
+index f36fa2df..560c7a96 100644
+--- a/backend/ml/scripts/build_inventory.py
++++ b/backend/ml/scripts/build_inventory.py
+@@ -1,8 +1,14 @@
+ """Varre as gravacoes e escreve o inventario de voltas.
+ 
+     python -m ml.scripts.build_inventory [--limit N] [--sessions PREFIXO ...]
++        [--pastas repositorio app_instalado] [--saida DIRETORIO]
+ 
+ Roda de dentro de `backend/`, que e a raiz de import do projeto.
++
++Desde o ADR 0014 le as duas pastas de gravacoes (a do repositorio e a do app
++instalado) e grava, ao lado do inventario, `relogio_microsetores.parquet`: o
++tempo pelo relogio e o tempo pela velocidade em cada microsetor de cada volta
++valida, de onde sai `relogio_suspeito`.
+ """
+ 
+ from __future__ import annotations
+@@ -13,21 +19,34 @@ import sys
+ import time
+ from pathlib import Path
+ 
++import pandas as pd
++
+ from ml import config
+ from ml.data.inventory import save_inventory, scan_sessions, summarise
+-from ml.data.recordings import list_sessions
++from ml.data.recordings import list_all_sessions
+ from ml.track.geometry import load_geometry
+ 
++CLOCK_TABLE = "relogio_microsetores.parquet"
++
+ 
+ def main(argv=None) -> int:
+     parser = argparse.ArgumentParser(description="Inventario de voltas gravadas")
+     parser.add_argument("--limit", type=int, default=None, help="processa so as N primeiras sessoes")
+     parser.add_argument("--sessions", nargs="*", default=None, help="prefixos de sessao a incluir")
++    parser.add_argument("--pastas", nargs="*", default=None, choices=list(config.RECORDING_FOLDERS),
++                        help="pastas de gravacoes (padrao: todas as que existem)")
++    parser.add_argument("--saida", type=Path, default=None,
++                        help=f"diretorio do inventario (padrao: {config.artifacts_root()})")
+     parser.add_argument("--quiet", action="store_true")
+     args = parser.parse_args(argv)
+ 
+     started = time.time()
+-    sessions = list_sessions()
++    roots = config.recordings_roots()
++    if args.pastas:
++        roots = {label: path for label, path in roots.items() if label in args.pastas}
++    for label, path in roots.items():
++        print(f"pasta {label}: {path}")
++    sessions = list_all_sessions(list(roots.values()))
+     if args.sessions:
+         sessions = [s for s in sessions if any(s.session_id.startswith(p) for p in args.sessions)]
+     if args.limit:
+@@ -41,10 +60,22 @@ def main(argv=None) -> int:
+     print(f"pista: {track.name} — {track.length:.1f} m, grade de {track.step:.1f} m")
+     print(f"sessoes: {len(sessions)}")
+ 
++    clock_rows = []
++
++    def keep_clock(lap, aligned, grid, check, row):
++        block = check.copy()
++        block.insert(0, "lap_id", lap.lap_id)
++        clock_rows.append(block)
++
+     inventory = scan_sessions(
+-        sessions, track=track, progress=None if args.quiet else lambda text: print(text, flush=True)
++        sessions,
++        track=track,
++        progress=None if args.quiet else lambda text: print(text, flush=True),
++        lap_hook=keep_clock,
+     )
+-    path = save_inventory(inventory)
++    path = save_inventory(inventory, args.saida)
++    if clock_rows:
++        pd.concat(clock_rows, ignore_index=True).to_parquet(path.parent / CLOCK_TABLE, index=False)
+     summary = summarise(inventory)
+ 
+     print(f"\ninventario -> {path}  ({time.time() - started:.0f}s)")
+diff --git a/backend/ml/scripts/build_lap_store.py b/backend/ml/scripts/build_lap_store.py
+index 0149add2..b273fd49 100644
+--- a/backend/ml/scripts/build_lap_store.py
++++ b/backend/ml/scripts/build_lap_store.py
+@@ -1,24 +1,42 @@
+ """Materializa as voltas validas na grade da pista.
+ 
+-    python -m ml.scripts.build_lap_store
++    python -m ml.scripts.build_lap_store [--origem humano ...|todas] [--incluir-relogio-suspeito]
+ 
+-Depende do inventario (`ml.scripts.build_inventory`).
++Depende do inventario (`ml.scripts.build_inventory`). Por padrao entram so
++voltas `humano` com relogio conferido e sem `relogio_suspeito` (ADR 0014).
+ """
+ 
+ from __future__ import annotations
+ 
++import argparse
+ import time
+ 
+ import numpy as np
+ 
+ from ml.data.lap_store import build_store, save_store
++from ml.data.origin import ORIGINS, parse_origins
+ from ml.track.geometry import load_geometry
+ 
+ 
+-def main() -> int:
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description="Store de voltas na grade")
++    parser.add_argument("--origem", nargs="*", default=None, choices=list(ORIGINS) + ["todas"],
++                        help="origens aceitas (padrao: humano; 'todas' = sem filtro)")
++    parser.add_argument("--incluir-relogio-suspeito", action="store_true",
++                        help="aceita voltas com relogio suspeito ou nao conferido")
++    args = parser.parse_args(argv)
++
+     started = time.time()
+     track = load_geometry()
+-    store = build_store(track=track, progress=lambda text: print(text, flush=True))
++    origins = parse_origins(args.origem)
++    print(f"origens: {origins if origins is not None else 'todas'}"
++          f"{'' if args.incluir_relogio_suspeito else ' | so relogio conferido e nao suspeito'}")
++    store = build_store(
++        track=track,
++        progress=lambda text: print(text, flush=True),
++        origins=origins,
++        include_clock_suspect=args.incluir_relogio_suspeito,
++    )
+     path = save_store(store)
+ 
+     laps = store.laps
+diff --git a/backend/ml/scripts/report_lap_origin.py b/backend/ml/scripts/report_lap_origin.py
+new file mode 100644
+index 00000000..a561b618
+--- /dev/null
++++ b/backend/ml/scripts/report_lap_origin.py
+@@ -0,0 +1,376 @@
++"""Origem e confiabilidade das voltas (pedido 12, ADR 0014).
++
++    python -m ml.scripts.report_lap_origin [--saida data/ml/origem] [--json ARQUIVO]
++    python -m ml.scripts.report_lap_origin --remarcar [--saida ...] [--json ...]
++
++A primeira forma varre as duas pastas de gravacoes (so leitura) e grava em
++`--saida`, sem tocar no inventario nem no store em uso:
++
++* `lap_inventory.parquet`: o inventario com `origem`, `pasta`, `relogio_*` e
++  `duplicada_de`;
++* `relogio_microsetores.parquet`: relogio x velocidade por microsetor;
++* `sinais_voltas.parquet`: os sinais candidatos IA x piloto de cada volta;
++* `grade_voltas.parquet`: freio, acelerador, lateral, velocidade e tempo na
++  grade, para as dispersoes entre voltas.
++
++`--remarcar` refaz so a marca do relogio (com `origin.CLOCK_LIMIT_S`) e o
++relatorio a partir desses arquivos, sem varrer de novo.
++"""
++
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import sys
++import time
++from pathlib import Path
++from typing import Dict, List
++
++import numpy as np
++import pandas as pd
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
++
++from ml import config  # noqa: E402
++from ml.data import origin  # noqa: E402
++from ml.data.inventory import inventory_path, save_inventory, scan_sessions, summarise  # noqa: E402
++from ml.data.origin_signals import lap_signals  # noqa: E402
++from ml.data.recordings import list_all_sessions  # noqa: E402
++from ml.track.corners import detect_corners  # noqa: E402
++from ml.track.geometry import load_geometry  # noqa: E402
++from ml.validation import empirical as em  # noqa: E402
++
++CLOCK_TABLE = "relogio_microsetores.parquet"
++SIGNALS_TABLE = "sinais_voltas.parquet"
++GRID_TABLE = "grade_voltas.parquet"
++GRID_COLUMNS = ("brake", "throttle", "lateral", "speed_kmh", "elapsed_s")
++
++# Bico de Pato, como na Fase 2b (janela J6).
++BICO_DE_PATO_M = (2590.0, 3080.0)
++
++# As tres voltas "impossiveis" do pedido 11 (identidade do coach).
++PEDIDO_11_LAPS = (
++    "rec__2026-08-08_13-18-00_vhe_interlagos__67",
++    "rec__2026-08-19_20-58-36_vhe_interlagos__9",
++    "rec__2026-08-16_03-30-14_vhe_interlagos__5",
++)
++
++# Datas em que o piloto disse que a IA pilotou parte das sessoes (pedido 12).
++# Nao e rotulo: as sessoes alternam IA e piloto, e a lista e de memoria.
++AI_DATES_CITED = (
++    "2026-06-14", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-19",
++    "2026-06-20", "2026-08-09",
++)
++
++SIGNAL_COLUMNS = (
++    "volante_taxa_p95",
++    "volante_reversoes_km",
++    "acelerador_parcial",
++    "freio_parcial",
++    "freio_pico_mediano",
++    "freio_subida_s",
++    "troca_rpm_mediana",
++    "troca_rpm_dp",
++)
++
++
++def sha256(path: Path) -> str:
++    digest = hashlib.sha256()
++    with path.open("rb") as handle:
++        for block in iter(lambda: handle.read(1 << 22), b""):
++            digest.update(block)
++    return digest.hexdigest()
++
++
++def scan(out_dir: Path, track) -> None:
++    sessions = list_all_sessions()
++    print(f"sessoes de Interlagos nas duas pastas: {len(sessions)}", flush=True)
++    clocks: List[pd.DataFrame] = []
++    signals: List[Dict[str, float]] = []
++    grids: List[pd.DataFrame] = []
++
++    def hook(lap, aligned, grid, check, row):
++        block = check.copy()
++        block.insert(0, "lap_id", lap.lap_id)
++        clocks.append(block)
++        signals.append({"lap_id": lap.lap_id, **lap_signals(aligned, track.length)})
++        g = grid.reindex(columns=list(GRID_COLUMNS)).astype("float32")
++        g.insert(0, "grid_index", np.arange(len(g), dtype=np.int32))
++        g.insert(0, "lap_id", lap.lap_id)
++        grids.append(g)
++
++    inventory = scan_sessions(sessions, track=track, progress=lambda t: print(t, flush=True), lap_hook=hook)
++    save_inventory(inventory, out_dir)
++    pd.concat(clocks, ignore_index=True).to_parquet(out_dir / CLOCK_TABLE, index=False)
++    pd.DataFrame(signals).to_parquet(out_dir / SIGNALS_TABLE, index=False)
++    pd.concat(grids, ignore_index=True).to_parquet(out_dir / GRID_TABLE, index=False)
++
++
++def percentiles(values: np.ndarray) -> Dict[str, float]:
++    values = values[np.isfinite(values)]
++    qs = (0, 1, 5, 25, 50, 75, 95, 99, 99.9, 100)
++    return {f"p{q:g}": round(float(np.percentile(values, q)), 4) for q in qs} | {"n": int(values.size)}
++
++
++def clock_distribution(inventory: pd.DataFrame, clock: pd.DataFrame) -> Dict[str, object]:
++    usable = inventory[inventory["valid"] & inventory["duplicada_de"].isna()]
++    rows = clock[clock["lap_id"].isin(usable["lap_id"])]
++    difference = rows["diferenca_s"].to_numpy(dtype=float)
++    worst = usable["relogio_pior_s"].abs().to_numpy(dtype=float)
++    by_sector = rows.groupby("microsetor")["diferenca_s"]
++    return {
++        "voltas": int(len(usable)),
++        "microsetores": int(len(rows)),
++        "diferenca_s": percentiles(difference),
++        "diferenca_abs_s": percentiles(np.abs(difference)),
++        "pior_por_volta_abs_s": percentiles(worst),
++        "voltas_com_pior_acima_de_s": {
++            str(t): int((worst > t).sum()) for t in (0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.5, 1.0)
++        },
++        "por_microsetor": [
++            {
++                "microsetor": int(k),
++                "mediana_s": round(float(v.median()), 4),
++                "p1_s": round(float(v.quantile(0.01)), 4),
++                "p99_s": round(float(v.quantile(0.99)), 4),
++            }
++            for k, v in by_sector
++        ],
++    }
++
++
++def window_dispersion(rows: List[List[Dict[str, float]]], count: int) -> Dict[str, float]:
++    """Dispersao (dp entre voltas) do ponto de frenagem e da lateral no apice."""
++    if len(rows) < 3:
++        return {"frenagem_dp_m": float("nan"), "apice_dp_m": float("nan"), "voltas_janela": len(rows)}
++    brake_sd, apex_sd = [], []
++    for k in range(count):
++        points = np.array([r[k]["braking_point_s"] for r in rows], dtype=float)
++        points = points[np.isfinite(points)]
++        if points.size >= 3:
++            brake_sd.append(float(np.std(points, ddof=1)))
++        apex = np.array([r[k]["lateral_apex_m"] for r in rows], dtype=float)
++        apex = apex[np.isfinite(apex)]
++        if apex.size >= 3:
++            apex_sd.append(float(np.std(apex, ddof=1)))
++    return {
++        "frenagem_dp_m": float(np.median(brake_sd)) if brake_sd else float("nan"),
++        "apice_dp_m": float(np.median(apex_sd)) if apex_sd else float("nan"),
++        "voltas_janela": len(rows),
++    }
++
++
++def lap_deviation(features: List[Dict[str, float]], medians: Dict[str, np.ndarray]) -> Dict[str, float]:
++    """Quanto uma volta se afasta da mediana da pista: frenagem e apice, mediana entre janelas.
++
++    E um sinal por volta, e nao por sessao: numa sessao que alterna IA e
++    piloto, as voltas de cada um podem cair em grupos diferentes.
++    """
++    out = {}
++    for key, name in (("braking_point_s", "frenagem_desvio_m"), ("lateral_apex_m", "apice_desvio_m")):
++        values = np.array([f[key] for f in features], dtype=float)
++        deviation = np.abs(values - medians[key])
++        deviation = deviation[np.isfinite(deviation)]
++        out[name] = float(np.median(deviation)) if deviation.size else float("nan")
++    return out
++
++
++def spread(values: np.ndarray) -> Dict[str, float]:
++    values = values[np.isfinite(values)]
++    if values.size == 0:
++        return {"p10": float("nan"), "p50": float("nan"), "p90": float("nan")}
++    return {f"p{q}": float(np.percentile(values, q)) for q in (10, 50, 90)}
++
++
++def section_time(frame: pd.DataFrame, track, span) -> float:
++    elapsed = frame.sort_values("grid_index")["elapsed_s"].to_numpy(dtype=float)
++    a, b = np.interp(span, track.s, elapsed)
++    return float(b - a)
++
++
++def robust_sd(values: np.ndarray) -> float:
++    values = values[np.isfinite(values)]
++    if values.size < 3:
++        return float("nan")
++    return float(1.4826 * np.median(np.abs(values - np.median(values))))
++
++
++def report(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
++    inventory = pd.read_parquet(inventory_path(out_dir))
++    inventory = origin.mark_clock(inventory)
++    save_inventory(inventory, out_dir)
++    clock = pd.read_parquet(out_dir / CLOCK_TABLE)
++    signals = pd.read_parquet(out_dir / SIGNALS_TABLE)
++    grids = {
++        lap_id: frame.sort_values("grid_index").reset_index(drop=True)
++        for lap_id, frame in pd.read_parquet(out_dir / GRID_TABLE).groupby("lap_id")
++    }
++
++    distribution = clock_distribution(inventory, clock)
++
++    # As 3 voltas do pedido 11, na identidade do ml.
++    p11 = []
++    for replay in PEDIDO_11_LAPS:
++        mapped = inventory[inventory.get("replay_lap_id") == replay]
++        for _, row in mapped.iterrows():
++            rows = clock[clock["lap_id"] == row["lap_id"]]
++            worst = rows.reindex(rows["diferenca_s"].abs().sort_values(ascending=False).index).head(3)
++            p11.append(
++                {
++                    "volta_coach": replay,
++                    "volta_ml": row["lap_id"],
++                    "pasta": row.get("pasta"),
++                    "valida": bool(row["valid"]),
++                    "motivos": row.get("reasons"),
++                    "duplicada_de": row.get("duplicada_de"),
++                    "relogio_verificado": bool(row.get("relogio_verificado", False)),
++                    "relogio_pior_s": None if pd.isna(row.get("relogio_pior_s")) else round(float(row["relogio_pior_s"]), 4),
++                    "relogio_pior_microsetor": (
++                        None if pd.isna(row.get("relogio_pior_microsetor")) else int(row["relogio_pior_microsetor"])
++                    ),
++                    "relogio_suspeito": None if "relogio_suspeito" not in row else bool(row["relogio_suspeito"]),
++                    "piores_microsetores": [
++                        {k: (round(float(v), 4) if isinstance(v, float) else int(v)) for k, v in r.items() if k != "lap_id"}
++                        for r in worst.to_dict(orient="records")
++                    ],
++                }
++            )
++
++    # Os sinais saem das voltas validas, unicas e com o relogio conferido: uma
++    # passagem pelo box ou uma parada mudaria o tempo e a frenagem por motivos
++    # que nao tem nada a ver com quem pilotou.
++    usable = inventory[inventory["valid"] & inventory["duplicada_de"].isna()]
++    clean_laps = origin.select_laps(usable, origins=None)
++    complete = [i for i in clean_laps["lap_id"] if i in grids and len(grids[i]) == track.size]
++    # Zonas de frenagem e janelas da Fase 2b, sobre essas voltas.
++    corners = detect_corners(track)
++    windows = em.define_windows([grids[i]["brake"].to_numpy(dtype=float) for i in complete], track, corners)
++    features = {i: em.lap_window_features(grids[i], windows, track) for i in complete}
++    medians = {
++        key: np.array(
++            [np.nanmedian(np.array([features[i][k][key] for i in complete], dtype=float)) for k in range(windows.count)],
++            dtype=float,
++        )
++        for key in ("braking_point_s", "lateral_apex_m")
++    }
++    deviations = pd.DataFrame([{"lap_id": i, **lap_deviation(features[i], medians)} for i in complete])
++    deviations.to_parquet(out_dir / "desvios_voltas.parquet", index=False)
++
++    merged = clean_laps.merge(signals, on="lap_id", how="left").merge(deviations, on="lap_id", how="left")
++    sessions = []
++    for session_id, laps in inventory.groupby("session_id"):
++        unique_valid = usable[usable["session_id"] == session_id]
++        clean = merged[merged["session_id"] == session_id]
++        times = clean["duration_s"].to_numpy(dtype=float)
++        bico = [section_time(grids[i], track, BICO_DE_PATO_M) for i in clean["lap_id"] if i in grids]
++        with_field = int(laps["ia_amostras_com_campo"].sum())
++        raw = int(laps["raw_samples"].sum())
++        ai_samples = float((laps["ia_fracao"].fillna(0) * laps["ia_amostras_com_campo"]).sum())
++        row = {
++            "sessao": session_id,
++            "pasta": laps["pasta"].iloc[0],
++            "data": session_id[:10],
++            "data_citada_com_ia": session_id[:10] in AI_DATES_CITED,
++            "amostras_nas_voltas": raw,
++            "campo_ia_existe": with_field > 0,
++            "amostras_com_campo_ia": with_field,
++            "fracao_amostras_ia": (ai_samples / with_field) if with_field else None,
++            "voltas": int(len(laps)),
++            "voltas_validas": int(laps["valid"].sum()),
++            "voltas_duplicadas": int(laps["duplicada_de"].notna().sum()),
++            "voltas_validas_unicas": int(len(unique_valid)),
++            "voltas_limpas": int(len(clean)),
++            "origem": laps["origem"].value_counts().to_dict(),
++            "relogio_suspeito_validas": (
++                int(unique_valid["relogio_suspeito"].fillna(False).astype(bool).sum())
++                if "relogio_suspeito" in unique_valid
++                else None
++            ),
++            "hz_mediana": float(np.nanmedian(clean["sample_hz"])) if len(clean) else None,
++            "melhor_volta_s": float(np.nanmin(times)) if times.size else None,
++            "tempo_volta_mediana_s": float(np.nanmedian(times)) if times.size else None,
++            "tempo_volta_dp_robusto_s": robust_sd(times),
++            "bico_de_pato_dp_robusto_s": robust_sd(np.asarray(bico, dtype=float)),
++        }
++        for column in SIGNAL_COLUMNS:
++            values = clean[column].to_numpy(dtype=float) if column in clean else np.array([])
++            row[column] = float(np.nanmedian(values)) if np.isfinite(values).any() else None
++        row.update(window_dispersion([features[i] for i in clean["lap_id"] if i in features], windows.count))
++        for column in ("frenagem_desvio_m", "apice_desvio_m"):
++            values = clean[column].to_numpy(dtype=float) if column in clean else np.array([])
++            row[column] = spread(values)
++        sessions.append(row)
++
++    def clean(value):
++        if isinstance(value, float) and not np.isfinite(value):
++            return None
++        if isinstance(value, (np.floating,)):
++            return clean(float(value))
++        if isinstance(value, (np.integer,)):
++            return int(value)
++        if isinstance(value, (np.bool_,)):
++            return bool(value)
++        if isinstance(value, dict):
++            return {str(k): clean(v) for k, v in value.items()}
++        if isinstance(value, list):
++            return [clean(v) for v in value]
++        return value
++
++    files = {
++        name: out_dir / name
++        for name in (inventory_path(out_dir).name, CLOCK_TABLE, SIGNALS_TABLE, GRID_TABLE, "desvios_voltas.parquet")
++    }
++    result = {
++        "gerado_em": time.strftime("%Y-%m-%dT%H:%M:%S"),
++        "pastas": {label: str(path) for label, path in config.recordings_roots().items()},
++        "limite_relogio_s": origin.CLOCK_LIMIT_S,
++        "inventario": summarise(inventory),
++        "relogio": distribution,
++        "voltas_pedido_11": p11,
++        "janelas_fase2b": windows.describe(),
++        "voltas_usadas_nos_sinais": len(complete),
++        "sinais_por_volta_distribuicao": {
++            column: spread(merged[column].to_numpy(dtype=float))
++            for column in SIGNAL_COLUMNS + ("frenagem_desvio_m", "apice_desvio_m")
++            if column in merged
++        },
++        "sessoes": sessions,
++        "arquivos": {name: {"caminho": str(path), "sha256": sha256(path)} for name, path in files.items()},
++    }
++    result = clean(result)
++    json_path.parent.mkdir(parents=True, exist_ok=True)
++    json_path.write_text(json.dumps(result, indent=1, ensure_ascii=False), encoding="utf-8")
++    return result
++
++
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("--saida", type=Path, default=config.artifacts_root() / "origem")
++    parser.add_argument("--json", type=Path, default=None)
++    parser.add_argument("--remarcar", action="store_true", help="nao varre: refaz a marca e o relatorio")
++    args = parser.parse_args(argv)
++
++    started = time.time()
++    track = load_geometry()
++    args.saida.mkdir(parents=True, exist_ok=True)
++    if not args.remarcar:
++        scan(args.saida, track)
++    result = report(args.saida, track, args.json or (args.saida / "relatorio_origem.json"))
++
++    d = result["relogio"]
++    print(f"\nlimite do relogio: {result['limite_relogio_s']}")
++    print(f"voltas validas e unicas: {d['voltas']}  microsetores: {d['microsetores']}")
++    print("diferenca relogio - velocidade (s):", d["diferenca_s"])
++    print("|diferenca| (s):", d["diferenca_abs_s"])
++    print("pior |diferenca| por volta (s):", d["pior_por_volta_abs_s"])
++    print("voltas com pior acima de:", d["voltas_com_pior_acima_de_s"])
++    print("\nvoltas do pedido 11:")
++    for row in result["voltas_pedido_11"]:
++        print("  ", json.dumps(row, ensure_ascii=False))
++    print(f"\n({time.time() - started:.0f}s)")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/tests/test_lap_origin.py b/backend/tests/test_lap_origin.py
+new file mode 100644
+index 00000000..42b19123
+--- /dev/null
++++ b/backend/tests/test_lap_origin.py
+@@ -0,0 +1,328 @@
++"""Origem das voltas (ADR 0014): quem pilotou, relogio plausivel, duplicatas.
++
++Tudo sintetico: nenhum teste depende das gravacoes.
++"""
++
++from __future__ import annotations
++
++import json
++import math
++import sys
++import tempfile
++import unittest
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++BACKEND = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(BACKEND))
++
++from core.telemetry.channels import ai_controlled  # noqa: E402
++from ml.data import origin  # noqa: E402
++from ml.data.origin_signals import lap_signals, steering_reversals  # noqa: E402
++from ml.data.samples import flatten  # noqa: E402
++from ml.track.geometry import TrackGeometry  # noqa: E402
++from ml.track.microsectors import build_microsectors  # noqa: E402
++
++
++def circular_track(radius: float = 200.0, step: float = 2.0) -> TrackGeometry:
++    length = 2.0 * math.pi * radius
++    count = int(round(length / step))
++    used = length / count
++    s = np.arange(count, dtype=float) * used
++    theta = s / radius
++    tangent = np.column_stack([-np.sin(theta), np.cos(theta)])
++    return TrackGeometry(
++        name="circulo",
++        length=length,
++        step=used,
++        s=s,
++        x=radius * np.cos(theta),
++        z=radius * np.sin(theta),
++        elevation=np.zeros(count),
++        tangent=tangent,
++        normal=np.column_stack([tangent[:, 1], -tangent[:, 0]]),
++        curvature=np.full(count, -1.0 / radius),
++        width_left=np.full(count, 6.0),
++        width_right=np.full(count, 6.0),
++    )
++
++
++class RecorderTests(unittest.TestCase):
++    """O gravador registra quem pilota em toda amostra e o carro nos metadados."""
++
++    def source(self, *parts):
++        return BACKEND.joinpath(*parts).read_text(encoding="utf-8")
++
++    def test_the_adapter_reads_the_physics_page_field(self):
++        self.assertIn('("isAIControlled", c_int)', self.source("core", "assetto_adapter.py"))
++        self.assertIn('"is_ai_controlled": bool(self.physics.isAIControlled)', self.source("core", "assetto_adapter.py"))
++
++    def test_the_reader_carries_it_through(self):
++        self.assertIn('"is_ai_controlled"', self.source("core", "telemetry", "telemetry_reader_impl.py"))
++
++    def test_the_sample_model_types_it(self):
++        from core.telemetry.telemetry_models import TelemetrySample
++
++        self.assertIs(TelemetrySample.from_dict({"timestamp": 1, "is_ai_controlled": True}).isAIControlled, True)
++        self.assertIs(TelemetrySample.from_dict({"timestamp": 1, "isAIControlled": 0}).isAIControlled, False)
++        self.assertIsNone(TelemetrySample.from_dict({"timestamp": 1}).isAIControlled)
++
++    def test_every_recorded_sample_carries_it(self):
++        from core.car_physics import build_player_car_physics
++        from core.telemetry.telemetry_models import TelemetrySample
++
++        sample = TelemetrySample.from_dict({"timestamp": 1, "speed": 30.0, "is_ai_controlled": True})
++        self.assertIs(build_player_car_physics(sample)["controls"]["isAIControlled"], True)
++        self.assertIn("isAIControlled", build_player_car_physics(None)["controls"])
++
++    def test_the_session_metadata_names_the_car(self):
++        self.assertIn('"carModel": source_manager.current_car_model()', self.source("main.py"))
++
++
++class ChannelTests(unittest.TestCase):
++    def test_nested_top_level_and_absent(self):
++        self.assertIs(ai_controlled({"carPhysics": {"controls": {"isAIControlled": True}}}), True)
++        self.assertIs(ai_controlled({"sample": {"isAIControlled": False}}), False)
++        self.assertIs(ai_controlled({"is_ai_controlled": 1}), True)
++        self.assertIsNone(ai_controlled({"throttle": 1.0, "carPhysics": {"controls": {"gear": 3}}}))
++
++    def test_flatten_keeps_the_difference_between_absent_and_false(self):
++        self.assertIsNone(flatten({"sample": {"lap": 1}})["ai_controlled"])
++        recorded = flatten({"sample": {"lap": 1, "carPhysics": {"controls": {"isAIControlled": False}}}})
++        self.assertIs(recorded["ai_controlled"], False)
++
++
++class LapOriginTests(unittest.TestCase):
++    def test_constant_flag(self):
++        self.assertEqual(origin.lap_origin([False] * 5), origin.HUMAN)
++        self.assertEqual(origin.lap_origin([True] * 5), origin.AI)
++
++    def test_flag_changes_within_the_lap(self):
++        self.assertEqual(origin.lap_origin([False, False, True, False]), origin.MIXED)
++
++    def test_no_field(self):
++        self.assertEqual(origin.lap_origin([None, None]), origin.UNKNOWN)
++        self.assertEqual(origin.lap_origin([float("nan")] * 3), origin.UNKNOWN)
++
++    def test_field_missing_in_part_of_the_lap_is_not_human(self):
++        self.assertEqual(origin.lap_origin([False, None, False]), origin.UNKNOWN)
++
++    def test_ai_share(self):
++        self.assertAlmostEqual(origin.ai_share([True, False, False, None]), 1 / 3)
++        self.assertTrue(math.isnan(origin.ai_share([None])))
++
++
++class ClockTests(unittest.TestCase):
++    def setUp(self):
++        self.track = circular_track()
++        self.sectors = build_microsectors(self.track, 60)
++        speed = 30.0
++        self.grid = pd.DataFrame(
++            {
++                "elapsed_s": self.track.s / speed,
++                "lap_time_s": np.full(self.track.size, self.track.length / speed),
++                "speed_kmh": np.full(self.track.size, speed * 3.6),
++                "lateral": np.zeros(self.track.size),
++            }
++        )
++
++    def test_a_consistent_lap_agrees(self):
++        check = origin.clock_check(self.grid, self.track, self.sectors)
++        self.assertEqual(len(check), 60)
++        self.assertLess(check["diferenca_s"].abs().max(), 1e-6)
++        self.assertTrue(origin.clock_summary(check)["relogio_verificado"])
++
++    def test_a_clock_jump_shows_in_its_microsector(self):
++        grid = self.grid.copy()
++        inside = int(np.argmax(self.sectors.index == 10)) + 3
++        grid.loc[inside:, "elapsed_s"] -= 0.5
++        grid["lap_time_s"] -= 0.5
++        summary = origin.clock_summary(origin.clock_check(grid, self.track, self.sectors))
++        self.assertEqual(summary["relogio_pior_microsetor"], 10)
++        self.assertAlmostEqual(summary["relogio_pior_s"], -0.5, places=6)
++
++    def test_the_trajectory_length_is_used_not_the_centerline(self):
++        """A linha por fora de um circulo e mais longa: com o relogio dela, nada a acusar."""
++        grid = self.grid.copy()
++        # Neste circulo a trajetoria deslocada de L mede 2*pi*(R + L): L = +3 e por fora.
++        lateral = 3.0
++        radius = 200.0
++        grid["lateral"] = lateral
++        factor = (radius + lateral) / radius
++        grid["elapsed_s"] *= factor
++        grid["lap_time_s"] *= factor
++        check = origin.clock_check(grid, self.track, self.sectors)
++        self.assertLess(check["diferenca_s"].abs().max(), 1e-3)
++
++    def test_missing_speed_is_not_verified(self):
++        grid = self.grid.copy()
++        grid.loc[100, "speed_kmh"] = np.nan
++        self.assertFalse(origin.clock_summary(origin.clock_check(grid, self.track, self.sectors))["relogio_verificado"])
++
++    def test_marking_uses_the_absolute_worst_microsector(self):
++        inventory = pd.DataFrame(
++            {"relogio_verificado": [True, True, False], "relogio_pior_s": [0.02, -0.4, np.nan]}
++        )
++        marked = origin.mark_clock(inventory, limit=0.1)
++        self.assertEqual(marked["relogio_suspeito"].tolist(), [False, True, False])
++
++    def test_no_limit_marks_nothing(self):
++        inventory = pd.DataFrame({"relogio_verificado": [True], "relogio_pior_s": [5.0]})
++        if origin.CLOCK_LIMIT_S is None:
++            self.assertNotIn("relogio_suspeito", origin.mark_clock(inventory).columns)
++        else:
++            self.assertTrue(origin.mark_clock(inventory)["relogio_suspeito"].iloc[0])
++
++
++class DuplicateTests(unittest.TestCase):
++    def test_the_same_moment_recorded_twice(self):
++        inventory = pd.DataFrame(
++            {
++                "lap_id": ["a#0001", "b#0000", "a#0002"],
++                "session_id": ["a", "b", "a"],
++                "lap_number": [56, 56, 57],
++                "raw_samples": [5000, 1500, 5000],
++                "inicio_epoch_s": [100.0, 101.0, 186.0],
++                "fim_epoch_s": [186.0, 185.0, 272.0],
++            }
++        )
++        marked = origin.mark_duplicates(inventory)
++        self.assertEqual(marked["duplicada_de"].tolist(), [None, "a#0001", None])
++
++    def test_consecutive_laps_of_one_session_are_not_duplicates(self):
++        inventory = pd.DataFrame(
++            {
++                "lap_id": ["a#0001", "a#0002"],
++                "session_id": ["a", "a"],
++                "lap_number": [1, 2],
++                "raw_samples": [10, 10],
++                "inicio_epoch_s": [0.0, 85.0],
++                "fim_epoch_s": [86.0, 170.0],
++            }
++        )
++        self.assertTrue(origin.mark_duplicates(inventory)["duplicada_de"].isna().all())
++
++
++class SelectionTests(unittest.TestCase):
++    def inventory(self):
++        return pd.DataFrame(
++            {
++                "lap_id": ["s#1", "s#2", "s#3", "s#4", "s#5", "s#6"],
++                "replay_lap_id": ["rec__s__1", "rec__s__2", "rec__s__3", "rec__s__4", "rec__s__5", "rec__s__5"],
++                "origem": ["humano", "ia", "humano", "humano", "humano", "misturada"],
++                "relogio_verificado": [True, True, True, False, True, True],
++                "relogio_suspeito": [False, False, True, False, False, False],
++                "duplicada_de": [None, None, None, None, None, None],
++            }
++        )
++
++    def test_the_default_is_the_driver_with_a_checked_clock(self):
++        self.assertEqual(origin.select_laps(self.inventory())["lap_id"].tolist(), ["s#1", "s#5"])
++
++    def test_filters_can_be_opened(self):
++        everything = origin.select_laps(self.inventory(), origins=None, include_clock_suspect=True)
++        self.assertEqual(len(everything), 6)
++        ai = origin.select_laps(self.inventory(), origins=["ia"])
++        self.assertEqual(ai["lap_id"].tolist(), ["s#2"])
++
++    def test_duplicates_never_pass(self):
++        inventory = self.inventory()
++        inventory.loc[0, "duplicada_de"] = "x#9"
++        self.assertNotIn("s#1", origin.select_laps(inventory, origins=None, include_clock_suspect=True)["lap_id"].tolist())
++
++    def test_an_old_inventory_gives_nothing_by_default(self):
++        old = pd.DataFrame({"lap_id": ["s#1"], "valid": [True]})
++        self.assertTrue(origin.select_laps(old).empty)
++
++    def test_a_replay_lap_passes_only_if_every_part_does(self):
++        self.assertEqual(origin.replay_selection(self.inventory()), {"rec__s__1"})
++
++    def test_command_line_origins(self):
++        self.assertEqual(origin.parse_origins(None), ["humano"])
++        self.assertIsNone(origin.parse_origins(["todas"]))
++        with self.assertRaises(ValueError):
++            origin.parse_origins(["piloto"])
++
++    def test_the_store_refuses_an_inventory_without_origin(self):
++        from ml.data.lap_store import build_store
++
++        old = pd.DataFrame({"lap_id": ["s#1"], "valid": [True], "geometry_id": ["g"], "session_id": ["s"], "sequence": [1]})
++        with self.assertRaisesRegex(ValueError, "ADR 0014"):
++            build_store(inventory=old, track=circular_track(), sessions=[])
++
++
++class CoachTrainingFilterTests(unittest.TestCase):
++    def test_the_trainer_filters_by_origin_before_loading_anything(self):
++        source = (BACKEND / "tools" / "train_reference_model.py").read_text(encoding="utf-8")
++        self.assertIn("replay_selection(inventory, origins, args.incluir_relogio_suspeito)", source)
++        self.assertIn('"origem" not in inventory.columns', source)
++        self.assertLess(source.index("replay_selection(inventory"), source.index("loader.load_lap("))
++
++
++class FolderTests(unittest.TestCase):
++    def test_a_session_id_in_both_folders_stops_the_listing(self):
++        from ml.data.recordings import list_all_sessions
++
++        roots = [Path(tempfile.mkdtemp()), Path(tempfile.mkdtemp())]
++        for root in roots:
++            session = root / "2026-10-03_10-00-00_vhe_interlagos"
++            session.mkdir()
++            line = {"type": "player", "track": "vhe_interlagos", "sample": {"lap": 1}}
++            (session / "player.jsonl").write_text(json.dumps(line) + "\n", encoding="utf-8")
++        with self.assertRaisesRegex(ValueError, "existe em"):
++            list_all_sessions(roots)
++
++    def test_folder_label(self):
++        from ml import config
++
++        repo = config.recordings_root() / "2026-05-26_19-06-59_vhe_interlagos"
++        self.assertEqual(origin.recording_folder(repo), "repositorio" if config.recordings_root().exists() else str(repo.parent))
++
++
++class SignalTests(unittest.TestCase):
++    def test_steering_reversals_ignore_small_noise(self):
++        zigzag = np.tile([0.0, 0.2, 0.0, -0.2], 5)
++        self.assertEqual(steering_reversals(zigzag), 2 * 5 - 1)
++        self.assertEqual(steering_reversals(zigzag * 0.01), 0)
++
++    def test_lap_signals(self):
++        time_s = np.arange(0.0, 10.0, 0.05)
++        aligned = pd.DataFrame(
++            {
++                "elapsed_s": time_s,
++                "steering": np.sin(time_s),
++                "throttle": np.where(time_s < 5, 1.0, 0.5),
++                "brake": np.where((time_s > 6) & (time_s < 7), 1.0, 0.0),
++                "gear": np.where(time_s < 3, 3, np.where(time_s < 8, 4, 5)).astype(float),
++                "rpm": 6000.0 + 500.0 * np.mod(time_s, 3.0),
++            }
++        )
++        signals = lap_signals(aligned, track_length=1000.0)
++        self.assertAlmostEqual(signals["acelerador_parcial"], 0.5, delta=0.02)
++        self.assertEqual(signals["freio_eventos"], 1.0)
++        self.assertEqual(signals["freio_pico_mediano"], 1.0)
++        self.assertGreater(signals["volante_taxa_p95"], 0.9)
++
++    def test_shifts_through_the_transient_zero_are_counted(self):
++        """Medido: toda troca passa uma amostra por 0 (6 -> 0 -> 5)."""
++        gear = np.array([2, 2, 0, 3, 3, 0, 4, 4, 0, 5, 5, 0, 4], dtype=float)
++        rpm = np.array([7000, 8100, 6000, 7000, 8200, 6000, 7000, 8150, 6000, 7000, 7500, 6000, 6000], dtype=float)
++        aligned = pd.DataFrame(
++            {
++                "elapsed_s": np.arange(gear.size) * 0.1,
++                "steering": np.zeros(gear.size),
++                "throttle": np.ones(gear.size),
++                "brake": np.zeros(gear.size),
++                "gear": gear,
++                "rpm": rpm,
++            }
++        )
++        signals = lap_signals(aligned, track_length=1000.0)
++        self.assertEqual(signals["troca_rpm_mediana"], 8150.0)
++        self.assertAlmostEqual(signals["troca_rpm_dp"], 1.4826 * 50.0)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/backend/tools/train_reference_model.py b/backend/tools/train_reference_model.py
+index 1ceb02de..8b114042 100644
+--- a/backend/tools/train_reference_model.py
++++ b/backend/tools/train_reference_model.py
+@@ -2,10 +2,17 @@
+ Fit the driver's reference model from everything he has recorded.
+ 
+     python tools/train_reference_model.py [--track vhe_interlagos] [--limit N]
++        [--origem humano ...|todas] [--incluir-relogio-suspeito] [--inventario ARQUIVO]
+ 
+ Walks the recorded laps, keeps the ones whose sampling holds up, times each
+ through every microsector, and writes the model the analysis engine measures
+ against. Prints what it learned and what it threw away.
++
++Only the driver's laps go in (ADR 0014): by default a lap must be `humano` in
++the `ml` inventory, with its clock checked and not `relogio_suspeito`, and not
++a duplicate. The inventory must be one built after ADR 0014
++(`python -m ml.scripts.build_inventory`); an older one has no `origem` and the
++tool stops instead of guessing.
+ """
+ 
+ from __future__ import annotations
+@@ -30,6 +37,8 @@ from core.assisted_analysis.reference_model import (  # noqa: E402
+ )
+ from core.live.runtime_state import RuntimeState  # noqa: E402
+ from core.telemetry.telemetry_buffer import TelemetryBuffer  # noqa: E402
++from ml.data.inventory import inventory_path  # noqa: E402
++from ml.data.origin import ORIGINS, parse_origins, replay_selection  # noqa: E402
+ 
+ 
+ def runtime_root() -> Path:
+@@ -51,7 +60,14 @@ def main() -> int:
+                         help="usar as N voltas mais rapidas (0 = todas)")
+     parser.add_argument("--microsectors", type=int, default=DEFAULT_MICROSECTORS)
+     parser.add_argument("--dry-run", action="store_true", help="nao grava o modelo")
++    parser.add_argument("--origem", nargs="*", default=None, choices=list(ORIGINS) + ["todas"],
++                        help="origens aceitas (padrao: humano; 'todas' = sem filtro)")
++    parser.add_argument("--incluir-relogio-suspeito", action="store_true",
++                        help="aceita voltas com relogio suspeito ou nao conferido")
++    parser.add_argument("--inventario", type=Path, default=None,
++                        help="inventario do ml com a coluna origem (padrao: data/ml/lap_inventory.parquet)")
+     args = parser.parse_args()
++    origins = parse_origins(args.origem)
+ 
+     root = runtime_root()
+     recordings = [root / "data" / "recordings", BACKEND_DIR.parent / "data" / "recordings"]
+@@ -77,6 +93,29 @@ def main() -> int:
+         print(f"pista escolhida   : {track or '(sem pista)'}")
+ 
+     selected = [lap for lap in descriptors if not track or lap.track == track]
++
++    # Quem pilotou (ADR 0014): so entra o que o inventario diz que e do piloto.
++    if origins is not None or not args.incluir_relogio_suspeito:
++        import pandas as pd
++
++        path = args.inventario or inventory_path()
++        if not path.exists():
++            print(f"PARADO: inventario nao encontrado em {path}. Rode: python -m ml.scripts.build_inventory")
++            return 2
++        inventory = pd.read_parquet(path)
++        if "origem" not in inventory.columns:
++            print(f"PARADO: o inventario {path} e anterior ao ADR 0014 (sem a coluna origem).")
++            return 2
++        allowed = replay_selection(inventory, origins, args.incluir_relogio_suspeito)
++        before = len(selected)
++        selected = [lap for lap in selected if lap.lap_id in allowed]
++        print(f"filtro de origem  : {origins if origins is not None else 'todas'}"
++              f"{'' if args.incluir_relogio_suspeito else ', relogio conferido e nao suspeito'}"
++              f" -> {len(selected)} de {before} voltas")
++        if not selected:
++            print("PARADO: nenhuma volta passa no filtro de origem. Modelo nao gravado.")
++            return 2
++
+     # Cheapest filter first: no point loading a lap the model will refuse.
+     plausible = [lap for lap in selected if lap_is_usable(lap.lap_time, lap.sample_count)[0]]
+     skipped_early = len(selected) - len(plausible)
+diff --git a/docs/origem_das_voltas.md b/docs/origem_das_voltas.md
+new file mode 100644
+index 00000000..7275faea
+--- /dev/null
++++ b/docs/origem_das_voltas.md
+@@ -0,0 +1,237 @@
++# Origem e confiabilidade das voltas (pedido 12, ADR 0014)
++
++Data: 2026-10-03 e 04. Branch: `etapa/origem-das-voltas`.
++
++O objetivo desta etapa é saber, volta a volta, **quem pilotou** (o Eduardo ou a IA do Assetto Corsa) e **se o tempo da volta merece confiança**. Nenhum modelo foi treinado. O store do ML e os resultados antigos não foram refeitos.
++
++## 1. As duas pastas de gravações
++
++O app grava em dois lugares, conforme o jeito como é aberto:
++
++- **repositório:** `data/recordings`, quando o app roda a partir do código. É a única pasta que o ML lia até hoje.
++- **app instalado:** `%APPDATA%\Automobilista Telemetria\data\recordings`. O ML nunca leu esta pasta.
++
++As duas pastas foram só lidas: nada foi copiado, movido ou apagado nelas. Cada arquivo de cada sessão passou por um hash SHA-256, num total de 179 sessões, em 34 s.
++
++| | repositório | app instalado |
++|---|---:|---:|
++| sessões (diretórios) | 89 | 90 |
++| sessões de Interlagos com gravação não vazia | 54 | 71 |
++| mesmo id nas duas pastas | 0 | 0 |
++| mesmo id **e** mesmo conteúdo (hash) | 0 | 0 |
++| mesmo `player.jsonl` com outro id | 0 | 0 |
++| só nesta pasta | 89 | 90 |
++
++**Nenhuma sessão está nas duas pastas.** São 125 sessões de Interlagos diferentes, num total de 5.488.618 amostras dentro de voltas.
++
++**Mas há voltas gravadas duas vezes.** O hash não pega este caso, porque cada cópia tem um id próprio. Em alguns momentos havia dois backends abertos ao mesmo tempo, e os dois gravaram os mesmos instantes:
++
++| sessão | outra sessão | tempo em comum | o que se vê |
++|---|---|---:|---|
++| repo `2026-06-14_11-30-32` | app `2026-06-14_11-29-22` | 13 s | mesma volta do jogo (56), mesma posição (distância mediana 0,00 m) |
++| repo `2026-08-09_19-10-41` | app `2026-08-09_18-47-11` | 285 s | voltas 363 a 367, distância mediana 0,00 m |
++| repo `2026-08-09_19-15-35` | app `2026-08-09_18-47-11` | 193 s | voltas 367 a 369, distância mediana 0,00 m |
++| repo `2026-06-01_15-05-10` | repo `18-08-50`, `18-26-01`, `18-36-55` | 166 a 2249 s | mesmas voltas (192 a 217), distância mediana de 0,7 a 1,3 m (as amostras não caem no mesmo instante) |
++
++A deduplicação é feita por volta, com a coluna `duplicada_de`. Duas voltas de sessões diferentes contam como a mesma quando se sobrepõem em mais de 50 % do tempo de relógio da mais curta e o número da volta do jogo difere no máximo em 1. Fica a cópia com mais amostras; se empatar, fica a da sessão de nome menor. **Resultado: 45 voltas duplicadas, das quais 4 válidas.** As 4 válidas estão na sessão `2026-08-09_18-47-11` (app), e as cópias mantidas estão no repositório. Nenhuma das 122 voltas do store em uso é duplicada.
++
++## 2. As gravações já dizem quem pilotou?
++
++**O jogo publica o campo, mas as gravações não o têm.**
++
++- **No jogo:** a página de física da memória compartilhada do Assetto Corsa tem `isAIControlled`. O struct do projeto já o lê (`backend/core/assetto_adapter.py:75`, `("isAIControlled", c_int)`), na posição certa: os campos vizinhos, temperatura dos pneus antes e ponto de contato depois, têm valores plausíveis no dump de 2026-05-17 (`data/debug/ac_shared_memory_full_inventory.csv:57`). Nesse dump o valor era 1. Não sei se a IA estava no volante naquele momento, e a gravação curta alternando IA e piloto vai mostrar.
++- **Nas gravações:** o adaptador lia o campo e o descartava. Em nenhuma das 125 sessões ele aparece, com qualquer nome (`isAIControlled`, `AIControlled`, `aiControlled`, `ai_controlled`, `isAI`, `"ai"`). Foram 5.488.623 linhas lidas byte a byte nas duas pastas. Os blocos `availability` e `inferred` também não trazem nenhum indicador equivalente. As únicas chaves parecidas eram `airDensity` e `airTemp`.
++- **Por sessão:** em todas as 125 o campo **não existe**, e a fração de amostras da IA é **indefinida**. A tabela por sessão está no JSON da entrega (`sessoes[].campo_ia_existe`, `amostras_com_campo_ia`, `fracao_amostras_ia`).
++
++Por isso **todas as 1.899 voltas antigas ficam `desconhecida`**.
++
++## 3. O que mudou no gravador
++
++A mudança é mínima, e o caminho é o mesmo que o pedal e o volante já seguem:
++
++| arquivo | mudança |
++|---|---|
++| `core/assetto_adapter.py` | publica `is_ai_controlled = bool(physics.isAIControlled)` em toda leitura |
++| `core/telemetry/telemetry_reader_impl.py` | leva o campo até a amostra |
++| `core/telemetry/telemetry_models.py` | `TelemetrySample.isAIControlled` (None quando a fonte não diz) |
++| `core/car_physics.py` | grava `carPhysics.controls.isAIControlled` em toda amostra |
++| `main.py` | `metadata.json` da sessão ganha `carModel` (página estática) |
++| `core/telemetry/channels.py` | `ai_controlled(sample)`: True, False ou None. None quer dizer "não registrado", nunca "o piloto" |
++| `ml/data/samples.py` | coluna `ai_controlled` |
++
++Os testes estão em `tests/test_lap_origin.py`, classes `RecorderTests` e `ChannelTests`.
++
++**Atenção:** o app instalado só passa a gravar o campo depois de ser reempacotado e reinstalado. Até lá, a gravação de teste tem que ser feita com o app aberto a partir do repositório (`develop`), e ela vai para `data/recordings`. Também falta conferir, numa gravação real, se `carModel` já está preenchido quando a gravação começa. O valor vem da página estática, lida junto com a primeira amostra.
++
++## 4. Relógio plausível
++
++### Como é medido
++
++Para cada volta válida, na grade de 2 m e nos 60 microsetores do ML:
++
++- **pelo relógio:** é o tempo do microsetor dado pelo cronômetro gravado (`elapsed_s`, o mesmo que dá o tempo da volta).
++- **pela velocidade:** é a soma, passo a passo da grade, de *comprimento do passo / velocidade média no passo*. O comprimento do passo segue a trajetória do carro, não a centerline (`trajectory.step_lengths`). Assim, a linha por fora de uma curva não aparece como erro.
++- **a diferença:** relógio − velocidade, por microsetor. As duas medidas usam as mesmas fronteiras (`split_times`).
++
++Uma diferença grande quer dizer que o relógio e a distância percorrida não contam a mesma história: o relógio pulou, a posição saltou, ou o carro andou por fora da grade.
++
++### Distribuição medida (antes de escolher o limite)
++
++Foram 688 voltas válidas e únicas das duas pastas, ou seja, 41.280 microsetores.
++
++| | p1 | p5 | p50 | p95 | p99 | p99,9 | máx |
++|---|---:|---:|---:|---:|---:|---:|---:|
++| diferença (s) | −0,035 | −0,025 | −0,009 | −0,005 | +0,007 | +0,750 | +23,75 |
++| \|diferença\| (s) | 0,004 | 0,005 | 0,009 | 0,026 | 0,042 | 0,750 | 23,75 |
++| pior \|diferença\| da volta (s) | 0,032 | 0,033 | 0,034 | 0,758 | 1,480 | 8,47 | 23,75 |
++
++- **Viés fixo:** a velocidade explica cerca de 9 ms a mais que o relógio, em quase todos os microsetores.
++- **Microsetor 0 (linha de chegada):** tem um viés próprio de −0,034 s, igual em todas as voltas. É o fechamento da volta na grade, e o pedido 11 viu o mesmo efeito no coach.
++- **Os outros microsetores:** fora o 0, o 3 (saída do box) e o 59 (entrada do box), a \|diferença\| tem p99 de 0,028 s e p99,9 de 0,068 s.
++
++Voltas cuja pior \|diferença\| passa de cada valor:
++
++| limite (s) | 0,02 | 0,03 | 0,05 | 0,075 | 0,10 | 0,15 | 0,20 | 0,30 | 0,50 | 1,0 |
++|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
++| voltas | 688 | 686 | 159 | 148 | 144 | 143 | 141 | 123 | 69 | 17 |
++
++O corpo da distribuição acaba perto de 0,05 s. Entre 0,05 e 0,1 s ficam só 15 voltas, quase todas com o microsetor 0 entre −0,05 e −0,08 s e tempo de volta normal (85,6 a 86,6 s). De 0,1 a 0,2 s o número quase não muda (144 → 141).
++
++### Limite proposto, registrado antes de aplicar
++
++**`relogio_suspeito` = alguma \|diferença\| de microsetor maior que 0,10 s.**
++
++Os motivos:
++
++- 0,10 s é 1,5 vez o p99,9 dos microsetores normais (0,068 s) e 3 vezes o viés do microsetor 0 (0,034 s);
++- o limite cai no platô da distribuição, então mexer nele um pouco para cima ou para baixo quase não muda quais voltas são marcadas;
++- as 15 voltas da zona cinza (0,05 a 0,1 s) têm tempo normal e ficam sem a marca.
++
++O limite está em `ml/data/origin.py` (`CLOCK_LIMIT_S = 0.10`) e é aplicado com `python -m ml.scripts.report_lap_origin --remarcar`. Voltas não válidas não têm o relógio conferido (`relogio_verificado = False`), e o filtro padrão também as deixa de fora.
++
++### O que o limite marca
++
++Aplicado depois do commit acima (`15b0e268`), o limite marcou **144 das 688 voltas válidas e únicas**. Na maioria delas o problema não é o relógio:
++
++| tipo | voltas | como aparece |
++|---|---:|---|
++| passagem pelo box | 135 | volta de entrada (≈ 101,7 s): o carro sai da pista no microsetor 0, com lateral de até 30 m, e faz o microsetor 3 a 18–74 km/h, dando +1,5 s nele. Volta de saída (≈ 93 s): começa dentro do box a 80 km/h, dando −0,4 a −0,7 s no microsetor 0 |
++| parada ou rodada no meio da volta | 3 | todas em `2026-08-19_20-58-36`. O relógio tem até 23,75 s a mais que a velocidade explica (microsetor 29) |
++| tempo a menos no meio da volta | 6 | o relógio anda menos do que a distância exige, por exemplo −0,48 s nos microsetores 29 a 31 de `2026-06-14_10-15-25#0010`. As outras são `2026-06-14_10-15-25#0007`, `2026-06-14_11-45-28#0009`, `2026-08-08_16-38-27#0003`, `#0004` e `2026-08-19_21-45-59#0001`. São os casos de relógio ou posição que saltou de verdade |
++
++Assim, a marca separa toda volta em que o tempo de algum microsetor não vem de o carro percorrer a pista. Isso inclui passar pelo box, parar ou ter um salto. Os portões de qualidade do ML deixavam passar as voltas de box como "válidas". **No store em uso (122 voltas), 21 receberiam a marca**, todas passagens pelo box: 11 voltas de saída (92,9 a 96,5 s) e 10 voltas de entrada (101,6 a 102,3 s). Os resultados das Fases 2 e 2b não foram refeitos (fica para depois, se o Eduardo pedir).
++
++### As 3 voltas do pedido 11
++
++| volta do coach | volta do ML | o que o relógio diz |
++|---|---|---|
++| `rec__2026-08-08_13-18-00_vhe_interlagos__67` (microsetor 4 com 1,006 s) | `2026-08-08_13-18-00#0000`, **não válida**: faltam 326 m de pista (a gravação começou no meio da volta) | o relógio não foi conferido. O microsetor 4 do coach (290 a 350 m) cai justamente no trecho que não foi gravado: o coach contou uma volta incompleta |
++| `rec__2026-08-19_20-58-36_vhe_interlagos__9` (microsetor 28 com 1,395 s) | `2026-08-19_20-58-36#0008`, válida | **limpo**: a pior diferença é −0,035 s, no microsetor 0 (o viés fixo) |
++| `rec__2026-08-16_03-30-14_vhe_interlagos__5` (microsetor 29 com 1,418 s) | `2026-08-16_03-30-14#0004`, válida | **limpo**: a pior diferença é −0,038 s, no microsetor 0 |
++
++Resumindo: o relógio gravado não explica os tempos impossíveis do pedido 11. Em duas voltas o relógio está certo, e o erro vem da projeção do coach, como o pedido 11 já tinha visto (saltos de até 28 m). Na terceira, o coach aceitou uma volta incompleta. As duas correções ficam para o pedido 13.
++
++## 5. Origem no inventário e filtros
++
++**Colunas novas por volta** (`ml/data/inventory.py`, cálculo em `ml/data/origin.py`):
++
++| coluna | o que é |
++|---|---|
++| `origem` | `humano` ou `ia` quando o campo existe e é constante na volta; `misturada` quando muda; `desconhecida` quando não existe. Se o campo falta em parte da volta e o resto é constante, a volta também fica `desconhecida` |
++| `ia_fracao`, `ia_amostras_com_campo` | fração das amostras com IA, e quantas amostras têm o campo |
++| `pasta` | `repositorio` ou `app_instalado` |
++| `inicio_epoch_s`, `fim_epoch_s` | relógio de parede da volta (usado para achar duplicatas) |
++| `relogio_verificado`, `relogio_pior_s`, `relogio_pior_microsetor` | conferência do relógio (só nas voltas válidas) |
++| `relogio_suspeito`, `relogio_limite_s` | a marca e o limite usado |
++| `duplicada_de` | a volta mantida, quando esta é uma cópia |
++
++O inventário novo, das duas pastas, está em `data/ml/origem/lap_inventory.parquet`, junto com a tabela do relógio por microsetor. **O inventário e o store em uso (`data/ml/lap_inventory.parquet` e `laps_grid.parquet`) não foram tocados.**
++
++| | voltas | válidas | válidas e únicas | relógio suspeito | limpas |
++|---|---:|---:|---:|---:|---:|
++| repositório | 1.009 | 122 | 122 | 21 | 101 |
++| app instalado | 890 | 570 | 566 | 123 | 443 |
++| total | 1.899 | 692 | 688 | 144 | 544 |
++
++Todas as 1.899 voltas ficam com `origem = desconhecida`.
++
++**Filtros.** Para tudo o que fala do piloto, o padrão é: `humano`, relógio conferido, sem `relogio_suspeito` e sem duplicata. Uma duplicata nunca passa, em nenhum filtro.
++
++- **store:** `build_store(..., origins=("humano",), include_clock_suspect=False)` e `python -m ml.scripts.build_lap_store [--origem humano ia misturada desconhecida | todas] [--incluir-relogio-suspeito]`. O store guarda o filtro usado (`selection`) e as colunas de origem de cada volta.
++- **treino do coach:** `tools/train_reference_model.py [--origem ...] [--incluir-relogio-suspeito] [--inventario ARQUIVO]`. Uma volta do coach (`rec__<sessão>__<n>`) só passa se todas as voltas do ML dentro dela passarem. O motivo é que o contador do jogo trava no box e junta trechos. Sem um inventário com `origem`, o treino para em vez de adivinhar.
++- **inventário:** `python -m ml.scripts.build_inventory` agora lê as duas pastas (`--pastas` restringe) e aceita `--saida`. Se o mesmo id aparecer nas duas pastas, ele para e pede para comparar.
++
++**Hoje, com o filtro padrão, nada passa.** O store responde "nenhuma das 692 voltas válidas passa no filtro de origem ['humano']…", e o treino do coach responde "0 de 906 voltas → PARADO: nenhuma volta passa no filtro de origem. Modelo não gravado." Esse teste foi feito com `--dry-run`, e nenhum modelo foi escrito. Isso é o esperado até existirem voltas gravadas com o campo novo.
++
++## 6. Sinais candidatos para separar IA de piloto
++
++As gravações antigas não têm o campo, e por isso **nenhum detector foi treinado**. Para cada volta limpa (válida, única e com o relógio sem marca: 544 voltas) foram medidos os sinais abaixo, com a distribuição por sessão. Eles servem para escolher o que o detector vai usar quando houver sessões rotuladas, e não como rótulo.
++
++| sinal | como é medido (`ml/data/origin_signals.py`, `ml/scripts/report_lap_origin.py`) |
++|---|---|
++| volante rápido | p95 de \|Δvolante/Δt\| e mudanças de sentido do volante por km (com histerese de 0,01) |
++| formato dos pedais | fração do tempo com acelerador e freio parciais (entre 0,05 e 0,95), pico de cada frenagem, tempo até 90 % do pico |
++| dispersão da frenagem e do ápice | desvio-padrão entre as voltas da sessão do início de frenagem e da lateral no ápice, nas janelas da Fase 2b, e, **por volta**, a distância até a mediana da pista |
++| trocas de marcha | RPM na última amostra antes de subir a marcha e a dispersão dele. Toda troca passa uma amostra pela marcha 0, e isso é tratado |
++| tempo | dispersão robusta do tempo de volta e do Bico de Pato (2.590 a 3.080 m) |
++
++Sessões com pelo menos 3 voltas limpas (a lista completa, com as 124 sessões, está no JSON da entrega). A coluna "data citada" diz se a data é uma das que o Eduardo lembra de ter usado a IA. Isso não é rótulo, porque as sessões alternam IA e piloto.
++
++| sessão | pasta | data citada | voltas limpas | Hz | dp tempo (s) | dp Bico (ms) | frenagem dp (m) | ápice dp (m) | desvio frenagem p50 / p90 (m) | desvio ápice p90 (m) | reversões volante /km | troca dp (rpm) |
++|---|---|:-:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
++| `2026-06-14_10-43-46` | app | sim | 3 | 29 | 0,00 | 1 | 1,6 | 0,05 | 2,0 / 2,0 | 0,04 | 57 | 13 |
++| `2026-06-14_12-23-46` | repo | sim | 8 | 32 | 0,15 | 11 | 1,0 | 0,03 | 0,5 / 2,0 | 0,04 | 58 | 6 |
++| `2026-06-18_20-06-03` | repo | sim | 3 | 30 | 0,21 | 8 | 1,2 | 0,09 | 2,0 / 2,0 | 0,05 | 61 | 7 |
++| `2026-06-19_23-24-46` | repo | sim | 4 | 38 | 2,22 | 376 | 8,4 | 1,68 | 4,0 / 9,9 | 1,59 | 61 | 7 |
++| `2026-06-20_13-13-02` | repo | sim | 31 | 58 | 0,59 | 47 | 7,5 | 1,15 | 3,0 / 16,0 | 0,35 | 67 | 5 |
++| `2026-08-07_20-27-52` | app | não | 54 | 58 | 0,15 | 15 | 1,2 | 0,03 | 0,0 / 2,0 | 0,03 | 60 | 4 |
++| `2026-08-08_11-58-41` | app | não | 13 | 55 | 0,07 | 10 | 1,1 | 0,03 | 0,0 / 0,8 | 0,03 | 59 | 4 |
++| `2026-08-08_12-23-51` | app | não | 26 | 55 | 0,18 | 27 | 1,7 | 0,05 | 1,5 / 2,0 | 0,04 | 58 | 5 |
++| `2026-08-08_13-22-07` | app | não | 10 | 54 | 0,16 | 13 | 1,0 | 0,03 | 1,0 / 2,0 | 0,04 | 58 | 4 |
++| `2026-08-08_16-38-27` | app | não | 3 | 56 | 0,02 | 8 | 0,0 | 0,01 | 1,0 / 1,8 | 0,03 | 58 | 7 |
++| `2026-08-08_17-04-15` | app | não | 66 | 54 | 0,14 | 18 | 1,3 | 0,04 | 1,0 / 2,0 | 0,04 | 58 | 5 |
++| `2026-08-09_10-27-39` | app | sim | 48 | 54 | 0,19 | 22 | 2,0 | 0,04 | 0,0 / 2,0 | 0,04 | 58 | 6 |
++| `2026-08-09_12-04-40` | app | sim | 6 | 55 | 0,10 | 14 | 1,6 | 0,03 | 1,0 / 1,5 | 0,03 | 59 | 6 |
++| `2026-08-09_12-21-19` | app | sim | 5 | 56 | 0,02 | 21 | 0,9 | 0,04 | 0,0 / 1,6 | 0,04 | 60 | 7 |
++| `2026-08-09_12-37-42` | app | sim | 12 | 53 | 0,16 | 19 | 1,5 | 0,04 | 0,5 / 2,0 | 0,05 | 58 | 6 |
++| `2026-08-09_13-02-49` | app | sim | 19 | 55 | 0,28 | 19 | 2,7 | 0,06 | 2,0 / 2,2 | 0,05 | 59 | 4 |
++| `2026-08-09_13-42-29` | app | sim | 16 | 54 | 0,27 | 29 | 1,9 | 0,04 | 1,0 / 2,0 | 0,06 | 58 | 6 |
++| `2026-08-09_14-16-51` | app | sim | 11 | 56 | 0,11 | 7 | 1,3 | 0,03 | 2,0 / 2,0 | 0,05 | 60 | 4 |
++| `2026-08-09_14-44-00` | app | sim | 8 | 54 | 0,08 | 9 | 2,4 | 0,06 | 2,0 / 2,0 | 0,04 | 59 | 5 |
++| `2026-08-09_14-58-46` | app | sim | 6 | 57 | 0,14 | 31 | 1,6 | 0,04 | 1,5 / 2,0 | 0,06 | 61 | 5 |
++| `2026-08-09_15-10-52` | app | sim | 49 | 58 | 0,15 | 11 | 1,3 | 0,04 | 2,0 / 2,0 | 0,06 | 60 | 6 |
++| `2026-08-09_17-06-41` | app | sim | 6 | 54 | 0,16 | 5 | 1,6 | 0,04 | 1,5 / 2,0 | 0,03 | 59 | 6 |
++| `2026-08-09_17-23-56` | app | sim | 6 | 56 | 0,19 | 3 | 1,2 | 0,05 | 0,0 / 1,0 | 0,05 | 60 | 5 |
++| `2026-08-09_17-37-33` | app | sim | 21 | 54 | 0,11 | 13 | 2,0 | 0,04 | 2,0 / 2,0 | 0,04 | 59 | 5 |
++| `2026-08-09_18-22-00` | app | sim | 6 | 55 | 0,06 | 16 | 0,9 | 0,03 | 1,5 / 2,0 | 0,04 | 60 | 6 |
++| `2026-08-09_18-41-18` | app | sim | 3 | 58 | 0,01 | 1 | 1,2 | 0,04 | 2,0 / 2,0 | 0,04 | 61 | 5 |
++| `2026-08-09_18-47-11` | app | sim | 12 | 53 | 0,14 | 21 | 2,4 | 0,04 | 1,0 / 2,0 | 0,06 | 60 | 6 |
++| `2026-08-09_19-10-41` | repo | sim | 3 | 58 | 0,20 | 18 | 1,2 | 0,02 | 1,0 / 1,8 | 0,03 | 63 | 3 |
++| `2026-08-09_19-20-59` | repo | sim | 40 | 59 | 0,19 | 14 | 1,3 | 0,03 | 1,0 / 2,0 | 0,04 | 61 | 4 |
++| `2026-08-16_03-30-14` | repo | não | 7 | 58 | 10,39 | 50 | 7,2 | 0,89 | 4,0 / 22,2 | 1,35 | 45 | 11 |
++| `2026-08-19_20-58-36` | app | não | 4 | 57 | 3,55 | 865 | 7,4 | 1,20 | 11,5 / 18,4 | 1,57 | 47 | 46 |
++| `2026-08-19_22-23-14` | app | não | 14 | 54 | 0,15 | 21 | 1,0 | 0,04 | 4,0 / 4,0 | 0,05 | 56 | 5 |
++
++O que a tabela mostra:
++
++- **A maioria das sessões é tão constante quanto uma máquina.** Em 27 das 32 sessões, 90 % das voltas freiam a até 2,2 m da mediana da pista, e 2 m é a própria resolução da grade. O ápice fica a até 6 cm, e o Bico de Pato varia de 1 a 31 ms. Isso inclui todas as sessões de 07/08 e 08/08, **que não estão entre as datas citadas** e que não se distinguem das de 09/08.
++- **Quatro sessões são bem mais variáveis:** `2026-06-19_23-24-46`, `2026-06-20_13-13-02`, `2026-08-16_03-30-14` e `2026-08-19_20-58-36`. Nelas, a dispersão da frenagem vai de 7 a 8,4 m e a do ápice de 0,9 a 1,7 m. Em `2026-06-20_13-13-02` metade das voltas fica a até 3 m da mediana e 10 % passam de 16 m, o que combina com uma sessão alternada.
++- **`2026-08-19_22-23-14` é constante, mas diferente:** freia sempre de 3 a 4 m longe da mediana das outras, e o ápice fica a até 5 cm. É dela a volta de referência do modelo de ensaio do pedido 11 (84,663 s).
++- **Pedais e trocas de marcha não variam entre sessões nestes dados.** O freio vai de 0 a 0,99 numa amostra em todas as sessões, inclusive nas quatro variáveis. A marcha sobe a 8.200 rpm, com dispersão de 3 a 13 rpm, em quase todas (46 rpm na mais variável). Nestes dados, esses sinais não separam nada. Com outro controle ou câmbio manual, isso pode mudar.
++- **O volante varia, mas depende de outras coisas.** As mudanças de sentido por km vão de 45 a 67, e as duas sessões com menos (45 e 47) estão entre as variáveis. Mas `2026-06-20` (variável) tem 67. A taxa de giro (p95) depende da frequência de gravação: as sessões de 30 Hz dão valores menores.
++
++## 7. Números por origem
++
++Não foram calculados. Nenhuma volta tem origem conhecida (`humano` = 0, `ia` = 0), então não há grupos para comparar o número de voltas, a dispersão da frenagem e do ápice, a variação do Bico de Pato e a melhor volta. O cálculo fica pronto para quando houver voltas rotuladas: o relatório já mede tudo isso por sessão, e o filtro de origem já existe.
++
++## O que falta
++
++1. **Gravação curta alternando a IA e o Eduardo, com o app aberto a partir do repositório.** O app instalado ainda é o antigo. Nela, conferir quatro coisas: se `isAIControlled` muda quando a IA assume e quando ela solta; se as voltas saem `humano`, `ia` e `misturada`; se `carModel` aparece no `metadata.json`; e o que significa o valor 1 do dump de maio. Depois, rodar `python -m ml.scripts.report_lap_origin` (ou `build_inventory`) para ver os rótulos.
++2. **Detector por volta,** para as gravações antigas. Treinar com sessões rotuladas e validar por sessão (ADR 0014). Os candidatos mais promissores nestes dados são a distância da frenagem e do ápice até a mediana, por volta, e a dispersão do tempo. Pedais e trocas não variaram.
++3. **Pedido 13 (coach):**
++   - o coach aceitou uma volta incompleta (`rec__2026-08-08_13-18-00__67`);
++   - a projeção do coach cria tempos impossíveis em voltas de relógio limpo;
++   - a volta de referência do ensaio vem de uma sessão que ainda não tem rótulo.
++4. **As voltas de box passam nos portões de qualidade como válidas:** são 135 nas duas pastas e 21 no store em uso. Fica para decidir se os portões passam a rejeitá-las. Isso não foi mudado agora, para não mexer nos resultados antigos.
++5. **Reempacotar o app instalado** para que ele também grave quem pilota.
++
