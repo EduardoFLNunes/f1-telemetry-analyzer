@@ -80,3 +80,120 @@ O critério (c) falhou porque a régua, o store, tem um erro medido. Ao zerar o 
 
 Pelo pedido, com o (c) falhando, parei antes da Parte C. Não fiz merge, não treinei nem regravei modelo e não mexi no ML nem no store. A decisão do que fazer com o store está no relatório.
 
+## 4. As duas referências (Parte C, ADR 0016)
+
+### O modelo
+
+O modelo do coach guarda as duas referências, as duas voltas reais e completas, cada uma com o tempo, o início de frenagem e a velocidade mínima de cada microsetor. A ativa é escolhida por configuração: a variável de ambiente `AT_COACH_REFERENCE`, com `volta_ia` (padrão) ou `minha_melhor`.
+
+| referência | como é escolhida | hoje |
+|---|---|---|
+| `volta_ia` (padrão) | a melhor volta limpa com origem `ia`, de sessões gravadas a partir de 04/10, no mesmo `carModel` e na geometria oficial | 84,828 s, `2026-10-04_03-42-10#0013` (parte 2, volta 26), entre 13 voltas limpas da IA |
+| `minha_melhor` | a melhor volta limpa `humano` com equipamento `atual`, no mesmo carro | 89,389 s, `2026-10-04_02-24-04#0018` (parte 2, volta 5), entre 11 voltas limpas suas |
+
+- **Limiar de fala:** continua sendo duas vezes a sua oscilação por microsetor (mediana menos melhor), com mínimo de 0,06 s, e é calculado só com as suas 11 voltas limpas. A oscilação tem mediana de 0,079 s e p90 de 0,218 s, então o limiar típico fica em cerca de 0,16 s.
+- **Identidade das voltas:** o treino (`tools/train_reference_model.py`) escolhe as voltas pelo inventário rotulado (`data/ml/origem/`) e as lê pela identidade do ML (`<sessão>#<ordem>`). A identidade do replay (`rec__<sessão>__<n>`) colaria, na sessão de 04/10, a volta 5 da IA (parte 1) com a sua volta 5 (parte 2), porque o contador do jogo recomeça quando a sessão é reiniciada.
+- **Onde o treino grava:** por padrão, no modelo do repositório, que é o lido pelo app de desenvolvimento. O modelo do app instalado só é gravado se for pedido com `--saida`.
+- **Modo antigo:** o `best_per_microsector` continua desligado.
+
+### O que o coach diz
+
+- **Cada frase nomeia a referência:** "Setor 2: 0.34s atras da volta da IA neste trecho (1.59s contra 1.25s). Minima da IA 157 km/h, a sua 122 km/h."
+- **A freada vem em relação à referência,** quando a referência começa a frear naquele microsetor e você começou a frear a até 60 m dela: "A IA freia 34 m depois de voce" ou "Na sua melhor volta voce freou 7 m depois". O início de frenagem é o pedal passando de 0,15, o mesmo critério da Fase 2b, na referência e ao vivo.
+- **No máximo 3 frases por volta:** as primeiras que passam do limiar.
+- **No fim da volta, um resumo:** "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.67s), setor 38 (0.66s) e setor 43 (0.48s). Volta da IA: 84.83s." Diferenças que arredondam para 0,00 s ficam de fora.
+- **Trechos não comparados:**
+  - o microsetor em que a contagem começa (parcial), exceto na linha de chegada;
+  - o microsetor com o carro parado (abaixo de 5 km/h);
+  - o microsetor no pit lane (mais de 10 m fora da linha e abaixo de 90 km/h).
+
+  O ensaio mostrou por quê: saindo do box, o coach dizia "52.84s atras … a sua 0 km/h".
+- **Estilo:** sem acentos, decimal com ponto, e nunca "ganh", "ideal" ou "otimo".
+
+### Textos alterados
+
+| arquivo e linha | antes | agora |
+|---|---|---|
+| `frontend/src/components/CoachingFeed.tsx:76` (rótulo, com o mapa nas linhas 53–56) | `REFERENCIA 1.96s` | `VOLTA DA IA 1.38s` ou `SUA MELHOR 1.50s`; `REFERENCIA` só com um modelo antigo |
+| `backend/core/live/driving_coach.py:501` | "Setor N: X.XXs atras da sua volta de referencia neste trecho (…)" | "Setor N: X.XXs atras da volta da IA neste trecho (…)" ou "… da sua melhor volta …" |
+| `backend/core/live/driving_coach.py:686–705` | "Na referencia: freada em 1578 m, minima de 110 km/h." | "A IA freia 12 m depois de voce; minima da IA 110 km/h, a sua 98 km/h." ou "Na sua melhor volta voce freou 12 m depois; minima na sua melhor volta 110 km/h, agora 98 km/h." |
+| `backend/core/live/driving_coach.py:607` | "Volta fechada. X.XXs somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor N (…)." | "Volta fechada. Maiores diferencas para a volta da IA: setor A (…), setor B (…) e setor C (…). Volta da IA: 84.83s." |
+
+O layout não mudou.
+
+## 5. Testes e ensaio (Parte D)
+
+- **Testes novos** (`backend/tests/test_coach_learning_phase.py`, 23 testes; 38 execuções, porque duas classes herdam os casos de outra):
+  - continuidade rígida, linha de chegada e engasgo do relógio;
+  - `volta_ia` só com voltas da IA de sessões novas, e `minha_melhor` só com `humano` de equipamento `atual`;
+  - teto de 3 frases e resumo dos 3 maiores;
+  - sinal de "antes" e "depois";
+  - frases que nomeiam a referência e não contêm "ganh", "ideal" ou "otimo";
+  - escolha da referência por configuração;
+  - trechos parciais, parados e no box.
+- **Testes antigos atualizados:** os que esperavam a freada em metros absolutos e o resumo antigo (`test_coach_reference_lap.py`), e o do script de treino (`test_lap_origin.py`).
+- **Suítes:** backend com **554 testes** passando, frontend com **137** (vitest) e build do frontend sem erro.
+
+### Ensaio nas suas voltas de 04/10
+
+O coach rodou amostra por amostra sobre os arquivos da sessão, nos dois modos, e cada frase ficou ligada à volta em que foi dita. Foram 32 voltas suas, das quais 11 válidas.
+
+| | volta_ia | minha_melhor |
+|---|---|---|
+| frases por volta, nas 11 válidas | 3,0 (máx. 3) | 2,5 (máx. 3) |
+| frases de trecho, nas 32 voltas | 94 | 79 |
+| resumos de fim de volta | 26 | 26 |
+| microsetores mais citados (válidas) | 2 (11), 0 (6), 1 (5), 3 (3) | 8 (4), 2 (3), 43, 47, 9, 38, 40 e 41 (2 cada) |
+| frases proibidas | 0 | 0 |
+
+- **Mais de 3 frases numa volta do ML** (até 6) só acontecem em voltas inválidas, com pausa ou ida ao box: o coach recomeça a contagem depois do salto, e a volta do ML junta os dois trechos.
+- **Critério (d) refeito com o coach final:** 188 frases, nenhuma proibida, no máximo 3 por volta.
+
+## 6. Merge e modelo
+
+- **Merge:** `etapa/coach-geometria-oficial` entrou em `develop` (`be7e8901`). Uma correção posterior, do resumo com diferenças zeradas, veio em `bffa135f`.
+- **Backup do modelo do repositório:** `data/reference_models/backup/vhe_interlagos.2026-10-04.antes-do-pedido-14.json` (sha256 `9d08d705…`).
+- **Geometria oficial exportada para o app de desenvolvimento:** `data/reference_models/vhe_interlagos.geometry.json` (`0ed16f0dd2225990`). Sem ela, o coach fica calado.
+- **Modelo treinado com o código de `develop`:** `data/reference_models/vhe_interlagos.json` (sha256 `9a2ce243…`). O modelo do app instalado ficou como estava (`9d08d705…`).
+- **Leitura pelo app:** o `AssistedAnalysisService` (o mesmo do `main.py`) leu o modelo e a geometria nos dois modos.
+- **Ensaio numa volta sua** (91,74 s, `03-21-52#0002`):
+  - `volta_ia`: 3 frases (setores 2, 11 e 12) e o resumo (setores 32, 38 e 43);
+  - `minha_melhor`: 1 frase (setor 32, 0.64 s) e o resumo (setores 32, 38 e 26).
+
+  Na sua melhor volta, o modo `minha_melhor` fica calado, porque ela é a própria referência.
+
+## 7. Limitações
+
+- **As 3 frases são as primeiras, não as maiores.** Contra a IA, o limiar é baixo para as diferenças que existem, e as 3 frases quase sempre caem no começo da volta (S do Senna, microsetores 0 a 3). As maiores diferenças só aparecem no resumo: na volta de 91,74 s, as frases foram para os setores 2, 11 e 12 (0,07 a 0,34 s), e os maiores foram 32, 38 e 43 (0,48 a 0,67 s). Se incomodar, as opções são subir o limiar contra a IA ou falar os 3 maiores de cada terço da volta, mas isso é decisão sua.
+- **A freada só aparece se você começou a frear a até 60 m do ponto da referência e antes de o microsetor terminar.** No ensaio, poucas frases trazem a freada (2 contra a IA e 1 contra a sua melhor).
+- **As referências vêm de uma sessão só** (04/10), com 13 voltas da IA e 11 suas. A cada sessão nova:
+  1. rode `python -m ml.scripts.report_lap_origin`, que refaz o inventário;
+  2. rode `python -m ml.scripts.detector_ia aplicar`, que devolve os rótulos das anotações de 04/10 que o passo 1 apaga;
+  3. rode `python tools/train_reference_model.py`.
+
+  Sessões só suas, sem Ctrl+C, saem `humano` pelo próprio indicador.
+- **O store do ML continua um passo curto** no microsetor 0 até a "Reconstrução do store" (backlog).
+- **O app instalado continua com o coach antigo** e com o modelo antigo até ser reempacotado.
+
+## 8. Como abrir o app de desenvolvimento para treinar com o coach ligado
+
+1. **Feche o app instalado,** inclusive na bandeja do Windows. Ele usa a mesma porta (8000), e os dois abertos gravam em dobro.
+2. **Abra um PowerShell na pasta do projeto** (`C:\Users\Dokas\Desktop\f1-telemetry-analyzer`).
+3. **Só na primeira vez, ou depois de atualizar o código, gere o frontend:**
+   ```
+   cd frontend
+   npm.cmd run build
+   cd ..
+   ```
+4. **Escolha a referência e abra o app:**
+   ```
+   $env:AT_BACKEND_USE_PYTHON_RUNNER = 'true'
+   $env:AT_COACH_REFERENCE = 'volta_ia'
+   cd desktop
+   npm.cmd run desktop:prod:autostart
+   ```
+   Para comparar com a sua melhor volta, use `$env:AT_COACH_REFERENCE = 'minha_melhor'`.
+5. **Abra o Assetto Corsa** em Interlagos, com o `rss_formula_rss_3_v6_2026`. A gravação começa sozinha quando o carro entra na pista. As frases aparecem no painel "AI Coaching", com o rótulo **VOLTA DA IA** ou **SUA MELHOR**, e o resumo sai ao cruzar a linha.
+6. **O coach usa dois arquivos,** ambos fora do git: `data/reference_models/vhe_interlagos.json` (o modelo) e `data/reference_models/vhe_interlagos.geometry.json` (a geometria). Sem a geometria, o coach fica calado e avisa uma vez no log.
+7. **Para treinar sem o coach,** feche o app e renomeie `data/reference_models/vhe_interlagos.json` (do repositório). Devolva o nome depois.
+8. **No fim, feche o app.** As sessões ficam em `data/recordings`. Para elas entrarem nas referências, siga a sequência da seção 7.
