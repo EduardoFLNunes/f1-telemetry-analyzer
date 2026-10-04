@@ -381,10 +381,10 @@ index 00000000..6d72278b
 +    out["d"] = d_values
 +    return out
 diff --git a/backend/core/assisted_analysis/reference_model.py b/backend/core/assisted_analysis/reference_model.py
-index 1220f3f9..4c1f6390 100644
+index 1220f3f9..53bfec97 100644
 --- a/backend/core/assisted_analysis/reference_model.py
 +++ b/backend/core/assisted_analysis/reference_model.py
-@@ -21,6 +21,19 @@ Two properties matter, and both come from the data rather than from a rule:
+@@ -21,6 +21,32 @@ Two properties matter, and both come from the data rather than from a rule:
    he has never driven it end to end; that difference is the honest headline of
    how much is on the table.
  
@@ -401,10 +401,23 @@ index 1220f3f9..4c1f6390 100644
 +  the second half of a session realised none of the "time on the table" fitted
 +  on the first half, and each microsector best was matched by 3-5 % of laps.
 +
++Two references, since ADR 0016 (the learning phase):
++
++* ``volta_ia`` (the default): the best clean lap of the game's AI, in the same
++  car, from sessions recorded with the current recorder. The AI repeats its
++  line within centimetres, so the reference does not move while the driver
++  learns.
++* ``minha_melhor``: the driver's best clean lap, `humano` with the current
++  equipment (ADR 0015).
++
++The model keeps both (`references`) and one is active (`use_reference`), chosen
++by configuration. The driver's spread through each slice -- the speaking
++threshold -- always comes from his own laps.
++
  Laps get in only if their sampling holds up. A lap of 937 samples over 74
  seconds is 13 Hz of a 57 Hz signal, and it was ranking as the driver's personal
  best -- a corrupt recording is not a lap record.
-@@ -42,6 +55,10 @@ logger = logging.getLogger(__name__)
+@@ -42,6 +68,31 @@ logger = logging.getLogger(__name__)
  
  MODEL_VERSION = "driver_reference_model.v1"
  
@@ -412,10 +425,31 @@ index 1220f3f9..4c1f6390 100644
 +MODE_BEST_PER_MICROSECTOR = "best_per_microsector"
 +MODES = (MODE_REFERENCE_LAP, MODE_BEST_PER_MICROSECTOR)
 +
++# The two references of the learning phase (ADR 0016) and how the coach names them.
++REFERENCE_AI = "volta_ia"
++REFERENCE_OWN_BEST = "minha_melhor"
++REFERENCE_KINDS = (REFERENCE_AI, REFERENCE_OWN_BEST)
++DEFAULT_REFERENCE = REFERENCE_AI
++REFERENCE_LABELS = {REFERENCE_AI: "volta da IA", REFERENCE_OWN_BEST: "sua melhor volta"}
++
++
++
++def configured_reference_kind() -> str:
++    """Which reference the coach uses: `AT_COACH_REFERENCE`, `volta_ia` by default."""
++    import os
++
++    value = (os.environ.get("AT_COACH_REFERENCE") or "").strip().lower()
++    return value if value in REFERENCE_KINDS else DEFAULT_REFERENCE
++
++
++# Start of braking: the pedal crosses this, as in Phase 2b (`empirical.BRAKE_ONSET`).
++# The live coach uses the same number, so "12 m later" compares like with like.
++BRAKE_ONSET = 0.15
++
  # 60 microsectors puts a boundary every ~72 m at Interlagos: short enough that a
  # single corner does not hide inside one, long enough that the crossing time is
  # not dominated by the sampling interval.
-@@ -79,6 +96,16 @@ class MicrosectorTarget:
+@@ -79,6 +130,19 @@ class MicrosectorTarget:
      optimal_seconds: Optional[float] = None
      optimal_min_speed_kmh: Optional[float] = None
  
@@ -428,11 +462,14 @@ index 1220f3f9..4c1f6390 100644
 +    reference_brake_point_m: Optional[float] = None
 +    reference_throttle_point_p: Optional[float] = None
 +    reference_throttle_point_m: Optional[float] = None
++    # Where the active reference starts braking inside this slice, on the
++    # official geometry (metres), if it does (ADR 0016).
++    reference_brake_onset_m: Optional[float] = None
 +
      @property
      def gap_best_to_optimal(self) -> Optional[float]:
          """How much the driver's own best still gives away here."""
-@@ -108,6 +135,43 @@ class DriverReferenceModel:
+@@ -108,6 +172,76 @@ class DriverReferenceModel:
      optimal_lap_seconds: Optional[float] = None
      optimal_source: Optional[str] = None
  
@@ -450,6 +487,39 @@ index 1220f3f9..4c1f6390 100644
 +    geometry_id: Optional[str] = None
 +    # The quickest valid laps and why each was or was not the reference.
 +    reference_candidates: List[Dict[str, Any]] = field(default_factory=list)
++    # ADR 0016: every reference the model carries, by kind, and the active one.
++    references: Dict[str, Dict[str, Any]] = field(default_factory=dict)
++    reference_kind: Optional[str] = None
++
++    @property
++    def reference_label(self) -> str:
++        """How the coach names the active reference."""
++        return REFERENCE_LABELS.get(self.reference_kind or "", "sua volta de referencia")
++
++    def use_reference(self, kind: str) -> bool:
++        """Make `kind` the reference every slice is measured against.
++
++        A model without that reference keeps none active: the coach then says
++        nothing rather than measure against something else.
++        """
++        if not self.references:
++            return self.has_reference          # a model from before ADR 0016: its single reference
++        reference = self.references.get(kind)
++        sectors = (reference or {}).get("sectors") or []
++        by_index = {int(sector["index"]): sector for sector in sectors}
++        for target in self.targets:
++            sector = by_index.get(target.index) or {}
++            target.reference_seconds = sector.get("seconds")
++            target.reference_min_speed_kmh = sector.get("min_speed_kmh")
++            target.reference_brake_onset_m = sector.get("brake_onset_m")
++            target.reference_brake_point_m = sector.get("brake_onset_m")
++            target.reference_brake_point_p = None
++            target.reference_throttle_point_p = None
++            target.reference_throttle_point_m = None
++        self.reference_kind = kind if reference else None
++        self.reference_lap_id = (reference or {}).get("lap_id")
++        self.reference_lap_seconds = (reference or {}).get("lap_seconds")
++        return reference is not None
 +
 +    @property
 +    def has_reference(self) -> bool:
@@ -476,7 +546,7 @@ index 1220f3f9..4c1f6390 100644
      # ── what the analysis asks it ────────────────────────────────────────
  
      def target_at(self, progress: float) -> Optional[MicrosectorTarget]:
-@@ -173,7 +237,12 @@ class DriverReferenceModel:
+@@ -173,7 +307,12 @@ class DriverReferenceModel:
  
      @classmethod
      def from_dict(cls, payload: Dict[str, Any]) -> "DriverReferenceModel":
@@ -490,7 +560,7 @@ index 1220f3f9..4c1f6390 100644
          return cls(
              version=payload.get("version", MODEL_VERSION),
              track=payload.get("track", ""),
-@@ -186,6 +255,11 @@ class DriverReferenceModel:
+@@ -186,6 +325,13 @@ class DriverReferenceModel:
              targets=targets,
              rejected_reasons=payload.get("rejected_reasons", {}),
              built_at=payload.get("built_at"),
@@ -499,10 +569,12 @@ index 1220f3f9..4c1f6390 100644
 +            reference_lap_seconds=payload.get("reference_lap_seconds"),
 +            geometry_id=payload.get("geometry_id"),
 +            reference_candidates=list(payload.get("reference_candidates") or []),
++            references=dict(payload.get("references") or {}),
++            reference_kind=payload.get("reference_kind"),
          )
  
      def save(self, path: Path) -> Path:
-@@ -232,6 +306,20 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
+@@ -232,6 +378,20 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
      Taking the first sample past a boundary instead would fold the sampling
      interval into the split, which at 57 Hz is up to 18 ms per boundary -- more
      than the differences this model exists to measure.
@@ -523,7 +595,7 @@ index 1220f3f9..4c1f6390 100644
      """
      splits: List[Optional[float]] = [None] * microsectors
      if df is None or df.empty or "p" not in df.columns or "elapsed_s" not in df.columns:
-@@ -244,43 +332,7 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
+@@ -244,43 +404,7 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
      if progress.size < microsectors:
          return splits
  
@@ -568,7 +640,7 @@ index 1220f3f9..4c1f6390 100644
      for index in range(microsectors):
          start, end = crossings[index], crossings[index + 1]
          if start is None or end is None:
-@@ -291,53 +343,49 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
+@@ -291,53 +415,49 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
      return splits
  
  
@@ -660,7 +732,7 @@ index 1220f3f9..4c1f6390 100644
  
  
  def _channel_summary(df: pd.DataFrame, start_p: float, end_p: float) -> Dict[str, Optional[float]]:
-@@ -376,19 +424,73 @@ def _channel_summary(df: pd.DataFrame, start_p: float, end_p: float) -> Dict[str
+@@ -376,19 +496,160 @@ def _channel_summary(df: pd.DataFrame, start_p: float, end_p: float) -> Dict[str
      return summary
  
  
@@ -694,6 +766,93 @@ index 1220f3f9..4c1f6390 100644
 +        return None
 +    index = int(np.argmin(np.abs(p[good] - float(progress))))
 +    return round(float(s[good][index]), 1)
++
++
++def _brake_onset_m(df: pd.DataFrame, start_p: float, end_p: float) -> Optional[float]:
++    """Where the brake first crosses `BRAKE_ONSET` inside the slice, in metres (`s`)."""
++    if df is None or "brake" not in df.columns or "p" not in df.columns or "s" not in df.columns:
++        return None
++    p = pd.to_numeric(df["p"], errors="coerce").to_numpy(dtype=float)
++    s = pd.to_numeric(df["s"], errors="coerce").to_numpy(dtype=float)
++    brake = pd.to_numeric(df["brake"], errors="coerce").fillna(0.0).to_numpy(dtype=float)
++    on = brake >= BRAKE_ONSET
++    starts = np.flatnonzero(on[1:] & ~on[:-1]) + 1
++    for index in starts:
++        if start_p <= p[index] < end_p and np.isfinite(s[index]):
++            return round(float(s[index]), 1)
++    return None
++
++
++def reference_from_laps(
++    laps: Sequence[Tuple[str, Optional[float], Optional[int], pd.DataFrame]],
++    *,
++    geometry: Any,
++    kind: str,
++) -> Tuple[Optional[Dict[str, Any]], List[Dict[str, Any]]]:
++    """The best valid and complete lap among `laps`, as a reference of `kind`.
++
++    Same rules as the model's own reference: usable sampling, no projection
++    jump, every microsector timed and no recording hole. Its time is the sum of
++    its slices, which is the lap from `s = 0` to `s = 0` (pedido 14). Returns the
++    reference (or None) and the five quickest candidates with the reason each
++    was or was not chosen.
++    """
++    from .official_geometry import project_lap, projection_jumped
++
++    microsectors = geometry.microsectors
++    status: Dict[str, Tuple[float, str]] = {}
++    complete: Dict[str, Tuple[float, List[Optional[float]], pd.DataFrame]] = {}
++    for lap_id, lap_seconds, sample_count, df in laps:
++        usable, reason = lap_is_usable(lap_seconds, sample_count)
++        if not usable:
++            status[lap_id] = (float(lap_seconds or 0.0), f"recusada: {reason}")
++            continue
++        projected = project_lap(df, geometry)
++        if projection_jumped(projected, geometry.length):
++            status[lap_id] = (float(lap_seconds or 0.0), "recusada: salto de projecao")
++            continue
++        splits = microsector_splits(projected, microsectors)
++        missing = sum(1 for split in splits if split is None)
++        if missing:
++            status[lap_id] = (float(lap_seconds or 0.0), f"incompleta: {missing} microsetores sem tempo")
++        elif _has_hole(projected, microsectors):
++            status[lap_id] = (float(lap_seconds or 0.0), "incompleta: buraco na gravacao maior que meio microsetor")
++        else:
++            seconds = float(sum(splits))
++            status[lap_id] = (seconds, "completa")
++            complete[lap_id] = (seconds, splits, projected)
++
++    chosen = min(complete, key=lambda key: complete[key][0]) if complete else None
++    candidates = []
++    for lap_id, (seconds, why) in sorted(status.items(), key=lambda item: item[1][0])[:5]:
++        if lap_id == chosen:
++            why = "escolhida: a mais rapida valida e completa"
++        elif why == "completa":
++            why = "valida e completa, mas mais lenta que a escolhida"
++        candidates.append({"lap_id": lap_id, "lap_seconds": round(seconds, 3), "motivo": why})
++    if chosen is None:
++        return None, candidates
++
++    seconds, splits, df = complete[chosen]
++    sectors = []
++    for index, split in enumerate(splits):
++        start_p, end_p = index / microsectors, (index + 1) / microsectors
++        summary = _channel_summary(df, start_p, end_p)
++        sectors.append({
++            "index": index,
++            "seconds": round(float(split), 4),
++            "min_speed_kmh": summary.get("min_speed_kmh"),
++            "brake_onset_m": _brake_onset_m(df, start_p, end_p),
++        })
++    reference = {
++        "kind": kind,
++        "label": REFERENCE_LABELS.get(kind, kind),
++        "lap_id": chosen,
++        "lap_seconds": round(seconds, 3),
++        "sectors": sectors,
++        "candidates": candidates,
++    }
++    return reference, candidates
 +
 +
  def build_reference_model(
@@ -734,7 +893,7 @@ index 1220f3f9..4c1f6390 100644
      best: Dict[int, Tuple[float, str, pd.DataFrame]] = {}
      observed: Dict[int, List[float]] = {}
      rejected: Dict[str, int] = {}
-@@ -396,17 +498,31 @@ def build_reference_model(
+@@ -396,17 +657,31 @@ def build_reference_model(
      best_lap_id: Optional[str] = None
      best_lap_seconds: Optional[float] = None
  
@@ -766,7 +925,7 @@ index 1220f3f9..4c1f6390 100644
  
          accepted += 1
          if best_lap_seconds is None or (lap_seconds or 0) < best_lap_seconds:
-@@ -436,6 +552,37 @@ def build_reference_model(
+@@ -436,6 +711,38 @@ def build_reference_model(
          )
          targets.append(target)
  
@@ -788,6 +947,7 @@ index 1220f3f9..4c1f6390 100644
 +            target.reference_min_speed_kmh = summary.get("min_speed_kmh")
 +            target.reference_brake_point_p = summary.get("brake_point_p")
 +            target.reference_brake_point_m = _meters_at(reference_df, summary.get("brake_point_p"))
++            target.reference_brake_onset_m = _brake_onset_m(reference_df, target.start_p, target.end_p)
 +            target.reference_throttle_point_p = summary.get("throttle_point_p")
 +            target.reference_throttle_point_m = _meters_at(reference_df, summary.get("throttle_point_p"))
 +
@@ -804,7 +964,7 @@ index 1220f3f9..4c1f6390 100644
      ideal = round(sum(target.best_seconds for target in targets), 3) if targets else None
      return DriverReferenceModel(
          version=MODEL_VERSION,
-@@ -449,6 +596,11 @@ def build_reference_model(
+@@ -449,6 +756,11 @@ def build_reference_model(
          targets=targets,
          rejected_reasons=rejected,
          built_at=built_at,
@@ -817,20 +977,27 @@ index 1220f3f9..4c1f6390 100644
  
  
 diff --git a/backend/core/assisted_analysis/service.py b/backend/core/assisted_analysis/service.py
-index 453d3bc3..921eaf4e 100644
+index 453d3bc3..6f156d5e 100644
 --- a/backend/core/assisted_analysis/service.py
 +++ b/backend/core/assisted_analysis/service.py
-@@ -20,7 +20,8 @@ from .lap_loader import LapDataLoader
+@@ -20,7 +20,15 @@ from .lap_loader import LapDataLoader
  from .reference_lap_comparator import ReferenceComparator
  from .corner_metrics import CornerMetricsCalculator
  from .models import CornerComparison, CornerMetrics, DrivingError, LapDescriptor
 -from .reference_model import DriverReferenceModel, lap_is_usable, microsector_splits, model_path
-+from .reference_model import MODE_REFERENCE_LAP, DriverReferenceModel, lap_is_usable, microsector_splits, model_path
++from .reference_model import (
++    MODE_REFERENCE_LAP,
++    DriverReferenceModel,
++    configured_reference_kind,
++    lap_is_usable,
++    microsector_splits,
++    model_path,
++)
 +from .official_geometry import find_official_geometry
  from .optimal_line import attach, find_optimal_line
  from .corner_segmentation import CornerSegmenter
  from .utils import finite_float
-@@ -294,6 +295,8 @@ class AssistedAnalysisService:
+@@ -294,6 +302,8 @@ class AssistedAnalysisService:
              return {"status": "UNAVAILABLE", "reason": "no_model_for_track"}
  
          splits = microsector_splits(target_df, model.microsectors)
@@ -839,7 +1006,7 @@ index 453d3bc3..921eaf4e 100644
          losses = model.loss_against_ideal(splits)
          ranked = sorted(
              (
-@@ -328,6 +331,48 @@ class AssistedAnalysisService:
+@@ -328,6 +338,48 @@ class AssistedAnalysisService:
              **self._optimal_line_context(model, splits),
          }
  
@@ -888,7 +1055,7 @@ index 453d3bc3..921eaf4e 100644
      def _optimal_line_context(self, model: DriverReferenceModel, splits) -> Dict[str, Any]:
          """What the optimised line says about this lap, if there is one."""
          if not model.optimal_lap_seconds:
-@@ -346,6 +391,17 @@ class AssistedAnalysisService:
+@@ -346,6 +398,17 @@ class AssistedAnalysisService:
              }
          }
  
@@ -906,11 +1073,21 @@ index 453d3bc3..921eaf4e 100644
      def _reference_model(self, track: Optional[str]) -> Optional[DriverReferenceModel]:
          key = (track or "unknown").strip()
          cached = getattr(self, "_reference_models", None)
+@@ -354,6 +417,9 @@ class AssistedAnalysisService:
+             self._reference_models = cached
+         if key not in cached:
+             model = DriverReferenceModel.load(model_path(self.runtime_root, key))
++            # ADR 0016: the reference by configuration (`AT_COACH_REFERENCE`).
++            if model is not None:
++                model.use_reference(configured_reference_kind())
+             # The optimised line lives in its own file and is optional. Attaching
+             # it here means everything downstream -- the live coach, the debrief,
+             # the analysis payload -- sees it without asking for it, and tracks
 diff --git a/backend/core/live/driving_coach.py b/backend/core/live/driving_coach.py
-index b4e22ec5..981bfc10 100644
+index b4e22ec5..088d3163 100644
 --- a/backend/core/live/driving_coach.py
 +++ b/backend/core/live/driving_coach.py
-@@ -12,6 +12,19 @@ This is that producer. It measures the lap as it happens against the reference
+@@ -12,6 +12,26 @@ This is that producer. It measures the lap as it happens against the reference
  model fitted from the driver's own laps, and speaks when a microsector costs
  real time.
  
@@ -919,6 +1096,13 @@ index b4e22ec5..981bfc10 100644
 +measured difference ("0.12 s behind your reference lap here"), never a promised
 +gain or an "ideal lap". The old comparison -- the best ever done in each slice --
 +is still here as `best_per_microsector`, off unless the model asks for it.
++
++Since ADR 0016 (the learning phase) the reference is either the AI's lap
++(`volta_ia`, the default) or the driver's best (`minha_melhor`), and every
++phrase names it: "0.60s atras da volta da IA neste trecho". Braking is said
++relative to the reference ("a IA freia 12 m depois de voce"), at most three
++phrases a lap -- the first that clear the bar -- and the lap closes with the
++three slices furthest from the reference.
 +
 +Since ADR 0013 a model carries the `geometry_id` of the official geometry it was
 +measured on. The coach then works out where the car is from its world position,
@@ -930,7 +1114,7 @@ index b4e22ec5..981bfc10 100644
  It runs on every frame at ~57 Hz, so it does almost nothing per frame: read the
  progress, and only when a microsector boundary is crossed does it look up a
  target and compare. Anything heavier here shows up as a hole in the recording --
-@@ -47,6 +60,17 @@ LOSS_SPREAD_MULTIPLE = 2.0
+@@ -47,6 +67,33 @@ LOSS_SPREAD_MULTIPLE = 2.0
  # And even above it, not more often than this -- a coach talking every corner is
  # a coach nobody listens to.
  MIN_SECONDS_BETWEEN_EVENTS = 3.0
@@ -940,6 +1124,22 @@ index b4e22ec5..981bfc10 100644
 +# from the menu, a reset), and the count starts again without a word.
 +LINE_WINDOW = 0.05
 +JUMP_PROGRESS = 0.05
++# ADR 0016: against the AI the gap shows up in nearly every slice, so the coach
++# speaks at most this often a lap -- the first slices that clear the bar -- and
++# sums up the worst ones at the line.
++MAX_PHRASES_PER_LAP = 3
++SUMMARY_SECTORS = 3
++SUMMARY_MIN_LOSS = 0.005
++# A braking point of the lap is compared with the reference's only within this.
++BRAKE_MATCH_M = 60.0
++BRAKE_ONSET = 0.15
++# A slice is not compared when the car stopped in it, or went through the pit
++# lane (far off the line and slow, the rule `ml` uses to spot a pit lap):
++# measured on 2026-10-04, starting from the box gave "52.84s behind ... yours
++# 0 km/h".
++STOPPED_KMH = 5.0
++PIT_LATERAL_M = 10.0
++PIT_SPEED_KMH = 90.0
 +
 +
 +def _legacy(model: Any) -> bool:
@@ -948,7 +1148,7 @@ index b4e22ec5..981bfc10 100644
  
  
  def _number(value: Any) -> Optional[float]:
-@@ -67,6 +91,7 @@ class LiveDrivingCoach:
+@@ -67,6 +114,7 @@ class LiveDrivingCoach:
          event_bus: Any,
          model_provider: Callable[[Optional[str]], Any],
          loop_ref_provider: Callable[[], Any] = lambda: None,
@@ -956,7 +1156,7 @@ index b4e22ec5..981bfc10 100644
          *,
          min_loss_seconds: float = MIN_LOSS_SECONDS,
          min_gap_seconds: float = MIN_SECONDS_BETWEEN_EVENTS,
-@@ -74,6 +99,10 @@ class LiveDrivingCoach:
+@@ -74,6 +122,10 @@ class LiveDrivingCoach:
          self.event_bus = event_bus
          self.model_provider = model_provider
          self.loop_ref_provider = loop_ref_provider
@@ -967,7 +1167,7 @@ index b4e22ec5..981bfc10 100644
          self.min_loss_seconds = min_loss_seconds
          self.min_gap_seconds = min_gap_seconds
  
-@@ -88,36 +117,82 @@ class LiveDrivingCoach:
+@@ -88,36 +140,115 @@ class LiveDrivingCoach:
          self._lap_loss: float = 0.0
          self._lap_loss_optimal: float = 0.0
          self._lap_worst: Optional[Dict[str, Any]] = None
@@ -975,6 +1175,19 @@ index b4e22ec5..981bfc10 100644
 +        self._last_lap_clock: Optional[float] = None
 +        self._last_clock_s: Optional[float] = None
 +        self._clock_offset = 0.0
++        # What the lap has done so far (ADR 0016): phrases said, loss per slice,
++        # where it started braking, and the lowest speed in the current slice.
++        self._lap_phrases = 0
++        self._lap_losses: Dict[int, float] = {}
++        self._lap_onsets: list = []
++        self._last_brake: Optional[float] = None
++        self._sector_min_speed: Optional[float] = None
++        self._closing_min_speed: Optional[float] = None
++        self._last_lateral: Optional[float] = None
++        self._sector_max_lateral: Optional[float] = None
++        self._closing_max_lateral: Optional[float] = None
++        # The slice the count started in is partial: never compared.
++        self._partial_sector: Optional[int] = None
  
      # ── the hot path ─────────────────────────────────────────────────────
  
@@ -1017,7 +1230,28 @@ index b4e22ec5..981bfc10 100644
  
          lap_number = _number(frame.get("lap_number") or frame.get("lap"))
          index = min(int(progress * model.microsectors), model.microsectors - 1)
- 
+-
++        position_m = self._position_m(frame, progress)
++        brake = _number(frame.get("brake"))
++        if brake is not None and position_m is not None:
++            if self._last_brake is not None and self._last_brake < BRAKE_ONSET <= brake:
++                self._lap_onsets.append(position_m)
++            self._last_brake = brake
++        speed_now = _number(frame.get("speedKmh"))
++        # The lowest speed of the slice being closed excludes this frame, which
++        # already lies in the next one.
++        self._closing_min_speed = self._sector_min_speed
++        self._closing_max_lateral = self._sector_max_lateral
++        lateral_now = abs(self._last_lateral) if on_geometry and self._last_lateral is not None else None
++        if self._sector_index is not None and index != self._sector_index:
++            self._sector_min_speed = speed_now
++            self._sector_max_lateral = lateral_now
++        else:
++            if speed_now is not None:
++                self._sector_min_speed = speed_now if self._sector_min_speed is None else min(self._sector_min_speed, speed_now)
++            if lateral_now is not None:
++                self._sector_max_lateral = lateral_now if self._sector_max_lateral is None else max(self._sector_max_lateral, lateral_now)
++
 +        if on_geometry:
 +            if self._sector_index is None or self._last_progress is None:
 +                self._start_lap(lap_number, index, clock, progress)
@@ -1031,7 +1265,7 @@ index b4e22ec5..981bfc10 100644
 +                    crossing = self._last_clock + (clock - self._last_clock) * t
 +                    self._close_sector(frame, model, self._sector_index, self._sector_entry_clock, crossing)
 +                    self._speak_lap_summary(frame, model)
-+                    self._start_lap(lap_number, 0, crossing, 0.0)
++                    self._start_lap(lap_number, 0, crossing, 0.0, at_line=True)
 +                    self._last_progress, self._last_clock = progress, clock
 +                    if index == 0:
 +                        return
@@ -1062,7 +1296,7 @@ index b4e22ec5..981bfc10 100644
              return
  
          # Still inside the same slice: nothing to do. This is the branch almost
-@@ -128,7 +203,7 @@ class LiveDrivingCoach:
+@@ -128,7 +259,7 @@ class LiveDrivingCoach:
              return
  
          # The lap wrapped; the finish line is handled as a new lap above.
@@ -1071,14 +1305,16 @@ index b4e22ec5..981bfc10 100644
              self._sector_index = index
              self._sector_entry_clock = clock
              self._last_progress = progress
-@@ -154,6 +229,22 @@ class LiveDrivingCoach:
+@@ -154,8 +285,45 @@ class LiveDrivingCoach:
          self._sector_entry_clock = crossing
          self._last_progress = progress
          self._last_clock = clock
 +        self._close_sector(frame, model, finished, entry, crossing)
 +
-+    def _start_lap(self, lap_number: Optional[float], index: int, clock: float, progress: float) -> None:
++    def _start_lap(self, lap_number: Optional[float], index: int, clock: float, progress: float,
++                   at_line: bool = False) -> None:
 +        """Start counting from here; nothing is said about the slice it starts in."""
++        self._partial_sector = None if at_line else index
 +        self._lap_number = lap_number
 +        self._sector_index = index
 +        self._sector_entry_clock = clock
@@ -1087,14 +1323,35 @@ index b4e22ec5..981bfc10 100644
 +        self._lap_loss = 0.0
 +        self._lap_loss_optimal = 0.0
 +        self._lap_worst = None
++        self._lap_phrases = 0
++        self._lap_losses = {}
++        self._lap_onsets = [onset for onset in self._lap_onsets[-1:] if progress < LINE_WINDOW]
++
++    def _position_m(self, frame: Dict[str, Any], progress: float) -> Optional[float]:
++        """Where the car is along the lap, in metres, on the model's ruler."""
++        if self._projector is not None:
++            return progress * self._projector.geometry.length
++        return _number(frame.get("s"))
 +
 +    def _close_sector(self, frame: Dict[str, Any], model: Any, finished: Optional[int],
 +                      entry: Optional[float], crossing: float) -> None:
 +        """A slice was completed: compare it with the model and speak if it is worth it."""
          if entry is None or finished is None:
              return
++        if finished == self._partial_sector:
++            self._partial_sector = None
++            return
++        stopped = self._closing_min_speed is not None and self._closing_min_speed < STOPPED_KMH
++        in_pits = (
++            self._closing_max_lateral is not None and self._closing_max_lateral > PIT_LATERAL_M
++            and self._closing_min_speed is not None and self._closing_min_speed < PIT_SPEED_KMH
++        )
++        if stopped or in_pits:
++            return
  
-@@ -164,14 +255,20 @@ class LiveDrivingCoach:
+         split = crossing - entry
+         if split <= 0:
+@@ -164,30 +332,128 @@ class LiveDrivingCoach:
          if target is None:
              return
  
@@ -1117,7 +1374,15 @@ index b4e22ec5..981bfc10 100644
          if loss <= 0:
              return
          self._lap_loss += loss
-@@ -184,10 +281,97 @@ class LiveDrivingCoach:
++        self._lap_losses[finished] = loss
+         if self._lap_worst is None or loss > self._lap_worst["lossS"]:
+             self._lap_worst = {"index": finished, "lossS": round(loss, 3)}
+         if loss < self._threshold_for(target):
+             return
++        if not legacy and self._lap_phrases >= MAX_PHRASES_PER_LAP:
++            return
+ 
+         now = time.monotonic()
          if now - self._last_event_at < self.min_gap_seconds:
              return
          self._last_event_at = now
@@ -1125,6 +1390,7 @@ index b4e22ec5..981bfc10 100644
 +        if legacy:
 +            self._emit_coaching_event(frame, target, split, loss)
 +        else:
++            self._lap_phrases += 1
 +            self._emit_reference_event(frame, model, target, split, loss)
 +
 +    def _physics_clock(self, frame: Dict[str, Any], lap_clock: float, progress: float) -> float:
@@ -1161,7 +1427,8 @@ index b4e22ec5..981bfc10 100644
 +        # Speed and interval size the projection's hard continuity (pedido 14).
 +        speed_kmh = _number(frame.get("speedKmh"))
 +        speed = speed_kmh / 3.6 if speed_kmh is not None else _number(frame.get("speed"))
-+        s, _ = projector.project(x, z, speed_mps=speed, dt_s=dt)
++        s, lateral = projector.project(x, z, speed_mps=speed, dt_s=dt)
++        self._last_lateral = lateral
 +        return s / projector.geometry.length
 +
 +    def _projector_for(self, model: Any) -> Any:
@@ -1217,44 +1484,65 @@ index b4e22ec5..981bfc10 100644
          spread = None
          median = getattr(target, "median_seconds", None)
          best = getattr(target, "best_seconds", None)
-@@ -199,6 +383,53 @@ class LiveDrivingCoach:
+@@ -199,6 +465,74 @@ class LiveDrivingCoach:
  
      # ── what it says ─────────────────────────────────────────────────────
  
++    def _your_brake_onset(self, reference_onset: Optional[float]) -> Optional[float]:
++        """The lap's start of braking nearest the reference's, within `BRAKE_MATCH_M`."""
++        if reference_onset is None or not self._lap_onsets:
++            return None
++        length = self._projector.geometry.length if self._projector is not None else None
++
++        def gap(onset: float) -> float:
++            d = onset - reference_onset
++            if length:
++                d = (d + length / 2.0) % length - length / 2.0
++            return d
++
++        nearest = min(self._lap_onsets, key=lambda onset: abs(gap(onset)))
++        return nearest if abs(gap(nearest)) <= BRAKE_MATCH_M else None
++
 +    def _emit_reference_event(self, frame: Dict[str, Any], model: Any, target: Any, split: float, loss: float) -> None:
-+        """A measured difference to the reference lap, and what that lap did here."""
++        """A measured difference to the reference, which is named, and what it did here."""
 +        reference = float(target.reference_seconds)
++        kind = getattr(model, "reference_kind", None)
++        label = getattr(model, "reference_label", "sua volta de referencia")
 +        evidence: Dict[str, Any] = {
 +            "microsector": target.index,
 +            "yourSeconds": round(split, 3),
 +            "referenceSeconds": round(reference, 3),
 +            "lossSeconds": round(loss, 3),
 +            "referenceLapId": getattr(model, "reference_lap_id", None),
++            "referenceKind": kind,
++            "referenceLabel": label,
 +        }
-+        brake_m = getattr(target, "reference_brake_point_m", None)
-+        min_speed = getattr(target, "reference_min_speed_kmh", None)
-+        if min_speed is not None:
-+            evidence["referenceMinSpeedKmh"] = min_speed
-+            speed = _number(frame.get("speedKmh"))
-+            if speed is not None:
-+                evidence["yourSpeedKmh"] = round(speed, 1)
-+        if brake_m is not None:
-+            evidence["referenceBrakePointM"] = brake_m
 +        at_lap_time = _number(frame.get("lap_time"))
 +        if at_lap_time is not None:
 +            evidence["atLapTimeSeconds"] = round(at_lap_time, 3)
 +
-+        message = (
-+            f"Setor {target.index}: {loss:.2f}s atras da sua volta de referencia neste trecho "
-+            f"({split:.2f}s contra {reference:.2f}s)."
-+        )
-+        goals = []
-+        if brake_m is not None:
-+            goals.append(f"freada em {brake_m:.0f} m")
-+        if min_speed is not None:
-+            goals.append(f"minima de {min_speed:.0f} km/h")
-+        if goals:
-+            message += " Na referencia: " + ", ".join(goals) + "."
++        message = f"Setor {target.index}: {loss:.2f}s atras da {label} neste trecho ({split:.2f}s contra {reference:.2f}s)."
++        clauses = []
++        reference_onset = getattr(target, "reference_brake_onset_m", None)
++        your_onset = self._your_brake_onset(reference_onset)
++        if reference_onset is not None and your_onset is not None:
++            delta = reference_onset - your_onset
++            if self._projector is not None:
++                length = self._projector.geometry.length
++                delta = (delta + length / 2.0) % length - length / 2.0
++            evidence["referenceBrakeOnsetM"] = round(reference_onset, 1)
++            evidence["yourBrakeOnsetM"] = round(your_onset, 1)
++            evidence["brakeDeltaM"] = round(delta, 1)
++            clauses.append(_braking_clause(kind, delta))
++        reference_min = getattr(target, "reference_min_speed_kmh", None)
++        your_min = self._closing_min_speed
++        if reference_min is not None and your_min is not None:
++            evidence["referenceMinSpeedKmh"] = round(float(reference_min), 1)
++            evidence["yourMinSpeedKmh"] = round(float(your_min), 1)
++            clauses.append(_min_speed_clause(kind, float(reference_min), float(your_min)))
++        if clauses:
++            sentence = "; ".join(clauses)
++            message += " " + sentence[0].upper() + sentence[1:] + "."
 +
 +        self._publish(COACHING_EVENT, {
 +            "type": "coaching_event",
@@ -1271,23 +1559,25 @@ index b4e22ec5..981bfc10 100644
      def _emit_coaching_event(self, frame: Dict[str, Any], target: Any, split: float, loss: float) -> None:
          evidence: Dict[str, Any] = {
              "microsector": target.index,
-@@ -258,6 +489,27 @@ class LiveDrivingCoach:
+@@ -258,6 +592,29 @@ class LiveDrivingCoach:
  
      def _speak_lap_summary(self, frame: Dict[str, Any], model: Any) -> None:
          """The radio call at the line: what the lap cost and where."""
 +        if not _legacy(model):
-+            if self._lap_loss <= 0.0 or not getattr(model, "has_reference", False):
++            if self._lap_loss <= 0.0 or not getattr(model, "has_reference", False) or not self._lap_losses:
 +                return
-+            worst = self._lap_worst or {}
-+            message = (
-+                f"Volta fechada. {self._lap_loss:.2f}s somando os trechos em que ficou atras "
-+                "da sua volta de referencia"
-+            )
-+            if worst:
-+                message += f"; a maior diferenca no setor {worst['index']} ({worst['lossS']:.2f}s)"
-+            message += "."
++            label = getattr(model, "reference_label", "sua volta de referencia")
++            # Differences that round to 0.00 s are not differences worth naming
++            # (measured: the reference lap against itself listed "setor 0 (0.00s)").
++            worst = [item for item in sorted(self._lap_losses.items(), key=lambda item: item[1], reverse=True)
++                     if item[1] >= SUMMARY_MIN_LOSS][:SUMMARY_SECTORS]
++            if not worst:
++                return
++            parts = [f"setor {index} ({loss:.2f}s)" for index, loss in worst]
++            listed = parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " e " + parts[-1]
++            message = f"Volta fechada. Maiores diferencas para a {label}: {listed}."
 +            if getattr(model, "reference_lap_seconds", None):
-+                message += f" Volta de referencia: {model.reference_lap_seconds:.2f}s."
++                message += f" {label[0].upper() + label[1:]}: {model.reference_lap_seconds:.2f}s."
 +            self._publish(ENGINEER_SPEECH, {
 +                "message": message,
 +                "priority": "high" if self._lap_loss > 1.0 else "medium",
@@ -1299,7 +1589,7 @@ index b4e22ec5..981bfc10 100644
          optimal_lap = getattr(model, "optimal_lap_seconds", None)
          if self._lap_loss <= 0.0 and not (optimal_lap and self._lap_loss_optimal > 0.0):
              return
-@@ -292,6 +544,8 @@ class LiveDrivingCoach:
+@@ -292,6 +649,8 @@ class LiveDrivingCoach:
          if key and key != self._track:
              self._track = key
              self._model = None
@@ -1308,7 +1598,35 @@ index b4e22ec5..981bfc10 100644
          if self._model is None:
              try:
                  self._model = self.model_provider(self._track)
-@@ -332,6 +586,7 @@ def coach_recorded_lap(
+@@ -324,6 +683,27 @@ class _CollectingBus:
+             self.speech.append(payload)
+ 
+ 
++def _braking_clause(kind: Optional[str], delta_m: float) -> str:
++    """Where the reference starts braking, relative to the driver (positive = later)."""
++    metres = abs(round(delta_m))
++    if kind == "minha_melhor":
++        if metres < 1:
++            return "na sua melhor volta voce freou no mesmo ponto"
++        return f"na sua melhor volta voce freou {metres:.0f} m {'depois' if delta_m > 0 else 'antes'}"
++    subject = "a IA" if kind == "volta_ia" else "a referencia"
++    if metres < 1:
++        return f"{subject} freia no mesmo ponto que voce"
++    return f"{subject} freia {metres:.0f} m {'depois' if delta_m > 0 else 'antes'} de voce"
++
++
++def _min_speed_clause(kind: Optional[str], reference_kmh: float, yours_kmh: float) -> str:
++    if kind == "volta_ia":
++        return f"minima da IA {reference_kmh:.0f} km/h, a sua {yours_kmh:.0f} km/h"
++    if kind == "minha_melhor":
++        return f"minima na sua melhor volta {reference_kmh:.0f} km/h, agora {yours_kmh:.0f} km/h"
++    return f"minima na referencia {reference_kmh:.0f} km/h, a sua {yours_kmh:.0f} km/h"
++
++
+ def coach_recorded_lap(
+     df: Any,
+     model: Any,
+@@ -332,6 +712,7 @@ def coach_recorded_lap(
      track: str = "",
      driver_id: str = "player_1",
      min_loss_seconds: float = MIN_LOSS_SECONDS,
@@ -1316,7 +1634,7 @@ index b4e22ec5..981bfc10 100644
  ) -> Dict[str, Any]:
      """
      Run a finished lap through the coach and collect everything it would say.
-@@ -354,6 +609,7 @@ def coach_recorded_lap(
+@@ -354,6 +735,7 @@ def coach_recorded_lap(
      coach = LiveDrivingCoach(
          bus,
          model_provider=lambda _track: model,
@@ -1324,7 +1642,7 @@ index b4e22ec5..981bfc10 100644
          min_loss_seconds=min_loss_seconds,
          min_gap_seconds=0.0,
      )
-@@ -363,14 +619,16 @@ def coach_recorded_lap(
+@@ -363,15 +745,18 @@ def coach_recorded_lap(
          data = row._asdict()
          clock = data.get("elapsed_s")
          progress = data.get("p")
@@ -1341,8 +1659,10 @@ index b4e22ec5..981bfc10 100644
 +            "world_x": float(data["x"]) if "x" in columns and data.get("x") == data.get("x") else None,
 +            "world_z": float(data["z"]) if "z" in columns and data.get("z") == data.get("z") else None,
              "speedKmh": float(data.get("speed_kmh")) if "speed_kmh" in columns and data.get("speed_kmh") == data.get("speed_kmh") else None,
++            "brake": float(data.get("brake")) if "brake" in columns and data.get("brake") == data.get("brake") else None,
              "driver_id": driver_id,
              "track": track,
+         })
 diff --git a/backend/core/spatial_engine.py b/backend/core/spatial_engine.py
 index 54ea6231..5a1c1b5f 100644
 --- a/backend/core/spatial_engine.py
@@ -1589,6 +1909,69 @@ index 207e8292..f64296a0 100644
          )
          event_bus.subscribe(PROCESSED_FRAME, live_driving_coach.on_frame)
          logger.info("Live driving coach subscribed to processed frames")
+diff --git a/backend/ml/data/coach_references.py b/backend/ml/data/coach_references.py
+new file mode 100644
+index 00000000..66a31e2a
+--- /dev/null
++++ b/backend/ml/data/coach_references.py
+@@ -0,0 +1,57 @@
++"""Quais voltas viram referencia do coach (ADR 0016) e quais medem a oscilacao do piloto.
++
++* `volta_ia`: voltas limpas com origem `ia`, de sessoes gravadas a partir de
++  2026-10-04 (o gravador novo, com o comportamento atual da IA), no mesmo
++  `carModel`. A IA de agosto fazia diferente no microsetor 41 e freava 6 a 8 m
++  longe em duas zonas (pedido 13): volta da IA antiga nao serve.
++* `minha_melhor` e a oscilacao (o limiar de fala): voltas limpas `humano` com
++  equipamento `atual` (ADR 0015), no mesmo carro.
++
++Volta limpa: valida, unica, relogio conferido e sem `relogio_suspeito`
++(`origin.driver_mask`), e sem passagem pelo box (`ai_detector.pit_lap`).
++"""
++
++from __future__ import annotations
++
++from typing import Dict, Iterable, Optional
++
++import pandas as pd
++
++from .origin import AI, CURRENT_EQUIPMENT, HUMAN, driver_mask
++
++AI_SINCE = "2026-10-04"
++
++
++def clean_laps(inventory: pd.DataFrame, pit_laps: Iterable[str] = ()) -> pd.DataFrame:
++    pits = set(pit_laps)
++    ok = inventory["valid"].astype(bool) & driver_mask(inventory, origins=None, equipment=None)
++    return inventory[ok & ~inventory["lap_id"].isin(pits)]
++
++
++def _with_car(laps: pd.DataFrame, cars: Dict[str, Optional[str]], car: Optional[str]) -> pd.DataFrame:
++    if car is None:
++        return laps
++    return laps[laps["session_id"].map(lambda sid: cars.get(sid)) == car]
++
++
++def driver_laps(inventory: pd.DataFrame, pit_laps: Iterable[str] = (), *,
++                cars: Optional[Dict[str, Optional[str]]] = None, car: Optional[str] = None) -> pd.DataFrame:
++    """Voltas do piloto de hoje: `humano`, equipamento `atual`, limpas, no carro dado."""
++    laps = clean_laps(inventory, pit_laps)
++    laps = laps[(laps["origem"] == HUMAN) & (laps["equipamento"] == CURRENT_EQUIPMENT)]
++    return _with_car(laps, cars or {}, car)
++
++
++def ai_laps(inventory: pd.DataFrame, pit_laps: Iterable[str] = (), *,
++            cars: Optional[Dict[str, Optional[str]]] = None, car: Optional[str] = None,
++            since: str = AI_SINCE) -> pd.DataFrame:
++    """Voltas da IA de sessoes novas: origem `ia`, a partir de `since`, limpas, no carro dado."""
++    laps = clean_laps(inventory, pit_laps)
++    laps = laps[(laps["origem"] == AI) & (laps["session_id"].str[:10] >= since)]
++    return _with_car(laps, cars or {}, car)
++
++
++def most_common_car(laps: pd.DataFrame, cars: Dict[str, Optional[str]]) -> Optional[str]:
++    """O carro das voltas dadas (o mais frequente), ou None se nenhuma sessao o registrou."""
++    values = laps["session_id"].map(lambda sid: cars.get(sid)).dropna()
++    return values.value_counts().idxmax() if not values.empty else None
 diff --git a/backend/ml/export/geometry.py b/backend/ml/export/geometry.py
 new file mode 100644
 index 00000000..70e6e71d
@@ -1737,10 +2120,10 @@ index 9bc3df21..10c24e34 100644
  
 diff --git a/backend/tests/test_coach_learning_phase.py b/backend/tests/test_coach_learning_phase.py
 new file mode 100644
-index 00000000..aab619ef
+index 00000000..b4db891d
 --- /dev/null
 +++ b/backend/tests/test_coach_learning_phase.py
-@@ -0,0 +1,211 @@
+@@ -0,0 +1,393 @@
 +"""Coach na fase de aprendizado (pedido 14): continuidade rigida, linha de chegada.
 +
 +Tudo sintetico.
@@ -1933,9 +2316,6 @@ index 00000000..aab619ef
 +        self.assertEqual(bus.of(COACHING_EVENT), [])
 +
 +
-+if __name__ == "__main__":
-+    unittest.main()
-+
 +
 +class WallClockStutterTest(LiveFinishLineTest):
 +    def test_a_stutter_in_the_recorder_clock_changes_nothing(self):
@@ -1952,6 +2332,191 @@ index 00000000..aab619ef
 +            [e["evidence"]["yourSeconds"] for e in stuttered.of(COACHING_EVENT)],
 +        )
 +        self.assertTrue(clean.of(COACHING_EVENT))
++
++
++# ── Parte C: as duas referencias (ADR 0016) ─────────────────────────────────
++
++from core.assisted_analysis.reference_model import (  # noqa: E402
++    REFERENCE_AI,
++    REFERENCE_OWN_BEST,
++    configured_reference_kind,
++    reference_from_laps,
++)
++from ml.data.coach_references import ai_laps, driver_laps  # noqa: E402
++
++FORBIDDEN = ("ganh", "ideal", "otimo")
++
++
++def inventory_row(lap_id, origem, equipamento, **extra):
++    session = lap_id.split("#")[0]
++    row = {"lap_id": lap_id, "session_id": session, "origem": origem, "equipamento": equipamento,
++           "valid": True, "relogio_verificado": True, "relogio_suspeito": False, "duplicada_de": None}
++    row.update(extra)
++    return row
++
++
++class ReferenceSelectionTest(unittest.TestCase):
++    def setUp(self):
++        self.inventory = pd.DataFrame([
++            inventory_row("2026-10-04_03-42-10_x#0013", "ia", "atual"),          # IA nova
++            inventory_row("2026-08-09_19-20-59_x#0001", "ia", "anterior"),       # IA antiga
++            inventory_row("2026-10-04_02-24-04_x#0018", "humano", "atual"),      # piloto de hoje
++            inventory_row("2026-08-16_03-30-14_x#0004", "humano", "anterior"),   # piloto com o controle antigo
++            inventory_row("2026-10-04_02-24-04_x#0007", "misturada", "atual"),
++            inventory_row("2026-10-04_03-42-10_x#0014", "ia", "atual", relogio_suspeito=True),  # box
++            inventory_row("2026-10-04_03-42-10_x#0015", "ia", "atual", valid=False),
++        ])
++        self.cars = {lap.split("#")[0]: "rss_formula_rss_3_v6_2026" for lap in self.inventory["lap_id"]}
++
++    def test_volta_ia_uses_only_ai_laps_from_new_sessions(self):
++        chosen = ai_laps(self.inventory, cars=self.cars, car="rss_formula_rss_3_v6_2026")["lap_id"].tolist()
++        self.assertEqual(chosen, ["2026-10-04_03-42-10_x#0013"])
++
++    def test_minha_melhor_uses_only_human_laps_with_the_current_equipment(self):
++        chosen = driver_laps(self.inventory, cars=self.cars, car="rss_formula_rss_3_v6_2026")["lap_id"].tolist()
++        self.assertEqual(chosen, ["2026-10-04_02-24-04_x#0018"])
++
++    def test_pit_laps_and_other_cars_stay_out(self):
++        self.assertTrue(ai_laps(self.inventory, ["2026-10-04_03-42-10_x#0013"]).empty)
++        self.cars["2026-10-04_03-42-10_x"] = "outro_carro"
++        self.assertTrue(ai_laps(self.inventory, cars=self.cars, car="rss_formula_rss_3_v6_2026").empty)
++
++
++def synthetic_lap(track, seconds, *, slow=(), brake_at=None):
++    """Volta sintetica a velocidade constante; `slow` = microsetores com tempo a mais."""
++    count = int(seconds * HZ)
++    s = np.linspace(0.0, track.length - 0.01, count)
++    elapsed = s / track.length * seconds
++    for index, extra in slow:
++        start, end = index / 60 * track.length, (index + 1) / 60 * track.length
++        elapsed = elapsed + np.where(s >= end, extra, np.where(s >= start, extra * (s - start) / (end - start), 0.0))
++    world = track.to_world(s, np.zeros(count))
++    brake = np.zeros(count)
++    if brake_at is not None:
++        brake[(s >= brake_at) & (s < brake_at + 40.0)] = 1.0
++    return pd.DataFrame({"x": world[:, 0], "z": world[:, 1], "elapsed_s": elapsed, "s": s,
++                         "speed_kmh": track.length / seconds * 3.6, "brake": brake, "throttle": 1.0})
++
++
++class TwoReferencesTest(unittest.TestCase):
++    """A IA freia em 300 m; o piloto freia em outro ponto."""
++
++    def setUp(self):
++        self.track = circular_track()
++        self.geometry = exported(self.track, "geo-1")
++        seconds = 60.0
++        # As voltas do piloto freiam em 296 m, dentro do mesmo microsetor da IA (293-314 m).
++        mine = [(f"h{i}", seconds + 0.5, int((seconds + 0.5) * HZ),
++                 synthetic_lap(self.track, seconds + 0.5, brake_at=296.0)) for i in range(3)]
++        ai = [("ia", seconds, int(seconds * HZ), synthetic_lap(self.track, seconds, brake_at=300.0))]
++        self.model = build_reference_model(mine, track="t", geometry=self.geometry)
++        for kind, laps in ((REFERENCE_OWN_BEST, mine), (REFERENCE_AI, ai)):
++            reference, _ = reference_from_laps(laps, geometry=self.geometry, kind=kind)
++            self.model.references[kind] = reference
++        self.model.use_reference(REFERENCE_AI)
++        self.sector = int(300.0 / self.track.length * 60)
++
++    def drive(self, lap):
++        bus = FakeBus()
++        coach = LiveDrivingCoach(bus, lambda _t: self.model, geometry_provider=lambda _t: self.geometry,
++                                 min_gap_seconds=0.0)
++        for number, frame in ((1, lap), (2, synthetic_lap(self.track, 60.5, brake_at=290.0))):
++            for row in frame.itertuples():
++                coach.on_frame({"world_x": row.x, "world_z": row.z, "lap_time": row.elapsed_s, "lap_number": number,
++                                "speedKmh": row.speed_kmh, "brake": row.brake, "track": "t"})
++        return bus
++
++    def test_at_most_three_phrases_a_lap(self):
++        slow = [(i, 0.3) for i in (5, 10, 20, 30, 40, 50)]
++        bus = self.drive(synthetic_lap(self.track, 62.0, slow=slow, brake_at=290.0))
++        lap_one = [e for e in bus.of(COACHING_EVENT) if e["lap_number"] == 1]
++        self.assertEqual(len(lap_one), 3)
++        self.assertEqual([e["evidence"]["microsector"] for e in lap_one], [5, 10, 20])
++
++    def test_the_lap_summary_lists_the_three_largest(self):
++        slow = [(5, 0.2), (10, 0.5), (20, 0.4), (30, 0.3), (40, 0.25)]
++        bus = self.drive(synthetic_lap(self.track, 62.0, slow=slow, brake_at=290.0))
++        summary = bus.of(ENGINEER_SPEECH)[0]["message"]
++        self.assertIn("Maiores diferencas para a volta da IA", summary)
++        self.assertLess(summary.index("setor 10"), summary.index("setor 20"))
++        self.assertLess(summary.index("setor 20"), summary.index("setor 30"))
++        self.assertNotIn("setor 40", summary)
++
++    def test_braking_is_said_relative_to_the_reference(self):
++        for driver_at, word in ((288.0, "depois"), (312.0, "antes")):
++            bus = self.drive(synthetic_lap(self.track, 60.5, slow=[(self.sector, 0.4)], brake_at=driver_at))
++            event = [e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == self.sector][0]
++            self.assertIn(f"A IA freia 12 m {word} de voce", event["event"])
++            self.assertAlmostEqual(event["evidence"]["brakeDeltaM"], 300.0 - driver_at, delta=1.5)
++
++    def test_phrases_name_the_reference_and_never_promise(self):
++        texts = []
++        for kind in (REFERENCE_AI, REFERENCE_OWN_BEST):
++            self.model.use_reference(kind)
++            bus = self.drive(synthetic_lap(self.track, 62.0, slow=[(self.sector, 0.5), (40, 0.4)], brake_at=288.0))
++            events = bus.of(COACHING_EVENT)
++            self.assertTrue(events)
++            name = "volta da IA" if kind == REFERENCE_AI else "sua melhor volta"
++            for event in events:
++                self.assertIn(f"atras da {name} neste trecho", event["event"])
++                self.assertEqual(event["evidence"]["referenceKind"], kind)
++            texts += [e["event"] for e in events] + [m["message"] for m in bus.of(ENGINEER_SPEECH)]
++        for text in texts:
++            for word in FORBIDDEN:
++                self.assertNotIn(word, text.lower())
++        self.assertTrue(any("na sua melhor volta voce freou" in t.lower() for t in texts))
++
++    def test_the_reference_comes_from_configuration(self):
++        import os
++        previous = os.environ.get("AT_COACH_REFERENCE")
++        try:
++            os.environ["AT_COACH_REFERENCE"] = "minha_melhor"
++            self.assertEqual(configured_reference_kind(), REFERENCE_OWN_BEST)
++            os.environ["AT_COACH_REFERENCE"] = "qualquer"
++            self.assertEqual(configured_reference_kind(), REFERENCE_AI)
++        finally:
++            if previous is None:
++                os.environ.pop("AT_COACH_REFERENCE", None)
++            else:
++                os.environ["AT_COACH_REFERENCE"] = previous
++
++    def test_a_model_without_the_reference_stays_silent(self):
++        del self.model.references[REFERENCE_OWN_BEST]
++        self.assertFalse(self.model.use_reference(REFERENCE_OWN_BEST))
++        self.assertFalse(self.model.has_reference)
++
++
++class NotComparableSlicesTest(TwoReferencesTest):
++    def test_a_slice_where_the_car_stopped_is_not_compared(self):
++        """Medido em 04/10: saindo do box, "52.84s atras ... a sua 0 km/h"."""
++        lap = synthetic_lap(self.track, 60.5, brake_at=288.0)
++        stop = int(len(lap) * 0.4)
++        parked = pd.concat([lap.iloc[[stop]]] * int(20 * HZ), ignore_index=True)
++        parked["speed_kmh"] = 0.0
++        lap = pd.concat([lap.iloc[:stop], parked, lap.iloc[stop:]], ignore_index=True)
++        lap.loc[stop:, "elapsed_s"] = lap.loc[stop:, "elapsed_s"].to_numpy() + np.r_[
++            np.arange(len(parked)) / HZ, np.full(len(lap) - stop - len(parked), len(parked) / HZ)]
++        bus = self.drive(lap)
++        sector = int(0.4 * 60)
++        self.assertFalse([e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == sector])
++
++    def test_the_slice_the_count_starts_in_is_not_compared(self):
++        lap = synthetic_lap(self.track, 60.5, slow=[(10, 2.0)], brake_at=288.0)
++        start = int(len(lap) * 10.5 / 60)                   # comeca no meio do microsetor 10
++        bus = self.drive(lap.iloc[start:].reset_index(drop=True))
++        self.assertFalse([e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == 10])
++
++
++class SummaryRoundingTest(TwoReferencesTest):
++    def test_no_summary_when_the_lap_matches_the_reference(self):
++        """Medido: a melhor volta contra ela mesma listava "setor 0 (0.00s)"."""
++        self.model.use_reference(REFERENCE_OWN_BEST)
++        bus = self.drive(synthetic_lap(self.track, 60.5, brake_at=296.0))
++        self.assertEqual(bus.of(ENGINEER_SPEECH), [])
++
++
++if __name__ == "__main__":
++    unittest.main()
 diff --git a/backend/tests/test_coach_official_geometry.py b/backend/tests/test_coach_official_geometry.py
 new file mode 100644
 index 00000000..a2310078
@@ -2228,10 +2793,10 @@ index 00000000..a2310078
 +    unittest.main()
 diff --git a/backend/tests/test_coach_reference_lap.py b/backend/tests/test_coach_reference_lap.py
 new file mode 100644
-index 00000000..efdff578
+index 00000000..02211826
 --- /dev/null
 +++ b/backend/tests/test_coach_reference_lap.py
-@@ -0,0 +1,217 @@
+@@ -0,0 +1,227 @@
 +"""Coach contra a volta de referencia (ADR 0012).
 +
 +O modo padrao mede cada microsetor contra uma volta real e completa do piloto
@@ -2377,13 +2942,23 @@ index 00000000..efdff578
 +        self.assertEqual(event["evidence"]["referenceLapId"], "ref")
 +        self.assertIn("referenceSeconds", event["evidence"])
 +        self.assertNotIn("bestSeconds", event["evidence"])
-+        self.assertIn("Volta de referencia: 85.00s", self.bus.of(ENGINEER_SPEECH)[0]["message"])
++        # ADR 0016: o fim da volta lista os trechos de maior diferenca e nomeia a referencia.
++        summary = self.bus.of(ENGINEER_SPEECH)[0]["message"]
++        self.assertIn("Maiores diferencas para a sua volta de referencia: setor 22", summary)
++        self.assertIn("Sua volta de referencia: 85.00s", summary)
 +
-+    def test_the_reference_goal_is_said_when_there_is_one(self):
-+        drive(self.coach, seconds=85.0, slow_slice=(22, 0.6))
++    def test_the_reference_braking_is_said_relative_to_the_driver(self):
++        """ADR 0016: a freada aparece em relacao a referencia, nao como posicao absoluta."""
++        driven = lap(85.0, slow=(22, 0.6), brake_at=0.3640, min_speed=100.0)
++        for number, frame in ((5, driven), (6, lap(85.0))):
++            for row in frame.itertuples():
++                self.coach.on_frame({"p": row.p, "s": row.s, "lap_time": row.elapsed_s, "lap_number": number,
++                                     "speedKmh": row.speed_kmh, "brake": row.brake, "track": "vhe_interlagos"})
 +        event = self.bus.of(COACHING_EVENT)[0]
-+        self.assertIn("Na referencia: freada em", event["event"])
-+        self.assertIn("minima de 110 km/h", event["event"])
++        self.assertNotIn("freada em", event["event"])
++        self.assertIn("A referencia freia", event["event"])
++        self.assertIn("depois de voce", event["event"])
++        self.assertIn("minima na referencia 110 km/h, a sua 100 km/h", event["event"])
 +
 +    def test_threshold_is_unchanged(self):
 +        # Mesmo limiar nos dois modos: 2 x (mediana - melhor) do microsetor.
@@ -2471,6 +3046,28 @@ index fbe0d4c4..5f6efa3b 100644
          drive(self.coach, seconds=85.0, lap=5, slow_slice=(22, 1.4))
          drive(self.coach, seconds=85.0, lap=6, slow_slice=(22, 1.4))
          speech = self.bus.of(ENGINEER_SPEECH)
+diff --git a/backend/tests/test_lap_origin.py b/backend/tests/test_lap_origin.py
+index adf7aa4a..e437cc09 100644
+--- a/backend/tests/test_lap_origin.py
++++ b/backend/tests/test_lap_origin.py
+@@ -275,11 +275,13 @@ class SelectionTests(unittest.TestCase):
+ 
+ 
+ class CoachTrainingFilterTests(unittest.TestCase):
+-    def test_the_trainer_filters_by_origin_before_loading_anything(self):
++    def test_the_trainer_chooses_laps_from_the_labelled_inventory_before_loading_anything(self):
++        """ADR 0016: a referencia da IA e a oscilacao do piloto saem do inventario rotulado."""
+         source = (BACKEND / "tools" / "train_reference_model.py").read_text(encoding="utf-8")
+-        self.assertIn("inventory, origins, args.incluir_relogio_suspeito, parse_equipment(args.equipamento)", source)
+-        self.assertIn('"origem" not in inventory.columns', source)
+-        self.assertLess(source.index("replay_selection("), source.index("loader.load_lap("))
++        self.assertIn("driver_laps(inventory, pits, cars=cars, car=car)", source)
++        self.assertIn("ai_laps(inventory, pits, cars=cars, car=car, since=args.ia_desde)", source)
++        self.assertIn('{"origem", "equipamento", "relogio_suspeito"} - set(inventory.columns)', source)
++        self.assertLess(source.index("driver_laps(inventory, pits, cars"), source.index("load_laps(mine, sessions)"))
+ 
+ 
+ class FolderTests(unittest.TestCase):
 diff --git a/backend/tests/test_optimal_line.py b/backend/tests/test_optimal_line.py
 index fe52b535..157d9096 100644
 --- a/backend/tests/test_optimal_line.py
@@ -2514,6 +3111,166 @@ index fe52b535..157d9096 100644
          attach(model, OptimalLine.from_dict(
              payload(microsectors=model.microsectors, seconds_each=85.0 / model.microsectors * 0.9)
          ))
+diff --git a/backend/tools/ensaio_coach.py b/backend/tools/ensaio_coach.py
+new file mode 100644
+index 00000000..0174bb81
+--- /dev/null
++++ b/backend/tools/ensaio_coach.py
+@@ -0,0 +1,154 @@
++"""Ensaio do coach da fase de aprendizado (pedido 14, ADR 0016).
++
++    python tools/ensaio_coach.py --modelo M.json --geometria-arquivo G.json --saida ensaio.json
++        [--sessao-prefixo 2026-10-04] [--voltas lap_id ...]
++
++O coach roda amostra por amostra, na ordem gravada, sobre os arquivos da sessao
++rotulada, nos dois modos de referencia. Cada frase fica ligada a volta do `ml`
++em que foi dita (pelo relogio das amostras); contam as voltas `humano` do
++inventario rotulado (ou as dadas em `--voltas`). O intervalo minimo entre falas
++e zerado, como no replay: o de 3 s usa o relogio da maquina e, numa reproducao
++rapida, calaria quase tudo. O teto de 3 frases por volta continua valendo.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++from collections import Counter
++from pathlib import Path
++from typing import Dict, List, Optional
++
++import numpy as np
++import pandas as pd
++
++BACKEND = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(BACKEND))
++
++from core.assisted_analysis.official_geometry import OfficialGeometry  # noqa: E402
++from core.assisted_analysis.reference_model import REFERENCE_KINDS, DriverReferenceModel  # noqa: E402
++from core.live.driving_coach import LiveDrivingCoach  # noqa: E402
++from core.telemetry_events import COACHING_EVENT, ENGINEER_SPEECH  # noqa: E402
++from ml import config  # noqa: E402
++from ml.data.recordings import list_all_sessions  # noqa: E402
++
++
++class Bus:
++    def __init__(self):
++        self.items: List[tuple] = []
++
++    def schedule(self, topic, payload, loop_ref=None):
++        self.items.append((topic, payload))
++
++
++def lap_finder(laps: pd.DataFrame):
++    starts = laps["inicio_epoch_s"].to_numpy(dtype=float)
++    ends = laps["fim_epoch_s"].to_numpy(dtype=float)
++    ids = laps["lap_id"].to_numpy()
++
++    def find(stamp_s: float) -> Optional[str]:
++        hit = np.flatnonzero((starts <= stamp_s) & (stamp_s <= ends))
++        return str(ids[hit[0]]) if hit.size else None
++
++    return find
++
++
++def run(model: DriverReferenceModel, kind: str, geometry, sessions, laps: pd.DataFrame) -> Dict[str, object]:
++    model.use_reference(kind)
++    find = lap_finder(laps)
++    wanted = set(laps["lap_id"])
++    phrases: List[Dict[str, object]] = []
++    for session in sessions:
++        bus = Bus()
++        coach = LiveDrivingCoach(bus, lambda _t: model, geometry_provider=lambda _t: geometry, min_gap_seconds=0.0)
++        with (session.directory / "player.jsonl").open("r", encoding="utf-8") as handle:
++            for line in handle:
++                try:
++                    payload = json.loads(line)
++                except json.JSONDecodeError:
++                    continue
++                sample = dict(payload.get("sample", payload))
++                sample.setdefault("track", payload.get("track"))
++                before = len(bus.items)
++                coach.on_frame(sample)
++                for topic, item in bus.items[before:]:
++                    stamp = payload.get("timestamp") or sample.get("timestamp")
++                    lap_id = find(float(stamp) / 1000.0) if stamp is not None else None
++                    if lap_id not in wanted:
++                        continue
++                    phrases.append({
++                        "volta": lap_id,
++                        "tipo": "trecho" if topic == COACHING_EVENT else "fim de volta",
++                        "microsetor": (item.get("evidence") or {}).get("microsector") if topic == COACHING_EVENT else None,
++                        "texto": item.get("event") if topic == COACHING_EVENT else item.get("message"),
++                    })
++    per_lap = Counter(p["volta"] for p in phrases if p["tipo"] == "trecho")
++    counts = np.array([per_lap.get(lap_id, 0) for lap_id in sorted(wanted)])
++    sectors = Counter(p["microsetor"] for p in phrases if p["tipo"] == "trecho")
++    valid_ids = sorted(laps.loc[laps["valid"].astype(bool), "lap_id"])
++    valid_counts = np.array([per_lap.get(lap_id, 0) for lap_id in valid_ids])
++    valid_sectors = Counter(p["microsetor"] for p in phrases if p["tipo"] == "trecho" and p["volta"] in set(valid_ids))
++    return {
++        "voltas_validas": {
++            "voltas": len(valid_ids),
++            "frases_por_volta": {"media": float(valid_counts.mean()) if valid_counts.size else 0.0,
++                                 "mediana": float(np.median(valid_counts)) if valid_counts.size else 0.0,
++                                 "max": int(valid_counts.max()) if valid_counts.size else 0},
++            "microsetores_mais_citados": [{"microsetor": int(k), "frases": int(v)} for k, v in valid_sectors.most_common(10)],
++        },
++        "referencia": kind,
++        "volta_de_referencia": model.reference_lap_id,
++        "tempo_da_referencia_s": model.reference_lap_seconds,
++        "voltas": len(wanted),
++        "frases_de_trecho": int(sum(per_lap.values())),
++        "frases_de_fim_de_volta": sum(1 for p in phrases if p["tipo"] == "fim de volta"),
++        "frases_por_volta": {"media": float(counts.mean()) if counts.size else 0.0,
++                             "mediana": float(np.median(counts)) if counts.size else 0.0,
++                             "max": int(counts.max()) if counts.size else 0},
++        "microsetores_mais_citados": [{"microsetor": int(k), "frases": int(v)} for k, v in sectors.most_common(10)],
++        "frases": phrases,
++    }
++
++
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("--modelo", type=Path, required=True)
++    parser.add_argument("--geometria-arquivo", type=Path, required=True)
++    parser.add_argument("--saida", type=Path, required=True)
++    parser.add_argument("--sessao-prefixo", default="2026-10-04")
++    parser.add_argument("--voltas", nargs="*", default=None, help="lap_id do ml (padrao: as voltas humano da sessao)")
++    args = parser.parse_args(argv)
++
++    geometry = OfficialGeometry.load(args.geometria_arquivo)
++    model = DriverReferenceModel.load(args.modelo)
++    if geometry is None or model is None:
++        print("PARADO: geometria ou modelo ilegivel")
++        return 2
++    inventory = pd.read_parquet(config.artifacts_root() / "origem" / "lap_inventory.parquet")
++    laps = inventory[inventory["session_id"].str.startswith(args.sessao_prefixo)]
++    laps = laps[laps["lap_id"].isin(args.voltas)] if args.voltas else laps[laps["origem"] == "humano"]
++    sessions = sorted((s for s in list_all_sessions() if s.session_id.startswith(args.sessao_prefixo)),
++                      key=lambda s: s.session_id)
++    sessions = [s for s in sessions if s.session_id in set(laps["session_id"])]
++
++    result = {"modelo": str(args.modelo), "sessoes": [s.session_id for s in sessions], "modos": {}}
++    for kind in REFERENCE_KINDS:
++        if kind not in model.references:
++            continue
++        out = run(model, kind, geometry, sessions, laps)
++        result["modos"][kind] = out
++        print(f"{kind}: {out['voltas']} voltas, {out['frases_de_trecho']} frases de trecho "
++              f"({out['frases_por_volta']}), {out['frases_de_fim_de_volta']} de fim de volta; "
++              f"mais citados {out['microsetores_mais_citados'][:5]}")
++        print(f"   so voltas validas: {out['voltas_validas']}")
++    texts = [p["texto"] for m in result["modos"].values() for p in m["frases"]]
++    result["frases_proibidas"] = [t for t in texts if any(w in t.lower() for w in ("ganh", "ideal", "otimo"))]
++    args.saida.parent.mkdir(parents=True, exist_ok=True)
++    args.saida.write_text(json.dumps(result, indent=1, ensure_ascii=False), encoding="utf-8")
++    print(f"frases proibidas: {len(result['frases_proibidas'])}\n-> {args.saida}")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
 diff --git a/backend/tools/measure_reference_optimism.py b/backend/tools/measure_reference_optimism.py
 new file mode 100644
 index 00000000..53e8ff02
@@ -2746,142 +3503,343 @@ index 00000000..53e8ff02
 +if __name__ == "__main__":
 +    raise SystemExit(main())
 diff --git a/backend/tools/train_reference_model.py b/backend/tools/train_reference_model.py
-index 33697713..0fbf2d21 100644
+index 33697713..f202a16e 100644
 --- a/backend/tools/train_reference_model.py
 +++ b/backend/tools/train_reference_model.py
-@@ -2,8 +2,19 @@
- Fit the driver's reference model from everything he has recorded.
- 
-     python tools/train_reference_model.py [--track vhe_interlagos] [--limit N]
-+        [--modo reference_lap|best_per_microsector] [--volta-referencia <lap_id>]
+@@ -1,184 +1,185 @@
+ """
+-Fit the driver's reference model from everything he has recorded.
+-
+-    python tools/train_reference_model.py [--track vhe_interlagos] [--limit N]
+-        [--origem humano ...|todas] [--incluir-relogio-suspeito] [--inventario ARQUIVO]
+-
+-Walks the recorded laps, keeps the ones whose sampling holds up, times each
+-through every microsector, and writes the model the analysis engine measures
+-against. Prints what it learned and what it threw away.
+-
+-Only the driver's laps go in (ADR 0014): by default a lap must be `humano` in
+-the `ml` inventory, with its clock checked and not `relogio_suspeito`, and not
+-a duplicate. The inventory must be one built after ADR 0014
+-(`python -m ml.scripts.build_inventory`); an older one has no `origem` and the
+-tool stops instead of guessing.
++Fit the coach's reference model for the learning phase (ADR 0016).
++
++    python tools/train_reference_model.py [--track vhe_interlagos]
++        [--inventario data/ml/origem/lap_inventory.parquet]
 +        [--geometria-arquivo <pista>.geometry.json] [--saida ARQUIVO]
-         [--origem humano ...|todas] [--incluir-relogio-suspeito] [--inventario ARQUIVO]
++        [--carro CARRO] [--ia-desde 2026-10-04] [--dry-run]
++
++The model carries two references, both real, complete laps:
++
++* ``volta_ia`` (the default): the best clean lap of the game's AI, from sessions
++  recorded from 2026-10-04 on (the current recorder and AI), in the same car;
++* ``minha_melhor``: the driver's best clean lap, `humano` with the current
++  equipment (ADR 0015).
++
++The driver's spread through each microsector -- the speaking threshold -- comes
++only from his own laps (`humano`, current equipment). Which laps are which comes
++from the `ml` inventory with the labels of pedidos 12 and 13; a lap is clean
++when it is valid, unique, its clock checked and not suspect, and it did not go
++through the pits. Laps are read by their `ml` identity (`<session>#<order>`):
++the game's lap counter repeats after a session restart, and the replay identity
++(`rec__<session>__<n>`) would glue an AI lap and a driver's lap together.
++
++Every lap is projected on the official geometry (ADR 0013). By default the model
++is written to the repository's `data/reference_models/`, the one the
++development app reads; the installed app's model is written only when asked
++for with `--saida`.
+ """
  
-+Modo padrao (ADR 0012): a volta de referencia e a melhor volta valida e completa
-+da pista -- ou a escolhida com --volta-referencia -- e o coach mede cada trecho
-+contra ela.
-+
-+Geometria (ADR 0013): toda volta e reprojetada pela posicao no mundo na
-+geometria oficial exportada por `python -m ml.scripts.export_geometry`, e o
-+modelo grava o `geometry_id` dela. Por isso entram voltas de qualquer cache,
-+inclusive as de 2026-08-09, que nao tem `p`.
-+
- Walks the recorded laps, keeps the ones whose sampling holds up, times each
- through every microsector, and writes the model the analysis engine measures
- against. Prints what it learned and what it threw away.
-@@ -29,8 +40,11 @@ if str(BACKEND_DIR) not in sys.path:
+ from __future__ import annotations
+ 
+ import argparse
+-import os
+ import sys
+-import time
+ from datetime import datetime, timezone
+ from pathlib import Path
++from typing import Dict, List, Optional, Tuple
+ 
+ BACKEND_DIR = Path(__file__).resolve().parents[1]
+ if str(BACKEND_DIR) not in sys.path:
      sys.path.insert(0, str(BACKEND_DIR))
  
- from core.assisted_analysis.lap_loader import LapDataLoader  # noqa: E402
+-from core.assisted_analysis.lap_loader import LapDataLoader  # noqa: E402
++import numpy as np  # noqa: E402
++import pandas as pd  # noqa: E402
++
 +from core.assisted_analysis.official_geometry import OfficialGeometry, find_official_geometry  # noqa: E402
  from core.assisted_analysis.reference_model import (  # noqa: E402
-     DEFAULT_MICROSECTORS,
-+    MODE_REFERENCE_LAP,
-+    MODES,
+-    DEFAULT_MICROSECTORS,
++    DEFAULT_REFERENCE,
++    REFERENCE_AI,
++    REFERENCE_OWN_BEST,
      build_reference_model,
-     lap_is_usable,
+-    lap_is_usable,
      model_path,
-@@ -56,10 +70,19 @@ def runtime_root() -> Path:
- def main() -> int:
-     parser = argparse.ArgumentParser(description="Treina o modelo de referencia do piloto")
-     parser.add_argument("--track", default=None, help="pista (padrao: a mais gravada)")
++    reference_from_laps,
+ )
+-from core.live.runtime_state import RuntimeState  # noqa: E402
+-from core.telemetry.telemetry_buffer import TelemetryBuffer  # noqa: E402
+-from ml.data.inventory import inventory_path  # noqa: E402
+-from ml.data.origin import ORIGINS, parse_equipment, parse_origins, replay_selection  # noqa: E402
+-
+-
+-def runtime_root() -> Path:
+-    configured = os.environ.get("AT_BACKEND_RUNTIME_ROOT")
+-    if configured:
+-        return Path(configured)
+-    appdata = os.environ.get("APPDATA")
+-    if appdata:
+-        packaged = Path(appdata) / "Automobilista Telemetria"
+-        if packaged.exists():
+-            return packaged
+-    return BACKEND_DIR.parent
+-
+-
+-def main() -> int:
+-    parser = argparse.ArgumentParser(description="Treina o modelo de referencia do piloto")
+-    parser.add_argument("--track", default=None, help="pista (padrao: a mais gravada)")
 -    parser.add_argument("--limit", type=int, default=150,
 -                        help="usar as N voltas mais rapidas (0 = todas)")
-+    parser.add_argument("--limit", type=int, default=0,
-+                        help="usar as N voltas mais rapidas (0 = todas, o padrao)")
-     parser.add_argument("--microsectors", type=int, default=DEFAULT_MICROSECTORS)
+-    parser.add_argument("--microsectors", type=int, default=DEFAULT_MICROSECTORS)
++from ml import config  # noqa: E402
++from ml.data.ai_detector import pit_lap  # noqa: E402
++from ml.data.coach_references import AI_SINCE, ai_laps, driver_laps, most_common_car  # noqa: E402
++from ml.data.recordings import iter_laps, list_all_sessions  # noqa: E402
++from ml.track.geometry import load_geometry  # noqa: E402
++from ml.track.microsectors import build_microsectors  # noqa: E402
++
++LapTuple = Tuple[str, Optional[float], Optional[int], pd.DataFrame]
++
++
++def coach_frame(lap) -> pd.DataFrame:
++    """An `ml` lap in the shape the coach's model fitting reads."""
++    frame = lap.frame
++    lap_time = pd.to_numeric(frame["lap_time_s"], errors="coerce")
++    return pd.DataFrame({
++        "x": pd.to_numeric(frame["x"], errors="coerce"),
++        "z": pd.to_numeric(frame["z"], errors="coerce"),
++        "elapsed_s": lap_time - lap_time.min(),
++        "speed_kmh": pd.to_numeric(frame["speed_kmh"], errors="coerce"),
++        "brake": pd.to_numeric(frame["brake"], errors="coerce"),
++        "throttle": pd.to_numeric(frame["throttle"], errors="coerce"),
++        "lap_number": lap.lap_number,
++    }).dropna(subset=["x", "z", "elapsed_s"]).reset_index(drop=True)
++
++
++def load_laps(rows: pd.DataFrame, sessions) -> List[LapTuple]:
++    """Read the chosen laps by their `ml` identity, one pass per session."""
++    wanted: Dict[str, Dict[int, pd.Series]] = {}
++    for _, row in rows.iterrows():
++        wanted.setdefault(row["session_id"], {})[int(row["sequence"])] = row
++    laps: List[LapTuple] = []
++    for session_id, by_sequence in sorted(wanted.items()):
++        for lap in iter_laps(sessions[session_id]):
++            row = by_sequence.get(lap.sequence)
++            if row is not None:
++                laps.append((lap.lap_id, float(row["duration_s"]), int(row["raw_samples"]), coach_frame(lap)))
++    return laps
++
++
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description="Modelo do coach na fase de aprendizado (ADR 0016)")
++    parser.add_argument("--track", default="vhe_interlagos")
++    parser.add_argument("--inventario", type=Path, default=config.artifacts_root() / "origem" / "lap_inventory.parquet",
++                        help="inventario do ml com origem e equipamento (pedidos 12 e 13)")
++    parser.add_argument("--geometria-arquivo", type=Path, default=None,
++                        help="geometria oficial exportada (padrao: data/reference_models/<pista>.geometry.json)")
++    parser.add_argument("--saida", type=Path, default=None,
++                        help="onde gravar (padrao: data/reference_models do repositorio, lido pelo app de desenvolvimento)")
++    parser.add_argument("--carro", default=None, help="carModel (padrao: o das voltas do piloto)")
++    parser.add_argument("--ia-desde", default=AI_SINCE, help="data minima das sessoes da IA")
      parser.add_argument("--dry-run", action="store_true", help="nao grava o modelo")
-+    parser.add_argument("--modo", default=MODE_REFERENCE_LAP, choices=MODES)
-+    parser.add_argument("--volta-referencia", default=None, help="lap_id da volta de referencia")
-+    parser.add_argument("--saida", type=Path, default=None, help="grava aqui em vez do caminho do runtime")
-+    parser.add_argument(
-+        "--geometria-arquivo",
-+        type=Path,
-+        default=None,
-+        help="geometria oficial exportada (padrao: data/reference_models/<pista>.geometry.json)",
-+    )
-     parser.add_argument("--origem", nargs="*", default=None, choices=list(ORIGINS) + ["todas"],
-                         help="origens aceitas (padrao: humano; 'todas' = sem filtro)")
-     parser.add_argument("--incluir-relogio-suspeito", action="store_true",
-@@ -96,6 +119,15 @@ def main() -> int:
- 
-     selected = [lap for lap in descriptors if not track or lap.track == track]
- 
-+    geometry = (
-+        OfficialGeometry.load(args.geometria_arquivo)
-+        if args.geometria_arquivo
-+        else find_official_geometry([root, BACKEND_DIR.parent], track or "unknown")
-+    )
-+    if geometry is None:
-+        print("PARADO: geometria oficial nao encontrada. Rode antes: python -m ml.scripts.export_geometry")
-+        return 2
-+    print(f"geometria oficial : {geometry.geometry_id}  ({geometry.length:.2f} m, {geometry.microsectors} microsetores)")
-     # Quem pilotou (ADR 0014): so entra o que o inventario diz que e do piloto.
-     if origins is not None or not args.incluir_relogio_suspeito:
-         import pandas as pd
-@@ -133,32 +165,45 @@ def main() -> int:
- 
-     laps = []
-     started = time.monotonic()
+-    parser.add_argument("--origem", nargs="*", default=None, choices=list(ORIGINS) + ["todas"],
+-                        help="origens aceitas (padrao: humano; 'todas' = sem filtro)")
+-    parser.add_argument("--incluir-relogio-suspeito", action="store_true",
+-                        help="aceita voltas com relogio suspeito ou nao conferido")
+-    parser.add_argument("--equipamento", nargs="*", default=None, choices=["atual", "anterior", "todos"],
+-                        help="equipamento das voltas humano (padrao: atual, ADR 0015)")
+-    parser.add_argument("--inventario", type=Path, default=None,
+-                        help="inventario do ml com a coluna origem (padrao: data/ml/lap_inventory.parquet)")
+-    args = parser.parse_args()
+-    origins = parse_origins(args.origem)
+-
+-    root = runtime_root()
+-    recordings = [root / "data" / "recordings", BACKEND_DIR.parent / "data" / "recordings"]
+-    print(f"lendo gravacoes de: {recordings[0]}")
+-
+-    loader = LapDataLoader(
+-        repo_root=BACKEND_DIR.parent,
+-        buffer_provider=lambda: TelemetryBuffer(max_size=1),
+-        runtime_state_provider=RuntimeState,
+-        recordings_roots=recordings,
+-    )
+-
+-    descriptors = loader.list_laps(include_buffer=False)
+-    print(f"voltas encontradas: {len(descriptors)}")
+-
+-    track = args.track
+-    if not track:
+-        counts: dict[str, int] = {}
+-        for lap in descriptors:
+-            if lap.track:
+-                counts[lap.track] = counts.get(lap.track, 0) + 1
+-        track = max(counts, key=counts.get) if counts else ""
+-        print(f"pista escolhida   : {track or '(sem pista)'}")
+-
+-    selected = [lap for lap in descriptors if not track or lap.track == track]
+-
+-    # Quem pilotou (ADR 0014): so entra o que o inventario diz que e do piloto.
+-    if origins is not None or not args.incluir_relogio_suspeito:
+-        import pandas as pd
+-
+-        path = args.inventario or inventory_path()
+-        if not path.exists():
+-            print(f"PARADO: inventario nao encontrado em {path}. Rode: python -m ml.scripts.build_inventory")
+-            return 2
+-        inventory = pd.read_parquet(path)
+-        if "origem" not in inventory.columns:
+-            print(f"PARADO: o inventario {path} e anterior ao ADR 0014 (sem a coluna origem).")
+-            return 2
+-        allowed = replay_selection(
+-            inventory, origins, args.incluir_relogio_suspeito, parse_equipment(args.equipamento)
+-        )
+-        before = len(selected)
+-        selected = [lap for lap in selected if lap.lap_id in allowed]
+-        print(f"filtro de origem  : {origins if origins is not None else 'todas'}"
+-              f"{'' if args.incluir_relogio_suspeito else ', relogio conferido e nao suspeito'}"
+-              f" -> {len(selected)} de {before} voltas")
+-        if not selected:
+-            print("PARADO: nenhuma volta passa no filtro de origem. Modelo nao gravado.")
+-            return 2
+-
+-    # Cheapest filter first: no point loading a lap the model will refuse.
+-    plausible = [lap for lap in selected if lap_is_usable(lap.lap_time, lap.sample_count)[0]]
+-    skipped_early = len(selected) - len(plausible)
+-    plausible.sort(key=lambda lap: float(lap.lap_time or 9e9))
+-    if args.limit:
+-        plausible = plausible[: args.limit]   # ja ordenadas por tempo
+-
+-    print(f"voltas da pista   : {len(selected)}")
+-    print(f"reprovadas no filtro rapido: {skipped_early}")
+-    print(f"a carregar        : {len(plausible)}")
+-
+-    laps = []
+-    started = time.monotonic()
 -    for index, descriptor in enumerate(plausible, start=1):
 -        try:
 -            _, df = loader.load_lap(descriptor.lap_id)
 -        except Exception as error:
 -            print(f"  ! {descriptor.lap_id}: {error}")
 -            continue
-+    # Gravacoes em lote: cada sessao e lida uma vez (load_recorded_laps).
-+    recorded = [lap for lap in plausible if lap.lap_id.startswith("rec__")]
-+    frames = loader.load_recorded_laps([lap.lap_id for lap in recorded]) if recorded else {}
-+    for descriptor in plausible:
-+        if descriptor.lap_id in frames:
-+            df = frames[descriptor.lap_id][1]
-+        else:
-+            try:
-+                _, df = loader.load_lap(descriptor.lap_id)
-+            except Exception as error:
-+                print(f"  ! {descriptor.lap_id}: {error}")
-+                continue
-         laps.append((descriptor.lap_id, descriptor.lap_time, descriptor.sample_count, df))
+-        laps.append((descriptor.lap_id, descriptor.lap_time, descriptor.sample_count, df))
 -        if index % 25 == 0 or index == len(plausible):
 -            elapsed = time.monotonic() - started
 -            print(f"  carregadas {index}/{len(plausible)}  ({elapsed:.0f}s)")
-+    print(f"  carregadas {len(laps)}/{len(plausible)}  ({time.monotonic() - started:.0f}s)")
++    args = parser.parse_args(argv)
  
++    repo = BACKEND_DIR.parent
++    geometry = (
++        OfficialGeometry.load(args.geometria_arquivo)
++        if args.geometria_arquivo
++        else find_official_geometry([repo], args.track)
++    )
++    if geometry is None:
++        print("PARADO: geometria oficial nao encontrada. Rode antes: python -m ml.scripts.export_geometry")
++        return 2
++    print(f"geometria oficial : {geometry.geometry_id}  ({geometry.length:.2f} m, {geometry.microsectors} microsetores)")
++
++    if not args.inventario.exists():
++        print(f"PARADO: inventario nao encontrado em {args.inventario}. Rode: python -m ml.scripts.report_lap_origin")
++        return 2
++    inventory = pd.read_parquet(args.inventario)
++    missing = {"origem", "equipamento", "relogio_suspeito"} - set(inventory.columns)
++    if missing:
++        print(f"PARADO: o inventario {args.inventario} nao tem {sorted(missing)} (pedidos 12 e 13).")
++        return 2
++    inventory = inventory[inventory["track"].fillna("").str.startswith(args.track)]
++
++    sessions = {s.session_id: s for s in list_all_sessions()}
++    cars = {sid: ((s.metadata().get("metadata") or {}).get("carModel")) for sid, s in sessions.items()}
++    grids_path = config.artifacts_root() / "origem" / "grade_voltas.parquet"
++    track = load_geometry()
++    sectors = build_microsectors(track)
++    pits = set()
++    if grids_path.exists():
++        for lap_id, grid in pd.read_parquet(grids_path).groupby("lap_id"):
++            if pit_lap(grid.sort_values("grid_index"), sectors):
++                pits.add(lap_id)
++
++    mine = driver_laps(inventory, pits)
++    car = args.carro or most_common_car(mine, cars)
++    mine = driver_laps(inventory, pits, cars=cars, car=car)
++    theirs = ai_laps(inventory, pits, cars=cars, car=car, since=args.ia_desde)
++    print(f"carro             : {car}")
++    print(f"voltas do piloto  : {len(mine)} (humano, equipamento atual, limpas)")
++    print(f"voltas da IA      : {len(theirs)} (ia, sessoes desde {args.ia_desde}, limpas)")
++    if mine.empty:
++        print("PARADO: nenhuma volta limpa do piloto com o equipamento atual. Modelo nao gravado.")
++        return 2
++
++    my_laps = load_laps(mine, sessions)
++    ai_lap_tuples = load_laps(theirs, sessions)
      model = build_reference_model(
-         laps,
-         track=track or "",
-         microsectors=args.microsectors,
-         built_at=datetime.now(timezone.utc).isoformat(),
-+        mode=args.modo,
-+        reference_lap_id=args.volta_referencia,
-+        geometry=geometry,
+-        laps,
+-        track=track or "",
+-        microsectors=args.microsectors,
+-        built_at=datetime.now(timezone.utc).isoformat(),
++        my_laps, track=args.track, built_at=datetime.now(timezone.utc).isoformat(), geometry=geometry,
      )
++    for kind, laps in ((REFERENCE_OWN_BEST, my_laps), (REFERENCE_AI, ai_lap_tuples)):
++        reference, candidates = reference_from_laps(laps, geometry=geometry, kind=kind) if laps else (None, [])
++        print(f"\nreferencia {kind}:")
++        for candidate in candidates:
++            print(f"  {candidate['lap_seconds']:.3f}s  {candidate['lap_id']}  -> {candidate['motivo']}")
++        if reference is None:
++            print("  (nenhuma volta valida e completa)")
++            continue
++        reference["carro"] = car
++        model.references[kind] = reference
++    active = model.use_reference(DEFAULT_REFERENCE)
  
++    spreads = [t.median_seconds - t.best_seconds for t in model.targets]
      print()
      print("=" * 58)
-     print(f"voltas no modelo   : {model.lap_count}")
-     print(f"descartadas        : {model.rejected_count}  {model.rejected_reasons}")
-+    print(f"modo               : {model.mode}")
-+    print(f"volta de referencia: {model.reference_lap_seconds}s  ({model.reference_lap_id})")
-+    print(f"geometria          : {model.geometry_id}")
-     print(f"melhor volta real  : {model.best_lap_seconds}s  ({model.best_lap_id})")
+-    print(f"voltas no modelo   : {model.lap_count}")
+-    print(f"descartadas        : {model.rejected_count}  {model.rejected_reasons}")
+-    print(f"melhor volta real  : {model.best_lap_seconds}s  ({model.best_lap_id})")
 -    print(f"volta ideal        : {model.ideal_lap_seconds}s")
 -    print(f"na mesa            : {model.gap_best_to_ideal}s")
-+    # A soma dos melhores trechos e um limite otimista, nao uma meta (ADR 0012).
-+    print(f"soma dos melhores trechos (limite otimista, nao meta): {model.ideal_lap_seconds}s")
++    print(f"voltas do piloto no modelo : {model.lap_count}  (recusadas {model.rejected_count} {model.rejected_reasons})")
++    print(f"referencia ativa           : {model.reference_kind} {model.reference_lap_id} {model.reference_lap_seconds}s"
++          if active else "referencia ativa           : nenhuma")
++    if spreads:
++        print(f"oscilacao (mediana - melhor) por microsetor: mediana {np.median(spreads):.3f}s, "
++              f"p90 {np.percentile(spreads, 90):.3f}s")
++    print(f"geometria                  : {model.geometry_id}")
      print("=" * 58)
-+    print("\nas 5 voltas validas mais rapidas:")
-+    for candidate in model.reference_candidates:
-+        print(f"  {candidate['lap_seconds']:.3f}s  {candidate['lap_id']}  -> {candidate['motivo']}")
  
-     if model.targets:
-         spread = sorted(
-@@ -178,7 +223,7 @@ def main() -> int:
+-    if model.targets:
+-        spread = sorted(
+-            model.targets,
+-            key=lambda target: target.median_seconds - target.best_seconds,
+-            reverse=True,
+-        )
+-        print("\nonde o piloto mais oscila (mediana - melhor):")
+-        for target in spread[:8]:
+-            delta = target.median_seconds - target.best_seconds
+-            print(
+-                f"  setor {target.index:2d} ({target.start_p:.2f}-{target.end_p:.2f} da volta): "
+-                f"{delta:+.3f}s   melhor {target.best_seconds:.3f}s em {target.best_lap_id}"
+-            )
+-
+     if args.dry_run:
          print("\n--dry-run: modelo nao gravado")
          return 0
- 
+-
 -    path = model.save(model_path(root, track or "unknown"))
-+    path = model.save(args.saida or model_path(root, track or "unknown"))
++    path = model.save(args.saida or model_path(repo, args.track))
      print(f"\nmodelo gravado em: {path}")
      return 0
  
@@ -3273,12 +4231,22 @@ index 00000000..4d87c4ba
 +
 +if __name__ == "__main__":
 +    raise SystemExit(main())
+diff --git a/docs/backlog.md b/docs/backlog.md
+index e4d26ec4..34f0861e 100644
+--- a/docs/backlog.md
++++ b/docs/backlog.md
+@@ -29,3 +29,5 @@ Lista viva de problemas conhecidos e tarefas adiadas, mantida pelo Claude (Cowor
+ | Hipótese: a IA em níveis mais fracos daria referências no ritmo do piloto (a "trajetória coerente com o ritmo" do pedido original) | ADR 0016 | Pode substituir parte da peça A por dados do próprio jogo | Testar depois do coach |
+ | Hipótese: a variação natural do piloto pode mostrar efeitos que as voltas da IA não mostravam, com o risco de confusão (quem freia tarde também erra o ápice) | ADR 0016 | Pode reabrir os estimadores da Fase 2b com voltas humanas | Quando houver voltas humanas suficientes |
+ | Acompanhar a evolução do piloto sessão a sessão: tempo, consistência e distância até a linha da IA por curva | ADR 0015 | Resultado do próprio TCC e critério para retomar experimentos | Junto com a peça B (pedido 15) |
++| Reconstrução do store, juntando quatro correções: (1) o período da volta: o ML zera o relógio com o período da grade e encurta toda volta e o microsetor 0 em um passo (25,7 a 28,0 ms; +26 ms em toda volta, no microsetor 0, ao corrigir); (2) o portão que deixa passar voltas com box; (3) as voltas rotuladas (origem e equipamento); (4) a pasta do app instalado | Pedidos 12, 13 e 14 (04/10) | Store, inventário e tudo o que lê deles; os resultados antigos ficam como registro | Um pedido próprio depois do coach, para reconstruir uma vez só |
++| O `timestamp` do gravador engasga: +357 ms numa amostra e +2 ms na seguinte, com o cronômetro do jogo certo e o carro andando 21 m | Pedido 14 (04/10) | O coach agora usa o cronômetro do jogo. Falta conferir o que mais usa esse `timestamp`, como o cálculo de frequência nos portões | A conferir |
 diff --git a/docs/coach_aprendizado.md b/docs/coach_aprendizado.md
 new file mode 100644
-index 00000000..cd746855
+index 00000000..cd5bf652
 --- /dev/null
 +++ b/docs/coach_aprendizado.md
-@@ -0,0 +1,76 @@
+@@ -0,0 +1,199 @@
 +# Coach na fase de aprendizado (pedido 14, ADR 0013 e 0016)
 +
 +Branch: `etapa/coach-geometria-oficial`, com o `develop` trazido em 2026-10-04 (merge `13e4a359`).
@@ -3351,10 +4319,133 @@ index 00000000..cd746855
 +
 +**Diagnóstico do (c), que não vale como critério.** Contra os microsetores do ML com o período verdadeiro, a diferença máxima por microsetor fica entre 0,002 e 0,004 s, e a soma bate com o período com diferença de 0,1 a 1,4 ms. Nas 5 voltas, o (c) só falha pelo passo do store no microsetor 0. Os ±78 ms entre os microsetores 25 e 26 da volta de 20/06, vistos no pedido 11, sumiram com a continuidade rígida.
 +
-+## 3. Parada
++## 3. Desvio do pré-registro
++
++O critério (c) falhou porque a régua, o store, tem um erro medido. Ao zerar o relógio usando o período da grade, o store encurta toda volta e o microsetor 0 em um passo da grade: de 25,7 a 28,0 ms nas 5 voltas. Isso foi conferido contra o cronômetro do jogo (84,8735 s contra 84,873 s). Contra o ML com o período corrigido, o (c) passa: no máximo 3,7 ms por microsetor, e a soma bate com o período em ±1,4 ms. Nenhum limite foi mudado.
++
++**Decisão do Eduardo em 04/10:** seguir para as Partes C e D e para o merge. O ML não é corrigido agora. A correção entra no item "Reconstrução do store" do backlog, junto com o portão das voltas com box, as voltas rotuladas e a pasta do app instalado, num pedido próprio depois do coach.
++
++## Registro da parada (antes da decisão)
 +
 +Pelo pedido, com o (c) falhando, parei antes da Parte C. Não fiz merge, não treinei nem regravei modelo e não mexi no ML nem no store. A decisão do que fazer com o store está no relatório.
 +
++## 4. As duas referências (Parte C, ADR 0016)
++
++### O modelo
++
++O modelo do coach guarda as duas referências, as duas voltas reais e completas, cada uma com o tempo, o início de frenagem e a velocidade mínima de cada microsetor. A ativa é escolhida por configuração: a variável de ambiente `AT_COACH_REFERENCE`, com `volta_ia` (padrão) ou `minha_melhor`.
++
++| referência | como é escolhida | hoje |
++|---|---|---|
++| `volta_ia` (padrão) | a melhor volta limpa com origem `ia`, de sessões gravadas a partir de 04/10, no mesmo `carModel` e na geometria oficial | 84,828 s, `2026-10-04_03-42-10#0013` (parte 2, volta 26), entre 13 voltas limpas da IA |
++| `minha_melhor` | a melhor volta limpa `humano` com equipamento `atual`, no mesmo carro | 89,389 s, `2026-10-04_02-24-04#0018` (parte 2, volta 5), entre 11 voltas limpas suas |
++
++- **Limiar de fala:** continua sendo duas vezes a sua oscilação por microsetor (mediana menos melhor), com mínimo de 0,06 s, e é calculado só com as suas 11 voltas limpas. A oscilação tem mediana de 0,079 s e p90 de 0,218 s, então o limiar típico fica em cerca de 0,16 s.
++- **Identidade das voltas:** o treino (`tools/train_reference_model.py`) escolhe as voltas pelo inventário rotulado (`data/ml/origem/`) e as lê pela identidade do ML (`<sessão>#<ordem>`). A identidade do replay (`rec__<sessão>__<n>`) colaria, na sessão de 04/10, a volta 5 da IA (parte 1) com a sua volta 5 (parte 2), porque o contador do jogo recomeça quando a sessão é reiniciada.
++- **Onde o treino grava:** por padrão, no modelo do repositório, que é o lido pelo app de desenvolvimento. O modelo do app instalado só é gravado se for pedido com `--saida`.
++- **Modo antigo:** o `best_per_microsector` continua desligado.
++
++### O que o coach diz
++
++- **Cada frase nomeia a referência:** "Setor 2: 0.34s atras da volta da IA neste trecho (1.59s contra 1.25s). Minima da IA 157 km/h, a sua 122 km/h."
++- **A freada vem em relação à referência,** quando a referência começa a frear naquele microsetor e você começou a frear a até 60 m dela: "A IA freia 34 m depois de voce" ou "Na sua melhor volta voce freou 7 m depois". O início de frenagem é o pedal passando de 0,15, o mesmo critério da Fase 2b, na referência e ao vivo.
++- **No máximo 3 frases por volta:** as primeiras que passam do limiar.
++- **No fim da volta, um resumo:** "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.67s), setor 38 (0.66s) e setor 43 (0.48s). Volta da IA: 84.83s." Diferenças que arredondam para 0,00 s ficam de fora.
++- **Trechos não comparados:**
++  - o microsetor em que a contagem começa (parcial), exceto na linha de chegada;
++  - o microsetor com o carro parado (abaixo de 5 km/h);
++  - o microsetor no pit lane (mais de 10 m fora da linha e abaixo de 90 km/h).
++
++  O ensaio mostrou por quê: saindo do box, o coach dizia "52.84s atras … a sua 0 km/h".
++- **Estilo:** sem acentos, decimal com ponto, e nunca "ganh", "ideal" ou "otimo".
++
++### Textos alterados
++
++| arquivo e linha | antes | agora |
++|---|---|---|
++| `frontend/src/components/CoachingFeed.tsx:76` (rótulo, com o mapa nas linhas 53–56) | `REFERENCIA 1.96s` | `VOLTA DA IA 1.38s` ou `SUA MELHOR 1.50s`; `REFERENCIA` só com um modelo antigo |
++| `backend/core/live/driving_coach.py:501` | "Setor N: X.XXs atras da sua volta de referencia neste trecho (…)" | "Setor N: X.XXs atras da volta da IA neste trecho (…)" ou "… da sua melhor volta …" |
++| `backend/core/live/driving_coach.py:686–705` | "Na referencia: freada em 1578 m, minima de 110 km/h." | "A IA freia 12 m depois de voce; minima da IA 110 km/h, a sua 98 km/h." ou "Na sua melhor volta voce freou 12 m depois; minima na sua melhor volta 110 km/h, agora 98 km/h." |
++| `backend/core/live/driving_coach.py:607` | "Volta fechada. X.XXs somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor N (…)." | "Volta fechada. Maiores diferencas para a volta da IA: setor A (…), setor B (…) e setor C (…). Volta da IA: 84.83s." |
++
++O layout não mudou.
++
++## 5. Testes e ensaio (Parte D)
++
++- **Testes novos** (`backend/tests/test_coach_learning_phase.py`, 23 testes; 38 execuções, porque duas classes herdam os casos de outra):
++  - continuidade rígida, linha de chegada e engasgo do relógio;
++  - `volta_ia` só com voltas da IA de sessões novas, e `minha_melhor` só com `humano` de equipamento `atual`;
++  - teto de 3 frases e resumo dos 3 maiores;
++  - sinal de "antes" e "depois";
++  - frases que nomeiam a referência e não contêm "ganh", "ideal" ou "otimo";
++  - escolha da referência por configuração;
++  - trechos parciais, parados e no box.
++- **Testes antigos atualizados:** os que esperavam a freada em metros absolutos e o resumo antigo (`test_coach_reference_lap.py`), e o do script de treino (`test_lap_origin.py`).
++- **Suítes:** backend com **554 testes** passando, frontend com **137** (vitest) e build do frontend sem erro.
++
++### Ensaio nas suas voltas de 04/10
++
++O coach rodou amostra por amostra sobre os arquivos da sessão, nos dois modos, e cada frase ficou ligada à volta em que foi dita. Foram 32 voltas suas, das quais 11 válidas.
++
++| | volta_ia | minha_melhor |
++|---|---|---|
++| frases por volta, nas 11 válidas | 3,0 (máx. 3) | 2,5 (máx. 3) |
++| frases de trecho, nas 32 voltas | 94 | 79 |
++| resumos de fim de volta | 26 | 26 |
++| microsetores mais citados (válidas) | 2 (11), 0 (6), 1 (5), 3 (3) | 8 (4), 2 (3), 43, 47, 9, 38, 40 e 41 (2 cada) |
++| frases proibidas | 0 | 0 |
++
++- **Mais de 3 frases numa volta do ML** (até 6) só acontecem em voltas inválidas, com pausa ou ida ao box: o coach recomeça a contagem depois do salto, e a volta do ML junta os dois trechos.
++- **Critério (d) refeito com o coach final:** 188 frases, nenhuma proibida, no máximo 3 por volta.
++
++## 6. Merge e modelo
++
++- **Merge:** `etapa/coach-geometria-oficial` entrou em `develop` (`be7e8901`). Uma correção posterior, do resumo com diferenças zeradas, veio em `bffa135f`.
++- **Backup do modelo do repositório:** `data/reference_models/backup/vhe_interlagos.2026-10-04.antes-do-pedido-14.json` (sha256 `9d08d705…`).
++- **Geometria oficial exportada para o app de desenvolvimento:** `data/reference_models/vhe_interlagos.geometry.json` (`0ed16f0dd2225990`). Sem ela, o coach fica calado.
++- **Modelo treinado com o código de `develop`:** `data/reference_models/vhe_interlagos.json` (sha256 `9a2ce243…`). O modelo do app instalado ficou como estava (`9d08d705…`).
++- **Leitura pelo app:** o `AssistedAnalysisService` (o mesmo do `main.py`) leu o modelo e a geometria nos dois modos.
++- **Ensaio numa volta sua** (91,74 s, `03-21-52#0002`):
++  - `volta_ia`: 3 frases (setores 2, 11 e 12) e o resumo (setores 32, 38 e 43);
++  - `minha_melhor`: 1 frase (setor 32, 0.64 s) e o resumo (setores 32, 38 e 26).
++
++  Na sua melhor volta, o modo `minha_melhor` fica calado, porque ela é a própria referência.
++
++## 7. Limitações
++
++- **As 3 frases são as primeiras, não as maiores.** Contra a IA, o limiar é baixo para as diferenças que existem, e as 3 frases quase sempre caem no começo da volta (S do Senna, microsetores 0 a 3). As maiores diferenças só aparecem no resumo: na volta de 91,74 s, as frases foram para os setores 2, 11 e 12 (0,07 a 0,34 s), e os maiores foram 32, 38 e 43 (0,48 a 0,67 s). Se incomodar, as opções são subir o limiar contra a IA ou falar os 3 maiores de cada terço da volta, mas isso é decisão sua.
++- **A freada só aparece se você começou a frear a até 60 m do ponto da referência e antes de o microsetor terminar.** No ensaio, poucas frases trazem a freada (2 contra a IA e 1 contra a sua melhor).
++- **As referências vêm de uma sessão só** (04/10), com 13 voltas da IA e 11 suas. A cada sessão nova:
++  1. rode `python -m ml.scripts.report_lap_origin`, que refaz o inventário;
++  2. rode `python -m ml.scripts.detector_ia aplicar`, que devolve os rótulos das anotações de 04/10 que o passo 1 apaga;
++  3. rode `python tools/train_reference_model.py`.
++
++  Sessões só suas, sem Ctrl+C, saem `humano` pelo próprio indicador.
++- **O store do ML continua um passo curto** no microsetor 0 até a "Reconstrução do store" (backlog).
++- **O app instalado continua com o coach antigo** e com o modelo antigo até ser reempacotado.
++
++## 8. Como abrir o app de desenvolvimento para treinar com o coach ligado
++
++1. **Feche o app instalado,** inclusive na bandeja do Windows. Ele usa a mesma porta (8000), e os dois abertos gravam em dobro.
++2. **Abra um PowerShell na pasta do projeto** (`C:\Users\Dokas\Desktop\f1-telemetry-analyzer`).
++3. **Só na primeira vez, ou depois de atualizar o código, gere o frontend:**
++   ```
++   cd frontend
++   npm.cmd run build
++   cd ..
++   ```
++4. **Escolha a referência e abra o app:**
++   ```
++   $env:AT_BACKEND_USE_PYTHON_RUNNER = 'true'
++   $env:AT_COACH_REFERENCE = 'volta_ia'
++   cd desktop
++   npm.cmd run desktop:prod:autostart
++   ```
++   Para comparar com a sua melhor volta, use `$env:AT_COACH_REFERENCE = 'minha_melhor'`.
++5. **Abra o Assetto Corsa** em Interlagos, com o `rss_formula_rss_3_v6_2026`. A gravação começa sozinha quando o carro entra na pista. As frases aparecem no painel "AI Coaching", com o rótulo **VOLTA DA IA** ou **SUA MELHOR**, e o resumo sai ao cruzar a linha.
++6. **O coach usa dois arquivos,** ambos fora do git: `data/reference_models/vhe_interlagos.json` (o modelo) e `data/reference_models/vhe_interlagos.geometry.json` (a geometria). Sem a geometria, o coach fica calado e avisa uma vez no log.
++7. **Para treinar sem o coach,** feche o app e renomeie `data/reference_models/vhe_interlagos.json` (do repositório). Devolva o nome depois.
++8. **No fim, feche o app.** As sessões ficam em `data/recordings`. Para elas entrarem nas referências, siga a sequência da seção 7.
 diff --git a/docs/coach_geometria_oficial.md b/docs/coach_geometria_oficial.md
 new file mode 100644
 index 00000000..75efd364
@@ -6643,10 +7734,10 @@ index 00000000..2f03cae4
 +   Duration  1.32s (transform 744ms, setup 0ms, collect 1.42s, tests 102ms, environment 2ms, prepare 1.53s)
 +
 diff --git a/frontend/src/components/CoachingFeed.test.ts b/frontend/src/components/CoachingFeed.test.ts
-index dbb88f49..802c1c2e 100644
+index dbb88f49..32ed933a 100644
 --- a/frontend/src/components/CoachingFeed.test.ts
 +++ b/frontend/src/components/CoachingFeed.test.ts
-@@ -65,6 +65,17 @@ describe('renderEvidence', () => {
+@@ -65,6 +65,30 @@ describe('renderEvidence', () => {
      expect(line).toContain('REF_S: 1200m');
    });
  
@@ -6661,14 +7752,41 @@ index dbb88f49..802c1c2e 100644
 +    expect(line).not.toContain('OTIMO');
 +  });
 +
++  it('names the reference in use (ADR 0016)', () => {
++    const ai = renderEvidence({
++      event: 'Setor 22: 0.60s atras da volta da IA neste trecho (1.98s contra 1.38s).',
++      evidence: { microsector: 22, yourSeconds: 1.98, referenceSeconds: 1.38, lossSeconds: 0.6, referenceKind: 'volta_ia' },
++    });
++    expect(ai).toContain('VOLTA DA IA 1.38s');
++    const own = renderEvidence({
++      event: 'x',
++      evidence: { microsector: 22, yourSeconds: 1.98, referenceSeconds: 1.5, lossSeconds: 0.48, referenceKind: 'minha_melhor' },
++    });
++    expect(own).toContain('SUA MELHOR 1.50s');
++  });
++
    it('survives an optimal split that arrives as null', () => {
      const line = renderEvidence(microsectorEvent({ optimalSeconds: null }));
      expect(line).not.toContain('OTIMO');
 diff --git a/frontend/src/components/CoachingFeed.tsx b/frontend/src/components/CoachingFeed.tsx
-index 9891e03f..001a5e78 100644
+index 9891e03f..896d9d93 100644
 --- a/frontend/src/components/CoachingFeed.tsx
 +++ b/frontend/src/components/CoachingFeed.tsx
-@@ -62,7 +62,12 @@ export function renderEvidence(event: Partial<CoachingEvent>): string {
+@@ -49,6 +49,13 @@ export function microsectorEvidence(event: Partial<CoachingEvent>): Record<strin
+   return finiteOrNull(evidence.microsector) === null ? null : evidence;
+ }
+ 
++// ADR 0016: which reference the coach is measuring against.
++const REFERENCE_TAGS: Record<string, string> = { volta_ia: 'VOLTA DA IA', minha_melhor: 'SUA MELHOR' };
++
++export function referenceTag(kind: unknown): string {
++  return typeof kind === 'string' && REFERENCE_TAGS[kind] ? REFERENCE_TAGS[kind] : 'REFERENCIA';
++}
++
+ export function renderEvidence(event: Partial<CoachingEvent>): string {
+   const e = event.evidence;
+   if (!e) return 'Physical anomaly detected.';
+@@ -62,7 +69,12 @@ export function renderEvidence(event: Partial<CoachingEvent>): string {
    const microsector = microsectorEvidence(event);
    if (microsector) {
      const parts = [`VOCE ${finiteNumber(microsector.yourSeconds).toFixed(2)}s`];
@@ -6677,7 +7795,7 @@ index 9891e03f..001a5e78 100644
 +    // best of each slice) only appears when the old mode is switched on.
 +    const reference = finiteOrNull(microsector.referenceSeconds);
 +    parts.push(reference !== null
-+      ? `REFERENCIA ${reference.toFixed(2)}s`
++      ? `${referenceTag(microsector.referenceKind)} ${reference.toFixed(2)}s`
 +      : `MELHOR ${finiteNumber(microsector.bestSeconds).toFixed(2)}s`);
      const optimal = finiteOrNull(microsector.optimalSeconds);
      if (optimal !== null) {

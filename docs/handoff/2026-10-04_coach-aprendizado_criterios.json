@@ -1,9 +1,9 @@
 {
- "etapa": "coach-aprendizado (pedido 14), parado no passo 5 da Parte B: criterio (c) falhou",
- "base_do_patch": "develop cbde23bd",
- "patch_sha256": "be635b7fe398fe81237aca5d544614c4dacbed7d57a5037ca4a8e909505f8373",
- "pytest": "530 passed, 4 warnings in 124.69s (0:02:04)",
- "vitest": "nao rodado: nenhuma mudanca no frontend nesta parte",
+ "etapa": "coach-aprendizado (pedido 14): criterios a-e, desvio do (c) decidido pelo Eduardo em 04/10, merge e modelo",
+ "base_do_patch": "develop cbde23bd (antes da etapa); o patch vai ate o merge final e o documento",
+ "patch_sha256": "19f7d0fc1cb7b52a0c51488837244c1a8f10461ba345905c1216adad01570de9",
+ "pytest": "554 passed, 4 warnings in 399.01s (0:06:39)",
+ "vitest": "7 arquivos, 137 testes passaram (2026-10-04_coach-aprendizado_vitest.txt)",
  "registro_dos_criterios": "a2cb59e3",
  "achado_store": {
   "causa": "ml/preprocessing/resampling.py::_reference_clock_to_grid usa o span da grade como periodo, um passo mais curto que a volta",
@@ -3762,5 +3762,890 @@
  "geometria": {
   "geometry_id": "0ed16f0dd2225990",
   "sha256": "207faa0dcc9b96d4ca5c4790645f31fcf462dfefe4b67a13abfb2fa7d47e3fad"
+ },
+ "desvio_do_pre_registro": {
+  "criterio": "c",
+  "decisao": "Eduardo, 04/10: seguir; o (c) passa contra o ML com o periodo verdadeiro (max 3,7 ms por microsetor, soma +-1,4 ms); nenhum limite mudado; correcao do ML no backlog (Reconstrucao do store)"
+ },
+ "d_com_o_coach_final": {
+  "frases_proibidas": [],
+  "total_de_frases": 188,
+  "passou": true,
+  "por_sessao": {
+   "2026-06-20_13-13-02_vhe_interlagos": {
+    "frames": 207403,
+    "frases_de_trecho": 58,
+    "frases_de_fim_de_volta": 41,
+    "voltas_com_frase": 24,
+    "frases_por_volta": {
+     "media": 2.4166666666666665,
+     "mediana": 3.0,
+     "max": 3
+    }
+   },
+   "2026-08-09_19-20-59_vhe_interlagos": {
+    "frames": 280172,
+    "frases_de_trecho": 36,
+    "frases_de_fim_de_volta": 53,
+    "voltas_com_frase": 12,
+    "frases_por_volta": {
+     "media": 3.0,
+     "mediana": 3.0,
+     "max": 3
+    }
+   }
+  },
+  "frases": {
+   "2026-06-20_13-13-02_vhe_interlagos": [
+    {
+     "tipo": "trecho",
+     "volta": 9,
+     "texto": "Setor 6: 0.28s atras da volta da IA neste trecho (1.88s contra 1.60s). Minima da IA 136 km/h, a sua 110 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 9,
+     "texto": "Setor 8: 0.10s atras da volta da IA neste trecho (1.35s contra 1.26s). Minima da IA 191 km/h, a sua 180 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 10,
+     "texto": "Setor 2: 0.18s atras da volta da IA neste trecho (1.43s contra 1.25s). Minima da IA 157 km/h, a sua 130 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 10,
+     "texto": "Setor 4: 0.56s atras da volta da IA neste trecho (2.62s contra 2.07s). A IA freia 38 m depois de voce; minima da IA 104 km/h, a sua 80 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 12,
+     "texto": "Setor 11: 0.12s atras da volta da IA neste trecho (1.21s contra 1.09s). Minima da IA 232 km/h, a sua 212 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 12,
+     "texto": "Setor 12: 0.12s atras da volta da IA neste trecho (1.17s contra 1.04s). Minima da IA 243 km/h, a sua 216 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 12,
+     "texto": "Setor 13: 0.11s atras da volta da IA neste trecho (1.12s contra 1.01s). Minima da IA 253 km/h, a sua 226 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 13,
+     "texto": "Setor 8: 0.25s atras da volta da IA neste trecho (1.51s contra 1.26s). Minima da IA 191 km/h, a sua 148 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 13,
+     "texto": "Setor 9: 0.33s atras da volta da IA neste trecho (1.54s contra 1.21s). Minima da IA 206 km/h, a sua 152 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 13,
+     "texto": "Setor 10: 0.34s atras da volta da IA neste trecho (1.49s contra 1.15s). Minima da IA 219 km/h, a sua 163 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 14,
+     "texto": "Setor 22: 0.07s atras da volta da IA neste trecho (1.29s contra 1.22s). Minima da IA 204 km/h, a sua 192 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 19,
+     "texto": "Setor 16: 0.46s atras da volta da IA neste trecho (1.41s contra 0.96s). A IA freia 14 m antes de voce; minima da IA 252 km/h, a sua 146 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 19,
+     "texto": "Setor 17: 0.51s atras da volta da IA neste trecho (1.83s contra 1.32s). Minima da IA 162 km/h, a sua 133 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 19,
+     "texto": "Setor 23: 0.09s atras da volta da IA neste trecho (1.25s contra 1.16s). Minima da IA 217 km/h, a sua 202 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 21,
+     "texto": "Setor 37: 0.41s atras da volta da IA neste trecho (2.98s contra 2.57s). Minima da IA 81 km/h, a sua 61 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 22,
+     "texto": "Setor 50: 0.13s atras da volta da IA neste trecho (1.26s contra 1.13s). Minima da IA 219 km/h, a sua 197 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 22,
+     "texto": "Setor 51: 0.10s atras da volta da IA neste trecho (1.23s contra 1.13s). Minima da IA 226 km/h, a sua 204 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 22,
+     "texto": "Setor 52: 0.08s atras da volta da IA neste trecho (1.16s contra 1.08s). Minima da IA 235 km/h, a sua 217 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 23,
+     "texto": "Setor 8: 0.25s atras da volta da IA neste trecho (1.51s contra 1.26s). Minima da IA 191 km/h, a sua 148 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 23,
+     "texto": "Setor 9: 0.33s atras da volta da IA neste trecho (1.54s contra 1.21s). Minima da IA 206 km/h, a sua 152 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 23,
+     "texto": "Setor 10: 0.34s atras da volta da IA neste trecho (1.49s contra 1.15s). Minima da IA 219 km/h, a sua 161 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 24,
+     "texto": "Setor 2: 0.26s atras da volta da IA neste trecho (1.51s contra 1.25s). Minima da IA 157 km/h, a sua 136 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 24,
+     "texto": "Setor 4: 0.39s atras da volta da IA neste trecho (2.45s contra 2.07s). A IA freia 41 m depois de voce; minima da IA 104 km/h, a sua 87 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 25,
+     "texto": "Setor 56: 0.06s atras da volta da IA neste trecho (1.03s contra 0.97s). Minima da IA 263 km/h, a sua 247 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 25,
+     "texto": "Setor 57: 0.06s atras da volta da IA neste trecho (1.02s contra 0.96s). Minima da IA 268 km/h, a sua 252 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 25,
+     "texto": "Setor 58: 0.06s atras da volta da IA neste trecho (1.00s contra 0.94s). Minima da IA 272 km/h, a sua 256 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 31,
+     "texto": "Setor 50: 0.16s atras da volta da IA neste trecho (1.29s contra 1.13s). Minima da IA 219 km/h, a sua 196 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 31,
+     "texto": "Setor 51: 0.11s atras da volta da IA neste trecho (1.24s contra 1.13s). Minima da IA 226 km/h, a sua 202 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 31,
+     "texto": "Setor 52: 0.09s atras da volta da IA neste trecho (1.17s contra 1.08s). Minima da IA 235 km/h, a sua 217 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 32,
+     "texto": "Setor 16: 0.28s atras da volta da IA neste trecho (1.23s contra 0.96s). A IA freia 4 m antes de voce; minima da IA 252 km/h, a sua 157 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 32,
+     "texto": "Setor 17: 0.30s atras da volta da IA neste trecho (1.62s contra 1.32s). Minima da IA 162 km/h, a sua 155 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 32,
+     "texto": "Setor 50: 0.15s atras da volta da IA neste trecho (1.28s contra 1.13s). Minima da IA 219 km/h, a sua 194 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 33,
+     "texto": "Setor 8: 0.25s atras da volta da IA neste trecho (1.50s contra 1.26s). Minima da IA 191 km/h, a sua 148 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 33,
+     "texto": "Setor 9: 0.34s atras da volta da IA neste trecho (1.55s contra 1.21s). Minima da IA 206 km/h, a sua 152 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 33,
+     "texto": "Setor 10: 0.34s atras da volta da IA neste trecho (1.48s contra 1.15s). Minima da IA 219 km/h, a sua 161 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 34,
+     "texto": "Setor 45: 0.33s atras da volta da IA neste trecho (2.32s contra 2.00s). Minima da IA 104 km/h, a sua 104 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 34,
+     "texto": "Setor 46: 0.18s atras da volta da IA neste trecho (1.71s contra 1.53s). Minima da IA 153 km/h, a sua 133 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 34,
+     "texto": "Setor 47: 0.12s atras da volta da IA neste trecho (1.49s contra 1.37s). Minima da IA 180 km/h, a sua 169 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 35,
+     "texto": "Setor 23: 0.17s atras da volta da IA neste trecho (1.33s contra 1.16s). Minima da IA 217 km/h, a sua 191 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 35,
+     "texto": "Setor 24: 0.13s atras da volta da IA neste trecho (1.25s contra 1.12s). Minima da IA 227 km/h, a sua 201 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 36,
+     "texto": "Setor 6: 0.20s atras da volta da IA neste trecho (1.80s contra 1.60s). Minima da IA 136 km/h, a sua 121 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 36,
+     "texto": "Setor 37: 0.46s atras da volta da IA neste trecho (3.03s contra 2.57s). Minima da IA 81 km/h, a sua 72 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 37,
+     "texto": "Setor 4: 0.35s atras da volta da IA neste trecho (2.41s contra 2.07s). Minima da IA 104 km/h, a sua 98 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 39,
+     "texto": "Setor 15: 0.08s atras da volta da IA neste trecho (1.04s contra 0.96s). Minima da IA 266 km/h, a sua 218 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 39,
+     "texto": "Setor 16: 0.41s atras da volta da IA neste trecho (1.37s contra 0.96s). A IA freia 2 m antes de voce; minima da IA 252 km/h, a sua 174 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 39,
+     "texto": "Setor 17: 0.35s atras da volta da IA neste trecho (1.67s contra 1.32s). Minima da IA 162 km/h, a sua 128 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 40,
+     "texto": "Setor 4: 0.32s atras da volta da IA neste trecho (2.39s contra 2.07s). Minima da IA 104 km/h, a sua 99 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 40,
+     "texto": "Setor 16: 0.13s atras da volta da IA neste trecho (1.09s contra 0.96s). A IA freia 3 m antes de voce; minima da IA 252 km/h, a sua 213 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 40,
+     "texto": "Setor 37: 0.47s atras da volta da IA neste trecho (3.04s contra 2.57s). Minima da IA 81 km/h, a sua 70 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 42,
+     "texto": "Setor 2: 0.16s atras da volta da IA neste trecho (1.41s contra 1.25s). Minima da IA 157 km/h, a sua 134 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 42,
+     "texto": "Setor 4: 0.53s atras da volta da IA neste trecho (2.59s contra 2.07s). A IA freia 51 m depois de voce; minima da IA 104 km/h, a sua 78 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 42,
+     "texto": "Setor 13: 0.08s atras da volta da IA neste trecho (1.08s contra 1.01s). Minima da IA 253 km/h, a sua 236 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 43,
+     "texto": "Setor 8: 0.26s atras da volta da IA neste trecho (1.51s contra 1.26s). Minima da IA 191 km/h, a sua 148 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 43,
+     "texto": "Setor 9: 0.33s atras da volta da IA neste trecho (1.54s contra 1.21s). Minima da IA 206 km/h, a sua 152 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 43,
+     "texto": "Setor 10: 0.34s atras da volta da IA neste trecho (1.49s contra 1.15s). Minima da IA 219 km/h, a sua 161 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 44,
+     "texto": "Setor 6: 0.20s atras da volta da IA neste trecho (1.80s contra 1.60s). Minima da IA 136 km/h, a sua 116 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 44,
+     "texto": "Setor 37: 0.40s atras da volta da IA neste trecho (2.96s contra 2.57s). Minima da IA 81 km/h, a sua 71 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 47,
+     "texto": "Setor 16: 0.18s atras da volta da IA neste trecho (1.14s contra 0.96s). A IA freia 2 m antes de voce; minima da IA 252 km/h, a sua 193 km/h."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (0.26s), setor 30 (0.18s) e setor 36 (0.08s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 6 (0.28s), setor 43 (0.22s) e setor 4 (0.21s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 4 (0.56s), setor 36 (0.27s) e setor 17 (0.24s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 35 (0.06s), setor 46 (0.05s) e setor 47 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 56 (0.86s), setor 17 (0.63s) e setor 16 (0.23s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 17 (0.41s), setor 10 (0.34s) e setor 9 (0.33s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 37 (0.31s), setor 32 (0.30s) e setor 38 (0.28s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 4 (0.06s), setor 35 (0.06s) e setor 46 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 35 (0.08s), setor 46 (0.06s) e setor 47 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (0.08s), setor 46 (0.06s) e setor 45 (0.06s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 35 (0.06s), setor 46 (0.05s) e setor 47 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 17 (0.51s), setor 16 (0.46s) e setor 19 (0.18s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 35 (0.07s), setor 6 (0.06s) e setor 45 (0.06s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 37 (0.41s), setor 36 (0.25s) e setor 43 (0.23s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 56 (0.86s), setor 55 (0.21s) e setor 43 (0.15s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 17 (0.42s), setor 10 (0.34s) e setor 9 (0.33s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 4 (0.39s), setor 2 (0.26s) e setor 5 (0.07s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (0.10s), setor 56 (0.06s) e setor 58 (0.06s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.17s), setor 0 (0.05s) e setor 46 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (0.19s), setor 46 (0.05s) e setor 35 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 4 (0.19s), setor 6 (0.17s) e setor 5 (0.14s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 4 (0.26s), setor 6 (0.11s) e setor 7 (0.07s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 35 (0.05s), setor 46 (0.05s) e setor 48 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (0.23s), setor 50 (0.16s) e setor 51 (0.11s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 56 (0.86s), setor 17 (0.30s) e setor 16 (0.28s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 17 (0.41s), setor 9 (0.34s) e setor 10 (0.34s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 45 (0.33s), setor 43 (0.29s) e setor 36 (0.28s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 30 (0.36s), setor 43 (0.27s) e setor 4 (0.23s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 37 (0.46s), setor 38 (0.38s) e setor 36 (0.26s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 4 (0.35s), setor 6 (0.09s) e setor 35 (0.06s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 1 (0.13s), setor 2 (0.06s) e setor 46 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 16 (0.41s), setor 17 (0.35s) e setor 18 (0.11s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 37 (0.47s), setor 38 (0.44s) e setor 36 (0.38s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (0.23s), setor 6 (0.16s) e setor 4 (0.16s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 56 (0.86s), setor 4 (0.53s) e setor 38 (0.35s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 17 (0.41s), setor 10 (0.34s) e setor 9 (0.33s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 36 (0.40s), setor 37 (0.40s) e setor 43 (0.26s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 35 (0.06s), setor 46 (0.05s) e setor 47 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 46 (0.05s), setor 35 (0.05s) e setor 47 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 16 (0.18s), setor 17 (0.16s) e setor 4 (0.06s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 38 (0.06s), setor 39 (0.06s) e setor 46 (0.06s). Volta da IA: 84.83s."
+    }
+   ],
+   "2026-08-09_19-20-59_vhe_interlagos": [
+    {
+     "tipo": "trecho",
+     "volta": 372,
+     "texto": "Setor 50: 0.12s atras da volta da IA neste trecho (1.25s contra 1.13s). Minima da IA 219 km/h, a sua 198 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 372,
+     "texto": "Setor 51: 0.10s atras da volta da IA neste trecho (1.23s contra 1.13s). Minima da IA 226 km/h, a sua 205 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 372,
+     "texto": "Setor 52: 0.09s atras da volta da IA neste trecho (1.17s contra 1.08s). Minima da IA 235 km/h, a sua 217 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 373,
+     "texto": "Setor 8: 0.25s atras da volta da IA neste trecho (1.51s contra 1.26s). Minima da IA 191 km/h, a sua 148 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 373,
+     "texto": "Setor 9: 0.33s atras da volta da IA neste trecho (1.54s contra 1.21s). Minima da IA 206 km/h, a sua 152 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 373,
+     "texto": "Setor 10: 0.33s atras da volta da IA neste trecho (1.48s contra 1.15s). Minima da IA 219 km/h, a sua 162 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 382,
+     "texto": "Setor 50: 0.14s atras da volta da IA neste trecho (1.27s contra 1.13s). Minima da IA 219 km/h, a sua 194 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 382,
+     "texto": "Setor 51: 0.15s atras da volta da IA neste trecho (1.28s contra 1.13s). Minima da IA 226 km/h, a sua 196 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 382,
+     "texto": "Setor 52: 0.12s atras da volta da IA neste trecho (1.20s contra 1.08s). Minima da IA 235 km/h, a sua 210 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 383,
+     "texto": "Setor 8: 0.25s atras da volta da IA neste trecho (1.51s contra 1.26s). Minima da IA 191 km/h, a sua 148 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 383,
+     "texto": "Setor 9: 0.33s atras da volta da IA neste trecho (1.54s contra 1.21s). Minima da IA 206 km/h, a sua 152 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 383,
+     "texto": "Setor 10: 0.33s atras da volta da IA neste trecho (1.48s contra 1.15s). Minima da IA 219 km/h, a sua 161 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 392,
+     "texto": "Setor 50: 0.14s atras da volta da IA neste trecho (1.27s contra 1.13s). Minima da IA 219 km/h, a sua 194 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 392,
+     "texto": "Setor 51: 0.15s atras da volta da IA neste trecho (1.27s contra 1.13s). Minima da IA 226 km/h, a sua 196 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 392,
+     "texto": "Setor 52: 0.11s atras da volta da IA neste trecho (1.19s contra 1.08s). Minima da IA 235 km/h, a sua 211 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 393,
+     "texto": "Setor 8: 0.25s atras da volta da IA neste trecho (1.51s contra 1.26s). Minima da IA 191 km/h, a sua 148 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 393,
+     "texto": "Setor 9: 0.34s atras da volta da IA neste trecho (1.55s contra 1.21s). Minima da IA 206 km/h, a sua 152 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 393,
+     "texto": "Setor 10: 0.33s atras da volta da IA neste trecho (1.48s contra 1.15s). Minima da IA 219 km/h, a sua 161 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 402,
+     "texto": "Setor 50: 0.12s atras da volta da IA neste trecho (1.25s contra 1.13s). Minima da IA 219 km/h, a sua 198 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 402,
+     "texto": "Setor 51: 0.10s atras da volta da IA neste trecho (1.22s contra 1.13s). Minima da IA 226 km/h, a sua 205 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 402,
+     "texto": "Setor 52: 0.08s atras da volta da IA neste trecho (1.16s contra 1.08s). Minima da IA 235 km/h, a sua 217 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 403,
+     "texto": "Setor 8: 0.25s atras da volta da IA neste trecho (1.50s contra 1.26s). Minima da IA 191 km/h, a sua 148 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 403,
+     "texto": "Setor 9: 0.33s atras da volta da IA neste trecho (1.54s contra 1.21s). Minima da IA 206 km/h, a sua 152 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 403,
+     "texto": "Setor 10: 0.33s atras da volta da IA neste trecho (1.48s contra 1.15s). Minima da IA 219 km/h, a sua 162 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 412,
+     "texto": "Setor 50: 0.12s atras da volta da IA neste trecho (1.25s contra 1.13s). Minima da IA 219 km/h, a sua 198 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 412,
+     "texto": "Setor 51: 0.10s atras da volta da IA neste trecho (1.23s contra 1.13s). Minima da IA 226 km/h, a sua 205 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 412,
+     "texto": "Setor 52: 0.09s atras da volta da IA neste trecho (1.17s contra 1.08s). Minima da IA 235 km/h, a sua 217 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 413,
+     "texto": "Setor 8: 0.25s atras da volta da IA neste trecho (1.51s contra 1.26s). Minima da IA 191 km/h, a sua 148 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 413,
+     "texto": "Setor 9: 0.34s atras da volta da IA neste trecho (1.55s contra 1.21s). Minima da IA 206 km/h, a sua 152 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 413,
+     "texto": "Setor 10: 0.33s atras da volta da IA neste trecho (1.48s contra 1.15s). Minima da IA 219 km/h, a sua 161 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 422,
+     "texto": "Setor 50: 0.12s atras da volta da IA neste trecho (1.25s contra 1.13s). Minima da IA 219 km/h, a sua 198 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 422,
+     "texto": "Setor 51: 0.10s atras da volta da IA neste trecho (1.22s contra 1.13s). Minima da IA 226 km/h, a sua 205 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 422,
+     "texto": "Setor 52: 0.08s atras da volta da IA neste trecho (1.16s contra 1.08s). Minima da IA 235 km/h, a sua 217 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 423,
+     "texto": "Setor 8: 0.25s atras da volta da IA neste trecho (1.50s contra 1.26s). Minima da IA 191 km/h, a sua 148 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 423,
+     "texto": "Setor 9: 0.33s atras da volta da IA neste trecho (1.54s contra 1.21s). Minima da IA 206 km/h, a sua 152 km/h."
+    },
+    {
+     "tipo": "trecho",
+     "volta": 423,
+     "texto": "Setor 10: 0.33s atras da volta da IA neste trecho (1.48s contra 1.15s). Minima da IA 219 km/h, a sua 161 km/h."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.12s), setor 19 (0.06s) e setor 20 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 56 (0.86s), setor 55 (0.21s) e setor 50 (0.12s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 17 (0.41s), setor 9 (0.33s) e setor 10 (0.33s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 19 (0.07s), setor 29 (0.06s) e setor 20 (0.06s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.15s), setor 19 (0.06s) e setor 20 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.13s), setor 29 (0.06s) e setor 35 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.14s), setor 4 (0.07s) e setor 29 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 4 (0.06s), setor 35 (0.05s) e setor 34 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.15s), setor 19 (0.06s) e setor 29 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 35 (0.05s), setor 34 (0.04s) e setor 48 (0.03s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 29 (0.06s), setor 20 (0.03s) e setor 48 (0.03s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 56 (0.86s), setor 55 (0.21s) e setor 51 (0.15s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 17 (0.40s), setor 9 (0.33s) e setor 10 (0.33s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 35 (0.06s), setor 29 (0.06s) e setor 34 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.05s), setor 29 (0.05s) e setor 19 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 29 (0.06s), setor 35 (0.05s) e setor 19 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.13s), setor 29 (0.05s) e setor 20 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 29 (0.09s), setor 35 (0.06s) e setor 45 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.13s), setor 29 (0.06s) e setor 19 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 29 (0.09s), setor 4 (0.04s) e setor 20 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 19 (0.06s), setor 29 (0.06s) e setor 20 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 56 (0.86s), setor 55 (0.21s) e setor 51 (0.15s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 17 (0.41s), setor 9 (0.34s) e setor 10 (0.33s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 35 (0.07s), setor 34 (0.05s) e setor 29 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 19 (0.06s), setor 20 (0.06s) e setor 35 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 45 (0.05s), setor 29 (0.05s) e setor 46 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 29 (0.04s), setor 46 (0.04s) e setor 48 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.15s), setor 45 (0.05s) e setor 46 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 29 (0.07s), setor 19 (0.06s) e setor 20 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.15s), setor 35 (0.05s) e setor 34 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.14s), setor 29 (0.05s) e setor 46 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 56 (0.86s), setor 55 (0.21s) e setor 50 (0.12s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 17 (0.40s), setor 9 (0.33s) e setor 10 (0.33s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 29 (0.05s), setor 46 (0.04s) e setor 20 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 29 (0.05s), setor 46 (0.04s) e setor 20 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.15s), setor 46 (0.04s) e setor 48 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 46 (0.04s), setor 20 (0.04s) e setor 48 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.15s), setor 45 (0.05s) e setor 46 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.15s), setor 4 (0.08s) e setor 19 (0.07s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 35 (0.05s), setor 29 (0.04s) e setor 34 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 29 (0.04s), setor 48 (0.03s) e setor 47 (0.03s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 56 (0.86s), setor 55 (0.21s) e setor 50 (0.12s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 17 (0.40s), setor 9 (0.34s) e setor 10 (0.33s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 19 (0.07s), setor 20 (0.06s) e setor 29 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 19 (0.06s), setor 20 (0.06s) e setor 32 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 35 (0.06s), setor 29 (0.04s) e setor 46 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 29 (0.05s), setor 48 (0.04s) e setor 20 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 29 (0.05s), setor 45 (0.04s) e setor 46 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 35 (0.06s), setor 29 (0.05s) e setor 34 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 35 (0.05s), setor 29 (0.05s) e setor 45 (0.05s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 20 (0.04s), setor 19 (0.04s) e setor 29 (0.04s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 56 (0.86s), setor 55 (0.21s) e setor 50 (0.12s). Volta da IA: 84.83s."
+    },
+    {
+     "tipo": "fim de volta",
+     "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 17 (0.42s), setor 9 (0.33s) e setor 10 (0.33s). Volta da IA: 84.83s."
+    }
+   ]
+  }
  }
 }
