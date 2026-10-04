@@ -1,4 +1,4 @@
-"""Validacao do coach na geometria oficial (ADR 0013), criterios a-d do pedido 11.
+"""Validacao do coach na geometria oficial (ADR 0013): criterios a-d do pedido 11 e e do pedido 14.
 
     python tools/validate_coach_geometry.py --geometria-arquivo G.json --modelo M.json --saida DIR
 
@@ -20,6 +20,12 @@ d  Ensaio: o coach novo, com o modelo dado, roda amostra por amostra na ordem
    salvas; nenhuma pode conter "ganh", "ideal" ou "otimo". O intervalo minimo
    entre falas e zerado, como no replay (`coach_recorded_lap`): o de 3 s usa o
    relogio da maquina e, numa reproducao rapida, calaria quase tudo.
+e  (pedido 14) Salto de projecao nas voltas limpas: |ds| entre a projecao do
+   coach (sessao inteira, amostra por amostra, como em a) e
+   `TrackGeometry.project_sequence`, em todas as amostras das voltas limpas
+   das sessoes de a e da sessao rotulada de 2026-10-04 (cada arquivo dela).
+   Volta limpa: valida, unica, relogio conferido, sem relogio_suspeito e sem
+   box (inventario de data/ml/origem). Cada sessao: |ds| maximo <= 2 m.
 """
 
 from __future__ import annotations
@@ -55,6 +61,8 @@ B_P99_MS = 1.0
 C_MAX_SECTOR_S = 0.02
 C_SUM_S = 0.02
 D_FORBIDDEN = ("ganh", "ideal", "otimo")
+E_MAX_DS_M = 2.0
+E_LABELLED_SESSION_DATE = "2026-10-04"
 
 A_SESSIONS = {
     "MergeFix": "2026-06-20_13-13-02_vhe_interlagos",
