@@ -2,10 +2,17 @@
 Fit the driver's reference model from everything he has recorded.
 
     python tools/train_reference_model.py [--track vhe_interlagos] [--limit N]
+        [--origem humano ...|todas] [--incluir-relogio-suspeito] [--inventario ARQUIVO]
 
 Walks the recorded laps, keeps the ones whose sampling holds up, times each
 through every microsector, and writes the model the analysis engine measures
 against. Prints what it learned and what it threw away.
+
+Only the driver's laps go in (ADR 0014): by default a lap must be `humano` in
+the `ml` inventory, with its clock checked and not `relogio_suspeito`, and not
+a duplicate. The inventory must be one built after ADR 0014
+(`python -m ml.scripts.build_inventory`); an older one has no `origem` and the
+tool stops instead of guessing.
 """
 
 from __future__ import annotations
@@ -30,6 +37,8 @@ from core.assisted_analysis.reference_model import (  # noqa: E402
 )
 from core.live.runtime_state import RuntimeState  # noqa: E402
 from core.telemetry.telemetry_buffer import TelemetryBuffer  # noqa: E402
+from ml.data.inventory import inventory_path  # noqa: E402
+from ml.data.origin import ORIGINS, parse_origins, replay_selection  # noqa: E402
 
 
 def runtime_root() -> Path:
@@ -51,7 +60,14 @@ def main() -> int:
                         help="usar as N voltas mais rapidas (0 = todas)")
     parser.add_argument("--microsectors", type=int, default=DEFAULT_MICROSECTORS)
     parser.add_argument("--dry-run", action="store_true", help="nao grava o modelo")
+    parser.add_argument("--origem", nargs="*", default=None, choices=list(ORIGINS) + ["todas"],
+                        help="origens aceitas (padrao: humano; 'todas' = sem filtro)")
+    parser.add_argument("--incluir-relogio-suspeito", action="store_true",
+                        help="aceita voltas com relogio suspeito ou nao conferido")
+    parser.add_argument("--inventario", type=Path, default=None,
+                        help="inventario do ml com a coluna origem (padrao: data/ml/lap_inventory.parquet)")
     args = parser.parse_args()
+    origins = parse_origins(args.origem)
 
     root = runtime_root()
     recordings = [root / "data" / "recordings", BACKEND_DIR.parent / "data" / "recordings"]
@@ -77,6 +93,29 @@ def main() -> int:
         print(f"pista escolhida   : {track or '(sem pista)'}")
 
     selected = [lap for lap in descriptors if not track or lap.track == track]
+
+    # Quem pilotou (ADR 0014): so entra o que o inventario diz que e do piloto.
+    if origins is not None or not args.incluir_relogio_suspeito:
+        import pandas as pd
+
+        path = args.inventario or inventory_path()
+        if not path.exists():
+            print(f"PARADO: inventario nao encontrado em {path}. Rode: python -m ml.scripts.build_inventory")
+            return 2
+        inventory = pd.read_parquet(path)
+        if "origem" not in inventory.columns:
+            print(f"PARADO: o inventario {path} e anterior ao ADR 0014 (sem a coluna origem).")
+            return 2
+        allowed = replay_selection(inventory, origins, args.incluir_relogio_suspeito)
+        before = len(selected)
+        selected = [lap for lap in selected if lap.lap_id in allowed]
+        print(f"filtro de origem  : {origins if origins is not None else 'todas'}"
+              f"{'' if args.incluir_relogio_suspeito else ', relogio conferido e nao suspeito'}"
+              f" -> {len(selected)} de {before} voltas")
+        if not selected:
+            print("PARADO: nenhuma volta passa no filtro de origem. Modelo nao gravado.")
+            return 2
+
     # Cheapest filter first: no point loading a lap the model will refuse.
     plausible = [lap for lap in selected if lap_is_usable(lap.lap_time, lap.sample_count)[0]]
     skipped_early = len(selected) - len(plausible)

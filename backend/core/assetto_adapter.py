@@ -282,6 +282,9 @@ class AssettoAdapter:
             "tyres_out": self.physics.numberOfTyresOut,
             "off_track": self.physics.numberOfTyresOut >= 4,
             "penalty_time": self.graphics.penaltyTime,
+            # Who is driving (ADR 0014): the game's AI can take the car over from
+            # a key, and laps it drove must never be read as the driver's.
+            "is_ai_controlled": bool(self.physics.isAIControlled),
             "heading": self.physics.heading,
             "accel_g": self.physics.accG[2], # Z is longitudinal in AC physics? Need to verify
             "lat_g": self.physics.accG[0],

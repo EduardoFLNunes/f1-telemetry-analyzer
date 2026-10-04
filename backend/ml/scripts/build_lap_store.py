@@ -1,24 +1,42 @@
 """Materializa as voltas validas na grade da pista.
 
-    python -m ml.scripts.build_lap_store
+    python -m ml.scripts.build_lap_store [--origem humano ...|todas] [--incluir-relogio-suspeito]
 
-Depende do inventario (`ml.scripts.build_inventory`).
+Depende do inventario (`ml.scripts.build_inventory`). Por padrao entram so
+voltas `humano` com relogio conferido e sem `relogio_suspeito` (ADR 0014).
 """
 
 from __future__ import annotations
 
+import argparse
 import time
 
 import numpy as np
 
 from ml.data.lap_store import build_store, save_store
+from ml.data.origin import ORIGINS, parse_origins
 from ml.track.geometry import load_geometry
 
 
-def main() -> int:
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description="Store de voltas na grade")
+    parser.add_argument("--origem", nargs="*", default=None, choices=list(ORIGINS) + ["todas"],
+                        help="origens aceitas (padrao: humano; 'todas' = sem filtro)")
+    parser.add_argument("--incluir-relogio-suspeito", action="store_true",
+                        help="aceita voltas com relogio suspeito ou nao conferido")
+    args = parser.parse_args(argv)
+
     started = time.time()
     track = load_geometry()
-    store = build_store(track=track, progress=lambda text: print(text, flush=True))
+    origins = parse_origins(args.origem)
+    print(f"origens: {origins if origins is not None else 'todas'}"
+          f"{'' if args.incluir_relogio_suspeito else ' | so relogio conferido e nao suspeito'}")
+    store = build_store(
+        track=track,
+        progress=lambda text: print(text, flush=True),
+        origins=origins,
+        include_clock_suspect=args.incluir_relogio_suspeito,
+    )
     path = save_store(store)
 
     laps = store.laps

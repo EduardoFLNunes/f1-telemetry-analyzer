@@ -83,3 +83,28 @@ def input_schema(sample: Mapping[str, Any]) -> str:
     if top:
         return "top_level"
     return "none"
+
+
+def ai_controlled(sample: Mapping[str, Any]) -> Optional[bool]:
+    """Whether the game's AI was driving at this sample (ADR 0014).
+
+    Assetto Corsa publishes `isAIControlled` on the physics page. The recorder
+    writes it in `carPhysics.controls` since 2026-10-03; nothing before that
+    date carries it, and those samples come back as None -- "not recorded",
+    never "the driver".
+    """
+    if isinstance(sample.get("sample"), Mapping):
+        sample = sample["sample"]
+    for value in (
+        _controls(sample).get("isAIControlled"),
+        sample.get("isAIControlled"),
+        sample.get("is_ai_controlled"),
+    ):
+        if value is None:
+            continue
+        if isinstance(value, bool):
+            return value
+        number = _finite(value)
+        if number is not None:
+            return number != 0.0
+    return None

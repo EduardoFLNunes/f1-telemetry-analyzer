@@ -247,6 +247,7 @@ def _base_unavailable_physics() -> Dict[str, Any]:
             "steerAngle": None,
             "gear": None,
             "rpm": None,
+            "isAIControlled": None,
         },
         "tyres": {
             "tyreCoreTemperature": [None, None, None, None],
@@ -355,6 +356,9 @@ def build_player_car_physics(
             "steerAngle": _safe_float(sample.steering),
             "gear": _safe_float(sample.gear),
             "rpm": _safe_float(sample.rpm),
+            # The game's AI at the wheel (ADR 0014): recorded on every sample, so
+            # a lap where it took over is never mistaken for the driver's.
+            "isAIControlled": sample.isAIControlled,
         },
         "tyres": {
             "tyreCoreTemperature": tyre_temp,
