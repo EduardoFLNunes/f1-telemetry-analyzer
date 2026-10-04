@@ -60,6 +60,12 @@ LOSS_SPREAD_MULTIPLE = 2.0
 # And even above it, not more often than this -- a coach talking every corner is
 # a coach nobody listens to.
 MIN_SECONDS_BETWEEN_EVENTS = 3.0
+# On the official geometry the lap turns at `s = 0`: a wrap from the last 5 % of
+# the lap into the first 5 % is the finish line; any other wrap, or a jump of
+# more than 5 % of the lap between two frames, is the car being moved (pits
+# from the menu, a reset), and the count starts again without a word.
+LINE_WINDOW = 0.05
+JUMP_PROGRESS = 0.05
 
 
 def _legacy(model: Any) -> bool:
@@ -112,14 +118,17 @@ class LiveDrivingCoach:
         self._lap_loss_optimal: float = 0.0
         self._lap_worst: Optional[Dict[str, Any]] = None
         self._warned_missing_reference = False
+        self._last_projection_clock: Optional[float] = None
+        self._last_lap_clock: Optional[float] = None
+        self._clock_offset = 0.0
 
     # ── the hot path ─────────────────────────────────────────────────────
 
     def on_frame(self, frame: Dict[str, Any]) -> None:
         if not isinstance(frame, dict):
             return
-        clock = _number(frame.get("lap_time"))
-        if clock is None:
+        lap_clock = _number(frame.get("lap_time"))
+        if lap_clock is None:
             return
 
         model = self._model_for(frame.get("track") or frame.get("trackName"))
@@ -127,25 +136,50 @@ class LiveDrivingCoach:
             return
         if not self._usable(model):
             return
-        progress = self._progress(frame, model)
+        on_geometry = bool(getattr(model, "geometry_id", None))
+        # On the official geometry the lap turns at `s = 0`, a few metres before
+        # the game resets its lap timer -- so the clock there has to run through
+        # the line (pedido 14). The legacy `p` path keeps the lap timer.
+        clock = self._continuous_clock(frame, lap_clock) if on_geometry else lap_clock
+        progress = self._progress(frame, model, clock)
         if progress is None or not (0.0 <= progress <= 1.0):
             return
 
         lap_number = _number(frame.get("lap_number") or frame.get("lap"))
         index = min(int(progress * model.microsectors), model.microsectors - 1)
 
+        if on_geometry:
+            if self._sector_index is None or self._last_progress is None:
+                self._start_lap(lap_number, index, clock, progress)
+                return
+            last_progress = self._last_progress
+            if last_progress - progress > 0.5:
+                if last_progress >= 1.0 - LINE_WINDOW and progress <= LINE_WINDOW:
+                    # The finish line, between two frames: interpolated, like any
+                    # other boundary. It closes the last slice and opens the next lap.
+                    t = (1.0 - last_progress) / ((progress + 1.0) - last_progress)
+                    crossing = self._last_clock + (clock - self._last_clock) * t
+                    self._close_sector(frame, model, self._sector_index, self._sector_entry_clock, crossing)
+                    self._speak_lap_summary(frame, model)
+                    self._start_lap(lap_number, 0, crossing, 0.0)
+                    self._last_progress, self._last_clock = progress, clock
+                    if index == 0:
+                        return
+                    # Already past the first boundary in the same frame: fall
+                    # through and close slice 0 too.
+                    last_progress = 0.0
+                else:
+                    # Not the line: the car was moved (pits from the menu, a reset).
+                    self._start_lap(lap_number, index, clock, progress)
+                    return
+            elif abs(progress - last_progress) > JUMP_PROGRESS:
+                self._start_lap(lap_number, index, clock, progress)
+                return
         # A new lap, or the first frame we have seen: start counting, say nothing.
-        if self._lap_number != lap_number or self._sector_index is None:
+        elif self._lap_number != lap_number or self._sector_index is None:
             if self._lap_number is not None and lap_number is not None and lap_number != self._lap_number:
                 self._speak_lap_summary(frame, model)
-            self._lap_number = lap_number
-            self._sector_index = index
-            self._sector_entry_clock = clock
-            self._last_progress = progress
-            self._last_clock = clock
-            self._lap_loss = 0.0
-            self._lap_loss_optimal = 0.0
-            self._lap_worst = None
+            self._start_lap(lap_number, index, clock, progress)
             return
 
         # Still inside the same slice: nothing to do. This is the branch almost
@@ -156,7 +190,7 @@ class LiveDrivingCoach:
             return
 
         # The lap wrapped; the finish line is handled as a new lap above.
-        if progress < (self._last_progress or 0.0) - 0.5:
+        if not on_geometry and progress < (self._last_progress or 0.0) - 0.5:
             self._sector_index = index
             self._sector_entry_clock = clock
             self._last_progress = progress
@@ -182,6 +216,22 @@ class LiveDrivingCoach:
         self._sector_entry_clock = crossing
         self._last_progress = progress
         self._last_clock = clock
+        self._close_sector(frame, model, finished, entry, crossing)
+
+    def _start_lap(self, lap_number: Optional[float], index: int, clock: float, progress: float) -> None:
+        """Start counting from here; nothing is said about the slice it starts in."""
+        self._lap_number = lap_number
+        self._sector_index = index
+        self._sector_entry_clock = clock
+        self._last_progress = progress
+        self._last_clock = clock
+        self._lap_loss = 0.0
+        self._lap_loss_optimal = 0.0
+        self._lap_worst = None
+
+    def _close_sector(self, frame: Dict[str, Any], model: Any, finished: Optional[int],
+                      entry: Optional[float], crossing: float) -> None:
+        """A slice was completed: compare it with the model and speak if it is worth it."""
         if entry is None or finished is None:
             return
 
@@ -223,7 +273,21 @@ class LiveDrivingCoach:
         else:
             self._emit_reference_event(frame, model, target, split, loss)
 
-    def _progress(self, frame: Dict[str, Any], model: Any) -> Optional[float]:
+    def _continuous_clock(self, frame: Dict[str, Any], lap_clock: float) -> float:
+        """A clock that runs through the finish line, in seconds.
+
+        The sample's `timestamp` (epoch, ms) when there is one. Without it, the
+        lap timer with its resets stitched together.
+        """
+        stamp = _number(frame.get("timestamp"))
+        if stamp is not None:
+            return stamp / 1000.0 if stamp > 100_000_000_000.0 else stamp
+        if self._last_lap_clock is not None and lap_clock < self._last_lap_clock - 1.0:
+            self._clock_offset += self._last_lap_clock
+        self._last_lap_clock = lap_clock
+        return lap_clock + self._clock_offset
+
+    def _progress(self, frame: Dict[str, Any], model: Any, clock: Optional[float] = None) -> Optional[float]:
         """Where in the lap the car is, 0 to 1, on the ruler the model was fitted on."""
         if not getattr(model, "geometry_id", None):
             return _number(frame.get("p") if frame.get("p") is not None else frame.get("lapProgress"))
@@ -234,7 +298,12 @@ class LiveDrivingCoach:
         z = _number(frame.get("world_z") if frame.get("world_z") is not None else frame.get("worldZ"))
         if x is None or z is None:
             return None
-        s, _ = projector.project(x, z)
+        # Speed and interval size the projection's hard continuity (pedido 14).
+        speed_kmh = _number(frame.get("speedKmh"))
+        speed = speed_kmh / 3.6 if speed_kmh is not None else _number(frame.get("speed"))
+        dt = clock - self._last_projection_clock if clock is not None and self._last_projection_clock is not None else None
+        self._last_projection_clock = clock
+        s, _ = projector.project(x, z, speed_mps=speed, dt_s=dt)
         return s / projector.geometry.length
 
     def _projector_for(self, model: Any) -> Any:

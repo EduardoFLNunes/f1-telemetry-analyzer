@@ -306,6 +306,20 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
     Taking the first sample past a boundary instead would fold the sampling
     interval into the split, which at 57 Hz is up to 18 ms per boundary -- more
     than the differences this model exists to measure.
+
+    The finish line follows the ML convention (pedido 14): the lap is timed from
+    `s = 0` to `s = 0`, interpolated. A recorded lap starts a few metres *past*
+    the line -- the game resets the lap timer a little after `s = 0`, and the
+    lap counter a few frames after that -- and ends a few metres past it again,
+    with the line itself crossed in its tail. So the flag is interpolated in the
+    tail, and the start is the flag minus one period: the time between two
+    passages over the lap's first sample. Measured on five laps: that period is
+    the game's lap time to the millisecond.
+
+    The old version extrapolated the start backwards from the first sample
+    instead, which put the sum of the slices 26 ms over the store's lap time --
+    and the store turned out to be the one that is short (one grid step at the
+    line, see docs/coach_aprendizado.md).
     """
     splits: List[Optional[float]] = [None] * microsectors
     if df is None or df.empty or "p" not in df.columns or "elapsed_s" not in df.columns:
@@ -318,43 +332,7 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
     if progress.size < microsectors:
         return splits
 
-    # Crossing time for every boundary, including the flag at 1.0.
-    #
-    # The two ends are not observed. A recorded lap does not start exactly on
-    # the line -- its first sample lands somewhere inside the first microsector
-    # -- and it does not end exactly on it either. Taking the first sample's
-    # clock as the crossing therefore makes the first sector short by however
-    # late the recording began, which is not a lap record, it is a recording
-    # offset: sector 0 came out with eight times the spread of any other sector
-    # and its target was set by whichever lap happened to start latest. The last
-    # sector had the mirror problem and simply never got a target at all, which
-    # left the ideal lap missing a slice and the gap to it overstated.
-    #
-    # So both ends are extrapolated from the rate at the ends, and only when the
-    # gap is small enough for that rate to mean anything.
-    crossings: List[Optional[float]] = [None] * (microsectors + 1)
-    crossings[0] = _edge_crossing(progress, elapsed, at=0.0, microsectors=microsectors)
-    boundary = 1
-    for index in range(1, progress.size):
-        while boundary <= microsectors and progress[index] >= boundary / microsectors:
-            previous_p, current_p = progress[index - 1], progress[index]
-            at = elapsed[index]
-            if current_p > previous_p:
-                t = ((boundary / microsectors) - previous_p) / (current_p - previous_p)
-                if 0.0 <= t <= 1.0:
-                    at = elapsed[index - 1] + (elapsed[index] - elapsed[index - 1]) * t
-            crossings[boundary] = float(at)
-            boundary += 1
-        if boundary > microsectors:
-            break
-
-    # The flag. The walk above can never reach it: a recorded lap ends a sample
-    # or two past the line, so its progress has already wrapped to nearly zero
-    # and `progress >= 1.0` is never true. Left like that the last microsector
-    # never closes, and the ideal lap is the sum of 59 slices out of 60.
-    if crossings[microsectors] is None:
-        crossings[microsectors] = _edge_crossing(progress, elapsed, at=1.0, microsectors=microsectors)
-
+    crossings = _line_crossings(progress, elapsed, microsectors)
     for index in range(microsectors):
         start, end = crossings[index], crossings[index + 1]
         if start is None or end is None:
@@ -365,53 +343,49 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
     return splits
 
 
-def _edge_crossing(progress, elapsed, *, at: float, microsectors: int) -> Optional[float]:
-    """
-    When the lap crossed `at` (0.0 or 1.0), which no sample sits exactly on.
+def _line_crossings(progress: np.ndarray, elapsed: np.ndarray, microsectors: int) -> List[Optional[float]]:
+    """When the lap crossed every boundary, the start line included (one period before the flag).
 
-    Extrapolated from the rate at that end of the lap, and only when the sample
-    is within a fifth of a microsector of the line -- past that the rate is a
-    guess and no target is better than a wrong one.
+    Progress is unwrapped where it falls back near zero -- the line crossed in
+    the tail -- so the lap runs on one increasing axis from its first sample to
+    one lap past it. An end that no sample reaches is extrapolated from the rate
+    at that end, but only within a fifth of a microsector: past that the rate is
+    a guess and no target is better than a wrong one.
     """
     tolerance = 0.2 / microsectors
-    if at <= 0.0:
-        if progress.size < 2 or progress[0] > tolerance:
+    unwrapped = progress.astype(float).copy()
+    drops = np.flatnonzero(np.diff(unwrapped) < -0.5)
+    if drops.size:
+        unwrapped[drops[0] + 1:] += 1.0
+        if drops.size > 1:
+            # A second wrap is the next lap: stop there.
+            cut = drops[1] + 1
+            unwrapped, elapsed = unwrapped[:cut], elapsed[:cut]
+    unwrapped = np.maximum.accumulate(unwrapped)
+    keep = np.r_[True, np.diff(unwrapped) > 0]
+    unwrapped, elapsed = unwrapped[keep], elapsed[keep]
+    if unwrapped.size < 2:
+        return [None] * (microsectors + 1)
+
+    def at(position: float) -> Optional[float]:
+        if position < unwrapped[0]:
             return None
-        span = progress[1] - progress[0]
-        if span <= 0:
-            return float(elapsed[0])
-        rate = (elapsed[1] - elapsed[0]) / span
-        return float(elapsed[0] - progress[0] * rate)
+        if position <= unwrapped[-1]:
+            return float(np.interp(position, unwrapped, elapsed))
+        if position - unwrapped[-1] > tolerance:
+            return None
+        rate = (elapsed[-1] - elapsed[-2]) / (unwrapped[-1] - unwrapped[-2])
+        return float(elapsed[-1] + (position - unwrapped[-1]) * rate)
 
-    if progress.size < 2:
-        return None
-
-    # A recorded lap usually ends *past* the line, with anything from one to a
-    # dozen samples already into the next lap and their progress back near zero.
-    # Read literally that is a lap that stopped at the start, and the final
-    # microsector never closes -- which is why the ideal lap was the sum of 59
-    # slices out of 60. So find where progress actually fell off the cliff and
-    # interpolate the crossing there, wherever in the tail it happened.
-    for index in range(progress.size - 1, max(0, progress.size - 60), -1):
-        before, after = float(progress[index - 1]), float(progress[index])
-        if after >= before - 0.5:
-            continue
-        span = (after + 1.0) - before
-        if span <= 0:
-            return float(elapsed[index])
-        t = (1.0 - before) / span
-        return float(elapsed[index - 1] + (elapsed[index] - elapsed[index - 1]) * t)
-
-    # No wrap in the tail: the lap simply stops, and only counts if it stopped
-    # on the line.
-    last, previous = float(progress[-1]), float(progress[-2])
-    if last < 1.0 - tolerance:
-        return None
-    span = last - previous
-    if span <= 0:
-        return float(elapsed[-1])
-    rate = (elapsed[-1] - elapsed[-2]) / span
-    return float(elapsed[-1] + (1.0 - last) * rate)
+    crossings: List[Optional[float]] = [None] * (microsectors + 1)
+    for boundary in range(1, microsectors + 1):
+        crossings[boundary] = at(boundary / microsectors)
+    first = float(unwrapped[0])
+    lap_end = at(1.0 + first)
+    if crossings[microsectors] is not None and lap_end is not None and first <= tolerance + 1.0 / microsectors:
+        period = lap_end - float(elapsed[0])
+        crossings[0] = crossings[microsectors] - period
+    return crossings
 
 
 def _channel_summary(df: pd.DataFrame, start_p: float, end_p: float) -> Dict[str, Optional[float]]:

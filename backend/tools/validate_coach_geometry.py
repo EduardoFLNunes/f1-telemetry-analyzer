@@ -51,7 +51,7 @@ from core.telemetry.telemetry_buffer import TelemetryBuffer  # noqa: E402
 from core.telemetry_events import COACHING_EVENT, ENGINEER_SPEECH  # noqa: E402
 from ml import config  # noqa: E402
 from ml.data.lap_store import load_store  # noqa: E402
-from ml.data.recordings import iter_laps, list_sessions  # noqa: E402
+from ml.data.recordings import iter_laps, list_all_sessions, list_sessions  # noqa: E402
 from ml.track.geometry import load_geometry  # noqa: E402
 from ml.track.microsectors import build_microsectors, split_times  # noqa: E402
 
@@ -82,28 +82,54 @@ def stats(values: np.ndarray) -> Dict[str, float]:
     }
 
 
+def project_session(geometry, session, timings: Optional[List[float]] = None):
+    """O coach projeta a sessao inteira, amostra por amostra, como ao vivo.
+
+    Velocidade e intervalo entre amostras (relogio continuo) vao para a
+    continuidade rigida do projetor (pedido 14). Devolve, por volta do `ml`, as
+    amostras e a projecao do coach.
+    """
+    projector = geometry.projector()
+    previous_clock = None
+    for lap in iter_laps(session, min_samples=1):
+        frame = lap.frame.dropna(subset=["x", "z"])
+        points = frame[["x", "z"]].to_numpy(dtype=float)
+        speed = frame["speed_kmh"].to_numpy(dtype=float) / 3.6 if "speed_kmh" in frame else np.full(len(frame), np.nan)
+        clock = frame["timestamp_s"].to_numpy(dtype=float) if "timestamp_s" in frame else np.full(len(frame), np.nan)
+        coach = np.empty((points.shape[0], 2))
+        for index, (x, z) in enumerate(points):
+            now = clock[index]
+            dt = now - previous_clock if previous_clock is not None and np.isfinite(now) else None
+            started = time.perf_counter()
+            coach[index] = projector.project(
+                x, z, speed_mps=float(speed[index]) if np.isfinite(speed[index]) else None, dt_s=dt
+            )
+            if timings is not None:
+                timings.append(time.perf_counter() - started)
+            if np.isfinite(now):
+                previous_clock = now
+        yield lap, points, coach
+
+
+def compare_with_ml(track, points, coach):
+    s_ml, d_ml = track.project_sequence(points)
+    ds = np.mod(coach[:, 0] - s_ml + track.length / 2, track.length) - track.length / 2
+    return ds, coach[:, 1] - d_ml
+
+
 def criterion_a_b(geometry, track, store, sessions) -> Dict[str, object]:
     valid = set(store.lap_ids)
     out: Dict[str, object] = {"sessoes": {}}
     timings: List[float] = []
     for origin, session_id in A_SESSIONS.items():
-        projector = geometry.projector()
         ds_all, dd_all = [], []
         laps_compared = 0
-        for lap in iter_laps(sessions[session_id], min_samples=1):
-            frame = lap.frame.dropna(subset=["x", "z"])
-            points = frame[["x", "z"]].to_numpy(dtype=float)
-            coach = np.empty((points.shape[0], 2))
-            for index, (x, z) in enumerate(points):
-                started = time.perf_counter()
-                coach[index] = projector.project(x, z)
-                timings.append(time.perf_counter() - started)
+        for lap, points, coach in project_session(geometry, sessions[session_id], timings):
             if lap.lap_id not in valid or points.shape[0] < 10:
                 continue
-            s_ml, d_ml = track.project_sequence(points)
-            ds = np.mod(coach[:, 0] - s_ml + track.length / 2, track.length) - track.length / 2
+            ds, dd = compare_with_ml(track, points, coach)
             ds_all.append(ds)
-            dd_all.append(coach[:, 1] - d_ml)
+            dd_all.append(dd)
             laps_compared += 1
         ds_stats = stats(np.concatenate(ds_all))
         dd_stats = stats(np.concatenate(dd_all))
@@ -126,8 +152,74 @@ def criterion_a_b(geometry, track, store, sessions) -> Dict[str, object]:
     return {"a": out, "b": b}
 
 
+def clean_lap_ids() -> set:
+    """Voltas limpas do inventario novo (pedidos 12 e 13): valida, unica, relogio ok, sem box."""
+    import pandas as pd
+
+    from ml.data.ai_detector import pit_lap
+    from ml.data.origin import driver_mask
+
+    root = config.artifacts_root() / "origem"
+    inventory = pd.read_parquet(root / "lap_inventory.parquet")
+    ok = inventory[inventory["valid"].astype(bool) & driver_mask(inventory, origins=None, equipment=None)]
+    grids = {k: g.sort_values("grid_index") for k, g in pd.read_parquet(root / "grade_voltas.parquet").groupby("lap_id")}
+    sectors = build_microsectors(load_geometry())
+    return {i for i in ok["lap_id"] if i in grids and not pit_lap(grids[i], sectors)}
+
+
+def criterion_e(geometry, track) -> Dict[str, object]:
+    clean = clean_lap_ids()
+    available = {s.session_id: s for s in list_all_sessions()}
+    names = list(A_SESSIONS.values()) + sorted(k for k in available if k.startswith(E_LABELLED_SESSION_DATE))
+    out: Dict[str, object] = {"sessoes": {}}
+    for session_id in names:
+        worst, samples, laps, where = 0.0, 0, 0, None
+        for lap, points, coach in project_session(geometry, available[session_id]):
+            if lap.lap_id not in clean or points.shape[0] < 10:
+                continue
+            ds, _ = compare_with_ml(track, points, coach)
+            k = int(np.argmax(np.abs(ds)))
+            if abs(ds[k]) > worst:
+                worst, where = float(abs(ds[k])), {"volta": lap.lap_id, "amostra": k, "s_ml_m": None}
+            samples += int(points.shape[0])
+            laps += 1
+        out["sessoes"][session_id] = {
+            "voltas_limpas": laps,
+            "amostras": samples,
+            "abs_ds_max_m": worst,
+            "onde": where,
+            "passou": laps == 0 or worst <= E_MAX_DS_M,
+        }
+    out["passou"] = all(v["passou"] for v in out["sessoes"].values())
+    return out
+
+
+def true_period_ms0(track, session, lap_id):
+    """Diagnostico (nao e criterio): microsetor 0 e periodo verdadeiro, com s = 0 interpolado."""
+    from ml.preprocessing.alignment import align_lap
+    from ml.preprocessing.cleaning import clean_lap
+    from ml.preprocessing.resampling import lap_time_from_grid, resample_lap
+
+    for lap in iter_laps(session):
+        if lap.lap_id != lap_id:
+            continue
+        cleaned, _ = clean_lap(lap.frame)
+        aligned, _ = align_lap(cleaned, track)
+        grid = resample_lap(aligned, track)
+        u = np.maximum.accumulate(aligned["s_unwrapped"].to_numpy(dtype=float))
+        t = aligned["elapsed_s"].to_numpy(dtype=float)
+        target = u[0] + track.length
+        if target <= u[-1]:
+            end = float(np.interp(target, u, t))
+        else:
+            end = float(t[-1] + (target - u[-1]) * (t[-1] - t[-2]) / (u[-1] - u[-2]))
+        return end - float(t[0]), lap_time_from_grid(grid)
+    return None, None
+
+
 def criterion_c(geometry, track, store, loader) -> Dict[str, object]:
     sectors = build_microsectors(track)
+    sessions_all = {s.session_id: s for s in list_all_sessions()}
     laps = store.laps.sort_values("lap_time_s")
     chosen = laps.drop_duplicates("session_id").head(5)
     loaded = loader.load_recorded_laps(chosen["replay_lap_id"].tolist())
@@ -139,6 +231,13 @@ def criterion_c(geometry, track, store, loader) -> Dict[str, object]:
         ml = split_times(frame["elapsed_s"].to_numpy(dtype=float), sectors, track, total=float(lap.lap_time_s))
         coach_arr = np.array([np.nan if v is None else v for v in coach], dtype=float)
         diff = coach_arr - ml
+        # Diagnostico, nao criterio: o ML com o periodo verdadeiro (o deficit do
+        # store fica inteiro no microsetor 0).
+        period, store_total = true_period_ms0(track, sessions_all[lap.session_id], lap.lap_id)
+        ml_fixed = ml.copy()
+        if period is not None:
+            ml_fixed[0] += period - store_total
+        diff_fixed = coach_arr - ml_fixed
         rows.append(
             {
                 "lap_id": lap.lap_id,
@@ -148,6 +247,14 @@ def criterion_c(geometry, track, store, loader) -> Dict[str, object]:
                 "diferenca_max_por_microsetor_s": float(np.nanmax(np.abs(diff))),
                 "soma_coach_s": float(np.nansum(coach_arr)),
                 "soma_menos_tempo_volta_s": float(np.nansum(coach_arr) - lap.lap_time_s),
+                "microsetor_0_diferenca_s": float(diff[0]),
+                "microsetores_1_a_59_diferenca_max_s": float(np.nanmax(np.abs(diff[1:]))),
+                "diagnostico_ml_periodo_verdadeiro": {
+                    "periodo_s": period,
+                    "store_menos_periodo_ms": None if period is None else round(1000 * (store_total - period), 1),
+                    "diferenca_max_por_microsetor_s": float(np.nanmax(np.abs(diff_fixed))),
+                    "soma_menos_periodo_s": None if period is None else float(np.nansum(coach_arr) - period),
+                },
             }
         )
     passed = all(
@@ -213,7 +320,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--geometria-arquivo", type=Path, required=True)
     parser.add_argument("--modelo", type=Path, required=True)
     parser.add_argument("--saida", type=Path, required=True)
-    parser.add_argument("--so", default="abcd", help="quais criterios rodar (padrao: abcd)")
+    parser.add_argument("--so", default="abcde", help="quais criterios rodar (padrao: abcde)")
     args = parser.parse_args(argv)
 
     geometry = OfficialGeometry.load(args.geometria_arquivo)
@@ -242,6 +349,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             "b": {"p99_ms": B_P99_MS},
             "c": {"max_por_microsetor_s": C_MAX_SECTOR_S, "soma_s": C_SUM_S},
             "d": {"proibido": list(D_FORBIDDEN)},
+            "e": {"abs_ds_max_m": E_MAX_DS_M, "sessao_rotulada": E_LABELLED_SESSION_DATE},
         },
     }
     if "a" in args.so or "b" in args.so:
@@ -257,10 +365,15 @@ def main(argv: Optional[List[str]] = None) -> int:
         result["d"] = criterion_d(geometry, model)
         print(f"  d: {result['d']['passou']}", flush=True)
 
+    if "e" in args.so:
+        print("e: saltos de projecao nas voltas limpas...", flush=True)
+        result["e"] = criterion_e(geometry, track)
+        print(f"  e: {result['e']['passou']}", flush=True)
+
     args.saida.mkdir(parents=True, exist_ok=True)
     (args.saida / "validacao.json").write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"-> {args.saida / 'validacao.json'}")
-    return 0 if all(result.get(k, {}).get("passou", True) for k in "abcd") else 1
+    return 0 if all(result.get(k, {}).get("passou", True) for k in "abcde") else 1
 
 
 if __name__ == "__main__":

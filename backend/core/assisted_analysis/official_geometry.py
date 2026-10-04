@@ -112,6 +112,13 @@ def find_official_geometry(roots: Iterable[Path], track: str) -> Optional[Offici
     return None
 
 
+# Hard continuity of the coach's projection (pedido 14). At 280 km/h and 60 Hz
+# a sample moves 1.3 m; the limit there is ~7 m, and a one-second recording hole
+# still allows ~120 m.
+MAX_ADVANCE_FACTOR = 1.5
+MAX_ADVANCE_MARGIN_M = 5.0
+
+
 class CoachProjector:
     """World X/Z -> (s, d) on the official grid, one sample after another.
 
@@ -126,16 +133,22 @@ class CoachProjector:
         self.geometry = geometry
         self.space = CanonicalTrackSpace(geometry.x, geometry.z)
         self.scale = geometry.length / self.space.total_length
-        self.engine = MapMatchingEngine(self.space)
+        # Hard continuity (pedido 14): `s` never moves further between two
+        # samples than speed * interval * 1.5 + 5 m. Only this instance -- the
+        # map and the live panel keep the engine's default.
+        self.engine = MapMatchingEngine(self.space, max_advance_factor=MAX_ADVANCE_FACTOR,
+                                        max_advance_margin_m=MAX_ADVANCE_MARGIN_M)
 
     def reset(self) -> None:
         """Forget the last position (new session, or a jump the car really made)."""
         self.engine.last_s = None
 
-    def project(self, x: float, z: float) -> Tuple[float, float]:
+    def project(
+        self, x: float, z: float, speed_mps: Optional[float] = None, dt_s: Optional[float] = None
+    ) -> Tuple[float, float]:
         # `velocity` only tunes a log line inside the engine; a large value keeps
         # it from warning on every legitimate jump (box exit, a reset).
-        result = self.engine.project(float(x), float(z), velocity=1e6)
+        result = self.engine.project(float(x), float(z), velocity=1e6, speed_mps=speed_mps, dt_s=dt_s)
         s = float(result["s"]) * self.scale
         return s % self.geometry.length, float(to_left_positive(float(result["L"])))
 
@@ -184,11 +197,24 @@ def project_lap(df: pd.DataFrame, geometry: OfficialGeometry) -> pd.DataFrame:
     projector = geometry.projector()
     xs = pd.to_numeric(out["x"], errors="coerce").to_numpy(dtype=float)
     zs = pd.to_numeric(out["z"], errors="coerce").to_numpy(dtype=float)
+    speed = (
+        pd.to_numeric(out["speed_kmh"], errors="coerce").to_numpy(dtype=float) / 3.6
+        if "speed_kmh" in out.columns else np.full(xs.size, np.nan)
+    )
+    clock = (
+        pd.to_numeric(out["elapsed_s"], errors="coerce").to_numpy(dtype=float)
+        if "elapsed_s" in out.columns else np.full(xs.size, np.nan)
+    )
     s_values = np.full(xs.size, np.nan)
     d_values = np.full(xs.size, np.nan)
+    previous_clock = None
     for index, (x, z) in enumerate(zip(xs, zs)):
         if np.isfinite(x) and np.isfinite(z):
-            s_values[index], d_values[index] = projector.project(x, z)
+            dt = clock[index] - previous_clock if previous_clock is not None and np.isfinite(clock[index]) else None
+            s_values[index], d_values[index] = projector.project(
+                x, z, speed_mps=float(speed[index]) if np.isfinite(speed[index]) else None, dt_s=dt
+            )
+            previous_clock = clock[index] if np.isfinite(clock[index]) else previous_clock
     out["s"] = s_values
     out["p"] = s_values / geometry.length
     out["d"] = d_values

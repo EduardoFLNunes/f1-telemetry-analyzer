@@ -82,15 +82,114 @@ class MapMatchingEngine:
     """
     High-precision map matching with heading validation and temporal continuity.
     Responsible for projecting raw coordinates into canonical (s, L) space.
+
+    Continuity is a penalty by default: a candidate far from the last `s` costs
+    more, but can still win. That is what the map and the live panel use. The
+    coach's instance can turn on a hard limit instead (`max_advance_factor`,
+    pedido 14): a candidate is only acceptable if `s` moved no more than the car
+    could have, `speed * dt * factor + margin` -- the same idea as the 60 m rule
+    of the ML projection (`TrackGeometry.project_sequence`), sized per sample.
+    Measured in the pedido 11 validation: with the penalty alone, isolated
+    samples jumped up to 28 m along the track.
     """
-    def __init__(self, track: CanonicalTrackSpace):
+    # Without speed or interval, the hard limit falls back to the ML's fixed step.
+    FALLBACK_MAX_ADVANCE_M = 60.0
+
+    def __init__(
+        self,
+        track: CanonicalTrackSpace,
+        max_advance_factor: Optional[float] = None,
+        max_advance_margin_m: float = 5.0,
+        teleport_distance_m: float = 50.0,
+    ):
         self.track = track
         self.last_s = None
         self.spatial_lock_threshold = 20.0  # meters
-        
-    def project(self, x: float, z: float, heading_vec: Optional[Tuple[float, float]] = None, velocity: float = 0.0, hint_s: Optional[float] = None) -> Dict[str, Any]:
+        # Hard continuity, off unless asked for (None).
+        self.max_advance_factor = max_advance_factor
+        self.max_advance_margin_m = max_advance_margin_m
+        # Inside the limit nothing is closer than this: the car really moved
+        # (back to the pits from the menu, a session reset), so let it jump.
+        self.teleport_distance_m = teleport_distance_m
+
+    def _score_segment(self, seg_start_idx: int, q: np.ndarray, heading_vec) -> Tuple[float, float, float, float]:
+        """(score, s, L, perpendicular distance) of the segment starting at `seg_start_idx`."""
+        idx1 = seg_start_idx % self.track.n_samples
+        idx2 = (seg_start_idx + 1) % self.track.n_samples
+
+        p1 = self.track.points[idx1]
+        p2 = self.track.points[idx2]
+
+        u = p2 - p1
+        u_mag_sq = np.sum(u**2)
+        if u_mag_sq < 1e-8:
+            return float('inf'), 0.0, 0.0, float('inf')
+
+        v = q - p1
+        t = np.clip(np.dot(v, u) / u_mag_sq, 0, 1)
+
+        proj_p = p1 + t * u
+        perp_dist = np.linalg.norm(q - proj_p)
+
+        s_proj = (self.track.s_samples[idx1] + t * self.track.ds[idx1]) % self.track.total_length
+
+        # Scoring Function
+        score = perp_dist
+
+        # Heading Validation
+        if heading_vec is not None:
+            tx, tz = self.track.get_tangent(s_proj)
+            h_mag = np.linalg.norm(heading_vec)
+            if h_mag > 0.1:
+                h_norm = np.array(heading_vec) / h_mag
+                dot = np.dot(h_norm, [tx, tz])
+                # Heavy penalty for wrong direction (reverse snapping protection)
+                score += (1.0 - dot) * 20.0
+
+        # Temporal Continuity
+        if self.last_s is not None:
+            s_diff = abs(self._min_s_diff(s_proj, self.last_s))
+            # Penalty for jumping too far
+            if s_diff > 10.0:
+                score += s_diff * 1.5
+
+        nx, nz = self.track.get_normal(s_proj)
+        L = np.dot(q - proj_p, [nx, nz])
+        return score, s_proj, L, perp_dist
+
+    def _max_advance(self, speed_mps: Optional[float], dt_s: Optional[float]) -> float:
+        if (
+            speed_mps is None or dt_s is None
+            or not np.isfinite(speed_mps) or not np.isfinite(dt_s) or dt_s <= 0.0
+        ):
+            return self.FALLBACK_MAX_ADVANCE_M
+        return abs(float(speed_mps)) * float(dt_s) * float(self.max_advance_factor) + self.max_advance_margin_m
+
+    def _window_segments(self, limit: float) -> List[int]:
+        """Segment starts whose `s` lies within `limit` of the last `s`, either way."""
+        total = self.track.total_length
+        samples = self.track.s_samples
+        low = (self.last_s - limit) % total
+        high = (self.last_s + limit) % total
+        if low <= high:
+            idx = np.flatnonzero((samples >= low) & (samples <= high))
+        else:
+            idx = np.flatnonzero((samples >= low) | (samples <= high))
+        # The segment that ends inside the window starts one sample before it.
+        return sorted(set(int(i) for i in idx) | set(int(i) - 1 for i in idx))
+
+    def project(
+        self,
+        x: float,
+        z: float,
+        heading_vec: Optional[Tuple[float, float]] = None,
+        velocity: float = 0.0,
+        hint_s: Optional[float] = None,
+        speed_mps: Optional[float] = None,
+        dt_s: Optional[float] = None,
+    ) -> Dict[str, Any]:
         q = np.array([x, z])
-        
+
         # 1. Candidate Selection
         if hint_s is not None:
             # If we have a hint (from lap_dist_pct), use it to narrow search
@@ -100,61 +199,40 @@ class MapMatchingEngine:
         else:
             k = 15 if self.last_s is None else 8
             dists, idxs = self.track.tree.query(q, k=k)
-        
+
         best_s = 0.0
         best_L = 0.0
         best_score = float('inf')
-        
+        best_perp = float('inf')
+        candidates = []
+
         # 2. Score candidates
         for i in idxs:
             # Check segments [i-1, i] and [i, i+1]
             for seg_start_idx in [i - 1, i]:
-                idx1 = seg_start_idx % self.track.n_samples
-                idx2 = (seg_start_idx + 1) % self.track.n_samples
-                
-                p1 = self.track.points[idx1]
-                p2 = self.track.points[idx2]
-                
-                u = p2 - p1
-                u_mag_sq = np.sum(u**2)
-                if u_mag_sq < 1e-8: continue
-                
-                v = q - p1
-                t = np.clip(np.dot(v, u) / u_mag_sq, 0, 1)
-                
-                proj_p = p1 + t * u
-                perp_dist = np.linalg.norm(q - proj_p)
-                
-                s_proj = (self.track.s_samples[idx1] + t * self.track.ds[idx1]) % self.track.total_length
-                
-                # Scoring Function
-                score = perp_dist
-                
-                # Heading Validation
-                if heading_vec is not None:
-                    tx, tz = self.track.get_tangent(s_proj)
-                    h_mag = np.linalg.norm(heading_vec)
-                    if h_mag > 0.1:
-                        h_norm = np.array(heading_vec) / h_mag
-                        dot = np.dot(h_norm, [tx, tz])
-                        # Heavy penalty for wrong direction (reverse snapping protection)
-                        score += (1.0 - dot) * 20.0
-                
-                # Temporal Continuity
-                if self.last_s is not None:
-                    s_diff = abs(self._min_s_diff(s_proj, self.last_s))
-                    # Penalty for jumping too far
-                    if s_diff > 10.0:
-                        score += s_diff * 1.5
-                    
+                score, s_proj, L, perp = self._score_segment(seg_start_idx, q, heading_vec)
+                if not np.isfinite(score):
+                    continue
+                candidates.append((score, s_proj, L, perp))
                 if score < best_score:
-                    best_score = score
-                    best_s = s_proj
-                    
-                    # Lateral Offset L
-                    nx, nz = self.track.get_normal(best_s)
-                    v_to_q = q - proj_p
-                    best_L = np.dot(v_to_q, [nx, nz])
+                    best_score, best_s, best_L, best_perp = score, s_proj, L, perp
+
+        # 2b. Hard continuity (coach only): keep `s` within what the car can travel.
+        if self.max_advance_factor is not None and self.last_s is not None and candidates:
+            limit = self._max_advance(speed_mps, dt_s)
+            allowed = [c for c in candidates if abs(self._min_s_diff(c[1], self.last_s)) <= limit]
+            if not allowed:
+                for seg_start_idx in self._window_segments(limit):
+                    c = self._score_segment(seg_start_idx, q, heading_vec)
+                    if np.isfinite(c[0]) and abs(self._min_s_diff(c[1], self.last_s)) <= limit:
+                        allowed.append(c)
+            chosen = min(allowed, key=lambda c: c[0]) if allowed else None
+            nearest = min(candidates, key=lambda c: c[3])
+            if chosen is None or (chosen[3] > self.teleport_distance_m and nearest[3] < chosen[3]):
+                # The car really moved: follow it to the nearest stretch, without
+                # the continuity penalty pulling it back towards where it was.
+                chosen = nearest
+            best_score, best_s, best_L, best_perp = chosen
 
         # 3. Spatial Locking / Outlier Rejection
         if self.last_s is not None:
@@ -163,7 +241,7 @@ class MapMatchingEngine:
                 logger.warning(f"MapMatching: Rejected large jump {jump:.1f}m")
                 # Return previous s if jump is too large (unless we have no choice)
                 # For now, we trust the scoring but we could be more aggressive
-        
+
         self.last_s = best_s
         return {"s": best_s, "L": best_L, "score": best_score}
 
