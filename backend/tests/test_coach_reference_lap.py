@@ -118,12 +118,16 @@ class DifferenceAddsUpTest(unittest.TestCase):
 
 class CoachWordsTest(unittest.TestCase):
     def setUp(self):
+        # A segunda volta perde 0,2 s no microsetor 22: ele entra no foco (pedido 15).
         self.model = build_reference_model(
-            [entry("ref", 85.0, lap(85.0, brake_at=0.3667, min_speed=110.0)), entry("x", 85.4, lap(85.4))],
+            [entry("ref", 85.0, lap(85.0, brake_at=0.3667, min_speed=110.0)), entry("x", 85.6, lap(85.4, slow=(22, 0.2)))],
             track="vhe_interlagos",
         )
         self.bus = FakeBus()
         self.coach = LiveDrivingCoach(self.bus, lambda _t: self.model, min_gap_seconds=0.0)
+
+    def phrases(self):
+        return [e for e in self.bus.of(COACHING_EVENT) if e.get("type") != "coaching_focus"]
 
     def said(self):
         return [e["event"] for e in self.bus.of(COACHING_EVENT)] + [m["message"] for m in self.bus.of(ENGINEER_SPEECH)]
@@ -138,7 +142,7 @@ class CoachWordsTest(unittest.TestCase):
             self.assertNotIn("ganh", lowered)          # ganhar, ganho
             self.assertNotIn("ideal", lowered)
             self.assertNotIn("otimo", lowered)
-        event = self.bus.of(COACHING_EVENT)[0]
+        event = self.phrases()[0]
         self.assertIn("atras da sua volta de referencia neste trecho", event["event"])
         self.assertEqual(event["evidence"]["referenceLapId"], "ref")
         self.assertIn("referenceSeconds", event["evidence"])
@@ -155,7 +159,7 @@ class CoachWordsTest(unittest.TestCase):
             for row in frame.itertuples():
                 self.coach.on_frame({"p": row.p, "s": row.s, "lap_time": row.elapsed_s, "lap_number": number,
                                      "speedKmh": row.speed_kmh, "brake": row.brake, "track": "vhe_interlagos"})
-        event = self.bus.of(COACHING_EVENT)[0]
+        event = self.phrases()[0]
         self.assertNotIn("freada em", event["event"])
         self.assertIn("A referencia freia", event["event"])
         self.assertIn("depois de voce", event["event"])
@@ -164,7 +168,8 @@ class CoachWordsTest(unittest.TestCase):
     def test_threshold_is_unchanged(self):
         # Mesmo limiar nos dois modos: 2 x (mediana - melhor) do microsetor.
         legacy = build_reference_model(
-            [entry("ref", 85.0, lap(85.0)), entry("x", 85.4, lap(85.4))], track="t", mode=MODE_BEST_PER_MICROSECTOR
+            [entry("ref", 85.0, lap(85.0)), entry("x", 85.6, lap(85.4, slow=(22, 0.2)))], track="t",
+            mode=MODE_BEST_PER_MICROSECTOR,
         )
         target_new, target_old = self.model.targets[22], legacy.targets[22]
         self.assertAlmostEqual(self.coach._threshold_for(target_new), self.coach._threshold_for(target_old))  # noqa: SLF001
@@ -214,7 +219,8 @@ class LegacyModeTest(unittest.TestCase):
         self.assertEqual(DriverReferenceModel.load(path).mode, MODE_BEST_PER_MICROSECTOR)
 
     def test_recorded_lap_replay_uses_the_same_rules(self):
-        model = build_reference_model([entry("ref", 85.0, lap(85.0))], track="t")
+        model = build_reference_model([entry("ref", 85.0, lap(85.0)), entry("x", 85.2, lap(85.0, slow=(22, 0.2)))],
+                                      track="t")
         frame = lap(85.0, slow=(22, 0.6))
         frame["speed_kmh"] = 180.0
         result = coach_recorded_lap(frame, model, lap_number=3, track="t")

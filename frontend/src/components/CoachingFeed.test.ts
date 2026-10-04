@@ -93,4 +93,14 @@ describe('renderEvidence', () => {
     const line = renderEvidence(microsectorEvent({ optimalSeconds: null }));
     expect(line).not.toContain('OTIMO');
   });
+
+  it('shows the focus line of pedido 15 as a plain feed line', () => {
+    const focus = {
+      type: 'coaching_focus',
+      event: 'Foco nas proximas voltas: setores 32, 38 e 43',
+      evidence: 'Maior diferenca mediana para a volta da IA nas suas voltas do modelo.',
+    };
+    expect(microsectorEvidence(focus)).toBeNull();
+    expect(renderEvidence(focus)).toBe('Maior diferenca mediana para a volta da IA nas suas voltas do modelo.');
+  });
 });
