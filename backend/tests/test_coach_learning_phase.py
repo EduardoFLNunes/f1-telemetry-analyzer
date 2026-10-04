@@ -60,6 +60,20 @@ class HardContinuityTest(unittest.TestCase):
         self.assertLess(abs(coach_s[outlier] - s_true[outlier]), 7.0)
         np.testing.assert_allclose(np.delete(coach_s, outlier), np.delete(s_true, outlier), atol=0.2)
 
+    def test_a_recording_gap_does_not_leave_the_projection_behind(self):
+        """Medido em 04/10: 357 ms sem amostras a 248 km/h, 24 m de uma vez. O limite deixa
+        passar, e dentro dele vale o trecho mais perto, sem a penalidade antiga."""
+        track = circular_track()
+        projector = exported(track).projector()
+        speed = 248.0 / 3.6
+        for s in np.arange(100.0, 140.0, speed / HZ):
+            x, z = track.to_world(np.array([s]), np.zeros(1))[0]
+            projector.project(x, z, speed_mps=speed, dt_s=1.0 / HZ)
+        target = s + speed * 0.357
+        x, z = track.to_world(np.array([target]), np.zeros(1))[0]
+        got, _ = projector.project(x, z, speed_mps=speed, dt_s=0.357)
+        self.assertAlmostEqual(got, target, delta=0.1)
+
     def test_a_real_move_is_followed(self):
         """Voltar ao box pelo menu leva o carro para longe: a projecao acompanha."""
         track = circular_track()
