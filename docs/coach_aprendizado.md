@@ -220,7 +220,7 @@ O ensaio (`tools/ensaio_coach.py`) roda um coach só, atravessando todos os arqu
 - **antes:** o coach do pedido 14, com o foco aberto a todos os microsetores;
 - **agora:** com os 3 trechos de foco.
 
-O "antes" reproduz o ensaio do pedido 14 frase por frase: 94 e 79 frases de trecho, e na volta de 91,74 s os setores 2, 11 e 12.
+O "antes" reproduz as frases de trecho do ensaio do pedido 14, texto por texto: 94 e 79 frases, e na volta de 91,74 s os setores 2, 11 e 12. Dos resumos, um do modo `minha_melhor` sai da contagem (25 contra 26). O motivo: agora cada fala é ligada à volta pela amostra anterior a ela, porque o resumo sai na amostra que já cruzou a linha.
 
 **"Nos 3 maiores da volta"** quer dizer que a frase caiu num dos 3 setores que o resumo daquela mesma volta lista.
 
