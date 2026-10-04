@@ -152,11 +152,15 @@ def build_store(
         raise ValueError("o inventario nao tem nenhuma volta valida")
     wanted = select_laps(valid, origins, include_clock_suspect)
     if wanted.empty:
+        hint = (
+            "Inventario anterior ao ADR 0014 nao tem a coluna `origem`: reconstrua-o."
+            if "origem" not in valid.columns
+            else "Ainda nao ha voltas com essa origem: grave sessoes com o gravador do ADR 0014."
+        )
         raise ValueError(
             f"nenhuma das {len(valid)} voltas validas passa no filtro de origem "
             f"{list(origins) if origins is not None else 'todas'}"
-            f"{'' if include_clock_suspect else ', relogio conferido e nao suspeito'} (ADR 0014). "
-            "Inventario anterior ao ADR 0014 nao tem a coluna `origem`: reconstrua-o."
+            f"{'' if include_clock_suspect else ', relogio conferido e nao suspeito'} (ADR 0014). {hint}"
         )
     # Quais voltas sao validas foi decidido projetando contra uma geometria;
     # materializar contra outra misturaria as duas decisoes.

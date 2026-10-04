@@ -140,18 +140,12 @@ def clock_distribution(inventory: pd.DataFrame, clock: pd.DataFrame) -> Dict[str
     }
 
 
-def window_dispersion(lap_ids: List[str], grids: pd.DataFrame, windows, track) -> Dict[str, float]:
+def window_dispersion(rows: List[List[Dict[str, float]]], count: int) -> Dict[str, float]:
     """Dispersao (dp entre voltas) do ponto de frenagem e da lateral no apice."""
-    rows = []
-    for lap_id in lap_ids:
-        frame = grids[grids["lap_id"] == lap_id].sort_values("grid_index")
-        if len(frame) != track.size:
-            continue
-        rows.append(em.lap_window_features(frame.reset_index(drop=True), windows, track))
     if len(rows) < 3:
         return {"frenagem_dp_m": float("nan"), "apice_dp_m": float("nan"), "voltas_janela": len(rows)}
     brake_sd, apex_sd = [], []
-    for k in range(windows.count):
+    for k in range(count):
         points = np.array([r[k]["braking_point_s"] for r in rows], dtype=float)
         points = points[np.isfinite(points)]
         if points.size >= 3:
@@ -165,6 +159,28 @@ def window_dispersion(lap_ids: List[str], grids: pd.DataFrame, windows, track) -
         "apice_dp_m": float(np.median(apex_sd)) if apex_sd else float("nan"),
         "voltas_janela": len(rows),
     }
+
+
+def lap_deviation(features: List[Dict[str, float]], medians: Dict[str, np.ndarray]) -> Dict[str, float]:
+    """Quanto uma volta se afasta da mediana da pista: frenagem e apice, mediana entre janelas.
+
+    E um sinal por volta, e nao por sessao: numa sessao que alterna IA e
+    piloto, as voltas de cada um podem cair em grupos diferentes.
+    """
+    out = {}
+    for key, name in (("braking_point_s", "frenagem_desvio_m"), ("lateral_apex_m", "apice_desvio_m")):
+        values = np.array([f[key] for f in features], dtype=float)
+        deviation = np.abs(values - medians[key])
+        deviation = deviation[np.isfinite(deviation)]
+        out[name] = float(np.median(deviation)) if deviation.size else float("nan")
+    return out
+
+
+def spread(values: np.ndarray) -> Dict[str, float]:
+    values = values[np.isfinite(values)]
+    if values.size == 0:
+        return {"p10": float("nan"), "p50": float("nan"), "p90": float("nan")}
+    return {f"p{q}": float(np.percentile(values, q)) for q in (10, 50, 90)}
 
 
 def section_time(frame: pd.DataFrame, track, span) -> float:
@@ -186,7 +202,10 @@ def report(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
     save_inventory(inventory, out_dir)
     clock = pd.read_parquet(out_dir / CLOCK_TABLE)
     signals = pd.read_parquet(out_dir / SIGNALS_TABLE)
-    grids = pd.read_parquet(out_dir / GRID_TABLE)
+    grids = {
+        lap_id: frame.sort_values("grid_index").reset_index(drop=True)
+        for lap_id, frame in pd.read_parquet(out_dir / GRID_TABLE).groupby("lap_id")
+    }
 
     distribution = clock_distribution(inventory, clock)
 
@@ -218,23 +237,33 @@ def report(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
                 }
             )
 
-    # Zonas de frenagem e janelas da Fase 2b, sobre todas as voltas validas e unicas.
+    # Os sinais saem das voltas validas, unicas e com o relogio conferido: uma
+    # passagem pelo box ou uma parada mudaria o tempo e a frenagem por motivos
+    # que nao tem nada a ver com quem pilotou.
     usable = inventory[inventory["valid"] & inventory["duplicada_de"].isna()]
+    clean_laps = origin.select_laps(usable, origins=None)
+    complete = [i for i in clean_laps["lap_id"] if i in grids and len(grids[i]) == track.size]
+    # Zonas de frenagem e janelas da Fase 2b, sobre essas voltas.
     corners = detect_corners(track)
-    brakes = [
-        grids[grids["lap_id"] == i].sort_values("grid_index")["brake"].to_numpy(dtype=float)
-        for i in usable["lap_id"]
-    ]
-    windows = em.define_windows([b for b in brakes if b.size == track.size], track, corners)
+    windows = em.define_windows([grids[i]["brake"].to_numpy(dtype=float) for i in complete], track, corners)
+    features = {i: em.lap_window_features(grids[i], windows, track) for i in complete}
+    medians = {
+        key: np.array(
+            [np.nanmedian(np.array([features[i][k][key] for i in complete], dtype=float)) for k in range(windows.count)],
+            dtype=float,
+        )
+        for key in ("braking_point_s", "lateral_apex_m")
+    }
+    deviations = pd.DataFrame([{"lap_id": i, **lap_deviation(features[i], medians)} for i in complete])
+    deviations.to_parquet(out_dir / "desvios_voltas.parquet", index=False)
 
-    merged = usable.merge(signals, on="lap_id", how="left")
+    merged = clean_laps.merge(signals, on="lap_id", how="left").merge(deviations, on="lap_id", how="left")
     sessions = []
     for session_id, laps in inventory.groupby("session_id"):
-        unique_valid = merged[merged["session_id"] == session_id]
-        times = unique_valid["duration_s"].to_numpy(dtype=float)
-        bico = [
-            section_time(grids[grids["lap_id"] == i], track, BICO_DE_PATO_M) for i in unique_valid["lap_id"]
-        ]
+        unique_valid = usable[usable["session_id"] == session_id]
+        clean = merged[merged["session_id"] == session_id]
+        times = clean["duration_s"].to_numpy(dtype=float)
+        bico = [section_time(grids[i], track, BICO_DE_PATO_M) for i in clean["lap_id"] if i in grids]
         with_field = int(laps["ia_amostras_com_campo"].sum())
         raw = int(laps["raw_samples"].sum())
         ai_samples = float((laps["ia_fracao"].fillna(0) * laps["ia_amostras_com_campo"]).sum())
@@ -251,22 +280,26 @@ def report(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
             "voltas_validas": int(laps["valid"].sum()),
             "voltas_duplicadas": int(laps["duplicada_de"].notna().sum()),
             "voltas_validas_unicas": int(len(unique_valid)),
+            "voltas_limpas": int(len(clean)),
             "origem": laps["origem"].value_counts().to_dict(),
             "relogio_suspeito_validas": (
                 int(unique_valid["relogio_suspeito"].fillna(False).astype(bool).sum())
                 if "relogio_suspeito" in unique_valid
                 else None
             ),
-            "hz_mediana": float(np.nanmedian(unique_valid["sample_hz"])) if len(unique_valid) else None,
+            "hz_mediana": float(np.nanmedian(clean["sample_hz"])) if len(clean) else None,
             "melhor_volta_s": float(np.nanmin(times)) if times.size else None,
             "tempo_volta_mediana_s": float(np.nanmedian(times)) if times.size else None,
             "tempo_volta_dp_robusto_s": robust_sd(times),
             "bico_de_pato_dp_robusto_s": robust_sd(np.asarray(bico, dtype=float)),
         }
         for column in SIGNAL_COLUMNS:
-            values = unique_valid[column].to_numpy(dtype=float) if column in unique_valid else np.array([])
+            values = clean[column].to_numpy(dtype=float) if column in clean else np.array([])
             row[column] = float(np.nanmedian(values)) if np.isfinite(values).any() else None
-        row.update(window_dispersion(unique_valid["lap_id"].tolist(), grids, windows, track))
+        row.update(window_dispersion([features[i] for i in clean["lap_id"] if i in features], windows.count))
+        for column in ("frenagem_desvio_m", "apice_desvio_m"):
+            values = clean[column].to_numpy(dtype=float) if column in clean else np.array([])
+            row[column] = spread(values)
         sessions.append(row)
 
     def clean(value):
@@ -284,7 +317,10 @@ def report(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
             return [clean(v) for v in value]
         return value
 
-    files = {name: out_dir / name for name in (inventory_path(out_dir).name, CLOCK_TABLE, SIGNALS_TABLE, GRID_TABLE)}
+    files = {
+        name: out_dir / name
+        for name in (inventory_path(out_dir).name, CLOCK_TABLE, SIGNALS_TABLE, GRID_TABLE, "desvios_voltas.parquet")
+    }
     result = {
         "gerado_em": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "pastas": {label: str(path) for label, path in config.recordings_roots().items()},
@@ -293,6 +329,12 @@ def report(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
         "relogio": distribution,
         "voltas_pedido_11": p11,
         "janelas_fase2b": windows.describe(),
+        "voltas_usadas_nos_sinais": len(complete),
+        "sinais_por_volta_distribuicao": {
+            column: spread(merged[column].to_numpy(dtype=float))
+            for column in SIGNAL_COLUMNS + ("frenagem_desvio_m", "apice_desvio_m")
+            if column in merged
+        },
         "sessoes": sessions,
         "arquivos": {name: {"caminho": str(path), "sha256": sha256(path)} for name, path in files.items()},
     }

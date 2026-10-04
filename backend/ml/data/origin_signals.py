@@ -102,9 +102,11 @@ def lap_signals(aligned: pd.DataFrame, track_length: float) -> Dict[str, float]:
 
     gear = aligned["gear"].to_numpy(dtype=float) if "gear" in aligned else np.full(len(aligned), np.nan)
     rpm = aligned["rpm"].to_numpy(dtype=float) if "rpm" in aligned else np.full(len(aligned), np.nan)
-    # RPM na ultima amostra antes de a marcha subir. No Assetto Corsa 0 e re e
-    # 1 e neutro: sair do neutro nao e troca de marcha.
-    up = np.flatnonzero((np.diff(gear) > 0) & (gear[:-1] >= 2))
+    # RPM na ultima amostra antes de a marcha subir. Medido em 2026-08-19: toda
+    # troca passa uma amostra por 0 (6 -> 0 -> 5), e 0 e 1 nao sao marchas de
+    # andar. Compara-se, entao, uma marcha engatada com a seguinte.
+    engaged = np.flatnonzero(np.isfinite(gear) & (gear >= 2))
+    up = engaged[np.flatnonzero(np.diff(gear[engaged]) > 0)]
     shift_rpm = rpm[up]
     shift_rpm = shift_rpm[np.isfinite(shift_rpm)]
     out["troca_rpm_mediana"] = float(np.median(shift_rpm)) if shift_rpm.size else float("nan")

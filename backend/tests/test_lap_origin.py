@@ -305,6 +305,24 @@ class SignalTests(unittest.TestCase):
         self.assertEqual(signals["freio_pico_mediano"], 1.0)
         self.assertGreater(signals["volante_taxa_p95"], 0.9)
 
+    def test_shifts_through_the_transient_zero_are_counted(self):
+        """Medido: toda troca passa uma amostra por 0 (6 -> 0 -> 5)."""
+        gear = np.array([2, 2, 0, 3, 3, 0, 4, 4, 0, 5, 5, 0, 4], dtype=float)
+        rpm = np.array([7000, 8100, 6000, 7000, 8200, 6000, 7000, 8150, 6000, 7000, 7500, 6000, 6000], dtype=float)
+        aligned = pd.DataFrame(
+            {
+                "elapsed_s": np.arange(gear.size) * 0.1,
+                "steering": np.zeros(gear.size),
+                "throttle": np.ones(gear.size),
+                "brake": np.zeros(gear.size),
+                "gear": gear,
+                "rpm": rpm,
+            }
+        )
+        signals = lap_signals(aligned, track_length=1000.0)
+        self.assertEqual(signals["troca_rpm_mediana"], 8150.0)
+        self.assertAlmostEqual(signals["troca_rpm_dp"], 1.4826 * 50.0)
+
 
 if __name__ == "__main__":
     unittest.main()
