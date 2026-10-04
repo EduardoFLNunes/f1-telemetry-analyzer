@@ -23,6 +23,10 @@ volante RS50 com pedais de celula de carga a partir de 2026-10-01 (`atual`),
 o controle de antes (`anterior`). Uma volta `humano` so fala do piloto de hoje
 com o equipamento `atual`. E `origem_fonte` diz de onde veio o rotulo: o
 indicador do jogo, as anotacoes do piloto numa sessao rotulada ou o detector.
+
+Desde o pedido 15, as sessoes novas sem anotacao seguem `unannotated_origin`:
+o indicador ate a IA ligar pela primeira vez, a volta em que ela liga como
+`misturada`, e o detector depois disso.
 """
 
 from __future__ import annotations
@@ -102,6 +106,47 @@ def lap_origin(flags: Iterable) -> str:
     if len(known) < len(values):
         return UNKNOWN
     return AI if known[0] else HUMAN
+
+
+def unannotated_origin(indicator: str, detector: Optional[str]) -> tuple:
+    """Origem de uma volta de sessao nova sem anotacao, e de onde veio (pedido 15).
+
+    O indicador do jogo liga com o Ctrl+C e fica travado ate a sessao do jogo
+    reiniciar. Antes de ligar, a volta e `humano` pelo indicador; a volta em que
+    liga e `misturada`; depois, o indicador diz `ia` mesmo com o piloto de volta
+    ao volante, e quem decide e o detector pela linha da IA. O que o detector
+    nao resolve, ou uma volta sem o campo, fica `desconhecida`.
+    """
+    if indicator in (HUMAN, MIXED):
+        return indicator, SOURCE_INDICATOR
+    if indicator == AI and detector in (HUMAN, AI, MIXED):
+        return detector, SOURCE_DETECTOR
+    return UNKNOWN, None
+
+
+def label_unannotated(inventory: pd.DataFrame, annotated: Set[str], classify) -> pd.DataFrame:
+    """Aplica `unannotated_origin` as voltas do equipamento `atual` fora de `annotated`.
+
+    `classify(lap_id, row)` devolve o veredito do detector (`classify_lap`) ou
+    `None` sem a grade; so e chamado nas voltas que o indicador da como `ia`.
+    As voltas do equipamento `anterior` e as anotadas nao mudam.
+    """
+    out = inventory.copy()
+    for column in ("origem_detector", "motivo_detector", "linha_detector"):
+        if column not in out.columns:
+            out[column] = None
+    target = (out["equipamento"] == CURRENT_EQUIPMENT) & ~out["lap_id"].isin(annotated)
+    for index in out.index[target]:
+        row = out.loc[index]
+        verdict = classify(row["lap_id"], row) if row["origem_indicador"] == AI else None
+        if verdict is not None:
+            out.at[index, "origem_detector"] = verdict["origem_detector"]
+            out.at[index, "motivo_detector"] = verdict["motivo"]
+            out.at[index, "linha_detector"] = verdict["linha"]
+        label, source = unannotated_origin(row["origem_indicador"], verdict["origem_detector"] if verdict else None)
+        out.at[index, "origem"] = label
+        out.at[index, "origem_fonte"] = source
+    return out
 
 
 def ai_share(flags: Iterable) -> float:

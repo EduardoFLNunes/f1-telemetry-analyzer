@@ -1,0 +1,54 @@
+lap_id,parte,volta_jogo,origem,box,observacao
+2026-10-04_02-24-04_vhe_interlagos#0000,1,1,humano,sim,Saida dos boxes
+2026-10-04_02-24-04_vhe_interlagos#0001,1,2,humano,nao,Primeira volta pilotando
+2026-10-04_02-24-04_vhe_interlagos#0002,1,3,humano,nao,Segunda volta pilotando
+2026-10-04_02-24-04_vhe_interlagos#0003,1,4,misturada,sim,Retorno ao box pelo menu e saida dos boxes da IA (Ctrl+C)
+2026-10-04_02-24-04_vhe_interlagos#0004,1,5,ia,nao,Primeira volta IA
+2026-10-04_02-24-04_vhe_interlagos#0005,1,6,ia,nao,Segunda volta IA
+2026-10-04_02-24-04_vhe_interlagos#0006,1,7,ia,sim,Retorno ao box pelo menu e saida dos boxes da IA
+2026-10-04_02-24-04_vhe_interlagos#0007,1,8,misturada,nao,"IA pilotando setores 1 e 2, piloto no setor 3"
+2026-10-04_02-24-04_vhe_interlagos#0008,1,9,humano,sim,Piloto; voltou ao box; erros de pilotagem
+2026-10-04_02-24-04_vhe_interlagos#0009,1,10,humano,nao,Piloto; erros de pilotagem e velocidade abaixo do esperado
+2026-10-04_02-24-04_vhe_interlagos#0010,1,11,ia,nao,Nao numerada pelo piloto: 'agora quem esta dirigindo e a IA' (mensagem durante esta volta)
+2026-10-04_02-24-04_vhe_interlagos#0011,1,12,ia,nao,Nao numerada pelo piloto: IA ate o reinicio da sessao
+2026-10-04_02-24-04_vhe_interlagos#0012,1,13,ia,nao,Nao numerada pelo piloto: IA ate o reinicio da sessao
+2026-10-04_02-24-04_vhe_interlagos#0013,1,14,ia,nao,Nao numerada pelo piloto: IA; interrompida pelo reinicio da sessao
+2026-10-04_02-24-04_vhe_interlagos#0014,2,1,humano,sim,Sessao reiniciada; saida dos boxes; inicio das 20 voltas do piloto
+2026-10-04_02-24-04_vhe_interlagos#0015,2,2,humano,nao,"20 voltas do piloto, sem box (varias com falhas e erros)"
+2026-10-04_02-24-04_vhe_interlagos#0016,2,3,humano,nao,20 voltas do piloto
+2026-10-04_02-24-04_vhe_interlagos#0017,2,4,humano,nao,20 voltas do piloto
+2026-10-04_02-24-04_vhe_interlagos#0018,2,5,humano,nao,20 voltas do piloto
+2026-10-04_02-24-04_vhe_interlagos#0019,2,6,humano,nao,20 voltas do piloto
+2026-10-04_03-21-52_vhe_interlagos#0000,2,6,humano,nao,20 voltas do piloto
+2026-10-04_03-21-52_vhe_interlagos#0001,2,7,humano,nao,20 voltas do piloto
+2026-10-04_03-21-52_vhe_interlagos#0002,2,8,humano,nao,20 voltas do piloto
+2026-10-04_03-21-52_vhe_interlagos#0003,2,9,humano,nao,20 voltas do piloto
+2026-10-04_03-21-52_vhe_interlagos#0004,2,10,humano,nao,20 voltas do piloto
+2026-10-04_03-21-52_vhe_interlagos#0005,2,11,humano,nao,20 voltas do piloto
+2026-10-04_03-21-52_vhe_interlagos#0006,2,12,humano,nao,20 voltas do piloto
+2026-10-04_03-21-52_vhe_interlagos#0007,2,13,humano,nao,20 voltas do piloto (pausa: a gravacao foi dividida)
+2026-10-04_03-35-57_vhe_interlagos#0000,2,13,humano,nao,20 voltas do piloto (pausa: a gravacao foi dividida)
+2026-10-04_03-36-35_vhe_interlagos#0000,2,13,humano,nao,20 voltas do piloto (pausa: a gravacao foi dividida)
+2026-10-04_03-40-32_vhe_interlagos#0000,2,13,humano,nao,20 voltas do piloto (pausa: a gravacao foi dividida)
+2026-10-04_03-42-10_vhe_interlagos#0000,2,13,humano,nao,20 voltas do piloto (pausa: a gravacao foi dividida)
+2026-10-04_03-42-10_vhe_interlagos#0001,2,14,humano,nao,20 voltas do piloto
+2026-10-04_03-42-10_vhe_interlagos#0002,2,15,humano,nao,20 voltas do piloto
+2026-10-04_03-42-10_vhe_interlagos#0003,2,16,humano,nao,20 voltas do piloto
+2026-10-04_03-42-10_vhe_interlagos#0004,2,17,humano,nao,20 voltas do piloto
+2026-10-04_03-42-10_vhe_interlagos#0005,2,18,humano,nao,20 voltas do piloto
+2026-10-04_03-42-10_vhe_interlagos#0006,2,19,humano,nao,20 voltas do piloto
+2026-10-04_03-42-10_vhe_interlagos#0007,2,20,humano,nao,20 voltas do piloto
+2026-10-04_03-42-10_vhe_interlagos#0008,2,21,misturada,sim,Saida dos boxes BOT (IA ligada com Ctrl+C no box)
+2026-10-04_03-42-10_vhe_interlagos#0009,2,22,ia,nao,Bloco da IA
+2026-10-04_03-42-10_vhe_interlagos#0010,2,23,ia,nao,Bloco da IA
+2026-10-04_03-42-10_vhe_interlagos#0011,2,24,ia,nao,Bloco da IA
+2026-10-04_03-42-10_vhe_interlagos#0012,2,25,ia,nao,Bloco da IA
+2026-10-04_03-42-10_vhe_interlagos#0013,2,26,ia,nao,Bloco da IA
+2026-10-04_03-42-10_vhe_interlagos#0014,2,27,ia,nao,Bloco da IA
+2026-10-04_03-42-10_vhe_interlagos#0015,2,28,ia,nao,Bloco da IA
+2026-10-04_03-42-10_vhe_interlagos#0016,2,29,ia,nao,Bloco da IA
+2026-10-04_03-42-10_vhe_interlagos#0017,2,30,ia,nao,Bloco da IA
+2026-10-04_03-42-10_vhe_interlagos#0018,2,31,ia,nao,Bloco da IA
+2026-10-04_03-42-10_vhe_interlagos#0019,2,32,misturada,nao,"IA ate o 3o setor, depois o piloto (Ctrl+C)"
+2026-10-04_03-42-10_vhe_interlagos#0020,2,33,humano,nao,Piloto humano
+2026-10-04_04-22-39_vhe_interlagos#0000,2,33,humano,nao,Piloto humano

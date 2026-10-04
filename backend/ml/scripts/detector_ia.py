@@ -12,6 +12,10 @@ sessoes de 2026-10-04). A ordem importa:
 2. os limites vao para `ml/data/ai_detector.py` e `docs/detector_ia.md` num
    commit proprio;
 3. `aplicar` recusa rodar sem os limites, e so entao olha as voltas antigas.
+
+Desde o pedido 15, `aplicar` tambem rotula as sessoes novas sem anotacao
+(`origin.unannotated_origin`), e a sessao rotulada vem do arquivo versionado
+volta a volta (`LAP_LABELS`), feito das anotacoes do piloto (`ANNOTATIONS`).
 """
 
 from __future__ import annotations
@@ -40,6 +44,9 @@ from ml.validation import empirical as em  # noqa: E402
 
 SESSION_DATE = "2026-10-04"
 ANNOTATIONS = config.repo_root() / "docs" / "experimentos" / "2026-10-04_sessao_rotulada_anotacoes.csv"
+# As mesmas anotacoes, volta a volta, pela identidade do ml (pedido 15). Uma
+# sessao gravada depois, no mesmo dia, nao herda as anotacoes da sessao rotulada.
+LAP_LABELS = config.repo_root() / "docs" / "experimentos" / "2026-10-04_rotulos_por_volta.csv"
 BICO_DE_PATO_M = (2590.0, 3080.0)
 # As datas que o piloto lembra de ter usado a IA (pedido 12/13) e as 4 sessoes
 # que mais variam nos sinais do pedido 12.
@@ -82,32 +89,58 @@ def annotations() -> Dict[tuple, Dict[str, str]]:
         return {(int(r["parte"]), int(r["volta_jogo"])): r for r in csv.DictReader(handle)}
 
 
-def labelled_session(inventory: pd.DataFrame) -> pd.DataFrame:
-    """Voltas de 2026-10-04 com a parte (1 = antes do reinicio) e a anotacao.
+def lap_labels(path: Path = None) -> pd.DataFrame:
+    """As anotacoes de 04/10 volta a volta: lap_id, parte, volta_jogo, origem, box."""
+    return pd.read_csv(path or LAP_LABELS, dtype={"lap_id": str, "origem": str, "box": str}, keep_default_na=False)
 
-    O jogo foi reiniciado no meio da primeira gravacao: o contador volta a 1 e
-    as voltas seguintes sao da parte 2, assim como todas as gravacoes depois.
+
+def check_lap_labels(inventory: pd.DataFrame, labels: pd.DataFrame, notes: Dict[tuple, Dict[str, str]]) -> List[str]:
+    """O que impede de aplicar os rotulos volta a volta. Vazio quando batem.
+
+    Cada volta do arquivo tem de estar no inventario com a mesma volta do jogo,
+    toda volta das gravacoes rotuladas tem de estar no arquivo, e o arquivo tem
+    de dizer o mesmo que as anotacoes do piloto.
     """
-    rows = inventory[inventory["session_id"].str.startswith(SESSION_DATE)].copy()
+    problems = []
+    ids = set(inventory["lap_id"])
+    missing = [i for i in labels["lap_id"] if i not in ids]
+    if missing:
+        problems.append(f"{len(missing)} voltas do arquivo fora do inventario (ex.: {missing[0]})")
+    sessions = set(labels["lap_id"].str.split("#").str[0])
+    extra = inventory[inventory["session_id"].isin(sessions) & ~inventory["lap_id"].isin(labels["lap_id"])]
+    if len(extra):
+        problems.append(f"{len(extra)} voltas das gravacoes rotuladas fora do arquivo (ex.: {extra['lap_id'].iloc[0]})")
+    merged = inventory.merge(labels, on="lap_id")
+    number = merged["game_lap_number"].fillna(merged["lap_number"]).astype(float)
+    wrong = merged[number != merged["volta_jogo"].astype(float)]
+    if len(wrong):
+        problems.append(f"{len(wrong)} voltas com outra volta do jogo no inventario (ex.: {wrong['lap_id'].iloc[0]})")
+    for _, r in labels.iterrows():
+        note = notes.get((int(r["parte"]), int(r["volta_jogo"])))
+        if note is None or note["origem_anotada"] != r["origem"] or note["box"] != r["box"]:
+            problems.append(f"{r['lap_id']} nao bate com as anotacoes do piloto (parte {r['parte']}, volta {r['volta_jogo']})")
+            break
+    return problems
+
+
+def labelled_session(inventory: pd.DataFrame) -> pd.DataFrame:
+    """Voltas da sessao rotulada de 04/10 com a parte (1 = antes do reinicio) e a anotacao.
+
+    Vem do arquivo volta a volta (`LAP_LABELS`). Para se o arquivo nao bater
+    com o inventario ou com as anotacoes do piloto: um inventario refeito com
+    outro corte de voltas nao pode herdar rotulos por engano.
+    """
+    labels = lap_labels()
+    problems = check_lap_labels(inventory, labels, annotations())
+    if problems:
+        raise SystemExit("PARADO: os rotulos volta a volta de 04/10 nao batem: " + "; ".join(problems))
+    rows = inventory[inventory["lap_id"].isin(labels["lap_id"])].copy()
     rows = rows.sort_values(["session_id", "sequence"])
-    first = sorted(rows["session_id"].unique())[0]
-    number = rows["game_lap_number"].fillna(rows["lap_number"]).astype(float)
-    rows["volta_jogo"] = number
-    part = []
-    seen_reset = False
-    previous = None
-    for session_id, value in zip(rows["session_id"], number):
-        if session_id != first:
-            part.append(2)
-            continue
-        if previous is not None and value < previous:
-            seen_reset = True
-        previous = value
-        part.append(2 if seen_reset else 1)
-    rows["parte"] = part
-    notes = annotations()
-    rows["origem_anotada"] = [notes.get((p, int(v)), {}).get("origem_anotada") for p, v in zip(rows["parte"], number)]
-    rows["box_anotado"] = [notes.get((p, int(v)), {}).get("box") == "sim" for p, v in zip(rows["parte"], number)]
+    by_id = labels.set_index("lap_id").loc[rows["lap_id"]]
+    rows["volta_jogo"] = by_id["volta_jogo"].astype(float).to_numpy()
+    rows["parte"] = by_id["parte"].astype(int).to_numpy()
+    rows["origem_anotada"] = by_id["origem"].to_numpy()
+    rows["box_anotado"] = (by_id["box"] == "sim").to_numpy()
     return rows
 
 
@@ -403,7 +436,23 @@ def apply(out_dir: Path, track, json_path: Path, promote: bool = False) -> Dict[
             by_id.at[lap_id, "origem"] = verdict["origem_detector"]
             by_id.at[lap_id, "origem_fonte"] = origin.SOURCE_DETECTOR
     out_inv = by_id.reset_index()
+
+    # Pedido 15: sessoes do equipamento atual sem anotacao, pela regra do indicador e do detector.
+    def classify(lap_id, r):
+        if lap_id not in grids:
+            return None
+        return det.classify_lap(grids[lap_id], float(r["duration_s"]), reference, track, sectors, limits)
+
+    out_inv = origin.label_unannotated(out_inv, set(session_rows.index), classify)
     save_inventory(out_inv, out_dir)
+    fresh = out_inv[(out_inv["equipamento"] == origin.CURRENT_EQUIPMENT) & ~out_inv["lap_id"].isin(session_rows.index)]
+    new_sessions = [
+        {"sessao": session_id, "voltas": int(len(laps)),
+         "origem": laps["origem"].value_counts().to_dict(),
+         "fonte": laps["origem_fonte"].fillna("-").value_counts().to_dict(),
+         "indicador": laps["origem_indicador"].value_counts().to_dict()}
+        for session_id, laps in fresh.groupby("session_id")
+    ]
 
     # 3. Por sessao.
     applied = out_inv[out_inv["lap_id"].isin(old.index)]
@@ -428,6 +477,9 @@ def apply(out_dir: Path, track, json_path: Path, promote: bool = False) -> Dict[
         "sessao_rotulada": {"acerto": hits, "voltas": scored},
         "voltas_antigas": {"aplicadas": int(len(applied)), "totais": totals,
                            "motivos": applied["motivo_detector"].fillna("-").value_counts().to_dict()},
+        "sessao_rotulada_aplicada": {"voltas": int(len(session_rows)),
+                                     "origem": session_rows["origem_anotada"].value_counts().to_dict()},
+        "sessoes_novas_sem_anotacao": new_sessions,
         "sessoes": sessions,
     }
     json_path.parent.mkdir(parents=True, exist_ok=True)
