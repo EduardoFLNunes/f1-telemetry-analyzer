@@ -122,6 +122,32 @@ def list_sessions(
     return sessions
 
 
+def list_all_sessions(
+    roots: Optional[Sequence[Path]] = None,
+    track_prefixes: Sequence[str] = config.INTERLAGOS_TRACK_PREFIXES,
+) -> List[Session]:
+    """Sessoes das duas pastas de gravacoes: a do repositorio e a do app instalado.
+
+    Desde o ADR 0014 o `ml` le as duas. O id da sessao e o nome do diretorio e
+    precisa ser unico entre as pastas; um id repetido para tudo, porque nao da
+    para saber sozinho qual das duas copias vale (em 2026-10-03 nao havia
+    nenhum).
+    """
+    bases = list(roots) if roots is not None else list(config.recordings_roots().values())
+    sessions: List[Session] = []
+    seen: Dict[str, Path] = {}
+    for base in bases:
+        for session in list_sessions(root=base, track_prefixes=track_prefixes):
+            if session.session_id in seen:
+                raise ValueError(
+                    f"sessao {session.session_id} existe em {seen[session.session_id]} e em "
+                    f"{session.directory}; compare as duas antes de seguir"
+                )
+            seen[session.session_id] = session.directory
+            sessions.append(session)
+    return sorted(sessions, key=lambda s: s.session_id)
+
+
 def _session_track(directory: Path, stream: Path) -> Optional[str]:
     index_path = directory / SESSION_INDEX
     if index_path.exists():

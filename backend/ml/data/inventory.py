@@ -8,6 +8,10 @@ resultado e persistido -- todo o resto do pipeline le a tabela, nao os JSONL.
 A tabela e a analise exploratoria. Ela responde, sem abrir um unico arquivo de
 novo: quantas voltas utilizaveis existem, de quantas sessoes, com que
 frequencia de amostragem, e quanto tempo separa a melhor da mediana.
+
+Desde o ADR 0014 cada volta diz tambem quem pilotou (`origem`), de que pasta
+veio (`pasta`), se o relogio dela bate com a velocidade (`relogio_*`) e se e
+a copia de uma volta gravada duas vezes (`duplicada_de`). Ver `origin`.
 """
 
 from __future__ import annotations
@@ -24,9 +28,24 @@ from .. import config
 from ..preprocessing.alignment import align_lap
 from ..preprocessing.cleaning import clean_lap
 from ..preprocessing.quality import evaluate_lap
+from ..preprocessing.resampling import resample_lap
 from ..track.geometry import TrackGeometry, load_geometry
+from ..track.microsectors import build_microsectors
 from .lap_identity import classify, counter_counts
+from .origin import (
+    ai_share,
+    clock_check,
+    clock_summary,
+    lap_origin,
+    mark_clock,
+    mark_duplicates,
+    recording_folder,
+)
 from .recordings import RawLap, Session, iter_laps, list_sessions
+
+# Chamado para cada volta valida com (volta crua, volta alinhada, grade,
+# conferencia do relogio por microsetor, linha do inventario).
+LapHook = Callable[[RawLap, pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, Any]], None]
 
 INVENTORY_FILENAME = "lap_inventory.parquet"
 INVENTORY_SUMMARY = "lap_inventory_summary.json"
@@ -52,21 +71,43 @@ def _record(lap: RawLap, quality, cleaning, alignment) -> Dict[str, Any]:
     return row
 
 
+def _provenance(lap: RawLap, folder: str) -> Dict[str, Any]:
+    """Quem pilotou, de que pasta veio e quando foi gravada (ADR 0014)."""
+    flags = lap.frame["ai_controlled"] if "ai_controlled" in lap.frame.columns else [None] * lap.sample_count
+    stamps = (
+        pd.to_numeric(lap.frame["timestamp_s"], errors="coerce")
+        if "timestamp_s" in lap.frame.columns
+        else pd.Series(dtype=float)
+    )
+    return {
+        "origem": lap_origin(flags),
+        "ia_fracao": ai_share(flags),
+        "ia_amostras_com_campo": int(sum(1 for f in flags if f is not None and f == f)),
+        "pasta": folder,
+        "inicio_epoch_s": float(stamps.min()) if stamps.notna().any() else float("nan"),
+        "fim_epoch_s": float(stamps.max()) if stamps.notna().any() else float("nan"),
+        "relogio_verificado": False,
+    }
+
+
 def scan_sessions(
     sessions: Optional[Sequence[Session]] = None,
     track: Optional[TrackGeometry] = None,
     gates: config.LapQualityGates = config.DEFAULT_GATES,
     progress: Optional[Callable[[str], None]] = None,
+    lap_hook: Optional[LapHook] = None,
 ) -> pd.DataFrame:
     """Percorre as sessoes e devolve uma linha por volta."""
     geometry = track or load_geometry()
     available = list(sessions) if sessions is not None else list_sessions()
+    sectors = build_microsectors(geometry)
 
     rows: List[Dict[str, Any]] = []
     for position, session in enumerate(available, start=1):
         count = 0
         first_row = len(rows)
         counters: Dict[tuple, Dict[int, int]] = {}
+        folder = recording_folder(session.directory)
         # `min_samples=1`: um trecho de uma amostra so nao vira linha do
         # inventario, mas a amostra dele esta dentro de algum replay e precisa
         # entrar na contagem que associa as duas identidades.
@@ -90,6 +131,7 @@ def scan_sessions(
                         "reasons": "amostras insuficientes apos limpeza",
                         "cleaned_samples": int(len(cleaned)),
                         "geometry_id": geometry.geometry_id,
+                        **_provenance(lap, folder),
                     }
                 )
                 count += 1
@@ -98,6 +140,14 @@ def scan_sessions(
             quality = evaluate_lap(aligned, geometry, alignment, gates)
             row = _record(lap, quality, cleaning, alignment)
             row["geometry_id"] = geometry.geometry_id
+            row.update(_provenance(lap, folder))
+            if quality.valid:
+                # O relogio so e conferido onde a volta inteira esta na grade.
+                grid = resample_lap(aligned, geometry)
+                check = clock_check(grid, geometry, sectors)
+                row.update(clock_summary(check))
+                if lap_hook is not None:
+                    lap_hook(lap, aligned, grid, check, row)
             rows.append(row)
             count += 1
         identities = classify(session.session_id, counters)
@@ -111,6 +161,7 @@ def scan_sessions(
     frame = pd.DataFrame(rows)
     if not frame.empty:
         frame = frame.sort_values(["session_id", "sequence"]).reset_index(drop=True)
+        frame = mark_clock(mark_duplicates(frame))
     return frame
 
 
@@ -136,6 +187,16 @@ def summarise(inventory: pd.DataFrame) -> Dict[str, Any]:
             key = reason.split("(")[0].strip()
             causes[key] = causes.get(key, 0) + 1
     summary["rejection_causes"] = dict(sorted(causes.items(), key=lambda kv: -kv[1]))
+
+    # ADR 0014: quem pilotou, de onde veio, relogio e duplicatas.
+    for column, label in (("origem", "laps_by_origin"), ("pasta", "laps_by_folder")):
+        if column in inventory.columns:
+            summary[label] = inventory[column].fillna("?").value_counts().to_dict()
+    if "duplicada_de" in inventory.columns:
+        summary["laps_duplicated"] = int(inventory["duplicada_de"].notna().sum())
+    if "relogio_suspeito" in inventory.columns:
+        summary["valid_laps_clock_suspect"] = int(valid["relogio_suspeito"].fillna(False).astype(bool).sum())
+        summary["clock_limit_s"] = float(inventory["relogio_limite_s"].iloc[0])
 
     if len(valid):
         for column, label in (

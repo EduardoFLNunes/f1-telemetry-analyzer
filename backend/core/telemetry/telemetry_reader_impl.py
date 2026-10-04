@@ -335,6 +335,7 @@ class ACSharedMemoryReader(PollingTelemetryReader):
                 "tyres_out": data.get("tyres_out"),
                 "off_track": data.get("off_track"),
                 "penalty_time": data.get("penalty_time"),
+                "is_ai_controlled": data.get("is_ai_controlled"),
                 "air_density": data.get("air_density"),
                 "wheel_slip": data.get("wheel_slip"),
                 "wheel_load": data.get("wheel_load"),

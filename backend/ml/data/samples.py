@@ -18,7 +18,7 @@ import math
 from typing import Any, Dict, Mapping, Optional
 
 from core.projection.lateral_offset import to_left_positive
-from core.telemetry.channels import driver_inputs
+from core.telemetry.channels import ai_controlled, driver_inputs
 
 
 def number(value: Any) -> Optional[float]:
@@ -124,6 +124,9 @@ def flatten(envelope: Mapping[str, Any]) -> Dict[str, Any]:
         "road_temp": number(ambient.get("roadTemp")),
         "off_track": bool(ambient.get("offTrack")) if ambient else None,
         "tyres_out": number(ambient.get("tyresOut")),
+        # Quem pilotava (ADR 0014): True/False quando o gravador registrou,
+        # None nas gravacoes anteriores ao campo.
+        "ai_controlled": ai_controlled(sample),
         # O `s` do gravador entra so como conferencia. O pipeline recalcula o
         # seu proprio: 6 sessoes gravaram `null` aqui, e as que gravaram algo o
         # fizeram contra versoes diferentes da geometria.
