@@ -12,6 +12,11 @@ As regras foram registradas antes da primeira rodada, em
   volta, e a soma das perdas e a diferenca de tempo de volta;
 * **diferenca consistente** -- o intervalo de 90% (bootstrap) da perda mediana
   para a IA nao inclui zero; com menos de 5 voltas na sessao, "poucos dados".
+
+Emenda de 04/10 (pedido 17, secao 1.5): o inicio da frenagem de uma curva e
+procurado do apice da curva anterior ate o apice dela. Do comeco do trecho,
+a frenagem da C10 (Bico de Pato), que comeca depois do apice da C09 e antes
+do trecho da C10, nao aparecia.
 """
 
 from __future__ import annotations
@@ -103,10 +108,16 @@ def segment_time(elapsed: np.ndarray, total: float, track: TrackGeometry, segmen
 
 
 def braking_point(brake: np.ndarray, track: TrackGeometry, start_s: float, apex_s: float) -> Optional[float]:
-    """Primeiro ponto, do inicio do trecho ao apice, em que o freio passa de < 0,15 para >= 0,15."""
+    """Primeiro ponto, de `start_s` ao apice, em que o freio passa de < 0,15 para >= 0,15.
+
+    `start_s` e o apice da curva anterior (emenda de 04/10, pedido 17).
+    """
     indices = _window(track, start_s, apex_s)
-    on = np.nan_to_num(np.asarray(brake, dtype=float)[indices]) >= BRAKE_ONSET
-    rising = np.flatnonzero(on[1:] & ~on[:-1]) + 1
+    # O ponto anterior a janela entra so para ver a subida no primeiro ponto dela:
+    # uma freada que comeca exatamente em `start_s` esta dentro da janela.
+    extended = np.concatenate([[(indices[0] - 1) % track.size], indices])
+    on = np.nan_to_num(np.asarray(brake, dtype=float)[extended]) >= BRAKE_ONSET
+    rising = np.flatnonzero(on[1:] & ~on[:-1])
     return float(track.s[indices[rising[0]]]) if rising.size else None
 
 
@@ -119,10 +130,11 @@ def lap_corner_features(
     lap_speed, ref_speed = lap["speed_kmh"].to_numpy(dtype=float), ref["speed_kmh"].to_numpy(dtype=float)
     lap_lateral, ref_lateral = lap["lateral"].to_numpy(dtype=float), ref["lateral"].to_numpy(dtype=float)
     out = []
-    for segment in segments:
+    for k, segment in enumerate(segments):
         corner = segment.corner
-        lap_brake = braking_point(lap["brake"].to_numpy(dtype=float), track, segment.start_s, corner.apex_s)
-        ref_brake = braking_point(ref["brake"].to_numpy(dtype=float), track, segment.start_s, corner.apex_s)
+        search_from = segments[k - 1].corner.apex_s
+        lap_brake = braking_point(lap["brake"].to_numpy(dtype=float), track, search_from, corner.apex_s)
+        ref_brake = braking_point(ref["brake"].to_numpy(dtype=float), track, search_from, corner.apex_s)
         inside = _window(track, corner.start_s, corner.end_s)
         apex = int(track.index_of(corner.apex_s))
         out.append({

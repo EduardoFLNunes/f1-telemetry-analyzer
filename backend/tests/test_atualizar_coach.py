@@ -189,7 +189,7 @@ class CommandTest(unittest.TestCase):
 
         c.build_lap_store_v2.main = store_v2
         try:
-            c._evolution_script = lambda: type("E", (), {"main": staticmethod(
+            c._evolution_script = lambda: type("E", (), {"PANEL_FILENAME": "painel.html", "main": staticmethod(
                 lambda args: calls.append(("evolucao", args[args.index("--modelo") + 1])) or 0)})
             c._train_script = lambda: Train
             c.DriverReferenceModel = Loaded
@@ -199,7 +199,12 @@ class CommandTest(unittest.TestCase):
                                         "voltas_do_piloto_no_modelo": 0,
                                         "limiar_s": {"mediana": 0, "min": 0, "max": 0, "microsetores_no_minimo": 0},
                                         "foco_inicial": {}}
-            code = c.main(["--saida", str(out_dir), "--modelo", str(model), "--resumo", str(self.tmp / "r.json")])
+            import contextlib
+            import io
+
+            printed = io.StringIO()
+            with contextlib.redirect_stdout(printed):
+                code = c.main(["--saida", str(out_dir), "--modelo", str(model), "--resumo", str(self.tmp / "r.json")])
         finally:
             c.report_lap_origin.scan = original_scan
             c.detector_ia.apply = original_apply
@@ -207,6 +212,10 @@ class CommandTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(calls, ["inventario", ("rotulos", False), ("treino", str(model), True), "resumo",
                                  ("store v2", True), ("evolucao", str(model))])
+        # Pedido 17: no fim, o caminho do painel.
+        last = printed.getvalue().strip().splitlines()[-1]
+        self.assertTrue(last.startswith("painel da evolucao: "))
+        self.assertTrue(last.endswith("painel.html"))
         self.assertTrue((self.tmp / "r.json").exists())
 
     def test_a_failed_training_stops_the_command(self):
