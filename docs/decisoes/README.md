@@ -18,3 +18,4 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
 | [0012](0012-coach-diferenca-medida-nao-ganho-prometido.md) | O coach mostra diferença medida contra uma volta real, não "ganho possível" pela soma dos melhores trechos | aceita; refina 0004 |
 | [0013](0013-coach-primeiro-na-geometria-oficial.md) | O coach é o primeiro a usar a geometria oficial, e o modelo dele sai da posição no mundo | aceita; implementa parte do 0002 |
 | [0014](0014-origem-das-voltas-humano-ou-ia.md) | Toda volta tem origem: humano, IA ou desconhecida | aceita |
+| [0015](0015-equipamento-atual-do-piloto.md) | O modelo do piloto usa só voltas com o equipamento atual | aceita; complementa 0014 |
