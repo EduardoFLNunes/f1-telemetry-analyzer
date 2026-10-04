@@ -1,0 +1,26 @@
+======================================================================
+EVOLUCAO  (referencia: volta da IA 2026-10-04_03-42-10_vhe_interlagos#0013, 84.829 s)
+  2026-10-04: 11 voltas, melhor 89.39 s, mediana 93.458 s (desvio 2.397), mediana - IA 8.629 s
+
+  curvas em 2026-10-04 (perda mediana para a IA, intervalo de 90%):
+    C01-esq  +1.267 s  [1.0345, 1.5911]  diferenca_consistente (perde)  freio -66 m  apice -0.85 m  minima -4.1 km/h
+    C02-dir  +0.062 s  [-0.0384, 0.0672]  sem_diferenca_consistente  freio -  apice -0.11 m  minima -1.5 km/h
+    C03-esq  +0.512 s  [0.3642, 0.5939]  diferenca_consistente (perde)  freio -  apice -0.78 m  minima -0.6 km/h
+    C04-esq  +0.728 s  [0.5585, 0.7936]  diferenca_consistente (perde)  freio -48 m  apice -0.47 m  minima -11.4 km/h
+    C05-esq  +0.322 s  [0.188, 0.5109]  diferenca_consistente (perde)  freio -  apice -2.21 m  minima -11.9 km/h
+    C06-dir  +0.558 s  [0.2961, 0.707]  diferenca_consistente (perde)  freio -72 m  apice -3.85 m  minima -3.5 km/h
+    C07-dir  +0.510 s  [0.3985, 0.7297]  diferenca_consistente (perde)  freio -28 m  apice +1.06 m  minima -6.7 km/h
+    C08-esq  +0.278 s  [0.2292, 0.5538]  diferenca_consistente (perde)  freio -17 m  apice -0.04 m  minima +3.6 km/h
+    C09-dir  +0.346 s  [0.1799, 0.3532]  diferenca_consistente (perde)  freio -  apice -1.69 m  minima -20.3 km/h
+    C10-dir  +0.791 s  [0.6297, 0.8941]  diferenca_consistente (perde)  freio -11 m  apice +1.21 m  minima -7.3 km/h
+    C11-esq  +0.792 s  [0.6177, 1.42]  diferenca_consistente (perde)  freio -  apice -0.57 m  minima -20.4 km/h
+    C12-esq  +0.638 s  [0.5041, 1.071]  diferenca_consistente (perde)  freio -34 m  apice -0.89 m  minima +0.4 km/h
+    C13-esq  +0.172 s  [0.1633, 0.2329]  diferenca_consistente (perde)  freio -  apice -2.23 m  minima -5.6 km/h
+    C14-esq  +0.352 s  [0.2406, 0.7258]  diferenca_consistente (perde)  freio -  apice -2.49 m  minima -6.6 km/h
+
+  tendencia da mediana: None s por sessao
+  3 curvas de maior perda: ['C01-esq', 'C11-esq', 'C10-dir']
+  criterio do ADR 0015: ainda nao avaliavel: 1 de 3 sessoes
+======================================================================
+-> C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\ml\evolucao
+painel: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\ml\evolucao\painel.html

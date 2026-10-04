@@ -1,0 +1,316 @@
+{
+ "sessao": "2026-10-04",
+ "regra_antes": "do inicio do trecho ao apice da curva (pedido 16)",
+ "regra_depois": "do apice da curva anterior ao apice da curva, com o apice anterior incluido (emenda de 04/10, pedido 17)",
+ "curvas_pedidas": [
+  "C01-esq",
+  "C02-dir",
+  "C07-dir",
+  "C08-esq",
+  "C10-dir",
+  "C12-esq"
+ ],
+ "perda_e_situacao_iguais_em_todas": true,
+ "curvas": [
+  {
+   "curva": "C01-esq",
+   "antes": {
+    "ia_freia": true,
+    "mediana_m": -66.0,
+    "p25_m": -95.0,
+    "p75_m": -58.0,
+    "voltas_com_ponto": 11,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": true,
+    "mediana_m": -66.0,
+    "p25_m": -95.0,
+    "p75_m": -58.0,
+    "voltas_com_ponto": 11,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  },
+  {
+   "curva": "C02-dir",
+   "antes": {
+    "ia_freia": true,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": true,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  },
+  {
+   "curva": "C03-esq",
+   "antes": {
+    "ia_freia": false,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": false,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  },
+  {
+   "curva": "C04-esq",
+   "antes": {
+    "ia_freia": true,
+    "mediana_m": -48.0,
+    "p25_m": -48.0,
+    "p75_m": -36.0,
+    "voltas_com_ponto": 11,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": true,
+    "mediana_m": -48.0,
+    "p25_m": -48.0,
+    "p75_m": -36.0,
+    "voltas_com_ponto": 11,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  },
+  {
+   "curva": "C05-esq",
+   "antes": {
+    "ia_freia": false,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": false,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  },
+  {
+   "curva": "C06-dir",
+   "antes": {
+    "ia_freia": true,
+    "mediana_m": -72.0,
+    "p25_m": -76.0,
+    "p75_m": -60.0,
+    "voltas_com_ponto": 9,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": true,
+    "mediana_m": -72.0,
+    "p25_m": -76.0,
+    "p75_m": -60.0,
+    "voltas_com_ponto": 9,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  },
+  {
+   "curva": "C07-dir",
+   "antes": {
+    "ia_freia": true,
+    "mediana_m": 40.0,
+    "p25_m": 0.0,
+    "p75_m": 50.0,
+    "voltas_com_ponto": 5,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": true,
+    "mediana_m": -28.0,
+    "p25_m": -38.0,
+    "p75_m": -14.5,
+    "voltas_com_ponto": 10,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  },
+  {
+   "curva": "C08-esq",
+   "antes": {
+    "ia_freia": true,
+    "mediana_m": 32.0,
+    "p25_m": 32.0,
+    "p75_m": 32.0,
+    "voltas_com_ponto": 1,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": true,
+    "mediana_m": -17.0,
+    "p25_m": -41.5,
+    "p75_m": 7.5,
+    "voltas_com_ponto": 2,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  },
+  {
+   "curva": "C09-dir",
+   "antes": {
+    "ia_freia": false,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": false,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  },
+  {
+   "curva": "C10-dir",
+   "antes": {
+    "ia_freia": true,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": true,
+    "mediana_m": -11.0,
+    "p25_m": -12.0,
+    "p75_m": -9.5,
+    "voltas_com_ponto": 4,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  },
+  {
+   "curva": "C11-esq",
+   "antes": {
+    "ia_freia": false,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": false,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  },
+  {
+   "curva": "C12-esq",
+   "antes": {
+    "ia_freia": true,
+    "mediana_m": -2.0,
+    "p25_m": -6.0,
+    "p75_m": 6.0,
+    "voltas_com_ponto": 3,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": true,
+    "mediana_m": -34.0,
+    "p25_m": -42.0,
+    "p75_m": -30.0,
+    "voltas_com_ponto": 10,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  },
+  {
+   "curva": "C13-esq",
+   "antes": {
+    "ia_freia": false,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": false,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  },
+  {
+   "curva": "C14-esq",
+   "antes": {
+    "ia_freia": false,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "depois": {
+    "ia_freia": false,
+    "mediana_m": null,
+    "p25_m": null,
+    "p75_m": null,
+    "voltas_com_ponto": 0,
+    "voltas": 11
+   },
+   "perda_e_situacao_iguais": true
+  }
+ ],
+ "diagnostico_c10": {
+  "descricao": "diagnostico, fora da regra: inicio da frenagem do Bico de Pato procurado desde o apice da C08",
+  "apice_c09_m": 2610.0,
+  "ia_comeca_m": 2622.0,
+  "voce_comeca_m": [
+   2614.0,
+   2608.0,
+   2604.0,
+   2610.0,
+   2588.0,
+   2612.0,
+   2602.0,
+   2606.0,
+   2608.0,
+   2610.0,
+   2608.0
+  ],
+  "voltas_antes_do_apice_da_c09": 7,
+  "diferenca_mediana_para_ia_m": -14.0
+ }
+}
