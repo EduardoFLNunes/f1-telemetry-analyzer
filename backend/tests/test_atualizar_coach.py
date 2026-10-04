@@ -181,7 +181,16 @@ class CommandTest(unittest.TestCase):
         c.load_geometry = lambda: None
         c.report_lap_origin.scan, original_scan = scan, c.report_lap_origin.scan
         c.detector_ia.apply, original_apply = apply, c.detector_ia.apply
+        original_store = c.build_lap_store_v2.main
+
+        def store_v2(args):
+            calls.append(("store v2", args[args.index("--inventario") + 1].endswith("lap_inventory.parquet")))
+            return 0
+
+        c.build_lap_store_v2.main = store_v2
         try:
+            c._evolution_script = lambda: type("E", (), {"main": staticmethod(
+                lambda args: calls.append(("evolucao", args[args.index("--modelo") + 1])) or 0)})
             c._train_script = lambda: Train
             c.DriverReferenceModel = Loaded
             c.summary = lambda m, inv: {"referencias": {}, "referencia_padrao": "volta_ia",
@@ -194,8 +203,10 @@ class CommandTest(unittest.TestCase):
         finally:
             c.report_lap_origin.scan = original_scan
             c.detector_ia.apply = original_apply
+            c.build_lap_store_v2.main = original_store
         self.assertEqual(code, 0)
-        self.assertEqual(calls, ["inventario", ("rotulos", False), ("treino", str(model), True), "resumo"])
+        self.assertEqual(calls, ["inventario", ("rotulos", False), ("treino", str(model), True), "resumo",
+                                 ("store v2", True), ("evolucao", str(model))])
         self.assertTrue((self.tmp / "r.json").exists())
 
     def test_a_failed_training_stops_the_command(self):
@@ -214,6 +225,37 @@ class CommandTest(unittest.TestCase):
         finally:
             c.detector_ia.apply = original_apply
         self.assertEqual(code, 2)
+
+    def test_a_failed_store_v2_check_stops_before_the_evolution_report(self):
+        c = self.command
+        out_dir = self.tmp / "origem"
+        out_dir.mkdir()
+        inventory_rows("2026-10-05_20-00-00_vhe_interlagos", ["humano"]).to_parquet(
+            out_dir / "lap_inventory.parquet", index=False)
+        model = self.tmp / "m.json"
+        model.write_text("{}", encoding="utf-8")
+        reached = []
+        c.load_geometry = lambda: None
+        original_apply, original_store = c.detector_ia.apply, c.build_lap_store_v2.main
+        c.detector_ia.apply = lambda *a, **k: {"sessao_rotulada_aplicada": {"voltas": 53, "origem": {}},
+                                               "sessoes_novas_sem_anotacao": []}
+        c.build_lap_store_v2.main = lambda args: 2
+        try:
+            c._train_script = lambda: type("T", (), {"main": staticmethod(lambda args: 0)})
+            c.DriverReferenceModel = type("L", (), {"load": staticmethod(lambda path: object())})
+            c.summary = lambda m, inv: {"referencias": {}, "referencia_padrao": "volta_ia",
+                                        "voltas_por_origem": {"equipamento_atual": {}, "equipamento_atual_por_fonte": {},
+                                                              "todas": {}},
+                                        "voltas_do_piloto_no_modelo": 0,
+                                        "limiar_s": {"mediana": 0, "min": 0, "max": 0, "microsetores_no_minimo": 0},
+                                        "foco_inicial": {}}
+            c._evolution_script = lambda: reached.append("evolucao")
+            code = c.main(["--sem-varrer", "--saida", str(out_dir), "--modelo", str(model),
+                           "--resumo", str(self.tmp / "r.json")])
+        finally:
+            c.detector_ia.apply, c.build_lap_store_v2.main = original_apply, original_store
+        self.assertEqual(code, 2)
+        self.assertEqual(reached, [])
 
 
 if __name__ == "__main__":

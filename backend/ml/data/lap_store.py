@@ -248,12 +248,19 @@ def build_store(
     )
 
 
-def store_path(root: Optional[Path] = None) -> Path:
-    return (Path(root) if root else config.artifacts_root()) / STORE_FILENAME
+def store_path(root: Optional[Path] = None, filename: str = STORE_FILENAME) -> Path:
+    return (Path(root) if root else config.artifacts_root()) / filename
 
 
-def save_store(store: StoredLaps, root: Optional[Path] = None) -> Path:
-    path = store_path(root)
+def save_store(
+    store: StoredLaps,
+    root: Optional[Path] = None,
+    filename: str = STORE_FILENAME,
+    metadata: str = STORE_METADATA,
+    extra: Optional[Dict[str, object]] = None,
+) -> Path:
+    """Grava o store. `filename`, `metadata` e `extra` existem para o store v2 (pedido 16)."""
+    path = store_path(root, filename)
     path.parent.mkdir(parents=True, exist_ok=True)
     store.frame.to_parquet(path, index=False)
     meta = {
@@ -263,18 +270,34 @@ def save_store(store: StoredLaps, root: Optional[Path] = None) -> Path:
         "source_hash": store.source_hash,
         "selection": store.selection,
         "columns": [c for c in store.frame.columns if c not in ("lap_id", "grid_index")],
+        **(extra or {}),
         "laps": store.laps.to_dict(orient="records"),
     }
-    (path.parent / STORE_METADATA).write_text(
-        json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8"
+    (path.parent / metadata).write_text(
+        json.dumps(meta, indent=2, ensure_ascii=False, default=_json_default), encoding="utf-8"
     )
     return path
 
 
-def load_store(root: Optional[Path] = None, track: Optional[TrackGeometry] = None) -> StoredLaps:
+def _json_default(value):
+    if isinstance(value, (np.integer,)):
+        return int(value)
+    if isinstance(value, (np.floating,)):
+        return None if np.isnan(value) else float(value)
+    if isinstance(value, (np.bool_,)):
+        return bool(value)
+    return str(value)
+
+
+def load_store(
+    root: Optional[Path] = None,
+    track: Optional[TrackGeometry] = None,
+    filename: str = STORE_FILENAME,
+    metadata: str = STORE_METADATA,
+) -> StoredLaps:
     """Le o store. Com `track`, recusa um store construido com outra geometria."""
-    path = store_path(root)
-    meta_path = path.parent / STORE_METADATA
+    path = store_path(root, filename)
+    meta_path = path.parent / metadata
     if not path.exists() or not meta_path.exists():
         raise FileNotFoundError(
             f"store nao encontrado em {path}. Rode `python -m ml.scripts.build_lap_store`."
