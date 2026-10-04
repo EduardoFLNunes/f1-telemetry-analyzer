@@ -24,8 +24,9 @@ from ..track.geometry import TrackGeometry
 # media da uma direcao para o lado oposto do correto.
 ANGULAR_CHANNELS = ("heading",)
 
-# Canais que nao devem ser interpolados: o valor entre duas marchas nao e 3,5.
-DISCRETE_CHANNELS = ("gear", "lap_number")
+# Canais que nao devem ser interpolados: o valor entre duas marchas nao e 3,5,
+# e entre "IA no volante" e "piloto no volante" nao ha meio-termo (ADR 0014).
+DISCRETE_CHANNELS = ("gear", "lap_number", "ai_controlled")
 
 # Colunas que descrevem a amostragem original e nao a pilotagem.
 DROPPED_CHANNELS = (

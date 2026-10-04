@@ -432,6 +432,9 @@ def recording_metadata() -> Dict[str, Any]:
         "trackCache": runtime_state.current_track_name,
         "trackState": runtime_state.track_build_state.value,
         "buildMethod": runtime_state.build_method,
+        # The car, from the static page (ADR 0014): without it a reference lap
+        # cannot be restricted to the same car.
+        "carModel": source_manager.current_car_model(),
     }
 
 

@@ -27,7 +27,8 @@ from ..preprocessing.quality import evaluate_lap
 from ..preprocessing.resampling import lap_time_from_grid, resample_lap
 from ..track.geometry import TrackGeometry, load_geometry
 from .inventory import load_inventory
-from .recordings import Session, iter_laps, list_sessions
+from .origin import DRIVER_EQUIPMENT, DRIVER_ORIGINS, select_laps
+from .recordings import Session, iter_laps, list_all_sessions
 
 # Associacao com o replay, calculada no inventario (`lap_identity`).
 IDENTITY_COLUMNS = (
@@ -36,6 +37,17 @@ IDENTITY_COLUMNS = (
     "game_lap_number",
     "replay_share_of_lap",
     "replay_share_of_replay",
+)
+
+# Quem pilotou e o que se sabe do relogio (ADR 0014), copiados do inventario.
+ORIGIN_COLUMNS = (
+    "origem",
+    "origem_fonte",
+    "equipamento",
+    "pasta",
+    "relogio_verificado",
+    "relogio_suspeito",
+    "relogio_pior_s",
 )
 
 STORE_FILENAME = "laps_grid.parquet"
@@ -102,6 +114,8 @@ class StoredLaps:
     track_length: float
     geometry_id: str = ""
     source_hash: str = ""
+    # O filtro com que o store foi construido (ADR 0014); vazio nos antigos.
+    selection: Optional[Dict[str, object]] = None
 
     @property
     def lap_ids(self) -> List[str]:
@@ -124,13 +138,34 @@ def build_store(
     track: Optional[TrackGeometry] = None,
     sessions: Optional[Sequence[Session]] = None,
     progress: Optional[Callable[[str], None]] = None,
+    origins: Optional[Sequence[str]] = DRIVER_ORIGINS,
+    include_clock_suspect: bool = False,
+    equipment: Optional[Sequence[str]] = DRIVER_EQUIPMENT,
 ) -> StoredLaps:
-    """Le as voltas marcadas como validas no inventario e devolve o store."""
+    """Le as voltas marcadas como validas no inventario e devolve o store.
+
+    O store fala do piloto, entao por padrao so entram voltas `humano`, com o
+    relogio conferido e sem `relogio_suspeito`, e nenhuma copia duplicada
+    (ADR 0014). `origins=None` aceita qualquer origem.
+    """
     geometry = track or load_geometry()
     catalogue = inventory if inventory is not None else load_inventory()
-    wanted = catalogue[catalogue["valid"]]
-    if wanted.empty:
+    valid = catalogue[catalogue["valid"]]
+    if valid.empty:
         raise ValueError("o inventario nao tem nenhuma volta valida")
+    wanted = select_laps(valid, origins, include_clock_suspect, equipment)
+    if wanted.empty:
+        hint = (
+            "Inventario anterior ao ADR 0014 nao tem a coluna `origem`: reconstrua-o."
+            if "origem" not in valid.columns
+            else "Ainda nao ha voltas com essa origem: grave sessoes com o gravador do ADR 0014."
+        )
+        raise ValueError(
+            f"nenhuma das {len(valid)} voltas validas passa no filtro de origem "
+            f"{list(origins) if origins is not None else 'todas'}"
+            f"{'' if include_clock_suspect else ', relogio conferido e nao suspeito'}"
+            f"{'' if equipment is None else f', equipamento {list(equipment)} (ADR 0015)'} (ADR 0014). {hint}"
+        )
     # Quais voltas sao validas foi decidido projetando contra uma geometria;
     # materializar contra outra misturaria as duas decisoes.
     recorded = wanted["geometry_id"].dropna().unique() if "geometry_id" in wanted else []
@@ -142,11 +177,11 @@ def build_store(
         by_session.setdefault(str(row["session_id"]), set()).add(int(row["sequence"]))
         identity[str(row["lap_id"])] = {
             key: (None if isinstance(row.get(key), float) and np.isnan(row.get(key)) else row.get(key))
-            for key in IDENTITY_COLUMNS
+            for key in IDENTITY_COLUMNS + ORIGIN_COLUMNS
             if key in row
         }
 
-    available = {s.session_id: s for s in (sessions if sessions is not None else list_sessions())}
+    available = {s.session_id: s for s in (sessions if sessions is not None else list_all_sessions())}
 
     blocks: List[pd.DataFrame] = []
     records: List[Dict[str, object]] = []
@@ -205,6 +240,11 @@ def build_store(
         track_length=geometry.length,
         geometry_id=geometry.geometry_id,
         source_hash=geometry.source_hash,
+        selection={
+            "origens": list(origins) if origins is not None else None,
+            "inclui_relogio_suspeito": bool(include_clock_suspect),
+            "equipamento": list(equipment) if equipment is not None else None,
+        },
     )
 
 
@@ -221,6 +261,7 @@ def save_store(store: StoredLaps, root: Optional[Path] = None) -> Path:
         "track_length": store.track_length,
         "geometry_id": store.geometry_id,
         "source_hash": store.source_hash,
+        "selection": store.selection,
         "columns": [c for c in store.frame.columns if c not in ("lap_id", "grid_index")],
         "laps": store.laps.to_dict(orient="records"),
     }
@@ -248,4 +289,5 @@ def load_store(root: Optional[Path] = None, track: Optional[TrackGeometry] = Non
         track_length=float(meta["track_length"]),
         geometry_id=str(meta.get("geometry_id") or ""),
         source_hash=str(meta.get("source_hash") or ""),
+        selection=meta.get("selection"),
     )

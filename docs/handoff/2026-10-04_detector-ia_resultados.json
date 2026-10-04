@@ -1,0 +1,2611 @@
+{
+ "etapa": "detector-ia (pedido 13)",
+ "estado": "parado no item 3 da Parte C: o detector registrado se absteve em 89 % das voltas antigas; nada promovido a origem, sem merge",
+ "base_do_patch": "develop b42d86f6",
+ "patch_sha256": "2fe2d7eaba3b86a9fab744d7f04869d9521f84560d9cc809ae8d30f05205a41c",
+ "pytest": "490 passed, 4 warnings in 70.38s (0:01:10)",
+ "testes_novos_ou_alterados": [
+  {
+   "teste": "test_ai_detector.py::test_a_missing_braking_counts_as_far",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_the_reference_is_the_median_line_and_the_common_braking_points",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_only_braking_zones_the_ai_repeats_are_used",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_only_microsectors_where_the_ai_repeats_itself_are_used",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_a_human_lap",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_a_lap_handed_over_halfway_is_mixed",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_a_long_ai_stretch_and_a_human_stretch_are_mixed",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_an_ai_lap",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_isolated_near_misses_do_not_make_a_human_lap_mixed",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_states_use_only_informative_microsectors",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_unclear_laps_stay_unknown",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_between_88_and_92_the_line_decides",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_braking_must_confirm_the_line",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_line_and_time_must_agree",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_time_votes",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_a_lap_through_the_pit_lane_is_left_out",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_a_normal_lap_is_not_a_pit_lap",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_the_registered_limits_are_the_ones_in_the_stage_document",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_the_protocol_numbers_come_back",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_ai_detector.py::test_the_simulated_plan_agrees_with_the_formula",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_every_recorded_sample_carries_it",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_the_adapter_reads_the_physics_page_field",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_the_reader_carries_it_through",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_the_sample_model_types_it",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_the_session_metadata_names_the_car",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_flatten_keeps_the_difference_between_absent_and_false",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_nested_top_level_and_absent",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_ai_share",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_constant_flag",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_field_missing_in_part_of_the_lap_is_not_human",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_flag_changes_within_the_lap",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_no_field",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_a_clock_jump_shows_in_its_microsector",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_a_consistent_lap_agrees",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_marking_uses_the_absolute_worst_microsector",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_missing_speed_is_not_verified",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_no_limit_marks_nothing",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_the_trajectory_length_is_used_not_the_centerline",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_consecutive_laps_of_one_session_are_not_duplicates",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_the_same_moment_recorded_twice",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_a_replay_lap_passes_only_if_every_part_does",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_an_old_inventory_gives_nothing_by_default",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_command_line_origins",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_duplicates_never_pass",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_equipment_follows_the_session_date",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_filters_can_be_opened",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_human_laps_count_only_with_the_current_equipment",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_the_default_is_the_driver_with_a_checked_clock",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_the_equipment_does_not_filter_ai_laps",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_the_store_refuses_an_inventory_without_origin",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_the_trainer_filters_by_origin_before_loading_anything",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_a_session_id_in_both_folders_stops_the_listing",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_folder_label",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_lap_signals",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_shifts_through_the_transient_zero_are_counted",
+   "resultado": "PASSED"
+  },
+  {
+   "teste": "test_lap_origin.py::test_steering_reversals_ignore_small_noise",
+   "resultado": "PASSED"
+  }
+ ],
+ "sessao_rotulada": {
+  "gravacoes": {
+   "2026-10-04_02-24-04_vhe_interlagos": {
+    "player_jsonl_sha256": "14442bffaf9b7f1a910ff4583540bba7f319de07e89ec622d2d3fb1833e66129",
+    "bytes": 734142161,
+    "carModel": "rss_formula_rss_3_v6_2026"
+   },
+   "2026-10-04_03-21-52_vhe_interlagos": {
+    "player_jsonl_sha256": "fd465f54e7fe5106d9971df7df8dabca99bf2af4b2fa38661df095389c4e843e",
+    "bytes": 182687339,
+    "carModel": "rss_formula_rss_3_v6_2026"
+   },
+   "2026-10-04_03-35-57_vhe_interlagos": {
+    "player_jsonl_sha256": "7f147b2aa2e1ee090fc6fc4a565ed0214817894fa69b8f9cc525eb6f1957102e",
+    "bytes": 7279811,
+    "carModel": "rss_formula_rss_3_v6_2026"
+   },
+   "2026-10-04_03-36-35_vhe_interlagos": {
+    "player_jsonl_sha256": "348751471c0a69c8480877142fff58f05f9c2c320c6aace9b609e69edb78a40a",
+    "bytes": 49933882,
+    "carModel": "rss_formula_rss_3_v6_2026"
+   },
+   "2026-10-04_03-40-32_vhe_interlagos": {
+    "player_jsonl_sha256": "769953dbb747147df927e995bce505c419fd40ec2fc48392147f95f381d6daa7",
+    "bytes": 20073924,
+    "carModel": "rss_formula_rss_3_v6_2026"
+   },
+   "2026-10-04_03-42-10_vhe_interlagos": {
+    "player_jsonl_sha256": "048dfc3e1a6ccd80a01b8754da22fd6a6d6bc0f44399781ba987a2a751f92ec6",
+    "bytes": 513496466,
+    "carModel": "rss_formula_rss_3_v6_2026"
+   },
+   "2026-10-04_04-22-39_vhe_interlagos": {
+    "player_jsonl_sha256": "78c33e433e40dfc2220144b99a78599a7a2f1c7816d8a5ce844674a683d90af3",
+    "bytes": 159137003,
+    "carModel": "rss_formula_rss_3_v6_2026"
+   }
+  },
+  "anotacoes": {
+   "arquivo": "docs/experimentos/2026-10-04_sessao_rotulada_anotacoes.csv",
+   "sha256": "35d9707e3584c7532130f2d731126c542df3003fa326d1762908d35b698cd8b2"
+  },
+  "modelo_do_coach_renomeado_e_restaurado": {
+   "arquivo": "data/reference_models/vhe_interlagos.json",
+   "sha256_antes_e_depois": "9d08d705c770c935b28e1cb4631a5dc1cbdf65b3ac76c2f5adf96c62119ca827"
+  },
+  "indicador_contra_anotacao": [
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0000",
+    "parte": 1,
+    "volta_jogo": 1,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 148.41
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0001",
+    "parte": 1,
+    "volta_jogo": 2,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 92.991
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0002",
+    "parte": 1,
+    "volta_jogo": 3,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 95.301
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0003",
+    "parte": 1,
+    "volta_jogo": 4,
+    "anotada": "misturada",
+    "indicador": "misturada",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 100.326
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0004",
+    "parte": 1,
+    "volta_jogo": 5,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 85.095
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0005",
+    "parte": 1,
+    "volta_jogo": 6,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 84.984
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0006",
+    "parte": 1,
+    "volta_jogo": 7,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 108.234
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0007",
+    "parte": 1,
+    "volta_jogo": 8,
+    "anotada": "misturada",
+    "indicador": "ia",
+    "concorda": false,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 86.091
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0008",
+    "parte": 1,
+    "volta_jogo": 9,
+    "anotada": "humano",
+    "indicador": "misturada",
+    "concorda": false,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 748.395
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0009",
+    "parte": 1,
+    "volta_jogo": 10,
+    "anotada": "humano",
+    "indicador": "ia",
+    "concorda": false,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 94.008
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0010",
+    "parte": 1,
+    "volta_jogo": 11,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 85.08
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0011",
+    "parte": 1,
+    "volta_jogo": 12,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 84.996
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0012",
+    "parte": 1,
+    "volta_jogo": 13,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 84.906
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0013",
+    "parte": 1,
+    "volta_jogo": 14,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 264.714
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0014",
+    "parte": 2,
+    "volta_jogo": 1,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 589.128
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0015",
+    "parte": 2,
+    "volta_jogo": 2,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 121.623
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0016",
+    "parte": 2,
+    "volta_jogo": 3,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 119.109
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0017",
+    "parte": 2,
+    "volta_jogo": 4,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 188.57100000000003
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0018",
+    "parte": 2,
+    "volta_jogo": 5,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 89.379
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0019",
+    "parte": 2,
+    "volta_jogo": 6,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 181.359
+   },
+   {
+    "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0000",
+    "parte": 2,
+    "volta_jogo": 6,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 104.697
+   },
+   {
+    "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0001",
+    "parte": 2,
+    "volta_jogo": 7,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 95.217
+   },
+   {
+    "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0002",
+    "parte": 2,
+    "volta_jogo": 8,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 91.719
+   },
+   {
+    "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0003",
+    "parte": 2,
+    "volta_jogo": 9,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 107.157
+   },
+   {
+    "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0004",
+    "parte": 2,
+    "volta_jogo": 10,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 92.646
+   },
+   {
+    "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0005",
+    "parte": 2,
+    "volta_jogo": 11,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 93.45
+   },
+   {
+    "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0006",
+    "parte": 2,
+    "volta_jogo": 12,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 93.0
+   },
+   {
+    "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0007",
+    "parte": 2,
+    "volta_jogo": 13,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 161.667
+   },
+   {
+    "lap_id": "2026-10-04_03-35-57_vhe_interlagos#0000",
+    "parte": 2,
+    "volta_jogo": 13,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 34.05600000000001
+   },
+   {
+    "lap_id": "2026-10-04_03-36-35_vhe_interlagos#0000",
+    "parte": 2,
+    "volta_jogo": 13,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 231.252
+   },
+   {
+    "lap_id": "2026-10-04_03-40-32_vhe_interlagos#0000",
+    "parte": 2,
+    "volta_jogo": 13,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 92.90700000000004
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0000",
+    "parte": 2,
+    "volta_jogo": 13,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 228.55499999999995
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0001",
+    "parte": 2,
+    "volta_jogo": 14,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 105.92399999999999
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0002",
+    "parte": 2,
+    "volta_jogo": 15,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 93.693
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0003",
+    "parte": 2,
+    "volta_jogo": 16,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 92.163
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0004",
+    "parte": 2,
+    "volta_jogo": 17,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 234.444
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0005",
+    "parte": 2,
+    "volta_jogo": 18,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 98.796
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0006",
+    "parte": 2,
+    "volta_jogo": 19,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 123.609
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0007",
+    "parte": 2,
+    "volta_jogo": 20,
+    "anotada": "humano",
+    "indicador": "humano",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 137.83800000000002
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0008",
+    "parte": 2,
+    "volta_jogo": 21,
+    "anotada": "misturada",
+    "indicador": "misturada",
+    "concorda": true,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 334.44
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0009",
+    "parte": 2,
+    "volta_jogo": 22,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 85.026
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0010",
+    "parte": 2,
+    "volta_jogo": 23,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 84.924
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0011",
+    "parte": 2,
+    "volta_jogo": 24,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 84.822
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0012",
+    "parte": 2,
+    "volta_jogo": 25,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 84.816
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0013",
+    "parte": 2,
+    "volta_jogo": 26,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 84.816
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0014",
+    "parte": 2,
+    "volta_jogo": 27,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": false,
+    "tempo_s": 92.649
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0015",
+    "parte": 2,
+    "volta_jogo": 28,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": false,
+    "tempo_s": 100.983
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0016",
+    "parte": 2,
+    "volta_jogo": 29,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 85.176
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0017",
+    "parte": 2,
+    "volta_jogo": 30,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 85.089
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0018",
+    "parte": 2,
+    "volta_jogo": 31,
+    "anotada": "ia",
+    "indicador": "ia",
+    "concorda": true,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 85.146
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0019",
+    "parte": 2,
+    "volta_jogo": 32,
+    "anotada": "misturada",
+    "indicador": "ia",
+    "concorda": false,
+    "valida": true,
+    "limpa": true,
+    "tempo_s": 85.602
+   },
+   {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0020",
+    "parte": 2,
+    "volta_jogo": 33,
+    "anotada": "humano",
+    "indicador": "ia",
+    "concorda": false,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 13.371
+   },
+   {
+    "lap_id": "2026-10-04_04-22-39_vhe_interlagos#0000",
+    "parte": 2,
+    "volta_jogo": 33,
+    "anotada": "humano",
+    "indicador": "misturada",
+    "concorda": false,
+    "valida": false,
+    "limpa": false,
+    "tempo_s": 734.673
+   }
+  ],
+  "voltas_limpas": {
+   "ia": [
+    "2026-10-04_02-24-04_vhe_interlagos#0004",
+    "2026-10-04_02-24-04_vhe_interlagos#0005",
+    "2026-10-04_02-24-04_vhe_interlagos#0010",
+    "2026-10-04_02-24-04_vhe_interlagos#0011",
+    "2026-10-04_02-24-04_vhe_interlagos#0012",
+    "2026-10-04_03-42-10_vhe_interlagos#0009",
+    "2026-10-04_03-42-10_vhe_interlagos#0010",
+    "2026-10-04_03-42-10_vhe_interlagos#0011",
+    "2026-10-04_03-42-10_vhe_interlagos#0012",
+    "2026-10-04_03-42-10_vhe_interlagos#0013",
+    "2026-10-04_03-42-10_vhe_interlagos#0016",
+    "2026-10-04_03-42-10_vhe_interlagos#0017",
+    "2026-10-04_03-42-10_vhe_interlagos#0018"
+   ],
+   "humano": [
+    "2026-10-04_02-24-04_vhe_interlagos#0001",
+    "2026-10-04_02-24-04_vhe_interlagos#0002",
+    "2026-10-04_02-24-04_vhe_interlagos#0009",
+    "2026-10-04_02-24-04_vhe_interlagos#0018",
+    "2026-10-04_03-21-52_vhe_interlagos#0001",
+    "2026-10-04_03-21-52_vhe_interlagos#0002",
+    "2026-10-04_03-21-52_vhe_interlagos#0004",
+    "2026-10-04_03-21-52_vhe_interlagos#0005",
+    "2026-10-04_03-42-10_vhe_interlagos#0002",
+    "2026-10-04_03-42-10_vhe_interlagos#0003",
+    "2026-10-04_03-42-10_vhe_interlagos#0005"
+   ]
+  },
+  "voltas_misturadas_validas": [
+   "2026-10-04_02-24-04_vhe_interlagos#0007",
+   "2026-10-04_03-42-10_vhe_interlagos#0019"
+  ]
+ },
+ "parte2_variacao": {
+  "humano": {
+   "voltas_limpas": [
+    "2026-10-04_02-24-04_vhe_interlagos#0001",
+    "2026-10-04_02-24-04_vhe_interlagos#0002",
+    "2026-10-04_02-24-04_vhe_interlagos#0009",
+    "2026-10-04_02-24-04_vhe_interlagos#0018",
+    "2026-10-04_03-21-52_vhe_interlagos#0001",
+    "2026-10-04_03-21-52_vhe_interlagos#0002",
+    "2026-10-04_03-21-52_vhe_interlagos#0004",
+    "2026-10-04_03-21-52_vhe_interlagos#0005",
+    "2026-10-04_03-42-10_vhe_interlagos#0002",
+    "2026-10-04_03-42-10_vhe_interlagos#0003",
+    "2026-10-04_03-42-10_vhe_interlagos#0005"
+   ],
+   "bico_de_pato_s": {
+    "n": 11,
+    "media": 13.538609417655287,
+    "dp": 0.9057136005168063,
+    "dp_robusto": 0.624753700579686,
+    "dp_diferencas_sucessivas": 0.8198455911514168
+   },
+   "frenagem_dp_m_por_janela": {
+    "J1:C01-esq": 21.968975915009633,
+    "J2:C04-esq": 12.925195527314608,
+    "J3:C06-dir": 50.32763432907192,
+    "J4:C07-dir": 16.460354842901776,
+    "J5:C08-esq": NaN,
+    "J6:C10-dir": 6.975409089684049,
+    "J7:C12-esq": 12.445664954151784
+   },
+   "frenagem_dp_m_mediana": 14.692775185108193,
+   "apice_dp_m_por_janela": {
+    "J1:C01-esq": 1.107272664043407,
+    "J2:C04-esq": 3.576167900338474,
+    "J3:C06-dir": 7.897896739936829,
+    "J4:C07-dir": 1.6542056680683468,
+    "J5:C08-esq": 1.8365835616424127,
+    "J6:C10-dir": 1.1957314711774596,
+    "J7:C12-esq": 1.9113534088928041
+   },
+   "apice_dp_m_mediana": 1.8365835616424127,
+   "tempo_volta_s": {
+    "n": 11,
+    "media": 93.57845454545455,
+    "dp": 2.3958293079281083,
+    "dp_robusto": 1.908106200000009,
+    "dp_diferencas_sucessivas": 2.5743005360680016
+   },
+   "melhor_volta": {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0018",
+    "tempo_s": 89.379
+   }
+  },
+  "ia": {
+   "voltas_limpas": [
+    "2026-10-04_02-24-04_vhe_interlagos#0004",
+    "2026-10-04_02-24-04_vhe_interlagos#0005",
+    "2026-10-04_02-24-04_vhe_interlagos#0010",
+    "2026-10-04_02-24-04_vhe_interlagos#0011",
+    "2026-10-04_02-24-04_vhe_interlagos#0012",
+    "2026-10-04_03-42-10_vhe_interlagos#0009",
+    "2026-10-04_03-42-10_vhe_interlagos#0010",
+    "2026-10-04_03-42-10_vhe_interlagos#0011",
+    "2026-10-04_03-42-10_vhe_interlagos#0012",
+    "2026-10-04_03-42-10_vhe_interlagos#0013",
+    "2026-10-04_03-42-10_vhe_interlagos#0016",
+    "2026-10-04_03-42-10_vhe_interlagos#0017",
+    "2026-10-04_03-42-10_vhe_interlagos#0018"
+   ],
+   "bico_de_pato_s": {
+    "n": 13,
+    "media": 11.431718464720348,
+    "dp": 0.0122288974622565,
+    "dp_robusto": 0.013480779599612374,
+    "dp_diferencas_sucessivas": 0.010092481312785173
+   },
+   "frenagem_dp_m_por_janela": {
+    "J1:C01-esq": 7.851324028267894,
+    "J2:C04-esq": 1.3204748256979928,
+    "J3:C06-dir": 0.9871143556844146,
+    "J4:C07-dir": 1.3204748256979262,
+    "J5:C08-esq": 4.733160493438237e-13,
+    "J6:C10-dir": 0.55471037996564,
+    "J7:C12-esq": 1.012757959964579
+   },
+   "frenagem_dp_m_mediana": 1.012757959964579,
+   "apice_dp_m_por_janela": {
+    "J1:C01-esq": 0.05639331456900079,
+    "J2:C04-esq": 0.036281230881859694,
+    "J3:C06-dir": 0.11420622939207303,
+    "J4:C07-dir": 0.02131042242602898,
+    "J5:C08-esq": 0.0393259087572205,
+    "J6:C10-dir": 0.032946887982233504,
+    "J7:C12-esq": 0.03166147497385436
+   },
+   "apice_dp_m_mediana": 0.036281230881859694,
+   "tempo_volta_s": {
+    "n": 13,
+    "media": 84.99046153846153,
+    "dp": 0.12563546167690412,
+    "dp_robusto": 0.13788180000000522,
+    "dp_diferencas_sucessivas": 0.09819698430844294
+   },
+   "melhor_volta": {
+    "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0012",
+    "tempo_s": 84.816
+   }
+  }
+ },
+ "parte2_janelas": [
+  {
+   "janela": "J1:C01-esq",
+   "inicio_m": 30.0,
+   "fim_m": 1130.0,
+   "comprimento_m": 1100.0,
+   "curva": "C01-esq",
+   "apice_m": 298.0054709816986,
+   "mediana_inicio_frenagem_m": 126.00231323387257
+  },
+  {
+   "janela": "J2:C04-esq",
+   "inicio_m": 1130.0,
+   "fim_m": 1800.0,
+   "comprimento_m": 670.0,
+   "curva": "C04-esq",
+   "apice_m": 1372.0251885466123,
+   "mediana_inicio_frenagem_m": 1204.0221042347823
+  },
+  {
+   "janela": "J3:C06-dir",
+   "inicio_m": 1800.0,
+   "fim_m": 2140.0,
+   "comprimento_m": 340.0,
+   "curva": "C06-dir",
+   "apice_m": 2102.038590615874,
+   "mediana_inicio_frenagem_m": 1890.0346985080885
+  },
+  {
+   "janela": "J4:C07-dir",
+   "inicio_m": 2140.0,
+   "fim_m": 2350.0,
+   "comprimento_m": 210.0,
+   "curva": "C07-dir",
+   "apice_m": 2282.041895235692,
+   "mediana_inicio_frenagem_m": 2198.040353079777
+  },
+  {
+   "janela": "J5:C08-esq",
+   "inicio_m": 2350.0,
+   "fim_m": 2590.0,
+   "comprimento_m": 240.0,
+   "curva": "C08-esq",
+   "apice_m": 2394.043951443579,
+   "mediana_inicio_frenagem_m": 2360.043327237613
+  },
+  {
+   "janela": "J6:C10-dir",
+   "inicio_m": 2590.0,
+   "fim_m": 3060.0,
+   "comprimento_m": 470.0,
+   "curva": "C10-dir",
+   "apice_m": 2728.050083349241,
+   "mediana_inicio_frenagem_m": 2622.048137295348
+  },
+  {
+   "janela": "J7:C12-esq",
+   "inicio_m": 3060.0,
+   "fim_m": 30.0,
+   "comprimento_m": 1304.0795679016164,
+   "curva": "C12-esq",
+   "apice_m": 3222.0591526947414,
+   "mediana_inicio_frenagem_m": 3120.0572800768446
+  }
+ ],
+ "parte2_tamanho_do_experimento": {
+  "sigma_bico_de_pato_s": {
+   "dp_diferencas_sucessivas": 0.8198455911514168,
+   "dp": 0.9057136005168063
+  },
+  "voltas_por_condicao_para_80pct": {
+   "dp_diferencas_sucessivas": {
+    "15_ms": {
+     "frenagem": 23448,
+     "B_menos_A": 46895
+    },
+    "30_ms": {
+     "frenagem": 5862,
+     "B_menos_A": 11724
+    },
+    "50_ms": {
+     "frenagem": 2111,
+     "B_menos_A": 4221
+    },
+    "detectavel_com_8_voltas_s": {
+     "frenagem": 0.812069502542308,
+     "B_menos_A": 1.1484397040849046
+    },
+    "detectavel_com_32_voltas_s": {
+     "frenagem": 0.406034751271154,
+     "B_menos_A": 0.5742198520424523
+    }
+   },
+   "dp": {
+    "15_ms": {
+     "frenagem": 28617,
+     "B_menos_A": 57233
+    },
+    "30_ms": {
+     "frenagem": 7155,
+     "B_menos_A": 14309
+    },
+    "50_ms": {
+     "frenagem": 2576,
+     "B_menos_A": 5151
+    },
+    "detectavel_com_8_voltas_s": {
+     "frenagem": 0.8971230692166351,
+     "B_menos_A": 1.2687236116039422
+    },
+    "detectavel_com_32_voltas_s": {
+     "frenagem": 0.44856153460831755,
+     "B_menos_A": 0.6343618058019711
+    }
+   }
+  },
+  "poder_simulado_no_efeito_detectavel": {
+   "dp_diferencas_sucessivas": {
+    "8_voltas_frenagem": 0.7625,
+    "8_voltas_B_menos_A": 0.7745,
+    "32_voltas_frenagem": 0.787,
+    "32_voltas_B_menos_A": 0.785
+   },
+   "dp": {
+    "8_voltas_frenagem": 0.7625,
+    "8_voltas_B_menos_A": 0.7745,
+    "32_voltas_frenagem": 0.787,
+    "32_voltas_B_menos_A": 0.785
+   }
+  },
+  "como": "formula do protocolo (z = 1,96 + 0,84), conferida simulando o plano em blocos (make_plan) analisado por estimate_effects, 2000 sessoes por ponto"
+ },
+ "parte3_limites_registrados": {
+  "lateral_ai_m": 0.25,
+  "lateral_human_m": 0.3,
+  "ai_run": 3,
+  "human_run": 2,
+  "braking_ai_m": 4.0,
+  "braking_human_m": 8.0,
+  "informative_microsectors": [
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   26,
+   27,
+   28,
+   30,
+   31,
+   32,
+   33,
+   34,
+   35,
+   36,
+   37,
+   38,
+   39,
+   40,
+   41,
+   42,
+   43,
+   44,
+   45,
+   46,
+   47,
+   49,
+   50,
+   51
+  ],
+  "braking_zones_m": [
+   126.0,
+   248.0,
+   1206.0,
+   2016.0,
+   2200.0,
+   2360.0,
+   2622.0,
+   3122.1
+  ],
+  "time_ai_max_s": 88.0,
+  "time_human_min_s": 92.0
+ },
+ "parte3_commit_do_registro": "0fe5471a",
+ "parte3_acerto_na_sessao": {
+  "ia": {
+   "voltas": 13,
+   "acertos": 13,
+   "desconhecidas": 0,
+   "erradas": 0
+  },
+  "humano": {
+   "voltas": 11,
+   "acertos": 11,
+   "desconhecidas": 0,
+   "erradas": 0
+  },
+  "misturada": {
+   "voltas": 2,
+   "acertos": 2,
+   "desconhecidas": 0,
+   "erradas": 0
+  }
+ },
+ "parte3_por_volta_na_sessao": [
+  {
+   "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0004",
+   "parte": 1,
+   "volta_jogo": 5,
+   "anotada": "ia",
+   "tempo_s": 85.095,
+   "origem_detector": "ia",
+   "motivo": "sinais concordam",
+   "linha": "ia",
+   "frenagem_mediana_m": 0.043005221385328696,
+   "microsetores_ia": 40,
+   "microsetores_humano": 0,
+   "trecho_ia": 40,
+   "trecho_humano": 0
+  },
+  {
+   "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0005",
+   "parte": 1,
+   "volta_jogo": 6,
+   "anotada": "ia",
+   "tempo_s": 84.984,
+   "origem_detector": "ia",
+   "motivo": "sinais concordam",
+   "linha": "ia",
+   "frenagem_mediana_m": 0.045732266480627004,
+   "microsetores_ia": 40,
+   "microsetores_humano": 0,
+   "trecho_ia": 40,
+   "trecho_humano": 0
+  },
+  {
+   "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0010",
+   "parte": 1,
+   "volta_jogo": 11,
+   "anotada": "ia",
+   "tempo_s": 85.08,
+   "origem_detector": "ia",
+   "motivo": "sinais concordam",
+   "linha": "ia",
+   "frenagem_mediana_m": 1.0130165302829255,
+   "microsetores_ia": 40,
+   "microsetores_humano": 0,
+   "trecho_ia": 40,
+   "trecho_humano": 0
+  },
+  {
+   "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0011",
+   "parte": 1,
+   "volta_jogo": 12,
+   "anotada": "ia",
+   "tempo_s": 84.996,
+   "origem_detector": "ia",
+   "motivo": "sinais concordam",
+   "linha": "ia",
+   "frenagem_mediana_m": 1.003892107785532,
+   "microsetores_ia": 40,
+   "microsetores_humano": 0,
+   "trecho_ia": 40,
+   "trecho_humano": 0
+  },
+  {
+   "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0012",
+   "parte": 1,
+   "volta_jogo": 13,
+   "anotada": "ia",
+   "tempo_s": 84.906,
+   "origem_detector": "ia",
+   "motivo": "sinais concordam",
+   "linha": "ia",
+   "frenagem_mediana_m": 1.0130165302829255,
+   "microsetores_ia": 40,
+   "microsetores_humano": 0,
+   "trecho_ia": 40,
+   "trecho_humano": 0
+  },
+  {
+   "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0009",
+   "parte": 2,
+   "volta_jogo": 22,
+   "anotada": "ia",
+   "tempo_s": 85.026,
+   "origem_detector": "ia",
+   "motivo": "sinais concordam",
+   "linha": "ia",
+   "frenagem_mediana_m": 0.04185851769398141,
+   "microsetores_ia": 40,
+   "microsetores_humano": 0,
+   "trecho_ia": 40,
+   "trecho_humano": 0
+  },
+  {
+   "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0010",
+   "parte": 2,
+   "volta_jogo": 23,
+   "anotada": "ia",
+   "tempo_s": 84.924,
+   "origem_detector": "ia",
+   "motivo": "sinais concordam",
+   "linha": "ia",
+   "frenagem_mediana_m": 0.04153650146622567,
+   "microsetores_ia": 40,
+   "microsetores_humano": 0,
+   "trecho_ia": 40,
+   "trecho_humano": 0
+  },
+  {
+   "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0011",
+   "parte": 2,
+   "volta_jogo": 24,
+   "anotada": "ia",
+   "tempo_s": 84.822,
+   "origem_detector": "ia",
+   "motivo": "sinais concordam",
+   "linha": "ia",
+   "frenagem_mediana_m": 0.039847473559348145,
+   "microsetores_ia": 40,
+   "microsetores_humano": 0,
+   "trecho_ia": 40,
+   "trecho_humano": 0
+  },
+  {
+   "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0012",
+   "parte": 2,
+   "volta_jogo": 25,
+   "anotada": "ia",
+   "tempo_s": 84.816,
+   "origem_detector": "ia",
+   "motivo": "sinais concordam",
+   "linha": "ia",
+   "frenagem_mediana_m": 1.9557731714364763,
+   "microsetores_ia": 40,
+   "microsetores_humano": 0,
+   "trecho_ia": 40,
+   "trecho_humano": 0
+  },
+  {
+   "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0013",
+   "parte": 2,
+   "volta_jogo": 26,
+   "anotada": "ia",
+   "tempo_s": 84.816,
+   "origem_detector": "ia",
+   "motivo": "sinais concordam",
+   "linha": "ia",
+   "frenagem_mediana_m": 0.045732266480627004,
+   "microsetores_ia": 40,
+   "microsetores_humano": 0,
+   "trecho_ia": 40,
+   "trecho_humano": 0
+  },
+  {
+   "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0016",
+   "parte": 2,
+   "volta_jogo": 29,
+   "anotada": "ia",
+   "tempo_s": 85.176,
+   "origem_detector": "ia",
+   "motivo": "sinais concordam",
+   "linha": "ia",
+   "frenagem_mediana_m": 0.03870076986800086,
+   "microsetores_ia": 40,
+   "microsetores_humano": 0,
+   "trecho_ia": 40,
+   "trecho_humano": 0
+  },
+  {
+   "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0017",
+   "parte": 2,
+   "volta_jogo": 30,
+   "anotada": "ia",
+   "tempo_s": 85.089,
+   "origem_detector": "ia",
+   "motivo": "sinais concordam",
+   "linha": "ia",
+   "frenagem_mediana_m": 0.04153650146622567,
+   "microsetores_ia": 40,
+   "microsetores_humano": 0,
+   "trecho_ia": 40,
+   "trecho_humano": 0
+  },
+  {
+   "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0018",
+   "parte": 2,
+   "volta_jogo": 31,
+   "anotada": "ia",
+   "tempo_s": 85.146,
+   "origem_detector": "ia",
+   "motivo": "sinais concordam",
+   "linha": "ia",
+   "frenagem_mediana_m": 0.04153650146622567,
+   "microsetores_ia": 40,
+   "microsetores_humano": 0,
+   "trecho_ia": 40,
+   "trecho_humano": 0
+  },
+  {
+   "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0001",
+   "parte": 1,
+   "volta_jogo": 2,
+   "anotada": "humano",
+   "tempo_s": 92.991,
+   "origem_detector": "humano",
+   "motivo": "sinais concordam",
+   "linha": "humano",
+   "frenagem_mediana_m": 43.97123144858483,
+   "microsetores_ia": 0,
+   "microsetores_humano": 39,
+   "trecho_ia": 0,
+   "trecho_humano": 31
+  },
+  {
+   "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0002",
+   "parte": 1,
+   "volta_jogo": 3,
+   "anotada": "humano",
+   "tempo_s": 95.301,
+   "origem_detector": "humano",
+   "motivo": "sinais concordam",
+   "linha": "humano",
+   "frenagem_mediana_m": 56.021818936552336,
+   "microsetores_ia": 2,
+   "microsetores_humano": 38,
+   "trecho_ia": 1,
+   "trecho_humano": 17
+  },
+  {
+   "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0009",
+   "parte": 1,
+   "volta_jogo": 10,
+   "anotada": "humano",
+   "tempo_s": 94.008,
+   "origem_detector": "humano",
+   "motivo": "sinais concordam",
+   "linha": "humano",
+   "frenagem_mediana_m": 50.981898026997285,
+   "microsetores_ia": 2,
+   "microsetores_humano": 38,
+   "trecho_ia": 1,
+   "trecho_humano": 20
+  },
+  {
+   "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0018",
+   "parte": 2,
+   "volta_jogo": 5,
+   "anotada": "humano",
+   "tempo_s": 89.379,
+   "origem_detector": "humano",
+   "motivo": "sinais concordam",
+   "linha": "humano",
+   "frenagem_mediana_m": 49.98017228109234,
+   "microsetores_ia": 1,
+   "microsetores_humano": 38,
+   "trecho_ia": 1,
+   "trecho_humano": 18
+  },
+  {
+   "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0001",
+   "parte": 2,
+   "volta_jogo": 7,
+   "anotada": "humano",
+   "tempo_s": 95.217,
+   "origem_detector": "humano",
+   "motivo": "sinais concordam",
+   "linha": "humano",
+   "frenagem_mediana_m": 58.999375794034385,
+   "microsetores_ia": 2,
+   "microsetores_humano": 38,
+   "trecho_ia": 1,
+   "trecho_humano": 22
+  },
+  {
+   "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0002",
+   "parte": 2,
+   "volta_jogo": 8,
+   "anotada": "humano",
+   "tempo_s": 91.719,
+   "origem_detector": "humano",
+   "motivo": "sinais concordam",
+   "linha": "humano",
+   "frenagem_mediana_m": 50.98870921562202,
+   "microsetores_ia": 3,
+   "microsetores_humano": 36,
+   "trecho_ia": 2,
+   "trecho_humano": 30
+  },
+  {
+   "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0004",
+   "parte": 2,
+   "volta_jogo": 10,
+   "anotada": "humano",
+   "tempo_s": 92.646,
+   "origem_detector": "humano",
+   "motivo": "sinais concordam",
+   "linha": "humano",
+   "frenagem_mediana_m": 52.98935178058662,
+   "microsetores_ia": 3,
+   "microsetores_humano": 36,
+   "trecho_ia": 2,
+   "trecho_humano": 19
+  },
+  {
+   "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0005",
+   "parte": 2,
+   "volta_jogo": 11,
+   "anotada": "humano",
+   "tempo_s": 93.45,
+   "origem_detector": "humano",
+   "motivo": "sinais concordam",
+   "linha": "humano",
+   "frenagem_mediana_m": 44.98920490859473,
+   "microsetores_ia": 3,
+   "microsetores_humano": 36,
+   "trecho_ia": 1,
+   "trecho_humano": 18
+  },
+  {
+   "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0002",
+   "parte": 2,
+   "volta_jogo": 15,
+   "anotada": "humano",
+   "tempo_s": 93.693,
+   "origem_detector": "humano",
+   "motivo": "sinais concordam",
+   "linha": "humano",
+   "frenagem_mediana_m": 60.0,
+   "microsetores_ia": 2,
+   "microsetores_humano": 36,
+   "trecho_ia": 1,
+   "trecho_humano": 11
+  },
+  {
+   "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0003",
+   "parte": 2,
+   "volta_jogo": 16,
+   "anotada": "humano",
+   "tempo_s": 92.163,
+   "origem_detector": "humano",
+   "motivo": "sinais concordam",
+   "linha": "humano",
+   "frenagem_mediana_m": 45.98861742062709,
+   "microsetores_ia": 1,
+   "microsetores_humano": 39,
+   "trecho_ia": 1,
+   "trecho_humano": 32
+  },
+  {
+   "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0005",
+   "parte": 2,
+   "volta_jogo": 18,
+   "anotada": "humano",
+   "tempo_s": 98.796,
+   "origem_detector": "humano",
+   "motivo": "sinais concordam",
+   "linha": "humano",
+   "frenagem_mediana_m": 53.98937013958562,
+   "microsetores_ia": 4,
+   "microsetores_humano": 35,
+   "trecho_ia": 2,
+   "trecho_humano": 12
+  },
+  {
+   "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0007",
+   "parte": 1,
+   "volta_jogo": 8,
+   "anotada": "misturada",
+   "tempo_s": 86.091,
+   "origem_detector": "misturada",
+   "motivo": "sinais concordam",
+   "linha": "misturada",
+   "frenagem_mediana_m": 0.045732266480627004,
+   "microsetores_ia": 32,
+   "microsetores_humano": 8,
+   "trecho_ia": 32,
+   "trecho_humano": 8
+  },
+  {
+   "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0019",
+   "parte": 2,
+   "volta_jogo": 32,
+   "anotada": "misturada",
+   "tempo_s": 85.602,
+   "origem_detector": "misturada",
+   "motivo": "sinais concordam",
+   "linha": "misturada",
+   "frenagem_mediana_m": 0.04153650146622567,
+   "microsetores_ia": 36,
+   "microsetores_humano": 4,
+   "trecho_ia": 36,
+   "trecho_humano": 4
+  }
+ ],
+ "parte3_fora_da_amostra": {
+  "limites": {
+   "lateral_ai_m": 0.25,
+   "lateral_human_m": 0.3,
+   "ai_run": 3,
+   "human_run": 2,
+   "braking_ai_m": 4.0,
+   "braking_human_m": 8.0,
+   "informative_microsectors": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    26,
+    27,
+    28,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    49,
+    50,
+    51
+   ],
+   "braking_zones_m": [
+    126.0,
+    248.0,
+    1206.0,
+    2016.0,
+    2200.0,
+    2360.0,
+    2622.0
+   ],
+   "time_ai_max_s": 88.0,
+   "time_human_min_s": 92.0
+  },
+  "acerto": {
+   "ia": {
+    "voltas": 5,
+    "acertos": 5,
+    "desconhecidas": 0,
+    "erradas": 0
+   },
+   "humano": {
+    "voltas": 3,
+    "acertos": 3,
+    "desconhecidas": 0,
+    "erradas": 0
+   },
+   "misturada": {
+    "voltas": 1,
+    "acertos": 1,
+    "desconhecidas": 0,
+    "erradas": 0
+   }
+  },
+  "por_volta": [
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0004",
+    "parte": 1,
+    "volta_jogo": 5,
+    "anotada": "ia",
+    "tempo_s": 85.095,
+    "origem_detector": "ia",
+    "motivo": "sinais concordam",
+    "linha": "ia",
+    "frenagem_mediana_m": 0.043327237613084435,
+    "microsetores_ia": 39,
+    "microsetores_humano": 0,
+    "trecho_ia": 39,
+    "trecho_humano": 0
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0005",
+    "parte": 1,
+    "volta_jogo": 6,
+    "anotada": "ia",
+    "tempo_s": 84.984,
+    "origem_detector": "ia",
+    "motivo": "sinais concordam",
+    "linha": "ia",
+    "frenagem_mediana_m": 0.043327237613084435,
+    "microsetores_ia": 39,
+    "microsetores_humano": 0,
+    "trecho_ia": 39,
+    "trecho_humano": 0
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0010",
+    "parte": 1,
+    "volta_jogo": 11,
+    "anotada": "ia",
+    "tempo_s": 85.08,
+    "origem_detector": "ia",
+    "motivo": "sinais concordam",
+    "linha": "ia",
+    "frenagem_mediana_m": 1.9778957652176814,
+    "microsetores_ia": 39,
+    "microsetores_humano": 0,
+    "trecho_ia": 39,
+    "trecho_humano": 0
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0011",
+    "parte": 1,
+    "volta_jogo": 12,
+    "anotada": "ia",
+    "tempo_s": 84.996,
+    "origem_detector": "ia",
+    "motivo": "sinais concordam",
+    "linha": "ia",
+    "frenagem_mediana_m": 0.04813729534816957,
+    "microsetores_ia": 39,
+    "microsetores_humano": 0,
+    "trecho_ia": 39,
+    "trecho_humano": 0
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0012",
+    "parte": 1,
+    "volta_jogo": 13,
+    "anotada": "ia",
+    "tempo_s": 84.906,
+    "origem_detector": "ia",
+    "motivo": "sinais concordam",
+    "linha": "ia",
+    "frenagem_mediana_m": 0.04813729534816957,
+    "microsetores_ia": 39,
+    "microsetores_humano": 0,
+    "trecho_ia": 39,
+    "trecho_humano": 0
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0001",
+    "parte": 1,
+    "volta_jogo": 2,
+    "anotada": "humano",
+    "tempo_s": 92.991,
+    "origem_detector": "humano",
+    "motivo": "sinais concordam",
+    "linha": "humano",
+    "frenagem_mediana_m": 45.96383277199243,
+    "microsetores_ia": 1,
+    "microsetores_humano": 38,
+    "trecho_ia": 1,
+    "trecho_humano": 30
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0002",
+    "parte": 1,
+    "volta_jogo": 3,
+    "anotada": "humano",
+    "tempo_s": 95.301,
+    "origem_detector": "humano",
+    "motivo": "sinais concordam",
+    "linha": "humano",
+    "frenagem_mediana_m": 60.0,
+    "microsetores_ia": 2,
+    "microsetores_humano": 37,
+    "trecho_ia": 1,
+    "trecho_humano": 17
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0009",
+    "parte": 1,
+    "volta_jogo": 10,
+    "anotada": "humano",
+    "tempo_s": 94.008,
+    "origem_detector": "humano",
+    "motivo": "sinais concordam",
+    "linha": "humano",
+    "frenagem_mediana_m": 58.0033780558139,
+    "microsetores_ia": 2,
+    "microsetores_humano": 37,
+    "trecho_ia": 1,
+    "trecho_humano": 19
+   },
+   {
+    "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0007",
+    "parte": 1,
+    "volta_jogo": 8,
+    "anotada": "misturada",
+    "tempo_s": 86.091,
+    "origem_detector": "misturada",
+    "motivo": "sinais concordam",
+    "linha": "misturada",
+    "frenagem_mediana_m": 0.043327237613084435,
+    "microsetores_ia": 32,
+    "microsetores_humano": 7,
+    "trecho_ia": 32,
+    "trecho_humano": 7
+   }
+  ]
+ },
+ "parte3_voltas_antigas": {
+  "aplicadas": 688,
+  "totais": {
+   "desconhecida": 613,
+   "ia": 35,
+   "misturada": 32,
+   "humano": 8
+  },
+  "motivos": {
+   "linha indefinida": 467,
+   "box": 136,
+   "sinais concordam": 75,
+   "linha diz ia, frenagem discorda": 10
+  }
+ },
+ "parte3_promovido_a_origem": false,
+ "parte3_por_sessao": [
+  {
+   "sessao": "2026-06-14_10-15-25_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 3,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 3,
+   "box": 2,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "box": 2,
+    "linha indefinida": 1
+   }
+  },
+  {
+   "sessao": "2026-06-14_10-43-46_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 3,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 3,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 3
+   }
+  },
+  {
+   "sessao": "2026-06-14_11-29-22_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 1,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 1,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 1
+   }
+  },
+  {
+   "sessao": "2026-06-14_11-45-28_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 5,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 5,
+   "box": 2,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 3,
+    "box": 2
+   }
+  },
+  {
+   "sessao": "2026-06-14_12-23-46_vhe_interlagos",
+   "pasta": "repositorio",
+   "voltas": 9,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 9,
+   "box": 1,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 8,
+    "box": 1
+   }
+  },
+  {
+   "sessao": "2026-06-14_12-44-04_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 2,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 2,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 2
+   }
+  },
+  {
+   "sessao": "2026-06-18_20-06-03_vhe_interlagos",
+   "pasta": "repositorio",
+   "voltas": 3,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 1,
+   "desconhecida": 2,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 2,
+    "sinais concordam": 1
+   }
+  },
+  {
+   "sessao": "2026-06-19_11-08-15_vhe_interlagos",
+   "pasta": "repositorio",
+   "voltas": 1,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 1,
+   "desconhecida": 0,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "sinais concordam": 1
+   }
+  },
+  {
+   "sessao": "2026-06-19_23-24-46_vhe_interlagos",
+   "pasta": "repositorio",
+   "voltas": 4,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 3,
+   "desconhecida": 1,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": true,
+   "motivos": {
+    "sinais concordam": 3,
+    "linha indefinida": 1
+   }
+  },
+  {
+   "sessao": "2026-06-20_13-04-20_vhe_interlagos",
+   "pasta": "repositorio",
+   "voltas": 2,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 1,
+   "desconhecida": 1,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 1,
+    "sinais concordam": 1
+   }
+  },
+  {
+   "sessao": "2026-06-20_13-09-57_vhe_interlagos",
+   "pasta": "repositorio",
+   "voltas": 1,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 1,
+   "desconhecida": 0,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "sinais concordam": 1
+   }
+  },
+  {
+   "sessao": "2026-06-20_13-13-02_vhe_interlagos",
+   "pasta": "repositorio",
+   "voltas": 39,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 22,
+   "desconhecida": 17,
+   "box": 8,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": true,
+   "motivos": {
+    "sinais concordam": 22,
+    "linha indefinida": 9,
+    "box": 8
+   }
+  },
+  {
+   "sessao": "2026-08-07_20-27-52_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 65,
+   "humano": 0,
+   "ia": 2,
+   "misturada": 0,
+   "desconhecida": 63,
+   "box": 11,
+   "data_citada_com_ia": false,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 50,
+    "box": 11,
+    "sinais concordam": 2,
+    "linha diz ia, frenagem discorda": 2
+   }
+  },
+  {
+   "sessao": "2026-08-08_11-40-43_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 2,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 2,
+   "box": 0,
+   "data_citada_com_ia": false,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 2
+   }
+  },
+  {
+   "sessao": "2026-08-08_11-58-41_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 15,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 15,
+   "box": 2,
+   "data_citada_com_ia": false,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 13,
+    "box": 2
+   }
+  },
+  {
+   "sessao": "2026-08-08_12-23-51_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 33,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 33,
+   "box": 7,
+   "data_citada_com_ia": false,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 26,
+    "box": 7
+   }
+  },
+  {
+   "sessao": "2026-08-08_13-18-00_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 1,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 1,
+   "box": 0,
+   "data_citada_com_ia": false,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 1
+   }
+  },
+  {
+   "sessao": "2026-08-08_13-22-07_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 13,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 13,
+   "box": 3,
+   "data_citada_com_ia": false,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 10,
+    "box": 3
+   }
+  },
+  {
+   "sessao": "2026-08-08_16-38-27_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 5,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 2,
+   "desconhecida": 3,
+   "box": 0,
+   "data_citada_com_ia": false,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 3,
+    "sinais concordam": 2
+   }
+  },
+  {
+   "sessao": "2026-08-08_16-52-13_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 4,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 4,
+   "box": 2,
+   "data_citada_com_ia": false,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 2,
+    "box": 2
+   }
+  },
+  {
+   "sessao": "2026-08-08_17-04-15_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 84,
+   "humano": 0,
+   "ia": 1,
+   "misturada": 0,
+   "desconhecida": 83,
+   "box": 18,
+   "data_citada_com_ia": false,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 62,
+    "box": 18,
+    "linha diz ia, frenagem discorda": 3,
+    "sinais concordam": 1
+   }
+  },
+  {
+   "sessao": "2026-08-09_10-27-39_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 60,
+   "humano": 0,
+   "ia": 5,
+   "misturada": 0,
+   "desconhecida": 55,
+   "box": 12,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 40,
+    "box": 12,
+    "sinais concordam": 5,
+    "linha diz ia, frenagem discorda": 3
+   }
+  },
+  {
+   "sessao": "2026-08-09_12-04-40_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 7,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 7,
+   "box": 1,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 6,
+    "box": 1
+   }
+  },
+  {
+   "sessao": "2026-08-09_12-21-19_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 7,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 7,
+   "box": 2,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 5,
+    "box": 2
+   }
+  },
+  {
+   "sessao": "2026-08-09_12-37-42_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 15,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 15,
+   "box": 3,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 12,
+    "box": 3
+   }
+  },
+  {
+   "sessao": "2026-08-09_13-02-49_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 23,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 23,
+   "box": 4,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 19,
+    "box": 4
+   }
+  },
+  {
+   "sessao": "2026-08-09_13-42-29_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 22,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 22,
+   "box": 6,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 16,
+    "box": 6
+   }
+  },
+  {
+   "sessao": "2026-08-09_14-16-51_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 13,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 13,
+   "box": 2,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 11,
+    "box": 2
+   }
+  },
+  {
+   "sessao": "2026-08-09_14-40-07_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 1,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 1,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 1
+   }
+  },
+  {
+   "sessao": "2026-08-09_14-44-00_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 8,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 8,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 8
+   }
+  },
+  {
+   "sessao": "2026-08-09_14-58-46_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 6,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 6,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 6
+   }
+  },
+  {
+   "sessao": "2026-08-09_15-10-52_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 61,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 61,
+   "box": 12,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 49,
+    "box": 12
+   }
+  },
+  {
+   "sessao": "2026-08-09_16-53-03_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 3,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 3,
+   "box": 2,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "box": 2,
+    "linha indefinida": 1
+   }
+  },
+  {
+   "sessao": "2026-08-09_17-00-01_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 2,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 2,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 2
+   }
+  },
+  {
+   "sessao": "2026-08-09_17-06-41_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 8,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 8,
+   "box": 2,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 6,
+    "box": 2
+   }
+  },
+  {
+   "sessao": "2026-08-09_17-23-56_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 8,
+   "humano": 0,
+   "ia": 1,
+   "misturada": 0,
+   "desconhecida": 7,
+   "box": 2,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 4,
+    "box": 2,
+    "linha diz ia, frenagem discorda": 1,
+    "sinais concordam": 1
+   }
+  },
+  {
+   "sessao": "2026-08-09_17-37-33_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 27,
+   "humano": 0,
+   "ia": 2,
+   "misturada": 0,
+   "desconhecida": 25,
+   "box": 6,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 18,
+    "box": 6,
+    "sinais concordam": 2,
+    "linha diz ia, frenagem discorda": 1
+   }
+  },
+  {
+   "sessao": "2026-08-09_18-22-00_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 9,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 9,
+   "box": 3,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 6,
+    "box": 3
+   }
+  },
+  {
+   "sessao": "2026-08-09_18-41-18_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 3,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 3,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 3
+   }
+  },
+  {
+   "sessao": "2026-08-09_18-47-11_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 16,
+   "humano": 0,
+   "ia": 1,
+   "misturada": 0,
+   "desconhecida": 15,
+   "box": 4,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 11,
+    "box": 4,
+    "sinais concordam": 1
+   }
+  },
+  {
+   "sessao": "2026-08-09_19-10-41_vhe_interlagos",
+   "pasta": "repositorio",
+   "voltas": 3,
+   "humano": 0,
+   "ia": 2,
+   "misturada": 0,
+   "desconhecida": 1,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "sinais concordam": 2,
+    "linha indefinida": 1
+   }
+  },
+  {
+   "sessao": "2026-08-09_19-15-35_vhe_interlagos",
+   "pasta": "repositorio",
+   "voltas": 1,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 1,
+   "box": 0,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 1
+   }
+  },
+  {
+   "sessao": "2026-08-09_19-20-59_vhe_interlagos",
+   "pasta": "repositorio",
+   "voltas": 52,
+   "humano": 0,
+   "ia": 0,
+   "misturada": 0,
+   "desconhecida": 52,
+   "box": 12,
+   "data_citada_com_ia": true,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "linha indefinida": 40,
+    "box": 12
+   }
+  },
+  {
+   "sessao": "2026-08-16_03-30-14_vhe_interlagos",
+   "pasta": "repositorio",
+   "voltas": 7,
+   "humano": 3,
+   "ia": 3,
+   "misturada": 1,
+   "desconhecida": 0,
+   "box": 0,
+   "data_citada_com_ia": false,
+   "sessao_variavel_pedido_12": true,
+   "motivos": {
+    "sinais concordam": 7
+   }
+  },
+  {
+   "sessao": "2026-08-19_20-58-36_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 10,
+   "humano": 5,
+   "ia": 2,
+   "misturada": 0,
+   "desconhecida": 3,
+   "box": 3,
+   "data_citada_com_ia": false,
+   "sessao_variavel_pedido_12": true,
+   "motivos": {
+    "sinais concordam": 7,
+    "box": 3
+   }
+  },
+  {
+   "sessao": "2026-08-19_21-45-59_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 3,
+   "humano": 0,
+   "ia": 2,
+   "misturada": 0,
+   "desconhecida": 1,
+   "box": 0,
+   "data_citada_com_ia": false,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "sinais concordam": 2,
+    "linha indefinida": 1
+   }
+  },
+  {
+   "sessao": "2026-08-19_22-23-14_vhe_interlagos",
+   "pasta": "app_instalado",
+   "voltas": 18,
+   "humano": 0,
+   "ia": 14,
+   "misturada": 0,
+   "desconhecida": 4,
+   "box": 4,
+   "data_citada_com_ia": false,
+   "sessao_variavel_pedido_12": false,
+   "motivos": {
+    "sinais concordam": 14,
+    "box": 4
+   }
+  }
+ ],
+ "parte3_distribuicoes": "voltas antigas sem box: 552\ndistancia lateral mediana ate a linha da IA de hoje (microsetores que contam), por volta:\ncount    552.000\nmean       0.060\nstd        0.197\nmin        0.010\n10%        0.023\n25%        0.026\n50%        0.031\n75%        0.037\n90%        0.044\nmax        2.064\n\npor sessao (>=3 voltas): mediana da distancia ate a IA de hoje | ate a propria sessao (deixa-uma-fora) | frenagem mediana ate a IA de hoje | tempo mediano\n                      n  ate_ia_hoje  ate_propria    fren   tempo  n_ia_like\nsessao                                                                      \n2026-06-14_10-43-46   3        0.029        0.019   2.043  85.806       39.0\n2026-06-14_11-45-28   3        0.026        0.012   3.026  85.854       38.0\n2026-06-14_12-23-46   8        0.026        0.013   3.023  85.719       39.0\n2026-06-18_20-06-03   3        0.042        0.025   2.039  85.428       35.0\n2026-06-19_23-24-46   4        0.206        0.372  10.999  87.723       23.5\n2026-06-20_13-13-02  31        0.075        0.038   3.046  86.154       32.0\n2026-08-07_20-27-52  54        0.026        0.012   3.024  85.776       39.0\n2026-08-08_11-58-41  13        0.025        0.012   4.019  85.959       39.0\n2026-08-08_12-23-51  26        0.030        0.014   3.990  85.968       39.0\n2026-08-08_13-22-07  10        0.031        0.010   4.012  85.878       39.0\n2026-08-08_16-38-27   5        0.027        0.005   3.997  85.998       38.0\n2026-08-08_17-04-15  66        0.028        0.010   4.003  86.012       39.0\n2026-08-09_10-27-39  48        0.030        0.018   3.044  85.989       39.0\n2026-08-09_12-04-40   6        0.032        0.013   4.024  85.923       39.0\n2026-08-09_12-21-19   5        0.029        0.006   4.043  85.950       39.0\n2026-08-09_12-37-42  12        0.028        0.011   4.041  86.046       39.0\n2026-08-09_13-02-49  19        0.035        0.018   4.004  86.157       39.0\n2026-08-09_13-42-29  16        0.029        0.016   4.024  86.070       39.0\n2026-08-09_14-16-51  11        0.036        0.012   5.013  86.250       39.0\n2026-08-09_14-44-00   8        0.032        0.010   4.009  86.206       39.0\n2026-08-09_14-58-46   6        0.044        0.005   5.013  86.224       39.0\n2026-08-09_15-10-52  49        0.035        0.015   3.035  86.082       39.0\n2026-08-09_17-06-41   6        0.031        0.009   3.520  85.942       39.0\n2026-08-09_17-23-56   6        0.026        0.015   2.538  86.000       39.0\n2026-08-09_17-37-33  21        0.035        0.016   3.031  85.962       39.0\n2026-08-09_18-22-00   6        0.040        0.012   2.044  85.976       39.0\n2026-08-09_18-41-18   3        0.030        0.013   3.035  86.091       39.0\n2026-08-09_18-47-11  12        0.030        0.021   2.530  85.914       39.0\n2026-08-09_19-10-41   3        0.026        0.011   2.039  86.010       40.0\n2026-08-09_19-20-59  40        0.029        0.015   3.025  85.806       39.0\n2026-08-16_03-30-14   7        0.066        0.166   1.956  91.899       35.0\n2026-08-19_20-58-36   7        1.680        1.181  22.023  94.857        1.0\n2026-08-19_21-45-59   3        0.010        0.011   1.004  85.002       40.0\n2026-08-19_22-23-14  14        0.015        0.016   0.044  84.987       40.0\n\nreferencia: voltas da IA de hoje entre si (deixa-uma-fora) mediana ~0,03 m; piloto de hoje ~1,1-2,1 m\n",
+ "artefatos_sha256": {
+  "lap_inventory.parquet": "dda39846704abc5db8d30345f88a022db995228156fedbb76a92aaec21b52790",
+  "grade_voltas.parquet": "1627380bc89b1b5716cc6b61932b46ecc52990c8b5984ae486049dc0bc3c253b",
+  "relogio_microsetores.parquet": "f8620bdab5662a5cef1e79eb3e27df833d3afa135113e804faa04b9e42a503e6",
+  "sinais_voltas.parquet": "84846d4884ec8dc5ecf8f45aff213cdc4c95d8f3984913d1196120292fcf8bc3",
+  "desvios_voltas.parquet": "721b146af044776439f3e14a44b1f7c1d129a38a83736269a2e5f579628d40f0"
+ }
+}

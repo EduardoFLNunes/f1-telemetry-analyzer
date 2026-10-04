@@ -53,6 +53,9 @@ class TelemetrySample:
     tyresOut: Optional[int] = None
     offTrack: Optional[bool] = None
     penaltyTime: Optional[float] = None
+    # Whether the game's AI is driving the car (physics page `isAIControlled`,
+    # ADR 0014). None when the source does not say.
+    isAIControlled: Optional[bool] = None
     airDensity: Optional[float] = None
     tyreCoreTemperature: List[Optional[float]] = field(default_factory=list)
     tyrePressure: List[Optional[float]] = field(default_factory=list)
@@ -146,6 +149,8 @@ class TelemetrySample:
             offTrack=(lambda v: None if v is None else bool(v))(
                 data.get("offTrack", data.get("off_track"))),
             penaltyTime=nullable_float(data.get("penaltyTime", data.get("penalty_time"))),
+            isAIControlled=(lambda v: None if v is None else bool(v))(
+                data.get("isAIControlled", data.get("is_ai_controlled"))),
             airDensity=nullable_float(data.get("airDensity", data.get("air_density"))),
             tyreCoreTemperature=nullable_float_list(data.get("tyreCoreTemperature", data.get("tyre_core_temperature"))),
             tyrePressure=nullable_float_list(data.get("tyrePressure", data.get("wheelsPressure", data.get("wheels_pressure")))),

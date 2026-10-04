@@ -24,6 +24,28 @@ def recordings_root() -> Path:
     return repo_root() / "data" / "recordings"
 
 
+def installed_app_recordings_root() -> Optional[Path]:
+    """Onde o app instalado grava: `%APPDATA%/Automobilista Telemetria/data/recordings`.
+
+    As sessoes desta pasta nunca passaram pelo `ml` ate o ADR 0014, e nenhuma
+    delas esta tambem na pasta do repositorio (conferido por id e por hash em
+    2026-10-03).
+    """
+    import os
+
+    appdata = os.environ.get("APPDATA")
+    return Path(appdata) / "Automobilista Telemetria" / "data" / "recordings" if appdata else None
+
+
+RECORDING_FOLDERS = ("repositorio", "app_instalado")
+
+
+def recordings_roots() -> "dict[str, Path]":
+    """As pastas de gravacoes que existem nesta maquina, pelo rotulo de origem."""
+    roots = {"repositorio": recordings_root(), "app_instalado": installed_app_recordings_root()}
+    return {label: path for label, path in roots.items() if path is not None and path.exists()}
+
+
 def track_cache_root() -> Path:
     return repo_root() / "data" / "cache" / "tracks"
 

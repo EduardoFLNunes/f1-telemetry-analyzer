@@ -2,6 +2,8 @@
 
 Rascunho para aprovação do Eduardo antes de pilotar. Escrito pelo Claude (Cowork) em 2026-10-02.
 
+> **Suspenso (ADR 0016).** A sessão rotulada de 04/10 mediu a variação real do Eduardo no Bico de Pato: 0,91 s entre voltas, contra 0,012 s da IA. Os 14 a 35 ms usados neste protocolo vinham da IA. Com a variação real, detectar 30 ms exigiria 5.862 voltas por condição, e 8 voltas só detectam efeitos a partir de 0,81 s. A pergunta deste protocolo passa para o caminho em que o próprio jogo executa as variações (ADR 0017, a escrever). O texto abaixo fica como registro.
+
 ## Por que esta sessão existe
 
 Nas suas voltas normais, você freia quase sempre no mesmo lugar (a menos de 5 m) e faz quase sempre a mesma linha (a menos de 0,5 m no ápice). Por isso os dados não mostram quanto vale frear antes ou depois, nem mudar a linha: é como tentar descobrir o efeito do sal numa receita em que você sempre usou a mesma quantidade. A solução é variar de propósito, de forma organizada, e medir.
@@ -52,6 +54,14 @@ As voltas são feitas em blocos de 4, e cada bloco tem as quatro condições em 
 - Faça cerca de 5 voltas de aquecimento além da volta de saída dos boxes. O número exato não importa: o que importa é **anotar o número no jogo da primeira volta do bloco 1**. A análise começa a contar a partir dela.
 - **A conferir no Assetto Corsa:** se dá para desligar o consumo de combustível e o desgaste de pneu nas opções de realismo. Se não der, faça a sessão em blocos curtos e reabasteça sempre com a mesma quantidade.
 - Grave a sessão normalmente pelo app. Nada muda na gravação.
+- **Não use a IA do jogo durante a sessão.** Todas as voltas do plano precisam ser suas.
+- **Deixe o coach desligado durante a sessão.** Ele comenta freadas e trechos, e isso pode mudar o jeito como você executa as condições. Como desligar:
+  1. Feche o app por completo, inclusive na bandeja do Windows. O app só lê o modelo do coach ao abrir.
+  2. Renomeie o arquivo `C:\Users\Dokas\AppData\Roaming\Automobilista Telemetria\data\reference_models\vhe_interlagos.json` (o mesmo que `%APPDATA%\Automobilista Telemetria\data\reference_models\vhe_interlagos.json`) para `vhe_interlagos.json.desligado`. Não apague e não edite o arquivo.
+  3. Abra o app e grave a sessão. Sem o modelo, o coach fica calado: o painel continua na tela, mas vazio. A gravação não muda. A análise da volta no app também perde a parte "quanto ainda dá para ganhar", que vem do mesmo arquivo.
+  4. Depois da sessão, feche o app de novo e devolva o nome original, `vhe_interlagos.json`.
+
+  O app instalado não traz outra cópia desse arquivo. Ele só traz a linha otimizada (`*.optimal.json`), e por isso não volta a ligar o coach sozinho.
 
 ## O que a análise vai responder
 
