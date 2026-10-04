@@ -299,3 +299,18 @@ O comando faz, em ordem:
 - os rótulos de 04/10 que não batem com o inventário;
 - os microsetores e zonas do detector que não batem com a sessão rotulada;
 - nenhuma volta limpa sua para treinar.
+
+### Primeira rodada (04/10, depois do merge)
+
+- **Saída:** código 0, em cerca de 16 minutos, quase tudo na varredura de 132 sessões.
+- **Sessão de 04/10:** 53 voltas reaplicadas pelo arquivo versionado, 32 `humano`, 17 `ia` e 4 `misturada`, os mesmos números de antes da varredura. Nenhuma sessão nova sem anotação.
+- **Referências:** as mesmas do pedido 14.
+  - `volta_ia`: 84,828 s, `2026-10-04_03-42-10_vhe_interlagos#0013`.
+  - `minha_melhor`: 89,389 s, `2026-10-04_02-24-04_vhe_interlagos#0018`.
+- **Voltas no modelo:** 11 suas e 13 da IA, todas limpas.
+- **Limiar:** mediana de 0,157 s (de 0,06 a 0,62 s), com 18 microsetores no mínimo de 0,06 s.
+- **Foco inicial:**
+  - `volta_ia`: setores 36, 38 e 43;
+  - `minha_melhor`: setores 32, 36 e 44.
+- **Modelo do repositório:** backup em `backup/vhe_interlagos.2026-10-04_17-19-56.antes-de-atualizar.json`. O modelo novo só difere dele na data de treino (`built_at`).
+- **O que não mudou:** o modelo do app instalado (`9d08d705…`) e o store do ML (`data/ml/lap_inventory.parquet` e `laps_grid.parquet`).

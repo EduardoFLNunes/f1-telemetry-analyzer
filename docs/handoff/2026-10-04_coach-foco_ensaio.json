@@ -1,0 +1,3046 @@
+{
+ "modelo": "..\\data\\reference_models\\vhe_interlagos.json",
+ "sessoes": [
+  "2026-10-04_02-24-04_vhe_interlagos",
+  "2026-10-04_03-21-52_vhe_interlagos",
+  "2026-10-04_03-35-57_vhe_interlagos",
+  "2026-10-04_03-36-35_vhe_interlagos",
+  "2026-10-04_03-40-32_vhe_interlagos",
+  "2026-10-04_03-42-10_vhe_interlagos",
+  "2026-10-04_04-22-39_vhe_interlagos"
+ ],
+ "volta_destaque": "2026-10-04_03-21-52_vhe_interlagos#0002",
+ "modos": {
+  "volta_ia": {
+   "antes": {
+    "voltas_validas": {
+     "voltas": 11,
+     "frases_por_volta": {
+      "media": 3.0,
+      "mediana": 3.0,
+      "max": 3
+     },
+     "microsetores_mais_citados": [
+      {
+       "microsetor": 2,
+       "frases": 11
+      },
+      {
+       "microsetor": 0,
+       "frases": 6
+      },
+      {
+       "microsetor": 1,
+       "frases": 5
+      },
+      {
+       "microsetor": 3,
+       "frases": 3
+      },
+      {
+       "microsetor": 8,
+       "frases": 2
+      },
+      {
+       "microsetor": 4,
+       "frases": 2
+      },
+      {
+       "microsetor": 16,
+       "frases": 1
+      },
+      {
+       "microsetor": 7,
+       "frases": 1
+      },
+      {
+       "microsetor": 11,
+       "frases": 1
+      },
+      {
+       "microsetor": 12,
+       "frases": 1
+      }
+     ]
+    },
+    "referencia": "volta_ia",
+    "volta_de_referencia": "2026-10-04_03-42-10_vhe_interlagos#0013",
+    "tempo_da_referencia_s": 84.828,
+    "voltas": 32,
+    "frases_de_trecho": 94,
+    "frases_de_fim_de_volta": 26,
+    "frases_por_volta": {
+     "media": 2.9375,
+     "mediana": 3.0,
+     "max": 6
+    },
+    "microsetores_mais_citados": [
+     {
+      "microsetor": 2,
+      "frases": 23
+     },
+     {
+      "microsetor": 0,
+      "frases": 13
+     },
+     {
+      "microsetor": 8,
+      "frases": 12
+     },
+     {
+      "microsetor": 1,
+      "frases": 10
+     },
+     {
+      "microsetor": 7,
+      "frases": 6
+     },
+     {
+      "microsetor": 9,
+      "frases": 6
+     },
+     {
+      "microsetor": 3,
+      "frases": 4
+     },
+     {
+      "microsetor": 4,
+      "frases": 4
+     },
+     {
+      "microsetor": 10,
+      "frases": 3
+     },
+     {
+      "microsetor": 16,
+      "frases": 2
+     }
+    ],
+    "onde_caem": {
+     "todas": {
+      "frases_de_trecho": 94,
+      "frases_em_voltas_com_resumo": 87,
+      "nos_3_maiores_da_volta": 15,
+      "fracao_nos_3_maiores": 0.172,
+      "microsetor_mediano": 3.0,
+      "nos_microsetores_0_a_5": 54
+     },
+     "validas": {
+      "frases_de_trecho": 33,
+      "frases_em_voltas_com_resumo": 33,
+      "nos_3_maiores_da_volta": 7,
+      "fracao_nos_3_maiores": 0.212,
+      "microsetor_mediano": 2.0,
+      "nos_microsetores_0_a_5": 27
+     }
+    },
+    "mudancas_de_foco": [],
+    "frases": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 7,
+      "foco": null,
+      "texto": "Setor 7: 0.48s atras da volta da IA neste trecho (1.84s contra 1.36s). Minima da IA 171 km/h, a sua 97 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.30s atras da volta da IA neste trecho (1.55s contra 1.26s). Minima da IA 191 km/h, a sua 134 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.24s atras da volta da IA neste trecho (1.45s contra 1.21s). Minima da IA 206 km/h, a sua 158 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (0.66s), setor 7 (0.48s) e setor 32 (0.46s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 0,
+      "foco": null,
+      "texto": "Setor 0: 0.08s atras da volta da IA neste trecho (1.01s contra 0.92s). Minima da IA 278 km/h, a sua 237 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 1,
+      "foco": null,
+      "texto": "Setor 1: 0.44s atras da volta da IA neste trecho (1.36s contra 0.92s). Minima da IA 263 km/h, a sua 155 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.56s atras da volta da IA neste trecho (1.81s contra 1.25s). Minima da IA 157 km/h, a sua 125 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 19 (0.74s), setor 2 (0.56s) e setor 37 (0.47s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.32s atras da volta da IA neste trecho (1.57s contra 1.25s). Minima da IA 157 km/h, a sua 134 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 3,
+      "foco": null,
+      "texto": "Setor 3: 0.40s atras da volta da IA neste trecho (2.43s contra 2.03s). Minima da IA 104 km/h, a sua 100 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.09s atras da volta da IA neste trecho (1.35s contra 1.26s). Minima da IA 191 km/h, a sua 179 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (0.76s), setor 51 (0.53s) e setor 50 (0.50s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.11s atras da volta da IA neste trecho (1.36s contra 1.26s). Minima da IA 191 km/h, a sua 174 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "trecho",
+      "microsetor": 6,
+      "foco": null,
+      "texto": "Setor 6: 0.34s atras da volta da IA neste trecho (1.94s contra 1.60s). Minima da IA 136 km/h, a sua 95 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "trecho",
+      "microsetor": 7,
+      "foco": null,
+      "texto": "Setor 7: 0.58s atras da volta da IA neste trecho (1.94s contra 1.36s). Minima da IA 171 km/h, a sua 100 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.71s atras da volta da IA neste trecho (1.97s contra 1.26s). Minima da IA 191 km/h, a sua 111 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 13 (2.29s), setor 38 (1.74s) e setor 37 (1.45s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "tipo": "trecho",
+      "microsetor": 0,
+      "foco": null,
+      "texto": "Setor 0: 0.12s atras da volta da IA neste trecho (1.04s contra 0.92s). Minima da IA 278 km/h, a sua 226 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "tipo": "trecho",
+      "microsetor": 1,
+      "foco": null,
+      "texto": "Setor 1: 0.37s atras da volta da IA neste trecho (1.29s contra 0.92s). Minima da IA 263 km/h, a sua 176 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.37s atras da volta da IA neste trecho (1.62s contra 1.25s). Minima da IA 157 km/h, a sua 140 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 26 (0.54s), setor 36 (0.52s) e setor 32 (0.51s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0014",
+      "tipo": "trecho",
+      "microsetor": 7,
+      "foco": null,
+      "texto": "Setor 7: 0.49s atras da volta da IA neste trecho (1.85s contra 1.36s). Minima da IA 171 km/h, a sua 109 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0014",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 1.00s atras da volta da IA neste trecho (2.26s contra 1.26s). Minima da IA 191 km/h, a sua 93 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0014",
+      "tipo": "trecho",
+      "microsetor": 10,
+      "foco": null,
+      "texto": "Setor 10: 0.80s atras da volta da IA neste trecho (1.95s contra 1.15s). Minima da IA 219 km/h, a sua 121 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0014",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 8 (1.00s), setor 10 (0.80s) e setor 11 (0.61s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0015",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.24s atras da volta da IA neste trecho (1.49s contra 1.25s). Minima da IA 157 km/h, a sua 154 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0015",
+      "tipo": "trecho",
+      "microsetor": 4,
+      "foco": null,
+      "texto": "Setor 4: 0.40s atras da volta da IA neste trecho (2.47s contra 2.07s). Minima da IA 104 km/h, a sua 93 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0015",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.10s atras da volta da IA neste trecho (1.36s contra 1.26s). Minima da IA 191 km/h, a sua 176 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0015",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 29 (1.39s), setor 21 (1.16s) e setor 27 (0.83s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0016",
+      "tipo": "trecho",
+      "microsetor": 0,
+      "foco": null,
+      "texto": "Setor 0: 0.09s atras da volta da IA neste trecho (1.02s contra 0.92s). Minima da IA 278 km/h, a sua 245 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0016",
+      "tipo": "trecho",
+      "microsetor": 1,
+      "foco": null,
+      "texto": "Setor 1: 0.28s atras da volta da IA neste trecho (1.21s contra 0.92s). Minima da IA 263 km/h, a sua 177 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0016",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.54s atras da volta da IA neste trecho (1.79s contra 1.25s). Minima da IA 157 km/h, a sua 132 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0016",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 20 (1.53s), setor 23 (0.59s) e setor 2 (0.54s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.19s atras da volta da IA neste trecho (1.44s contra 1.25s). Minima da IA 157 km/h, a sua 134 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "trecho",
+      "microsetor": 3,
+      "foco": null,
+      "texto": "Setor 3: 0.53s atras da volta da IA neste trecho (2.57s contra 2.03s). Minima da IA 104 km/h, a sua 89 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "trecho",
+      "microsetor": 19,
+      "foco": null,
+      "texto": "Setor 19: 0.54s atras da volta da IA neste trecho (2.33s contra 1.79s). Minima da IA 129 km/h, a sua 106 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.28s atras da volta da IA neste trecho (1.53s contra 1.26s). Minima da IA 191 km/h, a sua 144 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.26s atras da volta da IA neste trecho (1.47s contra 1.21s). Minima da IA 206 km/h, a sua 153 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "trecho",
+      "microsetor": 10,
+      "foco": null,
+      "texto": "Setor 10: 0.24s atras da volta da IA neste trecho (1.39s contra 1.15s). Minima da IA 219 km/h, a sua 175 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 19 (0.87s), setor 20 (0.72s) e setor 32 (0.59s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "tipo": "trecho",
+      "microsetor": 0,
+      "foco": null,
+      "texto": "Setor 0: 0.06s atras da volta da IA neste trecho (0.99s contra 0.92s). Minima da IA 278 km/h, a sua 259 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.36s atras da volta da IA neste trecho (1.61s contra 1.25s). Minima da IA 157 km/h, a sua 126 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "tipo": "trecho",
+      "microsetor": 16,
+      "foco": null,
+      "texto": "Setor 16: 0.17s atras da volta da IA neste trecho (1.13s contra 0.96s). Minima da IA 252 km/h, a sua 203 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 2 (0.36s), setor 31 (0.32s) e setor 38 (0.29s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0019",
+      "tipo": "trecho",
+      "microsetor": 0,
+      "foco": null,
+      "texto": "Setor 0: 0.06s atras da volta da IA neste trecho (0.99s contra 0.92s). Minima da IA 278 km/h, a sua 257 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0019",
+      "tipo": "trecho",
+      "microsetor": 1,
+      "foco": null,
+      "texto": "Setor 1: 0.23s atras da volta da IA neste trecho (1.15s contra 0.92s). Minima da IA 263 km/h, a sua 193 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0019",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.37s atras da volta da IA neste trecho (1.62s contra 1.25s). Minima da IA 157 km/h, a sua 124 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 7,
+      "foco": null,
+      "texto": "Setor 7: 0.36s atras da volta da IA neste trecho (1.72s contra 1.36s). Minima da IA 171 km/h, a sua 115 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.46s atras da volta da IA neste trecho (1.72s contra 1.26s). Minima da IA 191 km/h, a sua 121 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.36s atras da volta da IA neste trecho (1.57s contra 1.21s). Minima da IA 206 km/h, a sua 141 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 39 (0.85s), setor 38 (0.77s) e setor 43 (0.68s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.29s atras da volta da IA neste trecho (1.53s contra 1.25s). Minima da IA 157 km/h, a sua 132 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 4,
+      "foco": null,
+      "texto": "Setor 4: 0.37s atras da volta da IA neste trecho (2.44s contra 2.07s). Minima da IA 104 km/h, a sua 94 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 7,
+      "foco": null,
+      "texto": "Setor 7: 0.31s atras da volta da IA neste trecho (1.67s contra 1.36s). Minima da IA 171 km/h, a sua 144 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (0.86s), setor 38 (0.66s) e setor 36 (0.50s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.34s atras da volta da IA neste trecho (1.59s contra 1.25s). Minima da IA 157 km/h, a sua 122 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 11,
+      "foco": null,
+      "texto": "Setor 11: 0.07s atras da volta da IA neste trecho (1.16s contra 1.09s). Minima da IA 232 km/h, a sua 220 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 12,
+      "foco": null,
+      "texto": "Setor 12: 0.07s atras da volta da IA neste trecho (1.11s contra 1.04s). Minima da IA 243 km/h, a sua 227 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.67s), setor 38 (0.66s) e setor 43 (0.48s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.23s atras da volta da IA neste trecho (1.48s contra 1.25s). Minima da IA 157 km/h, a sua 141 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 25,
+      "foco": null,
+      "texto": "Setor 25: 0.21s atras da volta da IA neste trecho (1.30s contra 1.09s). Minima da IA 234 km/h, a sua 170 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 26,
+      "foco": null,
+      "texto": "Setor 26: 0.46s atras da volta da IA neste trecho (1.69s contra 1.24s). Minima da IA 187 km/h, a sua 149 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0003",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.90s), setor 38 (0.81s) e setor 26 (0.46s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 0,
+      "foco": null,
+      "texto": "Setor 0: 0.06s atras da volta da IA neste trecho (0.99s contra 0.92s). Minima da IA 278 km/h, a sua 250 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 1,
+      "foco": null,
+      "texto": "Setor 1: 0.24s atras da volta da IA neste trecho (1.16s contra 0.92s). Minima da IA 263 km/h, a sua 196 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.38s atras da volta da IA neste trecho (1.63s contra 1.25s). Minima da IA 157 km/h, a sua 132 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 38 (1.06s), setor 43 (0.65s) e setor 36 (0.49s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 0,
+      "foco": null,
+      "texto": "Setor 0: 0.07s atras da volta da IA neste trecho (0.99s contra 0.92s). Minima da IA 278 km/h, a sua 252 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 1,
+      "foco": null,
+      "texto": "Setor 1: 0.26s atras da volta da IA neste trecho (1.19s contra 0.92s). Minima da IA 263 km/h, a sua 186 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.51s atras da volta da IA neste trecho (1.76s contra 1.25s). Minima da IA 157 km/h, a sua 120 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 38 (0.97s), setor 43 (0.53s) e setor 2 (0.51s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.44s atras da volta da IA neste trecho (1.68s contra 1.25s). Minima da IA 157 km/h, a sua 112 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.17s atras da volta da IA neste trecho (1.42s contra 1.26s). Minima da IA 191 km/h, a sua 173 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.15s atras da volta da IA neste trecho (1.36s contra 1.21s). Minima da IA 206 km/h, a sua 188 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0006",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 38 (0.80s), setor 36 (0.58s) e setor 37 (0.55s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.18s atras da volta da IA neste trecho (1.43s contra 1.25s). Minima da IA 157 km/h, a sua 149 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 22,
+      "foco": null,
+      "texto": "Setor 22: 0.34s atras da volta da IA neste trecho (1.55s contra 1.22s). Minima da IA 204 km/h, a sua 118 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 23,
+      "foco": null,
+      "texto": "Setor 23: 2.35s atras da volta da IA neste trecho (3.51s contra 1.16s). Minima da IA 217 km/h, a sua 60 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 7,
+      "foco": null,
+      "texto": "Setor 7: 0.74s atras da volta da IA neste trecho (2.10s contra 1.36s). Minima da IA 171 km/h, a sua 90 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.68s atras da volta da IA neste trecho (1.93s contra 1.26s). Minima da IA 191 km/h, a sua 110 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.51s atras da volta da IA neste trecho (1.72s contra 1.21s). Minima da IA 206 km/h, a sua 126 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 19 (0.82s), setor 38 (0.81s) e setor 7 (0.74s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 0,
+      "foco": null,
+      "texto": "Setor 0: 0.07s atras da volta da IA neste trecho (0.99s contra 0.92s). Minima da IA 278 km/h, a sua 260 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.37s atras da volta da IA neste trecho (1.62s contra 1.25s). Minima da IA 157 km/h, a sua 116 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 4,
+      "foco": null,
+      "texto": "Setor 4: 0.36s atras da volta da IA neste trecho (2.43s contra 2.07s). Minima da IA 104 km/h, a sua 94 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0001",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 41 (1.52s), setor 38 (0.84s) e setor 43 (0.79s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 0,
+      "foco": null,
+      "texto": "Setor 0: 0.07s atras da volta da IA neste trecho (0.99s contra 0.92s). Minima da IA 278 km/h, a sua 252 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 1,
+      "foco": null,
+      "texto": "Setor 1: 0.20s atras da volta da IA neste trecho (1.12s contra 0.92s). Minima da IA 263 km/h, a sua 202 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.31s atras da volta da IA neste trecho (1.56s contra 1.25s). Minima da IA 157 km/h, a sua 136 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 41 (1.42s), setor 43 (0.90s) e setor 2 (0.31s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.58s atras da volta da IA neste trecho (1.83s contra 1.25s). Minima da IA 157 km/h, a sua 96 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 3,
+      "foco": null,
+      "texto": "Setor 3: 0.53s atras da volta da IA neste trecho (2.56s contra 2.03s). Minima da IA 104 km/h, a sua 92 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 4,
+      "foco": null,
+      "texto": "Setor 4: 0.42s atras da volta da IA neste trecho (2.48s contra 2.07s). Minima da IA 104 km/h, a sua 93 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 2 (0.58s), setor 38 (0.56s) e setor 3 (0.53s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 0,
+      "foco": null,
+      "texto": "Setor 0: 0.09s atras da volta da IA neste trecho (1.02s contra 0.92s). Minima da IA 278 km/h, a sua 237 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 1,
+      "foco": null,
+      "texto": "Setor 1: 0.35s atras da volta da IA neste trecho (1.27s contra 0.92s). Minima da IA 263 km/h, a sua 173 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.48s atras da volta da IA neste trecho (1.73s contra 1.25s). Minima da IA 157 km/h, a sua 139 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.20s atras da volta da IA neste trecho (1.46s contra 1.26s). Minima da IA 191 km/h, a sua 152 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.29s atras da volta da IA neste trecho (1.50s contra 1.21s). Minima da IA 206 km/h, a sua 152 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 10,
+      "foco": null,
+      "texto": "Setor 10: 0.25s atras da volta da IA neste trecho (1.40s contra 1.15s). Minima da IA 219 km/h, a sua 174 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (1.63s), setor 30 (0.95s) e setor 41 (0.70s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.30s atras da volta da IA neste trecho (1.55s contra 1.25s). Minima da IA 157 km/h, a sua 113 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 3,
+      "foco": null,
+      "texto": "Setor 3: 1.18s atras da volta da IA neste trecho (3.21s contra 2.03s). Minima da IA 104 km/h, a sua 64 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.12s atras da volta da IA neste trecho (1.37s contra 1.26s). Minima da IA 191 km/h, a sua 180 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 3 (1.18s), setor 33 (0.58s) e setor 36 (0.42s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 0,
+      "foco": null,
+      "texto": "Setor 0: 0.08s atras da volta da IA neste trecho (1.01s contra 0.92s). Minima da IA 278 km/h, a sua 255 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.30s atras da volta da IA neste trecho (1.55s contra 1.25s). Minima da IA 157 km/h, a sua 128 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 34,
+      "foco": null,
+      "texto": "Setor 34: 0.73s atras da volta da IA neste trecho (2.73s contra 2.00s). Minima da IA 110 km/h, a sua 91 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 39 (1.12s), setor 40 (0.78s) e setor 34 (0.73s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 0,
+      "foco": null,
+      "texto": "Setor 0: 0.07s atras da volta da IA neste trecho (1.00s contra 0.92s). Minima da IA 278 km/h, a sua 244 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 1,
+      "foco": null,
+      "texto": "Setor 1: 0.27s atras da volta da IA neste trecho (1.19s contra 0.92s). Minima da IA 263 km/h, a sua 191 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.33s atras da volta da IA neste trecho (1.57s contra 1.25s). Minima da IA 157 km/h, a sua 146 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 40 (2.00s), setor 36 (1.87s) e setor 39 (1.83s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0020",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.34s atras da volta da IA neste trecho (1.59s contra 1.25s). Minima da IA 157 km/h, a sua 129 km/h."
+     },
+     {
+      "volta": "2026-10-04_04-22-39_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 16,
+      "foco": null,
+      "texto": "Setor 16: 0.12s atras da volta da IA neste trecho (1.08s contra 0.96s). A IA freia 46 m depois de voce; minima da IA 252 km/h, a sua 216 km/h."
+     },
+     {
+      "volta": "2026-10-04_04-22-39_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 22,
+      "foco": null,
+      "texto": "Setor 22: 0.07s atras da volta da IA neste trecho (1.29s contra 1.22s). Minima da IA 204 km/h, a sua 196 km/h."
+     },
+     {
+      "volta": "2026-10-04_04-22-39_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 29,
+      "foco": null,
+      "texto": "Setor 29: 0.29s atras da volta da IA neste trecho (1.88s contra 1.58s). Minima da IA 155 km/h, a sua 136 km/h."
+     },
+     {
+      "volta": "2026-10-04_04-22-39_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 38 (0.85s), setor 34 (0.85s) e setor 30 (0.80s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_04-22-39_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 0,
+      "foco": null,
+      "texto": "Setor 0: 0.09s atras da volta da IA neste trecho (1.02s contra 0.92s). Minima da IA 278 km/h, a sua 244 km/h."
+     },
+     {
+      "volta": "2026-10-04_04-22-39_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 1,
+      "foco": null,
+      "texto": "Setor 1: 0.21s atras da volta da IA neste trecho (1.13s contra 0.92s). A IA freia 34 m depois de voce; minima da IA 263 km/h, a sua 212 km/h."
+     }
+    ],
+    "destaque": {
+     "trechos": [
+      2,
+      11,
+      12
+     ],
+     "foco": null,
+     "resumo": [
+      [
+       32,
+       38,
+       43
+      ]
+     ],
+     "frases": [
+      "Setor 2: 0.34s atras da volta da IA neste trecho (1.59s contra 1.25s). Minima da IA 157 km/h, a sua 122 km/h.",
+      "Setor 11: 0.07s atras da volta da IA neste trecho (1.16s contra 1.09s). Minima da IA 232 km/h, a sua 220 km/h.",
+      "Setor 12: 0.07s atras da volta da IA neste trecho (1.11s contra 1.04s). Minima da IA 243 km/h, a sua 227 km/h.",
+      "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.67s), setor 38 (0.66s) e setor 43 (0.48s). Volta da IA: 84.83s."
+     ]
+    }
+   },
+   "agora": {
+    "voltas_validas": {
+     "voltas": 11,
+     "frases_por_volta": {
+      "media": 1.1818181818181819,
+      "mediana": 1.0,
+      "max": 2
+     },
+     "microsetores_mais_citados": [
+      {
+       "microsetor": 43,
+       "frases": 7
+      },
+      {
+       "microsetor": 38,
+       "frases": 4
+      },
+      {
+       "microsetor": 36,
+       "frases": 1
+      },
+      {
+       "microsetor": 2,
+       "frases": 1
+      }
+     ]
+    },
+    "referencia": "volta_ia",
+    "volta_de_referencia": "2026-10-04_03-42-10_vhe_interlagos#0013",
+    "tempo_da_referencia_s": 84.828,
+    "voltas": 32,
+    "frases_de_trecho": 38,
+    "frases_de_fim_de_volta": 26,
+    "frases_por_volta": {
+     "media": 1.1875,
+     "mediana": 1.0,
+     "max": 3
+    },
+    "microsetores_mais_citados": [
+     {
+      "microsetor": 43,
+      "frases": 16
+     },
+     {
+      "microsetor": 38,
+      "frases": 13
+     },
+     {
+      "microsetor": 2,
+      "frases": 5
+     },
+     {
+      "microsetor": 36,
+      "frases": 3
+     },
+     {
+      "microsetor": 26,
+      "frases": 1
+     }
+    ],
+    "onde_caem": {
+     "todas": {
+      "frases_de_trecho": 38,
+      "frases_em_voltas_com_resumo": 37,
+      "nos_3_maiores_da_volta": 24,
+      "fracao_nos_3_maiores": 0.649,
+      "microsetor_mediano": 38.0,
+      "nos_microsetores_0_a_5": 5
+     },
+     "validas": {
+      "frases_de_trecho": 13,
+      "frases_em_voltas_com_resumo": 13,
+      "nos_3_maiores_da_volta": 11,
+      "fracao_nos_3_maiores": 0.846,
+      "microsetor_mediano": 43.0,
+      "nos_microsetores_0_a_5": 1
+     }
+    },
+    "mudancas_de_foco": [
+     {
+      "sessao": "2026-10-04_02-24-04_vhe_interlagos",
+      "fim_da_volta": "2026-10-04_02-24-04_vhe_interlagos#0000",
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "fonte": "modelo",
+      "texto": "Foco nas proximas voltas: setores 36, 38 e 43"
+     },
+     {
+      "sessao": "2026-10-04_03-21-52_vhe_interlagos",
+      "fim_da_volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "foco": [
+       26,
+       38,
+       43
+      ],
+      "fonte": "sessao",
+      "texto": "Foco nas proximas voltas: setores 26, 38 e 43"
+     },
+     {
+      "sessao": "2026-10-04_03-21-52_vhe_interlagos",
+      "fim_da_volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "fonte": "sessao",
+      "texto": "Foco nas proximas voltas: setores 36, 38 e 43"
+     },
+     {
+      "sessao": "2026-10-04_03-42-10_vhe_interlagos",
+      "fim_da_volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "foco": [
+       2,
+       38,
+       43
+      ],
+      "fonte": "sessao",
+      "texto": "Foco nas proximas voltas: setores 2, 38 e 43"
+     }
+    ],
+    "frases": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.66s atras da volta da IA neste trecho (2.02s contra 1.35s). A IA freia 55 m depois de voce; minima da IA 145 km/h, a sua 105 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (0.66s), setor 7 (0.48s) e setor 32 (0.46s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 19 (0.74s), setor 2 (0.56s) e setor 37 (0.47s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.76s atras da volta da IA neste trecho (2.11s contra 1.35s). A IA freia 37 m depois de voce; minima da IA 145 km/h, a sua 100 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (0.76s), setor 51 (0.53s) e setor 50 (0.50s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 1.74s atras da volta da IA neste trecho (3.83s contra 2.09s). Minima da IA 94 km/h, a sua 52 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 13 (2.29s), setor 38 (1.74s) e setor 37 (1.45s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "tipo": "trecho",
+      "microsetor": 36,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 36: 0.52s atras da volta da IA neste trecho (2.23s contra 1.71s). A IA freia 19 m depois de voce; minima da IA 115 km/h, a sua 85 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.47s atras da volta da IA neste trecho (1.82s contra 1.35s). A IA freia 3 m depois de voce; minima da IA 145 km/h, a sua 106 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 26 (0.54s), setor 36 (0.52s) e setor 32 (0.51s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0014",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 8 (1.00s), setor 10 (0.80s) e setor 11 (0.61s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0015",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.74s atras da volta da IA neste trecho (2.09s contra 1.35s). A IA freia 32 m depois de voce; minima da IA 145 km/h, a sua 109 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0015",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 29 (1.39s), setor 21 (1.16s) e setor 27 (0.83s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0016",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 20 (1.53s), setor 23 (0.59s) e setor 2 (0.54s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.50s atras da volta da IA neste trecho (1.86s contra 1.35s). A IA freia 41 m depois de voce; minima da IA 145 km/h, a sua 116 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 19 (0.87s), setor 20 (0.72s) e setor 32 (0.59s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 2 (0.36s), setor 31 (0.32s) e setor 38 (0.29s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 36,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 36: 0.56s atras da volta da IA neste trecho (2.27s contra 1.71s). A IA freia 20 m depois de voce; minima da IA 115 km/h, a sua 88 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 0.77s atras da volta da IA neste trecho (2.85s contra 2.09s). Minima da IA 94 km/h, a sua 80 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.68s atras da volta da IA neste trecho (2.03s contra 1.35s). A IA freia 24 m depois de voce; minima da IA 145 km/h, a sua 108 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 39 (0.85s), setor 38 (0.77s) e setor 43 (0.68s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 0.66s atras da volta da IA neste trecho (2.75s contra 2.09s). Minima da IA 94 km/h, a sua 73 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.86s atras da volta da IA neste trecho (2.21s contra 1.35s). A IA freia 46 m depois de voce; minima da IA 145 km/h, a sua 96 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (0.86s), setor 38 (0.66s) e setor 36 (0.50s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 0.66s atras da volta da IA neste trecho (2.75s contra 2.09s). Minima da IA 94 km/h, a sua 74 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.48s atras da volta da IA neste trecho (1.83s contra 1.35s). A IA freia 14 m antes de voce; minima da IA 145 km/h, a sua 116 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.67s), setor 38 (0.66s) e setor 43 (0.48s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 26,
+      "foco": [
+       26,
+       38,
+       43
+      ],
+      "texto": "Setor 26: 0.46s atras da volta da IA neste trecho (1.69s contra 1.24s). Minima da IA 187 km/h, a sua 149 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       26,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 0.81s atras da volta da IA neste trecho (2.89s contra 2.09s). Minima da IA 94 km/h, a sua 69 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0003",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.90s), setor 38 (0.81s) e setor 26 (0.46s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       26,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 1.06s atras da volta da IA neste trecho (3.14s contra 2.09s). Minima da IA 94 km/h, a sua 74 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       26,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.65s atras da volta da IA neste trecho (2.01s contra 1.35s). A IA freia 31 m depois de voce; minima da IA 145 km/h, a sua 109 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 38 (1.06s), setor 43 (0.65s) e setor 36 (0.49s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 0.97s atras da volta da IA neste trecho (3.06s contra 2.09s). Minima da IA 94 km/h, a sua 72 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.53s atras da volta da IA neste trecho (1.88s contra 1.35s). A IA freia 3 m depois de voce; minima da IA 145 km/h, a sua 117 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 38 (0.97s), setor 43 (0.53s) e setor 2 (0.51s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 36,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 36: 0.58s atras da volta da IA neste trecho (2.29s contra 1.71s). A IA freia 15 m depois de voce; minima da IA 115 km/h, a sua 94 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 0.80s atras da volta da IA neste trecho (2.89s contra 2.09s). Minima da IA 94 km/h, a sua 68 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.51s atras da volta da IA neste trecho (1.86s contra 1.35s). A IA freia 27 m depois de voce; minima da IA 145 km/h, a sua 110 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0006",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 38 (0.80s), setor 36 (0.58s) e setor 37 (0.55s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 0.81s atras da volta da IA neste trecho (2.90s contra 2.09s). Minima da IA 94 km/h, a sua 69 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.45s atras da volta da IA neste trecho (1.80s contra 1.35s). A IA freia 27 m antes de voce; minima da IA 145 km/h, a sua 122 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 19 (0.82s), setor 38 (0.81s) e setor 7 (0.74s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 0.84s atras da volta da IA neste trecho (2.93s contra 2.09s). Minima da IA 94 km/h, a sua 70 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.79s atras da volta da IA neste trecho (2.15s contra 1.35s). A IA freia 27 m antes de voce; minima da IA 145 km/h, a sua 112 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0001",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 41 (1.52s), setor 38 (0.84s) e setor 43 (0.79s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.90s atras da volta da IA neste trecho (2.25s contra 1.35s). Minima da IA 145 km/h, a sua 110 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 41 (1.42s), setor 43 (0.90s) e setor 2 (0.31s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 2 (0.58s), setor 38 (0.56s) e setor 3 (0.53s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": [
+       2,
+       38,
+       43
+      ],
+      "texto": "Setor 2: 0.48s atras da volta da IA neste trecho (1.73s contra 1.25s). Minima da IA 157 km/h, a sua 139 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       2,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 1.63s atras da volta da IA neste trecho (2.98s contra 1.35s). Minima da IA 145 km/h, a sua 59 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 43 (1.63s), setor 30 (0.95s) e setor 41 (0.70s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": [
+       2,
+       38,
+       43
+      ],
+      "texto": "Setor 2: 0.30s atras da volta da IA neste trecho (1.55s contra 1.25s). Minima da IA 157 km/h, a sua 113 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 3 (1.18s), setor 33 (0.58s) e setor 36 (0.42s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": [
+       2,
+       38,
+       43
+      ],
+      "texto": "Setor 2: 0.30s atras da volta da IA neste trecho (1.55s contra 1.25s). Minima da IA 157 km/h, a sua 128 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       2,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 0.67s atras da volta da IA neste trecho (2.75s contra 2.09s). Minima da IA 94 km/h, a sua 91 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": [
+       2,
+       38,
+       43
+      ],
+      "texto": "Setor 43: 0.44s atras da volta da IA neste trecho (1.79s contra 1.35s). A IA freia 10 m depois de voce; minima da IA 145 km/h, a sua 121 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 39 (1.12s), setor 40 (0.78s) e setor 34 (0.73s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": [
+       2,
+       38,
+       43
+      ],
+      "texto": "Setor 2: 0.33s atras da volta da IA neste trecho (1.57s contra 1.25s). Minima da IA 157 km/h, a sua 146 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       2,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 0.94s atras da volta da IA neste trecho (3.02s contra 2.09s). Minima da IA 94 km/h, a sua 70 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 40 (2.00s), setor 36 (1.87s) e setor 39 (1.83s). Volta da IA: 84.83s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0020",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": [
+       2,
+       38,
+       43
+      ],
+      "texto": "Setor 2: 0.34s atras da volta da IA neste trecho (1.59s contra 1.25s). Minima da IA 157 km/h, a sua 129 km/h."
+     },
+     {
+      "volta": "2026-10-04_04-22-39_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       2,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 0.85s atras da volta da IA neste trecho (2.93s contra 2.09s). Minima da IA 94 km/h, a sua 72 km/h."
+     },
+     {
+      "volta": "2026-10-04_04-22-39_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a volta da IA: setor 38 (0.85s), setor 34 (0.85s) e setor 30 (0.80s). Volta da IA: 84.83s."
+     }
+    ],
+    "destaque": {
+     "trechos": [
+      38,
+      43
+     ],
+     "foco": [
+      36,
+      38,
+      43
+     ],
+     "resumo": [
+      [
+       32,
+       38,
+       43
+      ]
+     ],
+     "frases": [
+      "Setor 38: 0.66s atras da volta da IA neste trecho (2.75s contra 2.09s). Minima da IA 94 km/h, a sua 74 km/h.",
+      "Setor 43: 0.48s atras da volta da IA neste trecho (1.83s contra 1.35s). A IA freia 14 m antes de voce; minima da IA 145 km/h, a sua 116 km/h.",
+      "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.67s), setor 38 (0.66s) e setor 43 (0.48s). Volta da IA: 84.83s."
+     ]
+    }
+   }
+  },
+  "minha_melhor": {
+   "antes": {
+    "voltas_validas": {
+     "voltas": 11,
+     "frases_por_volta": {
+      "media": 2.4545454545454546,
+      "mediana": 3.0,
+      "max": 3
+     },
+     "microsetores_mais_citados": [
+      {
+       "microsetor": 8,
+       "frases": 4
+      },
+      {
+       "microsetor": 2,
+       "frases": 3
+      },
+      {
+       "microsetor": 43,
+       "frases": 2
+      },
+      {
+       "microsetor": 47,
+       "frases": 2
+      },
+      {
+       "microsetor": 9,
+       "frases": 2
+      },
+      {
+       "microsetor": 38,
+       "frases": 2
+      },
+      {
+       "microsetor": 40,
+       "frases": 2
+      },
+      {
+       "microsetor": 41,
+       "frases": 2
+      },
+      {
+       "microsetor": 3,
+       "frases": 2
+      },
+      {
+       "microsetor": 1,
+       "frases": 1
+      }
+     ]
+    },
+    "referencia": "minha_melhor",
+    "volta_de_referencia": "2026-10-04_02-24-04_vhe_interlagos#0018",
+    "tempo_da_referencia_s": 89.389,
+    "voltas": 32,
+    "frases_de_trecho": 79,
+    "frases_de_fim_de_volta": 25,
+    "frases_por_volta": {
+     "media": 2.46875,
+     "mediana": 3.0,
+     "max": 5
+    },
+    "microsetores_mais_citados": [
+     {
+      "microsetor": 8,
+      "frases": 15
+     },
+     {
+      "microsetor": 9,
+      "frases": 8
+     },
+     {
+      "microsetor": 7,
+      "frases": 6
+     },
+     {
+      "microsetor": 10,
+      "frases": 5
+     },
+     {
+      "microsetor": 2,
+      "frases": 4
+     },
+     {
+      "microsetor": 6,
+      "frases": 3
+     },
+     {
+      "microsetor": 3,
+      "frases": 3
+     },
+     {
+      "microsetor": 41,
+      "frases": 3
+     },
+     {
+      "microsetor": 43,
+      "frases": 2
+     },
+     {
+      "microsetor": 47,
+      "frases": 2
+     }
+    ],
+    "onde_caem": {
+     "todas": {
+      "frases_de_trecho": 79,
+      "frases_em_voltas_com_resumo": 75,
+      "nos_3_maiores_da_volta": 25,
+      "fracao_nos_3_maiores": 0.333,
+      "microsetor_mediano": 9.0,
+      "nos_microsetores_0_a_5": 9
+     },
+     "validas": {
+      "frases_de_trecho": 27,
+      "frases_em_voltas_com_resumo": 27,
+      "nos_3_maiores_da_volta": 10,
+      "fracao_nos_3_maiores": 0.37,
+      "microsetor_mediano": 9.0,
+      "nos_microsetores_0_a_5": 6
+     }
+    },
+    "mudancas_de_foco": [],
+    "frases": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 7,
+      "foco": null,
+      "texto": "Setor 7: 0.46s atras da sua melhor volta neste trecho (1.84s contra 1.38s). Minima na sua melhor volta 171 km/h, agora 97 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.28s atras da sua melhor volta neste trecho (1.55s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 134 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.25s atras da sua melhor volta neste trecho (1.45s contra 1.21s). Minima na sua melhor volta 204 km/h, agora 158 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 7 (0.46s), setor 32 (0.43s) e setor 43 (0.40s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 1,
+      "foco": null,
+      "texto": "Setor 1: 0.24s atras da sua melhor volta neste trecho (1.36s contra 1.12s). Minima na sua melhor volta 201 km/h, agora 155 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.20s atras da sua melhor volta neste trecho (1.81s contra 1.61s). Minima na sua melhor volta 126 km/h, agora 125 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.13s atras da sua melhor volta neste trecho (1.41s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 174 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 19 (0.72s), setor 18 (0.47s) e setor 44 (0.35s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": null,
+      "texto": "Setor 43: 0.50s atras da sua melhor volta neste trecho (2.11s contra 1.61s). Minima na sua melhor volta 128 km/h, agora 100 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 46,
+      "foco": null,
+      "texto": "Setor 46: 0.21s atras da sua melhor volta neste trecho (1.80s contra 1.59s). Minima na sua melhor volta 151 km/h, agora 136 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 47,
+      "foco": null,
+      "texto": "Setor 47: 0.35s atras da sua melhor volta neste trecho (1.78s contra 1.43s). Minima na sua melhor volta 171 km/h, agora 144 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 43 (0.50s), setor 51 (0.49s) e setor 50 (0.46s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.09s atras da sua melhor volta neste trecho (1.36s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 174 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "trecho",
+      "microsetor": 6,
+      "foco": null,
+      "texto": "Setor 6: 0.34s atras da sua melhor volta neste trecho (1.94s contra 1.60s). Minima na sua melhor volta 139 km/h, agora 95 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "trecho",
+      "microsetor": 7,
+      "foco": null,
+      "texto": "Setor 7: 0.56s atras da sua melhor volta neste trecho (1.94s contra 1.38s). Minima na sua melhor volta 171 km/h, agora 100 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.70s atras da sua melhor volta neste trecho (1.97s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 111 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 13 (2.25s), setor 38 (1.45s) e setor 37 (1.16s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "tipo": "trecho",
+      "microsetor": 6,
+      "foco": null,
+      "texto": "Setor 6: 0.24s atras da sua melhor volta neste trecho (1.84s contra 1.60s). Minima na sua melhor volta 139 km/h, agora 122 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.13s atras da sua melhor volta neste trecho (1.40s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 171 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.11s atras da sua melhor volta neste trecho (1.31s contra 1.21s). Minima na sua melhor volta 204 km/h, agora 187 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 32 (0.48s), setor 18 (0.42s) e setor 26 (0.42s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0014",
+      "tipo": "trecho",
+      "microsetor": 7,
+      "foco": null,
+      "texto": "Setor 7: 0.47s atras da sua melhor volta neste trecho (1.85s contra 1.38s). Minima na sua melhor volta 171 km/h, agora 109 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0014",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.99s atras da sua melhor volta neste trecho (2.26s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 93 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0014",
+      "tipo": "trecho",
+      "microsetor": 10,
+      "foco": null,
+      "texto": "Setor 10: 0.78s atras da sua melhor volta neste trecho (1.95s contra 1.16s). Minima na sua melhor volta 217 km/h, agora 121 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0014",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 8 (0.99s), setor 10 (0.78s) e setor 11 (0.58s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0015",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.09s atras da sua melhor volta neste trecho (1.36s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 176 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0015",
+      "tipo": "trecho",
+      "microsetor": 21,
+      "foco": null,
+      "texto": "Setor 21: 1.08s atras da sua melhor volta neste trecho (2.42s contra 1.34s). Minima na sua melhor volta 177 km/h, agora 61 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0015",
+      "tipo": "trecho",
+      "microsetor": 22,
+      "foco": null,
+      "texto": "Setor 22: 0.43s atras da sua melhor volta neste trecho (1.70s contra 1.28s). Minima na sua melhor volta 195 km/h, agora 140 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0015",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 29 (1.50s), setor 21 (1.08s) e setor 27 (0.73s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0016",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.18s atras da sua melhor volta neste trecho (1.79s contra 1.61s). Minima na sua melhor volta 126 km/h, agora 132 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0016",
+      "tipo": "trecho",
+      "microsetor": 20,
+      "foco": null,
+      "texto": "Setor 20: 1.41s atras da sua melhor volta neste trecho (2.99s contra 1.58s). Minima na sua melhor volta 155 km/h, agora 25 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0016",
+      "tipo": "trecho",
+      "microsetor": 23,
+      "foco": null,
+      "texto": "Setor 23: 0.54s atras da sua melhor volta neste trecho (1.75s contra 1.21s). Minima na sua melhor volta 209 km/h, agora 128 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0016",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 20 (1.41s), setor 23 (0.54s) e setor 32 (0.42s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "trecho",
+      "microsetor": 3,
+      "foco": null,
+      "texto": "Setor 3: 0.41s atras da sua melhor volta neste trecho (2.57s contra 2.16s). Minima na sua melhor volta 108 km/h, agora 89 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "trecho",
+      "microsetor": 19,
+      "foco": null,
+      "texto": "Setor 19: 0.52s atras da sua melhor volta neste trecho (2.33s contra 1.81s). Minima na sua melhor volta 137 km/h, agora 106 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.26s atras da sua melhor volta neste trecho (1.53s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 144 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.26s atras da sua melhor volta neste trecho (1.47s contra 1.21s). Minima na sua melhor volta 204 km/h, agora 153 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "trecho",
+      "microsetor": 10,
+      "foco": null,
+      "texto": "Setor 10: 0.23s atras da sua melhor volta neste trecho (1.39s contra 1.16s). Minima na sua melhor volta 217 km/h, agora 175 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 19 (0.86s), setor 20 (0.60s) e setor 32 (0.56s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0019",
+      "tipo": "trecho",
+      "microsetor": 20,
+      "foco": null,
+      "texto": "Setor 20: 2.24s atras da sua melhor volta neste trecho (3.82s contra 1.58s). Minima na sua melhor volta 155 km/h, agora 26 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 7,
+      "foco": null,
+      "texto": "Setor 7: 0.34s atras da sua melhor volta neste trecho (1.72s contra 1.38s). Minima na sua melhor volta 171 km/h, agora 115 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.45s atras da sua melhor volta neste trecho (1.72s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 121 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.37s atras da sua melhor volta neste trecho (1.57s contra 1.21s). Minima na sua melhor volta 204 km/h, agora 141 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 39 (0.77s), setor 44 (0.68s) e setor 32 (0.58s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 7,
+      "foco": null,
+      "texto": "Setor 7: 0.29s atras da sua melhor volta neste trecho (1.67s contra 1.38s). Minima na sua melhor volta 171 km/h, agora 144 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.30s atras da sua melhor volta neste trecho (1.57s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 150 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.19s atras da sua melhor volta neste trecho (1.40s contra 1.21s). Minima na sua melhor volta 204 km/h, agora 170 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 43 (0.60s), setor 32 (0.41s) e setor 44 (0.37s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 32,
+      "foco": null,
+      "texto": "Setor 32: 0.64s atras da sua melhor volta neste trecho (2.96s contra 2.32s). Minima na sua melhor volta 87 km/h, agora 79 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 32 (0.64s), setor 38 (0.37s) e setor 26 (0.23s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 26,
+      "foco": null,
+      "texto": "Setor 26: 0.34s atras da sua melhor volta neste trecho (1.69s contra 1.36s). Minima na sua melhor volta 181 km/h, agora 149 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 32,
+      "foco": null,
+      "texto": "Setor 32: 0.88s atras da sua melhor volta neste trecho (3.19s contra 2.32s). Minima na sua melhor volta 87 km/h, agora 62 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0003",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 32 (0.88s), setor 38 (0.52s) e setor 26 (0.34s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": null,
+      "texto": "Setor 38: 0.76s atras da sua melhor volta neste trecho (3.14s contra 2.38s). Minima na sua melhor volta 80 km/h, agora 74 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 40,
+      "foco": null,
+      "texto": "Setor 40: 0.30s atras da sua melhor volta neste trecho (1.66s contra 1.36s). Minima na sua melhor volta 176 km/h, agora 141 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 41,
+      "foco": null,
+      "texto": "Setor 41: 0.35s atras da sua melhor volta neste trecho (1.71s contra 1.36s). Minima na sua melhor volta 184 km/h, agora 141 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 38 (0.76s), setor 43 (0.39s) e setor 41 (0.35s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.15s atras da sua melhor volta neste trecho (1.76s contra 1.61s). Minima na sua melhor volta 126 km/h, agora 120 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": null,
+      "texto": "Setor 38: 0.68s atras da sua melhor volta neste trecho (3.06s contra 2.38s). Minima na sua melhor volta 80 km/h, agora 72 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 40,
+      "foco": null,
+      "texto": "Setor 40: 0.24s atras da sua melhor volta neste trecho (1.60s contra 1.36s). Minima na sua melhor volta 176 km/h, agora 145 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 38 (0.68s), setor 44 (0.59s) e setor 18 (0.34s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.15s atras da sua melhor volta neste trecho (1.42s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 173 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.15s atras da sua melhor volta neste trecho (1.36s contra 1.21s). Minima na sua melhor volta 204 km/h, agora 188 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 10,
+      "foco": null,
+      "texto": "Setor 10: 0.08s atras da sua melhor volta neste trecho (1.24s contra 1.16s). Minima na sua melhor volta 217 km/h, agora 202 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0006",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 38 (0.51s), setor 36 (0.42s) e setor 39 (0.28s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 22,
+      "foco": null,
+      "texto": "Setor 22: 0.28s atras da sua melhor volta neste trecho (1.55s contra 1.28s). Minima na sua melhor volta 195 km/h, agora 118 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 23,
+      "foco": null,
+      "texto": "Setor 23: 2.31s atras da sua melhor volta neste trecho (3.51s contra 1.21s). Minima na sua melhor volta 209 km/h, agora 60 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 24,
+      "foco": null,
+      "texto": "Setor 24: 2.34s atras da sua melhor volta neste trecho (3.50s contra 1.16s). Minima na sua melhor volta 220 km/h, agora 61 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 7,
+      "foco": null,
+      "texto": "Setor 7: 0.72s atras da sua melhor volta neste trecho (2.10s contra 1.38s). Minima na sua melhor volta 171 km/h, agora 90 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.66s atras da sua melhor volta neste trecho (1.93s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 110 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.51s atras da sua melhor volta neste trecho (1.72s contra 1.21s). Minima na sua melhor volta 204 km/h, agora 126 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 19 (0.80s), setor 7 (0.72s) e setor 8 (0.66s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 18,
+      "foco": null,
+      "texto": "Setor 18: 0.43s atras da sua melhor volta neste trecho (2.16s contra 1.73s). Minima na sua melhor volta 134 km/h, agora 107 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 29,
+      "foco": null,
+      "texto": "Setor 29: 0.28s atras da sua melhor volta neste trecho (1.75s contra 1.48s). Minima na sua melhor volta 166 km/h, agora 140 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0001",
+      "tipo": "trecho",
+      "microsetor": 41,
+      "foco": null,
+      "texto": "Setor 41: 1.42s atras da sua melhor volta neste trecho (2.78s contra 1.36s). Minima na sua melhor volta 184 km/h, agora 56 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0001",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 41 (1.42s), setor 38 (0.55s) e setor 43 (0.53s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 41,
+      "foco": null,
+      "texto": "Setor 41: 1.32s atras da sua melhor volta neste trecho (2.68s contra 1.36s). Minima na sua melhor volta 184 km/h, agora 48 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 43,
+      "foco": null,
+      "texto": "Setor 43: 0.64s atras da sua melhor volta neste trecho (2.25s contra 1.61s). Minima na sua melhor volta 128 km/h, agora 110 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 41 (1.32s), setor 43 (0.64s) e setor 32 (0.28s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 2,
+      "foco": null,
+      "texto": "Setor 2: 0.22s atras da sua melhor volta neste trecho (1.83s contra 1.61s). Minima na sua melhor volta 126 km/h, agora 96 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 3,
+      "foco": null,
+      "texto": "Setor 3: 0.41s atras da sua melhor volta neste trecho (2.56s contra 2.16s). Minima na sua melhor volta 108 km/h, agora 92 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 47,
+      "foco": null,
+      "texto": "Setor 47: 0.09s atras da sua melhor volta neste trecho (1.53s contra 1.43s). Minima na sua melhor volta 171 km/h, agora 161 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 44 (0.43s), setor 3 (0.41s) e setor 36 (0.27s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 10,
+      "foco": null,
+      "texto": "Setor 10: 0.85s atras da sua melhor volta neste trecho (2.01s contra 1.16s). Minima na sua melhor volta 217 km/h, agora 114 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.19s atras da sua melhor volta neste trecho (1.46s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 152 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 9,
+      "foco": null,
+      "texto": "Setor 9: 0.29s atras da sua melhor volta neste trecho (1.50s contra 1.21s). Minima na sua melhor volta 204 km/h, agora 152 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "trecho",
+      "microsetor": 10,
+      "foco": null,
+      "texto": "Setor 10: 0.24s atras da sua melhor volta neste trecho (1.40s contra 1.16s). Minima na sua melhor volta 217 km/h, agora 174 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 43 (1.37s), setor 30 (0.74s) e setor 44 (0.65s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 3,
+      "foco": null,
+      "texto": "Setor 3: 1.05s atras da sua melhor volta neste trecho (3.21s contra 2.16s). Minima na sua melhor volta 108 km/h, agora 64 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.10s atras da sua melhor volta neste trecho (1.37s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 180 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 19,
+      "foco": null,
+      "texto": "Setor 19: 0.39s atras da sua melhor volta neste trecho (2.20s contra 1.81s). Minima na sua melhor volta 137 km/h, agora 117 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 3 (1.05s), setor 33 (0.43s) e setor 19 (0.39s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 34,
+      "foco": null,
+      "texto": "Setor 34: 0.69s atras da sua melhor volta neste trecho (2.73s contra 2.04s). Minima na sua melhor volta 110 km/h, agora 91 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 35,
+      "foco": null,
+      "texto": "Setor 35: 0.37s atras da sua melhor volta neste trecho (2.00s contra 1.63s). Minima na sua melhor volta 147 km/h, agora 103 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 39,
+      "foco": null,
+      "texto": "Setor 39: 1.04s atras da sua melhor volta neste trecho (2.65s contra 1.61s). Minima na sua melhor volta 142 km/h, agora 83 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 39 (1.04s), setor 40 (0.70s) e setor 34 (0.69s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 4,
+      "foco": null,
+      "texto": "Setor 4: 0.53s atras da sua melhor volta neste trecho (2.81s contra 2.28s). Minima na sua melhor volta 104 km/h, agora 86 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 6,
+      "foco": null,
+      "texto": "Setor 6: 0.19s atras da sua melhor volta neste trecho (1.79s contra 1.60s). Minima na sua melhor volta 139 km/h, agora 123 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 8,
+      "foco": null,
+      "texto": "Setor 8: 0.16s atras da sua melhor volta neste trecho (1.43s contra 1.27s). Minima na sua melhor volta 190 km/h, agora 170 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 40 (1.92s), setor 39 (1.75s) e setor 44 (1.72s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_04-22-39_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 28,
+      "foco": null,
+      "texto": "Setor 28: 0.27s atras da sua melhor volta neste trecho (1.80s contra 1.53s). Minima na sua melhor volta 164 km/h, agora 138 km/h."
+     },
+     {
+      "volta": "2026-10-04_04-22-39_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 29,
+      "foco": null,
+      "texto": "Setor 29: 0.40s atras da sua melhor volta neste trecho (1.88s contra 1.48s). Na sua melhor volta voce freou 7 m depois; minima na sua melhor volta 166 km/h, agora 136 km/h."
+     },
+     {
+      "volta": "2026-10-04_04-22-39_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 30,
+      "foco": null,
+      "texto": "Setor 30: 0.59s atras da sua melhor volta neste trecho (2.44s contra 1.85s). Minima na sua melhor volta 114 km/h, agora 86 km/h."
+     },
+     {
+      "volta": "2026-10-04_04-22-39_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 34 (0.81s), setor 30 (0.59s) e setor 38 (0.56s). Sua melhor volta: 89.39s."
+     }
+    ],
+    "destaque": {
+     "trechos": [
+      32
+     ],
+     "foco": null,
+     "resumo": [
+      [
+       32,
+       38,
+       26
+      ]
+     ],
+     "frases": [
+      "Setor 32: 0.64s atras da sua melhor volta neste trecho (2.96s contra 2.32s). Minima na sua melhor volta 87 km/h, agora 79 km/h.",
+      "Volta fechada. Maiores diferencas para a sua melhor volta: setor 32 (0.64s), setor 38 (0.37s) e setor 26 (0.23s). Sua melhor volta: 89.39s."
+     ]
+    }
+   },
+   "agora": {
+    "voltas_validas": {
+     "voltas": 11,
+     "frases_por_volta": {
+      "media": 0.18181818181818182,
+      "mediana": 0.0,
+      "max": 1
+     },
+     "microsetores_mais_citados": [
+      {
+       "microsetor": 32,
+       "frases": 1
+      },
+      {
+       "microsetor": 38,
+       "frases": 1
+      }
+     ]
+    },
+    "referencia": "minha_melhor",
+    "volta_de_referencia": "2026-10-04_02-24-04_vhe_interlagos#0018",
+    "tempo_da_referencia_s": 89.389,
+    "voltas": 32,
+    "frases_de_trecho": 9,
+    "frases_de_fim_de_volta": 25,
+    "frases_por_volta": {
+     "media": 0.28125,
+     "mediana": 0.0,
+     "max": 3
+    },
+    "microsetores_mais_citados": [
+     {
+      "microsetor": 44,
+      "frases": 2
+     },
+     {
+      "microsetor": 38,
+      "frases": 2
+     },
+     {
+      "microsetor": 39,
+      "frases": 2
+     },
+     {
+      "microsetor": 32,
+      "frases": 1
+     },
+     {
+      "microsetor": 26,
+      "frases": 1
+     },
+     {
+      "microsetor": 36,
+      "frases": 1
+     }
+    ],
+    "onde_caem": {
+     "todas": {
+      "frases_de_trecho": 9,
+      "frases_em_voltas_com_resumo": 9,
+      "nos_3_maiores_da_volta": 6,
+      "fracao_nos_3_maiores": 0.667,
+      "microsetor_mediano": 38.0,
+      "nos_microsetores_0_a_5": 0
+     },
+     "validas": {
+      "frases_de_trecho": 2,
+      "frases_em_voltas_com_resumo": 2,
+      "nos_3_maiores_da_volta": 2,
+      "fracao_nos_3_maiores": 1.0,
+      "microsetor_mediano": 35.0,
+      "nos_microsetores_0_a_5": 0
+     }
+    },
+    "mudancas_de_foco": [
+     {
+      "sessao": "2026-10-04_02-24-04_vhe_interlagos",
+      "fim_da_volta": "2026-10-04_02-24-04_vhe_interlagos#0000",
+      "foco": [
+       32,
+       36,
+       44
+      ],
+      "fonte": "modelo",
+      "texto": "Foco nas proximas voltas: setores 32, 36 e 44"
+     },
+     {
+      "sessao": "2026-10-04_03-21-52_vhe_interlagos",
+      "fim_da_volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "foco": [
+       26,
+       43,
+       44
+      ],
+      "fonte": "sessao",
+      "texto": "Foco nas proximas voltas: setores 26, 43 e 44"
+     },
+     {
+      "sessao": "2026-10-04_03-21-52_vhe_interlagos",
+      "fim_da_volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "fonte": "sessao",
+      "texto": "Foco nas proximas voltas: setores 36, 38 e 43"
+     },
+     {
+      "sessao": "2026-10-04_03-21-52_vhe_interlagos",
+      "fim_da_volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "foco": [
+       36,
+       38,
+       39
+      ],
+      "fonte": "sessao",
+      "texto": "Foco nas proximas voltas: setores 36, 38 e 39"
+     }
+    ],
+    "frases": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 7 (0.46s), setor 32 (0.43s) e setor 43 (0.40s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 19 (0.72s), setor 18 (0.47s) e setor 44 (0.35s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 43 (0.50s), setor 51 (0.49s) e setor 50 (0.46s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "trecho",
+      "microsetor": 44,
+      "foco": [
+       32,
+       36,
+       44
+      ],
+      "texto": "Setor 44: 1.16s atras da sua melhor volta neste trecho (3.18s contra 2.02s). Minima na sua melhor volta 107 km/h, agora 62 km/h."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0008",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 13 (2.25s), setor 38 (1.45s) e setor 37 (1.16s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 32 (0.48s), setor 18 (0.42s) e setor 26 (0.42s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0014",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 8 (0.99s), setor 10 (0.78s) e setor 11 (0.58s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0015",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 29 (1.50s), setor 21 (1.08s) e setor 27 (0.73s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0016",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 20 (1.41s), setor 23 (0.54s) e setor 32 (0.42s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0017",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 19 (0.86s), setor 20 (0.60s) e setor 32 (0.56s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "trecho",
+      "microsetor": 44,
+      "foco": [
+       32,
+       36,
+       44
+      ],
+      "texto": "Setor 44: 0.68s atras da sua melhor volta neste trecho (2.70s contra 2.02s). Minima na sua melhor volta 107 km/h, agora 85 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 39 (0.77s), setor 44 (0.68s) e setor 32 (0.58s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 43 (0.60s), setor 32 (0.41s) e setor 44 (0.37s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "tipo": "trecho",
+      "microsetor": 32,
+      "foco": [
+       32,
+       36,
+       44
+      ],
+      "texto": "Setor 32: 0.64s atras da sua melhor volta neste trecho (2.96s contra 2.32s). Minima na sua melhor volta 87 km/h, agora 79 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 32 (0.64s), setor 38 (0.37s) e setor 26 (0.23s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0003",
+      "tipo": "trecho",
+      "microsetor": 26,
+      "foco": [
+       26,
+       43,
+       44
+      ],
+      "texto": "Setor 26: 0.34s atras da sua melhor volta neste trecho (1.69s contra 1.36s). Minima na sua melhor volta 181 km/h, agora 149 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0003",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 32 (0.88s), setor 38 (0.52s) e setor 26 (0.34s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 38 (0.76s), setor 43 (0.39s) e setor 41 (0.35s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       36,
+       38,
+       43
+      ],
+      "texto": "Setor 38: 0.68s atras da sua melhor volta neste trecho (3.06s contra 2.38s). Minima na sua melhor volta 80 km/h, agora 72 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 38 (0.68s), setor 44 (0.59s) e setor 18 (0.34s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0006",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 38 (0.51s), setor 36 (0.42s) e setor 39 (0.28s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 19 (0.80s), setor 7 (0.72s) e setor 8 (0.66s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0001",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 41 (1.42s), setor 38 (0.55s) e setor 43 (0.53s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 41 (1.32s), setor 43 (0.64s) e setor 32 (0.28s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 44 (0.43s), setor 3 (0.41s) e setor 36 (0.27s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0004",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 43 (1.37s), setor 30 (0.74s) e setor 44 (0.65s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 3 (1.05s), setor 33 (0.43s) e setor 19 (0.39s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "trecho",
+      "microsetor": 39,
+      "foco": [
+       36,
+       38,
+       39
+      ],
+      "texto": "Setor 39: 1.04s atras da sua melhor volta neste trecho (2.65s contra 1.61s). Minima na sua melhor volta 142 km/h, agora 83 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0006",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 39 (1.04s), setor 40 (0.70s) e setor 34 (0.69s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 36,
+      "foco": [
+       36,
+       38,
+       39
+      ],
+      "texto": "Setor 36: 1.71s atras da sua melhor volta neste trecho (3.57s contra 1.87s). Na sua melhor volta voce freou 30 m depois; minima na sua melhor volta 101 km/h, agora 45 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 38,
+      "foco": [
+       36,
+       38,
+       39
+      ],
+      "texto": "Setor 38: 0.65s atras da sua melhor volta neste trecho (3.02s contra 2.38s). Minima na sua melhor volta 80 km/h, agora 70 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "trecho",
+      "microsetor": 39,
+      "foco": [
+       36,
+       38,
+       39
+      ],
+      "texto": "Setor 39: 1.75s atras da sua melhor volta neste trecho (3.36s contra 1.61s). Minima na sua melhor volta 142 km/h, agora 70 km/h."
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0007",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 40 (1.92s), setor 39 (1.75s) e setor 44 (1.72s). Sua melhor volta: 89.39s."
+     },
+     {
+      "volta": "2026-10-04_04-22-39_vhe_interlagos#0000",
+      "tipo": "fim de volta",
+      "microsetor": null,
+      "foco": null,
+      "texto": "Volta fechada. Maiores diferencas para a sua melhor volta: setor 34 (0.81s), setor 30 (0.59s) e setor 38 (0.56s). Sua melhor volta: 89.39s."
+     }
+    ],
+    "destaque": {
+     "trechos": [
+      32
+     ],
+     "foco": [
+      32,
+      36,
+      44
+     ],
+     "resumo": [
+      [
+       32,
+       38,
+       26
+      ]
+     ],
+     "frases": [
+      "Setor 32: 0.64s atras da sua melhor volta neste trecho (2.96s contra 2.32s). Minima na sua melhor volta 87 km/h, agora 79 km/h.",
+      "Volta fechada. Maiores diferencas para a sua melhor volta: setor 32 (0.64s), setor 38 (0.37s) e setor 26 (0.23s). Sua melhor volta: 89.39s."
+     ]
+    }
+   }
+  }
+ },
+ "frases_proibidas": []
+}

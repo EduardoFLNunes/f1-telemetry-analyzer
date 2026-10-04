@@ -1,0 +1,98 @@
+{
+ "referencias": {
+  "volta_ia": {
+   "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+   "tempo_s": 84.828,
+   "carro": "rss_formula_rss_3_v6_2026"
+  },
+  "minha_melhor": {
+   "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+   "tempo_s": 89.389,
+   "carro": "rss_formula_rss_3_v6_2026"
+  }
+ },
+ "referencia_padrao": "volta_ia",
+ "voltas_do_piloto_no_modelo": 11,
+ "voltas_por_origem": {
+  "todas": {
+   "desconhecida": 1899,
+   "humano": 32,
+   "ia": 17,
+   "misturada": 4
+  },
+  "equipamento_atual": {
+   "humano": 32,
+   "ia": 17,
+   "misturada": 4
+  },
+  "equipamento_atual_por_fonte": {
+   "humano (anotacao)": 4,
+   "humano (indicador)": 28,
+   "ia (indicador)": 17,
+   "misturada (anotacao)": 2,
+   "misturada (indicador)": 2
+  }
+ },
+ "limiar_s": {
+  "regra": "2 x (mediana - melhor) das suas voltas por microsetor, minimo de 0.06 s",
+  "mediana": 0.157,
+  "min": 0.06,
+  "max": 0.62,
+  "microsetores_no_minimo": 18
+ },
+ "foco_inicial": {
+  "volta_ia": {
+   "setores": [
+    36,
+    38,
+    43
+   ],
+   "fonte": "modelo",
+   "diferenca_mediana_s": {
+    "36": 0.416,
+    "38": 0.428,
+    "43": 0.478
+   }
+  },
+  "minha_melhor": {
+   "setores": [
+    32,
+    36,
+    44
+   ],
+   "fonte": "modelo",
+   "diferenca_mediana_s": {
+    "32": 0.22,
+    "36": 0.254,
+    "44": 0.235
+   }
+  }
+ },
+ "modelo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\reference_models\\vhe_interlagos.json",
+ "backup": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\reference_models\\backup\\vhe_interlagos.2026-10-04_17-19-56.antes-de-atualizar.json",
+ "sessoes_novas_sem_anotacao": [],
+ "sessao_rotulada": {
+  "voltas": 53,
+  "origem": {
+   "humano": 32,
+   "ia": 17,
+   "misturada": 4
+  }
+ },
+ "conferencia": {
+  "comando": "python tools/atualizar_coach.py (develop, depois do merge 7ac8f0ec), codigo de saida 0",
+  "modelo_do_repositorio_antes_sha256": "9a2ce2436c109db4c97fe3bf786d2ba211025abbc4e597a63a9747617c97e6d0",
+  "modelo_do_repositorio_depois_sha256": "a84b3d7ee97c55ca8e2d73ab02089f19f5a8ed92c8067e96fc07711781e837f2",
+  "diferenca_entre_backup_e_modelo_novo": "so built_at (2026-10-04T17:46:26 -> 2026-10-04T20:21:21 UTC); referencias, alvos e limiar iguais",
+  "modelo_do_app_instalado_sha256": "9d08d705c770c935b28e1cb4631a5dc1cbdf65b3ac76c2f5adf96c62119ca827",
+  "modelo_do_app_instalado_inalterado": true,
+  "store_do_ml_inalterado": {
+   "data/ml/lap_inventory.parquet": "78f23117b98ac4cb",
+   "data/ml/laps_grid.parquet": "a9798c3a338459a3",
+   "antes": {
+    "data/ml/lap_inventory.parquet": "78f23117b98ac4cb",
+    "data/ml/laps_grid.parquet": "a9798c3a338459a3"
+   }
+  }
+ }
+}

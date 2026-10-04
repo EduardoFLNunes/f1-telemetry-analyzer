@@ -1,0 +1,1750 @@
+diff --git a/backend/core/live/driving_coach.py b/backend/core/live/driving_coach.py
+index 088d3163..10024555 100644
+--- a/backend/core/live/driving_coach.py
++++ b/backend/core/live/driving_coach.py
+@@ -25,6 +25,14 @@ relative to the reference ("a IA freia 12 m depois de voce"), at most three
+ phrases a lap -- the first that clear the bar -- and the lap closes with the
+ three slices furthest from the reference.
+ 
++Since pedido 15 the coach speaks only in three *focus* slices, chosen before
++each lap: the microsectors with the largest median difference to the active
++reference over the session's last five valid laps -- or, until the session has
++five, over the driver's laps in the model. One phrase per focus slice, so three
++a lap at most, and a short line in the feed when the focus changes. ADR 0016
++asked for the slices with the largest difference; the first slices to clear the
++bar were mostly the opening corner.
++
+ Since ADR 0013 a model carries the `geometry_id` of the official geometry it was
+ measured on. The coach then works out where the car is from its world position,
+ projected on that same geometry (`official_geometry.CoachProjector`), instead of
+@@ -42,9 +50,12 @@ event loop, and the coach must not become the second one.
+ from __future__ import annotations
+ 
+ import logging
++import statistics
+ import time
+-from typing import Any, Callable, Dict, Optional
++from collections import deque
++from typing import Any, Callable, Dict, Optional, Tuple
+ 
++from ..telemetry.channels import ai_controlled
+ from ..telemetry_events import COACHING_EVENT, ENGINEER_SPEECH
+ 
+ logger = logging.getLogger(__name__)
+@@ -77,6 +88,12 @@ JUMP_PROGRESS = 0.05
+ # speaks at most this often a lap -- the first slices that clear the bar -- and
+ # sums up the worst ones at the line.
+ MAX_PHRASES_PER_LAP = 3
++# Pedido 15: the focus. The slices with the largest median difference to the
++# reference, over the session's last laps that count -- started at the line,
++# every slice compared, no AI at the wheel.
++FOCUS_SECTORS = 3
++FOCUS_LAPS = 5
++FOCUS_EVENT = "coaching_focus"
+ SUMMARY_SECTORS = 3
+ SUMMARY_MIN_LOSS = 0.005
+ # A braking point of the lap is compared with the reference's only within this.
+@@ -157,6 +174,16 @@ class LiveDrivingCoach:
+         self._closing_max_lateral: Optional[float] = None
+         # The slice the count started in is partial: never compared.
+         self._partial_sector: Optional[int] = None
++        # Pedido 15: what this lap measured (every slice, either sign), whether
++        # it counts for the focus, and the focus itself.
++        self._lap_diffs: Dict[int, float] = {}
++        self._lap_started_at_line = False
++        self._lap_had_ai = False
++        self._spoken_sectors: set = set()
++        self._session_laps: deque = deque(maxlen=FOCUS_LAPS)
++        self._focus: Optional[Tuple[int, ...]] = None
++        self._focus_source: Optional[str] = None
++        self._focus_key: Optional[tuple] = None
+ 
+     # ── the hot path ─────────────────────────────────────────────────────
+ 
+@@ -196,6 +223,14 @@ class LiveDrivingCoach:
+ 
+         lap_number = _number(frame.get("lap_number") or frame.get("lap"))
+         index = min(int(progress * model.microsectors), model.microsectors - 1)
++        if not _legacy(model):
++            if ai_controlled(frame) is True:
++                self._lap_had_ai = True
++            key = (id(model), getattr(model, "reference_kind", None), getattr(model, "reference_lap_id", None))
++            if self._focus_key != key:
++                self._focus_key = key
++                self._session_laps.clear()
++                self._update_focus(frame, model)
+         position_m = self._position_m(frame, progress)
+         brake = _number(frame.get("brake"))
+         if brake is not None and position_m is not None:
+@@ -229,7 +264,7 @@ class LiveDrivingCoach:
+                     t = (1.0 - last_progress) / ((progress + 1.0) - last_progress)
+                     crossing = self._last_clock + (clock - self._last_clock) * t
+                     self._close_sector(frame, model, self._sector_index, self._sector_entry_clock, crossing)
+-                    self._speak_lap_summary(frame, model)
++                    self._end_lap(frame, model)
+                     self._start_lap(lap_number, 0, crossing, 0.0, at_line=True)
+                     self._last_progress, self._last_clock = progress, clock
+                     if index == 0:
+@@ -247,7 +282,7 @@ class LiveDrivingCoach:
+         # A new lap, or the first frame we have seen: start counting, say nothing.
+         elif self._lap_number != lap_number or self._sector_index is None:
+             if self._lap_number is not None and lap_number is not None and lap_number != self._lap_number:
+-                self._speak_lap_summary(frame, model)
++                self._end_lap(frame, model)
+             self._start_lap(lap_number, index, clock, progress)
+             return
+ 
+@@ -302,6 +337,74 @@ class LiveDrivingCoach:
+         self._lap_phrases = 0
+         self._lap_losses = {}
+         self._lap_onsets = [onset for onset in self._lap_onsets[-1:] if progress < LINE_WINDOW]
++        self._lap_diffs = {}
++        self._lap_started_at_line = at_line
++        self._lap_had_ai = False
++        self._spoken_sectors = set()
++
++    def _end_lap(self, frame: Dict[str, Any], model: Any) -> None:
++        """The line: the summary, then the lap joins the session (if it counts) and the focus is redone."""
++        self._speak_lap_summary(frame, model)
++        if _legacy(model):
++            return
++        complete = len(self._lap_diffs) == model.microsectors
++        if self._lap_started_at_line and complete and not self._lap_had_ai:
++            self._session_laps.append(dict(self._lap_diffs))
++        self._update_focus(frame, model)
++
++    def focus_sectors(self, model: Any) -> Tuple[Tuple[int, ...], str]:
++        """The three slices furthest behind the reference, by median, and where that came from.
++
++        The session's last `FOCUS_LAPS` laps that count once there are that many
++        (only slices measured in all of them); before that, the driver's laps in
++        the model -- his median through each slice against the reference.
++        """
++        if len(self._session_laps) >= FOCUS_LAPS:
++            by_sector: Dict[int, list] = {}
++            for lap in self._session_laps:
++                for index, diff in lap.items():
++                    by_sector.setdefault(index, []).append(diff)
++            medians = {k: statistics.median(v) for k, v in by_sector.items() if len(v) == len(self._session_laps)}
++            source = "sessao"
++        else:
++            medians = {
++                t.index: float(t.median_seconds) - float(t.reference_seconds)
++                for t in getattr(model, "targets", [])
++                if getattr(t, "reference_seconds", None) is not None and getattr(t, "median_seconds", None) is not None
++            }
++            source = "modelo"
++        # Only slices he is actually behind in: a model of one lap (or the
++        # reference against itself) has no difference to listen for.
++        behind = [k for k in medians if medians[k] >= SUMMARY_MIN_LOSS]
++        ranked = sorted(behind, key=lambda k: (-medians[k], k))[:FOCUS_SECTORS]
++        return tuple(sorted(ranked)), source
++
++    def _update_focus(self, frame: Dict[str, Any], model: Any) -> None:
++        focus, source = self.focus_sectors(model)
++        changed = focus != self._focus
++        self._focus, self._focus_source = focus, source
++        if changed and focus:
++            self._emit_focus_event(frame, model, focus, source)
++
++    def _emit_focus_event(self, frame: Dict[str, Any], model: Any, focus: Tuple[int, ...], source: str) -> None:
++        """A short line in the feed: where the coach will listen in the next laps."""
++        label = getattr(model, "reference_label", "sua volta de referencia")
++        listed = ", ".join(str(k) for k in focus[:-1]) + (" e " if len(focus) > 1 else "") + str(focus[-1])
++        where = (
++            f"nas ultimas {FOCUS_LAPS} voltas validas da sessao" if source == "sessao" else "nas suas voltas do modelo"
++        )
++        self._publish(COACHING_EVENT, {
++            "type": FOCUS_EVENT,
++            "event": f"Foco nas proximas voltas: {'setor' if len(focus) == 1 else 'setores'} {listed}",
++            "severity": 0.0,
++            "evidence": f"Maior diferenca mediana para a {label} {where}.",
++            "focusSectors": list(focus),
++            "focusSource": source,
++            "driver_id": str(frame.get("driver_id") or "player_1"),
++            "lap_number": int(_number(frame.get("lap_number") or frame.get("lap")) or 0),
++            "s": 0.0,
++            "timestamp": time.time(),
++        })
+ 
+     def _position_m(self, frame: Dict[str, Any], progress: float) -> Optional[float]:
+         """Where the car is along the lap, in metres, on the model's ruler."""
+@@ -346,6 +449,8 @@ class LiveDrivingCoach:
+         if compared is None:
+             return
+         loss = split - float(compared)
++        if not legacy:
++            self._lap_diffs[finished] = loss
+         if loss <= 0:
+             return
+         self._lap_loss += loss
+@@ -354,8 +459,12 @@ class LiveDrivingCoach:
+             self._lap_worst = {"index": finished, "lossS": round(loss, 3)}
+         if loss < self._threshold_for(target):
+             return
+-        if not legacy and self._lap_phrases >= MAX_PHRASES_PER_LAP:
+-            return
++        if not legacy:
++            # Pedido 15: only in the focus slices, once each.
++            if finished not in (self._focus or ()) or finished in self._spoken_sectors:
++                return
++            if self._lap_phrases >= MAX_PHRASES_PER_LAP:
++                return
+ 
+         now = time.monotonic()
+         if now - self._last_event_at < self.min_gap_seconds:
+@@ -365,6 +474,7 @@ class LiveDrivingCoach:
+             self._emit_coaching_event(frame, target, split, loss)
+         else:
+             self._lap_phrases += 1
++            self._spoken_sectors.add(finished)
+             self._emit_reference_event(frame, model, target, split, loss)
+ 
+     def _physics_clock(self, frame: Dict[str, Any], lap_clock: float, progress: float) -> float:
+@@ -764,11 +874,14 @@ def coach_recorded_lap(
+     # The radio call lands on the flag, which the walk above never crosses.
+     coach._speak_lap_summary({"driver_id": driver_id}, model)   # noqa: SLF001
+ 
+-    for event in bus.events:
++    focus = [event for event in bus.events if event.get("type") == FOCUS_EVENT]
++    events = [event for event in bus.events if event.get("type") != FOCUS_EVENT]
++    for event in events:
+         event["lapTimeSeconds"] = event.get("evidence", {}).get("atLapTimeSeconds")
+     return {
+         "status": "READY",
+-        "events": bus.events,
++        "events": events,
++        "focus": focus[-1]["focusSectors"] if focus else [],
+         "speech": bus.speech,
+         "lossSeconds": round(coach._lap_loss, 3),   # noqa: SLF001
+         "worst": coach._lap_worst,                  # noqa: SLF001
+diff --git a/backend/ml/data/origin.py b/backend/ml/data/origin.py
+index 154c9193..97eca668 100644
+--- a/backend/ml/data/origin.py
++++ b/backend/ml/data/origin.py
+@@ -23,6 +23,10 @@ volante RS50 com pedais de celula de carga a partir de 2026-10-01 (`atual`),
+ o controle de antes (`anterior`). Uma volta `humano` so fala do piloto de hoje
+ com o equipamento `atual`. E `origem_fonte` diz de onde veio o rotulo: o
+ indicador do jogo, as anotacoes do piloto numa sessao rotulada ou o detector.
++
++Desde o pedido 15, as sessoes novas sem anotacao seguem `unannotated_origin`:
++o indicador ate a IA ligar pela primeira vez, a volta em que ela liga como
++`misturada`, e o detector depois disso.
+ """
+ 
+ from __future__ import annotations
+@@ -104,6 +108,47 @@ def lap_origin(flags: Iterable) -> str:
+     return AI if known[0] else HUMAN
+ 
+ 
++def unannotated_origin(indicator: str, detector: Optional[str]) -> tuple:
++    """Origem de uma volta de sessao nova sem anotacao, e de onde veio (pedido 15).
++
++    O indicador do jogo liga com o Ctrl+C e fica travado ate a sessao do jogo
++    reiniciar. Antes de ligar, a volta e `humano` pelo indicador; a volta em que
++    liga e `misturada`; depois, o indicador diz `ia` mesmo com o piloto de volta
++    ao volante, e quem decide e o detector pela linha da IA. O que o detector
++    nao resolve, ou uma volta sem o campo, fica `desconhecida`.
++    """
++    if indicator in (HUMAN, MIXED):
++        return indicator, SOURCE_INDICATOR
++    if indicator == AI and detector in (HUMAN, AI, MIXED):
++        return detector, SOURCE_DETECTOR
++    return UNKNOWN, None
++
++
++def label_unannotated(inventory: pd.DataFrame, annotated: Set[str], classify) -> pd.DataFrame:
++    """Aplica `unannotated_origin` as voltas do equipamento `atual` fora de `annotated`.
++
++    `classify(lap_id, row)` devolve o veredito do detector (`classify_lap`) ou
++    `None` sem a grade; so e chamado nas voltas que o indicador da como `ia`.
++    As voltas do equipamento `anterior` e as anotadas nao mudam.
++    """
++    out = inventory.copy()
++    for column in ("origem_detector", "motivo_detector", "linha_detector"):
++        if column not in out.columns:
++            out[column] = None
++    target = (out["equipamento"] == CURRENT_EQUIPMENT) & ~out["lap_id"].isin(annotated)
++    for index in out.index[target]:
++        row = out.loc[index]
++        verdict = classify(row["lap_id"], row) if row["origem_indicador"] == AI else None
++        if verdict is not None:
++            out.at[index, "origem_detector"] = verdict["origem_detector"]
++            out.at[index, "motivo_detector"] = verdict["motivo"]
++            out.at[index, "linha_detector"] = verdict["linha"]
++        label, source = unannotated_origin(row["origem_indicador"], verdict["origem_detector"] if verdict else None)
++        out.at[index, "origem"] = label
++        out.at[index, "origem_fonte"] = source
++    return out
++
++
+ def ai_share(flags: Iterable) -> float:
+     """Fracao das amostras com o campo que indicam IA. NaN sem o campo."""
+     known = [v for v in (_known(f) for f in flags) if v is not None]
+diff --git a/backend/ml/scripts/detector_ia.py b/backend/ml/scripts/detector_ia.py
+index 5fbedf73..3e231579 100644
+--- a/backend/ml/scripts/detector_ia.py
++++ b/backend/ml/scripts/detector_ia.py
+@@ -12,6 +12,10 @@ sessoes de 2026-10-04). A ordem importa:
+ 2. os limites vao para `ml/data/ai_detector.py` e `docs/detector_ia.md` num
+    commit proprio;
+ 3. `aplicar` recusa rodar sem os limites, e so entao olha as voltas antigas.
++
++Desde o pedido 15, `aplicar` tambem rotula as sessoes novas sem anotacao
++(`origin.unannotated_origin`), e a sessao rotulada vem do arquivo versionado
++volta a volta (`LAP_LABELS`), feito das anotacoes do piloto (`ANNOTATIONS`).
+ """
+ 
+ from __future__ import annotations
+@@ -40,6 +44,9 @@ from ml.validation import empirical as em  # noqa: E402
+ 
+ SESSION_DATE = "2026-10-04"
+ ANNOTATIONS = config.repo_root() / "docs" / "experimentos" / "2026-10-04_sessao_rotulada_anotacoes.csv"
++# As mesmas anotacoes, volta a volta, pela identidade do ml (pedido 15). Uma
++# sessao gravada depois, no mesmo dia, nao herda as anotacoes da sessao rotulada.
++LAP_LABELS = config.repo_root() / "docs" / "experimentos" / "2026-10-04_rotulos_por_volta.csv"
+ BICO_DE_PATO_M = (2590.0, 3080.0)
+ # As datas que o piloto lembra de ter usado a IA (pedido 12/13) e as 4 sessoes
+ # que mais variam nos sinais do pedido 12.
+@@ -82,32 +89,58 @@ def annotations() -> Dict[tuple, Dict[str, str]]:
+         return {(int(r["parte"]), int(r["volta_jogo"])): r for r in csv.DictReader(handle)}
+ 
+ 
++def lap_labels(path: Path = None) -> pd.DataFrame:
++    """As anotacoes de 04/10 volta a volta: lap_id, parte, volta_jogo, origem, box."""
++    return pd.read_csv(path or LAP_LABELS, dtype={"lap_id": str, "origem": str, "box": str}, keep_default_na=False)
++
++
++def check_lap_labels(inventory: pd.DataFrame, labels: pd.DataFrame, notes: Dict[tuple, Dict[str, str]]) -> List[str]:
++    """O que impede de aplicar os rotulos volta a volta. Vazio quando batem.
++
++    Cada volta do arquivo tem de estar no inventario com a mesma volta do jogo,
++    toda volta das gravacoes rotuladas tem de estar no arquivo, e o arquivo tem
++    de dizer o mesmo que as anotacoes do piloto.
++    """
++    problems = []
++    ids = set(inventory["lap_id"])
++    missing = [i for i in labels["lap_id"] if i not in ids]
++    if missing:
++        problems.append(f"{len(missing)} voltas do arquivo fora do inventario (ex.: {missing[0]})")
++    sessions = set(labels["lap_id"].str.split("#").str[0])
++    extra = inventory[inventory["session_id"].isin(sessions) & ~inventory["lap_id"].isin(labels["lap_id"])]
++    if len(extra):
++        problems.append(f"{len(extra)} voltas das gravacoes rotuladas fora do arquivo (ex.: {extra['lap_id'].iloc[0]})")
++    merged = inventory.merge(labels, on="lap_id")
++    number = merged["game_lap_number"].fillna(merged["lap_number"]).astype(float)
++    wrong = merged[number != merged["volta_jogo"].astype(float)]
++    if len(wrong):
++        problems.append(f"{len(wrong)} voltas com outra volta do jogo no inventario (ex.: {wrong['lap_id'].iloc[0]})")
++    for _, r in labels.iterrows():
++        note = notes.get((int(r["parte"]), int(r["volta_jogo"])))
++        if note is None or note["origem_anotada"] != r["origem"] or note["box"] != r["box"]:
++            problems.append(f"{r['lap_id']} nao bate com as anotacoes do piloto (parte {r['parte']}, volta {r['volta_jogo']})")
++            break
++    return problems
++
++
+ def labelled_session(inventory: pd.DataFrame) -> pd.DataFrame:
+-    """Voltas de 2026-10-04 com a parte (1 = antes do reinicio) e a anotacao.
++    """Voltas da sessao rotulada de 04/10 com a parte (1 = antes do reinicio) e a anotacao.
+ 
+-    O jogo foi reiniciado no meio da primeira gravacao: o contador volta a 1 e
+-    as voltas seguintes sao da parte 2, assim como todas as gravacoes depois.
++    Vem do arquivo volta a volta (`LAP_LABELS`). Para se o arquivo nao bater
++    com o inventario ou com as anotacoes do piloto: um inventario refeito com
++    outro corte de voltas nao pode herdar rotulos por engano.
+     """
+-    rows = inventory[inventory["session_id"].str.startswith(SESSION_DATE)].copy()
++    labels = lap_labels()
++    problems = check_lap_labels(inventory, labels, annotations())
++    if problems:
++        raise SystemExit("PARADO: os rotulos volta a volta de 04/10 nao batem: " + "; ".join(problems))
++    rows = inventory[inventory["lap_id"].isin(labels["lap_id"])].copy()
+     rows = rows.sort_values(["session_id", "sequence"])
+-    first = sorted(rows["session_id"].unique())[0]
+-    number = rows["game_lap_number"].fillna(rows["lap_number"]).astype(float)
+-    rows["volta_jogo"] = number
+-    part = []
+-    seen_reset = False
+-    previous = None
+-    for session_id, value in zip(rows["session_id"], number):
+-        if session_id != first:
+-            part.append(2)
+-            continue
+-        if previous is not None and value < previous:
+-            seen_reset = True
+-        previous = value
+-        part.append(2 if seen_reset else 1)
+-    rows["parte"] = part
+-    notes = annotations()
+-    rows["origem_anotada"] = [notes.get((p, int(v)), {}).get("origem_anotada") for p, v in zip(rows["parte"], number)]
+-    rows["box_anotado"] = [notes.get((p, int(v)), {}).get("box") == "sim" for p, v in zip(rows["parte"], number)]
++    by_id = labels.set_index("lap_id").loc[rows["lap_id"]]
++    rows["volta_jogo"] = by_id["volta_jogo"].astype(float).to_numpy()
++    rows["parte"] = by_id["parte"].astype(int).to_numpy()
++    rows["origem_anotada"] = by_id["origem"].to_numpy()
++    rows["box_anotado"] = (by_id["box"] == "sim").to_numpy()
+     return rows
+ 
+ 
+@@ -403,7 +436,23 @@ def apply(out_dir: Path, track, json_path: Path, promote: bool = False) -> Dict[
+             by_id.at[lap_id, "origem"] = verdict["origem_detector"]
+             by_id.at[lap_id, "origem_fonte"] = origin.SOURCE_DETECTOR
+     out_inv = by_id.reset_index()
++
++    # Pedido 15: sessoes do equipamento atual sem anotacao, pela regra do indicador e do detector.
++    def classify(lap_id, r):
++        if lap_id not in grids:
++            return None
++        return det.classify_lap(grids[lap_id], float(r["duration_s"]), reference, track, sectors, limits)
++
++    out_inv = origin.label_unannotated(out_inv, set(session_rows.index), classify)
+     save_inventory(out_inv, out_dir)
++    fresh = out_inv[(out_inv["equipamento"] == origin.CURRENT_EQUIPMENT) & ~out_inv["lap_id"].isin(session_rows.index)]
++    new_sessions = [
++        {"sessao": session_id, "voltas": int(len(laps)),
++         "origem": laps["origem"].value_counts().to_dict(),
++         "fonte": laps["origem_fonte"].fillna("-").value_counts().to_dict(),
++         "indicador": laps["origem_indicador"].value_counts().to_dict()}
++        for session_id, laps in fresh.groupby("session_id")
++    ]
+ 
+     # 3. Por sessao.
+     applied = out_inv[out_inv["lap_id"].isin(old.index)]
+@@ -428,6 +477,9 @@ def apply(out_dir: Path, track, json_path: Path, promote: bool = False) -> Dict[
+         "sessao_rotulada": {"acerto": hits, "voltas": scored},
+         "voltas_antigas": {"aplicadas": int(len(applied)), "totais": totals,
+                            "motivos": applied["motivo_detector"].fillna("-").value_counts().to_dict()},
++        "sessao_rotulada_aplicada": {"voltas": int(len(session_rows)),
++                                     "origem": session_rows["origem_anotada"].value_counts().to_dict()},
++        "sessoes_novas_sem_anotacao": new_sessions,
+         "sessoes": sessions,
+     }
+     json_path.parent.mkdir(parents=True, exist_ok=True)
+diff --git a/backend/tests/test_atualizar_coach.py b/backend/tests/test_atualizar_coach.py
+new file mode 100644
+index 00000000..08910ffe
+--- /dev/null
++++ b/backend/tests/test_atualizar_coach.py
+@@ -0,0 +1,220 @@
++"""Pedido 15, Parte C: atualizar o coach com um comando.
++
++* a regra das sessoes novas sem anotacao (indicador ate a IA ligar, a volta em
++  que ela liga e `misturada`, depois o detector);
++* os rotulos versionados de 04/10, volta a volta, e a trava quando nao batem;
++* o backup do modelo e a ordem dos passos do comando.
++"""
++
++from __future__ import annotations
++
++import importlib.util
++import tempfile
++import unittest
++from datetime import datetime
++from pathlib import Path
++
++import pandas as pd
++
++from ml.data import origin
++from ml.scripts import detector_ia
++
++BACKEND = Path(__file__).resolve().parents[1]
++
++
++def load_command():
++    spec = importlib.util.spec_from_file_location("atualizar_coach", BACKEND / "tools" / "atualizar_coach.py")
++    module = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(module)
++    return module
++
++
++def inventory_rows(session_id, indicators, *, equipment=origin.CURRENT_EQUIPMENT):
++    return pd.DataFrame({
++        "lap_id": [f"{session_id}#{i:04d}" for i in range(len(indicators))],
++        "session_id": session_id,
++        "sequence": range(len(indicators)),
++        "origem_indicador": indicators,
++        "origem": indicators,
++        "origem_fonte": origin.SOURCE_INDICATOR,
++        "equipamento": equipment,
++        "duration_s": 90.0,
++    })
++
++
++class UnannotatedRuleTest(unittest.TestCase):
++    def test_the_rule(self):
++        self.assertEqual(origin.unannotated_origin("humano", None), ("humano", "indicador"))
++        self.assertEqual(origin.unannotated_origin("misturada", None), ("misturada", "indicador"))
++        for verdict in ("humano", "ia", "misturada"):
++            self.assertEqual(origin.unannotated_origin("ia", verdict), (verdict, "detector"))
++        self.assertEqual(origin.unannotated_origin("ia", "desconhecida"), ("desconhecida", None))
++        self.assertEqual(origin.unannotated_origin("ia", None), ("desconhecida", None))
++        self.assertEqual(origin.unannotated_origin("desconhecida", None), ("desconhecida", None))
++
++    def test_a_new_session_before_and_after_the_ai_turns_on(self):
++        # O piloto anda duas voltas, liga a IA na terceira, e o indicador fica travado depois.
++        new = inventory_rows("2026-10-05_20-00-00_vhe_interlagos",
++                             ["humano", "humano", "misturada", "ia", "ia", "ia", "ia"])
++        verdicts = {
++            new["lap_id"][3]: {"origem_detector": "ia", "motivo": "sinais concordam", "linha": "ia"},
++            new["lap_id"][4]: {"origem_detector": "humano", "motivo": "sinais concordam", "linha": "humano"},
++            new["lap_id"][5]: {"origem_detector": "desconhecida", "motivo": "linha indefinida", "linha": "desconhecida"},
++            # a volta 6 nao tem grade: o detector nao diz nada
++        }
++        asked = []
++
++        def classify(lap_id, row):
++            asked.append(lap_id)
++            return verdicts.get(lap_id)
++
++        annotated = inventory_rows("2026-10-04_02-24-04_vhe_interlagos", ["ia"])
++        annotated["origem"], annotated["origem_fonte"] = "misturada", origin.SOURCE_ANNOTATION
++        old = inventory_rows("2026-06-19_23-24-46_vhe_interlagos", ["desconhecida", "ia"],
++                             equipment=origin.PREVIOUS_EQUIPMENT)
++        frame = pd.concat([annotated, old, new], ignore_index=True)
++        out = origin.label_unannotated(frame, set(annotated["lap_id"]), classify).set_index("lap_id")
++
++        got = [(out.at[i, "origem"], out.at[i, "origem_fonte"]) for i in new["lap_id"]]
++        self.assertEqual(got, [
++            ("humano", "indicador"), ("humano", "indicador"), ("misturada", "indicador"),
++            ("ia", "detector"), ("humano", "detector"), ("desconhecida", None), ("desconhecida", None),
++        ])
++        self.assertEqual(out.at[new["lap_id"][4], "motivo_detector"], "sinais concordam")
++        # o detector so e consultado nas voltas que o indicador da como ia
++        self.assertEqual(asked, list(new["lap_id"][3:]))
++        # a anotada e as do equipamento anterior nao mudam
++        self.assertEqual(out.at[annotated["lap_id"][0], "origem"], "misturada")
++        self.assertEqual(list(out.loc[old["lap_id"], "origem"]), ["desconhecida", "ia"])
++
++
++class LapLabelsTest(unittest.TestCase):
++    def inventory_from_file(self):
++        labels = detector_ia.lap_labels()
++        return pd.DataFrame({
++            "lap_id": labels["lap_id"],
++            "session_id": labels["lap_id"].str.split("#").str[0],
++            "sequence": labels["lap_id"].str.split("#").str[1].astype(int),
++            "lap_number": labels["volta_jogo"].astype(float),
++            "game_lap_number": labels["volta_jogo"].astype(float),
++        })
++
++    def test_the_versioned_file_agrees_with_the_drivers_annotations(self):
++        labels = detector_ia.lap_labels()
++        self.assertEqual(len(labels), 53)
++        self.assertEqual(detector_ia.check_lap_labels(self.inventory_from_file(), labels, detector_ia.annotations()), [])
++        self.assertEqual(labels["origem"].value_counts().to_dict(), {"humano": 32, "ia": 17, "misturada": 4})
++
++    def test_a_later_session_on_the_same_day_does_not_inherit_the_annotations(self):
++        inventory = self.inventory_from_file()
++        later = pd.DataFrame({"lap_id": ["2026-10-04_21-00-00_vhe_interlagos#0000"],
++                              "session_id": ["2026-10-04_21-00-00_vhe_interlagos"], "sequence": [0],
++                              "lap_number": [1.0], "game_lap_number": [1.0]})
++        rows = detector_ia.labelled_session(pd.concat([inventory, later], ignore_index=True))
++        self.assertEqual(len(rows), 53)
++        self.assertNotIn(later["lap_id"][0], set(rows["lap_id"]))
++        first = rows.set_index("lap_id").loc["2026-10-04_02-24-04_vhe_interlagos#0007"]
++        self.assertEqual((first["parte"], first["volta_jogo"], first["origem_anotada"]), (1, 8.0, "misturada"))
++
++    def test_it_stops_when_the_inventory_was_cut_differently(self):
++        inventory = self.inventory_from_file()
++        labels = detector_ia.lap_labels()
++        notes = detector_ia.annotations()
++        self.assertTrue(detector_ia.check_lap_labels(inventory.iloc[1:], labels, notes))
++        extra = inventory.iloc[:1].assign(lap_id="2026-10-04_02-24-04_vhe_interlagos#0099", sequence=99)
++        self.assertTrue(detector_ia.check_lap_labels(pd.concat([inventory, extra]), labels, notes))
++        shifted = inventory.assign(game_lap_number=inventory["game_lap_number"] + 1)
++        self.assertTrue(detector_ia.check_lap_labels(shifted, labels, notes))
++        with self.assertRaises(SystemExit):
++            detector_ia.labelled_session(inventory.iloc[1:])
++
++
++class CommandTest(unittest.TestCase):
++    def setUp(self):
++        self.command = load_command()
++        self.tmp = Path(tempfile.mkdtemp())
++
++    def test_backup_copies_the_model_with_date_and_time(self):
++        model = self.tmp / "vhe_interlagos.json"
++        self.assertIsNone(self.command.backup_model(model))
++        model.write_text("{}", encoding="utf-8")
++        now = datetime(2026, 10, 4, 22, 15, 0)
++        copy = self.command.backup_model(model, now)
++        self.assertEqual(copy, self.tmp / "backup" / "vhe_interlagos.2026-10-04_22-15-00.antes-de-atualizar.json")
++        self.assertEqual(copy.read_text(encoding="utf-8"), "{}")
++        with self.assertRaises(SystemExit):
++            self.command.backup_model(model, now)
++
++    def test_it_never_writes_the_installed_apps_model(self):
++        installed = self.tmp / "Automobilista Telemetria" / "data" / "reference_models" / "vhe_interlagos.json"
++        self.assertEqual(self.command.main(["--sem-varrer", "--modelo", str(installed)]), 2)
++
++    def test_the_steps_run_in_order(self):
++        calls = []
++        out_dir = self.tmp / "origem"
++        model = self.tmp / "vhe_interlagos.json"
++        model.write_text("{}", encoding="utf-8")
++        c = self.command
++
++        def scan(directory, track):
++            calls.append("inventario")
++            directory.mkdir(parents=True, exist_ok=True)
++            inventory_rows("2026-10-05_20-00-00_vhe_interlagos", ["humano"]).to_parquet(
++                directory / "lap_inventory.parquet", index=False)
++
++        def apply(directory, track, json_path, promote=False):
++            calls.append(("rotulos", promote))
++            return {"sessao_rotulada_aplicada": {"voltas": 53, "origem": {}}, "sessoes_novas_sem_anotacao": []}
++
++        class Train:
++            @staticmethod
++            def main(args):
++                calls.append(("treino", args[args.index("--saida") + 1], (model.parent / "backup").exists()))
++                return 0
++
++        class Loaded:
++            @staticmethod
++            def load(path):
++                calls.append("resumo")
++                return object()
++
++        c.load_geometry = lambda: None
++        c.report_lap_origin.scan, original_scan = scan, c.report_lap_origin.scan
++        c.detector_ia.apply, original_apply = apply, c.detector_ia.apply
++        try:
++            c._train_script = lambda: Train
++            c.DriverReferenceModel = Loaded
++            c.summary = lambda m, inv: {"referencias": {}, "referencia_padrao": "volta_ia",
++                                        "voltas_por_origem": {"equipamento_atual": {}, "equipamento_atual_por_fonte": {},
++                                                              "todas": {}},
++                                        "voltas_do_piloto_no_modelo": 0,
++                                        "limiar_s": {"mediana": 0, "min": 0, "max": 0, "microsetores_no_minimo": 0},
++                                        "foco_inicial": {}}
++            code = c.main(["--saida", str(out_dir), "--modelo", str(model), "--resumo", str(self.tmp / "r.json")])
++        finally:
++            c.report_lap_origin.scan = original_scan
++            c.detector_ia.apply = original_apply
++        self.assertEqual(code, 0)
++        self.assertEqual(calls, ["inventario", ("rotulos", False), ("treino", str(model), True), "resumo"])
++        self.assertTrue((self.tmp / "r.json").exists())
++
++    def test_a_failed_training_stops_the_command(self):
++        c = self.command
++        out_dir = self.tmp / "origem"
++        out_dir.mkdir()
++        inventory_rows("2026-10-05_20-00-00_vhe_interlagos", ["humano"]).to_parquet(
++            out_dir / "lap_inventory.parquet", index=False)
++        c.load_geometry = lambda: None
++        original_apply = c.detector_ia.apply
++        c.detector_ia.apply = lambda *a, **k: {"sessao_rotulada_aplicada": {"voltas": 53, "origem": {}},
++                                               "sessoes_novas_sem_anotacao": []}
++        try:
++            c._train_script = lambda: type("T", (), {"main": staticmethod(lambda args: 2)})
++            code = c.main(["--sem-varrer", "--saida", str(out_dir), "--modelo", str(self.tmp / "m.json")])
++        finally:
++            c.detector_ia.apply = original_apply
++        self.assertEqual(code, 2)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/backend/tests/test_coach_learning_phase.py b/backend/tests/test_coach_learning_phase.py
+index b4db891d..1d495807 100644
+--- a/backend/tests/test_coach_learning_phase.py
++++ b/backend/tests/test_coach_learning_phase.py
+@@ -28,6 +28,11 @@ from tests.test_ml_pipeline import circular_track  # noqa: E402
+ SPEED_MPS = 150.0 / 3.6
+ 
+ 
++def phrases_of(bus):
++    """As frases de trecho, sem as linhas de foco (pedido 15)."""
++    return [e for e in bus.of(COACHING_EVENT) if e.get("type") != "coaching_focus"]
++
++
+ class HardContinuityTest(unittest.TestCase):
+     def test_the_map_engine_keeps_its_default(self):
+         """Mapa e painel: a continuidade continua sendo so uma penalidade."""
+@@ -148,9 +153,11 @@ class LiveFinishLineTest(unittest.TestCase):
+         # Voltas de 60 s, como nos testes do pedido 11 (o modelo recusa voltas curtas).
+         seconds = 60.0
+         self.speed = self.track.length / seconds
++        # A segunda volta perde 0,3 s nos microsetores 0 e 30: eles entram no foco (pedido 15).
+         self.model = build_reference_model(
+             [("ref", seconds, int(seconds * HZ), lap_on(self.track, seconds)),
+-             ("x", seconds + 0.5, int((seconds + 0.5) * HZ), lap_on(self.track, seconds + 0.5))],
++             ("x", seconds + 0.6, int((seconds + 0.6) * HZ),
++              synthetic_lap(self.track, seconds, slow=[(0, 0.3), (30, 0.3)]))],
+             track="t", geometry=self.geometry,
+         )
+ 
+@@ -165,7 +172,7 @@ class LiveFinishLineTest(unittest.TestCase):
+     def test_the_first_slice_is_measured_from_s0(self):
+         """O microsetor 0 da volta 2 conta a partir de s = 0, antes de o jogo zerar o cronometro."""
+         bus = self.run_coach(drive_across_laps(self.track, 3, speed=self.speed, slow=(1, 0, 0.5)))
+-        events = [e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == 0]
++        events = [e for e in phrases_of(bus) if e["evidence"]["microsector"] == 0]
+         self.assertEqual(len(events), 1)
+         reference = self.model.targets[0].reference_seconds
+         self.assertAlmostEqual(events[0]["evidence"]["yourSeconds"] - reference, 0.5, delta=0.02)
+@@ -187,7 +194,7 @@ class LiveFinishLineTest(unittest.TestCase):
+                 jumped = True
+                 self.assertEqual(bus.of(ENGINEER_SPEECH), [])
+         self.assertTrue(jumped)
+-        self.assertEqual(bus.of(COACHING_EVENT), [])
++        self.assertEqual(phrases_of(bus), [])
+ 
+ 
+ 
+@@ -202,10 +209,10 @@ class WallClockStutterTest(LiveFinishLineTest):
+             frames[i + 1]["timestamp"] += 2.0 - (frames[i + 1]["timestamp"] - frames[i]["timestamp"])
+         stuttered = self.run_coach(frames)
+         self.assertEqual(
+-            [e["evidence"]["yourSeconds"] for e in clean.of(COACHING_EVENT)],
+-            [e["evidence"]["yourSeconds"] for e in stuttered.of(COACHING_EVENT)],
++            [e["evidence"]["yourSeconds"] for e in phrases_of(clean)],
++            [e["evidence"]["yourSeconds"] for e in phrases_of(stuttered)],
+         )
+-        self.assertTrue(clean.of(COACHING_EVENT))
++        self.assertTrue(phrases_of(clean))
+ 
+ 
+ # ── Parte C: as duas referencias (ADR 0016) ─────────────────────────────────
+@@ -272,6 +279,9 @@ def synthetic_lap(track, seconds, *, slow=(), brake_at=None):
+                          "speed_kmh": track.length / seconds * 3.6, "brake": brake, "throttle": 1.0})
+ 
+ 
++FOCUS_OF_MODEL = (5, 14, 40)
++
++
+ class TwoReferencesTest(unittest.TestCase):
+     """A IA freia em 300 m; o piloto freia em outro ponto."""
+ 
+@@ -280,8 +290,11 @@ class TwoReferencesTest(unittest.TestCase):
+         self.geometry = exported(self.track, "geo-1")
+         seconds = 60.0
+         # As voltas do piloto freiam em 296 m, dentro do mesmo microsetor da IA (293-314 m).
+-        mine = [(f"h{i}", seconds + 0.5, int((seconds + 0.5) * HZ),
+-                 synthetic_lap(self.track, seconds + 0.5, brake_at=296.0)) for i in range(3)]
++        # Pedido 15: as voltas do piloto perdem 0,1, 0,2 e 0,3 s nos microsetores 5, 14 e 40,
++        # que viram o foco do modelo nos dois modos.
++        mine = [(f"h{i}", seconds + 0.5 + 0.3 * (i + 1), int((seconds + 0.5 + 0.3 * (i + 1)) * HZ),
++                 synthetic_lap(self.track, seconds + 0.5, slow=[(k, 0.1 * (i + 1)) for k in FOCUS_OF_MODEL],
++                               brake_at=296.0)) for i in range(3)]
+         ai = [("ia", seconds, int(seconds * HZ), synthetic_lap(self.track, seconds, brake_at=300.0))]
+         self.model = build_reference_model(mine, track="t", geometry=self.geometry)
+         for kind, laps in ((REFERENCE_OWN_BEST, mine), (REFERENCE_AI, ai)):
+@@ -300,12 +313,11 @@ class TwoReferencesTest(unittest.TestCase):
+                                 "speedKmh": row.speed_kmh, "brake": row.brake, "track": "t"})
+         return bus
+ 
+-    def test_at_most_three_phrases_a_lap(self):
+-        slow = [(i, 0.3) for i in (5, 10, 20, 30, 40, 50)]
++    def test_at_most_three_phrases_a_lap_and_only_in_the_focus(self):
++        slow = [(i, 0.5) for i in (5, 10, 14, 20, 40, 50)]
+         bus = self.drive(synthetic_lap(self.track, 62.0, slow=slow, brake_at=290.0))
+-        lap_one = [e for e in bus.of(COACHING_EVENT) if e["lap_number"] == 1]
+-        self.assertEqual(len(lap_one), 3)
+-        self.assertEqual([e["evidence"]["microsector"] for e in lap_one], [5, 10, 20])
++        lap_one = [e for e in phrases_of(bus) if e["lap_number"] == 1]
++        self.assertEqual([e["evidence"]["microsector"] for e in lap_one], [5, 14, 40])
+ 
+     def test_the_lap_summary_lists_the_three_largest(self):
+         slow = [(5, 0.2), (10, 0.5), (20, 0.4), (30, 0.3), (40, 0.25)]
+@@ -319,7 +331,7 @@ class TwoReferencesTest(unittest.TestCase):
+     def test_braking_is_said_relative_to_the_reference(self):
+         for driver_at, word in ((288.0, "depois"), (312.0, "antes")):
+             bus = self.drive(synthetic_lap(self.track, 60.5, slow=[(self.sector, 0.4)], brake_at=driver_at))
+-            event = [e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == self.sector][0]
++            event = [e for e in phrases_of(bus) if e["evidence"]["microsector"] == self.sector][0]
+             self.assertIn(f"A IA freia 12 m {word} de voce", event["event"])
+             self.assertAlmostEqual(event["evidence"]["brakeDeltaM"], 300.0 - driver_at, delta=1.5)
+ 
+@@ -327,8 +339,8 @@ class TwoReferencesTest(unittest.TestCase):
+         texts = []
+         for kind in (REFERENCE_AI, REFERENCE_OWN_BEST):
+             self.model.use_reference(kind)
+-            bus = self.drive(synthetic_lap(self.track, 62.0, slow=[(self.sector, 0.5), (40, 0.4)], brake_at=288.0))
+-            events = bus.of(COACHING_EVENT)
++            bus = self.drive(synthetic_lap(self.track, 62.0, slow=[(self.sector, 0.6), (40, 0.5)], brake_at=288.0))
++            events = phrases_of(bus)
+             self.assertTrue(events)
+             name = "volta da IA" if kind == REFERENCE_AI else "sua melhor volta"
+             for event in events:
+@@ -363,30 +375,101 @@ class TwoReferencesTest(unittest.TestCase):
+ class NotComparableSlicesTest(TwoReferencesTest):
+     def test_a_slice_where_the_car_stopped_is_not_compared(self):
+         """Medido em 04/10: saindo do box, "52.84s atras ... a sua 0 km/h"."""
+-        lap = synthetic_lap(self.track, 60.5, brake_at=288.0)
+-        stop = int(len(lap) * 0.4)
++        lap = synthetic_lap(self.track, 60.5, slow=[(14, 1.0)], brake_at=288.0)
++        stop = int(len(lap) * 14.5 / 60)
+         parked = pd.concat([lap.iloc[[stop]]] * int(20 * HZ), ignore_index=True)
+         parked["speed_kmh"] = 0.0
+         lap = pd.concat([lap.iloc[:stop], parked, lap.iloc[stop:]], ignore_index=True)
+         lap.loc[stop:, "elapsed_s"] = lap.loc[stop:, "elapsed_s"].to_numpy() + np.r_[
+             np.arange(len(parked)) / HZ, np.full(len(lap) - stop - len(parked), len(parked) / HZ)]
+         bus = self.drive(lap)
+-        sector = int(0.4 * 60)
+-        self.assertFalse([e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == sector])
++        sector = 14
++        self.assertFalse([e for e in phrases_of(bus) if e["evidence"]["microsector"] == sector])
+ 
+     def test_the_slice_the_count_starts_in_is_not_compared(self):
+-        lap = synthetic_lap(self.track, 60.5, slow=[(10, 2.0)], brake_at=288.0)
+-        start = int(len(lap) * 10.5 / 60)                   # comeca no meio do microsetor 10
++        lap = synthetic_lap(self.track, 60.5, slow=[(5, 2.0)], brake_at=288.0)
++        start = int(len(lap) * 5.5 / 60)                    # comeca no meio do microsetor 5
+         bus = self.drive(lap.iloc[start:].reset_index(drop=True))
+-        self.assertFalse([e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == 10])
++        self.assertFalse([e for e in phrases_of(bus) if e["evidence"]["microsector"] == 5 and e["lap_number"] == 1])
+ 
+ 
+ class SummaryRoundingTest(TwoReferencesTest):
+     def test_no_summary_when_the_lap_matches_the_reference(self):
+         """Medido: a melhor volta contra ela mesma listava "setor 0 (0.00s)"."""
+         self.model.use_reference(REFERENCE_OWN_BEST)
+-        bus = self.drive(synthetic_lap(self.track, 60.5, brake_at=296.0))
+-        self.assertEqual(bus.of(ENGINEER_SPEECH), [])
++        best = synthetic_lap(self.track, 60.5, slow=[(k, 0.1) for k in FOCUS_OF_MODEL], brake_at=296.0)
++        bus = FakeBus()
++        coach = LiveDrivingCoach(bus, lambda _t: self.model, geometry_provider=lambda _t: self.geometry,
++                                 min_gap_seconds=0.0)
++        for number, frame in ((1, best), (2, best), (3, best)):
++            for row in frame.itertuples():
++                coach.on_frame({"world_x": row.x, "world_z": row.z, "lap_time": row.elapsed_s, "lap_number": number,
++                                "speedKmh": row.speed_kmh, "brake": row.brake, "track": "t"})
++        # A volta 2, inteira e igual a referencia, fecha sem resumo.
++        self.assertEqual(len(bus.of(ENGINEER_SPEECH)), 0)
++
++
++class FocusTest(unittest.TestCase):
++    """Pedido 15: o coach so fala nos 3 trechos de foco."""
++
++    setUp = TwoReferencesTest.setUp
++
++    def drive_laps(self, laps, *, ai_laps=()):
++        bus = FakeBus()
++        coach = LiveDrivingCoach(bus, lambda _t: self.model, geometry_provider=lambda _t: self.geometry,
++                                 min_gap_seconds=0.0)
++        for number, frame in enumerate(list(laps) + [synthetic_lap(self.track, 60.5, brake_at=296.0)], start=1):
++            ai = number in ai_laps
++            for row in frame.itertuples():
++                coach.on_frame({"world_x": row.x, "world_z": row.z, "lap_time": row.elapsed_s, "lap_number": number,
++                                "speedKmh": row.speed_kmh, "brake": row.brake, "track": "t",
++                                "carPhysics": {"controls": {"isAIControlled": ai}}})
++        return bus, coach
++
++    def focus_lines(self, bus):
++        return [e for e in bus.of(COACHING_EVENT) if e.get("type") == "coaching_focus"]
++
++    def session_lap(self):
++        return synthetic_lap(self.track, 60.5, slow=[(20, 0.6), (30, 0.5), (50, 0.4)], brake_at=296.0)
++
++    def test_before_five_laps_the_focus_comes_from_the_model(self):
++        bus, coach = self.drive_laps([self.session_lap()])
++        self.assertEqual(coach.focus_sectors(self.model), (FOCUS_OF_MODEL, "modelo"))
++        first = self.focus_lines(bus)[0]
++        self.assertEqual(first["event"], "Foco nas proximas voltas: setores 5, 14 e 40")
++        self.assertEqual(first["focusSource"], "modelo")
++
++    def test_the_focus_is_the_three_largest_medians_of_the_last_five_valid_laps(self):
++        laps = [self.session_lap() for _ in range(7)]
++        # Uma volta so com um erro grande no microsetor 10: a mediana nao muda.
++        laps[2] = synthetic_lap(self.track, 60.5, slow=[(10, 3.0), (20, 0.6), (30, 0.5), (50, 0.4)], brake_at=296.0)
++        bus, coach = self.drive_laps(laps)
++        # A volta 1 comeca a contar no meio dela mesma e nao vale; as voltas 2 a 6 sao as 5 validas.
++        self.assertEqual(coach.focus_sectors(self.model), ((20, 30, 50), "sessao"))
++        last = self.focus_lines(bus)[-1]
++        self.assertEqual(last["event"], "Foco nas proximas voltas: setores 20, 30 e 50")
++        self.assertIn("ultimas 5 voltas validas", last["evidence"])
++        # Na volta 7, ja com o foco novo, as frases caem nos microsetores 20, 30 e 50.
++        seventh = [e["evidence"]["microsector"] for e in phrases_of(bus) if e["lap_number"] == 7]
++        self.assertEqual(seventh, [20, 30, 50])
++
++    def test_outside_the_focus_the_coach_says_nothing(self):
++        bus, _ = self.drive_laps([synthetic_lap(self.track, 60.5, slow=[(25, 2.0)], brake_at=296.0)])
++        self.assertFalse([e for e in phrases_of(bus) if e["evidence"]["microsector"] == 25])
++
++    def test_never_more_than_three_phrases_a_lap(self):
++        slow = [(k, 0.8) for k in range(0, 60, 3)] + [(k, 0.8) for k in FOCUS_OF_MODEL]
++        bus, _ = self.drive_laps([synthetic_lap(self.track, 70.0, slow=slow, brake_at=296.0) for _ in range(3)])
++        per_lap = {}
++        for event in phrases_of(bus):
++            per_lap[event["lap_number"]] = per_lap.get(event["lap_number"], 0) + 1
++        self.assertTrue(per_lap)
++        self.assertLessEqual(max(per_lap.values()), 3)
++
++    def test_laps_with_the_ai_at_the_wheel_do_not_count(self):
++        laps = [self.session_lap() for _ in range(6)]
++        _, coach = self.drive_laps(laps, ai_laps={3, 4})
++        self.assertEqual(coach.focus_sectors(self.model)[1], "modelo")
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/backend/tests/test_coach_official_geometry.py b/backend/tests/test_coach_official_geometry.py
+index a2310078..ddd99ea3 100644
+--- a/backend/tests/test_coach_official_geometry.py
++++ b/backend/tests/test_coach_official_geometry.py
+@@ -221,8 +221,10 @@ class CoachOnOfficialGeometryTest(unittest.TestCase):
+     def setUp(self):
+         self.track = circular_track()
+         self.geometry = exported(self.track, "geo-1")
++        # A segunda volta perde 0,2 s no microsetor 22: ele entra no foco (pedido 15).
+         self.model = build_reference_model(
+-            [("ref", 60.0, int(60 * HZ), lap_on(self.track, 60.0)), ("x", 60.5, int(60.5 * HZ), lap_on(self.track, 60.5))],
++            [("ref", 60.0, int(60 * HZ), lap_on(self.track, 60.0)),
++             ("x", 60.7, int(60.7 * HZ), lap_on(self.track, 60.5, slow=(22, 0.2)))],
+             track="t", geometry=self.geometry,
+         )
+ 
+@@ -239,7 +241,7 @@ class CoachOnOfficialGeometryTest(unittest.TestCase):
+ 
+     def test_the_coach_speaks_from_world_position(self):
+         bus = self.drive(self.geometry, slow=(22, 0.6))
+-        events = bus.of(COACHING_EVENT)
++        events = [e for e in bus.of(COACHING_EVENT) if e.get("type") != "coaching_focus"]
+         self.assertTrue(events)
+         self.assertEqual(events[0]["evidence"]["microsector"], 22)
+         self.assertIn("volta de referencia", events[0]["event"])
+diff --git a/backend/tests/test_coach_reference_lap.py b/backend/tests/test_coach_reference_lap.py
+index 02211826..ef706223 100644
+--- a/backend/tests/test_coach_reference_lap.py
++++ b/backend/tests/test_coach_reference_lap.py
+@@ -118,13 +118,17 @@ class DifferenceAddsUpTest(unittest.TestCase):
+ 
+ class CoachWordsTest(unittest.TestCase):
+     def setUp(self):
++        # A segunda volta perde 0,2 s no microsetor 22: ele entra no foco (pedido 15).
+         self.model = build_reference_model(
+-            [entry("ref", 85.0, lap(85.0, brake_at=0.3667, min_speed=110.0)), entry("x", 85.4, lap(85.4))],
++            [entry("ref", 85.0, lap(85.0, brake_at=0.3667, min_speed=110.0)), entry("x", 85.6, lap(85.4, slow=(22, 0.2)))],
+             track="vhe_interlagos",
+         )
+         self.bus = FakeBus()
+         self.coach = LiveDrivingCoach(self.bus, lambda _t: self.model, min_gap_seconds=0.0)
+ 
++    def phrases(self):
++        return [e for e in self.bus.of(COACHING_EVENT) if e.get("type") != "coaching_focus"]
++
+     def said(self):
+         return [e["event"] for e in self.bus.of(COACHING_EVENT)] + [m["message"] for m in self.bus.of(ENGINEER_SPEECH)]
+ 
+@@ -138,7 +142,7 @@ class CoachWordsTest(unittest.TestCase):
+             self.assertNotIn("ganh", lowered)          # ganhar, ganho
+             self.assertNotIn("ideal", lowered)
+             self.assertNotIn("otimo", lowered)
+-        event = self.bus.of(COACHING_EVENT)[0]
++        event = self.phrases()[0]
+         self.assertIn("atras da sua volta de referencia neste trecho", event["event"])
+         self.assertEqual(event["evidence"]["referenceLapId"], "ref")
+         self.assertIn("referenceSeconds", event["evidence"])
+@@ -155,7 +159,7 @@ class CoachWordsTest(unittest.TestCase):
+             for row in frame.itertuples():
+                 self.coach.on_frame({"p": row.p, "s": row.s, "lap_time": row.elapsed_s, "lap_number": number,
+                                      "speedKmh": row.speed_kmh, "brake": row.brake, "track": "vhe_interlagos"})
+-        event = self.bus.of(COACHING_EVENT)[0]
++        event = self.phrases()[0]
+         self.assertNotIn("freada em", event["event"])
+         self.assertIn("A referencia freia", event["event"])
+         self.assertIn("depois de voce", event["event"])
+@@ -164,7 +168,8 @@ class CoachWordsTest(unittest.TestCase):
+     def test_threshold_is_unchanged(self):
+         # Mesmo limiar nos dois modos: 2 x (mediana - melhor) do microsetor.
+         legacy = build_reference_model(
+-            [entry("ref", 85.0, lap(85.0)), entry("x", 85.4, lap(85.4))], track="t", mode=MODE_BEST_PER_MICROSECTOR
++            [entry("ref", 85.0, lap(85.0)), entry("x", 85.6, lap(85.4, slow=(22, 0.2)))], track="t",
++            mode=MODE_BEST_PER_MICROSECTOR,
+         )
+         target_new, target_old = self.model.targets[22], legacy.targets[22]
+         self.assertAlmostEqual(self.coach._threshold_for(target_new), self.coach._threshold_for(target_old))  # noqa: SLF001
+@@ -214,7 +219,8 @@ class LegacyModeTest(unittest.TestCase):
+         self.assertEqual(DriverReferenceModel.load(path).mode, MODE_BEST_PER_MICROSECTOR)
+ 
+     def test_recorded_lap_replay_uses_the_same_rules(self):
+-        model = build_reference_model([entry("ref", 85.0, lap(85.0))], track="t")
++        model = build_reference_model([entry("ref", 85.0, lap(85.0)), entry("x", 85.2, lap(85.0, slow=(22, 0.2)))],
++                                      track="t")
+         frame = lap(85.0, slow=(22, 0.6))
+         frame["speed_kmh"] = 180.0
+         result = coach_recorded_lap(frame, model, lap_number=3, track="t")
+diff --git a/backend/tests/test_driving_coach.py b/backend/tests/test_driving_coach.py
+index 5f6efa3b..ec785971 100644
+--- a/backend/tests/test_driving_coach.py
++++ b/backend/tests/test_driving_coach.py
+@@ -26,22 +26,38 @@ class FakeBus:
+     def of(self, topic):
+         return [payload for name, payload in self.published if name == topic]
+ 
++    def phrases(self):
++        """The coach's phrases, without the focus line of pedido 15."""
++        return [e for e in self.of(COACHING_EVENT) if e.get("type") != "coaching_focus"]
+ 
+-def reference_lap(seconds: float = 85.0, hz: float = 57.0):
++
++def reference_lap(seconds: float = 85.0, hz: float = 57.0, slow=()):
+     count = int(seconds * hz)
+     progress = np.linspace(0.0, 1.0, count)
++    elapsed = progress * seconds
++    for index, extra in slow:
++        start, end = index / 60.0, (index + 1) / 60.0
++        elapsed = elapsed + np.clip((progress - start) / (end - start), 0.0, 1.0) * extra
+     return pd.DataFrame({
+         "p": progress,
+-        "elapsed_s": progress * seconds,
++        "elapsed_s": elapsed,
+         "speed_kmh": np.full(count, 180.0),
+         "brake": np.zeros(count),
+         "throttle": np.ones(count),
+     })
+ 
+ 
+-def model_of(seconds: float = 85.0):
+-    return build_reference_model([("melhor", seconds, int(seconds * 57), reference_lap(seconds))],
+-                                 track="vhe_interlagos")
++def model_of(seconds: float = 85.0, slow=()):
++    """A model of his best lap; with `slow`, a second lap that lost time in those slices.
++
++    Since pedido 15 the coach speaks only in the three slices where his laps are
++    furthest behind the reference, so a model of one lap leaves it silent.
++    """
++    laps = [("melhor", seconds, int(seconds * 57), reference_lap(seconds))]
++    if slow:
++        total = seconds + sum(extra for _, extra in slow)
++        laps.append(("outra", total, int(total * 57), reference_lap(seconds, slow=slow)))
++    return build_reference_model(laps, track="vhe_interlagos")
+ 
+ 
+ def drive(coach, *, seconds: float, lap: int = 5, steps: int = 400, track="vhe_interlagos",
+@@ -79,12 +95,13 @@ def drive(coach, *, seconds: float, lap: int = 5, steps: int = 400, track="vhe_i
+ class DrivingCoachTests(unittest.TestCase):
+     def setUp(self):
+         self.bus = FakeBus()
+-        self.model = model_of(85.0)
++        # Foco (pedido 15) nos microsetores 30, 58 e 59.
++        self.model = model_of(85.0, slow=((30, 0.3), (58, 0.3), (59, 0.3)))
+         self.coach = LiveDrivingCoach(self.bus, lambda track: self.model, min_gap_seconds=0.0)
+ 
+     def test_says_nothing_when_the_driver_matches_his_best(self):
+         drive(self.coach, seconds=85.0)
+-        self.assertEqual([], self.bus.of(COACHING_EVENT))
++        self.assertEqual([], self.bus.phrases())
+ 
+     def test_speaks_when_a_microsector_costs_real_time(self):
+         # O modo antigo (melhor de todos por microsetor), ligado explicitamente
+@@ -104,7 +121,7 @@ class DrivingCoachTests(unittest.TestCase):
+     def test_stays_quiet_about_losses_too_small_to_act_on(self):
+         # 80 ms over a whole lap is nothing a driver can do anything with.
+         drive(self.coach, seconds=85.08)
+-        self.assertEqual([], self.bus.of(COACHING_EVENT))
++        self.assertEqual([], self.bus.phrases())
+ 
+     def test_does_not_talk_over_itself(self):
+         coach = LiveDrivingCoach(self.bus, lambda track: self.model, min_gap_seconds=3.0)
+@@ -115,7 +132,8 @@ class DrivingCoachTests(unittest.TestCase):
+ 
+     def test_severity_grows_with_the_loss_and_stops_at_one(self):
+         drive(self.coach, seconds=85.0, slow_slice=(30, 2.5))
+-        severities = [event["severity"] for event in self.bus.of(COACHING_EVENT)]
++        severities = [event["severity"] for event in self.bus.of(COACHING_EVENT) if event["type"] != "coaching_focus"]
++        self.assertTrue(severities)
+         self.assertTrue(all(0.0 < value <= 1.0 for value in severities))
+ 
+     def test_calls_the_lap_on_the_radio_when_it_closes(self):
+@@ -169,7 +187,8 @@ class DrivingCoachTests(unittest.TestCase):
+             progress = 0.9 + (index / 199) * 0.099
+             coach.on_frame({"p": progress, "lap_time": 80 + progress, "lap_number": 7, "track": "vhe_interlagos"})
+         coach.on_frame({"p": 0.01, "lap_time": 85.4, "lap_number": 7, "track": "vhe_interlagos"})
+-        losses = [event["evidence"]["lossSeconds"] for event in self.bus.of(COACHING_EVENT)]
++        losses = [event["evidence"]["lossSeconds"] for event in self.bus.of(COACHING_EVENT)
++                  if event["type"] != "coaching_focus"]
+         self.assertTrue(all(loss < 5.0 for loss in losses), msg=str(losses))
+ 
+ 
+@@ -184,7 +203,8 @@ class RecordedLapCoachTests(unittest.TestCase):
+         from core.live.driving_coach import coach_recorded_lap
+ 
+         self.run = coach_recorded_lap
+-        self.model = model_of(85.0)
++        # Foco (pedido 15) nos microsetores 20, 30 e 50.
++        self.model = model_of(85.0, slow=((20, 0.3), (30, 0.3), (50, 0.3)))
+ 
+     def _lap(self, seconds: float, slow_slice=None):
+         count = int(seconds * 57)
+diff --git a/backend/tests/test_optimal_line.py b/backend/tests/test_optimal_line.py
+index 157d9096..79951f9e 100644
+--- a/backend/tests/test_optimal_line.py
++++ b/backend/tests/test_optimal_line.py
+@@ -186,7 +186,8 @@ class CoachWithOptimalLineTest(unittest.TestCase):
+         self.assertIn("tracado otimo", events[0]["event"])
+ 
+     def test_the_reference_mode_never_mentions_the_line(self):
+-        model = model_of(85.0)
++        # O microsetor 20 no foco (pedido 15): a segunda volta do modelo perde tempo nele.
++        model = model_of(85.0, slow=((20, 0.3),))
+         attach(model, OptimalLine.from_dict(
+             payload(microsectors=model.microsectors, seconds_each=85.0 / model.microsectors * 0.9)
+         ))
+@@ -196,14 +197,14 @@ class CoachWithOptimalLineTest(unittest.TestCase):
+         said = [e["event"] for e in bus.of(COACHING_EVENT)] + [m["message"] for m in bus.of(ENGINEER_SPEECH)]
+         self.assertTrue(said)
+         self.assertFalse(any("tracado otimo" in text or "ideal" in text.lower() for text in said))
+-        self.assertNotIn("optimalSeconds", bus.of(COACHING_EVENT)[0]["evidence"])
++        self.assertNotIn("optimalSeconds", bus.phrases()[0]["evidence"])
+ 
+     def test_without_a_line_the_events_are_exactly_as_before(self):
+-        model = model_of(85.0)
++        model = model_of(85.0, slow=((20, 0.3),))
+         bus, coach = self._coach(model)
+         drive(coach, seconds=86.0, slow_slice=(20, 0.9))
+ 
+-        events = bus.of(COACHING_EVENT)
++        events = bus.phrases()
+         self.assertTrue(events)
+         self.assertNotIn("optimalSeconds", events[0]["evidence"])
+         self.assertNotIn("tracado otimo", events[0]["event"])
+diff --git a/backend/tools/atualizar_coach.py b/backend/tools/atualizar_coach.py
+new file mode 100644
+index 00000000..7416bf13
+--- /dev/null
++++ b/backend/tools/atualizar_coach.py
+@@ -0,0 +1,230 @@
++"""Atualiza o coach depois de uma sessao, com um comando so (pedido 15).
++
++    python tools/atualizar_coach.py [--sem-varrer] [--saida data/ml/origem]
++        [--modelo ARQUIVO] [--geometria-arquivo ARQUIVO] [--resumo ARQUIVO]
++
++Em ordem:
++
++1. refaz o inventario novo em `data/ml/origem/`, varrendo as duas pastas de
++   gravacoes (so leitura, cerca de 13 minutos; `--sem-varrer` pula);
++2. aplica as anotacoes versionadas da sessao de 04/10
++   (`docs/experimentos/2026-10-04_rotulos_por_volta.csv`);
++3. rotula as sessoes novas sem anotacao: antes de a IA ligar pela primeira vez
++   na sessao do jogo, `humano` pelo indicador; a volta em que ela liga,
++   `misturada`; depois, com o indicador travado, o detector pela linha da IA
++   decide, e o que ele nao resolve fica `desconhecida`;
++4. copia o modelo do repositorio para `data/reference_models/backup/` e o
++   treina de novo;
++5. imprime o resumo: as duas referencias, as voltas de cada origem, o limiar e
++   o foco inicial.
++
++Nao toca no store do ML nem no app instalado: o modelo gravado e o do
++repositorio, lido pelo app de desenvolvimento. Qualquer trava dos passos (os
++rotulos de 04/10 que nao batem com o inventario, os limites do detector que nao
++batem com a sessao rotulada, nenhuma volta limpa para treinar) para o comando.
++"""
++
++from __future__ import annotations
++
++import argparse
++import importlib.util
++import json
++import shutil
++import sys
++from datetime import datetime
++from pathlib import Path
++from typing import Dict, Optional
++
++BACKEND_DIR = Path(__file__).resolve().parents[1]
++if str(BACKEND_DIR) not in sys.path:
++    sys.path.insert(0, str(BACKEND_DIR))
++
++import numpy as np  # noqa: E402
++import pandas as pd  # noqa: E402
++
++from core.assisted_analysis.reference_model import (  # noqa: E402
++    DEFAULT_REFERENCE,
++    REFERENCE_KINDS,
++    REFERENCE_LABELS,
++    DriverReferenceModel,
++    model_path,
++)
++from core.live.driving_coach import LiveDrivingCoach  # noqa: E402
++from ml import config  # noqa: E402
++from ml.data import origin  # noqa: E402
++from ml.data.inventory import inventory_path  # noqa: E402
++from ml.scripts import detector_ia, report_lap_origin  # noqa: E402
++from ml.track.geometry import load_geometry  # noqa: E402
++
++TRACK = "vhe_interlagos"
++# A pasta do app instalado: o comando nunca grava nela.
++INSTALLED_APP_FOLDER = "Automobilista Telemetria"
++
++
++def _train_script():
++    spec = importlib.util.spec_from_file_location("train_reference_model", BACKEND_DIR / "tools" / "train_reference_model.py")
++    module = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(module)
++    return module
++
++
++def backup_model(path: Path, now: Optional[datetime] = None) -> Optional[Path]:
++    """Copia o modelo para `backup/<nome>.<data_hora>.antes-de-atualizar.json`. Nada a copiar -> None."""
++    if not path.exists():
++        return None
++    stamp = (now or datetime.now()).strftime("%Y-%m-%d_%H-%M-%S")
++    target = path.parent / "backup" / f"{path.stem}.{stamp}.antes-de-atualizar{path.suffix}"
++    target.parent.mkdir(parents=True, exist_ok=True)
++    if target.exists():
++        raise SystemExit(f"PARADO: o backup {target} ja existe.")
++    shutil.copy2(path, target)
++    return target
++
++
++def origin_counts(inventory: pd.DataFrame) -> Dict[str, object]:
++    """Voltas de cada origem: todas, e as do equipamento atual (as que falam do piloto de hoje)."""
++    current = inventory[inventory["equipamento"] == origin.CURRENT_EQUIPMENT]
++    return {
++        "todas": {k: int(v) for k, v in inventory["origem"].value_counts().items()},
++        "equipamento_atual": {k: int(v) for k, v in current["origem"].value_counts().items()},
++        "equipamento_atual_por_fonte": {
++            f"{o} ({f})": int(n) for (o, f), n in current.groupby(["origem", current["origem_fonte"].fillna("-")]).size().items()
++        },
++    }
++
++
++class _Silent:
++    def schedule(self, topic, payload, loop_ref=None):
++        pass
++
++
++def summary(model: DriverReferenceModel, inventory: pd.DataFrame) -> Dict[str, object]:
++    """As duas referencias, as voltas de cada origem, o limiar e o foco inicial de cada modo."""
++    coach = LiveDrivingCoach(_Silent(), lambda _t: model)
++    thresholds = np.array([coach._threshold_for(t) for t in model.targets], dtype=float)
++    references = {}
++    focus = {}
++    for kind in REFERENCE_KINDS:
++        reference = model.references.get(kind)
++        if not reference:
++            references[kind] = None
++            continue
++        references[kind] = {"volta": reference.get("lap_id"), "tempo_s": reference.get("lap_seconds"),
++                            "carro": reference.get("carro")}
++        model.use_reference(kind)
++        sectors, source = coach.focus_sectors(model)
++        by_index = {t.index: t for t in model.targets}
++        focus[kind] = {
++            "setores": list(sectors),
++            "fonte": source,
++            "diferenca_mediana_s": {
++                str(k): round(float(by_index[k].median_seconds) - float(by_index[k].reference_seconds), 3)
++                for k in sectors
++            },
++        }
++    model.use_reference(DEFAULT_REFERENCE)
++    return {
++        "referencias": references,
++        "referencia_padrao": model.reference_kind,
++        "voltas_do_piloto_no_modelo": model.lap_count,
++        "voltas_por_origem": origin_counts(inventory),
++        "limiar_s": {
++            "regra": "2 x (mediana - melhor) das suas voltas por microsetor, minimo de 0.06 s",
++            "mediana": round(float(np.median(thresholds)), 3) if thresholds.size else None,
++            "min": round(float(thresholds.min()), 3) if thresholds.size else None,
++            "max": round(float(thresholds.max()), 3) if thresholds.size else None,
++            "microsetores_no_minimo": int((thresholds <= coach.min_loss_seconds + 1e-9).sum()),
++        },
++        "foco_inicial": focus,
++    }
++
++
++def print_summary(result: Dict[str, object]) -> None:
++    print()
++    print("=" * 66)
++    print("RESUMO DO COACH")
++    for kind, reference in result["referencias"].items():
++        label = REFERENCE_LABELS.get(kind, kind)
++        if reference is None:
++            print(f"  {kind:13s}: nenhuma volta valida")
++            continue
++        print(f"  {kind:13s}: {reference['tempo_s']:.3f} s  {reference['volta']}  ({label})")
++    print(f"  referencia padrao do app: {result['referencia_padrao']}")
++    counts = result["voltas_por_origem"]
++    print(f"  voltas por origem, equipamento atual: {counts['equipamento_atual']}")
++    print(f"     por fonte: {counts['equipamento_atual_por_fonte']}")
++    print(f"  voltas por origem, todas: {counts['todas']}")
++    print(f"  voltas suas no modelo (limpas): {result['voltas_do_piloto_no_modelo']}")
++    t = result["limiar_s"]
++    print(f"  limiar: mediana {t['mediana']} s (min {t['min']}, max {t['max']}; "
++          f"{t['microsetores_no_minimo']} microsetores no minimo de 0.06 s)")
++    for kind, focus in result["foco_inicial"].items():
++        listed = ", ".join(f"{k} ({v:.2f} s)" for k, v in focus["diferenca_mediana_s"].items())
++        print(f"  foco inicial, {kind}: setores {listed}  [fonte: {focus['fonte']}]")
++    print("=" * 66)
++
++
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("--sem-varrer", action="store_true", help="pula o passo 1 e usa o inventario que ja existe")
++    parser.add_argument("--saida", type=Path, default=config.artifacts_root() / "origem",
++                        help="pasta do inventario novo (padrao: data/ml/origem)")
++    parser.add_argument("--modelo", type=Path, default=model_path(BACKEND_DIR.parent, TRACK),
++                        help="modelo do coach (padrao: o do repositorio, lido pelo app de desenvolvimento)")
++    parser.add_argument("--geometria-arquivo", type=Path, default=None)
++    parser.add_argument("--resumo", type=Path, default=None, help="JSON do resumo (padrao: <saida>/atualizar_coach.json)")
++    args = parser.parse_args(argv)
++
++    if INSTALLED_APP_FOLDER.lower() in str(args.modelo.resolve()).lower():
++        print(f"PARADO: {args.modelo} e o modelo do app instalado; este comando so grava o do repositorio.")
++        return 2
++    track = load_geometry()
++    args.saida.mkdir(parents=True, exist_ok=True)
++
++    print("1/5 inventario novo" + (" (pulado: --sem-varrer)" if args.sem_varrer else ""), flush=True)
++    if not args.sem_varrer:
++        report_lap_origin.scan(args.saida, track)
++    if not inventory_path(args.saida).exists():
++        print(f"PARADO: nenhum inventario em {args.saida}.")
++        return 2
++
++    print("2/5 anotacoes versionadas de 04/10 e 3/5 sessoes novas sem anotacao", flush=True)
++    applied = detector_ia.apply(args.saida, track, args.saida / "detector_aplicar.json", promote=False)
++    labelled = applied["sessao_rotulada_aplicada"]
++    print(f"   sessao de 04/10: {labelled['voltas']} voltas, {labelled['origem']}")
++    news = applied["sessoes_novas_sem_anotacao"]
++    print(f"   sessoes novas sem anotacao: {len(news)}")
++    for row in news:
++        print(f"     {row['sessao']}: {row['voltas']} voltas, origem {row['origem']}, fonte {row['fonte']}")
++
++    print("4/5 backup e treino do modelo do repositorio", flush=True)
++    backup = backup_model(args.modelo)
++    print(f"   backup: {backup if backup else '(nao havia modelo)'}")
++    train_args = ["--track", TRACK, "--inventario", str(inventory_path(args.saida)), "--saida", str(args.modelo)]
++    if args.geometria_arquivo:
++        train_args += ["--geometria-arquivo", str(args.geometria_arquivo)]
++    code = _train_script().main(train_args)
++    if code != 0:
++        print("PARADO: o treino nao gravou o modelo (acima, o motivo). O backup ficou onde estava.")
++        return code
++
++    print("5/5 resumo", flush=True)
++    model = DriverReferenceModel.load(args.modelo)
++    if model is None:
++        print(f"PARADO: o modelo gravado em {args.modelo} nao abre.")
++        return 2
++    result = summary(model, pd.read_parquet(inventory_path(args.saida)))
++    result["modelo"] = str(args.modelo)
++    result["backup"] = str(backup) if backup else None
++    result["sessoes_novas_sem_anotacao"] = news
++    result["sessao_rotulada"] = labelled
++    print_summary(result)
++    out = args.resumo or (args.saida / "atualizar_coach.json")
++    out.parent.mkdir(parents=True, exist_ok=True)
++    out.write_text(json.dumps(result, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
++    print(f"-> {out}")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/tools/ensaio_coach.py b/backend/tools/ensaio_coach.py
+index 0174bb81..bf7964f9 100644
+--- a/backend/tools/ensaio_coach.py
++++ b/backend/tools/ensaio_coach.py
+@@ -1,20 +1,27 @@
+-"""Ensaio do coach da fase de aprendizado (pedido 14, ADR 0016).
++"""Ensaio do coach da fase de aprendizado (pedidos 14 e 15, ADR 0016).
+ 
+     python tools/ensaio_coach.py --modelo M.json --geometria-arquivo G.json --saida ensaio.json
+-        [--sessao-prefixo 2026-10-04] [--voltas lap_id ...]
++        [--sessao-prefixo 2026-10-04] [--voltas lap_id ...] [--volta-destaque lap_id]
+ 
+ O coach roda amostra por amostra, na ordem gravada, sobre os arquivos da sessao
+-rotulada, nos dois modos de referencia. Cada frase fica ligada a volta do `ml`
+-em que foi dita (pelo relogio das amostras); contam as voltas `humano` do
+-inventario rotulado (ou as dadas em `--voltas`). O intervalo minimo entre falas
+-e zerado, como no replay: o de 3 s usa o relogio da maquina e, numa reproducao
+-rapida, calaria quase tudo. O teto de 3 frases por volta continua valendo.
++rotulada, nos dois modos de referencia. Um coach so atravessa todos os arquivos
++do dia, como o app aberto, para o foco (pedido 15) acompanhar a sessao. Cada
++frase fica ligada a volta do `ml` em que foi dita, pelo relogio da amostra
++anterior a fala: a frase do ultimo trecho e o resumo saem na amostra que ja
++cruzou a linha. Contam as voltas `humano` do inventario rotulado (ou as dadas
++em `--voltas`). O intervalo minimo entre falas e zerado, como no replay: o de
++3 s usa o relogio da maquina e, numa reproducao rapida, calaria quase tudo.
++
++Cada modo roda duas vezes: "antes", com o foco aberto a todos os microsetores
++(o coach do pedido 14: as 3 primeiras frases que passam do limiar), e "agora",
++com os 3 trechos de foco.
+ """
+ 
+ from __future__ import annotations
+ 
+ import argparse
+ import json
++import re
+ import sys
+ from collections import Counter
+ from pathlib import Path
+@@ -28,7 +35,7 @@ sys.path.insert(0, str(BACKEND))
+ 
+ from core.assisted_analysis.official_geometry import OfficialGeometry  # noqa: E402
+ from core.assisted_analysis.reference_model import REFERENCE_KINDS, DriverReferenceModel  # noqa: E402
+-from core.live.driving_coach import LiveDrivingCoach  # noqa: E402
++from core.live.driving_coach import FOCUS_EVENT, LiveDrivingCoach  # noqa: E402
+ from core.telemetry_events import COACHING_EVENT, ENGINEER_SPEECH  # noqa: E402
+ from ml import config  # noqa: E402
+ from ml.data.recordings import list_all_sessions  # noqa: E402
+@@ -54,14 +61,44 @@ def lap_finder(laps: pd.DataFrame):
+     return find
+ 
+ 
+-def run(model: DriverReferenceModel, kind: str, geometry, sessions, laps: pd.DataFrame) -> Dict[str, object]:
++def summary_sectors(text: str) -> List[int]:
++    """Os microsetores do resumo de fim de volta ("... setor 32 (0.67s), setor 38 ...")."""
++    return [int(k) for k in re.findall(r"setor (\d+) \(", text or "")]
++
++
++def where_they_fall(phrases: List[Dict[str, object]], lap_ids) -> Dict[str, object]:
++    """Quantas frases de trecho caem nos 3 maiores da propria volta (os do resumo) e onde na volta."""
++    lap_ids = set(lap_ids)
++    top = {p["volta"]: set(summary_sectors(p["texto"])) for p in phrases
++           if p["tipo"] == "fim de volta" and p["volta"] in lap_ids}
++    said = [p for p in phrases if p["tipo"] == "trecho" and p["volta"] in lap_ids]
++    judged = [p for p in said if p["volta"] in top]
++    hits = [p for p in judged if p["microsetor"] in top[p["volta"]]]
++    sectors = np.array([p["microsetor"] for p in said], dtype=float)
++    return {
++        "frases_de_trecho": len(said),
++        "frases_em_voltas_com_resumo": len(judged),
++        "nos_3_maiores_da_volta": len(hits),
++        "fracao_nos_3_maiores": round(len(hits) / len(judged), 3) if judged else None,
++        "microsetor_mediano": float(np.median(sectors)) if sectors.size else None,
++        "nos_microsetores_0_a_5": int((sectors <= 5).sum()),
++    }
++
++
++def run(model: DriverReferenceModel, kind: str, geometry, sessions, laps: pd.DataFrame, *,
++        open_focus: bool = False) -> Dict[str, object]:
+     model.use_reference(kind)
+     find = lap_finder(laps)
+     wanted = set(laps["lap_id"])
+     phrases: List[Dict[str, object]] = []
++    focus_lines: List[Dict[str, object]] = []
++    bus = Bus()
++    coach = LiveDrivingCoach(bus, lambda _t: model, geometry_provider=lambda _t: geometry, min_gap_seconds=0.0)
++    if open_focus:
++        # O coach do pedido 14: qualquer microsetor pode falar, as 3 primeiras frases da volta.
++        coach.focus_sectors = lambda m: (tuple(range(m.microsectors)), "todos")
+     for session in sessions:
+-        bus = Bus()
+-        coach = LiveDrivingCoach(bus, lambda _t: model, geometry_provider=lambda _t: geometry, min_gap_seconds=0.0)
++        previous_stamp = None
+         with (session.directory / "player.jsonl").open("r", encoding="utf-8") as handle:
+             for line in handle:
+                 try:
+@@ -70,19 +107,29 @@ def run(model: DriverReferenceModel, kind: str, geometry, sessions, laps: pd.Dat
+                     continue
+                 sample = dict(payload.get("sample", payload))
+                 sample.setdefault("track", payload.get("track"))
++                stamp = payload.get("timestamp") or sample.get("timestamp")
+                 before = len(bus.items)
+                 coach.on_frame(sample)
+                 for topic, item in bus.items[before:]:
+-                    stamp = payload.get("timestamp") or sample.get("timestamp")
+-                    lap_id = find(float(stamp) / 1000.0) if stamp is not None else None
++                    at = previous_stamp if previous_stamp is not None else stamp
++                    lap_id = find(float(at) / 1000.0) if at is not None else None
++                    if topic == COACHING_EVENT and item.get("type") == FOCUS_EVENT:
++                        if not open_focus:
++                            focus_lines.append({"sessao": session.session_id, "fim_da_volta": lap_id,
++                                                "foco": item.get("focusSectors"), "fonte": item.get("focusSource"),
++                                                "texto": item.get("event")})
++                        continue
+                     if lap_id not in wanted:
+                         continue
+                     phrases.append({
+                         "volta": lap_id,
+                         "tipo": "trecho" if topic == COACHING_EVENT else "fim de volta",
+                         "microsetor": (item.get("evidence") or {}).get("microsector") if topic == COACHING_EVENT else None,
++                        "foco": list(coach._focus or ()) if topic == COACHING_EVENT and not open_focus else None,
+                         "texto": item.get("event") if topic == COACHING_EVENT else item.get("message"),
+                     })
++                if stamp is not None:
++                    previous_stamp = stamp
+     per_lap = Counter(p["volta"] for p in phrases if p["tipo"] == "trecho")
+     counts = np.array([per_lap.get(lap_id, 0) for lap_id in sorted(wanted)])
+     sectors = Counter(p["microsetor"] for p in phrases if p["tipo"] == "trecho")
+@@ -107,6 +154,8 @@ def run(model: DriverReferenceModel, kind: str, geometry, sessions, laps: pd.Dat
+                              "mediana": float(np.median(counts)) if counts.size else 0.0,
+                              "max": int(counts.max()) if counts.size else 0},
+         "microsetores_mais_citados": [{"microsetor": int(k), "frases": int(v)} for k, v in sectors.most_common(10)],
++        "onde_caem": {"todas": where_they_fall(phrases, wanted), "validas": where_they_fall(phrases, valid_ids)},
++        "mudancas_de_foco": focus_lines,
+         "frases": phrases,
+     }
+ 
+@@ -118,6 +167,8 @@ def main(argv=None) -> int:
+     parser.add_argument("--saida", type=Path, required=True)
+     parser.add_argument("--sessao-prefixo", default="2026-10-04")
+     parser.add_argument("--voltas", nargs="*", default=None, help="lap_id do ml (padrao: as voltas humano da sessao)")
++    parser.add_argument("--volta-destaque", default="2026-10-04_03-21-52_vhe_interlagos#0002",
++                        help="volta mostrada em detalhe (padrao: a de 91,74 s)")
+     args = parser.parse_args(argv)
+ 
+     geometry = OfficialGeometry.load(args.geometria_arquivo)
+@@ -130,19 +181,32 @@ def main(argv=None) -> int:
+     laps = laps[laps["lap_id"].isin(args.voltas)] if args.voltas else laps[laps["origem"] == "humano"]
+     sessions = sorted((s for s in list_all_sessions() if s.session_id.startswith(args.sessao_prefixo)),
+                       key=lambda s: s.session_id)
+-    sessions = [s for s in sessions if s.session_id in set(laps["session_id"])]
+-
+-    result = {"modelo": str(args.modelo), "sessoes": [s.session_id for s in sessions], "modos": {}}
++    result = {"modelo": str(args.modelo), "sessoes": [s.session_id for s in sessions],
++              "volta_destaque": args.volta_destaque, "modos": {}}
+     for kind in REFERENCE_KINDS:
+         if kind not in model.references:
+             continue
+-        out = run(model, kind, geometry, sessions, laps)
+-        result["modos"][kind] = out
+-        print(f"{kind}: {out['voltas']} voltas, {out['frases_de_trecho']} frases de trecho "
+-              f"({out['frases_por_volta']}), {out['frases_de_fim_de_volta']} de fim de volta; "
+-              f"mais citados {out['microsetores_mais_citados'][:5]}")
+-        print(f"   so voltas validas: {out['voltas_validas']}")
+-    texts = [p["texto"] for m in result["modos"].values() for p in m["frases"]]
++        result["modos"][kind] = {}
++        for label, open_focus in (("antes", True), ("agora", False)):
++            out = run(model, kind, geometry, sessions, laps, open_focus=open_focus)
++            result["modos"][kind][label] = out
++            spotlight = [p for p in out["frases"] if p["volta"] == args.volta_destaque]
++            out["destaque"] = {
++                "trechos": [p["microsetor"] for p in spotlight if p["tipo"] == "trecho"],
++                "foco": next((p["foco"] for p in spotlight if p["tipo"] == "trecho"), None),
++                "resumo": [summary_sectors(p["texto"]) for p in spotlight if p["tipo"] == "fim de volta"],
++                "frases": [p["texto"] for p in spotlight],
++            }
++            print(f"{kind} {label}: {out['voltas']} voltas, {out['frases_de_trecho']} frases de trecho "
++                  f"({out['frases_por_volta']}), {out['frases_de_fim_de_volta']} de fim de volta; "
++                  f"mais citados {out['microsetores_mais_citados'][:5]}")
++            print(f"   so voltas validas: {out['voltas_validas']}")
++            print(f"   onde caem: {out['onde_caem']}")
++            print(f"   {args.volta_destaque}: {out['destaque']}")
++            if not open_focus:
++                changes = [(f["fim_da_volta"], f["foco"], f["fonte"]) for f in out["mudancas_de_foco"]]
++                print(f"   mudancas de foco: {changes}")
++    texts = [p["texto"] for m in result["modos"].values() for run_ in m.values() for p in run_["frases"]]
+     result["frases_proibidas"] = [t for t in texts if any(w in t.lower() for w in ("ganh", "ideal", "otimo"))]
+     args.saida.parent.mkdir(parents=True, exist_ok=True)
+     args.saida.write_text(json.dumps(result, indent=1, ensure_ascii=False), encoding="utf-8")
+diff --git a/docs/coach_aprendizado.md b/docs/coach_aprendizado.md
+index cd5bf652..0be56c07 100644
+--- a/docs/coach_aprendizado.md
++++ b/docs/coach_aprendizado.md
+@@ -100,7 +100,7 @@ O modelo do coach guarda as duas referências, as duas voltas reais e completas,
+ 
+ - **Cada frase nomeia a referência:** "Setor 2: 0.34s atras da volta da IA neste trecho (1.59s contra 1.25s). Minima da IA 157 km/h, a sua 122 km/h."
+ - **A freada vem em relação à referência,** quando a referência começa a frear naquele microsetor e você começou a frear a até 60 m dela: "A IA freia 34 m depois de voce" ou "Na sua melhor volta voce freou 7 m depois". O início de frenagem é o pedal passando de 0,15, o mesmo critério da Fase 2b, na referência e ao vivo.
+-- **No máximo 3 frases por volta:** as primeiras que passam do limiar.
++- **No máximo 3 frases por volta:** até o pedido 14, as primeiras que passavam do limiar; desde o pedido 15, só nos 3 trechos de foco, uma por trecho (seção 9).
+ - **No fim da volta, um resumo:** "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.67s), setor 38 (0.66s) e setor 43 (0.48s). Volta da IA: 84.83s." Diferenças que arredondam para 0,00 s ficam de fora.
+ - **Trechos não comparados:**
+   - o microsetor em que a contagem começa (parcial), exceto na linha de chegada;
+@@ -164,14 +164,9 @@ O coach rodou amostra por amostra sobre os arquivos da sessão, nos dois modos,
+ 
+ ## 7. Limitações
+ 
+-- **As 3 frases são as primeiras, não as maiores.** Contra a IA, o limiar é baixo para as diferenças que existem, e as 3 frases quase sempre caem no começo da volta (S do Senna, microsetores 0 a 3). As maiores diferenças só aparecem no resumo: na volta de 91,74 s, as frases foram para os setores 2, 11 e 12 (0,07 a 0,34 s), e os maiores foram 32, 38 e 43 (0,48 a 0,67 s). Se incomodar, as opções são subir o limiar contra a IA ou falar os 3 maiores de cada terço da volta, mas isso é decisão sua.
++- **As 3 frases eram as primeiras, não as maiores** (resolvido no pedido 15 com os trechos de foco, seção 9). Contra a IA, o limiar é baixo para as diferenças que existem, e as 3 frases quase sempre caem no começo da volta (S do Senna, microsetores 0 a 3). As maiores diferenças só aparecem no resumo: na volta de 91,74 s, as frases foram para os setores 2, 11 e 12 (0,07 a 0,34 s), e os maiores foram 32, 38 e 43 (0,48 a 0,67 s). Se incomodar, as opções são subir o limiar contra a IA ou falar os 3 maiores de cada terço da volta, mas isso é decisão sua.
+ - **A freada só aparece se você começou a frear a até 60 m do ponto da referência e antes de o microsetor terminar.** No ensaio, poucas frases trazem a freada (2 contra a IA e 1 contra a sua melhor).
+-- **As referências vêm de uma sessão só** (04/10), com 13 voltas da IA e 11 suas. A cada sessão nova:
+-  1. rode `python -m ml.scripts.report_lap_origin`, que refaz o inventário;
+-  2. rode `python -m ml.scripts.detector_ia aplicar`, que devolve os rótulos das anotações de 04/10 que o passo 1 apaga;
+-  3. rode `python tools/train_reference_model.py`.
+-
+-  Sessões só suas, sem Ctrl+C, saem `humano` pelo próprio indicador.
++- **As referências vêm de uma sessão só** (04/10), com 13 voltas da IA e 11 suas. A cada sessão nova, rode `python tools/atualizar_coach.py` (seção 10), que faz os passos que antes eram manuais.
+ - **O store do ML continua um passo curto** no microsetor 0 até a "Reconstrução do store" (backlog).
+ - **O app instalado continua com o coach antigo** e com o modelo antigo até ser reempacotado.
+ 
+@@ -196,4 +191,111 @@ O coach rodou amostra por amostra sobre os arquivos da sessão, nos dois modos,
+ 5. **Abra o Assetto Corsa** em Interlagos, com o `rss_formula_rss_3_v6_2026`. A gravação começa sozinha quando o carro entra na pista. As frases aparecem no painel "AI Coaching", com o rótulo **VOLTA DA IA** ou **SUA MELHOR**, e o resumo sai ao cruzar a linha.
+ 6. **O coach usa dois arquivos,** ambos fora do git: `data/reference_models/vhe_interlagos.json` (o modelo) e `data/reference_models/vhe_interlagos.geometry.json` (a geometria). Sem a geometria, o coach fica calado e avisa uma vez no log.
+ 7. **Para treinar sem o coach,** feche o app e renomeie `data/reference_models/vhe_interlagos.json` (do repositório). Devolva o nome depois.
+-8. **No fim, feche o app.** As sessões ficam em `data/recordings`. Para elas entrarem nas referências, siga a sequência da seção 7.
++8. **No fim, feche o app.** As sessões ficam em `data/recordings`. Para elas entrarem nas referências, rode `python tools/atualizar_coach.py` (seção 10).
++
++## 9. Trechos de foco (pedido 15)
++
++### Como o foco é escolhido
++
++- **Antes de cada volta,** o coach escolhe 3 trechos de foco: os 3 microsetores com a maior diferença mediana para a referência ativa, nas últimas 5 voltas válidas da sessão.
++- **Volta válida da sessão,** para o foco:
++  - começou na linha de chegada;
++  - teve todos os 60 microsetores comparados, então fica de fora a volta com box, com o carro parado ou que começou a contar no meio;
++  - não teve a IA no volante em nenhuma amostra.
++- **Enquanto a sessão não tem 5 voltas válidas,** o foco vem das suas voltas no modelo: a sua mediana em cada microsetor menos a referência ativa.
++- **Só entra no foco um trecho em que você está atrás,** com diferença mediana de pelo menos 0,005 s, o mesmo corte do resumo. Um modelo de uma volta só não tem foco, e o coach fica calado durante a volta.
++- **Trocar a referência ou o modelo** recomeça a contagem das 5 voltas.
++
++### O que o coach diz
++
++- **Durante a volta:** só nos trechos de foco, quando a diferença passa do limiar, e no máximo uma frase por trecho. Então são no máximo 3 frases por volta.
++- **No fim da volta:** o resumo dos 3 trechos de maior diferença, igual ao do pedido 14.
++- **Quando o foco muda:** uma linha no próprio feed, sem componente novo. Ela aparece como "FOCO NAS PROXIMAS VOLTAS: SETORES 32, 38 E 43" e, embaixo, de onde veio. Exemplo: "Maior diferenca mediana para a volta da IA nas ultimas 5 voltas validas da sessao".
++- **No replay de uma volta gravada,** a linha de foco não entra na lista de eventos da volta; ela vem à parte, no campo `focus`.
++
++### Ensaio nas suas voltas de 04/10 (antes e depois)
++
++O ensaio (`tools/ensaio_coach.py`) roda um coach só, atravessando todos os arquivos do dia, como o app aberto. Cada modo roda duas vezes:
++
++- **antes:** o coach do pedido 14, com o foco aberto a todos os microsetores;
++- **agora:** com os 3 trechos de foco.
++
++O "antes" reproduz as frases de trecho do ensaio do pedido 14, texto por texto: 94 e 79 frases, e na volta de 91,74 s os setores 2, 11 e 12. Dos resumos, um do modo `minha_melhor` sai da contagem (25 contra 26). O motivo: agora cada fala é ligada à volta pela amostra anterior a ela, porque o resumo sai na amostra que já cruzou a linha.
++
++**"Nos 3 maiores da volta"** quer dizer que a frase caiu num dos 3 setores que o resumo daquela mesma volta lista.
++
++| | volta_ia antes | volta_ia agora | minha_melhor antes | minha_melhor agora |
++|---|---|---|---|---|
++| frases de trecho, 32 voltas | 94 | 38 | 79 | 9 |
++| frases por volta, 11 válidas (média, máx.) | 3,0, 3 | 1,2, 2 | 2,5, 3 | 0,2, 1 |
++| nas válidas, frases nos 3 maiores da volta | 7 de 33 (21%) | 11 de 13 (85%) | 10 de 27 (37%) | 2 de 2 (100%) |
++| microsetor mediano das frases (válidas) | 2 | 43 | 9 | 35 |
++| frases nos microsetores 0 a 5 (válidas) | 27 | 1 | 6 | 0 |
++| mais citados (válidas) | 2, 0, 1, 3 | 43 (7), 38 (4), 36, 2 | 8, 2, 43, 47 | 32, 38 |
++| frases proibidas | 0 | 0 | 0 | 0 |
++
++**Como o foco mudou ao longo do dia:**
++
++- `volta_ia`: começou no modelo, com os setores 36, 38 e 43, e depois veio da sessão:
++  - 26, 38 e 43;
++  - 36, 38 e 43;
++  - 2, 38 e 43.
++- `minha_melhor`: começou no modelo, com os setores 32, 36 e 44, e depois veio da sessão:
++  - 26, 43 e 44;
++  - 36, 38 e 43;
++  - 36, 38 e 39.
++
++**Contra a sua melhor volta, o coach quase não fala.** O limiar é o mesmo nos dois modos (2× a sua oscilação), e a sua diferença para a sua própria melhor volta raramente passa dele nos trechos de foco. Antes, as frases passavam do limiar em trechos de pouca diferença, no começo da volta.
++
++**Na volta de 91,74 s** (`2026-10-04_03-21-52_vhe_interlagos#0002`), o resumo lista os setores 32 (0,67 s), 38 (0,66 s) e 43 (0,48 s).
++
++| | antes (pedido 14) | agora |
++|---|---|---|
++| `volta_ia` | setores 2, 11 e 12 (0,34, 0,07 e 0,07 s) | setores 38 (0,66 s) e 43 (0,48 s); foco 36, 38 e 43, do modelo |
++| `minha_melhor` | setor 32 (0,64 s) | setor 32 (0,64 s); foco 32, 36 e 44, do modelo |
++
++- **As frases foram todas para trechos de maior diferença da volta.**
++- **O maior da volta contra a IA, o 32, ficou sem frase,** porque não estava no foco. O foco é escolhido antes da volta, pela sua mediana: nas suas 11 voltas do modelo, o 32 custa 0,24 s contra a IA, o 6º maior. O 36 custa 0,42 s, o 38 custa 0,43 s e o 43 custa 0,48 s. Nesta volta você perdeu 0,67 s no 32, bem acima do seu normal ali, e o coach só mostra isso no resumo.
++
++### Limitação
++
++- **O indicador de IA fica travado depois do Ctrl+C** até a sessão do jogo reiniciar. Assim, as suas voltas depois de um Ctrl+C não contam para o foco da sessão, e o foco volta a ser o do modelo até a sessão do jogo ser reiniciada e você somar 5 voltas válidas.
++
++## 10. Atualizar o coach com um comando (pedido 15)
++
++Depois de uma sessão nova, feche o app e rode, na pasta `backend`:
++
++```
++..\.venv\Scripts\python.exe tools\atualizar_coach.py
++```
++
++O comando faz, em ordem:
++
++1. **Refaz o inventário novo** em `data/ml/origem/`, varrendo as duas pastas de gravações. A varredura só lê as gravações e leva cerca de 13 minutos. `--sem-varrer` pula este passo.
++2. **Aplica as anotações versionadas de 04/10.** Elas ficam em `docs/experimentos/2026-10-04_rotulos_por_volta.csv`: 53 voltas, pela identidade do ML, feitas das suas anotações por parte e volta do jogo (`2026-10-04_sessao_rotulada_anotacoes.csv`). O comando para se o arquivo não bater com o inventário ou com as suas anotações. Uma sessão gravada depois, mesmo no dia 04/10, não herda as anotações.
++3. **Rotula as sessões novas sem anotação** (equipamento `atual`):
++   - antes de a IA ligar pela primeira vez na sessão do jogo, a volta é `humano`, pelo indicador;
++   - a volta em que a IA liga é `misturada`;
++   - depois disso, o indicador fica travado em `ia`, e quem decide é o detector pela linha da IA (`ai_detector.LIMITS`, com a referência das voltas limpas da IA de 04/10);
++   - o que o detector não resolve, ou uma volta sem o campo do indicador, fica `desconhecida`.
++
++   As voltas do equipamento anterior continuam como o indicador diz, e o detector só grava as colunas `*_detector` delas, como no pedido 13.
++4. **Copia o modelo do repositório** para `data/reference_models/backup/vhe_interlagos.<data_hora>.antes-de-atualizar.json` e o treina de novo.
++5. **Imprime o resumo:**
++   - as duas referências;
++   - as voltas de cada origem;
++   - o limiar;
++   - o foco inicial de cada modo.
++
++   O resumo também fica em `data/ml/origem/atualizar_coach.json`.
++
++**O que o comando não faz:**
++
++- não reconstrói o store do ML;
++- não grava o modelo do app instalado, e recusa um `--modelo` dentro da pasta dele.
++
++**Quando ele para:** qualquer trava dos passos para o comando antes de treinar:
++
++- os rótulos de 04/10 que não batem com o inventário;
++- os microsetores e zonas do detector que não batem com a sessão rotulada;
++- nenhuma volta limpa sua para treinar.
+diff --git a/docs/experimentos/2026-10-04_rotulos_por_volta.csv b/docs/experimentos/2026-10-04_rotulos_por_volta.csv
+new file mode 100644
+index 00000000..0ad182ce
+--- /dev/null
++++ b/docs/experimentos/2026-10-04_rotulos_por_volta.csv
+@@ -0,0 +1,54 @@
++lap_id,parte,volta_jogo,origem,box,observacao
++2026-10-04_02-24-04_vhe_interlagos#0000,1,1,humano,sim,Saida dos boxes
++2026-10-04_02-24-04_vhe_interlagos#0001,1,2,humano,nao,Primeira volta pilotando
++2026-10-04_02-24-04_vhe_interlagos#0002,1,3,humano,nao,Segunda volta pilotando
++2026-10-04_02-24-04_vhe_interlagos#0003,1,4,misturada,sim,Retorno ao box pelo menu e saida dos boxes da IA (Ctrl+C)
++2026-10-04_02-24-04_vhe_interlagos#0004,1,5,ia,nao,Primeira volta IA
++2026-10-04_02-24-04_vhe_interlagos#0005,1,6,ia,nao,Segunda volta IA
++2026-10-04_02-24-04_vhe_interlagos#0006,1,7,ia,sim,Retorno ao box pelo menu e saida dos boxes da IA
++2026-10-04_02-24-04_vhe_interlagos#0007,1,8,misturada,nao,"IA pilotando setores 1 e 2, piloto no setor 3"
++2026-10-04_02-24-04_vhe_interlagos#0008,1,9,humano,sim,Piloto; voltou ao box; erros de pilotagem
++2026-10-04_02-24-04_vhe_interlagos#0009,1,10,humano,nao,Piloto; erros de pilotagem e velocidade abaixo do esperado
++2026-10-04_02-24-04_vhe_interlagos#0010,1,11,ia,nao,Nao numerada pelo piloto: 'agora quem esta dirigindo e a IA' (mensagem durante esta volta)
++2026-10-04_02-24-04_vhe_interlagos#0011,1,12,ia,nao,Nao numerada pelo piloto: IA ate o reinicio da sessao
++2026-10-04_02-24-04_vhe_interlagos#0012,1,13,ia,nao,Nao numerada pelo piloto: IA ate o reinicio da sessao
++2026-10-04_02-24-04_vhe_interlagos#0013,1,14,ia,nao,Nao numerada pelo piloto: IA; interrompida pelo reinicio da sessao
++2026-10-04_02-24-04_vhe_interlagos#0014,2,1,humano,sim,Sessao reiniciada; saida dos boxes; inicio das 20 voltas do piloto
++2026-10-04_02-24-04_vhe_interlagos#0015,2,2,humano,nao,"20 voltas do piloto, sem box (varias com falhas e erros)"
++2026-10-04_02-24-04_vhe_interlagos#0016,2,3,humano,nao,20 voltas do piloto
++2026-10-04_02-24-04_vhe_interlagos#0017,2,4,humano,nao,20 voltas do piloto
++2026-10-04_02-24-04_vhe_interlagos#0018,2,5,humano,nao,20 voltas do piloto
++2026-10-04_02-24-04_vhe_interlagos#0019,2,6,humano,nao,20 voltas do piloto
++2026-10-04_03-21-52_vhe_interlagos#0000,2,6,humano,nao,20 voltas do piloto
++2026-10-04_03-21-52_vhe_interlagos#0001,2,7,humano,nao,20 voltas do piloto
++2026-10-04_03-21-52_vhe_interlagos#0002,2,8,humano,nao,20 voltas do piloto
++2026-10-04_03-21-52_vhe_interlagos#0003,2,9,humano,nao,20 voltas do piloto
++2026-10-04_03-21-52_vhe_interlagos#0004,2,10,humano,nao,20 voltas do piloto
++2026-10-04_03-21-52_vhe_interlagos#0005,2,11,humano,nao,20 voltas do piloto
++2026-10-04_03-21-52_vhe_interlagos#0006,2,12,humano,nao,20 voltas do piloto
++2026-10-04_03-21-52_vhe_interlagos#0007,2,13,humano,nao,20 voltas do piloto (pausa: a gravacao foi dividida)
++2026-10-04_03-35-57_vhe_interlagos#0000,2,13,humano,nao,20 voltas do piloto (pausa: a gravacao foi dividida)
++2026-10-04_03-36-35_vhe_interlagos#0000,2,13,humano,nao,20 voltas do piloto (pausa: a gravacao foi dividida)
++2026-10-04_03-40-32_vhe_interlagos#0000,2,13,humano,nao,20 voltas do piloto (pausa: a gravacao foi dividida)
++2026-10-04_03-42-10_vhe_interlagos#0000,2,13,humano,nao,20 voltas do piloto (pausa: a gravacao foi dividida)
++2026-10-04_03-42-10_vhe_interlagos#0001,2,14,humano,nao,20 voltas do piloto
++2026-10-04_03-42-10_vhe_interlagos#0002,2,15,humano,nao,20 voltas do piloto
++2026-10-04_03-42-10_vhe_interlagos#0003,2,16,humano,nao,20 voltas do piloto
++2026-10-04_03-42-10_vhe_interlagos#0004,2,17,humano,nao,20 voltas do piloto
++2026-10-04_03-42-10_vhe_interlagos#0005,2,18,humano,nao,20 voltas do piloto
++2026-10-04_03-42-10_vhe_interlagos#0006,2,19,humano,nao,20 voltas do piloto
++2026-10-04_03-42-10_vhe_interlagos#0007,2,20,humano,nao,20 voltas do piloto
++2026-10-04_03-42-10_vhe_interlagos#0008,2,21,misturada,sim,Saida dos boxes BOT (IA ligada com Ctrl+C no box)
++2026-10-04_03-42-10_vhe_interlagos#0009,2,22,ia,nao,Bloco da IA
++2026-10-04_03-42-10_vhe_interlagos#0010,2,23,ia,nao,Bloco da IA
++2026-10-04_03-42-10_vhe_interlagos#0011,2,24,ia,nao,Bloco da IA
++2026-10-04_03-42-10_vhe_interlagos#0012,2,25,ia,nao,Bloco da IA
++2026-10-04_03-42-10_vhe_interlagos#0013,2,26,ia,nao,Bloco da IA
++2026-10-04_03-42-10_vhe_interlagos#0014,2,27,ia,nao,Bloco da IA
++2026-10-04_03-42-10_vhe_interlagos#0015,2,28,ia,nao,Bloco da IA
++2026-10-04_03-42-10_vhe_interlagos#0016,2,29,ia,nao,Bloco da IA
++2026-10-04_03-42-10_vhe_interlagos#0017,2,30,ia,nao,Bloco da IA
++2026-10-04_03-42-10_vhe_interlagos#0018,2,31,ia,nao,Bloco da IA
++2026-10-04_03-42-10_vhe_interlagos#0019,2,32,misturada,nao,"IA ate o 3o setor, depois o piloto (Ctrl+C)"
++2026-10-04_03-42-10_vhe_interlagos#0020,2,33,humano,nao,Piloto humano
++2026-10-04_04-22-39_vhe_interlagos#0000,2,33,humano,nao,Piloto humano
+diff --git a/frontend/src/components/CoachingFeed.test.ts b/frontend/src/components/CoachingFeed.test.ts
+index 32ed933a..3daff694 100644
+--- a/frontend/src/components/CoachingFeed.test.ts
++++ b/frontend/src/components/CoachingFeed.test.ts
+@@ -93,4 +93,14 @@ describe('renderEvidence', () => {
+     const line = renderEvidence(microsectorEvent({ optimalSeconds: null }));
+     expect(line).not.toContain('OTIMO');
+   });
++
++  it('shows the focus line of pedido 15 as a plain feed line', () => {
++    const focus = {
++      type: 'coaching_focus',
++      event: 'Foco nas proximas voltas: setores 32, 38 e 43',
++      evidence: 'Maior diferenca mediana para a volta da IA nas suas voltas do modelo.',
++    };
++    expect(microsectorEvidence(focus)).toBeNull();
++    expect(renderEvidence(focus)).toBe('Maior diferenca mediana para a volta da IA nas suas voltas do modelo.');
++  });
+ });
