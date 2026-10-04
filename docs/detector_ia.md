@@ -50,7 +50,37 @@ Todas as outras voltas concordam. Por isso **o rótulo da sessão vem das anota�
 
 ## 2. A variação do piloto e a da IA
 
-*(preenchido depois de calcular)*
+Contam só as voltas limpas da sessão rotulada (válidas, únicas, com o relógio conferido e sem box): 11 voltas suas e 13 da IA. As janelas são as da Fase 2b.
+
+| | suas voltas (equipamento atual) | IA |
+|---|---:|---:|
+| Bico de Pato (2.590 a 3.080 m), tempo médio | 13,54 s | 11,43 s |
+| desvio entre voltas no Bico de Pato | **0,91 s** (robusto 0,62 s) | **0,012 s** |
+| o mesmo, sem a tendência da sessão (diferenças sucessivas) | 0,82 s | 0,010 s |
+| dispersão do ponto de frenagem (mediana das janelas) | 14,7 m | 1,0 m |
+| dispersão da lateral no ápice (mediana das janelas) | 1,84 m | 0,04 m |
+| tempo de volta: média e desvio | 93,58 s ± 2,40 s | 84,99 s ± 0,13 s |
+| melhor volta válida e completa | 89,379 s (parte 2, volta 5) | 84,816 s (parte 2, volta 25) |
+
+Nas janelas da Fase 2b, a sua dispersão da frenagem vai de 7,0 m (Bico de Pato) a 50,3 m (Ferradura), e a do ápice vai de 1,1 m a 7,9 m. No Pinheirinho, menos de 3 das suas voltas tiveram início de frenagem detectado.
+
+**A sua variação é de outra ordem que a usada até agora.** O cálculo do experimento usava de 14 a 35 ms no Bico de Pato, números que vinham das sessões de 09/08 e 20/06, ou seja, da IA (ADR 0014). A sua variação, com o equipamento novo e no começo da curva de aprendizado (ADR 0015), é cerca de 0,8 a 0,9 s: umas 60 vezes maior.
+
+### Tamanho do experimento controlado
+
+Voltas por condição para detectar o efeito com 80 % de chance, no desenho em blocos de 4 do protocolo. A fórmula é a do protocolo; usando o próprio plano (`make_plan`) analisado por `estimate_effects`, o poder simulado dá de 76 a 79 % no efeito previsto.
+
+| efeito | efeito principal (frenagem ou linha) | uma condição contra outra |
+|---|---:|---:|
+| 15 ms | 23.448 | 46.895 |
+| 30 ms | 5.862 | 11.724 |
+| 50 ms | 2.111 | 4.221 |
+
+O desvio usado é 0,82 s, sem a tendência da sessão. Com o desvio simples (0,91 s), os números crescem cerca de 22 %.
+
+Ao contrário: com as 8 voltas por condição do protocolo, o experimento só detecta um efeito principal a partir de 0,81 s, ou uma diferença entre duas condições a partir de 1,15 s. Com 32 voltas por condição, a partir de 0,41 s e 0,57 s.
+
+**Com a variação de hoje, o experimento não mede efeitos de 15 a 50 ms.** Isso combina com o ADR 0015: o experimento espera a curva de aprendizado estabilizar. Quando a mediana do tempo de volta das últimas 3 sessões variar menos de 0,5 s, a variação no Bico de Pato deve ser medida de novo e o cálculo refeito. Não gerei um plano novo, porque nenhum tamanho viável chega lá hoje.
 
 ## 3. O detector (registrado antes de olhar as voltas antigas)
 
@@ -103,6 +133,67 @@ Cada volta da IA é medida contra a referência feita sem ela.
 
 Os limites cumprem a meta do pedido: pelo menos 95 % de acerto em cada origem. A amostra, porém, é de um dia, um carro e uma configuração da IA. A prova de verdade vem nas voltas antigas, conferidas abaixo com as datas lembradas e com as sessões mais variáveis do pedido 12.
 
-## 4. As voltas antigas
+## 4. As voltas antigas: parei aqui
 
-*(preenchido depois de aplicar)*
+A regra registrada foi aplicada, depois do commit `0fe5471a`, às 688 voltas antigas válidas e únicas das duas pastas:
+
+| resultado | voltas |
+|---|---:|
+| box (ficam sem rótulo) | 136 |
+| linha indefinida | 467 |
+| linha diz `ia`, frenagem discorda | 10 |
+| rotuladas | **75**: 35 `ia`, 8 `humano`, 32 `misturada` |
+
+**89 % das voltas antigas ficaram `desconhecida`.** Pelo pedido, quando a separação não é clara, eu não forço: relato as distribuições e paro. Por isso nada foi promovido. As voltas antigas continuam com `origem = desconhecida` no inventário novo, e o que o detector disse está só nas colunas `origem_detector`, `motivo_detector` e `linha_detector`. Também não fiz o merge.
+
+### Por que a regra se absteve
+
+A minha primeira hipótese era que a IA antiga andasse por outra linha. As distribuições mostram o contrário:
+
+- **Linha:** nas 552 voltas antigas sem box, a distância lateral mediana até a linha da IA de hoje, nos 40 microsetores que contam, é **0,031 m** (p10 0,023 m, p90 0,044 m). É o mesmo que as voltas da IA de hoje têm entre si (cerca de 0,03 m), e muito longe das suas voltas de hoje (1,1 a 2,1 m).
+- **Sessões de 07/08, 08/08 e 09/08:** todas as voltas ficam a 2,5–4,4 cm da IA de hoje e a 0,5–2 cm das outras voltas da mesma sessão. Fecham em 85,8 a 86,3 s (medianas por sessão) e ficam perto da IA em 39 dos 40 microsetores.
+- **O que falha:**
+  - o **microsetor 41** (2.962 a 3.034 m) fica a mais de 0,25 m da IA de hoje em 469 das 534 voltas antigas rápidas. A IA de hoje se repete ali a até 0,024 m;
+  - nas zonas de frenagem de **126 m e 1.206 m**, as voltas antigas freiam a 8 m e 6 m da IA de hoje (medianas). Por isso a mediana da volta fica em 2 a 5 m, em torno do limite de 4 m.
+
+Ou seja, essas voltas antigas se comportam como a IA, a 3 cm da linha dela. Mas num lugar da pista e em duas freadas a IA daquela época fazia um pouco diferente, talvez por acerto, combustível, pneu ou configuração da IA. A regra registrada exige os 40 microsetores e frenagem até 4 m, então ela se abstém. Afrouxá-la agora, depois de ver as voltas antigas, seria forçar.
+
+### O que o detector disse (registrado, não promovido)
+
+| grupo | voltas | ia | humano | misturada | desconhecida (box) |
+|---|---:|---:|---:|---:|---:|
+| datas que você lembra (14/06 a 20/06 e 09/08) | 428 | 11 | 0 | 29 | 388 (86) |
+| outras datas | 260 | 24 | 8 | 3 | 225 (50) |
+
+As 4 sessões que mais variavam no pedido 12:
+
+| sessão | ia | humano | misturada | desconhecida (box) |
+|---|---:|---:|---:|---:|
+| `2026-06-19_23-24-46` | 0 | 0 | 3 | 1 (0) |
+| `2026-06-20_13-13-02` | 0 | 0 | 22 | 17 (8) |
+| `2026-08-16_03-30-14` | 3 | 3 | 1 | 0 (0) |
+| `2026-08-19_20-58-36` | 2 | 5 | 0 | 3 (3) |
+
+O que bate com o que você lembra e com o pedido 12:
+
+- As 8 voltas `humano` estão todas nas sessões variáveis de 16/08 e 19/08. Nenhuma está nas datas que você lembra como IA.
+- As `misturada` se concentram em 18/06, 19/06 e 20/06, datas em que você lembra de alternar.
+
+O que não bate:
+
+- **07/08 e 08/08**, que você não lembra como IA, são iguais às de 09/08 em todas as medidas: 2,5–3,1 cm da IA de hoje, 39 de 40 microsetores e 85,8–86,0 s. O detector se absteve nelas pelo mesmo motivo, mas as distribuições apontam IA.
+- **`2026-08-19_22-23-14`**, também fora das datas lembradas, tem 14 voltas `ia`. É dela a volta de referência do modelo de ensaio do pedido 11.
+
+Quantas voltas antigas são suas: pelo detector, 8 com certeza e talvez parte das 32 misturadas. Pelo ADR 0015, elas são do equipamento anterior e não entram nos números sobre você de qualquer jeito.
+
+### Para decidir
+
+1. **Deixar como está.** As voltas antigas ficam `desconhecida`; para o piloto valem só as voltas novas (ADR 0015); a referência da IA é a sessão de hoje. É o que o inventário novo tem agora.
+2. **Promover os 75 rótulos atuais** (`python -m ml.scripts.detector_ia aplicar --promover`). As 35 `ia` são as mais sólidas, porque batem com a IA de hoje em todos os 40 microsetores e nas freadas. As `misturada` de 20/06 são as mais incertas.
+3. **Uma regra nova para as voltas antigas**, por exemplo aceitando 1 microsetor fora e frenagem até 8 m. Como seria desenhada depois de ver as voltas antigas, precisaria ser validada numa sessão rotulada nova antes de ser aplicada.
+
+## O que falta
+
+- A sua decisão sobre as voltas antigas (acima) e sobre o merge desta branch.
+- **Medir de novo a variação no Bico de Pato** quando a curva de aprendizado estabilizar (ADR 0015), e refazer o tamanho do experimento.
+- **Reempacotar o app instalado** com o gravador novo. Lembrando que o indicador do jogo só prova que a IA nunca foi ligada; depois do primeiro Ctrl+C, quem pilota sai da linha e das anotações.

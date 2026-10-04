@@ -171,3 +171,23 @@ class RegisteredLimitsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ExperimentSizeTests(unittest.TestCase):
+    """O tamanho do experimento usa a formula do protocolo, conferida no plano em blocos."""
+
+    def test_the_protocol_numbers_come_back(self):
+        from ml.scripts.detector_ia import detectable, laps_needed
+
+        # Protocolo: 8 voltas por condicao, efeito principal detecta cerca de 1 desvio.
+        self.assertEqual(laps_needed(0.014, 0.014, "frenagem"), 8)
+        self.assertAlmostEqual(detectable(8, 0.014, "frenagem"), 0.0139, places=4)
+        # Uma condicao contra outra precisa do dobro de voltas.
+        self.assertEqual(laps_needed(0.014, 0.014, "B_menos_A"), 16)
+
+    def test_the_simulated_plan_agrees_with_the_formula(self):
+        from ml.scripts.detector_ia import detectable, power
+
+        achieved = power(8, 0.05, detectable(8, 0.05, "frenagem"), "frenagem", sims=600)
+        self.assertGreater(achieved, 0.68)
+        self.assertLess(achieved, 0.88)

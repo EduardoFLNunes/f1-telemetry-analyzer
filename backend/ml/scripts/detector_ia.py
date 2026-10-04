@@ -261,17 +261,22 @@ def power(n: int, sigma: float, effect: float, contrast: str, sims: int = 2000, 
     return hits / sims
 
 
-def laps_needed(sigma: float, effect: float, contrast: str, target: float = 0.8, max_n: int = 400) -> Optional[int]:
-    """Menor numero de voltas por condicao com poder >= alvo (busca pela formula, conferida por simulacao)."""
-    z = 1.96 + 0.8416
-    scale = 1.0 if contrast in ("frenagem", "linha") else 2.0   # efeito principal: 2n contra 2n
-    guess = max(2, int(np.ceil(scale * (z * sigma / effect) ** 2)))
-    n = max(2, guess - 2)
-    while n <= max_n:
-        if power(n, sigma, effect, contrast) >= target:
-            return n
-        n += 1
-    return None
+Z_80 = 1.96 + 0.8416   # IC 95 % e poder de 80 %, como no protocolo
+
+
+def contrast_scale(contrast: str) -> float:
+    """Efeito principal compara 2n contra 2n voltas; uma condicao contra outra, n contra n."""
+    return 1.0 if contrast in ("frenagem", "linha") else 2.0
+
+
+def laps_needed(sigma: float, effect: float, contrast: str) -> int:
+    """Voltas por condicao para detectar `effect` com 80 % de chance (formula do protocolo)."""
+    return int(np.ceil(contrast_scale(contrast) * (Z_80 * sigma / effect) ** 2))
+
+
+def detectable(n: int, sigma: float, contrast: str) -> float:
+    """Menor efeito detectavel com 80 % de chance com n voltas por condicao."""
+    return float(Z_80 * sigma * np.sqrt(contrast_scale(contrast) / n))
 
 
 def variation(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
@@ -310,21 +315,29 @@ def variation(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
         }
 
     human = out[origin.HUMAN]["bico_de_pato_s"]
-    sizes = {}
+    sizes, check = {}, {}
     for key in ("dp_diferencas_sucessivas", "dp"):
         sigma = human.get(key)
         if not sigma:
             continue
         sizes[key] = {
-            f"{ms}_ms": {
-                contrast: laps_needed(sigma, ms / 1000.0, contrast) for contrast in ("frenagem", "B_menos_A")
-            }
+            f"{ms}_ms": {contrast: laps_needed(sigma, ms / 1000.0, contrast) for contrast in ("frenagem", "B_menos_A")}
             for ms in EFFECTS_MS
+        }
+        sizes[key]["detectavel_com_8_voltas_s"] = {c: detectable(8, sigma, c) for c in ("frenagem", "B_menos_A")}
+        sizes[key]["detectavel_com_32_voltas_s"] = {c: detectable(32, sigma, c) for c in ("frenagem", "B_menos_A")}
+        # A formula conferida no proprio plano: com o efeito detectavel, o poder
+        # simulado tem de dar perto de 80 %.
+        check[key] = {
+            f"{n}_voltas_{c}": power(n, sigma, detectable(n, sigma, c), c)
+            for n in (8, 32) for c in ("frenagem", "B_menos_A")
         }
     out["tamanho_do_experimento"] = {
         "sigma_bico_de_pato_s": {k: human.get(k) for k in ("dp_diferencas_sucessivas", "dp")},
         "voltas_por_condicao_para_80pct": sizes,
-        "como": "simulacao do plano em blocos (make_plan) analisado por estimate_effects, 2000 sessoes por n",
+        "poder_simulado_no_efeito_detectavel": check,
+        "como": "formula do protocolo (z = 1,96 + 0,84), conferida simulando o plano em blocos "
+                "(make_plan) analisado por estimate_effects, 2000 sessoes por ponto",
     }
     json_path.parent.mkdir(parents=True, exist_ok=True)
     json_path.write_text(json.dumps(out, indent=1, ensure_ascii=False, default=float), encoding="utf-8")
@@ -333,7 +346,9 @@ def variation(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
 
 # ----------------------------------------------------------- aplicar ---
 
-def apply(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
+def apply(out_dir: Path, track, json_path: Path, promote: bool = False) -> Dict[str, object]:
+    """Aplica o detector registrado. Sem `promote`, o resultado fica so nas colunas
+    `*_detector`: a `origem` das voltas antigas so muda quando o piloto decidir."""
     limits = det.LIMITS
     if limits is None:
         raise SystemExit("PARADO: os limites do detector ainda nao foram registrados (ai_detector.LIMITS).")
@@ -370,7 +385,13 @@ def apply(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
         by_id.at[lap_id, "origem_fonte"] = (
             origin.SOURCE_INDICATOR if r["origem_indicador"] == note else origin.SOURCE_ANNOTATION
         )
-    old = by_id[(by_id["equipamento"] == origin.PREVIOUS_EQUIPMENT) & by_id["valid"].astype(bool) & by_id["duplicada_de"].isna()]
+    # Volta ao que o indicador diz antes de aplicar: rodar de novo da o mesmo resultado.
+    previous = by_id["equipamento"] == origin.PREVIOUS_EQUIPMENT
+    by_id.loc[previous, "origem"] = by_id.loc[previous, "origem_indicador"]
+    by_id.loc[previous, "origem_fonte"] = [
+        origin.SOURCE_INDICATOR if value != origin.UNKNOWN else None for value in by_id.loc[previous, "origem_indicador"]
+    ]
+    old = by_id[previous & by_id["valid"].astype(bool) & by_id["duplicada_de"].isna()]
     for lap_id, r in old.iterrows():
         if lap_id not in grids:
             continue
@@ -378,7 +399,7 @@ def apply(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
         by_id.at[lap_id, "origem_detector"] = verdict["origem_detector"]
         by_id.at[lap_id, "motivo_detector"] = verdict["motivo"]
         by_id.at[lap_id, "linha_detector"] = verdict["linha"]
-        if verdict["origem_detector"] != origin.UNKNOWN:
+        if promote and verdict["origem_detector"] != origin.UNKNOWN:
             by_id.at[lap_id, "origem"] = verdict["origem_detector"]
             by_id.at[lap_id, "origem_fonte"] = origin.SOURCE_DETECTOR
     out_inv = by_id.reset_index()
@@ -402,6 +423,7 @@ def apply(out_dir: Path, track, json_path: Path) -> Dict[str, object]:
     totals = applied["origem_detector"].fillna(origin.UNKNOWN).value_counts().to_dict()
     result = {
         "limites": limits.__dict__,
+        "promovido_a_origem": bool(promote),
         "referencia_ia": {"voltas": ai_ids, "zonas_de_frenagem_m": [round(float(z), 1) for z in reference.braking_s]},
         "sessao_rotulada": {"acerto": hits, "voltas": scored},
         "voltas_antigas": {"aplicadas": int(len(applied)), "totais": totals,
@@ -418,11 +440,15 @@ def main(argv=None) -> int:
     parser.add_argument("comando", choices=["calibrar", "variacao", "aplicar"])
     parser.add_argument("--saida", type=Path, default=config.artifacts_root() / "origem")
     parser.add_argument("--json", type=Path, default=None)
+    parser.add_argument("--promover", action="store_true",
+                        help="aplicar: grava o rotulo do detector tambem em `origem` (decisao do piloto)")
     args = parser.parse_args(argv)
     track = load_geometry()
     json_path = args.json or (args.saida / f"detector_{args.comando}.json")
-    run = {"calibrar": calibrate, "variacao": variation, "aplicar": apply}[args.comando]
-    result = run(args.saida, track, json_path)
+    if args.comando == "aplicar":
+        result = apply(args.saida, track, json_path, promote=args.promover)
+    else:
+        result = {"calibrar": calibrate, "variacao": variation}[args.comando](args.saida, track, json_path)
     print(json.dumps({k: v for k, v in result.items() if k not in ("por_volta", "indicador_contra_anotacao",
                                                                      "microsetores_das_misturadas", "sessoes")},
                      indent=1, ensure_ascii=False, default=float)[:6000])
