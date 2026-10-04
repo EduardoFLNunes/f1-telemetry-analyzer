@@ -31,3 +31,46 @@ Ao preparar o passo 3, medi o tempo de volta e o microsetor 0 nas 5 voltas de (c
 - **O que isso explica:** é o "+26 ms" do critério (c) no pedido 11. O coach estava certo e o store, curto. Explica também o viés de −0,034 s do relógio no microsetor 0 no pedido 12: −26 ms deste passo, mais o viés de −8 ms que aparece em todo microsetor.
 
 **Consequência para o critério (c):** com o coach seguindo a convenção de s = 0 interpolado (passo 3), o microsetor 0 e a soma vão diferir do store em cerca de 26 ms, acima do limite de 20 ms, por causa do store. O critério continua como foi escrito, contra o store. Para a decisão, o relatório trará também, **sem valer como critério**, a mesma comparação contra os microsetores do ML recalculados com o período verdadeiro. Não mexi no ML nem no store.
+
+## 2. O que mudou no coach (Parte B)
+
+### Linha de chegada (passo 3)
+
+- **Microsetores fora da pista** (`reference_model.microsector_splits`), usados no treino, no replay e no critério (c): a volta vai de s = 0 a s = 0. A bandeira é interpolada no fim da volta, onde a gravação passa por s = 0 alguns metros antes de o jogo zerar o cronômetro. O início é a bandeira menos um período, o tempo entre duas passagens pelo primeiro ponto da volta. Antes, o início era extrapolado para trás a partir da primeira amostra.
+- **Ao vivo** (`driving_coach.on_frame`, modelo na geometria oficial): a volta vira na passagem por s = 0, interpolada entre as duas amostras. Antes, virava quando o contador de voltas do jogo mudava, alguns metros depois. Um salto de mais de 5 % da volta que não seja a linha (box pelo menu, reset) recomeça a contagem sem falar.
+- **Relógio:** é o cronômetro do jogo, que é o relógio da física. Na virada, ele é costurado pela distância entre as duas amostras sobre a velocidade. O `timestamp` do gravador não serve: ele engasga (medido em 04/10, +357 ms numa amostra e +2 ms na seguinte, com o carro andando 21 m).
+- **O viés de −0,034 s do relógio no microsetor 0 (pedido 12) tem a mesma causa** do "+26 ms" do pedido 11: o store do ML encurta a volta e o microsetor 0 em um passo da grade (seção 1). São −26 ms do passo, mais o viés geral de −8 ms.
+
+### Continuidade (passo 4)
+
+- **`MapMatchingEngine` ganhou um limite rígido de avanço por amostra:** velocidade × intervalo × 1,5 + 5 m. Sem velocidade ou intervalo, vale 60 m, como no ML. Dentro do limite, vence o trecho mais perto, sem a penalidade antiga. Se nada dentro dele está a menos de 50 m do carro, o carro foi movido de verdade, e a projeção acompanha.
+- **A opção fica desligada por padrão,** e só o projetor do coach (`CoachProjector`) a liga. Mapa e painel não mudaram.
+
+### Rodadas dos critérios
+
+Os critérios e os limites não mudaram entre as rodadas. Cada correção resolveu um defeito de implementação com causa medida.
+
+| rodada | código | a | b | c | d | e | o que corrigiu |
+|---|---|---|---|---|---|---|---|
+| 1 | `fe88367f` | passou | falhou (p99 1,98 ms) | falhou | passou | falhou (até 17,3 m) | o intervalo vinha do `timestamp`, que engasga, e o motor calculava a normal de todo candidato. Além disso, a suíte rodava em paralelo |
+| 2 | `66e4b720` | passou | passou (0,94 ms) | falhou | passou | falhou (até 8,0 m) | depois de um buraco de gravação, a penalidade antiga preferia um ponto 8 m atrás |
+| 3 | `c753df6d` | passou | passou | **falhou** | passou | passou | — |
+
+### Números da rodada 3
+
+| | critério | medido | resultado |
+|---|---|---|---|
+| **a** MergeFix (39 voltas) | p99 \|Δs\| ≤ 0,5 m; p99 \|Δd\| ≤ 0,2 m | \|Δs\| p99 0,037 m (máx. 31,4 m, fora das voltas limpas); \|Δd\| p99 0,0018 m | passou |
+| **a** cache atual (7 voltas) | idem | \|Δs\| p99 0,036 m (máx. 0,04 m); \|Δd\| p99 0,0015 m | passou |
+| **a** sem cache (52 voltas) | idem | \|Δs\| p99 0,037 m (máx. 29,9 m, fora das voltas limpas); \|Δd\| p99 0,0019 m | passou |
+| **b** (582.527 amostras) | p99 ≤ 1 ms | p50 0,33 ms, p99 0,91 ms | passou |
+| **c** (5 voltas) | ≤ 0,02 s por microsetor; soma = tempo do store ± 0,02 s | microsetor 0: +0,026 a +0,029 s; microsetores 1 a 59: no máximo 0,002 a 0,004 s; soma − store: +0,026 a +0,029 s | **falhou** |
+| **d** (20/06 e 09/08) | nenhuma frase proibida | 303 frases, 0 proibidas | passou |
+| **e** (voltas limpas de 7 arquivos com voltas limpas) | \|Δs\| máx. ≤ 2 m por sessão | 0,04 a 0,31 m | passou |
+
+**Diagnóstico do (c), que não vale como critério.** Contra os microsetores do ML com o período verdadeiro, a diferença máxima por microsetor fica entre 0,002 e 0,004 s, e a soma bate com o período com diferença de 0,1 a 1,4 ms. Nas 5 voltas, o (c) só falha pelo passo do store no microsetor 0. Os ±78 ms entre os microsetores 25 e 26 da volta de 20/06, vistos no pedido 11, sumiram com a continuidade rígida.
+
+## 3. Parada
+
+Pelo pedido, com o (c) falhando, parei antes da Parte C. Não fiz merge, não treinei nem regravei modelo e não mexi no ML nem no store. A decisão do que fazer com o store está no relatório.
+
