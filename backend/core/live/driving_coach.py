@@ -118,8 +118,8 @@ class LiveDrivingCoach:
         self._lap_loss_optimal: float = 0.0
         self._lap_worst: Optional[Dict[str, Any]] = None
         self._warned_missing_reference = False
-        self._last_projection_clock: Optional[float] = None
         self._last_lap_clock: Optional[float] = None
+        self._last_clock_s: Optional[float] = None
         self._clock_offset = 0.0
 
     # ── the hot path ─────────────────────────────────────────────────────
@@ -137,13 +137,26 @@ class LiveDrivingCoach:
         if not self._usable(model):
             return
         on_geometry = bool(getattr(model, "geometry_id", None))
-        # On the official geometry the lap turns at `s = 0`, a few metres before
-        # the game resets its lap timer -- so the clock there has to run through
-        # the line (pedido 14). The legacy `p` path keeps the lap timer.
-        clock = self._continuous_clock(frame, lap_clock) if on_geometry else lap_clock
-        progress = self._progress(frame, model, clock)
-        if progress is None or not (0.0 <= progress <= 1.0):
-            return
+        if on_geometry:
+            # The game's lap timer is the physics clock; the recorder's wall-clock
+            # `timestamp` stutters (measured: +357 ms on one sample, +2 ms on the
+            # next, while the car moved 21 m). It sizes the projection's hard
+            # continuity, and it times the slices.
+            dt = (
+                lap_clock - self._last_lap_clock
+                if self._last_lap_clock is not None and lap_clock >= self._last_lap_clock else None
+            )
+            progress = self._progress(frame, model, dt)
+            if progress is None or not (0.0 <= progress <= 1.0):
+                return
+            # The lap turns at `s = 0`, a few metres before the game resets its
+            # timer, so the clock has to run through the line (pedido 14).
+            clock = self._physics_clock(frame, lap_clock, progress)
+        else:
+            clock = lap_clock
+            progress = self._progress(frame, model)
+            if progress is None or not (0.0 <= progress <= 1.0):
+                return
 
         lap_number = _number(frame.get("lap_number") or frame.get("lap"))
         index = min(int(progress * model.microsectors), model.microsectors - 1)
@@ -273,21 +286,27 @@ class LiveDrivingCoach:
         else:
             self._emit_reference_event(frame, model, target, split, loss)
 
-    def _continuous_clock(self, frame: Dict[str, Any], lap_clock: float) -> float:
-        """A clock that runs through the finish line, in seconds.
+    def _physics_clock(self, frame: Dict[str, Any], lap_clock: float, progress: float) -> float:
+        """The game's lap timer, stitched across its resets into one clock.
 
-        The sample's `timestamp` (epoch, ms) when there is one. Without it, the
-        lap timer with its resets stitched together.
+        Where the timer resets, the time between the last sample of the old lap
+        and the first of the new one is the distance between them over the
+        speed: the line sits somewhere in between, and the two samples are a
+        metre or so apart.
         """
-        stamp = _number(frame.get("timestamp"))
-        if stamp is not None:
-            return stamp / 1000.0 if stamp > 100_000_000_000.0 else stamp
-        if self._last_lap_clock is not None and lap_clock < self._last_lap_clock - 1.0:
-            self._clock_offset += self._last_lap_clock
+        length = self._projector.geometry.length if self._projector is not None else 1.0
+        s = progress * length
+        if self._last_lap_clock is not None and self._last_clock_s is not None and lap_clock < self._last_lap_clock - 1.0:
+            travelled = (s - self._last_clock_s) % length
+            speed_kmh = _number(frame.get("speedKmh"))
+            speed = speed_kmh / 3.6 if speed_kmh is not None else _number(frame.get("speed"))
+            between = travelled / speed if speed is not None and speed > 1.0 else 0.0
+            self._clock_offset += self._last_lap_clock + between - lap_clock
         self._last_lap_clock = lap_clock
+        self._last_clock_s = s
         return lap_clock + self._clock_offset
 
-    def _progress(self, frame: Dict[str, Any], model: Any, clock: Optional[float] = None) -> Optional[float]:
+    def _progress(self, frame: Dict[str, Any], model: Any, dt: Optional[float] = None) -> Optional[float]:
         """Where in the lap the car is, 0 to 1, on the ruler the model was fitted on."""
         if not getattr(model, "geometry_id", None):
             return _number(frame.get("p") if frame.get("p") is not None else frame.get("lapProgress"))
@@ -301,8 +320,6 @@ class LiveDrivingCoach:
         # Speed and interval size the projection's hard continuity (pedido 14).
         speed_kmh = _number(frame.get("speedKmh"))
         speed = speed_kmh / 3.6 if speed_kmh is not None else _number(frame.get("speed"))
-        dt = clock - self._last_projection_clock if clock is not None and self._last_projection_clock is not None else None
-        self._last_projection_clock = clock
         s, _ = projector.project(x, z, speed_mps=speed, dt_s=dt)
         return s / projector.geometry.length
 

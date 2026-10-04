@@ -178,3 +178,20 @@ class LiveFinishLineTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WallClockStutterTest(LiveFinishLineTest):
+    def test_a_stutter_in_the_recorder_clock_changes_nothing(self):
+        """Medido em 04/10: o `timestamp` do gravador andou 357 ms numa amostra e 2 ms na
+        seguinte, com o cronometro do jogo certo. O coach usa o cronometro."""
+        frames = drive_across_laps(self.track, 3, speed=self.speed, slow=(1, 30, 0.8))
+        clean = self.run_coach([dict(f) for f in frames])
+        for i in range(200, len(frames), 400):
+            frames[i]["timestamp"] += 357.0
+            frames[i + 1]["timestamp"] += 2.0 - (frames[i + 1]["timestamp"] - frames[i]["timestamp"])
+        stuttered = self.run_coach(frames)
+        self.assertEqual(
+            [e["evidence"]["yourSeconds"] for e in clean.of(COACHING_EVENT)],
+            [e["evidence"]["yourSeconds"] for e in stuttered.of(COACHING_EVENT)],
+        )
+        self.assertTrue(clean.of(COACHING_EVENT))

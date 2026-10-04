@@ -112,8 +112,8 @@ class MapMatchingEngine:
         # (back to the pits from the menu, a session reset), so let it jump.
         self.teleport_distance_m = teleport_distance_m
 
-    def _score_segment(self, seg_start_idx: int, q: np.ndarray, heading_vec) -> Tuple[float, float, float, float]:
-        """(score, s, L, perpendicular distance) of the segment starting at `seg_start_idx`."""
+    def _score_segment(self, seg_start_idx: int, q: np.ndarray, heading_vec):
+        """(score, s, projected point, perpendicular distance) of the segment starting at `seg_start_idx`."""
         idx1 = seg_start_idx % self.track.n_samples
         idx2 = (seg_start_idx + 1) % self.track.n_samples
 
@@ -123,7 +123,7 @@ class MapMatchingEngine:
         u = p2 - p1
         u_mag_sq = np.sum(u**2)
         if u_mag_sq < 1e-8:
-            return float('inf'), 0.0, 0.0, float('inf')
+            return float('inf'), 0.0, None, float('inf')
 
         v = q - p1
         t = np.clip(np.dot(v, u) / u_mag_sq, 0, 1)
@@ -153,9 +153,12 @@ class MapMatchingEngine:
             if s_diff > 10.0:
                 score += s_diff * 1.5
 
+        return score, s_proj, proj_p, perp_dist
+
+    def _lateral(self, s_proj: float, proj_p, q: np.ndarray) -> float:
+        # Only for the winner: the spline normal is the expensive part.
         nx, nz = self.track.get_normal(s_proj)
-        L = np.dot(q - proj_p, [nx, nz])
-        return score, s_proj, L, perp_dist
+        return np.dot(q - proj_p, [nx, nz])
 
     def _max_advance(self, speed_mps: Optional[float], dt_s: Optional[float]) -> float:
         if (
@@ -201,7 +204,7 @@ class MapMatchingEngine:
             dists, idxs = self.track.tree.query(q, k=k)
 
         best_s = 0.0
-        best_L = 0.0
+        best_p = None
         best_score = float('inf')
         best_perp = float('inf')
         candidates = []
@@ -210,12 +213,12 @@ class MapMatchingEngine:
         for i in idxs:
             # Check segments [i-1, i] and [i, i+1]
             for seg_start_idx in [i - 1, i]:
-                score, s_proj, L, perp = self._score_segment(seg_start_idx, q, heading_vec)
+                score, s_proj, proj_p, perp = self._score_segment(seg_start_idx, q, heading_vec)
                 if not np.isfinite(score):
                     continue
-                candidates.append((score, s_proj, L, perp))
+                candidates.append((score, s_proj, proj_p, perp))
                 if score < best_score:
-                    best_score, best_s, best_L, best_perp = score, s_proj, L, perp
+                    best_score, best_s, best_p, best_perp = score, s_proj, proj_p, perp
 
         # 2b. Hard continuity (coach only): keep `s` within what the car can travel.
         if self.max_advance_factor is not None and self.last_s is not None and candidates:
@@ -232,7 +235,7 @@ class MapMatchingEngine:
                 # The car really moved: follow it to the nearest stretch, without
                 # the continuity penalty pulling it back towards where it was.
                 chosen = nearest
-            best_score, best_s, best_L, best_perp = chosen
+            best_score, best_s, best_p, best_perp = chosen
 
         # 3. Spatial Locking / Outlier Rejection
         if self.last_s is not None:
@@ -242,6 +245,7 @@ class MapMatchingEngine:
                 # Return previous s if jump is too large (unless we have no choice)
                 # For now, we trust the scoring but we could be more aggressive
 
+        best_L = self._lateral(best_s, best_p, q) if best_p is not None else 0.0
         self.last_s = best_s
         return {"s": best_s, "L": best_L, "score": best_score}
 

@@ -85,7 +85,7 @@ def stats(values: np.ndarray) -> Dict[str, float]:
 def project_session(geometry, session, timings: Optional[List[float]] = None):
     """O coach projeta a sessao inteira, amostra por amostra, como ao vivo.
 
-    Velocidade e intervalo entre amostras (relogio continuo) vao para a
+    Velocidade e intervalo entre amostras (cronometro do jogo) vao para a
     continuidade rigida do projetor (pedido 14). Devolve, por volta do `ml`, as
     amostras e a projecao do coach.
     """
@@ -95,11 +95,13 @@ def project_session(geometry, session, timings: Optional[List[float]] = None):
         frame = lap.frame.dropna(subset=["x", "z"])
         points = frame[["x", "z"]].to_numpy(dtype=float)
         speed = frame["speed_kmh"].to_numpy(dtype=float) / 3.6 if "speed_kmh" in frame else np.full(len(frame), np.nan)
-        clock = frame["timestamp_s"].to_numpy(dtype=float) if "timestamp_s" in frame else np.full(len(frame), np.nan)
+        # O cronometro do jogo (relogio da fisica), como o coach ao vivo; zera na
+        # linha, e ali o intervalo fica desconhecido (o projetor usa 60 m).
+        clock = frame["lap_time_s"].to_numpy(dtype=float) if "lap_time_s" in frame else np.full(len(frame), np.nan)
         coach = np.empty((points.shape[0], 2))
         for index, (x, z) in enumerate(points):
             now = clock[index]
-            dt = now - previous_clock if previous_clock is not None and np.isfinite(now) else None
+            dt = now - previous_clock if previous_clock is not None and np.isfinite(now) and now >= previous_clock else None
             started = time.perf_counter()
             coach[index] = projector.project(
                 x, z, speed_mps=float(speed[index]) if np.isfinite(speed[index]) else None, dt_s=dt
