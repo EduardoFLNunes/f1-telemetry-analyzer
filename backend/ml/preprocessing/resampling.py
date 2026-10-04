@@ -79,15 +79,51 @@ def _closing_time(
     return float(elapsed[-1] + uncovered * step_time / step_distance)
 
 
+# Store v2 (pedido 16): amostras usadas para achar a passagem por um ponto.
+LINE_WINDOW_M = 15.0
+
+
+def crossing_time(
+    positions: np.ndarray,
+    elapsed: np.ndarray,
+    speed_ms: np.ndarray,
+    target: float,
+    window_m: float = LINE_WINDOW_M,
+) -> Optional[float]:
+    """Instante, no relogio da volta, em que o carro passa pela distancia `target`.
+
+    Cada amostra a ate `window_m` do ponto da uma estimativa, `t + (alvo - s)/v`,
+    com a velocidade gravada; vale a mediana. O cronometro do jogo as vezes
+    repete o valor de uma amostra para a seguinte, e com uma amostra so (como
+    em `_closing_time`) essa repeticao virava ate 15 ms de erro na volta.
+    """
+    near = (
+        (np.abs(positions - target) <= window_m)
+        & np.isfinite(elapsed)
+        & np.isfinite(speed_ms)
+        & (speed_ms > 1.0)
+    )
+    if not near.any():
+        return None
+    return float(np.median(elapsed[near] + (target - positions[near]) / speed_ms[near]))
+
+
 def resample_lap(
     frame: pd.DataFrame,
     track: TrackGeometry,
     channels: Optional[Sequence[str]] = None,
+    line_clock: bool = False,
 ) -> pd.DataFrame:
     """Volta alinhada -> volta na grade da pista, com `track.size` linhas.
 
     Exige as colunas que `align_lap` produz. O indice do resultado e o indice da
     grade, entao `frame.loc[i]` e o mesmo ponto de pista em todas as voltas.
+
+    `line_clock` (store v2, pedido 16): o relogio da grade e zerado na linha
+    com o periodo verdadeiro da volta, o tempo entre duas passagens por s = 0
+    (`crossing_time`), e `lap_time_s` passa a ser esse periodo. Sem ele, o
+    comportamento e o de sempre (`_reference_clock_to_grid`), que o store
+    antigo e as Fases 1, 2 e 2b continuam usando.
     """
     for required in ("s_unwrapped", "lateral", "elapsed_s"):
         if required not in frame.columns:
@@ -113,6 +149,11 @@ def resample_lap(
             for column in frame.columns
             if column not in DROPPED_CHANNELS and pd.api.types.is_numeric_dtype(frame[column])
         ]
+    speed_ms = (
+        frame["speed_kmh"].to_numpy(dtype=float) / 3.6
+        if line_clock and "speed_kmh" in frame.columns
+        else None
+    )
 
     data: Dict[str, np.ndarray] = {
         "s": track.s.copy(),
@@ -158,11 +199,18 @@ def resample_lap(
             #
             # O fechamento e extrapolado pela ultima velocidade observada, que e
             # a unica informacao que a volta tem sobre o trecho que nao gravou.
+            closing = (
+                crossing_time(sub_positions, sub_values, speed_ms[finite], wrap_position)
+                if speed_ms is not None
+                else None
+            )
+            if closing is None:
+                closing = _closing_time(sub_positions, sub_values, wrap_position)
             data[channel] = _interp_circular(
                 grid_targets,
                 sub_positions,
                 sub_values,
-                _closing_time(sub_positions, sub_values, wrap_position),
+                closing,
                 wrap_position,
             )
         else:
@@ -171,7 +219,18 @@ def resample_lap(
             )
 
     resampled = pd.DataFrame(data)
-    if "elapsed_s" in resampled.columns:
+    if "elapsed_s" in resampled.columns and line_clock:
+        elapsed, total = _line_clock_to_grid(
+            resampled["elapsed_s"].to_numpy(dtype=float),
+            grid_targets,
+            positions,
+            frame["elapsed_s"].to_numpy(dtype=float),
+            speed_ms,
+            track.length,
+        )
+        resampled["elapsed_s"] = elapsed
+        resampled["lap_time_s"] = total
+    elif "elapsed_s" in resampled.columns:
         elapsed, total = _reference_clock_to_grid(resampled["elapsed_s"].to_numpy(dtype=float))
         resampled["elapsed_s"] = elapsed
         resampled["lap_time_s"] = total
@@ -203,6 +262,53 @@ def _reference_clock_to_grid(elapsed: np.ndarray) -> tuple:
     shifted = np.maximum.accumulate(shifted)
     closing = float(shifted[-1] - shifted[-2])
     return shifted, float(shifted[-1] + closing)
+
+
+def _extrapolated_time(positions: np.ndarray, elapsed: np.ndarray, target: float) -> float:
+    """Tempo em `target` pela reta das duas amostras mais proximas (sem velocidade gravada)."""
+    if positions[0] <= target <= positions[-1]:
+        return float(np.interp(target, positions, elapsed))
+    pair = slice(0, 2) if target < positions[0] else slice(-2, None)
+    (u0, u1), (t0, t1) = positions[pair], elapsed[pair]
+    if u1 - u0 <= 1e-6:
+        return float(t0 if target < positions[0] else t1)
+    return float(t0 + (target - u0) * (t1 - t0) / (u1 - u0))
+
+
+def _line_clock_to_grid(
+    grid_elapsed: np.ndarray,
+    grid_targets: np.ndarray,
+    positions: np.ndarray,
+    elapsed: np.ndarray,
+    speed_ms: Optional[np.ndarray],
+    length: float,
+) -> tuple:
+    """Store v2: relogio zerado na linha, com o periodo verdadeiro (pedido 16).
+
+    `_reference_clock_to_grid` usa como periodo o `span` dos tempos na grade,
+    que fica um passo da grade mais curto que a volta: toda volta e o
+    microsetor 0 saiam de 25,7 a 28,0 ms curtos (pedido 14). Aqui o periodo e o
+    tempo entre as duas passagens por s = 0, cada uma achada por
+    `crossing_time`, e cada ponto da grade sabe, pela distancia, se cai antes
+    ou depois da segunda passagem -- nada de `mod` sobre tempos, que no ponto
+    s = 0 podia dar o periodo inteiro em vez de zero.
+    """
+    finite = np.isfinite(elapsed)
+    u, t = positions[finite], elapsed[finite]
+    v = speed_ms[finite] if speed_ms is not None else None
+    first = float(np.round(u[0] / length) * length)
+    second = first + length
+    start = crossing_time(u, t, v, first) if v is not None else None
+    end = crossing_time(u, t, v, second) if v is not None else None
+    if start is None:
+        start = _extrapolated_time(u, t, first)
+    if end is None:
+        end = _extrapolated_time(u, t, second)
+    period = float(end - start)
+    laps_ahead = np.floor((grid_targets - first) / length)
+    line = grid_elapsed - start - period * laps_ahead
+    line = np.maximum.accumulate(np.maximum(line, 0.0))
+    return line, period
 
 
 def lap_time_from_grid(resampled: pd.DataFrame) -> float:
