@@ -270,11 +270,84 @@ class EvolutionRulesTest(unittest.TestCase):
         self.assertAlmostEqual(ev.braking_point(brake, track, 250.0, 400.0), 300.0, delta=track.step)
         # Freio ja apertado no comeco do trecho (vindo da curva anterior): sem ponto de frenagem.
         self.assertIsNone(ev.braking_point(brake, track, 310.0, 400.0))
+        # Freada que comeca exatamente no primeiro ponto da janela conta.
+        start = float(track.s[np.flatnonzero(track.s >= 300.0)[0]])      # o primeiro ponto com o freio apertado
+        self.assertAlmostEqual(ev.braking_point(brake, track, start, 400.0), start)
 
     def test_stability_of_adr_0015(self):
         self.assertIsNone(ev.stability([93.0, 92.5])["estabilizou"])
         self.assertTrue(ev.stability([95.0, 92.1, 92.3, 92.4])["estabilizou"])
         self.assertFalse(ev.stability([93.0, 92.4, 91.9])["estabilizou"])
+
+    def test_braking_is_searched_from_the_previous_apex(self):
+        """Emenda de 04/10 (pedido 17): a freada que comeca antes do trecho, depois do apice anterior, conta."""
+        track = circular_track()
+        corners = [Corner(i, a, (a + b) / 2, b, 1, 50.0, 50.0, b - a)
+                   for i, (a, b) in enumerate([(100.0, 200.0), (500.0, 600.0), (1000.0, 1100.0)])]
+        segments = ev.corner_segments(track, corners)
+        self.assertAlmostEqual(segments[1].start_s, 350.0)           # o trecho da curva 2 comeca em 350 m
+
+        def lap_braking_at(start):
+            brake = np.zeros(track.size)
+            brake[(track.s >= start) & (track.s < 520.0)] = 0.9
+            return pd.DataFrame({"elapsed_s": track.s / SPEED, "speed_kmh": np.full(track.size, 144.0),
+                                 "lateral": np.zeros(track.size), "brake": brake})
+
+        total = track.length / SPEED
+        ref, lap = lap_braking_at(320.0), lap_braking_at(300.0)      # as duas antes do trecho, depois do apice 150
+        features = ev.lap_corner_features(lap, total, ref, total, track, segments)
+        self.assertTrue(features[1]["ia_freia"])
+        self.assertAlmostEqual(features[1]["frenagem_vs_ia_m"], -20.0, delta=track.step)
+
+
+def load_report_tool():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("relatorio_evolucao", BACKEND / "tools" / "relatorio_evolucao.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class PanelTest(unittest.TestCase):
+    def setUp(self):
+        from types import SimpleNamespace
+
+        self.tool = load_report_tool()
+        theta = np.linspace(0.0, 2 * np.pi, 100, endpoint=False)
+        self.geometry = SimpleNamespace(x=200.0 * np.cos(theta), z=200.0 * np.sin(theta), length=1256.6)
+        self.session = {"formato": "evolucao-sessao/1", "sessao": "2026-10-04", "regras": "texto com </script> dentro",
+                        "resumo": {"voltas": 11}, "curvas": [], "voltas": []}
+        self.summary = {"formato": "evolucao-resumo/1", "sessoes": [{"sessao": "2026-10-04"}]}
+
+    def panel(self):
+        data = self.tool.panel_data(self.summary, [self.session], self.geometry, ["rss_formula_rss_3_v6_2026", None])
+        html = self.tool.render_panel(self.tool.PANEL_TEMPLATE.read_text(encoding="utf-8"), data)
+        start = html.index('<script type="application/json" id="dados">') + len('<script type="application/json" id="dados">')
+        return html, html[start:html.index("</script>", start)]
+
+    def test_the_marker_is_replaced_by_valid_json_with_the_keys(self):
+        html, payload = self.panel()
+        self.assertNotIn("/*DADOS*/", html)
+        data = json.loads(payload)
+        self.assertEqual(set(data), {"resumo", "sessoes", "pista", "carro", "pista_nome"})
+        self.assertEqual(data["resumo"]["formato"], "evolucao-resumo/1")
+        self.assertEqual(list(data["sessoes"]), ["2026-10-04"])
+        self.assertEqual(data["sessoes"]["2026-10-04"]["resumo"]["voltas"], 11)
+        self.assertEqual(set(data["pista"]), {"x", "z", "ds", "L"})
+        self.assertEqual(len(data["pista"]["x"]), 100)
+        self.assertAlmostEqual(data["pista"]["ds"], 12.566)
+        self.assertEqual(data["carro"], "rss_formula_rss_3_v6_2026")
+        self.assertEqual(data["pista_nome"], "Interlagos")
+
+    def test_text_in_the_data_cannot_close_the_script(self):
+        html, payload = self.panel()
+        self.assertEqual(json.loads(payload)["sessoes"]["2026-10-04"]["regras"], "texto com </script> dentro")
+        self.assertEqual(html.count("</script>"), 2)                  # os dois do proprio modelo
+
+    def test_a_template_without_the_marker_stops(self):
+        with self.assertRaises(SystemExit):
+            self.tool.render_panel("<html></html>", {})
 
 
 if __name__ == "__main__":

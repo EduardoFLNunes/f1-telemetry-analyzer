@@ -243,7 +243,12 @@ def main(argv=None) -> int:
         return code
 
     print("7/7 relatorio de evolucao", flush=True)
-    return _evolution_script().main(["--modelo", str(args.modelo)])
+    evolution = _evolution_script()
+    code = evolution.main(["--modelo", str(args.modelo)])
+    if code == 0:
+        print()
+        print(f"painel da evolucao: {config.artifacts_root() / 'evolucao' / evolution.PANEL_FILENAME}")
+    return code
 
 
 if __name__ == "__main__":

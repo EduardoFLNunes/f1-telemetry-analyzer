@@ -151,7 +151,7 @@ function distTxt(v){ v = Math.round(v); return v < 0 ? (-v) + ' m antes' : v > 0
 function frenagemTxt(c, total){
   var f = c.frenagem_vs_ia_m;
   if (!c.ia_freia) return 'A IA não freia nesta curva.';
-  if (!f || f.mediana === null || f.mediana === undefined) return 'Sem ponto de frenagem medido aqui. A busca começa no trecho da curva, e a freada desta curva começa antes dele (correção em andamento).';
+  if (!f || f.mediana === null || f.mediana === undefined) return 'Sem ponto de frenagem medido aqui: em nenhuma volta você começa a frear entre o ápice da curva anterior e o ápice desta.';
   var t = 'Você freia ' + distTxt(f.mediana) + ' da IA';
   if (f.voltas >= 3) t += '; metade das voltas ' + faixaTxt(f.p25, f.p75);
   t += '.';

@@ -9,7 +9,9 @@ fora do git:
 * `sessao_<AAAA-MM-DD>.json` -- uma sessao (as gravacoes do mesmo dia): as
   voltas, o resumo, as 14 curvas e os 60 microsetores;
 * `resumo.json` -- a serie das sessoes, a tendencia, as 3 curvas de maior
-  perda e o criterio de estabilizacao do ADR 0015.
+  perda e o criterio de estabilizacao do ADR 0015;
+* `painel.html` -- o painel da evolucao (pedido 17), o modelo
+  `painel_evolucao.html` com os dados no lugar do marcador `/*DADOS*/`.
 
 O formato dos campos esta em `docs/store_v2_e_evolucao.md`. As regras foram
 registradas antes da primeira rodada, no mesmo documento.
@@ -29,6 +31,7 @@ if str(BACKEND_DIR) not in sys.path:
 
 import pandas as pd  # noqa: E402
 
+from core.assisted_analysis.official_geometry import OfficialGeometry, find_official_geometry  # noqa: E402
 from core.assisted_analysis.reference_model import REFERENCE_AI, DriverReferenceModel, model_path  # noqa: E402
 from ml import config  # noqa: E402
 from ml.comparison import evolution as ev  # noqa: E402
@@ -38,6 +41,36 @@ from ml.track.geometry import load_geometry  # noqa: E402
 from ml.track.microsectors import build_microsectors  # noqa: E402
 
 TRACK = "vhe_interlagos"
+TRACK_NAME = "Interlagos"
+PANEL_TEMPLATE = Path(__file__).resolve().parent / "painel_evolucao.html"
+PANEL_FILENAME = "painel.html"
+PANEL_MARKER = "/*DADOS*/"
+# `<` dentro de uma string JSON, escrito como escape unicode.
+LESS_THAN_ESCAPE = chr(92) + "u003c"
+
+
+def panel_data(summary: Dict[str, object], reports, geometry: OfficialGeometry, cars) -> Dict[str, object]:
+    """O que o painel le: o resumo, as sessoes pela data, a pista e o carro."""
+    return {
+        "resumo": summary,
+        "sessoes": {report["sessao"]: report for report in reports},
+        "pista": {
+            "x": [round(float(v), 2) for v in geometry.x],
+            "z": [round(float(v), 2) for v in geometry.z],
+            "ds": float(geometry.length) / int(geometry.x.size),
+            "L": float(geometry.length),
+        },
+        "carro": ", ".join(sorted({str(c) for c in cars if c})) or None,
+        "pista_nome": TRACK_NAME,
+    }
+
+
+def render_panel(template: str, data: Dict[str, object]) -> str:
+    """Troca o marcador pelo JSON, com `<` escapado: nenhum texto dos dados fecha o `<script>`."""
+    if template.count(PANEL_MARKER) != 1:
+        raise SystemExit(f"PARADO: o modelo do painel deve ter o marcador {PANEL_MARKER} uma vez so.")
+    payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("<", LESS_THAN_ESCAPE)
+    return template.replace(PANEL_MARKER, payload)
 
 
 def run(out_dir: Path, model_file: Path, store_root: Optional[Path] = None) -> Dict[str, object]:
@@ -85,7 +118,18 @@ def run(out_dir: Path, model_file: Path, store_root: Optional[Path] = None) -> D
         written.append(str(path))
     summary = {**ev.summary_report(reports), **common, "arquivos_de_sessao": written}
     (out_dir / "resumo.json").write_text(json.dumps(summary, indent=1, ensure_ascii=False), encoding="utf-8")
-    return {"resumo": summary, "sessoes": reports, "saida": str(out_dir)}
+
+    geometry = find_official_geometry([BACKEND_DIR.parent], TRACK)
+    if geometry is None:
+        raise SystemExit("PARADO: geometria oficial exportada nao encontrada; o painel nao foi gerado.")
+    if geometry.geometry_id != store.geometry_id:
+        raise SystemExit(f"PARADO: a geometria exportada ({geometry.geometry_id}) nao e a do store v2 "
+                         f"({store.geometry_id}); o painel nao foi gerado.")
+    cars = laps["carModel"].dropna().unique() if "carModel" in laps else []
+    panel = out_dir / PANEL_FILENAME
+    panel.write_text(render_panel(PANEL_TEMPLATE.read_text(encoding="utf-8"),
+                                  panel_data(summary, reports, geometry, cars)), encoding="utf-8")
+    return {"resumo": summary, "sessoes": reports, "saida": str(out_dir), "painel": str(panel)}
 
 
 def print_report(result: Dict[str, object]) -> None:
@@ -112,6 +156,7 @@ def print_report(result: Dict[str, object]) -> None:
     print(f"  criterio do ADR 0015: {summary['criterio_adr_0015']['situacao']}")
     print("=" * 70)
     print(f"-> {result['saida']}")
+    print(f"painel: {result['painel']}")
 
 
 def main(argv=None) -> int:
