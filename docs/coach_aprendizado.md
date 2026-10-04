@@ -70,7 +70,13 @@ Os critérios e os limites não mudaram entre as rodadas. Cada correção resolv
 
 **Diagnóstico do (c), que não vale como critério.** Contra os microsetores do ML com o período verdadeiro, a diferença máxima por microsetor fica entre 0,002 e 0,004 s, e a soma bate com o período com diferença de 0,1 a 1,4 ms. Nas 5 voltas, o (c) só falha pelo passo do store no microsetor 0. Os ±78 ms entre os microsetores 25 e 26 da volta de 20/06, vistos no pedido 11, sumiram com a continuidade rígida.
 
-## 3. Parada
+## 3. Desvio do pré-registro
+
+O critério (c) falhou porque a régua, o store, tem um erro medido. Ao zerar o relógio usando o período da grade, o store encurta toda volta e o microsetor 0 em um passo da grade: de 25,7 a 28,0 ms nas 5 voltas. Isso foi conferido contra o cronômetro do jogo (84,8735 s contra 84,873 s). Contra o ML com o período corrigido, o (c) passa: no máximo 3,7 ms por microsetor, e a soma bate com o período em ±1,4 ms. Nenhum limite foi mudado.
+
+**Decisão do Eduardo em 04/10:** seguir para as Partes C e D e para o merge. O ML não é corrigido agora. A correção entra no item "Reconstrução do store" do backlog, junto com o portão das voltas com box, as voltas rotuladas e a pasta do app instalado, num pedido próprio depois do coach.
+
+## Registro da parada (antes da decisão)
 
 Pelo pedido, com o (c) falhando, parei antes da Parte C. Não fiz merge, não treinei nem regravei modelo e não mexi no ML nem no store. A decisão do que fazer com o store está no relatório.
 
