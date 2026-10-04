@@ -275,11 +275,13 @@ class SelectionTests(unittest.TestCase):
 
 
 class CoachTrainingFilterTests(unittest.TestCase):
-    def test_the_trainer_filters_by_origin_before_loading_anything(self):
+    def test_the_trainer_chooses_laps_from_the_labelled_inventory_before_loading_anything(self):
+        """ADR 0016: a referencia da IA e a oscilacao do piloto saem do inventario rotulado."""
         source = (BACKEND / "tools" / "train_reference_model.py").read_text(encoding="utf-8")
-        self.assertIn("inventory, origins, args.incluir_relogio_suspeito, parse_equipment(args.equipamento)", source)
-        self.assertIn('"origem" not in inventory.columns', source)
-        self.assertLess(source.index("replay_selection("), source.index("loader.load_lap("))
+        self.assertIn("driver_laps(inventory, pits, cars=cars, car=car)", source)
+        self.assertIn("ai_laps(inventory, pits, cars=cars, car=car, since=args.ia_desde)", source)
+        self.assertIn('{"origem", "equipamento", "relogio_suspeito"} - set(inventory.columns)', source)
+        self.assertLess(source.index("driver_laps(inventory, pits, cars"), source.index("load_laps(mine, sessions)"))
 
 
 class FolderTests(unittest.TestCase):

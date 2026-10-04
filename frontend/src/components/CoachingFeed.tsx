@@ -49,6 +49,13 @@ export function microsectorEvidence(event: Partial<CoachingEvent>): Record<strin
   return finiteOrNull(evidence.microsector) === null ? null : evidence;
 }
 
+// ADR 0016: which reference the coach is measuring against.
+const REFERENCE_TAGS: Record<string, string> = { volta_ia: 'VOLTA DA IA', minha_melhor: 'SUA MELHOR' };
+
+export function referenceTag(kind: unknown): string {
+  return typeof kind === 'string' && REFERENCE_TAGS[kind] ? REFERENCE_TAGS[kind] : 'REFERENCIA';
+}
+
 export function renderEvidence(event: Partial<CoachingEvent>): string {
   const e = event.evidence;
   if (!e) return 'Physical anomaly detected.';
@@ -62,7 +69,12 @@ export function renderEvidence(event: Partial<CoachingEvent>): string {
   const microsector = microsectorEvidence(event);
   if (microsector) {
     const parts = [`VOCE ${finiteNumber(microsector.yourSeconds).toFixed(2)}s`];
-    parts.push(`MELHOR ${finiteNumber(microsector.bestSeconds).toFixed(2)}s`);
+    // ADR 0012: the default compares with one real reference lap. "MELHOR" (the
+    // best of each slice) only appears when the old mode is switched on.
+    const reference = finiteOrNull(microsector.referenceSeconds);
+    parts.push(reference !== null
+      ? `${referenceTag(microsector.referenceKind)} ${reference.toFixed(2)}s`
+      : `MELHOR ${finiteNumber(microsector.bestSeconds).toFixed(2)}s`);
     const optimal = finiteOrNull(microsector.optimalSeconds);
     if (optimal !== null) {
       parts.push(`OTIMO ${optimal.toFixed(2)}s`);

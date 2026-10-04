@@ -20,7 +20,15 @@ from .lap_loader import LapDataLoader
 from .reference_lap_comparator import ReferenceComparator
 from .corner_metrics import CornerMetricsCalculator
 from .models import CornerComparison, CornerMetrics, DrivingError, LapDescriptor
-from .reference_model import DriverReferenceModel, lap_is_usable, microsector_splits, model_path
+from .reference_model import (
+    MODE_REFERENCE_LAP,
+    DriverReferenceModel,
+    configured_reference_kind,
+    lap_is_usable,
+    microsector_splits,
+    model_path,
+)
+from .official_geometry import find_official_geometry
 from .optimal_line import attach, find_optimal_line
 from .corner_segmentation import CornerSegmenter
 from .utils import finite_float
@@ -294,6 +302,8 @@ class AssistedAnalysisService:
             return {"status": "UNAVAILABLE", "reason": "no_model_for_track"}
 
         splits = microsector_splits(target_df, model.microsectors)
+        if model.mode == MODE_REFERENCE_LAP:
+            return self._reference_lap_context(model, splits)
         losses = model.loss_against_ideal(splits)
         ranked = sorted(
             (
@@ -328,6 +338,48 @@ class AssistedAnalysisService:
             **self._optimal_line_context(model, splits),
         }
 
+    def _reference_lap_context(self, model: DriverReferenceModel, splits) -> Dict[str, Any]:
+        """The lap against the driver's reference lap (ADR 0012).
+
+        A measured difference to one real, complete lap -- no "ideal lap", no
+        "time on the table", and no optimised-line seconds, which come from the
+        simulator (ADR 0004).
+        """
+        if not model.has_reference:
+            return {
+                "status": "UNAVAILABLE",
+                "reason": "reference_lap_missing_refit_model",
+                "mode": model.mode,
+            }
+        losses = model.loss_against_reference(splits)
+        known = [loss for loss in losses if loss is not None]
+        ranked = sorted(
+            (
+                {
+                    "index": index,
+                    "startP": round(index / model.microsectors, 4),
+                    "endP": round((index + 1) / model.microsectors, 4),
+                    "behindReferenceS": round(loss, 3),
+                }
+                for index, loss in enumerate(losses)
+                if loss is not None and loss > 0.0
+            ),
+            key=lambda item: item["behindReferenceS"],
+            reverse=True,
+        )
+        return {
+            "status": "READY",
+            "version": model.version,
+            "mode": model.mode,
+            "lapsInModel": model.lap_count,
+            "builtAt": model.built_at,
+            "referenceLapId": model.reference_lap_id,
+            "referenceLapSeconds": model.reference_lap_seconds,
+            "deltaToReferenceS": round(sum(known), 3) if known else None,
+            "microsectorsCompared": len(known),
+            "worstMicrosectors": ranked[:8],
+        }
+
     def _optimal_line_context(self, model: DriverReferenceModel, splits) -> Dict[str, Any]:
         """What the optimised line says about this lap, if there is one."""
         if not model.optimal_lap_seconds:
@@ -346,6 +398,17 @@ class AssistedAnalysisService:
             }
         }
 
+    def _official_geometry(self, track: Optional[str]):
+        """The official geometry exported by `ml.scripts.export_geometry` (ADR 0013)."""
+        key = (track or "unknown").strip()
+        cached = getattr(self, "_official_geometries", None)
+        if cached is None:
+            cached = {}
+            self._official_geometries = cached
+        if key not in cached:
+            cached[key] = find_official_geometry([self.runtime_root, self.repo_root], key)
+        return cached[key]
+
     def _reference_model(self, track: Optional[str]) -> Optional[DriverReferenceModel]:
         key = (track or "unknown").strip()
         cached = getattr(self, "_reference_models", None)
@@ -354,6 +417,9 @@ class AssistedAnalysisService:
             self._reference_models = cached
         if key not in cached:
             model = DriverReferenceModel.load(model_path(self.runtime_root, key))
+            # ADR 0016: the reference by configuration (`AT_COACH_REFERENCE`).
+            if model is not None:
+                model.use_reference(configured_reference_kind())
             # The optimised line lives in its own file and is optional. Attaching
             # it here means everything downstream -- the live coach, the debrief,
             # the analysis payload -- sees it without asking for it, and tracks

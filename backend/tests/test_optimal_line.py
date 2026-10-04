@@ -165,7 +165,10 @@ class CoachWithOptimalLineTest(unittest.TestCase):
         return bus, LiveDrivingCoach(bus, model_provider=lambda _t: model, min_gap_seconds=0.0)
 
     def test_events_carry_the_optimal_split(self):
+        # O tracado otimo so aparece no modo antigo: no padrao (ADR 0012) os
+        # segundos do simulador ficam fora do que o piloto ouve (ADR 0004).
         model = model_of(85.0)
+        model.mode = "best_per_microsector"
         # Comfortably quicker than anything the driver did, which is what an
         # optimised line is.
         attach(model, OptimalLine.from_dict(
@@ -182,6 +185,19 @@ class CoachWithOptimalLineTest(unittest.TestCase):
         self.assertGreater(evidence["optimalLossSeconds"], evidence["lossSeconds"])
         self.assertIn("tracado otimo", events[0]["event"])
 
+    def test_the_reference_mode_never_mentions_the_line(self):
+        model = model_of(85.0)
+        attach(model, OptimalLine.from_dict(
+            payload(microsectors=model.microsectors, seconds_each=85.0 / model.microsectors * 0.9)
+        ))
+        bus, coach = self._coach(model)
+        drive(coach, seconds=86.0, lap=5, slow_slice=(20, 0.9))
+        drive(coach, seconds=86.0, lap=6)
+        said = [e["event"] for e in bus.of(COACHING_EVENT)] + [m["message"] for m in bus.of(ENGINEER_SPEECH)]
+        self.assertTrue(said)
+        self.assertFalse(any("tracado otimo" in text or "ideal" in text.lower() for text in said))
+        self.assertNotIn("optimalSeconds", bus.of(COACHING_EVENT)[0]["evidence"])
+
     def test_without_a_line_the_events_are_exactly_as_before(self):
         model = model_of(85.0)
         bus, coach = self._coach(model)
@@ -194,6 +210,7 @@ class CoachWithOptimalLineTest(unittest.TestCase):
 
     def test_the_lap_summary_reports_the_gap_to_the_line(self):
         model = model_of(85.0)
+        model.mode = "best_per_microsector"
         attach(model, OptimalLine.from_dict(
             payload(microsectors=model.microsectors, seconds_each=85.0 / model.microsectors * 0.9)
         ))

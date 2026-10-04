@@ -239,52 +239,77 @@ class LapDataLoader:
         return laps
 
     def _load_recorded_lap(self, lap_id: str) -> Tuple[LapDescriptor, pd.DataFrame]:
-        parts = lap_id.split("__", 2)
-        if len(parts) != 3:
-            raise ValueError(f"Invalid recording lap id: {lap_id}")
-        _, session_id, lap_text = parts
-        session_dir = self._recorded_lap_paths.get(lap_id) or self._find_recording_session_dir(session_id)
-        player_path = session_dir / "player.jsonl"
-        if not player_path.exists():
-            raise FileNotFoundError(f"Recording player stream not found: {player_path}")
+        loaded = self.load_recorded_laps([lap_id])
+        if lap_id not in loaded:
+            _, session_id, lap_text = lap_id.split("__", 2)
+            raise FileNotFoundError(f"Lap {finite_int(lap_text, 0)} not found in recording {session_id}")
+        return loaded[lap_id]
 
-        rows = []
-        lap_number = finite_int(lap_text, 0)
-        previous_lap_elapsed: Optional[float] = None
-        metadata = self._read_json(session_dir / "metadata.json")
-        for payload in self._read_jsonl(player_path):
-            sample = payload.get("sample", payload)
-            sample_lap = finite_int(sample.get("lap_number", sample.get("lap")), 0)
-            if sample_lap != lap_number:
-                continue
-            if is_assetto_lap_counter_lag_frame(sample, previous_lap_elapsed):
-                continue
-            rows.append(self._flatten_recording_sample(payload))
-            sample_elapsed = finite_float(
-                sample.get("lap_time", sample.get("lapTime", sample.get("currentLapTime")))
-            )
-            if sample_elapsed is not None:
-                if sample_elapsed > 10_000.0:
-                    sample_elapsed /= 1000.0
-                previous_lap_elapsed = max(previous_lap_elapsed or sample_elapsed, sample_elapsed)
-        if not rows:
-            raise FileNotFoundError(f"Lap {lap_number} not found in recording {session_id}")
+    def load_recorded_laps(self, lap_ids: Sequence[str]) -> Dict[str, Tuple[LapDescriptor, pd.DataFrame]]:
+        """Several recorded laps, reading each session file once.
 
-        descriptor = self._recording_descriptor_from_session(session_dir, lap_number, metadata) or LapDescriptor(
-            lap_id=lap_id,
-            source="recording_jsonl",
-            driver_id="player_1",
-            lap_number=lap_number,
-            track=metadata.get("track"),
-            session_id=session_id,
-            started_at=metadata.get("startedAt"),
-            metadata={"playerPath": str(player_path)},
-        )
-        df = normalize_lap_dataframe(pd.DataFrame(rows), track_length=self._active_track_length())
-        descriptor.sample_count = len(df)
-        descriptor.lap_time = descriptor.lap_time or self._duration(df)
-        descriptor.track = descriptor.track or metadata.get("track") or self._active_track_name()
-        return descriptor, df
+        `_load_recorded_lap` used to scan the whole `player.jsonl` for every lap
+        it was asked for -- ~19 s a lap on a 1 GB session, which made fitting
+        the coach on every valid lap a matter of hours. The rule per lap is the
+        same as before: every sample with that game lap number, minus the frames
+        where the game had not yet moved the counter on. Laps that are not found
+        are simply absent from the result.
+        """
+        by_session: Dict[str, Dict[int, str]] = {}
+        for lap_id in lap_ids:
+            parts = lap_id.split("__", 2)
+            if len(parts) != 3:
+                raise ValueError(f"Invalid recording lap id: {lap_id}")
+            _, session_id, lap_text = parts
+            by_session.setdefault(session_id, {})[finite_int(lap_text, 0)] = lap_id
+
+        result: Dict[str, Tuple[LapDescriptor, pd.DataFrame]] = {}
+        for session_id, wanted in by_session.items():
+            first_id = next(iter(wanted.values()))
+            session_dir = self._recorded_lap_paths.get(first_id) or self._find_recording_session_dir(session_id)
+            player_path = session_dir / "player.jsonl"
+            if not player_path.exists():
+                raise FileNotFoundError(f"Recording player stream not found: {player_path}")
+
+            rows: Dict[int, List[Dict]] = {number: [] for number in wanted}
+            previous_lap_elapsed: Dict[int, Optional[float]] = {number: None for number in wanted}
+            metadata = self._read_json(session_dir / "metadata.json")
+            for payload in self._read_jsonl(player_path):
+                sample = payload.get("sample", payload)
+                sample_lap = finite_int(sample.get("lap_number", sample.get("lap")), 0)
+                if sample_lap not in rows:
+                    continue
+                if is_assetto_lap_counter_lag_frame(sample, previous_lap_elapsed[sample_lap]):
+                    continue
+                rows[sample_lap].append(self._flatten_recording_sample(payload))
+                sample_elapsed = finite_float(
+                    sample.get("lap_time", sample.get("lapTime", sample.get("currentLapTime")))
+                )
+                if sample_elapsed is not None:
+                    if sample_elapsed > 10_000.0:
+                        sample_elapsed /= 1000.0
+                    before = previous_lap_elapsed[sample_lap]
+                    previous_lap_elapsed[sample_lap] = max(before or sample_elapsed, sample_elapsed)
+
+            for lap_number, lap_id in wanted.items():
+                if not rows[lap_number]:
+                    continue
+                descriptor = self._recording_descriptor_from_session(session_dir, lap_number, metadata) or LapDescriptor(
+                    lap_id=lap_id,
+                    source="recording_jsonl",
+                    driver_id="player_1",
+                    lap_number=lap_number,
+                    track=metadata.get("track"),
+                    session_id=session_id,
+                    started_at=metadata.get("startedAt"),
+                    metadata={"playerPath": str(player_path)},
+                )
+                df = normalize_lap_dataframe(pd.DataFrame(rows[lap_number]), track_length=self._active_track_length())
+                descriptor.sample_count = len(df)
+                descriptor.lap_time = descriptor.lap_time or self._duration(df)
+                descriptor.track = descriptor.track or metadata.get("track") or self._active_track_name()
+                result[lap_id] = (descriptor, df)
+        return result
 
     def _recording_descriptor_from_session(self, session_dir: Path, lap_number: int, metadata: Dict) -> Optional[LapDescriptor]:
         index = self._read_json(session_dir / "session-index.json")

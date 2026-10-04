@@ -1,0 +1,246 @@
+{
+  "etapa": "coach-referencia-real",
+  "base_do_patch": "develop 45d45c8e",
+  "patch": {
+    "arquivo": "2026-10-03_coach_referencia.patch",
+    "sha256": "6cc0109cdbbb9936243bf78c94dc37ee475cabd40d0213bfec30c7940b02e095"
+  },
+  "ambiente": {
+    "python": "3.9.7"
+  },
+  "medicao_otimismo": {
+    "comando": "cd backend && python tools/measure_reference_optimism.py",
+    "dados": {
+      "laps_grid.parquet": "a9798c3a338459a34cdb5760dd1ffd2da6352afa2a35bd917feb181a96634c0c",
+      "laps_grid_meta.json": "5a4d3823c9d479b16fecc03643cf355960b412c740ac5389dcf1e53c6b65b339"
+    },
+    "min_voltas": 20,
+    "regua_do_coach": {
+      "2026-06-20_13-13-02_vhe_interlagos": {
+        "voltas_validas": 39,
+        "primeira_metade": {
+          "voltas": 19,
+          "voltas_no_modelo": 19,
+          "descartadas": {}
+        },
+        "segunda_metade": {
+          "voltas": 20,
+          "voltas_medidas": 20
+        },
+        "microsetores_com_alvo": 60,
+        "fracao_das_voltas_que_atinge_o_melhor": {
+          "media": 0.049166666666666664,
+          "mediana": 0.0,
+          "microsetores_nunca_atingidos": 32,
+          "microsetores_atingidos_em_mais_de_25pct": 1,
+          "por_microsetor": {
+            "0": 0.25,
+            "1": 0.05,
+            "2": 0.0,
+            "3": 0.1,
+            "4": 0.0,
+            "5": 0.0,
+            "6": 0.0,
+            "7": 0.05,
+            "8": 0.05,
+            "9": 0.0,
+            "10": 0.0,
+            "11": 0.0,
+            "12": 0.0,
+            "13": 0.0,
+            "14": 0.0,
+            "15": 0.0,
+            "16": 0.0,
+            "17": 0.0,
+            "18": 0.0,
+            "19": 0.0,
+            "20": 0.05,
+            "21": 0.0,
+            "22": 0.15,
+            "23": 0.25,
+            "24": 0.3,
+            "25": 0.1,
+            "26": 0.05,
+            "27": 0.05,
+            "28": 0.0,
+            "29": 0.05,
+            "30": 0.0,
+            "31": 0.1,
+            "32": 0.0,
+            "33": 0.05,
+            "34": 0.1,
+            "35": 0.05,
+            "36": 0.0,
+            "37": 0.0,
+            "38": 0.0,
+            "39": 0.0,
+            "40": 0.0,
+            "41": 0.0,
+            "42": 0.0,
+            "43": 0.0,
+            "44": 0.0,
+            "45": 0.0,
+            "46": 0.0,
+            "47": 0.1,
+            "48": 0.25,
+            "49": 0.15,
+            "50": 0.1,
+            "51": 0.05,
+            "52": 0.15,
+            "53": 0.05,
+            "54": 0.05,
+            "55": 0.1,
+            "56": 0.1,
+            "57": 0.0,
+            "58": 0.05,
+            "59": 0.0
+          }
+        },
+        "melhor_volta_primeira_metade_s": 85.4414660826498,
+        "volta_ideal_primeira_metade_s": 83.928,
+        "ganho_na_mesa_primeira_metade_s": 1.5134660826497992,
+        "melhor_volta_segunda_metade_s": 85.57606634706174,
+        "ganho_realizado_na_segunda_metade_s": -0.13460026441194373,
+        "fracao_do_ganho_na_mesa_realizada": -0.0889351046283664,
+        "ideal_primeira_menos_melhor_real_segunda_s": -1.648066347061743
+      },
+      "2026-08-09_19-20-59_vhe_interlagos": {
+        "indisponivel": "a gravacao nao tem progresso (p): o coach nao recorta estas voltas em microsetores"
+      }
+    },
+    "grade_do_ml": {
+      "2026-06-20_13-13-02_vhe_interlagos": {
+        "voltas_validas": 39,
+        "primeira_metade": 19,
+        "segunda_metade": 20,
+        "fracao_das_voltas_que_atinge_o_melhor": {
+          "media": 0.042499999999999996,
+          "mediana": 0.0,
+          "microsetores_nunca_atingidos": 34,
+          "microsetores_atingidos_em_mais_de_25pct": 0
+        },
+        "melhor_volta_primeira_metade_s": 85.4414660826498,
+        "volta_ideal_primeira_metade_s": 83.91173412579629,
+        "ganho_na_mesa_primeira_metade_s": 1.5297319568535102,
+        "melhor_volta_segunda_metade_s": 85.57606634706174,
+        "ganho_realizado_na_segunda_metade_s": -0.13460026441194373,
+        "fracao_do_ganho_na_mesa_realizada": -0.08798944403881162,
+        "ideal_primeira_menos_melhor_real_segunda_s": -1.6643322212654539
+      },
+      "2026-08-09_19-20-59_vhe_interlagos": {
+        "voltas_validas": 52,
+        "primeira_metade": 26,
+        "segunda_metade": 26,
+        "fracao_das_voltas_que_atinge_o_melhor": {
+          "media": 0.03397435897435897,
+          "mediana": 0.0,
+          "microsetores_nunca_atingidos": 32,
+          "microsetores_atingidos_em_mais_de_25pct": 0
+        },
+        "melhor_volta_primeira_metade_s": 85.47170372461478,
+        "volta_ideal_primeira_metade_s": 84.6272318876527,
+        "ganho_na_mesa_primeira_metade_s": 0.8444718369620858,
+        "melhor_volta_segunda_metade_s": 85.53282740071606,
+        "ganho_realizado_na_segunda_metade_s": -0.06112367610127478,
+        "fracao_do_ganho_na_mesa_realizada": -0.07238095271615202,
+        "ideal_primeira_menos_melhor_real_segunda_s": -0.9055955130633606
+      }
+    }
+  },
+  "testes": {
+    "backend": {
+      "arquivo": "2026-10-03_coach_referencia_testes.txt",
+      "resumo": "447 passed, 4 warnings in 59.94s",
+      "novos": [
+        {
+          "classe": "ReferenceSelectionTest",
+          "teste": "test_another_lap_can_be_chosen_by_lap_id",
+          "resultado": "PASSED"
+        },
+        {
+          "classe": "ReferenceSelectionTest",
+          "teste": "test_picks_the_best_valid_complete_lap",
+          "resultado": "PASSED"
+        },
+        {
+          "classe": "ReferenceSelectionTest",
+          "teste": "test_the_reference_keeps_where_it_braked_and_how_slow_it_went",
+          "resultado": "PASSED"
+        },
+        {
+          "classe": "DifferenceAddsUpTest",
+          "teste": "test_microsector_differences_add_up_to_the_lap_difference",
+          "resultado": "PASSED"
+        },
+        {
+          "classe": "CoachWordsTest",
+          "teste": "test_a_newer_file_with_unknown_fields_still_loads",
+          "resultado": "PASSED"
+        },
+        {
+          "classe": "CoachWordsTest",
+          "teste": "test_an_old_model_file_loads_and_the_coach_stays_quiet",
+          "resultado": "PASSED"
+        },
+        {
+          "classe": "CoachWordsTest",
+          "teste": "test_new_phrases_state_a_measured_difference",
+          "resultado": "PASSED"
+        },
+        {
+          "classe": "CoachWordsTest",
+          "teste": "test_the_reference_goal_is_said_when_there_is_one",
+          "resultado": "PASSED"
+        },
+        {
+          "classe": "CoachWordsTest",
+          "teste": "test_threshold_is_unchanged",
+          "resultado": "PASSED"
+        },
+        {
+          "classe": "LegacyModeTest",
+          "teste": "test_recorded_lap_replay_uses_the_same_rules",
+          "resultado": "PASSED"
+        },
+        {
+          "classe": "LegacyModeTest",
+          "teste": "test_the_mode_survives_a_save_and_load",
+          "resultado": "PASSED"
+        },
+        {
+          "classe": "LegacyModeTest",
+          "teste": "test_the_old_mode_still_works_when_switched_on",
+          "resultado": "PASSED"
+        }
+      ]
+    },
+    "frontend": {
+      "arquivo": "2026-10-03_coach_referencia_vitest.txt",
+      "resumo": "7 arquivos, 136 testes passaram; tsc --noEmit sem erros"
+    }
+  },
+  "ensaio_de_treino_com_dados_reais": {
+    "comando": "python tools/train_reference_model.py --track vhe_interlagos --limit 40 --saida <scratchpad> (versao anterior a --geometria: usou a geometria da maioria)",
+    "modo": "reference_lap",
+    "volta_de_referencia": "rec__2026-06-20_13-13-02_vhe_interlagos__11",
+    "tempo_s": 85.467,
+    "microsetores_com_tempo_de_referencia": 60,
+    "soma_dos_tempos_de_referencia_s": 85.468,
+    "microsetores_com_freada": 20,
+    "microsetores_com_minima": 60,
+    "soma_dos_melhores_trechos_s": 84.854,
+    "arquivo_do_runtime_regravado": false
+  },
+  "geometria_das_gravacoes": {
+    "sessoes_por_trackCache": {
+      "vhe_interlagos_gp_InterlagosPitAccessAsphaltMergeFix": 60,
+      "vhe_interlagos_gp_kn5_surface_interval_geometry (cache atual)": 7,
+      "sem registro": 3
+    },
+    "modelo_em_uso_25_08_alvos_por_geometria": {
+      "kn5_surface_interval_geometry": 34,
+      "InterlagosPitAccessAsphaltMergeFix": 9,
+      "sem registro": 18
+    }
+  }
+}

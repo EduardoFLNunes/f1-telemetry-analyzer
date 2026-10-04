@@ -21,6 +21,32 @@ Two properties matter, and both come from the data rather than from a rule:
   he has never driven it end to end; that difference is the honest headline of
   how much is on the table.
 
+Two modes, since ADR 0012:
+
+* ``reference_lap`` (the default): every microsector is measured against one
+  real, complete lap -- by default the best valid one. "0.12 s behind your
+  reference lap here" is a measured fact.
+* ``best_per_microsector`` (the original, off by default): against the best
+  ever done in each slice. The sum of those bests -- the "ideal lap" -- is
+  optimistic by construction: the best of 150 noisy attempts is lower than what
+  the driver can repeat, and stitching slices ignores what one slice cost the
+  next. Measured on recorded sessions (tools/measure_reference_optimism.py):
+  the second half of a session realised none of the "time on the table" fitted
+  on the first half, and each microsector best was matched by 3-5 % of laps.
+
+Two references, since ADR 0016 (the learning phase):
+
+* ``volta_ia`` (the default): the best clean lap of the game's AI, in the same
+  car, from sessions recorded with the current recorder. The AI repeats its
+  line within centimetres, so the reference does not move while the driver
+  learns.
+* ``minha_melhor``: the driver's best clean lap, `humano` with the current
+  equipment (ADR 0015).
+
+The model keeps both (`references`) and one is active (`use_reference`), chosen
+by configuration. The driver's spread through each slice -- the speaking
+threshold -- always comes from his own laps.
+
 Laps get in only if their sampling holds up. A lap of 937 samples over 74
 seconds is 13 Hz of a 57 Hz signal, and it was ranking as the driver's personal
 best -- a corrupt recording is not a lap record.
@@ -41,6 +67,31 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 MODEL_VERSION = "driver_reference_model.v1"
+
+MODE_REFERENCE_LAP = "reference_lap"
+MODE_BEST_PER_MICROSECTOR = "best_per_microsector"
+MODES = (MODE_REFERENCE_LAP, MODE_BEST_PER_MICROSECTOR)
+
+# The two references of the learning phase (ADR 0016) and how the coach names them.
+REFERENCE_AI = "volta_ia"
+REFERENCE_OWN_BEST = "minha_melhor"
+REFERENCE_KINDS = (REFERENCE_AI, REFERENCE_OWN_BEST)
+DEFAULT_REFERENCE = REFERENCE_AI
+REFERENCE_LABELS = {REFERENCE_AI: "volta da IA", REFERENCE_OWN_BEST: "sua melhor volta"}
+
+
+
+def configured_reference_kind() -> str:
+    """Which reference the coach uses: `AT_COACH_REFERENCE`, `volta_ia` by default."""
+    import os
+
+    value = (os.environ.get("AT_COACH_REFERENCE") or "").strip().lower()
+    return value if value in REFERENCE_KINDS else DEFAULT_REFERENCE
+
+
+# Start of braking: the pedal crosses this, as in Phase 2b (`empirical.BRAKE_ONSET`).
+# The live coach uses the same number, so "12 m later" compares like with like.
+BRAKE_ONSET = 0.15
 
 # 60 microsectors puts a boundary every ~72 m at Interlagos: short enough that a
 # single corner does not hide inside one, long enough that the crossing time is
@@ -79,6 +130,19 @@ class MicrosectorTarget:
     optimal_seconds: Optional[float] = None
     optimal_min_speed_kmh: Optional[float] = None
 
+    # The reference lap through the same slice (ADR 0012): one real, complete
+    # lap, not the best of many. Brake and throttle points also in metres of the
+    # runtime's own `s`, which is what the coach says out loud.
+    reference_seconds: Optional[float] = None
+    reference_min_speed_kmh: Optional[float] = None
+    reference_brake_point_p: Optional[float] = None
+    reference_brake_point_m: Optional[float] = None
+    reference_throttle_point_p: Optional[float] = None
+    reference_throttle_point_m: Optional[float] = None
+    # Where the active reference starts braking inside this slice, on the
+    # official geometry (metres), if it does (ADR 0016).
+    reference_brake_onset_m: Optional[float] = None
+
     @property
     def gap_best_to_optimal(self) -> Optional[float]:
         """How much the driver's own best still gives away here."""
@@ -107,6 +171,76 @@ class DriverReferenceModel:
     # Filled by `optimal_line.attach` after loading, when the track has one.
     optimal_lap_seconds: Optional[float] = None
     optimal_source: Optional[str] = None
+
+    # ADR 0012. A model saved before the reference lap existed loads with
+    # `reference_lap_id = None`: `has_reference` is then False and the coach
+    # stays quiet rather than falling back to the old mode unasked.
+    mode: str = MODE_REFERENCE_LAP
+    reference_lap_id: Optional[str] = None
+    reference_lap_seconds: Optional[float] = None
+
+    # ADR 0013. The official geometry the model was measured on. When set, the
+    # coach projects the live position on that same geometry and stays quiet if
+    # it cannot load it or finds another one; when absent (a model fitted on the
+    # runtime's `p`), the coach keeps the old behaviour.
+    geometry_id: Optional[str] = None
+    # The quickest valid laps and why each was or was not the reference.
+    reference_candidates: List[Dict[str, Any]] = field(default_factory=list)
+    # ADR 0016: every reference the model carries, by kind, and the active one.
+    references: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    reference_kind: Optional[str] = None
+
+    @property
+    def reference_label(self) -> str:
+        """How the coach names the active reference."""
+        return REFERENCE_LABELS.get(self.reference_kind or "", "sua volta de referencia")
+
+    def use_reference(self, kind: str) -> bool:
+        """Make `kind` the reference every slice is measured against.
+
+        A model without that reference keeps none active: the coach then says
+        nothing rather than measure against something else.
+        """
+        if not self.references:
+            return self.has_reference          # a model from before ADR 0016: its single reference
+        reference = self.references.get(kind)
+        sectors = (reference or {}).get("sectors") or []
+        by_index = {int(sector["index"]): sector for sector in sectors}
+        for target in self.targets:
+            sector = by_index.get(target.index) or {}
+            target.reference_seconds = sector.get("seconds")
+            target.reference_min_speed_kmh = sector.get("min_speed_kmh")
+            target.reference_brake_onset_m = sector.get("brake_onset_m")
+            target.reference_brake_point_m = sector.get("brake_onset_m")
+            target.reference_brake_point_p = None
+            target.reference_throttle_point_p = None
+            target.reference_throttle_point_m = None
+        self.reference_kind = kind if reference else None
+        self.reference_lap_id = (reference or {}).get("lap_id")
+        self.reference_lap_seconds = (reference or {}).get("lap_seconds")
+        return reference is not None
+
+    @property
+    def has_reference(self) -> bool:
+        return bool(self.reference_lap_id) and any(t.reference_seconds is not None for t in self.targets)
+
+    def target_seconds(self, target: "MicrosectorTarget") -> Optional[float]:
+        """What a split is measured against, in the active mode."""
+        if self.mode == MODE_BEST_PER_MICROSECTOR:
+            return target.best_seconds
+        return target.reference_seconds
+
+    def loss_against_reference(self, splits: Sequence[Optional[float]]) -> List[Optional[float]]:
+        """Per-microsector difference to the reference lap (positive = behind it)."""
+        losses: List[Optional[float]] = []
+        by_index = {target.index: target for target in self.targets}
+        for index, split in enumerate(splits):
+            target = by_index.get(index)
+            if split is None or target is None or target.reference_seconds is None:
+                losses.append(None)
+                continue
+            losses.append(round(split - target.reference_seconds, 4))
+        return losses
 
     # ── what the analysis asks it ────────────────────────────────────────
 
@@ -173,7 +307,12 @@ class DriverReferenceModel:
 
     @classmethod
     def from_dict(cls, payload: Dict[str, Any]) -> "DriverReferenceModel":
-        targets = [MicrosectorTarget(**target) for target in payload.get("targets", [])]
+        known = set(MicrosectorTarget.__dataclass_fields__)
+        targets = [
+            MicrosectorTarget(**{k: v for k, v in target.items() if k in known})
+            for target in payload.get("targets", [])
+        ]
+        mode = payload.get("mode", MODE_REFERENCE_LAP)
         return cls(
             version=payload.get("version", MODEL_VERSION),
             track=payload.get("track", ""),
@@ -186,6 +325,13 @@ class DriverReferenceModel:
             targets=targets,
             rejected_reasons=payload.get("rejected_reasons", {}),
             built_at=payload.get("built_at"),
+            mode=mode if mode in MODES else MODE_REFERENCE_LAP,
+            reference_lap_id=payload.get("reference_lap_id"),
+            reference_lap_seconds=payload.get("reference_lap_seconds"),
+            geometry_id=payload.get("geometry_id"),
+            reference_candidates=list(payload.get("reference_candidates") or []),
+            references=dict(payload.get("references") or {}),
+            reference_kind=payload.get("reference_kind"),
         )
 
     def save(self, path: Path) -> Path:
@@ -232,6 +378,20 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
     Taking the first sample past a boundary instead would fold the sampling
     interval into the split, which at 57 Hz is up to 18 ms per boundary -- more
     than the differences this model exists to measure.
+
+    The finish line follows the ML convention (pedido 14): the lap is timed from
+    `s = 0` to `s = 0`, interpolated. A recorded lap starts a few metres *past*
+    the line -- the game resets the lap timer a little after `s = 0`, and the
+    lap counter a few frames after that -- and ends a few metres past it again,
+    with the line itself crossed in its tail. So the flag is interpolated in the
+    tail, and the start is the flag minus one period: the time between two
+    passages over the lap's first sample. Measured on five laps: that period is
+    the game's lap time to the millisecond.
+
+    The old version extrapolated the start backwards from the first sample
+    instead, which put the sum of the slices 26 ms over the store's lap time --
+    and the store turned out to be the one that is short (one grid step at the
+    line, see docs/coach_aprendizado.md).
     """
     splits: List[Optional[float]] = [None] * microsectors
     if df is None or df.empty or "p" not in df.columns or "elapsed_s" not in df.columns:
@@ -244,43 +404,7 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
     if progress.size < microsectors:
         return splits
 
-    # Crossing time for every boundary, including the flag at 1.0.
-    #
-    # The two ends are not observed. A recorded lap does not start exactly on
-    # the line -- its first sample lands somewhere inside the first microsector
-    # -- and it does not end exactly on it either. Taking the first sample's
-    # clock as the crossing therefore makes the first sector short by however
-    # late the recording began, which is not a lap record, it is a recording
-    # offset: sector 0 came out with eight times the spread of any other sector
-    # and its target was set by whichever lap happened to start latest. The last
-    # sector had the mirror problem and simply never got a target at all, which
-    # left the ideal lap missing a slice and the gap to it overstated.
-    #
-    # So both ends are extrapolated from the rate at the ends, and only when the
-    # gap is small enough for that rate to mean anything.
-    crossings: List[Optional[float]] = [None] * (microsectors + 1)
-    crossings[0] = _edge_crossing(progress, elapsed, at=0.0, microsectors=microsectors)
-    boundary = 1
-    for index in range(1, progress.size):
-        while boundary <= microsectors and progress[index] >= boundary / microsectors:
-            previous_p, current_p = progress[index - 1], progress[index]
-            at = elapsed[index]
-            if current_p > previous_p:
-                t = ((boundary / microsectors) - previous_p) / (current_p - previous_p)
-                if 0.0 <= t <= 1.0:
-                    at = elapsed[index - 1] + (elapsed[index] - elapsed[index - 1]) * t
-            crossings[boundary] = float(at)
-            boundary += 1
-        if boundary > microsectors:
-            break
-
-    # The flag. The walk above can never reach it: a recorded lap ends a sample
-    # or two past the line, so its progress has already wrapped to nearly zero
-    # and `progress >= 1.0` is never true. Left like that the last microsector
-    # never closes, and the ideal lap is the sum of 59 slices out of 60.
-    if crossings[microsectors] is None:
-        crossings[microsectors] = _edge_crossing(progress, elapsed, at=1.0, microsectors=microsectors)
-
+    crossings = _line_crossings(progress, elapsed, microsectors)
     for index in range(microsectors):
         start, end = crossings[index], crossings[index + 1]
         if start is None or end is None:
@@ -291,53 +415,49 @@ def microsector_splits(df: pd.DataFrame, microsectors: int = DEFAULT_MICROSECTOR
     return splits
 
 
-def _edge_crossing(progress, elapsed, *, at: float, microsectors: int) -> Optional[float]:
-    """
-    When the lap crossed `at` (0.0 or 1.0), which no sample sits exactly on.
+def _line_crossings(progress: np.ndarray, elapsed: np.ndarray, microsectors: int) -> List[Optional[float]]:
+    """When the lap crossed every boundary, the start line included (one period before the flag).
 
-    Extrapolated from the rate at that end of the lap, and only when the sample
-    is within a fifth of a microsector of the line -- past that the rate is a
-    guess and no target is better than a wrong one.
+    Progress is unwrapped where it falls back near zero -- the line crossed in
+    the tail -- so the lap runs on one increasing axis from its first sample to
+    one lap past it. An end that no sample reaches is extrapolated from the rate
+    at that end, but only within a fifth of a microsector: past that the rate is
+    a guess and no target is better than a wrong one.
     """
     tolerance = 0.2 / microsectors
-    if at <= 0.0:
-        if progress.size < 2 or progress[0] > tolerance:
+    unwrapped = progress.astype(float).copy()
+    drops = np.flatnonzero(np.diff(unwrapped) < -0.5)
+    if drops.size:
+        unwrapped[drops[0] + 1:] += 1.0
+        if drops.size > 1:
+            # A second wrap is the next lap: stop there.
+            cut = drops[1] + 1
+            unwrapped, elapsed = unwrapped[:cut], elapsed[:cut]
+    unwrapped = np.maximum.accumulate(unwrapped)
+    keep = np.r_[True, np.diff(unwrapped) > 0]
+    unwrapped, elapsed = unwrapped[keep], elapsed[keep]
+    if unwrapped.size < 2:
+        return [None] * (microsectors + 1)
+
+    def at(position: float) -> Optional[float]:
+        if position < unwrapped[0]:
             return None
-        span = progress[1] - progress[0]
-        if span <= 0:
-            return float(elapsed[0])
-        rate = (elapsed[1] - elapsed[0]) / span
-        return float(elapsed[0] - progress[0] * rate)
+        if position <= unwrapped[-1]:
+            return float(np.interp(position, unwrapped, elapsed))
+        if position - unwrapped[-1] > tolerance:
+            return None
+        rate = (elapsed[-1] - elapsed[-2]) / (unwrapped[-1] - unwrapped[-2])
+        return float(elapsed[-1] + (position - unwrapped[-1]) * rate)
 
-    if progress.size < 2:
-        return None
-
-    # A recorded lap usually ends *past* the line, with anything from one to a
-    # dozen samples already into the next lap and their progress back near zero.
-    # Read literally that is a lap that stopped at the start, and the final
-    # microsector never closes -- which is why the ideal lap was the sum of 59
-    # slices out of 60. So find where progress actually fell off the cliff and
-    # interpolate the crossing there, wherever in the tail it happened.
-    for index in range(progress.size - 1, max(0, progress.size - 60), -1):
-        before, after = float(progress[index - 1]), float(progress[index])
-        if after >= before - 0.5:
-            continue
-        span = (after + 1.0) - before
-        if span <= 0:
-            return float(elapsed[index])
-        t = (1.0 - before) / span
-        return float(elapsed[index - 1] + (elapsed[index] - elapsed[index - 1]) * t)
-
-    # No wrap in the tail: the lap simply stops, and only counts if it stopped
-    # on the line.
-    last, previous = float(progress[-1]), float(progress[-2])
-    if last < 1.0 - tolerance:
-        return None
-    span = last - previous
-    if span <= 0:
-        return float(elapsed[-1])
-    rate = (elapsed[-1] - elapsed[-2]) / span
-    return float(elapsed[-1] + (1.0 - last) * rate)
+    crossings: List[Optional[float]] = [None] * (microsectors + 1)
+    for boundary in range(1, microsectors + 1):
+        crossings[boundary] = at(boundary / microsectors)
+    first = float(unwrapped[0])
+    lap_end = at(1.0 + first)
+    if crossings[microsectors] is not None and lap_end is not None and first <= tolerance + 1.0 / microsectors:
+        period = lap_end - float(elapsed[0])
+        crossings[0] = crossings[microsectors] - period
+    return crossings
 
 
 def _channel_summary(df: pd.DataFrame, start_p: float, end_p: float) -> Dict[str, Optional[float]]:
@@ -376,19 +496,160 @@ def _channel_summary(df: pd.DataFrame, start_p: float, end_p: float) -> Dict[str
     return summary
 
 
+def _has_hole(df: pd.DataFrame, microsectors: int) -> bool:
+    """A gap in the recording longer than half a microsector.
+
+    `microsector_splits` interpolates every boundary, including the ones that
+    fall inside a hole -- so a lap with 400 m missing still comes out with 60
+    splits. Good enough to vote for the best of a slice among many laps; not
+    good enough to be *the* reference lap the driver is measured against.
+    """
+    if df is None or "p" not in df.columns:
+        return True
+    progress = pd.to_numeric(df["p"], errors="coerce").to_numpy(dtype=float)
+    progress = progress[np.isfinite(progress)]
+    if progress.size < 2:
+        return True
+    steps = np.diff(progress)
+    steps = steps[steps > -0.5]          # the wrap at the finish line is not a hole
+    return bool(steps.size and steps.max() > 0.5 / microsectors)
+
+
+def _meters_at(df: pd.DataFrame, progress: Optional[float]) -> Optional[float]:
+    """The runtime's `s` where the lap was at `progress`."""
+    if progress is None or df is None or "s" not in df.columns or "p" not in df.columns:
+        return None
+    p = pd.to_numeric(df["p"], errors="coerce").to_numpy(dtype=float)
+    s = pd.to_numeric(df["s"], errors="coerce").to_numpy(dtype=float)
+    good = np.isfinite(p) & np.isfinite(s)
+    if not good.any():
+        return None
+    index = int(np.argmin(np.abs(p[good] - float(progress))))
+    return round(float(s[good][index]), 1)
+
+
+def _brake_onset_m(df: pd.DataFrame, start_p: float, end_p: float) -> Optional[float]:
+    """Where the brake first crosses `BRAKE_ONSET` inside the slice, in metres (`s`)."""
+    if df is None or "brake" not in df.columns or "p" not in df.columns or "s" not in df.columns:
+        return None
+    p = pd.to_numeric(df["p"], errors="coerce").to_numpy(dtype=float)
+    s = pd.to_numeric(df["s"], errors="coerce").to_numpy(dtype=float)
+    brake = pd.to_numeric(df["brake"], errors="coerce").fillna(0.0).to_numpy(dtype=float)
+    on = brake >= BRAKE_ONSET
+    starts = np.flatnonzero(on[1:] & ~on[:-1]) + 1
+    for index in starts:
+        if start_p <= p[index] < end_p and np.isfinite(s[index]):
+            return round(float(s[index]), 1)
+    return None
+
+
+def reference_from_laps(
+    laps: Sequence[Tuple[str, Optional[float], Optional[int], pd.DataFrame]],
+    *,
+    geometry: Any,
+    kind: str,
+) -> Tuple[Optional[Dict[str, Any]], List[Dict[str, Any]]]:
+    """The best valid and complete lap among `laps`, as a reference of `kind`.
+
+    Same rules as the model's own reference: usable sampling, no projection
+    jump, every microsector timed and no recording hole. Its time is the sum of
+    its slices, which is the lap from `s = 0` to `s = 0` (pedido 14). Returns the
+    reference (or None) and the five quickest candidates with the reason each
+    was or was not chosen.
+    """
+    from .official_geometry import project_lap, projection_jumped
+
+    microsectors = geometry.microsectors
+    status: Dict[str, Tuple[float, str]] = {}
+    complete: Dict[str, Tuple[float, List[Optional[float]], pd.DataFrame]] = {}
+    for lap_id, lap_seconds, sample_count, df in laps:
+        usable, reason = lap_is_usable(lap_seconds, sample_count)
+        if not usable:
+            status[lap_id] = (float(lap_seconds or 0.0), f"recusada: {reason}")
+            continue
+        projected = project_lap(df, geometry)
+        if projection_jumped(projected, geometry.length):
+            status[lap_id] = (float(lap_seconds or 0.0), "recusada: salto de projecao")
+            continue
+        splits = microsector_splits(projected, microsectors)
+        missing = sum(1 for split in splits if split is None)
+        if missing:
+            status[lap_id] = (float(lap_seconds or 0.0), f"incompleta: {missing} microsetores sem tempo")
+        elif _has_hole(projected, microsectors):
+            status[lap_id] = (float(lap_seconds or 0.0), "incompleta: buraco na gravacao maior que meio microsetor")
+        else:
+            seconds = float(sum(splits))
+            status[lap_id] = (seconds, "completa")
+            complete[lap_id] = (seconds, splits, projected)
+
+    chosen = min(complete, key=lambda key: complete[key][0]) if complete else None
+    candidates = []
+    for lap_id, (seconds, why) in sorted(status.items(), key=lambda item: item[1][0])[:5]:
+        if lap_id == chosen:
+            why = "escolhida: a mais rapida valida e completa"
+        elif why == "completa":
+            why = "valida e completa, mas mais lenta que a escolhida"
+        candidates.append({"lap_id": lap_id, "lap_seconds": round(seconds, 3), "motivo": why})
+    if chosen is None:
+        return None, candidates
+
+    seconds, splits, df = complete[chosen]
+    sectors = []
+    for index, split in enumerate(splits):
+        start_p, end_p = index / microsectors, (index + 1) / microsectors
+        summary = _channel_summary(df, start_p, end_p)
+        sectors.append({
+            "index": index,
+            "seconds": round(float(split), 4),
+            "min_speed_kmh": summary.get("min_speed_kmh"),
+            "brake_onset_m": _brake_onset_m(df, start_p, end_p),
+        })
+    reference = {
+        "kind": kind,
+        "label": REFERENCE_LABELS.get(kind, kind),
+        "lap_id": chosen,
+        "lap_seconds": round(seconds, 3),
+        "sectors": sectors,
+        "candidates": candidates,
+    }
+    return reference, candidates
+
+
 def build_reference_model(
     laps: Sequence[Tuple[str, Optional[float], Optional[int], pd.DataFrame]],
     *,
     track: str = "",
     microsectors: int = DEFAULT_MICROSECTORS,
     built_at: Optional[str] = None,
+    mode: str = MODE_REFERENCE_LAP,
+    reference_lap_id: Optional[str] = None,
+    geometry: Any = None,
 ) -> DriverReferenceModel:
     """
     Fit the model from `(lap_id, lap_seconds, sample_count, dataframe)` laps.
 
     Every lap that survives the sanity filter contributes its splits; the model
     keeps the best of each slice and remembers which lap set it.
+
+    The reference lap is the quickest lap that is valid and *complete* -- every
+    microsector timed, so its slices add up to its lap time -- or the one named
+    by `reference_lap_id`, which then has to be valid and complete too. The
+    caller decides which laps are comparable (same track, car and geometry):
+    this function sees only the laps it is given.
+
+    With `geometry` (an `official_geometry.OfficialGeometry`, ADR 0013), every
+    lap is projected from its world position onto the official grid before it
+    is cut: the recorded `p` is ignored, so laps from any cache -- and laps that
+    have no `p` at all -- are measured on one ruler, and the microsectors are
+    the ML's equal-distance ones.
     """
+    if geometry is not None:
+        from .official_geometry import project_lap, projection_jumped
+
+        microsectors = geometry.microsectors
+        laps = [(lap_id, seconds, count, project_lap(df, geometry)) for lap_id, seconds, count, df in laps]
+    if mode not in MODES:
+        raise ValueError(f"unknown mode {mode!r}; expected one of {MODES}")
     best: Dict[int, Tuple[float, str, pd.DataFrame]] = {}
     observed: Dict[int, List[float]] = {}
     rejected: Dict[str, int] = {}
@@ -396,10 +657,17 @@ def build_reference_model(
     best_lap_id: Optional[str] = None
     best_lap_seconds: Optional[float] = None
 
+    complete: Dict[str, Tuple[float, List[Optional[float]], pd.DataFrame]] = {}
+    # Every lap the model accepted, and what kept it from being a reference.
+    accepted_status: Dict[str, Tuple[float, str]] = {}
+
     for lap_id, lap_seconds, sample_count, df in laps:
         usable, reason = lap_is_usable(lap_seconds, sample_count)
         if not usable:
             rejected[reason] = rejected.get(reason, 0) + 1
+            continue
+        if geometry is not None and projection_jumped(df, geometry.length):
+            rejected["projection_jump"] = rejected.get("projection_jump", 0) + 1
             continue
 
         splits = microsector_splits(df, microsectors)
@@ -407,6 +675,13 @@ def build_reference_model(
         if covered < microsectors * MIN_COVERAGE:
             rejected["incomplete_lap"] = rejected.get("incomplete_lap", 0) + 1
             continue
+        if covered < microsectors:
+            accepted_status[lap_id] = (float(lap_seconds or 0.0), f"incompleta: {microsectors - covered} microsetores sem tempo")
+        elif _has_hole(df, microsectors):
+            accepted_status[lap_id] = (float(lap_seconds or 0.0), "incompleta: buraco na gravacao maior que meio microsetor")
+        else:
+            accepted_status[lap_id] = (float(lap_seconds or 0.0), "completa")
+            complete[lap_id] = (float(lap_seconds or 0.0), splits, df)
 
         accepted += 1
         if best_lap_seconds is None or (lap_seconds or 0) < best_lap_seconds:
@@ -436,6 +711,38 @@ def build_reference_model(
         )
         targets.append(target)
 
+    reference_seconds: Optional[float] = None
+    requested_reference = reference_lap_id
+    if reference_lap_id is not None:
+        if reference_lap_id not in complete:
+            raise ValueError(
+                f"reference lap {reference_lap_id!r} is not a valid, complete lap among the laps given"
+            )
+    elif complete:
+        reference_lap_id = min(complete, key=lambda key: complete[key][0])
+    if reference_lap_id is not None:
+        reference_seconds, reference_splits, reference_df = complete[reference_lap_id]
+        for target in targets:
+            split = reference_splits[target.index]
+            target.reference_seconds = round(split, 4) if split is not None else None
+            summary = _channel_summary(reference_df, target.start_p, target.end_p)
+            target.reference_min_speed_kmh = summary.get("min_speed_kmh")
+            target.reference_brake_point_p = summary.get("brake_point_p")
+            target.reference_brake_point_m = _meters_at(reference_df, summary.get("brake_point_p"))
+            target.reference_brake_onset_m = _brake_onset_m(reference_df, target.start_p, target.end_p)
+            target.reference_throttle_point_p = summary.get("throttle_point_p")
+            target.reference_throttle_point_m = _meters_at(reference_df, summary.get("throttle_point_p"))
+
+    candidates = []
+    for lap_id, (seconds, status) in sorted(accepted_status.items(), key=lambda item: item[1][0])[:5]:
+        if lap_id == reference_lap_id:
+            why = "escolhida: " + ("indicada por lap_id" if requested_reference else "a mais rapida valida e completa")
+        elif status != "completa":
+            why = status
+        else:
+            why = "valida e completa, mas mais lenta que a escolhida"
+        candidates.append({"lap_id": lap_id, "lap_seconds": round(seconds, 3), "motivo": why})
+
     ideal = round(sum(target.best_seconds for target in targets), 3) if targets else None
     return DriverReferenceModel(
         version=MODEL_VERSION,
@@ -449,6 +756,11 @@ def build_reference_model(
         targets=targets,
         rejected_reasons=rejected,
         built_at=built_at,
+        mode=mode,
+        reference_lap_id=reference_lap_id,
+        reference_lap_seconds=round(reference_seconds, 3) if reference_seconds else None,
+        geometry_id=getattr(geometry, "geometry_id", None),
+        reference_candidates=candidates,
     )
 
 

@@ -65,6 +65,30 @@ describe('renderEvidence', () => {
     expect(line).toContain('REF_S: 1200m');
   });
 
+  it('labels the reference lap, not a best, in the default mode', () => {
+    const line = renderEvidence({
+      event: 'Setor 20: 0.45s atras da sua volta de referencia neste trecho (2.41s contra 1.96s).',
+      evidence: { microsector: 20, yourSeconds: 2.41, referenceSeconds: 1.96, lossSeconds: 0.45 },
+    });
+    expect(line).toContain('VOCE 2.41s');
+    expect(line).toContain('REFERENCIA 1.96s');
+    expect(line).not.toContain('MELHOR');
+    expect(line).not.toContain('OTIMO');
+  });
+
+  it('names the reference in use (ADR 0016)', () => {
+    const ai = renderEvidence({
+      event: 'Setor 22: 0.60s atras da volta da IA neste trecho (1.98s contra 1.38s).',
+      evidence: { microsector: 22, yourSeconds: 1.98, referenceSeconds: 1.38, lossSeconds: 0.6, referenceKind: 'volta_ia' },
+    });
+    expect(ai).toContain('VOLTA DA IA 1.38s');
+    const own = renderEvidence({
+      event: 'x',
+      evidence: { microsector: 22, yourSeconds: 1.98, referenceSeconds: 1.5, lossSeconds: 0.48, referenceKind: 'minha_melhor' },
+    });
+    expect(own).toContain('SUA MELHOR 1.50s');
+  });
+
   it('survives an optimal split that arrives as null', () => {
     const line = renderEvidence(microsectorEvent({ optimalSeconds: null }));
     expect(line).not.toContain('OTIMO');

@@ -851,6 +851,8 @@ async def lifespan(app: FastAPI):
             event_bus,
             model_provider=lambda track: assisted_analysis_service._reference_model(track),
             loop_ref_provider=lambda: asyncio.get_event_loop(),
+            # ADR 0013: the coach projects the car on the official geometry.
+            geometry_provider=lambda track: assisted_analysis_service._official_geometry(track),
         )
         event_bus.subscribe(PROCESSED_FRAME, live_driving_coach.on_frame)
         logger.info("Live driving coach subscribed to processed frames")

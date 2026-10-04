@@ -1,0 +1,3766 @@
+{
+ "etapa": "coach-aprendizado (pedido 14), parado no passo 5 da Parte B: criterio (c) falhou",
+ "base_do_patch": "develop cbde23bd",
+ "patch_sha256": "be635b7fe398fe81237aca5d544614c4dacbed7d57a5037ca4a8e909505f8373",
+ "pytest": "530 passed, 4 warnings in 124.69s (0:02:04)",
+ "vitest": "nao rodado: nenhuma mudanca no frontend nesta parte",
+ "registro_dos_criterios": "a2cb59e3",
+ "achado_store": {
+  "causa": "ml/preprocessing/resampling.py::_reference_clock_to_grid usa o span da grade como periodo, um passo mais curto que a volta",
+  "store_menos_periodo_ms": [
+   -25.7,
+   -28.0,
+   -26.0,
+   -26.5,
+   -26.3
+  ],
+  "vies_do_relogio_no_microsetor_0": "mesma causa: -26 ms do passo + -8 ms do vies geral"
+ },
+ "rodadas": {
+  "fe88367f": {
+   "resultado": {
+    "a": true,
+    "b": false,
+    "c": false,
+    "d": true,
+    "e": false
+   },
+   "detalhe": {
+    "a": {
+     "sessoes": {
+      "MergeFix": {
+       "sessao": "2026-06-20_13-13-02_vhe_interlagos",
+       "voltas_validas_comparadas": 39,
+       "abs_ds_m": {
+        "n": 195350,
+        "p50": 0.01803550408976662,
+        "p99": 0.03655403927733914,
+        "max": 33.34617744492334
+       },
+       "abs_dd_m": {
+        "n": 195350,
+        "p50": 2.3228123935403744e-05,
+        "p99": 0.0019208750547289823,
+        "max": 3.073378475710996
+       },
+       "passou": true
+      },
+      "cache atual": {
+       "sessao": "2026-08-16_03-30-14_vhe_interlagos",
+       "voltas_validas_comparadas": 7,
+       "abs_ds_m": {
+        "n": 36549,
+        "p50": 0.018140407350983878,
+        "p99": 0.036532068537380835,
+        "max": 7.825155345669373
+       },
+       "abs_dd_m": {
+        "n": 36549,
+        "p50": 2.30406380439252e-05,
+        "p99": 0.0015774449383093964,
+        "max": 0.1725015714593634
+       },
+       "passou": true
+      },
+      "sem cache": {
+       "sessao": "2026-08-09_19-20-59_vhe_interlagos",
+       "voltas_validas_comparadas": 52,
+       "abs_ds_m": {
+        "n": 271245,
+        "p50": 0.017981643517941848,
+        "p99": 0.03648961670493008,
+        "max": 29.932189962699795
+       },
+       "abs_dd_m": {
+        "n": 271245,
+        "p50": 2.3352040054991363e-05,
+        "p99": 0.0019275208805682445,
+        "max": 0.8000339680677975
+       },
+       "passou": true
+      }
+     },
+     "passou": true
+    },
+    "b": {
+     "amostras": 582527,
+     "p50_ms": 0.7956999999692016,
+     "p99_ms": 1.9795999999911373,
+     "max_ms": 26.684700000004113,
+     "passou": false
+    },
+    "c": {
+     "voltas": [
+      {
+       "lap_id": "2026-08-16_03-30-14_vhe_interlagos#0016",
+       "replay_lap_id": "rec__2026-08-16_03-30-14_vhe_interlagos__9",
+       "tempo_volta_store_s": 84.8478421595802,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.025630707077945458,
+       "soma_coach_s": 84.87359999999998,
+       "soma_menos_tempo_volta_s": 0.025757840419785794,
+       "microsetor_0_diferenca_s": 0.025630707077945458,
+       "microsetores_1_a_59_diferenca_max_s": 0.012619149528599438,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 84.87350721302876,
+        "store_menos_periodo_ms": -25.7,
+        "diferenca_max_por_microsetor_s": 0.012619149528599438,
+        "soma_menos_periodo_s": 9.278697122283575e-05
+       }
+      },
+      {
+       "lap_id": "2026-06-18_20-06-03_vhe_interlagos#0056",
+       "replay_lap_id": "rec__2026-06-18_20-06-03_vhe_interlagos__57",
+       "tempo_volta_store_s": 85.29966706645915,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.029276255659687167,
+       "soma_coach_s": 85.32910000000001,
+       "soma_menos_tempo_volta_s": 0.029432933540860517,
+       "microsetor_0_diferenca_s": 0.029276255659687167,
+       "microsetores_1_a_59_diferenca_max_s": 0.003210684881692849,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 85.32765629795203,
+        "store_menos_periodo_ms": -28.0,
+        "diferenca_max_por_microsetor_s": 0.003210684881692849,
+        "soma_menos_periodo_s": 0.0014437020479789453
+       }
+      },
+      {
+       "lap_id": "2026-06-20_13-13-02_vhe_interlagos#0003",
+       "replay_lap_id": "rec__2026-06-20_13-13-02_vhe_interlagos__11",
+       "tempo_volta_store_s": 85.4414660826498,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.0780036959864221,
+       "soma_coach_s": 85.4676,
+       "soma_menos_tempo_volta_s": 0.02613391735020798,
+       "microsetor_0_diferenca_s": 0.02597413183167041,
+       "microsetores_1_a_59_diferenca_max_s": 0.0780036959864221,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 85.46742954941855,
+        "store_menos_periodo_ms": -26.0,
+        "diferenca_max_por_microsetor_s": 0.0780036959864221,
+        "soma_menos_periodo_s": 0.00017045058145015446
+       }
+      },
+      {
+       "lap_id": "2026-08-09_19-20-59_vhe_interlagos#0010",
+       "replay_lap_id": "rec__2026-08-09_19-20-59_vhe_interlagos__381",
+       "tempo_volta_store_s": 85.47170372461478,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.026412791408114478,
+       "soma_coach_s": 85.4985,
+       "soma_menos_tempo_volta_s": 0.02679627538522311,
+       "microsetor_0_diferenca_s": 0.026412791408114478,
+       "microsetores_1_a_59_diferenca_max_s": 0.002150570872714308,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 85.49815798353299,
+        "store_menos_periodo_ms": -26.5,
+        "diferenca_max_por_microsetor_s": 0.002150570872714308,
+        "soma_menos_periodo_s": 0.0003420164670160375
+       }
+      },
+      {
+       "lap_id": "2026-06-14_12-23-46_vhe_interlagos#0007",
+       "replay_lap_id": "rec__2026-06-14_12-23-46_vhe_interlagos__100",
+       "tempo_volta_store_s": 85.53781350082261,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.02628625781590499,
+       "soma_coach_s": 85.56400000000001,
+       "soma_menos_tempo_volta_s": 0.026186499177399014,
+       "microsetor_0_diferenca_s": 0.02628625781590499,
+       "microsetores_1_a_59_diferenca_max_s": 0.0033245922479219203,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 85.56409824574251,
+        "store_menos_periodo_ms": -26.3,
+        "diferenca_max_por_microsetor_s": 0.0033245922479219203,
+        "soma_menos_periodo_s": -9.824574250671958e-05
+       }
+      }
+     ],
+     "passou": false
+    },
+    "d": {
+     "frases_proibidas": [],
+     "total_de_frases": 305,
+     "passou": true
+    },
+    "e": {
+     "sessoes": {
+      "2026-06-20_13-13-02_vhe_interlagos": {
+       "voltas_limpas": 31,
+       "amostras": 151781,
+       "abs_ds_max_m": 7.975782147963855,
+       "onde": {
+        "volta": "2026-06-20_13-13-02_vhe_interlagos#0010",
+        "amostra": 17,
+        "s_ml_m": null
+       },
+       "passou": false
+      },
+      "2026-08-16_03-30-14_vhe_interlagos": {
+       "voltas_limpas": 7,
+       "amostras": 36549,
+       "abs_ds_max_m": 7.825155345669373,
+       "onde": {
+        "volta": "2026-08-16_03-30-14_vhe_interlagos#0017",
+        "amostra": 1192,
+        "s_ml_m": null
+       },
+       "passou": false
+      },
+      "2026-08-09_19-20-59_vhe_interlagos": {
+       "voltas_limpas": 40,
+       "amostras": 202395,
+       "abs_ds_max_m": 12.63670536177915,
+       "onde": {
+        "volta": "2026-08-09_19-20-59_vhe_interlagos#0026",
+        "amostra": 749,
+        "s_ml_m": null
+       },
+       "passou": false
+      },
+      "2026-10-04_02-24-04_vhe_interlagos": {
+       "voltas_limpas": 10,
+       "amostras": 50686,
+       "abs_ds_max_m": 17.346031762668645,
+       "onde": {
+        "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+        "amostra": 4816,
+        "s_ml_m": null
+       },
+       "passou": false
+      },
+      "2026-10-04_03-21-52_vhe_interlagos": {
+       "voltas_limpas": 4,
+       "amostras": 21721,
+       "abs_ds_max_m": 9.3629916093887,
+       "onde": {
+        "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+        "amostra": 1358,
+        "s_ml_m": null
+       },
+       "passou": false
+      },
+      "2026-10-04_03-35-57_vhe_interlagos": {
+       "voltas_limpas": 0,
+       "amostras": 0,
+       "abs_ds_max_m": 0.0,
+       "onde": null,
+       "passou": true
+      },
+      "2026-10-04_03-36-35_vhe_interlagos": {
+       "voltas_limpas": 0,
+       "amostras": 0,
+       "abs_ds_max_m": 0.0,
+       "onde": null,
+       "passou": true
+      },
+      "2026-10-04_03-40-32_vhe_interlagos": {
+       "voltas_limpas": 0,
+       "amostras": 0,
+       "abs_ds_max_m": 0.0,
+       "onde": null,
+       "passou": true
+      },
+      "2026-10-04_03-42-10_vhe_interlagos": {
+       "voltas_limpas": 12,
+       "amostras": 59956,
+       "abs_ds_max_m": 13.982562759191751,
+       "onde": {
+        "volta": "2026-10-04_03-42-10_vhe_interlagos#0010",
+        "amostra": 4254,
+        "s_ml_m": null
+       },
+       "passou": false
+      },
+      "2026-10-04_04-22-39_vhe_interlagos": {
+       "voltas_limpas": 0,
+       "amostras": 0,
+       "abs_ds_max_m": 0.0,
+       "onde": null,
+       "passou": true
+      }
+     },
+     "passou": false
+    }
+   }
+  },
+  "66e4b720": {
+   "resultado": {
+    "a": true,
+    "b": true,
+    "c": false,
+    "d": true,
+    "e": false
+   },
+   "detalhe": {
+    "a": {
+     "sessoes": {
+      "MergeFix": {
+       "sessao": "2026-06-20_13-13-02_vhe_interlagos",
+       "voltas_validas_comparadas": 39,
+       "abs_ds_m": {
+        "n": 195350,
+        "p50": 0.01803376208431473,
+        "p99": 0.03654978006083184,
+        "max": 33.34617744492334
+       },
+       "abs_dd_m": {
+        "n": 195350,
+        "p50": 2.3226414004096085e-05,
+        "p99": 0.0019090722356528288,
+        "max": 3.073378475710996
+       },
+       "passou": true
+      },
+      "cache atual": {
+       "sessao": "2026-08-16_03-30-14_vhe_interlagos",
+       "voltas_validas_comparadas": 7,
+       "abs_ds_m": {
+        "n": 36549,
+        "p50": 0.018140568397484458,
+        "p99": 0.036532068537380835,
+        "max": 7.825155345669373
+       },
+       "abs_dd_m": {
+        "n": 36549,
+        "p50": 2.30406380439252e-05,
+        "p99": 0.0015762719530837837,
+        "max": 0.1725015714593634
+       },
+       "passou": true
+      },
+      "sem cache": {
+       "sessao": "2026-08-09_19-20-59_vhe_interlagos",
+       "voltas_validas_comparadas": 52,
+       "abs_ds_m": {
+        "n": 271245,
+        "p50": 0.017981631778184237,
+        "p99": 0.036488881514760575,
+        "max": 29.932189962699795
+       },
+       "abs_dd_m": {
+        "n": 271245,
+        "p50": 2.3351939888449635e-05,
+        "p99": 0.0019272869383813074,
+        "max": 0.8000339680677975
+       },
+       "passou": true
+      }
+     },
+     "passou": true
+    },
+    "b": {
+     "amostras": 582527,
+     "p50_ms": 0.33540000001153203,
+     "p99_ms": 0.9383000000013908,
+     "max_ms": 14.428700000003403,
+     "passou": true
+    },
+    "c": {
+     "voltas": [
+      {
+       "lap_id": "2026-08-16_03-30-14_vhe_interlagos#0016",
+       "replay_lap_id": "rec__2026-08-16_03-30-14_vhe_interlagos__9",
+       "tempo_volta_store_s": 84.8478421595802,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.025630707077945458,
+       "soma_coach_s": 84.87359999999998,
+       "soma_menos_tempo_volta_s": 0.025757840419785794,
+       "microsetor_0_diferenca_s": 0.025630707077945458,
+       "microsetores_1_a_59_diferenca_max_s": 0.012619149528599438,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 84.87350721302876,
+        "store_menos_periodo_ms": -25.7,
+        "diferenca_max_por_microsetor_s": 0.012619149528599438,
+        "soma_menos_periodo_s": 9.278697122283575e-05
+       }
+      },
+      {
+       "lap_id": "2026-06-18_20-06-03_vhe_interlagos#0056",
+       "replay_lap_id": "rec__2026-06-18_20-06-03_vhe_interlagos__57",
+       "tempo_volta_store_s": 85.29966706645915,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.029276255659687167,
+       "soma_coach_s": 85.32910000000001,
+       "soma_menos_tempo_volta_s": 0.029432933540860517,
+       "microsetor_0_diferenca_s": 0.029276255659687167,
+       "microsetores_1_a_59_diferenca_max_s": 0.003210684881692849,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 85.32765629795203,
+        "store_menos_periodo_ms": -28.0,
+        "diferenca_max_por_microsetor_s": 0.003210684881692849,
+        "soma_menos_periodo_s": 0.0014437020479789453
+       }
+      },
+      {
+       "lap_id": "2026-06-20_13-13-02_vhe_interlagos#0003",
+       "replay_lap_id": "rec__2026-06-20_13-13-02_vhe_interlagos__11",
+       "tempo_volta_store_s": 85.4414660826498,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.0780036959864221,
+       "soma_coach_s": 85.4676,
+       "soma_menos_tempo_volta_s": 0.02613391735020798,
+       "microsetor_0_diferenca_s": 0.02597413183167041,
+       "microsetores_1_a_59_diferenca_max_s": 0.0780036959864221,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 85.46742954941855,
+        "store_menos_periodo_ms": -26.0,
+        "diferenca_max_por_microsetor_s": 0.0780036959864221,
+        "soma_menos_periodo_s": 0.00017045058145015446
+       }
+      },
+      {
+       "lap_id": "2026-08-09_19-20-59_vhe_interlagos#0010",
+       "replay_lap_id": "rec__2026-08-09_19-20-59_vhe_interlagos__381",
+       "tempo_volta_store_s": 85.47170372461478,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.026412791408114478,
+       "soma_coach_s": 85.4985,
+       "soma_menos_tempo_volta_s": 0.02679627538522311,
+       "microsetor_0_diferenca_s": 0.026412791408114478,
+       "microsetores_1_a_59_diferenca_max_s": 0.002150570872714308,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 85.49815798353299,
+        "store_menos_periodo_ms": -26.5,
+        "diferenca_max_por_microsetor_s": 0.002150570872714308,
+        "soma_menos_periodo_s": 0.0003420164670160375
+       }
+      },
+      {
+       "lap_id": "2026-06-14_12-23-46_vhe_interlagos#0007",
+       "replay_lap_id": "rec__2026-06-14_12-23-46_vhe_interlagos__100",
+       "tempo_volta_store_s": 85.53781350082261,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.02628625781590499,
+       "soma_coach_s": 85.56400000000001,
+       "soma_menos_tempo_volta_s": 0.026186499177399014,
+       "microsetor_0_diferenca_s": 0.02628625781590499,
+       "microsetores_1_a_59_diferenca_max_s": 0.0033245922479219203,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 85.56409824574251,
+        "store_menos_periodo_ms": -26.3,
+        "diferenca_max_por_microsetor_s": 0.0033245922479219203,
+        "soma_menos_periodo_s": -9.824574250671958e-05
+       }
+      }
+     ],
+     "passou": false
+    },
+    "d": {
+     "frases_proibidas": [],
+     "total_de_frases": 304,
+     "passou": true
+    },
+    "e": {
+     "sessoes": {
+      "2026-06-20_13-13-02_vhe_interlagos": {
+       "voltas_limpas": 31,
+       "amostras": 151781,
+       "abs_ds_max_m": 7.975782147963855,
+       "onde": {
+        "volta": "2026-06-20_13-13-02_vhe_interlagos#0010",
+        "amostra": 17,
+        "s_ml_m": null
+       },
+       "passou": false
+      },
+      "2026-08-16_03-30-14_vhe_interlagos": {
+       "voltas_limpas": 7,
+       "amostras": 36549,
+       "abs_ds_max_m": 7.825155345669373,
+       "onde": {
+        "volta": "2026-08-16_03-30-14_vhe_interlagos#0017",
+        "amostra": 1192,
+        "s_ml_m": null
+       },
+       "passou": false
+      },
+      "2026-08-09_19-20-59_vhe_interlagos": {
+       "voltas_limpas": 40,
+       "amostras": 202395,
+       "abs_ds_max_m": 6.922169944990401,
+       "onde": {
+        "volta": "2026-08-09_19-20-59_vhe_interlagos#0025",
+        "amostra": 1196,
+        "s_ml_m": null
+       },
+       "passou": false
+      },
+      "2026-10-04_02-24-04_vhe_interlagos": {
+       "voltas_limpas": 10,
+       "amostras": 50686,
+       "abs_ds_max_m": 7.977035994517337,
+       "onde": {
+        "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+        "amostra": 1279,
+        "s_ml_m": null
+       },
+       "passou": false
+      },
+      "2026-10-04_03-21-52_vhe_interlagos": {
+       "voltas_limpas": 4,
+       "amostras": 21721,
+       "abs_ds_max_m": 7.540351498585551,
+       "onde": {
+        "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+        "amostra": 1010,
+        "s_ml_m": null
+       },
+       "passou": false
+      },
+      "2026-10-04_03-35-57_vhe_interlagos": {
+       "voltas_limpas": 0,
+       "amostras": 0,
+       "abs_ds_max_m": 0.0,
+       "onde": null,
+       "passou": true
+      },
+      "2026-10-04_03-36-35_vhe_interlagos": {
+       "voltas_limpas": 0,
+       "amostras": 0,
+       "abs_ds_max_m": 0.0,
+       "onde": null,
+       "passou": true
+      },
+      "2026-10-04_03-40-32_vhe_interlagos": {
+       "voltas_limpas": 0,
+       "amostras": 0,
+       "abs_ds_max_m": 0.0,
+       "onde": null,
+       "passou": true
+      },
+      "2026-10-04_03-42-10_vhe_interlagos": {
+       "voltas_limpas": 12,
+       "amostras": 59956,
+       "abs_ds_max_m": 7.982252239829904,
+       "onde": {
+        "volta": "2026-10-04_03-42-10_vhe_interlagos#0010",
+        "amostra": 4254,
+        "s_ml_m": null
+       },
+       "passou": false
+      },
+      "2026-10-04_04-22-39_vhe_interlagos": {
+       "voltas_limpas": 0,
+       "amostras": 0,
+       "abs_ds_max_m": 0.0,
+       "onde": null,
+       "passou": true
+      }
+     },
+     "passou": false
+    }
+   }
+  },
+  "c753df6d": {
+   "resultado": {
+    "a": true,
+    "b": true,
+    "c": false,
+    "d": true,
+    "e": true
+   },
+   "detalhe": {
+    "geometry_id": "0ed16f0dd2225990",
+    "modelo": {
+     "arquivo": "C:\\Users\\Dokas\\AppData\\Local\\Temp\\claude\\C--Users-Dokas-Desktop-f1-telemetry-analyzer\\71f85398-201e-4cbe-a4cf-301bc53f38b6\\scratchpad\\geo\\modelo_ensaio.json",
+     "referencia": "rec__2026-08-19_22-23-14_vhe_interlagos__32",
+     "voltas": 635
+    },
+    "criterios": {
+     "a": {
+      "p99_ds_m": 0.5,
+      "p99_dd_m": 0.2
+     },
+     "b": {
+      "p99_ms": 1.0
+     },
+     "c": {
+      "max_por_microsetor_s": 0.02,
+      "soma_s": 0.02
+     },
+     "d": {
+      "proibido": [
+       "ganh",
+       "ideal",
+       "otimo"
+      ]
+     },
+     "e": {
+      "abs_ds_max_m": 2.0,
+      "sessao_rotulada": "2026-10-04"
+     }
+    },
+    "a": {
+     "sessoes": {
+      "MergeFix": {
+       "sessao": "2026-06-20_13-13-02_vhe_interlagos",
+       "voltas_validas_comparadas": 39,
+       "abs_ds_m": {
+        "n": 195350,
+        "p50": 0.01802450040486292,
+        "p99": 0.03645709725224606,
+        "max": 31.34623269751819
+       },
+       "abs_dd_m": {
+        "n": 195350,
+        "p50": 2.3187596573048808e-05,
+        "p99": 0.0018077791439665702,
+        "max": 2.8801296812339103
+       },
+       "passou": true
+      },
+      "cache atual": {
+       "sessao": "2026-08-16_03-30-14_vhe_interlagos",
+       "voltas_validas_comparadas": 7,
+       "abs_ds_m": {
+        "n": 36549,
+        "p50": 0.018123671613921033,
+        "p99": 0.0364151139374735,
+        "max": 0.036888246999296825
+       },
+       "abs_dd_m": {
+        "n": 36549,
+        "p50": 2.2994287576239003e-05,
+        "p99": 0.0015099293636154875,
+        "max": 0.003756838398929041
+       },
+       "passou": true
+      },
+      "sem cache": {
+       "sessao": "2026-08-09_19-20-59_vhe_interlagos",
+       "voltas_validas_comparadas": 52,
+       "abs_ds_m": {
+        "n": 271245,
+        "p50": 0.01797730639054862,
+        "p99": 0.03647999929717116,
+        "max": 29.85635126807574
+       },
+       "abs_dd_m": {
+        "n": 271245,
+        "p50": 2.334915891388789e-05,
+        "p99": 0.001918535609783518,
+        "max": 0.7768049812659399
+       },
+       "passou": true
+      }
+     },
+     "passou": true
+    },
+    "b": {
+     "amostras": 582527,
+     "p50_ms": 0.3284999999948468,
+     "p99_ms": 0.9066000000075292,
+     "max_ms": 48.980900000000105,
+     "passou": true
+    },
+    "c": {
+     "voltas": [
+      {
+       "lap_id": "2026-08-16_03-30-14_vhe_interlagos#0016",
+       "replay_lap_id": "rec__2026-08-16_03-30-14_vhe_interlagos__9",
+       "tempo_volta_store_s": 84.8478421595802,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.025630707077945458,
+       "soma_coach_s": 84.8737,
+       "soma_menos_tempo_volta_s": 0.025857840419803324,
+       "microsetor_0_diferenca_s": 0.025630707077945458,
+       "microsetores_1_a_59_diferenca_max_s": 0.002789059543371497,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 84.87350721302876,
+        "store_menos_periodo_ms": -25.7,
+        "diferenca_max_por_microsetor_s": 0.002789059543371497,
+        "soma_menos_periodo_s": 0.00019278697124036626
+       }
+      },
+      {
+       "lap_id": "2026-06-18_20-06-03_vhe_interlagos#0056",
+       "replay_lap_id": "rec__2026-06-18_20-06-03_vhe_interlagos__57",
+       "tempo_volta_store_s": 85.29966706645915,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.029276255659687167,
+       "soma_coach_s": 85.32910000000001,
+       "soma_menos_tempo_volta_s": 0.029432933540860517,
+       "microsetor_0_diferenca_s": 0.029276255659687167,
+       "microsetores_1_a_59_diferenca_max_s": 0.003210684881692849,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 85.32765629795203,
+        "store_menos_periodo_ms": -28.0,
+        "diferenca_max_por_microsetor_s": 0.003210684881692849,
+        "soma_menos_periodo_s": 0.0014437020479789453
+       }
+      },
+      {
+       "lap_id": "2026-06-20_13-13-02_vhe_interlagos#0003",
+       "replay_lap_id": "rec__2026-06-20_13-13-02_vhe_interlagos__11",
+       "tempo_volta_store_s": 85.4414660826498,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.02597413183167041,
+       "soma_coach_s": 85.46770000000001,
+       "soma_menos_tempo_volta_s": 0.0262339173502113,
+       "microsetor_0_diferenca_s": 0.02597413183167041,
+       "microsetores_1_a_59_diferenca_max_s": 0.003742600623092285,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 85.46742954941855,
+        "store_menos_periodo_ms": -26.0,
+        "diferenca_max_por_microsetor_s": 0.003742600623092285,
+        "soma_menos_periodo_s": 0.0002704505814534741
+       }
+      },
+      {
+       "lap_id": "2026-08-09_19-20-59_vhe_interlagos#0010",
+       "replay_lap_id": "rec__2026-08-09_19-20-59_vhe_interlagos__381",
+       "tempo_volta_store_s": 85.47170372461478,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.026412791408114478,
+       "soma_coach_s": 85.4985,
+       "soma_menos_tempo_volta_s": 0.02679627538522311,
+       "microsetor_0_diferenca_s": 0.026412791408114478,
+       "microsetores_1_a_59_diferenca_max_s": 0.002150570872714308,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 85.49815798353299,
+        "store_menos_periodo_ms": -26.5,
+        "diferenca_max_por_microsetor_s": 0.002150570872714308,
+        "soma_menos_periodo_s": 0.0003420164670160375
+       }
+      },
+      {
+       "lap_id": "2026-06-14_12-23-46_vhe_interlagos#0007",
+       "replay_lap_id": "rec__2026-06-14_12-23-46_vhe_interlagos__100",
+       "tempo_volta_store_s": 85.53781350082261,
+       "microsetores_sem_tempo_no_coach": 0,
+       "diferenca_max_por_microsetor_s": 0.02628625781590499,
+       "soma_coach_s": 85.56400000000001,
+       "soma_menos_tempo_volta_s": 0.026186499177399014,
+       "microsetor_0_diferenca_s": 0.02628625781590499,
+       "microsetores_1_a_59_diferenca_max_s": 0.0033245922479219203,
+       "diagnostico_ml_periodo_verdadeiro": {
+        "periodo_s": 85.56409824574251,
+        "store_menos_periodo_ms": -26.3,
+        "diferenca_max_por_microsetor_s": 0.0033245922479219203,
+        "soma_menos_periodo_s": -9.824574250671958e-05
+       }
+      }
+     ],
+     "passou": false
+    },
+    "d": {
+     "sessoes": {
+      "2026-06-20_13-13-02_vhe_interlagos": {
+       "frames": 207403,
+       "frases_de_trecho": 113,
+       "frases_de_fim_de_volta": 41,
+       "voltas_com_frase": 25,
+       "frases_por_volta": {
+        "media": 4.52,
+        "mediana": 3.0,
+        "max": 12
+       },
+       "frases": [
+        {
+         "tipo": "trecho",
+         "volta": 8,
+         "texto": "Setor 43: 0.26s atras da sua volta de referencia neste trecho (1.61s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 9,
+         "texto": "Setor 5: 0.14s atras da sua volta de referencia neste trecho (2.13s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 9,
+         "texto": "Setor 43: 0.22s atras da sua volta de referencia neste trecho (1.57s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 10,
+         "texto": "Setor 17: 0.24s atras da sua volta de referencia neste trecho (1.56s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 10,
+         "texto": "Setor 36: 0.27s atras da sua volta de referencia neste trecho (1.97s contra 1.70s). Na referencia: freada em 2622 m, minima de 115 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 10,
+         "texto": "Setor 43: 0.22s atras da sua volta de referencia neste trecho (1.58s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 12,
+         "texto": "Setor 16: 0.23s atras da sua volta de referencia neste trecho (1.19s contra 0.96s). Na referencia: freada em 1207 m, minima de 251 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 12,
+         "texto": "Setor 17: 0.63s atras da sua volta de referencia neste trecho (1.95s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 12,
+         "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 12,
+         "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.82s contra 0.97s). Na referencia: minima de 263 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 12,
+         "texto": "Setor 57: 1.54s atras da sua volta de referencia neste trecho (2.49s contra 0.96s). Na referencia: minima de 269 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 12,
+         "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.24s contra 0.94s). Na referencia: minima de 273 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 12,
+         "texto": "Setor 59: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 13,
+         "texto": "Setor 0: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 13,
+         "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 13,
+         "texto": "Setor 2: 1.96s atras da sua volta de referencia neste trecho (3.21s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 13,
+         "texto": "Setor 3: 4.95s atras da sua volta de referencia neste trecho (6.98s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 13,
+         "texto": "Setor 5: 2.54s atras da sua volta de referencia neste trecho (4.54s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 13,
+         "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 13,
+         "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 13,
+         "texto": "Setor 10: 0.34s atras da sua volta de referencia neste trecho (1.49s contra 1.15s). Na referencia: minima de 219 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 13,
+         "texto": "Setor 11: 0.23s atras da sua volta de referencia neste trecho (1.32s contra 1.09s). Na referencia: minima de 232 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 13,
+         "texto": "Setor 17: 0.41s atras da sua volta de referencia neste trecho (1.73s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 13,
+         "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 14,
+         "texto": "Setor 32: 0.30s atras da sua volta de referencia neste trecho (2.59s contra 2.29s). Na referencia: freada em 2360 m, minima de 90 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 14,
+         "texto": "Setor 37: 0.31s atras da sua volta de referencia neste trecho (2.87s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 19,
+         "texto": "Setor 16: 0.46s atras da sua volta de referencia neste trecho (1.41s contra 0.96s). Na referencia: freada em 1207 m, minima de 251 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 19,
+         "texto": "Setor 17: 0.51s atras da sua volta de referencia neste trecho (1.83s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 21,
+         "texto": "Setor 35: 0.18s atras da sua volta de referencia neste trecho (1.78s contra 1.59s). Na referencia: minima de 145 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 21,
+         "texto": "Setor 36: 0.25s atras da sua volta de referencia neste trecho (1.96s contra 1.70s). Na referencia: freada em 2622 m, minima de 115 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 21,
+         "texto": "Setor 37: 0.41s atras da sua volta de referencia neste trecho (2.98s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 21,
+         "texto": "Setor 43: 0.23s atras da sua volta de referencia neste trecho (1.59s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 22,
+         "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 22,
+         "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.82s contra 0.97s). Na referencia: minima de 263 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 22,
+         "texto": "Setor 57: 1.54s atras da sua volta de referencia neste trecho (2.49s contra 0.96s). Na referencia: minima de 269 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 22,
+         "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 22,
+         "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 23,
+         "texto": "Setor 0: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 23,
+         "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 23,
+         "texto": "Setor 2: 1.96s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 23,
+         "texto": "Setor 3: 4.95s atras da sua volta de referencia neste trecho (6.98s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 23,
+         "texto": "Setor 5: 2.53s atras da sua volta de referencia neste trecho (4.53s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 23,
+         "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 23,
+         "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 23,
+         "texto": "Setor 10: 0.34s atras da sua volta de referencia neste trecho (1.49s contra 1.15s). Na referencia: minima de 219 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 23,
+         "texto": "Setor 11: 0.23s atras da sua volta de referencia neste trecho (1.32s contra 1.09s). Na referencia: minima de 232 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 23,
+         "texto": "Setor 17: 0.42s atras da sua volta de referencia neste trecho (1.74s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 23,
+         "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 23,
+         "texto": "Setor 46: 0.14s atras da sua volta de referencia neste trecho (1.66s contra 1.52s). Na referencia: minima de 154 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 24,
+         "texto": "Setor 2: 0.26s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 28,
+         "texto": "Setor 5: 0.14s atras da sua volta de referencia neste trecho (2.13s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 31,
+         "texto": "Setor 43: 0.23s atras da sua volta de referencia neste trecho (1.58s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 32,
+         "texto": "Setor 16: 0.28s atras da sua volta de referencia neste trecho (1.23s contra 0.96s). Na referencia: freada em 1207 m, minima de 251 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 32,
+         "texto": "Setor 17: 0.30s atras da sua volta de referencia neste trecho (1.62s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 32,
+         "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 32,
+         "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 32,
+         "texto": "Setor 57: 1.55s atras da sua volta de referencia neste trecho (2.50s contra 0.96s). Na referencia: minima de 269 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 32,
+         "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 32,
+         "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 33,
+         "texto": "Setor 0: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 33,
+         "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 33,
+         "texto": "Setor 2: 1.96s atras da sua volta de referencia neste trecho (3.21s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 33,
+         "texto": "Setor 3: 4.85s atras da sua volta de referencia neste trecho (6.88s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 33,
+         "texto": "Setor 5: 2.54s atras da sua volta de referencia neste trecho (4.54s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 33,
+         "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.50s contra 1.25s). Na referencia: minima de 192 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 33,
+         "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.55s contra 1.21s). Na referencia: minima de 207 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 33,
+         "texto": "Setor 10: 0.34s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 33,
+         "texto": "Setor 11: 0.23s atras da sua volta de referencia neste trecho (1.32s contra 1.09s). Na referencia: minima de 232 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 33,
+         "texto": "Setor 17: 0.41s atras da sua volta de referencia neste trecho (1.73s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 33,
+         "texto": "Setor 18: 0.29s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 34,
+         "texto": "Setor 36: 0.28s atras da sua volta de referencia neste trecho (1.98s contra 1.70s). Na referencia: freada em 2622 m, minima de 115 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 34,
+         "texto": "Setor 37: 0.25s atras da sua volta de referencia neste trecho (2.81s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 34,
+         "texto": "Setor 43: 0.28s atras da sua volta de referencia neste trecho (1.64s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 34,
+         "texto": "Setor 45: 0.35s atras da sua volta de referencia neste trecho (2.32s contra 1.97s). Na referencia: minima de 106 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 34,
+         "texto": "Setor 46: 0.19s atras da sua volta de referencia neste trecho (1.71s contra 1.52s). Na referencia: minima de 154 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 35,
+         "texto": "Setor 30: 0.37s atras da sua volta de referencia neste trecho (2.00s contra 1.63s). Na referencia: freada em 2198 m, minima de 112 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 35,
+         "texto": "Setor 31: 0.19s atras da sua volta de referencia neste trecho (2.64s contra 2.45s). Na referencia: freada em 2240 m, minima de 88 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 35,
+         "texto": "Setor 43: 0.27s atras da sua volta de referencia neste trecho (1.62s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 36,
+         "texto": "Setor 36: 0.26s atras da sua volta de referencia neste trecho (1.97s contra 1.70s). Na referencia: freada em 2622 m, minima de 115 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 36,
+         "texto": "Setor 37: 0.46s atras da sua volta de referencia neste trecho (3.03s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 36,
+         "texto": "Setor 43: 0.20s atras da sua volta de referencia neste trecho (1.56s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 39,
+         "texto": "Setor 16: 0.42s atras da sua volta de referencia neste trecho (1.37s contra 0.96s). Na referencia: freada em 1207 m, minima de 251 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 39,
+         "texto": "Setor 17: 0.35s atras da sua volta de referencia neste trecho (1.67s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 40,
+         "texto": "Setor 30: 0.32s atras da sua volta de referencia neste trecho (1.96s contra 1.63s). Na referencia: freada em 2198 m, minima de 112 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 40,
+         "texto": "Setor 31: 0.35s atras da sua volta de referencia neste trecho (2.79s contra 2.45s). Na referencia: freada em 2240 m, minima de 88 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 40,
+         "texto": "Setor 32: 0.37s atras da sua volta de referencia neste trecho (2.66s contra 2.29s). Na referencia: freada em 2360 m, minima de 90 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 40,
+         "texto": "Setor 36: 0.38s atras da sua volta de referencia neste trecho (2.08s contra 1.70s). Na referencia: freada em 2622 m, minima de 115 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 40,
+         "texto": "Setor 37: 0.48s atras da sua volta de referencia neste trecho (3.04s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 40,
+         "texto": "Setor 38: 0.44s atras da sua volta de referencia neste trecho (2.53s contra 2.08s). Na referencia: minima de 95 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 40,
+         "texto": "Setor 43: 0.23s atras da sua volta de referencia neste trecho (1.58s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 41,
+         "texto": "Setor 43: 0.23s atras da sua volta de referencia neste trecho (1.58s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 42,
+         "texto": "Setor 23: 0.25s atras da sua volta de referencia neste trecho (1.41s contra 1.16s). Na referencia: minima de 218 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 42,
+         "texto": "Setor 37: 0.29s atras da sua volta de referencia neste trecho (2.85s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 42,
+         "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 42,
+         "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 42,
+         "texto": "Setor 57: 1.54s atras da sua volta de referencia neste trecho (2.50s contra 0.96s). Na referencia: minima de 269 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 42,
+         "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 42,
+         "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 43,
+         "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 43,
+         "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 43,
+         "texto": "Setor 2: 1.96s atras da sua volta de referencia neste trecho (3.21s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 43,
+         "texto": "Setor 3: 4.75s atras da sua volta de referencia neste trecho (6.78s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 43,
+         "texto": "Setor 5: 2.53s atras da sua volta de referencia neste trecho (4.52s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 43,
+         "texto": "Setor 8: 0.26s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 43,
+         "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 43,
+         "texto": "Setor 10: 0.34s atras da sua volta de referencia neste trecho (1.49s contra 1.15s). Na referencia: minima de 219 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 43,
+         "texto": "Setor 11: 0.23s atras da sua volta de referencia neste trecho (1.32s contra 1.09s). Na referencia: minima de 232 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 43,
+         "texto": "Setor 17: 0.41s atras da sua volta de referencia neste trecho (1.73s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 43,
+         "texto": "Setor 18: 0.29s atras da sua volta de referencia neste trecho (2.07s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 44,
+         "texto": "Setor 36: 0.40s atras da sua volta de referencia neste trecho (2.11s contra 1.70s). Na referencia: freada em 2622 m, minima de 115 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 44,
+         "texto": "Setor 37: 0.40s atras da sua volta de referencia neste trecho (2.96s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 44,
+         "texto": "Setor 43: 0.26s atras da sua volta de referencia neste trecho (1.61s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 47,
+         "texto": "Setor 16: 0.18s atras da sua volta de referencia neste trecho (1.14s contra 0.96s). Na referencia: freada em 1207 m, minima de 251 km/h."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.98s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 43 (0.26s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 2.50s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 6 (0.28s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 3.85s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 4 (0.55s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.21s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 9.94s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.29s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 17.91s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.95s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 4.15s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 37 (0.31s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.48s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.50s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.09s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.66s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.09s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.44s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 3.35s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 17 (0.51s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.56s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 45 (0.08s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 3.33s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 37 (0.41s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 9.04s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 18.37s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.95s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 2.18s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 4 (0.38s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.90s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 43 (0.10s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.76s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.17s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.67s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 43 (0.19s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.92s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 4 (0.18s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.76s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 4 (0.25s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.29s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.06s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 2.07s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 43 (0.23s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 9.83s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 17.76s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.85s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 2.96s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 45 (0.35s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 4.32s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 30 (0.37s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 3.52s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 37 (0.47s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.83s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 4 (0.34s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.56s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 1 (0.13s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 2.32s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 16 (0.41s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 5.03s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 37 (0.48s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 2.31s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 43 (0.23s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 12.22s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 17.85s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.75s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 4.12s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 36 (0.40s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.37s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.41s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 45 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.81s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 16 (0.18s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.50s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 45 (0.07s). Volta de referencia: 84.66s."
+        }
+       ]
+      },
+      "2026-08-09_19-20-59_vhe_interlagos": {
+       "frames": 280172,
+       "frases_de_trecho": 96,
+       "frases_de_fim_de_volta": 53,
+       "voltas_com_frase": 12,
+       "frases_por_volta": {
+        "media": 8.0,
+        "mediana": 8.0,
+        "max": 11
+       },
+       "frases": [
+        {
+         "tipo": "trecho",
+         "volta": 372,
+         "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 372,
+         "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 372,
+         "texto": "Setor 57: 1.56s atras da sua volta de referencia neste trecho (2.51s contra 0.96s). Na referencia: minima de 269 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 372,
+         "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 372,
+         "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 373,
+         "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 373,
+         "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 373,
+         "texto": "Setor 2: 1.96s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 373,
+         "texto": "Setor 3: 4.74s atras da sua volta de referencia neste trecho (6.77s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 373,
+         "texto": "Setor 5: 2.53s atras da sua volta de referencia neste trecho (4.53s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 373,
+         "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 373,
+         "texto": "Setor 9: 0.33s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 373,
+         "texto": "Setor 10: 0.33s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 373,
+         "texto": "Setor 11: 0.21s atras da sua volta de referencia neste trecho (1.30s contra 1.09s). Na referencia: minima de 232 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 373,
+         "texto": "Setor 17: 0.41s atras da sua volta de referencia neste trecho (1.73s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 373,
+         "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 382,
+         "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 382,
+         "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 382,
+         "texto": "Setor 57: 1.55s atras da sua volta de referencia neste trecho (2.50s contra 0.96s). Na referencia: minima de 269 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 382,
+         "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 382,
+         "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 383,
+         "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 383,
+         "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 383,
+         "texto": "Setor 2: 1.97s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 383,
+         "texto": "Setor 3: 4.63s atras da sua volta de referencia neste trecho (6.66s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 383,
+         "texto": "Setor 5: 2.51s atras da sua volta de referencia neste trecho (4.51s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 383,
+         "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 383,
+         "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 383,
+         "texto": "Setor 10: 0.33s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 383,
+         "texto": "Setor 11: 0.22s atras da sua volta de referencia neste trecho (1.30s contra 1.09s). Na referencia: minima de 232 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 383,
+         "texto": "Setor 17: 0.40s atras da sua volta de referencia neste trecho (1.72s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 383,
+         "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 392,
+         "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 392,
+         "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 392,
+         "texto": "Setor 57: 1.54s atras da sua volta de referencia neste trecho (2.50s contra 0.96s). Na referencia: minima de 269 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 392,
+         "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 392,
+         "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 393,
+         "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 393,
+         "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 393,
+         "texto": "Setor 2: 1.97s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 393,
+         "texto": "Setor 3: 4.73s atras da sua volta de referencia neste trecho (6.76s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 393,
+         "texto": "Setor 5: 2.53s atras da sua volta de referencia neste trecho (4.52s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 393,
+         "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 393,
+         "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.55s contra 1.21s). Na referencia: minima de 207 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 393,
+         "texto": "Setor 10: 0.33s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 393,
+         "texto": "Setor 11: 0.22s atras da sua volta de referencia neste trecho (1.31s contra 1.09s). Na referencia: minima de 232 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 393,
+         "texto": "Setor 17: 0.41s atras da sua volta de referencia neste trecho (1.73s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 393,
+         "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 402,
+         "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 402,
+         "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 402,
+         "texto": "Setor 57: 1.55s atras da sua volta de referencia neste trecho (2.51s contra 0.96s). Na referencia: minima de 269 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 402,
+         "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 402,
+         "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 403,
+         "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 403,
+         "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 403,
+         "texto": "Setor 2: 1.97s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 403,
+         "texto": "Setor 3: 4.83s atras da sua volta de referencia neste trecho (6.86s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 403,
+         "texto": "Setor 5: 2.54s atras da sua volta de referencia neste trecho (4.53s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 403,
+         "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.50s contra 1.25s). Na referencia: minima de 192 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 403,
+         "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 403,
+         "texto": "Setor 10: 0.33s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 403,
+         "texto": "Setor 11: 0.22s atras da sua volta de referencia neste trecho (1.30s contra 1.09s). Na referencia: minima de 232 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 403,
+         "texto": "Setor 17: 0.40s atras da sua volta de referencia neste trecho (1.72s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 403,
+         "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 412,
+         "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 412,
+         "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 412,
+         "texto": "Setor 57: 1.55s atras da sua volta de referencia neste trecho (2.50s contra 0.96s). Na referencia: minima de 269 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 412,
+         "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 412,
+         "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 413,
+         "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 413,
+         "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 413,
+         "texto": "Setor 2: 1.97s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 413,
+         "texto": "Setor 3: 4.77s atras da sua volta de referencia neste trecho (6.80s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 413,
+         "texto": "Setor 5: 2.52s atras da sua volta de referencia neste trecho (4.52s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 413,
+         "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 413,
+         "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.55s contra 1.21s). Na referencia: minima de 207 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 413,
+         "texto": "Setor 10: 0.33s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 413,
+         "texto": "Setor 11: 0.22s atras da sua volta de referencia neste trecho (1.31s contra 1.09s). Na referencia: minima de 232 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 413,
+         "texto": "Setor 17: 0.40s atras da sua volta de referencia neste trecho (1.72s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 413,
+         "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 422,
+         "texto": "Setor 55: 0.22s atras da sua volta de referencia neste trecho (1.19s contra 0.97s). Na referencia: minima de 257 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 422,
+         "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.82s contra 0.97s). Na referencia: minima de 263 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 422,
+         "texto": "Setor 57: 1.55s atras da sua volta de referencia neste trecho (2.51s contra 0.96s). Na referencia: minima de 269 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 422,
+         "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 422,
+         "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 423,
+         "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 423,
+         "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 423,
+         "texto": "Setor 2: 1.96s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 423,
+         "texto": "Setor 3: 4.78s atras da sua volta de referencia neste trecho (6.81s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 423,
+         "texto": "Setor 5: 2.53s atras da sua volta de referencia neste trecho (4.53s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 423,
+         "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.50s contra 1.25s). Na referencia: minima de 192 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 423,
+         "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 423,
+         "texto": "Setor 10: 0.33s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 423,
+         "texto": "Setor 11: 0.22s atras da sua volta de referencia neste trecho (1.31s contra 1.09s). Na referencia: minima de 232 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 423,
+         "texto": "Setor 17: 0.42s atras da sua volta de referencia neste trecho (1.74s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+        },
+        {
+         "tipo": "trecho",
+         "volta": 423,
+         "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.46s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.12s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 8.74s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 17.68s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.74s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.52s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 19 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.61s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.15s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.61s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.13s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.49s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.14s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.36s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.49s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.16s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.25s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.06s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.15s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.06s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 8.80s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 17.58s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.63s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.52s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.50s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.49s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.46s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.13s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.51s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 29 (0.09s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.44s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.13s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.28s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 29 (0.09s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.27s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.06s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 8.70s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 17.67s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.73s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.45s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.41s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.06s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.30s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 45 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.26s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.48s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.15s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.42s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 29 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.40s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.15s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.34s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.15s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 8.64s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 17.80s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.83s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.35s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.31s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.43s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.15s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.27s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.48s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.16s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.55s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.16s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.29s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.15s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 8.64s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 17.71s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.77s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.48s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.41s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.42s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.24s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.23s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.06s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.24s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.34s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 45 (0.07s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 1.21s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.06s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 8.54s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+        },
+        {
+         "tipo": "fim de volta",
+         "texto": "Volta fechada. 17.75s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.78s). Volta de referencia: 84.66s."
+        }
+       ]
+      }
+     },
+     "frases_proibidas": [],
+     "total_de_frases": 303,
+     "passou": true
+    },
+    "e": {
+     "sessoes": {
+      "2026-06-20_13-13-02_vhe_interlagos": {
+       "voltas_limpas": 31,
+       "amostras": 151781,
+       "abs_ds_max_m": 0.3106993396859252,
+       "onde": {
+        "volta": "2026-06-20_13-13-02_vhe_interlagos#0006",
+        "amostra": 3069,
+        "s_ml_m": null
+       },
+       "passou": true
+      },
+      "2026-08-16_03-30-14_vhe_interlagos": {
+       "voltas_limpas": 7,
+       "amostras": 36549,
+       "abs_ds_max_m": 0.036888246999296825,
+       "onde": {
+        "volta": "2026-08-16_03-30-14_vhe_interlagos#0003",
+        "amostra": 2720,
+        "s_ml_m": null
+       },
+       "passou": true
+      },
+      "2026-08-09_19-20-59_vhe_interlagos": {
+       "voltas_limpas": 40,
+       "amostras": 202395,
+       "abs_ds_max_m": 0.13805202851199283,
+       "onde": {
+        "volta": "2026-08-09_19-20-59_vhe_interlagos#0009",
+        "amostra": 3624,
+        "s_ml_m": null
+       },
+       "passou": true
+      },
+      "2026-10-04_02-24-04_vhe_interlagos": {
+       "voltas_limpas": 10,
+       "amostras": 50686,
+       "abs_ds_max_m": 0.03688346763055961,
+       "onde": {
+        "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+        "amostra": 2673,
+        "s_ml_m": null
+       },
+       "passou": true
+      },
+      "2026-10-04_03-21-52_vhe_interlagos": {
+       "voltas_limpas": 4,
+       "amostras": 21721,
+       "abs_ds_max_m": 0.03685595140905207,
+       "onde": {
+        "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+        "amostra": 2593,
+        "s_ml_m": null
+       },
+       "passou": true
+      },
+      "2026-10-04_03-35-57_vhe_interlagos": {
+       "voltas_limpas": 0,
+       "amostras": 0,
+       "abs_ds_max_m": 0.0,
+       "onde": null,
+       "passou": true
+      },
+      "2026-10-04_03-36-35_vhe_interlagos": {
+       "voltas_limpas": 0,
+       "amostras": 0,
+       "abs_ds_max_m": 0.0,
+       "onde": null,
+       "passou": true
+      },
+      "2026-10-04_03-40-32_vhe_interlagos": {
+       "voltas_limpas": 0,
+       "amostras": 0,
+       "abs_ds_max_m": 0.0,
+       "onde": null,
+       "passou": true
+      },
+      "2026-10-04_03-42-10_vhe_interlagos": {
+       "voltas_limpas": 12,
+       "amostras": 59956,
+       "abs_ds_max_m": 0.20259425824360733,
+       "onde": {
+        "volta": "2026-10-04_03-42-10_vhe_interlagos#0016",
+        "amostra": 2686,
+        "s_ml_m": null
+       },
+       "passou": true
+      },
+      "2026-10-04_04-22-39_vhe_interlagos": {
+       "voltas_limpas": 0,
+       "amostras": 0,
+       "abs_ds_max_m": 0.0,
+       "onde": null,
+       "passou": true
+      }
+     },
+     "passou": true
+    }
+   }
+  }
+ },
+ "frases_do_ensaio_d": {
+  "sessoes": {
+   "2026-06-20_13-13-02_vhe_interlagos": {
+    "frames": 207403,
+    "frases_de_trecho": 113,
+    "frases_de_fim_de_volta": 41,
+    "voltas_com_frase": 25,
+    "frases_por_volta": {
+     "media": 4.52,
+     "mediana": 3.0,
+     "max": 12
+    },
+    "frases": [
+     {
+      "tipo": "trecho",
+      "volta": 8,
+      "texto": "Setor 43: 0.26s atras da sua volta de referencia neste trecho (1.61s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 9,
+      "texto": "Setor 5: 0.14s atras da sua volta de referencia neste trecho (2.13s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 9,
+      "texto": "Setor 43: 0.22s atras da sua volta de referencia neste trecho (1.57s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 10,
+      "texto": "Setor 17: 0.24s atras da sua volta de referencia neste trecho (1.56s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 10,
+      "texto": "Setor 36: 0.27s atras da sua volta de referencia neste trecho (1.97s contra 1.70s). Na referencia: freada em 2622 m, minima de 115 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 10,
+      "texto": "Setor 43: 0.22s atras da sua volta de referencia neste trecho (1.58s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 12,
+      "texto": "Setor 16: 0.23s atras da sua volta de referencia neste trecho (1.19s contra 0.96s). Na referencia: freada em 1207 m, minima de 251 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 12,
+      "texto": "Setor 17: 0.63s atras da sua volta de referencia neste trecho (1.95s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 12,
+      "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 12,
+      "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.82s contra 0.97s). Na referencia: minima de 263 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 12,
+      "texto": "Setor 57: 1.54s atras da sua volta de referencia neste trecho (2.49s contra 0.96s). Na referencia: minima de 269 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 12,
+      "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.24s contra 0.94s). Na referencia: minima de 273 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 12,
+      "texto": "Setor 59: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 13,
+      "texto": "Setor 0: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 13,
+      "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 13,
+      "texto": "Setor 2: 1.96s atras da sua volta de referencia neste trecho (3.21s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 13,
+      "texto": "Setor 3: 4.95s atras da sua volta de referencia neste trecho (6.98s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 13,
+      "texto": "Setor 5: 2.54s atras da sua volta de referencia neste trecho (4.54s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 13,
+      "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 13,
+      "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 13,
+      "texto": "Setor 10: 0.34s atras da sua volta de referencia neste trecho (1.49s contra 1.15s). Na referencia: minima de 219 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 13,
+      "texto": "Setor 11: 0.23s atras da sua volta de referencia neste trecho (1.32s contra 1.09s). Na referencia: minima de 232 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 13,
+      "texto": "Setor 17: 0.41s atras da sua volta de referencia neste trecho (1.73s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 13,
+      "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 14,
+      "texto": "Setor 32: 0.30s atras da sua volta de referencia neste trecho (2.59s contra 2.29s). Na referencia: freada em 2360 m, minima de 90 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 14,
+      "texto": "Setor 37: 0.31s atras da sua volta de referencia neste trecho (2.87s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 19,
+      "texto": "Setor 16: 0.46s atras da sua volta de referencia neste trecho (1.41s contra 0.96s). Na referencia: freada em 1207 m, minima de 251 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 19,
+      "texto": "Setor 17: 0.51s atras da sua volta de referencia neste trecho (1.83s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 21,
+      "texto": "Setor 35: 0.18s atras da sua volta de referencia neste trecho (1.78s contra 1.59s). Na referencia: minima de 145 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 21,
+      "texto": "Setor 36: 0.25s atras da sua volta de referencia neste trecho (1.96s contra 1.70s). Na referencia: freada em 2622 m, minima de 115 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 21,
+      "texto": "Setor 37: 0.41s atras da sua volta de referencia neste trecho (2.98s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 21,
+      "texto": "Setor 43: 0.23s atras da sua volta de referencia neste trecho (1.59s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 22,
+      "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 22,
+      "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.82s contra 0.97s). Na referencia: minima de 263 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 22,
+      "texto": "Setor 57: 1.54s atras da sua volta de referencia neste trecho (2.49s contra 0.96s). Na referencia: minima de 269 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 22,
+      "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 22,
+      "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 23,
+      "texto": "Setor 0: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 23,
+      "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 23,
+      "texto": "Setor 2: 1.96s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 23,
+      "texto": "Setor 3: 4.95s atras da sua volta de referencia neste trecho (6.98s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 23,
+      "texto": "Setor 5: 2.53s atras da sua volta de referencia neste trecho (4.53s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 23,
+      "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 23,
+      "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 23,
+      "texto": "Setor 10: 0.34s atras da sua volta de referencia neste trecho (1.49s contra 1.15s). Na referencia: minima de 219 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 23,
+      "texto": "Setor 11: 0.23s atras da sua volta de referencia neste trecho (1.32s contra 1.09s). Na referencia: minima de 232 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 23,
+      "texto": "Setor 17: 0.42s atras da sua volta de referencia neste trecho (1.74s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 23,
+      "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 23,
+      "texto": "Setor 46: 0.14s atras da sua volta de referencia neste trecho (1.66s contra 1.52s). Na referencia: minima de 154 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 24,
+      "texto": "Setor 2: 0.26s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 28,
+      "texto": "Setor 5: 0.14s atras da sua volta de referencia neste trecho (2.13s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 31,
+      "texto": "Setor 43: 0.23s atras da sua volta de referencia neste trecho (1.58s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 32,
+      "texto": "Setor 16: 0.28s atras da sua volta de referencia neste trecho (1.23s contra 0.96s). Na referencia: freada em 1207 m, minima de 251 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 32,
+      "texto": "Setor 17: 0.30s atras da sua volta de referencia neste trecho (1.62s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 32,
+      "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 32,
+      "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 32,
+      "texto": "Setor 57: 1.55s atras da sua volta de referencia neste trecho (2.50s contra 0.96s). Na referencia: minima de 269 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 32,
+      "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 32,
+      "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 33,
+      "texto": "Setor 0: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 33,
+      "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 33,
+      "texto": "Setor 2: 1.96s atras da sua volta de referencia neste trecho (3.21s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 33,
+      "texto": "Setor 3: 4.85s atras da sua volta de referencia neste trecho (6.88s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 33,
+      "texto": "Setor 5: 2.54s atras da sua volta de referencia neste trecho (4.54s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 33,
+      "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.50s contra 1.25s). Na referencia: minima de 192 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 33,
+      "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.55s contra 1.21s). Na referencia: minima de 207 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 33,
+      "texto": "Setor 10: 0.34s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 33,
+      "texto": "Setor 11: 0.23s atras da sua volta de referencia neste trecho (1.32s contra 1.09s). Na referencia: minima de 232 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 33,
+      "texto": "Setor 17: 0.41s atras da sua volta de referencia neste trecho (1.73s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 33,
+      "texto": "Setor 18: 0.29s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 34,
+      "texto": "Setor 36: 0.28s atras da sua volta de referencia neste trecho (1.98s contra 1.70s). Na referencia: freada em 2622 m, minima de 115 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 34,
+      "texto": "Setor 37: 0.25s atras da sua volta de referencia neste trecho (2.81s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 34,
+      "texto": "Setor 43: 0.28s atras da sua volta de referencia neste trecho (1.64s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 34,
+      "texto": "Setor 45: 0.35s atras da sua volta de referencia neste trecho (2.32s contra 1.97s). Na referencia: minima de 106 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 34,
+      "texto": "Setor 46: 0.19s atras da sua volta de referencia neste trecho (1.71s contra 1.52s). Na referencia: minima de 154 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 35,
+      "texto": "Setor 30: 0.37s atras da sua volta de referencia neste trecho (2.00s contra 1.63s). Na referencia: freada em 2198 m, minima de 112 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 35,
+      "texto": "Setor 31: 0.19s atras da sua volta de referencia neste trecho (2.64s contra 2.45s). Na referencia: freada em 2240 m, minima de 88 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 35,
+      "texto": "Setor 43: 0.27s atras da sua volta de referencia neste trecho (1.62s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 36,
+      "texto": "Setor 36: 0.26s atras da sua volta de referencia neste trecho (1.97s contra 1.70s). Na referencia: freada em 2622 m, minima de 115 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 36,
+      "texto": "Setor 37: 0.46s atras da sua volta de referencia neste trecho (3.03s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 36,
+      "texto": "Setor 43: 0.20s atras da sua volta de referencia neste trecho (1.56s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 39,
+      "texto": "Setor 16: 0.42s atras da sua volta de referencia neste trecho (1.37s contra 0.96s). Na referencia: freada em 1207 m, minima de 251 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 39,
+      "texto": "Setor 17: 0.35s atras da sua volta de referencia neste trecho (1.67s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 40,
+      "texto": "Setor 30: 0.32s atras da sua volta de referencia neste trecho (1.96s contra 1.63s). Na referencia: freada em 2198 m, minima de 112 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 40,
+      "texto": "Setor 31: 0.35s atras da sua volta de referencia neste trecho (2.79s contra 2.45s). Na referencia: freada em 2240 m, minima de 88 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 40,
+      "texto": "Setor 32: 0.37s atras da sua volta de referencia neste trecho (2.66s contra 2.29s). Na referencia: freada em 2360 m, minima de 90 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 40,
+      "texto": "Setor 36: 0.38s atras da sua volta de referencia neste trecho (2.08s contra 1.70s). Na referencia: freada em 2622 m, minima de 115 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 40,
+      "texto": "Setor 37: 0.48s atras da sua volta de referencia neste trecho (3.04s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 40,
+      "texto": "Setor 38: 0.44s atras da sua volta de referencia neste trecho (2.53s contra 2.08s). Na referencia: minima de 95 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 40,
+      "texto": "Setor 43: 0.23s atras da sua volta de referencia neste trecho (1.58s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 41,
+      "texto": "Setor 43: 0.23s atras da sua volta de referencia neste trecho (1.58s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 42,
+      "texto": "Setor 23: 0.25s atras da sua volta de referencia neste trecho (1.41s contra 1.16s). Na referencia: minima de 218 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 42,
+      "texto": "Setor 37: 0.29s atras da sua volta de referencia neste trecho (2.85s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 42,
+      "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 42,
+      "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 42,
+      "texto": "Setor 57: 1.54s atras da sua volta de referencia neste trecho (2.50s contra 0.96s). Na referencia: minima de 269 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 42,
+      "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 42,
+      "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 43,
+      "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 43,
+      "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 43,
+      "texto": "Setor 2: 1.96s atras da sua volta de referencia neste trecho (3.21s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 43,
+      "texto": "Setor 3: 4.75s atras da sua volta de referencia neste trecho (6.78s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 43,
+      "texto": "Setor 5: 2.53s atras da sua volta de referencia neste trecho (4.52s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 43,
+      "texto": "Setor 8: 0.26s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 43,
+      "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 43,
+      "texto": "Setor 10: 0.34s atras da sua volta de referencia neste trecho (1.49s contra 1.15s). Na referencia: minima de 219 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 43,
+      "texto": "Setor 11: 0.23s atras da sua volta de referencia neste trecho (1.32s contra 1.09s). Na referencia: minima de 232 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 43,
+      "texto": "Setor 17: 0.41s atras da sua volta de referencia neste trecho (1.73s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 43,
+      "texto": "Setor 18: 0.29s atras da sua volta de referencia neste trecho (2.07s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 44,
+      "texto": "Setor 36: 0.40s atras da sua volta de referencia neste trecho (2.11s contra 1.70s). Na referencia: freada em 2622 m, minima de 115 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 44,
+      "texto": "Setor 37: 0.40s atras da sua volta de referencia neste trecho (2.96s contra 2.56s). Na referencia: freada em 2673 m, minima de 81 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 44,
+      "texto": "Setor 43: 0.26s atras da sua volta de referencia neste trecho (1.61s contra 1.35s). Na referencia: freada em 3121 m, minima de 144 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 47,
+      "texto": "Setor 16: 0.18s atras da sua volta de referencia neste trecho (1.14s contra 0.96s). Na referencia: freada em 1207 m, minima de 251 km/h."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.98s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 43 (0.26s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 2.50s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 6 (0.28s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 3.85s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 4 (0.55s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.21s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 9.94s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.29s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 17.91s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.95s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 4.15s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 37 (0.31s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.48s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.50s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.09s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.66s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.09s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.44s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 3.35s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 17 (0.51s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.56s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 45 (0.08s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 3.33s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 37 (0.41s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 9.04s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 18.37s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.95s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 2.18s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 4 (0.38s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.90s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 43 (0.10s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.76s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.17s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.67s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 43 (0.19s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.92s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 4 (0.18s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.76s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 4 (0.25s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.29s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.06s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 2.07s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 43 (0.23s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 9.83s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 17.76s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.85s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 2.96s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 45 (0.35s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 4.32s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 30 (0.37s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 3.52s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 37 (0.47s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.83s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 4 (0.34s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.56s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 1 (0.13s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 2.32s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 16 (0.41s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 5.03s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 37 (0.48s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 2.31s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 43 (0.23s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 12.22s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 17.85s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.75s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 4.12s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 36 (0.40s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.37s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.41s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 45 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.81s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 16 (0.18s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.50s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 45 (0.07s). Volta de referencia: 84.66s."
+     }
+    ]
+   },
+   "2026-08-09_19-20-59_vhe_interlagos": {
+    "frames": 280172,
+    "frases_de_trecho": 96,
+    "frases_de_fim_de_volta": 53,
+    "voltas_com_frase": 12,
+    "frases_por_volta": {
+     "media": 8.0,
+     "mediana": 8.0,
+     "max": 11
+    },
+    "frases": [
+     {
+      "tipo": "trecho",
+      "volta": 372,
+      "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 372,
+      "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 372,
+      "texto": "Setor 57: 1.56s atras da sua volta de referencia neste trecho (2.51s contra 0.96s). Na referencia: minima de 269 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 372,
+      "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 372,
+      "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 373,
+      "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 373,
+      "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 373,
+      "texto": "Setor 2: 1.96s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 373,
+      "texto": "Setor 3: 4.74s atras da sua volta de referencia neste trecho (6.77s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 373,
+      "texto": "Setor 5: 2.53s atras da sua volta de referencia neste trecho (4.53s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 373,
+      "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 373,
+      "texto": "Setor 9: 0.33s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 373,
+      "texto": "Setor 10: 0.33s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 373,
+      "texto": "Setor 11: 0.21s atras da sua volta de referencia neste trecho (1.30s contra 1.09s). Na referencia: minima de 232 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 373,
+      "texto": "Setor 17: 0.41s atras da sua volta de referencia neste trecho (1.73s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 373,
+      "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 382,
+      "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 382,
+      "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 382,
+      "texto": "Setor 57: 1.55s atras da sua volta de referencia neste trecho (2.50s contra 0.96s). Na referencia: minima de 269 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 382,
+      "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 382,
+      "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 383,
+      "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 383,
+      "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 383,
+      "texto": "Setor 2: 1.97s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 383,
+      "texto": "Setor 3: 4.63s atras da sua volta de referencia neste trecho (6.66s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 383,
+      "texto": "Setor 5: 2.51s atras da sua volta de referencia neste trecho (4.51s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 383,
+      "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 383,
+      "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 383,
+      "texto": "Setor 10: 0.33s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 383,
+      "texto": "Setor 11: 0.22s atras da sua volta de referencia neste trecho (1.30s contra 1.09s). Na referencia: minima de 232 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 383,
+      "texto": "Setor 17: 0.40s atras da sua volta de referencia neste trecho (1.72s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 383,
+      "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 392,
+      "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 392,
+      "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 392,
+      "texto": "Setor 57: 1.54s atras da sua volta de referencia neste trecho (2.50s contra 0.96s). Na referencia: minima de 269 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 392,
+      "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 392,
+      "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 393,
+      "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 393,
+      "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 393,
+      "texto": "Setor 2: 1.97s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 393,
+      "texto": "Setor 3: 4.73s atras da sua volta de referencia neste trecho (6.76s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 393,
+      "texto": "Setor 5: 2.53s atras da sua volta de referencia neste trecho (4.52s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 393,
+      "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 393,
+      "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.55s contra 1.21s). Na referencia: minima de 207 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 393,
+      "texto": "Setor 10: 0.33s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 393,
+      "texto": "Setor 11: 0.22s atras da sua volta de referencia neste trecho (1.31s contra 1.09s). Na referencia: minima de 232 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 393,
+      "texto": "Setor 17: 0.41s atras da sua volta de referencia neste trecho (1.73s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 393,
+      "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 402,
+      "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 402,
+      "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 402,
+      "texto": "Setor 57: 1.55s atras da sua volta de referencia neste trecho (2.51s contra 0.96s). Na referencia: minima de 269 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 402,
+      "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 402,
+      "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 403,
+      "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 403,
+      "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 403,
+      "texto": "Setor 2: 1.97s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 403,
+      "texto": "Setor 3: 4.83s atras da sua volta de referencia neste trecho (6.86s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 403,
+      "texto": "Setor 5: 2.54s atras da sua volta de referencia neste trecho (4.53s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 403,
+      "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.50s contra 1.25s). Na referencia: minima de 192 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 403,
+      "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 403,
+      "texto": "Setor 10: 0.33s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 403,
+      "texto": "Setor 11: 0.22s atras da sua volta de referencia neste trecho (1.30s contra 1.09s). Na referencia: minima de 232 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 403,
+      "texto": "Setor 17: 0.40s atras da sua volta de referencia neste trecho (1.72s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 403,
+      "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 412,
+      "texto": "Setor 55: 0.21s atras da sua volta de referencia neste trecho (1.18s contra 0.97s). Na referencia: minima de 257 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 412,
+      "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.83s contra 0.97s). Na referencia: minima de 263 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 412,
+      "texto": "Setor 57: 1.55s atras da sua volta de referencia neste trecho (2.50s contra 0.96s). Na referencia: minima de 269 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 412,
+      "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 412,
+      "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 413,
+      "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 413,
+      "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 413,
+      "texto": "Setor 2: 1.97s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 413,
+      "texto": "Setor 3: 4.77s atras da sua volta de referencia neste trecho (6.80s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 413,
+      "texto": "Setor 5: 2.52s atras da sua volta de referencia neste trecho (4.52s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 413,
+      "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.51s contra 1.25s). Na referencia: minima de 192 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 413,
+      "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.55s contra 1.21s). Na referencia: minima de 207 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 413,
+      "texto": "Setor 10: 0.33s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 413,
+      "texto": "Setor 11: 0.22s atras da sua volta de referencia neste trecho (1.31s contra 1.09s). Na referencia: minima de 232 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 413,
+      "texto": "Setor 17: 0.40s atras da sua volta de referencia neste trecho (1.72s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 413,
+      "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 422,
+      "texto": "Setor 55: 0.22s atras da sua volta de referencia neste trecho (1.19s contra 0.97s). Na referencia: minima de 257 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 422,
+      "texto": "Setor 56: 0.86s atras da sua volta de referencia neste trecho (1.82s contra 0.97s). Na referencia: minima de 263 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 422,
+      "texto": "Setor 57: 1.55s atras da sua volta de referencia neste trecho (2.51s contra 0.96s). Na referencia: minima de 269 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 422,
+      "texto": "Setor 58: 2.29s atras da sua volta de referencia neste trecho (3.23s contra 0.94s). Na referencia: minima de 273 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 422,
+      "texto": "Setor 59: 2.30s atras da sua volta de referencia neste trecho (3.23s contra 0.93s). Na referencia: minima de 276 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 423,
+      "texto": "Setor 0: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: minima de 279 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 423,
+      "texto": "Setor 1: 2.31s atras da sua volta de referencia neste trecho (3.23s contra 0.92s). Na referencia: freada em 126 m, minima de 262 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 423,
+      "texto": "Setor 2: 1.96s atras da sua volta de referencia neste trecho (3.22s contra 1.25s). Na referencia: freada em 146 m, minima de 156 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 423,
+      "texto": "Setor 3: 4.78s atras da sua volta de referencia neste trecho (6.81s contra 2.03s). Na referencia: freada em 217 m, minima de 104 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 423,
+      "texto": "Setor 5: 2.53s atras da sua volta de referencia neste trecho (4.53s contra 1.99s). Na referencia: freada em 362 m, minima de 116 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 423,
+      "texto": "Setor 8: 0.25s atras da sua volta de referencia neste trecho (1.50s contra 1.25s). Na referencia: minima de 192 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 423,
+      "texto": "Setor 9: 0.34s atras da sua volta de referencia neste trecho (1.54s contra 1.21s). Na referencia: minima de 207 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 423,
+      "texto": "Setor 10: 0.33s atras da sua volta de referencia neste trecho (1.48s contra 1.15s). Na referencia: minima de 219 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 423,
+      "texto": "Setor 11: 0.22s atras da sua volta de referencia neste trecho (1.31s contra 1.09s). Na referencia: minima de 232 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 423,
+      "texto": "Setor 17: 0.42s atras da sua volta de referencia neste trecho (1.74s contra 1.32s). Na referencia: freada em 1228 m, minima de 162 km/h."
+     },
+     {
+      "tipo": "trecho",
+      "volta": 423,
+      "texto": "Setor 18: 0.30s atras da sua volta de referencia neste trecho (2.08s contra 1.78s). Na referencia: freada em 1301 m, minima de 129 km/h."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.46s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.12s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 8.74s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 17.68s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.74s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.52s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 19 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.61s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.15s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.61s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.13s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.49s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.14s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.36s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.49s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.16s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.25s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.06s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.15s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.06s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 8.80s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 17.58s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.63s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.52s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.50s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.49s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.46s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.13s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.51s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 29 (0.09s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.44s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.13s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.28s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 29 (0.09s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.27s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.06s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 8.70s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 17.67s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.73s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.45s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.41s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.06s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.30s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 45 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.26s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.48s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.15s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.42s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 29 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.40s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.15s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.34s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.15s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 8.64s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 17.80s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.83s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.35s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.31s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.43s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.15s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.27s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.48s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.16s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.55s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 32 (0.16s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.29s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.15s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 8.64s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 17.71s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.77s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.48s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.41s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.42s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.24s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.23s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.06s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.24s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 35 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.34s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 45 (0.07s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 1.21s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 54 (0.06s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 8.54s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 59 (2.30s). Volta de referencia: 84.66s."
+     },
+     {
+      "tipo": "fim de volta",
+      "texto": "Volta fechada. 17.75s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 3 (4.78s). Volta de referencia: 84.66s."
+     }
+    ]
+   }
+  },
+  "frases_proibidas": [],
+  "total_de_frases": 303,
+  "passou": true
+ },
+ "modelo_do_ensaio_d": {
+  "arquivo": "modelo de teste do pedido 11 (scratchpad), so para exercitar o coach",
+  "sha256": "3c113c999ce6ce89640bddaacf2c7872ae8b9c45db5ce6b5614415602f5db185"
+ },
+ "geometria": {
+  "geometry_id": "0ed16f0dd2225990",
+  "sha256": "207faa0dcc9b96d4ca5c4790645f31fcf462dfefe4b67a13abfb2fa7d47e3fad"
+ }
+}

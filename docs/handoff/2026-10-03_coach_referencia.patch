@@ -1,0 +1,1366 @@
+diff --git a/backend/core/assisted_analysis/reference_model.py b/backend/core/assisted_analysis/reference_model.py
+index 1220f3f9..02c2fa7d 100644
+--- a/backend/core/assisted_analysis/reference_model.py
++++ b/backend/core/assisted_analysis/reference_model.py
+@@ -21,6 +21,19 @@ Two properties matter, and both come from the data rather than from a rule:
+   he has never driven it end to end; that difference is the honest headline of
+   how much is on the table.
+ 
++Two modes, since ADR 0012:
++
++* ``reference_lap`` (the default): every microsector is measured against one
++  real, complete lap -- by default the best valid one. "0.12 s behind your
++  reference lap here" is a measured fact.
++* ``best_per_microsector`` (the original, off by default): against the best
++  ever done in each slice. The sum of those bests -- the "ideal lap" -- is
++  optimistic by construction: the best of 150 noisy attempts is lower than what
++  the driver can repeat, and stitching slices ignores what one slice cost the
++  next. Measured on recorded sessions (tools/measure_reference_optimism.py):
++  the second half of a session realised none of the "time on the table" fitted
++  on the first half, and each microsector best was matched by 3-5 % of laps.
++
+ Laps get in only if their sampling holds up. A lap of 937 samples over 74
+ seconds is 13 Hz of a 57 Hz signal, and it was ranking as the driver's personal
+ best -- a corrupt recording is not a lap record.
+@@ -42,6 +55,10 @@ logger = logging.getLogger(__name__)
+ 
+ MODEL_VERSION = "driver_reference_model.v1"
+ 
++MODE_REFERENCE_LAP = "reference_lap"
++MODE_BEST_PER_MICROSECTOR = "best_per_microsector"
++MODES = (MODE_REFERENCE_LAP, MODE_BEST_PER_MICROSECTOR)
++
+ # 60 microsectors puts a boundary every ~72 m at Interlagos: short enough that a
+ # single corner does not hide inside one, long enough that the crossing time is
+ # not dominated by the sampling interval.
+@@ -79,6 +96,16 @@ class MicrosectorTarget:
+     optimal_seconds: Optional[float] = None
+     optimal_min_speed_kmh: Optional[float] = None
+ 
++    # The reference lap through the same slice (ADR 0012): one real, complete
++    # lap, not the best of many. Brake and throttle points also in metres of the
++    # runtime's own `s`, which is what the coach says out loud.
++    reference_seconds: Optional[float] = None
++    reference_min_speed_kmh: Optional[float] = None
++    reference_brake_point_p: Optional[float] = None
++    reference_brake_point_m: Optional[float] = None
++    reference_throttle_point_p: Optional[float] = None
++    reference_throttle_point_m: Optional[float] = None
++
+     @property
+     def gap_best_to_optimal(self) -> Optional[float]:
+         """How much the driver's own best still gives away here."""
+@@ -108,6 +135,35 @@ class DriverReferenceModel:
+     optimal_lap_seconds: Optional[float] = None
+     optimal_source: Optional[str] = None
+ 
++    # ADR 0012. A model saved before the reference lap existed loads with
++    # `reference_lap_id = None`: `has_reference` is then False and the coach
++    # stays quiet rather than falling back to the old mode unasked.
++    mode: str = MODE_REFERENCE_LAP
++    reference_lap_id: Optional[str] = None
++    reference_lap_seconds: Optional[float] = None
++
++    @property
++    def has_reference(self) -> bool:
++        return bool(self.reference_lap_id) and any(t.reference_seconds is not None for t in self.targets)
++
++    def target_seconds(self, target: "MicrosectorTarget") -> Optional[float]:
++        """What a split is measured against, in the active mode."""
++        if self.mode == MODE_BEST_PER_MICROSECTOR:
++            return target.best_seconds
++        return target.reference_seconds
++
++    def loss_against_reference(self, splits: Sequence[Optional[float]]) -> List[Optional[float]]:
++        """Per-microsector difference to the reference lap (positive = behind it)."""
++        losses: List[Optional[float]] = []
++        by_index = {target.index: target for target in self.targets}
++        for index, split in enumerate(splits):
++            target = by_index.get(index)
++            if split is None or target is None or target.reference_seconds is None:
++                losses.append(None)
++                continue
++            losses.append(round(split - target.reference_seconds, 4))
++        return losses
++
+     # ── what the analysis asks it ────────────────────────────────────────
+ 
+     def target_at(self, progress: float) -> Optional[MicrosectorTarget]:
+@@ -173,7 +229,12 @@ class DriverReferenceModel:
+ 
+     @classmethod
+     def from_dict(cls, payload: Dict[str, Any]) -> "DriverReferenceModel":
+-        targets = [MicrosectorTarget(**target) for target in payload.get("targets", [])]
++        known = set(MicrosectorTarget.__dataclass_fields__)
++        targets = [
++            MicrosectorTarget(**{k: v for k, v in target.items() if k in known})
++            for target in payload.get("targets", [])
++        ]
++        mode = payload.get("mode", MODE_REFERENCE_LAP)
+         return cls(
+             version=payload.get("version", MODEL_VERSION),
+             track=payload.get("track", ""),
+@@ -186,6 +247,9 @@ class DriverReferenceModel:
+             targets=targets,
+             rejected_reasons=payload.get("rejected_reasons", {}),
+             built_at=payload.get("built_at"),
++            mode=mode if mode in MODES else MODE_REFERENCE_LAP,
++            reference_lap_id=payload.get("reference_lap_id"),
++            reference_lap_seconds=payload.get("reference_lap_seconds"),
+         )
+ 
+     def save(self, path: Path) -> Path:
+@@ -376,19 +440,61 @@ def _channel_summary(df: pd.DataFrame, start_p: float, end_p: float) -> Dict[str
+     return summary
+ 
+ 
++def _has_hole(df: pd.DataFrame, microsectors: int) -> bool:
++    """A gap in the recording longer than half a microsector.
++
++    `microsector_splits` interpolates every boundary, including the ones that
++    fall inside a hole -- so a lap with 400 m missing still comes out with 60
++    splits. Good enough to vote for the best of a slice among many laps; not
++    good enough to be *the* reference lap the driver is measured against.
++    """
++    if df is None or "p" not in df.columns:
++        return True
++    progress = pd.to_numeric(df["p"], errors="coerce").to_numpy(dtype=float)
++    progress = progress[np.isfinite(progress)]
++    if progress.size < 2:
++        return True
++    steps = np.diff(progress)
++    steps = steps[steps > -0.5]          # the wrap at the finish line is not a hole
++    return bool(steps.size and steps.max() > 0.5 / microsectors)
++
++
++def _meters_at(df: pd.DataFrame, progress: Optional[float]) -> Optional[float]:
++    """The runtime's `s` where the lap was at `progress`."""
++    if progress is None or df is None or "s" not in df.columns or "p" not in df.columns:
++        return None
++    p = pd.to_numeric(df["p"], errors="coerce").to_numpy(dtype=float)
++    s = pd.to_numeric(df["s"], errors="coerce").to_numpy(dtype=float)
++    good = np.isfinite(p) & np.isfinite(s)
++    if not good.any():
++        return None
++    index = int(np.argmin(np.abs(p[good] - float(progress))))
++    return round(float(s[good][index]), 1)
++
++
+ def build_reference_model(
+     laps: Sequence[Tuple[str, Optional[float], Optional[int], pd.DataFrame]],
+     *,
+     track: str = "",
+     microsectors: int = DEFAULT_MICROSECTORS,
+     built_at: Optional[str] = None,
++    mode: str = MODE_REFERENCE_LAP,
++    reference_lap_id: Optional[str] = None,
+ ) -> DriverReferenceModel:
+     """
+     Fit the model from `(lap_id, lap_seconds, sample_count, dataframe)` laps.
+ 
+     Every lap that survives the sanity filter contributes its splits; the model
+     keeps the best of each slice and remembers which lap set it.
++
++    The reference lap is the quickest lap that is valid and *complete* -- every
++    microsector timed, so its slices add up to its lap time -- or the one named
++    by `reference_lap_id`, which then has to be valid and complete too. The
++    caller decides which laps are comparable (same track, car and geometry):
++    this function sees only the laps it is given.
+     """
++    if mode not in MODES:
++        raise ValueError(f"unknown mode {mode!r}; expected one of {MODES}")
+     best: Dict[int, Tuple[float, str, pd.DataFrame]] = {}
+     observed: Dict[int, List[float]] = {}
+     rejected: Dict[str, int] = {}
+@@ -396,6 +502,8 @@ def build_reference_model(
+     best_lap_id: Optional[str] = None
+     best_lap_seconds: Optional[float] = None
+ 
++    complete: Dict[str, Tuple[float, List[Optional[float]], pd.DataFrame]] = {}
++
+     for lap_id, lap_seconds, sample_count, df in laps:
+         usable, reason = lap_is_usable(lap_seconds, sample_count)
+         if not usable:
+@@ -407,6 +515,8 @@ def build_reference_model(
+         if covered < microsectors * MIN_COVERAGE:
+             rejected["incomplete_lap"] = rejected.get("incomplete_lap", 0) + 1
+             continue
++        if covered == microsectors and not _has_hole(df, microsectors):
++            complete[lap_id] = (float(lap_seconds or 0.0), splits, df)
+ 
+         accepted += 1
+         if best_lap_seconds is None or (lap_seconds or 0) < best_lap_seconds:
+@@ -436,6 +546,26 @@ def build_reference_model(
+         )
+         targets.append(target)
+ 
++    reference_seconds: Optional[float] = None
++    if reference_lap_id is not None:
++        if reference_lap_id not in complete:
++            raise ValueError(
++                f"reference lap {reference_lap_id!r} is not a valid, complete lap among the laps given"
++            )
++    elif complete:
++        reference_lap_id = min(complete, key=lambda key: complete[key][0])
++    if reference_lap_id is not None:
++        reference_seconds, reference_splits, reference_df = complete[reference_lap_id]
++        for target in targets:
++            split = reference_splits[target.index]
++            target.reference_seconds = round(split, 4) if split is not None else None
++            summary = _channel_summary(reference_df, target.start_p, target.end_p)
++            target.reference_min_speed_kmh = summary.get("min_speed_kmh")
++            target.reference_brake_point_p = summary.get("brake_point_p")
++            target.reference_brake_point_m = _meters_at(reference_df, summary.get("brake_point_p"))
++            target.reference_throttle_point_p = summary.get("throttle_point_p")
++            target.reference_throttle_point_m = _meters_at(reference_df, summary.get("throttle_point_p"))
++
+     ideal = round(sum(target.best_seconds for target in targets), 3) if targets else None
+     return DriverReferenceModel(
+         version=MODEL_VERSION,
+@@ -449,6 +579,9 @@ def build_reference_model(
+         targets=targets,
+         rejected_reasons=rejected,
+         built_at=built_at,
++        mode=mode,
++        reference_lap_id=reference_lap_id,
++        reference_lap_seconds=round(reference_seconds, 3) if reference_seconds else None,
+     )
+ 
+ 
+diff --git a/backend/core/assisted_analysis/service.py b/backend/core/assisted_analysis/service.py
+index 453d3bc3..52e49c24 100644
+--- a/backend/core/assisted_analysis/service.py
++++ b/backend/core/assisted_analysis/service.py
+@@ -20,7 +20,7 @@ from .lap_loader import LapDataLoader
+ from .reference_lap_comparator import ReferenceComparator
+ from .corner_metrics import CornerMetricsCalculator
+ from .models import CornerComparison, CornerMetrics, DrivingError, LapDescriptor
+-from .reference_model import DriverReferenceModel, lap_is_usable, microsector_splits, model_path
++from .reference_model import MODE_REFERENCE_LAP, DriverReferenceModel, lap_is_usable, microsector_splits, model_path
+ from .optimal_line import attach, find_optimal_line
+ from .corner_segmentation import CornerSegmenter
+ from .utils import finite_float
+@@ -294,6 +294,8 @@ class AssistedAnalysisService:
+             return {"status": "UNAVAILABLE", "reason": "no_model_for_track"}
+ 
+         splits = microsector_splits(target_df, model.microsectors)
++        if model.mode == MODE_REFERENCE_LAP:
++            return self._reference_lap_context(model, splits)
+         losses = model.loss_against_ideal(splits)
+         ranked = sorted(
+             (
+@@ -328,6 +330,48 @@ class AssistedAnalysisService:
+             **self._optimal_line_context(model, splits),
+         }
+ 
++    def _reference_lap_context(self, model: DriverReferenceModel, splits) -> Dict[str, Any]:
++        """The lap against the driver's reference lap (ADR 0012).
++
++        A measured difference to one real, complete lap -- no "ideal lap", no
++        "time on the table", and no optimised-line seconds, which come from the
++        simulator (ADR 0004).
++        """
++        if not model.has_reference:
++            return {
++                "status": "UNAVAILABLE",
++                "reason": "reference_lap_missing_refit_model",
++                "mode": model.mode,
++            }
++        losses = model.loss_against_reference(splits)
++        known = [loss for loss in losses if loss is not None]
++        ranked = sorted(
++            (
++                {
++                    "index": index,
++                    "startP": round(index / model.microsectors, 4),
++                    "endP": round((index + 1) / model.microsectors, 4),
++                    "behindReferenceS": round(loss, 3),
++                }
++                for index, loss in enumerate(losses)
++                if loss is not None and loss > 0.0
++            ),
++            key=lambda item: item["behindReferenceS"],
++            reverse=True,
++        )
++        return {
++            "status": "READY",
++            "version": model.version,
++            "mode": model.mode,
++            "lapsInModel": model.lap_count,
++            "builtAt": model.built_at,
++            "referenceLapId": model.reference_lap_id,
++            "referenceLapSeconds": model.reference_lap_seconds,
++            "deltaToReferenceS": round(sum(known), 3) if known else None,
++            "microsectorsCompared": len(known),
++            "worstMicrosectors": ranked[:8],
++        }
++
+     def _optimal_line_context(self, model: DriverReferenceModel, splits) -> Dict[str, Any]:
+         """What the optimised line says about this lap, if there is one."""
+         if not model.optimal_lap_seconds:
+diff --git a/backend/core/live/driving_coach.py b/backend/core/live/driving_coach.py
+index b4e22ec5..4cf700c0 100644
+--- a/backend/core/live/driving_coach.py
++++ b/backend/core/live/driving_coach.py
+@@ -12,6 +12,12 @@ This is that producer. It measures the lap as it happens against the reference
+ model fitted from the driver's own laps, and speaks when a microsector costs
+ real time.
+ 
++Since ADR 0012 the default is the *reference lap*: every microsector is compared
++with one real, complete lap of the driver's, and what the coach says is a
++measured difference ("0.12 s behind your reference lap here"), never a promised
++gain or an "ideal lap". The old comparison -- the best ever done in each slice --
++is still here as `best_per_microsector`, off unless the model asks for it.
++
+ It runs on every frame at ~57 Hz, so it does almost nothing per frame: read the
+ progress, and only when a microsector boundary is crossed does it look up a
+ target and compare. Anything heavier here shows up as a hole in the recording --
+@@ -49,6 +55,11 @@ LOSS_SPREAD_MULTIPLE = 2.0
+ MIN_SECONDS_BETWEEN_EVENTS = 3.0
+ 
+ 
++def _legacy(model: Any) -> bool:
++    """The model asked for the old comparison against the best of each slice."""
++    return getattr(model, "mode", None) == "best_per_microsector"
++
++
+ def _number(value: Any) -> Optional[float]:
+     if value is None or isinstance(value, bool):
+         return None
+@@ -88,6 +99,7 @@ class LiveDrivingCoach:
+         self._lap_loss: float = 0.0
+         self._lap_loss_optimal: float = 0.0
+         self._lap_worst: Optional[Dict[str, Any]] = None
++        self._warned_missing_reference = False
+ 
+     # ── the hot path ─────────────────────────────────────────────────────
+ 
+@@ -102,6 +114,8 @@ class LiveDrivingCoach:
+         model = self._model_for(frame.get("track") or frame.get("trackName"))
+         if model is None or not model.targets:
+             return
++        if not self._usable(model):
++            return
+ 
+         lap_number = _number(frame.get("lap_number") or frame.get("lap"))
+         index = min(int(progress * model.microsectors), model.microsectors - 1)
+@@ -164,14 +178,20 @@ class LiveDrivingCoach:
+         if target is None:
+             return
+ 
++        legacy = _legacy(model)
+         # Against the optimised line this is counted whether or not he beat his
+         # own best here: the two targets answer different questions, and a slice
+         # where he set a personal best can still be half a second off the line.
++        # Only in the old mode: the line's seconds come from the simulator, and
++        # ADR 0004 keeps those out of what the driver hears.
+         optimal = getattr(target, "optimal_seconds", None)
+-        if optimal is not None:
++        if legacy and optimal is not None:
+             self._lap_loss_optimal += max(0.0, split - float(optimal))
+ 
+-        loss = split - target.best_seconds
++        compared = target.best_seconds if legacy else getattr(target, "reference_seconds", None)
++        if compared is None:
++            return
++        loss = split - float(compared)
+         if loss <= 0:
+             return
+         self._lap_loss += loss
+@@ -184,10 +204,35 @@ class LiveDrivingCoach:
+         if now - self._last_event_at < self.min_gap_seconds:
+             return
+         self._last_event_at = now
+-        self._emit_coaching_event(frame, target, split, loss)
++        if legacy:
++            self._emit_coaching_event(frame, target, split, loss)
++        else:
++            self._emit_reference_event(frame, model, target, split, loss)
++
++    def _usable(self, model: Any) -> bool:
++        """In the reference mode, a model without a reference lap says nothing.
++
++        A model saved before ADR 0012 has no reference lap. Falling back to the
++        best-per-microsector comparison would bring back the "ideal lap" the
++        driver was told is gone, so the coach stays quiet and logs once that the
++        model needs refitting (`tools/train_reference_model.py`).
++        """
++        if _legacy(model) or getattr(model, "has_reference", False):
++            return True
++        if not self._warned_missing_reference:
++            logger.warning(
++                "Reference model for %s has no reference lap; coach is silent until it is refitted",
++                getattr(model, "track", "?"),
++            )
++            self._warned_missing_reference = True
++        return False
+ 
+     def _threshold_for(self, target: Any) -> float:
+-        """How far off his own best this driver has to be, here, to hear about it."""
++        """How far off his own best this driver has to be, here, to hear about it.
++
++        The same in both modes (ADR 0012): the driver's own spread through the
++        slice, median minus best, measured over every lap in the model.
++        """
+         spread = None
+         median = getattr(target, "median_seconds", None)
+         best = getattr(target, "best_seconds", None)
+@@ -199,6 +244,53 @@ class LiveDrivingCoach:
+ 
+     # ── what it says ─────────────────────────────────────────────────────
+ 
++    def _emit_reference_event(self, frame: Dict[str, Any], model: Any, target: Any, split: float, loss: float) -> None:
++        """A measured difference to the reference lap, and what that lap did here."""
++        reference = float(target.reference_seconds)
++        evidence: Dict[str, Any] = {
++            "microsector": target.index,
++            "yourSeconds": round(split, 3),
++            "referenceSeconds": round(reference, 3),
++            "lossSeconds": round(loss, 3),
++            "referenceLapId": getattr(model, "reference_lap_id", None),
++        }
++        brake_m = getattr(target, "reference_brake_point_m", None)
++        min_speed = getattr(target, "reference_min_speed_kmh", None)
++        if min_speed is not None:
++            evidence["referenceMinSpeedKmh"] = min_speed
++            speed = _number(frame.get("speedKmh"))
++            if speed is not None:
++                evidence["yourSpeedKmh"] = round(speed, 1)
++        if brake_m is not None:
++            evidence["referenceBrakePointM"] = brake_m
++        at_lap_time = _number(frame.get("lap_time"))
++        if at_lap_time is not None:
++            evidence["atLapTimeSeconds"] = round(at_lap_time, 3)
++
++        message = (
++            f"Setor {target.index}: {loss:.2f}s atras da sua volta de referencia neste trecho "
++            f"({split:.2f}s contra {reference:.2f}s)."
++        )
++        goals = []
++        if brake_m is not None:
++            goals.append(f"freada em {brake_m:.0f} m")
++        if min_speed is not None:
++            goals.append(f"minima de {min_speed:.0f} km/h")
++        if goals:
++            message += " Na referencia: " + ", ".join(goals) + "."
++
++        self._publish(COACHING_EVENT, {
++            "type": "coaching_event",
++            "event": message,
++            "severity": round(min(1.0, loss / 0.5), 2),
++            "evidence": evidence,
++            "driver_id": str(frame.get("driver_id") or "player_1"),
++            "lap_number": int(_number(frame.get("lap_number") or frame.get("lap")) or 0),
++            "s": _number(frame.get("s")) or 0.0,
++            "timestamp": time.time(),
++            "corner_id": _number(frame.get("corner_id")),
++        })
++
+     def _emit_coaching_event(self, frame: Dict[str, Any], target: Any, split: float, loss: float) -> None:
+         evidence: Dict[str, Any] = {
+             "microsector": target.index,
+@@ -258,6 +350,27 @@ class LiveDrivingCoach:
+ 
+     def _speak_lap_summary(self, frame: Dict[str, Any], model: Any) -> None:
+         """The radio call at the line: what the lap cost and where."""
++        if not _legacy(model):
++            if self._lap_loss <= 0.0 or not getattr(model, "has_reference", False):
++                return
++            worst = self._lap_worst or {}
++            message = (
++                f"Volta fechada. {self._lap_loss:.2f}s somando os trechos em que ficou atras "
++                "da sua volta de referencia"
++            )
++            if worst:
++                message += f"; a maior diferenca no setor {worst['index']} ({worst['lossS']:.2f}s)"
++            message += "."
++            if getattr(model, "reference_lap_seconds", None):
++                message += f" Volta de referencia: {model.reference_lap_seconds:.2f}s."
++            self._publish(ENGINEER_SPEECH, {
++                "message": message,
++                "priority": "high" if self._lap_loss > 1.0 else "medium",
++                "timestamp": time.time(),
++                "category": "driver",
++            })
++            return
++
+         optimal_lap = getattr(model, "optimal_lap_seconds", None)
+         if self._lap_loss <= 0.0 and not (optimal_lap and self._lap_loss_optimal > 0.0):
+             return
+diff --git a/backend/routers/assisted_analysis.py b/backend/routers/assisted_analysis.py
+index 9bc3df21..01e33e50 100644
+--- a/backend/routers/assisted_analysis.py
++++ b/backend/routers/assisted_analysis.py
+@@ -179,12 +179,24 @@ async def get_lap_coaching(lapId: str):
+             "lapNumber": descriptor.lap_number,
+             "lapTime": descriptor.lap_time,
+             "track": descriptor.track,
+-            "model": {
+-                "lapsInModel": model.lap_count,
+-                "idealLapSeconds": model.ideal_lap_seconds,
+-                "bestLapSeconds": model.best_lap_seconds,
+-                "builtAt": model.built_at,
+-            },
++            "model": (
++                {
++                    "mode": model.mode,
++                    "lapsInModel": model.lap_count,
++                    "referenceLapId": model.reference_lap_id,
++                    "referenceLapSeconds": model.reference_lap_seconds,
++                    "builtAt": model.built_at,
++                }
++                if model.mode == "reference_lap"
++                # The old comparison, only when asked for (ADR 0012).
++                else {
++                    "mode": model.mode,
++                    "lapsInModel": model.lap_count,
++                    "idealLapSeconds": model.ideal_lap_seconds,
++                    "bestLapSeconds": model.best_lap_seconds,
++                    "builtAt": model.built_at,
++                }
++            ),
+         })
+         return result
+ 
+diff --git a/backend/tests/test_coach_reference_lap.py b/backend/tests/test_coach_reference_lap.py
+new file mode 100644
+index 00000000..efdff578
+--- /dev/null
++++ b/backend/tests/test_coach_reference_lap.py
+@@ -0,0 +1,217 @@
++"""Coach contra a volta de referencia (ADR 0012).
++
++O modo padrao mede cada microsetor contra uma volta real e completa do piloto
++-- por padrao a melhor valida -- e diz a diferenca medida, nunca um ganho
++prometido nem uma "volta ideal". O modo antigo continua disponivel quando ligado.
++"""
++
++from __future__ import annotations
++
++import json
++import sys
++import tempfile
++import unittest
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++BACKEND_DIR = Path(__file__).resolve().parents[1]
++if str(BACKEND_DIR) not in sys.path:
++    sys.path.insert(0, str(BACKEND_DIR))
++
++from core.assisted_analysis.reference_model import (  # noqa: E402
++    MODE_BEST_PER_MICROSECTOR,
++    MODE_REFERENCE_LAP,
++    DriverReferenceModel,
++    build_reference_model,
++    microsector_splits,
++)
++from core.live.driving_coach import LiveDrivingCoach, coach_recorded_lap  # noqa: E402
++from core.telemetry_events import COACHING_EVENT, ENGINEER_SPEECH  # noqa: E402
++from tests.test_driving_coach import FakeBus, drive  # noqa: E402
++
++HZ = 57.0
++TRACK_M = 4300.0
++
++
++def lap(seconds: float, *, slow=None, missing=None, brake_at=None, min_speed=None):
++    """Volta sintetica com tempo, progresso, `s`, freio e velocidade.
++
++    `slow=(indice, segundos)` atrasa um microsetor; `missing=(p0, p1)` apaga um
++    trecho (volta incompleta); `brake_at=p` pisa no freio no microsetor de `p`.
++    """
++    count = int(seconds * HZ)
++    progress = np.linspace(0.0, 1.0, count)
++    elapsed = progress * seconds
++    if slow is not None:
++        index, extra = slow
++        start, end = index / 60.0, (index + 1) / 60.0
++        elapsed = elapsed + np.where(progress >= end, extra, np.where(progress >= start, extra * (progress - start) / (end - start), 0.0))
++    speed = np.full(count, 180.0)
++    brake = np.zeros(count)
++    if brake_at is not None:
++        zone = (progress >= brake_at) & (progress < brake_at + 0.005)
++        brake[zone] = 0.9
++        speed[zone] = min_speed or 95.0
++    frame = pd.DataFrame(
++        {"p": progress, "s": progress * TRACK_M, "elapsed_s": elapsed, "speed_kmh": speed, "brake": brake, "throttle": 1.0 - brake}
++    )
++    if missing is not None:
++        frame = frame[(frame["p"] < missing[0]) | (frame["p"] > missing[1])].reset_index(drop=True)
++    return frame
++
++
++def entry(lap_id, seconds, frame, hz=HZ):
++    total = float(frame["elapsed_s"].iloc[-1] - frame["elapsed_s"].iloc[0])
++    return (lap_id, seconds, int(seconds * hz), frame)
++
++
++class ReferenceSelectionTest(unittest.TestCase):
++    def test_picks_the_best_valid_complete_lap(self):
++        laps = [
++            entry("lenta", 86.0, lap(86.0)),
++            entry("referencia", 85.0, lap(85.0)),
++            # Mais rapida, mas com um buraco de 6 microsetores: valida para o
++            # modelo (cobertura >= 90 %), nao para referencia (incompleta).
++            entry("incompleta", 84.5, lap(84.5, missing=(0.30, 0.40))),
++            # Mais rapida ainda, mas gravada a 13 Hz: nem entra no modelo.
++            ("rala", 84.0, int(84.0 * 13), lap(84.0)),
++        ]
++        model = build_reference_model(laps, track="t")
++        self.assertEqual(model.mode, MODE_REFERENCE_LAP)
++        self.assertEqual(model.reference_lap_id, "referencia")
++        self.assertAlmostEqual(model.reference_lap_seconds, 85.0)
++        self.assertTrue(model.has_reference)
++        self.assertTrue(all(t.reference_seconds is not None for t in model.targets))
++        # O melhor de todos por microsetor continua medido (o limiar usa ele).
++        self.assertLess(min(t.best_seconds for t in model.targets[20:30]), model.targets[25].reference_seconds)
++
++    def test_another_lap_can_be_chosen_by_lap_id(self):
++        laps = [entry("a", 85.0, lap(85.0)), entry("b", 85.6, lap(85.6))]
++        model = build_reference_model(laps, track="t", reference_lap_id="b")
++        self.assertEqual(model.reference_lap_id, "b")
++        with self.assertRaises(ValueError):
++            build_reference_model(laps + [entry("c", 84.0, lap(84.0, missing=(0.3, 0.4)))], track="t", reference_lap_id="c")
++        with self.assertRaises(ValueError):
++            build_reference_model(laps, track="t", reference_lap_id="nao-existe")
++
++    def test_the_reference_keeps_where_it_braked_and_how_slow_it_went(self):
++        model = build_reference_model([entry("r", 85.0, lap(85.0, brake_at=0.4501, min_speed=92.0))], track="t")
++        target = model.targets[27]                       # 0,45 a 0,4667
++        self.assertAlmostEqual(target.reference_min_speed_kmh, 92.0)
++        self.assertAlmostEqual(target.reference_brake_point_m, 0.4501 * TRACK_M, delta=5.0)
++        self.assertIsNotNone(target.reference_brake_point_p)
++
++
++class DifferenceAddsUpTest(unittest.TestCase):
++    def test_microsector_differences_add_up_to_the_lap_difference(self):
++        model = build_reference_model([entry("ref", 85.0, lap(85.0))], track="t")
++        for observed in (lap(86.2), lap(85.0, slow=(22, 0.7)), lap(84.4)):
++            splits = microsector_splits(observed, model.microsectors)
++            differences = model.loss_against_reference(splits)
++            lap_delta = float(observed["elapsed_s"].iloc[-1]) - 85.0
++            self.assertTrue(all(d is not None for d in differences))
++            # Tolerancia de interpolacao: as pontas da volta sao extrapoladas.
++            self.assertAlmostEqual(sum(differences), lap_delta, delta=0.02)
++
++
++class CoachWordsTest(unittest.TestCase):
++    def setUp(self):
++        self.model = build_reference_model(
++            [entry("ref", 85.0, lap(85.0, brake_at=0.3667, min_speed=110.0)), entry("x", 85.4, lap(85.4))],
++            track="vhe_interlagos",
++        )
++        self.bus = FakeBus()
++        self.coach = LiveDrivingCoach(self.bus, lambda _t: self.model, min_gap_seconds=0.0)
++
++    def said(self):
++        return [e["event"] for e in self.bus.of(COACHING_EVENT)] + [m["message"] for m in self.bus.of(ENGINEER_SPEECH)]
++
++    def test_new_phrases_state_a_measured_difference(self):
++        drive(self.coach, seconds=85.0, lap=5, slow_slice=(22, 0.6))
++        drive(self.coach, seconds=85.0, lap=6)
++        said = self.said()
++        self.assertTrue(said)
++        for text in said:
++            lowered = text.lower()
++            self.assertNotIn("ganh", lowered)          # ganhar, ganho
++            self.assertNotIn("ideal", lowered)
++            self.assertNotIn("otimo", lowered)
++        event = self.bus.of(COACHING_EVENT)[0]
++        self.assertIn("atras da sua volta de referencia neste trecho", event["event"])
++        self.assertEqual(event["evidence"]["referenceLapId"], "ref")
++        self.assertIn("referenceSeconds", event["evidence"])
++        self.assertNotIn("bestSeconds", event["evidence"])
++        self.assertIn("Volta de referencia: 85.00s", self.bus.of(ENGINEER_SPEECH)[0]["message"])
++
++    def test_the_reference_goal_is_said_when_there_is_one(self):
++        drive(self.coach, seconds=85.0, slow_slice=(22, 0.6))
++        event = self.bus.of(COACHING_EVENT)[0]
++        self.assertIn("Na referencia: freada em", event["event"])
++        self.assertIn("minima de 110 km/h", event["event"])
++
++    def test_threshold_is_unchanged(self):
++        # Mesmo limiar nos dois modos: 2 x (mediana - melhor) do microsetor.
++        legacy = build_reference_model(
++            [entry("ref", 85.0, lap(85.0)), entry("x", 85.4, lap(85.4))], track="t", mode=MODE_BEST_PER_MICROSECTOR
++        )
++        target_new, target_old = self.model.targets[22], legacy.targets[22]
++        self.assertAlmostEqual(self.coach._threshold_for(target_new), self.coach._threshold_for(target_old))  # noqa: SLF001
++
++    def test_an_old_model_file_loads_and_the_coach_stays_quiet(self):
++        payload = self.model.to_dict()
++        for key in ("mode", "reference_lap_id", "reference_lap_seconds"):
++            payload.pop(key)
++        for target in payload["targets"]:
++            for key in [k for k in target if k.startswith("reference_")]:
++                target.pop(key)
++        path = Path(tempfile.mkdtemp()) / "antigo.json"
++        path.write_text(json.dumps(payload), encoding="utf-8")
++        old = DriverReferenceModel.load(path)
++        self.assertIsNotNone(old)
++        self.assertFalse(old.has_reference)
++        bus = FakeBus()
++        coach = LiveDrivingCoach(bus, lambda _t: old, min_gap_seconds=0.0)
++        drive(coach, seconds=85.0, lap=5, slow_slice=(22, 0.9))
++        drive(coach, seconds=85.0, lap=6)
++        self.assertEqual(bus.published, [])
++
++    def test_a_newer_file_with_unknown_fields_still_loads(self):
++        payload = self.model.to_dict()
++        payload["targets"][0]["campo_do_futuro"] = 1
++        path = Path(tempfile.mkdtemp()) / "novo.json"
++        path.write_text(json.dumps(payload), encoding="utf-8")
++        self.assertTrue(DriverReferenceModel.load(path).has_reference)
++
++
++class LegacyModeTest(unittest.TestCase):
++    def test_the_old_mode_still_works_when_switched_on(self):
++        model = build_reference_model(
++            [entry("ref", 85.0, lap(85.0)), entry("x", 85.4, lap(85.4))], track="t", mode=MODE_BEST_PER_MICROSECTOR
++        )
++        bus = FakeBus()
++        coach = LiveDrivingCoach(bus, lambda _t: model, min_gap_seconds=0.0)
++        drive(coach, seconds=85.0, lap=5, slow_slice=(22, 0.6))
++        drive(coach, seconds=85.0, lap=6)
++        self.assertIn("atras do seu melhor", bus.of(COACHING_EVENT)[0]["event"])
++        self.assertIn("ideal", bus.of(ENGINEER_SPEECH)[0]["message"].lower())
++
++    def test_the_mode_survives_a_save_and_load(self):
++        model = build_reference_model([entry("ref", 85.0, lap(85.0))], track="t", mode=MODE_BEST_PER_MICROSECTOR)
++        path = Path(tempfile.mkdtemp()) / "m.json"
++        model.save(path)
++        self.assertEqual(DriverReferenceModel.load(path).mode, MODE_BEST_PER_MICROSECTOR)
++
++    def test_recorded_lap_replay_uses_the_same_rules(self):
++        model = build_reference_model([entry("ref", 85.0, lap(85.0))], track="t")
++        frame = lap(85.0, slow=(22, 0.6))
++        frame["speed_kmh"] = 180.0
++        result = coach_recorded_lap(frame, model, lap_number=3, track="t")
++        self.assertEqual(result["status"], "READY")
++        self.assertTrue(result["events"])
++        self.assertIn("volta de referencia", result["events"][0]["event"])
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/backend/tests/test_driving_coach.py b/backend/tests/test_driving_coach.py
+index fbe0d4c4..5f6efa3b 100644
+--- a/backend/tests/test_driving_coach.py
++++ b/backend/tests/test_driving_coach.py
+@@ -87,6 +87,9 @@ class DrivingCoachTests(unittest.TestCase):
+         self.assertEqual([], self.bus.of(COACHING_EVENT))
+ 
+     def test_speaks_when_a_microsector_costs_real_time(self):
++        # O modo antigo (melhor de todos por microsetor), ligado explicitamente
++        # (ADR 0012); o modo padrao tem os seus testes em test_coach_reference_lap.
++        self.model.mode = "best_per_microsector"
+         drive(self.coach, seconds=85.0, slow_slice=(22, 0.6))
+         events = self.bus.of(COACHING_EVENT)
+         self.assertGreater(len(events), 0)
+@@ -116,6 +119,7 @@ class DrivingCoachTests(unittest.TestCase):
+         self.assertTrue(all(0.0 < value <= 1.0 for value in severities))
+ 
+     def test_calls_the_lap_on_the_radio_when_it_closes(self):
++        self.model.mode = "best_per_microsector"   # o resumo antigo, com o "ideal"
+         drive(self.coach, seconds=85.0, lap=5, slow_slice=(22, 1.4))
+         drive(self.coach, seconds=85.0, lap=6, slow_slice=(22, 1.4))
+         speech = self.bus.of(ENGINEER_SPEECH)
+diff --git a/backend/tests/test_optimal_line.py b/backend/tests/test_optimal_line.py
+index fe52b535..157d9096 100644
+--- a/backend/tests/test_optimal_line.py
++++ b/backend/tests/test_optimal_line.py
+@@ -165,7 +165,10 @@ class CoachWithOptimalLineTest(unittest.TestCase):
+         return bus, LiveDrivingCoach(bus, model_provider=lambda _t: model, min_gap_seconds=0.0)
+ 
+     def test_events_carry_the_optimal_split(self):
++        # O tracado otimo so aparece no modo antigo: no padrao (ADR 0012) os
++        # segundos do simulador ficam fora do que o piloto ouve (ADR 0004).
+         model = model_of(85.0)
++        model.mode = "best_per_microsector"
+         # Comfortably quicker than anything the driver did, which is what an
+         # optimised line is.
+         attach(model, OptimalLine.from_dict(
+@@ -182,6 +185,19 @@ class CoachWithOptimalLineTest(unittest.TestCase):
+         self.assertGreater(evidence["optimalLossSeconds"], evidence["lossSeconds"])
+         self.assertIn("tracado otimo", events[0]["event"])
+ 
++    def test_the_reference_mode_never_mentions_the_line(self):
++        model = model_of(85.0)
++        attach(model, OptimalLine.from_dict(
++            payload(microsectors=model.microsectors, seconds_each=85.0 / model.microsectors * 0.9)
++        ))
++        bus, coach = self._coach(model)
++        drive(coach, seconds=86.0, lap=5, slow_slice=(20, 0.9))
++        drive(coach, seconds=86.0, lap=6)
++        said = [e["event"] for e in bus.of(COACHING_EVENT)] + [m["message"] for m in bus.of(ENGINEER_SPEECH)]
++        self.assertTrue(said)
++        self.assertFalse(any("tracado otimo" in text or "ideal" in text.lower() for text in said))
++        self.assertNotIn("optimalSeconds", bus.of(COACHING_EVENT)[0]["evidence"])
++
+     def test_without_a_line_the_events_are_exactly_as_before(self):
+         model = model_of(85.0)
+         bus, coach = self._coach(model)
+@@ -194,6 +210,7 @@ class CoachWithOptimalLineTest(unittest.TestCase):
+ 
+     def test_the_lap_summary_reports_the_gap_to_the_line(self):
+         model = model_of(85.0)
++        model.mode = "best_per_microsector"
+         attach(model, OptimalLine.from_dict(
+             payload(microsectors=model.microsectors, seconds_each=85.0 / model.microsectors * 0.9)
+         ))
+diff --git a/backend/tools/measure_reference_optimism.py b/backend/tools/measure_reference_optimism.py
+new file mode 100644
+index 00000000..53e8ff02
+--- /dev/null
++++ b/backend/tools/measure_reference_optimism.py
+@@ -0,0 +1,225 @@
++"""Quanto o "melhor de todos por microsetor" do coach e otimista (ADR 0012).
++
++    python tools/measure_reference_optimism.py [--min-laps 20]
++
++So dados ja gravados. Para cada sessao com pelo menos `--min-laps` voltas
++validas (as do store do `ml`, todas com associacao `exact` ao replay):
++
++* as voltas sao divididas em duas metades, na ordem em que foram feitas;
++* o modelo do coach (`build_reference_model`, o mesmo codigo do app) e
++  ajustado so com a primeira metade -- o "melhor de todos" de cada microsetor;
++* na segunda metade mede-se em que fracao das voltas cada microsetor atinge esse
++  melhor, quanto do "ganho na mesa" da primeira metade aparece na melhor volta
++  da segunda, e a volta ideal da primeira contra a melhor volta real da segunda.
++
++As voltas sao lidas como o coach as le (`LapDataLoader._load_recorded_lap`):
++amostras com o mesmo numero de volta do jogo, sem os quadros de atraso do
++contador, normalizadas por `normalize_lap_dataframe`. Aqui isso e feito numa
++passada so pelo arquivo, em vez de uma por volta.
++
++Escreve `data/ml/validation/reference_optimism/resultado.json`.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++from pathlib import Path
++from typing import Dict, List, Optional
++
++import numpy as np
++import pandas as pd
++
++BACKEND = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(BACKEND))
++
++from core.assisted_analysis.reference_model import build_reference_model, microsector_splits  # noqa: E402
++from core.assisted_analysis.utils import finite_float, finite_int, normalize_lap_dataframe  # noqa: E402
++from core.recording.session_repository import is_assetto_lap_counter_lag_frame  # noqa: E402
++from ml import config  # noqa: E402
++from ml.data.lap_store import load_store  # noqa: E402
++from ml.track.geometry import load_geometry  # noqa: E402
++
++
++def coach_frames(player: Path, wanted: Dict[int, str]) -> Dict[str, pd.DataFrame]:
++    """`{lap_id: df}` das voltas pedidas (numero do jogo -> lap_id), numa passada."""
++    rows: Dict[int, List[dict]] = {number: [] for number in wanted}
++    previous: Dict[int, Optional[float]] = {number: None for number in wanted}
++    with player.open("r", encoding="utf-8") as handle:
++        for line in handle:
++            line = line.strip()
++            if not line:
++                continue
++            try:
++                payload = json.loads(line)
++            except json.JSONDecodeError:
++                continue
++            sample = payload.get("sample", payload)
++            number = finite_int(sample.get("lap_number", sample.get("lap")), 0)
++            if number not in rows:
++                continue
++            if is_assetto_lap_counter_lag_frame(sample, previous[number]):
++                continue
++            row = dict(sample)
++            row.setdefault("timestamp", payload.get("timestamp"))
++            row.setdefault("sessionTime", payload.get("sessionTime"))
++            row.setdefault("track", payload.get("track"))
++            rows[number].append(row)
++            elapsed = finite_float(sample.get("lap_time", sample.get("lapTime", sample.get("currentLapTime"))))
++            if elapsed is not None:
++                if elapsed > 10_000.0:
++                    elapsed /= 1000.0
++                previous[number] = max(previous[number] or elapsed, elapsed)
++    return {wanted[n]: normalize_lap_dataframe(pd.DataFrame(r)) for n, r in rows.items() if r}
++
++
++def measure_session(session_id: str, laps: pd.DataFrame, frames: Dict[str, pd.DataFrame]) -> Dict[str, object]:
++    laps = laps.sort_values("sequence").reset_index(drop=True)
++    half = len(laps) // 2
++    first, second = laps.iloc[:half], laps.iloc[half:]
++
++    def entries(part):
++        return [
++            (r.lap_id, float(r.lap_time_s), int(len(frames[r.lap_id])), frames[r.lap_id])
++            for r in part.itertuples()
++            if r.lap_id in frames
++        ]
++
++    model = build_reference_model(entries(first), track=session_id)
++    best = {t.index: t.best_seconds for t in model.targets}
++
++    second_entries = entries(second)
++    splits = {lap_id: microsector_splits(df, model.microsectors) for lap_id, _, _, df in second_entries}
++    reach = {}
++    for index, target in best.items():
++        values = [s[index] for s in splits.values() if s[index] is not None]
++        reach[index] = float(np.mean([v <= target for v in values])) if values else float("nan")
++    reach_values = np.array([v for v in reach.values() if np.isfinite(v)])
++
++    best_first = float(first["lap_time_s"].min())
++    best_second = float(second["lap_time_s"].min())
++    on_table = best_first - float(model.ideal_lap_seconds) if model.ideal_lap_seconds else float("nan")
++    realised = best_first - best_second
++    return {
++        "voltas_validas": int(len(laps)),
++        "primeira_metade": {"voltas": int(len(first)), "voltas_no_modelo": model.lap_count, "descartadas": model.rejected_reasons},
++        "segunda_metade": {"voltas": int(len(second)), "voltas_medidas": len(splits)},
++        "microsetores_com_alvo": len(best),
++        "fracao_das_voltas_que_atinge_o_melhor": {
++            "media": float(reach_values.mean()) if reach_values.size else float("nan"),
++            "mediana": float(np.median(reach_values)) if reach_values.size else float("nan"),
++            "microsetores_nunca_atingidos": int((reach_values == 0).sum()),
++            "microsetores_atingidos_em_mais_de_25pct": int((reach_values > 0.25).sum()),
++            "por_microsetor": {str(k): v for k, v in sorted(reach.items())},
++        },
++        "melhor_volta_primeira_metade_s": best_first,
++        "volta_ideal_primeira_metade_s": model.ideal_lap_seconds,
++        "ganho_na_mesa_primeira_metade_s": on_table,
++        "melhor_volta_segunda_metade_s": best_second,
++        "ganho_realizado_na_segunda_metade_s": realised,
++        "fracao_do_ganho_na_mesa_realizada": realised / on_table if on_table and on_table > 0 else float("nan"),
++        "ideal_primeira_menos_melhor_real_segunda_s": float(model.ideal_lap_seconds) - best_second
++        if model.ideal_lap_seconds
++        else float("nan"),
++    }
++
++
++def measure_grid(session_laps: pd.DataFrame, store, track) -> Dict[str, object]:
++    """A mesma medicao na grade do `ml`: 60 microsetores de mesma distancia.
++
++    Serve onde a regua do coach nao existe -- as gravacoes de 2026-08-09 nao tem
++    progresso (`p`), e o coach nao consegue recortar essas voltas -- e como
++    segunda regua para as outras.
++    """
++    from ml.track.microsectors import build_microsectors, split_times, theoretical_best
++
++    sectors = build_microsectors(track)
++    laps = session_laps.sort_values("sequence").reset_index(drop=True)
++    half = len(laps) // 2
++    first, second = laps.iloc[:half], laps.iloc[half:]
++
++    def splits(lap):
++        frame = store.lap(lap.lap_id)
++        return split_times(frame["elapsed_s"].to_numpy(dtype=float), sectors, track, total=float(lap.lap_time_s))
++
++    first_splits = [splits(r) for r in first.itertuples()]
++    second_splits = np.vstack([splits(r) for r in second.itertuples()])
++    best = theoretical_best(first_splits)
++    reach = (second_splits <= best[None, :]).mean(axis=0)
++    ideal = float(best.sum())
++    best_first = float(first["lap_time_s"].min())
++    best_second = float(second["lap_time_s"].min())
++    on_table = best_first - ideal
++    realised = best_first - best_second
++    return {
++        "voltas_validas": int(len(laps)),
++        "primeira_metade": int(len(first)),
++        "segunda_metade": int(len(second)),
++        "fracao_das_voltas_que_atinge_o_melhor": {
++            "media": float(reach.mean()),
++            "mediana": float(np.median(reach)),
++            "microsetores_nunca_atingidos": int((reach == 0).sum()),
++            "microsetores_atingidos_em_mais_de_25pct": int((reach > 0.25).sum()),
++        },
++        "melhor_volta_primeira_metade_s": best_first,
++        "volta_ideal_primeira_metade_s": ideal,
++        "ganho_na_mesa_primeira_metade_s": on_table,
++        "melhor_volta_segunda_metade_s": best_second,
++        "ganho_realizado_na_segunda_metade_s": realised,
++        "fracao_do_ganho_na_mesa_realizada": realised / on_table if on_table > 0 else float("nan"),
++        "ideal_primeira_menos_melhor_real_segunda_s": ideal - best_second,
++    }
++
++
++def main(argv: Optional[List[str]] = None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("--min-laps", type=int, default=20)
++    args = parser.parse_args(argv)
++
++    track = load_geometry()
++    store = load_store(track=track)
++    laps = store.laps
++    counts = laps.groupby("session_id").size()
++    sessions = sorted(counts[counts >= args.min_laps].index)
++    print(f"sessoes com >= {args.min_laps} voltas validas: {sessions}", flush=True)
++
++    out: Dict[str, object] = {"min_voltas": args.min_laps, "regua_do_coach": {}, "grade_do_ml": {}}
++    for session_id in sessions:
++        part = laps[laps["session_id"] == session_id]
++        exact = part[part["replay_match"] == "exact"]
++        if len(exact) != len(part):
++            print(f"  {session_id}: {len(part) - len(exact)} voltas sem associacao exata ao replay; ficam de fora")
++        wanted = {int(n): lap_id for n, lap_id in zip(exact["game_lap_number"], exact["lap_id"])}
++        frames = coach_frames(config.recordings_root() / session_id / "player.jsonl", wanted)
++        with_progress = {k: f for k, f in frames.items() if f["p"].nunique() > 10}
++        if with_progress:
++            out["regua_do_coach"][session_id] = measure_session(session_id, exact, with_progress)
++        else:
++            out["regua_do_coach"][session_id] = {
++                "indisponivel": "a gravacao nao tem progresso (p): o coach nao recorta estas voltas em microsetores"
++            }
++        out["grade_do_ml"][session_id] = measure_grid(exact, store, track)
++        for ruler in ("regua_do_coach", "grade_do_ml"):
++            result = out[ruler][session_id]
++            if "indisponivel" in result:
++                print(f"  {session_id} [{ruler}]: {result['indisponivel']}", flush=True)
++                continue
++            reach = result["fracao_das_voltas_que_atinge_o_melhor"]
++            print(
++                f"  {session_id} [{ruler}]: ideal(1a) {result['volta_ideal_primeira_metade_s']:.3f} | melhor(1a) "
++                f"{result['melhor_volta_primeira_metade_s']:.3f} | na mesa {result['ganho_na_mesa_primeira_metade_s']:.3f} | "
++                f"melhor(2a) {result['melhor_volta_segunda_metade_s']:.3f} | realizado "
++                f"{result['ganho_realizado_na_segunda_metade_s']:+.3f} | atinge o melhor: media {reach['media']:.1%}",
++                flush=True,
++            )
++
++    path = config.artifacts_root() / "validation" / "reference_optimism" / "resultado.json"
++    path.parent.mkdir(parents=True, exist_ok=True)
++    path.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
++    print(f"-> {path}")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/tools/train_reference_model.py b/backend/tools/train_reference_model.py
+index 1ceb02de..bee6b42b 100644
+--- a/backend/tools/train_reference_model.py
++++ b/backend/tools/train_reference_model.py
+@@ -2,6 +2,13 @@
+ Fit the driver's reference model from everything he has recorded.
+ 
+     python tools/train_reference_model.py [--track vhe_interlagos] [--limit N]
++        [--modo reference_lap|best_per_microsector] [--volta-referencia <lap_id>]
++
++Modo padrao (ADR 0012): a volta de referencia e a melhor volta valida e completa
++da pista -- ou a escolhida com --volta-referencia -- e o coach mede cada trecho
++contra ela. So entram voltas gravadas com o mesmo cache de geometria da maioria
++(`trackCache` da sessao); o carro nao e registrado nas gravacoes, e por isso nao
++pode ser filtrado.
+ 
+ Walks the recorded laps, keeps the ones whose sampling holds up, times each
+ through every microsector, and writes the model the analysis engine measures
+@@ -24,6 +31,8 @@ if str(BACKEND_DIR) not in sys.path:
+ from core.assisted_analysis.lap_loader import LapDataLoader  # noqa: E402
+ from core.assisted_analysis.reference_model import (  # noqa: E402
+     DEFAULT_MICROSECTORS,
++    MODE_REFERENCE_LAP,
++    MODES,
+     build_reference_model,
+     lap_is_usable,
+     model_path,
+@@ -51,6 +60,14 @@ def main() -> int:
+                         help="usar as N voltas mais rapidas (0 = todas)")
+     parser.add_argument("--microsectors", type=int, default=DEFAULT_MICROSECTORS)
+     parser.add_argument("--dry-run", action="store_true", help="nao grava o modelo")
++    parser.add_argument("--modo", default=MODE_REFERENCE_LAP, choices=MODES)
++    parser.add_argument("--volta-referencia", default=None, help="lap_id da volta de referencia")
++    parser.add_argument("--saida", type=Path, default=None, help="grava aqui em vez do caminho do runtime")
++    parser.add_argument(
++        "--geometria",
++        default=None,
++        help="trackCache das sessoes a usar; sem ele, usa o da maioria e avisa",
++    )
+     args = parser.parse_args()
+ 
+     root = runtime_root()
+@@ -77,6 +94,27 @@ def main() -> int:
+         print(f"pista escolhida   : {track or '(sem pista)'}")
+ 
+     selected = [lap for lap in descriptors if not track or lap.track == track]
++
++    # Mesma geometria: o cache com que a sessao foi gravada. Voltas de outra
++    # versao da pista nao sao comparaveis trecho a trecho.
++    def geometry_of(lap):
++        return ((lap.metadata or {}).get("sessionMetadata") or {}).get("trackCache")
++
++    caches: dict = {}
++    for lap in selected:
++        caches[geometry_of(lap)] = caches.get(geometry_of(lap), 0) + 1
++    print("voltas por geometria gravada (trackCache):")
++    for cache, count in sorted(caches.items(), key=lambda item: -item[1]):
++        print(f"  {count:5d}  {cache}")
++    if args.geometria:
++        geometry = args.geometria
++    else:
++        geometry = max(caches, key=caches.get) if caches else None
++        print("AVISO: --geometria nao informada; usando a da maioria. O coach compara o progresso ao vivo,")
++        print("calculado com a geometria atual do app, com o do modelo: escolha a geometria de proposito.")
++    other_geometry = sum(n for cache, n in caches.items() if cache != geometry)
++    selected = [lap for lap in selected if geometry_of(lap) == geometry]
++    print(f"geometria (trackCache) : {geometry}  ({other_geometry} voltas de outra geometria fora)")
+     # Cheapest filter first: no point loading a lap the model will refuse.
+     plausible = [lap for lap in selected if lap_is_usable(lap.lap_time, lap.sample_count)[0]]
+     skipped_early = len(selected) - len(plausible)
+@@ -106,15 +144,19 @@ def main() -> int:
+         track=track or "",
+         microsectors=args.microsectors,
+         built_at=datetime.now(timezone.utc).isoformat(),
++        mode=args.modo,
++        reference_lap_id=args.volta_referencia,
+     )
+ 
+     print()
+     print("=" * 58)
+     print(f"voltas no modelo   : {model.lap_count}")
+     print(f"descartadas        : {model.rejected_count}  {model.rejected_reasons}")
++    print(f"modo               : {model.mode}")
++    print(f"volta de referencia: {model.reference_lap_seconds}s  ({model.reference_lap_id})")
+     print(f"melhor volta real  : {model.best_lap_seconds}s  ({model.best_lap_id})")
+-    print(f"volta ideal        : {model.ideal_lap_seconds}s")
+-    print(f"na mesa            : {model.gap_best_to_ideal}s")
++    # A soma dos melhores trechos e um limite otimista, nao uma meta (ADR 0012).
++    print(f"soma dos melhores trechos (limite otimista, nao meta): {model.ideal_lap_seconds}s")
+     print("=" * 58)
+ 
+     if model.targets:
+@@ -135,7 +177,7 @@ def main() -> int:
+         print("\n--dry-run: modelo nao gravado")
+         return 0
+ 
+-    path = model.save(model_path(root, track or "unknown"))
++    path = model.save(args.saida or model_path(root, track or "unknown"))
+     print(f"\nmodelo gravado em: {path}")
+     return 0
+ 
+diff --git a/docs/coach_referencia_real.md b/docs/coach_referencia_real.md
+new file mode 100644
+index 00000000..5cd882a7
+--- /dev/null
++++ b/docs/coach_referencia_real.md
+@@ -0,0 +1,176 @@
++# Coach com volta de referência real (ADR 0012)
++
++Relatório de 2026-10-03. Branch `etapa/coach-referencia-real`, a partir de
++`develop` (`45d45c8e`). Sem merge.
++
++---
++
++## 1. O problema
++
++O coach ao vivo guardava, para cada um dos 60 microsetores, o mais rápido que o
++piloto já tinha sido ali. Com isso ele dizia "X s atrás do seu melhor" em cada
++trecho e, no fim da volta, falava em "volta ideal" (a soma desses 60 melhores) e
++no que "sobrava" contra o traçado otimizado.
++
++A soma dos melhores trechos é otimista por construção. O melhor de 100
++tentativas com ruído é sempre mais baixo do que o piloto consegue repetir, mesmo
++sem nenhuma melhora real. E costurar trechos ignora que um trecho rápido pode ter
++custado o seguinte.
++
++## 2. A medição (só com dados já gravados)
++
++Script: `backend/tools/measure_reference_optimism.py`.
++
++Para cada sessão com pelo menos 20 voltas válidas, as voltas foram divididas em
++duas metades, na ordem em que foram feitas. O "melhor de todos" de cada
++microsetor foi montado só com a primeira metade. A pergunta foi: e na segunda
++metade?
++
++| sessão | régua | volta ideal (1ª metade) | melhor volta (1ª) | "na mesa" | melhor volta (2ª) | ganho realizado | voltas que igualam o "melhor" do microsetor |
++|---|---|---:|---:|---:|---:|---:|---:|
++| 2026-06-20_13-13-02 (39 voltas) | coach | 83,928 s | 85,441 s | 1,513 s | 85,576 s | **−0,135 s** | 4,9 % |
++| 2026-06-20_13-13-02 | grade do ML | 83,912 s | 85,441 s | 1,530 s | 85,576 s | −0,135 s | 4,2 % |
++| 2026-08-09_19-20-59 (52 voltas) | grade do ML | 84,627 s | 85,472 s | 0,844 s | 85,533 s | **−0,061 s** | 3,4 % |
++
++- **Nada do "ganho na mesa" se realizou.** Nas duas sessões, a melhor volta da
++  segunda metade foi até mais lenta que a da primeira.
++- **Cada "melhor do microsetor" só foi igualado em 3–5 % das voltas
++  seguintes.** Não é um alvo que o piloto repete.
++- **A volta ideal da primeira metade ficou 1,65 s e 0,91 s abaixo da melhor
++  volta real da segunda.**
++
++**Duas réguas.** A régua do coach usa o próprio código do app
++(`build_reference_model` e `microsector_splits`, sobre o progresso `p`). Ela só
++funciona na sessão de junho: **as gravações de 2026-08-09 não têm progresso**
++(`p` ausente e `s` = 0). O coach não consegue recortar essas voltas em
++microsetores, então elas nunca entram no modelo dele (veja o item 6). A grade do
++ML (60 microsetores de mesma distância, tempos do store) mede as duas sessões. Na
++sessão de junho, as duas réguas dão a mesma resposta.
++
++## 3. A mudança
++
++### Modelo (`core/assisted_analysis/reference_model.py`)
++
++- **Modo novo, padrão: `reference_lap`.** A volta de referência é a melhor volta
++  válida e **completa**. Completa quer dizer todos os 60 microsetores medidos e
++  nenhum buraco de gravação maior que meio microsetor (~36 m). O
++  `microsector_splits` interpola as fronteiras mesmo dentro de um buraco, então
++  "60 tempos" sozinho não garantia isso; um teste pegou o caso. Outra volta pode
++  ser escolhida pelo `lap_id`, e ela também precisa ser válida e completa.
++- **Para cada microsetor, a referência guarda:** o tempo, o ponto de frenagem
++  (em `p` e em metros do `s` do runtime), a velocidade mínima e o ponto de
++  retomada do acelerador.
++- **O modo antigo (`best_per_microsector`) continua no código,** desligado por
++  padrão.
++- **Um modelo salvo antes desta mudança ainda carrega,** mas sem volta de
++  referência. Nesse caso o coach fica em silêncio e registra no log que é
++  preciso retreinar. Ele **não** volta ao modo antigo sem pedido, porque isso
++  traria de volta a "volta ideal". O leitor também passou a ignorar campos
++  desconhecidos, para um arquivo mais novo não derrubar uma versão mais velha.
++
++### O que o coach diz (`core/live/driving_coach.py`)
++
++| quando | antes (exemplo) | agora, modo padrão (exemplo) |
++|---|---|---|
++| microsetor (linha 271) | "Setor 22: 0.60s atras do seu melhor (1.98s contra 1.38s). No melhor, minima de 95 km/h. O tracado otimo faz em 1.25s." | "Setor 22: 0.60s atras da sua volta de referencia neste trecho (1.98s contra 1.38s)." |
++| meta, quando houver (linha 280) | — | " Na referencia: freada em 1578 m, minima de 110 km/h." |
++| fim da volta (linhas 358–365) | "Volta fechada. 1.88s acima do seu ideal, a maior perda no setor 22 (0.60s). Ideal 83.54s, seu melhor 84.86s. Contra o tracado otimo, X s. Mesmo no seu ideal sobrariam Y s." | "Volta fechada. 1.88s somando os trechos em que ficou atras da sua volta de referencia; a maior diferenca no setor 22 (0.60s). Volta de referencia: 85.00s." |
++
++- **Nada de "ganhar", "ideal" ou traçado ótimo no modo padrão.** Os segundos do
++  traçado ótimo vêm do simulador, e o ADR 0004 os mantém fora do que o piloto
++  ouve.
++- **O limiar de fala não mudou.** Continua sendo duas vezes a oscilação do
++  próprio piloto no microsetor (mediana − melhor de todos), medida sobre todas
++  as voltas do modelo, nos dois modos.
++- **A evidência do evento** traz `referenceSeconds`, `referenceLapId`,
++  `referenceBrakePointM` e `referenceMinSpeedKmh`. Ela não traz mais
++  `bestSeconds` nem `optimalSeconds`.
++
++### API
++
++| arquivo | modo padrão |
++|---|---|
++| `core/assisted_analysis/service.py:369–370` (contexto do modelo na análise assistida) | `referenceLapId`, `referenceLapSeconds`, `deltaToReferenceS`, `worstMicrosectors[].behindReferenceS`. Sem `idealLapSeconds`, `gapBestToIdeal`, `lapLossAgainstIdeal` nem `optimalLine`. |
++| `routers/assisted_analysis.py:187` (coach do replay) | `model` traz `mode`, `referenceLapId`, `referenceLapSeconds`. O `idealLapSeconds` só aparece no modo antigo. |
++
++Nenhum desses campos antigos era lido pelo frontend (conferido por busca).
++
++### Interface (menor mudança possível, sem mexer no layout)
++
++| arquivo e linha | antes | agora |
++|---|---|---|
++| `frontend/src/components/CoachingFeed.tsx:69` | `MELHOR 1.38s` (e `OTIMO 1.25s` quando havia traçado) | `REFERENCIA 1.38s`. Sem `OTIMO`, porque o backend não manda mais `optimalSeconds` no modo padrão. |
++
++O modo antigo continua mostrando `MELHOR` e `OTIMO`.
++
++Busquei no frontend "ideal", "na mesa" e "ganho" vindos **deste modelo** e não
++achei outros. Os "GANHOS" de `LiveComparisonPanel.tsx:226` e
++`RacingLineAnalysisPanel.tsx:306`, e o "Voce ganha aproximadamente" de
++`utils/comparisonAnalysis.ts:504`, não vêm do modelo do coach. Eles saem da
++comparação ao vivo do frontend (`buildComparisonAnalysisFromStore`) e listam
++trechos em que o piloto **já foi** mais rápido que a referência: é diferença
++medida, e não ganho prometido. Ficaram como estão. O "Ganho estimado" do
++`core/assisted_analysis/feedback_generator.py`, que vem da análise assistida por
++curva, foi registrado como pendência para conferir contra o ADR 0012.
++
++### Treino do modelo (`tools/train_reference_model.py`)
++
++- Novas opções `--modo`, `--volta-referencia`, `--saida` e `--geometria`.
++- Só entram voltas gravadas com **um** cache de geometria (`trackCache` da
++  sessão). Sem `--geometria`, o script lista as geometrias encontradas, usa a da
++  maioria e avisa que isso deve ser escolhido de propósito (ver item 6).
++- No terminal, a soma dos melhores trechos passa a aparecer como "limite
++  otimista, nao meta".
++
++## 4. Testes
++
++- **`backend/tests/test_coach_reference_lap.py` (12 testes):**
++  - escolhe a melhor volta válida **completa**, ignorando uma mais rápida com
++    buraco e outra gravada a 13 Hz;
++  - aceita outra volta pelo `lap_id` e recusa uma incompleta ou inexistente;
++  - as diferenças por microsetor somam a diferença de tempo de volta (±0,02 s);
++  - as frases novas não contêm "ganh", "ideal" nem "otimo", e trazem a meta da
++    referência;
++  - o limiar é igual nos dois modos;
++  - um modelo antigo carrega e deixa o coach em silêncio;
++  - um arquivo com campos desconhecidos carrega;
++  - o modo antigo funciona quando ligado;
++  - o replay usa as mesmas regras.
++- **Testes do modo antigo:** os de `test_driving_coach.py` e `test_optimal_line.py`
++  que verificam o "seu melhor", o "ideal" e o traçado ótimo agora ligam o modo
++  antigo explicitamente. Um teste novo garante que o modo padrão nunca cita o
++  traçado.
++- **Frontend:** `CoachingFeed.test.ts` (10 testes, um novo) e `tsc --noEmit`
++  sem erros.
++
++## 5. O que não foi feito nesta branch
++
++- **O arquivo do modelo usado pelo app** (`data/reference_models/vhe_interlagos.json`,
++  fora do git) **não foi regravado.** O código de `develop` não lê o formato
++  novo, então regravar agora calaria o coach em `develop`. Depois do merge, é
++  preciso rodar `python tools/train_reference_model.py`. Até lá, com o código
++  novo, o coach fica em silêncio e avisa no log.
++- O `optimal.json`, as LSTMs e a geometria do runtime não foram tocados.
++
++## 6. Limitações
++
++- **As sessões de 2026-08-09 não entram no modelo do coach.** São 56 das 122
++  voltas válidas, e não têm progresso gravado. Isso já acontecia antes desta
++  mudança. A causa é a mesma da geometria única (ADR 0002): o coach depende do
++  `p` do runtime, e não da posição no mundo.
++- **Qual geometria usar é uma decisão pendente.** O coach compara o progresso
++  ao vivo, calculado com a geometria atual do app, com o progresso do modelo.
++  Contando as sessões de Interlagos pelo `trackCache` gravado: 60 usam
++  `vhe_interlagos_gp_InterlagosPitAccessAsphaltMergeFix`, só 7 usam
++  `vhe_interlagos_gp_kn5_surface_interval_geometry` (o cache atual do app) e 3
++  não registram nenhum (as de 09/08). Na Fase 1, o `s` gravado seguiu réguas
++  diferentes nesses dois grupos. **O modelo em uso (25/08) mistura as três
++  origens:** dos 60 alvos mais a melhor volta, 34 vêm de sessões com o cache
++  atual, 9 do `InterlagosPitAccessAsphaltMergeFix` e 18 de sessões sem cache
++  registrado. Isso é parte do ADR 0002 (geometria única).
++- **O carro não é registrado nas gravações.** O filtro "mesma pista, carro e
++  geometria" fica, na prática, mesma pista e mesmo nome de cache de geometria.
++- **A medição tem duas sessões.** Ela mostra o problema com clareza, mas não
++  mede quanto ele cresce com o tamanho do histórico.
++- **"Atrás da referência" é um fato medido, não uma promessa.** Fazer o trecho
++  como na referência não garante o mesmo tempo na volta inteira.
+diff --git a/frontend/src/components/CoachingFeed.test.ts b/frontend/src/components/CoachingFeed.test.ts
+index dbb88f49..802c1c2e 100644
+--- a/frontend/src/components/CoachingFeed.test.ts
++++ b/frontend/src/components/CoachingFeed.test.ts
+@@ -65,6 +65,17 @@ describe('renderEvidence', () => {
+     expect(line).toContain('REF_S: 1200m');
+   });
+ 
++  it('labels the reference lap, not a best, in the default mode', () => {
++    const line = renderEvidence({
++      event: 'Setor 20: 0.45s atras da sua volta de referencia neste trecho (2.41s contra 1.96s).',
++      evidence: { microsector: 20, yourSeconds: 2.41, referenceSeconds: 1.96, lossSeconds: 0.45 },
++    });
++    expect(line).toContain('VOCE 2.41s');
++    expect(line).toContain('REFERENCIA 1.96s');
++    expect(line).not.toContain('MELHOR');
++    expect(line).not.toContain('OTIMO');
++  });
++
+   it('survives an optimal split that arrives as null', () => {
+     const line = renderEvidence(microsectorEvent({ optimalSeconds: null }));
+     expect(line).not.toContain('OTIMO');
+diff --git a/frontend/src/components/CoachingFeed.tsx b/frontend/src/components/CoachingFeed.tsx
+index 9891e03f..001a5e78 100644
+--- a/frontend/src/components/CoachingFeed.tsx
++++ b/frontend/src/components/CoachingFeed.tsx
+@@ -62,7 +62,12 @@ export function renderEvidence(event: Partial<CoachingEvent>): string {
+   const microsector = microsectorEvidence(event);
+   if (microsector) {
+     const parts = [`VOCE ${finiteNumber(microsector.yourSeconds).toFixed(2)}s`];
+-    parts.push(`MELHOR ${finiteNumber(microsector.bestSeconds).toFixed(2)}s`);
++    // ADR 0012: the default compares with one real reference lap. "MELHOR" (the
++    // best of each slice) only appears when the old mode is switched on.
++    const reference = finiteOrNull(microsector.referenceSeconds);
++    parts.push(reference !== null
++      ? `REFERENCIA ${reference.toFixed(2)}s`
++      : `MELHOR ${finiteNumber(microsector.bestSeconds).toFixed(2)}s`);
+     const optimal = finiteOrNull(microsector.optimalSeconds);
+     if (optimal !== null) {
+       parts.push(`OTIMO ${optimal.toFixed(2)}s`);

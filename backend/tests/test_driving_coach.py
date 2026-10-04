@@ -87,6 +87,9 @@ class DrivingCoachTests(unittest.TestCase):
         self.assertEqual([], self.bus.of(COACHING_EVENT))
 
     def test_speaks_when_a_microsector_costs_real_time(self):
+        # O modo antigo (melhor de todos por microsetor), ligado explicitamente
+        # (ADR 0012); o modo padrao tem os seus testes em test_coach_reference_lap.
+        self.model.mode = "best_per_microsector"
         drive(self.coach, seconds=85.0, slow_slice=(22, 0.6))
         events = self.bus.of(COACHING_EVENT)
         self.assertGreater(len(events), 0)
@@ -116,6 +119,7 @@ class DrivingCoachTests(unittest.TestCase):
         self.assertTrue(all(0.0 < value <= 1.0 for value in severities))
 
     def test_calls_the_lap_on_the_radio_when_it_closes(self):
+        self.model.mode = "best_per_microsector"   # o resumo antigo, com o "ideal"
         drive(self.coach, seconds=85.0, lap=5, slow_slice=(22, 1.4))
         drive(self.coach, seconds=85.0, lap=6, slow_slice=(22, 1.4))
         speech = self.bus.of(ENGINEER_SPEECH)
