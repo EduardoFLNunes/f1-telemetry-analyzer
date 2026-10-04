@@ -288,10 +288,12 @@ O comando faz, em ordem:
    - o foco inicial de cada modo.
 
    O resumo também fica em `data/ml/origem/atualizar_coach.json`.
+6. **Refaz o store v2** (pedido 16) com as checagens. Se uma checagem falhar, o comando para antes do passo 7.
+7. **Roda o relatório de evolução** (`tools/relatorio_evolucao.py`), que grava os JSONs em `data/ml/evolucao/`. Ver `docs/store_v2_e_evolucao.md`.
 
 **O que o comando não faz:**
 
-- não reconstrói o store do ML;
+- não mexe no store antigo do ML (`laps_grid.parquet`); desde o pedido 16, ele refaz o store v2;
 - não grava o modelo do app instalado, e recusa um `--modelo` dentro da pasta dele.
 
 **Quando ele para:** qualquer trava dos passos para o comando antes de treinar:

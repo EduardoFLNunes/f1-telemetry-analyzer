@@ -92,3 +92,177 @@ E no store:
   - a série das medianas de volta, com a tendência: a inclinação da reta de mínimos quadrados, em segundos por sessão, a partir de 2 sessões;
   - as 3 curvas de maior perda mediana na sessão mais recente, com a série delas.
 - **Critério do ADR 0015:** com 3 sessões ou mais, a diferença entre a maior e a menor mediana de volta das últimas 3 sessões é menor que 0,5 s. Com menos de 3 sessões, ainda não dá para avaliar.
+
+## 2. O que mudou no store (Parte B)
+
+O store v2 é um arquivo novo: `data/ml/laps_grid_v2.parquet`, com o meta em `laps_grid_v2_meta.json`. Ele é construído por `python -m ml.scripts.build_lap_store_v2`, e o `atualizar_coach` também o refaz.
+
+O store antigo (`laps_grid.parquet`, 122 voltas) continua intacto, e os scripts das Fases 1, 2 e 2b continuam lendo ele.
+
+| | store antigo | store v2 |
+|---|---|---|
+| relógio da grade | zerado em s = 0 com o `span` da grade, um passo mais curto que a volta | zerado em s = 0 com o período verdadeiro (`resample_lap(..., line_clock=True)`) |
+| voltas com box | entravam | saem (`pit_lap`, a detecção do pedido 12) |
+| pastas | só a do repositório | as duas, sem as cópias `duplicada_de` |
+| origens | só `humano` (na prática, o rótulo antigo) | todas, com `origem`, `origem_fonte`, `equipamento`, `relogio_*`, `pasta` e `carModel` em cada volta |
+| tempo do jogo | não tinha | `tempo_jogo_s`, o cronômetro do jogo costurado na troca de volta |
+| meta | geometria | geometria, commit, sha256 e tamanho do inventário, dos rótulos de 04/10 e de cada gravação usada (ADR 0007), e o resultado das checagens (`aprovado`) |
+
+### Contagem
+
+- **Entrada:** 1.952 voltas no inventário, 720 válidas.
+- **Saídas:**
+  - 4 duplicatas;
+  - 138 voltas com passagem pelo box.
+- **Resultado:** 578 voltas no store v2.
+
+| origem | equipamento | pasta | voltas |
+|---|---|---|---:|
+| desconhecida | anterior | app_instalado | 451 |
+| desconhecida | anterior | repositorio | 101 |
+| humano | atual | repositorio | 11 |
+| ia | atual | repositorio | 13 |
+| misturada | atual | repositorio | 2 |
+
+As 101 voltas antigas do repositório são exatamente as 122 do store antigo menos as 21 com box que o pedido 12 tinha apontado.
+
+## 3. As checagens
+
+Todas passaram. O meta saiu com `aprovado: true`.
+
+| checagem | resultado |
+|---|---|
+| **principal:** período contra o cronômetro do jogo, p99 de \|diferença\| ≤ 5 ms | **passou.** As 578 voltas têm o fechamento medido. A diferença tem mediana de +0,7 ms e vai de −3,1 a +3,3 ms entre o p1 e o p99; o p99 de \|diferença\| é 3,9 ms. |
+| nenhuma volta passa pelo box | passou: 0 voltas com `pit_lap` |
+| nenhuma volta duas vezes | passou: `lap_id` únicos, nenhuma `duplicada_de` e nenhum par sobreposto entre as pastas |
+| uma geometria só | passou: `0ed16f0dd2225990` |
+
+**As 4 voltas acima de 5 ms:**
+
+- uma volta de 125,1 s com parada no meio, já marcada com `relogio_suspeito` (`2026-08-19_20-58-36#0011`, −20,1 ms);
+- três gravações de 14/06 a 31 Hz, com metade da amostragem: −8,2, −5,5 e +7,4 ms.
+
+**Efeitos esperados,** nas 101 voltas que estão nos dois stores:
+
+- **a volta sobe** 27,8 ms (mediana);
+- **o microsetor 0 sobe** 27,2 ms (mediana);
+- **os outros microsetores** mudam no máximo 0,6 ms (p99).
+
+Tudo isso dentro do registrado.
+
+**Controle:** o store antigo, contra o mesmo cronômetro do jogo, fica 27,3 ms curto (mediana) e não passaria na checagem principal. A checagem enxerga o erro que veio corrigir.
+
+O relatório completo fica em `data/ml/store_v2_relatorio.json`.
+
+## 4. Relatório de evolução (Parte C)
+
+```
+..\.venv\Scripts\python.exe tools\relatorio_evolucao.py
+```
+
+O comando roda na pasta `backend`, em cerca de 5 segundos. Ele lê o store v2 e para se o meta não estiver `aprovado`. Também para se a volta da IA do coach não estiver no store v2.
+
+O `atualizar_coach.py` agora faz, no fim, dois passos novos:
+
+- o passo 6 refaz o store v2 com as checagens;
+- o passo 7 chama este relatório.
+
+O store v2 entra no comando para as sessões novas chegarem ao relatório.
+
+### Como ler
+
+- **Sessão:** as gravações do mesmo dia.
+- **Perda para a IA por curva:** quanto tempo você gasta a mais que a volta da IA do coach no trecho da curva, do meio da reta anterior ao meio da seguinte. Positivo é mais lento que a IA.
+- **Situação de cada curva:**
+  - `diferenca_consistente`: o intervalo de 90% da perda mediana não inclui zero. O campo `lado` diz se você perde ou ganha.
+  - `sem_diferenca_consistente`: o intervalo inclui zero.
+  - `poucos_dados`: menos de 5 voltas na sessão.
+- **Frenagem:** em metros, positivo é frear depois da IA. Fica vazia quando a IA não freia no trecho (`ia_freia: false`) ou quando nenhuma volta sua tem um início de frenagem dentro do trecho.
+- **Lateral no ápice:** positivo é mais à esquerda que a IA. A interface deve dizer o lado em palavras (ADR 0003).
+
+### Primeira rodada: a linha de base, sessão de 04/10
+
+- **Voltas:** 11.
+- **Tempos:** melhor de 89,39 s, mediana de 93,46 s e desvio de 2,40 s.
+- **Diferença para a volta da IA (84,83 s):** a mediana fica 8,63 s acima, e a melhor, 4,56 s acima.
+
+| curva | perda mediana (s) | intervalo de 90% (s) | situação | frenagem vs IA (m) | lateral no ápice (m) | mínima vs IA (km/h) |
+|---|---:|---|---|---:|---:|---:|
+| C01-esq | +1,27 | 1,03 a 1,59 | perde | −66 (11 voltas) | −0,85 | −4,1 |
+| C02-dir | +0,06 | −0,04 a 0,07 | sem diferença consistente | — | −0,11 | −1,5 |
+| C03-esq | +0,51 | 0,36 a 0,59 | perde | IA não freia | −0,78 | −0,6 |
+| C04-esq | +0,73 | 0,56 a 0,79 | perde | −48 (11) | −0,47 | −11,4 |
+| C05-esq | +0,32 | 0,19 a 0,51 | perde | IA não freia | −2,21 | −11,9 |
+| C06-dir | +0,56 | 0,30 a 0,71 | perde | −72 (9) | −3,85 | −3,5 |
+| C07-dir | +0,51 | 0,40 a 0,73 | perde | +40 (5) | +1,06 | −6,7 |
+| C08-esq | +0,28 | 0,23 a 0,55 | perde | +32 (1) | −0,04 | +3,6 |
+| C09-dir | +0,35 | 0,18 a 0,35 | perde | IA não freia | −1,69 | −20,3 |
+| C10-dir | +0,79 | 0,63 a 0,89 | perde | — | +1,21 | −7,3 |
+| C11-esq | +0,79 | 0,62 a 1,42 | perde | IA não freia | −0,57 | −20,4 |
+| C12-esq | +0,64 | 0,50 a 1,07 | perde | −2 (3) | −0,89 | +0,4 |
+| C13-esq | +0,17 | 0,16 a 0,23 | perde | IA não freia | −2,23 | −5,6 |
+| C14-esq | +0,35 | 0,24 a 0,73 | perde | IA não freia | −2,49 | −6,6 |
+
+- **Diferença consistente:** 13 das 14 curvas. A exceção é a C02.
+- **As 3 de maior perda:** C01, o S do Senna (1,27 s); C11 (0,79 s); e C10 (0,79 s).
+- **Tendência e critério do ADR 0015:** ainda não dá para calcular, com uma sessão só (1 de 3).
+- **A soma das perdas medianas por curva** é 7,33 s. Ela não precisa bater com a mediana da volta menos a IA (8,63 s), porque a soma de medianas não é a mediana das somas. Volta a volta, a soma das 14 perdas é exatamente a diferença para a IA.
+
+### Limitação encontrada na primeira rodada
+
+**A janela de frenagem perde frenagens que começam no trecho anterior.** A regra registrada procura o início da frenagem do começo do trecho até o ápice da curva. Com duas curvas próximas, a frenagem da segunda pode começar ainda no trecho da primeira, depois do ápice dela.
+
+- **Na C10,** a IA começa a frear em 2.622 m, depois do ápice da C09 (2.610 m) e antes do trecho da C10 (2.649 m). Dentro do trecho, o pedal da IA pulsa em torno de 0,15, e nenhuma volta sua tem um início de frenagem ali.
+- **Na C02,** você vem freando da C01.
+- **Na C07, C08 e C12,** só algumas voltas têm ponto de frenagem.
+
+A regra não foi mudada depois de ver o resultado. Uma opção para a próxima versão é começar a janela de frenagem no ápice da curva anterior, e ela fica para decisão sua.
+
+## 5. Formato dos JSONs
+
+Os arquivos ficam em `data/ml/evolucao/`, fora do git:
+
+- `sessao_<AAAA-MM-DD>.json`, um por sessão;
+- `resumo.json`.
+
+Todos os tempos estão em segundos, as distâncias em metros e as velocidades em km/h. Valor `null` quer dizer que não deu para medir.
+
+### `sessao_<AAAA-MM-DD>.json` (`formato: "evolucao-sessao/1"`)
+
+| campo | o que é |
+|---|---|
+| `sessao` | o dia (`2026-10-04`) |
+| `gravacoes` | as gravações do dia que deram voltas |
+| `resumo` | `voltas`, `melhor_s`, `mediana_s`, `desvio_s` (desvio-padrão amostral), `volta_da_ia_s`, `mediana_menos_ia_s`, `melhor_menos_ia_s` e `poucos_dados` (menos de 5 voltas) |
+| `voltas[]` | `volta` (o `lap_id`), `gravacao` e `tempo_s` (o período do store v2), na ordem em que foram feitas |
+| `curvas[]` | uma por curva, na ordem da pista (a tabela abaixo) |
+| `microsetores[]` | `microsetor` (0 a 59), `perda_mediana_s`, `p25_s` e `p75_s` contra a volta da IA |
+| `referencia` | `tipo` (`volta_ia`), `volta`, `tempo_s` e `modelo`, o arquivo do coach de onde veio |
+| `store` | `arquivo`, `sha256`, `commit_do_store` e `geometry_id` do store v2 lido |
+| `regras` | onde estão as regras (este documento, seção 1.4) |
+
+Campos de cada item de `curvas[]`:
+
+| campo | o que é |
+|---|---|
+| `curva`, `indice` | o rótulo (`C01-esq`) e a posição (1 a 14) |
+| `trecho_m` | `[início, fim]` do trecho; o da C01 cruza a linha (`[4112.1, 346.0]`) |
+| `curva_m`, `apice_m` | início e fim da curva, e o ápice, pela curvatura da linha central |
+| `perda_para_ia_s` | `mediana`, `p25`, `p75`, `iqr` e `voltas` |
+| `situacao`, `lado`, `intervalo_90_s` | `diferenca_consistente`, `sem_diferenca_consistente` ou `poucos_dados`. `lado` é `perde`, `ganha` ou `null`. `intervalo_90_s` é `[baixo, alto]` ou `null` com poucos dados |
+| `ia_freia` | se a volta da IA tem início de frenagem no trecho |
+| `frenagem_vs_ia_m` | `mediana`, `p25`, `p75`, `iqr` e `voltas`, só das voltas com frenagem no trecho; `null` quando a IA não freia ou nenhuma volta freia |
+| `lateral_apice_vs_ia_m` | `mediana`, `p25`, `p75`, `iqr` e `voltas` |
+| `velocidade_minima_vs_ia_kmh` | `mediana` |
+| `por_volta[]` | `volta`, `perda_s`, `frenagem_vs_ia_m`, `lateral_apice_vs_ia_m` e `velocidade_minima_vs_ia_kmh` de cada volta |
+
+### `resumo.json` (`formato: "evolucao-resumo/1"`)
+
+| campo | o que é |
+|---|---|
+| `sessoes[]` | por sessão, em ordem de data: `sessao`, `voltas`, `melhor_s`, `mediana_s`, `desvio_s`, `mediana_menos_ia_s`, `melhor_menos_ia_s`, `poucos_dados` e `curvas_com_diferenca_consistente` |
+| `tendencia_mediana_s_por_sessao` | inclinação da reta da mediana de volta, em s por sessão; `null` com menos de 2 sessões. Negativo é melhorar |
+| `curvas_de_maior_perda[]` | as 3 de maior perda mediana na sessão mais recente, cada uma com `serie[]` (`sessao`, `perda_mediana_s`, `situacao`) e `tendencia_s_por_sessao` |
+| `criterio_adr_0015` | `limite_s` (0,5), `sessoes_necessarias` (3), `sessoes_disponiveis`, `amplitude_s` (maior menos menor mediana das últimas 3), `estabilizou` (`true`, `false` ou `null`) e `situacao` em texto |
+| `referencia`, `store`, `regras` | como no JSON da sessão |
+| `arquivos_de_sessao` | os caminhos dos JSONs de sessão |
