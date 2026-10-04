@@ -100,7 +100,7 @@ O modelo do coach guarda as duas referências, as duas voltas reais e completas,
 
 - **Cada frase nomeia a referência:** "Setor 2: 0.34s atras da volta da IA neste trecho (1.59s contra 1.25s). Minima da IA 157 km/h, a sua 122 km/h."
 - **A freada vem em relação à referência,** quando a referência começa a frear naquele microsetor e você começou a frear a até 60 m dela: "A IA freia 34 m depois de voce" ou "Na sua melhor volta voce freou 7 m depois". O início de frenagem é o pedal passando de 0,15, o mesmo critério da Fase 2b, na referência e ao vivo.
-- **No máximo 3 frases por volta:** as primeiras que passam do limiar.
+- **No máximo 3 frases por volta:** até o pedido 14, as primeiras que passavam do limiar; desde o pedido 15, só nos 3 trechos de foco, uma por trecho (seção 9).
 - **No fim da volta, um resumo:** "Volta fechada. Maiores diferencas para a volta da IA: setor 32 (0.67s), setor 38 (0.66s) e setor 43 (0.48s). Volta da IA: 84.83s." Diferenças que arredondam para 0,00 s ficam de fora.
 - **Trechos não comparados:**
   - o microsetor em que a contagem começa (parcial), exceto na linha de chegada;
@@ -164,14 +164,9 @@ O coach rodou amostra por amostra sobre os arquivos da sessão, nos dois modos, 
 
 ## 7. Limitações
 
-- **As 3 frases são as primeiras, não as maiores.** Contra a IA, o limiar é baixo para as diferenças que existem, e as 3 frases quase sempre caem no começo da volta (S do Senna, microsetores 0 a 3). As maiores diferenças só aparecem no resumo: na volta de 91,74 s, as frases foram para os setores 2, 11 e 12 (0,07 a 0,34 s), e os maiores foram 32, 38 e 43 (0,48 a 0,67 s). Se incomodar, as opções são subir o limiar contra a IA ou falar os 3 maiores de cada terço da volta, mas isso é decisão sua.
+- **As 3 frases eram as primeiras, não as maiores** (resolvido no pedido 15 com os trechos de foco, seção 9). Contra a IA, o limiar é baixo para as diferenças que existem, e as 3 frases quase sempre caem no começo da volta (S do Senna, microsetores 0 a 3). As maiores diferenças só aparecem no resumo: na volta de 91,74 s, as frases foram para os setores 2, 11 e 12 (0,07 a 0,34 s), e os maiores foram 32, 38 e 43 (0,48 a 0,67 s). Se incomodar, as opções são subir o limiar contra a IA ou falar os 3 maiores de cada terço da volta, mas isso é decisão sua.
 - **A freada só aparece se você começou a frear a até 60 m do ponto da referência e antes de o microsetor terminar.** No ensaio, poucas frases trazem a freada (2 contra a IA e 1 contra a sua melhor).
-- **As referências vêm de uma sessão só** (04/10), com 13 voltas da IA e 11 suas. A cada sessão nova:
-  1. rode `python -m ml.scripts.report_lap_origin`, que refaz o inventário;
-  2. rode `python -m ml.scripts.detector_ia aplicar`, que devolve os rótulos das anotações de 04/10 que o passo 1 apaga;
-  3. rode `python tools/train_reference_model.py`.
-
-  Sessões só suas, sem Ctrl+C, saem `humano` pelo próprio indicador.
+- **As referências vêm de uma sessão só** (04/10), com 13 voltas da IA e 11 suas. A cada sessão nova, rode `python tools/atualizar_coach.py` (seção 10), que faz os passos que antes eram manuais.
 - **O store do ML continua um passo curto** no microsetor 0 até a "Reconstrução do store" (backlog).
 - **O app instalado continua com o coach antigo** e com o modelo antigo até ser reempacotado.
 
@@ -196,4 +191,111 @@ O coach rodou amostra por amostra sobre os arquivos da sessão, nos dois modos, 
 5. **Abra o Assetto Corsa** em Interlagos, com o `rss_formula_rss_3_v6_2026`. A gravação começa sozinha quando o carro entra na pista. As frases aparecem no painel "AI Coaching", com o rótulo **VOLTA DA IA** ou **SUA MELHOR**, e o resumo sai ao cruzar a linha.
 6. **O coach usa dois arquivos,** ambos fora do git: `data/reference_models/vhe_interlagos.json` (o modelo) e `data/reference_models/vhe_interlagos.geometry.json` (a geometria). Sem a geometria, o coach fica calado e avisa uma vez no log.
 7. **Para treinar sem o coach,** feche o app e renomeie `data/reference_models/vhe_interlagos.json` (do repositório). Devolva o nome depois.
-8. **No fim, feche o app.** As sessões ficam em `data/recordings`. Para elas entrarem nas referências, siga a sequência da seção 7.
+8. **No fim, feche o app.** As sessões ficam em `data/recordings`. Para elas entrarem nas referências, rode `python tools/atualizar_coach.py` (seção 10).
+
+## 9. Trechos de foco (pedido 15)
+
+### Como o foco é escolhido
+
+- **Antes de cada volta,** o coach escolhe 3 trechos de foco: os 3 microsetores com a maior diferença mediana para a referência ativa, nas últimas 5 voltas válidas da sessão.
+- **Volta válida da sessão,** para o foco:
+  - começou na linha de chegada;
+  - teve todos os 60 microsetores comparados, então fica de fora a volta com box, com o carro parado ou que começou a contar no meio;
+  - não teve a IA no volante em nenhuma amostra.
+- **Enquanto a sessão não tem 5 voltas válidas,** o foco vem das suas voltas no modelo: a sua mediana em cada microsetor menos a referência ativa.
+- **Só entra no foco um trecho em que você está atrás,** com diferença mediana de pelo menos 0,005 s, o mesmo corte do resumo. Um modelo de uma volta só não tem foco, e o coach fica calado durante a volta.
+- **Trocar a referência ou o modelo** recomeça a contagem das 5 voltas.
+
+### O que o coach diz
+
+- **Durante a volta:** só nos trechos de foco, quando a diferença passa do limiar, e no máximo uma frase por trecho. Então são no máximo 3 frases por volta.
+- **No fim da volta:** o resumo dos 3 trechos de maior diferença, igual ao do pedido 14.
+- **Quando o foco muda:** uma linha no próprio feed, sem componente novo. Ela aparece como "FOCO NAS PROXIMAS VOLTAS: SETORES 32, 38 E 43" e, embaixo, de onde veio. Exemplo: "Maior diferenca mediana para a volta da IA nas ultimas 5 voltas validas da sessao".
+- **No replay de uma volta gravada,** a linha de foco não entra na lista de eventos da volta; ela vem à parte, no campo `focus`.
+
+### Ensaio nas suas voltas de 04/10 (antes e depois)
+
+O ensaio (`tools/ensaio_coach.py`) roda um coach só, atravessando todos os arquivos do dia, como o app aberto. Cada modo roda duas vezes:
+
+- **antes:** o coach do pedido 14, com o foco aberto a todos os microsetores;
+- **agora:** com os 3 trechos de foco.
+
+O "antes" reproduz as frases de trecho do ensaio do pedido 14, texto por texto: 94 e 79 frases, e na volta de 91,74 s os setores 2, 11 e 12. Dos resumos, um do modo `minha_melhor` sai da contagem (25 contra 26). O motivo: agora cada fala é ligada à volta pela amostra anterior a ela, porque o resumo sai na amostra que já cruzou a linha.
+
+**"Nos 3 maiores da volta"** quer dizer que a frase caiu num dos 3 setores que o resumo daquela mesma volta lista.
+
+| | volta_ia antes | volta_ia agora | minha_melhor antes | minha_melhor agora |
+|---|---|---|---|---|
+| frases de trecho, 32 voltas | 94 | 38 | 79 | 9 |
+| frases por volta, 11 válidas (média, máx.) | 3,0, 3 | 1,2, 2 | 2,5, 3 | 0,2, 1 |
+| nas válidas, frases nos 3 maiores da volta | 7 de 33 (21%) | 11 de 13 (85%) | 10 de 27 (37%) | 2 de 2 (100%) |
+| microsetor mediano das frases (válidas) | 2 | 43 | 9 | 35 |
+| frases nos microsetores 0 a 5 (válidas) | 27 | 1 | 6 | 0 |
+| mais citados (válidas) | 2, 0, 1, 3 | 43 (7), 38 (4), 36, 2 | 8, 2, 43, 47 | 32, 38 |
+| frases proibidas | 0 | 0 | 0 | 0 |
+
+**Como o foco mudou ao longo do dia:**
+
+- `volta_ia`: começou no modelo, com os setores 36, 38 e 43, e depois veio da sessão:
+  - 26, 38 e 43;
+  - 36, 38 e 43;
+  - 2, 38 e 43.
+- `minha_melhor`: começou no modelo, com os setores 32, 36 e 44, e depois veio da sessão:
+  - 26, 43 e 44;
+  - 36, 38 e 43;
+  - 36, 38 e 39.
+
+**Contra a sua melhor volta, o coach quase não fala.** O limiar é o mesmo nos dois modos (2× a sua oscilação), e a sua diferença para a sua própria melhor volta raramente passa dele nos trechos de foco. Antes, as frases passavam do limiar em trechos de pouca diferença, no começo da volta.
+
+**Na volta de 91,74 s** (`2026-10-04_03-21-52_vhe_interlagos#0002`), o resumo lista os setores 32 (0,67 s), 38 (0,66 s) e 43 (0,48 s).
+
+| | antes (pedido 14) | agora |
+|---|---|---|
+| `volta_ia` | setores 2, 11 e 12 (0,34, 0,07 e 0,07 s) | setores 38 (0,66 s) e 43 (0,48 s); foco 36, 38 e 43, do modelo |
+| `minha_melhor` | setor 32 (0,64 s) | setor 32 (0,64 s); foco 32, 36 e 44, do modelo |
+
+- **As frases foram todas para trechos de maior diferença da volta.**
+- **O maior da volta contra a IA, o 32, ficou sem frase,** porque não estava no foco. O foco é escolhido antes da volta, pela sua mediana: nas suas 11 voltas do modelo, o 32 custa 0,24 s contra a IA, o 6º maior. O 36 custa 0,42 s, o 38 custa 0,43 s e o 43 custa 0,48 s. Nesta volta você perdeu 0,67 s no 32, bem acima do seu normal ali, e o coach só mostra isso no resumo.
+
+### Limitação
+
+- **O indicador de IA fica travado depois do Ctrl+C** até a sessão do jogo reiniciar. Assim, as suas voltas depois de um Ctrl+C não contam para o foco da sessão, e o foco volta a ser o do modelo até a sessão do jogo ser reiniciada e você somar 5 voltas válidas.
+
+## 10. Atualizar o coach com um comando (pedido 15)
+
+Depois de uma sessão nova, feche o app e rode, na pasta `backend`:
+
+```
+..\.venv\Scripts\python.exe tools\atualizar_coach.py
+```
+
+O comando faz, em ordem:
+
+1. **Refaz o inventário novo** em `data/ml/origem/`, varrendo as duas pastas de gravações. A varredura só lê as gravações e leva cerca de 13 minutos. `--sem-varrer` pula este passo.
+2. **Aplica as anotações versionadas de 04/10.** Elas ficam em `docs/experimentos/2026-10-04_rotulos_por_volta.csv`: 53 voltas, pela identidade do ML, feitas das suas anotações por parte e volta do jogo (`2026-10-04_sessao_rotulada_anotacoes.csv`). O comando para se o arquivo não bater com o inventário ou com as suas anotações. Uma sessão gravada depois, mesmo no dia 04/10, não herda as anotações.
+3. **Rotula as sessões novas sem anotação** (equipamento `atual`):
+   - antes de a IA ligar pela primeira vez na sessão do jogo, a volta é `humano`, pelo indicador;
+   - a volta em que a IA liga é `misturada`;
+   - depois disso, o indicador fica travado em `ia`, e quem decide é o detector pela linha da IA (`ai_detector.LIMITS`, com a referência das voltas limpas da IA de 04/10);
+   - o que o detector não resolve, ou uma volta sem o campo do indicador, fica `desconhecida`.
+
+   As voltas do equipamento anterior continuam como o indicador diz, e o detector só grava as colunas `*_detector` delas, como no pedido 13.
+4. **Copia o modelo do repositório** para `data/reference_models/backup/vhe_interlagos.<data_hora>.antes-de-atualizar.json` e o treina de novo.
+5. **Imprime o resumo:**
+   - as duas referências;
+   - as voltas de cada origem;
+   - o limiar;
+   - o foco inicial de cada modo.
+
+   O resumo também fica em `data/ml/origem/atualizar_coach.json`.
+
+**O que o comando não faz:**
+
+- não reconstrói o store do ML;
+- não grava o modelo do app instalado, e recusa um `--modelo` dentro da pasta dele.
+
+**Quando ele para:** qualquer trava dos passos para o comando antes de treinar:
+
+- os rótulos de 04/10 que não batem com o inventário;
+- os microsetores e zonas do detector que não batem com a sessão rotulada;
+- nenhuma volta limpa sua para treinar.

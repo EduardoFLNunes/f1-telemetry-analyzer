@@ -28,6 +28,11 @@ from tests.test_ml_pipeline import circular_track  # noqa: E402
 SPEED_MPS = 150.0 / 3.6
 
 
+def phrases_of(bus):
+    """As frases de trecho, sem as linhas de foco (pedido 15)."""
+    return [e for e in bus.of(COACHING_EVENT) if e.get("type") != "coaching_focus"]
+
+
 class HardContinuityTest(unittest.TestCase):
     def test_the_map_engine_keeps_its_default(self):
         """Mapa e painel: a continuidade continua sendo so uma penalidade."""
@@ -148,9 +153,11 @@ class LiveFinishLineTest(unittest.TestCase):
         # Voltas de 60 s, como nos testes do pedido 11 (o modelo recusa voltas curtas).
         seconds = 60.0
         self.speed = self.track.length / seconds
+        # A segunda volta perde 0,3 s nos microsetores 0 e 30: eles entram no foco (pedido 15).
         self.model = build_reference_model(
             [("ref", seconds, int(seconds * HZ), lap_on(self.track, seconds)),
-             ("x", seconds + 0.5, int((seconds + 0.5) * HZ), lap_on(self.track, seconds + 0.5))],
+             ("x", seconds + 0.6, int((seconds + 0.6) * HZ),
+              synthetic_lap(self.track, seconds, slow=[(0, 0.3), (30, 0.3)]))],
             track="t", geometry=self.geometry,
         )
 
@@ -165,7 +172,7 @@ class LiveFinishLineTest(unittest.TestCase):
     def test_the_first_slice_is_measured_from_s0(self):
         """O microsetor 0 da volta 2 conta a partir de s = 0, antes de o jogo zerar o cronometro."""
         bus = self.run_coach(drive_across_laps(self.track, 3, speed=self.speed, slow=(1, 0, 0.5)))
-        events = [e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == 0]
+        events = [e for e in phrases_of(bus) if e["evidence"]["microsector"] == 0]
         self.assertEqual(len(events), 1)
         reference = self.model.targets[0].reference_seconds
         self.assertAlmostEqual(events[0]["evidence"]["yourSeconds"] - reference, 0.5, delta=0.02)
@@ -187,7 +194,7 @@ class LiveFinishLineTest(unittest.TestCase):
                 jumped = True
                 self.assertEqual(bus.of(ENGINEER_SPEECH), [])
         self.assertTrue(jumped)
-        self.assertEqual(bus.of(COACHING_EVENT), [])
+        self.assertEqual(phrases_of(bus), [])
 
 
 
@@ -202,10 +209,10 @@ class WallClockStutterTest(LiveFinishLineTest):
             frames[i + 1]["timestamp"] += 2.0 - (frames[i + 1]["timestamp"] - frames[i]["timestamp"])
         stuttered = self.run_coach(frames)
         self.assertEqual(
-            [e["evidence"]["yourSeconds"] for e in clean.of(COACHING_EVENT)],
-            [e["evidence"]["yourSeconds"] for e in stuttered.of(COACHING_EVENT)],
+            [e["evidence"]["yourSeconds"] for e in phrases_of(clean)],
+            [e["evidence"]["yourSeconds"] for e in phrases_of(stuttered)],
         )
-        self.assertTrue(clean.of(COACHING_EVENT))
+        self.assertTrue(phrases_of(clean))
 
 
 # ── Parte C: as duas referencias (ADR 0016) ─────────────────────────────────
@@ -272,6 +279,9 @@ def synthetic_lap(track, seconds, *, slow=(), brake_at=None):
                          "speed_kmh": track.length / seconds * 3.6, "brake": brake, "throttle": 1.0})
 
 
+FOCUS_OF_MODEL = (5, 14, 40)
+
+
 class TwoReferencesTest(unittest.TestCase):
     """A IA freia em 300 m; o piloto freia em outro ponto."""
 
@@ -280,8 +290,11 @@ class TwoReferencesTest(unittest.TestCase):
         self.geometry = exported(self.track, "geo-1")
         seconds = 60.0
         # As voltas do piloto freiam em 296 m, dentro do mesmo microsetor da IA (293-314 m).
-        mine = [(f"h{i}", seconds + 0.5, int((seconds + 0.5) * HZ),
-                 synthetic_lap(self.track, seconds + 0.5, brake_at=296.0)) for i in range(3)]
+        # Pedido 15: as voltas do piloto perdem 0,1, 0,2 e 0,3 s nos microsetores 5, 14 e 40,
+        # que viram o foco do modelo nos dois modos.
+        mine = [(f"h{i}", seconds + 0.5 + 0.3 * (i + 1), int((seconds + 0.5 + 0.3 * (i + 1)) * HZ),
+                 synthetic_lap(self.track, seconds + 0.5, slow=[(k, 0.1 * (i + 1)) for k in FOCUS_OF_MODEL],
+                               brake_at=296.0)) for i in range(3)]
         ai = [("ia", seconds, int(seconds * HZ), synthetic_lap(self.track, seconds, brake_at=300.0))]
         self.model = build_reference_model(mine, track="t", geometry=self.geometry)
         for kind, laps in ((REFERENCE_OWN_BEST, mine), (REFERENCE_AI, ai)):
@@ -300,12 +313,11 @@ class TwoReferencesTest(unittest.TestCase):
                                 "speedKmh": row.speed_kmh, "brake": row.brake, "track": "t"})
         return bus
 
-    def test_at_most_three_phrases_a_lap(self):
-        slow = [(i, 0.3) for i in (5, 10, 20, 30, 40, 50)]
+    def test_at_most_three_phrases_a_lap_and_only_in_the_focus(self):
+        slow = [(i, 0.5) for i in (5, 10, 14, 20, 40, 50)]
         bus = self.drive(synthetic_lap(self.track, 62.0, slow=slow, brake_at=290.0))
-        lap_one = [e for e in bus.of(COACHING_EVENT) if e["lap_number"] == 1]
-        self.assertEqual(len(lap_one), 3)
-        self.assertEqual([e["evidence"]["microsector"] for e in lap_one], [5, 10, 20])
+        lap_one = [e for e in phrases_of(bus) if e["lap_number"] == 1]
+        self.assertEqual([e["evidence"]["microsector"] for e in lap_one], [5, 14, 40])
 
     def test_the_lap_summary_lists_the_three_largest(self):
         slow = [(5, 0.2), (10, 0.5), (20, 0.4), (30, 0.3), (40, 0.25)]
@@ -319,7 +331,7 @@ class TwoReferencesTest(unittest.TestCase):
     def test_braking_is_said_relative_to_the_reference(self):
         for driver_at, word in ((288.0, "depois"), (312.0, "antes")):
             bus = self.drive(synthetic_lap(self.track, 60.5, slow=[(self.sector, 0.4)], brake_at=driver_at))
-            event = [e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == self.sector][0]
+            event = [e for e in phrases_of(bus) if e["evidence"]["microsector"] == self.sector][0]
             self.assertIn(f"A IA freia 12 m {word} de voce", event["event"])
             self.assertAlmostEqual(event["evidence"]["brakeDeltaM"], 300.0 - driver_at, delta=1.5)
 
@@ -327,8 +339,8 @@ class TwoReferencesTest(unittest.TestCase):
         texts = []
         for kind in (REFERENCE_AI, REFERENCE_OWN_BEST):
             self.model.use_reference(kind)
-            bus = self.drive(synthetic_lap(self.track, 62.0, slow=[(self.sector, 0.5), (40, 0.4)], brake_at=288.0))
-            events = bus.of(COACHING_EVENT)
+            bus = self.drive(synthetic_lap(self.track, 62.0, slow=[(self.sector, 0.6), (40, 0.5)], brake_at=288.0))
+            events = phrases_of(bus)
             self.assertTrue(events)
             name = "volta da IA" if kind == REFERENCE_AI else "sua melhor volta"
             for event in events:
@@ -363,30 +375,101 @@ class TwoReferencesTest(unittest.TestCase):
 class NotComparableSlicesTest(TwoReferencesTest):
     def test_a_slice_where_the_car_stopped_is_not_compared(self):
         """Medido em 04/10: saindo do box, "52.84s atras ... a sua 0 km/h"."""
-        lap = synthetic_lap(self.track, 60.5, brake_at=288.0)
-        stop = int(len(lap) * 0.4)
+        lap = synthetic_lap(self.track, 60.5, slow=[(14, 1.0)], brake_at=288.0)
+        stop = int(len(lap) * 14.5 / 60)
         parked = pd.concat([lap.iloc[[stop]]] * int(20 * HZ), ignore_index=True)
         parked["speed_kmh"] = 0.0
         lap = pd.concat([lap.iloc[:stop], parked, lap.iloc[stop:]], ignore_index=True)
         lap.loc[stop:, "elapsed_s"] = lap.loc[stop:, "elapsed_s"].to_numpy() + np.r_[
             np.arange(len(parked)) / HZ, np.full(len(lap) - stop - len(parked), len(parked) / HZ)]
         bus = self.drive(lap)
-        sector = int(0.4 * 60)
-        self.assertFalse([e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == sector])
+        sector = 14
+        self.assertFalse([e for e in phrases_of(bus) if e["evidence"]["microsector"] == sector])
 
     def test_the_slice_the_count_starts_in_is_not_compared(self):
-        lap = synthetic_lap(self.track, 60.5, slow=[(10, 2.0)], brake_at=288.0)
-        start = int(len(lap) * 10.5 / 60)                   # comeca no meio do microsetor 10
+        lap = synthetic_lap(self.track, 60.5, slow=[(5, 2.0)], brake_at=288.0)
+        start = int(len(lap) * 5.5 / 60)                    # comeca no meio do microsetor 5
         bus = self.drive(lap.iloc[start:].reset_index(drop=True))
-        self.assertFalse([e for e in bus.of(COACHING_EVENT) if e["evidence"]["microsector"] == 10])
+        self.assertFalse([e for e in phrases_of(bus) if e["evidence"]["microsector"] == 5 and e["lap_number"] == 1])
 
 
 class SummaryRoundingTest(TwoReferencesTest):
     def test_no_summary_when_the_lap_matches_the_reference(self):
         """Medido: a melhor volta contra ela mesma listava "setor 0 (0.00s)"."""
         self.model.use_reference(REFERENCE_OWN_BEST)
-        bus = self.drive(synthetic_lap(self.track, 60.5, brake_at=296.0))
-        self.assertEqual(bus.of(ENGINEER_SPEECH), [])
+        best = synthetic_lap(self.track, 60.5, slow=[(k, 0.1) for k in FOCUS_OF_MODEL], brake_at=296.0)
+        bus = FakeBus()
+        coach = LiveDrivingCoach(bus, lambda _t: self.model, geometry_provider=lambda _t: self.geometry,
+                                 min_gap_seconds=0.0)
+        for number, frame in ((1, best), (2, best), (3, best)):
+            for row in frame.itertuples():
+                coach.on_frame({"world_x": row.x, "world_z": row.z, "lap_time": row.elapsed_s, "lap_number": number,
+                                "speedKmh": row.speed_kmh, "brake": row.brake, "track": "t"})
+        # A volta 2, inteira e igual a referencia, fecha sem resumo.
+        self.assertEqual(len(bus.of(ENGINEER_SPEECH)), 0)
+
+
+class FocusTest(unittest.TestCase):
+    """Pedido 15: o coach so fala nos 3 trechos de foco."""
+
+    setUp = TwoReferencesTest.setUp
+
+    def drive_laps(self, laps, *, ai_laps=()):
+        bus = FakeBus()
+        coach = LiveDrivingCoach(bus, lambda _t: self.model, geometry_provider=lambda _t: self.geometry,
+                                 min_gap_seconds=0.0)
+        for number, frame in enumerate(list(laps) + [synthetic_lap(self.track, 60.5, brake_at=296.0)], start=1):
+            ai = number in ai_laps
+            for row in frame.itertuples():
+                coach.on_frame({"world_x": row.x, "world_z": row.z, "lap_time": row.elapsed_s, "lap_number": number,
+                                "speedKmh": row.speed_kmh, "brake": row.brake, "track": "t",
+                                "carPhysics": {"controls": {"isAIControlled": ai}}})
+        return bus, coach
+
+    def focus_lines(self, bus):
+        return [e for e in bus.of(COACHING_EVENT) if e.get("type") == "coaching_focus"]
+
+    def session_lap(self):
+        return synthetic_lap(self.track, 60.5, slow=[(20, 0.6), (30, 0.5), (50, 0.4)], brake_at=296.0)
+
+    def test_before_five_laps_the_focus_comes_from_the_model(self):
+        bus, coach = self.drive_laps([self.session_lap()])
+        self.assertEqual(coach.focus_sectors(self.model), (FOCUS_OF_MODEL, "modelo"))
+        first = self.focus_lines(bus)[0]
+        self.assertEqual(first["event"], "Foco nas proximas voltas: setores 5, 14 e 40")
+        self.assertEqual(first["focusSource"], "modelo")
+
+    def test_the_focus_is_the_three_largest_medians_of_the_last_five_valid_laps(self):
+        laps = [self.session_lap() for _ in range(7)]
+        # Uma volta so com um erro grande no microsetor 10: a mediana nao muda.
+        laps[2] = synthetic_lap(self.track, 60.5, slow=[(10, 3.0), (20, 0.6), (30, 0.5), (50, 0.4)], brake_at=296.0)
+        bus, coach = self.drive_laps(laps)
+        # A volta 1 comeca a contar no meio dela mesma e nao vale; as voltas 2 a 6 sao as 5 validas.
+        self.assertEqual(coach.focus_sectors(self.model), ((20, 30, 50), "sessao"))
+        last = self.focus_lines(bus)[-1]
+        self.assertEqual(last["event"], "Foco nas proximas voltas: setores 20, 30 e 50")
+        self.assertIn("ultimas 5 voltas validas", last["evidence"])
+        # Na volta 7, ja com o foco novo, as frases caem nos microsetores 20, 30 e 50.
+        seventh = [e["evidence"]["microsector"] for e in phrases_of(bus) if e["lap_number"] == 7]
+        self.assertEqual(seventh, [20, 30, 50])
+
+    def test_outside_the_focus_the_coach_says_nothing(self):
+        bus, _ = self.drive_laps([synthetic_lap(self.track, 60.5, slow=[(25, 2.0)], brake_at=296.0)])
+        self.assertFalse([e for e in phrases_of(bus) if e["evidence"]["microsector"] == 25])
+
+    def test_never_more_than_three_phrases_a_lap(self):
+        slow = [(k, 0.8) for k in range(0, 60, 3)] + [(k, 0.8) for k in FOCUS_OF_MODEL]
+        bus, _ = self.drive_laps([synthetic_lap(self.track, 70.0, slow=slow, brake_at=296.0) for _ in range(3)])
+        per_lap = {}
+        for event in phrases_of(bus):
+            per_lap[event["lap_number"]] = per_lap.get(event["lap_number"], 0) + 1
+        self.assertTrue(per_lap)
+        self.assertLessEqual(max(per_lap.values()), 3)
+
+    def test_laps_with_the_ai_at_the_wheel_do_not_count(self):
+        laps = [self.session_lap() for _ in range(6)]
+        _, coach = self.drive_laps(laps, ai_laps={3, 4})
+        self.assertEqual(coach.focus_sectors(self.model)[1], "modelo")
 
 
 if __name__ == "__main__":

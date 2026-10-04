@@ -25,6 +25,14 @@ relative to the reference ("a IA freia 12 m depois de voce"), at most three
 phrases a lap -- the first that clear the bar -- and the lap closes with the
 three slices furthest from the reference.
 
+Since pedido 15 the coach speaks only in three *focus* slices, chosen before
+each lap: the microsectors with the largest median difference to the active
+reference over the session's last five valid laps -- or, until the session has
+five, over the driver's laps in the model. One phrase per focus slice, so three
+a lap at most, and a short line in the feed when the focus changes. ADR 0016
+asked for the slices with the largest difference; the first slices to clear the
+bar were mostly the opening corner.
+
 Since ADR 0013 a model carries the `geometry_id` of the official geometry it was
 measured on. The coach then works out where the car is from its world position,
 projected on that same geometry (`official_geometry.CoachProjector`), instead of
@@ -42,9 +50,12 @@ event loop, and the coach must not become the second one.
 from __future__ import annotations
 
 import logging
+import statistics
 import time
-from typing import Any, Callable, Dict, Optional
+from collections import deque
+from typing import Any, Callable, Dict, Optional, Tuple
 
+from ..telemetry.channels import ai_controlled
 from ..telemetry_events import COACHING_EVENT, ENGINEER_SPEECH
 
 logger = logging.getLogger(__name__)
@@ -77,6 +88,12 @@ JUMP_PROGRESS = 0.05
 # speaks at most this often a lap -- the first slices that clear the bar -- and
 # sums up the worst ones at the line.
 MAX_PHRASES_PER_LAP = 3
+# Pedido 15: the focus. The slices with the largest median difference to the
+# reference, over the session's last laps that count -- started at the line,
+# every slice compared, no AI at the wheel.
+FOCUS_SECTORS = 3
+FOCUS_LAPS = 5
+FOCUS_EVENT = "coaching_focus"
 SUMMARY_SECTORS = 3
 SUMMARY_MIN_LOSS = 0.005
 # A braking point of the lap is compared with the reference's only within this.
@@ -157,6 +174,16 @@ class LiveDrivingCoach:
         self._closing_max_lateral: Optional[float] = None
         # The slice the count started in is partial: never compared.
         self._partial_sector: Optional[int] = None
+        # Pedido 15: what this lap measured (every slice, either sign), whether
+        # it counts for the focus, and the focus itself.
+        self._lap_diffs: Dict[int, float] = {}
+        self._lap_started_at_line = False
+        self._lap_had_ai = False
+        self._spoken_sectors: set = set()
+        self._session_laps: deque = deque(maxlen=FOCUS_LAPS)
+        self._focus: Optional[Tuple[int, ...]] = None
+        self._focus_source: Optional[str] = None
+        self._focus_key: Optional[tuple] = None
 
     # ── the hot path ─────────────────────────────────────────────────────
 
@@ -196,6 +223,14 @@ class LiveDrivingCoach:
 
         lap_number = _number(frame.get("lap_number") or frame.get("lap"))
         index = min(int(progress * model.microsectors), model.microsectors - 1)
+        if not _legacy(model):
+            if ai_controlled(frame) is True:
+                self._lap_had_ai = True
+            key = (id(model), getattr(model, "reference_kind", None), getattr(model, "reference_lap_id", None))
+            if self._focus_key != key:
+                self._focus_key = key
+                self._session_laps.clear()
+                self._update_focus(frame, model)
         position_m = self._position_m(frame, progress)
         brake = _number(frame.get("brake"))
         if brake is not None and position_m is not None:
@@ -229,7 +264,7 @@ class LiveDrivingCoach:
                     t = (1.0 - last_progress) / ((progress + 1.0) - last_progress)
                     crossing = self._last_clock + (clock - self._last_clock) * t
                     self._close_sector(frame, model, self._sector_index, self._sector_entry_clock, crossing)
-                    self._speak_lap_summary(frame, model)
+                    self._end_lap(frame, model)
                     self._start_lap(lap_number, 0, crossing, 0.0, at_line=True)
                     self._last_progress, self._last_clock = progress, clock
                     if index == 0:
@@ -247,7 +282,7 @@ class LiveDrivingCoach:
         # A new lap, or the first frame we have seen: start counting, say nothing.
         elif self._lap_number != lap_number or self._sector_index is None:
             if self._lap_number is not None and lap_number is not None and lap_number != self._lap_number:
-                self._speak_lap_summary(frame, model)
+                self._end_lap(frame, model)
             self._start_lap(lap_number, index, clock, progress)
             return
 
@@ -302,6 +337,74 @@ class LiveDrivingCoach:
         self._lap_phrases = 0
         self._lap_losses = {}
         self._lap_onsets = [onset for onset in self._lap_onsets[-1:] if progress < LINE_WINDOW]
+        self._lap_diffs = {}
+        self._lap_started_at_line = at_line
+        self._lap_had_ai = False
+        self._spoken_sectors = set()
+
+    def _end_lap(self, frame: Dict[str, Any], model: Any) -> None:
+        """The line: the summary, then the lap joins the session (if it counts) and the focus is redone."""
+        self._speak_lap_summary(frame, model)
+        if _legacy(model):
+            return
+        complete = len(self._lap_diffs) == model.microsectors
+        if self._lap_started_at_line and complete and not self._lap_had_ai:
+            self._session_laps.append(dict(self._lap_diffs))
+        self._update_focus(frame, model)
+
+    def focus_sectors(self, model: Any) -> Tuple[Tuple[int, ...], str]:
+        """The three slices furthest behind the reference, by median, and where that came from.
+
+        The session's last `FOCUS_LAPS` laps that count once there are that many
+        (only slices measured in all of them); before that, the driver's laps in
+        the model -- his median through each slice against the reference.
+        """
+        if len(self._session_laps) >= FOCUS_LAPS:
+            by_sector: Dict[int, list] = {}
+            for lap in self._session_laps:
+                for index, diff in lap.items():
+                    by_sector.setdefault(index, []).append(diff)
+            medians = {k: statistics.median(v) for k, v in by_sector.items() if len(v) == len(self._session_laps)}
+            source = "sessao"
+        else:
+            medians = {
+                t.index: float(t.median_seconds) - float(t.reference_seconds)
+                for t in getattr(model, "targets", [])
+                if getattr(t, "reference_seconds", None) is not None and getattr(t, "median_seconds", None) is not None
+            }
+            source = "modelo"
+        # Only slices he is actually behind in: a model of one lap (or the
+        # reference against itself) has no difference to listen for.
+        behind = [k for k in medians if medians[k] >= SUMMARY_MIN_LOSS]
+        ranked = sorted(behind, key=lambda k: (-medians[k], k))[:FOCUS_SECTORS]
+        return tuple(sorted(ranked)), source
+
+    def _update_focus(self, frame: Dict[str, Any], model: Any) -> None:
+        focus, source = self.focus_sectors(model)
+        changed = focus != self._focus
+        self._focus, self._focus_source = focus, source
+        if changed and focus:
+            self._emit_focus_event(frame, model, focus, source)
+
+    def _emit_focus_event(self, frame: Dict[str, Any], model: Any, focus: Tuple[int, ...], source: str) -> None:
+        """A short line in the feed: where the coach will listen in the next laps."""
+        label = getattr(model, "reference_label", "sua volta de referencia")
+        listed = ", ".join(str(k) for k in focus[:-1]) + (" e " if len(focus) > 1 else "") + str(focus[-1])
+        where = (
+            f"nas ultimas {FOCUS_LAPS} voltas validas da sessao" if source == "sessao" else "nas suas voltas do modelo"
+        )
+        self._publish(COACHING_EVENT, {
+            "type": FOCUS_EVENT,
+            "event": f"Foco nas proximas voltas: {'setor' if len(focus) == 1 else 'setores'} {listed}",
+            "severity": 0.0,
+            "evidence": f"Maior diferenca mediana para a {label} {where}.",
+            "focusSectors": list(focus),
+            "focusSource": source,
+            "driver_id": str(frame.get("driver_id") or "player_1"),
+            "lap_number": int(_number(frame.get("lap_number") or frame.get("lap")) or 0),
+            "s": 0.0,
+            "timestamp": time.time(),
+        })
 
     def _position_m(self, frame: Dict[str, Any], progress: float) -> Optional[float]:
         """Where the car is along the lap, in metres, on the model's ruler."""
@@ -346,6 +449,8 @@ class LiveDrivingCoach:
         if compared is None:
             return
         loss = split - float(compared)
+        if not legacy:
+            self._lap_diffs[finished] = loss
         if loss <= 0:
             return
         self._lap_loss += loss
@@ -354,8 +459,12 @@ class LiveDrivingCoach:
             self._lap_worst = {"index": finished, "lossS": round(loss, 3)}
         if loss < self._threshold_for(target):
             return
-        if not legacy and self._lap_phrases >= MAX_PHRASES_PER_LAP:
-            return
+        if not legacy:
+            # Pedido 15: only in the focus slices, once each.
+            if finished not in (self._focus or ()) or finished in self._spoken_sectors:
+                return
+            if self._lap_phrases >= MAX_PHRASES_PER_LAP:
+                return
 
         now = time.monotonic()
         if now - self._last_event_at < self.min_gap_seconds:
@@ -365,6 +474,7 @@ class LiveDrivingCoach:
             self._emit_coaching_event(frame, target, split, loss)
         else:
             self._lap_phrases += 1
+            self._spoken_sectors.add(finished)
             self._emit_reference_event(frame, model, target, split, loss)
 
     def _physics_clock(self, frame: Dict[str, Any], lap_clock: float, progress: float) -> float:
@@ -764,11 +874,14 @@ def coach_recorded_lap(
     # The radio call lands on the flag, which the walk above never crosses.
     coach._speak_lap_summary({"driver_id": driver_id}, model)   # noqa: SLF001
 
-    for event in bus.events:
+    focus = [event for event in bus.events if event.get("type") == FOCUS_EVENT]
+    events = [event for event in bus.events if event.get("type") != FOCUS_EVENT]
+    for event in events:
         event["lapTimeSeconds"] = event.get("evidence", {}).get("atLapTimeSeconds")
     return {
         "status": "READY",
-        "events": bus.events,
+        "events": events,
+        "focus": focus[-1]["focusSectors"] if focus else [],
         "speech": bus.speech,
         "lossSeconds": round(coach._lap_loss, 3),   # noqa: SLF001
         "worst": coach._lap_worst,                  # noqa: SLF001

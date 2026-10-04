@@ -221,8 +221,10 @@ class CoachOnOfficialGeometryTest(unittest.TestCase):
     def setUp(self):
         self.track = circular_track()
         self.geometry = exported(self.track, "geo-1")
+        # A segunda volta perde 0,2 s no microsetor 22: ele entra no foco (pedido 15).
         self.model = build_reference_model(
-            [("ref", 60.0, int(60 * HZ), lap_on(self.track, 60.0)), ("x", 60.5, int(60.5 * HZ), lap_on(self.track, 60.5))],
+            [("ref", 60.0, int(60 * HZ), lap_on(self.track, 60.0)),
+             ("x", 60.7, int(60.7 * HZ), lap_on(self.track, 60.5, slow=(22, 0.2)))],
             track="t", geometry=self.geometry,
         )
 
@@ -239,7 +241,7 @@ class CoachOnOfficialGeometryTest(unittest.TestCase):
 
     def test_the_coach_speaks_from_world_position(self):
         bus = self.drive(self.geometry, slow=(22, 0.6))
-        events = bus.of(COACHING_EVENT)
+        events = [e for e in bus.of(COACHING_EVENT) if e.get("type") != "coaching_focus"]
         self.assertTrue(events)
         self.assertEqual(events[0]["evidence"]["microsector"], 22)
         self.assertIn("volta de referencia", events[0]["event"])

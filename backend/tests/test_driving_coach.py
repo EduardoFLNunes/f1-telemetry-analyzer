@@ -26,22 +26,38 @@ class FakeBus:
     def of(self, topic):
         return [payload for name, payload in self.published if name == topic]
 
+    def phrases(self):
+        """The coach's phrases, without the focus line of pedido 15."""
+        return [e for e in self.of(COACHING_EVENT) if e.get("type") != "coaching_focus"]
 
-def reference_lap(seconds: float = 85.0, hz: float = 57.0):
+
+def reference_lap(seconds: float = 85.0, hz: float = 57.0, slow=()):
     count = int(seconds * hz)
     progress = np.linspace(0.0, 1.0, count)
+    elapsed = progress * seconds
+    for index, extra in slow:
+        start, end = index / 60.0, (index + 1) / 60.0
+        elapsed = elapsed + np.clip((progress - start) / (end - start), 0.0, 1.0) * extra
     return pd.DataFrame({
         "p": progress,
-        "elapsed_s": progress * seconds,
+        "elapsed_s": elapsed,
         "speed_kmh": np.full(count, 180.0),
         "brake": np.zeros(count),
         "throttle": np.ones(count),
     })
 
 
-def model_of(seconds: float = 85.0):
-    return build_reference_model([("melhor", seconds, int(seconds * 57), reference_lap(seconds))],
-                                 track="vhe_interlagos")
+def model_of(seconds: float = 85.0, slow=()):
+    """A model of his best lap; with `slow`, a second lap that lost time in those slices.
+
+    Since pedido 15 the coach speaks only in the three slices where his laps are
+    furthest behind the reference, so a model of one lap leaves it silent.
+    """
+    laps = [("melhor", seconds, int(seconds * 57), reference_lap(seconds))]
+    if slow:
+        total = seconds + sum(extra for _, extra in slow)
+        laps.append(("outra", total, int(total * 57), reference_lap(seconds, slow=slow)))
+    return build_reference_model(laps, track="vhe_interlagos")
 
 
 def drive(coach, *, seconds: float, lap: int = 5, steps: int = 400, track="vhe_interlagos",
@@ -79,12 +95,13 @@ def drive(coach, *, seconds: float, lap: int = 5, steps: int = 400, track="vhe_i
 class DrivingCoachTests(unittest.TestCase):
     def setUp(self):
         self.bus = FakeBus()
-        self.model = model_of(85.0)
+        # Foco (pedido 15) nos microsetores 30, 58 e 59.
+        self.model = model_of(85.0, slow=((30, 0.3), (58, 0.3), (59, 0.3)))
         self.coach = LiveDrivingCoach(self.bus, lambda track: self.model, min_gap_seconds=0.0)
 
     def test_says_nothing_when_the_driver_matches_his_best(self):
         drive(self.coach, seconds=85.0)
-        self.assertEqual([], self.bus.of(COACHING_EVENT))
+        self.assertEqual([], self.bus.phrases())
 
     def test_speaks_when_a_microsector_costs_real_time(self):
         # O modo antigo (melhor de todos por microsetor), ligado explicitamente
@@ -104,7 +121,7 @@ class DrivingCoachTests(unittest.TestCase):
     def test_stays_quiet_about_losses_too_small_to_act_on(self):
         # 80 ms over a whole lap is nothing a driver can do anything with.
         drive(self.coach, seconds=85.08)
-        self.assertEqual([], self.bus.of(COACHING_EVENT))
+        self.assertEqual([], self.bus.phrases())
 
     def test_does_not_talk_over_itself(self):
         coach = LiveDrivingCoach(self.bus, lambda track: self.model, min_gap_seconds=3.0)
@@ -115,7 +132,8 @@ class DrivingCoachTests(unittest.TestCase):
 
     def test_severity_grows_with_the_loss_and_stops_at_one(self):
         drive(self.coach, seconds=85.0, slow_slice=(30, 2.5))
-        severities = [event["severity"] for event in self.bus.of(COACHING_EVENT)]
+        severities = [event["severity"] for event in self.bus.of(COACHING_EVENT) if event["type"] != "coaching_focus"]
+        self.assertTrue(severities)
         self.assertTrue(all(0.0 < value <= 1.0 for value in severities))
 
     def test_calls_the_lap_on_the_radio_when_it_closes(self):
@@ -169,7 +187,8 @@ class DrivingCoachTests(unittest.TestCase):
             progress = 0.9 + (index / 199) * 0.099
             coach.on_frame({"p": progress, "lap_time": 80 + progress, "lap_number": 7, "track": "vhe_interlagos"})
         coach.on_frame({"p": 0.01, "lap_time": 85.4, "lap_number": 7, "track": "vhe_interlagos"})
-        losses = [event["evidence"]["lossSeconds"] for event in self.bus.of(COACHING_EVENT)]
+        losses = [event["evidence"]["lossSeconds"] for event in self.bus.of(COACHING_EVENT)
+                  if event["type"] != "coaching_focus"]
         self.assertTrue(all(loss < 5.0 for loss in losses), msg=str(losses))
 
 
@@ -184,7 +203,8 @@ class RecordedLapCoachTests(unittest.TestCase):
         from core.live.driving_coach import coach_recorded_lap
 
         self.run = coach_recorded_lap
-        self.model = model_of(85.0)
+        # Foco (pedido 15) nos microsetores 20, 30 e 50.
+        self.model = model_of(85.0, slow=((20, 0.3), (30, 0.3), (50, 0.3)))
 
     def _lap(self, seconds: float, slow_slice=None):
         count = int(seconds * 57)
