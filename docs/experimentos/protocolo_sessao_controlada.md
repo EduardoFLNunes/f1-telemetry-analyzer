@@ -2,7 +2,7 @@
 
 Rascunho para aprovação do Eduardo antes de pilotar. Escrito pelo Claude (Cowork) em 2026-10-02.
 
-> **Em espera (ADR 0014).** A variação usada no cálculo das voltas veio de sessões em que a IA do jogo pode ter pilotado. Antes desta sessão, uma sessão rotulada mede a sua variação real no Bico de Pato, e o número de voltas é recalculado. Como o número de voltas cresce com o quadrado da variação, uma variação 3 vezes maior pede cerca de 9 vezes mais voltas.
+> **Suspenso (ADR 0016).** A sessão rotulada de 04/10 mediu a variação real do Eduardo no Bico de Pato: 0,91 s entre voltas, contra 0,012 s da IA. Os 14 a 35 ms usados neste protocolo vinham da IA. Com a variação real, detectar 30 ms exigiria 5.862 voltas por condição, e 8 voltas só detectam efeitos a partir de 0,81 s. A pergunta deste protocolo passa para o caminho em que o próprio jogo executa as variações (ADR 0017, a escrever). O texto abaixo fica como registro.
 
 ## Por que esta sessão existe
 
