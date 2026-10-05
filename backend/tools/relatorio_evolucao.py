@@ -96,7 +96,14 @@ def run(out_dir: Path, model_file: Path, store_root: Optional[Path] = None) -> D
     segments = ev.corner_segments(track, corners)
     sectors = build_microsectors(track)
     laps = ev.driver_laps(store.laps)
-    laps = laps.assign(sessao=laps["session_id"].map(ev.session_of))
+    periods = meta.get("periodos_das_gravacoes")
+    if not periods:
+        raise SystemExit("PARADO: o meta do store v2 nao tem os periodos das gravacoes. "
+                         "Rode: python -m ml.scripts.build_lap_store_v2")
+    sessions_of = ev.group_sessions({sid: periods[sid] for sid in laps["session_id"].unique() if sid in periods})
+    if set(laps["session_id"]) - set(sessions_of):
+        raise SystemExit("PARADO: ha voltas de gravacoes sem periodo no meta do store v2.")
+    laps = laps.assign(sessao=laps["session_id"].map(sessions_of))
 
     out_dir.mkdir(parents=True, exist_ok=True)
     store_file = (Path(store_root) if store_root else config.artifacts_root()) / STORE_V2_FILENAME

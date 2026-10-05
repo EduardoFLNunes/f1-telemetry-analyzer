@@ -204,6 +204,9 @@ def main(argv=None) -> int:
     applied = detector_ia.apply(args.saida, track, args.saida / "detector_aplicar.json", promote=False)
     labelled = applied["sessao_rotulada_aplicada"]
     print(f"   sessao de 04/10: {labelled['voltas']} voltas, {labelled['origem']}")
+    for row in applied.get("sessoes_anotadas_inteiras", []):
+        print(f"   gravacao anotada inteira: {row['sessao']}: {row['voltas']} voltas ({row['validas']} validas), "
+              f"{row['origem']}")
     news = applied["sessoes_novas_sem_anotacao"]
     print(f"   sessoes novas sem anotacao: {len(news)}")
     for row in news:

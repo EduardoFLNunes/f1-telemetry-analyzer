@@ -62,6 +62,8 @@ DRIVER_EQUIPMENT = (CURRENT_EQUIPMENT,)
 SOURCE_INDICATOR = "indicador"
 SOURCE_ANNOTATION = "anotacao"
 SOURCE_DETECTOR = "detector"
+# 05/10: uma gravacao inteira anotada pelo piloto (anotacoes_de_sessao.csv).
+SOURCE_SESSION_ANNOTATION = "anotacao_sessao"
 
 # Diferenca maxima, em segundos, entre o tempo do relogio e o tempo explicado
 # pela velocidade, em qualquer microsetor. Proposta a partir da distribuicao

@@ -240,8 +240,23 @@ class EvolutionRulesTest(unittest.TestCase):
         })
         self.assertEqual(ev.driver_laps(laps)["lap_id"].tolist(), ["a"])
 
-    def test_sessions_are_days(self):
-        self.assertEqual(ev.session_of("2026-10-04_03-21-52_vhe_interlagos"), "2026-10-04")
+    def test_sessions_are_split_by_a_pause_and_dated_by_their_end(self):
+        """Emenda de 05/10: a madrugada de 04/10 e a noite de 04/10 a 05/10 sao sessoes diferentes."""
+        periods = {
+            "2026-10-04_02-24-04_vhe_interlagos": {"inicio": "2026-10-04T02:24:04", "duracao_s": 3400.0},
+            "2026-10-04_03-21-52_vhe_interlagos": {"inicio": "2026-10-04T03:21:52", "duracao_s": 840.0},
+            "2026-10-04_03-42-10_vhe_interlagos": {"inicio": "2026-10-04T03:42:10", "duracao_s": 2400.0},
+            "2026-10-04_23-51-42_vhe_interlagos": {"inicio": "2026-10-04T23:51:42", "duracao_s": 2440.0},
+        }
+        sessions = ev.group_sessions(periods)
+        self.assertEqual(sessions["2026-10-04_02-24-04_vhe_interlagos"], "2026-10-04")
+        self.assertEqual(sessions["2026-10-04_03-42-10_vhe_interlagos"], "2026-10-04")
+        self.assertEqual(sessions["2026-10-04_23-51-42_vhe_interlagos"], "2026-10-05")
+        # Pausa de ate 3 h nao separa; duas sessoes no mesmo dia nao se juntam.
+        close = {"a": {"inicio": "2026-10-06T10:00:00", "duracao_s": 3600.0},
+                 "b": {"inicio": "2026-10-06T13:30:00", "duracao_s": 600.0},
+                 "c": {"inicio": "2026-10-06T20:00:00", "duracao_s": 600.0}}
+        self.assertEqual(ev.group_sessions(close), {"a": "2026-10-06", "b": "2026-10-06", "c": "2026-10-06-2"})
 
     def test_the_corner_segments_cover_the_lap_and_add_up(self):
         track = circular_track()
@@ -348,6 +363,50 @@ class PanelTest(unittest.TestCase):
     def test_a_template_without_the_marker_stops(self):
         with self.assertRaises(SystemExit):
             self.tool.render_panel("<html></html>", {})
+
+
+class SessionAnnotationsTest(unittest.TestCase):
+    def notes(self, rows):
+        return pd.DataFrame(rows, columns=["sessao", "origem", "carModel", "anotado_em", "observacao"])
+
+    def inventory(self):
+        return pd.DataFrame({
+            "lap_id": ["noite#0000", "noite#0001", "outra#0000"], "session_id": ["noite", "noite", "outra"],
+            "origem": ["desconhecida"] * 3, "origem_indicador": ["desconhecida"] * 3, "origem_fonte": [None] * 3,
+        })
+
+    def test_every_lap_of_an_annotated_recording_gets_the_annotated_origin(self):
+        from ml.data.session_annotations import apply_session_annotations
+
+        inventory = self.inventory()
+        inventory.loc[1, "origem_indicador"] = "humano"        # mesmo concordando, a fonte e a anotacao
+        notes = self.notes([["noite", "humano", "rss_formula_rss_3_v6_2026", "2026-10-05", ""]])
+        out = apply_session_annotations(inventory, notes)
+        self.assertEqual(out["origem"].tolist(), ["humano", "humano", "desconhecida"])
+        self.assertEqual(out["origem_fonte"].tolist(), ["anotacao_sessao", "anotacao_sessao", None])
+
+    def test_it_stops_when_the_annotation_does_not_match(self):
+        from ml.data.session_annotations import check_session_annotations
+
+        notes = self.notes([["sumiu", "humano", "", "2026-10-05", ""], ["noite", "humano", "", "2026-10-05", ""]])
+        problems = check_session_annotations(self.inventory(), notes, lap_labelled={"noite"})
+        self.assertEqual(len(problems), 2)
+
+    def test_the_annotated_car_fills_the_missing_one_and_never_overrides(self):
+        from ml.data.session_annotations import cars_with_annotations
+
+        notes = self.notes([["noite", "humano", "rss_formula_rss_3_v6_2026", "2026-10-05", ""]])
+        cars = cars_with_annotations({"noite": None, "tarde": "rss_formula_rss_3_v6_2026"}, notes)
+        self.assertEqual(cars, {"noite": "rss_formula_rss_3_v6_2026", "tarde": "rss_formula_rss_3_v6_2026"})
+        with self.assertRaises(SystemExit):
+            cars_with_annotations({"noite": "outro_carro"}, notes)
+
+    def test_the_versioned_file_names_the_evening_session(self):
+        from ml.data.session_annotations import session_annotations
+
+        notes = session_annotations()
+        row = notes.set_index("sessao").loc["2026-10-04_23-51-42_vhe_interlagos"]
+        self.assertEqual((row["origem"], row["carModel"]), ("humano", "rss_formula_rss_3_v6_2026"))
 
 
 if __name__ == "__main__":

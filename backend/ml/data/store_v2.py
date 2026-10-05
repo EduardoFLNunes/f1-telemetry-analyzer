@@ -39,6 +39,7 @@ from ..track.microsectors import Microsectors, build_microsectors
 from .ai_detector import pit_lap
 from .lap_store import IDENTITY_COLUMNS, STORE_COLUMNS, StoredLaps, check_geometry, load_store, save_store
 from .recordings import RawLap, Session, iter_laps, list_all_sessions
+from .session_annotations import car_for, session_annotations
 
 STORE_V2_FILENAME = "laps_grid_v2.parquet"
 STORE_V2_METADATA = "laps_grid_v2_meta.json"
@@ -203,6 +204,7 @@ def build_store_v2(
 
     available = {s.session_id: s for s in (sessions if sessions is not None else list_all_sessions())}
     details = BuildDetails(selection=counts)
+    notes = session_annotations()
     blocks: List[pd.DataFrame] = []
     records: List[Dict[str, object]] = []
     for position, (session_id, sequences) in enumerate(sorted(by_session.items()), start=1):
@@ -211,7 +213,7 @@ def build_store_v2(
             details.not_found.extend(f"{session_id}#{q:04d}" for q in sorted(sequences))
             continue
         details.sessions.append(session_id)
-        car = (session.metadata().get("metadata") or {}).get("carModel")
+        car = car_for(session_id, (session.metadata().get("metadata") or {}).get("carModel"), notes)
         found = 0
         pending: Optional[tuple] = None          # (volta crua, registro) esperando a seguinte
         for lap in iter_laps(session):
@@ -279,6 +281,32 @@ def build_store_v2(
         },
     )
     return store, details
+
+
+def recording_start(session_id: str):
+    """Inicio da gravacao pelo nome (`2026-10-04_23-51-42_...`), no relogio do piloto.
+
+    O nome e o relogio que o piloto ve (05/10: a sessao de 23:51 terminou as
+    00:31 pelo relogio dele); o `timestamp` gravado tem outra defasagem, e dele
+    so se usa a duracao.
+    """
+    from datetime import datetime
+
+    return datetime.strptime(str(session_id)[:19], "%Y-%m-%d_%H-%M-%S")
+
+
+def recording_periods(inventory: pd.DataFrame, session_ids) -> Dict[str, Dict[str, object]]:
+    """Inicio (pelo nome) e duracao (pelos instantes gravados) de cada gravacao."""
+    out: Dict[str, Dict[str, object]] = {}
+    for session_id in sorted(set(session_ids)):
+        laps = inventory[inventory["session_id"] == session_id]
+        first = pd.to_numeric(laps.get("inicio_epoch_s"), errors="coerce").min() if len(laps) else np.nan
+        last = pd.to_numeric(laps.get("fim_epoch_s"), errors="coerce").max() if len(laps) else np.nan
+        out[session_id] = {
+            "inicio": recording_start(session_id).isoformat(),
+            "duracao_s": float(last - first) if np.isfinite(first) and np.isfinite(last) else None,
+        }
+    return out
 
 
 def save_store_v2(store: StoredLaps, extra: Dict[str, object], root: Optional[Path] = None) -> Path:

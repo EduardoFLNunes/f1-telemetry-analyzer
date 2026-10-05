@@ -280,6 +280,8 @@ O comando faz, em ordem:
    - o que o detector não resolve, ou uma volta sem o campo do indicador, fica `desconhecida`.
 
    As voltas do equipamento anterior continuam como o indicador diz, e o detector só grava as colunas `*_detector` delas, como no pedido 13.
+
+   Desde 05/10, uma gravação inteira também pode ser anotada em `docs/experimentos/anotacoes_de_sessao.csv` (quem pilotou e, se faltar, o carro). Isso vale para as gravações do app instalado, que ainda não têm o indicador de IA nem o `carModel`.
 4. **Copia o modelo do repositório** para `data/reference_models/backup/vhe_interlagos.<data_hora>.antes-de-atualizar.json` e o treina de novo.
 5. **Imprime o resumo:**
    - as duas referências;
