@@ -366,3 +366,39 @@ Reutilizado sem duplicar:
 
 Nenhuma LSTM foi retreinada; `optimal.json`, interface e algoritmo evolutivo
 não foram tocados.
+
+## 8. Correção de 05/10/2026: cada ponto da grade em exatamente uma janela
+
+### O erro
+
+- **Onde:** `ml/validation/empirical.py::define_windows`.
+- **Como funcionava:** cada janela marcava `round(comprimento / passo)` pontos a partir da sua entrada, sobre um vetor criado com `np.empty`.
+- **A falha:** quando o arredondamento não fechava com a entrada da janela seguinte, um ponto ficava sem janela e guardava o que houvesse na memória. Podia ser:
+  - um número negativo, que fez o `WindowTest` falhar uma vez numa rodada da suíte;
+  - um índice fora da faixa;
+  - um número de janela válido, com o ponto entrando calado na janela errada.
+- **Efeito colateral:** outro ponto ficava em duas janelas, e valia a última marcada.
+
+### Diagnóstico, antes da correção
+
+- **Na geometria oficial** (`0ed16f0dd2225990`), com o código antigo e um marcador no lugar do `np.empty`, **nenhum ponto ficou sem janela e nenhum ficou em duas**, em nenhum uso:
+  - as 11 dobras da variante "todas" e as 9 da "sem dominantes" desta Fase 2b;
+  - as janelas da sessão controlada;
+  - o relatório de origem do pedido 12;
+  - a variação do pedido 13.
+- **Na pista circular do teste**, a falha aparece:
+  - o ponto 617 (1.234,6 m) ficava sem janela, na junção antes da janela que começa em 1.236,6 m;
+  - o ponto 139, entrada da janela 0, ficava também na janela 2, que cruza a linha.
+
+### A correção
+
+- **A regra:** cada ponto pertence à janela cuja entrada é a última nele ou antes dele (`assign_points`). Antes da primeira entrada, a grade é da última janela, que cruza a linha.
+- **As entradas** são as mesmas de antes. Com janelas contíguas, a atribuição é idêntica à antiga.
+- **Testes:** o caso exato da pista circular e a equivalência com o algoritmo antigo.
+
+### Comparação, depois da correção
+
+- **As janelas de todos os usos acima,** com as voltas guardadas, foram comparadas ponto a ponto com as do algoritmo antigo: **0 pontos mudaram**, e as entradas são as mesmas.
+- **Consequência para os resultados:** os números desta fase e do ADR 0011 continuam valendo, sem recálculo, e nenhum documento de resultado foi alterado.
+- **Arquivos:** o diagnóstico e a comparação estão em `docs/handoff/2026-10-05_janelas-fase2b_*.json`.
+

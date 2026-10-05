@@ -194,13 +194,26 @@ def define_windows(
     chosen = [chosen[i] for i in order]
     ends = np.roll(starts, -1)
 
-    index = np.empty(track.size, dtype=int)
-    entry = np.empty(starts.size, dtype=int)
-    for k, (start, end) in enumerate(zip(starts, ends)):
-        points = _window(track, start, end)[:-1]
-        index[points] = k
-        entry[k] = points[0]
+    entry = np.array([int(track.index_of(start)) for start in starts], dtype=int)
+    index = assign_points(entry, track.size)
     return Windows(starts, ends, chosen, index, entry, medians, track.length)
+
+
+def assign_points(entry: np.ndarray, size: int) -> np.ndarray:
+    """Janela de cada ponto da grade: a ultima cuja entrada esta nele ou antes dele.
+
+    Cada ponto recebe exatamente uma janela. Antes (05/10), cada janela marcava
+    `round(comprimento / passo)` pontos a partir da entrada, sobre um vetor
+    criado com `np.empty`: quando o arredondamento nao fechava com a entrada da
+    seguinte, um ponto ficava sem janela, com o que houvesse na memoria (um
+    negativo, um indice fora da faixa ou um numero de janela valido, calado),
+    e outro ponto ficava em duas. Na geometria oficial isso nao acontecia em
+    nenhum uso; com janelas contiguas o resultado e o mesmo de antes.
+    """
+    entry = np.asarray(entry, dtype=int)
+    owner = np.searchsorted(entry, np.arange(size), side="right") - 1
+    # Antes da primeira entrada, a grade ainda e a ultima janela, que cruza a linha.
+    return np.where(owner < 0, entry.size - 1, owner).astype(int)
 
 
 # ---------------------------------------------------- entradas por volta ---

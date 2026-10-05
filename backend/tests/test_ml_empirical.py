@@ -57,6 +57,34 @@ class WindowTest(unittest.TestCase):
         labels = {round(s): c.index for s, c in zip(windows.start_s, windows.corner)}
         self.assertEqual(sorted(labels.values()), [0, 1, 2])
 
+    def test_every_point_has_exactly_one_window_at_a_rounding_junction(self):
+        """Regressao (05/10): nesta pista o ponto 617 ficava sem janela e o 139 em duas.
+
+        O ponto sem janela guardava o que houvesse no `np.empty`; quando era um
+        negativo, o `bincount` acima falhava, e quando era um numero de janela
+        valido, o ponto entrava calado na janela errada.
+        """
+        rng = np.random.default_rng(0)
+        brakes = [
+            brake_trace(
+                self.track,
+                [np.mod(1255 + rng.normal(0, 3), self.track.length), 300 + rng.normal(0, 3), 360, 700],
+            )
+            for _ in range(10)
+        ]
+        windows = em.define_windows(brakes, self.track, self.corners)
+        self.assertTrue(np.all((windows.index >= 0) & (windows.index < windows.count)))
+        for k in range(windows.count):
+            self.assertEqual(windows.index[windows.entry_index[k]], k)
+        junction = int(self.track.index_of(windows.start_s[2])) - 1    # o ponto antes da entrada da janela 2
+        self.assertEqual(windows.index[junction], 1)
+
+    def test_contiguous_windows_are_assigned_as_before(self):
+        entry = np.array([10, 40, 90])
+        index = em.assign_points(entry, 100)
+        expected = np.array([2] * 10 + [0] * 30 + [1] * 50 + [2] * 10)
+        np.testing.assert_array_equal(index, expected)
+
     def test_zones_braked_by_few_laps_do_not_open_a_window(self):
         brakes = [brake_trace(self.track, [300, 700]) for _ in range(9)]
         brakes.append(brake_trace(self.track, [300, 700, 1000]))
