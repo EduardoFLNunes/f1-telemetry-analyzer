@@ -13,6 +13,11 @@ As regras foram registradas antes da primeira rodada, em
 * **diferenca consistente** -- o intervalo de 90% (bootstrap) da perda mediana
   para a IA nao inclui zero; com menos de 5 voltas na sessao, "poucos dados".
 
+Emenda de 05/10 (secao 1.6): sessao deixa de ser o dia do nome da gravacao.
+Gravacoes separadas por mais de 3 h sem gravar sao sessoes diferentes, e a
+sessao leva a data em que terminou (`group_sessions`): a sessao de 04/10 23:51
+a 05/10 00:31 e a de 05/10, e nao se junta a da madrugada de 04/10.
+
 Emenda de 04/10 (pedido 17, secao 1.5): o inicio da frenagem de uma curva e
 procurado do apice da curva anterior ate o apice dela. Do comeco do trecho,
 a frenagem da C10 (Bico de Pato), que comeca depois do apice da C09 e antes
@@ -34,6 +39,7 @@ from ..track.microsectors import Microsectors, split_times
 from .lap_vs_reference import BRAKE_ONSET, _signed_distance, _window
 
 MIN_LAPS = 5
+SESSION_GAP_H = 3.0
 BOOTSTRAP_RESAMPLES = 2000
 BOOTSTRAP_LEVEL = 0.90
 BOOTSTRAP_SEED = 20261004
@@ -61,9 +67,37 @@ def driver_laps(laps: pd.DataFrame) -> pd.DataFrame:
     return laps[mask]
 
 
-def session_of(session_id: str) -> str:
-    """A sessao e o dia: `2026-10-04_03-21-52_vhe_interlagos` -> `2026-10-04`."""
-    return str(session_id)[:10]
+def group_sessions(periods: Dict[str, Dict[str, object]], gap_h: float = SESSION_GAP_H) -> Dict[str, str]:
+    """Gravacao -> sessao (emenda de 05/10).
+
+    `periods[gravacao] = {"inicio": ISO, "duracao_s": s}`. Uma pausa de mais de
+    `gap_h` horas entre o fim de uma gravacao e o inicio da seguinte abre uma
+    sessao nova. A chave da sessao e a data em que ela terminou; se duas
+    sessoes terminam no mesmo dia, a segunda ganha `-2` (a terceira, `-3`).
+    """
+    from datetime import datetime, timedelta
+
+    spans = []
+    for recording, period in periods.items():
+        start = datetime.fromisoformat(str(period["inicio"]))
+        end = start + timedelta(seconds=float(period.get("duracao_s") or 0.0))
+        spans.append((start, end, recording))
+    spans.sort()
+    groups: List[List[tuple]] = []
+    for span in spans:
+        if groups and (span[0] - max(e for _, e, _ in groups[-1])) <= timedelta(hours=gap_h):
+            groups[-1].append(span)
+        else:
+            groups.append([span])
+    out: Dict[str, str] = {}
+    used: Dict[str, int] = {}
+    for group in groups:
+        day = max(e for _, e, _ in group).date().isoformat()
+        used[day] = used.get(day, 0) + 1
+        key = day if used[day] == 1 else f"{day}-{used[day]}"
+        for _, _, recording in group:
+            out[recording] = key
+    return out
 
 
 # ------------------------------------------------------------ trechos ---

@@ -105,6 +105,22 @@ Registrada antes de rodar de novo, depois de ver a falha na C10 na primeira roda
   - os critérios de "diferença consistente" e de "poucos dados".
 - **Natureza da mudança:** é uma definição de medida, e não um limite de decisão. Nenhum critério foi mexido.
 
+### 1.6 Emenda de 05/10/2026: sessão e sessão anotada inteira
+
+Decidida pelo Eduardo em 05/10, depois da sessão de 04/10 às 23:51, que terminou às 00:31 de 05/10 e foi gravada pelo app instalado. Foi registrada antes de rodar de novo.
+
+- **Sessão:** deixa de ser o dia do nome da gravação.
+  - Gravações separadas por mais de 3 h sem gravar são sessões diferentes, e a sessão leva a data em que terminou.
+  - Se duas sessões terminam no mesmo dia, a segunda ganha `-2`.
+  - Os horários vêm do nome da gravação, que é o relógio do piloto, e da duração gravada. O `timestamp` do gravador tem outra defasagem.
+  - Com isso, a madrugada de 04/10 continua sendo a sessão `2026-10-04`, e a noite vira `2026-10-05`.
+- **Sessão anotada inteira:** `docs/experimentos/anotacoes_de_sessao.csv` diz, para uma gravação inteira, quem pilotou e, se o metadado não tiver, o carro.
+  - O `atualizar_coach` aplica essas anotações junto com as de 04/10. As voltas dessas gravações ficam com a fonte própria `origem_fonte = anotacao_sessao`, e nunca `indicador` nem `detector`.
+  - O carro anotado completa o metadado no treino e no store v2.
+  - O comando para se a gravação não estiver no inventário, se ela já estiver nos rótulos volta a volta, ou se o carro anotado contradisser o do metadado.
+  - A primeira linha é a sessão de 04/10 23:51: `humano`, `rss_formula_rss_3_v6_2026`, anotada pelo Eduardo em 05/10.
+- **O que não muda:** os critérios de "diferença consistente" e de "poucos dados", e as medidas por curva.
+
 ## 2. O que mudou no store (Parte B)
 
 O store v2 é um arquivo novo: `data/ml/laps_grid_v2.parquet`, com o meta em `laps_grid_v2_meta.json`. Ele é construído por `python -m ml.scripts.build_lap_store_v2`, e o `atualizar_coach` também o refaz.

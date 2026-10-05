@@ -36,6 +36,11 @@ from ml import config  # noqa: E402
 from ml.data import ai_detector as det  # noqa: E402
 from ml.data import origin  # noqa: E402
 from ml.data.inventory import inventory_path, save_inventory  # noqa: E402
+from ml.data.session_annotations import (  # noqa: E402
+    apply_session_annotations,
+    check_session_annotations,
+    session_annotations,
+)
 from ml.track.corners import detect_corners  # noqa: E402
 from ml.track.geometry import load_geometry  # noqa: E402
 from ml.track.microsectors import build_microsectors  # noqa: E402
@@ -437,15 +442,29 @@ def apply(out_dir: Path, track, json_path: Path, promote: bool = False) -> Dict[
             by_id.at[lap_id, "origem_fonte"] = origin.SOURCE_DETECTOR
     out_inv = by_id.reset_index()
 
+    # 05/10: gravacoes anotadas inteiras pelo piloto (anotacoes_de_sessao.csv).
+    notes = session_annotations()
+    problems = check_session_annotations(out_inv, notes, set(rows["session_id"]))
+    if problems:
+        raise SystemExit("PARADO: as anotacoes de sessao nao batem: " + "; ".join(problems))
+    out_inv = apply_session_annotations(out_inv, notes)
+    session_noted = set(out_inv.loc[out_inv["session_id"].isin(notes["sessao"]), "lap_id"])
+    noted_sessions = [
+        {"sessao": session_id, "voltas": int(len(laps)), "origem": laps["origem"].value_counts().to_dict(),
+         "validas": int(laps["valid"].astype(bool).sum())}
+        for session_id, laps in out_inv[out_inv["lap_id"].isin(session_noted)].groupby("session_id")
+    ]
+
     # Pedido 15: sessoes do equipamento atual sem anotacao, pela regra do indicador e do detector.
     def classify(lap_id, r):
         if lap_id not in grids:
             return None
         return det.classify_lap(grids[lap_id], float(r["duration_s"]), reference, track, sectors, limits)
 
-    out_inv = origin.label_unannotated(out_inv, set(session_rows.index), classify)
+    annotated = set(session_rows.index) | session_noted
+    out_inv = origin.label_unannotated(out_inv, annotated, classify)
     save_inventory(out_inv, out_dir)
-    fresh = out_inv[(out_inv["equipamento"] == origin.CURRENT_EQUIPMENT) & ~out_inv["lap_id"].isin(session_rows.index)]
+    fresh = out_inv[(out_inv["equipamento"] == origin.CURRENT_EQUIPMENT) & ~out_inv["lap_id"].isin(annotated)]
     new_sessions = [
         {"sessao": session_id, "voltas": int(len(laps)),
          "origem": laps["origem"].value_counts().to_dict(),
@@ -479,6 +498,7 @@ def apply(out_dir: Path, track, json_path: Path, promote: bool = False) -> Dict[
                            "motivos": applied["motivo_detector"].fillna("-").value_counts().to_dict()},
         "sessao_rotulada_aplicada": {"voltas": int(len(session_rows)),
                                      "origem": session_rows["origem_anotada"].value_counts().to_dict()},
+        "sessoes_anotadas_inteiras": noted_sessions,
         "sessoes_novas_sem_anotacao": new_sessions,
         "sessoes": sessions,
     }

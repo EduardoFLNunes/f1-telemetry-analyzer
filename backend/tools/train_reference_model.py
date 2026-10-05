@@ -55,6 +55,7 @@ from ml import config  # noqa: E402
 from ml.data.ai_detector import pit_lap  # noqa: E402
 from ml.data.coach_references import AI_SINCE, ai_laps, driver_laps, most_common_car  # noqa: E402
 from ml.data.recordings import iter_laps, list_all_sessions  # noqa: E402
+from ml.data.session_annotations import cars_with_annotations  # noqa: E402
 from ml.track.geometry import load_geometry  # noqa: E402
 from ml.track.microsectors import build_microsectors  # noqa: E402
 
@@ -127,6 +128,8 @@ def main(argv=None) -> int:
 
     sessions = {s.session_id: s for s in list_all_sessions()}
     cars = {sid: ((s.metadata().get("metadata") or {}).get("carModel")) for sid, s in sessions.items()}
+    # O app instalado nao grava o carModel: vale o anotado (anotacoes_de_sessao.csv, 05/10).
+    cars = cars_with_annotations(cars)
     grids_path = config.artifacts_root() / "origem" / "grade_voltas.parquet"
     track = load_geometry()
     sectors = build_microsectors(track)

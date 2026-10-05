@@ -35,6 +35,7 @@ from ml.data.store_v2 import (  # noqa: E402
     default_inventory_path,
     file_entry,
     git_commit,
+    recording_periods,
     save_store_v2,
 )
 from ml.track.geometry import load_geometry  # noqa: E402
@@ -93,6 +94,8 @@ def main(argv=None) -> int:
         "entradas": inputs,
         "aprovado": bool(result["todas_passaram"]),
         "checagens": result["checagens"],
+        # 05/10: para o relatorio de evolucao separar as sessoes pelas pausas.
+        "periodos_das_gravacoes": recording_periods(inventory, used),
     }
     path = save_store_v2(store, extra)
     result["store"] = {"arquivo": str(path), **file_entry(path)}
