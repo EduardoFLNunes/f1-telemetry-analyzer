@@ -1,0 +1,175 @@
+{
+ "pedido": "docs/prompts/2026-10-05_19_relatorio-em-arquivo-e-tempos.md",
+ "definicoes": {
+  "oficial_s": "lap_time_s do store v2, periodo de s = 0 a s = 0",
+  "cronometro_do_jogo_s": "tempo_jogo_s do store v2, o cronometro do jogo costurado na troca de volta",
+  "duration_s": "do inventario: do primeiro ao ultimo ponto gravado da volta; nao e tempo de volta"
+ },
+ "documentos": [
+  {
+   "arquivo": "docs/decisoes/0016-coach-na-fase-de-aprendizado.md",
+   "linha": 16,
+   "antigo": "89,379 s",
+   "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+   "fonte_do_antigo": "duration_s",
+   "oficial_s": 89.39,
+   "cronometro_do_jogo_s": 89.389,
+   "duration_s": 89.379
+  },
+  {
+   "arquivo": "docs/decisoes/0016-coach-na-fase-de-aprendizado.md",
+   "linha": 16,
+   "antigo": "84,816 s",
+   "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+   "fonte_do_antigo": "duration_s (empata com a #0012)",
+   "oficial_s": 84.829,
+   "cronometro_do_jogo_s": 84.829,
+   "duration_s": 84.816
+  },
+  {
+   "arquivo": "docs/detector_ia.md",
+   "linha": 63,
+   "antigo": "89,379 s (parte 2, volta 5)",
+   "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+   "fonte_do_antigo": "duration_s",
+   "oficial_s": 89.39,
+   "cronometro_do_jogo_s": 89.389,
+   "duration_s": 89.379
+  },
+  {
+   "arquivo": "docs/detector_ia.md",
+   "linha": 63,
+   "antigo": "84,816 s (parte 2, volta 25)",
+   "volta": "pelo oficial, a melhor e a volta 26 (2026-10-04_03-42-10_vhe_interlagos#0013); a volta 25 (#0012) tem 84,835 s",
+   "fonte_do_antigo": "duration_s",
+   "oficial_s": 84.829,
+   "cronometro_do_jogo_s": 84.829,
+   "duration_s": 84.816
+  },
+  {
+   "arquivo": "docs/detector_ia.md",
+   "linha": 62,
+   "antigo": "93,58 s +- 2,40 s (11 suas) e 84,99 s +- 0,13 s (13 da IA)",
+   "volta": "as voltas limpas de 04/10",
+   "fonte_do_antigo": "duration_s",
+   "oficial": "93,60 s +- 2,40 s e 85,02 s +- 0,13 s"
+  },
+  {
+   "arquivo": "docs/backlog.md",
+   "linha": 16,
+   "antigo": "89,379 s e 84,816 s",
+   "volta": "as mesmas do ADR 0016",
+   "fonte_do_antigo": "copia do ADR 0016 (duration_s)",
+   "oficial": "89,390 s e 84,829 s"
+  },
+  {
+   "arquivo": "docs/backlog.md (linha 18), docs/coach_geometria_oficial.md (172), docs/origem_das_voltas.md (219)",
+   "antigo": "84,663 s",
+   "volta": "rec__2026-08-19_22-23-14_vhe_interlagos__32 = 2026-08-19_22-23-14_vhe_interlagos#0004",
+   "fonte_do_antigo": "tempo do coach antigo (modelo de teste do pedido 11); nao e duration_s",
+   "oficial_s": 84.672,
+   "cronometro_do_jogo_s": 84.672,
+   "duration_s": 84.654
+  },
+  {
+   "arquivo": "docs/coach_aprendizado.md",
+   "linha": "tabela do pedido 14, coluna jogo ~",
+   "antigo": "~84,873",
+   "volta": "2026-08-16_03-30-14_vhe_interlagos#0016",
+   "fonte_do_antigo": "cronometro do jogo na ultima amostra da volta, sem costura",
+   "oficial_s": 84.875,
+   "cronometro_do_jogo_s": 84.874,
+   "duration_s": 84.852
+  },
+  {
+   "arquivo": "docs/coach_aprendizado.md",
+   "linha": "tabela do pedido 14, coluna jogo ~",
+   "antigo": "~85,293",
+   "volta": "2026-06-18_20-06-03_vhe_interlagos#0056",
+   "fonte_do_antigo": "cronometro do jogo na ultima amostra da volta, sem costura",
+   "oficial_s": 85.323,
+   "cronometro_do_jogo_s": 85.324,
+   "duration_s": 85.287
+  },
+  {
+   "arquivo": "docs/coach_aprendizado.md",
+   "linha": "tabela do pedido 14, coluna jogo ~",
+   "antigo": "~85,467",
+   "volta": "2026-06-20_13-13-02_vhe_interlagos#0003",
+   "fonte_do_antigo": "cronometro do jogo na ultima amostra da volta, sem costura",
+   "oficial_s": 85.468,
+   "cronometro_do_jogo_s": 85.467,
+   "duration_s": 85.446
+  },
+  {
+   "arquivo": "docs/coach_aprendizado.md",
+   "linha": "tabela do pedido 14, coluna jogo ~",
+   "antigo": "~85,494",
+   "volta": "2026-08-09_19-20-59_vhe_interlagos#0010",
+   "fonte_do_antigo": "cronometro do jogo na ultima amostra da volta, sem costura",
+   "oficial_s": 85.5,
+   "cronometro_do_jogo_s": 85.498,
+   "duration_s": 85.467
+  },
+  {
+   "arquivo": "docs/coach_aprendizado.md",
+   "linha": "tabela do pedido 14, coluna jogo ~",
+   "antigo": "~85,557",
+   "volta": "2026-06-14_12-23-46_vhe_interlagos#0007",
+   "fonte_do_antigo": "cronometro do jogo na ultima amostra da volta, sem costura",
+   "oficial_s": 85.565,
+   "cronometro_do_jogo_s": 85.573,
+   "duration_s": 85.533
+  }
+ ],
+ "jsons_de_resultado": [
+  {
+   "arquivo": "docs/handoff/2026-10-04_detector-ia_resultados.json",
+   "campos": "sessao_rotulada.indicador_contra_anotacao[].tempo_s (43), parte2_variacao.*.melhor_volta.tempo_s (89,379 e 84,816), parte2_variacao.*.tempo_volta_s, parte3_*[].tempo_s (21 e 7)",
+   "fonte_do_antigo": "duration_s"
+  },
+  {
+   "arquivo": "data/ml/origem/detector_aplicar.json",
+   "campos": "sessao_rotulada.voltas[].tempo_s (21)",
+   "fonte_do_antigo": "duration_s"
+  },
+  {
+   "arquivo": "docs/handoff/2026-10-04_origem-das-voltas_resultados.json",
+   "campos": "item5_inventario.lap_time_s (min 84,654, mediana 86,031, max 135,738) e best_lap 84,654; sessoes[].melhor_volta_s e tempo_volta_mediana_s",
+   "fonte_do_antigo": "duration_s (o resumo do inventario o chama de lap_time_s)",
+   "melhor_oficial": {
+    "oficial_s": 84.672,
+    "cronometro_do_jogo_s": 84.672,
+    "duration_s": 84.654
+   }
+  },
+  {
+   "arquivo": "data/ml/origem/lap_inventory_summary.json e data/ml/origem/pedido12/lap_inventory_summary.json",
+   "campos": "lap_time_s e best_lap (84,654, 2026-08-19_22-23-14#0004)",
+   "fonte_do_antigo": "duration_s",
+   "melhor_oficial": {
+    "oficial_s": 84.672,
+    "cronometro_do_jogo_s": 84.672,
+    "duration_s": 84.654
+   }
+  },
+  {
+   "arquivo": "data/ml/lap_inventory_summary.json (inventario antigo, 30/09)",
+   "campos": "lap_time_s e best_lap (84,84, 2026-08-16_03-30-14#0017)",
+   "fonte_do_antigo": "duration_s",
+   "melhor_oficial": {
+    "oficial_s": 84.878,
+    "cronometro_do_jogo_s": 84.877,
+    "duration_s": 84.84
+   }
+  }
+ ],
+ "sem_duration_s": [
+  "painel (data/ml/evolucao/painel.html) e JSONs da evolucao: store v2",
+  "referencias do coach 84,828 s e 89,389 s: medida do proprio coach, igual ao cronometro do jogo em 1 ms",
+  "ADR 0015 (93,0 e 95,3 s; 85,0 e 85,1 s): veio do duration_s, mas com uma casa decimal e igual ao oficial",
+  "Fases 1, 2 e 2b, ADR 0009 e coach_referencia_real: store antigo (um passo da grade curto); registro pelo pedido 16",
+  "coach_geometria_resultados.json, modelo_de_ensaio_nao_usar (84,663 e 84,807): coach antigo",
+  "custos do simulador, janelas em metros e numeros de volta: nao sao tempo de volta"
+ ]
+}
