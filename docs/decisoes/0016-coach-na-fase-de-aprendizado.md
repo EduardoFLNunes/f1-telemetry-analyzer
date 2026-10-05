@@ -15,6 +15,15 @@ A sessão rotulada de 04/10 (pedido 13), com o volante e os pedais novos, mediu 
 | Dispersão do ápice | 1,84 m | 0,04 m |
 | Melhor volta | 89,379 s | 84,816 s |
 
+> **Errata de 05/10/2026 (pedidos 19 e 20).** Os tempos da linha "Melhor volta" vieram do `duration_s` do inventário. Ele mede do primeiro ao último ponto gravado da volta e não é o tempo de volta.
+>
+> Os tempos oficiais (`lap_time_s` do store v2, conferidos contra o cronômetro do jogo) são:
+>
+> - o seu: **89,390 s** (`2026-10-04_02-24-04#0018`);
+> - o da IA: **84,829 s** (`2026-10-04_03-42-10#0013`).
+>
+> A decisão não muda.
+
 Três consequências:
 
 1. **O ADR 0012 manda comparar com a melhor volta do próprio piloto.** Numa fase em que o piloto melhora a cada sessão, essa referência muda o tempo todo e fica longe do que o carro consegue.

@@ -172,6 +172,8 @@ As frases estão em `docs/handoff/2026-10-03_coach_geometria_frases.json`.
   pipeline do ML nunca leu. A volta de referência do modelo de teste (84,663 s,
   `rec__2026-08-19_22-23-14_vhe_interlagos__32`) e as outras 4 mais rápidas vêm
   de lá. Pelo aviso do Eduardo, essas sessões podem ter a IA pilotando.
+
+  > **Nota de 05/10/2026 (pedidos 19 e 20):** 84,663 s foi o tempo medido pelo coach antigo nesse modelo de teste. O tempo oficial da volta (`2026-08-19_22-23-14#0004`, `lap_time_s` do store v2) é 84,672 s.
 - **O app instalado usa o próprio modelo,**
   `%APPDATA%\...\data\reference_models\vhe_interlagos.json`, e o script de
   treino grava lá por padrão (`runtime_root()`). O passo 9 do pedido fala do

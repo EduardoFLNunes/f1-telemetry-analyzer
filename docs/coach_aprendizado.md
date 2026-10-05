@@ -26,6 +26,19 @@ Ao preparar o passo 3, medi o tempo de volta e o microsetor 0 nas 5 voltas de (c
 | `2026-08-09_19-20-59` | ~85,494 s | 85,4982 s | 85,4717 s | −26,5 ms |
 | `2026-06-14_12-23-46` | ~85,557 s | 85,5641 s | 85,5378 s | −26,3 ms |
 
+> **Errata de 05/10/2026 (pedidos 19 e 20).** A coluna "jogo" (~) é o cronômetro do jogo na última amostra de cada volta, sem costura até a linha, e por isso fica de 0 a 31 ms abaixo do certo. A tabela abaixo põe ao lado dela o cronômetro costurado na troca de volta e o tempo oficial, o `lap_time_s` do store v2:
+>
+> | volta | jogo ~ (última amostra) | cronômetro costurado | oficial |
+> |---|---:|---:|---:|
+> | `2026-08-16_03-30-14#0016` | ~84,873 s | 84,874 s | 84,875 s |
+> | `2026-06-18_20-06-03#0056` | ~85,293 s | 85,324 s | 85,323 s |
+> | `2026-06-20_13-13-02#0003` | ~85,467 s | 85,467 s | 85,468 s |
+> | `2026-08-09_19-20-59#0010` | ~85,494 s | 85,498 s | 85,500 s |
+> | `2026-06-14_12-23-46#0007` | ~85,557 s | 85,573 s | 85,565 s |
+>
+> - **A coluna "período verdadeiro"** difere do oficial em 1 a 4 ms. Ela usava a extrapolação por uma amostra só; o store v2 usa a mediana das amostras perto da linha.
+> - **As conclusões desta seção não mudam:** o store antigo continua um passo da grade curto.
+
 - **A diferença é o tempo de um passo da grade na reta** (2 m a cerca de 280 km/h, de 25,7 a 26,5 ms), e cai inteira no microsetor 0.
 - **A causa:** `ml/preprocessing/resampling.py::_reference_clock_to_grid` zera o relógio em s = 0 da grade, mas usa como período o `span` dos tempos na grade, que fica um passo mais curto que a volta.
 - **O que isso explica:** é o "+26 ms" do critério (c) no pedido 11. O coach estava certo e o store, curto. Explica também o viés de −0,034 s do relógio no microsetor 0 no pedido 12: −26 ms deste passo, mais o viés de −8 ms que aparece em todo microsetor.

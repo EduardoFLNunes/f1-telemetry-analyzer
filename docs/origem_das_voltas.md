@@ -2,6 +2,13 @@
 
 Data: 2026-10-03 e 04. Branch: `etapa/origem-das-voltas`.
 
+> **Nota de 05/10/2026 sobre os JSONs deste pedido (pedidos 19 e 20).** Os campos abaixo são o `duration_s` do inventário, e não o tempo de volta:
+>
+> - em `docs/handoff/2026-10-04_origem-das-voltas_resultados.json`: o `lap_time_s` de `item5_inventario` e o de `best_lap`, e os campos `sessoes[].melhor_volta_s` e `tempo_volta_mediana_s`;
+> - os resumos `data/ml/origem/lap_inventory_summary.json`.
+>
+> O resumo do inventário publicava esse valor com o nome `lap_time_s`, o que foi corrigido no pedido 20. Os JSONs ficam como foram gravados. Os tempos oficiais estão no store v2 (`lap_time_s`).
+
 O objetivo desta etapa é saber, volta a volta, **quem pilotou** (o Eduardo ou a IA do Assetto Corsa) e **se o tempo da volta merece confiança**. Nenhum modelo foi treinado. O store do ML e os resultados antigos não foram refeitos.
 
 ## 1. As duas pastas de gravações
@@ -217,6 +224,8 @@ O que a tabela mostra:
 - **A maioria das sessões é tão constante quanto uma máquina.** Em 27 das 32 sessões, 90 % das voltas freiam a até 2,2 m da mediana da pista, e 2 m é a própria resolução da grade. O ápice fica a até 6 cm, e o Bico de Pato varia de 1 a 31 ms. Isso inclui todas as sessões de 07/08 e 08/08, **que não estão entre as datas citadas** e que não se distinguem das de 09/08.
 - **Quatro sessões são bem mais variáveis:** `2026-06-19_23-24-46`, `2026-06-20_13-13-02`, `2026-08-16_03-30-14` e `2026-08-19_20-58-36`. Nelas, a dispersão da frenagem vai de 7 a 8,4 m e a do ápice de 0,9 a 1,7 m. Em `2026-06-20_13-13-02` metade das voltas fica a até 3 m da mediana e 10 % passam de 16 m, o que combina com uma sessão alternada.
 - **`2026-08-19_22-23-14` é constante, mas diferente:** freia sempre de 3 a 4 m longe da mediana das outras, e o ápice fica a até 5 cm. É dela a volta de referência do modelo de ensaio do pedido 11 (84,663 s).
+
+  > **Nota de 05/10/2026 (pedidos 19 e 20):** 84,663 s foi o tempo medido pelo coach antigo nesse modelo de ensaio. O tempo oficial da volta (`2026-08-19_22-23-14#0004`, `lap_time_s` do store v2) é 84,672 s.
 - **Pedais e trocas de marcha não variam entre sessões nestes dados.** O freio vai de 0 a 0,99 numa amostra em todas as sessões, inclusive nas quatro variáveis. A marcha sobe a 8.200 rpm, com dispersão de 3 a 13 rpm, em quase todas (46 rpm na mais variável). Nestes dados, esses sinais não separam nada. Com outro controle ou câmbio manual, isso pode mudar.
 - **O volante varia, mas depende de outras coisas.** As mudanças de sentido por km vão de 45 a 67, e as duas sessões com menos (45 e 47) estão entre as variáveis. Mas `2026-06-20` (variável) tem 67. A taxa de giro (p95) depende da frequência de gravação: as sessões de 30 Hz dão valores menores.
 

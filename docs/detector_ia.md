@@ -2,6 +2,8 @@
 
 Datas: 2026-10-04. Branch: `etapa/detector-ia`.
 
+> **Nota de 05/10/2026 sobre os JSONs deste pedido (pedidos 19 e 20).** Os campos `tempo_s` de `docs/handoff/2026-10-04_detector-ia_resultados.json` e de `data/ml/origem/detector_aplicar.json` são o `duration_s` do inventário, e não o tempo de volta. Os JSONs ficam como foram gravados. Os tempos oficiais estão no store v2 (`lap_time_s`). Ver a errata na seção 2.
+
 ## 1. A sessão rotulada
 
 - **Pista e carro:** Interlagos, com o carro `rss_formula_rss_3_v6_2026`. Esse valor aparece no `metadata.json` de todas as gravações da sessão (campo novo do pedido 12) e é o mesmo carro das sessões antigas que o registravam.
@@ -61,6 +63,17 @@ Contam só as voltas limpas da sessão rotulada (válidas, únicas, com o relóg
 | dispersão da lateral no ápice (mediana das janelas) | 1,84 m | 0,04 m |
 | tempo de volta: média e desvio | 93,58 s ± 2,40 s | 84,99 s ± 0,13 s |
 | melhor volta válida e completa | 89,379 s (parte 2, volta 5) | 84,816 s (parte 2, volta 25) |
+
+> **Errata de 05/10/2026 (pedidos 19 e 20).** As linhas "tempo de volta: média e desvio" e "melhor volta válida e completa" vieram do `duration_s` do inventário, que não é o tempo de volta. Os tempos oficiais (`lap_time_s` do store v2), nas mesmas 11 voltas suas e 13 da IA, são:
+>
+> | | suas voltas | IA |
+> |---|---:|---:|
+> | tempo de volta: média e desvio | 93,60 s ± 2,40 s | 85,02 s ± 0,13 s |
+> | melhor volta válida e completa | 89,390 s (`2026-10-04_02-24-04#0018`, parte 2, volta 5) | 84,829 s (`2026-10-04_03-42-10#0013`, parte 2, **volta 26**) |
+>
+> - **A melhor volta da IA é a 26 (`#0013`), não a 25.** Pelo `duration_s`, as voltas 25 e 26 empatavam em 84,816 s; pelo tempo oficial, a 25 (`#0012`) tem 84,835 s.
+> - **As faixas com uma casa decimal mais abaixo** (seções 3 e 4) também vieram do `duration_s`, mas coincidem com o oficial nessa precisão.
+> - **O resto da seção não muda.**
 
 Nas janelas da Fase 2b, a sua dispersão da frenagem vai de 7,0 m (Bico de Pato) a 50,3 m (Ferradura), e a do ápice vai de 1,1 m a 7,9 m. No Pinheirinho, menos de 3 das suas voltas tiveram início de frenagem detectado.
 
