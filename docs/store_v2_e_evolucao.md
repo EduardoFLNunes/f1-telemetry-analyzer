@@ -328,6 +328,24 @@ Campos de cada item de `curvas[]`:
 | `referencia`, `store`, `regras` | como no JSON da sessão |
 | `arquivos_de_sessao` | os caminhos dos JSONs de sessão |
 
+### Bloco `tecnica` no JSON da sessão (`formato: "tecnica/1"`, pedido 18)
+
+Medidas descritivas, com as definições da seção 1.7. Nenhuma delas muda a situação das curvas. Valor `null` quer dizer sem número: a volta não tem o canal, ou a medida não se aplica.
+
+| campo | o que é |
+|---|---|
+| `voltas`, `definicoes` | quantas voltas da sessão e onde estão as definições |
+| `curvas[].curva` | o rótulo da curva, na mesma ordem de `curvas[]` do relatório |
+| `curvas[].uso_da_aderencia` | `mediana` do p95 de √(g lat² + g long²) no trecho, em g; `voltas` com número e `sem_canal`; `ia_g`, o mesmo na volta da IA; `razao_contra_ia`, a mediana dividida pela IA |
+| `curvas[].freio_e_volante_juntos` | `mediana` dos metros com freio ≥ 0,15 e volante ≥ 25% do maior da curva, na janela do ápice anterior ao ápice; `voltas`, `sem_canal` e `ia_m` |
+| `curvas[].freada_emendada` | `voltas_emendadas` de `voltas_com_frenagem`, `voltas_sem_frenagem` e `ia` (`emendada`, `nao emendada` ou `sem frenagem`) |
+| `curvas[].temperatura_freio_max_c` | `mediana`, `voltas` e `sem_canal` da máxima de freio na frenagem, em °C; `null` quando nenhuma volta tem o canal |
+| `curvas[].por_volta[]` | `volta`, `uso_da_aderencia_g`, `freio_e_volante_m`, `emendada` (`true`, `false` ou `null` sem frenagem) e `freio_max_c` |
+| `pneus.por_volta[]` | `volta`, `tempo_s`, `media_s0_c`, `media_volta_c`, `dianteira_c` e `traseira_c` (°C; só com os 4 canais de pneu) |
+| `pneus.spearman_temperatura_tempo` | a correlação de Spearman entre `media_volta_c` e `tempo_s`, com 3 voltas ou mais; `nota` lembra que ela não separa causa |
+| `pneus.voltas`, `pneus.sem_canal` | voltas com e sem as temperaturas dos pneus |
+| `freios.canal`, `freios.nota` | se alguma volta da sessão tem a temperatura dos freios |
+
 ## 6. Pedido 17: janela de frenagem e painel
 
 ### Janela de frenagem: antes e depois, sessão de 04/10
