@@ -357,3 +357,174 @@ def summary_report(sessions: Sequence[Dict[str, object]]) -> Dict[str, object]:
         "curvas_de_maior_perda": top,
         "criterio_adr_0015": stability(medians),
     }
+
+
+# ------------------------------------------------------------ tecnica ---
+#
+# Pedido 18 (secao 1.7): medidas descritivas. Nada daqui entra na situacao das
+# curvas, nos criterios ou no coach; o bloco `tecnica` so le o store.
+
+STEER_SHARE = 0.25
+TYRE_COLUMNS = ("tyre_core_temp_fl", "tyre_core_temp_fr", "tyre_core_temp_rl", "tyre_core_temp_rr")
+BRAKE_TEMP_COLUMNS = ("brake_temp_fl", "brake_temp_fr", "brake_temp_rl", "brake_temp_rr")
+CAUSE_NOTE = "A correlacao nao separa causa: o pneu esquenta e o piloto melhora ao mesmo tempo."
+
+
+def _column(frame: pd.DataFrame, name: str) -> Optional[np.ndarray]:
+    if name not in frame.columns:
+        return None
+    values = frame[name].to_numpy(dtype=float)
+    return values if np.isfinite(values).any() else None
+
+
+def steer_values(frame: pd.DataFrame) -> Optional[np.ndarray]:
+    """O volante bruto (`steer_angle`); `steering` onde ele nao existir."""
+    raw = _column(frame, "steer_angle")
+    return raw if raw is not None else _column(frame, "steering")
+
+
+def grip_usage(frame: pd.DataFrame, track: TrackGeometry, segment: Segment) -> Optional[float]:
+    """p95 da aceleracao combinada, sqrt(g lateral^2 + g longitudinal^2), no trecho da curva."""
+    lat, lon = _column(frame, "lateral_g"), _column(frame, "longitudinal_g")
+    if lat is None or lon is None:
+        return None
+    window = _window(track, segment.start_s, segment.end_s)
+    combined = np.hypot(lat[window], lon[window])
+    combined = combined[np.isfinite(combined)]
+    return float(np.percentile(combined, 95)) if combined.size else None
+
+
+def brake_and_steer_m(frame: pd.DataFrame, track: TrackGeometry, previous_apex_s: float,
+                      corner: Corner) -> Optional[float]:
+    """Metros, do apice anterior ao apice, com freio >= 0,15 e volante >= 25% do maior da volta na curva."""
+    brake, steer = _column(frame, "brake"), steer_values(frame)
+    if brake is None or steer is None:
+        return None
+    steer = np.abs(steer)
+    largest = np.nanmax(steer[_window(track, corner.start_s, corner.end_s)])
+    if not np.isfinite(largest) or largest <= 0.0:
+        return None
+    window = _window(track, previous_apex_s, corner.apex_s)
+    both = (np.nan_to_num(brake[window]) >= BRAKE_ONSET) & (np.nan_to_num(steer[window]) >= STEER_SHARE * largest)
+    return float(both.sum() * track.step)
+
+
+def chained_braking(brake: np.ndarray, track: TrackGeometry, previous_apex_s: float, apex_s: float) -> Optional[bool]:
+    """A sequencia de freio que contem o maior freio da janela comeca antes do apice anterior?
+
+    None quando nao ha freio de 0,15 ou mais na janela (sem frenagem).
+    """
+    window = _window(track, previous_apex_s, apex_s)
+    values = np.nan_to_num(np.asarray(brake, dtype=float))
+    inside = values[window]
+    if inside.max() < BRAKE_ONSET:
+        return None
+    start = int(np.argmax(inside))
+    while start > 0 and inside[start - 1] >= BRAKE_ONSET:
+        start -= 1
+    if start > 0:
+        return False
+    return bool(values[(window[0] - 1) % track.size] >= BRAKE_ONSET)
+
+
+def brake_temp_max(frame: pd.DataFrame, track: TrackGeometry, previous_apex_s: float, apex_s: float) -> Optional[float]:
+    """A maior temperatura de freio nos pontos da janela com freio >= 0,15. None sem o canal."""
+    temps = [_column(frame, c) for c in BRAKE_TEMP_COLUMNS]
+    brake = _column(frame, "brake")
+    if brake is None or all(t is None for t in temps):
+        return None
+    window = _window(track, previous_apex_s, apex_s)
+    braking = window[np.nan_to_num(brake[window]) >= BRAKE_ONSET]
+    values = np.concatenate([t[braking] for t in temps if t is not None]) if braking.size else np.array([])
+    values = values[np.isfinite(values)]
+    return float(values.max()) if values.size else None
+
+
+def tyre_temperatures(frame: pd.DataFrame) -> Optional[Dict[str, float]]:
+    """Media dos 4 pneus em s = 0 e ao longo da volta, e da dianteira e da traseira ao longo da volta."""
+    columns = [_column(frame, c) for c in TYRE_COLUMNS]
+    if any(c is None for c in columns):
+        return None
+    stack = np.vstack(columns)
+    return {
+        "media_s0_c": round(float(np.nanmean(stack[:, 0])), 2),
+        "media_volta_c": round(float(np.nanmean(stack)), 2),
+        "dianteira_c": round(float(np.nanmean(stack[:2])), 2),
+        "traseira_c": round(float(np.nanmean(stack[2:])), 2),
+    }
+
+
+def _summary(values: Sequence[Optional[float]], digits: int = 3) -> Dict[str, object]:
+    present = [v for v in values if v is not None]
+    return {"mediana": round(float(np.median(present)), digits) if present else None,
+            "voltas": len(present), "sem_canal": len(values) - len(present)}
+
+
+def _rounded(value):
+    return round(value, 3) if isinstance(value, float) else value
+
+
+def technique_report(laps: pd.DataFrame, lap_grids: Dict[str, pd.DataFrame], ref: pd.DataFrame,
+                     track: TrackGeometry, segments: Sequence[Segment]) -> Dict[str, object]:
+    """O bloco `tecnica` de uma sessao (formato em `docs/store_v2_e_evolucao.md`)."""
+    laps = laps.sort_values(["session_id", "sequence"])
+    lap_ids = list(laps["lap_id"])
+    corners = []
+    for k, segment in enumerate(segments):
+        corner, previous_apex = segment.corner, segments[k - 1].corner.apex_s
+
+        def measure(grid: pd.DataFrame) -> Dict[str, object]:
+            brake = _column(grid, "brake")
+            return {
+                "uso_da_aderencia_g": grip_usage(grid, track, segment),
+                "freio_e_volante_m": brake_and_steer_m(grid, track, previous_apex, corner),
+                "emendada": None if brake is None else chained_braking(brake, track, previous_apex, corner.apex_s),
+                "freio_max_c": brake_temp_max(grid, track, previous_apex, corner.apex_s),
+            }
+
+        rows = [{"volta": lap_id, **measure(lap_grids[lap_id])} for lap_id in lap_ids]
+        ai = measure(ref)
+        grip = _summary([r["uso_da_aderencia_g"] for r in rows])
+        chained = [r["emendada"] for r in rows]
+        brake_temps = _summary([r["freio_max_c"] for r in rows], 1)
+        ai_grip = ai["uso_da_aderencia_g"]
+        corners.append({
+            "curva": corner.label,
+            "uso_da_aderencia": {
+                **grip,
+                "ia_g": None if ai_grip is None else round(ai_grip, 3),
+                "razao_contra_ia": round(grip["mediana"] / ai_grip, 3) if grip["mediana"] is not None and ai_grip else None,
+            },
+            "freio_e_volante_juntos": {**_summary([r["freio_e_volante_m"] for r in rows], 1),
+                                       "ia_m": None if ai["freio_e_volante_m"] is None else round(ai["freio_e_volante_m"], 1)},
+            "freada_emendada": {
+                "voltas_emendadas": sum(1 for c in chained if c is True),
+                "voltas_com_frenagem": sum(1 for c in chained if c is not None),
+                "voltas_sem_frenagem": sum(1 for c in chained if c is None),
+                "ia": "sem frenagem" if ai["emendada"] is None else ("emendada" if ai["emendada"] else "nao emendada"),
+            },
+            "temperatura_freio_max_c": brake_temps if brake_temps["voltas"] else None,
+            "por_volta": [{key: _rounded(value) for key, value in r.items()} for r in rows],
+        })
+
+    tyres = []
+    for lap_id, total in zip(lap_ids, laps["lap_time_s"]):
+        temps = tyre_temperatures(lap_grids[lap_id])
+        tyres.append({"volta": lap_id, "tempo_s": round(float(total), 3), **(temps or {})})
+    with_temps = [t for t in tyres if "media_volta_c" in t]
+    rho = None
+    if len(with_temps) >= 3:
+        series = pd.DataFrame(with_temps)
+        value = series["media_volta_c"].corr(series["tempo_s"], method="spearman")
+        rho = None if pd.isna(value) else round(float(value), 3)
+    has_brakes = any(c["temperatura_freio_max_c"] for c in corners)
+    return {
+        "formato": "tecnica/1",
+        "definicoes": "docs/store_v2_e_evolucao.md, secao 1.7",
+        "voltas": len(lap_ids),
+        "curvas": corners,
+        "pneus": {"por_volta": tyres, "voltas": len(with_temps), "sem_canal": len(tyres) - len(with_temps),
+                  "spearman_temperatura_tempo": rho, "nota": CAUSE_NOTE},
+        "freios": {"canal": has_brakes,
+                   "nota": None if has_brakes else "As gravacoes desta sessao nao tem a temperatura dos freios."},
+    }

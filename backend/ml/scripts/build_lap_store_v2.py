@@ -31,6 +31,7 @@ from ml.data.lap_store import load_store, store_path  # noqa: E402
 from ml.data.recordings import list_all_sessions  # noqa: E402
 from ml.data.store_v2 import (  # noqa: E402
     STORE_V2_FILENAME,
+    STORE_V2_SCHEMA,
     build_store_v2,
     default_inventory_path,
     file_entry,
@@ -89,6 +90,8 @@ def main(argv=None) -> int:
     }
     extra = {
         "versao": 2,
+        "esquema": STORE_V2_SCHEMA,
+        "canais_por_volta": details.channels_by_lap,
         "construido_em": pd.Timestamp.now(tz="UTC").isoformat(),
         "commit": git_commit(),
         "entradas": inputs,
