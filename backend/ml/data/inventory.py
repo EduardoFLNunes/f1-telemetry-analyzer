@@ -174,7 +174,14 @@ def scan_sessions(
 
 
 def summarise(inventory: pd.DataFrame) -> Dict[str, Any]:
-    """Resumo legivel do inventario -- a analise exploratoria em numeros."""
+    """Resumo legivel do inventario -- a analise exploratoria em numeros.
+
+    O `duration_s` do inventario vai do primeiro ao ultimo ponto gravado da
+    volta e nao e o tempo de volta: fica de 13 a 43 ms curto, sem os trechos
+    ate a linha. Ate o pedido 20 o resumo o publicava com o nome `lap_time_s`,
+    e dali ele foi parar como tempo de volta em documentos (pedido 19). O tempo
+    de volta oficial e o `lap_time_s` do store v2.
+    """
     if inventory.empty:
         return {"laps": 0}
 
@@ -208,7 +215,7 @@ def summarise(inventory: pd.DataFrame) -> Dict[str, Any]:
 
     if len(valid):
         for column, label in (
-            ("duration_s", "lap_time_s"),
+            ("duration_s", "duration_s"),
             ("sample_hz", "sample_hz"),
             ("speed_mean_kmh", "speed_mean_kmh"),
             ("coverage", "coverage"),
@@ -225,11 +232,11 @@ def summarise(inventory: pd.DataFrame) -> Dict[str, Any]:
                 "p90": float(np.percentile(values, 90)),
                 "max": float(values.max()),
             }
-        best = valid.loc[valid["duration_s"].idxmin()]
-        summary["best_lap"] = {
-            "lap_id": str(best["lap_id"]),
-            "lap_time_s": float(best["duration_s"]),
-            "sample_hz": float(best["sample_hz"]),
+        shortest = valid.loc[valid["duration_s"].idxmin()]
+        summary["shortest_duration_lap"] = {
+            "lap_id": str(shortest["lap_id"]),
+            "duration_s": float(shortest["duration_s"]),
+            "sample_hz": float(shortest["sample_hz"]),
         }
         summary["valid_laps_per_session"] = (
             valid.groupby("session_id").size().sort_values(ascending=False).to_dict()
