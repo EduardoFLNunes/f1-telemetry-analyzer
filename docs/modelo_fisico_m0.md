@@ -83,6 +83,7 @@ Conferindo no código quais campos eram lidos e não gravados, apareceu um erro 
   - o `clutch` era lido além do fim da página. **Por isso a embreagem gravada é 0 em todas as gravações.**
 - **O que estava certo:** as temperaturas interna, central e externa dos pneus e o `isAIControlled` caíam no lugar certo. O indicador de IA dos pedidos 12 a 17 continua valendo.
 - **A correção:** a estrutura agora segue a ordem do Assetto Corsa 1. Um teste lê os bytes do retrato com as duas estruturas.
+- **Conferido em 05/10:** dos 32 campos da página de física que o gravador já gravava, só a embreagem mudou de posição. Ela ia de 580, o primeiro byte depois do fim da página, para 364. Os outros 31 têm a mesma posição antes e depois. A tabela com a posição antiga e a nova de cada um está em `docs/handoff/2026-10-05_confirmacoes-pedido18_campos.json`.
 
 ### O que entrou no gravador
 
@@ -117,6 +118,11 @@ O gravador do repositório passa a gravar, no bloco `carPhysics`:
 | 05/10, suas | 116 | 9,8 | 10,1 | 11,0 | 9,8 a 11,5 (6 voltas) |
 
 - **Sinal:** o volante positivo vem sempre com a aceleração lateral negativa (416 de 416 pontos). As convenções de sinal do volante e da aceleração lateral são opostas.
+- **Convenção de sinal do volante (`steerAngle`, `steering` e `steer_angle`),** registrada em 05/10:
+  - **positivo é virar para a direita, e negativo, para a esquerda;**
+  - medido no ápice das 14 curvas, nas voltas do piloto: negativo nas 9 curvas à esquerda e positivo nas 5 à direita;
+  - a aceleração lateral (`lateral_g`) é positiva para a esquerda, como o `lateral` do ML (ADR 0003);
+  - quem usar volante e aceleração lateral juntos precisa trocar o sinal de um deles.
 - **O que a razão sugere,** sem nada adotado:
   - **Ângulo da roda em radianos?** A razão ficaria perto do entre-eixos, cerca de 2,5 a 3 m. Ela é 3 a 4 vezes maior.
   - **Ângulo do volante em radianos?** A razão ficaria perto do entre-eixos vezes a relação de direção, algumas dezenas.
@@ -175,6 +181,8 @@ As definições estão na seção 1.7 do `docs/store_v2_e_evolucao.md`, e o form
 ## 6. O que ainda falta para a M1
 
 - **Sessões com os canais novos.** A guinada, as velocidades locais e os freios só existem nas gravações feitas depois deste pedido, com o app do repositório. O ADR 0017 pede 5 sessões humanas com canais físicos para a M1.
+  - **Regra da contagem,** registrada em 05/10: das 5 sessões, só contam sessões humanas com a guinada (`yaw_rate`) e as velocidades no referencial do carro (`velocity_long` e `velocity_lat`).
+  - **Hoje são 0 de 5.** As sessões de 04/10 e 05/10 foram gravadas antes da correção do gravador e não têm esses campos.
 - **Reempacotar o app instalado** depois do merge, para ele gravar o indicador de IA, os canais novos e a embreagem certa (backlog).
 - **A unidade do volante,** fechada com a guinada gravada (seção 3).
 - **O entre-eixos e os dados do carro** que não vêm do `data.acd`: o modelo da M1 vai ter de estimá-los dos dados ou recebê-los de fora.

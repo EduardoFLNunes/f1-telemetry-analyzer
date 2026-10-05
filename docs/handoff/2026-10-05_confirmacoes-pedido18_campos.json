@@ -1,0 +1,201 @@
+{
+ "descricao": "campos da pagina de fisica que o gravador gravava antes da correcao, posicao em bytes na estrutura antiga e na nova",
+ "tamanho_da_pagina_ac1_bytes": 580,
+ "campos": [
+  {
+   "campo": "packetId",
+   "posicao_antiga": 0,
+   "posicao_nova": 0,
+   "mudou": false
+  },
+  {
+   "campo": "gas",
+   "posicao_antiga": 4,
+   "posicao_nova": 4,
+   "mudou": false
+  },
+  {
+   "campo": "brake",
+   "posicao_antiga": 8,
+   "posicao_nova": 8,
+   "mudou": false
+  },
+  {
+   "campo": "fuel",
+   "posicao_antiga": 12,
+   "posicao_nova": 12,
+   "mudou": false
+  },
+  {
+   "campo": "gear",
+   "posicao_antiga": 16,
+   "posicao_nova": 16,
+   "mudou": false
+  },
+  {
+   "campo": "rpms",
+   "posicao_antiga": 20,
+   "posicao_nova": 20,
+   "mudou": false
+  },
+  {
+   "campo": "steerAngle",
+   "posicao_antiga": 24,
+   "posicao_nova": 24,
+   "mudou": false
+  },
+  {
+   "campo": "speedKmh",
+   "posicao_antiga": 28,
+   "posicao_nova": 28,
+   "mudou": false
+  },
+  {
+   "campo": "velocity",
+   "posicao_antiga": 32,
+   "posicao_nova": 32,
+   "mudou": false
+  },
+  {
+   "campo": "accG",
+   "posicao_antiga": 44,
+   "posicao_nova": 44,
+   "mudou": false
+  },
+  {
+   "campo": "wheelSlip",
+   "posicao_antiga": 56,
+   "posicao_nova": 56,
+   "mudou": false
+  },
+  {
+   "campo": "wheelLoad",
+   "posicao_antiga": 72,
+   "posicao_nova": 72,
+   "mudou": false
+  },
+  {
+   "campo": "wheelsPressure",
+   "posicao_antiga": 88,
+   "posicao_nova": 88,
+   "mudou": false
+  },
+  {
+   "campo": "tyreWear",
+   "posicao_antiga": 120,
+   "posicao_nova": 120,
+   "mudou": false
+  },
+  {
+   "campo": "tyreDirtyLevel",
+   "posicao_antiga": 136,
+   "posicao_nova": 136,
+   "mudou": false
+  },
+  {
+   "campo": "tyreCoreTemp",
+   "posicao_antiga": 152,
+   "posicao_nova": 152,
+   "mudou": false
+  },
+  {
+   "campo": "camberRAD",
+   "posicao_antiga": 168,
+   "posicao_nova": 168,
+   "mudou": false
+  },
+  {
+   "campo": "suspensionTravel",
+   "posicao_antiga": 184,
+   "posicao_nova": 184,
+   "mudou": false
+  },
+  {
+   "campo": "drs",
+   "posicao_antiga": 200,
+   "posicao_nova": 200,
+   "mudou": false
+  },
+  {
+   "campo": "tc",
+   "posicao_antiga": 204,
+   "posicao_nova": 204,
+   "mudou": false
+  },
+  {
+   "campo": "heading",
+   "posicao_antiga": 208,
+   "posicao_nova": 208,
+   "mudou": false
+  },
+  {
+   "campo": "carDamage",
+   "posicao_antiga": 224,
+   "posicao_nova": 224,
+   "mudou": false
+  },
+  {
+   "campo": "numberOfTyresOut",
+   "posicao_antiga": 244,
+   "posicao_nova": 244,
+   "mudou": false
+  },
+  {
+   "campo": "abs",
+   "posicao_antiga": 252,
+   "posicao_nova": 252,
+   "mudou": false
+  },
+  {
+   "campo": "rideHeight",
+   "posicao_antiga": 268,
+   "posicao_nova": 268,
+   "mudou": false
+  },
+  {
+   "campo": "turboBoost",
+   "posicao_antiga": 276,
+   "posicao_nova": 276,
+   "mudou": false
+  },
+  {
+   "campo": "ballast",
+   "posicao_antiga": 280,
+   "posicao_nova": 280,
+   "mudou": false
+  },
+  {
+   "campo": "airDensity",
+   "posicao_antiga": 284,
+   "posicao_nova": 284,
+   "mudou": false
+  },
+  {
+   "campo": "airTemp",
+   "posicao_antiga": 288,
+   "posicao_nova": 288,
+   "mudou": false
+  },
+  {
+   "campo": "roadTemp",
+   "posicao_antiga": 292,
+   "posicao_nova": 292,
+   "mudou": false
+  },
+  {
+   "campo": "isAIControlled",
+   "posicao_antiga": 416,
+   "posicao_nova": 416,
+   "mudou": false
+  },
+  {
+   "campo": "clutch",
+   "posicao_antiga": 580,
+   "posicao_nova": 364,
+   "mudou": true
+  }
+ ],
+ "mudaram": [
+  "clutch"
+ ]
+}

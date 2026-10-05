@@ -1,0 +1,150 @@
+{
+ "tempo_oficial": "lap_time_s do store v2 (periodo de s = 0 a s = 0), conferido contra o cronometro do jogo costurado",
+ "duration_s": "do inventario: do primeiro ao ultimo ponto gravado da volta; nao e tempo de volta",
+ "voltas": [
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0000",
+   "valida": false,
+   "tempo_oficial_s": null,
+   "cronometro_do_jogo_s": 188.605,
+   "duration_s_inventario": 186.783,
+   "no_store_v2": false,
+   "motivo": "faltam 226.3 m de pista (limite 6 m); carro parado em 38.2% das amostras"
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0001",
+   "valida": false,
+   "tempo_oficial_s": null,
+   "cronometro_do_jogo_s": 398.929,
+   "duration_s_inventario": 398.901,
+   "no_store_v2": false,
+   "motivo": "volta longa demais (398.9s > 200s); carro parado em 44.5% das amostras"
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0002",
+   "valida": false,
+   "tempo_oficial_s": null,
+   "cronometro_do_jogo_s": 272.017,
+   "duration_s_inventario": 272.001,
+   "no_store_v2": false,
+   "motivo": "volta longa demais (272.0s > 200s); carro parado em 26.3% das amostras"
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0003",
+   "valida": false,
+   "tempo_oficial_s": null,
+   "cronometro_do_jogo_s": 176.539,
+   "duration_s_inventario": 176.484,
+   "no_store_v2": false,
+   "motivo": "carro parado em 40.3% das amostras"
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+   "valida": true,
+   "tempo_oficial_s": 91.396,
+   "cronometro_do_jogo_s": 91.396,
+   "duration_s_inventario": 91.383,
+   "no_store_v2": true,
+   "motivo": ""
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0005",
+   "valida": false,
+   "tempo_oficial_s": null,
+   "cronometro_do_jogo_s": 139.393,
+   "duration_s_inventario": 139.38,
+   "no_store_v2": false,
+   "motivo": "carro parado em 26.4% das amostras"
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+   "valida": true,
+   "tempo_oficial_s": 93.297,
+   "cronometro_do_jogo_s": 93.298,
+   "duration_s_inventario": 93.285,
+   "no_store_v2": true,
+   "motivo": ""
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+   "valida": true,
+   "tempo_oficial_s": 92.818,
+   "cronometro_do_jogo_s": 92.818,
+   "duration_s_inventario": 92.787,
+   "no_store_v2": true,
+   "motivo": ""
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+   "valida": true,
+   "tempo_oficial_s": 90.524,
+   "cronometro_do_jogo_s": 90.523,
+   "duration_s_inventario": 90.498,
+   "no_store_v2": true,
+   "motivo": ""
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0009",
+   "valida": false,
+   "tempo_oficial_s": null,
+   "cronometro_do_jogo_s": 134.959,
+   "duration_s_inventario": 134.922,
+   "no_store_v2": false,
+   "motivo": "carro parado em 20.0% das amostras"
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+   "valida": true,
+   "tempo_oficial_s": 91.87,
+   "cronometro_do_jogo_s": 91.87,
+   "duration_s_inventario": 91.863,
+   "no_store_v2": true,
+   "motivo": ""
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+   "valida": true,
+   "tempo_oficial_s": 90.218,
+   "cronometro_do_jogo_s": 90.217,
+   "duration_s_inventario": 90.189,
+   "no_store_v2": true,
+   "motivo": ""
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+   "valida": true,
+   "tempo_oficial_s": 90.496,
+   "cronometro_do_jogo_s": 90.496,
+   "duration_s_inventario": 90.48,
+   "no_store_v2": true,
+   "motivo": ""
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0013",
+   "valida": false,
+   "tempo_oficial_s": null,
+   "cronometro_do_jogo_s": 297.949,
+   "duration_s_inventario": 297.921,
+   "no_store_v2": false,
+   "motivo": "volta longa demais (297.9s > 200s); carro parado em 51.4% das amostras; fora de pista em 53.1% das amostras"
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0014",
+   "valida": true,
+   "tempo_oficial_s": null,
+   "cronometro_do_jogo_s": 100.309,
+   "duration_s_inventario": 100.266,
+   "no_store_v2": false,
+   "motivo": "box (portao do pedido 16)"
+  },
+  {
+   "volta": "2026-10-04_23-51-42_vhe_interlagos#0015",
+   "valida": false,
+   "tempo_oficial_s": null,
+   "cronometro_do_jogo_s": null,
+   "duration_s_inventario": 81.354,
+   "no_store_v2": false,
+   "motivo": "faltam 4105.8 m de pista (limite 6 m); carro parado em 86.5% das amostras"
+  }
+ ]
+}

@@ -158,6 +158,11 @@ O store antigo (`laps_grid.parquet`, 122 voltas) continua intacto, e os scripts 
 | pastas | só a do repositório | as duas, sem as cópias `duplicada_de` |
 | origens | só `humano` (na prática, o rótulo antigo) | todas, com `origem`, `origem_fonte`, `equipamento`, `relogio_*`, `pasta` e `carModel` em cada volta |
 | tempo do jogo | não tinha | `tempo_jogo_s`, o cronômetro do jogo costurado na troca de volta |
+
+**Tempo de volta oficial** (nota de 05/10): é o `lap_time_s` do store v2, o período de s = 0 a s = 0, que bate com o cronômetro do jogo (`tempo_jogo_s`) dentro de poucos milissegundos.
+
+- **O `duration_s` do inventário não é tempo de volta.** Ele mede do primeiro ao último ponto gravado da volta, sem os trechos até a linha nas duas pontas, e fica de 13 a 43 ms curto.
+- **Exemplo, nas voltas da sessão de 05/10:** a melhor é 90,218 s no store v2, mas 90,189 s no `duration_s`.
 | meta | geometria | geometria, commit, sha256 e tamanho do inventário, dos rótulos de 04/10 e de cada gravação usada (ADR 0007), e o resultado das checagens (`aprovado`) |
 
 ### Contagem
