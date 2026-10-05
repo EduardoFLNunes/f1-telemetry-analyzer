@@ -141,7 +141,7 @@ O gravador do repositório passa a gravar, no bloco `carPhysics`:
 |---|---|---|
 | tamanho do store v2 | 137 MB | 315 MB |
 | construção do store v2 | 457 s | 556 s |
-| `atualizar_coach` completo | 1.151 s (19 min, em 05/10 de manhã) | CUSTO_DEPOIS |
+| `atualizar_coach` completo | 1.151 s (19 min, em 05/10 de manhã) | 1.454 s (24 min, depois do merge), abaixo do limite de 35 min |
 
 ## 5. Técnica de pilotagem: como ler (Parte D)
 

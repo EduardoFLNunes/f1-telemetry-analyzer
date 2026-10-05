@@ -1,0 +1,1578 @@
+diff --git a/backend/core/assetto_adapter.py b/backend/core/assetto_adapter.py
+index bf46c072..d0ea3f66 100644
+--- a/backend/core/assetto_adapter.py
++++ b/backend/core/assetto_adapter.py
+@@ -64,11 +64,19 @@ class SPageFilePhysics(Structure):
+         ("ersPowerLevel", c_int),
+         ("ersHeatCharging", c_int),
+         ("ersIsBatteryCharging", c_int),
+-        ("kersCurrentVK", c_float),
+-        ("visualTyreDamage", c_float * 4),
+-        ("elecSystemsOverlap", c_int),
+-        ("ersFuelDiff", c_float),
+-        ("diffPa", c_int),
++        # From here the page follows Assetto Corsa 1 (pedido 18). The fields
++        # used to be declared in another simulator's order: `brakeTemp` read
++        # brakeBias and localVelocity, `clutch` read past the end of the page
++        # (always 0 in every recording), and the real brake temperatures sat
++        # under `visualTyreDamage` and two ints. Measured on the saved snapshot
++        # (data/debug/ac_shared_memory_full_inventory.json): the old `brakeTemp`
++        # held 0.55 and a velocity whose z was speedKmh / 3.6 to the third
++        # decimal, and the old `diffPa` held the bits of the float 1.0.
++        ("kersCurrentKJ", c_float),
++        ("drsAvailable", c_int),
++        ("drsEnabled", c_int),
++        ("brakeTemp", c_float * 4),
++        ("clutch", c_float),
+         ("tyreTempI", c_float * 4),
+         ("tyreTempM", c_float * 4),
+         ("tyreTempO", c_float * 4),
+@@ -76,22 +84,8 @@ class SPageFilePhysics(Structure):
+         ("tyreContactPoint", c_float * 4 * 3),
+         ("tyreContactNormal", c_float * 4 * 3),
+         ("tyreContactHeading", c_float * 4 * 3),
+-        ("brakeTemp", c_float * 4),
+-        ("clutch", c_float),
+-        ("tyreTempI2", c_float * 4),
+-        ("tyreTempM2", c_float * 4),
+-        ("tyreTempO2", c_float * 4),
+-        ("isShadowTrack", c_int),
+-        ("iDiffPriority", c_int),
+-        ("tyreWorkTemp", c_float * 4),
+-        ("flag", c_int),
+-        ("iCurrentMaxGear", c_int),
+-        ("iCurrentTyreSet", c_int),
+-        ("iMguKMaxTorque", c_float),
+-        ("iMguHMaxTorque", c_float),
+-        ("gearRatio", c_float * 7),
+-        ("iDiffIn", c_float),
+-        ("iDiffOut", c_float),
++        ("brakeBias", c_float),
++        ("localVelocity", c_float * 3),
+     ]
+ 
+ class SPageFileGraphics(Structure):
+@@ -300,6 +294,24 @@ class AssettoAdapter:
+             "tyre_wear": list(self.physics.tyreWear),
+             "tyre_dirty_level": list(self.physics.tyreDirtyLevel),
+             "tyre_core_temperature": list(self.physics.tyreCoreTemp),
++            # Pedido 18 (ADR 0017, M0): what the car model needs and the page
++            # already had -- the tyre surface (inner, middle, outer), the
++            # brakes, the car-frame velocity and the yaw rate.
++            "tyre_temp_inner": list(self.physics.tyreTempI),
++            "tyre_temp_middle": list(self.physics.tyreTempM),
++            "tyre_temp_outer": list(self.physics.tyreTempO),
++            "brake_temp": list(self.physics.brakeTemp),
++            "brake_bias": self.physics.brakeBias,
++            "local_velocity": {
++                "x": self.physics.localVelocity[0],
++                "y": self.physics.localVelocity[1],
++                "z": self.physics.localVelocity[2],
++            },
++            "local_angular_velocity": {
++                "x": self.physics.localAngularVel[0],
++                "y": self.physics.localAngularVel[1],
++                "z": self.physics.localAngularVel[2],
++            },
+             "suspension_travel": list(self.physics.suspensionTravel),
+             "ride_height": list(self.physics.rideHeight),
+             "camber_rad": list(self.physics.camberRAD),
+diff --git a/backend/core/car_physics.py b/backend/core/car_physics.py
+index 759749b9..b309691e 100644
+--- a/backend/core/car_physics.py
++++ b/backend/core/car_physics.py
+@@ -239,6 +239,8 @@ def _base_unavailable_physics() -> Dict[str, Any]:
+             "speedKmh": None,
+             "velocity": {"x": None, "y": None, "z": None},
+             "accG": {"lateral": None, "longitudinal": None, "vertical": None},
++            "localVelocity": {"x": None, "y": None, "z": None},
++            "localAngularVelocity": {"x": None, "y": None, "z": None},
+         },
+         "controls": {
+             "throttle": None,
+@@ -257,6 +259,13 @@ def _base_unavailable_physics() -> Dict[str, Any]:
+             "wheelSlip": [None, None, None, None],
+             "wheelLoad": [None, None, None, None],
+             "estimatedGripIndex": [None, None, None, None],
++            "tyreTempInner": [None, None, None, None],
++            "tyreTempMiddle": [None, None, None, None],
++            "tyreTempOuter": [None, None, None, None],
++        },
++        "brakes": {
++            "brakeTemp": [None, None, None, None],
++            "brakeBias": None,
+         },
+         "suspension": {
+             "suspensionTravel": [None, None, None, None],
+@@ -348,6 +357,19 @@ def build_player_car_physics(
+                 "longitudinal": _safe_float(sample.accelZ),
+                 "vertical": _safe_float(sample.accelY),
+             },
++            # Pedido 18 (ADR 0017, M0). In the car's frame: x lateral, y
++            # vertical, z longitudinal; the yaw rate is the y of the angular
++            # velocity.
++            "localVelocity": {
++                "x": _safe_float(sample.localVelocityX),
++                "y": _safe_float(sample.localVelocityY),
++                "z": _safe_float(sample.localVelocityZ),
++            },
++            "localAngularVelocity": {
++                "x": _safe_float(sample.localAngularVelocityX),
++                "y": _safe_float(sample.localAngularVelocityY),
++                "z": _safe_float(sample.localAngularVelocityZ),
++            },
+         },
+         "controls": {
+             "throttle": _safe_float(sample.throttle),
+@@ -368,6 +390,13 @@ def build_player_car_physics(
+             "wheelSlip": wheel_slip,
+             "wheelLoad": wheel_load,
+             "estimatedGripIndex": [grip_index] * 4 if grip_index is not None else [None, None, None, None],
++            "tyreTempInner": _array4(sample.tyreTempInner),
++            "tyreTempMiddle": _array4(sample.tyreTempMiddle),
++            "tyreTempOuter": _array4(sample.tyreTempOuter),
++        },
++        "brakes": {
++            "brakeTemp": _array4(sample.brakeTemp),
++            "brakeBias": _safe_float(sample.brakeBias),
+         },
+         "suspension": {
+             "suspensionTravel": suspension_travel,
+diff --git a/backend/core/debug/ac_shared_memory_full_inventory.py b/backend/core/debug/ac_shared_memory_full_inventory.py
+index 8b40f3a5..55b64757 100644
+--- a/backend/core/debug/ac_shared_memory_full_inventory.py
++++ b/backend/core/debug/ac_shared_memory_full_inventory.py
+@@ -138,6 +138,11 @@ DESCRIPTIONS: Dict[str, str] = {
+     "ersHeatCharging": "ERS heat charging state.",
+     "ersIsBatteryCharging": "ERS battery charging state.",
+     "kersCurrentVK": "Current KERS voltage/energy related value.",
++    "kersCurrentKJ": "Current KERS energy (kJ).",
++    "drsAvailable": "DRS available.",
++    "drsEnabled": "DRS enabled.",
++    "brakeBias": "Brake bias (fraction on the front axle).",
++    "localVelocity": "Velocity in the car's frame (x lateral, y vertical, z longitudinal), m/s.",
+     "visualTyreDamage": f"Visual tyre damage per wheel. {WHEEL_NOTE}",
+     "elecSystemsOverlap": "Electrical systems overlap value.",
+     "ersFuelDiff": "ERS fuel delta/difference value.",
+diff --git a/backend/core/telemetry/telemetry_models.py b/backend/core/telemetry/telemetry_models.py
+index 5619d83f..8e82173d 100644
+--- a/backend/core/telemetry/telemetry_models.py
++++ b/backend/core/telemetry/telemetry_models.py
+@@ -67,6 +67,18 @@ class TelemetrySample:
+     rideHeight: List[Optional[float]] = field(default_factory=list)
+     camberRad: List[Optional[float]] = field(default_factory=list)
+     carDamage: List[Optional[float]] = field(default_factory=list)
++    # Pedido 18 (ADR 0017, M0): tyre surface, brakes and car-frame motion.
++    tyreTempInner: List[Optional[float]] = field(default_factory=list)
++    tyreTempMiddle: List[Optional[float]] = field(default_factory=list)
++    tyreTempOuter: List[Optional[float]] = field(default_factory=list)
++    brakeTemp: List[Optional[float]] = field(default_factory=list)
++    brakeBias: Optional[float] = None
++    localVelocityX: Optional[float] = None
++    localVelocityY: Optional[float] = None
++    localVelocityZ: Optional[float] = None
++    localAngularVelocityX: Optional[float] = None
++    localAngularVelocityY: Optional[float] = None
++    localAngularVelocityZ: Optional[float] = None
+ 
+     @classmethod
+     def from_dict(cls, data: Dict[str, Any]) -> "TelemetrySample":
+@@ -162,6 +174,17 @@ class TelemetrySample:
+             rideHeight=nullable_float_list(data.get("rideHeight", data.get("ride_height"))),
+             camberRad=nullable_float_list(data.get("camberRad", data.get("camberRAD", data.get("camber_rad")))),
+             carDamage=nullable_float_list(data.get("carDamage", data.get("car_damage"))),
++            tyreTempInner=nullable_float_list(data.get("tyreTempInner", data.get("tyre_temp_inner"))),
++            tyreTempMiddle=nullable_float_list(data.get("tyreTempMiddle", data.get("tyre_temp_middle"))),
++            tyreTempOuter=nullable_float_list(data.get("tyreTempOuter", data.get("tyre_temp_outer"))),
++            brakeTemp=nullable_float_list(data.get("brakeTemp", data.get("brake_temp"))),
++            brakeBias=nullable_float(data.get("brakeBias", data.get("brake_bias"))),
++            localVelocityX=nullable_float((data.get("local_velocity") or {}).get("x")),
++            localVelocityY=nullable_float((data.get("local_velocity") or {}).get("y")),
++            localVelocityZ=nullable_float((data.get("local_velocity") or {}).get("z")),
++            localAngularVelocityX=nullable_float((data.get("local_angular_velocity") or {}).get("x")),
++            localAngularVelocityY=nullable_float((data.get("local_angular_velocity") or {}).get("y")),
++            localAngularVelocityZ=nullable_float((data.get("local_angular_velocity") or {}).get("z")),
+         )
+ 
+     @property
+diff --git a/backend/core/telemetry/telemetry_reader_impl.py b/backend/core/telemetry/telemetry_reader_impl.py
+index c798496c..5de5481b 100644
+--- a/backend/core/telemetry/telemetry_reader_impl.py
++++ b/backend/core/telemetry/telemetry_reader_impl.py
+@@ -347,6 +347,14 @@ class ACSharedMemoryReader(PollingTelemetryReader):
+                 "ride_height": data.get("ride_height"),
+                 "camber_rad": data.get("camber_rad"),
+                 "car_damage": data.get("car_damage"),
++                # Pedido 18 (ADR 0017, M0): tyre surface, brakes and car-frame motion.
++                "tyre_temp_inner": data.get("tyre_temp_inner"),
++                "tyre_temp_middle": data.get("tyre_temp_middle"),
++                "tyre_temp_outer": data.get("tyre_temp_outer"),
++                "brake_temp": data.get("brake_temp"),
++                "brake_bias": data.get("brake_bias"),
++                "local_velocity": data.get("local_velocity"),
++                "local_angular_velocity": data.get("local_angular_velocity"),
+             }
+         )
+ 
+diff --git a/backend/ml/comparison/evolution.py b/backend/ml/comparison/evolution.py
+index 9acaf7ef..6993f5da 100644
+--- a/backend/ml/comparison/evolution.py
++++ b/backend/ml/comparison/evolution.py
+@@ -357,3 +357,174 @@ def summary_report(sessions: Sequence[Dict[str, object]]) -> Dict[str, object]:
+         "curvas_de_maior_perda": top,
+         "criterio_adr_0015": stability(medians),
+     }
++
++
++# ------------------------------------------------------------ tecnica ---
++#
++# Pedido 18 (secao 1.7): medidas descritivas. Nada daqui entra na situacao das
++# curvas, nos criterios ou no coach; o bloco `tecnica` so le o store.
++
++STEER_SHARE = 0.25
++TYRE_COLUMNS = ("tyre_core_temp_fl", "tyre_core_temp_fr", "tyre_core_temp_rl", "tyre_core_temp_rr")
++BRAKE_TEMP_COLUMNS = ("brake_temp_fl", "brake_temp_fr", "brake_temp_rl", "brake_temp_rr")
++CAUSE_NOTE = "A correlacao nao separa causa: o pneu esquenta e o piloto melhora ao mesmo tempo."
++
++
++def _column(frame: pd.DataFrame, name: str) -> Optional[np.ndarray]:
++    if name not in frame.columns:
++        return None
++    values = frame[name].to_numpy(dtype=float)
++    return values if np.isfinite(values).any() else None
++
++
++def steer_values(frame: pd.DataFrame) -> Optional[np.ndarray]:
++    """O volante bruto (`steer_angle`); `steering` onde ele nao existir."""
++    raw = _column(frame, "steer_angle")
++    return raw if raw is not None else _column(frame, "steering")
++
++
++def grip_usage(frame: pd.DataFrame, track: TrackGeometry, segment: Segment) -> Optional[float]:
++    """p95 da aceleracao combinada, sqrt(g lateral^2 + g longitudinal^2), no trecho da curva."""
++    lat, lon = _column(frame, "lateral_g"), _column(frame, "longitudinal_g")
++    if lat is None or lon is None:
++        return None
++    window = _window(track, segment.start_s, segment.end_s)
++    combined = np.hypot(lat[window], lon[window])
++    combined = combined[np.isfinite(combined)]
++    return float(np.percentile(combined, 95)) if combined.size else None
++
++
++def brake_and_steer_m(frame: pd.DataFrame, track: TrackGeometry, previous_apex_s: float,
++                      corner: Corner) -> Optional[float]:
++    """Metros, do apice anterior ao apice, com freio >= 0,15 e volante >= 25% do maior da volta na curva."""
++    brake, steer = _column(frame, "brake"), steer_values(frame)
++    if brake is None or steer is None:
++        return None
++    steer = np.abs(steer)
++    largest = np.nanmax(steer[_window(track, corner.start_s, corner.end_s)])
++    if not np.isfinite(largest) or largest <= 0.0:
++        return None
++    window = _window(track, previous_apex_s, corner.apex_s)
++    both = (np.nan_to_num(brake[window]) >= BRAKE_ONSET) & (np.nan_to_num(steer[window]) >= STEER_SHARE * largest)
++    return float(both.sum() * track.step)
++
++
++def chained_braking(brake: np.ndarray, track: TrackGeometry, previous_apex_s: float, apex_s: float) -> Optional[bool]:
++    """A sequencia de freio que contem o maior freio da janela comeca antes do apice anterior?
++
++    None quando nao ha freio de 0,15 ou mais na janela (sem frenagem).
++    """
++    window = _window(track, previous_apex_s, apex_s)
++    values = np.nan_to_num(np.asarray(brake, dtype=float))
++    inside = values[window]
++    if inside.max() < BRAKE_ONSET:
++        return None
++    start = int(np.argmax(inside))
++    while start > 0 and inside[start - 1] >= BRAKE_ONSET:
++        start -= 1
++    if start > 0:
++        return False
++    return bool(values[(window[0] - 1) % track.size] >= BRAKE_ONSET)
++
++
++def brake_temp_max(frame: pd.DataFrame, track: TrackGeometry, previous_apex_s: float, apex_s: float) -> Optional[float]:
++    """A maior temperatura de freio nos pontos da janela com freio >= 0,15. None sem o canal."""
++    temps = [_column(frame, c) for c in BRAKE_TEMP_COLUMNS]
++    brake = _column(frame, "brake")
++    if brake is None or all(t is None for t in temps):
++        return None
++    window = _window(track, previous_apex_s, apex_s)
++    braking = window[np.nan_to_num(brake[window]) >= BRAKE_ONSET]
++    values = np.concatenate([t[braking] for t in temps if t is not None]) if braking.size else np.array([])
++    values = values[np.isfinite(values)]
++    return float(values.max()) if values.size else None
++
++
++def tyre_temperatures(frame: pd.DataFrame) -> Optional[Dict[str, float]]:
++    """Media dos 4 pneus em s = 0 e ao longo da volta, e da dianteira e da traseira ao longo da volta."""
++    columns = [_column(frame, c) for c in TYRE_COLUMNS]
++    if any(c is None for c in columns):
++        return None
++    stack = np.vstack(columns)
++    return {
++        "media_s0_c": round(float(np.nanmean(stack[:, 0])), 2),
++        "media_volta_c": round(float(np.nanmean(stack)), 2),
++        "dianteira_c": round(float(np.nanmean(stack[:2])), 2),
++        "traseira_c": round(float(np.nanmean(stack[2:])), 2),
++    }
++
++
++def _summary(values: Sequence[Optional[float]], digits: int = 3) -> Dict[str, object]:
++    present = [v for v in values if v is not None]
++    return {"mediana": round(float(np.median(present)), digits) if present else None,
++            "voltas": len(present), "sem_canal": len(values) - len(present)}
++
++
++def _rounded(value):
++    return round(value, 3) if isinstance(value, float) else value
++
++
++def technique_report(laps: pd.DataFrame, lap_grids: Dict[str, pd.DataFrame], ref: pd.DataFrame,
++                     track: TrackGeometry, segments: Sequence[Segment]) -> Dict[str, object]:
++    """O bloco `tecnica` de uma sessao (formato em `docs/store_v2_e_evolucao.md`)."""
++    laps = laps.sort_values(["session_id", "sequence"])
++    lap_ids = list(laps["lap_id"])
++    corners = []
++    for k, segment in enumerate(segments):
++        corner, previous_apex = segment.corner, segments[k - 1].corner.apex_s
++
++        def measure(grid: pd.DataFrame) -> Dict[str, object]:
++            brake = _column(grid, "brake")
++            return {
++                "uso_da_aderencia_g": grip_usage(grid, track, segment),
++                "freio_e_volante_m": brake_and_steer_m(grid, track, previous_apex, corner),
++                "emendada": None if brake is None else chained_braking(brake, track, previous_apex, corner.apex_s),
++                "freio_max_c": brake_temp_max(grid, track, previous_apex, corner.apex_s),
++            }
++
++        rows = [{"volta": lap_id, **measure(lap_grids[lap_id])} for lap_id in lap_ids]
++        ai = measure(ref)
++        grip = _summary([r["uso_da_aderencia_g"] for r in rows])
++        chained = [r["emendada"] for r in rows]
++        brake_temps = _summary([r["freio_max_c"] for r in rows], 1)
++        ai_grip = ai["uso_da_aderencia_g"]
++        corners.append({
++            "curva": corner.label,
++            "uso_da_aderencia": {
++                **grip,
++                "ia_g": None if ai_grip is None else round(ai_grip, 3),
++                "razao_contra_ia": round(grip["mediana"] / ai_grip, 3) if grip["mediana"] is not None and ai_grip else None,
++            },
++            "freio_e_volante_juntos": {**_summary([r["freio_e_volante_m"] for r in rows], 1),
++                                       "ia_m": None if ai["freio_e_volante_m"] is None else round(ai["freio_e_volante_m"], 1)},
++            "freada_emendada": {
++                "voltas_emendadas": sum(1 for c in chained if c is True),
++                "voltas_com_frenagem": sum(1 for c in chained if c is not None),
++                "voltas_sem_frenagem": sum(1 for c in chained if c is None),
++                "ia": "sem frenagem" if ai["emendada"] is None else ("emendada" if ai["emendada"] else "nao emendada"),
++            },
++            "temperatura_freio_max_c": brake_temps if brake_temps["voltas"] else None,
++            "por_volta": [{key: _rounded(value) for key, value in r.items()} for r in rows],
++        })
++
++    tyres = []
++    for lap_id, total in zip(lap_ids, laps["lap_time_s"]):
++        temps = tyre_temperatures(lap_grids[lap_id])
++        tyres.append({"volta": lap_id, "tempo_s": round(float(total), 3), **(temps or {})})
++    with_temps = [t for t in tyres if "media_volta_c" in t]
++    rho = None
++    if len(with_temps) >= 3:
++        series = pd.DataFrame(with_temps)
++        value = series["media_volta_c"].corr(series["tempo_s"], method="spearman")
++        rho = None if pd.isna(value) else round(float(value), 3)
++    has_brakes = any(c["temperatura_freio_max_c"] for c in corners)
++    return {
++        "formato": "tecnica/1",
++        "definicoes": "docs/store_v2_e_evolucao.md, secao 1.7",
++        "voltas": len(lap_ids),
++        "curvas": corners,
++        "pneus": {"por_volta": tyres, "voltas": len(with_temps), "sem_canal": len(tyres) - len(with_temps),
++                  "spearman_temperatura_tempo": rho, "nota": CAUSE_NOTE},
++        "freios": {"canal": has_brakes,
++                   "nota": None if has_brakes else "As gravacoes desta sessao nao tem a temperatura dos freios."},
++    }
+diff --git a/backend/ml/data/samples.py b/backend/ml/data/samples.py
+index 866c2096..9b00cfe9 100644
+--- a/backend/ml/data/samples.py
++++ b/backend/ml/data/samples.py
+@@ -69,6 +69,44 @@ def _mean(values: Any) -> Optional[float]:
+     return sum(numbers) / len(numbers) if numbers else None
+ 
+ 
++# Pedido 18 (ADR 0017, M0): uma coluna por roda, na ordem do jogo.
++WHEELS = ("fl", "fr", "rl", "rr")
++
++
++def _wheel(values: Any, index: int) -> Optional[float]:
++    if not isinstance(values, (list, tuple)) or len(values) <= index:
++        return None
++    return number(values[index])
++
++
++def physical_channels(physics: Mapping[str, Any], controls: Mapping[str, Any]) -> Dict[str, Any]:
++    """Os canais fisicos da M0: por roda, o volante bruto e o movimento no referencial do carro.
++
++    Gravacao que nao tem o campo da None, e a coluna fica vazia na volta.
++    """
++    def block(name: str) -> Mapping[str, Any]:
++        value = physics.get(name)
++        return value if isinstance(value, Mapping) else {}
++
++    tyres, brakes, motion = block("tyres"), block("brakes"), block("motion")
++    local = motion.get("localVelocity") if isinstance(motion.get("localVelocity"), Mapping) else {}
++    angular = motion.get("localAngularVelocity") if isinstance(motion.get("localAngularVelocity"), Mapping) else {}
++    row: Dict[str, Any] = {}
++    for prefix, source in (("tyre_core_temp", tyres.get("tyreCoreTemperature")),
++                           ("wheel_load", tyres.get("wheelLoad")),
++                           ("wheel_slip", tyres.get("wheelSlip")),
++                           ("tyre_pressure", tyres.get("tyrePressure")),
++                           ("brake_temp", brakes.get("brakeTemp"))):
++        for index, wheel in enumerate(WHEELS):
++            row[f"{prefix}_{wheel}"] = _wheel(source, index)
++    # O volante como foi gravado: a limpeza corta `steering` em +-1,5, esta nao.
++    row["steer_angle"] = controls.get("steering")
++    row["yaw_rate"] = number(angular.get("y"))
++    row["velocity_long"] = number(local.get("z"))
++    row["velocity_lat"] = number(local.get("x"))
++    return row
++
++
+ def flatten(envelope: Mapping[str, Any]) -> Dict[str, Any]:
+     """Uma linha do `player.jsonl` -> um dicionario plano de colunas."""
+     sample = envelope.get("sample")
+@@ -138,6 +176,7 @@ def flatten(envelope: Mapping[str, Any]) -> Dict[str, Any]:
+             number(_first(sample, "lateralOffset", "lateral_offset"))
+         ),
+     }
++    row.update(physical_channels(physics, controls))
+     return row
+ 
+ 
+diff --git a/backend/ml/data/store_v2.py b/backend/ml/data/store_v2.py
+index 6bafe7e1..b9d77e85 100644
+--- a/backend/ml/data/store_v2.py
++++ b/backend/ml/data/store_v2.py
+@@ -44,6 +44,14 @@ from .session_annotations import car_for, session_annotations
+ STORE_V2_FILENAME = "laps_grid_v2.parquet"
+ STORE_V2_METADATA = "laps_grid_v2_meta.json"
+ STORE_V2_VERSION = 2
++# Pedido 18 (ADR 0017, M0): os canais fisicos entram no mesmo arquivo; o
++# esquema sobe de 2.0 para 2.1.
++STORE_V2_SCHEMA = "2.1"
++PHYSICAL_COLUMNS = tuple(
++    f"{prefix}_{wheel}"
++    for prefix in ("tyre_core_temp", "wheel_load", "wheel_slip", "tyre_pressure", "brake_temp")
++    for wheel in ("fl", "fr", "rl", "rr")
++) + ("steer_angle", "yaw_rate", "velocity_long", "velocity_lat")
+ 
+ # Copiados do inventario rotulado para cada volta.
+ CARRIED_COLUMNS = IDENTITY_COLUMNS + (
+@@ -168,6 +176,8 @@ class BuildDetails:
+ 
+     selection: Dict[str, int] = field(default_factory=dict)
+     box_removed: List[str] = field(default_factory=list)
++    # Pedido 18: os canais fisicos que cada volta tem (algum ponto preenchido).
++    channels_by_lap: Dict[str, List[str]] = field(default_factory=dict)
+     not_found: List[str] = field(default_factory=list)
+     sessions: List[str] = field(default_factory=list)
+ 
+@@ -230,7 +240,11 @@ def build_store_v2(
+             if pit_lap(grid, sectors):
+                 details.box_removed.append(lap.lap_id)
+                 continue
+-            block = grid.reindex(columns=[c for c in STORE_COLUMNS if c in grid.columns]).copy()
++            wanted_columns = [c for c in STORE_COLUMNS if c in grid.columns] + list(PHYSICAL_COLUMNS)
++            block = grid.reindex(columns=wanted_columns).copy()
++            details.channels_by_lap[lap.lap_id] = [
++                c for c in PHYSICAL_COLUMNS if np.isfinite(block[c].to_numpy(dtype=float)).any()
++            ]
+             block.insert(0, "grid_index", np.arange(geometry.size))
+             block.insert(0, "lap_id", lap.lap_id)
+             blocks.append(block)
+diff --git a/backend/ml/scripts/build_lap_store_v2.py b/backend/ml/scripts/build_lap_store_v2.py
+index 378bac71..d23dcda1 100644
+--- a/backend/ml/scripts/build_lap_store_v2.py
++++ b/backend/ml/scripts/build_lap_store_v2.py
+@@ -31,6 +31,7 @@ from ml.data.lap_store import load_store, store_path  # noqa: E402
+ from ml.data.recordings import list_all_sessions  # noqa: E402
+ from ml.data.store_v2 import (  # noqa: E402
+     STORE_V2_FILENAME,
++    STORE_V2_SCHEMA,
+     build_store_v2,
+     default_inventory_path,
+     file_entry,
+@@ -89,6 +90,8 @@ def main(argv=None) -> int:
+     }
+     extra = {
+         "versao": 2,
++        "esquema": STORE_V2_SCHEMA,
++        "canais_por_volta": details.channels_by_lap,
+         "construido_em": pd.Timestamp.now(tz="UTC").isoformat(),
+         "commit": git_commit(),
+         "entradas": inputs,
+diff --git a/backend/ml/scripts/checar_canais_fisicos.py b/backend/ml/scripts/checar_canais_fisicos.py
+new file mode 100644
+index 00000000..97a1b6e7
+--- /dev/null
++++ b/backend/ml/scripts/checar_canais_fisicos.py
+@@ -0,0 +1,133 @@
++"""Checagens da M0 no store v2 (pedido 18, Parte C; docs/modelo_fisico_m0.md, secao 1.2).
++
++    python -m ml.scripts.checar_canais_fisicos --base DIR [--saida ARQUIVO]
++
++`--base` e a pasta com a copia do store v2 do inicio da etapa
++(`laps_grid_v2.parquet` e o meta). Confere:
++
++* **nada do que ja existe muda** -- as mesmas voltas, o mesmo `lap_time_s` e as
++  colunas antigas identicas valor a valor (NaN igual a NaN);
++* **canais novos preenchidos** -- na sessao `2026-10-04`, cada canal novo cujo
++  campo existe na gravacao tem pelo menos 95% dos pontos da grade
++  preenchidos; a sessao `2026-10-05` (app instalado) e relatada a parte;
++* **store integro** -- o meta do store novo traz as checagens do pedido 16
++  aprovadas.
++
++Sai com codigo 2 se alguma coluna antiga mudou.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++from pathlib import Path
++from typing import Dict, List
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
++
++import numpy as np  # noqa: E402
++import pandas as pd  # noqa: E402
++
++from ml import config  # noqa: E402
++from ml.comparison.evolution import group_sessions  # noqa: E402
++from ml.data.lap_store import StoredLaps  # noqa: E402
++from ml.data.store_v2 import PHYSICAL_COLUMNS, load_store_v2, store_v2_meta  # noqa: E402
++
++FILL_LIMIT = 0.95
++CHECKED_SESSION = "2026-10-04"
++SEPARATE_SESSION = "2026-10-05"
++
++
++def unchanged(new: StoredLaps, base: StoredLaps) -> Dict[str, object]:
++    """As voltas, os tempos e as colunas do store base, iguais no novo."""
++    base_ids, new_ids = set(base.lap_ids), set(new.lap_ids)
++    times_base = base.laps.set_index("lap_id")["lap_time_s"]
++    times_new = new.laps.set_index("lap_id")["lap_time_s"]
++    common = sorted(base_ids & new_ids)
++    time_diff = [i for i in common if float(times_base[i]) != float(times_new[i])]
++    old_columns = [c for c in base.frame.columns if c not in ("lap_id", "grid_index")]
++    a = base.frame.sort_values(["lap_id", "grid_index"]).reset_index(drop=True)
++    b = new.frame[new.frame["lap_id"].isin(base_ids)].sort_values(["lap_id", "grid_index"]).reset_index(drop=True)
++    changed: List[str] = []
++    missing = [c for c in old_columns if c not in b.columns]
++    if len(a) != len(b) or not (a["lap_id"].to_numpy() == b["lap_id"].to_numpy()).all():
++        changed.append("(linhas da grade)")
++    else:
++        for column in old_columns:
++            if column in missing:
++                continue
++            if not np.array_equal(a[column].to_numpy(dtype=float), b[column].to_numpy(dtype=float), equal_nan=True):
++                changed.append(column)
++    return {
++        "checagem": "nada do que ja existe muda",
++        "voltas_base": len(base_ids), "voltas_novo": len(new_ids),
++        "so_na_base": sorted(base_ids - new_ids), "so_no_novo": sorted(new_ids - base_ids),
++        "lap_time_s_diferente": time_diff,
++        "colunas_antigas": old_columns,
++        "colunas_ausentes": missing,
++        "colunas_mudadas": changed,
++        "passou": base_ids == new_ids and not time_diff and not changed and not missing,
++    }
++
++
++def fill(store: StoredLaps, lap_ids: List[str]) -> Dict[str, object]:
++    """Preenchimento de cada canal novo nas voltas dadas, e se o campo existe na gravacao."""
++    frame = store.frame[store.frame["lap_id"].isin(lap_ids)]
++    out = {}
++    for column in PHYSICAL_COLUMNS:
++        values = frame[column].to_numpy(dtype=float) if column in frame else np.array([])
++        finite = np.isfinite(values)
++        out[column] = {
++            "existe_na_gravacao": bool(finite.any()),
++            "preenchimento": round(float(finite.mean()), 4) if values.size else 0.0,
++        }
++    return out
++
++
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("--base", type=Path, required=True)
++    parser.add_argument("--saida", type=Path, default=config.artifacts_root() / "canais" / "checagens_store_m0.json")
++    args = parser.parse_args(argv)
++
++    new = load_store_v2()
++    base = load_store_v2(args.base)
++    meta = store_v2_meta()
++    sessions = group_sessions({sid: p for sid, p in (meta.get("periodos_das_gravacoes") or {}).items()})
++    laps = new.laps.assign(sessao=new.laps["session_id"].map(sessions))
++    by_session = {key: laps.loc[laps["sessao"] == key, "lap_id"].tolist() for key in (CHECKED_SESSION, SEPARATE_SESSION)}
++
++    result: Dict[str, object] = {"esquema": meta.get("esquema"), "nada_muda": unchanged(new, base)}
++    checked = fill(new, by_session[CHECKED_SESSION])
++    existing = {c: v for c, v in checked.items() if v["existe_na_gravacao"]}
++    result["preenchimento"] = {
++        "checagem": f"canais novos com pelo menos {FILL_LIMIT:.0%} preenchidos na sessao {CHECKED_SESSION}",
++        "voltas": len(by_session[CHECKED_SESSION]),
++        "canais": checked,
++        "abaixo_do_limite": [c for c, v in existing.items() if v["preenchimento"] < FILL_LIMIT],
++        "passou": bool(existing) and all(v["preenchimento"] >= FILL_LIMIT for v in existing.values()),
++    }
++    result[f"sessao_{SEPARATE_SESSION}_a_parte"] = {"voltas": len(by_session[SEPARATE_SESSION]),
++                                                    "canais": fill(new, by_session[SEPARATE_SESSION])}
++    result["store_integro"] = {"checagem": "checagens do pedido 16", "aprovado": bool(meta.get("aprovado")),
++                               "passou": bool(meta.get("aprovado"))}
++    result["canais_por_volta"] = {"voltas_com_algum_canal_novo": sum(1 for v in (meta.get("canais_por_volta") or {}).values() if v)}
++    args.saida.parent.mkdir(parents=True, exist_ok=True)
++    args.saida.write_text(json.dumps(result, indent=1, ensure_ascii=False), encoding="utf-8")
++
++    for key in ("nada_muda", "preenchimento", "store_integro"):
++        print(f"[{'ok' if result[key]['passou'] else 'FALHOU'}] {result[key]['checagem']}")
++    if result["nada_muda"]["colunas_mudadas"] or result["nada_muda"]["colunas_ausentes"]:
++        print(f"   colunas mudadas: {result['nada_muda']['colunas_mudadas']}  ausentes: {result['nada_muda']['colunas_ausentes']}")
++    for column, value in checked.items():
++        print(f"   {CHECKED_SESSION} {column:20s} existe={value['existe_na_gravacao']}  {value['preenchimento']:.3f}")
++    print(f"-> {args.saida}")
++    if not result["nada_muda"]["passou"]:
++        print("PARADO: uma coluna antiga mudou (ou as voltas mudaram).")
++        return 2
++    return 0 if all(result[k]["passou"] for k in ("preenchimento", "store_integro")) else 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/ml/scripts/inventario_canais.py b/backend/ml/scripts/inventario_canais.py
+new file mode 100644
+index 00000000..43138a78
+--- /dev/null
++++ b/backend/ml/scripts/inventario_canais.py
+@@ -0,0 +1,185 @@
++"""Inventario dos canais fisicos nas gravacoes (pedido 18, Parte B; ADR 0017, M0).
++
++    python -m ml.scripts.inventario_canais [--sessoes 2026-10-04 2026-10-05] [--saida ARQUIVO]
++
++Para cada campo da lista do pedido 18 (pneus, freios, movimento, suspensao,
++comandos), nas gravacoes das sessoes dadas e separado por app (o de
++desenvolvimento grava em `data/recordings`; o instalado, em `%APPDATA%`):
++se existe na amostra gravada, a fracao de amostras preenchidas, a faixa
++(p1, p50, p99) e a unidade provavel. As sessoes seguem a regra da emenda de
++05/10 (`evolution.group_sessions`), sobre o inventario rotulado.
++
++Um campo que o adaptador le da memoria compartilhada mas nao grava aparece
++como `gravado: false`, com a nota de onde ele esta na estrutura.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++from pathlib import Path
++from typing import Dict, List, Optional
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
++
++import numpy as np  # noqa: E402
++import pandas as pd  # noqa: E402
++
++from ml import config  # noqa: E402
++from ml.comparison.evolution import group_sessions  # noqa: E402
++from ml.data.origin import recording_folder  # noqa: E402
++from ml.data.recordings import list_all_sessions  # noqa: E402
++from ml.data.store_v2 import default_inventory_path, recording_periods  # noqa: E402
++
++# (grupo, campo, caminho na amostra gravada ou None, unidade provavel, nota)
++FIELDS = (
++    ("pneus", "tyreCoreTemperature", "carPhysics.tyres.tyreCoreTemperature", "°C", ""),
++    ("pneus", "tyreTempI", None, "°C", "temperatura interna; lida pelo adaptador, nao gravada"),
++    ("pneus", "tyreTempM", None, "°C", "temperatura central; lida pelo adaptador, nao gravada"),
++    ("pneus", "tyreTempO", None, "°C", "temperatura externa; lida pelo adaptador, nao gravada"),
++    ("pneus", "tyrePressure", "carPhysics.tyres.tyrePressure", "psi", "wheelsPressure na memoria"),
++    ("pneus", "tyreWear", "carPhysics.tyres.tyreWear", "% (100 = novo)", ""),
++    ("pneus", "wheelSlip", "carPhysics.tyres.wheelSlip", "adimensional (escorregamento do jogo)", ""),
++    ("pneus", "wheelLoad", "carPhysics.tyres.wheelLoad", "N", ""),
++    ("freios", "brakeTemp", None, "°C",
++     "existe na memoria; o adaptador le no deslocamento errado (le brakeBias e localVelocity) e nao grava"),
++    ("freios", "brakeBias", None, "fracao na dianteira",
++     "existe na memoria; o adaptador nao declara no lugar certo e nao grava"),
++    ("movimento", "localVelocity", None, "m/s (x lateral, y vertical, z longitudinal)",
++     "existe na memoria; o adaptador nao declara no lugar certo e nao grava"),
++    ("movimento", "velocity", "carPhysics.motion.velocity", "m/s, eixos do mundo", "nao e a velocidade local do carro"),
++    ("movimento", "localAngularVel", None, "rad/s (y = guinada)", "lida pelo adaptador, nao gravada"),
++    ("movimento", "accG", "carPhysics.motion.accG", "g", ""),
++    ("movimento", "heading", "heading", "rad", ""),
++    ("suspensao", "suspensionTravel", "carPhysics.suspension.suspensionTravel", "m", ""),
++    ("suspensao", "rideHeight", "carPhysics.suspension.rideHeight", "m (dianteira, traseira)", ""),
++    ("comandos", "steerAngle", "carPhysics.controls.steerAngle", "sem unidade documentada (ver o relatorio do volante)", ""),
++    ("comandos", "throttle", "carPhysics.controls.throttle", "0 a 1", ""),
++    ("comandos", "brake", "carPhysics.controls.brake", "0 a 1", ""),
++    ("comandos", "clutch", "carPhysics.controls.clutch", "0 a 1",
++     "o adaptador le alem do fim da estrutura do AC1: o valor gravado e sempre 0"),
++    ("comandos", "gear", "carPhysics.controls.gear", "marcha (jogo: 0 = re, 1 = neutro)", ""),
++)
++
++
++def _get(sample: Dict, path: str):
++    value = sample
++    for key in path.split("."):
++        if not isinstance(value, dict):
++            return None
++        value = value.get(key)
++    return value
++
++
++def _flatten(value) -> List[Optional[float]]:
++    if isinstance(value, dict):
++        return [_number(v) for v in value.values()]
++    if isinstance(value, (list, tuple)):
++        return [_number(v) for v in value]
++    return [_number(value)]
++
++
++def _number(value) -> Optional[float]:
++    if value is None or isinstance(value, bool):
++        return float(value) if isinstance(value, bool) else None
++    try:
++        number = float(value)
++    except (TypeError, ValueError):
++        return None
++    return number if np.isfinite(number) else None
++
++
++def scan_recording(path: Path, step: int = 1) -> Dict[str, Dict[str, object]]:
++    """Le um player.jsonl e junta, por campo gravado, os valores e quantas amostras tinham o campo."""
++    values: Dict[str, List[List[Optional[float]]]] = {f: [] for _, f, p, _, _ in FIELDS if p}
++    present: Dict[str, int] = {f: 0 for f in values}
++    total = 0
++    with path.open("r", encoding="utf-8", errors="replace") as handle:
++        for index, line in enumerate(handle):
++            if index % step:
++                continue
++            try:
++                sample = json.loads(line).get("sample") or {}
++            except json.JSONDecodeError:
++                continue
++            total += 1
++            for _, name, field_path, _, _ in FIELDS:
++                if not field_path:
++                    continue
++                raw = _get(sample, field_path)
++                if raw is None:
++                    continue
++                present[name] += 1
++                values[name].append(_flatten(raw))
++    return {"amostras": total, "presentes": present, "valores": values}
++
++
++def summarize(scans: List[Dict[str, object]]) -> Dict[str, object]:
++    total = sum(s["amostras"] for s in scans)
++    out: Dict[str, object] = {"amostras": total, "campos": {}}
++    for group, name, field_path, unit, note in FIELDS:
++        entry: Dict[str, object] = {"grupo": group, "unidade_provavel": unit, "nota": note or None,
++                                    "gravado": bool(field_path), "caminho": field_path}
++        if field_path:
++            rows = [row for s in scans for row in s["valores"][name]]
++            present = sum(s["presentes"][name] for s in scans)
++            width = max((len(r) for r in rows), default=0)
++            matrix = np.array([r + [None] * (width - len(r)) for r in rows], dtype=float) if rows else np.empty((0, 0))
++            filled = np.isfinite(matrix).all(axis=1) if matrix.size else np.array([], dtype=bool)
++            entry["existe"] = present > 0
++            entry["componentes"] = width
++            entry["fracao_preenchida"] = round(float(filled.sum()) / total, 4) if total else 0.0
++            finite = matrix[np.isfinite(matrix)] if matrix.size else np.array([])
++            if finite.size:
++                entry["faixa"] = {"p1": round(float(np.percentile(finite, 1)), 4),
++                                  "p50": round(float(np.percentile(finite, 50)), 4),
++                                  "p99": round(float(np.percentile(finite, 99)), 4)}
++                entry["constante"] = bool(np.nanmin(finite) == np.nanmax(finite))
++                if width > 1:
++                    entry["p50_por_componente"] = [round(float(np.nanmedian(matrix[:, k])), 4) for k in range(width)]
++        else:
++            entry["existe"] = False
++        out["campos"][name] = entry
++    return out
++
++
++def session_recordings(sessions: List[str]) -> Dict[str, List[str]]:
++    inventory = pd.read_parquet(default_inventory_path())
++    october = sorted(i for i in inventory["session_id"].unique() if str(i) >= "2026-10-01")
++    mapping = group_sessions(recording_periods(inventory, october))
++    return {key: sorted(r for r, k in mapping.items() if k == key) for key in sessions}
++
++
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("--sessoes", nargs="*", default=["2026-10-04", "2026-10-05"])
++    parser.add_argument("--saida", type=Path, default=config.artifacts_root() / "canais" / "inventario_canais.json")
++    args = parser.parse_args(argv)
++    available = {s.session_id: s for s in list_all_sessions()}
++    out: Dict[str, object] = {"sessoes": {}}
++    for key, recordings in session_recordings(args.sessoes).items():
++        by_app: Dict[str, List[str]] = {}
++        for rid in recordings:
++            by_app.setdefault(recording_folder(available[rid].directory), []).append(rid)
++        out["sessoes"][key] = {}
++        for app, rids in sorted(by_app.items()):
++            scans = [scan_recording(available[rid].player_stream) for rid in rids]
++            summary = summarize(scans)
++            summary["gravacoes"] = rids
++            out["sessoes"][key][app] = summary
++            print(f"{key} / {app}: {len(rids)} gravacoes, {summary['amostras']} amostras")
++            for name, entry in summary["campos"].items():
++                if entry["existe"]:
++                    print(f"   {name:20s} {entry['fracao_preenchida']:.3f}  {entry.get('faixa')}  {entry['unidade_provavel']}"
++                          f"{'  CONSTANTE' if entry.get('constante') else ''}")
++                else:
++                    print(f"   {name:20s} nao gravado: {entry['nota']}")
++    args.saida.parent.mkdir(parents=True, exist_ok=True)
++    args.saida.write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
++    print(f"-> {args.saida}")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/ml/scripts/relatorio_volante.py b/backend/ml/scripts/relatorio_volante.py
+new file mode 100644
+index 00000000..54a2bc7f
+--- /dev/null
++++ b/backend/ml/scripts/relatorio_volante.py
+@@ -0,0 +1,126 @@
++"""A unidade do volante gravado (pedido 18, Parte B3; ADR 0017, M0).
++
++    python -m ml.scripts.relatorio_volante [--saida ARQUIVO]
++
++O `steerAngle` gravado nao tem unidade documentada. Relata, do store v2:
++
++* a faixa observada nas voltas do piloto e nas da IA, por sessao e app;
++* uma estimativa empirica: abaixo de 80 km/h, nas curvas mais fechadas (raio
++  minimo abaixo de 30 m), a razao entre o volante e a curvatura da trajetoria,
++  `|volante| / |kappa|`, com `kappa = a_lat / v^2` (aceleracao lateral medida e
++  velocidade). So pontos com |a_lat| >= 0,3 g, e com o volante e a curvatura
++  na relacao de sinal que domina (medido: volante positivo com a_lat
++  negativa, ou seja, convencoes de sinal opostas).
++
++Se o volante fosse o angulo das rodas em radianos, a razao ficaria perto do
++entre-eixos do carro (2,5 a 3 m num formula). Se fosse o angulo do volante em
++radianos, perto do entre-eixos vezes a relacao de direcao (dezenas). Se fosse
++uma fracao do curso do volante, mudaria com o ajuste de rotacao do volante.
++Nada e adotado aqui.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++from pathlib import Path
++from typing import Dict, List
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
++
++import numpy as np  # noqa: E402
++
++from ml import config  # noqa: E402
++from ml.comparison.evolution import group_sessions  # noqa: E402
++from ml.comparison.lap_vs_reference import _window  # noqa: E402
++from ml.data.store_v2 import load_store_v2, store_v2_meta  # noqa: E402
++from ml.track.corners import detect_corners  # noqa: E402
++from ml.track.geometry import load_geometry  # noqa: E402
++
++G = 9.80665
++MAX_SPEED_KMH = 80.0
++MIN_LATERAL_G = 0.3
++TIGHT_RADIUS_M = 30.0
++
++
++def _stats(values: np.ndarray, digits: int = 4) -> Dict[str, float]:
++    values = np.asarray(values, dtype=float)
++    values = values[np.isfinite(values)]
++    if values.size == 0:
++        return {"n": 0}
++    p1, p25, p50, p75, p99 = np.percentile(values, [1, 25, 50, 75, 99])
++    return {"n": int(values.size), "p1": round(float(p1), digits), "p25": round(float(p25), digits),
++            "p50": round(float(p50), digits), "p75": round(float(p75), digits), "p99": round(float(p99), digits),
++            "max_abs": round(float(np.max(np.abs(values))), digits)}
++
++
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("--saida", type=Path, default=config.artifacts_root() / "canais" / "relatorio_volante.json")
++    args = parser.parse_args(argv)
++    track = load_geometry()
++    store = load_store_v2(track=track)
++    meta = store_v2_meta()
++    sessions = group_sessions(meta.get("periodos_das_gravacoes") or {})
++    laps = store.laps.assign(sessao=store.laps["session_id"].map(sessions))
++    corners = [c for c in detect_corners(track) if c.min_radius_m < TIGHT_RADIUS_M]
++    inside = np.zeros(track.size, dtype=bool)
++    for corner in corners:
++        inside[_window(track, corner.start_s, corner.end_s)] = True
++    column = "steer_angle" if "steer_angle" in store.frame.columns else "steering"
++
++    groups: Dict[str, List[str]] = {}
++    for _, row in laps.iterrows():
++        if row["sessao"] in ("2026-10-04", "2026-10-05") and row["origem"] in ("humano", "ia"):
++            groups.setdefault(f"{row['sessao']} / {row['origem']} / {row['pasta']}", []).append(row["lap_id"])
++
++    out: Dict[str, object] = {"coluna": column, "curvas_fechadas": [c.label for c in corners],
++                              "limites": {"velocidade_max_kmh": MAX_SPEED_KMH, "a_lat_min_g": MIN_LATERAL_G,
++                                          "raio_minimo_abaixo_de_m": TIGHT_RADIUS_M},
++                              "grupos": {}}
++    for name, lap_ids in sorted(groups.items()):
++        steer_all, ratios, per_lap = [], [], []
++        for lap_id in lap_ids:
++            grid = store.lap(lap_id)
++            steer = grid[column].to_numpy(dtype=float)
++            speed = grid["speed_kmh"].to_numpy(dtype=float) / 3.6
++            lat_g = grid["lateral_g"].to_numpy(dtype=float)
++            steer_all.append(steer)
++            with np.errstate(divide="ignore", invalid="ignore"):
++                kappa = lat_g * G / speed ** 2
++            use = (inside & (speed * 3.6 < MAX_SPEED_KMH) & (np.abs(lat_g) >= MIN_LATERAL_G)
++                   & np.isfinite(steer) & np.isfinite(kappa) & (np.abs(steer) > 1e-4))
++            opposite = np.sign(steer) == -np.sign(kappa)
++            same_side = opposite if (use & opposite).sum() >= (use & ~opposite).sum() else ~opposite
++            r = np.abs(steer[use & same_side]) / np.abs(kappa[use & same_side])
++            ratios.append(r)
++            if r.size:
++                per_lap.append(float(np.median(r)))
++            out.setdefault("_sinais", {}).setdefault(name, []).append(
++                {"volta": lap_id, "pontos": int(use.sum()), "sinais_opostos": int((use & opposite).sum())})
++        steer_values = np.concatenate(steer_all) if steer_all else np.array([])
++        ratio_values = np.concatenate(ratios) if ratios else np.array([])
++        out["grupos"][name] = {
++            "voltas": len(lap_ids),
++            "faixa_do_volante": _stats(steer_values),
++            "razao_volante_curvatura_m": _stats(ratio_values, 3),
++            "mediana_por_volta_m": _stats(np.array(per_lap), 3),
++        }
++    signs = out.pop("_sinais", {})
++    out["pontos_por_grupo"] = {k: {"pontos": sum(v["pontos"] for v in rows),
++                                   "sinais_opostos": sum(v["sinais_opostos"] for v in rows)}
++                               for k, rows in signs.items()}
++    args.saida.parent.mkdir(parents=True, exist_ok=True)
++    args.saida.write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
++    for name, group in out["grupos"].items():
++        f, r = group["faixa_do_volante"], group["razao_volante_curvatura_m"]
++        print(f"{name}: {group['voltas']} voltas | volante p1 {f.get('p1')} p50 {f.get('p50')} p99 {f.get('p99')} "
++              f"max {f.get('max_abs')} | razao p25 {r.get('p25')} p50 {r.get('p50')} p75 {r.get('p75')} (n {r.get('n')})")
++    print(f"pontos: {out['pontos_por_grupo']}")
++    print(f"-> {args.saida}")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/tests/test_canais_fisicos.py b/backend/tests/test_canais_fisicos.py
+new file mode 100644
+index 00000000..e4b63cea
+--- /dev/null
++++ b/backend/tests/test_canais_fisicos.py
+@@ -0,0 +1,143 @@
++"""Pedido 18 (ADR 0017, M0): a pagina de fisica alinhada com o AC1 e os canais novos gravados.
++
++O retrato salvo da memoria compartilhada (data/debug/ac_shared_memory_full_inventory.json,
++lido com a estrutura antiga) e o que mostra o desalinhamento: os mesmos bytes,
++lidos com a estrutura corrigida, dao freios a 18,19 °C, a embreagem em 1,0, a
++distribuicao de frenagem em 0,55 e uma velocidade longitudinal igual a speedKmh / 3,6.
++"""
++
++from __future__ import annotations
++
++import ctypes
++import sys
++import unittest
++from ctypes import c_float, c_int
++from pathlib import Path
++
++BACKEND = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(BACKEND))
++
++from core.assetto_adapter import AssettoAdapter, SPageFilePhysics  # noqa: E402
++from core.car_physics import build_player_car_physics  # noqa: E402
++from core.telemetry.telemetry_models import TelemetrySample  # noqa: E402
++
++# A estrutura como estava antes do pedido 18, do kersCurrentKJ em diante.
++_PREFIX = [field for field in SPageFilePhysics._fields_ if field[0] != "kersCurrentKJ"]
++_PREFIX = _PREFIX[: [name for name, _ in _PREFIX].index("drsAvailable")]
++OLD_SUFFIX = [
++    ("kersCurrentVK", c_float),
++    ("visualTyreDamage", c_float * 4),
++    ("elecSystemsOverlap", c_int),
++    ("ersFuelDiff", c_float),
++    ("diffPa", c_int),
++    ("tyreTempI", c_float * 4),
++    ("tyreTempM", c_float * 4),
++    ("tyreTempO", c_float * 4),
++    ("isAIControlled", c_int),
++    ("tyreContactPoint", c_float * 4 * 3),
++    ("tyreContactNormal", c_float * 4 * 3),
++    ("tyreContactHeading", c_float * 4 * 3),
++    ("brakeTemp", c_float * 4),
++    ("clutch", c_float),
++]
++
++
++class OldPhysics(ctypes.Structure):
++    _pack_ = 4
++    _fields_ = _PREFIX + OLD_SUFFIX
++
++
++def snapshot_bytes() -> bytes:
++    """Os valores do retrato salvo, escritos na estrutura antiga."""
++    old = OldPhysics()
++    old.speedKmh = 192.5050811767578
++    old.visualTyreDamage[:] = [0.0, 0.0, 18.190166473388672, 18.190166473388672]
++    old.elecSystemsOverlap = 1100055926
++    old.ersFuelDiff = 18.190166473388672
++    old.diffPa = 1065353216
++    old.tyreTempI[:] = [73.59599304199219, 98.47428894042969, 78.94895935058594, 92.21526336669922]
++    old.isAIControlled = 1
++    old.brakeTemp[:] = [0.550000011920929, -0.6903559565544128, -0.39052021503448486, 53.46775436401367]
++    old.localAngularVel[:] = [-0.03680453449487686, 0.14621564745903015, -0.0457758791744709]
++    return bytes(old) + bytes(max(0, ctypes.sizeof(SPageFilePhysics) - ctypes.sizeof(OldPhysics)))
++
++
++class PhysicsPageTest(unittest.TestCase):
++    def setUp(self):
++        self.page = SPageFilePhysics.from_buffer_copy(snapshot_bytes()[: ctypes.sizeof(SPageFilePhysics)])
++
++    def test_the_snapshot_reads_as_assetto_corsa_1(self):
++        self.assertTrue(all(abs(v - 18.1902) < 1e-3 for v in self.page.brakeTemp))
++        self.assertAlmostEqual(self.page.clutch, 1.0)
++        self.assertAlmostEqual(self.page.brakeBias, 0.55, places=5)
++        # A norma da velocidade no referencial do carro e a velocidade do carro.
++        norm = sum(v * v for v in self.page.localVelocity) ** 0.5
++        self.assertAlmostEqual(norm * 3.6, self.page.speedKmh, places=2)
++        self.assertEqual(self.page.isAIControlled, 1)
++        self.assertAlmostEqual(self.page.tyreTempI[1], 98.4743, places=3)
++
++    def test_the_fields_before_the_fix_did_not_move(self):
++        for name in ("speedKmh", "tyreCoreTemp", "wheelLoad", "heading", "rideHeight", "localAngularVel",
++                     "tyreTempI", "tyreTempM", "tyreTempO", "isAIControlled"):
++            self.assertEqual(getattr(SPageFilePhysics, name).offset, getattr(OldPhysics, name).offset, name)
++
++
++class RecordedChannelsTest(unittest.TestCase):
++    def frame(self):
++        adapter = AssettoAdapter()
++        adapter.physics = SPageFilePhysics.from_buffer_copy(snapshot_bytes()[: ctypes.sizeof(SPageFilePhysics)])
++        adapter.physics.tyreTempM[:] = [80.0, 81.0, 82.0, 83.0]
++        adapter.physics.tyreTempO[:] = [70.0, 71.0, 72.0, 73.0]
++        return adapter._normalize()
++
++    def test_the_adapter_exports_the_new_channels(self):
++        frame = self.frame()
++        self.assertEqual(len(frame["tyre_temp_inner"]), 4)
++        self.assertAlmostEqual(frame["brake_temp"][0], 18.1902, places=3)
++        self.assertAlmostEqual(frame["brake_bias"], 0.55, places=5)
++        self.assertAlmostEqual(frame["local_velocity"]["z"], 53.4677, places=3)
++        self.assertAlmostEqual(frame["local_angular_velocity"]["y"], 0.1462, places=3)
++        self.assertAlmostEqual(frame["clutch"], 1.0)
++
++    def test_the_recorded_block_carries_them(self):
++        frame = self.frame()
++        sample = TelemetrySample.from_dict({**frame, "timestamp": 1.0, "worldPositionX": 0.0,
++                                            "worldPositionY": 0.0, "worldPositionZ": 0.0})
++        physics = build_player_car_physics(sample, [sample])
++        self.assertEqual(physics["tyres"]["tyreTempMiddle"], [80.0, 81.0, 82.0, 83.0])
++        self.assertEqual(physics["tyres"]["tyreTempOuter"], [70.0, 71.0, 72.0, 73.0])
++        self.assertAlmostEqual(physics["brakes"]["brakeTemp"][3], 18.1902, places=3)
++        self.assertAlmostEqual(physics["brakes"]["brakeBias"], 0.55, places=5)
++        self.assertAlmostEqual(physics["motion"]["localVelocity"]["z"], 53.4677, places=3)
++        self.assertAlmostEqual(physics["motion"]["localAngularVelocity"]["y"], 0.1462, places=3)
++
++    def test_a_source_without_them_records_none(self):
++        sample = TelemetrySample.from_dict({"timestamp": 1.0, "worldPositionX": 0.0, "worldPositionY": 0.0,
++                                            "worldPositionZ": 0.0})
++        physics = build_player_car_physics(sample, [sample])
++        self.assertEqual(physics["brakes"]["brakeTemp"], [None, None, None, None])
++        self.assertIsNone(physics["motion"]["localVelocity"]["z"])
++        self.assertEqual(physics["tyres"]["tyreTempInner"], [None, None, None, None])
++
++
++class ReaderTest(unittest.TestCase):
++    def test_the_shared_memory_reader_carries_the_new_channels_to_the_recorded_block(self):
++        """O caminho real: adaptador -> leitor -> amostra -> bloco gravado."""
++        from core.telemetry.telemetry_reader_impl import ACSharedMemoryReader
++
++        reader = ACSharedMemoryReader()
++        frame = RecordedChannelsTest().frame()
++        frame.update({"x": 120.0, "z": -40.0, "packet_id": 7})
++        reader.connect = lambda: True
++        reader.adapter.poll = lambda: frame
++        sample = reader.read_sample()
++        self.assertIsNotNone(sample)
++        physics = build_player_car_physics(sample, [sample])
++        self.assertAlmostEqual(physics["brakes"]["brakeBias"], 0.55, places=5)
++        self.assertEqual(physics["tyres"]["tyreTempOuter"], [70.0, 71.0, 72.0, 73.0])
++        self.assertAlmostEqual(physics["motion"]["localAngularVelocity"]["y"], 0.1462, places=3)
++        self.assertAlmostEqual(physics["controls"]["clutch"], 1.0)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/backend/tests/test_tecnica_e_canais_store.py b/backend/tests/test_tecnica_e_canais_store.py
+new file mode 100644
+index 00000000..7acaf4ef
+--- /dev/null
++++ b/backend/tests/test_tecnica_e_canais_store.py
+@@ -0,0 +1,187 @@
++"""Pedido 18, Partes C e D: canais fisicos no store v2 e tecnica de pilotagem.
++
++Tudo sintetico, numa pista circular.
++"""
++
++from __future__ import annotations
++
++import dataclasses
++import json
++import sys
++import tempfile
++import unittest
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++BACKEND = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(BACKEND))
++sys.path.insert(0, str(BACKEND / "tests"))
++
++from ml.comparison import evolution as ev  # noqa: E402
++from ml.data.lap_store import StoredLaps  # noqa: E402
++from ml.data.recordings import Session  # noqa: E402
++from ml.data.store_v2 import PHYSICAL_COLUMNS, build_store_v2  # noqa: E402
++from ml.scripts.checar_canais_fisicos import unchanged  # noqa: E402
++from ml.track.corners import Corner  # noqa: E402
++from test_lap_origin import circular_track  # noqa: E402
++
++SPEED = 40.0
++HZ = 60.0
++
++
++def write_session(directory: Path, track, laps):
++    """player.jsonl com voltas (numero, s_inicio, s_fim, com_pneus)."""
++    lines = []
++    clock = 1_790_000_000.0
++    for number, start, end, tyres in laps:
++        for value in np.arange(start, end, SPEED / HZ):
++            theta = np.mod(value, track.length) / 200.0
++            clock += 1.0 / HZ
++            physics = {"controls": {"throttle": 1.0, "brake": 0.0, "steerAngle": 0.12}}
++            if tyres:
++                physics["tyres"] = {"tyreCoreTemperature": [80.0, 81.0, 90.0, 91.0], "wheelLoad": [2000.0] * 4,
++                                    "wheelSlip": [0.1] * 4, "tyrePressure": [20.0] * 4}
++            lines.append(json.dumps({"timestamp": clock * 1000.0, "track": "vhe_interlagos", "sample": {
++                "lap": number, "lap_number": number, "lap_time": float(np.mod(value, track.length) / SPEED),
++                "world_x": 200.0 * np.cos(theta), "world_z": 200.0 * np.sin(theta), "speedKmh": SPEED * 3.6,
++                "carPhysics": physics,
++            }}))
++    directory.mkdir(parents=True)
++    (directory / "player.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
++
++
++class StoreChannelsTest(unittest.TestCase):
++    def build(self):
++        track = dataclasses.replace(circular_track(), geometry_id="circulo-1")
++        root = Path(tempfile.mkdtemp())
++        sid = "2026-10-05_20-00-00_vhe_interlagos"
++        L = track.length
++        write_session(root / sid, track, [(1, 0.4, L - 0.3, True), (2, L + 0.4, 2 * L - 0.3, False),
++                                          (3, 2 * L + 0.4, 2 * L + 50.0, False)])
++        inventory = pd.DataFrame({
++            "lap_id": [f"{sid}#0000", f"{sid}#0001"], "session_id": sid, "sequence": [0, 1], "valid": True,
++            "duplicada_de": [None, None], "geometry_id": track.geometry_id, "origem": "humano",
++            "equipamento": "atual", "pasta": "repositorio", "relogio_verificado": True, "relogio_suspeito": False,
++        })
++        session = Session(session_id=sid, directory=root / sid, track="vhe_interlagos")
++        return sid, build_store_v2(inventory, track=track, sessions=[session])
++
++    def test_the_new_columns_exist_and_a_lap_without_the_field_stays_empty(self):
++        sid, (store, details) = self.build()
++        for column in PHYSICAL_COLUMNS:
++            self.assertIn(column, store.frame.columns)
++        with_tyres, without = store.lap(f"{sid}#0000"), store.lap(f"{sid}#0001")
++        self.assertTrue(np.allclose(with_tyres["tyre_core_temp_rl"], 90.0))
++        self.assertTrue(np.isnan(without["tyre_core_temp_rl"]).all())
++        self.assertTrue(np.isnan(with_tyres["brake_temp_fl"]).all())        # campo que a gravacao nao tem
++        self.assertIn("tyre_core_temp_fl", details.channels_by_lap[f"{sid}#0000"])
++        self.assertNotIn("tyre_core_temp_fl", details.channels_by_lap[f"{sid}#0001"])
++        self.assertIn("steer_angle", details.channels_by_lap[f"{sid}#0001"])
++        self.assertNotIn("yaw_rate", details.channels_by_lap[f"{sid}#0000"])
++
++    def test_the_old_columns_do_not_change(self):
++        _, (store, _) = self.build()
++        old_columns = [c for c in store.frame.columns if c not in PHYSICAL_COLUMNS]
++        base = StoredLaps(frame=store.frame[old_columns].copy(), laps=store.laps.copy(),
++                          grid_size=store.grid_size, track_length=store.track_length)
++        self.assertTrue(unchanged(store, base)["passou"])
++        tampered = store.frame.copy()
++        tampered.loc[tampered.index[5], "speed_kmh"] += 0.001
++        moved = StoredLaps(frame=tampered, laps=store.laps.copy(), grid_size=store.grid_size,
++                           track_length=store.track_length)
++        result = unchanged(moved, base)
++        self.assertFalse(result["passou"])
++        self.assertEqual(result["colunas_mudadas"], ["speed_kmh"])
++        fewer = StoredLaps(frame=store.frame[store.frame["lap_id"] != store.lap_ids[0]], laps=store.laps.iloc[1:],
++                           grid_size=store.grid_size, track_length=store.track_length)
++        self.assertFalse(unchanged(fewer, base)["passou"])
++
++
++def corners_and_segments(track):
++    corners = [Corner(i, a, (a + b) / 2, b, 1, 50.0, 50.0, b - a)
++               for i, (a, b) in enumerate([(100.0, 200.0), (500.0, 600.0), (1000.0, 1100.0)])]
++    return corners, ev.corner_segments(track, corners)
++
++
++def lap_frame(track, *, brake_from=None, brake_to=None, steer=None, lat=0.0, lon=0.0):
++    brake = np.zeros(track.size)
++    if brake_from is not None:
++        brake[(track.s >= brake_from) & (track.s < brake_to)] = 0.8
++    return pd.DataFrame({
++        "brake": brake, "steer_angle": steer if steer is not None else np.zeros(track.size),
++        "lateral_g": np.full(track.size, lat), "longitudinal_g": np.full(track.size, lon),
++    })
++
++
++class TechniqueTest(unittest.TestCase):
++    def setUp(self):
++        self.track = circular_track()
++        self.corners, self.segments = corners_and_segments(self.track)
++
++    def test_combined_acceleration(self):
++        frame = lap_frame(self.track, lat=1.2, lon=-0.9)
++        self.assertAlmostEqual(ev.grip_usage(frame, self.track, self.segments[1]), 1.5, places=6)
++        self.assertIsNone(ev.grip_usage(frame.drop(columns=["lateral_g"]), self.track, self.segments[1]))
++
++    def test_brake_and_steer_together(self):
++        # Curva 2: apice anterior 150 m, apice 550 m, curva de 500 a 600 m.
++        steer = np.zeros(self.track.size)
++        steer[(self.track.s >= 480.0) & (self.track.s < 600.0)] = 0.4      # maior volante na curva: 0,4
++        steer[(self.track.s >= 470.0) & (self.track.s < 480.0)] = 0.05     # abaixo de 25% de 0,4
++        frame = lap_frame(self.track, brake_from=460.0, brake_to=520.0, steer=steer)
++        meters = ev.brake_and_steer_m(frame, self.track, self.corners[0].apex_s, self.corners[1])
++        self.assertAlmostEqual(meters, 40.0, delta=2 * self.track.step)   # de 480 a 520 m
++        self.assertIsNone(ev.brake_and_steer_m(frame.drop(columns=["steer_angle"]), self.track,
++                                               self.corners[0].apex_s, self.corners[1]))
++
++    def test_chained_braking_starts_before_or_after_the_previous_apex(self):
++        previous_apex, apex = self.corners[0].apex_s, self.corners[1].apex_s     # 150 e 550 m
++        chained = lap_frame(self.track, brake_from=120.0, brake_to=520.0)["brake"].to_numpy()
++        separate = lap_frame(self.track, brake_from=300.0, brake_to=520.0)["brake"].to_numpy()
++        self.assertTrue(ev.chained_braking(chained, self.track, previous_apex, apex))
++        self.assertFalse(ev.chained_braking(separate, self.track, previous_apex, apex))
++        self.assertIsNone(ev.chained_braking(np.zeros(self.track.size), self.track, previous_apex, apex))
++
++    def test_tyre_temperature_means(self):
++        frame = pd.DataFrame({c: np.full(self.track.size, v) for c, v in
++                              zip(ev.TYRE_COLUMNS, (80.0, 82.0, 90.0, 92.0))})
++        frame.loc[0, "tyre_core_temp_fl"] = 60.0
++        temps = ev.tyre_temperatures(frame)
++        self.assertEqual(temps["media_s0_c"], 81.0)
++        self.assertAlmostEqual(temps["dianteira_c"], 81.0, delta=0.05)     # o ponto em s = 0 pesa pouco
++        self.assertEqual(temps["traseira_c"], 91.0)
++        self.assertIsNone(ev.tyre_temperatures(frame.drop(columns=["tyre_core_temp_rr"])))
++
++    def test_the_technique_block_does_not_change_the_rest_of_the_report(self):
++        from ml.track.microsectors import build_microsectors
++
++        track = self.track
++        sectors = build_microsectors(track)
++        ref = pd.DataFrame({"elapsed_s": track.s / SPEED, "speed_kmh": np.full(track.size, 144.0),
++                            "lateral": np.zeros(track.size), "brake": np.zeros(track.size),
++                            "lateral_g": np.ones(track.size), "longitudinal_g": np.zeros(track.size)})
++        grids, rows = {}, []
++        for i in range(6):
++            lap = ref.copy()
++            lap["elapsed_s"] = ref["elapsed_s"] * (1.0 + 0.01 * (i + 1))
++            lap_id = f"s#{i:04d}"
++            grids[lap_id] = lap
++            rows.append({"lap_id": lap_id, "session_id": "s", "sequence": i,
++                         "lap_time_s": track.length / SPEED * (1.0 + 0.01 * (i + 1))})
++        laps = pd.DataFrame(rows)
++        total = track.length / SPEED
++        before = ev.session_report("2026-10-05", laps, grids, ref, total, track, self.segments, sectors)
++        snapshot = json.dumps(before, sort_keys=True)
++        block = ev.technique_report(laps, grids, ref, track, self.segments)
++        after = ev.session_report("2026-10-05", laps, grids, ref, total, track, self.segments, sectors)
++        self.assertEqual(json.dumps(after, sort_keys=True), snapshot)
++        self.assertEqual(json.dumps(before, sort_keys=True), snapshot)
++        self.assertEqual([c["curva"] for c in block["curvas"]], [c["curva"] for c in after["curvas"]])
++        self.assertEqual(block["pneus"]["sem_canal"], 6)                  # sem as colunas de pneu
++        self.assertFalse(block["freios"]["canal"])
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/backend/tools/relatorio_evolucao.py b/backend/tools/relatorio_evolucao.py
+index 748ae991..9833cca9 100644
+--- a/backend/tools/relatorio_evolucao.py
++++ b/backend/tools/relatorio_evolucao.py
+@@ -119,6 +119,8 @@ def run(out_dir: Path, model_file: Path, store_root: Optional[Path] = None) -> D
+     for session, rows in sorted(laps.groupby("sessao")):
+         grids = {lap_id: store.lap(lap_id) for lap_id in rows["lap_id"]}
+         report = {**ev.session_report(session, rows, grids, ref_grid, ref_total, track, segments, sectors), **common}
++        # Pedido 18 (secao 1.7): descritivo; so le o store e nao mexe no resto do relatorio.
++        report["tecnica"] = ev.technique_report(rows, grids, ref_grid, track, segments)
+         path = out_dir / f"sessao_{session}.json"
+         path.write_text(json.dumps(report, indent=1, ensure_ascii=False), encoding="utf-8")
+         reports.append(report)
+diff --git a/docs/modelo_fisico_m0.md b/docs/modelo_fisico_m0.md
+new file mode 100644
+index 00000000..f63c4fda
+--- /dev/null
++++ b/docs/modelo_fisico_m0.md
+@@ -0,0 +1,181 @@
++# Modelo físico do carro, etapa M0 (pedido 18, ADR 0017)
++
++Branch: `etapa/canais-fisicos`, a partir de `develop`.
++
++## 1. Registrado antes de construir (Parte C)
++
++Esta seção foi commitada antes de o store v2 ser refeito com os canais físicos. Nada nela muda depois de olhar os resultados.
++
++### 1.1 As colunas novas do store v2
++
++As colunas novas são reamostradas na grade de 2 m como as outras: interpoladas linearmente ao longo da distância da própria volta. A ordem das rodas é a do jogo: FL (dianteira esquerda), FR, RL e RR.
++
++| coluna | de onde vem na amostra gravada | unidade |
++|---|---|---|
++| `tyre_core_temp_fl`, `_fr`, `_rl`, `_rr` | `carPhysics.tyres.tyreCoreTemperature` | °C |
++| `wheel_load_fl` … `_rr` | `carPhysics.tyres.wheelLoad` | N |
++| `wheel_slip_fl` … `_rr` | `carPhysics.tyres.wheelSlip` | adimensional, a medida do jogo |
++| `tyre_pressure_fl` … `_rr` | `carPhysics.tyres.tyrePressure` | psi |
++| `brake_temp_fl` … `_rr` | `carPhysics.brakes.brakeTemp` | °C; só nas gravações feitas depois do pedido 18 |
++| `steer_angle` | `carPhysics.controls.steerAngle`, bruto, sem o corte de ±1,5 da limpeza | sem unidade documentada (seção 3) |
++| `yaw_rate` | `carPhysics.motion.localAngularVelocity.y` | rad/s; só nas gravações novas |
++| `velocity_long`, `velocity_lat` | `carPhysics.motion.localVelocity.z` e `.x` | m/s; só nas gravações novas |
++
++- **As colunas que já existiam** continuam calculadas do mesmo jeito; a coluna `wheel_slip`, que é a média das 4 rodas, também fica.
++- **Volta sem o campo:** a coluna fica vazia (NaN). O meta lista, para cada volta, os canais novos que ela tem (`canais_por_volta`).
++- **O esquema** sobe para `2.1` no meta (`esquema`). O nome do arquivo continua `laps_grid_v2.parquet`.
++
++### 1.2 Checagens
++
++| checagem | passa quando |
++|---|---|
++| **Nada do que já existe muda** | O store tem as mesmas voltas do início desta etapa: as 585 do store refeito em 05/10 depois da anotação da sessão da noite (`data/ml/laps_grid_v2.parquet`, sha256 registrado no relatório). Também precisam ser iguais o `lap_id`, o `lap_time_s` e as colunas antigas, idênticas valor a valor (NaN igual a NaN). |
++| **Canais novos preenchidos** | Nas voltas da sessão `2026-10-04`, cada canal novo cujo campo existe na gravação tem pelo menos 95% dos pontos da grade preenchidos. A sessão `2026-10-05`, do app instalado, é relatada à parte. |
++| **Store íntegro** | As checagens do pedido 16 continuam passando: o período contra o cronômetro do jogo, nenhum box, nenhuma duplicata e uma geometria só. |
++
++**Se alguma coluna antiga mudar, o trabalho para aqui** e o relatório vai para o Eduardo, sem merge.
++
++### 1.3 Custo
++
++O relatório traz o tamanho do store e o tempo do `atualizar_coach`, antes e depois. Se o comando passar de 35 minutos, isso é relatado; o modo incremental continua sendo um pedido próprio.
++
++## 2. O que é gravado (Parte B)
++
++O inventário (`python -m ml.scripts.inventario_canais`) olhou as gravações das duas sessões:
++
++- **`2026-10-04`:** 7 gravações do app de desenvolvimento, 447.811 amostras.
++- **`2026-10-05`:** 1 gravação do app instalado, 142.459 amostras.
++
++O JSON completo está em `docs/handoff/2026-10-04_canais-fisicos_inventario.json`.
++
++| grupo | campo | gravado? | preenchido | faixa p1 / p50 / p99 (04/10) | unidade provável |
++|---|---|---|---:|---|---|
++| pneus | `tyreCoreTemperature[4]` | sim | 100% | 0,0 / 47,4 / 86,8 | °C |
++| pneus | temperatura interna, central e externa | **não** (lidas da memória, não gravadas) | — | — | °C |
++| pneus | `tyrePressure[4]` | sim | 100% | 13,0 / 18,2 / 22,1 | psi |
++| pneus | `tyreWear[4]` | sim | 100% | 99,94 / 100,0 / 100,0 | %, 100 = novo |
++| pneus | `wheelSlip[4]` | sim | 100% | 0,001 / 0,09 / 2,04 | adimensional (medida do jogo) |
++| pneus | `wheelLoad[4]` | sim | 100% | 16 / 2.108 / 5.605 | N |
++| freios | `brakeTemp[4]` | **não** | — | — | °C |
++| freios | distribuição (`brakeBias`) | **não** | — | — | fração na dianteira |
++| movimento | velocidades longitudinal e lateral (`localVelocity`) | **não** | — | — | m/s |
++| movimento | velocidade no mundo (`velocity`) | sim | 100% | −62,5 / 0,0 / 69,8 | m/s, eixos do mundo |
++| movimento | velocidade angular, guinada (`localAngularVel`) | **não** (lida, não gravada) | — | — | rad/s |
++| movimento | `accG[3]` | sim | 100% | −2,06 / 0,00 / 2,07 | g |
++| movimento | `heading` | sim | 100% | −2,99 / −0,23 / 3,03 | rad |
++| suspensão | `suspensionTravel[4]` | sim | 100% | 0,035 / 0,041 / 0,067 | m |
++| suspensão | `rideHeight[2]` | sim | 100% | −0,005 / 0,016 / 0,035 | m (dianteira, traseira) |
++| comandos | `steerAngle` | sim | 100% | −0,48 / 0,00 / 0,51 | sem unidade documentada (seção 3) |
++| comandos | acelerador e freio | sim | 100% | 0 / 0 / 1 | 0 a 1 |
++| comandos | embreagem | sim, **mas sempre 0** | 100% | 0 / 0 / 0 | 0 a 1 |
++| comandos | marcha | sim | 100% | 0 / 2 / 6 | marcha do jogo |
++
++- **O app instalado** grava os mesmos campos, menos o indicador de IA. A sessão de 05/10 tem as mesmas faixas, exceto o volante (seção 3).
++
++### A estrutura da memória compartilhada estava desalinhada
++
++Conferindo no código quais campos eram lidos e não gravados, apareceu um erro no adaptador (`core/assetto_adapter.py`):
++
++- **O que estava errado:** do `kersCurrentKJ` em diante, a estrutura da página de física seguia a ordem de outro simulador. O retrato salvo da memória compartilhada (`data/debug/ac_shared_memory_full_inventory.json`) mostra os efeitos:
++  - o `brakeTemp` do adaptador tinha 0,55 e uma velocidade cujo z é `speedKmh / 3,6`: era a `brakeBias` e a `localVelocity`;
++  - as temperaturas reais dos freios (18,19 °C) estavam em `visualTyreDamage` e em dois inteiros;
++  - o `diffPa` tinha os bits do float 1,0, que é a embreagem;
++  - o `clutch` era lido além do fim da página. **Por isso a embreagem gravada é 0 em todas as gravações.**
++- **O que estava certo:** as temperaturas interna, central e externa dos pneus e o `isAIControlled` caíam no lugar certo. O indicador de IA dos pedidos 12 a 17 continua valendo.
++- **A correção:** a estrutura agora segue a ordem do Assetto Corsa 1. Um teste lê os bytes do retrato com as duas estruturas.
++
++### O que entrou no gravador
++
++O gravador do repositório passa a gravar, no bloco `carPhysics`:
++
++- `tyres.tyreTempInner`, `tyreTempMiddle` e `tyreTempOuter`: as temperaturas da superfície do pneu;
++- `brakes.brakeTemp[4]` e `brakes.brakeBias`;
++- `motion.localVelocity`: x lateral, y vertical, z longitudinal, em m/s;
++- `motion.localAngularVelocity`, com a guinada no y, em rad/s;
++- e a embreagem certa.
++
++**Só as sessões gravadas depois deste pedido, com o app aberto a partir do repositório, terão esses campos.** O app instalado continua sem eles até ser reempacotado (backlog).
++
++## 3. A unidade do volante
++
++- **Arquivos do carro:** os dados do `rss_formula_rss_3_v6_2026` estão empacotados no `data.acd`, que é criptografado, e não existe pasta `data/` aberta. Pela restrição do pedido, não tentei abrir. O ângulo máximo e a relação de direção não vêm dos arquivos.
++- **Faixa observada nas voltas válidas** (`python -m ml.scripts.relatorio_volante`):
++
++| grupo | voltas | p1 | p50 | p99 | máximo \|valor\| |
++|---|---:|---:|---:|---:|---:|
++| 04/10, suas, app de desenvolvimento | 11 | −0,38 | −0,01 | 0,37 | 0,60 |
++| 04/10, IA | 13 | −0,44 | −0,01 | 0,53 | 0,72 |
++| 05/10, suas, app instalado | 7 | −0,40 | −0,01 | 0,39 | 0,64 |
++
++  Fora das voltas (box e manobras), a gravação de 05/10 chega a ±0,98.
++- **Estimativa empírica,** abaixo de 80 km/h nas curvas fechadas (raio mínimo abaixo de 30 m: C01, C02, C07, C10 e C12), com |a lateral| de 0,3 g ou mais. Usa a razão |volante| / |curvatura|, com a curvatura `a_lat / v²`.
++
++| grupo | pontos | razão p25 | p50 | p75 | mediana por volta (min a max) |
++|---|---:|---:|---:|---:|---|
++| 04/10, suas | 288 | 10,1 | 10,6 | 11,6 | 10,2 a 11,5 (10 voltas) |
++| 04/10, IA | 12 | 13,3 | 13,3 | 13,5 | 13,3 a 13,5 (3 voltas) |
++| 05/10, suas | 116 | 9,8 | 10,1 | 11,0 | 9,8 a 11,5 (6 voltas) |
++
++- **Sinal:** o volante positivo vem sempre com a aceleração lateral negativa (416 de 416 pontos). As convenções de sinal do volante e da aceleração lateral são opostas.
++- **O que a razão sugere,** sem nada adotado:
++  - **Ângulo da roda em radianos?** A razão ficaria perto do entre-eixos, cerca de 2,5 a 3 m. Ela é 3 a 4 vezes maior.
++  - **Ângulo do volante em radianos?** A razão ficaria perto do entre-eixos vezes a relação de direção, algumas dezenas.
++  - **Fração do curso do volante?** A razão seria o entre-eixos dividido pelo esterço máximo da roda. Com 10,6 e um entre-eixos de 2,8 m, a roda teria cerca de 0,26 rad (15°) no fim do curso.
++  - **IA contra você:** a IA dá mais volante para a mesma curvatura. Pode ser o carro escorregando mais na frente no limite, com mais ângulo de deriva, e não outra escala; ela passa pouco abaixo de 80 km/h, então só tem 12 pontos.
++- **Para fechar a unidade:** uma volta com a guinada gravada (`localAngularVelocity`, agora no gravador) dá a curvatura sem depender da aceleração lateral. Uma sessão com o ajuste de rotação do volante conhecido diria se o valor é uma fração.
++
++## 4. O que entrou no store e as checagens (Parte C)
++
++- **As colunas** da seção 1.1 entraram no `laps_grid_v2.parquet`, com o esquema `2.1` e os canais de cada volta no meta (`canais_por_volta`).
++
++| checagem | resultado |
++|---|---|
++| nada do que já existe muda | **passou.** As mesmas 585 voltas, o mesmo `lap_time_s` e as colunas antigas idênticas valor a valor, contra a cópia do início da etapa (`data/ml/_backup_antes_pedido18/`, sha256 `3c056ba0…`) |
++| canais novos preenchidos na sessão `2026-10-04` | **passou.** Os 17 canais que existem nas gravações (pneus, carga, escorregamento, pressão e `steer_angle`) estão 100% preenchidos. Freios, guinada e velocidades locais não existem nessas gravações. |
++| sessão `2026-10-05`, à parte | os mesmos 17 canais, 100% preenchidos |
++| store íntegro | **passou.** As checagens do pedido 16 continuam passando (período com p99 de 3,3 ms). |
++
++**Custo:**
++
++| | antes | depois |
++|---|---|---|
++| tamanho do store v2 | 137 MB | 315 MB |
++| construção do store v2 | 457 s | 556 s |
++| `atualizar_coach` completo | 1.151 s (19 min, em 05/10 de manhã) | CUSTO_DEPOIS |
++
++## 5. Técnica de pilotagem: como ler (Parte D)
++
++As definições estão na seção 1.7 do `docs/store_v2_e_evolucao.md`, e o formato do bloco `tecnica` está na seção 5 dele. São medidas descritivas: a "diferença consistente" e o coach não mudam. A regressão nos JSONs das duas sessões saiu idêntica, tirando o bloco novo e o hash do store.
++
++- **Uso da aderência (g):** o quanto do pneu você usa no trecho. É o p95 da aceleração combinada. A razão contra a IA abaixo de 1 quer dizer que sobra aderência.
++- **Freio e volante juntos (m):** quantos metros você freia já virando. A IA faz isso no S do Senna e na Junção; um piloto que termina de frear antes de virar fica perto de zero.
++- **Freada emendada:** a freada desta curva começa antes do ápice da anterior. É o caso do Bico de Pato.
++- **Pneus:** a temperatura média por volta e a correlação com o tempo da volta. Negativa quer dizer volta mais quente, volta mais rápida, e isso não separa causa.
++
++### Primeira rodada
++
++| | 04/10 (11 voltas) | 05/10 (7 voltas) | IA |
++|---|---|---|---|
++| **C01, S do Senna:** aderência (g) | 1,95 (razão 0,75) | 2,02 (0,78) | 2,60 |
++| C01: freio e volante juntos | 0 m | 0 m | 16 m |
++| C01: freada emendada | 0 de 11 | 0 de 7 | não |
++| **C10, Bico de Pato:** aderência (g) | 1,78 (0,74) | 2,03 (0,84) | 2,41 |
++| C10: freio e volante juntos | 14 m | 16 m | 0 m |
++| C10: freada emendada | **7 de 11** | **4 de 7** | não |
++| pneus: correlação de Spearman entre temperatura e tempo | −0,16 | −0,57 | — |
++| freios | sem o canal | sem o canal | — |
++
++**As 14 curvas, em resumo:**
++
++- **Aderência:** você usa de 54% a 97% da aceleração combinada da IA. A menor razão é na C09 (0,54 e 0,56). As maiores são na C03 (0,97 e 0,93), na C05 (0,90 e 0,96) e na C14 (0,88 e 0,95). De 04/10 para 05/10, a razão subiu em 10 das 14 curvas.
++- **Freio e volante juntos:** a IA freia virando no S do Senna (16 m na C01, 10 m na C02), na C06 (24 m), C08 (20 m) e C12 (18 m). Você quase não faz isso nessas curvas: 0 a 8 m. Você freia virando mais que a IA no Bico de Pato (14 e 16 m, a IA 0 m) e, em 05/10, na C04 (18 m, a IA 6 m).
++- **Freada emendada:** só aparece na C10, e só nas suas voltas.
++- **Pneus:** a média ao longo da volta vai de 52 °C a 74 °C em 04/10 e de 52 °C a 61 °C em 05/10. A traseira fica de 0,7 °C a 11 °C acima da dianteira.
++
++## 6. O que ainda falta para a M1
++
++- **Sessões com os canais novos.** A guinada, as velocidades locais e os freios só existem nas gravações feitas depois deste pedido, com o app do repositório. O ADR 0017 pede 5 sessões humanas com canais físicos para a M1.
++- **Reempacotar o app instalado** depois do merge, para ele gravar o indicador de IA, os canais novos e a embreagem certa (backlog).
++- **A unidade do volante,** fechada com a guinada gravada (seção 3).
++- **O entre-eixos e os dados do carro** que não vêm do `data.acd`: o modelo da M1 vai ter de estimá-los dos dados ou recebê-los de fora.
++- **A embreagem antiga não serve:** todas as gravações anteriores têm 0 nela.
+diff --git a/docs/store_v2_e_evolucao.md b/docs/store_v2_e_evolucao.md
+index 0039f7b1..9b5124fa 100644
+--- a/docs/store_v2_e_evolucao.md
++++ b/docs/store_v2_e_evolucao.md
+@@ -121,6 +121,30 @@ Decidida pelo Eduardo em 05/10, depois da sessão de 04/10 às 23:51, que termin
+   - A primeira linha é a sessão de 04/10 23:51: `humano`, `rss_formula_rss_3_v6_2026`, anotada pelo Eduardo em 05/10.
+ - **O que não muda:** os critérios de "diferença consistente" e de "poucos dados", e as medidas por curva.
+ 
++### 1.7 Técnica de pilotagem, registrada em 05/10/2026 (pedido 18), antes da primeira rodada
++
++Medidas **descritivas**: não entram em nenhum critério, não mudam a "diferença consistente" e não mudam o coach. Saem num bloco `tecnica` no JSON de cada sessão. Para cada curva, a volta da IA do coach é medida do mesmo jeito.
++
++- **Uso da aderência.**
++  - Em cada curva e volta: o p95 da aceleração combinada, √(g lateral² + g longitudinal²), nos pontos da grade do trecho da curva (o mesmo trecho do tempo).
++  - Por sessão: a mediana entre as voltas e a razão dela contra a volta da IA.
++- **Freio e volante juntos.**
++  - Em cada curva e volta, procura na janela de frenagem do pedido 17, do ápice da curva anterior ao ápice da curva.
++  - Conta os metros em que o freio está em 0,15 ou mais e o volante, em valor absoluto, está em pelo menos 25% do maior volante daquela volta dentro da curva (do início ao fim dela).
++  - O volante é `steer_angle` (bruto), ou `steering` onde ele não existir.
++  - Por sessão: a mediana, e o mesmo número na volta da IA.
++- **Freada emendada.**
++  - Na curva k, toma a sequência contínua de freio em 0,15 ou mais que contém o maior freio entre o ápice da curva anterior e o ápice de k.
++  - A volta conta como emendada quando essa sequência começa antes do ápice da curva anterior.
++  - Volta sem freio de 0,15 ou mais na janela fica "sem frenagem".
++  - Por sessão: quantas voltas emendadas, de quantas com frenagem, e o que a IA faz.
++- **Temperatura dos pneus,** pelas colunas `tyre_core_temp_*` do store.
++  - Por volta: a média dos 4 pneus em s = 0 e ao longo da volta (a média dos pontos da grade), e a média da dianteira e da traseira ao longo da volta.
++  - Por sessão: a série volta a volta e a correlação de Spearman entre a temperatura média da volta e o tempo da volta.
++  - Junto da correlação vai escrito que ela não separa causa: o pneu esquenta e o piloto melhora ao mesmo tempo.
++- **Temperatura dos freios:** só se o campo existir (`brake_temp_*`). Por curva e volta, a máxima nos pontos da janela de frenagem com freio em 0,15 ou mais.
++- **Volta sem o canal:** fica sem número e é contada à parte (`sem_canal`).
++
+ ## 2. O que mudou no store (Parte B)
+ 
+ O store v2 é um arquivo novo: `data/ml/laps_grid_v2.parquet`, com o meta em `laps_grid_v2_meta.json`. Ele é construído por `python -m ml.scripts.build_lap_store_v2`, e o `atualizar_coach` também o refaz.
+@@ -304,6 +328,24 @@ Campos de cada item de `curvas[]`:
+ | `referencia`, `store`, `regras` | como no JSON da sessão |
+ | `arquivos_de_sessao` | os caminhos dos JSONs de sessão |
+ 
++### Bloco `tecnica` no JSON da sessão (`formato: "tecnica/1"`, pedido 18)
++
++Medidas descritivas, com as definições da seção 1.7. Nenhuma delas muda a situação das curvas. Valor `null` quer dizer sem número: a volta não tem o canal, ou a medida não se aplica.
++
++| campo | o que é |
++|---|---|
++| `voltas`, `definicoes` | quantas voltas da sessão e onde estão as definições |
++| `curvas[].curva` | o rótulo da curva, na mesma ordem de `curvas[]` do relatório |
++| `curvas[].uso_da_aderencia` | `mediana` do p95 de √(g lat² + g long²) no trecho, em g; `voltas` com número e `sem_canal`; `ia_g`, o mesmo na volta da IA; `razao_contra_ia`, a mediana dividida pela IA |
++| `curvas[].freio_e_volante_juntos` | `mediana` dos metros com freio ≥ 0,15 e volante ≥ 25% do maior da curva, na janela do ápice anterior ao ápice; `voltas`, `sem_canal` e `ia_m` |
++| `curvas[].freada_emendada` | `voltas_emendadas` de `voltas_com_frenagem`, `voltas_sem_frenagem` e `ia` (`emendada`, `nao emendada` ou `sem frenagem`) |
++| `curvas[].temperatura_freio_max_c` | `mediana`, `voltas` e `sem_canal` da máxima de freio na frenagem, em °C; `null` quando nenhuma volta tem o canal |
++| `curvas[].por_volta[]` | `volta`, `uso_da_aderencia_g`, `freio_e_volante_m`, `emendada` (`true`, `false` ou `null` sem frenagem) e `freio_max_c` |
++| `pneus.por_volta[]` | `volta`, `tempo_s`, `media_s0_c`, `media_volta_c`, `dianteira_c` e `traseira_c` (°C; só com os 4 canais de pneu) |
++| `pneus.spearman_temperatura_tempo` | a correlação de Spearman entre `media_volta_c` e `tempo_s`, com 3 voltas ou mais; `nota` lembra que ela não separa causa |
++| `pneus.voltas`, `pneus.sem_canal` | voltas com e sem as temperaturas dos pneus |
++| `freios.canal`, `freios.nota` | se alguma volta da sessão tem a temperatura dos freios |
++
+ ## 6. Pedido 17: janela de frenagem e painel
+ 
+ ### Janela de frenagem: antes e depois, sessão de 04/10

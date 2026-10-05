@@ -1,0 +1,2648 @@
+{
+ "2026-10-04": {
+  "formato": "tecnica/1",
+  "definicoes": "docs/store_v2_e_evolucao.md, secao 1.7",
+  "voltas": 11,
+  "curvas": [
+   {
+    "curva": "C01-esq",
+    "uso_da_aderencia": {
+     "mediana": 1.953,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 2.598,
+     "razao_contra_ia": 0.752
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 16.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 11,
+     "voltas_sem_frenagem": 0,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.953,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.788,
+      "freio_e_volante_m": 10.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 1.829,
+      "freio_e_volante_m": 22.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 2.057,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.959,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.95,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.914,
+      "freio_e_volante_m": 8.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.948,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.213,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 2.116,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.125,
+      "freio_e_volante_m": 10.0,
+      "emendada": false,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C02-dir",
+    "uso_da_aderencia": {
+     "mediana": 2.159,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 2.875,
+     "razao_contra_ia": 0.751
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 10.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 0,
+     "voltas_sem_frenagem": 11,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.939,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.212,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 1.935,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 2.139,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 2.032,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.159,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 2.242,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.188,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.334,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 1.858,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.372,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C03-esq",
+    "uso_da_aderencia": {
+     "mediana": 2.116,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 2.182,
+     "razao_contra_ia": 0.97
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 0,
+     "voltas_sem_frenagem": 11,
+     "ia": "sem frenagem"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.954,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.037,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 1.972,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 2.336,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.621,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.194,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 2.197,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.116,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.197,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 2.129,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.976,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C04-esq",
+    "uso_da_aderencia": {
+     "mediana": 2.002,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 2.532,
+     "razao_contra_ia": 0.791
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 6.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 6.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 11,
+     "voltas_sem_frenagem": 0,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.992,
+      "freio_e_volante_m": 28.001,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.041,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 2.002,
+      "freio_e_volante_m": 6.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 2.135,
+      "freio_e_volante_m": 20.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.928,
+      "freio_e_volante_m": 6.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.172,
+      "freio_e_volante_m": 24.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.971,
+      "freio_e_volante_m": 4.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.934,
+      "freio_e_volante_m": 2.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.983,
+      "freio_e_volante_m": 12.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 2.172,
+      "freio_e_volante_m": 10.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.177,
+      "freio_e_volante_m": 6.0,
+      "emendada": false,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C05-esq",
+    "uso_da_aderencia": {
+     "mediana": 1.933,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 2.152,
+     "razao_contra_ia": 0.898
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 0,
+     "voltas_sem_frenagem": 11,
+     "ia": "sem frenagem"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.933,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.451,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 2.163,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 1.813,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.643,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.04,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.671,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.3,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.052,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 1.86,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.701,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C06-dir",
+    "uso_da_aderencia": {
+     "mediana": 2.511,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 2.91,
+     "razao_contra_ia": 0.863
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 24.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 9,
+     "voltas_sem_frenagem": 2,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 2.209,
+      "freio_e_volante_m": 34.001,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.1,
+      "freio_e_volante_m": 10.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 2.039,
+      "freio_e_volante_m": 16.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 2.511,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 2.358,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.296,
+      "freio_e_volante_m": 14.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 2.522,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.815,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.591,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 2.722,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.606,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C07-dir",
+    "uso_da_aderencia": {
+     "mediana": 1.833,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 2.392,
+     "razao_contra_ia": 0.766
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 10.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 10.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 10,
+     "voltas_sem_frenagem": 1,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.713,
+      "freio_e_volante_m": 20.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.833,
+      "freio_e_volante_m": 6.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 1.588,
+      "freio_e_volante_m": 22.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 1.719,
+      "freio_e_volante_m": 24.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.95,
+      "freio_e_volante_m": 4.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.076,
+      "freio_e_volante_m": 26.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.768,
+      "freio_e_volante_m": 24.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.927,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.774,
+      "freio_e_volante_m": 10.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 2.015,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.08,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C08-esq",
+    "uso_da_aderencia": {
+     "mediana": 2.13,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 2.578,
+     "razao_contra_ia": 0.826
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 20.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 2,
+     "voltas_sem_frenagem": 9,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 2.183,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.13,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 1.81,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 2.179,
+      "freio_e_volante_m": 4.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 2.112,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.077,
+      "freio_e_volante_m": 6.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 2.171,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.207,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.069,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 2.149,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.816,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C09-dir",
+    "uso_da_aderencia": {
+     "mediana": 1.496,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 2.748,
+     "razao_contra_ia": 0.544
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 4.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 9,
+     "voltas_sem_frenagem": 2,
+     "ia": "sem frenagem"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.268,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.923,
+      "freio_e_volante_m": 4.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 1.4,
+      "freio_e_volante_m": 8.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 1.598,
+      "freio_e_volante_m": 14.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.366,
+      "freio_e_volante_m": 24.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.514,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.634,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.404,
+      "freio_e_volante_m": 6.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.7,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 1.496,
+      "freio_e_volante_m": 2.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.396,
+      "freio_e_volante_m": 4.0,
+      "emendada": false,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C10-dir",
+    "uso_da_aderencia": {
+     "mediana": 1.781,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 2.414,
+     "razao_contra_ia": 0.738
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 14.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 7,
+     "voltas_com_frenagem": 11,
+     "voltas_sem_frenagem": 0,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.666,
+      "freio_e_volante_m": 22.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.951,
+      "freio_e_volante_m": 6.0,
+      "emendada": true,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 1.855,
+      "freio_e_volante_m": 14.0,
+      "emendada": true,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 1.781,
+      "freio_e_volante_m": 20.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.652,
+      "freio_e_volante_m": 14.0,
+      "emendada": true,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.189,
+      "freio_e_volante_m": 10.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.759,
+      "freio_e_volante_m": 14.0,
+      "emendada": true,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.611,
+      "freio_e_volante_m": 28.001,
+      "emendada": true,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.072,
+      "freio_e_volante_m": 12.0,
+      "emendada": true,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 1.86,
+      "freio_e_volante_m": 12.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.776,
+      "freio_e_volante_m": 16.0,
+      "emendada": true,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C11-esq",
+    "uso_da_aderencia": {
+     "mediana": 2.408,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 3.113,
+     "razao_contra_ia": 0.774
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 0,
+     "voltas_sem_frenagem": 11,
+     "ia": "sem frenagem"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 2.505,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.347,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 2.153,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 2.717,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.999,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.408,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 2.033,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.27,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.51,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 2.569,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.61,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C12-esq",
+    "uso_da_aderencia": {
+     "mediana": 1.996,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 2.585,
+     "razao_contra_ia": 0.772
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 6.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 18.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 10,
+     "voltas_sem_frenagem": 1,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 2.034,
+      "freio_e_volante_m": 10.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.997,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 1.87,
+      "freio_e_volante_m": 14.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 2.278,
+      "freio_e_volante_m": 12.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.886,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 2.111,
+      "freio_e_volante_m": 6.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.996,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.982,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.881,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 1.719,
+      "freio_e_volante_m": 22.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.108,
+      "freio_e_volante_m": 22.0,
+      "emendada": false,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C13-esq",
+    "uso_da_aderencia": {
+     "mediana": 1.301,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 1.637,
+     "razao_contra_ia": 0.795
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 0,
+     "voltas_sem_frenagem": 11,
+     "ia": "sem frenagem"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.322,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.574,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 1.22,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 1.301,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.765,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.226,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.385,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.377,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.265,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 1.195,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.018,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C14-esq",
+    "uso_da_aderencia": {
+     "mediana": 1.836,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_g": 2.077,
+     "razao_contra_ia": 0.884
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 11,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 0,
+     "voltas_sem_frenagem": 11,
+     "ia": "sem frenagem"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.909,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.28,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+      "uso_da_aderencia_g": 2.15,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "uso_da_aderencia_g": 1.885,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+      "uso_da_aderencia_g": 1.836,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.764,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.802,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 1.821,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+      "uso_da_aderencia_g": 1.788,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+      "uso_da_aderencia_g": 2.293,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+      "uso_da_aderencia_g": 2.32,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   }
+  ],
+  "pneus": {
+   "por_volta": [
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "tempo_s": 93.004,
+     "media_s0_c": 57.74,
+     "media_volta_c": 53.38,
+     "dianteira_c": 51.45,
+     "traseira_c": 55.31
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "tempo_s": 95.312,
+     "media_s0_c": 59.44,
+     "media_volta_c": 56.44,
+     "dianteira_c": 54.95,
+     "traseira_c": 57.93
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "tempo_s": 94.025,
+     "media_s0_c": 55.55,
+     "media_volta_c": 51.74,
+     "dianteira_c": 49.74,
+     "traseira_c": 53.74
+    },
+    {
+     "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "tempo_s": 89.39,
+     "media_s0_c": 62.02,
+     "media_volta_c": 56.51,
+     "dianteira_c": 54.92,
+     "traseira_c": 58.11
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "tempo_s": 95.239,
+     "media_s0_c": 56.28,
+     "media_volta_c": 52.65,
+     "dianteira_c": 50.62,
+     "traseira_c": 54.68
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "tempo_s": 91.742,
+     "media_s0_c": 60.68,
+     "media_volta_c": 56.8,
+     "dianteira_c": 54.98,
+     "traseira_c": 58.61
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "tempo_s": 92.675,
+     "media_s0_c": 57.76,
+     "media_volta_c": 59.12,
+     "dianteira_c": 56.81,
+     "traseira_c": 61.43
+    },
+    {
+     "volta": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "tempo_s": 93.458,
+     "media_s0_c": 60.05,
+     "media_volta_c": 57.56,
+     "dianteira_c": 56.02,
+     "traseira_c": 59.1
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "tempo_s": 93.739,
+     "media_s0_c": 88.75,
+     "media_volta_c": 73.96,
+     "dianteira_c": 68.5,
+     "traseira_c": 79.42
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "tempo_s": 92.188,
+     "media_s0_c": 64.75,
+     "media_volta_c": 71.13,
+     "dianteira_c": 67.0,
+     "traseira_c": 75.26
+    },
+    {
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "tempo_s": 98.818,
+     "media_s0_c": 68.62,
+     "media_volta_c": 67.8,
+     "dianteira_c": 64.95,
+     "traseira_c": 70.65
+    }
+   ],
+   "voltas": 11,
+   "sem_canal": 0,
+   "spearman_temperatura_tempo": -0.164,
+   "nota": "A correlacao nao separa causa: o pneu esquenta e o piloto melhora ao mesmo tempo."
+  },
+  "freios": {
+   "canal": false,
+   "nota": "As gravacoes desta sessao nao tem a temperatura dos freios."
+  }
+ },
+ "2026-10-05": {
+  "formato": "tecnica/1",
+  "definicoes": "docs/store_v2_e_evolucao.md, secao 1.7",
+  "voltas": 7,
+  "curvas": [
+   {
+    "curva": "C01-esq",
+    "uso_da_aderencia": {
+     "mediana": 2.022,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 2.598,
+     "razao_contra_ia": 0.778
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 16.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 7,
+     "voltas_sem_frenagem": 0,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.884,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 2.025,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 2.398,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 2.404,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 1.905,
+      "freio_e_volante_m": 34.001,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 1.822,
+      "freio_e_volante_m": 4.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 2.022,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C02-dir",
+    "uso_da_aderencia": {
+     "mediana": 2.133,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 2.875,
+     "razao_contra_ia": 0.742
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 10.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 0,
+     "voltas_sem_frenagem": 7,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 2.133,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 1.943,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 1.908,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 2.277,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 2.432,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 2.164,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 2.004,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C03-esq",
+    "uso_da_aderencia": {
+     "mediana": 2.037,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 2.182,
+     "razao_contra_ia": 0.933
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 0,
+     "voltas_sem_frenagem": 7,
+     "ia": "sem frenagem"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 2.347,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 2.228,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 2.037,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 1.947,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 2.187,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 2.037,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 2.002,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C04-esq",
+    "uso_da_aderencia": {
+     "mediana": 2.1,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 2.532,
+     "razao_contra_ia": 0.829
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 18.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 6.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 7,
+     "voltas_sem_frenagem": 0,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 2.246,
+      "freio_e_volante_m": 2.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 2.131,
+      "freio_e_volante_m": 34.001,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 1.594,
+      "freio_e_volante_m": 40.001,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 2.363,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 1.888,
+      "freio_e_volante_m": 34.001,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 2.1,
+      "freio_e_volante_m": 18.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 1.9,
+      "freio_e_volante_m": 18.0,
+      "emendada": false,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C05-esq",
+    "uso_da_aderencia": {
+     "mediana": 2.075,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 2.152,
+     "razao_contra_ia": 0.964
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 0,
+     "voltas_sem_frenagem": 7,
+     "ia": "sem frenagem"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.987,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 1.808,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 2.259,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 2.049,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 2.213,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 2.211,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 2.075,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C06-dir",
+    "uso_da_aderencia": {
+     "mediana": 2.562,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 2.91,
+     "razao_contra_ia": 0.88
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 24.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 1,
+     "voltas_sem_frenagem": 6,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 2.809,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 2.738,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 2.587,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 2.44,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 2.562,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 2.513,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 2.552,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C07-dir",
+    "uso_da_aderencia": {
+     "mediana": 1.841,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 2.392,
+     "razao_contra_ia": 0.77
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 6.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 10.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 7,
+     "voltas_sem_frenagem": 0,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.734,
+      "freio_e_volante_m": 12.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 1.97,
+      "freio_e_volante_m": 6.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 2.039,
+      "freio_e_volante_m": 10.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 1.801,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 1.767,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 1.841,
+      "freio_e_volante_m": 6.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 1.975,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C08-esq",
+    "uso_da_aderencia": {
+     "mediana": 2.032,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 2.578,
+     "razao_contra_ia": 0.788
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 20.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 0,
+     "voltas_sem_frenagem": 7,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 2.093,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 2.032,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 2.009,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 2.103,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 1.998,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 1.994,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 2.098,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C09-dir",
+    "uso_da_aderencia": {
+     "mediana": 1.54,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 2.748,
+     "razao_contra_ia": 0.56
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 4,
+     "voltas_sem_frenagem": 3,
+     "ia": "sem frenagem"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.628,
+      "freio_e_volante_m": 2.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 1.54,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 1.496,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 1.607,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 1.21,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 1.49,
+      "freio_e_volante_m": 16.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 1.762,
+      "freio_e_volante_m": 4.0,
+      "emendada": false,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C10-dir",
+    "uso_da_aderencia": {
+     "mediana": 2.033,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 2.414,
+     "razao_contra_ia": 0.842
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 16.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 4,
+     "voltas_com_frenagem": 7,
+     "voltas_sem_frenagem": 0,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.949,
+      "freio_e_volante_m": 14.0,
+      "emendada": true,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 2.033,
+      "freio_e_volante_m": 16.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 1.937,
+      "freio_e_volante_m": 12.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 2.049,
+      "freio_e_volante_m": 16.0,
+      "emendada": true,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 2.094,
+      "freio_e_volante_m": 62.001,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 2.05,
+      "freio_e_volante_m": 18.0,
+      "emendada": true,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 2.01,
+      "freio_e_volante_m": 4.0,
+      "emendada": true,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C11-esq",
+    "uso_da_aderencia": {
+     "mediana": 2.663,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 3.113,
+     "razao_contra_ia": 0.855
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 0,
+     "voltas_sem_frenagem": 7,
+     "ia": "sem frenagem"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 2.829,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 2.476,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 2.489,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 2.572,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 2.673,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 2.896,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 2.663,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C12-esq",
+    "uso_da_aderencia": {
+     "mediana": 2.101,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 2.585,
+     "razao_contra_ia": 0.813
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 8.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 18.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 7,
+     "voltas_sem_frenagem": 0,
+     "ia": "nao emendada"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 2.004,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 1.696,
+      "freio_e_volante_m": 38.001,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 2.163,
+      "freio_e_volante_m": 6.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 2.101,
+      "freio_e_volante_m": 12.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 2.108,
+      "freio_e_volante_m": 8.0,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 1.999,
+      "freio_e_volante_m": 34.001,
+      "emendada": false,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 2.228,
+      "freio_e_volante_m": 0.0,
+      "emendada": false,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C13-esq",
+    "uso_da_aderencia": {
+     "mediana": 1.237,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 1.637,
+     "razao_contra_ia": 0.756
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 0,
+     "voltas_sem_frenagem": 7,
+     "ia": "sem frenagem"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 1.237,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 1.304,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 1.286,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 1.305,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 1.169,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 1.135,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 1.213,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   },
+   {
+    "curva": "C14-esq",
+    "uso_da_aderencia": {
+     "mediana": 1.98,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_g": 2.077,
+     "razao_contra_ia": 0.953
+    },
+    "freio_e_volante_juntos": {
+     "mediana": 0.0,
+     "voltas": 7,
+     "sem_canal": 0,
+     "ia_m": 0.0
+    },
+    "freada_emendada": {
+     "voltas_emendadas": 0,
+     "voltas_com_frenagem": 0,
+     "voltas_sem_frenagem": 7,
+     "ia": "sem frenagem"
+    },
+    "temperatura_freio_max_c": null,
+    "por_volta": [
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+      "uso_da_aderencia_g": 2.122,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+      "uso_da_aderencia_g": 1.921,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+      "uso_da_aderencia_g": 1.98,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+      "uso_da_aderencia_g": 2.098,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+      "uso_da_aderencia_g": 1.857,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+      "uso_da_aderencia_g": 1.794,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     },
+     {
+      "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+      "uso_da_aderencia_g": 2.509,
+      "freio_e_volante_m": 0.0,
+      "emendada": null,
+      "freio_max_c": null
+     }
+    ]
+   }
+  ],
+  "pneus": {
+   "por_volta": [
+    {
+     "volta": "2026-10-04_23-51-42_vhe_interlagos#0004",
+     "tempo_s": 91.396,
+     "media_s0_c": 61.53,
+     "media_volta_c": 56.49,
+     "dianteira_c": 55.28,
+     "traseira_c": 57.7
+    },
+    {
+     "volta": "2026-10-04_23-51-42_vhe_interlagos#0006",
+     "tempo_s": 93.297,
+     "media_s0_c": 59.41,
+     "media_volta_c": 57.38,
+     "dianteira_c": 55.72,
+     "traseira_c": 59.03
+    },
+    {
+     "volta": "2026-10-04_23-51-42_vhe_interlagos#0007",
+     "tempo_s": 92.818,
+     "media_s0_c": 60.13,
+     "media_volta_c": 57.3,
+     "dianteira_c": 55.67,
+     "traseira_c": 58.93
+    },
+    {
+     "volta": "2026-10-04_23-51-42_vhe_interlagos#0008",
+     "tempo_s": 90.524,
+     "media_s0_c": 61.56,
+     "media_volta_c": 60.02,
+     "dianteira_c": 59.66,
+     "traseira_c": 60.38
+    },
+    {
+     "volta": "2026-10-04_23-51-42_vhe_interlagos#0010",
+     "tempo_s": 91.87,
+     "media_s0_c": 59.62,
+     "media_volta_c": 52.2,
+     "dianteira_c": 48.84,
+     "traseira_c": 55.55
+    },
+    {
+     "volta": "2026-10-04_23-51-42_vhe_interlagos#0011",
+     "tempo_s": 90.218,
+     "media_s0_c": 63.19,
+     "media_volta_c": 58.87,
+     "dianteira_c": 57.14,
+     "traseira_c": 60.61
+    },
+    {
+     "volta": "2026-10-04_23-51-42_vhe_interlagos#0012",
+     "tempo_s": 90.496,
+     "media_s0_c": 66.0,
+     "media_volta_c": 61.13,
+     "dianteira_c": 59.94,
+     "traseira_c": 62.33
+    }
+   ],
+   "voltas": 7,
+   "sem_canal": 0,
+   "spearman_temperatura_tempo": -0.571,
+   "nota": "A correlacao nao separa causa: o pneu esquenta e o piloto melhora ao mesmo tempo."
+  },
+  "freios": {
+   "canal": false,
+   "nota": "As gravacoes desta sessao nao tem a temperatura dos freios."
+  }
+ }
+}

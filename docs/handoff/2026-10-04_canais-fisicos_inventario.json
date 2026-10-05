@@ -1,0 +1,722 @@
+{
+ "sessoes": {
+  "2026-10-04": {
+   "repositorio": {
+    "amostras": 447811,
+    "campos": {
+     "tyreCoreTemperature": {
+      "grupo": "pneus",
+      "unidade_provavel": "°C",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.tyres.tyreCoreTemperature",
+      "existe": true,
+      "componentes": 4,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.006,
+       "p50": 47.4313,
+       "p99": 86.7905
+      },
+      "constante": false,
+      "p50_por_componente": [
+       43.8125,
+       49.5471,
+       50.0429,
+       52.4363
+      ]
+     },
+     "tyreTempI": {
+      "grupo": "pneus",
+      "unidade_provavel": "°C",
+      "nota": "temperatura interna; lida pelo adaptador, nao gravada",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "tyreTempM": {
+      "grupo": "pneus",
+      "unidade_provavel": "°C",
+      "nota": "temperatura central; lida pelo adaptador, nao gravada",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "tyreTempO": {
+      "grupo": "pneus",
+      "unidade_provavel": "°C",
+      "nota": "temperatura externa; lida pelo adaptador, nao gravada",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "tyrePressure": {
+      "grupo": "pneus",
+      "unidade_provavel": "psi",
+      "nota": "wheelsPressure na memoria",
+      "gravado": true,
+      "caminho": "carPhysics.tyres.tyrePressure",
+      "existe": true,
+      "componentes": 4,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 13.0047,
+       "p50": 18.1633,
+       "p99": 22.0547
+      },
+      "constante": false,
+      "p50_por_componente": [
+       18.3879,
+       18.9609,
+       17.8265,
+       18.0541
+      ]
+     },
+     "tyreWear": {
+      "grupo": "pneus",
+      "unidade_provavel": "% (100 = novo)",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.tyres.tyreWear",
+      "existe": true,
+      "componentes": 4,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 99.9358,
+       "p50": 99.9972,
+       "p99": 100.0
+      },
+      "constante": false,
+      "p50_por_componente": [
+       99.998,
+       99.9975,
+       99.9966,
+       99.9963
+      ]
+     },
+     "wheelSlip": {
+      "grupo": "pneus",
+      "unidade_provavel": "adimensional (escorregamento do jogo)",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.tyres.wheelSlip",
+      "existe": true,
+      "componentes": 4,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0007,
+       "p50": 0.0925,
+       "p99": 2.0403
+      },
+      "constante": false,
+      "p50_por_componente": [
+       0.0727,
+       0.0736,
+       0.1217,
+       0.1351
+      ]
+     },
+     "wheelLoad": {
+      "grupo": "pneus",
+      "unidade_provavel": "N",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.tyres.wheelLoad",
+      "existe": true,
+      "componentes": 4,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 16.391,
+       "p50": 2108.3733,
+       "p99": 5605.4646
+      },
+      "constante": false,
+      "p50_por_componente": [
+       1579.3964,
+       1580.303,
+       2181.5491,
+       2176.6179
+      ]
+     },
+     "brakeTemp": {
+      "grupo": "freios",
+      "unidade_provavel": "°C",
+      "nota": "existe na memoria; o adaptador le no deslocamento errado (le brakeBias e localVelocity) e nao grava",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "brakeBias": {
+      "grupo": "freios",
+      "unidade_provavel": "fracao na dianteira",
+      "nota": "existe na memoria; o adaptador nao declara no lugar certo e nao grava",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "localVelocity": {
+      "grupo": "movimento",
+      "unidade_provavel": "m/s (x lateral, y vertical, z longitudinal)",
+      "nota": "existe na memoria; o adaptador nao declara no lugar certo e nao grava",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "velocity": {
+      "grupo": "movimento",
+      "unidade_provavel": "m/s, eixos do mundo",
+      "nota": "nao e a velocidade local do carro",
+      "gravado": true,
+      "caminho": "carPhysics.motion.velocity",
+      "existe": true,
+      "componentes": 3,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": -62.4845,
+       "p50": 0.0,
+       "p99": 69.7586
+      },
+      "constante": false,
+      "p50_por_componente": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     "localAngularVel": {
+      "grupo": "movimento",
+      "unidade_provavel": "rad/s (y = guinada)",
+      "nota": "lida pelo adaptador, nao gravada",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "accG": {
+      "grupo": "movimento",
+      "unidade_provavel": "g",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.motion.accG",
+      "existe": true,
+      "componentes": 3,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": -2.0635,
+       "p50": 0.0004,
+       "p99": 2.0727
+      },
+      "constante": false,
+      "p50_por_componente": [
+       0.0009,
+       0.0024,
+       0.0
+      ]
+     },
+     "heading": {
+      "grupo": "movimento",
+      "unidade_provavel": "rad",
+      "nota": null,
+      "gravado": true,
+      "caminho": "heading",
+      "existe": true,
+      "componentes": 1,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": -2.993,
+       "p50": -0.2269,
+       "p99": 3.0259
+      },
+      "constante": false
+     },
+     "suspensionTravel": {
+      "grupo": "suspensao",
+      "unidade_provavel": "m",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.suspension.suspensionTravel",
+      "existe": true,
+      "componentes": 4,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0349,
+       "p50": 0.041,
+       "p99": 0.0667
+      },
+      "constante": false,
+      "p50_por_componente": [
+       0.0373,
+       0.0375,
+       0.0427,
+       0.0425
+      ]
+     },
+     "rideHeight": {
+      "grupo": "suspensao",
+      "unidade_provavel": "m (dianteira, traseira)",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.suspension.rideHeight",
+      "existe": true,
+      "componentes": 2,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": -0.0051,
+       "p50": 0.0163,
+       "p99": 0.0352
+      },
+      "constante": false,
+      "p50_por_componente": [
+       0.0161,
+       0.0255
+      ]
+     },
+     "steerAngle": {
+      "grupo": "comandos",
+      "unidade_provavel": "sem unidade documentada (ver o relatorio do volante)",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.controls.steerAngle",
+      "existe": true,
+      "componentes": 1,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": -0.479,
+       "p50": 0.0,
+       "p99": 0.5057
+      },
+      "constante": false
+     },
+     "throttle": {
+      "grupo": "comandos",
+      "unidade_provavel": "0 a 1",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.controls.throttle",
+      "existe": true,
+      "componentes": 1,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0,
+       "p50": 0.0,
+       "p99": 1.0
+      },
+      "constante": false
+     },
+     "brake": {
+      "grupo": "comandos",
+      "unidade_provavel": "0 a 1",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.controls.brake",
+      "existe": true,
+      "componentes": 1,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0,
+       "p50": 0.0,
+       "p99": 1.0
+      },
+      "constante": false
+     },
+     "clutch": {
+      "grupo": "comandos",
+      "unidade_provavel": "0 a 1",
+      "nota": "o adaptador le alem do fim da estrutura do AC1: o valor gravado e sempre 0",
+      "gravado": true,
+      "caminho": "carPhysics.controls.clutch",
+      "existe": true,
+      "componentes": 1,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0,
+       "p50": 0.0,
+       "p99": 0.0
+      },
+      "constante": true
+     },
+     "gear": {
+      "grupo": "comandos",
+      "unidade_provavel": "marcha (jogo: 0 = re, 1 = neutro)",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.controls.gear",
+      "existe": true,
+      "componentes": 1,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0,
+       "p50": 2.0,
+       "p99": 6.0
+      },
+      "constante": false
+     }
+    },
+    "gravacoes": [
+     "2026-10-04_02-24-04_vhe_interlagos",
+     "2026-10-04_03-21-52_vhe_interlagos",
+     "2026-10-04_03-35-57_vhe_interlagos",
+     "2026-10-04_03-36-35_vhe_interlagos",
+     "2026-10-04_03-40-32_vhe_interlagos",
+     "2026-10-04_03-42-10_vhe_interlagos",
+     "2026-10-04_04-22-39_vhe_interlagos"
+    ]
+   }
+  },
+  "2026-10-05": {
+   "app_instalado": {
+    "amostras": 142459,
+    "campos": {
+     "tyreCoreTemperature": {
+      "grupo": "pneus",
+      "unidade_provavel": "°C",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.tyres.tyreCoreTemperature",
+      "existe": true,
+      "componentes": 4,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0055,
+       "p50": 51.4273,
+       "p99": 74.4206
+      },
+      "constante": false,
+      "p50_por_componente": [
+       48.3543,
+       51.8125,
+       53.205,
+       55.8573
+      ]
+     },
+     "tyreTempI": {
+      "grupo": "pneus",
+      "unidade_provavel": "°C",
+      "nota": "temperatura interna; lida pelo adaptador, nao gravada",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "tyreTempM": {
+      "grupo": "pneus",
+      "unidade_provavel": "°C",
+      "nota": "temperatura central; lida pelo adaptador, nao gravada",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "tyreTempO": {
+      "grupo": "pneus",
+      "unidade_provavel": "°C",
+      "nota": "temperatura externa; lida pelo adaptador, nao gravada",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "tyrePressure": {
+      "grupo": "pneus",
+      "unidade_provavel": "psi",
+      "nota": "wheelsPressure na memoria",
+      "gravado": true,
+      "caminho": "carPhysics.tyres.tyrePressure",
+      "existe": true,
+      "componentes": 4,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 13.0026,
+       "p50": 18.54,
+       "p99": 21.1205
+      },
+      "constante": false,
+      "p50_por_componente": [
+       18.8419,
+       19.1874,
+       18.1358,
+       18.3874
+      ]
+     },
+     "tyreWear": {
+      "grupo": "pneus",
+      "unidade_provavel": "% (100 = novo)",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.tyres.tyreWear",
+      "existe": true,
+      "componentes": 4,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 99.9199,
+       "p50": 99.9949,
+       "p99": 100.0
+      },
+      "constante": false,
+      "p50_por_componente": [
+       99.9956,
+       99.9952,
+       99.9935,
+       99.9934
+      ]
+     },
+     "wheelSlip": {
+      "grupo": "pneus",
+      "unidade_provavel": "adimensional (escorregamento do jogo)",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.tyres.wheelSlip",
+      "existe": true,
+      "componentes": 4,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0,
+       "p50": 0.1338,
+       "p99": 2.464
+      },
+      "constante": false,
+      "p50_por_componente": [
+       0.1069,
+       0.1219,
+       0.1524,
+       0.159
+      ]
+     },
+     "wheelLoad": {
+      "grupo": "pneus",
+      "unidade_provavel": "N",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.tyres.wheelLoad",
+      "existe": true,
+      "componentes": 4,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0,
+       "p50": 2252.5365,
+       "p99": 5667.6873
+      },
+      "constante": false,
+      "p50_por_componente": [
+       1613.7428,
+       2143.6968,
+       2601.9873,
+       2638.7441
+      ]
+     },
+     "brakeTemp": {
+      "grupo": "freios",
+      "unidade_provavel": "°C",
+      "nota": "existe na memoria; o adaptador le no deslocamento errado (le brakeBias e localVelocity) e nao grava",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "brakeBias": {
+      "grupo": "freios",
+      "unidade_provavel": "fracao na dianteira",
+      "nota": "existe na memoria; o adaptador nao declara no lugar certo e nao grava",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "localVelocity": {
+      "grupo": "movimento",
+      "unidade_provavel": "m/s (x lateral, y vertical, z longitudinal)",
+      "nota": "existe na memoria; o adaptador nao declara no lugar certo e nao grava",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "velocity": {
+      "grupo": "movimento",
+      "unidade_provavel": "m/s, eixos do mundo",
+      "nota": "nao e a velocidade local do carro",
+      "gravado": true,
+      "caminho": "carPhysics.motion.velocity",
+      "existe": true,
+      "componentes": 3,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": -62.4084,
+       "p50": 0.0,
+       "p99": 70.2383
+      },
+      "constante": false,
+      "p50_por_componente": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     "localAngularVel": {
+      "grupo": "movimento",
+      "unidade_provavel": "rad/s (y = guinada)",
+      "nota": "lida pelo adaptador, nao gravada",
+      "gravado": false,
+      "caminho": null,
+      "existe": false
+     },
+     "accG": {
+      "grupo": "movimento",
+      "unidade_provavel": "g",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.motion.accG",
+      "existe": true,
+      "componentes": 3,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": -1.9652,
+       "p50": 0.0,
+       "p99": 2.0433
+      },
+      "constante": false,
+      "p50_por_componente": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     "heading": {
+      "grupo": "movimento",
+      "unidade_provavel": "rad",
+      "nota": null,
+      "gravado": true,
+      "caminho": "heading",
+      "existe": true,
+      "componentes": 1,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": -3.0181,
+       "p50": -0.5705,
+       "p99": 3.0354
+      },
+      "constante": false
+     },
+     "suspensionTravel": {
+      "grupo": "suspensao",
+      "unidade_provavel": "m",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.suspension.suspensionTravel",
+      "existe": true,
+      "componentes": 4,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0344,
+       "p50": 0.0411,
+       "p99": 0.0675
+      },
+      "constante": false,
+      "p50_por_componente": [
+       0.0381,
+       0.0387,
+       0.0449,
+       0.045
+      ]
+     },
+     "rideHeight": {
+      "grupo": "suspensao",
+      "unidade_provavel": "m (dianteira, traseira)",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.suspension.rideHeight",
+      "existe": true,
+      "componentes": 2,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": -0.0065,
+       "p50": 0.0174,
+       "p99": 0.0471
+      },
+      "constante": false,
+      "p50_por_componente": [
+       0.0164,
+       0.0238
+      ]
+     },
+     "steerAngle": {
+      "grupo": "comandos",
+      "unidade_provavel": "sem unidade documentada (ver o relatorio do volante)",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.controls.steerAngle",
+      "existe": true,
+      "componentes": 1,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": -0.9304,
+       "p50": -0.0027,
+       "p99": 0.9835
+      },
+      "constante": false
+     },
+     "throttle": {
+      "grupo": "comandos",
+      "unidade_provavel": "0 a 1",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.controls.throttle",
+      "existe": true,
+      "componentes": 1,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0,
+       "p50": 0.2905,
+       "p99": 1.0
+      },
+      "constante": false
+     },
+     "brake": {
+      "grupo": "comandos",
+      "unidade_provavel": "0 a 1",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.controls.brake",
+      "existe": true,
+      "componentes": 1,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0,
+       "p50": 0.0,
+       "p99": 1.0
+      },
+      "constante": false
+     },
+     "clutch": {
+      "grupo": "comandos",
+      "unidade_provavel": "0 a 1",
+      "nota": "o adaptador le alem do fim da estrutura do AC1: o valor gravado e sempre 0",
+      "gravado": true,
+      "caminho": "carPhysics.controls.clutch",
+      "existe": true,
+      "componentes": 1,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0,
+       "p50": 0.0,
+       "p99": 0.0
+      },
+      "constante": true
+     },
+     "gear": {
+      "grupo": "comandos",
+      "unidade_provavel": "marcha (jogo: 0 = re, 1 = neutro)",
+      "nota": null,
+      "gravado": true,
+      "caminho": "carPhysics.controls.gear",
+      "existe": true,
+      "componentes": 1,
+      "fracao_preenchida": 1.0,
+      "faixa": {
+       "p1": 0.0,
+       "p50": 3.0,
+       "p99": 6.0
+      },
+      "constante": false
+     }
+    },
+    "gravacoes": [
+     "2026-10-04_23-51-42_vhe_interlagos"
+    ]
+   }
+  }
+ }
+}

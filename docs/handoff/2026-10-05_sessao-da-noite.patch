@@ -1,0 +1,494 @@
+diff --git a/backend/ml/comparison/evolution.py b/backend/ml/comparison/evolution.py
+index b14f0d64..9acaf7ef 100644
+--- a/backend/ml/comparison/evolution.py
++++ b/backend/ml/comparison/evolution.py
+@@ -13,6 +13,11 @@ As regras foram registradas antes da primeira rodada, em
+ * **diferenca consistente** -- o intervalo de 90% (bootstrap) da perda mediana
+   para a IA nao inclui zero; com menos de 5 voltas na sessao, "poucos dados".
+ 
++Emenda de 05/10 (secao 1.6): sessao deixa de ser o dia do nome da gravacao.
++Gravacoes separadas por mais de 3 h sem gravar sao sessoes diferentes, e a
++sessao leva a data em que terminou (`group_sessions`): a sessao de 04/10 23:51
++a 05/10 00:31 e a de 05/10, e nao se junta a da madrugada de 04/10.
++
+ Emenda de 04/10 (pedido 17, secao 1.5): o inicio da frenagem de uma curva e
+ procurado do apice da curva anterior ate o apice dela. Do comeco do trecho,
+ a frenagem da C10 (Bico de Pato), que comeca depois do apice da C09 e antes
+@@ -34,6 +39,7 @@ from ..track.microsectors import Microsectors, split_times
+ from .lap_vs_reference import BRAKE_ONSET, _signed_distance, _window
+ 
+ MIN_LAPS = 5
++SESSION_GAP_H = 3.0
+ BOOTSTRAP_RESAMPLES = 2000
+ BOOTSTRAP_LEVEL = 0.90
+ BOOTSTRAP_SEED = 20261004
+@@ -61,9 +67,37 @@ def driver_laps(laps: pd.DataFrame) -> pd.DataFrame:
+     return laps[mask]
+ 
+ 
+-def session_of(session_id: str) -> str:
+-    """A sessao e o dia: `2026-10-04_03-21-52_vhe_interlagos` -> `2026-10-04`."""
+-    return str(session_id)[:10]
++def group_sessions(periods: Dict[str, Dict[str, object]], gap_h: float = SESSION_GAP_H) -> Dict[str, str]:
++    """Gravacao -> sessao (emenda de 05/10).
++
++    `periods[gravacao] = {"inicio": ISO, "duracao_s": s}`. Uma pausa de mais de
++    `gap_h` horas entre o fim de uma gravacao e o inicio da seguinte abre uma
++    sessao nova. A chave da sessao e a data em que ela terminou; se duas
++    sessoes terminam no mesmo dia, a segunda ganha `-2` (a terceira, `-3`).
++    """
++    from datetime import datetime, timedelta
++
++    spans = []
++    for recording, period in periods.items():
++        start = datetime.fromisoformat(str(period["inicio"]))
++        end = start + timedelta(seconds=float(period.get("duracao_s") or 0.0))
++        spans.append((start, end, recording))
++    spans.sort()
++    groups: List[List[tuple]] = []
++    for span in spans:
++        if groups and (span[0] - max(e for _, e, _ in groups[-1])) <= timedelta(hours=gap_h):
++            groups[-1].append(span)
++        else:
++            groups.append([span])
++    out: Dict[str, str] = {}
++    used: Dict[str, int] = {}
++    for group in groups:
++        day = max(e for _, e, _ in group).date().isoformat()
++        used[day] = used.get(day, 0) + 1
++        key = day if used[day] == 1 else f"{day}-{used[day]}"
++        for _, _, recording in group:
++            out[recording] = key
++    return out
+ 
+ 
+ # ------------------------------------------------------------ trechos ---
+diff --git a/backend/ml/data/origin.py b/backend/ml/data/origin.py
+index 97eca668..0ebeb2a9 100644
+--- a/backend/ml/data/origin.py
++++ b/backend/ml/data/origin.py
+@@ -62,6 +62,8 @@ DRIVER_EQUIPMENT = (CURRENT_EQUIPMENT,)
+ SOURCE_INDICATOR = "indicador"
+ SOURCE_ANNOTATION = "anotacao"
+ SOURCE_DETECTOR = "detector"
++# 05/10: uma gravacao inteira anotada pelo piloto (anotacoes_de_sessao.csv).
++SOURCE_SESSION_ANNOTATION = "anotacao_sessao"
+ 
+ # Diferenca maxima, em segundos, entre o tempo do relogio e o tempo explicado
+ # pela velocidade, em qualquer microsetor. Proposta a partir da distribuicao
+diff --git a/backend/ml/data/session_annotations.py b/backend/ml/data/session_annotations.py
+new file mode 100644
+index 00000000..00a9f6cc
+--- /dev/null
++++ b/backend/ml/data/session_annotations.py
+@@ -0,0 +1,88 @@
++"""Anotacoes do piloto para sessoes inteiras (05/10).
++
++`docs/experimentos/anotacoes_de_sessao.csv` diz, para uma gravacao inteira,
++quem pilotou e, quando a gravacao nao registrou, em que carro. Existe porque o
++app instalado ainda grava sem o indicador de IA e sem o `carModel`: as voltas
++da sessao de 04/10 23:51 ficavam `desconhecida` e fora do coach e da evolucao,
++embora o Eduardo tenha pilotado todas.
++
++As anotacoes sao a verdade de campo daquela gravacao, como as de 04/10 volta a
++volta (`detector_ia.LAP_LABELS`). Uma gravacao anotada aqui nao pode estar
++tambem no arquivo volta a volta, e o carro anotado nao pode contradizer o do
++metadado: os dois casos param o comando.
++"""
++
++from __future__ import annotations
++
++from pathlib import Path
++from typing import Dict, List, Optional
++
++import pandas as pd
++
++from .. import config
++from .origin import ORIGINS, SOURCE_SESSION_ANNOTATION
++
++SESSION_ANNOTATIONS = config.repo_root() / "docs" / "experimentos" / "anotacoes_de_sessao.csv"
++
++
++def session_annotations(path: Optional[Path] = None) -> pd.DataFrame:
++    """As anotacoes por gravacao: sessao, origem, carModel, anotado_em, observacao."""
++    source = Path(path) if path else SESSION_ANNOTATIONS
++    if not source.exists():
++        return pd.DataFrame(columns=["sessao", "origem", "carModel", "anotado_em", "observacao"])
++    notes = pd.read_csv(source, dtype=str, keep_default_na=False)
++    bad = sorted(set(notes["origem"]) - set(ORIGINS))
++    if bad:
++        raise SystemExit(f"PARADO: origem desconhecida nas anotacoes de sessao: {bad}")
++    if notes["sessao"].duplicated().any():
++        raise SystemExit("PARADO: uma gravacao aparece duas vezes nas anotacoes de sessao.")
++    return notes
++
++
++def check_session_annotations(inventory: pd.DataFrame, notes: pd.DataFrame, lap_labelled: set) -> List[str]:
++    """O que impede de aplicar as anotacoes de sessao. Vazio quando batem."""
++    problems = []
++    sessions = set(inventory["session_id"])
++    for sid in notes["sessao"]:
++        if sid not in sessions:
++            problems.append(f"{sid} nao esta no inventario")
++        if sid in lap_labelled:
++            problems.append(f"{sid} ja esta nos rotulos volta a volta de 04/10")
++    return problems
++
++
++def apply_session_annotations(inventory: pd.DataFrame, notes: pd.DataFrame) -> pd.DataFrame:
++    """Todas as voltas de cada gravacao anotada recebem a origem anotada.
++
++    A fonte e sempre `anotacao_sessao`, mesmo quando o indicador concorda: o
++    rotulo vem da anotacao, e nunca do indicador nem do detector.
++    """
++    out = inventory.copy()
++    for _, note in notes.iterrows():
++        mask = out["session_id"] == note["sessao"]
++        out.loc[mask, "origem"] = note["origem"]
++        out.loc[mask, "origem_fonte"] = SOURCE_SESSION_ANNOTATION
++    return out
++
++
++def cars_with_annotations(cars: Dict[str, Optional[str]], notes: Optional[pd.DataFrame] = None) -> Dict[str, Optional[str]]:
++    """O carro de cada gravacao: o do metadado, ou o anotado quando o metadado nao tem.
++
++    Se os dois existem e discordam, o comando para.
++    """
++    notes = session_annotations() if notes is None else notes
++    out = dict(cars)
++    for _, note in notes.iterrows():
++        car = (note.get("carModel") or "").strip()
++        if not car:
++            continue
++        recorded = out.get(note["sessao"])
++        if recorded and recorded != car:
++            raise SystemExit(f"PARADO: o carro anotado para {note['sessao']} ({car}) nao e o do metadado ({recorded}).")
++        out[note["sessao"]] = car
++    return out
++
++
++def car_for(session_id: str, recorded: Optional[str], notes: Optional[pd.DataFrame] = None) -> Optional[str]:
++    """O carro de uma gravacao, com a anotacao quando o metadado nao tem."""
++    return cars_with_annotations({session_id: recorded}, notes).get(session_id)
+diff --git a/backend/ml/data/store_v2.py b/backend/ml/data/store_v2.py
+index d5fd6364..6bafe7e1 100644
+--- a/backend/ml/data/store_v2.py
++++ b/backend/ml/data/store_v2.py
+@@ -39,6 +39,7 @@ from ..track.microsectors import Microsectors, build_microsectors
+ from .ai_detector import pit_lap
+ from .lap_store import IDENTITY_COLUMNS, STORE_COLUMNS, StoredLaps, check_geometry, load_store, save_store
+ from .recordings import RawLap, Session, iter_laps, list_all_sessions
++from .session_annotations import car_for, session_annotations
+ 
+ STORE_V2_FILENAME = "laps_grid_v2.parquet"
+ STORE_V2_METADATA = "laps_grid_v2_meta.json"
+@@ -203,6 +204,7 @@ def build_store_v2(
+ 
+     available = {s.session_id: s for s in (sessions if sessions is not None else list_all_sessions())}
+     details = BuildDetails(selection=counts)
++    notes = session_annotations()
+     blocks: List[pd.DataFrame] = []
+     records: List[Dict[str, object]] = []
+     for position, (session_id, sequences) in enumerate(sorted(by_session.items()), start=1):
+@@ -211,7 +213,7 @@ def build_store_v2(
+             details.not_found.extend(f"{session_id}#{q:04d}" for q in sorted(sequences))
+             continue
+         details.sessions.append(session_id)
+-        car = (session.metadata().get("metadata") or {}).get("carModel")
++        car = car_for(session_id, (session.metadata().get("metadata") or {}).get("carModel"), notes)
+         found = 0
+         pending: Optional[tuple] = None          # (volta crua, registro) esperando a seguinte
+         for lap in iter_laps(session):
+@@ -281,6 +283,32 @@ def build_store_v2(
+     return store, details
+ 
+ 
++def recording_start(session_id: str):
++    """Inicio da gravacao pelo nome (`2026-10-04_23-51-42_...`), no relogio do piloto.
++
++    O nome e o relogio que o piloto ve (05/10: a sessao de 23:51 terminou as
++    00:31 pelo relogio dele); o `timestamp` gravado tem outra defasagem, e dele
++    so se usa a duracao.
++    """
++    from datetime import datetime
++
++    return datetime.strptime(str(session_id)[:19], "%Y-%m-%d_%H-%M-%S")
++
++
++def recording_periods(inventory: pd.DataFrame, session_ids) -> Dict[str, Dict[str, object]]:
++    """Inicio (pelo nome) e duracao (pelos instantes gravados) de cada gravacao."""
++    out: Dict[str, Dict[str, object]] = {}
++    for session_id in sorted(set(session_ids)):
++        laps = inventory[inventory["session_id"] == session_id]
++        first = pd.to_numeric(laps.get("inicio_epoch_s"), errors="coerce").min() if len(laps) else np.nan
++        last = pd.to_numeric(laps.get("fim_epoch_s"), errors="coerce").max() if len(laps) else np.nan
++        out[session_id] = {
++            "inicio": recording_start(session_id).isoformat(),
++            "duracao_s": float(last - first) if np.isfinite(first) and np.isfinite(last) else None,
++        }
++    return out
++
++
+ def save_store_v2(store: StoredLaps, extra: Dict[str, object], root: Optional[Path] = None) -> Path:
+     return save_store(store, root, filename=STORE_V2_FILENAME, metadata=STORE_V2_METADATA, extra=extra)
+ 
+diff --git a/backend/ml/scripts/build_lap_store_v2.py b/backend/ml/scripts/build_lap_store_v2.py
+index 9f29eb14..378bac71 100644
+--- a/backend/ml/scripts/build_lap_store_v2.py
++++ b/backend/ml/scripts/build_lap_store_v2.py
+@@ -35,6 +35,7 @@ from ml.data.store_v2 import (  # noqa: E402
+     default_inventory_path,
+     file_entry,
+     git_commit,
++    recording_periods,
+     save_store_v2,
+ )
+ from ml.track.geometry import load_geometry  # noqa: E402
+@@ -93,6 +94,8 @@ def main(argv=None) -> int:
+         "entradas": inputs,
+         "aprovado": bool(result["todas_passaram"]),
+         "checagens": result["checagens"],
++        # 05/10: para o relatorio de evolucao separar as sessoes pelas pausas.
++        "periodos_das_gravacoes": recording_periods(inventory, used),
+     }
+     path = save_store_v2(store, extra)
+     result["store"] = {"arquivo": str(path), **file_entry(path)}
+diff --git a/backend/ml/scripts/detector_ia.py b/backend/ml/scripts/detector_ia.py
+index 3e231579..4b4934f6 100644
+--- a/backend/ml/scripts/detector_ia.py
++++ b/backend/ml/scripts/detector_ia.py
+@@ -36,6 +36,11 @@ from ml import config  # noqa: E402
+ from ml.data import ai_detector as det  # noqa: E402
+ from ml.data import origin  # noqa: E402
+ from ml.data.inventory import inventory_path, save_inventory  # noqa: E402
++from ml.data.session_annotations import (  # noqa: E402
++    apply_session_annotations,
++    check_session_annotations,
++    session_annotations,
++)
+ from ml.track.corners import detect_corners  # noqa: E402
+ from ml.track.geometry import load_geometry  # noqa: E402
+ from ml.track.microsectors import build_microsectors  # noqa: E402
+@@ -437,15 +442,29 @@ def apply(out_dir: Path, track, json_path: Path, promote: bool = False) -> Dict[
+             by_id.at[lap_id, "origem_fonte"] = origin.SOURCE_DETECTOR
+     out_inv = by_id.reset_index()
+ 
++    # 05/10: gravacoes anotadas inteiras pelo piloto (anotacoes_de_sessao.csv).
++    notes = session_annotations()
++    problems = check_session_annotations(out_inv, notes, set(rows["session_id"]))
++    if problems:
++        raise SystemExit("PARADO: as anotacoes de sessao nao batem: " + "; ".join(problems))
++    out_inv = apply_session_annotations(out_inv, notes)
++    session_noted = set(out_inv.loc[out_inv["session_id"].isin(notes["sessao"]), "lap_id"])
++    noted_sessions = [
++        {"sessao": session_id, "voltas": int(len(laps)), "origem": laps["origem"].value_counts().to_dict(),
++         "validas": int(laps["valid"].astype(bool).sum())}
++        for session_id, laps in out_inv[out_inv["lap_id"].isin(session_noted)].groupby("session_id")
++    ]
++
+     # Pedido 15: sessoes do equipamento atual sem anotacao, pela regra do indicador e do detector.
+     def classify(lap_id, r):
+         if lap_id not in grids:
+             return None
+         return det.classify_lap(grids[lap_id], float(r["duration_s"]), reference, track, sectors, limits)
+ 
+-    out_inv = origin.label_unannotated(out_inv, set(session_rows.index), classify)
++    annotated = set(session_rows.index) | session_noted
++    out_inv = origin.label_unannotated(out_inv, annotated, classify)
+     save_inventory(out_inv, out_dir)
+-    fresh = out_inv[(out_inv["equipamento"] == origin.CURRENT_EQUIPMENT) & ~out_inv["lap_id"].isin(session_rows.index)]
++    fresh = out_inv[(out_inv["equipamento"] == origin.CURRENT_EQUIPMENT) & ~out_inv["lap_id"].isin(annotated)]
+     new_sessions = [
+         {"sessao": session_id, "voltas": int(len(laps)),
+          "origem": laps["origem"].value_counts().to_dict(),
+@@ -479,6 +498,7 @@ def apply(out_dir: Path, track, json_path: Path, promote: bool = False) -> Dict[
+                            "motivos": applied["motivo_detector"].fillna("-").value_counts().to_dict()},
+         "sessao_rotulada_aplicada": {"voltas": int(len(session_rows)),
+                                      "origem": session_rows["origem_anotada"].value_counts().to_dict()},
++        "sessoes_anotadas_inteiras": noted_sessions,
+         "sessoes_novas_sem_anotacao": new_sessions,
+         "sessoes": sessions,
+     }
+diff --git a/backend/tests/test_store_v2_e_evolucao.py b/backend/tests/test_store_v2_e_evolucao.py
+index ceed19c8..4881bccc 100644
+--- a/backend/tests/test_store_v2_e_evolucao.py
++++ b/backend/tests/test_store_v2_e_evolucao.py
+@@ -240,8 +240,23 @@ class EvolutionRulesTest(unittest.TestCase):
+         })
+         self.assertEqual(ev.driver_laps(laps)["lap_id"].tolist(), ["a"])
+ 
+-    def test_sessions_are_days(self):
+-        self.assertEqual(ev.session_of("2026-10-04_03-21-52_vhe_interlagos"), "2026-10-04")
++    def test_sessions_are_split_by_a_pause_and_dated_by_their_end(self):
++        """Emenda de 05/10: a madrugada de 04/10 e a noite de 04/10 a 05/10 sao sessoes diferentes."""
++        periods = {
++            "2026-10-04_02-24-04_vhe_interlagos": {"inicio": "2026-10-04T02:24:04", "duracao_s": 3400.0},
++            "2026-10-04_03-21-52_vhe_interlagos": {"inicio": "2026-10-04T03:21:52", "duracao_s": 840.0},
++            "2026-10-04_03-42-10_vhe_interlagos": {"inicio": "2026-10-04T03:42:10", "duracao_s": 2400.0},
++            "2026-10-04_23-51-42_vhe_interlagos": {"inicio": "2026-10-04T23:51:42", "duracao_s": 2440.0},
++        }
++        sessions = ev.group_sessions(periods)
++        self.assertEqual(sessions["2026-10-04_02-24-04_vhe_interlagos"], "2026-10-04")
++        self.assertEqual(sessions["2026-10-04_03-42-10_vhe_interlagos"], "2026-10-04")
++        self.assertEqual(sessions["2026-10-04_23-51-42_vhe_interlagos"], "2026-10-05")
++        # Pausa de ate 3 h nao separa; duas sessoes no mesmo dia nao se juntam.
++        close = {"a": {"inicio": "2026-10-06T10:00:00", "duracao_s": 3600.0},
++                 "b": {"inicio": "2026-10-06T13:30:00", "duracao_s": 600.0},
++                 "c": {"inicio": "2026-10-06T20:00:00", "duracao_s": 600.0}}
++        self.assertEqual(ev.group_sessions(close), {"a": "2026-10-06", "b": "2026-10-06", "c": "2026-10-06-2"})
+ 
+     def test_the_corner_segments_cover_the_lap_and_add_up(self):
+         track = circular_track()
+@@ -350,5 +365,49 @@ class PanelTest(unittest.TestCase):
+             self.tool.render_panel("<html></html>", {})
+ 
+ 
++class SessionAnnotationsTest(unittest.TestCase):
++    def notes(self, rows):
++        return pd.DataFrame(rows, columns=["sessao", "origem", "carModel", "anotado_em", "observacao"])
++
++    def inventory(self):
++        return pd.DataFrame({
++            "lap_id": ["noite#0000", "noite#0001", "outra#0000"], "session_id": ["noite", "noite", "outra"],
++            "origem": ["desconhecida"] * 3, "origem_indicador": ["desconhecida"] * 3, "origem_fonte": [None] * 3,
++        })
++
++    def test_every_lap_of_an_annotated_recording_gets_the_annotated_origin(self):
++        from ml.data.session_annotations import apply_session_annotations
++
++        inventory = self.inventory()
++        inventory.loc[1, "origem_indicador"] = "humano"        # mesmo concordando, a fonte e a anotacao
++        notes = self.notes([["noite", "humano", "rss_formula_rss_3_v6_2026", "2026-10-05", ""]])
++        out = apply_session_annotations(inventory, notes)
++        self.assertEqual(out["origem"].tolist(), ["humano", "humano", "desconhecida"])
++        self.assertEqual(out["origem_fonte"].tolist(), ["anotacao_sessao", "anotacao_sessao", None])
++
++    def test_it_stops_when_the_annotation_does_not_match(self):
++        from ml.data.session_annotations import check_session_annotations
++
++        notes = self.notes([["sumiu", "humano", "", "2026-10-05", ""], ["noite", "humano", "", "2026-10-05", ""]])
++        problems = check_session_annotations(self.inventory(), notes, lap_labelled={"noite"})
++        self.assertEqual(len(problems), 2)
++
++    def test_the_annotated_car_fills_the_missing_one_and_never_overrides(self):
++        from ml.data.session_annotations import cars_with_annotations
++
++        notes = self.notes([["noite", "humano", "rss_formula_rss_3_v6_2026", "2026-10-05", ""]])
++        cars = cars_with_annotations({"noite": None, "tarde": "rss_formula_rss_3_v6_2026"}, notes)
++        self.assertEqual(cars, {"noite": "rss_formula_rss_3_v6_2026", "tarde": "rss_formula_rss_3_v6_2026"})
++        with self.assertRaises(SystemExit):
++            cars_with_annotations({"noite": "outro_carro"}, notes)
++
++    def test_the_versioned_file_names_the_evening_session(self):
++        from ml.data.session_annotations import session_annotations
++
++        notes = session_annotations()
++        row = notes.set_index("sessao").loc["2026-10-04_23-51-42_vhe_interlagos"]
++        self.assertEqual((row["origem"], row["carModel"]), ("humano", "rss_formula_rss_3_v6_2026"))
++
++
+ if __name__ == "__main__":
+     unittest.main()
+diff --git a/backend/tools/atualizar_coach.py b/backend/tools/atualizar_coach.py
+index 5c5602d6..15289294 100644
+--- a/backend/tools/atualizar_coach.py
++++ b/backend/tools/atualizar_coach.py
+@@ -204,6 +204,9 @@ def main(argv=None) -> int:
+     applied = detector_ia.apply(args.saida, track, args.saida / "detector_aplicar.json", promote=False)
+     labelled = applied["sessao_rotulada_aplicada"]
+     print(f"   sessao de 04/10: {labelled['voltas']} voltas, {labelled['origem']}")
++    for row in applied.get("sessoes_anotadas_inteiras", []):
++        print(f"   gravacao anotada inteira: {row['sessao']}: {row['voltas']} voltas ({row['validas']} validas), "
++              f"{row['origem']}")
+     news = applied["sessoes_novas_sem_anotacao"]
+     print(f"   sessoes novas sem anotacao: {len(news)}")
+     for row in news:
+diff --git a/backend/tools/relatorio_evolucao.py b/backend/tools/relatorio_evolucao.py
+index 1271a1ec..748ae991 100644
+--- a/backend/tools/relatorio_evolucao.py
++++ b/backend/tools/relatorio_evolucao.py
+@@ -96,7 +96,14 @@ def run(out_dir: Path, model_file: Path, store_root: Optional[Path] = None) -> D
+     segments = ev.corner_segments(track, corners)
+     sectors = build_microsectors(track)
+     laps = ev.driver_laps(store.laps)
+-    laps = laps.assign(sessao=laps["session_id"].map(ev.session_of))
++    periods = meta.get("periodos_das_gravacoes")
++    if not periods:
++        raise SystemExit("PARADO: o meta do store v2 nao tem os periodos das gravacoes. "
++                         "Rode: python -m ml.scripts.build_lap_store_v2")
++    sessions_of = ev.group_sessions({sid: periods[sid] for sid in laps["session_id"].unique() if sid in periods})
++    if set(laps["session_id"]) - set(sessions_of):
++        raise SystemExit("PARADO: ha voltas de gravacoes sem periodo no meta do store v2.")
++    laps = laps.assign(sessao=laps["session_id"].map(sessions_of))
+ 
+     out_dir.mkdir(parents=True, exist_ok=True)
+     store_file = (Path(store_root) if store_root else config.artifacts_root()) / STORE_V2_FILENAME
+diff --git a/backend/tools/train_reference_model.py b/backend/tools/train_reference_model.py
+index f202a16e..fcc72ede 100644
+--- a/backend/tools/train_reference_model.py
++++ b/backend/tools/train_reference_model.py
+@@ -55,6 +55,7 @@ from ml import config  # noqa: E402
+ from ml.data.ai_detector import pit_lap  # noqa: E402
+ from ml.data.coach_references import AI_SINCE, ai_laps, driver_laps, most_common_car  # noqa: E402
+ from ml.data.recordings import iter_laps, list_all_sessions  # noqa: E402
++from ml.data.session_annotations import cars_with_annotations  # noqa: E402
+ from ml.track.geometry import load_geometry  # noqa: E402
+ from ml.track.microsectors import build_microsectors  # noqa: E402
+ 
+@@ -127,6 +128,8 @@ def main(argv=None) -> int:
+ 
+     sessions = {s.session_id: s for s in list_all_sessions()}
+     cars = {sid: ((s.metadata().get("metadata") or {}).get("carModel")) for sid, s in sessions.items()}
++    # O app instalado nao grava o carModel: vale o anotado (anotacoes_de_sessao.csv, 05/10).
++    cars = cars_with_annotations(cars)
+     grids_path = config.artifacts_root() / "origem" / "grade_voltas.parquet"
+     track = load_geometry()
+     sectors = build_microsectors(track)
+diff --git a/docs/coach_aprendizado.md b/docs/coach_aprendizado.md
+index 44a841c0..0c593d8b 100644
+--- a/docs/coach_aprendizado.md
++++ b/docs/coach_aprendizado.md
+@@ -280,6 +280,8 @@ O comando faz, em ordem:
+    - o que o detector não resolve, ou uma volta sem o campo do indicador, fica `desconhecida`.
+ 
+    As voltas do equipamento anterior continuam como o indicador diz, e o detector só grava as colunas `*_detector` delas, como no pedido 13.
++
++   Desde 05/10, uma gravação inteira também pode ser anotada em `docs/experimentos/anotacoes_de_sessao.csv` (quem pilotou e, se faltar, o carro). Isso vale para as gravações do app instalado, que ainda não têm o indicador de IA nem o `carModel`.
+ 4. **Copia o modelo do repositório** para `data/reference_models/backup/vhe_interlagos.<data_hora>.antes-de-atualizar.json` e o treina de novo.
+ 5. **Imprime o resumo:**
+    - as duas referências;
+diff --git a/docs/experimentos/anotacoes_de_sessao.csv b/docs/experimentos/anotacoes_de_sessao.csv
+new file mode 100644
+index 00000000..e47eb171
+--- /dev/null
++++ b/docs/experimentos/anotacoes_de_sessao.csv
+@@ -0,0 +1,2 @@
++sessao,origem,carModel,anotado_em,observacao
++2026-10-04_23-51-42_vhe_interlagos,humano,rss_formula_rss_3_v6_2026,2026-10-05,"Todas as voltas pelo piloto (Eduardo, 05/10). Sessao de 04/10 23:51 a 05/10 00:31, gravada pelo app instalado, sem o indicador de IA e sem o carModel no metadado"
+diff --git a/docs/store_v2_e_evolucao.md b/docs/store_v2_e_evolucao.md
+index 5dd9f0e1..0039f7b1 100644
+--- a/docs/store_v2_e_evolucao.md
++++ b/docs/store_v2_e_evolucao.md
+@@ -105,6 +105,22 @@ Registrada antes de rodar de novo, depois de ver a falha na C10 na primeira roda
+   - os critérios de "diferença consistente" e de "poucos dados".
+ - **Natureza da mudança:** é uma definição de medida, e não um limite de decisão. Nenhum critério foi mexido.
+ 
++### 1.6 Emenda de 05/10/2026: sessão e sessão anotada inteira
++
++Decidida pelo Eduardo em 05/10, depois da sessão de 04/10 às 23:51, que terminou às 00:31 de 05/10 e foi gravada pelo app instalado. Foi registrada antes de rodar de novo.
++
++- **Sessão:** deixa de ser o dia do nome da gravação.
++  - Gravações separadas por mais de 3 h sem gravar são sessões diferentes, e a sessão leva a data em que terminou.
++  - Se duas sessões terminam no mesmo dia, a segunda ganha `-2`.
++  - Os horários vêm do nome da gravação, que é o relógio do piloto, e da duração gravada. O `timestamp` do gravador tem outra defasagem.
++  - Com isso, a madrugada de 04/10 continua sendo a sessão `2026-10-04`, e a noite vira `2026-10-05`.
++- **Sessão anotada inteira:** `docs/experimentos/anotacoes_de_sessao.csv` diz, para uma gravação inteira, quem pilotou e, se o metadado não tiver, o carro.
++  - O `atualizar_coach` aplica essas anotações junto com as de 04/10. As voltas dessas gravações ficam com a fonte própria `origem_fonte = anotacao_sessao`, e nunca `indicador` nem `detector`.
++  - O carro anotado completa o metadado no treino e no store v2.
++  - O comando para se a gravação não estiver no inventário, se ela já estiver nos rótulos volta a volta, ou se o carro anotado contradisser o do metadado.
++  - A primeira linha é a sessão de 04/10 23:51: `humano`, `rss_formula_rss_3_v6_2026`, anotada pelo Eduardo em 05/10.
++- **O que não muda:** os critérios de "diferença consistente" e de "poucos dados", e as medidas por curva.
++
+ ## 2. O que mudou no store (Parte B)
+ 
+ O store v2 é um arquivo novo: `data/ml/laps_grid_v2.parquet`, com o meta em `laps_grid_v2_meta.json`. Ele é construído por `python -m ml.scripts.build_lap_store_v2`, e o `atualizar_coach` também o refaz.

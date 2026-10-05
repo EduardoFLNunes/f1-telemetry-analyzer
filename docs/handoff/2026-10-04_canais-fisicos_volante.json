@@ -1,0 +1,121 @@
+{
+ "coluna": "steer_angle",
+ "curvas_fechadas": [
+  "C01-esq",
+  "C02-dir",
+  "C07-dir",
+  "C10-dir",
+  "C12-esq"
+ ],
+ "limites": {
+  "velocidade_max_kmh": 80.0,
+  "a_lat_min_g": 0.3,
+  "raio_minimo_abaixo_de_m": 30.0
+ },
+ "grupos": {
+  "2026-10-04 / humano / repositorio": {
+   "voltas": 11,
+   "faixa_do_volante": {
+    "n": 23837,
+    "p1": -0.3815,
+    "p25": -0.0746,
+    "p50": -0.0122,
+    "p75": 0.0046,
+    "p99": 0.3664,
+    "max_abs": 0.5961
+   },
+   "razao_volante_curvatura_m": {
+    "n": 288,
+    "p1": 8.431,
+    "p25": 10.108,
+    "p50": 10.572,
+    "p75": 11.596,
+    "p99": 17.438,
+    "max_abs": 28.633
+   },
+   "mediana_por_volta_m": {
+    "n": 10,
+    "p1": 10.211,
+    "p25": 10.437,
+    "p50": 10.764,
+    "p75": 10.885,
+    "p99": 11.465,
+    "max_abs": 11.506
+   }
+  },
+  "2026-10-04 / ia / repositorio": {
+   "voltas": 13,
+   "faixa_do_volante": {
+    "n": 28171,
+    "p1": -0.4429,
+    "p25": -0.0757,
+    "p50": -0.0124,
+    "p75": 0.0029,
+    "p99": 0.5269,
+    "max_abs": 0.7195
+   },
+   "razao_volante_curvatura_m": {
+    "n": 12,
+    "p1": 12.878,
+    "p25": 13.269,
+    "p50": 13.319,
+    "p75": 13.502,
+    "p99": 13.702,
+    "max_abs": 13.708
+   },
+   "mediana_por_volta_m": {
+    "n": 3,
+    "p1": 13.307,
+    "p25": 13.366,
+    "p50": 13.427,
+    "p75": 13.45,
+    "p99": 13.473,
+    "max_abs": 13.474
+   }
+  },
+  "2026-10-05 / humano / app_instalado": {
+   "voltas": 7,
+   "faixa_do_volante": {
+    "n": 15169,
+    "p1": -0.3993,
+    "p25": -0.0737,
+    "p50": -0.01,
+    "p75": 0.0053,
+    "p99": 0.3925,
+    "max_abs": 0.6386
+   },
+   "razao_volante_curvatura_m": {
+    "n": 116,
+    "p1": 7.201,
+    "p25": 9.791,
+    "p50": 10.086,
+    "p75": 10.991,
+    "p99": 13.198,
+    "max_abs": 15.34
+   },
+   "mediana_por_volta_m": {
+    "n": 6,
+    "p1": 9.79,
+    "p25": 9.989,
+    "p50": 10.094,
+    "p75": 10.395,
+    "p99": 11.425,
+    "max_abs": 11.475
+   }
+  }
+ },
+ "pontos_por_grupo": {
+  "2026-10-04 / humano / repositorio": {
+   "pontos": 288,
+   "sinais_opostos": 288
+  },
+  "2026-10-04 / ia / repositorio": {
+   "pontos": 12,
+   "sinais_opostos": 12
+  },
+  "2026-10-05 / humano / app_instalado": {
+   "pontos": 116,
+   "sinais_opostos": 116
+  }
+ }
+}

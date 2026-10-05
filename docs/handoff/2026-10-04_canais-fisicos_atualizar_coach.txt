@@ -1,0 +1,295 @@
+1/7 inventario novo
+sessoes de Interlagos nas duas pastas: 133
+[1/133] 2026-05-26_19-06-59_vhe_interlagos: 76 voltas
+[2/133] 2026-05-26_21-12-57_vhe_interlagos: 1 voltas
+[3/133] 2026-05-26_21-13-07_vhe_interlagos: 1 voltas
+[4/133] 2026-05-26_21-13-21_vhe_interlagos: 1 voltas
+[5/133] 2026-05-26_21-13-34_vhe_interlagos: 1 voltas
+[6/133] 2026-05-26_21-13-47_vhe_interlagos: 1 voltas
+[7/133] 2026-05-26_21-19-32_vhe_interlagos: 8 voltas
+[8/133] 2026-05-29_20-22-25_vhe_interlagos: 62 voltas
+[9/133] 2026-06-01_13-39-13_vhe_interlagos: 31 voltas
+[10/133] 2026-06-01_14-22-37_vhe_interlagos: 0 voltas
+[11/133] 2026-06-01_14-22-56_vhe_interlagos: 4 voltas
+[12/133] 2026-06-01_14-26-50_vhe_interlagos: 26 voltas
+[13/133] 2026-06-01_15-03-48_vhe_interlagos: 2 voltas
+[14/133] 2026-06-01_15-05-10_vhe_interlagos: 151 voltas
+[15/133] 2026-06-01_18-08-50_vhe_interlagos: 26 voltas
+[16/133] 2026-06-01_18-26-01_vhe_interlagos: 3 voltas
+[17/133] 2026-06-01_18-36-55_vhe_interlagos: 7 voltas
+[18/133] 2026-06-01_18-52-15_vhe_interlagos: 38 voltas
+[19/133] 2026-06-01_19-46-56_vhe_interlagos: 3 voltas
+[20/133] 2026-06-01_19-49-39_vhe_interlagos: 39 voltas
+[21/133] 2026-06-01_20-45-15_vhe_interlagos: 2 voltas
+[22/133] 2026-06-01_20-46-59_vhe_interlagos: 84 voltas
+[23/133] 2026-06-02_01-15-01_vhe_interlagos: 17 voltas
+[24/133] 2026-06-02_13-37-11_vhe_interlagos_gp_InterlagosPitAccessAsphaltMergeFix: 21 voltas
+[25/133] 2026-06-02_23-43-23_vhe_interlagos_gp_InterlagosPitAccessAsphaltMergeFix: 1 voltas
+[26/133] 2026-06-02_23-44-58_vhe_interlagos_gp_InterlagosPitAccessAsphaltMergeFix: 11 voltas
+[27/133] 2026-06-07_19-21-36_vhe_interlagos: 3 voltas
+[28/133] 2026-06-07_19-23-35_vhe_interlagos: 3 voltas
+[29/133] 2026-06-07_19-27-12_vhe_interlagos: 19 voltas
+[30/133] 2026-06-07_20-07-04_vhe_interlagos: 15 voltas
+[31/133] 2026-06-08_10-35-09_vhe_interlagos: 1 voltas
+[32/133] 2026-06-08_11-14-51_vhe_interlagos: 1 voltas
+[33/133] 2026-06-08_11-36-29_vhe_interlagos: 1 voltas
+[34/133] 2026-06-13_13-03-31_vhe_interlagos: 13 voltas
+[35/133] 2026-06-13_13-56-22_vhe_interlagos: 1 voltas
+[36/133] 2026-06-13_14-11-23_vhe_interlagos: 1 voltas
+[37/133] 2026-06-13_14-15-54_vhe_interlagos: 1 voltas
+[38/133] 2026-06-13_14-16-46_vhe_interlagos: 1 voltas
+[39/133] 2026-06-13_14-20-06_vhe_interlagos: 1 voltas
+[40/133] 2026-06-13_14-24-16_vhe_interlagos: 1 voltas
+[41/133] 2026-06-13_18-34-33_vhe_interlagos: 3 voltas
+[42/133] 2026-06-13_19-07-16_vhe_interlagos: 2 voltas
+[43/133] 2026-06-13_20-42-20_vhe_interlagos: 1 voltas
+[44/133] 2026-06-13_20-43-01_vhe_interlagos: 1 voltas
+[45/133] 2026-06-13_20-45-19_vhe_interlagos: 1 voltas
+[46/133] 2026-06-13_21-17-21_vhe_interlagos: 2 voltas
+[47/133] 2026-06-14_10-09-39_vhe_interlagos: 1 voltas
+[48/133] 2026-06-14_10-15-25_vhe_interlagos: 14 voltas
+[49/133] 2026-06-14_10-43-46_vhe_interlagos: 12 voltas
+[50/133] 2026-06-14_11-03-51_vhe_interlagos: 3 voltas
+[51/133] 2026-06-14_11-12-42_vhe_interlagos: 4 voltas
+[52/133] 2026-06-14_11-22-17_vhe_interlagos: 2 voltas
+[53/133] 2026-06-14_11-24-17_vhe_interlagos: 1 voltas
+[54/133] 2026-06-14_11-29-22_vhe_interlagos: 3 voltas
+[55/133] 2026-06-14_11-30-32_vhe_interlagos: 1 voltas
+[56/133] 2026-06-14_11-36-21_vhe_interlagos: 2 voltas
+[57/133] 2026-06-14_11-37-35_vhe_interlagos: 2 voltas
+[58/133] 2026-06-14_11-38-30_vhe_interlagos: 2 voltas
+[59/133] 2026-06-14_11-40-01_vhe_interlagos: 1 voltas
+[60/133] 2026-06-14_11-45-28_vhe_interlagos: 28 voltas
+[61/133] 2026-06-14_12-23-46_vhe_interlagos: 13 voltas
+[62/133] 2026-06-14_12-44-04_vhe_interlagos: 18 voltas
+[63/133] 2026-06-14_13-16-06_vhe_interlagos: 8 voltas
+[64/133] 2026-06-14_13-26-54_vhe_interlagos: 26 voltas
+[65/133] 2026-06-14_14-03-29_vhe_interlagos: 48 voltas
+[66/133] 2026-06-14_15-14-42_vhe_interlagos: 5 voltas
+[67/133] 2026-06-14_15-21-10_vhe_interlagos: 3 voltas
+[68/133] 2026-06-14_15-38-47_vhe_interlagos: 6 voltas
+[69/133] 2026-06-14_15-46-58_vhe_interlagos: 2 voltas
+[70/133] 2026-06-14_15-53-20_vhe_interlagos: 2 voltas
+[71/133] 2026-06-14_15-59-17_vhe_interlagos: 3 voltas
+[72/133] 2026-06-14_18-37-47_vhe_interlagos: 3 voltas
+[73/133] 2026-06-14_18-42-07_vhe_interlagos: 11 voltas
+[74/133] 2026-06-16_19-04-54_vhe_interlagos: 15 voltas
+[75/133] 2026-06-18_20-06-03_vhe_interlagos: 58 voltas
+[76/133] 2026-06-19_11-08-15_vhe_interlagos: 3 voltas
+[77/133] 2026-06-19_19-46-21_vhe_interlagos: 113 voltas
+[78/133] 2026-06-19_23-24-46_vhe_interlagos: 8 voltas
+[79/133] 2026-06-19_23-36-46_vhe_interlagos: 1 voltas
+[80/133] 2026-06-19_23-48-39_vhe_interlagos: 1 voltas
+[81/133] 2026-06-20_13-04-20_vhe_interlagos: 4 voltas
+[82/133] 2026-06-20_13-09-57_vhe_interlagos: 3 voltas
+[83/133] 2026-06-20_13-13-02_vhe_interlagos: 42 voltas
+[84/133] 2026-08-07_20-10-03_vhe_interlagos: 1 voltas
+[85/133] 2026-08-07_20-13-11_vhe_interlagos: 1 voltas
+[86/133] 2026-08-07_20-27-52_vhe_interlagos: 70 voltas
+[87/133] 2026-08-08_11-40-43_vhe_interlagos: 4 voltas
+[88/133] 2026-08-08_11-52-03_vhe_interlagos: 2 voltas
+[89/133] 2026-08-08_11-58-41_vhe_interlagos: 17 voltas
+[90/133] 2026-08-08_12-23-51_vhe_interlagos: 37 voltas
+[91/133] 2026-08-08_13-18-00_vhe_interlagos: 3 voltas
+[92/133] 2026-08-08_13-22-07_vhe_interlagos: 15 voltas
+[93/133] 2026-08-08_16-38-27_vhe_interlagos: 7 voltas
+[94/133] 2026-08-08_16-52-13_vhe_interlagos: 6 voltas
+[95/133] 2026-08-08_17-04-15_vhe_interlagos: 88 voltas
+[96/133] 2026-08-09_10-17-32_vhe_interlagos: 2 voltas
+[97/133] 2026-08-09_10-27-39_vhe_interlagos: 63 voltas
+[98/133] 2026-08-09_12-04-40_vhe_interlagos: 9 voltas
+[99/133] 2026-08-09_12-21-19_vhe_interlagos: 9 voltas
+[100/133] 2026-08-09_12-37-42_vhe_interlagos: 17 voltas
+[101/133] 2026-08-09_13-02-49_vhe_interlagos: 27 voltas
+[102/133] 2026-08-09_13-42-29_vhe_interlagos: 24 voltas
+[103/133] 2026-08-09_14-16-51_vhe_interlagos: 15 voltas
+[104/133] 2026-08-09_14-40-07_vhe_interlagos: 3 voltas
+[105/133] 2026-08-09_14-44-00_vhe_interlagos: 10 voltas
+[106/133] 2026-08-09_14-58-46_vhe_interlagos: 8 voltas
+[107/133] 2026-08-09_15-10-52_vhe_interlagos: 69 voltas
+[108/133] 2026-08-09_16-53-03_vhe_interlagos: 5 voltas
+[109/133] 2026-08-09_17-00-01_vhe_interlagos: 4 voltas
+[110/133] 2026-08-09_17-05-12_vhe_interlagos: 2 voltas
+[111/133] 2026-08-09_17-06-41_vhe_interlagos: 10 voltas
+[112/133] 2026-08-09_17-23-56_vhe_interlagos: 10 voltas
+[113/133] 2026-08-09_17-37-33_vhe_interlagos: 30 voltas
+[114/133] 2026-08-09_18-22-00_vhe_interlagos: 13 voltas
+[115/133] 2026-08-09_18-41-18_vhe_interlagos: 5 voltas
+[116/133] 2026-08-09_18-47-11_vhe_interlagos: 24 voltas
+[117/133] 2026-08-09_19-10-41_vhe_interlagos: 5 voltas
+[118/133] 2026-08-09_19-15-35_vhe_interlagos: 3 voltas
+[119/133] 2026-08-09_19-20-59_vhe_interlagos: 54 voltas
+[120/133] 2026-08-16_03-30-14_vhe_interlagos: 16 voltas
+[121/133] 2026-08-16_03-58-36_vhe_interlagos: 2 voltas
+[122/133] 2026-08-19_20-57-37_vhe_interlagos: 1 voltas
+[123/133] 2026-08-19_20-58-36_vhe_interlagos: 21 voltas
+[124/133] 2026-08-19_21-45-59_vhe_interlagos: 6 voltas
+[125/133] 2026-08-19_22-23-14_vhe_interlagos: 20 voltas
+[126/133] 2026-10-04_02-24-04_vhe_interlagos: 20 voltas
+[127/133] 2026-10-04_03-21-52_vhe_interlagos: 8 voltas
+[128/133] 2026-10-04_03-35-57_vhe_interlagos: 1 voltas
+[129/133] 2026-10-04_03-36-35_vhe_interlagos: 1 voltas
+[130/133] 2026-10-04_03-40-32_vhe_interlagos: 1 voltas
+[131/133] 2026-10-04_03-42-10_vhe_interlagos: 21 voltas
+[132/133] 2026-10-04_04-22-39_vhe_interlagos: 1 voltas
+[133/133] 2026-10-04_23-51-42_vhe_interlagos: 16 voltas
+2/7 anotacoes versionadas de 04/10 e 3/7 sessoes novas sem anotacao
+   sessao de 04/10: 53 voltas, {'humano': 32, 'ia': 17, 'misturada': 4}
+   gravacao anotada inteira: 2026-10-04_23-51-42_vhe_interlagos: 16 voltas (8 validas), {'humano': 16}
+   sessoes novas sem anotacao: 0
+4/7 backup e treino do modelo do repositorio
+   backup: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\reference_models\backup\vhe_interlagos.2026-10-05_11-26-09.antes-de-atualizar.json
+geometria oficial : 0ed16f0dd2225990  (4334.08 m, 60 microsetores)
+carro             : rss_formula_rss_3_v6_2026
+voltas do piloto  : 18 (humano, equipamento atual, limpas)
+voltas da IA      : 13 (ia, sessoes desde 2026-10-04, limpas)
+
+referencia minha_melhor:
+  89.389s  2026-10-04_02-24-04_vhe_interlagos#0018  -> escolhida: a mais rapida valida e completa
+  90.217s  2026-10-04_23-51-42_vhe_interlagos#0011  -> valida e completa, mas mais lenta que a escolhida
+  90.495s  2026-10-04_23-51-42_vhe_interlagos#0012  -> valida e completa, mas mais lenta que a escolhida
+  90.522s  2026-10-04_23-51-42_vhe_interlagos#0008  -> valida e completa, mas mais lenta que a escolhida
+  91.394s  2026-10-04_23-51-42_vhe_interlagos#0004  -> valida e completa, mas mais lenta que a escolhida
+
+referencia volta_ia:
+  84.828s  2026-10-04_03-42-10_vhe_interlagos#0013  -> escolhida: a mais rapida valida e completa
+  84.833s  2026-10-04_03-42-10_vhe_interlagos#0012  -> valida e completa, mas mais lenta que a escolhida
+  84.849s  2026-10-04_03-42-10_vhe_interlagos#0011  -> valida e completa, mas mais lenta que a escolhida
+  84.926s  2026-10-04_02-24-04_vhe_interlagos#0012  -> valida e completa, mas mais lenta que a escolhida
+  84.936s  2026-10-04_03-42-10_vhe_interlagos#0010  -> valida e completa, mas mais lenta que a escolhida
+
+==========================================================
+voltas do piloto no modelo : 18  (recusadas 0 {})
+referencia ativa           : volta_ia 2026-10-04_03-42-10_vhe_interlagos#0013 84.828s
+oscilacao (mediana - melhor) por microsetor: mediana 0.083s, p90 0.231s
+geometria                  : 0ed16f0dd2225990
+==========================================================
+
+modelo gravado em: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\reference_models\vhe_interlagos.json
+5/7 resumo
+
+==================================================================
+RESUMO DO COACH
+  volta_ia     : 84.828 s  2026-10-04_03-42-10_vhe_interlagos#0013  (volta da IA)
+  minha_melhor : 89.389 s  2026-10-04_02-24-04_vhe_interlagos#0018  (sua melhor volta)
+  referencia padrao do app: volta_ia
+  voltas por origem, equipamento atual: {'humano': 48, 'ia': 17, 'misturada': 4}
+     por fonte: {'humano (anotacao)': 4, 'humano (anotacao_sessao)': 16, 'humano (indicador)': 28, 'ia (indicador)': 17, 'misturada (anotacao)': 2, 'misturada (indicador)': 2}
+  voltas por origem, todas: {'desconhecida': 1899, 'humano': 48, 'ia': 17, 'misturada': 4}
+  voltas suas no modelo (limpas): 18
+  limiar: mediana 0.167 s (min 0.06, max 0.669; 19 microsetores no minimo de 0.06 s)
+  foco inicial, volta_ia: setores 30 (0.35 s), 38 (0.41 s), 43 (0.40 s)  [fonte: modelo]
+  foco inicial, minha_melhor: setores 18 (0.20 s), 32 (0.25 s), 44 (0.23 s)  [fonte: modelo]
+==================================================================
+-> C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\ml\origem\atualizar_coach.json
+6/7 store v2, com as checagens
+[1/51] 2026-06-14_10-15-25_vhe_interlagos: 1 voltas
+[2/51] 2026-06-14_10-43-46_vhe_interlagos: 3 voltas
+[3/51] 2026-06-14_11-29-22_vhe_interlagos: 1 voltas
+[4/51] 2026-06-14_11-45-28_vhe_interlagos: 3 voltas
+[5/51] 2026-06-14_12-23-46_vhe_interlagos: 8 voltas
+[6/51] 2026-06-14_12-44-04_vhe_interlagos: 2 voltas
+[7/51] 2026-06-18_20-06-03_vhe_interlagos: 3 voltas
+[8/51] 2026-06-19_11-08-15_vhe_interlagos: 1 voltas
+[9/51] 2026-06-19_23-24-46_vhe_interlagos: 4 voltas
+[10/51] 2026-06-20_13-04-20_vhe_interlagos: 2 voltas
+[11/51] 2026-06-20_13-09-57_vhe_interlagos: 1 voltas
+[12/51] 2026-06-20_13-13-02_vhe_interlagos: 31 voltas
+[13/51] 2026-08-07_20-27-52_vhe_interlagos: 54 voltas
+[14/51] 2026-08-08_11-40-43_vhe_interlagos: 2 voltas
+[15/51] 2026-08-08_11-58-41_vhe_interlagos: 13 voltas
+[16/51] 2026-08-08_12-23-51_vhe_interlagos: 26 voltas
+[17/51] 2026-08-08_13-18-00_vhe_interlagos: 1 voltas
+[18/51] 2026-08-08_13-22-07_vhe_interlagos: 10 voltas
+[19/51] 2026-08-08_16-38-27_vhe_interlagos: 5 voltas
+[20/51] 2026-08-08_16-52-13_vhe_interlagos: 2 voltas
+[21/51] 2026-08-08_17-04-15_vhe_interlagos: 66 voltas
+[22/51] 2026-08-09_10-27-39_vhe_interlagos: 48 voltas
+[23/51] 2026-08-09_12-04-40_vhe_interlagos: 6 voltas
+[24/51] 2026-08-09_12-21-19_vhe_interlagos: 5 voltas
+[25/51] 2026-08-09_12-37-42_vhe_interlagos: 12 voltas
+[26/51] 2026-08-09_13-02-49_vhe_interlagos: 19 voltas
+[27/51] 2026-08-09_13-42-29_vhe_interlagos: 16 voltas
+[28/51] 2026-08-09_14-16-51_vhe_interlagos: 11 voltas
+[29/51] 2026-08-09_14-40-07_vhe_interlagos: 1 voltas
+[30/51] 2026-08-09_14-44-00_vhe_interlagos: 8 voltas
+[31/51] 2026-08-09_14-58-46_vhe_interlagos: 6 voltas
+[32/51] 2026-08-09_15-10-52_vhe_interlagos: 49 voltas
+[33/51] 2026-08-09_16-53-03_vhe_interlagos: 1 voltas
+[34/51] 2026-08-09_17-00-01_vhe_interlagos: 2 voltas
+[35/51] 2026-08-09_17-06-41_vhe_interlagos: 6 voltas
+[36/51] 2026-08-09_17-23-56_vhe_interlagos: 6 voltas
+[37/51] 2026-08-09_17-37-33_vhe_interlagos: 21 voltas
+[38/51] 2026-08-09_18-22-00_vhe_interlagos: 6 voltas
+[39/51] 2026-08-09_18-41-18_vhe_interlagos: 3 voltas
+[40/51] 2026-08-09_18-47-11_vhe_interlagos: 12 voltas
+[41/51] 2026-08-09_19-10-41_vhe_interlagos: 3 voltas
+[42/51] 2026-08-09_19-15-35_vhe_interlagos: 1 voltas
+[43/51] 2026-08-09_19-20-59_vhe_interlagos: 40 voltas
+[44/51] 2026-08-16_03-30-14_vhe_interlagos: 7 voltas
+[45/51] 2026-08-19_20-58-36_vhe_interlagos: 7 voltas
+[46/51] 2026-08-19_21-45-59_vhe_interlagos: 3 voltas
+[47/51] 2026-08-19_22-23-14_vhe_interlagos: 14 voltas
+[48/51] 2026-10-04_02-24-04_vhe_interlagos: 10 voltas
+[49/51] 2026-10-04_03-21-52_vhe_interlagos: 4 voltas
+[50/51] 2026-10-04_03-42-10_vhe_interlagos: 12 voltas
+[51/51] 2026-10-04_23-51-42_vhe_interlagos: 7 voltas
+
+store v2 -> C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\ml\laps_grid_v2.parquet  (572 s)
+voltas: 585  {'desconhecida': 552, 'humano': 18, 'ia': 13, 'misturada': 2}  {'anterior': 552, 'atual': 33}  {'app_instalado': 458, 'repositorio': 127}
+selecao: {"voltas_no_inventario": 1968, "validas": 728, "duplicadas_tiradas": 4, "box_tiradas": 139, "no_store_v2": 585}
+  [ok] periodo de s = 0 a s = 0 contra o cronometro do jogo
+  [ok] nenhuma volta passa pelo box
+  [ok] nenhuma volta aparece duas vezes
+  [ok] uma geometria so
+     periodo - jogo (ms): {'n': 585, 'min': -20.15, 'p1': -3.11, 'mediana': 0.73, 'p99': 3.34, 'max': 7.45}  sem fechamento medido: 0
+  efeitos: volta 27.78 ms, microsetor 0 27.16 ms, outros p99 0.6 ms (101 voltas)
+  controle (store antigo contra o jogo): {'n': 101, 'min': -52.22, 'p1': -45.03, 'mediana': -27.25, 'p99': -15.68, 'max': -14.89}
+-> C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\ml\store_v2_relatorio.json
+7/7 relatorio de evolucao
+======================================================================
+EVOLUCAO  (referencia: volta da IA 2026-10-04_03-42-10_vhe_interlagos#0013, 84.829 s)
+  2026-10-04: 11 voltas, melhor 89.39 s, mediana 93.458 s (desvio 2.397), mediana - IA 8.629 s
+  2026-10-05: 7 voltas, melhor 90.218 s, mediana 91.396 s (desvio 1.205), mediana - IA 6.567 s
+
+  curvas em 2026-10-04 (perda mediana para a IA, intervalo de 90%):
+    C01-esq  +1.267 s  [1.0345, 1.5911]  diferenca_consistente (perde)  freio -66 m  apice -0.85 m  minima -4.1 km/h
+    C02-dir  +0.062 s  [-0.0384, 0.0672]  sem_diferenca_consistente  freio -  apice -0.11 m  minima -1.5 km/h
+    C03-esq  +0.512 s  [0.3642, 0.5939]  diferenca_consistente (perde)  freio -  apice -0.78 m  minima -0.6 km/h
+    C04-esq  +0.728 s  [0.5585, 0.7936]  diferenca_consistente (perde)  freio -48 m  apice -0.47 m  minima -11.4 km/h
+    C05-esq  +0.322 s  [0.188, 0.5109]  diferenca_consistente (perde)  freio -  apice -2.21 m  minima -11.9 km/h
+    C06-dir  +0.558 s  [0.2961, 0.707]  diferenca_consistente (perde)  freio -72 m  apice -3.85 m  minima -3.5 km/h
+    C07-dir  +0.510 s  [0.3985, 0.7297]  diferenca_consistente (perde)  freio -28 m  apice +1.06 m  minima -6.7 km/h
+    C08-esq  +0.278 s  [0.2292, 0.5538]  diferenca_consistente (perde)  freio -17 m  apice -0.04 m  minima +3.6 km/h
+    C09-dir  +0.346 s  [0.1799, 0.3532]  diferenca_consistente (perde)  freio -  apice -1.69 m  minima -20.3 km/h
+    C10-dir  +0.791 s  [0.6297, 0.8941]  diferenca_consistente (perde)  freio -11 m  apice +1.21 m  minima -7.3 km/h
+    C11-esq  +0.792 s  [0.6177, 1.42]  diferenca_consistente (perde)  freio -  apice -0.57 m  minima -20.4 km/h
+    C12-esq  +0.638 s  [0.5041, 1.071]  diferenca_consistente (perde)  freio -34 m  apice -0.89 m  minima +0.4 km/h
+    C13-esq  +0.172 s  [0.1633, 0.2329]  diferenca_consistente (perde)  freio -  apice -2.23 m  minima -5.6 km/h
+    C14-esq  +0.352 s  [0.2406, 0.7258]  diferenca_consistente (perde)  freio -  apice -2.49 m  minima -6.6 km/h
+
+  curvas em 2026-10-05 (perda mediana para a IA, intervalo de 90%):
+    C01-esq  +1.040 s  [1.0073, 1.3829]  diferenca_consistente (perde)  freio -44 m  apice -0.80 m  minima -9.3 km/h
+    C02-dir  +0.204 s  [0.1328, 0.5233]  diferenca_consistente (perde)  freio -  apice +0.38 m  minima -6.2 km/h
+    C03-esq  +0.514 s  [0.4636, 0.6942]  diferenca_consistente (perde)  freio -  apice -3.13 m  minima -12.5 km/h
+    C04-esq  +0.662 s  [0.5974, 0.8808]  diferenca_consistente (perde)  freio -20 m  apice -1.59 m  minima -14.5 km/h
+    C05-esq  +0.161 s  [0.1472, 0.4868]  diferenca_consistente (perde)  freio -  apice -1.14 m  minima -5.2 km/h
+    C06-dir  +0.166 s  [0.0813, 0.3096]  diferenca_consistente (perde)  freio -60 m  apice -4.44 m  minima +3.5 km/h
+    C07-dir  +0.559 s  [0.3269, 0.6407]  diferenca_consistente (perde)  freio -26 m  apice -0.38 m  minima -2.2 km/h
+    C08-esq  +0.414 s  [0.2965, 0.4638]  diferenca_consistente (perde)  freio -  apice -0.81 m  minima +0.3 km/h
+    C09-dir  +0.184 s  [0.0787, 0.1998]  diferenca_consistente (perde)  freio -  apice -4.16 m  minima -13.0 km/h
+    C10-dir  +0.604 s  [0.4469, 0.9555]  diferenca_consistente (perde)  freio -6 m  apice +1.58 m  minima -6.0 km/h
+    C11-esq  +0.688 s  [0.3242, 0.8163]  diferenca_consistente (perde)  freio -  apice -1.93 m  minima -17.9 km/h
+    C12-esq  +0.602 s  [0.3565, 0.7456]  diferenca_consistente (perde)  freio -38 m  apice -1.34 m  minima +5.0 km/h
+    C13-esq  +0.144 s  [0.1318, 0.1965]  diferenca_consistente (perde)  freio -  apice -1.66 m  minima -4.9 km/h
+    C14-esq  +0.225 s  [0.1845, 0.2703]  diferenca_consistente (perde)  freio -  apice -2.26 m  minima -2.4 km/h
+
+  tendencia da mediana: -2.062 s por sessao
+  3 curvas de maior perda: ['C01-esq', 'C11-esq', 'C04-esq']
+  criterio do ADR 0015: ainda nao avaliavel: 2 de 3 sessoes
+======================================================================
+-> C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\ml\evolucao
+painel: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\ml\evolucao\painel.html
+
+painel da evolucao: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\ml\evolucao\painel.html
+codigo de saida: 0 (1454 s)

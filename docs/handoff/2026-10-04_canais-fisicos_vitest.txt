@@ -1,0 +1,16 @@
+
+ RUN  v2.1.9 C:/Users/Dokas/Desktop/f1-telemetry-analyzer/frontend
+
+ ✓ src/utils/sectorTimes.test.ts (13 tests) 9ms
+ ✓ src/components/map/CameraController.test.ts (7 tests) 5ms
+ ✓ src/components/map/OverlayRenderer.test.ts (26 tests) 15ms
+ ✓ src/components/map/BroadcastOverlay.test.ts (23 tests) 17ms
+ ✓ src/components/map/TrackElevationRibbon.test.ts (25 tests) 14ms
+ ✓ src/components/CoachingFeed.test.ts (12 tests) 5ms
+ ✓ src/store/offlineReplay.test.ts (32 tests) 19ms
+
+ Test Files  7 passed (7)
+      Tests  138 passed (138)
+   Start at  11:13:59
+   Duration  8.28s (transform 698ms, setup 0ms, collect 1.41s, tests 84ms, environment 2ms, prepare 4.44s)
+
