@@ -1,0 +1,248 @@
+diff --git a/backend/ml/data/inventory.py b/backend/ml/data/inventory.py
+index ce28f120..def3d8db 100644
+--- a/backend/ml/data/inventory.py
++++ b/backend/ml/data/inventory.py
+@@ -174,7 +174,14 @@ def scan_sessions(
+ 
+ 
+ def summarise(inventory: pd.DataFrame) -> Dict[str, Any]:
+-    """Resumo legivel do inventario -- a analise exploratoria em numeros."""
++    """Resumo legivel do inventario -- a analise exploratoria em numeros.
++
++    O `duration_s` do inventario vai do primeiro ao ultimo ponto gravado da
++    volta e nao e o tempo de volta: fica de 13 a 43 ms curto, sem os trechos
++    ate a linha. Ate o pedido 20 o resumo o publicava com o nome `lap_time_s`,
++    e dali ele foi parar como tempo de volta em documentos (pedido 19). O tempo
++    de volta oficial e o `lap_time_s` do store v2.
++    """
+     if inventory.empty:
+         return {"laps": 0}
+ 
+@@ -208,7 +215,7 @@ def summarise(inventory: pd.DataFrame) -> Dict[str, Any]:
+ 
+     if len(valid):
+         for column, label in (
+-            ("duration_s", "lap_time_s"),
++            ("duration_s", "duration_s"),
+             ("sample_hz", "sample_hz"),
+             ("speed_mean_kmh", "speed_mean_kmh"),
+             ("coverage", "coverage"),
+@@ -225,11 +232,11 @@ def summarise(inventory: pd.DataFrame) -> Dict[str, Any]:
+                 "p90": float(np.percentile(values, 90)),
+                 "max": float(values.max()),
+             }
+-        best = valid.loc[valid["duration_s"].idxmin()]
+-        summary["best_lap"] = {
+-            "lap_id": str(best["lap_id"]),
+-            "lap_time_s": float(best["duration_s"]),
+-            "sample_hz": float(best["sample_hz"]),
++        shortest = valid.loc[valid["duration_s"].idxmin()]
++        summary["shortest_duration_lap"] = {
++            "lap_id": str(shortest["lap_id"]),
++            "duration_s": float(shortest["duration_s"]),
++            "sample_hz": float(shortest["sample_hz"]),
+         }
+         summary["valid_laps_per_session"] = (
+             valid.groupby("session_id").size().sort_values(ascending=False).to_dict()
+diff --git a/backend/tests/test_inventory_summary.py b/backend/tests/test_inventory_summary.py
+new file mode 100644
+index 00000000..44096345
+--- /dev/null
++++ b/backend/tests/test_inventory_summary.py
+@@ -0,0 +1,65 @@
++"""Pedido 20: o resumo do inventario nao chama o `duration_s` de tempo de volta.
++
++O `duration_s` vai do primeiro ao ultimo ponto gravado da volta e nao e o tempo
++de volta. O resumo o publicava como `lap_time_s` e `best_lap`, e dali ele foi
++parar como tempo de volta em documentos (pedido 19).
++"""
++
++from __future__ import annotations
++
++import sys
++import unittest
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++BACKEND = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(BACKEND))
++
++from ml.data.inventory import summarise  # noqa: E402
++
++
++def inventory():
++    durations = [89.379, 93.004, 84.816, 300.0, 91.719]
++    return pd.DataFrame({
++        "lap_id": [f"s#{i:04d}" for i in range(5)],
++        "session_id": ["s", "s", "t", "t", "t"],
++        "driver_id": "player_1",
++        "valid": [True, True, True, False, True],
++        "reasons": ["", "", "", "volta longa demais", ""],
++        "duration_s": durations,
++        "sample_hz": [58.0, 57.5, 59.0, 40.0, 58.2],
++        "speed_mean_kmh": [160.0] * 5,
++        "coverage": [1.0] * 5,
++    })
++
++
++def keys(node):
++    if isinstance(node, dict):
++        for key, value in node.items():
++            yield key
++            yield from keys(value)
++
++
++class SummaryTest(unittest.TestCase):
++    def test_no_field_is_called_lap_time(self):
++        summary = summarise(inventory())
++        self.assertNotIn("lap_time_s", set(keys(summary)))
++        self.assertNotIn("best_lap", summary)
++
++    def test_the_duration_keeps_the_values_it_had(self):
++        frame = inventory()
++        valid = frame.loc[frame["valid"], "duration_s"].to_numpy(dtype=float)
++        summary = summarise(frame)
++        # Os mesmos numeros que saiam como `lap_time_s` antes do pedido 20.
++        self.assertEqual(summary["duration_s"], {
++            "min": float(valid.min()), "p10": float(np.percentile(valid, 10)), "median": float(np.median(valid)),
++            "p90": float(np.percentile(valid, 90)), "max": float(valid.max()),
++        })
++        self.assertEqual(summary["shortest_duration_lap"],
++                         {"lap_id": "s#0002", "duration_s": 84.816, "sample_hz": 59.0})
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/docs/backlog.md b/docs/backlog.md
+index 3ed9a10f..474392d3 100644
+--- a/docs/backlog.md
++++ b/docs/backlog.md
+@@ -13,9 +13,9 @@ Lista viva de problemas conhecidos e tarefas adiadas, mantida pelo Claude (Cowor
+ | `develop`, `main` e as tags só existem no PC | Desde 30/09 | Sem backup remoto | Quando o Eduardo autorizar o push |
+ | Duas projeções ao vivo durante a transição (runtime para mapa e painel, geometria oficial para o coach) | ADR 0013 | Temporário; o mesmo carro pode cair em trechos com números um pouco diferentes em telas diferentes | Some quando mapa, painel e replay migrarem |
+ | Voltas gravadas com a IA do AC misturadas às do piloto | ADR 0014; pedidos 12 e 13 | Sessões novas: rótulo pelas anotações e pelo indicador; o indicador do jogo só liga e fica em IA até a sessão reiniciar. Voltas antigas: o detector pela linha da IA rotulou 75 e deixou 467 indefinidas; nada foi promovido | Resolvido para sessões novas; voltas antigas ficam como estão (ADR 0015) |
+-| Corrigir textos publicados que dizem "você" sobre voltas da IA: vídeo "Modelo em Movimento", apresentação, aula, documento "Dados de corrida e estilos" e ADR 0011 | ADR 0014 | Os números certos já existem: Eduardo 89,379 s, 14,7 m de dispersão na freada e 1,84 m no ápice; IA 84,816 s, 1,0 m e 0,04 m | Próxima rodada de documentação |
++| Corrigir textos publicados que dizem "você" sobre voltas da IA: vídeo "Modelo em Movimento", apresentação, aula, documento "Dados de corrida e estilos" e ADR 0011 | ADR 0014 | Os números certos já existem: Eduardo 89,390 s, 14,7 m de dispersão na freada e 1,84 m no ápice; IA 84,829 s, 1,0 m e 0,04 m | Próxima rodada de documentação |
+ | Modelo físico do carro, separado do modelo do piloto | ADR 0017 (04/10) | O simulador atual não recebe as entradas do piloto nem tem estado (pneu, freio). M0: canais físicos no store, unidade do volante e técnica descritiva. M1: modelo do carro para a frente (física simples + correção aprendida). M2: temperatura. M3: modelo do piloto (peça B v2). M4: peça D sobre o modelo do carro | M0 no pedido 18; M1 com 5 sessões humanas com canais físicos |
+-| Duas pastas de gravações e de modelo: a do repositório e a do app instalado (`%APPDATA%\Automobilista Telemetria`), com 90 sessões e 14 GB que o ML nunca viu | Pedido 11 (03/10) | O ML pode estar deixando de fora boa parte dos dados; a volta de referência do teste (84,663 s) veio de lá | Inventário no pedido 12; entrada no store do ML depois da rotulagem |
++| Duas pastas de gravações e de modelo: a do repositório e a do app instalado (`%APPDATA%\Automobilista Telemetria`), com 90 sessões e 14 GB que o ML nunca viu | Pedido 11 (03/10) | O ML pode estar deixando de fora boa parte dos dados; a volta de referência do teste (84,672 s, `2026-08-19_22-23-14#0004`) veio de lá | Inventário no pedido 12; entrada no store do ML depois da rotulagem |
+ | São 688 voltas válidas e únicas nas 125 sessões de Interlagos das duas pastas; o store em uso tem 122 | Pedido 12 (03/10) | Quase todas são da IA ou de antes do equipamento novo | Só entram no modelo do piloto as voltas novas (ADR 0015) |
+ | O app instalado não grava o indicador de IA e não vai gravar os canais físicos do pedido 18 até ser reempacotado | Pedido 12 (03/10); sessão de 04/10 às 23:51, gravada no instalado e rotulada só por anotação | Até lá, gravar com o app aberto a partir do repositório; o que for gravado no instalado fica sem indicador e sem canais físicos | Reempacotar depois do merge do pedido 18 |
+ | A IA de agosto fazia diferente da de hoje no microsetor 41 (2.962 a 3.034 m) e freava 6 a 8 m longe em duas zonas | Pedido 13 (04/10) | Voltas antigas da IA não servem de referência | Referência da IA só de sessões novas |
+diff --git a/docs/coach_aprendizado.md b/docs/coach_aprendizado.md
+index 0c593d8b..84e8b148 100644
+--- a/docs/coach_aprendizado.md
++++ b/docs/coach_aprendizado.md
+@@ -26,6 +26,19 @@ Ao preparar o passo 3, medi o tempo de volta e o microsetor 0 nas 5 voltas de (c
+ | `2026-08-09_19-20-59` | ~85,494 s | 85,4982 s | 85,4717 s | −26,5 ms |
+ | `2026-06-14_12-23-46` | ~85,557 s | 85,5641 s | 85,5378 s | −26,3 ms |
+ 
++> **Errata de 05/10/2026 (pedidos 19 e 20).** A coluna "jogo" (~) é o cronômetro do jogo na última amostra de cada volta, sem costura até a linha, e por isso fica de 0 a 31 ms abaixo do certo. A tabela abaixo põe ao lado dela o cronômetro costurado na troca de volta e o tempo oficial, o `lap_time_s` do store v2:
++>
++> | volta | jogo ~ (última amostra) | cronômetro costurado | oficial |
++> |---|---:|---:|---:|
++> | `2026-08-16_03-30-14#0016` | ~84,873 s | 84,874 s | 84,875 s |
++> | `2026-06-18_20-06-03#0056` | ~85,293 s | 85,324 s | 85,323 s |
++> | `2026-06-20_13-13-02#0003` | ~85,467 s | 85,467 s | 85,468 s |
++> | `2026-08-09_19-20-59#0010` | ~85,494 s | 85,498 s | 85,500 s |
++> | `2026-06-14_12-23-46#0007` | ~85,557 s | 85,573 s | 85,565 s |
++>
++> - **A coluna "período verdadeiro"** difere do oficial em 1 a 4 ms. Ela usava a extrapolação por uma amostra só; o store v2 usa a mediana das amostras perto da linha.
++> - **As conclusões desta seção não mudam:** o store antigo continua um passo da grade curto.
++
+ - **A diferença é o tempo de um passo da grade na reta** (2 m a cerca de 280 km/h, de 25,7 a 26,5 ms), e cai inteira no microsetor 0.
+ - **A causa:** `ml/preprocessing/resampling.py::_reference_clock_to_grid` zera o relógio em s = 0 da grade, mas usa como período o `span` dos tempos na grade, que fica um passo mais curto que a volta.
+ - **O que isso explica:** é o "+26 ms" do critério (c) no pedido 11. O coach estava certo e o store, curto. Explica também o viés de −0,034 s do relógio no microsetor 0 no pedido 12: −26 ms deste passo, mais o viés de −8 ms que aparece em todo microsetor.
+diff --git a/docs/coach_geometria_oficial.md b/docs/coach_geometria_oficial.md
+index 75efd364..070c2578 100644
+--- a/docs/coach_geometria_oficial.md
++++ b/docs/coach_geometria_oficial.md
+@@ -172,6 +172,8 @@ As frases estão em `docs/handoff/2026-10-03_coach_geometria_frases.json`.
+   pipeline do ML nunca leu. A volta de referência do modelo de teste (84,663 s,
+   `rec__2026-08-19_22-23-14_vhe_interlagos__32`) e as outras 4 mais rápidas vêm
+   de lá. Pelo aviso do Eduardo, essas sessões podem ter a IA pilotando.
++
++  > **Nota de 05/10/2026 (pedidos 19 e 20):** 84,663 s foi o tempo medido pelo coach antigo nesse modelo de teste. O tempo oficial da volta (`2026-08-19_22-23-14#0004`, `lap_time_s` do store v2) é 84,672 s.
+ - **O app instalado usa o próprio modelo,**
+   `%APPDATA%\...\data\reference_models\vhe_interlagos.json`, e o script de
+   treino grava lá por padrão (`runtime_root()`). O passo 9 do pedido fala do
+diff --git a/docs/decisoes/0016-coach-na-fase-de-aprendizado.md b/docs/decisoes/0016-coach-na-fase-de-aprendizado.md
+index 9eea99a1..39319b6d 100644
+--- a/docs/decisoes/0016-coach-na-fase-de-aprendizado.md
++++ b/docs/decisoes/0016-coach-na-fase-de-aprendizado.md
+@@ -15,6 +15,15 @@ A sessão rotulada de 04/10 (pedido 13), com o volante e os pedais novos, mediu
+ | Dispersão do ápice | 1,84 m | 0,04 m |
+ | Melhor volta | 89,379 s | 84,816 s |
+ 
++> **Errata de 05/10/2026 (pedidos 19 e 20).** Os tempos da linha "Melhor volta" vieram do `duration_s` do inventário. Ele mede do primeiro ao último ponto gravado da volta e não é o tempo de volta.
++>
++> Os tempos oficiais (`lap_time_s` do store v2, conferidos contra o cronômetro do jogo) são:
++>
++> - o seu: **89,390 s** (`2026-10-04_02-24-04#0018`);
++> - o da IA: **84,829 s** (`2026-10-04_03-42-10#0013`).
++>
++> A decisão não muda.
++
+ Três consequências:
+ 
+ 1. **O ADR 0012 manda comparar com a melhor volta do próprio piloto.** Numa fase em que o piloto melhora a cada sessão, essa referência muda o tempo todo e fica longe do que o carro consegue.
+diff --git a/docs/detector_ia.md b/docs/detector_ia.md
+index 970e3286..28983de8 100644
+--- a/docs/detector_ia.md
++++ b/docs/detector_ia.md
+@@ -2,6 +2,8 @@
+ 
+ Datas: 2026-10-04. Branch: `etapa/detector-ia`.
+ 
++> **Nota de 05/10/2026 sobre os JSONs deste pedido (pedidos 19 e 20).** Os campos `tempo_s` de `docs/handoff/2026-10-04_detector-ia_resultados.json` e de `data/ml/origem/detector_aplicar.json` são o `duration_s` do inventário, e não o tempo de volta. Os JSONs ficam como foram gravados. Os tempos oficiais estão no store v2 (`lap_time_s`). Ver a errata na seção 2.
++
+ ## 1. A sessão rotulada
+ 
+ - **Pista e carro:** Interlagos, com o carro `rss_formula_rss_3_v6_2026`. Esse valor aparece no `metadata.json` de todas as gravações da sessão (campo novo do pedido 12) e é o mesmo carro das sessões antigas que o registravam.
+@@ -62,6 +64,17 @@ Contam só as voltas limpas da sessão rotulada (válidas, únicas, com o relóg
+ | tempo de volta: média e desvio | 93,58 s ± 2,40 s | 84,99 s ± 0,13 s |
+ | melhor volta válida e completa | 89,379 s (parte 2, volta 5) | 84,816 s (parte 2, volta 25) |
+ 
++> **Errata de 05/10/2026 (pedidos 19 e 20).** As linhas "tempo de volta: média e desvio" e "melhor volta válida e completa" vieram do `duration_s` do inventário, que não é o tempo de volta. Os tempos oficiais (`lap_time_s` do store v2), nas mesmas 11 voltas suas e 13 da IA, são:
++>
++> | | suas voltas | IA |
++> |---|---:|---:|
++> | tempo de volta: média e desvio | 93,60 s ± 2,40 s | 85,02 s ± 0,13 s |
++> | melhor volta válida e completa | 89,390 s (`2026-10-04_02-24-04#0018`, parte 2, volta 5) | 84,829 s (`2026-10-04_03-42-10#0013`, parte 2, **volta 26**) |
++>
++> - **A melhor volta da IA é a 26 (`#0013`), não a 25.** Pelo `duration_s`, as voltas 25 e 26 empatavam em 84,816 s; pelo tempo oficial, a 25 (`#0012`) tem 84,835 s.
++> - **As faixas com uma casa decimal mais abaixo** (seções 3 e 4) também vieram do `duration_s`, mas coincidem com o oficial nessa precisão.
++> - **O resto da seção não muda.**
++
+ Nas janelas da Fase 2b, a sua dispersão da frenagem vai de 7,0 m (Bico de Pato) a 50,3 m (Ferradura), e a do ápice vai de 1,1 m a 7,9 m. No Pinheirinho, menos de 3 das suas voltas tiveram início de frenagem detectado.
+ 
+ **A sua variação é de outra ordem que a usada até agora.** O cálculo do experimento usava de 14 a 35 ms no Bico de Pato, números que vinham das sessões de 09/08 e 20/06, ou seja, da IA (ADR 0014). A sua variação, com o equipamento novo e no começo da curva de aprendizado (ADR 0015), é cerca de 0,8 a 0,9 s: umas 60 vezes maior.
+diff --git a/docs/origem_das_voltas.md b/docs/origem_das_voltas.md
+index 7275faea..7507b9a6 100644
+--- a/docs/origem_das_voltas.md
++++ b/docs/origem_das_voltas.md
+@@ -2,6 +2,13 @@
+ 
+ Data: 2026-10-03 e 04. Branch: `etapa/origem-das-voltas`.
+ 
++> **Nota de 05/10/2026 sobre os JSONs deste pedido (pedidos 19 e 20).** Os campos abaixo são o `duration_s` do inventário, e não o tempo de volta:
++>
++> - em `docs/handoff/2026-10-04_origem-das-voltas_resultados.json`: o `lap_time_s` de `item5_inventario` e o de `best_lap`, e os campos `sessoes[].melhor_volta_s` e `tempo_volta_mediana_s`;
++> - os resumos `data/ml/origem/lap_inventory_summary.json`.
++>
++> O resumo do inventário publicava esse valor com o nome `lap_time_s`, o que foi corrigido no pedido 20. Os JSONs ficam como foram gravados. Os tempos oficiais estão no store v2 (`lap_time_s`).
++
+ O objetivo desta etapa é saber, volta a volta, **quem pilotou** (o Eduardo ou a IA do Assetto Corsa) e **se o tempo da volta merece confiança**. Nenhum modelo foi treinado. O store do ML e os resultados antigos não foram refeitos.
+ 
+ ## 1. As duas pastas de gravações
+@@ -217,6 +224,8 @@ O que a tabela mostra:
+ - **A maioria das sessões é tão constante quanto uma máquina.** Em 27 das 32 sessões, 90 % das voltas freiam a até 2,2 m da mediana da pista, e 2 m é a própria resolução da grade. O ápice fica a até 6 cm, e o Bico de Pato varia de 1 a 31 ms. Isso inclui todas as sessões de 07/08 e 08/08, **que não estão entre as datas citadas** e que não se distinguem das de 09/08.
+ - **Quatro sessões são bem mais variáveis:** `2026-06-19_23-24-46`, `2026-06-20_13-13-02`, `2026-08-16_03-30-14` e `2026-08-19_20-58-36`. Nelas, a dispersão da frenagem vai de 7 a 8,4 m e a do ápice de 0,9 a 1,7 m. Em `2026-06-20_13-13-02` metade das voltas fica a até 3 m da mediana e 10 % passam de 16 m, o que combina com uma sessão alternada.
+ - **`2026-08-19_22-23-14` é constante, mas diferente:** freia sempre de 3 a 4 m longe da mediana das outras, e o ápice fica a até 5 cm. É dela a volta de referência do modelo de ensaio do pedido 11 (84,663 s).
++
++  > **Nota de 05/10/2026 (pedidos 19 e 20):** 84,663 s foi o tempo medido pelo coach antigo nesse modelo de ensaio. O tempo oficial da volta (`2026-08-19_22-23-14#0004`, `lap_time_s` do store v2) é 84,672 s.
+ - **Pedais e trocas de marcha não variam entre sessões nestes dados.** O freio vai de 0 a 0,99 numa amostra em todas as sessões, inclusive nas quatro variáveis. A marcha sobe a 8.200 rpm, com dispersão de 3 a 13 rpm, em quase todas (46 rpm na mais variável). Nestes dados, esses sinais não separam nada. Com outro controle ou câmbio manual, isso pode mudar.
+ - **O volante varia, mas depende de outras coisas.** As mudanças de sentido por km vão de 45 a 67, e as duas sessões com menos (45 e 47) estão entre as variáveis. Mas `2026-06-20` (variável) tem 67. A taxa de giro (p95) depende da frequência de gravação: as sessões de 30 Hz dão valores menores.
+ 
