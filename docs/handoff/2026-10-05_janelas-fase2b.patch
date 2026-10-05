@@ -1,0 +1,122 @@
+diff --git a/backend/ml/validation/empirical.py b/backend/ml/validation/empirical.py
+index c014ebd0..101a818c 100644
+--- a/backend/ml/validation/empirical.py
++++ b/backend/ml/validation/empirical.py
+@@ -194,15 +194,28 @@ def define_windows(
+     chosen = [chosen[i] for i in order]
+     ends = np.roll(starts, -1)
+ 
+-    index = np.empty(track.size, dtype=int)
+-    entry = np.empty(starts.size, dtype=int)
+-    for k, (start, end) in enumerate(zip(starts, ends)):
+-        points = _window(track, start, end)[:-1]
+-        index[points] = k
+-        entry[k] = points[0]
++    entry = np.array([int(track.index_of(start)) for start in starts], dtype=int)
++    index = assign_points(entry, track.size)
+     return Windows(starts, ends, chosen, index, entry, medians, track.length)
+ 
+ 
++def assign_points(entry: np.ndarray, size: int) -> np.ndarray:
++    """Janela de cada ponto da grade: a ultima cuja entrada esta nele ou antes dele.
++
++    Cada ponto recebe exatamente uma janela. Antes (05/10), cada janela marcava
++    `round(comprimento / passo)` pontos a partir da entrada, sobre um vetor
++    criado com `np.empty`: quando o arredondamento nao fechava com a entrada da
++    seguinte, um ponto ficava sem janela, com o que houvesse na memoria (um
++    negativo, um indice fora da faixa ou um numero de janela valido, calado),
++    e outro ponto ficava em duas. Na geometria oficial isso nao acontecia em
++    nenhum uso; com janelas contiguas o resultado e o mesmo de antes.
++    """
++    entry = np.asarray(entry, dtype=int)
++    owner = np.searchsorted(entry, np.arange(size), side="right") - 1
++    # Antes da primeira entrada, a grade ainda e a ultima janela, que cruza a linha.
++    return np.where(owner < 0, entry.size - 1, owner).astype(int)
++
++
+ # ---------------------------------------------------- entradas por volta ---
+ 
+ def lap_window_features(
+diff --git a/backend/tests/test_ml_empirical.py b/backend/tests/test_ml_empirical.py
+index e1f7d49f..1e570954 100644
+--- a/backend/tests/test_ml_empirical.py
++++ b/backend/tests/test_ml_empirical.py
+@@ -57,6 +57,34 @@ class WindowTest(unittest.TestCase):
+         labels = {round(s): c.index for s, c in zip(windows.start_s, windows.corner)}
+         self.assertEqual(sorted(labels.values()), [0, 1, 2])
+ 
++    def test_every_point_has_exactly_one_window_at_a_rounding_junction(self):
++        """Regressao (05/10): nesta pista o ponto 617 ficava sem janela e o 139 em duas.
++
++        O ponto sem janela guardava o que houvesse no `np.empty`; quando era um
++        negativo, o `bincount` acima falhava, e quando era um numero de janela
++        valido, o ponto entrava calado na janela errada.
++        """
++        rng = np.random.default_rng(0)
++        brakes = [
++            brake_trace(
++                self.track,
++                [np.mod(1255 + rng.normal(0, 3), self.track.length), 300 + rng.normal(0, 3), 360, 700],
++            )
++            for _ in range(10)
++        ]
++        windows = em.define_windows(brakes, self.track, self.corners)
++        self.assertTrue(np.all((windows.index >= 0) & (windows.index < windows.count)))
++        for k in range(windows.count):
++            self.assertEqual(windows.index[windows.entry_index[k]], k)
++        junction = int(self.track.index_of(windows.start_s[2])) - 1    # o ponto antes da entrada da janela 2
++        self.assertEqual(windows.index[junction], 1)
++
++    def test_contiguous_windows_are_assigned_as_before(self):
++        entry = np.array([10, 40, 90])
++        index = em.assign_points(entry, 100)
++        expected = np.array([2] * 10 + [0] * 30 + [1] * 50 + [2] * 10)
++        np.testing.assert_array_equal(index, expected)
++
+     def test_zones_braked_by_few_laps_do_not_open_a_window(self):
+         brakes = [brake_trace(self.track, [300, 700]) for _ in range(9)]
+         brakes.append(brake_trace(self.track, [300, 700, 1000]))
+diff --git a/docs/fase2b_estimador_empirico.md b/docs/fase2b_estimador_empirico.md
+index 43e2c130..bee54425 100644
+--- a/docs/fase2b_estimador_empirico.md
++++ b/docs/fase2b_estimador_empirico.md
+@@ -366,3 +366,39 @@ Reutilizado sem duplicar:
+ 
+ Nenhuma LSTM foi retreinada; `optimal.json`, interface e algoritmo evolutivo
+ não foram tocados.
++
++## 8. Correção de 05/10/2026: cada ponto da grade em exatamente uma janela
++
++### O erro
++
++- **Onde:** `ml/validation/empirical.py::define_windows`.
++- **Como funcionava:** cada janela marcava `round(comprimento / passo)` pontos a partir da sua entrada, sobre um vetor criado com `np.empty`.
++- **A falha:** quando o arredondamento não fechava com a entrada da janela seguinte, um ponto ficava sem janela e guardava o que houvesse na memória. Podia ser:
++  - um número negativo, que fez o `WindowTest` falhar uma vez numa rodada da suíte;
++  - um índice fora da faixa;
++  - um número de janela válido, com o ponto entrando calado na janela errada.
++- **Efeito colateral:** outro ponto ficava em duas janelas, e valia a última marcada.
++
++### Diagnóstico, antes da correção
++
++- **Na geometria oficial** (`0ed16f0dd2225990`), com o código antigo e um marcador no lugar do `np.empty`, **nenhum ponto ficou sem janela e nenhum ficou em duas**, em nenhum uso:
++  - as 11 dobras da variante "todas" e as 9 da "sem dominantes" desta Fase 2b;
++  - as janelas da sessão controlada;
++  - o relatório de origem do pedido 12;
++  - a variação do pedido 13.
++- **Na pista circular do teste**, a falha aparece:
++  - o ponto 617 (1.234,6 m) ficava sem janela, na junção antes da janela que começa em 1.236,6 m;
++  - o ponto 139, entrada da janela 0, ficava também na janela 2, que cruza a linha.
++
++### A correção
++
++- **A regra:** cada ponto pertence à janela cuja entrada é a última nele ou antes dele (`assign_points`). Antes da primeira entrada, a grade é da última janela, que cruza a linha.
++- **As entradas** são as mesmas de antes. Com janelas contíguas, a atribuição é idêntica à antiga.
++- **Testes:** o caso exato da pista circular e a equivalência com o algoritmo antigo.
++
++### Comparação, depois da correção
++
++- **As janelas de todos os usos acima,** com as voltas guardadas, foram comparadas ponto a ponto com as do algoritmo antigo: **0 pontos mudaram**, e as entradas são as mesmas.
++- **Consequência para os resultados:** os números desta fase e do ADR 0011 continuam valendo, sem recálculo, e nenhum documento de resultado foi alterado.
++- **Arquivos:** o diagnóstico e a comparação estão em `docs/handoff/2026-10-05_janelas-fase2b_*.json`.
++

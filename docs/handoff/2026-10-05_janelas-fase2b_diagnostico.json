@@ -1,0 +1,172 @@
+{
+ "geometry_id": "0ed16f0dd2225990",
+ "passo_m": 2.000036717997977,
+ "pontos": 2167,
+ "usos": {
+  "fase2b_todas": {
+   "2026-06-14_12-23-46_vhe_interlagos": {
+    "janelas": 7,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-06-18_20-06-03_vhe_interlagos": {
+    "janelas": 7,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-06-19_11-08-15_vhe_interlagos": {
+    "janelas": 7,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-06-19_23-24-46_vhe_interlagos": {
+    "janelas": 7,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-06-20_13-04-20_vhe_interlagos": {
+    "janelas": 7,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-06-20_13-09-57_vhe_interlagos": {
+    "janelas": 7,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-06-20_13-13-02_vhe_interlagos": {
+    "janelas": 8,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-08-09_19-10-41_vhe_interlagos": {
+    "janelas": 7,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-08-09_19-15-35_vhe_interlagos": {
+    "janelas": 7,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-08-09_19-20-59_vhe_interlagos": {
+    "janelas": 7,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-08-16_03-30-14_vhe_interlagos": {
+    "janelas": 7,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   }
+  },
+  "fase2b_sem_dominantes": {
+   "2026-06-14_12-23-46_vhe_interlagos": {
+    "janelas": 7,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-06-18_20-06-03_vhe_interlagos": {
+    "janelas": 8,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-06-19_11-08-15_vhe_interlagos": {
+    "janelas": 8,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-06-19_23-24-46_vhe_interlagos": {
+    "janelas": 8,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-06-20_13-04-20_vhe_interlagos": {
+    "janelas": 8,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-06-20_13-09-57_vhe_interlagos": {
+    "janelas": 8,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-08-09_19-10-41_vhe_interlagos": {
+    "janelas": 8,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-08-09_19-15-35_vhe_interlagos": {
+    "janelas": 8,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   },
+   "2026-08-16_03-30-14_vhe_interlagos": {
+    "janelas": 8,
+    "sem_janela": 0,
+    "sobrepostos": 0,
+    "juncoes_sem_janela": [],
+    "sobreposicoes": []
+   }
+  },
+  "sessao_controlada (todas as voltas do store)": {
+   "janelas": 7,
+   "sem_janela": 0,
+   "sobrepostos": 0,
+   "juncoes_sem_janela": [],
+   "sobreposicoes": []
+  },
+  "pedido_12_report_lap_origin (dados de hoje)": {
+   "janelas": 7,
+   "sem_janela": 0,
+   "sobrepostos": 0,
+   "juncoes_sem_janela": [],
+   "sobreposicoes": []
+  },
+  "pedido_13_detector_variacao": {
+   "janelas": 7,
+   "sem_janela": 0,
+   "sobrepostos": 0,
+   "juncoes_sem_janela": [],
+   "sobreposicoes": []
+  }
+ }
+}

@@ -1,0 +1,217 @@
+{
+ "geometry_id": "0ed16f0dd2225990",
+ "usos": {
+  "fase2b_todas": {
+   "2026-06-14_12-23-46_vhe_interlagos": {
+    "janelas": 7,
+    "voltas": 122,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 264374,
+    "mudancas": []
+   },
+   "2026-06-18_20-06-03_vhe_interlagos": {
+    "janelas": 7,
+    "voltas": 122,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 264374,
+    "mudancas": []
+   },
+   "2026-06-19_11-08-15_vhe_interlagos": {
+    "janelas": 7,
+    "voltas": 122,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 264374,
+    "mudancas": []
+   },
+   "2026-06-19_23-24-46_vhe_interlagos": {
+    "janelas": 7,
+    "voltas": 122,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 264374,
+    "mudancas": []
+   },
+   "2026-06-20_13-04-20_vhe_interlagos": {
+    "janelas": 7,
+    "voltas": 122,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 264374,
+    "mudancas": []
+   },
+   "2026-06-20_13-09-57_vhe_interlagos": {
+    "janelas": 7,
+    "voltas": 122,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 264374,
+    "mudancas": []
+   },
+   "2026-06-20_13-13-02_vhe_interlagos": {
+    "janelas": 8,
+    "voltas": 122,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 264374,
+    "mudancas": []
+   },
+   "2026-08-09_19-10-41_vhe_interlagos": {
+    "janelas": 7,
+    "voltas": 122,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 264374,
+    "mudancas": []
+   },
+   "2026-08-09_19-15-35_vhe_interlagos": {
+    "janelas": 7,
+    "voltas": 122,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 264374,
+    "mudancas": []
+   },
+   "2026-08-09_19-20-59_vhe_interlagos": {
+    "janelas": 7,
+    "voltas": 122,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 264374,
+    "mudancas": []
+   },
+   "2026-08-16_03-30-14_vhe_interlagos": {
+    "janelas": 7,
+    "voltas": 122,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 264374,
+    "mudancas": []
+   }
+  },
+  "fase2b_sem_dominantes": {
+   "2026-06-14_12-23-46_vhe_interlagos": {
+    "janelas": 7,
+    "voltas": 31,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 67177,
+    "mudancas": []
+   },
+   "2026-06-18_20-06-03_vhe_interlagos": {
+    "janelas": 8,
+    "voltas": 31,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 67177,
+    "mudancas": []
+   },
+   "2026-06-19_11-08-15_vhe_interlagos": {
+    "janelas": 8,
+    "voltas": 31,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 67177,
+    "mudancas": []
+   },
+   "2026-06-19_23-24-46_vhe_interlagos": {
+    "janelas": 8,
+    "voltas": 31,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 67177,
+    "mudancas": []
+   },
+   "2026-06-20_13-04-20_vhe_interlagos": {
+    "janelas": 8,
+    "voltas": 31,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 67177,
+    "mudancas": []
+   },
+   "2026-06-20_13-09-57_vhe_interlagos": {
+    "janelas": 8,
+    "voltas": 31,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 67177,
+    "mudancas": []
+   },
+   "2026-08-09_19-10-41_vhe_interlagos": {
+    "janelas": 8,
+    "voltas": 31,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 67177,
+    "mudancas": []
+   },
+   "2026-08-09_19-15-35_vhe_interlagos": {
+    "janelas": 8,
+    "voltas": 31,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 67177,
+    "mudancas": []
+   },
+   "2026-08-16_03-30-14_vhe_interlagos": {
+    "janelas": 8,
+    "voltas": 31,
+    "pontos_da_grade": 2167,
+    "pontos_que_mudaram": 0,
+    "entradas_iguais": true,
+    "pontos_volta_comparados": 67177,
+    "mudancas": []
+   }
+  },
+  "sessao_controlada": {
+   "janelas": 7,
+   "voltas": 122,
+   "pontos_da_grade": 2167,
+   "pontos_que_mudaram": 0,
+   "entradas_iguais": true,
+   "pontos_volta_comparados": 264374,
+   "mudancas": []
+  },
+  "pedido_12_report_lap_origin": {
+   "janelas": 7,
+   "voltas": 577,
+   "pontos_da_grade": 2167,
+   "pontos_que_mudaram": 0,
+   "entradas_iguais": true,
+   "pontos_volta_comparados": 1250359,
+   "mudancas": []
+  },
+  "pedido_13_detector_variacao": {
+   "janelas": 7,
+   "voltas": 26,
+   "pontos_da_grade": 2167,
+   "pontos_que_mudaram": 0,
+   "entradas_iguais": true,
+   "pontos_volta_comparados": 56342,
+   "mudancas": []
+  }
+ },
+ "pontos_que_mudaram_no_total": 0
+}
