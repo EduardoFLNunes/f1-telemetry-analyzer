@@ -121,6 +121,30 @@ Decidida pelo Eduardo em 05/10, depois da sessão de 04/10 às 23:51, que termin
   - A primeira linha é a sessão de 04/10 23:51: `humano`, `rss_formula_rss_3_v6_2026`, anotada pelo Eduardo em 05/10.
 - **O que não muda:** os critérios de "diferença consistente" e de "poucos dados", e as medidas por curva.
 
+### 1.7 Técnica de pilotagem, registrada em 05/10/2026 (pedido 18), antes da primeira rodada
+
+Medidas **descritivas**: não entram em nenhum critério, não mudam a "diferença consistente" e não mudam o coach. Saem num bloco `tecnica` no JSON de cada sessão. Para cada curva, a volta da IA do coach é medida do mesmo jeito.
+
+- **Uso da aderência.**
+  - Em cada curva e volta: o p95 da aceleração combinada, √(g lateral² + g longitudinal²), nos pontos da grade do trecho da curva (o mesmo trecho do tempo).
+  - Por sessão: a mediana entre as voltas e a razão dela contra a volta da IA.
+- **Freio e volante juntos.**
+  - Em cada curva e volta, procura na janela de frenagem do pedido 17, do ápice da curva anterior ao ápice da curva.
+  - Conta os metros em que o freio está em 0,15 ou mais e o volante, em valor absoluto, está em pelo menos 25% do maior volante daquela volta dentro da curva (do início ao fim dela).
+  - O volante é `steer_angle` (bruto), ou `steering` onde ele não existir.
+  - Por sessão: a mediana, e o mesmo número na volta da IA.
+- **Freada emendada.**
+  - Na curva k, toma a sequência contínua de freio em 0,15 ou mais que contém o maior freio entre o ápice da curva anterior e o ápice de k.
+  - A volta conta como emendada quando essa sequência começa antes do ápice da curva anterior.
+  - Volta sem freio de 0,15 ou mais na janela fica "sem frenagem".
+  - Por sessão: quantas voltas emendadas, de quantas com frenagem, e o que a IA faz.
+- **Temperatura dos pneus,** pelas colunas `tyre_core_temp_*` do store.
+  - Por volta: a média dos 4 pneus em s = 0 e ao longo da volta (a média dos pontos da grade), e a média da dianteira e da traseira ao longo da volta.
+  - Por sessão: a série volta a volta e a correlação de Spearman entre a temperatura média da volta e o tempo da volta.
+  - Junto da correlação vai escrito que ela não separa causa: o pneu esquenta e o piloto melhora ao mesmo tempo.
+- **Temperatura dos freios:** só se o campo existir (`brake_temp_*`). Por curva e volta, a máxima nos pontos da janela de frenagem com freio em 0,15 ou mais.
+- **Volta sem o canal:** fica sem número e é contada à parte (`sem_canal`).
+
 ## 2. O que mudou no store (Parte B)
 
 O store v2 é um arquivo novo: `data/ml/laps_grid_v2.parquet`, com o meta em `laps_grid_v2_meta.json`. Ele é construído por `python -m ml.scripts.build_lap_store_v2`, e o `atualizar_coach` também o refaz.
@@ -303,6 +327,24 @@ Campos de cada item de `curvas[]`:
 | `criterio_adr_0015` | `limite_s` (0,5), `sessoes_necessarias` (3), `sessoes_disponiveis`, `amplitude_s` (maior menos menor mediana das últimas 3), `estabilizou` (`true`, `false` ou `null`) e `situacao` em texto |
 | `referencia`, `store`, `regras` | como no JSON da sessão |
 | `arquivos_de_sessao` | os caminhos dos JSONs de sessão |
+
+### Bloco `tecnica` no JSON da sessão (`formato: "tecnica/1"`, pedido 18)
+
+Medidas descritivas, com as definições da seção 1.7. Nenhuma delas muda a situação das curvas. Valor `null` quer dizer sem número: a volta não tem o canal, ou a medida não se aplica.
+
+| campo | o que é |
+|---|---|
+| `voltas`, `definicoes` | quantas voltas da sessão e onde estão as definições |
+| `curvas[].curva` | o rótulo da curva, na mesma ordem de `curvas[]` do relatório |
+| `curvas[].uso_da_aderencia` | `mediana` do p95 de √(g lat² + g long²) no trecho, em g; `voltas` com número e `sem_canal`; `ia_g`, o mesmo na volta da IA; `razao_contra_ia`, a mediana dividida pela IA |
+| `curvas[].freio_e_volante_juntos` | `mediana` dos metros com freio ≥ 0,15 e volante ≥ 25% do maior da curva, na janela do ápice anterior ao ápice; `voltas`, `sem_canal` e `ia_m` |
+| `curvas[].freada_emendada` | `voltas_emendadas` de `voltas_com_frenagem`, `voltas_sem_frenagem` e `ia` (`emendada`, `nao emendada` ou `sem frenagem`) |
+| `curvas[].temperatura_freio_max_c` | `mediana`, `voltas` e `sem_canal` da máxima de freio na frenagem, em °C; `null` quando nenhuma volta tem o canal |
+| `curvas[].por_volta[]` | `volta`, `uso_da_aderencia_g`, `freio_e_volante_m`, `emendada` (`true`, `false` ou `null` sem frenagem) e `freio_max_c` |
+| `pneus.por_volta[]` | `volta`, `tempo_s`, `media_s0_c`, `media_volta_c`, `dianteira_c` e `traseira_c` (°C; só com os 4 canais de pneu) |
+| `pneus.spearman_temperatura_tempo` | a correlação de Spearman entre `media_volta_c` e `tempo_s`, com 3 voltas ou mais; `nota` lembra que ela não separa causa |
+| `pneus.voltas`, `pneus.sem_canal` | voltas com e sem as temperaturas dos pneus |
+| `freios.canal`, `freios.nota` | se alguma volta da sessão tem a temperatura dos freios |
 
 ## 6. Pedido 17: janela de frenagem e painel
 

@@ -69,6 +69,44 @@ def _mean(values: Any) -> Optional[float]:
     return sum(numbers) / len(numbers) if numbers else None
 
 
+# Pedido 18 (ADR 0017, M0): uma coluna por roda, na ordem do jogo.
+WHEELS = ("fl", "fr", "rl", "rr")
+
+
+def _wheel(values: Any, index: int) -> Optional[float]:
+    if not isinstance(values, (list, tuple)) or len(values) <= index:
+        return None
+    return number(values[index])
+
+
+def physical_channels(physics: Mapping[str, Any], controls: Mapping[str, Any]) -> Dict[str, Any]:
+    """Os canais fisicos da M0: por roda, o volante bruto e o movimento no referencial do carro.
+
+    Gravacao que nao tem o campo da None, e a coluna fica vazia na volta.
+    """
+    def block(name: str) -> Mapping[str, Any]:
+        value = physics.get(name)
+        return value if isinstance(value, Mapping) else {}
+
+    tyres, brakes, motion = block("tyres"), block("brakes"), block("motion")
+    local = motion.get("localVelocity") if isinstance(motion.get("localVelocity"), Mapping) else {}
+    angular = motion.get("localAngularVelocity") if isinstance(motion.get("localAngularVelocity"), Mapping) else {}
+    row: Dict[str, Any] = {}
+    for prefix, source in (("tyre_core_temp", tyres.get("tyreCoreTemperature")),
+                           ("wheel_load", tyres.get("wheelLoad")),
+                           ("wheel_slip", tyres.get("wheelSlip")),
+                           ("tyre_pressure", tyres.get("tyrePressure")),
+                           ("brake_temp", brakes.get("brakeTemp"))):
+        for index, wheel in enumerate(WHEELS):
+            row[f"{prefix}_{wheel}"] = _wheel(source, index)
+    # O volante como foi gravado: a limpeza corta `steering` em +-1,5, esta nao.
+    row["steer_angle"] = controls.get("steering")
+    row["yaw_rate"] = number(angular.get("y"))
+    row["velocity_long"] = number(local.get("z"))
+    row["velocity_lat"] = number(local.get("x"))
+    return row
+
+
 def flatten(envelope: Mapping[str, Any]) -> Dict[str, Any]:
     """Uma linha do `player.jsonl` -> um dicionario plano de colunas."""
     sample = envelope.get("sample")
@@ -138,6 +176,7 @@ def flatten(envelope: Mapping[str, Any]) -> Dict[str, Any]:
             number(_first(sample, "lateralOffset", "lateral_offset"))
         ),
     }
+    row.update(physical_channels(physics, controls))
     return row
 
 

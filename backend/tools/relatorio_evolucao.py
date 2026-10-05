@@ -119,6 +119,8 @@ def run(out_dir: Path, model_file: Path, store_root: Optional[Path] = None) -> D
     for session, rows in sorted(laps.groupby("sessao")):
         grids = {lap_id: store.lap(lap_id) for lap_id in rows["lap_id"]}
         report = {**ev.session_report(session, rows, grids, ref_grid, ref_total, track, segments, sectors), **common}
+        # Pedido 18 (secao 1.7): descritivo; so le o store e nao mexe no resto do relatorio.
+        report["tecnica"] = ev.technique_report(rows, grids, ref_grid, track, segments)
         path = out_dir / f"sessao_{session}.json"
         path.write_text(json.dumps(report, indent=1, ensure_ascii=False), encoding="utf-8")
         reports.append(report)

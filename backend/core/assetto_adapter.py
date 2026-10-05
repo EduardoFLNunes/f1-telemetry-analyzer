@@ -64,11 +64,19 @@ class SPageFilePhysics(Structure):
         ("ersPowerLevel", c_int),
         ("ersHeatCharging", c_int),
         ("ersIsBatteryCharging", c_int),
-        ("kersCurrentVK", c_float),
-        ("visualTyreDamage", c_float * 4),
-        ("elecSystemsOverlap", c_int),
-        ("ersFuelDiff", c_float),
-        ("diffPa", c_int),
+        # From here the page follows Assetto Corsa 1 (pedido 18). The fields
+        # used to be declared in another simulator's order: `brakeTemp` read
+        # brakeBias and localVelocity, `clutch` read past the end of the page
+        # (always 0 in every recording), and the real brake temperatures sat
+        # under `visualTyreDamage` and two ints. Measured on the saved snapshot
+        # (data/debug/ac_shared_memory_full_inventory.json): the old `brakeTemp`
+        # held 0.55 and a velocity whose z was speedKmh / 3.6 to the third
+        # decimal, and the old `diffPa` held the bits of the float 1.0.
+        ("kersCurrentKJ", c_float),
+        ("drsAvailable", c_int),
+        ("drsEnabled", c_int),
+        ("brakeTemp", c_float * 4),
+        ("clutch", c_float),
         ("tyreTempI", c_float * 4),
         ("tyreTempM", c_float * 4),
         ("tyreTempO", c_float * 4),
@@ -76,22 +84,8 @@ class SPageFilePhysics(Structure):
         ("tyreContactPoint", c_float * 4 * 3),
         ("tyreContactNormal", c_float * 4 * 3),
         ("tyreContactHeading", c_float * 4 * 3),
-        ("brakeTemp", c_float * 4),
-        ("clutch", c_float),
-        ("tyreTempI2", c_float * 4),
-        ("tyreTempM2", c_float * 4),
-        ("tyreTempO2", c_float * 4),
-        ("isShadowTrack", c_int),
-        ("iDiffPriority", c_int),
-        ("tyreWorkTemp", c_float * 4),
-        ("flag", c_int),
-        ("iCurrentMaxGear", c_int),
-        ("iCurrentTyreSet", c_int),
-        ("iMguKMaxTorque", c_float),
-        ("iMguHMaxTorque", c_float),
-        ("gearRatio", c_float * 7),
-        ("iDiffIn", c_float),
-        ("iDiffOut", c_float),
+        ("brakeBias", c_float),
+        ("localVelocity", c_float * 3),
     ]
 
 class SPageFileGraphics(Structure):
@@ -300,6 +294,24 @@ class AssettoAdapter:
             "tyre_wear": list(self.physics.tyreWear),
             "tyre_dirty_level": list(self.physics.tyreDirtyLevel),
             "tyre_core_temperature": list(self.physics.tyreCoreTemp),
+            # Pedido 18 (ADR 0017, M0): what the car model needs and the page
+            # already had -- the tyre surface (inner, middle, outer), the
+            # brakes, the car-frame velocity and the yaw rate.
+            "tyre_temp_inner": list(self.physics.tyreTempI),
+            "tyre_temp_middle": list(self.physics.tyreTempM),
+            "tyre_temp_outer": list(self.physics.tyreTempO),
+            "brake_temp": list(self.physics.brakeTemp),
+            "brake_bias": self.physics.brakeBias,
+            "local_velocity": {
+                "x": self.physics.localVelocity[0],
+                "y": self.physics.localVelocity[1],
+                "z": self.physics.localVelocity[2],
+            },
+            "local_angular_velocity": {
+                "x": self.physics.localAngularVel[0],
+                "y": self.physics.localAngularVel[1],
+                "z": self.physics.localAngularVel[2],
+            },
             "suspension_travel": list(self.physics.suspensionTravel),
             "ride_height": list(self.physics.rideHeight),
             "camber_rad": list(self.physics.camberRAD),

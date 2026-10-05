@@ -67,6 +67,18 @@ class TelemetrySample:
     rideHeight: List[Optional[float]] = field(default_factory=list)
     camberRad: List[Optional[float]] = field(default_factory=list)
     carDamage: List[Optional[float]] = field(default_factory=list)
+    # Pedido 18 (ADR 0017, M0): tyre surface, brakes and car-frame motion.
+    tyreTempInner: List[Optional[float]] = field(default_factory=list)
+    tyreTempMiddle: List[Optional[float]] = field(default_factory=list)
+    tyreTempOuter: List[Optional[float]] = field(default_factory=list)
+    brakeTemp: List[Optional[float]] = field(default_factory=list)
+    brakeBias: Optional[float] = None
+    localVelocityX: Optional[float] = None
+    localVelocityY: Optional[float] = None
+    localVelocityZ: Optional[float] = None
+    localAngularVelocityX: Optional[float] = None
+    localAngularVelocityY: Optional[float] = None
+    localAngularVelocityZ: Optional[float] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "TelemetrySample":
@@ -162,6 +174,17 @@ class TelemetrySample:
             rideHeight=nullable_float_list(data.get("rideHeight", data.get("ride_height"))),
             camberRad=nullable_float_list(data.get("camberRad", data.get("camberRAD", data.get("camber_rad")))),
             carDamage=nullable_float_list(data.get("carDamage", data.get("car_damage"))),
+            tyreTempInner=nullable_float_list(data.get("tyreTempInner", data.get("tyre_temp_inner"))),
+            tyreTempMiddle=nullable_float_list(data.get("tyreTempMiddle", data.get("tyre_temp_middle"))),
+            tyreTempOuter=nullable_float_list(data.get("tyreTempOuter", data.get("tyre_temp_outer"))),
+            brakeTemp=nullable_float_list(data.get("brakeTemp", data.get("brake_temp"))),
+            brakeBias=nullable_float(data.get("brakeBias", data.get("brake_bias"))),
+            localVelocityX=nullable_float((data.get("local_velocity") or {}).get("x")),
+            localVelocityY=nullable_float((data.get("local_velocity") or {}).get("y")),
+            localVelocityZ=nullable_float((data.get("local_velocity") or {}).get("z")),
+            localAngularVelocityX=nullable_float((data.get("local_angular_velocity") or {}).get("x")),
+            localAngularVelocityY=nullable_float((data.get("local_angular_velocity") or {}).get("y")),
+            localAngularVelocityZ=nullable_float((data.get("local_angular_velocity") or {}).get("z")),
         )
 
     @property

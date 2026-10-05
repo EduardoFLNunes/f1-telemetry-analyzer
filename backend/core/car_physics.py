@@ -239,6 +239,8 @@ def _base_unavailable_physics() -> Dict[str, Any]:
             "speedKmh": None,
             "velocity": {"x": None, "y": None, "z": None},
             "accG": {"lateral": None, "longitudinal": None, "vertical": None},
+            "localVelocity": {"x": None, "y": None, "z": None},
+            "localAngularVelocity": {"x": None, "y": None, "z": None},
         },
         "controls": {
             "throttle": None,
@@ -257,6 +259,13 @@ def _base_unavailable_physics() -> Dict[str, Any]:
             "wheelSlip": [None, None, None, None],
             "wheelLoad": [None, None, None, None],
             "estimatedGripIndex": [None, None, None, None],
+            "tyreTempInner": [None, None, None, None],
+            "tyreTempMiddle": [None, None, None, None],
+            "tyreTempOuter": [None, None, None, None],
+        },
+        "brakes": {
+            "brakeTemp": [None, None, None, None],
+            "brakeBias": None,
         },
         "suspension": {
             "suspensionTravel": [None, None, None, None],
@@ -348,6 +357,19 @@ def build_player_car_physics(
                 "longitudinal": _safe_float(sample.accelZ),
                 "vertical": _safe_float(sample.accelY),
             },
+            # Pedido 18 (ADR 0017, M0). In the car's frame: x lateral, y
+            # vertical, z longitudinal; the yaw rate is the y of the angular
+            # velocity.
+            "localVelocity": {
+                "x": _safe_float(sample.localVelocityX),
+                "y": _safe_float(sample.localVelocityY),
+                "z": _safe_float(sample.localVelocityZ),
+            },
+            "localAngularVelocity": {
+                "x": _safe_float(sample.localAngularVelocityX),
+                "y": _safe_float(sample.localAngularVelocityY),
+                "z": _safe_float(sample.localAngularVelocityZ),
+            },
         },
         "controls": {
             "throttle": _safe_float(sample.throttle),
@@ -368,6 +390,13 @@ def build_player_car_physics(
             "wheelSlip": wheel_slip,
             "wheelLoad": wheel_load,
             "estimatedGripIndex": [grip_index] * 4 if grip_index is not None else [None, None, None, None],
+            "tyreTempInner": _array4(sample.tyreTempInner),
+            "tyreTempMiddle": _array4(sample.tyreTempMiddle),
+            "tyreTempOuter": _array4(sample.tyreTempOuter),
+        },
+        "brakes": {
+            "brakeTemp": _array4(sample.brakeTemp),
+            "brakeBias": _safe_float(sample.brakeBias),
         },
         "suspension": {
             "suspensionTravel": suspension_travel,

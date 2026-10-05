@@ -44,6 +44,14 @@ from .session_annotations import car_for, session_annotations
 STORE_V2_FILENAME = "laps_grid_v2.parquet"
 STORE_V2_METADATA = "laps_grid_v2_meta.json"
 STORE_V2_VERSION = 2
+# Pedido 18 (ADR 0017, M0): os canais fisicos entram no mesmo arquivo; o
+# esquema sobe de 2.0 para 2.1.
+STORE_V2_SCHEMA = "2.1"
+PHYSICAL_COLUMNS = tuple(
+    f"{prefix}_{wheel}"
+    for prefix in ("tyre_core_temp", "wheel_load", "wheel_slip", "tyre_pressure", "brake_temp")
+    for wheel in ("fl", "fr", "rl", "rr")
+) + ("steer_angle", "yaw_rate", "velocity_long", "velocity_lat")
 
 # Copiados do inventario rotulado para cada volta.
 CARRIED_COLUMNS = IDENTITY_COLUMNS + (
@@ -168,6 +176,8 @@ class BuildDetails:
 
     selection: Dict[str, int] = field(default_factory=dict)
     box_removed: List[str] = field(default_factory=list)
+    # Pedido 18: os canais fisicos que cada volta tem (algum ponto preenchido).
+    channels_by_lap: Dict[str, List[str]] = field(default_factory=dict)
     not_found: List[str] = field(default_factory=list)
     sessions: List[str] = field(default_factory=list)
 
@@ -230,7 +240,11 @@ def build_store_v2(
             if pit_lap(grid, sectors):
                 details.box_removed.append(lap.lap_id)
                 continue
-            block = grid.reindex(columns=[c for c in STORE_COLUMNS if c in grid.columns]).copy()
+            wanted_columns = [c for c in STORE_COLUMNS if c in grid.columns] + list(PHYSICAL_COLUMNS)
+            block = grid.reindex(columns=wanted_columns).copy()
+            details.channels_by_lap[lap.lap_id] = [
+                c for c in PHYSICAL_COLUMNS if np.isfinite(block[c].to_numpy(dtype=float)).any()
+            ]
             block.insert(0, "grid_index", np.arange(geometry.size))
             block.insert(0, "lap_id", lap.lap_id)
             blocks.append(block)

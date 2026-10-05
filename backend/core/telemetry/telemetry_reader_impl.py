@@ -347,6 +347,14 @@ class ACSharedMemoryReader(PollingTelemetryReader):
                 "ride_height": data.get("ride_height"),
                 "camber_rad": data.get("camber_rad"),
                 "car_damage": data.get("car_damage"),
+                # Pedido 18 (ADR 0017, M0): tyre surface, brakes and car-frame motion.
+                "tyre_temp_inner": data.get("tyre_temp_inner"),
+                "tyre_temp_middle": data.get("tyre_temp_middle"),
+                "tyre_temp_outer": data.get("tyre_temp_outer"),
+                "brake_temp": data.get("brake_temp"),
+                "brake_bias": data.get("brake_bias"),
+                "local_velocity": data.get("local_velocity"),
+                "local_angular_velocity": data.get("local_angular_velocity"),
             }
         )
 
