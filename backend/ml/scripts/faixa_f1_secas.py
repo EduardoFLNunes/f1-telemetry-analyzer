@@ -345,6 +345,7 @@ def run(out_dir: Path, years: Sequence[int] = f1_dry_laps.YEARS) -> Dict[str, ob
             record["criterio"] = fit.verdict
             record["alinhamento"] = {
                 "escala_m_por_unidade": fit.similarity.scale,
+                "escala_sobre_o_decimetro": fit.similarity.scale / f1_band.NOMINAL_M_PER_UNIT,
                 "rotacao_graus": fit.similarity.rotation_deg,
                 "espelhado": fit.similarity.mirrored,
                 "icp": fit.fit["icp"],
@@ -381,10 +382,16 @@ def run(out_dir: Path, years: Sequence[int] = f1_dry_laps.YEARS) -> Dict[str, ob
         sim, info = f1_line.refine_icp_session([raws[key] for key in keys], track, sims[0])
         for key in keys:
             v2_lateral[key] = f1_band.grid_lateral(track, raws[key], sim)
+        relative = np.array([s.scale for s in sims]) / f1_band.NOMINAL_M_PER_UNIT
         per_session[session_key] = {
-            "dispersao_por_volta": f1_band.transform_spread(sims, centroid),
+            "dispersao_por_volta": {
+                **f1_band.transform_spread(sims, centroid),
+                "escala_sobre_o_decimetro": {"min": float(relative.min()), "mediana": float(np.median(relative)),
+                                             "max": float(relative.max())},
+            },
             "transformacao_da_sessao": {
-                "escala_m_por_unidade": sim.scale, "rotacao_graus": sim.rotation_deg, "espelhado": sim.mirrored,
+                "escala_m_por_unidade": sim.scale, "escala_sobre_o_decimetro": sim.scale / f1_band.NOMINAL_M_PER_UNIT,
+                "rotacao_graus": sim.rotation_deg, "espelhado": sim.mirrored,
                 "centroide_vai_para_m": [float(v) for v in sim.apply(centroid.reshape(1, 2))[0]], **info,
             },
         }
