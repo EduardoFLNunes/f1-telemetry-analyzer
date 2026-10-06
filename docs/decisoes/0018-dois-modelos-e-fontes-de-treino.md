@@ -69,3 +69,9 @@ Continuam valendo:
 - o ADR 0016, para a referência do coach nesta fase;
 - o ADR 0009, até a volta do Modelo 1 cumprir o item 4;
 - o ADR 0004, até a M1 passar na régua (ADR 0017).
+
+## Esclarecimento (05/10, pedido 22)
+
+- **"Voltas `ia` rotuladas" (item 3 da decisão) são só as de sessões com rótulo pelo indicador do jogo ou por anotação** (ADR 0014): `origem_fonte` igual a `indicador`, `anotacao` ou `anotacao_sessao`, nunca `detector`.
+- **As voltas antigas ficam fora do treino do Modelo 1.** Isso vale para as de origem `desconhecida`, inclusive as que o detector marcou sem promover: 75 voltas, sendo 35 `ia`, 8 `humano` e 32 `misturada` (`docs/detector_ia.md`).
+- **Elas podem entrar depois num teste à parte**, treinando com e sem elas e comparando na régua do ADR 0006. O teste está no backlog.
