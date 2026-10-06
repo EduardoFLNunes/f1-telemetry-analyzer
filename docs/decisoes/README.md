@@ -19,5 +19,6 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
 | [0013](0013-coach-primeiro-na-geometria-oficial.md) | O coach é o primeiro a usar a geometria oficial, e o modelo dele sai da posição no mundo | aceita; implementa parte do 0002 |
 | [0014](0014-origem-das-voltas-humano-ou-ia.md) | Toda volta tem origem: humano, IA ou desconhecida | aceita |
 | [0015](0015-equipamento-atual-do-piloto.md) | O modelo do piloto usa só voltas com o equipamento atual | aceita; complementa 0014 |
-| [0016](0016-coach-na-fase-de-aprendizado.md) | Na fase de aprendizado, a referência padrão do coach é a volta da IA | aceita; refina 0012 |
+| [0016](0016-coach-na-fase-de-aprendizado.md) | Na fase de aprendizado, a referência padrão do coach é a volta da IA | aceita; refina 0012; enquadrada por 0018 |
 | [0017](0017-modelo-fisico-do-carro.md) | Modelo físico do carro: carro e piloto separados, construído por etapas junto do que já roda | aceita |
+| [0018](0018-dois-modelos-e-fontes-de-treino.md) | Dois modelos, previsão e correção; a volta da IA é uma fonte de treino, não o alvo | aceita |
