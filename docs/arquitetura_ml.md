@@ -394,3 +394,28 @@ A formulação matemática das duas redes — equações da célula, bidireciona
 contagem de parâmetros, perda e otimização — está em
 [`lstm_matematica.md`](lstm_matematica.md). Os resultados medidos e as
 limitações conhecidas estão em [`backend/ml/README.md`](../backend/ml/README.md).
+
+---
+
+## As peças A a E e os dois modelos
+
+As peças A a E estão definidas em
+[`correcao_trajetoria_auditoria.md`](correcao_trajetoria_auditoria.md#1-arquitetura),
+Parte 2, seção 1. O [ADR 0018](decisoes/0018-dois-modelos-e-fontes-de-treino.md)
+as divide entre os dois modelos do TCC: o Modelo 1 (previsão) encontra a melhor
+volta possível com este carro, e o Modelo 2 (correção) mede o erro do piloto e o
+ensina a chegar mais perto dela.
+
+| peça | modelo | situação |
+|---|---|---|
+| A — previsão de trajetória (LSTM geradora) | Modelo 1 | existe |
+| busca evolutiva | Modelo 1 | existe |
+| juiz do tempo | Modelo 1 | em construção: o juiz novo, o modelo do carro do [ADR 0017](decisoes/0017-modelo-fisico-do-carro.md), com a etapa M0 feita |
+| B — erro do piloto | Modelo 2 | em uso: versão 1, o relatório de evolução (pedidos 16 e 17) |
+| C — autocorreção | Modelo 2 | planejado |
+| D — tempo contrafactual | Modelo 2 | não passou ([fase1_validacao_contrafactual.md](fase1_validacao_contrafactual.md), seção 6; [ADR 0011](decisoes/0011-resultado-fase-2b-e-experimento-controlado.md)) |
+| E — avaliação | avalia os dois | em uso: a régua do [ADR 0006](decisoes/0006-protocolo-de-validacao.md) |
+
+O juiz é compartilhado: hoje é o simulador quase-estacionário
+([`optimization/lap_time_model.py`](../backend/ml/optimization/lap_time_model.py)),
+e a peça D refeita sobre o modelo do carro é a M4 do ADR 0017.
