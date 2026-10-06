@@ -158,11 +158,15 @@ def mirror(points: np.ndarray) -> np.ndarray:
     return out
 
 
-def umeyama(source: np.ndarray, target: np.ndarray, weights: Optional[np.ndarray] = None) -> Similarity:
+def umeyama(source: np.ndarray, target: np.ndarray, weights: Optional[np.ndarray] = None,
+            fixed_scale: Optional[float] = None) -> Similarity:
     """Semelhanca propria (sem espelho) que leva `source` a `target` em minimos quadrados.
 
     Umeyama (1991), com pesos: uma escala, uma rotacao e uma translacao, em
-    forma fechada pela SVD da covariancia cruzada.
+    forma fechada pela SVD da covariancia cruzada. Com `fixed_scale`, a escala
+    fica presa nesse valor e so rotacao e translacao sao ajustadas (a rotacao
+    otima nao depende da escala; a translacao usa a escala presa). E a variante
+    V1 do pedido 23.
     """
     source = np.asarray(source, dtype=float)
     target = np.asarray(target, dtype=float)
@@ -179,15 +183,18 @@ def umeyama(source: np.ndarray, target: np.ndarray, weights: Optional[np.ndarray
     if np.linalg.det(u) * np.linalg.det(vt) < 0:
         sign[1, 1] = -1.0
     rotation = u @ sign @ vt
-    scale = float(np.trace(np.diag(d) @ sign)) / variance
+    if fixed_scale is None:
+        scale = float(np.trace(np.diag(d) @ sign)) / variance
+    else:
+        scale = float(fixed_scale)
     translation = mu_t - scale * rotation @ mu_s
     return Similarity(scale, math.atan2(rotation[1, 0], rotation[0, 0]), translation, False)
 
 
 def fit_similarity(source: np.ndarray, target: np.ndarray, weights: Optional[np.ndarray],
-                   mirrored: bool) -> Similarity:
+                   mirrored: bool, fixed_scale: Optional[float] = None) -> Similarity:
     """Umeyama com o espelho escolhido antes: o espelho nao e decidido pela SVD."""
-    fitted = umeyama(mirror(source) if mirrored else source, target, weights)
+    fitted = umeyama(mirror(source) if mirrored else source, target, weights, fixed_scale)
     return replace(fitted, mirrored=bool(mirrored))
 
 
@@ -256,13 +263,15 @@ def refine_icp(source: np.ndarray, track: TrackGeometry, start: Similarity,
                weights: Optional[np.ndarray] = None,
                max_iterations: int = ICP_MAX_ITERATIONS,
                tolerance_m: float = ICP_TOLERANCE_M,
-               max_step_m: float = F1_MAX_STEP_M) -> Tuple[Similarity, Dict[str, object]]:
+               max_step_m: float = F1_MAX_STEP_M,
+               fixed_scale: Optional[float] = None) -> Tuple[Similarity, Dict[str, object]]:
     """ICP ponto-a-curva contra a linha central, com o espelho da busca inicial.
 
     A cada passo, cada amostra alinhada e casada com o pe da perpendicular na
     linha central (`project_sequence`, que usa a ordem da volta para nao cair no
     trecho vizinho), e a semelhanca e reajustada nesses pares. Para quando
-    nenhuma amostra anda mais que `tolerance_m` entre dois passos.
+    nenhuma amostra anda mais que `tolerance_m` entre dois passos. Com
+    `fixed_scale`, a escala fica presa (variante V1 do pedido 23).
     """
     similarity = start
     moved = similarity.apply(source)
@@ -272,7 +281,7 @@ def refine_icp(source: np.ndarray, track: TrackGeometry, start: Similarity,
     for iteration in range(1, int(max_iterations) + 1):
         s_hat, _ = track.project_sequence(moved, max_step_m=max_step_m)
         foot = track.to_world(s_hat, np.zeros_like(s_hat))
-        similarity = fit_similarity(source, foot, weights, similarity.mirrored)
+        similarity = fit_similarity(source, foot, weights, similarity.mirrored, fixed_scale)
         updated = similarity.apply(source)
         last_shift = float(np.max(np.linalg.norm(updated - moved, axis=1)))
         moved = updated
@@ -296,6 +305,75 @@ def align(source: np.ndarray, track: TrackGeometry,
     start, initial = initial_alignment(source, track.points)
     final, icp = refine_icp(source, track, start, weights)
     return final, {"busca_inicial": initial, "icp": icp}
+
+
+def with_scale(similarity: Similarity, source: np.ndarray, scale: float) -> Similarity:
+    """A mesma rotacao e espelho com outra escala, mantendo onde o centroide de `source` cai.
+
+    Ponto de partida do ICP de escala fixa (V1): trocar so a escala, sem mexer
+    na translacao, levaria a linha para longe da pista, porque a origem do
+    sistema do FastF1 fica a quilometros dela.
+    """
+    centroid = np.asarray(source, dtype=float).mean(axis=0, keepdims=True)
+    anchor = similarity.apply(centroid)[0]
+    probe = replace(similarity, scale=float(scale), translation=np.zeros(2))
+    return replace(probe, translation=anchor - probe.apply(centroid)[0])
+
+
+def align_fixed_scale(source: np.ndarray, track: TrackGeometry, start: Similarity, scale: float,
+                      weights: Optional[np.ndarray] = None) -> Tuple[Similarity, Dict[str, object]]:
+    """V1 do pedido 23: rotacao, translacao e espelho, com a escala presa em `scale`.
+
+    O espelho e a rotacao de partida vem do metodo principal (`start`); o ICP
+    contra a linha central reajusta so rotacao e translacao.
+    """
+    if weights is None:
+        weights = arc_weights(source)
+    return refine_icp(source, track, with_scale(start, source, scale), weights, fixed_scale=scale)
+
+
+def refine_icp_session(sources: Sequence[np.ndarray], track: TrackGeometry, start: Similarity,
+                       max_iterations: int = ICP_MAX_ITERATIONS,
+                       tolerance_m: float = ICP_TOLERANCE_M,
+                       max_step_m: float = F1_MAX_STEP_M) -> Tuple[Similarity, Dict[str, object]]:
+    """V2 do pedido 23: uma semelhanca so para varias voltas da mesma sessao.
+
+    O mesmo ICP de `refine_icp`, com uma diferenca: a cada passo, cada volta e
+    projetada na linha central na sua propria ordem (`project_sequence` por
+    volta, porque a continuidade vale dentro da volta), e uma unica semelhanca
+    e ajustada com os pares de todas as voltas juntos. Cada amostra pesa pelo
+    comprimento de linha que representa (`arc_weights` de cada volta), entao as
+    voltas pesam quase igual. Supoe que as posicoes da sessao estao num mesmo
+    sistema de coordenadas.
+    """
+    sources = [np.asarray(source, dtype=float) for source in sources]
+    stacked = np.vstack(sources)
+    weights = np.concatenate([arc_weights(source) for source in sources])
+    similarity = start
+    moved = [similarity.apply(source) for source in sources]
+    converged = False
+    iteration = 0
+    last_shift = math.inf
+    for iteration in range(1, int(max_iterations) + 1):
+        feet = []
+        for points in moved:
+            s_hat, _ = track.project_sequence(points, max_step_m=max_step_m)
+            feet.append(track.to_world(s_hat, np.zeros_like(s_hat)))
+        similarity = fit_similarity(stacked, np.vstack(feet), weights, similarity.mirrored)
+        updated = [similarity.apply(source) for source in sources]
+        last_shift = float(max(np.max(np.linalg.norm(new - old, axis=1)) for new, old in zip(updated, moved)))
+        moved = updated
+        if last_shift < tolerance_m:
+            converged = True
+            break
+    laterals = [track.project_sequence(points, max_step_m=max_step_m)[1] for points in moved]
+    return similarity, {
+        "voltas": len(sources),
+        "iteracoes": int(iteration),
+        "convergiu": converged,
+        "ultimo_deslocamento_m": last_shift,
+        "rms_ate_linha_central_m": weighted_rms(np.concatenate(laterals), weights),
+    }
 
 
 # ---------------------------------------------------------------- etapa 3 ---
