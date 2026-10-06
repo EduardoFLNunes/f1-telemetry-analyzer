@@ -1,0 +1,2056 @@
+diff --git a/backend/ml/external/f1_band.py b/backend/ml/external/f1_band.py
+new file mode 100644
+index 00000000..76a3d005
+--- /dev/null
++++ b/backend/ml/external/f1_band.py
+@@ -0,0 +1,256 @@
++"""Faixa de linhas reais da F1 na grade da pista (pedido 23; ADR 0018).
++
++Cada volta seca escolhida em `f1_dry_laps` passa pelo mesmo alinhamento do
++pedido 22 (`f1_line.align`: Procrustes e ICP contra a linha central, escala
++unica livre, espelho permitido), vai para a grade de 2 m e e julgada por um
++criterio fixado antes de rodar. Com as voltas aceitas:
++
++* **incerteza do alinhamento**, por duas variantes que nunca escolhem volta:
++  V1 com a escala presa no decimetro nominal; V2 com uma transformacao so por
++  sessao;
++* **faixa**: por ponto da grade, mediana, p10 e p90 do lateral (cada volta
++  pesa igual), e por microsetor a mediana desses valores;
++* **comparacao descritiva**: quanto de cada microsetor de uma linha cai dentro
++  de [p10, p90].
++
++A faixa mostra onde carros reais passam. Ela nao e alvo do Modelo 1: e outro
++carro, em outra velocidade (ADR 0018).
++"""
++
++from __future__ import annotations
++
++from dataclasses import dataclass
++from typing import Dict, List, Optional, Sequence
++
++import numpy as np
++
++from ..track.geometry import TrackGeometry
++from ..track.microsectors import Microsectors
++from . import f1_line
++
++# Criterio por volta do pedido 23, fixado antes de rodar.
++MIN_COVERAGE = 0.99
++MAX_GAP_M = 80.0
++MAX_OUTSIDE_FRACTION = f1_line.MAX_OUTSIDE_FRACTION   # 10%, o mesmo do pedido 22
++MAX_EXCESS_P95_M = f1_line.MAX_EXCESS_P95_M           # 1 m, o mesmo do pedido 22
++
++# Faixa: minimo fixado antes de rodar.
++MIN_BAND_LAPS = 20
++MIN_BAND_SESSIONS = 3
++BAND_PERCENTILES = (10.0, 50.0, 90.0)
++
++# Incerteza: microsetor com p90 de |variante - principal| acima disto e "faixa pouco confiavel".
++UNRELIABLE_P90_M = 1.0
++# V1: o decimetro nominal do FastF1.
++NOMINAL_M_PER_UNIT = 0.1
++
++# Comparacao: o microsetor conta como "dentro" com pelo menos esta fracao dos pontos dentro.
++INSIDE_SECTOR_FRACTION = 0.5
++
++
++# ------------------------------------------------------------- por volta ---
++
++@dataclass(frozen=True)
++class LapFit:
++    """Uma volta alinhada pelo metodo principal, com os numeros do criterio."""
++
++    similarity: f1_line.Similarity
++    fit: Dict[str, object]
++    line: f1_line.GridLine
++    excess: np.ndarray
++    summary: Dict[str, float]
++    max_gap_m: float
++    verdict: Dict[str, object]
++
++
++def max_gap_m(line: f1_line.GridLine, track_length: float) -> float:
++    """O maior buraco entre amostras seguidas, em metros de `s`, contando o que fecha a volta."""
++    positions = np.maximum.accumulate(line.s_unwrapped)
++    steps = np.diff(positions)
++    closing = float(positions[0] + track_length - positions[-1])
++    return float(max(steps.max() if steps.size else 0.0, closing))
++
++
++def lap_verdict(coverage: float, gap_m: float, summary: Dict[str, float]) -> Dict[str, object]:
++    """Aceita so se as quatro condicoes valem. Nada e ajustado depois de ver o resultado."""
++    checks = {
++        "cobertura_ok": coverage >= MIN_COVERAGE,
++        "buraco_ok": gap_m <= MAX_GAP_M,
++        "fracao_ok": summary["fracao_fora"] <= MAX_OUTSIDE_FRACTION,
++        "p95_ok": summary["p95_m"] <= MAX_EXCESS_P95_M,
++    }
++    accepted = all(checks.values())
++    return {
++        "aceita": bool(accepted),
++        "veredito": "aceita" if accepted else "recusada",
++        "cobertura": float(coverage),
++        "maior_buraco_m": float(gap_m),
++        "fracao_fora": float(summary["fracao_fora"]),
++        "p95_excesso_m": float(summary["p95_m"]),
++        "max_excesso_m": float(summary["max_m"]),
++        **{key: bool(value) for key, value in checks.items()},
++    }
++
++
++def fit_lap(track: TrackGeometry, raw: np.ndarray) -> LapFit:
++    """O metodo do pedido 22 numa volta: alinhamento, grade, excesso e criterio."""
++    similarity, fit = f1_line.align(raw, track)
++    line = f1_line.project_to_grid(track, similarity.apply(raw))
++    excess = f1_line.excess_on_grid(track, line.grid_lateral)
++    summary = f1_line.excess_summary(excess)
++    gap = max_gap_m(line, track.length)
++    return LapFit(similarity, fit, line, excess, summary, gap, lap_verdict(line.coverage, gap, summary))
++
++
++def grid_lateral(track: TrackGeometry, raw: np.ndarray, similarity: f1_line.Similarity) -> np.ndarray:
++    """Lateral na grade da volta `raw` levada por `similarity`."""
++    return f1_line.project_to_grid(track, similarity.apply(raw)).grid_lateral
++
++
++# ------------------------------------------------------------- incerteza ---
++
++def transform_spread(similarities: Sequence[f1_line.Similarity], centroid: np.ndarray) -> Dict[str, object]:
++    """Dispersao das transformacoes por volta de uma sessao.
++
++    A translacao e medida no centroide (`centroid`, no sistema do FastF1): o
++    vetor de translacao e a imagem da origem do FastF1, longe da pista, e ali
++    qualquer fracao de grau vira metros sem a linha sair do lugar.
++    """
++    scales = np.array([sim.scale for sim in similarities])
++    angles = np.array([sim.rotation_deg for sim in similarities])
++    reference = float(np.median(angles))
++    angles = (angles - reference + 180.0) % 360.0 - 180.0 + reference
++    point = np.asarray(centroid, dtype=float).reshape(1, 2)
++    images = np.vstack([sim.apply(point)[0] for sim in similarities])
++    centre = np.median(images, axis=0)
++    distance = np.linalg.norm(images - centre, axis=1)
++    return {
++        "voltas": int(len(similarities)),
++        "espelhadas": int(sum(sim.mirrored for sim in similarities)),
++        "escala_m_por_unidade": {
++            "min": float(scales.min()), "mediana": float(np.median(scales)), "max": float(scales.max()),
++            "amplitude_relativa": float(scales.max() / scales.min() - 1.0),
++        },
++        "rotacao_graus": {
++            "min": float(angles.min()), "mediana": float(np.median(angles)), "max": float(angles.max()),
++            "amplitude": float(angles.max() - angles.min()),
++        },
++        "centroide_m": {
++            "distancia_mediana_a_mediana": float(np.median(distance)),
++            "distancia_max_a_mediana": float(distance.max()),
++        },
++    }
++
++
++def sector_abs_stats(sectors: Microsectors, differences: np.ndarray) -> Dict[str, np.ndarray]:
++    """Mediana e p90 de |diferenca| por microsetor, com todos os pontos de todas as voltas juntos.
++
++    `differences` tem forma (voltas, grade).
++    """
++    values = np.abs(np.atleast_2d(np.asarray(differences, dtype=float)))
++    median = np.empty(sectors.count)
++    p90 = np.empty(sectors.count)
++    for k in range(sectors.count):
++        pooled = values[:, sectors.index == k].ravel()
++        median[k] = float(np.median(pooled))
++        p90[k] = float(np.percentile(pooled, 90))
++    return {"mediana": median, "p90": p90}
++
++
++# ----------------------------------------------------------------- faixa ---
++
++def band(laterals: np.ndarray) -> Dict[str, np.ndarray]:
++    """p10, p50 e p90 do lateral por ponto da grade, cada volta pesando igual. `laterals`: (voltas, grade)."""
++    laterals = np.atleast_2d(np.asarray(laterals, dtype=float))
++    p10, p50, p90 = np.percentile(laterals, BAND_PERCENTILES, axis=0)
++    return {"p10": p10, "p50": p50, "p90": p90, "n": np.full(laterals.shape[1], laterals.shape[0])}
++
++
++def band_is_formed(laps: int, sessions: int) -> bool:
++    return laps >= MIN_BAND_LAPS and sessions >= MIN_BAND_SESSIONS
++
++
++def sector_median(sectors: Microsectors, values: np.ndarray) -> np.ndarray:
++    """Mediana por microsetor de um vetor da grade."""
++    values = np.asarray(values, dtype=float)
++    return np.array([float(np.median(values[sectors.index == k])) for k in range(sectors.count)])
++
++
++def session_spread(sectors: Microsectors, laterals: np.ndarray, sessions: Sequence[str]) -> Dict[str, object]:
++    """Por microsetor, a amplitude entre as medianas das sessoes.
++
++    A mediana de cada sessao e a mediana ponto a ponto das suas voltas, depois
++    reduzida por microsetor pela mediana. A amplitude e max - min entre sessoes.
++    """
++    laterals = np.atleast_2d(np.asarray(laterals, dtype=float))
++    keys = list(dict.fromkeys(sessions))
++    labels = np.asarray(list(sessions))
++    medians = {key: sector_median(sectors, np.median(laterals[labels == key], axis=0)) for key in keys}
++    stacked = np.vstack([medians[key] for key in keys])
++    return {
++        "sessoes": keys,
++        "voltas_por_sessao": {key: int((labels == key).sum()) for key in keys},
++        "medianas_por_sessao": medians,
++        "amplitude": stacked.max(axis=0) - stacked.min(axis=0),
++    }
++
++
++# ------------------------------------------------------------ comparacao ---
++
++def signed_outside(line: np.ndarray, p10: np.ndarray, p90: np.ndarray) -> np.ndarray:
++    """Distancia ate a borda da faixa, por ponto: positiva a esquerda de p90, negativa a direita de p10, 0 dentro."""
++    line = np.asarray(line, dtype=float)
++    above = np.maximum(line - np.asarray(p90, dtype=float), 0.0)
++    below = np.maximum(np.asarray(p10, dtype=float) - line, 0.0)
++    return above - below
++
++
++def compare_to_band(sectors: Microsectors, line: np.ndarray, p10: np.ndarray, p90: np.ndarray,
++                    top: int = 5) -> Dict[str, object]:
++    """Quanto de cada microsetor de `line` fica dentro de [p10, p90].
++
++    O microsetor conta como "dentro" com pelo menos 50% dos pontos dentro. Os
++    "mais fora" sao os de maior distancia mediana ate a borda (positivo: a linha
++    passa a esquerda da faixa, ADR 0003).
++    """
++    outside = signed_outside(line, p10, p90)
++    inside = outside == 0.0
++    rows: List[Dict[str, object]] = []
++    for k in range(sectors.count):
++        mask = sectors.index == k
++        distance = float(np.median(outside[mask]))
++        rows.append({
++            "microsetor": k,
++            "rotulo": sectors.label(k),
++            "inicio_m": float(sectors.edges_s[k]),
++            "fim_m": float(sectors.edges_s[k + 1]),
++            "fracao_dentro": float(inside[mask].mean()),
++            "dentro": bool(inside[mask].mean() >= INSIDE_SECTOR_FRACTION),
++            "distancia_mediana_ate_a_borda_m": distance,
++            "lado": None if distance == 0.0 else ("esquerda" if distance > 0 else "direita"),
++        })
++    ranked = sorted(rows, key=lambda row: (-abs(row["distancia_mediana_ate_a_borda_m"]), row["fracao_dentro"]))
++    return {
++        "microsetores_dentro": int(sum(row["dentro"] for row in rows)),
++        "microsetores": int(sectors.count),
++        "fracao_de_pontos_dentro": float(inside.mean()),
++        "mais_fora": ranked[: int(top)],
++        "por_microsetor": rows,
++    }
++
++
++def difference_table(sectors: Microsectors, reference: np.ndarray,
++                     laps_lateral: np.ndarray) -> Dict[str, object]:
++    """`reference - mediana das voltas`, por microsetor (a tabela "F1 - IA" do pedido 22)."""
++    per_sector, median_line = f1_line.sector_median_difference(sectors, reference, laps_lateral)
++    return {"por_microsetor": per_sector, "linha_mediana": median_line,
++            "resumo": f1_line.difference_summary(per_sector)}
++
++
++def unreliable_sectors(v1_p90: Optional[np.ndarray], v2_p90: Optional[np.ndarray]) -> List[int]:
++    """Microsetores com p90 acima de 1 m em V1 ou em V2."""
++    flags = np.zeros(len(v1_p90 if v1_p90 is not None else v2_p90), dtype=bool)
++    for values in (v1_p90, v2_p90):
++        if values is not None:
++            flags |= np.asarray(values, dtype=float) > UNRELIABLE_P90_M
++    return [int(k) for k in np.flatnonzero(flags)]
+diff --git a/backend/ml/external/f1_dry_laps.py b/backend/ml/external/f1_dry_laps.py
+new file mode 100644
+index 00000000..10eab6a5
+--- /dev/null
++++ b/backend/ml/external/f1_dry_laps.py
+@@ -0,0 +1,332 @@
++"""Voltas secas de classificacao da F1 em Interlagos (pedido 23; ADR 0018).
++
++Coleta pelo FastF1 (3.4.0, fixado em `backend/requirements.txt`) as voltas
++que entram na faixa de linhas reais: classificacao (`Qualifying`) de cada ano
++e a classificatoria da sprint (Sprint Shootout em 2023, Sprint Qualifying
++de 2024 em diante). A corrida sprint nunca entra.
++
++**So a posicao entra.** De cada volta escolhida sai so `X` e `Y` dos dados de
++posicao (`Lap.get_pos_data()`), sem interpolar nos instantes dos dados do
++carro (`get_telemetry()` nao e usado). Velocidade, pedais, marcha, rotacao,
++DRS e distancia nao sao lidos nem salvos. O tempo da volta so escolhe e
++identifica a volta; nunca vira dado.
++
++O funil, nesta ordem (a volta fica na primeira etapa em que falha):
++
++1. `composto`: pneu fora de SOFT, MEDIUM e HARD;
++2. `imprecisa`: `IsAccurate` falso;
++3. `apagada`: `Deleted` verdadeiro. A sessao sem essa informacao (coluna
++   ausente ou nao booleana, o que acontece sem as mensagens da direcao de
++   prova) fica inteira de fora;
++4. `bandeira`: `TrackStatus` diferente de `'1'` (verde a volta toda);
++5. `box`: entrada ou saida de box;
++6. `chuva`: algum registro de `Rainfall` verdadeiro em `weather_data` entre o
++   inicio e o fim da volta. Sem o intervalo da volta, nao ha como conferir, e
++   ela cai aqui.
++
++Depois do funil: de cada piloto, a volta mais rapida que sobrou; de cada
++sessao, os 10 pilotos mais rapidos.
++"""
++
++from __future__ import annotations
++
++import logging
++import time
++from dataclasses import dataclass, field
++from typing import Any, Dict, List, Optional, Sequence, Tuple
++
++import numpy as np
++import pandas as pd
++
++YEARS = (2018, 2019, 2021, 2022, 2023, 2024, 2025)
++EVENT = "Sao Paulo"
++QUALIFYING = "Qualifying"
++SPRINT_QUALIFYING_NAMES = ("Sprint Shootout", "Sprint Qualifying")
++SPRINT_RACE = "Sprint"
++LOAD_KWARGS = {"laps": True, "telemetry": True, "weather": True, "messages": True}
++
++DRY_COMPOUNDS = ("SOFT", "MEDIUM", "HARD")
++GREEN = "1"
++TOP_DRIVERS = 10
++POSITION_COLUMNS = ("X", "Y")
++
++# Etapas do funil, na ordem em que sao aplicadas.
++STAGES = ("composto", "imprecisa", "apagada", "bandeira", "box", "chuva")
++STAGE_TEXT = {
++    "composto": "pneu fora de SOFT, MEDIUM e HARD",
++    "imprecisa": "IsAccurate falso",
++    "apagada": "volta apagada (Deleted)",
++    "bandeira": "TrackStatus diferente de '1'",
++    "box": "entrada ou saida de box",
++    "chuva": "Rainfall verdadeiro durante a volta, ou volta sem intervalo",
++    "nao_e_a_melhor_do_piloto": "passou nos filtros, mas o piloto tem volta mais rapida",
++    "fora_dos_10": "melhor volta do piloto, fora dos 10 pilotos mais rapidos da sessao",
++    "escolhida": "melhor volta do piloto, entre os 10 mais rapidos",
++}
++PASSED = "passou"
++
++
++# --------------------------------------------------------------- sessoes ---
++
++def event_sessions(event) -> List[Tuple[str, pd.Timestamp]]:
++    """(nome, data) das sessoes do fim de semana, na ordem do calendario."""
++    out = []
++    for i in range(1, 6):
++        name = event.get(f"Session{i}")
++        if isinstance(name, str) and name:
++            out.append((name, pd.Timestamp(event.get(f"Session{i}Date"))))
++    return out
++
++
++def choose_sessions(event) -> Tuple[List[Dict[str, object]], List[Dict[str, object]]]:
++    """Sessoes que entram e sessoes ligadas a sprint que nao entram, com o motivo.
++
++    A classificatoria da sprint e conferida pelo nome e pela data: ela so entra
++    se vier antes de uma sessao chamada `Sprint` (a corrida). Em 2021 e 2022 a
++    "Sprint Qualifying" era a propria corrida sprint; nessas datas nao existe
++    corrida depois dela, e a sessao fica de fora.
++    """
++    sessions = event_sessions(event)
++    sprint_dates = [date for name, date in sessions if name == SPRINT_RACE]
++    chosen, skipped = [], []
++    for name, date in sessions:
++        row = {"nome": name, "data": date.isoformat()}
++        if name == QUALIFYING:
++            chosen.append({**row, "tipo": "Q"})
++        elif name in SPRINT_QUALIFYING_NAMES:
++            if sprint_dates and all(date < race for race in sprint_dates):
++                chosen.append({**row, "tipo": "SQ"})
++            else:
++                skipped.append({**row, "motivo": "nao ha corrida sprint depois dela: e a propria corrida sprint"})
++        elif name == SPRINT_RACE:
++            skipped.append({**row, "motivo": "corrida sprint nao entra"})
++    return chosen, skipped
++
++
++# ---------------------------------------------------------------- funil ---
++
++def has_deleted_info(laps: pd.DataFrame) -> bool:
++    """A sessao sabe quais voltas foram apagadas: coluna `Deleted` booleana, sem vazios."""
++    if "Deleted" not in laps.columns:
++        return False
++    column = laps["Deleted"]
++    return column.dtype == bool and not column.isna().any()
++
++
++def weather_records(laps: pd.DataFrame, weather: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
++    """Para cada volta: quantos registros de tempo caem nela e se algum tem chuva.
++
++    Volta sem inicio ou fim conhecido devolve -1 registros e conta como chuva:
++    nao ha como conferir.
++    """
++    times = pd.to_timedelta(weather["Time"]).to_numpy()
++    rain = weather["Rainfall"].fillna(False).astype(bool).to_numpy()
++    counts = np.full(len(laps), -1, dtype=int)
++    wet = np.ones(len(laps), dtype=bool)
++    starts = pd.to_timedelta(laps["LapStartTime"]).to_numpy()
++    ends = pd.to_timedelta(laps["Time"]).to_numpy()
++    for i, (start, end) in enumerate(zip(starts, ends)):
++        if pd.isna(start) or pd.isna(end):
++            continue
++        inside = (times >= start) & (times <= end)
++        counts[i] = int(inside.sum())
++        wet[i] = bool(rain[inside].any())
++    return counts, wet
++
++
++def funnel(laps: pd.DataFrame, weather: pd.DataFrame) -> pd.DataFrame:
++    """Etapa em que cada volta caiu (`passou` se passou nas seis), na ordem do pedido 23.
++
++    Devolve um DataFrame com o mesmo indice de `laps`: `etapa` e
++    `registros_de_tempo` (quantos registros de `weather_data` caem na volta).
++    """
++    compound_ok = laps["Compound"].isin(DRY_COMPOUNDS).to_numpy()
++    accurate_ok = laps["IsAccurate"].fillna(False).astype(bool).to_numpy()
++    deleted_ok = ~laps["Deleted"].fillna(True).astype(bool).to_numpy()
++    green_ok = (laps["TrackStatus"].astype(object) == GREEN).to_numpy()
++    box_ok = (laps["PitInTime"].isna() & laps["PitOutTime"].isna()).to_numpy()
++    counts, wet = weather_records(laps, weather)
++    checks = (compound_ok, accurate_ok, deleted_ok, green_ok, box_ok, ~wet)
++    stage = np.full(len(laps), PASSED, dtype=object)
++    for name, ok in zip(reversed(STAGES), reversed(checks)):
++        stage = np.where(ok, stage, name)
++    return pd.DataFrame({"etapa": stage, "registros_de_tempo": counts}, index=laps.index)
++
++
++def funnel_counts(stages: Sequence[str], total: int) -> Dict[str, int]:
++    """Quantas voltas restam depois de cada etapa (e quantas cairam nela)."""
++    stages = list(stages)
++    remaining = int(total)
++    out: Dict[str, int] = {"voltas": remaining}
++    for name in STAGES:
++        fell = stages.count(name)
++        remaining -= fell
++        out[f"caem_{name}"] = fell
++        out[f"restam_depois_{name}"] = remaining
++    return out
++
++
++def pick_laps(passed: pd.DataFrame, top: int = TOP_DRIVERS) -> Tuple[pd.Index, pd.Index, pd.Index]:
++    """(escolhidas, nao_e_a_melhor_do_piloto, fora_dos_10), como indices de `passed`.
++
++    De cada piloto fica a volta mais rapida; dos pilotos, os `top` mais
++    rapidos. O tempo so escolhe: nao sai daqui como dado.
++    """
++    timed = passed[passed["LapTime"].notna()]
++    if timed.empty:
++        return pd.Index([]), passed.index, pd.Index([])
++    best = timed.loc[timed.groupby("Driver")["LapTime"].idxmin()].sort_values("LapTime", kind="stable")
++    chosen = best.index[: int(top)]
++    beyond = best.index[int(top):]
++    not_best = passed.index.difference(best.index)
++    return chosen, not_best, beyond
++
++
++# --------------------------------------------------------------- leitura ---
++
++def read_xy(lap) -> Tuple[np.ndarray, int]:
++    """(N, 2) com `X` e `Y` dos dados de posicao da volta, e quantas linhas nao finitas sairam.
++
++    So `get_pos_data()` e so as duas colunas: nada de velocidade, pedais,
++    marcha, rotacao, DRS ou distancia (ADR 0018), e nada de `get_telemetry()`,
++    que interpola a posicao nos instantes dos dados do carro.
++    """
++    position = lap.get_pos_data()
++    xy = np.asarray(position[list(POSITION_COLUMNS)], dtype=float)
++    finite = np.isfinite(xy).all(axis=1)
++    return xy[finite], int((~finite).sum())
++
++
++def seconds(value) -> Optional[float]:
++    if value is None or pd.isna(value):
++        return None
++    return float(pd.Timedelta(value).total_seconds())
++
++
++# --------------------------------------------------------------- coleta ---
++
++class _Collector(logging.Handler):
++    """Guarda os avisos do FastF1 durante o `load`: eles dizem o que falhou."""
++
++    def __init__(self):
++        super().__init__(level=logging.WARNING)
++        self.messages: List[str] = []
++
++    def emit(self, record):
++        message = record.getMessage()
++        if message not in self.messages:
++            self.messages.append(message)
++
++
++@dataclass
++class SessionData:
++    """O que sai de uma sessao: o registro para o manifesto e o X/Y das voltas escolhidas."""
++
++    info: Dict[str, Any]
++    laps: List[Dict[str, Any]] = field(default_factory=list)
++    xy: Dict[str, np.ndarray] = field(default_factory=dict)
++
++
++def lap_key(year: int, kind: str, driver: str, lap_number: int) -> str:
++    return f"{int(year)}_{kind}_{driver}_{int(lap_number)}"
++
++
++def deletion_messages(session) -> Dict[str, int]:
++    """Mensagens da direcao de prova que falam de tempo apagado, para conferir o `Deleted`."""
++    try:
++        messages = session.race_control_messages["Message"].astype(str)
++    except Exception:
++        return {"mensagens": 0, "com_deleted": 0, "com_reinstated": 0, "com_track_limits": 0}
++    return {
++        "mensagens": int(len(messages)),
++        "com_deleted": int(messages.str.contains("DELETED").sum()),
++        "com_reinstated": int(messages.str.contains("REINSTATED").sum()),
++        "com_track_limits": int(messages.str.contains("TRACK LIMITS").sum()),
++    }
++
++
++def collect_session(fastf1, year: int, name: str, kind: str, event: str = EVENT,
++                    extra_laps: Sequence[Tuple[str, int]] = ()) -> SessionData:
++    """Carrega uma sessao, passa o funil, escolhe as voltas e le o X/Y delas.
++
++    `extra_laps` sao voltas (piloto, numero) lidas a parte, fora do funil (a
++    volta de chuva de 2024). Se a sessao nao carregar, `info["erro"]` diz por
++    que, e nada mais e lido.
++    """
++    info: Dict[str, Any] = {"ano": int(year), "sessao": name, "tipo": kind, "carregou": False}
++    collector = _Collector()
++    logger = logging.getLogger("fastf1")
++    logger.addHandler(collector)
++    started = time.perf_counter()
++    try:
++        weekend = fastf1.get_event(int(year), event)
++        info["evento"] = str(weekend.get("EventName", ""))
++        session = weekend.get_session(name)
++        info["data"] = str(getattr(session, "date", ""))
++        info["api_path"] = str(getattr(session, "api_path", ""))
++        session.load(**LOAD_KWARGS)
++        laps = session.laps
++        if laps is None or len(laps) == 0:
++            raise RuntimeError("a sessao carregou sem nenhuma volta")
++        session.pos_data  # noqa: B018 -- so confere que a posicao carregou
++        weather = session.weather_data
++    except Exception as exc:
++        info["erro"] = f"{type(exc).__name__}: {exc}"
++    finally:
++        logger.removeHandler(collector)
++        info["tempo_de_carga_s"] = time.perf_counter() - started
++        info["avisos_do_fastf1"] = collector.messages[:12]
++    if "erro" in info:
++        return SessionData(info)
++    info["carregou"] = True
++    info["voltas"] = int(len(laps))
++    info["compostos"] = {str(k): int(v) for k, v in laps["Compound"].value_counts(dropna=False).items()}
++    info["apagadas"] = deletion_messages(session)
++
++    data = SessionData(info)
++    if not has_deleted_info(laps):
++        info["fora"] = "sem a informacao de volta apagada (coluna Deleted ausente ou incompleta)"
++        return data
++    if weather is None or len(weather) == 0 or "Rainfall" not in weather.columns:
++        info["fora"] = "sem dados de tempo (Rainfall) para conferir chuva"
++        return data
++    info["voltas_marcadas_apagadas"] = int(laps["Deleted"].sum())
++    info["registros_de_tempo"] = int(len(weather))
++    info["registros_com_chuva"] = int(weather["Rainfall"].fillna(False).astype(bool).sum())
++
++    stages = funnel(laps, weather)
++    passed = laps[stages["etapa"] == PASSED]
++    chosen, not_best, beyond = pick_laps(passed)
++    final = stages["etapa"].copy()
++    final[not_best] = "nao_e_a_melhor_do_piloto"
++    final[beyond] = "fora_dos_10"
++    final[chosen] = "escolhida"
++    info["funil"] = funnel_counts(stages["etapa"].tolist(), len(laps))
++    info["funil"]["melhores_por_piloto"] = int(len(chosen) + len(beyond))
++    info["funil"]["escolhidas"] = int(len(chosen))
++
++    extras = {(str(driver), int(number)) for driver, number in extra_laps}
++    for index in laps.index:
++        lap = laps.loc[index]
++        record = {
++            "chave": lap_key(year, kind, str(lap["Driver"]), int(lap["LapNumber"])),
++            "ano": int(year),
++            "sessao": name,
++            "piloto": str(lap["Driver"]),
++            "volta": int(lap["LapNumber"]),
++            "tempo_s": seconds(lap["LapTime"]),
++            "pneu": None if pd.isna(lap["Compound"]) else str(lap["Compound"]),
++            "etapa": str(final[index]),
++            "registros_de_tempo": int(stages.at[index, "registros_de_tempo"]),
++        }
++        wanted = record["etapa"] == "escolhida"
++        extra = (record["piloto"], record["volta"]) in extras
++        if wanted or extra:
++            xy, dropped = read_xy(lap)
++            record["amostras_xy"] = int(len(xy))
++            record["linhas_nao_finitas"] = dropped
++            data.xy[record["chave"]] = xy
++            if extra:
++                record["a_parte"] = "volta de chuva, fora da faixa seca"
++        data.laps.append(record)
++    return data
+diff --git a/backend/ml/external/f1_line.py b/backend/ml/external/f1_line.py
+index 11d35265..fc333ea9 100644
+--- a/backend/ml/external/f1_line.py
++++ b/backend/ml/external/f1_line.py
+@@ -158,11 +158,15 @@ def mirror(points: np.ndarray) -> np.ndarray:
+     return out
+ 
+ 
+-def umeyama(source: np.ndarray, target: np.ndarray, weights: Optional[np.ndarray] = None) -> Similarity:
++def umeyama(source: np.ndarray, target: np.ndarray, weights: Optional[np.ndarray] = None,
++            fixed_scale: Optional[float] = None) -> Similarity:
+     """Semelhanca propria (sem espelho) que leva `source` a `target` em minimos quadrados.
+ 
+     Umeyama (1991), com pesos: uma escala, uma rotacao e uma translacao, em
+-    forma fechada pela SVD da covariancia cruzada.
++    forma fechada pela SVD da covariancia cruzada. Com `fixed_scale`, a escala
++    fica presa nesse valor e so rotacao e translacao sao ajustadas (a rotacao
++    otima nao depende da escala; a translacao usa a escala presa). E a variante
++    V1 do pedido 23.
+     """
+     source = np.asarray(source, dtype=float)
+     target = np.asarray(target, dtype=float)
+@@ -179,15 +183,18 @@ def umeyama(source: np.ndarray, target: np.ndarray, weights: Optional[np.ndarray
+     if np.linalg.det(u) * np.linalg.det(vt) < 0:
+         sign[1, 1] = -1.0
+     rotation = u @ sign @ vt
+-    scale = float(np.trace(np.diag(d) @ sign)) / variance
++    if fixed_scale is None:
++        scale = float(np.trace(np.diag(d) @ sign)) / variance
++    else:
++        scale = float(fixed_scale)
+     translation = mu_t - scale * rotation @ mu_s
+     return Similarity(scale, math.atan2(rotation[1, 0], rotation[0, 0]), translation, False)
+ 
+ 
+ def fit_similarity(source: np.ndarray, target: np.ndarray, weights: Optional[np.ndarray],
+-                   mirrored: bool) -> Similarity:
++                   mirrored: bool, fixed_scale: Optional[float] = None) -> Similarity:
+     """Umeyama com o espelho escolhido antes: o espelho nao e decidido pela SVD."""
+-    fitted = umeyama(mirror(source) if mirrored else source, target, weights)
++    fitted = umeyama(mirror(source) if mirrored else source, target, weights, fixed_scale)
+     return replace(fitted, mirrored=bool(mirrored))
+ 
+ 
+@@ -256,13 +263,15 @@ def refine_icp(source: np.ndarray, track: TrackGeometry, start: Similarity,
+                weights: Optional[np.ndarray] = None,
+                max_iterations: int = ICP_MAX_ITERATIONS,
+                tolerance_m: float = ICP_TOLERANCE_M,
+-               max_step_m: float = F1_MAX_STEP_M) -> Tuple[Similarity, Dict[str, object]]:
++               max_step_m: float = F1_MAX_STEP_M,
++               fixed_scale: Optional[float] = None) -> Tuple[Similarity, Dict[str, object]]:
+     """ICP ponto-a-curva contra a linha central, com o espelho da busca inicial.
+ 
+     A cada passo, cada amostra alinhada e casada com o pe da perpendicular na
+     linha central (`project_sequence`, que usa a ordem da volta para nao cair no
+     trecho vizinho), e a semelhanca e reajustada nesses pares. Para quando
+-    nenhuma amostra anda mais que `tolerance_m` entre dois passos.
++    nenhuma amostra anda mais que `tolerance_m` entre dois passos. Com
++    `fixed_scale`, a escala fica presa (variante V1 do pedido 23).
+     """
+     similarity = start
+     moved = similarity.apply(source)
+@@ -272,7 +281,7 @@ def refine_icp(source: np.ndarray, track: TrackGeometry, start: Similarity,
+     for iteration in range(1, int(max_iterations) + 1):
+         s_hat, _ = track.project_sequence(moved, max_step_m=max_step_m)
+         foot = track.to_world(s_hat, np.zeros_like(s_hat))
+-        similarity = fit_similarity(source, foot, weights, similarity.mirrored)
++        similarity = fit_similarity(source, foot, weights, similarity.mirrored, fixed_scale)
+         updated = similarity.apply(source)
+         last_shift = float(np.max(np.linalg.norm(updated - moved, axis=1)))
+         moved = updated
+@@ -298,6 +307,75 @@ def align(source: np.ndarray, track: TrackGeometry,
+     return final, {"busca_inicial": initial, "icp": icp}
+ 
+ 
++def with_scale(similarity: Similarity, source: np.ndarray, scale: float) -> Similarity:
++    """A mesma rotacao e espelho com outra escala, mantendo onde o centroide de `source` cai.
++
++    Ponto de partida do ICP de escala fixa (V1): trocar so a escala, sem mexer
++    na translacao, levaria a linha para longe da pista, porque a origem do
++    sistema do FastF1 fica a quilometros dela.
++    """
++    centroid = np.asarray(source, dtype=float).mean(axis=0, keepdims=True)
++    anchor = similarity.apply(centroid)[0]
++    probe = replace(similarity, scale=float(scale), translation=np.zeros(2))
++    return replace(probe, translation=anchor - probe.apply(centroid)[0])
++
++
++def align_fixed_scale(source: np.ndarray, track: TrackGeometry, start: Similarity, scale: float,
++                      weights: Optional[np.ndarray] = None) -> Tuple[Similarity, Dict[str, object]]:
++    """V1 do pedido 23: rotacao, translacao e espelho, com a escala presa em `scale`.
++
++    O espelho e a rotacao de partida vem do metodo principal (`start`); o ICP
++    contra a linha central reajusta so rotacao e translacao.
++    """
++    if weights is None:
++        weights = arc_weights(source)
++    return refine_icp(source, track, with_scale(start, source, scale), weights, fixed_scale=scale)
++
++
++def refine_icp_session(sources: Sequence[np.ndarray], track: TrackGeometry, start: Similarity,
++                       max_iterations: int = ICP_MAX_ITERATIONS,
++                       tolerance_m: float = ICP_TOLERANCE_M,
++                       max_step_m: float = F1_MAX_STEP_M) -> Tuple[Similarity, Dict[str, object]]:
++    """V2 do pedido 23: uma semelhanca so para varias voltas da mesma sessao.
++
++    O mesmo ICP de `refine_icp`, com uma diferenca: a cada passo, cada volta e
++    projetada na linha central na sua propria ordem (`project_sequence` por
++    volta, porque a continuidade vale dentro da volta), e uma unica semelhanca
++    e ajustada com os pares de todas as voltas juntos. Cada amostra pesa pelo
++    comprimento de linha que representa (`arc_weights` de cada volta), entao as
++    voltas pesam quase igual. Supoe que as posicoes da sessao estao num mesmo
++    sistema de coordenadas.
++    """
++    sources = [np.asarray(source, dtype=float) for source in sources]
++    stacked = np.vstack(sources)
++    weights = np.concatenate([arc_weights(source) for source in sources])
++    similarity = start
++    moved = [similarity.apply(source) for source in sources]
++    converged = False
++    iteration = 0
++    last_shift = math.inf
++    for iteration in range(1, int(max_iterations) + 1):
++        feet = []
++        for points in moved:
++            s_hat, _ = track.project_sequence(points, max_step_m=max_step_m)
++            feet.append(track.to_world(s_hat, np.zeros_like(s_hat)))
++        similarity = fit_similarity(stacked, np.vstack(feet), weights, similarity.mirrored)
++        updated = [similarity.apply(source) for source in sources]
++        last_shift = float(max(np.max(np.linalg.norm(new - old, axis=1)) for new, old in zip(updated, moved)))
++        moved = updated
++        if last_shift < tolerance_m:
++            converged = True
++            break
++    laterals = [track.project_sequence(points, max_step_m=max_step_m)[1] for points in moved]
++    return similarity, {
++        "voltas": len(sources),
++        "iteracoes": int(iteration),
++        "convergiu": converged,
++        "ultimo_deslocamento_m": last_shift,
++        "rms_ate_linha_central_m": weighted_rms(np.concatenate(laterals), weights),
++    }
++
++
+ # ---------------------------------------------------------------- etapa 3 ---
+ 
+ @dataclass(frozen=True)
+diff --git a/backend/ml/scripts/faixa_f1_secas.py b/backend/ml/scripts/faixa_f1_secas.py
+new file mode 100644
+index 00000000..7cd407b3
+--- /dev/null
++++ b/backend/ml/scripts/faixa_f1_secas.py
+@@ -0,0 +1,580 @@
++"""Faixa de linhas reais da F1 em Interlagos com voltas secas de classificacao (pedido 23).
++
++    python -m ml.scripts.faixa_f1_secas [--saida data/ml/externo/f1_faixa]
++
++Carrega pelo FastF1 3.4.0 (cache em `data/fastf1_cache/`) a classificacao de
++2018, 2019 e 2021 a 2025 e as classificatorias da sprint (2023 em diante),
++passa cada volta pelo funil de `ml.external.f1_dry_laps`, le so `X` e `Y` dos
++dados de posicao das voltas escolhidas e alinha cada uma pelo metodo do pedido
++22. Com as voltas aceitas, mede a incerteza do alinhamento (V1 e V2), forma a
++faixa e compara, so para leitura, a IA, o piloto e a volta de chuva de 2024.
++
++Nada e treinado, e nada muda coach, store ou criterio. Nada da F1 alem da
++posicao e lido (ADR 0018).
++
++Escreve, fora do git, em `data/ml/externo/f1_faixa/`:
++
++* `manifesto.json` -- cada sessao e cada volta considerada, com a etapa do
++  funil, os numeros do criterio e o veredito;
++* `voltas/<ano>_<tipo>_<piloto>_<volta>.csv` -- `s`, lateral e excesso de cada
++  volta aceita;
++* `faixa.csv` -- `s`, p10, p50, p90, n e a incerteza V1 e V2 por ponto;
++* `resumo.json`, `faixa_pista.png` e `faixa_lateral.png`.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++import time
++from datetime import datetime, timezone
++from pathlib import Path
++from typing import Dict, List, Optional, Sequence, Tuple
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
++
++import matplotlib  # noqa: E402
++
++matplotlib.use("Agg")
++import matplotlib.pyplot as plt  # noqa: E402
++import numpy as np  # noqa: E402
++import pandas as pd  # noqa: E402
++
++from ml import config  # noqa: E402
++from ml.comparison import evolution as ev  # noqa: E402
++from ml.data.store_v2 import git_commit, load_store_v2, store_v2_meta  # noqa: E402
++from ml.external import f1_band, f1_dry_laps, f1_line  # noqa: E402
++from ml.scripts.alinhar_fastf1 import (  # noqa: E402
++    OFFICIAL_GEOMETRY_ID,
++    ZOOM_MARGIN_M,
++    _closed,
++    _round,
++    corner_by_name,
++    labelled_ai_laps,
++    lateral_matrix,
++)
++from ml.track.corners import detect_corners  # noqa: E402
++from ml.track.geometry import TrackGeometry, load_geometry  # noqa: E402
++from ml.track.microsectors import Microsectors, build_microsectors  # noqa: E402
++from ml.visualization.track_plots import draw_track  # noqa: E402
++
++PEDIDO = "docs/prompts/2026-10-05_23_voltas-secas-f1.md"
++CACHE_DIR = config.repo_root() / "data" / "fastf1_cache"
++DEFAULT_OUT = config.artifacts_root() / "externo" / "f1_faixa"
++# A volta de chuva: Norris, classificacao de 2024, volta 32 (pedido 22).
++RAIN_LAP = (2024, f1_dry_laps.QUALIFYING, "NOR", 32)
++P22_DIR = config.artifacts_root() / "externo"
++P22_SUMMARY = P22_DIR / "fastf1_alinhamento_resumo.json"
++P22_GRID = P22_DIR / "fastf1_linha_na_grade.csv"
++
++MANIFEST_FILE = "manifesto.json"
++SUMMARY_FILE = "resumo.json"
++BAND_FILE = "faixa.csv"
++TRACK_FIGURE = "faixa_pista.png"
++LATERAL_FIGURE = "faixa_lateral.png"
++
++COLOURS = {"f1": "#ff7a1a", "ia": "#4fa3ff", "humano": "#2ca02c", "chuva": "#9467bd", "faixa": "#ff9f5a"}
++
++
++def folder_bytes(path: Path) -> int:
++    return int(sum(item.stat().st_size for item in Path(path).rglob("*") if item.is_file()))
++
++
++# ---------------------------------------------------------------- coleta ---
++
++def plan_sessions(fastf1, years: Sequence[int]) -> Tuple[List[Dict[str, object]], List[Dict[str, object]]]:
++    """As sessoes de cada ano conferidas pelo nome e pela data no calendario do FastF1."""
++    chosen, skipped = [], []
++    for year in years:
++        try:
++            event = fastf1.get_event(int(year), f1_dry_laps.EVENT)
++        except Exception as exc:
++            skipped.append({"ano": int(year), "nome": None, "motivo": f"calendario: {type(exc).__name__}: {exc}"})
++            continue
++        take, leave = f1_dry_laps.choose_sessions(event)
++        chosen += [{"ano": int(year), "evento": str(event.get("EventName", "")), **row} for row in take]
++        skipped += [{"ano": int(year), "evento": str(event.get("EventName", "")), **row} for row in leave]
++    return chosen, skipped
++
++
++def collect(fastf1, plan: Sequence[Dict[str, object]]) -> List[f1_dry_laps.SessionData]:
++    out = []
++    for row in plan:
++        extra = [RAIN_LAP[2:]] if (row["ano"], row["nome"]) == RAIN_LAP[:2] else []
++        data = f1_dry_laps.collect_session(fastf1, int(row["ano"]), str(row["nome"]), str(row["tipo"]),
++                                           extra_laps=extra)
++        data.info["data_no_calendario"] = row["data"]
++        state = "ok" if data.info["carregou"] else f"ERRO {data.info.get('erro')}"
++        print(f"  {row['ano']} {row['nome']}: {state} ({data.info['tempo_de_carga_s']:.1f} s)", flush=True)
++        out.append(data)
++    return out
++
++
++# ---------------------------------------------------------------- figuras ---
++
++def zoom_windows(track: TrackGeometry) -> List[Tuple[str, float, float]]:
++    """S do Senna (C01 ate a saida da C02), Bico de Pato (C10) e Juncao (C12)."""
++    corners = detect_corners(track)
++    senna = corner_by_name(corners, "S do Senna")
++    after_senna = corners[[c.index for c in corners].index(senna.index) + 1]
++    pato = corner_by_name(corners, "Bico de Pato")
++    juncao = corner_by_name(corners, "Juncao")
++    return [
++        ("S do Senna", senna.start_s - ZOOM_MARGIN_M, after_senna.end_s + ZOOM_MARGIN_M),
++        ("Bico de Pato", pato.start_s - ZOOM_MARGIN_M, pato.end_s + ZOOM_MARGIN_M),
++        ("Junção", juncao.start_s - ZOOM_MARGIN_M, juncao.end_s + ZOOM_MARGIN_M),
++    ]
++
++
++def _draw_track_band(ax, track: TrackGeometry, faixa: Dict[str, np.ndarray], lines: Dict[str, np.ndarray],
++                     window=None) -> None:
++    draw_track(track, ax)
++    high = _closed(track.to_world(track.s, faixa["p90"]))
++    low = _closed(track.to_world(track.s, faixa["p10"]))
++    ax.fill(np.concatenate([high[:, 0], low[::-1, 0]]), np.concatenate([high[:, 1], low[::-1, 1]]),
++            color=COLOURS["faixa"], alpha=0.45, linewidth=0, zorder=2)
++    for key, width in (("humano", 1.2), ("ia", 1.2), ("f1", 1.5)):
++        xy = _closed(track.to_world(track.s, lines[key]))
++        ax.plot(xy[:, 0], xy[:, 1], color=COLOURS[key], linewidth=width, zorder=3)
++    if window is not None:
++        start, end = window
++        inside = (track.s >= start) & (track.s <= end)
++        span = np.vstack([track.to_world(track.s[inside], track.width_left[inside] + 1.0),
++                          track.to_world(track.s[inside], -track.width_right[inside] - 1.0)])
++        pad = 8.0
++        ax.set_xlim(span[:, 0].min() - pad, span[:, 0].max() + pad)
++        ax.set_ylim(span[:, 1].min() - pad, span[:, 1].max() + pad)
++
++
++def plot_track(path: Path, track: TrackGeometry, faixa, lines, windows, laps: int, sessions: int) -> Path:
++    figure = plt.figure(figsize=(16, 12))
++    grid = figure.add_gridspec(3, 2, width_ratios=[1.3, 1.0], hspace=0.3)
++    full = figure.add_subplot(grid[:, 0])
++    _draw_track_band(full, track, faixa, lines)
++    full.set_title("Interlagos, geometria oficial " + track.geometry_id, fontsize=10)
++    for row, (name, start, end) in enumerate(windows):
++        ax = figure.add_subplot(grid[row, 1])
++        _draw_track_band(ax, track, faixa, lines, window=(start, end))
++        ax.set_title(f"{name} (s = {start:.0f} a {end:.0f} m)", fontsize=10)
++        box = np.vstack([ax.get_xlim(), ax.get_ylim()]).T
++        full.add_patch(plt.Rectangle((box[0, 0], box[0, 1]), box[1, 0] - box[0, 0], box[1, 1] - box[0, 1],
++                                     fill=False, edgecolor="#d62728", linewidth=1.2, zorder=6))
++        full.annotate(name, (box[1, 0] + 4.0, box[1, 1]), color="#d62728", fontsize=9)
++    handles = [
++        plt.Rectangle((0, 0), 1, 1, color=COLOURS["faixa"], alpha=0.45, label="faixa da F1, p10 a p90"),
++        plt.Line2D([], [], color=COLOURS["f1"], linewidth=1.6, label="mediana da F1"),
++        plt.Line2D([], [], color=COLOURS["ia"], linewidth=1.4, label="mediana das voltas ia de 04/10"),
++        plt.Line2D([], [], color=COLOURS["humano"], linewidth=1.4, label="mediana das voltas humano (atual)"),
++    ]
++    figure.legend(handles=handles, loc="lower center", ncol=4, fontsize=9, frameon=False)
++    figure.suptitle(f"Faixa das linhas da F1 (posição do FastF1), voltas secas de classificação (pedido 23): "
++                    f"{laps} voltas de {sessions} sessões", fontsize=11)
++    figure.tight_layout(rect=(0, 0.04, 1, 0.96))
++    figure.savefig(path, dpi=120)
++    plt.close(figure)
++    return path
++
++
++def plot_lateral(path: Path, track: TrackGeometry, sectors: Microsectors, faixa, lines,
++                 rain: Optional[np.ndarray], rain_label: str, unreliable: Sequence[int]) -> Path:
++    rows = 4
++    figure, axes = plt.subplots(rows, 1, figsize=(16, 15))
++    edges = np.linspace(0.0, track.length, rows + 1)
++    low, high = track.corridor()
++    for ax, start, end in zip(axes, edges[:-1], edges[1:]):
++        mask = (track.s >= start) & (track.s <= end)
++        s = track.s[mask]
++        for k in unreliable:
++            a, b = sectors.edges_s[k], sectors.edges_s[k + 1]
++            if b > start and a < end:
++                ax.axvspan(max(a, start), min(b, end), color="#bbbbbb", alpha=0.35, linewidth=0, zorder=0)
++        ax.plot(s, low[mask], color="#8a8a93", linewidth=0.7, linestyle="--", zorder=1)
++        ax.plot(s, high[mask], color="#8a8a93", linewidth=0.7, linestyle="--", zorder=1)
++        ax.fill_between(s, faixa["p10"][mask], faixa["p90"][mask], color=COLOURS["faixa"], alpha=0.45,
++                        linewidth=0, zorder=2)
++        ax.plot(s, lines["f1"][mask], color=COLOURS["f1"], linewidth=1.5, zorder=4)
++        ax.plot(s, lines["ia"][mask], color=COLOURS["ia"], linewidth=1.1, zorder=3)
++        ax.plot(s, lines["humano"][mask], color=COLOURS["humano"], linewidth=1.1, zorder=3)
++        if rain is not None:
++            ax.plot(s, rain[mask], color=COLOURS["chuva"], linewidth=1.1, linestyle="--", zorder=3)
++        for edge in sectors.edges_s:
++            if start <= edge <= end:
++                ax.axvline(edge, color="#dddddd", linewidth=0.5, zorder=0)
++        ax.set_xlim(start, end)
++        ax.set_ylabel("lateral (m), + à esquerda")
++    axes[-1].set_xlabel("s (m)")
++    handles = [
++        plt.Rectangle((0, 0), 1, 1, color=COLOURS["faixa"], alpha=0.45, label="faixa da F1, p10 a p90"),
++        plt.Line2D([], [], color=COLOURS["f1"], linewidth=1.6, label="mediana da F1"),
++        plt.Line2D([], [], color=COLOURS["ia"], linewidth=1.2, label="mediana das voltas ia de 04/10"),
++        plt.Line2D([], [], color=COLOURS["humano"], linewidth=1.2, label="mediana das voltas humano (atual)"),
++        plt.Line2D([], [], color=COLOURS["chuva"], linewidth=1.2, linestyle="--", label=rain_label),
++        plt.Line2D([], [], color="#8a8a93", linewidth=0.8, linestyle="--", label="corredor (ml/track)"),
++        plt.Rectangle((0, 0), 1, 1, color="#bbbbbb", alpha=0.35, label="faixa pouco confiável (V1 ou V2)"),
++    ]
++    figure.legend(handles=handles, loc="lower center", ncol=4, fontsize=9, frameon=False)
++    figure.suptitle("Lateral × s: faixa da F1, IA, piloto e volta de chuva (pedido 23)", fontsize=11)
++    figure.tight_layout(rect=(0, 0.05, 1, 0.97))
++    figure.savefig(path, dpi=110)
++    plt.close(figure)
++    return path
++
++
++# ------------------------------------------------------------------ fluxo ---
++
++def _sector_rows(sectors: Microsectors, **columns) -> List[Dict[str, object]]:
++    rows = []
++    for k in range(sectors.count):
++        row = {"microsetor": k, "inicio_m": float(sectors.edges_s[k]), "fim_m": float(sectors.edges_s[k + 1])}
++        for name, values in columns.items():
++            row[name] = None if values is None else float(values[k])
++        rows.append(row)
++    return rows
++
++
++def _abs_summary(values: np.ndarray) -> Dict[str, float]:
++    values = np.abs(np.asarray(values, dtype=float))
++    return {"mediana": float(np.median(values)), "p90": float(np.percentile(values, 90)), "max": float(values.max())}
++
++
++def session_diagnosis(main: np.ndarray, sessions: Sequence[str], rain: Optional[np.ndarray]) -> Dict[str, object]:
++    """Descritivo, por sessao: quanto as voltas variam entre si e quanto a sessao se afasta do resto.
++
++    * `dispersao_entre_voltas_m`: por ponto da grade, o desvio-padrao e a
++      amplitude (max - min) do lateral entre as voltas da sessao, resumidos pela
++      mediana e pelo p90 dos pontos;
++    * `ate_a_mediana_geral_m`: |mediana da sessao - mediana de todas as voltas|;
++    * `volta_de_chuva_ate_a_mediana_da_sessao_m`: |volta de chuva - mediana da sessao|.
++
++    Nao muda a faixa nem nenhum criterio.
++    """
++    labels = np.asarray(list(sessions))
++    overall = np.median(main, axis=0)
++    out: Dict[str, object] = {}
++    for key in dict.fromkeys(sessions):
++        laps = main[labels == key]
++        median = np.median(laps, axis=0)
++        spread = laps.max(axis=0) - laps.min(axis=0)
++        sd = laps.std(axis=0)
++        out[key] = {
++            "voltas": int(len(laps)),
++            "dispersao_entre_voltas_m": {
++                "dp_mediano": float(np.median(sd)), "dp_p90": float(np.percentile(sd, 90)),
++                "amplitude_mediana": float(np.median(spread)), "amplitude_p90": float(np.percentile(spread, 90)),
++            },
++            "ate_a_mediana_geral_m": _abs_summary(median - overall),
++            "volta_de_chuva_ate_a_mediana_da_sessao_m": None if rain is None else _abs_summary(rain - median),
++        }
++    return out
++
++
++def conference_with_p22(track: TrackGeometry, fit: f1_band.LapFit) -> Dict[str, object]:
++    """A volta de Norris pelo caminho novo (posicao crua) contra os numeros do pedido 22."""
++    old = json.loads(P22_SUMMARY.read_text(encoding="utf-8"))
++    grid = pd.read_csv(P22_GRID)
++    delta = np.abs(fit.line.grid_lateral - grid["lateral_f1"].to_numpy(dtype=float))
++    return {
++        "aviso": "so relato; nao muda nada",
++        "pedido_22": {
++            "fracao_fora": old["etapa4_erro"]["na_grade"]["fracao_fora"],
++            "p95_excesso_m": old["etapa4_erro"]["na_grade"]["p95_m"],
++            "escala_m_por_unidade": old["etapa2_alinhamento"]["escala_m_por_unidade"],
++            "rotacao_graus": old["etapa2_alinhamento"]["rotacao_graus"],
++            "amostras": old["entrada"]["amostras"],
++        },
++        "caminho_novo": {
++            "fracao_fora": fit.summary["fracao_fora"],
++            "p95_excesso_m": fit.summary["p95_m"],
++            "escala_m_por_unidade": fit.similarity.scale,
++            "rotacao_graus": fit.similarity.rotation_deg,
++            "espelhado": fit.similarity.mirrored,
++        },
++        "diferenca_de_lateral_ponto_a_ponto_m": {
++            "mediana": float(np.median(delta)), "p95": float(np.percentile(delta, 95)), "max": float(delta.max()),
++        },
++    }
++
++
++def run(out_dir: Path, years: Sequence[int] = f1_dry_laps.YEARS) -> Dict[str, object]:
++    started = time.perf_counter()
++    track = load_geometry()
++    if track.geometry_id != OFFICIAL_GEOMETRY_ID:
++        raise SystemExit(f"PARADO: a geometria carregada e {track.geometry_id}, e o pedido fala da "
++                         f"{OFFICIAL_GEOMETRY_ID}.")
++    meta = store_v2_meta()
++    if not meta or not meta.get("aprovado"):
++        raise SystemExit("PARADO: store v2 ausente ou sem as checagens aprovadas.")
++    store = load_store_v2(track=track)
++    if store.geometry_id != track.geometry_id:
++        raise SystemExit(f"PARADO: o store v2 e da geometria {store.geometry_id}.")
++    sectors = build_microsectors(track)
++
++    import fastf1
++
++    CACHE_DIR.mkdir(parents=True, exist_ok=True)
++    cache_before = folder_bytes(CACHE_DIR)
++    fastf1.Cache.enable_cache(str(CACHE_DIR))
++
++    # Parte B: sessoes, funil e leitura de X/Y.
++    plan, skipped = plan_sessions(fastf1, years)
++    print(f"{len(plan)} sessoes no plano; {len(skipped)} ligadas a sprint fora", flush=True)
++    sessions = collect(fastf1, plan)
++    loaded = [data for data in sessions if data.info["carregou"]]
++    cache_after = folder_bytes(CACHE_DIR)
++    collected_s = time.perf_counter() - started
++    if not loaded:
++        raise SystemExit("PARADO: nenhuma sessao carregou. " + "; ".join(
++            f"{d.info['ano']} {d.info['sessao']}: {d.info.get('erro')}" for d in sessions))
++
++    # Parte C, itens 1 e 3: alinhamento e criterio por volta.
++    out_dir.mkdir(parents=True, exist_ok=True)
++    lap_dir = out_dir / "voltas"
++    lap_dir.mkdir(exist_ok=True)
++    fits: Dict[str, f1_band.LapFit] = {}
++    raws: Dict[str, np.ndarray] = {}
++    lap_session: Dict[str, str] = {}
++    rain_fit: Optional[f1_band.LapFit] = None
++    for data in loaded:
++        session_key = f"{data.info['ano']} {data.info['sessao']}"
++        for record in data.laps:
++            if record["chave"] not in data.xy:
++                continue
++            raw = data.xy[record["chave"]]
++            fit = f1_band.fit_lap(track, raw)
++            record["criterio"] = fit.verdict
++            record["alinhamento"] = {
++                "escala_m_por_unidade": fit.similarity.scale,
++                "escala_sobre_o_decimetro": fit.similarity.scale / f1_band.NOMINAL_M_PER_UNIT,
++                "rotacao_graus": fit.similarity.rotation_deg,
++                "espelhado": fit.similarity.mirrored,
++                "icp": fit.fit["icp"],
++            }
++            if record.get("a_parte"):
++                rain_fit = fit
++                continue
++            print(f"    {record['chave']}: {fit.verdict['veredito']} (cob {fit.verdict['cobertura']:.4f}, "
++                  f"buraco {fit.verdict['maior_buraco_m']:.1f} m, fora {fit.verdict['fracao_fora']:.4f}, "
++                  f"p95 {fit.verdict['p95_excesso_m']:.2f} m)", flush=True)
++            if fit.verdict["aceita"]:
++                fits[record["chave"]] = fit
++                raws[record["chave"]] = raw
++                lap_session[record["chave"]] = session_key
++                pd.DataFrame({"s": track.s, "lateral": fit.line.grid_lateral, "excesso_m": fit.excess}).to_csv(
++                    lap_dir / f"{record['chave']}.csv", index=False, float_format="%.4f")
++    accepted = list(fits)
++    session_keys = list(dict.fromkeys(lap_session[key] for key in accepted))
++
++    # Parte C, item 4: incerteza do alinhamento (V1 e V2). Nunca escolhe volta.
++    main = np.vstack([fits[key].line.grid_lateral for key in accepted]) if accepted else np.zeros((0, track.size))
++    v1_lateral, v1_info = [], {}
++    for key in accepted:
++        sim, info = f1_line.align_fixed_scale(raws[key], track, fits[key].similarity, f1_band.NOMINAL_M_PER_UNIT)
++        v1_lateral.append(f1_band.grid_lateral(track, raws[key], sim))
++        v1_info[key] = {"rotacao_graus": sim.rotation_deg, "convergiu": info["convergiu"],
++                        "iteracoes": info["iteracoes"]}
++    v2_lateral: Dict[str, np.ndarray] = {}
++    per_session: Dict[str, Dict[str, object]] = {}
++    for session_key in session_keys:
++        keys = [key for key in accepted if lap_session[key] == session_key]
++        sims = [fits[key].similarity for key in keys]
++        centroid = np.vstack([raws[key] for key in keys]).mean(axis=0)
++        sim, info = f1_line.refine_icp_session([raws[key] for key in keys], track, sims[0])
++        for key in keys:
++            v2_lateral[key] = f1_band.grid_lateral(track, raws[key], sim)
++        relative = np.array([s.scale for s in sims]) / f1_band.NOMINAL_M_PER_UNIT
++        per_session[session_key] = {
++            "dispersao_por_volta": {
++                **f1_band.transform_spread(sims, centroid),
++                "escala_sobre_o_decimetro": {"min": float(relative.min()), "mediana": float(np.median(relative)),
++                                             "max": float(relative.max())},
++            },
++            "transformacao_da_sessao": {
++                "escala_m_por_unidade": sim.scale, "escala_sobre_o_decimetro": sim.scale / f1_band.NOMINAL_M_PER_UNIT,
++                "rotacao_graus": sim.rotation_deg, "espelhado": sim.mirrored,
++                "centroide_vai_para_m": [float(v) for v in sim.apply(centroid.reshape(1, 2))[0]], **info,
++            },
++        }
++    v1 = v2 = None
++    unreliable: List[int] = []
++    if accepted:
++        v1_diff = np.vstack(v1_lateral) - main
++        v2_diff = np.vstack([v2_lateral[key] for key in accepted]) - main
++        v1 = f1_band.sector_abs_stats(sectors, v1_diff)
++        v2 = f1_band.sector_abs_stats(sectors, v2_diff)
++        unreliable = f1_band.unreliable_sectors(v1["p90"], v2["p90"])
++        for i, key in enumerate(accepted):
++            v1_info[key]["abs_mediana_m"] = float(np.median(np.abs(v1_diff[i])))
++            v1_info[key]["abs_p90_m"] = float(np.percentile(np.abs(v1_diff[i]), 90))
++
++    # Parte C, item 5: a faixa.
++    formed = f1_band.band_is_formed(len(accepted), len(session_keys))
++    rain_line, rain_label, rain_source = None, "", None
++    if rain_fit is not None:
++        rain_line = rain_fit.line.grid_lateral
++        rain_label = "volta de chuva 2024 (NOR, Q, 32), posição crua"
++        rain_source = "dados de posicao crus (get_pos_data), pelo caminho novo"
++    elif P22_GRID.exists():
++        rain_line = pd.read_csv(P22_GRID)["lateral_f1"].to_numpy(dtype=float)
++        rain_label = "volta de chuva 2024 (NOR, Q, 32), linha do pedido 22"
++        rain_source = ("a classificacao de 2024 nao carregou; linha ja alinhada do pedido 22 "
++                       "(fastf1_linha_na_grade.csv, que veio do get_telemetry)")
++
++    result: Dict[str, object] = {
++        "pedido": PEDIDO,
++        "gerado_em": datetime.now(timezone.utc).isoformat(),
++        "commit": git_commit(),
++        "fastf1_versao": getattr(fastf1, "__version__", None),
++        "campos_lidos": ["X", "Y"],
++        "nao_lidos": "velocidade, pedais, marcha, rotacao, DRS e distancia (ADR 0018); get_telemetry nao e usado",
++        "cache": {"pasta": str(CACHE_DIR), "bytes_antes": cache_before, "bytes_depois": cache_after},
++        "tempo_s": {"coleta": collected_s},
++        "sessoes_fora_do_plano": skipped,
++        "sessoes": [data.info for data in sessions],
++        "criterio_por_volta": {
++            "regra": "cobertura >= 0,99, maior buraco <= 80 m, fracao fora <= 10% e p95 do excesso <= 1 m; "
++                     "fixado antes de rodar",
++            "voltas_escolhidas": int(sum(1 for d in loaded for r in d.laps if r["etapa"] == "escolhida")),
++            "voltas_aceitas": len(accepted),
++            "sessoes_com_voltas_aceitas": session_keys,
++        },
++        "incerteza": {
++            "v1": "escala presa em 0,1 m por unidade; so rotacao, translacao e espelho",
++            "v2": "uma transformacao por sessao, ajustada com todas as voltas aceitas da sessao",
++            "por_sessao": per_session,
++            "por_volta_v1": v1_info,
++            "limite_p90_m": f1_band.UNRELIABLE_P90_M,
++            "microsetores_pouco_confiaveis": [sectors.label(k) for k in unreliable],
++            "por_microsetor": _sector_rows(
++                sectors,
++                v1_mediana_m=None if v1 is None else v1["mediana"], v1_p90_m=None if v1 is None else v1["p90"],
++                v2_mediana_m=None if v2 is None else v2["mediana"], v2_p90_m=None if v2 is None else v2["p90"]),
++        },
++        "faixa": {"formada": formed, "minimo": {"voltas": f1_band.MIN_BAND_LAPS,
++                                                "sessoes": f1_band.MIN_BAND_SESSIONS},
++                  "voltas": len(accepted), "sessoes": len(session_keys)},
++        "volta_de_chuva": {"fonte": rain_source, "criterio": None if rain_fit is None else rain_fit.verdict},
++        "conferencia_pedido_22": None,
++    }
++    if rain_fit is not None:
++        result["conferencia_pedido_22"] = conference_with_p22(track, rain_fit)
++    else:
++        result["conferencia_pedido_22"] = {"feita": False, "motivo": "a classificacao de 2024 nao carregou"}
++
++    if formed:
++        faixa = f1_band.band(main)
++        spread = f1_band.session_spread(sectors, main, [lap_session[key] for key in accepted])
++        per_point = {}
++        for name, lateral in (("v1", np.vstack(v1_lateral)), ("v2", np.vstack([v2_lateral[k] for k in accepted]))):
++            diff = np.abs(lateral - main)
++            per_point[f"{name}_mediana_abs_m"] = np.median(diff, axis=0)
++            per_point[f"{name}_p90_abs_m"] = np.percentile(diff, 90, axis=0)
++        pd.DataFrame({"s": track.s, "microsetor": sectors.index, "p10": faixa["p10"], "p50": faixa["p50"],
++                      "p90": faixa["p90"], "n": faixa["n"], **per_point}).to_csv(
++            out_dir / BAND_FILE, index=False, float_format="%.4f")
++
++        # Parte C, item 6: comparacao descritiva.
++        ai = labelled_ai_laps(store.laps)
++        human = ev.driver_laps(store.laps)
++        ai_ids, human_ids = ai["lap_id"].tolist(), human["lap_id"].tolist()
++        ai_laps, human_laps = lateral_matrix(store, ai_ids), lateral_matrix(store, human_ids)
++        ai_median, human_median = np.median(ai_laps, axis=0), np.median(human_laps, axis=0)
++        vs_ai = f1_band.difference_table(sectors, faixa["p50"], ai_laps)
++        vs_human = f1_band.difference_table(sectors, faixa["p50"], human_laps)
++        comparison = {
++            "aviso": "descritivo, so para leitura; nada muda coach, store ou criterio",
++            "voltas_ia": ai_ids,
++            "voltas_humano": human_ids,
++            "ia": f1_band.compare_to_band(sectors, ai_median, faixa["p10"], faixa["p90"]),
++            "humano": f1_band.compare_to_band(sectors, human_median, faixa["p10"], faixa["p90"]),
++            "chuva": None if rain_line is None else f1_band.compare_to_band(
++                sectors, rain_line, faixa["p10"], faixa["p90"]),
++            "mediana_f1_menos_ia": vs_ai["resumo"],
++            "mediana_f1_menos_humano": vs_human["resumo"],
++            "por_microsetor_diferenca": _sector_rows(sectors, f1_menos_ia_m=vs_ai["por_microsetor"],
++                                                     f1_menos_humano_m=vs_human["por_microsetor"]),
++        }
++        windows = zoom_windows(track)
++        lines = {"f1": faixa["p50"], "ia": ai_median, "humano": human_median}
++        track_png = plot_track(out_dir / TRACK_FIGURE, track, faixa, lines, windows, len(accepted),
++                               len(session_keys))
++        lateral_png = plot_lateral(out_dir / LATERAL_FIGURE, track, sectors, faixa, lines, rain_line,
++                                   rain_label, unreliable)
++        result["faixa"].update({
++            "por_microsetor": _sector_rows(
++                sectors,
++                p10_m=f1_band.sector_median(sectors, faixa["p10"]),
++                p50_m=f1_band.sector_median(sectors, faixa["p50"]),
++                p90_m=f1_band.sector_median(sectors, faixa["p90"]),
++                largura_p10_p90_m=f1_band.sector_median(sectors, faixa["p90"] - faixa["p10"]),
++                amplitude_entre_sessoes_m=spread["amplitude"]),
++            "largura_p10_p90_m": {"mediana": float(np.median(faixa["p90"] - faixa["p10"])),
++                                  "p90": float(np.percentile(faixa["p90"] - faixa["p10"], 90))},
++            "amplitude_entre_sessoes_m": {"mediana": float(np.median(spread["amplitude"])),
++                                          "p90": float(np.percentile(spread["amplitude"], 90)),
++                                          "max": float(spread["amplitude"].max()),
++                                          "microsetor_do_max": sectors.label(int(np.argmax(spread["amplitude"])))},
++            "voltas_por_sessao": spread["voltas_por_sessao"],
++            "diagnostico_por_sessao": session_diagnosis(main, [lap_session[key] for key in accepted], rain_line),
++            "lateral_medio_m": {"mediana_f1": float(faixa["p50"].mean()), "mediana_ia": float(ai_median.mean()),
++                                "mediana_humano": float(human_median.mean())},
++        })
++        result["comparacao"] = comparison
++        result["figuras"] = {"pista": str(track_png), "lateral": str(lateral_png),
++                             "zooms": [{"nome": n, "inicio_s_m": a, "fim_s_m": b} for n, a, b in windows]}
++    else:
++        result["faixa"]["motivo"] = (f"faixa nao formada: {len(accepted)} voltas aceitas de {len(session_keys)} "
++                                     f"sessoes; o minimo e {f1_band.MIN_BAND_LAPS} voltas de "
++                                     f"{f1_band.MIN_BAND_SESSIONS} sessoes")
++
++    result["tempo_s"]["total"] = time.perf_counter() - started
++    result = _round(result)
++    manifest = {
++        "pedido": PEDIDO,
++        "gerado_em": result["gerado_em"],
++        "commit": result["commit"],
++        "sessoes_fora_do_plano": result["sessoes_fora_do_plano"],
++        "sessoes": result["sessoes"],
++        "voltas": _round([record for data in sessions for record in data.laps]),
++    }
++    (out_dir / MANIFEST_FILE).write_text(json.dumps(manifest, indent=1, ensure_ascii=False), encoding="utf-8")
++    (out_dir / SUMMARY_FILE).write_text(json.dumps(result, indent=1, ensure_ascii=False), encoding="utf-8")
++    return result
++
++
++def print_report(result: Dict[str, object]) -> None:
++    print("=" * 72)
++    for info in result["sessoes"]:
++        state = info.get("erro") or info.get("fora") or info.get("funil")
++        print(f"{info['ano']} {info['sessao']}: {state}")
++    rule = result["criterio_por_volta"]
++    print(f"escolhidas {rule['voltas_escolhidas']}, aceitas {rule['voltas_aceitas']} de "
++          f"{len(rule['sessoes_com_voltas_aceitas'])} sessoes")
++    print(f"pouco confiaveis: {result['incerteza']['microsetores_pouco_confiaveis']}")
++    print(f"faixa: {result['faixa'].get('motivo') or 'formada'}")
++    if "comparacao" in result:
++        comparison = result["comparacao"]
++        for key in ("ia", "humano", "chuva"):
++            if comparison[key]:
++                print(f"  {key}: {comparison[key]['microsetores_dentro']} de 60 microsetores dentro")
++        print(f"  F1 - IA {comparison['mediana_f1_menos_ia']}; F1 - humano {comparison['mediana_f1_menos_humano']}")
++    print(f"conferencia: {result['conferencia_pedido_22']}")
++    print(f"cache {result['cache']}; tempo {result['tempo_s']}")
++    print("=" * 72)
++
++
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("--saida", type=Path, default=DEFAULT_OUT)
++    args = parser.parse_args(argv)
++    try:
++        result = run(args.saida)
++    except SystemExit as stop:
++        print(stop)
++        return 2
++    print_report(result)
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/tests/test_f1_faixa.py b/backend/tests/test_f1_faixa.py
+new file mode 100644
+index 00000000..8613ecdc
+--- /dev/null
++++ b/backend/tests/test_f1_faixa.py
+@@ -0,0 +1,171 @@
++"""Testes do alinhamento das voltas secas, da incerteza e da faixa da F1 (pedido 23, Parte C).
++
++Nada aqui usa a internet nem o cache: a pista e a curva sintetica do pedido 22
++e as linhas e transformacoes sao conhecidas.
++"""
++
++from __future__ import annotations
++
++import math
++import sys
++import unittest
++from pathlib import Path
++
++import numpy as np
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from ml.external import f1_band  # noqa: E402
++from ml.external.f1_line import (  # noqa: E402
++    GridLine,
++    Similarity,
++    align_fixed_scale,
++    refine_icp_session,
++)
++from ml.track.microsectors import build_microsectors  # noqa: E402
++from tests.test_fastf1_alinhamento import irregular_s, synthetic_track, to_foreign  # noqa: E402
++
++
++# ------------------------------------------------------- V1 e V2 ---
++
++class VariantRecoveryTest(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.track = synthetic_track()
++
++    def _line(self, amplitude, start, seed):
++        s = irregular_s(self.track, start=start, seed=seed)
++        lateral = amplitude * np.sin(2.0 * math.pi * 7.0 * s / self.track.length)
++        return self.track.to_world(s, lateral)
++
++    def _check(self, fitted, true, foreign, angle_deg=0.01, centroid_m=0.05):
++        self.assertEqual(fitted.mirrored, true.mirrored)
++        error = (fitted.rotation_deg - true.rotation_deg + 180.0) % 360.0 - 180.0
++        self.assertLess(abs(error), angle_deg)
++        centroid = foreign.mean(axis=0, keepdims=True)
++        self.assertLess(float(np.linalg.norm(fitted.apply(centroid) - true.apply(centroid))), centroid_m)
++
++    def test_v1_recovers_rotation_and_translation_with_the_fixed_scale(self):
++        true = Similarity(0.1, math.radians(-63.0), np.array([900.0, -2400.0]), mirrored=True)
++        foreign = to_foreign(self._line(0.0, 1234.0, 7), true)
++        # Partida do metodo principal, um pouco errada em escala, angulo e posicao.
++        start = Similarity(0.1004, math.radians(-62.0), true.translation + np.array([6.0, -4.0]), mirrored=True)
++        fitted, info = align_fixed_scale(foreign, self.track, start, 0.1)
++        self.assertTrue(info["convergiu"])
++        self.assertEqual(fitted.scale, 0.1)
++        self._check(fitted, true, foreign)
++
++    def test_v2_recovers_one_transform_shared_by_several_laps(self):
++        true = Similarity(0.0998, math.radians(141.0), np.array([-1500.0, 300.0]), mirrored=True)
++        lines = [self._line(amplitude, start, seed)
++                 for amplitude, start, seed in ((0.0, 100.0, 1), (0.0, 2100.0, 2), (0.0, 3300.0, 3))]
++        foreign = [to_foreign(line, true) for line in lines]
++        start = Similarity(0.1005, math.radians(139.5), true.translation + np.array([-8.0, 5.0]), mirrored=True)
++        fitted, info = refine_icp_session(foreign, self.track, start)
++        self.assertTrue(info["convergiu"])
++        self.assertEqual(info["voltas"], 3)
++        self.assertLess(abs(fitted.scale / true.scale - 1.0), 1e-4)
++        self._check(fitted, true, np.vstack(foreign))
++
++    def test_transform_spread_is_measured_at_the_centroid(self):
++        base = Similarity(0.1, math.radians(30.0), np.array([100.0, 200.0]), mirrored=True)
++        tilted = Similarity(0.1, math.radians(30.5), np.array([100.0, 200.0]), mirrored=True)
++        centroid = np.array([0.0, 0.0])
++        spread = f1_band.transform_spread([base, base, tilted], centroid)
++        self.assertAlmostEqual(spread["rotacao_graus"]["amplitude"], 0.5, places=6)
++        self.assertAlmostEqual(spread["centroide_m"]["distancia_max_a_mediana"], 0.0, places=6)
++        self.assertEqual(spread["espelhadas"], 3)
++
++
++# ------------------------------------------------------------ faixa ---
++
++class BandTest(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.track = synthetic_track()
++        cls.sectors = build_microsectors(cls.track)
++
++    def test_known_percentiles_with_equal_weight_per_lap(self):
++        laterals = np.vstack([np.full(self.track.size, float(v)) for v in range(11)])
++        faixa = f1_band.band(laterals)
++        np.testing.assert_allclose(faixa["p10"], 1.0)
++        np.testing.assert_allclose(faixa["p50"], 5.0)
++        np.testing.assert_allclose(faixa["p90"], 9.0)
++        self.assertTrue((faixa["n"] == 11).all())
++        np.testing.assert_allclose(f1_band.sector_median(self.sectors, faixa["p50"]), 5.0)
++
++    def test_inside_rule_per_microsector_and_the_side(self):
++        p10 = np.full(self.track.size, -1.0)
++        p90 = np.full(self.track.size, 1.0)
++        line = np.zeros(self.track.size)
++        first = np.flatnonzero(self.sectors.index == 0)
++        second = np.flatnonzero(self.sectors.index == 1)
++        third = np.flatnonzero(self.sectors.index == 2)
++        line[first[int(0.6 * len(first)):]] = 3.0       # 60% dentro: conta como dentro
++        line[second[int(0.4 * len(second)):]] = -4.0    # 40% dentro: fora, pela direita
++        line[third] = 2.5                                # todo fora, pela esquerda
++        result = f1_band.compare_to_band(self.sectors, line, p10, p90)
++        rows = result["por_microsetor"]
++        self.assertTrue(rows[0]["dentro"])
++        self.assertFalse(rows[1]["dentro"])
++        self.assertFalse(rows[2]["dentro"])
++        self.assertEqual(result["microsetores_dentro"], self.sectors.count - 2)
++        self.assertEqual(rows[1]["lado"], "direita")
++        self.assertAlmostEqual(rows[1]["distancia_mediana_ate_a_borda_m"], -3.0)
++        self.assertEqual(rows[2]["lado"], "esquerda")
++        self.assertAlmostEqual(rows[2]["distancia_mediana_ate_a_borda_m"], 1.5)
++        self.assertEqual([row["microsetor"] for row in result["mais_fora"][:2]], [1, 2])
++
++    def test_minimum_to_form_the_band(self):
++        self.assertTrue(f1_band.band_is_formed(20, 3))
++        self.assertFalse(f1_band.band_is_formed(19, 5))
++        self.assertFalse(f1_band.band_is_formed(40, 2))
++
++    def test_session_spread_is_the_range_of_session_medians(self):
++        laterals = np.vstack([np.full(self.track.size, v) for v in (0.0, 0.2, 1.0, 1.4, -0.5)])
++        spread = f1_band.session_spread(self.sectors, laterals, ["a", "a", "b", "b", "c"])
++        np.testing.assert_allclose(spread["amplitude"], 1.2 - (-0.5))
++        self.assertEqual(spread["voltas_por_sessao"], {"a": 2, "b": 2, "c": 1})
++
++
++# -------------------------------------------------------- criterio ---
++
++class LapCriterionTest(unittest.TestCase):
++    GOOD = {"fracao_fora": 0.05, "p95_m": 0.0, "max_m": 0.8}
++
++    def test_each_condition_rejects_alone(self):
++        self.assertTrue(f1_band.lap_verdict(0.995, 40.0, self.GOOD)["aceita"])
++        self.assertFalse(f1_band.lap_verdict(0.985, 40.0, self.GOOD)["cobertura_ok"])
++        self.assertFalse(f1_band.lap_verdict(0.995, 81.0, self.GOOD)["buraco_ok"])
++        self.assertFalse(f1_band.lap_verdict(0.995, 40.0, {**self.GOOD, "fracao_fora": 0.11})["aceita"])
++        self.assertFalse(f1_band.lap_verdict(0.995, 40.0, {**self.GOOD, "p95_m": 1.2})["aceita"])
++        self.assertTrue(f1_band.lap_verdict(0.99, 80.0, {**self.GOOD, "fracao_fora": 0.10, "p95_m": 1.0})["aceita"])
++
++    def test_largest_gap_counts_the_closing_gap(self):
++        length = 4000.0
++        s = np.array([10.0, 50.0, 140.0, 3900.0, 3970.0])
++        line = GridLine(s=s, lateral=np.zeros(5), s_unwrapped=s, grid_lateral=np.zeros(10),
++                        coverage=(s[-1] - s[0]) / length, backward_steps=0)
++        self.assertAlmostEqual(f1_band.max_gap_m(line, length), 3760.0)
++        # Amostras a cada 50 m de 100 a 3800 m: o maior buraco e o que fecha a volta, 300 m.
++        s2 = np.arange(100.0, 3800.1, 50.0)
++        line2 = GridLine(s=s2, lateral=np.zeros(s2.size), s_unwrapped=s2, grid_lateral=np.zeros(10),
++                         coverage=(s2[-1] - s2[0]) / length, backward_steps=0)
++        self.assertAlmostEqual(f1_band.max_gap_m(line2, length), 300.0)
++
++    def test_fit_lap_rejects_a_lap_with_a_hole_and_accepts_the_clean_one(self):
++        track = synthetic_track()
++        true = Similarity(0.1, math.radians(12.0), np.array([300.0, -900.0]), mirrored=True)
++        s = np.mod(500.0 + np.arange(0.0, track.length - 6.0, 6.0), track.length)
++        clean = to_foreign(track.to_world(s, np.zeros_like(s)), true)
++        fit = f1_band.fit_lap(track, clean)
++        self.assertTrue(fit.verdict["aceita"], fit.verdict)
++        holed = np.delete(clean, np.arange(200, 220), axis=0)   # 20 amostras de 6 m: buraco de 126 m
++        fit = f1_band.fit_lap(track, holed)
++        self.assertFalse(fit.verdict["buraco_ok"])
++        self.assertGreater(fit.verdict["maior_buraco_m"], 80.0)
++        self.assertFalse(fit.verdict["aceita"])
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/backend/tests/test_f1_voltas_secas.py b/backend/tests/test_f1_voltas_secas.py
+new file mode 100644
+index 00000000..d6a5fde8
+--- /dev/null
++++ b/backend/tests/test_f1_voltas_secas.py
+@@ -0,0 +1,274 @@
++"""Testes da coleta das voltas secas da F1 (pedido 23, Parte B).
++
++Nada aqui usa a internet nem o cache: o FastF1 e um modulo falso, com uma
++tabela de voltas montada a mao e dados de posicao que anotam o que foi lido.
++"""
++
++from __future__ import annotations
++
++import sys
++import unittest
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from ml.external import f1_dry_laps  # noqa: E402
++
++T = pd.Timedelta
++
++
++# ------------------------------------------------------------ fakes ---
++
++class RecordingPosition:
++    """Dados de posicao falsos que anotam quais colunas foram pedidas."""
++
++    def __init__(self, frame: pd.DataFrame):
++        self.frame = frame
++        self.requested = []
++
++    def __getitem__(self, key):
++        self.requested.append(key)
++        return self.frame[key]
++
++
++POSITIONS = {}
++
++
++class FakeLap(pd.Series):
++    @property
++    def _constructor(self):
++        return FakeLap
++
++    def get_pos_data(self, **_kwargs):
++        return POSITIONS[(self["Driver"], int(self["LapNumber"]))]
++
++    def get_telemetry(self, **_kwargs):
++        raise AssertionError("get_telemetry nao pode ser usado")
++
++    def get_car_data(self, **_kwargs):
++        raise AssertionError("get_car_data nao pode ser usado")
++
++
++class FakeLaps(pd.DataFrame):
++    @property
++    def _constructor(self):
++        return FakeLaps
++
++    @property
++    def _constructor_sliced(self):
++        return FakeLap
++
++
++def lap_row(driver, number, seconds, start_s, compound="SOFT", accurate=True, deleted=False,
++            status="1", pit_in=None, pit_out=None):
++    return {
++        "Driver": driver,
++        "LapNumber": number,
++        "LapTime": T(seconds=seconds),
++        "Compound": compound,
++        "IsAccurate": accurate,
++        "Deleted": deleted,
++        "TrackStatus": status,
++        "PitInTime": pd.NaT if pit_in is None else T(seconds=pit_in),
++        "PitOutTime": pd.NaT if pit_out is None else T(seconds=pit_out),
++        "LapStartTime": T(seconds=start_s),
++        "Time": T(seconds=start_s + seconds),
++    }
++
++
++def weather_frame(rain_between=None):
++    """Um registro por minuto, de 0 a 30 min; chuva so dentro de `rain_between` (s)."""
++    times = np.arange(0, 1800, 60)
++    rain = np.zeros(len(times), dtype=bool)
++    if rain_between is not None:
++        rain = (times >= rain_between[0]) & (times <= rain_between[1])
++    return pd.DataFrame({"Time": pd.to_timedelta(times, unit="s"), "Rainfall": rain})
++
++
++def case_laps():
++    """Uma volta de cada caso do funil, mais a volta limpa."""
++    rows = [
++        lap_row("INT", 1, 80.0, 100.0, compound="INTERMEDIATE"),
++        lap_row("IMP", 1, 80.0, 100.0, accurate=False),
++        lap_row("DEL", 1, 80.0, 100.0, deleted=True),
++        lap_row("YEL", 1, 80.0, 100.0, status="12"),
++        lap_row("BOX", 1, 80.0, 100.0, pit_out=95.0),
++        lap_row("RAI", 1, 80.0, 1000.0),
++        lap_row("OK", 1, 80.0, 100.0),
++    ]
++    return pd.DataFrame(rows)
++
++
++class FakeSession:
++    def __init__(self, laps, weather):
++        self._laps = laps
++        self.weather_data = weather
++        self.pos_data = {"ok": True}
++        self.race_control_messages = pd.DataFrame({"Message": ["GREEN LIGHT - PIT EXIT OPEN"]})
++        self.date = pd.Timestamp("2023-11-03 18:00")
++        self.api_path = "/static/fake/"
++        self.loaded_with = None
++
++    def load(self, **kwargs):
++        self.loaded_with = kwargs
++
++    @property
++    def laps(self):
++        return self._laps
++
++
++class FakeEvent(dict):
++    def __init__(self, sessions, session_obj=None):
++        super().__init__({"EventName": "Fake Grand Prix"})
++        for i, (name, date) in enumerate(sessions, start=1):
++            self[f"Session{i}"] = name
++            self[f"Session{i}Date"] = pd.Timestamp(date)
++        self.session_obj = session_obj
++
++    def get_session(self, _name):
++        return self.session_obj
++
++
++class FakeFastF1:
++    def __init__(self, event):
++        self.event = event
++
++    def get_event(self, _year, _gp):
++        return self.event
++
++
++# ------------------------------------------------------------ filtros ---
++
++class FunnelTest(unittest.TestCase):
++    def test_only_the_clean_lap_survives_each_case_falls_in_its_stage(self):
++        laps = case_laps()
++        stages = f1_dry_laps.funnel(laps, weather_frame(rain_between=(1020, 1080)))
++        by_driver = dict(zip(laps["Driver"], stages["etapa"]))
++        self.assertEqual(by_driver, {
++            "INT": "composto", "IMP": "imprecisa", "DEL": "apagada", "YEL": "bandeira",
++            "BOX": "box", "RAI": "chuva", "OK": "passou",
++        })
++        counts = f1_dry_laps.funnel_counts(stages["etapa"].tolist(), len(laps))
++        self.assertEqual(counts["restam_depois_chuva"], 1)
++        self.assertEqual(counts["caem_composto"], 1)
++
++    def test_the_first_failing_stage_wins(self):
++        # Intermediario e apagado: cai no composto, que vem antes.
++        laps = pd.DataFrame([lap_row("X", 1, 80.0, 100.0, compound="WET", deleted=True)])
++        self.assertEqual(f1_dry_laps.funnel(laps, weather_frame())["etapa"].iloc[0], "composto")
++
++    def test_lap_without_interval_cannot_be_checked_for_rain(self):
++        laps = pd.DataFrame([lap_row("X", 1, 80.0, 100.0)])
++        laps["LapStartTime"] = pd.Series([pd.NaT], dtype="timedelta64[ns]")
++        stages = f1_dry_laps.funnel(laps, weather_frame())
++        self.assertEqual(stages["etapa"].iloc[0], "chuva")
++        self.assertEqual(stages["registros_de_tempo"].iloc[0], -1)
++
++    def test_best_lap_per_driver_and_top_ten(self):
++        rows = []
++        for d in range(12):
++            for n, extra in enumerate((0.5, 0.0, 0.9), start=1):
++                rows.append(lap_row(f"D{d:02d}", n, 80.0 + d * 0.1 + extra, 100.0 * n))
++        passed = pd.DataFrame(rows)
++        chosen, not_best, beyond = f1_dry_laps.pick_laps(passed)
++        picked = passed.loc[chosen]
++        self.assertEqual(len(chosen), 10)
++        self.assertEqual(list(picked["Driver"]), [f"D{d:02d}" for d in range(10)])
++        self.assertTrue((picked["LapNumber"] == 2).all())
++        self.assertEqual(sorted(passed.loc[beyond, "Driver"]), ["D10", "D11"])
++        self.assertEqual(len(not_best), 24)
++
++    def test_session_without_deleted_information_is_left_out(self):
++        laps = case_laps().drop(columns=["Deleted"])
++        self.assertFalse(f1_dry_laps.has_deleted_info(laps))
++        incomplete = case_laps().astype({"Deleted": object})
++        incomplete.loc[0, "Deleted"] = None
++        self.assertFalse(f1_dry_laps.has_deleted_info(incomplete))
++        self.assertTrue(f1_dry_laps.has_deleted_info(case_laps()))
++
++        session = FakeSession(FakeLaps(laps), weather_frame())
++        event = FakeEvent([("Qualifying", "2023-11-03 15:00")], session)
++        data = f1_dry_laps.collect_session(FakeFastF1(event), 2023, "Qualifying", "Q")
++        self.assertTrue(data.info["carregou"])
++        self.assertIn("Deleted", data.info["fora"])
++        self.assertEqual(data.laps, [])
++        self.assertEqual(data.xy, {})
++
++
++class SessionChoiceTest(unittest.TestCase):
++    def test_sprint_qualifying_must_come_before_the_sprint_race(self):
++        y2021 = FakeEvent([("Practice 1", "2021-11-12 12:30"), ("Qualifying", "2021-11-12 16:00"),
++                           ("Practice 2", "2021-11-13 12:00"), ("Sprint Qualifying", "2021-11-13 16:30"),
++                           ("Race", "2021-11-14 14:00")])
++        chosen, skipped = f1_dry_laps.choose_sessions(y2021)
++        self.assertEqual([row["nome"] for row in chosen], ["Qualifying"])
++        self.assertEqual([row["nome"] for row in skipped], ["Sprint Qualifying"])
++
++        y2023 = FakeEvent([("Practice 1", "2023-11-03 11:30"), ("Qualifying", "2023-11-03 15:00"),
++                           ("Sprint Shootout", "2023-11-04 11:00"), ("Sprint", "2023-11-04 15:30"),
++                           ("Race", "2023-11-05 14:00")])
++        chosen, skipped = f1_dry_laps.choose_sessions(y2023)
++        self.assertEqual([(row["nome"], row["tipo"]) for row in chosen],
++                         [("Qualifying", "Q"), ("Sprint Shootout", "SQ")])
++        self.assertEqual([row["nome"] for row in skipped], ["Sprint"])
++
++
++# ------------------------------------------------------------ leitura ---
++
++class ReadingTest(unittest.TestCase):
++    def setUp(self):
++        POSITIONS.clear()
++
++    def _position(self, n=40):
++        frame = pd.DataFrame({
++            "X": np.arange(n, dtype=float), "Y": np.arange(n, dtype=float) * 2.0,
++            "Z": np.ones(n), "Status": ["OnTrack"] * n, "Speed": np.full(n, 300.0),
++            "Throttle": np.full(n, 100.0), "Distance": np.arange(n) * 10.0,
++        })
++        return RecordingPosition(frame)
++
++    def test_reads_only_x_and_y_of_the_position_data(self):
++        position = self._position()
++        POSITIONS[("OK", 1)] = position
++        lap = FakeLap(lap_row("OK", 1, 80.0, 100.0))
++        xy, dropped = f1_dry_laps.read_xy(lap)
++        self.assertEqual(position.requested, [["X", "Y"]])
++        self.assertEqual(xy.shape, (40, 2))
++        np.testing.assert_allclose(xy[:, 1], 2.0 * xy[:, 0])
++        self.assertEqual(dropped, 0)
++
++    def test_session_reads_xy_only_of_the_chosen_laps(self):
++        for driver in ("INT", "IMP", "DEL", "YEL", "BOX", "RAI", "OK"):
++            POSITIONS[(driver, 1)] = self._position()
++        session = FakeSession(FakeLaps(case_laps()), weather_frame(rain_between=(1020, 1080)))
++        event = FakeEvent([("Qualifying", "2023-11-03 15:00")], session)
++        data = f1_dry_laps.collect_session(FakeFastF1(event), 2023, "Qualifying", "Q",
++                                           extra_laps=[("INT", 1)])
++        self.assertEqual(session.loaded_with, f1_dry_laps.LOAD_KWARGS)
++        self.assertEqual(sorted(data.xy), ["2023_Q_INT_1", "2023_Q_OK_1"])
++        for driver in ("IMP", "DEL", "YEL", "BOX", "RAI"):
++            self.assertEqual(POSITIONS[(driver, 1)].requested, [])
++        stages = {row["piloto"]: row["etapa"] for row in data.laps}
++        self.assertEqual(stages["OK"], "escolhida")
++        self.assertEqual(stages["INT"], "composto")
++        extra = next(row for row in data.laps if row["piloto"] == "INT")
++        self.assertIn("chuva", extra["a_parte"])
++        self.assertEqual(data.info["funil"]["escolhidas"], 1)
++
++    def test_session_that_does_not_load_records_the_error(self):
++        class Broken(FakeSession):
++            def load(self, **_kwargs):
++                raise RuntimeError("sem rede")
++
++        event = FakeEvent([("Qualifying", "2023-11-03 15:00")], Broken(FakeLaps(case_laps()), weather_frame()))
++        data = f1_dry_laps.collect_session(FakeFastF1(event), 2023, "Qualifying", "Q")
++        self.assertFalse(data.info["carregou"])
++        self.assertIn("sem rede", data.info["erro"])
++
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/docs/backlog.md b/docs/backlog.md
+index f473c2c9..3ba75cf4 100644
+--- a/docs/backlog.md
++++ b/docs/backlog.md
+@@ -27,7 +27,7 @@ Lista viva de problemas conhecidos e tarefas adiadas, mantida pelo Claude (Cowor
+ | Freada emendada: a frenagem de uma curva começa antes do ápice da curva anterior (7 de 11 voltas no Bico de Pato em 04/10) | Pedido 17, diagnóstico da C10 | Explica parte da perda na C10 e é uma medida de técnica útil ao coach | Medida descritiva no pedido 18 |
+ | Unidade do `steerAngle` gravado não documentada (a limpeza aceita ±1,5) | Auditoria de 30/09; ADR 0017 | Sem ela não existe modelo de entradas para movimento | Pedido 18 |
+ | Painel de evolução: mostrar o bloco `tecnica` (uso da aderência, freio e volante juntos, freada emendada, temperatura) | Pedido 18 | Visualização para o piloto | Claude (Cowork), depois do pedido 18 |
+-| **Dados externos no treino do Modelo 1:** importar a forma da linha da F1 real (FastF1), alinhar à geometria oficial e medir o erro de alinhamento | ADR 0018; pedido 21 (05/10) | Terceira fonte do Modelo 1. Só a forma da linha entra, nunca velocidade ou ponto de frenagem de outro carro. Hoje o importador só dá contexto por curva e não entra em nenhum treino | A definir |
+-| **Retreinar a LSTM geradora com as três fontes** (voltas `humano` com equipamento `atual`, voltas `ia` rotuladas e forma da linha da F1), testada na régua do ADR 0006 | Fase 1; revisão da arquitetura (03/10). ADR 0018; pedido 21 (05/10). As duas linhas foram juntadas no pedido 22 | As LSTMs aprenderam sobretudo voltas da IA: hoje a rede erra 0,528 m de lateral abaixo de 88 s e 2,898 m acima, onde está o piloto. Da linha antiga da peça A seguem junto o envelope, o traçado e a faixa de incerteza σ(s). A peça B estatística (desvios contra a referência, sem prometer segundos) já existe como relatório de evolução (pedidos 16 e 17) | Depois das 5 sessões de treino e do alinhamento da F1 (pedido 22, Parte B) |
++| **Dados externos no treino do Modelo 1:** importar a forma da linha da F1 real (FastF1), alinhar à geometria oficial e medir o erro de alinhamento | ADR 0018; pedido 21 (05/10) | Terceira fonte do Modelo 1. Só a forma da linha entra, nunca velocidade ou ponto de frenagem de outro carro. Hoje o importador só dá contexto por curva e não entra em nenhum treino. A volta alinhada no pedido 22 é da classificação de 2024, com chuva | Em andamento: alinhamento de uma volta aceito no pedido 22; faixa de voltas secas no pedido 23, formada com 64 voltas de 8 sessões. A posição do FastF1 parece seguir um traçado de referência por época, e não a linha de cada carro (`docs/dados_externos_f1.md`). Entra no treino junto com o retreino das três fontes |
++| **Retreinar a LSTM geradora com as três fontes** (voltas `humano` com equipamento `atual`, voltas `ia` rotuladas e forma da linha da F1), testada na régua do ADR 0006 | Fase 1; revisão da arquitetura (03/10). ADR 0018; pedido 21 (05/10). As duas linhas foram juntadas no pedido 22 | As LSTMs aprenderam sobretudo voltas da IA: hoje a rede erra 0,528 m de lateral abaixo de 88 s e 2,898 m acima, onde está o piloto. Da linha antiga da peça A seguem junto o envelope, o traçado e a faixa de incerteza σ(s). A peça B estatística (desvios contra a referência, sem prometer segundos) já existe como relatório de evolução (pedidos 16 e 17) | Depois das 5 sessões de treino e do alinhamento da F1 (pedidos 22 e 23) |
+ | **Voltas antigas no treino do Modelo 1, num teste à parte:** treinar com e sem elas e comparar na régua do ADR 0006 | ADR 0018, esclarecimento de 05/10; pedido 22 | As voltas antigas ficam fora do treino do Modelo 1. Isso vale para as de origem `desconhecida`, inclusive as 75 que o detector rotulou sem promover (35 `ia`, 8 `humano` e 32 `misturada`). As 552 voltas antigas sem box passam, na mediana, a 0,031 m da linha da IA de hoje | Depois do retreino da LSTM com as três fontes |
+ | **Busca evolutiva de novo:** recomeçar das voltas reais mais rápidas, só depois da M1 aprovada | ADR 0018; ADR 0009, item 4 | Gera a volta do Modelo 1. Ela só vira referência do coach quando passar na régua do ADR 0006 com o juiz novo e for mais rápida que as voltas reais no mesmo juiz | Depois da M1 aprovada (ADR 0017) |
+diff --git a/docs/dados_externos_f1.md b/docs/dados_externos_f1.md
+new file mode 100644
+index 00000000..deb2fa74
+--- /dev/null
++++ b/docs/dados_externos_f1.md
+@@ -0,0 +1,70 @@
++# Dados externos da F1 no Modelo 1
++
++Terceira fonte do Modelo 1 ([ADR 0018](decisoes/0018-dois-modelos-e-fontes-de-treino.md)). Relatórios: [pedido 22](handoff/2026-10-05_22_fontes-e-alinhamento-f1_relatorio.md), uma volta, e [pedido 23](handoff/2026-10-05_23_voltas-secas-f1_relatorio.md), a faixa.
++
++## O que entra
++
++**Só a forma da linha:** `X` e `Y` dos dados de posição da volta (`Lap.get_pos_data()` do FastF1), levados à grade de 2 m da geometria oficial `0ed16f0dd2225990` como `lateral(s)`, positivo à esquerda (ADR 0003).
++
++Nada mais da F1 é lido nem salvo: velocidade, pedais, marcha, rotação, DRS, distância e ponto de frenagem ficam de fora. O tempo de volta só escolhe e identifica a volta. `get_telemetry()` não é usado, porque interpola a posição nos instantes dos dados do carro.
++
++## Fonte, sessões e anos
++
++- **Fonte:** FastF1 3.4.0, fixado em `backend/requirements.txt`, com o cache em `data/fastf1_cache/`, fora do git.
++- **Pista:** Interlagos.
++- **Sessões:** a classificação de 2018, 2019 e 2021 a 2025, mais as classificatórias da sprint: Sprint Shootout em 2023 e Sprint Qualifying em 2024 e 2025. A corrida sprint não entra. No FastF1 3.4.0, a sessão de 2021 e 2022 aparece como "Sprint", com data posterior à classificação, e fica fora.
++- **Código:**
++  - `backend/ml/external/f1_dry_laps.py` faz a coleta;
++  - `backend/ml/external/f1_line.py` e `f1_band.py` fazem o alinhamento e a faixa;
++  - `backend/ml/scripts/faixa_f1_secas.py` roda tudo.
++- **Saídas:** em `data/ml/externo/f1_faixa/`, fora do git.
++
++## Método
++
++1. **Filtros, nesta ordem:**
++   - pneu SOFT, MEDIUM ou HARD;
++   - `IsAccurate`;
++   - volta não apagada (`Deleted`). A sessão sem essa informação fica inteira fora;
++   - bandeira verde a volta toda (`TrackStatus == '1'`);
++   - sem box;
++   - nenhum `Rainfall` verdadeiro durante a volta.
++
++   Depois, de cada piloto a volta mais rápida, e de cada sessão os 10 pilotos mais rápidos.
++2. **Alinhamento**, o do pedido 22: Procrustes e ICP contra a linha central, com uma escala livre e espelho permitido, depois projeção na grade e excesso sobre o corredor de `ml.track`.
++3. **Critério por volta, fixado antes de rodar:**
++   - cobertura ≥ 0,99;
++   - maior buraco entre amostras ≤ 80 m;
++   - fração da grade fora do corredor ≤ 10%;
++   - p95 do excesso ≤ 1 m.
++4. **Incerteza do alinhamento:** V1 prende a escala em 0,1 m por unidade; V2 usa uma transformação por sessão. Um microsetor com p90 de |variante − principal| acima de 1 m é "faixa pouco confiável".
++5. **Faixa:** por ponto da grade, p10, p50 e p90 do lateral, com cada volta pesando igual. Mínimo de 20 voltas de 3 sessões.
++
++## Resultados (pedido 23)
++
++- **Funil:** 80 voltas escolhidas em 8 sessões.
++  - 2018 ficou sem nenhuma volta: 284 das 300 estão como `SUPERSOFT`, nome de composto da época, e as 4 que sobraram tinham chuva.
++  - A classificação de 2024 não carregou. O FastF1 3.4.0 monta o caminho pela data atual do calendário (03/11), e a sessão está publicada em `2024-11-02_Qualifying`.
++- **Critério:** 64 voltas aceitas, de 8 sessões, e 16 recusadas: 9 por buraco acima de 80 m e 7 por cobertura abaixo de 0,99. Nas aceitas, a fração fora do corredor vai de 1,0% a 2,9%, e o p95 do excesso é 0 m em todas.
++- **Incerteza:**
++  - V2 muda o lateral em menos de 7 cm (p90 por microsetor). As transformações por volta dentro de uma sessão variam no máximo 0,02° e 9 cm no centróide, então cada sessão está num sistema de coordenadas só.
++  - V1 muda até 1,27 m (p90). A escala livre sai 0,9977 a 0,9982 do decímetro.
++  - 10 microsetores ficam "pouco confiáveis": MS04 a MS09, MS19 e MS46 a MS48.
++- **Faixa formada com 64 voltas de 8 sessões.** A largura p10–p90 tem mediana de 2,71 m. A amplitude entre as medianas das sessões tem mediana de 2,67 m e máximo de 6,89 m (MS56).
++- **Comparação, só para leitura:**
++  - a mediana das 13 voltas `ia` fica dentro da faixa em 16 dos 60 microsetores;
++  - a das 18 voltas `humano` atuais, em 17;
++  - a volta de chuva de 2024, a linha do pedido 22, em 53;
++  - |mediana da F1 − IA| por microsetor: mediana 1,85 m, p90 3,36 m, máximo 5,00 m;
++  - |mediana da F1 − piloto|: mediana 1,48 m, p90 3,02 m, máximo 3,82 m.
++
++## Limites
++
++- **A posição do FastF1 não parece ser a linha de cada carro.**
++  - Dentro de uma sessão, 5 a 10 carros diferentes ficam a 3 a 8 cm uns dos outros (desvio-padrão mediano por ponto).
++  - As medianas das cinco sessões de 2023 a 2025 ficam a 3 a 4 cm da mediana geral, na mediana dos pontos.
++  - A volta de chuva de 2024 passa a 6 cm da mediana seca da Sprint Qualifying de 2024. O contexto do pedido 23 a descreve como de chuva, mas o pneu não pôde ser conferido no FastF1, porque a sessão não carregou.
++  - Já 2019 se afasta até 8,3 m das outras, e 2021–22 até 2,7 m.
++
++  O padrão é de um traçado de referência por época (2019, 2021–22 e 2023–25), e não da linha que cada piloto fez. Por isso, a largura da faixa mede sobretudo a diferença entre épocas, e não a variação entre pilotos. Também não se pode dizer, com estes dados, se a linha de chuva difere da seca. É uma leitura dos números, não um fato documentado pelo FastF1.
++- **Escala e lateral se confundem.** Contra a linha central, um deslocamento lateral uniforme se confunde com a escala. A V1 mostra que essa confusão vale até cerca de 1 m nos 10 microsetores marcados.
++- **A faixa é de outro carro, em outra velocidade.** Que ela ajude o Modelo 1 é uma hipótese, que só o retreino com as três fontes testa, na régua do ADR 0006 (ADR 0018).
+diff --git a/docs/prompts/2026-10-05_23_voltas-secas-f1.md b/docs/prompts/2026-10-05_23_voltas-secas-f1.md
+new file mode 100644
+index 00000000..49e53197
+--- /dev/null
++++ b/docs/prompts/2026-10-05_23_voltas-secas-f1.md
+@@ -0,0 +1,170 @@
++# Pedido 23 — Faixa de linhas reais da F1 em Interlagos: voltas secas de várias classificações
++
++**De:** Eduardo (o plano é meu). **Data:** 05/10/2026.
++**Tipo:** documentação, coleta de dados externos e medição. Nenhum modelo é treinado.
++
++## Contexto
++
++1. **O pedido 22 aceitou o alinhamento de uma volta da F1:** a volta 32 de Norris na classificação de 2024. Ficaram 2,03% dos pontos fora do corredor, e o p95 do excesso foi de 0 m.
++2. **Fato novo: essa classificação foi com pista molhada.** A classificação do GP de São Paulo de 2024 teve chuva, cinco bandeiras vermelhas e pole de Norris em 1:23,405, com pneus de chuva e intermediários. Na chuva, os pilotos costumam fugir da linha seca. Isso é uma hipótese, que este pedido mede. Portanto a tabela "F1 − IA" do pedido 22 comparou a IA com uma linha de chuva.
++   - Confira na coluna `Compound` do próprio FastF1 qual pneu essa volta usou e registre no relatório.
++3. **Uma volta só não separa duas coisas:** o que "a F1 faz assim" e o que "esse piloto fez nessa volta". O Modelo 1 precisa de uma **faixa**, ou seja, de onde passam várias voltas reais secas em cada trecho.
++4. **A limitação registrada no pedido 22 continua.** Ajustar contra a linha central confunde um deslocamento lateral uniforme com a escala. Este pedido mede esse efeito com duas variantes (Parte C, item 4).
++
++**O que a faixa é e o que não é:** ela mostra onde carros reais passam. Ela **não** é o alvo do Modelo 1, porque é outro carro, em outra velocidade (ADR 0018). Se ela ajuda o modelo, só o retreino com as três fontes vai dizer, na régua do ADR 0006.
++
++## Parte A — Documentação (antes do código)
++
++Em `docs/backlog.md`:
++
++1. Na linha **"Dados externos no treino do Modelo 1"**:
++   - acrescente ao Impacto: "A volta alinhada no pedido 22 é da classificação de 2024, com chuva";
++   - troque o Quando "A definir" por "Em andamento: alinhamento de uma volta aceito no pedido 22; faixa de voltas secas no pedido 23. Entra no treino junto com o retreino das três fontes".
++2. Na linha **"Retreinar a LSTM geradora com as três fontes"**, troque "(pedido 22, Parte B)" por "(pedidos 22 e 23)".
++
++## Parte B — Coletar voltas secas de classificação
++
++**Escopo:**
++
++- **Pista:** Interlagos.
++- **Anos:** 2018, 2019, 2021, 2022, 2023, 2024 e 2025. Em 2020 não houve GP.
++- **Sessões:**
++  - a classificação (`Q`) de cada ano;
++  - a sessão classificatória da sprint, nos anos em que o calendário do FastF1 tiver: Sprint Shootout (2023) e Sprint Qualifying (2024 em diante).
++  - **Cuidado:** no FastF1, `SQ` também nomeia a "Sprint Qualifying" de 2021 e 2022, que era a corrida sprint. Confirme cada sessão pelo nome e pela data no calendário. Corrida sprint não entra.
++
++**Carregamento:** `session.load(laps=True, telemetry=True, weather=True, messages=True)`. As mensagens de direção de prova são necessárias porque a coluna `Deleted` só existe com elas.
++
++**Filtros por volta**, nesta ordem. Conte quantas voltas caem em cada etapa, por sessão:
++
++1. `Compound` em SOFT, MEDIUM ou HARD;
++2. `IsAccurate` verdadeiro;
++3. volta não apagada (`Deleted` falso). Se a sessão não tiver a informação de volta apagada, a sessão inteira fica fora, registrada com o motivo. Uma volta apagada costuma ser justamente a que passou do limite da pista, e isso empurraria a faixa para fora;
++4. bandeira verde a volta inteira (`TrackStatus` igual a `'1'`);
++5. sem entrada nem saída de box;
++6. sem chuva: nenhum registro de `Rainfall` verdadeiro em `weather_data` entre o início e o fim da volta.
++
++**Escolha das voltas:**
++
++- de cada piloto, a volta mais rápida que sobrou dos filtros;
++- de cada sessão, os 10 pilotos mais rápidos.
++- O tempo da volta serve só para escolher e identificar. Nunca entra como dado.
++
++**A volta de chuva de 2024** (Norris, volta 32) fica registrada à parte, como "volta de chuva", fora da faixa seca. Ela entra só na comparação da Parte C, item 6.
++
++**O que ler:**
++
++- **Só `X` e `Y`, dos dados de posição da volta** (`get_pos_data()`; confira o nome na versão 3.4.0). Não use `get_telemetry()`: ele interpola a posição nos instantes dos dados do carro.
++- **Não leia nem salve** velocidade, pedais, marcha, rotação, DRS nem distância (ADR 0018).
++
++**Onde fica o código:**
++
++- Escreva a coleta em `backend/ml/external/`.
++- Não altere o importador do app (`backend/core/external_references/`), que dá o contexto por curva ao coach.
++- Use o mesmo cache, `data/fastf1_cache/`, que já fica fora do git. Relate o tamanho final do cache e o tempo de download.
++
++**Rede e versão:**
++
++- O FastF1 está fixado em 3.4.0 no `backend/requirements.txt`, que vai para o app empacotado. **Não atualize nem instale pacotes.**
++- Se uma sessão não carregar, registre o erro e siga com as outras.
++- Se nenhuma sessão carregar (sem internet ou bloqueio), pare e relate.
++- Não busque esses dados em nenhuma outra fonte.
++
++## Parte C — Alinhar, aceitar e formar a faixa
++
++1. **Alinhamento de cada volta:** o mesmo método do pedido 22 (`ml/external/f1_line.py`):
++   - Procrustes e ICP com uma escala só, livre, e espelho permitido, contra a linha central da geometria `0ed16f0dd2225990`;
++   - projeção na grade de 2.167 pontos;
++   - excesso sobre o corredor.
++2. **Conferência com o pedido 22.** Passe a volta de Norris de 2024 pelo caminho novo, com os dados de posição crus. Compare com os números do pedido 22:
++   - a fração fora do corredor, o p95 do excesso, a escala e a rotação;
++   - a diferença de lateral ponto a ponto, com mediana e p95.
++
++   Só relate: isso não muda nada.
++3. **Critério de aceite por volta, fixado antes de rodar.** A volta entra na faixa só se:
++   - a cobertura for de pelo menos 0,99 da volta, e o maior buraco entre amostras for de no máximo 80 m;
++   - no máximo 10% dos pontos da grade ficarem fora do corredor, e o p95 do excesso for de no máximo 1 m. É o mesmo critério do pedido 22.
++
++   A volta que não passa fica fora, listada com os números. Nada é ajustado depois de ver o resultado.
++4. **Incerteza do alinhamento.** Calcule duas variantes para toda volta aceita. Elas nunca servem para escolher voltas.
++   - **V1, escala fixa:** o decímetro nominal (0,1 m por unidade), com só rotação, translação e espelho.
++   - **V2, uma transformação por sessão:** ajustada com todas as voltas aceitas da sessão juntas. A ideia supõe que as posições de uma sessão estão no mesmo sistema de coordenadas. Confira isso pela dispersão das transformações por volta dentro da sessão, com escala, rotação e translação medida no centróide.
++
++   Por microsetor, relate a mediana e o p90 de |lateral da variante − lateral do método principal|. Marque como "faixa pouco confiável" os microsetores com p90 acima de 1 m.
++5. **Faixa**, só com as voltas aceitas, pelo método principal:
++   - **Mínimo fixado antes de rodar:** 20 voltas aceitas de pelo menos 3 sessões. Abaixo disso, o relatório diz "faixa não formada" e traz os números por volta.
++   - **Por ponto da grade:** mediana, p10 e p90 do lateral e o número de voltas. Cada volta pesa igual.
++   - **Por microsetor (60):** a mediana desses valores.
++   - **Dispersão entre sessões:** por microsetor, a amplitude entre as medianas das sessões. Ela mostra se a linha mudou de um ano para outro.
++6. **Comparação descritiva, só para leitura.** Nada disso muda coach, store ou critério.
++   - Por microsetor, calcule a fração dos pontos em que a mediana de cada linha fica dentro de [p10, p90] da faixa. As linhas são:
++     - as 13 voltas `ia` rotuladas de 04/10;
++     - as voltas `humano` com equipamento `atual`.
++
++     Use os mesmos filtros do pedido 22 e relate o número de voltas.
++   - Um microsetor conta como "dentro" se pelo menos 50% dos seus pontos estão dentro.
++   - Relate quantos microsetores ficam dentro, para a IA e para o piloto. Liste os 5 mais fora de cada um, com o lado (positivo à esquerda, ADR 0003) e a distância até a borda da faixa.
++   - Faça o mesmo cálculo com a volta de chuva de 2024 contra a faixa seca. Ele mostra quanto a linha de chuva difere da seca.
++   - Refaça a tabela "F1 − IA" e "F1 − piloto" do pedido 22 com a mediana da faixa no lugar da volta única: mediana, p90 e máximo de |Δ| por microsetor.
++7. **Figuras:**
++   - **A pista:**
++     - a faixa p10–p90 sombreada;
++     - a mediana da F1, a mediana da IA e a mediana do piloto;
++     - zoom no S do Senna, no Bico de Pato e na Junção, onde o pedido 22 achou o maior excesso.
++   - **Lateral × s:** a faixa, a mediana da F1, a IA, o piloto e a volta de chuva.
++
++   Copie as duas para `docs/handoff/`.
++
++**Testes**, sintéticos, sem internet, com um módulo FastF1 falso, como o provedor atual já permite:
++
++- **Filtros:**
++  - uma tabela falsa com uma volta de cada caso: intermediário, imprecisa, apagada, bandeira amarela, saída do box e chuva. Só a volta limpa sobra;
++  - a melhor volta por piloto e o corte nos 10 mais rápidos;
++  - a sessão sem a informação de volta apagada fica fora.
++- **Leitura:** só `X` e `Y`.
++- **V1:** recupera uma rotação e uma translação conhecidas com a escala fixa.
++- **V2:** recupera uma transformação conhecida aplicada a várias linhas da mesma sessão.
++- **Faixa:** p10, p50 e p90 conhecidos, e a regra de "dentro" do microsetor.
++- **Critério por volta:** cobertura, buraco e corredor.
++
++**Saídas**, fora do git, em `data/ml/externo/f1_faixa/`:
++
++- `manifesto.json`. Para cada sessão e cada volta considerada, registre:
++  - ano, sessão, piloto, número da volta, tempo e pneu;
++  - a etapa do funil em que caiu;
++  - os números do critério e o veredito.
++- Um CSV por volta aceita, com `s`, lateral e excesso. Sem velocidade.
++- `faixa.csv`, com `s`, p10, p50, p90, n e a incerteza V1 e V2.
++- `resumo.json` e as figuras.
++
++Copie `resumo.json` e as figuras para `docs/handoff/`, com o prefixo `2026-10-05_23_voltas-secas-f1_`.
++
++**Documento novo, `docs/dados_externos_f1.md`, curto.** Ele deve dizer:
++
++- o que entra: só a forma da linha;
++- a fonte, as sessões e os anos;
++- os filtros, o alinhamento, o critério e a faixa;
++- os resultados, com os números;
++- os limites:
++  - a confusão entre escala e lateral;
++  - a faixa é de outro carro, então que ela ajude o Modelo 1 é uma hipótese, testada só no retreino.
++
++Inclua links para o ADR 0018 e para os relatórios 22 e 23. No backlog, atualize o Quando da linha "Dados externos" com o resultado ("faixa formada com N voltas de M sessões" ou "faixa não formada").
++
++## Regras gerais
++
++- **Nada é treinado.** Coach, store e critérios não mudam.
++- **Nada da F1 além da posição:** sem velocidade, pedal ou ponto de frenagem (ADR 0018).
++- Branch `etapa/f1-voltas-secas`, commits por parte, merge em `develop`. Sem push.
++- Não mexa no app instalado nem em arquivos do jogo.
++- Uma sessão de implementação por vez (ADR 0008).
++- **Relatório** em `docs/handoff/2026-10-05_23_voltas-secas-f1_relatorio.md`, como manda o CLAUDE.md, com:
++  - o pneu da volta de 2024;
++  - o funil por sessão, numa tabela, com os erros de carregamento, se houver;
++  - o veredito por volta;
++  - a conferência com o pedido 22;
++  - a incerteza V1 e V2 e os microsetores pouco confiáveis;
++  - a faixa, ou o motivo de não ter sido formada;
++  - a comparação do item 6;
++  - os caminhos das figuras, o tamanho do cache, a saída da suíte de testes e os commits.
++- Se algo do contexto não bater com o repositório, pare e registre no relatório.
