@@ -1,0 +1,681 @@
+{
+ "pedido": "docs/prompts/2026-10-05_22_fontes-e-alinhamento-f1.md",
+ "gerado_em": "2026-10-06T01:36:46.200125+00:00",
+ "commit": "9494212c9604603824dcb2e918208e458dfc2b2c",
+ "entrada": {
+  "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\external_references\\fastf1__2024__Brazil__Q__NOR__32__093bbee0.json",
+  "sha256": "dbf1ddead766f4971a35c978fbbc307f9a04eb8278ea93f0c0563cda4298ad2c",
+  "referenceId": "fastf1__2024__Brazil__Q__NOR__32__093bbee0",
+  "source": "FASTF1",
+  "year": 2024,
+  "event": "Brazil",
+  "session": "Q",
+  "driver": "NOR",
+  "team": "McLaren",
+  "lapNumber": 32,
+  "track": "Interlagos",
+  "calibrationStatus": "UNCALIBRATED",
+  "sampleCount": 633,
+  "amostras": 633,
+  "campos_lidos": [
+   "x",
+   "y"
+  ],
+  "nao_lidos": "velocidade, pedais, marcha, rotacao, tempo e distancia do FastF1 (ADR 0018)"
+ },
+ "geometria": {
+  "geometry_id": "0ed16f0dd2225990",
+  "comprimento_m": 4334.0796,
+  "pontos_da_grade": 2167,
+  "passo_m": 2.0
+ },
+ "etapa1_unidade": {
+  "perimetro_unidades": 42319.7714,
+  "unidades_por_metro_da_pista": 9.7644,
+  "unidade": "dm",
+  "metros_por_unidade": 0.1,
+  "perimetro_m": 4231.9771,
+  "espacamento_entre_amostras_m": {
+   "mediana": 5.4545,
+   "p95": 16.4605,
+   "max": 57.3348
+  }
+ },
+ "etapa2_alinhamento": {
+  "escala_m_por_unidade": 0.0998,
+  "escala_sobre_a_unidade": 0.9981,
+  "comprimento_da_linha_alinhada_m": 4223.9865,
+  "comprimento_oficial_m": 4334.0796,
+  "diferenca_pct": -2.5402,
+  "rotacao_graus": 0.5517,
+  "espelhado": true,
+  "espelho": "y -> -y no sistema do FastF1, antes da rotacao",
+  "translacao_m": [
+   -60.5387,
+   -365.3945
+  ],
+  "busca_inicial": {
+   "pontos": 500,
+   "rms_m": 7.8011,
+   "melhor_rms_m": {
+    "sem_espelho": 293.005,
+    "com_espelho": 7.8011
+   },
+   "deslocamento_ciclico": 492
+  },
+  "icp": {
+   "iteracoes": 43,
+   "convergiu": true,
+   "ultimo_deslocamento_m": 0.0,
+   "rms_ate_linha_central_m": 3.2817
+  },
+  "comprimentos_na_grade_m": {
+   "linha_da_f1": 4257.2082,
+   "mediana_ia": 4251.9909,
+   "mediana_humano": 4273.2631,
+   "linha_central": 4334.0796
+  }
+ },
+ "etapa3_grade": {
+  "cobertura": 0.9997,
+  "passos_para_tras": 0,
+  "espacamento_em_s_m": {
+   "mediana": 5.7033,
+   "p95": 16.5528,
+   "max": 57.5854
+  },
+  "lateral_m": {
+   "min": -7.5476,
+   "max": 9.0286,
+   "media": -0.1988
+  },
+  "interpolacao": "linear em s entre as amostras, fechando o laco (como resample_lap)"
+ },
+ "etapa4_erro": {
+  "corredor": {
+   "regra": "ml.track.trajectory.corridor_violation: meia-largura medida + folga de zebra - meia-bitola",
+   "meia_bitola_m": 1.0,
+   "folga_de_zebra_m": 0.5
+  },
+  "na_grade": {
+   "pontos": 2167,
+   "pontos_fora": 44,
+   "fracao_fora": 0.0203,
+   "mediana_m": 0.0,
+   "p95_m": 0.0,
+   "max_m": 2.2632,
+   "mediana_so_dos_pontos_fora_m": 0.561
+  },
+  "nas_amostras": {
+   "pontos": 633,
+   "pontos_fora": 20,
+   "fracao_fora": 0.0316,
+   "mediana_m": 0.0,
+   "p95_m": 0.0,
+   "max_m": 2.2881,
+   "mediana_so_dos_pontos_fora_m": 0.4942
+  },
+  "microsetores_de_maior_excesso": [
+   {
+    "microsetor": 44,
+    "rotulo": "MS45 (3178-3251 m)",
+    "inicio_m": 3178.325,
+    "fim_m": 3250.5597,
+    "excesso_max_m": 2.2632,
+    "excesso_medio_m": 0.8182,
+    "fracao_fora": 0.5556,
+    "lado_do_maior_excesso": "esquerda"
+   },
+   {
+    "microsetor": 37,
+    "rotulo": "MS38 (2673-2745 m)",
+    "inicio_m": 2672.6824,
+    "fim_m": 2744.9171,
+    "excesso_max_m": 0.6155,
+    "excesso_medio_m": 0.1713,
+    "fracao_fora": 0.3611,
+    "lado_do_maior_excesso": "direita"
+   },
+   {
+    "microsetor": 18,
+    "rotulo": "MS19 (1300-1372 m)",
+    "inicio_m": 1300.2239,
+    "fim_m": 1372.4585,
+    "excesso_max_m": 0.4341,
+    "excesso_medio_m": 0.0911,
+    "fracao_fora": 0.3056,
+    "lado_do_maior_excesso": "esquerda"
+   },
+   {
+    "microsetor": 0,
+    "rotulo": "MS01 (0-72 m)",
+    "inicio_m": 0.0,
+    "fim_m": 72.2347,
+    "excesso_max_m": 0.0,
+    "excesso_medio_m": 0.0,
+    "fracao_fora": 0.0,
+    "lado_do_maior_excesso": null
+   },
+   {
+    "microsetor": 1,
+    "rotulo": "MS02 (72-144 m)",
+    "inicio_m": 72.2347,
+    "fim_m": 144.4693,
+    "excesso_max_m": 0.0,
+    "excesso_medio_m": 0.0,
+    "fracao_fora": 0.0,
+    "lado_do_maior_excesso": null
+   }
+  ],
+  "ordem": "excesso maximo no microsetor; desempate pelo excesso medio",
+  "microsetores_com_excesso": 3
+ },
+ "criterio": {
+  "regra": "aceito se fracao fora <= 10% e p95 do excesso <= 1 m, na grade; fixado antes de rodar",
+  "aceito": true,
+  "veredito": "aceito",
+  "fracao_fora": 0.0203,
+  "fracao_fora_max": 0.1,
+  "fracao_ok": true,
+  "p95_m": 0.0,
+  "p95_max_m": 1.0,
+  "p95_ok": true
+ },
+ "etapa5_comparacao": {
+  "aviso": "descritivo, so para leitura; nada muda coach, store ou criterio",
+  "diferenca": "lateral da F1 - mediana das voltas, positivo = F1 mais a esquerda",
+  "voltas_ia": [
+   "2026-10-04_03-42-10_vhe_interlagos#0013",
+   "2026-10-04_03-42-10_vhe_interlagos#0012",
+   "2026-10-04_03-42-10_vhe_interlagos#0011",
+   "2026-10-04_02-24-04_vhe_interlagos#0012",
+   "2026-10-04_03-42-10_vhe_interlagos#0010",
+   "2026-10-04_02-24-04_vhe_interlagos#0005",
+   "2026-10-04_02-24-04_vhe_interlagos#0011",
+   "2026-10-04_03-42-10_vhe_interlagos#0009",
+   "2026-10-04_03-42-10_vhe_interlagos#0017",
+   "2026-10-04_02-24-04_vhe_interlagos#0004",
+   "2026-10-04_02-24-04_vhe_interlagos#0010",
+   "2026-10-04_03-42-10_vhe_interlagos#0018",
+   "2026-10-04_03-42-10_vhe_interlagos#0016"
+  ],
+  "voltas_humano": [
+   "2026-10-04_02-24-04_vhe_interlagos#0018",
+   "2026-10-04_23-51-42_vhe_interlagos#0011",
+   "2026-10-04_23-51-42_vhe_interlagos#0012",
+   "2026-10-04_23-51-42_vhe_interlagos#0008",
+   "2026-10-04_23-51-42_vhe_interlagos#0004",
+   "2026-10-04_03-21-52_vhe_interlagos#0002",
+   "2026-10-04_23-51-42_vhe_interlagos#0010",
+   "2026-10-04_03-42-10_vhe_interlagos#0003",
+   "2026-10-04_03-21-52_vhe_interlagos#0004",
+   "2026-10-04_23-51-42_vhe_interlagos#0007",
+   "2026-10-04_02-24-04_vhe_interlagos#0001",
+   "2026-10-04_23-51-42_vhe_interlagos#0006",
+   "2026-10-04_03-21-52_vhe_interlagos#0005",
+   "2026-10-04_03-42-10_vhe_interlagos#0002",
+   "2026-10-04_02-24-04_vhe_interlagos#0009",
+   "2026-10-04_03-21-52_vhe_interlagos#0001",
+   "2026-10-04_02-24-04_vhe_interlagos#0002",
+   "2026-10-04_03-42-10_vhe_interlagos#0005"
+  ],
+  "f1_menos_ia": {
+   "mediana_abs_m": 1.8099,
+   "p90_abs_m": 3.3315,
+   "max_abs_m": 5.0174,
+   "microsetor_do_max": 47
+  },
+  "f1_menos_humano": {
+   "mediana_abs_m": 1.4436,
+   "p90_abs_m": 3.0402,
+   "max_abs_m": 3.8047,
+   "microsetor_do_max": 34
+  },
+  "lateral_medio_m": {
+   "f1": -0.1988,
+   "mediana_ia": 0.3803,
+   "mediana_humano": -0.8137
+  },
+  "por_microsetor": [
+   {
+    "microsetor": 0,
+    "inicio_m": 0.0,
+    "fim_m": 72.2347,
+    "f1_menos_ia_m": 1.4832,
+    "f1_menos_humano_m": 1.2019
+   },
+   {
+    "microsetor": 1,
+    "inicio_m": 72.2347,
+    "fim_m": 144.4693,
+    "f1_menos_ia_m": 1.784,
+    "f1_menos_humano_m": 1.6081
+   },
+   {
+    "microsetor": 2,
+    "inicio_m": 144.4693,
+    "fim_m": 216.704,
+    "f1_menos_ia_m": 2.8923,
+    "f1_menos_humano_m": 2.3406
+   },
+   {
+    "microsetor": 3,
+    "inicio_m": 216.704,
+    "fim_m": 288.9386,
+    "f1_menos_ia_m": 2.3174,
+    "f1_menos_humano_m": 2.2203
+   },
+   {
+    "microsetor": 4,
+    "inicio_m": 288.9386,
+    "fim_m": 361.1733,
+    "f1_menos_ia_m": -2.9579,
+    "f1_menos_humano_m": -1.8689
+   },
+   {
+    "microsetor": 5,
+    "inicio_m": 361.1733,
+    "fim_m": 433.408,
+    "f1_menos_ia_m": -0.4261,
+    "f1_menos_humano_m": -0.5219
+   },
+   {
+    "microsetor": 6,
+    "inicio_m": 433.408,
+    "fim_m": 505.6426,
+    "f1_menos_ia_m": -1.9816,
+    "f1_menos_humano_m": -0.6912
+   },
+   {
+    "microsetor": 7,
+    "inicio_m": 505.6426,
+    "fim_m": 577.8773,
+    "f1_menos_ia_m": -2.1817,
+    "f1_menos_humano_m": -0.4046
+   },
+   {
+    "microsetor": 8,
+    "inicio_m": 577.8773,
+    "fim_m": 650.1119,
+    "f1_menos_ia_m": -2.9325,
+    "f1_menos_humano_m": -0.9723
+   },
+   {
+    "microsetor": 9,
+    "inicio_m": 650.1119,
+    "fim_m": 722.3466,
+    "f1_menos_ia_m": -3.3253,
+    "f1_menos_humano_m": -2.3482
+   },
+   {
+    "microsetor": 10,
+    "inicio_m": 722.3466,
+    "fim_m": 794.5813,
+    "f1_menos_ia_m": 0.106,
+    "f1_menos_humano_m": -0.607
+   },
+   {
+    "microsetor": 11,
+    "inicio_m": 794.5813,
+    "fim_m": 866.8159,
+    "f1_menos_ia_m": -0.7176,
+    "f1_menos_humano_m": -0.036
+   },
+   {
+    "microsetor": 12,
+    "inicio_m": 866.8159,
+    "fim_m": 939.0506,
+    "f1_menos_ia_m": 0.0867,
+    "f1_menos_humano_m": 0.6889
+   },
+   {
+    "microsetor": 13,
+    "inicio_m": 939.0506,
+    "fim_m": 1011.2852,
+    "f1_menos_ia_m": 1.0427,
+    "f1_menos_humano_m": 0.6076
+   },
+   {
+    "microsetor": 14,
+    "inicio_m": 1011.2852,
+    "fim_m": 1083.5199,
+    "f1_menos_ia_m": 1.6962,
+    "f1_menos_humano_m": 0.5934
+   },
+   {
+    "microsetor": 15,
+    "inicio_m": 1083.5199,
+    "fim_m": 1155.7546,
+    "f1_menos_ia_m": 2.2355,
+    "f1_menos_humano_m": 1.0556
+   },
+   {
+    "microsetor": 16,
+    "inicio_m": 1155.7546,
+    "fim_m": 1227.9892,
+    "f1_menos_ia_m": 2.2689,
+    "f1_menos_humano_m": 2.0025
+   },
+   {
+    "microsetor": 17,
+    "inicio_m": 1227.9892,
+    "fim_m": 1300.2239,
+    "f1_menos_ia_m": 1.7097,
+    "f1_menos_humano_m": 2.0736
+   },
+   {
+    "microsetor": 18,
+    "inicio_m": 1300.2239,
+    "fim_m": 1372.4585,
+    "f1_menos_ia_m": 1.884,
+    "f1_menos_humano_m": 2.6462
+   },
+   {
+    "microsetor": 19,
+    "inicio_m": 1372.4585,
+    "fim_m": 1444.6932,
+    "f1_menos_ia_m": -0.1775,
+    "f1_menos_humano_m": 1.9408
+   },
+   {
+    "microsetor": 20,
+    "inicio_m": 1444.6932,
+    "fim_m": 1516.9278,
+    "f1_menos_ia_m": 0.3615,
+    "f1_menos_humano_m": 1.3095
+   },
+   {
+    "microsetor": 21,
+    "inicio_m": 1516.9278,
+    "fim_m": 1589.1625,
+    "f1_menos_ia_m": -2.2244,
+    "f1_menos_humano_m": 0.8876
+   },
+   {
+    "microsetor": 22,
+    "inicio_m": 1589.1625,
+    "fim_m": 1661.3972,
+    "f1_menos_ia_m": -2.3055,
+    "f1_menos_humano_m": 1.0122
+   },
+   {
+    "microsetor": 23,
+    "inicio_m": 1661.3972,
+    "fim_m": 1733.6318,
+    "f1_menos_ia_m": 1.1419,
+    "f1_menos_humano_m": 1.277
+   },
+   {
+    "microsetor": 24,
+    "inicio_m": 1733.6318,
+    "fim_m": 1805.8665,
+    "f1_menos_ia_m": -3.0774,
+    "f1_menos_humano_m": -2.0249
+   },
+   {
+    "microsetor": 25,
+    "inicio_m": 1805.8665,
+    "fim_m": 1878.1011,
+    "f1_menos_ia_m": -4.2005,
+    "f1_menos_humano_m": -2.9713
+   },
+   {
+    "microsetor": 26,
+    "inicio_m": 1878.1011,
+    "fim_m": 1950.3358,
+    "f1_menos_ia_m": -1.727,
+    "f1_menos_humano_m": -0.7252
+   },
+   {
+    "microsetor": 27,
+    "inicio_m": 1950.3358,
+    "fim_m": 2022.5705,
+    "f1_menos_ia_m": 1.8727,
+    "f1_menos_humano_m": 2.437
+   },
+   {
+    "microsetor": 28,
+    "inicio_m": 2022.5705,
+    "fim_m": 2094.8051,
+    "f1_menos_ia_m": -0.6425,
+    "f1_menos_humano_m": 3.4862
+   },
+   {
+    "microsetor": 29,
+    "inicio_m": 2094.8051,
+    "fim_m": 2167.0398,
+    "f1_menos_ia_m": -0.1765,
+    "f1_menos_humano_m": 0.6761
+   },
+   {
+    "microsetor": 30,
+    "inicio_m": 2167.0398,
+    "fim_m": 2239.2744,
+    "f1_menos_ia_m": -0.7162,
+    "f1_menos_humano_m": -0.6914
+   },
+   {
+    "microsetor": 31,
+    "inicio_m": 2239.2744,
+    "fim_m": 2311.5091,
+    "f1_menos_ia_m": -1.3028,
+    "f1_menos_humano_m": -1.7657
+   },
+   {
+    "microsetor": 32,
+    "inicio_m": 2311.5091,
+    "fim_m": 2383.7438,
+    "f1_menos_ia_m": -0.0123,
+    "f1_menos_humano_m": -3.1484
+   },
+   {
+    "microsetor": 33,
+    "inicio_m": 2383.7438,
+    "fim_m": 2455.9784,
+    "f1_menos_ia_m": -3.3876,
+    "f1_menos_humano_m": -1.6928
+   },
+   {
+    "microsetor": 34,
+    "inicio_m": 2455.9784,
+    "fim_m": 2528.2131,
+    "f1_menos_ia_m": -2.0008,
+    "f1_menos_humano_m": 3.8047
+   },
+   {
+    "microsetor": 35,
+    "inicio_m": 2528.2131,
+    "fim_m": 2600.4477,
+    "f1_menos_ia_m": -2.2806,
+    "f1_menos_humano_m": -0.6332
+   },
+   {
+    "microsetor": 36,
+    "inicio_m": 2600.4477,
+    "fim_m": 2672.6824,
+    "f1_menos_ia_m": -4.5266,
+    "f1_menos_humano_m": -0.6716
+   },
+   {
+    "microsetor": 37,
+    "inicio_m": 2672.6824,
+    "fim_m": 2744.9171,
+    "f1_menos_ia_m": -2.1453,
+    "f1_menos_humano_m": -2.2668
+   },
+   {
+    "microsetor": 38,
+    "inicio_m": 2744.9171,
+    "fim_m": 2817.1517,
+    "f1_menos_ia_m": -0.5412,
+    "f1_menos_humano_m": -1.0569
+   },
+   {
+    "microsetor": 39,
+    "inicio_m": 2817.1517,
+    "fim_m": 2889.3864,
+    "f1_menos_ia_m": -2.9827,
+    "f1_menos_humano_m": -2.4036
+   },
+   {
+    "microsetor": 40,
+    "inicio_m": 2889.3864,
+    "fim_m": 2961.621,
+    "f1_menos_ia_m": -2.0113,
+    "f1_menos_humano_m": -1.1804
+   },
+   {
+    "microsetor": 41,
+    "inicio_m": 2961.621,
+    "fim_m": 3033.8557,
+    "f1_menos_ia_m": 1.226,
+    "f1_menos_humano_m": 0.1923
+   },
+   {
+    "microsetor": 42,
+    "inicio_m": 3033.8557,
+    "fim_m": 3106.0904,
+    "f1_menos_ia_m": 1.8804,
+    "f1_menos_humano_m": 1.5556
+   },
+   {
+    "microsetor": 43,
+    "inicio_m": 3106.0904,
+    "fim_m": 3178.325,
+    "f1_menos_ia_m": 3.9131,
+    "f1_menos_humano_m": 2.8029
+   },
+   {
+    "microsetor": 44,
+    "inicio_m": 3178.325,
+    "fim_m": 3250.5597,
+    "f1_menos_ia_m": 2.4419,
+    "f1_menos_humano_m": 3.461
+   },
+   {
+    "microsetor": 45,
+    "inicio_m": 3250.5597,
+    "fim_m": 3322.7943,
+    "f1_menos_ia_m": 1.9588,
+    "f1_menos_humano_m": 2.5602
+   },
+   {
+    "microsetor": 46,
+    "inicio_m": 3322.7943,
+    "fim_m": 3395.029,
+    "f1_menos_ia_m": -1.8543,
+    "f1_menos_humano_m": 0.2621
+   },
+   {
+    "microsetor": 47,
+    "inicio_m": 3395.029,
+    "fim_m": 3467.2637,
+    "f1_menos_ia_m": -5.0174,
+    "f1_menos_humano_m": 1.0949
+   },
+   {
+    "microsetor": 48,
+    "inicio_m": 3467.2637,
+    "fim_m": 3539.4983,
+    "f1_menos_ia_m": -4.2792,
+    "f1_menos_humano_m": -0.0299
+   },
+   {
+    "microsetor": 49,
+    "inicio_m": 3539.4983,
+    "fim_m": 3611.733,
+    "f1_menos_ia_m": -1.8359,
+    "f1_menos_humano_m": 0.1457
+   },
+   {
+    "microsetor": 50,
+    "inicio_m": 3611.733,
+    "fim_m": 3683.9676,
+    "f1_menos_ia_m": -0.0351,
+    "f1_menos_humano_m": 2.3019
+   },
+   {
+    "microsetor": 51,
+    "inicio_m": 3683.9676,
+    "fim_m": 3756.2023,
+    "f1_menos_ia_m": -1.518,
+    "f1_menos_humano_m": 1.6509
+   },
+   {
+    "microsetor": 52,
+    "inicio_m": 3756.2023,
+    "fim_m": 3828.437,
+    "f1_menos_ia_m": -0.0384,
+    "f1_menos_humano_m": -0.1773
+   },
+   {
+    "microsetor": 53,
+    "inicio_m": 3828.437,
+    "fim_m": 3900.6716,
+    "f1_menos_ia_m": -0.2801,
+    "f1_menos_humano_m": 1.1184
+   },
+   {
+    "microsetor": 54,
+    "inicio_m": 3900.6716,
+    "fim_m": 3972.9063,
+    "f1_menos_ia_m": -0.6712,
+    "f1_menos_humano_m": 3.172
+   },
+   {
+    "microsetor": 55,
+    "inicio_m": 3972.9063,
+    "fim_m": 4045.1409,
+    "f1_menos_ia_m": -0.8198,
+    "f1_menos_humano_m": 2.9323
+   },
+   {
+    "microsetor": 56,
+    "inicio_m": 4045.1409,
+    "fim_m": 4117.3756,
+    "f1_menos_ia_m": -1.7457,
+    "f1_menos_humano_m": 3.0282
+   },
+   {
+    "microsetor": 57,
+    "inicio_m": 4117.3756,
+    "fim_m": 4189.6102,
+    "f1_menos_ia_m": -1.3113,
+    "f1_menos_humano_m": 3.4279
+   },
+   {
+    "microsetor": 58,
+    "inicio_m": 4189.6102,
+    "fim_m": 4261.8449,
+    "f1_menos_ia_m": 0.3563,
+    "f1_menos_humano_m": 1.9375
+   },
+   {
+    "microsetor": 59,
+    "inicio_m": 4261.8449,
+    "fim_m": 4334.0796,
+    "f1_menos_ia_m": 1.281,
+    "f1_menos_humano_m": 1.3317
+   }
+  ]
+ },
+ "figura": {
+  "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\externo\\fastf1_alinhamento.png",
+  "zooms": [
+   {
+    "nome": "S do Senna",
+    "inicio_s_m": 184.0041,
+    "fim_s_m": 462.0077
+   },
+   {
+    "nome": "Bico de Pato",
+    "inicio_s_m": 2632.0491,
+    "fim_s_m": 2798.0506
+   }
+  ]
+ },
+ "store_v2": {
+  "commit_do_store": "1bdfa41b434f13f112e371d424f3633b989aee52",
+  "geometry_id": "0ed16f0dd2225990"
+ }
+}

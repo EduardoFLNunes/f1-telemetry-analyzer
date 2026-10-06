@@ -1,0 +1,1271 @@
+diff --git a/backend/ml/external/__init__.py b/backend/ml/external/__init__.py
+new file mode 100644
+index 00000000..e69de29b
+diff --git a/backend/ml/external/f1_line.py b/backend/ml/external/f1_line.py
+new file mode 100644
+index 00000000..11d35265
+--- /dev/null
++++ b/backend/ml/external/f1_line.py
+@@ -0,0 +1,429 @@
++"""A forma da linha da F1 real na grade da pista (pedido 22; ADR 0018).
++
++A volta importada pelo FastF1 (`data/external_references/*.json`) vem nas
++coordenadas do FastF1, sem calibracao (`UNCALIBRATED`). Este modulo a leva para
++a mesma grade de 2 m das voltas do store v2, como `lateral(s)` (ADR 0003,
++positivo a esquerda), e mede o quanto ela sai do corredor oficial.
++
++**So a posicao entra.** Velocidade, pedais, marcha, rotacao, tempo e a
++distancia que o FastF1 integra da velocidade sao de outro carro (ADR 0018) e
++nao sao lidos: `load_xy` devolve so `x` e `y`.
++
++Os passos:
++
++1. **unidade** -- o perimetro da volta comparado com o comprimento da
++   geometria oficial (`infer_unit`);
++2. **alinhamento rigido com escala unica** -- rotacao, translacao, uma escala
++   e, se precisar, espelhamento, ajustados contra a linha central oficial. Uma
++   busca inicial por Procrustes (Umeyama) casa as duas linhas pela fracao do
++   comprimento, em todos os deslocamentos ciclicos, com e sem espelho; o ICP
++   refina com o ponto mais proximo da linha central. Nada deforma a linha:
++   deformar esconderia o erro;
++3. **grade** -- `project_sequence` nas amostras alinhadas e interpolacao linear
++   em `s` entre elas, como `resample_lap` faz com as voltas do jogo;
++4. **erro** -- o excesso sobre o corredor de `ml.track`
++   (`corridor_violation`: largura medida mais a folga de zebra, menos a
++   meia-bitola), 0 dentro dele.
++
++O criterio foi fixado no pedido 22, antes de rodar: o alinhamento so e aceito
++para uso futuro se a fracao de pontos da grade fora do corredor for de no
++maximo 10% e o p95 do excesso, de no maximo 1 m.
++"""
++
++from __future__ import annotations
++
++import json
++import math
++from dataclasses import dataclass, replace
++from pathlib import Path
++from typing import Dict, List, Optional, Sequence, Tuple
++
++import numpy as np
++
++from ..preprocessing.alignment import unwrap_distance
++from ..preprocessing.resampling import _interp_circular
++from ..track.geometry import TrackGeometry
++from ..track.microsectors import Microsectors
++from ..track.trajectory import corridor_violation
++
++# Criterio do pedido 22, fixado antes de rodar. Medido na grade (2167 pontos).
++MAX_OUTSIDE_FRACTION = 0.10
++MAX_EXCESS_P95_M = 1.0
++
++# Metros por unidade de cada candidata. O FastF1 documenta a posicao em 1/10 m;
++# a unidade e confirmada pelos proprios dados (`infer_unit`), nao assumida.
++UNIT_CANDIDATES: Dict[str, float] = {"m": 1.0, "dm": 0.1, "cm": 0.01, "pe": 0.3048}
++
++# Pontos de cada linha na busca inicial (~8,7 m entre eles em Interlagos).
++INITIAL_POINTS = 500
++
++# O FastF1 tem poucas amostras: 633 numa volta de 83 s, com buracos de ate ~57 m
++# numa reta. Os 60 m de `project_sequence`, pensados para o gravador a 20 Hz,
++# ficariam no limite; 150 m ainda separam trechos que correm lado a lado, que
++# estao a centenas de metros um do outro em `s`.
++F1_MAX_STEP_M = 150.0
++
++ICP_MAX_ITERATIONS = 200
++ICP_TOLERANCE_M = 1e-6
++
++
++# ---------------------------------------------------------------- leitura ---
++
++def load_xy(path: Path) -> Tuple[np.ndarray, Dict[str, object]]:
++    """(N, 2) com `x` e `y` das amostras, na ordem gravada, e a identificacao da volta.
++
++    Le so a posicao. Nenhum outro canal da amostra sai daqui (ADR 0018).
++    """
++    raw = json.loads(Path(path).read_text(encoding="utf-8"))
++    samples = raw.get("samples") or []
++    points = np.array(
++        [[float(sample["x"]), float(sample["y"])] for sample in samples if "x" in sample and "y" in sample],
++        dtype=float,
++    )
++    if len(points) != len(samples) or len(points) < 10 or not np.isfinite(points).all():
++        raise ValueError(f"{path}: amostras sem x/y finitos ({len(points)} de {len(samples)})")
++    meta = raw.get("metadata") or {}
++    identity = {
++        key: meta.get(key)
++        for key in ("referenceId", "source", "year", "event", "session", "driver", "team",
++                    "lapNumber", "track", "calibrationStatus", "sampleCount")
++    }
++    return points, identity
++
++
++# ---------------------------------------------------------------- etapa 1 ---
++
++def segment_lengths(points: np.ndarray) -> np.ndarray:
++    """Comprimento de cada segmento do poligono fechado (o ultimo volta ao primeiro ponto)."""
++    closed = np.vstack([points, points[:1]])
++    return np.linalg.norm(np.diff(closed, axis=0), axis=1)
++
++
++def infer_unit(points: np.ndarray, track_length: float) -> Dict[str, object]:
++    """A unidade de `x`/`y`: a candidata que leva o perimetro mais perto da pista oficial."""
++    perimeter = float(segment_lengths(points).sum())
++    ratio = perimeter / float(track_length)
++    unit = min(UNIT_CANDIDATES, key=lambda name: abs(math.log(perimeter * UNIT_CANDIDATES[name] / track_length)))
++    metres = UNIT_CANDIDATES[unit]
++    return {
++        "perimetro_unidades": perimeter,
++        "unidades_por_metro_da_pista": ratio,
++        "unidade": unit,
++        "metros_por_unidade": metres,
++        "perimetro_m": perimeter * metres,
++    }
++
++
++def spacing_summary(lengths: np.ndarray) -> Dict[str, float]:
++    lengths = np.asarray(lengths, dtype=float)
++    return {
++        "mediana": float(np.median(lengths)),
++        "p95": float(np.percentile(lengths, 95)),
++        "max": float(lengths.max()),
++    }
++
++
++# ---------------------------------------------------------------- etapa 2 ---
++
++@dataclass(frozen=True)
++class Similarity:
++    """`destino = escala * R(rotacao) * E * origem + translacao`.
++
++    `E` e o espelho `y -> -y` quando `mirrored`, e a identidade senao. A rotacao
++    e aplicada depois do espelho.
++    """
++
++    scale: float
++    rotation_rad: float
++    translation: np.ndarray
++    mirrored: bool = False
++
++    @property
++    def rotation_deg(self) -> float:
++        return math.degrees(self.rotation_rad)
++
++    @property
++    def matrix(self) -> np.ndarray:
++        c, s = math.cos(self.rotation_rad), math.sin(self.rotation_rad)
++        return np.array([[c, -s], [s, c]])
++
++    def apply(self, points: np.ndarray) -> np.ndarray:
++        source = mirror(points) if self.mirrored else np.asarray(points, dtype=float)
++        return self.scale * source @ self.matrix.T + np.asarray(self.translation, dtype=float)
++
++
++def mirror(points: np.ndarray) -> np.ndarray:
++    out = np.array(points, dtype=float, copy=True)
++    out[:, 1] = -out[:, 1]
++    return out
++
++
++def umeyama(source: np.ndarray, target: np.ndarray, weights: Optional[np.ndarray] = None) -> Similarity:
++    """Semelhanca propria (sem espelho) que leva `source` a `target` em minimos quadrados.
++
++    Umeyama (1991), com pesos: uma escala, uma rotacao e uma translacao, em
++    forma fechada pela SVD da covariancia cruzada.
++    """
++    source = np.asarray(source, dtype=float)
++    target = np.asarray(target, dtype=float)
++    w = np.ones(len(source)) if weights is None else np.asarray(weights, dtype=float)
++    w = w / w.sum()
++    mu_s = w @ source
++    mu_t = w @ target
++    a = source - mu_s
++    b = target - mu_t
++    covariance = (b * w[:, None]).T @ a
++    variance = float(np.sum(w * np.sum(a * a, axis=1)))
++    u, d, vt = np.linalg.svd(covariance)
++    sign = np.eye(2)
++    if np.linalg.det(u) * np.linalg.det(vt) < 0:
++        sign[1, 1] = -1.0
++    rotation = u @ sign @ vt
++    scale = float(np.trace(np.diag(d) @ sign)) / variance
++    translation = mu_t - scale * rotation @ mu_s
++    return Similarity(scale, math.atan2(rotation[1, 0], rotation[0, 0]), translation, False)
++
++
++def fit_similarity(source: np.ndarray, target: np.ndarray, weights: Optional[np.ndarray],
++                   mirrored: bool) -> Similarity:
++    """Umeyama com o espelho escolhido antes: o espelho nao e decidido pela SVD."""
++    fitted = umeyama(mirror(source) if mirrored else source, target, weights)
++    return replace(fitted, mirrored=bool(mirrored))
++
++
++def weighted_rms(residual: np.ndarray, weights: Optional[np.ndarray] = None) -> float:
++    residual = np.asarray(residual, dtype=float)
++    squared = np.sum(residual**2, axis=1) if residual.ndim > 1 else residual**2
++    w = np.ones(len(squared)) if weights is None else np.asarray(weights, dtype=float)
++    return float(math.sqrt(np.sum(w * squared) / np.sum(w)))
++
++
++def arc_weights(points: np.ndarray) -> np.ndarray:
++    """Peso de cada amostra: metade dos dois segmentos que encostam nela.
++
++    As amostras do FastF1 sao uniformes no tempo, entao ficam mais densas nas
++    curvas lentas. Com este peso cada metro de pista pesa o mesmo no ajuste,
++    como na grade em que o erro e medido.
++    """
++    lengths = segment_lengths(points)
++    return 0.5 * (lengths + np.roll(lengths, 1))
++
++
++def resample_by_fraction(points: np.ndarray, count: int) -> np.ndarray:
++    """`count` pontos uniformes no comprimento do poligono fechado, a partir do primeiro."""
++    closed = np.vstack([points, points[:1]])
++    cumulative = np.concatenate([[0.0], np.cumsum(segment_lengths(points))])
++    targets = np.arange(int(count)) * cumulative[-1] / int(count)
++    return np.column_stack([np.interp(targets, cumulative, closed[:, axis]) for axis in (0, 1)])
++
++
++def initial_alignment(source: np.ndarray, centre: np.ndarray,
++                      count: int = INITIAL_POINTS) -> Tuple[Similarity, Dict[str, object]]:
++    """Procrustes com correspondencia pela fracao do comprimento.
++
++    As duas linhas sao reamostradas em `count` pontos uniformes no comprimento.
++    O ponto inicial de cada uma e arbitrario (a largada do FastF1 nao e o `s = 0`
++    do jogo), entao todos os deslocamentos ciclicos sao testados, com e sem
++    espelho, e fica o de menor erro quadratico. Os dois sentidos de percurso ja
++    batem: as amostras estao na ordem da volta e `s` cresce no sentido da prova.
++    """
++    src = resample_by_fraction(source, count)
++    cen = resample_by_fraction(centre, count)
++    best: Optional[Tuple[float, Similarity, int]] = None
++    per_mirror: Dict[str, float] = {}
++    for mirrored in (False, True):
++        flipped = mirror(src) if mirrored else src
++        best_here = math.inf
++        for shift in range(int(count)):
++            target = np.roll(cen, -shift, axis=0)
++            fitted = umeyama(flipped, target)
++            rms = weighted_rms(fitted.apply(flipped) - target)
++            best_here = min(best_here, rms)
++            if best is None or rms < best[0]:
++                best = (rms, replace(fitted, mirrored=mirrored), shift)
++        per_mirror["com_espelho" if mirrored else "sem_espelho"] = best_here
++    assert best is not None
++    rms, similarity, shift = best
++    return similarity, {
++        "pontos": int(count),
++        "rms_m": rms,
++        "melhor_rms_m": per_mirror,
++        "deslocamento_ciclico": int(shift),
++    }
++
++
++def refine_icp(source: np.ndarray, track: TrackGeometry, start: Similarity,
++               weights: Optional[np.ndarray] = None,
++               max_iterations: int = ICP_MAX_ITERATIONS,
++               tolerance_m: float = ICP_TOLERANCE_M,
++               max_step_m: float = F1_MAX_STEP_M) -> Tuple[Similarity, Dict[str, object]]:
++    """ICP ponto-a-curva contra a linha central, com o espelho da busca inicial.
++
++    A cada passo, cada amostra alinhada e casada com o pe da perpendicular na
++    linha central (`project_sequence`, que usa a ordem da volta para nao cair no
++    trecho vizinho), e a semelhanca e reajustada nesses pares. Para quando
++    nenhuma amostra anda mais que `tolerance_m` entre dois passos.
++    """
++    similarity = start
++    moved = similarity.apply(source)
++    converged = False
++    iteration = 0
++    last_shift = math.inf
++    for iteration in range(1, int(max_iterations) + 1):
++        s_hat, _ = track.project_sequence(moved, max_step_m=max_step_m)
++        foot = track.to_world(s_hat, np.zeros_like(s_hat))
++        similarity = fit_similarity(source, foot, weights, similarity.mirrored)
++        updated = similarity.apply(source)
++        last_shift = float(np.max(np.linalg.norm(updated - moved, axis=1)))
++        moved = updated
++        if last_shift < tolerance_m:
++            converged = True
++            break
++    _, lateral = track.project_sequence(moved, max_step_m=max_step_m)
++    return similarity, {
++        "iteracoes": int(iteration),
++        "convergiu": converged,
++        "ultimo_deslocamento_m": last_shift,
++        "rms_ate_linha_central_m": weighted_rms(lateral, weights),
++    }
++
++
++def align(source: np.ndarray, track: TrackGeometry,
++          weights: Optional[np.ndarray] = None) -> Tuple[Similarity, Dict[str, object]]:
++    """Busca inicial e ICP. `source` ja em metros ou em qualquer unidade: a escala e livre."""
++    if weights is None:
++        weights = arc_weights(source)
++    start, initial = initial_alignment(source, track.points)
++    final, icp = refine_icp(source, track, start, weights)
++    return final, {"busca_inicial": initial, "icp": icp}
++
++
++# ---------------------------------------------------------------- etapa 3 ---
++
++@dataclass(frozen=True)
++class GridLine:
++    """A linha alinhada nas amostras e na grade."""
++
++    s: np.ndarray               # (N,) `s` de cada amostra
++    lateral: np.ndarray         # (N,) lateral de cada amostra, positivo a esquerda
++    s_unwrapped: np.ndarray     # (N,) `s` sem o salto da linha de chegada
++    grid_lateral: np.ndarray    # (grade,) lateral em cada ponto da grade
++    coverage: float             # fracao da volta entre a primeira e a ultima amostra
++    backward_steps: int
++
++
++def project_to_grid(track: TrackGeometry, points: np.ndarray,
++                    max_step_m: float = F1_MAX_STEP_M) -> GridLine:
++    """Amostras ja alinhadas (world X/Z) -> lateral na grade da pista.
++
++    A interpolacao e linear em `s`, fechando o laco na linha de chegada, a mesma
++    de `resample_lap`. Interpolar em `s` e nao em X/Z segue a curva da pista
++    entre duas amostras distantes, em vez de cortar pela corda.
++    """
++    s_values, lateral = track.project_sequence(np.asarray(points, dtype=float), max_step_m=max_step_m)
++    unwrapped = unwrap_distance(s_values, track.length)
++    steps = np.diff(unwrapped)
++    positions = np.maximum.accumulate(unwrapped)
++    start = float(positions[0])
++    targets = start + np.mod(track.s - start, track.length)
++    grid = _interp_circular(targets, positions, lateral, float(lateral[0]), start + track.length)
++    return GridLine(
++        s=s_values,
++        lateral=lateral,
++        s_unwrapped=unwrapped,
++        grid_lateral=grid,
++        coverage=float(unwrapped[-1] - unwrapped[0]) / track.length,
++        backward_steps=int((steps < 0).sum()),
++    )
++
++
++# ---------------------------------------------------------------- etapa 4 ---
++
++def excess_on_grid(track: TrackGeometry, grid_lateral: np.ndarray) -> np.ndarray:
++    """Metros fora do corredor de `ml.track`, ponto a ponto da grade (0 dentro)."""
++    return corridor_violation(track, grid_lateral)
++
++
++def excess_at_samples(track: TrackGeometry, s_values: np.ndarray, lateral: np.ndarray) -> np.ndarray:
++    """O mesmo excesso nas amostras medidas, com o corredor interpolado em `s`."""
++    low, high = track.corridor()
++    low_s = np.interp(s_values, track.s, low, period=track.length)
++    high_s = np.interp(s_values, track.s, high, period=track.length)
++    return np.maximum(np.maximum(low_s - lateral, lateral - high_s), 0.0)
++
++
++def excess_summary(excess: np.ndarray) -> Dict[str, float]:
++    excess = np.asarray(excess, dtype=float)
++    outside = excess > 0.0
++    return {
++        "pontos": int(excess.size),
++        "pontos_fora": int(outside.sum()),
++        "fracao_fora": float(outside.mean()),
++        "mediana_m": float(np.median(excess)),
++        "p95_m": float(np.percentile(excess, 95)),
++        "max_m": float(excess.max()),
++        "mediana_so_dos_pontos_fora_m": float(np.median(excess[outside])) if outside.any() else 0.0,
++    }
++
++
++def worst_sectors(sectors: Microsectors, excess: np.ndarray, top: int = 5) -> List[Dict[str, object]]:
++    """Os microsetores de maior excesso maximo (desempate pelo excesso medio)."""
++    rows = []
++    for sector in range(sectors.count):
++        values = np.asarray(excess, dtype=float)[sectors.index == sector]
++        rows.append({
++            "microsetor": sector,
++            "rotulo": sectors.label(sector),
++            "inicio_m": float(sectors.edges_s[sector]),
++            "fim_m": float(sectors.edges_s[sector + 1]),
++            "excesso_max_m": float(values.max()),
++            "excesso_medio_m": float(values.mean()),
++            "fracao_fora": float((values > 0.0).mean()),
++        })
++    rows.sort(key=lambda row: (-row["excesso_max_m"], -row["excesso_medio_m"]))
++    return rows[: int(top)]
++
++
++def verdict(summary: Dict[str, float],
++            max_fraction: float = MAX_OUTSIDE_FRACTION,
++            max_p95_m: float = MAX_EXCESS_P95_M) -> Dict[str, object]:
++    """Aceito so se as duas condicoes do pedido 22 valem; nada e ajustado depois."""
++    fraction_ok = summary["fracao_fora"] <= max_fraction
++    p95_ok = summary["p95_m"] <= max_p95_m
++    accepted = bool(fraction_ok and p95_ok)
++    return {
++        "aceito": accepted,
++        "veredito": "aceito" if accepted else "não aceito",
++        "fracao_fora": summary["fracao_fora"],
++        "fracao_fora_max": max_fraction,
++        "fracao_ok": bool(fraction_ok),
++        "p95_m": summary["p95_m"],
++        "p95_max_m": max_p95_m,
++        "p95_ok": bool(p95_ok),
++    }
++
++
++# ---------------------------------------------------------------- etapa 5 ---
++
++def sector_median_difference(sectors: Microsectors, line: np.ndarray,
++                             laps_lateral: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
++    """Diferenca lateral mediana por microsetor entre `line` e a mediana das voltas.
++
++    A linha mediana e a mediana ponto a ponto da grade; a diferenca e
++    `line - mediana`, positiva quando a linha passa mais a esquerda. Devolve
++    (diferenca por microsetor, linha mediana na grade).
++    """
++    median_line = np.median(np.asarray(laps_lateral, dtype=float), axis=0)
++    difference = np.asarray(line, dtype=float) - median_line
++    per_sector = np.array([float(np.median(difference[sectors.index == k])) for k in range(sectors.count)])
++    return per_sector, median_line
++
++
++def difference_summary(per_sector: Sequence[float]) -> Dict[str, float]:
++    values = np.abs(np.asarray(per_sector, dtype=float))
++    return {
++        "mediana_abs_m": float(np.median(values)),
++        "p90_abs_m": float(np.percentile(values, 90)),
++        "max_abs_m": float(values.max()),
++        "microsetor_do_max": int(np.argmax(values)),
++    }
+diff --git a/backend/ml/scripts/alinhar_fastf1.py b/backend/ml/scripts/alinhar_fastf1.py
+new file mode 100644
+index 00000000..973cf161
+--- /dev/null
++++ b/backend/ml/scripts/alinhar_fastf1.py
+@@ -0,0 +1,400 @@
++"""Alinha a volta da F1 importada pelo FastF1 a geometria oficial e mede o erro (pedido 22).
++
++    python -m ml.scripts.alinhar_fastf1 [--referencia ARQUIVO] [--saida data/ml/externo]
++
++So a posicao (`x`, `y`) da volta e lida: velocidade, pedais e pontos de
++frenagem sao de outro carro (ADR 0018). Nada e treinado, e nada muda coach,
++store ou criterio: a comparacao com as voltas do store v2 e so descritiva.
++
++Escreve, fora do git:
++
++* `fastf1_alinhamento_resumo.json` -- os numeros das etapas 1 a 5 e o veredito
++  do criterio fixado no pedido 22;
++* `fastf1_linha_na_grade.csv` -- a linha na grade: `s`, lateral, corredor,
++  excesso e as linhas medianas da IA e do piloto;
++* `fastf1_alinhamento.png` -- a pista, a linha da F1 alinhada e a mediana da
++  IA, com zoom no S do Senna e no Bico de Pato.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++from datetime import datetime, timezone
++from pathlib import Path
++from typing import Dict, List, Sequence, Tuple
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
++
++import matplotlib  # noqa: E402
++
++matplotlib.use("Agg")
++import matplotlib.pyplot as plt  # noqa: E402
++import numpy as np  # noqa: E402
++import pandas as pd  # noqa: E402
++
++from ml import config  # noqa: E402
++from ml.comparison import evolution as ev  # noqa: E402
++from ml.data.origin import AI, SOURCE_ANNOTATION, SOURCE_INDICATOR, SOURCE_SESSION_ANNOTATION  # noqa: E402
++from ml.data.store_v2 import file_entry, git_commit, load_store_v2, store_v2_meta  # noqa: E402
++from ml.external import f1_line  # noqa: E402
++from ml.track.corners import Corner, detect_corners  # noqa: E402
++from ml.track.geometry import TrackGeometry, load_geometry  # noqa: E402
++from ml.track.microsectors import build_microsectors  # noqa: E402
++from ml.track.trajectory import path_length  # noqa: E402
++from ml.validation.controlled import CORNER_NAMES  # noqa: E402
++from ml.visualization.track_plots import draw_track  # noqa: E402
++
++DEFAULT_REFERENCE = config.repo_root() / "data" / "external_references" / (
++    "fastf1__2024__Brazil__Q__NOR__32__093bbee0.json"
++)
++OFFICIAL_GEOMETRY_ID = "0ed16f0dd2225990"
++# As voltas `ia` rotuladas da sessao de 04/10 (ADR 0018, esclarecimento do pedido 22):
++# rotulo pelo indicador do jogo ou por anotacao, nunca pelo detector.
++AI_DAY = "2026-10-04"
++LABELLED_SOURCES = (SOURCE_INDICATOR, SOURCE_ANNOTATION, SOURCE_SESSION_ANNOTATION)
++# Margem de cada zoom alem da curva, em metros de `s`.
++ZOOM_MARGIN_M = 40.0
++
++SUMMARY_FILE = "fastf1_alinhamento_resumo.json"
++GRID_FILE = "fastf1_linha_na_grade.csv"
++FIGURE_FILE = "fastf1_alinhamento.png"
++
++
++# ----------------------------------------------------------------- voltas ---
++
++def labelled_ai_laps(laps: pd.DataFrame, day: str = AI_DAY) -> pd.DataFrame:
++    """Voltas `ia` rotuladas do dia, com o relogio conferido e nao suspeito."""
++    mask = (
++        (laps["origem"] == AI)
++        & laps["origem_fonte"].isin(LABELLED_SOURCES)
++        & (laps["session_id"].str[:10] == day)
++        & laps["relogio_verificado"].fillna(False).astype(bool)
++        & ~laps["relogio_suspeito"].fillna(True).astype(bool)
++    )
++    return laps[mask]
++
++
++def lateral_matrix(store, lap_ids: Sequence[str]) -> np.ndarray:
++    return np.vstack([store.lap(lap_id)["lateral"].to_numpy(dtype=float) for lap_id in lap_ids])
++
++
++# ----------------------------------------------------------------- figura ---
++
++def corner_by_name(corners: Sequence[Corner], name: str) -> Corner:
++    label = CORNER_NAMES[name]
++    for corner in corners:
++        if corner.label == label:
++            return corner
++    raise SystemExit(f"PARADO: a curva {name} ({label}) nao foi detectada na geometria.")
++
++
++def zoom_windows(corners: Sequence[Corner]) -> List[Tuple[str, float, float]]:
++    """S do Senna: da entrada da C01 a saida da C02. Bico de Pato: a C10."""
++    senna = corner_by_name(corners, "S do Senna")
++    after_senna = corners[[c.index for c in corners].index(senna.index) + 1]
++    pato = corner_by_name(corners, "Bico de Pato")
++    return [
++        ("S do Senna", senna.start_s - ZOOM_MARGIN_M, after_senna.end_s + ZOOM_MARGIN_M),
++        ("Bico de Pato", pato.start_s - ZOOM_MARGIN_M, pato.end_s + ZOOM_MARGIN_M),
++    ]
++
++
++def _closed(points: np.ndarray) -> np.ndarray:
++    return np.vstack([points, points[:1]])
++
++
++def draw_lines(ax, track: TrackGeometry, f1: np.ndarray, ai: np.ndarray, samples: np.ndarray,
++               window=None) -> None:
++    draw_track(track, ax)
++    low, high = track.corridor()
++    for bound in (low, high):
++        edge = _closed(track.to_world(track.s, bound))
++        ax.plot(edge[:, 0], edge[:, 1], color="#c9a227", linewidth=0.6, linestyle="--", zorder=2)
++    centre = _closed(track.points)
++    ax.plot(centre[:, 0], centre[:, 1], color="#6b6b75", linewidth=0.6, linestyle=":", zorder=2)
++    ai_xy = _closed(track.to_world(track.s, ai))
++    f1_xy = _closed(track.to_world(track.s, f1))
++    ax.plot(ai_xy[:, 0], ai_xy[:, 1], color="#4fa3ff", linewidth=1.4, zorder=3)
++    ax.plot(f1_xy[:, 0], f1_xy[:, 1], color="#ff7a1a", linewidth=1.4, zorder=4)
++    if window is not None:
++        ax.scatter(samples[:, 0], samples[:, 1], s=9, color="#ff7a1a", edgecolor="white",
++                   linewidth=0.4, zorder=5)
++        start, end = window
++        inside = (track.s >= start) & (track.s <= end)
++        span = np.vstack([track.to_world(track.s[inside], track.width_left[inside] + 1.0),
++                          track.to_world(track.s[inside], -track.width_right[inside] - 1.0)])
++        pad = 8.0
++        ax.set_xlim(span[:, 0].min() - pad, span[:, 0].max() + pad)
++        ax.set_ylim(span[:, 1].min() - pad, span[:, 1].max() + pad)
++
++
++def plot_figure(path: Path, track: TrackGeometry, f1: np.ndarray, ai: np.ndarray, samples: np.ndarray,
++                windows, verdict_text: str, mirrored: bool) -> Path:
++    figure = plt.figure(figsize=(15, 10))
++    grid = figure.add_gridspec(2, 2, width_ratios=[1.25, 1.0], hspace=0.28)
++    full = figure.add_subplot(grid[:, 0])
++    draw_lines(full, track, f1, ai, samples)
++    full.set_title("Interlagos, geometria oficial " + track.geometry_id, fontsize=10)
++    zooms = [figure.add_subplot(grid[row, 1]) for row in (0, 1)]
++    for ax, (name, start, end) in zip(zooms, windows):
++        draw_lines(ax, track, f1, ai, samples, window=(start, end))
++        ax.set_title(f"{name} (s = {start:.0f} a {end:.0f} m)", fontsize=10)
++        box = np.vstack([ax.get_xlim(), ax.get_ylim()]).T
++        full.add_patch(plt.Rectangle((box[0, 0], box[0, 1]), box[1, 0] - box[0, 0], box[1, 1] - box[0, 1],
++                                     fill=False, edgecolor="#d62728", linewidth=1.2, zorder=6))
++        full.annotate(name, (box[1, 0] + 4.0, box[1, 1]), color="#d62728", fontsize=9)
++    handles = [
++        plt.Line2D([], [], color="#ff7a1a", linewidth=1.6, label="F1 2024 (NOR, Q, volta 32), alinhada"),
++        plt.Line2D([], [], color="#4fa3ff", linewidth=1.6, label="mediana das 13 voltas ia de 04/10"),
++        plt.Line2D([], [], color="#c9a227", linewidth=0.8, linestyle="--", label="corredor (ml/track)"),
++        plt.Line2D([], [], color="#6b6b75", linewidth=0.8, linestyle=":", label="linha central oficial"),
++        plt.Line2D([], [], color="#ff7a1a", marker="o", linestyle="", markersize=4,
++                   label="amostras do FastF1 (zoom)"),
++    ]
++    figure.legend(handles=handles, loc="lower center", ncol=5, fontsize=8, frameon=False)
++    figure.suptitle(
++        "Forma da linha da F1 na geometria oficial (pedido 22). Alinhamento rígido com escala única"
++        + (", com espelho" if mirrored else "") + f". Critério: {verdict_text}.",
++        fontsize=11,
++    )
++    figure.tight_layout(rect=(0, 0.04, 1, 0.96))
++    figure.savefig(path, dpi=130)
++    plt.close(figure)
++    return path
++
++
++# ------------------------------------------------------------------ fluxo ---
++
++def _round(value, digits: int = 4):
++    if isinstance(value, dict):
++        return {k: _round(v, digits) for k, v in value.items()}
++    if isinstance(value, (list, tuple)):
++        return [_round(v, digits) for v in value]
++    if isinstance(value, (float, np.floating)):
++        return round(float(value), digits)
++    if isinstance(value, np.integer):
++        return int(value)
++    if isinstance(value, np.bool_):
++        return bool(value)
++    return value
++
++
++def run(reference: Path, out_dir: Path) -> Dict[str, object]:
++    track = load_geometry()
++    if track.geometry_id != OFFICIAL_GEOMETRY_ID:
++        raise SystemExit(f"PARADO: a geometria carregada e {track.geometry_id}, e o pedido 22 fala da "
++                         f"{OFFICIAL_GEOMETRY_ID}.")
++    meta = store_v2_meta()
++    if not meta or not meta.get("aprovado"):
++        raise SystemExit("PARADO: store v2 ausente ou sem as checagens aprovadas.")
++    store = load_store_v2(track=track)
++    if store.geometry_id != track.geometry_id:
++        raise SystemExit(f"PARADO: o store v2 e da geometria {store.geometry_id}.")
++    sectors = build_microsectors(track)
++
++    # Etapa 1: unidade e amostragem, so com x e y.
++    raw, identity = f1_line.load_xy(reference)
++    unit = f1_line.infer_unit(raw, track.length)
++    spacing = f1_line.spacing_summary(f1_line.segment_lengths(raw) * unit["metros_por_unidade"])
++
++    # Etapa 2: alinhamento rigido com escala unica contra a linha central.
++    similarity, fit = f1_line.align(raw, track)
++    aligned = similarity.apply(raw)
++    aligned_length = float(f1_line.segment_lengths(aligned).sum())
++
++    # Etapa 3: projecao na grade.
++    line = f1_line.project_to_grid(track, aligned)
++    s_steps = np.diff(np.maximum.accumulate(line.s_unwrapped))
++    closing = float(line.s_unwrapped[0] + track.length - np.maximum.accumulate(line.s_unwrapped)[-1])
++
++    # Etapa 4: erro de alinhamento, o excesso sobre o corredor.
++    excess = f1_line.excess_on_grid(track, line.grid_lateral)
++    summary = f1_line.excess_summary(excess)
++    verdict = f1_line.verdict(summary)
++    at_samples = f1_line.excess_summary(f1_line.excess_at_samples(track, line.s, line.lateral))
++    worst = f1_line.worst_sectors(sectors, excess, top=5)
++    for row in worst:
++        # O lado do ponto de maior excesso: fora do corredor, o sinal do lateral diz o lado (ADR 0003).
++        points = np.flatnonzero(sectors.index == row["microsetor"])
++        peak = points[int(np.argmax(excess[points]))]
++        row["lado_do_maior_excesso"] = (
++            None if excess[peak] == 0.0 else ("esquerda" if line.grid_lateral[peak] > 0 else "direita"))
++    sectors_with_excess = int(sum(excess[sectors.index == k].max() > 0.0 for k in range(sectors.count)))
++
++    # Etapa 5: comparacao descritiva com as voltas do store v2.
++    ai = labelled_ai_laps(store.laps)
++    human = ev.driver_laps(store.laps)
++    if ai.empty or human.empty:
++        raise SystemExit(f"PARADO: {len(ai)} voltas ia rotuladas de {AI_DAY} e {len(human)} humano atual no store v2.")
++    ai_ids = ai["lap_id"].tolist()
++    human_ids = human["lap_id"].tolist()
++    vs_ai, ai_median = f1_line.sector_median_difference(sectors, line.grid_lateral, lateral_matrix(store, ai_ids))
++    vs_human, human_median = f1_line.sector_median_difference(
++        sectors, line.grid_lateral, lateral_matrix(store, human_ids))
++    low, high = track.corridor()
++
++    out_dir.mkdir(parents=True, exist_ok=True)
++    grid_frame = pd.DataFrame({
++        "grid_index": np.arange(track.size),
++        "s": track.s,
++        "microsetor": sectors.index,
++        "lateral_f1": line.grid_lateral,
++        "corredor_dir": low,
++        "corredor_esq": high,
++        "excesso_m": excess,
++        "mediana_ia": ai_median,
++        "mediana_humano": human_median,
++    })
++    grid_frame.to_csv(out_dir / GRID_FILE, index=False, float_format="%.4f")
++
++    corners = detect_corners(track)
++    windows = zoom_windows(corners)
++    figure = plot_figure(out_dir / FIGURE_FILE, track, line.grid_lateral, ai_median, aligned,
++                         windows, verdict["veredito"], similarity.mirrored)
++
++    result = {
++        "pedido": "docs/prompts/2026-10-05_22_fontes-e-alinhamento-f1.md",
++        "gerado_em": datetime.now(timezone.utc).isoformat(),
++        "commit": git_commit(),
++        "entrada": {
++            "arquivo": str(reference),
++            "sha256": file_entry(Path(reference))["sha256"],
++            **identity,
++            "amostras": int(len(raw)),
++            "campos_lidos": ["x", "y"],
++            "nao_lidos": "velocidade, pedais, marcha, rotacao, tempo e distancia do FastF1 (ADR 0018)",
++        },
++        "geometria": {
++            "geometry_id": track.geometry_id,
++            "comprimento_m": track.length,
++            "pontos_da_grade": track.size,
++            "passo_m": track.step,
++        },
++        "etapa1_unidade": {
++            **unit,
++            "espacamento_entre_amostras_m": spacing,
++        },
++        "etapa2_alinhamento": {
++            "escala_m_por_unidade": similarity.scale,
++            "escala_sobre_a_unidade": similarity.scale / unit["metros_por_unidade"],
++            "comprimento_da_linha_alinhada_m": aligned_length,
++            "comprimento_oficial_m": track.length,
++            "diferenca_pct": 100.0 * (aligned_length / track.length - 1.0),
++            "rotacao_graus": similarity.rotation_deg,
++            "espelhado": similarity.mirrored,
++            "espelho": "y -> -y no sistema do FastF1, antes da rotacao",
++            "translacao_m": [float(v) for v in similarity.translation],
++            **fit,
++            # Descritivo: o comprimento de cada linha medido do mesmo jeito, na grade (`path_length`).
++            "comprimentos_na_grade_m": {
++                "linha_da_f1": path_length(track, line.grid_lateral),
++                "mediana_ia": path_length(track, ai_median),
++                "mediana_humano": path_length(track, human_median),
++                "linha_central": path_length(track, np.zeros(track.size)),
++            },
++        },
++        "etapa3_grade": {
++            "cobertura": line.coverage,
++            "passos_para_tras": line.backward_steps,
++            "espacamento_em_s_m": f1_line.spacing_summary(np.append(s_steps, closing)),
++            "lateral_m": {
++                "min": float(line.grid_lateral.min()),
++                "max": float(line.grid_lateral.max()),
++                "media": float(line.grid_lateral.mean()),
++            },
++            "interpolacao": "linear em s entre as amostras, fechando o laco (como resample_lap)",
++        },
++        "etapa4_erro": {
++            "corredor": {
++                "regra": "ml.track.trajectory.corridor_violation: meia-largura medida + folga de zebra - meia-bitola",
++                "meia_bitola_m": config.CAR_HALF_WIDTH_M,
++                "folga_de_zebra_m": config.KERB_ALLOWANCE_M,
++            },
++            "na_grade": summary,
++            "nas_amostras": at_samples,
++            "microsetores_de_maior_excesso": worst,
++            "ordem": "excesso maximo no microsetor; desempate pelo excesso medio",
++            "microsetores_com_excesso": sectors_with_excess,
++        },
++        "criterio": {
++            "regra": "aceito se fracao fora <= 10% e p95 do excesso <= 1 m, na grade; fixado antes de rodar",
++            **verdict,
++        },
++        "etapa5_comparacao": {
++            "aviso": "descritivo, so para leitura; nada muda coach, store ou criterio",
++            "diferenca": "lateral da F1 - mediana das voltas, positivo = F1 mais a esquerda",
++            "voltas_ia": ai_ids,
++            "voltas_humano": human_ids,
++            "f1_menos_ia": f1_line.difference_summary(vs_ai),
++            "f1_menos_humano": f1_line.difference_summary(vs_human),
++            "lateral_medio_m": {
++                "f1": float(line.grid_lateral.mean()),
++                "mediana_ia": float(ai_median.mean()),
++                "mediana_humano": float(human_median.mean()),
++            },
++            "por_microsetor": [
++                {
++                    "microsetor": k,
++                    "inicio_m": float(sectors.edges_s[k]),
++                    "fim_m": float(sectors.edges_s[k + 1]),
++                    "f1_menos_ia_m": float(vs_ai[k]),
++                    "f1_menos_humano_m": float(vs_human[k]),
++                }
++                for k in range(sectors.count)
++            ],
++        },
++        "figura": {
++            "arquivo": str(figure),
++            "zooms": [{"nome": name, "inicio_s_m": start, "fim_s_m": end} for name, start, end in windows],
++        },
++        "store_v2": {"commit_do_store": meta.get("commit"), "geometry_id": store.geometry_id},
++    }
++    result = _round(result)
++    (out_dir / SUMMARY_FILE).write_text(json.dumps(result, indent=1, ensure_ascii=False), encoding="utf-8")
++    return result
++
++
++def print_report(result: Dict[str, object]) -> None:
++    unit, fit = result["etapa1_unidade"], result["etapa2_alinhamento"]
++    grid, error, rule = result["etapa3_grade"], result["etapa4_erro"], result["criterio"]
++    comparison = result["etapa5_comparacao"]
++    print("=" * 72)
++    print(f"1. unidade: {unit['unidade']} ({unit['unidades_por_metro_da_pista']:.3f} unidades por metro da pista); "
++          f"espacamento {unit['espacamento_entre_amostras_m']}")
++    print(f"2. escala {fit['escala_m_por_unidade']} m/unidade ({fit['escala_sobre_a_unidade']} da unidade); "
++          f"comprimento {fit['comprimento_da_linha_alinhada_m']} m contra {fit['comprimento_oficial_m']} m "
++          f"({fit['diferenca_pct']}%); rotacao {fit['rotacao_graus']} graus; espelho {fit['espelhado']}")
++    print(f"   busca inicial {fit['busca_inicial']}; icp {fit['icp']}")
++    print(f"3. cobertura {grid['cobertura']}; passos para tras {grid['passos_para_tras']}; "
++          f"espacamento em s {grid['espacamento_em_s_m']}")
++    print(f"4. na grade {error['na_grade']}")
++    print(f"   nas amostras {error['nas_amostras']}")
++    for row in error["microsetores_de_maior_excesso"]:
++        print(f"   {row['rotulo']}: max {row['excesso_max_m']} m, medio {row['excesso_medio_m']} m, "
++              f"fora {row['fracao_fora']}")
++    print(f"   criterio: {rule['veredito']} (fracao {rule['fracao_fora']} <= {rule['fracao_fora_max']}: "
++          f"{rule['fracao_ok']}; p95 {rule['p95_m']} <= {rule['p95_max_m']}: {rule['p95_ok']})")
++    print(f"5. {len(comparison['voltas_ia'])} voltas ia, {len(comparison['voltas_humano'])} humano; "
++          f"F1 - IA {comparison['f1_menos_ia']}; F1 - humano {comparison['f1_menos_humano']}")
++    print("=" * 72)
++    print(f"figura: {result['figura']['arquivo']}")
++
++
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("--referencia", type=Path, default=DEFAULT_REFERENCE)
++    parser.add_argument("--saida", type=Path, default=config.artifacts_root() / "externo")
++    args = parser.parse_args(argv)
++    try:
++        result = run(args.referencia, args.saida)
++    except SystemExit as stop:
++        print(stop)
++        return 2
++    print_report(result)
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/tests/test_fastf1_alinhamento.py b/backend/tests/test_fastf1_alinhamento.py
+new file mode 100644
+index 00000000..1b40a8a1
+--- /dev/null
++++ b/backend/tests/test_fastf1_alinhamento.py
+@@ -0,0 +1,265 @@
++"""Testes do alinhamento da linha da F1 a geometria oficial (pedido 22).
++
++Nada aqui le a volta importada nem o cache de geometria: a pista e uma curva
++fechada sintetica, com curvas para os dois lados, e a linha da F1 e uma linha
++conhecida passada por uma transformacao conhecida.
++"""
++
++from __future__ import annotations
++
++import json
++import math
++import sys
++import tempfile
++import unittest
++from pathlib import Path
++
++import numpy as np
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from ml.external.f1_line import (  # noqa: E402
++    Similarity,
++    align,
++    excess_on_grid,
++    excess_summary,
++    infer_unit,
++    load_xy,
++    mirror,
++    project_to_grid,
++    sector_median_difference,
++    verdict,
++    worst_sectors,
++)
++from ml.track.geometry import TrackGeometry  # noqa: E402
++from ml.track.microsectors import build_microsectors  # noqa: E402
++
++HALF_WIDTH = 6.0
++STEP = 2.0
++
++
++def synthetic_track(centre=(2000.0, -1500.0)) -> TrackGeometry:
++    """Curva fechada de ~4,1 km com trechos concavos (curvas para os dois lados).
++
++    A normal segue `load_geometry`: `normal = (t_z, -t_x)`, o lado que o ML
++    chama de esquerda (ADR 0003).
++    """
++    theta = np.linspace(0.0, 2.0 * math.pi, 40000, endpoint=False)
++    radius = 600.0 * (1.0 + 0.15 * np.cos(3.0 * theta) + 0.08 * np.sin(5.0 * theta))
++    dense = np.column_stack([radius * np.cos(theta), radius * np.sin(theta)]) + np.asarray(centre)
++    closed = np.vstack([dense, dense[:1]])
++    cumulative = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(closed, axis=0), axis=1))])
++    length = float(cumulative[-1])
++    count = int(round(length / STEP))
++    step = length / count
++    s = np.arange(count) * step
++    x = np.interp(s, cumulative, closed[:, 0])
++    z = np.interp(s, cumulative, closed[:, 1])
++    points = np.column_stack([x, z])
++    derivative = (np.roll(points, -1, axis=0) - np.roll(points, 1, axis=0)) / (2.0 * step)
++    tangent = derivative / np.linalg.norm(derivative, axis=1, keepdims=True)
++    normal = np.column_stack([tangent[:, 1], -tangent[:, 0]])
++    turn = (np.roll(tangent, -1, axis=0) - np.roll(tangent, 1, axis=0)) / (2.0 * step)
++    return TrackGeometry(
++        name="sintetica",
++        length=length,
++        step=step,
++        s=s,
++        x=x,
++        z=z,
++        elevation=np.zeros(count),
++        tangent=tangent,
++        normal=normal,
++        curvature=np.sum(turn * normal, axis=1),
++        width_left=np.full(count, HALF_WIDTH),
++        width_right=np.full(count, HALF_WIDTH),
++    )
++
++
++def irregular_s(track: TrackGeometry, count: int = 640, start: float = 1234.0, seed: int = 7) -> np.ndarray:
++    """`count` posicoes em `s`, espacadas de forma irregular, uma volta a partir de `start`."""
++    rng = np.random.default_rng(seed)
++    gaps = rng.uniform(0.3, 1.7, count)
++    positions = np.concatenate([[0.0], np.cumsum(gaps[:-1])])
++    positions *= (track.length - 3.0) / (positions[-1] + gaps[-1])
++    return np.mod(start + positions, track.length)
++
++
++def to_foreign(points: np.ndarray, true: Similarity) -> np.ndarray:
++    """Inverso de `true`: leva pontos da pista para o sistema "de fora"."""
++    rotated = (np.asarray(points) - true.translation) @ true.matrix / true.scale
++    return mirror(rotated) if true.mirrored else rotated
++
++
++class AlignmentRecoveryTest(unittest.TestCase):
++    """Uma linha conhecida, uma transformacao conhecida: o alinhamento a recupera."""
++
++    @classmethod
++    def setUpClass(cls):
++        cls.track = synthetic_track()
++
++    def _recover(self, true: Similarity, lateral_amplitude: float, noise_m: float):
++        s = irregular_s(self.track)
++        lateral = lateral_amplitude * np.sin(2.0 * math.pi * 7.0 * s / self.track.length)
++        line = self.track.to_world(s, lateral)
++        if noise_m:
++            line = line + np.random.default_rng(3).normal(0.0, noise_m, line.shape)
++        foreign = to_foreign(line, true)
++        fitted, info = align(foreign, self.track)
++        self.assertTrue(info["icp"]["convergiu"])
++        return fitted, foreign, line
++
++    def _check(self, fitted: Similarity, true: Similarity, foreign, line,
++               scale_rel: float, angle_deg: float, shift_m: float, line_m: float):
++        self.assertEqual(fitted.mirrored, true.mirrored)
++        self.assertLess(abs(fitted.scale / true.scale - 1.0), scale_rel)
++        angle_error = (fitted.rotation_deg - true.rotation_deg + 180.0) % 360.0 - 180.0
++        self.assertLess(abs(angle_error), angle_deg)
++        # A translacao e medida no centroide da linha. O vetor `translation` e a
++        # imagem da origem do sistema de fora, que fica a ~5 km da linha: ali
++        # 0,02 grau de rotacao ja vira 1,6 m, sem a linha sair do lugar.
++        centroid = foreign.mean(axis=0, keepdims=True)
++        self.assertLess(float(np.linalg.norm(fitted.apply(centroid) - true.apply(centroid))), shift_m)
++        moved = fitted.apply(foreign)
++        self.assertLess(float(np.max(np.linalg.norm(moved - true.apply(foreign), axis=1))), line_m)
++
++    def test_recovers_mirrored_transform_in_decimetres(self):
++        true = Similarity(0.1, math.radians(37.0), np.array([-350.0, 820.0]), mirrored=True)
++        fitted, foreign, line = self._recover(true, lateral_amplitude=0.0, noise_m=0.0)
++        self._check(fitted, true, foreign, line, scale_rel=1e-4, angle_deg=0.01, shift_m=0.05, line_m=0.05)
++
++    def test_recovers_proper_transform_with_a_racing_line(self):
++        # Uma linha que nao e a central (1,5 m para os dois lados) e com ruido de
++        # 0,2 m: o ICP contra a linha central continua recuperando a transformacao.
++        true = Similarity(0.1, math.radians(-121.0), np.array([4100.0, -90.0]), mirrored=False)
++        fitted, foreign, line = self._recover(true, lateral_amplitude=1.5, noise_m=0.2)
++        self._check(fitted, true, foreign, line, scale_rel=1e-3, angle_deg=0.1, shift_m=0.5, line_m=0.5)
++
++    def test_recovers_mirrored_transform_with_a_racing_line(self):
++        true = Similarity(0.1, math.radians(200.0), np.array([-700.0, 2500.0]), mirrored=True)
++        fitted, foreign, line = self._recover(true, lateral_amplitude=1.5, noise_m=0.2)
++        self._check(fitted, true, foreign, line, scale_rel=1e-3, angle_deg=0.1, shift_m=0.5, line_m=0.5)
++
++
++class LateralSignTest(unittest.TestCase):
++    """Convencao do ADR 0003: lateral positivo a esquerda, a `+normal` da pista."""
++
++    @classmethod
++    def setUpClass(cls):
++        cls.track = synthetic_track()
++
++    def test_line_to_the_left_projects_positive_on_the_grid(self):
++        s = irregular_s(self.track)
++        for offset in (3.0, -2.0):
++            grid = project_to_grid(self.track, self.track.to_world(s, np.full(s.size, offset)))
++            self.assertEqual(grid.grid_lateral.size, self.track.size)
++            np.testing.assert_allclose(grid.grid_lateral, offset, atol=0.05)
++            self.assertGreater(grid.coverage, 0.99)
++            self.assertEqual(grid.backward_steps, 0)
++
++    def test_sign_survives_a_mirrored_source(self):
++        # A linha alterna os lados (3 m a esquerda, depois a direita); o sistema
++        # de fora e espelhado. Depois do alinhamento cada trecho continua do
++        # mesmo lado: o espelho nao troca o sinal.
++        #
++        # Nao da para usar um deslocamento constante aqui: contra a linha
++        # central, uma linha toda 3 m a esquerda se confunde com uma escala um
++        # pouco diferente, e o ICP a traz para perto do centro. Pelo mesmo
++        # motivo a onda de +-3 m sai com um vies de alguns decimetros; o teste
++        # e do sinal, por isso a tolerancia do valor e de 1 m.
++        s = irregular_s(self.track)
++        lateral = 3.0 * np.sign(np.sin(2.0 * math.pi * 5.0 * s / self.track.length))
++        line = self.track.to_world(s, lateral)
++        true = Similarity(0.1, math.radians(75.0), np.array([300.0, 300.0]), mirrored=True)
++        fitted, _ = align(to_foreign(line, true), self.track)
++        grid = project_to_grid(self.track, fitted.apply(to_foreign(line, true)))
++        self.assertTrue(fitted.mirrored)
++        expected = 3.0 * np.sign(np.sin(2.0 * math.pi * 5.0 * self.track.s / self.track.length))
++        steady = np.abs(np.sin(2.0 * math.pi * 5.0 * self.track.s / self.track.length)) > 0.1
++        np.testing.assert_array_equal(np.sign(grid.grid_lateral[steady]), np.sign(expected[steady]))
++        np.testing.assert_allclose(grid.grid_lateral[steady], expected[steady], atol=1.0)
++
++    def test_left_side_is_plus_normal(self):
++        # `to_world` com lateral positivo anda para `+normal`, e `project` devolve o mesmo sinal.
++        s = np.array([100.0, 1500.0, 3000.0])
++        left = self.track.to_world(s, np.full(3, 2.5))
++        index = self.track.index_of(s)
++        offset = np.sum((left - self.track.points[index]) * self.track.normal[index], axis=1)
++        self.assertTrue(np.all(offset > 0))
++        _, lateral = self.track.project(left)
++        np.testing.assert_allclose(lateral, 2.5, atol=0.01)
++
++
++class UnitTest(unittest.TestCase):
++    def test_unit_comes_from_the_perimeter(self):
++        track = synthetic_track()
++        metres = track.to_world(irregular_s(track), np.zeros(640))
++        self.assertEqual(infer_unit(metres, track.length)["unidade"], "m")
++        self.assertEqual(infer_unit(metres * 10.0, track.length)["unidade"], "dm")
++        self.assertEqual(infer_unit(metres * 100.0, track.length)["unidade"], "cm")
++
++
++class ExcessAndVerdictTest(unittest.TestCase):
++    def test_excess_is_zero_inside_and_the_overshoot_outside(self):
++        track = synthetic_track()
++        low, high = track.corridor()
++        lateral = np.zeros(track.size)
++        lateral[:10] = high[:10] + 0.7
++        lateral[10:20] = low[10:20] - 0.3
++        excess = excess_on_grid(track, lateral)
++        np.testing.assert_allclose(excess[:10], 0.7)
++        np.testing.assert_allclose(excess[10:20], 0.3)
++        self.assertTrue(np.all(excess[20:] == 0.0))
++        summary = excess_summary(excess)
++        self.assertEqual(summary["pontos_fora"], 20)
++        self.assertAlmostEqual(summary["max_m"], 0.7)
++        worst = worst_sectors(build_microsectors(track), excess, top=5)
++        self.assertEqual(worst[0]["microsetor"], 0)
++        self.assertAlmostEqual(worst[0]["excesso_max_m"], 0.7)
++
++    def test_verdict_uses_both_limits(self):
++        self.assertTrue(verdict({"fracao_fora": 0.10, "p95_m": 1.0})["aceito"])
++        self.assertFalse(verdict({"fracao_fora": 0.1001, "p95_m": 0.2})["aceito"])
++        self.assertFalse(verdict({"fracao_fora": 0.02, "p95_m": 1.01})["aceito"])
++        self.assertEqual(verdict({"fracao_fora": 0.5, "p95_m": 3.0})["veredito"], "não aceito")
++
++
++class ReadingTest(unittest.TestCase):
++    def test_reads_only_position(self):
++        samples = [
++            {"x": float(i), "y": float(-i), "speedKmh": 300.0, "throttle": 1.0, "brake": 0.0, "elapsedS": i * 0.1}
++            for i in range(20)
++        ]
++        payload = {"metadata": {"referenceId": "teste", "lapTime": 83.4}, "samples": samples}
++        with tempfile.TemporaryDirectory() as folder:
++            path = Path(folder) / "volta.json"
++            path.write_text(json.dumps(payload), encoding="utf-8")
++            points, identity = load_xy(path)
++        self.assertEqual(points.shape, (20, 2))
++        np.testing.assert_allclose(points[:, 0], np.arange(20))
++        np.testing.assert_allclose(points[:, 1], -np.arange(20))
++        self.assertEqual(identity["referenceId"], "teste")
++        self.assertNotIn("lapTime", identity)
++
++    def test_missing_position_is_refused(self):
++        samples = [{"x": float(i), "y": float(i)} for i in range(20)]
++        del samples[5]["y"]
++        with tempfile.TemporaryDirectory() as folder:
++            path = Path(folder) / "volta.json"
++            path.write_text(json.dumps({"samples": samples}), encoding="utf-8")
++            with self.assertRaises(ValueError):
++                load_xy(path)
++
++
++class ComparisonTest(unittest.TestCase):
++    def test_difference_is_line_minus_median(self):
++        track = synthetic_track()
++        sectors = build_microsectors(track)
++        laps = np.vstack([np.full(track.size, v) for v in (-1.0, 0.0, 0.5)])
++        per_sector, median_line = sector_median_difference(sectors, np.full(track.size, 1.0), laps)
++        np.testing.assert_allclose(median_line, 0.0)
++        np.testing.assert_allclose(per_sector, 1.0)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/docs/arquitetura_ml.md b/docs/arquitetura_ml.md
+index 239005f6..403f0d91 100644
+--- a/docs/arquitetura_ml.md
++++ b/docs/arquitetura_ml.md
+@@ -394,3 +394,28 @@ A formulação matemática das duas redes — equações da célula, bidireciona
+ contagem de parâmetros, perda e otimização — está em
+ [`lstm_matematica.md`](lstm_matematica.md). Os resultados medidos e as
+ limitações conhecidas estão em [`backend/ml/README.md`](../backend/ml/README.md).
++
++---
++
++## As peças A a E e os dois modelos
++
++As peças A a E estão definidas em
++[`correcao_trajetoria_auditoria.md`](correcao_trajetoria_auditoria.md#1-arquitetura),
++Parte 2, seção 1. O [ADR 0018](decisoes/0018-dois-modelos-e-fontes-de-treino.md)
++as divide entre os dois modelos do TCC: o Modelo 1 (previsão) encontra a melhor
++volta possível com este carro, e o Modelo 2 (correção) mede o erro do piloto e o
++ensina a chegar mais perto dela.
++
++| peça | modelo | situação |
++|---|---|---|
++| A — previsão de trajetória (LSTM geradora) | Modelo 1 | existe |
++| busca evolutiva | Modelo 1 | existe |
++| juiz do tempo | Modelo 1 | em construção: o juiz novo, o modelo do carro do [ADR 0017](decisoes/0017-modelo-fisico-do-carro.md), com a etapa M0 feita |
++| B — erro do piloto | Modelo 2 | em uso: versão 1, o relatório de evolução (pedidos 16 e 17) |
++| C — autocorreção | Modelo 2 | planejado |
++| D — tempo contrafactual | Modelo 2 | não passou ([fase1_validacao_contrafactual.md](fase1_validacao_contrafactual.md), seção 6; [ADR 0011](decisoes/0011-resultado-fase-2b-e-experimento-controlado.md)) |
++| E — avaliação | avalia os dois | em uso: a régua do [ADR 0006](decisoes/0006-protocolo-de-validacao.md) |
++
++O juiz é compartilhado: hoje é o simulador quase-estacionário
++([`optimization/lap_time_model.py`](../backend/ml/optimization/lap_time_model.py)),
++e a peça D refeita sobre o modelo do carro é a M4 do ADR 0017.
+diff --git a/docs/backlog.md b/docs/backlog.md
+index fd458088..f473c2c9 100644
+--- a/docs/backlog.md
++++ b/docs/backlog.md
+@@ -7,7 +7,6 @@ Lista viva de problemas conhecidos e tarefas adiadas, mantida pelo Claude (Cowor
+ | Geometria única no runtime: a linha central crua do app tem dois trechos deslocados ~11 m (463–500 m e 751–807 m) | ADR 0002, etapa do coach (30/09) | Projeção ao vivo erra em ~30 de 19 802 amostras | Em andamento: o coach migra primeiro (ADR 0013, pedido 11); depois mapa, painel e replay, cada um numa etapa |
+ | Alvos do `optimal.json` ainda no mapeamento antigo (~14 m de deslocamento) | ADR 0009 | Só o modo antigo do coach usa esse arquivo; o modo padrão da Parte C não usa | Some do caminho padrão com o merge do pedido 11 |
+ | Gravador: horário 3 h adiantado (provável UTC contra UTC−3) | Fase 2c, ajustes (02/10) | Só a exibição da hora. O registro do carro e da IA no controle foi para o pedido 12 | Baixa prioridade |
+-| Peça A: retreinar LSTMs, envelope e traçado com voltas rotuladas e criar a faixa de incerteza σ(s). Peça B, parte estatística: desvios contra a referência, sem prometer segundos | Fase 1; revisão da arquitetura (03/10) | As LSTMs aprenderam sobretudo voltas da IA. A peça B estatística já existe como relatório de evolução (pedidos 16 e 17) | Peça A: depois que o piloto estabilizar (ADR 0015), com voltas humanas |
+ | `stash@{0}` "Organizacao das 3 visoes (descartada; refeita na sessao do mapa)", de 19/08 | Relatório de 02/10 | Nenhum | Decidir se apaga |
+ | Dois documentos antigos fora do git: `docs/integracao_ml_e_empacotamento.md` e `docs/phase16_dashboard_3_visoes.md` | Relatório de 30/09 | Nenhum | Decidir se commita |
+ | `develop`, `main` e as tags só existem no PC | Desde 30/09 | Sem backup remoto | Quando o Eduardo autorizar o push |
+@@ -29,5 +28,6 @@ Lista viva de problemas conhecidos e tarefas adiadas, mantida pelo Claude (Cowor
+ | Unidade do `steerAngle` gravado não documentada (a limpeza aceita ±1,5) | Auditoria de 30/09; ADR 0017 | Sem ela não existe modelo de entradas para movimento | Pedido 18 |
+ | Painel de evolução: mostrar o bloco `tecnica` (uso da aderência, freio e volante juntos, freada emendada, temperatura) | Pedido 18 | Visualização para o piloto | Claude (Cowork), depois do pedido 18 |
+ | **Dados externos no treino do Modelo 1:** importar a forma da linha da F1 real (FastF1), alinhar à geometria oficial e medir o erro de alinhamento | ADR 0018; pedido 21 (05/10) | Terceira fonte do Modelo 1. Só a forma da linha entra, nunca velocidade ou ponto de frenagem de outro carro. Hoje o importador só dá contexto por curva e não entra em nenhum treino | A definir |
+-| **Retreinar a LSTM geradora com as três fontes:** testar na régua do ADR 0006 | ADR 0018; pedido 21 (05/10) | Hoje a rede erra 0,528 m de lateral abaixo de 88 s e 2,898 m acima, onde está o piloto. As três fontes são voltas `humano` com equipamento `atual`, voltas `ia` rotuladas e dados externos | Depois dos dados externos no treino |
++| **Retreinar a LSTM geradora com as três fontes** (voltas `humano` com equipamento `atual`, voltas `ia` rotuladas e forma da linha da F1), testada na régua do ADR 0006 | Fase 1; revisão da arquitetura (03/10). ADR 0018; pedido 21 (05/10). As duas linhas foram juntadas no pedido 22 | As LSTMs aprenderam sobretudo voltas da IA: hoje a rede erra 0,528 m de lateral abaixo de 88 s e 2,898 m acima, onde está o piloto. Da linha antiga da peça A seguem junto o envelope, o traçado e a faixa de incerteza σ(s). A peça B estatística (desvios contra a referência, sem prometer segundos) já existe como relatório de evolução (pedidos 16 e 17) | Depois das 5 sessões de treino e do alinhamento da F1 (pedido 22, Parte B) |
++| **Voltas antigas no treino do Modelo 1, num teste à parte:** treinar com e sem elas e comparar na régua do ADR 0006 | ADR 0018, esclarecimento de 05/10; pedido 22 | As voltas antigas ficam fora do treino do Modelo 1. Isso vale para as de origem `desconhecida`, inclusive as 75 que o detector rotulou sem promover (35 `ia`, 8 `humano` e 32 `misturada`). As 552 voltas antigas sem box passam, na mediana, a 0,031 m da linha da IA de hoje | Depois do retreino da LSTM com as três fontes |
+ | **Busca evolutiva de novo:** recomeçar das voltas reais mais rápidas, só depois da M1 aprovada | ADR 0018; ADR 0009, item 4 | Gera a volta do Modelo 1. Ela só vira referência do coach quando passar na régua do ADR 0006 com o juiz novo e for mais rápida que as voltas reais no mesmo juiz | Depois da M1 aprovada (ADR 0017) |
+diff --git a/docs/decisoes/0018-dois-modelos-e-fontes-de-treino.md b/docs/decisoes/0018-dois-modelos-e-fontes-de-treino.md
+index a34ed41f..d06c3628 100644
+--- a/docs/decisoes/0018-dois-modelos-e-fontes-de-treino.md
++++ b/docs/decisoes/0018-dois-modelos-e-fontes-de-treino.md
+@@ -69,3 +69,9 @@ Continuam valendo:
+ - o ADR 0016, para a referência do coach nesta fase;
+ - o ADR 0009, até a volta do Modelo 1 cumprir o item 4;
+ - o ADR 0004, até a M1 passar na régua (ADR 0017).
++
++## Esclarecimento (05/10, pedido 22)
++
++- **"Voltas `ia` rotuladas" (item 3 da decisão) são só as de sessões com rótulo pelo indicador do jogo ou por anotação** (ADR 0014): `origem_fonte` igual a `indicador`, `anotacao` ou `anotacao_sessao`, nunca `detector`.
++- **As voltas antigas ficam fora do treino do Modelo 1.** Isso vale para as de origem `desconhecida`, inclusive as que o detector marcou sem promover: 75 voltas, sendo 35 `ia`, 8 `humano` e 32 `misturada` (`docs/detector_ia.md`).
++- **Elas podem entrar depois num teste à parte**, treinando com e sem elas e comparando na régua do ADR 0006. O teste está no backlog.
+diff --git a/docs/prompts/2026-10-05_22_fontes-e-alinhamento-f1.md b/docs/prompts/2026-10-05_22_fontes-e-alinhamento-f1.md
+new file mode 100644
+index 00000000..011678ea
+--- /dev/null
++++ b/docs/prompts/2026-10-05_22_fontes-e-alinhamento-f1.md
+@@ -0,0 +1,83 @@
++# Pedido 22 — Ajustes do ADR 0018 e alinhamento da volta da F1 à pista oficial
++
++**De:** Eduardo (o plano é meu). **Data:** 05/10/2026.
++**Parte A:** só documentação. **Parte B:** código novo e medição, sem treinar nenhum modelo.
++
++## Respostas aos pontos do relatório do pedido 21
++
++1. **Peças A a E.** Elas estão definidas em `docs/correcao_trajetoria_auditoria.md`, "Parte 2 — Arquitetura proposta", seção 1:
++   - A: previsão de trajetória;
++   - B: erro do piloto;
++   - C: autocorreção;
++   - D: tempo contrafactual;
++   - E: avaliação.
++
++   Falta só ligar esse texto aos documentos de hoje (Parte A, item 3).
++2. **Duas linhas de retreino no backlog:** decidi juntar numa linha só (Parte A, item 1).
++3. **Voltas `ia` antigas no treino:** decidi que só entram as rotuladas (Parte A, item 2).
++   - Correção de número: o detector rotulou **75 voltas antigas** (35 `ia`, 8 `humano` e 32 `misturada`), e nada foi promovido (`docs/detector_ia.md`). Não foram 75 `ia`.
++4. **A volta FastF1 já importada** é o ponto de partida da Parte B.
++
++## Parte A — Documentação
++
++1. **`docs/backlog.md`:** junte as duas linhas de retreino da LSTM (a antiga, da peça A, e a nova, do ADR 0018) numa linha só:
++   - **Item:** "Retreinar a LSTM geradora com as três fontes (voltas `humano` com equipamento `atual`, voltas `ia` rotuladas e forma da linha da F1), testada na régua do ADR 0006".
++   - **Quando:** "depois das 5 sessões de treino e do alinhamento da F1 (Parte B deste pedido)".
++   - Mantenha na coluna Origem as duas origens.
++2. **`docs/decisoes/0018-dois-modelos-e-fontes-de-treino.md`:** acrescente ao fim uma seção "Esclarecimento (05/10, pedido 22)" dizendo:
++   - "voltas `ia` rotuladas" são só as de sessões com rótulo pelo indicador do jogo ou por anotação;
++   - as voltas antigas ficam fora do treino do Modelo 1. Isso vale para as de origem `desconhecida`, inclusive as que o detector marcou sem promover;
++   - elas podem entrar depois num teste à parte, com e sem elas, na régua do ADR 0006. Crie a linha correspondente no backlog.
++3. **`docs/arquitetura_ml.md`:** acrescente uma seção curta, "As peças A a E e os dois modelos", com:
++   - uma tabela peça × modelo × situação: A, a busca evolutiva e o juiz no Modelo 1; B, C e D no Modelo 2; E avalia os dois;
++   - um link para a seção 1 da Parte 2 de `docs/correcao_trajetoria_auditoria.md` e para o ADR 0018.
++
++   Situação só com o que está registrado:
++   - existe: LSTM geradora e busca evolutiva;
++   - em uso: B versão 1 e E;
++   - planejado: C;
++   - não passou: D;
++   - em construção: o juiz novo, etapa M0 feita.
++
++## Parte B — Alinhar a volta da F1 à geometria oficial e medir o erro
++
++**Objetivo:** ter a forma da linha da F1 real como lateral(s) na mesma grade de 2 m das nossas voltas, com o erro de alinhamento medido. Nenhum modelo é treinado nesta parte.
++
++**Entrada:** `data/external_references/fastf1__2024__Brazil__Q__NOR__32__093bbee0.json`, que tem 633 amostras com `x` e `y` nas coordenadas do FastF1, marcada `UNCALIBRATED`.
++
++**Passos:**
++
++1. **Unidades e amostragem.** Descubra a unidade de `x`/`y` pelos próprios dados: compare o perímetro da volta com o comprimento da geometria oficial (4.334 m). Relate também o espaçamento entre amostras em metros (mediana e p95).
++2. **Alinhamento rígido com escala única.** Use rotação, translação, uma escala só e, se precisar, espelhamento. Nada de deformar a linha: deformar esconderia o erro. Ajuste contra a linha central da geometria oficial (hash `0ed16f0dd2225990`). Pode ser ICP ou Procrustes com correspondência por distância. Relate:
++   - a escala ajustada e o comprimento resultante contra os 4.334 m;
++   - a rotação e se houve espelhamento.
++3. **Projeção na grade.** Projete a linha alinhada em s e lateral, com a mesma convenção (ADR 0003, positivo à esquerda) e a mesma grade de 2.167 pontos das voltas do store v2. Interpole entre as amostras, já que a F1 tem poucas.
++4. **Erro de alinhamento.** Uma linha de corrida real fica dentro da pista. Por isso o erro é o excesso: quanto cada ponto alinhado fica fora do corredor oficial (largura medida + zebra, como em `ml/track`), valendo 0 se está dentro. Relate:
++   - a fração de pontos fora do corredor;
++   - a mediana, o p95 e o máximo do excesso;
++   - os 5 microsetores com maior excesso.
++5. **Comparação descritiva, só para leitura.** Por microsetor, compare a diferença lateral mediana entre:
++   - a linha da F1 e a mediana das 13 voltas `ia` rotuladas de 04/10;
++   - a linha da F1 e a mediana das voltas `humano` com equipamento `atual`.
++
++   Nada disso muda coach, store ou critério.
++6. **Figura.** Gere um PNG com a pista oficial, a linha da F1 alinhada e a linha mediana da IA, com zoom no S do Senna e no Bico de Pato. Coloque uma cópia em `docs/handoff/`.
++
++**Regras da Parte B:**
++
++- **Não use velocidade, pedal nem ponto de frenagem da F1:** é outro carro (ADR 0018).
++- **Critério fixado antes de rodar:** o alinhamento só é aceito para uso futuro se a fração de pontos fora do corredor for de no máximo 10% e o p95 do excesso for de no máximo 1 m. Senão, o relatório diz "não aceito", com os números, e nada é ajustado depois de ver o resultado.
++- **Saídas:** em `data/ml/externo/`, que fica fora do git. O resumo JSON e a figura vão também para `docs/handoff/`.
++- **Testes:** um caso sintético em que uma linha conhecida passa por uma transformação conhecida e o alinhamento recupera escala, rotação e translação dentro de tolerância; e a convenção de sinal do lateral.
++
++## Regras gerais
++
++- Branch `etapa/fastf1-alinhamento`, commits por parte, merge em `develop`. Sem push.
++- Não mexa no app instalado nem em arquivos do jogo.
++- Uma sessão de implementação por vez (ADR 0008).
++- Relatório em `docs/handoff/2026-10-05_22_fontes-e-alinhamento-f1_relatorio.md`, como manda o CLAUDE.md, com:
++  - os números das etapas 1 a 5;
++  - o veredito do critério;
++  - o caminho da figura;
++  - os commits.
++- Se algo do contexto não bater com o repositório, pare e registre no relatório.
