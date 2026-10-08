@@ -21,4 +21,5 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
 | [0015](0015-equipamento-atual-do-piloto.md) | O modelo do piloto usa só voltas com o equipamento atual | aceita; complementa 0014 |
 | [0016](0016-coach-na-fase-de-aprendizado.md) | Na fase de aprendizado, a referência padrão do coach é a volta da IA | aceita; refina 0012; enquadrada por 0018 |
 | [0017](0017-modelo-fisico-do-carro.md) | Modelo físico do carro: carro e piloto separados, construído por etapas junto do que já roda | aceita |
-| [0018](0018-dois-modelos-e-fontes-de-treino.md) | Dois modelos, previsão e correção; a volta da IA é uma fonte de treino, não o alvo | aceita |
+| [0018](0018-dois-modelos-e-fontes-de-treino.md) | Dois modelos, previsão e correção; a volta da IA é uma fonte de treino, não o alvo | aceita; item 3 refinado por 0019 |
+| [0019](0019-f1-tracado-de-referencia-2023-25.md) | A F1 entra no Modelo 1 como um traçado de referência único da época 2023–25 | aceita; refina 0018 |

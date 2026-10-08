@@ -75,3 +75,5 @@ Continuam valendo:
 - **"Voltas `ia` rotuladas" (item 3 da decisão) são só as de sessões com rótulo pelo indicador do jogo ou por anotação** (ADR 0014): `origem_fonte` igual a `indicador`, `anotacao` ou `anotacao_sessao`, nunca `detector`.
 - **As voltas antigas ficam fora do treino do Modelo 1.** Isso vale para as de origem `desconhecida`, inclusive as que o detector marcou sem promover: 75 voltas, sendo 35 `ia`, 8 `humano` e 32 `misturada` (`docs/detector_ia.md`).
 - **Elas podem entrar depois num teste à parte**, treinando com e sem elas e comparando na régua do ADR 0006. O teste está no backlog.
+
+**Refinado por [0019](0019-f1-tracado-de-referencia-2023-25.md)** (08/10): a F1 entra como traçado de referência único da época 2023–25.
