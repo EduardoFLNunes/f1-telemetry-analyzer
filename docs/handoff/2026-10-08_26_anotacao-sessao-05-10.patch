@@ -1,0 +1,87 @@
+diff --git a/docs/experimentos/anotacoes_de_sessao.csv b/docs/experimentos/anotacoes_de_sessao.csv
+index e47eb171..fdda2f35 100644
+--- a/docs/experimentos/anotacoes_de_sessao.csv
++++ b/docs/experimentos/anotacoes_de_sessao.csv
+@@ -1,2 +1,3 @@
+ sessao,origem,carModel,anotado_em,observacao
+ 2026-10-04_23-51-42_vhe_interlagos,humano,rss_formula_rss_3_v6_2026,2026-10-05,"Todas as voltas pelo piloto (Eduardo, 05/10). Sessao de 04/10 23:51 a 05/10 00:31, gravada pelo app instalado, sem o indicador de IA e sem o carModel no metadado"
++2026-10-05_20-33-47_vhe_interlagos,humano,rss_formula_rss_3_v6_2026,2026-10-08,"Todas as voltas pelo piloto (Eduardo, confirmado em 08/10). Sessao de 05/10 20:33, gravada pelo app instalado, sem o indicador de IA e sem o carModel no metadado"
+diff --git a/docs/prompts/2026-10-08_26_anotacao-sessao-05-10.md b/docs/prompts/2026-10-08_26_anotacao-sessao-05-10.md
+new file mode 100644
+index 00000000..8a52d9b9
+--- /dev/null
++++ b/docs/prompts/2026-10-08_26_anotacao-sessao-05-10.md
+@@ -0,0 +1,61 @@
++# Pedido 26 — Anotar a sessão de 05/10 às 20:33 como pilotada por mim
++
++**De:** Eduardo. **Data:** 08/10/2026.
++**Tipo:** anotação de dados e uma rodada do `atualizar_coach`. Nenhum código e nenhum critério mudam.
++
++## Contexto
++
++1. **A sessão:** `2026-10-05_20-33-47_vhe_interlagos`. Ela foi gravada pelo app instalado e entrou na Parte A do pedido 25 com 25 voltas, todas `desconhecida`. O app instalado não grava o indicador de IA nem o `carModel`.
++2. **Confirmo que pilotei todas as voltas dessa sessão, sem a IA** (08/10).
++3. **O caminho já existe:** a anotação de gravação inteira (`docs/experimentos/anotacoes_de_sessao.csv`, emenda 1.6 de `docs/store_v2_e_evolucao.md`), a mesma usada para a sessão de 04/10 às 23:51.
++
++## Parte A — Conferências antes de anotar
++
++Pare e registre no relatório se alguma destas não bater:
++
++1. **A sessão está no inventário** com 25 voltas, todas `desconhecida`. Relate quantas são válidas.
++2. **O `metadata.json` da sessão não tem `carModel`.** Se tiver um, ele vai na anotação, desde que seja `rss_formula_rss_3_v6_2026`; se for outro carro, pare.
++3. **O carro das minhas sessões com equipamento `atual` gravadas pelo app do repositório:** se todas forem `rss_formula_rss_3_v6_2026`, siga. Se houver outro carro, pare e liste as sessões e os carros.
++
++## Parte B — A anotação
++
++Acrescente esta linha ao fim de `docs/experimentos/anotacoes_de_sessao.csv`, sem mudar a primeira:
++
++```
++2026-10-05_20-33-47_vhe_interlagos,humano,rss_formula_rss_3_v6_2026,2026-10-08,"Todas as voltas pelo piloto (Eduardo, confirmado em 08/10). Sessao de 05/10 20:33, gravada pelo app instalado, sem o indicador de IA e sem o carModel no metadado"
++```
++
++Se a conferência A.2 achar `carModel` no metadado, tire "e sem o carModel no metadado" da observação.
++
++## Parte C — Rodada do `atualizar_coach`
++
++1. **Antes de rodar,** guarde uma cópia, fora do git, de `data/ml/origem/atualizar_coach.json`, do meta do store v2 e dos JSONs de `data/ml/evolucao/`, para comparar.
++2. **Rode o comando padrão (incremental),** com o app fechado.
++3. **O esperado:** nenhuma sessão lida nos passos 1 e 6, porque a gravação não mudou e os rótulos são recalculados a cada rodada. Se alguma sessão for lida, relate qual foi e por quê.
++4. **Relate, antes e depois:**
++   - **voltas da sessão:** as válidas, as que entram no modelo do coach e a mais rápida;
++   - **coach:**
++     - as duas referências (`volta_ia` e `minha_melhor`);
++     - as voltas do piloto no modelo;
++     - o limiar;
++     - o foco inicial de cada modo;
++   - **store v2:** as voltas por origem;
++   - **relatório de evolução:** a sessão nova, com o nome que a regra 1.6 der a ela (o esperado é `2026-10-05-2`, porque termina no mesmo dia que a da madrugada), e os números principais;
++   - **canais físicos:** quantas sessões no store v2 têm canais físicos. Esta sessão não conta para as 5 da M1, porque o app instalado não grava esses canais.
++   - Tempos de volta em M:SS,mmm.
++
++## Parte D — Documentação
++
++Na emenda 1.6 de `docs/store_v2_e_evolucao.md`, depois de "A primeira linha é a sessão de 04/10 23:51…", acrescente: "A segunda linha é a sessão de 05/10 20:33: `humano`, `rss_formula_rss_3_v6_2026`, anotada pelo Eduardo em 08/10."
++
++## Regras gerais
++
++- **Nada muda além da anotação e das saídas da rodada:** código, critérios, detector, store antigo e app instalado ficam como estão.
++- **Não contorne nenhuma trava:** se o comando parar, pare também e registre o motivo.
++- **Branch e commits:** branch `etapa/anotacao-sessao-05-10`, commits por parte, merge em `develop`. Sem push.
++- **Uma sessão de implementação por vez** (ADR 0008).
++- **Relatório** em `docs/handoff/2026-10-08_26_anotacao-sessao-05-10_relatorio.md`, como manda o CLAUDE.md, com:
++  - as conferências da Parte A;
++  - a tabela antes e depois da Parte C;
++  - as leituras e os tempos da rodada;
++  - os commits.
+diff --git a/docs/store_v2_e_evolucao.md b/docs/store_v2_e_evolucao.md
+index bd098751..e99ad476 100644
+--- a/docs/store_v2_e_evolucao.md
++++ b/docs/store_v2_e_evolucao.md
+@@ -119,6 +119,7 @@ Decidida pelo Eduardo em 05/10, depois da sessão de 04/10 às 23:51, que termin
+   - O carro anotado completa o metadado no treino e no store v2.
+   - O comando para se a gravação não estiver no inventário, se ela já estiver nos rótulos volta a volta, ou se o carro anotado contradisser o do metadado.
+   - A primeira linha é a sessão de 04/10 23:51: `humano`, `rss_formula_rss_3_v6_2026`, anotada pelo Eduardo em 05/10.
++  - A segunda linha é a sessão de 05/10 20:33: `humano`, `rss_formula_rss_3_v6_2026`, anotada pelo Eduardo em 08/10.
+ - **O que não muda:** os critérios de "diferença consistente" e de "poucos dados", e as medidas por curva.
+ 
+ ### 1.7 Técnica de pilotagem, registrada em 05/10/2026 (pedido 18), antes da primeira rodada
