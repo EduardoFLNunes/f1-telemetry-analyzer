@@ -119,6 +119,7 @@ Decidida pelo Eduardo em 05/10, depois da sessão de 04/10 às 23:51, que termin
   - O carro anotado completa o metadado no treino e no store v2.
   - O comando para se a gravação não estiver no inventário, se ela já estiver nos rótulos volta a volta, ou se o carro anotado contradisser o do metadado.
   - A primeira linha é a sessão de 04/10 23:51: `humano`, `rss_formula_rss_3_v6_2026`, anotada pelo Eduardo em 05/10.
+  - A segunda linha é a sessão de 05/10 20:33: `humano`, `rss_formula_rss_3_v6_2026`, anotada pelo Eduardo em 08/10.
 - **O que não muda:** os critérios de "diferença consistente" e de "poucos dados", e as medidas por curva.
 
 ### 1.7 Técnica de pilotagem, registrada em 05/10/2026 (pedido 18), antes da primeira rodada
