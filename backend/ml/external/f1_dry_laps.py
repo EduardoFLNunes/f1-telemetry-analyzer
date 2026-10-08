@@ -26,6 +26,9 @@ O funil, nesta ordem (a volta fica na primeira etapa em que falha):
 
 Depois do funil: de cada piloto, a volta mais rapida que sobrou; de cada
 sessao, os 10 pilotos mais rapidos.
+
+A classificacao de 2024 e carregada pelo caminho em que foi publicada
+(`use_published_path`, pedido 24; ADR 0019): o FastF1 3.4.0 monta outro.
 """
 
 from __future__ import annotations
@@ -65,6 +68,17 @@ STAGE_TEXT = {
 }
 PASSED = "passou"
 
+# Sessoes publicadas num caminho diferente do que o FastF1 3.4.0 monta (pedido 24;
+# ADR 0019, item 5). O FastF1 guarda o caminho em `Session.api_path`, montado em
+# `fastf1/core.py` (linha 1180) com a data local da sessao no calendario atual. A
+# classificacao de 2024 em Interlagos foi adiada de sabado, 02/11, para domingo,
+# 03/11, e o calendario traz a data nova; a sessao, porem, foi publicada no caminho
+# da data original. O cache usa o mesmo caminho (`fastf1/req.py`, linha 470).
+PUBLISHED_PATHS = {
+    (2024, "São Paulo Grand Prix", QUALIFYING):
+        "/static/2024/2024-11-03_São_Paulo_Grand_Prix/2024-11-02_Qualifying/",
+}
+
 
 # --------------------------------------------------------------- sessoes ---
 
@@ -101,6 +115,25 @@ def choose_sessions(event) -> Tuple[List[Dict[str, object]], List[Dict[str, obje
         elif name == SPRINT_RACE:
             skipped.append({**row, "motivo": "corrida sprint nao entra"})
     return chosen, skipped
+
+
+def published_api_path(year: int, event_name: str, session_name: str) -> Optional[str]:
+    """O caminho publicado da sessao, so quando ano, evento e sessao sao exatamente os de `PUBLISHED_PATHS`."""
+    return PUBLISHED_PATHS.get((int(year), str(event_name), str(session_name)))
+
+
+def use_published_path(session, year: int, event_name: str, session_name: str) -> Optional[str]:
+    """Troca `session.api_path` pelo caminho publicado, antes do `load`, so na sessao listada.
+
+    Devolve o caminho que o FastF1 tinha montado, se trocou; `None` se a sessao
+    nao e a listada, e entao nada muda. Nao toca em nenhum arquivo do FastF1.
+    """
+    path = published_api_path(year, event_name, session_name)
+    if path is None:
+        return None
+    previous = str(session.api_path)
+    session.api_path = path
+    return previous
 
 
 # ---------------------------------------------------------------- funil ---
@@ -263,6 +296,9 @@ def collect_session(fastf1, year: int, name: str, kind: str, event: str = EVENT,
         info["evento"] = str(weekend.get("EventName", ""))
         session = weekend.get_session(name)
         info["data"] = str(getattr(session, "date", ""))
+        previous = use_published_path(session, int(year), info["evento"], name)
+        if previous is not None:
+            info["caminho_corrigido"] = {"montado_pelo_fastf1": previous, "publicado": str(session.api_path)}
         info["api_path"] = str(getattr(session, "api_path", ""))
         session.load(**LOAD_KWARGS)
         laps = session.laps

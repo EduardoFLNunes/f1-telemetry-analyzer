@@ -111,9 +111,11 @@ class FakeSession:
         self.date = pd.Timestamp("2023-11-03 18:00")
         self.api_path = "/static/fake/"
         self.loaded_with = None
+        self.path_at_load = None
 
     def load(self, **kwargs):
         self.loaded_with = kwargs
+        self.path_at_load = self.api_path
 
     @property
     def laps(self):
@@ -121,8 +123,8 @@ class FakeSession:
 
 
 class FakeEvent(dict):
-    def __init__(self, sessions, session_obj=None):
-        super().__init__({"EventName": "Fake Grand Prix"})
+    def __init__(self, sessions, session_obj=None, name="Fake Grand Prix"):
+        super().__init__({"EventName": name})
         for i, (name, date) in enumerate(sessions, start=1):
             self[f"Session{i}"] = name
             self[f"Session{i}Date"] = pd.Timestamp(date)
@@ -214,6 +216,50 @@ class SessionChoiceTest(unittest.TestCase):
         self.assertEqual([(row["nome"], row["tipo"]) for row in chosen],
                          [("Qualifying", "Q"), ("Sprint Shootout", "SQ")])
         self.assertEqual([row["nome"] for row in skipped], ["Sprint"])
+
+
+# ------------------------------------------------- caminho de 2024 ---
+
+SAO_PAULO = "São Paulo Grand Prix"
+PUBLISHED_2024_Q = "/static/2024/2024-11-03_São_Paulo_Grand_Prix/2024-11-02_Qualifying/"
+
+
+class PublishedPathTest(unittest.TestCase):
+    """A troca do caminho (pedido 24) so acontece na classificacao de 2024 em Interlagos."""
+
+    def _session(self, path="/static/montado/"):
+        session = FakeSession(FakeLaps(case_laps()), weather_frame())
+        session.api_path = path
+        return session
+
+    def test_only_the_2024_qualifying_changes_path(self):
+        session = self._session()
+        previous = f1_dry_laps.use_published_path(session, 2024, SAO_PAULO, "Qualifying")
+        self.assertEqual(previous, "/static/montado/")
+        self.assertEqual(session.api_path, PUBLISHED_2024_Q)
+        for year, event, name in ((2024, SAO_PAULO, "Sprint Qualifying"), (2023, SAO_PAULO, "Qualifying"),
+                                  (2025, SAO_PAULO, "Qualifying"), (2024, "Brazilian Grand Prix", "Qualifying"),
+                                  (2024, SAO_PAULO, "Sprint")):
+            other = self._session()
+            self.assertIsNone(f1_dry_laps.use_published_path(other, year, event, name))
+            self.assertEqual(other.api_path, "/static/montado/")
+
+    def test_collect_session_loads_2024_qualifying_from_the_published_path(self):
+        POSITIONS.clear()
+        for driver in case_laps()["Driver"]:
+            POSITIONS[(driver, 1)] = RecordingPosition(pd.DataFrame({"X": np.arange(20.0), "Y": np.arange(20.0)}))
+        session = self._session("/static/2024/2024-11-03_São_Paulo_Grand_Prix/2024-11-03_Qualifying/")
+        event = FakeEvent([("Qualifying", "2024-11-03 07:30")], session, name=SAO_PAULO)
+        data = f1_dry_laps.collect_session(FakeFastF1(event), 2024, "Qualifying", "Q")
+        self.assertEqual(session.path_at_load, PUBLISHED_2024_Q)
+        self.assertEqual(data.info["api_path"], PUBLISHED_2024_Q)
+        self.assertIn("2024-11-03_Qualifying", data.info["caminho_corrigido"]["montado_pelo_fastf1"])
+
+        sprint = self._session("/static/2024/sprint/")
+        event = FakeEvent([("Sprint Qualifying", "2024-11-01 15:30")], sprint, name=SAO_PAULO)
+        data = f1_dry_laps.collect_session(FakeFastF1(event), 2024, "Sprint Qualifying", "SQ")
+        self.assertEqual(sprint.path_at_load, "/static/2024/sprint/")
+        self.assertNotIn("caminho_corrigido", data.info)
 
 
 # ------------------------------------------------------------ leitura ---
