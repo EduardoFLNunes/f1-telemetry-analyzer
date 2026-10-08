@@ -256,9 +256,6 @@ def _run(argv, clock: Clock):
     scan_mode.add_argument("--sem-varrer", action="store_true", help="pula o passo 1 e usa o inventario que ja existe")
     scan_mode.add_argument("--completo", action="store_true",
                            help="le todas as gravacoes nos passos 1 e 6 e refaz os dois caches")
-    # Pedido 25: opcional ate as tres rodadas da conferencia passarem; depois vira o padrao.
-    parser.add_argument("--incremental", action="store_true",
-                        help="le so as sessoes novas ou mudadas nos passos 1 e 6 (cache por gravacao)")
     parser.add_argument("--saida", type=Path, default=config.artifacts_root() / "origem",
                         help="pasta do inventario novo (padrao: data/ml/origem)")
     parser.add_argument("--modelo", type=Path, default=model_path(BACKEND_DIR.parent, TRACK),
@@ -275,12 +272,10 @@ def _run(argv, clock: Clock):
         return 2, None
     track = load_geometry()
     args.saida.mkdir(parents=True, exist_ok=True)
-    if args.completo and args.incremental:
-        print("PARADO: --completo e --incremental juntos.")
-        return 2, None
-    mode = "completo" if args.completo else ("incremental" if args.incremental else None)
+    # Pedido 25: o incremental e o padrao desde que as tres rodadas da conferencia passaram.
+    mode = "completo" if args.completo else "incremental"
 
-    print("1/7 inventario novo" + (" (pulado: --sem-varrer)" if args.sem_varrer else f" ({mode or 'sem cache'})"), flush=True)
+    print("1/7 inventario novo" + (" (pulado: --sem-varrer)" if args.sem_varrer else f" ({mode})"), flush=True)
     clock.start("1")
     if not args.sem_varrer:
         clock.reads["1"] = report_lap_origin.scan(args.saida, track, mode=mode)
@@ -332,7 +327,7 @@ def _run(argv, clock: Clock):
 
     print("6/7 store v2, com as checagens", flush=True)
     clock.start("6")
-    code = build_lap_store_v2.main(["--inventario", str(inventory_path(args.saida))] + ([f"--{mode}"] if mode else []))
+    code = build_lap_store_v2.main(["--inventario", str(inventory_path(args.saida)), f"--{mode}"])
     construction = store_v2_meta().get("construcao") or {}
     clock.reads["6"] = {
         "modo": construction.get("modo"), "motivo": construction.get("motivo"),
