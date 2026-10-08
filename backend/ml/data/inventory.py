@@ -98,6 +98,85 @@ def _provenance(lap: RawLap, folder: str) -> Dict[str, Any]:
     }
 
 
+def read_session(
+    session: Session,
+    geometry: TrackGeometry,
+    sectors,
+    gates: config.LapQualityGates = config.DEFAULT_GATES,
+    lap_hook: Optional[LapHook] = None,
+) -> List[Dict[str, Any]]:
+    """Le uma sessao: uma linha por volta, ja com a identidade de `classify`.
+
+    E a leitura inteira de uma sessao, a unica que abre a gravacao: limpeza,
+    alinhamento, portoes, conferencia do relogio e identidade. As linhas saem
+    antes de `mark_duplicates` e `mark_clock`, que cruzam sessoes e trabalham
+    sobre a tabela pronta (`assemble_inventory`). O modo completo e o
+    incremental do `atualizar_coach` (pedido 25) chamam esta mesma funcao.
+    """
+    rows: List[Dict[str, Any]] = []
+    counters: Dict[tuple, Dict[int, int]] = {}
+    folder = recording_folder(session.directory)
+    # `min_samples=1`: um trecho de uma amostra so nao vira linha do
+    # inventario, mas a amostra dele esta dentro de algum replay e precisa
+    # entrar na contagem que associa as duas identidades.
+    for lap in iter_laps(session, min_samples=1):
+        counters[(lap.lap_id, lap.sequence)] = counter_counts(lap.frame)
+        if lap.sample_count < 2:
+            continue
+        cleaned, cleaning = clean_lap(lap.frame)
+        if cleaned.empty or len(cleaned) < 4:
+            rows.append(
+                {
+                    "lap_id": lap.lap_id,
+                    "session_id": lap.session_id,
+                    "sequence": lap.sequence,
+                    "lap_number": lap.lap_number,
+                    "driver_id": lap.driver_id,
+                    "track": lap.track,
+                    "raw_samples": lap.sample_count,
+                    "corrupt_lines": lap.corrupt_lines,
+                    "valid": False,
+                    "reasons": "amostras insuficientes apos limpeza",
+                    "cleaned_samples": int(len(cleaned)),
+                    "geometry_id": geometry.geometry_id,
+                    **_provenance(lap, folder),
+                }
+            )
+            continue
+        aligned, alignment = align_lap(cleaned, geometry)
+        quality = evaluate_lap(aligned, geometry, alignment, gates)
+        row = _record(lap, quality, cleaning, alignment)
+        row["geometry_id"] = geometry.geometry_id
+        row.update(_provenance(lap, folder))
+        if quality.valid:
+            # O relogio so e conferido onde a volta inteira esta na grade.
+            grid = resample_lap(aligned, geometry)
+            check = clock_check(grid, geometry, sectors)
+            row.update(clock_summary(check))
+            if lap_hook is not None:
+                lap_hook(lap, aligned, grid, check, row)
+        rows.append(row)
+    identities = classify(session.session_id, counters)
+    for row in rows:
+        identity = identities.get(row["lap_id"])
+        if identity is not None:
+            row.update({k: v for k, v in identity.to_dict().items() if k != "lap_id"})
+    return rows
+
+
+def assemble_inventory(rows: Sequence[Dict[str, Any]]) -> pd.DataFrame:
+    """A tabela a partir das linhas de todas as sessoes, com as etapas que cruzam sessoes.
+
+    A ordenacao por duas colunas e estavel: linhas empatadas ficam na ordem
+    em que chegaram, que e a ordem das sessoes e das voltas.
+    """
+    frame = pd.DataFrame(list(rows))
+    if not frame.empty:
+        frame = frame.sort_values(["session_id", "sequence"]).reset_index(drop=True)
+        frame = mark_clock(mark_duplicates(frame))
+    return frame
+
+
 def scan_sessions(
     sessions: Optional[Sequence[Session]] = None,
     track: Optional[TrackGeometry] = None,
@@ -112,65 +191,11 @@ def scan_sessions(
 
     rows: List[Dict[str, Any]] = []
     for position, session in enumerate(available, start=1):
-        count = 0
-        first_row = len(rows)
-        counters: Dict[tuple, Dict[int, int]] = {}
-        folder = recording_folder(session.directory)
-        # `min_samples=1`: um trecho de uma amostra so nao vira linha do
-        # inventario, mas a amostra dele esta dentro de algum replay e precisa
-        # entrar na contagem que associa as duas identidades.
-        for lap in iter_laps(session, min_samples=1):
-            counters[(lap.lap_id, lap.sequence)] = counter_counts(lap.frame)
-            if lap.sample_count < 2:
-                continue
-            cleaned, cleaning = clean_lap(lap.frame)
-            if cleaned.empty or len(cleaned) < 4:
-                rows.append(
-                    {
-                        "lap_id": lap.lap_id,
-                        "session_id": lap.session_id,
-                        "sequence": lap.sequence,
-                        "lap_number": lap.lap_number,
-                        "driver_id": lap.driver_id,
-                        "track": lap.track,
-                        "raw_samples": lap.sample_count,
-                        "corrupt_lines": lap.corrupt_lines,
-                        "valid": False,
-                        "reasons": "amostras insuficientes apos limpeza",
-                        "cleaned_samples": int(len(cleaned)),
-                        "geometry_id": geometry.geometry_id,
-                        **_provenance(lap, folder),
-                    }
-                )
-                count += 1
-                continue
-            aligned, alignment = align_lap(cleaned, geometry)
-            quality = evaluate_lap(aligned, geometry, alignment, gates)
-            row = _record(lap, quality, cleaning, alignment)
-            row["geometry_id"] = geometry.geometry_id
-            row.update(_provenance(lap, folder))
-            if quality.valid:
-                # O relogio so e conferido onde a volta inteira esta na grade.
-                grid = resample_lap(aligned, geometry)
-                check = clock_check(grid, geometry, sectors)
-                row.update(clock_summary(check))
-                if lap_hook is not None:
-                    lap_hook(lap, aligned, grid, check, row)
-            rows.append(row)
-            count += 1
-        identities = classify(session.session_id, counters)
-        for row in rows[first_row:]:
-            identity = identities.get(row["lap_id"])
-            if identity is not None:
-                row.update({k: v for k, v in identity.to_dict().items() if k != "lap_id"})
+        session_rows = read_session(session, geometry, sectors, gates, lap_hook)
+        rows.extend(session_rows)
         if progress:
-            progress(f"[{position}/{len(available)}] {session.session_id}: {count} voltas")
-
-    frame = pd.DataFrame(rows)
-    if not frame.empty:
-        frame = frame.sort_values(["session_id", "sequence"]).reset_index(drop=True)
-        frame = mark_clock(mark_duplicates(frame))
-    return frame
+            progress(f"[{position}/{len(available)}] {session.session_id}: {len(session_rows)} voltas")
+    return assemble_inventory(rows)
 
 
 def summarise(inventory: pd.DataFrame) -> Dict[str, Any]:

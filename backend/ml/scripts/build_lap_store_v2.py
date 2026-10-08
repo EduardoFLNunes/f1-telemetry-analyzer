@@ -29,6 +29,14 @@ from ml import config  # noqa: E402
 from ml.data import store_checks  # noqa: E402
 from ml.data.lap_store import load_store, store_path  # noqa: E402
 from ml.data.recordings import list_all_sessions  # noqa: E402
+from ml.data.session_cache import (  # noqa: E402
+    STORE_CODE,
+    STORE_FILES,
+    CacheBroken,
+    SessionCache,
+    fingerprint,
+    global_key,
+)
 from ml.data.store_v2 import (  # noqa: E402
     STORE_V2_FILENAME,
     STORE_V2_SCHEMA,
@@ -36,21 +44,112 @@ from ml.data.store_v2 import (  # noqa: E402
     default_inventory_path,
     file_entry,
     git_commit,
+    materialize_session,
     recording_periods,
     save_store_v2,
+    selection_plan,
 )
 from ml.track.geometry import load_geometry  # noqa: E402
 from ml.track.microsectors import build_microsectors  # noqa: E402
+
+# Cache por gravacao do passo 6 do `atualizar_coach` (pedido 25), fora do git.
+DEFAULT_CACHE_DIR = config.artifacts_root() / "cache_store_v2"
 
 
 def lap_labels_path() -> Path:
     return config.repo_root() / "docs" / "experimentos" / "2026-10-04_rotulos_por_volta.csv"
 
 
+def materials_from_cache(inventory, track, sectors, sessions, mode: str, cache_dir: Path):
+    """As sessoes materializadas: do cache as que podem sair dele, lidas as outras (pedido 25).
+
+    Uma sessao e lida de novo quando os arquivos dela mudaram, quando uma volta
+    selecionada dela nao foi pedida na leitura guardada, ou quando a chave
+    global mudou (entao o cache inteiro e refeito). Na releitura, as voltas
+    pedidas antes continuam pedidas: materializar uma volta a mais nao muda
+    nenhuma outra, e a sessao nao fica indo e voltando.
+
+    Devolve (materiais, cache, construcao).
+    """
+    by_session, _, _ = selection_plan(inventory, track)
+    available = {s.session_id: s for s in sessions}
+    cache = SessionCache(cache_dir, global_key(track.geometry_id, config.DEFAULT_GATES, STORE_CODE))
+    reason = cache.prepare("--completo" if mode == "completo" else None)
+    if reason:
+        print(f"   leitura completa: {reason}", flush=True)
+    had_cache = bool(cache.sessions)
+    wanted = {sid: seqs for sid, seqs in by_session.items() if sid in available}
+    files = {sid: fingerprint(available[sid], STORE_FILES) for sid in wanted}
+    materials = {}
+    if reason is None:
+        try:
+            for sid, seqs in sorted(wanted.items()):
+                entry = cache.entry(sid)
+                if entry is None or not set(seqs) <= set(entry.get("sequencias_pedidas") or []):
+                    continue
+                material = cache.load(sid, files[sid])
+                if material is not None:
+                    materials[sid] = material
+        except CacheBroken as exc:
+            reason = f"o cache nao abre ({exc})"
+            print(f"   leitura completa: {reason}", flush=True)
+            cache.reset()
+            materials = {}
+    read = []
+    for sid, seqs in sorted(wanted.items()):
+        if sid in materials:
+            continue
+        before = cache.entry(sid) if cache.matches(sid, files[sid]) else None
+        requested = set(seqs) | set((before or {}).get("sequencias_pedidas") or [])
+        material = materialize_session(available[sid], requested, track, sectors)
+        materials[sid] = material
+        read.append(sid)
+        cache.store(available[sid], files[sid], material, sequencias_pedidas=list(material.requested),
+                    sha256_player=None)
+        print(f"   lida: {sid} ({len(material.laps)} voltas materializadas)", flush=True)
+    gone = [sid for sid in cache.session_ids if sid not in available]
+    for sid in gone:
+        cache.remove(sid)
+    construction = {
+        "modo": "completo" if reason else "incremental",
+        "motivo": reason,
+        "cache_vazio_no_inicio": not had_cache and reason is None,
+        "sessoes_com_voltas_selecionadas": len(wanted),
+        "sessoes_lidas": read,
+        "sessoes_do_cache": len(wanted) - len(read),
+        "sumiram": gone,
+    }
+    # O manifesto sai junto com os arquivos das sessoes: o cache nunca fica sem ele.
+    cache.finish(construction)
+    return materials, cache, construction
+
+
+def recording_entries(used, by_id, cache: SessionCache = None) -> dict:
+    """`file_entry` de cada gravacao usada; com o cache, o sha256 sai dele se os arquivos nao mudaram."""
+    out = {}
+    for sid in used:
+        if sid not in by_id:
+            continue
+        path = by_id[sid].player_stream
+        entry = cache.entry(sid) if cache is not None else None
+        if entry is not None and entry.get("sha256_player") and cache.matches(sid, fingerprint(by_id[sid], STORE_FILES)):
+            out[sid] = {"arquivo": str(path), "bytes": int(path.stat().st_size), "sha256": entry["sha256_player"]}
+            continue
+        out[sid] = file_entry(path)
+        if entry is not None:
+            cache.update(sid, sha256_player=out[sid]["sha256"])
+    return out
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--inventario", type=Path, default=default_inventory_path())
     parser.add_argument("--relatorio", type=Path, default=config.artifacts_root() / "store_v2_relatorio.json")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--incremental", action="store_true",
+                      help="usa o cache por gravacao: le so as sessoes novas ou mudadas (pedido 25)")
+    mode.add_argument("--completo", action="store_true", help="le todas as sessoes e refaz o cache")
+    parser.add_argument("--cache", type=Path, default=DEFAULT_CACHE_DIR, help="pasta do cache por gravacao")
     args = parser.parse_args(argv)
 
     started = time.time()
@@ -65,8 +164,14 @@ def main(argv=None) -> int:
     track = load_geometry()
     sectors = build_microsectors(track)
     sessions = list_all_sessions()
+    cache = construction = None
+    materials = None
+    if args.incremental or args.completo:
+        materials, cache, construction = materials_from_cache(
+            inventory, track, sectors, sessions, "completo" if args.completo else "incremental", args.cache)
     store, details = build_store_v2(inventory, track=track, sessions=sessions,
-                                    progress=lambda text: print(text, flush=True), sectors=sectors)
+                                    progress=lambda text: print(text, flush=True), sectors=sectors,
+                                    materials=materials)
 
     old = None
     if store_path().exists():
@@ -86,7 +191,7 @@ def main(argv=None) -> int:
     inputs = {
         "inventario": file_entry(args.inventario),
         "rotulos_04_10": file_entry(lap_labels_path()) if lap_labels_path().exists() else None,
-        "gravacoes": {sid: file_entry(by_id[sid].player_stream) for sid in used if sid in by_id},
+        "gravacoes": recording_entries(used, by_id, cache),
     }
     extra = {
         "versao": 2,
@@ -100,6 +205,10 @@ def main(argv=None) -> int:
         # 05/10: para o relatorio de evolucao separar as sessoes pelas pausas.
         "periodos_das_gravacoes": recording_periods(inventory, used),
     }
+    if construction is not None:
+        # Pedido 25: como o store foi construido. E o unico campo novo do meta.
+        extra["construcao"] = construction
+        cache.finish(construction)          # de novo, agora com o sha256 das gravacoes usadas
     path = save_store_v2(store, extra)
     result["store"] = {"arquivo": str(path), **file_entry(path)}
     result["meta"] = {"commit": extra["commit"], "geometry_id": store.geometry_id, "source_hash": store.source_hash,

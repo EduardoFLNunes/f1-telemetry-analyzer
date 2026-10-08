@@ -156,8 +156,11 @@ class CommandTest(unittest.TestCase):
         model.write_text("{}", encoding="utf-8")
         c = self.command
 
-        def scan(directory, track):
+        modes = []
+
+        def scan(directory, track, mode=None):
             calls.append("inventario")
+            modes.append(mode)
             directory.mkdir(parents=True, exist_ok=True)
             inventory_rows("2026-10-05_20-00-00_vhe_interlagos", ["humano"]).to_parquet(
                 directory / "lap_inventory.parquet", index=False)
@@ -185,6 +188,7 @@ class CommandTest(unittest.TestCase):
 
         def store_v2(args):
             calls.append(("store v2", args[args.index("--inventario") + 1].endswith("lap_inventory.parquet")))
+            modes.append([a for a in args if a in ("--incremental", "--completo")])
             return 0
 
         c.build_lap_store_v2.main = store_v2
@@ -212,6 +216,8 @@ class CommandTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(calls, ["inventario", ("rotulos", False), ("treino", str(model), True), "resumo",
                                  ("store v2", True), ("evolucao", str(model))])
+        # Pedido 25: o incremental e o padrao nos passos 1 e 6.
+        self.assertEqual(modes, ["incremental", ["--incremental"]])
         # Pedido 17: no fim, o caminho do painel.
         last = printed.getvalue().strip().splitlines()[-1]
         self.assertTrue(last.startswith("painel da evolucao: "))

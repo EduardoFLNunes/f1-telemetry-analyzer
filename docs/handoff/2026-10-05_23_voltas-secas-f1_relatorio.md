@@ -18,6 +18,8 @@
   - `docs/handoff/2026-10-05_23_voltas-secas-f1_faixa_pista.png` (cópia de `data/ml/externo/f1_faixa/faixa_pista.png`)
   - `docs/handoff/2026-10-05_23_voltas-secas-f1_faixa_lateral.png` (cópia de `data/ml/externo/f1_faixa/faixa_lateral.png`)
 
+**Errata (08/10, pedido 24):** onde este relatório diz que a pasta da classificação de 2024 no cache foi baixada em junho "com o mesmo FastF1 3.4.0" ou "com a mesma versão", a afirmação está errada. Os arquivos de junho não passaram na checagem de versão do cache do FastF1 3.4.0 e foram sobrescritos no pedido 24. Ver `docs/handoff/2026-10-08_24_f1-referencia-2023-25_relatorio.md`.
+
 Nada foi enviado ao remoto. O app instalado e os arquivos do jogo não foram tocados. Nenhum pacote foi instalado nem atualizado. Nenhum modelo foi treinado, e coach, store e critérios não mudaram.
 
 ## Em resumo

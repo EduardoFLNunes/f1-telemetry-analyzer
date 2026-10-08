@@ -24,7 +24,7 @@ import hashlib
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Sequence
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
@@ -190,16 +190,79 @@ def _clean_value(value):
     return value
 
 
-def build_store_v2(
-    inventory: pd.DataFrame,
-    track: Optional[TrackGeometry] = None,
-    sessions: Optional[Sequence[Session]] = None,
-    progress: Optional[Callable[[str], None]] = None,
-    sectors: Optional[Microsectors] = None,
-) -> tuple:
-    """Le as voltas validas e unicas do inventario rotulado e devolve (store, detalhes)."""
-    geometry = track or load_geometry()
-    sectors = sectors or build_microsectors(geometry)
+@dataclass
+class SessionMaterial:
+    """O que a leitura de uma sessao produz para o store v2 (pedido 25: e o que o cache guarda).
+
+    `laps[sequence]` tem, para cada volta pedida e encontrada, na ordem do
+    arquivo: a identidade crua, a marca de box e, fora do box, o bloco na grade
+    com os canais fisicos, os canais com algum ponto, os campos medidos e o tempo
+    do jogo. `requested` sao as voltas pedidas na leitura, encontradas ou nao.
+    """
+
+    session_id: str
+    car_model_recorded: Optional[str]
+    requested: Tuple[int, ...]
+    laps: Dict[int, Dict[str, object]] = field(default_factory=dict)
+
+
+def materialize_session(session: Session, sequences, geometry: TrackGeometry,
+                        sectors: Microsectors) -> SessionMaterial:
+    """Le uma sessao e materializa as voltas `sequences` na grade.
+
+    E a unica parte do store v2 que abre a gravacao. O tempo do jogo de uma
+    volta depende so da volta crua seguinte no arquivo, e a marca de box, so
+    da grade dela: nada aqui depende do inventario.
+    """
+    sequences = set(int(q) for q in sequences)
+    material = SessionMaterial(
+        session_id=session.session_id,
+        car_model_recorded=(session.metadata().get("metadata") or {}).get("carModel"),
+        requested=tuple(sorted(sequences)),
+    )
+    pending: Optional[tuple] = None          # (volta crua, registro) esperando a seguinte
+    for lap in iter_laps(session):
+        if pending is not None:
+            previous, entry = pending
+            entry["tempo_jogo_s"] = game_lap_time(previous, lap, geometry)
+            pending = None
+        if lap.sequence not in sequences:
+            continue
+        identity = {"lap_id": lap.lap_id, "sequence": lap.sequence, "lap_number": lap.lap_number,
+                    "driver_id": lap.driver_id, "track": lap.track}
+        cleaned, _ = clean_lap(lap.frame)
+        aligned, alignment = align_lap(cleaned, geometry)
+        quality = evaluate_lap(aligned, geometry, alignment)
+        grid = resample_lap(aligned, geometry, line_clock=True)
+        if pit_lap(grid, sectors):
+            material.laps[lap.sequence] = {**identity, "box": True}
+            continue
+        wanted_columns = [c for c in STORE_COLUMNS if c in grid.columns] + list(PHYSICAL_COLUMNS)
+        block = grid.reindex(columns=wanted_columns).copy()
+        channels = [c for c in PHYSICAL_COLUMNS if np.isfinite(block[c].to_numpy(dtype=float)).any()]
+        block.insert(0, "grid_index", np.arange(geometry.size))
+        block.insert(0, "lap_id", lap.lap_id)
+        entry = {
+            **identity,
+            "box": False,
+            "block": block,
+            "channels": channels,
+            "lap_time_s": lap_time_from_grid(grid),
+            "tempo_jogo_s": None,
+            "sample_hz": float(quality.metrics.get("sample_hz", np.nan)),
+            "raw_samples": int(lap.sample_count),
+            "coverage": float(alignment.coverage),
+            "speed_mean_kmh": float(np.nanmean(grid["speed_kmh"])),
+            "speed_min_kmh": float(np.nanmin(grid["speed_kmh"])),
+            "speed_max_kmh": float(np.nanmax(grid["speed_kmh"])),
+        }
+        material.laps[lap.sequence] = entry
+        pending = (lap, entry)
+    return material
+
+
+def selection_plan(inventory: pd.DataFrame, geometry: TrackGeometry) -> tuple:
+    """(voltas por sessao, rotulos por volta, contagens da selecao), a partir do inventario rotulado."""
     wanted, counts = select_v2(inventory)
     if wanted.empty:
         raise ValueError("o inventario nao tem nenhuma volta valida e unica")
@@ -211,10 +274,28 @@ def build_store_v2(
     for _, row in wanted.iterrows():
         by_session.setdefault(str(row["session_id"]), set()).add(int(row["sequence"]))
         carried[str(row["lap_id"])] = {k: _clean_value(row.get(k)) for k in CARRIED_COLUMNS if k in row}
+    return by_session, carried, counts
 
-    available = {s.session_id: s for s in (sessions if sessions is not None else list_all_sessions())}
+
+def assemble_store_v2(
+    by_session: Dict[str, set],
+    carried: Dict[str, Dict[str, object]],
+    counts: Dict[str, int],
+    materials: Dict[str, SessionMaterial],
+    available: Dict[str, Session],
+    geometry: TrackGeometry,
+    notes=None,
+    progress: Optional[Callable[[str], None]] = None,
+) -> tuple:
+    """O store e os detalhes a partir das sessoes materializadas, dos rotulos e das anotacoes atuais.
+
+    Os rotulos (`CARRIED_COLUMNS`) e o `carModel` (`car_for`) saem sempre do
+    inventario e das anotacoes desta rodada: um rotulo que mudou chega ao store
+    sem reler a gravacao. A ordem das voltas, dos blocos e dos detalhes e a do
+    caminho de sempre: sessoes por id, voltas pela ordem no arquivo.
+    """
+    notes = session_annotations() if notes is None else notes
     details = BuildDetails(selection=counts)
-    notes = session_annotations()
     blocks: List[pd.DataFrame] = []
     records: List[Dict[str, object]] = []
     for position, (session_id, sequences) in enumerate(sorted(by_session.items()), start=1):
@@ -223,52 +304,37 @@ def build_store_v2(
             details.not_found.extend(f"{session_id}#{q:04d}" for q in sorted(sequences))
             continue
         details.sessions.append(session_id)
-        car = car_for(session_id, (session.metadata().get("metadata") or {}).get("carModel"), notes)
+        material = materials[session_id]
+        car = car_for(session_id, material.car_model_recorded, notes)
         found = 0
-        pending: Optional[tuple] = None          # (volta crua, registro) esperando a seguinte
-        for lap in iter_laps(session):
-            if pending is not None:
-                previous, record = pending
-                record["tempo_jogo_s"] = game_lap_time(previous, lap, geometry)
-                pending = None
-            if lap.sequence not in sequences:
+        for sequence in sorted(material.laps):
+            if sequence not in sequences:
                 continue
-            cleaned, _ = clean_lap(lap.frame)
-            aligned, alignment = align_lap(cleaned, geometry)
-            quality = evaluate_lap(aligned, geometry, alignment)
-            grid = resample_lap(aligned, geometry, line_clock=True)
-            if pit_lap(grid, sectors):
-                details.box_removed.append(lap.lap_id)
+            entry = material.laps[sequence]
+            if entry["box"]:
+                details.box_removed.append(entry["lap_id"])
                 continue
-            wanted_columns = [c for c in STORE_COLUMNS if c in grid.columns] + list(PHYSICAL_COLUMNS)
-            block = grid.reindex(columns=wanted_columns).copy()
-            details.channels_by_lap[lap.lap_id] = [
-                c for c in PHYSICAL_COLUMNS if np.isfinite(block[c].to_numpy(dtype=float)).any()
-            ]
-            block.insert(0, "grid_index", np.arange(geometry.size))
-            block.insert(0, "lap_id", lap.lap_id)
-            blocks.append(block)
-            record = {
-                "lap_id": lap.lap_id,
+            details.channels_by_lap[entry["lap_id"]] = list(entry["channels"])
+            blocks.append(entry["block"])
+            records.append({
+                "lap_id": entry["lap_id"],
                 "session_id": session_id,
-                "sequence": lap.sequence,
-                "lap_number": lap.lap_number,
-                "driver_id": lap.driver_id,
-                "track": lap.track,
-                "lap_time_s": lap_time_from_grid(grid),
-                "tempo_jogo_s": None,
+                "sequence": entry["sequence"],
+                "lap_number": entry["lap_number"],
+                "driver_id": entry["driver_id"],
+                "track": entry["track"],
+                "lap_time_s": entry["lap_time_s"],
+                "tempo_jogo_s": entry["tempo_jogo_s"],
                 "geometry_id": geometry.geometry_id,
                 "carModel": car,
-                "sample_hz": float(quality.metrics.get("sample_hz", np.nan)),
-                "raw_samples": int(lap.sample_count),
-                "coverage": float(alignment.coverage),
-                "speed_mean_kmh": float(np.nanmean(grid["speed_kmh"])),
-                "speed_min_kmh": float(np.nanmin(grid["speed_kmh"])),
-                "speed_max_kmh": float(np.nanmax(grid["speed_kmh"])),
-                **carried.get(lap.lap_id, {}),
-            }
-            records.append(record)
-            pending = (lap, record)
+                "sample_hz": entry["sample_hz"],
+                "raw_samples": entry["raw_samples"],
+                "coverage": entry["coverage"],
+                "speed_mean_kmh": entry["speed_mean_kmh"],
+                "speed_min_kmh": entry["speed_min_kmh"],
+                "speed_max_kmh": entry["speed_max_kmh"],
+                **carried.get(entry["lap_id"], {}),
+            })
             found += 1
         missing = sequences - {r["sequence"] for r in records if r["session_id"] == session_id} - {
             int(i.split("#")[1]) for i in details.box_removed if i.startswith(session_id + "#")
@@ -281,7 +347,11 @@ def build_store_v2(
         raise ValueError("nenhuma volta pode ser materializada")
     frame = pd.concat(blocks, ignore_index=True)
     laps = pd.DataFrame(records).sort_values("lap_time_s").reset_index(drop=True)
-    store = StoredLaps(
+    return _stored(frame, laps, geometry), details
+
+
+def _stored(frame: pd.DataFrame, laps: pd.DataFrame, geometry: TrackGeometry) -> StoredLaps:
+    return StoredLaps(
         frame=frame,
         laps=laps,
         grid_size=geometry.size,
@@ -294,7 +364,30 @@ def build_store_v2(
             "relogio": "zerado na linha com o periodo verdadeiro (line_clock)",
         },
     )
-    return store, details
+
+
+def build_store_v2(
+    inventory: pd.DataFrame,
+    track: Optional[TrackGeometry] = None,
+    sessions: Optional[Sequence[Session]] = None,
+    progress: Optional[Callable[[str], None]] = None,
+    sectors: Optional[Microsectors] = None,
+    materials: Optional[Dict[str, SessionMaterial]] = None,
+) -> tuple:
+    """Le as voltas validas e unicas do inventario rotulado e devolve (store, detalhes).
+
+    Sem `materials`, le todas as sessoes. Com `materials` (o modo incremental do
+    pedido 25), usa a sessao materializada que estiver la e le so as outras.
+    """
+    geometry = track or load_geometry()
+    sectors = sectors or build_microsectors(geometry)
+    by_session, carried, counts = selection_plan(inventory, geometry)
+    available = {s.session_id: s for s in (sessions if sessions is not None else list_all_sessions())}
+    materials = {} if materials is None else materials
+    for session_id, sequences in sorted(by_session.items()):
+        if session_id in available and session_id not in materials:
+            materials[session_id] = materialize_session(available[session_id], sequences, geometry, sectors)
+    return assemble_store_v2(by_session, carried, counts, materials, available, geometry, progress=progress)
 
 
 def recording_start(session_id: str):

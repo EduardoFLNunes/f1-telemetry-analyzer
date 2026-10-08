@@ -25,7 +25,7 @@ import json
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -34,13 +34,24 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from ml import config  # noqa: E402
 from ml.data import origin  # noqa: E402
-from ml.data.inventory import inventory_path, save_inventory, scan_sessions, summarise  # noqa: E402
+from ml.data.inventory import assemble_inventory, inventory_path, read_session, save_inventory, summarise  # noqa: E402
 from ml.data.origin_signals import lap_signals  # noqa: E402
 from ml.data.recordings import list_all_sessions  # noqa: E402
+from ml.data.session_cache import (  # noqa: E402
+    INVENTORY_CODE,
+    INVENTORY_FILES,
+    CacheBroken,
+    SessionCache,
+    fingerprint,
+    global_key,
+)
 from ml.track.corners import detect_corners  # noqa: E402
 from ml.track.geometry import load_geometry  # noqa: E402
+from ml.track.microsectors import build_microsectors  # noqa: E402
 from ml.validation import empirical as em  # noqa: E402
 
+# Cache por gravacao do passo 1 do `atualizar_coach` (pedido 25), dentro de `--saida`.
+CACHE_DIR = "cache"
 CLOCK_TABLE = "relogio_microsetores.parquet"
 SIGNALS_TABLE = "sinais_voltas.parquet"
 GRID_TABLE = "grade_voltas.parquet"
@@ -83,28 +94,114 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def scan(out_dir: Path, track) -> None:
-    sessions = list_all_sessions()
-    print(f"sessoes de Interlagos nas duas pastas: {len(sessions)}", flush=True)
-    clocks: List[pd.DataFrame] = []
-    signals: List[Dict[str, float]] = []
-    grids: List[pd.DataFrame] = []
+def read_session_tables(session, track, sectors, gates=config.DEFAULT_GATES) -> Dict[str, list]:
+    """Uma sessao lida: as linhas do inventario e os blocos das tres tabelas, na ordem das voltas.
+
+    E o que o cache do passo 1 guarda por sessao (pedido 25): as linhas saem de
+    `read_session`, antes das marcas que cruzam sessoes, e os blocos do relogio,
+    dos sinais e da grade, do gancho, exatamente como o caminho completo os monta.
+    """
+    tables: Dict[str, list] = {"linhas": [], "relogio": [], "sinais": [], "grade": []}
 
     def hook(lap, aligned, grid, check, row):
         block = check.copy()
         block.insert(0, "lap_id", lap.lap_id)
-        clocks.append(block)
-        signals.append({"lap_id": lap.lap_id, **lap_signals(aligned, track.length)})
+        tables["relogio"].append(block)
+        tables["sinais"].append({"lap_id": lap.lap_id, **lap_signals(aligned, track.length)})
         g = grid.reindex(columns=list(GRID_COLUMNS)).astype("float32")
         g.insert(0, "grid_index", np.arange(len(g), dtype=np.int32))
         g.insert(0, "lap_id", lap.lap_id)
-        grids.append(g)
+        tables["grade"].append(g)
 
-    inventory = scan_sessions(sessions, track=track, progress=lambda t: print(t, flush=True), lap_hook=hook)
+    tables["linhas"] = read_session(session, track, sectors, gates, lap_hook=hook)
+    return tables
+
+
+def scan(out_dir: Path, track, mode: Optional[str] = None, sessions=None,
+         cache_dir: Optional[Path] = None, gates=None) -> Dict[str, object]:
+    """Varre as duas pastas e grava o inventario e as tres tabelas em `out_dir`.
+
+    `mode`:
+
+    * `None` -- le todas as sessoes, sem cache (o comportamento de sempre);
+    * `"completo"` -- le todas e refaz o cache do zero;
+    * `"incremental"` -- sessao com os mesmos arquivos sai do cache, sessao nova
+      ou mudada e lida, sessao que sumiu sai (pedido 25). Se a chave global mudou
+      ou o cache nao abre, le tudo e diz o motivo.
+
+    Nos tres modos, as etapas que cruzam sessoes (ordenacao, `mark_duplicates`,
+    `mark_clock`) rodam sobre a tabela inteira, e os arquivos saem iguais.
+    """
+    sessions = list(sessions) if sessions is not None else list_all_sessions()
+    print(f"sessoes de Interlagos nas duas pastas: {len(sessions)}", flush=True)
+    sectors = build_microsectors(track)
+    gates = config.DEFAULT_GATES if gates is None else gates
+    cache: Optional[SessionCache] = None
+    reason: Optional[str] = None
+    if mode is not None:
+        if mode not in ("completo", "incremental"):
+            raise ValueError(f"modo desconhecido: {mode}")
+        cache = SessionCache(cache_dir or out_dir / CACHE_DIR, global_key(track.geometry_id, gates, INVENTORY_CODE))
+        reason = cache.prepare("--completo" if mode == "completo" else None)
+        if reason:
+            print(f"   leitura completa: {reason}", flush=True)
+    had_cache = bool(cache and cache.sessions)
+
+    files = {s.session_id: fingerprint(s, INVENTORY_FILES) for s in sessions}
+    contents: Dict[str, Dict[str, list]] = {}
+    if cache is not None and reason is None:
+        try:
+            for session in sessions:
+                content = cache.load(session.session_id, files[session.session_id])
+                if content is not None:
+                    contents[session.session_id] = content
+        except CacheBroken as exc:
+            reason = f"o cache nao abre ({exc})"
+            print(f"   leitura completa: {reason}", flush=True)
+            cache.reset()
+            contents = {}
+
+    read: List[str] = []
+    for position, session in enumerate(sessions, start=1):
+        sid = session.session_id
+        if sid in contents:
+            print(f"[{position}/{len(sessions)}] {sid}: {len(contents[sid]['linhas'])} voltas (cache)", flush=True)
+            continue
+        content = read_session_tables(session, track, sectors, gates)
+        contents[sid] = content
+        read.append(sid)
+        if cache is not None:
+            cache.store(session, files[sid], content)
+        print(f"[{position}/{len(sessions)}] {sid}: {len(content['linhas'])} voltas", flush=True)
+
+    gone: List[str] = []
+    if cache is not None:
+        present = set(files)
+        gone = [sid for sid in cache.session_ids if sid not in present]
+        for sid in gone:
+            cache.remove(sid)
+        if gone:
+            print(f"   sessoes que sumiram do disco (sairam do inventario e do cache): {gone}", flush=True)
+
+    ordered = [contents[s.session_id] for s in sessions]
+    inventory = assemble_inventory([row for content in ordered for row in content["linhas"]])
     save_inventory(inventory, out_dir)
-    pd.concat(clocks, ignore_index=True).to_parquet(out_dir / CLOCK_TABLE, index=False)
-    pd.DataFrame(signals).to_parquet(out_dir / SIGNALS_TABLE, index=False)
-    pd.concat(grids, ignore_index=True).to_parquet(out_dir / GRID_TABLE, index=False)
+    pd.concat([b for c in ordered for b in c["relogio"]], ignore_index=True).to_parquet(out_dir / CLOCK_TABLE, index=False)
+    pd.DataFrame([s for c in ordered for s in c["sinais"]]).to_parquet(out_dir / SIGNALS_TABLE, index=False)
+    pd.concat([b for c in ordered for b in c["grade"]], ignore_index=True).to_parquet(out_dir / GRID_TABLE, index=False)
+
+    run = {
+        "modo": "sem cache" if cache is None else ("completo" if reason else "incremental"),
+        "motivo": reason,
+        "cache_vazio_no_inicio": None if cache is None else (not had_cache and reason is None),
+        "sessoes": len(sessions),
+        "lidas": read,
+        "do_cache": len(sessions) - len(read),
+        "sumiram": gone,
+    }
+    if cache is not None:
+        cache.finish(run)
+    return run
 
 
 def percentiles(values: np.ndarray) -> Dict[str, float]:

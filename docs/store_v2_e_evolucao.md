@@ -404,3 +404,37 @@ O arquivo com as 14 curvas e o diagnóstico é `docs/handoff/2026-10-04_painel-e
 
 - o painel desenha os números, o mapa de Interlagos com as curvas coloridas, as listas e o detalhe, sem erro no console;
 - depois da correção de implementação, a C10 mostra "Você freia 11 m antes da IA; metade das voltas entre 9 e 12 m antes. Medido em 4 de 11 voltas."
+
+## 7. Cache do store v2 e o campo `construcao` do meta (pedido 25)
+
+O `atualizar_coach` constrói o store v2 no modo incremental (`build_lap_store_v2 --incremental`). As voltas de cada sessão materializadas na grade ficam em `data/ml/cache_store_v2/`, fora do git: um arquivo por sessão e um `manifesto.json`. O cache guarda o que só a gravação dá:
+
+- os blocos na grade, com os canais físicos;
+- o tempo de volta, o tempo do jogo, a frequência, as amostras, a cobertura e as velocidades;
+- a marca de box e os canais de cada volta;
+- o `carModel` gravado;
+- o sha256 do `player.jsonl`, para `entradas.gravacoes`.
+
+A seleção, os rótulos (`CARRIED_COLUMNS`), o `carModel` com as anotações, os períodos das gravações, as checagens e o meta são recalculados a cada rodada, a partir do inventário e das anotações atuais.
+
+Uma sessão é lida de novo quando:
+
+- o `player.jsonl` ou o `metadata.json` dela mudou de tamanho ou de data;
+- uma volta selecionada dela não estava na leitura guardada;
+- a chave global mudou: geometria, portões, formato do cache ou o código da materialização (lista em `backend/ml/data/session_cache.py`, `STORE_CODE`). Nesse caso, o cache inteiro é refeito.
+
+`--completo` lê tudo e refaz o cache. Sem nenhuma das duas flags, o `build_lap_store_v2` lê tudo sem usar cache, como antes.
+
+O store, o meta e o relatório seguem no esquema 2.1. O meta ganha só o campo `construcao`, presente quando o store foi construído com o cache:
+
+| campo | o que é |
+|---|---|
+| `modo` | `incremental` ou `completo` |
+| `motivo` | por que tudo foi lido (`--completo`, chave global mudou, cache que não abre); `null` no incremental |
+| `cache_vazio_no_inicio` | se o cache estava vazio, como na primeira rodada |
+| `sessoes_com_voltas_selecionadas` | quantas sessões têm volta no store |
+| `sessoes_lidas` | as sessões lidas nesta rodada |
+| `sessoes_do_cache` | quantas saíram do cache |
+| `sumiram` | sessões que estavam no cache e sumiram do disco |
+
+Nas rodadas de conferência do pedido 25, o store e o meta saíram idênticos aos do comando completo, fora as datas, o commit e o próprio `construcao`.
