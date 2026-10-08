@@ -1,0 +1,26 @@
+........................................................................ [ 10%]
+........................................................................ [ 21%]
+........................................................................ [ 32%]
+........................................................................ [ 43%]
+........................................................................ [ 54%]
+........................................................................ [ 65%]
+........................................................................ [ 76%]
+........................................................................ [ 87%]
+........................................................................ [ 98%]
+........                                                                 [100%]
+============================== warnings summary ===============================
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 1 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 2 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 4 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+656 passed, 4 warnings in 444.27s (0:07:24)
