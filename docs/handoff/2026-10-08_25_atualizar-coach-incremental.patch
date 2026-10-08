@@ -1,0 +1,2333 @@
+diff --git a/backend/ml/data/inventory.py b/backend/ml/data/inventory.py
+index def3d8db..5f133eb1 100644
+--- a/backend/ml/data/inventory.py
++++ b/backend/ml/data/inventory.py
+@@ -98,6 +98,85 @@ def _provenance(lap: RawLap, folder: str) -> Dict[str, Any]:
+     }
+ 
+ 
++def read_session(
++    session: Session,
++    geometry: TrackGeometry,
++    sectors,
++    gates: config.LapQualityGates = config.DEFAULT_GATES,
++    lap_hook: Optional[LapHook] = None,
++) -> List[Dict[str, Any]]:
++    """Le uma sessao: uma linha por volta, ja com a identidade de `classify`.
++
++    E a leitura inteira de uma sessao, a unica que abre a gravacao: limpeza,
++    alinhamento, portoes, conferencia do relogio e identidade. As linhas saem
++    antes de `mark_duplicates` e `mark_clock`, que cruzam sessoes e trabalham
++    sobre a tabela pronta (`assemble_inventory`). O modo completo e o
++    incremental do `atualizar_coach` (pedido 25) chamam esta mesma funcao.
++    """
++    rows: List[Dict[str, Any]] = []
++    counters: Dict[tuple, Dict[int, int]] = {}
++    folder = recording_folder(session.directory)
++    # `min_samples=1`: um trecho de uma amostra so nao vira linha do
++    # inventario, mas a amostra dele esta dentro de algum replay e precisa
++    # entrar na contagem que associa as duas identidades.
++    for lap in iter_laps(session, min_samples=1):
++        counters[(lap.lap_id, lap.sequence)] = counter_counts(lap.frame)
++        if lap.sample_count < 2:
++            continue
++        cleaned, cleaning = clean_lap(lap.frame)
++        if cleaned.empty or len(cleaned) < 4:
++            rows.append(
++                {
++                    "lap_id": lap.lap_id,
++                    "session_id": lap.session_id,
++                    "sequence": lap.sequence,
++                    "lap_number": lap.lap_number,
++                    "driver_id": lap.driver_id,
++                    "track": lap.track,
++                    "raw_samples": lap.sample_count,
++                    "corrupt_lines": lap.corrupt_lines,
++                    "valid": False,
++                    "reasons": "amostras insuficientes apos limpeza",
++                    "cleaned_samples": int(len(cleaned)),
++                    "geometry_id": geometry.geometry_id,
++                    **_provenance(lap, folder),
++                }
++            )
++            continue
++        aligned, alignment = align_lap(cleaned, geometry)
++        quality = evaluate_lap(aligned, geometry, alignment, gates)
++        row = _record(lap, quality, cleaning, alignment)
++        row["geometry_id"] = geometry.geometry_id
++        row.update(_provenance(lap, folder))
++        if quality.valid:
++            # O relogio so e conferido onde a volta inteira esta na grade.
++            grid = resample_lap(aligned, geometry)
++            check = clock_check(grid, geometry, sectors)
++            row.update(clock_summary(check))
++            if lap_hook is not None:
++                lap_hook(lap, aligned, grid, check, row)
++        rows.append(row)
++    identities = classify(session.session_id, counters)
++    for row in rows:
++        identity = identities.get(row["lap_id"])
++        if identity is not None:
++            row.update({k: v for k, v in identity.to_dict().items() if k != "lap_id"})
++    return rows
++
++
++def assemble_inventory(rows: Sequence[Dict[str, Any]]) -> pd.DataFrame:
++    """A tabela a partir das linhas de todas as sessoes, com as etapas que cruzam sessoes.
++
++    A ordenacao por duas colunas e estavel: linhas empatadas ficam na ordem
++    em que chegaram, que e a ordem das sessoes e das voltas.
++    """
++    frame = pd.DataFrame(list(rows))
++    if not frame.empty:
++        frame = frame.sort_values(["session_id", "sequence"]).reset_index(drop=True)
++        frame = mark_clock(mark_duplicates(frame))
++    return frame
++
++
+ def scan_sessions(
+     sessions: Optional[Sequence[Session]] = None,
+     track: Optional[TrackGeometry] = None,
+@@ -112,65 +191,11 @@ def scan_sessions(
+ 
+     rows: List[Dict[str, Any]] = []
+     for position, session in enumerate(available, start=1):
+-        count = 0
+-        first_row = len(rows)
+-        counters: Dict[tuple, Dict[int, int]] = {}
+-        folder = recording_folder(session.directory)
+-        # `min_samples=1`: um trecho de uma amostra so nao vira linha do
+-        # inventario, mas a amostra dele esta dentro de algum replay e precisa
+-        # entrar na contagem que associa as duas identidades.
+-        for lap in iter_laps(session, min_samples=1):
+-            counters[(lap.lap_id, lap.sequence)] = counter_counts(lap.frame)
+-            if lap.sample_count < 2:
+-                continue
+-            cleaned, cleaning = clean_lap(lap.frame)
+-            if cleaned.empty or len(cleaned) < 4:
+-                rows.append(
+-                    {
+-                        "lap_id": lap.lap_id,
+-                        "session_id": lap.session_id,
+-                        "sequence": lap.sequence,
+-                        "lap_number": lap.lap_number,
+-                        "driver_id": lap.driver_id,
+-                        "track": lap.track,
+-                        "raw_samples": lap.sample_count,
+-                        "corrupt_lines": lap.corrupt_lines,
+-                        "valid": False,
+-                        "reasons": "amostras insuficientes apos limpeza",
+-                        "cleaned_samples": int(len(cleaned)),
+-                        "geometry_id": geometry.geometry_id,
+-                        **_provenance(lap, folder),
+-                    }
+-                )
+-                count += 1
+-                continue
+-            aligned, alignment = align_lap(cleaned, geometry)
+-            quality = evaluate_lap(aligned, geometry, alignment, gates)
+-            row = _record(lap, quality, cleaning, alignment)
+-            row["geometry_id"] = geometry.geometry_id
+-            row.update(_provenance(lap, folder))
+-            if quality.valid:
+-                # O relogio so e conferido onde a volta inteira esta na grade.
+-                grid = resample_lap(aligned, geometry)
+-                check = clock_check(grid, geometry, sectors)
+-                row.update(clock_summary(check))
+-                if lap_hook is not None:
+-                    lap_hook(lap, aligned, grid, check, row)
+-            rows.append(row)
+-            count += 1
+-        identities = classify(session.session_id, counters)
+-        for row in rows[first_row:]:
+-            identity = identities.get(row["lap_id"])
+-            if identity is not None:
+-                row.update({k: v for k, v in identity.to_dict().items() if k != "lap_id"})
++        session_rows = read_session(session, geometry, sectors, gates, lap_hook)
++        rows.extend(session_rows)
+         if progress:
+-            progress(f"[{position}/{len(available)}] {session.session_id}: {count} voltas")
+-
+-    frame = pd.DataFrame(rows)
+-    if not frame.empty:
+-        frame = frame.sort_values(["session_id", "sequence"]).reset_index(drop=True)
+-        frame = mark_clock(mark_duplicates(frame))
+-    return frame
++            progress(f"[{position}/{len(available)}] {session.session_id}: {len(session_rows)} voltas")
++    return assemble_inventory(rows)
+ 
+ 
+ def summarise(inventory: pd.DataFrame) -> Dict[str, Any]:
+diff --git a/backend/ml/data/session_cache.py b/backend/ml/data/session_cache.py
+new file mode 100644
+index 00000000..6cca215d
+--- /dev/null
++++ b/backend/ml/data/session_cache.py
+@@ -0,0 +1,332 @@
++"""Cache por gravacao do `atualizar_coach` (pedido 25).
++
++O passo 1 (inventario) e o passo 6 (store v2) leem cada sessao de forma
++independente, e o resultado de uma sessao so muda se os arquivos dela mudam
++ou se muda o codigo, a geometria ou os portoes que a leitura usa. Este modulo
++guarda, por sessao, o que a leitura produziu, e diz quando uma sessao pode
++sair do cache.
++
++Regras, iguais para os dois caches:
++
++* **chave global** -- formato do cache, `geometry_id`, os portoes
++  (`config.DEFAULT_GATES`) e o sha256 de cada arquivo de codigo que muda a
++  leitura (listas explicitas abaixo). Se ela muda, ou se o cache nao abre, o
++  cache inteiro e apagado e tudo e lido de novo: nunca ha mistura de cache
++  velho com cache novo;
++* **por sessao** -- o tamanho e a data de modificacao (em ns) de cada arquivo
++  que a leitura abre. Iguais: a sessao sai do cache. Diferentes, ou a sessao
++  fora do cache: ela e lida de novo;
++* **so leitura nas gravacoes** -- nada aqui escreve, move ou apaga gravacao, e
++  nenhum cache fica na pasta do app instalado.
++
++Cada sessao vira um arquivo `pickle` com as estruturas exatamente como o
++caminho completo as monta (listas de dicionarios e blocos de DataFrame), para
++os tipos das colunas sairem iguais quando as tabelas sao montadas.
++"""
++
++from __future__ import annotations
++
++import hashlib
++import json
++import os
++import pickle
++import re
++import shutil
++from dataclasses import asdict, is_dataclass
++from pathlib import Path
++from typing import Any, Dict, Iterable, List, Optional, Sequence
++
++from .. import config
++from .recordings import PLAYER_STREAM, SESSION_INDEX, SESSION_METADATA, Session
++
++# Sobe quando o conteudo dos arquivos do cache muda de forma.
++CACHE_FORMAT = 1
++MANIFEST = "manifesto.json"
++PICKLE_PROTOCOL = 4
++
++# Os arquivos de cada sessao que a leitura abre.
++# Passo 1: `list_sessions` le o `session-index.json` (a pista) e `iter_laps`, o stream.
++INVENTORY_FILES = (PLAYER_STREAM, SESSION_INDEX)
++# Passo 6: o stream e o `metadata.json` (o `carModel` gravado).
++STORE_FILES = (PLAYER_STREAM, SESSION_METADATA)
++
++# Codigo que muda a leitura de uma sessao no passo 1 (caminhos relativos a `backend/`).
++# `tests/test_atualizar_coach_incremental.py` confere que todo modulo `ml` que a
++# leitura importa esta aqui, e que todo `.py` de `ml/preprocessing` e `ml/track` entra.
++INVENTORY_CODE = (
++    "ml/__init__.py",
++    "ml/config.py",
++    "ml/preprocessing/__init__.py",
++    "ml/preprocessing/alignment.py",
++    "ml/preprocessing/cleaning.py",
++    "ml/preprocessing/quality.py",
++    "ml/preprocessing/resampling.py",
++    "ml/preprocessing/splits.py",
++    "ml/track/__init__.py",
++    "ml/track/corners.py",
++    "ml/track/geometry.py",
++    "ml/track/microsectors.py",
++    "ml/track/trajectory.py",
++    "ml/data/__init__.py",
++    "ml/data/inventory.py",
++    "ml/data/lap_identity.py",
++    "ml/data/origin.py",
++    "ml/data/origin_signals.py",
++    "ml/data/recordings.py",
++    "ml/data/samples.py",
++    "ml/data/session_cache.py",
++    "ml/scripts/report_lap_origin.py",
++)
++# Passo 6: o do passo 1 mais a materializacao das voltas (store v2, `pit_lap`,
++# colunas do store). A selecao, os rotulos e o `carModel` sao recalculados a
++# cada rodada e nao entram.
++STORE_CODE = INVENTORY_CODE + (
++    "ml/data/ai_detector.py",
++    "ml/data/lap_store.py",
++    "ml/data/store_v2.py",
++    "ml/scripts/build_lap_store_v2.py",
++)
++
++# A pasta do app instalado: nenhum cache e gravado nela.
++INSTALLED_APP_FOLDER = "Automobilista Telemetria"
++
++
++class CacheBroken(Exception):
++    """O cache nao abre: um arquivo dele nao le ou nao bate com o manifesto."""
++
++
++def backend_root() -> Path:
++    return Path(__file__).resolve().parents[2]
++
++
++def file_sha256(path: Path) -> str:
++    digest = hashlib.sha256()
++    with Path(path).open("rb") as handle:
++        for block in iter(lambda: handle.read(1 << 22), b""):
++            digest.update(block)
++    return digest.hexdigest()
++
++
++def code_hashes(files: Sequence[str]) -> Dict[str, str]:
++    """sha256 de cada arquivo de codigo da lista (relativo a `backend/`)."""
++    root = backend_root()
++    return {name: file_sha256(root / name) for name in files}
++
++
++def gates_dict(gates: Any) -> Dict[str, Any]:
++    return asdict(gates) if is_dataclass(gates) else {"repr": repr(gates)}
++
++
++def global_key(geometry_id: str, gates: Any, code_files: Sequence[str]) -> Dict[str, Any]:
++    return {
++        "formato": CACHE_FORMAT,
++        "geometry_id": str(geometry_id),
++        "portoes": gates_dict(gates),
++        "codigo": code_hashes(code_files),
++    }
++
++
++def key_difference(old: Dict[str, Any], new: Dict[str, Any]) -> List[str]:
++    """O que mudou na chave global, em palavras."""
++    out = []
++    if old.get("formato") != new.get("formato"):
++        out.append(f"formato do cache {old.get('formato')} -> {new.get('formato')}")
++    if old.get("geometry_id") != new.get("geometry_id"):
++        out.append(f"geometria {old.get('geometry_id')} -> {new.get('geometry_id')}")
++    if old.get("portoes") != new.get("portoes"):
++        out.append("portoes de qualidade")
++    old_code, new_code = old.get("codigo") or {}, new.get("codigo") or {}
++    changed = sorted(n for n in set(old_code) | set(new_code) if old_code.get(n) != new_code.get(n))
++    if changed:
++        out.append("codigo: " + ", ".join(changed))
++    return out
++
++
++def fingerprint(session: Session, names: Iterable[str]) -> Dict[str, Optional[Dict[str, int]]]:
++    """Tamanho e data de modificacao (ns) de cada arquivo da sessao; `None` se ele nao existe."""
++    out: Dict[str, Optional[Dict[str, int]]] = {}
++    for name in names:
++        path = Path(session.directory) / name
++        try:
++            stat = path.stat()
++        except FileNotFoundError:
++            out[name] = None
++            continue
++        out[name] = {"bytes": int(stat.st_size), "mtime_ns": int(stat.st_mtime_ns)}
++    return out
++
++
++def ensure_not_installed_app(path: Path) -> None:
++    """Para se `path` estiver na pasta do app instalado."""
++    resolved = str(Path(path).resolve()).lower()
++    installed = config.installed_app_recordings_root()
++    if INSTALLED_APP_FOLDER.lower() in resolved:
++        raise ValueError(f"{path} fica na pasta do app instalado; nenhum cache e gravado nela")
++    if installed is not None:
++        app_root = str(Path(installed).resolve().parent).lower()
++        if resolved == app_root or resolved.startswith(app_root + os.sep):
++            raise ValueError(f"{path} fica na pasta do app instalado; nenhum cache e gravado nela")
++
++
++def _safe_name(session_id: str) -> str:
++    return re.sub(r"[^A-Za-z0-9_.-]", "_", str(session_id)) + ".pkl"
++
++
++class SessionCache:
++    """Um cache: o manifesto e um arquivo por sessao.
++
++    `prepare` decide se o cache vale (devolve o motivo da leitura completa, ou
++    `None`); `load` devolve o conteudo de uma sessao se os arquivos dela nao
++    mudaram; `store` grava uma sessao lida; `finish` grava o manifesto.
++    """
++
++    def __init__(self, directory: Path, key: Dict[str, Any]):
++        ensure_not_installed_app(directory)
++        self.directory = Path(directory)
++        self.key = key
++        self.sessions: Dict[str, Dict[str, Any]] = {}
++
++    # ------------------------------------------------------------ abrir ---
++
++    def _read_manifest(self) -> Optional[Dict[str, Any]]:
++        path = self.directory / MANIFEST
++        if not path.exists():
++            return None
++        try:
++            manifest = json.loads(path.read_text(encoding="utf-8"))
++        except (OSError, json.JSONDecodeError) as exc:
++            raise CacheBroken(f"o manifesto nao abre: {exc}") from exc
++        if not isinstance(manifest, dict) or not isinstance(manifest.get("sessoes"), dict):
++            raise CacheBroken("o manifesto nao tem a lista de sessoes")
++        return manifest
++
++    def prepare(self, force_reason: Optional[str] = None) -> Optional[str]:
++        """Decide o modo. Devolve o motivo da leitura completa (e limpa o cache), ou `None`.
++
++        Cache vazio nao e motivo de limpeza: as sessoes so nao estao nele.
++        """
++        reason = force_reason
++        if reason is None:
++            try:
++                manifest = self._read_manifest()
++            except CacheBroken as exc:
++                reason = f"o cache nao abre ({exc})"
++                manifest = None
++            if manifest is not None and reason is None:
++                changes = key_difference(manifest.get("chave") or {}, self.key)
++                if changes:
++                    reason = "a chave global mudou: " + "; ".join(changes)
++                else:
++                    self.sessions = dict(manifest["sessoes"])
++            elif manifest is None and reason is None:
++                reason = None if not self.directory.exists() or not any(self.directory.iterdir()) else (
++                    "o cache nao tem manifesto")
++        if reason is not None:
++            self.reset()
++        return reason
++
++    def reset(self) -> None:
++        """Apaga o cache inteiro (so a pasta do cache)."""
++        if self.directory.exists():
++            shutil.rmtree(self.directory)
++        self.sessions = {}
++
++    # ------------------------------------------------------- por sessao ---
++
++    @property
++    def session_ids(self) -> List[str]:
++        return sorted(self.sessions)
++
++    def entry(self, session_id: str) -> Optional[Dict[str, Any]]:
++        return self.sessions.get(session_id)
++
++    def matches(self, session_id: str, files: Dict[str, Any]) -> bool:
++        entry = self.sessions.get(session_id)
++        return entry is not None and entry.get("arquivos") == files
++
++    def load(self, session_id: str, files: Dict[str, Any]) -> Optional[Any]:
++        """O conteudo da sessao, se ela esta no cache com os mesmos arquivos; senao `None`.
++
++        Um arquivo que nao abre, ou que nao bate com o manifesto, levanta
++        `CacheBroken`: quem chama refaz tudo.
++        """
++        if not self.matches(session_id, files):
++            return None
++        entry = self.sessions[session_id]
++        path = self.directory / entry["arquivo_cache"]
++        try:
++            with path.open("rb") as handle:
++                stored = pickle.load(handle)
++        except Exception as exc:  # noqa: BLE001 -- qualquer falha de leitura invalida o cache
++            raise CacheBroken(f"{path.name} nao abre: {exc}") from exc
++        if not isinstance(stored, dict) or stored.get("session_id") != session_id or stored.get("arquivos") != files:
++            raise CacheBroken(f"{path.name} nao bate com o manifesto")
++        return stored["conteudo"]
++
++    def store(self, session: Session, files: Dict[str, Any], content: Any, **extra: Any) -> None:
++        """Grava uma sessao lida. Primeiro o arquivo (por um temporario), o manifesto so no `finish`."""
++        self.directory.mkdir(parents=True, exist_ok=True)
++        name = _safe_name(session.session_id)
++        target = self.directory / name
++        temporary = target.with_suffix(".tmp")
++        with temporary.open("wb") as handle:
++            pickle.dump({"session_id": session.session_id, "arquivos": files, "conteudo": content},
++                        handle, protocol=PICKLE_PROTOCOL)
++        os.replace(temporary, target)
++        self.sessions[session.session_id] = {
++            "pasta": str(Path(session.directory).parent),
++            "arquivos": files,
++            "arquivo_cache": name,
++            **extra,
++        }
++
++    def update(self, session_id: str, **extra: Any) -> None:
++        self.sessions[session_id].update(extra)
++
++    def remove(self, session_id: str) -> None:
++        entry = self.sessions.pop(session_id, None)
++        if entry is not None:
++            path = self.directory / entry["arquivo_cache"]
++            if path.exists():
++                path.unlink()
++
++    def finish(self, run: Dict[str, Any]) -> Path:
++        """Grava o manifesto, com a chave, as sessoes e o resumo da rodada."""
++        self.directory.mkdir(parents=True, exist_ok=True)
++        path = self.directory / MANIFEST
++        temporary = path.with_suffix(".tmp")
++        temporary.write_text(json.dumps({
++            "formato": CACHE_FORMAT,
++            "chave": self.key,
++            "sessoes": {sid: self.sessions[sid] for sid in sorted(self.sessions)},
++            "ultima_rodada": run,
++        }, indent=1, ensure_ascii=False), encoding="utf-8")
++        os.replace(temporary, path)
++        return path
++
++
++def forget_session(directory: Path, session_id: str) -> bool:
++    """Tira uma sessao do cache (o arquivo dela e a linha do manifesto), sem tocar na gravacao.
++
++    Serve para simular uma sessao nova (pedido 25, Parte D, rodada 3). Devolve
++    se a sessao estava no cache.
++    """
++    directory = Path(directory)
++    ensure_not_installed_app(directory)
++    path = directory / MANIFEST
++    manifest = json.loads(path.read_text(encoding="utf-8"))
++    entry = manifest["sessoes"].pop(session_id, None)
++    if entry is None:
++        return False
++    stored = directory / entry["arquivo_cache"]
++    if stored.exists():
++        stored.unlink()
++    path.write_text(json.dumps(manifest, indent=1, ensure_ascii=False), encoding="utf-8")
++    return True
++
++
++def folder_size(path: Path) -> int:
++    path = Path(path)
++    if not path.exists():
++        return 0
++    return int(sum(item.stat().st_size for item in path.rglob("*") if item.is_file()))
+diff --git a/backend/ml/data/store_v2.py b/backend/ml/data/store_v2.py
+index b9d77e85..80563f55 100644
+--- a/backend/ml/data/store_v2.py
++++ b/backend/ml/data/store_v2.py
+@@ -24,7 +24,7 @@ import hashlib
+ import subprocess
+ from dataclasses import dataclass, field
+ from pathlib import Path
+-from typing import Callable, Dict, List, Optional, Sequence
++from typing import Callable, Dict, List, Optional, Sequence, Tuple
+ 
+ import numpy as np
+ import pandas as pd
+@@ -190,16 +190,79 @@ def _clean_value(value):
+     return value
+ 
+ 
+-def build_store_v2(
+-    inventory: pd.DataFrame,
+-    track: Optional[TrackGeometry] = None,
+-    sessions: Optional[Sequence[Session]] = None,
+-    progress: Optional[Callable[[str], None]] = None,
+-    sectors: Optional[Microsectors] = None,
+-) -> tuple:
+-    """Le as voltas validas e unicas do inventario rotulado e devolve (store, detalhes)."""
+-    geometry = track or load_geometry()
+-    sectors = sectors or build_microsectors(geometry)
++@dataclass
++class SessionMaterial:
++    """O que a leitura de uma sessao produz para o store v2 (pedido 25: e o que o cache guarda).
++
++    `laps[sequence]` tem, para cada volta pedida e encontrada, na ordem do
++    arquivo: a identidade crua, a marca de box e, fora do box, o bloco na grade
++    com os canais fisicos, os canais com algum ponto, os campos medidos e o tempo
++    do jogo. `requested` sao as voltas pedidas na leitura, encontradas ou nao.
++    """
++
++    session_id: str
++    car_model_recorded: Optional[str]
++    requested: Tuple[int, ...]
++    laps: Dict[int, Dict[str, object]] = field(default_factory=dict)
++
++
++def materialize_session(session: Session, sequences, geometry: TrackGeometry,
++                        sectors: Microsectors) -> SessionMaterial:
++    """Le uma sessao e materializa as voltas `sequences` na grade.
++
++    E a unica parte do store v2 que abre a gravacao. O tempo do jogo de uma
++    volta depende so da volta crua seguinte no arquivo, e a marca de box, so
++    da grade dela: nada aqui depende do inventario.
++    """
++    sequences = set(int(q) for q in sequences)
++    material = SessionMaterial(
++        session_id=session.session_id,
++        car_model_recorded=(session.metadata().get("metadata") or {}).get("carModel"),
++        requested=tuple(sorted(sequences)),
++    )
++    pending: Optional[tuple] = None          # (volta crua, registro) esperando a seguinte
++    for lap in iter_laps(session):
++        if pending is not None:
++            previous, entry = pending
++            entry["tempo_jogo_s"] = game_lap_time(previous, lap, geometry)
++            pending = None
++        if lap.sequence not in sequences:
++            continue
++        identity = {"lap_id": lap.lap_id, "sequence": lap.sequence, "lap_number": lap.lap_number,
++                    "driver_id": lap.driver_id, "track": lap.track}
++        cleaned, _ = clean_lap(lap.frame)
++        aligned, alignment = align_lap(cleaned, geometry)
++        quality = evaluate_lap(aligned, geometry, alignment)
++        grid = resample_lap(aligned, geometry, line_clock=True)
++        if pit_lap(grid, sectors):
++            material.laps[lap.sequence] = {**identity, "box": True}
++            continue
++        wanted_columns = [c for c in STORE_COLUMNS if c in grid.columns] + list(PHYSICAL_COLUMNS)
++        block = grid.reindex(columns=wanted_columns).copy()
++        channels = [c for c in PHYSICAL_COLUMNS if np.isfinite(block[c].to_numpy(dtype=float)).any()]
++        block.insert(0, "grid_index", np.arange(geometry.size))
++        block.insert(0, "lap_id", lap.lap_id)
++        entry = {
++            **identity,
++            "box": False,
++            "block": block,
++            "channels": channels,
++            "lap_time_s": lap_time_from_grid(grid),
++            "tempo_jogo_s": None,
++            "sample_hz": float(quality.metrics.get("sample_hz", np.nan)),
++            "raw_samples": int(lap.sample_count),
++            "coverage": float(alignment.coverage),
++            "speed_mean_kmh": float(np.nanmean(grid["speed_kmh"])),
++            "speed_min_kmh": float(np.nanmin(grid["speed_kmh"])),
++            "speed_max_kmh": float(np.nanmax(grid["speed_kmh"])),
++        }
++        material.laps[lap.sequence] = entry
++        pending = (lap, entry)
++    return material
++
++
++def selection_plan(inventory: pd.DataFrame, geometry: TrackGeometry) -> tuple:
++    """(voltas por sessao, rotulos por volta, contagens da selecao), a partir do inventario rotulado."""
+     wanted, counts = select_v2(inventory)
+     if wanted.empty:
+         raise ValueError("o inventario nao tem nenhuma volta valida e unica")
+@@ -211,10 +274,28 @@ def build_store_v2(
+     for _, row in wanted.iterrows():
+         by_session.setdefault(str(row["session_id"]), set()).add(int(row["sequence"]))
+         carried[str(row["lap_id"])] = {k: _clean_value(row.get(k)) for k in CARRIED_COLUMNS if k in row}
++    return by_session, carried, counts
+ 
+-    available = {s.session_id: s for s in (sessions if sessions is not None else list_all_sessions())}
++
++def assemble_store_v2(
++    by_session: Dict[str, set],
++    carried: Dict[str, Dict[str, object]],
++    counts: Dict[str, int],
++    materials: Dict[str, SessionMaterial],
++    available: Dict[str, Session],
++    geometry: TrackGeometry,
++    notes=None,
++    progress: Optional[Callable[[str], None]] = None,
++) -> tuple:
++    """O store e os detalhes a partir das sessoes materializadas, dos rotulos e das anotacoes atuais.
++
++    Os rotulos (`CARRIED_COLUMNS`) e o `carModel` (`car_for`) saem sempre do
++    inventario e das anotacoes desta rodada: um rotulo que mudou chega ao store
++    sem reler a gravacao. A ordem das voltas, dos blocos e dos detalhes e a do
++    caminho de sempre: sessoes por id, voltas pela ordem no arquivo.
++    """
++    notes = session_annotations() if notes is None else notes
+     details = BuildDetails(selection=counts)
+-    notes = session_annotations()
+     blocks: List[pd.DataFrame] = []
+     records: List[Dict[str, object]] = []
+     for position, (session_id, sequences) in enumerate(sorted(by_session.items()), start=1):
+@@ -223,52 +304,37 @@ def build_store_v2(
+             details.not_found.extend(f"{session_id}#{q:04d}" for q in sorted(sequences))
+             continue
+         details.sessions.append(session_id)
+-        car = car_for(session_id, (session.metadata().get("metadata") or {}).get("carModel"), notes)
++        material = materials[session_id]
++        car = car_for(session_id, material.car_model_recorded, notes)
+         found = 0
+-        pending: Optional[tuple] = None          # (volta crua, registro) esperando a seguinte
+-        for lap in iter_laps(session):
+-            if pending is not None:
+-                previous, record = pending
+-                record["tempo_jogo_s"] = game_lap_time(previous, lap, geometry)
+-                pending = None
+-            if lap.sequence not in sequences:
++        for sequence in sorted(material.laps):
++            if sequence not in sequences:
+                 continue
+-            cleaned, _ = clean_lap(lap.frame)
+-            aligned, alignment = align_lap(cleaned, geometry)
+-            quality = evaluate_lap(aligned, geometry, alignment)
+-            grid = resample_lap(aligned, geometry, line_clock=True)
+-            if pit_lap(grid, sectors):
+-                details.box_removed.append(lap.lap_id)
++            entry = material.laps[sequence]
++            if entry["box"]:
++                details.box_removed.append(entry["lap_id"])
+                 continue
+-            wanted_columns = [c for c in STORE_COLUMNS if c in grid.columns] + list(PHYSICAL_COLUMNS)
+-            block = grid.reindex(columns=wanted_columns).copy()
+-            details.channels_by_lap[lap.lap_id] = [
+-                c for c in PHYSICAL_COLUMNS if np.isfinite(block[c].to_numpy(dtype=float)).any()
+-            ]
+-            block.insert(0, "grid_index", np.arange(geometry.size))
+-            block.insert(0, "lap_id", lap.lap_id)
+-            blocks.append(block)
+-            record = {
+-                "lap_id": lap.lap_id,
++            details.channels_by_lap[entry["lap_id"]] = list(entry["channels"])
++            blocks.append(entry["block"])
++            records.append({
++                "lap_id": entry["lap_id"],
+                 "session_id": session_id,
+-                "sequence": lap.sequence,
+-                "lap_number": lap.lap_number,
+-                "driver_id": lap.driver_id,
+-                "track": lap.track,
+-                "lap_time_s": lap_time_from_grid(grid),
+-                "tempo_jogo_s": None,
++                "sequence": entry["sequence"],
++                "lap_number": entry["lap_number"],
++                "driver_id": entry["driver_id"],
++                "track": entry["track"],
++                "lap_time_s": entry["lap_time_s"],
++                "tempo_jogo_s": entry["tempo_jogo_s"],
+                 "geometry_id": geometry.geometry_id,
+                 "carModel": car,
+-                "sample_hz": float(quality.metrics.get("sample_hz", np.nan)),
+-                "raw_samples": int(lap.sample_count),
+-                "coverage": float(alignment.coverage),
+-                "speed_mean_kmh": float(np.nanmean(grid["speed_kmh"])),
+-                "speed_min_kmh": float(np.nanmin(grid["speed_kmh"])),
+-                "speed_max_kmh": float(np.nanmax(grid["speed_kmh"])),
+-                **carried.get(lap.lap_id, {}),
+-            }
+-            records.append(record)
+-            pending = (lap, record)
++                "sample_hz": entry["sample_hz"],
++                "raw_samples": entry["raw_samples"],
++                "coverage": entry["coverage"],
++                "speed_mean_kmh": entry["speed_mean_kmh"],
++                "speed_min_kmh": entry["speed_min_kmh"],
++                "speed_max_kmh": entry["speed_max_kmh"],
++                **carried.get(entry["lap_id"], {}),
++            })
+             found += 1
+         missing = sequences - {r["sequence"] for r in records if r["session_id"] == session_id} - {
+             int(i.split("#")[1]) for i in details.box_removed if i.startswith(session_id + "#")
+@@ -281,7 +347,11 @@ def build_store_v2(
+         raise ValueError("nenhuma volta pode ser materializada")
+     frame = pd.concat(blocks, ignore_index=True)
+     laps = pd.DataFrame(records).sort_values("lap_time_s").reset_index(drop=True)
+-    store = StoredLaps(
++    return _stored(frame, laps, geometry), details
++
++
++def _stored(frame: pd.DataFrame, laps: pd.DataFrame, geometry: TrackGeometry) -> StoredLaps:
++    return StoredLaps(
+         frame=frame,
+         laps=laps,
+         grid_size=geometry.size,
+@@ -294,7 +364,30 @@ def build_store_v2(
+             "relogio": "zerado na linha com o periodo verdadeiro (line_clock)",
+         },
+     )
+-    return store, details
++
++
++def build_store_v2(
++    inventory: pd.DataFrame,
++    track: Optional[TrackGeometry] = None,
++    sessions: Optional[Sequence[Session]] = None,
++    progress: Optional[Callable[[str], None]] = None,
++    sectors: Optional[Microsectors] = None,
++    materials: Optional[Dict[str, SessionMaterial]] = None,
++) -> tuple:
++    """Le as voltas validas e unicas do inventario rotulado e devolve (store, detalhes).
++
++    Sem `materials`, le todas as sessoes. Com `materials` (o modo incremental do
++    pedido 25), usa a sessao materializada que estiver la e le so as outras.
++    """
++    geometry = track or load_geometry()
++    sectors = sectors or build_microsectors(geometry)
++    by_session, carried, counts = selection_plan(inventory, geometry)
++    available = {s.session_id: s for s in (sessions if sessions is not None else list_all_sessions())}
++    materials = {} if materials is None else materials
++    for session_id, sequences in sorted(by_session.items()):
++        if session_id in available and session_id not in materials:
++            materials[session_id] = materialize_session(available[session_id], sequences, geometry, sectors)
++    return assemble_store_v2(by_session, carried, counts, materials, available, geometry, progress=progress)
+ 
+ 
+ def recording_start(session_id: str):
+diff --git a/backend/ml/scripts/build_lap_store_v2.py b/backend/ml/scripts/build_lap_store_v2.py
+index d23dcda1..ce261263 100644
+--- a/backend/ml/scripts/build_lap_store_v2.py
++++ b/backend/ml/scripts/build_lap_store_v2.py
+@@ -29,6 +29,14 @@ from ml import config  # noqa: E402
+ from ml.data import store_checks  # noqa: E402
+ from ml.data.lap_store import load_store, store_path  # noqa: E402
+ from ml.data.recordings import list_all_sessions  # noqa: E402
++from ml.data.session_cache import (  # noqa: E402
++    STORE_CODE,
++    STORE_FILES,
++    CacheBroken,
++    SessionCache,
++    fingerprint,
++    global_key,
++)
+ from ml.data.store_v2 import (  # noqa: E402
+     STORE_V2_FILENAME,
+     STORE_V2_SCHEMA,
+@@ -36,21 +44,112 @@ from ml.data.store_v2 import (  # noqa: E402
+     default_inventory_path,
+     file_entry,
+     git_commit,
++    materialize_session,
+     recording_periods,
+     save_store_v2,
++    selection_plan,
+ )
+ from ml.track.geometry import load_geometry  # noqa: E402
+ from ml.track.microsectors import build_microsectors  # noqa: E402
+ 
++# Cache por gravacao do passo 6 do `atualizar_coach` (pedido 25), fora do git.
++DEFAULT_CACHE_DIR = config.artifacts_root() / "cache_store_v2"
++
+ 
+ def lap_labels_path() -> Path:
+     return config.repo_root() / "docs" / "experimentos" / "2026-10-04_rotulos_por_volta.csv"
+ 
+ 
++def materials_from_cache(inventory, track, sectors, sessions, mode: str, cache_dir: Path):
++    """As sessoes materializadas: do cache as que podem sair dele, lidas as outras (pedido 25).
++
++    Uma sessao e lida de novo quando os arquivos dela mudaram, quando uma volta
++    selecionada dela nao foi pedida na leitura guardada, ou quando a chave
++    global mudou (entao o cache inteiro e refeito). Na releitura, as voltas
++    pedidas antes continuam pedidas: materializar uma volta a mais nao muda
++    nenhuma outra, e a sessao nao fica indo e voltando.
++
++    Devolve (materiais, cache, construcao).
++    """
++    by_session, _, _ = selection_plan(inventory, track)
++    available = {s.session_id: s for s in sessions}
++    cache = SessionCache(cache_dir, global_key(track.geometry_id, config.DEFAULT_GATES, STORE_CODE))
++    reason = cache.prepare("--completo" if mode == "completo" else None)
++    if reason:
++        print(f"   leitura completa: {reason}", flush=True)
++    had_cache = bool(cache.sessions)
++    wanted = {sid: seqs for sid, seqs in by_session.items() if sid in available}
++    files = {sid: fingerprint(available[sid], STORE_FILES) for sid in wanted}
++    materials = {}
++    if reason is None:
++        try:
++            for sid, seqs in sorted(wanted.items()):
++                entry = cache.entry(sid)
++                if entry is None or not set(seqs) <= set(entry.get("sequencias_pedidas") or []):
++                    continue
++                material = cache.load(sid, files[sid])
++                if material is not None:
++                    materials[sid] = material
++        except CacheBroken as exc:
++            reason = f"o cache nao abre ({exc})"
++            print(f"   leitura completa: {reason}", flush=True)
++            cache.reset()
++            materials = {}
++    read = []
++    for sid, seqs in sorted(wanted.items()):
++        if sid in materials:
++            continue
++        before = cache.entry(sid) if cache.matches(sid, files[sid]) else None
++        requested = set(seqs) | set((before or {}).get("sequencias_pedidas") or [])
++        material = materialize_session(available[sid], requested, track, sectors)
++        materials[sid] = material
++        read.append(sid)
++        cache.store(available[sid], files[sid], material, sequencias_pedidas=list(material.requested),
++                    sha256_player=None)
++        print(f"   lida: {sid} ({len(material.laps)} voltas materializadas)", flush=True)
++    gone = [sid for sid in cache.session_ids if sid not in available]
++    for sid in gone:
++        cache.remove(sid)
++    construction = {
++        "modo": "completo" if reason else "incremental",
++        "motivo": reason,
++        "cache_vazio_no_inicio": not had_cache and reason is None,
++        "sessoes_com_voltas_selecionadas": len(wanted),
++        "sessoes_lidas": read,
++        "sessoes_do_cache": len(wanted) - len(read),
++        "sumiram": gone,
++    }
++    # O manifesto sai junto com os arquivos das sessoes: o cache nunca fica sem ele.
++    cache.finish(construction)
++    return materials, cache, construction
++
++
++def recording_entries(used, by_id, cache: SessionCache = None) -> dict:
++    """`file_entry` de cada gravacao usada; com o cache, o sha256 sai dele se os arquivos nao mudaram."""
++    out = {}
++    for sid in used:
++        if sid not in by_id:
++            continue
++        path = by_id[sid].player_stream
++        entry = cache.entry(sid) if cache is not None else None
++        if entry is not None and entry.get("sha256_player") and cache.matches(sid, fingerprint(by_id[sid], STORE_FILES)):
++            out[sid] = {"arquivo": str(path), "bytes": int(path.stat().st_size), "sha256": entry["sha256_player"]}
++            continue
++        out[sid] = file_entry(path)
++        if entry is not None:
++            cache.update(sid, sha256_player=out[sid]["sha256"])
++    return out
++
++
+ def main(argv=None) -> int:
+     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+     parser.add_argument("--inventario", type=Path, default=default_inventory_path())
+     parser.add_argument("--relatorio", type=Path, default=config.artifacts_root() / "store_v2_relatorio.json")
++    mode = parser.add_mutually_exclusive_group()
++    mode.add_argument("--incremental", action="store_true",
++                      help="usa o cache por gravacao: le so as sessoes novas ou mudadas (pedido 25)")
++    mode.add_argument("--completo", action="store_true", help="le todas as sessoes e refaz o cache")
++    parser.add_argument("--cache", type=Path, default=DEFAULT_CACHE_DIR, help="pasta do cache por gravacao")
+     args = parser.parse_args(argv)
+ 
+     started = time.time()
+@@ -65,8 +164,14 @@ def main(argv=None) -> int:
+     track = load_geometry()
+     sectors = build_microsectors(track)
+     sessions = list_all_sessions()
++    cache = construction = None
++    materials = None
++    if args.incremental or args.completo:
++        materials, cache, construction = materials_from_cache(
++            inventory, track, sectors, sessions, "completo" if args.completo else "incremental", args.cache)
+     store, details = build_store_v2(inventory, track=track, sessions=sessions,
+-                                    progress=lambda text: print(text, flush=True), sectors=sectors)
++                                    progress=lambda text: print(text, flush=True), sectors=sectors,
++                                    materials=materials)
+ 
+     old = None
+     if store_path().exists():
+@@ -86,7 +191,7 @@ def main(argv=None) -> int:
+     inputs = {
+         "inventario": file_entry(args.inventario),
+         "rotulos_04_10": file_entry(lap_labels_path()) if lap_labels_path().exists() else None,
+-        "gravacoes": {sid: file_entry(by_id[sid].player_stream) for sid in used if sid in by_id},
++        "gravacoes": recording_entries(used, by_id, cache),
+     }
+     extra = {
+         "versao": 2,
+@@ -100,6 +205,10 @@ def main(argv=None) -> int:
+         # 05/10: para o relatorio de evolucao separar as sessoes pelas pausas.
+         "periodos_das_gravacoes": recording_periods(inventory, used),
+     }
++    if construction is not None:
++        # Pedido 25: como o store foi construido. E o unico campo novo do meta.
++        extra["construcao"] = construction
++        cache.finish(construction)          # de novo, agora com o sha256 das gravacoes usadas
+     path = save_store_v2(store, extra)
+     result["store"] = {"arquivo": str(path), **file_entry(path)}
+     result["meta"] = {"commit": extra["commit"], "geometry_id": store.geometry_id, "source_hash": store.source_hash,
+diff --git a/backend/ml/scripts/comparar_saidas_coach.py b/backend/ml/scripts/comparar_saidas_coach.py
+new file mode 100644
+index 00000000..f40cf5cd
+--- /dev/null
++++ b/backend/ml/scripts/comparar_saidas_coach.py
+@@ -0,0 +1,264 @@
++"""Compara as saidas do `atualizar_coach` com uma referencia guardada (pedido 25).
++
++    python -m ml.scripts.comparar_saidas_coach --guardar data/ml/_p25_referencia_completa
++    python -m ml.scripts.comparar_saidas_coach --referencia data/ml/_p25_referencia_completa [--json ARQUIVO]
++
++`--guardar` copia as saidas atuais para a pasta (a "referencia completa").
++`--referencia` compara as saidas atuais com ela, pelo criterio do pedido 25:
++
++* **tabelas** (parquet): mesmo esquema (colunas, ordem e tipos), mesmas linhas
++  na mesma ordem e valores identicos, com NaN igual a NaN. A comparacao e
++  coluna a coluna, para o store v2 nao precisar caber inteiro na memoria duas
++  vezes;
++* **JSONs**: mesmas chaves e mesmos valores. Ficam fora so os campos listados
++  em `EXCLUDED`: data e hora, duracao, commit, caminho de backup e o campo novo
++  `construcao` do meta.
++
++Sai com 0 se tudo bate e 1 se algo difere, e diz o arquivo, a coluna (ou o
++campo), quantas linhas diferem e um exemplo.
++"""
++
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import math
++import shutil
++import sys
++from pathlib import Path
++from typing import Any, Dict, List, Optional, Sequence, Tuple
++
++import numpy as np
++import pandas as pd
++import pyarrow.parquet as pq
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
++
++from ml import config  # noqa: E402
++
++ROOT = config.repo_root()
++
++# (rotulo na referencia, caminho na raiz do repositorio, tipo)
++OUTPUTS: Tuple[Tuple[str, str, str], ...] = (
++    ("origem/lap_inventory.parquet", "data/ml/origem/lap_inventory.parquet", "tabela"),
++    ("origem/relogio_microsetores.parquet", "data/ml/origem/relogio_microsetores.parquet", "tabela"),
++    ("origem/sinais_voltas.parquet", "data/ml/origem/sinais_voltas.parquet", "tabela"),
++    ("origem/grade_voltas.parquet", "data/ml/origem/grade_voltas.parquet", "tabela"),
++    ("origem/lap_inventory_summary.json", "data/ml/origem/lap_inventory_summary.json", "json"),
++    ("origem/detector_aplicar.json", "data/ml/origem/detector_aplicar.json", "json"),
++    ("origem/atualizar_coach.json", "data/ml/origem/atualizar_coach.json", "json"),
++    ("laps_grid_v2.parquet", "data/ml/laps_grid_v2.parquet", "tabela"),
++    ("laps_grid_v2_meta.json", "data/ml/laps_grid_v2_meta.json", "json"),
++    ("store_v2_relatorio.json", "data/ml/store_v2_relatorio.json", "json"),
++    ("reference_models/vhe_interlagos.json", "data/reference_models/vhe_interlagos.json", "json"),
++)
++# Os JSONs do relatorio de evolucao: todos os da pasta.
++EVOLUTION_DIR = ("evolucao", "data/ml/evolucao")
++
++# Campos fora da comparacao, por arquivo. Um caminho e uma sequencia de chaves
++# separadas por ponto; `*` vale para qualquer chave ou posicao de lista.
++# Levantados nos JSONs da referencia completa antes da primeira rodada. Ficam na
++# comparacao as datas e duracoes que saem das gravacoes (`periodos_das_gravacoes`).
++EXCLUDED: Dict[str, Tuple[str, ...]] = {
++    "origem/atualizar_coach.json": ("backup",),                               # caminho do backup
++    "laps_grid_v2_meta.json": ("construido_em", "commit", "construcao"),    # data, commit, campo novo
++    "store_v2_relatorio.json": ("segundos", "meta.commit"),                  # duracao, commit
++    "reference_models/vhe_interlagos.json": ("built_at",),                    # data do treino
++}
++EVOLUTION_EXCLUDED: Tuple[str, ...] = ("store.commit_do_store",)               # commit do store lido
++
++
++def sha256(path: Path) -> str:
++    digest = hashlib.sha256()
++    with Path(path).open("rb") as handle:
++        for block in iter(lambda: handle.read(1 << 22), b""):
++            digest.update(block)
++    return digest.hexdigest()
++
++
++def current_outputs() -> List[Tuple[str, Path, str]]:
++    out = [(label, ROOT / relative, kind) for label, relative, kind in OUTPUTS]
++    label, relative = EVOLUTION_DIR
++    for path in sorted((ROOT / relative).glob("*.json")):
++        out.append((f"{label}/{path.name}", path, "json"))
++    return out
++
++
++def excluded_for(label: str) -> Tuple[str, ...]:
++    if label.startswith(EVOLUTION_DIR[0] + "/"):
++        return EVOLUTION_EXCLUDED
++    return EXCLUDED.get(label, ())
++
++
++# ----------------------------------------------------------------- tabelas ---
++
++def _values_equal(a: pd.Series, b: pd.Series) -> np.ndarray:
++    """Igualdade elemento a elemento, com NaN igual a NaN e o tipo do valor conferido nos objetos."""
++    if a.dtype.kind == "f" and b.dtype.kind == "f":
++        x, y = a.to_numpy(), b.to_numpy()
++        return (x == y) | (np.isnan(x) & np.isnan(y))
++    if a.dtype == object or b.dtype == object:
++        out = np.empty(len(a), dtype=bool)
++        for i, (x, y) in enumerate(zip(a.tolist(), b.tolist())):
++            x_nan = isinstance(x, float) and math.isnan(x)
++            y_nan = isinstance(y, float) and math.isnan(y)
++            if x_nan or y_nan:
++                out[i] = x_nan and y_nan
++            elif type(x) is not type(y):
++                out[i] = False
++            elif isinstance(x, np.ndarray):
++                out[i] = bool(np.array_equal(x, y))
++            else:
++                out[i] = bool(x == y)
++        return out
++    na = a.isna().to_numpy() & b.isna().to_numpy()
++    eq = (a.to_numpy() == b.to_numpy())
++    return np.asarray(eq | na, dtype=bool)
++
++
++def compare_tables(reference: Path, current: Path) -> Dict[str, Any]:
++    if sha256(reference) == sha256(current):
++        return {"igual": True, "bytes_iguais": True}
++    ref_file, cur_file = pq.ParquetFile(reference), pq.ParquetFile(current)
++    ref_schema, cur_schema = ref_file.schema_arrow, cur_file.schema_arrow
++    problems: List[Dict[str, Any]] = []
++    if ref_schema.names != cur_schema.names:
++        problems.append({"coluna": None, "problema": "colunas diferentes",
++                         "referencia": ref_schema.names, "atual": cur_schema.names})
++        return {"igual": False, "bytes_iguais": False, "diferencas": problems}
++    if ref_file.metadata.num_rows != cur_file.metadata.num_rows:
++        problems.append({"coluna": None, "problema": "numero de linhas",
++                         "referencia": ref_file.metadata.num_rows, "atual": cur_file.metadata.num_rows})
++        return {"igual": False, "bytes_iguais": False, "diferencas": problems}
++    for name in ref_schema.names:
++        ref_type, cur_type = ref_schema.field(name).type, cur_schema.field(name).type
++        if ref_type != cur_type:
++            problems.append({"coluna": name, "problema": "tipo", "referencia": str(ref_type), "atual": str(cur_type)})
++            continue
++        a = ref_file.read(columns=[name]).column(name).to_pandas()
++        b = cur_file.read(columns=[name]).column(name).to_pandas()
++        if a.dtype != b.dtype:
++            problems.append({"coluna": name, "problema": "tipo no pandas", "referencia": str(a.dtype),
++                             "atual": str(b.dtype)})
++            continue
++        equal = _values_equal(a, b)
++        if not equal.all():
++            bad = np.flatnonzero(~equal)
++            problems.append({"coluna": name, "problema": "valores", "linhas_diferentes": int(bad.size),
++                             "exemplo": {"linha": int(bad[0]), "referencia": repr(a.iloc[bad[0]]),
++                                         "atual": repr(b.iloc[bad[0]])}})
++    if (ref_schema.metadata or {}) != (cur_schema.metadata or {}):
++        problems.append({"coluna": None, "problema": "metadados do esquema (pandas)"})
++    return {"igual": not problems, "bytes_iguais": False, "diferencas": problems}
++
++
++# ------------------------------------------------------------------- JSONs ---
++
++def _matches(path: Sequence[str], pattern: Sequence[str]) -> bool:
++    return len(path) == len(pattern) and all(p == "*" or p == k for k, p in zip(path, pattern))
++
++
++def _diff_json(a: Any, b: Any, path: List[str], excluded: List[List[str]], out: List[Dict[str, Any]]) -> None:
++    if any(_matches(path, pattern) for pattern in excluded):
++        return
++    if isinstance(a, dict) and isinstance(b, dict):
++        for key in sorted(set(a) | set(b), key=str):
++            child = path + [str(key)]
++            if any(_matches(child, pattern) for pattern in excluded):
++                continue
++            if key not in a or key not in b:
++                out.append({"campo": ".".join(child), "problema": "chave so na " + ("atual" if key in b else "referencia")})
++                continue
++            _diff_json(a[key], b[key], child, excluded, out)
++        return
++    if isinstance(a, list) and isinstance(b, list):
++        if len(a) != len(b):
++            out.append({"campo": ".".join(path), "problema": "tamanho da lista", "referencia": len(a), "atual": len(b)})
++            return
++        for i, (x, y) in enumerate(zip(a, b)):
++            _diff_json(x, y, path + [str(i)], excluded, out)
++        return
++    if type(a) is not type(b) or a != b:
++        if isinstance(a, float) and isinstance(b, float) and math.isnan(a) and math.isnan(b):
++            return
++        out.append({"campo": ".".join(path), "problema": "valor", "referencia": a, "atual": b})
++
++
++def compare_json(reference: Path, current: Path, excluded: Sequence[str]) -> Dict[str, Any]:
++    a = json.loads(reference.read_text(encoding="utf-8"))
++    b = json.loads(current.read_text(encoding="utf-8"))
++    differences: List[Dict[str, Any]] = []
++    _diff_json(a, b, [], [pattern.split(".") for pattern in excluded], differences)
++    return {"igual": not differences, "campos_excluidos": list(excluded), "diferencas": differences[:20],
++            "total_de_diferencas": len(differences)}
++
++
++# ------------------------------------------------------------------- fluxo ---
++
++def save_reference(target: Path) -> List[str]:
++    target = Path(target)
++    if target.exists():
++        raise SystemExit(f"PARADO: {target} ja existe; a referencia nao e sobrescrita.")
++    saved = []
++    for label, path, _ in current_outputs():
++        if not path.exists():
++            raise SystemExit(f"PARADO: {path} nao existe.")
++        destination = target / label
++        destination.parent.mkdir(parents=True, exist_ok=True)
++        shutil.copy2(path, destination)
++        saved.append(label)
++    return saved
++
++
++def compare(reference: Path) -> Dict[str, Any]:
++    reference = Path(reference)
++    results: Dict[str, Any] = {}
++    current = {label: (path, kind) for label, path, kind in current_outputs()}
++    expected = {str(p.relative_to(reference)).replace("\\", "/") for p in reference.rglob("*") if p.is_file()}
++    for label in sorted(set(current) | expected):
++        if label not in current or not current[label][0].exists():
++            results[label] = {"igual": False, "problema": "o arquivo atual nao existe"}
++            continue
++        if label not in expected:
++            results[label] = {"igual": False, "problema": "o arquivo nao esta na referencia"}
++            continue
++        path, kind = current[label]
++        if kind == "tabela":
++            results[label] = {"tipo": "tabela", **compare_tables(reference / label, path)}
++        else:
++            results[label] = {"tipo": "json", **compare_json(reference / label, path, excluded_for(label))}
++    return {"referencia": str(reference), "tudo_igual": all(r["igual"] for r in results.values()),
++            "arquivos": results}
++
++
++def main(argv: Optional[Sequence[str]] = None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    group = parser.add_mutually_exclusive_group(required=True)
++    group.add_argument("--guardar", type=Path, help="copia as saidas atuais para esta pasta")
++    group.add_argument("--referencia", type=Path, help="compara as saidas atuais com esta pasta")
++    parser.add_argument("--json", type=Path, default=None, help="grava o resultado da comparacao")
++    args = parser.parse_args(argv)
++    if args.guardar:
++        saved = save_reference(args.guardar)
++        print(f"{len(saved)} arquivos guardados em {args.guardar}")
++        for label in saved:
++            print(f"  {label}")
++        return 0
++    result = compare(args.referencia)
++    for label, item in result["arquivos"].items():
++        state = "igual" if item["igual"] else "DIFERENTE"
++        extra = " (bytes iguais)" if item.get("bytes_iguais") else ""
++        excluded = item.get("campos_excluidos")
++        print(f"  [{state}] {label}{extra}" + (f"  excluidos: {', '.join(excluded)}" if excluded else ""))
++        for difference in item.get("diferencas", [])[:5]:
++            print(f"      {json.dumps(difference, ensure_ascii=False, default=str)[:300]}")
++    print("tudo igual" if result["tudo_igual"] else "HA DIFERENCAS")
++    if args.json:
++        args.json.parent.mkdir(parents=True, exist_ok=True)
++        args.json.write_text(json.dumps(result, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
++    return 0 if result["tudo_igual"] else 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/backend/ml/scripts/report_lap_origin.py b/backend/ml/scripts/report_lap_origin.py
+index a561b618..41aec4a4 100644
+--- a/backend/ml/scripts/report_lap_origin.py
++++ b/backend/ml/scripts/report_lap_origin.py
+@@ -25,7 +25,7 @@ import json
+ import sys
+ import time
+ from pathlib import Path
+-from typing import Dict, List
++from typing import Dict, List, Optional
+ 
+ import numpy as np
+ import pandas as pd
+@@ -34,13 +34,24 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+ 
+ from ml import config  # noqa: E402
+ from ml.data import origin  # noqa: E402
+-from ml.data.inventory import inventory_path, save_inventory, scan_sessions, summarise  # noqa: E402
++from ml.data.inventory import assemble_inventory, inventory_path, read_session, save_inventory, summarise  # noqa: E402
+ from ml.data.origin_signals import lap_signals  # noqa: E402
+ from ml.data.recordings import list_all_sessions  # noqa: E402
++from ml.data.session_cache import (  # noqa: E402
++    INVENTORY_CODE,
++    INVENTORY_FILES,
++    CacheBroken,
++    SessionCache,
++    fingerprint,
++    global_key,
++)
+ from ml.track.corners import detect_corners  # noqa: E402
+ from ml.track.geometry import load_geometry  # noqa: E402
++from ml.track.microsectors import build_microsectors  # noqa: E402
+ from ml.validation import empirical as em  # noqa: E402
+ 
++# Cache por gravacao do passo 1 do `atualizar_coach` (pedido 25), dentro de `--saida`.
++CACHE_DIR = "cache"
+ CLOCK_TABLE = "relogio_microsetores.parquet"
+ SIGNALS_TABLE = "sinais_voltas.parquet"
+ GRID_TABLE = "grade_voltas.parquet"
+@@ -83,28 +94,114 @@ def sha256(path: Path) -> str:
+     return digest.hexdigest()
+ 
+ 
+-def scan(out_dir: Path, track) -> None:
+-    sessions = list_all_sessions()
+-    print(f"sessoes de Interlagos nas duas pastas: {len(sessions)}", flush=True)
+-    clocks: List[pd.DataFrame] = []
+-    signals: List[Dict[str, float]] = []
+-    grids: List[pd.DataFrame] = []
++def read_session_tables(session, track, sectors, gates=config.DEFAULT_GATES) -> Dict[str, list]:
++    """Uma sessao lida: as linhas do inventario e os blocos das tres tabelas, na ordem das voltas.
++
++    E o que o cache do passo 1 guarda por sessao (pedido 25): as linhas saem de
++    `read_session`, antes das marcas que cruzam sessoes, e os blocos do relogio,
++    dos sinais e da grade, do gancho, exatamente como o caminho completo os monta.
++    """
++    tables: Dict[str, list] = {"linhas": [], "relogio": [], "sinais": [], "grade": []}
+ 
+     def hook(lap, aligned, grid, check, row):
+         block = check.copy()
+         block.insert(0, "lap_id", lap.lap_id)
+-        clocks.append(block)
+-        signals.append({"lap_id": lap.lap_id, **lap_signals(aligned, track.length)})
++        tables["relogio"].append(block)
++        tables["sinais"].append({"lap_id": lap.lap_id, **lap_signals(aligned, track.length)})
+         g = grid.reindex(columns=list(GRID_COLUMNS)).astype("float32")
+         g.insert(0, "grid_index", np.arange(len(g), dtype=np.int32))
+         g.insert(0, "lap_id", lap.lap_id)
+-        grids.append(g)
++        tables["grade"].append(g)
++
++    tables["linhas"] = read_session(session, track, sectors, gates, lap_hook=hook)
++    return tables
++
+ 
+-    inventory = scan_sessions(sessions, track=track, progress=lambda t: print(t, flush=True), lap_hook=hook)
++def scan(out_dir: Path, track, mode: Optional[str] = None, sessions=None,
++         cache_dir: Optional[Path] = None, gates=None) -> Dict[str, object]:
++    """Varre as duas pastas e grava o inventario e as tres tabelas em `out_dir`.
++
++    `mode`:
++
++    * `None` -- le todas as sessoes, sem cache (o comportamento de sempre);
++    * `"completo"` -- le todas e refaz o cache do zero;
++    * `"incremental"` -- sessao com os mesmos arquivos sai do cache, sessao nova
++      ou mudada e lida, sessao que sumiu sai (pedido 25). Se a chave global mudou
++      ou o cache nao abre, le tudo e diz o motivo.
++
++    Nos tres modos, as etapas que cruzam sessoes (ordenacao, `mark_duplicates`,
++    `mark_clock`) rodam sobre a tabela inteira, e os arquivos saem iguais.
++    """
++    sessions = list(sessions) if sessions is not None else list_all_sessions()
++    print(f"sessoes de Interlagos nas duas pastas: {len(sessions)}", flush=True)
++    sectors = build_microsectors(track)
++    gates = config.DEFAULT_GATES if gates is None else gates
++    cache: Optional[SessionCache] = None
++    reason: Optional[str] = None
++    if mode is not None:
++        if mode not in ("completo", "incremental"):
++            raise ValueError(f"modo desconhecido: {mode}")
++        cache = SessionCache(cache_dir or out_dir / CACHE_DIR, global_key(track.geometry_id, gates, INVENTORY_CODE))
++        reason = cache.prepare("--completo" if mode == "completo" else None)
++        if reason:
++            print(f"   leitura completa: {reason}", flush=True)
++    had_cache = bool(cache and cache.sessions)
++
++    files = {s.session_id: fingerprint(s, INVENTORY_FILES) for s in sessions}
++    contents: Dict[str, Dict[str, list]] = {}
++    if cache is not None and reason is None:
++        try:
++            for session in sessions:
++                content = cache.load(session.session_id, files[session.session_id])
++                if content is not None:
++                    contents[session.session_id] = content
++        except CacheBroken as exc:
++            reason = f"o cache nao abre ({exc})"
++            print(f"   leitura completa: {reason}", flush=True)
++            cache.reset()
++            contents = {}
++
++    read: List[str] = []
++    for position, session in enumerate(sessions, start=1):
++        sid = session.session_id
++        if sid in contents:
++            print(f"[{position}/{len(sessions)}] {sid}: {len(contents[sid]['linhas'])} voltas (cache)", flush=True)
++            continue
++        content = read_session_tables(session, track, sectors, gates)
++        contents[sid] = content
++        read.append(sid)
++        if cache is not None:
++            cache.store(session, files[sid], content)
++        print(f"[{position}/{len(sessions)}] {sid}: {len(content['linhas'])} voltas", flush=True)
++
++    gone: List[str] = []
++    if cache is not None:
++        present = set(files)
++        gone = [sid for sid in cache.session_ids if sid not in present]
++        for sid in gone:
++            cache.remove(sid)
++        if gone:
++            print(f"   sessoes que sumiram do disco (sairam do inventario e do cache): {gone}", flush=True)
++
++    ordered = [contents[s.session_id] for s in sessions]
++    inventory = assemble_inventory([row for content in ordered for row in content["linhas"]])
+     save_inventory(inventory, out_dir)
+-    pd.concat(clocks, ignore_index=True).to_parquet(out_dir / CLOCK_TABLE, index=False)
+-    pd.DataFrame(signals).to_parquet(out_dir / SIGNALS_TABLE, index=False)
+-    pd.concat(grids, ignore_index=True).to_parquet(out_dir / GRID_TABLE, index=False)
++    pd.concat([b for c in ordered for b in c["relogio"]], ignore_index=True).to_parquet(out_dir / CLOCK_TABLE, index=False)
++    pd.DataFrame([s for c in ordered for s in c["sinais"]]).to_parquet(out_dir / SIGNALS_TABLE, index=False)
++    pd.concat([b for c in ordered for b in c["grade"]], ignore_index=True).to_parquet(out_dir / GRID_TABLE, index=False)
++
++    run = {
++        "modo": "sem cache" if cache is None else ("completo" if reason else "incremental"),
++        "motivo": reason,
++        "cache_vazio_no_inicio": None if cache is None else (not had_cache and reason is None),
++        "sessoes": len(sessions),
++        "lidas": read,
++        "do_cache": len(sessions) - len(read),
++        "sumiram": gone,
++    }
++    if cache is not None:
++        cache.finish(run)
++    return run
+ 
+ 
+ def percentiles(values: np.ndarray) -> Dict[str, float]:
+diff --git a/backend/tests/test_atualizar_coach.py b/backend/tests/test_atualizar_coach.py
+index 673c30cc..4f3e5e70 100644
+--- a/backend/tests/test_atualizar_coach.py
++++ b/backend/tests/test_atualizar_coach.py
+@@ -156,8 +156,11 @@ class CommandTest(unittest.TestCase):
+         model.write_text("{}", encoding="utf-8")
+         c = self.command
+ 
+-        def scan(directory, track):
++        modes = []
++
++        def scan(directory, track, mode=None):
+             calls.append("inventario")
++            modes.append(mode)
+             directory.mkdir(parents=True, exist_ok=True)
+             inventory_rows("2026-10-05_20-00-00_vhe_interlagos", ["humano"]).to_parquet(
+                 directory / "lap_inventory.parquet", index=False)
+@@ -185,6 +188,7 @@ class CommandTest(unittest.TestCase):
+ 
+         def store_v2(args):
+             calls.append(("store v2", args[args.index("--inventario") + 1].endswith("lap_inventory.parquet")))
++            modes.append([a for a in args if a in ("--incremental", "--completo")])
+             return 0
+ 
+         c.build_lap_store_v2.main = store_v2
+@@ -212,6 +216,8 @@ class CommandTest(unittest.TestCase):
+         self.assertEqual(code, 0)
+         self.assertEqual(calls, ["inventario", ("rotulos", False), ("treino", str(model), True), "resumo",
+                                  ("store v2", True), ("evolucao", str(model))])
++        # Pedido 25: o incremental e o padrao nos passos 1 e 6.
++        self.assertEqual(modes, ["incremental", ["--incremental"]])
+         # Pedido 17: no fim, o caminho do painel.
+         last = printed.getvalue().strip().splitlines()[-1]
+         self.assertTrue(last.startswith("painel da evolucao: "))
+diff --git a/backend/tests/test_atualizar_coach_incremental.py b/backend/tests/test_atualizar_coach_incremental.py
+new file mode 100644
+index 00000000..1a470862
+--- /dev/null
++++ b/backend/tests/test_atualizar_coach_incremental.py
+@@ -0,0 +1,388 @@
++"""Pedido 25: modo incremental do `atualizar_coach` (inventario e store v2 com cache por gravacao).
++
++Tudo sintetico: gravacoes pequenas numa pista circular, em pastas temporarias.
++Nenhum teste le as gravacoes reais nem grava nos caches reais.
++"""
++
++from __future__ import annotations
++
++import dataclasses
++import json
++import os
++import shutil
++import subprocess
++import sys
++import tempfile
++import unittest
++from pathlib import Path
++from unittest import mock
++
++import numpy as np
++import pandas as pd
++
++BACKEND = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(BACKEND))
++
++from ml import config  # noqa: E402
++from ml.data import session_cache as sc  # noqa: E402
++from ml.data.recordings import Session  # noqa: E402
++from ml.data.store_v2 import build_store_v2  # noqa: E402
++from ml.scripts import build_lap_store_v2 as bsv2  # noqa: E402
++from ml.scripts import report_lap_origin as rlo  # noqa: E402
++from ml.track.microsectors import build_microsectors  # noqa: E402
++from tests.test_lap_origin import circular_track  # noqa: E402
++
++SPEED = 40.0          # m/s
++HZ = 60.0
++# A volta da pista circular leva ~31 s; o resto dos portoes fica o padrao.
++GATES = dataclasses.replace(config.DEFAULT_GATES, min_lap_seconds=10.0)
++TRACK = dataclasses.replace(circular_track(), geometry_id="circulo-p25")
++TABLES = ("lap_inventory.parquet", rlo.CLOCK_TABLE, rlo.SIGNALS_TABLE, rlo.GRID_TABLE)
++
++
++def write_recording(directory: Path, laps: int, clock0: float, car: str = "carro_a") -> None:
++    """`laps` voltas completas seguidas e um trecho curto no fim, com relogio de parede a partir de `clock0`."""
++    length = TRACK.length
++    lines = []
++    clock = clock0
++    spans = [(k + 1, k * length + 0.4, (k + 1) * length - 0.3) for k in range(laps)]
++    spans.append((laps + 1, laps * length + 0.4, laps * length + 60.0))
++    for number, start, end in spans:
++        for value in np.arange(start, end, SPEED / HZ):
++            theta = np.mod(value, length) / 200.0
++            clock += (SPEED / HZ) / SPEED
++            lines.append(json.dumps({"timestamp": clock * 1000.0, "track": "vhe_interlagos", "sample": {
++                "lap": number, "lap_number": number, "lap_time": float(np.mod(value, length) / SPEED),
++                "world_x": 200.0 * np.cos(theta), "world_z": 200.0 * np.sin(theta), "speedKmh": SPEED * 3.6,
++                "carPhysics": {
++                    "controls": {"throttle": 1.0, "brake": 0.0, "steerAngle": 0.1 * np.sin(value / 50.0),
++                                 "gear": 4, "rpm": 7000.0},
++                    "motion": {"accG": {"lateral": SPEED ** 2 / 200.0 / 9.81, "longitudinal": 0.0, "vertical": 1.0}},
++                },
++            }}))
++    directory.mkdir(parents=True, exist_ok=True)
++    (directory / "player.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
++    (directory / "metadata.json").write_text(json.dumps({"metadata": {"carModel": car}}), encoding="utf-8")
++
++
++class Workspace:
++    """Uma pasta de gravacoes, uma saida do inventario e os dois caches, todos temporarios."""
++
++    IDS = ("2026-10-06_10-00-00_vhe_interlagos", "2026-10-06_11-00-00_vhe_interlagos",
++           "2026-10-07_09-00-00_vhe_interlagos")
++
++    def __init__(self, sessions=3):
++        self.root = Path(tempfile.mkdtemp(prefix="p25_"))
++        self.recordings = self.root / "recordings"
++        for i, sid in enumerate(self.IDS[:sessions]):
++            write_recording(self.recordings / sid, laps=2 + i, clock0=1_790_000_000.0 + 10_000.0 * i)
++
++    def sessions(self):
++        return [Session(session_id=d.name, directory=d, track="vhe_interlagos")
++                for d in sorted(self.recordings.iterdir()) if (d / "player.jsonl").exists()]
++
++    def scan(self, name: str, mode=None, cache="cache_inv", track=TRACK, gates=GATES):
++        out = self.root / name
++        out.mkdir(parents=True, exist_ok=True)
++        run = rlo.scan(out, track, mode=mode, sessions=self.sessions(), cache_dir=self.root / cache, gates=gates)
++        return out, run
++
++    def store(self, inventory: pd.DataFrame, mode=None, cache="cache_store"):
++        sectors = build_microsectors(TRACK)
++        materials = construction = None
++        if mode is not None:
++            materials, _, construction = bsv2.materials_from_cache(
++                inventory, TRACK, sectors, self.sessions(), mode, self.root / cache)
++        store, details = build_store_v2(inventory, track=TRACK, sessions=self.sessions(), sectors=sectors,
++                                        materials=materials)
++        return store, details, construction
++
++    def cleanup(self):
++        shutil.rmtree(self.root, ignore_errors=True)
++
++
++def tables(out: Path):
++    return {name: pd.read_parquet(out / name) for name in TABLES}
++
++
++def assert_same_tables(case, left: Path, right: Path):
++    for name in TABLES:
++        a, b = pd.read_parquet(left / name), pd.read_parquet(right / name)
++        pd.testing.assert_frame_equal(a, b, check_exact=True, obj=name)
++
++
++def assert_same_store(case, a, b):
++    pd.testing.assert_frame_equal(a[0].frame, b[0].frame, check_exact=True, obj="store.frame")
++    pd.testing.assert_frame_equal(a[0].laps, b[0].laps, check_exact=True, obj="store.laps")
++    case.assertEqual(a[1].box_removed, b[1].box_removed)
++    case.assertEqual(a[1].channels_by_lap, b[1].channels_by_lap)
++    case.assertEqual(a[1].not_found, b[1].not_found)
++    case.assertEqual(a[1].sessions, b[1].sessions)
++
++
++class CountingReads:
++    """Conta as leituras de sessao dos dois passos sem mudar o que elas fazem."""
++
++    def __enter__(self):
++        self.inventory, self.store = [], []
++        real_inv, real_store = rlo.read_session_tables, bsv2.materialize_session
++
++        def inv(session, *a, **k):
++            self.inventory.append(session.session_id)
++            return real_inv(session, *a, **k)
++
++        def store(session, *a, **k):
++            self.store.append(session.session_id)
++            return real_store(session, *a, **k)
++
++        self._patches = [mock.patch.object(rlo, "read_session_tables", inv),
++                         mock.patch.object(bsv2, "materialize_session", store)]
++        for p in self._patches:
++            p.start()
++        return self
++
++    def __exit__(self, *exc):
++        for p in self._patches:
++            p.stop()
++
++
++class InventoryCacheTest(unittest.TestCase):
++    def setUp(self):
++        self.ws = Workspace()
++
++    def tearDown(self):
++        self.ws.cleanup()
++
++    def test_unchanged_sessions_are_not_read(self):
++        self.ws.scan("a", mode="incremental")
++        with CountingReads() as reads:
++            out, run = self.ws.scan("b", mode="incremental")
++        self.assertEqual(reads.inventory, [])
++        self.assertEqual(run["modo"], "incremental")
++        self.assertEqual(run["do_cache"], 3)
++        assert_same_tables(self, self.ws.root / "a", out)
++
++    def test_a_changed_session_is_read_again_and_a_missing_one_leaves(self):
++        self.ws.scan("a", mode="incremental")
++        target = self.ws.recordings / Workspace.IDS[1] / "player.jsonl"
++        stat = target.stat()
++        os.utime(target, ns=(stat.st_atime_ns, stat.st_mtime_ns + 5_000_000_000))      # so a data
++        with CountingReads() as reads:
++            self.ws.scan("b", mode="incremental")
++        self.assertEqual(reads.inventory, [Workspace.IDS[1]])
++        with target.open("a", encoding="utf-8") as handle:                             # o tamanho
++            handle.write("\n")
++        with CountingReads() as reads:
++            self.ws.scan("c", mode="incremental")
++        self.assertEqual(reads.inventory, [Workspace.IDS[1]])
++
++        shutil.rmtree(self.ws.recordings / Workspace.IDS[2])
++        with CountingReads() as reads:
++            out, run = self.ws.scan("d", mode="incremental")
++        self.assertEqual(reads.inventory, [])
++        self.assertEqual(run["sumiram"], [Workspace.IDS[2]])
++        self.assertNotIn(Workspace.IDS[2], set(pd.read_parquet(out / "lap_inventory.parquet")["session_id"]))
++        manifest = json.loads((self.ws.root / "cache_inv" / sc.MANIFEST).read_text(encoding="utf-8"))
++        self.assertNotIn(Workspace.IDS[2], manifest["sessoes"])
++        full, _ = self.ws.scan("full", mode=None)
++        assert_same_tables(self, full, out)
++
++    def test_a_changed_global_key_reads_everything_and_says_why(self):
++        self.ws.scan("a", mode="incremental")
++        cases = {
++            "geometria": dict(track=dataclasses.replace(TRACK, geometry_id="outra")),
++            "portoes": dict(gates=dataclasses.replace(GATES, max_long_gaps=4)),
++        }
++        for word, kwargs in cases.items():
++            with CountingReads() as reads:
++                _, run = self.ws.scan("x", mode="incremental", **kwargs)
++            self.assertEqual(len(reads.inventory), 3, word)
++            self.assertEqual(run["modo"], "completo")
++            self.assertIn(word, run["motivo"])
++            self.ws.scan("a", mode="incremental")       # volta a chave de sempre (le tudo de novo)
++        real = sc.code_hashes
++        with mock.patch.object(sc, "code_hashes", lambda files: {**real(files), "ml/config.py": "mudou"}):
++            with CountingReads() as reads:
++                _, run = self.ws.scan("x", mode="incremental")
++        self.assertEqual(len(reads.inventory), 3)
++        self.assertIn("codigo: ml/config.py", run["motivo"])
++        self.ws.scan("a", mode="incremental")
++        with mock.patch.object(sc, "CACHE_FORMAT", sc.CACHE_FORMAT + 1):
++            with CountingReads() as reads:
++                _, run = self.ws.scan("x", mode="incremental")
++        self.assertEqual(len(reads.inventory), 3)
++        self.assertIn("formato do cache", run["motivo"])
++
++    def test_a_broken_cache_is_rebuilt_whole(self):
++        self.ws.scan("a", mode="incremental")
++        broken = next((self.ws.root / "cache_inv").glob("*.pkl"))
++        broken.write_bytes(b"isto nao e pickle")
++        with CountingReads() as reads:
++            out, run = self.ws.scan("b", mode="incremental")
++        self.assertEqual(len(reads.inventory), 3)
++        self.assertIn("nao abre", run["motivo"])
++        assert_same_tables(self, self.ws.root / "a", out)
++
++    def test_completo_reads_everything_and_rebuilds_the_cache(self):
++        self.ws.scan("a", mode="incremental")
++        with CountingReads() as reads:
++            _, run = self.ws.scan("b", mode="completo")
++        self.assertEqual(len(reads.inventory), 3)
++        self.assertEqual(run["motivo"], "--completo")
++        with CountingReads() as reads:
++            self.ws.scan("c", mode="incremental")
++        self.assertEqual(reads.inventory, [])
++
++    def test_duplicates_between_a_cached_session_and_a_new_one_match_the_full_scan(self):
++        ws = Workspace(sessions=2)
++        try:
++            ws.scan("a", mode="incremental")
++            copy = ws.recordings / "2026-10-06_10-00-05_vhe_interlagos"      # a mesma gravacao, outro id
++            shutil.copytree(ws.recordings / Workspace.IDS[0], copy)
++            with CountingReads() as reads:
++                out, _ = ws.scan("b", mode="incremental")
++            self.assertEqual(reads.inventory, [copy.name])
++            full, _ = ws.scan("full", mode=None)
++            assert_same_tables(self, full, out)
++            inventory = pd.read_parquet(out / "lap_inventory.parquet")
++            self.assertGreater(int(inventory["duplicada_de"].notna().sum()), 0)
++        finally:
++            ws.cleanup()
++
++
++class StoreCacheTest(unittest.TestCase):
++    def setUp(self):
++        self.ws = Workspace()
++        out, _ = self.ws.scan("inv", mode=None)
++        self.inventory = pd.read_parquet(out / "lap_inventory.parquet")
++        self.assertGreater(int(self.inventory["valid"].sum()), 3)
++
++    def tearDown(self):
++        self.ws.cleanup()
++
++    def test_a_changed_label_reaches_the_store_without_reading_again(self):
++        self.ws.store(self.inventory, mode="incremental")
++        changed = self.inventory.copy()
++        lap_id = changed.loc[changed["valid"], "lap_id"].iloc[0]
++        changed.loc[changed["lap_id"] == lap_id, "origem"] = "ia"
++        changed.loc[changed["lap_id"] == lap_id, "origem_fonte"] = "anotacao"
++        with CountingReads() as reads:
++            store, details, construction = self.ws.store(changed, mode="incremental")
++        self.assertEqual(reads.store, [])
++        self.assertEqual(construction["sessoes_lidas"], [])
++        row = store.laps.set_index("lap_id").loc[lap_id]
++        self.assertEqual((row["origem"], row["origem_fonte"]), ("ia", "anotacao"))
++        assert_same_store(self, (store, details), self.ws.store(changed, mode=None)[:2])
++
++    def test_a_selected_lap_missing_from_the_cache_reads_the_session_again(self):
++        partial = self.inventory.copy()
++        lap_id = partial.loc[partial["valid"], "lap_id"].iloc[-1]
++        session_id = lap_id.split("#")[0]
++        partial.loc[partial["lap_id"] == lap_id, "valid"] = False
++        self.ws.store(partial, mode="incremental")
++        with CountingReads() as reads:
++            store, details, _ = self.ws.store(self.inventory, mode="incremental")
++        self.assertEqual(reads.store, [session_id])
++        assert_same_store(self, (store, details), self.ws.store(self.inventory, mode=None)[:2])
++
++    def test_the_recording_sha256_comes_from_the_cache_when_the_files_did_not_change(self):
++        _, cache, _ = bsv2.materials_from_cache(self.inventory, TRACK, build_microsectors(TRACK),
++                                                self.ws.sessions(), "incremental", self.ws.root / "cs")
++        by_id = {s.session_id: s for s in self.ws.sessions()}
++        first = bsv2.recording_entries(sorted(by_id), by_id, cache)
++        expected = {sid: bsv2.file_entry(by_id[sid].player_stream) for sid in sorted(by_id)}
++        self.assertEqual(first, expected)
++        with mock.patch.object(bsv2, "file_entry", side_effect=AssertionError("nao devia reler")):
++            self.assertEqual(bsv2.recording_entries(sorted(by_id), by_id, cache), expected)
++
++
++class EndToEndTest(unittest.TestCase):
++    """As tres rodadas da Parte D com 3 sessoes falsas: o incremental da o mesmo que o completo."""
++
++    def test_three_rounds_match_the_full_path(self):
++        ws = Workspace()
++        try:
++            full_out, _ = ws.scan("full", mode=None)
++            full_inventory = pd.read_parquet(full_out / "lap_inventory.parquet")
++            full_store = ws.store(full_inventory, mode=None)[:2]
++
++            def round_(name):
++                with CountingReads() as reads:
++                    out, run = ws.scan(name, mode="incremental")
++                    inventory = pd.read_parquet(out / "lap_inventory.parquet")
++                    store, details, construction = ws.store(inventory, mode="incremental")
++                assert_same_tables(self, full_out, out)
++                assert_same_store(self, full_store, (store, details))
++                return reads, run, construction
++
++            reads, run, construction = round_("r1")                     # cache vazio
++            self.assertEqual(len(reads.inventory), 3)
++            self.assertEqual(len(reads.store), 3)
++            self.assertTrue(run["cache_vazio_no_inicio"])
++            reads, run, construction = round_("r2")                     # nada novo
++            self.assertEqual((reads.inventory, reads.store), ([], []))
++            newest = Workspace.IDS[2]                                   # sessao nova simulada
++            self.assertTrue(sc.forget_session(ws.root / "cache_inv", newest))
++            self.assertTrue(sc.forget_session(ws.root / "cache_store", newest))
++            reads, run, construction = round_("r3")
++            self.assertEqual((reads.inventory, reads.store), ([newest], [newest]))
++            self.assertEqual(construction["sessoes_lidas"], [newest])
++        finally:
++            ws.cleanup()
++
++
++class InstalledAppTest(unittest.TestCase):
++    def test_no_cache_is_written_in_the_installed_app_folder(self):
++        root = Path(tempfile.mkdtemp())
++        try:
++            with self.assertRaisesRegex(ValueError, "app instalado"):
++                sc.SessionCache(root / sc.INSTALLED_APP_FOLDER / "data" / "cache", {"formato": 1})
++            installed = config.installed_app_recordings_root()
++            if installed is not None:
++                with self.assertRaisesRegex(ValueError, "app instalado"):
++                    sc.ensure_not_installed_app(Path(installed) / "cache")
++            self.assertFalse((root / sc.INSTALLED_APP_FOLDER / "data" / "cache").exists())
++        finally:
++            shutil.rmtree(root, ignore_errors=True)
++
++    def test_the_command_refuses_an_output_folder_in_the_installed_app(self):
++        import importlib.util
++
++        spec = importlib.util.spec_from_file_location("atualizar_coach_p25", BACKEND / "tools" / "atualizar_coach.py")
++        module = importlib.util.module_from_spec(spec)
++        spec.loader.exec_module(module)
++        root = Path(tempfile.mkdtemp())
++        try:
++            target = root / sc.INSTALLED_APP_FOLDER / "origem"
++            with mock.patch.object(module.report_lap_origin, "scan", side_effect=AssertionError("nao devia varrer")):
++                self.assertEqual(module.main(["--saida", str(target)]), 2)
++            self.assertFalse(target.exists())
++        finally:
++            shutil.rmtree(root, ignore_errors=True)
++
++    def test_the_default_caches_live_in_the_repository(self):
++        self.assertTrue(str(bsv2.DEFAULT_CACHE_DIR).startswith(str(config.artifacts_root())))
++        sc.ensure_not_installed_app(bsv2.DEFAULT_CACHE_DIR)
++        sc.ensure_not_installed_app(config.artifacts_root() / "origem" / rlo.CACHE_DIR)
++
++
++class CodeKeyTest(unittest.TestCase):
++    def test_the_code_lists_exist_and_cover_what_the_reading_imports(self):
++        for name in sc.STORE_CODE:
++            self.assertTrue((BACKEND / name).exists(), name)
++        for folder in ("ml/preprocessing", "ml/track"):
++            for path in sorted((BACKEND / folder).glob("*.py")):
++                self.assertIn(f"{folder}/{path.name}", sc.INVENTORY_CODE)
++        self.assertTrue(set(sc.INVENTORY_CODE) <= set(sc.STORE_CODE))
++        for name in ("ml/data/store_v2.py", "ml/data/ai_detector.py", "ml/data/lap_store.py"):
++            self.assertIn(name, sc.STORE_CODE)
++        code = ("import sys, ml.data.inventory, ml.data.origin_signals, ml.data.session_cache;"
++                "print('\\n'.join(sorted(m for m in sys.modules if m == 'ml' or m.startswith('ml.'))))")
++        out = subprocess.run([sys.executable, "-c", code], cwd=str(BACKEND), capture_output=True, text=True,
++                             timeout=120, check=True).stdout.split()
++        listed = {name[:-3].replace("/", ".").replace(".__init__", "") for name in sc.INVENTORY_CODE}
++        self.assertEqual(sorted(set(out) - listed), [])
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/backend/tools/atualizar_coach.py b/backend/tools/atualizar_coach.py
+index 15289294..91bdc61c 100644
+--- a/backend/tools/atualizar_coach.py
++++ b/backend/tools/atualizar_coach.py
+@@ -1,12 +1,14 @@
+ """Atualiza o coach depois de uma sessao, com um comando so (pedido 15).
+ 
+-    python tools/atualizar_coach.py [--sem-varrer] [--saida data/ml/origem]
++    python tools/atualizar_coach.py [--sem-varrer | --completo] [--saida data/ml/origem]
+         [--modelo ARQUIVO] [--geometria-arquivo ARQUIVO] [--resumo ARQUIVO]
+ 
+ Em ordem:
+ 
+-1. refaz o inventario novo em `data/ml/origem/`, varrendo as duas pastas de
+-   gravacoes (so leitura, cerca de 13 minutos; `--sem-varrer` pula);
++1. refaz o inventario novo em `data/ml/origem/`, lendo das duas pastas de
++   gravacoes so as sessoes novas ou mudadas; as outras saem do cache por
++   gravacao em `data/ml/origem/cache/` (pedido 25; `--completo` le todas e
++   refaz o cache, `--sem-varrer` pula o passo);
+ 2. aplica as anotacoes versionadas da sessao de 04/10
+    (`docs/experimentos/2026-10-04_rotulos_por_volta.csv`);
+ 3. rotula as sessoes novas sem anotacao: antes de a IA ligar pela primeira vez
+@@ -18,7 +20,9 @@ Em ordem:
+ 5. imprime o resumo: as duas referencias, as voltas de cada origem, o limiar e
+    o foco inicial;
+ 6. refaz o store v2 com as checagens (`ml.scripts.build_lap_store_v2`, pedido
+-   16), para as sessoes novas entrarem no relatorio de evolucao;
++   16), para as sessoes novas entrarem no relatorio de evolucao; as voltas das
++   sessoes que nao mudaram saem do cache em `data/ml/cache_store_v2/`, e os
++   rotulos e o `carModel` sao sempre recalculados (pedido 25);
+ 7. roda o relatorio de evolucao (`tools/relatorio_evolucao.py`).
+ 
+ Nao toca no store antigo (`laps_grid.parquet`) nem no app instalado: o modelo
+@@ -35,6 +39,7 @@ import importlib.util
+ import json
+ import shutil
+ import sys
++import time
+ from datetime import datetime
+ from pathlib import Path
+ from typing import Dict, Optional
+@@ -57,12 +62,22 @@ from core.live.driving_coach import LiveDrivingCoach  # noqa: E402
+ from ml import config  # noqa: E402
+ from ml.data import origin  # noqa: E402
+ from ml.data.inventory import inventory_path  # noqa: E402
++from ml.data.store_v2 import store_v2_meta  # noqa: E402
+ from ml.scripts import build_lap_store_v2, detector_ia, report_lap_origin  # noqa: E402
+ from ml.track.geometry import load_geometry  # noqa: E402
+ 
+ TRACK = "vhe_interlagos"
+ # A pasta do app instalado: o comando nunca grava nela.
+ INSTALLED_APP_FOLDER = "Automobilista Telemetria"
++TIMES_FILE = "atualizar_coach_tempos.json"
++STEPS = {
++    "1": "inventario",
++    "2-3": "anotacoes e sessoes novas",
++    "4": "backup e treino",
++    "5": "resumo",
++    "6": "store v2",
++    "7": "relatorio de evolucao",
++}
+ 
+ 
+ def _tool(name: str):
+@@ -176,9 +191,71 @@ def print_summary(result: Dict[str, object]) -> None:
+     print("=" * 66)
+ 
+ 
++class Clock:
++    """O tempo de cada passo e o que os passos 1 e 6 leram (pedido 25)."""
++
++    def __init__(self):
++        self.started = time.perf_counter()
++        self.steps: Dict[str, float] = {}
++        self.reads: Dict[str, Dict[str, object]] = {}
++        self.final_line: Optional[str] = None
++        self._open: Optional[tuple] = None
++
++    def start(self, step: str) -> None:
++        self.stop()
++        self._open = (step, time.perf_counter())
++
++    def stop(self) -> None:
++        if self._open is not None:
++            step, t0 = self._open
++            self.steps[step] = self.steps.get(step, 0.0) + time.perf_counter() - t0
++            self._open = None
++
++    def report(self, out_dir: Path) -> None:
++        self.stop()
++        total = time.perf_counter() - self.started
++        print()
++        print("tempo de cada passo:")
++        for step, name in STEPS.items():
++            if step in self.steps:
++                print(f"  {step:4s} {name:28s} {self.steps[step]:8.1f} s")
++        print(f"  {'':4s} {'total':28s} {total:8.1f} s")
++        for step, info in self.reads.items():
++            if not info:
++                continue
++            gone = info.get("sumiram") or []
++            print(f"  passo {step}: {info.get('modo')}; lidas {len(info.get('lidas') or [])}, do cache "
++                  f"{info.get('do_cache')}" + (f", sumiram {len(gone)}" if gone else "")
++                  + (f" (motivo: {info['motivo']})" if info.get("motivo") else ""))
++        try:
++            (out_dir / TIMES_FILE).write_text(json.dumps({
++                "gerado_em": datetime.now().isoformat(timespec="seconds"),
++                "passos_s": {k: round(v, 1) for k, v in self.steps.items()},
++                "total_s": round(total, 1),
++                "leituras": self.reads,
++            }, indent=1, ensure_ascii=False), encoding="utf-8")
++        except OSError:
++            pass
++
++
+ def main(argv=None) -> int:
++    clock = Clock()
++    code, args = _run(argv, clock)
++    if args is not None:
++        clock.report(args.saida)
++    if clock.final_line:
++        # Pedido 17: a ultima linha e o caminho do painel.
++        print()
++        print(clock.final_line)
++    return code
++
++
++def _run(argv, clock: Clock):
+     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+-    parser.add_argument("--sem-varrer", action="store_true", help="pula o passo 1 e usa o inventario que ja existe")
++    scan_mode = parser.add_mutually_exclusive_group()
++    scan_mode.add_argument("--sem-varrer", action="store_true", help="pula o passo 1 e usa o inventario que ja existe")
++    scan_mode.add_argument("--completo", action="store_true",
++                           help="le todas as gravacoes nos passos 1 e 6 e refaz os dois caches")
+     parser.add_argument("--saida", type=Path, default=config.artifacts_root() / "origem",
+                         help="pasta do inventario novo (padrao: data/ml/origem)")
+     parser.add_argument("--modelo", type=Path, default=model_path(BACKEND_DIR.parent, TRACK),
+@@ -189,18 +266,25 @@ def main(argv=None) -> int:
+ 
+     if INSTALLED_APP_FOLDER.lower() in str(args.modelo.resolve()).lower():
+         print(f"PARADO: {args.modelo} e o modelo do app instalado; este comando so grava o do repositorio.")
+-        return 2
++        return 2, None
++    if INSTALLED_APP_FOLDER.lower() in str(args.saida.resolve()).lower():
++        print(f"PARADO: {args.saida} fica no app instalado; o inventario e os caches nao sao gravados la.")
++        return 2, None
+     track = load_geometry()
+     args.saida.mkdir(parents=True, exist_ok=True)
++    # Pedido 25: o incremental e o padrao desde que as tres rodadas da conferencia passaram.
++    mode = "completo" if args.completo else "incremental"
+ 
+-    print("1/7 inventario novo" + (" (pulado: --sem-varrer)" if args.sem_varrer else ""), flush=True)
++    print("1/7 inventario novo" + (" (pulado: --sem-varrer)" if args.sem_varrer else f" ({mode})"), flush=True)
++    clock.start("1")
+     if not args.sem_varrer:
+-        report_lap_origin.scan(args.saida, track)
++        clock.reads["1"] = report_lap_origin.scan(args.saida, track, mode=mode)
+     if not inventory_path(args.saida).exists():
+         print(f"PARADO: nenhum inventario em {args.saida}.")
+-        return 2
++        return 2, args
+ 
+     print("2/7 anotacoes versionadas de 04/10 e 3/7 sessoes novas sem anotacao", flush=True)
++    clock.start("2-3")
+     applied = detector_ia.apply(args.saida, track, args.saida / "detector_aplicar.json", promote=False)
+     labelled = applied["sessao_rotulada_aplicada"]
+     print(f"   sessao de 04/10: {labelled['voltas']} voltas, {labelled['origem']}")
+@@ -213,6 +297,7 @@ def main(argv=None) -> int:
+         print(f"     {row['sessao']}: {row['voltas']} voltas, origem {row['origem']}, fonte {row['fonte']}")
+ 
+     print("4/7 backup e treino do modelo do repositorio", flush=True)
++    clock.start("4")
+     backup = backup_model(args.modelo)
+     print(f"   backup: {backup if backup else '(nao havia modelo)'}")
+     train_args = ["--track", TRACK, "--inventario", str(inventory_path(args.saida)), "--saida", str(args.modelo)]
+@@ -221,13 +306,14 @@ def main(argv=None) -> int:
+     code = _train_script().main(train_args)
+     if code != 0:
+         print("PARADO: o treino nao gravou o modelo (acima, o motivo). O backup ficou onde estava.")
+-        return code
++        return code, args
+ 
+     print("5/7 resumo", flush=True)
++    clock.start("5")
+     model = DriverReferenceModel.load(args.modelo)
+     if model is None:
+         print(f"PARADO: o modelo gravado em {args.modelo} nao abre.")
+-        return 2
++        return 2, args
+     result = summary(model, pd.read_parquet(inventory_path(args.saida)))
+     result["modelo"] = str(args.modelo)
+     result["backup"] = str(backup) if backup else None
+@@ -240,18 +326,26 @@ def main(argv=None) -> int:
+     print(f"-> {out}")
+ 
+     print("6/7 store v2, com as checagens", flush=True)
+-    code = build_lap_store_v2.main(["--inventario", str(inventory_path(args.saida))])
++    clock.start("6")
++    code = build_lap_store_v2.main(["--inventario", str(inventory_path(args.saida)), f"--{mode}"])
++    construction = store_v2_meta().get("construcao") or {}
++    clock.reads["6"] = {
++        "modo": construction.get("modo"), "motivo": construction.get("motivo"),
++        "lidas": construction.get("sessoes_lidas"), "do_cache": construction.get("sessoes_do_cache"),
++        "sumiram": construction.get("sumiram"),
++    } if construction else {}
+     if code != 0:
+         print("PARADO: o store v2 nao passou nas checagens (acima); o relatorio de evolucao nao rodou.")
+-        return code
++        return code, args
+ 
+     print("7/7 relatorio de evolucao", flush=True)
++    clock.start("7")
+     evolution = _evolution_script()
+     code = evolution.main(["--modelo", str(args.modelo)])
++    clock.stop()
+     if code == 0:
+-        print()
+-        print(f"painel da evolucao: {config.artifacts_root() / 'evolucao' / evolution.PANEL_FILENAME}")
+-    return code
++        clock.final_line = f"painel da evolucao: {config.artifacts_root() / 'evolucao' / evolution.PANEL_FILENAME}"
++    return code, args
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/docs/backlog.md b/docs/backlog.md
+index a3b5dc46..789b785e 100644
+--- a/docs/backlog.md
++++ b/docs/backlog.md
+@@ -22,12 +22,11 @@ Lista viva de problemas conhecidos e tarefas adiadas, mantida pelo Claude (Cowor
+ | Hipótese: a IA em níveis mais fracos daria referências no ritmo do piloto (a "trajetória coerente com o ritmo" do pedido original) | ADR 0016 | Pode substituir parte da peça A por dados do próprio jogo | Testar depois do coach |
+ | Hipótese: a variação natural do piloto pode mostrar efeitos que as voltas da IA não mostravam, com o risco de confusão (quem freia tarde também erra o ápice) | ADR 0016 | Pode reabrir os estimadores da Fase 2b com voltas humanas | Quando houver voltas humanas suficientes |
+ | O `timestamp` do gravador engasga: +357 ms numa amostra e +2 ms na seguinte, com o cronômetro do jogo certo e o carro andando 21 m | Pedido 14 (04/10) | O coach agora usa o cronômetro do jogo. Falta conferir o que mais usa esse `timestamp`, como o cálculo de frequência nos portões | A conferir |
+-| atualizar_coach leva ~16 min; criar um modo incremental | Pedido 16 (04/10) | Com o store v2 e o relatório de evolução, o comando completo passa a levar cerca de 26 min: a varredura do inventário (~13 min) e o store v2 (~10 min) leem todas as gravações de novo a cada sessão | Pedido próprio |
+ | Como o jogo vai executar variações controladas para a peça D (IA em outros níveis, entradas roteirizadas, AssettoCorsaGym) | ADR 0017 | Define de onde vêm os dados de "e se?" com o modelo do carro | Decidir antes da M4 |
+ | Freada emendada: a frenagem de uma curva começa antes do ápice da curva anterior (7 de 11 voltas no Bico de Pato em 04/10) | Pedido 17, diagnóstico da C10 | Explica parte da perda na C10 e é uma medida de técnica útil ao coach | Medida descritiva no pedido 18 |
+ | Unidade do `steerAngle` gravado não documentada (a limpeza aceita ±1,5) | Auditoria de 30/09; ADR 0017 | Sem ela não existe modelo de entradas para movimento | Pedido 18 |
+ | Painel de evolução: mostrar o bloco `tecnica` (uso da aderência, freio e volante juntos, freada emendada, temperatura) | Pedido 18 | Visualização para o piloto | Claude (Cowork), depois do pedido 18 |
+-| **Dados externos no treino do Modelo 1:** importar a forma da linha da F1 real (FastF1), alinhar à geometria oficial e medir o erro de alinhamento | ADR 0018; pedido 21 (05/10) | Terceira fonte do Modelo 1. Só a forma da linha entra, nunca velocidade ou ponto de frenagem de outro carro. Hoje o importador só dá contexto por curva e não entra em nenhum treino. A volta alinhada no pedido 22 é da classificação de 2024, com chuva | Em andamento: alinhamento de uma volta aceito no pedido 22; faixa de voltas secas no pedido 23, formada com 64 voltas de 8 sessões. A posição do FastF1 parece seguir um traçado de referência por época, e não a linha de cada carro (`docs/dados_externos_f1.md`). Entra no treino junto com o retreino das três fontes. Pedido 24: referência única da época 2023–25 (ADR 0019); classificação de 2024 pelo caminho publicado |
+-| **Retreinar a LSTM geradora com as três fontes** (voltas `humano` com equipamento `atual`, voltas `ia` rotuladas e traçado de referência da F1 na época 2023–25 (ADR 0019)), testada na régua do ADR 0006 | Fase 1; revisão da arquitetura (03/10). ADR 0018; pedido 21 (05/10). As duas linhas foram juntadas no pedido 22 | As LSTMs aprenderam sobretudo voltas da IA: hoje a rede erra 0,528 m de lateral abaixo de 88 s e 2,898 m acima, onde está o piloto. Da linha antiga da peça A seguem junto o envelope, o traçado e a faixa de incerteza σ(s). A peça B estatística (desvios contra a referência, sem prometer segundos) já existe como relatório de evolução (pedidos 16 e 17) | Depois das 5 sessões de treino e do alinhamento da F1 (pedidos 22 e 23) |
++| **Retreinar a LSTM geradora com as três fontes** (voltas `humano` com equipamento `atual`, voltas `ia` rotuladas e traçado de referência da F1 na época 2023–25 (ADR 0019)), testada na régua do ADR 0006 | Fase 1; revisão da arquitetura (03/10). ADR 0018; pedido 21 (05/10). As duas linhas foram juntadas no pedido 22 | As LSTMs aprenderam sobretudo voltas da IA: hoje a rede erra 0,528 m de lateral abaixo de 88 s e 2,898 m acima, onde está o piloto. Da linha antiga da peça A seguem junto o envelope, o traçado e a faixa de incerteza σ(s). A peça B estatística (desvios contra a referência, sem prometer segundos) já existe como relatório de evolução (pedidos 16 e 17). Decidir como tratar os 10 microssetores pouco confiáveis da referência da F1 (ADR 0019, item 7) | Depois das 5 sessões de treino e do alinhamento da F1 (pedidos 22 e 23) |
++| O FastF1 3.4.0 não reconhece "LAP DELETED" sem tempo de volta: uma volta apagada assim passaria pelo filtro 3 | Pedido 24 (08/10) | Nenhum nas sessões usadas hoje: as contagens de 2023–25 batiam no pedido 23, e em 2024 todas as voltas caem pelo pneu | Conferir se entrar sessão nova da F1 |
+ | **Voltas antigas no treino do Modelo 1, num teste à parte:** treinar com e sem elas e comparar na régua do ADR 0006 | ADR 0018, esclarecimento de 05/10; pedido 22 | As voltas antigas ficam fora do treino do Modelo 1. Isso vale para as de origem `desconhecida`, inclusive as 75 que o detector rotulou sem promover (35 `ia`, 8 `humano` e 32 `misturada`). As 552 voltas antigas sem box passam, na mediana, a 0,031 m da linha da IA de hoje | Depois do retreino da LSTM com as três fontes |
+ | **Busca evolutiva de novo:** recomeçar das voltas reais mais rápidas, só depois da M1 aprovada | ADR 0018; ADR 0009, item 4 | Gera a volta do Modelo 1. Ela só vira referência do coach quando passar na régua do ADR 0006 com o juiz novo e for mais rápida que as voltas reais no mesmo juiz | Depois da M1 aprovada (ADR 0017) |
+diff --git a/docs/coach_aprendizado.md b/docs/coach_aprendizado.md
+index 84e8b148..c38009e1 100644
+--- a/docs/coach_aprendizado.md
++++ b/docs/coach_aprendizado.md
+@@ -284,7 +284,7 @@ Depois de uma sessão nova, feche o app e rode, na pasta `backend`:
+ 
+ O comando faz, em ordem:
+ 
+-1. **Refaz o inventário novo** em `data/ml/origem/`, varrendo as duas pastas de gravações. A varredura só lê as gravações e leva cerca de 13 minutos. `--sem-varrer` pula este passo.
++1. **Refaz o inventário novo** em `data/ml/origem/`, a partir das duas pastas de gravações. Desde o pedido 25, só as sessões novas ou mudadas são lidas; as outras saem do cache por gravação (ver "Modo incremental", no fim desta seção). A leitura nunca escreve nas gravações. `--sem-varrer` pula este passo, e `--completo` lê todas as sessões.
+ 2. **Aplica as anotações versionadas de 04/10.** Elas ficam em `docs/experimentos/2026-10-04_rotulos_por_volta.csv`: 53 voltas, pela identidade do ML, feitas das suas anotações por parte e volta do jogo (`2026-10-04_sessao_rotulada_anotacoes.csv`). O comando para se o arquivo não bater com o inventário ou com as suas anotações. Uma sessão gravada depois, mesmo no dia 04/10, não herda as anotações.
+ 3. **Rotula as sessões novas sem anotação** (equipamento `atual`):
+    - antes de a IA ligar pela primeira vez na sessão do jogo, a volta é `humano`, pelo indicador;
+@@ -303,7 +303,7 @@ O comando faz, em ordem:
+    - o foco inicial de cada modo.
+ 
+    O resumo também fica em `data/ml/origem/atualizar_coach.json`.
+-6. **Refaz o store v2** (pedido 16) com as checagens. Se uma checagem falhar, o comando para antes do passo 7.
++6. **Refaz o store v2** (pedido 16) com as checagens. As voltas das sessões que não mudaram saem do cache do store v2 (pedido 25). Se uma checagem falhar, o comando para antes do passo 7.
+ 7. **Roda o relatório de evolução** (`tools/relatorio_evolucao.py`), que grava os JSONs e o `painel.html` em `data/ml/evolucao/` e imprime o caminho do painel. Ver `docs/store_v2_e_evolucao.md`.
+ 
+ **O que o comando não faz:**
+@@ -331,3 +331,48 @@ O comando faz, em ordem:
+   - `minha_melhor`: setores 32, 36 e 44.
+ - **Modelo do repositório:** backup em `backup/vhe_interlagos.2026-10-04_17-19-56.antes-de-atualizar.json`. O modelo novo só difere dele na data de treino (`built_at`).
+ - **O que não mudou:** o modelo do app instalado (`9d08d705…`) e o store do ML (`data/ml/lap_inventory.parquet` e `laps_grid.parquet`).
++
++### Modo incremental (pedido 25)
++
++**Como funciona.** O comando guarda, por gravação, o que os passos 1 e 6 leram dela. Na rodada seguinte, só lê de novo a gravação nova ou mudada. O resultado é o mesmo do comando completo: o inventário, as três tabelas de `data/ml/origem/` e o store v2 saíram idênticos byte a byte nas rodadas de conferência do pedido 25. No fim, o comando imprime o tempo de cada passo e, nos passos 1 e 6, quantas sessões foram lidas e quantas saíram do cache.
++
++**O que é reaproveitado:**
++
++- **passo 1:** de cada sessão, as linhas do inventário, já com a identidade das voltas, mas antes das marcas que cruzam sessões (duplicatas e relógio), e as linhas das três tabelas (relógio, sinais e grade). As etapas que cruzam sessões (a ordenação, `mark_duplicates` e `mark_clock`) rodam sempre sobre a tabela inteira;
++- **passo 6:** de cada sessão, as voltas materializadas na grade, com os canais físicos, o tempo de volta, o tempo do jogo, a marca de box, o `carModel` gravado e o sha256 da gravação. A seleção, os rótulos, o `carModel` (com as anotações), as checagens e o meta são recalculados a cada rodada. Assim, um rótulo que o detector ou uma anotação mudou chega ao store sem reler a gravação.
++
++**Quando uma sessão é lida de novo:**
++
++- o tamanho ou a data de modificação de um arquivo dela mudou. No passo 1 são o `player.jsonl` e o `session-index.json`; no passo 6, o `player.jsonl` e o `metadata.json`;
++- no passo 6, uma volta selecionada dela não estava na leitura guardada.
++
++Uma sessão que sumiu do disco sai do inventário e do cache, e aparece no resumo.
++
++**Quando tudo é lido de novo:** o cache inteiro é apagado e refeito, e o motivo é impresso e gravado no manifesto do cache. Isso acontece em três casos:
++
++- a chave global mudou: o `geometry_id`, os portões de qualidade, a versão do formato do cache ou o código que muda a leitura (a lista explícita está em `backend/ml/data/session_cache.py`);
++- o cache não abre;
++- o comando rodou com `--completo`.
++
++Nunca há mistura de cache velho com cache novo.
++
++**`--completo`:** lê todas as gravações nos passos 1 e 6 e refaz os dois caches. Use se houver dúvida sobre o cache. `--sem-varrer` continua pulando o passo 1.
++
++**Onde ficam os caches** (fora do git, nunca na pasta do app instalado):
++
++- passo 1: `data/ml/origem/cache/`, com 50,4 MB para as 134 sessões;
++- passo 6: `data/ml/cache_store_v2/`, com 445,4 MB para as 52 sessões com voltas selecionadas para o store.
++
++Cada pasta tem um `manifesto.json` e um arquivo por sessão.
++
++**Tempos medidos em 08/10** (134 sessões, 22,5 GB de gravações, 1.993 voltas no inventário e 596 no store v2):
++
++| rodada | passo 1 | passo 6 | total |
++|---|---|---|---|
++| comando completo, antes do pedido 25 | 735 s | 571 s | 1.478 s (24,6 min) |
++| incremental com o cache vazio (lê tudo) | 704 s | 587 s | 1.461 s |
++| nada novo | 1,0 a 1,3 s | 27,7 a 29,9 s | 200,5 s |
++| uma sessão nova com 1 volta | 5,7 s | 28,6 s | 205,3 s |
++| uma sessão nova com 14 voltas no store | 17,0 s | 42,9 s | 233,4 s |
++
++Com o incremental, o que mais pesa é o treino do passo 4, cerca de 167 s, que o pedido 25 não mudou. No passo 6 sobram as checagens, cerca de 25 s.
+diff --git a/docs/handoff/2026-10-05_23_voltas-secas-f1_relatorio.md b/docs/handoff/2026-10-05_23_voltas-secas-f1_relatorio.md
+index 852c0f3c..9d904a70 100644
+--- a/docs/handoff/2026-10-05_23_voltas-secas-f1_relatorio.md
++++ b/docs/handoff/2026-10-05_23_voltas-secas-f1_relatorio.md
+@@ -18,6 +18,8 @@
+   - `docs/handoff/2026-10-05_23_voltas-secas-f1_faixa_pista.png` (cópia de `data/ml/externo/f1_faixa/faixa_pista.png`)
+   - `docs/handoff/2026-10-05_23_voltas-secas-f1_faixa_lateral.png` (cópia de `data/ml/externo/f1_faixa/faixa_lateral.png`)
+ 
++**Errata (08/10, pedido 24):** onde este relatório diz que a pasta da classificação de 2024 no cache foi baixada em junho "com o mesmo FastF1 3.4.0" ou "com a mesma versão", a afirmação está errada. Os arquivos de junho não passaram na checagem de versão do cache do FastF1 3.4.0 e foram sobrescritos no pedido 24. Ver `docs/handoff/2026-10-08_24_f1-referencia-2023-25_relatorio.md`.
++
+ Nada foi enviado ao remoto. O app instalado e os arquivos do jogo não foram tocados. Nenhum pacote foi instalado nem atualizado. Nenhum modelo foi treinado, e coach, store e critérios não mudaram.
+ 
+ ## Em resumo
+diff --git a/docs/prompts/2026-10-08_25_atualizar-coach-incremental.md b/docs/prompts/2026-10-08_25_atualizar-coach-incremental.md
+new file mode 100644
+index 00000000..344caa61
+--- /dev/null
++++ b/docs/prompts/2026-10-08_25_atualizar-coach-incremental.md
+@@ -0,0 +1,170 @@
++# Pedido 25 — Modo incremental do `atualizar_coach`: ler só as gravações novas, com o mesmo resultado do comando completo
++
++**De:** Eduardo (o plano é meu). **Data:** 08/10/2026.
++**Tipo:** engenharia (desempenho) e documentação. Nenhum resultado muda: rótulos, detector, treino do coach, checagens do store v2 e relatório de evolução continuam iguais.
++
++## Contexto
++
++1. **O backlog registra:** "atualizar_coach leva ~16 min; criar um modo incremental". Com o store v2 e o relatório de evolução (pedido 16), o comando completo passou a levar cerca de 26 min:
++   - a varredura do inventário (passo 1), cerca de 13 min;
++   - o store v2 (passo 6), cerca de 10 min;
++   - com `--sem-varrer`, o pedido 16 mediu 667 s.
++
++   Os dois passos releem todas as gravações das duas pastas a cada sessão nova.
++2. **Por que agora:** vou gravar as 5 sessões com o app aberto a partir do repositório, que são a condição da M1 (ADR 0017). Depois de cada uma, rodo o `atualizar_coach`.
++3. **O que pode ser reaproveitado, pelo código atual:**
++   - **Passo 1:** `scan_sessions` (`backend/ml/data/inventory.py`) lê cada sessão de forma independente. Isso inclui limpeza, alinhamento, portões, conferência do relógio e identidade (`classify`). O gancho de `report_lap_origin.scan` monta, volta a volta, as tabelas de relógio, sinais e grade. Só duas operações cruzam sessões, e as duas trabalham sobre a tabela pronta, sem abrir gravação: `mark_duplicates` e `mark_clock`.
++   - **Passo 6:** `build_store_v2` (`backend/ml/data/store_v2.py`) lê cada sessão de forma independente para materializar as voltas na grade, o tempo do jogo e a marca de box. Já os rótulos de cada volta (`CARRIED_COLUMNS`) e o `carModel` vêm do inventário e das anotações, sem abrir gravação.
++   - **Passos 2 a 5 e 7:** leem as tabelas e só as voltas escolhidas. Não mudam.
++4. **Pendências pequenas do pedido 24** entram na Parte E.
++
++## Princípio, fixado antes do código
++
++**O modo incremental tem de dar exatamente o mesmo resultado que o comando completo.** O critério de comparação é este:
++
++- **tabelas** (inventário, as três tabelas de `data/ml/origem/` e o store v2): mesmas colunas, mesmos tipos, mesma ordem de linhas e valores idênticos (NaN igual a NaN);
++- **JSONs:** mesmas chaves e mesmos valores. Ficam fora da comparação só os campos de data e hora, de duração, de commit e de caminho de backup, mais o campo novo `construcao` do meta (Parte C). Liste no relatório cada campo excluído e onde ele aparece.
++
++Se alguma comparação falhar, o incremental **não vira o padrão**. Pare, registre a diferença (arquivo, coluna, quantas linhas e um exemplo) e deixe a decisão para mim. Nada é ajustado depois de ver o resultado.
++
++## Parte A — Medição do comando atual (antes do código)
++
++1. **Em `develop`, depois do merge `5e1bd317`, com o app fechado,** rode o `tools/atualizar_coach.py` completo e meça:
++   - o tempo de cada um dos 7 passos;
++   - no passo 1, o tempo de leitura das sessões e o de gravação das tabelas;
++   - no passo 6, o tempo da materialização das voltas, do sha256 das gravações (`file_entry`, para o meta), das checagens e da gravação.
++
++   Pode medir com `cProfile` ou com marcações de tempo. Uma impressão permanente do tempo de cada passo no fim do comando é bem-vinda.
++2. **Guarde as saídas dessa rodada como "referência completa"** em `data/ml/_p25_referencia_completa/`, fora do git:
++   - o inventário e as três tabelas de `data/ml/origem/`;
++   - `detector_aplicar.json` e `atualizar_coach.json`;
++   - o store v2, o meta e `store_v2_relatorio.json`;
++   - o modelo do coach (`data/reference_models/vhe_interlagos.json`);
++   - os JSONs de `data/ml/evolucao/`.
++3. **Para dar o contexto, relate também:** o número de sessões e de voltas e o tamanho total das gravações lidas.
++
++## Parte B — Inventário incremental (passo 1)
++
++1. **Cache por gravação** em `data/ml/origem/cache/`, fora do git. Para cada sessão, ele guarda:
++   - as linhas do inventário **antes** de `mark_duplicates` e `mark_clock`, já com a identidade de `classify`;
++   - as linhas das três tabelas: relógio, sinais e grade.
++
++   Guarde as linhas no mesmo formato em que o caminho completo as monta (a lista de dicionários do inventário e dos sinais, os blocos do relógio e da grade). Assim, os tipos das colunas saem iguais quando a tabela é montada.
++2. **Manifesto** (`manifesto.json`) com:
++   - **por sessão:** o `session_id`, a pasta (`repositorio` ou `app_instalado`), os arquivos que a leitura abre e o tamanho e a data de modificação de cada um;
++   - **chave global:** `geometry_id`, os portões (`config.DEFAULT_GATES`), a versão do formato do cache e o sha256 dos arquivos de código que mudam a leitura. A lista desses arquivos fica explícita no código e no relatório. Na dúvida, entra: `ml/preprocessing/`, `ml/track/`, `ml/config.py` e os módulos de `ml/data/` e `ml/scripts/` que a varredura usa.
++3. **A cada rodada:**
++   - liste as sessões como hoje (`list_all_sessions`);
++   - sessão com os mesmos tamanhos e datas sai do cache; sessão nova ou mudada é lida e atualiza o cache; sessão que sumiu do disco sai do inventário e do cache e aparece listada no resumo;
++   - depois, sobre a tabela inteira, faça as etapas que cruzam sessões exatamente como hoje: ordenação por `session_id` e `sequence`, `mark_duplicates`, `mark_clock`, e a gravação do inventário e das três tabelas, nos mesmos arquivos e no mesmo formato.
++4. **Um caminho só:** separe de `scan_sessions` uma função que lê uma sessão. Os dois modos, completo e incremental, chamam essa mesma função. Nada da lógica de leitura fica duplicado.
++5. **Quando o cache inteiro é refeito:**
++   - a chave global mudou (geometria, portões, código ou formato);
++   - o cache não abre.
++
++   Nos dois casos, o comando faz a varredura completa, imprime o motivo e o grava no resumo. Nunca há mistura de cache velho com cache novo.
++6. **Confira um risco da ordenação:** pode haver duas linhas com o mesmo `session_id` e `sequence`, por exemplo a mesma sessão nas duas pastas? Se puder, a ordem entre elas precisa sair igual nos dois modos.
++
++## Parte C — Store v2 incremental (passo 6)
++
++1. **Cache por gravação** em `data/ml/cache_store_v2/`, fora do git. Para cada sessão, ele guarda:
++   - os blocos materializados de cada volta (a grade com os canais físicos);
++   - os campos medidos: `lap_time_s`, `tempo_jogo_s`, `sample_hz`, `raw_samples`, `coverage` e as velocidades;
++   - a marca de box e os canais de cada volta (`channels_by_lap`);
++   - o sha256 do `player_stream`, para o `entradas.gravacoes` do meta.
++2. **Recalculado sempre, a partir do inventário e das anotações atuais:**
++   - a seleção (`select_v2`);
++   - os rótulos (`CARRIED_COLUMNS`);
++   - o `carModel` (`car_for`, com as anotações);
++   - `recording_periods`;
++   - as checagens (`store_checks.run_checks`);
++   - o meta.
++
++   Assim, um rótulo que o detector ou uma anotação mudou chega ao store v2 sem reler a gravação.
++3. **Uma sessão é relida quando:**
++   - os arquivos dela mudaram;
++   - uma volta selecionada dela não está no cache;
++   - a chave global mudou. Aqui a chave é a da Parte B mais o código do store v2: `store_v2.py`, `ai_detector.py` (`pit_lap`), a reamostragem e o que mais a materialização usar.
++4. **O store v2, o meta e o relatório continuam no mesmo formato e no esquema 2.1.** O meta ganha só o campo `construcao`, com:
++   - o modo (`incremental` ou `completo`);
++   - as sessões lidas;
++   - quantas saíram do cache;
++   - o motivo, se foi completo.
++
++## Parte D — Conferência com os dados reais
++
++Compare cada rodada com a referência completa da Parte A, pelo critério do princípio. Use um script de comparação versionado, que fica para conferências futuras, por exemplo `backend/ml/scripts/comparar_saidas_coach.py`.
++
++1. **Rodada 1, cache vazio:** o incremental sem cache equivale ao completo. Compare.
++2. **Rodada 2, nada novo:** rode de novo. O esperado é que nenhuma sessão seja lida. Compare e meça.
++3. **Rodada 3, sessão nova simulada:** tire **só do cache** (nunca das gravações) a sessão mais recente da pasta do repositório com equipamento `atual`, e rode de novo. O esperado é que só ela seja lida, no passo 1 e no passo 6. Compare e meça.
++4. **Só depois das três rodadas passarem,** o incremental vira o padrão do comando:
++   - `--completo` força a leitura de tudo e refaz os dois caches;
++   - `--sem-varrer` continua como hoje.
++5. **No fim do comando,** imprima o tempo de cada passo e quantas sessões foram lidas e quantas saíram do cache.
++6. **A pasta `_p25_referencia_completa` fica,** e o tamanho dela vai para o relatório. Eu decido depois se apago.
++
++## Parte E — Documentação e pendências do pedido 24
++
++1. **`docs/coach_aprendizado.md`, seção 10:**
++   - como funciona o modo incremental;
++   - o que é reaproveitado;
++   - quando tudo é lido de novo;
++   - o `--completo`;
++   - onde ficam os caches;
++   - os tempos medidos, antes e depois.
++2. **`docs/store_v2_e_evolucao.md`:** uma seção curta sobre o cache do store v2 e o campo `construcao` do meta.
++3. **`docs/backlog.md`:**
++   - **tire a linha** "atualizar_coach leva ~16 min; criar um modo incremental" (concluída);
++   - **tire a linha** "Dados externos no treino do Modelo 1". Ela ficou concluída com os pedidos 22 a 24, e a entrada no treino já está na linha do retreino (ADR 0019);
++   - **na linha "Retreinar a LSTM geradora com as três fontes",** no Impacto, acrescente ao fim: "Decidir como tratar os 10 microssetores pouco confiáveis da referência da F1 (ADR 0019, item 7)";
++   - **acrescente a linha:**
++
++     | Item | Origem | Impacto | Quando |
++     |---|---|---|---|
++     | O FastF1 3.4.0 não reconhece "LAP DELETED" sem tempo de volta: uma volta apagada assim passaria pelo filtro 3 | Pedido 24 (08/10) | Nenhum nas sessões usadas hoje: as contagens de 2023–25 batiam no pedido 23, e em 2024 todas as voltas caem pelo pneu | Conferir se entrar sessão nova da F1 |
++
++4. **Errata no relatório 23** (`docs/handoff/2026-10-05_23_voltas-secas-f1_relatorio.md`). Logo depois do cabeçalho, acrescente o parágrafo abaixo, sem mudar o resto do texto:
++
++   > **Errata (08/10, pedido 24):** onde este relatório diz que a pasta da classificação de 2024 no cache foi baixada em junho "com o mesmo FastF1 3.4.0" ou "com a mesma versão", a afirmação está errada. Os arquivos de junho não passaram na checagem de versão do cache do FastF1 3.4.0 e foram sobrescritos no pedido 24. Ver `docs/handoff/2026-10-08_24_f1-referencia-2023-25_relatorio.md`.
++
++## Testes
++
++Os testes são sintéticos, com gravações falsas pequenas e sem as gravações reais:
++
++- **mesmos tamanhos e datas:** a sessão não é lida (conte as leituras);
++- **tamanho ou data mudou:** a sessão é lida de novo; **sessão sumiu:** ela sai do inventário;
++- **chave global mudou** (geometria, portões, código ou formato): leitura completa, com o motivo;
++- **duplicatas entre uma sessão do cache e uma nova:** marcadas igual ao modo completo;
++- **store v2:**
++  - um rótulo mudado no inventário chega ao store sem reler a gravação;
++  - uma volta selecionada fora do cache faz a sessão ser relida;
++- **ponta a ponta, com 3 sessões falsas:** o incremental dá o mesmo que o completo nas três situações da Parte D;
++- **pasta do app instalado:** os caches nunca são gravados nela.
++
++A suíte `backend/tests` continua passando: são 656 testes hoje, mais os novos.
++
++## Regras gerais
++
++- **Nenhum resultado muda:**
++  - rótulos, detector, treino do coach, checagens do store v2, relatório de evolução e store antigo (`laps_grid.parquet`) ficam como estão;
++  - o esquema do store v2 continua 2.1.
++- **Todas as travas do comando continuam:**
++  - rótulos de 04/10 que não batem;
++  - microssetores e zonas do detector que não batem;
++  - nenhuma volta limpa para treinar;
++  - checagem do store v2 que falha;
++  - `--modelo` dentro da pasta do app instalado.
++- **As gravações são só lidas,** nas duas pastas. Nenhuma é movida, renomeada ou apagada.
++- **Não mexa no app instalado nem em arquivos do jogo.** Nenhum cache fica na pasta do app instalado.
++- **Não instale nem atualize pacotes.**
++- **Branch e commits:** branch `etapa/atualizar-coach-incremental`, commits por parte, merge em `develop`. Sem push.
++- **Uma sessão de implementação por vez** (ADR 0008).
++- **Relatório** em `docs/handoff/2026-10-08_25_atualizar-coach-incremental_relatorio.md`, como manda o CLAUDE.md, com:
++  - os tempos da Parte A, por passo e com o detalhamento dos passos 1 e 6;
++  - o desenho dos caches: as chaves, os arquivos e a lista do código que entra na chave;
++  - a tabela de comparação das três rodadas (arquivo, resultado e campos excluídos);
++  - os tempos das três rodadas;
++  - o tamanho dos dois caches e da referência completa;
++  - a saída da suíte de testes e os commits.
++- Se algo do contexto não bater com o repositório, pare e registre no relatório.
+diff --git a/docs/store_v2_e_evolucao.md b/docs/store_v2_e_evolucao.md
+index aee1675d..bd098751 100644
+--- a/docs/store_v2_e_evolucao.md
++++ b/docs/store_v2_e_evolucao.md
+@@ -404,3 +404,37 @@ O arquivo com as 14 curvas e o diagnóstico é `docs/handoff/2026-10-04_painel-e
+ 
+ - o painel desenha os números, o mapa de Interlagos com as curvas coloridas, as listas e o detalhe, sem erro no console;
+ - depois da correção de implementação, a C10 mostra "Você freia 11 m antes da IA; metade das voltas entre 9 e 12 m antes. Medido em 4 de 11 voltas."
++
++## 7. Cache do store v2 e o campo `construcao` do meta (pedido 25)
++
++O `atualizar_coach` constrói o store v2 no modo incremental (`build_lap_store_v2 --incremental`). As voltas de cada sessão materializadas na grade ficam em `data/ml/cache_store_v2/`, fora do git: um arquivo por sessão e um `manifesto.json`. O cache guarda o que só a gravação dá:
++
++- os blocos na grade, com os canais físicos;
++- o tempo de volta, o tempo do jogo, a frequência, as amostras, a cobertura e as velocidades;
++- a marca de box e os canais de cada volta;
++- o `carModel` gravado;
++- o sha256 do `player.jsonl`, para `entradas.gravacoes`.
++
++A seleção, os rótulos (`CARRIED_COLUMNS`), o `carModel` com as anotações, os períodos das gravações, as checagens e o meta são recalculados a cada rodada, a partir do inventário e das anotações atuais.
++
++Uma sessão é lida de novo quando:
++
++- o `player.jsonl` ou o `metadata.json` dela mudou de tamanho ou de data;
++- uma volta selecionada dela não estava na leitura guardada;
++- a chave global mudou: geometria, portões, formato do cache ou o código da materialização (lista em `backend/ml/data/session_cache.py`, `STORE_CODE`). Nesse caso, o cache inteiro é refeito.
++
++`--completo` lê tudo e refaz o cache. Sem nenhuma das duas flags, o `build_lap_store_v2` lê tudo sem usar cache, como antes.
++
++O store, o meta e o relatório seguem no esquema 2.1. O meta ganha só o campo `construcao`, presente quando o store foi construído com o cache:
++
++| campo | o que é |
++|---|---|
++| `modo` | `incremental` ou `completo` |
++| `motivo` | por que tudo foi lido (`--completo`, chave global mudou, cache que não abre); `null` no incremental |
++| `cache_vazio_no_inicio` | se o cache estava vazio, como na primeira rodada |
++| `sessoes_com_voltas_selecionadas` | quantas sessões têm volta no store |
++| `sessoes_lidas` | as sessões lidas nesta rodada |
++| `sessoes_do_cache` | quantas saíram do cache |
++| `sumiram` | sessões que estavam no cache e sumiram do disco |
++
++Nas rodadas de conferência do pedido 25, o store e o meta saíram idênticos aos do comando completo, fora as datas, o commit e o próprio `construcao`.

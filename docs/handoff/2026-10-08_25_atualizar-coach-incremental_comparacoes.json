@@ -1,0 +1,632 @@
+{
+ "pedido": "docs/prompts/2026-10-08_25_atualizar-coach-incremental.md",
+ "parte_a_completo": {
+  "p1_leitura_scan_sessions": 734.46,
+  "p1_gravacao_inventario": 0.12,
+  "p1_total": 735.22,
+  "p2_3_total": 2.31,
+  "p4_backup": 0.0,
+  "p4_treino": 167.88,
+  "p5_resumo": 0.0,
+  "p6_listar_sessoes": 0.09,
+  "p6_materializacao": 528.05,
+  "p6_checagens_store_antigo": 0.06,
+  "p6_checagens": 25.61,
+  "p6_sha256_lap_inventory.parquet": 0.0,
+  "p6_sha256_2026-10-04_rotulos_por_volta.csv": 0.0,
+  "p6_sha256_gravacoes": 15.23,
+  "p6_gravacao_store": 1.54,
+  "p6_sha256_laps_grid_v2.parquet": 0.24,
+  "p6_total": 570.98,
+  "p7_total": 1.53,
+  "comando_total": 1477.99,
+  "codigo_de_saida": 0
+ },
+ "rodadas": {
+  "1_cache_vazio": {
+   "o_que": "atualizar_coach --incremental, sem cache",
+   "passos_s": {
+    "1": 704.1,
+    "2-3": 2.2,
+    "4": 166.1,
+    "5": 0.0,
+    "6": 587.4,
+    "7": 1.7,
+    "total": 1461.4
+   },
+   "leituras": [
+    "passo 1: incremental; lidas 134, do cache 0",
+    "passo 6: incremental; lidas 52, do cache 0"
+   ],
+   "tudo_igual": true,
+   "arquivos": {
+    "evolucao/resumo.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "evolucao/sessao_2026-10-04.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "evolucao/sessao_2026-10-05.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "laps_grid_v2.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "laps_grid_v2_meta.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "construido_em",
+      "commit",
+      "construcao"
+     ],
+     "diferencas": 0
+    },
+    "origem/atualizar_coach.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "backup"
+     ],
+     "diferencas": 0
+    },
+    "origem/detector_aplicar.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [],
+     "diferencas": 0
+    },
+    "origem/grade_voltas.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/lap_inventory.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/lap_inventory_summary.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [],
+     "diferencas": 0
+    },
+    "origem/relogio_microsetores.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/sinais_voltas.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "reference_models/vhe_interlagos.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "built_at"
+     ],
+     "diferencas": 0
+    },
+    "store_v2_relatorio.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "segundos",
+      "meta.commit"
+     ],
+     "diferencas": 0
+    }
+   }
+  },
+  "2_nada_novo": {
+   "o_que": "atualizar_coach --incremental, de novo",
+   "passos_s": {
+    "1": 1.3,
+    "2-3": 2.3,
+    "4": 165.5,
+    "5": 0.0,
+    "6": 29.9,
+    "7": 1.6,
+    "total": 200.5
+   },
+   "leituras": [
+    "passo 1: incremental; lidas 0, do cache 134",
+    "passo 6: incremental; lidas 0, do cache 52"
+   ],
+   "tudo_igual": true,
+   "arquivos": {
+    "evolucao/resumo.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "evolucao/sessao_2026-10-04.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "evolucao/sessao_2026-10-05.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "laps_grid_v2.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "laps_grid_v2_meta.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "construido_em",
+      "commit",
+      "construcao"
+     ],
+     "diferencas": 0
+    },
+    "origem/atualizar_coach.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "backup"
+     ],
+     "diferencas": 0
+    },
+    "origem/detector_aplicar.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [],
+     "diferencas": 0
+    },
+    "origem/grade_voltas.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/lap_inventory.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/lap_inventory_summary.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [],
+     "diferencas": 0
+    },
+    "origem/relogio_microsetores.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/sinais_voltas.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "reference_models/vhe_interlagos.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "built_at"
+     ],
+     "diferencas": 0
+    },
+    "store_v2_relatorio.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "segundos",
+      "meta.commit"
+     ],
+     "diferencas": 0
+    }
+   }
+  },
+  "3_sessao_nova_simulada": {
+   "o_que": "2026-10-04_04-22-39 tirada dos caches (so estava no do passo 1)",
+   "passos_s": {
+    "1": 5.7,
+    "2-3": 2.1,
+    "4": 167.4,
+    "5": 0.0,
+    "6": 28.6,
+    "7": 1.4,
+    "total": 205.3
+   },
+   "leituras": [
+    "passo 1: incremental; lidas 1, do cache 133",
+    "passo 6: incremental; lidas 0, do cache 52"
+   ],
+   "tudo_igual": true,
+   "arquivos": {
+    "evolucao/resumo.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "evolucao/sessao_2026-10-04.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "evolucao/sessao_2026-10-05.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "laps_grid_v2.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "laps_grid_v2_meta.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "construido_em",
+      "commit",
+      "construcao"
+     ],
+     "diferencas": 0
+    },
+    "origem/atualizar_coach.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "backup"
+     ],
+     "diferencas": 0
+    },
+    "origem/detector_aplicar.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [],
+     "diferencas": 0
+    },
+    "origem/grade_voltas.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/lap_inventory.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/lap_inventory_summary.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [],
+     "diferencas": 0
+    },
+    "origem/relogio_microsetores.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/sinais_voltas.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "reference_models/vhe_interlagos.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "built_at"
+     ],
+     "diferencas": 0
+    },
+    "store_v2_relatorio.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "segundos",
+      "meta.commit"
+     ],
+     "diferencas": 0
+    }
+   }
+  },
+  "3b_sessao_nova_com_voltas_no_store": {
+   "o_que": "2026-10-04_03-42-10 tirada dos dois caches",
+   "passos_s": {
+    "1": 17.0,
+    "2-3": 2.1,
+    "4": 169.8,
+    "5": 0.0,
+    "6": 42.9,
+    "7": 1.4,
+    "total": 233.4
+   },
+   "leituras": [
+    "passo 1: incremental; lidas 1, do cache 133",
+    "passo 6: incremental; lidas 1, do cache 51"
+   ],
+   "tudo_igual": true,
+   "arquivos": {
+    "evolucao/resumo.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "evolucao/sessao_2026-10-04.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "evolucao/sessao_2026-10-05.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "laps_grid_v2.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "laps_grid_v2_meta.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "construido_em",
+      "commit",
+      "construcao"
+     ],
+     "diferencas": 0
+    },
+    "origem/atualizar_coach.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "backup"
+     ],
+     "diferencas": 0
+    },
+    "origem/detector_aplicar.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [],
+     "diferencas": 0
+    },
+    "origem/grade_voltas.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/lap_inventory.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/lap_inventory_summary.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [],
+     "diferencas": 0
+    },
+    "origem/relogio_microsetores.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/sinais_voltas.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "reference_models/vhe_interlagos.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "built_at"
+     ],
+     "diferencas": 0
+    },
+    "store_v2_relatorio.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "segundos",
+      "meta.commit"
+     ],
+     "diferencas": 0
+    }
+   }
+  },
+  "4_padrao_sem_flags": {
+   "o_que": "atualizar_coach sem flags, depois da troca do padrao",
+   "passos_s": {
+    "1": 1.0,
+    "2-3": 2.2,
+    "4": 167.7,
+    "5": 0.0,
+    "6": 27.7,
+    "7": 1.9,
+    "total": 200.5
+   },
+   "leituras": [
+    "passo 1: incremental; lidas 0, do cache 134",
+    "passo 6: incremental; lidas 0, do cache 52"
+   ],
+   "tudo_igual": true,
+   "arquivos": {
+    "evolucao/resumo.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "evolucao/sessao_2026-10-04.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "evolucao/sessao_2026-10-05.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "store.commit_do_store"
+     ],
+     "diferencas": 0
+    },
+    "laps_grid_v2.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "laps_grid_v2_meta.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "construido_em",
+      "commit",
+      "construcao"
+     ],
+     "diferencas": 0
+    },
+    "origem/atualizar_coach.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "backup"
+     ],
+     "diferencas": 0
+    },
+    "origem/detector_aplicar.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [],
+     "diferencas": 0
+    },
+    "origem/grade_voltas.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/lap_inventory.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/lap_inventory_summary.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [],
+     "diferencas": 0
+    },
+    "origem/relogio_microsetores.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "origem/sinais_voltas.parquet": {
+     "igual": true,
+     "bytes_iguais": true,
+     "campos_excluidos": null,
+     "diferencas": 0
+    },
+    "reference_models/vhe_interlagos.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "built_at"
+     ],
+     "diferencas": 0
+    },
+    "store_v2_relatorio.json": {
+     "igual": true,
+     "bytes_iguais": null,
+     "campos_excluidos": [
+      "segundos",
+      "meta.commit"
+     ],
+     "diferencas": 0
+    }
+   }
+  }
+ },
+ "tamanhos_bytes": {
+  "cache_inventario": 50401218,
+  "cache_store_v2": 445447673,
+  "referencia_completa": 351117738
+ }
+}
