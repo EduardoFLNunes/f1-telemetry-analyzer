@@ -156,7 +156,7 @@ class CommandTest(unittest.TestCase):
         model.write_text("{}", encoding="utf-8")
         c = self.command
 
-        def scan(directory, track):
+        def scan(directory, track, mode=None):
             calls.append("inventario")
             directory.mkdir(parents=True, exist_ok=True)
             inventory_rows("2026-10-05_20-00-00_vhe_interlagos", ["humano"]).to_parquet(
