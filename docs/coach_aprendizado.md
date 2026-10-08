@@ -284,7 +284,7 @@ Depois de uma sessão nova, feche o app e rode, na pasta `backend`:
 
 O comando faz, em ordem:
 
-1. **Refaz o inventário novo** em `data/ml/origem/`, varrendo as duas pastas de gravações. A varredura só lê as gravações e leva cerca de 13 minutos. `--sem-varrer` pula este passo.
+1. **Refaz o inventário novo** em `data/ml/origem/`, a partir das duas pastas de gravações. Desde o pedido 25, só as sessões novas ou mudadas são lidas; as outras saem do cache por gravação (ver "Modo incremental", no fim desta seção). A leitura nunca escreve nas gravações. `--sem-varrer` pula este passo, e `--completo` lê todas as sessões.
 2. **Aplica as anotações versionadas de 04/10.** Elas ficam em `docs/experimentos/2026-10-04_rotulos_por_volta.csv`: 53 voltas, pela identidade do ML, feitas das suas anotações por parte e volta do jogo (`2026-10-04_sessao_rotulada_anotacoes.csv`). O comando para se o arquivo não bater com o inventário ou com as suas anotações. Uma sessão gravada depois, mesmo no dia 04/10, não herda as anotações.
 3. **Rotula as sessões novas sem anotação** (equipamento `atual`):
    - antes de a IA ligar pela primeira vez na sessão do jogo, a volta é `humano`, pelo indicador;
@@ -303,7 +303,7 @@ O comando faz, em ordem:
    - o foco inicial de cada modo.
 
    O resumo também fica em `data/ml/origem/atualizar_coach.json`.
-6. **Refaz o store v2** (pedido 16) com as checagens. Se uma checagem falhar, o comando para antes do passo 7.
+6. **Refaz o store v2** (pedido 16) com as checagens. As voltas das sessões que não mudaram saem do cache do store v2 (pedido 25). Se uma checagem falhar, o comando para antes do passo 7.
 7. **Roda o relatório de evolução** (`tools/relatorio_evolucao.py`), que grava os JSONs e o `painel.html` em `data/ml/evolucao/` e imprime o caminho do painel. Ver `docs/store_v2_e_evolucao.md`.
 
 **O que o comando não faz:**
@@ -331,3 +331,48 @@ O comando faz, em ordem:
   - `minha_melhor`: setores 32, 36 e 44.
 - **Modelo do repositório:** backup em `backup/vhe_interlagos.2026-10-04_17-19-56.antes-de-atualizar.json`. O modelo novo só difere dele na data de treino (`built_at`).
 - **O que não mudou:** o modelo do app instalado (`9d08d705…`) e o store do ML (`data/ml/lap_inventory.parquet` e `laps_grid.parquet`).
+
+### Modo incremental (pedido 25)
+
+**Como funciona.** O comando guarda, por gravação, o que os passos 1 e 6 leram dela. Na rodada seguinte, só lê de novo a gravação nova ou mudada. O resultado é o mesmo do comando completo: o inventário, as três tabelas de `data/ml/origem/` e o store v2 saíram idênticos byte a byte nas rodadas de conferência do pedido 25. No fim, o comando imprime o tempo de cada passo e, nos passos 1 e 6, quantas sessões foram lidas e quantas saíram do cache.
+
+**O que é reaproveitado:**
+
+- **passo 1:** de cada sessão, as linhas do inventário, já com a identidade das voltas, mas antes das marcas que cruzam sessões (duplicatas e relógio), e as linhas das três tabelas (relógio, sinais e grade). As etapas que cruzam sessões (a ordenação, `mark_duplicates` e `mark_clock`) rodam sempre sobre a tabela inteira;
+- **passo 6:** de cada sessão, as voltas materializadas na grade, com os canais físicos, o tempo de volta, o tempo do jogo, a marca de box, o `carModel` gravado e o sha256 da gravação. A seleção, os rótulos, o `carModel` (com as anotações), as checagens e o meta são recalculados a cada rodada. Assim, um rótulo que o detector ou uma anotação mudou chega ao store sem reler a gravação.
+
+**Quando uma sessão é lida de novo:**
+
+- o tamanho ou a data de modificação de um arquivo dela mudou. No passo 1 são o `player.jsonl` e o `session-index.json`; no passo 6, o `player.jsonl` e o `metadata.json`;
+- no passo 6, uma volta selecionada dela não estava na leitura guardada.
+
+Uma sessão que sumiu do disco sai do inventário e do cache, e aparece no resumo.
+
+**Quando tudo é lido de novo:** o cache inteiro é apagado e refeito, e o motivo é impresso e gravado no manifesto do cache. Isso acontece em três casos:
+
+- a chave global mudou: o `geometry_id`, os portões de qualidade, a versão do formato do cache ou o código que muda a leitura (a lista explícita está em `backend/ml/data/session_cache.py`);
+- o cache não abre;
+- o comando rodou com `--completo`.
+
+Nunca há mistura de cache velho com cache novo.
+
+**`--completo`:** lê todas as gravações nos passos 1 e 6 e refaz os dois caches. Use se houver dúvida sobre o cache. `--sem-varrer` continua pulando o passo 1.
+
+**Onde ficam os caches** (fora do git, nunca na pasta do app instalado):
+
+- passo 1: `data/ml/origem/cache/`, com 50,4 MB para as 134 sessões;
+- passo 6: `data/ml/cache_store_v2/`, com 445,4 MB para as 52 sessões com voltas selecionadas para o store.
+
+Cada pasta tem um `manifesto.json` e um arquivo por sessão.
+
+**Tempos medidos em 08/10** (134 sessões, 22,5 GB de gravações, 1.993 voltas no inventário e 596 no store v2):
+
+| rodada | passo 1 | passo 6 | total |
+|---|---|---|---|
+| comando completo, antes do pedido 25 | 735 s | 571 s | 1.478 s (24,6 min) |
+| incremental com o cache vazio (lê tudo) | 704 s | 587 s | 1.461 s |
+| nada novo | 1,0 a 1,3 s | 27,7 a 29,9 s | 200,5 s |
+| uma sessão nova com 1 volta | 5,7 s | 28,6 s | 205,3 s |
+| uma sessão nova com 14 voltas no store | 17,0 s | 42,9 s | 233,4 s |
+
+Com o incremental, o que mais pesa é o treino do passo 4, cerca de 167 s, que o pedido 25 não mudou. No passo 6 sobram as checagens, cerca de 25 s.
