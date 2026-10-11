@@ -38,7 +38,12 @@ function main() {
     committedAt: git(['log', '-1', '--format=%cI']),
     subject: git(['log', '-1', '--format=%s']),
     dirty: status === null ? null : status.length > 0,
+    // Arquivos que deixam a arvore suja: o relatorio do build diz quais eram.
+    dirtyFiles: status ? status.split(/\r?\n/).filter(Boolean) : [],
     builtAt: new Date().toISOString(),
+    // O repositorio em que o app foi construido. O app instalado le dele o
+    // modelo e a geometria do coach (pedido 28), so lendo, enquanto ele existir.
+    repoPath: REPO_ROOT,
     stamped: true,
   };
 

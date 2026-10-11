@@ -48,9 +48,15 @@ class AssistedAnalysisService:
         external_reference_repository: Optional[ExternalReferenceRepository] = None,
         runtime_root: Optional[Path] = None,
         recordings_roots: Optional[Sequence[Path]] = None,
+        coach_settings: Optional[Any] = None,
     ):
         self.repo_root = Path(repo_root)
         self.runtime_root = Path(runtime_root) if runtime_root else self.repo_root
+        # Pedido 28: where the coach reads its model and geometry, and which
+        # reference it uses, come from the app configuration
+        # (`core.coleta.configuracao`). Without it, the old behaviour: the model
+        # under the runtime root and `AT_COACH_REFERENCE`.
+        self.coach_settings = coach_settings
         self.telemetry_buffer = telemetry_buffer
         self.runtime_state = runtime_state
         self.track_cache = track_cache
@@ -406,7 +412,11 @@ class AssistedAnalysisService:
             cached = {}
             self._official_geometries = cached
         if key not in cached:
-            cached[key] = find_official_geometry([self.runtime_root, self.repo_root], key)
+            if self.coach_settings is not None:
+                folder = self.coach_settings.coach_root()
+                cached[key] = find_official_geometry([folder], key) if folder is not None else None
+            else:
+                cached[key] = find_official_geometry([self.runtime_root, self.repo_root], key)
         return cached[key]
 
     def _reference_model(self, track: Optional[str]) -> Optional[DriverReferenceModel]:
@@ -416,6 +426,9 @@ class AssistedAnalysisService:
             cached = {}
             self._reference_models = cached
         if key not in cached:
+            if self.coach_settings is not None:
+                cached[key] = self._configured_reference_model(key)
+                return cached[key]
             model = DriverReferenceModel.load(model_path(self.runtime_root, key))
             # ADR 0016: the reference by configuration (`AT_COACH_REFERENCE`).
             if model is not None:
@@ -427,6 +440,28 @@ class AssistedAnalysisService:
             attach(model, find_optimal_line([self.runtime_root, self.repo_root], key))
             cached[key] = model
         return cached[key]
+
+    def _configured_reference_model(self, key: str) -> Optional[DriverReferenceModel]:
+        """The model from the configured repository, with the configured reference (pedido 28).
+
+        Read only, and never copied: the model changes on every `atualizar_coach`.
+        "Coach off" and "no repository" both mean no model, so the coach is
+        silent exactly as it is when the file is missing.
+        """
+        kind = self.coach_settings.coach_reference()
+        folder = self.coach_settings.coach_root()
+        if kind is None or folder is None:
+            return None
+        model = DriverReferenceModel.load(model_path(folder, key))
+        if model is not None:
+            model.use_reference(kind)
+        attach(model, find_optimal_line([folder, self.runtime_root, self.repo_root], key))
+        return model
+
+    def reload_coach(self) -> None:
+        """Forget the loaded model and geometry; the next request reads them again."""
+        self._reference_models = {}
+        self._official_geometries = {}
 
     def _load_reference(
         self,
