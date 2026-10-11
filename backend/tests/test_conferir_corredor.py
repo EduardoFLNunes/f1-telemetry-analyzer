@@ -173,6 +173,17 @@ class OptionsTest(unittest.TestCase):
         self.assertEqual((row["amostras"], row["pneus_fora_pct"]), (40, 25.0))
 
 
+class ChannelTest(unittest.TestCase):
+    def test_the_stream_says_which_channels_were_recorded(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "player.jsonl"
+            path.write_text('{"sample": {"carPhysics": {"environment": {"roadTemp": 30}}}}\n'
+                            '{"sample": {"carPhysics": {"environment": {"tyresOut": 0, "roadTemp": 30}}}}\n',
+                            encoding="utf-8")
+            self.assertEqual(cc.stream_has(path, ("tyresOut", "offTrack")), {"tyresOut": True, "offTrack": False})
+
+
 class RunsTest(unittest.TestCase):
     def test_runs_close_the_loop(self):
         labels = ["a", "a", "b", "b", "a"]

@@ -414,6 +414,34 @@ def class_shares(measures: Dict[str, List[SideMeasure]]) -> Dict[str, Dict[str, 
 
 # ------------------------------------------------------------ parte C: jogo ---
 
+def stream_has(path: Path, keys: Sequence[str], max_lines: int = 2000) -> Dict[str, bool]:
+    """Se as primeiras linhas do fluxo gravado trazem cada chave (o gravador escreve todas em toda amostra)."""
+    found = {key: False for key in keys}
+    with open(path, encoding="utf-8", errors="replace") as handle:
+        for number, line in enumerate(handle):
+            for key in keys:
+                found[key] = found[key] or f'"{key}"' in line
+            if all(found.values()) or number >= max_lines:
+                break
+    return found
+
+
+def channel_sessions(sessions, laps: pd.DataFrame) -> List[Dict[str, object]]:
+    """Parte C.1: as sessoes cujo fluxo traz `tyresOut` ou `offTrack`, com a pasta e as voltas do store v2."""
+    roots = {str(path): name for name, path in config.recordings_roots().items()}
+    out = []
+    for session in sessions:
+        found = stream_has(session.player_stream, ("tyresOut", "offTrack"))
+        if not any(found.values()):
+            continue
+        folder = next((name for path, name in roots.items() if str(session.directory).startswith(path)), "?")
+        mine = laps[laps["session_id"] == session.session_id]
+        out.append({"sessao": session.session_id, "pasta": folder, "tyresOut": found["tyresOut"],
+                    "offTrack": found["offTrack"], "voltas_no_store_v2": int(len(mine)),
+                    "por_origem": {str(k): int(v) for k, v in mine["origem"].value_counts().items()}})
+    return out
+
+
 def option_edges(measures: Dict[str, List[SideMeasure]]) -> Dict[str, Dict[str, np.ndarray]]:
     """A borda do corredor util de cada opcao da Parte F, de cada lado, como distancia a partir da linha central.
 
@@ -781,6 +809,9 @@ def run(out_dir: Path, raw_laps: bool = True) -> Dict[str, object]:
         sessions = list_all_sessions()
         wanted = store.laps[store.laps["origem"].isin(["humano", "ia"])]["lap_id"].tolist()
         part_c = tyres_out_check(track, measures, store, wanted, sessions, edges)
+        with_channel = channel_sessions(sessions, store.laps)
+        part_c["onde_o_canal_existe"] = {"sessoes_de_interlagos": len(sessions),
+                                         "sessoes_com_o_canal": len(with_channel), "sessoes": with_channel}
 
     out_dir.mkdir(parents=True, exist_ok=True)
     windows = figure_windows(track, segments)
