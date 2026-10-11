@@ -206,6 +206,23 @@ export const api = {
     );
     return res.data;
   },
+  // ─── Coleta de dados (pedido 28) ──────────────────────────────────────────
+  getColetaRequisitos: async (): Promise<any> => (await client.get('/api/coleta/requisitos')).data,
+  getColetaAntes: async (): Promise<any> => (await client.get('/api/coleta/antes', { timeout: 60_000 })).data,
+  getColetaAoVivo: async (): Promise<any> => (await client.get('/api/coleta/ao-vivo')).data,
+  putColetaConfiguracao: async (changes: Record<string, unknown>): Promise<any> => (
+    await client.put('/api/coleta/configuracao', changes, { timeout: 30_000 })
+  ).data,
+  getColetaSessaoAtual: async (): Promise<any> => (await client.get('/api/coleta/sessao-atual')).data,
+  listColetaVerificacoes: async (): Promise<any> => (await client.get('/api/coleta/verificacoes')).data,
+  getColetaVerificacao: async (sessionId: string): Promise<any> => (
+    await client.get(`/api/coleta/verificacoes/${encodeURIComponent(sessionId)}`)
+  ).data,
+  conferirSessao: async (sessionId: string): Promise<any> => (
+    await client.post(`/api/coleta/verificacoes/${encodeURIComponent(sessionId)}`)
+  ).data,
+  getColetaM1Oficial: async (): Promise<any> => (await client.get('/api/coleta/m1/oficial', { timeout: 60_000 })).data,
+
   listExternalReferences: async (): Promise<any> => (await client.get('/api/references/external')).data,
   importFastF1Reference: async (payload: Record<string, unknown>): Promise<any> => (
     await client.post('/api/references/external/fastf1/import', payload, { timeout: 180_000 })

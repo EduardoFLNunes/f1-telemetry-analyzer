@@ -13,6 +13,7 @@ import Dashboard from './Dashboard';
 import HomePage from './pages/HomePage';
 import AnalysisPage from './pages/AnalysisPage';
 import DiagnosticsPage from './pages/DiagnosticsPage';
+import ColetaPage from './pages/ColetaPage';
 import { api } from './api/client';
 
 const App: React.FC = () => {
@@ -45,6 +46,7 @@ const App: React.FC = () => {
       <div className="app-main">
         {page === 'home' && <HomePage onNavigate={setPage} />}
         {page === 'live' && <Dashboard />}
+        {page === 'coleta' && <ColetaPage />}
         {page === 'analysis' && <AnalysisPage />}
         {page === 'diagnostics' && <DiagnosticsPage />}
       </div>

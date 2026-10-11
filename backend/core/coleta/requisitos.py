@@ -37,7 +37,8 @@ from __future__ import annotations
 
 import math
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from functools import lru_cache
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 # ------------------------------------------------------------- regras ---
@@ -487,10 +488,15 @@ def por_grupo() -> List[Tuple[str, str, List[Requisito]]]:
 _PASSO = re.compile(r"([^.\[\]]+)|\[(\d+)\]")
 
 
+@lru_cache(maxsize=1024)
+def _passos(caminho: str) -> Tuple[Tuple[str, str], ...]:
+    return tuple(_PASSO.findall(caminho))
+
+
 def ler_caminho(dados: Any, caminho: str) -> Any:
     """`carPhysics.tyres.wheelLoad[2]` dentro de um dicionario; None se algo faltar."""
     atual = dados
-    for chave, indice in _PASSO.findall(caminho):
+    for chave, indice in _passos(caminho):
         if atual is None:
             return None
         if chave:

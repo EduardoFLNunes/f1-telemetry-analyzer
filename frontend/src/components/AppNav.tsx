@@ -1,7 +1,7 @@
 import React from 'react';
-import { Home, Activity, LineChart, Stethoscope } from 'lucide-react';
+import { Home, Activity, LineChart, Stethoscope, ClipboardCheck } from 'lucide-react';
 
-export type AppPage = 'home' | 'live' | 'analysis' | 'diagnostics';
+export type AppPage = 'home' | 'live' | 'coleta' | 'analysis' | 'diagnostics';
 
 type NavEntry = {
   id: AppPage;
@@ -13,6 +13,7 @@ type NavEntry = {
 const ENTRIES: NavEntry[] = [
   { id: 'home', label: 'Inicio', title: 'Pagina inicial', Icon: Home },
   { id: 'live', label: 'Pista', title: 'Telemetria ao vivo', Icon: Activity },
+  { id: 'coleta', label: 'Coleta', title: 'Coleta de dados: a gravação tem o que os modelos precisam?', Icon: ClipboardCheck },
   { id: 'analysis', label: 'Analise', title: 'Analise de voltas gravadas', Icon: LineChart },
   { id: 'diagnostics', label: 'Sistema', title: 'Diagnostico e qualidade de dados', Icon: Stethoscope },
 ];
