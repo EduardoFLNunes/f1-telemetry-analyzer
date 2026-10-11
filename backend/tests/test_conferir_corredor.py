@@ -148,6 +148,31 @@ class RayTest(unittest.TestCase):
         self.assertAlmostEqual(cc.first_exit(mask, SAMPLES), 10.0, places=6)
 
 
+class OptionsTest(unittest.TestCase):
+    def side(self, corridor, stripe, surface, asphalt):
+        return cc.SideMeasure(corridor, corridor - 0.5, stripe, stripe, surface, asphalt, None, True,
+                              cc.COINCIDE, None, None)
+
+    def test_each_option_moves_only_the_width(self):
+        measures = {"esquerda": [self.side(6.0, 5.0, 6.5, 5.2), self.side(6.0, None, 6.5, 5.2)],
+                    "direita": [self.side(4.0, None, None, None), self.side(4.0, 4.0, 4.2, 4.2)]}
+        edges = cc.option_edges(measures)
+        np.testing.assert_allclose(edges[cc.OPTION_KEEP]["esquerda"], [5.5, 5.5])
+        # Faixa onde ha; sem faixa, a borda do asfalto; sem nenhuma das duas, a largura de hoje.
+        np.testing.assert_allclose(edges[cc.OPTION_STRIPE]["esquerda"], [4.5, 4.7])
+        np.testing.assert_allclose(edges[cc.OPTION_STRIPE]["direita"], [3.5, 3.5])
+        np.testing.assert_allclose(edges[cc.OPTION_SURFACE]["esquerda"], [6.0, 6.0])
+        np.testing.assert_allclose(edges[cc.OPTION_SURFACE]["direita"], [3.5, 3.7])
+
+    def test_the_profile_finds_where_most_samples_are_out(self):
+        offsets = np.concatenate([np.full(40, -0.6), np.full(40, 0.1), np.full(40, 0.6)])
+        out = np.concatenate([np.zeros(40, bool), np.r_[np.ones(10, bool), np.zeros(30, bool)], np.ones(40, bool)])
+        profile = cc.edge_profile(offsets, out)
+        self.assertEqual(profile["limiar_50pct_m"], 0.5)
+        row = next(r for r in profile["faixas"] if r["de_m"] == 0.0)
+        self.assertEqual((row["amostras"], row["pneus_fora_pct"]), (40, 25.0))
+
+
 class RunsTest(unittest.TestCase):
     def test_runs_close_the_loop(self):
         labels = ["a", "a", "b", "b", "a"]

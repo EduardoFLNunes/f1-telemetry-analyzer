@@ -32,6 +32,10 @@ normal e mede, ate 30 m:
 
 Uma faixa so conta se estiver ate 1 m alem da borda da superficie: mais longe
 que isso, ela e de outro trecho da pista e o lado fica "sem faixa".
+
+Para a Parte F, o script tambem mede, sem implementar nada, onde o `tyres_out`
+do jogo passa a marcar pneus fora em relacao a faixa e a borda da superficie, e
+quantas amostras cada opcao de corredor poria do lado errado desse sinal.
 """
 
 from __future__ import annotations
@@ -80,6 +84,14 @@ NO_STRIPE_SUB = ("coincide com a borda", "alem da borda", "antes da borda")
 
 # Parte D: encostado na borda do corredor util.
 TOUCH_M = 0.1
+
+# Parte F: as opcoes de corredor, medidas contra o sinal do jogo (nada e implementado).
+OPTION_KEEP = "1. manter como esta"
+OPTION_STRIPE = "2. faixa limite (borda do asfalto onde nao ha faixa)"
+OPTION_SURFACE = "3. borda da superficie (asfalto, zebra e pintura)"
+OPTIONS = (OPTION_KEEP, OPTION_STRIPE, OPTION_SURFACE)
+# Perfil do sinal: distancia do centro do carro ate cada referencia, + = alem dela.
+PROFILE_BINS_M = np.round(np.arange(-1.5, 3.01, 0.25), 2)
 
 
 # ------------------------------------------------------------------- camadas ---
@@ -402,7 +414,69 @@ def class_shares(measures: Dict[str, List[SideMeasure]]) -> Dict[str, Dict[str, 
 
 # ------------------------------------------------------------ parte C: jogo ---
 
-def tyres_out_check(track, measures, store, lap_ids: Sequence[str], sessions) -> Dict[str, object]:
+def option_edges(measures: Dict[str, List[SideMeasure]]) -> Dict[str, Dict[str, np.ndarray]]:
+    """A borda do corredor util de cada opcao da Parte F, de cada lado, como distancia a partir da linha central.
+
+    Todas usam a mesma regra de hoje para o corredor util (largura - meia-bitola +
+    folga de zebra); muda so a largura. Onde a referencia da opcao falta, fica a
+    largura de hoje.
+    """
+    shrink = config.CAR_HALF_WIDTH_M - config.KERB_ALLOWANCE_M
+
+    def first(*values):
+        return next(v for v in values if v is not None)
+
+    bases = {
+        OPTION_KEEP: lambda m: m.corridor_m,
+        OPTION_STRIPE: lambda m: first(m.stripe_m, m.asphalt_edge_m, m.corridor_m),
+        OPTION_SURFACE: lambda m: first(m.surface_edge_m, m.corridor_m),
+    }
+    return {name: {side: np.array([base(m) - shrink for m in measures[side]]) for side in SIDES}
+            for name, base in bases.items()}
+
+
+def edge_profile(offsets: np.ndarray, out_flags: np.ndarray, bins: np.ndarray = PROFILE_BINS_M) -> Dict[str, object]:
+    """Fracao das amostras com `tyres_out` >= 2 por distancia ate uma referencia (+ = alem dela).
+
+    `limiar_50pct_m` e o inicio da primeira faixa de distancia em que a maioria
+    das amostras ja tem pneus fora.
+    """
+    rows, threshold = [], None
+    for a, b in zip(bins[:-1], bins[1:]):
+        sel = (offsets >= a) & (offsets < b)
+        n = int(sel.sum())
+        pct = round(100.0 * float(out_flags[sel].mean()), 1) if n else None
+        rows.append({"de_m": float(a), "ate_m": float(b), "amostras": n, "pneus_fora_pct": pct})
+        if threshold is None and pct is not None and n >= 30 and pct >= 50.0:
+            threshold = float(a)
+    return {"faixas": rows, "limiar_50pct_m": threshold}
+
+
+def option_changes(measures: Dict[str, List[SideMeasure]],
+                   edges: Dict[str, Dict[str, np.ndarray]]) -> Dict[str, object]:
+    """Quanto a borda do corredor util de cada opcao se afasta da de hoje (+ = mais largo), de cada lado."""
+    out = {}
+    for name in OPTIONS[1:]:
+        out[name] = {}
+        for side in SIDES:
+            delta = edges[name][side] - edges[OPTION_KEEP][side]
+            out[name][side] = {
+                "mediana_m": float(np.median(delta)), "p10_m": float(np.percentile(delta, 10)),
+                "p90_m": float(np.percentile(delta, 90)),
+                "mais_largo_que_0_5m_pct": float(100 * np.mean(delta > 0.5)),
+                "mais_estreito_que_0_5m_pct": float(100 * np.mean(delta < -0.5)),
+            }
+    for side in SIDES:
+        out[OPTION_STRIPE][side]["pontos_pela_borda_do_asfalto"] = sum(
+            1 for m in measures[side] if m.stripe_m is None and m.asphalt_edge_m is not None)
+        out[OPTION_STRIPE][side]["pontos_sem_referencia"] = sum(
+            1 for m in measures[side] if m.stripe_m is None and m.asphalt_edge_m is None)
+        out[OPTION_SURFACE][side]["pontos_sem_referencia"] = sum(1 for m in measures[side] if m.surface_edge_m is None)
+    return out
+
+
+def tyres_out_check(track, measures, store, lap_ids: Sequence[str], sessions,
+                    edges: Optional[Dict[str, Dict[str, np.ndarray]]] = None) -> Dict[str, object]:
     """Cruza, amostra a amostra, a posicao do centro do carro com o corredor util e o `tyres_out` do jogo."""
     from ml.data.recordings import iter_laps
     from ml.preprocessing.alignment import align_lap
@@ -422,6 +496,8 @@ def tyres_out_check(track, measures, store, lap_ids: Sequence[str], sessions) ->
     # Quanto as amostras "estreito demais" passam da borda util, e quanto as "largo demais" ficam dentro dela.
     beyond = {side: [] for side in SIDES}
     margin = {side: [] for side in SIDES}
+    # Cada amostra do lado em que o carro esta: ponto da grade, distancia do centro ate a linha central, pneus fora.
+    kept = {side: {"idx": [], "towards": [], "out": []} for side in SIDES}
     for sid, sequences in sorted(by_session.items()):
         session = available.get(sid)
         if session is None:
@@ -456,6 +532,9 @@ def tyres_out_check(track, measures, store, lap_ids: Sequence[str], sessions) ->
                 useful = high[idx] if side == LEFT else -low[idx]
                 beyond[side].extend((towards - useful)[narrow].tolist())
                 margin[side].extend((useful - towards)[wide].tolist())
+                kept[side]["idx"].append(idx[mask_side])
+                kept[side]["towards"].append(towards[mask_side])
+                kept[side]["out"].append(tyres[mask_side] >= 2)
                 for i in np.unique(idx[wide]):
                     rec["voltas_largo"][i].add(lap.lap_id)
                 for i in np.unique(idx[narrow]):
@@ -489,7 +568,37 @@ def tyres_out_check(track, measures, store, lap_ids: Sequence[str], sessions) ->
                      "estreito_demais_alem_da_borda_util": stats(beyond[side]),
                      "largo_demais_dentro_da_borda_util": stats(margin[side])}
               for side in SIDES}
-    return {"voltas_usadas": used, "voltas_sem_canal": missing, "totais": totals, "trechos": sections}
+
+    # Onde o jogo passa a dizer "pneus fora": o perfil do sinal contra a faixa, a
+    # borda da superficie e a borda util de hoje; e quantas amostras cada opcao da
+    # Parte F poria do lado errado do sinal.
+    profiles, options = {}, {}
+    for side in SIDES:
+        if not kept[side]["idx"]:
+            continue
+        idx = np.concatenate(kept[side]["idx"])
+        towards = np.concatenate(kept[side]["towards"])
+        out = np.concatenate(kept[side]["out"])
+        references = {
+            "faixa": np.array([np.nan if m.stripe_m is None else m.stripe_m for m in measures[side]]),
+            "borda da superficie": np.array([np.nan if m.surface_edge_m is None else m.surface_edge_m
+                                             for m in measures[side]]),
+            "borda util de hoje": np.array([m.useful_m for m in measures[side]]),
+        }
+        profiles[side] = {}
+        for name, ref in references.items():
+            offsets = towards - ref[idx]
+            ok = np.isfinite(offsets)
+            profiles[side][name] = edge_profile(offsets[ok], out[ok])
+        for name, edge in (edges or {}).items():
+            inside = towards <= edge[side][idx]
+            options.setdefault(name, {})[side] = {
+                "largo_demais": int(np.sum(inside & out)),
+                "estreito_demais": int(np.sum(~inside & ~out)),
+                "fora_do_corredor_util": int(np.sum(~inside)),
+            }
+    return {"voltas_usadas": used, "voltas_sem_canal": missing, "totais": totals, "trechos": sections,
+            "perfil_do_sinal": profiles, "opcoes_da_parte_f": options}
 
 
 # ------------------------------------------------------- parte D: trajetorias ---
@@ -636,6 +745,7 @@ def run(out_dir: Path, raw_laps: bool = True) -> Dict[str, object]:
     measures = measure_track(track, layers)
     shares = class_shares(measures)
     segments = segments_table(track, measures)
+    edges = option_edges(measures)
 
     # Trajetorias para a Parte D e as figuras.
     store = load_store_v2(track=track)
@@ -670,7 +780,7 @@ def run(out_dir: Path, raw_laps: bool = True) -> Dict[str, object]:
     if raw_laps:
         sessions = list_all_sessions()
         wanted = store.laps[store.laps["origem"].isin(["humano", "ia"])]["lap_id"].tolist()
-        part_c = tyres_out_check(track, measures, store, wanted, sessions)
+        part_c = tyres_out_check(track, measures, store, wanted, sessions, edges)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     windows = figure_windows(track, segments)
@@ -717,6 +827,11 @@ def run(out_dir: Path, raw_laps: bool = True) -> Dict[str, object]:
         "parte_b": {"classes_pct": shares, "trechos": segments, "metadado_do_cache": raw["metadata"].get("builtFromLimits")},
         "parte_c": part_c,
         "parte_d": part_d,
+        "parte_f": {
+            "regra": "mesma regra do corredor util de hoje (largura - 0,5 m); muda so a largura; onde falta a referencia, fica a de hoje",
+            "mudanca_da_borda_util": option_changes(measures, edges),
+            "contra_o_sinal_do_jogo": None if part_c is None else part_c["opcoes_da_parte_f"],
+        },
         "figura": {"arquivo": str(figure), "quadros": windows},
         "por_ponto": per_point,
     }
