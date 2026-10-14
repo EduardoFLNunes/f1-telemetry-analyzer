@@ -25,7 +25,7 @@ export default {
         estado: { ok: v('estado-ok'), aviso: v('estado-aviso'), erro: v('estado-erro'), neutro: v('estado-neutro') },
       },
       fontFamily: {
-        titulo: ['"Big Shoulders"', '"Arial Narrow"', 'sans-serif'],
+        titulo: ['"Barlow Condensed"', '"Arial Narrow"', 'sans-serif'],
         sans: ['"Instrument Sans"', '"Segoe UI"', 'system-ui', 'sans-serif'],
         mono: ['"IBM Plex Mono"', 'Consolas', '"Cascadia Mono"', 'monospace'],
       },

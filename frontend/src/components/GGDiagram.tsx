@@ -77,7 +77,7 @@ export const GGDiagram: React.FC = () => {
         ctx.stroke();
         if (!simple && g < 4) {
           ctx.fillStyle = 'rgba(255,255,255,0.2)';
-          ctx.font = `500 5.5px "JetBrains Mono"`;
+          ctx.font = `500 5.5px "IBM Plex Mono"`;
           ctx.textAlign = 'left';
           ctx.fillText(`${g}G`, cx + r + 1, cy - 1);
         }
@@ -93,7 +93,7 @@ export const GGDiagram: React.FC = () => {
 
       if (!simple) {
         ctx.fillStyle = 'rgba(255,255,255,0.2)';
-        ctx.font = `500 5px "JetBrains Mono"`;
+        ctx.font = `500 5px "IBM Plex Mono"`;
         ctx.textAlign = 'center';
         ctx.fillText('LAT', cx, cy + R + 8);
         ctx.save(); ctx.translate(cx - R - 7, cy); ctx.rotate(-Math.PI/2);
@@ -149,7 +149,7 @@ export const GGDiagram: React.FC = () => {
 
         if (!simple) {
           ctx.fillStyle = 'rgba(255,255,255,0.6)';
-          ctx.font = `bold 6px "JetBrains Mono"`;
+          ctx.font = `bold 6px "IBM Plex Mono"`;
           ctx.textAlign = 'center';
           ctx.fillText(`${totalG.toFixed(2)}G`, cx, S - 4);
         }

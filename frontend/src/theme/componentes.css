@@ -270,11 +270,13 @@ body {
   font-size: 12.5px;
   color: var(--texto-2);
 }
+/* Número grande na Barlow Condensed com `tnum`: os algarismos não dançam quando o valor muda. */
 .cartao-numero__valor {
-  font-family: var(--fonte-dado);
+  font-family: var(--fonte-titulo);
   font-weight: 700;
-  font-size: 26px;
-  line-height: 1.15;
+  font-size: 34px;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
@@ -394,6 +396,21 @@ body {
   cursor: pointer;
 }
 .segmentado button[aria-pressed='true'] {
+  background: var(--texto-1);
+  color: var(--fundo);
+}
+/* O mesmo desenho para abas que são links (Sistema › Depuração). */
+.segmentado-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: var(--raio-1);
+  color: var(--texto-2);
+  font: 600 13px var(--fonte-texto);
+  text-decoration: none;
+}
+.segmentado-link[aria-current='page'] {
   background: var(--texto-1);
   color: var(--fundo);
 }

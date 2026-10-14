@@ -37,7 +37,7 @@ export const SessionTimeline: React.FC = () => {
         ctx.fillStyle = 'rgba(255,255,255,0.03)';
         ctx.fillRect(0, 4, W, H - 4);
         ctx.fillStyle = 'rgba(255,255,255,0.06)';
-        ctx.font = `600 7px "JetBrains Mono"`;
+        ctx.font = `600 7px "IBM Plex Mono"`;
         ctx.textAlign = 'center';
         ctx.fillText('NO TELEMETRY DATA', W / 2, H / 2 + 2);
         animRef.current = requestAnimationFrame(loop);
@@ -111,7 +111,7 @@ export const SessionTimeline: React.FC = () => {
         const x = sToX(s.start_s);
         ctx.fillStyle = sectorColors[i % 3];
         ctx.fillRect(x, traceTop, 1, 3);
-        ctx.font = `600 6px "JetBrains Mono"`;
+        ctx.font = `600 6px "IBM Plex Mono"`;
         ctx.textAlign = 'left';
         ctx.fillStyle = sectorColors[i % 3];
         ctx.globalAlpha = 0.5;
@@ -139,7 +139,7 @@ export const SessionTimeline: React.FC = () => {
 
         // Distance label
         ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.font = `600 6px "JetBrains Mono"`;
+        ctx.font = `600 6px "IBM Plex Mono"`;
         ctx.textAlign = cx > W / 2 ? 'right' : 'left';
         ctx.fillText(`${globalCursorS.toFixed(0)}m`, cx + (cx > W / 2 ? -3 : 3), H - 1);
       }
