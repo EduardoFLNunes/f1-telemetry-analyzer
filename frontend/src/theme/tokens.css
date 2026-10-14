@@ -1,0 +1,122 @@
+/*
+ * Variáveis do sistema visual (pedido 29). Toda cor dos componentes sai daqui
+ * (e da configuração do Tailwind, que aponta para estas variáveis); nenhum
+ * componente novo tem cor solta. O porquê de cada cor está em
+ * docs/sistema_visual.md e na tela Sistema › Guia visual.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Fundo e superfícies: carbono, quase preto. */
+  --fundo: #08090b;
+  --superficie: #0e1013; /* opaca: gráficos, tabelas e mapas */
+  --superficie-2: #15181c; /* vidro sem transparência; botões */
+  --superficie-3: #1d2126; /* realce de linha e hover */
+  --linha: #262b31;
+  --linha-fraca: #1b1f24;
+
+  /* Texto: branco e cinzas. Todos passam 4,5:1 sobre o vidro (docs/sistema_visual.md). */
+  --texto-1: #f2f4f5;
+  --texto-2: #b4bcc4;
+  --texto-3: #8e98a2;
+  --texto-apagado: #4a525b; /* só traços decorativos e o "—" de sem dados; nunca texto corrido */
+
+  /* Destaque: o vermelho das transmissões, sem marca de ninguém. */
+  --vermelho: #e10600; /* tela ativa, gravação, rádio; fundo de botão com texto branco */
+  --vermelho-claro: #ff4a3d; /* o vermelho como texto ou ícone sobre o carbono */
+  --vermelho-escuro: #c80500; /* botão vermelho com o mouse em cima */
+  --vermelho-fundo: rgba(225, 6, 0, 0.12);
+  --vermelho-borda: rgba(225, 6, 0, 0.55);
+  --texto-sobre-vermelho: #ffffff;
+  --radio-foco: #3a4049; /* etiqueta "Foco" do rádio: neutra, para não competir com a frase */
+
+  /* Realces neutros sobre o carbono e o vidro. */
+  --realce-1: rgba(255, 255, 255, 0.04);
+  --realce-2: rgba(255, 255, 255, 0.06);
+  --realce-3: rgba(255, 255, 255, 0.08);
+  --borda-botao: rgba(255, 255, 255, 0.16);
+  --borda-dica: rgba(255, 255, 255, 0.12);
+  --chip-fundo: rgba(14, 16, 19, 0.7);
+  --sombra-dica: rgba(0, 0, 0, 0.4);
+  --barra-rolagem: rgba(255, 255, 255, 0.1);
+  --barra-rolagem-hover: rgba(255, 255, 255, 0.2);
+
+  /* Dados (do protótipo). Perda e ganho sempre com o sinal e o número. */
+  --freio: #ff5a5f;
+  --acelerador: #3ddc84;
+  --parcial: #f5c542;
+  --perda: #ffa24a;
+  --perda-fraca: #4a3322;
+  --ganho: #6f9bff;
+  --voce: #ffffff;
+  --referencia: #7f93a6;
+
+  /* Cronometragem, só em tempos e só com o significado da F1. */
+  --tempo-roxo: #b266ff; /* a melhor de todas */
+  --tempo-verde: #2bd67b; /* a sua melhor */
+  --tempo-amarelo: #f5c542; /* sem melhora */
+
+  /* Estados (coleta, backend). Cada etiqueta tem ícone e texto além da cor. */
+  --estado-ok: #4cc38a;
+  --estado-aviso: #f2c14e;
+  --estado-erro: #ff7a6b;
+  --estado-neutro: #8e98a2;
+
+  /* Vidro. Uma camada de desfoque por região; nunca vidro dentro de vidro. */
+  --vidro-fundo: rgba(22, 25, 29, 0.55);
+  --vidro-fundo-forte: rgba(28, 31, 36, 0.72);
+  --vidro-borda: rgba(255, 255, 255, 0.09);
+  --vidro-brilho: rgba(255, 255, 255, 0.06);
+  --vidro-desfoque: blur(18px) saturate(1.3);
+  --vidro-desfoque-dica: blur(12px);
+  --vidro-sombra: 0 24px 48px rgba(0, 0, 0, 0.35);
+  --superficie-no-vidro: rgba(14, 16, 19, 0.92);
+
+  /* O fundo com profundidade, para o vidro ter o que desfocar. */
+  --fundo-brilho-vermelho: rgba(225, 6, 0, 0.2);
+  --fundo-brilho-frio: rgba(38, 62, 90, 0.34);
+  --fundo-trama: rgba(255, 255, 255, 0.016);
+
+  /* Tipografia. */
+  --fonte-titulo: 'Big Shoulders', 'Arial Narrow', sans-serif;
+  --fonte-texto: 'Instrument Sans', 'Segoe UI', system-ui, sans-serif;
+  --fonte-dado: 'IBM Plex Mono', Consolas, 'Cascadia Mono', monospace;
+
+  --raio-1: 8px;
+  --raio-2: 12px;
+  --raio-3: 16px;
+
+  /* Nomes antigos, usados pelas telas que ainda não foram redesenhadas
+     (Volta e Evolução recebem o conteúdo atual). Apontam para a paleta nova. */
+  --bg-core: var(--fundo);
+  --bg-panel: var(--superficie);
+  --bg-surface: var(--superficie-2);
+  --border: rgba(255, 255, 255, 0.07);
+  --border-hi: rgba(255, 255, 255, 0.14);
+  --text-1: var(--texto-1);
+  --text-2: var(--texto-2);
+  --text-3: var(--texto-3);
+  --cyan: #22d3ee;
+  --emerald: var(--estado-ok);
+  --rose: var(--estado-erro);
+  --amber: var(--estado-aviso);
+  --violet: #a78bfa;
+}
+
+/* Sem transparência: pedido pelo sistema ou pela tela Sistema. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --vidro-fundo: #14171b;
+    --vidro-fundo-forte: #1a1d22;
+    --vidro-desfoque: none;
+    --vidro-desfoque-dica: none;
+    --superficie-no-vidro: var(--superficie);
+  }
+}
+:root[data-vidro='desligado'] {
+  --vidro-fundo: #14171b;
+  --vidro-fundo-forte: #1a1d22;
+  --vidro-desfoque: none;
+  --vidro-desfoque-dica: none;
+  --superficie-no-vidro: var(--superficie);
+}

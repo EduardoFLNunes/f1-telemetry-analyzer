@@ -1,0 +1,59 @@
+/*
+ * Fontes do sistema visual (pedido 29), como arquivos locais: o app instalado
+ * funciona sem internet. Licenças (SIL Open Font License 1.1) ao lado dos
+ * arquivos, em src/assets/fonts/*-OFL.txt.
+ *
+ * - Big Shoulders: títulos e rótulos grandes. Os algarismos não têm a mesma
+ *   largura, então ela nunca mostra um número que muda.
+ * - Instrument Sans: texto do app (tem `tnum` para números em tabela).
+ * - IBM Plex Mono: tempos, diferenças, tabelas e rótulos de dado.
+ */
+@font-face {
+  font-family: 'Big Shoulders';
+  src: url('../assets/fonts/BigShoulders-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Big Shoulders';
+  src: url('../assets/fonts/BigShoulders-Bold.ttf') format('truetype');
+  font-weight: 600 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('../assets/fonts/InstrumentSans-Regular.ttf') format('truetype');
+  font-weight: 300 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('../assets/fonts/InstrumentSans-Bold.ttf') format('truetype');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('../assets/fonts/InstrumentSans-Italic.ttf') format('truetype');
+  font-weight: 300 500;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('../assets/fonts/IBMPlexMono-Regular.ttf') format('truetype');
+  font-weight: 300 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('../assets/fonts/IBMPlexMono-Bold.ttf') format('truetype');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
