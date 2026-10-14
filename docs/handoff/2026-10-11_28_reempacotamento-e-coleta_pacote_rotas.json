@@ -1,0 +1,990 @@
+{
+ "antes": {
+  "app": {
+   "versao": "0.3.0-coleta-modelos",
+   "commit": "e0f64ece861091942c9ca38a9d0fdd3d500e0c4b",
+   "arvoreSuja": true,
+   "empacotado": true,
+   "fonte": "build-info",
+   "construidoEm": "2026-10-14T13:01:50.433Z",
+   "commitCurto": "e0f64ec"
+  },
+  "backend": {
+   "servico": "automobilista-telemetria-backend",
+   "versao": "coleta-modelos",
+   "pastaDeDados": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\tmp\\teste-pacote-28\\userData",
+   "pastaDeRecursos": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\desktop\\dist\\win-unpacked\\resources"
+  },
+  "gravacao": {
+   "pasta": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\tmp\\teste-pacote-28\\userData\\data\\recordings",
+   "disco": "C:\\",
+   "livreGb": 43.58,
+   "totalGb": 952.13,
+   "nivel": "ok",
+   "limites": {
+    "amareloGb": 5.0,
+    "vermelhoGb": 2.0
+   },
+   "gravando": false,
+   "sessao": null
+  },
+  "jogo": {
+   "fonte": "mock",
+   "captura": {
+    "allowed": false,
+    "reason": "waiting_for_assetto_corsa_process",
+    "sharedMemoryGate": {
+     "enabled": true,
+     "allowed": false,
+     "processRunning": false,
+     "processNames": [
+      "acs.exe",
+      "AssettoCorsa.exe"
+     ],
+     "pages": {
+      "checked": true,
+      "required": [
+       "acpmf_physics",
+       "acpmf_graphics",
+       "acpmf_static"
+      ],
+      "available": {},
+      "missing": [
+       "acpmf_physics",
+       "acpmf_graphics",
+       "acpmf_static"
+      ],
+      "ready": false
+     },
+     "static": {
+      "checked": false,
+      "ready": false
+     },
+     "reason": "waiting_for_assetto_corsa_process"
+    }
+   },
+   "carro": null,
+   "pista": "vhe_interlagos_gp_kn5_surface_interval_geometry",
+   "carroEsperado": "rss_formula_rss_3_v6_2026",
+   "pistaEsperada": "vhe_interlagos",
+   "carroBate": null,
+   "pistaBate": true,
+   "avisos": []
+  },
+  "coach": {
+   "ativo": true,
+   "motivoCalado": null,
+   "referencia": "volta_ia",
+   "referenciaRotulo": "volta da IA",
+   "referenciaFonte": "padrao",
+   "repositorio": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer",
+   "modelo": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\reference_models\\vhe_interlagos.json",
+    "encontrado": true,
+    "construidoEm": "2026-10-10T20:38:13.223967+00:00",
+    "voltasSuas": 43,
+    "geometryId": "0ed16f0dd2225990",
+    "referencias": {
+     "minha_melhor": {
+      "volta": "2026-10-04_02-24-04_vhe_interlagos#0018",
+      "tempoS": 89.389,
+      "carro": "rss_formula_rss_3_v6_2026"
+     },
+     "volta_ia": {
+      "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+      "tempoS": 84.828,
+      "carro": "rss_formula_rss_3_v6_2026"
+     }
+    }
+   },
+   "geometria": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\reference_models\\vhe_interlagos.geometry.json",
+    "encontrada": true,
+    "geometryId": "0ed16f0dd2225990"
+   },
+   "geometryIdBate": true
+  },
+  "configuracao": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\tmp\\teste-pacote-28\\userData\\data\\configuracao\\app.json",
+   "repositorio": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer",
+   "repositorioFonte": "AT_REPO_PATH",
+   "repositorioPadrao": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer",
+   "repositorioExiste": true,
+   "referenciaCoach": "volta_ia",
+   "referenciaCoachRotulo": "volta da IA",
+   "referenciaCoachFonte": "padrao",
+   "referenciaTravadaPelaVariavel": false,
+   "opcoesReferencia": [
+    {
+     "id": "volta_ia",
+     "rotulo": "volta da IA"
+    },
+    {
+     "id": "minha_melhor",
+     "rotulo": "sua melhor volta"
+    },
+    {
+     "id": "desligado",
+     "rotulo": "coach desligado"
+    }
+   ]
+  },
+  "conferencia": {
+   "geometria": {
+    "geometryId": "0ed16f0dd2225990",
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\cache\\tracks\\vhe_interlagos_gp_kn5_surface_interval_geometry.json",
+    "origem": "repositório",
+    "pontos": 2167,
+    "comprimentoM": 4334.08
+   },
+   "pastaDasVerificacoes": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\tmp\\teste-pacote-28\\userData\\data\\verificacoes",
+   "pastasDeGravacao": [
+    {
+     "pasta": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\tmp\\teste-pacote-28\\userData\\data\\recordings",
+     "origem": "pasta de dados do app"
+    },
+    {
+     "pasta": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\recordings",
+     "origem": "repositório"
+    }
+   ]
+  }
+ },
+ "conferencia_04_10_pelo_pacote": {
+  "estado": "pronta",
+  "sessao": "2026-10-04_03-21-52_vhe_interlagos",
+  "resultado": {
+   "formato": "coleta-verificacao/1",
+   "sessao": "2026-10-04_03-21-52_vhe_interlagos",
+   "pasta": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\recordings\\2026-10-04_03-21-52_vhe_interlagos",
+   "final": true,
+   "atualizadoEm": "2026-10-14T10:09:38",
+   "pista": "vhe_interlagos",
+   "gravacao": {
+    "carModel": "rss_formula_rss_3_v6_2026",
+    "appVersion": null,
+    "appCommit": null,
+    "inicio": "2026-10-04T03:21:52.013060",
+    "fim": "2026-10-04T03:35:56.800066"
+   },
+   "geometria": {
+    "geometryId": "0ed16f0dd2225990",
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\cache\\tracks\\vhe_interlagos_gp_kn5_surface_interval_geometry.json",
+    "origem": "repositório",
+    "pontos": 2167,
+    "comprimentoM": 4334.08
+   },
+   "leitura": {
+    "linhas": 48896,
+    "corrompidas": 0,
+    "bytes": 182687339,
+    "segundosDeConferencia": 1.33
+   },
+   "voltaAberta": null,
+   "voltas": [
+    {
+     "lapId": "2026-10-04_03-21-52_vhe_interlagos#0000",
+     "sequencia": 0,
+     "voltaDoJogo": 6,
+     "amostras": 6099,
+     "linhasCorrompidas": 0,
+     "origem": "humano",
+     "origemRotulo": "você",
+     "preenchimentoItens": {
+      "lap_time": 1.0,
+      "lap_number": 1.0,
+      "distance": 1.0,
+      "position": 1.0,
+      "speed": 1.0,
+      "throttle": 1.0,
+      "brake": 1.0,
+      "steering": 1.0,
+      "gear": 1.0,
+      "rpm": 1.0,
+      "ai_controlled": 1.0,
+      "track": 1.0,
+      "tyres_out": 1.0,
+      "off_track": 1.0,
+      "yaw_rate": 0.0,
+      "velocity_long": 0.0,
+      "velocity_lat": 0.0,
+      "brake_temp": 0.0,
+      "brake_bias": 0.0,
+      "tyre_core_temp": 1.0,
+      "tyre_temp_inner": 0.0,
+      "tyre_temp_middle": 0.0,
+      "tyre_temp_outer": 0.0,
+      "wheel_load": 1.0,
+      "wheel_slip": 1.0,
+      "tyre_pressure": 1.0,
+      "suspension_travel": 1.0,
+      "acc_g": 1.0,
+      "clutch": 1.0,
+      "fuel": 1.0,
+      "tyre_wear": 1.0,
+      "grip_index": 1.0,
+      "car_model": 1.0
+     },
+     "preenchimentoGrupos": {
+      "base": {
+       "minimo": 1.0,
+       "piorItem": "lap_time"
+      },
+      "origem": {
+       "minimo": 1.0,
+       "piorItem": "ai_controlled"
+      },
+      "limites": {
+       "minimo": 1.0,
+       "piorItem": "tyres_out"
+      },
+      "m1": {
+       "minimo": 0.0,
+       "piorItem": "yaw_rate"
+      },
+      "contexto": {
+       "minimo": 1.0,
+       "piorItem": "fuel"
+      }
+     },
+     "valida": false,
+     "motivos": [
+      "faltam 224.6 m de pista (limite 6 m)",
+      "carro parado em 3.8% das amostras"
+     ],
+     "box": null,
+     "tempoS": null,
+     "duracaoS": 104.697,
+     "grade": {},
+     "pontosDaGrade": 2167,
+     "taxaHz": 58.16827305364358,
+     "tempo": null,
+     "duracao": "1:44,697",
+     "entraNoStore": false
+    },
+    {
+     "lapId": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "sequencia": 1,
+     "voltaDoJogo": 7,
+     "amostras": 5563,
+     "linhasCorrompidas": 0,
+     "origem": "humano",
+     "origemRotulo": "você",
+     "preenchimentoItens": {
+      "lap_time": 1.0,
+      "lap_number": 1.0,
+      "distance": 1.0,
+      "position": 1.0,
+      "speed": 1.0,
+      "throttle": 1.0,
+      "brake": 1.0,
+      "steering": 1.0,
+      "gear": 1.0,
+      "rpm": 1.0,
+      "ai_controlled": 1.0,
+      "track": 1.0,
+      "tyres_out": 1.0,
+      "off_track": 1.0,
+      "yaw_rate": 0.0,
+      "velocity_long": 0.0,
+      "velocity_lat": 0.0,
+      "brake_temp": 0.0,
+      "brake_bias": 0.0,
+      "tyre_core_temp": 1.0,
+      "tyre_temp_inner": 0.0,
+      "tyre_temp_middle": 0.0,
+      "tyre_temp_outer": 0.0,
+      "wheel_load": 1.0,
+      "wheel_slip": 1.0,
+      "tyre_pressure": 1.0,
+      "suspension_travel": 1.0,
+      "acc_g": 1.0,
+      "clutch": 1.0,
+      "fuel": 1.0,
+      "tyre_wear": 1.0,
+      "grip_index": 1.0,
+      "car_model": 1.0
+     },
+     "preenchimentoGrupos": {
+      "base": {
+       "minimo": 1.0,
+       "piorItem": "lap_time"
+      },
+      "origem": {
+       "minimo": 1.0,
+       "piorItem": "ai_controlled"
+      },
+      "limites": {
+       "minimo": 1.0,
+       "piorItem": "tyres_out"
+      },
+      "m1": {
+       "minimo": 0.0,
+       "piorItem": "yaw_rate"
+      },
+      "contexto": {
+       "minimo": 1.0,
+       "piorItem": "fuel"
+      }
+     },
+     "valida": true,
+     "motivos": [],
+     "box": false,
+     "tempoS": 95.2393499734448,
+     "duracaoS": 95.217,
+     "grade": {
+      "speed_kmh": 2167,
+      "throttle": 2167,
+      "brake": 2167,
+      "steering": 2167,
+      "steer_angle": 2167,
+      "gear": 2167,
+      "rpm": 2167,
+      "off_track": 2167,
+      "yaw_rate": 0,
+      "velocity_long": 0,
+      "velocity_lat": 0,
+      "brake_temp_fl": 0,
+      "brake_temp_fr": 0,
+      "brake_temp_rl": 0,
+      "brake_temp_rr": 0,
+      "tyre_core_temp_fl": 2167,
+      "tyre_core_temp_fr": 2167,
+      "tyre_core_temp_rl": 2167,
+      "tyre_core_temp_rr": 2167,
+      "wheel_load_fl": 2167,
+      "wheel_load_fr": 2167,
+      "wheel_load_rl": 2167,
+      "wheel_load_rr": 2167,
+      "wheel_slip_fl": 2167,
+      "wheel_slip_fr": 2167,
+      "wheel_slip_rl": 2167,
+      "wheel_slip_rr": 2167,
+      "wheel_slip": 2167,
+      "tyre_pressure_fl": 2167,
+      "tyre_pressure_fr": 2167,
+      "tyre_pressure_rl": 2167,
+      "tyre_pressure_rr": 2167,
+      "lateral_g": 2167,
+      "longitudinal_g": 2167,
+      "fuel": 2167,
+      "tyre_wear": 2167,
+      "grip_index": 2167
+     },
+     "pontosDaGrade": 2167,
+     "taxaHz": 58.30978312640857,
+     "tempo": "1:35,239",
+     "duracao": "1:35,217",
+     "entraNoStore": true
+    },
+    {
+     "lapId": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "sequencia": 2,
+     "voltaDoJogo": 8,
+     "amostras": 5315,
+     "linhasCorrompidas": 0,
+     "origem": "humano",
+     "origemRotulo": "você",
+     "preenchimentoItens": {
+      "lap_time": 1.0,
+      "lap_number": 1.0,
+      "distance": 1.0,
+      "position": 1.0,
+      "speed": 1.0,
+      "throttle": 1.0,
+      "brake": 1.0,
+      "steering": 1.0,
+      "gear": 1.0,
+      "rpm": 1.0,
+      "ai_controlled": 1.0,
+      "track": 1.0,
+      "tyres_out": 1.0,
+      "off_track": 1.0,
+      "yaw_rate": 0.0,
+      "velocity_long": 0.0,
+      "velocity_lat": 0.0,
+      "brake_temp": 0.0,
+      "brake_bias": 0.0,
+      "tyre_core_temp": 1.0,
+      "tyre_temp_inner": 0.0,
+      "tyre_temp_middle": 0.0,
+      "tyre_temp_outer": 0.0,
+      "wheel_load": 1.0,
+      "wheel_slip": 1.0,
+      "tyre_pressure": 1.0,
+      "suspension_travel": 1.0,
+      "acc_g": 1.0,
+      "clutch": 1.0,
+      "fuel": 1.0,
+      "tyre_wear": 1.0,
+      "grip_index": 1.0,
+      "car_model": 1.0
+     },
+     "preenchimentoGrupos": {
+      "base": {
+       "minimo": 1.0,
+       "piorItem": "lap_time"
+      },
+      "origem": {
+       "minimo": 1.0,
+       "piorItem": "ai_controlled"
+      },
+      "limites": {
+       "minimo": 1.0,
+       "piorItem": "tyres_out"
+      },
+      "m1": {
+       "minimo": 0.0,
+       "piorItem": "yaw_rate"
+      },
+      "contexto": {
+       "minimo": 1.0,
+       "piorItem": "fuel"
+      }
+     },
+     "valida": true,
+     "motivos": [],
+     "box": false,
+     "tempoS": 91.7416506783154,
+     "duracaoS": 91.719,
+     "grade": {
+      "speed_kmh": 2167,
+      "throttle": 2167,
+      "brake": 2167,
+      "steering": 2167,
+      "steer_angle": 2167,
+      "gear": 2167,
+      "rpm": 2167,
+      "off_track": 2167,
+      "yaw_rate": 0,
+      "velocity_long": 0,
+      "velocity_lat": 0,
+      "brake_temp_fl": 0,
+      "brake_temp_fr": 0,
+      "brake_temp_rl": 0,
+      "brake_temp_rr": 0,
+      "tyre_core_temp_fl": 2167,
+      "tyre_core_temp_fr": 2167,
+      "tyre_core_temp_rl": 2167,
+      "tyre_core_temp_rr": 2167,
+      "wheel_load_fl": 2167,
+      "wheel_load_fr": 2167,
+      "wheel_load_rl": 2167,
+      "wheel_load_rr": 2167,
+      "wheel_slip_fl": 2167,
+      "wheel_slip_fr": 2167,
+      "wheel_slip_rl": 2167,
+      "wheel_slip_rr": 2167,
+      "wheel_slip": 2167,
+      "tyre_pressure_fl": 2167,
+      "tyre_pressure_fr": 2167,
+      "tyre_pressure_rl": 2167,
+      "tyre_pressure_rr": 2167,
+      "lateral_g": 2167,
+      "longitudinal_g": 2167,
+      "fuel": 2167,
+      "tyre_wear": 2167,
+      "grip_index": 2167
+     },
+     "pontosDaGrade": 2167,
+     "taxaHz": 57.86319709694576,
+     "tempo": "1:31,742",
+     "duracao": "1:31,719",
+     "entraNoStore": true
+    },
+    {
+     "lapId": "2026-10-04_03-21-52_vhe_interlagos#0003",
+     "sequencia": 3,
+     "voltaDoJogo": 8,
+     "amostras": 6246,
+     "linhasCorrompidas": 0,
+     "origem": "humano",
+     "origemRotulo": "você",
+     "preenchimentoItens": {
+      "lap_time": 1.0,
+      "lap_number": 1.0,
+      "distance": 1.0,
+      "position": 1.0,
+      "speed": 1.0,
+      "throttle": 1.0,
+      "brake": 1.0,
+      "steering": 1.0,
+      "gear": 1.0,
+      "rpm": 1.0,
+      "ai_controlled": 1.0,
+      "track": 1.0,
+      "tyres_out": 1.0,
+      "off_track": 1.0,
+      "yaw_rate": 0.0,
+      "velocity_long": 0.0,
+      "velocity_lat": 0.0,
+      "brake_temp": 0.0,
+      "brake_bias": 0.0,
+      "tyre_core_temp": 1.0,
+      "tyre_temp_inner": 0.0,
+      "tyre_temp_middle": 0.0,
+      "tyre_temp_outer": 0.0,
+      "wheel_load": 1.0,
+      "wheel_slip": 1.0,
+      "tyre_pressure": 1.0,
+      "suspension_travel": 1.0,
+      "acc_g": 1.0,
+      "clutch": 1.0,
+      "fuel": 1.0,
+      "tyre_wear": 1.0,
+      "grip_index": 1.0,
+      "car_model": 1.0
+     },
+     "preenchimentoGrupos": {
+      "base": {
+       "minimo": 1.0,
+       "piorItem": "lap_time"
+      },
+      "origem": {
+       "minimo": 1.0,
+       "piorItem": "ai_controlled"
+      },
+      "limites": {
+       "minimo": 1.0,
+       "piorItem": "tyres_out"
+      },
+      "m1": {
+       "minimo": 0.0,
+       "piorItem": "yaw_rate"
+      },
+      "contexto": {
+       "minimo": 1.0,
+       "piorItem": "fuel"
+      }
+     },
+     "valida": false,
+     "motivos": [
+      "carro parado em 4.5% das amostras"
+     ],
+     "box": null,
+     "tempoS": null,
+     "duracaoS": 107.157,
+     "grade": {},
+     "pontosDaGrade": 2167,
+     "taxaHz": 58.24280701985473,
+     "tempo": null,
+     "duracao": "1:47,157",
+     "entraNoStore": false
+    },
+    {
+     "lapId": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "sequencia": 4,
+     "voltaDoJogo": 10,
+     "amostras": 5411,
+     "linhasCorrompidas": 0,
+     "origem": "humano",
+     "origemRotulo": "você",
+     "preenchimentoItens": {
+      "lap_time": 1.0,
+      "lap_number": 1.0,
+      "distance": 1.0,
+      "position": 1.0,
+      "speed": 1.0,
+      "throttle": 1.0,
+      "brake": 1.0,
+      "steering": 1.0,
+      "gear": 1.0,
+      "rpm": 1.0,
+      "ai_controlled": 1.0,
+      "track": 1.0,
+      "tyres_out": 1.0,
+      "off_track": 1.0,
+      "yaw_rate": 0.0,
+      "velocity_long": 0.0,
+      "velocity_lat": 0.0,
+      "brake_temp": 0.0,
+      "brake_bias": 0.0,
+      "tyre_core_temp": 1.0,
+      "tyre_temp_inner": 0.0,
+      "tyre_temp_middle": 0.0,
+      "tyre_temp_outer": 0.0,
+      "wheel_load": 1.0,
+      "wheel_slip": 1.0,
+      "tyre_pressure": 1.0,
+      "suspension_travel": 1.0,
+      "acc_g": 1.0,
+      "clutch": 1.0,
+      "fuel": 1.0,
+      "tyre_wear": 1.0,
+      "grip_index": 1.0,
+      "car_model": 1.0
+     },
+     "preenchimentoGrupos": {
+      "base": {
+       "minimo": 1.0,
+       "piorItem": "lap_time"
+      },
+      "origem": {
+       "minimo": 1.0,
+       "piorItem": "ai_controlled"
+      },
+      "limites": {
+       "minimo": 1.0,
+       "piorItem": "tyres_out"
+      },
+      "m1": {
+       "minimo": 0.0,
+       "piorItem": "yaw_rate"
+      },
+      "contexto": {
+       "minimo": 1.0,
+       "piorItem": "fuel"
+      }
+     },
+     "valida": true,
+     "motivos": [],
+     "box": false,
+     "tempoS": 92.6749441159239,
+     "duracaoS": 92.646,
+     "grade": {
+      "speed_kmh": 2167,
+      "throttle": 2167,
+      "brake": 2167,
+      "steering": 2167,
+      "steer_angle": 2167,
+      "gear": 2167,
+      "rpm": 2167,
+      "off_track": 2167,
+      "yaw_rate": 0,
+      "velocity_long": 0,
+      "velocity_lat": 0,
+      "brake_temp_fl": 0,
+      "brake_temp_fr": 0,
+      "brake_temp_rl": 0,
+      "brake_temp_rr": 0,
+      "tyre_core_temp_fl": 2167,
+      "tyre_core_temp_fr": 2167,
+      "tyre_core_temp_rl": 2167,
+      "tyre_core_temp_rr": 2167,
+      "wheel_load_fl": 2167,
+      "wheel_load_fr": 2167,
+      "wheel_load_rl": 2167,
+      "wheel_load_rr": 2167,
+      "wheel_slip_fl": 2167,
+      "wheel_slip_fr": 2167,
+      "wheel_slip_rl": 2167,
+      "wheel_slip_rr": 2167,
+      "wheel_slip": 2167,
+      "tyre_pressure_fl": 2167,
+      "tyre_pressure_fr": 2167,
+      "tyre_pressure_rl": 2167,
+      "tyre_pressure_rr": 2167,
+      "lateral_g": 2167,
+      "longitudinal_g": 2167,
+      "fuel": 2167,
+      "tyre_wear": 2167,
+      "grip_index": 2167
+     },
+     "pontosDaGrade": 2167,
+     "taxaHz": 58.29417227057819,
+     "tempo": "1:32,675",
+     "duracao": "1:32,646",
+     "entraNoStore": true
+    },
+    {
+     "lapId": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "sequencia": 5,
+     "voltaDoJogo": 10,
+     "amostras": 5432,
+     "linhasCorrompidas": 0,
+     "origem": "humano",
+     "origemRotulo": "você",
+     "preenchimentoItens": {
+      "lap_time": 1.0,
+      "lap_number": 1.0,
+      "distance": 1.0,
+      "position": 1.0,
+      "speed": 1.0,
+      "throttle": 1.0,
+      "brake": 1.0,
+      "steering": 1.0,
+      "gear": 1.0,
+      "rpm": 1.0,
+      "ai_controlled": 1.0,
+      "track": 1.0,
+      "tyres_out": 1.0,
+      "off_track": 1.0,
+      "yaw_rate": 0.0,
+      "velocity_long": 0.0,
+      "velocity_lat": 0.0,
+      "brake_temp": 0.0,
+      "brake_bias": 0.0,
+      "tyre_core_temp": 1.0,
+      "tyre_temp_inner": 0.0,
+      "tyre_temp_middle": 0.0,
+      "tyre_temp_outer": 0.0,
+      "wheel_load": 1.0,
+      "wheel_slip": 1.0,
+      "tyre_pressure": 1.0,
+      "suspension_travel": 1.0,
+      "acc_g": 1.0,
+      "clutch": 1.0,
+      "fuel": 1.0,
+      "tyre_wear": 1.0,
+      "grip_index": 1.0,
+      "car_model": 1.0
+     },
+     "preenchimentoGrupos": {
+      "base": {
+       "minimo": 1.0,
+       "piorItem": "lap_time"
+      },
+      "origem": {
+       "minimo": 1.0,
+       "piorItem": "ai_controlled"
+      },
+      "limites": {
+       "minimo": 1.0,
+       "piorItem": "tyres_out"
+      },
+      "m1": {
+       "minimo": 0.0,
+       "piorItem": "yaw_rate"
+      },
+      "contexto": {
+       "minimo": 1.0,
+       "piorItem": "fuel"
+      }
+     },
+     "valida": true,
+     "motivos": [],
+     "box": false,
+     "tempoS": 93.45826450324557,
+     "duracaoS": 93.45,
+     "grade": {
+      "speed_kmh": 2167,
+      "throttle": 2167,
+      "brake": 2167,
+      "steering": 2167,
+      "steer_angle": 2167,
+      "gear": 2167,
+      "rpm": 2167,
+      "off_track": 2167,
+      "yaw_rate": 0,
+      "velocity_long": 0,
+      "velocity_lat": 0,
+      "brake_temp_fl": 0,
+      "brake_temp_fr": 0,
+      "brake_temp_rl": 0,
+      "brake_temp_rr": 0,
+      "tyre_core_temp_fl": 2167,
+      "tyre_core_temp_fr": 2167,
+      "tyre_core_temp_rl": 2167,
+      "tyre_core_temp_rr": 2167,
+      "wheel_load_fl": 2167,
+      "wheel_load_fr": 2167,
+      "wheel_load_rl": 2167,
+      "wheel_load_rr": 2167,
+      "wheel_slip_fl": 2167,
+      "wheel_slip_fr": 2167,
+      "wheel_slip_rl": 2167,
+      "wheel_slip_rr": 2167,
+      "wheel_slip": 2167,
+      "tyre_pressure_fl": 2167,
+      "tyre_pressure_fr": 2167,
+      "tyre_pressure_rl": 2167,
+      "tyre_pressure_rr": 2167,
+      "lateral_g": 2167,
+      "longitudinal_g": 2167,
+      "fuel": 2167,
+      "tyre_wear": 2167,
+      "grip_index": 2167
+     },
+     "pontosDaGrade": 2167,
+     "taxaHz": 58.06077562271987,
+     "tempo": "1:33,458",
+     "duracao": "1:33,450",
+     "entraNoStore": true
+    },
+    {
+     "lapId": "2026-10-04_03-21-52_vhe_interlagos#0006",
+     "sequencia": 6,
+     "voltaDoJogo": 12,
+     "amostras": 5423,
+     "linhasCorrompidas": 0,
+     "origem": "humano",
+     "origemRotulo": "você",
+     "preenchimentoItens": {
+      "lap_time": 1.0,
+      "lap_number": 1.0,
+      "distance": 1.0,
+      "position": 1.0,
+      "speed": 1.0,
+      "throttle": 1.0,
+      "brake": 1.0,
+      "steering": 1.0,
+      "gear": 1.0,
+      "rpm": 1.0,
+      "ai_controlled": 1.0,
+      "track": 1.0,
+      "tyres_out": 1.0,
+      "off_track": 1.0,
+      "yaw_rate": 0.0,
+      "velocity_long": 0.0,
+      "velocity_lat": 0.0,
+      "brake_temp": 0.0,
+      "brake_bias": 0.0,
+      "tyre_core_temp": 1.0,
+      "tyre_temp_inner": 0.0,
+      "tyre_temp_middle": 0.0,
+      "tyre_temp_outer": 0.0,
+      "wheel_load": 1.0,
+      "wheel_slip": 1.0,
+      "tyre_pressure": 1.0,
+      "suspension_travel": 1.0,
+      "acc_g": 1.0,
+      "clutch": 1.0,
+      "fuel": 1.0,
+      "tyre_wear": 1.0,
+      "grip_index": 1.0,
+      "car_model": 1.0
+     },
+     "preenchimentoGrupos": {
+      "base": {
+       "minimo": 1.0,
+       "piorItem": "lap_time"
+      },
+      "origem": {
+       "minimo": 1.0,
+       "piorItem": "ai_controlled"
+      },
+      "limites": {
+       "minimo": 1.0,
+       "piorItem": "tyres_out"
+      },
+      "m1": {
+       "minimo": 0.0,
+       "piorItem": "yaw_rate"
+      },
+      "contexto": {
+       "minimo": 1.0,
+       "piorItem": "fuel"
+      }
+     },
+     "valida": false,
+     "motivos": [
+      "faltam 6.1 m de pista (limite 6 m)"
+     ],
+     "box": null,
+     "tempoS": null,
+     "duracaoS": 93.0,
+     "grade": {},
+     "pontosDaGrade": 2167,
+     "taxaHz": 58.23986291063034,
+     "tempo": null,
+     "duracao": "1:33,000",
+     "entraNoStore": false
+    },
+    {
+     "lapId": "2026-10-04_03-21-52_vhe_interlagos#0007",
+     "sequencia": 7,
+     "voltaDoJogo": 12,
+     "amostras": 9407,
+     "linhasCorrompidas": 0,
+     "origem": "humano",
+     "origemRotulo": "você",
+     "preenchimentoItens": {
+      "lap_time": 1.0,
+      "lap_number": 1.0,
+      "distance": 1.0,
+      "position": 1.0,
+      "speed": 1.0,
+      "throttle": 1.0,
+      "brake": 1.0,
+      "steering": 1.0,
+      "gear": 1.0,
+      "rpm": 1.0,
+      "ai_controlled": 1.0,
+      "track": 1.0,
+      "tyres_out": 1.0,
+      "off_track": 1.0,
+      "yaw_rate": 0.0,
+      "velocity_long": 0.0,
+      "velocity_lat": 0.0,
+      "brake_temp": 0.0,
+      "brake_bias": 0.0,
+      "tyre_core_temp": 1.0,
+      "tyre_temp_inner": 0.0,
+      "tyre_temp_middle": 0.0,
+      "tyre_temp_outer": 0.0,
+      "wheel_load": 1.0,
+      "wheel_slip": 1.0,
+      "tyre_pressure": 1.0,
+      "suspension_travel": 1.0,
+      "acc_g": 1.0,
+      "clutch": 1.0,
+      "fuel": 1.0,
+      "tyre_wear": 1.0,
+      "grip_index": 1.0,
+      "car_model": 1.0
+     },
+     "preenchimentoGrupos": {
+      "base": {
+       "minimo": 1.0,
+       "piorItem": "lap_time"
+      },
+      "origem": {
+       "minimo": 1.0,
+       "piorItem": "ai_controlled"
+      },
+      "limites": {
+       "minimo": 1.0,
+       "piorItem": "tyres_out"
+      },
+      "m1": {
+       "minimo": 0.0,
+       "piorItem": "yaw_rate"
+      },
+      "contexto": {
+       "minimo": 1.0,
+       "piorItem": "fuel"
+      }
+     },
+     "valida": false,
+     "motivos": [
+      "faltam 4107.7 m de pista (limite 6 m)",
+      "carro parado em 63.6% das amostras"
+     ],
+     "box": null,
+     "tempoS": null,
+     "duracaoS": 161.667,
+     "grade": {},
+     "pontosDaGrade": 2167,
+     "taxaHz": 57.696435943066845,
+     "tempo": null,
+     "duracao": "2:41,667",
+     "entraNoStore": false
+    }
+   ],
+   "veredito": {
+    "conta": false,
+    "final": true,
+    "texto": "Não conta para a M1: faltam a guinada e as velocidades no referencial do carro.",
+    "falta": [
+     "faltam a guinada e as velocidades no referencial do carro"
+    ],
+    "humana": true,
+    "voltas": 8,
+    "voltasValidas": 4,
+    "voltasComIA": [],
+    "voltasSemIndicador": [],
+    "preenchimentoGrade": {
+     "yaw_rate": 0.0,
+     "velocity_long": 0.0,
+     "velocity_lat": 0.0,
+     "brake_temp_fl": 0.0,
+     "brake_temp_fr": 0.0,
+     "brake_temp_rl": 0.0,
+     "brake_temp_rr": 0.0
+    },
+    "limiar": 0.95,
+    "regra": "sessão humana (indicador de IA desligado em todas as voltas) com a guinada e as velocidades no referencial do carro em pelo menos 95% dos pontos da grade das voltas válidas"
+   }
+  }
+ }
+}

@@ -1,0 +1,86 @@
+== userData/logs/desktop.log
+[2026-10-14T13:07:56.913Z] Desktop shell starting.
+[2026-10-14T13:07:56.924Z] Backend health unavailable before startup. error=connect ECONNREFUSED 127.0.0.1:8000
+[2026-10-14T13:07:57.939Z] Backend process started by Electron source=packaged-resource pid=39516
+[2026-10-14T13:08:38.173Z] Backend health OK after autostart at http://127.0.0.1:8000/api/health.
+[2026-10-14T13:08:38.229Z] Loading frontend static build: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\desktop\dist\win-unpacked\resources\frontend\index.html
+[2026-10-14T13:11:01.627Z] Backend process stopped.
+[2026-10-14T13:11:01.630Z] Backend process exited code=1 signal=null
+[2026-10-14T13:11:14.754Z] Desktop shell starting.
+[2026-10-14T13:11:14.763Z] Backend health unavailable before startup. error=connect ECONNREFUSED 127.0.0.1:8000
+[2026-10-14T13:11:14.775Z] Backend process started by Electron source=packaged-resource pid=28220
+[2026-10-14T13:11:53.038Z] Backend health OK after autostart at http://127.0.0.1:8000/api/health.
+[2026-10-14T13:11:53.091Z] Loading frontend static build: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\desktop\dist\win-unpacked\resources\frontend\index.html
+[2026-10-14T13:12:37.343Z] Backend process stopped.
+[2026-10-14T13:12:37.346Z] Backend process exited code=1 signal=null
+
+== userData/logs/backend.log (sem as linhas GET /api)
+
+[2026-10-14T13:07:56.926Z] Starting packaged-resource: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\desktop\dist\win-unpacked\resources\backend\automobilista-backend\automobilista-backend.exe 
+2026-10-14 10:07:58,236 - __main__ - INFO - Starting desktop backend runner on 127.0.0.1:8000 from C:\Users\Dokas\Desktop\f1-telemetry-analyzer\desktop\dist\win-unpacked\resources\backend\automobilista-backend resource=C:\Users\Dokas\Desktop\f1-telemetry-analyzer\desktop\dist\win-unpacked\resources runtime=C:\Users\Dokas\Desktop\f1-telemetry-analyzer\tmp\teste-pacote-28\userData
+INFO:     Started server process [39516]
+INFO:     Waiting for application startup.
+2026-10-14 10:07:59,584 - core.telemetry.telemetry_reader_impl - INFO - Assetto Corsa shared memory gate is waiting for process: acs.exe, AssettoCorsa.exe
+2026-10-14 10:07:59,584 - core.telemetry.telemetry_reader_impl - WARNING - Telemetry source selected: mock; replay fallback is disabled
+2026-10-14 10:07:59,585 - core.track_file_resolver - INFO - Building track file manifest from shared memory track=vhe_interlagos config=gp source=assetto_corsa
+2026-10-14 10:07:59,586 - core.track_file_resolver - INFO - TrackFileResolver AC root resolved via steam_registry: D:\SteamLibrary\steamapps\common\assettocorsa
+2026-10-14 10:07:59,586 - core.track_file_resolver - INFO - TrackFileResolver AC root resolved via steam_registry: D:\SteamLibrary\steamapps\common\assettocorsa
+2026-10-14 10:07:59,587 - core.track_file_resolver - INFO - Resolving track folder for shared memory track name: vhe_interlagos
+2026-10-14 10:07:59,587 - core.track_file_resolver - INFO - Track folder resolved by exact folder name: D:\SteamLibrary\steamapps\common\assettocorsa\content\tracks\vhe_interlagos
+2026-10-14 10:07:59,588 - core.track_file_resolver - INFO - Resolving models ini for track=D:\SteamLibrary\steamapps\common\assettocorsa\content\tracks\vhe_interlagos config=gp
+2026-10-14 10:07:59,597 - core.track_file_resolver - INFO - Selected models ini: D:\SteamLibrary\steamapps\common\assettocorsa\content\tracks\vhe_interlagos\models_gp.ini
+2026-10-14 10:07:59,602 - core.track_file_resolver - INFO - Parsed 11 static MODEL entries from D:\SteamLibrary\steamapps\common\assettocorsa\content\tracks\vhe_interlagos\models_gp.ini
+2026-10-14 10:07:59,602 - core.track_file_resolver - INFO - Candidate KN5 files: {'mainVisual': 'D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5', 'collider': 'D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\obj_collider.kn5', 'groove': 'D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\obj_groove.kn5'}
+2026-10-14 10:07:59,603 - core.track_file_resolver - INFO - Resolved surfaces.ini: D:\SteamLibrary\steamapps\common\assettocorsa\content\tracks\vhe_interlagos\gp\data\surfaces.ini
+2026-10-14 10:07:59,610 - core.track_file_resolver - INFO - Parsed 8 surface entries from D:\SteamLibrary\steamapps\common\assettocorsa\content\tracks\vhe_interlagos\gp\data\surfaces.ini; valid=['PITLANE', 'ROAD', 'CURB', 'KERB', 'OUTER', 'SAND', 'CARPET']
+2026-10-14 10:07:59,612 - core.track_file_resolver - INFO - Resolved AI/reference files: {'fast_lane': True, 'pit_lane': True, 'ideal_line': False, 'line_spl': True, 'map_ini': True, 'groove_ini': True, 'groveline_csv': True}
+2026-10-14 10:08:36,816 - core.geometry.width_continuity - INFO - Track edge blocks trimmed: 23 left, 23 right, widest 19.33 -> 19.33 m
+2026-10-14 10:08:37,326 - core.geometry.limit_corridor - INFO - Limit corridor: 13 rings, measured left 83.8% / right 70.8%
+2026-10-14 10:08:37,345 - core.geometry.limit_corridor - INFO - Track built from limits: width 12.39 -> 13.92 m
+2026-10-14 10:08:37,925 - core.geometry.paint_edge_correction - INFO - Track edges corrected against painted limits: 1061 samples (39.6%), width 13.92 -> 14.33 m
+2026-10-14 10:08:38,082 - main - INFO - Loaded default Interlagos track-only geometry via kn5_surface_interval from C:\Users\Dokas\Desktop\f1-telemetry-analyzer\tmp\teste-pacote-28\userData\data\cache\tracks\vhe_interlagos_gp_kn5_surface_interval_geometry.json
+2026-10-14 10:08:38,084 - main - INFO - Live driving coach subscribed to processed frames
+INFO:     Application startup complete.
+2026-10-14 10:08:38,086 - core.opponents.opponents_receiver - INFO - Opponents telemetry receiver started on 127.0.0.1:8765
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     ('127.0.0.1', 59791) - "WebSocket /ws" [accepted]
+2026-10-14 10:08:38,534 - core.websocket_server - INFO - New client connected. Total: 1
+INFO:     connection open
+INFO:     127.0.0.1:53077 - "POST /api/coleta/verificacoes/2026-10-04_03-21-52_vhe_interlagos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49197 - "PUT /api/coleta/configuracao HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49198 - "PUT /api/coleta/configuracao HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49199 - "PUT /api/coleta/configuracao HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49200 - "PUT /api/coleta/configuracao HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49201 - "PUT /api/coleta/configuracao HTTP/1.1" 200 OK
+
+[2026-10-14T13:11:14.767Z] Starting packaged-resource: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\desktop\dist\win-unpacked\resources\backend\automobilista-backend\automobilista-backend.exe 
+2026-10-14 10:11:15,016 - __main__ - INFO - Starting desktop backend runner on 127.0.0.1:8000 from C:\Users\Dokas\Desktop\f1-telemetry-analyzer\desktop\dist\win-unpacked\resources\backend\automobilista-backend resource=C:\Users\Dokas\Desktop\f1-telemetry-analyzer\desktop\dist\win-unpacked\resources runtime=C:\Users\Dokas\Desktop\f1-telemetry-analyzer\tmp\teste-pacote-28\userData
+INFO:     Started server process [28220]
+INFO:     Waiting for application startup.
+2026-10-14 10:11:16,230 - core.telemetry.telemetry_reader_impl - INFO - Assetto Corsa shared memory gate is waiting for process: acs.exe, AssettoCorsa.exe
+2026-10-14 10:11:16,230 - core.telemetry.telemetry_reader_impl - WARNING - Telemetry source selected: mock; replay fallback is disabled
+2026-10-14 10:11:16,267 - core.geometry.track_geometry_provider - INFO - Rebuilding track cache written before the drawn map had its own geometry
+2026-10-14 10:11:16,268 - core.track_file_resolver - INFO - Building track file manifest from shared memory track=vhe_interlagos config=gp source=assetto_corsa
+2026-10-14 10:11:16,269 - core.track_file_resolver - INFO - TrackFileResolver AC root resolved via steam_registry: D:\SteamLibrary\steamapps\common\assettocorsa
+2026-10-14 10:11:16,270 - core.track_file_resolver - INFO - TrackFileResolver AC root resolved via steam_registry: D:\SteamLibrary\steamapps\common\assettocorsa
+2026-10-14 10:11:16,270 - core.track_file_resolver - INFO - Resolving track folder for shared memory track name: vhe_interlagos
+2026-10-14 10:11:16,270 - core.track_file_resolver - INFO - Track folder resolved by exact folder name: D:\SteamLibrary\steamapps\common\assettocorsa\content\tracks\vhe_interlagos
+2026-10-14 10:11:16,273 - core.track_file_resolver - INFO - Resolving models ini for track=D:\SteamLibrary\steamapps\common\assettocorsa\content\tracks\vhe_interlagos config=gp
+2026-10-14 10:11:16,275 - core.track_file_resolver - INFO - Selected models ini: D:\SteamLibrary\steamapps\common\assettocorsa\content\tracks\vhe_interlagos\models_gp.ini
+2026-10-14 10:11:16,281 - core.track_file_resolver - INFO - Parsed 11 static MODEL entries from D:\SteamLibrary\steamapps\common\assettocorsa\content\tracks\vhe_interlagos\models_gp.ini
+2026-10-14 10:11:16,281 - core.track_file_resolver - INFO - Candidate KN5 files: {'mainVisual': 'D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\vhe_interlagos.kn5', 'collider': 'D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\obj_collider.kn5', 'groove': 'D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\obj_groove.kn5'}
+2026-10-14 10:11:16,281 - core.track_file_resolver - INFO - Resolved surfaces.ini: D:\SteamLibrary\steamapps\common\assettocorsa\content\tracks\vhe_interlagos\gp\data\surfaces.ini
+2026-10-14 10:11:16,282 - core.track_file_resolver - INFO - Parsed 8 surface entries from D:\SteamLibrary\steamapps\common\assettocorsa\content\tracks\vhe_interlagos\gp\data\surfaces.ini; valid=['PITLANE', 'ROAD', 'CURB', 'KERB', 'OUTER', 'SAND', 'CARPET']
+2026-10-14 10:11:16,284 - core.track_file_resolver - INFO - Resolved AI/reference files: {'fast_lane': True, 'pit_lane': True, 'ideal_line': False, 'line_spl': True, 'map_ini': True, 'groove_ini': True, 'groveline_csv': True}
+2026-10-14 10:11:51,740 - core.geometry.width_continuity - INFO - Track edge blocks trimmed: 23 left, 23 right, widest 19.33 -> 19.33 m
+2026-10-14 10:11:52,246 - core.geometry.limit_corridor - INFO - Limit corridor: 13 rings, measured left 83.8% / right 70.8%
+2026-10-14 10:11:52,270 - core.geometry.limit_corridor - INFO - Track built from limits: width 12.39 -> 13.92 m
+2026-10-14 10:11:52,841 - core.geometry.paint_edge_correction - INFO - Track edges corrected against painted limits: 1061 samples (39.6%), width 13.92 -> 14.33 m
+2026-10-14 10:11:52,997 - main - INFO - Loaded default Interlagos track-only geometry via kn5_surface_interval from C:\Users\Dokas\Desktop\f1-telemetry-analyzer\tmp\teste-pacote-28\userData\data\cache\tracks\vhe_interlagos_gp_kn5_surface_interval_geometry.json
+2026-10-14 10:11:52,999 - main - INFO - Live driving coach subscribed to processed frames
+INFO:     Application startup complete.
+2026-10-14 10:11:53,000 - core.opponents.opponents_receiver - INFO - Opponents telemetry receiver started on 127.0.0.1:8765
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     ('127.0.0.1', 59832) - "WebSocket /ws" [accepted]
+2026-10-14 10:11:53,204 - core.websocket_server - INFO - New client connected. Total: 1
+INFO:     connection open
