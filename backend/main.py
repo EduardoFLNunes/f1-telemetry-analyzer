@@ -972,6 +972,7 @@ from routers import (  # noqa: E402
     external_references,
     health,
     legacy,
+    leitura,
     live,
     recording as recording_router,
     track,
@@ -989,6 +990,7 @@ app.include_router(assisted_analysis.router)
 app.include_router(external_references.router)
 app.include_router(debug.router)
 app.include_router(coleta.router)
+app.include_router(leitura.router)
 app.include_router(legacy.router)
 
 # Re-exported so existing tests that call `backend_main.<name>(...)` directly
