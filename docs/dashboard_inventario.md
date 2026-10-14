@@ -158,13 +158,23 @@ O app tem 4 páginas, sem roteador (`App.tsx:20,46-49`). Ao recarregar, ele volt
 
 **Decisão do Eduardo (11/10):** a aba "Coleta de dados" entra já no app atual, junto com o reempacotamento do app instalado (pedido 28), e ocupa o lugar da tela "Antes de pilotar". É a única exceção à regra de não construir backend: conferir se a gravação tem o que os modelos precisam exige ler a gravação.
 
+**Decisões do Eduardo (14/10, pedido 29):**
+
+- O redesenho segue a **opção A** do protótipo.
+- **Paleta inspirada nas transmissões da F1,** sem a identidade oficial: nada de logotipo, marca, fonte proprietária ou cor de equipe.
+- **Visual de vidro (glassmorphism)** nos recipientes. Gráficos, tabelas e mapas ficam sobre superfície opaca, para os números não perderem contraste.
+- **Hero** no topo da tela Sessões, com dado real e o estado do backend na abertura.
+- **Tela Ao vivo** e **realidade aumentada dentro do jogo como o rádio do engenheiro.** A realidade aumentada é a segunda exceção à regra de não construir backend e depende do ADR 0020.
+- O redesenho usa a skill `frontend-design` (`.claude/skills/frontend-design`).
+
 | Tela | Para quê | O que é reaproveitado | O que é novo |
 |---|---|---|---|
-| **Sessões** (início) | <br>• a lista de sessões, com voltas, melhor, mediana e diferença para a IA; <br>• a tendência entre sessões e o critério do ADR 0015 | <br>• o cartão "Sessoes gravadas" da `HomePage`, com `/api/sessions`; <br>• o `resumo.json` da evolução | só a montagem da tela |
+| **Sessões** (início) | <br>• o hero (14/10); <br>• a lista de sessões, com voltas, melhor, mediana e diferença para a IA; <br>• a tendência entre sessões e o critério do ADR 0015 | <br>• o cartão "Sessoes gravadas" da `HomePage`, com `/api/sessions`; <br>• o `resumo.json` da evolução | só a montagem da tela |
 | **Volta** | análise de uma volta contra a referência, com mapa, diferença acumulada, traços, 14 curvas e replay | <br>• mapa: `TrackRenderer` (canvas, asfalto e zebras do jogo); <br>• traços: `AssistedLapTraces` e `TelemetryTraces`; <br>• replay e frases do coach: `SessionLapsPanel`, `ReplayControls`, `/api/laps/{id}/replay` e `/api/analysis/coach/lap/{id}`; <br>• diferença pelo relógio do jogo: o cálculo do store (`calculateLapMetrics`, `useTelemetryStore.ts:863-891`) | <br>• a camada dos 60 microssetores no mapa, desenhada no front, com as cores do relatório; <br>• o eixo dos traços em metros, e não em %; <br>• a tabela das 14 curvas, com os números de `sessao_*.json` (`por_volta`) |
 | **Evolução** | perda por curva entre sessões, diferenças consistentes e técnica de pilotagem | o `painel_evolucao.html` e os JSONs que ele já lê | o bloco `tecnica`, que já está no JSON |
 | **Coleta de dados** (era "Antes de pilotar"; pedido 28) | conferir antes, durante e depois da sessão se a gravação tem o que os modelos precisam | <br>• o cartão "Estado da coleta" da `HomePage`; <br>• a `LiveSessionStrip`; <br>• `/api/runtime/status` e `/api/recording/status` | <br>• a taxa real no lugar do "60 HZ" fixo; <br>• o estado de cada canal, pelo registro do que os modelos precisam; <br>• o veredito de cada volta e da sessão |
-| **Sistema** | tudo o que é de desenvolvimento | a `DiagnosticsPage`, como está | recebe o PERF e os modos de depuração do mapa |
+| **Ao vivo** (14/10) | acompanhar a sessão em andamento e o que o rádio disse ao piloto | <br>• `/api/coleta/ao-vivo`; <br>• `/api/live/coach`; <br>• a visão "Volta com fantasma" do protótipo, ao vivo | <br>• as mensagens de rádio em sequência; <br>• o rádio dentro do jogo (realidade aumentada, ADR 0020) |
+| **Sistema** | tudo o que é de desenvolvimento | a `DiagnosticsPage`, como está | <br>• recebe o PERF e os modos de depuração do mapa; <br>• o guia visual (pedido 29) |
 
 **Backend:** só um jeito de o front ler os JSONs que `atualizar_coach` já grava em `data/ml/evolucao/`. Pode ser uma rota que devolve o arquivo ou uma leitura pelo Electron. Nenhum cálculo novo no servidor.
 
@@ -197,13 +207,72 @@ O app tem 4 páginas, sem roteador (`App.tsx:20,46-49`). Ao recarregar, ele volt
 
 ## 7. Ordem sugerida dos pedidos
 
-1. **Base:**
+Atualizada em 14/10, com as decisões do pedido 29:
+
+1. **Base e sistema visual (pedido 29):**
+   - paleta, fontes, vidro, componentes e guia visual;
    - roteador, idioma, nome do produto e `lang="pt-BR"`;
    - retirada dos dados fixos;
-   - depuração para Sistema.
-2. **Tela Volta**, montada com as peças da tabela da seção 5. O único acréscimo fora do front é a leitura dos JSONs da evolução.
-3. **Evolução** dentro do app, a partir do `painel_evolucao.html`, com o bloco `tecnica`.
-4. **Sessões.** A Coleta de dados já entra no pedido 28.
-5. **Limpeza** de componentes, rotas e globais sem uso.
+   - depuração para Sistema;
+   - espelhamento do mapa principal;
+   - hero e a casca da tela Ao vivo;
+   - a leitura do CSP para a realidade aumentada.
+2. **Realidade aumentada:** o rádio no jogo e a tela Ao vivo completa, depois do ADR 0020.
+3. **Tela Volta**, montada com as peças da tabela da seção 5. O único acréscimo fora do front é a leitura dos JSONs da evolução.
+4. **Evolução** dentro do app, a partir do `painel_evolucao.html`, com o bloco `tecnica`.
+5. **Sessões.** A Coleta de dados já entrou no pedido 28.
+6. **Limpeza** de componentes, rotas e globais sem uso.
+7. **Instalador** com o redesenho.
 
 Cada pedido mantém o que já foi validado: o coach, o store v2 e o relatório de evolução não mudam de regra.
+
+### O que o pedido 29 entregou (14/10)
+
+Item 1 da lista acima. Detalhes em `docs/handoff/2026-10-14_29_redesenho-base_relatorio.md`; o sistema visual está em `docs/sistema_visual.md`.
+
+- **Paleta, fontes, vidro, componentes e guia visual:**
+  - a paleta está em variáveis (`frontend/src/theme/tokens.css`), e o Tailwind aponta para elas;
+  - as fontes são arquivos locais com a licença OFL: Barlow Condensed, Instrument Sans e IBM Plex Mono;
+  - o vidro vale só nos recipientes e respeita `prefers-reduced-transparency`; há também o botão "Sem transparência";
+  - os componentes base estão em `components/ui/base.tsx`;
+  - o guia visual fica em Sistema › Guia visual;
+  - todo texto passa no AA (4,5:1) sobre o vidro.
+- **Roteador, idioma, nome do produto e `lang="pt-BR"`:**
+  - **o roteador:** endereço por hash (`#/sessoes`, `#/volta`…), que sobrevive ao recarregar. O trilho lateral deu lugar a uma barra de vidro no topo, com as seis telas: Sessões, Ao vivo, Volta, Evolução, Coleta de dados e Sistema;
+  - **o idioma:** `lang="pt-BR"` e tempos em M:SS,mmm, com vírgula, também nas telas antigas;
+  - **o nome do produto:** "Sistema de Telemetria e Otimização de Trajetórias", no título da janela (`desktop/main.js`) e na página. Saíram "Motorsport Intelligence Workstation", "AT TELEM" e "Telemetria Assistida para Simulacao Automobilistica". O `productName` do instalador não mudou.
+- **Retirada dos dados fixos (problema B):**
+  - as três "AI RECOMMENDATIONS" fixas;
+  - "SPATIAL" e "AI_CORE" sempre acesos;
+  - "BUILD v13.0";
+  - a escolha de fonte "F1-25 UDP" e "IRACING SDK", com o Start e o Stop que chamavam `/api/streaming/*`, rota que não existe;
+  - "Neural-linked coaching // Priority enabled".
+
+  O "GRAVAÇÃO 60 HZ" já mostrava a taxa real desde o pedido 28.
+- **Depuração para Sistema (problema C):** fora da tela Sistema, o mapa não mostra mais:
+  - o PERF;
+  - os modos DIAG, RAW, PTS, SEGS, SMTH e SPEED;
+  - a legenda "VIS/RAW/MICRO";
+  - o "N m | N pts | fonte";
+  - o "World X/Y/Z" dos oponentes.
+
+  Também saíram:
+  - o "LAP DBG" dos traços;
+  - o "P n / REF n";
+  - o JSON do `evidence`;
+  - "Phase 13", que agora se chama "portões de qualidade".
+
+  Tudo isso está em Sistema › Depuração.
+- **Espelhamento do mapa principal:**
+  - **o que mudou:** a câmera usa `scale(s, −s)` (`CameraController.tsx`, `SENTIDO_DO_EIXO_Y`), e o mapa gira no anti-horário, como o minimapa e o relevo;
+  - **o que vem junto:** a projeção dos oponentes acompanha, e os textos desenhados no mapa ficam em pé;
+  - **a conferência:** foi feita com uma volta real, antes e depois.
+- **Hero e casca da tela Ao vivo:**
+  - **o hero:** fica no topo de Sessões. Mostra o estado real do `/api/health` enquanto o backend sobe, os números de dado real e a sua melhor volta traçada sobre as camadas do cache. Para isso, a janela do Electron agora abre antes de o backend responder;
+  - **a casca do Ao vivo:** a gravação e os canais vêm de `/api/coleta/ao-vivo`, e o rádio de `/api/live/coach`.
+- **A leitura do CSP para a realidade aumentada:** está no relatório do pedido 29 (Parte A).
+- **O que fica para os próximos pedidos:**
+  - Volta e Evolução ainda mostram o conteúdo antigo (Pista e Análise) dentro da casca nova;
+  - a lista de Sessões é a do gravador, com a conferência da Coleta.
+
+  O pedido 30 (complemento, 14/10) passa as três telas para o protótipo A.

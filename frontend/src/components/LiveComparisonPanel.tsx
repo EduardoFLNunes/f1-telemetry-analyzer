@@ -289,8 +289,7 @@ export const LiveComparisonPanel = React.memo(function LiveComparisonPanel({ act
       </div>
 
       <div style={{ borderTop: `1px solid ${BORDER}`, padding: '6px 9px', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 4 }}>
-        <div className="num" style={{ fontSize: 10, color: MUTED }}>P {analysis.debug.playerSamples} / REF {analysis.debug.referenceSamples}</div>
-        <div className="num" style={{ fontSize: 10, color: MUTED, textAlign: 'right' }}>OPP {analysis.debug.opponentsAnalyzed} / VALID {analysis.debug.validMicroSectors}</div>
+        {/* Pedido 29: as contagens de amostras (P n / REF n) são depuração; saíram da tela do piloto. */}
         <div className="num" style={{ gridColumn: '1 / -1', fontSize: 10, color: hasReferenceLap ? EMERALD : AMBER, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {hasReferenceLap ? `Reference lap ${lapDebug?.referenceLapNumber}` : 'Reference lap unavailable or incomplete'}
         </div>

@@ -91,7 +91,8 @@ export function renderEvidence(event: Partial<CoachingEvent>): string {
   if (eventName === 'poor_apex') {
     return `APEX_OFFSET: ${finiteNumber(evidence.l_offset).toFixed(2)}m  CORNER_T${finiteNumber(evidence.corner_id).toFixed(0)}`;
   }
-  return Object.keys(evidence).length ? JSON.stringify(evidence).slice(0, 60) : 'Physical anomaly detected.';
+  // Pedido 29: o JSON cru do evidence era depuração; o evento cru fica na tela Sistema.
+  return 'Evento sem detalhe medido.';
 }
 
 export const CoachingFeed: React.FC = () => {

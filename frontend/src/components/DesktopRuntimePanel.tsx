@@ -462,7 +462,7 @@ export const DesktopRuntimePanel: React.FC<{ active?: boolean }> = ({ active = t
   const coachReady = runtime?.coach?.status === 'READY' || Boolean(runtime?.coach?.online && runtime?.telemetry?.activeTrackReady);
   const trackState = runtime?.backend?.trackState || 'UNKNOWN';
   const backendSource = desktopStatus?.backendSource || (healthOk ? 'already-running' : 'unavailable');
-  const softwareName = desktopStatus?.softwareName || 'Automobilista Telemetria';
+  const softwareName = desktopStatus?.softwareName || 'Sistema de Telemetria e Otimização de Trajetórias';
   const branchName = desktopStatus?.branchName || '--';
   const sharedMemoryGate = runtime?.telemetry?.sharedMemoryGate;
   const gateStatus = sharedMemoryGate?.enabled === false

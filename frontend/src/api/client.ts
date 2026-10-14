@@ -119,7 +119,8 @@ export const api = {
   getTrackGeometry: async (): Promise<any> => (await client.get('/api/track/geometry')).data,
   getTrackCache: async (): Promise<any> => (await client.get('/api/track/cache')).data,
   getCarState: async (): Promise<any> => (await client.get('/api/car/state')).data,
-  getHealth: async (): Promise<any> => (await client.get('/api/health')).data,
+  /** Curto de propósito: enquanto o backend sobe, cada tentativa falha rápido e o hero mostra a espera real. */
+  getHealth: async (timeoutMs = 2500): Promise<any> => (await client.get('/api/health', { timeout: timeoutMs })).data,
   getRuntimeStatus: async (): Promise<any> => (await client.get('/api/runtime/status')).data,
   getDataQuality: async (): Promise<any> => (await client.get('/api/validation/data-quality')).data,
   getLiveTelemetry: async (options: LiveTelemetryOptions = {}): Promise<any> => (
@@ -222,6 +223,10 @@ export const api = {
     await client.post(`/api/coleta/verificacoes/${encodeURIComponent(sessionId)}`)
   ).data,
   getColetaM1Oficial: async (): Promise<any> => (await client.get('/api/coleta/m1/oficial', { timeout: 60_000 })).data,
+
+  // ─── Ao vivo (pedido 29) ──────────────────────────────────────────────────
+  /** As frases recentes do coach, a mais nova primeiro (as 20 últimas de uma fila de 50). */
+  getLiveCoach: async (): Promise<any> => (await client.get('/api/live/coach')).data,
 
   listExternalReferences: async (): Promise<any> => (await client.get('/api/references/external')).data,
   importFastF1Reference: async (payload: Record<string, unknown>): Promise<any> => (

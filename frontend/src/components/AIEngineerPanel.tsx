@@ -84,8 +84,7 @@ export const AIEngineerPanel = React.memo(function AIEngineerPanel({ active = tr
       {/* Footer */}
       <div className="px-3 py-1.5 shrink-0 flex items-center gap-2"
         style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        <div className="w-1 h-1 rounded-full bg-blue-400 blink" />
-        <span className="num text-[10px] text-slate-700 uppercase tracking-wider">Neural-linked coaching // Priority enabled</span>
+        <span className="num text-[10px] text-slate-500">Fala do engenheiro: frases do coach, pelo WebSocket</span>
       </div>
     </div>
   );

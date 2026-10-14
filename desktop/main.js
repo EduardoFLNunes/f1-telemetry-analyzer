@@ -36,8 +36,11 @@ const ASSETTO_PLUGIN_FILE = 'ac_opponents_exporter.py';
 const ASSETTO_CONFIG_FILE = 'assetto-corsa-setup.json';
 const UDP_OPPONENTS_HOST = process.env.AT_UDP_OPPONENTS_HOST || '127.0.0.1';
 const UDP_OPPONENTS_PORT = Number(process.env.AT_UDP_OPPONENTS_PORT || 8765);
-const DESKTOP_BRANCH_NAME = process.env.AT_DESKTOP_BRANCH_NAME || 'Coleta de dados';
-const DESKTOP_WINDOW_TITLE = `Automobilista Telemetria - ${DESKTOP_BRANCH_NAME}`;
+// Pedido 29: o título da janela é o nome do produto do TCC. O productName do
+// instalador ("Automobilista Telemetria") e a pasta de dados não mudam.
+const PRODUCT_DISPLAY_NAME = 'Sistema de Telemetria e Otimização de Trajetórias';
+const DESKTOP_BRANCH_NAME = process.env.AT_DESKTOP_BRANCH_NAME || '';
+const DESKTOP_WINDOW_TITLE = DESKTOP_BRANCH_NAME ? `${PRODUCT_DISPLAY_NAME} - ${DESKTOP_BRANCH_NAME}` : PRODUCT_DISPLAY_NAME;
 
 const FRONTEND_URL = process.env.AT_DESKTOP_FRONTEND_URL || DEFAULT_FRONTEND_DEV_URL;
 const BACKEND_URL = stripTrailingSlash(process.env.AT_BACKEND_URL || DEFAULT_BACKEND_URL);
@@ -962,7 +965,7 @@ async function createWindow() {
     minWidth: 1024,
     minHeight: 640,
     title: DESKTOP_WINDOW_TITLE,
-    backgroundColor: '#06060d',
+    backgroundColor: '#08090b',
     ...(resolveWindowIconPath() ? { icon: resolveWindowIconPath() } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -1000,8 +1003,12 @@ async function createWindow() {
 
 app.whenReady().then(async () => {
   appendDesktopLog('Desktop shell starting.');
-  await prepareBackendRuntime();
+  // Pedido 29: a janela abre logo e o hero da tela Sessões mostra o backend
+  // subindo pelo /api/health (até cerca de 40 s na primeira abertura). Antes, a
+  // janela só abria depois que o backend respondia.
+  const backendReady = prepareBackendRuntime();
   await createWindow();
+  await backendReady;
 
   app.on('activate', async () => {
     if (BrowserWindow.getAllWindows().length === 0) {

@@ -1,4 +1,5 @@
 import { resolveSampleMapPosition } from '../../utils/spatialTransform';
+import { eixoInvertido } from './CameraController';
 
 export type CarRenderOptions = {
   noGlow?: boolean;
@@ -179,8 +180,10 @@ export function drawOpponentCar(
     ? carId
     : `${carId} ${shortName(opponent.driverName) || 'Unknown'} ${Number.isFinite(opponent.speedKmh) ? `${Math.round(opponent.speedKmh)} km/h` : '-- km/h'}${spline}`;
 
+  // O eixo do mapa é invertido (pedido 29); o rótulo se escreve em pé, acima do carro.
+  if (eixoInvertido(ctx)) ctx.scale(1, -1);
   const fontSize = (labelMode === 'id' ? 9 : 10) / scale;
-  ctx.font = `600 ${fontSize}px Inter, system-ui, sans-serif`;
+  ctx.font = `600 ${fontSize}px 'Instrument Sans', system-ui, sans-serif`;
   const textWidth = ctx.measureText(label).width;
   const padX = (labelMode === 'id' ? 3 : 4) / scale;
   const padY = 2.25 / scale;

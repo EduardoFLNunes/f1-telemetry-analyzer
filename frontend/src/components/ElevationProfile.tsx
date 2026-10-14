@@ -104,7 +104,7 @@ export const ElevationProfile: React.FC<{ active?: boolean }> = ({ active = true
     // Height grid, every 10 m.
     ctx.strokeStyle = 'rgba(148,163,184,0.13)';
     ctx.fillStyle = 'rgba(148,163,184,0.7)';
-    ctx.font = '9px "JetBrains Mono", monospace';
+    ctx.font = '9px "IBM Plex Mono", monospace';
     ctx.lineWidth = 1;
     const first = Math.ceil(stats.low / 10) * 10;
     for (let height = first; height <= stats.high; height += 10) {

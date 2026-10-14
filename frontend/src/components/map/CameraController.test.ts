@@ -32,7 +32,7 @@ describe('the follow camera', () => {
     const ctx = createFakeContext();
     const scale = applyCameraTransform(ctx, 800, 400, BOUNDS, FOLLOW, car(0, 0));
     expect(scale).toBeCloseTo(400 / FOLLOW_VIEW_METERS, 6);
-    expect(callsOf(ctx, 'scale')[0].args).toEqual([scale, scale]);
+    expect(callsOf(ctx, 'scale')[0].args).toEqual([scale, -scale]);
 
     const zoomed = createFakeContext();
     const zoomedScale = applyCameraTransform(zoomed, 800, 400, BOUNDS, { ...FOLLOW, zoom: 2 }, car(0, 0));
@@ -54,6 +54,19 @@ describe('the overview camera', () => {
     const [toCentre, toTrack] = callsOf(ctx, 'translate');
     expect(toCentre.args).toEqual([430, 190]);
     expect(toTrack.args).toEqual([-BOUNDS.cx, -BOUNDS.cy]);
+  });
+});
+
+describe('o sentido do mapa (pedido 29)', () => {
+  it('inverte o eixo vertical, como o minimapa e o relevo: Interlagos no anti-horário', () => {
+    // As posições do mapa são (x, −z). Com y invertido, a tela fica com z para baixo.
+    for (const camera of [FOLLOW, { mode: 'OVERVIEW', zoom: 1, offset: { x: 0, y: 0 } }]) {
+      const ctx = createFakeContext();
+      const scale = applyCameraTransform(ctx, 800, 400, BOUNDS, camera, car(0, 0));
+      const [sx, sy] = callsOf(ctx, 'scale')[0].args as number[];
+      expect(sx).toBeCloseTo(scale, 6);
+      expect(sy).toBeCloseTo(-scale, 6);
+    }
   });
 });
 

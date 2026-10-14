@@ -103,23 +103,7 @@ export const AIDebriefPanel = React.memo(function AIDebriefPanel({ active = true
           </div>
         )}
 
-        {/* Recommendations */}
-        <div>
-          <span className="label block mb-2" style={{ fontSize: 9 }}>AI RECOMMENDATIONS</span>
-          <div className="flex flex-col gap-1.5">
-            {[
-              { icon: '⟩', color: '#22d3ee', text: 'Focus on corner exit speed — consistent throttle application point needed.' },
-              { icon: '⟩', color: '#fbbf24', text: 'Brake variability detected. Single reference point per braking zone.' },
-              { icon: '⟩', color: '#a78bfa', text: 'Understeer signature in medium-speed corners. Evaluate front setup.' },
-            ].map((r, i) => (
-              <div key={i} className="flex gap-2 items-start text-[12px] px-2 py-1.5 rounded-sm leading-relaxed"
-                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
-                <span style={{ color: r.color, fontSize: 12, lineHeight: 1.2 }}>{r.icon}</span>
-                <span className="text-slate-400 font-sans">{r.text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Pedido 29: as três recomendações fixas (texto escrito à mão, sem dado) saíram. */}
       </div>
     </div>
   );
