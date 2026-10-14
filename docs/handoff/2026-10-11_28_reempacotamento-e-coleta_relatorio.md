@@ -445,3 +445,21 @@ A saída completa está em `_testes.txt`.
 - **O achado 2:** as pastas `_MEI*` do `%TEMP%`.
 
 `docs/handoff/2026-10-11_28_reempacotamento-e-coleta_relatorio.md`
+
+## Pergunta no chat (14/10): as sessões que gravei contaram para o treinamento?
+
+Conferido em 14/10, só lendo (`tools/conferir_sessao.py` nas três sessões novas; store v2 e modelo do coach do repositório).
+
+**Modelo do coach e store v2 (relatório de evolução):**
+- **Até 10/10, sim.** O store v2 (refeito em 10/10 17:42) e o modelo do coach (treinado em 10/10 17:38, 43 voltas suas) têm as sessões de 04/10 (app de desenvolvimento), 04/10 23:51, 05/10, 08/10 e 10/10. As do app instalado entraram pela anotação em `docs/experimentos/anotacoes_de_sessao.csv`.
+- **11/10 e 13/10, ainda não.** O `atualizar_coach` não rodou depois de 10/10. E, gravadas pelo app antigo, essas sessões não têm o indicador de IA: sem uma linha de anotação confirmando que todas as voltas foram suas, as voltas saem `desconhecida` e não entram no modelo do coach.
+
+| sessão | linhas | voltas válidas pelos portões | melhor volta |
+|---|---:|---:|---|
+| `2026-10-11_14-16-34` | 1.134 | 0 | — |
+| `2026-10-11_14-19-52` | 130.442 | 16 | 1:27,594 |
+| `2026-10-13_19-24-10` | 95.087 | 9 | 1:29,768 |
+
+A volta de 1:27,594 é mais rápida que a referência `minha_melhor` atual (1:29,389).
+
+**Modelo do carro (M1):** nenhuma sessão gravada até agora conta (0 de 5). Todas foram gravadas sem a guinada e as velocidades no referencial do carro. Só as sessões do app novo (0.3.0) vão ter esses canais.
