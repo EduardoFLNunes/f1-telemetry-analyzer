@@ -44,6 +44,12 @@ O app instalado roda o mesmo código de `develop`; no pacote mudam só os caminh
   troca a pasta de usuário do Electron antes de qualquer caminho ser pedido.
   Logs, configuração, perfil do Chromium e a pasta de dados do backend vão
   para ela.
+- **Todas as versões num lugar só:** `versoes/` na raiz do repositório, uma
+  pasta por versão com o instalador, o `build-info.json` e o `sha256.txt`. O
+  `versoes/LEIA-ME.md` diz qual é a mais atual (a de build mais recente), qual
+  está instalada e como instalar e abrir. O `npm run dist:win` guarda o
+  instalador novo ao terminar (`npm run publicar`); `npm run versoes` só refaz
+  o LEIA-ME. Os instaladores ficam fora do git.
 - **O que não muda:** o `productName`, o `appId` e a pasta de dados
   (`%APPDATA%\Automobilista Telemetria`). As gravações continuam na mesma pasta.
 

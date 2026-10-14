@@ -76,4 +76,9 @@ data/reference_models/*.json
 # empacotamento, e datado. Versionar guardaria a hora de um build de outra
 # maquina como se fosse a desta.
 desktop/build-info.json
+
+# Instaladores de todas as versoes do app (desktop/scripts/publish-version.js):
+# so o indice e versionado.
+versoes/*
+!versoes/LEIA-ME.md
 docs/estudos/*.mp4

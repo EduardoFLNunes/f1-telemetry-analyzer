@@ -472,3 +472,27 @@ A volta de 1:27,594 é mais rápida que a referência `minha_melhor` atual (1:29
 - **O carro foi anotado pelo padrão das anotações anteriores e pelos tempos de volta.** Você confirmou o piloto; confirme também o carro.
 - **`2026-10-11_13-56-20` ficou de fora:** tem uma amostra só e não entra no inventário. Anotada, ela faria o `atualizar_coach` parar.
 - **Nada rodou ainda:** as voltas entram no coach e no store v2 no `atualizar_coach` da Parte G. A volta de 1:27,594 deve virar a referência `minha_melhor`.
+
+## Pasta de versões e menu Iniciar (pedido no chat de 14/10)
+
+Você disse que o app não aparecia no menu Iniciar e pediu um lugar com todas as versões.
+
+**O que existe hoje no Windows:**
+- A instalação é a `0.1.7-phase-16`, registrada para todos os usuários (registro `HKLM`), na pasta `C:\Users\Dokas\AppData\Local\Programs\Automobilista Telemetria`.
+- Há dois atalhos "Automobilista Telemetria", de 02/09, apontando para ela:
+  - no menu Iniciar de todos os usuários: `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Automobilista Telemetria.lnk`;
+  - na área de trabalho pública: `C:\Users\Public\Desktop\Automobilista Telemetria.lnk`.
+- A `0.3.0` ainda não foi instalada. O instalador dela recria os atalhos.
+
+**A pasta nova:** `versoes\`, na raiz do repositório:
+- **uma subpasta por versão,** com o instalador, o `build-info.json` e o `sha256.txt`;
+- **os instaladores antigos** foram movidos de `desktop\dist\`: 10 instaladores de 9 versões. As versões anteriores à `0.1.7` não têm carimbo de build; a data delas é a do arquivo;
+- **a `0.3.0`** foi copiada para `versoes\0.3.0-coleta-modelos\`. Ela continua também em `desktop\dist\`, a saída do build;
+- **`versoes\LEIA-ME.md`,** gerado pelo script e versionado, diz:
+  - qual é a mais atual, a de build mais recente (a `0.2.0-assetto-udp` é de 14/06, anterior à `0.1.7`);
+  - qual está instalada, pelo registro do Windows;
+  - como instalar a mais atual: por cima da atual, escolhendo "todos os usuários" e mantendo a pasta, como na instalação de hoje;
+  - como abrir o app e conferir a versão.
+- **o build guarda o instalador novo sozinho:** `desktop/scripts/publish-version.js` roda no fim do `npm run dist:win` (`npm run publicar`). `npm run versoes` só refaz o LEIA-ME.
+
+**Na Parte F, use o instalador** `versoes\0.3.0-coleta-modelos\Automobilista-Telemetria-Setup-0.3.0-coleta-modelos.exe`. É o mesmo arquivo de `desktop\dist\`, sha256 `7b27fe71…`.
