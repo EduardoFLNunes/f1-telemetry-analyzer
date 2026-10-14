@@ -309,4 +309,4 @@ O sistema completo, com o porquê de cada cor, está em `docs/sistema_visual.md`
 - **Decisões suas:**
   - **o texto:** fica com a Instrument Sans, ou quer também a IBM Plex Sans do protótipo (precisaria baixar)?
   - **o achado 1** (o gravador junta passagens): proponho um pedido próprio.
-- **O canvas** ainda mostra a Big Shoulders e as cores de "parado" e "taxa baixa" trocadas em relação ao código (no código, parado é vermelho e taxa baixa é âmbar). Vale o código e `docs/sistema_visual.md`; atualizo o canvas em seguida.
+- **O canvas** foi atualizado depois do merge (versão 8): os títulos e números grandes estão na Barlow Condensed, e "parado" e "taxa baixa" têm as cores do código (parado vermelho, taxa baixa âmbar).
