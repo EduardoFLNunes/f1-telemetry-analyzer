@@ -1,0 +1,232 @@
+{
+  "formato": "medidas-pedido-29/1",
+  "quadros_por_segundo": {
+    "como": "requestAnimationFrame por 10 s na janela do Electron (viewport emulado), com a última volta de 13/10 tocando no replay a 0,5x; vidro alternado por data-vidro; roteiro em scratchpad/quadros.sh",
+    "1920x1080": [
+      {
+        "tela": "#/volta",
+        "vidro": "ligado",
+        "camadasComDesfoque": 1,
+        "quadrosPorSegundo": 75,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 13.5,
+        "quadros": 750,
+        "viewport": "1920x1080",
+        "replayTocando": true,
+        "tempoDoReplay": "7.85"
+      },
+      {
+        "tela": "#/volta",
+        "vidro": "desligado",
+        "camadasComDesfoque": 0,
+        "quadrosPorSegundo": 75,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 13.5,
+        "quadros": 750,
+        "viewport": "1920x1080",
+        "replayTocando": true,
+        "tempoDoReplay": "13.6"
+      },
+      {
+        "tela": "#/volta",
+        "vidro": "ligado",
+        "camadasComDesfoque": 1,
+        "quadrosPorSegundo": 75,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 13.5,
+        "quadros": 750,
+        "viewport": "1920x1080",
+        "replayTocando": true,
+        "tempoDoReplay": "19.34"
+      },
+      {
+        "tela": "#/volta",
+        "vidro": "desligado",
+        "camadasComDesfoque": 0,
+        "quadrosPorSegundo": 75,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 13.5,
+        "quadros": 750,
+        "viewport": "1920x1080",
+        "replayTocando": true,
+        "tempoDoReplay": "25.09"
+      },
+      {
+        "tela": "#/sistema/depuracao",
+        "vidro": "ligado",
+        "camadasComDesfoque": 5,
+        "quadrosPorSegundo": 75,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 13.5,
+        "quadros": 750,
+        "viewport": "1920x1080",
+        "replayTocando": null,
+        "tempoDoReplay": null
+      },
+      {
+        "tela": "#/sistema/depuracao",
+        "vidro": "desligado",
+        "camadasComDesfoque": 0,
+        "quadrosPorSegundo": 75,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 13.5,
+        "quadros": 750,
+        "viewport": "1920x1080",
+        "replayTocando": null,
+        "tempoDoReplay": null
+      },
+      {
+        "tela": "#/sistema/depuracao",
+        "vidro": "ligado",
+        "camadasComDesfoque": 5,
+        "quadrosPorSegundo": 75,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 13.5,
+        "quadros": 750,
+        "viewport": "1920x1080",
+        "replayTocando": null,
+        "tempoDoReplay": null
+      },
+      {
+        "tela": "#/sistema/depuracao",
+        "vidro": "desligado",
+        "camadasComDesfoque": 0,
+        "quadrosPorSegundo": 75,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 13.5,
+        "quadros": 750,
+        "viewport": "1920x1080",
+        "replayTocando": null,
+        "tempoDoReplay": null
+      }
+    ],
+    "2560x1440": [
+      {
+        "tela": "#/volta",
+        "vidro": "ligado",
+        "camadasComDesfoque": 1,
+        "quadrosPorSegundo": 73.5,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 40.1,
+        "quadros": 735,
+        "viewport": "2560x1440",
+        "replayTocando": true,
+        "tempoDoReplay": "7.87"
+      },
+      {
+        "tela": "#/volta",
+        "vidro": "desligado",
+        "camadasComDesfoque": 0,
+        "quadrosPorSegundo": 68.7,
+        "p95Ms": 26.7,
+        "piorQuadroMs": 40,
+        "quadros": 687,
+        "viewport": "2560x1440",
+        "replayTocando": true,
+        "tempoDoReplay": "13.62"
+      },
+      {
+        "tela": "#/volta",
+        "vidro": "ligado",
+        "camadasComDesfoque": 1,
+        "quadrosPorSegundo": 74.6,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 26.7,
+        "quadros": 746,
+        "viewport": "2560x1440",
+        "replayTocando": true,
+        "tempoDoReplay": "19.37"
+      },
+      {
+        "tela": "#/volta",
+        "vidro": "desligado",
+        "camadasComDesfoque": 0,
+        "quadrosPorSegundo": 75,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 13.6,
+        "quadros": 750,
+        "viewport": "2560x1440",
+        "replayTocando": true,
+        "tempoDoReplay": "25.12"
+      },
+      {
+        "tela": "#/sistema/depuracao",
+        "vidro": "ligado",
+        "camadasComDesfoque": 5,
+        "quadrosPorSegundo": 75,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 13.5,
+        "quadros": 750,
+        "viewport": "2560x1440",
+        "replayTocando": null,
+        "tempoDoReplay": null
+      },
+      {
+        "tela": "#/sistema/depuracao",
+        "vidro": "desligado",
+        "camadasComDesfoque": 0,
+        "quadrosPorSegundo": 75,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 13.5,
+        "quadros": 750,
+        "viewport": "2560x1440",
+        "replayTocando": null,
+        "tempoDoReplay": null
+      },
+      {
+        "tela": "#/sistema/depuracao",
+        "vidro": "ligado",
+        "camadasComDesfoque": 5,
+        "quadrosPorSegundo": 75,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 13.6,
+        "quadros": 750,
+        "viewport": "2560x1440",
+        "replayTocando": null,
+        "tempoDoReplay": null
+      },
+      {
+        "tela": "#/sistema/depuracao",
+        "vidro": "desligado",
+        "camadasComDesfoque": 0,
+        "quadrosPorSegundo": 75,
+        "p95Ms": 13.4,
+        "piorQuadroMs": 13.5,
+        "quadros": 750,
+        "viewport": "2560x1440",
+        "replayTocando": null,
+        "tempoDoReplay": null
+      }
+    ]
+  },
+  "espelhamento": {
+    "como": "frontend/scripts/sentido_do_mapa.ts contra o backend isolado (porta 8010); área com sinal do traçado na tela; positiva = horário",
+    "voltas": [
+      {
+        "lapId": "rec__2026-10-13_19-24-10_vhe_interlagos__14",
+        "amostras": 2690,
+        "antes": {
+          "areaM2": 397682,
+          "sentido": "horário"
+        },
+        "depois": {
+          "areaM2": -397682,
+          "sentido": "anti-horário"
+        }
+      },
+      {
+        "lapId": "rec__2026-10-04_02-24-04_vhe_interlagos__5",
+        "amostras": 3267,
+        "antes": {
+          "areaM2": 786461,
+          "sentido": "horário"
+        },
+        "depois": {
+          "areaM2": -786461,
+          "sentido": "anti-horário"
+        }
+      }
+    ],
+    "nota": "a volta rec__2026-10-04_02-24-04_vhe_interlagos__5 do gravador junta duas passagens (85,107 s e 89,388 s, a segunda 46 min depois): por isso a área é o dobro"
+  }
+}

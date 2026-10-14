@@ -1,0 +1,228 @@
+{
+  "formato": "contraste/1",
+  "fonte": "frontend/src/theme/tokens.css",
+  "superficies": [
+    {
+      "id": "vidro",
+      "nome": "vidro sobre o brilho vermelho (pior caso)",
+      "cor": "#251316"
+    },
+    {
+      "id": "vidro-frio",
+      "nome": "vidro sobre o brilho frio",
+      "cor": "#161c23"
+    },
+    {
+      "id": "opaca-no-vidro",
+      "nome": "superfície opaca dentro do vidro",
+      "cor": "#101013"
+    },
+    {
+      "id": "dica",
+      "nome": "dica (vidro forte)",
+      "cor": "#231a1d"
+    },
+    {
+      "id": "superficie",
+      "nome": "superfície opaca (gráficos, tabelas, mapas)",
+      "cor": "#0e1013"
+    },
+    {
+      "id": "sem-transparencia",
+      "nome": "vidro sem transparência",
+      "cor": "#14171b"
+    }
+  ],
+  "linhas": [
+    {
+      "token": "--texto-1",
+      "uso": "títulos, números e corpo",
+      "cor": "#f2f4f5",
+      "razoes": {
+        "vidro": 16.07,
+        "vidro-frio": 15.61,
+        "opaca-no-vidro": 17.2,
+        "dica": 15.39,
+        "superficie": 17.27,
+        "sem-transparencia": 16.29
+      },
+      "pior": 15.39,
+      "passaAA": true
+    },
+    {
+      "token": "--texto-2",
+      "uso": "texto de apoio",
+      "cor": "#b4bcc4",
+      "razoes": {
+        "vidro": 9.23,
+        "vidro-frio": 8.96,
+        "opaca-no-vidro": 9.87,
+        "dica": 8.84,
+        "superficie": 9.92,
+        "sem-transparencia": 9.36
+      },
+      "pior": 8.84,
+      "passaAA": true
+    },
+    {
+      "token": "--texto-3",
+      "uso": "rótulos e legendas",
+      "cor": "#8e98a2",
+      "razoes": {
+        "vidro": 6.05,
+        "vidro-frio": 5.87,
+        "opaca-no-vidro": 6.47,
+        "dica": 5.79,
+        "superficie": 6.5,
+        "sem-transparencia": 6.13
+      },
+      "pior": 5.79,
+      "passaAA": true
+    },
+    {
+      "token": "--vermelho-claro",
+      "uso": "vermelho como texto",
+      "cor": "#ff4a3d",
+      "razoes": {
+        "vidro": 5.32,
+        "vidro-frio": 5.16,
+        "opaca-no-vidro": 5.69,
+        "dica": 5.09,
+        "superficie": 5.71,
+        "sem-transparencia": 5.39
+      },
+      "pior": 5.09,
+      "passaAA": true
+    },
+    {
+      "token": "--perda",
+      "uso": "perda (+ e o número)",
+      "cor": "#ffa24a",
+      "razoes": {
+        "vidro": 8.88,
+        "vidro-frio": 8.62,
+        "opaca-no-vidro": 9.5,
+        "dica": 8.5,
+        "superficie": 9.54,
+        "sem-transparencia": 9.01
+      },
+      "pior": 8.5,
+      "passaAA": true
+    },
+    {
+      "token": "--ganho",
+      "uso": "ganho (− e o número)",
+      "cor": "#6f9bff",
+      "razoes": {
+        "vidro": 6.59,
+        "vidro-frio": 6.4,
+        "opaca-no-vidro": 7.05,
+        "dica": 6.31,
+        "superficie": 7.08,
+        "sem-transparencia": 6.68
+      },
+      "pior": 6.31,
+      "passaAA": true
+    },
+    {
+      "token": "--tempo-verde",
+      "uso": "a sua melhor",
+      "cor": "#2bd67b",
+      "razoes": {
+        "vidro": 9.3,
+        "vidro-frio": 9.02,
+        "opaca-no-vidro": 9.94,
+        "dica": 8.9,
+        "superficie": 9.99,
+        "sem-transparencia": 9.42
+      },
+      "pior": 8.9,
+      "passaAA": true
+    },
+    {
+      "token": "--tempo-roxo",
+      "uso": "a melhor de todas",
+      "cor": "#b266ff",
+      "razoes": {
+        "vidro": 5.27,
+        "vidro-frio": 5.11,
+        "opaca-no-vidro": 5.63,
+        "dica": 5.04,
+        "superficie": 5.66,
+        "sem-transparencia": 5.34
+      },
+      "pior": 5.04,
+      "passaAA": true
+    },
+    {
+      "token": "--tempo-amarelo",
+      "uso": "sem melhora",
+      "cor": "#f5c542",
+      "razoes": {
+        "vidro": 10.93,
+        "vidro-frio": 10.62,
+        "opaca-no-vidro": 11.7,
+        "dica": 10.47,
+        "superficie": 11.75,
+        "sem-transparencia": 11.08
+      },
+      "pior": 10.47,
+      "passaAA": true
+    },
+    {
+      "token": "--estado-ok",
+      "uso": "etiqueta ok",
+      "cor": "#4cc38a",
+      "razoes": {
+        "vidro": 8.01,
+        "vidro-frio": 7.77,
+        "opaca-no-vidro": 8.56,
+        "dica": 7.66,
+        "superficie": 8.6,
+        "sem-transparencia": 8.12
+      },
+      "pior": 7.66,
+      "passaAA": true
+    },
+    {
+      "token": "--estado-aviso",
+      "uso": "etiqueta de aviso",
+      "cor": "#f2c14e",
+      "razoes": {
+        "vidro": 10.57,
+        "vidro-frio": 10.26,
+        "opaca-no-vidro": 11.3,
+        "dica": 10.12,
+        "superficie": 11.35,
+        "sem-transparencia": 10.71
+      },
+      "pior": 10.12,
+      "passaAA": true
+    },
+    {
+      "token": "--estado-erro",
+      "uso": "etiqueta de erro",
+      "cor": "#ff7a6b",
+      "razoes": {
+        "vidro": 6.97,
+        "vidro-frio": 6.76,
+        "opaca-no-vidro": 7.45,
+        "dica": 6.67,
+        "superficie": 7.48,
+        "sem-transparencia": 7.06
+      },
+      "pior": 6.67,
+      "passaAA": true
+    },
+    {
+      "token": "--texto-sobre-vermelho",
+      "uso": "texto do botão vermelho (sobre --vermelho)",
+      "cor": "#ffffff",
+      "razoes": {
+        "vermelho": 4.97
+      },
+      "pior": 4.97,
+      "passaAA": true
+    }
+  ]
+}
