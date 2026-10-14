@@ -32,6 +32,10 @@ data/assisted_analysis/
 data/external_references/
 data/fastf1_cache/
 data/cache/
+# Pedido 28: a conferencia de cada sessao e a configuracao do app (repositorio
+# e referencia do coach), gravadas pelo backend na pasta de dados.
+data/verificacoes/
+data/configuracao/
 data/feature_store/
 data/telemetry_db/
 backend/data/fastf1_cache/

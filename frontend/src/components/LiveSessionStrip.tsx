@@ -42,7 +42,9 @@ const Item = ({
 
 export const LiveSessionStrip: React.FC<{
   onTrackKeyChange?: (trackKey: string | null) => void;
-}> = ({ onTrackKeyChange }) => {
+  /** A taxa medida pela aba Coleta de dados (pedido 28); sem ela, a da ultima volta gravada. */
+  taxaHz?: number | null;
+}> = ({ onTrackKeyChange, taxaHz }) => {
   const lapMetrics = useTelemetryStore((state) => state.lapMetrics);
   const [runtime, setRuntime] = useState<RuntimePayload | null>(null);
   const [recording, setRecording] = useState<any>(null);
@@ -81,6 +83,13 @@ export const LiveSessionStrip: React.FC<{
   const trackReady = runtime?.backend?.trackState === 'TRACK_READY';
   const track = String(trackKey || 'Aguardando pista').replace(/[_-]+/g, ' ');
   const source = String(runtime?.telemetry?.source || 'Assetto Corsa').replace(/[_-]+/g, ' ');
+  // A taxa real no lugar do "60 HZ" fixo: a medida ao vivo, ou a da ultima volta persistida.
+  const measuredHz = typeof taxaHz === 'number' && Number.isFinite(taxaHz)
+    ? taxaHz
+    : Number(recording?.lastPersistedLapEffectiveHz);
+  const recordingLabel = Number.isFinite(measuredHz) && measuredHz > 0
+    ? `GRAVAÇÃO ${measuredHz.toFixed(1).replace('.', ',')} HZ`
+    : 'GRAVAÇÃO';
 
   return (
     <div className="live-session-strip">
@@ -95,7 +104,7 @@ export const LiveSessionStrip: React.FC<{
       <Item icon={<TimerReset size={14} />} label="VOLTA ATUAL" value={String(lapMetrics.currentLapNumber ?? '--')} active={playerLive} />
       <Item
         icon={<Save size={14} />}
-        label="GRAVAÇÃO 60 HZ"
+        label={recordingLabel}
         value={recording?.recording ? `${Number(recording.playerSamplesWritten || 0).toLocaleString()} AMOSTRAS` : 'PAUSADA'}
         active={Boolean(recording?.recording)}
       />

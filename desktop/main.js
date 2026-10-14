@@ -5,14 +5,30 @@ const http = require('node:http');
 const https = require('node:https');
 const path = require('node:path');
 
+// Pedido 28: a test run of the packaged app keeps everything Electron writes --
+// Chromium profile, logs, the backend's data -- out of the real data folder.
+// It has to happen before anything asks Electron for a path.
+const USER_DATA_OVERRIDE = process.env.AT_DESKTOP_USER_DATA_DIR
+  ? path.resolve(process.env.AT_DESKTOP_USER_DATA_DIR)
+  : null;
+if (USER_DATA_OVERRIDE) {
+  fs.mkdirSync(USER_DATA_OVERRIDE, { recursive: true });
+  app.setPath('userData', USER_DATA_OVERRIDE);
+  app.setPath('sessionData', USER_DATA_OVERRIDE);
+  app.setPath('crashDumps', path.join(USER_DATA_OVERRIDE, 'Crashpad'));
+}
+
 const APP_ROOT = app.isPackaged ? path.dirname(process.execPath) : path.resolve(__dirname, '..');
 const REPO_ROOT = path.resolve(__dirname, '..');
 const REPO_FRONTEND_DIST = path.join(REPO_ROOT, 'frontend', 'dist', 'index.html');
 const DEFAULT_FRONTEND_DEV_URL = 'http://127.0.0.1:5173';
 const DEFAULT_BACKEND_URL = 'http://127.0.0.1:8000';
 const BACKEND_EXE_NAME = process.platform === 'win32' ? 'automobilista-backend.exe' : 'automobilista-backend';
+// PyInstaller --onedir (pedido 28): the executable sits in its own folder, next
+// to `_internal`, instead of unpacking ~0.37 GB into %TEMP% on every start.
+const BACKEND_DIR_NAME = 'automobilista-backend';
 const EXPECTED_BACKEND_SERVICE = 'automobilista-telemetria-backend';
-const EXPECTED_BACKEND_VERSION = 'phase-16-consolidation';
+const EXPECTED_BACKEND_VERSION = 'coleta-modelos';
 const WINDOW_ICON_NAME = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
 const ASSETTO_PLUGIN_ID = 'ac_opponents_exporter';
 const ASSETTO_PLUGIN_DISPLAY_NAME = 'Opponents Exporter';
@@ -20,7 +36,7 @@ const ASSETTO_PLUGIN_FILE = 'ac_opponents_exporter.py';
 const ASSETTO_CONFIG_FILE = 'assetto-corsa-setup.json';
 const UDP_OPPONENTS_HOST = process.env.AT_UDP_OPPONENTS_HOST || '127.0.0.1';
 const UDP_OPPONENTS_PORT = Number(process.env.AT_UDP_OPPONENTS_PORT || 8765);
-const DESKTOP_BRANCH_NAME = process.env.AT_DESKTOP_BRANCH_NAME || 'Phase 16';
+const DESKTOP_BRANCH_NAME = process.env.AT_DESKTOP_BRANCH_NAME || 'Coleta de dados';
 const DESKTOP_WINDOW_TITLE = `Automobilista Telemetria - ${DESKTOP_BRANCH_NAME}`;
 
 const FRONTEND_URL = process.env.AT_DESKTOP_FRONTEND_URL || DEFAULT_FRONTEND_DEV_URL;
@@ -68,6 +84,7 @@ const desktopRuntimeState = {
   backendResourceRoot: null,
   backendRuntimeRoot: null,
   logsDir: null,
+  coachRepoPath: null,
 };
 
 function resolveBackendResourceRoot() {
@@ -470,7 +487,7 @@ function resolveFrontendIndexPath() {
 }
 
 function packagedResourceBackendPath() {
-  return path.join(resolveBackendResourceRoot(), 'backend', BACKEND_EXE_NAME);
+  return path.join(resolveBackendResourceRoot(), 'backend', BACKEND_DIR_NAME, BACKEND_EXE_NAME);
 }
 
 function samePath(left, right) {
@@ -484,9 +501,9 @@ function packagedBackendCandidates() {
   if (configured) candidates.push(configured);
 
   candidates.push(packagedResourceBackendPath());
-  candidates.push(path.join(__dirname, 'resources', 'backend', BACKEND_EXE_NAME));
-  candidates.push(path.join(REPO_ROOT, 'backend', 'dist', BACKEND_EXE_NAME));
-  candidates.push(path.join(REPO_ROOT, 'dist', BACKEND_EXE_NAME));
+  candidates.push(path.join(__dirname, 'resources', 'backend', BACKEND_DIR_NAME, BACKEND_EXE_NAME));
+  candidates.push(path.join(REPO_ROOT, 'backend', 'dist', BACKEND_DIR_NAME, BACKEND_EXE_NAME));
+  candidates.push(path.join(REPO_ROOT, 'dist', BACKEND_DIR_NAME, BACKEND_EXE_NAME));
   return candidates;
 }
 
@@ -514,6 +531,43 @@ function resolvePythonRunnerLaunch() {
     cwd: REPO_ROOT,
     runnerPath,
     useShell: false,
+  };
+}
+
+function readBuildInfo() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, 'build-info.json'), 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The repository the coach reads its model and geometry from (pedido 28).
+ *
+ * `AT_REPO_PATH` first. A source run is its own repository. An installed app
+ * uses the one it was built from, stamped in build-info.json, as long as it is
+ * still there; otherwise none, and the "Coleta de dados" tab asks for it.
+ */
+function resolveCoachRepo() {
+  const configured = resolveMaybeRelativePath(process.env.AT_REPO_PATH);
+  if (configured) return configured;
+  if (!app.isPackaged) return REPO_ROOT;
+  const stamped = readBuildInfo()?.repoPath;
+  if (stamped && safeExists(path.join(stamped, '.git'))) return stamped;
+  return null;
+}
+
+/** Which build is recording, for each session's metadata.json (pedido 28). A source run asks git instead. */
+function appIdentityEnv() {
+  if (!app.isPackaged) return {};
+  const info = readBuildInfo() || {};
+  return {
+    AT_APP_VERSION: info.version || app.getVersion(),
+    AT_APP_COMMIT: info.commit || '',
+    AT_APP_BUILD_DIRTY: info.dirty === null || info.dirty === undefined ? '' : String(info.dirty),
+    AT_APP_BUILT_AT: info.builtAt || '',
+    AT_APP_PACKAGED: 'true',
   };
 }
 
@@ -674,6 +728,8 @@ function startBackendProcess() {
   const logsDir = ensureLogsDir();
   const backendResourceRoot = resolveBackendResourceRoot();
   const backendRuntimeRoot = resolveBackendRuntimeRoot();
+  const coachRepo = resolveCoachRepo();
+  desktopRuntimeState.coachRepoPath = coachRepo;
   const backendLog = fs.createWriteStream(path.join(logsDir, 'backend.log'), { flags: 'a' });
   backendLog.write(`\n[${new Date().toISOString()}] Starting ${launch.source}: ${launch.command} ${launch.args.join(' ')}\n`);
   backendProcess = spawn(launch.command, launch.args, {
@@ -686,6 +742,8 @@ function startBackendProcess() {
       AT_BACKEND_RESOURCE_ROOT: process.env.AT_BACKEND_RESOURCE_ROOT || backendResourceRoot,
       AT_BACKEND_RUNTIME_ROOT: process.env.AT_BACKEND_RUNTIME_ROOT || backendRuntimeRoot,
       AT_BACKEND_REPO_ROOT: process.env.AT_BACKEND_REPO_ROOT || backendResourceRoot,
+      ...(coachRepo ? { AT_REPO_PATH: coachRepo } : {}),
+      ...appIdentityEnv(),
       PYTHONUNBUFFERED: '1',
     },
   });
@@ -877,6 +935,7 @@ async function desktopRuntimeStatus() {
     backendResourceRoot: desktopRuntimeState.backendResourceRoot || resolveBackendResourceRoot(),
     backendRuntimeRoot: desktopRuntimeState.backendRuntimeRoot || resolveBackendRuntimeRoot(),
     logsDir: desktopRuntimeState.logsDir || resolveLogsDir(),
+    userDataDir: app.getPath('userData'),
     backendOnline: health.ok,
     healthStatusCode: health.statusCode,
     healthOk: health.ok,

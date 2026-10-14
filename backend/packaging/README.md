@@ -1,5 +1,33 @@
 # Backend Packaging
 
+## Versão 0.3.0-coleta-modelos (pedido 28)
+
+- **`--onedir`.** O `build_backend.ps1` gera a pasta
+  `backend/dist/automobilista-backend/` (o `automobilista-backend.exe` ao lado
+  de `_internal/`), e não mais um executável único. O executável único se
+  extraía a cada abertura em `%TEMP%` (cerca de 0,37 GB); em 08/10, com 1,84 GB
+  livres no C:, a extração falhou e a sessão não foi gravada. Com a pasta,
+  nada é extraído: ela é instalada uma vez e aberta no lugar.
+- **O `.spec`** ao lado do script é refeito a cada build pelas opções do
+  PyInstaller e fica fora do git (`*.spec` no `.gitignore`); quem manda são as
+  opções do `build_backend.ps1`.
+- **O pacote leva o `ml` que a aba "Coleta de dados" usa:** a leitura das
+  gravações, a limpeza, o alinhamento, os portões de qualidade e a
+  reamostragem (`ml.data.recordings`, `ml.preprocessing.*`, `ml.track.*`).
+  Nada que puxe o torch: o portão do box foi copiado para
+  `core/coleta/conferencia.py`, porque `ml.data.ai_detector` importa
+  `ml.validation`.
+- **Modelo do coach.** O backend lê `data/reference_models/<pista>.json` e
+  `<pista>.geometry.json` do repositório configurado (`core/coleta/configuracao.py`:
+  a configuração do app, depois `AT_REPO_PATH`, depois a raiz do código quando
+  roda do código-fonte), só lendo. A linha ótima continua sendo procurada no
+  repositório, na pasta de dados e na de recursos, nessa ordem.
+- **Referência do coach:** a configuração do app (`volta_ia`, `minha_melhor` ou
+  `desligado`); `AT_COACH_REFERENCE`, quando definida, vale mais.
+- **Versão do serviço** em `/api/health`: `coleta-modelos`.
+- **Escritas novas na pasta de dados:** `data/configuracao/app.json` e
+  `data/verificacoes/<sessao>.json`, ambas fora de `data/recordings/`.
+
 ## Current Entrypoint
 
 Development command from `backend/`:
@@ -53,7 +81,8 @@ These paths must remain writable outside a read-only packaged app directory:
 Do not bake machine-specific absolute paths into the executable.
 
 `AT_BACKEND_RESOURCE_ROOT` and `AT_BACKEND_RUNTIME_ROOT` keep PyInstaller
-onefile runs from reading or writing under the temporary extraction directory.
+runs from reading or writing next to the executable (with the old `--onefile`
+build, under the temporary extraction directory).
 In the Electron package, resources come from `process.resourcesPath` while
 cache and recordings go to Electron `userData`.
 
@@ -83,10 +112,11 @@ Build:
 powershell -ExecutionPolicy Bypass -File backend\packaging\build_backend.ps1
 ```
 
-The executable is generated at:
+The executable is generated at (`--onedir`, pedido 28):
 
 ```text
-backend/dist/automobilista-backend.exe
+backend/dist/automobilista-backend/automobilista-backend.exe
+backend/dist/automobilista-backend/_internal/
 ```
 
 `backend/build/`, `backend/dist/`, and generated PyInstaller `.spec` files are
@@ -94,10 +124,10 @@ build artifacts. Do not commit machine-specific generated specs.
 
 ## Electron Resource Packaging
 
-Electron Builder copies the backend executable into:
+Electron Builder copies the backend folder into:
 
 ```text
-desktop/dist/win-unpacked/resources/backend/automobilista-backend.exe
+desktop/dist/win-unpacked/resources/backend/automobilista-backend/automobilista-backend.exe
 ```
 
 At runtime, Electron passes:

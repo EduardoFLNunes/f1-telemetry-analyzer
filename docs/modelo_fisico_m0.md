@@ -183,7 +183,19 @@ As definições estão na seção 1.7 do `docs/store_v2_e_evolucao.md`, e o form
 - **Sessões com os canais novos.** A guinada, as velocidades locais e os freios só existem nas gravações feitas depois deste pedido, com o app do repositório. O ADR 0017 pede 5 sessões humanas com canais físicos para a M1.
   - **Regra da contagem,** registrada em 05/10: das 5 sessões, só contam sessões humanas com a guinada (`yaw_rate`) e as velocidades no referencial do carro (`velocity_long` e `velocity_lat`).
   - **Hoje são 0 de 5.** As sessões de 04/10 e 05/10 foram gravadas antes da correção do gravador e não têm esses campos.
-- **Reempacotar o app instalado** depois do merge, para ele gravar o indicador de IA, os canais novos e a embreagem certa (backlog).
+- **O app instalado foi reempacotado no pedido 28** (`0.3.0-coleta-modelos`, construído de `develop`). Ele grava o indicador de IA, o `carModel`, os canais novos, a embreagem certa e a versão e o commit do app no `metadata.json`. A instalação é feita pelo Eduardo. Até lá, as sessões do app antigo não contam, como as de 11/10 e 13/10.
+
+### Como a contagem é conferida agora (pedido 28)
+
+- **Prévia de cada sessão,** na aba "Coleta de dados" (`core/coleta/conferencia.py`, `veredito_m1`):
+  - **sessão humana:** o indicador de IA desligado em todas as voltas, isto é, `lap_origin` igual a `humano` em todas;
+  - **voltas válidas:** as que passam nos portões de qualidade e não passam pelo box, cortadas e conferidas pelas mesmas funções do store v2;
+  - **canais:** `yaw_rate`, `velocity_long` e `velocity_lat` em pelo menos 95% dos pontos da grade das voltas válidas, o limiar das checagens do pedido 18;
+  - a prévia diz o que falta quando a sessão não conta. O resultado fica em `data/verificacoes/<sessao>.json`, na pasta de dados do app.
+- **Contagem oficial,** lida do store v2 que o `atualizar_coach` refaz (`core/coleta/oficial.py`, rota `/api/coleta/m1/oficial`, também na aba):
+  - uma sessão conta quando todas as voltas dela no store têm `origem` igual a `humano` e os três canais estão em pelo menos 95% dos pontos da grade dessas voltas;
+  - o total aparece como "n de 5".
+- **Antes do pedido 28** não havia código para a contagem: o "0 de 5" era conferido à mão nos relatórios. Em 11/10, a contagem oficial pelo código deu **0 de 5**, com o store de 10/10 (612 voltas).
 - **A unidade do volante,** fechada com a guinada gravada (seção 3).
 - **O entre-eixos e os dados do carro** que não vêm do `data.acd`: o modelo da M1 vai ter de estimá-los dos dados ou recebê-los de fora.
 - **A embreagem antiga não serve:** todas as gravações anteriores têm 0 nela.

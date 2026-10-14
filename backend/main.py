@@ -21,6 +21,7 @@ import logging
 import math
 import os
 import re
+import sys
 import time
 
 from fastapi import FastAPI
@@ -29,6 +30,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.assisted_analysis import AssistedAnalysisService
 from core.assetto_shared_memory_gate import shared_memory_gate_status
 from core.cache.track_cache import TrackCache
+from core.coleta import origem_app
+from core.coleta.ao_vivo import MonitorAoVivo
+from core.coleta.conferencia import ServicoConferencia
+from core.coleta.configuracao import AppConfig
 from core.data_quality import (
     DataQualityReporter,
     TelemetryReliabilityMonitor,
@@ -79,13 +84,31 @@ RUNTIME_ROOT = Path(
     or RESOURCE_ROOT
 ).resolve()
 REPO_ROOT = RESOURCE_ROOT
+
+
+def _default_repository():
+    """The repository the coach reads its model from, unless the app configuration says otherwise.
+
+    Electron passes the one the app was built from (`AT_REPO_PATH`); run from
+    the source tree, it is the tree itself. A packaged backend started by hand
+    has none, and the coach stays silent until one is configured (pedido 28).
+    """
+    configured = os.environ.get("AT_REPO_PATH")
+    if configured:
+        return Path(configured).resolve(), "AT_REPO_PATH"
+    if not getattr(sys, "frozen", False):
+        return BACKEND_DIR.parent, "codigo-fonte"
+    return None, None
+
+
+app_config = AppConfig(RUNTIME_ROOT, *_default_repository())
 REPLAY_TRACK_CACHE_NAME = "telemetry_reconstructed_multilap_v1"
 LIVE_TRACK_CACHE_PREFIX = "assetto_corsa"
 TRACK_CACHE_DIR = RUNTIME_ROOT / "data" / "cache" / "tracks"
 PRIMARY_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetry.csv"
 DEBUG_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetryOld.csv"
 BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
-BACKEND_PHASE_VERSION = "phase-16-consolidation"
+BACKEND_PHASE_VERSION = "coleta-modelos"
 
 runtime_state = RuntimeState()
 telemetry_buffer = TelemetryBuffer(max_size=20000)
@@ -125,6 +148,7 @@ assisted_analysis_service = AssistedAnalysisService(
     track_cache,
     external_reference_repository=external_reference_repository,
     runtime_root=RUNTIME_ROOT,
+    coach_settings=app_config,
 )
 
 
@@ -435,6 +459,8 @@ def recording_metadata() -> Dict[str, Any]:
         # The car, from the static page (ADR 0014): without it a reference lap
         # cannot be restricted to the same car.
         "carModel": source_manager.current_car_model(),
+        # Which app recorded it (pedido 28): version and commit.
+        **origem_app.metadata_fields(BACKEND_DIR.parent),
     }
 
 
@@ -462,6 +488,38 @@ def capture_gate_status() -> Dict[str, Any]:
             "sharedMemoryGate": gate,
         }
     return {"allowed": True, "reason": None, "activeSource": active_source, "sharedMemoryGate": gate}
+
+
+def _recording_status() -> Dict[str, Any]:
+    return recording_runtime.status().to_api() if recording_runtime else {}
+
+
+# Pedido 28: what is being recorded, item by item, and the check of each lap and
+# session against what the models need.
+coleta_monitor = MonitorAoVivo(gravando=lambda: bool(recording_runtime and recording_runtime.recorder.recording))
+coleta_conferencia = ServicoConferencia(
+    RUNTIME_ROOT,
+    recording_config_from_env(RUNTIME_ROOT).output_root,
+    repositorio=app_config.coach_root,
+    estado_da_gravacao=_recording_status,
+)
+COLETA_TICK_SECONDS = 5.0
+
+
+def reload_coach() -> None:
+    """The configuration changed where the model is read from or which reference it uses."""
+    assisted_analysis_service.reload_coach()
+    if live_driving_coach is not None:
+        live_driving_coach.reset_model()
+
+
+async def _coleta_loop():
+    while True:
+        await asyncio.sleep(COLETA_TICK_SECONDS)
+        try:
+            await asyncio.to_thread(coleta_conferencia.tick)
+        except Exception as error:  # the check must never take the backend down
+            logger.warning("Coleta check tick failed: %s", error)
 
 
 def build_recording_runtime() -> RecordingRuntime:
@@ -860,6 +918,9 @@ async def lifespan(app: FastAPI):
         logger.warning("Live driving coach unavailable: %s", error)
 
     event_bus.subscribe(COACHING_EVENT, remember_coaching_event)
+    event_bus.subscribe(PROCESSED_FRAME, coleta_monitor.on_frame)
+    coleta_task = asyncio.create_task(_coleta_loop())
+    asyncio.get_running_loop().run_in_executor(None, coleta_conferencia.concluir_pendentes)
     telemetry_runtime = build_telemetry_runtime()
     loop = asyncio.get_running_loop()
     telemetry_runtime.start(loop)
@@ -876,6 +937,12 @@ async def lifespan(app: FastAPI):
     if recording_runtime:
         recording_runtime.stop()
         recording_runtime = None
+    coleta_task.cancel()
+    event_bus.unsubscribe(PROCESSED_FRAME, coleta_monitor.on_frame)
+    try:
+        await asyncio.to_thread(coleta_conferencia.finalizar)
+    except Exception as error:
+        logger.warning("Coleta check could not be finalized: %s", error)
     if live_driving_coach is not None:
         event_bus.unsubscribe(PROCESSED_FRAME, live_driving_coach.on_frame)
     event_bus.unsubscribe(COACHING_EVENT, remember_coaching_event)
@@ -900,6 +967,7 @@ app.add_middleware(
 # must happen after all the state/helpers/app above are already defined.
 from routers import (  # noqa: E402
     assisted_analysis,
+    coleta,
     debug,
     external_references,
     health,
@@ -920,6 +988,7 @@ app.include_router(recording_router.router)
 app.include_router(assisted_analysis.router)
 app.include_router(external_references.router)
 app.include_router(debug.router)
+app.include_router(coleta.router)
 app.include_router(legacy.router)
 
 # Re-exported so existing tests that call `backend_main.<name>(...)` directly

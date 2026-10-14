@@ -754,6 +754,18 @@ class LiveDrivingCoach:
 
     # ── plumbing ─────────────────────────────────────────────────────────
 
+    def reset_model(self) -> None:
+        """Drop the model and the projector; the next frame asks the providers again.
+
+        Called when the app configuration changes where the model is read from,
+        or which reference it uses (pedido 28). The coach rules are untouched: a
+        new model or reference restarts the focus count, as before.
+        """
+        self._model = None
+        self._projector = None
+        self._projector_geometry_id = None
+        self._warned_geometry = None
+
     def _model_for(self, track: Optional[str]) -> Any:
         key = (track or "").strip() or self._track
         if key and key != self._track:
