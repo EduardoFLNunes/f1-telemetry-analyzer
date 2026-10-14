@@ -225,3 +225,54 @@ Atualizada em 14/10, com as decisões do pedido 29:
 7. **Instalador** com o redesenho.
 
 Cada pedido mantém o que já foi validado: o coach, o store v2 e o relatório de evolução não mudam de regra.
+
+### O que o pedido 29 entregou (14/10)
+
+Item 1 da lista acima. Detalhes em `docs/handoff/2026-10-14_29_redesenho-base_relatorio.md`; o sistema visual está em `docs/sistema_visual.md`.
+
+- **Paleta, fontes, vidro, componentes e guia visual:**
+  - a paleta está em variáveis (`frontend/src/theme/tokens.css`), e o Tailwind aponta para elas;
+  - as fontes são arquivos locais com a licença OFL: Barlow Condensed, Instrument Sans e IBM Plex Mono;
+  - o vidro vale só nos recipientes e respeita `prefers-reduced-transparency`; há também o botão "Sem transparência";
+  - os componentes base estão em `components/ui/base.tsx`;
+  - o guia visual fica em Sistema › Guia visual;
+  - todo texto passa no AA (4,5:1) sobre o vidro.
+- **Roteador, idioma, nome do produto e `lang="pt-BR"`:**
+  - **o roteador:** endereço por hash (`#/sessoes`, `#/volta`…), que sobrevive ao recarregar. O trilho lateral deu lugar a uma barra de vidro no topo, com as seis telas: Sessões, Ao vivo, Volta, Evolução, Coleta de dados e Sistema;
+  - **o idioma:** `lang="pt-BR"` e tempos em M:SS,mmm, com vírgula, também nas telas antigas;
+  - **o nome do produto:** "Sistema de Telemetria e Otimização de Trajetórias", no título da janela (`desktop/main.js`) e na página. Saíram "Motorsport Intelligence Workstation", "AT TELEM" e "Telemetria Assistida para Simulacao Automobilistica". O `productName` do instalador não mudou.
+- **Retirada dos dados fixos (problema B):**
+  - as três "AI RECOMMENDATIONS" fixas;
+  - "SPATIAL" e "AI_CORE" sempre acesos;
+  - "BUILD v13.0";
+  - a escolha de fonte "F1-25 UDP" e "IRACING SDK", com o Start e o Stop que chamavam `/api/streaming/*`, rota que não existe;
+  - "Neural-linked coaching // Priority enabled".
+
+  O "GRAVAÇÃO 60 HZ" já mostrava a taxa real desde o pedido 28.
+- **Depuração para Sistema (problema C):** fora da tela Sistema, o mapa não mostra mais:
+  - o PERF;
+  - os modos DIAG, RAW, PTS, SEGS, SMTH e SPEED;
+  - a legenda "VIS/RAW/MICRO";
+  - o "N m | N pts | fonte";
+  - o "World X/Y/Z" dos oponentes.
+
+  Também saíram:
+  - o "LAP DBG" dos traços;
+  - o "P n / REF n";
+  - o JSON do `evidence`;
+  - "Phase 13", que agora se chama "portões de qualidade".
+
+  Tudo isso está em Sistema › Depuração.
+- **Espelhamento do mapa principal:**
+  - **o que mudou:** a câmera usa `scale(s, −s)` (`CameraController.tsx`, `SENTIDO_DO_EIXO_Y`), e o mapa gira no anti-horário, como o minimapa e o relevo;
+  - **o que vem junto:** a projeção dos oponentes acompanha, e os textos desenhados no mapa ficam em pé;
+  - **a conferência:** foi feita com uma volta real, antes e depois.
+- **Hero e casca da tela Ao vivo:**
+  - **o hero:** fica no topo de Sessões. Mostra o estado real do `/api/health` enquanto o backend sobe, os números de dado real e a sua melhor volta traçada sobre as camadas do cache. Para isso, a janela do Electron agora abre antes de o backend responder;
+  - **a casca do Ao vivo:** a gravação e os canais vêm de `/api/coleta/ao-vivo`, e o rádio de `/api/live/coach`.
+- **A leitura do CSP para a realidade aumentada:** está no relatório do pedido 29 (Parte A).
+- **O que fica para os próximos pedidos:**
+  - Volta e Evolução ainda mostram o conteúdo antigo (Pista e Análise) dentro da casca nova;
+  - a lista de Sessões é a do gravador, com a conferência da Coleta.
+
+  O pedido 30 (complemento, 14/10) passa as três telas para o protótipo A.
