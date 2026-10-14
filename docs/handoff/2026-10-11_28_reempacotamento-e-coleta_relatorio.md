@@ -463,3 +463,12 @@ Conferido em 14/10, só lendo (`tools/conferir_sessao.py` nas três sessões nov
 A volta de 1:27,594 é mais rápida que a referência `minha_melhor` atual (1:29,389).
 
 **Modelo do carro (M1):** nenhuma sessão gravada até agora conta (0 de 5). Todas foram gravadas sem a guinada e as velocidades no referencial do carro. Só as sessões do app novo (0.3.0) vão ter esses canais.
+
+**Anotação feita em 14/10, a seu pedido no chat** ("sim, todas as voltas foram minhas, pode anotar"):
+- **O que entrou:** três linhas em `docs/experimentos/anotacoes_de_sessao.csv`, todas como `humano`, `rss_formula_rss_3_v6_2026`:
+  - `2026-10-11_14-16-34`;
+  - `2026-10-11_14-19-52`;
+  - `2026-10-13_19-24-10`.
+- **O carro foi anotado pelo padrão das anotações anteriores e pelos tempos de volta.** Você confirmou o piloto; confirme também o carro.
+- **`2026-10-11_13-56-20` ficou de fora:** tem uma amostra só e não entra no inventário. Anotada, ela faria o `atualizar_coach` parar.
+- **Nada rodou ainda:** as voltas entram no coach e no store v2 no `atualizar_coach` da Parte G. A volta de 1:27,594 deve virar a referência `minha_melhor`.
