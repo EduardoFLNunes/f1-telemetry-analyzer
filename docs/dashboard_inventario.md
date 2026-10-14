@@ -158,13 +158,23 @@ O app tem 4 páginas, sem roteador (`App.tsx:20,46-49`). Ao recarregar, ele volt
 
 **Decisão do Eduardo (11/10):** a aba "Coleta de dados" entra já no app atual, junto com o reempacotamento do app instalado (pedido 28), e ocupa o lugar da tela "Antes de pilotar". É a única exceção à regra de não construir backend: conferir se a gravação tem o que os modelos precisam exige ler a gravação.
 
+**Decisões do Eduardo (14/10, pedido 29):**
+
+- O redesenho segue a **opção A** do protótipo.
+- **Paleta inspirada nas transmissões da F1,** sem a identidade oficial: nada de logotipo, marca, fonte proprietária ou cor de equipe.
+- **Visual de vidro (glassmorphism)** nos recipientes. Gráficos, tabelas e mapas ficam sobre superfície opaca, para os números não perderem contraste.
+- **Hero** no topo da tela Sessões, com dado real e o estado do backend na abertura.
+- **Tela Ao vivo** e **realidade aumentada dentro do jogo como o rádio do engenheiro.** A realidade aumentada é a segunda exceção à regra de não construir backend e depende do ADR 0020.
+- O redesenho usa a skill `frontend-design` (`.claude/skills/frontend-design`).
+
 | Tela | Para quê | O que é reaproveitado | O que é novo |
 |---|---|---|---|
-| **Sessões** (início) | <br>• a lista de sessões, com voltas, melhor, mediana e diferença para a IA; <br>• a tendência entre sessões e o critério do ADR 0015 | <br>• o cartão "Sessoes gravadas" da `HomePage`, com `/api/sessions`; <br>• o `resumo.json` da evolução | só a montagem da tela |
+| **Sessões** (início) | <br>• o hero (14/10); <br>• a lista de sessões, com voltas, melhor, mediana e diferença para a IA; <br>• a tendência entre sessões e o critério do ADR 0015 | <br>• o cartão "Sessoes gravadas" da `HomePage`, com `/api/sessions`; <br>• o `resumo.json` da evolução | só a montagem da tela |
 | **Volta** | análise de uma volta contra a referência, com mapa, diferença acumulada, traços, 14 curvas e replay | <br>• mapa: `TrackRenderer` (canvas, asfalto e zebras do jogo); <br>• traços: `AssistedLapTraces` e `TelemetryTraces`; <br>• replay e frases do coach: `SessionLapsPanel`, `ReplayControls`, `/api/laps/{id}/replay` e `/api/analysis/coach/lap/{id}`; <br>• diferença pelo relógio do jogo: o cálculo do store (`calculateLapMetrics`, `useTelemetryStore.ts:863-891`) | <br>• a camada dos 60 microssetores no mapa, desenhada no front, com as cores do relatório; <br>• o eixo dos traços em metros, e não em %; <br>• a tabela das 14 curvas, com os números de `sessao_*.json` (`por_volta`) |
 | **Evolução** | perda por curva entre sessões, diferenças consistentes e técnica de pilotagem | o `painel_evolucao.html` e os JSONs que ele já lê | o bloco `tecnica`, que já está no JSON |
 | **Coleta de dados** (era "Antes de pilotar"; pedido 28) | conferir antes, durante e depois da sessão se a gravação tem o que os modelos precisam | <br>• o cartão "Estado da coleta" da `HomePage`; <br>• a `LiveSessionStrip`; <br>• `/api/runtime/status` e `/api/recording/status` | <br>• a taxa real no lugar do "60 HZ" fixo; <br>• o estado de cada canal, pelo registro do que os modelos precisam; <br>• o veredito de cada volta e da sessão |
-| **Sistema** | tudo o que é de desenvolvimento | a `DiagnosticsPage`, como está | recebe o PERF e os modos de depuração do mapa |
+| **Ao vivo** (14/10) | acompanhar a sessão em andamento e o que o rádio disse ao piloto | <br>• `/api/coleta/ao-vivo`; <br>• `/api/live/coach`; <br>• a visão "Volta com fantasma" do protótipo, ao vivo | <br>• as mensagens de rádio em sequência; <br>• o rádio dentro do jogo (realidade aumentada, ADR 0020) |
+| **Sistema** | tudo o que é de desenvolvimento | a `DiagnosticsPage`, como está | <br>• recebe o PERF e os modos de depuração do mapa; <br>• o guia visual (pedido 29) |
 
 **Backend:** só um jeito de o front ler os JSONs que `atualizar_coach` já grava em `data/ml/evolucao/`. Pode ser uma rota que devolve o arquivo ou uma leitura pelo Electron. Nenhum cálculo novo no servidor.
 
@@ -197,13 +207,21 @@ O app tem 4 páginas, sem roteador (`App.tsx:20,46-49`). Ao recarregar, ele volt
 
 ## 7. Ordem sugerida dos pedidos
 
-1. **Base:**
+Atualizada em 14/10, com as decisões do pedido 29:
+
+1. **Base e sistema visual (pedido 29):**
+   - paleta, fontes, vidro, componentes e guia visual;
    - roteador, idioma, nome do produto e `lang="pt-BR"`;
    - retirada dos dados fixos;
-   - depuração para Sistema.
-2. **Tela Volta**, montada com as peças da tabela da seção 5. O único acréscimo fora do front é a leitura dos JSONs da evolução.
-3. **Evolução** dentro do app, a partir do `painel_evolucao.html`, com o bloco `tecnica`.
-4. **Sessões.** A Coleta de dados já entra no pedido 28.
-5. **Limpeza** de componentes, rotas e globais sem uso.
+   - depuração para Sistema;
+   - espelhamento do mapa principal;
+   - hero e a casca da tela Ao vivo;
+   - a leitura do CSP para a realidade aumentada.
+2. **Realidade aumentada:** o rádio no jogo e a tela Ao vivo completa, depois do ADR 0020.
+3. **Tela Volta**, montada com as peças da tabela da seção 5. O único acréscimo fora do front é a leitura dos JSONs da evolução.
+4. **Evolução** dentro do app, a partir do `painel_evolucao.html`, com o bloco `tecnica`.
+5. **Sessões.** A Coleta de dados já entrou no pedido 28.
+6. **Limpeza** de componentes, rotas e globais sem uso.
+7. **Instalador** com o redesenho.
 
 Cada pedido mantém o que já foi validado: o coach, o store v2 e o relatório de evolução não mudam de regra.
