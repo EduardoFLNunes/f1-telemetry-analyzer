@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Archive, Gauge, PlayCircle, Radio, RefreshCw, Target, XCircle } from 'lucide-react';
 import { api } from '../api/client';
 import { OfflineReplayState, TelemetryFrame, useTelemetryStore } from '../store/useTelemetryStore';
@@ -169,9 +169,18 @@ const LapButton = ({
   </button>
 );
 
-export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalysis?: () => void }> = ({
+export const SessionLapsPanel: React.FC<{
+  active?: boolean;
+  onOpenAssistedAnalysis?: () => void;
+  /** Pedido 29: abre sozinho a última volta válida da sessão mais recente (atalho "Última volta"). */
+  abrirUltimaVolta?: boolean;
+  /** Chamado depois que uma volta abre no replay: o replay toca na tela Volta. */
+  aoAbrirReplay?: () => void;
+}> = ({
   active = true,
   onOpenAssistedAnalysis,
+  abrirUltimaVolta = false,
+  aoAbrirReplay,
 }) => {
   const completedLaps = useTelemetryStore((state) => active ? state.completedLapsHistory : EMPTY_COMPLETED_LAPS);
   const selectedLap = useTelemetryStore((state) => active ? state.selectedLap : null);
@@ -366,6 +375,7 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
         headline: 'Replay offline pronto para abrir no ASSIST',
       });
       setError(null);
+      aoAbrirReplay?.();
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : 'Replay offline indisponivel');
     } finally {
@@ -373,10 +383,23 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
     }
   };
 
+  // Atalho "Última volta" do hero: a última volta válida da sessão mais recente que tem uma.
+  const ultimaVoltaAberta = useRef(false);
+  useEffect(() => {
+    if (!active || !abrirUltimaVolta || ultimaVoltaAberta.current || !sessions.length) return;
+    for (const session of sessions) {
+      const validas = (session.laps || []).filter((lap) => Boolean(lap.acceptedByPhase13 ?? lap.valid) && lap.sampleCount > 0);
+      if (!validas.length) continue;
+      ultimaVoltaAberta.current = true;
+      openReplayLap(session, [...validas].sort((a, b) => b.lapNumber - a.lapNumber)[0]);
+      return;
+    }
+  }, [active, abrirUltimaVolta, sessions]);
+
   const openAssistedLap = (session: SessionSummary, lap: LapSummary) => {
     const accepted = Boolean(lap.acceptedByPhase13 ?? lap.valid);
     if (!accepted) {
-      setError('Volta rejeitada pela Phase 13; ASSIST usa apenas voltas validas.');
+      setError('Volta rejeitada pelos portões de qualidade; ASSIST usa apenas voltas validas.');
       return;
     }
     setAssistedTraceContext({
@@ -396,7 +419,7 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
   const openCurrentReplayInAssist = () => {
     if (!offlineReplay.lapId) return;
     if (!offlineReplay.canAnalyze && !offlineReplay.assistAvailable) {
-      setError(offlineReplay.issues?.join('; ') || 'Volta rejeitada pela Phase 13; ASSIST usa apenas voltas validas.');
+      setError(offlineReplay.issues?.join('; ') || 'Volta rejeitada pelos portões de qualidade; ASSIST usa apenas voltas validas.');
       return;
     }
     setAssistedTraceContext({
@@ -507,7 +530,7 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
             <div><span>Car</span><strong>{offlineReplay.car || '--'}</strong></div>
             <div><span>Lap time</span><strong>{formatLapTime(offlineReplay.lapTime ?? offlineReplay.duration)}</strong></div>
             <div><span>Samples</span><strong>{Number(offlineReplay.sampleCount || offlineReplay.samples.length).toLocaleString()}</strong></div>
-            <div><span>Phase 13</span><strong>{offlineReplay.acceptedByPhase13 === false ? 'Rejected' : offlineReplay.validationStatus || 'Accepted'}</strong></div>
+            <div><span>Portões de qualidade</span><strong>{offlineReplay.acceptedByPhase13 === false ? 'Rejected' : offlineReplay.validationStatus || 'Accepted'}</strong></div>
             <div><span>Reference</span><strong>{offlineReplay.referenceLapNumber ? `L${offlineReplay.referenceLapNumber}` : '--'}</strong></div>
             <div><span>ASSIST</span><strong>{offlineReplay.canAnalyze || offlineReplay.assistAvailable ? 'Ready' : 'Blocked'}</strong></div>
           </div>
@@ -602,7 +625,7 @@ export const SessionLapsPanel: React.FC<{ active?: boolean; onOpenAssistedAnalys
                         disabled={!(lap.acceptedByPhase13 ?? lap.valid)}
                         title={(lap.acceptedByPhase13 ?? lap.valid)
                           ? 'Abrir volta persistida no Assisted Analysis'
-                          : 'Volta rejeitada pela Phase 13'}
+                          : 'Volta rejeitada pelos portões de qualidade'}
                         onClick={() => openAssistedLap(session, lap)}
                       >
                         <Target size={10} />

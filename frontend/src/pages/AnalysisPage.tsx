@@ -4,64 +4,50 @@ import { AssistedLapTraces } from '../components/AssistedLapTraces';
 import { SessionLapsPanel } from '../components/SessionLapsPanel';
 import { ElevationProfile } from '../components/ElevationProfile';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { Segmentado } from '../components/ui/base';
 
 type Tab = 'laps' | 'assisted' | 'traces' | 'elevation';
 
 const TABS: Array<[Tab, string]> = [
   ['laps', 'Voltas'],
-  ['assisted', 'Analise assistida'],
-  ['traces', 'Tracados'],
-  ['elevation', 'Elevacao'],
+  ['assisted', 'Análise assistida'],
+  ['traces', 'Traçados'],
+  ['elevation', 'Elevação'],
 ];
 
 /**
- * Post-lap analysis. These panels used to compete for the dashboard's right rail
- * against live-driving widgets; giving them a page of their own is what removes
- * the "everything at once" problem from the live view.
+ * Evolução (pedido 29): por enquanto, o conteúdo da antiga Análise dentro da
+ * casca nova. O redesenho desta tela, com o painel de evolução, é o pedido 4
+ * do redesenho.
+ *
+ * `abrirUltimaVolta` (atalho "Última volta" do hero) abre a última volta válida
+ * da sessão mais recente no replay; `aoAbrirReplay` leva para a tela Volta, que
+ * é onde o replay toca (inventário, problema E).
  */
-export const AnalysisPage: React.FC = () => {
+export const AnalysisPage: React.FC<{ abrirUltimaVolta?: boolean; aoAbrirReplay?: () => void }> = ({ abrirUltimaVolta = false, aoAbrirReplay }) => {
   const [tab, setTab] = useState<Tab>('laps');
 
   return (
     <ErrorBoundary>
-      <div className="app-page">
-        <div>
-          <div className="app-page-title">Analise de voltas</div>
-          <div className="app-page-subtitle">
-            Sessoes gravadas em disco, feedback assistido e comparacao de tracados.
+      <div className="tela-conteudo" style={{ minHeight: '100%' }}>
+        <header className="cabecalho-tela">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div className="sobrancelha">Voltas gravadas · conteúdo atual da Análise</div>
+            <h1 className="titulo-tela">Evolução</h1>
           </div>
-        </div>
-
-        <div className="panel" style={{ display: 'flex', gap: 3, padding: 4, alignSelf: 'flex-start' }}>
-          {TABS.map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setTab(id)}
-              className="num"
-              style={{
-                padding: '6px 12px',
-                fontSize: 8,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                borderRadius: 2,
-                cursor: 'pointer',
-                border: tab === id ? '1px solid rgba(34,211,238,0.22)' : '1px solid transparent',
-                background: tab === id ? 'rgba(34,211,238,0.08)' : 'transparent',
-                color: tab === id ? 'var(--cyan)' : 'var(--text-3)',
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+          <Segmentado rotulo="Partes da Evolução" opcoes={TABS.map(([id, texto]) => ({ id, texto }))} valor={tab} aoMudar={setTab} />
+        </header>
 
         {/* Panels stay mounted so their internal caches survive tab switches; the
             `active` prop is what suspends polling on the hidden ones. */}
-        <div className="panel" style={{ flex: 1, minHeight: 420, position: 'relative', overflow: 'hidden' }}>
+        <div className="vidro" style={{ flex: 1, minHeight: 640, position: 'relative', overflow: 'hidden', padding: 0 }}>
           <div style={{ position: 'absolute', inset: 0, opacity: tab === 'laps' ? 1 : 0, pointerEvents: tab === 'laps' ? 'auto' : 'none', transition: 'opacity 0.2s' }}>
-            <SessionLapsPanel active={tab === 'laps'} onOpenAssistedAnalysis={() => setTab('assisted')} />
+            <SessionLapsPanel
+              active={tab === 'laps'}
+              onOpenAssistedAnalysis={() => setTab('assisted')}
+              abrirUltimaVolta={abrirUltimaVolta}
+              aoAbrirReplay={aoAbrirReplay}
+            />
           </div>
           <div style={{ position: 'absolute', inset: 0, opacity: tab === 'assisted' ? 1 : 0, pointerEvents: tab === 'assisted' ? 'auto' : 'none', transition: 'opacity 0.2s' }}>
             <AssistedAnalysisPanel active={tab === 'assisted'} />

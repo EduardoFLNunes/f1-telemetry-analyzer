@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { PerformanceMode, useTelemetryStore, TelemetryFrame, LapDebugState } from '../store/useTelemetryStore';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { PerformanceMode, useTelemetryStore, TelemetryFrame } from '../store/useTelemetryStore';
 import { useRenderCounter } from '../hooks/useRenderCounter';
 import { formatDelta, formatLapTime } from '../utils/lapFormat';
 
@@ -247,11 +247,11 @@ function drawRow(
   }
 
   ctx.fillStyle = TEXT_MUTED;
-  ctx.font = '700 8px "JetBrains Mono"';
+  ctx.font = '700 8px "IBM Plex Mono"';
   ctx.textAlign = 'left';
   ctx.fillText(trace.label.toUpperCase(), 10, y0 + 10);
   ctx.fillStyle = TEXT_DIM;
-  ctx.font = '600 7px "JetBrains Mono"';
+  ctx.font = '600 7px "IBM Plex Mono"';
   ctx.fillText(trace.unit, 10, y0 + 21);
 
   const currentPoints = cachedSeriesPoints(current, trace, performanceMode);
@@ -263,7 +263,7 @@ function drawRow(
     ? trace.value(currentValueFrame)
     : current.length ? trace.value(current[current.length - 1]) : null;
   ctx.fillStyle = CURRENT_COLOR;
-  ctx.font = '700 8px "JetBrains Mono"';
+  ctx.font = '700 8px "IBM Plex Mono"';
   ctx.textAlign = 'right';
   ctx.fillText(trace.format(currentValue), x0 + width - 2, y0 + 10);
 
@@ -288,24 +288,10 @@ export const TelemetryTraces: React.FC = () => {
   const cursorProgressRef = useRef<number | null>(null);
   const performanceMode = useTelemetryStore((state) => state.performanceMode);
   const performanceModeRef = useRef<PerformanceMode>('BALANCED');
-  const [showLapDebug, setShowLapDebug] = useState(false);
-  const [lapDebug, setLapDebug] = useState<LapDebugState | null>(null);
 
   useEffect(() => {
     performanceModeRef.current = performanceMode;
   }, [performanceMode]);
-
-  useEffect(() => {
-    if (!showLapDebug) {
-      setLapDebug(null);
-      return undefined;
-    }
-    const interval = setInterval(() => {
-      const { lapDebug: debug } = useTelemetryStore.getState();
-      setLapDebug(debug);
-    }, 500);
-    return () => clearInterval(interval);
-  }, [showLapDebug]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -349,14 +335,14 @@ export const TelemetryTraces: React.FC = () => {
       ctx.fillRect(0, 0, width, height);
 
       ctx.fillStyle = 'rgba(241,245,249,0.86)';
-      ctx.font = '800 9px "JetBrains Mono"';
+      ctx.font = '800 9px "IBM Plex Mono"';
       ctx.textAlign = 'left';
       ctx.fillText('LAP COMPARISON', 10, 13);
 
       ctx.fillStyle = CURRENT_COLOR;
       ctx.fillRect(128, 8, 18, 2);
       ctx.fillStyle = TEXT_MUTED;
-      ctx.font = '700 7px "JetBrains Mono"';
+      ctx.font = '700 7px "IBM Plex Mono"';
       ctx.fillText(`CURRENT L${lapMetrics.currentLapNumber ?? '--'}`, 152, 12);
 
       ctx.fillStyle = PREVIOUS_COLOR;
@@ -376,7 +362,7 @@ export const TelemetryTraces: React.FC = () => {
 
       if (currentLapSamples.length < 2) {
         ctx.fillStyle = 'rgba(255,255,255,0.08)';
-        ctx.font = '700 9px "JetBrains Mono"';
+        ctx.font = '700 9px "IBM Plex Mono"';
         ctx.textAlign = 'center';
         ctx.fillText('WAITING FOR CURRENT LAP TELEMETRY', width / 2, height / 2);
         recordTraceRender(performance.now() - renderStart);
@@ -408,7 +394,7 @@ export const TelemetryTraces: React.FC = () => {
       perf.traceCacheEntries = SERIES_CACHE.size;
 
       ctx.fillStyle = TEXT_DIM;
-      ctx.font = '600 7px "JetBrains Mono"';
+      ctx.font = '600 7px "IBM Plex Mono"';
       ctx.textAlign = 'left';
       ctx.fillText('0%', graphX, height - 2);
       ctx.textAlign = 'center';
@@ -461,49 +447,7 @@ export const TelemetryTraces: React.FC = () => {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       />
-      <button
-        type="button"
-        onClick={() => setShowLapDebug((visible) => !visible)}
-        className="absolute right-2 top-1 num text-[7px] uppercase text-slate-600 hover:text-cyan-300"
-        style={{ zIndex: 5, background: 'transparent', border: 0, padding: '2px 4px', cursor: 'pointer' }}
-      >
-        LAP DBG
-      </button>
-      {showLapDebug && lapDebug && (
-        <div
-          className="absolute right-2 top-6 panel px-2 py-1.5"
-          style={{ zIndex: 6, width: 210, background: 'rgba(8,12,22,0.94)', pointerEvents: 'none' }}
-        >
-          <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
-            <span className="label" style={{ fontSize: 6 }}>Current</span>
-            <span className="num text-[8px] text-slate-300 text-right">{lapDebug.currentLapNumber ?? '--'}</span>
-            <span className="label" style={{ fontSize: 6 }}>Reference</span>
-            <span className="num text-[8px] text-slate-300 text-right">{lapDebug.referenceLapNumber ?? '--'}</span>
-            <span className="label" style={{ fontSize: 6 }}>Current Samples</span>
-            <span className="num text-[8px] text-slate-300 text-right">{lapDebug.currentLapSamplesLength}</span>
-            <span className="label" style={{ fontSize: 6 }}>Previous Samples</span>
-            <span className="num text-[8px] text-slate-300 text-right">{lapDebug.previousLapSamplesLength}</span>
-            <span className="label" style={{ fontSize: 6 }}>Partial</span>
-            <span className="num text-[8px] text-slate-300 text-right">{lapDebug.currentLapIsPartial ? 'true' : 'false'}</span>
-            <span className="label" style={{ fontSize: 6 }}>Last Complete</span>
-            <span className="num text-[8px] text-slate-300 text-right">{lapDebug.lastCompletedLapNumber ?? '--'}</span>
-            <span className="label" style={{ fontSize: 6 }}>Transition</span>
-            <span className="num text-[8px] text-slate-300 text-right truncate">{lapDebug.lastLapTransitionReason ?? '--'}</span>
-            <span className="label" style={{ fontSize: 6 }}>Rejected</span>
-            <span className="num text-[8px] text-slate-300 text-right truncate">{lapDebug.lastRejectedLapReason ?? '--'}</span>
-            <span className="label" style={{ fontSize: 6 }}>Prev Valid</span>
-            <span className="num text-[8px] text-slate-300 text-right">{lapDebug.previousLapValid ? 'true' : 'false'}</span>
-            <span className="label" style={{ fontSize: 6 }}>Progress</span>
-            <span className="num text-[8px] text-slate-300 text-right">
-              {lapDebug.finalizedProgressStart?.toFixed(3) ?? '--'} / {lapDebug.finalizedProgressEnd?.toFixed(3) ?? '--'}
-            </span>
-            <span className="label" style={{ fontSize: 6 }}>Duration</span>
-            <span className="num text-[8px] text-slate-300 text-right">
-              {lapDebug.finalizedLapDuration !== null ? `${lapDebug.finalizedLapDuration.toFixed(2)}s` : '--'}
-            </span>
-          </div>
-        </div>
-      )}
+      {/* Pedido 29: o LAP DBG saiu daqui; o mesmo estado da volta está em Sistema › Depuração. */}
     </div>
   );
 };

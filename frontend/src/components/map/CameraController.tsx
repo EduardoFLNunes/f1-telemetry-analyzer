@@ -85,6 +85,22 @@ export function computeTrackBounds(
  */
 export const FOLLOW_VIEW_METERS = 90;
 
+/**
+ * O eixo vertical do mapa (pedido 29).
+ *
+ * As posições do mapa são (x, −z) do mundo. Desenhadas com `scale(s, s)`, o
+ * mapa saía espelhado: Interlagos girava no sentido horário, ao contrário do
+ * minimapa, do relevo e da pista real. Com `scale(s, −s)` a tela fica com x
+ * para a direita e z para baixo, como o minimapa (`OverlayRenderer`) e o relevo
+ * (`TrackElevationRibbon`), e o circuito gira no anti-horário.
+ */
+export const SENTIDO_DO_EIXO_Y = -1;
+
+/** Texto em pé num contexto com o eixo y invertido: desfaz a inversão só para escrever. */
+export function eixoInvertido(ctx: CanvasRenderingContext2D): boolean {
+  return typeof ctx.getTransform === 'function' && ctx.getTransform().d < 0;
+}
+
 export function applyCameraTransform(
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -108,14 +124,14 @@ export function applyCameraTransform(
     }
     const scale = (height / FOLLOW_VIEW_METERS) * zoom;
     ctx.translate(width / 2, height / 2);
-    ctx.scale(scale, scale);
+    ctx.scale(scale, SENTIDO_DO_EIXO_Y * scale);
     ctx.translate(-carPosition.x, -carPosition.y);
     return scale;
   }
 
   const scale = Math.min(width / bounds.w, height / bounds.h) * 0.84 * zoom;
   ctx.translate(width / 2 + camera.offset.x, height / 2 + camera.offset.y);
-  ctx.scale(scale, scale);
+  ctx.scale(scale, SENTIDO_DO_EIXO_Y * scale);
   ctx.translate(-bounds.cx, -bounds.cy);
   return scale;
 }

@@ -1,55 +1,48 @@
 /**
- * Motorsport Intelligence Workstation — Entry Shell
+ * Sistema de Telemetria e Otimização de Trajetórias: a casca do app (pedido 29).
  *
- * Holds the persistent navigation rail and swaps the active page. The telemetry
- * WebSocket lives here (not inside a page) so the live stream and its store stay
- * connected while the user browses analysis or diagnostics.
+ * A navegação de vidro no topo, o fundo em carbono e a tela da rota atual
+ * (`#/tela`, ver navegacao/rotas.ts). O WebSocket da telemetria fica aqui, e
+ * não numa tela, para o fluxo ao vivo continuar ligado enquanto o piloto
+ * troca de tela.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import './App.css';
 import { useTelemetryWS } from './hooks/useTelemetryWS';
-import { AppNav, AppPage } from './components/AppNav';
+import { useEstadoDoApp } from './hooks/useEstadoDoApp';
+import { useRota } from './navegacao/useRota';
+import { Navegacao } from './components/Navegacao';
 import Dashboard from './Dashboard';
-import HomePage from './pages/HomePage';
+import SessoesPage from './pages/SessoesPage';
+import AoVivoPage from './pages/AoVivoPage';
 import AnalysisPage from './pages/AnalysisPage';
-import DiagnosticsPage from './pages/DiagnosticsPage';
 import ColetaPage from './pages/ColetaPage';
-import { api } from './api/client';
+import SistemaPage from './pages/SistemaPage';
+import { aplicarVidro, vidroLigado } from './theme/vidro';
 
 const App: React.FC = () => {
   useTelemetryWS();
-  const [page, setPage] = useState<AppPage>('home');
-  const [captureActive, setCaptureActive] = useState(false);
+  const { tela, sub, navegar } = useRota();
+  const estado = useEstadoDoApp();
 
-  // Drives the nav indicator so the capture state is visible from every page.
   useEffect(() => {
-    let cancelled = false;
-    const poll = async () => {
-      try {
-        const runtime = await api.getRuntimeStatus();
-        if (!cancelled) setCaptureActive(Boolean(runtime?.capture?.allowed));
-      } catch {
-        if (!cancelled) setCaptureActive(false);
-      }
-    };
-    poll();
-    const timer = window.setInterval(poll, 5000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-    };
+    aplicarVidro(vidroLigado());
   }, []);
 
   return (
-    <div className="app-root">
-      <AppNav page={page} onNavigate={setPage} captureActive={captureActive} />
-      <div className="app-main">
-        {page === 'home' && <HomePage onNavigate={setPage} />}
-        {page === 'live' && <Dashboard />}
-        {page === 'coleta' && <ColetaPage />}
-        {page === 'analysis' && <AnalysisPage />}
-        {page === 'diagnostics' && <DiagnosticsPage />}
-      </div>
+    <div className="casca">
+      <div className="casca-fundo" aria-hidden="true" />
+      <Navegacao tela={tela} estado={estado} />
+      <main className={tela === 'volta' ? 'tela tela--cheia' : 'tela'} id="conteudo">
+        {tela === 'sessoes' && <SessoesPage estado={estado} />}
+        {tela === 'ao-vivo' && <AoVivoPage estado={estado} />}
+        {tela === 'volta' && <Dashboard />}
+        {tela === 'evolucao' && (
+          <AnalysisPage abrirUltimaVolta={sub === 'ultima-volta'} aoAbrirReplay={() => navegar('volta')} />
+        )}
+        {tela === 'coleta' && <ColetaPage />}
+        {tela === 'sistema' && <SistemaPage sub={sub} />}
+      </main>
     </div>
   );
 };

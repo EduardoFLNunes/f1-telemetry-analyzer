@@ -581,7 +581,7 @@ function drawSpeedGradientLegend(ctx: CanvasRenderingContext2D, x: number, y: nu
   const minSpeed = prepared.debug?.speedGradientMinKmh;
   const maxSpeed = prepared.debug?.speedGradientMaxKmh;
   ctx.fillStyle = '#94a3b8';
-  ctx.font = '7px "JetBrains Mono", monospace';
+  ctx.font = '7px "IBM Plex Mono", monospace';
   ctx.fillText(finiteNumber(minSpeed) ? `${Math.round(minSpeed)} KMH` : 'LOW', x, y + 19);
   const maxLabel = finiteNumber(maxSpeed) ? `${Math.round(maxSpeed)} KMH` : 'HIGH';
   ctx.fillText(maxLabel, x + width - ctx.measureText(maxLabel).width, y + 19);
@@ -640,7 +640,7 @@ export function drawPreparedRacingLineOverlay(
   return performance.now() - start;
 }
 
-export function drawRacingLineLegend(ctx: CanvasRenderingContext2D, width: number, height: number, prepared: PreparedRacingLineOverlay | null | undefined, mode: string = 'LINE_ONLY') {
+export function drawRacingLineLegend(ctx: CanvasRenderingContext2D, width: number, height: number, prepared: PreparedRacingLineOverlay | null | undefined, mode: string = 'LINE_ONLY', depuracao = false) {
   if (!prepared) return;
   ctx.save();
   screenSpace(ctx);
@@ -660,11 +660,11 @@ export function drawRacingLineLegend(ctx: CanvasRenderingContext2D, width: numbe
   ctx.strokeRect(x, y, panelWidth, panelHeight);
 
   ctx.fillStyle = ready ? '#22d3ee' : '#fbbf24';
-  ctx.font = '700 8px "JetBrains Mono", monospace';
+  ctx.font = '700 8px "IBM Plex Mono", monospace';
   ctx.fillText(ready ? `RACING LINE ${racingLineModeLabel(safeMode)}` : 'RACING LINE INDISPONIVEL', x + 10, y + 16);
 
   ctx.fillStyle = '#94a3b8';
-  ctx.font = '7px "JetBrains Mono", monospace';
+  ctx.font = '7px "IBM Plex Mono", monospace';
   if (!ready) {
     ctx.fillText('Aguardando volta de referencia valida.', x + 10, y + 36);
     ctx.restore();
@@ -673,7 +673,8 @@ export function drawRacingLineLegend(ctx: CanvasRenderingContext2D, width: numbe
 
   const rawCount = prepared.debug?.rawDisplayPointCount || prepared.rawEntries.length;
   const microCount = prepared.debug?.racingLinePointCount || prepared.entries.length;
-  ctx.fillText(`VIS ${prepared.debug?.visualSource || 'UNKNOWN'} / RAW ${rawCount} / MICRO ${microCount}`, x + 10, y + 32);
+  // Contagens de pontos: depuração, só na tela Sistema (pedido 29).
+  if (depuracao) ctx.fillText(`VIS ${prepared.debug?.visualSource || 'UNKNOWN'} / RAW ${rawCount} / MICRO ${microCount}`, x + 10, y + 32);
 
   if (safeMode === 'PLAYER_INPUT_GRADIENT') {
     drawSpeedGradientLegend(ctx, x + 10, y + 43, panelWidth - 20, prepared);

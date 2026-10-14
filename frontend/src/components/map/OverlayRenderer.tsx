@@ -732,11 +732,11 @@ export function drawHud(
   ctx.strokeRect(12, 12, compact ? 170 : 260, compact ? 42 : 62);
 
   ctx.fillStyle = '#22d3ee';
-  ctx.font = 'bold 9px "JetBrains Mono", monospace';
+  ctx.font = 'bold 9px "IBM Plex Mono", monospace';
   ctx.fillText(trackData?.trackName || trackData?.name || 'COLLECTING LAP', 24, 32);
 
   ctx.fillStyle = '#94a3b8';
-  ctx.font = '8px "JetBrains Mono", monospace';
+  ctx.font = '8px "IBM Plex Mono", monospace';
   if (compact) {
     ctx.fillText(`${camera.mode} x${camera.zoom.toFixed(1)}`, 24, 50);
   } else {

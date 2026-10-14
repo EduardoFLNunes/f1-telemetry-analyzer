@@ -33,24 +33,14 @@ export const Header: React.FC<HeaderProps> = ({ time = new Date() }) => {
       {/* ── Left: Wordmark + build ── */}
       <div className="flex items-center gap-3">
         {/* Accent bar */}
-        <div style={{ width: 3, height: 22, background: 'linear-gradient(to bottom, #22d3ee, #06b6d4)', borderRadius: 2 }} />
+        <div style={{ width: 3, height: 22, background: 'var(--vermelho)', borderRadius: 2 }} />
 
+        {/* Pedido 29: um nome de produto só (inventário, problema F); a marca fica na navegação. */}
         <div className="flex flex-col justify-center -gap-0">
-          <div className="flex items-baseline gap-2">
-            <span className="font-eng font-black text-[11px] tracking-[0.22em] text-white uppercase">
-              Motorsport
-            </span>
-            <span className="font-eng font-light text-[11px] tracking-[0.22em] text-cyan-400 uppercase">
-              Intelligence
-            </span>
-            <span className="font-eng font-black text-[11px] tracking-[0.22em] text-slate-400 uppercase">
-              Workstation
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="num text-[7px] text-slate-700 tracking-widest">BUILD v13.0 // DATA RELIABILITY</span>
-            <div className="w-1 h-1 rounded-full bg-emerald-400 status-live" />
-          </div>
+          <span style={{ fontFamily: 'var(--fonte-titulo)', fontWeight: 700, fontSize: 18, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            Volta
+          </span>
+          <span className="rotulo">ao vivo e replay</span>
         </div>
       </div>
 
@@ -99,8 +89,6 @@ export const Header: React.FC<HeaderProps> = ({ time = new Date() }) => {
           style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
           <StatusPill label="LINK" active={isConnected} color="cyan" />
           <StatusPill label="STREAM" active={isStreaming} color="emerald" />
-          <StatusPill label="SPATIAL" active={true} color="cyan" />
-          <StatusPill label="AI_CORE" active={true} color="violet" />
         </div>
 
         {/* Clock */}

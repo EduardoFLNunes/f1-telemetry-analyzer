@@ -3,7 +3,7 @@ import { useTelemetryStore } from '../../store/useTelemetryStore';
 import { useRenderCounter } from '../../hooks/useRenderCounter';
 import { api } from '../../api/client';
 import { drawCar, drawOpponentCar } from './CarRenderer';
-import { applyCameraTransform, computeTrackBounds, CameraState, FOLLOW_VIEW_METERS } from './CameraController';
+import { applyCameraTransform, computeTrackBounds, CameraState, eixoInvertido, FOLLOW_VIEW_METERS, SENTIDO_DO_EIXO_Y } from './CameraController';
 import { drawHud, drawTrackSurface, screenSpace } from './OverlayRenderer';
 import { drawBroadcastCar, drawBroadcastTrail } from './BroadcastOverlay';
 import { MapReadout, TrackMiniMap } from './MapOverlay';
@@ -383,7 +383,7 @@ function drawReplaySegmentMarkers(ctx: CanvasRenderingContext2D, entries: TraceE
   if (!entries.length) return;
   const seen = new Set<number>();
   ctx.save();
-  ctx.font = `${Math.max(7 / scale, 4)}px "JetBrains Mono", monospace`;
+  ctx.font = `${Math.max(7 / scale, 4)}px "IBM Plex Mono", monospace`;
   entries.forEach((entry) => {
     const progress = sampleProgress(entry.sample);
     if (!isFiniteNumber(progress)) return;
@@ -398,7 +398,16 @@ function drawReplaySegmentMarkers(ctx: CanvasRenderingContext2D, entries: TraceE
     ctx.strokeStyle = 'rgba(250,204,21,0.78)';
     ctx.stroke();
     ctx.fillStyle = '#fde68a';
-    ctx.fillText(String(segment + 1), entry.position.x + 5 / scale, entry.position.y - 5 / scale);
+    if (eixoInvertido(ctx)) {
+      // Em pé: o eixo do mapa é invertido (pedido 29), o texto não.
+      ctx.save();
+      ctx.translate(entry.position.x, entry.position.y);
+      ctx.scale(1, -1);
+      ctx.fillText(String(segment + 1), 5 / scale, -5 / scale);
+      ctx.restore();
+    } else {
+      ctx.fillText(String(segment + 1), entry.position.x + 5 / scale, entry.position.y - 5 / scale);
+    }
   });
   ctx.restore();
 }
@@ -562,10 +571,10 @@ function drawReplayLegend(ctx: CanvasRenderingContext2D, width: number, height: 
   ctx.strokeRect(x, y, panelWidth, panelHeight);
 
   ctx.fillStyle = '#fde68a';
-  ctx.font = '700 8px "JetBrains Mono", monospace';
+  ctx.font = '700 8px "IBM Plex Mono", monospace';
   ctx.fillText(`PERSISTED LAP ${racingLineModeLabel(safeMode)}`, x + 10, y + 16);
   ctx.fillStyle = '#94a3b8';
-  ctx.font = '7px "JetBrains Mono", monospace';
+  ctx.font = '7px "IBM Plex Mono", monospace';
   const refText = replay.referenceSamples?.length ? `REF ROXA ${replay.referenceSamples.length}` : 'REF ROXA --';
   ctx.fillText(`USADA AMARELA ${replay.samples?.length || 0} / ${refText}`, x + 10, y + 32);
 
@@ -742,7 +751,7 @@ function worldToScreen(
     const scale = (height / FOLLOW_VIEW_METERS) * camera.zoom;
     return {
       x: width / 2 + (point.x - carPosition.x) * scale,
-      y: height / 2 + (point.y - carPosition.y) * scale,
+      y: height / 2 + SENTIDO_DO_EIXO_Y * (point.y - carPosition.y) * scale,
       scale,
     };
   }
@@ -750,7 +759,7 @@ function worldToScreen(
   const scale = Math.min(width / bounds.w, height / bounds.h) * 0.84 * camera.zoom;
   return {
     x: width / 2 + camera.offset.x + (point.x - bounds.cx) * scale,
-    y: height / 2 + camera.offset.y + (point.y - bounds.cy) * scale,
+    y: height / 2 + camera.offset.y + SENTIDO_DO_EIXO_Y * (point.y - bounds.cy) * scale,
     scale,
   };
 }
@@ -828,8 +837,18 @@ function findOpponentHit(screenOpponents: ScreenOpponent[], x: number, y: number
   return best;
 }
 
-export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { trackData: any }) {
+// Modos da linha de corrida que servem ao piloto. Os outros (DIAG, RAW, PTS,
+// SEGS, SMTH, SPEED) são de depuração e só aparecem na tela Sistema (pedido 29).
+const MODOS_DO_PILOTO = new Set(['LINE_ONLY', 'BRAKE_ACCEL']);
+
+export const TrackRenderer = React.memo(function TrackRenderer({ trackData, depuracao = false }: {
+  trackData: any;
+  /** Pedido 29: PERF, modos de depuração da linha, HUD técnico e coordenadas de mundo só na tela Sistema. */
+  depuracao?: boolean;
+}) {
   useRenderCounter('TrackRenderer');
+  const depuracaoRef = useRef(depuracao);
+  depuracaoRef.current = depuracao;
   const performanceMode = useTelemetryStore((state) => state.performanceMode);
   const setPerformanceMode = useTelemetryStore((state) => state.setPerformanceMode);
   const replayActive = useTelemetryStore((state) => state.offlineReplay.active);
@@ -863,6 +882,9 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
   const showOpponentsRef = useRef(true);
   const racingLineModeRef = useRef('LINE_ONLY');
   const performanceModeRef = useRef('BALANCED');
+  useEffect(() => {
+    if (!depuracao && !MODOS_DO_PILOTO.has(racingLineMode)) setRacingLineMode('LINE_ONLY');
+  }, [depuracao, racingLineMode]);
   const [hoveredOpponent, setHoveredOpponent] = useState<{ opponent: any; x: number; y: number } | null>(null);
   const [selectedOpponent, setSelectedOpponent] = useState<{ opponent: any; x: number; y: number } | null>(null);
   const hoveredOpponentRef = useRef<{ opponent: any; x: number; y: number } | null>(null);
@@ -1259,11 +1281,13 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
       // The readout and the inset are DOM now, in the overlay's own quadrants,
       // so nothing painted here can grow into them.
       if (!broadcast) {
-        drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current, { performanceMode: activePerformanceMode });
+        if (depuracaoRef.current) {
+          drawHud(ctx, rect.width, rect.height, normalizedTrack, liveFrame, cameraRef.current, { performanceMode: activePerformanceMode });
+        }
         if (!simpleVisuals && replayActiveNow) {
           drawReplayLegend(ctx, rect.width, rect.height, offlineReplay, showRacingLineRef.current ? racingLineModeRef.current : 'LINE_ONLY');
         } else if (!simpleVisuals && showRacingLineRef.current && racingLineOverlayRef.current) {
-          drawRacingLineLegend(ctx, rect.width, rect.height, racingLineOverlayRef.current, racingLineModeRef.current);
+          drawRacingLineLegend(ctx, rect.width, rect.height, racingLineOverlayRef.current, racingLineModeRef.current, depuracaoRef.current);
         }
       }
 
@@ -1501,7 +1525,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
   const compactOpponentsPanel = mapSize.width > 0 && mapSize.width < 260;
   const availableRacingLineModes = performanceMode === 'PERFORMANCE'
     ? ['LINE_ONLY']
-    : RACING_LINE_OVERLAY_MODES;
+    : RACING_LINE_OVERLAY_MODES.filter((mode) => depuracao || MODOS_DO_PILOTO.has(mode));
 
   return (
     <div
@@ -1607,6 +1631,7 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
             ))}
           </div>
         )}
+        {depuracao && (
         <div className="panel px-1.5 py-1">
           <button
             type="button"
@@ -1617,7 +1642,8 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
             PERF
           </button>
         </div>
-        {showPerf && (
+        )}
+        {depuracao && showPerf && (
           <div className="panel px-2 py-1.5 w-[184px]">
             <div className="grid grid-cols-3 gap-1 mb-1.5">
               {PERFORMANCE_MODES.map((mode) => (
@@ -1761,9 +1787,11 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
                   <span className="num text-[8px] text-slate-400 text-right">
                     {formatOpponentNumber(opponent.speedKmh)} km/h
                   </span>
+                  {depuracao && (
                   <span className="num text-[7px] text-slate-600 col-start-2 col-span-2 truncate">
                     p {formatOpponentNumber(splinePercent, 1)}% / x {formatOpponentNumber(world.x, 0)} z {formatOpponentNumber(world.z, 0)}
                   </span>
+                  )}
                 </div>
               );
               })}
@@ -1807,12 +1835,16 @@ export const TrackRenderer = React.memo(function TrackRenderer({ trackData }: { 
             <span className="num text-[8px] text-slate-300 text-right">{formatOpponentNumber(tooltipOpponent.speedKmh)} km/h</span>
             <span className="label" style={{ fontSize: 6 }}>Spline</span>
             <span className="num text-[8px] text-slate-300 text-right">{formatOpponentNumber(opponentSplinePercent(tooltipOpponent), 1)}%</span>
-            <span className="label" style={{ fontSize: 6 }}>World X</span>
-            <span className="num text-[8px] text-slate-300 text-right">{formatOpponentNumber(tooltipWorld.x, 2)}</span>
-            <span className="label" style={{ fontSize: 6 }}>World Y</span>
-            <span className="num text-[8px] text-slate-300 text-right">{formatOpponentNumber(tooltipWorld.y, 2)}</span>
-            <span className="label" style={{ fontSize: 6 }}>World Z</span>
-            <span className="num text-[8px] text-slate-300 text-right">{formatOpponentNumber(tooltipWorld.z, 2)}</span>
+            {depuracao && (
+              <>
+                <span className="label" style={{ fontSize: 6 }}>World X</span>
+                <span className="num text-[8px] text-slate-300 text-right">{formatOpponentNumber(tooltipWorld.x, 2)}</span>
+                <span className="label" style={{ fontSize: 6 }}>World Y</span>
+                <span className="num text-[8px] text-slate-300 text-right">{formatOpponentNumber(tooltipWorld.y, 2)}</span>
+                <span className="label" style={{ fontSize: 6 }}>World Z</span>
+                <span className="num text-[8px] text-slate-300 text-right">{formatOpponentNumber(tooltipWorld.z, 2)}</span>
+              </>
+            )}
           </div>
         </div>
       )}
