@@ -181,30 +181,37 @@ O coach rodou amostra por amostra sobre os arquivos da sessão, nos dois modos, 
 - **A freada só aparece se você começou a frear a até 60 m do ponto da referência e antes de o microsetor terminar.** No ensaio, poucas frases trazem a freada (2 contra a IA e 1 contra a sua melhor).
 - **As referências vêm de uma sessão só** (04/10), com 13 voltas da IA e 11 suas. A cada sessão nova, rode `python tools/atualizar_coach.py` (seção 10), que faz os passos que antes eram manuais.
 - **O store do ML continua um passo curto** no microsetor 0 até a "Reconstrução do store" (backlog).
-- **O app instalado continua com o coach antigo** e com o modelo antigo até ser reempacotado.
+- **O app instalado foi reempacotado no pedido 28** (`0.3.0-coleta-modelos`): o coach dele lê o modelo e a geometria do repositório (seção 8).
 
-## 8. Como abrir o app de desenvolvimento para treinar com o coach ligado
+## 8. Como gravar uma sessão de treino
 
-1. **Feche o app instalado,** inclusive na bandeja do Windows. Ele usa a mesma porta (8000), e os dois abertos gravam em dobro.
-2. **Abra um PowerShell na pasta do projeto** (`C:\Users\Dokas\Desktop\f1-telemetry-analyzer`).
-3. **Só na primeira vez, ou depois de atualizar o código, gere o frontend:**
-   ```
-   cd frontend
-   npm.cmd run build
-   cd ..
-   ```
-4. **Escolha a referência e abra o app:**
+Desde o pedido 28 (versão `0.3.0-coleta-modelos`), as sessões de treino são gravadas pelo **app instalado**. Ele roda o mesmo código de `develop`, grava o indicador de IA, o `carModel`, os canais do pedido 18 e a versão e o commit do app, e o coach lê o modelo direto do repositório.
+
+1. **Feche o app de desenvolvimento,** se estiver aberto. Os dois usam a porta 8000, e os dois abertos gravam em dobro.
+2. **Abra o app instalado** e vá à aba **"Coleta de dados"**. Antes de pilotar, confira:
+   - a versão e o commit do app;
+   - o espaço livre no disco das gravações: amarelo abaixo de 5 GB, vermelho abaixo de 2 GB. A sessão de 41 min de 10/10 ocupou 0,53 GB;
+   - o **repositório do modelo**: o padrão é o repositório em que o app foi construído (`C:\Users\Dokas\Desktop\f1-telemetry-analyzer`). O coach lê dele, só lendo, `data/reference_models/vhe_interlagos.json` (o modelo) e `vhe_interlagos.geometry.json` (a geometria);
+   - a **referência do coach**: **volta da IA**, **sua melhor volta** ou **coach desligado**. A escolha vale na hora, sem reiniciar o app. Ela substitui a variável `AT_COACH_REFERENCE` e o "renomeie o arquivo para treinar sem o coach";
+   - o estado do coach: ligado, ou calado e por quê (sem o modelo, sem a geometria ou com outro `geometry_id`).
+3. **Abra o Assetto Corsa** em Interlagos, com o `rss_formula_rss_3_v6_2026`. A gravação começa sozinha quando o carro entra na pista. Se o carro ou a pista forem outros, a aba avisa.
+4. **Durante a sessão,** a aba mostra, numa janela de 5 s, o estado de cada canal (ok, ausente, parado, fora da faixa ou taxa baixa), a taxa real e o último valor, e o indicador de IA em destaque. As frases do coach aparecem no painel "AI Coaching", com o rótulo **VOLTA DA IA** ou **SUA MELHOR**.
+5. **Depois de cada volta,** a aba confere a volta pelos portões de qualidade do pipeline e mostra o tempo, o motivo quando ela não passa e o preenchimento de cada grupo de canais.
+6. **No fim, feche o app.** A conferência da sessão fica em `%APPDATA%\Automobilista Telemetria\data\verificacoes\`, com a prévia de "esta sessão conta para a M1?". Se o app fechar no meio da sessão, a conferência é concluída na próxima vez que ele abrir.
+7. **Atualize o coach** com o app fechado, na pasta `backend`: `..\.venv\Scripts\python.exe tools\atualizar_coach.py` (seção 10). A sessão entra no store v2 e na contagem oficial da M1, que a aba também mostra ("n de 5").
+
+**Alternativa: o app de desenvolvimento.** Continua valendo, por exemplo para testar código ainda não empacotado:
+
+1. Feche o app instalado, inclusive na bandeja do Windows.
+2. Num PowerShell na pasta do projeto, gere o frontend só na primeira vez ou depois de atualizar o código (`cd frontend`, `npm.cmd run build`, `cd ..`).
+3. Abra o app com o backend do código-fonte:
    ```
    $env:AT_BACKEND_USE_PYTHON_RUNNER = 'true'
-   $env:AT_COACH_REFERENCE = 'volta_ia'
    cd desktop
    npm.cmd run desktop:prod:autostart
    ```
-   Para comparar com a sua melhor volta, use `$env:AT_COACH_REFERENCE = 'minha_melhor'`.
-5. **Abra o Assetto Corsa** em Interlagos, com o `rss_formula_rss_3_v6_2026`. A gravação começa sozinha quando o carro entra na pista. As frases aparecem no painel "AI Coaching", com o rótulo **VOLTA DA IA** ou **SUA MELHOR**, e o resumo sai ao cruzar a linha.
-6. **O coach usa dois arquivos,** ambos fora do git: `data/reference_models/vhe_interlagos.json` (o modelo) e `data/reference_models/vhe_interlagos.geometry.json` (a geometria). Sem a geometria, o coach fica calado e avisa uma vez no log.
-7. **Para treinar sem o coach,** feche o app e renomeie `data/reference_models/vhe_interlagos.json` (do repositório). Devolva o nome depois.
-8. **No fim, feche o app.** As sessões ficam em `data/recordings`. Para elas entrarem nas referências, rode `python tools/atualizar_coach.py` (seção 10).
+4. A referência é escolhida na aba, como no app instalado. A variável `AT_COACH_REFERENCE` (`volta_ia`, `minha_melhor` ou `desligado`), quando definida, vale mais que a aba e trava a escolha.
+5. As sessões ficam em `data/recordings` do repositório, e a conferência em `data/verificacoes`.
 
 ## 9. Trechos de foco (pedido 15)
 

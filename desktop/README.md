@@ -1,5 +1,52 @@
 # Automobilista Telemetria Desktop Shell
 
+## Versão 0.3.0-coleta-modelos (pedido 28)
+
+O app instalado roda o mesmo código de `develop`; no pacote mudam só os caminhos.
+
+- **Backend em `--onedir`.** O PyInstaller gera uma pasta,
+  `backend/dist/automobilista-backend/`, com o `automobilista-backend.exe` ao
+  lado de `_internal/`. O `extraResources` leva a pasta inteira para
+  `resources/backend/automobilista-backend/`. Antes, o `--onefile` se extraía a
+  cada abertura em `%TEMP%` (cerca de 0,37 GB); em 08/10, com 1,84 GB livres
+  no C:, a extração falhou e a sessão não foi gravada.
+- **Ordem de busca do backend** (a mesma de antes, com o caminho novo):
+  1. `AT_BACKEND_EXE_PATH`;
+  2. `process.resourcesPath\backend\automobilista-backend\automobilista-backend.exe`;
+  3. `desktop\resources\backend\automobilista-backend\automobilista-backend.exe`;
+  4. `backend\dist\automobilista-backend\automobilista-backend.exe` e
+     `dist\automobilista-backend\automobilista-backend.exe` do repositório.
+- **Modelo do coach.** O coach lê `data/reference_models/vhe_interlagos.json` e
+  `vhe_interlagos.geometry.json` da pasta `data/reference_models` do
+  repositório, só lendo. O modelo não é copiado para o pacote nem para
+  `%APPDATA%`, porque muda a cada `atualizar_coach`. O caminho do repositório
+  fica na configuração do app (`%APPDATA%\Automobilista Telemetria\data\configuracao\app.json`),
+  editável na aba "Coleta de dados". O padrão é:
+  1. `AT_REPO_PATH`, se definido;
+  2. rodando do código-fonte, o próprio repositório;
+  3. no app instalado, o repositório em que ele foi construído
+     (`repoPath` do `build-info.json`), se ainda tiver `.git`.
+
+  Sem os arquivos, ou com outro `geometry_id`, o coach fica calado e a aba
+  diz por quê.
+- **Referência do coach.** `volta_ia`, `minha_melhor` ou coach desligado, na
+  aba. A variável `AT_COACH_REFERENCE` continua valendo no app de
+  desenvolvimento e, quando definida, trava a escolha da aba.
+- **Origem do dado.** O Electron passa o carimbo do build ao backend
+  (`AT_APP_VERSION`, `AT_APP_COMMIT`, `AT_APP_BUILD_DIRTY`, `AT_APP_BUILT_AT`,
+  `AT_APP_PACKAGED`), e o `metadata.json` de cada sessão nova ganha
+  `appVersion`, `appCommit`, `appCommitDirty` e `appPackaged`. Rodando do
+  código-fonte, o backend pergunta ao git.
+- **Versão do backend:** `coleta-modelos`. O app novo não usa um backend antigo
+  que esteja na porta 8000: ele aparece como conflito de porta.
+- **Rótulo da janela:** "Automobilista Telemetria - Coleta de dados".
+- **Teste do pacote sem tocar na pasta de dados:** `AT_DESKTOP_USER_DATA_DIR`
+  troca a pasta de usuário do Electron antes de qualquer caminho ser pedido.
+  Logs, configuração, perfil do Chromium e a pasta de dados do backend vão
+  para ela.
+- **O que não muda:** o `productName`, o `appId` e a pasta de dados
+  (`%APPDATA%\Automobilista Telemetria`). As gravações continuam na mesma pasta.
+
 Phase 12.6 validates the Windows installer after the desktop packaging merge to
 `main` and adds a project-owned provisional icon. Packaged builds start the
 bundled backend from Electron `resources/`, write runtime data to AppData,
@@ -111,7 +158,7 @@ npm run build:backend
 Install silently for validation:
 
 ```bash
-desktop\dist\Automobilista-Telemetria-Setup-0.1.1-phase-12.exe /S
+desktop\dist\Automobilista-Telemetria-Setup-0.3.0-coleta-modelos.exe /S
 ```
 
 Default per-user install path:
@@ -123,7 +170,7 @@ Default per-user install path:
 The packaged app expects these resources:
 
 ```text
-desktop/dist/win-unpacked/resources/backend/automobilista-backend.exe
+desktop/dist/win-unpacked/resources/backend/automobilista-backend/automobilista-backend.exe
 desktop/dist/win-unpacked/resources/frontend/index.html
 desktop/dist/win-unpacked/resources/data/example_telemetry.csv
 desktop/dist/win-unpacked/resources/data/debug/interlagos_track_only_fixed_geometry.json
@@ -136,8 +183,8 @@ files through `AT_BACKEND_RESOURCE_ROOT`, ahead of stale user track caches.
 When packaged, Electron resolves the backend in this order:
 
 1. `AT_BACKEND_EXE_PATH`
-2. `process.resourcesPath\backend\automobilista-backend.exe`
-3. Development fallbacks under the repository.
+2. `process.resourcesPath\backend\automobilista-backend\automobilista-backend.exe`
+3. Development fallbacks under the repository (`backend\dist\automobilista-backend\`).
 
 The frontend static build resolves from:
 
@@ -264,6 +311,15 @@ The frontend also continues to support:
 - `AT_UDP_OPPONENTS_PORT`: UDP opponents port shown in diagnostics.
 - `ASSETTO_CORSA_ROOT` / `AT_ASSETTO_CORSA_ROOT`: optional Assetto Corsa root
   used by the setup diagnostics before Steam/default path detection.
+- `AT_REPO_PATH`: repositório de onde o coach lê o modelo e a geometria
+  (pedido 28); a configuração salva na aba "Coleta de dados" vale mais.
+- `AT_COACH_REFERENCE`: `volta_ia`, `minha_melhor` ou `desligado`; quando
+  definida, vale mais que a aba (app de desenvolvimento).
+- `AT_DESKTOP_USER_DATA_DIR`: pasta de usuário do Electron no lugar de
+  `%APPDATA%\Automobilista Telemetria` (teste do pacote).
+- `AT_APP_VERSION`, `AT_APP_COMMIT`, `AT_APP_BUILD_DIRTY`, `AT_APP_BUILT_AT`,
+  `AT_APP_PACKAGED`: passadas pelo Electron empacotado ao backend, do
+  `build-info.json`.
 
 Backend autostart is enabled by default only when `app.isPackaged` is true.
 
