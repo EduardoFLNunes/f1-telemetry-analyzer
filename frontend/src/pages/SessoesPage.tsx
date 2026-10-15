@@ -183,6 +183,7 @@ const SessoesDoRelatorio: React.FC = () => {
         <PainelVidro titulo="Mediana e melhor volta por sessão">
           <p className="texto-apoio" style={{ margin: 0 }}>
             Linha cheia: mediana. Tracejada: melhor volta. A volta da IA é a referência.
+            {resumo.tendencia_mediana_s_por_sessao !== null && <> Tendência da mediana: {sg(resumo.tendencia_mediana_s_por_sessao, 3)} s por sessão.</>}
             {a15 && (
               <>
                 {' '}Critério do ADR 0015: {a15.estabilizou ? 'estabilizou' : 'ainda variando'} (amplitude{' '}
