@@ -12,10 +12,10 @@ import { useTelemetryWS } from './hooks/useTelemetryWS';
 import { useEstadoDoApp } from './hooks/useEstadoDoApp';
 import { useRota } from './navegacao/useRota';
 import { Navegacao } from './components/Navegacao';
-import Dashboard from './Dashboard';
 import SessoesPage from './pages/SessoesPage';
 import AoVivoPage from './pages/AoVivoPage';
-import AnalysisPage from './pages/AnalysisPage';
+import VoltaPage from './pages/VoltaPage';
+import EvolucaoPage from './pages/EvolucaoPage';
 import ColetaPage from './pages/ColetaPage';
 import SistemaPage from './pages/SistemaPage';
 import { aplicarVidro, vidroLigado } from './theme/vidro';
@@ -29,17 +29,20 @@ const App: React.FC = () => {
     aplicarVidro(vidroLigado());
   }, []);
 
+  // Trocar de tela começa do topo; trocar de volta na mesma tela mantém a rolagem, como no protótipo.
+  useEffect(() => {
+    document.getElementById('conteudo')?.scrollTo(0, 0);
+  }, [tela]);
+
   return (
     <div className="casca">
       <div className="casca-fundo" aria-hidden="true" />
       <Navegacao tela={tela} estado={estado} />
-      <main className={tela === 'volta' ? 'tela tela--cheia' : 'tela'} id="conteudo">
+      <main className="tela" id="conteudo">
         {tela === 'sessoes' && <SessoesPage estado={estado} />}
         {tela === 'ao-vivo' && <AoVivoPage estado={estado} />}
-        {tela === 'volta' && <Dashboard />}
-        {tela === 'evolucao' && (
-          <AnalysisPage abrirUltimaVolta={sub === 'ultima-volta'} aoAbrirReplay={() => navegar('volta')} />
-        )}
+        {tela === 'volta' && <VoltaPage sub={sub} navegar={navegar} />}
+        {tela === 'evolucao' && <EvolucaoPage navegar={navegar} />}
         {tela === 'coleta' && <ColetaPage />}
         {tela === 'sistema' && <SistemaPage sub={sub} />}
       </main>
