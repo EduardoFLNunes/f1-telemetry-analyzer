@@ -86,6 +86,21 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
   const mini = useRef<HTMLCanvasElement>(null);
   const textoDoRelevo = useRef<HTMLSpanElement>(null);
   const angulo = useRef<number | null>(null);
+  const caixa = useRef<HTMLDivElement>(null);
+
+  // A roda do mouse dentro da visão aproxima e afasta, sem rolar a página. O `onWheel` do React é
+  // passivo e não consegue impedir a rolagem; por isso o ouvinte nativo, com `passive: false`.
+  useEffect(() => {
+    const el = caixa.current;
+    if (!el) return undefined;
+    const aoRolar = (ev: WheelEvent) => {
+      ev.preventDefault();
+      const z = useEstadoDaVolta.getState().zoom;
+      useEstadoDaVolta.getState().setZoom(Math.max(40, Math.min(1200, z * (ev.deltaY > 0 ? 1.15 : 1 / 1.15))));
+    };
+    el.addEventListener('wheel', aoRolar, { passive: false });
+    return () => el.removeEventListener('wheel', aoRolar);
+  }, []);
   const modo = useEstadoDaVolta((e) => e.modo);
   const zoom = useEstadoDaVolta((e) => e.zoom);
   const girar = useEstadoDaVolta((e) => e.girar);
@@ -430,11 +445,7 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
       </div>
       <div
         className="fantasma"
-        onWheel={(ev) => {
-          ev.preventDefault();
-          const z = useEstadoDaVolta.getState().zoom;
-          setZoom(Math.max(40, Math.min(1200, z * (ev.deltaY > 0 ? 1.15 : 1 / 1.15))));
-        }}
+        ref={caixa}
       >
         <canvas ref={principal} className="fantasma-principal" aria-label="Visão próxima da volta, com o fantasma da referência" />
         <TituloDoFantasma grade={g} volta={volta} ref_={ref} curvas={curvas} referencia={referencia} />
