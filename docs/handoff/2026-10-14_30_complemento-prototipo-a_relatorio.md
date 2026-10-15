@@ -180,3 +180,12 @@ App à esquerda (o build do repositório na janela do Electron), protótipo A à
 - **Para o pedido de limpeza:** `Dashboard.tsx`, `AnalysisPage.tsx` e os componentes que só eles usavam.
 - **O canvas de design** do pedido 29 não foi atualizado com as telas novas; as capturas lado a lado fazem esse papel aqui.
 - **O pedido 31** (realidade aumentada) espera o seu "Execute".
+
+## Correção depois da entrega (15/10, pedida no chat)
+
+- **O problema:** na tela Volta, a roda do mouse sobre a visão com fantasma mudava a aproximação e rolava a página ao mesmo tempo.
+- **A causa:** o `onWheel` do React é registrado como passivo, então o `preventDefault` dele não segurava a rolagem.
+- **A correção** (`2c3f9c12`): um ouvinte nativo de `wheel` com `passive: false` na visão.
+  - **Dentro da visão:** a roda só aproxima e afasta.
+  - **Fora dela:** a página rola como antes.
+- **Como foi conferido:** na janela do Electron isolada, a roda dentro da visão cancelou o evento, a rolagem ficou em 200 px e a aproximação foi de 150 para 172 m. Fora da visão, o evento passou. `tsc`, `vitest` (173 testes) e o build passam.
