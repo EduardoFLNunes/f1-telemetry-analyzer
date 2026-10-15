@@ -276,3 +276,23 @@ Item 1 da lista acima. Detalhes em `docs/handoff/2026-10-14_29_redesenho-base_re
   - a lista de Sessões é a do gravador, com a conferência da Coleta.
 
   O pedido 30 (complemento, 14/10) passa as três telas para o protótipo A.
+
+### O que o pedido 30 entregou (14/10)
+
+Complemento do pedido 29: as telas do protótipo A (`frontend/mockups/prototipo_dashboard.html`, opção A). Detalhes na seção "Complemento: pedido 30" de `docs/handoff/2026-10-14_29_redesenho-base_relatorio.md`.
+
+- **Rotas novas, só de leitura** (`backend/routers/leitura.py`, com teste): `/api/evolucao/resumo`, `/api/evolucao/sessoes/{sessao}`, `/api/coach/referencias`, `/api/store/voltas/{lap_id}` e `/api/geometria/oficial`. Leem os arquivos do repositório configurado na Coleta; nenhuma calcula nada.
+- **Sessões:** o hero, as sessões do relatório de evolução (com a faixa de voltas e o atalho para a melhor volta), a tendência com o critério do ADR 0015 e as gravações que ainda não entraram no relatório.
+- **Volta:** a opção A inteira, na geometria oficial:
+  - a barra de contexto e a escolha de sessão, volta e referência (volta da IA ou sua melhor);
+  - a volta com fantasma: as camadas do cache, o traçado pelo pedal, o fantasma por curva ou na volta inteira, o relevo, a pista inteira, a leitura dos dois carros e o replay;
+  - o mapa dos 60 microssetores, a tabela das 14 curvas e os traços por distância;
+  - as medidas repetem o método do relatório de evolução (`frontend/src/volta/medidas.ts`), conferidas contra o `por_volta` oficial e contra o protótipo.
+- **Evolução:** a tendência, a perda por curva entre sessões com a faixa de 90% e a técnica por curva.
+- **Destinos da seção 6 cumpridos:**
+  - Pista e Análise deixaram de ser telas;
+  - a comparação por distância e o replay estão em Volta;
+  - as frases do coach ficam embaixo do replay e marcadas no mapa (rota `/api/analysis/coach/lap/{id}`, que já existia);
+  - os traçados e o relevo da Análise entraram em Volta;
+  - o painel de evolução virou a tela Evolução, com o bloco `tecnica`.
+- **O que fica para o pedido de limpeza:** `Dashboard.tsx`, `AnalysisPage.tsx` e os componentes que só eles usavam continuam no código, sem rota.

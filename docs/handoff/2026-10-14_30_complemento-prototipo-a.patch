@@ -1,0 +1,4036 @@
+diff --git a/backend/core/leitura/__init__.py b/backend/core/leitura/__init__.py
+new file mode 100644
+index 00000000..ec0a737b
+--- /dev/null
++++ b/backend/core/leitura/__init__.py
+@@ -0,0 +1 @@
++"""Leitura, sem calculo, dos arquivos que o `atualizar_coach` ja grava (pedido 30)."""
+diff --git a/backend/core/leitura/arquivos.py b/backend/core/leitura/arquivos.py
+new file mode 100644
+index 00000000..4b0c90e4
+--- /dev/null
++++ b/backend/core/leitura/arquivos.py
+@@ -0,0 +1,268 @@
++"""As telas Sessoes, Volta e Evolucao leem o que o `atualizar_coach` ja gravou (pedido 30).
++
++Nada aqui calcula um numero novo. Cada funcao le um arquivo que ja existe na
++pasta do repositorio configurada na Coleta de dados (pedido 28) e o devolve
++como esta, ou recortado:
++
++* `data/ml/evolucao/resumo.json` e `sessao_*.json` -- o relatorio de evolucao;
++* `data/ml/laps_grid_v2.parquet` e o meta -- as linhas de uma volta no store v2;
++* `data/reference_models/vhe_interlagos.json` -- o modelo do coach, para saber
++  qual volta e cada referencia;
++* `data/reference_models/vhe_interlagos.geometry.json` -- a geometria oficial
++  exportada (linha central, normais e bordas dos 60 microsetores).
++
++A altitude e as larguras do relevo nao estao na geometria exportada. Elas vem
++do mesmo carregador que o ML usa (`ml.track.geometry.load_geometry`), lendo o
++cache da pista do repositorio, e so entram se o `geometry_id` for o mesmo.
++"""
++
++from __future__ import annotations
++
++import json
++import re
++import threading
++from collections import OrderedDict
++from pathlib import Path
++from typing import Any, Dict, List, Optional
++
++PISTA = "vhe_interlagos"
++CACHE_DA_PISTA = "vhe_interlagos_gp_kn5_surface_interval_geometry.json"
++STORE_V2 = "laps_grid_v2.parquet"
++STORE_V2_META = "laps_grid_v2_meta.json"
++COLUNAS_DA_VOLTA = ("grid_index", "elapsed_s", "speed_kmh", "throttle", "brake", "lateral")
++
++SESSAO = re.compile(r"^\d{4}-\d{2}-\d{2}(-\d+)?$")
++VOLTA = re.compile(r"^[A-Za-z0-9_.-]+#\d{4}$")
++
++
++def _ler_json(caminho: Path) -> Optional[Dict[str, Any]]:
++    try:
++        return json.loads(Path(caminho).read_text(encoding="utf-8"))
++    except (OSError, ValueError):
++        return None
++
++
++def _numeros(valores, casas: int) -> List[Optional[float]]:
++    out: List[Optional[float]] = []
++    for v in valores:
++        try:
++            f = float(v)
++        except (TypeError, ValueError):
++            out.append(None)
++            continue
++        out.append(round(f, casas) if f == f else None)
++    return out
++
++
++# ------------------------------------------------------------ evolucao ---
++
++def pasta_da_evolucao(raiz: Path) -> Path:
++    return Path(raiz) / "data" / "ml" / "evolucao"
++
++
++def ler_resumo(raiz: Optional[Path]) -> Dict[str, Any]:
++    """O `resumo.json` como esta, e as sessoes que tem arquivo."""
++    if raiz is None:
++        return {"disponivel": False, "motivo": "o repositório não está configurado na Coleta de dados"}
++    pasta = pasta_da_evolucao(raiz)
++    resumo = _ler_json(pasta / "resumo.json")
++    if resumo is None:
++        return {"disponivel": False, "motivo": f"o relatório de evolução não foi encontrado em {pasta}",
++                "pasta": str(pasta)}
++    sessoes = sorted(p.stem[len("sessao_"):] for p in pasta.glob("sessao_*.json") if SESSAO.match(p.stem[len("sessao_"):]))
++    return {"disponivel": True, "pasta": str(pasta), "arquivosDeSessao": sessoes, "resumo": resumo}
++
++
++def ler_sessao(raiz: Optional[Path], sessao: str) -> Dict[str, Any]:
++    """O `sessao_<sessao>.json` como esta."""
++    if not SESSAO.match(str(sessao or "")):
++        return {"disponivel": False, "motivo": f"nome de sessão inválido: {sessao!r}"}
++    if raiz is None:
++        return {"disponivel": False, "motivo": "o repositório não está configurado na Coleta de dados"}
++    caminho = pasta_da_evolucao(raiz) / f"sessao_{sessao}.json"
++    dados = _ler_json(caminho)
++    if dados is None:
++        return {"disponivel": False, "motivo": f"a sessão {sessao} não está no relatório de evolução",
++                "arquivo": str(caminho)}
++    return {"disponivel": True, "arquivo": str(caminho), "sessao": dados}
++
++
++# ------------------------------------------------------- referencias ---
++
++def ler_referencias(raiz: Optional[Path], pista: str = PISTA) -> Dict[str, Any]:
++    """Qual volta e cada referencia do coach, lido do modelo do repositorio."""
++    if raiz is None:
++        return {"disponivel": False, "motivo": "o repositório não está configurado na Coleta de dados"}
++    caminho = Path(raiz) / "data" / "reference_models" / f"{pista}.json"
++    modelo = _ler_json(caminho)
++    if modelo is None:
++        return {"disponivel": False, "motivo": f"o modelo do coach não foi encontrado em {caminho}", "arquivo": str(caminho)}
++    referencias = {}
++    for tipo, ref in (modelo.get("references") or {}).items():
++        if isinstance(ref, dict):
++            referencias[tipo] = {"volta": ref.get("lap_id"), "tempoS": ref.get("lap_seconds"), "carro": ref.get("carro")}
++    return {
++        "disponivel": True,
++        "arquivo": str(caminho),
++        "geometryId": modelo.get("geometry_id"),
++        "construidoEm": modelo.get("built_at"),
++        "voltasSuas": modelo.get("lap_count"),
++        "referencias": referencias,
++    }
++
++
++# ------------------------------------------------------------ store v2 ---
++
++class LeitorDoStore:
++    """Linhas de uma volta do store v2, com as ultimas voltas lidas guardadas.
++
++    O parquet tem todas as voltas (cerca de 330 MB); o filtro por `lap_id` le
++    uma volta em cerca de 1 s. As ultimas `capacidade` voltas ficam em memoria,
++    invalidadas quando o arquivo muda.
++    """
++
++    def __init__(self, capacidade: int = 24) -> None:
++        self.capacidade = capacidade
++        self._voltas: "OrderedDict[tuple, Dict[str, Any]]" = OrderedDict()
++        self._metas: Dict[tuple, Dict[str, Any]] = {}
++        self._lock = threading.Lock()
++
++    @staticmethod
++    def _assinatura(caminho: Path) -> tuple:
++        info = caminho.stat()
++        return (str(caminho), info.st_mtime, info.st_size)
++
++    def _meta(self, raiz: Path) -> Optional[Dict[str, Any]]:
++        caminho = Path(raiz) / "data" / "ml" / STORE_V2_META
++        try:
++            chave = self._assinatura(caminho)
++        except OSError:
++            return None
++        with self._lock:
++            if chave in self._metas:
++                return self._metas[chave]
++        meta = _ler_json(caminho)
++        if meta is None:
++            return None
++        resumo = {
++            "geometry_id": meta.get("geometry_id"),
++            "grid_size": meta.get("grid_size"),
++            "track_length": meta.get("track_length"),
++            "aprovado": meta.get("aprovado"),
++            "voltas": {lap["lap_id"]: lap for lap in meta.get("laps") or [] if isinstance(lap, dict) and lap.get("lap_id")},
++        }
++        with self._lock:
++            self._metas = {chave: resumo}
++        return resumo
++
++    def ler_volta(self, raiz: Optional[Path], lap_id: str) -> Dict[str, Any]:
++        if not VOLTA.match(str(lap_id or "")):
++            return {"disponivel": False, "motivo": f"id de volta inválido: {lap_id!r}"}
++        if raiz is None:
++            return {"disponivel": False, "motivo": "o repositório não está configurado na Coleta de dados"}
++        parquet = Path(raiz) / "data" / "ml" / STORE_V2
++        meta = self._meta(raiz)
++        if meta is None or not parquet.exists():
++            return {"disponivel": False, "motivo": f"o store v2 não foi encontrado em {parquet.parent}"}
++        info = meta["voltas"].get(lap_id)
++        if info is None:
++            return {"disponivel": False, "motivo": f"a volta {lap_id} não está no store v2"}
++        chave = (*self._assinatura(parquet), lap_id)
++        with self._lock:
++            if chave in self._voltas:
++                self._voltas.move_to_end(chave)
++                return self._voltas[chave]
++
++        import pyarrow.parquet as pq
++
++        tabela = pq.read_table(parquet, columns=["lap_id", *COLUNAS_DA_VOLTA], filters=[("lap_id", "==", lap_id)])
++        linhas = tabela.drop(["lap_id"]).to_pydict()
++        ordem = sorted(range(len(linhas["grid_index"])), key=lambda i: linhas["grid_index"][i])
++        coluna = lambda nome: [linhas[nome][i] for i in ordem]  # noqa: E731
++        grade = int(meta.get("grid_size") or 0)
++        comprimento = float(meta.get("track_length") or 0.0)
++        resposta = {
++            "disponivel": True,
++            "lapId": lap_id,
++            "gravacao": info.get("session_id"),
++            "sequencia": info.get("sequence"),
++            "voltaDoJogo": info.get("game_lap_number"),
++            "replayLapId": info.get("replay_lap_id"),
++            "tempoS": info.get("lap_time_s"),
++            "origem": info.get("origem"),
++            "carro": info.get("carModel"),
++            "geometryId": meta.get("geometry_id"),
++            "pontosDaGrade": grade,
++            "comprimentoM": comprimento,
++            "passoM": comprimento / grade if grade else None,
++            "gridIndex": [int(v) for v in coluna("grid_index")],
++            "elapsedS": _numeros(coluna("elapsed_s"), 6),
++            "velocidadeKmh": _numeros(coluna("speed_kmh"), 3),
++            "acelerador": _numeros(coluna("throttle"), 4),
++            "freio": _numeros(coluna("brake"), 4),
++            "lateralM": _numeros(coluna("lateral"), 4),
++        }
++        with self._lock:
++            self._voltas[chave] = resposta
++            while len(self._voltas) > self.capacidade:
++                self._voltas.popitem(last=False)
++        return resposta
++
++
++# ----------------------------------------------------------- geometria ---
++
++_geometrias: Dict[tuple, Dict[str, Any]] = {}
++_geometrias_lock = threading.Lock()
++
++
++def ler_geometria(raiz: Optional[Path], pista: str = PISTA) -> Dict[str, Any]:
++    """A geometria oficial exportada e, do carregador do ML, a altitude e as larguras."""
++    if raiz is None:
++        return {"disponivel": False, "motivo": "o repositório não está configurado na Coleta de dados"}
++    exportada = Path(raiz) / "data" / "reference_models" / f"{pista}.geometry.json"
++    cache = Path(raiz) / "data" / "cache" / "tracks" / CACHE_DA_PISTA
++    try:
++        chave = (str(exportada), exportada.stat().st_mtime, str(cache), cache.stat().st_mtime if cache.exists() else None)
++    except OSError:
++        return {"disponivel": False, "motivo": f"a geometria oficial não foi encontrada em {exportada}"}
++    with _geometrias_lock:
++        if chave in _geometrias:
++            return _geometrias[chave]
++    dados = _ler_json(exportada)
++    if dados is None or not dados.get("geometry_id"):
++        return {"disponivel": False, "motivo": f"a geometria oficial em {exportada} não pôde ser lida"}
++    resposta: Dict[str, Any] = {
++        "disponivel": True,
++        "arquivo": str(exportada),
++        "geometryId": dados["geometry_id"],
++        "comprimentoM": dados.get("track_length"),
++        "passoM": dados.get("step"),
++        "x": _numeros(dados.get("x") or [], 3),
++        "z": _numeros(dados.get("z") or [], 3),
++        "normalX": _numeros(dados.get("normal_x") or [], 5),
++        "normalZ": _numeros(dados.get("normal_z") or [], 5),
++        "ladoDaNormal": dados.get("normal_side"),
++        "bordasDosMicrossetores": _numeros(dados.get("microsector_edges") or [], 3),
++        "elevacaoM": None,
++        "larguraEsquerdaM": None,
++        "larguraDireitaM": None,
++        "relevo": None,
++    }
++    try:
++        from ml.track.geometry import load_geometry
++
++        trilha = load_geometry(cache)
++        if trilha.geometry_id != dados["geometry_id"] or trilha.size != len(resposta["x"]):
++            resposta["relevo"] = (f"o cache da pista ({trilha.geometry_id}) não é a geometria oficial "
++                                  f"({dados['geometry_id']}); sem altitude e larguras")
++        else:
++            resposta["elevacaoM"] = _numeros(trilha.elevation, 3)
++            resposta["larguraEsquerdaM"] = _numeros(trilha.width_left, 3)
++            resposta["larguraDireitaM"] = _numeros(trilha.width_right, 3)
++            resposta["relevo"] = f"altitude e larguras de {cache}"
++    except (OSError, ValueError, KeyError) as erro:
++        resposta["relevo"] = f"sem altitude e larguras: {erro}"
++    with _geometrias_lock:
++        _geometrias.clear()
++        _geometrias[chave] = resposta
++    return resposta
+diff --git a/backend/main.py b/backend/main.py
+index c5615f92..85beb66c 100644
+--- a/backend/main.py
++++ b/backend/main.py
+@@ -972,6 +972,7 @@ from routers import (  # noqa: E402
+     external_references,
+     health,
+     legacy,
++    leitura,
+     live,
+     recording as recording_router,
+     track,
+@@ -989,6 +990,7 @@ app.include_router(assisted_analysis.router)
+ app.include_router(external_references.router)
+ app.include_router(debug.router)
+ app.include_router(coleta.router)
++app.include_router(leitura.router)
+ app.include_router(legacy.router)
+ 
+ # Re-exported so existing tests that call `backend_main.<name>(...)` directly
+diff --git a/backend/routers/leitura.py b/backend/routers/leitura.py
+new file mode 100644
+index 00000000..7cb237e9
+--- /dev/null
++++ b/backend/routers/leitura.py
+@@ -0,0 +1,44 @@
++"""Rotas de leitura das telas Sessoes, Volta e Evolucao (pedido 30).
++
++So leem arquivos que ja existem na pasta do repositorio configurada na Coleta de
++dados (`main.app_config.coach_root()`); nenhuma calcula um numero novo. O que
++cada uma le esta em `core/leitura/arquivos.py`.
++"""
++import asyncio
++
++from fastapi import APIRouter
++
++import main
++from core.leitura import arquivos
++
++router = APIRouter()
++leitor_do_store = arquivos.LeitorDoStore()
++
++
++def _raiz():
++    return main.app_config.coach_root()
++
++
++@router.get("/api/evolucao/resumo")
++async def get_evolucao_resumo():
++    return await asyncio.to_thread(arquivos.ler_resumo, _raiz())
++
++
++@router.get("/api/evolucao/sessoes/{sessao}")
++async def get_evolucao_sessao(sessao: str):
++    return await asyncio.to_thread(arquivos.ler_sessao, _raiz(), sessao)
++
++
++@router.get("/api/coach/referencias")
++async def get_coach_referencias():
++    return await asyncio.to_thread(arquivos.ler_referencias, _raiz())
++
++
++@router.get("/api/store/voltas/{lap_id}")
++async def get_store_volta(lap_id: str):
++    return await asyncio.to_thread(leitor_do_store.ler_volta, _raiz(), lap_id)
++
++
++@router.get("/api/geometria/oficial")
++async def get_geometria_oficial():
++    return await asyncio.to_thread(arquivos.ler_geometria, _raiz())
+diff --git a/backend/tests/test_leitura.py b/backend/tests/test_leitura.py
+new file mode 100644
+index 00000000..4f056c36
+--- /dev/null
++++ b/backend/tests/test_leitura.py
+@@ -0,0 +1,125 @@
++"""Rotas de leitura das telas Sessoes, Volta e Evolucao (pedido 30).
++
++So leem o que o `atualizar_coach` ja gravou. Os testes montam um repositorio
++de mentira com os mesmos arquivos e conferem que o que sai e o que esta no
++arquivo, sem conta nova; o ultimo confere a volta da conferencia do pedido 30
++nos arquivos reais, quando eles existem.
++"""
++
++import json
++from pathlib import Path
++
++import pandas as pd
++import pytest
++
++from core.leitura import arquivos
++
++REPO = Path(__file__).resolve().parents[2]
++
++
++def _escrever(caminho: Path, dados) -> None:
++    caminho.parent.mkdir(parents=True, exist_ok=True)
++    caminho.write_text(json.dumps(dados), encoding="utf-8")
++
++
++def _repositorio(tmp_path: Path) -> Path:
++    raiz = tmp_path / "repo"
++    evolucao = raiz / "data" / "ml" / "evolucao"
++    _escrever(evolucao / "resumo.json", {"formato": "evolucao-resumo/1", "sessoes": [{"sessao": "2026-10-05-2"}]})
++    _escrever(evolucao / "sessao_2026-10-05-2.json", {"formato": "evolucao-sessao/1", "sessao": "2026-10-05-2",
++                                                       "voltas": [{"volta": "g#0008", "tempo_s": 90.629}]})
++    _escrever(raiz / "data" / "reference_models" / "vhe_interlagos.json", {
++        "geometry_id": "abc", "built_at": "2026-10-10T20:38:13", "lap_count": 43,
++        "references": {"volta_ia": {"lap_id": "ia#0013", "lap_seconds": 84.828, "carro": "c"},
++                       "minha_melhor": {"lap_id": "eu#0018", "lap_seconds": 89.389, "carro": "c"}},
++    })
++    # Store v2: duas voltas, fora de ordem na grade, como o parquet pode guardar.
++    linhas = []
++    for lap_id, desloc in (("g#0008", 0.0), ("ia#0013", 0.5)):
++        for i in (3, 0, 2, 1):
++            linhas.append({"lap_id": lap_id, "grid_index": i, "elapsed_s": i * 10.0 + desloc, "speed_kmh": 100.0 + i,
++                           "throttle": 0.5, "brake": 0.0, "lateral": 0.1 * i, "outra": 1.0})
++    ml = raiz / "data" / "ml"
++    ml.mkdir(parents=True, exist_ok=True)
++    pd.DataFrame(linhas).to_parquet(ml / "laps_grid_v2.parquet", index=False)
++    _escrever(ml / "laps_grid_v2_meta.json", {
++        "geometry_id": "abc", "grid_size": 4, "track_length": 40.0, "aprovado": True,
++        "laps": [{"lap_id": "g#0008", "session_id": "g", "sequence": 8, "game_lap_number": 9, "lap_time_s": 40.2,
++                  "replay_lap_id": "rec__g__9", "origem": "humano", "carModel": "c"},
++                 {"lap_id": "ia#0013", "session_id": "ia", "sequence": 13, "lap_time_s": 40.7, "origem": "ia"}],
++    })
++    _escrever(raiz / "data" / "reference_models" / "vhe_interlagos.geometry.json", {
++        "version": 1, "geometry_id": "abc", "track_length": 40.0, "step": 10.0, "normal_side": "left",
++        "x": [0.0, 10.0, 10.0, 0.0], "z": [0.0, 0.0, 10.0, 10.0], "s": [0.0, 10.0, 20.0, 30.0],
++        "normal_x": [0.0, -1.0, 0.0, 1.0], "normal_z": [1.0, 0.0, -1.0, 0.0], "microsector_edges": [0.0, 20.0, 40.0],
++    })
++    return raiz
++
++
++def test_evolucao_devolve_os_arquivos_como_estao(tmp_path):
++    raiz = _repositorio(tmp_path)
++    resumo = arquivos.ler_resumo(raiz)
++    assert resumo["disponivel"] and resumo["resumo"]["formato"] == "evolucao-resumo/1"
++    assert resumo["arquivosDeSessao"] == ["2026-10-05-2"]
++    sessao = arquivos.ler_sessao(raiz, "2026-10-05-2")
++    assert sessao["disponivel"] and sessao["sessao"]["voltas"][0]["tempo_s"] == 90.629
++
++
++def test_sem_arquivo_ou_nome_invalido_diz_por_que(tmp_path):
++    raiz = _repositorio(tmp_path)
++    assert arquivos.ler_resumo(None)["disponivel"] is False
++    assert arquivos.ler_resumo(tmp_path / "vazio")["disponivel"] is False
++    assert arquivos.ler_sessao(raiz, "2026-10-09")["disponivel"] is False
++    # Nada fora da pasta da evolucao: o nome da sessao e conferido antes de abrir.
++    assert "inválido" in arquivos.ler_sessao(raiz, "../../segredo")["motivo"]
++
++
++def test_referencias_do_modelo_do_coach(tmp_path):
++    ref = arquivos.ler_referencias(_repositorio(tmp_path))
++    assert ref["disponivel"] and ref["geometryId"] == "abc"
++    assert ref["referencias"]["volta_ia"] == {"volta": "ia#0013", "tempoS": 84.828, "carro": "c"}
++    assert ref["referencias"]["minha_melhor"]["volta"] == "eu#0018"
++
++
++def test_volta_do_store_na_ordem_da_grade_e_sem_conta(tmp_path):
++    raiz = _repositorio(tmp_path)
++    leitor = arquivos.LeitorDoStore()
++    volta = leitor.ler_volta(raiz, "g#0008")
++    assert volta["disponivel"]
++    assert volta["gridIndex"] == [0, 1, 2, 3]
++    assert volta["elapsedS"] == [0.0, 10.0, 20.0, 30.0]
++    assert volta["lateralM"] == [0.0, 0.1, 0.2, 0.3]
++    assert volta["tempoS"] == 40.2 and volta["replayLapId"] == "rec__g__9" and volta["voltaDoJogo"] == 9
++    assert volta["passoM"] == 10.0 and volta["geometryId"] == "abc"
++    assert "outra" not in volta
++    # A segunda leitura vem da memoria, a mesma resposta.
++    assert leitor.ler_volta(raiz, "g#0008") is volta
++
++
++def test_volta_desconhecida_ou_id_invalido(tmp_path):
++    raiz = _repositorio(tmp_path)
++    leitor = arquivos.LeitorDoStore()
++    assert "não está no store" in leitor.ler_volta(raiz, "x#0001")["motivo"]
++    assert "inválido" in leitor.ler_volta(raiz, "../x")["motivo"]
++    assert leitor.ler_volta(None, "g#0008")["disponivel"] is False
++
++
++def test_geometria_exportada_sem_cache_fica_sem_relevo(tmp_path):
++    geo = arquivos.ler_geometria(_repositorio(tmp_path))
++    assert geo["disponivel"] and geo["geometryId"] == "abc"
++    assert geo["x"] == [0.0, 10.0, 10.0, 0.0] and geo["bordasDosMicrossetores"] == [0.0, 20.0, 40.0]
++    assert geo["elevacaoM"] is None and geo["relevo"].startswith("sem altitude")
++
++
++@pytest.mark.skipif(not (REPO / "data" / "ml" / "laps_grid_v2.parquet").exists(), reason="store v2 do repositório ausente")
++def test_volta_da_conferencia_nos_arquivos_reais():
++    """Pedido 30: a volta 8 de 05/10 20:33 e a volta da IA do coach, como o store v2 as guarda."""
++    leitor = arquivos.LeitorDoStore()
++    volta = leitor.ler_volta(REPO, "2026-10-05_20-33-47_vhe_interlagos#0008")
++    assert volta["disponivel"] and volta["pontosDaGrade"] == 2167 and len(volta["elapsedS"]) == 2167
++    assert volta["tempoS"] == pytest.approx(90.6288, abs=1e-3)
++    assert volta["replayLapId"] == "rec__2026-10-05_20-33-47_vhe_interlagos__9"
++    geo = arquivos.ler_geometria(REPO)
++    assert geo["geometryId"] == volta["geometryId"] == "0ed16f0dd2225990"
++    assert len(geo["x"]) == 2167 and len(geo["bordasDosMicrossetores"]) == 61
++    assert geo["elevacaoM"] is not None and len(geo["elevacaoM"]) == 2167
+diff --git a/frontend/scripts/conferencia_prototipo.ts b/frontend/scripts/conferencia_prototipo.ts
+new file mode 100644
+index 00000000..d2076e10
+--- /dev/null
++++ b/frontend/scripts/conferencia_prototipo.ts
+@@ -0,0 +1,128 @@
++/**
++ * Conferência da tela Volta contra o protótipo A (pedido 30, seção 6).
++ *
++ *   node scripts/conferencia_prototipo.ts <url-do-backend> [saida.json]
++ *
++ * A volta 8 da sessão de 05/10 às 20:33 contra a volta da IA. Compara três
++ * fontes:
++ * - app: as linhas do store v2 lidas pelas rotas do app e as medidas de
++ *   `src/volta/medidas.ts` (o que a tela mostra);
++ * - protótipo: os números embutidos em `mockups/prototipo_dashboard.html`;
++ * - oficial: o `por_volta` do `sessao_2026-10-05-2.json`, que o
++ *   `atualizar_coach` gravou (só existe contra a volta da IA).
++ */
++import { readFileSync, writeFileSync } from 'node:fs';
++import { dirname, join } from 'node:path';
++import { fileURLToPath } from 'node:url';
++import {
++  curvasDoRelatorio,
++  diferencaPorMicrossetor,
++  estadoDoFantasma,
++  medidasDasCurvas,
++  type Curva,
++  type Grade,
++  type Linhas,
++} from '../src/volta/medidas.ts';
++
++const base = process.argv[2];
++const destino = process.argv[3];
++if (!base) {
++  console.error('uso: node scripts/conferencia_prototipo.ts <url-do-backend> [saida.json]');
++  process.exit(2);
++}
++const VOLTA = '2026-10-05_20-33-47_vhe_interlagos#0008';
++const SESSAO = '2026-10-05-2';
++
++const pegar = async (rota: string) => {
++  const r = await fetch(`${base}${rota}`);
++  if (!r.ok) throw new Error(`${rota}: ${r.status}`);
++  return r.json();
++};
++
++const refs = await pegar('/api/coach/referencias');
++const idIA = refs.referencias.volta_ia.volta as string;
++const [sessao, volta, ia] = await Promise.all([
++  pegar(`/api/evolucao/sessoes/${SESSAO}`),
++  pegar(`/api/store/voltas/${encodeURIComponent(VOLTA)}`),
++  pegar(`/api/store/voltas/${encodeURIComponent(idIA)}`),
++]);
++
++const linhas = (v: any): Linhas => ({
++  elapsed: v.elapsedS, total: v.tempoS, velocidade: v.velocidadeKmh, acelerador: v.acelerador, freio: v.freio, lateral: v.lateralM,
++});
++const g: Grade = { n: volta.pontosDaGrade, comprimento: volta.comprimentoM, passo: volta.passoM };
++const curvas: Curva[] = curvasDoRelatorio(g, sessao.sessao.curvas);
++const geo = await pegar('/api/geometria/oficial');
++const bordas: number[] = geo.bordasDosMicrossetores;
++
++const app = medidasDasCurvas(g, linhas(volta), linhas(ia), curvas);
++const appMs = diferencaPorMicrossetor(g, linhas(volta), linhas(ia), bordas);
++
++// O protótipo A: os dados embutidos.
++const aqui = dirname(fileURLToPath(import.meta.url));
++const html = readFileSync(join(aqui, '..', 'mockups', 'prototipo_dashboard.html'), 'utf-8');
++const D = JSON.parse(/<script type="application\/json" id="dados">([\s\S]*?)<\/script>/.exec(html)![1]);
++const chave = `${VOLTA}|${D.ref.ia}`;
++const proto = D.cmp[chave];
++if (!proto) throw new Error(`o protótipo não tem ${chave}`);
++const pLap = D.laps[VOLTA];
++const pRef = D.laps[D.ref.ia];
++
++// O fantasma por curva do protótipo, com os dados dele (a mesma conta de `ghostState`).
++const S: number[] = D.step_s;
++const pInterp = (xs: number[], ys: number[], x: number) => {
++  if (x <= xs[0]) return ys[0];
++  for (let i = 1; i < xs.length; i += 1) if (x <= xs[i]) return ys[i - 1] + ((x - xs[i - 1]) / (xs[i] - xs[i - 1])) * (ys[i] - ys[i - 1]);
++  return ys[ys.length - 1];
++};
++const protoGhost = (s: number) => {
++  const c = curvas.find((k) => (k.trecho[1] >= k.trecho[0] ? s >= k.trecho[0] && s < k.trecho[1] : s >= k.trecho[0] || s < k.trecho[1]))!;
++  const [a, b] = c.trecho;
++  const s0 = b >= a ? a : s >= a ? a : 0;
++  const tme = pInterp(S, pLap.e, s);
++  return (tme - pInterp(S, pLap.e, s0)) - (pInterp(S, pRef.e, s) - pInterp(S, pRef.e, s0));
++};
++
++const oficial = Object.fromEntries(sessao.sessao.curvas.map((c: any) => [String(c.curva).split('-')[0], c.por_volta.find((p: any) => p.volta === VOLTA)]));
++const r3 = (v: number | null | undefined) => (v === null || v === undefined || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000);
++
++const linhasCurvas = curvas.map((c, i) => {
++  const fim = c.trecho[1] - 0.01 < 0 ? c.trecho[1] + g.comprimento - 0.01 : c.trecho[1] - 0.01;
++  const fantasmaApp = estadoDoFantasma(g, linhas(volta), linhas(ia), curvas, fim % g.comprimento, 'curva').diferenca;
++  return {
++    curva: c.codigo,
++    perda: { app: r3(app[i].perdaS), prototipo: r3(proto.c[i][0]), oficial: r3(oficial[c.codigo]?.perda_s) },
++    freadaM: { app: r3(app[i].freadaM), prototipo: proto.c[i][3], oficial: r3(oficial[c.codigo]?.frenagem_vs_ia_m) },
++    minimaKmh: { app: r3(app[i].minimaKmh), prototipo: proto.c[i][1], oficial: r3(oficial[c.codigo]?.velocidade_minima_vs_ia_kmh) },
++    lateralM: { app: r3(app[i].lateralApiceM), prototipo: proto.c[i][2], oficial: r3(oficial[c.codigo]?.lateral_apice_vs_ia_m) },
++    fantasmaNoFimDaCurva: { app: r3(fantasmaApp), prototipo: r3(protoGhost(fim % g.comprimento)) },
++  };
++});
++const maior = (f: (l: any) => number | null) => Math.max(...linhasCurvas.map((l) => Math.abs(f(l) ?? 0)));
++const msDif = appMs.map((v, i) => Math.abs(v - proto.ms[i]));
++
++const resultado = {
++  formato: 'conferencia-prototipo/1',
++  volta: VOLTA,
++  referencia: idIA,
++  tempo: { app: volta.tempoS, prototipo: pLap.t, refApp: ia.tempoS, refPrototipo: pRef.t },
++  diferencaDaVolta: { app: r3(volta.tempoS - ia.tempoS), prototipo: r3(pLap.t - pRef.t), somaDasCurvasApp: r3(app.reduce((a, c) => a + c.perdaS, 0)) },
++  curvas: linhasCurvas,
++  microssetores: appMs.map((v, i) => ({ microssetor: i + 1, app: Math.round(v * 10000) / 10000, prototipo: proto.ms[i] })),
++  maioresDiferencas: {
++    perdaAppPrototipoS: r3(maior((l) => (l.perda.app ?? 0) - (l.perda.prototipo ?? 0))),
++    perdaAppOficialS: r3(maior((l) => (l.perda.app ?? 0) - (l.perda.oficial ?? 0))),
++    freadaAppOficialM: r3(maior((l) => (l.freadaM.app ?? 0) - (l.freadaM.oficial ?? 0))),
++    minimaAppOficialKmh: r3(maior((l) => (l.minimaKmh.app ?? 0) - (l.minimaKmh.oficial ?? 0))),
++    lateralAppOficialM: r3(maior((l) => (l.lateralM.app ?? 0) - (l.lateralM.oficial ?? 0))),
++    microssetorAppPrototipoS: r3(Math.max(...msDif)),
++    fantasmaAppPrototipoS: r3(maior((l) => (l.fantasmaNoFimDaCurva.app ?? 0) - (l.fantasmaNoFimDaCurva.prototipo ?? 0))),
++  },
++};
++console.log(JSON.stringify(resultado.maioresDiferencas, null, 2));
++console.log(JSON.stringify({ tempo: resultado.tempo, diferencaDaVolta: resultado.diferencaDaVolta }, null, 2));
++for (const l of linhasCurvas) console.log(l.curva, JSON.stringify(l.perda), JSON.stringify(l.freadaM), JSON.stringify(l.fantasmaNoFimDaCurva));
++if (destino) {
++  writeFileSync(destino, JSON.stringify(resultado, null, 2) + '\n', 'utf-8');
++  console.log(`gravado em ${destino}`);
++}
+diff --git a/frontend/src/App.tsx b/frontend/src/App.tsx
+index fb5b8fe0..8a219a0a 100644
+--- a/frontend/src/App.tsx
++++ b/frontend/src/App.tsx
+@@ -12,10 +12,10 @@ import { useTelemetryWS } from './hooks/useTelemetryWS';
+ import { useEstadoDoApp } from './hooks/useEstadoDoApp';
+ import { useRota } from './navegacao/useRota';
+ import { Navegacao } from './components/Navegacao';
+-import Dashboard from './Dashboard';
+ import SessoesPage from './pages/SessoesPage';
+ import AoVivoPage from './pages/AoVivoPage';
+-import AnalysisPage from './pages/AnalysisPage';
++import VoltaPage from './pages/VoltaPage';
++import EvolucaoPage from './pages/EvolucaoPage';
+ import ColetaPage from './pages/ColetaPage';
+ import SistemaPage from './pages/SistemaPage';
+ import { aplicarVidro, vidroLigado } from './theme/vidro';
+@@ -29,17 +29,20 @@ const App: React.FC = () => {
+     aplicarVidro(vidroLigado());
+   }, []);
+ 
++  // Trocar de tela começa do topo; trocar de volta na mesma tela mantém a rolagem, como no protótipo.
++  useEffect(() => {
++    document.getElementById('conteudo')?.scrollTo(0, 0);
++  }, [tela]);
++
+   return (
+     <div className="casca">
+       <div className="casca-fundo" aria-hidden="true" />
+       <Navegacao tela={tela} estado={estado} />
+-      <main className={tela === 'volta' ? 'tela tela--cheia' : 'tela'} id="conteudo">
++      <main className="tela" id="conteudo">
+         {tela === 'sessoes' && <SessoesPage estado={estado} />}
+         {tela === 'ao-vivo' && <AoVivoPage estado={estado} />}
+-        {tela === 'volta' && <Dashboard />}
+-        {tela === 'evolucao' && (
+-          <AnalysisPage abrirUltimaVolta={sub === 'ultima-volta'} aoAbrirReplay={() => navegar('volta')} />
+-        )}
++        {tela === 'volta' && <VoltaPage sub={sub} navegar={navegar} />}
++        {tela === 'evolucao' && <EvolucaoPage navegar={navegar} />}
+         {tela === 'coleta' && <ColetaPage />}
+         {tela === 'sistema' && <SistemaPage sub={sub} />}
+       </main>
+diff --git a/frontend/src/api/client.ts b/frontend/src/api/client.ts
+index 287d02c2..8b0f9991 100644
+--- a/frontend/src/api/client.ts
++++ b/frontend/src/api/client.ts
+@@ -228,6 +228,18 @@ export const api = {
+   /** As frases recentes do coach, a mais nova primeiro (as 20 últimas de uma fila de 50). */
+   getLiveCoach: async (): Promise<any> => (await client.get('/api/live/coach')).data,
+ 
++  // ─── Sessões, Volta e Evolução (pedido 30): só leitura ─────────────────────
++  getEvolucaoResumo: async (): Promise<any> => (await client.get('/api/evolucao/resumo', { timeout: 30_000 })).data,
++  getEvolucaoSessao: async (sessao: string): Promise<any> => (
++    await client.get(`/api/evolucao/sessoes/${encodeURIComponent(sessao)}`, { timeout: 30_000 })
++  ).data,
++  getCoachReferencias: async (): Promise<any> => (await client.get('/api/coach/referencias', { timeout: 30_000 })).data,
++  /** As linhas de uma volta no store v2 (o `#` do id vai codificado). */
++  getStoreVolta: async (lapId: string): Promise<any> => (
++    await client.get(`/api/store/voltas/${encodeURIComponent(lapId)}`, { timeout: 60_000 })
++  ).data,
++  getGeometriaOficial: async (): Promise<any> => (await client.get('/api/geometria/oficial', { timeout: 60_000 })).data,
++
+   listExternalReferences: async (): Promise<any> => (await client.get('/api/references/external')).data,
+   importFastF1Reference: async (payload: Record<string, unknown>): Promise<any> => (
+     await client.post('/api/references/external/fastf1/import', payload, { timeout: 180_000 })
+diff --git a/frontend/src/components/Navegacao.tsx b/frontend/src/components/Navegacao.tsx
+index fdb45c4d..a1883f1b 100644
+--- a/frontend/src/components/Navegacao.tsx
++++ b/frontend/src/components/Navegacao.tsx
+@@ -15,9 +15,9 @@ const Marca: React.FC = () => (
+       <circle cx="13" cy="20" r="2.6" fill="var(--vermelho)" />
+     </svg>
+     <span>
+-      Telemetria e
++      Sistema de Telemetria e
+       <br />
+-      Trajetórias
++      Otimização de Trajetórias
+     </span>
+   </a>
+ );
+diff --git a/frontend/src/components/sessoes/HeroSessoes.tsx b/frontend/src/components/sessoes/HeroSessoes.tsx
+index 45386d6b..76b1ccd8 100644
+--- a/frontend/src/components/sessoes/HeroSessoes.tsx
++++ b/frontend/src/components/sessoes/HeroSessoes.tsx
+@@ -265,7 +265,7 @@ export const HeroSessoes: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
+               <path d="M3 8h10M9 4l4 4-4 4" />
+             </svg>
+           </a>
+-          <a className="botao" href={hashDaRota('evolucao', 'ultima-volta')}>Última volta</a>
++          <a className="botao" href={hashDaRota('volta', 'ultima')}>Última volta</a>
+           <a className="botao" href={hashDaRota('evolucao')}>Evolução</a>
+         </div>
+       </div>
+diff --git a/frontend/src/evolucao/Graficos.tsx b/frontend/src/evolucao/Graficos.tsx
+new file mode 100644
+index 00000000..a7706fe8
+--- /dev/null
++++ b/frontend/src/evolucao/Graficos.tsx
+@@ -0,0 +1,129 @@
++/**
++ * Gráficos das telas Sessões e Evolução (pedido 30), como no protótipo A:
++ *
++ * - `GraficoTendencia`: mediana (linha cheia) e melhor volta (tracejada) por
++ *   sessão, com a volta da IA como referência;
++ * - `FaixaDeVoltas`: uma marca por volta válida da sessão, numa faixa de tempo;
++ * - `IntervaloDaCurva`: a perda mediana de uma curva para a IA, com a faixa de
++ *   90% de confiança (ponto vazio: sem diferença consistente).
++ */
++import React from 'react';
++import { useLargura } from '../volta/Graficos';
++import type { CurvaDaSessao, SessaoDoResumo } from '../volta/dados';
++import { nomeDaSessao, numeroDaVolta, sg, tempo } from '../volta/formato';
++
++/** M:SS sem os milésimos, para os eixos. */
++const tempoCurto = (t: number) => tempo(t).replace(/,\d+$/, '');
++
++export const GraficoTendencia: React.FC<{ sessoes: SessaoDoResumo[]; tempoIa: number | null }> = ({ sessoes, tempoIa }) => {
++  const [caixa, W0] = useLargura<HTMLDivElement>();
++  const W = Math.max(280, W0);
++  const H = 200;
++  const pl = 54;
++  const pr = 48;
++  const topo = 14;
++  const base = 30;
++  const valores = sessoes.flatMap((s) => [s.mediana_s, s.melhor_s]);
++  if (tempoIa !== null) valores.push(tempoIa);
++  const mn = Math.floor(Math.min(...valores)) - 1;
++  const mx = Math.ceil(Math.max(...valores)) + 1;
++  const x = (i: number) => pl + (sessoes.length === 1 ? 0.5 : i / (sessoes.length - 1)) * (W - pl - pr);
++  const y = (v: number) => topo + ((mx - v) / (mx - mn)) * (H - topo - base);
++  const marcas: number[] = [];
++  for (let v = Math.ceil(mn); v <= mx; v += 2) marcas.push(v);
++  return (
++    <div ref={caixa} style={{ width: '100%' }}>
++      {W0 > 0 && sessoes.length > 0 && (
++        <svg width={W} height={H} role="img" aria-label="Mediana e melhor volta por sessão" style={{ display: 'block' }}>
++          {marcas.map((v) => (
++            <g key={v}>
++              <line x1={pl} x2={W - pr} y1={y(v)} y2={y(v)} style={{ stroke: 'var(--linha)', strokeWidth: 0.6 }} />
++              <text x={pl - 6} y={y(v) + 3} textAnchor="end" className="grafico-texto">{tempoCurto(v)}</text>
++            </g>
++          ))}
++          {tempoIa !== null && (
++            <g>
++              <line x1={pl} x2={W - pr} y1={y(tempoIa)} y2={y(tempoIa)} style={{ stroke: 'var(--referencia)', strokeDasharray: '5 4' }} />
++              <text x={W - pr} y={y(tempoIa) - 5} textAnchor="end" className="grafico-texto">volta da IA {tempo(tempoIa)}</text>
++            </g>
++          )}
++          {(['mediana_s', 'melhor_s'] as const).map((campo) => (
++            <g key={campo}>
++              <path
++                d={sessoes.map((s, i) => `${i ? 'L' : 'M'}${x(i)} ${y(s[campo])}`).join('')}
++                style={{ fill: 'none', stroke: 'var(--voce)', strokeWidth: 2, strokeDasharray: campo === 'melhor_s' ? '3 3' : undefined }}
++              />
++              {sessoes.map((s, i) => (
++                <circle
++                  key={s.sessao}
++                  cx={x(i)}
++                  cy={y(s[campo])}
++                  r={4}
++                  style={{ fill: campo === 'mediana_s' ? 'var(--voce)' : 'var(--superficie)', stroke: 'var(--voce)', strokeWidth: 2 }}
++                >
++                  <title>{`${nomeDaSessao(s.sessao)}: ${campo === 'mediana_s' ? 'mediana' : 'melhor volta'} ${tempo(s[campo])}`}</title>
++                </circle>
++              ))}
++            </g>
++          ))}
++          {sessoes.map((s, i) => (
++            <text key={s.sessao} x={x(i)} y={H - 10} textAnchor="middle" className="grafico-texto">{nomeDaSessao(s.sessao)}</text>
++          ))}
++        </svg>
++      )}
++    </div>
++  );
++};
++
++export const FaixaDeVoltas: React.FC<{ voltas: Array<{ volta: string; tempo_s: number }>; tempoIa: number | null }> = ({ voltas, tempoIa }) => {
++  const [caixa, W0] = useLargura<HTMLDivElement>();
++  const W = Math.max(260, W0);
++  const H = 34;
++  const lo = 83;
++  const hi = 102;
++  const x = (v: number) => 4 + ((Math.min(hi, Math.max(lo, v)) - lo) / (hi - lo)) * (W - 8);
++  return (
++    <div ref={caixa} style={{ width: '100%' }}>
++      {W0 > 0 && (
++        <svg width={W} height={H} role="img" aria-label={`Tempos das ${voltas.length} voltas válidas da sessão`} style={{ display: 'block' }}>
++          <line x1={4} x2={W - 4} y1={14} y2={14} style={{ stroke: 'var(--linha)' }} />
++          {tempoIa !== null && (
++            <g>
++              <line x1={x(tempoIa)} x2={x(tempoIa)} y1={4} y2={24} style={{ stroke: 'var(--referencia)', strokeDasharray: '3 2' }} />
++              <text x={x(tempoIa) + 4} y={10} className="grafico-texto">IA</text>
++            </g>
++          )}
++          {voltas.map((v) => (
++            <circle key={v.volta} cx={x(v.tempo_s)} cy={14} r={4.5} style={{ fill: 'var(--voce)', fillOpacity: 0.55 }}>
++              <title>{`volta ${numeroDaVolta(v.volta)}: ${tempo(v.tempo_s)}`}</title>
++            </circle>
++          ))}
++          {[88, 92, 96, 100].map((t) => (
++            <text key={t} x={x(t)} y={32} textAnchor="middle" className="grafico-texto">{tempoCurto(t)}</text>
++          ))}
++        </svg>
++      )}
++    </div>
++  );
++};
++
++export const IntervaloDaCurva: React.FC<{ curva: CurvaDaSessao | undefined }> = ({ curva }) => {
++  const mediana = curva?.perda_para_ia_s?.mediana;
++  if (!curva || mediana === undefined || mediana === null) return <span className="texto-fraco">—</span>;
++  const W = 96;
++  const mx = 1.6;
++  const x = (v: number) => 4 + (Math.max(0, Math.min(mx, v)) / mx) * (W - 8);
++  const consistente = curva.situacao === 'diferenca_consistente';
++  const ic = curva.intervalo_90_s;
++  const texto = consistente ? 'diferença consistente' : curva.situacao === 'poucos_dados' ? 'poucos dados' : 'sem diferença consistente';
++  return (
++    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }} title={`${sg(mediana, 3)} s${ic ? ` (90%: ${sg(ic[0], 3)} a ${sg(ic[1], 3)})` : ''} · ${texto}`}>
++      <svg width={W} height={18} aria-hidden="true">
++        <line x1={x(0)} x2={x(0)} y1={2} y2={16} style={{ stroke: 'var(--linha)' }} />
++        {ic && <line x1={x(ic[0])} x2={x(ic[1])} y1={9} y2={9} style={{ stroke: 'var(--texto-3)', strokeWidth: 2 }} />}
++        <circle cx={x(mediana)} cy={9} r={4} style={{ fill: consistente ? 'var(--voce)' : 'var(--superficie)', stroke: 'var(--voce)', strokeWidth: 2 }} />
++      </svg>
++      <span className="dado" style={{ fontSize: 12 }}>{sg(mediana, 2)}</span>
++    </span>
++  );
++};
+diff --git a/frontend/src/pages/EvolucaoPage.tsx b/frontend/src/pages/EvolucaoPage.tsx
+new file mode 100644
+index 00000000..96773d78
+--- /dev/null
++++ b/frontend/src/pages/EvolucaoPage.tsx
+@@ -0,0 +1,163 @@
++/**
++ * Evolução (pedido 30), como no protótipo A:
++ *
++ * - mediana e melhor volta por sessão, com o critério do ADR 0015;
++ * - perda por curva entre sessões, com a faixa de 90% de confiança;
++ * - técnica de pilotagem por curva (bloco `tecnica` do JSON da sessão).
++ *
++ * Tudo do relatório de evolução (`/api/evolucao/resumo` e
++ * `/api/evolucao/sessoes/{sessao}`); nada é recalculado aqui.
++ */
++import React, { useState } from 'react';
++import { ErrorBoundary } from '../components/ErrorBoundary';
++import { PainelVidro } from '../components/ui/base';
++import type { Tela } from '../navegacao/rotas';
++import { useSessoesDoRelatorio, type TecnicaDaCurva } from '../volta/dados';
++import { nf, nomeDaSessao, tempo } from '../volta/formato';
++import { GraficoTendencia, IntervaloDaCurva } from '../evolucao/Graficos';
++
++const codigoDaCurva = (curva: string) => curva.split('-')[0];
++
++function textoDaEmendada(t: TecnicaDaCurva): React.ReactNode {
++  const e = t.freada_emendada;
++  if (!e) return '—';
++  const ia = String(e.ia ?? '—').replace('nao', 'não');
++  return (
++    <>
++      {e.voltas_com_frenagem ? `${e.voltas_emendadas} de ${e.voltas_com_frenagem} voltas` : 'sem frenagem'} <span className="texto-fraco">(IA: {ia})</span>
++    </>
++  );
++}
++
++const numero = (v: number | null | undefined, casas: number) => (v === null || v === undefined ? '—' : nf(v, casas));
++
++export const EvolucaoPage: React.FC<{ navegar: (tela: Tela, sub?: string | null) => void }> = () => {
++  const relatorio = useSessoesDoRelatorio();
++  const [escolhida, setEscolhida] = useState<string | null>(null);
++  const resumo = relatorio.dado?.resumo;
++  const sessoes = relatorio.dado?.sessoes ?? [];
++  const tempoIa = resumo?.referencia?.tempo_s ?? null;
++  const a15 = resumo?.criterio_adr_0015;
++  const sessaoTecnica = sessoes.find((s) => s.sessao === escolhida) ?? sessoes[sessoes.length - 1] ?? null;
++  const curvas = sessoes[0]?.curvas.map((c) => c.curva) ?? [];
++
++  return (
++    <ErrorBoundary>
++      <div className="tela-conteudo">
++        <header className="cabecalho-tela">
++          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
++            <div className="sobrancelha">Interlagos · referência: volta da IA {tempoIa === null ? '—' : tempo(tempoIa)}</div>
++            <h1 className="titulo-tela">Evolução</h1>
++          </div>
++        </header>
++
++        {relatorio.carregando && <p className="texto-fraco">Lendo o relatório de evolução…</p>}
++        {relatorio.erro && (
++          <PainelVidro titulo="Evolução">
++            <p className="texto-apoio" style={{ margin: 0 }}>Sem dados: {relatorio.erro}</p>
++          </PainelVidro>
++        )}
++
++        {resumo && (
++          <>
++            <PainelVidro titulo="Mediana e melhor volta por sessão">
++              {a15 && (
++                <p className="texto-apoio" style={{ margin: 0 }}>
++                  Critério do ADR 0015: {a15.estabilizou ? 'estabilizou' : 'ainda variando'} (amplitude{' '}
++                  {a15.amplitude_s === null ? '—' : `${nf(a15.amplitude_s, 3)} s`}, limite {nf(a15.limite_s, 1)} s, {a15.sessoes_disponiveis} sessões
++                  de {a15.sessoes_necessarias} necessárias).
++                </p>
++              )}
++              <GraficoTendencia sessoes={resumo.sessoes} tempoIa={tempoIa} />
++              <span className="legenda">
++                <span><i className="linha" style={{ borderColor: 'var(--voce)' }} />mediana</span>
++                <span><i className="linha" style={{ borderColor: 'var(--voce)', borderTopStyle: 'dashed' }} />melhor volta</span>
++                <span><i className="linha" style={{ borderColor: 'var(--referencia)', borderTopStyle: 'dashed' }} />volta da IA</span>
++              </span>
++            </PainelVidro>
++
++            <PainelVidro titulo="Perda por curva entre sessões">
++              <p className="texto-apoio" style={{ margin: 0 }}>
++                Ponto: perda mediana para a IA, em segundos. Traço: faixa de 90% de confiança. Ponto vazio: sem diferença consistente.
++              </p>
++              <div className="superficie tabela-caixa">
++                <table className="tabela tabela--curvas">
++                  <thead>
++                    <tr>
++                      <th scope="col">Curva</th>
++                      {sessoes.map((s) => (
++                        <th key={s.sessao} scope="col">{nomeDaSessao(s.sessao)}</th>
++                      ))}
++                    </tr>
++                  </thead>
++                  <tbody>
++                    {curvas.map((nome) => (
++                      <tr key={nome}>
++                        <th scope="row" className="dado" style={{ fontWeight: 500 }}>{codigoDaCurva(nome)}</th>
++                        {sessoes.map((s) => (
++                          <td key={s.sessao}>
++                            <IntervaloDaCurva curva={s.curvas.find((c) => c.curva === nome)} />
++                          </td>
++                        ))}
++                      </tr>
++                    ))}
++                  </tbody>
++                </table>
++              </div>
++            </PainelVidro>
++
++            <PainelVidro
++              titulo="Técnica de pilotagem por curva"
++              acao={
++                <div className="chips" role="group" aria-label="Sessão">
++                  {sessoes.map((s) => (
++                    <button key={s.sessao} type="button" className="chip" aria-pressed={s.sessao === sessaoTecnica?.sessao} onClick={() => setEscolhida(s.sessao)}>
++                      {nomeDaSessao(s.sessao)}
++                    </button>
++                  ))}
++                </div>
++              }
++            >
++              <p className="texto-apoio" style={{ margin: 0 }}>
++                Medidas descritivas: não entram em nenhum critério. Uso da aderência: p95 da aceleração combinada na curva. Freio e volante juntos: metros
++                com freio e volante ao mesmo tempo.
++              </p>
++              {sessaoTecnica?.tecnica?.curvas?.length ? (
++                <div className="superficie tabela-caixa">
++                  <table className="tabela tabela--curvas">
++                    <thead>
++                      <tr>
++                        <th scope="col">Curva</th>
++                        <th scope="col" className="num">Uso da aderência (g)</th>
++                        <th scope="col" className="num">IA (g)</th>
++                        <th scope="col" className="num">Freio e volante juntos (m)</th>
++                        <th scope="col" className="num">IA (m)</th>
++                        <th scope="col">Freada emendada</th>
++                      </tr>
++                    </thead>
++                    <tbody>
++                      {sessaoTecnica.tecnica.curvas.map((t) => (
++                        <tr key={t.curva}>
++                          <th scope="row" className="dado" style={{ fontWeight: 500 }}>{codigoDaCurva(t.curva)}</th>
++                          <td className="num">{numero(t.uso_da_aderencia?.mediana, 2)}</td>
++                          <td className="num texto-apoio">{numero(t.uso_da_aderencia?.ia_g, 2)}</td>
++                          <td className="num">{numero(t.freio_e_volante_juntos?.mediana, 0)}</td>
++                          <td className="num texto-apoio">{numero(t.freio_e_volante_juntos?.ia_m, 0)}</td>
++                          <td>{textoDaEmendada(t)}</td>
++                        </tr>
++                      ))}
++                    </tbody>
++                  </table>
++                </div>
++              ) : (
++                <p className="texto-apoio" style={{ margin: 0 }}>Sem dados: o JSON desta sessão não tem o bloco de técnica.</p>
++              )}
++            </PainelVidro>
++          </>
++        )}
++      </div>
++    </ErrorBoundary>
++  );
++};
++
++export default EvolucaoPage;
+diff --git a/frontend/src/pages/SessoesPage.tsx b/frontend/src/pages/SessoesPage.tsx
+index b76a2834..624681c8 100644
+--- a/frontend/src/pages/SessoesPage.tsx
++++ b/frontend/src/pages/SessoesPage.tsx
+@@ -1,13 +1,17 @@
+ /**
+- * Sessões (pedido 29): o início do app. O hero no topo e as sessões gravadas
+- * embaixo, no lugar da antiga página inicial.
++ * Sessões (pedidos 29 e 30): o início do app, como no protótipo A.
+  *
+- * A lista de sessões é a do gravador (`/api/sessions`); voltas válidas e
+- * melhor volta vêm da conferência da Coleta, a mesma régua do store v2. Sessão
+- * não conferida diz isso, em vez de mostrar o tempo medido de outro jeito.
+- * O redesenho completo desta tela é o pedido 5 do redesenho.
++ * - O hero no topo.
++ * - As sessões do relatório de evolução (`/api/evolucao/*`), a mais nova em
++ *   cima: os números da sessão, uma marca por volta válida e o atalho para a
++ *   melhor volta na tela Volta.
++ * - Mediana e melhor volta por sessão, com o critério do ADR 0015.
++ * - As gravações que ainda não entraram no relatório (`/api/sessions` menos as
++ *   gravações dos JSONs de sessão): voltas válidas e melhor volta vêm da
++ *   conferência da Coleta, a mesma régua do store v2. Gravação não conferida
++ *   diz isso, em vez de mostrar o tempo medido de outro jeito.
+  */
+-import React, { useEffect, useState } from 'react';
++import React, { useEffect, useMemo, useState } from 'react';
+ import { api } from '../api/client';
+ import type { EstadoDoApp } from '../hooks/useEstadoDoApp';
+ import { hashDaRota } from '../navegacao/rotas';
+@@ -15,6 +19,9 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
+ import { HeroSessoes } from '../components/sessoes/HeroSessoes';
+ import { PainelVidro } from '../components/ui/base';
+ import { dataCurtaDaSessao, formatarTempo, resumoDaConferencia, type ResumoConferido } from '../components/sessoes/dadosDoHero';
++import { useSessoesDoRelatorio, type Resumo, type Sessao } from '../volta/dados';
++import { nf, nomeDaSessao, sg, tempo } from '../volta/formato';
++import { FaixaDeVoltas, GraficoTendencia } from '../evolucao/Graficos';
+ 
+ type Linha = {
+   id: string;
+@@ -24,12 +31,12 @@ type Linha = {
+   conferida: ResumoConferido | null;
+ };
+ 
+-const SessoesGravadas: React.FC<{ pronto: boolean }> = ({ pronto }) => {
++const GravacoesFora: React.FC<{ pronto: boolean; noRelatorio: Set<string> | null }> = ({ pronto, noRelatorio }) => {
+   const [linhas, setLinhas] = useState<Linha[] | null>(null);
+   const [falhou, setFalhou] = useState(false);
+ 
+   useEffect(() => {
+-    if (!pronto) return undefined;
++    if (!pronto || noRelatorio === null) return undefined;
+     let cancelado = false;
+     const ler = async () => {
+       try {
+@@ -38,7 +45,7 @@ const SessoesGravadas: React.FC<{ pronto: boolean }> = ({ pronto }) => {
+           api.listColetaVerificacoes().catch(() => ({ verificacoes: [] })),
+         ]);
+         const conferidas = new Set((conferencias?.verificacoes || []).filter((v: any) => v?.final !== false).map((v: any) => v.sessao));
+-        const lista: any[] = Array.isArray(sessoes?.sessions) ? sessoes.sessions : [];
++        const lista: any[] = (Array.isArray(sessoes?.sessions) ? sessoes.sessions : []).filter((x: any) => !noRelatorio.has(x.sessionId));
+         const novas: Linha[] = await Promise.all(lista.map(async (s) => {
+           let conferida: ResumoConferido | null = null;
+           if (conferidas.has(s.sessionId)) {
+@@ -71,18 +78,21 @@ const SessoesGravadas: React.FC<{ pronto: boolean }> = ({ pronto }) => {
+       cancelado = true;
+       window.clearInterval(timer);
+     };
+-  }, [pronto]);
++  }, [pronto, noRelatorio]);
+ 
+   return (
+-    <PainelVidro id="sessoes-gravadas" titulo="Sessões gravadas" nota="voltas válidas e melhor volta pela conferência da Coleta">
+-      {!pronto ? (
++    <PainelVidro id="gravacoes-fora" titulo="Gravações fora do relatório" nota="voltas válidas e melhor volta pela conferência da Coleta">
++      <p className="texto-apoio" style={{ margin: 0 }}>
++        Entram no relatório de evolução quando o <span className="dado">atualizar_coach</span> roda, com o app fechado.
++      </p>
++      {!pronto || noRelatorio === null ? (
+         <p className="texto-fraco" style={{ margin: 0 }}>Aguardando o backend.</p>
+       ) : falhou ? (
+         <p className="texto-fraco" style={{ margin: 0 }}>O backend não devolveu as sessões.</p>
+       ) : linhas === null ? (
+         <p className="texto-fraco" style={{ margin: 0 }}>Lendo as sessões…</p>
+       ) : linhas.length === 0 ? (
+-        <p className="texto-fraco" style={{ margin: 0 }}>Nenhuma sessão gravada ainda. Abra o Assetto Corsa e entre na pista.</p>
++        <p className="texto-fraco" style={{ margin: 0 }}>Nenhuma: as gravações recentes já estão no relatório.</p>
+       ) : (
+         <div className="superficie tabela-caixa">
+           <table className="tabela" style={{ minWidth: 640 }}>
+@@ -113,13 +123,97 @@ const SessoesGravadas: React.FC<{ pronto: boolean }> = ({ pronto }) => {
+   );
+ };
+ 
+-export const SessoesPage: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => (
+-  <ErrorBoundary>
+-    <div className="tela-conteudo">
+-      <HeroSessoes estado={estado} />
+-      <SessoesGravadas pronto={estado.backend.fase === 'pronto'} />
++/** Uma sessão do relatório, como o `sescard` do protótipo. */
++const CartaoDaSessao: React.FC<{ s: Sessao; doResumo: Resumo['sessoes'][number] | undefined; tempoIa: number | null }> = ({ s, doResumo, tempoIa }) => {
++  const melhor = [...s.voltas].sort((a, b) => a.tempo_s - b.tempo_s)[0];
++  const consistentes = s.curvas.filter((c) => c.situacao === 'diferenca_consistente').length;
++  return (
++    <div className="cartao-sessao">
++      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
++        <h3 className="titulo-cartao">{nomeDaSessao(s.sessao)}</h3>
++        <div className="fatos dado">
++          <span>{s.resumo.voltas} voltas</span>
++          <span>melhor {tempo(s.resumo.melhor_s)}</span>
++          <span>mediana {tempo(s.resumo.mediana_s)}</span>
++          {doResumo?.desvio_s !== null && doResumo?.desvio_s !== undefined && <span>desvio {nf(doResumo.desvio_s, 3)} s</span>}
++          <span>mediana {sg(s.resumo.mediana_s - s.resumo.volta_da_ia_s, 3)} s da IA</span>
++          <span>{consistentes} de {s.curvas.length} curvas com diferença consistente</span>
++        </div>
++        <FaixaDeVoltas voltas={s.voltas} tempoIa={tempoIa} />
++      </div>
++      {melhor && (
++        <a className="botao" href={hashDaRota('volta', melhor.volta)}>
++          Ver a melhor volta
++        </a>
++      )}
+     </div>
+-  </ErrorBoundary>
+-);
++  );
++};
++
++const SessoesDoRelatorio: React.FC = () => {
++  const relatorio = useSessoesDoRelatorio();
++  const resumo = relatorio.dado?.resumo;
++  const sessoes = relatorio.dado?.sessoes ?? [];
++  const tempoIa = resumo?.referencia?.tempo_s ?? null;
++  const a15 = resumo?.criterio_adr_0015;
++  if (relatorio.erro) {
++    return (
++      <PainelVidro titulo="Sessões no relatório">
++        <p className="texto-apoio" style={{ margin: 0 }}>Sem dados: {relatorio.erro}</p>
++      </PainelVidro>
++    );
++  }
++  return (
++    <>
++      <PainelVidro
++        titulo="Sessões no relatório"
++        nota={resumo ? `${sessoes.length} sessões · ${sessoes.reduce((n, x) => n + x.voltas.length, 0)} voltas válidas` : undefined}
++      >
++        {!resumo ? (
++          <p className="texto-fraco" style={{ margin: 0 }}>Lendo o relatório de evolução…</p>
++        ) : (
++          <div className="lista-sessoes">
++            {[...sessoes].reverse().map((x) => (
++              <CartaoDaSessao key={x.sessao} s={x} doResumo={resumo.sessoes.find((r) => r.sessao === x.sessao)} tempoIa={tempoIa} />
++            ))}
++          </div>
++        )}
++      </PainelVidro>
++      {resumo && (
++        <PainelVidro titulo="Mediana e melhor volta por sessão">
++          <p className="texto-apoio" style={{ margin: 0 }}>
++            Linha cheia: mediana. Tracejada: melhor volta. A volta da IA é a referência.
++            {resumo.tendencia_mediana_s_por_sessao !== null && <> Tendência da mediana: {sg(resumo.tendencia_mediana_s_por_sessao, 3)} s por sessão.</>}
++            {a15 && (
++              <>
++                {' '}Critério do ADR 0015: {a15.estabilizou ? 'estabilizou' : 'ainda variando'} (amplitude{' '}
++                {a15.amplitude_s === null ? '—' : `${nf(a15.amplitude_s, 3)} s`}, limite {nf(a15.limite_s, 1)} s).
++              </>
++            )}
++          </p>
++          <GraficoTendencia sessoes={resumo.sessoes} tempoIa={tempoIa} />
++        </PainelVidro>
++      )}
++    </>
++  );
++};
++
++export const SessoesPage: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
++  const relatorio = useSessoesDoRelatorio();
++  // Sem o relatório (erro), todas as gravações recentes contam como fora dele.
++  const noRelatorio = useMemo(
++    () => (relatorio.dado ? new Set(relatorio.dado.sessoes.flatMap((x) => x.gravacoes)) : relatorio.erro ? new Set<string>() : null),
++    [relatorio.dado, relatorio.erro],
++  );
++  return (
++    <ErrorBoundary>
++      <div className="tela-conteudo">
++        <HeroSessoes estado={estado} />
++        <SessoesDoRelatorio />
++        <GravacoesFora pronto={estado.backend.fase === 'pronto'} noRelatorio={noRelatorio} />
++      </div>
++    </ErrorBoundary>
++  );
++};
+ 
+ export default SessoesPage;
+diff --git a/frontend/src/pages/VoltaPage.tsx b/frontend/src/pages/VoltaPage.tsx
+new file mode 100644
+index 00000000..6a57b3b9
+--- /dev/null
++++ b/frontend/src/pages/VoltaPage.tsx
+@@ -0,0 +1,372 @@
++/**
++ * Volta (pedido 30): uma volta contra a referência, na organização da opção A
++ * do protótipo (`frontend/mockups/prototipo_dashboard.html`).
++ *
++ * - Barra de contexto: sessão, volta, tempo e a diferença para a referência.
++ * - Escolha da sessão, da volta e da referência (volta da IA ou sua melhor).
++ * - Volta com fantasma, com o replay.
++ * - Mapa dos 60 microssetores e a tabela das 14 curvas, lado a lado.
++ * - Diferença acumulada por distância, velocidade, acelerador e freio.
++ *
++ * Tudo vem das rotas de leitura (`/api/evolucao/*`, `/api/coach/referencias`,
++ * `/api/store/voltas/{lap}`, `/api/geometria/oficial`) e das camadas da pista do
++ * cache (`/api/track/geometry`). As medidas são as do relatório de evolução
++ * (`volta/medidas.ts`, conferidas contra o `por_volta` oficial).
++ *
++ * Endereço: `#/volta/<lapId>`; `#/volta/ultima` abre a última volta do
++ * relatório; sem volta, a melhor da sessão mais recente.
++ */
++import React, { useEffect, useMemo, useState } from 'react';
++import { ErrorBoundary } from '../components/ErrorBoundary';
++import { PainelVidro } from '../components/ui/base';
++import type { Tela } from '../navegacao/rotas';
++import {
++  gradeDaVolta,
++  lerCamadasDaPista,
++  lerGeometria,
++  lerReferencias,
++  lerVolta,
++  useLeitura,
++  useSessoesDoRelatorio,
++  type Sessao,
++  type VoltaDoStore,
++} from '../volta/dados';
++import { useEstadoDaVolta } from '../volta/estado';
++import {
++  curvaEm,
++  curvasDoRelatorio,
++  diferencaAcumulada,
++  diferencaPorMicrossetor,
++  medidasDasCurvas,
++  tempoEm,
++  valorEm,
++} from '../volta/medidas';
++import { nf, nomeDaSessao, numeroDaVolta, sg, tempo } from '../volta/formato';
++import { EixoDeDistancia, GraficoPorDistancia } from '../volta/Graficos';
++import { MapaMicrossetores } from '../volta/MapaMicrossetores';
++import { TabelaDasCurvas } from '../volta/TabelaDasCurvas';
++import { Fantasma } from '../volta/Fantasma';
++import { frasesDosEventos, RadioDaVolta } from '../volta/RadioDaVolta';
++import { api } from '../api/client';
++
++type Referencia = 'ia' | 'melhor';
++
++const NOME_DA_REFERENCIA: Record<Referencia, string> = { ia: 'volta da IA', melhor: 'sua melhor volta' };
++
++function melhorDaSessao(s: Sessao): string | null {
++  const v = [...s.voltas].sort((a, b) => a.tempo_s - b.tempo_s)[0];
++  return v ? v.volta : null;
++}
++
++/** A última volta do relatório: a da gravação mais recente, com o maior número. */
++function ultimaDoRelatorio(sessoes: Sessao[]): string | null {
++  const todas = sessoes.flatMap((s) => s.voltas.map((v) => v.volta));
++  return todas.sort().at(-1) ?? null;
++}
++
++function SemDados({ titulo, texto }: { titulo: string; texto: string }) {
++  return (
++    <PainelVidro titulo={titulo}>
++      <p className="texto-apoio" style={{ margin: 0 }}>Sem dados: {texto}</p>
++    </PainelVidro>
++  );
++}
++
++export const VoltaPage: React.FC<{ sub: string | null; navegar: (tela: Tela, sub?: string | null) => void }> = ({ sub, navegar }) => {
++  const relatorio = useSessoesDoRelatorio();
++  const referencias = useLeitura('referencias', lerReferencias);
++  const geometria = useLeitura('geometria', lerGeometria);
++  const camadas = useLeitura('camadas', lerCamadasDaPista);
++  const [referencia, setReferencia] = useState<Referencia>('ia');
++
++  const sessoes = relatorio.dado?.sessoes ?? [];
++  const lapId = useMemo(() => {
++    if (sub && sub.includes('#')) return sub;
++    if (!sessoes.length) return null;
++    if (sub === 'ultima') return ultimaDoRelatorio(sessoes);
++    return melhorDaSessao(sessoes[sessoes.length - 1]);
++  }, [sub, sessoes]);
++  const sessaoDaVolta = useMemo(() => sessoes.find((s) => s.voltas.some((v) => v.volta === lapId)) ?? null, [sessoes, lapId]);
++
++  const lapIa = referencias.dado?.volta_ia?.volta ?? null;
++  const lapMelhor = referencias.dado?.minha_melhor?.volta ?? null;
++  const lapRef = referencia === 'ia' ? lapIa : lapMelhor;
++  const volta = useLeitura(lapId ? `volta:${lapId}` : null, () => lerVolta(lapId as string));
++  const voltaIa = useLeitura(lapIa ? `volta:${lapIa}` : null, () => lerVolta(lapIa as string));
++  const voltaMelhor = useLeitura(lapMelhor ? `volta:${lapMelhor}` : null, () => lerVolta(lapMelhor as string));
++  const ref = referencia === 'ia' ? voltaIa : voltaMelhor;
++  const replayLapId = volta.dado?.replayLapId ?? null;
++  const coach = useLeitura(replayLapId ? `coach:${replayLapId}` : null, () =>
++    api.getLapCoaching(replayLapId as string).catch((e) => {
++      // A rota responde 404 (com a frase em inglês) quando a gravação da volta não está na pasta de gravações.
++      if (e?.response?.status === 404) throw new Error('a gravação desta volta não está na pasta de gravações do backend');
++      throw e;
++    }),
++  );
++
++  // Trocar de volta ou de referência desliga o replay e tira o cursor, como no protótipo.
++  useEffect(() => {
++    const { setS, setTocando } = useEstadoDaVolta.getState();
++    setTocando(false);
++    setS(null);
++  }, [lapId, lapRef]);
++
++  const v = volta.dado;
++  const r = ref.dado;
++  const geo = geometria.dado;
++  const conta = useMemo(() => {
++    if (!v || !r || !geo || !sessoes.length) return null;
++    if (v.geometryId !== geo.geometryId || r.geometryId !== geo.geometryId) return { erro: 'a volta e a referência não estão na grade da geometria oficial' } as const;
++    const g = gradeDaVolta(v);
++    const curvas = curvasDoRelatorio(g, (sessaoDaVolta ?? sessoes[0]).curvas);
++    return {
++      erro: null,
++      g,
++      curvas,
++      medidas: medidasDasCurvas(g, v.linhas, r.linhas, curvas),
++      microssetores: diferencaPorMicrossetor(g, v.linhas, r.linhas, geo.bordasDosMicrossetores),
++      acumulada: diferencaAcumulada(v.linhas, r.linhas),
++    } as const;
++  }, [v, r, geo, sessoes, sessaoDaVolta]);
++
++  const frases = useMemo(() => (coach.dado && v ? frasesDosEventos(coach.dado.events, v.comprimentoM) : null), [coach.dado, v]);
++  const medianas = referencia === 'ia' && sessaoDaVolta ? sessaoDaVolta.curvas.map((c) => c.perda_para_ia_s?.mediana ?? null) : null;
++  const carregando = relatorio.carregando || referencias.carregando || geometria.carregando || volta.carregando || ref.carregando;
++  const falha = relatorio.erro || referencias.erro || geometria.erro || volta.erro || ref.erro;
++  const nomeRef = NOME_DA_REFERENCIA[referencia];
++  const diferenca = v && r ? v.tempoS - r.tempoS : null;
++
++  return (
++    <ErrorBoundary>
++      <div className="tela-conteudo">
++        <section className="contexto-volta" aria-label="Volta escolhida">
++          <div>
++            <div className="rotulo">
++              {sessaoDaVolta ? `Sessão ${nomeDaSessao(sessaoDaVolta.sessao)}` : 'Fora do relatório'}
++              {lapId ? ` · volta ${numeroDaVolta(lapId)}` : ''}
++            </div>
++            <div className="numero-grande">{v ? tempo(v.tempoS) : '—'}</div>
++            <div className="texto-fraco">tempo de volta, relógio do jogo</div>
++          </div>
++          <div>
++            <div className="rotulo">Diferença</div>
++            <div className={`numero-grande ${diferenca === null ? '' : diferenca > 0 ? 'cor-perda' : 'cor-ganho'}`}>
++              {diferenca === null ? '—' : `${sg(diferenca, 3)} s`}
++            </div>
++            <div className="texto-fraco">{diferenca === null ? nomeRef : `${diferenca >= 0 ? 'acima' : 'abaixo'} da ${nomeRef}`}</div>
++          </div>
++        </section>
++
++        <section className="contexto-volta" style={{ alignItems: 'flex-start', gap: '14px 36px' }}>
++          <div role="group" aria-label="Sessão" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
++            <span className="rotulo">Sessão</span>
++            <div className="chips">
++              {sessoes.map((s) => (
++                <button
++                  key={s.sessao}
++                  type="button"
++                  className="chip"
++                  aria-pressed={s.sessao === sessaoDaVolta?.sessao}
++                  onClick={() => {
++                    const melhor = melhorDaSessao(s);
++                    if (melhor) navegar('volta', melhor);
++                  }}
++                >
++                  {nomeDaSessao(s.sessao)}
++                </button>
++              ))}
++            </div>
++          </div>
++          <div role="group" aria-label="Referência" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
++            <span className="rotulo">Comparar com</span>
++            <div className="chips">
++              <button type="button" className="chip" aria-pressed={referencia === 'ia'} disabled={!lapIa} onClick={() => setReferencia('ia')}>
++                Volta da IA · {voltaIa.dado ? tempo(voltaIa.dado.tempoS) : '—'}
++              </button>
++              <button type="button" className="chip" aria-pressed={referencia === 'melhor'} disabled={!lapMelhor} onClick={() => setReferencia('melhor')}>
++                Sua melhor · {voltaMelhor.dado ? tempo(voltaMelhor.dado.tempoS) : '—'}
++              </button>
++            </div>
++          </div>
++        </section>
++
++        {sessaoDaVolta && (
++          <section className="chips" aria-label="Voltas válidas da sessão" style={{ alignItems: 'center' }}>
++            <span className="rotulo" style={{ marginRight: 6 }}>Voltas</span>
++            {sessaoDaVolta.voltas.map((x) => (
++              <button key={x.volta} type="button" className="chip" aria-pressed={x.volta === lapId} onClick={() => navegar('volta', x.volta)}>
++                V{numeroDaVolta(x.volta)} · {tempo(x.tempo_s)}
++              </button>
++            ))}
++          </section>
++        )}
++
++        {falha && <SemDados titulo="Volta" texto={falha} />}
++        {!falha && !carregando && !lapId && <SemDados titulo="Volta" texto="o relatório de evolução ainda não tem voltas." />}
++        {!falha && carregando && !conta && (
++          <PainelVidro titulo="Volta com fantasma">
++            <p className="texto-fraco" style={{ margin: 0 }}>Lendo a volta, a referência e a geometria oficial…</p>
++          </PainelVidro>
++        )}
++        {conta?.erro && <SemDados titulo="Volta" texto={conta.erro} />}
++
++        {conta && !conta.erro && v && r && geo && (
++          <>
++            <Fantasma
++              key={`${v.lapId}|${r.lapId}`}
++              grade={conta.g}
++              geometria={geo}
++              curvas={conta.curvas}
++              volta={v}
++              voltaRef={r}
++              referencia={referencia}
++              camadas={camadas.dado}
++            >
++              <RadioDaVolta
++                frases={frases}
++                curvas={conta.curvas}
++                erro={coach.erro ?? (!coach.carregando && !replayLapId ? 'esta volta não tem a gravação ligada no store' : null)}
++              />
++            </Fantasma>
++            <div className="grade-dupla">
++              <PainelVidro
++                titulo="Diferença por microssetor"
++                acao={
++                  <span className="legenda">
++                    <span><i className="amostra" style={{ background: 'var(--ganho)' }} />ganhou</span>
++                    <span><i className="amostra" style={{ background: 'var(--perda-fraca)' }} />perdeu pouco</span>
++                    <span><i className="amostra" style={{ background: 'var(--perda)' }} />perdeu muito</span>
++                  </span>
++                }
++              >
++                <MapaMicrossetores geometria={geo} curvas={conta.curvas} microssetores={conta.microssetores} frases={frases} />
++              </PainelVidro>
++              <PainelVidro titulo={`As 14 curvas, contra a ${nomeRef}`}>
++                <TabelaDasCurvas medidas={conta.medidas} medianas={medianas} diferencaDaVolta={v.tempoS - r.tempoS} referencia={referencia} />
++              </PainelVidro>
++            </div>
++            <Tracos conta={conta} volta={v} ref_={r} nomeRef={nomeRef} />
++            <footer className="texto-fraco dado">
++              Fonte: store v2 (tempo pelo relógio do jogo), geometria oficial {geo.geometryId} e relatório de evolução. As comparações por curva
++              repetem o método do relatório de evolução.
++            </footer>
++          </>
++        )}
++      </div>
++    </ErrorBoundary>
++  );
++};
++
++type Conta = {
++  g: ReturnType<typeof gradeDaVolta>;
++  curvas: ReturnType<typeof curvasDoRelatorio>;
++  acumulada: number[];
++};
++
++/** Os traços por distância, como no `tracesPanel` do protótipo. */
++function Tracos({ conta, volta, ref_: ref, nomeRef }: { conta: Conta; volta: VoltaDoStore; ref_: VoltaDoStore; nomeRef: string }) {
++  const { g, curvas, acumulada } = conta;
++  const L = g.comprimento;
++  const eixo = useMemo(() => {
++    let mn = Math.min(0, ...acumulada);
++    let mx = Math.max(0.5, ...acumulada);
++    mn = Math.floor(mn * 2) / 2 - (mn < 0 ? 0 : 0.2);
++    mx = Math.ceil(mx);
++    const marcas: Array<{ v: number; rotulo: string; forte?: boolean }> = [];
++    const passo = mx - mn > 4 ? 2 : 1;
++    for (let t = Math.ceil(mn); t <= mx; t += passo) marcas.push({ v: t, rotulo: `${sg(t, 0)} s`, forte: t === 0 });
++    return { mn, mx, marcas };
++  }, [acumulada]);
++  const dica = (s: number) => {
++    const d = tempoEm(g, volta.linhas, s) - tempoEm(g, ref.linhas, s);
++    const c = curvaEm(curvas, s);
++    return `${nf(s, 0)} m · ${c ? c.codigo : '—'} · ${sg(d, 3)} s · ${nf(valorEm(g, volta.linhas.velocidade, s), 0)} km/h (ref. ${nf(valorEm(g, ref.linhas.velocidade, s), 0)})`;
++  };
++  const voce = 'var(--voce)';
++  const outra = 'var(--referencia)';
++  const pedal = [
++    { v: 0, rotulo: '0%' },
++    { v: 1, rotulo: '100%' },
++  ];
++  return (
++    <>
++      <PainelVidro titulo={`Diferença acumulada para a ${nomeRef}`} nota="passe o mouse para ler; clique numa faixa para escolher a curva">
++        <GraficoPorDistancia
++          comprimento={L}
++          passo={g.passo}
++          altura={170}
++          min={eixo.mn}
++          max={eixo.mx}
++          marcas={eixo.marcas}
++          series={[{ valores: acumulada, cor: voce, largura: 2, area: true }]}
++          curvas={curvas}
++          rotulosDasCurvas
++          rotulo={`Diferença acumulada para a ${nomeRef}`}
++          dica={dica}
++        />
++      </PainelVidro>
++      <PainelVidro
++        titulo="Velocidade (km/h), acelerador e freio"
++        acao={
++          <span className="legenda">
++            <span><i className="linha" style={{ borderColor: voce }} />volta {numeroDaVolta(volta.lapId)}</span>
++            <span><i className="linha" style={{ borderColor: outra, borderTopStyle: 'dashed' }} />{nomeRef}</span>
++          </span>
++        }
++      >
++        <div>
++          <GraficoPorDistancia
++            comprimento={L}
++            passo={g.passo}
++            altura={180}
++            min={60}
++            max={300}
++            marcas={[100, 150, 200, 250, 300].map((k) => ({ v: k, rotulo: String(k) }))}
++            series={[
++              { valores: ref.linhas.velocidade, cor: outra, largura: 1.3, tracejado: '5 4' },
++              { valores: volta.linhas.velocidade, cor: voce, largura: 1.8 },
++            ]}
++            curvas={curvas}
++            rotulo="Velocidade"
++            dica={dica}
++          />
++          <div className="rotulo" style={{ marginTop: 4 }}>Acelerador</div>
++          <GraficoPorDistancia
++            comprimento={L}
++            passo={g.passo}
++            altura={64}
++            min={0}
++            max={1.05}
++            marcas={pedal}
++            series={[
++              { valores: ref.linhas.acelerador, cor: outra, largura: 1.1, tracejado: '4 3' },
++              { valores: volta.linhas.acelerador, cor: voce, largura: 1.5 },
++            ]}
++            curvas={curvas}
++            rotulo="Acelerador"
++            dica={dica}
++          />
++          <div className="rotulo">Freio</div>
++          <GraficoPorDistancia
++            comprimento={L}
++            passo={g.passo}
++            altura={64}
++            min={0}
++            max={1.05}
++            marcas={pedal}
++            series={[
++              { valores: ref.linhas.freio, cor: outra, largura: 1.1, tracejado: '4 3' },
++              { valores: volta.linhas.freio, cor: voce, largura: 1.5 },
++            ]}
++            curvas={curvas}
++            rotulo="Freio"
++            dica={dica}
++          />
++          <EixoDeDistancia comprimento={L} />
++        </div>
++      </PainelVidro>
++    </>
++  );
++}
++
++export default VoltaPage;
+diff --git a/frontend/src/theme/componentes.css b/frontend/src/theme/componentes.css
+index f79dc190..35f83e7c 100644
+--- a/frontend/src/theme/componentes.css
++++ b/frontend/src/theme/componentes.css
+@@ -85,8 +85,8 @@ body {
+ .navegacao-marca span {
+   font-family: var(--fonte-titulo);
+   font-weight: 700;
+-  font-size: 16px;
+-  letter-spacing: 0.06em;
++  font-size: 14px;
++  letter-spacing: 0.05em;
+   text-transform: uppercase;
+   line-height: 1.05;
+ }
+@@ -677,3 +677,390 @@ body {
+   color: var(--texto-2);
+   font-size: 13px;
+ }
++
++/* ── Gráficos e mapas da tela Volta (pedido 30) ───────────────────────── */
++.grafico-texto {
++  font-family: var(--fonte-dado);
++  font-size: 10px;
++  fill: var(--texto-3);
++}
++.grafico-rotulo-curva {
++  font-family: var(--fonte-dado);
++  font-size: 12px;
++  fill: var(--texto-1);
++  cursor: pointer;
++}
++.grafico-rotulo-curva:focus-visible {
++  outline: none;
++  fill: var(--vermelho-claro);
++}
++.contexto-volta {
++  display: flex;
++  flex-wrap: wrap;
++  align-items: flex-end;
++  gap: 14px 40px;
++}
++.numero-grande {
++  font-family: var(--fonte-titulo);
++  font-weight: 700;
++  font-size: clamp(40px, 4.4vw, 58px);
++  line-height: 1;
++  font-variant-numeric: tabular-nums;
++}
++.legenda {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 6px 14px;
++  font-size: 12px;
++  color: var(--texto-3);
++  align-items: center;
++}
++.legenda span {
++  display: inline-flex;
++  align-items: center;
++  gap: 6px;
++}
++.legenda .amostra {
++  display: inline-block;
++  width: 18px;
++  height: 7px;
++  border-radius: 2px;
++}
++.legenda .linha {
++  display: inline-block;
++  width: 22px;
++  height: 0;
++  border-top: 2px solid;
++}
++.barra-perda {
++  flex: 1;
++  height: 6px;
++  min-width: 60px;
++  border-radius: 3px;
++  background: var(--superficie-3);
++  display: flex;
++}
++.barra-perda i {
++  display: block;
++  height: 6px;
++  border-radius: 3px;
++}
++.tabela tr.escolhivel {
++  cursor: pointer;
++}
++.tabela tr.escolhivel:hover {
++  background: var(--realce-1);
++}
++.tabela tr.escolhivel[aria-selected='true'] {
++  background: var(--faixa-selecionada);
++}
++.legenda .ponto {
++  display: inline-block;
++  border-radius: 50%;
++}
++
++/* ── Volta com fantasma (tela Volta, protótipo A) ─────────────────────── */
++.fantasma {
++  position: relative;
++  height: 540px;
++  overflow: hidden;
++  border-radius: var(--raio-2);
++  background: var(--superficie-no-vidro);
++  border: 1px solid var(--linha-fraca);
++  color: var(--texto-1);
++}
++.fantasma-principal {
++  position: absolute;
++  inset: 0;
++  width: 100%;
++  height: 100%;
++  display: block;
++  cursor: grab;
++}
++.fantasma-canto {
++  position: absolute;
++  right: 12px;
++  overflow: hidden;
++  border-radius: var(--raio-1);
++  border: 1px solid var(--linha);
++  background: var(--superficie);
++}
++.fantasma-canto canvas {
++  width: 100%;
++  height: 100%;
++  display: block;
++}
++.fantasma-relevo {
++  top: 12px;
++  width: 300px;
++  height: 190px;
++}
++.fantasma-mini {
++  bottom: 12px;
++  width: 230px;
++  height: 170px;
++}
++.fantasma-rotulo {
++  position: absolute;
++  left: 8px;
++  top: 6px;
++  font: 10px var(--fonte-dado);
++  letter-spacing: 0.08em;
++  text-transform: uppercase;
++  color: var(--texto-3);
++}
++.fantasma-leitura {
++  position: absolute;
++  left: 8px;
++  bottom: 6px;
++  font: 11px var(--fonte-dado);
++  color: var(--texto-1);
++}
++.fantasma-titulo {
++  position: absolute;
++  left: 16px;
++  top: 12px;
++  display: flex;
++  flex-direction: column;
++  gap: 2px;
++  pointer-events: none;
++}
++.fantasma-titulo b {
++  font-family: var(--fonte-titulo);
++  font-size: 24px;
++  line-height: 1.05;
++}
++.fantasma-titulo span {
++  font: 12px var(--fonte-dado);
++  color: var(--texto-3);
++}
++.fantasma-hud {
++  position: absolute;
++  left: 0;
++  right: 254px;
++  bottom: 0;
++  padding: 48px 16px 14px;
++  background: linear-gradient(to top, var(--superficie) 55%, transparent);
++  display: grid;
++  grid-template-columns: repeat(3, auto);
++  justify-content: start;
++  align-items: end;
++  gap: 4px 30px;
++  pointer-events: none;
++}
++.hud-coluna {
++  display: flex;
++  flex-direction: column;
++  gap: 2px;
++  min-width: 0;
++}
++.hud-centro {
++  align-items: center;
++  align-self: center;
++  text-align: center;
++}
++.hud-quem {
++  font-family: var(--fonte-titulo);
++  font-weight: 700;
++  font-size: 18px;
++  white-space: nowrap;
++}
++.hud-estado {
++  font: 500 12px var(--fonte-dado);
++  letter-spacing: 0.1em;
++}
++.hud-velocidade {
++  font-family: var(--fonte-titulo);
++  font-weight: 700;
++  font-size: 46px;
++  line-height: 1;
++  font-variant-numeric: tabular-nums;
++}
++.hud-unidade {
++  font: 11px var(--fonte-dado);
++  color: var(--texto-3);
++}
++.hud-tempo {
++  font: 13px var(--fonte-dado);
++  font-variant-numeric: tabular-nums;
++}
++.hud-diferenca {
++  font-family: var(--fonte-titulo);
++  font-weight: 700;
++  font-size: 30px;
++  line-height: 1;
++  font-variant-numeric: tabular-nums;
++}
++.replay {
++  display: flex;
++  flex-wrap: wrap;
++  align-items: center;
++  gap: 10px 14px;
++}
++.replay-tocar {
++  width: 44px;
++  height: 44px;
++  border-radius: 22px;
++  border: 0;
++  background: var(--texto-1);
++  color: var(--fundo);
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  cursor: pointer;
++}
++.replay-posicao {
++  flex: 1 1 240px;
++  display: flex;
++  align-items: center;
++  gap: 10px;
++  font-size: 12px;
++  color: var(--texto-3);
++}
++.replay-posicao input[type='range'] {
++  flex: 1;
++  accent-color: var(--vermelho);
++}
++.replay-leitura {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 4px 16px;
++  font-size: 13px;
++}
++@media (max-width: 760px) {
++  .fantasma {
++    height: auto;
++  }
++  .fantasma-principal {
++    position: relative;
++    height: 360px;
++  }
++  .fantasma-relevo {
++    width: 150px;
++    height: 100px;
++  }
++  .fantasma-relevo .fantasma-leitura,
++  .fantasma-mini .fantasma-rotulo,
++  .fantasma-titulo {
++    display: none;
++  }
++  .fantasma-mini {
++    top: 12px;
++    bottom: auto;
++    left: 12px;
++    right: auto;
++    width: 110px;
++    height: 84px;
++  }
++  .fantasma-hud {
++    position: static;
++    padding: 12px 14px 14px;
++    background: none;
++    grid-template-columns: repeat(2, minmax(0, 1fr));
++    gap: 10px 16px;
++  }
++  .hud-centro {
++    grid-column: 1 / -1;
++    order: -1;
++  }
++  .hud-velocidade {
++    font-size: 34px;
++  }
++}
++/* Dois painéis lado a lado, que viram um embaixo do outro na tela estreita (protótipo: grid2). */
++.grade-dupla {
++  display: grid;
++  grid-template-columns: repeat(auto-fit, minmax(min(520px, 100%), 1fr));
++  gap: 16px;
++}
++/* Sessões: uma sessão do relatório por linha (protótipo: sescard). */
++.lista-sessoes {
++  display: flex;
++  flex-direction: column;
++}
++.cartao-sessao {
++  display: grid;
++  grid-template-columns: minmax(0, 1fr) auto;
++  align-items: center;
++  gap: 8px 18px;
++  padding: 14px 0;
++  border-bottom: 1px solid var(--linha-fraca);
++}
++.cartao-sessao:last-child {
++  border-bottom: 0;
++}
++.titulo-cartao {
++  margin: 0;
++  font-family: var(--fonte-titulo);
++  font-weight: 700;
++  font-size: 20px;
++  letter-spacing: 0.02em;
++}
++.fatos {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 4px 18px;
++  font-size: 13px;
++}
++@media (max-width: 640px) {
++  .cartao-sessao {
++    grid-template-columns: minmax(0, 1fr);
++  }
++}
++/* Rádio nesta volta: as frases do coach, embaixo do replay. */
++.radio-da-volta {
++  display: flex;
++  flex-direction: column;
++  gap: 6px;
++}
++.radio-lista {
++  display: grid;
++  grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
++  gap: 6px;
++  margin: 0;
++  padding: 0;
++  list-style: none;
++}
++.radio-frase {
++  display: flex;
++  flex-direction: column;
++  gap: 2px;
++  width: 100%;
++  padding: 8px 12px;
++  border: 1px solid var(--linha-fraca);
++  border-radius: var(--raio-1);
++  background: var(--superficie);
++  color: var(--texto-1);
++  font: 13px var(--fonte-texto);
++  text-align: left;
++  cursor: pointer;
++}
++.radio-frase:hover {
++  background: var(--realce-1);
++}
++.radio-frase[aria-current='true'] {
++  border-color: var(--vermelho);
++  box-shadow: inset 3px 0 0 var(--vermelho);
++}
++/* Tabela densa (as 14 curvas da tela Volta), como no protótipo A: o texto quebra em vez de alargar o painel. */
++.tabela--compacta th,
++.tabela--compacta td {
++  padding: 7px 8px;
++}
++.tabela--compacta thead th {
++  white-space: normal;
++}
++/* Tabelas por curva (Volta e Evolução): o nome da curva é o dado da linha, como no protótipo A, e não um rótulo apagado. */
++.tabela--curvas tbody th {
++  color: var(--texto-1);
++  font-size: 13.5px;
++  border-bottom: 1px solid var(--linha-fraca);
++}
++.tabela--curvas tbody tr:last-child th {
++  border-bottom: 0;
++}
++.tabela--curvas tfoot th,
++.tabela--curvas tfoot td {
++  border-top: 1px solid var(--linha);
++  border-bottom: 0;
++}
+diff --git a/frontend/src/theme/tokens.css b/frontend/src/theme/tokens.css
+index 940cc63d..326e3ad9 100644
+--- a/frontend/src/theme/tokens.css
++++ b/frontend/src/theme/tokens.css
+@@ -51,6 +51,15 @@
+   --voce: #ffffff;
+   --referencia: #7f93a6;
+ 
++  /* Gráficos e mapas da tela Volta (pedido 30). */
++  --faixa-curva: rgba(255, 255, 255, 0.03); /* curvas alternadas no fundo dos gráficos */
++  --faixa-selecionada: rgba(225, 6, 0, 0.16); /* a curva escolhida */
++  --pista-desenho: #2a2f36; /* a pista no mapa dos microssetores e no minimapa */
++  --relevo-plano: #8a96a3;
++  --relevo-subida: #ff9f43;
++  --relevo-descida: #4c8dff;
++  --fantasma: rgba(233, 237, 242, 0.9); /* o contorno do fantasma da referência */
++
+   /* Cronometragem, só em tempos e só com o significado da F1. */
+   --tempo-roxo: #b266ff; /* a melhor de todas */
+   --tempo-verde: #2bd67b; /* a sua melhor */
+diff --git a/frontend/src/volta/Fantasma.tsx b/frontend/src/volta/Fantasma.tsx
+new file mode 100644
+index 00000000..c338b924
+--- /dev/null
++++ b/frontend/src/volta/Fantasma.tsx
+@@ -0,0 +1,579 @@
++/**
++ * "Volta com fantasma" (pedido 30; `docs/dashboard_visoes.md`, seção 8), como
++ * no protótipo A:
++ *
++ * - câmera próxima que acompanha o carro (80, 150 ou 400 m; pode girar com ele);
++ * - traçado desde o início da volta, colorido pelo pedal (freio ≥ 0,15 em
++ *   vermelho, acelerador ≥ 0,9 em verde, o resto em amarelo);
++ * - fantasma da referência posicionado pelo tempo, por curva (recomeça junto no
++ *   início de cada curva) ou na volta inteira; fora da tela, uma seta com a
++ *   distância;
++ * - relevo no canto superior direito, com a altitude e a inclinação no ponto
++ *   do carro, e a pista inteira no inferior direito;
++ * - a leitura dos dois carros e o replay.
++ *
++ * A pista desenhada são as camadas do cache que o mapa do app usa
++ * (`drawTrackSurface`): asfalto, pintura classificada e zebras. As posições são
++ * a linha central oficial mais o deslocamento lateral do store v2.
++ */
++import React, { useCallback, useEffect, useMemo, useRef } from 'react';
++import clsx from 'clsx';
++import { drawTrackSurface } from '../components/map/OverlayRenderer';
++import { Segmentado } from '../components/ui/base';
++import { useEstadoDaVolta } from './estado';
++import type { Geometria, VoltaDoStore } from './dados';
++import { CORES_DO_PEDAL, misturar, token } from './cores';
++import {
++  curvaEm,
++  estadoDoFantasma,
++  pedalEm,
++  sNoTempo,
++  tempoEm,
++  valorEm,
++  type Curva,
++  type Grade,
++  type Pedal,
++} from './medidas';
++import { nf, numeroDaVolta, sg, tempo } from './formato';
++import { linhaCentral, posicaoEm, rotuloDaCurva, tracadoDaVolta, transformarCamadas, type Ponto } from './projecao';
++
++type Props = {
++  grade: Grade;
++  geometria: Geometria;
++  curvas: Curva[];
++  volta: VoltaDoStore;
++  voltaRef: VoltaDoStore;
++  referencia: 'ia' | 'melhor';
++  /** As camadas da pista do cache (`/api/track/geometry`); sem elas, a linha central. */
++  camadas: any | null;
++  /** O que vai embaixo do replay (as frases do coach). */
++  children?: React.ReactNode;
++};
++
++const NOME_DO_PEDAL: Record<Pedal, string> = { freio: 'FREANDO', acelerador: 'ACELERANDO', parcial: 'PARCIAL' };
++
++function ajustar(cv: HTMLCanvasElement) {
++  const W = cv.clientWidth;
++  const H = cv.clientHeight;
++  const d = window.devicePixelRatio || 1;
++  if (cv.width !== Math.round(W * d) || cv.height !== Math.round(H * d)) {
++    cv.width = Math.round(W * d);
++    cv.height = Math.round(H * d);
++  }
++  const ctx = cv.getContext('2d')!;
++  ctx.setTransform(d, 0, 0, d, 0, 0);
++  ctx.clearRect(0, 0, W, H);
++  return { ctx, W, H };
++}
++
++const voltaAngulo = (a: number) => {
++  let x = a;
++  while (x > Math.PI) x -= 2 * Math.PI;
++  while (x < -Math.PI) x += 2 * Math.PI;
++  return x;
++};
++
++function rotulo(ctx: CanvasRenderingContext2D, texto: string, x: number, y: number) {
++  ctx.lineWidth = 4;
++  ctx.strokeStyle = 'rgba(8,9,11,0.9)';
++  ctx.strokeText(texto, x, y);
++  ctx.fillText(texto, x, y);
++}
++
++export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, volta, voltaRef: ref, referencia, camadas, children }) => {
++  const principal = useRef<HTMLCanvasElement>(null);
++  const relevo = useRef<HTMLCanvasElement>(null);
++  const mini = useRef<HTMLCanvasElement>(null);
++  const textoDoRelevo = useRef<HTMLSpanElement>(null);
++  const angulo = useRef<number | null>(null);
++  const modo = useEstadoDaVolta((e) => e.modo);
++  const zoom = useEstadoDaVolta((e) => e.zoom);
++  const girar = useEstadoDaVolta((e) => e.girar);
++  const { setModo, setZoom, setGirar } = useEstadoDaVolta.getState();
++
++  const central = useMemo(() => linhaCentral(geo), [geo]);
++  const trVolta = useMemo(() => tracadoDaVolta(geo, volta.linhas.lateral), [geo, volta]);
++  const trRef = useMemo(() => tracadoDaVolta(geo, ref.linhas.lateral), [geo, ref]);
++  const pedais = useMemo(() => {
++    const doPonto = (v: VoltaDoStore) => v.linhas.freio.map((f, i) => (Number(f) >= 0.15 ? 'freio' : Number(v.linhas.acelerador[i]) >= 0.9 ? 'acelerador' : 'parcial') as Pedal);
++    return { volta: doPonto(volta), ref: doPonto(ref) };
++  }, [volta, ref]);
++  const rotuloRef = referencia === 'ia' ? 'IA' : 'Sua melhor';
++
++  const desenhar = useCallback(() => {
++    const cv = principal.current;
++    if (!cv) return;
++    const est = useEstadoDaVolta.getState();
++    const f = estadoDoFantasma(g, volta.linhas, ref.linhas, curvas, est.s ?? 0, est.modo);
++    const { ctx, W, H } = ajustar(cv);
++    const passo = g.passo;
++    const carro = posicaoEm(trVolta, passo, f.s);
++    const fantasma = posicaoEm(trRef, passo, f.sFantasma);
++    const i = Math.round(f.s / passo) % central.n;
++    const i2 = (i + 4) % central.n;
++    const alvo = est.girar ? -Math.PI / 2 - Math.atan2(central.cy[i2] - central.cy[i], central.cx[i2] - central.cx[i]) : 0;
++    angulo.current = angulo.current === null || !est.tocando ? alvo : angulo.current + voltaAngulo(alvo - angulo.current) * 0.12;
++    const ang = angulo.current;
++    const sc = Math.min(W, H) / est.zoom;
++    const cxs = W < 600 ? W * 0.5 : W * 0.42;
++    const cys = W < 600 ? H * 0.52 : H * 0.44;
++    const cs = Math.cos(ang);
++    const sn = Math.sin(ang);
++    const naTela = (p: Ponto): Ponto => {
++      const dx = p[0] - carro[0];
++      const dy = p[1] - carro[1];
++      return [cxs + sc * (dx * cs - dy * sn), cys + sc * (dx * sn + dy * cs)];
++    };
++
++    ctx.save();
++    ctx.translate(cxs, cys);
++    ctx.rotate(ang);
++    ctx.scale(sc, sc);
++    ctx.translate(-carro[0], -carro[1]);
++    if (camadas) {
++      ctx.save();
++      transformarCamadas(ctx);
++      drawTrackSurface(ctx, camadas, null, sc);
++      ctx.restore();
++    } else {
++      ctx.beginPath();
++      central.cx.forEach((x, k) => (k ? ctx.lineTo(x, central.cy[k]) : ctx.moveTo(x, central.cy[k])));
++      ctx.closePath();
++      ctx.strokeStyle = token('--pista-desenho', '#2a2f36');
++      ctx.lineWidth = 14;
++      ctx.stroke();
++    }
++    if (est.curva) {
++      const c = curvas.find((k) => k.codigo === est.curva);
++      if (c) {
++        const a0 = Math.round(c.trecho[0] / passo);
++        const b0 = Math.round(c.trecho[1] / passo) % central.n;
++        ctx.beginPath();
++        for (let q = a0 % central.n, primeiro = true; ; q = (q + 1) % central.n) {
++          if (primeiro) {
++            ctx.moveTo(central.cx[q], central.cy[q]);
++            primeiro = false;
++          } else ctx.lineTo(central.cx[q], central.cy[q]);
++          if (q === b0) break;
++        }
++        ctx.strokeStyle = 'rgba(233,237,242,0.18)';
++        ctx.lineWidth = 14;
++        ctx.stroke();
++      }
++    }
++    const tracar = (tr: { x: number[]; y: number[] }, ped: Pedal[], s0: number, s1: number, alfa: number, largura: number) => {
++      const n = tr.x.length;
++      const j0 = Math.max(0, Math.floor(s0 / passo));
++      const j1 = Math.min(n - 1, Math.floor(s1 / passo));
++      if (j1 <= j0) return;
++      const fim = posicaoEm(tr, passo, s1);
++      ctx.globalAlpha = alfa;
++      ctx.lineWidth = largura;
++      ctx.lineCap = 'round';
++      ctx.lineJoin = 'round';
++      let j = j0;
++      while (j < j1) {
++        const k = ped[j];
++        let jj = j;
++        ctx.beginPath();
++        ctx.moveTo(tr.x[j], tr.y[j]);
++        while (jj < j1 && ped[jj] === k) {
++          jj += 1;
++          ctx.lineTo(tr.x[jj], tr.y[jj]);
++        }
++        if (jj >= j1) ctx.lineTo(fim[0], fim[1]);
++        ctx.strokeStyle = CORES_DO_PEDAL[k]();
++        ctx.stroke();
++        j = jj;
++      }
++      ctx.globalAlpha = 1;
++    };
++    tracar(trRef, pedais.ref, est.modo === 'curva' ? f.s0 : 0, f.sFantasma, 0.6, Math.max(0.7, 3.5 / sc));
++    tracar(trVolta, pedais.volta, 0, f.s, 1, Math.max(0.9, 5 / sc));
++    ctx.restore();
++
++    const texto = token('--texto-1', '#f2f4f5');
++    ctx.font = `600 11px ${token('--fonte-dado', 'monospace')}`;
++    ctx.textAlign = 'center';
++    curvas.forEach((c) => {
++      const p = naTela(rotuloDaCurva(geo, c.apice, c.lado));
++      if (p[0] > 8 && p[0] < W - 8 && p[1] > 8 && p[1] < H - 8) {
++        ctx.fillStyle = 'rgba(233,237,242,0.75)';
++        rotulo(ctx, c.codigo, p[0], p[1]);
++      }
++    });
++    const gs = naTela(fantasma);
++    const dentro = gs[0] > 14 && gs[0] < W - 14 && gs[1] > 14 && gs[1] < H - 14;
++    if (dentro) {
++      ctx.beginPath();
++      ctx.arc(gs[0], gs[1], 8, 0, 2 * Math.PI);
++      ctx.fillStyle = 'rgba(8,9,11,0.6)';
++      ctx.fill();
++      ctx.lineWidth = 2.5;
++      ctx.strokeStyle = token('--fantasma', 'rgba(233,237,242,0.9)');
++      ctx.stroke();
++      ctx.fillStyle = texto;
++      rotulo(ctx, rotuloRef, gs[0], gs[1] - 14);
++    } else {
++      const cxm = Math.max(18, Math.min(W - 18, gs[0]));
++      const cym = Math.max(18, Math.min(H - 18, gs[1]));
++      ctx.save();
++      ctx.translate(cxm, cym);
++      ctx.rotate(Math.atan2(gs[1] - cys, gs[0] - cxs));
++      ctx.beginPath();
++      ctx.moveTo(8, 0);
++      ctx.lineTo(-6, -6);
++      ctx.lineTo(-6, 6);
++      ctx.closePath();
++      ctx.fillStyle = token('--fantasma', 'rgba(233,237,242,0.9)');
++      ctx.fill();
++      ctx.restore();
++      const dm = f.sFantasma - f.s;
++      ctx.fillStyle = texto;
++      ctx.textAlign = cxm > W / 2 ? 'right' : 'left';
++      rotulo(ctx, `${rotuloRef} · ${nf(Math.abs(dm), 0)} m ${dm >= 0 ? 'à frente' : 'atrás'}`, cxm + (cxm > W / 2 ? -12 : 12), cym + (cym > H / 2 ? -12 : 18));
++    }
++    ctx.beginPath();
++    ctx.arc(cxs, cys, 8.5, 0, 2 * Math.PI);
++    ctx.fillStyle = token('--voce', '#ffffff');
++    ctx.fill();
++    ctx.lineWidth = 2.5;
++    ctx.strokeStyle = token('--vermelho', '#e10600');
++    ctx.stroke();
++    ctx.fillStyle = texto;
++    ctx.textAlign = 'center';
++    rotulo(ctx, `Você · V${numeroDaVolta(volta.lapId)}`, cxs, cys + 26);
++
++    desenharRelevo(f.s, f.sFantasma);
++    desenharMini(f.s, f.sFantasma, carro, fantasma);
++    // eslint-disable-next-line react-hooks/exhaustive-deps
++  }, [g, geo, curvas, volta, ref, camadas, central, trVolta, trRef, pedais, rotuloRef]);
++
++  const desenharRelevo = (s: number, sFantasma: number) => {
++    const cv = relevo.current;
++    if (!cv) return;
++    const { ctx, W, H } = ajustar(cv);
++    const el = geo.elevacaoM;
++    const n = central.n;
++    if (!el) {
++      if (textoDoRelevo.current) textoDoRelevo.current.textContent = 'sem a altitude da geometria oficial';
++      return;
++    }
++    const EX = 3.2;
++    const INCL = 0.5;
++    const emin = Math.min(...el);
++    const umin = Math.min(...central.cx);
++    const umax = Math.max(...central.cx);
++    const proj = (i: number, chao: boolean): Ponto => [central.cx[i], central.cy[i] * INCL - (chao ? 0 : el[i] - emin) * EX];
++    let ymin = Infinity;
++    let ymax = -Infinity;
++    for (let i = 0; i < n; i += 4) {
++      const a = proj(i, false);
++      const b = proj(i, true);
++      ymin = Math.min(ymin, a[1], b[1]);
++      ymax = Math.max(ymax, a[1], b[1]);
++    }
++    const padT = 24;
++    const padB = 22;
++    const padX = 16;
++    const k = Math.min((W - 2 * padX) / (umax - umin), (H - padT - padB) / (ymax - ymin));
++    const ox = (W - k * (umax - umin)) / 2 - k * umin;
++    const oy = padT + (H - padT - padB - k * (ymax - ymin)) / 2 - k * ymin;
++    const P = (i: number, chao: boolean): Ponto => {
++      const p = proj(i, chao);
++      return [ox + k * p[0], oy + k * p[1]];
++    };
++    ctx.beginPath();
++    for (let j = 0; j <= n; j += 3) {
++      const q = P(j % n, true);
++      if (!j) ctx.moveTo(q[0], q[1]);
++      else ctx.lineTo(q[0], q[1]);
++    }
++    ctx.strokeStyle = token('--superficie-3', '#1d2126');
++    ctx.lineWidth = 3;
++    ctx.stroke();
++    ctx.lineWidth = 3.2;
++    ctx.lineCap = 'round';
++    const plano = token('--relevo-plano', '#8a96a3');
++    const subida = token('--relevo-subida', '#ff9f43');
++    const descida = token('--relevo-descida', '#4c8dff');
++    for (let m = 0; m < n; m += 3) {
++      const n2 = (m + 3) % n;
++      const t = Math.max(-1, Math.min(1, (el[n2] - el[m]) / (3 * g.passo) / 0.06));
++      ctx.strokeStyle = t >= 0 ? misturar(plano, subida, t) : misturar(plano, descida, -t);
++      const a1 = P(m, false);
++      const b1 = P(n2, false);
++      ctx.beginPath();
++      ctx.moveTo(a1[0], a1[1]);
++      ctx.lineTo(b1[0], b1[1]);
++      ctx.stroke();
++    }
++    const ponto = (sp: number, cheio: string, borda: string) => {
++      const ii = Math.round(sp / g.passo) % n;
++      const p = P(ii, false);
++      const q = P(ii, true);
++      ctx.beginPath();
++      ctx.moveTo(q[0], q[1]);
++      ctx.lineTo(p[0], p[1]);
++      ctx.strokeStyle = 'rgba(233,237,242,0.35)';
++      ctx.lineWidth = 1;
++      ctx.stroke();
++      ctx.beginPath();
++      ctx.arc(p[0], p[1], 5, 0, 2 * Math.PI);
++      ctx.fillStyle = cheio;
++      ctx.fill();
++      ctx.lineWidth = 2;
++      ctx.strokeStyle = borda;
++      ctx.stroke();
++    };
++    ponto(sFantasma, 'rgba(8,9,11,0.6)', token('--fantasma', 'rgba(233,237,242,0.9)'));
++    ponto(s, token('--voce', '#ffffff'), token('--vermelho', '#e10600'));
++    const ic = Math.round(s / g.passo) % n;
++    const ia = (ic - 5 + n) % n;
++    const ib = (ic + 5) % n;
++    const inclinacao = ((el[ib] - el[ia]) / (10 * g.passo)) * 100;
++    if (textoDoRelevo.current) textoDoRelevo.current.textContent = `altitude ${nf(el[ic] - emin, 1)} m · inclinação ${sg(inclinacao, 1)}%`;
++  };
++
++  const desenharMini = (s: number, sFantasma: number, carro: Ponto, fantasma: Ponto) => {
++    const cv = mini.current;
++    if (!cv) return;
++    const { ctx, W, H } = ajustar(cv);
++    const n = central.n;
++    const umin = Math.min(...central.cx);
++    const umax = Math.max(...central.cx);
++    const vmin = Math.min(...central.cy);
++    const vmax = Math.max(...central.cy);
++    const pt = 18;
++    const pd = 10;
++    const k = Math.min((W - 2 * pd) / (umax - umin), (H - pt - pd) / (vmax - vmin));
++    const ox = (W - k * (umax - umin)) / 2 - k * umin;
++    const oy = pt + (H - pt - pd - k * (vmax - vmin)) / 2 - k * vmin;
++    const P = (i: number): Ponto => [ox + k * central.cx[i], oy + k * central.cy[i]];
++    ctx.beginPath();
++    for (let j = 0; j <= n; j += 3) {
++      const q = P(j % n);
++      if (!j) ctx.moveTo(q[0], q[1]);
++      else ctx.lineTo(q[0], q[1]);
++    }
++    ctx.strokeStyle = 'rgba(233,237,242,0.55)';
++    ctx.lineWidth = 2;
++    ctx.stroke();
++    const c = curvaEm(curvas, s);
++    if (c) {
++      const a = Math.round(c.trecho[0] / g.passo) % n;
++      const b = Math.round(c.trecho[1] / g.passo) % n;
++      ctx.beginPath();
++      for (let q = a, primeiro = true; ; q = (q + 1) % n) {
++        const pp = P(q);
++        if (primeiro) {
++          ctx.moveTo(pp[0], pp[1]);
++          primeiro = false;
++        } else ctx.lineTo(pp[0], pp[1]);
++        if (q === b) break;
++      }
++      ctx.strokeStyle = token('--texto-1', '#f2f4f5');
++      ctx.lineWidth = 4;
++      ctx.stroke();
++    }
++    const s0 = P(0);
++    ctx.fillStyle = token('--texto-1', '#f2f4f5');
++    ctx.fillRect(s0[0] - 1, s0[1] - 5, 2, 10);
++    const marca = (p: Ponto, cheio: string, borda: string) => {
++      ctx.beginPath();
++      ctx.arc(ox + k * p[0], oy + k * p[1], 4.5, 0, 2 * Math.PI);
++      ctx.fillStyle = cheio;
++      ctx.fill();
++      ctx.lineWidth = 2;
++      ctx.strokeStyle = borda;
++      ctx.stroke();
++    };
++    marca(fantasma, 'rgba(8,9,11,0.6)', token('--fantasma', 'rgba(233,237,242,0.9)'));
++    marca(carro, token('--voce', '#ffffff'), token('--vermelho', '#e10600'));
++    void sFantasma;
++  };
++
++  // Redesenha quando o cursor, o modo ou a câmera mudam, e quando a janela muda de tamanho.
++  useEffect(() => {
++    let quadro = 0;
++    const pedir = () => {
++      cancelAnimationFrame(quadro);
++      quadro = requestAnimationFrame(desenhar);
++    };
++    pedir();
++    const desassinar = useEstadoDaVolta.subscribe(pedir);
++    const ro = new ResizeObserver(pedir);
++    if (principal.current) ro.observe(principal.current);
++    return () => {
++      cancelAnimationFrame(quadro);
++      desassinar();
++      ro.disconnect();
++    };
++  }, [desenhar]);
++
++  return (
++    <section className="vidro painel" aria-labelledby="fantasma-titulo">
++      <div className="painel-cabeca">
++        <h2 id="fantasma-titulo" className="titulo-painel">Volta com fantasma</h2>
++        <div className="chips" style={{ alignItems: 'center' }}>
++          <Segmentado rotulo="Fantasma" opcoes={[{ id: 'curva', texto: 'Fantasma por curva' }, { id: 'volta', texto: 'Volta inteira' }]} valor={modo} aoMudar={setModo} />
++          <Segmentado
++            rotulo="Aproximação"
++            opcoes={[80, 150, 400].map((z) => ({ id: String(z), texto: `${z} m` }))}
++            valor={String(Math.round(zoom))}
++            aoMudar={(z) => setZoom(Number(z))}
++          />
++          <button type="button" className={clsx('chip')} aria-pressed={girar} onClick={() => setGirar(!girar)}>
++            Girar com o carro
++          </button>
++        </div>
++      </div>
++      <div
++        className="fantasma"
++        onWheel={(ev) => {
++          ev.preventDefault();
++          const z = useEstadoDaVolta.getState().zoom;
++          setZoom(Math.max(40, Math.min(1200, z * (ev.deltaY > 0 ? 1.15 : 1 / 1.15))));
++        }}
++      >
++        <canvas ref={principal} className="fantasma-principal" aria-label="Visão próxima da volta, com o fantasma da referência" />
++        <TituloDoFantasma grade={g} volta={volta} ref_={ref} curvas={curvas} referencia={referencia} />
++        <div className="fantasma-canto fantasma-relevo">
++          <canvas ref={relevo} aria-label="Relevo da pista" />
++          <span className="fantasma-rotulo">Relevo</span>
++          <span className="fantasma-leitura" ref={textoDoRelevo} />
++        </div>
++        <div className="fantasma-canto fantasma-mini">
++          <canvas ref={mini} aria-label="Pista inteira" />
++          <span className="fantasma-rotulo">Pista inteira</span>
++        </div>
++        <Hud grade={g} volta={volta} ref_={ref} curvas={curvas} referencia={referencia} />
++      </div>
++      <div className="legenda">
++        <span><i className="amostra" style={{ background: 'var(--freio)' }} />freio</span>
++        <span><i className="amostra" style={{ background: 'var(--acelerador)' }} />acelerador</span>
++        <span><i className="amostra" style={{ background: 'var(--parcial)' }} />acelerador parcial ou sem pedal</span>
++        <span><i className="ponto" style={{ border: '2px solid var(--fantasma)', width: 10, height: 10 }} />fantasma</span>
++      </div>
++      <Replay grade={g} volta={volta} ref_={ref} curvas={curvas} />
++      {children}
++    </section>
++  );
++};
++
++type PropsDaLeitura = { grade: Grade; volta: VoltaDoStore; ref_: VoltaDoStore; curvas: Curva[]; referencia?: 'ia' | 'melhor' };
++
++function TituloDoFantasma({ grade: g, volta, curvas, referencia }: PropsDaLeitura) {
++  const s = useEstadoDaVolta((e) => e.s) ?? 0;
++  const modo = useEstadoDaVolta((e) => e.modo);
++  const c = curvaEm(curvas, s);
++  return (
++    <div className="fantasma-titulo">
++      <b>Volta {numeroDaVolta(volta.lapId)} contra a {referencia === 'ia' ? 'volta da IA' : 'sua melhor'}</b>
++      <span>{modo === 'curva' ? 'fantasma por curva' : 'fantasma na volta inteira'} · {nf(s, 0)} m{c ? ` · ${c.codigo}` : ''}</span>
++      {void g}
++    </div>
++  );
++}
++
++function Hud({ grade: g, volta, ref_: ref, curvas, referencia }: PropsDaLeitura) {
++  const s = useEstadoDaVolta((e) => e.s) ?? 0;
++  const modo = useEstadoDaVolta((e) => e.modo);
++  const f = estadoDoFantasma(g, volta.linhas, ref.linhas, curvas, s, modo);
++  const pv = pedalEm(g, volta.linhas, f.s);
++  const pr = pedalEm(g, ref.linhas, f.sFantasma);
++  const cor = (p: Pedal) => `var(--${p === 'freio' ? 'freio' : p === 'acelerador' ? 'acelerador' : 'parcial'})`;
++  return (
++    <div className="fantasma-hud" aria-live="off">
++      <div className="hud-coluna">
++        <span className="hud-quem">Você · V{numeroDaVolta(volta.lapId)}</span>
++        <span className="hud-estado" style={{ color: cor(pv) }}>{NOME_DO_PEDAL[pv]}</span>
++        <span className="hud-velocidade">{nf(valorEm(g, volta.linhas.velocidade, f.s), 0)}</span>
++        <span className="hud-unidade">KM/H</span>
++        <span className="hud-tempo">{tempo(f.tempoVolta)}</span>
++      </div>
++      <div className="hud-coluna hud-centro">
++        <span className={clsx('hud-diferenca', f.diferenca > 0 ? 'cor-perda' : 'cor-ganho')}>{sg(f.diferenca, 3)} s</span>
++        <span className="hud-unidade">{modo === 'curva' ? `diferença nesta curva${f.curva ? ` (${f.curva})` : ''}` : 'diferença na volta'}</span>
++      </div>
++      <div className="hud-coluna">
++        <span className="hud-quem">{referencia === 'ia' ? 'Volta da IA' : 'Sua melhor'}</span>
++        <span className="hud-estado" style={{ color: cor(pr) }}>{NOME_DO_PEDAL[pr]}</span>
++        <span className="hud-velocidade">{nf(valorEm(g, ref.linhas.velocidade, f.sFantasma), 0)}</span>
++        <span className="hud-unidade">KM/H</span>
++        <span className="hud-tempo">{tempo(f.tempoFantasma)}</span>
++      </div>
++    </div>
++  );
++}
++
++/** Replay: tocar, velocidade, posição e a leitura no cursor. */
++function Replay({ grade: g, volta, ref_: ref, curvas }: PropsDaLeitura) {
++  const s = useEstadoDaVolta((e) => e.s);
++  const tocando = useEstadoDaVolta((e) => e.tocando);
++  const velocidade = useEstadoDaVolta((e) => e.velocidade);
++  const { setS, setTocando, setVelocidade } = useEstadoDaVolta.getState();
++
++  useEffect(() => {
++    if (!tocando) return undefined;
++    const atual = useEstadoDaVolta.getState().s;
++    let tVolta = tempoEm(g, volta.linhas, atual === null || atual >= g.comprimento - 2 ? 0 : atual);
++    if (atual === null || atual >= g.comprimento - 2) setS(0);
++    let anterior = performance.now();
++    let quadro = 0;
++    const passo = (agora: number) => {
++      tVolta += ((agora - anterior) / 1000) * useEstadoDaVolta.getState().velocidade;
++      anterior = agora;
++      if (tVolta >= volta.linhas.total) {
++        setS(g.comprimento);
++        setTocando(false);
++        return;
++      }
++      setS(sNoTempo(g, volta.linhas, tVolta));
++      quadro = requestAnimationFrame(passo);
++    };
++    quadro = requestAnimationFrame(passo);
++    return () => cancelAnimationFrame(quadro);
++  }, [tocando, g, volta, setS, setTocando]);
++
++  const sAtual = s ?? 0;
++  const tm = tempoEm(g, volta.linhas, sAtual);
++  const tr = tempoEm(g, ref.linhas, sAtual);
++  const c = curvaEm(curvas, sAtual);
++  return (
++    <div className="replay" aria-label="Replay">
++      <button type="button" className="replay-tocar" aria-label={tocando ? 'Pausar' : 'Reproduzir'} onClick={() => setTocando(!tocando)}>
++        {tocando ? (
++          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="4" height="12" fill="currentColor" /><rect x="9" y="2" width="4" height="12" fill="currentColor" /></svg>
++        ) : (
++          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2 L13 8 L4 14 Z" fill="currentColor" /></svg>
++        )}
++      </button>
++      <Segmentado
++        rotulo="Velocidade do replay"
++        opcoes={[0.5, 1, 2, 4].map((v) => ({ id: String(v), texto: `${nf(v, v % 1 ? 1 : 0)}×` }))}
++        valor={String(velocidade)}
++        aoMudar={(v) => setVelocidade(Number(v))}
++      />
++      <label className="replay-posicao">
++        Posição
++        <input
++          type="range"
++          min={0}
++          max={Math.round(g.comprimento)}
++          value={Math.round(sAtual)}
++          onChange={(ev) => {
++            setTocando(false);
++            setS(Number(ev.target.value));
++          }}
++        />
++      </label>
++      <div className="replay-leitura dado">
++        <span>{nf(sAtual, 0)} m · {c ? c.codigo : '—'}</span>
++        <span>{tempo(tm)} <span className="texto-fraco">(ref. {tempo(tr)})</span></span>
++        <span className={tm - tr > 0 ? 'cor-perda' : 'cor-ganho'}>{sg(tm - tr, 3)} s</span>
++        <span>{nf(valorEm(g, volta.linhas.velocidade, sAtual), 0)} km/h <span className="texto-fraco">(ref. {nf(valorEm(g, ref.linhas.velocidade, sAtual), 0)})</span></span>
++      </div>
++    </div>
++  );
++}
+diff --git a/frontend/src/volta/Graficos.tsx b/frontend/src/volta/Graficos.tsx
+new file mode 100644
+index 00000000..f49938ee
+--- /dev/null
++++ b/frontend/src/volta/Graficos.tsx
+@@ -0,0 +1,185 @@
++/**
++ * Gráficos por distância da tela Volta (pedido 30), como no protótipo A: eixo
++ * em metros, as 14 curvas como faixas, um cursor compartilhado com o mapa e o
++ * replay, a dica ao passar o mouse e o clique para escolher a curva.
++ */
++import React, { useEffect, useMemo, useRef, useState } from 'react';
++import { Dica } from '../components/ui/base';
++import { useEstadoDaVolta } from './estado';
++import { curvaEm, type Curva } from './medidas';
++import { nf } from './formato';
++
++const PL = 6;
++const PR = 52;
++
++export function useLargura<T extends HTMLElement>(): [React.RefObject<T>, number] {
++  const ref = useRef<T>(null);
++  const [largura, setLargura] = useState(0);
++  useEffect(() => {
++    const el = ref.current;
++    if (!el) return undefined;
++    setLargura(el.clientWidth);
++    const ro = new ResizeObserver((entradas) => setLargura(Math.round(entradas[0].contentRect.width)));
++    ro.observe(el);
++    return () => ro.disconnect();
++  }, []);
++  return [ref, largura];
++}
++
++export type Serie = { valores: ArrayLike<number>; cor: string; largura?: number; tracejado?: string; area?: boolean };
++
++type PropsDoGrafico = {
++  comprimento: number;
++  passo: number;
++  altura: number;
++  min: number;
++  max: number;
++  marcas: Array<{ v: number; rotulo: string; forte?: boolean }>;
++  series: Serie[];
++  curvas: Curva[];
++  rotulosDasCurvas?: boolean;
++  rotulo: string;
++  dica: (s: number) => string;
++};
++
++const xDe = (s: number, W: number, L: number) => PL + (s / L) * (W - PL - PR);
++
++/** Faixas das curvas (alternadas) e a curva escolhida. */
++function Faixas({ curvas, W, H, L, rotulos }: { curvas: Curva[]; W: number; H: number; L: number; rotulos: boolean }) {
++  const escolhida = useEstadoDaVolta((e) => e.curva);
++  return (
++    <g>
++      {curvas.map((c, k) => {
++        const [a, b] = c.trecho;
++        const partes = b >= a ? [[a, b]] : [[a, L], [0, b]];
++        const cor = escolhida === c.codigo ? 'var(--faixa-selecionada)' : k % 2 ? 'var(--faixa-curva)' : 'transparent';
++        const meio = b >= a ? (a + b) / 2 : b / 2;
++        return (
++          <g key={c.codigo}>
++            {partes.map(([p0, p1]) => (
++              <rect key={p0} x={xDe(p0, W, L)} y={0} width={Math.max(0, xDe(p1, W, L) - xDe(p0, W, L))} height={H} style={{ fill: cor }} />
++            ))}
++            {rotulos && W > 520 && (
++              <text x={xDe(meio, W, L)} y={11} textAnchor="middle" className="grafico-texto">
++                {c.codigo}
++              </text>
++            )}
++          </g>
++        );
++      })}
++    </g>
++  );
++}
++
++function LinhaDoCursor({ W, H, L }: { W: number; H: number; L: number }) {
++  const s = useEstadoDaVolta((e) => e.s);
++  if (s === null) return null;
++  const x = xDe(s, W, L);
++  return <line x1={x} x2={x} y1={0} y2={H} style={{ stroke: 'var(--texto-1)', strokeWidth: 1 }} />;
++}
++
++export const GraficoPorDistancia: React.FC<PropsDoGrafico> = ({
++  comprimento: L, passo, altura: H, min, max, marcas, series, curvas, rotulosDasCurvas = false, rotulo, dica,
++}) => {
++  const [caixa, W0] = useLargura<HTMLDivElement>();
++  const W = Math.max(280, W0);
++  const topo = rotulosDasCurvas ? 16 : 4;
++  const y = (v: number) => topo + ((max - v) / (max - min)) * (H - topo - 4);
++  const [dicaEm, setDicaEm] = useState<{ x: number; y: number; texto: string } | null>(null);
++  const { setS, escolherCurva } = useEstadoDaVolta.getState();
++
++  const caminhos = useMemo(
++    () =>
++      series.map((sr) => {
++        let d = '';
++        for (let i = 0; i < sr.valores.length; i += 1) {
++          const v = Number(sr.valores[i]);
++          if (!Number.isFinite(v)) continue;
++          d += `${d ? 'L' : 'M'}${xDe(i * passo, W, L).toFixed(1)} ${y(v).toFixed(1)}`;
++        }
++        return d;
++      }),
++    // eslint-disable-next-line react-hooks/exhaustive-deps
++    [series, W, L, passo, min, max, H],
++  );
++
++  const sDoEvento = (ev: React.MouseEvent<SVGRectElement>) => {
++    const r = (ev.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
++    return Math.max(0, Math.min(L, ((ev.clientX - r.left - PL) / (W - PL - PR)) * L));
++  };
++
++  return (
++    <div ref={caixa} style={{ width: '100%' }}>
++      {W0 > 0 && (
++        <svg width={W} height={H} role="img" aria-label={rotulo} style={{ display: 'block' }}>
++          <Faixas curvas={curvas} W={W} H={H} L={L} rotulos={rotulosDasCurvas} />
++          {marcas.map((m) => (
++            <g key={m.v}>
++              <line x1={PL} x2={W - PR} y1={y(m.v)} y2={y(m.v)} style={{ stroke: 'var(--linha)', strokeWidth: m.forte ? 1.2 : 0.6 }} />
++              <text x={W - 4} y={y(m.v) + 3} textAnchor="end" className="grafico-texto">
++                {m.rotulo}
++              </text>
++            </g>
++          ))}
++          {series.map((sr, k) =>
++            sr.area ? (
++              <path
++                key={`a${k}`}
++                d={`${caminhos[k]}L${W - PR} ${y(0).toFixed(1)}L${PL} ${y(0).toFixed(1)}Z`}
++                style={{ fill: sr.cor, fillOpacity: 0.12, stroke: 'none' }}
++              />
++            ) : null,
++          )}
++          {series.map((sr, k) => (
++            <path
++              key={k}
++              d={caminhos[k]}
++              style={{ fill: 'none', stroke: sr.cor, strokeWidth: sr.largura ?? 1.6, strokeDasharray: sr.tracejado, strokeLinejoin: 'round' }}
++            />
++          ))}
++          <LinhaDoCursor W={W} H={H} L={L} />
++          <rect
++            x={PL}
++            y={0}
++            width={W - PL - PR}
++            height={H}
++            style={{ fill: 'transparent', cursor: 'crosshair' }}
++            onMouseMove={(ev) => {
++              const s = sDoEvento(ev);
++              setS(s);
++              setDicaEm({ x: ev.clientX, y: ev.clientY, texto: dica(s) });
++            }}
++            onMouseLeave={() => {
++              setDicaEm(null);
++              if (!useEstadoDaVolta.getState().tocando) setS(null);
++            }}
++            onClick={(ev) => {
++              const c = curvaEm(curvas, sDoEvento(ev));
++              if (c) escolherCurva(c.codigo);
++            }}
++          />
++        </svg>
++      )}
++      {dicaEm && <Dica x={dicaEm.x} y={dicaEm.y}>{dicaEm.texto}</Dica>}
++    </div>
++  );
++};
++
++/** O eixo de distância, em metros, alinhado com os gráficos. */
++export const EixoDeDistancia: React.FC<{ comprimento: number }> = ({ comprimento: L }) => {
++  const [caixa, W0] = useLargura<HTMLDivElement>();
++  const W = Math.max(280, W0);
++  return (
++    <div ref={caixa} style={{ width: '100%' }}>
++      {W0 > 0 && (
++        <svg width={W} height={16} aria-hidden="true" style={{ display: 'block' }}>
++          {[0, 1000, 2000, 3000, 4000].filter((m) => m <= L).map((m) => (
++            <text key={m} x={xDe(m, W, L)} y={12} textAnchor={m ? 'middle' : 'start'} className="grafico-texto">
++              {nf(m, 0)} m
++            </text>
++          ))}
++        </svg>
++      )}
++    </div>
++  );
++};
+diff --git a/frontend/src/volta/MapaMicrossetores.tsx b/frontend/src/volta/MapaMicrossetores.tsx
+new file mode 100644
+index 00000000..68841ef3
+--- /dev/null
++++ b/frontend/src/volta/MapaMicrossetores.tsx
+@@ -0,0 +1,139 @@
++/**
++ * Mapa dos 60 microssetores da tela Volta (pedido 30), como no protótipo A:
++ * a linha central da geometria oficial, cada microssetor colorido pela
++ * diferença para a referência, o nome das 14 curvas (clique para escolher) e o
++ * ponto do cursor.
++ */
++import React, { useMemo, useState } from 'react';
++import { Dica } from '../components/ui/base';
++import { useEstadoDaVolta } from './estado';
++import type { Geometria } from './dados';
++import { calor } from './cores';
++import { interp, type Curva } from './medidas';
++import { nf, sg } from './formato';
++import { base, rotuloDaCurva, type Ponto } from './projecao';
++import type { FraseDaVolta } from './RadioDaVolta';
++
++const W = 640;
++const H = 420;
++const MARGEM = 34;
++
++type Props = { geometria: Geometria; curvas: Curva[]; microssetores: number[]; frases?: FraseDaVolta[] | null };
++
++/** O ponto do cursor: só ele acompanha o replay. */
++function PontoDoCursor({ S, X, Y }: { S: number[]; X: number[]; Y: number[] }) {
++  const s = useEstadoDaVolta((e) => e.s);
++  if (s === null) return null;
++  return <circle cx={interp(s, S, X)} cy={interp(s, S, Y)} r={6} style={{ fill: 'var(--voce)', stroke: 'var(--superficie)', strokeWidth: 2 }} />;
++}
++
++export const MapaMicrossetores: React.FC<Props> = ({ geometria, curvas, microssetores, frases }) => {
++  const curvaEscolhida = useEstadoDaVolta((e) => e.curva);
++  const escolherCurva = useEstadoDaVolta((e) => e.escolherCurva);
++  const [dica, setDica] = useState<{ x: number; y: number; texto: string } | null>(null);
++  const L = geometria.comprimentoM;
++
++  const proj = useMemo(() => {
++    const pts = geometria.x.map((x, i) => base(x, geometria.z[i]));
++    const xs = pts.map((p) => p[0]);
++    const ys = pts.map((p) => p[1]);
++    const minX = Math.min(...xs);
++    const maxX = Math.max(...xs);
++    const minY = Math.min(...ys);
++    const maxY = Math.max(...ys);
++    const k = Math.min((W - 2 * MARGEM) / (maxX - minX), (H - 2 * MARGEM) / (maxY - minY));
++    const ox = (W - k * (maxX - minX)) / 2 - k * minX;
++    const oy = (H - k * (maxY - minY)) / 2 - k * minY;
++    const tela = (p: Ponto): Ponto => [ox + k * p[0], oy + k * p[1]];
++    const X = pts.map((p) => tela(p)[0]);
++    const Y = pts.map((p) => tela(p)[1]);
++    const S = geometria.x.map((_, i) => i * geometria.passoM);
++    // Fecha o laço na linha.
++    X.push(X[0]);
++    Y.push(Y[0]);
++    S.push(L);
++    return { X, Y, S, tela };
++  }, [geometria, L]);
++
++  const trecho = (a: number, b: number) => {
++    const pts: Ponto[] = [];
++    const add = (s0: number, s1: number) => {
++      pts.push([interp(s0, proj.S, proj.X), interp(s0, proj.S, proj.Y)]);
++      for (let i = 0; i < proj.S.length; i += 1) if (proj.S[i] > s0 && proj.S[i] < s1) pts.push([proj.X[i], proj.Y[i]]);
++      pts.push([interp(s1, proj.S, proj.X), interp(s1, proj.S, proj.Y)]);
++    };
++    if (b >= a) add(a, b);
++    else {
++      add(a, L);
++      add(0, b);
++    }
++    return pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join('');
++  };
++
++  const pista = useMemo(() => proj.X.map((x, i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${proj.Y[i].toFixed(1)}`).join('') + 'Z', [proj]);
++  const bordas = geometria.bordasDosMicrossetores;
++  const caminhosMs = useMemo(() => bordas.slice(0, -1).map((a, k) => trecho(a, bordas[k + 1])), [bordas, proj]); // eslint-disable-line react-hooks/exhaustive-deps
++  const escolhida = curvas.find((c) => c.codigo === curvaEscolhida) || null;
++  const rotulos = useMemo(
++    () => curvas.map((c) => ({ c, p: proj.tela(rotuloDaCurva(geometria, c.apice, c.lado, 24)) })),
++    [curvas, geometria, proj],
++  );
++
++  return (
++    <div style={{ position: 'relative' }}>
++      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Mapa de Interlagos colorido pela diferença em cada um dos 60 microssetores" style={{ width: '100%', height: 'auto', display: 'block' }}>
++        <path d={pista} style={{ fill: 'none', stroke: 'var(--pista-desenho)', strokeWidth: 16, strokeLinejoin: 'round' }} />
++        {escolhida && (
++          <path d={trecho(escolhida.trecho[0], escolhida.trecho[1])} style={{ fill: 'none', stroke: 'var(--texto-1)', strokeWidth: 15, strokeLinecap: 'round', strokeOpacity: 0.5 }} />
++        )}
++        {caminhosMs.map((d, k) => (
++          <path
++            key={k}
++            d={d}
++            style={{ fill: 'none', stroke: calor(microssetores[k]), strokeWidth: 8 }}
++            onMouseMove={(ev) => setDica({ x: ev.clientX, y: ev.clientY, texto: `Microssetor ${k + 1} (${nf(bordas[k], 0)}–${nf(bordas[k + 1], 0)} m): ${sg(microssetores[k], 3)} s` })}
++            onMouseLeave={() => setDica(null)}
++          />
++        ))}
++        <rect x={proj.X[0] - 2} y={proj.Y[0] - 9} width={4} height={18} style={{ fill: 'var(--texto-1)' }} />
++        {rotulos.map(({ c, p }) => (
++          <text
++            key={c.codigo}
++            x={p[0]}
++            y={p[1] + 4}
++            textAnchor="middle"
++            className="grafico-rotulo-curva"
++            role="button"
++            tabIndex={0}
++            aria-label={`Escolher a curva ${c.codigo}`}
++            aria-pressed={curvaEscolhida === c.codigo}
++            onClick={() => escolherCurva(c.codigo)}
++            onKeyDown={(ev) => {
++              if (ev.key === 'Enter' || ev.key === ' ') {
++                ev.preventDefault();
++                escolherCurva(c.codigo);
++              }
++            }}
++          >
++            {c.codigo}
++          </text>
++        ))}
++        {(frases ?? []).map((f) => {
++          const x = interp(f.s, proj.S, proj.X);
++          const y = interp(f.s, proj.S, proj.Y);
++          return (
++            <path
++              key={f.mensagem.id}
++              d={`M${x.toFixed(1)} ${(y - 6).toFixed(1)}L${(x + 6).toFixed(1)} ${y.toFixed(1)}L${x.toFixed(1)} ${(y + 6).toFixed(1)}L${(x - 6).toFixed(1)} ${y.toFixed(1)}Z`}
++              style={{ fill: 'var(--superficie)', stroke: 'var(--texto-1)', strokeWidth: 1.6 }}
++              onMouseMove={(ev) => setDica({ x: ev.clientX, y: ev.clientY, texto: `Rádio em ${nf(f.s, 0)} m: ${f.mensagem.frase}` })}
++              onMouseLeave={() => setDica(null)}
++            />
++          );
++        })}
++        <PontoDoCursor S={proj.S} X={proj.X} Y={proj.Y} />
++      </svg>
++      {dica && <Dica x={dica.x} y={dica.y}>{dica.texto}</Dica>}
++    </div>
++  );
++};
+diff --git a/frontend/src/volta/RadioDaVolta.tsx b/frontend/src/volta/RadioDaVolta.tsx
+new file mode 100644
+index 00000000..28163389
+--- /dev/null
++++ b/frontend/src/volta/RadioDaVolta.tsx
+@@ -0,0 +1,68 @@
++/**
++ * As frases do coach nesta volta (inventário, seção 6: "as frases ficam no
++ * replay da Volta, marcadas no mapa").
++ *
++ * Vêm da rota que já existe, `/api/analysis/coach/lap/{replayLapId}`: o mesmo
++ * coach, percorrido no servidor sobre a volta gravada. Cada evento traz o `s`
++ * onde a frase sai, já na geometria oficial (o coach projeta nela desde o
++ * ADR 0013). A frase é montada em português por `utils/radio.ts`, com os mesmos
++ * números do evento. Clicar numa frase leva o cursor até o ponto dela; durante
++ * o replay, a última frase já dita fica destacada.
++ */
++import React from 'react';
++import { mensagemDoEvento, type EventoCoach, type MensagemRadio } from '../utils/radio';
++import { useEstadoDaVolta } from './estado';
++import { curvaEm, type Curva } from './medidas';
++import { nf } from './formato';
++
++export type FraseDaVolta = { s: number; mensagem: MensagemRadio };
++
++/** Os eventos da rota com `s` válido, na ordem da volta. */
++export function frasesDosEventos(eventos: unknown, comprimento: number): FraseDaVolta[] {
++  if (!Array.isArray(eventos)) return [];
++  return eventos
++    .map((e: EventoCoach & { s?: unknown }, i) => ({ s: Number(e?.s), mensagem: mensagemDoEvento(e, i) }))
++    .filter((f) => Number.isFinite(f.s) && f.s >= 0 && f.s <= comprimento + 1)
++    .sort((a, b) => a.s - b.s);
++}
++
++export const RadioDaVolta: React.FC<{ frases: FraseDaVolta[] | null; curvas: Curva[]; erro: string | null }> = ({ frases, curvas, erro }) => {
++  const s = useEstadoDaVolta((e) => e.s);
++  const { setS, setTocando } = useEstadoDaVolta.getState();
++  const ultima = s === null || !frases ? -1 : frases.reduce((k, f, i) => (f.s <= s ? i : k), -1);
++  return (
++    <div className="radio-da-volta" aria-label="Rádio nesta volta">
++      <span className="rotulo">Rádio nesta volta</span>
++      {erro ? (
++        <p className="texto-fraco" style={{ margin: 0 }}>Sem dados: {erro}</p>
++      ) : frases === null ? (
++        <p className="texto-fraco" style={{ margin: 0 }}>Lendo as frases do coach…</p>
++      ) : frases.length === 0 ? (
++        <p className="texto-fraco" style={{ margin: 0 }}>O coach não falou durante esta volta.</p>
++      ) : (
++        <ol className="radio-lista">
++          {frases.map((f, i) => {
++            const c = curvaEm(curvas, f.s);
++            return (
++              <li key={f.mensagem.id}>
++                <button
++                  type="button"
++                  className="radio-frase"
++                  aria-current={i === ultima ? 'true' : undefined}
++                  onClick={() => {
++                    setTocando(false);
++                    setS(f.s);
++                  }}
++                >
++                  <span className="dado texto-fraco">{nf(f.s, 0)} m{c ? ` · ${c.codigo}` : ''}</span>
++                  <span>{f.mensagem.frase}</span>
++                  {f.mensagem.detalhe && <span className="texto-fraco">{f.mensagem.detalhe}</span>}
++                </button>
++              </li>
++            );
++          })}
++        </ol>
++      )}
++    </div>
++  );
++};
+diff --git a/frontend/src/volta/TabelaDasCurvas.tsx b/frontend/src/volta/TabelaDasCurvas.tsx
+new file mode 100644
+index 00000000..1b30339e
+--- /dev/null
++++ b/frontend/src/volta/TabelaDasCurvas.tsx
+@@ -0,0 +1,89 @@
++/**
++ * As 14 curvas da volta contra a referência (pedido 30), como no protótipo A.
++ * Os números são os do método do relatório de evolução (`medidas.ts`); a
++ * coluna "Mediana da sessão" só aparece contra a volta da IA, que é a
++ * referência do relatório.
++ */
++import React from 'react';
++import { useEstadoDaVolta } from './estado';
++import type { MedidaDaCurva } from './medidas';
++import { nf, sg, textoDaFreada, textoDaLateral, textoDaMinima } from './formato';
++
++type Props = {
++  medidas: MedidaDaCurva[];
++  /** Mediana da perda para a IA na sessão, por curva; `null` sem a coluna. */
++  medianas: Array<number | null> | null;
++  diferencaDaVolta: number;
++  referencia: 'ia' | 'melhor';
++};
++
++export const TabelaDasCurvas: React.FC<Props> = ({ medidas, medianas, diferencaDaVolta, referencia }) => {
++  const escolhida = useEstadoDaVolta((e) => e.curva);
++  const escolher = useEstadoDaVolta((e) => e.escolherCurva);
++  const maior = Math.max(...medidas.map((m) => Math.abs(m.perdaS))) || 1;
++  const comMediana = Boolean(medianas);
++  return (
++    <div className="superficie tabela-caixa">
++      <table className="tabela tabela--compacta tabela--curvas">
++        <thead>
++          <tr>
++            <th scope="col">Curva</th>
++            <th scope="col" style={{ minWidth: 150 }}>Perda (s)</th>
++            {comMediana && <th scope="col" className="num">Mediana da sessão</th>}
++            <th scope="col">Início da freada</th>
++            <th scope="col" className="num">Velocidade mínima</th>
++            <th scope="col">Posição no ápice</th>
++          </tr>
++        </thead>
++        <tbody>
++          {medidas.map((m, i) => {
++            const ganho = m.perdaS < 0;
++            const largura = Math.max(2, Math.round((Math.abs(m.perdaS) / maior) * 100));
++            return (
++              <tr
++                key={m.codigo}
++                className="escolhivel"
++                aria-selected={escolhida === m.codigo}
++                tabIndex={0}
++                onClick={() => escolher(m.codigo)}
++                onKeyDown={(ev) => {
++                  if (ev.key === 'Enter' || ev.key === ' ') {
++                    ev.preventDefault();
++                    escolher(m.codigo);
++                  }
++                }}
++              >
++                <th scope="row" className="dado" style={{ fontWeight: 500, whiteSpace: 'nowrap' }}>
++                  {m.codigo} · {m.lado}
++                </th>
++                <td>
++                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
++                    <span className={`dado ${ganho ? 'cor-ganho' : 'cor-perda'}`} style={{ width: 62, textAlign: 'right' }}>
++                      {sg(m.perdaS, 3)}
++                    </span>
++                    <span className="barra-perda">
++                      <i style={{ width: `${largura}%`, background: ganho ? 'var(--ganho)' : 'var(--perda)' }} />
++                    </span>
++                  </div>
++                </td>
++                {comMediana && (
++                  <td className="num texto-apoio">{medianas?.[i] === null || medianas?.[i] === undefined ? '—' : nf(medianas[i] as number, 3)}</td>
++                )}
++                <td>{textoDaFreada(m.freadaM, m.refFreia, false, referencia)}</td>
++                <td className="num">{Number.isFinite(m.minimaKmh) ? textoDaMinima(m.minimaKmh, false) : '—'}</td>
++                <td>{Number.isFinite(m.lateralApiceM) ? textoDaLateral(m.lateralApiceM) : '—'}</td>
++              </tr>
++            );
++          })}
++        </tbody>
++        <tfoot>
++          <tr>
++            <th scope="row" className="texto-fraco" style={{ fontWeight: 500 }}>Soma</th>
++            <td className={`dado ${diferencaDaVolta < 0 ? 'cor-ganho' : 'cor-perda'}`}>{sg(diferencaDaVolta, 3)} s</td>
++            <td colSpan={comMediana ? 4 : 3} className="texto-fraco">as 14 curvas cobrem a volta inteira</td>
++          </tr>
++        </tfoot>
++      </table>
++    </div>
++  );
++};
+diff --git a/frontend/src/volta/cores.ts b/frontend/src/volta/cores.ts
+new file mode 100644
+index 00000000..094f6f69
+--- /dev/null
++++ b/frontend/src/volta/cores.ts
+@@ -0,0 +1,45 @@
++/** Cores do canvas e dos mapas da tela Volta, lidas das variáveis do tema (tokens.css). */
++
++const lidas = new Map<string, string>();
++
++export function token(nome: string, padrao: string): string {
++  if (typeof window === 'undefined') return padrao;
++  const guardada = lidas.get(nome);
++  if (guardada) return guardada;
++  const v = getComputedStyle(document.documentElement).getPropertyValue(nome).trim() || padrao;
++  lidas.set(nome, v);
++  return v;
++}
++
++function rgb(cor: string): [number, number, number] {
++  const c = cor.trim();
++  if (c.startsWith('#')) {
++    const h = c.length === 4 ? c.slice(1).split('').map((x) => x + x).join('') : c.slice(1, 7);
++    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
++  }
++  const m = /rgba?\(([^)]+)\)/.exec(c);
++  if (m) {
++    const [r, g, b] = m[1].split(',').map((x) => parseFloat(x));
++    return [r, g, b];
++  }
++  return [128, 128, 128];
++}
++
++export function misturar(a: string, b: string, t: number): string {
++  const A = rgb(a);
++  const B = rgb(b);
++  return `rgb(${A.map((x, i) => Math.round(x + (B[i] - x) * t)).join(',')})`;
++}
++
++/** A escala do protótipo: ganho em azul; perda do marrom ao laranja, saturando em 0,45 s. */
++export function calor(v: number): string {
++  if (!Number.isFinite(v)) return token('--pista-desenho', '#2a2f36');
++  if (v < 0) return token('--ganho', '#6f9bff');
++  return misturar(token('--perda-fraca', '#4a3322'), token('--perda', '#ffa24a'), Math.min(v / 0.45, 1));
++}
++
++export const CORES_DO_PEDAL = {
++  freio: () => token('--freio', '#ff5a5f'),
++  acelerador: () => token('--acelerador', '#3ddc84'),
++  parcial: () => token('--parcial', '#f5c542'),
++};
+diff --git a/frontend/src/volta/dados.test.ts b/frontend/src/volta/dados.test.ts
+new file mode 100644
+index 00000000..4ce6e59b
+--- /dev/null
++++ b/frontend/src/volta/dados.test.ts
+@@ -0,0 +1,17 @@
++import { describe, expect, it } from 'vitest';
++import { textoDoErro } from './dados';
++
++describe('textoDoErro', () => {
++  it('diz que o backend não respondeu quando não há resposta', () => {
++    expect(textoDoErro({ isAxiosError: true, message: 'Network Error' })).toBe('o backend não respondeu; tentando de novo');
++  });
++  it('usa a frase do backend quando ele manda uma', () => {
++    expect(textoDoErro({ isAxiosError: true, response: { status: 404, data: { detail: 'volta não encontrada no store' } } })).toBe('volta não encontrada no store');
++  });
++  it('diz o código quando o backend não manda frase', () => {
++    expect(textoDoErro({ isAxiosError: true, response: { status: 500, data: {} } })).toBe('o backend respondeu 500');
++  });
++  it('mantém a mensagem dos outros erros', () => {
++    expect(textoDoErro(new Error('sem dados'))).toBe('sem dados');
++  });
++});
+diff --git a/frontend/src/volta/dados.ts b/frontend/src/volta/dados.ts
+new file mode 100644
+index 00000000..db2914bd
+--- /dev/null
++++ b/frontend/src/volta/dados.ts
+@@ -0,0 +1,211 @@
++/**
++ * Os dados das telas Sessões, Volta e Evolução (pedido 30), todos das rotas do
++ * app; nada do JSON embutido no protótipo. Cada leitura fica guardada enquanto
++ * o app está aberto: os arquivos só mudam quando o `atualizar_coach` roda.
++ */
++import { useEffect, useState } from 'react';
++import { api } from '../api/client';
++import type { Grade, Linhas } from './medidas';
++
++export type SessaoDoResumo = {
++  sessao: string;
++  voltas: number;
++  melhor_s: number;
++  mediana_s: number;
++  desvio_s: number | null;
++  mediana_menos_ia_s: number;
++  melhor_menos_ia_s: number;
++  poucos_dados: boolean;
++  curvas_com_diferenca_consistente: string[];
++};
++
++export type Resumo = {
++  sessoes: SessaoDoResumo[];
++  tendencia_mediana_s_por_sessao: number | null;
++  criterio_adr_0015: {
++    limite_s: number;
++    sessoes_necessarias: number;
++    sessoes_disponiveis: number;
++    amplitude_s: number | null;
++    estabilizou: boolean | null;
++    situacao: string;
++  };
++  referencia: { tipo: string; volta: string; tempo_s: number };
++};
++
++export type CurvaDaSessao = {
++  curva: string;
++  trecho_m: number[];
++  curva_m: number[];
++  apice_m: number;
++  perda_para_ia_s: { mediana: number } | null;
++  situacao: string;
++  intervalo_90_s: [number, number] | null;
++};
++
++export type TecnicaDaCurva = {
++  curva: string;
++  uso_da_aderencia: { mediana: number | null; ia_g: number | null } | null;
++  freio_e_volante_juntos: { mediana: number | null; ia_m: number | null } | null;
++  freada_emendada: { voltas_emendadas: number; voltas_com_frenagem: number; ia: string | null } | null;
++};
++
++export type Sessao = {
++  sessao: string;
++  gravacoes: string[];
++  voltas: Array<{ volta: string; gravacao: string; tempo_s: number }>;
++  curvas: CurvaDaSessao[];
++  tecnica?: { curvas: TecnicaDaCurva[] };
++  resumo: { voltas: number; melhor_s: number; mediana_s: number; volta_da_ia_s: number };
++};
++
++export type Referencias = {
++  volta_ia?: { volta: string; tempoS: number };
++  minha_melhor?: { volta: string; tempoS: number };
++};
++
++export type Geometria = {
++  geometryId: string;
++  comprimentoM: number;
++  passoM: number;
++  x: number[];
++  z: number[];
++  normalX: number[];
++  normalZ: number[];
++  bordasDosMicrossetores: number[];
++  elevacaoM: number[] | null;
++  larguraEsquerdaM: number[] | null;
++  larguraDireitaM: number[] | null;
++};
++
++export type VoltaDoStore = {
++  lapId: string;
++  gravacao: string;
++  tempoS: number;
++  replayLapId: string | null;
++  geometryId: string;
++  pontosDaGrade: number;
++  comprimentoM: number;
++  passoM: number;
++  linhas: Linhas;
++};
++
++export type Carga<T> = { dado: T | null; erro: string | null; carregando: boolean };
++
++const guardados = new Map<string, Promise<any>>();
++
++function lerUmaVez<T>(chave: string, ler: () => Promise<T>): Promise<T> {
++  let p = guardados.get(chave);
++  if (!p) {
++    p = ler().catch((e) => {
++      guardados.delete(chave);
++      throw e;
++    });
++    guardados.set(chave, p);
++  }
++  return p;
++}
++
++/** Esquece as leituras guardadas (depois de um `atualizar_coach`, por exemplo). */
++export function esquecerLeituras(): void {
++  guardados.clear();
++}
++
++async function exigir<T>(promessa: Promise<any>, campo: string): Promise<T> {
++  const r = await promessa;
++  if (!r || r.disponivel === false) throw new Error(r?.motivo || 'sem dados');
++  return (campo ? r[campo] : r) as T;
++}
++
++export const lerResumo = () => lerUmaVez('resumo', () => exigir<Resumo>(api.getEvolucaoResumo(), 'resumo'));
++export const lerSessao = (sessao: string) => lerUmaVez(`sessao:${sessao}`, () => exigir<Sessao>(api.getEvolucaoSessao(sessao), 'sessao'));
++export const lerReferencias = () => lerUmaVez('referencias', () => exigir<Referencias>(api.getCoachReferencias(), 'referencias'));
++export const lerGeometria = () => lerUmaVez('geometria', () => exigir<Geometria>(api.getGeometriaOficial(), ''));
++export const lerCamadasDaPista = () => lerUmaVez('camadas', async () => {
++  const r = await api.getTrackGeometry();
++  if (!r?.activeTrackReady || !r?.track) throw new Error('o backend ainda não tem a pista do cache pronta');
++  return r.track;
++});
++export const lerVolta = (lapId: string) => lerUmaVez(`volta:${lapId}`, async (): Promise<VoltaDoStore> => {
++  const v = await exigir<any>(api.getStoreVolta(lapId), '');
++  return {
++    lapId: v.lapId,
++    gravacao: v.gravacao,
++    tempoS: v.tempoS,
++    replayLapId: v.replayLapId ?? null,
++    geometryId: v.geometryId,
++    pontosDaGrade: v.pontosDaGrade,
++    comprimentoM: v.comprimentoM,
++    passoM: v.passoM,
++    linhas: {
++      elapsed: v.elapsedS,
++      total: v.tempoS,
++      velocidade: v.velocidadeKmh,
++      acelerador: v.acelerador,
++      freio: v.freio,
++      lateral: v.lateralM,
++    },
++  };
++});
++
++export function gradeDaVolta(v: VoltaDoStore): Grade {
++  return { n: v.pontosDaGrade, comprimento: v.comprimentoM, passo: v.passoM };
++}
++
++/** O backend não respondeu (ainda subindo, ou caiu): vale tentar de novo. */
++function semResposta(e: any): boolean {
++  return Boolean(e?.isAxiosError && !e?.response);
++}
++
++/** O erro em português: a frase do backend quando ele manda uma (`detail`), senão o motivo. */
++export function textoDoErro(e: any): string {
++  if (semResposta(e)) return 'o backend não respondeu; tentando de novo';
++  const detalhe = e?.response?.data?.detail;
++  if (typeof detalhe === 'string' && detalhe) return detalhe;
++  if (e?.response?.status) return `o backend respondeu ${e.response.status}`;
++  return e instanceof Error ? e.message : String(e);
++}
++
++const ESPERA_PARA_TENTAR_DE_NOVO_MS = 3000;
++
++/**
++ * Uma leitura com o estado de carga; `null` na chave não lê nada. Sem resposta
++ * do backend (o app abre antes de ele terminar de subir), tenta de novo a cada
++ * 3 s, em vez de ficar parada no erro.
++ */
++export function useLeitura<T>(chave: string | null, ler: () => Promise<T>): Carga<T> {
++  const [estado, setEstado] = useState<Carga<T>>({ dado: null, erro: null, carregando: Boolean(chave) });
++  const [tentativa, setTentativa] = useState(0);
++  useEffect(() => {
++    if (!chave) {
++      setEstado({ dado: null, erro: null, carregando: false });
++      return undefined;
++    }
++    let cancelado = false;
++    let timer: number | undefined;
++    setEstado((e) => ({ dado: e.dado, erro: null, carregando: true }));
++    ler()
++      .then((dado) => !cancelado && setEstado({ dado, erro: null, carregando: false }))
++      .catch((e) => {
++        if (cancelado) return;
++        setEstado({ dado: null, erro: textoDoErro(e), carregando: false });
++        if (semResposta(e)) timer = window.setTimeout(() => setTentativa((t) => t + 1), ESPERA_PARA_TENTAR_DE_NOVO_MS);
++      });
++    return () => {
++      cancelado = true;
++      window.clearTimeout(timer);
++    };
++    // `ler` muda a cada render; a chave (e a nova tentativa) diz quando ler de novo.
++    // eslint-disable-next-line react-hooks/exhaustive-deps
++  }, [chave, tentativa]);
++  return estado;
++}
++
++/** Todas as sessões do relatório, cada uma com o seu JSON. */
++export function useSessoesDoRelatorio(): Carga<{ resumo: Resumo; sessoes: Sessao[] }> {
++  return useLeitura('todas-as-sessoes', async () => {
++    const resumo = await lerResumo();
++    const sessoes = await Promise.all(resumo.sessoes.map((s) => lerSessao(s.sessao)));
++    return { resumo, sessoes };
++  });
++}
+diff --git a/frontend/src/volta/estado.ts b/frontend/src/volta/estado.ts
+new file mode 100644
+index 00000000..9834ae32
+--- /dev/null
++++ b/frontend/src/volta/estado.ts
+@@ -0,0 +1,43 @@
++/**
++ * O estado compartilhado da tela Volta: o cursor (onde a volta está, em
++ * metros), o replay e as escolhas da visão com fantasma. O canvas e os
++ * gráficos assinam só o que usam, para o replay não refazer a tela inteira a
++ * cada quadro.
++ */
++import { create } from 'zustand';
++import type { ModoDoFantasma } from './medidas';
++
++type EstadoDaVolta = {
++  /** Cursor em metros; `null` sem cursor. */
++  s: number | null;
++  tocando: boolean;
++  velocidade: number;
++  modo: ModoDoFantasma;
++  zoom: number;
++  girar: boolean;
++  curva: string | null;
++  setS: (s: number | null) => void;
++  setTocando: (t: boolean) => void;
++  setVelocidade: (v: number) => void;
++  setModo: (m: ModoDoFantasma) => void;
++  setZoom: (z: number) => void;
++  setGirar: (g: boolean) => void;
++  escolherCurva: (c: string | null) => void;
++};
++
++export const useEstadoDaVolta = create<EstadoDaVolta>((set, get) => ({
++  s: null,
++  tocando: false,
++  velocidade: 1,
++  modo: 'curva',
++  zoom: 150,
++  girar: true,
++  curva: null,
++  setS: (s) => set({ s }),
++  setTocando: (tocando) => set({ tocando }),
++  setVelocidade: (velocidade) => set({ velocidade }),
++  setModo: (modo) => set({ modo }),
++  setZoom: (zoom) => set({ zoom }),
++  setGirar: (girar) => set({ girar }),
++  escolherCurva: (c) => set({ curva: get().curva === c ? null : c }),
++}));
+diff --git a/frontend/src/volta/formato.ts b/frontend/src/volta/formato.ts
+new file mode 100644
+index 00000000..37012965
+--- /dev/null
++++ b/frontend/src/volta/formato.ts
+@@ -0,0 +1,52 @@
++/** Nomes e números das telas Sessões, Volta e Evolução (pedido 30), como no protótipo A. */
++
++/** `2026-10-05-2` → `05/10 (2)`. */
++export function nomeDaSessao(id: string): string {
++  const p = String(id).split('-');
++  if (p.length < 3) return id;
++  return `${p[2]}/${p[1]}${p[3] ? ` (${p[3]})` : ''}`;
++}
++
++/** `…#0008` → 8. */
++export function numeroDaVolta(lapId: string): number {
++  return parseInt(String(lapId).split('#')[1] || '0', 10);
++}
++
++/** Número com vírgula e `casas` casas fixas. */
++export function nf(v: number, casas: number): string {
++  return Number(v).toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
++}
++
++/** Com sinal: +0,214 / −0,098 / 0,000. */
++export function sg(v: number, casas: number): string {
++  return `${v > 0 ? '+' : v < 0 ? '−' : ''}${nf(Math.abs(v), casas)}`;
++}
++
++/** M:SS,mmm. */
++export function tempo(t: number): string {
++  if (!Number.isFinite(t)) return '—';
++  const m = Math.floor(t / 60);
++  const s = t - 60 * m;
++  return `${m}:${s < 10 ? '0' : ''}${nf(s, 3)}`;
++}
++
++export function textoDaFreada(freadaM: number | null, refFreia: boolean, longo: boolean, rotuloRef: 'ia' | 'melhor'): string {
++  if (freadaM === null) {
++    if (refFreia) return longo ? 'sem freada medida nesta volta' : 'não medida';
++    return longo ? (rotuloRef === 'ia' ? 'a IA não freia aqui' : 'a referência não freia aqui') : 'ref. não freia';
++  }
++  const m = Math.round(freadaM);
++  if (m === 0) return longo ? 'no mesmo ponto' : 'mesmo ponto';
++  return `${Math.abs(m)} m ${m < 0 ? 'antes' : 'depois'}${longo ? (rotuloRef === 'ia' ? ' da IA' : ' da referência') : ''}`;
++}
++
++export function textoDaMinima(v: number, longo: boolean): string {
++  if (!longo) return `${sg(v, 1)} km/h`;
++  if (Math.abs(v) < 0.05) return 'igual';
++  return `${nf(Math.abs(v), 1)} km/h ${v < 0 ? 'mais lenta' : 'mais rápida'}`;
++}
++
++export function textoDaLateral(v: number): string {
++  if (Math.abs(v) < 0.005) return 'na mesma linha';
++  return `${nf(Math.abs(v), 2)} m à ${v > 0 ? 'esquerda' : 'direita'}`;
++}
+diff --git a/frontend/src/volta/medidas.test.ts b/frontend/src/volta/medidas.test.ts
+new file mode 100644
+index 00000000..53f0aec5
+--- /dev/null
++++ b/frontend/src/volta/medidas.test.ts
+@@ -0,0 +1,112 @@
++import { describe, expect, it } from 'vitest';
++import {
++  arredondarParaPar,
++  curvasDoRelatorio,
++  diferencaPorMicrossetor,
++  distanciaComSinal,
++  estadoDoFantasma,
++  indiceDe,
++  inicioDaFreada,
++  janela,
++  medidasDasCurvas,
++  pedalEm,
++  sNoTempo,
++  tempoDoTrecho,
++  tempoEm,
++  type Curva,
++  type Grade,
++  type Linhas,
++} from './medidas';
++
++// Uma pista de 100 m com passo de 10 m: pontos em 0, 10, ..., 90; a linha em 100.
++const g: Grade = { n: 10, comprimento: 100, passo: 10 };
++
++function volta(segundosPorPonto: number, freioEm: number[] = [], lateral = 0): Linhas {
++  const elapsed = Array.from({ length: 10 }, (_, i) => i * segundosPorPonto);
++  return {
++    elapsed,
++    total: 10 * segundosPorPonto,
++    velocidade: Array.from({ length: 10 }, (_, i) => 100 + i),
++    acelerador: Array.from({ length: 10 }, () => 1),
++    freio: Array.from({ length: 10 }, (_, i) => (freioEm.includes(i) ? 0.8 : 0)),
++    lateral: Array.from({ length: 10 }, () => lateral),
++  };
++}
++
++describe('medidas da tela Volta (método do relatório de evolução)', () => {
++  it('índice, janela e distância com sinal como no ML', () => {
++    expect(indiceDe(g, 29.9)).toBe(2);
++    expect(indiceDe(g, 105)).toBe(0);
++    expect(janela(g, 80, 20)).toEqual([8, 9, 0, 1, 2]);
++    expect(distanciaComSinal(g, 10, 90)).toBe(20);
++    expect(distanciaComSinal(g, 90, 10)).toBe(-20);
++    expect(arredondarParaPar(2.5)).toBe(2);
++    expect(arredondarParaPar(3.5)).toBe(4);
++  });
++
++  it('o relógio fecha na linha com o tempo da volta, e o trecho que cruza a linha soma as duas pontas', () => {
++    const v = volta(1);
++    expect(tempoEm(g, v, 95)).toBeCloseTo(9.5, 9);
++    expect(tempoDoTrecho(g, v, [90, 20])).toBeCloseTo(3, 9);
++    expect(sNoTempo(g, v, 4.5)).toBeCloseTo(45, 9);
++    expect(sNoTempo(g, v, 99)).toBe(100);
++  });
++
++  it('a freada é a subida do freio entre o ápice anterior e o ápice', () => {
++    expect(inicioDaFreada(g, volta(1, [3, 4]).freio, 10, 50)).toBe(30);
++    expect(inicioDaFreada(g, volta(1).freio, 10, 50)).toBeNull();
++  });
++
++  it('as curvas somam a diferença da volta, e cada uma traz freada, ápice e mínima', () => {
++    const curvas: Curva[] = [
++      { codigo: 'C01', lado: 'esq.', trecho: [80, 40], curva: [20, 30], apice: 20 },
++      { codigo: 'C02', lado: 'dir.', trecho: [40, 80], curva: [50, 70], apice: 60 },
++    ];
++    const lenta = volta(1.1, [5], 0.5);
++    const rapida = volta(1, [4], 0);
++    const m = medidasDasCurvas(g, lenta, rapida, curvas);
++    expect(m[0].perdaS + m[1].perdaS).toBeCloseTo(lenta.total - rapida.total, 9);
++    expect(m[1].freadaM).toBe(10); // a lenta freia 10 m depois
++    expect(m[1].lateralApiceM).toBeCloseTo(0.5, 9);
++    expect(m[0].minimaKmh).toBe(0);
++  });
++
++  it('as curvas do relatório voltam para a grade', () => {
++    const passo = 2.000036717997977;
++    const [c] = curvasDoRelatorio({ n: 2167, comprimento: 2167 * passo, passo }, [
++      { curva: 'C01-esq', trecho_m: [4112.1, 346.0], curva_m: [224.0, 334.0], apice_m: 298.0 },
++    ]);
++    // 298,0 m arredondado é o ponto 149 (298,0055 m): o índice certo do ápice.
++    expect(c.apice / passo).toBeCloseTo(149, 9);
++    expect(c.codigo).toBe('C01');
++    expect(c.lado).toBe('esq.');
++  });
++
++  it('microssetores: a diferença soma a diferença da volta', () => {
++    const d = diferencaPorMicrossetor(g, volta(1.2), volta(1), [0, 50, 100]);
++    expect(d[0]).toBeCloseTo(1, 9);
++    expect(d[1]).toBeCloseTo(1, 9);
++  });
++
++  it('o fantasma por curva recomeça no início do trecho; na volta inteira acumula', () => {
++    const curvas: Curva[] = [
++      { codigo: 'C01', lado: 'esq.', trecho: [0, 50], curva: [10, 20], apice: 10 },
++      { codigo: 'C02', lado: 'dir.', trecho: [50, 100], curva: [60, 70], apice: 60 },
++    ];
++    const lenta = volta(1.1);
++    const rapida = volta(1);
++    const porCurva = estadoDoFantasma(g, lenta, rapida, curvas, 70, 'curva');
++    expect(porCurva.curva).toBe('C02');
++    expect(porCurva.diferenca).toBeCloseTo(0.2, 9); // de 50 a 70 m: 2,2 s contra 2,0 s
++    const inteira = estadoDoFantasma(g, lenta, rapida, curvas, 70, 'volta');
++    expect(inteira.diferenca).toBeCloseTo(0.7, 9); // 7,7 s contra 7,0 s
++    expect(inteira.sFantasma).toBeCloseTo(77, 9); // a referência em 7,7 s estava em 77 m
++  });
++
++  it('pedal: freio ≥ 0,15, acelerador ≥ 0,9, o resto é parcial', () => {
++    const v = volta(1, [2]);
++    expect(pedalEm(g, v, 20)).toBe('freio');
++    expect(pedalEm(g, v, 50)).toBe('acelerador');
++    expect(pedalEm(g, { ...v, acelerador: v.acelerador.map(() => 0.5) }, 50)).toBe('parcial');
++  });
++});
+diff --git a/frontend/src/volta/medidas.ts b/frontend/src/volta/medidas.ts
+new file mode 100644
+index 00000000..4b44f3be
+--- /dev/null
++++ b/frontend/src/volta/medidas.ts
+@@ -0,0 +1,334 @@
++/**
++ * As medidas da tela Volta (pedido 30), no método do relatório de evolução.
++ *
++ * Porte direto de `backend/ml/comparison/evolution.py` e
++ * `backend/ml/track/microsectors.py`, para que a tela, o protótipo A e o
++ * `sessao_*.json` deem o mesmo número:
++ *
++ * - perda por curva: tempo do trecho da curva (do meio da reta anterior ao meio
++ *   da seguinte) na volta menos na referência; os 14 trechos cobrem a volta;
++ * - início da freada: primeiro ponto, do ápice da curva anterior ao ápice dela,
++ *   em que o freio passa de < 0,15 para ≥ 0,15; a diferença é com sinal, em
++ *   metros de pista;
++ * - posição no ápice: lateral da volta menos a da referência no ponto do ápice;
++ * - velocidade mínima: mínima dentro da curva, volta menos referência;
++ * - microssetores: tempo em cada um dos 60, volta menos referência.
++ *
++ * Tudo em cima das linhas do store v2 (`/api/store/voltas/{id}`), que já estão
++ * na grade da geometria oficial: o ponto i está em s = i · passo. Sem imports,
++ * para o Node rodar a conferência (`scripts/conferencia_prototipo.ts`).
++ */
++
++export type Grade = {
++  /** Número de pontos (2167 em Interlagos). */
++  n: number;
++  /** Comprimento da volta, em metros. */
++  comprimento: number;
++  /** Passo da grade, em metros. */
++  passo: number;
++};
++
++export type Linhas = {
++  elapsed: number[];
++  /** Tempo da volta, pelo relógio do jogo (`lap_time_s` do store v2). */
++  total: number;
++  velocidade: number[];
++  acelerador: number[];
++  freio: number[];
++  lateral: number[];
++};
++
++export type Curva = {
++  /** C01 a C14. */
++  codigo: string;
++  /** 'esq.' ou 'dir.'. */
++  lado: string;
++  /** Trecho da curva: do meio da reta anterior ao meio da seguinte (pode cruzar a linha). */
++  trecho: [number, number];
++  /** A curva em si: onde a mínima é procurada. */
++  curva: [number, number];
++  apice: number;
++};
++
++/**
++ * As 14 curvas do relatório de evolução (`sessao_*.json`, campo `curvas`),
++ * encaixadas na grade.
++ *
++ * O JSON grava os limites arredondados a 0,1 m. No ML, o início, o fim e o
++ * ápice de cada curva caem exatamente num ponto da grade, e o trecho cai no
++ * meio entre dois pontos. Ler o valor arredondado poria o ápice no ponto
++ * vizinho (298,0 m vira o ponto 148, e o ápice é o 149, em 298,0055 m), e a
++ * lateral no ápice e a mínima sairiam de outro ponto. O encaixe no ponto (ou
++ * meio ponto) mais próximo devolve o valor exato: conferido em 14/10 nos 42
++ * limites das 14 curvas.
++ */
++export function curvasDoRelatorio(g: Grade, curvas: Array<{ curva: string; trecho_m: number[]; curva_m: number[]; apice_m: number }>): Curva[] {
++  const noPonto = (v: number) => Math.round(v / g.passo) * g.passo;
++  const noMeioPonto = (v: number) => (Math.round((2 * v) / g.passo) / 2) * g.passo;
++  return curvas.map((c) => {
++    const [codigo, lado] = String(c.curva).split('-');
++    return {
++      codigo,
++      lado: lado === 'esq' ? 'esq.' : lado === 'dir' ? 'dir.' : String(lado || ''),
++      trecho: [noMeioPonto(Number(c.trecho_m[0])), noMeioPonto(Number(c.trecho_m[1]))],
++      curva: [noPonto(Number(c.curva_m[0])), noPonto(Number(c.curva_m[1]))],
++      apice: noPonto(Number(c.apice_m)),
++    };
++  });
++}
++
++export const FREIO_LIGADO = 0.15;
++export const ACELERADOR_CHEIO = 0.9;
++
++/** Resto com o sinal do divisor, como o `np.mod`. */
++export function mod(a: number, n: number): number {
++  const r = a % n;
++  return r < 0 ? r + n : r;
++}
++
++/** Arredonda meio para o par, como o `np.round`. */
++export function arredondarParaPar(v: number): number {
++  const piso = Math.floor(v);
++  const fracao = v - piso;
++  if (Math.abs(fracao - 0.5) < 1e-9) return piso % 2 === 0 ? piso : piso + 1;
++  return Math.round(v);
++}
++
++/** `np.interp` (xs crescente), com os extremos presos. */
++export function interp(x: number, xs: ArrayLike<number>, ys: ArrayLike<number>): number {
++  const n = xs.length;
++  if (x <= xs[0]) return ys[0];
++  if (x >= xs[n - 1]) return ys[n - 1];
++  let lo = 0;
++  let hi = n - 1;
++  while (hi - lo > 1) {
++    const mid = (lo + hi) >> 1;
++    if (xs[mid] <= x) lo = mid;
++    else hi = mid;
++  }
++  const t = (x - xs[lo]) / (xs[hi] - xs[lo]);
++  return ys[lo] + t * (ys[hi] - ys[lo]);
++}
++
++export function sDoPonto(g: Grade, i: number): number {
++  return i * g.passo;
++}
++
++/** Índice da grade de uma distância (com a volta na linha), como `TrackGeometry.index_of`. */
++export function indiceDe(g: Grade, s: number): number {
++  return Math.min(g.n - 1, Math.max(0, Math.floor(mod(s, g.comprimento) / g.passo)));
++}
++
++/** Índices da grade de `a` a `b`, dando a volta se preciso (`_window`). */
++export function janela(g: Grade, a: number, b: number): number[] {
++  const inicio = indiceDe(g, a);
++  const vao = arredondarParaPar(mod(b - a, g.comprimento) / g.passo) + 1;
++  const out = new Array<number>(vao);
++  for (let k = 0; k < vao; k += 1) out[k] = (inicio + k) % g.n;
++  return out;
++}
++
++/** `a − b` em metros de pista, no intervalo (−L/2, L/2]. */
++export function distanciaComSinal(g: Grade, a: number, b: number): number {
++  return mod(a - b + g.comprimento / 2, g.comprimento) - g.comprimento / 2;
++}
++
++function eixoComFim(g: Grade): number[] {
++  const xs = new Array<number>(g.n + 1);
++  for (let i = 0; i < g.n; i += 1) xs[i] = i * g.passo;
++  xs[g.n] = g.comprimento;
++  return xs;
++}
++
++const eixos = new WeakMap<Grade, number[]>();
++function eixo(g: Grade): number[] {
++  let xs = eixos.get(g);
++  if (!xs) {
++    xs = eixoComFim(g);
++    eixos.set(g, xs);
++  }
++  return xs;
++}
++
++const relogios = new WeakMap<object, number[]>();
++/** O relógio da volta com o tempo da volta na linha, no fim (guardado por volta). */
++function relogio(v: Pick<Linhas, 'elapsed' | 'total'>): number[] {
++  let ys = relogios.get(v);
++  if (!ys) {
++    ys = [...v.elapsed, v.total];
++    relogios.set(v, ys);
++  }
++  return ys;
++}
++
++/** Tempo da volta no ponto `s`: o relógio vai de 0 em s = 0 ao tempo da volta na linha (`time_at`). */
++export function tempoEm(g: Grade, v: Pick<Linhas, 'elapsed' | 'total'>, s: number): number {
++  return interp(mod(s, g.comprimento), eixo(g), relogio(v));
++}
++
++/** O `s` em que a volta estava no tempo `t` (o inverso de `tempoEm`, sem passar da linha). */
++export function sNoTempo(g: Grade, v: Pick<Linhas, 'elapsed' | 'total'>, t: number): number {
++  if (t >= v.total) return g.comprimento;
++  if (t <= v.elapsed[0]) return 0;
++  return interp(t, relogio(v), eixo(g));
++}
++
++/** Tempo de um trecho; o que cruza a linha soma o fim e o começo da mesma volta (`segment_time`). */
++export function tempoDoTrecho(g: Grade, v: Pick<Linhas, 'elapsed' | 'total'>, trecho: [number, number]): number {
++  return mod(tempoEm(g, v, trecho[1]) - tempoEm(g, v, trecho[0]), v.total);
++}
++
++/** Início da freada entre o ápice da curva anterior e o ápice dela (`braking_point`). */
++export function inicioDaFreada(g: Grade, freio: ArrayLike<number>, deS: number, apice: number): number | null {
++  const idx = janela(g, deS, apice);
++  const estendido = [mod(idx[0] - 1, g.n), ...idx];
++  const ligado = estendido.map((i) => {
++    const f = Number(freio[i]);
++    return (Number.isFinite(f) ? f : 0) >= FREIO_LIGADO;
++  });
++  for (let k = 0; k < ligado.length - 1; k += 1) {
++    if (ligado[k + 1] && !ligado[k]) return sDoPonto(g, idx[k]);
++  }
++  return null;
++}
++
++function minimo(valores: ArrayLike<number>, indices: number[]): number {
++  let m = Infinity;
++  for (const i of indices) {
++    const v = Number(valores[i]);
++    if (Number.isFinite(v) && v < m) m = v;
++  }
++  return m === Infinity ? NaN : m;
++}
++
++export type MedidaDaCurva = {
++  codigo: string;
++  lado: string;
++  perdaS: number;
++  /** A referência freia nesta curva. */
++  refFreia: boolean;
++  /** Início da freada da volta menos o da referência (m); negativo = antes. */
++  freadaM: number | null;
++  /** A volta tem freada medida nesta curva. */
++  voltaFreia: boolean;
++  /** Lateral no ápice, volta menos referência (m); positivo = mais à esquerda. */
++  lateralApiceM: number;
++  /** Velocidade mínima na curva, volta menos referência (km/h). */
++  minimaKmh: number;
++};
++
++/** As 14 curvas de uma volta contra a referência (`lap_corner_features`). */
++export function medidasDasCurvas(g: Grade, volta: Linhas, ref: Linhas, curvas: Curva[]): MedidaDaCurva[] {
++  const n = curvas.length;
++  return curvas.map((c, k) => {
++    const anterior = curvas[(k - 1 + n) % n];
++    const freadaVolta = inicioDaFreada(g, volta.freio, anterior.apice, c.apice);
++    const freadaRef = inicioDaFreada(g, ref.freio, anterior.apice, c.apice);
++    const dentro = janela(g, c.curva[0], c.curva[1]);
++    const apice = indiceDe(g, c.apice);
++    return {
++      codigo: c.codigo,
++      lado: c.lado,
++      perdaS: tempoDoTrecho(g, volta, c.trecho) - tempoDoTrecho(g, ref, c.trecho),
++      refFreia: freadaRef !== null,
++      voltaFreia: freadaVolta !== null,
++      freadaM: freadaVolta !== null && freadaRef !== null ? distanciaComSinal(g, freadaVolta, freadaRef) : null,
++      lateralApiceM: Number(volta.lateral[apice]) - Number(ref.lateral[apice]),
++      minimaKmh: minimo(volta.velocidade, dentro) - minimo(ref.velocidade, dentro),
++    };
++  });
++}
++
++/** Tempo em cada microssetor (`split_times`): a última borda é a linha, no tempo da volta. */
++export function temposDosMicrossetores(g: Grade, v: Pick<Linhas, 'elapsed' | 'total'>, bordas: number[]): number[] {
++  const xs = new Array<number>(g.n);
++  for (let i = 0; i < g.n; i += 1) xs[i] = i * g.passo;
++  const limites = bordas.map((b) => interp(b, xs, v.elapsed));
++  limites[limites.length - 1] = v.total;
++  const out: number[] = [];
++  for (let k = 1; k < limites.length; k += 1) out.push(limites[k] - limites[k - 1]);
++  return out;
++}
++
++export function diferencaPorMicrossetor(g: Grade, volta: Linhas, ref: Linhas, bordas: number[]): number[] {
++  const a = temposDosMicrossetores(g, volta, bordas);
++  const b = temposDosMicrossetores(g, ref, bordas);
++  return a.map((v, i) => v - b[i]);
++}
++
++/** Diferença acumulada ponto a ponto da grade (s): volta menos referência. */
++export function diferencaAcumulada(volta: Linhas, ref: Linhas): number[] {
++  return volta.elapsed.map((t, i) => t - ref.elapsed[i]);
++}
++
++/** A curva em que `s` cai, pelos trechos (que cobrem a volta inteira). */
++export function curvaEm(curvas: Curva[], s: number): Curva | null {
++  for (const c of curvas) {
++    const [a, b] = c.trecho;
++    if (b >= a ? s >= a && s < b : s >= a || s < b) return c;
++  }
++  return null;
++}
++
++export type Pedal = 'freio' | 'acelerador' | 'parcial';
++
++/** O estado do pedal: freio ≥ 0,15; acelerador ≥ 0,9; o resto é parcial ou sem pedal. */
++export function pedalEm(g: Grade, v: Linhas, s: number): Pedal {
++  const xs = eixo(g);
++  const f = interp(mod(s, g.comprimento), xs, [...v.freio, v.freio[0]]);
++  const a = interp(mod(s, g.comprimento), xs, [...v.acelerador, v.acelerador[0]]);
++  if (f >= FREIO_LIGADO) return 'freio';
++  if (a >= ACELERADOR_CHEIO) return 'acelerador';
++  return 'parcial';
++}
++
++export function valorEm(g: Grade, valores: ArrayLike<number>, s: number): number {
++  const xs = eixo(g);
++  const ys = Array.from(valores);
++  ys.push(Number(valores[0]));
++  return interp(mod(s, g.comprimento), xs, ys);
++}
++
++export type ModoDoFantasma = 'curva' | 'volta';
++
++export type EstadoDoFantasma = {
++  s: number;
++  /** Tempo da volta em `s`. */
++  tempoVolta: number;
++  /** Onde o fantasma da referência está, e o tempo dele. */
++  sFantasma: number;
++  tempoFantasma: number;
++  /** Onde o fantasma recomeçou (início da curva, no modo por curva). */
++  s0: number;
++  /** Diferença desde `s0`: positivo = a volta perdeu tempo. */
++  diferenca: number;
++  curva: string | null;
++};
++
++/**
++ * O fantasma da referência, posicionado pelo tempo (como no protótipo A):
++ * onde a referência estava depois do mesmo tempo. No modo por curva, ele
++ * recomeça junto com a volta no início do trecho de cada curva; o trecho que
++ * cruza a linha recomeça em 0, onde a volta começa.
++ */
++export function estadoDoFantasma(g: Grade, volta: Linhas, ref: Linhas, curvas: Curva[], s: number, modo: ModoDoFantasma): EstadoDoFantasma {
++  const tempoVolta = tempoEm(g, volta, s);
++  let s0 = 0;
++  let t0Volta = 0;
++  let t0Ref = 0;
++  let curva: string | null = null;
++  if (modo === 'curva') {
++    const c = curvaEm(curvas, s);
++    if (c) {
++      const [a, b] = c.trecho;
++      s0 = b >= a ? a : s >= a ? a : 0;
++      t0Volta = tempoEm(g, volta, s0);
++      t0Ref = tempoEm(g, ref, s0);
++      curva = c.codigo;
++    }
++  }
++  const tg = t0Ref + (tempoVolta - t0Volta);
++  const sFantasma = tg >= ref.total ? g.comprimento : sNoTempo(g, ref, tg);
++  const diferenca = tempoVolta - t0Volta - (tempoEm(g, ref, s) - t0Ref);
++  return { s, tempoVolta, sFantasma, tempoFantasma: Math.min(tg, ref.total), s0, diferenca, curva };
++}
+diff --git a/frontend/src/volta/projecao.ts b/frontend/src/volta/projecao.ts
+new file mode 100644
+index 00000000..ecaa9ac3
+--- /dev/null
++++ b/frontend/src/volta/projecao.ts
+@@ -0,0 +1,71 @@
++/**
++ * A pista nas visões da tela Volta (pedido 30), como no protótipo A.
++ *
++ * O protótipo gira o mundo 90° (`base(x, z) = [z, −x]`): a pista fica deitada,
++ * melhor para a tela larga, e continua no sentido anti-horário (é uma rotação,
++ * não um espelho). As posições do carro e do fantasma são a linha central da
++ * geometria oficial mais o deslocamento lateral do store v2 (positivo para a
++ * esquerda, na direção da normal).
++ *
++ * As camadas desenhadas (asfalto, pintura e zebras) vêm do cache em
++ * coordenadas de mapa (x, −z); `transformarCamadas` leva o contexto do canvas
++ * para elas.
++ */
++import type { Geometria } from './dados';
++
++export type Ponto = [number, number];
++
++/** Mundo (x, z) → tela da tela Volta. */
++export function base(x: number, z: number): Ponto {
++  return [z, -x];
++}
++
++/** Coordenadas de mapa (x, −z) → mesmas coordenadas de `base`: (u, v) ↦ (−v, −u). */
++export function transformarCamadas(ctx: CanvasRenderingContext2D): void {
++  ctx.transform(0, -1, -1, 0, 0, 0);
++}
++
++export type LinhaCentral = { cx: number[]; cy: number[]; n: number; passo: number };
++
++export function linhaCentral(geo: Geometria): LinhaCentral {
++  const cx: number[] = [];
++  const cy: number[] = [];
++  for (let i = 0; i < geo.x.length; i += 1) {
++    const [u, v] = base(geo.x[i], geo.z[i]);
++    cx.push(u);
++    cy.push(v);
++  }
++  return { cx, cy, n: cx.length, passo: geo.passoM };
++}
++
++/** O traçado de uma volta: linha central + lateral × normal, ponto a ponto da grade. */
++export function tracadoDaVolta(geo: Geometria, lateral: ArrayLike<number>): { x: number[]; y: number[] } {
++  const x: number[] = [];
++  const y: number[] = [];
++  for (let i = 0; i < geo.x.length; i += 1) {
++    const l = Number(lateral[i]) || 0;
++    const [u, v] = base(geo.x[i] + l * geo.normalX[i], geo.z[i] + l * geo.normalZ[i]);
++    x.push(u);
++    y.push(v);
++  }
++  return { x, y };
++}
++
++/** Posição em `s` no traçado (interpolada entre os pontos da grade; não passa da linha). */
++export function posicaoEm(tracado: { x: number[]; y: number[] }, passo: number, s: number): Ponto {
++  const n = tracado.x.length;
++  const j = Math.max(0, s) / passo;
++  const j0 = Math.floor(j);
++  if (j0 >= n - 1) return [tracado.x[n - 1], tracado.y[n - 1]];
++  const f = j - j0;
++  return [tracado.x[j0] + f * (tracado.x[j0 + 1] - tracado.x[j0]), tracado.y[j0] + f * (tracado.y[j0 + 1] - tracado.y[j0])];
++}
++
++/** Onde escrever o nome de uma curva: por fora dela, além da borda. */
++export function rotuloDaCurva(geo: Geometria, apiceS: number, lado: string, folgaM = 9): Ponto {
++  const i = Math.round(apiceS / geo.passoM) % geo.x.length;
++  const fora = lado === 'esq.' ? -1 : 1;
++  const largura = (fora > 0 ? geo.larguraEsquerdaM?.[i] : geo.larguraDireitaM?.[i]) ?? 7;
++  const w = largura + folgaM;
++  return base(geo.x[i] + fora * w * geo.normalX[i], geo.z[i] + fora * w * geo.normalZ[i]);
++}

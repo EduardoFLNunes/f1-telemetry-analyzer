@@ -1,0 +1,102 @@
+# Pedido 30: testes (14/10/2026 21:37, branch etapa/redesenho-base, ee3721e4)
+
+## frontend: npx tsc --noEmit -p .
+(sem erros)
+
+## frontend: npx vitest run
+
+ RUN  v2.1.9 C:/Users/Dokas/Desktop/f1-telemetry-analyzer/frontend
+
+ ✓ src/volta/medidas.test.ts (8 tests) 6ms
+ ✓ src/utils/sectorTimes.test.ts (13 tests) 8ms
+ ✓ src/navegacao/rotas.test.ts (4 tests) 5ms
+ ✓ src/utils/radio.test.ts (5 tests) 26ms
+ ✓ src/theme/contraste.test.ts (2 tests) 5ms
+ ✓ src/components/map/CameraController.test.ts (8 tests) 9ms
+ ✓ src/store/offlineReplay.test.ts (32 tests) 21ms
+ ✓ src/components/map/BroadcastOverlay.test.ts (23 tests) 19ms
+ ✓ src/components/map/OverlayRenderer.test.ts (26 tests) 20ms
+ ✓ src/components/sessoes/dadosDoHero.test.ts (4 tests) 6ms
+ ✓ src/utils/coleta.test.ts (7 tests) 30ms
+ ✓ src/components/map/TrackElevationRibbon.test.ts (25 tests) 11ms
+ ✓ src/components/CoachingFeed.test.ts (12 tests) 7ms
+ ✓ src/volta/dados.test.ts (4 tests) 4ms
+
+ Test Files  14 passed (14)
+      Tests  173 passed (173)
+   Start at  21:38:01
+   Duration  1.57s (transform 1.20s, setup 0ms, collect 2.49s, tests 177ms, environment 3ms, prepare 3.32s)
+
+
+## frontend: npm run build
+dist/assets/IBMPlexMono-Bold-Ovd3DSUS.ttf          136.01 kB
+dist/assets/index-BHW55op0.css                      59.08 kB │ gzip:  12.55 kB
+dist/assets/index-Dxomjdv9.js                      465.91 kB │ gzip: 145.78 kB
+✓ built in 3.43s
+
+## backend: ..\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider (na pasta backend, em 14/10 às 20:59, com o backend de a3d1e694, o mesmo de agora)
+.F...................................................................... [  9%]
+........................................................................ [ 19%]
+........................................................................ [ 29%]
+........................................................................ [ 38%]
+........................................................................ [ 48%]
+........................................................................ [ 58%]
+........................................................................ [ 67%]
+........................................................................ [ 77%]
+........................................................................ [ 87%]
+........................................................................ [ 96%]
+........................                                                 [100%]
+================================== FAILURES ===================================
+___________________________________ test_ws ___________________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+============================== warnings summary ===============================
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:64
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:64: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    prop = Group((name + Suppress("=") + comma_separated(value)) | oneOf(_CONSTANTS))
+
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    parse = parser.parseString(pattern)
+
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+    parser.resetCache()
+
+..\.venv\lib\site-packages\matplotlib\_mathtext.py:45
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_mathtext.py:45: PyparsingDeprecationWarning: 'enablePackrat' deprecated - use 'enable_packrat'
+    ParserElement.enablePackrat()
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 1 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 2 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 4 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED test_ws_client.py::test_ws - Failed: async def functions are not nativ...
+1 failed, 743 passed, 18 warnings in 671.74s (0:11:11)
+exit 1

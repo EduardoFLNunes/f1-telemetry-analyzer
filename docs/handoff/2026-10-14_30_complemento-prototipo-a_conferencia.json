@@ -1,0 +1,707 @@
+{
+  "formato": "conferencia-prototipo/1",
+  "volta": "2026-10-05_20-33-47_vhe_interlagos#0008",
+  "referencia": "2026-10-04_03-42-10_vhe_interlagos#0013",
+  "tempo": {
+    "app": 90.62882023014576,
+    "prototipo": 90.629,
+    "refApp": 84.8291625038158,
+    "refPrototipo": 84.829
+  },
+  "diferencaDaVolta": {
+    "app": 5.8,
+    "prototipo": 5.8,
+    "somaDasCurvasApp": 5.8
+  },
+  "curvas": [
+    {
+      "curva": "C01",
+      "perda": {
+        "app": 1.221,
+        "prototipo": 1.221,
+        "oficial": 1.221
+      },
+      "freadaM": {
+        "app": -54.001,
+        "prototipo": -54,
+        "oficial": -54.001
+      },
+      "minimaKmh": {
+        "app": -7.005,
+        "prototipo": -7,
+        "oficial": -7.005
+      },
+      "lateralM": {
+        "app": -0.036,
+        "prototipo": -0.04,
+        "oficial": -0.036
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": 1.029,
+        "prototipo": 1.029
+      }
+    },
+    {
+      "curva": "C02",
+      "perda": {
+        "app": 0.091,
+        "prototipo": 0.091,
+        "oficial": 0.091
+      },
+      "freadaM": {
+        "app": null,
+        "prototipo": null,
+        "oficial": null
+      },
+      "minimaKmh": {
+        "app": -0.645,
+        "prototipo": -0.6,
+        "oficial": -0.645
+      },
+      "lateralM": {
+        "app": 0.693,
+        "prototipo": 0.69,
+        "oficial": 0.693
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": 0.091,
+        "prototipo": 0.09
+      }
+    },
+    {
+      "curva": "C03",
+      "perda": {
+        "app": 0.475,
+        "prototipo": 0.475,
+        "oficial": 0.475
+      },
+      "freadaM": {
+        "app": null,
+        "prototipo": null,
+        "oficial": null
+      },
+      "minimaKmh": {
+        "app": -4.183,
+        "prototipo": -4.2,
+        "oficial": -4.183
+      },
+      "lateralM": {
+        "app": -1.777,
+        "prototipo": -1.78,
+        "oficial": -1.777
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": 0.475,
+        "prototipo": 0.475
+      }
+    },
+    {
+      "curva": "C04",
+      "perda": {
+        "app": 0.492,
+        "prototipo": 0.492,
+        "oficial": 0.492
+      },
+      "freadaM": {
+        "app": -56.001,
+        "prototipo": -56,
+        "oficial": -56.001
+      },
+      "minimaKmh": {
+        "app": 12.74,
+        "prototipo": 12.7,
+        "oficial": 12.74
+      },
+      "lateralM": {
+        "app": -0.695,
+        "prototipo": -0.69,
+        "oficial": -0.694
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": 0.492,
+        "prototipo": 0.493
+      }
+    },
+    {
+      "curva": "C05",
+      "perda": {
+        "app": 0.348,
+        "prototipo": 0.348,
+        "oficial": 0.348
+      },
+      "freadaM": {
+        "app": null,
+        "prototipo": null,
+        "oficial": null
+      },
+      "minimaKmh": {
+        "app": -11.377,
+        "prototipo": -11.4,
+        "oficial": -11.377
+      },
+      "lateralM": {
+        "app": -0.417,
+        "prototipo": -0.42,
+        "oficial": -0.417
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": 0.348,
+        "prototipo": 0.347
+      }
+    },
+    {
+      "curva": "C06",
+      "perda": {
+        "app": 0.328,
+        "prototipo": 0.328,
+        "oficial": 0.328
+      },
+      "freadaM": {
+        "app": null,
+        "prototipo": null,
+        "oficial": null
+      },
+      "minimaKmh": {
+        "app": 7.608,
+        "prototipo": 7.6,
+        "oficial": 7.608
+      },
+      "lateralM": {
+        "app": -5.3,
+        "prototipo": -5.3,
+        "oficial": -5.3
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": 0.328,
+        "prototipo": 0.328
+      }
+    },
+    {
+      "curva": "C07",
+      "perda": {
+        "app": 0.378,
+        "prototipo": 0.378,
+        "oficial": 0.378
+      },
+      "freadaM": {
+        "app": -24,
+        "prototipo": -24,
+        "oficial": -24
+      },
+      "minimaKmh": {
+        "app": 1.215,
+        "prototipo": 1.2,
+        "oficial": 1.215
+      },
+      "lateralM": {
+        "app": 2.789,
+        "prototipo": 2.79,
+        "oficial": 2.789
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": 0.378,
+        "prototipo": 0.379
+      }
+    },
+    {
+      "curva": "C08",
+      "perda": {
+        "app": -0.098,
+        "prototipo": -0.098,
+        "oficial": -0.098
+      },
+      "freadaM": {
+        "app": null,
+        "prototipo": null,
+        "oficial": null
+      },
+      "minimaKmh": {
+        "app": 13.111,
+        "prototipo": 13.1,
+        "oficial": 13.111
+      },
+      "lateralM": {
+        "app": 0.037,
+        "prototipo": 0.04,
+        "oficial": 0.037
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": -0.098,
+        "prototipo": -0.099
+      }
+    },
+    {
+      "curva": "C09",
+      "perda": {
+        "app": 0.348,
+        "prototipo": 0.347,
+        "oficial": 0.348
+      },
+      "freadaM": {
+        "app": null,
+        "prototipo": null,
+        "oficial": null
+      },
+      "minimaKmh": {
+        "app": -32.351,
+        "prototipo": -32.4,
+        "oficial": -32.351
+      },
+      "lateralM": {
+        "app": -0.71,
+        "prototipo": -0.71,
+        "oficial": -0.71
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": 0.347,
+        "prototipo": 0.348
+      }
+    },
+    {
+      "curva": "C10",
+      "perda": {
+        "app": 0.895,
+        "prototipo": 0.895,
+        "oficial": 0.895
+      },
+      "freadaM": {
+        "app": null,
+        "prototipo": null,
+        "oficial": null
+      },
+      "minimaKmh": {
+        "app": -8.752,
+        "prototipo": -8.8,
+        "oficial": -8.751
+      },
+      "lateralM": {
+        "app": 0.429,
+        "prototipo": 0.43,
+        "oficial": 0.429
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": 0.895,
+        "prototipo": 0.893
+      }
+    },
+    {
+      "curva": "C11",
+      "perda": {
+        "app": 0.525,
+        "prototipo": 0.525,
+        "oficial": 0.525
+      },
+      "freadaM": {
+        "app": null,
+        "prototipo": null,
+        "oficial": null
+      },
+      "minimaKmh": {
+        "app": -16.796,
+        "prototipo": -16.8,
+        "oficial": -16.796
+      },
+      "lateralM": {
+        "app": -1.631,
+        "prototipo": -1.63,
+        "oficial": -1.631
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": 0.525,
+        "prototipo": 0.526
+      }
+    },
+    {
+      "curva": "C12",
+      "perda": {
+        "app": 0.237,
+        "prototipo": 0.237,
+        "oficial": 0.237
+      },
+      "freadaM": {
+        "app": -26,
+        "prototipo": -26,
+        "oficial": -26
+      },
+      "minimaKmh": {
+        "app": 0.079,
+        "prototipo": 0.1,
+        "oficial": 0.079
+      },
+      "lateralM": {
+        "app": 0.039,
+        "prototipo": 0.04,
+        "oficial": 0.04
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": 0.237,
+        "prototipo": 0.237
+      }
+    },
+    {
+      "curva": "C13",
+      "perda": {
+        "app": 0.146,
+        "prototipo": 0.146,
+        "oficial": 0.146
+      },
+      "freadaM": {
+        "app": null,
+        "prototipo": null,
+        "oficial": null
+      },
+      "minimaKmh": {
+        "app": -3.984,
+        "prototipo": -4,
+        "oficial": -3.984
+      },
+      "lateralM": {
+        "app": -2.193,
+        "prototipo": -2.19,
+        "oficial": -2.193
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": 0.146,
+        "prototipo": 0.147
+      }
+    },
+    {
+      "curva": "C14",
+      "perda": {
+        "app": 0.415,
+        "prototipo": 0.415,
+        "oficial": 0.415
+      },
+      "freadaM": {
+        "app": null,
+        "prototipo": null,
+        "oficial": null
+      },
+      "minimaKmh": {
+        "app": -7.085,
+        "prototipo": -7.1,
+        "oficial": -7.085
+      },
+      "lateralM": {
+        "app": -1.546,
+        "prototipo": -1.55,
+        "oficial": -1.546
+      },
+      "fantasmaNoFimDaCurva": {
+        "app": 0.415,
+        "prototipo": 0.415
+      }
+    }
+  ],
+  "microssetores": [
+    {
+      "microssetor": 1,
+      "app": 0.0726,
+      "prototipo": 0.073
+    },
+    {
+      "microssetor": 2,
+      "app": 0.174,
+      "prototipo": 0.174
+    },
+    {
+      "microssetor": 3,
+      "app": 0.2943,
+      "prototipo": 0.294
+    },
+    {
+      "microssetor": 4,
+      "app": 0.369,
+      "prototipo": 0.369
+    },
+    {
+      "microssetor": 5,
+      "app": 0.1763,
+      "prototipo": 0.176
+    },
+    {
+      "microssetor": 6,
+      "app": 0.0365,
+      "prototipo": 0.037
+    },
+    {
+      "microssetor": 7,
+      "app": 0.091,
+      "prototipo": 0.091
+    },
+    {
+      "microssetor": 8,
+      "app": 0.0717,
+      "prototipo": 0.072
+    },
+    {
+      "microssetor": 9,
+      "app": 0.0619,
+      "prototipo": 0.062
+    },
+    {
+      "microssetor": 10,
+      "app": 0.0388,
+      "prototipo": 0.039
+    },
+    {
+      "microssetor": 11,
+      "app": 0.0448,
+      "prototipo": 0.045
+    },
+    {
+      "microssetor": 12,
+      "app": 0.0514,
+      "prototipo": 0.051
+    },
+    {
+      "microssetor": 13,
+      "app": 0.0588,
+      "prototipo": 0.059
+    },
+    {
+      "microssetor": 14,
+      "app": 0.0625,
+      "prototipo": 0.062
+    },
+    {
+      "microssetor": 15,
+      "app": 0.0671,
+      "prototipo": 0.067
+    },
+    {
+      "microssetor": 16,
+      "app": 0.0722,
+      "prototipo": 0.072
+    },
+    {
+      "microssetor": 17,
+      "app": 0.1939,
+      "prototipo": 0.194
+    },
+    {
+      "microssetor": 18,
+      "app": 0.2401,
+      "prototipo": 0.24
+    },
+    {
+      "microssetor": 19,
+      "app": -0.1076,
+      "prototipo": -0.108
+    },
+    {
+      "microssetor": 20,
+      "app": 0.0236,
+      "prototipo": 0.024
+    },
+    {
+      "microssetor": 21,
+      "app": 0.1136,
+      "prototipo": 0.114
+    },
+    {
+      "microssetor": 22,
+      "app": 0.0837,
+      "prototipo": 0.084
+    },
+    {
+      "microssetor": 23,
+      "app": 0.069,
+      "prototipo": 0.069
+    },
+    {
+      "microssetor": 24,
+      "app": 0.0499,
+      "prototipo": 0.05
+    },
+    {
+      "microssetor": 25,
+      "app": 0.0538,
+      "prototipo": 0.054
+    },
+    {
+      "microssetor": 26,
+      "app": 0.1534,
+      "prototipo": 0.153
+    },
+    {
+      "microssetor": 27,
+      "app": 0.1509,
+      "prototipo": 0.151
+    },
+    {
+      "microssetor": 28,
+      "app": 0.1041,
+      "prototipo": 0.104
+    },
+    {
+      "microssetor": 29,
+      "app": -0.0838,
+      "prototipo": -0.084
+    },
+    {
+      "microssetor": 30,
+      "app": -0.101,
+      "prototipo": -0.101
+    },
+    {
+      "microssetor": 31,
+      "app": 0.2694,
+      "prototipo": 0.269
+    },
+    {
+      "microssetor": 32,
+      "app": 0.1814,
+      "prototipo": 0.181
+    },
+    {
+      "microssetor": 33,
+      "app": 0.0701,
+      "prototipo": 0.07
+    },
+    {
+      "microssetor": 34,
+      "app": -0.1423,
+      "prototipo": -0.142
+    },
+    {
+      "microssetor": 35,
+      "app": -0.0203,
+      "prototipo": -0.02
+    },
+    {
+      "microssetor": 36,
+      "app": 0.0455,
+      "prototipo": 0.046
+    },
+    {
+      "microssetor": 37,
+      "app": 0.5773,
+      "prototipo": 0.577
+    },
+    {
+      "microssetor": 38,
+      "app": 0.3163,
+      "prototipo": 0.316
+    },
+    {
+      "microssetor": 39,
+      "app": 0.3423,
+      "prototipo": 0.342
+    },
+    {
+      "microssetor": 40,
+      "app": 0.1822,
+      "prototipo": 0.182
+    },
+    {
+      "microssetor": 41,
+      "app": 0.1393,
+      "prototipo": 0.139
+    },
+    {
+      "microssetor": 42,
+      "app": 0.0798,
+      "prototipo": 0.08
+    },
+    {
+      "microssetor": 43,
+      "app": 0.0831,
+      "prototipo": 0.083
+    },
+    {
+      "microssetor": 44,
+      "app": 0.2052,
+      "prototipo": 0.205
+    },
+    {
+      "microssetor": 45,
+      "app": 0.0205,
+      "prototipo": 0.02
+    },
+    {
+      "microssetor": 46,
+      "app": 0.0222,
+      "prototipo": 0.022
+    },
+    {
+      "microssetor": 47,
+      "app": 0.0633,
+      "prototipo": 0.063
+    },
+    {
+      "microssetor": 48,
+      "app": 0.0595,
+      "prototipo": 0.059
+    },
+    {
+      "microssetor": 49,
+      "app": 0.0562,
+      "prototipo": 0.056
+    },
+    {
+      "microssetor": 50,
+      "app": 0.0526,
+      "prototipo": 0.053
+    },
+    {
+      "microssetor": 51,
+      "app": 0.044,
+      "prototipo": 0.044
+    },
+    {
+      "microssetor": 52,
+      "app": 0.0418,
+      "prototipo": 0.042
+    },
+    {
+      "microssetor": 53,
+      "app": 0.0412,
+      "prototipo": 0.041
+    },
+    {
+      "microssetor": 54,
+      "app": 0.0364,
+      "prototipo": 0.036
+    },
+    {
+      "microssetor": 55,
+      "app": 0.048,
+      "prototipo": 0.048
+    },
+    {
+      "microssetor": 56,
+      "app": 0.052,
+      "prototipo": 0.052
+    },
+    {
+      "microssetor": 57,
+      "app": 0.0589,
+      "prototipo": 0.059
+    },
+    {
+      "microssetor": 58,
+      "app": 0.058,
+      "prototipo": 0.058
+    },
+    {
+      "microssetor": 59,
+      "app": 0.0624,
+      "prototipo": 0.062
+    },
+    {
+      "microssetor": 60,
+      "app": 0.0671,
+      "prototipo": 0.067
+    }
+  ],
+  "maioresDiferencas": {
+    "perdaAppPrototipoS": 0.001,
+    "perdaAppOficialS": 0,
+    "freadaAppOficialM": 0,
+    "minimaAppOficialKmh": 0.001,
+    "lateralAppOficialM": 0.001,
+    "microssetorAppPrototipoS": 0,
+    "fantasmaAppPrototipoS": 0.002
+  }
+}
