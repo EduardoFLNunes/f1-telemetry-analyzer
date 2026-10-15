@@ -81,7 +81,7 @@ export const EvolucaoPage: React.FC<{ navegar: (tela: Tela, sub?: string | null)
                 Ponto: perda mediana para a IA, em segundos. Traço: faixa de 90% de confiança. Ponto vazio: sem diferença consistente.
               </p>
               <div className="superficie tabela-caixa">
-                <table className="tabela">
+                <table className="tabela tabela--curvas">
                   <thead>
                     <tr>
                       <th scope="col">Curva</th>
@@ -124,7 +124,7 @@ export const EvolucaoPage: React.FC<{ navegar: (tela: Tela, sub?: string | null)
               </p>
               {sessaoTecnica?.tecnica?.curvas?.length ? (
                 <div className="superficie tabela-caixa">
-                  <table className="tabela">
+                  <table className="tabela tabela--curvas">
                     <thead>
                       <tr>
                         <th scope="col">Curva</th>

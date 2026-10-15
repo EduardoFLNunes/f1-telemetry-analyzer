@@ -24,7 +24,7 @@ export const TabelaDasCurvas: React.FC<Props> = ({ medidas, medianas, diferencaD
   const comMediana = Boolean(medianas);
   return (
     <div className="superficie tabela-caixa">
-      <table className="tabela tabela--compacta">
+      <table className="tabela tabela--compacta tabela--curvas">
         <thead>
           <tr>
             <th scope="col">Curva</th>

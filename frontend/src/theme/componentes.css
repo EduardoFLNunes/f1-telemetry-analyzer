@@ -1050,3 +1050,17 @@ body {
 .tabela--compacta thead th {
   white-space: normal;
 }
+/* Tabelas por curva (Volta e Evolução): o nome da curva é o dado da linha, como no protótipo A, e não um rótulo apagado. */
+.tabela--curvas tbody th {
+  color: var(--texto-1);
+  font-size: 13.5px;
+  border-bottom: 1px solid var(--linha-fraca);
+}
+.tabela--curvas tbody tr:last-child th {
+  border-bottom: 0;
+}
+.tabela--curvas tfoot th,
+.tabela--curvas tfoot td {
+  border-top: 1px solid var(--linha);
+  border-bottom: 0;
+}
