@@ -15,9 +15,9 @@ const Marca: React.FC = () => (
       <circle cx="13" cy="20" r="2.6" fill="var(--vermelho)" />
     </svg>
     <span>
-      Telemetria e
+      Sistema de Telemetria e
       <br />
-      Trajetórias
+      Otimização de Trajetórias
     </span>
   </a>
 );

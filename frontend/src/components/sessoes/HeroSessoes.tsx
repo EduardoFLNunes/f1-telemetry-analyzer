@@ -265,7 +265,7 @@ export const HeroSessoes: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
               <path d="M3 8h10M9 4l4 4-4 4" />
             </svg>
           </a>
-          <a className="botao" href={hashDaRota('evolucao', 'ultima-volta')}>Última volta</a>
+          <a className="botao" href={hashDaRota('volta', 'ultima')}>Última volta</a>
           <a className="botao" href={hashDaRota('evolucao')}>Evolução</a>
         </div>
       </div>
