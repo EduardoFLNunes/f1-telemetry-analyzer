@@ -96,7 +96,13 @@ export const VoltaPage: React.FC<{ sub: string | null; navegar: (tela: Tela, sub
   const voltaMelhor = useLeitura(lapMelhor ? `volta:${lapMelhor}` : null, () => lerVolta(lapMelhor as string));
   const ref = referencia === 'ia' ? voltaIa : voltaMelhor;
   const replayLapId = volta.dado?.replayLapId ?? null;
-  const coach = useLeitura(replayLapId ? `coach:${replayLapId}` : null, () => api.getLapCoaching(replayLapId as string));
+  const coach = useLeitura(replayLapId ? `coach:${replayLapId}` : null, () =>
+    api.getLapCoaching(replayLapId as string).catch((e) => {
+      // A rota responde 404 (com a frase em inglês) quando a gravação da volta não está na pasta de gravações.
+      if (e?.response?.status === 404) throw new Error('a gravação desta volta não está na pasta de gravações do backend');
+      throw e;
+    }),
+  );
 
   // Trocar de volta ou de referência desliga o replay e tira o cursor, como no protótipo.
   useEffect(() => {

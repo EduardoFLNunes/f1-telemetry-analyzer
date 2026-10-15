@@ -152,25 +152,52 @@ export function gradeDaVolta(v: VoltaDoStore): Grade {
   return { n: v.pontosDaGrade, comprimento: v.comprimentoM, passo: v.passoM };
 }
 
-/** Uma leitura com o estado de carga; `null` na chave não lê nada. */
+/** O backend não respondeu (ainda subindo, ou caiu): vale tentar de novo. */
+function semResposta(e: any): boolean {
+  return Boolean(e?.isAxiosError && !e?.response);
+}
+
+/** O erro em português: a frase do backend quando ele manda uma (`detail`), senão o motivo. */
+export function textoDoErro(e: any): string {
+  if (semResposta(e)) return 'o backend não respondeu; tentando de novo';
+  const detalhe = e?.response?.data?.detail;
+  if (typeof detalhe === 'string' && detalhe) return detalhe;
+  if (e?.response?.status) return `o backend respondeu ${e.response.status}`;
+  return e instanceof Error ? e.message : String(e);
+}
+
+const ESPERA_PARA_TENTAR_DE_NOVO_MS = 3000;
+
+/**
+ * Uma leitura com o estado de carga; `null` na chave não lê nada. Sem resposta
+ * do backend (o app abre antes de ele terminar de subir), tenta de novo a cada
+ * 3 s, em vez de ficar parada no erro.
+ */
 export function useLeitura<T>(chave: string | null, ler: () => Promise<T>): Carga<T> {
   const [estado, setEstado] = useState<Carga<T>>({ dado: null, erro: null, carregando: Boolean(chave) });
+  const [tentativa, setTentativa] = useState(0);
   useEffect(() => {
     if (!chave) {
       setEstado({ dado: null, erro: null, carregando: false });
       return undefined;
     }
     let cancelado = false;
+    let timer: number | undefined;
     setEstado((e) => ({ dado: e.dado, erro: null, carregando: true }));
     ler()
       .then((dado) => !cancelado && setEstado({ dado, erro: null, carregando: false }))
-      .catch((e) => !cancelado && setEstado({ dado: null, erro: e instanceof Error ? e.message : String(e), carregando: false }));
+      .catch((e) => {
+        if (cancelado) return;
+        setEstado({ dado: null, erro: textoDoErro(e), carregando: false });
+        if (semResposta(e)) timer = window.setTimeout(() => setTentativa((t) => t + 1), ESPERA_PARA_TENTAR_DE_NOVO_MS);
+      });
     return () => {
       cancelado = true;
+      window.clearTimeout(timer);
     };
-    // `ler` muda a cada render; a chave diz quando ler de novo.
+    // `ler` muda a cada render; a chave (e a nova tentativa) diz quando ler de novo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chave]);
+  }, [chave, tentativa]);
   return estado;
 }
 
