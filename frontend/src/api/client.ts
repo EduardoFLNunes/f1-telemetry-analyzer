@@ -228,6 +228,18 @@ export const api = {
   /** As frases recentes do coach, a mais nova primeiro (as 20 últimas de uma fila de 50). */
   getLiveCoach: async (): Promise<any> => (await client.get('/api/live/coach')).data,
 
+  // ─── Sessões, Volta e Evolução (pedido 30): só leitura ─────────────────────
+  getEvolucaoResumo: async (): Promise<any> => (await client.get('/api/evolucao/resumo', { timeout: 30_000 })).data,
+  getEvolucaoSessao: async (sessao: string): Promise<any> => (
+    await client.get(`/api/evolucao/sessoes/${encodeURIComponent(sessao)}`, { timeout: 30_000 })
+  ).data,
+  getCoachReferencias: async (): Promise<any> => (await client.get('/api/coach/referencias', { timeout: 30_000 })).data,
+  /** As linhas de uma volta no store v2 (o `#` do id vai codificado). */
+  getStoreVolta: async (lapId: string): Promise<any> => (
+    await client.get(`/api/store/voltas/${encodeURIComponent(lapId)}`, { timeout: 60_000 })
+  ).data,
+  getGeometriaOficial: async (): Promise<any> => (await client.get('/api/geometria/oficial', { timeout: 60_000 })).data,
+
   listExternalReferences: async (): Promise<any> => (await client.get('/api/references/external')).data,
   importFastF1Reference: async (payload: Record<string, unknown>): Promise<any> => (
     await client.post('/api/references/external/fastf1/import', payload, { timeout: 180_000 })

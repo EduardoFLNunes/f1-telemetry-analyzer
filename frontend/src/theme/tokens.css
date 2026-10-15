@@ -51,6 +51,15 @@
   --voce: #ffffff;
   --referencia: #7f93a6;
 
+  /* Gráficos e mapas da tela Volta (pedido 30). */
+  --faixa-curva: rgba(255, 255, 255, 0.03); /* curvas alternadas no fundo dos gráficos */
+  --faixa-selecionada: rgba(225, 6, 0, 0.16); /* a curva escolhida */
+  --pista-desenho: #2a2f36; /* a pista no mapa dos microssetores e no minimapa */
+  --relevo-plano: #8a96a3;
+  --relevo-subida: #ff9f43;
+  --relevo-descida: #4c8dff;
+  --fantasma: rgba(233, 237, 242, 0.9); /* o contorno do fantasma da referência */
+
   /* Cronometragem, só em tempos e só com o significado da F1. */
   --tempo-roxo: #b266ff; /* a melhor de todas */
   --tempo-verde: #2bd67b; /* a sua melhor */
