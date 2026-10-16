@@ -496,3 +496,12 @@ Você disse que o app não aparecia no menu Iniciar e pediu um lugar com todas a
 - **o build guarda o instalador novo sozinho:** `desktop/scripts/publish-version.js` roda no fim do `npm run dist:win` (`npm run publicar`). `npm run versoes` só refaz o LEIA-ME.
 
 **Na Parte F, use o instalador** `versoes\0.3.0-coleta-modelos\Automobilista-Telemetria-Setup-0.3.0-coleta-modelos.exe`. É o mesmo arquivo de `desktop\dist\`, sha256 `7b27fe71…`.
+
+## Parte G: conferência da sessão de teste (16/10, junto com o pedido 32)
+
+O relatório completo está em `docs/handoff/2026-10-15_32_sessoes-11-e-13-10-e-botao-do-coach_relatorio.md`, na seção "Parte G do pedido 28".
+
+- **A sessão:** `2026-10-15_23-24-50_vhe_interlagos`, com 20 voltas, todas `humano` pelo indicador. Ela saiu do **app do repositório** (`appPackaged: false`), e não do pacote instalado: foi gravada pela janela de validação do pedido 30. Por isso entrou por uma cópia em `data/recordings`.
+- **No store v2:** guinada, velocidades locais e os quatro freios em 100% dos pontos das 11 voltas. O metadado tem `carModel`, indicador, versão e commit, e a origem é o `indicador`, sem anotação.
+- **O veredito da aba e o do store batem,** e a contagem oficial da M1 foi para **1 de 5**.
+- **Falta:** uma sessão curta gravada pelo pacote instalado, para confirmar o mesmo por ele.

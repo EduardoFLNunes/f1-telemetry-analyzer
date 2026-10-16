@@ -1,0 +1,1538 @@
+diff --git a/backend/core/coleta/anotacao.py b/backend/core/coleta/anotacao.py
+new file mode 100644
+index 00000000..d7c063ad
+--- /dev/null
++++ b/backend/core/coleta/anotacao.py
+@@ -0,0 +1,107 @@
++"""A anotacao "Todas as voltas foram minhas" (pedido 32, Parte B.1 e B.2).
++
++Cada gravacao fora do relatorio tem uma origem, pela conferencia da Coleta:
++
++* **indicador de IA gravado** (app 0.3.0 em diante): todas as voltas `humano`
++  pelo indicador. Nao precisa de anotacao.
++* **sem indicador:** voltas `desconhecida`. Precisa da confirmacao do piloto de
++  que todas as voltas foram dele; so estas tem o botao.
++* **com voltas da IA ou misturada:** fica como esta, sem botao.
++
++Ao confirmar, a linha entra em `docs/experimentos/anotacoes_de_sessao.csv` do
++repositorio configurado, no formato do arquivo, com fim de linha CRLF e a
++observacao "anotada pelo app em AAAA-MM-DD". O commit fica para depois: a
++anotacao so vale para o coach na proxima rodada do `atualizar_coach`.
++"""
++from __future__ import annotations
++
++import csv
++import io
++import re
++import threading
++from datetime import date
++from pathlib import Path
++from typing import Any, Dict, List, Mapping, Optional
++
++ARQUIVO = Path("docs") / "experimentos" / "anotacoes_de_sessao.csv"
++COLUNAS = ["sessao", "origem", "carModel", "anotado_em", "observacao"]
++CARRO_PADRAO = "rss_formula_rss_3_v6_2026"
++_SESSAO_VALIDA = re.compile(r"^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_[A-Za-z0-9_]+$")
++_lock = threading.Lock()
++
++INDICADOR = "indicador"
++SEM_INDICADOR = "sem_indicador"
++COM_IA = "com_ia"
++SEM_CONFERENCIA = "sem_conferencia"
++
++
++def classificar(conferencia: Optional[Mapping[str, Any]]) -> str:
++    """A origem da gravacao pela conferencia: indicador, sem indicador ou com voltas da IA."""
++    voltas = list((conferencia or {}).get("voltas") or [])
++    if not voltas:
++        return SEM_CONFERENCIA
++    origens = {str(v.get("origem") or "desconhecida") for v in voltas}
++    if origens & {"ia", "misturada"}:
++        return COM_IA
++    if origens == {"humano"}:
++        return INDICADOR
++    return SEM_INDICADOR
++
++
++def ler_anotacoes(repositorio: Path) -> List[Dict[str, str]]:
++    caminho = Path(repositorio) / ARQUIVO
++    if not caminho.exists():
++        return []
++    with caminho.open(encoding="utf-8", newline="") as handle:
++        return [dict(linha) for linha in csv.DictReader(handle)]
++
++
++def linha_da_anotacao(sessao: str, carro: str, hoje: date) -> str:
++    """A linha no formato do arquivo (observacao entre aspas, como as outras), com CRLF."""
++    dia = hoje.isoformat()
++    buffer = io.StringIO()
++    escritor = csv.writer(buffer, lineterminator="\r\n", quoting=csv.QUOTE_MINIMAL)
++    escritor.writerow([sessao, "humano", carro, dia, f"anotada pelo app em {dia}"])
++    texto = buffer.getvalue()
++    # As outras linhas poem a observacao entre aspas mesmo sem virgula: mesma forma aqui.
++    if not texto.rstrip("\r\n").endswith('"'):
++        corpo, _ = texto.rsplit(",", 1)
++        texto = f'{corpo},"anotada pelo app em {dia}"\r\n'
++    return texto
++
++
++class AnotacaoRecusada(ValueError):
++    pass
++
++
++def anotar(repositorio: Path, sessao: str, conferencia: Optional[Mapping[str, Any]],
++           hoje: Optional[date] = None) -> Dict[str, Any]:
++    """Acrescenta a anotacao de uma gravacao sem indicador; devolve a linha gravada."""
++    if not _SESSAO_VALIDA.match(sessao or ""):
++        raise AnotacaoRecusada(f"nome de sessão inválido: {sessao!r}")
++    if (conferencia or {}).get("sessao") not in (None, sessao):
++        raise AnotacaoRecusada("a conferência não é desta sessão")
++    tipo = classificar(conferencia)
++    if tipo == SEM_CONFERENCIA:
++        raise AnotacaoRecusada("confira a sessão na aba Coleta de dados antes de anotar")
++    if tipo == INDICADOR:
++        raise AnotacaoRecusada("esta gravação tem o indicador de IA: não precisa de anotação")
++    if tipo == COM_IA:
++        raise AnotacaoRecusada("esta gravação tem voltas da IA ou misturadas: não pode ser anotada como sua")
++    gravado = ((conferencia or {}).get("gravacao") or {}).get("carModel")
++    carro = str(gravado or CARRO_PADRAO)
++    caminho = Path(repositorio) / ARQUIVO
++    with _lock:
++        if any(a.get("sessao") == sessao for a in ler_anotacoes(repositorio)):
++            raise AnotacaoRecusada("esta gravação já está anotada")
++        linha = linha_da_anotacao(sessao, carro, hoje or date.today())
++        if caminho.exists():
++            atual = caminho.read_bytes()
++            prefixo = b"" if not atual or atual.endswith(b"\n") else b"\r\n"
++        else:
++            caminho.parent.mkdir(parents=True, exist_ok=True)
++            prefixo = (",".join(COLUNAS) + "\r\n").encode("utf-8")
++        with caminho.open("ab") as handle:
++            handle.write(prefixo + linha.encode("utf-8"))
++    return {"sessao": sessao, "linha": linha.rstrip("\r\n"), "arquivo": str(caminho),
++            "carro": carro, "carroGravado": bool(gravado), "commit": False}
+diff --git a/backend/core/coleta/rodada_coach.py b/backend/core/coleta/rodada_coach.py
+new file mode 100644
+index 00000000..4b6be3e6
+--- /dev/null
++++ b/backend/core/coleta/rodada_coach.py
+@@ -0,0 +1,247 @@
++"""O botao "Atualizar coach e relatorio" (pedido 32, Parte B.3).
++
++Roda o mesmo `tools/atualizar_coach.py`, incremental, com o Python e a pasta do
++repositorio configurado na Coleta: o backend empacotado nao tem tudo o que o
++comando usa, e o codigo continua num caminho so. O botao nao muda o comando,
++os criterios nem as travas.
++
++* **Ligado** quando o repositorio esta configurado (com o Python dele), nada
++  esta sendo gravado e nenhuma rodada esta em andamento: nem pelo app, nem
++  pelo terminal (a trava de execucao, `core.coleta.trava_coach`).
++* **Durante:** os 7 passos, um a um, lidos da saida do comando, e o log
++  inteiro num arquivo em `<pasta de dados>/data/coach_rodadas/`.
++* **No fim:** as sessoes lidas, as voltas de cada uma no store v2, as
++  referencias antes e depois e a contagem oficial da M1. Depois de uma rodada
++  completa, o coach ao vivo recarrega o modelo.
++* **Parada numa trava** (`PARADO: ...`): a mensagem do comando, como ele a
++  escreveu; o servico nao tenta de novo sozinho.
++"""
++from __future__ import annotations
++
++import json
++import os
++import re
++import subprocess
++import sys
++import threading
++from datetime import datetime
++from pathlib import Path
++from typing import Any, Callable, Dict, List, Optional, Sequence
++
++from .oficial import contagem_oficial
++from .trava_coach import ler_trava, mensagem_de_ocupada
++
++PASSOS = (
++    ("1", "Inventário novo"),
++    ("2", "Anotações de 04/10 e de sessão inteira"),
++    ("3", "Sessões novas sem anotação"),
++    ("4", "Backup e treino do modelo do coach"),
++    ("5", "Resumo do coach"),
++    ("6", "Store v2, com as checagens"),
++    ("7", "Relatório de evolução"),
++)
++_PASSO = re.compile(r"^(\d)/7 ")
++_TAMBEM = re.compile(r" (\d)/7 ")
++_SESSAO_LIDA = re.compile(r"^\[(\d+)/(\d+)\] (\S+): (\d+) voltas(?P<cache> \(cache\))?\s*$")
++LINHAS_GUARDADAS = 400
++
++
++def comando_padrao(repositorio: Path) -> Optional[List[str]]:
++    """O Python do repositorio e o comando; None quando o Python dele nao existe."""
++    python = Path(repositorio) / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
++    script = Path(repositorio) / "backend" / "tools" / "atualizar_coach.py"
++    if not python.exists() or not script.exists():
++        return None
++    return [str(python), str(script)]
++
++
++def _referencias(repositorio: Path) -> Dict[str, Any]:
++    try:
++        dados = json.loads((Path(repositorio) / "data" / "ml" / "origem" / "atualizar_coach.json").read_text(encoding="utf-8"))
++    except (OSError, json.JSONDecodeError):
++        return {}
++    return dados.get("referencias") or {}
++
++
++def _voltas_no_store(repositorio: Path, sessoes: Sequence[str]) -> Dict[str, int]:
++    try:
++        meta = json.loads((Path(repositorio) / "data" / "ml" / "laps_grid_v2_meta.json").read_text(encoding="utf-8"))
++    except (OSError, json.JSONDecodeError):
++        return {}
++    contagem: Dict[str, int] = {s: 0 for s in sessoes}
++    for volta in meta.get("laps") or []:
++        sid = volta.get("session_id")
++        if sid in contagem:
++            contagem[sid] += 1
++    return contagem
++
++
++class RodadaDoCoach:
++    def __init__(
++        self,
++        repositorio: Callable[[], Optional[Path]],
++        gravando: Callable[[], bool],
++        pasta_de_logs: Path,
++        recarregar_coach: Callable[[], None],
++        comando: Callable[[Path], Optional[List[str]]] = comando_padrao,
++    ):
++        self._repositorio = repositorio
++        self._gravando = gravando
++        self.pasta_de_logs = Path(pasta_de_logs)
++        self._recarregar = recarregar_coach
++        self._comando = comando
++        self._lock = threading.Lock()
++        self._processo: Optional[subprocess.Popen] = None
++        self._thread: Optional[threading.Thread] = None
++        self._rodada: Optional[Dict[str, Any]] = None
++
++    # ------------------------------------------------------------ estado ---
++
++    def motivos_para_desligar(self) -> List[str]:
++        motivos = []
++        repo = self._repositorio()
++        if repo is None:
++            motivos.append("o repositório não está configurado (aba Coleta de dados)")
++        elif self._comando(repo) is None:
++            motivos.append(f"o repositório configurado não tem o Python dele (.venv) ou o tools/atualizar_coach.py: {repo}")
++        if self._gravando():
++            motivos.append("uma sessão está sendo gravada; espere ela terminar")
++        if self.em_andamento():
++            motivos.append("uma rodada do app está em andamento")
++        elif repo is not None:
++            trava = ler_trava(repo)
++            if trava and trava.get("ativa"):
++                motivos.append(mensagem_de_ocupada(trava).replace("PARADO: ", ""))
++        return motivos
++
++    def em_andamento(self) -> bool:
++        with self._lock:
++            return self._thread is not None and self._thread.is_alive()
++
++    def estado(self) -> Dict[str, Any]:
++        motivos = self.motivos_para_desligar()
++        with self._lock:
++            rodada = json.loads(json.dumps(self._rodada)) if self._rodada else None
++        return {"ligado": not motivos, "motivos": motivos, "emAndamento": self.em_andamento(), "rodada": rodada,
++                "passos": [{"id": p, "nome": n} for p, n in PASSOS]}
++
++    # ------------------------------------------------------------ rodada ---
++
++    def iniciar(self) -> Dict[str, Any]:
++        motivos = self.motivos_para_desligar()
++        if motivos:
++            raise RuntimeError("; ".join(motivos))
++        repo = self._repositorio()
++        assert repo is not None
++        comando = self._comando(repo)
++        assert comando is not None
++        inicio = datetime.now()
++        self.pasta_de_logs.mkdir(parents=True, exist_ok=True)
++        log = self.pasta_de_logs / f"atualizar_coach_{inicio.strftime('%Y-%m-%d_%H-%M-%S')}.log"
++        with self._lock:
++            self._rodada = {
++                "situacao": "rodando",
++                "inicio": inicio.isoformat(timespec="seconds"),
++                "fim": None,
++                "repositorio": str(repo),
++                "comando": comando,
++                "log": str(log),
++                "passos": {p: "pendente" for p, _ in PASSOS},
++                "passoAtual": None,
++                "linhas": [],
++                "sessoesLidas": [],
++                "mensagemDeParada": None,
++                "codigo": None,
++                "resumo": None,
++                "referenciasAntes": _referencias(repo),
++                "coachRecarregado": False,
++            }
++            self._thread = threading.Thread(target=self._rodar, args=(repo, comando, log), daemon=True,
++                                            name="atualizar-coach")
++            self._thread.start()
++        return self.estado()
++
++    def _rodar(self, repo: Path, comando: List[str], log: Path) -> None:
++        env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUNBUFFERED": "1", "AT_COACH_RODADA_ORIGEM": "app"}
++        flags = 0x08000000 if sys.platform == "win32" else 0  # CREATE_NO_WINDOW
++        codigo: Optional[int] = None
++        try:
++            with log.open("w", encoding="utf-8", newline="\n") as saida:
++                processo = subprocess.Popen(
++                    comando, cwd=str(Path(repo) / "backend"), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
++                    text=True, encoding="utf-8", errors="replace", env=env, creationflags=flags,
++                )
++                with self._lock:
++                    self._processo = processo
++                assert processo.stdout is not None
++                for linha in processo.stdout:
++                    saida.write(linha)
++                    saida.flush()
++                    self._linha(linha.rstrip("\r\n"))
++                codigo = processo.wait()
++        except OSError as erro:
++            self._linha(f"PARADO: o comando nao abriu: {erro}")
++            codigo = -1
++        self._fechar(repo, codigo)
++
++    def _linha(self, linha: str) -> None:
++        with self._lock:
++            r = self._rodada
++            if r is None:
++                return
++            r["linhas"].append(linha)
++            del r["linhas"][:-LINHAS_GUARDADAS]
++            passo = _PASSO.match(linha)
++            if passo:
++                ids = [passo.group(1)] + _TAMBEM.findall(linha)
++                for p, estado in r["passos"].items():
++                    if estado == "rodando":
++                        r["passos"][p] = "feito"
++                for p in ids:
++                    if p in r["passos"]:
++                        r["passos"][p] = "rodando"
++                r["passoAtual"] = ids[-1]
++            lida = _SESSAO_LIDA.match(linha)
++            if lida and not lida.group("cache") and r.get("passoAtual") == "1":
++                r["sessoesLidas"].append({"sessao": lida.group(3), "voltas": int(lida.group(4))})
++            if linha.startswith("PARADO:") and not r["mensagemDeParada"]:
++                r["mensagemDeParada"] = linha
++
++    def _fechar(self, repo: Path, codigo: Optional[int]) -> None:
++        with self._lock:
++            r = self._rodada
++            assert r is not None
++            r["codigo"] = codigo
++            r["fim"] = datetime.now().isoformat(timespec="seconds")
++            parada = r["mensagemDeParada"]
++            if codigo == 0 and not parada:
++                r["situacao"] = "concluida"
++                for p in r["passos"]:
++                    r["passos"][p] = "feito"
++            else:
++                r["situacao"] = "parada" if parada else "falhou"
++                for p, estado in r["passos"].items():
++                    if estado == "rodando":
++                        r["passos"][p] = "parado"
++            sessoes = [s["sessao"] for s in r["sessoesLidas"]]
++            antes = r["referenciasAntes"]
++        resumo = None
++        if codigo == 0 and not parada:
++            store = _voltas_no_store(repo, sessoes)
++            resumo = {
++                "sessoesLidas": [{"sessao": s, "voltasNoStore": store.get(s, 0)} for s in sessoes],
++                "referenciasAntes": antes,
++                "referenciasDepois": _referencias(repo),
++                "m1": contagem_oficial(repo),
++            }
++        recarregado = False
++        if codigo == 0 and not parada:
++            try:
++                self._recarregar()
++                recarregado = True
++            except Exception as erro:  # o modelo novo ja esta no disco; o coach o le na proxima abertura
++                self._linha(f"aviso: o coach ao vivo nao recarregou o modelo: {erro}")
++        with self._lock:
++            self._rodada["resumo"] = resumo
++            self._rodada["coachRecarregado"] = recarregado
++            self._processo = None
+diff --git a/backend/core/coleta/trava_coach.py b/backend/core/coleta/trava_coach.py
+new file mode 100644
+index 00000000..bcdef3ab
+--- /dev/null
++++ b/backend/core/coleta/trava_coach.py
+@@ -0,0 +1,127 @@
++"""A trava de execucao do `atualizar_coach` (pedido 32, Parte B).
++
++Uma rodada por vez, venha ela do terminal ou do botao do app: o comando cria
++`data/ml/atualizar_coach.lock` no repositorio antes do passo 1 e apaga no fim,
++mesmo quando para numa trava. O arquivo diz quem roda (processo e inicio).
++
++Uma trava cujo processo ja nao existe (o comando foi morto, o PC desligou) e
++velha: a proxima rodada a substitui e diz isso. A trava nao muda nada do que o
++comando le ou grava; ela so impede duas rodadas ao mesmo tempo.
++"""
++from __future__ import annotations
++
++import ctypes
++import json
++import os
++import sys
++from datetime import datetime
++from pathlib import Path
++from typing import Any, Dict, Optional
++
++NOME_DA_TRAVA = "atualizar_coach.lock"
++
++
++def caminho_da_trava(repositorio: Path) -> Path:
++    return Path(repositorio) / "data" / "ml" / NOME_DA_TRAVA
++
++
++def processo_vivo(pid: int) -> bool:
++    """O processo existe? Sem `os.kill(pid, 0)`, que no Windows encerraria o processo."""
++    if pid <= 0:
++        return False
++    if sys.platform == "win32":
++        kernel = ctypes.windll.kernel32
++        handle = kernel.OpenProcess(0x1000, False, int(pid))  # PROCESS_QUERY_LIMITED_INFORMATION
++        if not handle:
++            return False
++        try:
++            codigo = ctypes.c_ulong()
++            if not kernel.GetExitCodeProcess(handle, ctypes.byref(codigo)):
++                return False
++            return codigo.value == 259  # STILL_ACTIVE
++        finally:
++            kernel.CloseHandle(handle)
++    try:
++        os.kill(pid, 0)
++    except ProcessLookupError:
++        return False
++    except PermissionError:
++        return True
++    return True
++
++
++def ler_trava(repositorio: Path) -> Optional[Dict[str, Any]]:
++    """O conteudo da trava, com `ativa` (o processo ainda roda); None sem trava."""
++    caminho = caminho_da_trava(repositorio)
++    try:
++        dados = json.loads(caminho.read_text(encoding="utf-8"))
++    except FileNotFoundError:
++        return None
++    except (OSError, json.JSONDecodeError):
++        # Acabou de ser criada e ainda esta sendo escrita: conta como ativa por alguns segundos.
++        try:
++            recente = (datetime.now().timestamp() - caminho.stat().st_mtime) < 10
++        except OSError:
++            recente = False
++        return {"pid": 0, "ativa": recente, "arquivo": str(caminho)}
++    pid = int(dados.get("pid") or 0)
++    return {**dados, "pid": pid, "ativa": processo_vivo(pid), "arquivo": str(caminho)}
++
++
++class TravaOcupada(RuntimeError):
++    def __init__(self, info: Dict[str, Any]):
++        self.info = info
++        super().__init__(mensagem_de_ocupada(info))
++
++
++def mensagem_de_ocupada(info: Dict[str, Any]) -> str:
++    inicio = str(info.get("inicio") or "")[11:19] or "horario desconhecido"
++    origem = info.get("origem") or "terminal"
++    return (f"PARADO: outra rodada do atualizar_coach esta em andamento "
++            f"(processo {info.get('pid')}, desde {inicio}, pelo {origem}).")
++
++
++class TravaDeExecucao:
++    """`with TravaDeExecucao(repo):` segura a trava durante a rodada."""
++
++    def __init__(self, repositorio: Path, origem: Optional[str] = None):
++        self.caminho = caminho_da_trava(repositorio)
++        self.repositorio = Path(repositorio)
++        self.origem = origem or os.environ.get("AT_COACH_RODADA_ORIGEM") or "terminal"
++        self.substituiu: Optional[Dict[str, Any]] = None
++        self._minha = False
++
++    def __enter__(self) -> "TravaDeExecucao":
++        self.caminho.parent.mkdir(parents=True, exist_ok=True)
++        conteudo = json.dumps({"pid": os.getpid(), "inicio": datetime.now().isoformat(timespec="seconds"),
++                               "origem": self.origem}, ensure_ascii=False)
++        for _ in range(2):
++            try:
++                fd = os.open(str(self.caminho), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
++            except FileExistsError:
++                info = ler_trava(self.repositorio) or {}
++                if info.get("ativa"):
++                    raise TravaOcupada(info)
++                # Velha: o processo dela nao existe mais.
++                self.substituiu = info
++                try:
++                    self.caminho.unlink()
++                except FileNotFoundError:
++                    pass
++                continue
++            with os.fdopen(fd, "w", encoding="utf-8") as handle:
++                handle.write(conteudo)
++            self._minha = True
++            return self
++        raise TravaOcupada(ler_trava(self.repositorio) or {})
++
++    def __exit__(self, *exc) -> None:
++        if not self._minha:
++            return
++        try:
++            info = json.loads(self.caminho.read_text(encoding="utf-8"))
++            if int(info.get("pid") or 0) == os.getpid():
++                self.caminho.unlink()
++        except (OSError, json.JSONDecodeError, ValueError):
++            pass
++        self._minha = False
+diff --git a/backend/routers/coleta.py b/backend/routers/coleta.py
+index 68dcac1c..8f049d8b 100644
+--- a/backend/routers/coleta.py
++++ b/backend/routers/coleta.py
+@@ -8,7 +8,7 @@ O estado do backend e da conexao com o jogo continua em `/api/runtime/status` e
+ `/api/recording/status`; a aba le essas rotas como estao.
+ """
+ import asyncio
+-from typing import Any, Dict
++from typing import Any, Dict, Optional
+ 
+ from fastapi import APIRouter, Body, HTTPException
+ 
+@@ -18,6 +18,8 @@ from core.coleta.configuracao import ConfigError
+ from core.coleta.estado import carro_e_pista, espaco_em_disco, estado_do_coach
+ from core.coleta.oficial import contagem_oficial
+ from core.coleta.origem_app import app_identity
++from core.coleta.anotacao import ARQUIVO as ANOTACOES, AnotacaoRecusada, anotar, ler_anotacoes
++from core.coleta.rodada_coach import RodadaDoCoach
+ 
+ router = APIRouter(prefix="/api/coleta")
+ 
+@@ -116,3 +118,59 @@ async def post_verificacao(session_id: str):
+ @router.get("/m1/oficial")
+ async def get_m1_oficial():
+     return await asyncio.to_thread(contagem_oficial, main.app_config.coach_root())
++
++
++# ---------------------------------------------------------------- pedido 32 ---
++# O botao do coach e a anotacao "Todas as voltas foram minhas", na tela Sessoes.
++
++_rodada: Optional[RodadaDoCoach] = None
++
++
++def _gravando() -> bool:
++    recording = main.recording_runtime.status().to_api() if main.recording_runtime else {}
++    return bool(recording.get("recording"))
++
++
++def rodada_do_coach() -> RodadaDoCoach:
++    global _rodada
++    if _rodada is None:
++        _rodada = RodadaDoCoach(
++            repositorio=main.app_config.coach_root,
++            gravando=_gravando,
++            pasta_de_logs=main.RUNTIME_ROOT / "data" / "coach_rodadas",
++            recarregar_coach=main.reload_coach,
++        )
++    return _rodada
++
++
++@router.get("/coach/rodada")
++async def get_rodada_do_coach():
++    return await asyncio.to_thread(rodada_do_coach().estado)
++
++
++@router.post("/coach/rodada")
++async def post_rodada_do_coach():
++    try:
++        return await asyncio.to_thread(rodada_do_coach().iniciar)
++    except RuntimeError as error:
++        raise HTTPException(status_code=409, detail=str(error))
++
++
++@router.get("/anotacoes")
++async def get_anotacoes():
++    repo = main.app_config.coach_root()
++    if repo is None:
++        return {"disponivel": False, "motivo": "o repositório não está configurado", "anotacoes": []}
++    return {"disponivel": True, "arquivo": str(repo / ANOTACOES), "anotacoes": await asyncio.to_thread(ler_anotacoes, repo)}
++
++
++@router.post("/anotacoes/{session_id}")
++async def post_anotacao(session_id: str):
++    repo = main.app_config.coach_root()
++    if repo is None:
++        raise HTTPException(status_code=409, detail="o repositório não está configurado (aba Coleta de dados)")
++    conferencia = await asyncio.to_thread(main.coleta_conferencia.ler_salvo, session_id)
++    try:
++        return await asyncio.to_thread(anotar, repo, session_id, conferencia)
++    except AnotacaoRecusada as error:
++        raise HTTPException(status_code=409, detail=str(error))
+diff --git a/backend/tests/test_coach_no_app.py b/backend/tests/test_coach_no_app.py
+new file mode 100644
+index 00000000..30539662
+--- /dev/null
++++ b/backend/tests/test_coach_no_app.py
+@@ -0,0 +1,223 @@
++"""Pedido 32, Parte C: o botao do coach, a anotacao de sessao e a trava de execucao.
++
++Tudo numa pasta temporaria, com um comando falso no lugar do `atualizar_coach`:
++nenhum teste le ou grava o repositorio de verdade.
++"""
++import json
++import os
++import sys
++import time
++from datetime import date
++from pathlib import Path
++
++import pytest
++
++BACKEND = Path(__file__).resolve().parents[1]
++if str(BACKEND) not in sys.path:
++    sys.path.insert(0, str(BACKEND))
++
++from core.coleta import anotacao as anot  # noqa: E402
++from core.coleta.rodada_coach import RodadaDoCoach  # noqa: E402
++from core.coleta.trava_coach import TravaDeExecucao, TravaOcupada, caminho_da_trava, ler_trava  # noqa: E402
++
++CABECALHO = "sessao,origem,carModel,anotado_em,observacao\r\n"
++SESSAO = "2026-10-20_10-00-00_vhe_interlagos"
++
++
++def _conferencia(*origens, carro=None, sessao=SESSAO):
++    return {"sessao": sessao, "gravacao": {"carModel": carro}, "voltas": [{"origem": o} for o in origens]}
++
++
++# ------------------------------------------------------------------ trava ---
++
++def test_trava_impede_a_segunda_rodada_e_sai_no_fim(tmp_path):
++    with TravaDeExecucao(tmp_path) as trava:
++        assert caminho_da_trava(tmp_path).exists()
++        assert ler_trava(tmp_path)["ativa"] is True
++        with pytest.raises(TravaOcupada) as ocupada:
++            TravaDeExecucao(tmp_path).__enter__()
++        assert str(ocupada.value).startswith("PARADO: outra rodada do atualizar_coach esta em andamento")
++        assert trava.substituiu is None
++    assert not caminho_da_trava(tmp_path).exists()
++
++
++def test_trava_velha_e_substituida(tmp_path):
++    caminho = caminho_da_trava(tmp_path)
++    caminho.parent.mkdir(parents=True)
++    caminho.write_text(json.dumps({"pid": 4_000_000, "inicio": "2026-10-15T23:00:00", "origem": "terminal"}),
++                       encoding="utf-8")
++    assert ler_trava(tmp_path)["ativa"] is False
++    with TravaDeExecucao(tmp_path) as trava:
++        assert trava.substituiu["pid"] == 4_000_000
++        assert json.loads(caminho.read_text(encoding="utf-8"))["pid"] == os.getpid()
++    assert not caminho.exists()
++
++
++def test_atualizar_coach_para_com_a_trava_ocupada_sem_rodar(monkeypatch, capsys):
++    sys.path.insert(0, str(BACKEND / "tools"))
++    import atualizar_coach
++
++    class Ocupada:
++        def __init__(self, *_a, **_k):
++            pass
++
++        def __enter__(self):
++            raise TravaOcupada({"pid": 123, "inicio": "2026-10-16T01:00:00", "origem": "app"})
++
++    chamou = []
++    monkeypatch.setattr(atualizar_coach, "TravaDeExecucao", Ocupada)
++    monkeypatch.setattr(atualizar_coach, "_main", lambda argv=None: chamou.append(argv) or 0)
++    assert atualizar_coach.main([]) == 3
++    assert chamou == []
++    assert "PARADO: outra rodada do atualizar_coach esta em andamento (processo 123, desde 01:00:00, pelo app)." \
++        in capsys.readouterr().out
++
++
++# --------------------------------------------------------------- anotacao ---
++
++def test_origem_da_gravacao():
++    assert anot.classificar(_conferencia("humano", "humano")) == anot.INDICADOR
++    assert anot.classificar(_conferencia("desconhecida", "desconhecida")) == anot.SEM_INDICADOR
++    assert anot.classificar(_conferencia("desconhecida", "ia")) == anot.COM_IA
++    assert anot.classificar(_conferencia("humano", "misturada")) == anot.COM_IA
++    assert anot.classificar(None) == anot.SEM_CONFERENCIA
++
++
++def test_linha_no_formato_do_arquivo_com_crlf_e_observacao(tmp_path):
++    arquivo = tmp_path / anot.ARQUIVO
++    arquivo.parent.mkdir(parents=True)
++    existente = CABECALHO + '2026-10-05_20-33-47_vhe_interlagos,humano,rss_formula_rss_3_v6_2026,2026-10-08,"Todas as voltas"\r\n'
++    arquivo.write_bytes(existente.encode("utf-8"))
++    r = anot.anotar(tmp_path, SESSAO, _conferencia("desconhecida", "desconhecida"), hoje=date(2026, 10, 16))
++    esperado = f'{SESSAO},humano,rss_formula_rss_3_v6_2026,2026-10-16,"anotada pelo app em 2026-10-16"'
++    assert r["linha"] == esperado
++    assert r["carroGravado"] is False and r["commit"] is False
++    assert arquivo.read_bytes() == (existente + esperado + "\r\n").encode("utf-8")
++    # O leitor do pipeline le a linha nova.
++    from ml.data.session_annotations import session_annotations
++    notas = session_annotations(arquivo)
++    assert notas.iloc[-1].to_dict() == {"sessao": SESSAO, "origem": "humano", "carModel": "rss_formula_rss_3_v6_2026",
++                                        "anotado_em": "2026-10-16", "observacao": "anotada pelo app em 2026-10-16"}
++
++
++def test_carro_gravado_e_arquivo_sem_quebra_no_fim(tmp_path):
++    arquivo = tmp_path / anot.ARQUIVO
++    arquivo.parent.mkdir(parents=True)
++    arquivo.write_bytes(CABECALHO.rstrip("\r\n").encode("utf-8"))
++    r = anot.anotar(tmp_path, SESSAO, _conferencia("desconhecida", carro="ks_carro"), hoje=date(2026, 10, 16))
++    assert r["carro"] == "ks_carro" and r["carroGravado"] is True
++    assert arquivo.read_bytes().endswith(b'observacao\r\n' + r["linha"].encode() + b"\r\n")
++
++
++@pytest.mark.parametrize("conferencia, motivo", [
++    (_conferencia("humano"), "indicador de IA"),
++    (_conferencia("desconhecida", "ia"), "voltas da IA"),
++    (None, "confira a sessão"),
++    (_conferencia("desconhecida", sessao="outra"), "não é desta sessão"),
++])
++def test_anotacao_recusada(tmp_path, conferencia, motivo):
++    with pytest.raises(anot.AnotacaoRecusada, match=motivo):
++        anot.anotar(tmp_path, SESSAO, conferencia)
++    assert not (tmp_path / anot.ARQUIVO).exists()
++
++
++def test_anotacao_repetida_e_nome_invalido(tmp_path):
++    anot.anotar(tmp_path, SESSAO, _conferencia("desconhecida"), hoje=date(2026, 10, 16))
++    with pytest.raises(anot.AnotacaoRecusada, match="já está anotada"):
++        anot.anotar(tmp_path, SESSAO, _conferencia("desconhecida"))
++    with pytest.raises(anot.AnotacaoRecusada, match="inválido"):
++        anot.anotar(tmp_path, "../x", _conferencia("desconhecida", sessao="../x"))
++
++
++# ----------------------------------------------------------------- rodada ---
++
++FALSO_OK = """
++import time
++print("1/7 inventario novo (incremental)", flush=True)
++print("[1/2] 2026-10-11_14-19-52_vhe_interlagos: 23 voltas", flush=True)
++print("[2/2] 2026-10-04_02-24-04_vhe_interlagos: 20 voltas (cache)", flush=True)
++print("2/7 anotacoes versionadas de 04/10 e 3/7 sessoes novas sem anotacao", flush=True)
++time.sleep(0.2)
++for n in (4, 5, 6, 7):
++    print(f"{n}/7 passo", flush=True)
++"""
++
++FALSO_PARADO = """
++print("1/7 inventario novo (incremental)", flush=True)
++print("6/7 store v2, com as checagens", flush=True)
++print("PARADO: o store v2 nao passou nas checagens (acima); o relatorio de evolucao nao rodou.", flush=True)
++raise SystemExit(1)
++"""
++
++
++def _repo_falso(tmp_path, script):
++    repo = tmp_path / "repo"
++    (repo / "data" / "ml" / "origem").mkdir(parents=True)
++    (repo / "backend").mkdir()
++    (repo / "data" / "ml" / "origem" / "atualizar_coach.json").write_text(json.dumps({"referencias": {
++        "minha_melhor": {"volta": "a#0018", "tempo_s": 89.389}}}), encoding="utf-8")
++    falso = tmp_path / "falso.py"
++    falso.write_text(script, encoding="utf-8")
++    return repo, falso
++
++
++def _rodada(repo, falso, gravando=False, repositorio=True, recarregar=None):
++    return RodadaDoCoach(
++        repositorio=lambda: repo if repositorio else None,
++        gravando=lambda: gravando,
++        pasta_de_logs=repo.parent / "logs",
++        recarregar_coach=recarregar or (lambda: None),
++        comando=lambda _repo: [sys.executable, str(falso)],
++    )
++
++
++def _esperar(rodada, limite=20.0):
++    fim = time.time() + limite
++    while rodada.em_andamento() and time.time() < fim:
++        time.sleep(0.05)
++    assert not rodada.em_andamento()
++    return rodada.estado()
++
++
++def test_botao_desligado(tmp_path):
++    repo, falso = _repo_falso(tmp_path, FALSO_OK)
++    assert _rodada(repo, falso).estado()["ligado"] is True
++    assert "não está configurado" in _rodada(repo, falso, repositorio=False).estado()["motivos"][0]
++    assert "sendo gravada" in _rodada(repo, falso, gravando=True).estado()["motivos"][0]
++    with TravaDeExecucao(repo, origem="terminal"):
++        estado = _rodada(repo, falso).estado()
++        assert estado["ligado"] is False and "outra rodada" in estado["motivos"][0]
++        with pytest.raises(RuntimeError):
++            _rodada(repo, falso).iniciar()
++
++
++def test_rodada_progresso_resumo_e_recarregamento(tmp_path):
++    repo, falso = _repo_falso(tmp_path, FALSO_OK)
++    recarregou = []
++    rodada = _rodada(repo, falso, recarregar=lambda: recarregou.append(True))
++    inicio = rodada.iniciar()
++    assert inicio["emAndamento"] is True and inicio["ligado"] is False
++    estado = _esperar(rodada)
++    r = estado["rodada"]
++    assert r["situacao"] == "concluida" and r["codigo"] == 0
++    assert set(r["passos"].values()) == {"feito"}
++    assert r["sessoesLidas"] == [{"sessao": "2026-10-11_14-19-52_vhe_interlagos", "voltas": 23}]
++    assert r["resumo"]["referenciasAntes"]["minha_melhor"]["tempo_s"] == 89.389
++    assert r["resumo"]["m1"]["disponivel"] is False
++    assert recarregou == [True] and r["coachRecarregado"] is True
++    assert Path(r["log"]).read_text(encoding="utf-8").startswith("1/7 inventario novo")
++    assert estado["ligado"] is True
++
++
++def test_rodada_parada_numa_trava_nao_tenta_de_novo(tmp_path):
++    repo, falso = _repo_falso(tmp_path, FALSO_PARADO)
++    recarregou = []
++    rodada = _rodada(repo, falso, recarregar=lambda: recarregou.append(True))
++    rodada.iniciar()
++    r = _esperar(rodada)["rodada"]
++    assert r["situacao"] == "parada" and r["codigo"] == 1
++    assert r["mensagemDeParada"].startswith("PARADO: o store v2 nao passou")
++    assert r["passos"]["6"] == "parado" and r["passos"]["7"] == "pendente"
++    assert r["resumo"] is None and recarregou == []
++    time.sleep(0.3)
++    assert rodada.em_andamento() is False  # nao comecou outra sozinha
+diff --git a/backend/tools/atualizar_coach.py b/backend/tools/atualizar_coach.py
+index 91bdc61c..ed4f4cab 100644
+--- a/backend/tools/atualizar_coach.py
++++ b/backend/tools/atualizar_coach.py
+@@ -59,6 +59,7 @@ from core.assisted_analysis.reference_model import (  # noqa: E402
+     model_path,
+ )
+ from core.live.driving_coach import LiveDrivingCoach  # noqa: E402
++from core.coleta.trava_coach import TravaDeExecucao, TravaOcupada  # noqa: E402
+ from ml import config  # noqa: E402
+ from ml.data import origin  # noqa: E402
+ from ml.data.inventory import inventory_path  # noqa: E402
+@@ -239,6 +240,22 @@ class Clock:
+ 
+ 
+ def main(argv=None) -> int:
++    # Pedido 32: uma rodada por vez, do terminal ou do botao do app. A trava nao muda o que os passos fazem.
++    try:
++        trava = TravaDeExecucao(BACKEND_DIR.parent)
++        trava.__enter__()
++    except TravaOcupada as ocupada:
++        print(str(ocupada), flush=True)
++        return 3
++    if trava.substituiu is not None:
++        print(f"   (trava velha do processo {trava.substituiu.get('pid')} substituida: ele ja nao roda)", flush=True)
++    try:
++        return _main(argv)
++    finally:
++        trava.__exit__(None, None, None)
++
++
++def _main(argv=None) -> int:
+     clock = Clock()
+     code, args = _run(argv, clock)
+     if args is not None:
+diff --git a/frontend/src/api/client.ts b/frontend/src/api/client.ts
+index 8b0f9991..728d16a9 100644
+--- a/frontend/src/api/client.ts
++++ b/frontend/src/api/client.ts
+@@ -223,6 +223,13 @@ export const api = {
+     await client.post(`/api/coleta/verificacoes/${encodeURIComponent(sessionId)}`)
+   ).data,
+   getColetaM1Oficial: async (): Promise<any> => (await client.get('/api/coleta/m1/oficial', { timeout: 60_000 })).data,
++  // ─── Pedido 32: o botão do coach e a anotação de sessão ────────────────────
++  getCoachRodada: async (): Promise<any> => (await client.get('/api/coleta/coach/rodada', { timeout: 15_000 })).data,
++  postCoachRodada: async (): Promise<any> => (await client.post('/api/coleta/coach/rodada', null, { timeout: 30_000 })).data,
++  getColetaAnotacoes: async (): Promise<any> => (await client.get('/api/coleta/anotacoes')).data,
++  postColetaAnotacao: async (sessionId: string): Promise<any> => (
++    await client.post(`/api/coleta/anotacoes/${encodeURIComponent(sessionId)}`, null, { timeout: 30_000 })
++  ).data,
+ 
+   // ─── Ao vivo (pedido 29) ──────────────────────────────────────────────────
+   /** As frases recentes do coach, a mais nova primeiro (as 20 últimas de uma fila de 50). */
+diff --git a/frontend/src/components/sessoes/CoachNoApp.tsx b/frontend/src/components/sessoes/CoachNoApp.tsx
+new file mode 100644
+index 00000000..1070ff71
+--- /dev/null
++++ b/frontend/src/components/sessoes/CoachNoApp.tsx
+@@ -0,0 +1,241 @@
++/**
++ * Pedido 32, Parte B, na seção "Gravações fora do relatório" da tela Sessões:
++ *
++ * - `BotaoDoCoach`: "Atualizar coach e relatório" roda o mesmo
++ *   `tools/atualizar_coach.py` pelo backend (`/api/coleta/coach/rodada`). Mostra
++ *   por que está desligado, os 7 passos durante a rodada, o log e, no fim, o
++ *   resumo. Uma parada numa trava mostra a mensagem do comando e não tenta de
++ *   novo sozinha. Depois de uma rodada completa, as telas leem de novo.
++ * - `ConfirmarAnotacao`: a confirmação de "Todas as voltas foram minhas", com a
++ *   sessão, a data, as voltas válidas e o carro.
++ */
++import React, { useEffect, useRef, useState } from 'react';
++import { api } from '../../api/client';
++import { esquecerLeituras, textoDoErro } from '../../volta/dados';
++import { EtiquetaEstado, type Tom } from '../ui/base';
++import { ROTULO_DO_PASSO, tempoDaReferencia, type EstadoDoPasso } from './regrasDoCoachNoApp';
++
++const TOM_DO_PASSO: Record<EstadoDoPasso, Tom> = { pendente: 'neutro', rodando: 'aviso', feito: 'ok', parado: 'erro' };
++const NOME_DA_REFERENCIA: Record<string, string> = { volta_ia: 'Volta da IA', minha_melhor: 'Sua melhor' };
++
++function Referencias({ antes, depois }: { antes: any; depois: any }) {
++  const tipos = Array.from(new Set([...Object.keys(antes || {}), ...Object.keys(depois || {})]));
++  return (
++    <table className="tabela" style={{ minWidth: 520 }}>
++      <thead>
++        <tr>
++          <th scope="col">Referência</th>
++          <th scope="col">Antes</th>
++          <th scope="col">Depois</th>
++        </tr>
++      </thead>
++      <tbody>
++        {tipos.map((tipo) => {
++          const a = antes?.[tipo];
++          const d = depois?.[tipo];
++          const mudou = a?.volta !== d?.volta;
++          return (
++            <tr key={tipo}>
++              <th scope="row" style={{ color: 'var(--texto-1)', fontSize: 13.5 }}>{NOME_DA_REFERENCIA[tipo] ?? tipo}</th>
++              <td className="dado" title={a?.volta}>{a ? tempoDaReferencia(a.tempo_s) : '—'}</td>
++              <td className="dado" title={d?.volta}>
++                {d ? tempoDaReferencia(d.tempo_s) : '—'}
++                {mudou && d && <span className="texto-fraco"> · {d.volta}</span>}
++              </td>
++            </tr>
++          );
++        })}
++      </tbody>
++    </table>
++  );
++}
++
++export const BotaoDoCoach: React.FC<{ pronto: boolean }> = ({ pronto }) => {
++  const [estado, setEstado] = useState<any>(null);
++  const [erro, setErro] = useState<string | null>(null);
++  const [pedindo, setPedindo] = useState(false);
++  const recarregadoPara = useRef<string | null>(null);
++
++  useEffect(() => {
++    if (!pronto) return undefined;
++    let cancelado = false;
++    let timer = 0;
++    const ler = async () => {
++      try {
++        const e = await api.getCoachRodada();
++        if (cancelado) return;
++        setEstado(e);
++        setErro(null);
++        const r = e?.rodada;
++        // Rodada completa: as telas leem de novo, uma vez por rodada.
++        // Na primeira leitura só guarda qual foi a última rodada; as telas acabaram de ler.
++        const fim = r?.situacao === 'concluida' ? String(r.fim || '') : '';
++        if (recarregadoPara.current === null) recarregadoPara.current = fim;
++        else if (fim && fim !== recarregadoPara.current) {
++          recarregadoPara.current = fim;
++          esquecerLeituras();
++        }
++        timer = window.setTimeout(ler, e?.emAndamento ? 1500 : 10_000);
++      } catch (falha) {
++        if (cancelado) return;
++        setErro(textoDoErro(falha));
++        timer = window.setTimeout(ler, 5000);
++      }
++    };
++    ler();
++    return () => {
++      cancelado = true;
++      window.clearTimeout(timer);
++    };
++  }, [pronto]);
++
++  const iniciar = async () => {
++    setPedindo(true);
++    try {
++      setEstado(await api.postCoachRodada());
++      setErro(null);
++    } catch (falha) {
++      setErro(textoDoErro(falha));
++    } finally {
++      setPedindo(false);
++    }
++  };
++
++  const rodada = estado?.rodada;
++  const passos: Array<{ id: string; nome: string }> = estado?.passos ?? [];
++  const ligado = Boolean(estado?.ligado) && !pedindo;
++  const linhas: string[] = rodada?.linhas ?? [];
++  return (
++    <div className="superficie" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
++      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
++        <button type="button" className="botao botao--primario" disabled={!ligado} onClick={iniciar}>
++          Atualizar coach e relatório
++        </button>
++        <span className="texto-apoio" style={{ fontSize: 13 }}>
++          Roda o <span className="dado">tools/atualizar_coach.py</span> do repositório configurado, incremental, como no terminal.
++        </span>
++      </div>
++      {erro && <p className="texto-apoio" style={{ margin: 0 }}>Sem dados: {erro}</p>}
++      {estado && !estado.ligado && (estado.motivos?.length ?? 0) > 0 && (
++        <ul className="texto-apoio" style={{ margin: 0, paddingLeft: 18, fontSize: 13 }} aria-label="Por que o botão está desligado">
++          {estado.motivos.map((m: string) => <li key={m}>{m}</li>)}
++        </ul>
++      )}
++      {rodada && (
++        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }} aria-live="polite">
++          <ol className="passos-do-coach" aria-label="Passos da rodada">
++            {passos.map((p) => {
++              const situacao = (rodada.passos?.[p.id] ?? 'pendente') as EstadoDoPasso;
++              return (
++                <li key={p.id}>
++                  <span className="dado texto-fraco">{p.id}/7</span>
++                  <span>{p.nome}</span>
++                  <EtiquetaEstado tom={TOM_DO_PASSO[situacao]}>{ROTULO_DO_PASSO[situacao]}</EtiquetaEstado>
++                </li>
++              );
++            })}
++          </ol>
++          {rodada.situacao === 'parada' && (
++            <div className="vidro" role="alert" style={{ padding: '10px 14px', background: 'var(--vermelho-fundo)', borderColor: 'var(--vermelho-borda)' }}>
++              <b>O comando parou numa trava.</b> Nada foi tentado de novo.
++              <div className="dado" style={{ marginTop: 4, fontSize: 13 }}>{rodada.mensagemDeParada}</div>
++            </div>
++          )}
++          {rodada.situacao === 'falhou' && (
++            <p className="texto-apoio" style={{ margin: 0 }}>O comando terminou com o código {String(rodada.codigo)}. O log está abaixo.</p>
++          )}
++          {rodada.situacao === 'concluida' && rodada.resumo && (
++            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
++              <b>Rodada concluída{rodada.coachRecarregado ? '; o coach ao vivo já usa o modelo novo.' : '.'}</b>
++              <div className="fatos dado">
++                {(rodada.resumo.sessoesLidas ?? []).length === 0 ? (
++                  <span>nenhuma sessão nova ou mudada</span>
++                ) : (
++                  rodada.resumo.sessoesLidas.map((s: any) => (
++                    <span key={s.sessao}>{s.sessao}: {s.voltasNoStore} voltas no store</span>
++                  ))
++                )}
++              </div>
++              <div className="tabela-caixa">
++                <Referencias antes={rodada.resumo.referenciasAntes} depois={rodada.resumo.referenciasDepois} />
++              </div>
++              <span className="texto-apoio">
++                Contagem oficial da M1:{' '}
++                {rodada.resumo.m1?.disponivel === false
++                  ? rodada.resumo.m1?.motivo
++                  : rodada.resumo.m1?.texto ?? '—'}
++                {(rodada.resumo.m1?.sessoesQueContam ?? []).length > 0 && ` (${rodada.resumo.m1.sessoesQueContam.join(', ')})`}
++              </span>
++            </div>
++          )}
++          <details>
++            <summary className="texto-fraco" style={{ cursor: 'pointer' }}>
++              Log da rodada ({linhas.length} linhas{rodada.log ? ` · ${rodada.log}` : ''})
++            </summary>
++            <pre className="log-do-coach">{linhas.slice(-120).join('\n')}</pre>
++          </details>
++        </div>
++      )}
++    </div>
++  );
++};
++
++export const ConfirmarAnotacao: React.FC<{
++  sessao: string;
++  quando: string | null;
++  voltasValidas: number | null;
++  carro: string;
++  confirmarCarro: boolean;
++  aoCancelar: () => void;
++  aoConfirmar: () => void;
++  gravando: boolean;
++}> = ({ sessao, quando, voltasValidas, carro, confirmarCarro, aoCancelar, aoConfirmar, gravando }) => {
++  const confirmar = useRef<HTMLButtonElement>(null);
++  useEffect(() => {
++    confirmar.current?.focus();
++    const tecla = (ev: KeyboardEvent) => ev.key === 'Escape' && aoCancelar();
++    window.addEventListener('keydown', tecla);
++    return () => window.removeEventListener('keydown', tecla);
++  }, [aoCancelar]);
++  return (
++    <div className="fundo-do-dialogo" onClick={aoCancelar}>
++      <div
++        className="vidro dialogo"
++        role="dialog"
++        aria-modal="true"
++        aria-labelledby="anotacao-titulo"
++        onClick={(ev) => ev.stopPropagation()}
++      >
++        <h2 id="anotacao-titulo" className="titulo-painel">Todas as voltas foram minhas</h2>
++        <p className="texto-apoio" style={{ margin: 0 }}>
++          A gravação não tem o indicador de IA. Confirme que você pilotou todas as voltas dela.
++        </p>
++        <dl className="dados-da-anotacao">
++          <dt>Sessão</dt>
++          <dd className="dado">{sessao}</dd>
++          <dt>Data</dt>
++          <dd className="dado">{quando ?? '—'}</dd>
++          <dt>Voltas válidas</dt>
++          <dd className="dado">{voltasValidas ?? '—'} (pela conferência da Coleta)</dd>
++          <dt>Carro</dt>
++          <dd className="dado">
++            {carro}
++            {confirmarCarro && (
++              <EtiquetaEstado tom="aviso">confirme o carro</EtiquetaEstado>
++            )}
++          </dd>
++        </dl>
++        <p className="texto-fraco" style={{ margin: 0 }}>
++          A linha entra em <span className="dado">docs/experimentos/anotacoes_de_sessao.csv</span>, ainda sem commit. Ela vale para o coach na
++          próxima rodada.
++        </p>
++        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
++          <button type="button" className="botao" onClick={aoCancelar}>Cancelar</button>
++          <button type="button" className="botao botao--primario" ref={confirmar} onClick={aoConfirmar} disabled={gravando}>
++            {gravando ? 'Gravando…' : 'Confirmar'}
++          </button>
++        </div>
++      </div>
++    </div>
++  );
++};
+diff --git a/frontend/src/components/sessoes/regrasDoCoachNoApp.test.ts b/frontend/src/components/sessoes/regrasDoCoachNoApp.test.ts
+new file mode 100644
+index 00000000..0638178b
+--- /dev/null
++++ b/frontend/src/components/sessoes/regrasDoCoachNoApp.test.ts
+@@ -0,0 +1,45 @@
++import { describe, expect, it } from 'vitest';
++import { carroDaConfirmacao, origemDaGravacao, podeAnotar, tempoDaReferencia } from './regrasDoCoachNoApp';
++
++const comVoltas = (...origens: string[]) => ({ voltas: origens.map((origem) => ({ origem })) });
++
++describe('origemDaGravacao', () => {
++  it('todas humano pelo indicador: não precisa de anotação', () => {
++    expect(origemDaGravacao(comVoltas('humano', 'humano'))).toBe('indicador');
++  });
++  it('sem indicador: voltas desconhecida', () => {
++    expect(origemDaGravacao(comVoltas('desconhecida', 'desconhecida'))).toBe('sem_indicador');
++  });
++  it('qualquer volta da IA ou misturada: fica como está', () => {
++    expect(origemDaGravacao(comVoltas('desconhecida', 'ia'))).toBe('com_ia');
++    expect(origemDaGravacao(comVoltas('humano', 'misturada'))).toBe('com_ia');
++  });
++  it('sem conferência', () => {
++    expect(origemDaGravacao(null)).toBe('sem_conferencia');
++    expect(origemDaGravacao({ voltas: [] })).toBe('sem_conferencia');
++  });
++});
++
++describe('podeAnotar', () => {
++  it('só a gravação sem indicador e ainda não anotada', () => {
++    expect(podeAnotar('sem_indicador', false)).toBe(true);
++    expect(podeAnotar('sem_indicador', true)).toBe(false);
++    expect(podeAnotar('indicador', false)).toBe(false);
++    expect(podeAnotar('com_ia', false)).toBe(false);
++    expect(podeAnotar('sem_conferencia', false)).toBe(false);
++  });
++});
++
++describe('carroDaConfirmacao', () => {
++  it('o carro gravado, ou o padrão com o aviso', () => {
++    expect(carroDaConfirmacao('ks_ferrari')).toEqual({ carro: 'ks_ferrari', confirmar: false });
++    expect(carroDaConfirmacao(null)).toEqual({ carro: 'rss_formula_rss_3_v6_2026', confirmar: true });
++  });
++});
++
++describe('tempoDaReferencia', () => {
++  it('M:SS,mmm', () => {
++    expect(tempoDaReferencia(87.014)).toBe('1:27,014');
++    expect(tempoDaReferencia(null)).toBe('—');
++  });
++});
+diff --git a/frontend/src/components/sessoes/regrasDoCoachNoApp.ts b/frontend/src/components/sessoes/regrasDoCoachNoApp.ts
+new file mode 100644
+index 00000000..1f04d919
+--- /dev/null
++++ b/frontend/src/components/sessoes/regrasDoCoachNoApp.ts
+@@ -0,0 +1,54 @@
++/**
++ * O botão do coach e a anotação na tela Sessões (pedido 32, Parte B): as regras
++ * que não dependem da tela, para testar sem o React.
++ */
++
++export type OrigemDaGravacao = 'indicador' | 'sem_indicador' | 'com_ia' | 'sem_conferencia';
++
++/** A mesma regra do backend (`core/coleta/anotacao.classificar`), pelas voltas da conferência. */
++export function origemDaGravacao(resultado: any): OrigemDaGravacao {
++  const voltas: any[] = Array.isArray(resultado?.voltas) ? resultado.voltas : [];
++  if (!voltas.length) return 'sem_conferencia';
++  const origens = new Set(voltas.map((v) => String(v?.origem || 'desconhecida')));
++  if (origens.has('ia') || origens.has('misturada')) return 'com_ia';
++  if (origens.size === 1 && origens.has('humano')) return 'indicador';
++  return 'sem_indicador';
++}
++
++export const ROTULO_DA_ORIGEM: Record<OrigemDaGravacao, string> = {
++  indicador: 'indicador de IA gravado',
++  sem_indicador: 'sem indicador',
++  com_ia: 'voltas da IA ou misturada',
++  sem_conferencia: 'não conferida',
++};
++
++/** O botão "Todas as voltas foram minhas" só aparece na gravação sem indicador, conferida e ainda não anotada. */
++export function podeAnotar(origem: OrigemDaGravacao, anotada: boolean): boolean {
++  return origem === 'sem_indicador' && !anotada;
++}
++
++export const CARRO_PADRAO = 'rss_formula_rss_3_v6_2026';
++
++/** O carro da confirmação: o gravado ou, sem ele, o padrão com o aviso "confirme o carro". */
++export function carroDaConfirmacao(carroGravado: string | null | undefined): { carro: string; confirmar: boolean } {
++  return carroGravado ? { carro: carroGravado, confirmar: false } : { carro: CARRO_PADRAO, confirmar: true };
++}
++
++export type EstadoDoPasso = 'pendente' | 'rodando' | 'feito' | 'parado';
++
++export const ROTULO_DO_PASSO: Record<EstadoDoPasso, string> = {
++  pendente: 'a fazer',
++  rodando: 'rodando',
++  feito: 'feito',
++  parado: 'parou aqui',
++};
++
++/** Tempo da referência (segundos) como M:SS,mmm. */
++export function tempoDaReferencia(segundos: unknown): string {
++  if (segundos === null || segundos === undefined || segundos === '') return '—';
++  const t = Number(segundos);
++  if (!Number.isFinite(t)) return '—';
++  const m = Math.floor(t / 60);
++  const s = t - 60 * m;
++  return `${m}:${s < 10 ? '0' : ''}${s.toFixed(3).replace('.', ',')}`;
++}
+diff --git a/frontend/src/pages/SessoesPage.tsx b/frontend/src/pages/SessoesPage.tsx
+index 624681c8..e6d8a89b 100644
+--- a/frontend/src/pages/SessoesPage.tsx
++++ b/frontend/src/pages/SessoesPage.tsx
+@@ -22,6 +22,12 @@ import { dataCurtaDaSessao, formatarTempo, resumoDaConferencia, type ResumoConfe
+ import { useSessoesDoRelatorio, type Resumo, type Sessao } from '../volta/dados';
+ import { nf, nomeDaSessao, sg, tempo } from '../volta/formato';
+ import { FaixaDeVoltas, GraficoTendencia } from '../evolucao/Graficos';
++import { BotaoDoCoach, ConfirmarAnotacao } from '../components/sessoes/CoachNoApp';
++import { EtiquetaEstado, type Tom } from '../components/ui/base';
++import { carroDaConfirmacao, origemDaGravacao, podeAnotar, ROTULO_DA_ORIGEM, type OrigemDaGravacao } from '../components/sessoes/regrasDoCoachNoApp';
++import { textoDoErro } from '../volta/dados';
++
++const TOM_DA_ORIGEM: Record<OrigemDaGravacao, Tom> = { indicador: 'ok', sem_indicador: 'aviso', com_ia: 'neutro', sem_conferencia: 'neutro' };
+ 
+ type Linha = {
+   id: string;
+@@ -29,29 +35,65 @@ type Linha = {
+   carro: string | null;
+   voltasGravadas: number;
+   conferida: ResumoConferido | null;
++  origem: OrigemDaGravacao;
++  carroGravado: string | null;
+ };
+ 
+ const GravacoesFora: React.FC<{ pronto: boolean; noRelatorio: Set<string> | null }> = ({ pronto, noRelatorio }) => {
+   const [linhas, setLinhas] = useState<Linha[] | null>(null);
+   const [falhou, setFalhou] = useState(false);
++  const [anotadas, setAnotadas] = useState<Record<string, string>>({});
++  const [confirmando, setConfirmando] = useState<Linha | null>(null);
++  const [gravandoAnotacao, setGravandoAnotacao] = useState(false);
++  const [gravadas, setGravadas] = useState<Array<{ sessao: string; linha: string }>>([]);
++  const [erroDaAnotacao, setErroDaAnotacao] = useState<string | null>(null);
++
++  const anotar = async (l: Linha) => {
++    setGravandoAnotacao(true);
++    try {
++      const r = await api.postColetaAnotacao(l.id);
++      setGravadas((g) => [...g, { sessao: r.sessao, linha: r.linha }]);
++      setAnotadas((a) => ({ ...a, [r.sessao]: r.linha }));
++      setErroDaAnotacao(null);
++      setConfirmando(null);
++    } catch (falha) {
++      setErroDaAnotacao(textoDoErro(falha));
++    } finally {
++      setGravandoAnotacao(false);
++    }
++  };
+ 
+   useEffect(() => {
+     if (!pronto || noRelatorio === null) return undefined;
+     let cancelado = false;
+     const ler = async () => {
+       try {
+-        const [sessoes, conferencias] = await Promise.all([
++        const [sessoes, conferencias, anotacoes] = await Promise.all([
+           api.getSessions(8),
+           api.listColetaVerificacoes().catch(() => ({ verificacoes: [] })),
++          api.getColetaAnotacoes().catch(() => ({ anotacoes: [] })),
+         ]);
++        if (!cancelado) {
++          const lidas: Record<string, string> = {};
++          (anotacoes?.anotacoes || []).forEach((a: any) => {
++            lidas[a.sessao] = [a.sessao, a.origem, a.carModel, a.anotado_em, a.observacao].join(',');
++          });
++          setAnotadas(lidas);
++        }
+         const conferidas = new Set((conferencias?.verificacoes || []).filter((v: any) => v?.final !== false).map((v: any) => v.sessao));
+         const lista: any[] = (Array.isArray(sessoes?.sessions) ? sessoes.sessions : []).filter((x: any) => !noRelatorio.has(x.sessionId));
+         const novas: Linha[] = await Promise.all(lista.map(async (s) => {
+           let conferida: ResumoConferido | null = null;
++          let origem: OrigemDaGravacao = 'sem_conferencia';
++          let carroGravado: string | null = null;
+           if (conferidas.has(s.sessionId)) {
+             try {
+               const r = await api.getColetaVerificacao(s.sessionId);
+-              if (r?.estado === 'pronta') conferida = resumoDaConferencia(r.resultado);
++              if (r?.estado === 'pronta') {
++                conferida = resumoDaConferencia(r.resultado);
++                origem = origemDaGravacao(r.resultado);
++                carroGravado = r.resultado?.gravacao?.carModel ?? null;
++              }
+             } catch {
+               conferida = null;
+             }
+@@ -62,6 +104,8 @@ const GravacoesFora: React.FC<{ pronto: boolean; noRelatorio: Set<string> | null
+             carro: s.car ?? null,
+             voltasGravadas: Array.isArray(s.laps) ? s.laps.length : 0,
+             conferida,
++            origem,
++            carroGravado: carroGravado ?? s.car ?? null,
+           };
+         }));
+         if (!cancelado) {
+@@ -83,8 +127,10 @@ const GravacoesFora: React.FC<{ pronto: boolean; noRelatorio: Set<string> | null
+   return (
+     <PainelVidro id="gravacoes-fora" titulo="Gravações fora do relatório" nota="voltas válidas e melhor volta pela conferência da Coleta">
+       <p className="texto-apoio" style={{ margin: 0 }}>
+-        Entram no relatório de evolução quando o <span className="dado">atualizar_coach</span> roda, com o app fechado.
++        Entram no coach e no relatório de evolução quando o <span className="dado">atualizar_coach</span> roda. As gravações sem indicador de
++        IA precisam antes da sua confirmação de que todas as voltas foram suas.
+       </p>
++      <BotaoDoCoach pronto={pronto} />
+       {!pronto || noRelatorio === null ? (
+         <p className="texto-fraco" style={{ margin: 0 }}>Aguardando o backend.</p>
+       ) : falhou ? (
+@@ -103,6 +149,8 @@ const GravacoesFora: React.FC<{ pronto: boolean; noRelatorio: Set<string> | null
+                 <th scope="col" className="num">Voltas gravadas</th>
+                 <th scope="col" className="num">Voltas válidas</th>
+                 <th scope="col" className="num">Melhor</th>
++                <th scope="col">Origem</th>
++                <th scope="col"><span className="sr-only">Anotação</span></th>
+               </tr>
+             </thead>
+             <tbody>
+@@ -113,12 +161,53 @@ const GravacoesFora: React.FC<{ pronto: boolean; noRelatorio: Set<string> | null
+                   <td className="num">{l.voltasGravadas}</td>
+                   <td className="num">{l.conferida ? l.conferida.voltasValidas : <a href={hashDaRota('coleta')} className="texto-fraco">conferir</a>}</td>
+                   <td className="num">{l.conferida?.melhorS != null ? formatarTempo(l.conferida.melhorS) : '—'}</td>
++                  <td>
++                    {anotadas[l.id] ? (
++                      <EtiquetaEstado tom="ok">anotada como sua</EtiquetaEstado>
++                    ) : (
++                      <EtiquetaEstado tom={TOM_DA_ORIGEM[l.origem]}>{ROTULO_DA_ORIGEM[l.origem]}</EtiquetaEstado>
++                    )}
++                  </td>
++                  <td>
++                    {podeAnotar(l.origem, Boolean(anotadas[l.id])) && (
++                      <button type="button" className="botao botao--pequeno" onClick={() => { setErroDaAnotacao(null); setConfirmando(l); }}>
++                        Todas as voltas foram minhas
++                      </button>
++                    )}
++                  </td>
+                 </tr>
+               ))}
+             </tbody>
+           </table>
+         </div>
+       )}
++      {gravadas.length > 0 && (
++        <div className="superficie" style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }} aria-live="polite">
++          <b>Anotação gravada, ainda sem commit.</b>
++          {gravadas.map((g) => (
++            <code key={g.sessao} className="dado" style={{ fontSize: 12.5, overflowWrap: 'anywhere' }}>{g.linha}</code>
++          ))}
++          <span className="texto-fraco">Ela vale para o coach na próxima rodada de "Atualizar coach e relatório".</span>
++        </div>
++      )}
++      {confirmando && (() => {
++        const { carro, confirmar } = carroDaConfirmacao(confirmando.carroGravado);
++        return (
++          <>
++            <ConfirmarAnotacao
++              sessao={confirmando.id}
++              quando={confirmando.quando}
++              voltasValidas={confirmando.conferida?.voltasValidas ?? null}
++              carro={carro}
++              confirmarCarro={confirmar}
++              gravando={gravandoAnotacao}
++              aoCancelar={() => setConfirmando(null)}
++              aoConfirmar={() => anotar(confirmando)}
++            />
++            {erroDaAnotacao && <div className="aviso-do-dialogo" role="alert">Não gravou: {erroDaAnotacao}</div>}
++          </>
++        );
++      })()}
+     </PainelVidro>
+   );
+ };
+diff --git a/frontend/src/theme/componentes.css b/frontend/src/theme/componentes.css
+index 35f83e7c..f2c2868f 100644
+--- a/frontend/src/theme/componentes.css
++++ b/frontend/src/theme/componentes.css
+@@ -1064,3 +1064,94 @@ body {
+   border-top: 1px solid var(--linha);
+   border-bottom: 0;
+ }
++/* Pedido 32: o botão do coach (passos e log) e a confirmação da anotação. */
++.passos-do-coach {
++  display: grid;
++  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
++  gap: 6px 16px;
++  margin: 0;
++  padding: 0;
++  list-style: none;
++}
++.passos-do-coach li {
++  display: flex;
++  align-items: center;
++  gap: 10px;
++  min-height: 32px;
++}
++.passos-do-coach li > span:nth-child(2) {
++  flex: 1;
++}
++.log-do-coach {
++  max-height: 260px;
++  overflow: auto;
++  margin: 8px 0 0;
++  padding: 10px 12px;
++  border-radius: var(--raio-1);
++  background: var(--superficie);
++  border: 1px solid var(--linha-fraca);
++  font: 12px var(--fonte-dado);
++  color: var(--texto-2);
++  white-space: pre-wrap;
++  overflow-wrap: anywhere;
++}
++.fundo-do-dialogo {
++  position: fixed;
++  inset: 0;
++  z-index: 50;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  padding: 16px;
++  background: rgba(4, 5, 6, 0.72);
++}
++.dialogo {
++  width: min(560px, 100%);
++  display: flex;
++  flex-direction: column;
++  gap: 14px;
++  padding: 20px 22px;
++  background: var(--vidro-fundo-forte);
++}
++.dados-da-anotacao {
++  display: grid;
++  grid-template-columns: max-content minmax(0, 1fr);
++  gap: 6px 16px;
++  margin: 0;
++}
++.dados-da-anotacao dt {
++  color: var(--texto-3);
++  font-size: 13px;
++}
++.dados-da-anotacao dd {
++  margin: 0;
++  display: flex;
++  flex-wrap: wrap;
++  align-items: center;
++  gap: 8px;
++  overflow-wrap: anywhere;
++}
++.aviso-do-dialogo {
++  position: fixed;
++  z-index: 51;
++  left: 50%;
++  bottom: 24px;
++  transform: translateX(-50%);
++  max-width: min(560px, calc(100% - 32px));
++  padding: 10px 14px;
++  border-radius: var(--raio-2);
++  background: var(--vermelho-fundo);
++  border: 1px solid var(--vermelho-borda);
++  color: var(--texto-1);
++}
++.sr-only {
++  position: absolute;
++  width: 1px;
++  height: 1px;
++  padding: 0;
++  margin: -1px;
++  overflow: hidden;
++  clip: rect(0, 0, 0, 0);
++  white-space: nowrap;
++  border: 0;
++}
+diff --git a/frontend/src/volta/dados.ts b/frontend/src/volta/dados.ts
+index db2914bd..51ebfd2f 100644
+--- a/frontend/src/volta/dados.ts
++++ b/frontend/src/volta/dados.ts
+@@ -106,9 +106,26 @@ function lerUmaVez<T>(chave: string, ler: () => Promise<T>): Promise<T> {
+   return p;
+ }
+ 
+-/** Esquece as leituras guardadas (depois de um `atualizar_coach`, por exemplo). */
++let versaoDasLeituras = 0;
++const ouvintesDaVersao = new Set<() => void>();
++
++/** Esquece as leituras guardadas e faz as telas abertas lerem de novo (depois de um `atualizar_coach`). */
+ export function esquecerLeituras(): void {
+   guardados.clear();
++  versaoDasLeituras += 1;
++  ouvintesDaVersao.forEach((ouvir) => ouvir());
++}
++
++function useVersaoDasLeituras(): number {
++  const [versao, setVersao] = useState(versaoDasLeituras);
++  useEffect(() => {
++    const ouvir = () => setVersao(versaoDasLeituras);
++    ouvintesDaVersao.add(ouvir);
++    return () => {
++      ouvintesDaVersao.delete(ouvir);
++    };
++  }, []);
++  return versao;
+ }
+ 
+ async function exigir<T>(promessa: Promise<any>, campo: string): Promise<T> {
+@@ -176,6 +193,7 @@ const ESPERA_PARA_TENTAR_DE_NOVO_MS = 3000;
+ export function useLeitura<T>(chave: string | null, ler: () => Promise<T>): Carga<T> {
+   const [estado, setEstado] = useState<Carga<T>>({ dado: null, erro: null, carregando: Boolean(chave) });
+   const [tentativa, setTentativa] = useState(0);
++  const versao = useVersaoDasLeituras();
+   useEffect(() => {
+     if (!chave) {
+       setEstado({ dado: null, erro: null, carregando: false });
+@@ -197,7 +215,7 @@ export function useLeitura<T>(chave: string | null, ler: () => Promise<T>): Carg
+     };
+     // `ler` muda a cada render; a chave (e a nova tentativa) diz quando ler de novo.
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+-  }, [chave, tentativa]);
++  }, [chave, tentativa, versao]);
+   return estado;
+ }
+ 

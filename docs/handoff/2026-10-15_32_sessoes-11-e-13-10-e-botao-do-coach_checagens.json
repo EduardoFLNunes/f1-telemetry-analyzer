@@ -1,0 +1,2523 @@
+{
+ "formato": "checagem-de-volta/1",
+ "regra": "pedido 32, item A.2: tyres_out e off_track ponto a ponto, o corredor util e a diferenca para a volta da IA por curva (metodo do relatorio de evolucao)",
+ "volta_87594": {
+  "sessao": "2026-10-11_14-19-52_vhe_interlagos",
+  "volta": "2026-10-11_14-19-52_vhe_interlagos#0019",
+  "voltaDoJogo": 20,
+  "origem": "desconhecida",
+  "tempo_conferencia_s": 87.5937304267852,
+  "tempo_grade_s": 87.5937,
+  "volta_ia": "2026-10-04_03-42-10_vhe_interlagos#0013",
+  "tempo_ia_s": 84.8292,
+  "diferenca_s": 2.765,
+  "portoes": {
+   "valida": true,
+   "motivos": [],
+   "off_track_fraction": 0.0,
+   "outside_corridor_fraction": 0.0558,
+   "limite_off_track": 0.05
+  },
+  "amostras": 5111,
+  "tyres_out_contagem": {
+   "0": 5111
+  },
+  "off_track_amostras": 0,
+  "trechos_off_track": [],
+  "trechos_2_ou_mais_pneus_fora": [],
+  "trechos_1_pneu_fora": [],
+  "por_curva": [
+   {
+    "curva": "C01-esq",
+    "perda_s": 0.886,
+    "frenagem_vs_ia_m": -40.0,
+    "lateral_apice_vs_ia_m": -0.93,
+    "velocidade_minima_vs_ia_kmh": -1.1
+   },
+   {
+    "curva": "C02-dir",
+    "perda_s": -0.138,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": 0.63,
+    "velocidade_minima_vs_ia_kmh": 8.6
+   },
+   {
+    "curva": "C03-esq",
+    "perda_s": 0.095,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -0.15,
+    "velocidade_minima_vs_ia_kmh": 12.7
+   },
+   {
+    "curva": "C04-esq",
+    "perda_s": 0.095,
+    "frenagem_vs_ia_m": -4.0,
+    "lateral_apice_vs_ia_m": 0.27,
+    "velocidade_minima_vs_ia_kmh": 3.0
+   },
+   {
+    "curva": "C05-esq",
+    "perda_s": 0.278,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": 2.52,
+    "velocidade_minima_vs_ia_kmh": -8.8
+   },
+   {
+    "curva": "C06-dir",
+    "perda_s": -0.415,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -2.81,
+    "velocidade_minima_vs_ia_kmh": 23.0
+   },
+   {
+    "curva": "C07-dir",
+    "perda_s": 0.195,
+    "frenagem_vs_ia_m": -8.0,
+    "lateral_apice_vs_ia_m": 2.41,
+    "velocidade_minima_vs_ia_kmh": -6.9
+   },
+   {
+    "curva": "C08-esq",
+    "perda_s": -0.061,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -0.22,
+    "velocidade_minima_vs_ia_kmh": 11.4
+   },
+   {
+    "curva": "C09-dir",
+    "perda_s": 0.048,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -0.9,
+    "velocidade_minima_vs_ia_kmh": -1.9
+   },
+   {
+    "curva": "C10-dir",
+    "perda_s": 0.297,
+    "frenagem_vs_ia_m": -12.0,
+    "lateral_apice_vs_ia_m": 1.7,
+    "velocidade_minima_vs_ia_kmh": 5.9
+   },
+   {
+    "curva": "C11-esq",
+    "perda_s": 0.376,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -2.08,
+    "velocidade_minima_vs_ia_kmh": -15.2
+   },
+   {
+    "curva": "C12-esq",
+    "perda_s": 0.249,
+    "frenagem_vs_ia_m": -26.0,
+    "lateral_apice_vs_ia_m": 0.53,
+    "velocidade_minima_vs_ia_kmh": 11.4
+   },
+   {
+    "curva": "C13-esq",
+    "perda_s": 0.241,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -3.72,
+    "velocidade_minima_vs_ia_kmh": -7.2
+   },
+   {
+    "curva": "C14-esq",
+    "perda_s": 0.618,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -2.4,
+    "velocidade_minima_vs_ia_kmh": -9.3
+   }
+  ],
+  "soma_curvas_s": 2.765,
+  "outras_voltas_da_sessao": [
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0000",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0001",
+    "tempo": "1:30,920",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0002",
+    "tempo": "1:30,222",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0003",
+    "tempo": "1:30,632",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0004",
+    "tempo": "1:30,794",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0005",
+    "tempo": "1:29,443",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0006",
+    "tempo": "1:29,651",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0007",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0008",
+    "tempo": "1:30,698",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0009",
+    "tempo": "1:28,714",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0010",
+    "tempo": "1:28,275",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0011",
+    "tempo": "1:27,917",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0012",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0013",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0014",
+    "tempo": "1:31,074",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0015",
+    "tempo": "1:29,655",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0016",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0017",
+    "tempo": "1:29,138",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0018",
+    "tempo": "1:27,666",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0019",
+    "tempo": "1:27,594",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0020",
+    "tempo": "1:27,795",
+    "valida": true,
+    "box": false,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0021",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "desconhecida"
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0022",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "desconhecida"
+   }
+  ],
+  "trechos_fora_do_corredor": [
+   {
+    "de_m": 438.4,
+    "ate_m": 458.6,
+    "amostras": 28,
+    "curva": "C03-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 9.73,
+    "excesso_max_m": 0.61,
+    "lado": "esquerda"
+   },
+   {
+    "de_m": 460.2,
+    "ate_m": 460.2,
+    "amostras": 1,
+    "curva": "C03-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 10.21,
+    "excesso_max_m": 0.0,
+    "lado": "esquerda"
+   },
+   {
+    "de_m": 465.3,
+    "ate_m": 506.9,
+    "amostras": 52,
+    "curva": "C03-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 10.32,
+    "excesso_max_m": 1.53,
+    "lado": "esquerda"
+   },
+   {
+    "de_m": 512.3,
+    "ate_m": 539.9,
+    "amostras": 32,
+    "curva": "C03-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 11.27,
+    "excesso_max_m": 0.23,
+    "lado": "esquerda"
+   },
+   {
+    "de_m": 1333.2,
+    "ate_m": 1355.4,
+    "amostras": 30,
+    "curva": "C04-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 24.59,
+    "excesso_max_m": 0.69,
+    "lado": "esquerda"
+   },
+   {
+    "de_m": 2929.6,
+    "ate_m": 2963.3,
+    "amostras": 37,
+    "curva": "C11-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 61.97,
+    "excesso_max_m": 0.32,
+    "lado": "esquerda"
+   },
+   {
+    "de_m": 3137.7,
+    "ate_m": 3159.6,
+    "amostras": 35,
+    "curva": "C12-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 65.76,
+    "excesso_max_m": 0.28,
+    "lado": "direita"
+   },
+   {
+    "de_m": 3210.9,
+    "ate_m": 3225.8,
+    "amostras": 23,
+    "curva": "C12-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 67.81,
+    "excesso_max_m": 0.52,
+    "lado": "esquerda"
+   },
+   {
+    "de_m": 3569.4,
+    "ate_m": 3594.6,
+    "amostras": 26,
+    "curva": "C14-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 75.9,
+    "excesso_max_m": 0.47,
+    "lado": "esquerda"
+   },
+   {
+    "de_m": 3716.3,
+    "ate_m": 3736.3,
+    "amostras": 20,
+    "curva": "C14-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 78.35,
+    "excesso_max_m": 0.27,
+    "lado": "direita"
+   },
+   {
+    "de_m": 0.3,
+    "ate_m": 0.3,
+    "amostras": 1,
+    "curva": "C01-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 87.56,
+    "excesso_max_m": 0.0,
+    "lado": "direita"
+   }
+  ],
+  "sessao_tyres_out_contagem": {
+   "0.0": 129046,
+   "2.0": 555,
+   "4.0": 486,
+   "1.0": 273,
+   "3.0": 82
+  },
+  "sessao_off_track_verdadeiro": 486,
+  "sessao_amostras": 130442,
+  "corredor_das_voltas_validas": [
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0001",
+    "tempo": "1:30,920",
+    "outside_corridor_fraction": 0.0402
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0002",
+    "tempo": "1:30,222",
+    "outside_corridor_fraction": 0.0624
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0003",
+    "tempo": "1:30,632",
+    "outside_corridor_fraction": 0.0491
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0004",
+    "tempo": "1:30,794",
+    "outside_corridor_fraction": 0.0609
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0005",
+    "tempo": "1:29,443",
+    "outside_corridor_fraction": 0.0897
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0006",
+    "tempo": "1:29,651",
+    "outside_corridor_fraction": 0.039
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0008",
+    "tempo": "1:30,698",
+    "outside_corridor_fraction": 0.0948
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0009",
+    "tempo": "1:28,714",
+    "outside_corridor_fraction": 0.0679
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0010",
+    "tempo": "1:28,275",
+    "outside_corridor_fraction": 0.0778
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0011",
+    "tempo": "1:27,917",
+    "outside_corridor_fraction": 0.0652
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0014",
+    "tempo": "1:31,074",
+    "outside_corridor_fraction": 0.0611
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0015",
+    "tempo": "1:29,655",
+    "outside_corridor_fraction": 0.0524
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0017",
+    "tempo": "1:29,138",
+    "outside_corridor_fraction": 0.041
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0018",
+    "tempo": "1:27,666",
+    "outside_corridor_fraction": 0.0526
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0019",
+    "tempo": "1:27,594",
+    "outside_corridor_fraction": 0.0558
+   },
+   {
+    "lapId": "2026-10-11_14-19-52_vhe_interlagos#0020",
+    "tempo": "1:27,795",
+    "outside_corridor_fraction": 0.0763
+   }
+  ]
+ },
+ "volta_87014": {
+  "sessao": "2026-10-15_23-24-50_vhe_interlagos",
+  "volta": "2026-10-15_23-24-50_vhe_interlagos#0008",
+  "voltaDoJogo": 8,
+  "origem": "humano",
+  "tempo_conferencia_s": 87.01447367589712,
+  "tempo_grade_s": 87.0145,
+  "volta_ia": "2026-10-04_03-42-10_vhe_interlagos#0013",
+  "tempo_ia_s": 84.8292,
+  "diferenca_s": 2.185,
+  "portoes": {
+   "valida": true,
+   "motivos": [],
+   "off_track_fraction": 0.0,
+   "outside_corridor_fraction": 0.0921,
+   "limite_off_track": 0.05
+  },
+  "amostras": 5036,
+  "tyres_out_contagem": {
+   "0": 5036
+  },
+  "off_track_amostras": 0,
+  "trechos_off_track": [],
+  "trechos_2_ou_mais_pneus_fora": [],
+  "trechos_1_pneu_fora": [],
+  "por_curva": [
+   {
+    "curva": "C01-esq",
+    "perda_s": 0.522,
+    "frenagem_vs_ia_m": 0.0,
+    "lateral_apice_vs_ia_m": -2.67,
+    "velocidade_minima_vs_ia_kmh": -4.0
+   },
+   {
+    "curva": "C02-dir",
+    "perda_s": -0.124,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -0.91,
+    "velocidade_minima_vs_ia_kmh": 4.3
+   },
+   {
+    "curva": "C03-esq",
+    "perda_s": -0.02,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -0.06,
+    "velocidade_minima_vs_ia_kmh": 12.2
+   },
+   {
+    "curva": "C04-esq",
+    "perda_s": 0.096,
+    "frenagem_vs_ia_m": -48.0,
+    "lateral_apice_vs_ia_m": -0.08,
+    "velocidade_minima_vs_ia_kmh": 12.9
+   },
+   {
+    "curva": "C05-esq",
+    "perda_s": 0.177,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -0.8,
+    "velocidade_minima_vs_ia_kmh": -7.7
+   },
+   {
+    "curva": "C06-dir",
+    "perda_s": -0.072,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": 4.0,
+    "velocidade_minima_vs_ia_kmh": 6.6
+   },
+   {
+    "curva": "C07-dir",
+    "perda_s": -0.101,
+    "frenagem_vs_ia_m": -20.0,
+    "lateral_apice_vs_ia_m": -0.05,
+    "velocidade_minima_vs_ia_kmh": 8.1
+   },
+   {
+    "curva": "C08-esq",
+    "perda_s": 0.143,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": 0.6,
+    "velocidade_minima_vs_ia_kmh": 8.1
+   },
+   {
+    "curva": "C09-dir",
+    "perda_s": 0.041,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -0.71,
+    "velocidade_minima_vs_ia_kmh": -0.2
+   },
+   {
+    "curva": "C10-dir",
+    "perda_s": 0.416,
+    "frenagem_vs_ia_m": -6.0,
+    "lateral_apice_vs_ia_m": 3.87,
+    "velocidade_minima_vs_ia_kmh": -2.9
+   },
+   {
+    "curva": "C11-esq",
+    "perda_s": 0.396,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -0.56,
+    "velocidade_minima_vs_ia_kmh": -8.7
+   },
+   {
+    "curva": "C12-esq",
+    "perda_s": 0.255,
+    "frenagem_vs_ia_m": -30.0,
+    "lateral_apice_vs_ia_m": -1.55,
+    "velocidade_minima_vs_ia_kmh": 9.1
+   },
+   {
+    "curva": "C13-esq",
+    "perda_s": 0.245,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -3.82,
+    "velocidade_minima_vs_ia_kmh": -8.1
+   },
+   {
+    "curva": "C14-esq",
+    "perda_s": 0.21,
+    "frenagem_vs_ia_m": null,
+    "lateral_apice_vs_ia_m": -0.11,
+    "velocidade_minima_vs_ia_kmh": -2.8
+   }
+  ],
+  "soma_curvas_s": 2.185,
+  "outras_voltas_da_sessao": [
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0000",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0001",
+    "tempo": "1:36,824",
+    "valida": true,
+    "box": false,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0002",
+    "tempo": "1:37,115",
+    "valida": true,
+    "box": false,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0003",
+    "tempo": "1:31,794",
+    "valida": true,
+    "box": false,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0004",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0005",
+    "tempo": "1:30,861",
+    "valida": true,
+    "box": false,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0006",
+    "tempo": "1:33,148",
+    "valida": true,
+    "box": false,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0007",
+    "tempo": "1:27,438",
+    "valida": true,
+    "box": false,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0008",
+    "tempo": "1:27,014",
+    "valida": true,
+    "box": false,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0009",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0010",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0011",
+    "tempo": "1:30,971",
+    "valida": true,
+    "box": false,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0012",
+    "tempo": "1:28,985",
+    "valida": true,
+    "box": false,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0013",
+    "tempo": "1:30,274",
+    "valida": true,
+    "box": true,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0014",
+    "tempo": "1:29,407",
+    "valida": true,
+    "box": false,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0015",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0016",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0017",
+    "tempo": "1:28,428",
+    "valida": true,
+    "box": false,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0018",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "humano"
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0019",
+    "tempo": null,
+    "valida": false,
+    "box": null,
+    "origem": "humano"
+   }
+  ],
+  "trechos_fora_do_corredor": [
+   {
+    "de_m": 17.7,
+    "ate_m": 69.6,
+    "amostras": 43,
+    "curva": "C01-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 0.22,
+    "excesso_max_m": 0.05,
+    "lado": "direita"
+   },
+   {
+    "de_m": 376.7,
+    "ate_m": 391.2,
+    "amostras": 21,
+    "curva": "C02-dir",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 8.04,
+    "excesso_max_m": 0.58,
+    "lado": "direita"
+   },
+   {
+    "de_m": 470.2,
+    "ate_m": 552.6,
+    "amostras": 94,
+    "curva": "C03-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 10.24,
+    "excesso_max_m": 1.84,
+    "lado": "esquerda"
+   },
+   {
+    "de_m": 1411.4,
+    "ate_m": 1453.8,
+    "amostras": 62,
+    "curva": "C04-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 26.21,
+    "excesso_max_m": 1.4,
+    "lado": "direita"
+   },
+   {
+    "de_m": 2024.4,
+    "ate_m": 2073.2,
+    "amostras": 68,
+    "curva": "C06-dir",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 37.07,
+    "excesso_max_m": 0.86,
+    "lado": "esquerda"
+   },
+   {
+    "de_m": 2336.7,
+    "ate_m": 2385.5,
+    "amostras": 88,
+    "curva": "C07-dir",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 45.16,
+    "excesso_max_m": 1.35,
+    "lado": "esquerda"
+   },
+   {
+    "de_m": 2903.6,
+    "ate_m": 2903.6,
+    "amostras": 1,
+    "curva": "C11-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 61.36,
+    "excesso_max_m": 0.0,
+    "lado": "esquerda"
+   },
+   {
+    "de_m": 2905.3,
+    "ate_m": 2945.6,
+    "amostras": 45,
+    "curva": "C11-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 61.39,
+    "excesso_max_m": 0.12,
+    "lado": "esquerda"
+   },
+   {
+    "de_m": 3262.7,
+    "ate_m": 3284.7,
+    "amostras": 42,
+    "curva": "C12-esq",
+    "max_pneus_fora": 0,
+    "tempo_na_volta_s": 69.22,
+    "excesso_max_m": 1.17,
+    "lado": "direita"
+   }
+  ],
+  "sessao_tyres_out_contagem": {
+   "0.0": 120814,
+   "4.0": 4867,
+   "2.0": 1572,
+   "1.0": 1021,
+   "3.0": 433
+  },
+  "sessao_off_track_verdadeiro": 4867,
+  "sessao_amostras": 128707,
+  "corredor_das_voltas_validas": [
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0001",
+    "tempo": "1:36,824",
+    "outside_corridor_fraction": 0.0809
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0002",
+    "tempo": "1:37,115",
+    "outside_corridor_fraction": 0.1455
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0003",
+    "tempo": "1:31,794",
+    "outside_corridor_fraction": 0.0744
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0005",
+    "tempo": "1:30,861",
+    "outside_corridor_fraction": 0.0606
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0006",
+    "tempo": "1:33,148",
+    "outside_corridor_fraction": 0.1377
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0007",
+    "tempo": "1:27,438",
+    "outside_corridor_fraction": 0.0467
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0008",
+    "tempo": "1:27,014",
+    "outside_corridor_fraction": 0.0921
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0011",
+    "tempo": "1:30,971",
+    "outside_corridor_fraction": 0.0023
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0012",
+    "tempo": "1:28,985",
+    "outside_corridor_fraction": 0.0151
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0014",
+    "tempo": "1:29,407",
+    "outside_corridor_fraction": 0.0485
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0017",
+    "tempo": "1:28,428",
+    "outside_corridor_fraction": 0.0853
+   }
+  ]
+ },
+ "conferencia_da_sessao_de_teste": {
+  "formato": "coleta-verificacao/1",
+  "sessao": "2026-10-15_23-24-50_vhe_interlagos",
+  "pasta": "C:\\Users\\Dokas\\AppData\\Local\\Temp\\claude\\C--Users-Dokas-Desktop-f1-telemetry-analyzer\\6d2869f6-db96-4d2e-b3f2-ef87109c70b2\\scratchpad\\runtime\\data\\recordings\\2026-10-15_23-24-50_vhe_interlagos",
+  "final": true,
+  "atualizadoEm": "2026-10-16T00:13:14",
+  "pista": "vhe_interlagos",
+  "gravacao": {
+   "carModel": "rss_formula_rss_3_v6_2026",
+   "appVersion": "0.3.0-coleta-modelos",
+   "appCommit": "3cdbfbaf2f1ef86e437b4f255e5e803eb3add15b",
+   "inicio": "2026-10-15T23:24:50.890731",
+   "fim": null
+  },
+  "geometria": {
+   "geometryId": "0ed16f0dd2225990",
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\cache\\tracks\\vhe_interlagos_gp_kn5_surface_interval_geometry.json",
+   "origem": "repositório",
+   "pontos": 2167,
+   "comprimentoM": 4334.08
+  },
+  "leitura": {
+   "linhas": 128707,
+   "corrompidas": 0,
+   "bytes": 556513212,
+   "segundosDeConferencia": 3.23
+  },
+  "voltaAberta": null,
+  "voltas": [
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0000",
+    "sequencia": 0,
+    "voltaDoJogo": 1,
+    "amostras": 10110,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": false,
+    "motivos": [
+     "faltam 224.9 m de pista (limite 6 m)",
+     "carro parado em 22.5% das amostras"
+    ],
+    "box": null,
+    "tempoS": null,
+    "duracaoS": 174.86700000000002,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.47528632529507,
+    "tempo": null,
+    "duracao": "2:54,867",
+    "entraNoStore": false
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0001",
+    "sequencia": 1,
+    "voltaDoJogo": 1,
+    "amostras": 5614,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": true,
+    "motivos": [],
+    "box": false,
+    "tempoS": 96.82378067349774,
+    "duracaoS": 96.798,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.96471621866157,
+    "tempo": "1:36,824",
+    "duracao": "1:36,798",
+    "entraNoStore": true
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0002",
+    "sequencia": 2,
+    "voltaDoJogo": 2,
+    "amostras": 5627,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": true,
+    "motivos": [],
+    "box": false,
+    "tempoS": 97.11462403983985,
+    "duracaoS": 97.107,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.88200690190934,
+    "tempo": "1:37,115",
+    "duracao": "1:37,107",
+    "entraNoStore": true
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0003",
+    "sequencia": 3,
+    "voltaDoJogo": 4,
+    "amostras": 5303,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": true,
+    "motivos": [],
+    "box": false,
+    "tempoS": 91.79363302094974,
+    "duracaoS": 91.77,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.71978151599795,
+    "tempo": "1:31,794",
+    "duracao": "1:31,770",
+    "entraNoStore": true
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0004",
+    "sequencia": 4,
+    "voltaDoJogo": 5,
+    "amostras": 7764,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": false,
+    "motivos": [
+     "carro parado em 8.2% das amostras",
+     "fora de pista em 20.7% das amostras"
+    ],
+    "box": null,
+    "tempoS": null,
+    "duracaoS": 133.704,
+    "pontosDaGrade": 2167,
+    "taxaHz": 58.00648877326629,
+    "tempo": null,
+    "duracao": "2:13,704",
+    "entraNoStore": false
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0005",
+    "sequencia": 5,
+    "voltaDoJogo": 6,
+    "amostras": 5256,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": true,
+    "motivos": [],
+    "box": false,
+    "tempoS": 90.8606843845034,
+    "duracaoS": 90.846,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.78983472945652,
+    "tempo": "1:30,861",
+    "duracao": "1:30,846",
+    "entraNoStore": true
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0006",
+    "sequencia": 6,
+    "voltaDoJogo": 7,
+    "amostras": 5398,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": true,
+    "motivos": [],
+    "box": false,
+    "tempoS": 93.14830734283512,
+    "duracaoS": 93.117,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.914061825776585,
+    "tempo": "1:33,148",
+    "duracao": "1:33,117",
+    "entraNoStore": true
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0007",
+    "sequencia": 7,
+    "voltaDoJogo": 7,
+    "amostras": 5039,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": true,
+    "motivos": [],
+    "box": false,
+    "tempoS": 87.43824773256452,
+    "duracaoS": 87.42,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.55792124963492,
+    "tempo": "1:27,438",
+    "duracao": "1:27,420",
+    "entraNoStore": true
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0008",
+    "sequencia": 8,
+    "voltaDoJogo": 8,
+    "amostras": 5038,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": true,
+    "motivos": [],
+    "box": false,
+    "tempoS": 87.01447367589712,
+    "duracaoS": 86.985,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.88244582099773,
+    "tempo": "1:27,014",
+    "duracao": "1:26,985",
+    "entraNoStore": true
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0009",
+    "sequencia": 9,
+    "voltaDoJogo": 9,
+    "amostras": 18127,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": false,
+    "motivos": [
+     "volta longa demais (313.6s > 200s)",
+     "carro parado em 44.7% das amostras"
+    ],
+    "box": null,
+    "tempoS": null,
+    "duracaoS": 313.59900000000005,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.41179485622723,
+    "tempo": null,
+    "duracao": "5:13,599",
+    "entraNoStore": false
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0010",
+    "sequencia": 10,
+    "voltaDoJogo": 11,
+    "amostras": 8043,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": false,
+    "motivos": [
+     "carro parado em 4.8% das amostras",
+     "fora de pista em 8.4% das amostras"
+    ],
+    "box": null,
+    "tempoS": null,
+    "duracaoS": 139.239,
+    "pontosDaGrade": 2167,
+    "taxaHz": 56.957778422505065,
+    "tempo": null,
+    "duracao": "2:19,239",
+    "entraNoStore": false
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0011",
+    "sequencia": 11,
+    "voltaDoJogo": 12,
+    "amostras": 5246,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": true,
+    "motivos": [],
+    "box": false,
+    "tempoS": 90.97066711227399,
+    "duracaoS": 90.93299999999999,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.627274954111215,
+    "tempo": "1:30,971",
+    "duracao": "1:30,933",
+    "entraNoStore": true
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0012",
+    "sequencia": 12,
+    "voltaDoJogo": 12,
+    "amostras": 5111,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": true,
+    "motivos": [],
+    "box": false,
+    "tempoS": 88.98525877553055,
+    "duracaoS": 88.971,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.38484460491618,
+    "tempo": "1:28,985",
+    "duracao": "1:28,971",
+    "entraNoStore": true
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0013",
+    "sequencia": 13,
+    "voltaDoJogo": 13,
+    "amostras": 5204,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": true,
+    "motivos": [
+     "passou pelo box"
+    ],
+    "box": true,
+    "tempoS": 90.27384719746148,
+    "duracaoS": 90.204,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.61439531877297,
+    "tempo": "1:30,274",
+    "duracao": "1:30,204",
+    "entraNoStore": false
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0014",
+    "sequencia": 14,
+    "voltaDoJogo": 15,
+    "amostras": 5179,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": true,
+    "motivos": [],
+    "box": false,
+    "tempoS": 89.40735619595338,
+    "duracaoS": 89.376,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.89771031158412,
+    "tempo": "1:29,407",
+    "duracao": "1:29,376",
+    "entraNoStore": true
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0015",
+    "sequencia": 15,
+    "voltaDoJogo": 16,
+    "amostras": 6764,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": false,
+    "motivos": [
+     "carro parado em 9.8% das amostras",
+     "fora de pista em 15.1% das amostras"
+    ],
+    "box": null,
+    "tempoS": null,
+    "duracaoS": 117.273,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.61247345140386,
+    "tempo": null,
+    "duracao": "1:57,273",
+    "entraNoStore": false
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0016",
+    "sequencia": 16,
+    "voltaDoJogo": 17,
+    "amostras": 5961,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": false,
+    "motivos": [
+     "carro parado em 6.2% das amostras"
+    ],
+    "box": null,
+    "tempoS": null,
+    "duracaoS": 102.855,
+    "pontosDaGrade": 2167,
+    "taxaHz": 55.26890240552318,
+    "tempo": null,
+    "duracao": "1:42,855",
+    "entraNoStore": false
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0017",
+    "sequencia": 17,
+    "voltaDoJogo": 18,
+    "amostras": 5118,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": true,
+    "motivos": [],
+    "box": false,
+    "tempoS": 88.42844167362216,
+    "duracaoS": 88.413,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.79650802996445,
+    "tempo": "1:28,428",
+    "duracao": "1:28,413",
+    "entraNoStore": true
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0018",
+    "sequencia": 18,
+    "voltaDoJogo": 19,
+    "amostras": 7387,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": false,
+    "motivos": [
+     "carro parado em 8.6% das amostras",
+     "fora de pista em 13.1% das amostras"
+    ],
+    "box": null,
+    "tempoS": null,
+    "duracaoS": 127.722,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.80549938854207,
+    "tempo": null,
+    "duracao": "2:07,722",
+    "entraNoStore": false
+   },
+   {
+    "lapId": "2026-10-15_23-24-50_vhe_interlagos#0019",
+    "sequencia": 19,
+    "voltaDoJogo": 20,
+    "amostras": 1418,
+    "linhasCorrompidas": 0,
+    "origem": "humano",
+    "origemRotulo": "você",
+    "preenchimentoItens": {
+     "lap_time": 1.0,
+     "lap_number": 1.0,
+     "distance": 1.0,
+     "position": 1.0,
+     "speed": 1.0,
+     "throttle": 1.0,
+     "brake": 1.0,
+     "steering": 1.0,
+     "gear": 1.0,
+     "rpm": 1.0,
+     "ai_controlled": 1.0,
+     "track": 1.0,
+     "tyres_out": 1.0,
+     "off_track": 1.0,
+     "yaw_rate": 1.0,
+     "velocity_long": 1.0,
+     "velocity_lat": 1.0,
+     "brake_temp": 1.0,
+     "brake_bias": 1.0,
+     "tyre_core_temp": 1.0,
+     "tyre_temp_inner": 1.0,
+     "tyre_temp_middle": 1.0,
+     "tyre_temp_outer": 1.0,
+     "wheel_load": 1.0,
+     "wheel_slip": 1.0,
+     "tyre_pressure": 1.0,
+     "suspension_travel": 1.0,
+     "acc_g": 1.0,
+     "clutch": 1.0,
+     "fuel": 1.0,
+     "tyre_wear": 1.0,
+     "grip_index": 1.0,
+     "car_model": 1.0
+    },
+    "preenchimentoGrupos": {
+     "base": {
+      "minimo": 1.0,
+      "piorItem": "lap_time"
+     },
+     "origem": {
+      "minimo": 1.0,
+      "piorItem": "ai_controlled"
+     },
+     "limites": {
+      "minimo": 1.0,
+      "piorItem": "tyres_out"
+     },
+     "m1": {
+      "minimo": 1.0,
+      "piorItem": "yaw_rate"
+     },
+     "contexto": {
+      "minimo": 1.0,
+      "piorItem": "fuel"
+     }
+    },
+    "valida": false,
+    "motivos": [
+     "volta curta demais (24.7s < 55s)",
+     "faltam 3618.4 m de pista (limite 6 m)",
+     "carro parado em 16.7% das amostras"
+    ],
+    "box": null,
+    "tempoS": null,
+    "duracaoS": 24.654,
+    "pontosDaGrade": 2167,
+    "taxaHz": 57.35243899721453,
+    "tempo": null,
+    "duracao": "0:24,654",
+    "entraNoStore": false
+   }
+  ],
+  "veredito": {
+   "conta": true,
+   "final": true,
+   "texto": "Conta para a M1.",
+   "falta": [],
+   "humana": true,
+   "voltas": 20,
+   "voltasValidas": 11,
+   "voltasComIA": [],
+   "voltasSemIndicador": [],
+   "preenchimentoGrade": {
+    "yaw_rate": 1.0,
+    "velocity_long": 1.0,
+    "velocity_lat": 1.0,
+    "brake_temp_fl": 1.0,
+    "brake_temp_fr": 1.0,
+    "brake_temp_rl": 1.0,
+    "brake_temp_rr": 1.0
+   },
+   "limiar": 0.95,
+   "regra": "sessão humana (indicador de IA desligado em todas as voltas) com a guinada e as velocidades no referencial do carro em pelo menos 95% dos pontos da grade das voltas válidas"
+  }
+ }
+}

@@ -1,0 +1,91 @@
+# Pedido 32: testes (16/10/2026 01:35, branch etapa/sessoes-11-13-e-botao-do-coach, e34472d7)
+
+## backend: ..\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider tests
+........................................................................ [  9%]
+........................................................................ [ 19%]
+........................................................................ [ 28%]
+........................................................................ [ 38%]
+........................................................................ [ 47%]
+........................................................................ [ 57%]
+........................................................................ [ 66%]
+........................................................................ [ 76%]
+........................................................................ [ 85%]
+........................................................................ [ 95%]
+....................................                                     [100%]
+============================== warnings summary ===============================
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:64
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:64: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    prop = Group((name + Suppress("=") + comma_separated(value)) | oneOf(_CONSTANTS))
+
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    parse = parser.parseString(pattern)
+
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+    parser.resetCache()
+
+..\.venv\lib\site-packages\matplotlib\_mathtext.py:45
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_mathtext.py:45: PyparsingDeprecationWarning: 'enablePackrat' deprecated - use 'enable_packrat'
+    ParserElement.enablePackrat()
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 1 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 2 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 4 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+756 passed, 18 warnings in 513.56s (0:08:33)
+exit 0
+
+## frontend: npx tsc --noEmit -p .
+(sem erros)
+
+## frontend: npx vitest run
+
+ RUN  v2.1.9 C:/Users/Dokas/Desktop/f1-telemetry-analyzer/frontend
+
+ ✓ src/volta/medidas.test.ts (8 tests) 5ms
+ ✓ src/utils/sectorTimes.test.ts (13 tests) 7ms
+ ✓ src/utils/radio.test.ts (5 tests) 29ms
+ ✓ src/navegacao/rotas.test.ts (4 tests) 5ms
+ ✓ src/components/sessoes/regrasDoCoachNoApp.test.ts (7 tests) 5ms
+ ✓ src/components/sessoes/dadosDoHero.test.ts (4 tests) 5ms
+ ✓ src/components/CoachingFeed.test.ts (12 tests) 6ms
+ ✓ src/components/map/CameraController.test.ts (8 tests) 8ms
+ ✓ src/components/map/TrackElevationRibbon.test.ts (25 tests) 12ms
+ ✓ src/theme/contraste.test.ts (2 tests) 5ms
+ ✓ src/components/map/OverlayRenderer.test.ts (26 tests) 17ms
+ ✓ src/store/offlineReplay.test.ts (32 tests) 20ms
+ ✓ src/components/map/BroadcastOverlay.test.ts (23 tests) 20ms
+ ✓ src/utils/coleta.test.ts (7 tests) 30ms
+ ✓ src/volta/dados.test.ts (4 tests) 3ms
+
+ Test Files  15 passed (15)
+      Tests  180 passed (180)
+   Start at  01:35:11
+   Duration  1.63s (transform 2.39s, setup 0ms, collect 8.66s, tests 178ms, environment 4ms, prepare 3.21s)
+
+
+## frontend: npm run build
+dist/assets/index-M9L3RAVb.css                      60.72 kB │ gzip:  12.88 kB
+dist/assets/index-LUqVWi8M.js                      476.33 kB │ gzip: 148.88 kB
+✓ built in 3.82s
