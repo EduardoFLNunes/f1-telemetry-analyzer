@@ -22,6 +22,12 @@ import { dataCurtaDaSessao, formatarTempo, resumoDaConferencia, type ResumoConfe
 import { useSessoesDoRelatorio, type Resumo, type Sessao } from '../volta/dados';
 import { nf, nomeDaSessao, sg, tempo } from '../volta/formato';
 import { FaixaDeVoltas, GraficoTendencia } from '../evolucao/Graficos';
+import { BotaoDoCoach, ConfirmarAnotacao } from '../components/sessoes/CoachNoApp';
+import { EtiquetaEstado, type Tom } from '../components/ui/base';
+import { carroDaConfirmacao, origemDaGravacao, podeAnotar, ROTULO_DA_ORIGEM, type OrigemDaGravacao } from '../components/sessoes/regrasDoCoachNoApp';
+import { textoDoErro } from '../volta/dados';
+
+const TOM_DA_ORIGEM: Record<OrigemDaGravacao, Tom> = { indicador: 'ok', sem_indicador: 'aviso', com_ia: 'neutro', sem_conferencia: 'neutro' };
 
 type Linha = {
   id: string;
@@ -29,29 +35,65 @@ type Linha = {
   carro: string | null;
   voltasGravadas: number;
   conferida: ResumoConferido | null;
+  origem: OrigemDaGravacao;
+  carroGravado: string | null;
 };
 
 const GravacoesFora: React.FC<{ pronto: boolean; noRelatorio: Set<string> | null }> = ({ pronto, noRelatorio }) => {
   const [linhas, setLinhas] = useState<Linha[] | null>(null);
   const [falhou, setFalhou] = useState(false);
+  const [anotadas, setAnotadas] = useState<Record<string, string>>({});
+  const [confirmando, setConfirmando] = useState<Linha | null>(null);
+  const [gravandoAnotacao, setGravandoAnotacao] = useState(false);
+  const [gravadas, setGravadas] = useState<Array<{ sessao: string; linha: string }>>([]);
+  const [erroDaAnotacao, setErroDaAnotacao] = useState<string | null>(null);
+
+  const anotar = async (l: Linha) => {
+    setGravandoAnotacao(true);
+    try {
+      const r = await api.postColetaAnotacao(l.id);
+      setGravadas((g) => [...g, { sessao: r.sessao, linha: r.linha }]);
+      setAnotadas((a) => ({ ...a, [r.sessao]: r.linha }));
+      setErroDaAnotacao(null);
+      setConfirmando(null);
+    } catch (falha) {
+      setErroDaAnotacao(textoDoErro(falha));
+    } finally {
+      setGravandoAnotacao(false);
+    }
+  };
 
   useEffect(() => {
     if (!pronto || noRelatorio === null) return undefined;
     let cancelado = false;
     const ler = async () => {
       try {
-        const [sessoes, conferencias] = await Promise.all([
+        const [sessoes, conferencias, anotacoes] = await Promise.all([
           api.getSessions(8),
           api.listColetaVerificacoes().catch(() => ({ verificacoes: [] })),
+          api.getColetaAnotacoes().catch(() => ({ anotacoes: [] })),
         ]);
+        if (!cancelado) {
+          const lidas: Record<string, string> = {};
+          (anotacoes?.anotacoes || []).forEach((a: any) => {
+            lidas[a.sessao] = [a.sessao, a.origem, a.carModel, a.anotado_em, a.observacao].join(',');
+          });
+          setAnotadas(lidas);
+        }
         const conferidas = new Set((conferencias?.verificacoes || []).filter((v: any) => v?.final !== false).map((v: any) => v.sessao));
         const lista: any[] = (Array.isArray(sessoes?.sessions) ? sessoes.sessions : []).filter((x: any) => !noRelatorio.has(x.sessionId));
         const novas: Linha[] = await Promise.all(lista.map(async (s) => {
           let conferida: ResumoConferido | null = null;
+          let origem: OrigemDaGravacao = 'sem_conferencia';
+          let carroGravado: string | null = null;
           if (conferidas.has(s.sessionId)) {
             try {
               const r = await api.getColetaVerificacao(s.sessionId);
-              if (r?.estado === 'pronta') conferida = resumoDaConferencia(r.resultado);
+              if (r?.estado === 'pronta') {
+                conferida = resumoDaConferencia(r.resultado);
+                origem = origemDaGravacao(r.resultado);
+                carroGravado = r.resultado?.gravacao?.carModel ?? null;
+              }
             } catch {
               conferida = null;
             }
@@ -62,6 +104,8 @@ const GravacoesFora: React.FC<{ pronto: boolean; noRelatorio: Set<string> | null
             carro: s.car ?? null,
             voltasGravadas: Array.isArray(s.laps) ? s.laps.length : 0,
             conferida,
+            origem,
+            carroGravado: carroGravado ?? s.car ?? null,
           };
         }));
         if (!cancelado) {
@@ -83,8 +127,10 @@ const GravacoesFora: React.FC<{ pronto: boolean; noRelatorio: Set<string> | null
   return (
     <PainelVidro id="gravacoes-fora" titulo="Gravações fora do relatório" nota="voltas válidas e melhor volta pela conferência da Coleta">
       <p className="texto-apoio" style={{ margin: 0 }}>
-        Entram no relatório de evolução quando o <span className="dado">atualizar_coach</span> roda, com o app fechado.
+        Entram no coach e no relatório de evolução quando o <span className="dado">atualizar_coach</span> roda. As gravações sem indicador de
+        IA precisam antes da sua confirmação de que todas as voltas foram suas.
       </p>
+      <BotaoDoCoach pronto={pronto} />
       {!pronto || noRelatorio === null ? (
         <p className="texto-fraco" style={{ margin: 0 }}>Aguardando o backend.</p>
       ) : falhou ? (
@@ -103,6 +149,8 @@ const GravacoesFora: React.FC<{ pronto: boolean; noRelatorio: Set<string> | null
                 <th scope="col" className="num">Voltas gravadas</th>
                 <th scope="col" className="num">Voltas válidas</th>
                 <th scope="col" className="num">Melhor</th>
+                <th scope="col">Origem</th>
+                <th scope="col"><span className="sr-only">Anotação</span></th>
               </tr>
             </thead>
             <tbody>
@@ -113,12 +161,53 @@ const GravacoesFora: React.FC<{ pronto: boolean; noRelatorio: Set<string> | null
                   <td className="num">{l.voltasGravadas}</td>
                   <td className="num">{l.conferida ? l.conferida.voltasValidas : <a href={hashDaRota('coleta')} className="texto-fraco">conferir</a>}</td>
                   <td className="num">{l.conferida?.melhorS != null ? formatarTempo(l.conferida.melhorS) : '—'}</td>
+                  <td>
+                    {anotadas[l.id] ? (
+                      <EtiquetaEstado tom="ok">anotada como sua</EtiquetaEstado>
+                    ) : (
+                      <EtiquetaEstado tom={TOM_DA_ORIGEM[l.origem]}>{ROTULO_DA_ORIGEM[l.origem]}</EtiquetaEstado>
+                    )}
+                  </td>
+                  <td>
+                    {podeAnotar(l.origem, Boolean(anotadas[l.id])) && (
+                      <button type="button" className="botao botao--pequeno" onClick={() => { setErroDaAnotacao(null); setConfirmando(l); }}>
+                        Todas as voltas foram minhas
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+      {gravadas.length > 0 && (
+        <div className="superficie" style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }} aria-live="polite">
+          <b>Anotação gravada, ainda sem commit.</b>
+          {gravadas.map((g) => (
+            <code key={g.sessao} className="dado" style={{ fontSize: 12.5, overflowWrap: 'anywhere' }}>{g.linha}</code>
+          ))}
+          <span className="texto-fraco">Ela vale para o coach na próxima rodada de "Atualizar coach e relatório".</span>
+        </div>
+      )}
+      {confirmando && (() => {
+        const { carro, confirmar } = carroDaConfirmacao(confirmando.carroGravado);
+        return (
+          <>
+            <ConfirmarAnotacao
+              sessao={confirmando.id}
+              quando={confirmando.quando}
+              voltasValidas={confirmando.conferida?.voltasValidas ?? null}
+              carro={carro}
+              confirmarCarro={confirmar}
+              gravando={gravandoAnotacao}
+              aoCancelar={() => setConfirmando(null)}
+              aoConfirmar={() => anotar(confirmando)}
+            />
+            {erroDaAnotacao && <div className="aviso-do-dialogo" role="alert">Não gravou: {erroDaAnotacao}</div>}
+          </>
+        );
+      })()}
     </PainelVidro>
   );
 };

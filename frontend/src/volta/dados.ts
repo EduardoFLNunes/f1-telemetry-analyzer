@@ -106,9 +106,26 @@ function lerUmaVez<T>(chave: string, ler: () => Promise<T>): Promise<T> {
   return p;
 }
 
-/** Esquece as leituras guardadas (depois de um `atualizar_coach`, por exemplo). */
+let versaoDasLeituras = 0;
+const ouvintesDaVersao = new Set<() => void>();
+
+/** Esquece as leituras guardadas e faz as telas abertas lerem de novo (depois de um `atualizar_coach`). */
 export function esquecerLeituras(): void {
   guardados.clear();
+  versaoDasLeituras += 1;
+  ouvintesDaVersao.forEach((ouvir) => ouvir());
+}
+
+function useVersaoDasLeituras(): number {
+  const [versao, setVersao] = useState(versaoDasLeituras);
+  useEffect(() => {
+    const ouvir = () => setVersao(versaoDasLeituras);
+    ouvintesDaVersao.add(ouvir);
+    return () => {
+      ouvintesDaVersao.delete(ouvir);
+    };
+  }, []);
+  return versao;
 }
 
 async function exigir<T>(promessa: Promise<any>, campo: string): Promise<T> {
@@ -176,6 +193,7 @@ const ESPERA_PARA_TENTAR_DE_NOVO_MS = 3000;
 export function useLeitura<T>(chave: string | null, ler: () => Promise<T>): Carga<T> {
   const [estado, setEstado] = useState<Carga<T>>({ dado: null, erro: null, carregando: Boolean(chave) });
   const [tentativa, setTentativa] = useState(0);
+  const versao = useVersaoDasLeituras();
   useEffect(() => {
     if (!chave) {
       setEstado({ dado: null, erro: null, carregando: false });
@@ -197,7 +215,7 @@ export function useLeitura<T>(chave: string | null, ler: () => Promise<T>): Carg
     };
     // `ler` muda a cada render; a chave (e a nova tentativa) diz quando ler de novo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chave, tentativa]);
+  }, [chave, tentativa, versao]);
   return estado;
 }
 
