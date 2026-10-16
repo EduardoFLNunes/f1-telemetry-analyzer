@@ -59,6 +59,7 @@ from core.assisted_analysis.reference_model import (  # noqa: E402
     model_path,
 )
 from core.live.driving_coach import LiveDrivingCoach  # noqa: E402
+from core.coleta.trava_coach import TravaDeExecucao, TravaOcupada  # noqa: E402
 from ml import config  # noqa: E402
 from ml.data import origin  # noqa: E402
 from ml.data.inventory import inventory_path  # noqa: E402
@@ -239,6 +240,22 @@ class Clock:
 
 
 def main(argv=None) -> int:
+    # Pedido 32: uma rodada por vez, do terminal ou do botao do app. A trava nao muda o que os passos fazem.
+    try:
+        trava = TravaDeExecucao(BACKEND_DIR.parent)
+        trava.__enter__()
+    except TravaOcupada as ocupada:
+        print(str(ocupada), flush=True)
+        return 3
+    if trava.substituiu is not None:
+        print(f"   (trava velha do processo {trava.substituiu.get('pid')} substituida: ele ja nao roda)", flush=True)
+    try:
+        return _main(argv)
+    finally:
+        trava.__exit__(None, None, None)
+
+
+def _main(argv=None) -> int:
     clock = Clock()
     code, args = _run(argv, clock)
     if args is not None:
