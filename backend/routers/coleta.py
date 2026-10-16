@@ -8,7 +8,7 @@ O estado do backend e da conexao com o jogo continua em `/api/runtime/status` e
 `/api/recording/status`; a aba le essas rotas como estao.
 """
 import asyncio
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Body, HTTPException
 
@@ -18,6 +18,8 @@ from core.coleta.configuracao import ConfigError
 from core.coleta.estado import carro_e_pista, espaco_em_disco, estado_do_coach
 from core.coleta.oficial import contagem_oficial
 from core.coleta.origem_app import app_identity
+from core.coleta.anotacao import ARQUIVO as ANOTACOES, AnotacaoRecusada, anotar, ler_anotacoes
+from core.coleta.rodada_coach import RodadaDoCoach
 
 router = APIRouter(prefix="/api/coleta")
 
@@ -116,3 +118,59 @@ async def post_verificacao(session_id: str):
 @router.get("/m1/oficial")
 async def get_m1_oficial():
     return await asyncio.to_thread(contagem_oficial, main.app_config.coach_root())
+
+
+# ---------------------------------------------------------------- pedido 32 ---
+# O botao do coach e a anotacao "Todas as voltas foram minhas", na tela Sessoes.
+
+_rodada: Optional[RodadaDoCoach] = None
+
+
+def _gravando() -> bool:
+    recording = main.recording_runtime.status().to_api() if main.recording_runtime else {}
+    return bool(recording.get("recording"))
+
+
+def rodada_do_coach() -> RodadaDoCoach:
+    global _rodada
+    if _rodada is None:
+        _rodada = RodadaDoCoach(
+            repositorio=main.app_config.coach_root,
+            gravando=_gravando,
+            pasta_de_logs=main.RUNTIME_ROOT / "data" / "coach_rodadas",
+            recarregar_coach=main.reload_coach,
+        )
+    return _rodada
+
+
+@router.get("/coach/rodada")
+async def get_rodada_do_coach():
+    return await asyncio.to_thread(rodada_do_coach().estado)
+
+
+@router.post("/coach/rodada")
+async def post_rodada_do_coach():
+    try:
+        return await asyncio.to_thread(rodada_do_coach().iniciar)
+    except RuntimeError as error:
+        raise HTTPException(status_code=409, detail=str(error))
+
+
+@router.get("/anotacoes")
+async def get_anotacoes():
+    repo = main.app_config.coach_root()
+    if repo is None:
+        return {"disponivel": False, "motivo": "o repositório não está configurado", "anotacoes": []}
+    return {"disponivel": True, "arquivo": str(repo / ANOTACOES), "anotacoes": await asyncio.to_thread(ler_anotacoes, repo)}
+
+
+@router.post("/anotacoes/{session_id}")
+async def post_anotacao(session_id: str):
+    repo = main.app_config.coach_root()
+    if repo is None:
+        raise HTTPException(status_code=409, detail="o repositório não está configurado (aba Coleta de dados)")
+    conferencia = await asyncio.to_thread(main.coleta_conferencia.ler_salvo, session_id)
+    try:
+        return await asyncio.to_thread(anotar, repo, session_id, conferencia)
+    except AnotacaoRecusada as error:
+        raise HTTPException(status_code=409, detail=str(error))

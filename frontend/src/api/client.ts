@@ -223,6 +223,13 @@ export const api = {
     await client.post(`/api/coleta/verificacoes/${encodeURIComponent(sessionId)}`)
   ).data,
   getColetaM1Oficial: async (): Promise<any> => (await client.get('/api/coleta/m1/oficial', { timeout: 60_000 })).data,
+  // ─── Pedido 32: o botão do coach e a anotação de sessão ────────────────────
+  getCoachRodada: async (): Promise<any> => (await client.get('/api/coleta/coach/rodada', { timeout: 15_000 })).data,
+  postCoachRodada: async (): Promise<any> => (await client.post('/api/coleta/coach/rodada', null, { timeout: 30_000 })).data,
+  getColetaAnotacoes: async (): Promise<any> => (await client.get('/api/coleta/anotacoes')).data,
+  postColetaAnotacao: async (sessionId: string): Promise<any> => (
+    await client.post(`/api/coleta/anotacoes/${encodeURIComponent(sessionId)}`, null, { timeout: 30_000 })
+  ).data,
 
   // ─── Ao vivo (pedido 29) ──────────────────────────────────────────────────
   /** As frases recentes do coach, a mais nova primeiro (as 20 últimas de uma fila de 50). */

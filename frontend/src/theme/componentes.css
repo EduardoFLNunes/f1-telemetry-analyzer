@@ -1064,3 +1064,94 @@ body {
   border-top: 1px solid var(--linha);
   border-bottom: 0;
 }
+/* Pedido 32: o botão do coach (passos e log) e a confirmação da anotação. */
+.passos-do-coach {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.passos-do-coach li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+.passos-do-coach li > span:nth-child(2) {
+  flex: 1;
+}
+.log-do-coach {
+  max-height: 260px;
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--raio-1);
+  background: var(--superficie);
+  border: 1px solid var(--linha-fraca);
+  font: 12px var(--fonte-dado);
+  color: var(--texto-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.fundo-do-dialogo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(4, 5, 6, 0.72);
+}
+.dialogo {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 22px;
+  background: var(--vidro-fundo-forte);
+}
+.dados-da-anotacao {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 16px;
+  margin: 0;
+}
+.dados-da-anotacao dt {
+  color: var(--texto-3);
+  font-size: 13px;
+}
+.dados-da-anotacao dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+.aviso-do-dialogo {
+  position: fixed;
+  z-index: 51;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  max-width: min(560px, calc(100% - 32px));
+  padding: 10px 14px;
+  border-radius: var(--raio-2);
+  background: var(--vermelho-fundo);
+  border: 1px solid var(--vermelho-borda);
+  color: var(--texto-1);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
