@@ -2,7 +2,7 @@
   "name": "automobilista-telemetria-desktop",
   "private": true,
   "productName": "Automobilista Telemetria",
-  "version": "0.3.0-coleta-modelos",
+  "version": "0.4.0-redesenho",
   "description": "Sistema desktop de telemetria e analise de desempenho para simulacao automobilistica com Assetto Corsa.",
   "author": "Eduardo Francisco",
   "copyright": "Copyright (c) 2026 Eduardo Francisco",

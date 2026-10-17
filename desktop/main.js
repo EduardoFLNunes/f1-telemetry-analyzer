@@ -28,7 +28,7 @@ const BACKEND_EXE_NAME = process.platform === 'win32' ? 'automobilista-backend.e
 // to `_internal`, instead of unpacking ~0.37 GB into %TEMP% on every start.
 const BACKEND_DIR_NAME = 'automobilista-backend';
 const EXPECTED_BACKEND_SERVICE = 'automobilista-telemetria-backend';
-const EXPECTED_BACKEND_VERSION = 'coleta-modelos';
+const EXPECTED_BACKEND_VERSION = 'redesenho';
 const WINDOW_ICON_NAME = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
 const ASSETTO_PLUGIN_ID = 'ac_opponents_exporter';
 const ASSETTO_PLUGIN_DISPLAY_NAME = 'Opponents Exporter';
