@@ -306,3 +306,16 @@ Conferi no app do repositório, isolado, apontado para este repositório (`_capt
 - **A Parte G com o pacote:** uma sessão curta gravada pelo **app instalado** confirma o mesmo pelo pacote.
 - **O commit de anotações feitas pelo botão** fica para o próximo pedido, como o pedido manda. Nenhuma foi feita agora.
 - **O pedido 31** (realidade aumentada) espera o seu "Execute".
+
+## Instalador 0.4.0-redesenho (pedido no chat em 17/10)
+
+- **O que entra:** as telas dos pedidos 29 e 30 e o botão do coach do pedido 32. Você aprovou no chat ("gere o instalador").
+- **Versão:** `0.4.0-redesenho` (`429a5c47`, branch `etapa/instalador-0.4.0`). A marca do backend virou `redesenho` em `backend/main.py` e `desktop/main.js`: o Electron confere essa marca para não usar um backend antigo que esteja no ar.
+- **Arquivo:** `versoes/0.4.0-redesenho/Automobilista-Telemetria-Setup-0.4.0-redesenho.exe`, com 229 MB e sha256 `cbeb346dcc3dfe0f20500776ac21b1a4ea748a45d8ed69fa511e72163a939a1c`. Também está em `desktop/dist/`.
+- **O `build-info.json`** marca a árvore como suja só por arquivos não rastreados (`docs/estudos/`, os pedidos 31 etc.) e pelo fim de linha do `package-lock.json`, que eu tinha tocado sem mudar o conteúdo e depois voltei.
+- **Conferido antes de entregar:** o pacote (`dist/win-unpacked`), aberto numa pasta isolada:
+  - o backend empacotado subiu com a marca `redesenho`;
+  - a tela Sessões mostrou as 8 sessões do relatório;
+  - o botão do coach apareceu ligado, apontando para este repositório.
+- **Uma trava velha do git:** um `.git/index.lock` vazio ficou do build (03:08), sem nenhum processo do git rodando. Removi como o próprio git orienta.
+- **Não instalei.** A instalação é com você: rode o instalador por cima do atual, na mesma pasta. A instalação preserva `%APPDATA%` (fase 12.6).
