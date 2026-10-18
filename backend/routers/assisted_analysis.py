@@ -1,5 +1,6 @@
 """Post-lap assisted driving analysis endpoints."""
 import asyncio
+import logging
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Body, HTTPException, Query
@@ -7,6 +8,7 @@ from fastapi import APIRouter, Body, HTTPException, Query
 import main
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def _get_assisted_analysis_or_404(
@@ -175,6 +177,19 @@ async def get_lap_coaching(lapId: str):
             driver_id=descriptor.driver_id or "player_1",
             geometry=main.assisted_analysis_service._official_geometry(descriptor.track),  # noqa: SLF001
         )
+        # Pedido 31: cada frase de diferenca com a mensagem de radio pronta (o mesmo
+        # texto do app do jogo e da tela Ao vivo) e o `s` da geometria oficial.
+        try:
+            from core.radio.janelas import carregar_curvas
+            from core.radio.texto import mensagem_de_diferenca
+
+            curvas, comprimento = carregar_curvas(main.app_config.coach_root())
+            if curvas and comprimento:
+                for evento in result.get("events") or []:
+                    if evento.get("type") == "coaching_event":
+                        evento["radio"] = mensagem_de_diferenca(evento, curvas, comprimento)
+        except Exception as error:  # sem a geometria, as frases voltam como antes
+            logger.warning("Radio da volta sem texto pronto: %s", error)
         result.update({
             "lapId": lapId,
             "lapNumber": descriptor.lap_number,

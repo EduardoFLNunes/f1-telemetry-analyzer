@@ -184,6 +184,12 @@ class LiveDrivingCoach:
         self._focus: Optional[Tuple[int, ...]] = None
         self._focus_source: Optional[str] = None
         self._focus_key: Optional[tuple] = None
+        # Pedido 31 (o radio): o que o coach ja sabe, guardado para quem so le.
+        # Nao muda nenhuma regra: o horario da linha em que a volta comecou e o
+        # periodo da ultima volta completa (de s = 0 a s = 0, como o store v2).
+        self._lap_line_clock: Optional[float] = None
+        self._volta_do_jogo: Optional[float] = None
+        self.ultima_volta: Optional[Dict[str, Any]] = None
 
     # ── the hot path ─────────────────────────────────────────────────────
 
@@ -222,6 +228,7 @@ class LiveDrivingCoach:
                 return
 
         lap_number = _number(frame.get("lap_number") or frame.get("lap"))
+        self._volta_do_jogo = lap_number  # pedido 31: so para quem le a posicao
         index = min(int(progress * model.microsectors), model.microsectors - 1)
         if not _legacy(model):
             if ai_controlled(frame) is True:
@@ -265,6 +272,11 @@ class LiveDrivingCoach:
                     crossing = self._last_clock + (clock - self._last_clock) * t
                     self._close_sector(frame, model, self._sector_index, self._sector_entry_clock, crossing)
                     self._end_lap(frame, model)
+                    if self._lap_started_at_line and self._lap_line_clock is not None:
+                        # O s = 0 fica alguns metros antes da linha do jogo: no quadro da passagem,
+                        # o jogo ainda conta a volta que acabou.
+                        self.ultima_volta = {"volta": lap_number, "tempoS": crossing - self._lap_line_clock,
+                                             "teveIA": self._lap_had_ai, "momento": time.time()}
                     self._start_lap(lap_number, 0, crossing, 0.0, at_line=True)
                     self._last_progress, self._last_clock = progress, clock
                     if index == 0:
@@ -339,6 +351,7 @@ class LiveDrivingCoach:
         self._lap_onsets = [onset for onset in self._lap_onsets[-1:] if progress < LINE_WINDOW]
         self._lap_diffs = {}
         self._lap_started_at_line = at_line
+        self._lap_line_clock = clock if at_line else None
         self._lap_had_ai = False
         self._spoken_sectors = set()
 
@@ -405,6 +418,22 @@ class LiveDrivingCoach:
             "s": 0.0,
             "timestamp": time.time(),
         })
+
+    def posicao_oficial(self) -> Optional[Dict[str, Any]]:
+        """Pedido 31: onde o carro esta, na projecao da geometria oficial que o coach ja faz.
+
+        So leitura: `s` em metros, a lateral (positiva para a esquerda) e a volta
+        do jogo. None sem projecao (modelo antigo, sem geometria ou antes do
+        primeiro quadro).
+        """
+        if self._projector is None or self._last_progress is None:
+            return None
+        length = float(self._projector.geometry.length)
+        tempo = (self._last_clock - self._lap_line_clock
+                 if self._lap_line_clock is not None and self._last_clock is not None else None)
+        return {"s": float(self._last_progress) * length, "comprimento": length,
+                "lateral": self._last_lateral, "volta": self._volta_do_jogo,
+                "tempoDaVolta": tempo, "desdeALinha": self._lap_line_clock is not None}
 
     def _position_m(self, frame: Dict[str, Any], progress: float) -> Optional[float]:
         """Where the car is along the lap, in metres, on the model's ruler."""

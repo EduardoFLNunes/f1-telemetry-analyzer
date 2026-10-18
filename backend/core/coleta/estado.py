@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -12,6 +13,36 @@ from .configuracao import CHOICE_LABELS, COACH_OFF, AppConfig
 from .requisitos import CARRO_ESPERADO, ESPACO_AMARELO_GB, ESPACO_VERMELHO_GB, PISTA_ESPERADA
 
 GB = 1024 ** 3
+STORE_V2_META = Path("data") / "ml" / "laps_grid_v2_meta.json"
+_tempos_do_store: Dict[str, Any] = {"chave": None, "tempos": {}}
+
+
+def tempos_do_store(raiz: Optional[Path]) -> Dict[str, float]:
+    """`lap_time_s` de cada volta do store v2 (pedido 31, A.3: uma fonte para cada numero).
+
+    O hero e a tela Volta mostram o mesmo tempo para a mesma volta: o do store v2
+    e do relatorio de evolucao, e nao o do modelo do coach, que mede a volta a
+    sua maneira (1 ms de diferenca). Guardado pela data do arquivo.
+    """
+    if raiz is None:
+        return {}
+    arquivo = Path(raiz) / STORE_V2_META
+    try:
+        info = arquivo.stat()
+    except OSError:
+        return {}
+    chave = (str(arquivo), info.st_mtime, info.st_size)
+    if _tempos_do_store["chave"] != chave:
+        try:
+            meta = json.loads(arquivo.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}
+        _tempos_do_store["tempos"] = {
+            str(v.get("lap_id")): float(v["lap_time_s"]) for v in meta.get("laps") or []
+            if v.get("lap_id") and v.get("lap_time_s") is not None
+        }
+        _tempos_do_store["chave"] = chave
+    return _tempos_do_store["tempos"]
 
 
 def espaco_em_disco(pasta: Path) -> Dict[str, Any]:
@@ -90,6 +121,7 @@ def estado_do_coach(service: Any, config: AppConfig, pista: str = PISTA_ESPERADA
     if modelo is not None:
         for kind, ref in (modelo.references or {}).items():
             referencias[kind] = {"volta": ref.get("lap_id"), "tempoS": ref.get("lap_seconds"),
+                                 "tempoStoreS": tempos_do_store(raiz).get(str(ref.get("lap_id"))),
                                  "carro": ref.get("carro")}
     return {
         "ativo": motivo is None,

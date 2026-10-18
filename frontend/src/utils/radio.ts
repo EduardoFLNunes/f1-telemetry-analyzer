@@ -8,9 +8,16 @@
  * e a mesma regra, só a escrita muda. Evento sem os números → a frase do
  * backend, como veio.
  *
- * "Setor N" no coach é o microssetor N de 60 (inventário, problema A.5); aqui
- * ele se chama microssetor.
+ * "Setor N" no coach é o índice N do microssetor, contado a partir de 0
+ * (`int(progresso × 60)` em `driving_coach.py`). O piloto vê o microssetor
+ * contado a partir de 1, como no mapa e no relatório de evolução (pedido 31,
+ * A.2): o índice 2 do coach é o microssetor 3. O índice interno não muda.
  */
+
+/** Índice do coach (a partir de 0) → número que o piloto vê (a partir de 1). */
+export function microssetorParaOPiloto(indice: number): number {
+  return indice + 1;
+}
 
 export type EventoCoach = {
   type?: string;
@@ -86,6 +93,53 @@ function clausulaDaMinima(tipo: string | null, referenciaKmh: number, suaKmh: nu
   return `mínima na referência ${ref} km/h, a sua ${sua} km/h`;
 }
 
+/**
+ * Pedido 31: a mensagem que o backend montou (`/api/radio/mensagens`, ou o campo
+ * `radio` das frases de uma volta gravada). O texto vem pronto, igual ao do app
+ * do jogo; aqui ela só vira o formato do cartão.
+ */
+export type MensagemDoBackend = {
+  id?: number;
+  origem: 'coach' | 'resumo' | 'teste' | string;
+  titulo: string;
+  texto: string;
+  detalhe: string | null;
+  fala?: string;
+  microssetor: number | null;
+  curva: string | null;
+  s: number | null;
+  sCarro?: number | null;
+  voltaDoCarro?: number | null;
+  entregueEm?: string | null;
+  audio?: string | null;
+  perdaS?: number | null;
+};
+
+export type MensagemRadioComAudio = MensagemRadio & { audio: string | null; sCarro: number | null };
+
+const TAG_DA_ORIGEM: Record<string, string> = { coach: 'Rádio', resumo: 'Volta', teste: 'Teste' };
+
+export function mensagemDoRadio(m: MensagemDoBackend, indice = 0): MensagemRadioComAudio {
+  const ponto = numero(m.sCarro) ?? numero(m.s);
+  const onde = [
+    m.titulo,
+    m.microssetor ? `microssetor ${m.microssetor}` : null,
+    ponto !== null && m.origem !== 'teste' ? `${Math.round(ponto).toLocaleString('pt-BR')} m` : null,
+  ].filter(Boolean).join(' · ');
+  return {
+    id: `${m.id ?? 'sem-id'}-${indice}`,
+    tipo: m.origem === 'coach' ? 'diferenca' : 'outro',
+    tag: TAG_DA_ORIGEM[m.origem] ?? 'Rádio',
+    onde,
+    hora: m.entregueEm ? m.entregueEm.slice(11, 19) : '',
+    frase: m.texto,
+    detalhe: m.detalhe ?? null,
+    perdaS: numero(m.perdaS),
+    audio: m.audio ?? null,
+    sCarro: numero(m.sCarro),
+  };
+}
+
 /** Um evento de `/api/live/coach` (ou do WebSocket) como mensagem de rádio. */
 export function mensagemDoEvento(evento: EventoCoach, indice = 0): MensagemRadio {
   const volta = numero(evento.lap_number);
@@ -94,7 +148,7 @@ export function mensagemDoEvento(evento: EventoCoach, indice = 0): MensagemRadio
   const textoOriginal = String(evento.event ?? evento.message ?? '').trim();
 
   if (evento.type === 'coaching_focus' && Array.isArray(evento.focusSectors) && evento.focusSectors.length) {
-    const setores = evento.focusSectors;
+    const setores = evento.focusSectors.map((indice) => microssetorParaOPiloto(Number(indice)));
     const onde = evento.focusSource === 'sessao' ? 'nas últimas 5 voltas válidas da sessão' : 'nas suas voltas do modelo';
     return {
       id,
@@ -132,7 +186,7 @@ export function mensagemDoEvento(evento: EventoCoach, indice = 0): MensagemRadio
       id,
       tipo: 'diferenca',
       tag: 'Rádio',
-      onde: [volta ? `volta ${volta}` : null, `microssetor ${microssetor}`].filter(Boolean).join(' · '),
+      onde: [volta ? `volta ${volta}` : null, `microssetor ${microssetorParaOPiloto(microssetor)}`].filter(Boolean).join(' · '),
       hora,
       frase: `${diferencaComSinal(perda)} para ${artigo} ${rotulo} neste trecho`,
       detalhe: partes.join(' · '),

@@ -1,22 +1,21 @@
 /**
- * Ao vivo (pedido 29, casca): a sessão em andamento e o que o rádio disse.
+ * Ao vivo (pedidos 29 e 31): a sessão em andamento, como o rádio do engenheiro.
  *
+ * - Volta com fantasma: o mesmo componente da tela Volta, com o carro na
+ *   posição atual (a projeção do coach na geometria oficial), o traçado da volta
+ *   em andamento e o fantasma da referência escolhida (`/api/live/volta`).
+ * - Rádio: as mensagens que o backend entregou (`/api/radio/mensagens`), com o
+ *   texto pronto (o mesmo do app do jogo), a hora, o ponto da pista e o áudio.
  * - Gravação e canais: `/api/coleta/ao-vivo` (pedido 28), a cada 2 s.
- * - Rádio: `/api/live/coach`, a cada 2 s; as frases recentes, a mais nova em
- *   cima, montadas em português a partir dos números de cada evento
- *   (utils/radio.ts). O resumo de fim de volta não passa por esta rota (vai só
- *   pelo WebSocket) e fica para o próximo pedido.
- *
- * O mapa ao vivo, o fantasma e o rádio dentro do jogo chegam com a realidade
- * aumentada (próximo pedido, depois do ADR 0020).
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import type { EstadoDoApp } from '../hooks/useEstadoDoApp';
 import { ErrorBoundary } from '../components/ErrorBoundary';
-import { CartaoNumero, EtiquetaEstado, MensagemRadioCartao, PainelVidro, type Tom } from '../components/ui/base';
+import { CartaoNumero, EtiquetaEstado, PainelVidro, type Tom } from '../components/ui/base';
+import { RadioAoVivo } from '../aoVivo/RadioAoVivo';
+import { FantasmaAoVivo } from '../aoVivo/FantasmaAoVivo';
 import { formatarNumero, ROTULO_ESTADO, tomDoEstado, type EstadoCanal } from '../utils/coleta';
-import { mensagemDoEvento, type MensagemRadio } from '../utils/radio';
 
 function usePeriodico<T>(ler: () => Promise<T>, ms: number, ligado: boolean): [T | null, boolean] {
   const [dado, setDado] = useState<T | null>(null);
@@ -57,12 +56,6 @@ function quemPilota(aoVivo: any): string | null {
 export const AoVivoPage: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
   const pronto = estado.backend.fase === 'pronto';
   const [aoVivo, aoVivoFalhou] = usePeriodico(api.getColetaAoVivo, 2000, pronto);
-  const [coach, coachFalhou] = usePeriodico(api.getLiveCoach, 2000, pronto);
-
-  const mensagens = useMemo<MensagemRadio[]>(
-    () => (Array.isArray(coach?.events) ? coach.events : []).map((evento: any, i: number) => mensagemDoEvento(evento, i)),
-    [coach],
-  );
   const itens: any[] = aoVivo?.itens || [];
   const grupos: any[] = aoVivo?.grupos || [];
   const gravando = Boolean(aoVivo?.gravando);
@@ -89,6 +82,8 @@ export const AoVivoPage: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
             </EtiquetaEstado>
           )}
         </header>
+
+        <FantasmaAoVivo pronto={pronto} />
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
           <PainelVidro id="ao-vivo-canais" titulo="Gravação e canais" nota="/api/coleta/ao-vivo · últimos segundos" style={{ flex: '999 1 560px', minWidth: 0 }}>
@@ -117,28 +112,11 @@ export const AoVivoPage: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
                 );
               })}
             </div>
-            <div className="aviso-proximo">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M3 15c2-6 5-9 8-9 3 0 5 2 5 5s-3 5-6 5" />
-                <circle cx="10" cy="16" r="1.6" />
-              </svg>
-              O mapa ao vivo com o fantasma e o rádio dentro do jogo chegam no próximo pedido, com a realidade aumentada.
-            </div>
           </PainelVidro>
 
-          <PainelVidro id="ao-vivo-radio" titulo="Rádio" nota="até 3 frases por volta" style={{ flex: '1 1 400px', minWidth: 0 }}>
-            <div role="log" aria-live="polite" aria-label="Mensagens do rádio" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {coachFalhou && <p className="texto-fraco" style={{ margin: 0 }}>O backend não respondeu ao coach.</p>}
-              {!coachFalhou && mensagens.length === 0 && (
-                <p className="texto-fraco" style={{ margin: 0 }}>
-                  {pronto ? 'Nenhuma frase do coach nesta abertura do app. Elas aparecem aqui durante a sessão.' : 'Aguardando o backend.'}
-                </p>
-              )}
-              {mensagens.map((m, i) => (
-                <MensagemRadioCartao key={m.id} mensagem={m} esmaecida={Math.max(0.6, 1 - i * 0.08)} />
-              ))}
-            </div>
-            <span className="texto-fraco dado">/api/live/coach · as 20 mais recentes</span>
+          <PainelVidro id="ao-vivo-radio" titulo="Rádio" nota="até 3 frases por volta, nas retas, e o resumo na linha" style={{ flex: '1 1 400px', minWidth: 0 }}>
+            <RadioAoVivo pronto={pronto} />
+            <span className="texto-fraco dado">/api/radio/mensagens · as 20 mais recentes</span>
           </PainelVidro>
         </div>
       </div>

@@ -16,6 +16,7 @@ import { CarPhysicsDebugPanel } from '../components/CarPhysicsDebugPanel';
 import { hashDaRota } from '../navegacao/rotas';
 import { DepuracaoSistema } from './sistema/DepuracaoSistema';
 import { GuiaVisual } from './sistema/GuiaVisual';
+import { RadioDeTeste } from './sistema/RadioDeTeste';
 
 const ABAS: ReadonlyArray<{ id: string | null; rotulo: string }> = [
   { id: null, rotulo: 'Diagnóstico' },
@@ -25,6 +26,7 @@ const ABAS: ReadonlyArray<{ id: string | null; rotulo: string }> = [
 
 const Diagnostico: React.FC = () => (
   <>
+    <RadioDeTeste />
     <section className="vidro painel">
       <div className="superficie" style={{ minHeight: 300, overflow: 'hidden' }}>
         <DesktopRuntimePanel active />

@@ -296,3 +296,24 @@ Complemento do pedido 29: as telas do protótipo A (`frontend/mockups/prototipo_
   - os traçados e o relevo da Análise entraram em Volta;
   - o painel de evolução virou a tela Evolução, com o bloco `tecnica`.
 - **O que fica para o pedido de limpeza:** `Dashboard.tsx`, `AnalysisPage.tsx` e os componentes que só eles usavam continuam no código, sem rota.
+
+### O que o pedido 31 entregou (18/10)
+
+O rádio do engenheiro e a tela Ao vivo completa (ADR 0020). Detalhes em `docs/realidade_aumentada.md` e em `docs/handoff/2026-10-15_31_radio-realidade-aumentada_relatorio.md`.
+
+- **O rádio no backend** (`backend/core/radio/`):
+  - a mensagem é montada uma vez, com microssetor a partir de 1, a curva C01 a C14 e o lado por extenso;
+  - ela é entregue só nas janelas de rádio (as retas) ou com o resumo na linha;
+  - a voz é a Microsoft Daniel do Windows, com uma vinheta gerada pelo código;
+  - cada mensagem entregue fica no registro `data/radio/<sessão>.jsonl`.
+- **O app do jogo:** `tools/csp_app/radio_engenheiro/`, com os scripts de instalar e remover, que só o Eduardo roda.
+- **A tela Ao vivo:**
+  - a volta com fantasma ao vivo, com o mesmo componente da tela Volta;
+  - o rádio, com o texto pronto e o áudio;
+  - a gravação e os canais.
+- **A tela Volta:** as frases de uma volta gravada usam o texto pronto do backend e o `s` da geometria oficial. Antes, usavam o `s` do runtime.
+- **A tela Sistema:** a mensagem de teste do rádio.
+- **O hero:** os tempos das referências vêm do store v2, a mesma fonte da tela Volta.
+- **Dois defeitos antigos corrigidos no caminho ao vivo:**
+  - o coach ao vivo não achava o modelo, porque o quadro não traz a pista;
+  - o barramento enchia o log a cada quadro (958 MB no app instalado).

@@ -60,7 +60,8 @@ const ALTURA_PISTA = 500;
 
 function referencia(valor: any): Referencia | null {
   if (!valor || typeof valor !== 'object') return null;
-  const tempo = Number(valor.tempoS);
+  // Pedido 31, A.3: o tempo do store v2 (o mesmo da tela Volta e do relatório); o do modelo do coach só sem ele.
+  const tempo = Number(valor.tempoStoreS ?? valor.tempoS);
   return { volta: valor.volta ?? null, tempoS: Number.isFinite(tempo) ? tempo : null, carro: valor.carro ?? null };
 }
 

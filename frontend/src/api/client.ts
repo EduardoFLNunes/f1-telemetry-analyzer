@@ -223,6 +223,15 @@ export const api = {
     await client.post(`/api/coleta/verificacoes/${encodeURIComponent(sessionId)}`)
   ).data,
   getColetaM1Oficial: async (): Promise<any> => (await client.get('/api/coleta/m1/oficial', { timeout: 60_000 })).data,
+  // ─── Pedido 31: o rádio do engenheiro e a volta ao vivo ───────────────────
+  getRadioMensagens: async (desde: number, instancia: string | null): Promise<any> => (
+    await client.get('/api/radio/mensagens', { params: { desde, ...(instancia ? { instancia } : {}) } })
+  ).data,
+  postRadioTeste: async (): Promise<any> => (await client.post('/api/radio/teste', null, { timeout: 45_000 })).data,
+  getRadioEstado: async (): Promise<any> => (await client.get('/api/radio/estado', { timeout: 30_000 })).data,
+  getLiveVolta: async (): Promise<any> => (await client.get('/api/live/volta')).data,
+  /** O endereço completo do áudio de uma mensagem (`/api/radio/audio/<id>`). */
+  urlDoAudio: (caminho: string): string => `${BASE_URL}${caminho}`,
   // ─── Pedido 32: o botão do coach e a anotação de sessão ────────────────────
   getCoachRodada: async (): Promise<any> => (await client.get('/api/coleta/coach/rodada', { timeout: 15_000 })).data,
   postCoachRodada: async (): Promise<any> => (await client.post('/api/coleta/coach/rodada', null, { timeout: 30_000 })).data,

@@ -23,3 +23,4 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
 | [0017](0017-modelo-fisico-do-carro.md) | Modelo físico do carro: carro e piloto separados, construído por etapas junto do que já roda | aceita |
 | [0018](0018-dois-modelos-e-fontes-de-treino.md) | Dois modelos, previsão e correção; a volta da IA é uma fonte de treino, não o alvo | aceita; item 3 refinado por 0019 |
 | [0019](0019-f1-tracado-de-referencia-2023-25.md) | A F1 entra no Modelo 1 como um traçado de referência único da época 2023–25 | aceita; refina 0018 |
+| [0020](0020-realidade-aumentada-app-lua-do-csp.md) | Realidade aumentada no Assetto Corsa: um app Lua do CSP, numa pasta própria do jogo | aceita (pedido 31) |
