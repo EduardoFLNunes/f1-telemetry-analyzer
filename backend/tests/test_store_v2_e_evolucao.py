@@ -95,8 +95,11 @@ class PeriodTest(unittest.TestCase):
         self.assertIsNone(game_lap_time(lap, later, self.track))
 
     def test_the_main_check(self):
+        # Pedido 34: a regua leva o tempo do jogo ao s = 0; com a mesma velocidade
+        # nas duas pontas, a travessia se cancela e a conta e a de antes.
         laps = pd.DataFrame({"lap_id": ["a", "b", "c", "d"], "lap_time_s": [85.001, 86.0, 84.9985, 90.0],
-                             "tempo_jogo_s": [85.0, 86.002, 85.0, None]})
+                             "tempo_jogo_s": [85.0, 86.002, 85.0, None], "linha_do_jogo_m": 1.463,
+                             "v_linha_inicio_kmh": 250.0, "v_linha_fim_kmh": 250.0})
         ok = store_checks.check_period(laps)
         self.assertTrue(ok["passou"])
         self.assertEqual((ok["voltas_medidas"], ok["voltas_sem_fechamento_medido"]), (3, 1))

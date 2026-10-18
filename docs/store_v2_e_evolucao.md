@@ -57,6 +57,36 @@ E no store:
 
 **Se a checagem principal falhar, o trabalho para aqui** e o relatório vai para o Eduardo, sem merge.
 
+#### Emenda de 18/10/2026 (pedido 34): a régua da checagem do período
+
+Decidida pelo Eduardo em 18/10 (opção 1 do relatório do pedido 33) e registrada antes de rodar.
+
+- **Por que:** a checagem comparava duas linhas diferentes.
+  - O período vai de s = 0 a s = 0 da geometria oficial.
+  - O tempo do jogo vai de linha do jogo a linha do jogo, e a linha do jogo fica **1,463 m depois do s = 0** (pedido 33: 138 voltas, desvio de 0,067 m por volta).
+  - A diferença entre as duas medidas é o tempo de atravessar esses 1,463 m no começo menos o tempo no fim. Ela só some quando o carro passa pela linha na mesma velocidade nas duas pontas.
+  - Em 18/10, isso reprovou o store (p99 de 7,63 ms) por 5 voltas que começaram logo depois de uma passagem lenta pela linha. O gravador, o corte em voltas e a interpolação na linha estão certos (pedido 33, Parte A).
+- **A régua nova:** o tempo do jogo é levado ao s = 0 antes de comparar.
+  - A conta é **tempo do jogo + d × (1/v no começo − 1/v no fim)**.
+  - `v` é a velocidade gravada em cada passagem por s = 0: a mediana das amostras da mesma janela de 15 m que acha a passagem (`store_v2.line_speeds`).
+  - `d` é a distância medida nas próprias gravações: a mediana das voltas do store.
+- **A medida da distância** (`store_v2.game_line_position`, por volta, campo `linha_do_jogo_m`):
+  - nas 3 primeiras amostras depois de o cronômetro zerar, com ele em até 0,06 s e o carro a 100 km/h ou mais, a linha fica em `s − v × cronômetro`;
+  - vale a mediana dessas amostras.
+- **A checagem nova, "a linha do jogo fica onde foi medida"** (`store_checks.check_game_line`):
+  - **o que confere:** cada sessão com pelo menos 3 voltas medidas tem a mediana a até **0,10 m** de 1,463 m, e a mediana de todas as voltas também;
+  - **quando reprova:** se a geometria oficial ou a linha do jogo mudarem, a checagem reprova e diz qual sessão saiu e para onde;
+  - **por que 0,10 m:** a tolerância foi fixada antes de rodar. As sessões de junho a outubro ficam entre 1,425 e 1,505 m, e um erro de 0,10 m na distância move a régua em no máximo 1,5 ms na pior volta vista (127 contra 264 km/h nas duas pontas).
+- **O que não muda:**
+  - o que a checagem prova, que é "o período de uma volta bate com o cronômetro do jogo";
+  - o limite (p99 até 5 ms);
+  - o período gravado no store (`lap_time_s`, de s = 0 a s = 0);
+  - as outras checagens;
+  - nenhuma volta sai do store.
+- **A outra régua** (medir o período em s = 1,463 m, nas duas pontas) fica só como conferência, no relatório do pedido 34.
+- **O controle do store antigo** (cerca de −26 ms) passa a usar a mesma régua.
+- **O que se esperava antes de rodar** (pedido 33, com a velocidade da grade): o p99 das 676 voltas iria de 7,63 ms para 3,56 ms, e as voltas acima de 5 ms, de 10 para 3. O antes e depois da rodada está na seção 3.
+
 ### 1.4 Regras do relatório de evolução
 
 - **Voltas:**
@@ -212,6 +242,24 @@ Tudo isso dentro do registrado.
 **Controle:** o store antigo, contra o mesmo cronômetro do jogo, fica 27,3 ms curto (mediana) e não passaria na checagem principal. A checagem enxerga o erro que veio corrigir.
 
 O relatório completo fica em `data/ml/store_v2_relatorio.json`.
+
+### Antes e depois da régua nova (pedido 34, rodada de 18/10/2026)
+
+O store de 18/10 tem 685 voltas, com a sessão `2026-10-18_12-38-44`. As duas réguas foram medidas nas mesmas voltas.
+
+| | régua antiga (linha do jogo contra s = 0) | régua nova (as duas em s = 0) |
+|---|---|---|
+| p99 de \|período − tempo do jogo\| | 7,56 ms | **3,56 ms** |
+| voltas acima de 5 ms | 10 | 3 |
+| a checagem principal | reprovaria | **passou** |
+
+- **A linha do jogo medida:** 1,495 m depois do s = 0, a mediana de 683 voltas.
+  - As 47 sessões com pelo menos 3 voltas medidas ficam entre 1,418 e 1,536 m, todas dentro de 1,463 ± 0,10 m.
+  - Outras 13 sessões têm menos de 3 voltas medidas e ficam sem veredito.
+- **As 3 voltas que continuam acima de 5 ms** são as três de 14/06, do gravador de junho a 31 Hz: −8,15 ms, +7,46 ms e −5,43 ms. Elas já estavam no store quando o p99 era de 4,60 ms (pedido 33, A.4).
+- **A conferência pela outra régua:** o período medido na própria linha do jogo, com a mesma interpolação, dá o mesmo que a régua nova, a menos de 0,40 ms (p99 de 0,33 ms) nas 99 voltas das 9 sessões lidas no pedido 33.
+- **O controle do store antigo,** com a régua nova, fica 27,2 ms curto (mediana), como antes.
+- **O meta saiu com `aprovado: true`,** e as cinco checagens passaram.
 
 ## 4. Relatório de evolução (Parte C)
 

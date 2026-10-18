@@ -1,0 +1,653 @@
+{
+ "pedido": "docs/prompts/2026-10-18_34_regua-da-checagem-do-periodo.md",
+ "antes": {
+  "construido_em": "2026-10-18T07:51:13.495921+00:00",
+  "commit": "788e09065c8c3d585bdd3304271ccca6b214524c",
+  "aprovado": false,
+  "voltas": 676,
+  "principal_periodo": {
+   "checagem": "periodo de s = 0 a s = 0 contra o cronometro do jogo",
+   "limite_ms": 5.0,
+   "voltas_medidas": 676,
+   "voltas_sem_fechamento_medido": 0,
+   "diferenca_ms": {
+    "n": 676,
+    "min": -21.46,
+    "p1": -3.13,
+    "mediana": 0.74,
+    "p99": 3.55,
+    "max": 11.74
+   },
+   "abs_diferenca_ms": {
+    "n": 676,
+    "min": 0.0,
+    "p1": 0.01,
+    "mediana": 1.03,
+    "p99": 7.63,
+    "max": 21.46
+   },
+   "piores": [
+    {
+     "volta": "2026-10-05_20-33-47_vhe_interlagos#0013",
+     "diferenca_ms": -21.46
+    },
+    {
+     "volta": "2026-08-19_20-58-36_vhe_interlagos#0011",
+     "diferenca_ms": -20.15
+    },
+    {
+     "volta": "2026-10-17_16-17-08_vhe_interlagos#0007",
+     "diferenca_ms": 11.74
+    },
+    {
+     "volta": "2026-10-17_01-02-22_vhe_interlagos#0003",
+     "diferenca_ms": 11.49
+    },
+    {
+     "volta": "2026-10-17_16-17-08_vhe_interlagos#0020",
+     "diferenca_ms": 10.86
+    }
+   ],
+   "passou": false
+  }
+ },
+ "depois": {
+  "construido_em": "2026-10-18T20:55:36.014793+00:00",
+  "commit": "c15b2587af348f96f5b5116a7eabce3bb66ac6ad",
+  "aprovado": true,
+  "voltas": 685,
+  "checagens": {
+   "principal_periodo": {
+    "checagem": "periodo de s = 0 a s = 0 contra o cronometro do jogo, na mesma linha",
+    "regua": "tempo do jogo levado ao s = 0: tempo do jogo + linha x (1/v no comeco - 1/v no fim) (pedido 34)",
+    "linha_do_jogo_m": 1.4948,
+    "limite_ms": 5.0,
+    "voltas_medidas": 685,
+    "voltas_sem_fechamento_medido": 0,
+    "voltas_sem_velocidade_na_linha": 0,
+    "diferenca_ms": {
+     "n": 685,
+     "min": -8.15,
+     "p1": -3.01,
+     "mediana": 0.77,
+     "p99": 3.33,
+     "max": 7.46
+    },
+    "abs_diferenca_ms": {
+     "n": 685,
+     "min": 0.0,
+     "p1": 0.02,
+     "mediana": 1.05,
+     "p99": 3.56,
+     "max": 8.15
+    },
+    "piores": [
+     {
+      "volta": "2026-06-14_12-23-46_vhe_interlagos#0007",
+      "diferenca_ms": -8.15
+     },
+     {
+      "volta": "2026-06-14_12-23-46_vhe_interlagos#0005",
+      "diferenca_ms": 7.46
+     },
+     {
+      "volta": "2026-06-14_12-44-04_vhe_interlagos#0002",
+      "diferenca_ms": -5.43
+     },
+     {
+      "volta": "2026-06-14_12-23-46_vhe_interlagos#0001",
+      "diferenca_ms": -4.79
+     },
+     {
+      "volta": "2026-06-14_12-23-46_vhe_interlagos#0003",
+      "diferenca_ms": -4.33
+     }
+    ],
+    "acima_do_limite": [
+     {
+      "volta": "2026-06-14_12-23-46_vhe_interlagos#0007",
+      "diferenca_ms": -8.15
+     },
+     {
+      "volta": "2026-06-14_12-23-46_vhe_interlagos#0005",
+      "diferenca_ms": 7.46
+     },
+     {
+      "volta": "2026-06-14_12-44-04_vhe_interlagos#0002",
+      "diferenca_ms": -5.43
+     }
+    ],
+    "regua_antiga (informativo)": {
+     "abs_diferenca_ms": {
+      "n": 685,
+      "min": 0.0,
+      "p1": 0.01,
+      "mediana": 1.03,
+      "p99": 7.56,
+      "max": 21.46
+     },
+     "acima_do_limite": 10
+    },
+    "passou": true
+   },
+   "linha_do_jogo": {
+    "checagem": "a linha do jogo fica onde foi medida (pedido 34)",
+    "registrada_m": 1.463,
+    "tolerancia_m": 0.1,
+    "medida_m": 1.4948,
+    "voltas_medidas": 683,
+    "sessoes": {
+     "2026-06-14_10-15-25_vhe_interlagos": {
+      "voltas_medidas": 1,
+      "dentro": null
+     },
+     "2026-06-14_10-43-46_vhe_interlagos": {
+      "voltas_medidas": 3,
+      "mediana_m": 1.498,
+      "desvio_m": 0.051,
+      "dentro": true
+     },
+     "2026-06-14_11-29-22_vhe_interlagos": {
+      "voltas_medidas": 1,
+      "dentro": null
+     },
+     "2026-06-14_11-45-28_vhe_interlagos": {
+      "voltas_medidas": 3,
+      "mediana_m": 1.432,
+      "desvio_m": 0.052,
+      "dentro": true
+     },
+     "2026-06-14_12-23-46_vhe_interlagos": {
+      "voltas_medidas": 8,
+      "mediana_m": 1.418,
+      "desvio_m": 0.07,
+      "dentro": true
+     },
+     "2026-06-14_12-44-04_vhe_interlagos": {
+      "voltas_medidas": 2,
+      "dentro": null
+     },
+     "2026-06-18_20-06-03_vhe_interlagos": {
+      "voltas_medidas": 3,
+      "mediana_m": 1.486,
+      "desvio_m": 0.045,
+      "dentro": true
+     },
+     "2026-06-19_11-08-15_vhe_interlagos": {
+      "voltas_medidas": 1,
+      "dentro": null
+     },
+     "2026-06-19_23-24-46_vhe_interlagos": {
+      "voltas_medidas": 4,
+      "mediana_m": 1.424,
+      "desvio_m": 0.081,
+      "dentro": true
+     },
+     "2026-06-20_13-04-20_vhe_interlagos": {
+      "voltas_medidas": 2,
+      "dentro": null
+     },
+     "2026-06-20_13-09-57_vhe_interlagos": {
+      "voltas_medidas": 1,
+      "dentro": null
+     },
+     "2026-06-20_13-13-02_vhe_interlagos": {
+      "voltas_medidas": 31,
+      "mediana_m": 1.503,
+      "desvio_m": 0.09,
+      "dentro": true
+     },
+     "2026-08-07_20-27-52_vhe_interlagos": {
+      "voltas_medidas": 54,
+      "mediana_m": 1.499,
+      "desvio_m": 0.063,
+      "dentro": true
+     },
+     "2026-08-08_11-40-43_vhe_interlagos": {
+      "voltas_medidas": 2,
+      "dentro": null
+     },
+     "2026-08-08_11-58-41_vhe_interlagos": {
+      "voltas_medidas": 13,
+      "mediana_m": 1.497,
+      "desvio_m": 0.054,
+      "dentro": true
+     },
+     "2026-08-08_12-23-51_vhe_interlagos": {
+      "voltas_medidas": 25,
+      "mediana_m": 1.522,
+      "desvio_m": 0.066,
+      "dentro": true
+     },
+     "2026-08-08_13-18-00_vhe_interlagos": {
+      "voltas_medidas": 1,
+      "dentro": null
+     },
+     "2026-08-08_13-22-07_vhe_interlagos": {
+      "voltas_medidas": 10,
+      "mediana_m": 1.504,
+      "desvio_m": 0.072,
+      "dentro": true
+     },
+     "2026-08-08_16-38-27_vhe_interlagos": {
+      "voltas_medidas": 5,
+      "mediana_m": 1.445,
+      "desvio_m": 0.064,
+      "dentro": true
+     },
+     "2026-08-08_16-52-13_vhe_interlagos": {
+      "voltas_medidas": 2,
+      "dentro": null
+     },
+     "2026-08-08_17-04-15_vhe_interlagos": {
+      "voltas_medidas": 66,
+      "mediana_m": 1.484,
+      "desvio_m": 0.066,
+      "dentro": true
+     },
+     "2026-08-09_10-27-39_vhe_interlagos": {
+      "voltas_medidas": 48,
+      "mediana_m": 1.487,
+      "desvio_m": 0.059,
+      "dentro": true
+     },
+     "2026-08-09_12-04-40_vhe_interlagos": {
+      "voltas_medidas": 6,
+      "mediana_m": 1.458,
+      "desvio_m": 0.078,
+      "dentro": true
+     },
+     "2026-08-09_12-21-19_vhe_interlagos": {
+      "voltas_medidas": 5,
+      "mediana_m": 1.434,
+      "desvio_m": 0.067,
+      "dentro": true
+     },
+     "2026-08-09_12-37-42_vhe_interlagos": {
+      "voltas_medidas": 12,
+      "mediana_m": 1.501,
+      "desvio_m": 0.072,
+      "dentro": true
+     },
+     "2026-08-09_13-02-49_vhe_interlagos": {
+      "voltas_medidas": 19,
+      "mediana_m": 1.5,
+      "desvio_m": 0.057,
+      "dentro": true
+     },
+     "2026-08-09_13-42-29_vhe_interlagos": {
+      "voltas_medidas": 16,
+      "mediana_m": 1.471,
+      "desvio_m": 0.058,
+      "dentro": true
+     },
+     "2026-08-09_14-16-51_vhe_interlagos": {
+      "voltas_medidas": 11,
+      "mediana_m": 1.494,
+      "desvio_m": 0.044,
+      "dentro": true
+     },
+     "2026-08-09_14-40-07_vhe_interlagos": {
+      "voltas_medidas": 1,
+      "dentro": null
+     },
+     "2026-08-09_14-44-00_vhe_interlagos": {
+      "voltas_medidas": 8,
+      "mediana_m": 1.472,
+      "desvio_m": 0.059,
+      "dentro": true
+     },
+     "2026-08-09_14-58-46_vhe_interlagos": {
+      "voltas_medidas": 6,
+      "mediana_m": 1.512,
+      "desvio_m": 0.028,
+      "dentro": true
+     },
+     "2026-08-09_15-10-52_vhe_interlagos": {
+      "voltas_medidas": 49,
+      "mediana_m": 1.508,
+      "desvio_m": 0.064,
+      "dentro": true
+     },
+     "2026-08-09_16-53-03_vhe_interlagos": {
+      "voltas_medidas": 1,
+      "dentro": null
+     },
+     "2026-08-09_17-00-01_vhe_interlagos": {
+      "voltas_medidas": 2,
+      "dentro": null
+     },
+     "2026-08-09_17-06-41_vhe_interlagos": {
+      "voltas_medidas": 6,
+      "mediana_m": 1.519,
+      "desvio_m": 0.085,
+      "dentro": true
+     },
+     "2026-08-09_17-23-56_vhe_interlagos": {
+      "voltas_medidas": 6,
+      "mediana_m": 1.527,
+      "desvio_m": 0.069,
+      "dentro": true
+     },
+     "2026-08-09_17-37-33_vhe_interlagos": {
+      "voltas_medidas": 21,
+      "mediana_m": 1.504,
+      "desvio_m": 0.058,
+      "dentro": true
+     },
+     "2026-08-09_18-22-00_vhe_interlagos": {
+      "voltas_medidas": 6,
+      "mediana_m": 1.533,
+      "desvio_m": 0.081,
+      "dentro": true
+     },
+     "2026-08-09_18-41-18_vhe_interlagos": {
+      "voltas_medidas": 3,
+      "mediana_m": 1.492,
+      "desvio_m": 0.043,
+      "dentro": true
+     },
+     "2026-08-09_18-47-11_vhe_interlagos": {
+      "voltas_medidas": 12,
+      "mediana_m": 1.467,
+      "desvio_m": 0.06,
+      "dentro": true
+     },
+     "2026-08-09_19-10-41_vhe_interlagos": {
+      "voltas_medidas": 3,
+      "mediana_m": 1.482,
+      "desvio_m": 0.015,
+      "dentro": true
+     },
+     "2026-08-09_19-15-35_vhe_interlagos": {
+      "voltas_medidas": 1,
+      "dentro": null
+     },
+     "2026-08-09_19-20-59_vhe_interlagos": {
+      "voltas_medidas": 40,
+      "mediana_m": 1.505,
+      "desvio_m": 0.063,
+      "dentro": true
+     },
+     "2026-08-16_03-30-14_vhe_interlagos": {
+      "voltas_medidas": 7,
+      "mediana_m": 1.536,
+      "desvio_m": 0.048,
+      "dentro": true
+     },
+     "2026-08-19_20-58-36_vhe_interlagos": {
+      "voltas_medidas": 7,
+      "mediana_m": 1.469,
+      "desvio_m": 0.071,
+      "dentro": true
+     },
+     "2026-08-19_21-45-59_vhe_interlagos": {
+      "voltas_medidas": 3,
+      "mediana_m": 1.521,
+      "desvio_m": 0.002,
+      "dentro": true
+     },
+     "2026-08-19_22-23-14_vhe_interlagos": {
+      "voltas_medidas": 14,
+      "mediana_m": 1.536,
+      "desvio_m": 0.061,
+      "dentro": true
+     },
+     "2026-10-04_02-24-04_vhe_interlagos": {
+      "voltas_medidas": 9,
+      "mediana_m": 1.5,
+      "desvio_m": 0.05,
+      "dentro": true
+     },
+     "2026-10-04_03-21-52_vhe_interlagos": {
+      "voltas_medidas": 4,
+      "mediana_m": 1.436,
+      "desvio_m": 0.012,
+      "dentro": true
+     },
+     "2026-10-04_03-42-10_vhe_interlagos": {
+      "voltas_medidas": 12,
+      "mediana_m": 1.48,
+      "desvio_m": 0.081,
+      "dentro": true
+     },
+     "2026-10-04_23-51-42_vhe_interlagos": {
+      "voltas_medidas": 7,
+      "mediana_m": 1.465,
+      "desvio_m": 0.042,
+      "dentro": true
+     },
+     "2026-10-05_20-33-47_vhe_interlagos": {
+      "voltas_medidas": 11,
+      "mediana_m": 1.498,
+      "desvio_m": 0.066,
+      "dentro": true
+     },
+     "2026-10-08_23-56-13_vhe_interlagos": {
+      "voltas_medidas": 4,
+      "mediana_m": 1.459,
+      "desvio_m": 0.059,
+      "dentro": true
+     },
+     "2026-10-10_09-57-09_vhe_interlagos": {
+      "voltas_medidas": 12,
+      "mediana_m": 1.491,
+      "desvio_m": 0.059,
+      "dentro": true
+     },
+     "2026-10-11_14-19-52_vhe_interlagos": {
+      "voltas_medidas": 16,
+      "mediana_m": 1.502,
+      "desvio_m": 0.055,
+      "dentro": true
+     },
+     "2026-10-13_19-24-10_vhe_interlagos": {
+      "voltas_medidas": 9,
+      "mediana_m": 1.448,
+      "desvio_m": 0.058,
+      "dentro": true
+     },
+     "2026-10-15_23-24-50_vhe_interlagos": {
+      "voltas_medidas": 11,
+      "mediana_m": 1.461,
+      "desvio_m": 0.049,
+      "dentro": true
+     },
+     "2026-10-17_01-02-22_vhe_interlagos": {
+      "voltas_medidas": 12,
+      "mediana_m": 1.468,
+      "desvio_m": 0.079,
+      "dentro": true
+     },
+     "2026-10-17_16-17-08_vhe_interlagos": {
+      "voltas_medidas": 16,
+      "mediana_m": 1.435,
+      "desvio_m": 0.051,
+      "dentro": true
+     },
+     "2026-10-18_12-38-44_vhe_interlagos": {
+      "voltas_medidas": 9,
+      "mediana_m": 1.49,
+      "desvio_m": 0.069,
+      "dentro": true
+     }
+    },
+    "sessoes_sem_veredito": [
+     "2026-06-14_10-15-25_vhe_interlagos",
+     "2026-06-14_11-29-22_vhe_interlagos",
+     "2026-06-14_12-44-04_vhe_interlagos",
+     "2026-06-19_11-08-15_vhe_interlagos",
+     "2026-06-20_13-04-20_vhe_interlagos",
+     "2026-06-20_13-09-57_vhe_interlagos",
+     "2026-08-08_11-40-43_vhe_interlagos",
+     "2026-08-08_13-18-00_vhe_interlagos",
+     "2026-08-08_16-52-13_vhe_interlagos",
+     "2026-08-09_14-40-07_vhe_interlagos",
+     "2026-08-09_16-53-03_vhe_interlagos",
+     "2026-08-09_17-00-01_vhe_interlagos",
+     "2026-08-09_19-15-35_vhe_interlagos"
+    ],
+    "motivos": [],
+    "passou": true
+   },
+   "sem_box": {
+    "checagem": "nenhuma volta passa pelo box",
+    "voltas_com_box": [],
+    "passou": true
+   },
+   "sem_duplicatas": {
+    "checagem": "nenhuma volta aparece duas vezes",
+    "lap_id_repetido": [],
+    "com_duplicada_de": [],
+    "pares_de_pastas_diferentes_sobrepostos": [],
+    "pares_da_mesma_pasta_sobrepostos (informativo)": [],
+    "passou": true
+   },
+   "uma_geometria": {
+    "checagem": "uma geometria so",
+    "geometry_ids": [
+     "0ed16f0dd2225990"
+    ],
+    "geometria_carregada": "0ed16f0dd2225990",
+    "passou": true
+   }
+  },
+  "controle_store_antigo": {
+   "controle": "store antigo contra o mesmo cronometro do jogo",
+   "voltas": 101,
+   "diferenca_ms": {
+    "n": 101,
+    "min": -52.61,
+    "p1": -45.03,
+    "mediana": -27.21,
+    "p99": -14.94,
+    "max": -14.86
+   },
+   "passaria": false
+  },
+  "efeitos_esperados": {
+   "voltas_nos_dois_stores": 101,
+   "voltas_so_no_antigo": 21,
+   "volta_v2_menos_antigo_ms": {
+    "n": 101,
+    "min": 11.54,
+    "p1": 17.26,
+    "mediana": 27.78,
+    "p99": 47.66,
+    "max": 53.71
+   },
+   "microsetor_0_v2_menos_antigo_ms": {
+    "n": 101,
+    "min": 10.98,
+    "p1": 16.39,
+    "mediana": 27.16,
+    "p99": 47.07,
+    "max": 51.06
+   },
+   "outros_microsetores_abs_ms": {
+    "n": 5959,
+    "min": 0.0,
+    "p1": 0.0,
+    "mediana": 0.0,
+    "p99": 0.6,
+    "max": 5.02
+   },
+   "como_esperado": true
+  },
+  "contagens": {
+   "voltas": 685,
+   "por_origem": {
+    "desconhecida": 552,
+    "humano": 118,
+    "ia": 13,
+    "misturada": 2
+   },
+   "por_equipamento": {
+    "anterior": 552,
+    "atual": 133
+   },
+   "por_pasta": {
+    "app_instalado": 526,
+    "repositorio": 159
+   },
+   "por_origem_equipamento_pasta": {
+    "desconhecida / anterior / app_instalado": 451,
+    "desconhecida / anterior / repositorio": 101,
+    "humano / atual / app_instalado": 75,
+    "humano / atual / repositorio": 43,
+    "ia / atual / repositorio": 13,
+    "misturada / atual / repositorio": 2
+   }
+  },
+  "construcao": {
+   "modo": "completo",
+   "motivo": "a chave global mudou: codigo: ml/data/store_v2.py",
+   "cache_vazio_no_inicio": false,
+   "sessoes_com_voltas_selecionadas": 60,
+   "sessoes_lidas": [
+    "2026-06-14_10-15-25_vhe_interlagos",
+    "2026-06-14_10-43-46_vhe_interlagos",
+    "2026-06-14_11-29-22_vhe_interlagos",
+    "2026-06-14_11-45-28_vhe_interlagos",
+    "2026-06-14_12-23-46_vhe_interlagos",
+    "2026-06-14_12-44-04_vhe_interlagos",
+    "2026-06-18_20-06-03_vhe_interlagos",
+    "2026-06-19_11-08-15_vhe_interlagos",
+    "2026-06-19_23-24-46_vhe_interlagos",
+    "2026-06-20_13-04-20_vhe_interlagos",
+    "2026-06-20_13-09-57_vhe_interlagos",
+    "2026-06-20_13-13-02_vhe_interlagos",
+    "2026-08-07_20-27-52_vhe_interlagos",
+    "2026-08-08_11-40-43_vhe_interlagos",
+    "2026-08-08_11-58-41_vhe_interlagos",
+    "2026-08-08_12-23-51_vhe_interlagos",
+    "2026-08-08_13-18-00_vhe_interlagos",
+    "2026-08-08_13-22-07_vhe_interlagos",
+    "2026-08-08_16-38-27_vhe_interlagos",
+    "2026-08-08_16-52-13_vhe_interlagos",
+    "2026-08-08_17-04-15_vhe_interlagos",
+    "2026-08-09_10-27-39_vhe_interlagos",
+    "2026-08-09_12-04-40_vhe_interlagos",
+    "2026-08-09_12-21-19_vhe_interlagos",
+    "2026-08-09_12-37-42_vhe_interlagos",
+    "2026-08-09_13-02-49_vhe_interlagos",
+    "2026-08-09_13-42-29_vhe_interlagos",
+    "2026-08-09_14-16-51_vhe_interlagos",
+    "2026-08-09_14-40-07_vhe_interlagos",
+    "2026-08-09_14-44-00_vhe_interlagos",
+    "2026-08-09_14-58-46_vhe_interlagos",
+    "2026-08-09_15-10-52_vhe_interlagos",
+    "2026-08-09_16-53-03_vhe_interlagos",
+    "2026-08-09_17-00-01_vhe_interlagos",
+    "2026-08-09_17-06-41_vhe_interlagos",
+    "2026-08-09_17-23-56_vhe_interlagos",
+    "2026-08-09_17-37-33_vhe_interlagos",
+    "2026-08-09_18-22-00_vhe_interlagos",
+    "2026-08-09_18-41-18_vhe_interlagos",
+    "2026-08-09_18-47-11_vhe_interlagos",
+    "2026-08-09_19-10-41_vhe_interlagos",
+    "2026-08-09_19-15-35_vhe_interlagos",
+    "2026-08-09_19-20-59_vhe_interlagos",
+    "2026-08-16_03-30-14_vhe_interlagos",
+    "2026-08-19_20-58-36_vhe_interlagos",
+    "2026-08-19_21-45-59_vhe_interlagos",
+    "2026-08-19_22-23-14_vhe_interlagos",
+    "2026-10-04_02-24-04_vhe_interlagos",
+    "2026-10-04_03-21-52_vhe_interlagos",
+    "2026-10-04_03-42-10_vhe_interlagos",
+    "2026-10-04_23-51-42_vhe_interlagos",
+    "2026-10-05_20-33-47_vhe_interlagos",
+    "2026-10-08_23-56-13_vhe_interlagos",
+    "2026-10-10_09-57-09_vhe_interlagos",
+    "2026-10-11_14-19-52_vhe_interlagos",
+    "2026-10-13_19-24-10_vhe_interlagos",
+    "2026-10-15_23-24-50_vhe_interlagos",
+    "2026-10-17_01-02-22_vhe_interlagos",
+    "2026-10-17_16-17-08_vhe_interlagos",
+    "2026-10-18_12-38-44_vhe_interlagos"
+   ],
+   "sessoes_do_cache": 0,
+   "sumiram": []
+  }
+ }
+}
