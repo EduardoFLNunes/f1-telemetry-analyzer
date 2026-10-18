@@ -70,8 +70,16 @@ local estado = {
   player = nil,
 }
 
-local function agora()
-  return os.preciseClock()
+-- O relógio do app: o do CSP ou, se ele faltar, a soma dos dt dos quadros.
+local somaDosQuadros = 0
+local abertoEm = nil
+
+local function agora(dt)
+  somaDosQuadros = somaDosQuadros + (tonumber(dt) or 0)
+  if os.preciseClock ~= nil then
+    return os.preciseClock()
+  end
+  return somaDosQuadros
 end
 
 -- ── conversa com o backend ──────────────────────────────────────────────
@@ -194,10 +202,12 @@ end
 
 -- Chamada a cada quadro pela janela do app (manifest.ini, FUNCTION_MAIN).
 function janela(dt)
-  local t = os.preciseClock and agora() or 0
+  local t = agora(dt)
+  abertoEm = abertoEm or t
   local tamanho = ui.windowSize()
   if CALADO then
-    if t < AVISO_S then
+    -- O aviso fica os primeiros AVISO_S segundos depois de a janela abrir.
+    if t - abertoEm < AVISO_S then
       desenharAviso('Rádio do engenheiro: esta versão do CSP não tem ' .. table.concat(FALTA, ', ') .. '.', tamanho)
     end
     return
