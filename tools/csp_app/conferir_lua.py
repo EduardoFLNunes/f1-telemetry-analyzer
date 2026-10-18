@@ -9,6 +9,9 @@ Nao ha interpretador de Lua neste computador. O que da para conferir:
 3. **A API usada:** cada chamada `web.`, `ui.`, `ac.`, `JSON.`, `os.` e
    `setInterval` existe no `lib.lua` do SDK do CSP instalado (so leitura).
 
+4. **A conferencia da API no proprio app:** nenhuma funcao da API conferida com
+   `type(...) == 'function'`, porque no CSP varias sao nativas e dao 'cdata'.
+
 Nao e uma analise completa da gramatica: uma expressao malformada dentro de um
 bloco bem fechado passaria. O teste de verdade e no jogo (Parte F).
 
@@ -54,6 +57,13 @@ for tipo, valor in tokens:
                 pilha.pop()
 if pilha:
     problemas.append(f"blocos sem fechar: {pilha}")
+
+# No CSP, varias funcoes da API sao nativas (FFI): o `type()` delas e 'cdata', e nao
+# 'function'. Conferir `type(ui.x) == 'function'` calou o app no teste no jogo de 18/10.
+for linha, texto in enumerate(codigo.splitlines(), 1):
+    if re.search(r"type\(\s*(?:web|ui|ac|JSON|os)\.[A-Za-z_]+\s*\)\s*[~=]=\s*'function'", texto) or \
+            re.search(r"type\(\s*setInterval\s*\)\s*[~=]=\s*'function'", texto):
+        problemas.append(f"linha {linha}: `type(...) == 'function'` numa funcao da API (no CSP pode ser 'cdata')")
 
 chamadas = sorted(set(re.findall(r"\b((?:web|ui|ac|JSON|os)\.[A-Za-z_]+|setInterval|rgbm|vec2)\b", codigo)))
 faltam = []

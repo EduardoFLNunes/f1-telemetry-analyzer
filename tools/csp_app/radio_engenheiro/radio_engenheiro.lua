@@ -27,18 +27,24 @@ local CORES = {
 }
 local TAG = { coach = 'RÁDIO', resumo = 'VOLTA', teste = 'TESTE' }
 
--- A API que o app usa, conferida uma vez ao abrir.
+-- A API que o app usa, conferida uma vez ao abrir. Confere só se existe: no CSP,
+-- várias funções são nativas (FFI) e o `type()` delas é 'cdata', e não 'function'.
+-- No teste no jogo de 18/10, conferir 'function' calou o app com a API inteira lá.
+local function existe(tabela, nome)
+  return tabela ~= nil and tabela[nome] ~= nil
+end
+
 local function faltando()
   local f = {}
-  if type(web) ~= 'table' or type(web.get) ~= 'function' then f[#f + 1] = 'web.get' end
-  if type(JSON) ~= 'table' or type(JSON.parse) ~= 'function' then f[#f + 1] = 'JSON.parse' end
-  if type(ui) ~= 'table' or ui.MediaPlayer == nil then f[#f + 1] = 'ui.MediaPlayer' end
-  if type(ui) ~= 'table' or type(ui.dwriteDrawText) ~= 'function' or type(ui.drawRectFilled) ~= 'function'
-    or type(ui.windowSize) ~= 'function' then
-    f[#f + 1] = 'ui.dwriteDrawText, ui.drawRectFilled ou ui.windowSize'
+  local usadas = {
+    { web, 'web', 'get' }, { web, 'web', 'timeouts' }, { JSON, 'JSON', 'parse' },
+    { ui, 'ui', 'MediaPlayer' }, { ui, 'ui', 'dwriteDrawText' }, { ui, 'ui', 'drawRectFilled' },
+    { ui, 'ui', 'windowSize' }, { os, 'os', 'preciseClock' }, { ac, 'ac', 'log' },
+  }
+  for _, u in ipairs(usadas) do
+    if not existe(u[1], u[3]) then f[#f + 1] = u[2] .. '.' .. u[3] end
   end
-  if type(setInterval) ~= 'function' then f[#f + 1] = 'setInterval' end
-  if type(os.preciseClock) ~= 'function' then f[#f + 1] = 'os.preciseClock' end
+  if setInterval == nil then f[#f + 1] = 'setInterval' end
   return f
 end
 
@@ -46,6 +52,8 @@ local FALTA = faltando()
 local CALADO = #FALTA > 0
 if CALADO then
   ac.log('[radio_engenheiro] a API do CSP não tem: ' .. table.concat(FALTA, ', ') .. '. O app fica calado.')
+else
+  ac.log('[radio_engenheiro] ligado; pede as mensagens a ' .. BACKEND)
 end
 
 local estado = {
