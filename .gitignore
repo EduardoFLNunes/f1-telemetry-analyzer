@@ -82,3 +82,4 @@ desktop/build-info.json
 versoes/*
 !versoes/LEIA-ME.md
 docs/estudos/*.mp4
+data/radio/
