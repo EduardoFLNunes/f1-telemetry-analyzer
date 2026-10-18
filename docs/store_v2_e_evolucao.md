@@ -243,6 +243,24 @@ Tudo isso dentro do registrado.
 
 O relatório completo fica em `data/ml/store_v2_relatorio.json`.
 
+### Antes e depois da régua nova (pedido 34, rodada de 18/10/2026)
+
+O store de 18/10 tem 685 voltas, com a sessão `2026-10-18_12-38-44`. As duas réguas foram medidas nas mesmas voltas.
+
+| | régua antiga (linha do jogo contra s = 0) | régua nova (as duas em s = 0) |
+|---|---|---|
+| p99 de \|período − tempo do jogo\| | 7,56 ms | **3,56 ms** |
+| voltas acima de 5 ms | 10 | 3 |
+| a checagem principal | reprovaria | **passou** |
+
+- **A linha do jogo medida:** 1,495 m depois do s = 0, a mediana de 683 voltas.
+  - As 47 sessões com pelo menos 3 voltas medidas ficam entre 1,418 e 1,536 m, todas dentro de 1,463 ± 0,10 m.
+  - Outras 13 sessões têm menos de 3 voltas medidas e ficam sem veredito.
+- **As 3 voltas que continuam acima de 5 ms** são as três de 14/06, do gravador de junho a 31 Hz: −8,15 ms, +7,46 ms e −5,43 ms. Elas já estavam no store quando o p99 era de 4,60 ms (pedido 33, A.4).
+- **A conferência pela outra régua:** o período medido na própria linha do jogo, com a mesma interpolação, dá o mesmo que a régua nova, a menos de 0,40 ms (p99 de 0,33 ms) nas 99 voltas das 9 sessões lidas no pedido 33.
+- **O controle do store antigo,** com a régua nova, fica 27,2 ms curto (mediana), como antes.
+- **O meta saiu com `aprovado: true`,** e as cinco checagens passaram.
+
 ## 4. Relatório de evolução (Parte C)
 
 ```
