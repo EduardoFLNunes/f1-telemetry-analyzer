@@ -1,0 +1,660 @@
+diff --git a/backend/ml/data/store_checks.py b/backend/ml/data/store_checks.py
+index eabce850..e18dc4f2 100644
+--- a/backend/ml/data/store_checks.py
++++ b/backend/ml/data/store_checks.py
+@@ -3,7 +3,9 @@
+ `docs/store_v2_e_evolucao.md`, secao 1.3:
+ 
+ * **principal** -- o periodo de s = 0 a s = 0 bate com o cronometro do jogo:
+-  p99 de |periodo - tempo do jogo| <= 5 ms nas voltas com o fechamento medido;
++  p99 de |periodo - tempo do jogo| <= 5 ms nas voltas com o fechamento medido,
++  com o tempo do jogo levado ao s = 0 desde o pedido 34 (`game_time_at_zero`);
++* **a linha do jogo** (pedido 34) -- fica onde foi medida, sessao a sessao;
+ * nenhuma volta passa pelo box;
+ * nenhuma volta aparece duas vezes;
+ * uma geometria so.
+@@ -26,6 +28,25 @@ from .lap_store import StoredLaps
+ 
+ PERIOD_LIMIT_MS = 5.0
+ OVERLAP_LIMIT = 0.5
++
++# Pedido 34: a regua da checagem principal. O periodo vai de s = 0 a s = 0 da
++# geometria oficial; o tempo do jogo, de linha do jogo a linha do jogo, e a linha
++# do jogo fica uns metros depois do s = 0. A checagem leva o tempo do jogo ao
++# s = 0, somando a travessia dessa distancia nas duas pontas da volta:
++#
++#     tempo do jogo no s = 0 = tempo do jogo + d x (1/v no comeco - 1/v no fim)
++#
++# A distancia `d` usada e a medida nas proprias gravacoes (`linha_do_jogo_m` de
++# cada volta, a mediana de todas). A checagem `linha_do_jogo` confere, sessao a
++# sessao, que a medida fica perto da registrada no pedido 33 (1,463 m em 138
++# voltas, desvio de 0,067 m por volta); se a geometria oficial ou a linha do jogo
++# mudarem, ela reprova com o motivo. A tolerancia de 0,10 m foi fixada antes de
++# rodar: as sessoes de jun a out ficam entre 1,425 e 1,505 m, e um erro de 0,10 m
++# na distancia move a regua em no maximo 1,5 ms na pior volta vista (127 contra
++# 264 km/h nas duas pontas).
++GAME_LINE_REGISTERED_M = 1.463
++GAME_LINE_TOLERANCE_M = 0.10
++GAME_LINE_MIN_LAPS = 3
+ EXPECTED_SHIFT_MS = (20.0, 35.0)
+ OTHER_SECTORS_LIMIT_MS = 5.0
+ 
+@@ -44,8 +65,46 @@ def _stats(values: np.ndarray) -> Dict[str, float]:
+     }
+ 
+ 
+-def period_differences_ms(laps: pd.DataFrame) -> pd.Series:
+-    """Periodo (lap_time_s) menos o tempo do jogo, em ms, das voltas com o fechamento medido."""
++def game_line_m(laps: pd.DataFrame) -> Optional[float]:
++    """A distancia medida entre o s = 0 e a linha do jogo: a mediana das voltas, ou None."""
++    if "linha_do_jogo_m" not in laps.columns:
++        return None
++    values = pd.to_numeric(laps["linha_do_jogo_m"], errors="coerce").dropna()
++    return float(values.median()) if len(values) else None
++
++
++def game_time_at_zero(laps: pd.DataFrame, line_m: Optional[float]) -> pd.Series:
++    """O tempo do jogo levado ao s = 0 (pedido 34), por volta; NaN onde nao da para levar.
++
++    `tempo do jogo + line_m x (1/v no comeco - 1/v no fim)`, com a velocidade
++    gravada nas duas passagens. Sem a distancia ou sem as duas velocidades, NaN.
++    """
++    game = pd.to_numeric(laps["tempo_jogo_s"], errors="coerce").astype(float)
++    if line_m is None or "v_linha_inicio_kmh" not in laps.columns or "v_linha_fim_kmh" not in laps.columns:
++        return pd.Series(np.nan, index=laps.index)
++    start = pd.to_numeric(laps["v_linha_inicio_kmh"], errors="coerce").astype(float) / 3.6
++    end = pd.to_numeric(laps["v_linha_fim_kmh"], errors="coerce").astype(float) / 3.6
++    start = start.where(start > 0)
++    end = end.where(end > 0)
++    return game + line_m * (1.0 / start - 1.0 / end)
++
++
++def period_differences_ms(laps: pd.DataFrame, line_m: Optional[float] = None) -> pd.Series:
++    """Periodo (lap_time_s) menos o tempo do jogo levado ao s = 0, em ms, das voltas medidas.
++
++    Sem `line_m`, a distancia e a medida nas proprias voltas (`game_line_m`).
++    """
++    line_m = game_line_m(laps) if line_m is None else line_m
++    game = game_time_at_zero(laps, line_m)
++    measured = game.notna()
++    return pd.Series(
++        1000.0 * (laps.loc[measured, "lap_time_s"].astype(float) - game[measured]).to_numpy(),
++        index=laps.loc[measured, "lap_id"].to_numpy(),
++    )
++
++
++def raw_period_differences_ms(laps: pd.DataFrame) -> pd.Series:
++    """A regua de antes do pedido 34: periodo menos o tempo do jogo na linha do jogo, em ms."""
+     measured = laps.dropna(subset=["tempo_jogo_s"])
+     return pd.Series(
+         1000.0 * (measured["lap_time_s"].astype(float) - measured["tempo_jogo_s"].astype(float)).to_numpy(),
+@@ -54,23 +113,87 @@ def period_differences_ms(laps: pd.DataFrame) -> pd.Series:
+ 
+ 
+ def check_period(laps: pd.DataFrame, limit_ms: float = PERIOD_LIMIT_MS) -> Dict[str, object]:
+-    """Checagem principal: p99 de |periodo - tempo do jogo| <= `limit_ms`."""
+-    diffs = period_differences_ms(laps)
++    """Checagem principal: p99 de |periodo - tempo do jogo no s = 0| <= `limit_ms`.
++
++    O que ela prova nao mudou no pedido 34: o periodo de uma volta bate com o
++    cronometro do jogo. So a regua mudou: o tempo do jogo e levado a mesma linha
++    do periodo (`game_time_at_zero`).
++    """
++    line_m = game_line_m(laps)
++    diffs = period_differences_ms(laps, line_m)
+     absolute = diffs.abs()
+     p99 = float(np.percentile(absolute, 99)) if len(absolute) else float("nan")
+     worst = absolute.sort_values(ascending=False).head(5)
++    above = absolute[absolute > limit_ms].sort_values(ascending=False)
++    without_game = laps["tempo_jogo_s"].isna()
++    raw = raw_period_differences_ms(laps).abs()
+     return {
+-        "checagem": "periodo de s = 0 a s = 0 contra o cronometro do jogo",
++        "checagem": "periodo de s = 0 a s = 0 contra o cronometro do jogo, na mesma linha",
++        "regua": "tempo do jogo levado ao s = 0: tempo do jogo + linha x (1/v no comeco - 1/v no fim) (pedido 34)",
++        "linha_do_jogo_m": round(line_m, 4) if line_m is not None else None,
+         "limite_ms": limit_ms,
+         "voltas_medidas": int(len(diffs)),
+-        "voltas_sem_fechamento_medido": int(laps["tempo_jogo_s"].isna().sum()),
++        "voltas_sem_fechamento_medido": int(without_game.sum()),
++        "voltas_sem_velocidade_na_linha": int((~without_game).sum() - len(diffs)),
+         "diferenca_ms": _stats(diffs.to_numpy()),
+         "abs_diferenca_ms": _stats(absolute.to_numpy()),
+         "piores": [{"volta": k, "diferenca_ms": round(float(diffs[k]), 2)} for k in worst.index],
++        "acima_do_limite": [{"volta": k, "diferenca_ms": round(float(diffs[k]), 2)} for k in above.index],
++        "regua_antiga (informativo)": {
++            "abs_diferenca_ms": _stats(raw.to_numpy()),
++            "acima_do_limite": int((raw > limit_ms).sum()),
++        },
+         "passou": bool(len(diffs) > 0 and p99 <= limit_ms),
+     }
+ 
+ 
++def check_game_line(laps: pd.DataFrame, registered_m: float = GAME_LINE_REGISTERED_M,
++                    tolerance_m: float = GAME_LINE_TOLERANCE_M,
++                    min_laps: int = GAME_LINE_MIN_LAPS) -> Dict[str, object]:
++    """A linha do jogo fica onde foi medida no pedido 33, sessao a sessao (pedido 34).
++
++    Cada sessao com pelo menos `min_laps` voltas medidas tem de ficar a ate
++    `tolerance_m` de `registered_m`, e a mediana de todas tambem. Se a geometria
++    oficial ou a linha do jogo mudarem, a checagem reprova e diz onde.
++    """
++    column = laps["linha_do_jogo_m"] if "linha_do_jogo_m" in laps.columns else pd.Series(np.nan, index=laps.index)
++    values = pd.to_numeric(column, errors="coerce")
++    sessions: Dict[str, Dict[str, object]] = {}
++    reasons: List[str] = []
++    for session_id, group in values.groupby(laps["session_id"]):
++        measured = group.dropna()
++        entry: Dict[str, object] = {"voltas_medidas": int(len(measured))}
++        if len(measured) >= min_laps:
++            median = float(measured.median())
++            inside = abs(median - registered_m) <= tolerance_m
++            entry.update({"mediana_m": round(median, 3), "desvio_m": round(float(measured.std(ddof=0)), 3),
++                          "dentro": bool(inside)})
++            if not inside:
++                reasons.append(f"{session_id}: a linha do jogo ficou a {median:.3f} m do s = 0, e a registrada e "
++                               f"{registered_m:.3f} m (tolerancia {tolerance_m:.2f} m): a geometria oficial ou a "
++                               f"linha do jogo mudaram")
++        else:
++            entry["dentro"] = None                      # poucas voltas medidas: sem veredito
++        sessions[str(session_id)] = entry
++    pooled = game_line_m(laps)
++    if pooled is None:
++        reasons.append("nenhuma volta tem a medida da linha do jogo")
++    elif abs(pooled - registered_m) > tolerance_m:
++        reasons.append(f"a mediana de todas as voltas ficou a {pooled:.3f} m do s = 0, e a registrada e "
++                       f"{registered_m:.3f} m (tolerancia {tolerance_m:.2f} m)")
++    return {
++        "checagem": "a linha do jogo fica onde foi medida (pedido 34)",
++        "registrada_m": registered_m,
++        "tolerancia_m": tolerance_m,
++        "medida_m": round(pooled, 4) if pooled is not None else None,
++        "voltas_medidas": int(values.notna().sum()),
++        "sessoes": sessions,
++        "sessoes_sem_veredito": sorted(k for k, v in sessions.items() if v["dentro"] is None),
++        "motivos": reasons,
++        "passou": not reasons,
++    }
++
++
+ def check_no_box(store: StoredLaps, sectors: Microsectors) -> Dict[str, object]:
+     flagged = [lap_id for lap_id in store.lap_ids if pit_lap(store.lap(lap_id), sectors)]
+     return {"checagem": "nenhuma volta passa pelo box", "voltas_com_box": flagged, "passou": not flagged}
+@@ -155,8 +278,12 @@ def expected_effects(new: StoredLaps, old: StoredLaps, sectors: Microsectors, tr
+ 
+ 
+ def control_old_period(old: StoredLaps, new_laps: pd.DataFrame) -> Dict[str, object]:
+-    """Controle: a checagem principal aplicada ao store antigo (espera-se ~ -26 ms)."""
+-    game = new_laps.set_index("lap_id")["tempo_jogo_s"].dropna()
++    """Controle: a checagem principal aplicada ao store antigo (espera-se ~ -26 ms).
++
++    Com a mesma regua da checagem: o tempo do jogo levado ao s = 0 (pedido 34).
++    """
++    game = pd.Series(game_time_at_zero(new_laps, game_line_m(new_laps)).to_numpy(),
++                     index=new_laps["lap_id"].to_numpy()).dropna()
+     old_laps = old.laps.set_index("lap_id")
+     common = [i for i in old_laps.index if i in game.index]
+     diffs = np.array([1000.0 * (float(old_laps.at[i, "lap_time_s"]) - float(game[i])) for i in common])
+@@ -173,6 +300,7 @@ def run_checks(store: StoredLaps, track: TrackGeometry, sectors: Microsectors,
+     laps = store.laps
+     checks = {
+         "principal_periodo": check_period(laps),
++        "linha_do_jogo": check_game_line(laps),
+         "sem_box": check_no_box(store, sectors),
+         "sem_duplicatas": check_no_duplicates(laps),
+         "uma_geometria": check_single_geometry(laps, track),
+diff --git a/backend/ml/data/store_v2.py b/backend/ml/data/store_v2.py
+index 80563f55..a98e97bc 100644
+--- a/backend/ml/data/store_v2.py
++++ b/backend/ml/data/store_v2.py
+@@ -15,7 +15,10 @@ e o 14 acharam:
+ 
+ Cada volta leva tambem o tempo de volta do jogo (`tempo_jogo_s`), medido pelo
+ cronometro do jogo costurado na troca de volta (`game_lap_time`): e a regua
+-da checagem principal (`store_checks`).
++da checagem principal (`store_checks`). Desde o pedido 34, leva tambem onde a
++linha do jogo ficou nesta volta (`linha_do_jogo_m`) e a velocidade nas duas
++passagens por s = 0, para a checagem levar o tempo do jogo a mesma linha do
++periodo.
+ """
+ 
+ from __future__ import annotations
+@@ -33,7 +36,7 @@ from .. import config
+ from ..preprocessing.alignment import align_lap
+ from ..preprocessing.cleaning import clean_lap
+ from ..preprocessing.quality import evaluate_lap
+-from ..preprocessing.resampling import lap_time_from_grid, resample_lap
++from ..preprocessing.resampling import LINE_WINDOW_M, lap_time_from_grid, resample_lap
+ from ..track.geometry import TrackGeometry, load_geometry
+ from ..track.microsectors import Microsectors, build_microsectors
+ from .ai_detector import pit_lap
+@@ -168,6 +171,59 @@ def game_lap_time(lap: RawLap, following: RawLap, track: TrackGeometry) -> Optio
+     return float(np.median(estimates)) if estimates else None
+ 
+ 
++# ---------------------------------------- linha do jogo (pedido 34) ---
++#
++# O tempo do jogo vai de linha do jogo a linha do jogo, e a linha do jogo (onde o
++# cronometro zera) fica alguns metros depois do s = 0 oficial: 1,463 m em
++# Interlagos, medidos no pedido 33. Cada volta guarda a sua medida da linha e a
++# velocidade gravada nas duas passagens por s = 0, para a checagem do periodo
++# medir o tempo do jogo na mesma linha do periodo (`store_checks.check_period`).
++
++# As primeiras amostras depois de o cronometro zerar, enquanto ele ainda e
++# pequeno e o carro anda: a linha fica em `s - v x cronometro`.
++GAME_LINE_SAMPLES = 3
++GAME_LINE_MAX_TIMER_S = 0.06
++GAME_LINE_MIN_SPEED_KMH = 100.0
++
++
++def game_line_position(aligned: pd.DataFrame, length: float) -> Optional[float]:
++    """Onde o cronometro do jogo zera, em metros depois do s = 0 oficial, ou None.
++
++    `aligned` e a volta alinhada: comeca na amostra em que o cronometro zerou.
++    """
++    needed = ("s", "speed_kmh", "lap_time_s")
++    if any(c not in aligned.columns for c in needed) or aligned.empty:
++        return None
++    head = aligned.head(GAME_LINE_SAMPLES)
++    s = head["s"].to_numpy(dtype=float)
++    s = np.where(s > length / 2.0, s - length, s)        # uma amostra antes do s = 0 fica negativa
++    speed = head["speed_kmh"].to_numpy(dtype=float) / 3.6
++    timer = head["lap_time_s"].to_numpy(dtype=float)
++    good = (np.isfinite(s) & np.isfinite(speed) & np.isfinite(timer)
++            & (speed * 3.6 >= GAME_LINE_MIN_SPEED_KMH) & (timer >= 0.0) & (timer <= GAME_LINE_MAX_TIMER_S))
++    if not good.any():
++        return None
++    return float(np.median(s[good] - speed[good] * timer[good]))
++
++
++def line_speeds(aligned: pd.DataFrame, length: float) -> Tuple[Optional[float], Optional[float]]:
++    """A velocidade gravada (km/h) nas duas passagens por s = 0 da volta: no comeco e no fim.
++
++    E a mediana das amostras da mesma janela que `crossing_time` usa para achar
++    as passagens (`LINE_WINDOW_M`).
++    """
++    if any(c not in aligned.columns for c in ("s_unwrapped", "speed_kmh")) or aligned.empty:
++        return None, None
++    positions = np.maximum.accumulate(aligned["s_unwrapped"].to_numpy(dtype=float))
++    speed = aligned["speed_kmh"].to_numpy(dtype=float)
++    first = float(np.round(positions[0] / length) * length)
++    out = []
++    for target in (first, first + length):
++        near = (np.abs(positions - target) <= LINE_WINDOW_M) & np.isfinite(speed) & (speed > 3.6)
++        out.append(float(np.median(speed[near])) if near.any() else None)
++    return out[0], out[1]
++
++
+ # ------------------------------------------------------------- build ---
+ 
+ @dataclass
+@@ -255,7 +311,11 @@ def materialize_session(session: Session, sequences, geometry: TrackGeometry,
+             "speed_mean_kmh": float(np.nanmean(grid["speed_kmh"])),
+             "speed_min_kmh": float(np.nanmin(grid["speed_kmh"])),
+             "speed_max_kmh": float(np.nanmax(grid["speed_kmh"])),
++            # Pedido 34: a linha do jogo medida nesta volta e a velocidade nas duas
++            # passagens por s = 0, para a checagem do periodo medir na mesma linha.
++            "linha_do_jogo_m": game_line_position(aligned, geometry.length),
+         }
++        entry["v_linha_inicio_kmh"], entry["v_linha_fim_kmh"] = line_speeds(aligned, geometry.length)
+         material.laps[lap.sequence] = entry
+         pending = (lap, entry)
+     return material
+@@ -325,6 +385,9 @@ def assemble_store_v2(
+                 "track": entry["track"],
+                 "lap_time_s": entry["lap_time_s"],
+                 "tempo_jogo_s": entry["tempo_jogo_s"],
++                "linha_do_jogo_m": entry.get("linha_do_jogo_m"),
++                "v_linha_inicio_kmh": entry.get("v_linha_inicio_kmh"),
++                "v_linha_fim_kmh": entry.get("v_linha_fim_kmh"),
+                 "geometry_id": geometry.geometry_id,
+                 "carModel": car,
+                 "sample_hz": entry["sample_hz"],
+diff --git a/backend/tests/test_regua_do_periodo.py b/backend/tests/test_regua_do_periodo.py
+new file mode 100644
+index 00000000..a7031ea0
+--- /dev/null
++++ b/backend/tests/test_regua_do_periodo.py
+@@ -0,0 +1,237 @@
++"""Pedido 34: a regua da checagem do periodo e a checagem da linha do jogo.
++
++O periodo vai de s = 0 a s = 0 da geometria; o tempo do jogo, de linha do jogo a
++linha do jogo, uns metros depois. A checagem leva o tempo do jogo ao s = 0 com a
++travessia dessa distancia nas duas pontas. Tudo sintetico, numa pista circular,
++com o caminho inteiro do store v2 (gravacao -> corte -> alinhamento -> grade).
++"""
++
++from __future__ import annotations
++
++import json
++import sys
++import tempfile
++import unittest
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++BACKEND = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(BACKEND))
++sys.path.insert(0, str(BACKEND / "tests"))
++
++from ml.data import store_checks  # noqa: E402
++from ml.data.recordings import Session  # noqa: E402
++from ml.data.store_v2 import build_store_v2, game_line_position, line_speeds  # noqa: E402
++from test_lap_origin import circular_track  # noqa: E402
++
++HZ = 60.0
++LINE_M = 1.463          # a linha do jogo, depois do s = 0
++SESSION = "2026-10-18_20-00-00_vhe_interlagos"
++
++
++class Motion:
++    """O carro numa velocidade, depois uma rampa de `ramp_s` segundos ate outra, a partir de `ramp_at_m`."""
++
++    def __init__(self, start_m, v1, v2, ramp_at_m, ramp_s=4.0):
++        self.start, self.v1, self.v2 = start_m, v1, v2
++        self.t1 = (ramp_at_m - start_m) / v1
++        self.ramp = ramp_s
++        self.a = (v2 - v1) / ramp_s
++        self.u1 = ramp_at_m
++        self.u2 = ramp_at_m + v1 * ramp_s + 0.5 * self.a * ramp_s ** 2
++
++    def position(self, t):
++        if t <= self.t1:
++            return self.start + self.v1 * t
++        if t <= self.t1 + self.ramp:
++            tau = t - self.t1
++            return self.u1 + self.v1 * tau + 0.5 * self.a * tau ** 2
++        return self.u2 + self.v2 * (t - self.t1 - self.ramp)
++
++    def speed(self, t):
++        if t <= self.t1:
++            return self.v1
++        if t <= self.t1 + self.ramp:
++            return self.v1 + self.a * (t - self.t1)
++        return self.v2
++
++    def time_at(self, u):
++        """O instante exato em que o carro passa por `u` (o movimento e monotono)."""
++        low, high = 0.0, 1e5
++        for _ in range(200):
++            mid = 0.5 * (low + high)
++            if self.position(mid) < u:
++                low = mid
++            else:
++                high = mid
++        return 0.5 * (low + high)
++
++
++def write_session(directory: Path, track, motion: Motion, end_m: float, line_m: float = LINE_M,
++                  phase_s: float = 0.0):
++    """Amostras a 60 Hz; o cronometro do jogo zera e o contador sobe quando o carro passa pela linha do jogo."""
++    L = track.length
++    lines = []
++    clock = 1_790_000_000.0
++    t = phase_s
++    while True:
++        u = motion.position(t)
++        if u >= end_m:
++            break
++        laps_done = int(np.floor((u - line_m) / L))          # linhas do jogo ja cruzadas
++        # A primeira volta da gravacao comecou antes dela: o cronometro ja vinha contando.
++        line_time = motion.time_at(laps_done * L + line_m) if laps_done >= 1 else -30.0
++        theta = np.mod(u, L) / 200.0
++        lines.append(json.dumps({"timestamp": (clock + t) * 1000.0, "track": "vhe_interlagos", "sample": {
++            "lap": laps_done + 1, "lap_number": laps_done + 1, "lap_time": float(t - line_time),
++            "world_x": 200.0 * np.cos(theta), "world_z": 200.0 * np.sin(theta),
++            "speedKmh": motion.speed(t) * 3.6,
++            "carPhysics": {"controls": {"throttle": 1.0, "brake": 0.0}},
++        }}))
++        t += 1.0 / HZ
++    directory.mkdir(parents=True)
++    (directory / "player.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
++
++
++def build(track, motion, end_m, *, phase_s=0.0, sequences=(0, 1)):
++    root = Path(tempfile.mkdtemp())
++    write_session(root / SESSION, track, motion, end_m, phase_s=phase_s)
++    inventory = pd.DataFrame({
++        "lap_id": [f"{SESSION}#{i:04d}" for i in sequences], "session_id": SESSION, "sequence": list(sequences),
++        "valid": True, "duplicada_de": None, "geometry_id": track.geometry_id,
++        "origem": "humano", "equipamento": "atual", "pasta": "repositorio",
++        "relogio_verificado": True, "relogio_suspeito": False,
++    })
++    session = Session(session_id=SESSION, directory=root / SESSION, track="vhe_interlagos")
++    store, _ = build_store_v2(inventory, track=track, sessions=[session])
++    return store.laps.set_index("lap_id")
++
++
++class SpeedAtTheLineTest(unittest.TestCase):
++    """A diferenca da regua antiga e a travessia dos 1,463 m; a regua nova a tira."""
++
++    def setUp(self):
++        import dataclasses
++
++        self.track = dataclasses.replace(circular_track(), geometry_id="circulo-34")
++        self.L = self.track.length
++
++    def check_lap(self, v_start, v_end):
++        L = self.L
++        start = LINE_M + 0.5
++        # A volta 1 vai do s = 0 em L ao s = 0 em 2L: passa a v_start no comeco e a
++        # v_end no fim; a rampa fica no meio dela, longe das duas linhas.
++        motion = Motion(start, v_start, v_end, ramp_at_m=1.3 * L)
++        laps = build(self.track, motion, end_m=2 * L + LINE_M + 80.0)
++        lap = laps.loc[f"{SESSION}#0001"]
++        true_period = motion.time_at(2 * L) - motion.time_at(L)
++        true_game = motion.time_at(2 * L + LINE_M) - motion.time_at(L + LINE_M)
++
++        self.assertAlmostEqual(lap["lap_time_s"], true_period, delta=0.001)
++        self.assertAlmostEqual(lap["tempo_jogo_s"], true_game, delta=0.001)
++        self.assertAlmostEqual(lap["linha_do_jogo_m"], LINE_M, delta=0.02)
++        self.assertAlmostEqual(lap["v_linha_inicio_kmh"], v_start * 3.6, delta=0.5)
++        self.assertAlmostEqual(lap["v_linha_fim_kmh"], v_end * 3.6, delta=0.5)
++
++        # A regua antiga ve a travessia; a nova, nao.
++        expected_ms = 1000.0 * LINE_M * (1.0 / v_start - 1.0 / v_end)
++        raw = store_checks.raw_period_differences_ms(laps.reset_index())[f"{SESSION}#0001"]
++        self.assertAlmostEqual(raw, expected_ms, delta=1.0)
++        self.assertGreater(abs(raw), store_checks.PERIOD_LIMIT_MS)
++        new = store_checks.period_differences_ms(laps.reset_index())[f"{SESSION}#0001"]
++        self.assertLess(abs(new), 1.0)
++        return raw, new
++
++    def test_a_lap_that_starts_slow_and_ends_fast(self):
++        raw, _ = self.check_lap(30.0, 75.0)            # 108 e 270 km/h: a regua antiga da +29 ms
++        self.assertGreater(raw, 0)
++
++    def test_a_lap_that_starts_fast_and_ends_slow(self):
++        raw, _ = self.check_lap(75.0, 30.0)
++        self.assertLess(raw, 0)
++
++    def test_the_check_passes_with_the_new_ruler_and_failed_with_the_old(self):
++        L = self.L
++        motion = Motion(LINE_M + 0.5, 30.0, 75.0, ramp_at_m=1.3 * L)
++        laps = build(self.track, motion, end_m=2 * L + LINE_M + 80.0).reset_index()
++        laps = laps[laps["lap_id"] == f"{SESSION}#0001"]       # a primeira volta da gravacao nao fecha no jogo
++        check = store_checks.check_period(laps)
++        self.assertTrue(check["passou"])
++        self.assertAlmostEqual(check["linha_do_jogo_m"], LINE_M, delta=0.02)
++        self.assertEqual(check["regua_antiga (informativo)"]["acima_do_limite"], 1)
++        self.assertEqual(check["acima_do_limite"], [])
++
++
++class PassageBetweenSamplesTest(unittest.TestCase):
++    """A passagem pela linha cai entre duas amostras: a medida e a regua continuam certas."""
++
++    def setUp(self):
++        import dataclasses
++
++        self.track = dataclasses.replace(circular_track(), geometry_id="circulo-34")
++
++    def test_the_line_and_the_period_with_the_passage_between_two_samples(self):
++        L = self.track.length
++        speed = 70.0                                    # 1,17 m entre amostras a 60 Hz
++        for phase in (0.0, 0.004, 0.009, 0.013):        # a fase das amostras em relacao as linhas
++            motion = Motion(LINE_M + 0.3, speed, speed, ramp_at_m=10 * L)
++            laps = build(self.track, motion, end_m=2 * L + LINE_M + 60.0, phase_s=phase)
++            lap = laps.loc[f"{SESSION}#0001"]
++            self.assertAlmostEqual(lap["linha_do_jogo_m"], LINE_M, delta=0.02, msg=f"fase {phase}")
++            self.assertAlmostEqual(lap["lap_time_s"], L / speed, delta=0.0005, msg=f"fase {phase}")
++            self.assertAlmostEqual(lap["tempo_jogo_s"], L / speed, delta=0.0005, msg=f"fase {phase}")
++            diff = store_checks.period_differences_ms(laps.reset_index())[f"{SESSION}#0001"]
++            self.assertLess(abs(diff), 0.5, msg=f"fase {phase}")
++
++    def test_the_line_measure_needs_the_first_samples_moving(self):
++        L = self.track.length
++        frame = pd.DataFrame({"s": [2.0, 3.0, 4.0], "speed_kmh": [50.0, 50.0, 50.0],
++                              "lap_time_s": [0.04, 0.11, 0.18], "s_unwrapped": [2.0, 3.0, 4.0]})
++        self.assertIsNone(game_line_position(frame, L))          # devagar demais para a conta
++        moving = frame.assign(speed_kmh=250.0, lap_time_s=[0.0078, 0.0222, 0.0366])
++        self.assertAlmostEqual(game_line_position(moving, L), 1.458, delta=0.01)
++        start, end = line_speeds(moving, L)
++        self.assertEqual((start, end), (250.0, None))            # o fim da volta nao esta no quadro
++
++
++class GameLineCheckTest(unittest.TestCase):
++    def laps(self, values):
++        rows = []
++        for session, measures in values.items():
++            for i, value in enumerate(measures):
++                rows.append({"lap_id": f"{session}#{i:04d}", "session_id": session, "linha_do_jogo_m": value})
++        return pd.DataFrame(rows)
++
++    def test_it_passes_near_the_registered_line(self):
++        check = store_checks.check_game_line(self.laps({
++            "s1": [1.44, 1.46, 1.47, 1.45], "s2": [1.50, 1.49, 1.52], "s3": [1.40, None]}))
++        self.assertTrue(check["passou"], check["motivos"])
++        self.assertEqual(check["sessoes_sem_veredito"], ["s3"])         # menos de 3 voltas medidas
++        self.assertAlmostEqual(check["medida_m"], 1.46, delta=0.01)
++
++    def test_it_fails_with_the_reason_when_the_line_moves(self):
++        check = store_checks.check_game_line(self.laps({
++            "s1": [1.44, 1.46, 1.47], "nova": [3.10, 3.12, 3.09, 3.11]}))
++        self.assertFalse(check["passou"])
++        self.assertTrue(check["motivos"][0].startswith("nova:"), check["motivos"])
++        self.assertIn("geometria oficial ou a linha do jogo mudaram", check["motivos"][0])
++        self.assertTrue(check["sessoes"]["s1"]["dentro"])
++        self.assertFalse(check["sessoes"]["nova"]["dentro"])
++
++    def test_it_fails_without_any_measure(self):
++        check = store_checks.check_game_line(self.laps({"s1": [None, None, None]}))
++        self.assertFalse(check["passou"])
++        self.assertIn("nenhuma volta", check["motivos"][0])
++
++    def test_the_period_check_needs_the_speeds_at_the_line(self):
++        laps = pd.DataFrame({"lap_id": ["a", "b"], "lap_time_s": [85.0, 86.0], "tempo_jogo_s": [85.0, 86.0],
++                             "linha_do_jogo_m": 1.463, "v_linha_inicio_kmh": [250.0, None],
++                             "v_linha_fim_kmh": [250.0, 250.0]})
++        check = store_checks.check_period(laps)
++        self.assertEqual((check["voltas_medidas"], check["voltas_sem_velocidade_na_linha"]), (1, 1))
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/backend/tests/test_store_v2_e_evolucao.py b/backend/tests/test_store_v2_e_evolucao.py
+index 4881bccc..f229433c 100644
+--- a/backend/tests/test_store_v2_e_evolucao.py
++++ b/backend/tests/test_store_v2_e_evolucao.py
+@@ -95,8 +95,11 @@ class PeriodTest(unittest.TestCase):
+         self.assertIsNone(game_lap_time(lap, later, self.track))
+ 
+     def test_the_main_check(self):
++        # Pedido 34: a regua leva o tempo do jogo ao s = 0; com a mesma velocidade
++        # nas duas pontas, a travessia se cancela e a conta e a de antes.
+         laps = pd.DataFrame({"lap_id": ["a", "b", "c", "d"], "lap_time_s": [85.001, 86.0, 84.9985, 90.0],
+-                             "tempo_jogo_s": [85.0, 86.002, 85.0, None]})
++                             "tempo_jogo_s": [85.0, 86.002, 85.0, None], "linha_do_jogo_m": 1.463,
++                             "v_linha_inicio_kmh": 250.0, "v_linha_fim_kmh": 250.0})
+         ok = store_checks.check_period(laps)
+         self.assertTrue(ok["passou"])
+         self.assertEqual((ok["voltas_medidas"], ok["voltas_sem_fechamento_medido"]), (3, 1))
+diff --git a/docs/modelo_fisico_m0.md b/docs/modelo_fisico_m0.md
+index 550a8c62..2d6dcc7d 100644
+--- a/docs/modelo_fisico_m0.md
++++ b/docs/modelo_fisico_m0.md
+@@ -199,3 +199,17 @@ As definições estão na seção 1.7 do `docs/store_v2_e_evolucao.md`, e o form
+ - **A unidade do volante,** fechada com a guinada gravada (seção 3).
+ - **O entre-eixos e os dados do carro** que não vêm do `data.acd`: o modelo da M1 vai ter de estimá-los dos dados ou recebê-los de fora.
+ - **A embreagem antiga não serve:** todas as gravações anteriores têm 0 nela.
++
++### O relógio da M1 (pendente, sem mudança agora; pedido 34)
++
++O pedido 33 (A.5) mediu o tempo das amostras nas gravações, e a recomendação fica registrada aqui. **A decisão fica para o pedido que retreinar a M1.**
++
++- **Usar o cronômetro do jogo como relógio da M1,** e não o horário do gravador.
++  - O cronômetro anda em passos de física de 3 ms, e o tempo e a posição de cada amostra vêm do mesmo passo: o erro entre eles tem p99 abaixo de 0,5 ms nas sessões novas.
++  - O horário do gravador se afasta do cronômetro: o p99 da diferença fica entre 7 e 14 ms nas sessões normais e chegou a 29 ms na sessão do 0.4.0 (17/10 16:17).
++  - Numa freada forte (25 m/s²), isso dá até 0,35 m/s nas sessões normais, e 0,73 m/s na do 0.4.0.
++- **Descartar as amostras repetidas** (o mesmo cronômetro e o mesmo lugar da anterior):
++  - nelas, a página de física já mudou, mas o tempo não andou, então Δt = 0 com o estado mudando;
++  - elas são de 1,5 a 2,3% das amostras nas sessões antigas e no 0.3.0, 5,2% na sessão do 0.4.0 e 4,0% na de 18/10.
++- **A página de física** (velocidade, pedais e cargas) chega de 0 a 3 ms adiantada sobre o cronômetro, nas sessões antigas e nas novas. Numa freada forte, isso dá até 0,08 m/s.
++- **O store v2 já usa o cronômetro do jogo** no relógio da grade. O que fica pendente é o relógio das amostras cruas, se a M1 for treinada com elas.
+diff --git a/docs/store_v2_e_evolucao.md b/docs/store_v2_e_evolucao.md
+index 929b5edd..61f38e64 100644
+--- a/docs/store_v2_e_evolucao.md
++++ b/docs/store_v2_e_evolucao.md
+@@ -57,6 +57,36 @@ E no store:
+ 
+ **Se a checagem principal falhar, o trabalho para aqui** e o relatório vai para o Eduardo, sem merge.
+ 
++#### Emenda de 18/10/2026 (pedido 34): a régua da checagem do período
++
++Decidida pelo Eduardo em 18/10 (opção 1 do relatório do pedido 33) e registrada antes de rodar.
++
++- **Por que:** a checagem comparava duas linhas diferentes.
++  - O período vai de s = 0 a s = 0 da geometria oficial.
++  - O tempo do jogo vai de linha do jogo a linha do jogo, e a linha do jogo fica **1,463 m depois do s = 0** (pedido 33: 138 voltas, desvio de 0,067 m por volta).
++  - A diferença entre as duas medidas é o tempo de atravessar esses 1,463 m no começo menos o tempo no fim. Ela só some quando o carro passa pela linha na mesma velocidade nas duas pontas.
++  - Em 18/10, isso reprovou o store (p99 de 7,63 ms) por 5 voltas que começaram logo depois de uma passagem lenta pela linha. O gravador, o corte em voltas e a interpolação na linha estão certos (pedido 33, Parte A).
++- **A régua nova:** o tempo do jogo é levado ao s = 0 antes de comparar.
++  - A conta é **tempo do jogo + d × (1/v no começo − 1/v no fim)**.
++  - `v` é a velocidade gravada em cada passagem por s = 0: a mediana das amostras da mesma janela de 15 m que acha a passagem (`store_v2.line_speeds`).
++  - `d` é a distância medida nas próprias gravações: a mediana das voltas do store.
++- **A medida da distância** (`store_v2.game_line_position`, por volta, campo `linha_do_jogo_m`):
++  - nas 3 primeiras amostras depois de o cronômetro zerar, com ele em até 0,06 s e o carro a 100 km/h ou mais, a linha fica em `s − v × cronômetro`;
++  - vale a mediana dessas amostras.
++- **A checagem nova, "a linha do jogo fica onde foi medida"** (`store_checks.check_game_line`):
++  - **o que confere:** cada sessão com pelo menos 3 voltas medidas tem a mediana a até **0,10 m** de 1,463 m, e a mediana de todas as voltas também;
++  - **quando reprova:** se a geometria oficial ou a linha do jogo mudarem, a checagem reprova e diz qual sessão saiu e para onde;
++  - **por que 0,10 m:** a tolerância foi fixada antes de rodar. As sessões de junho a outubro ficam entre 1,425 e 1,505 m, e um erro de 0,10 m na distância move a régua em no máximo 1,5 ms na pior volta vista (127 contra 264 km/h nas duas pontas).
++- **O que não muda:**
++  - o que a checagem prova, que é "o período de uma volta bate com o cronômetro do jogo";
++  - o limite (p99 até 5 ms);
++  - o período gravado no store (`lap_time_s`, de s = 0 a s = 0);
++  - as outras checagens;
++  - nenhuma volta sai do store.
++- **A outra régua** (medir o período em s = 1,463 m, nas duas pontas) fica só como conferência, no relatório do pedido 34.
++- **O controle do store antigo** (cerca de −26 ms) passa a usar a mesma régua.
++- **O que se esperava antes de rodar** (pedido 33, com a velocidade da grade): o p99 das 676 voltas iria de 7,63 ms para 3,56 ms, e as voltas acima de 5 ms, de 10 para 3. O antes e depois da rodada está na seção 3.
++
+ ### 1.4 Regras do relatório de evolução
+ 
+ - **Voltas:**
+@@ -213,6 +243,24 @@ Tudo isso dentro do registrado.
+ 
+ O relatório completo fica em `data/ml/store_v2_relatorio.json`.
+ 
++### Antes e depois da régua nova (pedido 34, rodada de 18/10/2026)
++
++O store de 18/10 tem 685 voltas, com a sessão `2026-10-18_12-38-44`. As duas réguas foram medidas nas mesmas voltas.
++
++| | régua antiga (linha do jogo contra s = 0) | régua nova (as duas em s = 0) |
++|---|---|---|
++| p99 de \|período − tempo do jogo\| | 7,56 ms | **3,56 ms** |
++| voltas acima de 5 ms | 10 | 3 |
++| a checagem principal | reprovaria | **passou** |
++
++- **A linha do jogo medida:** 1,495 m depois do s = 0, a mediana de 683 voltas.
++  - As 47 sessões com pelo menos 3 voltas medidas ficam entre 1,418 e 1,536 m, todas dentro de 1,463 ± 0,10 m.
++  - Outras 13 sessões têm menos de 3 voltas medidas e ficam sem veredito.
++- **As 3 voltas que continuam acima de 5 ms** são as três de 14/06, do gravador de junho a 31 Hz: −8,15 ms, +7,46 ms e −5,43 ms. Elas já estavam no store quando o p99 era de 4,60 ms (pedido 33, A.4).
++- **A conferência pela outra régua:** o período medido na própria linha do jogo, com a mesma interpolação, dá o mesmo que a régua nova, a menos de 0,40 ms (p99 de 0,33 ms) nas 99 voltas das 9 sessões lidas no pedido 33.
++- **O controle do store antigo,** com a régua nova, fica 27,2 ms curto (mediana), como antes.
++- **O meta saiu com `aprovado: true`,** e as cinco checagens passaram.
++
+ ## 4. Relatório de evolução (Parte C)
+ 
+ ```
