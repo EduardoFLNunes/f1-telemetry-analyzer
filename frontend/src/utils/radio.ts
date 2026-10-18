@@ -8,9 +8,16 @@
  * e a mesma regra, só a escrita muda. Evento sem os números → a frase do
  * backend, como veio.
  *
- * "Setor N" no coach é o microssetor N de 60 (inventário, problema A.5); aqui
- * ele se chama microssetor.
+ * "Setor N" no coach é o índice N do microssetor, contado a partir de 0
+ * (`int(progresso × 60)` em `driving_coach.py`). O piloto vê o microssetor
+ * contado a partir de 1, como no mapa e no relatório de evolução (pedido 31,
+ * A.2): o índice 2 do coach é o microssetor 3. O índice interno não muda.
  */
+
+/** Índice do coach (a partir de 0) → número que o piloto vê (a partir de 1). */
+export function microssetorParaOPiloto(indice: number): number {
+  return indice + 1;
+}
 
 export type EventoCoach = {
   type?: string;
@@ -94,7 +101,7 @@ export function mensagemDoEvento(evento: EventoCoach, indice = 0): MensagemRadio
   const textoOriginal = String(evento.event ?? evento.message ?? '').trim();
 
   if (evento.type === 'coaching_focus' && Array.isArray(evento.focusSectors) && evento.focusSectors.length) {
-    const setores = evento.focusSectors;
+    const setores = evento.focusSectors.map((indice) => microssetorParaOPiloto(Number(indice)));
     const onde = evento.focusSource === 'sessao' ? 'nas últimas 5 voltas válidas da sessão' : 'nas suas voltas do modelo';
     return {
       id,
@@ -132,7 +139,7 @@ export function mensagemDoEvento(evento: EventoCoach, indice = 0): MensagemRadio
       id,
       tipo: 'diferenca',
       tag: 'Rádio',
-      onde: [volta ? `volta ${volta}` : null, `microssetor ${microssetor}`].filter(Boolean).join(' · '),
+      onde: [volta ? `volta ${volta}` : null, `microssetor ${microssetorParaOPiloto(microssetor)}`].filter(Boolean).join(' · '),
       hora,
       frase: `${diferencaComSinal(perda)} para ${artigo} ${rotulo} neste trecho`,
       detalhe: partes.join(' · '),

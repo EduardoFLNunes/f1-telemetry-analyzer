@@ -28,7 +28,7 @@ describe('mensagens de rádio', () => {
     const m = mensagemDoEvento(eventoReferencia);
     expect(m.tipo).toBe('diferenca');
     expect(m.frase).toBe('+0,31 s para a volta da IA neste trecho');
-    expect(m.onde).toBe('volta 7 · microssetor 12');
+    expect(m.onde).toBe('volta 7 · microssetor 13');
     expect(m.detalhe).toBe('3,12 s contra 2,81 s · a IA freia 12 m depois de você · mínima da IA 104 km/h, a sua 96 km/h');
     expect(m.perdaS).toBeCloseTo(0.31);
   });
@@ -53,7 +53,7 @@ describe('mensagens de rádio', () => {
     });
     expect(m.tipo).toBe('foco');
     expect(m.tag).toBe('Foco');
-    expect(m.frase).toBe('Foco nas próximas voltas: microssetores 3, 12 e 41');
+    expect(m.frase).toBe('Foco nas próximas voltas: microssetores 4, 13 e 42');
     expect(m.detalhe).toBe('maior diferença mediana para a referência nas suas voltas do modelo');
   });
 
