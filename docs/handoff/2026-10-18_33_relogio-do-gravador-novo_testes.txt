@@ -1,0 +1,35 @@
+# Pedido 33: testes (18/10/2026, branch etapa/relogio-do-gravador, f394bbcf)
+
+## backend: ..\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider tests
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+768 passed, 18 warnings in 577.38s (0:09:37)
+exit 0
+
+## frontend: npx tsc --noEmit -p .
+(sem erros)
+
+## frontend: npx vitest run
+ RUN  v2.1.9 C:/Users/Dokas/Desktop/f1-telemetry-analyzer/frontend
+ ✓ src/navegacao/rotas.test.ts (4 tests) 6ms
+ ✓ src/aoVivo/voltaAoVivo.test.ts (2 tests) 4ms
+ ✓ src/components/sessoes/regrasDoCoachNoApp.test.ts (7 tests) 5ms
+ ✓ src/components/sessoes/dadosDoHero.test.ts (4 tests) 5ms
+ ✓ src/volta/medidas.test.ts (8 tests) 8ms
+ ✓ src/utils/sectorTimes.test.ts (13 tests) 12ms
+ ✓ src/utils/coleta.test.ts (7 tests) 29ms
+ ✓ src/utils/radio.test.ts (5 tests) 31ms
+ ✓ src/components/map/CameraController.test.ts (8 tests) 10ms
+ ✓ src/components/map/OverlayRenderer.test.ts (26 tests) 19ms
+ ✓ src/components/map/BroadcastOverlay.test.ts (23 tests) 20ms
+ ✓ src/components/map/TrackElevationRibbon.test.ts (25 tests) 13ms
+ ✓ src/components/CoachingFeed.test.ts (12 tests) 6ms
+ ✓ src/store/offlineReplay.test.ts (32 tests) 25ms
+ ✓ src/theme/contraste.test.ts (2 tests) 5ms
+ ✓ src/volta/dados.test.ts (4 tests) 2ms
+ Test Files  16 passed (16)
+      Tests  182 passed (182)
+   Start at  14:42:08
+   Duration  11.64s (transform 2.10s, setup 0ms, collect 6.55s, tests 201ms, environment 4ms, prepare 11.51s)
+
+## janela de teste (Parte C): titulo lido com a pasta isolada
+[teste] Sistema de Telemetria e Otimização de Trajetórias  (janela fechada em seguida; nenhum electron.exe do repositorio aberto)
