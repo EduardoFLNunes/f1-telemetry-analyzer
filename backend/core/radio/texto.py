@@ -32,8 +32,9 @@ from typing import Any, Dict, Mapping, Optional, Sequence
 MICROSSETORES = 60
 LADO = {"esq": "esquerda", "dir": "direita"}
 REFERENCIA_LONGA = {"volta_ia": "volta da IA", "minha_melhor": "sua melhor volta"}
-# Pedido 35: o tempo maximo de cada fala, com a vinheta (o radio fica com a primeira que cabe).
-FALA_MAXIMA_S = {"coach": 6.0, "resumo": 7.0, "analise": 8.0, "teste": 8.0}
+# Pedido 35: o tempo maximo de cada fala, com a vinheta (o radio fica com a primeira que cabe):
+# "cerca de" 6, 7 e 8 s, com 10% de folga.
+FALA_MAXIMA_S = {"coach": 6.6, "resumo": 7.7, "analise": 8.8, "teste": 8.8}
 FALA_ALVO = {"volta_ia": "da IA", "minha_melhor": "da sua melhor"}
 
 
@@ -179,7 +180,8 @@ def mensagem_de_diferenca(evento: Mapping[str, Any], curvas: Sequence[CurvaDaPis
     else:
         completa = f"{nome}: {decimal(abs(perda))} {lado_da_perda} {alvo}."
     curta = f"{nome}: {decimal(abs(perda))} {lado_da_perda}."
-    falas = [f"{completa} {causa['fala']}", f"{curta} {causa['fala']}"] if causa else []
+    mais_curta = f"{nome}: {decimal(abs(perda), 1)} {lado_da_perda}."
+    falas = [f"{completa} {causa['fala']}", f"{curta} {causa['fala']}", f"{mais_curta} {causa['fala']}"] if causa else []
     falas += [completa, curta]
     return {
         "origem": "coach",
@@ -226,7 +228,8 @@ def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optio
         detalhe = f"mais perdeu na {pior['curva']}{lado_curva}: {com_sinal(perda_pior)}"
         nome = (_nome_falado(pior["curva"]) or pior["curva"]).lower()
         falas += [f"{abertura}, {falado}.{fala_dif} Mais perdeu na {nome}: {decimal(perda_pior, 1)}.",
-                  f"{abertura}, {curto}.{fala_dif_curta} Mais perdeu na {nome}: {decimal(perda_pior, 1)}."]
+                  f"{abertura}: {curto},{fala_dif_curta[:-1]}. Mais perdeu na {nome}: {decimal(perda_pior, 1)}.",
+                  f"{abertura},{fala_dif_curta[:-1]}. Mais perdeu na {nome}: {decimal(perda_pior, 1)}."]
     falas += [f"{abertura}, {falado}.{fala_dif}", f"{abertura}, {curto}.{fala_dif_curta}"]
     return {
         "origem": "resumo",
@@ -279,7 +282,8 @@ def mensagem_de_analise(analise: Mapping[str, Any], tipo: Optional[str],
     if not curvas or len(voltas) < 2:
         return None
     rotulo = REFERENCIA_LONGA.get(tipo or "", "referência")
-    intervalo = f"{voltas[0]} a {voltas[-1]}"
+    seguidas = voltas == list(range(voltas[0], voltas[0] + len(voltas)))
+    intervalo = f"{voltas[0]} a {voltas[-1]}" if seguidas else ", ".join(str(v) for v in voltas[:-1]) + f" e {voltas[-1]}"
     linhas = []
     for c in curvas:
         escritas = [_diferenca_escrita(d["medida"], d["valor"], d) for d in c.get("diferencas") or []]
@@ -295,13 +299,15 @@ def mensagem_de_analise(analise: Mapping[str, Any], tipo: Optional[str],
         return base + (": " + ", ".join(ditas) if ditas else "") + "."
 
     abertura = f"Análise das voltas {intervalo}."
+    curta = f"Voltas {intervalo}."
     candidatas = []
     if len(curvas) > 1:
         candidatas.append(f"{abertura} {trecho(curvas[0], 2)} {trecho(curvas[1], 2)}")
-        candidatas.append(f"{abertura} {trecho(curvas[0], 1)} {trecho(curvas[1], 1)}")
+        candidatas.append(f"{curta} {trecho(curvas[0], 1)} {trecho(curvas[1], 1)}")
     candidatas.append(f"{abertura} {trecho(curvas[0], 2)}")
-    candidatas.append(f"Voltas {intervalo}. {trecho(curvas[0], 1)}")
-    candidatas.append(f"Voltas {intervalo}. {trecho(curvas[0], 0)}")
+    candidatas.append(f"{curta} {trecho(curvas[0], 2)}")
+    candidatas.append(f"{curta} {trecho(curvas[0], 1)}")
+    candidatas.append(f"{curta} {trecho(curvas[0], 0)}")
     falas = []
     for f in candidatas:
         if f not in falas:

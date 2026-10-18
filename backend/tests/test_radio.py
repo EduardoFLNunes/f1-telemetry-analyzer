@@ -51,7 +51,7 @@ def test_frase_de_diferenca_com_virgula_microssetor_a_partir_de_1_e_lado_por_ext
     # Pedido 35: a causa principal na voz (a freada passou do corte de 15 m: voce freou 38 m antes).
     assert m["fala"] == "Curva 1, esquerda: 0,74 atrás da IA. Freia 38 metros antes."
     assert m["falas"][-2:] == ["Curva 1, esquerda: 0,74 atrás da IA.", "Curva 1: 0,74 atrás."]
-    assert m["falaMaxS"] == 6.0
+    assert m["falaMaxS"] == 6.6                     # cerca de 6 s, com 10% de folga
     assert m["s"] == pytest.approx(3 * L / 60, abs=0.1)  # o fim do microssetor: ali o coach fecha a medida
     assert "." not in m["texto"].split(" s ")[0]  # numero com virgula
 
@@ -162,8 +162,9 @@ def test_uma_por_vez_e_so_quando_a_fala_inteira_cabe_na_janela(tmp_path):
     pista.agora += 3.0
     radio.on_frame(QUADRO)
     entregues = radio.desde(0)["mensagens"]
-    assert [m["origem"] for m in entregues] == ["coach", "coach", "resumo"]
-    assert entregues[-1]["janela"] == [2221.0, 100.0] and entregues[-1]["velocidadeKmh"] == 250.0
+    # O resumo vai para a frente da fila (pedido 35): a frase que sobrou da volta espera ele.
+    assert [m["origem"] for m in entregues] == ["coach", "resumo", "coach"]
+    assert entregues[1]["janela"] == [2221.0, 100.0] and entregues[1]["velocidadeKmh"] == 250.0
 
 
 def test_o_radio_nao_cria_frases_o_limite_do_coach_continua(tmp_path):
@@ -298,7 +299,7 @@ def test_resumo_com_a_curva_de_maior_perda():
     assert m["detalhe"] == "mais perdeu na C11, esquerda: +1,14 s"
     assert m["fala"] == "Volta 7, 1 minuto e 30,4. 5,53 atrás da IA. Mais perdeu na curva 11: 1,1."
     assert m["falas"][-1] == "Volta 7, 1 e 30,4. 5,5 atrás."
-    assert m["falaMaxS"] == 7.0 and m["curva"] == "C11"
+    assert m["falaMaxS"] == 7.7 and m["curva"] == "C11"
 
 
 def _medidas(perdas, freada=-50.0, minima=-30.0, acelerador=12.0, tracado=0.4):
@@ -327,7 +328,7 @@ def test_a_analise_so_curvas_perdidas_em_2_de_3_e_no_maximo_2():
     assert "traçado 0,4 m mais à esquerda" in m["linhas"][0]        # o lado por extenso (ADR 0003)
     assert m["fala"].startswith("Análise das voltas 6 a 8. Curva 12: 0,9 por volta: passa a 80 contra 110, "
                                 "freia 50 metros antes.")
-    assert m["falaMaxS"] == 8.0 and m["referencia"] == {"tipo": "volta_ia", "volta": "ref#0013"}
+    assert m["falaMaxS"] == 8.8 and m["referencia"] == {"tipo": "volta_ia", "volta": "ref#0013"}
     # Tres curvas perdidas em 2 das 3: so as 2 de maior perda mediana.
     voltas[1]["medidas"][2]["perdaS"] = 0.4
     voltas[2]["medidas"][2]["perdaS"] = 0.5

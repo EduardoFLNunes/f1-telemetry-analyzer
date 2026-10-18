@@ -248,12 +248,16 @@ class RadioDoEngenheiro:
         ref = self._referencia() or {}
         medidas = self._medidas_da_volta(volta)
         pior = None
-        if medidas:
+        # A curva que mais perdeu so nas voltas completas (a mesma regra da analise): numa volta
+        # com parada, "mais perdeu na curva 1: 66,4" e verdade, mas nao ajuda.
+        if medidas and volta.get("completa") is not False:
             m = max(medidas, key=lambda x: x["perdaS"])
             if m["perdaS"] > 0:
                 pior = {"curva": m["curva"], "lado": m["lado"], "perdaS": m["perdaS"]}
-        self._pendentes.append(self._nova(mensagem_de_resumo(volta.get("volta"), float(volta["tempoS"]),
-                                                             ref.get("tempoS"), ref.get("tipo"), pior)))
+        # O resumo vai para a frente da fila: o que ficou da volta anterior espera ele (pedido 35;
+        # sem isto, numa sessao real, o resumo chegava uma volta atrasado).
+        self._pendentes.appendleft(self._nova(mensagem_de_resumo(volta.get("volta"), float(volta["tempoS"]),
+                                                                 ref.get("tempoS"), ref.get("tipo"), pior)))
         self._analise_da_volta(volta, medidas, ref)
 
     def _analise_da_volta(self, volta: Dict[str, Any], medidas: Optional[List[Dict[str, Any]]],
