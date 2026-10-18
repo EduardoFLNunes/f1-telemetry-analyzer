@@ -1,0 +1,49 @@
+{
+  "pedido": "docs/prompts/2026-10-18_33_relogio-do-gravador-novo.md",
+  "linha_do_jogo": {
+    "s_m_depois_do_s0_oficial": 1.463,
+    "desvio_m": 0.067,
+    "voltas_medidas": 138,
+    "como": "s da primeira amostra da volta menos v x cronometro, nas voltas com o carro acima de 100 km/h"
+  },
+  "modelo": "periodo - tempo do jogo = 1,463 m x (1/v na linha no inicio - 1/v na linha no fim)",
+  "store_676_voltas": {
+    "p99_ms": 7.63,
+    "acima_de_5ms": 10,
+    "p99_sem_a_travessia_ms": 3.56,
+    "acima_de_5ms_sem_a_travessia": 3,
+    "correlacao_com_o_modelo": 0.7194,
+    "por_app": {
+      "0.3.0-coleta-modelos": {
+        "voltas": 23,
+        "p99_ms": 11.17,
+        "max_ms": 11.49,
+        "acima_de_5ms": 2,
+        "p99_sem_a_travessia_ms": 2.69,
+        "acima_de_5ms_sem_a_travessia": 0
+      },
+      "0.4.0-redesenho": {
+        "voltas": 16,
+        "p99_ms": 11.6,
+        "max_ms": 11.74,
+        "acima_de_5ms": 3,
+        "p99_sem_a_travessia_ms": 3.05,
+        "acima_de_5ms_sem_a_travessia": 0
+      },
+      "anterior ao 0.3.0 (sem versao no metadado)": {
+        "voltas": 637,
+        "p99_ms": 4.15,
+        "max_ms": 21.46,
+        "acima_de_5ms": 5,
+        "p99_sem_a_travessia_ms": 3.66,
+        "acima_de_5ms_sem_a_travessia": 3
+      }
+    }
+  },
+  "sessao_de_18_10_fora_do_store": {
+    "sessao": "2026-10-18_12-38-44_vhe_interlagos",
+    "voltas_com_fechamento": 13,
+    "pior_ms": 3.24,
+    "passagens_na_linha_kmh": "249 a 256"
+  }
+}
