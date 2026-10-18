@@ -40,7 +40,13 @@ const UDP_OPPONENTS_PORT = Number(process.env.AT_UDP_OPPONENTS_PORT || 8765);
 // instalador ("Automobilista Telemetria") e a pasta de dados não mudam.
 const PRODUCT_DISPLAY_NAME = 'Sistema de Telemetria e Otimização de Trajetórias';
 const DESKTOP_BRANCH_NAME = process.env.AT_DESKTOP_BRANCH_NAME || '';
-const DESKTOP_WINDOW_TITLE = DESKTOP_BRANCH_NAME ? `${PRODUCT_DISPLAY_NAME} - ${DESKTOP_BRANCH_NAME}` : PRODUCT_DISPLAY_NAME;
+// Pedido 33, Parte C: toda janela aberta para teste ou captura leva "[teste]" no
+// título, para não ser confundida com o app instalado (em 15/10 e 17/10 houve
+// gravação numa janela de teste esquecida aberta). É teste a execução com a
+// pasta de dados isolada (AT_DESKTOP_USER_DATA_DIR) ou com AT_DESKTOP_TESTE=1.
+const DESKTOP_TEST_RUN = Boolean(USER_DATA_OVERRIDE) || process.env.AT_DESKTOP_TESTE === '1';
+const DESKTOP_WINDOW_TITLE = `${DESKTOP_TEST_RUN ? '[teste] ' : ''}${
+  DESKTOP_BRANCH_NAME ? `${PRODUCT_DISPLAY_NAME} - ${DESKTOP_BRANCH_NAME}` : PRODUCT_DISPLAY_NAME}`;
 
 const FRONTEND_URL = process.env.AT_DESKTOP_FRONTEND_URL || DEFAULT_FRONTEND_DEV_URL;
 const BACKEND_URL = stripTrailingSlash(process.env.AT_BACKEND_URL || DEFAULT_BACKEND_URL);
