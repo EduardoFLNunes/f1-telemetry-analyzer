@@ -319,3 +319,60 @@ Conferi no app do repositório, isolado, apontado para este repositório (`_capt
   - o botão do coach apareceu ligado, apontando para este repositório.
 - **Uma trava velha do git:** um `.git/index.lock` vazio ficou do build (03:08), sem nenhum processo do git rodando. Removi como o próprio git orienta.
 - **Não instalei.** A instalação é com você: rode o instalador por cima do atual, na mesma pasta. A instalação preserva `%APPDATA%` (fase 12.6).
+
+## Parte G com o pacote instalado (18/10): a rodada parou numa trava
+
+**O pedido:** o mesmo do chat de 16/10 ("Faça a Parte G do pedido 28 junto com a Parte A do pedido 32…"). Fiz só o que faltava:
+- a checagem da volta de 1:27,594 e as Partes A e B do pedido 32 já estavam feitas;
+- faltava a Parte G com uma sessão gravada pelo **app instalado**: `2026-10-17_16-17-08`, do 0.4.0, em `%APPDATA%`;
+- a rodada também leva a `2026-10-17_01-02-22`, gravada na janela de teste e copiada para `data/recordings`.
+
+**Antes:**
+- cópia em `data/ml/_p32b_antes/`, fora do git;
+- o app instalado estava fechado e nada estava gravando.
+
+**A rodada** (`atualizar_coach`, incremental, pelo terminal, com a trava `origem: terminal`) terminou com **código 2, parada no passo 6**:
+
+| passo | tempo | o que fez |
+|---|---|---|
+| 1 | 58,8 s | 2 sessões lidas, 141 do cache |
+| 2 e 3 | 3,2 s | as 3 sessões do app novo entraram pelo indicador: 20, 22 e 24 voltas `humano` |
+| 4 | 662,4 s | backup `vhe_interlagos.2026-10-18_04-38-57…` e treino: **103 voltas suas** (eram 77), referências iguais (1:24,828 e 1:27,013) |
+| 5 | 0 s | resumo gravado |
+| 6 | 75,9 s | store v2 com 676 voltas (`humano` 109), **checagem principal falhou** |
+| 7 | não rodou | o relatório de evolução continua o de 16/10 |
+
+**A trava:**
+- **a regra:** "período de s = 0 a s = 0 contra o cronômetro do jogo" (`store_checks.check_period`) pede o p99 de |período − tempo do jogo| ≤ 5 ms;
+- **antes:** 4,60 ms, em 648 voltas;
+- **agora:** **7,63 ms**, em 676;
+- **o comando:** gravou o store com `aprovado: false` e parou, como manda a regra. Não contornei.
+
+**A causa:** as voltas gravadas pelo app novo (0.3.0 e 0.4.0) às vezes fecham 10 a 12 ms longe do cronômetro do jogo, e as do app antigo não.
+
+| sessão | app | voltas | mediana \|dif.\| | voltas acima de 5 ms | pior |
+|---|---|---|---|---|---|
+| `2026-10-11_14-19-52` | antigo | 16 | 1,20 ms | 0 | 2,72 ms |
+| `2026-10-13_19-24-10` | antigo | 9 | 1,29 ms | 0 | 2,65 ms |
+| `2026-10-15_23-24-50` | repositório (0.3.0) | 11 | 1,13 ms | 1 | 10,03 ms |
+| `2026-10-17_01-02-22` | repositório (0.3.0) | 12 | 0,84 ms | 1 | 11,49 ms |
+| `2026-10-17_16-17-08` | **pacote 0.4.0** | 16 | 0,91 ms | 3 | **11,74 ms** (`#0007`) |
+
+- **A mediana das voltas novas é boa.** O problema são as voltas isoladas de cerca de 11 ms: 5 de 39.
+- **Por que só agora:** com 11 voltas novas (16/10) o p99 ainda ficava em 4,6 ms; com 39, passou de 5.
+- **As duas piores do store** (−21 e −20 ms) são antigas e já estavam lá.
+
+**Como ficou:**
+- **o coach** já usa o modelo novo (103 voltas suas);
+- **a contagem oficial da M1** lê o store e dá **3 de 5**: as sessões de 15/10, 17/10 01:02 e 17/10 16:17;
+- **o relatório de evolução** é o de 16/10 e não tem as sessões de 17/10;
+- **o store v2** ficou gravado com `aprovado: false`.
+
+**A Parte G pelo pacote:** a sessão `2026-10-17_16-17-08` tem 16 voltas no store, com 100% de guinada, velocidades locais e freios, `carModel`, versão `0.4.0-redesenho` e commit no metadado, e origem pelo `indicador`. A conferência da aba ("Conta para a M1") bate com o store. O que não passou foi a checagem global do store, e não esta sessão.
+
+**Precisa de decisão sua:**
+1. **Investigar o relógio do gravador novo**, num pedido próprio. É a minha proposta. A hipótese a conferir é a mudança do pedido 28 no corte e no horário das amostras. Não muda critério.
+2. **Ou mudar o limite da checagem** (hoje 5 ms no p99). Isso é critério, e só com você.
+3. **Ou tirar do store as voltas acima de um limite por volta.** Também é regra nova.
+
+Enquanto isso, o relatório de evolução não atualiza, e o botão "Atualizar coach e relatório" vai parar no mesmo lugar e mostrar esta mensagem.

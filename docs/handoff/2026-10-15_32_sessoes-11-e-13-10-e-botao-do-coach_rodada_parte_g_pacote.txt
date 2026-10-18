@@ -1,0 +1,291 @@
+inicio 04:37:45
+1/7 inventario novo (incremental)
+sessoes de Interlagos nas duas pastas: 143
+[1/143] 2026-05-26_19-06-59_vhe_interlagos: 76 voltas (cache)
+[2/143] 2026-05-26_21-12-57_vhe_interlagos: 1 voltas (cache)
+[3/143] 2026-05-26_21-13-07_vhe_interlagos: 1 voltas (cache)
+[4/143] 2026-05-26_21-13-21_vhe_interlagos: 1 voltas (cache)
+[5/143] 2026-05-26_21-13-34_vhe_interlagos: 1 voltas (cache)
+[6/143] 2026-05-26_21-13-47_vhe_interlagos: 1 voltas (cache)
+[7/143] 2026-05-26_21-19-32_vhe_interlagos: 8 voltas (cache)
+[8/143] 2026-05-29_20-22-25_vhe_interlagos: 62 voltas (cache)
+[9/143] 2026-06-01_13-39-13_vhe_interlagos: 31 voltas (cache)
+[10/143] 2026-06-01_14-22-37_vhe_interlagos: 0 voltas (cache)
+[11/143] 2026-06-01_14-22-56_vhe_interlagos: 4 voltas (cache)
+[12/143] 2026-06-01_14-26-50_vhe_interlagos: 26 voltas (cache)
+[13/143] 2026-06-01_15-03-48_vhe_interlagos: 2 voltas (cache)
+[14/143] 2026-06-01_15-05-10_vhe_interlagos: 151 voltas (cache)
+[15/143] 2026-06-01_18-08-50_vhe_interlagos: 26 voltas (cache)
+[16/143] 2026-06-01_18-26-01_vhe_interlagos: 3 voltas (cache)
+[17/143] 2026-06-01_18-36-55_vhe_interlagos: 7 voltas (cache)
+[18/143] 2026-06-01_18-52-15_vhe_interlagos: 38 voltas (cache)
+[19/143] 2026-06-01_19-46-56_vhe_interlagos: 3 voltas (cache)
+[20/143] 2026-06-01_19-49-39_vhe_interlagos: 39 voltas (cache)
+[21/143] 2026-06-01_20-45-15_vhe_interlagos: 2 voltas (cache)
+[22/143] 2026-06-01_20-46-59_vhe_interlagos: 84 voltas (cache)
+[23/143] 2026-06-02_01-15-01_vhe_interlagos: 17 voltas (cache)
+[24/143] 2026-06-02_13-37-11_vhe_interlagos_gp_InterlagosPitAccessAsphaltMergeFix: 21 voltas (cache)
+[25/143] 2026-06-02_23-43-23_vhe_interlagos_gp_InterlagosPitAccessAsphaltMergeFix: 1 voltas (cache)
+[26/143] 2026-06-02_23-44-58_vhe_interlagos_gp_InterlagosPitAccessAsphaltMergeFix: 11 voltas (cache)
+[27/143] 2026-06-07_19-21-36_vhe_interlagos: 3 voltas (cache)
+[28/143] 2026-06-07_19-23-35_vhe_interlagos: 3 voltas (cache)
+[29/143] 2026-06-07_19-27-12_vhe_interlagos: 19 voltas (cache)
+[30/143] 2026-06-07_20-07-04_vhe_interlagos: 15 voltas (cache)
+[31/143] 2026-06-08_10-35-09_vhe_interlagos: 1 voltas (cache)
+[32/143] 2026-06-08_11-14-51_vhe_interlagos: 1 voltas (cache)
+[33/143] 2026-06-08_11-36-29_vhe_interlagos: 1 voltas (cache)
+[34/143] 2026-06-13_13-03-31_vhe_interlagos: 13 voltas (cache)
+[35/143] 2026-06-13_13-56-22_vhe_interlagos: 1 voltas (cache)
+[36/143] 2026-06-13_14-11-23_vhe_interlagos: 1 voltas (cache)
+[37/143] 2026-06-13_14-15-54_vhe_interlagos: 1 voltas (cache)
+[38/143] 2026-06-13_14-16-46_vhe_interlagos: 1 voltas (cache)
+[39/143] 2026-06-13_14-20-06_vhe_interlagos: 1 voltas (cache)
+[40/143] 2026-06-13_14-24-16_vhe_interlagos: 1 voltas (cache)
+[41/143] 2026-06-13_18-34-33_vhe_interlagos: 3 voltas (cache)
+[42/143] 2026-06-13_19-07-16_vhe_interlagos: 2 voltas (cache)
+[43/143] 2026-06-13_20-42-20_vhe_interlagos: 1 voltas (cache)
+[44/143] 2026-06-13_20-43-01_vhe_interlagos: 1 voltas (cache)
+[45/143] 2026-06-13_20-45-19_vhe_interlagos: 1 voltas (cache)
+[46/143] 2026-06-13_21-17-21_vhe_interlagos: 2 voltas (cache)
+[47/143] 2026-06-14_10-09-39_vhe_interlagos: 1 voltas (cache)
+[48/143] 2026-06-14_10-15-25_vhe_interlagos: 14 voltas (cache)
+[49/143] 2026-06-14_10-43-46_vhe_interlagos: 12 voltas (cache)
+[50/143] 2026-06-14_11-03-51_vhe_interlagos: 3 voltas (cache)
+[51/143] 2026-06-14_11-12-42_vhe_interlagos: 4 voltas (cache)
+[52/143] 2026-06-14_11-22-17_vhe_interlagos: 2 voltas (cache)
+[53/143] 2026-06-14_11-24-17_vhe_interlagos: 1 voltas (cache)
+[54/143] 2026-06-14_11-29-22_vhe_interlagos: 3 voltas (cache)
+[55/143] 2026-06-14_11-30-32_vhe_interlagos: 1 voltas (cache)
+[56/143] 2026-06-14_11-36-21_vhe_interlagos: 2 voltas (cache)
+[57/143] 2026-06-14_11-37-35_vhe_interlagos: 2 voltas (cache)
+[58/143] 2026-06-14_11-38-30_vhe_interlagos: 2 voltas (cache)
+[59/143] 2026-06-14_11-40-01_vhe_interlagos: 1 voltas (cache)
+[60/143] 2026-06-14_11-45-28_vhe_interlagos: 28 voltas (cache)
+[61/143] 2026-06-14_12-23-46_vhe_interlagos: 13 voltas (cache)
+[62/143] 2026-06-14_12-44-04_vhe_interlagos: 18 voltas (cache)
+[63/143] 2026-06-14_13-16-06_vhe_interlagos: 8 voltas (cache)
+[64/143] 2026-06-14_13-26-54_vhe_interlagos: 26 voltas (cache)
+[65/143] 2026-06-14_14-03-29_vhe_interlagos: 48 voltas (cache)
+[66/143] 2026-06-14_15-14-42_vhe_interlagos: 5 voltas (cache)
+[67/143] 2026-06-14_15-21-10_vhe_interlagos: 3 voltas (cache)
+[68/143] 2026-06-14_15-38-47_vhe_interlagos: 6 voltas (cache)
+[69/143] 2026-06-14_15-46-58_vhe_interlagos: 2 voltas (cache)
+[70/143] 2026-06-14_15-53-20_vhe_interlagos: 2 voltas (cache)
+[71/143] 2026-06-14_15-59-17_vhe_interlagos: 3 voltas (cache)
+[72/143] 2026-06-14_18-37-47_vhe_interlagos: 3 voltas (cache)
+[73/143] 2026-06-14_18-42-07_vhe_interlagos: 11 voltas (cache)
+[74/143] 2026-06-16_19-04-54_vhe_interlagos: 15 voltas (cache)
+[75/143] 2026-06-18_20-06-03_vhe_interlagos: 58 voltas (cache)
+[76/143] 2026-06-19_11-08-15_vhe_interlagos: 3 voltas (cache)
+[77/143] 2026-06-19_19-46-21_vhe_interlagos: 113 voltas (cache)
+[78/143] 2026-06-19_23-24-46_vhe_interlagos: 8 voltas (cache)
+[79/143] 2026-06-19_23-36-46_vhe_interlagos: 1 voltas (cache)
+[80/143] 2026-06-19_23-48-39_vhe_interlagos: 1 voltas (cache)
+[81/143] 2026-06-20_13-04-20_vhe_interlagos: 4 voltas (cache)
+[82/143] 2026-06-20_13-09-57_vhe_interlagos: 3 voltas (cache)
+[83/143] 2026-06-20_13-13-02_vhe_interlagos: 42 voltas (cache)
+[84/143] 2026-08-07_20-10-03_vhe_interlagos: 1 voltas (cache)
+[85/143] 2026-08-07_20-13-11_vhe_interlagos: 1 voltas (cache)
+[86/143] 2026-08-07_20-27-52_vhe_interlagos: 70 voltas (cache)
+[87/143] 2026-08-08_11-40-43_vhe_interlagos: 4 voltas (cache)
+[88/143] 2026-08-08_11-52-03_vhe_interlagos: 2 voltas (cache)
+[89/143] 2026-08-08_11-58-41_vhe_interlagos: 17 voltas (cache)
+[90/143] 2026-08-08_12-23-51_vhe_interlagos: 37 voltas (cache)
+[91/143] 2026-08-08_13-18-00_vhe_interlagos: 3 voltas (cache)
+[92/143] 2026-08-08_13-22-07_vhe_interlagos: 15 voltas (cache)
+[93/143] 2026-08-08_16-38-27_vhe_interlagos: 7 voltas (cache)
+[94/143] 2026-08-08_16-52-13_vhe_interlagos: 6 voltas (cache)
+[95/143] 2026-08-08_17-04-15_vhe_interlagos: 88 voltas (cache)
+[96/143] 2026-08-09_10-17-32_vhe_interlagos: 2 voltas (cache)
+[97/143] 2026-08-09_10-27-39_vhe_interlagos: 63 voltas (cache)
+[98/143] 2026-08-09_12-04-40_vhe_interlagos: 9 voltas (cache)
+[99/143] 2026-08-09_12-21-19_vhe_interlagos: 9 voltas (cache)
+[100/143] 2026-08-09_12-37-42_vhe_interlagos: 17 voltas (cache)
+[101/143] 2026-08-09_13-02-49_vhe_interlagos: 27 voltas (cache)
+[102/143] 2026-08-09_13-42-29_vhe_interlagos: 24 voltas (cache)
+[103/143] 2026-08-09_14-16-51_vhe_interlagos: 15 voltas (cache)
+[104/143] 2026-08-09_14-40-07_vhe_interlagos: 3 voltas (cache)
+[105/143] 2026-08-09_14-44-00_vhe_interlagos: 10 voltas (cache)
+[106/143] 2026-08-09_14-58-46_vhe_interlagos: 8 voltas (cache)
+[107/143] 2026-08-09_15-10-52_vhe_interlagos: 69 voltas (cache)
+[108/143] 2026-08-09_16-53-03_vhe_interlagos: 5 voltas (cache)
+[109/143] 2026-08-09_17-00-01_vhe_interlagos: 4 voltas (cache)
+[110/143] 2026-08-09_17-05-12_vhe_interlagos: 2 voltas (cache)
+[111/143] 2026-08-09_17-06-41_vhe_interlagos: 10 voltas (cache)
+[112/143] 2026-08-09_17-23-56_vhe_interlagos: 10 voltas (cache)
+[113/143] 2026-08-09_17-37-33_vhe_interlagos: 30 voltas (cache)
+[114/143] 2026-08-09_18-22-00_vhe_interlagos: 13 voltas (cache)
+[115/143] 2026-08-09_18-41-18_vhe_interlagos: 5 voltas (cache)
+[116/143] 2026-08-09_18-47-11_vhe_interlagos: 24 voltas (cache)
+[117/143] 2026-08-09_19-10-41_vhe_interlagos: 5 voltas (cache)
+[118/143] 2026-08-09_19-15-35_vhe_interlagos: 3 voltas (cache)
+[119/143] 2026-08-09_19-20-59_vhe_interlagos: 54 voltas (cache)
+[120/143] 2026-08-16_03-30-14_vhe_interlagos: 16 voltas (cache)
+[121/143] 2026-08-16_03-58-36_vhe_interlagos: 2 voltas (cache)
+[122/143] 2026-08-19_20-57-37_vhe_interlagos: 1 voltas (cache)
+[123/143] 2026-08-19_20-58-36_vhe_interlagos: 21 voltas (cache)
+[124/143] 2026-08-19_21-45-59_vhe_interlagos: 6 voltas (cache)
+[125/143] 2026-08-19_22-23-14_vhe_interlagos: 20 voltas (cache)
+[126/143] 2026-10-04_02-24-04_vhe_interlagos: 20 voltas (cache)
+[127/143] 2026-10-04_03-21-52_vhe_interlagos: 8 voltas (cache)
+[128/143] 2026-10-04_03-35-57_vhe_interlagos: 1 voltas (cache)
+[129/143] 2026-10-04_03-36-35_vhe_interlagos: 1 voltas (cache)
+[130/143] 2026-10-04_03-40-32_vhe_interlagos: 1 voltas (cache)
+[131/143] 2026-10-04_03-42-10_vhe_interlagos: 21 voltas (cache)
+[132/143] 2026-10-04_04-22-39_vhe_interlagos: 1 voltas (cache)
+[133/143] 2026-10-04_23-51-42_vhe_interlagos: 16 voltas (cache)
+[134/143] 2026-10-05_20-33-47_vhe_interlagos: 25 voltas (cache)
+[135/143] 2026-10-08_23-56-13_vhe_interlagos: 10 voltas (cache)
+[136/143] 2026-10-10_09-57-09_vhe_interlagos: 21 voltas (cache)
+[137/143] 2026-10-11_13-56-20_vhe_interlagos: 0 voltas (cache)
+[138/143] 2026-10-11_14-16-34_vhe_interlagos: 1 voltas (cache)
+[139/143] 2026-10-11_14-19-52_vhe_interlagos: 23 voltas (cache)
+[140/143] 2026-10-13_19-24-10_vhe_interlagos: 15 voltas (cache)
+[141/143] 2026-10-15_23-24-50_vhe_interlagos: 20 voltas (cache)
+[142/143] 2026-10-17_01-02-22_vhe_interlagos: 22 voltas
+[143/143] 2026-10-17_16-17-08_vhe_interlagos: 24 voltas
+2/7 anotacoes versionadas de 04/10 e 3/7 sessoes novas sem anotacao
+   sessao de 04/10: 53 voltas, {'humano': 32, 'ia': 17, 'misturada': 4}
+   gravacao anotada inteira: 2026-10-04_23-51-42_vhe_interlagos: 16 voltas (8 validas), {'humano': 16}
+   gravacao anotada inteira: 2026-10-05_20-33-47_vhe_interlagos: 25 voltas (12 validas), {'humano': 25}
+   gravacao anotada inteira: 2026-10-08_23-56-13_vhe_interlagos: 10 voltas (4 validas), {'humano': 10}
+   gravacao anotada inteira: 2026-10-10_09-57-09_vhe_interlagos: 21 voltas (12 validas), {'humano': 21}
+   gravacao anotada inteira: 2026-10-11_14-16-34_vhe_interlagos: 1 voltas (0 validas), {'humano': 1}
+   gravacao anotada inteira: 2026-10-11_14-19-52_vhe_interlagos: 23 voltas (16 validas), {'humano': 23}
+   gravacao anotada inteira: 2026-10-13_19-24-10_vhe_interlagos: 15 voltas (9 validas), {'humano': 15}
+   sessoes novas sem anotacao: 3
+     2026-10-15_23-24-50_vhe_interlagos: 20 voltas, origem {'humano': 20}, fonte {'indicador': 20}
+     2026-10-17_01-02-22_vhe_interlagos: 22 voltas, origem {'humano': 22}, fonte {'indicador': 22}
+     2026-10-17_16-17-08_vhe_interlagos: 24 voltas, origem {'humano': 24}, fonte {'indicador': 24}
+4/7 backup e treino do modelo do repositorio
+   backup: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\reference_models\backup\vhe_interlagos.2026-10-18_04-38-57.antes-de-atualizar.json
+geometria oficial : 0ed16f0dd2225990  (4334.08 m, 60 microsetores)
+carro             : rss_formula_rss_3_v6_2026
+voltas do piloto  : 103 (humano, equipamento atual, limpas)
+voltas da IA      : 13 (ia, sessoes desde 2026-10-04, limpas)
+
+referencia minha_melhor:
+  87.013s  2026-10-15_23-24-50_vhe_interlagos#0008  -> escolhida: a mais rapida valida e completa
+  87.436s  2026-10-15_23-24-50_vhe_interlagos#0007  -> valida e completa, mas mais lenta que a escolhida
+  87.592s  2026-10-11_14-19-52_vhe_interlagos#0019  -> valida e completa, mas mais lenta que a escolhida
+  87.618s  2026-10-17_01-02-22_vhe_interlagos#0019  -> valida e completa, mas mais lenta que a escolhida
+  87.665s  2026-10-11_14-19-52_vhe_interlagos#0018  -> valida e completa, mas mais lenta que a escolhida
+
+referencia volta_ia:
+  84.828s  2026-10-04_03-42-10_vhe_interlagos#0013  -> escolhida: a mais rapida valida e completa
+  84.833s  2026-10-04_03-42-10_vhe_interlagos#0012  -> valida e completa, mas mais lenta que a escolhida
+  84.849s  2026-10-04_03-42-10_vhe_interlagos#0011  -> valida e completa, mas mais lenta que a escolhida
+  84.926s  2026-10-04_02-24-04_vhe_interlagos#0012  -> valida e completa, mas mais lenta que a escolhida
+  84.936s  2026-10-04_03-42-10_vhe_interlagos#0010  -> valida e completa, mas mais lenta que a escolhida
+
+==========================================================
+voltas do piloto no modelo : 103  (recusadas 0 {})
+referencia ativa           : volta_ia 2026-10-04_03-42-10_vhe_interlagos#0013 84.828s
+oscilacao (mediana - melhor) por microsetor: mediana 0.088s, p90 0.316s
+geometria                  : 0ed16f0dd2225990
+==========================================================
+
+modelo gravado em: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\reference_models\vhe_interlagos.json
+5/7 resumo
+
+==================================================================
+RESUMO DO COACH
+  volta_ia     : 84.828 s  2026-10-04_03-42-10_vhe_interlagos#0013  (volta da IA)
+  minha_melhor : 87.013 s  2026-10-15_23-24-50_vhe_interlagos#0008  (sua melhor volta)
+  referencia padrao do app: volta_ia
+  voltas por origem, equipamento atual: {'humano': 209, 'ia': 17, 'misturada': 4}
+     por fonte: {'humano (anotacao)': 4, 'humano (anotacao_sessao)': 111, 'humano (indicador)': 94, 'ia (indicador)': 17, 'misturada (anotacao)': 2, 'misturada (indicador)': 2}
+  voltas por origem, todas: {'desconhecida': 1899, 'humano': 209, 'ia': 17, 'misturada': 4}
+  voltas suas no modelo (limpas): 103
+  limiar: mediana 0.175 s (min 0.06, max 0.874; 3 microsetores no minimo de 0.06 s)
+  foco inicial, volta_ia: setores 2 (0.32 s), 38 (0.37 s), 43 (0.45 s)  [fonte: modelo]
+  foco inicial, minha_melhor: setores 2 (0.25 s), 18 (0.27 s), 31 (0.26 s)  [fonte: modelo]
+==================================================================
+-> C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\ml\origem\atualizar_coach.json
+6/7 store v2, com as checagens
+   lida: 2026-10-17_01-02-22_vhe_interlagos (12 voltas materializadas)
+   lida: 2026-10-17_16-17-08_vhe_interlagos (16 voltas materializadas)
+[1/59] 2026-06-14_10-15-25_vhe_interlagos: 1 voltas
+[2/59] 2026-06-14_10-43-46_vhe_interlagos: 3 voltas
+[3/59] 2026-06-14_11-29-22_vhe_interlagos: 1 voltas
+[4/59] 2026-06-14_11-45-28_vhe_interlagos: 3 voltas
+[5/59] 2026-06-14_12-23-46_vhe_interlagos: 8 voltas
+[6/59] 2026-06-14_12-44-04_vhe_interlagos: 2 voltas
+[7/59] 2026-06-18_20-06-03_vhe_interlagos: 3 voltas
+[8/59] 2026-06-19_11-08-15_vhe_interlagos: 1 voltas
+[9/59] 2026-06-19_23-24-46_vhe_interlagos: 4 voltas
+[10/59] 2026-06-20_13-04-20_vhe_interlagos: 2 voltas
+[11/59] 2026-06-20_13-09-57_vhe_interlagos: 1 voltas
+[12/59] 2026-06-20_13-13-02_vhe_interlagos: 31 voltas
+[13/59] 2026-08-07_20-27-52_vhe_interlagos: 54 voltas
+[14/59] 2026-08-08_11-40-43_vhe_interlagos: 2 voltas
+[15/59] 2026-08-08_11-58-41_vhe_interlagos: 13 voltas
+[16/59] 2026-08-08_12-23-51_vhe_interlagos: 26 voltas
+[17/59] 2026-08-08_13-18-00_vhe_interlagos: 1 voltas
+[18/59] 2026-08-08_13-22-07_vhe_interlagos: 10 voltas
+[19/59] 2026-08-08_16-38-27_vhe_interlagos: 5 voltas
+[20/59] 2026-08-08_16-52-13_vhe_interlagos: 2 voltas
+[21/59] 2026-08-08_17-04-15_vhe_interlagos: 66 voltas
+[22/59] 2026-08-09_10-27-39_vhe_interlagos: 48 voltas
+[23/59] 2026-08-09_12-04-40_vhe_interlagos: 6 voltas
+[24/59] 2026-08-09_12-21-19_vhe_interlagos: 5 voltas
+[25/59] 2026-08-09_12-37-42_vhe_interlagos: 12 voltas
+[26/59] 2026-08-09_13-02-49_vhe_interlagos: 19 voltas
+[27/59] 2026-08-09_13-42-29_vhe_interlagos: 16 voltas
+[28/59] 2026-08-09_14-16-51_vhe_interlagos: 11 voltas
+[29/59] 2026-08-09_14-40-07_vhe_interlagos: 1 voltas
+[30/59] 2026-08-09_14-44-00_vhe_interlagos: 8 voltas
+[31/59] 2026-08-09_14-58-46_vhe_interlagos: 6 voltas
+[32/59] 2026-08-09_15-10-52_vhe_interlagos: 49 voltas
+[33/59] 2026-08-09_16-53-03_vhe_interlagos: 1 voltas
+[34/59] 2026-08-09_17-00-01_vhe_interlagos: 2 voltas
+[35/59] 2026-08-09_17-06-41_vhe_interlagos: 6 voltas
+[36/59] 2026-08-09_17-23-56_vhe_interlagos: 6 voltas
+[37/59] 2026-08-09_17-37-33_vhe_interlagos: 21 voltas
+[38/59] 2026-08-09_18-22-00_vhe_interlagos: 6 voltas
+[39/59] 2026-08-09_18-41-18_vhe_interlagos: 3 voltas
+[40/59] 2026-08-09_18-47-11_vhe_interlagos: 12 voltas
+[41/59] 2026-08-09_19-10-41_vhe_interlagos: 3 voltas
+[42/59] 2026-08-09_19-15-35_vhe_interlagos: 1 voltas
+[43/59] 2026-08-09_19-20-59_vhe_interlagos: 40 voltas
+[44/59] 2026-08-16_03-30-14_vhe_interlagos: 7 voltas
+[45/59] 2026-08-19_20-58-36_vhe_interlagos: 7 voltas
+[46/59] 2026-08-19_21-45-59_vhe_interlagos: 3 voltas
+[47/59] 2026-08-19_22-23-14_vhe_interlagos: 14 voltas
+[48/59] 2026-10-04_02-24-04_vhe_interlagos: 10 voltas
+[49/59] 2026-10-04_03-21-52_vhe_interlagos: 4 voltas
+[50/59] 2026-10-04_03-42-10_vhe_interlagos: 12 voltas
+[51/59] 2026-10-04_23-51-42_vhe_interlagos: 7 voltas
+[52/59] 2026-10-05_20-33-47_vhe_interlagos: 11 voltas
+[53/59] 2026-10-08_23-56-13_vhe_interlagos: 4 voltas
+[54/59] 2026-10-10_09-57-09_vhe_interlagos: 12 voltas
+[55/59] 2026-10-11_14-19-52_vhe_interlagos: 16 voltas
+[56/59] 2026-10-13_19-24-10_vhe_interlagos: 9 voltas
+[57/59] 2026-10-15_23-24-50_vhe_interlagos: 11 voltas
+[58/59] 2026-10-17_01-02-22_vhe_interlagos: 12 voltas
+[59/59] 2026-10-17_16-17-08_vhe_interlagos: 16 voltas
+
+store v2 -> C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\ml\laps_grid_v2.parquet  (76 s)
+voltas: 676  {'desconhecida': 552, 'humano': 109, 'ia': 13, 'misturada': 2}  {'anterior': 552, 'atual': 124}  {'app_instalado': 526, 'repositorio': 150}
+selecao: {"voltas_no_inventario": 2129, "validas": 821, "duplicadas_tiradas": 4, "box_tiradas": 141, "no_store_v2": 676}
+  [FALHOU] periodo de s = 0 a s = 0 contra o cronometro do jogo
+  [ok] nenhuma volta passa pelo box
+  [ok] nenhuma volta aparece duas vezes
+  [ok] uma geometria so
+     periodo - jogo (ms): {'n': 676, 'min': -21.46, 'p1': -3.13, 'mediana': 0.74, 'p99': 3.55, 'max': 11.74}  sem fechamento medido: 0
+  efeitos: volta 27.78 ms, microsetor 0 27.16 ms, outros p99 0.6 ms (101 voltas)
+  controle (store antigo contra o jogo): {'n': 101, 'min': -52.22, 'p1': -45.03, 'mediana': -27.25, 'p99': -15.68, 'max': -14.89}
+-> C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\ml\store_v2_relatorio.json
+PARADO: a checagem principal falhou. O store v2 ficou gravado com aprovado: false.
+PARADO: o store v2 nao passou nas checagens (acima); o relatorio de evolucao nao rodou.
+
+tempo de cada passo:
+  1    inventario                       58.8 s
+  2-3  anotacoes e sessoes novas         3.2 s
+  4    backup e treino                 662.4 s
+  5    resumo                            0.0 s
+  6    store v2                         75.9 s
+       total                           800.4 s
+  passo 1: incremental; lidas 2, do cache 141
+  passo 6: incremental; lidas 2, do cache 57
+codigo 2
