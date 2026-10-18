@@ -132,6 +132,8 @@ _validation_sessions_cache_at = 0.0
 # `Program Files` it is read-only outright -- and the two directories below are
 # the ones this backend writes to at runtime.
 live_driving_coach: Optional[Any] = None
+# Pedido 31: o radio do engenheiro (core/radio), criado com o coach ao vivo.
+radio_do_engenheiro: Optional[Any] = None
 external_reference_repository = ExternalReferenceRepository(
     REPO_ROOT,
     data_dir=RUNTIME_ROOT / "data" / "external_references",
@@ -150,6 +152,47 @@ assisted_analysis_service = AssistedAnalysisService(
     runtime_root=RUNTIME_ROOT,
     coach_settings=app_config,
 )
+
+
+def _referencia_do_radio() -> Dict[str, Any]:
+    """A referencia escolhida do coach, com o tempo do store v2 (uma fonte para cada numero)."""
+    model = getattr(live_driving_coach, "_model", None) if live_driving_coach is not None else None
+    if model is None:
+        return {}
+    from core.coleta.estado import tempos_do_store
+
+    lap_id = getattr(model, "reference_lap_id", None)
+    tempo = tempos_do_store(app_config.coach_root()).get(str(lap_id)) if lap_id else None
+    return {"tipo": getattr(model, "reference_kind", None), "volta": lap_id,
+            "tempoS": tempo if tempo is not None else getattr(model, "reference_lap_seconds", None)}
+
+
+def _sessao_do_radio() -> Optional[str]:
+    if recording_runtime is None:
+        return None
+    status = recording_runtime.status().to_api()
+    return status.get("sessionId") if status.get("recording") else None
+
+
+def _ligar_o_radio() -> None:
+    """Pedido 31: o radio ouve as frases do coach e os quadros, depois do coach."""
+    global radio_do_engenheiro
+    try:
+        from core.radio.servico import RadioDoEngenheiro
+
+        radio_do_engenheiro = RadioDoEngenheiro(
+            pasta_de_dados=RUNTIME_ROOT,
+            repositorio=app_config.coach_root,
+            posicao=lambda: live_driving_coach.posicao_oficial() if live_driving_coach is not None else None,
+            ultima_volta=lambda: getattr(live_driving_coach, "ultima_volta", None),
+            referencia=_referencia_do_radio,
+            sessao=_sessao_do_radio,
+        )
+        event_bus.subscribe(PROCESSED_FRAME, radio_do_engenheiro.on_frame)
+        event_bus.subscribe(COACHING_EVENT, radio_do_engenheiro.on_coaching_event)
+        logger.info("Radio do engenheiro ligado")
+    except Exception as error:
+        logger.warning("Radio do engenheiro indisponivel: %s", error)
 
 
 async def remember_coaching_event(event: Dict[str, Any]):
@@ -918,6 +961,7 @@ async def lifespan(app: FastAPI):
         logger.warning("Live driving coach unavailable: %s", error)
 
     event_bus.subscribe(COACHING_EVENT, remember_coaching_event)
+    _ligar_o_radio()
     event_bus.subscribe(PROCESSED_FRAME, coleta_monitor.on_frame)
     coleta_task = asyncio.create_task(_coleta_loop())
     asyncio.get_running_loop().run_in_executor(None, coleta_conferencia.concluir_pendentes)
@@ -945,6 +989,9 @@ async def lifespan(app: FastAPI):
         logger.warning("Coleta check could not be finalized: %s", error)
     if live_driving_coach is not None:
         event_bus.unsubscribe(PROCESSED_FRAME, live_driving_coach.on_frame)
+    if radio_do_engenheiro is not None:
+        event_bus.unsubscribe(PROCESSED_FRAME, radio_do_engenheiro.on_frame)
+        event_bus.unsubscribe(COACHING_EVENT, radio_do_engenheiro.on_coaching_event)
     event_bus.unsubscribe(COACHING_EVENT, remember_coaching_event)
 
 
@@ -974,6 +1021,7 @@ from routers import (  # noqa: E402
     legacy,
     leitura,
     live,
+    radio,
     recording as recording_router,
     track,
     validation,
@@ -991,6 +1039,7 @@ app.include_router(external_references.router)
 app.include_router(debug.router)
 app.include_router(coleta.router)
 app.include_router(leitura.router)
+app.include_router(radio.router)
 app.include_router(legacy.router)
 
 # Re-exported so existing tests that call `backend_main.<name>(...)` directly
