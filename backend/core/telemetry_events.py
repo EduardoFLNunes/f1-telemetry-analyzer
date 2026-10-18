@@ -3,6 +3,7 @@ Internal Event Bus for F1 Telemetry Analyzer
 Decouples telemetry ingestion from processing and storage.
 """
 import asyncio
+import inspect
 import threading
 from typing import Dict, Any, Callable, List
 import logging
@@ -52,8 +53,14 @@ class TelemetryEventBus:
 
     async def emit(self, event_type: str, data: Any):
         if event_type in self.subscribers:
-            tasks = [cb(data) for cb in self.subscribers[event_type]]
-            await asyncio.gather(*tasks)
+            # Pedido 31: os assinantes podem ser sincronos (o coach, o radio, a Coleta) ou
+            # assincronos (o WebSocket). Antes, o `gather` recebia o `None` dos sincronos e
+            # falhava: os assincronos depois deles na lista nao rodavam, e cada quadro
+            # deixava um erro no log (950 MB no app instalado). So o que e aguardavel e esperado.
+            results = [cb(data) for cb in list(self.subscribers[event_type])]
+            awaitables = [r for r in results if inspect.isawaitable(r)]
+            if awaitables:
+                await asyncio.gather(*awaitables)
 
     def schedule(self, event_type: str, data: Any, loop: asyncio.AbstractEventLoop):
         with self._schedule_lock:

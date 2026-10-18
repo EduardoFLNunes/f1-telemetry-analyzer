@@ -237,3 +237,25 @@ def test_rotas(tmp_path, monkeypatch):
     with pytest.raises(HTTPException) as fora:
         asyncio.run(rota.get_mensagens(0, None))
     assert fora.value.status_code == 503
+
+
+# ------------------------------------------------- o barramento (achado) ---
+
+def test_emit_com_assinantes_sincronos_e_assincronos():
+    """Pedido 31: o `emit` esperava o `None` dos assinantes sincronos e falhava; os assincronos depois deles nao rodavam."""
+    import asyncio
+
+    from core.telemetry_events import TelemetryEventBus
+
+    bus = TelemetryEventBus()
+    vistos = []
+    bus.subscribe("quadro", lambda q: vistos.append(("sincrono", q)))
+
+    async def assincrono(q):
+        vistos.append(("assincrono", q))
+
+    bus.subscribe("quadro", assincrono)
+    bus.subscribe("quadro", lambda q: vistos.append(("outro sincrono", q)))
+    asyncio.run(bus.emit("quadro", 1))
+    # Os tres rodam (o assincrono, quando e esperado, depois dos sincronos).
+    assert sorted(vistos) == [("assincrono", 1), ("outro sincrono", 1), ("sincrono", 1)]
