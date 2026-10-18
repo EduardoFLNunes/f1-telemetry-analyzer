@@ -1,0 +1,54 @@
+# Pedido 31: testes (18/10/2026 09:59, branch etapa/radio-realidade-aumentada, 9b5dda36)
+
+## backend: ..\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider tests
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+768 passed, 18 warnings in 586.16s (0:09:46)
+exit 0
+
+## frontend: npx tsc --noEmit -p .
+(sem erros)
+
+## frontend: npx vitest run
+
+ RUN  v2.1.9 C:/Users/Dokas/Desktop/f1-telemetry-analyzer/frontend
+
+ ✓ src/aoVivo/voltaAoVivo.test.ts (2 tests) 3ms
+ ✓ src/navegacao/rotas.test.ts (4 tests) 4ms
+ ✓ src/components/sessoes/regrasDoCoachNoApp.test.ts (7 tests) 5ms
+ ✓ src/components/sessoes/dadosDoHero.test.ts (4 tests) 5ms
+ ✓ src/volta/medidas.test.ts (8 tests) 7ms
+ ✓ src/utils/sectorTimes.test.ts (13 tests) 10ms
+ ✓ src/components/map/CameraController.test.ts (8 tests) 10ms
+ ✓ src/utils/radio.test.ts (5 tests) 27ms
+ ✓ src/utils/coleta.test.ts (7 tests) 27ms
+ ✓ src/components/map/BroadcastOverlay.test.ts (23 tests) 19ms
+ ✓ src/components/map/OverlayRenderer.test.ts (26 tests) 20ms
+ ✓ src/components/map/TrackElevationRibbon.test.ts (25 tests) 16ms
+ ✓ src/store/offlineReplay.test.ts (32 tests) 24ms
+ ✓ src/components/CoachingFeed.test.ts (12 tests) 7ms
+ ✓ src/theme/contraste.test.ts (2 tests) 3ms
+ ✓ src/volta/dados.test.ts (4 tests) 3ms
+
+ Test Files  16 passed (16)
+      Tests  182 passed (182)
+   Start at  10:00:14
+   Duration  3.28s (transform 1.89s, setup 0ms, collect 5.15s, tests 189ms, environment 4ms, prepare 12.14s)
+
+
+## frontend: npm run build
+dist/assets/index-M9L3RAVb.css                      60.72 kB │ gzip:  12.88 kB
+dist/assets/index-I4CmPdgn.js                      482.81 kB │ gzip: 151.15 kB
+✓ built in 3.78s
+
+## app Lua: python tools/csp_app/conferir_lua.py (léxico do pygments, blocos e API contra o SDK do CSP 0.2.11)
+arquivo: tools\csp_app\radio_engenheiro\radio_engenheiro.lua
+tokens: 2101; erros de lexico: 0 []
+blocos: ok
+API usada (12): JSON.parse, ac.log, os.preciseClock, rgbm, setInterval, ui.MediaPlayer, ui.drawRectFilled, ui.dwriteDrawText, ui.windowSize, vec2, web.get, web.timeouts
+no SDK do CSP: todas existem
+
+## scripts PowerShell: o analisador do próprio PowerShell (sem executar)
+tools\csp_app\instalar.ps1 : 0 erros
+tools\csp_app\remover.ps1 : 0 erros
+backend\core\radio\voz.ps1 : 0 erros

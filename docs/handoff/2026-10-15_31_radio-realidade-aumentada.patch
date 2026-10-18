@@ -1,0 +1,2757 @@
+diff --git a/backend/core/coleta/estado.py b/backend/core/coleta/estado.py
+index 4f10f388..bdcf1817 100644
+--- a/backend/core/coleta/estado.py
++++ b/backend/core/coleta/estado.py
+@@ -2,6 +2,7 @@
+ 
+ from __future__ import annotations
+ 
++import json
+ import shutil
+ from pathlib import Path
+ from typing import Any, Dict, Optional
+@@ -12,6 +13,36 @@ from .configuracao import CHOICE_LABELS, COACH_OFF, AppConfig
+ from .requisitos import CARRO_ESPERADO, ESPACO_AMARELO_GB, ESPACO_VERMELHO_GB, PISTA_ESPERADA
+ 
+ GB = 1024 ** 3
++STORE_V2_META = Path("data") / "ml" / "laps_grid_v2_meta.json"
++_tempos_do_store: Dict[str, Any] = {"chave": None, "tempos": {}}
++
++
++def tempos_do_store(raiz: Optional[Path]) -> Dict[str, float]:
++    """`lap_time_s` de cada volta do store v2 (pedido 31, A.3: uma fonte para cada numero).
++
++    O hero e a tela Volta mostram o mesmo tempo para a mesma volta: o do store v2
++    e do relatorio de evolucao, e nao o do modelo do coach, que mede a volta a
++    sua maneira (1 ms de diferenca). Guardado pela data do arquivo.
++    """
++    if raiz is None:
++        return {}
++    arquivo = Path(raiz) / STORE_V2_META
++    try:
++        info = arquivo.stat()
++    except OSError:
++        return {}
++    chave = (str(arquivo), info.st_mtime, info.st_size)
++    if _tempos_do_store["chave"] != chave:
++        try:
++            meta = json.loads(arquivo.read_text(encoding="utf-8"))
++        except (OSError, json.JSONDecodeError):
++            return {}
++        _tempos_do_store["tempos"] = {
++            str(v.get("lap_id")): float(v["lap_time_s"]) for v in meta.get("laps") or []
++            if v.get("lap_id") and v.get("lap_time_s") is not None
++        }
++        _tempos_do_store["chave"] = chave
++    return _tempos_do_store["tempos"]
+ 
+ 
+ def espaco_em_disco(pasta: Path) -> Dict[str, Any]:
+@@ -90,6 +121,7 @@ def estado_do_coach(service: Any, config: AppConfig, pista: str = PISTA_ESPERADA
+     if modelo is not None:
+         for kind, ref in (modelo.references or {}).items():
+             referencias[kind] = {"volta": ref.get("lap_id"), "tempoS": ref.get("lap_seconds"),
++                                 "tempoStoreS": tempos_do_store(raiz).get(str(ref.get("lap_id"))),
+                                  "carro": ref.get("carro")}
+     return {
+         "ativo": motivo is None,
+diff --git a/backend/core/live/driving_coach.py b/backend/core/live/driving_coach.py
+index 5b3c692f..3ac54bfc 100644
+--- a/backend/core/live/driving_coach.py
++++ b/backend/core/live/driving_coach.py
+@@ -184,6 +184,12 @@ class LiveDrivingCoach:
+         self._focus: Optional[Tuple[int, ...]] = None
+         self._focus_source: Optional[str] = None
+         self._focus_key: Optional[tuple] = None
++        # Pedido 31 (o radio): o que o coach ja sabe, guardado para quem so le.
++        # Nao muda nenhuma regra: o horario da linha em que a volta comecou e o
++        # periodo da ultima volta completa (de s = 0 a s = 0, como o store v2).
++        self._lap_line_clock: Optional[float] = None
++        self._volta_do_jogo: Optional[float] = None
++        self.ultima_volta: Optional[Dict[str, Any]] = None
+ 
+     # ── the hot path ─────────────────────────────────────────────────────
+ 
+@@ -222,6 +228,7 @@ class LiveDrivingCoach:
+                 return
+ 
+         lap_number = _number(frame.get("lap_number") or frame.get("lap"))
++        self._volta_do_jogo = lap_number  # pedido 31: so para quem le a posicao
+         index = min(int(progress * model.microsectors), model.microsectors - 1)
+         if not _legacy(model):
+             if ai_controlled(frame) is True:
+@@ -265,6 +272,11 @@ class LiveDrivingCoach:
+                     crossing = self._last_clock + (clock - self._last_clock) * t
+                     self._close_sector(frame, model, self._sector_index, self._sector_entry_clock, crossing)
+                     self._end_lap(frame, model)
++                    if self._lap_started_at_line and self._lap_line_clock is not None:
++                        # O s = 0 fica alguns metros antes da linha do jogo: no quadro da passagem,
++                        # o jogo ainda conta a volta que acabou.
++                        self.ultima_volta = {"volta": lap_number, "tempoS": crossing - self._lap_line_clock,
++                                             "teveIA": self._lap_had_ai, "momento": time.time()}
+                     self._start_lap(lap_number, 0, crossing, 0.0, at_line=True)
+                     self._last_progress, self._last_clock = progress, clock
+                     if index == 0:
+@@ -339,6 +351,7 @@ class LiveDrivingCoach:
+         self._lap_onsets = [onset for onset in self._lap_onsets[-1:] if progress < LINE_WINDOW]
+         self._lap_diffs = {}
+         self._lap_started_at_line = at_line
++        self._lap_line_clock = clock if at_line else None
+         self._lap_had_ai = False
+         self._spoken_sectors = set()
+ 
+@@ -406,6 +419,22 @@ class LiveDrivingCoach:
+             "timestamp": time.time(),
+         })
+ 
++    def posicao_oficial(self) -> Optional[Dict[str, Any]]:
++        """Pedido 31: onde o carro esta, na projecao da geometria oficial que o coach ja faz.
++
++        So leitura: `s` em metros, a lateral (positiva para a esquerda) e a volta
++        do jogo. None sem projecao (modelo antigo, sem geometria ou antes do
++        primeiro quadro).
++        """
++        if self._projector is None or self._last_progress is None:
++            return None
++        length = float(self._projector.geometry.length)
++        tempo = (self._last_clock - self._lap_line_clock
++                 if self._lap_line_clock is not None and self._last_clock is not None else None)
++        return {"s": float(self._last_progress) * length, "comprimento": length,
++                "lateral": self._last_lateral, "volta": self._volta_do_jogo,
++                "tempoDaVolta": tempo, "desdeALinha": self._lap_line_clock is not None}
++
+     def _position_m(self, frame: Dict[str, Any], progress: float) -> Optional[float]:
+         """Where the car is along the lap, in metres, on the model's ruler."""
+         if self._projector is not None:
+diff --git a/backend/core/live/volta_ao_vivo.py b/backend/core/live/volta_ao_vivo.py
+new file mode 100644
+index 00000000..7584ba2c
+--- /dev/null
++++ b/backend/core/live/volta_ao_vivo.py
+@@ -0,0 +1,91 @@
++"""A volta em andamento na grade da geometria oficial (pedido 31, Parte D): para a "Volta com fantasma" ao vivo.
++
++Nao calcula posicao: le a projecao que o coach ja faz (`posicao_oficial`: `s`,
++lateral e o relogio da volta desde a linha) e guarda, no ponto da grade de
++`s`, a velocidade e os pedais do mesmo quadro. A tela Ao vivo desenha isso com
++o mesmo componente da tela Volta.
++"""
++from __future__ import annotations
++
++import math
++import threading
++from typing import Any, Callable, Dict, List, Optional
++
++VOLTA_MINIMA_PARA_NOVA = 0.5  # `s` voltou mais de metade da pista: a volta recomecou na linha
++
++
++def _numero(valor: Any) -> Optional[float]:
++    if valor is None or isinstance(valor, bool):
++        return None
++    try:
++        n = float(valor)
++    except (TypeError, ValueError):
++        return None
++    return n if math.isfinite(n) else None
++
++
++class VoltaAoVivo:
++    def __init__(self, posicao: Callable[[], Optional[Dict[str, Any]]], pontos: Callable[[], Optional[int]]):
++        self._posicao = posicao
++        self._pontos = pontos
++        self._lock = threading.Lock()
++        self._n = 0
++        self._comprimento: Optional[float] = None
++        self._s_anterior: Optional[float] = None
++        self._volta: Optional[float] = None
++        self._versao = 0
++        self._zerar()
++
++    def _zerar(self) -> None:
++        self._linhas: Dict[str, List[Optional[float]]] = {
++            nome: [None] * self._n for nome in ("elapsed", "velocidade", "acelerador", "freio", "lateral")
++        }
++        self._indice: Optional[int] = None
++        self._desde_a_linha = False
++
++    def on_frame(self, frame: Any) -> None:
++        if not isinstance(frame, dict):
++            return
++        pos = self._posicao()
++        if not pos or pos.get("s") is None:
++            return
++        with self._lock:
++            n = int(self._pontos() or 0)
++            if n <= 0:
++                return
++            L = float(pos["comprimento"])
++            if n != self._n or L != self._comprimento:
++                self._n, self._comprimento = n, L
++                self._zerar()
++            s = float(pos["s"])
++            if self._s_anterior is not None and self._s_anterior - s > VOLTA_MINIMA_PARA_NOVA * L:
++                self._zerar()
++                self._versao += 1
++            self._s_anterior = s
++            self._volta = pos.get("volta")
++            self._desde_a_linha = bool(pos.get("desdeALinha"))
++            k = min(int(s / (L / n)), n - 1)
++            self._indice = k
++            linhas = self._linhas
++            linhas["elapsed"][k] = _numero(pos.get("tempoDaVolta"))
++            linhas["lateral"][k] = _numero(pos.get("lateral"))
++            linhas["velocidade"][k] = _numero(frame.get("speedKmh") if "speedKmh" in frame else frame.get("speed_kmh"))
++            linhas["acelerador"][k] = _numero(frame.get("throttle") if "throttle" in frame else frame.get("gas"))
++            linhas["freio"][k] = _numero(frame.get("brake"))
++
++    def estado(self) -> Dict[str, Any]:
++        with self._lock:
++            if not self._n or self._indice is None:
++                return {"disponivel": False, "motivo": "sem a projeção do coach: o jogo não está mandando quadros ou o coach não tem a geometria oficial"}
++            return {
++                "disponivel": True,
++                "versao": self._versao,
++                "volta": self._volta,
++                "desdeALinha": self._desde_a_linha,
++                "comprimentoM": self._comprimento,
++                "pontosDaGrade": self._n,
++                "passoM": self._comprimento / self._n,
++                "indice": self._indice,
++                "s": self._s_anterior,
++                "linhas": {k: list(v) for k, v in self._linhas.items()},
++            }
+diff --git a/backend/core/radio/__init__.py b/backend/core/radio/__init__.py
+new file mode 100644
+index 00000000..477028f3
+--- /dev/null
++++ b/backend/core/radio/__init__.py
+@@ -0,0 +1 @@
++"""O radio do engenheiro (pedido 31): a mensagem montada uma vez, a janela de entrega, a voz e o registro."""
+diff --git a/backend/core/radio/audio.py b/backend/core/radio/audio.py
+new file mode 100644
+index 00000000..404912be
+--- /dev/null
++++ b/backend/core/radio/audio.py
+@@ -0,0 +1,132 @@
++"""O audio de cada mensagem (pedido 31, Parte B.3): a vinheta e a voz pt-BR do Windows, num WAV so.
++
++* **A voz:** `voz.ps1`, pelo PowerShell do Windows, sem instalar nada. As vozes
++  pt-BR deste Windows: Microsoft Daniel e Microsoft Maria (OneCore) e Microsoft
++  Maria Desktop (SAPI 5). A escolhida e a `OneCore:Daniel`, a 1,25x (ver
++  `docs/realidade_aumentada.md`).
++* **A vinheta:** gerada aqui, por conta: um estalo curto de ruido e dois bipes
++  descendo, como o clique de um radio. Nenhum som copiado de transmissao.
++* **O arquivo:** `<pasta de dados>/data/radio/audio/<id>.wav`, mono, 16 bits,
++  na taxa da voz. O silencio das pontas da voz e cortado.
++"""
++from __future__ import annotations
++
++import array
++import math
++import os
++import random
++import subprocess
++import sys
++import tempfile
++import wave
++from pathlib import Path
++from typing import Optional, Tuple
++
++VOZ_PADRAO = "OneCore:Daniel"
++VELOCIDADE_PADRAO = 1.25
++SCRIPT_DA_VOZ = Path(__file__).with_name("voz.ps1")
++LIMIAR_DE_SILENCIO = 500
++TEMPO_LIMITE_S = 30
++
++
++class VozIndisponivel(RuntimeError):
++    pass
++
++
++def vinheta(taxa: int) -> array.array:
++    """O clique do radio: 25 ms de ruido, 40 ms de silencio e dois bipes curtos (1.400 e 1.050 Hz)."""
++    rnd = random.Random(31)
++    amostras = array.array("h")
++
++    def bipe(freq: float, dur_s: float, amp: float) -> None:
++        n = int(taxa * dur_s)
++        for k in range(n):
++            env = min(1.0, k / (0.004 * taxa), (n - k) / (0.008 * taxa))
++            amostras.append(int(amp * env * math.sin(2 * math.pi * freq * k / taxa)))
++
++    n_ruido = int(taxa * 0.025)
++    for k in range(n_ruido):
++        env = 1.0 - k / n_ruido
++        amostras.append(int(9000 * env * (rnd.random() * 2 - 1)))
++    amostras.extend([0] * int(taxa * 0.04))
++    bipe(1400.0, 0.06, 7000)
++    amostras.extend([0] * int(taxa * 0.02))
++    bipe(1050.0, 0.07, 7000)
++    amostras.extend([0] * int(taxa * 0.12))
++    return amostras
++
++
++def _ler_wav(caminho: Path) -> Tuple[int, array.array]:
++    with wave.open(str(caminho), "rb") as w:
++        if w.getsampwidth() != 2:
++            raise VozIndisponivel(f"a voz gerou {w.getsampwidth() * 8} bits; esperado 16")
++        taxa, canais, n = w.getframerate(), w.getnchannels(), w.getnframes()
++        dados = array.array("h", w.readframes(n))
++    if canais > 1:
++        dados = array.array("h", (dados[k] for k in range(0, len(dados), canais)))
++    return taxa, dados
++
++
++def _cortar_silencio(dados: array.array, taxa: int) -> array.array:
++    sons = [k for k, v in enumerate(dados) if abs(v) > LIMIAR_DE_SILENCIO]
++    if not sons:
++        return dados
++    folga = int(taxa * 0.05)
++    return dados[max(0, sons[0] - folga): min(len(dados), sons[-1] + folga)]
++
++
++def falar(texto: str, destino: Path, voz: str = VOZ_PADRAO, velocidade: float = VELOCIDADE_PADRAO) -> float:
++    """Grava `destino` (WAV) com a vinheta e a voz; devolve a duracao em segundos."""
++    if sys.platform != "win32":
++        raise VozIndisponivel("a voz do radio usa as vozes do Windows")
++    destino = Path(destino)
++    destino.parent.mkdir(parents=True, exist_ok=True)
++    with tempfile.TemporaryDirectory(prefix="radio_") as pasta:
++        txt = Path(pasta) / "fala.txt"
++        cru = Path(pasta) / "voz.wav"
++        txt.write_text(texto, encoding="utf-8")
++        comando = ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File",
++                   str(SCRIPT_DA_VOZ), "-Texto", str(txt), "-Saida", str(cru), "-Voz", voz,
++                   "-Velocidade", str(velocidade)]
++        flags = 0x08000000 if sys.platform == "win32" else 0  # CREATE_NO_WINDOW
++        try:
++            r = subprocess.run(comando, capture_output=True, text=True, timeout=TEMPO_LIMITE_S, creationflags=flags)
++        except (OSError, subprocess.TimeoutExpired) as erro:
++            raise VozIndisponivel(f"a voz do Windows não respondeu: {erro}") from erro
++        if r.returncode != 0 or not cru.exists():
++            raise VozIndisponivel((r.stderr or r.stdout or f"código {r.returncode}").strip()[:300])
++        taxa, fala = _ler_wav(cru)
++    fala = _cortar_silencio(fala, taxa)
++    tudo = vinheta(taxa)
++    tudo.extend(fala)
++    tudo.extend([0] * int(taxa * 0.15))
++    temporario = destino.with_suffix(".tmp")
++    with wave.open(str(temporario), "wb") as w:
++        w.setnchannels(1)
++        w.setsampwidth(2)
++        w.setframerate(taxa)
++        w.writeframes(tudo.tobytes())
++    os.replace(temporario, destino)
++    return len(tudo) / taxa
++
++
++def vozes_disponiveis() -> list:
++    """As vozes que o `voz.ps1` acha (para a tela Sistema e para o teste)."""
++    if sys.platform != "win32":
++        return []
++    flags = 0x08000000
++    try:
++        r = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File",
++                            str(SCRIPT_DA_VOZ), "-Voz", "listar"], capture_output=True, text=True,
++                           timeout=TEMPO_LIMITE_S, creationflags=flags)
++    except (OSError, subprocess.TimeoutExpired):
++        return []
++    return [linha.strip() for linha in (r.stdout or "").splitlines() if linha.strip()]
++
++
++def duracao(caminho: Path) -> Optional[float]:
++    try:
++        with wave.open(str(caminho), "rb") as w:
++            return w.getnframes() / w.getframerate()
++    except (OSError, wave.Error):
++        return None
+diff --git a/backend/core/radio/janelas.py b/backend/core/radio/janelas.py
+new file mode 100644
+index 00000000..eef1660f
+--- /dev/null
++++ b/backend/core/radio/janelas.py
+@@ -0,0 +1,100 @@
++"""As janelas de radio (pedido 31, Parte B.2): onde a mensagem pode ser entregue.
++
++Uma janela e um trecho da geometria oficial fora das 14 curvas, como um
++engenheiro que nao fala na freada (ADR 0020, decisao 4):
++
++* cada curva e o trecho em que a pista curva (`ml.track.corners.detect_corners`),
++  com uma margem antes dela para a freada e uma depois para a saida;
++* o que sobra, com pelo menos `JANELA_MINIMA_M`, e janela.
++
++A posicao do carro e a projecao na geometria oficial que o coach ja faz
++(`LiveDrivingCoach.posicao_oficial`). Nenhum calculo novo de posicao.
++"""
++from __future__ import annotations
++
++from pathlib import Path
++from typing import List, Optional, Sequence, Tuple
++
++from .texto import LADO, CurvaDaPista
++
++MARGEM_ANTES_DA_CURVA_M = 120.0   # a freada
++MARGEM_DEPOIS_DA_CURVA_M = 30.0   # a saida, ainda acelerando com o volante virado
++JANELA_MINIMA_M = 80.0
++CACHE_DA_PISTA = "vhe_interlagos_gp_kn5_surface_interval_geometry.json"
++
++Janela = Tuple[float, float]
++
++
++def curvas_da_geometria(track) -> List[CurvaDaPista]:
++    """As 14 curvas e os trechos delas, pelas mesmas funcoes do relatorio de evolucao."""
++    from ml.comparison.evolution import corner_segments
++    from ml.track.corners import detect_corners
++
++    corners = detect_corners(track)
++    out = []
++    for seg in corner_segments(track, corners):
++        rotulo = seg.corner.label  # C01-esq
++        out.append(CurvaDaPista(
++            codigo=rotulo[:3], lado=LADO.get(rotulo[4:], rotulo[4:]),
++            inicio_m=float(seg.corner.start_s), fim_m=float(seg.corner.end_s),
++            trecho_inicio_m=float(seg.start_s), trecho_fim_m=float(seg.end_s),
++        ))
++    return out
++
++
++def carregar_curvas(repositorio: Optional[Path]) -> Tuple[List[CurvaDaPista], Optional[float]]:
++    """As curvas da geometria oficial do repositorio configurado, e o comprimento da volta."""
++    if repositorio is None:
++        return [], None
++    from ml.track.geometry import load_geometry
++
++    cache = Path(repositorio) / "data" / "cache" / "tracks" / CACHE_DA_PISTA
++    if not cache.exists():
++        return [], None
++    track = load_geometry(cache)
++    return curvas_da_geometria(track), float(track.length)
++
++
++def janelas_de_radio(curvas: Sequence[CurvaDaPista], comprimento: float,
++                     antes: float = MARGEM_ANTES_DA_CURVA_M, depois: float = MARGEM_DEPOIS_DA_CURVA_M,
++                     minima: float = JANELA_MINIMA_M) -> List[Janela]:
++    """Os trechos fora das curvas (com as margens), de pelo menos `minima` metros, em ordem de `s`."""
++    if not curvas or not comprimento:
++        return []
++    L = float(comprimento)
++    # Marca, num passo de 1 m, o que esta ocupado por curva + margens (a pista e fechada).
++    ocupado = bytearray(int(L) + 1)
++    for c in curvas:
++        a = (c.inicio_m - antes) % L
++        b = (c.fim_m + depois) % L
++        n = int(round(((b - a) % L)))
++        for k in range(n + 1):
++            ocupado[int((a + k) % L)] = 1
++    janelas: List[Janela] = []
++    k = 0
++    n = len(ocupado)
++    while k < n:
++        if ocupado[k]:
++            k += 1
++            continue
++        inicio = k
++        while k < n and not ocupado[k]:
++            k += 1
++        janelas.append((float(inicio), float(min(k, L))))
++    # Junta a que termina na linha com a que comeca nela (a reta dos boxes cruza s = 0).
++    if len(janelas) > 1 and janelas[0][0] == 0.0 and janelas[-1][1] >= L - 1.0:
++        primeira = janelas.pop(0)
++        ultima = janelas.pop()
++        janelas.append((ultima[0], primeira[1]))
++    def tamanho(j: Janela) -> float:
++        return (j[1] - j[0]) % L if j[1] != j[0] else L
++    return [j for j in janelas if tamanho(j) >= minima]
++
++
++def dentro(janelas: Sequence[Janela], s: float, comprimento: float) -> Optional[Janela]:
++    """A janela em que `s` esta, ou None."""
++    x = s % comprimento
++    for a, b in janelas:
++        if (a <= b and a <= x < b) or (a > b and (x >= a or x < b)):
++            return (a, b)
++    return None
+diff --git a/backend/core/radio/servico.py b/backend/core/radio/servico.py
+new file mode 100644
+index 00000000..a1c3d17e
+--- /dev/null
++++ b/backend/core/radio/servico.py
+@@ -0,0 +1,249 @@
++"""O radio do engenheiro no backend (pedido 31, Parte B): da frase do coach a mensagem entregue.
++
++1. **Nasce:** cada frase de diferenca do coach (`coaching_event`) vira uma
++   mensagem (`texto.mensagem_de_diferenca`) e o audio comeca a ser gerado.
++   O resumo nasce na linha de chegada, com o periodo da volta que o coach mede.
++2. **Espera:** so e entregue com o carro numa janela de radio (`janelas`), com a
++   posicao que o coach ja projeta. Uma por vez: a seguinte espera o audio da
++   anterior acabar. Se a volta acaba antes, a mensagem vai junto com o resumo.
++3. **E entregue:** ganha um id, entra na lista que o app do jogo e a tela Ao vivo
++   leem (`desde(id)`) e e registrada em `<pasta de dados>/data/radio/<sessao>.jsonl`,
++   fora da pasta de gravacoes.
++
++O radio nao decide nada: quais frases saem, o limite de 3 por volta, o foco e o
++limiar continuam no coach. Ele so escreve e entrega.
++"""
++from __future__ import annotations
++
++import json
++import logging
++import threading
++import time
++from collections import deque
++from concurrent.futures import ThreadPoolExecutor
++from datetime import datetime
++from pathlib import Path
++from typing import Any, Callable, Deque, Dict, List, Optional
++
++from . import audio as audio_do_radio
++from .janelas import Janela, carregar_curvas, dentro, janelas_de_radio
++from .texto import CurvaDaPista, mensagem_de_diferenca, mensagem_de_resumo, mensagem_de_teste
++
++logger = logging.getLogger(__name__)
++
++ESPERA_DO_RESUMO_S = 0.6       # as ultimas frases da volta chegam pelo barramento logo depois da linha
++FOLGA_ENTRE_MENSAGENS_S = 0.6
++ESPERA_DO_AUDIO_S = 4.0        # sem audio pronto ate aqui, a mensagem sai sem voz
++GUARDADAS = 200
++
++
++class RadioDoEngenheiro:
++    def __init__(
++        self,
++        pasta_de_dados: Path,
++        repositorio: Callable[[], Optional[Path]],
++        posicao: Callable[[], Optional[Dict[str, Any]]],
++        ultima_volta: Callable[[], Optional[Dict[str, Any]]],
++        referencia: Callable[[], Dict[str, Any]],
++        sessao: Callable[[], Optional[str]],
++        falar: Callable[[str, Path], float] = audio_do_radio.falar,
++        relogio: Callable[[], float] = time.time,
++    ):
++        self.pasta = Path(pasta_de_dados) / "data" / "radio"
++        self.pasta_audio = self.pasta / "audio"
++        self._repositorio = repositorio
++        self._posicao = posicao
++        self._ultima_volta = ultima_volta
++        self._referencia = referencia
++        self._sessao = sessao
++        self._falar = falar
++        self._relogio = relogio
++        self._lock = threading.RLock()
++        self._audio = ThreadPoolExecutor(max_workers=1, thread_name_prefix="radio-voz")
++        self.instancia = datetime.now().strftime("%Y%m%d%H%M%S")
++        self._proximo_id = 1
++        self._pendentes: Deque[Dict[str, Any]] = deque()
++        self._entregues: Deque[Dict[str, Any]] = deque(maxlen=GUARDADAS)
++        self._ocupado_ate = 0.0
++        self._volta_vista: Optional[float] = None
++        self._resumo_desde: Optional[float] = None
++        self._resumo: Optional[Dict[str, Any]] = None
++        self._curvas: Optional[List[CurvaDaPista]] = None
++        self._comprimento: Optional[float] = None
++        self._janelas: List[Janela] = []
++        self._chave_da_pista: Optional[str] = None
++        self.erro_da_voz: Optional[str] = None
++
++    # ------------------------------------------------------------- pista ---
++
++    def _pista(self) -> bool:
++        repo = self._repositorio()
++        chave = str(repo) if repo else None
++        if chave != self._chave_da_pista:
++            self._chave_da_pista = chave
++            try:
++                self._curvas, self._comprimento = carregar_curvas(repo)
++            except Exception as erro:  # sem a geometria oficial o radio fica calado
++                logger.warning("Radio sem a geometria oficial: %s", erro)
++                self._curvas, self._comprimento = [], None
++            self._janelas = janelas_de_radio(self._curvas or [], self._comprimento or 0.0)
++        return bool(self._curvas and self._comprimento)
++
++    def janelas(self) -> List[Janela]:
++        with self._lock:
++            self._pista()
++            return list(self._janelas)
++
++    # ------------------------------------------------------------ nascer ---
++
++    def _nova(self, mensagem: Dict[str, Any]) -> Dict[str, Any]:
++        mensagem = dict(mensagem)
++        mensagem["criadaEm"] = self._relogio()
++        mensagem["audio"] = None
++        mensagem["duracaoS"] = None
++        mensagem["_futuro"] = self._audio.submit(self._gerar_audio, mensagem)
++        return mensagem
++
++    def _gerar_audio(self, mensagem: Dict[str, Any]) -> Optional[Path]:
++        arquivo = self.pasta_audio / f"{self.instancia}_{id(mensagem)}.wav"
++        try:
++            self.pasta_audio.mkdir(parents=True, exist_ok=True)
++            dur = self._falar(mensagem["fala"], arquivo)
++        except Exception as erro:
++            self.erro_da_voz = str(erro)
++            logger.warning("Radio sem voz: %s", erro)
++            return None
++        self.erro_da_voz = None
++        mensagem["duracaoS"] = round(float(dur), 2)
++        return arquivo
++
++    def on_coaching_event(self, evento: Dict[str, Any]) -> None:
++        """Uma frase do coach. So as de diferenca viram radio (o foco fica na tela)."""
++        if not isinstance(evento, dict) or evento.get("type") != "coaching_event":
++            return
++        with self._lock:
++            if not self._pista():
++                return
++            mensagem = mensagem_de_diferenca(evento, self._curvas or [], float(self._comprimento or 0.0))
++            if mensagem is None:
++                return
++            self._pendentes.append(self._nova(mensagem))
++
++    # ---------------------------------------------------------- entregar ---
++
++    def on_frame(self, _frame: Any = None) -> None:
++        """A cada quadro, sem nunca esperar: a linha (o resumo) e a janela (a proxima mensagem)."""
++        agora = self._relogio()
++        with self._lock:
++            volta = self._ultima_volta()
++            if volta and volta.get("momento") != self._volta_vista:
++                self._volta_vista = volta.get("momento")
++                self._resumo_desde = agora
++                self._resumo = volta
++            if self._resumo_desde is not None and agora - self._resumo_desde >= ESPERA_DO_RESUMO_S:
++                self._resumo_na_linha()
++            if not self._pendentes or agora < self._ocupado_ate:
++                return
++            proxima = self._pendentes[0]
++            if not self._audio_pronto(proxima, agora):
++                return
++            pos = self._posicao() or {}
++            if not proxima.get("naLinha"):
++                if not pos or not self._pista():
++                    return
++                if dentro(self._janelas, float(pos["s"]), float(self._comprimento or pos["comprimento"])) is None:
++                    return
++            self._entregar(self._pendentes.popleft(), agora, pos)
++
++    def _audio_pronto(self, mensagem: Dict[str, Any], agora: float) -> bool:
++        futuro = mensagem.get("_futuro")
++        return futuro is None or futuro.done() or agora - mensagem["criadaEm"] >= ESPERA_DO_AUDIO_S
++
++    def _resumo_na_linha(self) -> None:
++        """A volta acabou: o que ficou dela sai na linha, sem esperar janela, e depois o resumo."""
++        volta, self._resumo_desde = self._resumo, None
++        for m in self._pendentes:
++            m["naLinha"] = True
++        if not volta or volta.get("teveIA"):
++            return
++        ref = self._referencia() or {}
++        resumo = self._nova(mensagem_de_resumo(volta.get("volta"), float(volta["tempoS"]), ref.get("tempoS"),
++                                               ref.get("tipo")))
++        resumo["naLinha"] = True
++        self._pendentes.append(resumo)
++
++    def _entregar(self, mensagem: Dict[str, Any], agora: float, pos: Dict[str, Any]) -> Dict[str, Any]:
++        futuro = mensagem.pop("_futuro", None)
++        arquivo = None
++        if futuro is not None and futuro.done():
++            try:
++                arquivo = futuro.result()
++            except Exception:
++                arquivo = None
++        mensagem["id"] = self._proximo_id
++        self._proximo_id += 1
++        mensagem["instancia"] = self.instancia
++        mensagem["entregueEm"] = datetime.fromtimestamp(agora).isoformat(timespec="seconds")
++        mensagem["sCarro"] = round(float(pos["s"]), 1) if pos.get("s") is not None else None
++        mensagem["voltaDoCarro"] = int(pos["volta"]) if pos.get("volta") is not None else None
++        mensagem["sessao"] = self._sessao()
++        mensagem.pop("naLinha", None)
++        if arquivo is not None:
++            mensagem["audio"] = f"/api/radio/audio/{mensagem['id']}"
++            mensagem["_arquivo"] = str(arquivo)
++        self._ocupado_ate = agora + float(mensagem.get("duracaoS") or 3.0) + FOLGA_ENTRE_MENSAGENS_S
++        self._entregues.append(mensagem)
++        self._registrar(mensagem)
++        return mensagem
++
++    def _registrar(self, mensagem: Dict[str, Any]) -> None:
++        sessao = mensagem.get("sessao") or f"sem-gravacao_{datetime.now():%Y-%m-%d}"
++        linha = {k: mensagem.get(k) for k in ("id", "instancia", "entregueEm", "voltaDoCarro", "sCarro", "s",
++                                              "microssetor", "curva", "origem", "titulo", "texto", "detalhe", "fala",
++                                              "perdaS", "volta", "tempoS", "duracaoS")}
++        try:
++            self.pasta.mkdir(parents=True, exist_ok=True)
++            with (self.pasta / f"{sessao}.jsonl").open("a", encoding="utf-8") as saida:
++                saida.write(json.dumps(linha, ensure_ascii=False) + "\n")
++        except OSError as erro:
++            logger.warning("Radio sem registro: %s", erro)
++
++    # ------------------------------------------------------------ leitura ---
++
++    @staticmethod
++    def _publica(m: Dict[str, Any]) -> Dict[str, Any]:
++        return {k: v for k, v in m.items() if not k.startswith("_")}
++
++    def desde(self, id_: int = 0, instancia: Optional[str] = None) -> Dict[str, Any]:
++        """As mensagens entregues depois de `id_`. Outra instancia (backend reiniciado): todas."""
++        with self._lock:
++            desde = 0 if instancia and instancia != self.instancia else int(id_ or 0)
++            novas = [self._publica(m) for m in self._entregues if m["id"] > desde]
++            return {"instancia": self.instancia, "ultimoId": self._proximo_id - 1, "mensagens": novas,
++                    "pendentes": len(self._pendentes), "erroDaVoz": self.erro_da_voz}
++
++    def arquivo_do_audio(self, id_: int) -> Optional[Path]:
++        with self._lock:
++            for m in self._entregues:
++                if m["id"] == id_ and m.get("_arquivo"):
++                    return Path(m["_arquivo"])
++        return None
++
++    def teste(self) -> Dict[str, Any]:
++        """A mensagem de teste da tela Sistema: entregue na hora, sem esperar janela."""
++        mensagem = self._nova(mensagem_de_teste())
++        try:
++            mensagem["_futuro"].result(timeout=20)
++        except Exception:
++            pass
++        with self._lock:
++            return self._publica(self._entregar(mensagem, self._relogio(), self._posicao() or {}))
++
++    def estado(self) -> Dict[str, Any]:
++        with self._lock:
++            pista = self._pista()
++            return {"pistaPronta": pista, "janelas": [[round(a, 1), round(b, 1)] for a, b in self._janelas],
++                    "comprimento": self._comprimento, "pendentes": len(self._pendentes),
++                    "entregues": len(self._entregues), "instancia": self.instancia,
++                    "voz": audio_do_radio.VOZ_PADRAO, "velocidade": audio_do_radio.VELOCIDADE_PADRAO,
++                    "erroDaVoz": self.erro_da_voz, "pastaDoRegistro": str(self.pasta)}
+diff --git a/backend/core/radio/texto.py b/backend/core/radio/texto.py
+new file mode 100644
+index 00000000..1f9c4755
+--- /dev/null
++++ b/backend/core/radio/texto.py
+@@ -0,0 +1,194 @@
++"""O texto de cada mensagem de radio (pedido 31, Parte B.1), montado uma vez, aqui.
++
++E a escrita que a tela usava em `frontend/src/utils/radio.ts`, trazida para o
++backend: o app do jogo, a tela Ao vivo e a tela Volta mostram o mesmo texto.
++
++* **Portugues com acento,** numero com virgula, nomes tecnicos.
++* **Microssetor contado a partir de 1** (o indice do coach e a partir de 0:
++  `int(progresso x 60)`; o indice 2 e o microssetor 3). O indice interno nao muda.
++* **A curva pelo nome tecnico** (C01 a C14) e o lado por extenso (ADR 0003).
++* **Duas formas do mesmo numero:**
++  - `titulo`, `texto` e `detalhe`: o cartao, com o numero completo;
++  - `fala`: o que a voz diz, curta (cerca de 4 a 6 s com a fala a 1,25x).
++
++So escreve o que o coach ja decidiu: a frase, a perda, a freada e a minima vem
++do `evidence` do evento, sem conta nova.
++"""
++from __future__ import annotations
++
++from dataclasses import dataclass
++from typing import Any, Dict, Mapping, Optional, Sequence
++
++MICROSSETORES = 60
++LADO = {"esq": "esquerda", "dir": "direita"}
++REFERENCIA_LONGA = {"volta_ia": "volta da IA", "minha_melhor": "sua melhor volta"}
++FALA_ALVO = {"volta_ia": "da IA", "minha_melhor": "da sua melhor"}
++
++
++@dataclass(frozen=True)
++class CurvaDaPista:
++    """Uma curva na geometria oficial: o nome, o lado e o trecho (do meio da reta ao meio da seguinte)."""
++
++    codigo: str          # C01
++    lado: str            # esquerda | direita
++    inicio_m: float      # a curva em si (fora dela e reta)
++    fim_m: float
++    trecho_inicio_m: float
++    trecho_fim_m: float
++
++
++def _numero(valor: Any) -> Optional[float]:
++    if valor is None or isinstance(valor, bool):
++        return None
++    try:
++        n = float(valor)
++    except (TypeError, ValueError):
++        return None
++    return n if n == n and abs(n) != float("inf") else None
++
++
++def decimal(valor: float, casas: int = 2) -> str:
++    """0,31 (com `casas` casas e virgula)."""
++    return f"{valor:.{casas}f}".replace(".", ",")
++
++
++def com_sinal(segundos: float, casas: int = 2) -> str:
++    sinal = "+" if segundos > 0 else "−" if segundos < 0 else ""
++    return f"{sinal}{decimal(abs(segundos), casas)} s"
++
++
++def tempo_de_volta(segundos: float) -> str:
++    """M:SS,mmm."""
++    m = int(segundos // 60)
++    s = segundos - 60 * m
++    return f"{m}:{'0' if s < 10 else ''}{decimal(s, 3)}"
++
++
++def microssetor_para_o_piloto(indice: int) -> int:
++    """Indice do coach (a partir de 0) -> numero que o piloto ve (a partir de 1)."""
++    return int(indice) + 1
++
++
++def s_do_fim_do_microssetor(indice: int, comprimento: float) -> float:
++    """Onde o microssetor termina, na geometria oficial: ali o coach fecha a medida e fala."""
++    return (int(indice) + 1) * comprimento / MICROSSETORES
++
++
++def curva_do_ponto(curvas: Sequence[CurvaDaPista], s: float, comprimento: float) -> Optional[CurvaDaPista]:
++    """A curva cujo trecho contem `s` (os trechos cobrem a volta inteira)."""
++    x = s % comprimento
++    for c in curvas:
++        a, b = c.trecho_inicio_m, c.trecho_fim_m
++        if (a <= b and a <= x < b) or (a > b and (x >= a or x < b)):
++            return c
++    return None
++
++
++def _clausula_da_freada(tipo: Optional[str], delta_m: float) -> str:
++    metros = abs(round(delta_m))
++    lado = "depois" if delta_m > 0 else "antes"
++    if tipo == "minha_melhor":
++        return "na sua melhor volta você freou no mesmo ponto" if metros < 1 else f"na sua melhor volta você freou {metros} m {lado}"
++    quem = "a IA" if tipo == "volta_ia" else "a referência"
++    return f"{quem} freia no mesmo ponto que você" if metros < 1 else f"{quem} freia {metros} m {lado} de você"
++
++
++def _clausula_da_minima(tipo: Optional[str], ref_kmh: float, sua_kmh: float) -> str:
++    ref, sua = round(ref_kmh), round(sua_kmh)
++    if tipo == "volta_ia":
++        return f"mínima da IA {ref} km/h, a sua {sua} km/h"
++    if tipo == "minha_melhor":
++        return f"mínima na sua melhor volta {ref} km/h, agora {sua} km/h"
++    return f"mínima na referência {ref} km/h, a sua {sua} km/h"
++
++
++def mensagem_de_diferenca(evento: Mapping[str, Any], curvas: Sequence[CurvaDaPista],
++                          comprimento: float) -> Optional[Dict[str, Any]]:
++    """Uma frase de diferenca do coach (`coaching_event`) como mensagem de radio; None sem os numeros."""
++    ev = evento.get("evidence") if isinstance(evento.get("evidence"), Mapping) else None
++    if not ev:
++        return None
++    indice = _numero(ev.get("microsector"))
++    sua = _numero(ev.get("yourSeconds"))
++    ref = _numero(ev.get("referenceSeconds"))
++    if ref is None:
++        ref = _numero(ev.get("bestSeconds"))
++    perda = _numero(ev.get("lossSeconds"))
++    if perda is None and sua is not None and ref is not None:
++        perda = sua - ref
++    if indice is None or sua is None or ref is None or perda is None:
++        return None
++    tipo = ev.get("referenceKind") if isinstance(ev.get("referenceKind"), str) else None
++    rotulo = ev.get("referenceLabel") if isinstance(ev.get("referenceLabel"), str) and ev.get("referenceLabel") else (
++        REFERENCIA_LONGA.get(tipo or "", "referência"))
++    s = s_do_fim_do_microssetor(int(indice), comprimento)
++    curva = curva_do_ponto(curvas, s - 1.0, comprimento)
++    numero = microssetor_para_o_piloto(int(indice))
++    onde = f"{curva.codigo}, {curva.lado}" if curva else f"microssetor {numero}"
++    partes = [f"{decimal(sua)} s contra {decimal(ref)} s"]
++    freada = _numero(ev.get("brakeDeltaM"))
++    if freada is not None:
++        partes.append(_clausula_da_freada(tipo, freada))
++    min_ref, min_sua = _numero(ev.get("referenceMinSpeedKmh")), _numero(ev.get("yourMinSpeedKmh"))
++    if min_ref is not None and min_sua is not None:
++        partes.append(_clausula_da_minima(tipo, min_ref, min_sua))
++    alvo = FALA_ALVO.get(tipo or "", "da referência")
++    lado_da_perda = "atrás" if perda > 0 else "à frente"
++    nome_falado = f"Curva {int(curva.codigo[1:])}, {curva.lado}" if curva else f"Microssetor {numero}"
++    return {
++        "origem": "coach",
++        "titulo": onde,
++        "texto": f"{com_sinal(perda)} para a {rotulo} no microssetor {numero}",
++        "detalhe": " · ".join(partes),
++        "fala": f"{nome_falado}: {decimal(abs(perda))} {lado_da_perda} {alvo}.",
++        "microssetor": numero,
++        "curva": curva.codigo if curva else None,
++        "s": round(s, 1),
++        "perdaS": round(perda, 3),
++        "volta": int(_numero(evento.get("lap_number")) or 0) or None,
++    }
++
++
++def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optional[float],
++                       tipo: Optional[str]) -> Dict[str, Any]:
++    """O resumo na linha de chegada: o tempo da volta e a diferenca para a referencia escolhida."""
++    rotulo = REFERENCIA_LONGA.get(tipo or "", "referência")
++    alvo = FALA_ALVO.get(tipo or "", "da referência")
++    volta = int(volta) if _numero(volta) is not None else None
++    m = int(tempo_s // 60)
++    s = tempo_s - 60 * m
++    falado = f"{m} minuto{'s' if m != 1 else ''} e {decimal(s, 1)}"
++    if referencia_s:
++        dif = tempo_s - referencia_s
++        texto = f"{com_sinal(dif, 3)} para a {rotulo} ({tempo_de_volta(referencia_s)})"
++        fala_dif = f" {decimal(abs(dif))} {'atrás' if dif > 0 else 'à frente'} {alvo}."
++    else:
++        texto, fala_dif = "sem referência para comparar", ""
++    return {
++        "origem": "resumo",
++        "titulo": f"Volta {volta}: {tempo_de_volta(tempo_s)}" if volta else f"Volta: {tempo_de_volta(tempo_s)}",
++        "texto": texto,
++        "detalhe": None,
++        "fala": f"Volta {volta}, {falado}.{fala_dif}" if volta else f"Volta em {falado}.{fala_dif}",
++        "microssetor": None,
++        "curva": None,
++        "s": 0.0,
++        "perdaS": round(tempo_s - referencia_s, 3) if referencia_s else None,
++        "volta": volta,
++        "tempoS": round(tempo_s, 3),
++    }
++
++
++def mensagem_de_teste() -> Dict[str, Any]:
++    return {
++        "origem": "teste",
++        "titulo": "Rádio de teste",
++        "texto": "Se você está vendo e ouvindo isto no jogo, o rádio funciona.",
++        "detalhe": "mensagem mandada pela tela Sistema",
++        "fala": "Teste do rádio. Se você me ouve, está tudo certo.",
++        "microssetor": None,
++        "curva": None,
++        "s": None,
++        "perdaS": None,
++        "volta": None,
++    }
+diff --git a/backend/core/radio/voz.ps1 b/backend/core/radio/voz.ps1
+new file mode 100644
+index 00000000..86327c65
+--- /dev/null
++++ b/backend/core/radio/voz.ps1
+@@ -0,0 +1,63 @@
++﻿# A voz do rádio (pedido 31, Parte B.3): o texto vira um WAV com uma voz pt-BR do Windows.
++# Nada é instalado: as vozes OneCore vêm do Windows.Media.SpeechSynthesis e a SAPI 5 do System.Speech.
++#
++# Uso: powershell -NoProfile -ExecutionPolicy Bypass -File voz.ps1 -Texto <arquivo .txt em UTF-8> -Saida <arquivo .wav> -Voz <OneCore:Daniel|OneCore:Maria|SAPI:Maria|listar>
++param(
++  [string]$Texto,
++  [string]$Saida,
++  [string]$Voz = 'OneCore:Daniel',
++  [double]$Velocidade = 1.0
++)
++$ErrorActionPreference = 'Stop'
++
++if ($Voz -eq 'listar') {
++  Add-Type -AssemblyName System.Speech
++  $sapi = New-Object System.Speech.Synthesis.SpeechSynthesizer
++  $sapi.GetInstalledVoices() | ForEach-Object { 'SAPI:' + $_.VoiceInfo.Name + ' | ' + $_.VoiceInfo.Culture }
++  Add-Type -AssemblyName System.Runtime.WindowsRuntime
++  $null = [Windows.Media.SpeechSynthesis.SpeechSynthesizer, Windows.Media.SpeechSynthesis, ContentType = WindowsRuntime]
++  [Windows.Media.SpeechSynthesis.SpeechSynthesizer]::AllVoices | ForEach-Object { 'OneCore:' + $_.DisplayName + ' | ' + $_.Language }
++  exit 0
++}
++
++$frase = [IO.File]::ReadAllText($Texto, [Text.Encoding]::UTF8)
++$tipo, $nome = $Voz.Split(':', 2)
++
++if ($tipo -eq 'SAPI') {
++  Add-Type -AssemblyName System.Speech
++  $sapi = New-Object System.Speech.Synthesis.SpeechSynthesizer
++  $escolhida = $sapi.GetInstalledVoices() | Where-Object { $_.VoiceInfo.Name -like "*$nome*" -and $_.VoiceInfo.Culture.Name -eq 'pt-BR' } | Select-Object -First 1
++  if (-not $escolhida) { Write-Error "voz SAPI pt-BR '$nome' não encontrada"; exit 3 }
++  $sapi.SelectVoice($escolhida.VoiceInfo.Name)
++  # SAPI: de -10 a 10; 1,0 vira 0 e cada 0,1 acima vira um passo.
++  $sapi.Rate = [Math]::Max(-10, [Math]::Min(10, [int][Math]::Round(($Velocidade - 1.0) * 10)))
++  $sapi.SetOutputToWaveFile($Saida)
++  $sapi.Speak($frase)
++  $sapi.Dispose()
++  exit 0
++}
++
++# OneCore (Windows.Media.SpeechSynthesis), pela ponte do WinRT do PowerShell 5.1.
++Add-Type -AssemblyName System.Runtime.WindowsRuntime
++$null = [Windows.Media.SpeechSynthesis.SpeechSynthesizer, Windows.Media.SpeechSynthesis, ContentType = WindowsRuntime]
++$null = [Windows.Media.SpeechSynthesis.SpeechSynthesisStream, Windows.Media.SpeechSynthesis, ContentType = WindowsRuntime]
++$asTask = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {
++    $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1'
++  })[0]
++function Esperar($operacao, [Type]$tipoDoResultado) {
++  $tarefa = $asTask.MakeGenericMethod($tipoDoResultado).Invoke($null, @($operacao))
++  $null = $tarefa.Wait(-1)
++  $tarefa.Result
++}
++$sintetizador = New-Object Windows.Media.SpeechSynthesis.SpeechSynthesizer
++$escolhida = [Windows.Media.SpeechSynthesis.SpeechSynthesizer]::AllVoices | Where-Object { $_.DisplayName -like "*$nome*" -and $_.Language -eq 'pt-BR' } | Select-Object -First 1
++if (-not $escolhida) { Write-Error "voz OneCore pt-BR '$nome' não encontrada"; exit 3 }
++$sintetizador.Voice = $escolhida
++try { $sintetizador.Options.SpeakingRate = $Velocidade } catch { }
++$fluxo = Esperar ($sintetizador.SynthesizeTextToStreamAsync($frase)) ([Windows.Media.SpeechSynthesis.SpeechSynthesisStream])
++$leitura = [System.IO.WindowsRuntimeStreamExtensions]::AsStreamForRead($fluxo)
++$arquivo = [IO.File]::Create($Saida)
++$leitura.CopyTo($arquivo)
++$arquivo.Close()
++$leitura.Dispose()
++exit 0
+diff --git a/backend/core/telemetry_events.py b/backend/core/telemetry_events.py
+index 1c31e368..853dc2c5 100644
+--- a/backend/core/telemetry_events.py
++++ b/backend/core/telemetry_events.py
+@@ -3,6 +3,7 @@ Internal Event Bus for F1 Telemetry Analyzer
+ Decouples telemetry ingestion from processing and storage.
+ """
+ import asyncio
++import inspect
+ import threading
+ from typing import Dict, Any, Callable, List
+ import logging
+@@ -52,8 +53,14 @@ class TelemetryEventBus:
+ 
+     async def emit(self, event_type: str, data: Any):
+         if event_type in self.subscribers:
+-            tasks = [cb(data) for cb in self.subscribers[event_type]]
+-            await asyncio.gather(*tasks)
++            # Pedido 31: os assinantes podem ser sincronos (o coach, o radio, a Coleta) ou
++            # assincronos (o WebSocket). Antes, o `gather` recebia o `None` dos sincronos e
++            # falhava: os assincronos depois deles na lista nao rodavam, e cada quadro
++            # deixava um erro no log (950 MB no app instalado). So o que e aguardavel e esperado.
++            results = [cb(data) for cb in list(self.subscribers[event_type])]
++            awaitables = [r for r in results if inspect.isawaitable(r)]
++            if awaitables:
++                await asyncio.gather(*awaitables)
+ 
+     def schedule(self, event_type: str, data: Any, loop: asyncio.AbstractEventLoop):
+         with self._schedule_lock:
+diff --git a/backend/main.py b/backend/main.py
+index 7f408069..2ccb39f6 100644
+--- a/backend/main.py
++++ b/backend/main.py
+@@ -132,6 +132,9 @@ _validation_sessions_cache_at = 0.0
+ # `Program Files` it is read-only outright -- and the two directories below are
+ # the ones this backend writes to at runtime.
+ live_driving_coach: Optional[Any] = None
++# Pedido 31: o radio do engenheiro (core/radio), criado com o coach ao vivo.
++radio_do_engenheiro: Optional[Any] = None
++volta_ao_vivo: Optional[Any] = None
+ external_reference_repository = ExternalReferenceRepository(
+     REPO_ROOT,
+     data_dir=RUNTIME_ROOT / "data" / "external_references",
+@@ -152,6 +155,62 @@ assisted_analysis_service = AssistedAnalysisService(
+ )
+ 
+ 
++def _referencia_do_radio() -> Dict[str, Any]:
++    """A referencia escolhida do coach, com o tempo do store v2 (uma fonte para cada numero)."""
++    model = getattr(live_driving_coach, "_model", None) if live_driving_coach is not None else None
++    if model is None:
++        return {}
++    from core.coleta.estado import tempos_do_store
++
++    lap_id = getattr(model, "reference_lap_id", None)
++    tempo = tempos_do_store(app_config.coach_root()).get(str(lap_id)) if lap_id else None
++    return {"tipo": getattr(model, "reference_kind", None), "volta": lap_id,
++            "tempoS": tempo if tempo is not None else getattr(model, "reference_lap_seconds", None)}
++
++
++def _sessao_do_radio() -> Optional[str]:
++    if recording_runtime is None:
++        return None
++    status = recording_runtime.status().to_api()
++    return status.get("sessionId") if status.get("recording") else None
++
++
++def _ligar_o_radio() -> None:
++    """Pedido 31: o radio ouve as frases do coach e os quadros, depois do coach."""
++    global radio_do_engenheiro
++    try:
++        from core.radio.servico import RadioDoEngenheiro
++
++        radio_do_engenheiro = RadioDoEngenheiro(
++            pasta_de_dados=RUNTIME_ROOT,
++            repositorio=app_config.coach_root,
++            posicao=lambda: live_driving_coach.posicao_oficial() if live_driving_coach is not None else None,
++            ultima_volta=lambda: getattr(live_driving_coach, "ultima_volta", None),
++            referencia=_referencia_do_radio,
++            sessao=_sessao_do_radio,
++        )
++        event_bus.subscribe(PROCESSED_FRAME, radio_do_engenheiro.on_frame)
++        event_bus.subscribe(COACHING_EVENT, radio_do_engenheiro.on_coaching_event)
++        logger.info("Radio do engenheiro ligado")
++    except Exception as error:
++        logger.warning("Radio do engenheiro indisponivel: %s", error)
++    global volta_ao_vivo
++    try:
++        from core.live.volta_ao_vivo import VoltaAoVivo
++
++        def pontos_da_grade():
++            projetor = getattr(live_driving_coach, "_projector", None)
++            return len(projetor.geometry.x) if projetor is not None else None
++
++        volta_ao_vivo = VoltaAoVivo(
++            posicao=lambda: live_driving_coach.posicao_oficial() if live_driving_coach is not None else None,
++            pontos=pontos_da_grade,
++        )
++        event_bus.subscribe(PROCESSED_FRAME, volta_ao_vivo.on_frame)
++    except Exception as error:
++        logger.warning("Radio do engenheiro indisponivel: %s", error)
++
++
+ async def remember_coaching_event(event: Dict[str, Any]):
+     recent_coaching_events.insert(0, event)
+     del recent_coaching_events[50:]
+@@ -905,12 +964,17 @@ async def lifespan(app: FastAPI):
+     try:
+         from core.live.driving_coach import LiveDrivingCoach
+ 
++        # Pedido 31: o quadro ao vivo nao traz o nome da pista; sem ele o coach pedia o
++        # modelo da pista "unknown" e ficava calado. Completa com a pista do jogo, a mesma
++        # que o gravador escreve no metadata.json (`current_recording_track`).
+         live_driving_coach = LiveDrivingCoach(
+             event_bus,
+-            model_provider=lambda track: assisted_analysis_service._reference_model(track),
++            model_provider=lambda track: assisted_analysis_service._reference_model(
++                track or current_recording_track()),
+             loop_ref_provider=lambda: asyncio.get_event_loop(),
+             # ADR 0013: the coach projects the car on the official geometry.
+-            geometry_provider=lambda track: assisted_analysis_service._official_geometry(track),
++            geometry_provider=lambda track: assisted_analysis_service._official_geometry(
++                track or current_recording_track()),
+         )
+         event_bus.subscribe(PROCESSED_FRAME, live_driving_coach.on_frame)
+         logger.info("Live driving coach subscribed to processed frames")
+@@ -918,6 +982,7 @@ async def lifespan(app: FastAPI):
+         logger.warning("Live driving coach unavailable: %s", error)
+ 
+     event_bus.subscribe(COACHING_EVENT, remember_coaching_event)
++    _ligar_o_radio()
+     event_bus.subscribe(PROCESSED_FRAME, coleta_monitor.on_frame)
+     coleta_task = asyncio.create_task(_coleta_loop())
+     asyncio.get_running_loop().run_in_executor(None, coleta_conferencia.concluir_pendentes)
+@@ -945,6 +1010,11 @@ async def lifespan(app: FastAPI):
+         logger.warning("Coleta check could not be finalized: %s", error)
+     if live_driving_coach is not None:
+         event_bus.unsubscribe(PROCESSED_FRAME, live_driving_coach.on_frame)
++    if volta_ao_vivo is not None:
++        event_bus.unsubscribe(PROCESSED_FRAME, volta_ao_vivo.on_frame)
++    if radio_do_engenheiro is not None:
++        event_bus.unsubscribe(PROCESSED_FRAME, radio_do_engenheiro.on_frame)
++        event_bus.unsubscribe(COACHING_EVENT, radio_do_engenheiro.on_coaching_event)
+     event_bus.unsubscribe(COACHING_EVENT, remember_coaching_event)
+ 
+ 
+@@ -974,6 +1044,7 @@ from routers import (  # noqa: E402
+     legacy,
+     leitura,
+     live,
++    radio,
+     recording as recording_router,
+     track,
+     validation,
+@@ -991,6 +1062,8 @@ app.include_router(external_references.router)
+ app.include_router(debug.router)
+ app.include_router(coleta.router)
+ app.include_router(leitura.router)
++app.include_router(radio.router)
++app.include_router(radio.router_ao_vivo)
+ app.include_router(legacy.router)
+ 
+ # Re-exported so existing tests that call `backend_main.<name>(...)` directly
+diff --git a/backend/routers/assisted_analysis.py b/backend/routers/assisted_analysis.py
+index 10c24e34..0f887c3d 100644
+--- a/backend/routers/assisted_analysis.py
++++ b/backend/routers/assisted_analysis.py
+@@ -1,5 +1,6 @@
+ """Post-lap assisted driving analysis endpoints."""
+ import asyncio
++import logging
+ from typing import Any, Dict, Optional
+ 
+ from fastapi import APIRouter, Body, HTTPException, Query
+@@ -7,6 +8,7 @@ from fastapi import APIRouter, Body, HTTPException, Query
+ import main
+ 
+ router = APIRouter()
++logger = logging.getLogger(__name__)
+ 
+ 
+ def _get_assisted_analysis_or_404(
+@@ -175,6 +177,19 @@ async def get_lap_coaching(lapId: str):
+             driver_id=descriptor.driver_id or "player_1",
+             geometry=main.assisted_analysis_service._official_geometry(descriptor.track),  # noqa: SLF001
+         )
++        # Pedido 31: cada frase de diferenca com a mensagem de radio pronta (o mesmo
++        # texto do app do jogo e da tela Ao vivo) e o `s` da geometria oficial.
++        try:
++            from core.radio.janelas import carregar_curvas
++            from core.radio.texto import mensagem_de_diferenca
++
++            curvas, comprimento = carregar_curvas(main.app_config.coach_root())
++            if curvas and comprimento:
++                for evento in result.get("events") or []:
++                    if evento.get("type") == "coaching_event":
++                        evento["radio"] = mensagem_de_diferenca(evento, curvas, comprimento)
++        except Exception as error:  # sem a geometria, as frases voltam como antes
++            logger.warning("Radio da volta sem texto pronto: %s", error)
+         result.update({
+             "lapId": lapId,
+             "lapNumber": descriptor.lap_number,
+diff --git a/backend/routers/radio.py b/backend/routers/radio.py
+new file mode 100644
+index 00000000..a09baa4e
+--- /dev/null
++++ b/backend/routers/radio.py
+@@ -0,0 +1,57 @@
++"""O radio do engenheiro (pedido 31, Parte B.4).
++
++* `GET /api/radio/mensagens?desde=<id>&instancia=<inst>`: as mensagens entregues
++  depois de `id`, para o app do jogo e a tela Ao vivo. Uma instancia diferente
++  (o backend reiniciou) devolve todas.
++* `GET /api/radio/audio/{id}`: o WAV da mensagem (vinheta e voz).
++* `POST /api/radio/teste`: uma mensagem de teste, entregue na hora, so pela tela
++  Sistema, para conferir o radio sem andar no jogo.
++* `GET /api/radio/estado`: as janelas, a voz e o que esta esperando.
++"""
++import asyncio
++from typing import Optional
++
++from fastapi import APIRouter, HTTPException
++from fastapi.responses import FileResponse
++
++import main
++
++router = APIRouter(prefix="/api/radio")
++router_ao_vivo = APIRouter(prefix="/api/live")
++
++
++def _radio():
++    if main.radio_do_engenheiro is None:
++        raise HTTPException(status_code=503, detail="o rádio ainda não está pronto")
++    return main.radio_do_engenheiro
++
++
++@router.get("/mensagens")
++async def get_mensagens(desde: int = 0, instancia: Optional[str] = None):
++    return _radio().desde(desde, instancia)
++
++
++@router.get("/audio/{id_}")
++async def get_audio(id_: int):
++    arquivo = _radio().arquivo_do_audio(id_)
++    if arquivo is None or not arquivo.exists():
++        raise HTTPException(status_code=404, detail="mensagem sem áudio")
++    return FileResponse(str(arquivo), media_type="audio/wav", filename=f"radio_{id_}.wav")
++
++
++@router.post("/teste")
++async def post_teste():
++    return await asyncio.to_thread(_radio().teste)
++
++
++@router.get("/estado")
++async def get_estado():
++    return await asyncio.to_thread(_radio().estado)
++
++
++@router_ao_vivo.get("/volta")
++async def get_volta_ao_vivo():
++    """A volta em andamento na grade oficial (pedido 31, Parte D), para o fantasma da tela Ao vivo."""
++    if main.volta_ao_vivo is None:
++        return {"disponivel": False, "motivo": "a volta ao vivo ainda não está pronta"}
++    return main.volta_ao_vivo.estado()
+diff --git a/backend/tests/test_radio.py b/backend/tests/test_radio.py
+new file mode 100644
+index 00000000..d2347a81
+--- /dev/null
++++ b/backend/tests/test_radio.py
+@@ -0,0 +1,261 @@
++"""Pedido 31, Parte E.1: o radio do engenheiro.
++
++O texto de cada tipo de mensagem, a janela de radio, o limite do coach, a voz,
++as rotas e o registro. Tudo numa pasta temporaria; a voz so roda no Windows.
++"""
++import json
++import sys
++import wave
++from pathlib import Path
++
++import pytest
++
++BACKEND = Path(__file__).resolve().parents[1]
++if str(BACKEND) not in sys.path:
++    sys.path.insert(0, str(BACKEND))
++
++from core.radio import audio as audio_do_radio  # noqa: E402
++from core.radio.janelas import dentro, janelas_de_radio  # noqa: E402
++from core.radio.servico import RadioDoEngenheiro  # noqa: E402
++from core.radio.texto import (  # noqa: E402
++    CurvaDaPista,
++    mensagem_de_diferenca,
++    mensagem_de_resumo,
++    microssetor_para_o_piloto,
++)
++
++L = 4334.08
++# Duas curvas de mentira: C01 (esquerda, 200 a 340 m) e C02 (direita, 2000 a 2200 m).
++CURVAS = [
++    CurvaDaPista("C01", "esquerda", 200.0, 340.0, 3500.0, 1170.0),
++    CurvaDaPista("C02", "direita", 2000.0, 2200.0, 1170.0, 3500.0),
++]
++
++
++def _evento(indice=2, perda=0.742, tipo="volta_ia", volta=2):
++    return {"type": "coaching_event", "lap_number": volta, "evidence": {
++        "microsector": indice, "yourSeconds": 1.991, "referenceSeconds": 1.249, "lossSeconds": perda,
++        "referenceKind": tipo, "referenceLabel": "volta da IA" if tipo == "volta_ia" else "sua melhor volta",
++        "brakeDeltaM": 38.0, "referenceMinSpeedKmh": 157.0, "yourMinSpeedKmh": 93.5}}
++
++
++# ------------------------------------------------------------------ texto ---
++
++def test_frase_de_diferenca_com_virgula_microssetor_a_partir_de_1_e_lado_por_extenso():
++    m = mensagem_de_diferenca(_evento(indice=2), CURVAS, L)
++    assert microssetor_para_o_piloto(2) == 3
++    assert m["microssetor"] == 3
++    assert m["titulo"] == "C01, esquerda"
++    assert m["texto"] == "+0,74 s para a volta da IA no microssetor 3"
++    assert m["detalhe"] == "1,99 s contra 1,25 s · a IA freia 38 m depois de você · mínima da IA 157 km/h, a sua 94 km/h"
++    assert m["fala"] == "Curva 1, esquerda: 0,74 atrás da IA."
++    assert m["s"] == pytest.approx(3 * L / 60, abs=0.1)  # o fim do microssetor: ali o coach fecha a medida
++    assert "." not in m["texto"].split(" s ")[0]  # numero com virgula
++
++
++def test_frase_contra_a_sua_melhor_e_na_curva_da_direita():
++    m = mensagem_de_diferenca(_evento(indice=29, perda=0.215, tipo="minha_melhor"), CURVAS, L)
++    assert m["titulo"] == "C02, direita" and m["microssetor"] == 30
++    assert m["fala"] == "Curva 2, direita: 0,21 atrás da sua melhor."
++    assert "na sua melhor volta você freou 38 m depois" in m["detalhe"]
++
++
++def test_evento_sem_os_numeros_nao_vira_radio():
++    assert mensagem_de_diferenca({"type": "coaching_event", "evidence": "texto"}, CURVAS, L) is None
++
++
++def test_resumo_na_linha():
++    m = mensagem_de_resumo(7, 88.132, 84.829, "volta_ia")
++    assert m["titulo"] == "Volta 7: 1:28,132"
++    assert m["texto"] == "+3,303 s para a volta da IA (1:24,829)"
++    assert m["fala"] == "Volta 7, 1 minuto e 28,1. 3,30 atrás da IA."
++
++
++# ----------------------------------------------------------------- janela ---
++
++def test_janelas_ficam_fora_das_curvas_com_as_margens():
++    janelas = janelas_de_radio(CURVAS, L, antes=100.0, depois=20.0, minima=50.0)
++    assert janelas == [(361.0, 1900.0), (2221.0, 100.0)]
++    assert dentro(janelas, 250.0, L) is None          # na C01
++    assert dentro(janelas, 1950.0, L) is None         # na freada da C02
++    assert dentro(janelas, 800.0, L) == (361.0, 1900.0)
++    assert dentro(janelas, 10.0, L) == (2221.0, 100.0)  # a reta cruza a linha
++
++
++class _Pista:
++    """O que o radio le do coach: a posicao, a ultima volta e a referencia."""
++
++    def __init__(self):
++        self.s = 0.0
++        self.volta = None
++        self.agora = 1000.0
++
++
++def _radio(tmp_path, pista, falar=None):
++    radio = RadioDoEngenheiro(
++        pasta_de_dados=tmp_path,
++        repositorio=lambda: tmp_path,
++        posicao=lambda: {"s": pista.s, "comprimento": L, "lateral": 0.0, "volta": 2},
++        ultima_volta=lambda: pista.volta,
++        referencia=lambda: {"tipo": "volta_ia", "tempoS": 84.829},
++        sessao=lambda: "2026-10-20_10-00-00_vhe_interlagos",
++        falar=falar or (lambda texto, destino: (Path(destino).write_bytes(b"RIFF"), 2.0)[1]),
++        relogio=lambda: pista.agora,
++    )
++    # A pista de mentira, sem ler a geometria do repositorio.
++    radio._chave_da_pista = str(tmp_path)
++    radio._curvas, radio._comprimento = CURVAS, L
++    radio._janelas = janelas_de_radio(CURVAS, L, antes=100.0, depois=20.0, minima=50.0)
++    return radio
++
++
++def _esperar_o_audio(radio):
++    for m in list(radio._pendentes):
++        m["_futuro"].result(timeout=5)
++
++
++def test_mensagem_gerada_dentro_da_curva_espera_a_reta(tmp_path):
++    pista = _Pista()
++    radio = _radio(tmp_path, pista)
++    pista.s = 300.0  # dentro da C01
++    radio.on_coaching_event(_evento(indice=3))
++    _esperar_o_audio(radio)
++    radio.on_frame()
++    assert radio.desde(0)["mensagens"] == [] and radio.desde(0)["pendentes"] == 1
++    pista.s = 500.0  # a reta
++    radio.on_frame()
++    entregue = radio.desde(0)["mensagens"]
++    assert len(entregue) == 1 and entregue[0]["sCarro"] == 500.0 and entregue[0]["audio"] == "/api/radio/audio/1"
++
++
++def test_uma_mensagem_por_vez_e_o_resto_vai_com_o_resumo(tmp_path):
++    pista = _Pista()
++    radio = _radio(tmp_path, pista)
++    pista.s = 500.0
++    radio.on_coaching_event(_evento(indice=6))
++    radio.on_coaching_event(_evento(indice=7))
++    _esperar_o_audio(radio)
++    radio.on_frame()
++    assert len(radio.desde(0)["mensagens"]) == 1  # a segunda espera o audio da primeira (2 s)
++    pista.s = 2100.0  # a volta segue, entra no miolo e acaba antes da proxima janela
++    pista.agora += 3.0
++    radio.on_frame()
++    assert len(radio.desde(0)["mensagens"]) == 1
++    pista.volta = {"volta": 2, "tempoS": 88.132, "teveIA": False, "momento": 1}
++    radio.on_frame()            # a linha: o resumo espera as ultimas frases chegarem
++    pista.agora += 1.0
++    radio.on_frame()            # o que sobrou da volta sai na linha, sem esperar janela
++    _esperar_o_audio(radio)
++    pista.agora += 3.0
++    radio.on_frame()            # e depois o resumo
++    origens = [m["origem"] for m in radio.desde(0)["mensagens"]]
++    assert origens == ["coach", "coach", "resumo"]
++
++
++def test_o_radio_nao_cria_frases_o_limite_do_coach_continua(tmp_path):
++    from core.live import driving_coach
++
++    assert driving_coach.MAX_PHRASES_PER_LAP == 3
++    assert driving_coach.MIN_SECONDS_BETWEEN_EVENTS == 3.0
++    pista = _Pista()
++    radio = _radio(tmp_path, pista)
++    radio.on_coaching_event({"type": "coaching_focus", "focusSectors": [2, 38, 43]})  # o foco fica na tela
++    for k in range(3):
++        radio.on_coaching_event(_evento(indice=10 + k))
++    assert radio.desde(0)["pendentes"] == 3  # uma mensagem por frase do coach, nenhuma a mais
++
++
++def test_registro_fora_da_pasta_de_gravacoes(tmp_path):
++    pista = _Pista()
++    radio = _radio(tmp_path, pista)
++    pista.s = 500.0
++    radio.on_coaching_event(_evento(indice=6))
++    _esperar_o_audio(radio)
++    radio.on_frame()
++    registro = tmp_path / "data" / "radio" / "2026-10-20_10-00-00_vhe_interlagos.jsonl"
++    linha = json.loads(registro.read_text(encoding="utf-8").splitlines()[0])
++    assert {k: linha[k] for k in ("id", "voltaDoCarro", "sCarro", "microssetor", "curva", "origem")} == {
++        "id": 1, "voltaDoCarro": 2, "sCarro": 500.0, "microssetor": 7, "curva": "C01", "origem": "coach"}
++    assert linha["texto"].startswith("+0,74 s") and linha["entregueEm"]
++    # Nenhum leitor do ML ve isto como sessao: nao ha player.jsonl, e a pasta nao e de gravacoes.
++    assert not list((tmp_path / "data" / "radio").rglob("player.jsonl"))
++    assert "recordings" not in registro.parts
++
++
++# ------------------------------------------------------------------- voz ---
++
++@pytest.mark.skipif(sys.platform != "win32", reason="a voz do radio usa as vozes do Windows")
++def test_a_voz_gera_um_wav_tocavel(tmp_path):
++    vozes = audio_do_radio.vozes_disponiveis()
++    if not any(v.startswith("OneCore:Microsoft Daniel") for v in vozes):
++        pytest.skip(f"sem a voz Microsoft Daniel (OneCore) neste Windows: {vozes}")
++    destino = tmp_path / "msg.wav"
++    dur = audio_do_radio.falar("Curva 1, esquerda: 0,74 atrás da IA.", destino)
++    with wave.open(str(destino), "rb") as w:
++        assert w.getnchannels() == 1 and w.getsampwidth() == 2
++        assert w.getnframes() / w.getframerate() == pytest.approx(dur)
++    assert 2.0 < dur < 7.0  # vinheta + uma frase curta
++
++
++# ----------------------------------------------------------------- rotas ---
++
++def test_rotas(tmp_path, monkeypatch):
++    """As funcoes das rotas, chamadas direto (o TestClient pede o httpx, que nao esta instalado)."""
++    import asyncio
++
++    from fastapi import HTTPException
++
++    import main
++    from routers import radio as rota
++
++    pista = _Pista()
++
++    def falar(texto, destino):
++        with wave.open(str(destino), "wb") as w:
++            w.setnchannels(1)
++            w.setsampwidth(2)
++            w.setframerate(16000)
++            w.writeframes(b"\x00\x00" * 1600)
++        return 0.1
++
++    radio = _radio(tmp_path, pista, falar=falar)
++    monkeypatch.setattr(main, "radio_do_engenheiro", radio)
++    teste = asyncio.run(rota.post_teste())
++    assert teste["origem"] == "teste" and teste["id"] == 1 and teste["audio"] == "/api/radio/audio/1"
++    lista = asyncio.run(rota.get_mensagens(0, None))
++    assert [m["id"] for m in lista["mensagens"]] == [1] and lista["instancia"] == radio.instancia
++    assert asyncio.run(rota.get_mensagens(1, radio.instancia))["mensagens"] == []
++    outra = asyncio.run(rota.get_mensagens(9, "outra"))
++    assert [m["id"] for m in outra["mensagens"]] == [1]  # backend reiniciado: manda tudo de novo
++    resposta = asyncio.run(rota.get_audio(1))
++    assert resposta.media_type == "audio/wav" and Path(resposta.path).exists()
++    with pytest.raises(HTTPException) as falta:
++        asyncio.run(rota.get_audio(99))
++    assert falta.value.status_code == 404
++    assert asyncio.run(rota.get_estado())["janelas"]
++    monkeypatch.setattr(main, "radio_do_engenheiro", None)
++    with pytest.raises(HTTPException) as fora:
++        asyncio.run(rota.get_mensagens(0, None))
++    assert fora.value.status_code == 503
++
++
++# ------------------------------------------------- o barramento (achado) ---
++
++def test_emit_com_assinantes_sincronos_e_assincronos():
++    """Pedido 31: o `emit` esperava o `None` dos assinantes sincronos e falhava; os assincronos depois deles nao rodavam."""
++    import asyncio
++
++    from core.telemetry_events import TelemetryEventBus
++
++    bus = TelemetryEventBus()
++    vistos = []
++    bus.subscribe("quadro", lambda q: vistos.append(("sincrono", q)))
++
++    async def assincrono(q):
++        vistos.append(("assincrono", q))
++
++    bus.subscribe("quadro", assincrono)
++    bus.subscribe("quadro", lambda q: vistos.append(("outro sincrono", q)))
++    asyncio.run(bus.emit("quadro", 1))
++    # Os tres rodam (o assincrono, quando e esperado, depois dos sincronos).
++    assert sorted(vistos) == [("assincrono", 1), ("outro sincrono", 1), ("sincrono", 1)]
+diff --git a/frontend/src/aoVivo/FantasmaAoVivo.tsx b/frontend/src/aoVivo/FantasmaAoVivo.tsx
+new file mode 100644
+index 00000000..43a68345
+--- /dev/null
++++ b/frontend/src/aoVivo/FantasmaAoVivo.tsx
+@@ -0,0 +1,98 @@
++/**
++ * A "Volta com fantasma" ao vivo (pedido 31, Parte D.1), com o mesmo componente
++ * da tela Volta:
++ *
++ * - o carro na posição atual, sobre a pista tratada (as camadas do cache);
++ * - o traçado da volta em andamento, colorido pelo pedal;
++ * - o fantasma da referência escolhida na Coleta (volta da IA ou sua melhor),
++ *   posicionado pelo tempo.
++ *
++ * A posição é a projeção na geometria oficial que o coach já faz
++ * (`/api/live/volta`, a cada 300 ms). O fantasma precisa do relógio da volta, que
++ * só existe depois de uma passagem pela linha.
++ */
++import React, { useEffect, useMemo, useState } from 'react';
++import { api } from '../api/client';
++import { PainelVidro } from '../components/ui/base';
++import { Fantasma } from '../volta/Fantasma';
++import { lerCamadasDaPista, lerGeometria, lerVolta, useLeitura, useSessoesDoRelatorio } from '../volta/dados';
++import { useEstadoDaVolta } from '../volta/estado';
++import { curvasDoRelatorio } from '../volta/medidas';
++import { voltaDoAoVivo, type VoltaDoBackend } from './voltaAoVivo';
++
++const PERIODO_MS = 300;
++
++export const FantasmaAoVivo: React.FC<{ pronto: boolean }> = ({ pronto }) => {
++  const [aoVivo, setAoVivo] = useState<VoltaDoBackend | null>(null);
++  const geometria = useLeitura(pronto ? 'geometria' : null, lerGeometria);
++  const camadas = useLeitura(pronto ? 'camadas' : null, lerCamadasDaPista);
++  const relatorio = useSessoesDoRelatorio();
++  const escolha = useLeitura(pronto ? 'coach-escolha' : null, async () => {
++    const antes = await api.getColetaAntes();
++    const tipo = antes?.coach?.referencia === 'minha_melhor' ? 'minha_melhor' : 'volta_ia';
++    return { tipo, lapId: antes?.coach?.modelo?.referencias?.[tipo]?.volta ?? null } as { tipo: string; lapId: string | null };
++  });
++  const lapRef = escolha.dado?.lapId ?? null;
++  const ref = useLeitura(lapRef ? `volta:${lapRef}` : null, () => lerVolta(lapRef as string));
++
++  useEffect(() => {
++    if (!pronto) return undefined;
++    let cancelado = false;
++    let timer = 0;
++    const { setS, setTocando } = useEstadoDaVolta.getState();
++    setTocando(true); // a câmera gira suave, como no replay
++    const ler = async () => {
++      try {
++        const r = await api.getLiveVolta();
++        if (cancelado) return;
++        setAoVivo(r);
++        if (r?.disponivel && r.s != null) setS(Number(r.s));
++      } catch {
++        if (!cancelado) setAoVivo(null);
++      }
++      if (!cancelado) timer = window.setTimeout(ler, PERIODO_MS);
++    };
++    ler();
++    return () => {
++      cancelado = true;
++      window.clearTimeout(timer);
++      useEstadoDaVolta.getState().setTocando(false);
++    };
++  }, [pronto]);
++
++  const geo = geometria.dado;
++  const volta = useMemo(() => (geo ? voltaDoAoVivo(aoVivo, geo.geometryId) : null), [aoVivo, geo]);
++  const grade = volta ? { n: volta.pontosDaGrade, comprimento: volta.comprimentoM, passo: volta.passoM } : null;
++  const sessoes = relatorio.dado?.sessoes ?? [];
++  const curvas = useMemo(() => (grade && sessoes.length ? curvasDoRelatorio(grade, sessoes[0].curvas) : []), [grade?.n, grade?.passo, sessoes]); // eslint-disable-line react-hooks/exhaustive-deps
++
++  let motivo: string | null = null;
++  if (!pronto) motivo = 'aguardando o backend';
++  else if (geometria.erro) motivo = `sem a geometria oficial: ${geometria.erro}`;
++  else if (escolha.dado && !lapRef) motivo = 'o coach não tem a referência escolhida na Coleta';
++  else if (ref.erro) motivo = `sem a volta de referência: ${ref.erro}`;
++  else if (!aoVivo || !aoVivo.disponivel) motivo = aoVivo && 'motivo' in aoVivo ? String((aoVivo as any).motivo) : 'sem quadros do jogo';
++  else if (!aoVivo.desdeALinha) motivo = 'o fantasma aparece depois da próxima passagem pela linha: o relógio da volta começa nela';
++
++  if (motivo || !volta || !grade || !geo || !ref.dado || !curvas.length) {
++    return (
++      <PainelVidro titulo="Volta com fantasma">
++        <p className="texto-apoio" style={{ margin: 0 }}>
++          {motivo ? `Sem dados: ${motivo}.` : 'Lendo a geometria oficial, a referência e a volta…'}
++        </p>
++      </PainelVidro>
++    );
++  }
++  return (
++    <Fantasma
++      grade={grade}
++      geometria={geo}
++      curvas={curvas}
++      volta={volta}
++      voltaRef={ref.dado}
++      referencia={escolha.dado?.tipo === 'minha_melhor' ? 'melhor' : 'ia'}
++      camadas={camadas.dado}
++      aoVivo
++    />
++  );
++};
+diff --git a/frontend/src/aoVivo/RadioAoVivo.tsx b/frontend/src/aoVivo/RadioAoVivo.tsx
+new file mode 100644
+index 00000000..10573b81
+--- /dev/null
++++ b/frontend/src/aoVivo/RadioAoVivo.tsx
+@@ -0,0 +1,81 @@
++/**
++ * O rádio da tela Ao vivo (pedido 31, Parte D.2): as mensagens que o backend
++ * entregou (`/api/radio/mensagens`), com o texto pronto (o mesmo do app do
++ * jogo), a hora, o ponto da pista e o botão para ouvir o áudio.
++ *
++ * Lê só o que é novo (`desde` o último id). Se o backend reiniciou (outra
++ * `instancia`), começa de novo.
++ */
++import React, { useEffect, useRef, useState } from 'react';
++import { api } from '../api/client';
++import { MensagemRadioCartao } from '../components/ui/base';
++import { mensagemDoRadio, type MensagemDoBackend } from '../utils/radio';
++
++const GUARDADAS = 20;
++
++export const RadioAoVivo: React.FC<{ pronto: boolean }> = ({ pronto }) => {
++  const [mensagens, setMensagens] = useState<MensagemDoBackend[]>([]);
++  const [falhou, setFalhou] = useState(false);
++  const [erroDaVoz, setErroDaVoz] = useState<string | null>(null);
++  const cursor = useRef<{ desde: number; instancia: string | null }>({ desde: 0, instancia: null });
++  const tocando = useRef<HTMLAudioElement | null>(null);
++
++  useEffect(() => {
++    if (!pronto) return undefined;
++    let cancelado = false;
++    let timer = 0;
++    const ler = async () => {
++      try {
++        const r = await api.getRadioMensagens(cursor.current.desde, cursor.current.instancia);
++        if (cancelado) return;
++        const reiniciou = cursor.current.instancia !== null && r.instancia !== cursor.current.instancia;
++        cursor.current = { desde: r.ultimoId ?? cursor.current.desde, instancia: r.instancia ?? null };
++        const novas: MensagemDoBackend[] = Array.isArray(r.mensagens) ? r.mensagens : [];
++        if (reiniciou) setMensagens(novas.slice(-GUARDADAS).reverse());
++        else if (novas.length) setMensagens((atuais) => [...novas.slice().reverse(), ...atuais].slice(0, GUARDADAS));
++        setErroDaVoz(r.erroDaVoz ?? null);
++        setFalhou(false);
++      } catch {
++        if (!cancelado) setFalhou(true);
++      }
++      if (!cancelado) timer = window.setTimeout(ler, 1000);
++    };
++    ler();
++    return () => {
++      cancelado = true;
++      window.clearTimeout(timer);
++    };
++  }, [pronto]);
++
++  const ouvir = (caminho: string) => {
++    tocando.current?.pause();
++    const audio = new Audio(api.urlDoAudio(caminho));
++    tocando.current = audio;
++    audio.play().catch(() => undefined);
++  };
++
++  return (
++    <div role="log" aria-live="polite" aria-label="Mensagens do rádio" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
++      {falhou && <p className="texto-fraco" style={{ margin: 0 }}>O backend não respondeu ao rádio.</p>}
++      {erroDaVoz && <p className="texto-fraco" style={{ margin: 0 }}>Sem voz: {erroDaVoz}</p>}
++      {!falhou && mensagens.length === 0 && (
++        <p className="texto-fraco" style={{ margin: 0 }}>
++          {pronto
++            ? 'Nenhuma mensagem nesta abertura do app. Elas chegam nas retas (as frases do coach) e na linha (o resumo da volta).'
++            : 'Aguardando o backend.'}
++        </p>
++      )}
++      {mensagens.map((m, i) => {
++        const cartao = mensagemDoRadio(m, i);
++        return (
++          <MensagemRadioCartao
++            key={cartao.id}
++            mensagem={cartao}
++            esmaecida={Math.max(0.6, 1 - i * 0.08)}
++            aoOuvir={cartao.audio ? () => ouvir(cartao.audio as string) : undefined}
++          />
++        );
++      })}
++    </div>
++  );
++};
+diff --git a/frontend/src/aoVivo/voltaAoVivo.test.ts b/frontend/src/aoVivo/voltaAoVivo.test.ts
+new file mode 100644
+index 00000000..fbcbda39
+--- /dev/null
++++ b/frontend/src/aoVivo/voltaAoVivo.test.ts
+@@ -0,0 +1,39 @@
++import { describe, expect, it } from 'vitest';
++import { voltaDoAoVivo, type VoltaDoBackend } from './voltaAoVivo';
++
++function backend(parcial: Partial<VoltaDoBackend> = {}): VoltaDoBackend {
++  const n = 10;
++  const vazio = () => new Array<number | null>(n).fill(null);
++  const linhas = { elapsed: vazio(), velocidade: vazio(), acelerador: vazio(), freio: vazio(), lateral: vazio() };
++  // Medido nos pontos 1, 2 e 5 (o 3 e o 4 caíram entre dois quadros).
++  [[1, 0.1], [2, 0.2], [5, 0.5]].forEach(([i, t]) => {
++    linhas.elapsed[i] = t;
++    linhas.velocidade[i] = 72; // 20 m/s
++    linhas.acelerador[i] = 1;
++    linhas.freio[i] = 0;
++    linhas.lateral[i] = i;
++  });
++  return { disponivel: true, volta: 7, desdeALinha: true, comprimentoM: 20, pontosDaGrade: n, passoM: 2, indice: 5, s: 10.4, linhas, ...parcial };
++}
++
++describe('voltaDoAoVivo', () => {
++  it('preenche os buracos até o ponto atual e segue o relógio depois dele', () => {
++    const v = voltaDoAoVivo(backend(), 'g1')!;
++    expect(v.lapId).toBe('ao-vivo#0007');
++    expect(v.linhas.elapsed[0]).toBe(0);
++    expect(v.linhas.elapsed[3]).toBeCloseTo(0.3);
++    expect(v.linhas.elapsed[4]).toBeCloseTo(0.4);
++    expect(v.linhas.elapsed[6]).toBeCloseTo(0.6); // 2 m a 20 m/s
++    expect(v.linhas.total).toBeCloseTo(1.0);
++    expect(v.linhas.lateral[3]).toBeCloseTo(3);
++    expect(v.linhas.acelerador[4]).toBe(1);
++    expect(Number.isNaN(v.linhas.freio[7])).toBe(true);
++    expect(v.tempoS).toBeCloseTo(0.5);
++  });
++
++  it('sem passar pela linha ainda, não há relógio para o fantasma', () => {
++    expect(voltaDoAoVivo(backend({ desdeALinha: false }), 'g1')).toBeNull();
++    expect(voltaDoAoVivo({ ...backend(), disponivel: false }, 'g1')).toBeNull();
++    expect(voltaDoAoVivo(null, 'g1')).toBeNull();
++  });
++});
+diff --git a/frontend/src/aoVivo/voltaAoVivo.ts b/frontend/src/aoVivo/voltaAoVivo.ts
+new file mode 100644
+index 00000000..9c024b5a
+--- /dev/null
++++ b/frontend/src/aoVivo/voltaAoVivo.ts
+@@ -0,0 +1,79 @@
++/**
++ * A volta em andamento (`/api/live/volta`) no formato das voltas do store, para
++ * o mesmo componente da tela Volta (pedido 31, Parte D.1).
++ *
++ * O backend manda, ponto a ponto da grade oficial, o que o coach já projetou
++ * (lateral e o relógio desde a linha) e a velocidade e os pedais do quadro.
++ * Aqui só se preenchem os buracos entre dois pontos medidos (interpolação) e,
++ * depois do ponto atual, o relógio segue reto na velocidade do carro, para o
++ * relógio da volta continuar crescendo (o componente só usa até o ponto atual).
++ */
++import type { VoltaDoStore } from '../volta/dados';
++
++export type VoltaDoBackend = {
++  disponivel: boolean;
++  volta: number | null;
++  desdeALinha: boolean;
++  comprimentoM: number;
++  pontosDaGrade: number;
++  passoM: number;
++  indice: number;
++  s: number;
++  linhas: Record<'elapsed' | 'velocidade' | 'acelerador' | 'freio' | 'lateral', Array<number | null>>;
++};
++
++const VELOCIDADE_MINIMA_KMH = 30;
++
++function preencher(valores: Array<number | null>, ate: number, interpolar: boolean): number[] {
++  const out: number[] = new Array(valores.length).fill(Number.NaN);
++  let anterior = -1;
++  for (let i = 0; i <= ate; i += 1) {
++    const v = valores[i];
++    if (v === null || v === undefined || !Number.isFinite(v)) continue;
++    out[i] = v;
++    if (anterior >= 0 && i - anterior > 1) {
++      for (let k = anterior + 1; k < i; k += 1) {
++        out[k] = interpolar ? out[anterior] + ((v - out[anterior]) * (k - anterior)) / (i - anterior) : out[anterior];
++      }
++    }
++    anterior = i;
++  }
++  return out;
++}
++
++/** A volta em andamento como `VoltaDoStore`; null antes da primeira passagem pela linha. */
++export function voltaDoAoVivo(r: VoltaDoBackend | null, geometryId: string): VoltaDoStore | null {
++  if (!r || !r.disponivel || !r.desdeALinha) return null;
++  const n = r.pontosDaGrade;
++  const k = Math.min(Math.max(0, r.indice), n - 1);
++  const elapsed = preencher(r.linhas.elapsed, k, true);
++  // Antes do primeiro ponto medido da volta: do zero na linha até ele.
++  const primeiro = elapsed.findIndex((v) => Number.isFinite(v));
++  if (primeiro < 0) return null;
++  for (let i = 0; i < primeiro; i += 1) elapsed[i] = (elapsed[primeiro] * i) / Math.max(primeiro, 1);
++  const velocidade = preencher(r.linhas.velocidade, k, false);
++  let ultimo = k;
++  while (ultimo > 0 && !Number.isFinite(elapsed[ultimo])) ultimo -= 1;
++  const v = Math.max(Number.isFinite(velocidade[ultimo]) ? velocidade[ultimo] : 0, VELOCIDADE_MINIMA_KMH) / 3.6;
++  for (let i = ultimo + 1; i < n; i += 1) elapsed[i] = elapsed[ultimo] + ((i - ultimo) * r.passoM) / v;
++  const total = elapsed[n - 1] + r.passoM / v;
++  const numero = Number(r.volta ?? 0);
++  return {
++    lapId: `ao-vivo#${String(Number.isFinite(numero) ? numero : 0).padStart(4, '0')}`,
++    gravacao: '',
++    tempoS: elapsed[ultimo],
++    replayLapId: null,
++    geometryId,
++    pontosDaGrade: n,
++    comprimentoM: r.comprimentoM,
++    passoM: r.passoM,
++    linhas: {
++      elapsed,
++      total,
++      velocidade,
++      acelerador: preencher(r.linhas.acelerador, k, false),
++      freio: preencher(r.linhas.freio, k, false),
++      lateral: preencher(r.linhas.lateral, k, true),
++    },
++  };
++}
+diff --git a/frontend/src/api/client.ts b/frontend/src/api/client.ts
+index 728d16a9..603a5a09 100644
+--- a/frontend/src/api/client.ts
++++ b/frontend/src/api/client.ts
+@@ -223,6 +223,15 @@ export const api = {
+     await client.post(`/api/coleta/verificacoes/${encodeURIComponent(sessionId)}`)
+   ).data,
+   getColetaM1Oficial: async (): Promise<any> => (await client.get('/api/coleta/m1/oficial', { timeout: 60_000 })).data,
++  // ─── Pedido 31: o rádio do engenheiro e a volta ao vivo ───────────────────
++  getRadioMensagens: async (desde: number, instancia: string | null): Promise<any> => (
++    await client.get('/api/radio/mensagens', { params: { desde, ...(instancia ? { instancia } : {}) } })
++  ).data,
++  postRadioTeste: async (): Promise<any> => (await client.post('/api/radio/teste', null, { timeout: 45_000 })).data,
++  getRadioEstado: async (): Promise<any> => (await client.get('/api/radio/estado', { timeout: 30_000 })).data,
++  getLiveVolta: async (): Promise<any> => (await client.get('/api/live/volta')).data,
++  /** O endereço completo do áudio de uma mensagem (`/api/radio/audio/<id>`). */
++  urlDoAudio: (caminho: string): string => `${BASE_URL}${caminho}`,
+   // ─── Pedido 32: o botão do coach e a anotação de sessão ────────────────────
+   getCoachRodada: async (): Promise<any> => (await client.get('/api/coleta/coach/rodada', { timeout: 15_000 })).data,
+   postCoachRodada: async (): Promise<any> => (await client.post('/api/coleta/coach/rodada', null, { timeout: 30_000 })).data,
+diff --git a/frontend/src/components/sessoes/HeroSessoes.tsx b/frontend/src/components/sessoes/HeroSessoes.tsx
+index 76b1ccd8..97f336d7 100644
+--- a/frontend/src/components/sessoes/HeroSessoes.tsx
++++ b/frontend/src/components/sessoes/HeroSessoes.tsx
+@@ -60,7 +60,8 @@ const ALTURA_PISTA = 500;
+ 
+ function referencia(valor: any): Referencia | null {
+   if (!valor || typeof valor !== 'object') return null;
+-  const tempo = Number(valor.tempoS);
++  // Pedido 31, A.3: o tempo do store v2 (o mesmo da tela Volta e do relatório); o do modelo do coach só sem ele.
++  const tempo = Number(valor.tempoStoreS ?? valor.tempoS);
+   return { volta: valor.volta ?? null, tempoS: Number.isFinite(tempo) ? tempo : null, carro: valor.carro ?? null };
+ }
+ 
+diff --git a/frontend/src/components/ui/base.tsx b/frontend/src/components/ui/base.tsx
+index b19f9ef5..af88926e 100644
+--- a/frontend/src/components/ui/base.tsx
++++ b/frontend/src/components/ui/base.tsx
+@@ -142,7 +142,11 @@ export const Dica: React.FC<{ x: number; y: number; children: React.ReactNode }>
+ 
+ // ── Mensagem de rádio ────────────────────────────────────────────────────────
+ 
+-export const MensagemRadioCartao: React.FC<{ mensagem: MensagemRadio; esmaecida?: number }> = ({ mensagem, esmaecida = 1 }) => (
++export const MensagemRadioCartao: React.FC<{ mensagem: MensagemRadio; esmaecida?: number; aoOuvir?: () => void }> = ({
++  mensagem,
++  esmaecida = 1,
++  aoOuvir,
++}) => (
+   <article className="radio" style={{ opacity: esmaecida }}>
+     <div className="radio__topo">
+       <span className={clsx('radio__tag', mensagem.tipo === 'foco' && 'radio__tag--foco')}>
+@@ -156,5 +160,11 @@ export const MensagemRadioCartao: React.FC<{ mensagem: MensagemRadio; esmaecida?
+     </div>
+     <p className="radio__frase">{mensagem.frase}</p>
+     {mensagem.detalhe && <p className="radio__detalhe">{mensagem.detalhe}</p>}
++    {aoOuvir && (
++      <button type="button" className="botao botao--pequeno" style={{ alignSelf: 'flex-start' }} onClick={aoOuvir}>
++        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2 L13 8 L4 14 Z" /></svg>
++        Ouvir
++      </button>
++    )}
+   </article>
+ );
+diff --git a/frontend/src/pages/AoVivoPage.tsx b/frontend/src/pages/AoVivoPage.tsx
+index c4ce1d1f..f5633642 100644
+--- a/frontend/src/pages/AoVivoPage.tsx
++++ b/frontend/src/pages/AoVivoPage.tsx
+@@ -1,22 +1,21 @@
+ /**
+- * Ao vivo (pedido 29, casca): a sessão em andamento e o que o rádio disse.
++ * Ao vivo (pedidos 29 e 31): a sessão em andamento, como o rádio do engenheiro.
+  *
++ * - Volta com fantasma: o mesmo componente da tela Volta, com o carro na
++ *   posição atual (a projeção do coach na geometria oficial), o traçado da volta
++ *   em andamento e o fantasma da referência escolhida (`/api/live/volta`).
++ * - Rádio: as mensagens que o backend entregou (`/api/radio/mensagens`), com o
++ *   texto pronto (o mesmo do app do jogo), a hora, o ponto da pista e o áudio.
+  * - Gravação e canais: `/api/coleta/ao-vivo` (pedido 28), a cada 2 s.
+- * - Rádio: `/api/live/coach`, a cada 2 s; as frases recentes, a mais nova em
+- *   cima, montadas em português a partir dos números de cada evento
+- *   (utils/radio.ts). O resumo de fim de volta não passa por esta rota (vai só
+- *   pelo WebSocket) e fica para o próximo pedido.
+- *
+- * O mapa ao vivo, o fantasma e o rádio dentro do jogo chegam com a realidade
+- * aumentada (próximo pedido, depois do ADR 0020).
+  */
+-import React, { useEffect, useMemo, useState } from 'react';
++import React, { useEffect, useState } from 'react';
+ import { api } from '../api/client';
+ import type { EstadoDoApp } from '../hooks/useEstadoDoApp';
+ import { ErrorBoundary } from '../components/ErrorBoundary';
+-import { CartaoNumero, EtiquetaEstado, MensagemRadioCartao, PainelVidro, type Tom } from '../components/ui/base';
++import { CartaoNumero, EtiquetaEstado, PainelVidro, type Tom } from '../components/ui/base';
++import { RadioAoVivo } from '../aoVivo/RadioAoVivo';
++import { FantasmaAoVivo } from '../aoVivo/FantasmaAoVivo';
+ import { formatarNumero, ROTULO_ESTADO, tomDoEstado, type EstadoCanal } from '../utils/coleta';
+-import { mensagemDoEvento, type MensagemRadio } from '../utils/radio';
+ 
+ function usePeriodico<T>(ler: () => Promise<T>, ms: number, ligado: boolean): [T | null, boolean] {
+   const [dado, setDado] = useState<T | null>(null);
+@@ -57,12 +56,6 @@ function quemPilota(aoVivo: any): string | null {
+ export const AoVivoPage: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
+   const pronto = estado.backend.fase === 'pronto';
+   const [aoVivo, aoVivoFalhou] = usePeriodico(api.getColetaAoVivo, 2000, pronto);
+-  const [coach, coachFalhou] = usePeriodico(api.getLiveCoach, 2000, pronto);
+-
+-  const mensagens = useMemo<MensagemRadio[]>(
+-    () => (Array.isArray(coach?.events) ? coach.events : []).map((evento: any, i: number) => mensagemDoEvento(evento, i)),
+-    [coach],
+-  );
+   const itens: any[] = aoVivo?.itens || [];
+   const grupos: any[] = aoVivo?.grupos || [];
+   const gravando = Boolean(aoVivo?.gravando);
+@@ -90,6 +83,8 @@ export const AoVivoPage: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
+           )}
+         </header>
+ 
++        <FantasmaAoVivo pronto={pronto} />
++
+         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
+           <PainelVidro id="ao-vivo-canais" titulo="Gravação e canais" nota="/api/coleta/ao-vivo · últimos segundos" style={{ flex: '999 1 560px', minWidth: 0 }}>
+             {aoVivoFalhou && <p className="texto-fraco" style={{ margin: 0 }}>O backend não respondeu ao estado ao vivo.</p>}
+@@ -117,28 +112,11 @@ export const AoVivoPage: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
+                 );
+               })}
+             </div>
+-            <div className="aviso-proximo">
+-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+-                <path d="M3 15c2-6 5-9 8-9 3 0 5 2 5 5s-3 5-6 5" />
+-                <circle cx="10" cy="16" r="1.6" />
+-              </svg>
+-              O mapa ao vivo com o fantasma e o rádio dentro do jogo chegam no próximo pedido, com a realidade aumentada.
+-            </div>
+           </PainelVidro>
+ 
+-          <PainelVidro id="ao-vivo-radio" titulo="Rádio" nota="até 3 frases por volta" style={{ flex: '1 1 400px', minWidth: 0 }}>
+-            <div role="log" aria-live="polite" aria-label="Mensagens do rádio" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+-              {coachFalhou && <p className="texto-fraco" style={{ margin: 0 }}>O backend não respondeu ao coach.</p>}
+-              {!coachFalhou && mensagens.length === 0 && (
+-                <p className="texto-fraco" style={{ margin: 0 }}>
+-                  {pronto ? 'Nenhuma frase do coach nesta abertura do app. Elas aparecem aqui durante a sessão.' : 'Aguardando o backend.'}
+-                </p>
+-              )}
+-              {mensagens.map((m, i) => (
+-                <MensagemRadioCartao key={m.id} mensagem={m} esmaecida={Math.max(0.6, 1 - i * 0.08)} />
+-              ))}
+-            </div>
+-            <span className="texto-fraco dado">/api/live/coach · as 20 mais recentes</span>
++          <PainelVidro id="ao-vivo-radio" titulo="Rádio" nota="até 3 frases por volta, nas retas, e o resumo na linha" style={{ flex: '1 1 400px', minWidth: 0 }}>
++            <RadioAoVivo pronto={pronto} />
++            <span className="texto-fraco dado">/api/radio/mensagens · as 20 mais recentes</span>
+           </PainelVidro>
+         </div>
+       </div>
+diff --git a/frontend/src/pages/SistemaPage.tsx b/frontend/src/pages/SistemaPage.tsx
+index 233c6ee4..de33476b 100644
+--- a/frontend/src/pages/SistemaPage.tsx
++++ b/frontend/src/pages/SistemaPage.tsx
+@@ -16,6 +16,7 @@ import { CarPhysicsDebugPanel } from '../components/CarPhysicsDebugPanel';
+ import { hashDaRota } from '../navegacao/rotas';
+ import { DepuracaoSistema } from './sistema/DepuracaoSistema';
+ import { GuiaVisual } from './sistema/GuiaVisual';
++import { RadioDeTeste } from './sistema/RadioDeTeste';
+ 
+ const ABAS: ReadonlyArray<{ id: string | null; rotulo: string }> = [
+   { id: null, rotulo: 'Diagnóstico' },
+@@ -25,6 +26,7 @@ const ABAS: ReadonlyArray<{ id: string | null; rotulo: string }> = [
+ 
+ const Diagnostico: React.FC = () => (
+   <>
++    <RadioDeTeste />
+     <section className="vidro painel">
+       <div className="superficie" style={{ minHeight: 300, overflow: 'hidden' }}>
+         <DesktopRuntimePanel active />
+diff --git a/frontend/src/pages/sistema/RadioDeTeste.tsx b/frontend/src/pages/sistema/RadioDeTeste.tsx
+new file mode 100644
+index 00000000..d5bb0cab
+--- /dev/null
++++ b/frontend/src/pages/sistema/RadioDeTeste.tsx
+@@ -0,0 +1,71 @@
++/**
++ * O rádio do engenheiro na tela Sistema (pedido 31, Parte B.4): o estado (janelas
++ * de rádio e voz) e a mensagem de teste, para conferir o cartão e a voz no jogo
++ * sem andar na pista.
++ */
++import React, { useEffect, useState } from 'react';
++import { api } from '../../api/client';
++import { MensagemRadioCartao, PainelVidro } from '../../components/ui/base';
++import { textoDoErro } from '../../volta/dados';
++import { mensagemDoRadio } from '../../utils/radio';
++
++export const RadioDeTeste: React.FC = () => {
++  const [estado, setEstado] = useState<any>(null);
++  const [erro, setErro] = useState<string | null>(null);
++  const [mandando, setMandando] = useState(false);
++  const [ultima, setUltima] = useState<any>(null);
++
++  useEffect(() => {
++    let cancelado = false;
++    api.getRadioEstado().then((e) => !cancelado && setEstado(e)).catch((f) => !cancelado && setErro(textoDoErro(f)));
++    return () => {
++      cancelado = true;
++    };
++  }, []);
++
++  const mandar = async () => {
++    setMandando(true);
++    try {
++      const m = await api.postRadioTeste();
++      setUltima(m);
++      setErro(null);
++      if (m?.audio) new Audio(api.urlDoAudio(m.audio)).play().catch(() => undefined);
++    } catch (f) {
++      setErro(textoDoErro(f));
++    } finally {
++      setMandando(false);
++    }
++  };
++
++  const janelas: Array<[number, number]> = estado?.janelas ?? [];
++  return (
++    <PainelVidro
++      id="sistema-radio"
++      titulo="Rádio do engenheiro"
++      acao={
++        <button type="button" className="botao botao--primario botao--pequeno" onClick={mandar} disabled={mandando}>
++          {mandando ? 'Gerando a voz…' : 'Mandar mensagem de teste'}
++        </button>
++      }
++    >
++      <p className="texto-apoio" style={{ margin: 0 }}>
++        A mensagem de teste sai na hora, sem esperar uma reta: com o app do rádio ligado no jogo, o cartão aparece e a voz toca.
++      </p>
++      {erro && <p className="texto-apoio" style={{ margin: 0 }}>Sem dados: {erro}</p>}
++      {estado && (
++        <div className="fatos dado">
++          <span>voz {estado.voz} a {String(estado.velocidade).replace('.', ',')}x</span>
++          <span>
++            janelas de rádio:{' '}
++            {janelas.length
++              ? janelas.map(([a, b]) => `${Math.round(a).toLocaleString('pt-BR')}–${Math.round(b).toLocaleString('pt-BR')} m`).join(', ')
++              : 'sem a geometria oficial'}
++          </span>
++          <span>{estado.entregues} entregues nesta abertura · {estado.pendentes} esperando</span>
++          {estado.erroDaVoz && <span>sem voz: {estado.erroDaVoz}</span>}
++        </div>
++      )}
++      {ultima && <MensagemRadioCartao mensagem={mensagemDoRadio(ultima)} aoOuvir={ultima.audio ? () => new Audio(api.urlDoAudio(ultima.audio)).play().catch(() => undefined) : undefined} />}
++    </PainelVidro>
++  );
++};
+diff --git a/frontend/src/utils/radio.test.ts b/frontend/src/utils/radio.test.ts
+index 1a0a25a5..59080e40 100644
+--- a/frontend/src/utils/radio.test.ts
++++ b/frontend/src/utils/radio.test.ts
+@@ -28,7 +28,7 @@ describe('mensagens de rádio', () => {
+     const m = mensagemDoEvento(eventoReferencia);
+     expect(m.tipo).toBe('diferenca');
+     expect(m.frase).toBe('+0,31 s para a volta da IA neste trecho');
+-    expect(m.onde).toBe('volta 7 · microssetor 12');
++    expect(m.onde).toBe('volta 7 · microssetor 13');
+     expect(m.detalhe).toBe('3,12 s contra 2,81 s · a IA freia 12 m depois de você · mínima da IA 104 km/h, a sua 96 km/h');
+     expect(m.perdaS).toBeCloseTo(0.31);
+   });
+@@ -53,7 +53,7 @@ describe('mensagens de rádio', () => {
+     });
+     expect(m.tipo).toBe('foco');
+     expect(m.tag).toBe('Foco');
+-    expect(m.frase).toBe('Foco nas próximas voltas: microssetores 3, 12 e 41');
++    expect(m.frase).toBe('Foco nas próximas voltas: microssetores 4, 13 e 42');
+     expect(m.detalhe).toBe('maior diferença mediana para a referência nas suas voltas do modelo');
+   });
+ 
+diff --git a/frontend/src/utils/radio.ts b/frontend/src/utils/radio.ts
+index 8091f1c8..e30ff626 100644
+--- a/frontend/src/utils/radio.ts
++++ b/frontend/src/utils/radio.ts
+@@ -8,10 +8,17 @@
+  * e a mesma regra, só a escrita muda. Evento sem os números → a frase do
+  * backend, como veio.
+  *
+- * "Setor N" no coach é o microssetor N de 60 (inventário, problema A.5); aqui
+- * ele se chama microssetor.
++ * "Setor N" no coach é o índice N do microssetor, contado a partir de 0
++ * (`int(progresso × 60)` em `driving_coach.py`). O piloto vê o microssetor
++ * contado a partir de 1, como no mapa e no relatório de evolução (pedido 31,
++ * A.2): o índice 2 do coach é o microssetor 3. O índice interno não muda.
+  */
+ 
++/** Índice do coach (a partir de 0) → número que o piloto vê (a partir de 1). */
++export function microssetorParaOPiloto(indice: number): number {
++  return indice + 1;
++}
++
+ export type EventoCoach = {
+   type?: string;
+   event?: string;
+@@ -86,6 +93,53 @@ function clausulaDaMinima(tipo: string | null, referenciaKmh: number, suaKmh: nu
+   return `mínima na referência ${ref} km/h, a sua ${sua} km/h`;
+ }
+ 
++/**
++ * Pedido 31: a mensagem que o backend montou (`/api/radio/mensagens`, ou o campo
++ * `radio` das frases de uma volta gravada). O texto vem pronto, igual ao do app
++ * do jogo; aqui ela só vira o formato do cartão.
++ */
++export type MensagemDoBackend = {
++  id?: number;
++  origem: 'coach' | 'resumo' | 'teste' | string;
++  titulo: string;
++  texto: string;
++  detalhe: string | null;
++  fala?: string;
++  microssetor: number | null;
++  curva: string | null;
++  s: number | null;
++  sCarro?: number | null;
++  voltaDoCarro?: number | null;
++  entregueEm?: string | null;
++  audio?: string | null;
++  perdaS?: number | null;
++};
++
++export type MensagemRadioComAudio = MensagemRadio & { audio: string | null; sCarro: number | null };
++
++const TAG_DA_ORIGEM: Record<string, string> = { coach: 'Rádio', resumo: 'Volta', teste: 'Teste' };
++
++export function mensagemDoRadio(m: MensagemDoBackend, indice = 0): MensagemRadioComAudio {
++  const ponto = numero(m.sCarro) ?? numero(m.s);
++  const onde = [
++    m.titulo,
++    m.microssetor ? `microssetor ${m.microssetor}` : null,
++    ponto !== null && m.origem !== 'teste' ? `${Math.round(ponto).toLocaleString('pt-BR')} m` : null,
++  ].filter(Boolean).join(' · ');
++  return {
++    id: `${m.id ?? 'sem-id'}-${indice}`,
++    tipo: m.origem === 'coach' ? 'diferenca' : 'outro',
++    tag: TAG_DA_ORIGEM[m.origem] ?? 'Rádio',
++    onde,
++    hora: m.entregueEm ? m.entregueEm.slice(11, 19) : '',
++    frase: m.texto,
++    detalhe: m.detalhe ?? null,
++    perdaS: numero(m.perdaS),
++    audio: m.audio ?? null,
++    sCarro: numero(m.sCarro),
++  };
++}
++
+ /** Um evento de `/api/live/coach` (ou do WebSocket) como mensagem de rádio. */
+ export function mensagemDoEvento(evento: EventoCoach, indice = 0): MensagemRadio {
+   const volta = numero(evento.lap_number);
+@@ -94,7 +148,7 @@ export function mensagemDoEvento(evento: EventoCoach, indice = 0): MensagemRadio
+   const textoOriginal = String(evento.event ?? evento.message ?? '').trim();
+ 
+   if (evento.type === 'coaching_focus' && Array.isArray(evento.focusSectors) && evento.focusSectors.length) {
+-    const setores = evento.focusSectors;
++    const setores = evento.focusSectors.map((indice) => microssetorParaOPiloto(Number(indice)));
+     const onde = evento.focusSource === 'sessao' ? 'nas últimas 5 voltas válidas da sessão' : 'nas suas voltas do modelo';
+     return {
+       id,
+@@ -132,7 +186,7 @@ export function mensagemDoEvento(evento: EventoCoach, indice = 0): MensagemRadio
+       id,
+       tipo: 'diferenca',
+       tag: 'Rádio',
+-      onde: [volta ? `volta ${volta}` : null, `microssetor ${microssetor}`].filter(Boolean).join(' · '),
++      onde: [volta ? `volta ${volta}` : null, `microssetor ${microssetorParaOPiloto(microssetor)}`].filter(Boolean).join(' · '),
+       hora,
+       frase: `${diferencaComSinal(perda)} para ${artigo} ${rotulo} neste trecho`,
+       detalhe: partes.join(' · '),
+diff --git a/frontend/src/volta/Fantasma.tsx b/frontend/src/volta/Fantasma.tsx
+index 7c7985e7..f8fae1d8 100644
+--- a/frontend/src/volta/Fantasma.tsx
++++ b/frontend/src/volta/Fantasma.tsx
+@@ -48,6 +48,8 @@ type Props = {
+   camadas: any | null;
+   /** O que vai embaixo do replay (as frases do coach). */
+   children?: React.ReactNode;
++  /** Pedido 31: a volta em andamento (tela Ao vivo), sem o replay. */
++  aoVivo?: boolean;
+ };
+ 
+ const NOME_DO_PEDAL: Record<Pedal, string> = { freio: 'FREANDO', acelerador: 'ACELERANDO', parcial: 'PARCIAL' };
+@@ -80,7 +82,7 @@ function rotulo(ctx: CanvasRenderingContext2D, texto: string, x: number, y: numb
+   ctx.fillText(texto, x, y);
+ }
+ 
+-export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, volta, voltaRef: ref, referencia, camadas, children }) => {
++export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, volta, voltaRef: ref, referencia, camadas, children, aoVivo = false }) => {
+   const principal = useRef<HTMLCanvasElement>(null);
+   const relevo = useRef<HTMLCanvasElement>(null);
+   const mini = useRef<HTMLCanvasElement>(null);
+@@ -448,7 +450,7 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
+         ref={caixa}
+       >
+         <canvas ref={principal} className="fantasma-principal" aria-label="Visão próxima da volta, com o fantasma da referência" />
+-        <TituloDoFantasma grade={g} volta={volta} ref_={ref} curvas={curvas} referencia={referencia} />
++        <TituloDoFantasma grade={g} volta={volta} ref_={ref} curvas={curvas} referencia={referencia} aoVivo={aoVivo} />
+         <div className="fantasma-canto fantasma-relevo">
+           <canvas ref={relevo} aria-label="Relevo da pista" />
+           <span className="fantasma-rotulo">Relevo</span>
+@@ -466,21 +468,21 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
+         <span><i className="amostra" style={{ background: 'var(--parcial)' }} />acelerador parcial ou sem pedal</span>
+         <span><i className="ponto" style={{ border: '2px solid var(--fantasma)', width: 10, height: 10 }} />fantasma</span>
+       </div>
+-      <Replay grade={g} volta={volta} ref_={ref} curvas={curvas} />
++      {!aoVivo && <Replay grade={g} volta={volta} ref_={ref} curvas={curvas} />}
+       {children}
+     </section>
+   );
+ };
+ 
+-type PropsDaLeitura = { grade: Grade; volta: VoltaDoStore; ref_: VoltaDoStore; curvas: Curva[]; referencia?: 'ia' | 'melhor' };
++type PropsDaLeitura = { grade: Grade; volta: VoltaDoStore; ref_: VoltaDoStore; curvas: Curva[]; referencia?: 'ia' | 'melhor'; aoVivo?: boolean };
+ 
+-function TituloDoFantasma({ grade: g, volta, curvas, referencia }: PropsDaLeitura) {
++function TituloDoFantasma({ grade: g, volta, curvas, referencia, aoVivo }: PropsDaLeitura) {
+   const s = useEstadoDaVolta((e) => e.s) ?? 0;
+   const modo = useEstadoDaVolta((e) => e.modo);
+   const c = curvaEm(curvas, s);
+   return (
+     <div className="fantasma-titulo">
+-      <b>Volta {numeroDaVolta(volta.lapId)} contra a {referencia === 'ia' ? 'volta da IA' : 'sua melhor'}</b>
++      <b>{aoVivo ? 'Ao vivo: volta' : 'Volta'} {numeroDaVolta(volta.lapId)} contra a {referencia === 'ia' ? 'volta da IA' : 'sua melhor'}</b>
+       <span>{modo === 'curva' ? 'fantasma por curva' : 'fantasma na volta inteira'} · {nf(s, 0)} m{c ? ` · ${c.codigo}` : ''}</span>
+       {void g}
+     </div>
+diff --git a/frontend/src/volta/RadioDaVolta.tsx b/frontend/src/volta/RadioDaVolta.tsx
+index 28163389..94b93e14 100644
+--- a/frontend/src/volta/RadioDaVolta.tsx
++++ b/frontend/src/volta/RadioDaVolta.tsx
+@@ -3,25 +3,33 @@
+  * replay da Volta, marcadas no mapa").
+  *
+  * Vêm da rota que já existe, `/api/analysis/coach/lap/{replayLapId}`: o mesmo
+- * coach, percorrido no servidor sobre a volta gravada. Cada evento traz o `s`
+- * onde a frase sai, já na geometria oficial (o coach projeta nela desde o
+- * ADR 0013). A frase é montada em português por `utils/radio.ts`, com os mesmos
+- * números do evento. Clicar numa frase leva o cursor até o ponto dela; durante
+- * o replay, a última frase já dita fica destacada.
++ * coach, percorrido no servidor sobre a volta gravada. Desde o pedido 31, cada
++ * frase traz a mensagem de rádio pronta (`radio`), o mesmo texto do app do jogo,
++ * com o `s` da geometria oficial (o fim do microssetor). Antes, a tela usava o
++ * `s` do quadro, que é a projeção do runtime, e não a oficial. Clicar numa frase
++ * leva o cursor até o ponto dela; durante o replay, a última frase já dita fica
++ * destacada.
+  */
+ import React from 'react';
+-import { mensagemDoEvento, type EventoCoach, type MensagemRadio } from '../utils/radio';
++import { mensagemDoEvento, mensagemDoRadio, type EventoCoach, type MensagemRadio } from '../utils/radio';
+ import { useEstadoDaVolta } from './estado';
+ import { curvaEm, type Curva } from './medidas';
+ import { nf } from './formato';
+ 
+ export type FraseDaVolta = { s: number; mensagem: MensagemRadio };
+ 
+-/** Os eventos da rota com `s` válido, na ordem da volta. */
++/**
++ * Os eventos da rota com `s` válido, na ordem da volta.
++ *
++ * Pedido 31: com o texto pronto do backend (`radio`), a frase é a mesma do app do
++ * jogo e o `s` é o da geometria oficial (o fim do microssetor, onde o coach fecha a
++ * medida). Antes, o `s` era o do quadro, que é a projeção do runtime.
++ */
+ export function frasesDosEventos(eventos: unknown, comprimento: number): FraseDaVolta[] {
+   if (!Array.isArray(eventos)) return [];
+   return eventos
+-    .map((e: EventoCoach & { s?: unknown }, i) => ({ s: Number(e?.s), mensagem: mensagemDoEvento(e, i) }))
++    .map((e: EventoCoach & { s?: unknown; radio?: any }, i) =>
++      e?.radio ? { s: Number(e.radio.s), mensagem: mensagemDoRadio(e.radio, i) } : { s: Number(e?.s), mensagem: mensagemDoEvento(e, i) })
+     .filter((f) => Number.isFinite(f.s) && f.s >= 0 && f.s <= comprimento + 1)
+     .sort((a, b) => a.s - b.s);
+ }
+diff --git a/tools/csp_app/conferir_lua.py b/tools/csp_app/conferir_lua.py
+new file mode 100644
+index 00000000..b9891ffd
+--- /dev/null
++++ b/tools/csp_app/conferir_lua.py
+@@ -0,0 +1,75 @@
++"""Confere o app Lua sem o jogo e sem instalar nada (pedido 31, Parte E.3).
++
++Nao ha interpretador de Lua neste computador. O que da para conferir:
++
++1. **O lexico:** o `pygments` (ja no .venv) le o arquivo com o lexer de Lua; um
++   token de erro e um erro de lexico (string sem fechar, caractere estranho).
++2. **Os blocos:** cada `function`, `if`, `for`, `while` e `do` solto fecha com um
++   `end`, e cada `repeat` com um `until`, na ordem.
++3. **A API usada:** cada chamada `web.`, `ui.`, `ac.`, `JSON.`, `os.` e
++   `setInterval` existe no `lib.lua` do SDK do CSP instalado (so leitura).
++
++Nao e uma analise completa da gramatica: uma expressao malformada dentro de um
++bloco bem fechado passaria. O teste de verdade e no jogo (Parte F).
++
++Uso: python conferir_lua.py <arquivo.lua> [<lib.lua do SDK>]
++"""
++import re
++import sys
++from pathlib import Path
++
++from pygments.lexers import LuaLexer
++from pygments.token import Error, Keyword, Name
++
++arquivo = Path(sys.argv[1])
++sdk = Path(sys.argv[2]) if len(sys.argv) > 2 else None
++codigo = arquivo.read_text(encoding="utf-8")
++tokens = list(LuaLexer().get_tokens(codigo))
++
++erros = [valor for tipo, valor in tokens if tipo in Error]
++pilha = []
++problemas = []
++anterior = None
++for tipo, valor in tokens:
++    if tipo in Keyword or (tipo in Name and valor in ("function",)):
++        if valor in ("function", "if", "repeat"):
++            pilha.append(valor)
++        elif valor in ("for", "while"):
++            pilha.append(valor)
++        elif valor == "do":
++            # `for ... do` e `while ... do` ja abriram o bloco; um `do` solto abre outro.
++            if pilha and pilha[-1] in ("for", "while") and anterior != "do-usado":
++                pilha[-1] = pilha[-1] + "-do"
++            else:
++                pilha.append("do")
++        elif valor == "end":
++            if not pilha or pilha[-1] == "repeat":
++                problemas.append("`end` sem bloco aberto")
++            else:
++                pilha.pop()
++        elif valor == "until":
++            if not pilha or pilha[-1] != "repeat":
++                problemas.append("`until` sem `repeat`")
++            else:
++                pilha.pop()
++if pilha:
++    problemas.append(f"blocos sem fechar: {pilha}")
++
++chamadas = sorted(set(re.findall(r"\b((?:web|ui|ac|JSON|os)\.[A-Za-z_]+|setInterval|rgbm|vec2)\b", codigo)))
++faltam = []
++if sdk and sdk.exists():
++    lib = sdk.read_text(encoding="utf-8", errors="replace")
++    for c in chamadas:
++        if c in ("os.preciseClock",) and "function os.preciseClock" in lib:
++            continue
++        padrao = rf"function {re.escape(c)}\(|^{re.escape(c)} = |^---@class {re.escape(c)}\b"
++        if not re.search(padrao, lib, re.MULTILINE):
++            faltam.append(c)
++
++print(f"arquivo: {arquivo}")
++print(f"tokens: {len(tokens)}; erros de lexico: {len(erros)} {erros[:5]}")
++print(f"blocos: {'ok' if not problemas else problemas}")
++print(f"API usada ({len(chamadas)}): {', '.join(chamadas)}")
++if sdk:
++    print(f"no SDK do CSP: {'todas existem' if not faltam else 'faltam ' + ', '.join(faltam)}")
++sys.exit(1 if erros or problemas or faltam else 0)
+diff --git a/tools/csp_app/instalar.ps1 b/tools/csp_app/instalar.ps1
+new file mode 100644
+index 00000000..d6805abc
+--- /dev/null
++++ b/tools/csp_app/instalar.ps1
+@@ -0,0 +1,58 @@
++﻿# Instala o "Rádio do engenheiro" no Assetto Corsa (pedido 31, ADR 0020).
++#
++# Copia tools\csp_app\radio_engenheiro\ para <pasta do jogo>\apps\lua\radio_engenheiro\
++# e não toca em mais nada do jogo. Quem roda é o Eduardo:
++#
++#   powershell -NoProfile -ExecutionPolicy Bypass -File tools\csp_app\instalar.ps1
++#
++# (O -ExecutionPolicy Bypass vale só para este comando; não muda a configuração do Windows.)
++param([string]$PastaDoJogo)
++$ErrorActionPreference = 'Stop'
++
++$nome = 'radio_engenheiro'
++$origem = Join-Path $PSScriptRoot $nome
++if (-not (Test-Path (Join-Path $origem 'manifest.ini'))) {
++  Write-Host "Não achei o app em $origem." -ForegroundColor Red
++  exit 1
++}
++
++if (-not $PastaDoJogo) {
++  $sugestao = 'D:\SteamLibrary\steamapps\common\assettocorsa'
++  $PastaDoJogo = Read-Host "Pasta do Assetto Corsa (Enter para $sugestao)"
++  if (-not $PastaDoJogo) { $PastaDoJogo = $sugestao }
++}
++$PastaDoJogo = $PastaDoJogo.Trim('"').TrimEnd('\')
++
++# A pasta tem de ser a do jogo, com o Custom Shaders Patch instalado.
++$log = Join-Path $PastaDoJogo 'extension\installed.log'
++if (-not (Test-Path (Join-Path $PastaDoJogo 'acs.exe'))) {
++  Write-Host "Esta pasta não é a do Assetto Corsa (não tem acs.exe): $PastaDoJogo" -ForegroundColor Red
++  exit 2
++}
++if (-not (Test-Path $log)) {
++  Write-Host "Não achei o Custom Shaders Patch: falta $log" -ForegroundColor Red
++  exit 3
++}
++$csp = (Get-Content $log -TotalCount 40 | Select-String -Pattern '^\s*version:\s*(.+)$' | Select-Object -First 1)
++$versao = if ($csp) { $csp.Matches[0].Groups[1].Value.Trim() } else { 'desconhecida' }
++
++$destinoLua = Join-Path $PastaDoJogo 'apps\lua'
++$destino = Join-Path $destinoLua $nome
++Write-Host "Custom Shaders Patch: versão $versao (o app foi feito para a 0.2.11)."
++Write-Host "Vou copiar:"
++Write-Host "  de   $origem"
++Write-Host "  para $destino"
++Write-Host "Nada mais do jogo é tocado."
++$ok = Read-Host "Continuar? (s/n)"
++if ($ok -notin @('s', 'S', 'sim', 'Sim')) {
++  Write-Host 'Nada foi feito.'
++  exit 0
++}
++
++if (-not (Test-Path $destinoLua)) { New-Item -ItemType Directory -Path $destinoLua | Out-Null }
++if (Test-Path $destino) { Remove-Item -Recurse -Force $destino }
++Copy-Item -Recurse $origem $destino
++Get-ChildItem $destino | ForEach-Object { Write-Host "  copiado: $($_.Name)" }
++Write-Host ''
++Write-Host 'Pronto. No jogo, abra a barra de apps (lado direito da tela) e ligue "Rádio do engenheiro".' -ForegroundColor Green
++Write-Host 'Abra o app do repositório (o backend com o rádio) antes do jogo.'
+diff --git a/tools/csp_app/radio_engenheiro/manifest.ini b/tools/csp_app/radio_engenheiro/manifest.ini
+new file mode 100644
+index 00000000..17c5d927
+--- /dev/null
++++ b/tools/csp_app/radio_engenheiro/manifest.ini
+@@ -0,0 +1,20 @@
++; Radio do engenheiro (pedido 31, ADR 0020): o radio do coach dentro do jogo.
++; Instalado por tools\csp_app\instalar.ps1 em <pasta do jogo>\apps\lua\radio_engenheiro\
++; e removido por tools\csp_app\remover.ps1. So le o estado do jogo e conversa com o
++; backend local (127.0.0.1:8000); nao muda o carro, os controles nem o jogo.
++
++[ABOUT]
++NAME = Rádio do engenheiro
++AUTHOR = Sistema de Telemetria e Otimização de Trajetórias
++VERSION = 0.1.0
++DESCRIPTION = As mensagens do coach no jogo: um cartão e a voz, nas retas e na linha de chegada.
++
++[CORE]
++LAZY = NONE
++
++[WINDOW_...]
++ID = radio
++NAME = Rádio · Sistema de Telemetria e Otimização de Trajetórias
++FUNCTION_MAIN = janela
++SIZE = 560, 150
++FLAGS = NO_TITLE_BAR, NO_BACKGROUND, NO_SCROLLBAR, NO_COLLAPSE
+diff --git a/tools/csp_app/radio_engenheiro/radio_engenheiro.lua b/tools/csp_app/radio_engenheiro/radio_engenheiro.lua
+new file mode 100644
+index 00000000..e5b7a594
+--- /dev/null
++++ b/tools/csp_app/radio_engenheiro/radio_engenheiro.lua
+@@ -0,0 +1,209 @@
++-- Rádio do engenheiro (pedido 31, ADR 0020).
++--
++-- O que faz:
++--   * a cada 0,3 s, pede ao backend local as mensagens novas (/api/radio/mensagens),
++--     com uma requisição por vez (a API do CSP permite no máximo duas);
++--   * mostra um cartão de rádio por alguns segundos, numa janela transparente
++--     (carbono e vermelho, como o app), e toca a vinheta e a voz da mensagem;
++--   * com o backend fora do ar, mostra um indicador discreto e não repete o aviso;
++--   * se a API do CSP não tiver o que o app usa, avisa uma vez e fica calado.
++--
++-- O que não faz: não muda o carro, os controles nem o jogo, e não desenha na pista.
++-- O áudio toca direto da URL do backend (ui.MediaPlayer aceita URL), sem ler nem
++-- gravar arquivo fora da pasta do app.
++
++local BACKEND = 'http://127.0.0.1:8000'
++local PERIODO_S = 0.3
++local CARTAO_MINIMO_S = 5
++local FOLGA_DEPOIS_DA_VOZ_S = 2.5
++local AVISO_S = 10
++
++local CORES = {
++  fundo = rgbm(0.031, 0.035, 0.043, 0.9),
++  vermelho = rgbm(0.882, 0.024, 0.0, 1),
++  texto = rgbm(0.949, 0.957, 0.961, 1),
++  apoio = rgbm(0.72, 0.76, 0.80, 1),
++  fraco = rgbm(0.55, 0.59, 0.63, 1),
++}
++local TAG = { coach = 'RÁDIO', resumo = 'VOLTA', teste = 'TESTE' }
++
++-- A API que o app usa, conferida uma vez ao abrir.
++local function faltando()
++  local f = {}
++  if type(web) ~= 'table' or type(web.get) ~= 'function' then f[#f + 1] = 'web.get' end
++  if type(JSON) ~= 'table' or type(JSON.parse) ~= 'function' then f[#f + 1] = 'JSON.parse' end
++  if type(ui) ~= 'table' or ui.MediaPlayer == nil then f[#f + 1] = 'ui.MediaPlayer' end
++  if type(ui) ~= 'table' or type(ui.dwriteDrawText) ~= 'function' or type(ui.drawRectFilled) ~= 'function'
++    or type(ui.windowSize) ~= 'function' then
++    f[#f + 1] = 'ui.dwriteDrawText, ui.drawRectFilled ou ui.windowSize'
++  end
++  if type(setInterval) ~= 'function' then f[#f + 1] = 'setInterval' end
++  if type(os.preciseClock) ~= 'function' then f[#f + 1] = 'os.preciseClock' end
++  return f
++end
++
++local FALTA = faltando()
++local CALADO = #FALTA > 0
++if CALADO then
++  ac.log('[radio_engenheiro] a API do CSP não tem: ' .. table.concat(FALTA, ', ') .. '. O app fica calado.')
++end
++
++local estado = {
++  desde = 0,
++  instancia = nil,
++  primeira = true,
++  pedindo = false,
++  fora = false,
++  avisouFora = false,
++  fila = {},
++  atual = nil,
++  inicio = 0,
++  ateQuando = 0,
++  player = nil,
++}
++
++local function agora()
++  return os.preciseClock()
++end
++
++-- ── conversa com o backend ──────────────────────────────────────────────
++
++local function receber(err, resposta)
++  estado.pedindo = false
++  if err or not resposta or resposta.status ~= 200 then
++    estado.fora = true
++    if not estado.avisouFora then
++      ac.log('[radio_engenheiro] o backend não respondeu em ' .. BACKEND)
++      estado.avisouFora = true
++    end
++    return
++  end
++  estado.fora = false
++  local ok, dados = pcall(JSON.parse, resposta.body)
++  if not ok or type(dados) ~= 'table' then
++    return
++  end
++  local mensagens = type(dados.mensagens) == 'table' and dados.mensagens or {}
++  if estado.primeira then
++    -- Ao abrir, o que já tinha sido dito fica para trás.
++    estado.primeira = false
++  else
++    -- Mensagens novas (ou todas, se o backend reiniciou: outra instância).
++    for _, m in ipairs(mensagens) do
++      estado.fila[#estado.fila + 1] = m
++    end
++  end
++  estado.instancia = dados.instancia
++  estado.desde = tonumber(dados.ultimoId) or estado.desde
++end
++
++local function pedir()
++  if CALADO or estado.pedindo then
++    return
++  end
++  estado.pedindo = true
++  local url = BACKEND .. '/api/radio/mensagens?desde=' .. tostring(estado.desde)
++  if type(estado.instancia) == 'string' then
++    url = url .. '&instancia=' .. estado.instancia
++  end
++  local ok = pcall(web.get, url, receber)
++  if not ok then
++    estado.pedindo = false
++  end
++end
++
++if not CALADO then
++  pcall(web.timeouts, 500, 500, 1000, 1500)
++  setInterval(pedir, PERIODO_S)
++end
++
++-- ── a voz ───────────────────────────────────────────────────────────────
++
++local function tocar(m)
++  if type(m.audio) ~= 'string' then
++    return
++  end
++  if not estado.player then
++    local ok, player = pcall(ui.MediaPlayer, nil, { use3D = false, reverbResponse = false })
++    if not ok or not player then
++      return
++    end
++    estado.player = player
++  end
++  pcall(function()
++    estado.player:setSource(BACKEND .. m.audio)
++    estado.player:setVolume(1)
++    estado.player:setAutoPlay(true)
++    estado.player:play()
++  end)
++end
++
++local function avancar(t)
++  if estado.atual and t < estado.ateQuando then
++    return
++  end
++  estado.atual = nil
++  local proxima = table.remove(estado.fila, 1)
++  if not proxima then
++    return
++  end
++  estado.atual = proxima
++  estado.inicio = t
++  estado.ateQuando = t + math.max(CARTAO_MINIMO_S, (tonumber(proxima.duracaoS) or 3) + FOLGA_DEPOIS_DA_VOZ_S)
++  tocar(proxima)
++end
++
++-- ── o cartão ────────────────────────────────────────────────────────────
++
++local function comAlfa(cor, alfa)
++  return rgbm(cor.r, cor.g, cor.b, cor.mult * alfa)
++end
++
++local function corte(texto, limite)
++  texto = tostring(texto or '')
++  if #texto <= limite then
++    return texto
++  end
++  return texto:sub(1, limite - 1) .. '…'
++end
++
++local function desenharCartao(m, alfa, tamanho)
++  local w, h = tamanho.x, tamanho.y - 26
++  ui.drawRectFilled(vec2(0, 0), vec2(w, h), comAlfa(CORES.fundo, alfa), 10)
++  ui.drawRectFilled(vec2(0, 0), vec2(6, h), comAlfa(CORES.vermelho, alfa), 3)
++  ui.dwriteDrawText(TAG[m.origem] or 'RÁDIO', 13, vec2(20, 10), comAlfa(CORES.vermelho, alfa))
++  ui.dwriteDrawText(corte(m.titulo, 48), 22, vec2(20, 28), comAlfa(CORES.texto, alfa))
++  ui.dwriteDrawText(corte(m.texto, 64), 17, vec2(20, 60), comAlfa(CORES.texto, alfa))
++  if type(m.detalhe) == 'string' and m.detalhe ~= '' then
++    ui.dwriteDrawText(corte(m.detalhe, 86), 13, vec2(20, 88), comAlfa(CORES.apoio, alfa))
++  end
++end
++
++local function desenharAviso(texto, tamanho)
++  ui.drawRectFilled(vec2(0, 0), vec2(tamanho.x, 44), CORES.fundo, 8)
++  ui.dwriteDrawText(corte(texto, 90), 13, vec2(14, 14), CORES.apoio)
++end
++
++-- Chamada a cada quadro pela janela do app (manifest.ini, FUNCTION_MAIN).
++function janela(dt)
++  local t = os.preciseClock and agora() or 0
++  local tamanho = ui.windowSize()
++  if CALADO then
++    if t < AVISO_S then
++      desenharAviso('Rádio do engenheiro: esta versão do CSP não tem ' .. table.concat(FALTA, ', ') .. '.', tamanho)
++    end
++    return
++  end
++  avancar(t)
++  if estado.fora then
++    -- Discreto: um ponto apagado e duas palavras, no rodapé da janela.
++    ui.drawRectFilled(vec2(10, tamanho.y - 16), vec2(18, tamanho.y - 8), CORES.fraco, 4)
++    ui.dwriteDrawText('rádio sem backend', 12, vec2(24, tamanho.y - 20), CORES.fraco)
++  end
++  local m = estado.atual
++  if not m then
++    return
++  end
++  local alfa = math.max(0, math.min(1, (t - estado.inicio) / 0.25, (estado.ateQuando - t) / 0.6))
++  desenharCartao(m, alfa, tamanho)
++end
+diff --git a/tools/csp_app/remover.ps1 b/tools/csp_app/remover.ps1
+new file mode 100644
+index 00000000..c2373048
+--- /dev/null
++++ b/tools/csp_app/remover.ps1
+@@ -0,0 +1,43 @@
++﻿# Remove o "Rádio do engenheiro" do Assetto Corsa (pedido 31, ADR 0020).
++#
++# Apaga só <pasta do jogo>\apps\lua\radio_engenheiro\. Quem roda é o Eduardo:
++#
++#   powershell -NoProfile -ExecutionPolicy Bypass -File tools\csp_app\remover.ps1
++param([string]$PastaDoJogo)
++$ErrorActionPreference = 'Stop'
++
++$nome = 'radio_engenheiro'
++if (-not $PastaDoJogo) {
++  $sugestao = 'D:\SteamLibrary\steamapps\common\assettocorsa'
++  $PastaDoJogo = Read-Host "Pasta do Assetto Corsa (Enter para $sugestao)"
++  if (-not $PastaDoJogo) { $PastaDoJogo = $sugestao }
++}
++$PastaDoJogo = $PastaDoJogo.Trim('"').TrimEnd('\')
++
++if (-not (Test-Path (Join-Path $PastaDoJogo 'acs.exe'))) {
++  Write-Host "Esta pasta não é a do Assetto Corsa (não tem acs.exe): $PastaDoJogo" -ForegroundColor Red
++  exit 2
++}
++if (-not (Test-Path (Join-Path $PastaDoJogo 'extension\installed.log'))) {
++  Write-Host "Não achei o Custom Shaders Patch nesta pasta: $PastaDoJogo" -ForegroundColor Red
++  exit 3
++}
++
++$destino = Join-Path $PastaDoJogo "apps\lua\$nome"
++if (-not (Test-Path $destino)) {
++  Write-Host "O app não está instalado: $destino não existe. Nada foi feito."
++  exit 0
++}
++# Só a pasta do app, e só se ela for mesmo a dele.
++if (-not (Test-Path (Join-Path $destino "$nome.lua"))) {
++  Write-Host "A pasta $destino não parece ser a do rádio (falta $nome.lua). Nada foi feito." -ForegroundColor Red
++  exit 4
++}
++Write-Host "Vou apagar só esta pasta: $destino"
++$ok = Read-Host "Continuar? (s/n)"
++if ($ok -notin @('s', 'S', 'sim', 'Sim')) {
++  Write-Host 'Nada foi feito.'
++  exit 0
++}
++Remove-Item -Recurse -Force $destino
++Write-Host 'Removido.' -ForegroundColor Green
