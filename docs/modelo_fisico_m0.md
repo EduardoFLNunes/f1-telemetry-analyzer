@@ -199,3 +199,17 @@ As definições estão na seção 1.7 do `docs/store_v2_e_evolucao.md`, e o form
 - **A unidade do volante,** fechada com a guinada gravada (seção 3).
 - **O entre-eixos e os dados do carro** que não vêm do `data.acd`: o modelo da M1 vai ter de estimá-los dos dados ou recebê-los de fora.
 - **A embreagem antiga não serve:** todas as gravações anteriores têm 0 nela.
+
+### O relógio da M1 (pendente, sem mudança agora; pedido 34)
+
+O pedido 33 (A.5) mediu o tempo das amostras nas gravações, e a recomendação fica registrada aqui. **A decisão fica para o pedido que retreinar a M1.**
+
+- **Usar o cronômetro do jogo como relógio da M1,** e não o horário do gravador.
+  - O cronômetro anda em passos de física de 3 ms, e o tempo e a posição de cada amostra vêm do mesmo passo: o erro entre eles tem p99 abaixo de 0,5 ms nas sessões novas.
+  - O horário do gravador se afasta do cronômetro: o p99 da diferença fica entre 7 e 14 ms nas sessões normais e chegou a 29 ms na sessão do 0.4.0 (17/10 16:17).
+  - Numa freada forte (25 m/s²), isso dá até 0,35 m/s nas sessões normais, e 0,73 m/s na do 0.4.0.
+- **Descartar as amostras repetidas** (o mesmo cronômetro e o mesmo lugar da anterior):
+  - nelas, a página de física já mudou, mas o tempo não andou, então Δt = 0 com o estado mudando;
+  - elas são de 1,5 a 2,3% das amostras nas sessões antigas e no 0.3.0, 5,2% na sessão do 0.4.0 e 4,0% na de 18/10.
+- **A página de física** (velocidade, pedais e cargas) chega de 0 a 3 ms adiantada sobre o cronômetro, nas sessões antigas e nas novas. Numa freada forte, isso dá até 0,08 m/s.
+- **O store v2 já usa o cronômetro do jogo** no relógio da grade. O que fica pendente é o relógio das amostras cruas, se a M1 for treinada com elas.
