@@ -275,8 +275,11 @@ class LiveDrivingCoach:
                     if self._lap_started_at_line and self._lap_line_clock is not None:
                         # O s = 0 fica alguns metros antes da linha do jogo: no quadro da passagem,
                         # o jogo ainda conta a volta que acabou.
+                        # Pedido 35: "completa" (todos os microsetores comparados), so leitura, para
+                        # o radio contar as voltas validas da analise com a mesma regra do foco.
                         self.ultima_volta = {"volta": lap_number, "tempoS": crossing - self._lap_line_clock,
-                                             "teveIA": self._lap_had_ai, "momento": time.time()}
+                                             "teveIA": self._lap_had_ai, "momento": time.time(),
+                                             "completa": len(self._lap_diffs) == model.microsectors}
                     self._start_lap(lap_number, 0, crossing, 0.0, at_line=True)
                     self._last_progress, self._last_clock = progress, clock
                     if index == 0:
