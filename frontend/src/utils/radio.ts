@@ -41,6 +41,8 @@ export type MensagemRadio = {
   detalhe: string | null;
   /** Segundos perdidos no trecho, quando o evento é uma diferença. */
   perdaS: number | null;
+  /** Pedido 35: a análise das voltas mostra uma linha por curva, com todos os números. */
+  linhas?: string[];
 };
 
 function numero(valor: unknown): number | null {
@@ -113,11 +115,13 @@ export type MensagemDoBackend = {
   entregueEm?: string | null;
   audio?: string | null;
   perdaS?: number | null;
+  /** Pedido 35: as linhas da análise (uma por curva). */
+  linhas?: string[] | null;
 };
 
 export type MensagemRadioComAudio = MensagemRadio & { audio: string | null; sCarro: number | null };
 
-const TAG_DA_ORIGEM: Record<string, string> = { coach: 'Rádio', resumo: 'Volta', teste: 'Teste' };
+const TAG_DA_ORIGEM: Record<string, string> = { coach: 'Rádio', resumo: 'Volta', teste: 'Teste', analise: 'Análise' };
 
 export function mensagemDoRadio(m: MensagemDoBackend, indice = 0): MensagemRadioComAudio {
   const ponto = numero(m.sCarro) ?? numero(m.s);
@@ -133,8 +137,9 @@ export function mensagemDoRadio(m: MensagemDoBackend, indice = 0): MensagemRadio
     onde,
     hora: m.entregueEm ? m.entregueEm.slice(11, 19) : '',
     frase: m.texto,
-    detalhe: m.detalhe ?? null,
+    detalhe: m.linhas && m.linhas.length ? null : m.detalhe ?? null,
     perdaS: numero(m.perdaS),
+    ...(m.linhas && m.linhas.length ? { linhas: m.linhas } : {}),
     audio: m.audio ?? null,
     sCarro: numero(m.sCarro),
   };

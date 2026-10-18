@@ -114,7 +114,7 @@ export const AoVivoPage: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
             </div>
           </PainelVidro>
 
-          <PainelVidro id="ao-vivo-radio" titulo="Rádio" nota="até 3 frases por volta, nas retas, e o resumo na linha" style={{ flex: '1 1 400px', minWidth: 0 }}>
+          <PainelVidro id="ao-vivo-radio" titulo="Rádio" nota="nas retas: até 3 frases por volta, o resumo da volta e, a cada 3 voltas válidas, a análise" style={{ flex: '1 1 400px', minWidth: 0 }}>
             <RadioAoVivo pronto={pronto} />
             <span className="texto-fraco dado">/api/radio/mensagens · as 20 mais recentes</span>
           </PainelVidro>

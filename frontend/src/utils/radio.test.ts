@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decimal, diferencaComSinal, mensagemDoEvento } from './radio';
+import { decimal, diferencaComSinal, mensagemDoEvento, mensagemDoRadio } from './radio';
 
 // Um evento como o `_emit_reference_event` do coach publica (driving_coach.py).
 const eventoReferencia = {
@@ -69,5 +69,19 @@ describe('mensagens de rádio', () => {
     expect(diferencaComSinal(0.214, 3)).toBe('+0,214 s');
     expect(diferencaComSinal(-0.12)).toBe('−0,12 s');
     expect(diferencaComSinal(0)).toBe('0,00 s');
+  });
+});
+
+describe('a análise das voltas (pedido 35)', () => {
+  it('vira um cartão com a tag Análise e uma linha por curva', () => {
+    const m = mensagemDoRadio({
+      id: 8, origem: 'analise', titulo: 'Análise das voltas 6 a 8', texto: 'C12 perde 0,90 s por volta, contra a volta da IA',
+      detalhe: 'C12, esquerda: … | C04, esquerda: …', linhas: ['C12, esquerda: perde 0,90 s por volta', 'C04, esquerda: perde 0,25 s por volta'],
+      microssetor: null, curva: 'C12', s: null, sCarro: 3697.5, entregueEm: '2026-10-20T10:00:05', audio: '/api/radio/audio/8',
+    });
+    expect(m.tag).toBe('Análise');
+    expect(m.onde).toBe('Análise das voltas 6 a 8 · 3.698 m');
+    expect(m.linhas).toEqual(['C12, esquerda: perde 0,90 s por volta', 'C04, esquerda: perde 0,25 s por volta']);
+    expect(m.detalhe).toBeNull();
   });
 });

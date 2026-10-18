@@ -15,6 +15,11 @@
  * A pista desenhada são as camadas do cache que o mapa do app usa
  * (`drawTrackSurface`): asfalto, pintura classificada e zebras. As posições são
  * a linha central oficial mais o deslocamento lateral do store v2.
+ *
+ * Pedido 35 (Parte D): a pista é desenhada uma vez num bitmap (`camadaDaPista`) e
+ * reaproveitada a cada quadro; ela só é refeita quando o zoom ou o tamanho mudam.
+ * Na tela Ao vivo (`fonteAoVivo`), o desenho roda a cada quadro, com a posição que a
+ * fonte dá (o carro andando entre duas posições), sem o React renderizar de novo.
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import clsx from 'clsx';
@@ -50,7 +55,17 @@ type Props = {
   children?: React.ReactNode;
   /** Pedido 31: a volta em andamento (tela Ao vivo), sem o replay. */
   aoVivo?: boolean;
+  /** Pedido 35: a posição a cada quadro e a versão dos dados da volta ao vivo. */
+  fonteAoVivo?: React.MutableRefObject<FonteAoVivo | null>;
 };
+
+/** Pedido 35: o que a tela Ao vivo entrega ao desenho, a cada quadro, fora do React. */
+export type FonteAoVivo = { s: () => number; versao: () => number };
+
+// O bitmap da pista inteira fica com no máximo isto de pixels (um pouco menos de 100 MB);
+// perto disso, a aproximação de 80 m usa a pista um pouco ampliada.
+const PIXELS_DA_PISTA = 24e6;
+const MARGEM_DA_PISTA_M = 120;
 
 const NOME_DO_PEDAL: Record<Pedal, string> = { freio: 'FREANDO', acelerador: 'ACELERANDO', parcial: 'PARCIAL' };
 
@@ -82,7 +97,7 @@ function rotulo(ctx: CanvasRenderingContext2D, texto: string, x: number, y: numb
   ctx.fillText(texto, x, y);
 }
 
-export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, volta, voltaRef: ref, referencia, camadas, children, aoVivo = false }) => {
+export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, volta, voltaRef: ref, referencia, camadas, children, aoVivo = false, fonteAoVivo }) => {
   const principal = useRef<HTMLCanvasElement>(null);
   const relevo = useRef<HTMLCanvasElement>(null);
   const mini = useRef<HTMLCanvasElement>(null);
@@ -117,14 +132,75 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
   }, [volta, ref]);
   const rotuloRef = referencia === 'ia' ? 'IA' : 'Sua melhor';
 
+  // Pedido 35: na tela Ao vivo os dados da volta mudam no mesmo objeto a cada leitura; o traçado e
+  // os pedais da volta são refeitos quando a versão dos dados muda, sem renderizar de novo.
+  const vivoTr = useRef<{ versao: number; tr: { x: number[]; y: number[] }; ped: Pedal[] } | null>(null);
+  const tracadoAtual = () => {
+    const fonte = fonteAoVivo?.current;
+    if (!fonte) return { tr: trVolta, ped: pedais.volta };
+    const versao = fonte.versao();
+    if (!vivoTr.current || vivoTr.current.versao !== versao) {
+      const l = volta.linhas;
+      vivoTr.current = {
+        versao,
+        tr: tracadoDaVolta(geo, l.lateral),
+        ped: l.freio.map((f, i) => (Number(f) >= 0.15 ? 'freio' : Number(l.acelerador[i]) >= 0.9 ? 'acelerador' : 'parcial') as Pedal),
+      };
+    }
+    return vivoTr.current;
+  };
+
+  // Pedido 35: a pista desenhada uma vez, num bitmap do circuito inteiro, refeito só quando o zoom
+  // ou o tamanho mudam (a escala do bitmap anda em degraus de raiz de 2).
+  const pistaPronta = useRef<{ chave: string; tela: HTMLCanvasElement; x0: number; y0: number; k: number } | null>(null);
+  useEffect(() => {
+    pistaPronta.current = null;
+  }, [camadas, central]);
+  const camadaDaPista = (sc: number, W: number, H: number, zoomAtual: number) => {
+    if (!camadas) return null;
+    const d = window.devicePixelRatio || 1;
+    let x0 = Infinity;
+    let x1 = -Infinity;
+    let y0 = Infinity;
+    let y1 = -Infinity;
+    for (let i = 0; i < central.n; i += 1) {
+      x0 = Math.min(x0, central.cx[i]);
+      x1 = Math.max(x1, central.cx[i]);
+      y0 = Math.min(y0, central.cy[i]);
+      y1 = Math.max(y1, central.cy[i]);
+    }
+    x0 -= MARGEM_DA_PISTA_M;
+    y0 -= MARGEM_DA_PISTA_M;
+    x1 += MARGEM_DA_PISTA_M;
+    y1 += MARGEM_DA_PISTA_M;
+    const kMax = Math.sqrt(PIXELS_DA_PISTA / ((x1 - x0) * (y1 - y0)));
+    const k = Math.min(kMax, 2 ** (Math.round(Math.log2(sc * d) * 2) / 2));
+    const chave = `${k.toFixed(4)}|${W}x${H}|${zoomAtual}`;
+    if (pistaPronta.current?.chave === chave) return pistaPronta.current;
+    const tela = document.createElement('canvas');
+    tela.width = Math.ceil((x1 - x0) * k);
+    tela.height = Math.ceil((y1 - y0) * k);
+    const c = tela.getContext('2d');
+    if (!c) return null;
+    c.setTransform(k, 0, 0, k, -x0 * k, -y0 * k);
+    transformarCamadas(c);
+    drawTrackSurface(c, camadas, null, sc);
+    pistaPronta.current = { chave, tela, x0, y0, k };
+    return pistaPronta.current;
+  };
+  const ultimoCanto = useRef(0);
+
   const desenhar = useCallback(() => {
     const cv = principal.current;
     if (!cv) return;
     const est = useEstadoDaVolta.getState();
-    const f = estadoDoFantasma(g, volta.linhas, ref.linhas, curvas, est.s ?? 0, est.modo);
+    const fonte = fonteAoVivo?.current;
+    const sAgora = fonte ? fonte.s() : est.s ?? 0;
+    const f = estadoDoFantasma(g, volta.linhas, ref.linhas, curvas, sAgora, est.modo);
     const { ctx, W, H } = ajustar(cv);
     const passo = g.passo;
-    const carro = posicaoEm(trVolta, passo, f.s);
+    const { tr: trV, ped: pedV } = tracadoAtual();
+    const carro = posicaoEm(trV, passo, f.s);
     const fantasma = posicaoEm(trRef, passo, f.sFantasma);
     const i = Math.round(f.s / passo) % central.n;
     const i2 = (i + 4) % central.n;
@@ -147,11 +223,9 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
     ctx.rotate(ang);
     ctx.scale(sc, sc);
     ctx.translate(-carro[0], -carro[1]);
-    if (camadas) {
-      ctx.save();
-      transformarCamadas(ctx);
-      drawTrackSurface(ctx, camadas, null, sc);
-      ctx.restore();
+    const pista = camadaDaPista(sc, W, H, est.zoom);
+    if (pista) {
+      ctx.drawImage(pista.tela, pista.x0, pista.y0, pista.tela.width / pista.k, pista.tela.height / pista.k);
     } else {
       ctx.beginPath();
       central.cx.forEach((x, k) => (k ? ctx.lineTo(x, central.cy[k]) : ctx.moveTo(x, central.cy[k])));
@@ -206,7 +280,7 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
       ctx.globalAlpha = 1;
     };
     tracar(trRef, pedais.ref, est.modo === 'curva' ? f.s0 : 0, f.sFantasma, 0.6, Math.max(0.7, 3.5 / sc));
-    tracar(trVolta, pedais.volta, 0, f.s, 1, Math.max(0.9, 5 / sc));
+    tracar(trV, pedV, 0, f.s, 1, Math.max(0.9, 5 / sc));
     ctx.restore();
 
     const texto = token('--texto-1', '#f2f4f5');
@@ -261,10 +335,15 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
     ctx.textAlign = 'center';
     rotulo(ctx, `Você · V${numeroDaVolta(volta.lapId)}`, cxs, cys + 26);
 
-    desenharRelevo(f.s, f.sFantasma);
-    desenharMini(f.s, f.sFantasma, carro, fantasma);
+    // Ao vivo, os cantos (relevo e pista inteira) acompanham até 10 vezes por segundo.
+    const agora = performance.now();
+    if (!fonte || agora - ultimoCanto.current >= 100) {
+      ultimoCanto.current = agora;
+      desenharRelevo(f.s, f.sFantasma);
+      desenharMini(f.s, f.sFantasma, carro, fantasma);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [g, geo, curvas, volta, ref, camadas, central, trVolta, trRef, pedais, rotuloRef]);
+  }, [g, geo, curvas, volta, ref, camadas, central, trVolta, trRef, pedais, rotuloRef, fonteAoVivo]);
 
   const desenharRelevo = (s: number, sFantasma: number) => {
     const cv = relevo.current;
@@ -410,14 +489,22 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
     void sFantasma;
   };
 
-  // Redesenha quando o cursor, o modo ou a câmera mudam, e quando a janela muda de tamanho.
+  // Redesenha quando o cursor, o modo ou a câmera mudam, e quando a janela muda de tamanho. Ao vivo
+  // (pedido 35), a cada quadro da tela.
   useEffect(() => {
     let quadro = 0;
+    const continuo = Boolean(fonteAoVivo);
+    const laco = () => {
+      desenhar();
+      quadro = requestAnimationFrame(laco);
+    };
     const pedir = () => {
+      if (continuo) return;
       cancelAnimationFrame(quadro);
       quadro = requestAnimationFrame(desenhar);
     };
-    pedir();
+    if (continuo) quadro = requestAnimationFrame(laco);
+    else pedir();
     const desassinar = useEstadoDaVolta.subscribe(pedir);
     const ro = new ResizeObserver(pedir);
     if (principal.current) ro.observe(principal.current);
@@ -426,7 +513,7 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
       desassinar();
       ro.disconnect();
     };
-  }, [desenhar]);
+  }, [desenhar, fonteAoVivo]);
 
   return (
     <section className="vidro painel" aria-labelledby="fantasma-titulo">
