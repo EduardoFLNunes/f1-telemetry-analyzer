@@ -1,4 +1,4 @@
-# A voz do rádio (pedido 31, Parte B.3): o texto vira um WAV com uma voz pt-BR do Windows.
+﻿# A voz do rádio (pedido 31, Parte B.3): o texto vira um WAV com uma voz pt-BR do Windows.
 # Nada é instalado: as vozes OneCore vêm do Windows.Media.SpeechSynthesis e a SAPI 5 do System.Speech.
 #
 # Uso: powershell -NoProfile -ExecutionPolicy Bypass -File voz.ps1 -Texto <arquivo .txt em UTF-8> -Saida <arquivo .wav> -Voz <OneCore:Daniel|OneCore:Maria|SAPI:Maria|listar>
