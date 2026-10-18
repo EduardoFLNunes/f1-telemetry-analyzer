@@ -15,7 +15,10 @@ e o 14 acharam:
 
 Cada volta leva tambem o tempo de volta do jogo (`tempo_jogo_s`), medido pelo
 cronometro do jogo costurado na troca de volta (`game_lap_time`): e a regua
-da checagem principal (`store_checks`).
+da checagem principal (`store_checks`). Desde o pedido 34, leva tambem onde a
+linha do jogo ficou nesta volta (`linha_do_jogo_m`) e a velocidade nas duas
+passagens por s = 0, para a checagem levar o tempo do jogo a mesma linha do
+periodo.
 """
 
 from __future__ import annotations
@@ -33,7 +36,7 @@ from .. import config
 from ..preprocessing.alignment import align_lap
 from ..preprocessing.cleaning import clean_lap
 from ..preprocessing.quality import evaluate_lap
-from ..preprocessing.resampling import lap_time_from_grid, resample_lap
+from ..preprocessing.resampling import LINE_WINDOW_M, lap_time_from_grid, resample_lap
 from ..track.geometry import TrackGeometry, load_geometry
 from ..track.microsectors import Microsectors, build_microsectors
 from .ai_detector import pit_lap
@@ -168,6 +171,59 @@ def game_lap_time(lap: RawLap, following: RawLap, track: TrackGeometry) -> Optio
     return float(np.median(estimates)) if estimates else None
 
 
+# ---------------------------------------- linha do jogo (pedido 34) ---
+#
+# O tempo do jogo vai de linha do jogo a linha do jogo, e a linha do jogo (onde o
+# cronometro zera) fica alguns metros depois do s = 0 oficial: 1,463 m em
+# Interlagos, medidos no pedido 33. Cada volta guarda a sua medida da linha e a
+# velocidade gravada nas duas passagens por s = 0, para a checagem do periodo
+# medir o tempo do jogo na mesma linha do periodo (`store_checks.check_period`).
+
+# As primeiras amostras depois de o cronometro zerar, enquanto ele ainda e
+# pequeno e o carro anda: a linha fica em `s - v x cronometro`.
+GAME_LINE_SAMPLES = 3
+GAME_LINE_MAX_TIMER_S = 0.06
+GAME_LINE_MIN_SPEED_KMH = 100.0
+
+
+def game_line_position(aligned: pd.DataFrame, length: float) -> Optional[float]:
+    """Onde o cronometro do jogo zera, em metros depois do s = 0 oficial, ou None.
+
+    `aligned` e a volta alinhada: comeca na amostra em que o cronometro zerou.
+    """
+    needed = ("s", "speed_kmh", "lap_time_s")
+    if any(c not in aligned.columns for c in needed) or aligned.empty:
+        return None
+    head = aligned.head(GAME_LINE_SAMPLES)
+    s = head["s"].to_numpy(dtype=float)
+    s = np.where(s > length / 2.0, s - length, s)        # uma amostra antes do s = 0 fica negativa
+    speed = head["speed_kmh"].to_numpy(dtype=float) / 3.6
+    timer = head["lap_time_s"].to_numpy(dtype=float)
+    good = (np.isfinite(s) & np.isfinite(speed) & np.isfinite(timer)
+            & (speed * 3.6 >= GAME_LINE_MIN_SPEED_KMH) & (timer >= 0.0) & (timer <= GAME_LINE_MAX_TIMER_S))
+    if not good.any():
+        return None
+    return float(np.median(s[good] - speed[good] * timer[good]))
+
+
+def line_speeds(aligned: pd.DataFrame, length: float) -> Tuple[Optional[float], Optional[float]]:
+    """A velocidade gravada (km/h) nas duas passagens por s = 0 da volta: no comeco e no fim.
+
+    E a mediana das amostras da mesma janela que `crossing_time` usa para achar
+    as passagens (`LINE_WINDOW_M`).
+    """
+    if any(c not in aligned.columns for c in ("s_unwrapped", "speed_kmh")) or aligned.empty:
+        return None, None
+    positions = np.maximum.accumulate(aligned["s_unwrapped"].to_numpy(dtype=float))
+    speed = aligned["speed_kmh"].to_numpy(dtype=float)
+    first = float(np.round(positions[0] / length) * length)
+    out = []
+    for target in (first, first + length):
+        near = (np.abs(positions - target) <= LINE_WINDOW_M) & np.isfinite(speed) & (speed > 3.6)
+        out.append(float(np.median(speed[near])) if near.any() else None)
+    return out[0], out[1]
+
+
 # ------------------------------------------------------------- build ---
 
 @dataclass
@@ -255,7 +311,11 @@ def materialize_session(session: Session, sequences, geometry: TrackGeometry,
             "speed_mean_kmh": float(np.nanmean(grid["speed_kmh"])),
             "speed_min_kmh": float(np.nanmin(grid["speed_kmh"])),
             "speed_max_kmh": float(np.nanmax(grid["speed_kmh"])),
+            # Pedido 34: a linha do jogo medida nesta volta e a velocidade nas duas
+            # passagens por s = 0, para a checagem do periodo medir na mesma linha.
+            "linha_do_jogo_m": game_line_position(aligned, geometry.length),
         }
+        entry["v_linha_inicio_kmh"], entry["v_linha_fim_kmh"] = line_speeds(aligned, geometry.length)
         material.laps[lap.sequence] = entry
         pending = (lap, entry)
     return material
@@ -325,6 +385,9 @@ def assemble_store_v2(
                 "track": entry["track"],
                 "lap_time_s": entry["lap_time_s"],
                 "tempo_jogo_s": entry["tempo_jogo_s"],
+                "linha_do_jogo_m": entry.get("linha_do_jogo_m"),
+                "v_linha_inicio_kmh": entry.get("v_linha_inicio_kmh"),
+                "v_linha_fim_kmh": entry.get("v_linha_fim_kmh"),
                 "geometry_id": geometry.geometry_id,
                 "carModel": car,
                 "sample_hz": entry["sample_hz"],
