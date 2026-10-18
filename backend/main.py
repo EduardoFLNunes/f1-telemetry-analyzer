@@ -964,12 +964,17 @@ async def lifespan(app: FastAPI):
     try:
         from core.live.driving_coach import LiveDrivingCoach
 
+        # Pedido 31: o quadro ao vivo nao traz o nome da pista; sem ele o coach pedia o
+        # modelo da pista "unknown" e ficava calado. Completa com a pista do jogo, a mesma
+        # que o gravador escreve no metadata.json (`current_recording_track`).
         live_driving_coach = LiveDrivingCoach(
             event_bus,
-            model_provider=lambda track: assisted_analysis_service._reference_model(track),
+            model_provider=lambda track: assisted_analysis_service._reference_model(
+                track or current_recording_track()),
             loop_ref_provider=lambda: asyncio.get_event_loop(),
             # ADR 0013: the coach projects the car on the official geometry.
-            geometry_provider=lambda track: assisted_analysis_service._official_geometry(track),
+            geometry_provider=lambda track: assisted_analysis_service._official_geometry(
+                track or current_recording_track()),
         )
         event_bus.subscribe(PROCESSED_FRAME, live_driving_coach.on_frame)
         logger.info("Live driving coach subscribed to processed frames")
