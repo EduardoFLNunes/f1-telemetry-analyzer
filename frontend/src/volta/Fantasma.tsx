@@ -48,6 +48,8 @@ type Props = {
   camadas: any | null;
   /** O que vai embaixo do replay (as frases do coach). */
   children?: React.ReactNode;
+  /** Pedido 31: a volta em andamento (tela Ao vivo), sem o replay. */
+  aoVivo?: boolean;
 };
 
 const NOME_DO_PEDAL: Record<Pedal, string> = { freio: 'FREANDO', acelerador: 'ACELERANDO', parcial: 'PARCIAL' };
@@ -80,7 +82,7 @@ function rotulo(ctx: CanvasRenderingContext2D, texto: string, x: number, y: numb
   ctx.fillText(texto, x, y);
 }
 
-export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, volta, voltaRef: ref, referencia, camadas, children }) => {
+export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, volta, voltaRef: ref, referencia, camadas, children, aoVivo = false }) => {
   const principal = useRef<HTMLCanvasElement>(null);
   const relevo = useRef<HTMLCanvasElement>(null);
   const mini = useRef<HTMLCanvasElement>(null);
@@ -448,7 +450,7 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
         ref={caixa}
       >
         <canvas ref={principal} className="fantasma-principal" aria-label="Visão próxima da volta, com o fantasma da referência" />
-        <TituloDoFantasma grade={g} volta={volta} ref_={ref} curvas={curvas} referencia={referencia} />
+        <TituloDoFantasma grade={g} volta={volta} ref_={ref} curvas={curvas} referencia={referencia} aoVivo={aoVivo} />
         <div className="fantasma-canto fantasma-relevo">
           <canvas ref={relevo} aria-label="Relevo da pista" />
           <span className="fantasma-rotulo">Relevo</span>
@@ -466,21 +468,21 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
         <span><i className="amostra" style={{ background: 'var(--parcial)' }} />acelerador parcial ou sem pedal</span>
         <span><i className="ponto" style={{ border: '2px solid var(--fantasma)', width: 10, height: 10 }} />fantasma</span>
       </div>
-      <Replay grade={g} volta={volta} ref_={ref} curvas={curvas} />
+      {!aoVivo && <Replay grade={g} volta={volta} ref_={ref} curvas={curvas} />}
       {children}
     </section>
   );
 };
 
-type PropsDaLeitura = { grade: Grade; volta: VoltaDoStore; ref_: VoltaDoStore; curvas: Curva[]; referencia?: 'ia' | 'melhor' };
+type PropsDaLeitura = { grade: Grade; volta: VoltaDoStore; ref_: VoltaDoStore; curvas: Curva[]; referencia?: 'ia' | 'melhor'; aoVivo?: boolean };
 
-function TituloDoFantasma({ grade: g, volta, curvas, referencia }: PropsDaLeitura) {
+function TituloDoFantasma({ grade: g, volta, curvas, referencia, aoVivo }: PropsDaLeitura) {
   const s = useEstadoDaVolta((e) => e.s) ?? 0;
   const modo = useEstadoDaVolta((e) => e.modo);
   const c = curvaEm(curvas, s);
   return (
     <div className="fantasma-titulo">
-      <b>Volta {numeroDaVolta(volta.lapId)} contra a {referencia === 'ia' ? 'volta da IA' : 'sua melhor'}</b>
+      <b>{aoVivo ? 'Ao vivo: volta' : 'Volta'} {numeroDaVolta(volta.lapId)} contra a {referencia === 'ia' ? 'volta da IA' : 'sua melhor'}</b>
       <span>{modo === 'curva' ? 'fantasma por curva' : 'fantasma na volta inteira'} · {nf(s, 0)} m{c ? ` · ${c.codigo}` : ''}</span>
       {void g}
     </div>

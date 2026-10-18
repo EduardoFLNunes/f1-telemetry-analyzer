@@ -188,6 +188,7 @@ class LiveDrivingCoach:
         # Nao muda nenhuma regra: o horario da linha em que a volta comecou e o
         # periodo da ultima volta completa (de s = 0 a s = 0, como o store v2).
         self._lap_line_clock: Optional[float] = None
+        self._volta_do_jogo: Optional[float] = None
         self.ultima_volta: Optional[Dict[str, Any]] = None
 
     # ── the hot path ─────────────────────────────────────────────────────
@@ -227,6 +228,7 @@ class LiveDrivingCoach:
                 return
 
         lap_number = _number(frame.get("lap_number") or frame.get("lap"))
+        self._volta_do_jogo = lap_number  # pedido 31: so para quem le a posicao
         index = min(int(progress * model.microsectors), model.microsectors - 1)
         if not _legacy(model):
             if ai_controlled(frame) is True:
@@ -271,7 +273,9 @@ class LiveDrivingCoach:
                     self._close_sector(frame, model, self._sector_index, self._sector_entry_clock, crossing)
                     self._end_lap(frame, model)
                     if self._lap_started_at_line and self._lap_line_clock is not None:
-                        self.ultima_volta = {"volta": self._lap_number, "tempoS": crossing - self._lap_line_clock,
+                        # O s = 0 fica alguns metros antes da linha do jogo: no quadro da passagem,
+                        # o jogo ainda conta a volta que acabou.
+                        self.ultima_volta = {"volta": lap_number, "tempoS": crossing - self._lap_line_clock,
                                              "teveIA": self._lap_had_ai, "momento": time.time()}
                     self._start_lap(lap_number, 0, crossing, 0.0, at_line=True)
                     self._last_progress, self._last_clock = progress, clock
@@ -425,8 +429,11 @@ class LiveDrivingCoach:
         if self._projector is None or self._last_progress is None:
             return None
         length = float(self._projector.geometry.length)
+        tempo = (self._last_clock - self._lap_line_clock
+                 if self._lap_line_clock is not None and self._last_clock is not None else None)
         return {"s": float(self._last_progress) * length, "comprimento": length,
-                "lateral": self._last_lateral, "volta": self._lap_number}
+                "lateral": self._last_lateral, "volta": self._volta_do_jogo,
+                "tempoDaVolta": tempo, "desdeALinha": self._lap_line_clock is not None}
 
     def _position_m(self, frame: Dict[str, Any], progress: float) -> Optional[float]:
         """Where the car is along the lap, in metres, on the model's ruler."""

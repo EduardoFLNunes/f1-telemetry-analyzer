@@ -3,25 +3,33 @@
  * replay da Volta, marcadas no mapa").
  *
  * Vêm da rota que já existe, `/api/analysis/coach/lap/{replayLapId}`: o mesmo
- * coach, percorrido no servidor sobre a volta gravada. Cada evento traz o `s`
- * onde a frase sai, já na geometria oficial (o coach projeta nela desde o
- * ADR 0013). A frase é montada em português por `utils/radio.ts`, com os mesmos
- * números do evento. Clicar numa frase leva o cursor até o ponto dela; durante
- * o replay, a última frase já dita fica destacada.
+ * coach, percorrido no servidor sobre a volta gravada. Desde o pedido 31, cada
+ * frase traz a mensagem de rádio pronta (`radio`), o mesmo texto do app do jogo,
+ * com o `s` da geometria oficial (o fim do microssetor). Antes, a tela usava o
+ * `s` do quadro, que é a projeção do runtime, e não a oficial. Clicar numa frase
+ * leva o cursor até o ponto dela; durante o replay, a última frase já dita fica
+ * destacada.
  */
 import React from 'react';
-import { mensagemDoEvento, type EventoCoach, type MensagemRadio } from '../utils/radio';
+import { mensagemDoEvento, mensagemDoRadio, type EventoCoach, type MensagemRadio } from '../utils/radio';
 import { useEstadoDaVolta } from './estado';
 import { curvaEm, type Curva } from './medidas';
 import { nf } from './formato';
 
 export type FraseDaVolta = { s: number; mensagem: MensagemRadio };
 
-/** Os eventos da rota com `s` válido, na ordem da volta. */
+/**
+ * Os eventos da rota com `s` válido, na ordem da volta.
+ *
+ * Pedido 31: com o texto pronto do backend (`radio`), a frase é a mesma do app do
+ * jogo e o `s` é o da geometria oficial (o fim do microssetor, onde o coach fecha a
+ * medida). Antes, o `s` era o do quadro, que é a projeção do runtime.
+ */
 export function frasesDosEventos(eventos: unknown, comprimento: number): FraseDaVolta[] {
   if (!Array.isArray(eventos)) return [];
   return eventos
-    .map((e: EventoCoach & { s?: unknown }, i) => ({ s: Number(e?.s), mensagem: mensagemDoEvento(e, i) }))
+    .map((e: EventoCoach & { s?: unknown; radio?: any }, i) =>
+      e?.radio ? { s: Number(e.radio.s), mensagem: mensagemDoRadio(e.radio, i) } : { s: Number(e?.s), mensagem: mensagemDoEvento(e, i) })
     .filter((f) => Number.isFinite(f.s) && f.s >= 0 && f.s <= comprimento + 1)
     .sort((a, b) => a.s - b.s);
 }

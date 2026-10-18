@@ -154,6 +154,7 @@ def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optio
     """O resumo na linha de chegada: o tempo da volta e a diferenca para a referencia escolhida."""
     rotulo = REFERENCIA_LONGA.get(tipo or "", "referência")
     alvo = FALA_ALVO.get(tipo or "", "da referência")
+    volta = int(volta) if _numero(volta) is not None else None
     m = int(tempo_s // 60)
     s = tempo_s - 60 * m
     falado = f"{m} minuto{'s' if m != 1 else ''} e {decimal(s, 1)}"

@@ -142,7 +142,11 @@ export const Dica: React.FC<{ x: number; y: number; children: React.ReactNode }>
 
 // ── Mensagem de rádio ────────────────────────────────────────────────────────
 
-export const MensagemRadioCartao: React.FC<{ mensagem: MensagemRadio; esmaecida?: number }> = ({ mensagem, esmaecida = 1 }) => (
+export const MensagemRadioCartao: React.FC<{ mensagem: MensagemRadio; esmaecida?: number; aoOuvir?: () => void }> = ({
+  mensagem,
+  esmaecida = 1,
+  aoOuvir,
+}) => (
   <article className="radio" style={{ opacity: esmaecida }}>
     <div className="radio__topo">
       <span className={clsx('radio__tag', mensagem.tipo === 'foco' && 'radio__tag--foco')}>
@@ -156,5 +160,11 @@ export const MensagemRadioCartao: React.FC<{ mensagem: MensagemRadio; esmaecida?
     </div>
     <p className="radio__frase">{mensagem.frase}</p>
     {mensagem.detalhe && <p className="radio__detalhe">{mensagem.detalhe}</p>}
+    {aoOuvir && (
+      <button type="button" className="botao botao--pequeno" style={{ alignSelf: 'flex-start' }} onClick={aoOuvir}>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2 L13 8 L4 14 Z" /></svg>
+        Ouvir
+      </button>
+    )}
   </article>
 );

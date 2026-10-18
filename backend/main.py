@@ -134,6 +134,7 @@ _validation_sessions_cache_at = 0.0
 live_driving_coach: Optional[Any] = None
 # Pedido 31: o radio do engenheiro (core/radio), criado com o coach ao vivo.
 radio_do_engenheiro: Optional[Any] = None
+volta_ao_vivo: Optional[Any] = None
 external_reference_repository = ExternalReferenceRepository(
     REPO_ROOT,
     data_dir=RUNTIME_ROOT / "data" / "external_references",
@@ -191,6 +192,21 @@ def _ligar_o_radio() -> None:
         event_bus.subscribe(PROCESSED_FRAME, radio_do_engenheiro.on_frame)
         event_bus.subscribe(COACHING_EVENT, radio_do_engenheiro.on_coaching_event)
         logger.info("Radio do engenheiro ligado")
+    except Exception as error:
+        logger.warning("Radio do engenheiro indisponivel: %s", error)
+    global volta_ao_vivo
+    try:
+        from core.live.volta_ao_vivo import VoltaAoVivo
+
+        def pontos_da_grade():
+            projetor = getattr(live_driving_coach, "_projector", None)
+            return len(projetor.geometry.x) if projetor is not None else None
+
+        volta_ao_vivo = VoltaAoVivo(
+            posicao=lambda: live_driving_coach.posicao_oficial() if live_driving_coach is not None else None,
+            pontos=pontos_da_grade,
+        )
+        event_bus.subscribe(PROCESSED_FRAME, volta_ao_vivo.on_frame)
     except Exception as error:
         logger.warning("Radio do engenheiro indisponivel: %s", error)
 
@@ -989,6 +1005,8 @@ async def lifespan(app: FastAPI):
         logger.warning("Coleta check could not be finalized: %s", error)
     if live_driving_coach is not None:
         event_bus.unsubscribe(PROCESSED_FRAME, live_driving_coach.on_frame)
+    if volta_ao_vivo is not None:
+        event_bus.unsubscribe(PROCESSED_FRAME, volta_ao_vivo.on_frame)
     if radio_do_engenheiro is not None:
         event_bus.unsubscribe(PROCESSED_FRAME, radio_do_engenheiro.on_frame)
         event_bus.unsubscribe(COACHING_EVENT, radio_do_engenheiro.on_coaching_event)
@@ -1040,6 +1058,7 @@ app.include_router(debug.router)
 app.include_router(coleta.router)
 app.include_router(leitura.router)
 app.include_router(radio.router)
+app.include_router(radio.router_ao_vivo)
 app.include_router(legacy.router)
 
 # Re-exported so existing tests that call `backend_main.<name>(...)` directly

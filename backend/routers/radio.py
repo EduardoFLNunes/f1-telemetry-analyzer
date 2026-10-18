@@ -17,6 +17,7 @@ from fastapi.responses import FileResponse
 import main
 
 router = APIRouter(prefix="/api/radio")
+router_ao_vivo = APIRouter(prefix="/api/live")
 
 
 def _radio():
@@ -46,3 +47,11 @@ async def post_teste():
 @router.get("/estado")
 async def get_estado():
     return await asyncio.to_thread(_radio().estado)
+
+
+@router_ao_vivo.get("/volta")
+async def get_volta_ao_vivo():
+    """A volta em andamento na grade oficial (pedido 31, Parte D), para o fantasma da tela Ao vivo."""
+    if main.volta_ao_vivo is None:
+        return {"disponivel": False, "motivo": "a volta ao vivo ainda não está pronta"}
+    return main.volta_ao_vivo.estado()

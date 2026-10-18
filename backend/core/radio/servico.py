@@ -185,7 +185,7 @@ class RadioDoEngenheiro:
         mensagem["instancia"] = self.instancia
         mensagem["entregueEm"] = datetime.fromtimestamp(agora).isoformat(timespec="seconds")
         mensagem["sCarro"] = round(float(pos["s"]), 1) if pos.get("s") is not None else None
-        mensagem["voltaDoCarro"] = pos.get("volta")
+        mensagem["voltaDoCarro"] = int(pos["volta"]) if pos.get("volta") is not None else None
         mensagem["sessao"] = self._sessao()
         mensagem.pop("naLinha", None)
         if arquivo is not None:

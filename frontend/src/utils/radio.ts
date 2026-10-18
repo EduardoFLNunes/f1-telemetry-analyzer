@@ -93,6 +93,53 @@ function clausulaDaMinima(tipo: string | null, referenciaKmh: number, suaKmh: nu
   return `mínima na referência ${ref} km/h, a sua ${sua} km/h`;
 }
 
+/**
+ * Pedido 31: a mensagem que o backend montou (`/api/radio/mensagens`, ou o campo
+ * `radio` das frases de uma volta gravada). O texto vem pronto, igual ao do app
+ * do jogo; aqui ela só vira o formato do cartão.
+ */
+export type MensagemDoBackend = {
+  id?: number;
+  origem: 'coach' | 'resumo' | 'teste' | string;
+  titulo: string;
+  texto: string;
+  detalhe: string | null;
+  fala?: string;
+  microssetor: number | null;
+  curva: string | null;
+  s: number | null;
+  sCarro?: number | null;
+  voltaDoCarro?: number | null;
+  entregueEm?: string | null;
+  audio?: string | null;
+  perdaS?: number | null;
+};
+
+export type MensagemRadioComAudio = MensagemRadio & { audio: string | null; sCarro: number | null };
+
+const TAG_DA_ORIGEM: Record<string, string> = { coach: 'Rádio', resumo: 'Volta', teste: 'Teste' };
+
+export function mensagemDoRadio(m: MensagemDoBackend, indice = 0): MensagemRadioComAudio {
+  const ponto = numero(m.sCarro) ?? numero(m.s);
+  const onde = [
+    m.titulo,
+    m.microssetor ? `microssetor ${m.microssetor}` : null,
+    ponto !== null && m.origem !== 'teste' ? `${Math.round(ponto).toLocaleString('pt-BR')} m` : null,
+  ].filter(Boolean).join(' · ');
+  return {
+    id: `${m.id ?? 'sem-id'}-${indice}`,
+    tipo: m.origem === 'coach' ? 'diferenca' : 'outro',
+    tag: TAG_DA_ORIGEM[m.origem] ?? 'Rádio',
+    onde,
+    hora: m.entregueEm ? m.entregueEm.slice(11, 19) : '',
+    frase: m.texto,
+    detalhe: m.detalhe ?? null,
+    perdaS: numero(m.perdaS),
+    audio: m.audio ?? null,
+    sCarro: numero(m.sCarro),
+  };
+}
+
 /** Um evento de `/api/live/coach` (ou do WebSocket) como mensagem de rádio. */
 export function mensagemDoEvento(evento: EventoCoach, indice = 0): MensagemRadio {
   const volta = numero(evento.lap_number);
