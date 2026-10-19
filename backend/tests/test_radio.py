@@ -445,3 +445,18 @@ def test_o_minimapa_monta_a_pista_a_referencia_e_o_relogio_da_linha_do_jogo():
     # centro + normal x lateral (`TrackGeometry.to_world`); na pista circular de teste a normal aponta para fora
     assert t0 == 0.0 and np.hypot(x0, z0) == pytest.approx(200.0 + 1.0, abs=0.05)
     assert m["curvasDaAnalise"] == [] and m["versao"] == "volta_ia|ref#0013|6-7-8"   # a C99 nao existe na pista
+
+
+def test_as_mensagens_dizem_a_versao_do_minimapa(tmp_path):
+    """Pedido 35, Parte E: o app do jogo baixa o minimapa de novo quando a referencia ou a analise mudam."""
+    pista = _Pista()
+    escolha = {"tipo": "volta_ia", "volta": "ref#0013", "tempoS": 84.829}
+    radio = _radio(tmp_path, pista)
+    radio._referencia = lambda: dict(escolha)
+    assert radio.desde(0)["minimapaVersao"] == "volta_ia|ref#0013|"
+    radio._ultima_analise = {"voltas": [6, 7, 8], "curvas": []}
+    assert radio.desde(0)["minimapaVersao"] == "volta_ia|ref#0013|6-7-8"
+    escolha.update(tipo="minha_melhor", volta="ref#0021")
+    assert radio.desde(0)["minimapaVersao"] == "minha_melhor|ref#0021|6-7-8"
+    radio._referencia = lambda: (_ for _ in ()).throw(RuntimeError("sem o coach"))
+    assert radio.desde(0)["minimapaVersao"] == "None|None|6-7-8"

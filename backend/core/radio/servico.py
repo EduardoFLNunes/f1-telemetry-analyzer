@@ -328,7 +328,18 @@ class RadioDoEngenheiro:
             desde = 0 if instancia and instancia != self.instancia else int(id_ or 0)
             novas = [self._publica(m) for m in self._entregues if m["id"] > desde]
             return {"instancia": self.instancia, "ultimoId": self._proximo_id - 1, "mensagens": novas,
-                    "pendentes": len(self._pendentes), "erroDaVoz": self.erro_da_voz}
+                    "pendentes": len(self._pendentes), "erroDaVoz": self.erro_da_voz,
+                    "minimapaVersao": self.versao_do_minimapa()}
+
+    def versao_do_minimapa(self) -> str:
+        """Pedido 35: muda quando a referencia ou a ultima analise mudam (o app do jogo baixa o minimapa de novo).
+        O mesmo formato de `minimapa.montar`."""
+        try:
+            ref = self._referencia() or {}
+        except Exception:
+            ref = {}
+        voltas = (self._ultima_analise or {}).get("voltas") or []
+        return f"{ref.get('tipo')}|{ref.get('volta')}|{'-'.join(str(v) for v in voltas)}"
 
     def arquivo_do_audio(self, id_: int) -> Optional[Path]:
         with self._lock:
