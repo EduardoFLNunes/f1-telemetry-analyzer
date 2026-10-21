@@ -1,0 +1,124 @@
+1
+00:00:03,000 --> 00:00:09,400
+Em roxo, a IA do próprio jogo. Em laranja, o piloto. Mesmo carro, mesma pista.
+
+2
+00:00:09,600 --> 00:00:14,800
+A diferença é de 4,6 s por volta. O projeto quer entender de onde ela vem.
+
+3
+00:00:15,800 --> 00:00:21,400
+O jogo é lido dezenas de vezes por segundo. Mas as amostras caem em lugares diferentes a cada volta.
+
+4
+00:00:21,600 --> 00:00:26,800
+Então cada volta vira uma régua: um ponto a cada 2 metros, sempre 2.167 pontos por volta.
+
+5
+00:00:27,000 --> 00:00:31,800
+O ponto 500 é o mesmo lugar da pista em qualquer volta. Agora dá para comparar ponto a ponto.
+
+6
+00:00:32,800 --> 00:00:39,300
+A pista é cortada em 60 pedaços de uns 72 metros. Eles dizem onde o tempo foi perdido.
+
+7
+00:00:39,500 --> 00:00:45,800
+E em 14 curvas, que ajudam a explicar por quê: onde freou, por onde passou e com que velocidade.
+
+8
+00:00:46,800 --> 00:00:52,000
+A peça A é uma rede neural do tipo LSTM. Ela lê a pista ponto a ponto e guarda uma memória do que já viu.
+
+9
+00:00:52,200 --> 00:00:57,000
+Pedindo “perda zero”, ela desenha uma volta de referência: onde estar e quanto frear em cada ponto.
+
+10
+00:00:57,200 --> 00:01:04,800
+No teste, ela erra 1,5 m em média. Erra pouco nas voltas rápidas e muito nas lentas.
+
+11
+00:01:05,800 --> 00:01:11,800
+A peça D tenta responder uma pergunta difícil: e se eu frear 10 metros depois?
+
+12
+00:01:12,000 --> 00:01:17,300
+Essa volta nunca aconteceu. D precisa estimar o tempo dela, sempre com margem de erro.
+
+13
+00:01:17,500 --> 00:01:22,800
+A conta vale para a curva inteira, da frenagem ao fim da reta: frear tarde pode ganhar na entrada e perder na saída.
+
+14
+00:01:23,800 --> 00:01:28,900
+Antes de cada teste, as regras são escritas e travadas. Ninguém muda a régua depois de ver o resultado.
+
+15
+00:01:29,100 --> 00:01:34,400
+A nota compara cada modelo com um chute ingênuo: dizer que nada muda. Abaixo de zero, o modelo atrapalha.
+
+16
+00:01:34,600 --> 00:01:39,900
+Dois testes, oito tentativas. Nenhuma chegou à meta de 0,20.
+
+17
+00:01:40,100 --> 00:01:44,800
+Resultado negativo também é resultado: ele foi registrado e explicado.
+
+18
+00:01:45,800 --> 00:01:51,300
+Então veio a virada: muitas sessões antigas foram gravadas com o carro entregue à IA do jogo.
+
+19
+00:01:51,500 --> 00:01:59,800
+A IA freia sempre no mesmo lugar: varia 1 metro. O piloto varia quase 15 metros.
+
+20
+00:02:00,000 --> 00:02:06,800
+Aquela consistência que travava os testes era da IA. Os dados precisavam dizer quem pilotava.
+
+21
+00:02:07,800 --> 00:02:12,900
+Agora cada volta tem origem: piloto, IA, misturada ou desconhecida.
+
+22
+00:02:13,100 --> 00:02:18,400
+Um detector usa três sinais: a linha, os pontos de frenagem e o tempo. Só rotula quando os três concordam.
+
+23
+00:02:18,600 --> 00:02:23,800
+E só contam as voltas humanas com o equipamento atual: volante e pedais novos, desde 01/10.
+
+24
+00:02:24,800 --> 00:02:30,300
+Hoje, a ferramenta desta fase é o coach. Ele compara a volta com uma volta real da IA.
+
+25
+00:02:30,500 --> 00:02:36,100
+Fala só nos 3 trechos onde o piloto mais perde, no máximo 3 frases por volta.
+
+26
+00:02:36,300 --> 00:02:41,800
+E nunca promete ganho: diz apenas o que foi medido.
+
+27
+00:02:42,800 --> 00:02:47,900
+A autocorreção vem por último, porque depende da peça D.
+
+28
+00:02:48,100 --> 00:02:53,400
+Ela propõe ajustes pequenos, suaves e locais: uma curva por vez.
+
+29
+00:02:53,600 --> 00:02:58,800
+E só aceita quando o ganho estimado é maior que a incerteza. Se não, responde: não conclusivo.
+
+30
+00:02:59,800 --> 00:03:05,300
+Resumo: medir, o sistema já mede bem. Prever quanto se ganharia ainda não passou na régua.
+
+31
+00:03:05,500 --> 00:03:11,300
+Próximos passos: treinar até o tempo estabilizar, retreinar a peça A com voltas humanas e refazer o “e se?”.
+
