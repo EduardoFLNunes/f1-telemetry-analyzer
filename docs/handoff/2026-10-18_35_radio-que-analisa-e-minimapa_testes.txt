@@ -19,10 +19,21 @@ exit 0
 
 ## app do jogo: python tools/csp_app/conferir_lua.py tools/csp_app/radio_engenheiro/radio_engenheiro.lua <lib.lua do SDK do CSP 0.2.11>
 arquivo: tools\csp_app\radio_engenheiro\radio_engenheiro.lua
-tokens: 10214; erros de lexico: 0 []
+tokens: 13774; erros de lexico: 0 []
 blocos: ok
-API usada (32): JSON.parse, ac.FolderID, ac.getCar, ac.getFolder, ac.getSim, ac.log, io.createDir, io.deleteFile, io.fileExists, io.load, io.save, io.scanDir, os.preciseClock, rgbm, setInterval, ui.Alignment, ui.ExtraCanvas, ui.MediaPlayer, ui.drawCircle, ui.drawCircleFilled, ui.drawImage, ui.drawLine, ui.drawRectFilled, ui.dwriteDrawText, ui.dwriteDrawTextClipped, ui.pathClear, ui.pathLineTo, ui.pathStroke, ui.windowSize, vec2, web.get, web.timeouts
+API usada (38): JSON.parse, ac.FolderID, ac.getCar, ac.getFolder, ac.getSim, ac.log, io.createDir, io.deleteFile, io.fileExists, io.load, io.save, io.scanDir, os.preciseClock, rgbm, setInterval, ui.Alignment, ui.ExtraCanvas, ui.MediaPlayer, ui.drawCircle, ui.drawCircleFilled, ui.drawImage, ui.drawImageQuad, ui.drawLine, ui.drawRectFilled, ui.drawTriangleFilled, ui.dwriteDrawText, ui.dwriteDrawTextClipped, ui.isImageReady, ui.measureDWriteText, ui.mouseWheel, ui.pathClear, ui.pathLineTo, ui.pathStroke, ui.windowHovered, ui.windowSize, vec2, web.get, web.timeouts
 metodos usados (9): clear, currentTime, dispose, pause, play, setAutoPlay, setSource, setVolume, update
 no SDK do CSP: todas existem
 metodos no SDK do CSP: todos existem
 saida=0
+
+# Depois da captura do jogo (21/10): o mapa aproximado (3fe260ee)
+
+## backend: ..\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider tests
+786 passed, 18 warnings in 570.04s (0:09:30)
+exit 0
+
+## backend, so o radio: tests/test_radio.py
+21 passed
+
+## app do jogo: a conferencia acima ja e a do mapa aproximado (38 chamadas da API, 9 metodos)

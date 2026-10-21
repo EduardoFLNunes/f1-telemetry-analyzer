@@ -11,21 +11,26 @@
   - `ed009592` Partes B e E: o app do jogo, com a voz em três caminhos e o minimapa
   - `822c96d7` Parte H: a documentação e o ADR 0021 em `docs/decisoes/`
   - `4029c42a` Parte F.1: o teste das duas rotas novas
-  - o commit deste relatório, com o handoff: "Relatório parcial do pedido 35"
-  - o merge em `develop`: "Merge etapa/radio-v2-e-minimapa (pedido 35, até a Parte G)"
+  - `b1af6f2d` o relatório parcial, com o handoff
+  - `6e7cbee1` o merge em `develop` (até a Parte G)
+  - **depois da sua captura do jogo (21/10):**
+    - `3fe260ee` o mapa aproximado: a terceira janela do app do jogo, a pista detalhada, a referência com o pedal e o nome das curvas, e o aviso do minimapa que não cabia
+    - o commit desta atualização do relatório, com o handoff: "Relatório parcial do pedido 35: o mapa aproximado"
+    - o merge em `develop`: "Merge etapa/radio-v2-e-minimapa (pedido 35: o mapa aproximado)"
 - **Arquivos de handoff** (`docs/handoff/2026-10-18_35_radio-que-analisa-e-minimapa_*`):
   - `_relatorio.md` (este arquivo);
   - `_captura_ao_vivo_com_a_analise_1920x1080.png`: a tela Ao vivo com o cartão da análise (janela de teste, com a gravação de 18/10 tocando);
   - `_captura_minimapa_fora_do_jogo_600x600.png`: o minimapa desenhado fora do jogo (Parte E);
+  - `_captura_mapa_aproximado_saida_dos_boxes_720x720.png` e `_captura_mapa_aproximado_freada_da_c04_720x720.png`: o mapa aproximado desenhado fora do jogo;
   - `_conferencia_13-10.json` e `_conferencia_18-10.json`: as mensagens que o rádio daria em cada sessão (Parte F.4);
-  - `_minimapa_conta_do_app_13-10.json` e `_18-10.json`: a conta do minimapa contra a conta da grade;
+  - `_minimapa_conta_do_app_13-10.json` e `_18-10.json`: a conta do minimapa contra a conta da grade, com a referência em todos os 2.167 pontos;
   - `_minimapa_da_rota.json`: o que a rota do minimapa entregou na janela de teste;
   - `_mapa_ao_vivo_antes.json` e `_depois.json`: as medidas da Parte D;
   - `_variacao_das_medidas.json`: a variação volta a volta que deu os cortes;
   - `_conferencia_do_lua.txt`: a conferência do app do jogo contra o SDK do CSP;
   - `_testes.txt`: a saída das suítes;
   - `_scripts/`: os scripts das conferências e das medidas;
-  - `.patch`: de `d10e7cb3` até o teste das rotas (`4029c42a`), com o código e os documentos, sem o handoff.
+  - `.patch`: de `d10e7cb3` até o mapa aproximado (`3fe260ee`), com o código e os documentos, sem o handoff.
 
 ## Em resumo
 
@@ -49,6 +54,45 @@
    - **front:** o `tsc` passa, e o `vitest` passa com 184 testes (eram 182);
    - **o app do jogo:** a conferência passa, com as 32 chamadas da API e os 9 métodos no SDK do CSP.
 7. **Falta:** o teste no jogo (Parte G), com os passos no fim deste relatório.
+
+## Depois da sua captura do jogo (21/10): o mapa aproximado
+
+**O que você mandou:**
+- a captura do minimapa no jogo: a pista inteira, o carro e o aviso "o fantasma aparece depois da próxima passagem pela linha";
+- a captura da tela Volta na vista "fantasma por curva", com o pedido: "o certo era esse mapa com zoom in; mantenha o que já está e inclua esse novo".
+
+**O que a sua captura já mostra:**
+- o app novo carregou no jogo, e o minimapa desenhou a pista e o carro;
+- **o aviso de cima não cabia na janela** ("…pela lin"). Agora ele quebra a linha e cabe na largura (a faixa de cima passou de 26 para 30 px).
+
+**O que eu fiz** (`3fe260ee`), mantendo o minimapa como estava:
+- **uma terceira janela, "Mapa aproximado",** com a vista de perto da tela Volta:
+  - **a câmera** segue o carro e gira com a pista, como a tela Volta. A direção vem da volta de referência perto do carro; sem ela, vem do carro;
+  - **o zoom** abre com 120 m no lado menor da janela. A roda do mouse, com o ponteiro sobre a janela, vai de 50 m a 400 m;
+  - **a pista detalhada** tem as mesmas camadas do mapa do app: o asfalto, a pintura (o limite em branco, os boxes em amarelo, as vias de serviço em cinza) e as zebras. Ela é desenhada uma vez numa imagem, `pista_detalhada.png` (3 px por metro, 0,56 MB), e girada em volta do carro a cada quadro;
+  - **por cima:**
+    - o seu traçado desde a linha, pintado pelo pedal, lido do jogo 20 vezes por segundo;
+    - o traçado do fantasma até onde ele está;
+    - o nome das 14 curvas;
+    - o fantasma ("IA" ou "Sua melhor", com uma seta na borda se ele sair da janela);
+    - o carro ("Você · V<n>");
+    - a diferença numa faixa escura no alto;
+- **a rota do minimapa** passou a mandar:
+  - a referência em todos os 2.167 pontos da grade, com o pedal;
+  - o nome das 14 curvas, na mesma posição da tela Volta.
+
+  Ela monta tudo em cerca de 20 ms e manda 64 KB, uma vez por referência ou análise;
+- **o `gerar_pista.py`** desenha a imagem e grava, na `pista.json`, onde ela fica no mundo e o nome das curvas.
+
+**A conferência fora do jogo:**
+- **a parte arriscada é girar a imagem.** Uma prévia em HTML repete as contas do app, com a referência da IA e dois instantes reais de 18/10:
+  - **na saída da reta dos boxes** (`_captura_mapa_aproximado_saida_dos_boxes_720x720.png`), a pintura amarela dos boxes fica à esquerda, como na sua captura da tela Volta;
+  - **na freada da C04** (`_captura_mapa_aproximado_freada_da_c04_720x720.png`), o carro e os dois traçados ficam dentro do asfalto, e a curva vira para a esquerda;
+- **o minimapa com a referência completa** dá os mesmos números: a diferença a 0,010 s da conta da grade em 18/10 e a 0,011 s em 13/10 (mediana), e o fantasma a 0,46 m;
+- **a conferência do app do jogo** passa com 38 chamadas da API (eram 32) e os 9 métodos, todos no SDK do CSP;
+- **os testes** do minimapa cobrem o pedal de cada ponto e a posição do nome das curvas. A suíte do backend passa com 786 testes.
+
+**O custo do mapa aproximado** entra no mesmo registro do FPS: a linha do log diz se o minimapa e o mapa aproximado estavam ligados.
 
 ## Parte A: o pedido 31 fechado e o teste de 18/10
 
@@ -339,7 +383,8 @@ As regras, os cortes e os exemplos estão em `docs/realidade_aumentada.md`, seç
   - já guardei uma cópia;
   - o hash de agora é `dbac662a…83db598`;
   - depois do teste, eu comparo e, se mudar além do `generatedAt`, restauro;
-- **a sessão vai ter 6 voltas,** mais de 5. Então ela entra no coach na próxima rodada.
+- **a sessão vai ter 6 voltas,** mais de 5. Então ela entra no coach na próxima rodada;
+- **se você já tinha começado o teste,** recomece do passo 1: o app do jogo mudou (é preciso instalar de novo) e o backend também (é preciso abrir o app do repositório de novo).
 
 **Os passos:**
 
@@ -361,18 +406,19 @@ As regras, os cortes e os exemplos estão em `docs/realidade_aumentada.md`, seç
    npm.cmd run desktop:prod:autostart
    ```
    Espere o "backend pronto" no topo da tela.
-4. **Abra o Assetto Corsa** em Interlagos, com o `rss_formula_rss_3_v6_2026`. Na barra de apps, no lado direito da tela, ligue as duas janelas do app:
+4. **Abra o Assetto Corsa** em Interlagos, com o `rss_formula_rss_3_v6_2026`. Na barra de apps, no lado direito da tela, ligue as três janelas do app:
    - **"Rádio · Sistema de Telemetria e Otimização de Trajetórias":** não tem fundo e só aparece quando chega uma mensagem;
-   - **"Minimapa · Sistema de Telemetria e Otimização de Trajetórias":** ponha num canto, sem cobrir o centro da tela. O fantasma só aparece depois da primeira passagem pela linha.
+   - **"Minimapa · Sistema de Telemetria e Otimização de Trajetórias":** ponha num canto, sem cobrir o centro da tela. O fantasma só aparece depois da primeira passagem pela linha;
+   - **"Mapa aproximado · Sistema de Telemetria e Otimização de Trajetórias":** ponha em outro canto. Com o ponteiro sobre ele, a roda do mouse muda o zoom.
 
-   Se a barra mostrar só "Rádio do engenheiro", abra-o: as duas janelas ficam dentro dele. Se não achar o minimapa, me diga o que aparece.
+   Se a barra mostrar só "Rádio do engenheiro", abra-o: as janelas ficam dentro dele. Se não achar alguma, me diga o que aparece.
 5. **No app, mande a mensagem de teste:** tela **Sistema**, aba Diagnóstico, botão **"Mandar mensagem de teste"**.
    - No jogo, aparece o cartão "TESTE", e a voz toca.
    - Se a primeira forma de tocar não funcionar, o app tenta a seguinte. A voz pode demorar até uns 10 s nessa primeira vez.
 6. **Ande 6 voltas sem a IA:**
    - **as 3 primeiras com a tela Ao vivo aberta** no app;
    - **as 3 últimas com a tela Sessões aberta;**
-   - **em uma volta de cada bloco** (por exemplo, a 2ª e a 5ª), desligue o minimapa na barra de apps e ligue de novo na linha seguinte. Assim, o log tem o FPS com ele ligado e desligado.
+   - **na 2ª volta,** desligue o minimapa e o mapa aproximado na barra de apps e ligue os dois de novo na linha seguinte. **Na 5ª,** desligue só o mapa aproximado. Assim, o log tem o FPS com os dois mapas ligados, com os dois desligados e só com o minimapa.
 
    O que esperar:
    - as frases do coach e os resumos chegam nas retas, com a causa e a curva na voz;
@@ -387,14 +433,14 @@ Não precisa copiar nada: eu leio os dois.
 
 **Depois do seu aviso, eu:**
 - confiro o registro do rádio contra as frases do coach e as análises;
-- leio, sem mudar nada, as linhas `[radio_engenheiro]` do log do CSP: o caminho da voz e o FPS com o minimapa ligado e desligado;
+- leio, sem mudar nada, as linhas `[radio_engenheiro]` do log do CSP: o caminho da voz e o FPS com os mapas ligados e desligados;
 - comparo a gravação nas voltas com a tela Ao vivo aberta e com a tela Sessões: as amostras repetidas, os buracos de 50 ms ou mais e o p99 do relógio do gravador (as medidas do pedido 33);
 - confiro o cache da pista;
 - completo este relatório e as partes "a preencher" de `docs/realidade_aumentada.md`.
 
 ## O que falta e o que precisa de decisão
 
-**Falta, deste pedido:** o teste no jogo (Parte G) e o que vem depois dele (o caminho da voz, o custo do minimapa e a gravação com a tela Ao vivo aberta e fechada).
+**Falta, deste pedido:** o teste no jogo (Parte G) e o que vem depois dele (o caminho da voz, o custo dos dois mapas e a gravação com a tela Ao vivo aberta e fechada).
 
 **Para você decidir:**
 1. **O fantasma com o backend fora do ar** (Parte E.5): ele continua se já tinha sido baixado. Manter ou esconder?

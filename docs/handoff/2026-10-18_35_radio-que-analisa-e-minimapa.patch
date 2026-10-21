@@ -445,10 +445,10 @@ index eef1660f..b35bd9c4 100644
                       minima: float = JANELA_MINIMA_M) -> List[Janela]:
 diff --git a/backend/core/radio/minimapa.py b/backend/core/radio/minimapa.py
 new file mode 100644
-index 00000000..200526a4
+index 00000000..3aea941f
 --- /dev/null
 +++ b/backend/core/radio/minimapa.py
-@@ -0,0 +1,94 @@
+@@ -0,0 +1,135 @@
 +"""O que o minimapa do app do jogo baixa do backend (pedido 35, Parte E; ADR 0021, item 5).
 +
 +Uma vez, quando o app abre ou a referencia muda (`versao`):
@@ -456,12 +456,17 @@ index 00000000..200526a4
 +* **a pista tratada:** as duas bordas do asfalto da geometria oficial (centro mais e
 +  menos a largura, pela normal), simplificadas para `PONTOS_DA_BORDA` pontos cada;
 +* **a volta de referencia escolhida na Coleta:** a posicao (centro + normal x lateral,
-+  a mesma conta da tela Volta) e o tempo desde o s = 0, em `PONTOS_DA_REFERENCIA` pontos;
++  a mesma conta da tela Volta), o tempo desde o s = 0 e o pedal, em todos os pontos da
++  grade do store (2 m). O pedal e o da tela Volta: 2 = freio (0,15 ou mais), 1 =
++  acelerador (0,9 ou mais), 0 = parcial ou sem pedal. O mapa aproximado do jogo pinta o
++  tracado do fantasma com ele (pedido 35, depois do teste no jogo);
 +* **o alinhamento dos relogios:** o cronometro do jogo zera na linha do jogo, a
 +  `linhaDoJogoM` depois do s = 0 (pedido 33; a medida do store, pedido 34). O tempo da
 +  referencia nesse ponto (`tempoNaLinhaDoJogoS`) e somado ao cronometro do jogo para
 +  achar o fantasma: tempo da referencia = cronometro do jogo + tempoNaLinhaDoJogoS;
-+* **as curvas da ultima analise,** com a posicao do apice.
++* **as curvas da ultima analise,** com a posicao do apice;
++* **o nome das 14 curvas,** na mesma posicao da tela Volta (`rotuloDaCurva`): do lado de
++  fora, a largura da pista mais 9 m do apice.
 +
 +A posicao do carro nao vem daqui: o app le do proprio jogo, a cada quadro.
 +As coordenadas sao as do mundo do jogo (x, z), as mesmas da projecao do coach.
@@ -476,7 +481,8 @@ index 00000000..200526a4
 +import numpy as np
 +
 +PONTOS_DA_BORDA = 300
-+PONTOS_DA_REFERENCIA = 400
++PONTOS_DA_REFERENCIA = 2200     # todos os pontos da grade do store (2.167 em Interlagos)
++FOLGA_DO_ROTULO_M = 9.0         # o nome da curva, de fora, como na tela Volta
 +LINHA_DO_JOGO_REGISTRADA_M = 1.463   # pedido 33; vale a medida do store, se houver
 +
 +
@@ -495,6 +501,38 @@ index 00000000..200526a4
 +        return LINHA_DO_JOGO_REGISTRADA_M
 +
 +
++def _pedais(referencia: Dict[str, Any], n: int) -> np.ndarray:
++    """O pedal de cada ponto, como na tela Volta: 2 = freio, 1 = acelerador cheio, 0 = parcial."""
++    def serie(nome: str) -> np.ndarray:
++        v = referencia.get(nome) or []
++        a = np.array([np.nan if x is None else float(x) for x in v], dtype=float)
++        return a if a.size == n else np.full(n, np.nan)
++
++    freio, acelerador = serie("freio"), serie("acelerador")
++    pedal = np.zeros(n, dtype=int)
++    pedal[np.nan_to_num(acelerador, nan=0.0) >= 0.9] = 1
++    pedal[np.nan_to_num(freio, nan=0.0) >= 0.15] = 2
++    return pedal
++
++
++def rotulos_das_curvas(track: Any, segmentos: List[Any]) -> List[Dict[str, Any]]:
++    """Onde vai o nome de cada curva: do lado de fora, a largura mais `FOLGA_DO_ROTULO_M` do apice."""
++    x, z = np.asarray(track.x, dtype=float), np.asarray(track.z, dtype=float)
++    normal = np.asarray(track.normal, dtype=float)
++    wl, wr = np.asarray(track.width_left, dtype=float), np.asarray(track.width_right, dtype=float)
++    out = []
++    for seg in segmentos:
++        corner = seg.corner
++        codigo, _, lado = corner.label.partition("-")
++        i = int(track.index_of(corner.apex_s))
++        fora = -1.0 if lado.startswith("esq") else 1.0   # a normal aponta para a esquerda (ADR 0003)
++        w = (wl[i] if fora > 0 else wr[i]) + FOLGA_DO_ROTULO_M
++        out.append({"curva": codigo, "lado": "esquerda" if fora < 0 else "direita",
++                    "x": round(float(x[i] + fora * w * normal[i, 0]), 2),
++                    "z": round(float(z[i] + fora * w * normal[i, 1]), 2)})
++    return out
++
++
 +def montar(track: Any, segmentos: List[Any], referencia: Optional[Dict[str, Any]], tipo: Optional[str],
 +           analise: Optional[Dict[str, Any]], linha_m: float) -> Dict[str, Any]:
 +    x, z = np.asarray(track.x, dtype=float), np.asarray(track.z, dtype=float)
@@ -510,6 +548,7 @@ index 00000000..200526a4
 +        "linhaDoJogoM": round(float(linha_m), 3),
 +        "referencia": None,
 +        "curvasDaAnalise": [],
++        "curvas": rotulos_das_curvas(track, segmentos),
 +    }
 +    if referencia and referencia.get("disponivel", True) and referencia.get("elapsedS"):
 +        el = np.array([np.nan if v is None else float(v) for v in referencia["elapsedS"]], dtype=float)
@@ -521,6 +560,7 @@ index 00000000..200526a4
 +            lat = np.interp(idx, idx[np.isfinite(lat)], lat[np.isfinite(lat)])
 +            px, pz = x + normal[:, 0] * lat, z + normal[:, 1] * lat
 +            r = _decimar(el.size, PONTOS_DA_REFERENCIA)
++            pedal = _pedais(referencia, el.size)
 +            total = float(referencia.get("tempoS") or el[-1])
 +            na_linha = float(np.interp(linha_m, np.asarray(track.s, dtype=float), el))
 +            out["referencia"] = {
@@ -528,8 +568,9 @@ index 00000000..200526a4
 +                "lapId": referencia.get("lapId"),
 +                "tempoS": round(total, 3),
 +                "tempoNaLinhaDoJogoS": round(na_linha, 4),
-+                # [x, z, tempo desde o s = 0]
-+                "pontos": np.round(np.column_stack([px[r], pz[r], el[r]]), 3).tolist(),
++                # [x, z, tempo desde o s = 0, pedal]
++                "pontos": [[round(float(a), 2), round(float(b), 2), round(float(c), 3), int(d)]
++                           for a, b, c, d in zip(px[r], pz[r], el[r], pedal[r])],
 +            }
 +    codigos = {seg.corner.label[:3]: seg.corner for seg in segmentos}
 +    for c in (analise or {}).get("curvas") or []:
@@ -1459,7 +1500,7 @@ index 00000000..656c3a98
 +    _exigir()
 +    return _reprodutor.estado if _reprodutor is not None else {"tocando": False}
 diff --git a/backend/tests/test_radio.py b/backend/tests/test_radio.py
-index d2347a81..c993e166 100644
+index d2347a81..fae4baf8 100644
 --- a/backend/tests/test_radio.py
 +++ b/backend/tests/test_radio.py
 @@ -1,4 +1,4 @@
@@ -1576,7 +1617,7 @@ index d2347a81..c993e166 100644
      registro = tmp_path / "data" / "radio" / "2026-10-20_10-00-00_vhe_interlagos.jsonl"
      linha = json.loads(registro.read_text(encoding="utf-8").splitlines()[0])
      assert {k: linha[k] for k in ("id", "voltaDoCarro", "sCarro", "microssetor", "curva", "origem")} == {
-@@ -259,3 +274,242 @@ def test_emit_com_assinantes_sincronos_e_assincronos():
+@@ -259,3 +274,264 @@ def test_emit_com_assinantes_sincronos_e_assincronos():
      asyncio.run(bus.emit("quadro", 1))
      # Os tres rodam (o assincrono, quando e esperado, depois dos sincronos).
      assert sorted(vistos) == [("assincrono", 1), ("outro sincrono", 1), ("sincrono", 1)]
@@ -1747,10 +1788,32 @@ index d2347a81..c993e166 100644
 +    ref = m["referencia"]
 +    assert ref["lapId"] == "ref#0013" and len(ref["pontos"]) <= minimapa.PONTOS_DA_REFERENCIA
 +    assert ref["tempoNaLinhaDoJogoS"] == pytest.approx(1.495 / 50.0, abs=1e-3)   # 50 m/s na referencia
-+    x0, z0, t0 = ref["pontos"][0]
++    x0, z0, t0, pedal0 = ref["pontos"][0]
 +    # centro + normal x lateral (`TrackGeometry.to_world`); na pista circular de teste a normal aponta para fora
 +    assert t0 == 0.0 and np.hypot(x0, z0) == pytest.approx(200.0 + 1.0, abs=0.05)
++    assert pedal0 == 0                                     # sem os pedais na volta: parcial
 +    assert m["curvasDaAnalise"] == [] and m["versao"] == "volta_ia|ref#0013|6-7-8"   # a C99 nao existe na pista
++
++    # O pedal de cada ponto, como na tela Volta: freio a partir de 0,15, acelerador cheio a partir de 0,9.
++    freio = [0.0] * n
++    acelerador = [0.5] * n
++    freio[0], acelerador[1], acelerador[2], freio[2] = 0.2, 0.95, 0.95, 0.3
++    com_pedais = dict(referencia, freio=freio, acelerador=acelerador)
++    pontos = minimapa.montar(track, [], com_pedais, "volta_ia", None, 1.495)["referencia"]["pontos"]
++    assert len(pontos) == n and [q[3] for q in pontos[:4]] == [2, 1, 2, 0]
++
++    # O nome da curva fica do lado de fora: numa curva a esquerda, do lado direito (-normal), largura + 9 m.
++    class _Curva:
++        label, apex_s = "C03-esq", float(track.s[10])
++
++    class _Trecho:
++        corner = _Curva()
++
++    rotulo = minimapa.rotulos_das_curvas(track, [_Trecho()])[0]
++    w = float(np.asarray(track.width_right)[10]) + minimapa.FOLGA_DO_ROTULO_M
++    assert rotulo["curva"] == "C03" and rotulo["lado"] == "esquerda"
++    assert rotulo["x"] == pytest.approx(float(track.x[10] - w * track.normal[10, 0]), abs=0.01)
++    assert rotulo["z"] == pytest.approx(float(track.z[10] - w * track.normal[10, 1]), abs=0.01)
 +
 +
 +def test_as_mensagens_dizem_a_versao_do_minimapa(tmp_path):
@@ -1820,10 +1883,10 @@ index d2347a81..c993e166 100644
 +    assert m["referencia"]["tempoNaLinhaDoJogoS"] == pytest.approx(1.463 / 50.0, abs=1e-3)
 +    assert m["versao"] == "volta_ia|ref#0013|" == radio.desde(0)["minimapaVersao"]
 diff --git a/docs/dashboard_inventario.md b/docs/dashboard_inventario.md
-index 5ff0df79..551d97c9 100644
+index 5ff0df79..a9b7e6ea 100644
 --- a/docs/dashboard_inventario.md
 +++ b/docs/dashboard_inventario.md
-@@ -317,3 +317,24 @@ O rádio do engenheiro e a tela Ao vivo completa (ADR 0020). Detalhes em `docs/r
+@@ -317,3 +317,25 @@ O rádio do engenheiro e a tela Ao vivo completa (ADR 0020). Detalhes em `docs/r
  - **Dois defeitos antigos corrigidos no caminho ao vivo:**
    - o coach ao vivo não achava o modelo, porque o quadro não traz a pista;
    - o barramento enchia o log a cada quadro (958 MB no app instalado).
@@ -1845,7 +1908,8 @@ index 5ff0df79..551d97c9 100644
 +- **O app do jogo** (`tools/csp_app/radio_engenheiro/`):
 +  - a voz tem três caminhos (a URL, o arquivo do backend e o áudio baixado para a pasta do app), com uma linha no log do CSP por mensagem;
 +  - o minimapa, uma segunda janela: a pista, o carro, o fantasma da referência pelo tempo, a diferença ao vivo e as curvas da última análise;
-+  - o FPS do jogo no log a cada 10 s, com o minimapa ligado ou desligado.
++  - o mapa aproximado, uma terceira janela, pedida depois da primeira captura do jogo (21/10): a vista de perto da tela Volta, com a pista detalhada girando em volta do carro e os traçados pintados pelo pedal;
++  - o FPS do jogo no log a cada 10 s, com cada mapa ligado ou desligado.
 +- **Para os testes sem o jogo:** o reprodutor de gravações (`/api/teste/*`, só com `AT_TESTE_REPRODUTOR=1`) toca uma sessão pelo caminho do jogo.
 +- **Falta:** o teste no jogo (Parte G), com o caminho da voz que funcionou e o custo do minimapa.
 diff --git a/docs/decisoes/0021-radio-que-analisa-as-voltas-e-minimapa.md b/docs/decisoes/0021-radio-que-analisa-as-voltas-e-minimapa.md
@@ -1921,7 +1985,7 @@ index e8b73aa6..95417495 100644
 +| [0020](0020-realidade-aumentada-app-lua-do-csp.md) | Realidade aumentada no Assetto Corsa: um app Lua do CSP, numa pasta própria do jogo | aceita (pedido 31); item 4 refinado por 0021 |
 +| [0021](0021-radio-que-analisa-as-voltas-e-minimapa.md) | O rádio analisa as voltas e diz onde e por que o piloto perde tempo; o app do jogo ganha um minimapa | aceita (pedido 35); refina 0020 |
 diff --git a/docs/realidade_aumentada.md b/docs/realidade_aumentada.md
-index baa7159f..ff85f5fa 100644
+index baa7159f..55dbdfdc 100644
 --- a/docs/realidade_aumentada.md
 +++ b/docs/realidade_aumentada.md
 @@ -1,27 +1,115 @@
@@ -1929,7 +1993,7 @@ index baa7159f..ff85f5fa 100644
 +# Realidade aumentada: o rádio do engenheiro e o minimapa (pedido 31, ADR 0020; pedido 35, ADR 0021)
  
 -O rádio leva o que o coach já decide até o piloto, durante a volta, com o jogo em tela cheia: uma mensagem curta, num cartão dentro do jogo e em voz, no momento em que dá para ouvir. É o jeito de o Modelo 2 chegar ao piloto (ADR 0018). O rádio não decide nada: quais frases saem, o limite de 3 por volta, o foco e o limiar continuam no coach.
-+O rádio leva o que o coach já decide até o piloto, durante a volta, com o jogo em tela cheia: uma mensagem curta, num cartão dentro do jogo e em voz, no momento em que dá para ouvir. É o jeito de o Modelo 2 chegar ao piloto (ADR 0018). O rádio não decide nada do coach: quais frases saem, o limite de 3 por volta, o foco e o limiar continuam no coach. Desde o pedido 35, ele também analisa as voltas a cada 3 voltas válidas, lendo só o que a volta ao vivo e o store já medem (ADR 0021). O app do jogo ganhou um minimapa com o fantasma da referência.
++O rádio leva o que o coach já decide até o piloto, durante a volta, com o jogo em tela cheia: uma mensagem curta, num cartão dentro do jogo e em voz, no momento em que dá para ouvir. É o jeito de o Modelo 2 chegar ao piloto (ADR 0018). O rádio não decide nada do coach: quais frases saem, o limite de 3 por volta, o foco e o limiar continuam no coach. Desde o pedido 35, ele também analisa as voltas a cada 3 voltas válidas, lendo só o que a volta ao vivo e o store já medem (ADR 0021). O app do jogo ganhou dois mapas com o fantasma da referência: o minimapa, com a pista inteira, e o mapa aproximado, a vista de perto da tela Volta.
  
  ## 1. Como funciona
  
@@ -2012,8 +2076,7 @@ index baa7159f..ff85f5fa 100644
 +- **O que vai na fala:** as diferenças que mais pesam, até 2 por curva. O peso é a diferença dividida pelo corte da medida (seção 2.4); só entra o que passa do corte. Se a fala não couber em cerca de 8 s, sai a variante mais curta (seção 2.5).
 +- **O cartão:** as curvas com todos os números, uma linha por curva.
 +- **Exemplos:**
- 
--## 2. As janelas de rádio
++
 +  | sessão | cartão | fala | dura |
 +  |---|---|---|---|
 +  | 18/10 | Análise das voltas 3, 7 e 8 · C04 perde 1,04 s por volta · C01 perde 0,95 s por volta, contra a volta da IA. Linha da C04: perde 1,04 s por volta (1,04 · 1,06 · 0,22); mínima 102 contra 128 km/h; freada 40 m antes; acelerador cheio 16 m depois; traçado 1,5 m mais à direita | "Voltas 3, 7 e 8. Curva 4: 1,0 por volta: passa a 102 contra 128." | 8,1 s |
@@ -2021,7 +2084,8 @@ index baa7159f..ff85f5fa 100644
 +  | 13/10 | Análise das voltas 6 a 8 · C01 perde 1,09 s por volta · C11 perde 0,70 s por volta | "Análise das voltas 6 a 8. Curva 1: 1,1 por volta: freia 36 metros antes." | 6,8 s |
 +
 +### 2.4 Os cortes e o porquê
-+
+ 
+-## 2. As janelas de rádio
 +Abaixo do corte, a diferença está dentro da variação normal do próprio piloto de uma volta para outra, e não é dita. Cada corte é a mediana do desvio-padrão volta a volta daquela medida, por curva e por sessão, nas 73 voltas humanas do store v2 de 11/10 a 18/10, arredondada:
 +
 +| medida | variação medida (mediana; p75) | corte |
@@ -2070,7 +2134,7 @@ index baa7159f..ff85f5fa 100644
  
  | voz | interface | gera em | dura (com a vinheta) |
  |---|---|---|---|
-@@ -59,20 +147,75 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é
+@@ -59,20 +147,105 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é
  - **A vinheta antes da voz:** gerada pelo próprio código, sem som copiado de transmissão. É um estalo curto de ruído e dois bipes descendo (1.400 e 1.050 Hz).
  - **O arquivo:** um WAV por mensagem em `<pasta de dados>/data/radio/audio/`, mono, 16 bits, com o silêncio das pontas cortado.
  
@@ -2088,10 +2152,14 @@ index baa7159f..ff85f5fa 100644
 +- **Onde fica:** `tools/csp_app/radio_engenheiro/`:
 +  - `manifest.ini`;
 +  - `radio_engenheiro.lua`;
-+  - `pista.json`, a pista simplificada para quando o backend estiver fora do ar, gerada por `tools/csp_app/gerar_pista.py` a partir da geometria oficial.
-+- **Duas janelas,** ligadas e desligadas cada uma na barra de apps do jogo:
++  - `pista.json`: a pista simplificada para quando o backend estiver fora do ar, o nome das 14 curvas e onde fica a imagem da pista detalhada no mundo;
++  - `pista_detalhada.png`: a pista do mapa aproximado (seção 5.3).
++
++  Os dois arquivos são gerados por `tools/csp_app/gerar_pista.py`, a partir da geometria oficial e do cache da pista. Se o cache mudar, rode de novo.
++- **Três janelas,** ligadas e desligadas cada uma na barra de apps do jogo:
 +  - **"Rádio · Sistema de Telemetria e Otimização de Trajetórias":** o cartão e a voz;
-+  - **"Minimapa · Sistema de Telemetria e Otimização de Trajetórias":** a pista, o carro e o fantasma.
++  - **"Minimapa · Sistema de Telemetria e Otimização de Trajetórias":** a pista inteira, o carro e o fantasma;
++  - **"Mapa aproximado · Sistema de Telemetria e Otimização de Trajetórias":** a vista de perto, que gira com o carro.
  - **O que não faz:** não muda o carro, os controles nem nada do jogo, e não desenha na pista.
 -- **Onde pôr a janela:** num canto, sem cobrir o centro da tela. A posição é a do modo de mover apps do jogo.
 +- **Onde grava:** só na subpasta `voz` da própria pasta do app (ADR 0021, item 6), que ele limpa dos `.wav` ao abrir.
@@ -2128,7 +2196,7 @@ index baa7159f..ff85f5fa 100644
 +  - **as marcas:** a linha do s = 0 e as curvas da última análise, com um círculo e o nome (C01...).
 +- **O carro:** a posição vem do próprio jogo, a cada quadro (`ac.getCar(0).position`), sem pedir nada ao backend. A posição do jogo e a da geometria oficial estão no mesmo sistema de coordenadas: é a mesma que o coach projeta.
 +- **O fantasma da referência escolhida na Coleta:**
-+  - a volta (a posição e o tempo de 362 pontos) é baixada do backend uma vez, quando o app abre ou quando a referência ou a análise mudam (a `minimapaVersao` das mensagens);
++  - a volta é baixada do backend uma vez, quando o app abre ou quando a referência ou a análise mudam (a `minimapaVersao` das mensagens). Ela vem em todos os 2.167 pontos da grade do store (2 m), com a posição, o tempo e o pedal;
 +  - **o alinhamento dos relógios:** o cronômetro do jogo zera na linha do jogo, 1,463 m depois do s = 0 (pedido 33; o backend usa a medida do store, 1,495 m, pedido 34). O tempo da referência conta desde o s = 0. O backend manda o tempo da referência na linha do jogo (`tempoNaLinhaDoJogoS`, 0,020 s na volta da IA), e o app soma: **tempo da referência = cronômetro do jogo + tempoNaLinhaDoJogoS**. O fantasma fica no ponto da referência com esse tempo;
 +  - aparece depois da primeira passagem pela linha (o cronômetro da volta de saída dos boxes não serve).
 +- **A diferença ao vivo, em segundos e com sinal:**
@@ -2137,7 +2205,8 @@ index baa7159f..ff85f5fa 100644
 +  - **a conferência fora do jogo:** a mesma conta, portada para Python, nas sessões de 13/10 e 18/10, contra a conta da grade (o s do carro pela linha central e o tempo da referência nesse s):
 +    - a diferença do app ficou a 0,010 s da grade na mediana (p95 de 0,04 s em 18/10 e de 0,06 s em 13/10);
 +    - o fantasma ficou a 0,5 m, ao longo da pista, de onde a grade o põe (p95 de 1,0 m);
-+    - os poucos pontos acima de 0,5 s (0,1% em 13/10 e 0,9% em 18/10) foram com o carro a mais de 20 m da linha central, fora da pista.
++    - os poucos pontos acima de 0,5 s (0,1% em 13/10 e 0,9% em 18/10) foram com o carro a mais de 20 m da linha central, fora da pista;
++    - os números são os mesmos com a referência em 362 pontos (a primeira versão) e em 2.167.
 +- **As cores:** as da tela Volta (`frontend/src/theme/tokens.css`):
 +  - o carro, "você": branco com o anel vermelho;
 +  - o fantasma: o miolo escuro com o anel claro;
@@ -2145,19 +2214,44 @@ index baa7159f..ff85f5fa 100644
 +- **Com o backend fora do ar:**
 +  - a pista vem da `pista.json` da pasta do app;
 +  - o carro continua;
-+  - sem a volta de referência, o texto de cima diz, discreto, "sem fantasma: backend fora do ar";
++  - sem a volta de referência, o texto de cima diz, discreto, "sem fantasma: backend fora do ar". O texto quebra a linha e cabe na largura da janela;
 +  - se o backend cair depois de o app ter baixado a referência, o fantasma continua (os dados estão no app) e o canto de baixo diz "sem backend".
 +- **O custo no jogo:**
-+  - a cada 10 s, o app escreve no log do CSP o FPS do jogo (`ac.getSim().fps`, lido a cada 1 s): a média, a mínima e a máxima, e se o minimapa estava ligado ou desligado. O formato da linha: `[radio_engenheiro] fps: média <n> (mín <n>, máx <n>) em 10 s; minimapa ligado` (ou `desligado`, ou `ligado e desligado` quando mudou no meio). Com o jogo pausado ou num replay, a leitura não conta;
++  - a cada 10 s, o app escreve no log do CSP o FPS do jogo (`ac.getSim().fps`, lido a cada 1 s): a média, a mínima e a máxima, e se cada mapa estava ligado ou desligado. O formato da linha: `[radio_engenheiro] fps: média <n> (mín <n>, máx <n>) em 10 s; minimapa ligado; mapa aproximado desligado` (ou `ligado e desligado`, quando mudou no meio). Com o jogo pausado ou num replay, a leitura não conta;
 +  - o custo medido no jogo: a preencher depois do teste do pedido 35 (Parte G);
-+  - fora do jogo: a rota monta o minimapa em 9 ms, uma vez, e manda 18,8 KB. A cada quadro, o app desenha a imagem da pista, dois círculos e o texto, e procura o ponto mais perto em cerca de 34 segmentos da referência.
++  - fora do jogo: a rota monta o minimapa em cerca de 20 ms, uma vez, e manda 64 KB. A cada quadro, o app desenha a imagem da pista, dois círculos e o texto, e procura o ponto mais perto em cerca de 34 segmentos da referência.
++
++### 5.3 O mapa aproximado
++
++Pedido depois do primeiro teste no jogo (21/10): a vista de perto da tela Volta ("fantasma por curva"), dentro do jogo, ao lado do minimapa.
++
++- **A câmera:**
++  - segue o carro, um pouco abaixo do meio da janela, para mostrar mais da pista à frente;
++  - gira com a pista, como a tela Volta. A direção é a da volta de referência perto do carro, mais estável que a do carro numa escorregada; sem ela, é a do carro. O giro acompanha em cerca de 0,15 s;
++  - abre com 120 m no lado menor da janela. **A roda do mouse,** com o ponteiro sobre a janela, aproxima até 50 m e afasta até 400 m.
++- **A pista detalhada:**
++  - as camadas do cache que o mapa do app desenha (`drawTrackSurface`): o asfalto, a pintura classificada (o limite em branco, os boxes em amarelo, as vias de serviço em cinza) e as zebras (a base escura com as faixas brancas), com as cores e as larguras do app;
++  - desenhada uma vez numa imagem, `pista_detalhada.png` (2.788 × 4.118 px, 3 px por metro, 0,56 MB), pelo `gerar_pista.py`;
++  - a cada quadro, o app desenha essa imagem girada (`ui.drawImageQuad`): cada canto da janela volta para o mundo e daí para a imagem, que está nas coordenadas do mapa (x, −z), as mesmas da posição do carro;
++  - sem a imagem, ou enquanto ela carrega, o app desenha só as bordas do asfalto.
++- **Por cima da pista:**
++  - **o seu traçado** desde a linha, pintado pelo pedal: o freio em vermelho, o acelerador cheio em verde e o parcial em amarelo. O app lê a posição e os pedais do jogo 20 vezes por segundo e guarda um ponto a cada 1,5 m;
++  - **o traçado do fantasma,** da linha até onde ele está, mais apagado, com o pedal da volta de referência;
++  - **o nome das 14 curvas,** na mesma posição da tela Volta (do lado de fora, a largura da pista mais 9 m do ápice);
++  - **o fantasma,** com "IA" ou "Sua melhor". Fora da janela, ele vira uma seta na borda, apontando para onde está;
++  - **o carro,** "Você · V<n>", com o número da volta do jogo;
++  - **a diferença,** a mesma do minimapa, numa faixa escura no alto.
++- **A conferência fora do jogo:** uma prévia em HTML repete as contas do app (a câmera, a imagem girada, os traçados e as marcas), com a referência da IA e instantes reais da sessão de 18/10:
++  - **na saída da reta dos boxes,** a pintura amarela dos boxes fica à esquerda, como na tela Volta;
++  - **na freada da C04,** o carro e os dois traçados ficam dentro do asfalto, e a curva vira para a esquerda.
++- **O custo:** uma imagem e algumas centenas de pontos por quadro. O FPS entra no mesmo registro do minimapa, com o mapa aproximado ligado ou desligado.
  
 -### Instalar, ligar e remover
-+### 5.3 Instalar, ligar e remover
++### 5.4 Instalar, ligar e remover
  
  O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
  
-@@ -84,36 +227,50 @@ O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
+@@ -84,36 +257,50 @@ O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
     - pede a pasta do jogo, com `D:\SteamLibrary\steamapps\common\assettocorsa` como sugestão;
     - confere que ela tem o `acs.exe` e o `extension\installed.log` do CSP;
     - mostra o que vai copiar e pede confirmação;
@@ -2169,7 +2263,7 @@ index baa7159f..ff85f5fa 100644
     - abra o app do repositório (o backend com o rádio) antes do jogo;
 -   - no jogo, abra a barra de apps, no lado direito da tela, e ligue "Rádio do engenheiro".
 -3. **Conferir:** na tela Sistema, "Mandar mensagem de teste". O cartão aparece no jogo e a voz toca.
-+   - no jogo, abra a barra de apps, no lado direito da tela, e ligue as janelas "Rádio" e "Minimapa".
++   - no jogo, abra a barra de apps, no lado direito da tela, e ligue as janelas "Rádio", "Minimapa" e "Mapa aproximado".
 +3. **Conferir:** na tela Sistema, "Mandar mensagem de teste". O cartão aparece no jogo e a voz toca. O log do CSP diz por qual caminho.
  4. **Remover:**
     ```
@@ -2217,7 +2311,7 @@ index baa7159f..ff85f5fa 100644
 -| `GET /api/radio/estado` | as janelas, a voz e o que está esperando |
 -| `GET /api/live/volta` | a volta em andamento na grade oficial, para o fantasma da tela Ao vivo |
 +| `GET /api/radio/estado` | as janelas, a voz, o que está esperando e as voltas válidas da sessão |
-+| `GET /api/radio/minimapa` | a pista simplificada, a volta de referência com o tempo, o alinhamento da linha do jogo e as curvas da última análise (pedido 35) |
++| `GET /api/radio/minimapa` | a pista simplificada, a volta de referência com o tempo e o pedal, o alinhamento da linha do jogo, o nome das 14 curvas e as curvas da última análise (pedido 35) |
 +| `GET /api/live/volta` | a volta em andamento inteira, na grade oficial |
 +| `GET /api/live/volta/novos?versao=<v>&desde=<seq>` | só os pontos novos e a posição do carro (pedido 35); a volta inteira só numa volta nova |
 +| `POST /api/teste/reproduzir`, `POST /api/teste/parar`, `GET /api/teste/estado` | só nos testes (`AT_TESTE_REPRODUTOR=1`): toca uma gravação pelo caminho do jogo, para medir a tela Ao vivo sem o jogo |
@@ -2931,44 +3025,207 @@ index 25f5ca3f..67158113 100644
 +sys.exit(1 if erros or problemas or faltam or metodos_faltam else 0)
 diff --git a/tools/csp_app/gerar_pista.py b/tools/csp_app/gerar_pista.py
 new file mode 100644
-index 00000000..29c800ba
+index 00000000..16884870
 --- /dev/null
 +++ b/tools/csp_app/gerar_pista.py
-@@ -0,0 +1,29 @@
-+"""Gera a pista simplificada que acompanha o app do jogo (pedido 35, Parte E).
+@@ -0,0 +1,192 @@
++"""Gera a pista que acompanha o app do jogo (pedido 35, Parte E e o mapa aproximado).
 +
-+O minimapa baixa a pista do backend (`GET /api/radio/minimapa`); com o backend fora do
-+ar, ele usa esta copia, que vai na pasta do app (`radio_engenheiro/pista.json`) e e
-+instalada pelo `instalar.ps1`. As bordas sao as mesmas da rota: a geometria oficial do
-+repositorio, simplificada (`core/radio/minimapa.py`). So le o repositorio.
++Dois arquivos na pasta do app (`radio_engenheiro/`), instalados pelo `instalar.ps1`:
 +
-+Uso (na pasta backend): python ../tools/csp_app/gerar_pista.py
++* **`pista.json`:** a pista simplificada do minimapa, para quando o backend estiver fora
++  do ar (o minimapa baixa a mesma pista de `GET /api/radio/minimapa`), o nome das 14
++  curvas e onde fica a imagem da pista detalhada no mundo;
++* **`pista_detalhada.png`:** a pista do mapa aproximado, desenhada uma vez com as camadas
++  do cache que o mapa do app usa (`drawTrackSurface`, em
++  `frontend/src/components/map/OverlayRenderer.tsx`): o asfalto, a pintura classificada
++  (o limite em branco, os boxes em amarelo, as vias de servico em cinza) e as zebras (a
++  base escura com as faixas brancas). As cores e as larguras sao as do app com o zoom de
++  perto. O app do jogo gira e aproxima essa imagem em volta do carro, a cada quadro.
++
++A imagem fica em `PX_POR_METRO` pixels por metro, desenhada com o dobro e reduzida (as
++bordas ficam suaves). As camadas do cache estao nas coordenadas do mapa (x, -z) (a mesma
++posicao do carro no jogo): coluna = (x - x0) * k e linha = (-z - y0) * k.
++
++So le o repositorio. Uso (na pasta backend): python ../tools/csp_app/gerar_pista.py
 +"""
 +import json
++import math
 +import sys
 +from pathlib import Path
++
++import numpy as np
++from PIL import Image, ImageDraw
 +
 +BACKEND = Path(__file__).resolve().parents[2] / "backend"
 +sys.path.insert(0, str(BACKEND))
 +
 +from core.radio import minimapa  # noqa: E402
-+from core.radio.janelas import carregar_geometria  # noqa: E402
++from core.radio.analise import Pista  # noqa: E402
++from core.radio.janelas import CACHE_DA_PISTA, carregar_geometria  # noqa: E402
 +
 +REPO = BACKEND.parent
-+track = carregar_geometria(REPO)
-+if track is None:
-+    raise SystemExit("sem a geometria oficial em data/cache/tracks")
-+dados = minimapa.montar(track, [], None, None, None, minimapa.linha_do_jogo_m(REPO))
-+saida = Path(__file__).resolve().parent / "radio_engenheiro" / "pista.json"
-+saida.write_text(json.dumps({"comprimentoM": dados["comprimentoM"], "pista": dados["pista"],
-+                             "geometryId": getattr(track, "geometry_id", None)},
-+                            separators=(",", ":")), encoding="utf-8")
-+print(f"{saida}: {saida.stat().st_size} bytes, {len(dados['pista']['esquerda'])} pontos por borda")
++PASTA_DO_APP = Path(__file__).resolve().parent / "radio_engenheiro"
++PX_POR_METRO = 3            # o mapa aproximado abre com 120 m na janela de 360 px: 3 px/m
++SUPERAMOSTRA = 2            # desenhada com o dobro e reduzida: as bordas ficam suaves
++MARGEM_M = 120.0            # a vista em volta do carro nunca sai da imagem
++
++# As do app (OverlayRenderer.tsx): ASPHALT_FILL, KERB_*, MARKING_STYLES.
++ASFALTO = ((0x2C, 0x2C, 0x2C), 1.0)
++ZEBRA_ESCURA = ((0x11, 0x11, 0x11), 1.0)
++ZEBRA_CLARA = ((0xF4, 0xF4, 0xF5), 1.0)
++ZEBRA_BORDA = ((228, 228, 231), 0.85)
++FAIXA_DA_ZEBRA_M = 1.1
++BORDA_DA_ZEBRA_M = 0.4      # 1,2 px na tela do app, com 3 px/m
++# A pintura: a cor, a opacidade e a largura (o minimo em pixels do app, com 3 px/m), na ordem de desenho.
++PINTURA = (
++    ("servico", (148, 163, 184), 0.34, 0.30),
++    ("boxes", (234, 179, 8), 0.62, 0.37),
++    ("limite", (255, 255, 255), 1.0, 0.70),
++)
++
++
++def _angulo_dominante(pontos):
++    """O mesmo `dominantAngle` do app: as direcoes dobradas em meio circulo."""
++    sx = sy = 0.0
++    for (x0, y0), (x1, y1) in zip(pontos[:-1], pontos[1:]):
++        dx, dy = x1 - x0, y1 - y0
++        if dx < 0:
++            dx, dy = -dx, -dy
++        sx += dx
++        sy += dy
++    return math.atan2(sy, sx)
++
++
++def gerar_imagem(cache: dict):
++    asfalto = [l["points"] for l in cache["asphaltSurface"]["loops"] if len(l.get("points") or []) >= 3]
++    pinturas = [f for f in cache["markingGeometry"]["features"] if len(f.get("points") or []) >= 2]
++    zebras = [p["points"] for p in cache["kerbGeometry"]["polygons"] if len(p.get("points") or []) >= 4]
++    todos = np.array([q for grupo in (asfalto, [f["points"] for f in pinturas], zebras) for pts in grupo for q in pts])
++    x0, y0 = float(todos[:, 0].min()) - MARGEM_M, float(todos[:, 1].min()) - MARGEM_M
++    x1, y1 = float(todos[:, 0].max()) + MARGEM_M, float(todos[:, 1].max()) + MARGEM_M
++    largura, altura = int(math.ceil((x1 - x0) * PX_POR_METRO)), int(math.ceil((y1 - y0) * PX_POR_METRO))
++    k2 = PX_POR_METRO * SUPERAMOSTRA
++    L2, A2 = largura * SUPERAMOSTRA, altura * SUPERAMOSTRA
++
++    def px(pontos):
++        return [((p[0] - x0) * k2, (p[1] - y0) * k2) for p in pontos]
++
++    def poligono(mascara: np.ndarray, pontos, xor: bool = False) -> None:
++        """Preenche o poligono na mascara (ou troca, para o par-impar do asfalto), so no retangulo dele."""
++        p = px(pontos)
++        c0 = max(0, int(min(q[0] for q in p)) - 1)
++        l0 = max(0, int(min(q[1] for q in p)) - 1)
++        c1 = min(L2, int(max(q[0] for q in p)) + 2)
++        l1 = min(A2, int(max(q[1] for q in p)) + 2)
++        recorte = Image.new("L", (c1 - c0, l1 - l0), 0)
++        ImageDraw.Draw(recorte).polygon([(a - c0, b - l0) for a, b in p], fill=255)
++        r = np.asarray(recorte)
++        if xor:
++            mascara[l0:l1, c0:c1] ^= r
++        else:
++            np.maximum(mascara[l0:l1, c0:c1], r, out=mascara[l0:l1, c0:c1])
++
++    def reduzir(mascara: np.ndarray) -> np.ndarray:
++        """Do dobro para o tamanho final: a cobertura de cada pixel, de 0 a 1."""
++        return np.asarray(Image.fromarray(mascara).resize((largura, altura), Image.BOX), dtype=np.float32) / 255.0
++
++    camadas = []   # (cobertura, cor, opacidade), na ordem do app: asfalto, pintura, zebras
++
++    m = np.zeros((A2, L2), dtype=np.uint8)
++    for loop in asfalto:
++        poligono(m, loop, xor=True)       # par-impar, como o fill('evenodd') do app
++    camadas.append((reduzir(m), *ASFALTO))
++
++    for tipo, cor, opacidade, metros in PINTURA:
++        img = Image.new("L", (L2, A2), 0)
++        d = ImageDraw.Draw(img)
++        for f in pinturas:
++            if f.get("kind") != tipo:
++                continue
++            p = px(f["points"])
++            if f.get("closed"):
++                p = p + p[:1]
++            d.line(p, fill=255, width=max(1, round(metros * k2)), joint="curve")
++        camadas.append((reduzir(np.asarray(img).copy()), cor, opacidade))
++
++    escura = np.zeros((A2, L2), dtype=np.uint8)
++    clara = np.zeros((A2, L2), dtype=np.uint8)
++    borda = Image.new("L", (L2, A2), 0)
++    db = ImageDraw.Draw(borda)
++    for pontos in zebras:
++        p = px(pontos)
++        c0 = max(0, int(min(q[0] for q in p)) - 1)
++        l0 = max(0, int(min(q[1] for q in p)) - 1)
++        c1 = min(L2, int(max(q[0] for q in p)) + 2)
++        l1 = min(A2, int(max(q[1] for q in p)) + 2)
++        recorte = Image.new("L", (c1 - c0, l1 - l0), 0)
++        ImageDraw.Draw(recorte).polygon([(a - c0, b - l0) for a, b in p], fill=255)
++        dentro = np.asarray(recorte) > 0
++        # As faixas: como o app, giradas pelo angulo dominante, a partir de -span no centro do retangulo.
++        xs = np.array([q[0] for q in pontos])
++        ys = np.array([q[1] for q in pontos])
++        cx, cy = (xs.min() + xs.max()) / 2, (ys.min() + ys.max()) / 2
++        span = math.hypot(xs.max() - xs.min(), ys.max() - ys.min())
++        ang = _angulo_dominante(pontos)
++        cols = (np.arange(c0, c1) + 0.5) / k2 + x0
++        lins = (np.arange(l0, l1) + 0.5) / k2 + y0
++        X, Y = np.meshgrid(cols, lins)
++        ao_longo = (X - cx) * math.cos(ang) + (Y - cy) * math.sin(ang)
++        faixa = np.mod(ao_longo + span, 2 * FAIXA_DA_ZEBRA_M) < FAIXA_DA_ZEBRA_M
++        escura[l0:l1, c0:c1] |= (dentro & ~faixa).astype(np.uint8) * 255
++        clara[l0:l1, c0:c1] |= (dentro & faixa).astype(np.uint8) * 255
++        db.line(p + p[:1], fill=255, width=max(1, round(BORDA_DA_ZEBRA_M * k2)), joint="curve")
++    camadas.append((reduzir(escura), *ZEBRA_ESCURA))
++    camadas.append((reduzir(clara), *ZEBRA_CLARA))
++    camadas.append((reduzir(np.asarray(borda).copy()), *ZEBRA_BORDA))
++
++    # "Por cima", camada a camada, com a cor pre-multiplicada; o fundo e transparente.
++    rgb = np.zeros((altura, largura, 3), dtype=np.float32)
++    alfa = np.zeros((altura, largura), dtype=np.float32)
++    for cobertura, cor, opacidade in camadas:
++        a = cobertura * opacidade
++        rgb *= (1.0 - a)[..., None]
++        rgb += a[..., None] * (np.array(cor, dtype=np.float32) / 255.0)
++        alfa = a + alfa * (1.0 - a)
++    com_alfa = np.where(alfa > 1e-6, alfa, 1.0)
++    saida = np.dstack([np.clip(rgb / com_alfa[..., None], 0, 1), alfa])
++    imagem = Image.fromarray((saida * 255 + 0.5).astype(np.uint8))   # (altura, largura, 4): RGBA
++    transformacao = {"arquivo": "pista_detalhada.png", "x0": round(x0, 3), "y0": round(y0, 3),
++                     "pxPorMetro": PX_POR_METRO, "largura": largura, "altura": altura,
++                     "eixos": "coluna = (x - x0) * pxPorMetro; linha = (-z - y0) * pxPorMetro"}
++    return imagem, transformacao
++
++
++def main() -> None:
++    track = carregar_geometria(REPO)
++    if track is None:
++        raise SystemExit("sem a geometria oficial em data/cache/tracks")
++    pista = Pista.da_geometria(track)
++    dados = minimapa.montar(track, pista.segmentos, None, None, None, minimapa.linha_do_jogo_m(REPO))
++    cache = json.loads((REPO / "data" / "cache" / "tracks" / CACHE_DA_PISTA).read_text(encoding="utf-8"))
++    imagem, transformacao = gerar_imagem(cache)
++    PASTA_DO_APP.mkdir(exist_ok=True)
++    arquivo_da_imagem = PASTA_DO_APP / transformacao["arquivo"]
++    imagem.save(arquivo_da_imagem, optimize=True)
++    saida = PASTA_DO_APP / "pista.json"
++    saida.write_text(json.dumps({"comprimentoM": dados["comprimentoM"], "pista": dados["pista"],
++                                 "curvas": dados["curvas"], "imagem": transformacao,
++                                 "geometryId": getattr(track, "geometry_id", None)},
++                                separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
++    print(f"{saida}: {saida.stat().st_size} bytes, {len(dados['pista']['esquerda'])} pontos por borda, "
++          f"{len(dados['curvas'])} curvas")
++    print(f"{arquivo_da_imagem}: {transformacao['largura']} x {transformacao['altura']} px, "
++          f"{arquivo_da_imagem.stat().st_size} bytes")
++
++
++if __name__ == "__main__":
++    main()
 diff --git a/tools/csp_app/instalar.ps1 b/tools/csp_app/instalar.ps1
-index d6805abc..3e81657e 100644
+index d6805abc..59465f97 100644
 --- a/tools/csp_app/instalar.ps1
 +++ b/tools/csp_app/instalar.ps1
-@@ -50,9 +50,12 @@ if ($ok -notin @('s', 'S', 'sim', 'Sim')) {
+@@ -50,9 +50,13 @@ if ($ok -notin @('s', 'S', 'sim', 'Sim')) {
  }
  
  if (-not (Test-Path $destinoLua)) { New-Item -ItemType Directory -Path $destinoLua | Out-Null }
@@ -2979,14 +3236,15 @@ index d6805abc..3e81657e 100644
  Get-ChildItem $destino | ForEach-Object { Write-Host "  copiado: $($_.Name)" }
  Write-Host ''
 -Write-Host 'Pronto. No jogo, abra a barra de apps (lado direito da tela) e ligue "Rádio do engenheiro".' -ForegroundColor Green
-+Write-Host 'Pronto. No jogo, abra a barra de apps (lado direito da tela) e ligue as duas janelas do app:' -ForegroundColor Green
-+Write-Host '  "Rádio" (o cartão e a voz) e "Minimapa" (a pista, o carro e o fantasma).' -ForegroundColor Green
++Write-Host 'Pronto. No jogo, abra a barra de apps (lado direito da tela) e ligue as janelas do app:' -ForegroundColor Green
++Write-Host '  "Rádio" (o cartão e a voz), "Minimapa" (a pista inteira, o carro e o fantasma)' -ForegroundColor Green
++Write-Host '  e "Mapa aproximado" (a vista de perto, que gira com o carro; a roda do mouse muda o zoom).' -ForegroundColor Green
  Write-Host 'Abra o app do repositório (o backend com o rádio) antes do jogo.'
 diff --git a/tools/csp_app/radio_engenheiro/manifest.ini b/tools/csp_app/radio_engenheiro/manifest.ini
-index 17c5d927..3c7078bc 100644
+index 17c5d927..50614a26 100644
 --- a/tools/csp_app/radio_engenheiro/manifest.ini
 +++ b/tools/csp_app/radio_engenheiro/manifest.ini
-@@ -1,13 +1,15 @@
+@@ -1,13 +1,17 @@
 -; Radio do engenheiro (pedido 31, ADR 0020): o radio do coach dentro do jogo.
 -; Instalado por tools\csp_app\instalar.ps1 em <pasta do jogo>\apps\lua\radio_engenheiro\
 -; e removido por tools\csp_app\remover.ps1. So le o estado do jogo e conversa com o
@@ -2996,19 +3254,21 @@ index 17c5d927..3c7078bc 100644
 +; <pasta do jogo>\apps\lua\radio_engenheiro\ e removido por tools\csp_app\remover.ps1.
 +; So le o estado do jogo e conversa com o backend local (127.0.0.1:8000); nao muda o
 +; carro, os controles nem o jogo. So grava na propria pasta (a subpasta voz).
-+; Duas janelas, ligadas e desligadas cada uma na barra de apps do jogo.
++; Tres janelas, ligadas e desligadas cada uma na barra de apps do jogo: o radio, o
++; minimapa (a pista inteira) e o mapa aproximado (a vista de perto da tela Volta, que
++; usa a pista_detalhada.png; a roda do mouse sobre a janela muda o zoom).
  
  [ABOUT]
  NAME = Rádio do engenheiro
  AUTHOR = Sistema de Telemetria e Otimização de Trajetórias
 -VERSION = 0.1.0
 -DESCRIPTION = As mensagens do coach no jogo: um cartão e a voz, nas retas e na linha de chegada.
-+VERSION = 0.2.0
-+DESCRIPTION = O rádio do coach no jogo (o cartão e a voz, nas retas e na linha de chegada) e o minimapa com o fantasma.
++VERSION = 0.3.0
++DESCRIPTION = O rádio do coach no jogo (o cartão e a voz, nas retas e na linha de chegada), o minimapa e o mapa aproximado, com o fantasma.
  
  [CORE]
  LAZY = NONE
-@@ -16,5 +18,14 @@ LAZY = NONE
+@@ -16,5 +20,23 @@ LAZY = NONE
  ID = radio
  NAME = Rádio · Sistema de Telemetria e Otimização de Trajetórias
  FUNCTION_MAIN = janela
@@ -3024,19 +3284,32 @@ index 17c5d927..3c7078bc 100644
 +MIN_SIZE = 200, 200
 +MAX_SIZE = 640, 640
  FLAGS = NO_TITLE_BAR, NO_BACKGROUND, NO_SCROLLBAR, NO_COLLAPSE
++
++[WINDOW_...]
++ID = aproximado
++NAME = Mapa aproximado · Sistema de Telemetria e Otimização de Trajetórias
++FUNCTION_MAIN = aproximado
++SIZE = 360, 360
++MIN_SIZE = 220, 220
++MAX_SIZE = 900, 900
++FLAGS = NO_TITLE_BAR, NO_BACKGROUND, NO_SCROLLBAR, NO_COLLAPSE, NO_SCROLL_WITH_MOUSE
 diff --git a/tools/csp_app/radio_engenheiro/pista.json b/tools/csp_app/radio_engenheiro/pista.json
 new file mode 100644
-index 00000000..6ce0ee77
+index 00000000..fb97400e
 --- /dev/null
 +++ b/tools/csp_app/radio_engenheiro/pista.json
 @@ -0,0 +1 @@
-+{"comprimentoM":4334.08,"pista":{"esquerda":[[-404.86,218.77],[-400.92,234.16],[-396.98,249.54],[-393.04,264.93],[-389.09,280.31],[-385.13,295.69],[-381.2,311.08],[-377.03,326.41],[-373.27,341.85],[-369.29,357.23],[-365.5,372.65],[-361.82,388.1],[-358.13,403.49],[-354.3,418.78],[-350.23,433.76],[-345.26,448.11],[-337.31,460.93],[-327.52,471.74],[-316.27,477.88],[-304.85,477.67],[-293.23,473.01],[-282.72,462.91],[-273.55,449.96],[-262.87,436.5],[-245.46,427.44],[-225.26,427.52],[-208.86,435.13],[-195.04,443.64],[-181.88,451.22],[-167.96,457.05],[-153.56,462.35],[-138.9,465.68],[-123.69,465.23],[-108.58,464.8],[-93.69,462.64],[-79.28,458.44],[-65.24,452.65],[-51.78,445.52],[-39.16,437.2],[-27.53,427.65],[-17.09,416.63],[-7.81,404.5],[0.26,391.71],[6.81,378.18],[12.46,363.78],[17.86,348.92],[22.88,333.83],[26.66,318.39],[31.19,303.18],[38.36,288.78],[43.53,273.76],[48.14,258.59],[52.76,243.42],[57.64,228.3],[61.94,213.05],[66.17,197.76],[70.58,182.51],[74.51,167.09],[78.59,151.85],[82.26,136.57],[84.02,120.66],[87.77,104.96],[91.45,89.56],[95.14,74.1],[98.84,58.64],[102.88,43.28],[106.88,27.91],[111.17,12.61],[115.52,-2.66],[119.87,-17.93],[124.2,-33.22],[128.23,-48.6],[132.43,-63.92],[136.63,-79.23],[140.83,-94.55],[145.03,-109.87],[149.21,-125.19],[153.65,-140.43],[157.82,-155.76],[161.99,-171.08],[166.16,-186.41],[170.33,-201.78],[174.05,-217.08],[176.72,-231.57],[174.82,-245.08],[169.02,-256.7],[160.52,-266.13],[148.74,-273.12],[134.0,-276.42],[118.37,-279.91],[102.79,-282.97],[87.13,-285.7],[71.69,-288.84],[56.47,-290.91],[41.39,-291.42],[26.43,-290.04],[11.89,-286.7],[-2.06,-281.36],[-15.16,-274.02],[-27.33,-265.14],[-38.68,-255.06],[-49.32,-243.9],[-59.51,-231.95],[-69.38,-219.57],[-78.93,-206.91],[-88.37,-194.13],[-97.71,-181.32],[-106.97,-168.44],[-116.15,-155.49],[-125.31,-142.51],[-134.67,-129.69],[-143.67,-116.59],[-152.03,-103.02],[-160.35,-89.41],[-171.24,-77.67],[-180.91,-65.06],[-189.35,-51.55],[-197.56,-37.88],[-204.98,-23.62],[-214.47,-10.91],[-224.1,1.74],[-233.98,14.7],[-245.34,27.64],[-259.86,38.61],[-276.77,45.65],[-294.47,45.77],[-311.24,46.03],[-327.86,44.67],[-344.31,41.31],[-359.91,35.43],[-374.98,28.2],[-390.05,19.36],[-403.94,7.09],[-411.81,-9.49],[-413.39,-26.75],[-415.58,-42.7],[-418.74,-58.33],[-421.55,-74.04],[-424.12,-89.79],[-426.36,-105.64],[-428.33,-121.65],[-429.47,-138.25],[-427.45,-156.77],[-414.3,-172.52],[-394.65,-177.9],[-376.25,-172.49],[-362.29,-162.28],[-349.76,-152.82],[-337.05,-145.79],[-323.98,-142.83],[-311.03,-145.11],[-299.49,-151.54],[-291.16,-161.89],[-286.79,-174.43],[-286.44,-187.64],[-290.85,-200.55],[-299.7,-212.17],[-310.55,-223.37],[-321.96,-234.43],[-333.38,-245.54],[-344.75,-256.87],[-356.1,-268.75],[-366.03,-282.08],[-373.99,-296.83],[-379.38,-312.63],[-383.54,-328.32],[-387.41,-343.73],[-391.47,-359.3],[-394.43,-376.71],[-389.7,-396.48],[-373.06,-410.64],[-350.32,-411.02],[-334.52,-398.33],[-324.86,-384.76],[-315.17,-372.28],[-303.38,-361.54],[-292.15,-350.28],[-281.45,-338.61],[-271.21,-327.01],[-261.44,-315.37],[-248.89,-307.54],[-235.24,-302.19],[-220.77,-299.13],[-205.99,-298.21],[-191.31,-299.29],[-177.09,-302.72],[-163.61,-308.44],[-151.19,-316.22],[-140.42,-326.12],[-131.59,-338.32],[-122.42,-350.92],[-113.49,-364.02],[-104.7,-377.22],[-95.26,-389.99],[-85.93,-402.85],[-77.36,-416.23],[-68.91,-429.65],[-60.55,-443.1],[-52.39,-456.7],[-44.53,-470.53],[-37.65,-483.71],[-35.45,-496.11],[-39.78,-506.68],[-49.29,-515.9],[-62.6,-522.59],[-77.12,-528.34],[-92.05,-533.62],[-107.39,-537.98],[-122.39,-543.07],[-136.75,-547.68],[-150.94,-550.47],[-165.73,-549.13],[-181.05,-546.41],[-196.68,-543.41],[-212.15,-540.23],[-227.3,-536.47],[-242.16,-532.13],[-256.48,-526.78],[-271.1,-521.7],[-285.88,-516.08],[-299.42,-507.71],[-313.73,-501.49],[-328.52,-496.32],[-341.91,-488.51],[-354.69,-480.24],[-366.36,-470.84],[-377.03,-460.18],[-386.75,-448.72],[-395.03,-436.31],[-401.8,-422.83],[-407.49,-408.62],[-412.67,-394.03],[-417.53,-379.07],[-422.04,-363.89],[-426.19,-348.65],[-430.01,-333.31],[-433.73,-317.91],[-437.35,-302.48],[-440.97,-287.01],[-444.59,-271.55],[-448.2,-256.08],[-452.0,-240.78],[-455.82,-224.39],[-461.56,-209.5],[-462.41,-195.03],[-465.83,-180.06],[-469.33,-164.2],[-471.61,-148.53],[-472.91,-133.22],[-473.81,-117.79],[-474.08,-102.36],[-473.68,-86.96],[-472.82,-71.57],[-471.24,-56.36],[-468.6,-41.17],[-465.19,-25.93],[-461.62,-10.46],[-458.19,5.06],[-454.66,20.55],[-451.05,36.02],[-447.16,51.4],[-443.42,66.79],[-439.6,82.17],[-435.7,97.58],[-432.01,113.02],[-428.16,128.43],[-424.04,143.77],[-420.05,159.14],[-416.1,174.52],[-412.16,189.91],[-408.22,205.29]],"direita":[[-419.07,222.41],[-415.13,237.8],[-411.19,253.18],[-407.25,268.57],[-403.31,283.95],[-399.37,299.34],[-395.43,314.72],[-391.49,330.09],[-387.6,345.48],[-383.71,360.88],[-379.81,376.27],[-377.49,392.07],[-375.15,407.95],[-370.65,423.38],[-365.03,438.85],[-358.14,454.42],[-349.48,469.25],[-339.13,483.91],[-322.32,495.54],[-301.08,493.97],[-282.77,486.6],[-271.38,473.14],[-261.59,460.45],[-251.56,449.31],[-240.35,442.69],[-228.39,442.19],[-216.5,448.82],[-204.42,458.6],[-189.77,467.13],[-174.03,473.84],[-157.89,478.43],[-141.02,482.85],[-123.87,482.4],[-106.99,481.35],[-90.19,478.62],[-73.83,473.85],[-58.33,467.36],[-43.45,459.69],[-29.34,450.38],[-16.28,439.44],[-4.6,427.26],[5.9,414.19],[15.24,400.0],[22.57,384.49],[28.15,368.92],[32.58,353.51],[35.61,337.84],[39.99,322.55],[44.31,307.25],[48.61,291.95],[51.88,276.32],[54.76,260.57],[59.66,245.44],[65.25,230.51],[67.44,214.58],[71.94,199.32],[76.96,184.22],[81.82,169.13],[85.79,153.58],[91.01,138.04],[94.49,122.77],[96.99,107.61],[100.67,92.06],[104.97,76.77],[109.82,61.64],[113.84,46.29],[117.03,30.69],[121.86,15.55],[126.64,0.39],[129.65,-15.25],[133.99,-30.52],[139.42,-45.47],[143.53,-60.81],[146.79,-76.39],[152.59,-91.26],[158.35,-106.14],[162.73,-121.4],[167.44,-136.57],[172.32,-151.7],[177.13,-166.84],[181.24,-182.18],[186.14,-197.21],[190.71,-212.68],[194.38,-230.07],[193.7,-249.46],[186.47,-268.24],[171.74,-282.47],[153.14,-287.51],[136.29,-289.17],[120.83,-292.21],[105.25,-295.26],[89.69,-298.38],[74.0,-301.61],[57.74,-303.91],[41.08,-304.51],[24.41,-303.15],[7.97,-299.48],[-7.66,-293.29],[-22.31,-285.18],[-35.75,-275.27],[-47.71,-263.75],[-57.98,-251.0],[-67.71,-238.19],[-77.15,-225.34],[-86.45,-212.44],[-95.74,-199.56],[-105.04,-186.66],[-114.19,-173.64],[-123.38,-160.69],[-132.7,-147.83],[-142.04,-134.98],[-151.39,-122.15],[-160.76,-109.35],[-170.11,-96.53],[-179.48,-83.73],[-188.9,-70.95],[-198.32,-58.17],[-207.76,-45.39],[-217.23,-32.64],[-226.7,-19.89],[-236.19,-7.15],[-245.86,5.16],[-256.5,15.89],[-268.04,24.53],[-281.31,29.81],[-295.73,32.54],[-310.75,32.92],[-325.75,31.15],[-340.37,27.79],[-354.66,22.82],[-368.14,16.14],[-379.82,7.65],[-389.25,-2.68],[-396.6,-15.05],[-400.53,-29.65],[-403.67,-45.05],[-406.67,-60.58],[-409.46,-76.14],[-412.13,-91.73],[-414.66,-107.28],[-416.44,-122.82],[-416.51,-137.92],[-413.5,-150.7],[-405.78,-158.67],[-394.96,-161.44],[-382.61,-159.11],[-369.97,-151.97],[-357.02,-142.46],[-342.42,-133.29],[-324.62,-128.99],[-306.29,-131.49],[-290.26,-140.58],[-278.58,-154.75],[-272.05,-171.93],[-272.95,-190.4],[-280.11,-207.03],[-290.53,-220.74],[-300.95,-233.28],[-312.77,-243.9],[-325.4,-253.61],[-336.5,-264.73],[-346.19,-276.65],[-354.68,-289.2],[-360.54,-302.97],[-367.62,-316.31],[-371.81,-331.27],[-375.48,-346.71],[-378.51,-362.1],[-379.72,-376.09],[-376.3,-387.24],[-367.42,-393.56],[-356.61,-393.93],[-345.48,-387.2],[-334.91,-375.96],[-325.17,-363.22],[-315.15,-350.86],[-302.77,-340.66],[-292.09,-328.86],[-281.14,-316.98],[-269.02,-305.66],[-255.06,-296.01],[-239.36,-289.23],[-223.25,-282.95],[-206.07,-280.98],[-188.62,-281.8],[-171.39,-285.55],[-155.36,-292.91],[-140.29,-302.1],[-127.21,-314.09],[-116.99,-327.77],[-108.32,-341.57],[-100.21,-355.29],[-91.9,-368.87],[-83.0,-382.07],[-73.45,-394.85],[-65.44,-408.55],[-59.91,-423.91],[-51.29,-437.3],[-42.63,-450.65],[-34.09,-464.02],[-25.15,-478.37],[-20.37,-496.98],[-27.67,-515.96],[-42.51,-527.1],[-57.78,-534.27],[-72.72,-540.45],[-87.0,-547.83],[-101.97,-553.02],[-116.93,-558.49],[-133.42,-561.79],[-150.66,-563.43],[-167.56,-562.64],[-183.56,-559.99],[-199.19,-557.39],[-214.96,-554.77],[-230.89,-551.94],[-246.81,-548.44],[-262.56,-543.55],[-277.52,-537.11],[-292.08,-530.55],[-306.67,-523.99],[-321.38,-517.44],[-335.86,-510.18],[-350.07,-502.26],[-364.1,-493.49],[-377.22,-483.01],[-389.1,-471.29],[-399.88,-458.48],[-408.85,-444.23],[-416.37,-429.34],[-422.64,-414.12],[-427.44,-398.54],[-431.49,-383.02],[-435.5,-367.59],[-439.56,-352.15],[-443.5,-336.69],[-447.37,-321.24],[-451.12,-305.78],[-454.88,-290.35],[-458.67,-274.93],[-462.53,-259.53],[-466.42,-244.01],[-470.01,-229.5],[-476.4,-215.01],[-479.2,-198.05],[-481.66,-182.03],[-485.31,-166.76],[-488.88,-151.2],[-491.5,-134.99],[-492.95,-118.73],[-493.54,-102.4],[-493.25,-86.04],[-491.9,-69.74],[-489.47,-53.43],[-486.09,-37.42],[-482.36,-21.71],[-478.57,-6.28],[-474.79,9.13],[-471.01,24.56],[-467.23,39.97],[-463.44,55.42],[-459.58,70.88],[-455.63,86.29],[-451.69,101.67],[-447.75,117.05],[-443.81,132.44],[-439.87,147.82],[-435.93,163.21],[-431.99,178.59],[-428.05,193.98],[-424.11,209.36]]},"geometryId":"0ed16f0dd2225990"}
++{"comprimentoM":4334.08,"pista":{"esquerda":[[-404.86,218.77],[-400.92,234.16],[-396.98,249.54],[-393.04,264.93],[-389.09,280.31],[-385.13,295.69],[-381.2,311.08],[-377.03,326.41],[-373.27,341.85],[-369.29,357.23],[-365.5,372.65],[-361.82,388.1],[-358.13,403.49],[-354.3,418.78],[-350.23,433.76],[-345.26,448.11],[-337.31,460.93],[-327.52,471.74],[-316.27,477.88],[-304.85,477.67],[-293.23,473.01],[-282.72,462.91],[-273.55,449.96],[-262.87,436.5],[-245.46,427.44],[-225.26,427.52],[-208.86,435.13],[-195.04,443.64],[-181.88,451.22],[-167.96,457.05],[-153.56,462.35],[-138.9,465.68],[-123.69,465.23],[-108.58,464.8],[-93.69,462.64],[-79.28,458.44],[-65.24,452.65],[-51.78,445.52],[-39.16,437.2],[-27.53,427.65],[-17.09,416.63],[-7.81,404.5],[0.26,391.71],[6.81,378.18],[12.46,363.78],[17.86,348.92],[22.88,333.83],[26.66,318.39],[31.19,303.18],[38.36,288.78],[43.53,273.76],[48.14,258.59],[52.76,243.42],[57.64,228.3],[61.94,213.05],[66.17,197.76],[70.58,182.51],[74.51,167.09],[78.59,151.85],[82.26,136.57],[84.02,120.66],[87.77,104.96],[91.45,89.56],[95.14,74.1],[98.84,58.64],[102.88,43.28],[106.88,27.91],[111.17,12.61],[115.52,-2.66],[119.87,-17.93],[124.2,-33.22],[128.23,-48.6],[132.43,-63.92],[136.63,-79.23],[140.83,-94.55],[145.03,-109.87],[149.21,-125.19],[153.65,-140.43],[157.82,-155.76],[161.99,-171.08],[166.16,-186.41],[170.33,-201.78],[174.05,-217.08],[176.72,-231.57],[174.82,-245.08],[169.02,-256.7],[160.52,-266.13],[148.74,-273.12],[134.0,-276.42],[118.37,-279.91],[102.79,-282.97],[87.13,-285.7],[71.69,-288.84],[56.47,-290.91],[41.39,-291.42],[26.43,-290.04],[11.89,-286.7],[-2.06,-281.36],[-15.16,-274.02],[-27.33,-265.14],[-38.68,-255.06],[-49.32,-243.9],[-59.51,-231.95],[-69.38,-219.57],[-78.93,-206.91],[-88.37,-194.13],[-97.71,-181.32],[-106.97,-168.44],[-116.15,-155.49],[-125.31,-142.51],[-134.67,-129.69],[-143.67,-116.59],[-152.03,-103.02],[-160.35,-89.41],[-171.24,-77.67],[-180.91,-65.06],[-189.35,-51.55],[-197.56,-37.88],[-204.98,-23.62],[-214.47,-10.91],[-224.1,1.74],[-233.98,14.7],[-245.34,27.64],[-259.86,38.61],[-276.77,45.65],[-294.47,45.77],[-311.24,46.03],[-327.86,44.67],[-344.31,41.31],[-359.91,35.43],[-374.98,28.2],[-390.05,19.36],[-403.94,7.09],[-411.81,-9.49],[-413.39,-26.75],[-415.58,-42.7],[-418.74,-58.33],[-421.55,-74.04],[-424.12,-89.79],[-426.36,-105.64],[-428.33,-121.65],[-429.47,-138.25],[-427.45,-156.77],[-414.3,-172.52],[-394.65,-177.9],[-376.25,-172.49],[-362.29,-162.28],[-349.76,-152.82],[-337.05,-145.79],[-323.98,-142.83],[-311.03,-145.11],[-299.49,-151.54],[-291.16,-161.89],[-286.79,-174.43],[-286.44,-187.64],[-290.85,-200.55],[-299.7,-212.17],[-310.55,-223.37],[-321.96,-234.43],[-333.38,-245.54],[-344.75,-256.87],[-356.1,-268.75],[-366.03,-282.08],[-373.99,-296.83],[-379.38,-312.63],[-383.54,-328.32],[-387.41,-343.73],[-391.47,-359.3],[-394.43,-376.71],[-389.7,-396.48],[-373.06,-410.64],[-350.32,-411.02],[-334.52,-398.33],[-324.86,-384.76],[-315.17,-372.28],[-303.38,-361.54],[-292.15,-350.28],[-281.45,-338.61],[-271.21,-327.01],[-261.44,-315.37],[-248.89,-307.54],[-235.24,-302.19],[-220.77,-299.13],[-205.99,-298.21],[-191.31,-299.29],[-177.09,-302.72],[-163.61,-308.44],[-151.19,-316.22],[-140.42,-326.12],[-131.59,-338.32],[-122.42,-350.92],[-113.49,-364.02],[-104.7,-377.22],[-95.26,-389.99],[-85.93,-402.85],[-77.36,-416.23],[-68.91,-429.65],[-60.55,-443.1],[-52.39,-456.7],[-44.53,-470.53],[-37.65,-483.71],[-35.45,-496.11],[-39.78,-506.68],[-49.29,-515.9],[-62.6,-522.59],[-77.12,-528.34],[-92.05,-533.62],[-107.39,-537.98],[-122.39,-543.07],[-136.75,-547.68],[-150.94,-550.47],[-165.73,-549.13],[-181.05,-546.41],[-196.68,-543.41],[-212.15,-540.23],[-227.3,-536.47],[-242.16,-532.13],[-256.48,-526.78],[-271.1,-521.7],[-285.88,-516.08],[-299.42,-507.71],[-313.73,-501.49],[-328.52,-496.32],[-341.91,-488.51],[-354.69,-480.24],[-366.36,-470.84],[-377.03,-460.18],[-386.75,-448.72],[-395.03,-436.31],[-401.8,-422.83],[-407.49,-408.62],[-412.67,-394.03],[-417.53,-379.07],[-422.04,-363.89],[-426.19,-348.65],[-430.01,-333.31],[-433.73,-317.91],[-437.35,-302.48],[-440.97,-287.01],[-444.59,-271.55],[-448.2,-256.08],[-452.0,-240.78],[-455.82,-224.39],[-461.56,-209.5],[-462.41,-195.03],[-465.83,-180.06],[-469.33,-164.2],[-471.61,-148.53],[-472.91,-133.22],[-473.81,-117.79],[-474.08,-102.36],[-473.68,-86.96],[-472.82,-71.57],[-471.24,-56.36],[-468.6,-41.17],[-465.19,-25.93],[-461.62,-10.46],[-458.19,5.06],[-454.66,20.55],[-451.05,36.02],[-447.16,51.4],[-443.42,66.79],[-439.6,82.17],[-435.7,97.58],[-432.01,113.02],[-428.16,128.43],[-424.04,143.77],[-420.05,159.14],[-416.1,174.52],[-412.16,189.91],[-408.22,205.29]],"direita":[[-419.07,222.41],[-415.13,237.8],[-411.19,253.18],[-407.25,268.57],[-403.31,283.95],[-399.37,299.34],[-395.43,314.72],[-391.49,330.09],[-387.6,345.48],[-383.71,360.88],[-379.81,376.27],[-377.49,392.07],[-375.15,407.95],[-370.65,423.38],[-365.03,438.85],[-358.14,454.42],[-349.48,469.25],[-339.13,483.91],[-322.32,495.54],[-301.08,493.97],[-282.77,486.6],[-271.38,473.14],[-261.59,460.45],[-251.56,449.31],[-240.35,442.69],[-228.39,442.19],[-216.5,448.82],[-204.42,458.6],[-189.77,467.13],[-174.03,473.84],[-157.89,478.43],[-141.02,482.85],[-123.87,482.4],[-106.99,481.35],[-90.19,478.62],[-73.83,473.85],[-58.33,467.36],[-43.45,459.69],[-29.34,450.38],[-16.28,439.44],[-4.6,427.26],[5.9,414.19],[15.24,400.0],[22.57,384.49],[28.15,368.92],[32.58,353.51],[35.61,337.84],[39.99,322.55],[44.31,307.25],[48.61,291.95],[51.88,276.32],[54.76,260.57],[59.66,245.44],[65.25,230.51],[67.44,214.58],[71.94,199.32],[76.96,184.22],[81.82,169.13],[85.79,153.58],[91.01,138.04],[94.49,122.77],[96.99,107.61],[100.67,92.06],[104.97,76.77],[109.82,61.64],[113.84,46.29],[117.03,30.69],[121.86,15.55],[126.64,0.39],[129.65,-15.25],[133.99,-30.52],[139.42,-45.47],[143.53,-60.81],[146.79,-76.39],[152.59,-91.26],[158.35,-106.14],[162.73,-121.4],[167.44,-136.57],[172.32,-151.7],[177.13,-166.84],[181.24,-182.18],[186.14,-197.21],[190.71,-212.68],[194.38,-230.07],[193.7,-249.46],[186.47,-268.24],[171.74,-282.47],[153.14,-287.51],[136.29,-289.17],[120.83,-292.21],[105.25,-295.26],[89.69,-298.38],[74.0,-301.61],[57.74,-303.91],[41.08,-304.51],[24.41,-303.15],[7.97,-299.48],[-7.66,-293.29],[-22.31,-285.18],[-35.75,-275.27],[-47.71,-263.75],[-57.98,-251.0],[-67.71,-238.19],[-77.15,-225.34],[-86.45,-212.44],[-95.74,-199.56],[-105.04,-186.66],[-114.19,-173.64],[-123.38,-160.69],[-132.7,-147.83],[-142.04,-134.98],[-151.39,-122.15],[-160.76,-109.35],[-170.11,-96.53],[-179.48,-83.73],[-188.9,-70.95],[-198.32,-58.17],[-207.76,-45.39],[-217.23,-32.64],[-226.7,-19.89],[-236.19,-7.15],[-245.86,5.16],[-256.5,15.89],[-268.04,24.53],[-281.31,29.81],[-295.73,32.54],[-310.75,32.92],[-325.75,31.15],[-340.37,27.79],[-354.66,22.82],[-368.14,16.14],[-379.82,7.65],[-389.25,-2.68],[-396.6,-15.05],[-400.53,-29.65],[-403.67,-45.05],[-406.67,-60.58],[-409.46,-76.14],[-412.13,-91.73],[-414.66,-107.28],[-416.44,-122.82],[-416.51,-137.92],[-413.5,-150.7],[-405.78,-158.67],[-394.96,-161.44],[-382.61,-159.11],[-369.97,-151.97],[-357.02,-142.46],[-342.42,-133.29],[-324.62,-128.99],[-306.29,-131.49],[-290.26,-140.58],[-278.58,-154.75],[-272.05,-171.93],[-272.95,-190.4],[-280.11,-207.03],[-290.53,-220.74],[-300.95,-233.28],[-312.77,-243.9],[-325.4,-253.61],[-336.5,-264.73],[-346.19,-276.65],[-354.68,-289.2],[-360.54,-302.97],[-367.62,-316.31],[-371.81,-331.27],[-375.48,-346.71],[-378.51,-362.1],[-379.72,-376.09],[-376.3,-387.24],[-367.42,-393.56],[-356.61,-393.93],[-345.48,-387.2],[-334.91,-375.96],[-325.17,-363.22],[-315.15,-350.86],[-302.77,-340.66],[-292.09,-328.86],[-281.14,-316.98],[-269.02,-305.66],[-255.06,-296.01],[-239.36,-289.23],[-223.25,-282.95],[-206.07,-280.98],[-188.62,-281.8],[-171.39,-285.55],[-155.36,-292.91],[-140.29,-302.1],[-127.21,-314.09],[-116.99,-327.77],[-108.32,-341.57],[-100.21,-355.29],[-91.9,-368.87],[-83.0,-382.07],[-73.45,-394.85],[-65.44,-408.55],[-59.91,-423.91],[-51.29,-437.3],[-42.63,-450.65],[-34.09,-464.02],[-25.15,-478.37],[-20.37,-496.98],[-27.67,-515.96],[-42.51,-527.1],[-57.78,-534.27],[-72.72,-540.45],[-87.0,-547.83],[-101.97,-553.02],[-116.93,-558.49],[-133.42,-561.79],[-150.66,-563.43],[-167.56,-562.64],[-183.56,-559.99],[-199.19,-557.39],[-214.96,-554.77],[-230.89,-551.94],[-246.81,-548.44],[-262.56,-543.55],[-277.52,-537.11],[-292.08,-530.55],[-306.67,-523.99],[-321.38,-517.44],[-335.86,-510.18],[-350.07,-502.26],[-364.1,-493.49],[-377.22,-483.01],[-389.1,-471.29],[-399.88,-458.48],[-408.85,-444.23],[-416.37,-429.34],[-422.64,-414.12],[-427.44,-398.54],[-431.49,-383.02],[-435.5,-367.59],[-439.56,-352.15],[-443.5,-336.69],[-447.37,-321.24],[-451.12,-305.78],[-454.88,-290.35],[-458.67,-274.93],[-462.53,-259.53],[-466.42,-244.01],[-470.01,-229.5],[-476.4,-215.01],[-479.2,-198.05],[-481.66,-182.03],[-485.31,-166.76],[-488.88,-151.2],[-491.5,-134.99],[-492.95,-118.73],[-493.54,-102.4],[-493.25,-86.04],[-491.9,-69.74],[-489.47,-53.43],[-486.09,-37.42],[-482.36,-21.71],[-478.57,-6.28],[-474.79,9.13],[-471.01,24.56],[-467.23,39.97],[-463.44,55.42],[-459.58,70.88],[-455.63,86.29],[-451.69,101.67],[-447.75,117.05],[-443.81,132.44],[-439.87,147.82],[-435.93,163.21],[-431.99,178.59],[-428.05,193.98],[-424.11,209.36]]},"curvas":[{"curva":"C01","lado":"esquerda","x":-308.61,"z":503.99},{"curva":"C02","lado":"direita","x":-238.68,"z":418.07},{"curva":"C03","lado":"esquerda","x":-149.19,"z":491.2},{"curva":"C04","lado":"esquerda","x":181.67,"z":-286.25},{"curva":"C05","lado":"esquerda","x":23.04,"z":-312.05},{"curva":"C06","lado":"direita","x":-402.15,"z":21.37},{"curva":"C07","lado":"direita","x":-426.88,"z":-174.01},{"curva":"C08","lado":"esquerda","x":-311.37,"z":-120.94},{"curva":"C09","lado":"direita","x":-383.06,"z":-295.18},{"curva":"C10","lado":"direita","x":-361.55,"z":-422.41},{"curva":"C11","lado":"esquerda","x":-255.08,"z":-285.98},{"curva":"C12","lado":"esquerda","x":-13.11,"z":-507.24},{"curva":"C13","lado":"esquerda","x":-145.63,"z":-572.08},{"curva":"C14","lado":"esquerda","x":-412.14,"z":-456.4}],"imagem":{"arquivo":"pista_detalhada.png","x0":-615.75,"y0":-661.527,"pxPorMetro":3,"largura":2788,"altura":4118,"eixos":"coluna = (x - x0) * pxPorMetro; linha = (-z - y0) * pxPorMetro"},"geometryId":"0ed16f0dd2225990"}
 \ No newline at end of file
+diff --git a/tools/csp_app/radio_engenheiro/pista_detalhada.png b/tools/csp_app/radio_engenheiro/pista_detalhada.png
+new file mode 100644
+index 00000000..bc4ec8de
+Binary files /dev/null and b/tools/csp_app/radio_engenheiro/pista_detalhada.png differ
 diff --git a/tools/csp_app/radio_engenheiro/radio_engenheiro.lua b/tools/csp_app/radio_engenheiro/radio_engenheiro.lua
-index 79b84787..721e2cc4 100644
+index 79b84787..afa7981e 100644
 --- a/tools/csp_app/radio_engenheiro/radio_engenheiro.lua
 +++ b/tools/csp_app/radio_engenheiro/radio_engenheiro.lua
-@@ -1,31 +1,80 @@
+@@ -1,31 +1,105 @@
 --- Rádio do engenheiro (pedido 31, ADR 0020).
 +-- Rádio do engenheiro (pedido 31, ADR 0020; pedido 35, ADR 0021).
  --
@@ -3047,7 +3320,7 @@ index 79b84787..721e2cc4 100644
 ---     (carbono e vermelho, como o app), e toca a vinheta e a voz da mensagem;
 ---   * com o backend fora do ar, mostra um indicador discreto e não repete o aviso;
 ---   * se a API do CSP não tiver o que o app usa, avisa uma vez e fica calado.
-+-- Duas janelas, cada uma ligada e desligada na barra de apps do jogo (manifest.ini):
++-- Três janelas, cada uma ligada e desligada na barra de apps do jogo (manifest.ini):
 +--
 +--   * o rádio (`janela`): a cada 0,3 s, pede ao backend local as mensagens novas
 +--     (/api/radio/mensagens) e mostra o cartão por alguns segundos, com a vinheta e a
@@ -3055,7 +3328,12 @@ index 79b84787..721e2cc4 100644
 +--     não tiver o que o app usa, avisa uma vez e fica calado;
 +--   * o minimapa (`minimapa`, pedido 35, Parte E): a pista tratada, o carro (lido do
 +--     jogo a cada quadro), o fantasma da referência escolhida na Coleta (pelo tempo da
-+--     volta), a diferença ao vivo e as curvas da última análise.
++--     volta), a diferença ao vivo e as curvas da última análise;
++--   * o mapa aproximado (`aproximado`, pedido 35, depois do teste no jogo): a vista de
++--     perto da tela Volta ("fantasma por curva"). A câmera segue o carro e gira com a
++--     pista; a pista detalhada (asfalto, pintura e zebras) é uma imagem desenhada uma vez
++--     (`pista_detalhada.png`); por cima, o seu traçado e o do fantasma, pintados pelo
++--     pedal, o carro, o fantasma, o nome das curvas e a diferença.
 +--
 +-- A voz tem três caminhos, um depois do outro (pedido 35, Parte B): a URL do backend;
 +-- o arquivo que o backend grava em data/radio/audio/; e o áudio baixado para a
@@ -3089,12 +3367,22 @@ index 79b84787..721e2cc4 100644
 +local ESPERA_DO_DOWNLOAD_S = 4
 +
 +-- O minimapa.
-+local TOPO_DO_MINIMAPA = 26         -- a faixa de cima, com a diferença
++local TOPO_DO_MINIMAPA = 30         -- a faixa de cima, com a diferença ou o aviso (até duas linhas)
 +local MARGEM_DO_MINIMAPA = 12
 +local DIFERENCA_MAXIMA_S = 20       -- mais que isto é a linha (o relógio do jogo ainda na volta anterior)
 +local LONGE_DA_REFERENCIA_M = 60    -- mais longe que isto da volta de referência (os boxes): sem diferença
 +local FPS_AMOSTRA_S = 1             -- o FPS do jogo lido a cada 1 s...
-+local FPS_REGISTRO_S = 10           -- ...e registrado no log a cada 10 s, com o minimapa ligado ou desligado
++local FPS_REGISTRO_S = 10           -- ...e registrado no log a cada 10 s, com os mapas ligados ou desligados
++
++-- O mapa aproximado, como a vista "fantasma por curva" da tela Volta.
++local ZOOM_INICIAL_M = 120          -- o que cabe no lado menor da janela (a tela Volta abre com 150 m)
++local ZOOM_MINIMO_M = 50            -- a roda do mouse, com o ponteiro sobre a janela, aproxima até isto...
++local ZOOM_MAXIMO_M = 400           -- ...e afasta até isto
++local CENTRO_VERTICAL = 0.62        -- o carro um pouco abaixo do meio: dá para ver mais da pista à frente
++local GIRO_S = 0.15                 -- quanto a câmera demora para acompanhar a direção da pista
++local RASTRO_PASSO_M = 1.5          -- o seu traçado: um ponto a cada 1,5 m...
++local RASTRO_PERIODO_S = 0.05       -- ...lidos do jogo 20 vezes por segundo
++local SALTO_M = 20                  -- mais que isto entre dois pontos (os boxes, um reset): o traço não liga
  
  local CORES = {
    fundo = rgbm(0.031, 0.035, 0.043, 0.9),
@@ -3111,8 +3399,18 @@ index 79b84787..721e2cc4 100644
 +  borda = rgbm(0.914, 0.929, 0.949, 0.35),
 +  perda = rgbm(1.0, 0.635, 0.29, 1),          -- --perda (#ffa24a)
 +  ganho = rgbm(0.435, 0.608, 1.0, 1),         -- --ganho (#6f9bff)
++  fundoDoMapa = rgbm(0.067, 0.071, 0.078, 0.92),
++  branco = rgbm(1, 1, 1, 1),
++  rotulo = rgbm(0.914, 0.929, 0.949, 0.75),
++  faixaDoTexto = rgbm(0.067, 0.071, 0.078, 0.78),
  }
 -local TAG = { coach = 'RÁDIO', resumo = 'VOLTA', teste = 'TESTE' }
++-- O traçado pintado pelo pedal, como a tela Volta: 0 = parcial ou sem pedal, 1 = acelerador cheio, 2 = freio.
++local CORES_DO_PEDAL = {
++  [0] = rgbm(0.961, 0.773, 0.259, 1),        -- --parcial (#f5c542)
++  [1] = rgbm(0.239, 0.863, 0.518, 1),        -- --acelerador (#3ddc84)
++  [2] = rgbm(1.0, 0.353, 0.373, 1),          -- --freio (#ff5a5f)
++}
 +local TAG = { coach = 'RÁDIO', resumo = 'VOLTA', analise = 'ANÁLISE', teste = 'TESTE' }
 +
 +local function log(texto)
@@ -3128,7 +3426,7 @@ index 79b84787..721e2cc4 100644
  
  -- A API que o app usa, conferida uma vez ao abrir. Confere só se existe: no CSP,
  -- várias funções são nativas (FFI) e o `type()` delas é 'cdata', e não 'function'.
-@@ -34,26 +83,55 @@ local function existe(tabela, nome)
+@@ -34,26 +108,61 @@ local function existe(tabela, nome)
    return tabela ~= nil and tabela[nome] ~= nil
  end
  
@@ -3165,12 +3463,18 @@ index 79b84787..721e2cc4 100644
 +  { io, 'io', 'createDir' }, { io, 'io', 'scanDir' }, { io, 'io', 'deleteFile' }, { io, 'io', 'fileExists' },
 +})
 +
++local FALTA_NO_APROXIMADO = conferir({
++  { ui, 'ui', 'drawImageQuad' }, { ui, 'ui', 'isImageReady' }, { ui, 'ui', 'drawTriangleFilled' },
++  { ui, 'ui', 'windowHovered' }, { ui, 'ui', 'mouseWheel' },
++})
++
  local CALADO = #FALTA > 0
 -if CALADO then
 -  ac.log('[radio_engenheiro] a API do CSP não tem: ' .. table.concat(FALTA, ', ') .. '. O app fica calado.')
 -else
 -  ac.log('[radio_engenheiro] ligado; pede as mensagens a ' .. BACKEND)
 +local MINIMAPA = not CALADO and #FALTA_NO_MINIMAPA == 0
++local APROXIMADO = MINIMAPA and #FALTA_NO_APROXIMADO == 0
 +local ALINHAR_NO_INICIO = ui ~= nil and ui.Alignment ~= nil and ui.Alignment.Start or nil
 +
 +-- A pasta do app (onde o instalar.ps1 o copiou) e a subpasta da voz baixada.
@@ -3196,7 +3500,7 @@ index 79b84787..721e2cc4 100644
  end
  
  local estado = {
-@@ -70,26 +148,115 @@ local estado = {
+@@ -70,26 +179,123 @@ local estado = {
    player = nil,
  }
  
@@ -3208,6 +3512,8 @@ index 79b84787..721e2cc4 100644
 +  origem = nil,            -- 'backend' ou 'arquivo do app'
 +  referencia = nil,        -- {tipo, tempoNaLinhaDoJogoS, pontos = {{x, z, t}, ...}}
 +  curvas = {},
++  rotulos = {},            -- o nome das 14 curvas e onde ele vai: {curva, x, z}
++  imagem = nil,            -- a pista detalhada: {arquivo, x0, y0, pxPorMetro, largura, altura}
 +  motivo = nil,
 +  versao = nil,            -- a versão que o rádio anunciou quando o app baixou o minimapa
 +  baixando = false,
@@ -3272,6 +3578,11 @@ index 79b84787..721e2cc4 100644
 +    mini.pista = dados.pista
 +    mini.origem = 'arquivo do app'
 +    mini.desenhado = nil
++    if type(dados.curvas) == 'table' then mini.rotulos = dados.curvas end
++    if type(dados.imagem) == 'table' and type(dados.imagem.arquivo) == 'string' then
++      mini.imagem = dados.imagem
++      mini.imagem.caminho = PASTA .. '\\' .. dados.imagem.arquivo
++    end
 +  end
 +end
 +
@@ -3303,6 +3614,7 @@ index 79b84787..721e2cc4 100644
 +    mini.referencia = type(dados.referencia) == 'table' and type(dados.referencia.pontos) == 'table'
 +      and dados.referencia or nil
 +    mini.curvas = type(dados.curvasDaAnalise) == 'table' and dados.curvasDaAnalise or {}
++    if type(dados.curvas) == 'table' and #dados.curvas > 0 then mini.rotulos = dados.curvas end
 +    mini.motivo = mini.referencia == nil and 'o coach não tem a volta de referência' or nil
 +    mini.iFantasma, mini.iCarro = 1, nil
 +    mini.desenhado = nil
@@ -3322,7 +3634,7 @@ index 79b84787..721e2cc4 100644
        estado.avisouFora = true
      end
      return
-@@ -105,12 +272,19 @@ local function receber(err, resposta)
+@@ -105,12 +311,19 @@ local function receber(err, resposta)
      estado.primeira = false
    else
      -- Mensagens novas (ou todas, se o backend reiniciou: outra instância).
@@ -3342,7 +3654,7 @@ index 79b84787..721e2cc4 100644
  end
  
  local function pedir()
-@@ -122,36 +296,188 @@ local function pedir()
+@@ -122,36 +335,188 @@ local function pedir()
    if type(estado.instancia) == 'string' then
      url = url .. '&instancia=' .. estado.instancia
    end
@@ -3418,22 +3730,23 @@ index 79b84787..721e2cc4 100644
 +    if c ~= voz.funciona then ordem[#ordem + 1] = c end
 +  end
 +  return ordem
- end
- 
---- ── a voz ───────────────────────────────────────────────────────────────
++end
++
 +local function terminarSemVoz(a)
 +  log('voz: falhou: ' .. table.concat(a.falhas, '; ') .. ' (mensagem ' .. tostring(a.m.id) .. ')')
 +  voz.tentativa = nil
 +  pcall(function() estado.player:pause() end)
-+end
-+
+ end
+ 
+--- ── a voz ───────────────────────────────────────────────────────────────
 +local proximoCaminho
 +
 +local function falhar(a, motivo)
 +  a.falhas[#a.falhas + 1] = a.caminho .. ': ' .. motivo
 +  proximoCaminho(a)
 +end
-+
+ 
+-local function tocar(m)
 +proximoCaminho = function(a)
 +  if voz.tentativa ~= a then return end
 +  a.k = a.k + 1
@@ -3490,8 +3803,7 @@ index 79b84787..721e2cc4 100644
 +    end)
 +  end
 +end
- 
--local function tocar(m)
++
 +local function falar(m)
 +  local antiga = voz.tentativa
 +  if antiga then
@@ -3548,7 +3860,7 @@ index 79b84787..721e2cc4 100644
  end
  
  local function avancar(t)
-@@ -160,13 +486,17 @@ local function avancar(t)
+@@ -160,13 +525,17 @@ local function avancar(t)
    end
    estado.atual = nil
    local proxima = table.remove(estado.fila, 1)
@@ -3568,7 +3880,7 @@ index 79b84787..721e2cc4 100644
  end
  
  -- ── o cartão ────────────────────────────────────────────────────────────
-@@ -183,26 +513,51 @@ local function corte(texto, limite)
+@@ -183,26 +552,51 @@ local function corte(texto, limite)
    return texto:sub(1, limite - 1) .. '…'
  end
  
@@ -3628,7 +3940,7 @@ index 79b84787..721e2cc4 100644
    abertoEm = abertoEm or t
    local tamanho = ui.windowSize()
    if CALADO then
-@@ -213,6 +568,7 @@ function janela(dt)
+@@ -213,6 +607,7 @@ function janela(dt)
      return
    end
    avancar(t)
@@ -3636,7 +3948,7 @@ index 79b84787..721e2cc4 100644
    if estado.fora then
      -- Discreto: um ponto apagado e duas palavras, no rodapé da janela.
      ui.drawRectFilled(vec2(10, tamanho.y - 16), vec2(18, tamanho.y - 8), CORES.fraco, 4)
-@@ -225,3 +581,295 @@ function janela(dt)
+@@ -225,3 +620,510 @@ function janela(dt)
    local alfa = math.max(0, math.min(1, (t - estado.inicio) / 0.25, (estado.ateQuando - t) / 0.6))
    desenharCartao(m, alfa, tamanho)
  end
@@ -3790,6 +4102,51 @@ index 79b84787..721e2cc4 100644
 +  ui.drawCircle(q, raio, borda, 16, espessura)
 +end
 +
++-- O fantasma e a diferença, para as duas janelas de mapa. Devolve onde o fantasma está
++-- (x, z), ou nada antes da primeira passagem pela linha ou sem a volta de referência.
++local function oFantasma(carro)
++  local ref = mini.referencia
++  if not ref or not mini.desdeALinha then return nil end
++  local tCarro = (tonumber(carro.lapTimeMs) or 0) / 1000 + (tonumber(ref.tempoNaLinhaDoJogoS) or 0)
++  local fx, fz = fantasmaEm(ref.pontos, tCarro)
++  -- A diferença ao vivo, calculada aqui: o tempo do carro menos o da referência no mesmo ponto.
++  local tRef = tempoDaReferenciaPerto(ref.pontos, carro.position.x, carro.position.z)
++  if tRef then
++    local d = tCarro - tRef
++    if math.abs(d) < DIFERENCA_MAXIMA_S then mini.diferenca = d end
++  end
++  return fx, fz
++end
++
++local function notaDoFantasma()
++  if mini.referencia then
++    if mini.desdeALinha then return nil end
++    return 'o fantasma aparece depois da próxima passagem pela linha'
++  end
++  if estado.fora then return 'sem fantasma: backend fora do ar' end
++  return 'sem fantasma: ' .. tostring(mini.motivo or 'lendo a volta de referência')
++end
++
++-- O texto de cima das duas janelas: a diferença (10 vezes por segundo, para ler sem
++-- piscar) ou o aviso, que quebra a linha e cabe na largura da janela.
++local function desenharODeCima(t, W, nota)
++  if t - mini.mostradaEm >= 0.1 then
++    mini.mostrada = mini.diferenca
++    mini.mostradaEm = t
++  end
++  if nota then
++    caixa(nota, 11, vec2(MARGEM_DO_MINIMAPA, 4), vec2(W - 8, TOPO_DO_MINIMAPA + 2), CORES.fraco)
++  elseif mini.mostrada then
++    local d = mini.mostrada
++    local sinal = d >= 0 and '+' or '−'
++    ui.dwriteDrawText(sinal .. decimal(math.abs(d), 2) .. ' s', 17, vec2(MARGEM_DO_MINIMAPA, 4),
++      d > 0 and CORES.perda or CORES.ganho)
++    local ref = mini.referencia
++    local contra = ref and ref.tipo == 'minha_melhor' and 'para a sua melhor' or 'para a volta da IA'
++    ui.dwriteDrawText(contra, 11, vec2(MARGEM_DO_MINIMAPA + 82, 10), CORES.apoio)
++  end
++end
++
 +-- Chamada a cada quadro pela janela do minimapa (manifest.ini, FUNCTION_MAIN).
 +function minimapa(dt)
 +  local t = relogio()
@@ -3823,54 +4180,219 @@ index 79b84787..721e2cc4 100644
 +
 +  local ok, carro = pcall(ac.getCar, 0)
 +  if not ok or not carro then return end
-+  local x, z = carro.position.x, carro.position.z
-+  local ref = mini.referencia
-+  local nota = nil
-+  if ref and mini.desdeALinha then
-+    local tempoDaVolta = (tonumber(carro.lapTimeMs) or 0) / 1000
-+    local tCarro = tempoDaVolta + (tonumber(ref.tempoNaLinhaDoJogoS) or 0)
-+    local fx, fz = fantasmaEm(ref.pontos, tCarro)
-+    if fx then
-+      desenharMarca(naTela(fx, fz), 5, CORES.fantasmaMiolo, CORES.fantasma, 2)
-+    end
-+    -- A diferença ao vivo, calculada aqui: o tempo do carro menos o da referência no mesmo ponto.
-+    local tRef = tempoDaReferenciaPerto(ref.pontos, x, z)
-+    if tRef then
-+      local d = tCarro - tRef
-+      if math.abs(d) < DIFERENCA_MAXIMA_S then mini.diferenca = d end
-+    end
-+  elseif ref then
-+    nota = 'o fantasma aparece depois da próxima passagem pela linha'
-+  elseif estado.fora then
-+    nota = 'sem fantasma: backend fora do ar'
-+  else
-+    nota = 'sem fantasma: ' .. tostring(mini.motivo or 'lendo a volta de referência')
++  local fx, fz = oFantasma(carro)
++  if fx then
++    desenharMarca(naTela(fx, fz), 5, CORES.fantasmaMiolo, CORES.fantasma, 2)
 +  end
-+  desenharMarca(naTela(x, z), 5.5, CORES.voce, CORES.vermelho, 2.5)
++  desenharMarca(naTela(carro.position.x, carro.position.z), 5.5, CORES.voce, CORES.vermelho, 2.5)
++  desenharODeCima(t, W, notaDoFantasma())
++  if estado.fora and mini.referencia then
++    ui.dwriteDrawText('sem backend', 11, vec2(W - 74, H - 18), CORES.fraco)
++  end
++end
 +
-+  -- O texto de cima: a diferença (10 vezes por segundo, para ler sem piscar) ou a nota.
-+  if t - mini.mostradaEm >= 0.1 then
-+    mini.mostrada = mini.diferenca
-+    mini.mostradaEm = t
++-- ── o mapa aproximado: a vista de perto da tela Volta ───────────────────
++
++local perto = { zoom = ZOOM_INICIAL_M, angulo = nil, ultimoQuadro = -100 }
++local rastro = { pontos = {}, voltas = nil }
++
++-- O seu traçado da volta, lido do jogo 20 vezes por segundo: {x, z, pedal}. Começa de novo na linha.
++local function gravarORastro()
++  local ok, carro = pcall(ac.getCar, 0)
++  if not ok or not carro then return end
++  local voltas = tonumber(carro.lapCount) or 0
++  if rastro.voltas ~= nil and voltas ~= rastro.voltas then
++    rastro.pontos = {}
 +  end
-+  if nota then
-+    ui.dwriteDrawText(nota, 11, vec2(MARGEM_DO_MINIMAPA, 8), CORES.fraco)
-+  elseif mini.mostrada then
-+    local d = mini.mostrada
-+    local sinal = d >= 0 and '+' or '−'
-+    ui.dwriteDrawText(sinal .. decimal(math.abs(d), 2) .. ' s', 17, vec2(MARGEM_DO_MINIMAPA, 4),
-+      d > 0 and CORES.perda or CORES.ganho)
-+    local contra = ref and ref.tipo == 'minha_melhor' and 'para a sua melhor' or 'para a volta da IA'
-+    ui.dwriteDrawText(contra, 11, vec2(MARGEM_DO_MINIMAPA + 82, 10), CORES.apoio)
++  rastro.voltas = voltas
++  local x, z = carro.position.x, carro.position.z
++  local n = #rastro.pontos
++  local ultimo = rastro.pontos[n]
++  if ultimo and (x - ultimo[1]) ^ 2 + (z - ultimo[2]) ^ 2 < RASTRO_PASSO_M * RASTRO_PASSO_M then return end
++  local pedal = 0
++  if (tonumber(carro.brake) or 0) >= 0.15 then
++    pedal = 2
++  elseif (tonumber(carro.gas) or 0) >= 0.9 then
++    pedal = 1
 +  end
++  if n >= 5000 then table.remove(rastro.pontos, 1) end
++  rastro.pontos[#rastro.pontos + 1] = { x, z, pedal }
++end
++
++-- Um traçado na tela, em trechos da mesma cor; os pontos fora da janela ficam de fora.
++-- `ip` é a posição do pedal em cada ponto ({x, z, t, pedal} na referência, {x, z, pedal} no seu).
++local function tracar(pontos, ate, ip, alfa, largura, tela, W, H)
++  local aberto, cor = false, 0
++  local ax, az = nil, nil
++  for i = 1, math.min(ate, #pontos) do
++    local p = pontos[i]
++    local sx, sy = tela(p[1], p[2])
++    local visivel = sx > -40 and sx < W + 40 and sy > -40 and sy < H + 40
++    local pedal = p[ip] or 0
++    local salto = ax ~= nil and (p[1] - ax) ^ 2 + (p[2] - az) ^ 2 > SALTO_M * SALTO_M
++    if aberto and (not visivel or salto or pedal ~= cor) then
++      if visivel and not salto then ui.pathLineTo(vec2(sx, sy)) end
++      ui.pathStroke(comAlfa(CORES_DO_PEDAL[cor] or CORES_DO_PEDAL[0], alfa), false, largura)
++      aberto = false
++    end
++    if visivel then
++      if not aberto then
++        ui.pathClear()
++        aberto, cor = true, pedal
++      end
++      ui.pathLineTo(vec2(sx, sy))
++    end
++    ax, az = p[1], p[2]
++  end
++  if aberto then
++    ui.pathStroke(comAlfa(CORES_DO_PEDAL[cor] or CORES_DO_PEDAL[0], alfa), false, largura)
++  end
++end
++
++local function rotuloCentrado(texto, tamanhoDaFonte, sx, sy, cor)
++  local largura = #texto * tamanhoDaFonte * 0.55
++  if ui.measureDWriteText ~= nil then
++    local ok, medida = pcall(ui.measureDWriteText, texto, tamanhoDaFonte)
++    if ok and medida then largura = medida.x end
++  end
++  ui.dwriteDrawText(texto, tamanhoDaFonte, vec2(sx - largura / 2, sy - tamanhoDaFonte / 2), cor)
++end
++
++-- Chamada a cada quadro pela janela do mapa aproximado (manifest.ini, FUNCTION_MAIN).
++function aproximado(dt)
++  local t = relogio()
++  perto.ultimoQuadro = t
++  local tamanho = ui.windowSize()
++  if CALADO or not APROXIMADO then
++    local falta = CALADO and FALTA or (#FALTA_NO_MINIMAPA > 0 and FALTA_NO_MINIMAPA or FALTA_NO_APROXIMADO)
++    desenharAviso('Mapa aproximado: esta versão do CSP não tem ' .. table.concat(falta, ', ') .. '.', tamanho)
++    return
++  end
++  local ok, carro = pcall(ac.getCar, 0)
++  if not ok or not carro then return end
++  local W, H = tamanho.x, tamanho.y
++
++  -- O zoom pela roda do mouse, com o ponteiro sobre a janela.
++  if ui.windowHovered() then
++    local roda = tonumber(ui.mouseWheel()) or 0
++    if roda ~= 0 then
++      perto.zoom = math.max(ZOOM_MINIMO_M, math.min(ZOOM_MAXIMO_M, perto.zoom * (roda > 0 and 1 / 1.15 or 1.15)))
++    end
++  end
++  local fx, fz = oFantasma(carro)
++
++  -- A câmera: o carro fixo na janela e a pista girando, como a tela Volta (base(x, z) = (z, −x)).
++  -- A direção é a da volta de referência perto do carro (mais estável que a do carro numa
++  -- escorregada) ou, sem ela, a do carro.
++  local x, z = carro.position.x, carro.position.z
++  local du, dv = nil, nil
++  local ref = mini.referencia
++  if ref and mini.iCarro then
++    local a, b = ref.pontos[mini.iCarro], ref.pontos[math.min(#ref.pontos, mini.iCarro + 4)]
++    if a and b then du, dv = b[2] - a[2], -(b[1] - a[1]) end
++  end
++  if not du or du * du + dv * dv < 1 then
++    du, dv = carro.look.z, -carro.look.x
++  end
++  local alvo = -math.pi / 2 - math.atan2(dv, du)
++  if perto.angulo == nil then
++    perto.angulo = alvo
++  else
++    local giro = (alvo - perto.angulo + math.pi) % (2 * math.pi) - math.pi
++    perto.angulo = perto.angulo + giro * math.min(1, (tonumber(dt) or 0.016) / GIRO_S)
++  end
++  local cs, sn = math.cos(perto.angulo), math.sin(perto.angulo)
++  local k = math.min(W, H) / perto.zoom
++  local cx, cy = W * 0.5, H * CENTRO_VERTICAL
++  local bu0, bv0 = z, -x
++  local function tela(px, pz)
++    local eu, ev = pz - bu0, -px - bv0
++    return cx + k * (eu * cs - ev * sn), cy + k * (eu * sn + ev * cs)
++  end
++
++  ui.drawRectFilled(vec2(0, 0), vec2(W, H), CORES.fundoDoMapa, 6)
++
++  -- A pista detalhada: a imagem girada em volta do carro. Cada canto da janela volta para o
++  -- mundo e daí para a imagem (coluna = (x − x0)·k; linha = (−z − y0)·k).
++  local img = mini.imagem
++  local pronta = false
++  if img then
++    local function uv(sx, sy)
++      local ex, ey = (sx - cx) / k, (sy - cy) / k
++      local bu, bv = bu0 + ex * cs + ey * sn, bv0 - ex * sn + ey * cs
++      local mx, my = -bv, -bu          -- o mundo (x = −bv, z = bu) nas coordenadas do mapa (x, −z)
++      return vec2((mx - img.x0) * img.pxPorMetro / img.largura, (my - img.y0) * img.pxPorMetro / img.altura)
++    end
++    ui.drawImageQuad(img.caminho, vec2(0, 0), vec2(W, 0), vec2(W, H), vec2(0, H), CORES.branco,
++      uv(0, 0), uv(W, 0), uv(W, H), uv(0, H))
++    local okP, p = pcall(ui.isImageReady, img.caminho)
++    pronta = okP and p
++  end
++  if not pronta and mini.pista then
++    -- Sem a imagem (ou enquanto ela carrega): as bordas do asfalto, como no minimapa.
++    for _, lado in ipairs({ mini.pista.esquerda, mini.pista.direita }) do
++      ui.pathClear()
++      for _, q in ipairs(lado) do
++        local sx, sy = tela(q[1], q[2])
++        ui.pathLineTo(vec2(sx, sy))
++      end
++      ui.pathStroke(CORES.borda, true, 1.5)
++    end
++  end
++
++  -- Os traçados: o do fantasma até onde ele está, mais apagado; o seu desde a linha.
++  if ref and mini.desdeALinha then
++    tracar(ref.pontos, mini.iFantasma + 1, 4, 0.6, 3.5, tela, W, H)
++  end
++  tracar(rastro.pontos, #rastro.pontos, 3, 1.0, 5, tela, W, H)
++
++  -- O nome das curvas que estão na janela.
++  for _, c in ipairs(mini.rotulos) do
++    local sx, sy = tela(tonumber(c.x) or 0, tonumber(c.z) or 0)
++    if sx > 12 and sx < W - 12 and sy > TOPO_DO_MINIMAPA + 8 and sy < H - 8 then
++      rotuloCentrado(tostring(c.curva), 12, sx, sy, CORES.rotulo)
++    end
++  end
++
++  -- O fantasma (ou uma seta na borda, se ele estiver fora da janela) e o carro.
++  local rotuloDaRef = ref and ref.tipo == 'minha_melhor' and 'Sua melhor' or 'IA'
++  if fx then
++    local gx, gy = tela(fx, fz)
++    if gx > 14 and gx < W - 14 and gy > 14 and gy < H - 14 then
++      desenharMarca(vec2(gx, gy), 8, CORES.fantasmaMiolo, CORES.fantasma, 2.5)
++      rotuloCentrado(rotuloDaRef, 12, gx, gy - 16, CORES.texto)
++    else
++      local mx, my = math.max(18, math.min(W - 18, gx)), math.max(18, math.min(H - 18, gy))
++      local a = math.atan2(gy - cy, gx - cx)
++      local ca, sa = math.cos(a), math.sin(a)
++      local function girado(px, py) return vec2(mx + px * ca - py * sa, my + px * sa + py * ca) end
++      ui.drawTriangleFilled(girado(8, 0), girado(-6, -6), girado(-6, 6), CORES.fantasma)
++    end
++  end
++  desenharMarca(vec2(cx, cy), 8.5, CORES.voce, CORES.vermelho, 2.5)
++  rotuloCentrado('Você · V' .. tostring((tonumber(carro.lapCount) or 0) + 1), 12, cx, cy + 18, CORES.texto)
++
++  -- O texto de cima numa faixa escura: a pista passa por baixo dele.
++  ui.drawRectFilled(vec2(0, 0), vec2(W, TOPO_DO_MINIMAPA + 2), CORES.faixaDoTexto, 6)
++  desenharODeCima(t, W, notaDoFantasma())
 +  if estado.fora and ref then
 +    ui.dwriteDrawText('sem backend', 11, vec2(W - 74, H - 18), CORES.fraco)
 +  end
 +end
 +
-+-- ── o custo no jogo: o FPS com o minimapa ligado e desligado ────────────
++-- ── o custo no jogo: o FPS com os mapas ligados e desligados ────────────
 +
-+local fps = { soma = 0, n = 0, minimo = math.huge, maximo = 0, ligado = 0, desligado = 0, parado = 0 }
++local function novaContagem()
++  return { soma = 0, n = 0, minimo = math.huge, maximo = 0, parado = 0,
++           mini = { ligado = 0, desligado = 0 }, perto = { ligado = 0, desligado = 0 } }
++end
++local fps = novaContagem()
++
++local function situacao(c)
++  if c.desligado == 0 then return 'ligado' end
++  if c.ligado == 0 then return 'desligado' end
++  return 'ligado e desligado'
++end
 +
 +local function amostrarOFps()
 +  local ok, sim = pcall(ac.getSim)
@@ -3883,20 +4405,19 @@ index 79b84787..721e2cc4 100644
 +    fps.n = fps.n + 1
 +    fps.minimo = math.min(fps.minimo, v)
 +    fps.maximo = math.max(fps.maximo, v)
-+    if relogio() - mini.ultimoQuadro < 0.5 then
-+      fps.ligado = fps.ligado + 1
-+    else
-+      fps.desligado = fps.desligado + 1
++    local agora = relogio()
++    for nome, ultimo in pairs({ mini = mini.ultimoQuadro, perto = perto.ultimoQuadro }) do
++      local c = fps[nome]
++      if agora - ultimo < 0.5 then c.ligado = c.ligado + 1 else c.desligado = c.desligado + 1 end
 +    end
 +  end
 +  if fps.n + fps.parado >= FPS_REGISTRO_S / FPS_AMOSTRA_S then
 +    if fps.n > 0 then
-+      local situacao = 'ligado e desligado'
-+      if fps.desligado == 0 then situacao = 'ligado' elseif fps.ligado == 0 then situacao = 'desligado' end
 +      log('fps: média ' .. decimal(fps.soma / fps.n, 1) .. ' (mín ' .. decimal(fps.minimo, 0) .. ', máx '
-+        .. decimal(fps.maximo, 0) .. ') em ' .. fps.n .. ' s; minimapa ' .. situacao)
++        .. decimal(fps.maximo, 0) .. ') em ' .. fps.n .. ' s; minimapa ' .. situacao(fps.mini)
++        .. '; mapa aproximado ' .. situacao(fps.perto))
 +    end
-+    fps = { soma = 0, n = 0, minimo = math.huge, maximo = 0, ligado = 0, desligado = 0, parado = 0 }
++    fps = novaContagem()
 +  end
 +end
 +
@@ -3908,6 +4429,8 @@ index 79b84787..721e2cc4 100644
 +  log('ligado; pede as mensagens a ' .. BACKEND)
 +  if #FALTA_NO_MINIMAPA > 0 then
 +    log('minimapa desligado: a API do CSP não tem ' .. table.concat(FALTA_NO_MINIMAPA, ', '))
++  elseif #FALTA_NO_APROXIMADO > 0 then
++    log('mapa aproximado desligado: a API do CSP não tem ' .. table.concat(FALTA_NO_APROXIMADO, ', '))
 +  end
 +  if not PASTA_DA_VOZ then
 +    log('voz: sem o terceiro caminho (a pasta do app): ' .. (#FALTA_NA_PASTA > 0 and table.concat(FALTA_NA_PASTA, ', ') or 'sem a pasta'))
@@ -3928,7 +4451,11 @@ index 79b84787..721e2cc4 100644
 +  setInterval(pedir, PERIODO_S)
 +  if MINIMAPA then
 +    lerAPistaDoApp()
++    if APROXIMADO and not mini.imagem then
++      log('mapa aproximado: sem a pista_detalhada.png na pasta do app; desenha só as bordas da pista')
++    end
 +    setInterval(acompanharAVolta, 0.25)
++    setInterval(gravarORastro, RASTRO_PERIODO_S)
 +    setInterval(amostrarOFps, FPS_AMOSTRA_S)
 +  end
 +end

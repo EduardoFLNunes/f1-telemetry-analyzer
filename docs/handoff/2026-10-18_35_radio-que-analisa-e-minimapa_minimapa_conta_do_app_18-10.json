@@ -6,303 +6,303 @@
   "tempoS": 84.829,
   "tempoNaLinhaDoJogoS": 0.0198,
   "linhaDoJogoM": 1.495,
-  "pontos": 362
+  "pontos": 2167
  },
  "pistaPontosPorBorda": 271,
  "amostrasComparadas": 75387,
  "amostrasAMenosDe5mDoS0ForaDaComparacao": 59,
  "appMenosGradeS": {
   "mediana": 0.0101,
-  "p95": 0.0391,
-  "maximo": 2.494
+  "p95": 0.0383,
+  "maximo": 2.3708
  },
  "fantasmaAoLongoDaPistaContraGradeM": {
   "mediana": 0.46,
-  "p95": 0.96
+  "p95": 0.95
  },
  "acimaDe0_5s": [
   {
    "volta": 4,
-   "sM": 2244.0,
-   "appS": 1.776,
-   "gradeS": 2.369,
-   "carroALinhaCentralM": 28.6
-  },
-  {
-   "volta": 4,
-   "sM": 2244.0,
-   "appS": 1.779,
-   "gradeS": 2.384,
-   "carroALinhaCentralM": 28.8
-  },
-  {
-   "volta": 4,
-   "sM": 2244.0,
-   "appS": 1.781,
-   "gradeS": 2.399,
-   "carroALinhaCentralM": 29.0
-  },
-  {
-   "volta": 4,
    "sM": 2246.0,
-   "appS": 1.783,
-   "gradeS": 2.347,
-   "carroALinhaCentralM": 29.3
-  },
-  {
-   "volta": 4,
-   "sM": 2246.0,
-   "appS": 1.786,
+   "appS": 1.821,
    "gradeS": 2.365,
    "carroALinhaCentralM": 29.5
   },
   {
    "volta": 4,
    "sM": 2246.0,
-   "appS": 1.789,
+   "appS": 1.755,
    "gradeS": 2.38,
    "carroALinhaCentralM": 29.7
   },
   {
    "volta": 4,
    "sM": 2246.0,
-   "appS": 1.792,
+   "appS": 1.667,
    "gradeS": 2.395,
    "carroALinhaCentralM": 30.0
   },
   {
    "volta": 4,
    "sM": 2246.0,
-   "appS": 1.795,
+   "appS": 1.639,
    "gradeS": 2.413,
    "carroALinhaCentralM": 30.2
   },
   {
    "volta": 4,
    "sM": 2246.0,
-   "appS": 1.802,
+   "appS": 1.557,
    "gradeS": 2.443,
    "carroALinhaCentralM": 30.7
   },
   {
    "volta": 4,
    "sM": 2248.0,
-   "appS": 1.454,
+   "appS": 1.528,
    "gradeS": 2.392,
    "carroALinhaCentralM": 30.9
   },
   {
    "volta": 4,
    "sM": 2248.0,
-   "appS": 1.456,
+   "appS": 1.531,
    "gradeS": 2.407,
    "carroALinhaCentralM": 31.1
   },
   {
    "volta": 4,
    "sM": 2248.0,
-   "appS": 1.46,
+   "appS": 1.488,
    "gradeS": 2.425,
    "carroALinhaCentralM": 31.4
   },
   {
    "volta": 4,
    "sM": 2248.0,
-   "appS": 1.463,
+   "appS": 1.437,
    "gradeS": 2.44,
    "carroALinhaCentralM": 31.6
   },
   {
    "volta": 4,
    "sM": 2248.0,
-   "appS": 0.357,
+   "appS": 1.327,
    "gradeS": 2.455,
    "carroALinhaCentralM": 31.8
   },
   {
    "volta": 4,
    "sM": 2248.0,
-   "appS": 0.366,
+   "appS": 0.461,
    "gradeS": 2.473,
    "carroALinhaCentralM": 32.1
   },
   {
    "volta": 4,
    "sM": 2248.0,
-   "appS": 0.373,
+   "appS": 0.406,
    "gradeS": 2.488,
    "carroALinhaCentralM": 32.3
   },
   {
    "volta": 4,
    "sM": 2250.0,
-   "appS": 0.38,
+   "appS": 0.361,
    "gradeS": 2.435,
    "carroALinhaCentralM": 32.5
   },
   {
    "volta": 4,
    "sM": 2250.0,
-   "appS": 0.387,
+   "appS": 0.292,
    "gradeS": 2.45,
    "carroALinhaCentralM": 32.7
   },
   {
    "volta": 4,
    "sM": 2250.0,
-   "appS": 0.394,
+   "appS": 0.249,
    "gradeS": 2.465,
    "carroALinhaCentralM": 32.9
   },
   {
    "volta": 4,
    "sM": 2330.0,
-   "appS": 0.402,
+   "appS": 0.259,
    "gradeS": -0.279,
    "carroALinhaCentralM": 33.1
   },
   {
    "volta": 4,
    "sM": 2330.0,
-   "appS": 0.409,
+   "appS": 0.267,
    "gradeS": -0.264,
    "carroALinhaCentralM": 32.8
   },
   {
    "volta": 6,
    "sM": 2244.0,
-   "appS": 2.824,
-   "gradeS": 3.416,
-   "carroALinhaCentralM": 29.7
-  },
-  {
-   "volta": 6,
-   "sM": 2244.0,
-   "appS": 2.832,
-   "gradeS": 3.428,
-   "carroALinhaCentralM": 29.8
-  },
-  {
-   "volta": 6,
-   "sM": 2244.0,
-   "appS": 2.84,
-   "gradeS": 3.44,
-   "carroALinhaCentralM": 29.8
-  },
-  {
-   "volta": 6,
-   "sM": 2244.0,
-   "appS": 2.855,
-   "gradeS": 3.461,
-   "carroALinhaCentralM": 29.9
-  },
-  {
-   "volta": 6,
-   "sM": 2244.0,
-   "appS": 2.865,
-   "gradeS": 3.476,
-   "carroALinhaCentralM": 29.9
-  },
-  {
-   "volta": 6,
-   "sM": 2244.0,
-   "appS": 2.884,
-   "gradeS": 3.503,
-   "carroALinhaCentralM": 30.0
-  },
-  {
-   "volta": 6,
-   "sM": 2244.0,
-   "appS": 2.89,
-   "gradeS": 3.512,
-   "carroALinhaCentralM": 30.1
-  },
-  {
-   "volta": 6,
-   "sM": 2244.0,
-   "appS": 2.907,
-   "gradeS": 3.536,
-   "carroALinhaCentralM": 30.1
-  },
-  {
-   "volta": 6,
-   "sM": 2244.0,
-   "appS": 2.92,
-   "gradeS": 3.554,
-   "carroALinhaCentralM": 30.2
-  },
-  {
-   "volta": 6,
-   "sM": 2244.0,
-   "appS": 2.933,
+   "appS": 3.038,
    "gradeS": 3.572,
    "carroALinhaCentralM": 30.2
   },
   {
    "volta": 6,
    "sM": 2244.0,
-   "appS": 2.942,
+   "appS": 3.047,
    "gradeS": 3.584,
    "carroALinhaCentralM": 30.3
   },
   {
    "volta": 6,
    "sM": 2244.0,
-   "appS": 2.953,
+   "appS": 2.989,
    "gradeS": 3.599,
    "carroALinhaCentralM": 30.3
   },
   {
    "volta": 6,
    "sM": 2246.0,
-   "appS": 2.965,
+   "appS": 3.0,
    "gradeS": 3.547,
    "carroALinhaCentralM": 30.3
   },
   {
    "volta": 6,
    "sM": 2246.0,
-   "appS": 2.976,
+   "appS": 3.012,
    "gradeS": 3.562,
    "carroALinhaCentralM": 30.4
   },
   {
    "volta": 6,
    "sM": 2246.0,
-   "appS": 2.987,
+   "appS": 2.86,
    "gradeS": 3.577,
    "carroALinhaCentralM": 30.4
   },
   {
    "volta": 6,
    "sM": 2246.0,
-   "appS": 3.001,
+   "appS": 2.874,
    "gradeS": 3.595,
    "carroALinhaCentralM": 30.4
   },
   {
    "volta": 6,
    "sM": 2246.0,
-   "appS": 3.013,
+   "appS": 2.885,
    "gradeS": 3.61,
    "carroALinhaCentralM": 30.5
   },
   {
    "volta": 6,
    "sM": 2246.0,
-   "appS": 3.024,
+   "appS": 2.897,
    "gradeS": 3.625,
    "carroALinhaCentralM": 30.5
   },
   {
    "volta": 6,
    "sM": 2246.0,
-   "appS": 3.051,
+   "appS": 2.923,
    "gradeS": 3.658,
    "carroALinhaCentralM": 30.5
+  },
+  {
+   "volta": 6,
+   "sM": 2246.0,
+   "appS": 2.918,
+   "gradeS": 3.691,
+   "carroALinhaCentralM": 30.6
+  },
+  {
+   "volta": 6,
+   "sM": 2246.0,
+   "appS": 2.93,
+   "gradeS": 3.706,
+   "carroALinhaCentralM": 30.6
+  },
+  {
+   "volta": 6,
+   "sM": 2246.0,
+   "appS": 2.943,
+   "gradeS": 3.721,
+   "carroALinhaCentralM": 30.6
+  },
+  {
+   "volta": 6,
+   "sM": 2246.0,
+   "appS": 2.955,
+   "gradeS": 3.736,
+   "carroALinhaCentralM": 30.6
+  },
+  {
+   "volta": 6,
+   "sM": 2246.0,
+   "appS": 2.971,
+   "gradeS": 3.754,
+   "carroALinhaCentralM": 30.6
+  },
+  {
+   "volta": 6,
+   "sM": 2246.0,
+   "appS": 2.896,
+   "gradeS": 3.769,
+   "carroALinhaCentralM": 30.6
+  },
+  {
+   "volta": 6,
+   "sM": 2246.0,
+   "appS": 2.909,
+   "gradeS": 3.784,
+   "carroALinhaCentralM": 30.6
+  },
+  {
+   "volta": 6,
+   "sM": 2246.0,
+   "appS": 2.924,
+   "gradeS": 3.802,
+   "carroALinhaCentralM": 30.6
+  },
+  {
+   "volta": 6,
+   "sM": 2246.0,
+   "appS": 2.937,
+   "gradeS": 3.817,
+   "carroALinhaCentralM": 30.6
+  },
+  {
+   "volta": 6,
+   "sM": 2246.0,
+   "appS": 2.945,
+   "gradeS": 3.826,
+   "carroALinhaCentralM": 30.6
+  },
+  {
+   "volta": 6,
+   "sM": 2246.0,
+   "appS": 2.958,
+   "gradeS": 3.841,
+   "carroALinhaCentralM": 30.6
+  },
+  {
+   "volta": 6,
+   "sM": 2246.0,
+   "appS": 2.974,
+   "gradeS": 3.859,
+   "carroALinhaCentralM": 30.6
+  },
+  {
+   "volta": 6,
+   "sM": 2248.0,
+   "appS": 2.988,
+   "gradeS": 3.808,
+   "carroALinhaCentralM": 30.6
   }
  ],
- "quantasAcimaDe0_5s": 669,
+ "quantasAcimaDe0_5s": 690,
  "fimDeCadaVolta": {
   "2": {
    "cronometroNoUltimoQuadroS": 93.282,
@@ -325,13 +325,13 @@
   "5": {
    "cronometroNoUltimoQuadroS": 89.694,
    "sNoUltimoQuadroM": 3340.1,
-   "diferencaDoAppS": 19.998,
+   "diferencaDoAppS": 19.997,
    "diferencaDaGradeS": 19.999
   },
   "6": {
    "cronometroNoUltimoQuadroS": 98.439,
    "sNoUltimoQuadroM": 3860.1,
-   "diferencaDoAppS": 19.998,
+   "diferencaDoAppS": 19.997,
    "diferencaDaGradeS": 19.997
   },
   "7": {
@@ -355,7 +355,7 @@
   "10": {
    "cronometroNoUltimoQuadroS": 47.214,
    "sNoUltimoQuadroM": 1470.0,
-   "diferencaDoAppS": 19.995,
+   "diferencaDoAppS": 19.994,
    "diferencaDaGradeS": 19.996
   },
   "11": {
