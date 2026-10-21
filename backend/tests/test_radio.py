@@ -441,10 +441,32 @@ def test_o_minimapa_monta_a_pista_a_referencia_e_o_relogio_da_linha_do_jogo():
     ref = m["referencia"]
     assert ref["lapId"] == "ref#0013" and len(ref["pontos"]) <= minimapa.PONTOS_DA_REFERENCIA
     assert ref["tempoNaLinhaDoJogoS"] == pytest.approx(1.495 / 50.0, abs=1e-3)   # 50 m/s na referencia
-    x0, z0, t0 = ref["pontos"][0]
+    x0, z0, t0, pedal0 = ref["pontos"][0]
     # centro + normal x lateral (`TrackGeometry.to_world`); na pista circular de teste a normal aponta para fora
     assert t0 == 0.0 and np.hypot(x0, z0) == pytest.approx(200.0 + 1.0, abs=0.05)
+    assert pedal0 == 0                                     # sem os pedais na volta: parcial
     assert m["curvasDaAnalise"] == [] and m["versao"] == "volta_ia|ref#0013|6-7-8"   # a C99 nao existe na pista
+
+    # O pedal de cada ponto, como na tela Volta: freio a partir de 0,15, acelerador cheio a partir de 0,9.
+    freio = [0.0] * n
+    acelerador = [0.5] * n
+    freio[0], acelerador[1], acelerador[2], freio[2] = 0.2, 0.95, 0.95, 0.3
+    com_pedais = dict(referencia, freio=freio, acelerador=acelerador)
+    pontos = minimapa.montar(track, [], com_pedais, "volta_ia", None, 1.495)["referencia"]["pontos"]
+    assert len(pontos) == n and [q[3] for q in pontos[:4]] == [2, 1, 2, 0]
+
+    # O nome da curva fica do lado de fora: numa curva a esquerda, do lado direito (-normal), largura + 9 m.
+    class _Curva:
+        label, apex_s = "C03-esq", float(track.s[10])
+
+    class _Trecho:
+        corner = _Curva()
+
+    rotulo = minimapa.rotulos_das_curvas(track, [_Trecho()])[0]
+    w = float(np.asarray(track.width_right)[10]) + minimapa.FOLGA_DO_ROTULO_M
+    assert rotulo["curva"] == "C03" and rotulo["lado"] == "esquerda"
+    assert rotulo["x"] == pytest.approx(float(track.x[10] - w * track.normal[10, 0]), abs=0.01)
+    assert rotulo["z"] == pytest.approx(float(track.z[10] - w * track.normal[10, 1]), abs=0.01)
 
 
 def test_as_mensagens_dizem_a_versao_do_minimapa(tmp_path):

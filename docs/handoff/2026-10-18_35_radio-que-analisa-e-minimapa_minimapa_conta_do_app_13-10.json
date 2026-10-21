@@ -6,303 +6,303 @@
   "tempoS": 84.829,
   "tempoNaLinhaDoJogoS": 0.0198,
   "linhaDoJogoM": 1.495,
-  "pontos": 362
+  "pontos": 2167
  },
  "pistaPontosPorBorda": 271,
- "amostrasComparadas": 63862,
+ "amostrasComparadas": 63856,
  "amostrasAMenosDe5mDoS0ForaDaComparacao": 50,
  "appMenosGradeS": {
   "mediana": 0.0106,
-  "p95": 0.0622,
-  "maximo": 5.115
+  "p95": 0.0584,
+  "maximo": 5.1259
  },
  "fantasmaAoLongoDaPistaContraGradeM": {
   "mediana": 0.47,
-  "p95": 0.96
+  "p95": 0.95
  },
  "acimaDe0_5s": [
   {
    "volta": 3,
    "sM": 2256.0,
-   "appS": 8.532,
+   "appS": 8.599,
    "gradeS": 9.132,
    "carroALinhaCentralM": 21.8
   },
   {
    "volta": 3,
    "sM": 2258.0,
-   "appS": 8.527,
-   "gradeS": 9.071,
-   "carroALinhaCentralM": 22.1
-  },
-  {
-   "volta": 3,
-   "sM": 2258.0,
-   "appS": 8.523,
+   "appS": 8.569,
    "gradeS": 9.086,
    "carroALinhaCentralM": 22.4
   },
   {
    "volta": 3,
    "sM": 2258.0,
-   "appS": 8.518,
+   "appS": 8.534,
    "gradeS": 9.104,
    "carroALinhaCentralM": 22.7
   },
   {
    "volta": 3,
    "sM": 2260.0,
-   "appS": 8.513,
+   "appS": 8.53,
    "gradeS": 9.042,
    "carroALinhaCentralM": 23.0
   },
   {
    "volta": 3,
    "sM": 2260.0,
-   "appS": 8.511,
+   "appS": 8.494,
    "gradeS": 9.051,
    "carroALinhaCentralM": 23.1
   },
   {
    "volta": 3,
    "sM": 2260.0,
-   "appS": 8.507,
+   "appS": 8.49,
    "gradeS": 9.066,
    "carroALinhaCentralM": 23.4
   },
   {
    "volta": 3,
    "sM": 2262.0,
-   "appS": 8.503,
+   "appS": 8.444,
    "gradeS": 9.003,
    "carroALinhaCentralM": 23.7
   },
   {
    "volta": 3,
    "sM": 2262.0,
-   "appS": 8.498,
+   "appS": 8.411,
    "gradeS": 9.021,
    "carroALinhaCentralM": 24.0
   },
   {
    "volta": 3,
    "sM": 2264.0,
-   "appS": 8.272,
+   "appS": 8.366,
    "gradeS": 8.959,
    "carroALinhaCentralM": 24.2
   },
   {
    "volta": 3,
    "sM": 2264.0,
-   "appS": 8.269,
+   "appS": 8.331,
    "gradeS": 8.971,
    "carroALinhaCentralM": 24.4
   },
   {
    "volta": 3,
    "sM": 2266.0,
-   "appS": 8.267,
+   "appS": 8.329,
    "gradeS": 8.9,
    "carroALinhaCentralM": 24.6
   },
   {
    "volta": 3,
    "sM": 2266.0,
-   "appS": 8.263,
+   "appS": 8.28,
    "gradeS": 8.918,
    "carroALinhaCentralM": 24.8
   },
   {
    "volta": 3,
    "sM": 2268.0,
-   "appS": 8.259,
+   "appS": 8.244,
    "gradeS": 8.862,
    "carroALinhaCentralM": 25.1
   },
   {
    "volta": 3,
    "sM": 2270.0,
-   "appS": 8.256,
+   "appS": 8.2,
    "gradeS": 8.799,
    "carroALinhaCentralM": 25.2
   },
   {
-   "volta": 5,
-   "sM": 2244.0,
-   "appS": 4.096,
-   "gradeS": 4.697,
-   "carroALinhaCentralM": 30.5
+   "volta": 3,
+   "sM": 2274.0,
+   "appS": 8.156,
+   "gradeS": 8.68,
+   "carroALinhaCentralM": 25.4
   },
   {
    "volta": 5,
    "sM": 2244.0,
-   "appS": 4.1,
-   "gradeS": 4.712,
-   "carroALinhaCentralM": 30.8
-  },
-  {
-   "volta": 5,
-   "sM": 2244.0,
-   "appS": 4.103,
-   "gradeS": 4.724,
-   "carroALinhaCentralM": 31.0
-  },
-  {
-   "volta": 5,
-   "sM": 2244.0,
-   "appS": 4.108,
-   "gradeS": 4.742,
-   "carroALinhaCentralM": 31.3
-  },
-  {
-   "volta": 5,
-   "sM": 2244.0,
-   "appS": 4.114,
+   "appS": 4.152,
    "gradeS": 4.763,
    "carroALinhaCentralM": 31.6
   },
   {
    "volta": 5,
    "sM": 2244.0,
-   "appS": 4.121,
+   "appS": 3.987,
    "gradeS": 4.787,
    "carroALinhaCentralM": 32.0
   },
   {
    "volta": 5,
    "sM": 2244.0,
-   "appS": 4.128,
+   "appS": 3.865,
    "gradeS": 4.808,
    "carroALinhaCentralM": 32.4
   },
   {
    "volta": 5,
    "sM": 2244.0,
-   "appS": 4.128,
+   "appS": 3.865,
    "gradeS": 4.808,
    "carroALinhaCentralM": 32.4
   },
   {
    "volta": 5,
    "sM": 2246.0,
-   "appS": 2.194,
+   "appS": 2.27,
    "gradeS": 4.771,
    "carroALinhaCentralM": 32.9
   },
   {
    "volta": 5,
    "sM": 2246.0,
-   "appS": 2.201,
+   "appS": 2.276,
    "gradeS": 4.783,
    "carroALinhaCentralM": 33.1
   },
   {
    "volta": 5,
    "sM": 2246.0,
-   "appS": 2.209,
+   "appS": 2.233,
    "gradeS": 4.798,
    "carroALinhaCentralM": 33.3
   },
   {
    "volta": 5,
    "sM": 2246.0,
-   "appS": 2.219,
+   "appS": 2.243,
    "gradeS": 4.816,
    "carroALinhaCentralM": 33.6
   },
   {
    "volta": 5,
    "sM": 2246.0,
-   "appS": 2.228,
+   "appS": 2.194,
    "gradeS": 4.834,
    "carroALinhaCentralM": 33.9
   },
   {
    "volta": 5,
    "sM": 2246.0,
-   "appS": 2.236,
+   "appS": 2.203,
    "gradeS": 4.849,
    "carroALinhaCentralM": 34.2
   },
   {
    "volta": 5,
    "sM": 2246.0,
-   "appS": 2.241,
+   "appS": 2.208,
    "gradeS": 4.858,
    "carroALinhaCentralM": 34.3
   },
   {
    "volta": 5,
    "sM": 2654.0,
-   "appS": 4.262,
+   "appS": 4.3,
    "gradeS": 8.407,
    "carroALinhaCentralM": 32.3
   },
   {
    "volta": 5,
    "sM": 2654.0,
-   "appS": 4.279,
+   "appS": 4.283,
    "gradeS": 8.425,
    "carroALinhaCentralM": 32.7
   },
   {
    "volta": 9,
-   "sM": 2244.0,
-   "appS": 4.306,
-   "gradeS": 4.886,
-   "carroALinhaCentralM": 27.1
-  },
-  {
-   "volta": 9,
    "sM": 2246.0,
-   "appS": 4.307,
-   "gradeS": 4.834,
-   "carroALinhaCentralM": 27.4
-  },
-  {
-   "volta": 9,
-   "sM": 2246.0,
-   "appS": 4.309,
-   "gradeS": 4.852,
-   "carroALinhaCentralM": 27.7
-  },
-  {
-   "volta": 9,
-   "sM": 2246.0,
-   "appS": 4.312,
-   "gradeS": 4.87,
-   "carroALinhaCentralM": 28.0
-  },
-  {
-   "volta": 9,
-   "sM": 2246.0,
-   "appS": 4.313,
-   "gradeS": 4.879,
-   "carroALinhaCentralM": 28.2
-  },
-  {
-   "volta": 9,
-   "sM": 2246.0,
-   "appS": 4.316,
+   "appS": 4.349,
    "gradeS": 4.897,
    "carroALinhaCentralM": 28.5
   },
   {
    "volta": 9,
    "sM": 2246.0,
-   "appS": 4.318,
+   "appS": 4.199,
    "gradeS": 4.915,
    "carroALinhaCentralM": 28.8
   },
   {
    "volta": 9,
    "sM": 2248.0,
-   "appS": 4.322,
+   "appS": 4.171,
    "gradeS": 4.873,
    "carroALinhaCentralM": 29.2
+  },
+  {
+   "volta": 9,
+   "sM": 2248.0,
+   "appS": 4.175,
+   "gradeS": 4.891,
+   "carroALinhaCentralM": 29.5
+  },
+  {
+   "volta": 9,
+   "sM": 2248.0,
+   "appS": 4.093,
+   "gradeS": 4.909,
+   "carroALinhaCentralM": 29.8
+  },
+  {
+   "volta": 9,
+   "sM": 2248.0,
+   "appS": 4.065,
+   "gradeS": 4.927,
+   "carroALinhaCentralM": 30.1
+  },
+  {
+   "volta": 9,
+   "sM": 2248.0,
+   "appS": 4.066,
+   "gradeS": 4.936,
+   "carroALinhaCentralM": 30.3
+  },
+  {
+   "volta": 9,
+   "sM": 2248.0,
+   "appS": 4.069,
+   "gradeS": 4.954,
+   "carroALinhaCentralM": 30.6
+  },
+  {
+   "volta": 9,
+   "sM": 2248.0,
+   "appS": 4.027,
+   "gradeS": 4.972,
+   "carroALinhaCentralM": 30.9
+  },
+  {
+   "volta": 9,
+   "sM": 2250.0,
+   "appS": 3.913,
+   "gradeS": 4.922,
+   "carroALinhaCentralM": 31.2
+  },
+  {
+   "volta": 9,
+   "sM": 2250.0,
+   "appS": 3.869,
+   "gradeS": 4.931,
+   "carroALinhaCentralM": 31.3
+  },
+  {
+   "volta": 9,
+   "sM": 2250.0,
+   "appS": 3.324,
+   "gradeS": 4.949,
+   "carroALinhaCentralM": 31.6
   }
  ],
- "quantasAcimaDe0_5s": 64,
+ "quantasAcimaDe0_5s": 54,
  "fimDeCadaVolta": {
   "2": {
    "cronometroNoUltimoQuadroS": 90.156,
@@ -313,14 +313,14 @@
   "3": {
    "cronometroNoUltimoQuadroS": 71.262,
    "sNoUltimoQuadroM": 2560.0,
-   "diferencaDoAppS": 19.991,
+   "diferencaDoAppS": 19.99,
    "diferencaDaGradeS": 19.981
   },
   "4": {
-   "cronometroNoUltimoQuadroS": 61.776,
+   "cronometroNoUltimoQuadroS": 61.713,
    "sNoUltimoQuadroM": 2244.0,
-   "diferencaDoAppS": 19.997,
-   "diferencaDaGradeS": 20.153
+   "diferencaDoAppS": 19.976,
+   "diferencaDaGradeS": 20.09
   },
   "5": {
    "cronometroNoUltimoQuadroS": 95.982,
@@ -361,14 +361,14 @@
   "11": {
    "cronometroNoUltimoQuadroS": 79.362,
    "sNoUltimoQuadroM": 2858.1,
-   "diferencaDoAppS": 19.992,
+   "diferencaDoAppS": 19.987,
    "diferencaDaGradeS": 19.961
   },
   "12": {
-   "cronometroNoUltimoQuadroS": 23.4,
+   "cronometroNoUltimoQuadroS": 23.358,
    "sNoUltimoQuadroM": 226.0,
-   "diferencaDoAppS": 19.998,
-   "diferencaDaGradeS": 20.092
+   "diferencaDoAppS": 19.989,
+   "diferencaDaGradeS": 20.05
   },
   "13": {
    "cronometroNoUltimoQuadroS": 90.915,
@@ -385,7 +385,7 @@
   "15": {
    "cronometroNoUltimoQuadroS": 36.354,
    "sNoUltimoQuadroM": 1390.0,
-   "diferencaDoAppS": 11.081,
+   "diferencaDoAppS": 11.077,
    "diferencaDaGradeS": 11.017
   }
  }

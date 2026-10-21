@@ -56,6 +56,7 @@ if (Test-Path $destino) { Remove-Item -Recurse -Force $destino }
 Copy-Item -Recurse $origem $destino
 Get-ChildItem $destino | ForEach-Object { Write-Host "  copiado: $($_.Name)" }
 Write-Host ''
-Write-Host 'Pronto. No jogo, abra a barra de apps (lado direito da tela) e ligue as duas janelas do app:' -ForegroundColor Green
-Write-Host '  "Rádio" (o cartão e a voz) e "Minimapa" (a pista, o carro e o fantasma).' -ForegroundColor Green
+Write-Host 'Pronto. No jogo, abra a barra de apps (lado direito da tela) e ligue as janelas do app:' -ForegroundColor Green
+Write-Host '  "Rádio" (o cartão e a voz), "Minimapa" (a pista inteira, o carro e o fantasma)' -ForegroundColor Green
+Write-Host '  e "Mapa aproximado" (a vista de perto, que gira com o carro; a roda do mouse muda o zoom).' -ForegroundColor Green
 Write-Host 'Abra o app do repositório (o backend com o rádio) antes do jogo.'

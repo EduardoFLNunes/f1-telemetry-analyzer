@@ -1,6 +1,6 @@
 -- Rádio do engenheiro (pedido 31, ADR 0020; pedido 35, ADR 0021).
 --
--- Duas janelas, cada uma ligada e desligada na barra de apps do jogo (manifest.ini):
+-- Três janelas, cada uma ligada e desligada na barra de apps do jogo (manifest.ini):
 --
 --   * o rádio (`janela`): a cada 0,3 s, pede ao backend local as mensagens novas
 --     (/api/radio/mensagens) e mostra o cartão por alguns segundos, com a vinheta e a
@@ -8,7 +8,12 @@
 --     não tiver o que o app usa, avisa uma vez e fica calado;
 --   * o minimapa (`minimapa`, pedido 35, Parte E): a pista tratada, o carro (lido do
 --     jogo a cada quadro), o fantasma da referência escolhida na Coleta (pelo tempo da
---     volta), a diferença ao vivo e as curvas da última análise.
+--     volta), a diferença ao vivo e as curvas da última análise;
+--   * o mapa aproximado (`aproximado`, pedido 35, depois do teste no jogo): a vista de
+--     perto da tela Volta ("fantasma por curva"). A câmera segue o carro e gira com a
+--     pista; a pista detalhada (asfalto, pintura e zebras) é uma imagem desenhada uma vez
+--     (`pista_detalhada.png`); por cima, o seu traçado e o do fantasma, pintados pelo
+--     pedal, o carro, o fantasma, o nome das curvas e a diferença.
 --
 -- A voz tem três caminhos, um depois do outro (pedido 35, Parte B): a URL do backend;
 -- o arquivo que o backend grava em data/radio/audio/; e o áudio baixado para a
@@ -40,12 +45,22 @@ local ESPERA_NA_PRIMEIRA_S = 5      -- na primeira mensagem, o CSP ainda pode es
 local ESPERA_DO_DOWNLOAD_S = 4
 
 -- O minimapa.
-local TOPO_DO_MINIMAPA = 26         -- a faixa de cima, com a diferença
+local TOPO_DO_MINIMAPA = 30         -- a faixa de cima, com a diferença ou o aviso (até duas linhas)
 local MARGEM_DO_MINIMAPA = 12
 local DIFERENCA_MAXIMA_S = 20       -- mais que isto é a linha (o relógio do jogo ainda na volta anterior)
 local LONGE_DA_REFERENCIA_M = 60    -- mais longe que isto da volta de referência (os boxes): sem diferença
 local FPS_AMOSTRA_S = 1             -- o FPS do jogo lido a cada 1 s...
-local FPS_REGISTRO_S = 10           -- ...e registrado no log a cada 10 s, com o minimapa ligado ou desligado
+local FPS_REGISTRO_S = 10           -- ...e registrado no log a cada 10 s, com os mapas ligados ou desligados
+
+-- O mapa aproximado, como a vista "fantasma por curva" da tela Volta.
+local ZOOM_INICIAL_M = 120          -- o que cabe no lado menor da janela (a tela Volta abre com 150 m)
+local ZOOM_MINIMO_M = 50            -- a roda do mouse, com o ponteiro sobre a janela, aproxima até isto...
+local ZOOM_MAXIMO_M = 400           -- ...e afasta até isto
+local CENTRO_VERTICAL = 0.62        -- o carro um pouco abaixo do meio: dá para ver mais da pista à frente
+local GIRO_S = 0.15                 -- quanto a câmera demora para acompanhar a direção da pista
+local RASTRO_PASSO_M = 1.5          -- o seu traçado: um ponto a cada 1,5 m...
+local RASTRO_PERIODO_S = 0.05       -- ...lidos do jogo 20 vezes por segundo
+local SALTO_M = 20                  -- mais que isto entre dois pontos (os boxes, um reset): o traço não liga
 
 local CORES = {
   fundo = rgbm(0.031, 0.035, 0.043, 0.9),
@@ -62,6 +77,16 @@ local CORES = {
   borda = rgbm(0.914, 0.929, 0.949, 0.35),
   perda = rgbm(1.0, 0.635, 0.29, 1),          -- --perda (#ffa24a)
   ganho = rgbm(0.435, 0.608, 1.0, 1),         -- --ganho (#6f9bff)
+  fundoDoMapa = rgbm(0.067, 0.071, 0.078, 0.92),
+  branco = rgbm(1, 1, 1, 1),
+  rotulo = rgbm(0.914, 0.929, 0.949, 0.75),
+  faixaDoTexto = rgbm(0.067, 0.071, 0.078, 0.78),
+}
+-- O traçado pintado pelo pedal, como a tela Volta: 0 = parcial ou sem pedal, 1 = acelerador cheio, 2 = freio.
+local CORES_DO_PEDAL = {
+  [0] = rgbm(0.961, 0.773, 0.259, 1),        -- --parcial (#f5c542)
+  [1] = rgbm(0.239, 0.863, 0.518, 1),        -- --acelerador (#3ddc84)
+  [2] = rgbm(1.0, 0.353, 0.373, 1),          -- --freio (#ff5a5f)
 }
 local TAG = { coach = 'RÁDIO', resumo = 'VOLTA', analise = 'ANÁLISE', teste = 'TESTE' }
 
@@ -108,8 +133,14 @@ local FALTA_NA_PASTA = conferir({
   { io, 'io', 'createDir' }, { io, 'io', 'scanDir' }, { io, 'io', 'deleteFile' }, { io, 'io', 'fileExists' },
 })
 
+local FALTA_NO_APROXIMADO = conferir({
+  { ui, 'ui', 'drawImageQuad' }, { ui, 'ui', 'isImageReady' }, { ui, 'ui', 'drawTriangleFilled' },
+  { ui, 'ui', 'windowHovered' }, { ui, 'ui', 'mouseWheel' },
+})
+
 local CALADO = #FALTA > 0
 local MINIMAPA = not CALADO and #FALTA_NO_MINIMAPA == 0
+local APROXIMADO = MINIMAPA and #FALTA_NO_APROXIMADO == 0
 local ALINHAR_NO_INICIO = ui ~= nil and ui.Alignment ~= nil and ui.Alignment.Start or nil
 
 -- A pasta do app (onde o instalar.ps1 o copiou) e a subpasta da voz baixada.
@@ -153,6 +184,8 @@ local mini = {
   origem = nil,            -- 'backend' ou 'arquivo do app'
   referencia = nil,        -- {tipo, tempoNaLinhaDoJogoS, pontos = {{x, z, t}, ...}}
   curvas = {},
+  rotulos = {},            -- o nome das 14 curvas e onde ele vai: {curva, x, z}
+  imagem = nil,            -- a pista detalhada: {arquivo, x0, y0, pxPorMetro, largura, altura}
   motivo = nil,
   versao = nil,            -- a versão que o rádio anunciou quando o app baixou o minimapa
   baixando = false,
@@ -211,6 +244,11 @@ local function lerAPistaDoApp()
     mini.pista = dados.pista
     mini.origem = 'arquivo do app'
     mini.desenhado = nil
+    if type(dados.curvas) == 'table' then mini.rotulos = dados.curvas end
+    if type(dados.imagem) == 'table' and type(dados.imagem.arquivo) == 'string' then
+      mini.imagem = dados.imagem
+      mini.imagem.caminho = PASTA .. '\\' .. dados.imagem.arquivo
+    end
   end
 end
 
@@ -242,6 +280,7 @@ local function baixarOMinimapa(versao)
     mini.referencia = type(dados.referencia) == 'table' and type(dados.referencia.pontos) == 'table'
       and dados.referencia or nil
     mini.curvas = type(dados.curvasDaAnalise) == 'table' and dados.curvasDaAnalise or {}
+    if type(dados.curvas) == 'table' and #dados.curvas > 0 then mini.rotulos = dados.curvas end
     mini.motivo = mini.referencia == nil and 'o coach não tem a volta de referência' or nil
     mini.iFantasma, mini.iCarro = 1, nil
     mini.desenhado = nil
@@ -731,6 +770,51 @@ local function desenharMarca(q, raio, miolo, borda, espessura)
   ui.drawCircle(q, raio, borda, 16, espessura)
 end
 
+-- O fantasma e a diferença, para as duas janelas de mapa. Devolve onde o fantasma está
+-- (x, z), ou nada antes da primeira passagem pela linha ou sem a volta de referência.
+local function oFantasma(carro)
+  local ref = mini.referencia
+  if not ref or not mini.desdeALinha then return nil end
+  local tCarro = (tonumber(carro.lapTimeMs) or 0) / 1000 + (tonumber(ref.tempoNaLinhaDoJogoS) or 0)
+  local fx, fz = fantasmaEm(ref.pontos, tCarro)
+  -- A diferença ao vivo, calculada aqui: o tempo do carro menos o da referência no mesmo ponto.
+  local tRef = tempoDaReferenciaPerto(ref.pontos, carro.position.x, carro.position.z)
+  if tRef then
+    local d = tCarro - tRef
+    if math.abs(d) < DIFERENCA_MAXIMA_S then mini.diferenca = d end
+  end
+  return fx, fz
+end
+
+local function notaDoFantasma()
+  if mini.referencia then
+    if mini.desdeALinha then return nil end
+    return 'o fantasma aparece depois da próxima passagem pela linha'
+  end
+  if estado.fora then return 'sem fantasma: backend fora do ar' end
+  return 'sem fantasma: ' .. tostring(mini.motivo or 'lendo a volta de referência')
+end
+
+-- O texto de cima das duas janelas: a diferença (10 vezes por segundo, para ler sem
+-- piscar) ou o aviso, que quebra a linha e cabe na largura da janela.
+local function desenharODeCima(t, W, nota)
+  if t - mini.mostradaEm >= 0.1 then
+    mini.mostrada = mini.diferenca
+    mini.mostradaEm = t
+  end
+  if nota then
+    caixa(nota, 11, vec2(MARGEM_DO_MINIMAPA, 4), vec2(W - 8, TOPO_DO_MINIMAPA + 2), CORES.fraco)
+  elseif mini.mostrada then
+    local d = mini.mostrada
+    local sinal = d >= 0 and '+' or '−'
+    ui.dwriteDrawText(sinal .. decimal(math.abs(d), 2) .. ' s', 17, vec2(MARGEM_DO_MINIMAPA, 4),
+      d > 0 and CORES.perda or CORES.ganho)
+    local ref = mini.referencia
+    local contra = ref and ref.tipo == 'minha_melhor' and 'para a sua melhor' or 'para a volta da IA'
+    ui.dwriteDrawText(contra, 11, vec2(MARGEM_DO_MINIMAPA + 82, 10), CORES.apoio)
+  end
+end
+
 -- Chamada a cada quadro pela janela do minimapa (manifest.ini, FUNCTION_MAIN).
 function minimapa(dt)
   local t = relogio()
@@ -764,54 +848,219 @@ function minimapa(dt)
 
   local ok, carro = pcall(ac.getCar, 0)
   if not ok or not carro then return end
-  local x, z = carro.position.x, carro.position.z
-  local ref = mini.referencia
-  local nota = nil
-  if ref and mini.desdeALinha then
-    local tempoDaVolta = (tonumber(carro.lapTimeMs) or 0) / 1000
-    local tCarro = tempoDaVolta + (tonumber(ref.tempoNaLinhaDoJogoS) or 0)
-    local fx, fz = fantasmaEm(ref.pontos, tCarro)
-    if fx then
-      desenharMarca(naTela(fx, fz), 5, CORES.fantasmaMiolo, CORES.fantasma, 2)
-    end
-    -- A diferença ao vivo, calculada aqui: o tempo do carro menos o da referência no mesmo ponto.
-    local tRef = tempoDaReferenciaPerto(ref.pontos, x, z)
-    if tRef then
-      local d = tCarro - tRef
-      if math.abs(d) < DIFERENCA_MAXIMA_S then mini.diferenca = d end
-    end
-  elseif ref then
-    nota = 'o fantasma aparece depois da próxima passagem pela linha'
-  elseif estado.fora then
-    nota = 'sem fantasma: backend fora do ar'
-  else
-    nota = 'sem fantasma: ' .. tostring(mini.motivo or 'lendo a volta de referência')
+  local fx, fz = oFantasma(carro)
+  if fx then
+    desenharMarca(naTela(fx, fz), 5, CORES.fantasmaMiolo, CORES.fantasma, 2)
   end
-  desenharMarca(naTela(x, z), 5.5, CORES.voce, CORES.vermelho, 2.5)
+  desenharMarca(naTela(carro.position.x, carro.position.z), 5.5, CORES.voce, CORES.vermelho, 2.5)
+  desenharODeCima(t, W, notaDoFantasma())
+  if estado.fora and mini.referencia then
+    ui.dwriteDrawText('sem backend', 11, vec2(W - 74, H - 18), CORES.fraco)
+  end
+end
 
-  -- O texto de cima: a diferença (10 vezes por segundo, para ler sem piscar) ou a nota.
-  if t - mini.mostradaEm >= 0.1 then
-    mini.mostrada = mini.diferenca
-    mini.mostradaEm = t
+-- ── o mapa aproximado: a vista de perto da tela Volta ───────────────────
+
+local perto = { zoom = ZOOM_INICIAL_M, angulo = nil, ultimoQuadro = -100 }
+local rastro = { pontos = {}, voltas = nil }
+
+-- O seu traçado da volta, lido do jogo 20 vezes por segundo: {x, z, pedal}. Começa de novo na linha.
+local function gravarORastro()
+  local ok, carro = pcall(ac.getCar, 0)
+  if not ok or not carro then return end
+  local voltas = tonumber(carro.lapCount) or 0
+  if rastro.voltas ~= nil and voltas ~= rastro.voltas then
+    rastro.pontos = {}
   end
-  if nota then
-    ui.dwriteDrawText(nota, 11, vec2(MARGEM_DO_MINIMAPA, 8), CORES.fraco)
-  elseif mini.mostrada then
-    local d = mini.mostrada
-    local sinal = d >= 0 and '+' or '−'
-    ui.dwriteDrawText(sinal .. decimal(math.abs(d), 2) .. ' s', 17, vec2(MARGEM_DO_MINIMAPA, 4),
-      d > 0 and CORES.perda or CORES.ganho)
-    local contra = ref and ref.tipo == 'minha_melhor' and 'para a sua melhor' or 'para a volta da IA'
-    ui.dwriteDrawText(contra, 11, vec2(MARGEM_DO_MINIMAPA + 82, 10), CORES.apoio)
+  rastro.voltas = voltas
+  local x, z = carro.position.x, carro.position.z
+  local n = #rastro.pontos
+  local ultimo = rastro.pontos[n]
+  if ultimo and (x - ultimo[1]) ^ 2 + (z - ultimo[2]) ^ 2 < RASTRO_PASSO_M * RASTRO_PASSO_M then return end
+  local pedal = 0
+  if (tonumber(carro.brake) or 0) >= 0.15 then
+    pedal = 2
+  elseif (tonumber(carro.gas) or 0) >= 0.9 then
+    pedal = 1
   end
+  if n >= 5000 then table.remove(rastro.pontos, 1) end
+  rastro.pontos[#rastro.pontos + 1] = { x, z, pedal }
+end
+
+-- Um traçado na tela, em trechos da mesma cor; os pontos fora da janela ficam de fora.
+-- `ip` é a posição do pedal em cada ponto ({x, z, t, pedal} na referência, {x, z, pedal} no seu).
+local function tracar(pontos, ate, ip, alfa, largura, tela, W, H)
+  local aberto, cor = false, 0
+  local ax, az = nil, nil
+  for i = 1, math.min(ate, #pontos) do
+    local p = pontos[i]
+    local sx, sy = tela(p[1], p[2])
+    local visivel = sx > -40 and sx < W + 40 and sy > -40 and sy < H + 40
+    local pedal = p[ip] or 0
+    local salto = ax ~= nil and (p[1] - ax) ^ 2 + (p[2] - az) ^ 2 > SALTO_M * SALTO_M
+    if aberto and (not visivel or salto or pedal ~= cor) then
+      if visivel and not salto then ui.pathLineTo(vec2(sx, sy)) end
+      ui.pathStroke(comAlfa(CORES_DO_PEDAL[cor] or CORES_DO_PEDAL[0], alfa), false, largura)
+      aberto = false
+    end
+    if visivel then
+      if not aberto then
+        ui.pathClear()
+        aberto, cor = true, pedal
+      end
+      ui.pathLineTo(vec2(sx, sy))
+    end
+    ax, az = p[1], p[2]
+  end
+  if aberto then
+    ui.pathStroke(comAlfa(CORES_DO_PEDAL[cor] or CORES_DO_PEDAL[0], alfa), false, largura)
+  end
+end
+
+local function rotuloCentrado(texto, tamanhoDaFonte, sx, sy, cor)
+  local largura = #texto * tamanhoDaFonte * 0.55
+  if ui.measureDWriteText ~= nil then
+    local ok, medida = pcall(ui.measureDWriteText, texto, tamanhoDaFonte)
+    if ok and medida then largura = medida.x end
+  end
+  ui.dwriteDrawText(texto, tamanhoDaFonte, vec2(sx - largura / 2, sy - tamanhoDaFonte / 2), cor)
+end
+
+-- Chamada a cada quadro pela janela do mapa aproximado (manifest.ini, FUNCTION_MAIN).
+function aproximado(dt)
+  local t = relogio()
+  perto.ultimoQuadro = t
+  local tamanho = ui.windowSize()
+  if CALADO or not APROXIMADO then
+    local falta = CALADO and FALTA or (#FALTA_NO_MINIMAPA > 0 and FALTA_NO_MINIMAPA or FALTA_NO_APROXIMADO)
+    desenharAviso('Mapa aproximado: esta versão do CSP não tem ' .. table.concat(falta, ', ') .. '.', tamanho)
+    return
+  end
+  local ok, carro = pcall(ac.getCar, 0)
+  if not ok or not carro then return end
+  local W, H = tamanho.x, tamanho.y
+
+  -- O zoom pela roda do mouse, com o ponteiro sobre a janela.
+  if ui.windowHovered() then
+    local roda = tonumber(ui.mouseWheel()) or 0
+    if roda ~= 0 then
+      perto.zoom = math.max(ZOOM_MINIMO_M, math.min(ZOOM_MAXIMO_M, perto.zoom * (roda > 0 and 1 / 1.15 or 1.15)))
+    end
+  end
+  local fx, fz = oFantasma(carro)
+
+  -- A câmera: o carro fixo na janela e a pista girando, como a tela Volta (base(x, z) = (z, −x)).
+  -- A direção é a da volta de referência perto do carro (mais estável que a do carro numa
+  -- escorregada) ou, sem ela, a do carro.
+  local x, z = carro.position.x, carro.position.z
+  local du, dv = nil, nil
+  local ref = mini.referencia
+  if ref and mini.iCarro then
+    local a, b = ref.pontos[mini.iCarro], ref.pontos[math.min(#ref.pontos, mini.iCarro + 4)]
+    if a and b then du, dv = b[2] - a[2], -(b[1] - a[1]) end
+  end
+  if not du or du * du + dv * dv < 1 then
+    du, dv = carro.look.z, -carro.look.x
+  end
+  local alvo = -math.pi / 2 - math.atan2(dv, du)
+  if perto.angulo == nil then
+    perto.angulo = alvo
+  else
+    local giro = (alvo - perto.angulo + math.pi) % (2 * math.pi) - math.pi
+    perto.angulo = perto.angulo + giro * math.min(1, (tonumber(dt) or 0.016) / GIRO_S)
+  end
+  local cs, sn = math.cos(perto.angulo), math.sin(perto.angulo)
+  local k = math.min(W, H) / perto.zoom
+  local cx, cy = W * 0.5, H * CENTRO_VERTICAL
+  local bu0, bv0 = z, -x
+  local function tela(px, pz)
+    local eu, ev = pz - bu0, -px - bv0
+    return cx + k * (eu * cs - ev * sn), cy + k * (eu * sn + ev * cs)
+  end
+
+  ui.drawRectFilled(vec2(0, 0), vec2(W, H), CORES.fundoDoMapa, 6)
+
+  -- A pista detalhada: a imagem girada em volta do carro. Cada canto da janela volta para o
+  -- mundo e daí para a imagem (coluna = (x − x0)·k; linha = (−z − y0)·k).
+  local img = mini.imagem
+  local pronta = false
+  if img then
+    local function uv(sx, sy)
+      local ex, ey = (sx - cx) / k, (sy - cy) / k
+      local bu, bv = bu0 + ex * cs + ey * sn, bv0 - ex * sn + ey * cs
+      local mx, my = -bv, -bu          -- o mundo (x = −bv, z = bu) nas coordenadas do mapa (x, −z)
+      return vec2((mx - img.x0) * img.pxPorMetro / img.largura, (my - img.y0) * img.pxPorMetro / img.altura)
+    end
+    ui.drawImageQuad(img.caminho, vec2(0, 0), vec2(W, 0), vec2(W, H), vec2(0, H), CORES.branco,
+      uv(0, 0), uv(W, 0), uv(W, H), uv(0, H))
+    local okP, p = pcall(ui.isImageReady, img.caminho)
+    pronta = okP and p
+  end
+  if not pronta and mini.pista then
+    -- Sem a imagem (ou enquanto ela carrega): as bordas do asfalto, como no minimapa.
+    for _, lado in ipairs({ mini.pista.esquerda, mini.pista.direita }) do
+      ui.pathClear()
+      for _, q in ipairs(lado) do
+        local sx, sy = tela(q[1], q[2])
+        ui.pathLineTo(vec2(sx, sy))
+      end
+      ui.pathStroke(CORES.borda, true, 1.5)
+    end
+  end
+
+  -- Os traçados: o do fantasma até onde ele está, mais apagado; o seu desde a linha.
+  if ref and mini.desdeALinha then
+    tracar(ref.pontos, mini.iFantasma + 1, 4, 0.6, 3.5, tela, W, H)
+  end
+  tracar(rastro.pontos, #rastro.pontos, 3, 1.0, 5, tela, W, H)
+
+  -- O nome das curvas que estão na janela.
+  for _, c in ipairs(mini.rotulos) do
+    local sx, sy = tela(tonumber(c.x) or 0, tonumber(c.z) or 0)
+    if sx > 12 and sx < W - 12 and sy > TOPO_DO_MINIMAPA + 8 and sy < H - 8 then
+      rotuloCentrado(tostring(c.curva), 12, sx, sy, CORES.rotulo)
+    end
+  end
+
+  -- O fantasma (ou uma seta na borda, se ele estiver fora da janela) e o carro.
+  local rotuloDaRef = ref and ref.tipo == 'minha_melhor' and 'Sua melhor' or 'IA'
+  if fx then
+    local gx, gy = tela(fx, fz)
+    if gx > 14 and gx < W - 14 and gy > 14 and gy < H - 14 then
+      desenharMarca(vec2(gx, gy), 8, CORES.fantasmaMiolo, CORES.fantasma, 2.5)
+      rotuloCentrado(rotuloDaRef, 12, gx, gy - 16, CORES.texto)
+    else
+      local mx, my = math.max(18, math.min(W - 18, gx)), math.max(18, math.min(H - 18, gy))
+      local a = math.atan2(gy - cy, gx - cx)
+      local ca, sa = math.cos(a), math.sin(a)
+      local function girado(px, py) return vec2(mx + px * ca - py * sa, my + px * sa + py * ca) end
+      ui.drawTriangleFilled(girado(8, 0), girado(-6, -6), girado(-6, 6), CORES.fantasma)
+    end
+  end
+  desenharMarca(vec2(cx, cy), 8.5, CORES.voce, CORES.vermelho, 2.5)
+  rotuloCentrado('Você · V' .. tostring((tonumber(carro.lapCount) or 0) + 1), 12, cx, cy + 18, CORES.texto)
+
+  -- O texto de cima numa faixa escura: a pista passa por baixo dele.
+  ui.drawRectFilled(vec2(0, 0), vec2(W, TOPO_DO_MINIMAPA + 2), CORES.faixaDoTexto, 6)
+  desenharODeCima(t, W, notaDoFantasma())
   if estado.fora and ref then
     ui.dwriteDrawText('sem backend', 11, vec2(W - 74, H - 18), CORES.fraco)
   end
 end
 
--- ── o custo no jogo: o FPS com o minimapa ligado e desligado ────────────
+-- ── o custo no jogo: o FPS com os mapas ligados e desligados ────────────
 
-local fps = { soma = 0, n = 0, minimo = math.huge, maximo = 0, ligado = 0, desligado = 0, parado = 0 }
+local function novaContagem()
+  return { soma = 0, n = 0, minimo = math.huge, maximo = 0, parado = 0,
+           mini = { ligado = 0, desligado = 0 }, perto = { ligado = 0, desligado = 0 } }
+end
+local fps = novaContagem()
+
+local function situacao(c)
+  if c.desligado == 0 then return 'ligado' end
+  if c.ligado == 0 then return 'desligado' end
+  return 'ligado e desligado'
+end
 
 local function amostrarOFps()
   local ok, sim = pcall(ac.getSim)
@@ -824,20 +1073,19 @@ local function amostrarOFps()
     fps.n = fps.n + 1
     fps.minimo = math.min(fps.minimo, v)
     fps.maximo = math.max(fps.maximo, v)
-    if relogio() - mini.ultimoQuadro < 0.5 then
-      fps.ligado = fps.ligado + 1
-    else
-      fps.desligado = fps.desligado + 1
+    local agora = relogio()
+    for nome, ultimo in pairs({ mini = mini.ultimoQuadro, perto = perto.ultimoQuadro }) do
+      local c = fps[nome]
+      if agora - ultimo < 0.5 then c.ligado = c.ligado + 1 else c.desligado = c.desligado + 1 end
     end
   end
   if fps.n + fps.parado >= FPS_REGISTRO_S / FPS_AMOSTRA_S then
     if fps.n > 0 then
-      local situacao = 'ligado e desligado'
-      if fps.desligado == 0 then situacao = 'ligado' elseif fps.ligado == 0 then situacao = 'desligado' end
       log('fps: média ' .. decimal(fps.soma / fps.n, 1) .. ' (mín ' .. decimal(fps.minimo, 0) .. ', máx '
-        .. decimal(fps.maximo, 0) .. ') em ' .. fps.n .. ' s; minimapa ' .. situacao)
+        .. decimal(fps.maximo, 0) .. ') em ' .. fps.n .. ' s; minimapa ' .. situacao(fps.mini)
+        .. '; mapa aproximado ' .. situacao(fps.perto))
     end
-    fps = { soma = 0, n = 0, minimo = math.huge, maximo = 0, ligado = 0, desligado = 0, parado = 0 }
+    fps = novaContagem()
   end
 end
 
@@ -849,6 +1097,8 @@ else
   log('ligado; pede as mensagens a ' .. BACKEND)
   if #FALTA_NO_MINIMAPA > 0 then
     log('minimapa desligado: a API do CSP não tem ' .. table.concat(FALTA_NO_MINIMAPA, ', '))
+  elseif #FALTA_NO_APROXIMADO > 0 then
+    log('mapa aproximado desligado: a API do CSP não tem ' .. table.concat(FALTA_NO_APROXIMADO, ', '))
   end
   if not PASTA_DA_VOZ then
     log('voz: sem o terceiro caminho (a pasta do app): ' .. (#FALTA_NA_PASTA > 0 and table.concat(FALTA_NA_PASTA, ', ') or 'sem a pasta'))
@@ -869,7 +1119,11 @@ else
   setInterval(pedir, PERIODO_S)
   if MINIMAPA then
     lerAPistaDoApp()
+    if APROXIMADO and not mini.imagem then
+      log('mapa aproximado: sem a pista_detalhada.png na pasta do app; desenha só as bordas da pista')
+    end
     setInterval(acompanharAVolta, 0.25)
+    setInterval(gravarORastro, RASTRO_PERIODO_S)
     setInterval(amostrarOFps, FPS_AMOSTRA_S)
   end
 end
