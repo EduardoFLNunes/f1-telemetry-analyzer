@@ -317,3 +317,24 @@ O rádio do engenheiro e a tela Ao vivo completa (ADR 0020). Detalhes em `docs/r
 - **Dois defeitos antigos corrigidos no caminho ao vivo:**
   - o coach ao vivo não achava o modelo, porque o quadro não traz a pista;
   - o barramento enchia o log a cada quadro (958 MB no app instalado).
+
+### O que o pedido 35 entregou (18/10)
+
+O rádio que analisa as voltas, o mapa ao vivo sem travar e o minimapa no jogo (ADR 0021). Detalhes em `docs/realidade_aumentada.md` e em `docs/handoff/2026-10-18_35_radio-que-analisa-e-minimapa_relatorio.md`.
+
+- **O que o rádio diz** (`backend/core/radio/`):
+  - a frase do coach diz a causa principal na voz: a freada (mais de 15 m) ou a mínima (mais de 8 km/h);
+  - o resumo na linha diz a curva em que a volta mais perdeu;
+  - a análise das voltas, o tipo novo: a cada 3 voltas válidas, até 2 curvas perdidas em 2 das 3, com a freada, a mínima, o acelerador cheio e o traçado;
+  - a voz a 1,4x e, em cada mensagem, a primeira fala que cabe em cerca de 6, 7 ou 8 s;
+  - a mensagem só sai quando a fala inteira cabe no que resta da janela, pela velocidade do carro.
+- **A tela Ao vivo:**
+  - o mapa não trava: a tela pede só os pontos novos (`/api/live/volta/novos`), cerca de 24 vezes por segundo, com respostas de cerca de 0,5 KB (eram 65 KB, 3 vezes por segundo);
+  - o carro anda a cada quadro da tela, e a pista é desenhada uma vez num bitmap (a tela Volta usa o mesmo componente);
+  - o cartão do rádio mostra a análise, com uma linha por curva.
+- **O app do jogo** (`tools/csp_app/radio_engenheiro/`):
+  - a voz tem três caminhos (a URL, o arquivo do backend e o áudio baixado para a pasta do app), com uma linha no log do CSP por mensagem;
+  - o minimapa, uma segunda janela: a pista, o carro, o fantasma da referência pelo tempo, a diferença ao vivo e as curvas da última análise;
+  - o FPS do jogo no log a cada 10 s, com o minimapa ligado ou desligado.
+- **Para os testes sem o jogo:** o reprodutor de gravações (`/api/teste/*`, só com `AT_TESTE_REPRODUTOR=1`) toca uma sessão pelo caminho do jogo.
+- **Falta:** o teste no jogo (Parte G), com o caminho da voz que funcionou e o custo do minimapa.
