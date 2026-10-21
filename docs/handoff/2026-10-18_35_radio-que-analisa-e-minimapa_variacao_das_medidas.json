@@ -1,0 +1,134 @@
+{
+ "voltas": 73,
+ "sessoes": [
+  "2026-10-11_14-19-52",
+  "2026-10-13_19-24-10",
+  "2026-10-15_23-24-50",
+  "2026-10-17_01-02-22",
+  "2026-10-17_16-17-08",
+  "2026-10-18_12-38-44"
+ ],
+ "referencia": "2026-10-04_03-42-10_vhe_interlagos#0013",
+ "variacao_volta_a_volta": {
+  "freada (m)": {
+   "mediana_do_desvio": 14.71,
+   "p75_do_desvio": 21.63
+  },
+  "minima (km/h)": {
+   "mediana_do_desvio": 7.73,
+   "p75_do_desvio": 10.9
+  },
+  "acelerador cheio (m)": {
+   "mediana_do_desvio": 10.68,
+   "p75_do_desvio": 18.72
+  },
+  "tracado (m)": {
+   "mediana_do_desvio": 1.76,
+   "p75_do_desvio": 2.25
+  },
+  "perda (s)": {
+   "mediana_do_desvio": 0.24,
+   "p75_do_desvio": 0.44
+  }
+ },
+ "diferenca_mediana_por_curva": {
+  "C01": {
+   "freadaM": -41.0,
+   "minimaKmh": -5.1,
+   "aceleradorM": -3.0,
+   "tracadoM": -0.45,
+   "perdaS": 1.01
+  },
+  "C02": {
+   "freadaM": 12.0,
+   "minimaKmh": -0.3,
+   "aceleradorM": -8.0,
+   "tracadoM": -0.64,
+   "perdaS": -0.01
+  },
+  "C03": {
+   "freadaM": NaN,
+   "minimaKmh": 3.8,
+   "aceleradorM": 0.0,
+   "tracadoM": -1.52,
+   "perdaS": 0.34
+  },
+  "C04": {
+   "freadaM": -24.0,
+   "minimaKmh": -4.0,
+   "aceleradorM": 16.0,
+   "tracadoM": 0.39,
+   "perdaS": 0.46
+  },
+  "C05": {
+   "freadaM": NaN,
+   "minimaKmh": -10.0,
+   "aceleradorM": 0.0,
+   "tracadoM": 0.14,
+   "perdaS": 0.31
+  },
+  "C06": {
+   "freadaM": -49.0,
+   "minimaKmh": 9.8,
+   "aceleradorM": 32.0,
+   "tracadoM": -3.33,
+   "perdaS": -0.06
+  },
+  "C07": {
+   "freadaM": -14.0,
+   "minimaKmh": -2.2,
+   "aceleradorM": -1.0,
+   "tracadoM": 1.25,
+   "perdaS": 0.29
+  },
+  "C08": {
+   "freadaM": -76.0,
+   "minimaKmh": 5.5,
+   "aceleradorM": 56.0,
+   "tracadoM": -1.44,
+   "perdaS": 0.19
+  },
+  "C09": {
+   "freadaM": NaN,
+   "minimaKmh": -14.1,
+   "aceleradorM": 0.0,
+   "tracadoM": -0.07,
+   "perdaS": 0.21
+  },
+  "C10": {
+   "freadaM": -2.0,
+   "minimaKmh": -2.3,
+   "aceleradorM": 22.0,
+   "tracadoM": 0.82,
+   "perdaS": 0.54
+  },
+  "C11": {
+   "freadaM": NaN,
+   "minimaKmh": -15.9,
+   "aceleradorM": 0.0,
+   "tracadoM": -0.98,
+   "perdaS": 0.57
+  },
+  "C12": {
+   "freadaM": -40.0,
+   "minimaKmh": 8.5,
+   "aceleradorM": 10.0,
+   "tracadoM": -0.56,
+   "perdaS": 0.38
+  },
+  "C13": {
+   "freadaM": NaN,
+   "minimaKmh": -6.6,
+   "aceleradorM": 0.0,
+   "tracadoM": -1.01,
+   "perdaS": 0.23
+  },
+  "C14": {
+   "freadaM": NaN,
+   "minimaKmh": -8.8,
+   "aceleradorM": 0.0,
+   "tracadoM": -1.26,
+   "perdaS": 0.54
+  }
+ }
+}

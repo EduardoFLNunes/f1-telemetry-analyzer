@@ -1,0 +1,392 @@
+{
+ "sessao": "2026-10-13_19-24-10_vhe_interlagos",
+ "referencia": {
+  "tipo": "volta_ia",
+  "lapId": "2026-10-04_03-42-10_vhe_interlagos#0013",
+  "tempoS": 84.829,
+  "tempoNaLinhaDoJogoS": 0.0198,
+  "linhaDoJogoM": 1.495,
+  "pontos": 362
+ },
+ "pistaPontosPorBorda": 271,
+ "amostrasComparadas": 63862,
+ "amostrasAMenosDe5mDoS0ForaDaComparacao": 50,
+ "appMenosGradeS": {
+  "mediana": 0.0106,
+  "p95": 0.0622,
+  "maximo": 5.115
+ },
+ "fantasmaAoLongoDaPistaContraGradeM": {
+  "mediana": 0.47,
+  "p95": 0.96
+ },
+ "acimaDe0_5s": [
+  {
+   "volta": 3,
+   "sM": 2256.0,
+   "appS": 8.532,
+   "gradeS": 9.132,
+   "carroALinhaCentralM": 21.8
+  },
+  {
+   "volta": 3,
+   "sM": 2258.0,
+   "appS": 8.527,
+   "gradeS": 9.071,
+   "carroALinhaCentralM": 22.1
+  },
+  {
+   "volta": 3,
+   "sM": 2258.0,
+   "appS": 8.523,
+   "gradeS": 9.086,
+   "carroALinhaCentralM": 22.4
+  },
+  {
+   "volta": 3,
+   "sM": 2258.0,
+   "appS": 8.518,
+   "gradeS": 9.104,
+   "carroALinhaCentralM": 22.7
+  },
+  {
+   "volta": 3,
+   "sM": 2260.0,
+   "appS": 8.513,
+   "gradeS": 9.042,
+   "carroALinhaCentralM": 23.0
+  },
+  {
+   "volta": 3,
+   "sM": 2260.0,
+   "appS": 8.511,
+   "gradeS": 9.051,
+   "carroALinhaCentralM": 23.1
+  },
+  {
+   "volta": 3,
+   "sM": 2260.0,
+   "appS": 8.507,
+   "gradeS": 9.066,
+   "carroALinhaCentralM": 23.4
+  },
+  {
+   "volta": 3,
+   "sM": 2262.0,
+   "appS": 8.503,
+   "gradeS": 9.003,
+   "carroALinhaCentralM": 23.7
+  },
+  {
+   "volta": 3,
+   "sM": 2262.0,
+   "appS": 8.498,
+   "gradeS": 9.021,
+   "carroALinhaCentralM": 24.0
+  },
+  {
+   "volta": 3,
+   "sM": 2264.0,
+   "appS": 8.272,
+   "gradeS": 8.959,
+   "carroALinhaCentralM": 24.2
+  },
+  {
+   "volta": 3,
+   "sM": 2264.0,
+   "appS": 8.269,
+   "gradeS": 8.971,
+   "carroALinhaCentralM": 24.4
+  },
+  {
+   "volta": 3,
+   "sM": 2266.0,
+   "appS": 8.267,
+   "gradeS": 8.9,
+   "carroALinhaCentralM": 24.6
+  },
+  {
+   "volta": 3,
+   "sM": 2266.0,
+   "appS": 8.263,
+   "gradeS": 8.918,
+   "carroALinhaCentralM": 24.8
+  },
+  {
+   "volta": 3,
+   "sM": 2268.0,
+   "appS": 8.259,
+   "gradeS": 8.862,
+   "carroALinhaCentralM": 25.1
+  },
+  {
+   "volta": 3,
+   "sM": 2270.0,
+   "appS": 8.256,
+   "gradeS": 8.799,
+   "carroALinhaCentralM": 25.2
+  },
+  {
+   "volta": 5,
+   "sM": 2244.0,
+   "appS": 4.096,
+   "gradeS": 4.697,
+   "carroALinhaCentralM": 30.5
+  },
+  {
+   "volta": 5,
+   "sM": 2244.0,
+   "appS": 4.1,
+   "gradeS": 4.712,
+   "carroALinhaCentralM": 30.8
+  },
+  {
+   "volta": 5,
+   "sM": 2244.0,
+   "appS": 4.103,
+   "gradeS": 4.724,
+   "carroALinhaCentralM": 31.0
+  },
+  {
+   "volta": 5,
+   "sM": 2244.0,
+   "appS": 4.108,
+   "gradeS": 4.742,
+   "carroALinhaCentralM": 31.3
+  },
+  {
+   "volta": 5,
+   "sM": 2244.0,
+   "appS": 4.114,
+   "gradeS": 4.763,
+   "carroALinhaCentralM": 31.6
+  },
+  {
+   "volta": 5,
+   "sM": 2244.0,
+   "appS": 4.121,
+   "gradeS": 4.787,
+   "carroALinhaCentralM": 32.0
+  },
+  {
+   "volta": 5,
+   "sM": 2244.0,
+   "appS": 4.128,
+   "gradeS": 4.808,
+   "carroALinhaCentralM": 32.4
+  },
+  {
+   "volta": 5,
+   "sM": 2244.0,
+   "appS": 4.128,
+   "gradeS": 4.808,
+   "carroALinhaCentralM": 32.4
+  },
+  {
+   "volta": 5,
+   "sM": 2246.0,
+   "appS": 2.194,
+   "gradeS": 4.771,
+   "carroALinhaCentralM": 32.9
+  },
+  {
+   "volta": 5,
+   "sM": 2246.0,
+   "appS": 2.201,
+   "gradeS": 4.783,
+   "carroALinhaCentralM": 33.1
+  },
+  {
+   "volta": 5,
+   "sM": 2246.0,
+   "appS": 2.209,
+   "gradeS": 4.798,
+   "carroALinhaCentralM": 33.3
+  },
+  {
+   "volta": 5,
+   "sM": 2246.0,
+   "appS": 2.219,
+   "gradeS": 4.816,
+   "carroALinhaCentralM": 33.6
+  },
+  {
+   "volta": 5,
+   "sM": 2246.0,
+   "appS": 2.228,
+   "gradeS": 4.834,
+   "carroALinhaCentralM": 33.9
+  },
+  {
+   "volta": 5,
+   "sM": 2246.0,
+   "appS": 2.236,
+   "gradeS": 4.849,
+   "carroALinhaCentralM": 34.2
+  },
+  {
+   "volta": 5,
+   "sM": 2246.0,
+   "appS": 2.241,
+   "gradeS": 4.858,
+   "carroALinhaCentralM": 34.3
+  },
+  {
+   "volta": 5,
+   "sM": 2654.0,
+   "appS": 4.262,
+   "gradeS": 8.407,
+   "carroALinhaCentralM": 32.3
+  },
+  {
+   "volta": 5,
+   "sM": 2654.0,
+   "appS": 4.279,
+   "gradeS": 8.425,
+   "carroALinhaCentralM": 32.7
+  },
+  {
+   "volta": 9,
+   "sM": 2244.0,
+   "appS": 4.306,
+   "gradeS": 4.886,
+   "carroALinhaCentralM": 27.1
+  },
+  {
+   "volta": 9,
+   "sM": 2246.0,
+   "appS": 4.307,
+   "gradeS": 4.834,
+   "carroALinhaCentralM": 27.4
+  },
+  {
+   "volta": 9,
+   "sM": 2246.0,
+   "appS": 4.309,
+   "gradeS": 4.852,
+   "carroALinhaCentralM": 27.7
+  },
+  {
+   "volta": 9,
+   "sM": 2246.0,
+   "appS": 4.312,
+   "gradeS": 4.87,
+   "carroALinhaCentralM": 28.0
+  },
+  {
+   "volta": 9,
+   "sM": 2246.0,
+   "appS": 4.313,
+   "gradeS": 4.879,
+   "carroALinhaCentralM": 28.2
+  },
+  {
+   "volta": 9,
+   "sM": 2246.0,
+   "appS": 4.316,
+   "gradeS": 4.897,
+   "carroALinhaCentralM": 28.5
+  },
+  {
+   "volta": 9,
+   "sM": 2246.0,
+   "appS": 4.318,
+   "gradeS": 4.915,
+   "carroALinhaCentralM": 28.8
+  },
+  {
+   "volta": 9,
+   "sM": 2248.0,
+   "appS": 4.322,
+   "gradeS": 4.873,
+   "carroALinhaCentralM": 29.2
+  }
+ ],
+ "quantasAcimaDe0_5s": 64,
+ "fimDeCadaVolta": {
+  "2": {
+   "cronometroNoUltimoQuadroS": 90.156,
+   "sNoUltimoQuadroM": 2.0,
+   "diferencaDoAppS": 5.373,
+   "diferencaDaGradeS": 90.149
+  },
+  "3": {
+   "cronometroNoUltimoQuadroS": 71.262,
+   "sNoUltimoQuadroM": 2560.0,
+   "diferencaDoAppS": 19.991,
+   "diferencaDaGradeS": 19.981
+  },
+  "4": {
+   "cronometroNoUltimoQuadroS": 61.776,
+   "sNoUltimoQuadroM": 2244.0,
+   "diferencaDoAppS": 19.997,
+   "diferencaDaGradeS": 20.153
+  },
+  "5": {
+   "cronometroNoUltimoQuadroS": 95.982,
+   "sNoUltimoQuadroM": 0.0,
+   "diferencaDoAppS": 11.199,
+   "diferencaDaGradeS": 96.002
+  },
+  "6": {
+   "cronometroNoUltimoQuadroS": 92.511,
+   "sNoUltimoQuadroM": 2.0,
+   "diferencaDoAppS": 7.728,
+   "diferencaDaGradeS": 92.504
+  },
+  "7": {
+   "cronometroNoUltimoQuadroS": 90.351,
+   "sNoUltimoQuadroM": 0.0,
+   "diferencaDoAppS": 5.568,
+   "diferencaDaGradeS": 90.371
+  },
+  "8": {
+   "cronometroNoUltimoQuadroS": 90.219,
+   "sNoUltimoQuadroM": 0.0,
+   "diferencaDoAppS": 5.436,
+   "diferencaDaGradeS": 90.239
+  },
+  "9": {
+   "cronometroNoUltimoQuadroS": 93.096,
+   "sNoUltimoQuadroM": 0.0,
+   "diferencaDoAppS": 8.313,
+   "diferencaDaGradeS": 93.116
+  },
+  "10": {
+   "cronometroNoUltimoQuadroS": 89.757,
+   "sNoUltimoQuadroM": 0.0,
+   "diferencaDoAppS": 4.974,
+   "diferencaDaGradeS": 89.777
+  },
+  "11": {
+   "cronometroNoUltimoQuadroS": 79.362,
+   "sNoUltimoQuadroM": 2858.1,
+   "diferencaDoAppS": 19.992,
+   "diferencaDaGradeS": 19.961
+  },
+  "12": {
+   "cronometroNoUltimoQuadroS": 23.4,
+   "sNoUltimoQuadroM": 226.0,
+   "diferencaDoAppS": 19.998,
+   "diferencaDaGradeS": 20.092
+  },
+  "13": {
+   "cronometroNoUltimoQuadroS": 90.915,
+   "sNoUltimoQuadroM": 0.0,
+   "diferencaDoAppS": 6.132,
+   "diferencaDaGradeS": 90.935
+  },
+  "14": {
+   "cronometroNoUltimoQuadroS": 91.683,
+   "sNoUltimoQuadroM": 0.0,
+   "diferencaDoAppS": 6.9,
+   "diferencaDaGradeS": 91.703
+  },
+  "15": {
+   "cronometroNoUltimoQuadroS": 36.354,
+   "sNoUltimoQuadroM": 1390.0,
+   "diferencaDoAppS": 11.081,
+   "diferencaDaGradeS": 11.017
+  }
+ }
+}
