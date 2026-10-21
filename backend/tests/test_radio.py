@@ -460,3 +460,56 @@ def test_as_mensagens_dizem_a_versao_do_minimapa(tmp_path):
     assert radio.desde(0)["minimapaVersao"] == "minha_melhor|ref#0021|6-7-8"
     radio._referencia = lambda: (_ for _ in ()).throw(RuntimeError("sem o coach"))
     assert radio.desde(0)["minimapaVersao"] == "None|None|6-7-8"
+
+
+def test_as_rotas_novas_pontos_novos_e_minimapa(tmp_path, monkeypatch):
+    """Pedido 35, Parte F.1: /api/live/volta/novos e /api/radio/minimapa, chamadas direto (como `test_rotas`)."""
+    import asyncio
+
+    import numpy as np
+
+    import main
+    from core.live.volta_ao_vivo import VoltaAoVivo
+    from core.radio.analise import Pista
+    from routers import radio as rota
+
+    sys.path.insert(0, str(BACKEND / "tests"))
+    from test_lap_origin import circular_track
+
+    # Sem a volta ao vivo e sem a geometria: respostas que dizem por que.
+    monkeypatch.setattr(main, "volta_ao_vivo", None)
+    assert asyncio.run(rota.get_volta_novos(None, None))["disponivel"] is False
+    radio = _radio(tmp_path, _Pista())
+    monkeypatch.setattr(main, "radio_do_engenheiro", radio)
+    monkeypatch.setattr(radio, "_pista", lambda: None)
+    radio._geometria = None
+    assert json.loads(asyncio.run(rota.get_minimapa()).body)["disponivel"] is False
+
+    # Os pontos novos: a volta inteira na primeira leitura, depois so o que chegou.
+    pos = {"s": 0.0}
+    v = VoltaAoVivo(lambda: {"s": pos["s"], "comprimento": 100.0, "lateral": 0.0, "volta": 2,
+                             "tempoDaVolta": pos["s"] / 50, "desdeALinha": True}, lambda: 50)
+    monkeypatch.setattr(main, "volta_ao_vivo", v)
+    for s in (1.0, 3.0):
+        pos["s"] = s
+        v.on_frame({"speedKmh": 180.0, "throttle": 1.0, "brake": 0.0})
+    inteira = json.loads(asyncio.run(rota.get_volta_novos(None, None)).body)
+    pos["s"] = 5.0
+    v.on_frame({"speedKmh": 180.0, "throttle": 1.0, "brake": 0.0})
+    novos = json.loads(asyncio.run(rota.get_volta_novos(inteira["versao"], inteira["seq"])).body)
+    assert inteira["completa"] is True and novos["completa"] is False and novos["pontos"]["indices"] == [2]
+
+    # O minimapa: a pista, a referencia escolhida com o tempo e a versao.
+    track = circular_track()
+    radio._geometria = Pista(track=track, segmentos=[])
+    volta = {"disponivel": True, "lapId": "ref#0013", "tempoS": float(track.length / 50.0),
+             "elapsedS": (np.asarray(track.s) / 50.0).tolist(), "lateralM": [0.0] * track.size}
+    escolha = lambda: {"tipo": "volta_ia", "volta": "ref#0013"}   # noqa: E731
+    monkeypatch.setattr(main, "_referencia_do_radio", escolha)
+    radio._referencia = escolha                    # no backend, o radio recebe a mesma funcao (main.py)
+    monkeypatch.setattr(main, "_volta_de_referencia_do_radio", lambda: volta)
+    monkeypatch.setattr(main.app_config, "coach_root", lambda: tmp_path)   # sem o meta do store: 1,463 m
+    m = json.loads(asyncio.run(rota.get_minimapa()).body)
+    assert m["disponivel"] and m["linhaDoJogoM"] == 1.463 and m["referencia"]["lapId"] == "ref#0013"
+    assert m["referencia"]["tempoNaLinhaDoJogoS"] == pytest.approx(1.463 / 50.0, abs=1e-3)
+    assert m["versao"] == "volta_ia|ref#0013|" == radio.desde(0)["minimapaVersao"]
