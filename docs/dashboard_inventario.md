@@ -335,6 +335,7 @@ O rádio que analisa as voltas, o mapa ao vivo sem travar e o minimapa no jogo (
 - **O app do jogo** (`tools/csp_app/radio_engenheiro/`):
   - a voz tem três caminhos (a URL, o arquivo do backend e o áudio baixado para a pasta do app), com uma linha no log do CSP por mensagem;
   - o minimapa, uma segunda janela: a pista, o carro, o fantasma da referência pelo tempo, a diferença ao vivo e as curvas da última análise;
-  - o FPS do jogo no log a cada 10 s, com o minimapa ligado ou desligado.
+  - o mapa aproximado, uma terceira janela, pedida depois da primeira captura do jogo (21/10): a vista de perto da tela Volta, com a pista detalhada girando em volta do carro e os traçados pintados pelo pedal;
+  - o FPS do jogo no log a cada 10 s, com cada mapa ligado ou desligado.
 - **Para os testes sem o jogo:** o reprodutor de gravações (`/api/teste/*`, só com `AT_TESTE_REPRODUTOR=1`) toca uma sessão pelo caminho do jogo.
 - **Falta:** o teste no jogo (Parte G), com o caminho da voz que funcionou e o custo do minimapa.

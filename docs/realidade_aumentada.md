@@ -1,6 +1,6 @@
 # Realidade aumentada: o rádio do engenheiro e o minimapa (pedido 31, ADR 0020; pedido 35, ADR 0021)
 
-O rádio leva o que o coach já decide até o piloto, durante a volta, com o jogo em tela cheia: uma mensagem curta, num cartão dentro do jogo e em voz, no momento em que dá para ouvir. É o jeito de o Modelo 2 chegar ao piloto (ADR 0018). O rádio não decide nada do coach: quais frases saem, o limite de 3 por volta, o foco e o limiar continuam no coach. Desde o pedido 35, ele também analisa as voltas a cada 3 voltas válidas, lendo só o que a volta ao vivo e o store já medem (ADR 0021). O app do jogo ganhou um minimapa com o fantasma da referência.
+O rádio leva o que o coach já decide até o piloto, durante a volta, com o jogo em tela cheia: uma mensagem curta, num cartão dentro do jogo e em voz, no momento em que dá para ouvir. É o jeito de o Modelo 2 chegar ao piloto (ADR 0018). O rádio não decide nada do coach: quais frases saem, o limite de 3 por volta, o foco e o limiar continuam no coach. Desde o pedido 35, ele também analisa as voltas a cada 3 voltas válidas, lendo só o que a volta ao vivo e o store já medem (ADR 0021). O app do jogo ganhou dois mapas com o fantasma da referência: o minimapa, com a pista inteira, e o mapa aproximado, a vista de perto da tela Volta.
 
 ## 1. Como funciona
 
@@ -152,10 +152,14 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é 
 - **Onde fica:** `tools/csp_app/radio_engenheiro/`:
   - `manifest.ini`;
   - `radio_engenheiro.lua`;
-  - `pista.json`, a pista simplificada para quando o backend estiver fora do ar, gerada por `tools/csp_app/gerar_pista.py` a partir da geometria oficial.
-- **Duas janelas,** ligadas e desligadas cada uma na barra de apps do jogo:
+  - `pista.json`: a pista simplificada para quando o backend estiver fora do ar, o nome das 14 curvas e onde fica a imagem da pista detalhada no mundo;
+  - `pista_detalhada.png`: a pista do mapa aproximado (seção 5.3).
+
+  Os dois arquivos são gerados por `tools/csp_app/gerar_pista.py`, a partir da geometria oficial e do cache da pista. Se o cache mudar, rode de novo.
+- **Três janelas,** ligadas e desligadas cada uma na barra de apps do jogo:
   - **"Rádio · Sistema de Telemetria e Otimização de Trajetórias":** o cartão e a voz;
-  - **"Minimapa · Sistema de Telemetria e Otimização de Trajetórias":** a pista, o carro e o fantasma.
+  - **"Minimapa · Sistema de Telemetria e Otimização de Trajetórias":** a pista inteira, o carro e o fantasma;
+  - **"Mapa aproximado · Sistema de Telemetria e Otimização de Trajetórias":** a vista de perto, que gira com o carro.
 - **O que não faz:** não muda o carro, os controles nem nada do jogo, e não desenha na pista.
 - **Onde grava:** só na subpasta `voz` da própria pasta do app (ADR 0021, item 6), que ele limpa dos `.wav` ao abrir.
 - **Onde pôr as janelas:** num canto, sem cobrir o centro da tela. A posição é a do modo de mover apps do jogo.
@@ -191,7 +195,7 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é 
   - **as marcas:** a linha do s = 0 e as curvas da última análise, com um círculo e o nome (C01...).
 - **O carro:** a posição vem do próprio jogo, a cada quadro (`ac.getCar(0).position`), sem pedir nada ao backend. A posição do jogo e a da geometria oficial estão no mesmo sistema de coordenadas: é a mesma que o coach projeta.
 - **O fantasma da referência escolhida na Coleta:**
-  - a volta (a posição e o tempo de 362 pontos) é baixada do backend uma vez, quando o app abre ou quando a referência ou a análise mudam (a `minimapaVersao` das mensagens);
+  - a volta é baixada do backend uma vez, quando o app abre ou quando a referência ou a análise mudam (a `minimapaVersao` das mensagens). Ela vem em todos os 2.167 pontos da grade do store (2 m), com a posição, o tempo e o pedal;
   - **o alinhamento dos relógios:** o cronômetro do jogo zera na linha do jogo, 1,463 m depois do s = 0 (pedido 33; o backend usa a medida do store, 1,495 m, pedido 34). O tempo da referência conta desde o s = 0. O backend manda o tempo da referência na linha do jogo (`tempoNaLinhaDoJogoS`, 0,020 s na volta da IA), e o app soma: **tempo da referência = cronômetro do jogo + tempoNaLinhaDoJogoS**. O fantasma fica no ponto da referência com esse tempo;
   - aparece depois da primeira passagem pela linha (o cronômetro da volta de saída dos boxes não serve).
 - **A diferença ao vivo, em segundos e com sinal:**
@@ -200,7 +204,8 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é 
   - **a conferência fora do jogo:** a mesma conta, portada para Python, nas sessões de 13/10 e 18/10, contra a conta da grade (o s do carro pela linha central e o tempo da referência nesse s):
     - a diferença do app ficou a 0,010 s da grade na mediana (p95 de 0,04 s em 18/10 e de 0,06 s em 13/10);
     - o fantasma ficou a 0,5 m, ao longo da pista, de onde a grade o põe (p95 de 1,0 m);
-    - os poucos pontos acima de 0,5 s (0,1% em 13/10 e 0,9% em 18/10) foram com o carro a mais de 20 m da linha central, fora da pista.
+    - os poucos pontos acima de 0,5 s (0,1% em 13/10 e 0,9% em 18/10) foram com o carro a mais de 20 m da linha central, fora da pista;
+    - os números são os mesmos com a referência em 362 pontos (a primeira versão) e em 2.167.
 - **As cores:** as da tela Volta (`frontend/src/theme/tokens.css`):
   - o carro, "você": branco com o anel vermelho;
   - o fantasma: o miolo escuro com o anel claro;
@@ -208,14 +213,39 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é 
 - **Com o backend fora do ar:**
   - a pista vem da `pista.json` da pasta do app;
   - o carro continua;
-  - sem a volta de referência, o texto de cima diz, discreto, "sem fantasma: backend fora do ar";
+  - sem a volta de referência, o texto de cima diz, discreto, "sem fantasma: backend fora do ar". O texto quebra a linha e cabe na largura da janela;
   - se o backend cair depois de o app ter baixado a referência, o fantasma continua (os dados estão no app) e o canto de baixo diz "sem backend".
 - **O custo no jogo:**
-  - a cada 10 s, o app escreve no log do CSP o FPS do jogo (`ac.getSim().fps`, lido a cada 1 s): a média, a mínima e a máxima, e se o minimapa estava ligado ou desligado. O formato da linha: `[radio_engenheiro] fps: média <n> (mín <n>, máx <n>) em 10 s; minimapa ligado` (ou `desligado`, ou `ligado e desligado` quando mudou no meio). Com o jogo pausado ou num replay, a leitura não conta;
+  - a cada 10 s, o app escreve no log do CSP o FPS do jogo (`ac.getSim().fps`, lido a cada 1 s): a média, a mínima e a máxima, e se cada mapa estava ligado ou desligado. O formato da linha: `[radio_engenheiro] fps: média <n> (mín <n>, máx <n>) em 10 s; minimapa ligado; mapa aproximado desligado` (ou `ligado e desligado`, quando mudou no meio). Com o jogo pausado ou num replay, a leitura não conta;
   - o custo medido no jogo: a preencher depois do teste do pedido 35 (Parte G);
-  - fora do jogo: a rota monta o minimapa em 9 ms, uma vez, e manda 18,8 KB. A cada quadro, o app desenha a imagem da pista, dois círculos e o texto, e procura o ponto mais perto em cerca de 34 segmentos da referência.
+  - fora do jogo: a rota monta o minimapa em cerca de 20 ms, uma vez, e manda 64 KB. A cada quadro, o app desenha a imagem da pista, dois círculos e o texto, e procura o ponto mais perto em cerca de 34 segmentos da referência.
 
-### 5.3 Instalar, ligar e remover
+### 5.3 O mapa aproximado
+
+Pedido depois do primeiro teste no jogo (21/10): a vista de perto da tela Volta ("fantasma por curva"), dentro do jogo, ao lado do minimapa.
+
+- **A câmera:**
+  - segue o carro, um pouco abaixo do meio da janela, para mostrar mais da pista à frente;
+  - gira com a pista, como a tela Volta. A direção é a da volta de referência perto do carro, mais estável que a do carro numa escorregada; sem ela, é a do carro. O giro acompanha em cerca de 0,15 s;
+  - abre com 120 m no lado menor da janela. **A roda do mouse,** com o ponteiro sobre a janela, aproxima até 50 m e afasta até 400 m.
+- **A pista detalhada:**
+  - as camadas do cache que o mapa do app desenha (`drawTrackSurface`): o asfalto, a pintura classificada (o limite em branco, os boxes em amarelo, as vias de serviço em cinza) e as zebras (a base escura com as faixas brancas), com as cores e as larguras do app;
+  - desenhada uma vez numa imagem, `pista_detalhada.png` (2.788 × 4.118 px, 3 px por metro, 0,56 MB), pelo `gerar_pista.py`;
+  - a cada quadro, o app desenha essa imagem girada (`ui.drawImageQuad`): cada canto da janela volta para o mundo e daí para a imagem, que está nas coordenadas do mapa (x, −z), as mesmas da posição do carro;
+  - sem a imagem, ou enquanto ela carrega, o app desenha só as bordas do asfalto.
+- **Por cima da pista:**
+  - **o seu traçado** desde a linha, pintado pelo pedal: o freio em vermelho, o acelerador cheio em verde e o parcial em amarelo. O app lê a posição e os pedais do jogo 20 vezes por segundo e guarda um ponto a cada 1,5 m;
+  - **o traçado do fantasma,** da linha até onde ele está, mais apagado, com o pedal da volta de referência;
+  - **o nome das 14 curvas,** na mesma posição da tela Volta (do lado de fora, a largura da pista mais 9 m do ápice);
+  - **o fantasma,** com "IA" ou "Sua melhor". Fora da janela, ele vira uma seta na borda, apontando para onde está;
+  - **o carro,** "Você · V<n>", com o número da volta do jogo;
+  - **a diferença,** a mesma do minimapa, numa faixa escura no alto.
+- **A conferência fora do jogo:** uma prévia em HTML repete as contas do app (a câmera, a imagem girada, os traçados e as marcas), com a referência da IA e instantes reais da sessão de 18/10:
+  - **na saída da reta dos boxes,** a pintura amarela dos boxes fica à esquerda, como na tela Volta;
+  - **na freada da C04,** o carro e os dois traçados ficam dentro do asfalto, e a curva vira para a esquerda.
+- **O custo:** uma imagem e algumas centenas de pontos por quadro. O FPS entra no mesmo registro do minimapa, com o mapa aproximado ligado ou desligado.
+
+### 5.4 Instalar, ligar e remover
 
 O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
 
@@ -232,7 +262,7 @@ O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
    O `-ExecutionPolicy Bypass` vale só para esse comando e não muda a configuração do Windows.
 2. **Ligar:**
    - abra o app do repositório (o backend com o rádio) antes do jogo;
-   - no jogo, abra a barra de apps, no lado direito da tela, e ligue as janelas "Rádio" e "Minimapa".
+   - no jogo, abra a barra de apps, no lado direito da tela, e ligue as janelas "Rádio", "Minimapa" e "Mapa aproximado".
 3. **Conferir:** na tela Sistema, "Mandar mensagem de teste". O cartão aparece no jogo e a voz toca. O log do CSP diz por qual caminho.
 4. **Remover:**
    ```
@@ -270,7 +300,7 @@ O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
 | `GET /api/radio/audio/{id}` | o WAV da mensagem |
 | `POST /api/radio/teste` | a mensagem de teste, entregue na hora (só pela tela Sistema) |
 | `GET /api/radio/estado` | as janelas, a voz, o que está esperando e as voltas válidas da sessão |
-| `GET /api/radio/minimapa` | a pista simplificada, a volta de referência com o tempo, o alinhamento da linha do jogo e as curvas da última análise (pedido 35) |
+| `GET /api/radio/minimapa` | a pista simplificada, a volta de referência com o tempo e o pedal, o alinhamento da linha do jogo, o nome das 14 curvas e as curvas da última análise (pedido 35) |
 | `GET /api/live/volta` | a volta em andamento inteira, na grade oficial |
 | `GET /api/live/volta/novos?versao=<v>&desde=<seq>` | só os pontos novos e a posição do carro (pedido 35); a volta inteira só numa volta nova |
 | `POST /api/teste/reproduzir`, `POST /api/teste/parar`, `GET /api/teste/estado` | só nos testes (`AT_TESTE_REPRODUTOR=1`): toca uma gravação pelo caminho do jogo, para medir a tela Ao vivo sem o jogo |
