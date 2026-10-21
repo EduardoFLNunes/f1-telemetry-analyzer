@@ -7,12 +7,18 @@
 * `POST /api/radio/teste`: uma mensagem de teste, entregue na hora, so pela tela
   Sistema, para conferir o radio sem andar no jogo.
 * `GET /api/radio/estado`: as janelas, a voz e o que esta esperando.
+* `GET /api/radio/minimapa`: a pista simplificada, a volta de referencia e as curvas da
+  ultima analise, para o minimapa do app do jogo (pedido 35, Parte E).
+* `GET /api/live/volta`: a volta em andamento inteira (pedido 31, Parte D).
+* `GET /api/live/volta/novos?versao=<v>&desde=<seq>`: so os pontos novos e a posicao
+  do carro (pedido 35, Parte D); a volta inteira so numa volta nova.
 """
 import asyncio
-from typing import Optional
+import json
+from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 
 import main
 
@@ -49,9 +55,45 @@ async def get_estado():
     return await asyncio.to_thread(_radio().estado)
 
 
+def _minimapa():
+    from core.radio import minimapa
+
+    radio = _radio()
+    with radio._lock:
+        radio._pista()
+        geometria = radio._geometria
+    if geometria is None:
+        return {"disponivel": False, "motivo": "sem a geometria oficial no repositório configurado"}
+    ref = main._referencia_do_radio()
+    volta = main._volta_de_referencia_do_radio()
+    return minimapa.montar(geometria.track, geometria.segmentos, volta, ref.get("tipo"), radio.ultima_analise(),
+                           minimapa.linha_do_jogo_m(main.app_config.coach_root()))
+
+
+@router.get("/minimapa")
+async def get_minimapa():
+    """Pedido 35, Parte E: o que o minimapa do jogo baixa uma vez (e de novo quando a `versao` muda)."""
+    return _json(await asyncio.to_thread(_minimapa))
+
+
+def _json(dado: Any) -> Response:
+    """Pedido 35: direto pelo `json`, sem o `jsonable_encoder` do FastAPI. Numa volta inteira
+    (5 linhas de 2.167 pontos) ele custava ~10 ms de processador por resposta; assim, ~2 ms."""
+    return Response(content=json.dumps(dado, ensure_ascii=False, separators=(",", ":")),
+                    media_type="application/json")
+
+
 @router_ao_vivo.get("/volta")
 async def get_volta_ao_vivo():
     """A volta em andamento na grade oficial (pedido 31, Parte D), para o fantasma da tela Ao vivo."""
     if main.volta_ao_vivo is None:
         return {"disponivel": False, "motivo": "a volta ao vivo ainda não está pronta"}
-    return main.volta_ao_vivo.estado()
+    return _json(main.volta_ao_vivo.estado())
+
+
+@router_ao_vivo.get("/volta/novos")
+async def get_volta_novos(versao: Optional[int] = None, desde: Optional[int] = None):
+    """Pedido 35, Parte D: so os pontos gravados depois de `desde` e a posicao do carro."""
+    if main.volta_ao_vivo is None:
+        return {"disponivel": False, "motivo": "a volta ao vivo ainda não está pronta"}
+    return _json(main.volta_ao_vivo.novos(versao, desde))

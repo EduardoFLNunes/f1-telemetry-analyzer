@@ -168,6 +168,16 @@ def _referencia_do_radio() -> Dict[str, Any]:
             "tempoS": tempo if tempo is not None else getattr(model, "reference_lap_seconds", None)}
 
 
+def _volta_de_referencia_do_radio() -> Optional[Dict[str, Any]]:
+    """Pedido 35: a volta de referencia escolhida, na grade do store v2 (a mesma leitura da tela Volta)."""
+    ref = _referencia_do_radio()
+    if not ref.get("volta"):
+        return None
+    from routers.leitura import leitor_do_store
+
+    return leitor_do_store.ler_volta(app_config.coach_root(), str(ref["volta"]))
+
+
 def _sessao_do_radio() -> Optional[str]:
     if recording_runtime is None:
         return None
@@ -188,6 +198,10 @@ def _ligar_o_radio() -> None:
             ultima_volta=lambda: getattr(live_driving_coach, "ultima_volta", None),
             referencia=_referencia_do_radio,
             sessao=_sessao_do_radio,
+            # Pedido 35: a volta que acabou de fechar, na grade, e a volta de referencia do store,
+            # para o resumo dizer a curva que mais perdeu e a analise das voltas (ADR 0021).
+            volta_fechada=lambda: volta_ao_vivo.ultima_fechada() if volta_ao_vivo is not None else None,
+            volta_de_referencia=_volta_de_referencia_do_radio,
         )
         event_bus.subscribe(PROCESSED_FRAME, radio_do_engenheiro.on_frame)
         event_bus.subscribe(COACHING_EVENT, radio_do_engenheiro.on_coaching_event)
@@ -1046,6 +1060,7 @@ from routers import (  # noqa: E402
     live,
     radio,
     recording as recording_router,
+    teste,
     track,
     validation,
     websocket,
@@ -1064,6 +1079,7 @@ app.include_router(coleta.router)
 app.include_router(leitura.router)
 app.include_router(radio.router)
 app.include_router(radio.router_ao_vivo)
+app.include_router(teste.router)  # pedido 35: so de teste, 404 sem AT_TESTE_REPRODUTOR=1
 app.include_router(legacy.router)
 
 # Re-exported so existing tests that call `backend_main.<name>(...)` directly

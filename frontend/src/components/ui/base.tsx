@@ -160,6 +160,13 @@ export const MensagemRadioCartao: React.FC<{ mensagem: MensagemRadio; esmaecida?
     </div>
     <p className="radio__frase">{mensagem.frase}</p>
     {mensagem.detalhe && <p className="radio__detalhe">{mensagem.detalhe}</p>}
+    {mensagem.linhas && mensagem.linhas.length > 0 && (
+      <ul className="radio__linhas">
+        {mensagem.linhas.map((linha) => (
+          <li key={linha} className="radio__detalhe">{linha}</li>
+        ))}
+      </ul>
+    )}
     {aoOuvir && (
       <button type="button" className="botao botao--pequeno" style={{ alignSelf: 'flex-start' }} onClick={aoOuvir}>
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2 L13 8 L4 14 Z" /></svg>

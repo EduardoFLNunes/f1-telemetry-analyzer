@@ -1,0 +1,28 @@
+# Pedido 35: testes (21/10/2026, branch etapa/radio-v2-e-minimapa, 4029c42a)
+
+## backend: ..\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider tests
+786 passed, 18 warnings in 494.32s (0:08:14)
+
+exit 0
+
+## backend, so o radio: ..\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider tests/test_radio.py
+21 passed in 2.93s
+
+## frontend: npx tsc --noEmit -p .
+(sem erros)
+
+## frontend: npx vitest run
+ RUN  v2.1.9 C:/Users/Dokas/Desktop/f1-telemetry-analyzer/frontend
+ Test Files  16 passed (16)
+      Tests  184 passed (184)
+   Duration  9.55s (transform 1.94s, setup 0ms, collect 5.56s, tests 186ms, environment 4ms, prepare 11.30s)
+
+## app do jogo: python tools/csp_app/conferir_lua.py tools/csp_app/radio_engenheiro/radio_engenheiro.lua <lib.lua do SDK do CSP 0.2.11>
+arquivo: tools\csp_app\radio_engenheiro\radio_engenheiro.lua
+tokens: 10214; erros de lexico: 0 []
+blocos: ok
+API usada (32): JSON.parse, ac.FolderID, ac.getCar, ac.getFolder, ac.getSim, ac.log, io.createDir, io.deleteFile, io.fileExists, io.load, io.save, io.scanDir, os.preciseClock, rgbm, setInterval, ui.Alignment, ui.ExtraCanvas, ui.MediaPlayer, ui.drawCircle, ui.drawCircleFilled, ui.drawImage, ui.drawLine, ui.drawRectFilled, ui.dwriteDrawText, ui.dwriteDrawTextClipped, ui.pathClear, ui.pathLineTo, ui.pathStroke, ui.windowSize, vec2, web.get, web.timeouts
+metodos usados (9): clear, currentTime, dispose, pause, play, setAutoPlay, setSource, setVolume, update
+no SDK do CSP: todas existem
+metodos no SDK do CSP: todos existem
+saida=0

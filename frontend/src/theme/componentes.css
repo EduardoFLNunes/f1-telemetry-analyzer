@@ -549,6 +549,15 @@ body {
   font: 12px/1.5 var(--fonte-dado);
   color: var(--texto-2);
 }
+/* Pedido 35: a análise das voltas, uma linha por curva. */
+.radio__linhas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 .hero {

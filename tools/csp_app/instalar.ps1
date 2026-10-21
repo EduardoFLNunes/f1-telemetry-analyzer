@@ -50,9 +50,12 @@ if ($ok -notin @('s', 'S', 'sim', 'Sim')) {
 }
 
 if (-not (Test-Path $destinoLua)) { New-Item -ItemType Directory -Path $destinoLua | Out-Null }
+# Só a pasta do app é apagada e copiada de novo (pedido 35): a subpasta voz, que o app
+# cria e limpa sozinho, vai junto.
 if (Test-Path $destino) { Remove-Item -Recurse -Force $destino }
 Copy-Item -Recurse $origem $destino
 Get-ChildItem $destino | ForEach-Object { Write-Host "  copiado: $($_.Name)" }
 Write-Host ''
-Write-Host 'Pronto. No jogo, abra a barra de apps (lado direito da tela) e ligue "Rádio do engenheiro".' -ForegroundColor Green
+Write-Host 'Pronto. No jogo, abra a barra de apps (lado direito da tela) e ligue as duas janelas do app:' -ForegroundColor Green
+Write-Host '  "Rádio" (o cartão e a voz) e "Minimapa" (a pista, o carro e o fantasma).' -ForegroundColor Green
 Write-Host 'Abra o app do repositório (o backend com o rádio) antes do jogo.'

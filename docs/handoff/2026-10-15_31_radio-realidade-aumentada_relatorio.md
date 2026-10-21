@@ -1,6 +1,8 @@
-# Relatório parcial do pedido 31: o rádio do engenheiro no jogo e a tela Ao vivo completa (parado na Parte F)
+# Relatório do pedido 31: o rádio do engenheiro no jogo e a tela Ao vivo completa (fechado no pedido 35, com o teste no jogo de 18/10)
 
-- **Pedido:** `docs/prompts/2026-10-15_31_radio-realidade-aumentada.md`, Partes A, B, C, D, E e G. A Parte F, o teste no jogo com você, é a parada que o pedido manda fazer.
+- **Pedido:** `docs/prompts/2026-10-15_31_radio-realidade-aumentada.md`, Partes A a G.
+  - A Parte F, o teste no jogo com você, foi em 18/10, das 12:38 às 13:08.
+  - Este relatório foi fechado no pedido 35 (Parte A), na seção "O teste no jogo de 18/10".
 - **Branch:** `etapa/radio-realidade-aumentada`, criada de `develop` (`2c4d56d0`), com merge em `develop`. Nada foi enviado ao remoto.
 - **Commits e merge:**
   - `16cd0ec8` docs: pedido 31
@@ -12,7 +14,10 @@
   - `50fc6ab2` achado 2: o coach ao vivo ficava sem o modelo, porque o quadro não traz a pista
   - `9b5dda36` Parte G: `docs/realidade_aumentada.md` e o inventário
   - `4d40f8c2` Merge etapa/radio-realidade-aumentada
-  - o commit deste relatório, com o handoff: "Relatório parcial do pedido 31". `develop` avança até ele.
+  - `1c53807b` o relatório parcial, com o handoff (parado na Parte F)
+  - `7904758f` depois do teste: a conferência da API calava o app do jogo
+  - `416ae3f7` depois do teste: o aviso de API faltando nunca aparecia
+  - o fechamento deste relatório vai no commit da Parte A do pedido 35, na branch `etapa/radio-v2-e-minimapa`
 - **Arquivos de handoff** (`docs/handoff/2026-10-15_31_radio-realidade-aumentada_*`):
   - `_relatorio.md` (este arquivo);
   - `_conferencia_13-10.json`: a sessão de 13/10 passada pelo coach fora do tempo real, com as frases do coach e as 18 mensagens que o rádio daria;
@@ -20,7 +25,9 @@
   - `_mensagem_de_teste.wav`: o áudio da mensagem de teste, gerado pelo backend;
   - `_captura_1_ao_vivo_1920x1080.png`, `_captura_1_ao_vivo_2560x1440.png` e `_captura_2_sistema_radio.png`;
   - `_testes.txt`;
-  - `.patch`: de `2c4d56d0` até o merge, com o backend, o frontend e o `tools`. São 33 arquivos, com 2.204 linhas a mais e 63 a menos.
+  - `.patch`: de `2c4d56d0` até o merge, com o backend, o frontend e o `tools`. São 33 arquivos, com 2.204 linhas a mais e 63 a menos;
+  - `_teste_no_jogo_18-10_registro.jsonl`: o registro do rádio do teste no jogo (19 mensagens);
+  - `_teste_no_jogo_18-10_coach.json`: a mesma sessão passada pelo coach fora do tempo real, com o motivo de cada microssetor calado.
 
 ## Em resumo
 
@@ -35,7 +42,13 @@
    - o barramento de eventos dava erro a cada quadro;
    - o coach ao vivo ficava sem o modelo.
 4. **A voz escolhida é a Microsoft Daniel (OneCore), a 1,25x.**
-5. **Parei na Parte F,** como o pedido manda. Os passos estão em "Parte F: o que você faz".
+5. **O teste no jogo (18/10) mostrou o backend certo e o app do jogo calado:**
+   - o rádio registrou 19 mensagens e não perdeu nenhuma frase do coach;
+   - no jogo, o cartão não apareceu e a voz não tocou, porque a conferência da API calava o app;
+   - corrigi o app em `7904758f` e `416ae3f7`;
+   - o teste do cartão e da voz continua no pedido 35 (Parte G).
+
+   Os detalhes estão em "O teste no jogo de 18/10".
 6. **Testes:**
    - **backend:** a suíte passa com **768 testes**, 12 deles do rádio;
    - **front:** o `vitest` passa com **182 testes**, e o `tsc` e o build também passam;
@@ -402,24 +415,53 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\csp_app\remover.ps1
 - confiro o cache da pista;
 - completo este relatório.
 
+## O teste no jogo de 18/10
+
+Você testou das 12:38 às 13:08, com o app do repositório, na sessão `2026-10-18_12-38-44` (16 voltas no arquivo, 15 andadas).
+
+**O que aconteceu no jogo:**
+- **o app do rádio carregou** (o log do CSP às 12:38 diz "App is loaded … windows: 1");
+- **ele ficou calado desde que abriu.** O log do CSP tem a linha: `[radio_engenheiro] a API do CSP não tem: ui.dwriteDrawText, ui.drawRectFilled ou ui.windowSize, os.preciseClock. O app fica calado.`;
+- **a causa:** a conferência da API, feita ao abrir, testava se cada função era do tipo "função". No CSP, essas funções são nativas (FFI) e o `type()` delas é `cdata`. Elas existem, mas a conferência concluiu que faltavam;
+- **por isso o app não pediu nenhuma mensagem ao backend:** você não viu o cartão nem ouviu a voz, e as mensagens apareceram só no app;
+- **a voz pela URL** (`ui.MediaPlayer` com a URL do backend) nunca rodou e continua sem confirmação.
+
+**As duas correções do app do jogo,** feitas depois do teste:
+1. **`7904758f`:**
+   - a conferência só verifica se cada função existe;
+   - ao ligar, o app escreve `[radio_engenheiro] ligado; pede as mensagens a http://127.0.0.1:8000` no log;
+   - o `conferir_lua.py` passou a acusar `type(...) == 'function'` numa função da API. Com a versão que estava no jogo, ele acusa as 6 linhas.
+2. **`416ae3f7`:** o aviso de API faltando contava o tempo desde a abertura do jogo e nunca aparecia. Agora ele conta desde a abertura da janela.
+
+A cópia instalada no jogo ainda é a de antes das correções. A reinstalação faz parte do teste do pedido 35.
+
+**O registro do rádio contra as frases do coach** (`_teste_no_jogo_18-10_registro.jsonl` e `_teste_no_jogo_18-10_coach.json`):
+- **o registro tem 19 mensagens:** 4 de teste, 13 resumos na linha e 2 frases do coach;
+- **as 2 frases do coach:**
+  - volta 4, C11: "+1,25 s para a volta da IA no microssetor 39" (3,34 s contra 2,09 s; mínima da IA 94 km/h, a sua 64 km/h), entregue a 3.697 m, na reta dos boxes;
+  - volta 10, C08: "+0,85 s para a volta da IA no microssetor 33" (3,14 s contra 2,29 s; mínima da IA 90 km/h, a sua 74 km/h), entregue a 3.698 m;
+- **a mesma sessão pelo coach, fora do tempo real** (com o modelo que estava ativo no teste e o arquivo lido amostra a amostra): **o coach daria as mesmas 2 frases.** O caminho ao vivo não perdeu nada: nem o coach, nem a fila do rádio, nem as janelas;
+- **os 13 resumos** saíram um em cada passagem pela linha, a partir da volta 2, entre 83 e 90 m depois do s = 0;
+- **as 4 mensagens de teste** saíram na hora, pelo botão da tela Sistema;
+- **por que o coach falou tão pouco** está no relatório do pedido 35, Parte A.2.
+
+**O cache da pista:**
+- foi regravado às 12:38:43, quando o app do repositório abriu;
+- comparado com a cópia de antes do teste, só o campo `generatedAt` mudou, e o resto é idêntico;
+- não precisei restaurar nada.
+
 ## O que falta e o que precisa de decisão
 
-**Falta, deste pedido:**
+**Falta, deste pedido:** ver o cartão e ouvir a voz no jogo, com o app corrigido. Isso segue no pedido 35, que também traz os três caminhos da voz (Parte B) e repete o teste no jogo (Parte G).
 
-- a Parte F, o teste no jogo, com você;
-- depois dela:
-  - a conferência do registro;
-  - a conferência do cache da pista;
-  - a conclusão do relatório.
-- **um ponto de atenção:** se o WAV não tocar pela URL, a proposta está na Parte C, e o caminho é decisão sua.
-
-**Decisões suas que continuam abertas, de antes:**
-
-1. **O limite da checagem do período do store v2:** o p99 deu 7,63 ms, contra o limite de 5 ms. O pedido 33 (`docs/prompts/2026-10-18_33_relogio-do-gravador-novo.md`) está na pasta, sem commit, e não foi mandado executar.
-2. **O CSV de anotações:** normalizar o fim de linha, que está misturado.
-3. **A referência de 1:27,014:** manter ou não, já que tem 9,2% fora do corredor.
+**As decisões de antes:**
+1. **O limite da checagem do período:** resolvido nos pedidos 33 e 34 (a régua nova, com o store aprovado).
+2. **O CSV de anotações:** normalizar o fim de linha, que está misturado. Continua aberto.
+3. **A referência de 1:27,014:** manter ou não, já que tem 9,2% fora do corredor. Continua aberta.
 
 **Para você apagar, se quiser:**
 
-- o `backend.log` de 958 MB do app instalado (achado 1);
+- o `backend.log` de 958 MB do app instalado (achado 1). Ele já passa de 1 GB;
 - a pasta vazia `C:\c` (achado 5).
+
+**O `data/radio/`** entrou no `.gitignore`. É a pasta de dados do rádio, com os registros e os áudios, e não deve ir para o git.

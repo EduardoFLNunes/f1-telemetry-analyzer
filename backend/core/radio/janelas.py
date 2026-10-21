@@ -42,17 +42,33 @@ def curvas_da_geometria(track) -> List[CurvaDaPista]:
     return out
 
 
-def carregar_curvas(repositorio: Optional[Path]) -> Tuple[List[CurvaDaPista], Optional[float]]:
-    """As curvas da geometria oficial do repositorio configurado, e o comprimento da volta."""
+def carregar_geometria(repositorio: Optional[Path]):
+    """A geometria do ML (a mesma grade do store e da volta ao vivo) do repositorio configurado, ou None."""
     if repositorio is None:
-        return [], None
+        return None
     from ml.track.geometry import load_geometry
 
     cache = Path(repositorio) / "data" / "cache" / "tracks" / CACHE_DA_PISTA
     if not cache.exists():
+        return None
+    return load_geometry(cache)
+
+
+def carregar_curvas(repositorio: Optional[Path]) -> Tuple[List[CurvaDaPista], Optional[float]]:
+    """As curvas da geometria oficial do repositorio configurado, e o comprimento da volta."""
+    track = carregar_geometria(repositorio)
+    if track is None:
         return [], None
-    track = load_geometry(cache)
     return curvas_da_geometria(track), float(track.length)
+
+
+def tempo_que_resta(janelas: Sequence[Janela], s: float, comprimento: float, velocidade_kmh: Optional[float]) -> float:
+    """Pedido 35: quanto tempo o carro ainda fica na janela em que esta, na velocidade de agora (0 fora dela)."""
+    janela = dentro(janelas, s, comprimento)
+    if janela is None or not velocidade_kmh or velocidade_kmh <= 1.0:
+        return 0.0
+    restante_m = (janela[1] - (s % comprimento)) % comprimento
+    return restante_m / (velocidade_kmh / 3.6)
 
 
 def janelas_de_radio(curvas: Sequence[CurvaDaPista], comprimento: float,

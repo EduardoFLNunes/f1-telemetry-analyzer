@@ -230,6 +230,9 @@ export const api = {
   postRadioTeste: async (): Promise<any> => (await client.post('/api/radio/teste', null, { timeout: 45_000 })).data,
   getRadioEstado: async (): Promise<any> => (await client.get('/api/radio/estado', { timeout: 30_000 })).data,
   getLiveVolta: async (): Promise<any> => (await client.get('/api/live/volta')).data,
+  /** Pedido 35: só os pontos novos da volta ao vivo (a volta inteira numa volta nova). */
+  getLiveVoltaNovos: async (versao: number | null, desde: number | null): Promise<any> =>
+    (await client.get('/api/live/volta/novos', { params: { versao: versao ?? undefined, desde: desde ?? undefined }, timeout: 2_000 })).data,
   /** O endereço completo do áudio de uma mensagem (`/api/radio/audio/<id>`). */
   urlDoAudio: (caminho: string): string => `${BASE_URL}${caminho}`,
   // ─── Pedido 32: o botão do coach e a anotação de sessão ────────────────────

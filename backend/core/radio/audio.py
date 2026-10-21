@@ -23,7 +23,10 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 VOZ_PADRAO = "OneCore:Daniel"
-VELOCIDADE_PADRAO = 1.25
+# Pedido 35: 1,4x (era 1,25x no pedido 31). Os numeros falados por extenso fazem a frase
+# com a causa, o resumo com a curva e a analise passarem de 6, 7 e 8 s a 1,25x (medido:
+# 6,8, 8,2 e 8,5 s); a 1,4x cabem (6,2, 7,4 e 7,7 s). Voltar e mudar esta linha.
+VELOCIDADE_PADRAO = 1.4
 SCRIPT_DA_VOZ = Path(__file__).with_name("voz.ps1")
 LIMIAR_DE_SILENCIO = 500
 TEMPO_LIMITE_S = 30
