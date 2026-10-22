@@ -1,0 +1,301 @@
+{
+ "disponivel": true,
+ "n": 5,
+ "meta": 5,
+ "texto": "5 de 5",
+ "sessoesQueContam": [
+  "2026-10-15_23-24-50_vhe_interlagos",
+  "2026-10-17_01-02-22_vhe_interlagos",
+  "2026-10-17_16-17-08_vhe_interlagos",
+  "2026-10-18_12-38-44_vhe_interlagos",
+  "2026-10-21_20-30-54_vhe_interlagos"
+ ],
+ "sessoesComVoltasSuas": [
+  {
+   "sessao": "2026-10-04_02-24-04_vhe_interlagos",
+   "voltasNoStore": 10,
+   "origens": {
+    "humano": 4,
+    "ia": 5,
+    "misturada": 1
+   },
+   "fontesDaOrigem": [
+    "anotacao",
+    "indicador"
+   ],
+   "humana": false,
+   "preenchimentoGrade": {
+    "yaw_rate": 0.0,
+    "velocity_long": 0.0,
+    "velocity_lat": 0.0
+   },
+   "conta": false,
+   "motivos": [
+    "tem voltas que não são suas no store",
+    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
+   ]
+  },
+  {
+   "sessao": "2026-10-04_03-21-52_vhe_interlagos",
+   "voltasNoStore": 4,
+   "origens": {
+    "humano": 4
+   },
+   "fontesDaOrigem": [
+    "indicador"
+   ],
+   "humana": true,
+   "preenchimentoGrade": {
+    "yaw_rate": 0.0,
+    "velocity_long": 0.0,
+    "velocity_lat": 0.0
+   },
+   "conta": false,
+   "motivos": [
+    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
+   ]
+  },
+  {
+   "sessao": "2026-10-04_03-42-10_vhe_interlagos",
+   "voltasNoStore": 12,
+   "origens": {
+    "humano": 3,
+    "ia": 8,
+    "misturada": 1
+   },
+   "fontesDaOrigem": [
+    "anotacao",
+    "indicador"
+   ],
+   "humana": false,
+   "preenchimentoGrade": {
+    "yaw_rate": 0.0,
+    "velocity_long": 0.0,
+    "velocity_lat": 0.0
+   },
+   "conta": false,
+   "motivos": [
+    "tem voltas que não são suas no store",
+    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
+   ]
+  },
+  {
+   "sessao": "2026-10-04_23-51-42_vhe_interlagos",
+   "voltasNoStore": 7,
+   "origens": {
+    "humano": 7
+   },
+   "fontesDaOrigem": [
+    "anotacao_sessao"
+   ],
+   "humana": true,
+   "preenchimentoGrade": {
+    "yaw_rate": 0.0,
+    "velocity_long": 0.0,
+    "velocity_lat": 0.0
+   },
+   "conta": false,
+   "motivos": [
+    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
+   ]
+  },
+  {
+   "sessao": "2026-10-05_20-33-47_vhe_interlagos",
+   "voltasNoStore": 11,
+   "origens": {
+    "humano": 11
+   },
+   "fontesDaOrigem": [
+    "anotacao_sessao"
+   ],
+   "humana": true,
+   "preenchimentoGrade": {
+    "yaw_rate": 0.0,
+    "velocity_long": 0.0,
+    "velocity_lat": 0.0
+   },
+   "conta": false,
+   "motivos": [
+    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
+   ]
+  },
+  {
+   "sessao": "2026-10-08_23-56-13_vhe_interlagos",
+   "voltasNoStore": 4,
+   "origens": {
+    "humano": 4
+   },
+   "fontesDaOrigem": [
+    "anotacao_sessao"
+   ],
+   "humana": true,
+   "preenchimentoGrade": {
+    "yaw_rate": 0.0,
+    "velocity_long": 0.0,
+    "velocity_lat": 0.0
+   },
+   "conta": false,
+   "motivos": [
+    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
+   ]
+  },
+  {
+   "sessao": "2026-10-10_09-57-09_vhe_interlagos",
+   "voltasNoStore": 12,
+   "origens": {
+    "humano": 12
+   },
+   "fontesDaOrigem": [
+    "anotacao_sessao"
+   ],
+   "humana": true,
+   "preenchimentoGrade": {
+    "yaw_rate": 0.0,
+    "velocity_long": 0.0,
+    "velocity_lat": 0.0
+   },
+   "conta": false,
+   "motivos": [
+    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
+   ]
+  },
+  {
+   "sessao": "2026-10-11_14-19-52_vhe_interlagos",
+   "voltasNoStore": 16,
+   "origens": {
+    "humano": 16
+   },
+   "fontesDaOrigem": [
+    "anotacao_sessao"
+   ],
+   "humana": true,
+   "preenchimentoGrade": {
+    "yaw_rate": 0.0,
+    "velocity_long": 0.0,
+    "velocity_lat": 0.0
+   },
+   "conta": false,
+   "motivos": [
+    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
+   ]
+  },
+  {
+   "sessao": "2026-10-13_19-24-10_vhe_interlagos",
+   "voltasNoStore": 9,
+   "origens": {
+    "humano": 9
+   },
+   "fontesDaOrigem": [
+    "anotacao_sessao"
+   ],
+   "humana": true,
+   "preenchimentoGrade": {
+    "yaw_rate": 0.0,
+    "velocity_long": 0.0,
+    "velocity_lat": 0.0
+   },
+   "conta": false,
+   "motivos": [
+    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
+   ]
+  },
+  {
+   "sessao": "2026-10-15_23-24-50_vhe_interlagos",
+   "voltasNoStore": 11,
+   "origens": {
+    "humano": 11
+   },
+   "fontesDaOrigem": [
+    "indicador"
+   ],
+   "humana": true,
+   "preenchimentoGrade": {
+    "yaw_rate": 1.0,
+    "velocity_long": 1.0,
+    "velocity_lat": 1.0
+   },
+   "conta": true,
+   "motivos": []
+  },
+  {
+   "sessao": "2026-10-17_01-02-22_vhe_interlagos",
+   "voltasNoStore": 12,
+   "origens": {
+    "humano": 12
+   },
+   "fontesDaOrigem": [
+    "indicador"
+   ],
+   "humana": true,
+   "preenchimentoGrade": {
+    "yaw_rate": 1.0,
+    "velocity_long": 1.0,
+    "velocity_lat": 1.0
+   },
+   "conta": true,
+   "motivos": []
+  },
+  {
+   "sessao": "2026-10-17_16-17-08_vhe_interlagos",
+   "voltasNoStore": 16,
+   "origens": {
+    "humano": 16
+   },
+   "fontesDaOrigem": [
+    "indicador"
+   ],
+   "humana": true,
+   "preenchimentoGrade": {
+    "yaw_rate": 1.0,
+    "velocity_long": 1.0,
+    "velocity_lat": 1.0
+   },
+   "conta": true,
+   "motivos": []
+  },
+  {
+   "sessao": "2026-10-18_12-38-44_vhe_interlagos",
+   "voltasNoStore": 9,
+   "origens": {
+    "humano": 9
+   },
+   "fontesDaOrigem": [
+    "indicador"
+   ],
+   "humana": true,
+   "preenchimentoGrade": {
+    "yaw_rate": 1.0,
+    "velocity_long": 1.0,
+    "velocity_lat": 1.0
+   },
+   "conta": true,
+   "motivos": []
+  },
+  {
+   "sessao": "2026-10-21_20-30-54_vhe_interlagos",
+   "voltasNoStore": 9,
+   "origens": {
+    "humano": 9
+   },
+   "fontesDaOrigem": [
+    "indicador"
+   ],
+   "humana": true,
+   "preenchimentoGrade": {
+    "yaw_rate": 1.0,
+    "velocity_long": 1.0,
+    "velocity_lat": 1.0
+   },
+   "conta": true,
+   "motivos": []
+  }
+ ],
+ "store": {
+  "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2.parquet",
+  "construidoEm": "2026-10-22T03:34:28.282651+00:00",
+  "commit": "2b16db32f6434fb93eb1ae4eafc7d9b1df7c9931",
+  "esquema": "2.1",
+  "voltas": 694
+ },
+ "regra": "sessões com todas as voltas do store como suas (origem humano) e a guinada e as velocidades no referencial do carro em pelo menos 95% dos pontos da grade"
+}

@@ -1,0 +1,14 @@
+{
+ "rotulo": "antes",
+ "segundosMedidos": 120.0,
+ "bytes": 218349,
+ "bytesPorHora": 6549921,
+ "MBporHora": 6.25,
+ "pedidos": {
+  "novos": 1967,
+  "mensagens": 704,
+  "erros": 0
+ },
+ "linhasDeAcessoNoLog": 2673,
+ "linhasNoLog": 2701
+}
