@@ -725,3 +725,109 @@ def test_a_freada_da_ia_por_curva_pela_regra_do_relatorio_de_evolucao():
     largura = float(np.asarray(track.width_left)[i] + np.asarray(track.width_right)[i])
     assert np.hypot(ax - bx, az - bz) == pytest.approx(largura, abs=0.05)   # de uma borda a outra
     assert minimapa.freadas_da_referencia(track, trechos, [0.0] * 10) == []  # sem a grade inteira
+
+
+def _pista_de_teste_com_uma_curva():
+    """A pista circular de teste com uma curva de mentira (C03, a esquerda), para o replay."""
+    import numpy as np
+
+    from core.radio.analise import Pista
+
+    sys.path.insert(0, str(BACKEND / "tests"))
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    s = np.asarray(track.s)
+
+    class _Curva:
+        def __init__(self, label, inicio, apice, fim):
+            self.label, self.start_s, self.apex_s, self.end_s = label, float(inicio), float(apice), float(fim)
+
+    class _Trecho:
+        def __init__(self, curva, inicio, fim):
+            self.corner, self.start_s, self.end_s = curva, float(inicio), float(fim)
+
+    trechos = [_Trecho(_Curva("C02-dir", s[100], s[120], s[140]), s[60], s[200]),
+               _Trecho(_Curva("C03-esq", s[400], s[430], s[460]), s[200], s[600])]
+    return track, Pista(track=track, segmentos=trechos), s
+
+
+def _grade_de_teste(s, v_ms, lateral, freia_em, minima_em, minima_kmh):
+    import numpy as np
+
+    n = s.size
+    velocidade = np.full(n, v_ms * 3.6)
+    velocidade[minima_em] = minima_kmh
+    freio = np.zeros(n)
+    freio[freia_em:minima_em] = 0.8
+    acelerador = np.where(freio > 0, 0.0, 1.0)
+    return {"elapsed": s / v_ms, "velocidade": velocidade, "freio": freio, "acelerador": acelerador,
+            "lateral": np.full(n, float(lateral))}
+
+
+def test_o_replay_da_curva_tem_as_duas_linhas_freadas_minimas_tracado_e_a_perda():
+    """Pedido 36, Parte E: os dados de uma curva, so com as grades (nada de fisica nova)."""
+    import numpy as np
+
+    from core.radio.replay import dados_da_curva
+    from ml.comparison.evolution import segment_time
+
+    track, pista, s = _pista_de_teste_com_uma_curva()
+    voce = _grade_de_teste(s, 45.0, 1.5, freia_em=380, minima_em=425, minima_kmh=95.0)    # freia antes, mais a esquerda
+    ia = _grade_de_teste(s, 50.0, 0.0, freia_em=395, minima_em=430, minima_kmh=110.0)
+    d = dados_da_curva(pista, "C03", voce, float(s[-1] / 45.0), ia, float(s[-1] / 50.0), 7, "volta_ia")
+    assert d["curva"] == "C03" and d["lado"] == "esquerda" and d["volta"] == 7
+    assert d["rotuloDaReferencia"] == "IA (referência)"
+    lv, lr = d["linhas"]["voce"], d["linhas"]["referencia"]
+    assert len(lv) == len(lr) > 50 and lv[0][2] == 0.0 and lr[0][2] == 0.0          # cada um no seu tempo, da mesma entrada
+    assert lv[-1][2] > lr[-1][2]                                                    # a IA abre
+    assert d["duracaoS"] == pytest.approx(lv[-1][2], abs=1e-3)
+    assert {p[3] for p in lv} >= {1, 2}                                              # o pedal: freio e acelerador
+    assert d["freadas"]["distanciaM"] == pytest.approx(float(s[380] - s[395]), abs=0.1)   # freou 15 pontos antes
+    assert d["minimas"]["voce"]["kmh"] == 95.0 and d["minimas"]["referencia"]["kmh"] == 110.0
+    t = d["tracado"]
+    assert t["distanciaM"] == pytest.approx(1.5) and t["lado"] == "esquerda"         # ADR 0003: positivo = esquerda
+    assert np.hypot(t["voce"][0] - t["referencia"][0], t["voce"][1] - t["referencia"][1]) == pytest.approx(1.5, abs=0.01)
+    seg = pista.segmentos[1]
+    perda = segment_time(voce["elapsed"], s[-1] / 45.0, track, seg) - segment_time(ia["elapsed"], s[-1] / 50.0, track, seg)
+    assert d["perdaS"] == pytest.approx(perda, abs=1e-3) and d["perdaS"] > 0
+    assert dados_da_curva(pista, "C14", voce, 1.0, ia, 1.0, 7, "volta_ia") is None
+
+
+def test_o_replay_da_analise_usa_a_volta_mais_perto_da_mediana():
+    """Pedido 36, Parte E.2: na analise, a volta das 3 cuja perda na curva fica mais perto da mediana."""
+    from core.radio.replay import replay_da_analise, volta_mais_perto_da_mediana
+
+    voltas = [{"volta": 6}, {"volta": 7}, {"volta": 8}]
+    assert volta_mais_perto_da_mediana(voltas, {"perdas": [0.85, 0.90, 1.02], "perdaMedianaS": 0.90}) == 1
+    assert volta_mais_perto_da_mediana(voltas, {"perdas": [26.54, 0.73, 0.51], "perdaMedianaS": 0.73}) == 1
+    assert volta_mais_perto_da_mediana(voltas, {"perdas": [0.5], "perdaMedianaS": 0.5}) is None   # nao sao as 3
+
+    track, pista, s = _pista_de_teste_com_uma_curva()
+    ia = _grade_de_teste(s, 50.0, 0.0, 395, 430, 110.0)
+    tres = [{"volta": n, "tempoS": float(s[-1] / v), "grade": _grade_de_teste(s, v, 1.0, 385, 428, 100.0)}
+            for n, v in ((6, 44.0), (7, 46.0), (8, 48.0))]
+    analise = {"curvas": [{"curva": "C03", "perdas": [0.9, 0.6, 0.3], "perdaMedianaS": 0.6}]}
+    replays = replay_da_analise(pista, tres, analise, ia, float(s[-1] / 50.0), "volta_ia")
+    assert [(r["curva"], r["volta"]) for r in replays] == [("C03", 7)]
+
+
+def test_a_rota_do_replay(tmp_path, monkeypatch):
+    """Pedido 36, Parte E.6: a rota entrega os dados do replay de uma mensagem entregue; 404 sem replay."""
+    import asyncio
+
+    from fastapi import HTTPException
+
+    import main
+    from routers import radio as rota
+
+    radio = _radio(tmp_path, _Pista())
+    monkeypatch.setattr(main, "radio_do_engenheiro", radio)
+    radio._entregues.append({"id": 3, "origem": "analise", "_replay": [{"curva": "C01"}]})
+    radio._entregues.append({"id": 4, "origem": "resumo"})
+    dados = json.loads(asyncio.run(rota.get_replay(3)).body)
+    assert dados == {"id": 3, "origem": "analise", "curvas": [{"curva": "C01"}]}
+    for sem in (4, 99):
+        with pytest.raises(HTTPException) as erro:
+            asyncio.run(rota.get_replay(sem))
+        assert erro.value.status_code == 404

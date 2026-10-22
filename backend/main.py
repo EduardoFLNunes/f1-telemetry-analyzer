@@ -202,6 +202,7 @@ def _ligar_o_radio() -> None:
             # para o resumo dizer a curva que mais perdeu e a analise das voltas (ADR 0021).
             volta_fechada=lambda: volta_ao_vivo.ultima_fechada() if volta_ao_vivo is not None else None,
             volta_de_referencia=_volta_de_referencia_do_radio,
+            volta_atual=lambda: volta_ao_vivo.estado() if volta_ao_vivo is not None else None,
         )
         event_bus.subscribe(PROCESSED_FRAME, radio_do_engenheiro.on_frame)
         event_bus.subscribe(COACHING_EVENT, radio_do_engenheiro.on_coaching_event)

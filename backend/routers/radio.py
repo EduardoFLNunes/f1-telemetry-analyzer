@@ -45,6 +45,15 @@ async def get_audio(id_: int):
     return FileResponse(str(arquivo), media_type="audio/wav", filename=f"radio_{id_}.wav")
 
 
+@router.get("/replay/{id_}")
+async def get_replay(id_: int):
+    """Pedido 36, Parte E: os dados do replay da curva de uma mensagem (uma vez por mensagem)."""
+    dados = _radio().replay(id_)
+    if dados is None:
+        raise HTTPException(status_code=404, detail="mensagem sem replay")
+    return _json(dados)
+
+
 @router.post("/teste")
 async def post_teste():
     return await asyncio.to_thread(_radio().teste)
