@@ -339,3 +339,20 @@ O rádio que analisa as voltas, o mapa ao vivo sem travar e o minimapa no jogo (
   - o FPS do jogo no log a cada 10 s, com cada mapa ligado ou desligado.
 - **Para os testes sem o jogo:** o reprodutor de gravações (`/api/teste/*`, só com `AT_TESTE_REPRODUTOR=1`) toca uma sessão pelo caminho do jogo.
 - **Falta:** o teste no jogo (Parte G), com o caminho da voz que funcionou e o custo do minimapa.
+
+### O que o pedido 36 entregou (22/10)
+
+O rádio com as unidades, a freada da IA nos mapas e o replay da curva (ADR 0021, atualizações de 22/10). Detalhes em `docs/realidade_aumentada.md` e em `docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_relatorio.md`.
+
+- **O que o rádio diz** (`backend/core/radio/texto.py`):
+  - todo número falado tem a unidade: "7 décimos", "1,2 segundo", "1 minuto e 29,1 segundos", "46 metros", "1,8 metro", "Mínima de 102 contra 128 quilômetros por hora.";
+  - a unidade nunca sai para a fala caber: sai antes a segunda causa e depois a primeira. Nas três sessões passadas pelo rádio, 10 das 43 mensagens com causa a perderam por isso (todas frases do coach da C11 com a mínima);
+  - a volta com rodada (uma curva com mais de 5 s de perda) não entra na análise, e o resumo dela não cita a curva.
+- **O log do backend:** o registro de acesso deixa de fora os pontos novos da tela Ao vivo e as mensagens do rádio (cerca de 6,25 MB por hora a menos).
+- **O app do jogo** (`tools/csp_app/radio_engenheiro/`, versão 0.4.0):
+  - os mapas e o replay se encaixam na parte visível da janela (o minimapa cortava à direita em 21/10) e escrevem as suas medidas no log do CSP;
+  - a freada da IA: no minimapa, só a da próxima curva; no mapa aproximado, todas as da janela, com o rótulo;
+  - a quarta janela, "Replay da curva": na reta, junto com a fala; nos boxes ou pausado, a última análise em repetição.
+- **A tela Ao vivo:** o mesmo replay sob o cartão da análise e da frase do coach com causa, com o botão "Repetir o replay".
+- **A rota nova:** `GET /api/radio/replay/{id}`.
+- **Falta:** o teste no jogo (Parte G), com o FPS de cada janela e as medidas do encaixe no log do CSP.
