@@ -1,6 +1,6 @@
 # Relatório do pedido 35: o rádio que analisa as voltas, a voz no jogo, o mapa ao vivo sem travar e o minimapa
 
-- **Pedido:** `docs/prompts/2026-10-18_35_radio-que-analisa-e-minimapa.md` (ADR 0021). **Este relatório é parcial:** parei na Parte G, como o pedido manda. Falta o teste no jogo com você.
+- **Pedido:** `docs/prompts/2026-10-18_35_radio-que-analisa-e-minimapa.md` (ADR 0021). **Fechado** com o teste no jogo de 21/10 e as seis mudanças que você pediu depois dele.
 - **Branch:** `etapa/radio-v2-e-minimapa`, criada de `develop` (`58bf2b46`), com merge em `develop`. Nada foi enviado ao remoto.
 - **Commits e merge:**
   - `d10e7cb3` docs: pedido 35 e o anexo do ADR 0021
@@ -15,12 +15,17 @@
   - `6e7cbee1` o merge em `develop` (até a Parte G)
   - **depois da sua captura do jogo (21/10):**
     - `3fe260ee` o mapa aproximado: a terceira janela do app do jogo, a pista detalhada, a referência com o pedal e o nome das curvas, e o aviso do minimapa que não cabia
-    - o commit desta atualização do relatório, com o handoff: "Relatório parcial do pedido 35: o mapa aproximado"
-    - o merge em `develop`: "Merge etapa/radio-v2-e-minimapa (pedido 35: o mapa aproximado)"
+    - `6de82a3e` o relatório com o mapa aproximado, com o handoff
+    - `a6510e27` o merge em `develop` (o mapa aproximado)
+  - `27dc187c` (em `develop`, a seu pedido): os documentos e os estudos que estavam fora do git
+  - **no fechamento, depois do teste no jogo de 21/10:**
+    - `5f48c019` o minimapa com o contorno do asfalto tratado, a fala da análise no estilo da frase do coach e a documentação
+    - o commit deste relatório, com o handoff: "Relatório do pedido 35"
+    - o merge em `develop`: "Merge etapa/radio-v2-e-minimapa (pedido 35 fechado)"
 - **Arquivos de handoff** (`docs/handoff/2026-10-18_35_radio-que-analisa-e-minimapa_*`):
   - `_relatorio.md` (este arquivo);
   - `_captura_ao_vivo_com_a_analise_1920x1080.png`: a tela Ao vivo com o cartão da análise (janela de teste, com a gravação de 18/10 tocando);
-  - `_captura_minimapa_fora_do_jogo_600x600.png`: o minimapa desenhado fora do jogo (Parte E);
+  - `_captura_minimapa_fora_do_jogo_600x600.png`: o minimapa desenhado fora do jogo, com o contorno do asfalto tratado (Parte E e o fechamento);
   - `_captura_mapa_aproximado_saida_dos_boxes_720x720.png` e `_captura_mapa_aproximado_freada_da_c04_720x720.png`: o mapa aproximado desenhado fora do jogo;
   - `_conferencia_13-10.json` e `_conferencia_18-10.json`: as mensagens que o rádio daria em cada sessão (Parte F.4);
   - `_minimapa_conta_do_app_13-10.json` e `_18-10.json`: a conta do minimapa contra a conta da grade, com a referência em todos os 2.167 pontos;
@@ -28,32 +33,135 @@
   - `_mapa_ao_vivo_antes.json` e `_depois.json`: as medidas da Parte D;
   - `_variacao_das_medidas.json`: a variação volta a volta que deu os cortes;
   - `_conferencia_do_lua.txt`: a conferência do app do jogo contra o SDK do CSP;
+  - **do teste no jogo de 21/10:**
+    - `_teste_no_jogo_21-10_registro.jsonl`: o registro do rádio da sessão (cópia de `data/radio/`, que fica fora do git);
+    - `_teste_no_jogo_21-10_conferencia.json`: a mesma sessão pelo rádio fora do tempo real;
+    - `_teste_no_jogo_21-10_coach.json`: a mesma sessão pelo coach fora do tempo real;
+    - `_teste_no_jogo_21-10_gravacao_e_fps.json`: a gravação e o FPS por bloco (a tela Ao vivo e a tela Sessões) e pelos mapas ligados e desligados;
+  - `_fala_da_analise.json`: a voz da fala nova da análise nas 5 análises reais;
   - `_testes.txt`: a saída das suítes;
   - `_scripts/`: os scripts das conferências e das medidas;
-  - `.patch`: de `d10e7cb3` até o mapa aproximado (`3fe260ee`), com o código e os documentos, sem o handoff.
+  - `.patch`: de `d10e7cb3` até o fechamento (`5f48c019`), com o código e os documentos, sem o handoff.
 
 ## Em resumo
 
-1. **Parte A:** o caminho ao vivo não perdeu nenhuma frase em 18/10. O coach ficou calado porque, nos 3 microssetores de foco, a perda ficou abaixo do limiar dele em 44 de 48 passagens.
-2. **O que o rádio diz (Parte C):**
-   - a frase do coach diz a causa na voz: "Curva 11: 1,25 atrás. Mínima 64 contra 94.";
-   - o resumo diz a curva em que a volta mais perdeu: "Volta 8, 4,2 atrás. Mais perdeu na curva 1: 0,7.";
-   - a análise das voltas sai a cada 3 voltas válidas: "Análise das voltas 9, 12 e 13. Curva 1: 0,9 por volta: freia 46 metros antes.";
-   - nas sessões de 13/10 e 18/10, todas as falas couberam no que restava da janela, e nada foi dito dentro das curvas.
-3. **O mapa ao vivo (Parte D):**
-   - o carro recebe 23 posições novas por segundo (eram 2,95) e é desenhado a cada quadro da tela (144 por segundo);
-   - cada resposta tem cerca de 0,5 KB (eram 65 KB);
-   - o backend gasta 0,05 ms de processador por resposta (eram 10,7 ms).
-4. **A voz no jogo (Parte B):** três caminhos, um depois do outro, com uma linha no log do CSP por mensagem. Qual funciona só o teste no jogo vai dizer.
-5. **O minimapa (Parte E):**
-   - uma segunda janela do app do jogo, com a pista, o carro, o fantasma, a diferença ao vivo e as curvas da última análise;
-   - fora do jogo, a conta do app ficou a 0,01 s da conta da grade (mediana) nas duas sessões;
-   - o custo no jogo vai para o log a cada 10 s (o FPS com o minimapa ligado e desligado).
+1. **O teste no jogo de 21/10** (de 20:30 a 21:18, 21 voltas):
+   - **a voz tocou pela URL do backend nas 30 mensagens,** sem nenhuma falha. Os outros dois caminhos não foram precisos;
+   - **o registro bate com o caminho fora do tempo real:** as 29 mensagens (fora a de teste) são as mesmas, na mesma ordem e no mesmo ponto da pista. As 10 frases do coach são as que o coach daria;
+   - **as duas análises saíram** (voltas 5, 9 e 11; voltas 13, 16 e 17), na reta dos boxes;
+   - **a gravação não piorou:** com a tela Ao vivo aberta, 2,11% de amostras repetidas e 0,67% de buracos de 50 ms ou mais. Com a tela Sessões, 1,67% e 0,31%. Em 18/10, antes deste pedido, foram 3,98% e 0,84%;
+   - **o FPS do jogo:** 137,0 com a tela Ao vivo e 136,1 com a tela Sessões. Os dois mapas juntos custam de 3 a 4 FPS (cerca de 3%).
+2. **O fechamento** (o que você pediu depois do teste):
+   - o minimapa passou a usar o contorno do asfalto tratado do cache (12 contornos, 363 pontos), e não as bordas da geometria oficial;
+   - a fala da análise ficou no estilo da frase do coach: "Curva 4: 1,0 por volta. Mínima 102 contra 128." As 5 análises reais cabem com a causa (de 7,3 a 8,6 s);
+   - a voz a 1,4x ficou registrada como desvio, à espera da sua decisão;
+   - o fantasma com o backend fora do ar ficou como estava;
+   - o `data/radio/` já estava no `.gitignore` desde a Parte A (`999c8f56`).
+3. **O que o rádio diz (Parte C):** a causa na frase do coach, a curva que mais perdeu no resumo e a análise a cada 3 voltas válidas, sempre numa janela em que a fala cabe.
+4. **O mapa ao vivo (Parte D):** 23 posições novas por segundo (eram 2,95), o carro desenhado a cada quadro, respostas de 0,5 KB (eram 65 KB) e 0,05 ms de processador do backend por resposta (eram 10,7 ms).
+5. **O app do jogo (Partes B e E):** o rádio, o minimapa e o mapa aproximado, a vista de perto da tela Volta que você pediu depois da primeira captura.
 6. **Testes:**
-   - **backend:** a suíte passa com **786 testes** (eram 777, mais os 9 novos do rádio);
+   - **backend:** a suíte passa com **787 testes** (eram 777 no pedido 34);
    - **front:** o `tsc` passa, e o `vitest` passa com 184 testes (eram 182);
-   - **o app do jogo:** a conferência passa, com as 32 chamadas da API e os 9 métodos no SDK do CSP.
-7. **Falta:** o teste no jogo (Parte G), com os passos no fim deste relatório.
+   - **o app do jogo:** a conferência passa, com as 38 chamadas da API e os 9 métodos no SDK do CSP.
+
+## O teste no jogo de 21/10
+
+**A sessão:** `2026-10-21_20-30-54`, de 20:30 a 21:18, com 21 voltas, já em `data/recordings` (ela entra no coach na próxima rodada). As sessões de 10:51 (a da sua captura, parada nos boxes) e de 11:44 (2 voltas) têm 5 voltas ou menos.
+
+**Os blocos,** pelo log do backend (a tela Ao vivo pede os pontos novos cerca de 28 vezes por segundo, e cada pedido fica no log):
+- **a tela Ao vivo aberta:** de 20:31 a 21:03, 15 voltas (inteiras ou em parte);
+- **a tela Sessões:** de 21:04 a 21:17, 7 voltas.
+
+Foram mais voltas que as 3 de cada bloco do roteiro, o que dá mais amostras para a comparação.
+
+**A voz no jogo:**
+- as 30 mensagens (29 da sessão e a de teste) tocaram pela URL do backend: 30 linhas `voz: url tocou` no log do CSP, nenhuma `falhou`;
+- o app guardou o caminho (`voz\caminho.txt`) e começa por ele da próxima vez;
+- **o que mais o log do CSP diz:**
+  - o app carregou com as 3 janelas;
+  - o Media Foundation estava disponível;
+  - o backend não respondeu uma vez, logo ao abrir o jogo, antes de ficar pronto, e não voltou a falhar;
+  - o minimapa foi baixado 3 vezes: na abertura e depois de cada análise;
+  - uma linha do CSP diz "App radio_engenheiro is not allowed to load" no meio do carregamento de outro app (`vrc_advanced_setup`), depois de o nosso já ter carregado. Ela não teve efeito: o app funcionou a sessão inteira.
+
+**O registro do rádio contra o coach e as análises** (`_teste_no_jogo_21-10_registro.jsonl`):
+- **30 mensagens:** 1 de teste, 17 resumos, 10 frases do coach e 2 análises;
+- **a mesma sessão fora do tempo real** (o coach com o modelo ativo no teste, o de 18/10 às 17:42, e o rádio):
+  - o coach daria as mesmas 10 frases (C11 e C12, os microssetores 39 e 44);
+  - o rádio daria as mesmas 29 mensagens, na mesma ordem, entregues a menos de 50 m do mesmo ponto;
+  - as duas análises cobrem as mesmas voltas e curvas;
+  - **o caminho ao vivo não perdeu nada;**
+- **as falas:** todas couberam no limite do tipo (resumos de 6,2 a 7,7 s, frases de 5,9 a 6,6 s, análises de 7,6 e 8,3 s) e no que restava da janela;
+- **as análises:**
+  - **voltas 5, 9 e 11:** C01 perde 0,76 s por volta (freada 30 m antes) e C12 perde 0,73 s (freada 52 m antes, traçado 3,7 m mais à direita);
+  - **voltas 13, 16 e 17:** C01 perde 1,21 s por volta (traçado 7,9 m mais à direita, mínima 71 contra 104 km/h) e C10 perde 0,46 s (acelerador cheio 14 m depois);
+- **duas observações:**
+  - **a segunda análise disse "passa 7,9 metro mais à direita".** O plural estava errado e foi corrigido no fechamento;
+  - **a volta 5 entrou na primeira análise com 26,5 s perdidos na C12** (uma rodada, sem parar), e o resumo dela disse "Mais perdeu na curva 12: 26,5". A mediana absorveu a perda (0,73 s), mas o resumo dessa volta não ajuda. Uma regra possível: a volta com uma curva acima de, por exemplo, 5 s não conta como válida e não diz a curva. Não mexi: fica para você decidir.
+
+**A gravação, com as medidas do pedido 33** (`_teste_no_jogo_21-10_gravacao_e_fps.json`):
+
+| medida | tela Ao vivo aberta | tela Sessões | 18/10 (antes deste pedido) |
+|---|---|---|---|
+| pares de amostras | 89.521 | 39.984 | 90.271 |
+| intervalo mediano / p99 (ms) | 15 / 45 | 15 / 36 | 15 / 48 |
+| repetidas: mesmo cronômetro e lugar | 2,11% | 1,67% | 3,98% |
+| buracos de 50 ms ou mais | 0,67% | 0,31% | 0,84% |
+| maior buraco (ms) | 312 | 291 | 288 |
+| relógio do gravador menos o cronômetro, p99 (ms) | 9,0 | 8,9 | 13,4 |
+
+- **A gravação não piorou:** com a tela Ao vivo aberta, ela ficou melhor que em 18/10 em todas as medidas, menos no maior buraco (312 contra 288 ms, uma amostra).
+- **A tela Ao vivo ainda pesa um pouco:** com ela aberta, há mais buracos que com a tela Sessões (0,67% contra 0,31%) e mais repetidas (2,11% contra 1,67%). O relógio do gravador fica igual.
+
+**O FPS do jogo** (285 linhas de 10 s no log do CSP):
+
+| bloco | os dois mapas ligados | os dois mapas desligados | tudo |
+|---|---|---|---|
+| tela Ao vivo aberta | 136,9 (183 janelas) | 140,9 (9 janelas) | 137,0 |
+| tela Sessões | 136,0 (79 janelas) | 138,9 (4 janelas) | 136,1 |
+
+- **A tela do app não muda o FPS do jogo:** 137,0 contra 136,1.
+- **Os dois mapas juntos custam de 3 a 4 FPS,** cerca de 3%. Você desligou os dois juntos, então o custo de cada um não aparece separado. Com só 13 janelas de 10 s desligados, o número é uma indicação.
+- **O mínimo de 76 a 78 FPS** apareceu com os mapas ligados, nos dois blocos.
+
+**O cache da pista:** foi regravado às 20:30, quando o app do repositório abriu. Comparado com a cópia de antes do teste, só o `generatedAt` mudou. Não precisei restaurar nada.
+
+**Uma observação sobre o log do backend:** o `logs\backend.log` do repositório tem 3,8 GB. O uvicorn escreve uma linha por pedido, e a tela Ao vivo pede os pontos novos cerca de 28 vezes por segundo (cerca de 100 mil linhas por hora), mais o rádio no jogo e na tela. Isso não mudou nada no teste, mas o arquivo cresce. Silenciar o log de acesso dessas rotas é uma linha de configuração. Não mexi: fica para você decidir.
+
+## O fechamento: o que você pediu depois do teste
+
+1. **O minimapa com o contorno do asfalto tratado** (`5f48c019`):
+   - **a rota e a `pista.json`** passaram a mandar o contorno do asfalto do cache (`asphaltSurface.loops`), a mesma camada do mapa do app e do mapa aproximado, e não as bordas da geometria oficial;
+   - **a simplificação:**
+     - só os laços com pelo menos 1.000 m²: o contorno de fora, o buraco do miolo, as áreas de escape e dos boxes;
+     - cada laço pelo Douglas-Peucker, com 2 m de tolerância (meio pixel no minimapa);
+     - em Interlagos, de 60 laços e 2.080 pontos para 12 contornos e 363 pontos;
+   - **as coordenadas:** o cache está em (x, −z); a rota manda (x, z), a posição do carro;
+   - **o desenho:** o contorno, sem preencher o asfalto (o desenho do CSP não preenche polígonos côncavos). A linha do s = 0 continua como marca, da geometria oficial;
+   - **sem o cache,** a rota manda as bordas da geometria oficial e diz isso em `pista.origem`;
+   - **não houve motivo técnico para manter a geometria oficial:** o contorno do cache está no mesmo sistema de coordenadas do carro, e a captura fora do jogo mostra o carro e o fantasma sobre ele;
+   - o nome da curva da análise, perto da borda direita, passou para o lado de dentro (na captura, a C01 ficava cortada);
+   - `docs/realidade_aumentada.md` (seção 5.2) e a Parte E.2 deste relatório foram corrigidos.
+2. **A fala da análise no estilo da frase do coach:**
+   - cada diferença é uma frase: "Curva 4: 1,0 por volta. Mínima 102 contra 128." (antes: "passa a 102 contra 128");
+   - **as outras três:** "Freia 46 metros antes.", "Acelera 14 metros depois." e "Passa 8 metros mais à direita.";
+   - **o traçado:** de 2 m para cima, com o número inteiro, que é mais curto de falar; abaixo de 2 m, com a vírgula e no singular ("1,8 metro");
+   - **as frases separadas ficam cerca de 0,5 s mais longas, pelas pausas.** Nas 5 análises reais (`_fala_da_analise.json`), a fala com a causa coube nas 5, de 7,3 a 8,6 s;
+   - com o traçado em decimal, a última análise de 21/10 dava 8,95 s e perdia a causa. Por isso o inteiro.
+3. **A voz a 1,4x é um desvio** (seção "Desvios do pedido", abaixo).
+4. **O FPS entre os blocos** está na tabela do teste: 137,0 com a tela Ao vivo e 136,1 com a tela Sessões.
+5. **O fantasma com o backend fora do ar** ficou como estava: ele continua se já tinha sido baixado.
+6. **O `data/radio/` no `.gitignore`:** já estava, na linha 85, desde a Parte A (`999c8f56`). Não precisou mudar.
+
+## Desvios do pedido
+
+1. **A voz passou de 1,25x para 1,4x sem estar no pedido** (`042c09cb`, `core/radio/audio.py`, `VELOCIDADE_PADRAO`):
+   - **por quê:** a 1,25x, os números falados por extenso faziam a frase com a causa, o resumo com a curva e a análise passarem de 6, 7 e 8 s (medido: 6,8, 8,2 e 8,5 s). A 1,4x, cabem;
+   - **a decisão é sua,** depois do teste. Voltar é mudar uma linha. A 1,25x, algumas mensagens sairiam na variante mais curta, sem a causa, ou esperariam uma janela maior;
+   - no teste de 21/10, a voz a 1,4x tocou nas 30 mensagens.
+2. **O minimapa saiu primeiro com as bordas da geometria oficial,** e não com o contorno do asfalto do cache que o pedido (Parte E.2) pedia. Foi corrigido no fechamento.
+3. **O mapa aproximado** (a terceira janela) não estava no pedido. Foi acrescentado a seu pedido, depois da primeira captura do jogo.
 
 ## Depois da sua captura do jogo (21/10): o mapa aproximado
 
@@ -154,7 +262,7 @@
 
 **O cartão:** carbono e vermelho como antes. A análise fica 12 s na tela, com o resumo em até duas linhas e uma linha por curva. A janela do rádio passou a 600 × 220, com o tamanho fixo.
 
-**O que funcionou no jogo:** a preencher depois do teste.
+**O que funcionou no jogo** (21/10): a URL do backend, nas 30 mensagens, sem nenhuma falha.
 
 ## Parte C: o que o rádio diz
 
@@ -180,7 +288,7 @@ As regras, os cortes e os exemplos estão em `docs/realidade_aumentada.md`, seç
 - **o cartão:** todas as curvas, com todos os números;
 - **exemplo real (18/10):**
   - o cartão: "Análise das voltas 3, 7 e 8 · C04 perde 1,04 s por volta · C01 perde 0,95 s por volta, contra a volta da IA", e uma linha por curva: "C04, esquerda: perde 1,04 s por volta (1,04 · 1,06 · 0,22); mínima 102 contra 128 km/h; freada 40 m antes; acelerador cheio 16 m depois; traçado 1,5 m mais à direita";
-  - a fala: "Voltas 3, 7 e 8. Curva 4: 1,0 por volta: passa a 102 contra 128." (8,1 s).
+  - a fala: "Voltas 3, 7 e 8. Curva 4: 1,0 por volta. Mínima 102 contra 128." (8,6 s; antes do fechamento era "passa a 102 contra 128", com 8,1 s).
 
 **C.3 O resumo:** "Volta 8, 4,2 atrás. Mais perdeu na curva 1: 0,7." A curva só entra numa volta completa: numa volta com parada, "mais perdeu na curva 1: 66,4" é verdade, mas não ajuda.
 
@@ -244,8 +352,8 @@ As regras, os cortes e os exemplos estão em `docs/realidade_aumentada.md`, seç
 
 **E.2 O que o minimapa mostra** (a captura fora do jogo: `_captura_minimapa_fora_do_jogo_600x600.png`):
 - **a pista tratada:**
-  - as duas bordas do asfalto da geometria oficial, simplificadas para 271 pontos cada;
-  - desenhada uma vez no canvas, com a linha do s = 0;
+  - o contorno do asfalto tratado do cache, simplificado: 12 contornos e 363 pontos (no fechamento; antes eram as duas bordas da geometria oficial, com 271 pontos cada);
+  - desenhada uma vez no canvas, com a marca da linha do s = 0;
   - a mesma orientação do mapa do app;
 - **o carro:** do próprio jogo, a cada quadro, sem pedir nada ao backend. A posição do jogo está no mesmo sistema de coordenadas da geometria oficial: é a que o coach projeta;
 - **o fantasma da referência escolhida na Coleta:**
@@ -275,14 +383,14 @@ As regras, os cortes e os exemplos estão em `docs/realidade_aumentada.md`, seç
 **E.5 Com o backend fora do ar:**
 - a pista e o carro continuam;
 - sem a referência, aparece "sem fantasma: backend fora do ar", discreto, no alto;
-- **uma escolha minha, para você confirmar:** se o backend cair depois de o app ter baixado a referência, o fantasma continua, porque os dados já estão no app, e o canto de baixo diz "sem backend". Se preferir que o fantasma suma, é uma linha.
+- **se o backend cair depois de o app ter baixado a referência,** o fantasma continua, porque os dados já estão no app, e o canto de baixo diz "sem backend". Você decidiu manter assim.
 
 **E.6 Duas janelas:** "Rádio" e "Minimapa" aparecem separadas na barra de apps do jogo. O minimapa tem 300 × 300 e pode ser redimensionado de 200 a 640.
 
 **E.7 O custo no jogo:**
 - **a API tem como medir:** a cada 10 s, o app escreve no log do CSP o FPS do jogo (lido a cada 1 s), com a média, a mínima e a máxima, e se o minimapa estava ligado ou desligado. O formato é `[radio_engenheiro] fps: média <n> (mín <n>, máx <n>) em 10 s; minimapa ligado`;
 - **a cada quadro,** o app desenha a imagem da pista, dois círculos e o texto, e procura o ponto mais perto em cerca de 34 segmentos. A pista inteira só é redesenhada quando muda;
-- **o número medido:** a preencher depois do teste. No passo 6, você desliga o minimapa numa volta de cada bloco.
+- **o número medido** (21/10): os dois mapas juntos custam de 3 a 4 FPS, cerca de 3% (a tabela está em "O teste no jogo de 21/10").
 
 ## Parte F: testes e conferência sem o jogo
 
@@ -334,7 +442,7 @@ As regras, os cortes e os exemplos estão em `docs/realidade_aumentada.md`, seç
   | 7 | resumo | "Volta 6, 1 minuto e 45,4. 20,54 atrás da IA." |
   | 8 | resumo | "Volta 7: 1 e 30,8, 6,0 atrás. Mais perdeu na curva 4: 1,1." |
   | 9 | resumo | "Volta 8, 4,2 atrás. Mais perdeu na curva 1: 0,7." |
-  | 9 | análise | "Voltas 3, 7 e 8. Curva 4: 1,0 por volta: passa a 102 contra 128." |
+  | 9 | análise | "Voltas 3, 7 e 8. Curva 4: 1,0 por volta: passa a 102 contra 128." (a fala de então; a de agora é "Curva 4: 1,0 por volta. Mínima 102 contra 128.") |
   | 10 | resumo | "Volta 9, 5,6 atrás. Mais perdeu na curva 14: 1,0." |
   | 10 | coach | "Curva 8: 0,85 atrás. Mínima 74 contra 90." |
   | 11 | resumo | "Volta 10, 2 minutos e 39,7. 74,92 atrás da IA." |
@@ -376,6 +484,8 @@ As regras, os cortes e os exemplos estão em `docs/realidade_aumentada.md`, seç
 - **`docs/dashboard_inventario.md`:** "O que o pedido 35 entregou", no fim da seção 7.
 
 ## Parte G: o teste no jogo (com você)
+
+**Feito em 21/10.** O resultado está em "O teste no jogo de 21/10". Os passos ficam aqui como foram combinados.
 
 **Antes de começar:**
 - **o front já está construído** com o código deste pedido (`frontend/dist`, de 18/10 às 20:40). Não precisa rodar o build;
@@ -440,10 +550,17 @@ Não precisa copiar nada: eu leio os dois.
 
 ## O que falta e o que precisa de decisão
 
-**Falta, deste pedido:** o teste no jogo (Parte G) e o que vem depois dele (o caminho da voz, o custo dos dois mapas e a gravação com a tela Ao vivo aberta e fechada).
+**Deste pedido, nada falta.** Para você reinstalar o app do jogo com o minimapa novo:
+
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer\tools\csp_app\instalar.ps1
+```
 
 **Para você decidir:**
-1. **O fantasma com o backend fora do ar** (Parte E.5): ele continua se já tinha sido baixado. Manter ou esconder?
+1. **A voz a 1,4x:** manter ou voltar a 1,25x (seção "Desvios do pedido").
+2. **A volta com uma rodada na análise:** ela conta como válida se o coach mediu todos os microssetores, mesmo com 26,5 s perdidos numa curva. Deixar a volta de fora (e sem a curva no resumo) acima de um limite, por exemplo 5 s numa curva?
+3. **O log de acesso do backend:** silenciar as rotas que a tela Ao vivo e o jogo pedem várias vezes por segundo (o `logs\backend.log` tem 3,8 GB).
+4. **A pasta `recordings/`** (16 GB, fora do git): pôr no `.gitignore`, como `data/recordings/`.
 
 **As decisões de antes, ainda abertas:**
 1. **O CSV de anotações:** normalizar o fim de linha, que está misturado.
