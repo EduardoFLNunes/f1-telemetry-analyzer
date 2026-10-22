@@ -33,7 +33,8 @@ from pathlib import Path
 from typing import Any, Callable, Deque, Dict, List, Optional
 
 from . import audio as audio_do_radio
-from .analise import COBERTURA_MINIMA, VOLTAS_POR_ANALISE, Pista, analisar, cobertura, grade, medidas_da_volta
+from .analise import (COBERTURA_MINIMA, VOLTAS_POR_ANALISE, Pista, analisar, cobertura, grade, medidas_da_volta,
+                      teve_rodada)
 from .janelas import Janela, carregar_geometria, curvas_da_geometria, dentro, janelas_de_radio, tempo_que_resta
 from .texto import (
     FALA_MAXIMA_S,
@@ -249,8 +250,9 @@ class RadioDoEngenheiro:
         medidas = self._medidas_da_volta(volta)
         pior = None
         # A curva que mais perdeu so nas voltas completas (a mesma regra da analise): numa volta
-        # com parada, "mais perdeu na curva 1: 66,4" e verdade, mas nao ajuda.
-        if medidas and volta.get("completa") is not False:
+        # com parada, "mais perdeu na curva 1: 66,4" e verdade, mas nao ajuda. Nem numa volta com
+        # rodada (pedido 36): "mais perdeu na curva 12: 26,5".
+        if medidas and volta.get("completa") is not False and not teve_rodada(medidas):
             m = max(medidas, key=lambda x: x["perdaS"])
             if m["perdaS"] > 0:
                 pior = {"curva": m["curva"], "lado": m["lado"], "perdaS": m["perdaS"]}
@@ -265,7 +267,7 @@ class RadioDoEngenheiro:
         sessao = self._sessao()
         if sessao != self._sessao_da_analise:
             self._sessao_da_analise, self._voltas_validas = sessao, []
-        if medidas is None or volta.get("completa") is False:
+        if medidas is None or volta.get("completa") is False or teve_rodada(medidas):
             return
         self._voltas_validas.append({"volta": int(volta["volta"]) if volta.get("volta") is not None else None,
                                      "medidas": medidas})

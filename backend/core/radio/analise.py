@@ -39,6 +39,15 @@ VOLTAS_POR_ANALISE = 3
 CURVAS_POR_ANALISE = 2
 VOLTAS_PERDIDAS_MINIMAS = 2          # a curva tem de ter sido perdida em 2 das 3 voltas
 PERDA_QUE_CONTA_S = 0.0              # perdida = perda acima de zero contra a referencia
+# Pedido 36 (decisao do Eduardo, 22/10): a volta em que uma curva perde mais que isto contra a
+# referencia teve uma rodada ou uma saida de pista. Ela nao conta para a analise das voltas, e o
+# resumo dela nao cita a curva. So uma regra do radio: o coach e o store nao mudam.
+PERDA_DE_RODADA_S = 5.0
+
+
+def teve_rodada(medidas) -> bool:
+    """Alguma curva da volta perdeu mais de `PERDA_DE_RODADA_S` contra a referencia."""
+    return any(float(m.get("perdaS") or 0.0) > PERDA_DE_RODADA_S for m in medidas or [])
 DIFERENCAS_FALADAS_POR_CURVA = 2
 
 # Os cortes de cada diferenca: abaixo deles, a diferenca esta dentro da variacao normal

@@ -573,3 +573,53 @@ def test_o_minimapa_usa_o_contorno_do_asfalto_tratado_do_cache(tmp_path):
     assert np.hypot(p[:, 0], p[:, 1] + 50).max() == pytest.approx(300, abs=0.5)
     m = minimapa.montar(circular_track(), [], None, None, None, 1.495, contornos)
     assert m["pista"] == {"origem": "asfalto tratado do cache", "contornos": contornos}
+
+
+def test_a_volta_com_rodada_sai_da_analise_e_o_resumo_nao_cita_a_curva(tmp_path, monkeypatch):
+    """Pedido 36, Parte B.2: como a volta 5 de 21/10 (26,5 s na C12), que entrou na primeira analise."""
+    from core.radio.analise import PERDA_DE_RODADA_S, teve_rodada
+
+    assert PERDA_DE_RODADA_S == 5.0 and teve_rodada(_medidas([26.5, 0.3, 0.5])) and not teve_rodada(_medidas([4.9, 0, 0]))
+    pista = _Pista()
+    radio = _radio(tmp_path, pista)
+    medidas = iter([_medidas([26.54, 0.30, 0.47]), _medidas([0.73, -0.1, 0.76]), _medidas([0.51, 0.2, 0.94]),
+                    _medidas([0.60, 0.1, 0.80])])
+    monkeypatch.setattr(radio, "_medidas_da_volta", lambda volta: next(medidas))
+
+    def linha(n):
+        pista.volta = {"volta": n, "tempoS": 110.0, "teveIA": False, "momento": n, "completa": True}
+        radio.on_frame(QUADRO)
+        pista.agora += 1.0
+        radio.on_frame(QUADRO)
+
+    pista.s = 50.0
+    for n in (5, 9, 11, 12):
+        linha(n)
+    resumos = [m for m in radio._pendentes if m["origem"] == "resumo"]
+    analises = [m for m in radio._pendentes if m["origem"] == "analise"]
+    da_volta_5 = next(r for r in resumos if r["volta"] == 5)
+    assert da_volta_5["piorCurva"] is None and "curva" not in da_volta_5["fala"].lower()
+    # A analise usa a volta valida seguinte (12) no lugar da 5.
+    assert len(analises) == 1 and analises[0]["voltasAnalisadas"] == [9, 11, 12]
+
+
+def test_o_log_de_acesso_deixa_de_fora_so_as_rotas_frequentes_bem_sucedidas():
+    """Pedido 36, Parte B.3: os pontos novos e as mensagens do radio saem do log; os erros e o resto ficam."""
+    import logging
+
+    from core.registro_de_acesso import LOGGER_DE_ACESSO, SemPedidosFrequentes, silenciar_rotas_frequentes
+
+    filtro = SemPedidosFrequentes()
+
+    def linha(caminho, codigo):
+        return logging.LogRecord(LOGGER_DE_ACESSO, logging.INFO, "", 0, '%s - "%s %s HTTP/%s" %d',
+                                 ("127.0.0.1:5000", "GET", caminho, "1.1", codigo), None)
+
+    assert not filtro.filter(linha("/api/live/volta/novos?versao=3&desde=10", 200))
+    assert not filtro.filter(linha("/api/radio/mensagens?desde=4&instancia=x", 200))
+    assert filtro.filter(linha("/api/live/volta/novos?versao=3&desde=10", 500))      # erro fica
+    assert filtro.filter(linha("/api/radio/minimapa", 200))                          # outra rota fica
+    assert filtro.filter(linha("/api/radio/mensagens-antigas", 200))
+    silenciar_rotas_frequentes()
+    silenciar_rotas_frequentes()
+    assert sum(isinstance(f, SemPedidosFrequentes) for f in logging.getLogger(LOGGER_DE_ACESSO).filters) == 1

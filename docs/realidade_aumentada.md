@@ -55,7 +55,8 @@ A curva que mais perdeu só entra numa volta completa (com todos os microssetore
 - **Quando:** a cada 3 voltas válidas da sessão, sobre essas 3. Uma volta é válida quando:
   - não teve a IA;
   - o coach mediu todos os microssetores;
-  - a volta ao vivo tem o relógio medido em pelo menos 90% dos pontos da grade.
+  - a volta ao vivo tem o relógio medido em pelo menos 90% dos pontos da grade;
+  - **nenhuma curva perdeu mais de 5 s contra a referência** (pedido 36, decisão do Eduardo de 22/10). Uma perda dessas é uma rodada ou uma saída de pista: no teste de 21/10, a volta 5 perdeu 26,5 s na C12 e entrou na primeira análise. A volta com rodada não conta para a análise, e o resumo dela diz o tempo e a diferença sem citar a curva. É uma regra só do rádio (`PERDA_DE_RODADA_S` em `core/radio/analise.py`): o coach, o store e as regras de volta válida do store não mudam.
 - **As curvas:** até 2 das 14, pela maior perda mediana contra a referência escolhida na Coleta, e só as perdidas em pelo menos 2 das 3 voltas.
 - **As medidas de cada curva** (`backend/core/radio/analise.py`), sempre "sua volta menos a referência", em mediana das 3 voltas:
 
@@ -98,7 +99,7 @@ Na análise, vale a mediana de 3 voltas, que varia menos que uma volta: o corte 
 
 ### 2.5 Quanto cabe em cada janela
 
-- **A voz a 1,4x** (era 1,25x no pedido 31): os números falados por extenso faziam a frase com a causa, o resumo com a curva e a análise passarem de 6, 7 e 8 s. **Não estava no pedido 35:** está registrada como desvio no relatório dele, e a decisão de manter ou voltar é do Eduardo.
+- **A voz a 1,4x** (era 1,25x no pedido 31): os números falados por extenso faziam a frase com a causa, o resumo com a curva e a análise passarem de 6, 7 e 8 s. Não estava no pedido 35 e ficou registrada como desvio no relatório dele. **O Eduardo aprovou a 1,4x em 22/10** (pedido 36).
 - **As variantes:** cada mensagem traz a fala da mais completa à mais curta. O rádio gera o áudio e fica com a primeira que cabe no limite do tipo: 6,6 s (frase do coach), 7,7 s (resumo) e 8,8 s (análise), os 6, 7 e 8 s do pedido com 10% de folga.
 - **A entrega:** só quando a fala inteira cabe no que resta da janela, pela velocidade do carro, com 0,3 s de folga.
 - **Nas duas sessões** (todas as falas couberam no que restava da janela):
@@ -134,7 +135,7 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é 
 
 ## 4. A voz
 
-- **A escolhida:** **Microsoft Daniel (OneCore, pt-BR), a 1,4x** (`VELOCIDADE_PADRAO` em `core/radio/audio.py`; a 1,25x até o pedido 35). A 1,4x é um desvio do pedido 35, à espera da decisão do Eduardo (seção 2.5).
+- **A escolhida:** **Microsoft Daniel (OneCore, pt-BR), a 1,4x** (`VELOCIDADE_PADRAO` em `core/radio/audio.py`; a 1,25x até o pedido 35). A 1,4x foi um desvio do pedido 35, aprovado pelo Eduardo em 22/10 (seção 2.5).
 - **Como é gerada:** pelo `backend/core/radio/voz.ps1`, com o PowerShell do Windows, sem instalar nada.
 - **As três vozes pt-BR deste Windows,** testadas no pedido 31 com a mesma frase ("Curva 1, esquerda: 0,74 atrás da IA."), a 1,25x:
 

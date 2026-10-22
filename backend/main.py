@@ -966,6 +966,10 @@ async def data_quality_payload(force_sessions: bool = False) -> Dict[str, Any]:
 async def lifespan(app: FastAPI):
     global telemetry_runtime, opponents_runtime, recording_runtime
 
+    # Pedido 36: o log de acesso sem as rotas pedidas varias vezes por segundo.
+    from core.registro_de_acesso import silenciar_rotas_frequentes
+
+    silenciar_rotas_frequentes()
     source_manager.select_source()
     prime_active_source()
     initialize_spatial_state()
