@@ -5,7 +5,8 @@
 - **Commit:** o deste relatório, "A rodada do coach com o teste no jogo de 21/10".
 - **Arquivos de handoff** (`docs/handoff/2026-10-22_35_rodada-do-coach_*`):
   - `_relatorio.md` (este arquivo);
-  - `_rodada.txt`: a saída inteira do `atualizar_coach`.
+  - `_rodada.txt`: a saída inteira do `atualizar_coach`;
+  - `_corredor.json` e `_corredor.py`: o corredor de cada volta da sessão de 21/10 (pedido no chat, depois da rodada).
 
 ## Em resumo
 
@@ -44,9 +45,26 @@
 - **Se o app do repositório estiver aberto, feche e abra de novo,** para ele carregar o modelo novo com certeza.
 - **O fantasma "Sua melhor"** (na tela Volta, na tela Ao vivo e nos mapas do jogo, quando a referência escolhida na Coleta é a sua melhor) passa a ser a volta de 1:26,875. Com a volta da IA, que é a padrão, nada muda.
 
+## O corredor da volta nova
+
+Pedido no chat depois da rodada. É a mesma checagem da Parte A.2 do pedido 32, com as mesmas funções do store v2 e da conferência da Coleta, só lendo: a volta limpa, alinhada na geometria oficial e passada pelos portões, com a fração de amostras com o centro do carro fora do corredor útil.
+
+| | 1:27,594 (11/10) | 1:27,014 (15/10) | **1:26,875 (21/10)** |
+|---|---|---|---|
+| volta | `2026-10-11_14-19-52#0019` | `2026-10-15_23-24-50#0008` | `2026-10-21_20-30-54#0017` |
+| portões | válida | válida | **válida, sem motivo** |
+| amostras com 2 ou mais pneus fora (jogo) | 0 | 0 | **0** |
+| `off_track` (jogo) | 0 | 0 | **0** |
+| fora do corredor útil | 5,6% | 9,2% | **2,8%** |
+| o maior excesso | 1,53 m, na saída da C03 | 1,84 m, na saída da C03 | **0,65 m, à esquerda, de 285 a 311 m (no S do Senna)** |
+
+- **A volta nova é a mais limpa das três:** 2,8% fora do corredor, abaixo até da volta limpa de referência do portão (4,7%, `quality.py`). Nenhum pneu fora pelo jogo, e o maior excesso é de 0,65 m. É uso de zebra, e não corte.
+- **As outras voltas válidas da sessão** ficam entre 2,6% e 12,0% fora do corredor.
+- **A volta nova fica como referência "sua melhor".** A decisão sobre a de 1:27,014 está resolvida.
+
 ## Para você decidir
 
-- **A decisão aberta sobre a referência de 1:27,014** (ela tem 9,2% fora do corredor) perdeu o objeto: a sua melhor agora é a de 1:26,875. Não conferi o corredor da volta nova, porque a rodada não faz isso. Se quiser, confiro.
+- **A decisão aberta sobre a referência de 1:27,014** (ela tem 9,2% fora do corredor) perdeu o objeto: a sua melhor agora é a de 1:26,875, conferida abaixo.
 - **As outras decisões do pedido 35 continuam abertas:**
   - a voz a 1,4x;
   - a volta com rodada na análise do rádio;

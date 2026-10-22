@@ -1,0 +1,1026 @@
+[
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0000",
+  "tempoS": 227.484,
+  "valida": false,
+  "motivos": [
+   "faltam 229.7 m de pista (limite 6 m)",
+   "carro parado em 40.1% das amostras"
+  ],
+  "amostras": 11107,
+  "pneusFora2ouMais": 73,
+  "pneusFora1ouMais": 110,
+  "offTrack": 30,
+  "foraDoCorredor": 0.545,
+  "trechosFora": [
+   {
+    "deS": 226.0,
+    "ateS": 878.0,
+    "maiorExcessoM": 33.73,
+    "lado": "esquerda",
+    "curva": "C03"
+   },
+   {
+    "deS": 2932.0,
+    "ateS": 3021.0,
+    "maiorExcessoM": 4.36,
+    "lado": "esquerda",
+    "curva": "C11"
+   },
+   {
+    "deS": 2274.0,
+    "ateS": 2304.0,
+    "maiorExcessoM": 2.41,
+    "lado": "esquerda",
+    "curva": "C07"
+   },
+   {
+    "deS": 2395.0,
+    "ateS": 2443.0,
+    "maiorExcessoM": 1.84,
+    "lado": "esquerda",
+    "curva": "C08"
+   },
+   {
+    "deS": 1404.0,
+    "ateS": 1447.0,
+    "maiorExcessoM": 1.6,
+    "lado": "direita",
+    "curva": "C04"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0001",
+  "tempoS": 136.188,
+  "valida": false,
+  "motivos": [
+   "carro parado em 9.1% das amostras",
+   "fora de pista em 10.5% das amostras"
+  ],
+  "amostras": 7752,
+  "pneusFora2ouMais": 1196,
+  "pneusFora1ouMais": 1450,
+  "offTrack": 818,
+  "foraDoCorredor": 0.2964,
+  "trechosFora": [
+   {
+    "deS": 2208.0,
+    "ateS": 2250.0,
+    "maiorExcessoM": 34.18,
+    "lado": "direita",
+    "curva": "C07"
+   },
+   {
+    "deS": 320.0,
+    "ateS": 418.0,
+    "maiorExcessoM": 7.75,
+    "lado": "direita",
+    "curva": "C02"
+   },
+   {
+    "deS": 2417.0,
+    "ateS": 2500.0,
+    "maiorExcessoM": 3.99,
+    "lado": "esquerda",
+    "curva": "C08"
+   },
+   {
+    "deS": 2144.0,
+    "ateS": 2185.0,
+    "maiorExcessoM": 3.17,
+    "lado": "esquerda",
+    "curva": "C06"
+   },
+   {
+    "deS": 1345.0,
+    "ateS": 1396.0,
+    "maiorExcessoM": 1.94,
+    "lado": "esquerda",
+    "curva": "C04"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0002",
+  "tempoS": 104.976,
+  "valida": false,
+  "motivos": [
+   "carro parado em 5.1% das amostras"
+  ],
+  "amostras": 5957,
+  "pneusFora2ouMais": 77,
+  "pneusFora1ouMais": 366,
+  "offTrack": 0,
+  "foraDoCorredor": 0.1315,
+  "trechosFora": [
+   {
+    "deS": 1502.0,
+    "ateS": 1512.0,
+    "maiorExcessoM": 6.1,
+    "lado": "direita",
+    "curva": "C05"
+   },
+   {
+    "deS": 1402.0,
+    "ateS": 1458.0,
+    "maiorExcessoM": 4.3,
+    "lado": "direita",
+    "curva": "C04"
+   },
+   {
+    "deS": 1488.0,
+    "ateS": 1502.0,
+    "maiorExcessoM": 2.24,
+    "lado": "esquerda",
+    "curva": "C05"
+   },
+   {
+    "deS": 72.0,
+    "ateS": 111.0,
+    "maiorExcessoM": 0.14,
+    "lado": "direita",
+    "curva": "reta"
+   },
+   {
+    "deS": 4142.0,
+    "ateS": 4158.0,
+    "maiorExcessoM": 0.05,
+    "lado": "direita",
+    "curva": "reta"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0003",
+  "tempoS": 94.326,
+  "valida": false,
+  "motivos": [
+   "fora de pista em 13.5% das amostras"
+  ],
+  "amostras": 5399,
+  "pneusFora2ouMais": 797,
+  "pneusFora1ouMais": 837,
+  "offTrack": 730,
+  "foraDoCorredor": 0.2345,
+  "trechosFora": [
+   {
+    "deS": 2078.0,
+    "ateS": 2356.0,
+    "maiorExcessoM": 37.75,
+    "lado": "direita",
+    "curva": "C07"
+   },
+   {
+    "deS": 2612.0,
+    "ateS": 2790.0,
+    "maiorExcessoM": 27.45,
+    "lado": "direita",
+    "curva": "C10"
+   },
+   {
+    "deS": 1391.0,
+    "ateS": 1495.0,
+    "maiorExcessoM": 13.79,
+    "lado": "direita",
+    "curva": "C04"
+   },
+   {
+    "deS": 2367.0,
+    "ateS": 2453.0,
+    "maiorExcessoM": 7.93,
+    "lado": "esquerda",
+    "curva": "C08"
+   },
+   {
+    "deS": 372.0,
+    "ateS": 393.0,
+    "maiorExcessoM": 1.53,
+    "lado": "direita",
+    "curva": "C02"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0004",
+  "tempoS": 115.434,
+  "valida": false,
+  "motivos": [
+   "fora de pista em 15.4% das amostras"
+  ],
+  "amostras": 6578,
+  "pneusFora2ouMais": 1046,
+  "pneusFora1ouMais": 1081,
+  "offTrack": 1009,
+  "foraDoCorredor": 0.1995,
+  "trechosFora": [
+   {
+    "deS": 3313.0,
+    "ateS": 3142.0,
+    "maiorExcessoM": 79.7,
+    "lado": "esquerda",
+    "curva": "C12"
+   },
+   {
+    "deS": 3941.0,
+    "ateS": 4046.0,
+    "maiorExcessoM": 2.57,
+    "lado": "esquerda",
+    "curva": "C14"
+   },
+   {
+    "deS": 2699.0,
+    "ateS": 2733.0,
+    "maiorExcessoM": 1.74,
+    "lado": "direita",
+    "curva": "C10"
+   },
+   {
+    "deS": 376.0,
+    "ateS": 399.0,
+    "maiorExcessoM": 1.03,
+    "lado": "direita",
+    "curva": "C02"
+   },
+   {
+    "deS": 2936.0,
+    "ateS": 2983.0,
+    "maiorExcessoM": 0.89,
+    "lado": "esquerda",
+    "curva": "C11"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0005",
+  "tempoS": 114.294,
+  "valida": false,
+  "motivos": [
+   "carro parado em 10.2% das amostras",
+   "fora de pista em 10.9% das amostras"
+  ],
+  "amostras": 6534,
+  "pneusFora2ouMais": 810,
+  "pneusFora1ouMais": 834,
+  "offTrack": 709,
+  "foraDoCorredor": 0.1964,
+  "trechosFora": [
+   {
+    "deS": 1420.0,
+    "ateS": 1422.0,
+    "maiorExcessoM": 20.08,
+    "lado": "esquerda",
+    "curva": "C04"
+   },
+   {
+    "deS": 1400.0,
+    "ateS": 1409.0,
+    "maiorExcessoM": 2.14,
+    "lado": "direita",
+    "curva": "C04"
+   },
+   {
+    "deS": 75.0,
+    "ateS": 164.0,
+    "maiorExcessoM": 0.94,
+    "lado": "direita",
+    "curva": "reta"
+   },
+   {
+    "deS": 3272.0,
+    "ateS": 3282.0,
+    "maiorExcessoM": 0.43,
+    "lado": "direita",
+    "curva": "C12"
+   },
+   {
+    "deS": 1346.0,
+    "ateS": 1363.0,
+    "maiorExcessoM": 0.34,
+    "lado": "esquerda",
+    "curva": "C04"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0006",
+  "tempoS": 94.479,
+  "valida": true,
+  "motivos": [],
+  "amostras": 5390,
+  "pneusFora2ouMais": 266,
+  "pneusFora1ouMais": 294,
+  "offTrack": 209,
+  "foraDoCorredor": 0.1197,
+  "trechosFora": [
+   {
+    "deS": 1382.0,
+    "ateS": 1459.0,
+    "maiorExcessoM": 12.84,
+    "lado": "direita",
+    "curva": "C04"
+   },
+   {
+    "deS": 2467.0,
+    "ateS": 2518.0,
+    "maiorExcessoM": 7.14,
+    "lado": "direita",
+    "curva": "C08"
+   },
+   {
+    "deS": 2411.0,
+    "ateS": 2442.0,
+    "maiorExcessoM": 6.94,
+    "lado": "esquerda",
+    "curva": "C08"
+   },
+   {
+    "deS": 2903.0,
+    "ateS": 2979.0,
+    "maiorExcessoM": 1.42,
+    "lado": "esquerda",
+    "curva": "C11"
+   },
+   {
+    "deS": 279.0,
+    "ateS": 302.0,
+    "maiorExcessoM": 1.16,
+    "lado": "esquerda",
+    "curva": "reta"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0007",
+  "tempoS": 322.074,
+  "valida": false,
+  "motivos": [
+   "volta longa demais (322.1s > 200s)",
+   "carro parado em 23.9% das amostras",
+   "fora de pista em 10.3% das amostras"
+  ],
+  "amostras": 18235,
+  "pneusFora2ouMais": 2433,
+  "pneusFora1ouMais": 2556,
+  "offTrack": 1886,
+  "foraDoCorredor": 0.4317,
+  "trechosFora": [
+   {
+    "deS": 1386.0,
+    "ateS": 1392.0,
+    "maiorExcessoM": 39.44,
+    "lado": "direita",
+    "curva": "C04"
+   },
+   {
+    "deS": 2818.0,
+    "ateS": 886.0,
+    "maiorExcessoM": 37.08,
+    "lado": "esquerda",
+    "curva": "C02"
+   },
+   {
+    "deS": 1207.0,
+    "ateS": 870.0,
+    "maiorExcessoM": 36.05,
+    "lado": "esquerda",
+    "curva": "C02"
+   },
+   {
+    "deS": 1356.0,
+    "ateS": 1332.0,
+    "maiorExcessoM": 2.52,
+    "lado": "esquerda",
+    "curva": "C04"
+   },
+   {
+    "deS": 0.0,
+    "ateS": 0.0,
+    "maiorExcessoM": 1.56,
+    "lado": "direita",
+    "curva": "reta"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0008",
+  "tempoS": 90.777,
+  "valida": true,
+  "motivos": [],
+  "amostras": 5161,
+  "pneusFora2ouMais": 0,
+  "pneusFora1ouMais": 0,
+  "offTrack": 0,
+  "foraDoCorredor": 0.0378,
+  "trechosFora": [
+   {
+    "deS": 2030.0,
+    "ateS": 2092.0,
+    "maiorExcessoM": 1.95,
+    "lado": "esquerda",
+    "curva": "C06"
+   },
+   {
+    "deS": 2.0,
+    "ateS": 81.0,
+    "maiorExcessoM": 1.58,
+    "lado": "direita",
+    "curva": "reta"
+   },
+   {
+    "deS": 2146.0,
+    "ateS": 2166.0,
+    "maiorExcessoM": 0.87,
+    "lado": "esquerda",
+    "curva": "C06"
+   },
+   {
+    "deS": 0.0,
+    "ateS": 0.0,
+    "maiorExcessoM": 0.28,
+    "lado": "direita",
+    "curva": "reta"
+   },
+   {
+    "deS": 2279.0,
+    "ateS": 2286.0,
+    "maiorExcessoM": 0.24,
+    "lado": "direita",
+    "curva": "C07"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0009",
+  "tempoS": 89.505,
+  "valida": true,
+  "motivos": [],
+  "amostras": 5116,
+  "pneusFora2ouMais": 136,
+  "pneusFora1ouMais": 171,
+  "offTrack": 76,
+  "foraDoCorredor": 0.0717,
+  "trechosFora": [
+   {
+    "deS": 2762.0,
+    "ateS": 2811.0,
+    "maiorExcessoM": 5.3,
+    "lado": "esquerda",
+    "curva": "C10"
+   },
+   {
+    "deS": 1422.0,
+    "ateS": 1455.0,
+    "maiorExcessoM": 0.98,
+    "lado": "direita",
+    "curva": "C04"
+   },
+   {
+    "deS": 2372.0,
+    "ateS": 2404.0,
+    "maiorExcessoM": 0.68,
+    "lado": "esquerda",
+    "curva": "C08"
+   },
+   {
+    "deS": 1828.0,
+    "ateS": 1854.0,
+    "maiorExcessoM": 0.65,
+    "lado": "esquerda",
+    "curva": "C06"
+   },
+   {
+    "deS": 2895.0,
+    "ateS": 2948.0,
+    "maiorExcessoM": 0.42,
+    "lado": "esquerda",
+    "curva": "C11"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0010",
+  "tempoS": 88.104,
+  "valida": true,
+  "motivos": [],
+  "amostras": 5043,
+  "pneusFora2ouMais": 0,
+  "pneusFora1ouMais": 0,
+  "offTrack": 0,
+  "foraDoCorredor": 0.0377,
+  "trechosFora": [
+   {
+    "deS": 1.0,
+    "ateS": 1.0,
+    "maiorExcessoM": 1.3,
+    "lado": "direita",
+    "curva": "reta"
+   },
+   {
+    "deS": 279.0,
+    "ateS": 304.0,
+    "maiorExcessoM": 1.01,
+    "lado": "esquerda",
+    "curva": "reta"
+   },
+   {
+    "deS": 479.0,
+    "ateS": 499.0,
+    "maiorExcessoM": 0.7,
+    "lado": "esquerda",
+    "curva": "C03"
+   },
+   {
+    "deS": 2376.0,
+    "ateS": 2394.0,
+    "maiorExcessoM": 0.4,
+    "lado": "esquerda",
+    "curva": "C08"
+   },
+   {
+    "deS": 4220.0,
+    "ateS": 4305.0,
+    "maiorExcessoM": 0.22,
+    "lado": "direita",
+    "curva": "reta"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0011",
+  "tempoS": 103.185,
+  "valida": false,
+  "motivos": [
+   "carro parado em 2.3% das amostras"
+  ],
+  "amostras": 5901,
+  "pneusFora2ouMais": 287,
+  "pneusFora1ouMais": 309,
+  "offTrack": 217,
+  "foraDoCorredor": 0.185,
+  "trechosFora": [
+   {
+    "deS": 2011.0,
+    "ateS": 2122.0,
+    "maiorExcessoM": 9.75,
+    "lado": "esquerda",
+    "curva": "C06"
+   },
+   {
+    "deS": 2122.0,
+    "ateS": 2184.0,
+    "maiorExcessoM": 8.51,
+    "lado": "direita",
+    "curva": "C06"
+   },
+   {
+    "deS": 2.0,
+    "ateS": 87.0,
+    "maiorExcessoM": 1.28,
+    "lado": "direita",
+    "curva": "reta"
+   },
+   {
+    "deS": 3259.0,
+    "ateS": 3282.0,
+    "maiorExcessoM": 0.96,
+    "lado": "direita",
+    "curva": "C12"
+   },
+   {
+    "deS": 2532.0,
+    "ateS": 2551.0,
+    "maiorExcessoM": 0.94,
+    "lado": "direita",
+    "curva": "C09"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0012",
+  "tempoS": 88.317,
+  "valida": true,
+  "motivos": [],
+  "amostras": 5051,
+  "pneusFora2ouMais": 0,
+  "pneusFora1ouMais": 0,
+  "offTrack": 0,
+  "foraDoCorredor": 0.0738,
+  "trechosFora": [
+   {
+    "deS": 1418.0,
+    "ateS": 1458.0,
+    "maiorExcessoM": 1.59,
+    "lado": "direita",
+    "curva": "C04"
+   },
+   {
+    "deS": 429.0,
+    "ateS": 459.0,
+    "maiorExcessoM": 1.45,
+    "lado": "esquerda",
+    "curva": "C03"
+   },
+   {
+    "deS": 39.0,
+    "ateS": 155.0,
+    "maiorExcessoM": 0.6,
+    "lado": "direita",
+    "curva": "reta"
+   },
+   {
+    "deS": 1680.0,
+    "ateS": 1718.0,
+    "maiorExcessoM": 0.51,
+    "lado": "direita",
+    "curva": "C05"
+   },
+   {
+    "deS": 4116.0,
+    "ateS": 4142.0,
+    "maiorExcessoM": 0.5,
+    "lado": "direita",
+    "curva": "reta"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0013",
+  "tempoS": 90.477,
+  "valida": true,
+  "motivos": [],
+  "amostras": 5174,
+  "pneusFora2ouMais": 4,
+  "pneusFora1ouMais": 18,
+  "offTrack": 0,
+  "foraDoCorredor": 0.0798,
+  "trechosFora": [
+   {
+    "deS": 329.0,
+    "ateS": 396.0,
+    "maiorExcessoM": 6.41,
+    "lado": "direita",
+    "curva": "C02"
+   },
+   {
+    "deS": 1397.0,
+    "ateS": 1454.0,
+    "maiorExcessoM": 5.15,
+    "lado": "direita",
+    "curva": "C04"
+   },
+   {
+    "deS": 417.0,
+    "ateS": 470.0,
+    "maiorExcessoM": 5.02,
+    "lado": "esquerda",
+    "curva": "C03"
+   },
+   {
+    "deS": 98.0,
+    "ateS": 166.0,
+    "maiorExcessoM": 0.25,
+    "lado": "direita",
+    "curva": "reta"
+   },
+   {
+    "deS": 2965.0,
+    "ateS": 2989.0,
+    "maiorExcessoM": 0.24,
+    "lado": "esquerda",
+    "curva": "C11"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0014",
+  "tempoS": 403.446,
+  "valida": false,
+  "motivos": [
+   "volta longa demais (403.4s > 200s)",
+   "carro parado em 46.0% das amostras"
+  ],
+  "amostras": 23057,
+  "pneusFora2ouMais": 68,
+  "pneusFora1ouMais": 121,
+  "offTrack": 9,
+  "foraDoCorredor": 0.5603,
+  "trechosFora": [
+   {
+    "deS": 3955.0,
+    "ateS": 862.0,
+    "maiorExcessoM": 34.19,
+    "lado": "esquerda",
+    "curva": "C02"
+   },
+   {
+    "deS": 2611.0,
+    "ateS": 2793.0,
+    "maiorExcessoM": 28.24,
+    "lado": "direita",
+    "curva": "C10"
+   },
+   {
+    "deS": 1400.0,
+    "ateS": 1478.0,
+    "maiorExcessoM": 5.66,
+    "lado": "direita",
+    "curva": "C04"
+   },
+   {
+    "deS": 1398.0,
+    "ateS": 1450.0,
+    "maiorExcessoM": 5.04,
+    "lado": "direita",
+    "curva": "C04"
+   },
+   {
+    "deS": 1470.0,
+    "ateS": 1488.0,
+    "maiorExcessoM": 2.77,
+    "lado": "esquerda",
+    "curva": "C05"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0015",
+  "tempoS": 90.18,
+  "valida": true,
+  "motivos": [],
+  "amostras": 5175,
+  "pneusFora2ouMais": 0,
+  "pneusFora1ouMais": 0,
+  "offTrack": 0,
+  "foraDoCorredor": 0.0319,
+  "trechosFora": [
+   {
+    "deS": 2325.0,
+    "ateS": 2347.0,
+    "maiorExcessoM": 2.08,
+    "lado": "esquerda",
+    "curva": "C07"
+   },
+   {
+    "deS": 374.0,
+    "ateS": 392.0,
+    "maiorExcessoM": 0.81,
+    "lado": "direita",
+    "curva": "C02"
+   },
+   {
+    "deS": 480.0,
+    "ateS": 500.0,
+    "maiorExcessoM": 0.67,
+    "lado": "esquerda",
+    "curva": "C03"
+   },
+   {
+    "deS": 1412.0,
+    "ateS": 1427.0,
+    "maiorExcessoM": 0.27,
+    "lado": "direita",
+    "curva": "C04"
+   },
+   {
+    "deS": 3993.0,
+    "ateS": 4031.0,
+    "maiorExcessoM": 0.2,
+    "lado": "esquerda",
+    "curva": "C14"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0016",
+  "tempoS": 88.536,
+  "valida": true,
+  "motivos": [],
+  "amostras": 5117,
+  "pneusFora2ouMais": 18,
+  "pneusFora1ouMais": 36,
+  "offTrack": 0,
+  "foraDoCorredor": 0.0262,
+  "trechosFora": [
+   {
+    "deS": 2031.0,
+    "ateS": 2080.0,
+    "maiorExcessoM": 1.34,
+    "lado": "esquerda",
+    "curva": "C06"
+   },
+   {
+    "deS": 2388.0,
+    "ateS": 2426.0,
+    "maiorExcessoM": 0.81,
+    "lado": "esquerda",
+    "curva": "C08"
+   },
+   {
+    "deS": 0.0,
+    "ateS": 1.0,
+    "maiorExcessoM": 0.08,
+    "lado": "direita",
+    "curva": "reta"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0017",
+  "tempoS": 86.853,
+  "valida": true,
+  "motivos": [],
+  "amostras": 5024,
+  "pneusFora2ouMais": 0,
+  "pneusFora1ouMais": 0,
+  "offTrack": 0,
+  "foraDoCorredor": 0.0281,
+  "trechosFora": [
+   {
+    "deS": 285.0,
+    "ateS": 311.0,
+    "maiorExcessoM": 0.65,
+    "lado": "esquerda",
+    "curva": "reta"
+   },
+   {
+    "deS": 1712.0,
+    "ateS": 1754.0,
+    "maiorExcessoM": 0.5,
+    "lado": "direita",
+    "curva": "C05"
+   },
+   {
+    "deS": 379.0,
+    "ateS": 389.0,
+    "maiorExcessoM": 0.31,
+    "lado": "direita",
+    "curva": "C02"
+   },
+   {
+    "deS": 3137.0,
+    "ateS": 3147.0,
+    "maiorExcessoM": 0.25,
+    "lado": "direita",
+    "curva": "C12"
+   },
+   {
+    "deS": 3212.0,
+    "ateS": 3219.0,
+    "maiorExcessoM": 0.15,
+    "lado": "esquerda",
+    "curva": "C12"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0018",
+  "tempoS": 138.123,
+  "valida": false,
+  "motivos": [
+   "carro parado em 3.7% das amostras"
+  ],
+  "amostras": 7966,
+  "pneusFora2ouMais": 418,
+  "pneusFora1ouMais": 529,
+  "offTrack": 0,
+  "foraDoCorredor": 0.266,
+  "trechosFora": [
+   {
+    "deS": 3920.0,
+    "ateS": 2.0,
+    "maiorExcessoM": 24.28,
+    "lado": "esquerda",
+    "curva": "C14"
+   },
+   {
+    "deS": 1490.0,
+    "ateS": 1561.0,
+    "maiorExcessoM": 21.29,
+    "lado": "direita",
+    "curva": "C05"
+   },
+   {
+    "deS": 1521.0,
+    "ateS": 1502.0,
+    "maiorExcessoM": 3.27,
+    "lado": "esquerda",
+    "curva": "C05"
+   },
+   {
+    "deS": 1411.0,
+    "ateS": 1455.0,
+    "maiorExcessoM": 2.06,
+    "lado": "direita",
+    "curva": "C04"
+   },
+   {
+    "deS": 1488.0,
+    "ateS": 1515.0,
+    "maiorExcessoM": 1.66,
+    "lado": "esquerda",
+    "curva": "C05"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0019",
+  "tempoS": 197.295,
+  "valida": false,
+  "motivos": [
+   "carro parado em 34.5% das amostras"
+  ],
+  "amostras": 11419,
+  "pneusFora2ouMais": 417,
+  "pneusFora1ouMais": 469,
+  "offTrack": 301,
+  "foraDoCorredor": 0.6013,
+  "trechosFora": [
+   {
+    "deS": 2.0,
+    "ateS": 829.0,
+    "maiorExcessoM": 34.79,
+    "lado": "esquerda",
+    "curva": "C03"
+   },
+   {
+    "deS": 2281.0,
+    "ateS": 2304.0,
+    "maiorExcessoM": 12.5,
+    "lado": "esquerda",
+    "curva": "C07"
+   },
+   {
+    "deS": 3262.0,
+    "ateS": 3294.0,
+    "maiorExcessoM": 11.97,
+    "lado": "esquerda",
+    "curva": "C12"
+   },
+   {
+    "deS": 2323.0,
+    "ateS": 2356.0,
+    "maiorExcessoM": 2.02,
+    "lado": "direita",
+    "curva": "C07"
+   },
+   {
+    "deS": 3239.0,
+    "ateS": 3257.0,
+    "maiorExcessoM": 1.53,
+    "lado": "direita",
+    "curva": "C12"
+   }
+  ]
+ },
+ {
+  "volta": "2026-10-21_20-30-54_vhe_interlagos#0020",
+  "tempoS": 96.456,
+  "valida": false,
+  "motivos": [
+   "carro parado em 8.0% das amostras"
+  ],
+  "amostras": 5570,
+  "pneusFora2ouMais": 64,
+  "pneusFora1ouMais": 125,
+  "offTrack": 0,
+  "foraDoCorredor": 0.1513,
+  "trechosFora": [
+   {
+    "deS": 226.0,
+    "ateS": 228.0,
+    "maiorExcessoM": 16.33,
+    "lado": "esquerda",
+    "curva": "reta"
+   },
+   {
+    "deS": 3479.0,
+    "ateS": 3510.0,
+    "maiorExcessoM": 4.41,
+    "lado": "esquerda",
+    "curva": "C14"
+   },
+   {
+    "deS": 1341.0,
+    "ateS": 1399.0,
+    "maiorExcessoM": 1.89,
+    "lado": "esquerda",
+    "curva": "C04"
+   },
+   {
+    "deS": 374.0,
+    "ateS": 404.0,
+    "maiorExcessoM": 1.56,
+    "lado": "direita",
+    "curva": "C02"
+   },
+   {
+    "deS": 3541.0,
+    "ateS": 3561.0,
+    "maiorExcessoM": 1.39,
+    "lado": "direita",
+    "curva": "C14"
+   }
+  ]
+ }
+]
