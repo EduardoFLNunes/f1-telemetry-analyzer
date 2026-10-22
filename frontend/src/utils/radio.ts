@@ -117,6 +117,8 @@ export type MensagemDoBackend = {
   perdaS?: number | null;
   /** Pedido 35: as linhas da análise (uma por curva). */
   linhas?: string[] | null;
+  /** Pedido 36: o replay da curva (na análise e na frase do coach com causa). */
+  replay?: { url: string; curvas: string[] } | null;
 };
 
 export type MensagemRadioComAudio = MensagemRadio & { audio: string | null; sCarro: number | null };

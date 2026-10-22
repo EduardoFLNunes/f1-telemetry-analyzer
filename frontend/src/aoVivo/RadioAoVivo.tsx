@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
 import { MensagemRadioCartao } from '../components/ui/base';
 import { mensagemDoRadio, type MensagemDoBackend } from '../utils/radio';
+import { ReplayDaCurva } from './ReplayDaCurva';
 
 const GUARDADAS = 20;
 
@@ -67,13 +68,21 @@ export const RadioAoVivo: React.FC<{ pronto: boolean }> = ({ pronto }) => {
       )}
       {mensagens.map((m, i) => {
         const cartao = mensagemDoRadio(m, i);
-        return (
+        const cartaoDoRadio = (
           <MensagemRadioCartao
             key={cartao.id}
             mensagem={cartao}
             esmaecida={Math.max(0.6, 1 - i * 0.08)}
             aoOuvir={cartao.audio ? () => ouvir(cartao.audio as string) : undefined}
           />
+        );
+        // Pedido 36: a análise e a frase do coach com causa ganham o replay da curva.
+        if (!m.replay?.url) return cartaoDoRadio;
+        return (
+          <div key={cartao.id} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {cartaoDoRadio}
+            <ReplayDaCurva url={m.replay.url} />
+          </div>
         );
       })}
     </div>
