@@ -1,0 +1,26 @@
+{
+ "sessao": "2026-10-22_09-46-01_vhe_interlagos",
+ "quadros": 13598,
+ "referencia": {
+  "tipo": "volta_ia",
+  "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+  "tempoS": 84.8291625038158
+ },
+ "janelas": [
+  [
+   723.0,
+   1192.0
+  ],
+  [
+   1637.0,
+   1818.0
+  ],
+  [
+   3697.0,
+   104.0
+  ]
+ ],
+ "pendentesNoFim": 0,
+ "mensagens": [],
+ "replays": {}
+}

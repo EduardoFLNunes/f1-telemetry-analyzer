@@ -53,7 +53,7 @@ def test_frase_de_diferenca_com_virgula_microssetor_a_partir_de_1_e_lado_por_ext
     assert m["fala"] == "Curva 1, esquerda: 7 décimos atrás da IA. Freia 38 metros antes da IA."
     assert m["falas"][-3:] == ["Curva 1, esquerda: 7 décimos atrás da IA.", "Curva 1: 7 décimos atrás da IA.",
                                "Curva 1: 7 décimos atrás."]
-    assert m["falaMaxS"] == 6.6                     # cerca de 6 s, com 10% de folga
+    assert m["falaMaxS"] == 7.3                     # cerca de 6 s, com folga para a causa (pedido 36)
     assert m["s"] == pytest.approx(3 * L / 60, abs=0.1)  # o fim do microssetor: ali o coach fecha a medida
     assert "." not in m["texto"].split(" s ")[0]  # numero com virgula
 
@@ -400,11 +400,11 @@ def test_a_voz_fica_com_a_primeira_fala_que_cabe(tmp_path):
     radio.on_coaching_event(_evento(indice=2))
     _esperar_o_audio(radio)
     m = radio._pendentes[0]
-    assert 0.12 * len(m["falas"][0]) > 6.6               # a completa, com a causa, passa do limite
+    assert 0.12 * len(m["falas"][0]) > 7.3               # a completa, com a causa, passa do limite
     # O radio gera da mais completa a mais curta e fica com a primeira que cabe: ainda com a causa.
-    cabe = next(i for i, f in enumerate(m["falas"]) if 0.12 * len(f) <= 6.6)
+    cabe = next(i for i, f in enumerate(m["falas"]) if 0.12 * len(f) <= 7.3)
     assert m["fala"] == m["falas"][cabe] and "Freia 38 metros antes" in m["fala"]
-    assert m["duracaoS"] <= 6.6 and ditas == m["falas"][:cabe + 1]
+    assert m["duracaoS"] <= 7.3 and ditas == m["falas"][:cabe + 1]
 
 
 def test_volta_ao_vivo_manda_so_os_pontos_novos_e_guarda_a_volta_fechada():

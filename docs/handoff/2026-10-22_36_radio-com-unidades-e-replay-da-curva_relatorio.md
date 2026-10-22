@@ -1,6 +1,6 @@
-# Relatório do pedido 36 (parado na Parte G): o rádio com as unidades, a freada da IA nos mapas e o replay da curva
+# Relatório do pedido 36: o rádio com as unidades, a freada da IA nos mapas e o replay da curva
 
-- **Pedido:** `docs/prompts/2026-10-22_36_radio-com-unidades-e-replay-da-curva.md`, retomado pelo pedido de continuar "da Parte C até a parada da Parte G". **Parado na Parte G, como o pedido manda:** o teste no jogo é seu.
+- **Pedido:** `docs/prompts/2026-10-22_36_radio-com-unidades-e-replay-da-curva.md`, retomado pelo pedido de continuar "da Parte C até a parada da Parte G", e o fechamento pedido depois do teste no jogo ("testei o rádio com o replay no jogo", com os itens 1 a 4). **O fechamento está na seção "Fechamento", no fim.** O teste no jogo de 22/10 não exercitou o rádio (a IA dirigiu a sessão), e um novo teste fica para você.
 - **Branch:** `etapa/radio-unidades-e-replay`, criada de `develop` (`5bb9f257`). Nada foi enviado ao remoto.
 - **Commits:**
   - `eb60d8d7` Pedido 36, Parte B: as decisões do pedido 35;
@@ -11,7 +11,11 @@
   - `2d1b5d81` Pedido 36, Parte E no backend: o replay da curva;
   - `19282168` Pedido 36, Parte E no front e no jogo: o replay da curva;
   - `4d625418` Pedido 36, Parte H: a documentação;
-  - o commit deste relatório e do handoff, e o merge em `develop` (os hashes estão no fim do chat e no `git log`).
+  - `8cac1de3` o relatório parado na Parte G e o handoff; merge em `develop`: `3262b4a8`;
+  - **o fechamento:**
+    - `52ce0a02` a frase do coach sobe de 6,6 para 7,3 s;
+    - `db39300f` o log do backend gira em 20 MB e guarda 5 arquivos;
+    - o commit da documentação, deste relatório e do handoff, e o merge em `develop` (os hashes estão no fim do chat e no `git log`).
 - **Arquivos de handoff** (`docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_*`):
   - `_relatorio.md` (este arquivo) e `_patch.diff` (a branch inteira contra `develop`);
   - **Parte A:** `_m1.json`;
@@ -19,7 +23,12 @@
   - **o log de 3,8 GB:** `_log_varredura.json` e `_varrer_log.py`;
   - **Parte C:** `_radio_antes_{13-10,18-10,21-10}.json`, `_radio_depois_{...}.json`, `_causas_antes_depois.json`, `_radio_offline.py` e `_texto_antes.py` (o texto de antes das unidades, para a rodada "antes");
   - **Parte D:** `_minimapa_folha.png`, `_minimapa_com_freadas.json`, `_minimapa_previa.py`, `_aproximado_c04.png`, `_aproximado_previa.py`;
-  - **Parte E:** `_radio_replay_21-10.json`, `_replay_folha.png`, `_replay_previa.py`, `_replay_tempos.json`, `_medir_replay.py`.
+  - **Parte E:** `_radio_replay_21-10.json`, `_replay_folha.png`, `_replay_previa.py`, `_replay_tempos.json`, `_medir_replay.py`;
+  - **o fechamento:**
+    - o teste no jogo de 22/10: `_csp_22-10.txt` (as linhas do app no log do CSP) e `_radio_22-10.json`;
+    - o limite de 7,3 s: `_causas_limite_7-3s.json`, `_radio_limite_7-3s_{13-10,18-10,21-10}.json`, `_contar_causas.py` e `_rodar_conferencia.sh` (o `_radio_offline.py` foi corrigido: agora passa o sinal da IA ao coach);
+    - o log: `_log_compactado.json` e `_compactar_log.py`;
+    - a conferência ponta a ponta: `_ao_vivo_replay.png`, `_ao_vivo_tela.jpg`, `_e2e_diagnostico.txt`, `_e2e_subir_backend.py`, `_e2e_runner_com_diagnostico.py` e `_e2e_receptor.py`.
 
 ## 1. O git status ao retomar
 
@@ -189,7 +198,84 @@ Em `develop` há um stash antigo ("Organização das 3 visões"), que não mexi.
 6. **Pelo menos 8 voltas sem a IA, com uma ida aos boxes** depois da primeira análise (a 3ª volta válida). Para o FPS de cada janela, desligue o replay por 2 ou 3 voltas e ligue de novo, e deixe a tela Ao vivo aberta no app.
 7. **Avise "testei o rádio com o replay no jogo".** Eu leio, sem mudar nada, o registro do rádio, as linhas `[radio_engenheiro]` do log do CSP (a voz, as medidas das janelas e o FPS com cada uma ligada e desligada) e os replays entregues, e completo este relatório e `docs/realidade_aumentada.md`.
 
-## O que precisa de decisão sua
+## As decisões da parada na Parte G (tomadas no fechamento)
 
-1. **O limite da frase do coach:** subir de 6,6 para cerca de 7,3 s, para a causa da C11 voltar (Parte C.3).
-2. **O log de 3,8 GB:** apagar, compactar ou guardar; e se a rotação proposta (20 MB, 5 arquivos) entra num pedido.
+1. **O limite da frase do coach:** subiu de 6,6 para 7,3 s (item 1 do fechamento).
+2. **O log de 3,8 GB:** compactado e apagado; a rotação foi implementada (itens 2 e 3).
+
+## Fechamento (22/10, depois do teste no jogo)
+
+### O teste no jogo de 22/10: a IA dirigiu, e o rádio ficou calado
+
+- **O que a gravação mostra** (`data/recordings/2026-10-22_09-46-01`): 4 minutos, das 09:46 às 09:50, com a volta de saída (2:09,2), uma volta completa (1:29,1) e 17 s da terceira. **O jogo marca 11.970 dos 13.598 quadros como dirigidos pela IA** (`isAIControlled`): o controle passou para a IA 36 s depois do começo da gravação, ainda na saída dos boxes, e ficou com ela até o fim. A volta 2 inteira foi da IA.
+- **O rádio fez o que a regra manda:** uma volta com a IA não tem resumo nem análise. O backend terminou com 0 mensagens entregues, 0 pendentes e 0 voltas válidas, e não houve mensagem de teste (nenhum `POST /api/radio/teste` no log). Por isso o replay não apareceu no jogo, e não há linha de voz no log do CSP.
+- **O que o log do CSP mostra** (`_csp_22-10.txt`, só lido):
+  - o app 0.4.0 carregou com as 4 janelas ("windows: 4") e baixou a referência com as 8 freadas;
+  - **as medidas das janelas confirmam uma das causas do corte (Parte D.1):** o minimapa estava em −9 × 543, numa tela de 2.560 × 1.080. 9 px da janela passavam da borda esquerda, e a área visível começou em 9 px. É a janela passando da borda da tela, a causa que o encaixe novo trata;
+  - **o FPS:** com as 4 janelas ligadas, 119,4 de média (21 blocos de 10 s, de 112 a 127). Com tudo desligado, só um bloco, no começo (137,3). O replay não chegou a aparecer; o custo de cada janela ficou sem medida. A tela e as condições (2.560 × 1.080, a IA dirigindo) não são as de 21/10 (136,9 com os dois mapas), então os dois números não se comparam.
+- **Uma falha no meu script de conferência, corrigida:** o `radio_offline.py` passava o sinal da IA com o nome `ai_controlled`, mas o coach lê `isAIControlled`. Fora do jogo, as voltas com a IA contavam como suas. As sessões de 13/10, 18/10 e 21/10 não têm nenhum quadro com a IA, então os números delas não mudam. Na sessão de hoje, o script corrigido dá 0 mensagens, como ao vivo.
+
+### Item 1: o limite da frase do coach em 7,3 s (`52ce0a02`)
+
+As 3 sessões passadas de novo pelo rádio, com a voz de verdade, e contadas entre as mensagens com causa:
+
+| sessão | antes das unidades | com as unidades e 6,6 s | **com 7,3 s** |
+|---|---|---|---|
+| 13/10 | 0 de 12 | 2 de 12 | **0 de 12** |
+| 18/10 | 0 de 13 | 2 de 13 | **0 de 13** |
+| 21/10 | 0 de 18 | 6 de 18 | **0 de 18** |
+
+- **Nenhuma mensagem perde mais a causa.** As frases do coach duram de 6,0 a 7,3 s, por exemplo "Curva 11: 1,3 segundo atrás. Mínima de 64 contra 94 quilômetros por hora." (7,2 s, 18/10).
+- **Todas continuam sendo entregues:** as mesmas 19, 18 e 29 mensagens, e as mesmas pendentes no fim (1 em 13/10, a última volta).
+- Os 29 testes do rádio passam. A suíte completa do backend está no fim.
+
+### Item 2: o `logs\backend.log` compactado e apagado
+
+- O app do repositório (aberto desde 09:45 para o teste) segurava o arquivo e escrevia nele. Fechei a janela do app do jeito normal, que também parou o backend, e conferi que nenhum processo tinha o arquivo aberto.
+- **`logs\backend.log.gz`:** 33.091.242 bytes (31,6 MiB), compactado com gzip, nível 6, em 21 s.
+- **A conferência,** abrindo o .gz de novo: **38.636.617 linhas, 3.792.687.753 bytes e o mesmo sha256** do original (`22e6c691…ce00a8`). Só então o original foi apagado (`_log_compactado.json`).
+
+### Item 3: a rotação do log (`db39300f`)
+
+- **`desktop/log-rotativo.js`:** o `main.js` escreve a saída do backend por ele, no lugar do `createWriteStream`. Quando uma escrita faria o `backend.log` passar de **20 MB**, ele vira `backend.1.log`, o `.1` vira `.2`, até **5 arquivos**; o mais velho sai. No máximo, cerca de 120 MB no disco.
+- **A conferência é a cada escrita, e não a cada hora,** como estava na proposta: um erro em laço como o de 04/10 gira o arquivo na hora, sem esperar.
+- **No arranque,** um arquivo que já passou do limite gira antes da primeira linha.
+- **Se não der para girar** (um arquivo preso por outro programa), o log segue no mesmo arquivo, o `desktop.log` recebe um aviso (uma vez) e a próxima escrita tenta de novo. O backend não para.
+- **Os testes** (`desktop/log-rotativo.test.js`, `npm test` na pasta `desktop`, com o `node:test` do próprio Node, sem pacote novo): 4, todos passando:
+  - gira no limite e guarda só os 5 mais novos, sem cortar linha;
+  - gira no arranque um arquivo grande;
+  - abaixo do limite, só acrescenta;
+  - sem conseguir girar, avisa e segue.
+- O `log-rotativo.js` entrou na lista de arquivos do instalador (`package.json`, `build.files`).
+
+### Item 4 (E.9): o replay na tela Ao vivo, ponta a ponta
+
+- **Como:** o backend do repositório na porta 8011, com as pastas isoladas no rascunho e o reprodutor ligado, tocou a sessão de 21/10 pelo caminho do jogo, desde a volta 1. A tela Ao vivo (o front de desenvolvimento apontado para a 8011) abriu numa aba "[teste]" do navegador do app, fechada no fim. O backend de teste, o receptor da captura e o front foram parados no fim.
+- **O resultado:** a frase da C12 da volta 2 ("Curva 12, esquerda: 6 décimos atrás da IA. Freia 16 metros antes da IA.") saiu com o replay. A tela mostrou a animação sob o cartão, com a pista, as duas linhas, os dois carros, as freadas, as mínimas, o traçado e o botão "Repetir o replay", que funciona (`_ao_vivo_tela.jpg`; os quadros do meio e do fim da animação, com densidade 3, em `_ao_vivo_replay.png`).
+- **A volta de saída não tem replay, de propósito.** No primeiro ensaio, comecei a reprodução na volta 2, e a frase dela saiu sem replay. O diagnóstico (um invólucro do runner, fora do repositório, `_e2e_diagnostico.txt`) mostrou a curva achada, mas com cobertura 0: o relógio da volta ao vivo vem do coach e só começa numa volta que cruzou a linha. Começando na volta 1, a frase da volta 2 teve cobertura de 99,4%. Num jogo de verdade, só a volta de saída dos boxes fica sem replay.
+- **Um achado, para decisão sua: na frase do coach, a voz e o replay não dizem o mesmo número.**
+
+  | | a voz e o cartão (o coach) | o replay |
+  |---|---|---|
+  | o que mede | o microssetor 44 (cerca de 70 m) | a curva C12 inteira (a regra do relatório de evolução) |
+  | freada | "Freia 16 metros antes da IA" | "você freia 56 m antes da IA" |
+  | mínimas | a sua 101, a da IA 145 km/h | 90 e 98 km/h |
+  | tempo | +0,64 s no microssetor | perde 0,92 s nesta curva |
+
+  Na análise das voltas, a fala e o replay usam a mesma medida (por isso os 7,9 m da C01 batiam). As saídas possíveis:
+  1. **no replay de uma frase do coach, os rótulos usam os números do coach** (os mesmos da voz), e as linhas e os carros continuam os da curva. **É a que recomendo:** o piloto vê o que ouviu;
+  2. o replay mostra a curva inteira, mas o rótulo diz que é a curva ("na curva toda: você freia 56 m antes da IA");
+  3. a frase do coach passa a falar a medida da curva, o que muda o que o coach diz (um critério do coach, fora do escopo do rádio).
+
+  Não mudei nada: é critério.
+
+### Testes do fechamento
+
+- **Backend:** `pytest tests`, 794 testes, todos passando (8 min 14 s).
+- **Desktop:** 4 testes da rotação, todos passando.
+- O front não mudou no fechamento (os 189 testes e o `tsc` da Parte F valem).
+
+### O que fica para você
+
+1. **A decisão da medida do replay na frase do coach** (acima; recomendo a opção 1).
+2. **Um novo teste no jogo, sem a IA:** os passos da Parte G valem. Antes do passo 6, confira que a IA não está dirigindo. A gravação só diz que o jogo marcou a IA a partir de 36 s (`isAIControlled`), não o que a ligou. Como o `backend.log` não existe mais, o app abre com um log novo, que já gira em 20 MB.

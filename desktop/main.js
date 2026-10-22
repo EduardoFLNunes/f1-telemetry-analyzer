@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const http = require('node:http');
 const https = require('node:https');
 const path = require('node:path');
+const { criarLogRotativo } = require('./log-rotativo');
 
 // Pedido 28: a test run of the packaged app keeps everything Electron writes --
 // Chromium profile, logs, the backend's data -- out of the real data folder.
@@ -739,7 +740,8 @@ function startBackendProcess() {
   const backendRuntimeRoot = resolveBackendRuntimeRoot();
   const coachRepo = resolveCoachRepo();
   desktopRuntimeState.coachRepoPath = coachRepo;
-  const backendLog = fs.createWriteStream(path.join(logsDir, 'backend.log'), { flags: 'a' });
+  // Pedido 36: o log gira em 20 MB e guarda 5 arquivos (backend.1.log a backend.5.log).
+  const backendLog = criarLogRotativo(path.join(logsDir, 'backend.log'), { avisar: appendDesktopLog });
   backendLog.write(`\n[${new Date().toISOString()}] Starting ${launch.source}: ${launch.command} ${launch.args.join(' ')}\n`);
   backendProcess = spawn(launch.command, launch.args, {
     cwd: launch.cwd || APP_ROOT,

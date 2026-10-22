@@ -346,13 +346,16 @@ O rádio com as unidades, a freada da IA nos mapas e o replay da curva (ADR 0021
 
 - **O que o rádio diz** (`backend/core/radio/texto.py`):
   - todo número falado tem a unidade: "7 décimos", "1,2 segundo", "1 minuto e 29,1 segundos", "46 metros", "1,8 metro", "Mínima de 102 contra 128 quilômetros por hora.";
-  - a unidade nunca sai para a fala caber: sai antes a segunda causa e depois a primeira. Nas três sessões passadas pelo rádio, 10 das 43 mensagens com causa a perderam por isso (todas frases do coach da C11 com a mínima);
+  - a unidade nunca sai para a fala caber: sai antes a segunda causa e depois a primeira. Com as unidades, 10 das 43 mensagens com causa a perdiam (todas frases do coach da C11 com a mínima); com o limite da frase do coach em 7,3 s (era 6,6), nenhuma perde;
   - a volta com rodada (uma curva com mais de 5 s de perda) não entra na análise, e o resumo dela não cita a curva.
-- **O log do backend:** o registro de acesso deixa de fora os pontos novos da tela Ao vivo e as mensagens do rádio (cerca de 6,25 MB por hora a menos).
+- **O log do backend:**
+  - o registro de acesso deixa de fora os pontos novos da tela Ao vivo e as mensagens do rádio (cerca de 6,25 MB por hora a menos);
+  - o `logs/backend.log` gira em 20 MB e guarda 5 arquivos, `backend.1.log` a `backend.5.log` (`desktop/log-rotativo.js`, com teste em `npm test` na pasta `desktop`);
+  - o arquivo de 3,8 GB (95% de um erro em laço do asyncio de 04/10) virou `logs/backend.log.gz`, com 31,6 MiB.
 - **O app do jogo** (`tools/csp_app/radio_engenheiro/`, versão 0.4.0):
   - os mapas e o replay se encaixam na parte visível da janela (o minimapa cortava à direita em 21/10) e escrevem as suas medidas no log do CSP;
   - a freada da IA: no minimapa, só a da próxima curva; no mapa aproximado, todas as da janela, com o rótulo;
   - a quarta janela, "Replay da curva": na reta, junto com a fala; nos boxes ou pausado, a última análise em repetição.
 - **A tela Ao vivo:** o mesmo replay sob o cartão da análise e da frase do coach com causa, com o botão "Repetir o replay".
 - **A rota nova:** `GET /api/radio/replay/{id}`.
-- **Falta:** o teste no jogo (Parte G), com o FPS de cada janela e as medidas do encaixe no log do CSP.
+- **Falta:** o teste no jogo com o rádio falando. No teste de 22/10, a IA dirigiu a sessão, e o rádio ficou calado, como manda a regra; o replay no jogo e o FPS de cada janela ficaram sem medida.

@@ -20,7 +20,8 @@
     "dist:win:package": "electron-builder --win nsis",
     "publicar": "node scripts/publish-version.js",
     "versoes": "node scripts/publish-version.js --indice",
-    "stamp": "node scripts/stamp-build-info.js"
+    "stamp": "node scripts/stamp-build-info.js",
+    "test": "node --test"
   },
   "devDependencies": {
     "electron": "^42.3.3",
@@ -38,6 +39,7 @@
       "main.js",
       "preload.js",
       "version-service.js",
+      "log-rotativo.js",
       "package.json",
       "build-info.json",
       "assets/**/*",

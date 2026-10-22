@@ -1,0 +1,20 @@
+{
+ "original": {
+  "bytes": 3792687753,
+  "linhas": 38636617,
+  "sha256": "22e6c6914ded9145f4b22e689adc15b27e2112f86d00147137546da237ce00a8"
+ },
+ "doGz": {
+  "bytes": 3792687753,
+  "linhas": 38636617,
+  "sha256": "22e6c6914ded9145f4b22e689adc15b27e2112f86d00147137546da237ce00a8"
+ },
+ "gzBytes": 33091242,
+ "segundos": {
+  "medir": 7,
+  "compactar": 21,
+  "conferir": 8
+ },
+ "bate": true,
+ "originalApagado": true
+}

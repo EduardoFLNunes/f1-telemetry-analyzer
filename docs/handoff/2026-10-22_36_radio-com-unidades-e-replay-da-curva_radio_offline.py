@@ -112,7 +112,7 @@ for lap in iter_laps(sessao):
         quadro = {"lap_time": num("lap_time_s"), "lap_number": d.get("lap_number"), "lap": d.get("lap_number"),
                   "world_x": num("x"), "world_z": num("z"), "speedKmh": num("speed_kmh"), "brake": num("brake"),
                   "throttle": num("throttle"), "track": "vhe_interlagos", "driver_id": "player_1",
-                  "ai_controlled": d.get("ai_controlled")}
+                  "isAIControlled": d.get("ai_controlled")}  # a chave que o coach le (channels.ai_controlled)
         coach.on_frame(quadro)
         volta.on_frame(quadro)
         radio.on_frame(quadro)
