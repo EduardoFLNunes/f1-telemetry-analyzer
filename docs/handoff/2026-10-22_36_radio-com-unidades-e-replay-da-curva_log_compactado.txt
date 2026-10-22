@@ -1,0 +1,1 @@
+log 3.532 GiB; gzip nivel 6: 31.5 MiB 0.9 %; 27 s

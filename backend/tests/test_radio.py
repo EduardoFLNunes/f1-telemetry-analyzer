@@ -49,8 +49,10 @@ def test_frase_de_diferenca_com_virgula_microssetor_a_partir_de_1_e_lado_por_ext
     assert m["texto"] == "+0,74 s para a volta da IA no microssetor 3"
     assert m["detalhe"] == "1,99 s contra 1,25 s · a IA freia 38 m depois de você · mínima da IA 157 km/h, a sua 94 km/h"
     # Pedido 35: a causa principal na voz (a freada passou do corte de 15 m: voce freou 38 m antes).
-    assert m["fala"] == "Curva 1, esquerda: 0,74 atrás da IA. Freia 38 metros antes."
-    assert m["falas"][-2:] == ["Curva 1, esquerda: 0,74 atrás da IA.", "Curva 1: 0,74 atrás."]
+    # Pedido 36: com a unidade (abaixo de 1 s, em decimos).
+    assert m["fala"] == "Curva 1, esquerda: 7 décimos atrás da IA. Freia 38 metros antes da IA."
+    assert m["falas"][-3:] == ["Curva 1, esquerda: 7 décimos atrás da IA.", "Curva 1: 7 décimos atrás da IA.",
+                               "Curva 1: 7 décimos atrás."]
     assert m["falaMaxS"] == 6.6                     # cerca de 6 s, com 10% de folga
     assert m["s"] == pytest.approx(3 * L / 60, abs=0.1)  # o fim do microssetor: ali o coach fecha a medida
     assert "." not in m["texto"].split(" s ")[0]  # numero com virgula
@@ -59,7 +61,7 @@ def test_frase_de_diferenca_com_virgula_microssetor_a_partir_de_1_e_lado_por_ext
 def test_frase_contra_a_sua_melhor_e_na_curva_da_direita():
     m = mensagem_de_diferenca(_evento(indice=29, perda=0.215, tipo="minha_melhor"), CURVAS, L)
     assert m["titulo"] == "C02, direita" and m["microssetor"] == 30
-    assert m["fala"] == "Curva 2, direita: 0,21 atrás da sua melhor. Freia 38 metros antes."
+    assert m["fala"] == "Curva 2, direita: 2 décimos atrás da sua melhor. Freia 38 metros antes da sua melhor."
     assert "na sua melhor volta você freou 38 m depois" in m["detalhe"]
 
 
@@ -71,7 +73,7 @@ def test_resumo_na_linha():
     m = mensagem_de_resumo(7, 88.132, 84.829, "volta_ia")
     assert m["titulo"] == "Volta 7: 1:28,132"
     assert m["texto"] == "+3,303 s para a volta da IA (1:24,829)"
-    assert m["fala"] == "Volta 7, 1 minuto e 28,1. 3,30 atrás da IA."
+    assert m["fala"] == "Volta 7: 1 minuto e 28,1 segundos, 3,3 segundos atrás da IA."
 
 
 # ----------------------------------------------------------------- janela ---
@@ -284,21 +286,23 @@ from core.radio.texto import causa_principal, mensagem_de_analise  # noqa: E402
 
 def test_a_causa_principal_freada_antes_da_minima_e_os_cortes():
     ev = {"brakeDeltaM": 15.0, "referenceMinSpeedKmh": 94.0, "yourMinSpeedKmh": 64.0}
-    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 15 metros antes."   # no corte: conta
+    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 15 metros antes da IA."   # no corte: conta
+    assert causa_principal(ev, "volta_ia")["falaCurta"] == "Freia 15 metros antes."
     ev["brakeDeltaM"] = -14.9                                                     # abaixo: vai para a minima
-    assert causa_principal(ev, "volta_ia")["fala"] == "Mínima 64 contra 94."
+    assert causa_principal(ev, "volta_ia")["fala"] == "Mínima de 64 contra 94 quilômetros por hora."
     ev["yourMinSpeedKmh"] = 94.0 - CORTE_MINIMA_KMH + 0.1                         # abaixo dos dois cortes
     assert causa_principal(ev, "volta_ia") is None
     ev["brakeDeltaM"] = -30.0
-    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 30 metros depois."
+    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 30 metros depois da IA."
     assert (CORTE_FREADA_M, CORTE_MINIMA_KMH) == (15.0, 8.0)
 
 
 def test_resumo_com_a_curva_de_maior_perda():
     m = mensagem_de_resumo(7, 90.363, 84.829, "volta_ia", {"curva": "C11", "lado": "esquerda", "perdaS": 1.14})
     assert m["detalhe"] == "mais perdeu na C11, esquerda: +1,14 s"
-    assert m["fala"] == "Volta 7, 1 minuto e 30,4. 5,53 atrás da IA. Mais perdeu na curva 11: 1,1."
-    assert m["falas"][-1] == "Volta 7, 1 e 30,4. 5,5 atrás."
+    assert m["fala"] == ("Volta 7: 1 minuto e 30,4 segundos, 5,5 segundos atrás da IA. "
+                         "Mais perdeu na curva 11: 1,1 segundo.")
+    assert m["falas"][-1] == "Volta 7: 5,5 segundos atrás."
     assert m["falaMaxS"] == 7.7 and m["curva"] == "C11"
 
 
@@ -323,16 +327,18 @@ def test_a_analise_so_curvas_perdidas_em_2_de_3_e_no_maximo_2():
     assert a["voltas"] == [6, 7, 8]
     m = mensagem_de_analise(a, "volta_ia", "ref#0013")
     assert m["titulo"] == "Análise das voltas 6 a 8"
-    assert m["linhas"][0].startswith("C12, esquerda: perde 0,90 s por volta (0,85 · 0,90 · 1,02)")
+    assert m["linhas"][0].startswith("C12, esquerda: perde 0,90 s por volta (0,85 s · 0,90 s · 1,02 s)")
     assert "mínima 80 contra 110 km/h" in m["linhas"][0] and "freada 50 m antes" in m["linhas"][0]
     assert "traçado 0,4 m mais à esquerda" in m["linhas"][0]        # o lado por extenso (ADR 0003)
-    # A fala no estilo da frase do coach: cada diferenca e uma frase ("Minima 80 contra 110.").
-    assert m["fala"].startswith("Análise das voltas 6 a 8. Curva 12: 0,9 por volta. Mínima 80 contra 110. "
-                                "Freia 50 metros antes.")
+    # A fala no estilo da frase do coach, cada diferenca uma frase, com as unidades (pedido 36).
+    assert m["fala"].startswith("Análise das voltas 6 a 8. Curva 12: perde 9 décimos por volta. "
+                                "Mínima de 80 contra 110 quilômetros por hora. Freia 50 metros antes da IA.")
     from core.radio.texto import _diferenca_falada
     assert _diferenca_falada("tracado", -7.9, {}) == "Passa 8 metros mais à direita."
     assert _diferenca_falada("tracado", 1.5, {}) == "Passa 1,5 metro mais à esquerda."
     assert _diferenca_falada("acelerador", 14.0, {}) == "Acelera 14 metros depois."
+    assert _diferenca_falada("tracado", -7.9, {}, "da IA") == "Passa 8 metros mais à direita que a IA."
+    assert _diferenca_falada("tracado", 2.4, {}, "da sua melhor") == "Passa 2 metros mais à esquerda que a sua melhor."
     assert m["falaMaxS"] == 8.8 and m["referencia"] == {"tipo": "volta_ia", "volta": "ref#0013"}
     # Tres curvas perdidas em 2 das 3: so as 2 de maior perda mediana.
     voltas[1]["medidas"][2]["perdaS"] = 0.4
@@ -394,9 +400,11 @@ def test_a_voz_fica_com_a_primeira_fala_que_cabe(tmp_path):
     radio.on_coaching_event(_evento(indice=2))
     _esperar_o_audio(radio)
     m = radio._pendentes[0]
-    assert 0.12 * len(m["falas"][0]) > 6.0               # a completa, com a causa, passa de 6 s
-    assert m["fala"] == m["falas"][1] == "Curva 1: 0,74 atrás. Freia 38 metros antes."
-    assert m["duracaoS"] <= 6.0 and ditas == m["falas"][:2]
+    assert 0.12 * len(m["falas"][0]) > 6.6               # a completa, com a causa, passa do limite
+    # O radio gera da mais completa a mais curta e fica com a primeira que cabe: ainda com a causa.
+    cabe = next(i for i, f in enumerate(m["falas"]) if 0.12 * len(f) <= 6.6)
+    assert m["fala"] == m["falas"][cabe] and "Freia 38 metros antes" in m["fala"]
+    assert m["duracaoS"] <= 6.6 and ditas == m["falas"][:cabe + 1]
 
 
 def test_volta_ao_vivo_manda_so_os_pontos_novos_e_guarda_a_volta_fechada():
@@ -573,3 +581,253 @@ def test_o_minimapa_usa_o_contorno_do_asfalto_tratado_do_cache(tmp_path):
     assert np.hypot(p[:, 0], p[:, 1] + 50).max() == pytest.approx(300, abs=0.5)
     m = minimapa.montar(circular_track(), [], None, None, None, 1.495, contornos)
     assert m["pista"] == {"origem": "asfalto tratado do cache", "contornos": contornos}
+
+
+def test_a_volta_com_rodada_sai_da_analise_e_o_resumo_nao_cita_a_curva(tmp_path, monkeypatch):
+    """Pedido 36, Parte B.2: como a volta 5 de 21/10 (26,5 s na C12), que entrou na primeira analise."""
+    from core.radio.analise import PERDA_DE_RODADA_S, teve_rodada
+
+    assert PERDA_DE_RODADA_S == 5.0 and teve_rodada(_medidas([26.5, 0.3, 0.5])) and not teve_rodada(_medidas([4.9, 0, 0]))
+    pista = _Pista()
+    radio = _radio(tmp_path, pista)
+    medidas = iter([_medidas([26.54, 0.30, 0.47]), _medidas([0.73, -0.1, 0.76]), _medidas([0.51, 0.2, 0.94]),
+                    _medidas([0.60, 0.1, 0.80])])
+    monkeypatch.setattr(radio, "_medidas_da_volta", lambda volta: next(medidas))
+
+    def linha(n):
+        pista.volta = {"volta": n, "tempoS": 110.0, "teveIA": False, "momento": n, "completa": True}
+        radio.on_frame(QUADRO)
+        pista.agora += 1.0
+        radio.on_frame(QUADRO)
+
+    pista.s = 50.0
+    for n in (5, 9, 11, 12):
+        linha(n)
+    resumos = [m for m in radio._pendentes if m["origem"] == "resumo"]
+    analises = [m for m in radio._pendentes if m["origem"] == "analise"]
+    da_volta_5 = next(r for r in resumos if r["volta"] == 5)
+    assert da_volta_5["piorCurva"] is None and "curva" not in da_volta_5["fala"].lower()
+    # A analise usa a volta valida seguinte (12) no lugar da 5.
+    assert len(analises) == 1 and analises[0]["voltasAnalisadas"] == [9, 11, 12]
+
+
+def test_o_log_de_acesso_deixa_de_fora_so_as_rotas_frequentes_bem_sucedidas():
+    """Pedido 36, Parte B.3: os pontos novos e as mensagens do radio saem do log; os erros e o resto ficam."""
+    import logging
+
+    from core.registro_de_acesso import LOGGER_DE_ACESSO, SemPedidosFrequentes, silenciar_rotas_frequentes
+
+    filtro = SemPedidosFrequentes()
+
+    def linha(caminho, codigo):
+        return logging.LogRecord(LOGGER_DE_ACESSO, logging.INFO, "", 0, '%s - "%s %s HTTP/%s" %d',
+                                 ("127.0.0.1:5000", "GET", caminho, "1.1", codigo), None)
+
+    assert not filtro.filter(linha("/api/live/volta/novos?versao=3&desde=10", 200))
+    assert not filtro.filter(linha("/api/radio/mensagens?desde=4&instancia=x", 200))
+    assert filtro.filter(linha("/api/live/volta/novos?versao=3&desde=10", 500))      # erro fica
+    assert filtro.filter(linha("/api/radio/minimapa", 200))                          # outra rota fica
+    assert filtro.filter(linha("/api/radio/mensagens-antigas", 200))
+    silenciar_rotas_frequentes()
+    silenciar_rotas_frequentes()
+    assert sum(isinstance(f, SemPedidosFrequentes) for f in logging.getLogger(LOGGER_DE_ACESSO).filters) == 1
+
+
+def _numeros_sem_unidade(fala: str):
+    """Os numeros de medida da fala que nao tem a unidade logo depois (pedido 36, Parte C.5).
+
+    Ficam de fora os numeros que nao sao medida: a curva, a volta, o microssetor e a lista
+    das voltas da analise. Dois numeros juntos podem dividir a unidade, no fim:
+    "minima de 102 contra 128 quilometros por hora"."""
+    import re
+
+    resto = re.sub(r"\b(Curva|curva|Volta|Microssetor) \d+", "", fala)
+    resto = re.sub(r"(Análise das voltas|Voltas) [\d, ea]+?\.", "", resto)
+    unidade = r"(décimos?|segundos?|metros?|minutos?|quilômetros por hora)\b"
+    faltando = []
+    for m in re.finditer(r"\d+(,\d+)?", resto):
+        depois = resto[m.end():]
+        if re.match(r"\s+" + unidade, depois) or re.match(r"\s+contra\s+\d+(,\d+)?\s+" + unidade, depois):
+            continue
+        faltando.append((m.group(0), fala))
+    return faltando
+
+
+def test_todo_numero_falado_tem_a_unidade_em_todos_os_tipos_de_mensagem():
+    """Pedido 36, Parte C.5: em todas as variantes de fala de todos os tipos de mensagem."""
+    from core.radio.texto import mensagem_de_resumo, mensagem_de_teste
+
+    mensagens = []
+    for perda, freada, minima_sua, tipo in ((0.04, 38.0, 93.5, "volta_ia"), (0.742, -20.0, 150.0, "volta_ia"),
+                                           (1.253, 0.0, 64.0, "volta_ia"), (2.5, 3.0, 154.0, "minha_melhor"),
+                                           (0.97, 60.0, 157.0, "minha_melhor")):
+        ev = _evento(indice=38, perda=perda, tipo=tipo)
+        ev["evidence"].update(brakeDeltaM=freada, yourMinSpeedKmh=minima_sua)
+        mensagens.append(mensagem_de_diferenca(ev, CURVAS, L))
+    for tempo, ref, pior in ((88.132, 84.829, None), (90.363, 84.829, {"curva": "C11", "lado": "esquerda", "perdaS": 1.14}),
+                             (85.3, 84.829, {"curva": "C01", "lado": "esquerda", "perdaS": 0.7}),
+                             (136.188, 84.829, {"curva": "C12", "lado": "esquerda", "perdaS": 2.6}),
+                             (59.95, None, None), (84.1, 84.829, None)):
+        mensagens.append(mensagem_de_resumo(8, tempo, ref, "volta_ia", pior))
+    voltas = [{"volta": n, "medidas": _medidas(p, freada=f, minima=mi, acelerador=a, tracado=tr)}
+              for n, p, f, mi, a, tr in ((6, [0.85, 0.30, 0.9], -50.0, -30.0, 12.0, 7.9),
+                                         (7, [0.90, -0.1, 1.1], -46.0, -24.0, 14.0, -1.5),
+                                         (8, [1.02, 0.25, 0.95], -40.0, -26.0, -9.0, 2.0))]
+    a = analisar(voltas)
+    for c in a["curvas"]:
+        c["ditas"] = ["freada", "minima", "acelerador", "tracado"]     # todas as medidas faladas
+    mensagens.append(mensagem_de_analise(a, "volta_ia"))
+    mensagens.append(mensagem_de_analise(a, "minha_melhor"))
+    mensagens.append(mensagem_de_teste())
+    falas = [f for m in mensagens for f in (m.get("falas") or [m["fala"]])]
+    assert len(falas) > 40
+    faltando = [x for f in falas for x in _numeros_sem_unidade(f)]
+    assert faltando == []
+    # O teste do teste: um numero solto e achado.
+    assert _numeros_sem_unidade("Curva 4: 1,0 por volta. Mínima 102 contra 128.") == [
+        ("1,0", "Curva 4: 1,0 por volta. Mínima 102 contra 128."), ("102", "Curva 4: 1,0 por volta. Mínima 102 contra 128."),
+        ("128", "Curva 4: 1,0 por volta. Mínima 102 contra 128.")]
+
+
+def test_a_freada_da_ia_por_curva_pela_regra_do_relatorio_de_evolucao():
+    """Pedido 36, Parte D.2: o primeiro ponto, do apice anterior ao apice, em que o freio passa de 0,15
+    (`ml.comparison.evolution.braking_point`); a curva sem freada fica de fora; a linha atravessa a pista."""
+    import numpy as np
+
+    from core.radio import minimapa
+    from ml.comparison.evolution import braking_point
+
+    sys.path.insert(0, str(BACKEND / "tests"))
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    s = np.asarray(track.s)
+
+    class _Curva:
+        def __init__(self, label, apice):
+            self.label, self.apex_s = label, float(apice)
+
+    class _Trecho:
+        def __init__(self, label, apice):
+            self.corner = _Curva(label, apice)
+
+    trechos = [_Trecho("C01-esq", s[100]), _Trecho("C02-dir", s[300]), _Trecho("C03-esq", s[500])]
+    freio = np.zeros(track.size)
+    freio[80:100] = 0.6          # a freada da C01 comeca no ponto 80
+    freio[270:300] = 0.14        # na C02, o freio nao passa de 0,15: sem freada
+    freio[460:500] = 0.9         # a da C03 comeca no 460
+    freadas = minimapa.freadas_da_referencia(track, trechos, freio.tolist())
+    assert [f["curva"] for f in freadas] == ["C01", "C03"]
+    assert freadas[0]["s"] == pytest.approx(braking_point(freio, track, s[500], s[100]), abs=0.05)
+    assert freadas[1]["s"] == pytest.approx(float(s[460]), abs=0.05)
+    (ax, az), (bx, bz) = freadas[0]["pontos"]
+    i = 80
+    largura = float(np.asarray(track.width_left)[i] + np.asarray(track.width_right)[i])
+    assert np.hypot(ax - bx, az - bz) == pytest.approx(largura, abs=0.05)   # de uma borda a outra
+    assert minimapa.freadas_da_referencia(track, trechos, [0.0] * 10) == []  # sem a grade inteira
+
+
+def _pista_de_teste_com_uma_curva():
+    """A pista circular de teste com uma curva de mentira (C03, a esquerda), para o replay."""
+    import numpy as np
+
+    from core.radio.analise import Pista
+
+    sys.path.insert(0, str(BACKEND / "tests"))
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    s = np.asarray(track.s)
+
+    class _Curva:
+        def __init__(self, label, inicio, apice, fim):
+            self.label, self.start_s, self.apex_s, self.end_s = label, float(inicio), float(apice), float(fim)
+
+    class _Trecho:
+        def __init__(self, curva, inicio, fim):
+            self.corner, self.start_s, self.end_s = curva, float(inicio), float(fim)
+
+    trechos = [_Trecho(_Curva("C02-dir", s[100], s[120], s[140]), s[60], s[200]),
+               _Trecho(_Curva("C03-esq", s[400], s[430], s[460]), s[200], s[600])]
+    return track, Pista(track=track, segmentos=trechos), s
+
+
+def _grade_de_teste(s, v_ms, lateral, freia_em, minima_em, minima_kmh):
+    import numpy as np
+
+    n = s.size
+    velocidade = np.full(n, v_ms * 3.6)
+    velocidade[minima_em] = minima_kmh
+    freio = np.zeros(n)
+    freio[freia_em:minima_em] = 0.8
+    acelerador = np.where(freio > 0, 0.0, 1.0)
+    return {"elapsed": s / v_ms, "velocidade": velocidade, "freio": freio, "acelerador": acelerador,
+            "lateral": np.full(n, float(lateral))}
+
+
+def test_o_replay_da_curva_tem_as_duas_linhas_freadas_minimas_tracado_e_a_perda():
+    """Pedido 36, Parte E: os dados de uma curva, so com as grades (nada de fisica nova)."""
+    import numpy as np
+
+    from core.radio.replay import dados_da_curva
+    from ml.comparison.evolution import segment_time
+
+    track, pista, s = _pista_de_teste_com_uma_curva()
+    voce = _grade_de_teste(s, 45.0, 1.5, freia_em=380, minima_em=425, minima_kmh=95.0)    # freia antes, mais a esquerda
+    ia = _grade_de_teste(s, 50.0, 0.0, freia_em=395, minima_em=430, minima_kmh=110.0)
+    d = dados_da_curva(pista, "C03", voce, float(s[-1] / 45.0), ia, float(s[-1] / 50.0), 7, "volta_ia")
+    assert d["curva"] == "C03" and d["lado"] == "esquerda" and d["volta"] == 7
+    assert d["rotuloDaReferencia"] == "IA (referência)"
+    lv, lr = d["linhas"]["voce"], d["linhas"]["referencia"]
+    assert len(lv) == len(lr) > 50 and lv[0][2] == 0.0 and lr[0][2] == 0.0          # cada um no seu tempo, da mesma entrada
+    assert lv[-1][2] > lr[-1][2]                                                    # a IA abre
+    assert d["duracaoS"] == pytest.approx(lv[-1][2], abs=1e-3)
+    assert {p[3] for p in lv} >= {1, 2}                                              # o pedal: freio e acelerador
+    assert d["freadas"]["distanciaM"] == pytest.approx(float(s[380] - s[395]), abs=0.1)   # freou 15 pontos antes
+    assert d["minimas"]["voce"]["kmh"] == 95.0 and d["minimas"]["referencia"]["kmh"] == 110.0
+    t = d["tracado"]
+    assert t["distanciaM"] == pytest.approx(1.5) and t["lado"] == "esquerda"         # ADR 0003: positivo = esquerda
+    assert np.hypot(t["voce"][0] - t["referencia"][0], t["voce"][1] - t["referencia"][1]) == pytest.approx(1.5, abs=0.01)
+    seg = pista.segmentos[1]
+    perda = segment_time(voce["elapsed"], s[-1] / 45.0, track, seg) - segment_time(ia["elapsed"], s[-1] / 50.0, track, seg)
+    assert d["perdaS"] == pytest.approx(perda, abs=1e-3) and d["perdaS"] > 0
+    assert dados_da_curva(pista, "C14", voce, 1.0, ia, 1.0, 7, "volta_ia") is None
+
+
+def test_o_replay_da_analise_usa_a_volta_mais_perto_da_mediana():
+    """Pedido 36, Parte E.2: na analise, a volta das 3 cuja perda na curva fica mais perto da mediana."""
+    from core.radio.replay import replay_da_analise, volta_mais_perto_da_mediana
+
+    voltas = [{"volta": 6}, {"volta": 7}, {"volta": 8}]
+    assert volta_mais_perto_da_mediana(voltas, {"perdas": [0.85, 0.90, 1.02], "perdaMedianaS": 0.90}) == 1
+    assert volta_mais_perto_da_mediana(voltas, {"perdas": [26.54, 0.73, 0.51], "perdaMedianaS": 0.73}) == 1
+    assert volta_mais_perto_da_mediana(voltas, {"perdas": [0.5], "perdaMedianaS": 0.5}) is None   # nao sao as 3
+
+    track, pista, s = _pista_de_teste_com_uma_curva()
+    ia = _grade_de_teste(s, 50.0, 0.0, 395, 430, 110.0)
+    tres = [{"volta": n, "tempoS": float(s[-1] / v), "grade": _grade_de_teste(s, v, 1.0, 385, 428, 100.0)}
+            for n, v in ((6, 44.0), (7, 46.0), (8, 48.0))]
+    analise = {"curvas": [{"curva": "C03", "perdas": [0.9, 0.6, 0.3], "perdaMedianaS": 0.6}]}
+    replays = replay_da_analise(pista, tres, analise, ia, float(s[-1] / 50.0), "volta_ia")
+    assert [(r["curva"], r["volta"]) for r in replays] == [("C03", 7)]
+
+
+def test_a_rota_do_replay(tmp_path, monkeypatch):
+    """Pedido 36, Parte E.6: a rota entrega os dados do replay de uma mensagem entregue; 404 sem replay."""
+    import asyncio
+
+    from fastapi import HTTPException
+
+    import main
+    from routers import radio as rota
+
+    radio = _radio(tmp_path, _Pista())
+    monkeypatch.setattr(main, "radio_do_engenheiro", radio)
+    radio._entregues.append({"id": 3, "origem": "analise", "_replay": [{"curva": "C01"}]})
+    radio._entregues.append({"id": 4, "origem": "resumo"})
+    dados = json.loads(asyncio.run(rota.get_replay(3)).body)
+    assert dados == {"id": 3, "origem": "analise", "curvas": [{"curva": "C01"}]}
+    for sem in (4, 99):
+        with pytest.raises(HTTPException) as erro:
+            asyncio.run(rota.get_replay(sem))
+        assert erro.value.status_code == 404

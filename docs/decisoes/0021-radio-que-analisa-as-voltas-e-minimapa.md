@@ -53,3 +53,9 @@
 - **O piloto ouve mais:** até 3 frases por volta, o resumo e uma análise a cada 3 voltas válidas. Se incomodar, a cadência da análise é o primeiro ajuste.
 - **O minimapa custa processamento dentro do jogo.** O custo é medido no teste no jogo, com o app ligado e desligado.
 - **A exceção do ADR 0020 continua do mesmo tamanho:** só a pasta do app, só pelos scripts. A única gravação nova é a do próprio app, dentro dessa pasta.
+
+## Atualizações
+
+- **22/10/2026 (pedido 36), a volta com rodada:** a volta em que uma curva perde mais de 5 s contra a referência (uma rodada ou uma saída de pista) não conta para a análise das voltas, e o resumo dela não cita a curva. É uma regra só do rádio: o coach, o store e as regras de volta válida do store não mudam.
+- **22/10/2026 (pedido 36), a voz:** a 1,4x, aprovada pelo Eduardo (era 1,25x no pedido 31).
+- **22/10/2026 (pedido 36), o replay da curva e as marcas de freada:** o app do jogo ganha uma quarta janela, "Replay da curva": a curva de que o rádio fala (a análise ou a frase do coach com causa), vista de cima, com a sua linha e a da referência, os dois carros cada um no seu tempo, as freadas, as mínimas, o traçado e o tempo perdido. Aparece na reta junto com a fala e some quando a janela de rádio acaba; nos boxes ou pausado, mostra a última análise em repetição. Os dados vêm de `/api/radio/replay/<id>`, só com as grades que o rádio já tem. Os dois mapas marcam a freada da IA pela regra do relatório de evolução: o minimapa só a da próxima curva, o mapa aproximado todas as da janela, com o rótulo. A gravação do app continua só dentro da pasta dele.

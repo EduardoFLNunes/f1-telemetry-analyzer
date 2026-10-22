@@ -19,6 +19,11 @@ Uma vez, quando o app abre ou a referencia muda (`versao`):
   `linhaDoJogoM` depois do s = 0 (pedido 33; a medida do store, pedido 34). O tempo da
   referencia nesse ponto (`tempoNaLinhaDoJogoS`) e somado ao cronometro do jogo para
   achar o fantasma: tempo da referencia = cronometro do jogo + tempoNaLinhaDoJogoS;
+* **a freada da referencia em cada curva** (pedido 36, Parte D.2): o ponto em que o freio
+  dela passa de 0,15, do apice da curva anterior ao apice, a mesma regra do relatorio de
+  evolucao (`ml.comparison.evolution.braking_point`, a janela de frenagem do pedido 17), e
+  a linha que atravessa a pista ali, de uma borda a outra da geometria oficial. Vem com a
+  referencia, uma vez por referencia;
 * **as curvas da ultima analise,** com a posicao do apice;
 * **o nome das 14 curvas,** na mesma posicao da tela Volta (`rotuloDaCurva`): do lado de
   fora, a largura da pista mais 9 m do apice.
@@ -147,6 +152,31 @@ def contorno_do_asfalto(repositorio: Optional[Path]) -> Optional[List[List[List[
     return _CONTORNO["contornos"]
 
 
+def freadas_da_referencia(track: Any, segmentos: List[Any], freio: Any) -> List[Dict[str, Any]]:
+    """A freada da referencia em cada curva (a regra do relatorio de evolucao) e a linha na pista.
+
+    Uma curva em que a referencia nao freia (o `ia_freia` falso do relatorio) fica de fora."""
+    from ml.comparison.evolution import braking_point
+
+    f = np.array([np.nan if v is None else float(v) for v in freio or []], dtype=float)
+    if f.size != int(track.size) or not segmentos:
+        return []
+    x, z = np.asarray(track.x, dtype=float), np.asarray(track.z, dtype=float)
+    normal = np.asarray(track.normal, dtype=float)
+    wl, wr = np.asarray(track.width_left, dtype=float), np.asarray(track.width_right, dtype=float)
+    out = []
+    for k, seg in enumerate(segmentos):
+        corner = seg.corner
+        s = braking_point(f, track, segmentos[k - 1].corner.apex_s, corner.apex_s)
+        if s is None:
+            continue
+        i = int(track.index_of(s))
+        out.append({"curva": corner.label[:3], "s": round(float(s), 1),
+                    "pontos": [[round(float(x[i] + normal[i, 0] * wl[i]), 2), round(float(z[i] + normal[i, 1] * wl[i]), 2)],
+                               [round(float(x[i] - normal[i, 0] * wr[i]), 2), round(float(z[i] - normal[i, 1] * wr[i]), 2)]]})
+    return out
+
+
 def montar(track: Any, segmentos: List[Any], referencia: Optional[Dict[str, Any]], tipo: Optional[str],
            analise: Optional[Dict[str, Any]], linha_m: float,
            contornos: Optional[List[List[List[float]]]] = None) -> Dict[str, Any]:
@@ -196,6 +226,8 @@ def montar(track: Any, segmentos: List[Any], referencia: Optional[Dict[str, Any]
                 # [x, z, tempo desde o s = 0, pedal]
                 "pontos": [[round(float(a), 2), round(float(b), 2), round(float(c), 3), int(d)]
                            for a, b, c, d in zip(px[r], pz[r], el[r], pedal[r])],
+                # pedido 36: a freada dela em cada curva, com a linha que atravessa a pista
+                "freadas": freadas_da_referencia(track, segmentos, referencia.get("freio")),
             }
     codigos = {seg.corner.label[:3]: seg.corner for seg in segmentos}
     for c in (analise or {}).get("curvas") or []:

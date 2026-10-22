@@ -1,6 +1,6 @@
 -- Rádio do engenheiro (pedido 31, ADR 0020; pedido 35, ADR 0021).
 --
--- Três janelas, cada uma ligada e desligada na barra de apps do jogo (manifest.ini):
+-- Quatro janelas, cada uma ligada e desligada na barra de apps do jogo (manifest.ini):
 --
 --   * o rádio (`janela`): a cada 0,3 s, pede ao backend local as mensagens novas
 --     (/api/radio/mensagens) e mostra o cartão por alguns segundos, com a vinheta e a
@@ -13,7 +13,10 @@
 --     perto da tela Volta ("fantasma por curva"). A câmera segue o carro e gira com a
 --     pista; a pista detalhada (asfalto, pintura e zebras) é uma imagem desenhada uma vez
 --     (`pista_detalhada.png`); por cima, o seu traçado e o do fantasma, pintados pelo
---     pedal, o carro, o fantasma, o nome das curvas e a diferença.
+--     pedal, o carro, o fantasma, o nome das curvas e a diferença;
+--   * o replay da curva (`replay`, pedido 36, Parte E): a curva citada pelo rádio, vista de
+--     cima, com a sua linha e a da referência, os dois carros, as freadas, as mínimas, o
+--     traçado e o tempo perdido. Na reta, junto com a fala; nos boxes, a última análise.
 --
 -- A voz tem três caminhos, um depois do outro (pedido 35, Parte B): a URL do backend;
 -- o arquivo que o backend grava em data/radio/audio/; e o áudio baixado para a
@@ -244,6 +247,7 @@ local function lerAPistaDoApp()
   local okJ, dados = pcall(JSON.parse, texto)
   if okJ and type(dados) == 'table' and type(dados.pista) == 'table' and type(dados.pista.contornos) == 'table' then
     mini.pista = dados.pista
+    mini.comprimento = tonumber(dados.comprimentoM) or mini.comprimento
     mini.linhaDoS0 = type(dados.linhaDoS0) == 'table' and dados.linhaDoS0 or nil
     mini.origem = 'arquivo do app'
     mini.desenhado = nil
@@ -279,6 +283,7 @@ local function baixarOMinimapa(versao)
       return
     end
     mini.pista = dados.pista
+    mini.comprimento = tonumber(dados.comprimentoM) or mini.comprimento
     mini.linhaDoS0 = type(dados.linhaDoS0) == 'table' and dados.linhaDoS0 or mini.linhaDoS0
     mini.origem = 'backend'
     mini.referencia = type(dados.referencia) == 'table' and type(dados.referencia.pontos) == 'table'
@@ -523,6 +528,9 @@ local function acompanharAVoz(t)
   end
 end
 
+-- Pedido 36: o replay da curva começa junto com o cartão (definido mais abaixo, na seção do replay).
+local comecarReplay
+
 local function avancar(t)
   if estado.atual and t < estado.ateQuando then
     return
@@ -540,6 +548,7 @@ local function avancar(t)
   local minimo = proxima.origem == 'analise' and CARTAO_DA_ANALISE_S or CARTAO_MINIMO_S
   estado.ateQuando = t + math.max(minimo, (tonumber(proxima.duracaoS) or 3) + FOLGA_DEPOIS_DA_VOZ_S)
   falar(proxima)
+  if comecarReplay then comecarReplay(proxima, t) end
 end
 
 -- ── o cartão ────────────────────────────────────────────────────────────
@@ -627,12 +636,55 @@ end
 
 -- ── o minimapa: a pista desenhada uma vez ───────────────────────────────
 
+-- Pedido 36, Parte D.1: a parte da janela que está na tela. Uma janela posta na borda
+-- da tela fica com um pedaço para fora, e o desenho que encaixava na janela inteira saía
+-- cortado. As medidas usam a posição da janela e o tamanho da tela da interface do CSP
+-- (as mesmas unidades, já com a escala da interface).
+local function areaVisivel(W, H)
+  local x0, y0, x1, y1 = 0, 0, W, H
+  local okP, pos = pcall(ui.windowPos)
+  local okU, estadoUi = pcall(ac.getUI)
+  if okP and pos and okU and estadoUi and estadoUi.windowSize then
+    local tela = estadoUi.windowSize
+    x0, y0 = math.max(0, -pos.x), math.max(0, -pos.y)
+    x1, y1 = math.min(W, tela.x - pos.x), math.min(H, tela.y - pos.y)
+    if x1 - x0 < 80 or y1 - y0 < 80 then x0, y0, x1, y1 = 0, 0, W, H end
+  end
+  return math.floor(x0), math.floor(y0), math.floor(x1), math.floor(y1)
+end
+
+-- Uma vez por janela, as medidas no log do CSP, para conferir no jogo o que corta.
+local medidasRegistradas = {}
+local function registrarAsMedidas(nome, W, H)
+  if medidasRegistradas[nome] then return end
+  medidasRegistradas[nome] = true
+  local okP, pos = pcall(ui.windowPos)
+  local okU, estadoUi = pcall(ac.getUI)
+  local okC, cursor = pcall(ui.getCursor)
+  local function par(v) return v and (decimal(v.x, 0) .. ' x ' .. decimal(v.y, 0)) or '?' end
+  local x0, y0, x1, y1 = areaVisivel(W, H)
+  log(nome .. ': janela ' .. decimal(W, 0) .. ' x ' .. decimal(H, 0) .. ' em ' .. par(okP and pos)
+    .. '; tela ' .. par(okU and estadoUi and estadoUi.windowSize) .. ', escala ' .. decimal(okU and estadoUi and estadoUi.uiScale or 1, 2)
+    .. '; cursor ' .. par(okC and cursor) .. '; visível de ' .. x0 .. ',' .. y0 .. ' a ' .. x1 .. ',' .. y1)
+end
+
+-- Desenha `corpo` com o recorte na janela inteira: o recorte padrão do ImGui tira uma faixa
+-- das bordas (metade do espaçamento interno), como o app Mumble do próprio CSP evita.
+local function naJanelaInteira(W, H, corpo, ...)
+  local recorte = ui.pushClipRect ~= nil and ui.popClipRect ~= nil
+  if recorte then ui.pushClipRect(vec2(0, 0), vec2(W, H), false) end
+  local ok, erro = pcall(corpo, ...)
+  if recorte then ui.popClipRect() end
+  if not ok then error(erro, 0) end
+end
+
 -- A mesma orientação do mapa do app (frontend/src/volta/projecao.ts): base(x, z) = (z, −x).
 local function naTela(x, z)
   return vec2(mini.ox + mini.k * z, mini.oy - mini.k * x)
 end
 
 local function ajustarAEscala(W, H)
+  local x0, y0, x1, y1 = areaVisivel(W, H)
   local umin, umax, vmin, vmax = math.huge, -math.huge, math.huge, -math.huge
   for _, contorno in ipairs(mini.pista.contornos) do
     for _, q in ipairs(contorno) do
@@ -641,12 +693,13 @@ local function ajustarAEscala(W, H)
       vmin, vmax = math.min(vmin, v), math.max(vmax, v)
     end
   end
-  local largura = W - 2 * MARGEM_DO_MINIMAPA
-  local altura = H - 2 * MARGEM_DO_MINIMAPA - TOPO_DO_MINIMAPA
+  local largura = (x1 - x0) - 2 * MARGEM_DO_MINIMAPA
+  local altura = (y1 - y0) - 2 * MARGEM_DO_MINIMAPA - TOPO_DO_MINIMAPA
   local k = math.min(largura / math.max(umax - umin, 1), altura / math.max(vmax - vmin, 1))
   mini.k = k
-  mini.ox = MARGEM_DO_MINIMAPA + (largura - k * (umax - umin)) / 2 - k * umin
-  mini.oy = MARGEM_DO_MINIMAPA + TOPO_DO_MINIMAPA + (altura - k * (vmax - vmin)) / 2 - k * vmin
+  mini.ox = x0 + MARGEM_DO_MINIMAPA + (largura - k * (umax - umin)) / 2 - k * umin
+  mini.oy = y0 + MARGEM_DO_MINIMAPA + TOPO_DO_MINIMAPA + (altura - k * (vmax - vmin)) / 2 - k * vmin
+  mini.visivel = { x0, y0, x1, y1 }
 end
 
 local function desenharAPista(W, H)
@@ -680,12 +733,12 @@ local function desenharAPista(W, H)
       local q = naTela(tonumber(c.x) or 0, tonumber(c.z) or 0)
       ui.drawCircle(q, 7, CORES.perda, 16, 2)
       -- O nome do lado de dentro quando a marca está perto da borda direita.
-      local nx = q.x + 9 + 26 > W and q.x - 9 - 26 or q.x + 9
+      local nx = q.x + 9 + 26 > mini.visivel[3] and q.x - 9 - 26 or q.x + 9
       ui.dwriteDrawText(tostring(c.curva), 11, vec2(nx, q.y - 7), CORES.perda)
     end
   end)
   mini.desenhado = tostring(mini.versao) .. '|' .. tostring(mini.origem)
-  mini.tamanho = W .. 'x' .. H
+  mini.tamanho = W .. 'x' .. H .. '|' .. table.concat(mini.visivel, ',')
 end
 
 -- ── o minimapa: o fantasma e a diferença ────────────────────────────────
@@ -796,26 +849,51 @@ end
 
 -- O texto de cima das duas janelas: a diferença (10 vezes por segundo, para ler sem
 -- piscar) ou o aviso, que quebra a linha e cabe na largura da janela.
-local function desenharODeCima(t, W, nota)
+local function desenharODeCima(t, W, nota, x0, y0)
+  x0, y0 = x0 or 0, y0 or 0
   if t - mini.mostradaEm >= 0.1 then
     mini.mostrada = mini.diferenca
     mini.mostradaEm = t
   end
   if nota then
-    caixa(nota, 11, vec2(MARGEM_DO_MINIMAPA, 4), vec2(W - 8, TOPO_DO_MINIMAPA + 2), CORES.fraco)
+    caixa(nota, 11, vec2(x0 + MARGEM_DO_MINIMAPA, y0 + 4), vec2(W - 8, y0 + TOPO_DO_MINIMAPA + 2), CORES.fraco)
   elseif mini.mostrada then
     local d = mini.mostrada
     local sinal = d >= 0 and '+' or '−'
-    ui.dwriteDrawText(sinal .. decimal(math.abs(d), 2) .. ' s', 17, vec2(MARGEM_DO_MINIMAPA, 4),
+    ui.dwriteDrawText(sinal .. decimal(math.abs(d), 2) .. ' s', 17, vec2(x0 + MARGEM_DO_MINIMAPA, y0 + 4),
       d > 0 and CORES.perda or CORES.ganho)
     local ref = mini.referencia
     local contra = ref and ref.tipo == 'minha_melhor' and 'para a sua melhor' or 'para a volta da IA'
-    ui.dwriteDrawText(contra, 11, vec2(MARGEM_DO_MINIMAPA + 82, 10), CORES.apoio)
+    ui.dwriteDrawText(contra, 11, vec2(x0 + MARGEM_DO_MINIMAPA + 82, y0 + 10), CORES.apoio)
   end
 end
 
+-- Pedido 36, Parte D.2: a freada da IA na próxima curva, pela posição do carro na volta de
+-- referência (o índice do ponto mais perto e o passo da grade).
+local function proximaFreada(carro)
+  local ref = mini.referencia
+  if not ref or type(ref.freadas) ~= 'table' or #ref.freadas == 0 then return nil end
+  tempoDaReferenciaPerto(ref.pontos, carro.position.x, carro.position.z)
+  local L = tonumber(mini.comprimento) or 0
+  if not mini.iCarro or L <= 0 then return nil end
+  local s = (mini.iCarro - 1) * L / #ref.pontos
+  local melhor, menor = nil, math.huge
+  for _, f in ipairs(ref.freadas) do
+    local d = ((tonumber(f.s) or 0) - s) % L
+    if d < menor then melhor, menor = f, d end
+  end
+  return melhor
+end
+
+local desenharMinimapa
+
 -- Chamada a cada quadro pela janela do minimapa (manifest.ini, FUNCTION_MAIN).
 function minimapa(dt)
+  local tamanho = ui.windowSize()
+  naJanelaInteira(tamanho.x, tamanho.y, desenharMinimapa, dt)
+end
+
+desenharMinimapa = function(dt)
   local t = relogio()
   mini.ultimoQuadro = t
   local tamanho = ui.windowSize()
@@ -829,7 +907,8 @@ function minimapa(dt)
     return
   end
   local W, H = math.floor(tamanho.x), math.floor(tamanho.y)
-  local agoraTamanho = W .. 'x' .. H
+  registrarAsMedidas('minimapa', W, H)
+  local agoraTamanho = W .. 'x' .. H .. '|' .. table.concat({ areaVisivel(W, H) }, ',')
   if mini.tamanho ~= agoraTamanho then
     mini.mudouEm = mini.mudouEm or t
   else
@@ -847,14 +926,26 @@ function minimapa(dt)
 
   local ok, carro = pcall(ac.getCar, 0)
   if not ok or not carro then return end
+  -- A freada da IA só na próxima curva: uma marca curta atravessando a pista, na cor do fantasma.
+  local f = proximaFreada(carro)
+  if f and f.pontos and f.pontos[1] and f.pontos[2] then
+    local a, b = naTela(f.pontos[1][1], f.pontos[1][2]), naTela(f.pontos[2][1], f.pontos[2][2])
+    local mx, my, dx, dy = (a.x + b.x) / 2, (a.y + b.y) / 2, b.x - a.x, b.y - a.y
+    local n = math.sqrt(dx * dx + dy * dy)
+    if n > 0.01 then
+      dx, dy = dx / n * 7, dy / n * 7
+      ui.drawLine(vec2(mx - dx, my - dy), vec2(mx + dx, my + dy), CORES.fantasma, 3)
+    end
+  end
   local fx, fz = oFantasma(carro)
   if fx then
     desenharMarca(naTela(fx, fz), 5, CORES.fantasmaMiolo, CORES.fantasma, 2)
   end
   desenharMarca(naTela(carro.position.x, carro.position.z), 5.5, CORES.voce, CORES.vermelho, 2.5)
-  desenharODeCima(t, W, notaDoFantasma())
+  local v = mini.visivel or { 0, 0, W, H }
+  desenharODeCima(t, v[3], notaDoFantasma(), v[1], v[2])
   if estado.fora and mini.referencia then
-    ui.dwriteDrawText('sem backend', 11, vec2(W - 74, H - 18), CORES.fraco)
+    ui.dwriteDrawText('sem backend', 11, vec2(v[3] - 74, v[4] - 18), CORES.fraco)
   end
 end
 
@@ -925,8 +1016,15 @@ local function rotuloCentrado(texto, tamanhoDaFonte, sx, sy, cor)
   ui.dwriteDrawText(texto, tamanhoDaFonte, vec2(sx - largura / 2, sy - tamanhoDaFonte / 2), cor)
 end
 
+local desenharAproximado
+
 -- Chamada a cada quadro pela janela do mapa aproximado (manifest.ini, FUNCTION_MAIN).
 function aproximado(dt)
+  local tamanho = ui.windowSize()
+  naJanelaInteira(tamanho.x, tamanho.y, desenharAproximado, dt)
+end
+
+desenharAproximado = function(dt)
   local t = relogio()
   perto.ultimoQuadro = t
   local tamanho = ui.windowSize()
@@ -938,6 +1036,8 @@ function aproximado(dt)
   local ok, carro = pcall(ac.getCar, 0)
   if not ok or not carro then return end
   local W, H = tamanho.x, tamanho.y
+  registrarAsMedidas('mapa aproximado', W, H)
+  local vx0, vy0, vx1, vy1 = areaVisivel(W, H)
 
   -- O zoom pela roda do mouse, com o ponteiro sobre a janela.
   if ui.windowHovered() then
@@ -969,8 +1069,8 @@ function aproximado(dt)
     perto.angulo = perto.angulo + giro * math.min(1, (tonumber(dt) or 0.016) / GIRO_S)
   end
   local cs, sn = math.cos(perto.angulo), math.sin(perto.angulo)
-  local k = math.min(W, H) / perto.zoom
-  local cx, cy = W * 0.5, H * CENTRO_VERTICAL
+  local k = math.min(vx1 - vx0, vy1 - vy0) / perto.zoom
+  local cx, cy = (vx0 + vx1) * 0.5, vy0 + (vy1 - vy0) * CENTRO_VERTICAL
   local bu0, bv0 = z, -x
   local function tela(px, pz)
     local eu, ev = pz - bu0, -px - bv0
@@ -1013,6 +1113,27 @@ function aproximado(dt)
   end
   tracar(rastro.pontos, #rastro.pontos, 3, 1.0, 5, tela, W, H)
 
+  -- Pedido 36, Parte D.2: a freada da IA em todas as curvas da janela, uma linha atravessando o
+  -- asfalto (um pouco além das bordas) com o rótulo. O seu traçado mostra onde você freou: o
+  -- vermelho começa ali.
+  if ref and type(ref.freadas) == 'table' then
+    local rotuloDaFreada = ref.tipo == 'minha_melhor' and 'freada da sua melhor' or 'freada da IA'
+    for _, f in ipairs(ref.freadas) do
+      if f.pontos and f.pontos[1] and f.pontos[2] then
+        local ax, ay = tela(f.pontos[1][1], f.pontos[1][2])
+        local bx, by = tela(f.pontos[2][1], f.pontos[2][2])
+        local mx, my = (ax + bx) / 2, (ay + by) / 2
+        if mx > -40 and mx < W + 40 and my > -40 and my < H + 40 then
+          local ex, ey = (bx - ax) * 0.15, (by - ay) * 0.15
+          ui.drawLine(vec2(ax - ex, ay - ey), vec2(bx + ex, by + ey), CORES.fantasma, 2.5)
+          local lx, ly = bx + ex, by + ey
+          if ax - ex > lx then lx, ly = ax - ex, ay - ey end
+          ui.dwriteDrawText(rotuloDaFreada, 11, vec2(lx + 4, ly - 7), CORES.fantasma)
+        end
+      end
+    end
+  end
+
   -- O nome das curvas que estão na janela.
   for _, c in ipairs(mini.rotulos) do
     local sx, sy = tela(tonumber(c.x) or 0, tonumber(c.z) or 0)
@@ -1040,10 +1161,366 @@ function aproximado(dt)
   rotuloCentrado('Você · V' .. tostring((tonumber(carro.lapCount) or 0) + 1), 12, cx, cy + 18, CORES.texto)
 
   -- O texto de cima numa faixa escura: a pista passa por baixo dele.
-  ui.drawRectFilled(vec2(0, 0), vec2(W, TOPO_DO_MINIMAPA + 2), CORES.faixaDoTexto, 6)
-  desenharODeCima(t, W, notaDoFantasma())
+  ui.drawRectFilled(vec2(vx0, vy0), vec2(vx1, vy0 + TOPO_DO_MINIMAPA + 2), CORES.faixaDoTexto, 6)
+  desenharODeCima(t, vx1, notaDoFantasma(), vx0, vy0)
   if estado.fora and ref then
-    ui.dwriteDrawText('sem backend', 11, vec2(W - 74, H - 18), CORES.fraco)
+    ui.dwriteDrawText('sem backend', 11, vec2(vx1 - 74, vy1 - 18), CORES.fraco)
+  end
+end
+
+-- ── o replay da curva (pedido 36, Parte E) ──────────────────────────────
+
+-- O que o engenheiro mostra quando fala de uma curva: a curva vista de cima, sobre a pista
+-- tratada (a `pista_detalhada.png`), com as duas linhas ("você" e "IA (referência)"), os dois
+-- carros andando cada um no seu próprio tempo a partir da mesma entrada, as duas freadas com
+-- a distância, as duas mínimas com o valor, o traçado e o tempo perdido. Os dados vêm de
+-- `/api/radio/replay/<id>`, uma vez por mensagem.
+--
+-- * Na reta: aparece junto com a fala de uma análise ou de uma frase do coach com causa,
+--   toca cada curva citada e some quando a janela de rádio acaba (o `restaS` da mensagem,
+--   calculado pelo backend na entrega). Nunca dentro das 14 curvas.
+-- * Nos boxes ou com o jogo pausado: a última análise, em repetição e com a janela maior,
+--   até você sair.
+local REPLAY_PAUSA_NO_FIM_S = 1.2       -- o fim de cada curva fica parado um pouco
+local REPLAY_MINIMO_S = 6               -- na reta, sem o `restaS` da mensagem (um backend antigo)
+local REPLAY_AUMENTO_NOS_BOXES = 1.6    -- nos boxes, a janela cresce isto
+local REPLAY_TOPO = 24
+local REPLAY_MARGEM = 18
+
+local rp = {
+  dados = {},            -- [id da mensagem] = { curvas }
+  ordem = {},            -- os ids guardados, do mais antigo ao mais novo (no máximo 6)
+  atual = nil, inicio = 0, ateQuando = 0,
+  ultimaAnalise = nil,
+  noBox = false, inicioNoBox = 0,
+  janela = nil, tamanhoOriginal = nil, avisouTamanho = false,
+  ultimoQuadro = -100,
+}
+
+local function guardarReplay(id, curvas)
+  rp.dados[id] = curvas
+  rp.ordem[#rp.ordem + 1] = id
+  while #rp.ordem > 6 do
+    local velho = table.remove(rp.ordem, 1)
+    if velho ~= rp.ultimaAnalise then rp.dados[velho] = nil end
+  end
+end
+
+-- Chamada quando uma mensagem com replay vira o cartão atual (`avancar`).
+comecarReplay = function(m, t)
+  if type(m.replay) ~= 'table' or type(m.replay.url) ~= 'string' then return end
+  local id = m.id
+  rp.atual, rp.inicio = id, t
+  rp.ateQuando = t + (tonumber(m.restaS) or REPLAY_MINIMO_S)
+  if m.origem == 'analise' then rp.ultimaAnalise = id end
+  if rp.dados[id] then return end
+  pedirAoBackend(BACKEND .. m.replay.url, function(err, r)
+    if err or not r or r.status ~= 200 then
+      log('replay: o backend não entregou o replay da mensagem ' .. tostring(id) .. ' (' .. tostring(err or (r and r.status)) .. ')')
+      return
+    end
+    local ok, dados = pcall(JSON.parse, r.body)
+    if ok and type(dados) == 'table' and type(dados.curvas) == 'table' and #dados.curvas > 0 then
+      guardarReplay(id, dados.curvas)
+    end
+  end)
+end
+
+-- A câmera da curva, a mesma da tela Ao vivo (frontend/src/aoVivo/replay.ts): a entrada para
+-- cima, na orientação do mapa do app (base(x, z) = (z, −x)), encaixada na área.
+local function cameraDaCurva(c, x0, y0, W, H)
+  local ref = c.linhas.referencia
+  local a, b = ref[1], ref[math.min(#ref, 11)]
+  local du, dv = b[2] - a[2], -(b[1] - a[1])
+  local ang = -math.pi / 2 - math.atan2(dv, du)
+  local cs, sn = math.cos(ang), math.sin(ang)
+  local function girar(x, z)
+    local u, v = z, -x
+    return u * cs - v * sn, u * sn + v * cs
+  end
+  local gx0, gx1, gy0, gy1 = math.huge, -math.huge, math.huge, -math.huge
+  for _, linha in ipairs({ c.linhas.voce, ref }) do
+    for _, p in ipairs(linha) do
+      local gx, gy = girar(p[1], p[2])
+      gx0, gx1 = math.min(gx0, gx), math.max(gx1, gx)
+      gy0, gy1 = math.min(gy0, gy), math.max(gy1, gy)
+    end
+  end
+  local k = math.min((W - 2 * REPLAY_MARGEM) / math.max(gx1 - gx0, 1),
+                     (H - 2 * REPLAY_MARGEM - REPLAY_TOPO) / math.max(gy1 - gy0, 1))
+  local ax, ay = x0 + W / 2, y0 + REPLAY_TOPO + (H - REPLAY_TOPO) / 2
+  local rcx, rcy = (gx0 + gx1) / 2, (gy0 + gy1) / 2
+  local cam = { k = k, ax = ax, ay = ay, rcx = rcx, rcy = rcy, cs = cs, sn = sn }
+  function cam.tela(x, z)
+    local gx, gy = girar(x, z)
+    return ax + k * (gx - rcx), ay + k * (gy - rcy)
+  end
+  -- O inverso, para a imagem da pista: da tela ao mundo e dele às coordenadas do mapa (x, −z).
+  function cam.mapa(sx, sy)
+    local gx, gy = (sx - ax) / k + rcx, (sy - ay) / k + rcy
+    local u, v = gx * cs + gy * sn, -gx * sn + gy * cs
+    local x, z = -v, u
+    return x, -z
+  end
+  return cam
+end
+
+-- Onde o carro está no tempo `t` (cada um no seu tempo; o fim da linha depois dela).
+local function posicaoNoTempo(linha, t)
+  local n = #linha
+  if n == 0 then return 0, 0 end
+  if t <= linha[1][3] then return linha[1][1], linha[1][2] end
+  if t >= linha[n][3] then return linha[n][1], linha[n][2] end
+  local a, b = 1, n
+  while b - a > 1 do
+    local m = math.floor((a + b) / 2)
+    if linha[m][3] <= t then a = m else b = m end
+  end
+  local p, q = linha[a], linha[b]
+  local u = q[3] > p[3] and (t - p[3]) / (q[3] - p[3]) or 0
+  return p[1] + (q[1] - p[1]) * u, p[2] + (q[2] - p[2]) * u
+end
+
+local function larguraDoRotulo(texto)
+  local largura = #texto * 6
+  if ui.measureDWriteText ~= nil then
+    local ok, medida = pcall(ui.measureDWriteText, texto, 11)
+    if ok and medida then largura = medida.x end
+  end
+  return largura + 6
+end
+
+-- Os rótulos do replay não cobrem um ao outro, nem os carros e as marcas, nem saem da janela:
+-- cada um tenta, em ordem, os lugares em volta do seu ponto (o preferido primeiro), encostado e
+-- depois cada vez mais longe (com um fio até o ponto); se nenhum estiver livre, fica no
+-- preferido, empurrado para dentro da janela.
+local LUGARES_DO_ROTULO = { 'direita', 'esquerda', 'abaixo', 'acima', 'direitaAcima', 'esquerdaAbaixo',
+                            'direitaAbaixo', 'esquerdaAcima' }
+local ALTURA_DO_ROTULO = 15
+local AFASTAMENTOS_DO_ROTULO = { 0, 14, 28, 44, 60 }
+local DIRECAO_DO_ROTULO = { direita = { 1, 0 }, esquerda = { -1, 0 }, abaixo = { 0, 1 }, acima = { 0, -1 },
+                            direitaAcima = { 0.7, -0.7 }, esquerdaAbaixo = { -0.7, 0.7 },
+                            direitaAbaixo = { 0.7, 0.7 }, esquerdaAcima = { -0.7, -0.7 } }
+
+local function novoQuadroDeRotulos(x0, y0, W, H)
+  return { area = { x0 + 2, y0 + REPLAY_TOPO + 2, x0 + W - 2, y0 + H - 2 }, ocupados = {} }
+end
+
+local function ocupar(q, x, y, raio)
+  q.ocupados[#q.ocupados + 1] = { x - raio, y - raio, x + raio, y + raio }
+end
+
+local function cantoDoRotulo(lugar, x, y, w, h)
+  if lugar == 'direita' then return x + 8, y - h / 2 end
+  if lugar == 'esquerda' then return x - 8 - w, y - h / 2 end
+  if lugar == 'abaixo' then return x - w / 2, y + 8 end
+  if lugar == 'acima' then return x - w / 2, y - 8 - h end
+  if lugar == 'direitaAcima' then return x + 6, y - 6 - h end
+  if lugar == 'esquerdaAbaixo' then return x - 6 - w, y + 6 end
+  if lugar == 'direitaAbaixo' then return x + 6, y + 6 end
+  return x - 6 - w, y - 6 - h
+end
+
+local function rotulo(q, texto, x, y, cor, preferido)
+  local w, h = larguraDoRotulo(texto), ALTURA_DO_ROTULO
+  local a = q.area
+  local function livre(bx, by)
+    if bx < a[1] or by < a[2] or bx + w > a[3] or by + h > a[4] then return false end
+    for _, r in ipairs(q.ocupados) do
+      if bx < r[3] and r[1] < bx + w and by < r[4] and r[2] < by + h then return false end
+    end
+    return true
+  end
+  local bx, by, longe
+  for _, d in ipairs(AFASTAMENTOS_DO_ROTULO) do
+    for i = 0, #LUGARES_DO_ROTULO do
+      local lugar = i == 0 and preferido or LUGARES_DO_ROTULO[i]
+      local dir = DIRECAO_DO_ROTULO[lugar]
+      local cx, cy = cantoDoRotulo(lugar, x + dir[1] * d, y + dir[2] * d, w, h)
+      if livre(cx, cy) then bx, by, longe = cx, cy, d > 0 break end
+    end
+    if bx then break end
+  end
+  if not bx then
+    bx, by = cantoDoRotulo(preferido, x, y, w, h)
+    bx = math.min(math.max(bx, a[1]), a[3] - w)
+    by = math.min(math.max(by, a[2]), a[4] - h)
+  end
+  q.ocupados[#q.ocupados + 1] = { bx, by, bx + w, by + h }
+  if longe then
+    ui.drawLine(vec2(x, y), vec2(math.min(math.max(x, bx), bx + w), math.min(math.max(y, by), by + h)), cor, 1)
+  end
+  ui.drawRectFilled(vec2(bx, by), vec2(bx + w, by + h), CORES.fantasmaMiolo, 3)
+  ui.dwriteDrawText(texto, 11, vec2(bx + 3, by + 1), cor)
+end
+
+local function desenharACurva(c, t, x0, y0, W, H)
+  local cam = cameraDaCurva(c, x0, y0, W, H)
+  ui.drawRectFilled(vec2(x0, y0), vec2(x0 + W, y0 + H), CORES.fundoDoMapa, 6)
+  local img = mini.imagem
+  if img then
+    local function uv(sx, sy)
+      local mx, my = cam.mapa(sx, sy)
+      return vec2((mx - img.x0) * img.pxPorMetro / img.largura, (my - img.y0) * img.pxPorMetro / img.altura)
+    end
+    ui.drawImageQuad(img.caminho, vec2(x0, y0), vec2(x0 + W, y0), vec2(x0 + W, y0 + H), vec2(x0, y0 + H), CORES.branco,
+      uv(x0, y0), uv(x0 + W, y0), uv(x0 + W, y0 + H), uv(x0, y0 + H))
+  end
+  local function linha(pontos, cor)
+    ui.pathClear()
+    for _, p in ipairs(pontos) do
+      local sx, sy = cam.tela(p[1], p[2])
+      ui.pathLineTo(vec2(sx, sy))
+    end
+    ui.pathStroke(cor, false, 2.5)
+  end
+  linha(c.linhas.referencia, CORES.fantasma)
+  linha(c.linhas.voce, CORES.vermelho)
+  -- Os pontos que os rótulos não cobrem: os dois carros, as freadas, as mínimas e o traçado.
+  local q = novoQuadroDeRotulos(x0, y0, W, H)
+  local rx, rz = posicaoNoTempo(c.linhas.referencia, t)
+  local vx, vz = posicaoNoTempo(c.linhas.voce, t)
+  local rsx, rsy = cam.tela(rx, rz)
+  local vsx, vsy = cam.tela(vx, vz)
+  ocupar(q, rsx, rsy, 9)
+  ocupar(q, vsx, vsy, 9)
+  local mv, mr = c.minimas.voce, c.minimas.referencia
+  local mvx, mvy = cam.tela(mv.x, mv.z)
+  local mrx, mry = cam.tela(mr.x, mr.z)
+  ocupar(q, mvx, mvy, 5)
+  ocupar(q, mrx, mry, 5)
+  local tv, tr = c.tracado.voce, c.tracado.referencia
+  local tvx, tvy = cam.tela(tv[1], tv[2])
+  local trx, try = cam.tela(tr[1], tr[2])
+  ocupar(q, tvx, tvy, 5)
+  ocupar(q, trx, try, 5)
+  -- As freadas: um traço em cada linha e a distância entre elas.
+  local contra = c.referencia == 'minha_melhor' and 'da sua melhor' or 'da IA'
+  local function traco(m, cor)
+    if type(m) ~= 'table' then return nil end
+    local sx, sy = cam.tela(tonumber(m.x) or 0, tonumber(m.z) or 0)
+    ui.drawLine(vec2(sx - 7, sy), vec2(sx + 7, sy), cor, 3)
+    ocupar(q, sx, sy, 7)
+    return sx, sy
+  end
+  local fx, fy = traco(c.freadas.voce, CORES.vermelho)
+  traco(c.freadas.referencia, CORES.fantasma)
+  local d = tonumber(c.freadas.distanciaM)
+  if fx and d then
+    local m = math.floor(math.abs(d) + 0.5)
+    local texto = m < 1 and ('você freia no mesmo ponto ' .. contra:gsub('^da ', 'que a '))
+      or ('você freia ' .. m .. ' m ' .. (d < 0 and 'antes ' or 'depois ') .. contra)
+    rotulo(q, texto, fx, fy, CORES.vermelho, 'direita')
+  end
+  -- O traçado: uma seta entre as duas linhas, no ponto da mínima da referência.
+  local amarelo = CORES_DO_PEDAL[0]
+  if math.sqrt((tvx - trx) ^ 2 + (tvy - try) ^ 2) > 2 then
+    ui.drawLine(vec2(trx, try), vec2(tvx, tvy), amarelo, 1.5)
+    local a = math.atan2(tvy - try, tvx - trx)
+    ui.drawTriangleFilled(vec2(tvx, tvy), vec2(tvx - 7 * math.cos(a - 0.5), tvy - 7 * math.sin(a - 0.5)),
+      vec2(tvx - 7 * math.cos(a + 0.5), tvy - 7 * math.sin(a + 0.5)), amarelo)
+  end
+  rotulo(q, 'você passa ' .. decimal(tonumber(c.tracado.distanciaM) or 0, 1) .. ' m mais à ' .. tostring(c.tracado.lado),
+    (tvx + trx) / 2, (tvy + try) / 2, amarelo, 'abaixo')
+  -- As mínimas, no ponto de cada uma.
+  ui.drawCircleFilled(vec2(mvx, mvy), 3.5, CORES.vermelho, 12)
+  ui.drawCircleFilled(vec2(mrx, mry), 3.5, CORES.fantasma, 12)
+  rotulo(q, 'mínima ' .. math.floor(mv.kmh + 0.5) .. ' km/h', mvx, mvy, CORES.vermelho, 'esquerda')
+  rotulo(q, 'mínima ' .. math.floor(mr.kmh + 0.5) .. ' km/h', mrx, mry, CORES.fantasma, 'direita')
+  -- Os dois carros, cada um no seu tempo.
+  desenharMarca(vec2(rsx, rsy), 6.5, CORES.fantasmaMiolo, CORES.fantasma, 2.5)
+  desenharMarca(vec2(vsx, vsy), 6.5, CORES.voce, CORES.vermelho, 2.5)
+  rotulo(q, tostring(c.rotuloDaReferencia or 'IA (referência)'), rsx, rsy, CORES.fantasma, 'direitaAcima')
+  rotulo(q, 'você', vsx, vsy, CORES.texto, 'esquerdaAbaixo')
+  -- O alto: a curva, a volta e o tempo perdido.
+  ui.drawRectFilled(vec2(x0, y0), vec2(x0 + W, y0 + REPLAY_TOPO), CORES.faixaDoTexto, 6)
+  local perda = tonumber(c.perdaS) or 0
+  local volta = c.volta and (' · volta ' .. tostring(c.volta)) or ''
+  ui.dwriteDrawText(tostring(c.curva) .. ', ' .. tostring(c.lado) .. volta .. ' · ' .. (perda >= 0 and 'perde ' or 'ganha ')
+    .. decimal(math.abs(perda), 2) .. ' s nesta curva', 12, vec2(x0 + 10, y0 + 5), CORES.texto)
+end
+
+-- Nos boxes, a janela cresce (e volta ao tamanho de antes na saída). A janela é achada pelo título.
+local function aumentarNosBoxes(aumentar)
+  if ac.accessAppWindow == nil or ac.getAppWindows == nil then return end
+  if not rp.janela then
+    local ok, janelas = pcall(ac.getAppWindows)
+    if ok and type(janelas) == 'table' then
+      for _, j in ipairs(janelas) do
+        if type(j.title) == 'string' and j.title:find('Replay da curva', 1, true) then
+          local okA, acesso = pcall(ac.accessAppWindow, j.name)
+          if okA and acesso then rp.janela = acesso end
+        end
+      end
+    end
+    if not rp.janela then
+      if not rp.avisouTamanho then
+        log('replay: não achei a janela para aumentar nos boxes; o replay fica no tamanho dela')
+        rp.avisouTamanho = true
+      end
+      return
+    end
+  end
+  pcall(function()
+    if aumentar then
+      rp.tamanhoOriginal = rp.janela:size()
+      rp.janela:resize(rp.tamanhoOriginal * REPLAY_AUMENTO_NOS_BOXES)
+    elseif rp.tamanhoOriginal then
+      rp.janela:resize(rp.tamanhoOriginal)
+      rp.tamanhoOriginal = nil
+    end
+  end)
+end
+
+local desenharOReplay
+
+-- Chamada a cada quadro pela janela do replay (manifest.ini, FUNCTION_MAIN).
+function replay(dt)
+  local tamanho = ui.windowSize()
+  naJanelaInteira(tamanho.x, tamanho.y, desenharOReplay, dt)
+end
+
+desenharOReplay = function(dt)
+  local t = relogio()
+  rp.ultimoQuadro = t
+  local tamanho = ui.windowSize()
+  if CALADO or not APROXIMADO then
+    local falta = CALADO and FALTA or (#FALTA_NO_MINIMAPA > 0 and FALTA_NO_MINIMAPA or FALTA_NO_APROXIMADO)
+    desenharAviso('Replay da curva: esta versão do CSP não tem ' .. table.concat(falta, ', ') .. '.', tamanho)
+    return
+  end
+  local W, H = tamanho.x, tamanho.y
+  registrarAsMedidas('replay', W, H)
+  local okC, carro = pcall(ac.getCar, 0)
+  local okS, sim = pcall(ac.getSim)
+  local noBox = (okC and carro and (carro.isInPitlane or carro.isInPit)) or (okS and sim and sim.isPaused) or false
+  if noBox ~= rp.noBox then
+    rp.noBox = noBox
+    rp.inicioNoBox = t
+    aumentarNosBoxes(noBox)
+  end
+  local curvas, inicio, repetir = nil, 0, false
+  if noBox and rp.ultimaAnalise and rp.dados[rp.ultimaAnalise] then
+    curvas, inicio, repetir = rp.dados[rp.ultimaAnalise], rp.inicioNoBox, true
+  elseif rp.atual and t < rp.ateQuando and rp.dados[rp.atual] then
+    curvas, inicio = rp.dados[rp.atual], rp.inicio
+  end
+  if not curvas then return end
+  -- Cada curva citada, uma depois da outra (e de novo, nos boxes).
+  local total = 0
+  for _, c in ipairs(curvas) do total = total + (tonumber(c.duracaoS) or 0) + REPLAY_PAUSA_NO_FIM_S end
+  local tc = t - inicio
+  if repetir and total > 0 then tc = tc % total end
+  local i = 1
+  while i < #curvas and tc > (tonumber(curvas[i].duracaoS) or 0) + REPLAY_PAUSA_NO_FIM_S do
+    tc = tc - (tonumber(curvas[i].duracaoS) or 0) - REPLAY_PAUSA_NO_FIM_S
+    i = i + 1
+  end
+  local c = curvas[i]
+  local x0, y0, x1, y1 = areaVisivel(W, H)
+  desenharACurva(c, math.min(tc, tonumber(c.duracaoS) or 0), x0, y0, x1 - x0, y1 - y0)
+  if noBox then
+    ui.dwriteDrawText('nos boxes: a última análise, em repetição', 11, vec2(x0 + 10, y1 - 18), CORES.apoio)
   end
 end
 
@@ -1051,7 +1528,8 @@ end
 
 local function novaContagem()
   return { soma = 0, n = 0, minimo = math.huge, maximo = 0, parado = 0,
-           mini = { ligado = 0, desligado = 0 }, perto = { ligado = 0, desligado = 0 } }
+           mini = { ligado = 0, desligado = 0 }, perto = { ligado = 0, desligado = 0 },
+           rep = { ligado = 0, desligado = 0 } }
 end
 local fps = novaContagem()
 
@@ -1073,7 +1551,7 @@ local function amostrarOFps()
     fps.minimo = math.min(fps.minimo, v)
     fps.maximo = math.max(fps.maximo, v)
     local agora = relogio()
-    for nome, ultimo in pairs({ mini = mini.ultimoQuadro, perto = perto.ultimoQuadro }) do
+    for nome, ultimo in pairs({ mini = mini.ultimoQuadro, perto = perto.ultimoQuadro, rep = rp.ultimoQuadro }) do
       local c = fps[nome]
       if agora - ultimo < 0.5 then c.ligado = c.ligado + 1 else c.desligado = c.desligado + 1 end
     end
@@ -1082,7 +1560,7 @@ local function amostrarOFps()
     if fps.n > 0 then
       log('fps: média ' .. decimal(fps.soma / fps.n, 1) .. ' (mín ' .. decimal(fps.minimo, 0) .. ', máx '
         .. decimal(fps.maximo, 0) .. ') em ' .. fps.n .. ' s; minimapa ' .. situacao(fps.mini)
-        .. '; mapa aproximado ' .. situacao(fps.perto))
+        .. '; mapa aproximado ' .. situacao(fps.perto) .. '; replay ' .. situacao(fps.rep))
     end
     fps = novaContagem()
   end

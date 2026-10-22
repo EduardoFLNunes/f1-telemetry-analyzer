@@ -1,0 +1,199 @@
+{
+ "13-10": {
+  "antes": {
+   "mensagens": 19,
+   "comCausa": 12,
+   "perderamACausa": 0,
+   "quais": [],
+   "duracao": {
+    "resumo": [
+     6.07,
+     7.65,
+     13
+    ],
+    "coach": [
+     5.82,
+     6.46,
+     5
+    ],
+    "analise": [
+     7.3,
+     7.3,
+     1
+    ]
+   }
+  },
+  "depois": {
+   "mensagens": 19,
+   "comCausa": 12,
+   "perderamACausa": 2,
+   "quais": [
+    [
+     "coach",
+     4,
+     "Curva 11, esquerda: 1,1 segundo atrás da IA."
+    ],
+    [
+     "coach",
+     10,
+     "Curva 11, esquerda: 5 décimos atrás da IA."
+    ]
+   ],
+   "duracao": {
+    "resumo": [
+     6.04,
+     7.41,
+     13
+    ],
+    "coach": [
+     3.52,
+     6.44,
+     5
+    ],
+    "analise": [
+     8.3,
+     8.3,
+     1
+    ]
+   }
+  }
+ },
+ "18-10": {
+  "antes": {
+   "mensagens": 18,
+   "comCausa": 13,
+   "perderamACausa": 0,
+   "quais": [],
+   "duracao": {
+    "resumo": [
+     6.07,
+     7.7,
+     13
+    ],
+    "coach": [
+     5.93,
+     6.23,
+     3
+    ],
+    "analise": [
+     8.42,
+     8.56,
+     2
+    ]
+   }
+  },
+  "depois": {
+   "mensagens": 18,
+   "comCausa": 13,
+   "perderamACausa": 2,
+   "quais": [
+    [
+     "coach",
+     4,
+     "Curva 11, esquerda: 1,3 segundo atrás da IA."
+    ],
+    [
+     "coach",
+     10,
+     "Curva 11, esquerda: 5 décimos atrás da IA."
+    ]
+   ],
+   "duracao": {
+    "resumo": [
+     5.98,
+     7.48,
+     13
+    ],
+    "coach": [
+     3.52,
+     6.37,
+     3
+    ],
+    "analise": [
+     7.8,
+     8.74,
+     2
+    ]
+   }
+  }
+ },
+ "21-10": {
+  "antes": {
+   "mensagens": 29,
+   "comCausa": 18,
+   "perderamACausa": 0,
+   "quais": [],
+   "duracao": {
+    "coach": [
+     5.89,
+     6.58,
+     10
+    ],
+    "resumo": [
+     6.19,
+     7.68,
+     17
+    ],
+    "analise": [
+     7.39,
+     8.35,
+     2
+    ]
+   }
+  },
+  "depois": {
+   "mensagens": 29,
+   "comCausa": 18,
+   "perderamACausa": 6,
+   "quais": [
+    [
+     "coach",
+     1,
+     "Curva 11, esquerda: 3,2 segundos atrás da IA."
+    ],
+    [
+     "coach",
+     5,
+     "Curva 11, esquerda: 6 décimos atrás da IA."
+    ],
+    [
+     "coach",
+     8,
+     "Curva 11, esquerda: 1,8 segundo atrás da IA."
+    ],
+    [
+     "coach",
+     12,
+     "Curva 11, esquerda: 5 décimos atrás da IA."
+    ],
+    [
+     "coach",
+     15,
+     "Curva 11, esquerda: 7 décimos atrás da IA."
+    ],
+    [
+     "coach",
+     19,
+     "Curva 11, esquerda: 5 décimos atrás da IA."
+    ]
+   ],
+   "duracao": {
+    "coach": [
+     3.47,
+     6.4,
+     10
+    ],
+    "resumo": [
+     6.3,
+     7.54,
+     17
+    ],
+    "analise": [
+     8.32,
+     8.68,
+     2
+    ]
+   }
+  }
+ }
+}

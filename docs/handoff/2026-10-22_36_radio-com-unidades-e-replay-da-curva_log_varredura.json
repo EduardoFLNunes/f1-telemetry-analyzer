@@ -1,0 +1,218 @@
+{
+ "bytes": 3792073323,
+ "linhas": 38628231,
+ "tipos": 144,
+ "maiores": [
+  {
+   "tipo": "<data> - asyncio - ERROR - Exception in callback gather.<locals>._done_callback(<Task finishe...> result=None>) at C:\\Users\\Dokas\\AppData\\Local",
+   "linhas": 4801438,
+   "bytes": 1017904856,
+   "de": "2026-10-04 02:24",
+   "ate": "2026-10-04 13:51",
+   "porcento": 26.84
+  },
+  {
+   "tipo": "handle: <Handle gather.<locals>._done_callback(<Task finishe...> result=None>) at C:\\Users\\Dokas\\AppData\\Local\\Programs\\Python\\Python#\\lib\\asyncio\\tasks.py:#",
+   "linhas": 4801438,
+   "bytes": 782634394,
+   "de": "2026-10-04 02:24",
+   "ate": "2026-10-04 13:51",
+   "porcento": 20.64
+  },
+  {
+   "tipo": "  File \"C:\\Users\\Dokas\\AppData\\Local\\Programs\\Python\\Python#\\lib\\asyncio\\tasks.py\", line #, in _done_callback",
+   "linhas": 4801438,
+   "bytes": 547363932,
+   "de": "2026-10-04 02:24",
+   "ate": "2026-10-04 13:51",
+   "porcento": 14.43
+  },
+  {
+   "tipo": "  File \"C:\\Users\\Dokas\\AppData\\Local\\Programs\\Python\\Python#\\lib\\asyncio\\events.py\", line #, in _run",
+   "linhas": 4801438,
+   "bytes": 499349552,
+   "de": "2026-10-04 02:24",
+   "ate": "2026-10-04 13:51",
+   "porcento": 13.17
+  },
+  {
+   "tipo": "NameError: free variable 'outer' referenced before assignment in enclosing scope",
+   "linhas": 4801438,
+   "bytes": 393717916,
+   "de": "2026-10-04 02:24",
+   "ate": "2026-10-04 13:51",
+   "porcento": 10.38
+  },
+  {
+   "tipo": "    self._context.run(self._callback, *self._args)",
+   "linhas": 4801438,
+   "bytes": 249674776,
+   "de": "2026-10-04 02:24",
+   "ate": "2026-10-04 13:51",
+   "porcento": 6.58
+  },
+  {
+   "tipo": "Traceback (most recent call last):",
+   "linhas": 4801737,
+   "bytes": 172862532,
+   "de": "2026-06-19 19:46",
+   "ate": "2026-10-21 21:17",
+   "porcento": 4.56
+  },
+  {
+   "tipo": "    if outer.done():",
+   "linhas": 4801438,
+   "bytes": 105631636,
+   "de": "2026-10-04 02:24",
+   "ate": "2026-10-04 13:51",
+   "porcento": 2.79
+  },
+  {
+   "tipo": "INFO:     #.#:# - \"GET /api/live/volta/novos?<consulta> HTTP/#\" # OK",
+   "linhas": 65338,
+   "bytes": 6186738,
+   "de": "2026-10-21 10:51",
+   "ate": "2026-10-21 21:18",
+   "porcento": 0.16
+  },
+  {
+   "tipo": "<data> - core.opponents.opponents_receiver - INFO - Opponents telemetry packets received=# last_from=#.#:# last_bytes=#",
+   "linhas": 30043,
+   "bytes": 4542903,
+   "de": "2026-06-08 10:35",
+   "ate": "2026-10-21 21:18",
+   "porcento": 0.12
+  },
+  {
+   "tipo": "<data> - core.opponents.opponents_receiver - INFO - Opponents telemetry summary received=# accepted=# ignored_player=#",
+   "linhas": 30042,
+   "bytes": 4142154,
+   "de": "2026-06-08 10:35",
+   "ate": "2026-10-21 21:18",
+   "porcento": 0.11
+  },
+  {
+   "tipo": "INFO:     #.#:# - \"GET /api/radio/mensagens?<consulta> HTTP/#\" # OK",
+   "linhas": 36581,
+   "bytes": 3858020,
+   "de": "2026-10-18 12:48",
+   "ate": "2026-10-21 21:18",
+   "porcento": 0.1
+  },
+  {
+   "tipo": "INFO:     #.#:# - \"GET /api/runtime/status HTTP/#\" # OK",
+   "linhas": 13877,
+   "bytes": 985267,
+   "de": "2026-06-13 14:24",
+   "ate": "2026-10-21 20:31",
+   "porcento": 0.03
+  },
+  {
+   "tipo": "INFO:     #.#:# - \"GET /api/recording/status HTTP/#\" # OK",
+   "linhas": 10359,
+   "bytes": 756207,
+   "de": "2026-06-15 23:22",
+   "ate": "2026-10-21 21:18",
+   "porcento": 0.02
+  },
+  {
+   "tipo": "INFO:     #.#:# - \"GET /api/live/racing-line?<consulta> HTTP/#\" # OK",
+   "linhas": 3834,
+   "bytes": 521428,
+   "de": "2026-06-15 23:22",
+   "ate": "2026-10-04 14:35",
+   "porcento": 0.01
+  },
+  {
+   "tipo": "INFO:     #.#:# - \"GET /api/health HTTP/#\" # OK",
+   "linhas": 4649,
+   "bytes": 292887,
+   "de": "2026-06-08 10:27",
+   "ate": "2026-10-21 21:18",
+   "porcento": 0.01
+  },
+  {
+   "tipo": "INFO:     #.#:# - \"GET /api/live/opponents HTTP/#\" # OK",
+   "linhas": 3772,
+   "bytes": 267812,
+   "de": "2026-06-15 23:22",
+   "ate": "2026-10-21 21:18",
+   "porcento": 0.01
+  },
+  {
+   "tipo": "INFO:     #.#:# - \"GET /api/sessions?<consulta> HTTP/#\" # OK",
+   "linhas": 3511,
+   "bytes": 259251,
+   "de": "2026-06-15 23:22",
+   "ate": "2026-10-21 20:31",
+   "porcento": 0.01
+  },
+  {
+   "tipo": "INFO:     #.#:# - \"GET /api/live/volta HTTP/#\" # OK",
+   "linhas": 3651,
+   "bytes": 244617,
+   "de": "2026-10-18 12:48",
+   "ate": "2026-10-18 13:10",
+   "porcento": 0.01
+  },
+  {
+   "tipo": "INFO:     #.#:# - \"GET /api/track/geometry HTTP/#\" # OK",
+   "linhas": 3067,
+   "bytes": 217757,
+   "de": "2026-06-15 23:22",
+   "ate": "2026-10-21 20:31",
+   "porcento": 0.01
+  },
+  {
+   "tipo": "INFO:     #.#:# - \"GET /api/coleta/ao-vivo HTTP/#\" # OK",
+   "linhas": 2596,
+   "bytes": 184316,
+   "de": "2026-10-18 12:48",
+   "ate": "2026-10-21 21:18",
+   "porcento": 0.0
+  },
+  {
+   "tipo": "INFO:     #.#:# - \"GET /api/live/player-physics HTTP/#\" # OK",
+   "linhas": 768,
+   "bytes": 58368,
+   "de": "2026-06-19 19:49",
+   "ate": "2026-10-21 20:31",
+   "porcento": 0.0
+  },
+  {
+   "tipo": "  File \"C:\\Users\\Dokas\\Desktop\\f#-telemetry-analyzer\\backend\\core\\websocket_server.py\", line #, in _drain_frames",
+   "linhas": 299,
+   "bytes": 34684,
+   "de": "2026-06-19 19:46",
+   "ate": "2026-10-21 21:17",
+   "porcento": 0.0
+  },
+  {
+   "tipo": "  File \"C:\\Users\\Dokas\\Desktop\\f#-telemetry-analyzer\\backend\\core\\websocket_server.py\", line #, in broadcast",
+   "linhas": 299,
+   "bytes": 33444,
+   "de": "2026-06-19 19:46",
+   "ate": "2026-10-21 21:17",
+   "porcento": 0.0
+  },
+  {
+   "tipo": "RuntimeError: Task <Task pending name='Task-#' coro=<TelemetryBroadcaster._drain_frames() running at C:\\Users\\Dokas\\Desktop\\f#-telemetry-analyzer\\backend\\c",
+   "linhas": 124,
+   "bytes": 30752,
+   "de": "2026-06-19 19:54",
+   "ate": "2026-10-21 21:09",
+   "porcento": 0.0
+  }
+ ],
+ "porDia": {
+  "(antes da primeira data)": 0.0,
+  "2026-06-08": 0.0,
+  "2026-06-13": 0.0,
+  "2026-06-15": 0.1,
+  "2026-06-16": 0.1,
+  "2026-06-19": 3.6,
+  "2026-10-04": 3601.1,
+  "2026-10-18": 0.8,
+  "2026-10-21": 10.7
+ }
+}

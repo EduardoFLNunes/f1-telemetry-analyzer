@@ -159,6 +159,7 @@ Foram mais voltas que as 3 de cada bloco do roteiro, o que dá mais amostras par
 1. **A voz passou de 1,25x para 1,4x sem estar no pedido** (`042c09cb`, `core/radio/audio.py`, `VELOCIDADE_PADRAO`):
    - **por quê:** a 1,25x, os números falados por extenso faziam a frase com a causa, o resumo com a curva e a análise passarem de 6, 7 e 8 s (medido: 6,8, 8,2 e 8,5 s). A 1,4x, cabem;
    - **a decisão é sua,** depois do teste. Voltar é mudar uma linha. A 1,25x, algumas mensagens sairiam na variante mais curta, sem a causa, ou esperariam uma janela maior;
+   - **aprovado por você em 22/10** (pedido 36): a voz fica a 1,4x;
    - no teste de 21/10, a voz a 1,4x tocou nas 30 mensagens.
 2. **O minimapa saiu primeiro com as bordas da geometria oficial,** e não com o contorno do asfalto do cache que o pedido (Parte E.2) pedia. Foi corrigido no fechamento.
 3. **O mapa aproximado** (a terceira janela) não estava no pedido. Foi acrescentado a seu pedido, depois da primeira captura do jogo.

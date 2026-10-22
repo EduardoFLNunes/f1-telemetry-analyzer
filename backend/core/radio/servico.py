@@ -32,9 +32,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Deque, Dict, List, Optional
 
+import numpy as np
+
 from . import audio as audio_do_radio
-from .analise import COBERTURA_MINIMA, VOLTAS_POR_ANALISE, Pista, analisar, cobertura, grade, medidas_da_volta
+from .analise import (COBERTURA_MINIMA, VOLTAS_POR_ANALISE, Pista, analisar, cobertura, grade, medidas_da_volta,
+                      teve_rodada)
 from .janelas import Janela, carregar_geometria, curvas_da_geometria, dentro, janelas_de_radio, tempo_que_resta
+from .replay import cobertura_na_curva, dados_da_curva, janela_da_curva, replay_da_analise
 from .texto import (
     FALA_MAXIMA_S,
     CurvaDaPista,
@@ -55,7 +59,7 @@ GUARDADAS = 200
 CAMPOS_DO_REGISTRO = ("id", "instancia", "entregueEm", "voltaDoCarro", "sCarro", "velocidadeKmh", "janela",
                       "s", "microssetor", "curva", "origem", "titulo", "texto", "detalhe", "linhas", "fala",
                       "falaMaxS", "duracaoS", "causa", "perdaS", "volta", "tempoS", "piorCurva",
-                      "voltasAnalisadas", "curvasDaAnalise", "referencia")
+                      "voltasAnalisadas", "curvasDaAnalise", "referencia", "restaS", "replay")
 
 
 class RadioDoEngenheiro:
@@ -71,6 +75,7 @@ class RadioDoEngenheiro:
         relogio: Callable[[], float] = time.time,
         volta_fechada: Callable[[], Optional[Dict[str, Any]]] = lambda: None,
         volta_de_referencia: Callable[[], Optional[Dict[str, Any]]] = lambda: None,
+        volta_atual: Callable[[], Optional[Dict[str, Any]]] = lambda: None,
     ):
         self.pasta = Path(pasta_de_dados) / "data" / "radio"
         self.pasta_audio = self.pasta / "audio"
@@ -83,6 +88,8 @@ class RadioDoEngenheiro:
         self._relogio = relogio
         self._volta_fechada = volta_fechada
         self._volta_de_referencia = volta_de_referencia
+        self._volta_atual = volta_atual
+        self._grade_da_ultima: Optional[Dict[str, Any]] = None   # pedido 36: a grade da volta que fechou
         self._lock = threading.RLock()
         self._audio = ThreadPoolExecutor(max_workers=1, thread_name_prefix="radio-voz")
         self.instancia = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -234,8 +241,11 @@ class RadioDoEngenheiro:
         if cobertura(fechada["linhas"]) < COBERTURA_MINIMA:
             return None
         try:
-            return medidas_da_volta(grade(fechada["linhas"]), float(volta["tempoS"]), grade(ref),
-                                    float(ref["tempoS"]), self._geometria)
+            g = grade(fechada["linhas"])
+            medidas = medidas_da_volta(g, float(volta["tempoS"]), grade(ref), float(ref["tempoS"]), self._geometria)
+            # Pedido 36: a grade fica guardada para o replay da curva da analise.
+            self._grade_da_ultima = {"volta": volta.get("volta"), "grade": g, "tempoS": float(volta["tempoS"])}
+            return medidas
         except Exception as erro:
             logger.warning("Radio sem as medidas da volta: %s", erro)
             return None
@@ -249,8 +259,9 @@ class RadioDoEngenheiro:
         medidas = self._medidas_da_volta(volta)
         pior = None
         # A curva que mais perdeu so nas voltas completas (a mesma regra da analise): numa volta
-        # com parada, "mais perdeu na curva 1: 66,4" e verdade, mas nao ajuda.
-        if medidas and volta.get("completa") is not False:
+        # com parada, "mais perdeu na curva 1: 66,4" e verdade, mas nao ajuda. Nem numa volta com
+        # rodada (pedido 36): "mais perdeu na curva 12: 26,5".
+        if medidas and volta.get("completa") is not False and not teve_rodada(medidas):
             m = max(medidas, key=lambda x: x["perdaS"])
             if m["perdaS"] > 0:
                 pior = {"curva": m["curva"], "lado": m["lado"], "perdaS": m["perdaS"]}
@@ -265,17 +276,79 @@ class RadioDoEngenheiro:
         sessao = self._sessao()
         if sessao != self._sessao_da_analise:
             self._sessao_da_analise, self._voltas_validas = sessao, []
-        if medidas is None or volta.get("completa") is False:
+        if medidas is None or volta.get("completa") is False or teve_rodada(medidas):
             return
+        guardada = self._grade_da_ultima if (self._grade_da_ultima or {}).get("volta") == volta.get("volta") else None
         self._voltas_validas.append({"volta": int(volta["volta"]) if volta.get("volta") is not None else None,
-                                     "medidas": medidas})
+                                     "medidas": medidas, "grade": (guardada or {}).get("grade"),
+                                     "tempoS": (guardada or {}).get("tempoS")})
         if len(self._voltas_validas) % VOLTAS_POR_ANALISE:
             return
-        resultado = analisar(self._voltas_validas[-VOLTAS_POR_ANALISE:])
+        tres = self._voltas_validas[-VOLTAS_POR_ANALISE:]
+        resultado = analisar(tres)
         mensagem = mensagem_de_analise(resultado, ref.get("tipo"), ref.get("volta"))
         self._ultima_analise = resultado
         if mensagem is not None:
+            mensagem["_replay"] = self._replay_da_analise(tres, resultado, ref.get("tipo"))
             self._pendentes.append(self._nova(mensagem))
+
+    # ------------------------------------------------------------- replay ---
+
+    def _grade_da_referencia(self) -> Optional[Dict[str, Any]]:
+        ref = self._volta_de_referencia()
+        if not ref or not ref.get("disponivel", True) or self._geometria is None:
+            return None
+        try:
+            return {"grade": grade(ref), "tempoS": float(ref["tempoS"])}
+        except Exception:
+            return None
+
+    def _replay_da_analise(self, voltas: List[Dict[str, Any]], resultado: Dict[str, Any],
+                           tipo: Optional[str]) -> List[Dict[str, Any]]:
+        """Pedido 36, Parte E: cada curva citada, com a volta das 3 mais perto da mediana."""
+        ref = self._grade_da_referencia()
+        if ref is None:
+            return []
+        try:
+            return replay_da_analise(self._geometria, voltas, resultado, ref["grade"], ref["tempoS"], tipo)
+        except Exception as erro:
+            logger.warning("Radio sem o replay da analise: %s", erro)
+            return []
+
+    def _replay_da_frase(self, mensagem: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Pedido 36, Parte E: a curva da frase do coach com causa, na volta em que a frase saiu (a em
+        andamento, ou a que acabou de fechar se a entrega ja passou da linha)."""
+        codigo, numero = mensagem.get("curva"), mensagem.get("volta")
+        if not codigo or not mensagem.get("causa") or self._geometria is None:
+            return []
+        ref = self._grade_da_referencia()
+        if ref is None:
+            return []
+        for candidata in (self._volta_atual(), self._volta_fechada()):
+            if not candidata or not candidata.get("linhas") or candidata.get("volta") != numero:
+                continue
+            if int(candidata.get("pontosDaGrade") or 0) != int(self._geometria.track.size):
+                continue
+            try:
+                g = grade(candidata["linhas"])
+                janela = janela_da_curva(self._geometria, codigo, g, ref["grade"])
+                if janela is None or cobertura_na_curva(candidata["linhas"], janela[2]) < COBERTURA_MINIMA:
+                    continue
+                total = float(np.nanmax(g["elapsed"]))
+                d = dados_da_curva(self._geometria, codigo, g, total, ref["grade"], ref["tempoS"], numero,
+                                   (self._referencia() or {}).get("tipo"))
+                return [d] if d else []
+            except Exception as erro:
+                logger.warning("Radio sem o replay da frase: %s", erro)
+        return []
+
+    def replay(self, id_: int) -> Optional[Dict[str, Any]]:
+        """Os dados do replay de uma mensagem entregue (a rota, uma vez por mensagem)."""
+        with self._lock:
+            for m in self._entregues:
+                if m["id"] == int(id_) and m.get("_replay"):
+                    return {"id": m["id"], "origem": m.get("origem"), "curvas": m["_replay"]}
+        return None
 
     def _entregar(self, mensagem: Dict[str, Any], agora: float, pos: Dict[str, Any]) -> Dict[str, Any]:
         futuro = mensagem.pop("_futuro", None)
@@ -297,6 +370,16 @@ class RadioDoEngenheiro:
             mensagem["janela"] = [round(janela[0], 1), round(janela[1], 1)] if janela else None
         mensagem["sessao"] = self._sessao()
         mensagem.pop("naLinha", None)
+        # Pedido 36, Parte E: quanto resta da janela de radio (o replay some quando ela acaba) e o
+        # replay da curva, na frase do coach com causa e na analise.
+        if pos.get("s") is not None and self._comprimento:
+            mensagem["restaS"] = round(tempo_que_resta(self._janelas, float(pos["s"]), float(self._comprimento),
+                                                       self._velocidade_kmh), 1)
+        if mensagem.get("origem") == "coach" and "_replay" not in mensagem:
+            mensagem["_replay"] = self._replay_da_frase(mensagem)
+        if mensagem.get("_replay"):
+            mensagem["replay"] = {"url": f"/api/radio/replay/{mensagem['id']}",
+                                  "curvas": [c["curva"] for c in mensagem["_replay"]]}
         if arquivo is not None:
             mensagem["audio"] = f"/api/radio/audio/{mensagem['id']}"
             mensagem["audioArquivo"] = str(Path(arquivo).resolve())   # pedido 35: o 2o caminho da voz no jogo

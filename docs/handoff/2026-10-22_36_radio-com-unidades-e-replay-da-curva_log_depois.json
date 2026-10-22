@@ -1,0 +1,14 @@
+{
+ "rotulo": "depois",
+ "segundosMedidos": 120.0,
+ "bytes": 0,
+ "bytesPorHora": 0,
+ "MBporHora": 0.0,
+ "pedidos": {
+  "novos": 1979,
+  "mensagens": 708,
+  "erros": 0
+ },
+ "linhasDeAcessoNoLog": 2,
+ "linhasNoLog": 31
+}

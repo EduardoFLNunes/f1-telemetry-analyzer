@@ -1,0 +1,3445 @@
+diff --git a/backend/core/radio/analise.py b/backend/core/radio/analise.py
+index 860ba9f0..0c50e8f4 100644
+--- a/backend/core/radio/analise.py
++++ b/backend/core/radio/analise.py
+@@ -39,6 +39,15 @@ VOLTAS_POR_ANALISE = 3
+ CURVAS_POR_ANALISE = 2
+ VOLTAS_PERDIDAS_MINIMAS = 2          # a curva tem de ter sido perdida em 2 das 3 voltas
+ PERDA_QUE_CONTA_S = 0.0              # perdida = perda acima de zero contra a referencia
++# Pedido 36 (decisao do Eduardo, 22/10): a volta em que uma curva perde mais que isto contra a
++# referencia teve uma rodada ou uma saida de pista. Ela nao conta para a analise das voltas, e o
++# resumo dela nao cita a curva. So uma regra do radio: o coach e o store nao mudam.
++PERDA_DE_RODADA_S = 5.0
++
++
++def teve_rodada(medidas) -> bool:
++    """Alguma curva da volta perdeu mais de `PERDA_DE_RODADA_S` contra a referencia."""
++    return any(float(m.get("perdaS") or 0.0) > PERDA_DE_RODADA_S for m in medidas or [])
+ DIFERENCAS_FALADAS_POR_CURVA = 2
+ 
+ # Os cortes de cada diferenca: abaixo deles, a diferenca esta dentro da variacao normal
+diff --git a/backend/core/radio/minimapa.py b/backend/core/radio/minimapa.py
+index dc74ff54..b6310152 100644
+--- a/backend/core/radio/minimapa.py
++++ b/backend/core/radio/minimapa.py
+@@ -19,6 +19,11 @@ Uma vez, quando o app abre ou a referencia muda (`versao`):
+   `linhaDoJogoM` depois do s = 0 (pedido 33; a medida do store, pedido 34). O tempo da
+   referencia nesse ponto (`tempoNaLinhaDoJogoS`) e somado ao cronometro do jogo para
+   achar o fantasma: tempo da referencia = cronometro do jogo + tempoNaLinhaDoJogoS;
++* **a freada da referencia em cada curva** (pedido 36, Parte D.2): o ponto em que o freio
++  dela passa de 0,15, do apice da curva anterior ao apice, a mesma regra do relatorio de
++  evolucao (`ml.comparison.evolution.braking_point`, a janela de frenagem do pedido 17), e
++  a linha que atravessa a pista ali, de uma borda a outra da geometria oficial. Vem com a
++  referencia, uma vez por referencia;
+ * **as curvas da ultima analise,** com a posicao do apice;
+ * **o nome das 14 curvas,** na mesma posicao da tela Volta (`rotuloDaCurva`): do lado de
+   fora, a largura da pista mais 9 m do apice.
+@@ -147,6 +152,31 @@ def contorno_do_asfalto(repositorio: Optional[Path]) -> Optional[List[List[List[
+     return _CONTORNO["contornos"]
+ 
+ 
++def freadas_da_referencia(track: Any, segmentos: List[Any], freio: Any) -> List[Dict[str, Any]]:
++    """A freada da referencia em cada curva (a regra do relatorio de evolucao) e a linha na pista.
++
++    Uma curva em que a referencia nao freia (o `ia_freia` falso do relatorio) fica de fora."""
++    from ml.comparison.evolution import braking_point
++
++    f = np.array([np.nan if v is None else float(v) for v in freio or []], dtype=float)
++    if f.size != int(track.size) or not segmentos:
++        return []
++    x, z = np.asarray(track.x, dtype=float), np.asarray(track.z, dtype=float)
++    normal = np.asarray(track.normal, dtype=float)
++    wl, wr = np.asarray(track.width_left, dtype=float), np.asarray(track.width_right, dtype=float)
++    out = []
++    for k, seg in enumerate(segmentos):
++        corner = seg.corner
++        s = braking_point(f, track, segmentos[k - 1].corner.apex_s, corner.apex_s)
++        if s is None:
++            continue
++        i = int(track.index_of(s))
++        out.append({"curva": corner.label[:3], "s": round(float(s), 1),
++                    "pontos": [[round(float(x[i] + normal[i, 0] * wl[i]), 2), round(float(z[i] + normal[i, 1] * wl[i]), 2)],
++                               [round(float(x[i] - normal[i, 0] * wr[i]), 2), round(float(z[i] - normal[i, 1] * wr[i]), 2)]]})
++    return out
++
++
+ def montar(track: Any, segmentos: List[Any], referencia: Optional[Dict[str, Any]], tipo: Optional[str],
+            analise: Optional[Dict[str, Any]], linha_m: float,
+            contornos: Optional[List[List[List[float]]]] = None) -> Dict[str, Any]:
+@@ -196,6 +226,8 @@ def montar(track: Any, segmentos: List[Any], referencia: Optional[Dict[str, Any]
+                 # [x, z, tempo desde o s = 0, pedal]
+                 "pontos": [[round(float(a), 2), round(float(b), 2), round(float(c), 3), int(d)]
+                            for a, b, c, d in zip(px[r], pz[r], el[r], pedal[r])],
++                # pedido 36: a freada dela em cada curva, com a linha que atravessa a pista
++                "freadas": freadas_da_referencia(track, segmentos, referencia.get("freio")),
+             }
+     codigos = {seg.corner.label[:3]: seg.corner for seg in segmentos}
+     for c in (analise or {}).get("curvas") or []:
+diff --git a/backend/core/radio/replay.py b/backend/core/radio/replay.py
+new file mode 100644
+index 00000000..c1bbcbbb
+--- /dev/null
++++ b/backend/core/radio/replay.py
+@@ -0,0 +1,180 @@
++"""O replay da curva (pedido 36, Parte E): o que o engenheiro mostra quando fala de uma curva.
++
++Para uma curva citada pelo radio (uma analise das voltas ou uma frase do coach com causa):
++
++* **as duas linhas:** a sua volta e a volta de referencia, na geometria oficial (centro +
++  normal x lateral, o mesmo tracado da tela Volta), da entrada a saida da curva, com o
++  tempo de cada uma desde a mesma entrada e o pedal (o da tela Volta: 2 = freio, 1 =
++  acelerador cheio, 0 = parcial). Os dois carros andam cada um no seu proprio tempo: a
++  diferenca aparece sozinha, no quanto a referencia abre;
++* **as duas freadas** (a regra do relatorio de evolucao, `braking_point`) e a distancia
++  entre elas;
++* **as duas minimas,** no ponto de cada uma, com o valor;
++* **o tracado:** no ponto da minima da referencia, as duas posicoes e a distancia, com o
++  lado por extenso (ADR 0003: positivo = mais a esquerda);
++* **o tempo perdido na curva** (o trecho do relatorio de evolucao, a mesma perda da analise).
++
++Sempre "voce" e "IA (referencia)", a diferenca medida contra uma volta real (ADR 0012).
++So le as grades que o radio ja tem (a volta ao vivo e a referencia do store); nada de
++fisica nova.
++"""
++from __future__ import annotations
++
++from typing import Any, Dict, List, Optional, Sequence
++
++import numpy as np
++
++ANTES_DA_FREADA_M = 50.0     # a entrada: um pouco antes da primeira freada (ou do inicio da curva)
++DEPOIS_DA_CURVA_M = 60.0     # a saida: um pouco depois do fim da curva
++LIMIAR_DO_FREIO = 0.15       # o pedal, como a tela Volta (Fantasma.tsx)
++ACELERADOR_CHEIO = 0.9
++
++
++def _pedal(freio: np.ndarray, acelerador: np.ndarray) -> np.ndarray:
++    p = np.zeros(freio.size, dtype=int)
++    p[np.nan_to_num(acelerador) >= ACELERADOR_CHEIO] = 1
++    p[np.nan_to_num(freio) >= LIMIAR_DO_FREIO] = 2
++    return p
++
++
++def _posicoes(track: Any, lateral: np.ndarray, indices: np.ndarray) -> np.ndarray:
++    x, z = np.asarray(track.x, dtype=float), np.asarray(track.z, dtype=float)
++    normal = np.asarray(track.normal, dtype=float)
++    lat = np.nan_to_num(lateral[indices])
++    return np.column_stack([x[indices] + normal[indices, 0] * lat, z[indices] + normal[indices, 1] * lat])
++
++
++def _tempos(elapsed: np.ndarray, indices: np.ndarray, total: float) -> np.ndarray:
++    """O tempo desde a entrada da curva, ao longo da janela (com a volta da linha, se a janela cruzar o s = 0)."""
++    t = np.asarray(elapsed, dtype=float)[indices].copy()
++    for k in range(1, t.size):
++        if t[k] < t[k - 1]:
++            t[k:] += total
++    return t - t[0]
++
++
++def cobertura_na_curva(linhas_grade: Dict[str, np.ndarray], indices: Sequence[int]) -> float:
++    """Fracao dos pontos da janela com o relogio medido (antes de interpolar)."""
++    el = linhas_grade.get("elapsed")
++    if el is None:
++        return 0.0
++    vals = [el[i] for i in indices]
++    return sum(1 for v in vals if v is not None and v == v) / max(len(vals), 1)
++
++
++def janela_da_curva(pista: Any, codigo: str, volta: Dict[str, np.ndarray], ref: Dict[str, np.ndarray]):
++    """O segmento da curva e os indices da grade da entrada a saida; None se a curva nao existe."""
++    from ml.comparison.evolution import braking_point
++    from ml.comparison.lap_vs_reference import _window
++
++    track = pista.track
++    for k, seg in enumerate(pista.segmentos):
++        if seg.corner.label[:3] != codigo:
++            continue
++        corner = seg.corner
++        anterior = pista.segmentos[k - 1].corner.apex_s
++        freada_v = braking_point(volta["freio"], track, anterior, corner.apex_s)
++        freada_r = braking_point(ref["freio"], track, anterior, corner.apex_s)
++        L = float(track.length)
++        # a entrada: o que vier primeiro (contando para tras a partir do apice) entre o inicio da curva e as freadas
++        recuos = [(corner.apex_s - s) % L for s in (corner.start_s, freada_v, freada_r) if s is not None]
++        inicio = (corner.apex_s - max(recuos) - ANTES_DA_FREADA_M) % L
++        fim = (corner.end_s + DEPOIS_DA_CURVA_M) % L
++        return seg, k, _window(track, inicio, fim), freada_v, freada_r
++    return None
++
++
++def dados_da_curva(pista: Any, codigo: str, volta: Dict[str, np.ndarray], volta_total: float,
++                   ref: Dict[str, np.ndarray], ref_total: float, numero_da_volta: Optional[int],
++                   tipo: Optional[str]) -> Optional[Dict[str, Any]]:
++    """O replay de uma curva: as duas linhas com o tempo e o pedal, as freadas, as minimas,
++    o tracado e a perda. `volta` e `ref` sao grades completas (`analise.grade`)."""
++    from ml.comparison.evolution import segment_time
++    from ml.comparison.lap_vs_reference import _signed_distance, _window
++
++    janela = janela_da_curva(pista, codigo, volta, ref)
++    if janela is None:
++        return None
++    seg, _, indices, freada_v, freada_r = janela
++    track = pista.track
++    corner = seg.corner
++    pos_v, pos_r = _posicoes(track, volta["lateral"], indices), _posicoes(track, ref["lateral"], indices)
++    t_v, t_r = _tempos(volta["elapsed"], indices, volta_total), _tempos(ref["elapsed"], indices, ref_total)
++    ped_v = _pedal(volta["freio"][indices], volta["acelerador"][indices])
++    ped_r = _pedal(ref["freio"][indices], ref["acelerador"][indices])
++
++    def linha(pos, t, ped):
++        return [[round(float(a), 2), round(float(b), 2), round(float(c), 3), int(d)] for (a, b), c, d in zip(pos, t, ped)]
++
++    def ponto(s: Optional[float], lateral: np.ndarray) -> Optional[Dict[str, Any]]:
++        if s is None:
++            return None
++        i = np.array([int(track.index_of(s))])
++        p = _posicoes(track, lateral, i)[0]
++        return {"x": round(float(p[0]), 2), "z": round(float(p[1]), 2), "s": round(float(s), 1)}
++
++    dentro = _window(track, corner.start_s, corner.end_s)
++    i_v = int(dentro[int(np.nanargmin(volta["velocidade"][dentro]))])
++    i_r = int(dentro[int(np.nanargmin(ref["velocidade"][dentro]))])
++    mv, mr = _posicoes(track, volta["lateral"], np.array([i_v])), _posicoes(track, ref["lateral"], np.array([i_r]))
++    # o tracado: no ponto da minima da referencia, a sua posicao e a dela
++    tv = _posicoes(track, volta["lateral"], np.array([i_r]))[0]
++    dif_lateral = float(np.nan_to_num(volta["lateral"][i_r]) - np.nan_to_num(ref["lateral"][i_r]))
++    perda = segment_time(volta["elapsed"], volta_total, track, seg) - segment_time(ref["elapsed"], ref_total, track, seg)
++    return {
++        "curva": codigo,
++        "lado": "esquerda" if corner.label.endswith("esq") else "direita",
++        "volta": numero_da_volta,
++        "referencia": tipo,
++        "rotuloDaReferencia": "IA (referência)" if tipo == "volta_ia" else "sua melhor (referência)",
++        "perdaS": round(float(perda), 3),
++        "linhas": {"voce": linha(pos_v, t_v, ped_v), "referencia": linha(pos_r, t_r, ped_r)},
++        "duracaoS": round(float(max(t_v[-1], t_r[-1])), 3),
++        "freadas": {
++            "voce": ponto(freada_v, volta["lateral"]),
++            "referencia": ponto(freada_r, ref["lateral"]),
++            # positivo = voce freou depois da referencia; negativo = antes
++            "distanciaM": round(float(_signed_distance(track, freada_v, freada_r)), 1)
++            if freada_v is not None and freada_r is not None else None,
++        },
++        "minimas": {
++            "voce": {"x": round(float(mv[0, 0]), 2), "z": round(float(mv[0, 1]), 2),
++                     "kmh": round(float(volta["velocidade"][i_v]), 1)},
++            "referencia": {"x": round(float(mr[0, 0]), 2), "z": round(float(mr[0, 1]), 2),
++                           "kmh": round(float(ref["velocidade"][i_r]), 1)},
++        },
++        "tracado": {
++            "voce": [round(float(tv[0]), 2), round(float(tv[1]), 2)],
++            "referencia": [round(float(mr[0, 0]), 2), round(float(mr[0, 1]), 2)],
++            "distanciaM": round(abs(dif_lateral), 2),
++            "lado": "esquerda" if dif_lateral > 0 else "direita",
++        },
++    }
++
++
++def volta_mais_perto_da_mediana(voltas: Sequence[Dict[str, Any]], curva: Dict[str, Any]) -> Optional[int]:
++    """Na analise, a volta das 3 cuja perda na curva fica mais perto da mediana (o indice em `voltas`).
++
++    `curva["perdas"]` vem na ordem das voltas analisadas."""
++    perdas = list(curva.get("perdas") or [])
++    if not perdas or len(perdas) != len(voltas):
++        return None
++    mediana = float(curva.get("perdaMedianaS", np.median(perdas)))
++    return int(min(range(len(perdas)), key=lambda i: (abs(perdas[i] - mediana), i)))
++
++
++def replay_da_analise(pista: Any, voltas: Sequence[Dict[str, Any]], analise: Dict[str, Any],
++                      ref: Dict[str, np.ndarray], ref_total: float, tipo: Optional[str]) -> List[Dict[str, Any]]:
++    """Uma curva por curva citada na analise, cada uma com a volta mais perto da mediana.
++
++    `voltas`: as 3 voltas analisadas, cada uma com `grade` e `tempoS`."""
++    out = []
++    for curva in analise.get("curvas") or []:
++        i = volta_mais_perto_da_mediana(voltas, curva)
++        if i is None or voltas[i].get("grade") is None:
++            continue
++        d = dados_da_curva(pista, curva["curva"], voltas[i]["grade"], float(voltas[i]["tempoS"]), ref, ref_total,
++                           voltas[i].get("volta"), tipo)
++        if d is not None:
++            out.append(d)
++    return out
+diff --git a/backend/core/radio/servico.py b/backend/core/radio/servico.py
+index fd4a9ef0..7ec32a74 100644
+--- a/backend/core/radio/servico.py
++++ b/backend/core/radio/servico.py
+@@ -32,9 +32,13 @@ from datetime import datetime
+ from pathlib import Path
+ from typing import Any, Callable, Deque, Dict, List, Optional
+ 
++import numpy as np
++
+ from . import audio as audio_do_radio
+-from .analise import COBERTURA_MINIMA, VOLTAS_POR_ANALISE, Pista, analisar, cobertura, grade, medidas_da_volta
++from .analise import (COBERTURA_MINIMA, VOLTAS_POR_ANALISE, Pista, analisar, cobertura, grade, medidas_da_volta,
++                      teve_rodada)
+ from .janelas import Janela, carregar_geometria, curvas_da_geometria, dentro, janelas_de_radio, tempo_que_resta
++from .replay import cobertura_na_curva, dados_da_curva, janela_da_curva, replay_da_analise
+ from .texto import (
+     FALA_MAXIMA_S,
+     CurvaDaPista,
+@@ -55,7 +59,7 @@ GUARDADAS = 200
+ CAMPOS_DO_REGISTRO = ("id", "instancia", "entregueEm", "voltaDoCarro", "sCarro", "velocidadeKmh", "janela",
+                       "s", "microssetor", "curva", "origem", "titulo", "texto", "detalhe", "linhas", "fala",
+                       "falaMaxS", "duracaoS", "causa", "perdaS", "volta", "tempoS", "piorCurva",
+-                      "voltasAnalisadas", "curvasDaAnalise", "referencia")
++                      "voltasAnalisadas", "curvasDaAnalise", "referencia", "restaS", "replay")
+ 
+ 
+ class RadioDoEngenheiro:
+@@ -71,6 +75,7 @@ class RadioDoEngenheiro:
+         relogio: Callable[[], float] = time.time,
+         volta_fechada: Callable[[], Optional[Dict[str, Any]]] = lambda: None,
+         volta_de_referencia: Callable[[], Optional[Dict[str, Any]]] = lambda: None,
++        volta_atual: Callable[[], Optional[Dict[str, Any]]] = lambda: None,
+     ):
+         self.pasta = Path(pasta_de_dados) / "data" / "radio"
+         self.pasta_audio = self.pasta / "audio"
+@@ -83,6 +88,8 @@ class RadioDoEngenheiro:
+         self._relogio = relogio
+         self._volta_fechada = volta_fechada
+         self._volta_de_referencia = volta_de_referencia
++        self._volta_atual = volta_atual
++        self._grade_da_ultima: Optional[Dict[str, Any]] = None   # pedido 36: a grade da volta que fechou
+         self._lock = threading.RLock()
+         self._audio = ThreadPoolExecutor(max_workers=1, thread_name_prefix="radio-voz")
+         self.instancia = datetime.now().strftime("%Y%m%d%H%M%S")
+@@ -234,8 +241,11 @@ class RadioDoEngenheiro:
+         if cobertura(fechada["linhas"]) < COBERTURA_MINIMA:
+             return None
+         try:
+-            return medidas_da_volta(grade(fechada["linhas"]), float(volta["tempoS"]), grade(ref),
+-                                    float(ref["tempoS"]), self._geometria)
++            g = grade(fechada["linhas"])
++            medidas = medidas_da_volta(g, float(volta["tempoS"]), grade(ref), float(ref["tempoS"]), self._geometria)
++            # Pedido 36: a grade fica guardada para o replay da curva da analise.
++            self._grade_da_ultima = {"volta": volta.get("volta"), "grade": g, "tempoS": float(volta["tempoS"])}
++            return medidas
+         except Exception as erro:
+             logger.warning("Radio sem as medidas da volta: %s", erro)
+             return None
+@@ -249,8 +259,9 @@ class RadioDoEngenheiro:
+         medidas = self._medidas_da_volta(volta)
+         pior = None
+         # A curva que mais perdeu so nas voltas completas (a mesma regra da analise): numa volta
+-        # com parada, "mais perdeu na curva 1: 66,4" e verdade, mas nao ajuda.
+-        if medidas and volta.get("completa") is not False:
++        # com parada, "mais perdeu na curva 1: 66,4" e verdade, mas nao ajuda. Nem numa volta com
++        # rodada (pedido 36): "mais perdeu na curva 12: 26,5".
++        if medidas and volta.get("completa") is not False and not teve_rodada(medidas):
+             m = max(medidas, key=lambda x: x["perdaS"])
+             if m["perdaS"] > 0:
+                 pior = {"curva": m["curva"], "lado": m["lado"], "perdaS": m["perdaS"]}
+@@ -265,18 +276,80 @@ class RadioDoEngenheiro:
+         sessao = self._sessao()
+         if sessao != self._sessao_da_analise:
+             self._sessao_da_analise, self._voltas_validas = sessao, []
+-        if medidas is None or volta.get("completa") is False:
++        if medidas is None or volta.get("completa") is False or teve_rodada(medidas):
+             return
++        guardada = self._grade_da_ultima if (self._grade_da_ultima or {}).get("volta") == volta.get("volta") else None
+         self._voltas_validas.append({"volta": int(volta["volta"]) if volta.get("volta") is not None else None,
+-                                     "medidas": medidas})
++                                     "medidas": medidas, "grade": (guardada or {}).get("grade"),
++                                     "tempoS": (guardada or {}).get("tempoS")})
+         if len(self._voltas_validas) % VOLTAS_POR_ANALISE:
+             return
+-        resultado = analisar(self._voltas_validas[-VOLTAS_POR_ANALISE:])
++        tres = self._voltas_validas[-VOLTAS_POR_ANALISE:]
++        resultado = analisar(tres)
+         mensagem = mensagem_de_analise(resultado, ref.get("tipo"), ref.get("volta"))
+         self._ultima_analise = resultado
+         if mensagem is not None:
++            mensagem["_replay"] = self._replay_da_analise(tres, resultado, ref.get("tipo"))
+             self._pendentes.append(self._nova(mensagem))
+ 
++    # ------------------------------------------------------------- replay ---
++
++    def _grade_da_referencia(self) -> Optional[Dict[str, Any]]:
++        ref = self._volta_de_referencia()
++        if not ref or not ref.get("disponivel", True) or self._geometria is None:
++            return None
++        try:
++            return {"grade": grade(ref), "tempoS": float(ref["tempoS"])}
++        except Exception:
++            return None
++
++    def _replay_da_analise(self, voltas: List[Dict[str, Any]], resultado: Dict[str, Any],
++                           tipo: Optional[str]) -> List[Dict[str, Any]]:
++        """Pedido 36, Parte E: cada curva citada, com a volta das 3 mais perto da mediana."""
++        ref = self._grade_da_referencia()
++        if ref is None:
++            return []
++        try:
++            return replay_da_analise(self._geometria, voltas, resultado, ref["grade"], ref["tempoS"], tipo)
++        except Exception as erro:
++            logger.warning("Radio sem o replay da analise: %s", erro)
++            return []
++
++    def _replay_da_frase(self, mensagem: Dict[str, Any]) -> List[Dict[str, Any]]:
++        """Pedido 36, Parte E: a curva da frase do coach com causa, na volta em que a frase saiu (a em
++        andamento, ou a que acabou de fechar se a entrega ja passou da linha)."""
++        codigo, numero = mensagem.get("curva"), mensagem.get("volta")
++        if not codigo or not mensagem.get("causa") or self._geometria is None:
++            return []
++        ref = self._grade_da_referencia()
++        if ref is None:
++            return []
++        for candidata in (self._volta_atual(), self._volta_fechada()):
++            if not candidata or not candidata.get("linhas") or candidata.get("volta") != numero:
++                continue
++            if int(candidata.get("pontosDaGrade") or 0) != int(self._geometria.track.size):
++                continue
++            try:
++                g = grade(candidata["linhas"])
++                janela = janela_da_curva(self._geometria, codigo, g, ref["grade"])
++                if janela is None or cobertura_na_curva(candidata["linhas"], janela[2]) < COBERTURA_MINIMA:
++                    continue
++                total = float(np.nanmax(g["elapsed"]))
++                d = dados_da_curva(self._geometria, codigo, g, total, ref["grade"], ref["tempoS"], numero,
++                                   (self._referencia() or {}).get("tipo"))
++                return [d] if d else []
++            except Exception as erro:
++                logger.warning("Radio sem o replay da frase: %s", erro)
++        return []
++
++    def replay(self, id_: int) -> Optional[Dict[str, Any]]:
++        """Os dados do replay de uma mensagem entregue (a rota, uma vez por mensagem)."""
++        with self._lock:
++            for m in self._entregues:
++                if m["id"] == int(id_) and m.get("_replay"):
++                    return {"id": m["id"], "origem": m.get("origem"), "curvas": m["_replay"]}
++        return None
++
+     def _entregar(self, mensagem: Dict[str, Any], agora: float, pos: Dict[str, Any]) -> Dict[str, Any]:
+         futuro = mensagem.pop("_futuro", None)
+         arquivo = None
+@@ -297,6 +370,16 @@ class RadioDoEngenheiro:
+             mensagem["janela"] = [round(janela[0], 1), round(janela[1], 1)] if janela else None
+         mensagem["sessao"] = self._sessao()
+         mensagem.pop("naLinha", None)
++        # Pedido 36, Parte E: quanto resta da janela de radio (o replay some quando ela acaba) e o
++        # replay da curva, na frase do coach com causa e na analise.
++        if pos.get("s") is not None and self._comprimento:
++            mensagem["restaS"] = round(tempo_que_resta(self._janelas, float(pos["s"]), float(self._comprimento),
++                                                       self._velocidade_kmh), 1)
++        if mensagem.get("origem") == "coach" and "_replay" not in mensagem:
++            mensagem["_replay"] = self._replay_da_frase(mensagem)
++        if mensagem.get("_replay"):
++            mensagem["replay"] = {"url": f"/api/radio/replay/{mensagem['id']}",
++                                  "curvas": [c["curva"] for c in mensagem["_replay"]]}
+         if arquivo is not None:
+             mensagem["audio"] = f"/api/radio/audio/{mensagem['id']}"
+             mensagem["audioArquivo"] = str(Path(arquivo).resolve())   # pedido 35: o 2o caminho da voz no jogo
+diff --git a/backend/core/radio/texto.py b/backend/core/radio/texto.py
+index 6a1b68d8..faa0fc75 100644
+--- a/backend/core/radio/texto.py
++++ b/backend/core/radio/texto.py
+@@ -9,7 +9,7 @@ backend: o app do jogo, a tela Ao vivo e a tela Volta mostram o mesmo texto.
+ * **A curva pelo nome tecnico** (C01 a C14) e o lado por extenso (ADR 0003).
+ * **Duas formas do mesmo numero:**
+   - `titulo`, `texto` e `detalhe`: o cartao, com o numero completo;
+-  - `fala`: o que a voz diz, curta (cerca de 4 a 6 s com a fala a 1,25x).
++  - `fala`: o que a voz diz, curta (cerca de 6 a 8 s com a voz a 1,4x).
+ 
+ So escreve o que o coach ja decidiu: a frase, a perda, a freada e a minima vem
+ do `evidence` do evento, sem conta nova.
+@@ -23,6 +23,19 @@ Pedido 35 (ADR 0021):
+ * **a analise das voltas** (`mensagem_de_analise`), a cada 3 voltas validas;
+ * **cada mensagem traz as falas em ordem, da mais completa a mais curta** (`falas`), e
+   o tempo maximo (`falaMaxS`): o radio gera o audio e fica com a primeira que cabe.
++
++Pedido 36 (Parte C): **todo numero falado tem a sua unidade.**
++
++* o tempo perdido: abaixo de 1 s em decimos ("7 decimos"); de 1 s para cima em segundos,
++  com uma casa ("1,2 segundo", "2,5 segundos") (`tempo_falado`);
++* o tempo da volta: "1 minuto e 29,1 segundos"; a diferenca da volta: "4,2 segundos atras";
++* a distancia: "46 metros", "1,8 metro" (`metros_falados`);
++* a velocidade: "minima de 102 contra 128 quilometros por hora" (a unidade uma vez, no
++  fim, para os dois numeros).
++
++A unidade nunca sai da fala: quando nao cabe, sai primeiro a segunda causa, depois a
++primeira, e por ultimo as palavras que dizem contra quem ("da IA"), nunca a unidade.
++O numero que nao e medida (a curva, a volta, o microssetor) nao tem unidade.
+ """
+ from __future__ import annotations
+ 
+@@ -97,6 +110,40 @@ def curva_do_ponto(curvas: Sequence[CurvaDaPista], s: float, comprimento: float)
+     return None
+ 
+ 
++def tempo_falado(segundos: float) -> str:
++    """O tempo, falado com a unidade (pedido 36): "7 decimos", "1,0 segundo", "2,5 segundos"."""
++    a = abs(float(segundos))
++    decimos = int(round(a * 10))
++    if decimos < 10:
++        if decimos <= 0:
++            return "menos de 1 décimo"
++        return f"{decimos} décimo{'s' if decimos != 1 else ''}"
++    v = round(a, 1)
++    return f"{decimal(v, 1)} segundo{'s' if v >= 2 else ''}"
++
++
++def tempo_de_volta_falado(segundos: float) -> str:
++    """O tempo da volta, falado (pedido 36): "1 minuto e 29,1 segundos"."""
++    total = round(float(segundos), 1)
++    m = int(total // 60)
++    s = round(total - 60 * m, 1)
++    seg = f"{decimal(s, 1)} segundo{'s' if s >= 2 else ''}"
++    if m == 0:
++        return seg
++    return f"{m} minuto{'s' if m != 1 else ''} e {seg}"
++
++
++def metros_falados(metros: float) -> str:
++    """A distancia, falada (pedido 36): "46 metros"; abaixo de 2 m, com a virgula e no singular, "1,8 metro"."""
++    v = round(abs(float(metros)), 1)
++    return f"{decimal(v, 1)} metro" if v < 2 else f"{int(round(v))} metros"
++
++
++def minima_falada(sua: float, ref: float) -> str:
++    """As duas minimas, com a unidade uma vez, no fim (pedido 36)."""
++    return f"Mínima de {int(round(sua))} contra {int(round(ref))} quilômetros por hora."
++
++
+ def _clausula_da_freada(tipo: Optional[str], delta_m: float) -> str:
+     metros = abs(round(delta_m))
+     lado = "depois" if delta_m > 0 else "antes"
+@@ -130,14 +177,15 @@ def causa_principal(ev: Mapping[str, Any], tipo: Optional[str]) -> Optional[Dict
+     from .analise import CORTE_FREADA_M, CORTE_MINIMA_KMH
+ 
+     freada = _numero(ev.get("brakeDeltaM"))
++    alvo = FALA_ALVO.get(tipo or "", "da referência")
+     if freada is not None and abs(freada) >= CORTE_FREADA_M:
+-        metros = int(round(abs(freada)))
+         lado = "antes" if freada > 0 else "depois"
+-        return {"medida": "freada", "valor": round(-freada, 1), "fala": f"Freia {metros} metros {lado}."}
++        base = f"Freia {metros_falados(freada)} {lado}"
++        return {"medida": "freada", "valor": round(-freada, 1), "fala": f"{base} {alvo}.", "falaCurta": f"{base}."}
+     ref, sua = _numero(ev.get("referenceMinSpeedKmh")), _numero(ev.get("yourMinSpeedKmh"))
+     if ref is not None and sua is not None and abs(sua - ref) >= CORTE_MINIMA_KMH:
+-        return {"medida": "minima", "valor": round(sua - ref, 1),
+-                "fala": f"Mínima {int(round(sua))} contra {int(round(ref))}."}
++        fala = minima_falada(sua, ref)
++        return {"medida": "minima", "valor": round(sua - ref, 1), "fala": fala, "falaCurta": fala}
+     return None
+ 
+ 
+@@ -175,14 +223,22 @@ def mensagem_de_diferenca(evento: Mapping[str, Any], curvas: Sequence[CurvaDaPis
+     lado_da_perda = "atrás" if perda > 0 else "à frente"
+     nome = _nome_falado(curva.codigo) if curva else f"Microssetor {numero}"
+     causa = causa_principal(ev, tipo)
++    quanto = tempo_falado(perda)
+     if curva:
+-        completa = f"{nome}, {curva.lado}: {decimal(abs(perda))} {lado_da_perda} {alvo}."
++        completa = f"{nome}, {curva.lado}: {quanto} {lado_da_perda} {alvo}."
+     else:
+-        completa = f"{nome}: {decimal(abs(perda))} {lado_da_perda} {alvo}."
+-    curta = f"{nome}: {decimal(abs(perda))} {lado_da_perda}."
+-    mais_curta = f"{nome}: {decimal(abs(perda), 1)} {lado_da_perda}."
+-    falas = [f"{completa} {causa['fala']}", f"{curta} {causa['fala']}", f"{mais_curta} {causa['fala']}"] if causa else []
+-    falas += [completa, curta]
++        completa = f"{nome}: {quanto} {lado_da_perda} {alvo}."
++    com_alvo = f"{nome}: {quanto} {lado_da_perda} {alvo}."
++    curta = f"{nome}: {quanto} {lado_da_perda}."
++    falas = []
++    if causa:
++        for f in (f"{completa} {causa['fala']}", f"{com_alvo} {causa['fala']}", f"{curta} {causa['fala']}",
++                  f"{curta} {causa['falaCurta']}"):
++            if f not in falas:
++                falas.append(f)
++    for f in (completa, com_alvo, curta):
++        if f not in falas:
++            falas.append(f)
+     return {
+         "origem": "coach",
+         "titulo": onde,
+@@ -207,18 +263,17 @@ def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optio
+     rotulo = REFERENCIA_LONGA.get(tipo or "", "referência")
+     alvo = FALA_ALVO.get(tipo or "", "da referência")
+     volta = int(volta) if _numero(volta) is not None else None
+-    m = int(tempo_s // 60)
+-    s = tempo_s - 60 * m
+-    falado = f"{m} minuto{'s' if m != 1 else ''} e {decimal(s, 1)}"
+-    curto = f"{m} e {decimal(s, 1)}"
++    falado = tempo_de_volta_falado(tempo_s)
++    abertura = f"Volta {volta}" if volta else "Volta"
+     if referencia_s:
+         dif = tempo_s - referencia_s
+         texto = f"{com_sinal(dif, 3)} para a {rotulo} ({tempo_de_volta(referencia_s)})"
+         lado = "atrás" if dif > 0 else "à frente"
+-        fala_dif, fala_dif_curta = f" {decimal(abs(dif))} {lado} {alvo}.", f" {decimal(abs(dif), 1)} {lado}."
++        dif_alvo, dif_curta = f"{tempo_falado(dif)} {lado} {alvo}", f"{tempo_falado(dif)} {lado}"
++        inteiras = [f"{abertura}: {falado}, {dif_alvo}.", f"{abertura}: {dif_alvo}.", f"{abertura}: {dif_curta}."]
+     else:
+-        texto, fala_dif, fala_dif_curta = "sem referência para comparar", "", ""
+-    abertura = f"Volta {volta}" if volta else "Volta"
++        texto = "sem referência para comparar"
++        inteiras = [f"{abertura}: {falado}."]
+     perda_pior = _numero((pior or {}).get("perdaS"))
+     tem_pior = bool(pior and pior.get("curva") and perda_pior is not None and perda_pior > 0)
+     falas = []
+@@ -227,10 +282,8 @@ def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optio
+         lado_curva = f", {pior['lado']}" if pior.get("lado") else ""
+         detalhe = f"mais perdeu na {pior['curva']}{lado_curva}: {com_sinal(perda_pior)}"
+         nome = (_nome_falado(pior["curva"]) or pior["curva"]).lower()
+-        falas += [f"{abertura}, {falado}.{fala_dif} Mais perdeu na {nome}: {decimal(perda_pior, 1)}.",
+-                  f"{abertura}: {curto},{fala_dif_curta[:-1]}. Mais perdeu na {nome}: {decimal(perda_pior, 1)}.",
+-                  f"{abertura},{fala_dif_curta[:-1]}. Mais perdeu na {nome}: {decimal(perda_pior, 1)}."]
+-    falas += [f"{abertura}, {falado}.{fala_dif}", f"{abertura}, {curto}.{fala_dif_curta}"]
++        falas += [f"{f} Mais perdeu na {nome}: {tempo_falado(perda_pior)}." for f in inteiras]
++    falas += [f for f in inteiras if f not in falas]
+     return {
+         "origem": "resumo",
+         "titulo": f"Volta {volta}: {tempo_de_volta(tempo_s)}" if volta else f"Volta: {tempo_de_volta(tempo_s)}",
+@@ -249,20 +302,21 @@ def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optio
+     }
+ 
+ 
+-def _diferenca_falada(medida: str, valor: float, extra: Mapping[str, Any]) -> str:
+-    """Uma diferenca da analise, falada como uma frase, no estilo da frase do coach
+-    ("Freia 54 metros antes.", "Minima 64 contra 94."; fechamento do pedido 35)."""
++def _diferenca_falada(medida: str, valor: float, extra: Mapping[str, Any], alvo: str = "") -> str:
++    """Uma diferenca da analise, falada como uma frase, no estilo da frase do coach, com a
++    unidade (pedido 36): "Freia 46 metros antes da IA.", "Minima de 102 contra 128 quilometros
++    por hora.". `alvo` ("da IA") diz contra quem; vazio, a forma curta. O tracado de 2 m para
++    cima vai com o numero inteiro, mais curto de falar; o cartao continua com a decimal."""
++    contra = f" {alvo}" if alvo else ""
+     if medida == "freada":
+-        return f"Freia {int(round(abs(valor)))} metros {'antes' if valor < 0 else 'depois'}."
++        return f"Freia {metros_falados(valor)} {'antes' if valor < 0 else 'depois'}{contra}."
+     if medida == "minima":
+-        return f"Mínima {int(round(extra.get('sua', 0)))} contra {int(round(extra.get('ref', 0)))}."
++        return minima_falada(extra.get("sua", 0), extra.get("ref", 0))
+     if medida == "acelerador":
+-        return f"Acelera {int(round(abs(valor)))} metros {'depois' if valor > 0 else 'antes'}."
+-    # Abaixo de 2 m, com a virgula e no singular ("1,8 metro"); de 2 m para cima, o numero inteiro,
+-    # mais curto de falar ("8 metros"). O cartao continua com a decimal.
+-    metros = round(abs(valor), 1)
+-    quanto = f"{decimal(metros, 1)} metro" if metros < 2 else f"{int(round(metros))} metros"
+-    return f"Passa {quanto} mais à {'esquerda' if valor > 0 else 'direita'}."
++        return f"Acelera {metros_falados(valor)} {'depois' if valor > 0 else 'antes'}{contra}."
++    # "da IA" -> "que a IA"; "da sua melhor" -> "que a sua melhor"
++    que = f" que a {alvo[3:] if alvo.startswith('da ') else alvo}" if alvo else ""
++    return f"Passa {metros_falados(valor)} mais à {'esquerda' if valor > 0 else 'direita'}{que}."
+ 
+ 
+ def _diferenca_escrita(medida: str, valor: float, extra: Mapping[str, Any]) -> str:
+@@ -293,17 +347,22 @@ def mensagem_de_analise(analise: Mapping[str, Any], tipo: Optional[str],
+     linhas = []
+     for c in curvas:
+         escritas = [_diferenca_escrita(d["medida"], d["valor"], d) for d in c.get("diferencas") or []]
+-        perdas = " · ".join(decimal(p) for p in c["perdas"])
++        perdas = " · ".join(f"{decimal(p)} s" for p in c["perdas"])
+         linhas.append(f"{c['curva']}, {c['lado']}: perde {decimal(c['perdaMedianaS'])} s por volta ({perdas})"
+                       + (f"; {'; '.join(escritas)}" if escritas else ""))
+ 
+-    def trecho(c: Mapping[str, Any], quantas: int) -> str:
++    alvo = FALA_ALVO.get(tipo or "", "da referência")
++
++    def trecho(c: Mapping[str, Any], quantas: int, com_alvo: bool = True) -> str:
+         nome = _nome_falado(c["curva"]) or c["curva"]
+         difs = {d["medida"]: d for d in c.get("diferencas") or []}
+-        ditas = [_diferenca_falada(m, difs[m]["valor"], difs[m]) for m in c.get("ditas", [])[:quantas] if m in difs]
+-        base = f"{nome}: {decimal(c['perdaMedianaS'], 1)} por volta."
++        ditas = [_diferenca_falada(m, difs[m]["valor"], difs[m], alvo if com_alvo else "")
++                 for m in c.get("ditas", [])[:quantas] if m in difs]
++        base = f"{nome}: perde {tempo_falado(c['perdaMedianaS'])} por volta."
+         return base + (" " + " ".join(ditas) if ditas else "")
+ 
++    # Da mais completa a mais curta: sai a segunda curva, a segunda causa, o "da IA", a abertura
++    # e, por ultimo, a primeira causa. A unidade nunca sai.
+     abertura = f"Análise das voltas {intervalo}."
+     curta = f"Voltas {intervalo}."
+     candidatas = []
+@@ -313,6 +372,8 @@ def mensagem_de_analise(analise: Mapping[str, Any], tipo: Optional[str],
+     candidatas.append(f"{abertura} {trecho(curvas[0], 2)}")
+     candidatas.append(f"{curta} {trecho(curvas[0], 2)}")
+     candidatas.append(f"{curta} {trecho(curvas[0], 1)}")
++    candidatas.append(f"{curta} {trecho(curvas[0], 1, com_alvo=False)}")
++    candidatas.append(trecho(curvas[0], 1, com_alvo=False))
+     candidatas.append(f"{curta} {trecho(curvas[0], 0)}")
+     falas = []
+     for f in candidatas:
+diff --git a/backend/core/registro_de_acesso.py b/backend/core/registro_de_acesso.py
+new file mode 100644
+index 00000000..be77e8dd
+--- /dev/null
++++ b/backend/core/registro_de_acesso.py
+@@ -0,0 +1,47 @@
++"""O log de acesso sem as rotas pedidas varias vezes por segundo (pedido 36, Parte B.3).
++
++O uvicorn escreve uma linha por pedido no log de acesso (`uvicorn.access`). A tela Ao
++vivo pede os pontos novos da volta cerca de 28 vezes por segundo, e o app do jogo e a
++tela pedem as mensagens do radio a cada 0,3 s: no teste de 21/10, o `logs/backend.log`
++do repositorio chegou a 3,8 GB. Este filtro tira do log so os pedidos bem-sucedidos
++dessas rotas; os erros (codigo 400 ou mais) e as outras rotas continuam.
++"""
++from __future__ import annotations
++
++import logging
++
++ROTAS_FREQUENTES = (
++    "/api/live/volta/novos",     # a tela Ao vivo, ~28 por segundo (pedido 35)
++    "/api/radio/mensagens",      # o app do jogo e a tela, a cada 0,3 s
++)
++LOGGER_DE_ACESSO = "uvicorn.access"
++
++
++class SemPedidosFrequentes(logging.Filter):
++    """Deixa de fora as linhas de acesso bem-sucedidas das `ROTAS_FREQUENTES`.
++
++    O uvicorn passa (cliente, metodo, caminho com a consulta, versao, codigo) em `args`."""
++
++    def filter(self, record: logging.LogRecord) -> bool:
++        args = record.args if isinstance(record.args, tuple) else ()
++        if len(args) < 5:
++            return True
++        caminho, codigo = str(args[2]), args[4]
++        try:
++            erro = int(codigo) >= 400
++        except (TypeError, ValueError):
++            erro = True
++        if erro:
++            return True
++        rota = caminho.split("?", 1)[0]
++        return rota not in ROTAS_FREQUENTES
++
++
++_FILTRO = SemPedidosFrequentes()
++
++
++def silenciar_rotas_frequentes() -> None:
++    """Liga o filtro no log de acesso (uma vez; chamar de novo nao duplica)."""
++    logger = logging.getLogger(LOGGER_DE_ACESSO)
++    if _FILTRO not in logger.filters:
++        logger.addFilter(_FILTRO)
+diff --git a/backend/main.py b/backend/main.py
+index 037a49de..a8685a8e 100644
+--- a/backend/main.py
++++ b/backend/main.py
+@@ -202,6 +202,7 @@ def _ligar_o_radio() -> None:
+             # para o resumo dizer a curva que mais perdeu e a analise das voltas (ADR 0021).
+             volta_fechada=lambda: volta_ao_vivo.ultima_fechada() if volta_ao_vivo is not None else None,
+             volta_de_referencia=_volta_de_referencia_do_radio,
++            volta_atual=lambda: volta_ao_vivo.estado() if volta_ao_vivo is not None else None,
+         )
+         event_bus.subscribe(PROCESSED_FRAME, radio_do_engenheiro.on_frame)
+         event_bus.subscribe(COACHING_EVENT, radio_do_engenheiro.on_coaching_event)
+@@ -966,6 +967,10 @@ async def data_quality_payload(force_sessions: bool = False) -> Dict[str, Any]:
+ async def lifespan(app: FastAPI):
+     global telemetry_runtime, opponents_runtime, recording_runtime
+ 
++    # Pedido 36: o log de acesso sem as rotas pedidas varias vezes por segundo.
++    from core.registro_de_acesso import silenciar_rotas_frequentes
++
++    silenciar_rotas_frequentes()
+     source_manager.select_source()
+     prime_active_source()
+     initialize_spatial_state()
+diff --git a/backend/routers/radio.py b/backend/routers/radio.py
+index 2a35065f..bbba104f 100644
+--- a/backend/routers/radio.py
++++ b/backend/routers/radio.py
+@@ -45,6 +45,15 @@ async def get_audio(id_: int):
+     return FileResponse(str(arquivo), media_type="audio/wav", filename=f"radio_{id_}.wav")
+ 
+ 
++@router.get("/replay/{id_}")
++async def get_replay(id_: int):
++    """Pedido 36, Parte E: os dados do replay da curva de uma mensagem (uma vez por mensagem)."""
++    dados = _radio().replay(id_)
++    if dados is None:
++        raise HTTPException(status_code=404, detail="mensagem sem replay")
++    return _json(dados)
++
++
+ @router.post("/teste")
+ async def post_teste():
+     return await asyncio.to_thread(_radio().teste)
+diff --git a/backend/tests/test_radio.py b/backend/tests/test_radio.py
+index 0fcfe667..097047fb 100644
+--- a/backend/tests/test_radio.py
++++ b/backend/tests/test_radio.py
+@@ -49,8 +49,10 @@ def test_frase_de_diferenca_com_virgula_microssetor_a_partir_de_1_e_lado_por_ext
+     assert m["texto"] == "+0,74 s para a volta da IA no microssetor 3"
+     assert m["detalhe"] == "1,99 s contra 1,25 s · a IA freia 38 m depois de você · mínima da IA 157 km/h, a sua 94 km/h"
+     # Pedido 35: a causa principal na voz (a freada passou do corte de 15 m: voce freou 38 m antes).
+-    assert m["fala"] == "Curva 1, esquerda: 0,74 atrás da IA. Freia 38 metros antes."
+-    assert m["falas"][-2:] == ["Curva 1, esquerda: 0,74 atrás da IA.", "Curva 1: 0,74 atrás."]
++    # Pedido 36: com a unidade (abaixo de 1 s, em decimos).
++    assert m["fala"] == "Curva 1, esquerda: 7 décimos atrás da IA. Freia 38 metros antes da IA."
++    assert m["falas"][-3:] == ["Curva 1, esquerda: 7 décimos atrás da IA.", "Curva 1: 7 décimos atrás da IA.",
++                               "Curva 1: 7 décimos atrás."]
+     assert m["falaMaxS"] == 6.6                     # cerca de 6 s, com 10% de folga
+     assert m["s"] == pytest.approx(3 * L / 60, abs=0.1)  # o fim do microssetor: ali o coach fecha a medida
+     assert "." not in m["texto"].split(" s ")[0]  # numero com virgula
+@@ -59,7 +61,7 @@ def test_frase_de_diferenca_com_virgula_microssetor_a_partir_de_1_e_lado_por_ext
+ def test_frase_contra_a_sua_melhor_e_na_curva_da_direita():
+     m = mensagem_de_diferenca(_evento(indice=29, perda=0.215, tipo="minha_melhor"), CURVAS, L)
+     assert m["titulo"] == "C02, direita" and m["microssetor"] == 30
+-    assert m["fala"] == "Curva 2, direita: 0,21 atrás da sua melhor. Freia 38 metros antes."
++    assert m["fala"] == "Curva 2, direita: 2 décimos atrás da sua melhor. Freia 38 metros antes da sua melhor."
+     assert "na sua melhor volta você freou 38 m depois" in m["detalhe"]
+ 
+ 
+@@ -71,7 +73,7 @@ def test_resumo_na_linha():
+     m = mensagem_de_resumo(7, 88.132, 84.829, "volta_ia")
+     assert m["titulo"] == "Volta 7: 1:28,132"
+     assert m["texto"] == "+3,303 s para a volta da IA (1:24,829)"
+-    assert m["fala"] == "Volta 7, 1 minuto e 28,1. 3,30 atrás da IA."
++    assert m["fala"] == "Volta 7: 1 minuto e 28,1 segundos, 3,3 segundos atrás da IA."
+ 
+ 
+ # ----------------------------------------------------------------- janela ---
+@@ -284,21 +286,23 @@ from core.radio.texto import causa_principal, mensagem_de_analise  # noqa: E402
+ 
+ def test_a_causa_principal_freada_antes_da_minima_e_os_cortes():
+     ev = {"brakeDeltaM": 15.0, "referenceMinSpeedKmh": 94.0, "yourMinSpeedKmh": 64.0}
+-    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 15 metros antes."   # no corte: conta
++    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 15 metros antes da IA."   # no corte: conta
++    assert causa_principal(ev, "volta_ia")["falaCurta"] == "Freia 15 metros antes."
+     ev["brakeDeltaM"] = -14.9                                                     # abaixo: vai para a minima
+-    assert causa_principal(ev, "volta_ia")["fala"] == "Mínima 64 contra 94."
++    assert causa_principal(ev, "volta_ia")["fala"] == "Mínima de 64 contra 94 quilômetros por hora."
+     ev["yourMinSpeedKmh"] = 94.0 - CORTE_MINIMA_KMH + 0.1                         # abaixo dos dois cortes
+     assert causa_principal(ev, "volta_ia") is None
+     ev["brakeDeltaM"] = -30.0
+-    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 30 metros depois."
++    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 30 metros depois da IA."
+     assert (CORTE_FREADA_M, CORTE_MINIMA_KMH) == (15.0, 8.0)
+ 
+ 
+ def test_resumo_com_a_curva_de_maior_perda():
+     m = mensagem_de_resumo(7, 90.363, 84.829, "volta_ia", {"curva": "C11", "lado": "esquerda", "perdaS": 1.14})
+     assert m["detalhe"] == "mais perdeu na C11, esquerda: +1,14 s"
+-    assert m["fala"] == "Volta 7, 1 minuto e 30,4. 5,53 atrás da IA. Mais perdeu na curva 11: 1,1."
+-    assert m["falas"][-1] == "Volta 7, 1 e 30,4. 5,5 atrás."
++    assert m["fala"] == ("Volta 7: 1 minuto e 30,4 segundos, 5,5 segundos atrás da IA. "
++                         "Mais perdeu na curva 11: 1,1 segundo.")
++    assert m["falas"][-1] == "Volta 7: 5,5 segundos atrás."
+     assert m["falaMaxS"] == 7.7 and m["curva"] == "C11"
+ 
+ 
+@@ -323,16 +327,18 @@ def test_a_analise_so_curvas_perdidas_em_2_de_3_e_no_maximo_2():
+     assert a["voltas"] == [6, 7, 8]
+     m = mensagem_de_analise(a, "volta_ia", "ref#0013")
+     assert m["titulo"] == "Análise das voltas 6 a 8"
+-    assert m["linhas"][0].startswith("C12, esquerda: perde 0,90 s por volta (0,85 · 0,90 · 1,02)")
++    assert m["linhas"][0].startswith("C12, esquerda: perde 0,90 s por volta (0,85 s · 0,90 s · 1,02 s)")
+     assert "mínima 80 contra 110 km/h" in m["linhas"][0] and "freada 50 m antes" in m["linhas"][0]
+     assert "traçado 0,4 m mais à esquerda" in m["linhas"][0]        # o lado por extenso (ADR 0003)
+-    # A fala no estilo da frase do coach: cada diferenca e uma frase ("Minima 80 contra 110.").
+-    assert m["fala"].startswith("Análise das voltas 6 a 8. Curva 12: 0,9 por volta. Mínima 80 contra 110. "
+-                                "Freia 50 metros antes.")
++    # A fala no estilo da frase do coach, cada diferenca uma frase, com as unidades (pedido 36).
++    assert m["fala"].startswith("Análise das voltas 6 a 8. Curva 12: perde 9 décimos por volta. "
++                                "Mínima de 80 contra 110 quilômetros por hora. Freia 50 metros antes da IA.")
+     from core.radio.texto import _diferenca_falada
+     assert _diferenca_falada("tracado", -7.9, {}) == "Passa 8 metros mais à direita."
+     assert _diferenca_falada("tracado", 1.5, {}) == "Passa 1,5 metro mais à esquerda."
+     assert _diferenca_falada("acelerador", 14.0, {}) == "Acelera 14 metros depois."
++    assert _diferenca_falada("tracado", -7.9, {}, "da IA") == "Passa 8 metros mais à direita que a IA."
++    assert _diferenca_falada("tracado", 2.4, {}, "da sua melhor") == "Passa 2 metros mais à esquerda que a sua melhor."
+     assert m["falaMaxS"] == 8.8 and m["referencia"] == {"tipo": "volta_ia", "volta": "ref#0013"}
+     # Tres curvas perdidas em 2 das 3: so as 2 de maior perda mediana.
+     voltas[1]["medidas"][2]["perdaS"] = 0.4
+@@ -394,9 +400,11 @@ def test_a_voz_fica_com_a_primeira_fala_que_cabe(tmp_path):
+     radio.on_coaching_event(_evento(indice=2))
+     _esperar_o_audio(radio)
+     m = radio._pendentes[0]
+-    assert 0.12 * len(m["falas"][0]) > 6.0               # a completa, com a causa, passa de 6 s
+-    assert m["fala"] == m["falas"][1] == "Curva 1: 0,74 atrás. Freia 38 metros antes."
+-    assert m["duracaoS"] <= 6.0 and ditas == m["falas"][:2]
++    assert 0.12 * len(m["falas"][0]) > 6.6               # a completa, com a causa, passa do limite
++    # O radio gera da mais completa a mais curta e fica com a primeira que cabe: ainda com a causa.
++    cabe = next(i for i, f in enumerate(m["falas"]) if 0.12 * len(f) <= 6.6)
++    assert m["fala"] == m["falas"][cabe] and "Freia 38 metros antes" in m["fala"]
++    assert m["duracaoS"] <= 6.6 and ditas == m["falas"][:cabe + 1]
+ 
+ 
+ def test_volta_ao_vivo_manda_so_os_pontos_novos_e_guarda_a_volta_fechada():
+@@ -573,3 +581,253 @@ def test_o_minimapa_usa_o_contorno_do_asfalto_tratado_do_cache(tmp_path):
+     assert np.hypot(p[:, 0], p[:, 1] + 50).max() == pytest.approx(300, abs=0.5)
+     m = minimapa.montar(circular_track(), [], None, None, None, 1.495, contornos)
+     assert m["pista"] == {"origem": "asfalto tratado do cache", "contornos": contornos}
++
++
++def test_a_volta_com_rodada_sai_da_analise_e_o_resumo_nao_cita_a_curva(tmp_path, monkeypatch):
++    """Pedido 36, Parte B.2: como a volta 5 de 21/10 (26,5 s na C12), que entrou na primeira analise."""
++    from core.radio.analise import PERDA_DE_RODADA_S, teve_rodada
++
++    assert PERDA_DE_RODADA_S == 5.0 and teve_rodada(_medidas([26.5, 0.3, 0.5])) and not teve_rodada(_medidas([4.9, 0, 0]))
++    pista = _Pista()
++    radio = _radio(tmp_path, pista)
++    medidas = iter([_medidas([26.54, 0.30, 0.47]), _medidas([0.73, -0.1, 0.76]), _medidas([0.51, 0.2, 0.94]),
++                    _medidas([0.60, 0.1, 0.80])])
++    monkeypatch.setattr(radio, "_medidas_da_volta", lambda volta: next(medidas))
++
++    def linha(n):
++        pista.volta = {"volta": n, "tempoS": 110.0, "teveIA": False, "momento": n, "completa": True}
++        radio.on_frame(QUADRO)
++        pista.agora += 1.0
++        radio.on_frame(QUADRO)
++
++    pista.s = 50.0
++    for n in (5, 9, 11, 12):
++        linha(n)
++    resumos = [m for m in radio._pendentes if m["origem"] == "resumo"]
++    analises = [m for m in radio._pendentes if m["origem"] == "analise"]
++    da_volta_5 = next(r for r in resumos if r["volta"] == 5)
++    assert da_volta_5["piorCurva"] is None and "curva" not in da_volta_5["fala"].lower()
++    # A analise usa a volta valida seguinte (12) no lugar da 5.
++    assert len(analises) == 1 and analises[0]["voltasAnalisadas"] == [9, 11, 12]
++
++
++def test_o_log_de_acesso_deixa_de_fora_so_as_rotas_frequentes_bem_sucedidas():
++    """Pedido 36, Parte B.3: os pontos novos e as mensagens do radio saem do log; os erros e o resto ficam."""
++    import logging
++
++    from core.registro_de_acesso import LOGGER_DE_ACESSO, SemPedidosFrequentes, silenciar_rotas_frequentes
++
++    filtro = SemPedidosFrequentes()
++
++    def linha(caminho, codigo):
++        return logging.LogRecord(LOGGER_DE_ACESSO, logging.INFO, "", 0, '%s - "%s %s HTTP/%s" %d',
++                                 ("127.0.0.1:5000", "GET", caminho, "1.1", codigo), None)
++
++    assert not filtro.filter(linha("/api/live/volta/novos?versao=3&desde=10", 200))
++    assert not filtro.filter(linha("/api/radio/mensagens?desde=4&instancia=x", 200))
++    assert filtro.filter(linha("/api/live/volta/novos?versao=3&desde=10", 500))      # erro fica
++    assert filtro.filter(linha("/api/radio/minimapa", 200))                          # outra rota fica
++    assert filtro.filter(linha("/api/radio/mensagens-antigas", 200))
++    silenciar_rotas_frequentes()
++    silenciar_rotas_frequentes()
++    assert sum(isinstance(f, SemPedidosFrequentes) for f in logging.getLogger(LOGGER_DE_ACESSO).filters) == 1
++
++
++def _numeros_sem_unidade(fala: str):
++    """Os numeros de medida da fala que nao tem a unidade logo depois (pedido 36, Parte C.5).
++
++    Ficam de fora os numeros que nao sao medida: a curva, a volta, o microssetor e a lista
++    das voltas da analise. Dois numeros juntos podem dividir a unidade, no fim:
++    "minima de 102 contra 128 quilometros por hora"."""
++    import re
++
++    resto = re.sub(r"\b(Curva|curva|Volta|Microssetor) \d+", "", fala)
++    resto = re.sub(r"(Análise das voltas|Voltas) [\d, ea]+?\.", "", resto)
++    unidade = r"(décimos?|segundos?|metros?|minutos?|quilômetros por hora)\b"
++    faltando = []
++    for m in re.finditer(r"\d+(,\d+)?", resto):
++        depois = resto[m.end():]
++        if re.match(r"\s+" + unidade, depois) or re.match(r"\s+contra\s+\d+(,\d+)?\s+" + unidade, depois):
++            continue
++        faltando.append((m.group(0), fala))
++    return faltando
++
++
++def test_todo_numero_falado_tem_a_unidade_em_todos_os_tipos_de_mensagem():
++    """Pedido 36, Parte C.5: em todas as variantes de fala de todos os tipos de mensagem."""
++    from core.radio.texto import mensagem_de_resumo, mensagem_de_teste
++
++    mensagens = []
++    for perda, freada, minima_sua, tipo in ((0.04, 38.0, 93.5, "volta_ia"), (0.742, -20.0, 150.0, "volta_ia"),
++                                           (1.253, 0.0, 64.0, "volta_ia"), (2.5, 3.0, 154.0, "minha_melhor"),
++                                           (0.97, 60.0, 157.0, "minha_melhor")):
++        ev = _evento(indice=38, perda=perda, tipo=tipo)
++        ev["evidence"].update(brakeDeltaM=freada, yourMinSpeedKmh=minima_sua)
++        mensagens.append(mensagem_de_diferenca(ev, CURVAS, L))
++    for tempo, ref, pior in ((88.132, 84.829, None), (90.363, 84.829, {"curva": "C11", "lado": "esquerda", "perdaS": 1.14}),
++                             (85.3, 84.829, {"curva": "C01", "lado": "esquerda", "perdaS": 0.7}),
++                             (136.188, 84.829, {"curva": "C12", "lado": "esquerda", "perdaS": 2.6}),
++                             (59.95, None, None), (84.1, 84.829, None)):
++        mensagens.append(mensagem_de_resumo(8, tempo, ref, "volta_ia", pior))
++    voltas = [{"volta": n, "medidas": _medidas(p, freada=f, minima=mi, acelerador=a, tracado=tr)}
++              for n, p, f, mi, a, tr in ((6, [0.85, 0.30, 0.9], -50.0, -30.0, 12.0, 7.9),
++                                         (7, [0.90, -0.1, 1.1], -46.0, -24.0, 14.0, -1.5),
++                                         (8, [1.02, 0.25, 0.95], -40.0, -26.0, -9.0, 2.0))]
++    a = analisar(voltas)
++    for c in a["curvas"]:
++        c["ditas"] = ["freada", "minima", "acelerador", "tracado"]     # todas as medidas faladas
++    mensagens.append(mensagem_de_analise(a, "volta_ia"))
++    mensagens.append(mensagem_de_analise(a, "minha_melhor"))
++    mensagens.append(mensagem_de_teste())
++    falas = [f for m in mensagens for f in (m.get("falas") or [m["fala"]])]
++    assert len(falas) > 40
++    faltando = [x for f in falas for x in _numeros_sem_unidade(f)]
++    assert faltando == []
++    # O teste do teste: um numero solto e achado.
++    assert _numeros_sem_unidade("Curva 4: 1,0 por volta. Mínima 102 contra 128.") == [
++        ("1,0", "Curva 4: 1,0 por volta. Mínima 102 contra 128."), ("102", "Curva 4: 1,0 por volta. Mínima 102 contra 128."),
++        ("128", "Curva 4: 1,0 por volta. Mínima 102 contra 128.")]
++
++
++def test_a_freada_da_ia_por_curva_pela_regra_do_relatorio_de_evolucao():
++    """Pedido 36, Parte D.2: o primeiro ponto, do apice anterior ao apice, em que o freio passa de 0,15
++    (`ml.comparison.evolution.braking_point`); a curva sem freada fica de fora; a linha atravessa a pista."""
++    import numpy as np
++
++    from core.radio import minimapa
++    from ml.comparison.evolution import braking_point
++
++    sys.path.insert(0, str(BACKEND / "tests"))
++    from test_lap_origin import circular_track
++
++    track = circular_track()
++    s = np.asarray(track.s)
++
++    class _Curva:
++        def __init__(self, label, apice):
++            self.label, self.apex_s = label, float(apice)
++
++    class _Trecho:
++        def __init__(self, label, apice):
++            self.corner = _Curva(label, apice)
++
++    trechos = [_Trecho("C01-esq", s[100]), _Trecho("C02-dir", s[300]), _Trecho("C03-esq", s[500])]
++    freio = np.zeros(track.size)
++    freio[80:100] = 0.6          # a freada da C01 comeca no ponto 80
++    freio[270:300] = 0.14        # na C02, o freio nao passa de 0,15: sem freada
++    freio[460:500] = 0.9         # a da C03 comeca no 460
++    freadas = minimapa.freadas_da_referencia(track, trechos, freio.tolist())
++    assert [f["curva"] for f in freadas] == ["C01", "C03"]
++    assert freadas[0]["s"] == pytest.approx(braking_point(freio, track, s[500], s[100]), abs=0.05)
++    assert freadas[1]["s"] == pytest.approx(float(s[460]), abs=0.05)
++    (ax, az), (bx, bz) = freadas[0]["pontos"]
++    i = 80
++    largura = float(np.asarray(track.width_left)[i] + np.asarray(track.width_right)[i])
++    assert np.hypot(ax - bx, az - bz) == pytest.approx(largura, abs=0.05)   # de uma borda a outra
++    assert minimapa.freadas_da_referencia(track, trechos, [0.0] * 10) == []  # sem a grade inteira
++
++
++def _pista_de_teste_com_uma_curva():
++    """A pista circular de teste com uma curva de mentira (C03, a esquerda), para o replay."""
++    import numpy as np
++
++    from core.radio.analise import Pista
++
++    sys.path.insert(0, str(BACKEND / "tests"))
++    from test_lap_origin import circular_track
++
++    track = circular_track()
++    s = np.asarray(track.s)
++
++    class _Curva:
++        def __init__(self, label, inicio, apice, fim):
++            self.label, self.start_s, self.apex_s, self.end_s = label, float(inicio), float(apice), float(fim)
++
++    class _Trecho:
++        def __init__(self, curva, inicio, fim):
++            self.corner, self.start_s, self.end_s = curva, float(inicio), float(fim)
++
++    trechos = [_Trecho(_Curva("C02-dir", s[100], s[120], s[140]), s[60], s[200]),
++               _Trecho(_Curva("C03-esq", s[400], s[430], s[460]), s[200], s[600])]
++    return track, Pista(track=track, segmentos=trechos), s
++
++
++def _grade_de_teste(s, v_ms, lateral, freia_em, minima_em, minima_kmh):
++    import numpy as np
++
++    n = s.size
++    velocidade = np.full(n, v_ms * 3.6)
++    velocidade[minima_em] = minima_kmh
++    freio = np.zeros(n)
++    freio[freia_em:minima_em] = 0.8
++    acelerador = np.where(freio > 0, 0.0, 1.0)
++    return {"elapsed": s / v_ms, "velocidade": velocidade, "freio": freio, "acelerador": acelerador,
++            "lateral": np.full(n, float(lateral))}
++
++
++def test_o_replay_da_curva_tem_as_duas_linhas_freadas_minimas_tracado_e_a_perda():
++    """Pedido 36, Parte E: os dados de uma curva, so com as grades (nada de fisica nova)."""
++    import numpy as np
++
++    from core.radio.replay import dados_da_curva
++    from ml.comparison.evolution import segment_time
++
++    track, pista, s = _pista_de_teste_com_uma_curva()
++    voce = _grade_de_teste(s, 45.0, 1.5, freia_em=380, minima_em=425, minima_kmh=95.0)    # freia antes, mais a esquerda
++    ia = _grade_de_teste(s, 50.0, 0.0, freia_em=395, minima_em=430, minima_kmh=110.0)
++    d = dados_da_curva(pista, "C03", voce, float(s[-1] / 45.0), ia, float(s[-1] / 50.0), 7, "volta_ia")
++    assert d["curva"] == "C03" and d["lado"] == "esquerda" and d["volta"] == 7
++    assert d["rotuloDaReferencia"] == "IA (referência)"
++    lv, lr = d["linhas"]["voce"], d["linhas"]["referencia"]
++    assert len(lv) == len(lr) > 50 and lv[0][2] == 0.0 and lr[0][2] == 0.0          # cada um no seu tempo, da mesma entrada
++    assert lv[-1][2] > lr[-1][2]                                                    # a IA abre
++    assert d["duracaoS"] == pytest.approx(lv[-1][2], abs=1e-3)
++    assert {p[3] for p in lv} >= {1, 2}                                              # o pedal: freio e acelerador
++    assert d["freadas"]["distanciaM"] == pytest.approx(float(s[380] - s[395]), abs=0.1)   # freou 15 pontos antes
++    assert d["minimas"]["voce"]["kmh"] == 95.0 and d["minimas"]["referencia"]["kmh"] == 110.0
++    t = d["tracado"]
++    assert t["distanciaM"] == pytest.approx(1.5) and t["lado"] == "esquerda"         # ADR 0003: positivo = esquerda
++    assert np.hypot(t["voce"][0] - t["referencia"][0], t["voce"][1] - t["referencia"][1]) == pytest.approx(1.5, abs=0.01)
++    seg = pista.segmentos[1]
++    perda = segment_time(voce["elapsed"], s[-1] / 45.0, track, seg) - segment_time(ia["elapsed"], s[-1] / 50.0, track, seg)
++    assert d["perdaS"] == pytest.approx(perda, abs=1e-3) and d["perdaS"] > 0
++    assert dados_da_curva(pista, "C14", voce, 1.0, ia, 1.0, 7, "volta_ia") is None
++
++
++def test_o_replay_da_analise_usa_a_volta_mais_perto_da_mediana():
++    """Pedido 36, Parte E.2: na analise, a volta das 3 cuja perda na curva fica mais perto da mediana."""
++    from core.radio.replay import replay_da_analise, volta_mais_perto_da_mediana
++
++    voltas = [{"volta": 6}, {"volta": 7}, {"volta": 8}]
++    assert volta_mais_perto_da_mediana(voltas, {"perdas": [0.85, 0.90, 1.02], "perdaMedianaS": 0.90}) == 1
++    assert volta_mais_perto_da_mediana(voltas, {"perdas": [26.54, 0.73, 0.51], "perdaMedianaS": 0.73}) == 1
++    assert volta_mais_perto_da_mediana(voltas, {"perdas": [0.5], "perdaMedianaS": 0.5}) is None   # nao sao as 3
++
++    track, pista, s = _pista_de_teste_com_uma_curva()
++    ia = _grade_de_teste(s, 50.0, 0.0, 395, 430, 110.0)
++    tres = [{"volta": n, "tempoS": float(s[-1] / v), "grade": _grade_de_teste(s, v, 1.0, 385, 428, 100.0)}
++            for n, v in ((6, 44.0), (7, 46.0), (8, 48.0))]
++    analise = {"curvas": [{"curva": "C03", "perdas": [0.9, 0.6, 0.3], "perdaMedianaS": 0.6}]}
++    replays = replay_da_analise(pista, tres, analise, ia, float(s[-1] / 50.0), "volta_ia")
++    assert [(r["curva"], r["volta"]) for r in replays] == [("C03", 7)]
++
++
++def test_a_rota_do_replay(tmp_path, monkeypatch):
++    """Pedido 36, Parte E.6: a rota entrega os dados do replay de uma mensagem entregue; 404 sem replay."""
++    import asyncio
++
++    from fastapi import HTTPException
++
++    import main
++    from routers import radio as rota
++
++    radio = _radio(tmp_path, _Pista())
++    monkeypatch.setattr(main, "radio_do_engenheiro", radio)
++    radio._entregues.append({"id": 3, "origem": "analise", "_replay": [{"curva": "C01"}]})
++    radio._entregues.append({"id": 4, "origem": "resumo"})
++    dados = json.loads(asyncio.run(rota.get_replay(3)).body)
++    assert dados == {"id": 3, "origem": "analise", "curvas": [{"curva": "C01"}]}
++    for sem in (4, 99):
++        with pytest.raises(HTTPException) as erro:
++            asyncio.run(rota.get_replay(sem))
++        assert erro.value.status_code == 404
+diff --git a/docs/dashboard_inventario.md b/docs/dashboard_inventario.md
+index a9b7e6ea..ef3ec107 100644
+--- a/docs/dashboard_inventario.md
++++ b/docs/dashboard_inventario.md
+@@ -339,3 +339,20 @@ O rádio que analisa as voltas, o mapa ao vivo sem travar e o minimapa no jogo (
+   - o FPS do jogo no log a cada 10 s, com cada mapa ligado ou desligado.
+ - **Para os testes sem o jogo:** o reprodutor de gravações (`/api/teste/*`, só com `AT_TESTE_REPRODUTOR=1`) toca uma sessão pelo caminho do jogo.
+ - **Falta:** o teste no jogo (Parte G), com o caminho da voz que funcionou e o custo do minimapa.
++
++### O que o pedido 36 entregou (22/10)
++
++O rádio com as unidades, a freada da IA nos mapas e o replay da curva (ADR 0021, atualizações de 22/10). Detalhes em `docs/realidade_aumentada.md` e em `docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_relatorio.md`.
++
++- **O que o rádio diz** (`backend/core/radio/texto.py`):
++  - todo número falado tem a unidade: "7 décimos", "1,2 segundo", "1 minuto e 29,1 segundos", "46 metros", "1,8 metro", "Mínima de 102 contra 128 quilômetros por hora.";
++  - a unidade nunca sai para a fala caber: sai antes a segunda causa e depois a primeira. Nas três sessões passadas pelo rádio, 10 das 43 mensagens com causa a perderam por isso (todas frases do coach da C11 com a mínima);
++  - a volta com rodada (uma curva com mais de 5 s de perda) não entra na análise, e o resumo dela não cita a curva.
++- **O log do backend:** o registro de acesso deixa de fora os pontos novos da tela Ao vivo e as mensagens do rádio (cerca de 6,25 MB por hora a menos).
++- **O app do jogo** (`tools/csp_app/radio_engenheiro/`, versão 0.4.0):
++  - os mapas e o replay se encaixam na parte visível da janela (o minimapa cortava à direita em 21/10) e escrevem as suas medidas no log do CSP;
++  - a freada da IA: no minimapa, só a da próxima curva; no mapa aproximado, todas as da janela, com o rótulo;
++  - a quarta janela, "Replay da curva": na reta, junto com a fala; nos boxes ou pausado, a última análise em repetição.
++- **A tela Ao vivo:** o mesmo replay sob o cartão da análise e da frase do coach com causa, com o botão "Repetir o replay".
++- **A rota nova:** `GET /api/radio/replay/{id}`.
++- **Falta:** o teste no jogo (Parte G), com o FPS de cada janela e as medidas do encaixe no log do CSP.
+diff --git a/docs/decisoes/0021-radio-que-analisa-as-voltas-e-minimapa.md b/docs/decisoes/0021-radio-que-analisa-as-voltas-e-minimapa.md
+index 65342150..11cec48d 100644
+--- a/docs/decisoes/0021-radio-que-analisa-as-voltas-e-minimapa.md
++++ b/docs/decisoes/0021-radio-que-analisa-as-voltas-e-minimapa.md
+@@ -53,3 +53,9 @@
+ - **O piloto ouve mais:** até 3 frases por volta, o resumo e uma análise a cada 3 voltas válidas. Se incomodar, a cadência da análise é o primeiro ajuste.
+ - **O minimapa custa processamento dentro do jogo.** O custo é medido no teste no jogo, com o app ligado e desligado.
+ - **A exceção do ADR 0020 continua do mesmo tamanho:** só a pasta do app, só pelos scripts. A única gravação nova é a do próprio app, dentro dessa pasta.
++
++## Atualizações
++
++- **22/10/2026 (pedido 36), a volta com rodada:** a volta em que uma curva perde mais de 5 s contra a referência (uma rodada ou uma saída de pista) não conta para a análise das voltas, e o resumo dela não cita a curva. É uma regra só do rádio: o coach, o store e as regras de volta válida do store não mudam.
++- **22/10/2026 (pedido 36), a voz:** a 1,4x, aprovada pelo Eduardo (era 1,25x no pedido 31).
++- **22/10/2026 (pedido 36), o replay da curva e as marcas de freada:** o app do jogo ganha uma quarta janela, "Replay da curva": a curva de que o rádio fala (a análise ou a frase do coach com causa), vista de cima, com a sua linha e a da referência, os dois carros cada um no seu tempo, as freadas, as mínimas, o traçado e o tempo perdido. Aparece na reta junto com a fala e some quando a janela de rádio acaba; nos boxes ou pausado, mostra a última análise em repetição. Os dados vêm de `/api/radio/replay/<id>`, só com as grades que o rádio já tem. Os dois mapas marcam a freada da IA pela regra do relatório de evolução: o minimapa só a da próxima curva, o mapa aproximado todas as da janela, com o rótulo. A gravação do app continua só dentro da pasta dele.
+diff --git a/docs/handoff/2026-10-18_35_radio-que-analisa-e-minimapa_relatorio.md b/docs/handoff/2026-10-18_35_radio-que-analisa-e-minimapa_relatorio.md
+index a547dc5e..afbfd8a5 100644
+--- a/docs/handoff/2026-10-18_35_radio-que-analisa-e-minimapa_relatorio.md
++++ b/docs/handoff/2026-10-18_35_radio-que-analisa-e-minimapa_relatorio.md
+@@ -159,6 +159,7 @@ Foram mais voltas que as 3 de cada bloco do roteiro, o que dá mais amostras par
+ 1. **A voz passou de 1,25x para 1,4x sem estar no pedido** (`042c09cb`, `core/radio/audio.py`, `VELOCIDADE_PADRAO`):
+    - **por quê:** a 1,25x, os números falados por extenso faziam a frase com a causa, o resumo com a curva e a análise passarem de 6, 7 e 8 s (medido: 6,8, 8,2 e 8,5 s). A 1,4x, cabem;
+    - **a decisão é sua,** depois do teste. Voltar é mudar uma linha. A 1,25x, algumas mensagens sairiam na variante mais curta, sem a causa, ou esperariam uma janela maior;
++   - **aprovado por você em 22/10** (pedido 36): a voz fica a 1,4x;
+    - no teste de 21/10, a voz a 1,4x tocou nas 30 mensagens.
+ 2. **O minimapa saiu primeiro com as bordas da geometria oficial,** e não com o contorno do asfalto do cache que o pedido (Parte E.2) pedia. Foi corrigido no fechamento.
+ 3. **O mapa aproximado** (a terceira janela) não estava no pedido. Foi acrescentado a seu pedido, depois da primeira captura do jogo.
+diff --git a/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_log_antes.json b/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_log_antes.json
+new file mode 100644
+index 00000000..6d607e38
+--- /dev/null
++++ b/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_log_antes.json
+@@ -0,0 +1,14 @@
++{
++ "rotulo": "antes",
++ "segundosMedidos": 120.0,
++ "bytes": 218349,
++ "bytesPorHora": 6549921,
++ "MBporHora": 6.25,
++ "pedidos": {
++  "novos": 1967,
++  "mensagens": 704,
++  "erros": 0
++ },
++ "linhasDeAcessoNoLog": 2673,
++ "linhasNoLog": 2701
++}
+\ No newline at end of file
+diff --git a/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_log_depois.json b/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_log_depois.json
+new file mode 100644
+index 00000000..1b57a378
+--- /dev/null
++++ b/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_log_depois.json
+@@ -0,0 +1,14 @@
++{
++ "rotulo": "depois",
++ "segundosMedidos": 120.0,
++ "bytes": 0,
++ "bytesPorHora": 0,
++ "MBporHora": 0.0,
++ "pedidos": {
++  "novos": 1979,
++  "mensagens": 708,
++  "erros": 0
++ },
++ "linhasDeAcessoNoLog": 2,
++ "linhasNoLog": 31
++}
+\ No newline at end of file
+diff --git a/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_m1.json b/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_m1.json
+new file mode 100644
+index 00000000..441550cb
+--- /dev/null
++++ b/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_m1.json
+@@ -0,0 +1,301 @@
++{
++ "disponivel": true,
++ "n": 5,
++ "meta": 5,
++ "texto": "5 de 5",
++ "sessoesQueContam": [
++  "2026-10-15_23-24-50_vhe_interlagos",
++  "2026-10-17_01-02-22_vhe_interlagos",
++  "2026-10-17_16-17-08_vhe_interlagos",
++  "2026-10-18_12-38-44_vhe_interlagos",
++  "2026-10-21_20-30-54_vhe_interlagos"
++ ],
++ "sessoesComVoltasSuas": [
++  {
++   "sessao": "2026-10-04_02-24-04_vhe_interlagos",
++   "voltasNoStore": 10,
++   "origens": {
++    "humano": 4,
++    "ia": 5,
++    "misturada": 1
++   },
++   "fontesDaOrigem": [
++    "anotacao",
++    "indicador"
++   ],
++   "humana": false,
++   "preenchimentoGrade": {
++    "yaw_rate": 0.0,
++    "velocity_long": 0.0,
++    "velocity_lat": 0.0
++   },
++   "conta": false,
++   "motivos": [
++    "tem voltas que não são suas no store",
++    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
++   ]
++  },
++  {
++   "sessao": "2026-10-04_03-21-52_vhe_interlagos",
++   "voltasNoStore": 4,
++   "origens": {
++    "humano": 4
++   },
++   "fontesDaOrigem": [
++    "indicador"
++   ],
++   "humana": true,
++   "preenchimentoGrade": {
++    "yaw_rate": 0.0,
++    "velocity_long": 0.0,
++    "velocity_lat": 0.0
++   },
++   "conta": false,
++   "motivos": [
++    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
++   ]
++  },
++  {
++   "sessao": "2026-10-04_03-42-10_vhe_interlagos",
++   "voltasNoStore": 12,
++   "origens": {
++    "humano": 3,
++    "ia": 8,
++    "misturada": 1
++   },
++   "fontesDaOrigem": [
++    "anotacao",
++    "indicador"
++   ],
++   "humana": false,
++   "preenchimentoGrade": {
++    "yaw_rate": 0.0,
++    "velocity_long": 0.0,
++    "velocity_lat": 0.0
++   },
++   "conta": false,
++   "motivos": [
++    "tem voltas que não são suas no store",
++    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
++   ]
++  },
++  {
++   "sessao": "2026-10-04_23-51-42_vhe_interlagos",
++   "voltasNoStore": 7,
++   "origens": {
++    "humano": 7
++   },
++   "fontesDaOrigem": [
++    "anotacao_sessao"
++   ],
++   "humana": true,
++   "preenchimentoGrade": {
++    "yaw_rate": 0.0,
++    "velocity_long": 0.0,
++    "velocity_lat": 0.0
++   },
++   "conta": false,
++   "motivos": [
++    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
++   ]
++  },
++  {
++   "sessao": "2026-10-05_20-33-47_vhe_interlagos",
++   "voltasNoStore": 11,
++   "origens": {
++    "humano": 11
++   },
++   "fontesDaOrigem": [
++    "anotacao_sessao"
++   ],
++   "humana": true,
++   "preenchimentoGrade": {
++    "yaw_rate": 0.0,
++    "velocity_long": 0.0,
++    "velocity_lat": 0.0
++   },
++   "conta": false,
++   "motivos": [
++    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
++   ]
++  },
++  {
++   "sessao": "2026-10-08_23-56-13_vhe_interlagos",
++   "voltasNoStore": 4,
++   "origens": {
++    "humano": 4
++   },
++   "fontesDaOrigem": [
++    "anotacao_sessao"
++   ],
++   "humana": true,
++   "preenchimentoGrade": {
++    "yaw_rate": 0.0,
++    "velocity_long": 0.0,
++    "velocity_lat": 0.0
++   },
++   "conta": false,
++   "motivos": [
++    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
++   ]
++  },
++  {
++   "sessao": "2026-10-10_09-57-09_vhe_interlagos",
++   "voltasNoStore": 12,
++   "origens": {
++    "humano": 12
++   },
++   "fontesDaOrigem": [
++    "anotacao_sessao"
++   ],
++   "humana": true,
++   "preenchimentoGrade": {
++    "yaw_rate": 0.0,
++    "velocity_long": 0.0,
++    "velocity_lat": 0.0
++   },
++   "conta": false,
++   "motivos": [
++    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
++   ]
++  },
++  {
++   "sessao": "2026-10-11_14-19-52_vhe_interlagos",
++   "voltasNoStore": 16,
++   "origens": {
++    "humano": 16
++   },
++   "fontesDaOrigem": [
++    "anotacao_sessao"
++   ],
++   "humana": true,
++   "preenchimentoGrade": {
++    "yaw_rate": 0.0,
++    "velocity_long": 0.0,
++    "velocity_lat": 0.0
++   },
++   "conta": false,
++   "motivos": [
++    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
++   ]
++  },
++  {
++   "sessao": "2026-10-13_19-24-10_vhe_interlagos",
++   "voltasNoStore": 9,
++   "origens": {
++    "humano": 9
++   },
++   "fontesDaOrigem": [
++    "anotacao_sessao"
++   ],
++   "humana": true,
++   "preenchimentoGrade": {
++    "yaw_rate": 0.0,
++    "velocity_long": 0.0,
++    "velocity_lat": 0.0
++   },
++   "conta": false,
++   "motivos": [
++    "abaixo de 95%: a guinada, a velocidade longitudinal no referencial do carro, a velocidade lateral no referencial do carro"
++   ]
++  },
++  {
++   "sessao": "2026-10-15_23-24-50_vhe_interlagos",
++   "voltasNoStore": 11,
++   "origens": {
++    "humano": 11
++   },
++   "fontesDaOrigem": [
++    "indicador"
++   ],
++   "humana": true,
++   "preenchimentoGrade": {
++    "yaw_rate": 1.0,
++    "velocity_long": 1.0,
++    "velocity_lat": 1.0
++   },
++   "conta": true,
++   "motivos": []
++  },
++  {
++   "sessao": "2026-10-17_01-02-22_vhe_interlagos",
++   "voltasNoStore": 12,
++   "origens": {
++    "humano": 12
++   },
++   "fontesDaOrigem": [
++    "indicador"
++   ],
++   "humana": true,
++   "preenchimentoGrade": {
++    "yaw_rate": 1.0,
++    "velocity_long": 1.0,
++    "velocity_lat": 1.0
++   },
++   "conta": true,
++   "motivos": []
++  },
++  {
++   "sessao": "2026-10-17_16-17-08_vhe_interlagos",
++   "voltasNoStore": 16,
++   "origens": {
++    "humano": 16
++   },
++   "fontesDaOrigem": [
++    "indicador"
++   ],
++   "humana": true,
++   "preenchimentoGrade": {
++    "yaw_rate": 1.0,
++    "velocity_long": 1.0,
++    "velocity_lat": 1.0
++   },
++   "conta": true,
++   "motivos": []
++  },
++  {
++   "sessao": "2026-10-18_12-38-44_vhe_interlagos",
++   "voltasNoStore": 9,
++   "origens": {
++    "humano": 9
++   },
++   "fontesDaOrigem": [
++    "indicador"
++   ],
++   "humana": true,
++   "preenchimentoGrade": {
++    "yaw_rate": 1.0,
++    "velocity_long": 1.0,
++    "velocity_lat": 1.0
++   },
++   "conta": true,
++   "motivos": []
++  },
++  {
++   "sessao": "2026-10-21_20-30-54_vhe_interlagos",
++   "voltasNoStore": 9,
++   "origens": {
++    "humano": 9
++   },
++   "fontesDaOrigem": [
++    "indicador"
++   ],
++   "humana": true,
++   "preenchimentoGrade": {
++    "yaw_rate": 1.0,
++    "velocity_long": 1.0,
++    "velocity_lat": 1.0
++   },
++   "conta": true,
++   "motivos": []
++  }
++ ],
++ "store": {
++  "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2.parquet",
++  "construidoEm": "2026-10-22T03:34:28.282651+00:00",
++  "commit": "2b16db32f6434fb93eb1ae4eafc7d9b1df7c9931",
++  "esquema": "2.1",
++  "voltas": 694
++ },
++ "regra": "sessões com todas as voltas do store como suas (origem humano) e a guinada e as velocidades no referencial do carro em pelo menos 95% dos pontos da grade"
++}
+\ No newline at end of file
+diff --git a/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_medir_log.py b/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_medir_log.py
+new file mode 100644
+index 00000000..47314533
+--- /dev/null
++++ b/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_medir_log.py
+@@ -0,0 +1,108 @@
++"""Pedido 36, Parte B.3: quanto o log do backend cresce por hora, numa reproducao de gravacao.
++
++Sobe o backend do repositorio (o `desktop_backend_runner.py`, o mesmo do app) na porta
++de teste, com a pasta de dados e as gravacoes isoladas no scratchpad e o reprodutor
++ligado (`AT_TESTE_REPRODUTOR=1`); toca a sessao de 21/10 pelo caminho do jogo; e pede as
++rotas no ritmo medido no teste no jogo de 21/10: os pontos novos 28 vezes por segundo
++(a tela Ao vivo) e as mensagens do radio a cada 0,3 s duas vezes (o app do jogo e a
++tela). O log e a saida do processo, como no app. Mede o crescimento depois do arranque.
++
++Uso: python medir_log.py <rotulo> <segundos> <saida.json>
++"""
++import json
++import os
++import subprocess
++import sys
++import threading
++import time
++import urllib.request
++from pathlib import Path
++
++ROTULO, SEGUNDOS, SAIDA = sys.argv[1], float(sys.argv[2]), Path(sys.argv[3])
++REPO = Path(r"C:\Users\Dokas\Desktop\f1-telemetry-analyzer")
++AQUI = Path(__file__).resolve().parent
++PORTA = 8011
++BASE = f"http://127.0.0.1:{PORTA}"
++LOG = AQUI / f"backend_{ROTULO}.log"
++GRAVACAO = REPO / "data" / "recordings" / "2026-10-21_20-30-54_vhe_interlagos" / "player.jsonl"
++
++env = dict(os.environ, AT_BACKEND_PORT=str(PORTA), AT_BACKEND_RESOURCE_ROOT=str(REPO), AT_BACKEND_REPO_ROOT=str(REPO),
++           AT_BACKEND_RUNTIME_ROOT=str(AQUI / "runtime"), TELEMETRY_RECORDING_DIR=str(AQUI / "runtime" / "gravacoes"),
++           AT_TESTE_REPRODUTOR="1", PYTHONIOENCODING="utf-8")
++(AQUI / "runtime" / "gravacoes").mkdir(parents=True, exist_ok=True)
++saida_do_processo = LOG.open("wb")
++proc = subprocess.Popen([str(REPO / ".venv" / "Scripts" / "python.exe"), str(REPO / "backend" / "desktop_backend_runner.py")],
++                        cwd=str(REPO / "backend"), env=env, stdout=saida_do_processo, stderr=subprocess.STDOUT)
++
++
++def pedir(caminho: str, corpo=None):
++    dados = json.dumps(corpo).encode() if corpo is not None else None
++    req = urllib.request.Request(BASE + caminho, data=dados, headers={"Content-Type": "application/json"} if dados else {})
++    with urllib.request.urlopen(req, timeout=5) as r:
++        return json.loads(r.read() or b"null")
++
++
++try:
++    for _ in range(120):
++        try:
++            pedir("/api/radio/estado")
++            break
++        except Exception:
++            time.sleep(1)
++    else:
++        raise SystemExit("o backend nao subiu")
++    pedir("/api/teste/reproduzir", {"arquivo": str(GRAVACAO), "desdeVolta": 8, "velocidade": 1.0})
++    parar = threading.Event()
++    contagem = {"novos": 0, "mensagens": 0, "erros": 0}
++
++    def tela_ao_vivo():
++        versao = desde = None
++        while not parar.is_set():
++            t = time.perf_counter()
++            try:
++                q = "" if versao is None else f"?versao={versao}&desde={desde}"
++                r = pedir("/api/live/volta/novos" + q)
++                versao, desde = r.get("versao", versao), r.get("seq", desde)
++                contagem["novos"] += 1
++            except Exception:
++                contagem["erros"] += 1
++            time.sleep(max(0.0, 1 / 28 - (time.perf_counter() - t)))
++
++    def radio():
++        while not parar.is_set():
++            try:
++                pedir("/api/radio/mensagens?desde=0")
++                contagem["mensagens"] += 1
++            except Exception:
++                contagem["erros"] += 1
++            time.sleep(0.3)
++
++    fios = [threading.Thread(target=tela_ao_vivo), threading.Thread(target=radio), threading.Thread(target=radio)]
++    for f in fios:
++        f.start()
++    time.sleep(10)                      # o arranque da reproducao fica de fora
++    saida_do_processo.flush()
++    b0, t0 = LOG.stat().st_size, time.time()
++    time.sleep(SEGUNDOS)
++    b1, t1 = LOG.stat().st_size, time.time()
++    parar.set()
++    for f in fios:
++        f.join()
++    linhas = LOG.read_bytes().decode("utf-8", "replace").splitlines()
++    acesso = sum(1 for l in linhas if '"GET /api/' in l or '"POST /api/' in l)
++    resultado = {"rotulo": ROTULO, "segundosMedidos": round(t1 - t0, 1), "bytes": b1 - b0,
++                 "bytesPorHora": round((b1 - b0) / (t1 - t0) * 3600), "MBporHora": round((b1 - b0) / (t1 - t0) * 3600 / 2**20, 2),
++                 "pedidos": contagem, "linhasDeAcessoNoLog": acesso, "linhasNoLog": len(linhas)}
++    print(json.dumps(resultado, ensure_ascii=False))
++    SAIDA.write_text(json.dumps(resultado, ensure_ascii=False, indent=1), encoding="utf-8")
++finally:
++    try:
++        pedir("/api/teste/parar", {})
++    except Exception:
++        pass
++    proc.terminate()
++    try:
++        proc.wait(timeout=20)
++    except subprocess.TimeoutExpired:
++        proc.kill()
++    saida_do_processo.close()
+diff --git a/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_relatorio.md b/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_relatorio.md
+new file mode 100644
+index 00000000..eb704a7b
+--- /dev/null
++++ b/docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_relatorio.md
+@@ -0,0 +1,69 @@
++# Relatório parcial do pedido 36: o rádio com as unidades, a freada da IA nos mapas e o replay da curva
++
++- **Pedido:** `docs/prompts/2026-10-22_36_radio-com-unidades-e-replay-da-curva.md`. **Parcial:** parei no meio da Parte C, porque o limite de uso acabou.
++- **Branch:** `etapa/radio-unidades-e-replay`, criada de `develop` (`5bb9f257`). Ainda sem merge em `develop`, e nada foi enviado ao remoto.
++- **Commits:**
++  - `eb60d8d7` Parte B: as decisões do pedido 35;
++  - o commit deste relatório: "Relatório parcial do pedido 36".
++- **Arquivos de handoff** (`docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_*`):
++  - `_relatorio.md` (este arquivo);
++  - `_m1.json`: a contagem oficial da M1;
++  - `_log_antes.json`, `_log_depois.json` e `_medir_log.py`: o crescimento do log de acesso.
++
++## Parte A: as conferências rápidas (feita)
++
++1. **A M1 está em 5 de 5.** A sessão `2026-10-21_20-30-54` é a 5ª: ela tem 9 voltas, todas suas no store, e a guinada e as velocidades estão em 100% da grade. As outras quatro são 15/10 23:24, 17/10 01:02, 17/10 16:17 e 18/10 12:38.
++2. **A volta de 1:26,875** (`2026-10-21_20-30-54#0017`) não tem sinal de corte de pista:
++   - nenhuma amostra com 2 ou mais pneus fora;
++   - nenhum `off_track`;
++   - 2,8% fora do corredor útil. A volta limpa de referência do portão tem 4,7%;
++   - a conferência completa, comparada com as voltas de 1:27,594 e 1:27,014, está em `docs/handoff/2026-10-22_35_rodada-do-coach_relatorio.md` (commit `5bb9f257`).
++
++## Parte B: as decisões do pedido 35 (feita, `eb60d8d7`)
++
++1. **A voz a 1,4x, aprovada:** a decisão está registrada em `docs/realidade_aumentada.md`, no relatório do pedido 35 (seção "Desvios") e numa seção nova, "Atualizações", no ADR 0021.
++2. **A volta com rodada:**
++   - a volta em que uma curva perde mais de 5 s contra a referência não conta para a análise, e o resumo dela não cita a curva;
++   - é uma regra só do rádio (`PERDA_DE_RODADA_S`, em `core/radio/analise.py`);
++   - o teste repete o caso de 21/10: a volta 5 (26,54 s na C12) sai da análise, e a análise passa a usar as voltas 9, 11 e 12.
++3. **O log de acesso:**
++   - o filtro está em `core/registro_de_acesso.py` e é ligado no arranque do backend. Ele tira do log os pedidos bem-sucedidos de `/api/live/volta/novos` e `/api/radio/mensagens`; os erros e as outras rotas continuam;
++   - **a medida,** numa reprodução da gravação de 21/10 (backend na porta 8011, pastas isoladas):
++     - antes, o log crescia **6,25 MB por hora**, com cerca de 15 pedidos de pontos novos por segundo e 5,4 de mensagens;
++     - depois, essas duas rotas não escrevem nada (0 bytes por hora no mesmo teste);
++   - **o log existente:** 3,53 GiB (3,8 GB). Compactado com gzip, nível 6, ocuparia **31,5 MiB** (0,9%). Não apaguei nem compactei nada; a decisão é sua.
++4. **O CSV de anotações:**
++   - no git, o arquivo já estava todo em LF;
++   - a cópia de trabalho tinha 5 linhas com CRLF e 3 com LF. Normalizei para CRLF, a maioria;
++   - o leitor do `atualizar_coach` e o do botão do app leem as mesmas 7 linhas antes e depois, e os testes que usam o arquivo passam;
++   - o git não vê diferença de conteúdo, então não houve o que commitar. O CSV também não entra na chave do cache da rodada.
++
++## Parte C: as unidades (começada, sem commit)
++
++- **O texto novo está escrito** em `backend/core/radio/texto.py`, mas não foi commitado:
++  - o tempo em décimos abaixo de 1 s e em segundos acima;
++  - a volta como "1 minuto e 29,1 segundos";
++  - a distância como "46 metros" ou "1,8 metro";
++  - a velocidade como "mínima de 102 contra 128 quilômetros por hora".
++- **Sete testes do rádio** ainda esperam o texto antigo e falham:
++  - `test_frase_de_diferenca...`;
++  - `test_frase_contra_a_sua_melhor...`;
++  - `test_resumo_na_linha`;
++  - `test_a_causa_principal...`;
++  - `test_resumo_com_a_curva_de_maior_perda`;
++  - `test_a_analise_so_curvas...`;
++  - `test_a_voz_fica_com_a_primeira_fala_que_cabe`.
++
++  É preciso atualizá-los e escrever o teste novo, de que todo número da fala tem a sua unidade.
++
++## O que falta
++
++- **Parte C:**
++  - os testes;
++  - a conferência de 13/10, 18/10 e 21/10: quantas mensagens perderam a causa por causa das unidades, antes e depois;
++  - o cartão com as unidades. Os números das perdas na análise já ganharam o "s".
++- **Parte D:** o minimapa que corta à direita (achar a causa) e a freada da IA nos dois mapas.
++- **Parte E:** o replay da curva (a rota, a janela do jogo e a animação na tela Ao vivo) e as propostas de outras representações visuais.
++- **Partes F, H e G:** os testes e as prévias, a documentação e a parada para o teste no jogo.
++
++Nada precisa de decisão agora.
+diff --git a/docs/prompts/2026-10-22_36_radio-com-unidades-e-replay-da-curva.md b/docs/prompts/2026-10-22_36_radio-com-unidades-e-replay-da-curva.md
+new file mode 100644
+index 00000000..0b12ac23
+--- /dev/null
++++ b/docs/prompts/2026-10-22_36_radio-com-unidades-e-replay-da-curva.md
+@@ -0,0 +1,178 @@
++# Pedido 36 — O rádio com as unidades, a freada da IA nos mapas e o replay da curva
++
++**De:** Eduardo. **Data:** 22/10/2026.
++**Tipo:** backend (rádio), app Lua do CSP, front (tela Ao vivo) e documentação. Nenhum modelo, store ou critério muda. O coach continua decidindo as frases.
++
++**Quando começar:** agora; o pedido 35 está fechado. Os cuidados de processo da Parte C do pedido 33 valem aqui (janela de teste com "[teste]" e fechada no fim; nenhuma trava do git apagada sem me perguntar).
++
++## Contexto
++
++1. **O teste no jogo de 21/10** (relatório do pedido 35) funcionou: a voz tocou nas 30 mensagens, o registro bate com o caminho fora do tempo real, e os dois mapas custam cerca de 3% do FPS.
++2. **O que eu observei andando:**
++   - **a voz solta números sem unidade.** "Curva 4: 1,0 por volta. Mínima 102 contra 128." não diz se é segundo, décimo, metro ou km/h. Assim, eu não entendo o que é cada número;
++   - **o minimapa (a pista inteira) corta do lado direito;**
++   - **quero ver o ponto de freada da IA** no minimapa e no mapa aproximado;
++   - **o engenheiro precisa mostrar, e não só falar.** Quando ele diz que passei 8 metros mais à direita, quero ver uma animação com onde eu passei e onde a IA passou;
++   - **no geral, faltam representações visuais.**
++3. **As minhas decisões sobre o pedido 35:**
++   - **a voz fica a 1,4x.** O desvio está aprovado;
++   - **a volta com rodada sai da análise** (item da Parte B);
++   - **o log de acesso do backend é silenciado** nas rotas pedidas várias vezes por segundo (Parte B);
++   - **o CSV de anotações é normalizado** (Parte B);
++   - a pasta `recordings/` continua fora do `.gitignore`.
++
++## Parte A — Conferências rápidas
++
++1. **A contagem oficial da M1** depois da rodada de 22/10, com as sessões que contam. A sessão `2026-10-21_20-30-54` deve ser a 5ª; confirme ou diga por que não.
++2. **A volta de 1:26,875** (`2026-10-21_20-30-54#0017`), que virou a sua melhor:
++   - o `tyres_out` e o `off_track` dela, como foi feito com a volta de 1:27,594 no pedido 32;
++   - a fração fora do corredor, só para registro.
++
++   Nenhuma regra muda. Se houver sinal de corte de pista, relate; a decisão é minha.
++
++## Parte B — As decisões do pedido 35
++
++1. **A voz a 1,4x:** registre a decisão em `docs/realidade_aumentada.md` e no relatório do pedido 35 (seção "Desvios"), como aprovada em 22/10.
++2. **A volta com rodada:**
++   - a volta em que uma curva perde mais de 5 s contra a referência não conta para a análise das voltas;
++   - o resumo dessa volta diz o tempo e a diferença, sem citar a curva;
++   - o coach, o store e as regras de volta válida do store não mudam. É uma regra só do rádio;
++   - escreva a regra em `docs/realidade_aumentada.md` e numa linha de atualização no ADR 0021;
++   - teste: a volta 5 de 21/10 (26,5 s na C12) sai da primeira análise, e a análise passa a usar a volta válida seguinte.
++3. **O log de acesso:**
++   - silencie o registro de acesso das rotas que a tela Ao vivo e o app do jogo pedem várias vezes por segundo (os pontos novos da volta e as mensagens do rádio);
++   - os erros e as outras rotas continuam no log;
++   - relate quanto o log cresce por hora, antes e depois, numa reprodução de gravação.
++   - **O arquivo de 3,8 GB que já existe** não é apagado. Diga só o tamanho dele compactado; a decisão de apagar é minha.
++4. **O CSV de anotações** (`docs/experimentos/anotacoes_de_sessao.csv`):
++   - normalize o fim de linha para o que a maioria das linhas usa, sem mudar nenhum conteúdo;
++   - confira que todos os leitores do arquivo (o `atualizar_coach`, o botão do app e os testes) leem as mesmas linhas antes e depois.
++
++## Parte C — As unidades na voz e no cartão
++
++1. **Todo número falado tem a sua unidade:**
++   - **o tempo perdido:**
++     - abaixo de 1 s, em décimos: "4 décimos";
++     - de 1 s para cima, em segundos, com uma casa: "1,2 segundo", "2,5 segundos";
++   - **o tempo da volta:** "1 minuto e 29,1 segundos";
++   - **a diferença da volta:** "4,2 segundos atrás da IA";
++   - **a distância:** "46 metros", "1,8 metro";
++   - **a velocidade:** em quilômetros por hora. Quando dois números aparecem juntos, a unidade pode vir uma vez só, no fim, se ficar claro: "mínima de 102 contra 128 quilômetros por hora".
++2. **Exemplos do que eu quero ouvir:**
++   - "Curva 11: 1,2 segundo atrás da IA. Mínima de 64 contra 94 quilômetros por hora."
++   - "Volta 8: 4,2 segundos atrás da IA. Mais perdeu na curva 1: 7 décimos."
++   - "Curva 4: perde 1,0 segundo por volta. Freia 46 metros antes da IA."
++3. **Para caber na janela:**
++   - a unidade nunca sai da fala;
++   - se não couber, sai primeiro a segunda causa, depois a primeira, como nas variantes que já existem;
++   - relate, nas sessões de 13/10, 18/10 e 21/10, quantas mensagens perderam a causa por causa das unidades, antes e depois.
++4. **O cartão** mostra as mesmas unidades, com os números completos (s, m e km/h).
++5. **Testes:** todo número de toda fala tem a unidade logo depois, em todos os tipos de mensagem.
++
++## Parte D — O minimapa e a freada da IA nos mapas
++
++1. **O minimapa que corta à direita:**
++   - ache a causa: a conta do encaixe, a margem, os contornos novos do asfalto tratado, o nome das curvas ou a janela que não é quadrada;
++   - a pista inteira e os nomes cabem, com margem, em todos os tamanhos da janela (de 200 a 640) e numa janela mais larga que alta, ou mais alta que larga;
++   - se houver captura minha do jogo no repositório, use-a; senão, mostre a prévia nos tamanhos 200, 300 e 640.
++2. **O ponto de freada da IA:**
++   - **a regra:** o começo da freada da volta de referência em cada curva, pela mesma regra do relatório de evolução (a janela de frenagem do pedido 17). Nada de conta nova;
++   - **no minimapa:** só a freada da próxima curva, como uma marca curta atravessando a pista, na cor do fantasma. Com 14 curvas, mais que isso polui;
++   - **no mapa aproximado:** a freada da IA em todas as curvas que estiverem na janela, como uma linha atravessando o asfalto, com o rótulo "freada da IA". O seu traçado, pintado pelo pedal, já mostra onde você freou: o vermelho começa ali;
++   - os pontos vêm com a referência, na rota do minimapa, uma vez por referência.
++
++## Parte E — O replay da curva: o engenheiro mostra o que diz
++
++**O que é:** uma animação curta da curva citada pelo rádio, vista de cima, sobre a pista tratada (asfalto, pintura e zebras):
++
++1. **O que mostra:**
++   - **duas linhas:** onde você passou e onde a IA passou. O texto diz "você" e "IA (referência)", nunca "onde devia passar": é uma diferença medida contra uma volta real (ADR 0012);
++   - **dois carros andando** sobre as linhas, cada um no seu próprio tempo, a partir da mesma entrada da curva. A diferença de tempo aparece sozinha, no quanto a IA abre;
++   - **as duas freadas,** com a distância entre elas em metros;
++   - **as duas mínimas,** no ponto de cada uma, com o valor em km/h;
++   - **o traçado:** no ponto da mínima da IA, uma seta entre as duas linhas com a distância em metros e o lado por extenso (ADR 0003);
++   - **o tempo perdido na curva,** com a unidade.
++2. **Qual volta sua:** uma volta real, e não uma média. Na análise, é a volta das 3 cuja perda na curva fica mais perto da mediana. Na frase do coach, é a volta em que a frase saiu.
++3. **De onde vêm os dados:** a volta ao vivo que o backend já guarda (a lateral, o relógio e o pedal na grade oficial) e a volta de referência, com as posições montadas na geometria oficial, como o traçado da tela Volta. Nada de física nova.
++4. **No jogo:**
++   - **uma janela nova do app,** "Replay da curva", separada das outras na barra de apps;
++   - **na reta:** ela aparece junto com a fala de uma análise ou de uma frase do coach com causa, toca a animação de cada curva citada e some quando a janela de rádio acaba. Nunca aparece dentro das 14 curvas;
++   - **nos boxes ou com o jogo pausado:** a última análise fica disponível, maior e em repetição, até você sair. Confira na `lib.lua` como saber que o carro está nos boxes;
++   - **o desenho:** a imagem da pista que o app já tem (`pista_detalhada.png`), recortada e girada na curva, com as linhas e os carros por cima;
++   - **o custo:** meça o FPS com a janela ligada e desligada, como no pedido 35.
++5. **No app,** na tela Ao vivo: o cartão da análise e o da frase com causa ganham a mesma animação, com um botão de repetir.
++6. **A rota:** uma rota entrega os dados do replay de cada mensagem, uma vez por mensagem, com a versão na mensagem, como o minimapa.
++
++**Outras representações visuais:** proponha no relatório, sem implementar, outras formas de mostrar o que o rádio diz (por exemplo, no cartão do resumo ou na frase do coach), com um esboço de cada uma.
++
++## Parte F — Testes e conferência sem o jogo
++
++1. **Backend:**
++   - as unidades em todas as falas (Parte C.5);
++   - a volta com rodada fora da análise (Parte B.2);
++   - a freada da IA por curva, contra o relatório de evolução;
++   - a escolha da volta do replay (a mais perto da mediana);
++   - as rotas novas e o log silenciado.
++2. **App Lua:** a conferência contra o SDK do CSP (`tools/csp_app/conferir_lua.py`), com as chamadas novas.
++3. **Front:** os testes da tela Ao vivo e da tela Volta.
++4. **Conferência nas sessões de 13/10, 18/10 e 21/10,** fora do tempo real:
++   - as falas novas, com a duração e a janela em que caem;
++   - as mensagens que perderam a causa (Parte C.3).
++5. **Prévias fora do jogo:**
++   - o minimapa nos tamanhos da Parte D.1, com a marca de freada;
++   - o mapa aproximado com a linha de freada da IA;
++   - **o replay de 3 curvas reais de 21/10,** incluindo a C01 da segunda análise (o traçado 7,9 m mais à direita). Diga se esses 7,9 m batem com as duas linhas desenhadas.
++6. **As suítes:** a do backend e os testes do front continuam passando.
++
++## Parte G — Teste no jogo (comigo)
++
++Pare aqui. Grave o relatório parcial com os passos para mim, com os comandos exatos, como no pedido 35:
++
++1. fechar o jogo e o app instalado;
++2. rodar o `instalar.ps1` de novo;
++3. abrir o app pelo repositório;
++4. no jogo, ligar as quatro janelas: rádio, minimapa, mapa aproximado e replay da curva;
++5. mandar a mensagem de teste;
++6. andar pelo menos 8 voltas sem a IA, com uma ida aos boxes no meio, para ver o replay grande;
++7. avisar: "testei o rádio com o replay no jogo".
++
++**Depois do aviso:**
++
++- confira o registro do rádio, as unidades e os replays entregues;
++- leia, sem mudar nada, as linhas `[radio_engenheiro]` do log do CSP;
++- meça o FPS com cada janela;
++- complete o relatório e `docs/realidade_aumentada.md`.
++
++## Parte H — Documentação
++
++- **`docs/realidade_aumentada.md`:**
++  - as unidades e os exemplos;
++  - a regra da volta com rodada;
++  - a freada da IA nos mapas;
++  - o replay da curva: o que mostra, de onde vem cada dado, quando aparece e o custo medido.
++- **ADR 0021:** uma linha de atualização com a janela do replay, as marcas de freada e a regra da volta com rodada.
++- **`docs/dashboard_inventario.md`:** o que este pedido entregou, no fim da seção 7.
++
++## Regras gerais
++
++- **O coach continua decidindo as frases.** O foco, o limiar e o limite de 3 por volta não mudam.
++- **Nenhum modelo, store ou critério muda.** A regra da volta com rodada é só do rádio.
++- **Não grave na pasta do jogo.** Os scripts são rodados por mim. Em tempo de jogo, o app só grava dentro da pasta dele (ADR 0021).
++- **Não instale nem atualize pacotes.** Se algo pedir pacote novo, pare e relate.
++- **Não mexa no app instalado.** Os testes usam a pasta isolada.
++- **Não apague o log de 3,8 GB nem nenhuma gravação.**
++- **Não gere instalador.** Ele vem depois deste teste no jogo.
++- **Nada de marca alheia:** sem logotipo, som ou fonte da F1, do WEC, da FIA ou de equipes.
++- **Não contorne nenhuma trava:** se algo parar, pare também e registre o motivo.
++- **Janelas de teste** com "[teste]" no título, fechadas no fim.
++- **Branch e commits:** branch `etapa/radio-unidades-e-replay`, commits por parte, merge em `develop`. Sem push.
++- **Uma sessão de implementação por vez** (ADR 0008).
++- **Relatório** em `docs/handoff/2026-10-22_36_radio-com-unidades-e-replay-da-curva_relatorio.md`, como manda o CLAUDE.md, com:
++  - a Parte A;
++  - as falas novas, com exemplos reais e o antes e depois do que cabe;
++  - a causa do corte no minimapa e as prévias;
++  - o replay: as prévias e a conferência dos 7,9 m;
++  - as propostas de outras representações visuais;
++  - a saída dos testes e os commits;
++  - na parada da Parte G, os passos para mim.
++- Se algo do contexto não bater com o repositório, pare e registre no relatório.
+diff --git a/docs/realidade_aumentada.md b/docs/realidade_aumentada.md
+index 80d4dbfa..1c8d504a 100644
+--- a/docs/realidade_aumentada.md
++++ b/docs/realidade_aumentada.md
+@@ -1,6 +1,6 @@
+-# Realidade aumentada: o rádio do engenheiro e o minimapa (pedido 31, ADR 0020; pedido 35, ADR 0021)
++# Realidade aumentada: o rádio do engenheiro, os mapas e o replay da curva (pedido 31, ADR 0020; pedidos 35 e 36, ADR 0021)
+ 
+-O rádio leva o que o coach já decide até o piloto, durante a volta, com o jogo em tela cheia: uma mensagem curta, num cartão dentro do jogo e em voz, no momento em que dá para ouvir. É o jeito de o Modelo 2 chegar ao piloto (ADR 0018). O rádio não decide nada do coach: quais frases saem, o limite de 3 por volta, o foco e o limiar continuam no coach. Desde o pedido 35, ele também analisa as voltas a cada 3 voltas válidas, lendo só o que a volta ao vivo e o store já medem (ADR 0021). O app do jogo ganhou dois mapas com o fantasma da referência: o minimapa, com a pista inteira, e o mapa aproximado, a vista de perto da tela Volta.
++O rádio leva o que o coach já decide até o piloto, durante a volta, com o jogo em tela cheia: uma mensagem curta, num cartão dentro do jogo e em voz, no momento em que dá para ouvir. É o jeito de o Modelo 2 chegar ao piloto (ADR 0018). O rádio não decide nada do coach: quais frases saem, o limite de 3 por volta, o foco e o limiar continuam no coach. Desde o pedido 35, ele também analisa as voltas a cada 3 voltas válidas, lendo só o que a volta ao vivo e o store já medem (ADR 0021). O app do jogo ganhou dois mapas com o fantasma da referência: o minimapa, com a pista inteira, e o mapa aproximado, a vista de perto da tela Volta. Desde o pedido 36, todo número falado tem a unidade (seção 2.6), os dois mapas marcam a freada da IA e o engenheiro mostra o que diz: o replay da curva (seção 5.4), no jogo e na tela Ao vivo.
+ 
+ ## 1. Como funciona
+ 
+@@ -20,7 +20,7 @@ O rádio leva o que o coach já decide até o piloto, durante a volta, com o jog
+ 
+ ## 2. O que o rádio diz (pedido 35)
+ 
+-Os exemplos são das sessões de 13/10 e 18/10, passadas pelo rádio fora do tempo real, com a voz de verdade e o cronômetro do gravador (handoff do pedido 35).
++Os exemplos são das sessões de 13/10 e 18/10, passadas pelo rádio fora do tempo real, com a voz de verdade e o cronômetro do gravador (handoff do pedido 35). Desde o pedido 36, as falas são as com as unidades (seção 2.6), da mesma passagem refeita (handoff do pedido 36).
+ 
+ ### 2.1 A frase do coach com a causa
+ 
+@@ -34,8 +34,8 @@ A voz diz a curva, a diferença e a causa principal, quando o `evidence` do coac
+ 
+   | cartão | fala | dura |
+   |---|---|---|
+-  | C11, esquerda · +1,25 s para a volta da IA no microssetor 39 · mínima da IA 94 km/h, a sua 64 km/h | "Curva 11: 1,25 atrás. Mínima 64 contra 94." | 6,2 s |
+-  | C12, esquerda · +1,87 s para a volta da IA no microssetor 44 · a IA freia 54 m depois de você | "Curva 12: 1,87 atrás. Freia 54 metros antes." | 5,8 s |
++  | C12, esquerda · +1,87 s para a volta da IA no microssetor 44 · a IA freia 54 m depois de você | "Curva 12: 1,9 segundo atrás da IA. Freia 54 metros antes da IA." | 6,2 s |
++  | C11, esquerda · +1,25 s para a volta da IA no microssetor 39 · mínima da IA 94 km/h, a sua 64 km/h | "Curva 11, esquerda: 1,3 segundo atrás da IA." (a mínima não coube: seção 2.6) | 3,9 s |
+ 
+ O cartão continua com todos os números (os dois tempos, a freada e a mínima).
+ 
+@@ -45,8 +45,8 @@ O tempo da volta (o período de s = 0 a s = 0, que o coach mede como o store v2)
+ 
+ | cartão | fala | dura |
+ |---|---|---|
+-| Volta 8: 1:29,059 · +4,230 s para a volta da IA (1:24,829) · mais perdeu na C01, esquerda: +0,75 s | "Volta 8, 4,2 atrás. Mais perdeu na curva 1: 0,7." | 6,3 s |
+-| Volta 4: 1:40,073 · +15,244 s para a volta da IA (1:24,829) | "Volta 4, 1 minuto e 40,1. 15,24 atrás da IA." | 6,1 s |
++| Volta 8: 1:29,059 · +4,230 s para a volta da IA (1:24,829) · mais perdeu na C01, esquerda: +0,75 s | "Volta 8: 4,2 segundos atrás da IA. Mais perdeu na curva 1: 7 décimos." | 6,7 s |
++| Volta 4: 1:40,073 · +15,244 s para a volta da IA (1:24,829) | "Volta 4: 1 minuto e 40,1 segundos, 15,2 segundos atrás da IA." | 6,0 s |
+ 
+ A curva que mais perdeu só entra numa volta completa (com todos os microssetores medidos): numa volta com parada, "mais perdeu na curva 1: 66,4" é verdade, mas não ajuda.
+ 
+@@ -55,7 +55,8 @@ A curva que mais perdeu só entra numa volta completa (com todos os microssetore
+ - **Quando:** a cada 3 voltas válidas da sessão, sobre essas 3. Uma volta é válida quando:
+   - não teve a IA;
+   - o coach mediu todos os microssetores;
+-  - a volta ao vivo tem o relógio medido em pelo menos 90% dos pontos da grade.
++  - a volta ao vivo tem o relógio medido em pelo menos 90% dos pontos da grade;
++  - **nenhuma curva perdeu mais de 5 s contra a referência** (pedido 36, decisão do Eduardo de 22/10). Uma perda dessas é uma rodada ou uma saída de pista: no teste de 21/10, a volta 5 perdeu 26,5 s na C12 e entrou na primeira análise. A volta com rodada não conta para a análise, e o resumo dela diz o tempo e a diferença sem citar a curva. É uma regra só do rádio (`PERDA_DE_RODADA_S` em `core/radio/analise.py`): o coach, o store e as regras de volta válida do store não mudam.
+ - **As curvas:** até 2 das 14, pela maior perda mediana contra a referência escolhida na Coleta, e só as perdidas em pelo menos 2 das 3 voltas.
+ - **As medidas de cada curva** (`backend/core/radio/analise.py`), sempre "sua volta menos a referência", em mediana das 3 voltas:
+ 
+@@ -69,19 +70,22 @@ A curva que mais perdeu só entra numa volta completa (com todos os microssetore
+ 
+   A volta do piloto é a grade que a volta ao vivo guarda, com a projeção que o coach já faz; a referência é a volta do store v2. Nenhuma conta de física nova.
+ - **O que vai na fala:** as diferenças que mais pesam, até 2 por curva. O peso é a diferença dividida pelo corte da medida (seção 2.4); só entra o que passa do corte. Se a fala não couber em cerca de 8 s, sai a variante mais curta (seção 2.5).
+-- **Como cada diferença é falada:** uma frase, como na frase do coach:
+-  - "Freia 46 metros antes.";
+-  - "Mínima 102 contra 128.";
+-  - "Acelera 14 metros depois.";
+-  - "Passa 8 metros mais à direita.": de 2 m para cima, o número inteiro; abaixo de 2 m, com a vírgula e no singular ("1,8 metro").
++- **Como cada diferença é falada:** uma frase, como na frase do coach, com a unidade e contra quem (seção 2.6):
++  - "Freia 46 metros antes da IA.";
++  - "Mínima de 102 contra 128 quilômetros por hora.";
++  - "Acelera 14 metros depois da IA.";
++  - "Passa 8 metros mais à direita que a IA.": de 2 m para cima, o número inteiro; abaixo de 2 m, com a vírgula e no singular ("1,8 metro").
++
++  Contra a sua melhor volta, "da sua melhor" e "que a sua melhor".
+ - **O cartão:** as curvas com todos os números, uma linha por curva.
+ - **Exemplos:**
+ 
+   | sessão | cartão | fala | dura |
+   |---|---|---|---|
+-  | 18/10 | Análise das voltas 3, 7 e 8 · C04 perde 1,04 s por volta · C01 perde 0,95 s por volta, contra a volta da IA. Linha da C04: perde 1,04 s por volta (1,04 · 1,06 · 0,22); mínima 102 contra 128 km/h; freada 40 m antes; acelerador cheio 16 m depois; traçado 1,5 m mais à direita | "Voltas 3, 7 e 8. Curva 4: 1,0 por volta. Mínima 102 contra 128." | 8,6 s |
+-  | 18/10 | Análise das voltas 9, 12 e 13 · C01 perde 0,86 s por volta · C05 perde 0,55 s por volta | "Análise das voltas 9, 12 e 13. Curva 1: 0,9 por volta. Freia 46 metros antes." | 8,4 s |
+-  | 13/10 | Análise das voltas 6 a 8 · C01 perde 1,09 s por volta · C11 perde 0,70 s por volta | "Análise das voltas 6 a 8. Curva 1: 1,1 por volta. Freia 36 metros antes." | 7,3 s |
++  | 18/10 | Análise das voltas 3, 7 e 8 · C04 perde 1,04 s por volta · C01 perde 0,95 s por volta, contra a volta da IA. Linha da C04: perde 1,04 s por volta (1,04 s · 1,06 s · 0,22 s); mínima 102 contra 128 km/h; freada 40 m antes; acelerador cheio 16 m depois; traçado 1,5 m mais à direita | "Curva 4: perde 1,0 segundo por volta. Mínima de 102 contra 128 quilômetros por hora." (sem a abertura, para caber) | 7,8 s |
++  | 18/10 | Análise das voltas 9, 12 e 13 · C01 perde 0,86 s por volta · C05 perde 0,55 s por volta | "Análise das voltas 9, 12 e 13. Curva 1: perde 9 décimos por volta. Freia 46 metros antes da IA." | 8,7 s |
++  | 13/10 | Análise das voltas 6 a 8 · C01 perde 1,09 s por volta · C11 perde 0,70 s por volta | "Análise das voltas 6 a 8. Curva 1: perde 1,1 segundo por volta. Freia 36 metros antes da IA." | 8,3 s |
++  | 21/10 | Análise das voltas 16 a 18 · C01 perde 1,21 s por volta · C10 perde 0,46 s por volta | "Voltas 16 a 18. Curva 1: perde 1,2 segundo por volta. Passa 8 metros mais à direita que a IA." | 8,3 s |
+ 
+ ### 2.4 Os cortes e o porquê
+ 
+@@ -98,7 +102,7 @@ Na análise, vale a mediana de 3 voltas, que varia menos que uma volta: o corte
+ 
+ ### 2.5 Quanto cabe em cada janela
+ 
+-- **A voz a 1,4x** (era 1,25x no pedido 31): os números falados por extenso faziam a frase com a causa, o resumo com a curva e a análise passarem de 6, 7 e 8 s. **Não estava no pedido 35:** está registrada como desvio no relatório dele, e a decisão de manter ou voltar é do Eduardo.
++- **A voz a 1,4x** (era 1,25x no pedido 31): os números falados por extenso faziam a frase com a causa, o resumo com a curva e a análise passarem de 6, 7 e 8 s. Não estava no pedido 35 e ficou registrada como desvio no relatório dele. **O Eduardo aprovou a 1,4x em 22/10** (pedido 36).
+ - **As variantes:** cada mensagem traz a fala da mais completa à mais curta. O rádio gera o áudio e fica com a primeira que cabe no limite do tipo: 6,6 s (frase do coach), 7,7 s (resumo) e 8,8 s (análise), os 6, 7 e 8 s do pedido com 10% de folga.
+ - **A entrega:** só quando a fala inteira cabe no que resta da janela, pela velocidade do carro, com 0,3 s de folga.
+ - **Nas duas sessões** (todas as falas couberam no que restava da janela):
+@@ -114,6 +118,33 @@ Na análise, vale a mediana de 3 voltas, que varia menos que uma volta: o corte
+ 
+   A janela entre a C05 e a C06 (1.637 a 1.818 m, cerca de 3 s a 200 km/h) não recebeu nenhuma fala: nenhuma cabe nela.
+ 
++### 2.6 As unidades (pedido 36)
++
++Todo número falado tem a sua unidade (`backend/core/radio/texto.py`):
++
++| o quê | regra | exemplos |
++|---|---|---|
++| tempo abaixo de 1 s | em décimos | "7 décimos", "1 décimo", "menos de 1 décimo" |
++| tempo de 1 s para cima | uma casa, "segundo" no singular abaixo de 2 | "1,2 segundo", "5,4 segundos" |
++| tempo da volta | minutos e segundos | "1 minuto e 29,1 segundos", "2 minutos e 8,2 segundos" |
++| distância | o inteiro; abaixo de 2 m, uma casa e no singular | "46 metros", "1,8 metro" |
++| mínima | as duas velocidades e a unidade uma vez, no fim | "Mínima de 102 contra 128 quilômetros por hora." |
++
++- **Contra quem:** a diferença diz a referência ("atrás da IA", "antes da IA", "que a IA"; "da sua melhor" contra a sua melhor volta). Sem espaço, sai ("Freia 15 metros antes.").
++- **A ordem do corte,** quando a fala não cabe no limite do tipo (seção 2.5): **a unidade nunca sai.**
++  - na frase do coach: sai o lado da curva, depois o "contra quem" e, por último, a causa;
++  - na análise: sai a segunda curva, depois a abertura encurta ("Voltas 16 a 18."), depois a segunda causa, o "contra quem", a abertura inteira e, por último, a primeira causa.
++- **O teste:** `test_todo_numero_falado_tem_a_unidade...` (em `backend/tests/test_radio.py`) passa todas as falas de todas as variantes por um leitor que acusa número sem unidade.
++- **Quantas mensagens perderam a causa** por causa das unidades, nas três sessões passadas pelo rádio (handoff do pedido 36), entre as que têm causa (a frase do coach com a causa, o resumo com a curva que mais perdeu e a análise):
++
++  | sessão | antes | depois |
++  |---|---|---|
++  | 13/10 | 0 de 12 | 2 de 12 |
++  | 18/10 | 0 de 13 | 2 de 13 |
++  | 21/10 | 0 de 18 | 6 de 18 |
++
++  Todas são frases do coach da C11 com a mínima: "Curva 11, esquerda: 1,3 segundo atrás da IA. Mínima de 64 contra 94 quilômetros por hora." dura de 6,8 a 7,2 s na variante mais curta com a causa, e o limite é 6,6 s. A causa da C11 sai, e a voz diz só a curva e o tempo. Subir o limite da frase do coach para 7,3 s traria as 10 de volta; a decisão é do Eduardo.
++
+ ## 3. As janelas de rádio
+ 
+ Uma janela é um trecho da geometria oficial fora das 14 curvas (`backend/core/radio/janelas.py`):
+@@ -134,7 +165,7 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é
+ 
+ ## 4. A voz
+ 
+-- **A escolhida:** **Microsoft Daniel (OneCore, pt-BR), a 1,4x** (`VELOCIDADE_PADRAO` em `core/radio/audio.py`; a 1,25x até o pedido 35). A 1,4x é um desvio do pedido 35, à espera da decisão do Eduardo (seção 2.5).
++- **A escolhida:** **Microsoft Daniel (OneCore, pt-BR), a 1,4x** (`VELOCIDADE_PADRAO` em `core/radio/audio.py`; a 1,25x até o pedido 35). A 1,4x foi um desvio do pedido 35, aprovado pelo Eduardo em 22/10 (seção 2.5).
+ - **Como é gerada:** pelo `backend/core/radio/voz.ps1`, com o PowerShell do Windows, sem instalar nada.
+ - **As três vozes pt-BR deste Windows,** testadas no pedido 31 com a mesma frase ("Curva 1, esquerda: 0,74 atrás da IA."), a 1,25x:
+ 
+@@ -158,13 +189,15 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é
+   - `manifest.ini`;
+   - `radio_engenheiro.lua`;
+   - `pista.json`: a pista simplificada para quando o backend estiver fora do ar, o nome das 14 curvas e onde fica a imagem da pista detalhada no mundo;
+-  - `pista_detalhada.png`: a pista do mapa aproximado (seção 5.3).
++  - `pista_detalhada.png`: a pista do mapa aproximado (seção 5.3) e do replay da curva (seção 5.4).
+ 
+   Os dois arquivos são gerados por `tools/csp_app/gerar_pista.py`, a partir da geometria oficial e do cache da pista. Se o cache mudar, rode de novo.
+-- **Três janelas,** ligadas e desligadas cada uma na barra de apps do jogo:
++- **Quatro janelas,** ligadas e desligadas cada uma na barra de apps do jogo:
+   - **"Rádio · Sistema de Telemetria e Otimização de Trajetórias":** o cartão e a voz;
+   - **"Minimapa · Sistema de Telemetria e Otimização de Trajetórias":** a pista inteira, o carro e o fantasma;
+-  - **"Mapa aproximado · Sistema de Telemetria e Otimização de Trajetórias":** a vista de perto, que gira com o carro.
++  - **"Mapa aproximado · Sistema de Telemetria e Otimização de Trajetórias":** a vista de perto, que gira com o carro;
++  - **"Replay da curva · Sistema de Telemetria e Otimização de Trajetórias"** (pedido 36, versão 0.4.0): a curva de que o rádio fala, com a sua linha e a da referência.
++- **O encaixe na janela** (pedido 36, Parte D.1): no teste de 21/10, o minimapa cortava à direita. Fora do jogo, isso não se reproduz; as causas possíveis são a janela passando da borda da tela, o recorte padrão do ImGui e o espaçamento interno da janela. Desde o pedido 36, os mapas e o replay se encaixam na parte visível da janela (a janela menos o que passa da tela, pelo `ui.windowPos` e o tamanho da tela do jogo) e desenham com o recorte da janela inteira. Cada janela escreve uma vez no log do CSP as suas medidas (`[radio_engenheiro] minimapa: janela 300 x 300 em 1600 x 40; tela 1920 x 1080, escala 1,00; cursor ...; visível de 0,0 a 300,300`), para confirmar a causa no jogo.
+ - **O que não faz:** não muda o carro, os controles nem nada do jogo, e não desenha na pista.
+ - **Onde grava:** só na subpasta `voz` da própria pasta do app (ADR 0021, item 6), que ele limpa dos `.wav` ao abrir.
+ - **Onde pôr as janelas:** num canto, sem cobrir o centro da tela. A posição é a do modo de mover apps do jogo.
+@@ -198,7 +231,8 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é
+   - **até o fechamento do pedido 35,** eram as duas bordas da geometria oficial (o centro mais e menos a largura do corredor). Elas só ficam quando o backend não tem o cache da pista, e a rota diz isso em `pista.origem`;
+   - **como é desenhada:** o contorno, sem preencher o asfalto (o desenho do CSP não preenche polígonos côncavos). Uma vez, num `ui.ExtraCanvas`, refeito só quando o minimapa muda ou a janela muda de tamanho. A cada quadro, o app só desenha essa imagem;
+   - **a orientação:** a mesma do mapa do app (`base(x, z) = (z, −x)`, `frontend/src/volta/projecao.ts`);
+-  - **as marcas:** a linha do s = 0 (da geometria oficial, só como marca) e as curvas da última análise, com um círculo e o nome (C01...).
++  - **as marcas:** a linha do s = 0 (da geometria oficial, só como marca) e as curvas da última análise, com um círculo e o nome (C01...);
++  - **a freada da IA** (pedido 36): só a da próxima curva, uma marca curta atravessando a pista, na cor do fantasma. O ponto é o do relatório de evolução (`ml.comparison.evolution.braking_point`: o freio da referência passa de 0,15, do ápice anterior ao ápice), e a marca vai da borda esquerda à direita da geometria oficial nesse ponto (`core/radio/minimapa.py`, `freadas_da_referencia`). Em Interlagos, a IA freia em 8 das 14 curvas (C01, C02, C04, C06, C07, C08, C10 e C12), as mesmas do relatório de evolução. Uma curva em que a referência não freia fica sem marca.
+ - **O carro:** a posição vem do próprio jogo, a cada quadro (`ac.getCar(0).position`), sem pedir nada ao backend. A posição do jogo e a da geometria oficial estão no mesmo sistema de coordenadas: é a mesma que o coach projeta.
+ - **O fantasma da referência escolhida na Coleta:**
+   - a volta é baixada do backend uma vez, quando o app abre ou quando a referência ou a análise mudam (a `minimapaVersao` das mensagens). Ela vem em todos os 2.167 pontos da grade do store (2 m), com a posição, o tempo e o pedal;
+@@ -246,13 +280,51 @@ Pedido depois do primeiro teste no jogo (21/10): a vista de perto da tela Volta
+   - **o nome das 14 curvas,** na mesma posição da tela Volta (do lado de fora, a largura da pista mais 9 m do ápice);
+   - **o fantasma,** com "IA" ou "Sua melhor". Fora da janela, ele vira uma seta na borda, apontando para onde está;
+   - **o carro,** "Você · V<n>", com o número da volta do jogo;
+-  - **a diferença,** a mesma do minimapa, numa faixa escura no alto.
++  - **a diferença,** a mesma do minimapa, numa faixa escura no alto;
++  - **a freada da IA** (pedido 36): em todas as curvas que aparecem na janela, uma linha atravessando o asfalto, um pouco além das bordas, com o rótulo "freada da IA" ("freada da sua melhor", contra a sua melhor volta). O ponto é o mesmo do minimapa. O seu traçado mostra onde você freou: o vermelho começa ali.
+ - **A conferência fora do jogo:** uma prévia em HTML repete as contas do app (a câmera, a imagem girada, os traçados e as marcas), com a referência da IA e instantes reais da sessão de 18/10:
+   - **na saída da reta dos boxes,** a pintura amarela dos boxes fica à esquerda, como na tela Volta;
+   - **na freada da C04,** o carro e os dois traçados ficam dentro do asfalto, e a curva vira para a esquerda.
+ - **O custo:** uma imagem e algumas centenas de pontos por quadro. O FPS entra no mesmo registro do minimapa. O custo medido está na seção 5.2: os dois mapas juntos, de 3 a 4 FPS.
+ 
+-### 5.4 Instalar, ligar e remover
++### 5.4 O replay da curva (pedido 36)
++
++O engenheiro mostra o que diz: quando o rádio fala de uma curva, a janela mostra essa curva vista de cima, com a sua passagem e a da referência lado a lado. O mesmo replay aparece na tela Ao vivo, sob o cartão.
++
++- **O que mostra:**
++  - a curva sobre a pista tratada (no jogo, a `pista_detalhada.png`; na tela Ao vivo, as camadas do cache que o mapa do app desenha), com a entrada para cima;
++  - **as duas linhas:** "você" em vermelho e "IA (referência)" (ou "Sua melhor") em claro, da entrada à saída;
++  - **os dois carros,** cada um andando no seu próprio tempo a partir da mesma entrada: a diferença aparece sozinha, no quanto a referência abre;
++  - **as duas freadas,** um traço em cada linha, com a distância ("você freia 34 m antes da IA");
++  - **as duas mínimas,** no ponto de cada uma, em km/h;
++  - **o traçado:** uma seta, no ponto da mínima da referência, da linha da referência à sua, com a distância e o lado ("você passa 7,9 m mais à direita");
++  - **no alto:** a curva, o lado, a volta e o tempo perdido na curva ("C01, esquerda · volta 17 · perde 1,21 s nesta curva");
++  - os rótulos não se cobrem, não cobrem os carros e as marcas e não saem da janela: cada um procura um lugar livre em volta do seu ponto e, se precisar ir mais longe, ganha um fio até ele.
++- **De onde vem cada dado** (`backend/core/radio/replay.py`), só com o que o rádio já tem, sem física nova:
++
++  | dado | de onde vem |
++  |---|---|
++  | a sua volta | na frase do coach, a volta em que a frase saiu (a volta ao vivo, ou a que acabou de fechar, se a entrega já passou da linha; só com o relógio medido em pelo menos 90% da curva). Na análise, das 3 voltas analisadas, a de perda na curva mais perto da mediana |
++  | a referência | a volta do store v2 escolhida na Coleta, a mesma do rádio |
++  | as linhas | a geometria oficial (o centro mais a normal vezes a posição lateral), o traçado da tela Volta, de 50 m antes da primeira freada (ou do começo da curva) até 60 m depois do fim da curva |
++  | o tempo de cada carro | o relógio da grade, zerado na mesma entrada |
++  | as freadas | o primeiro ponto com o freio acima de 0,15, do ápice anterior ao ápice (o relatório de evolução) |
++  | as mínimas | a menor velocidade dentro da curva (o relatório de evolução) |
++  | o traçado | a posição lateral no ponto da mínima da referência, a mesma medida da análise (ADR 0003) |
++  | o tempo perdido | o trecho do relatório de evolução, a mesma perda da análise |
++
++- **Quando aparece, no jogo:**
++  - **na reta:** junto com a fala de uma análise ou de uma frase do coach com causa. Toca cada curva citada, uma depois da outra, e some quando a janela de rádio acaba (o `restaS` que o backend manda na mensagem: o que resta da janela, pela velocidade do carro, na entrega). Como a fala, nunca aparece dentro das 14 curvas;
++  - **nos boxes ou com o jogo pausado:** a última análise, em repetição, com a janela 1,6 vez maior, até você sair. A janela volta ao tamanho de antes na saída;
++  - o resumo na linha e a frase do coach sem causa não têm replay.
++- **Na tela Ao vivo:** sob o cartão da análise e da frase do coach com causa, a mesma animação, uma vez, e o botão "Repetir o replay".
++- **A rota:** `GET /api/radio/replay/<id>`, uma vez por mensagem. A mensagem diz se tem replay (`replay.url` e as curvas). Uma análise com 2 curvas ocupa cerca de 20 KB; uma frase do coach, cerca de 8 KB.
++- **A conferência fora do jogo:** uma prévia em HTML repete as contas da janela (a câmera, a imagem girada, as linhas, as marcas e o encaixe dos rótulos) com 3 curvas reais da sessão de 21/10: a C01 e a C10 da segunda análise e a C12 da primeira. Na C01 da segunda análise, os 7,9 m do traçado batem: a distância entre os dois pontos da seta é 7,941 m, e cada ponto está sobre a sua linha.
++- **O custo:**
++  - **no backend:** montar o replay leva cerca de 1 ms numa frase do coach e 3 ms numa análise com 2 curvas (sessão de 21/10, 9 replays), uma vez, na entrega;
++  - **no jogo:** a cada quadro, uma imagem, duas linhas de 120 a 200 pontos, as marcas e os rótulos, e só enquanto o replay está na tela. O FPS entra no mesmo registro dos mapas (`replay ligado` ou `desligado`). A medida no jogo fica para o teste da Parte G do pedido 36.
++
++### 5.5 Instalar, ligar e remover
+ 
+ O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
+ 
+@@ -269,7 +341,7 @@ O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
+    O `-ExecutionPolicy Bypass` vale só para esse comando e não muda a configuração do Windows.
+ 2. **Ligar:**
+    - abra o app do repositório (o backend com o rádio) antes do jogo;
+-   - no jogo, abra a barra de apps, no lado direito da tela, e ligue as janelas "Rádio", "Minimapa" e "Mapa aproximado".
++   - no jogo, abra a barra de apps, no lado direito da tela, e ligue as janelas "Rádio", "Minimapa", "Mapa aproximado" e "Replay da curva".
+ 3. **Conferir:** na tela Sistema, "Mandar mensagem de teste". O cartão aparece no jogo e a voz toca. O log do CSP diz por qual caminho.
+ 4. **Remover:**
+    ```
+@@ -286,6 +358,7 @@ O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
+   - o `s` da geometria oficial do que foi medido (o fim do microssetor), o microssetor (a partir de 1) e a curva;
+   - o texto, a fala, quanto ela dura e a origem (`coach`, `resumo`, `analise` ou `teste`);
+   - na frase do coach, a causa dita;
++  - o que restava da janela na entrega (`restaS`) e, quando há, o replay (o caminho e as curvas; pedido 36);
+   - no resumo, o tempo da volta e a curva que mais perdeu;
+   - **na análise:**
+     - as voltas analisadas;
+@@ -307,7 +380,8 @@ O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
+ | `GET /api/radio/audio/{id}` | o WAV da mensagem |
+ | `POST /api/radio/teste` | a mensagem de teste, entregue na hora (só pela tela Sistema) |
+ | `GET /api/radio/estado` | as janelas, a voz, o que está esperando e as voltas válidas da sessão |
+-| `GET /api/radio/minimapa` | a pista simplificada, a volta de referência com o tempo e o pedal, o alinhamento da linha do jogo, o nome das 14 curvas e as curvas da última análise (pedido 35) |
++| `GET /api/radio/minimapa` | a pista simplificada, a volta de referência com o tempo e o pedal, o alinhamento da linha do jogo, o nome das 14 curvas e as curvas da última análise (pedido 35); desde o pedido 36, a freada da referência em cada curva (`referencia.freadas`) |
++| `GET /api/radio/replay/{id}` | os dados do replay da curva de uma mensagem entregue (pedido 36); 404 sem replay |
+ | `GET /api/live/volta` | a volta em andamento inteira, na grade oficial |
+ | `GET /api/live/volta/novos?versao=<v>&desde=<seq>` | só os pontos novos e a posição do carro (pedido 35); a volta inteira só numa volta nova |
+ | `POST /api/teste/reproduzir`, `POST /api/teste/parar`, `GET /api/teste/estado` | só nos testes (`AT_TESTE_REPRODUTOR=1`): toca uma gravação pelo caminho do jogo, para medir a tela Ao vivo sem o jogo |
+diff --git a/frontend/src/aoVivo/RadioAoVivo.tsx b/frontend/src/aoVivo/RadioAoVivo.tsx
+index 10573b81..49360517 100644
+--- a/frontend/src/aoVivo/RadioAoVivo.tsx
++++ b/frontend/src/aoVivo/RadioAoVivo.tsx
+@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState } from 'react';
+ import { api } from '../api/client';
+ import { MensagemRadioCartao } from '../components/ui/base';
+ import { mensagemDoRadio, type MensagemDoBackend } from '../utils/radio';
++import { ReplayDaCurva } from './ReplayDaCurva';
+ 
+ const GUARDADAS = 20;
+ 
+@@ -67,7 +68,7 @@ export const RadioAoVivo: React.FC<{ pronto: boolean }> = ({ pronto }) => {
+       )}
+       {mensagens.map((m, i) => {
+         const cartao = mensagemDoRadio(m, i);
+-        return (
++        const cartaoDoRadio = (
+           <MensagemRadioCartao
+             key={cartao.id}
+             mensagem={cartao}
+@@ -75,6 +76,14 @@ export const RadioAoVivo: React.FC<{ pronto: boolean }> = ({ pronto }) => {
+             aoOuvir={cartao.audio ? () => ouvir(cartao.audio as string) : undefined}
+           />
+         );
++        // Pedido 36: a análise e a frase do coach com causa ganham o replay da curva.
++        if (!m.replay?.url) return cartaoDoRadio;
++        return (
++          <div key={cartao.id} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
++            {cartaoDoRadio}
++            <ReplayDaCurva url={m.replay.url} />
++          </div>
++        );
+       })}
+     </div>
+   );
+diff --git a/frontend/src/aoVivo/ReplayDaCurva.tsx b/frontend/src/aoVivo/ReplayDaCurva.tsx
+new file mode 100644
+index 00000000..58fc2a35
+--- /dev/null
++++ b/frontend/src/aoVivo/ReplayDaCurva.tsx
+@@ -0,0 +1,208 @@
++/**
++ * O replay da curva na tela Ao vivo (pedido 36, Parte E.5): o engenheiro mostra o que diz.
++ *
++ * Sob o cartão da análise e da frase do coach com causa: a curva vista de cima, sobre a
++ * pista tratada (as camadas do cache que o mapa do app desenha), com as duas linhas
++ * ("você" e "IA (referência)"), os dois carros andando cada um no seu próprio tempo a
++ * partir da mesma entrada, as duas freadas com a distância, as duas mínimas com o valor,
++ * o traçado no ponto da mínima da referência e o tempo perdido na curva. Toca cada curva
++ * citada uma vez; o botão repete.
++ */
++import React, { useEffect, useRef, useState } from 'react';
++import { api } from '../api/client';
++import { drawTrackSurface } from '../components/map/OverlayRenderer';
++import { lerCamadasDaPista, useLeitura } from '../volta/dados';
++import { transformarCamadas } from '../volta/projecao';
++import {
++  QuadroDeRotulos, cameraDaCurva, posicaoNoTempo, textoDaFreada, textoDaMinima, textoDaPerda, textoDoTracado,
++  type CurvaDoReplay, type DadosDoReplay, type LugarDoRotulo,
++} from './replay';
++
++const ALTURA = 250;
++const PAUSA_NO_FIM_S = 1.2;      // o fim de cada curva fica parado um pouco, antes da próxima
++const COR_VOCE = '#e10600';
++const COR_REF = 'rgba(233,237,242,0.9)';
++
++function desenhar(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: number, W: number, H: number, camadas: any) {
++  const cam = cameraDaCurva(c, W, H);
++  ctx.fillStyle = '#111214';
++  ctx.fillRect(0, 0, W, H);
++  if (camadas) {
++    // A pista tratada, na mesma câmera: tela = A + k (R base(x, z) − rc).
++    ctx.save();
++    ctx.translate(cam.ax, cam.ay);
++    ctx.scale(cam.k, cam.k);
++    ctx.translate(-cam.rcx, -cam.rcy);
++    ctx.rotate(cam.ang);
++    transformarCamadas(ctx);
++    drawTrackSurface(ctx, camadas, null, cam.k);
++    ctx.restore();
++  }
++  const linha = (pts: CurvaDoReplay['linhas']['voce'], cor: string, largura: number) => {
++    ctx.beginPath();
++    pts.forEach((p, i) => {
++      const [x, y] = cam.tela(p[0], p[1]);
++      if (i) ctx.lineTo(x, y);
++      else ctx.moveTo(x, y);
++    });
++    ctx.strokeStyle = cor;
++    ctx.lineWidth = largura;
++    ctx.lineJoin = 'round';
++    ctx.stroke();
++  };
++  linha(c.linhas.referencia, COR_REF, 2.5);
++  linha(c.linhas.voce, COR_VOCE, 2.5);
++  // Os pontos que os rótulos não cobrem: os dois carros, as freadas, as mínimas e o traçado.
++  const q = new QuadroDeRotulos([2, 26, W - 2, H - 2]);
++  const [rx, rz] = posicaoNoTempo(c.linhas.referencia, t);
++  const [vx, vz] = posicaoNoTempo(c.linhas.voce, t);
++  const [rsx, rsy] = cam.tela(rx, rz);
++  const [vsx, vsy] = cam.tela(vx, vz);
++  const [mvx, mvy] = cam.tela(c.minimas.voce.x, c.minimas.voce.z);
++  const [mrx, mry] = cam.tela(c.minimas.referencia.x, c.minimas.referencia.z);
++  const [tvx, tvy] = cam.tela(c.tracado.voce[0], c.tracado.voce[1]);
++  const [trx, try_] = cam.tela(c.tracado.referencia[0], c.tracado.referencia[1]);
++  q.ocupar(rsx, rsy, 9);
++  q.ocupar(vsx, vsy, 9);
++  for (const [x, y] of [[mvx, mvy], [mrx, mry], [tvx, tvy], [trx, try_]]) q.ocupar(x, y, 5);
++  ctx.font = '600 11px "Barlow", "Segoe UI", sans-serif';
++  ctx.textAlign = 'left';
++  ctx.textBaseline = 'top';
++  const rotulo = (texto: string, x: number, y: number, cor: string, preferido: LugarDoRotulo) => {
++    const w = ctx.measureText(texto).width + 6;
++    const [bx, by, longe] = q.colocar(x, y, w, 15, preferido);
++    if (longe) {
++      ctx.beginPath();
++      ctx.moveTo(x, y);
++      ctx.lineTo(Math.min(Math.max(x, bx), bx + w), Math.min(Math.max(y, by), by + 15));
++      ctx.strokeStyle = cor;
++      ctx.lineWidth = 1;
++      ctx.stroke();
++    }
++    ctx.fillStyle = 'rgba(8,9,11,0.7)';
++    ctx.fillRect(bx, by, w, 15);
++    ctx.fillStyle = cor;
++    ctx.fillText(texto, bx + 3, by + 1);
++  };
++  // As freadas: um traço atravessando cada linha, e a distância entre elas.
++  const traco = (m: { x: number; z: number } | null, cor: string) => {
++    if (!m) return null;
++    const [x, y] = cam.tela(m.x, m.z);
++    ctx.beginPath();
++    ctx.moveTo(x - 7, y);
++    ctx.lineTo(x + 7, y);
++    ctx.strokeStyle = cor;
++    ctx.lineWidth = 3;
++    ctx.stroke();
++    q.ocupar(x, y, 7);
++    return [x, y];
++  };
++  const fv = traco(c.freadas.voce, COR_VOCE);
++  traco(c.freadas.referencia, COR_REF);
++  const contra = c.referencia === 'minha_melhor' ? 'da sua melhor' : 'da IA';
++  const tf = textoDaFreada(c.freadas.distanciaM, contra);
++  if (fv && tf) rotulo(tf, fv[0], fv[1], COR_VOCE, 'direita');
++  // O traçado: uma seta entre as duas linhas, no ponto da mínima da referência.
++  if (Math.hypot(tvx - trx, tvy - try_) > 2) {
++    ctx.beginPath();
++    ctx.moveTo(trx, try_);
++    ctx.lineTo(tvx, tvy);
++    ctx.strokeStyle = '#f5c542';
++    ctx.lineWidth = 1.5;
++    ctx.stroke();
++    const a = Math.atan2(tvy - try_, tvx - trx);
++    ctx.beginPath();
++    ctx.moveTo(tvx, tvy);
++    ctx.lineTo(tvx - 7 * Math.cos(a - 0.5), tvy - 7 * Math.sin(a - 0.5));
++    ctx.lineTo(tvx - 7 * Math.cos(a + 0.5), tvy - 7 * Math.sin(a + 0.5));
++    ctx.closePath();
++    ctx.fillStyle = '#f5c542';
++    ctx.fill();
++  }
++  rotulo(textoDoTracado(c.tracado), (tvx + trx) / 2, (tvy + try_) / 2, '#f5c542', 'abaixo');
++  // As mínimas, no ponto de cada uma.
++  for (const [x, y, cor] of [[mvx, mvy, COR_VOCE], [mrx, mry, COR_REF]] as [number, number, string][]) {
++    ctx.beginPath();
++    ctx.arc(x, y, 3.5, 0, 2 * Math.PI);
++    ctx.fillStyle = cor;
++    ctx.fill();
++  }
++  rotulo(`mínima ${textoDaMinima(c.minimas.voce.kmh)}`, mvx, mvy, COR_VOCE, 'esquerda');
++  rotulo(`mínima ${textoDaMinima(c.minimas.referencia.kmh)}`, mrx, mry, COR_REF, 'direita');
++  // Os dois carros, cada um no seu tempo.
++  const marca = (x: number, y: number, miolo: string, borda: string) => {
++    ctx.beginPath();
++    ctx.arc(x, y, 6.5, 0, 2 * Math.PI);
++    ctx.fillStyle = miolo;
++    ctx.fill();
++    ctx.lineWidth = 2.5;
++    ctx.strokeStyle = borda;
++    ctx.stroke();
++  };
++  marca(rsx, rsy, 'rgba(8,9,11,0.6)', COR_REF);
++  marca(vsx, vsy, '#ffffff', COR_VOCE);
++  rotulo(c.rotuloDaReferencia, rsx, rsy, COR_REF, 'direitaAcima');
++  rotulo('você', vsx, vsy, '#ffffff', 'esquerdaAbaixo');
++  // O alto: a curva, a volta e o tempo perdido.
++  ctx.fillStyle = 'rgba(8,9,11,0.8)';
++  ctx.fillRect(0, 0, W, 24);
++  ctx.textBaseline = 'alphabetic';
++  ctx.fillStyle = '#f2f4f5';
++  ctx.font = '600 12px "Barlow", "Segoe UI", sans-serif';
++  ctx.fillText(`${c.curva}, ${c.lado}${c.volta ? ` · volta ${c.volta}` : ''} · ${textoDaPerda(c.perdaS)}`, 10, 16);
++}
++
++export const ReplayDaCurva: React.FC<{ url: string }> = ({ url }) => {
++  const [dados, setDados] = useState<DadosDoReplay | null>(null);
++  const [erro, setErro] = useState<string | null>(null);
++  const [vez, setVez] = useState(0);
++  const camadas = useLeitura('camadas', lerCamadasDaPista);
++  const tela = useRef<HTMLCanvasElement | null>(null);
++
++  useEffect(() => {
++    let vivo = true;
++    api.getRadioReplay(url).then((d) => vivo && setDados(d)).catch(() => vivo && setErro('o backend não entregou o replay'));
++    return () => {
++      vivo = false;
++    };
++  }, [url]);
++
++  useEffect(() => {
++    const cv = tela.current;
++    if (!cv || !dados || !dados.curvas.length) return undefined;
++    const ctx = cv.getContext('2d');
++    if (!ctx) return undefined;
++    const W = cv.clientWidth || 360;
++    const d = window.devicePixelRatio || 1;
++    cv.width = Math.round(W * d);
++    cv.height = Math.round(ALTURA * d);
++    ctx.setTransform(d, 0, 0, d, 0, 0);
++    const curvas = dados.curvas;
++    const inicio = performance.now();
++    let quadro = 0;
++    const passo = () => {
++      let t = (performance.now() - inicio) / 1000;
++      let i = 0;
++      while (i < curvas.length - 1 && t > curvas[i].duracaoS + PAUSA_NO_FIM_S) {
++        t -= curvas[i].duracaoS + PAUSA_NO_FIM_S;
++        i += 1;
++      }
++      ctx.setTransform(d, 0, 0, d, 0, 0);
++      desenhar(ctx, curvas[i], Math.min(t, curvas[i].duracaoS), W, ALTURA, camadas.dado);
++      if (i < curvas.length - 1 || t < curvas[i].duracaoS + PAUSA_NO_FIM_S) quadro = requestAnimationFrame(passo);
++    };
++    quadro = requestAnimationFrame(passo);
++    return () => cancelAnimationFrame(quadro);
++  }, [dados, vez, camadas.dado]);
++
++  if (erro) return <p className="texto-fraco" style={{ margin: 0 }}>Replay: {erro}.</p>;
++  if (!dados) return <p className="texto-fraco" style={{ margin: 0 }}>Lendo o replay da curva…</p>;
++  return (
++    <div className="replay-da-curva" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
++      <canvas ref={tela} style={{ width: '100%', height: ALTURA, borderRadius: 8 }} aria-label="Replay da curva: você e a referência" />
++      <button type="button" className="botao botao--pequeno" style={{ alignSelf: 'flex-start' }} onClick={() => setVez((v) => v + 1)}>
++        Repetir o replay
++      </button>
++    </div>
++  );
++};
+diff --git a/frontend/src/aoVivo/replay.test.ts b/frontend/src/aoVivo/replay.test.ts
+new file mode 100644
+index 00000000..cb633623
+--- /dev/null
++++ b/frontend/src/aoVivo/replay.test.ts
+@@ -0,0 +1,84 @@
++import { describe, expect, it } from 'vitest';
++import {
++  QuadroDeRotulos, cameraDaCurva, posicaoNoTempo, textoDaFreada, textoDaMinima, textoDaPerda, textoDoTracado,
++  type CurvaDoReplay, type PontoDoReplay,
++} from './replay';
++
++// Uma curva de mentira: as duas linhas indo de z = 0 a z = 200 (para cima no mapa do app), a IA mais rápida.
++function linha(lateral: number, velocidade: number): PontoDoReplay[] {
++  return Array.from({ length: 101 }, (_, i) => [lateral, i * 2, (i * 2) / velocidade, i < 30 ? 2 : 1] as PontoDoReplay);
++}
++const curva: CurvaDoReplay = {
++  curva: 'C01', lado: 'esquerda', volta: 17, referencia: 'volta_ia', rotuloDaReferencia: 'IA (referência)',
++  perdaS: 0.92, duracaoS: 200 / 45,
++  linhas: { voce: linha(-7.9, 45), referencia: linha(0, 50) },
++  freadas: { voce: { x: -7.9, z: 10 }, referencia: { x: 0, z: 52 }, distanciaM: -42 },
++  minimas: { voce: { x: -7.9, z: 120, kmh: 102.4 }, referencia: { x: 0, z: 110, kmh: 128 } },
++  tracado: { voce: [-7.9, 110], referencia: [0, 110], distanciaM: 7.94, lado: 'direita' },
++};
++
++describe('o replay da curva (pedido 36, Parte E)', () => {
++  it('põe cada carro no seu próprio tempo, desde a mesma entrada', () => {
++    expect(posicaoNoTempo(curva.linhas.referencia, 0)).toEqual([0, 0]);
++    expect(posicaoNoTempo(curva.linhas.referencia, 1)).toEqual([0, 50]);       // 50 m/s
++    expect(posicaoNoTempo(curva.linhas.voce, 1)).toEqual([-7.9, 45]);          // 45 m/s: a IA abre 5 m
++    expect(posicaoNoTempo(curva.linhas.voce, 99)).toEqual([-7.9, 200]);        // depois do fim, no fim
++  });
++
++  it('encaixa as duas linhas na tela, com a entrada para cima', () => {
++    const W = 360;
++    const H = 250;
++    const cam = cameraDaCurva(curva, W, H);
++    for (const p of [...curva.linhas.voce, ...curva.linhas.referencia]) {
++      const [x, y] = cam.tela(p[0], p[1]);
++      expect(x).toBeGreaterThanOrEqual(18 - 1e-6);
++      expect(x).toBeLessThanOrEqual(W - 18 + 1e-6);
++      expect(y).toBeGreaterThanOrEqual(26 + 18 - 1e-6);
++      expect(y).toBeLessThanOrEqual(H - 18 + 1e-6);
++    }
++    const [, yEntrada] = cam.tela(0, 0);
++    const [, ySaida] = cam.tela(0, 200);
++    expect(ySaida).toBeLessThan(yEntrada);                                       // anda para cima
++  });
++
++  it('desenha os 7,9 m do traçado como a distância entre as duas linhas', () => {
++    const cam = cameraDaCurva(curva, 360, 250);
++    const [ax, ay] = cam.tela(...curva.tracado.voce);
++    const [bx, by] = cam.tela(...curva.tracado.referencia);
++    expect(Math.hypot(ax - bx, ay - by) / cam.k).toBeCloseTo(7.9, 6);
++  });
++
++  it('escreve os números com a unidade', () => {
++    expect(textoDaPerda(0.92)).toBe('perde 0,92 s nesta curva');
++    expect(textoDaPerda(-0.1)).toBe('ganha 0,10 s nesta curva');
++    expect(textoDaFreada(-42)).toBe('você freia 42 m antes da IA');
++    expect(textoDaFreada(16, 'da sua melhor')).toBe('você freia 16 m depois da sua melhor');
++    expect(textoDaFreada(null)).toBeNull();
++    expect(textoDoTracado(curva.tracado)).toBe('você passa 7,9 m mais à direita');
++    expect(textoDaMinima(102.4)).toBe('102 km/h');
++  });
++});
++
++describe('os rótulos do replay', () => {
++  it('não cobrem um ao outro nem saem da área', () => {
++    const q = new QuadroDeRotulos([0, 26, 360, 250]);
++    q.ocupar(200, 100, 9);
++    const caixas = [
++      q.colocar(200, 100, 120, 15, 'direita'),
++      q.colocar(205, 102, 120, 15, 'direita'),
++      q.colocar(350, 240, 140, 15, 'direita'),   // perto do canto: entra para dentro
++    ].map(([x, y], i) => [x, y, x + [120, 120, 140][i], y + 15]);
++    for (const [x0, y0, x1, y1] of caixas) {
++      expect(x0).toBeGreaterThanOrEqual(0);
++      expect(x1).toBeLessThanOrEqual(360);
++      expect(y0).toBeGreaterThanOrEqual(26);
++      expect(y1).toBeLessThanOrEqual(250);
++    }
++    for (let i = 0; i < caixas.length; i++) {
++      for (let j = i + 1; j < caixas.length; j++) {
++        const [a, b] = [caixas[i], caixas[j]];
++        expect(a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]).toBe(false);
++      }
++    }
++  });
++});
+diff --git a/frontend/src/aoVivo/replay.ts b/frontend/src/aoVivo/replay.ts
+new file mode 100644
+index 00000000..4371f977
+--- /dev/null
++++ b/frontend/src/aoVivo/replay.ts
+@@ -0,0 +1,192 @@
++/**
++ * O replay da curva (pedido 36, Parte E): as contas, sem React.
++ *
++ * Os dados vêm de `/api/radio/replay/<id>` (`backend/core/radio/replay.py`): para cada
++ * curva citada pelo rádio, as duas linhas (você e a referência) na geometria oficial, com
++ * o tempo desde a mesma entrada e o pedal, as freadas, as mínimas, o traçado e a perda.
++ * Sempre "você" e "IA (referência)": a diferença medida contra uma volta real (ADR 0012).
++ */
++import { base } from '../volta/projecao';
++
++/** [x, z, tempo desde a entrada da curva, pedal (0 parcial, 1 acelerador, 2 freio)] */
++export type PontoDoReplay = [number, number, number, number];
++type Marca = { x: number; z: number; s?: number };
++
++export type CurvaDoReplay = {
++  curva: string;
++  lado: string;
++  volta: number | null;
++  referencia: string | null;
++  rotuloDaReferencia: string;
++  perdaS: number;
++  duracaoS: number;
++  linhas: { voce: PontoDoReplay[]; referencia: PontoDoReplay[] };
++  freadas: { voce: Marca | null; referencia: Marca | null; distanciaM: number | null };
++  minimas: { voce: Marca & { kmh: number }; referencia: Marca & { kmh: number } };
++  tracado: { voce: [number, number]; referencia: [number, number]; distanciaM: number; lado: string };
++};
++
++export type DadosDoReplay = { id: number; origem: string; curvas: CurvaDoReplay[] };
++
++const nf = (v: number, casas: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
++
++/** Onde o carro está no tempo `t` (cada um no seu próprio tempo); o fim da linha depois dela. */
++export function posicaoNoTempo(linha: PontoDoReplay[], t: number): [number, number] {
++  if (!linha.length) return [0, 0];
++  if (t <= linha[0][2]) return [linha[0][0], linha[0][1]];
++  const n = linha.length;
++  if (t >= linha[n - 1][2]) return [linha[n - 1][0], linha[n - 1][1]];
++  let a = 0;
++  let b = n - 1;
++  while (b - a > 1) {
++    const m = (a + b) >> 1;
++    if (linha[m][2] <= t) a = m;
++    else b = m;
++  }
++  const p = linha[a];
++  const q = linha[b];
++  const u = q[2] > p[2] ? (t - p[2]) / (q[2] - p[2]) : 0;
++  return [p[0] + (q[0] - p[0]) * u, p[1] + (q[1] - p[1]) * u];
++}
++
++export type Camera = {
++  ang: number; k: number; ax: number; ay: number; rcx: number; rcy: number;
++  /** Do mundo (x, z) para a tela. */
++  tela: (x: number, z: number) => [number, number];
++};
++
++/**
++ * A câmera que mostra a curva inteira: a entrada para cima (a direção dos primeiros pontos da
++ * referência), na orientação do mapa do app (`base(x, z) = (z, −x)`), encaixada em `largura` x
++ * `altura` com `margem` e a faixa de cima (`topo`).
++ */
++export function cameraDaCurva(c: CurvaDoReplay, largura: number, altura: number, margem = 18, topo = 26): Camera {
++  const ref = c.linhas.referencia;
++  const p0 = base(ref[0][0], ref[0][1]);
++  const p1 = base(ref[Math.min(ref.length - 1, 10)][0], ref[Math.min(ref.length - 1, 10)][1]);
++  const ang = -Math.PI / 2 - Math.atan2(p1[1] - p0[1], p1[0] - p0[0]);
++  const cs = Math.cos(ang);
++  const sn = Math.sin(ang);
++  const girar = (x: number, z: number): [number, number] => {
++    const [u, v] = base(x, z);
++    return [u * cs - v * sn, u * sn + v * cs];
++  };
++  let x0 = Infinity;
++  let x1 = -Infinity;
++  let y0 = Infinity;
++  let y1 = -Infinity;
++  for (const p of [...c.linhas.voce, ...ref]) {
++    const [gx, gy] = girar(p[0], p[1]);
++    x0 = Math.min(x0, gx);
++    x1 = Math.max(x1, gx);
++    y0 = Math.min(y0, gy);
++    y1 = Math.max(y1, gy);
++  }
++  const w = Math.max(x1 - x0, 1);
++  const h = Math.max(y1 - y0, 1);
++  const k = Math.min((largura - 2 * margem) / w, (altura - 2 * margem - topo) / h);
++  const ax = largura / 2;
++  const ay = topo + (altura - topo) / 2;
++  const rcx = (x0 + x1) / 2;
++  const rcy = (y0 + y1) / 2;
++  return {
++    ang, k, ax, ay, rcx, rcy,
++    tela: (x, z) => {
++      const [gx, gy] = girar(x, z);
++      return [ax + k * (gx - rcx), ay + k * (gy - rcy)];
++    },
++  };
++}
++
++/** "perde 0,92 s nesta curva" (com a unidade). */
++export function textoDaPerda(perdaS: number): string {
++  return `${perdaS >= 0 ? 'perde' : 'ganha'} ${nf(Math.abs(perdaS), 2)} s nesta curva`;
++}
++
++/** "você freia 42 m antes da IA" (a distância de `freadas.distanciaM`: negativa = antes). */
++export function textoDaFreada(distanciaM: number | null, contra = 'da IA'): string | null {
++  if (distanciaM === null || distanciaM === undefined) return null;
++  const m = Math.round(Math.abs(distanciaM));
++  if (m < 1) return `você freia no mesmo ponto ${contra.replace(/^da /, 'que a ')}`;
++  return `você freia ${m} m ${distanciaM < 0 ? 'antes' : 'depois'} ${contra}`;
++}
++
++/** "você passa 7,9 m mais à direita" (no ponto da mínima da referência; ADR 0003). */
++export function textoDoTracado(t: CurvaDoReplay['tracado']): string {
++  return `você passa ${nf(t.distanciaM, 1)} m mais à ${t.lado}`;
++}
++
++/** "102 km/h" */
++export function textoDaMinima(kmh: number): string {
++  return `${Math.round(kmh)} km/h`;
++}
++
++/**
++ * Os rótulos do replay não cobrem um ao outro, nem os carros e as marcas, nem saem da área:
++ * cada um tenta, em ordem, os lugares em volta do seu ponto (o preferido primeiro), encostado e
++ * depois cada vez mais longe (com um fio até o ponto); se nenhum estiver livre, fica no
++ * preferido, empurrado para dentro. A mesma regra do app do jogo (`radio_engenheiro.lua`, `rotulo`).
++ */
++export type LugarDoRotulo =
++  | 'direita' | 'esquerda' | 'abaixo' | 'acima' | 'direitaAcima' | 'esquerdaAbaixo' | 'direitaAbaixo' | 'esquerdaAcima';
++type Caixa = [number, number, number, number];
++const LUGARES: LugarDoRotulo[] = [
++  'direita', 'esquerda', 'abaixo', 'acima', 'direitaAcima', 'esquerdaAbaixo', 'direitaAbaixo', 'esquerdaAcima',
++];
++const AFASTAMENTOS = [0, 14, 28, 44, 60];
++const DIRECAO: Record<LugarDoRotulo, [number, number]> = {
++  direita: [1, 0], esquerda: [-1, 0], abaixo: [0, 1], acima: [0, -1],
++  direitaAcima: [0.7, -0.7], esquerdaAbaixo: [-0.7, 0.7], direitaAbaixo: [0.7, 0.7], esquerdaAcima: [-0.7, -0.7],
++};
++
++function cantoDoRotulo(lugar: LugarDoRotulo, x: number, y: number, w: number, h: number): [number, number] {
++  switch (lugar) {
++    case 'direita': return [x + 8, y - h / 2];
++    case 'esquerda': return [x - 8 - w, y - h / 2];
++    case 'abaixo': return [x - w / 2, y + 8];
++    case 'acima': return [x - w / 2, y - 8 - h];
++    case 'direitaAcima': return [x + 6, y - 6 - h];
++    case 'esquerdaAbaixo': return [x - 6 - w, y + 6];
++    case 'direitaAbaixo': return [x + 6, y + 6];
++    default: return [x - 6 - w, y - 6 - h];
++  }
++}
++
++export class QuadroDeRotulos {
++  readonly ocupados: Caixa[] = [];
++  constructor(readonly area: Caixa) {}
++
++  ocupar(x: number, y: number, raio: number) {
++    this.ocupados.push([x - raio, y - raio, x + raio, y + raio]);
++  }
++
++  /**
++   * O canto de cima à esquerda da caixa do rótulo (largura `w`, altura `h`), e a ocupa. O terceiro
++   * valor diz se a caixa ficou longe do ponto (então vale um fio até ele).
++   */
++  colocar(x: number, y: number, w: number, h: number, preferido: LugarDoRotulo): [number, number, boolean] {
++    const [a0, a1, a2, a3] = this.area;
++    const livre = (bx: number, by: number) =>
++      bx >= a0 && by >= a1 && bx + w <= a2 && by + h <= a3
++      && this.ocupados.every((r) => !(bx < r[2] && r[0] < bx + w && by < r[3] && r[1] < by + h));
++    let canto: [number, number] | null = null;
++    let longe = false;
++    for (const d of AFASTAMENTOS) {
++      for (const lugar of [preferido, ...LUGARES]) {
++        const c = cantoDoRotulo(lugar, x + DIRECAO[lugar][0] * d, y + DIRECAO[lugar][1] * d, w, h);
++        if (livre(c[0], c[1])) {
++          canto = c;
++          longe = d > 0;
++          break;
++        }
++      }
++      if (canto) break;
++    }
++    if (!canto) {
++      const [bx, by] = cantoDoRotulo(preferido, x, y, w, h);
++      canto = [Math.min(Math.max(bx, a0), a2 - w), Math.min(Math.max(by, a1), a3 - h)];
++    }
++    this.ocupados.push([canto[0], canto[1], canto[0] + w, canto[1] + h]);
++    return [canto[0], canto[1], longe];
++  }
++}
+diff --git a/frontend/src/api/client.ts b/frontend/src/api/client.ts
+index b556656e..d11da9fb 100644
+--- a/frontend/src/api/client.ts
++++ b/frontend/src/api/client.ts
+@@ -233,6 +233,8 @@ export const api = {
+   /** Pedido 35: só os pontos novos da volta ao vivo (a volta inteira numa volta nova). */
+   getLiveVoltaNovos: async (versao: number | null, desde: number | null): Promise<any> =>
+     (await client.get('/api/live/volta/novos', { params: { versao: versao ?? undefined, desde: desde ?? undefined }, timeout: 2_000 })).data,
++  /** Pedido 36: os dados do replay da curva de uma mensagem (`/api/radio/replay/<id>`). */
++  getRadioReplay: async (caminho: string): Promise<any> => (await client.get(caminho, { timeout: 10_000 })).data,
+   /** O endereço completo do áudio de uma mensagem (`/api/radio/audio/<id>`). */
+   urlDoAudio: (caminho: string): string => `${BASE_URL}${caminho}`,
+   // ─── Pedido 32: o botão do coach e a anotação de sessão ────────────────────
+diff --git a/frontend/src/utils/radio.ts b/frontend/src/utils/radio.ts
+index 6b0ae8f4..5f7a361b 100644
+--- a/frontend/src/utils/radio.ts
++++ b/frontend/src/utils/radio.ts
+@@ -117,6 +117,8 @@ export type MensagemDoBackend = {
+   perdaS?: number | null;
+   /** Pedido 35: as linhas da análise (uma por curva). */
+   linhas?: string[] | null;
++  /** Pedido 36: o replay da curva (na análise e na frase do coach com causa). */
++  replay?: { url: string; curvas: string[] } | null;
+ };
+ 
+ export type MensagemRadioComAudio = MensagemRadio & { audio: string | null; sCarro: number | null };
+diff --git a/tools/csp_app/radio_engenheiro/manifest.ini b/tools/csp_app/radio_engenheiro/manifest.ini
+index 50614a26..f9040fef 100644
+--- a/tools/csp_app/radio_engenheiro/manifest.ini
++++ b/tools/csp_app/radio_engenheiro/manifest.ini
+@@ -3,15 +3,16 @@
+ ; <pasta do jogo>\apps\lua\radio_engenheiro\ e removido por tools\csp_app\remover.ps1.
+ ; So le o estado do jogo e conversa com o backend local (127.0.0.1:8000); nao muda o
+ ; carro, os controles nem o jogo. So grava na propria pasta (a subpasta voz).
+-; Tres janelas, ligadas e desligadas cada uma na barra de apps do jogo: o radio, o
+-; minimapa (a pista inteira) e o mapa aproximado (a vista de perto da tela Volta, que
+-; usa a pista_detalhada.png; a roda do mouse sobre a janela muda o zoom).
++; Quatro janelas, ligadas e desligadas cada uma na barra de apps do jogo: o radio, o
++; minimapa (a pista inteira), o mapa aproximado (a vista de perto da tela Volta, que
++; usa a pista_detalhada.png; a roda do mouse sobre a janela muda o zoom) e o replay da
++; curva (pedido 36: a curva citada pelo radio, com a sua linha e a da referencia).
+ 
+ [ABOUT]
+ NAME = Rádio do engenheiro
+ AUTHOR = Sistema de Telemetria e Otimização de Trajetórias
+-VERSION = 0.3.0
+-DESCRIPTION = O rádio do coach no jogo (o cartão e a voz, nas retas e na linha de chegada), o minimapa e o mapa aproximado, com o fantasma.
++VERSION = 0.4.0
++DESCRIPTION = O rádio do coach no jogo (o cartão e a voz, nas retas e na linha de chegada), o minimapa, o mapa aproximado e o replay da curva, com o fantasma.
+ 
+ [CORE]
+ LAZY = NONE
+@@ -40,3 +41,12 @@ SIZE = 360, 360
+ MIN_SIZE = 220, 220
+ MAX_SIZE = 900, 900
+ FLAGS = NO_TITLE_BAR, NO_BACKGROUND, NO_SCROLLBAR, NO_COLLAPSE, NO_SCROLL_WITH_MOUSE
++
++[WINDOW_...]
++ID = replay
++NAME = Replay da curva · Sistema de Telemetria e Otimização de Trajetórias
++FUNCTION_MAIN = replay
++SIZE = 420, 300
++MIN_SIZE = 260, 200
++MAX_SIZE = 1100, 800
++FLAGS = NO_TITLE_BAR, NO_BACKGROUND, NO_SCROLLBAR, NO_COLLAPSE, NO_SCROLL_WITH_MOUSE
+diff --git a/tools/csp_app/radio_engenheiro/radio_engenheiro.lua b/tools/csp_app/radio_engenheiro/radio_engenheiro.lua
+index b73de4d5..173df8f1 100644
+--- a/tools/csp_app/radio_engenheiro/radio_engenheiro.lua
++++ b/tools/csp_app/radio_engenheiro/radio_engenheiro.lua
+@@ -1,6 +1,6 @@
+ -- Rádio do engenheiro (pedido 31, ADR 0020; pedido 35, ADR 0021).
+ --
+--- Três janelas, cada uma ligada e desligada na barra de apps do jogo (manifest.ini):
++-- Quatro janelas, cada uma ligada e desligada na barra de apps do jogo (manifest.ini):
+ --
+ --   * o rádio (`janela`): a cada 0,3 s, pede ao backend local as mensagens novas
+ --     (/api/radio/mensagens) e mostra o cartão por alguns segundos, com a vinheta e a
+@@ -13,7 +13,10 @@
+ --     perto da tela Volta ("fantasma por curva"). A câmera segue o carro e gira com a
+ --     pista; a pista detalhada (asfalto, pintura e zebras) é uma imagem desenhada uma vez
+ --     (`pista_detalhada.png`); por cima, o seu traçado e o do fantasma, pintados pelo
+---     pedal, o carro, o fantasma, o nome das curvas e a diferença.
++--     pedal, o carro, o fantasma, o nome das curvas e a diferença;
++--   * o replay da curva (`replay`, pedido 36, Parte E): a curva citada pelo rádio, vista de
++--     cima, com a sua linha e a da referência, os dois carros, as freadas, as mínimas, o
++--     traçado e o tempo perdido. Na reta, junto com a fala; nos boxes, a última análise.
+ --
+ -- A voz tem três caminhos, um depois do outro (pedido 35, Parte B): a URL do backend;
+ -- o arquivo que o backend grava em data/radio/audio/; e o áudio baixado para a
+@@ -244,6 +247,7 @@ local function lerAPistaDoApp()
+   local okJ, dados = pcall(JSON.parse, texto)
+   if okJ and type(dados) == 'table' and type(dados.pista) == 'table' and type(dados.pista.contornos) == 'table' then
+     mini.pista = dados.pista
++    mini.comprimento = tonumber(dados.comprimentoM) or mini.comprimento
+     mini.linhaDoS0 = type(dados.linhaDoS0) == 'table' and dados.linhaDoS0 or nil
+     mini.origem = 'arquivo do app'
+     mini.desenhado = nil
+@@ -279,6 +283,7 @@ local function baixarOMinimapa(versao)
+       return
+     end
+     mini.pista = dados.pista
++    mini.comprimento = tonumber(dados.comprimentoM) or mini.comprimento
+     mini.linhaDoS0 = type(dados.linhaDoS0) == 'table' and dados.linhaDoS0 or mini.linhaDoS0
+     mini.origem = 'backend'
+     mini.referencia = type(dados.referencia) == 'table' and type(dados.referencia.pontos) == 'table'
+@@ -523,6 +528,9 @@ local function acompanharAVoz(t)
+   end
+ end
+ 
++-- Pedido 36: o replay da curva começa junto com o cartão (definido mais abaixo, na seção do replay).
++local comecarReplay
++
+ local function avancar(t)
+   if estado.atual and t < estado.ateQuando then
+     return
+@@ -540,6 +548,7 @@ local function avancar(t)
+   local minimo = proxima.origem == 'analise' and CARTAO_DA_ANALISE_S or CARTAO_MINIMO_S
+   estado.ateQuando = t + math.max(minimo, (tonumber(proxima.duracaoS) or 3) + FOLGA_DEPOIS_DA_VOZ_S)
+   falar(proxima)
++  if comecarReplay then comecarReplay(proxima, t) end
+ end
+ 
+ -- ── o cartão ────────────────────────────────────────────────────────────
+@@ -627,12 +636,55 @@ end
+ 
+ -- ── o minimapa: a pista desenhada uma vez ───────────────────────────────
+ 
++-- Pedido 36, Parte D.1: a parte da janela que está na tela. Uma janela posta na borda
++-- da tela fica com um pedaço para fora, e o desenho que encaixava na janela inteira saía
++-- cortado. As medidas usam a posição da janela e o tamanho da tela da interface do CSP
++-- (as mesmas unidades, já com a escala da interface).
++local function areaVisivel(W, H)
++  local x0, y0, x1, y1 = 0, 0, W, H
++  local okP, pos = pcall(ui.windowPos)
++  local okU, estadoUi = pcall(ac.getUI)
++  if okP and pos and okU and estadoUi and estadoUi.windowSize then
++    local tela = estadoUi.windowSize
++    x0, y0 = math.max(0, -pos.x), math.max(0, -pos.y)
++    x1, y1 = math.min(W, tela.x - pos.x), math.min(H, tela.y - pos.y)
++    if x1 - x0 < 80 or y1 - y0 < 80 then x0, y0, x1, y1 = 0, 0, W, H end
++  end
++  return math.floor(x0), math.floor(y0), math.floor(x1), math.floor(y1)
++end
++
++-- Uma vez por janela, as medidas no log do CSP, para conferir no jogo o que corta.
++local medidasRegistradas = {}
++local function registrarAsMedidas(nome, W, H)
++  if medidasRegistradas[nome] then return end
++  medidasRegistradas[nome] = true
++  local okP, pos = pcall(ui.windowPos)
++  local okU, estadoUi = pcall(ac.getUI)
++  local okC, cursor = pcall(ui.getCursor)
++  local function par(v) return v and (decimal(v.x, 0) .. ' x ' .. decimal(v.y, 0)) or '?' end
++  local x0, y0, x1, y1 = areaVisivel(W, H)
++  log(nome .. ': janela ' .. decimal(W, 0) .. ' x ' .. decimal(H, 0) .. ' em ' .. par(okP and pos)
++    .. '; tela ' .. par(okU and estadoUi and estadoUi.windowSize) .. ', escala ' .. decimal(okU and estadoUi and estadoUi.uiScale or 1, 2)
++    .. '; cursor ' .. par(okC and cursor) .. '; visível de ' .. x0 .. ',' .. y0 .. ' a ' .. x1 .. ',' .. y1)
++end
++
++-- Desenha `corpo` com o recorte na janela inteira: o recorte padrão do ImGui tira uma faixa
++-- das bordas (metade do espaçamento interno), como o app Mumble do próprio CSP evita.
++local function naJanelaInteira(W, H, corpo, ...)
++  local recorte = ui.pushClipRect ~= nil and ui.popClipRect ~= nil
++  if recorte then ui.pushClipRect(vec2(0, 0), vec2(W, H), false) end
++  local ok, erro = pcall(corpo, ...)
++  if recorte then ui.popClipRect() end
++  if not ok then error(erro, 0) end
++end
++
+ -- A mesma orientação do mapa do app (frontend/src/volta/projecao.ts): base(x, z) = (z, −x).
+ local function naTela(x, z)
+   return vec2(mini.ox + mini.k * z, mini.oy - mini.k * x)
+ end
+ 
+ local function ajustarAEscala(W, H)
++  local x0, y0, x1, y1 = areaVisivel(W, H)
+   local umin, umax, vmin, vmax = math.huge, -math.huge, math.huge, -math.huge
+   for _, contorno in ipairs(mini.pista.contornos) do
+     for _, q in ipairs(contorno) do
+@@ -641,12 +693,13 @@ local function ajustarAEscala(W, H)
+       vmin, vmax = math.min(vmin, v), math.max(vmax, v)
+     end
+   end
+-  local largura = W - 2 * MARGEM_DO_MINIMAPA
+-  local altura = H - 2 * MARGEM_DO_MINIMAPA - TOPO_DO_MINIMAPA
++  local largura = (x1 - x0) - 2 * MARGEM_DO_MINIMAPA
++  local altura = (y1 - y0) - 2 * MARGEM_DO_MINIMAPA - TOPO_DO_MINIMAPA
+   local k = math.min(largura / math.max(umax - umin, 1), altura / math.max(vmax - vmin, 1))
+   mini.k = k
+-  mini.ox = MARGEM_DO_MINIMAPA + (largura - k * (umax - umin)) / 2 - k * umin
+-  mini.oy = MARGEM_DO_MINIMAPA + TOPO_DO_MINIMAPA + (altura - k * (vmax - vmin)) / 2 - k * vmin
++  mini.ox = x0 + MARGEM_DO_MINIMAPA + (largura - k * (umax - umin)) / 2 - k * umin
++  mini.oy = y0 + MARGEM_DO_MINIMAPA + TOPO_DO_MINIMAPA + (altura - k * (vmax - vmin)) / 2 - k * vmin
++  mini.visivel = { x0, y0, x1, y1 }
+ end
+ 
+ local function desenharAPista(W, H)
+@@ -680,12 +733,12 @@ local function desenharAPista(W, H)
+       local q = naTela(tonumber(c.x) or 0, tonumber(c.z) or 0)
+       ui.drawCircle(q, 7, CORES.perda, 16, 2)
+       -- O nome do lado de dentro quando a marca está perto da borda direita.
+-      local nx = q.x + 9 + 26 > W and q.x - 9 - 26 or q.x + 9
++      local nx = q.x + 9 + 26 > mini.visivel[3] and q.x - 9 - 26 or q.x + 9
+       ui.dwriteDrawText(tostring(c.curva), 11, vec2(nx, q.y - 7), CORES.perda)
+     end
+   end)
+   mini.desenhado = tostring(mini.versao) .. '|' .. tostring(mini.origem)
+-  mini.tamanho = W .. 'x' .. H
++  mini.tamanho = W .. 'x' .. H .. '|' .. table.concat(mini.visivel, ',')
+ end
+ 
+ -- ── o minimapa: o fantasma e a diferença ────────────────────────────────
+@@ -796,26 +849,51 @@ end
+ 
+ -- O texto de cima das duas janelas: a diferença (10 vezes por segundo, para ler sem
+ -- piscar) ou o aviso, que quebra a linha e cabe na largura da janela.
+-local function desenharODeCima(t, W, nota)
++local function desenharODeCima(t, W, nota, x0, y0)
++  x0, y0 = x0 or 0, y0 or 0
+   if t - mini.mostradaEm >= 0.1 then
+     mini.mostrada = mini.diferenca
+     mini.mostradaEm = t
+   end
+   if nota then
+-    caixa(nota, 11, vec2(MARGEM_DO_MINIMAPA, 4), vec2(W - 8, TOPO_DO_MINIMAPA + 2), CORES.fraco)
++    caixa(nota, 11, vec2(x0 + MARGEM_DO_MINIMAPA, y0 + 4), vec2(W - 8, y0 + TOPO_DO_MINIMAPA + 2), CORES.fraco)
+   elseif mini.mostrada then
+     local d = mini.mostrada
+     local sinal = d >= 0 and '+' or '−'
+-    ui.dwriteDrawText(sinal .. decimal(math.abs(d), 2) .. ' s', 17, vec2(MARGEM_DO_MINIMAPA, 4),
++    ui.dwriteDrawText(sinal .. decimal(math.abs(d), 2) .. ' s', 17, vec2(x0 + MARGEM_DO_MINIMAPA, y0 + 4),
+       d > 0 and CORES.perda or CORES.ganho)
+     local ref = mini.referencia
+     local contra = ref and ref.tipo == 'minha_melhor' and 'para a sua melhor' or 'para a volta da IA'
+-    ui.dwriteDrawText(contra, 11, vec2(MARGEM_DO_MINIMAPA + 82, 10), CORES.apoio)
++    ui.dwriteDrawText(contra, 11, vec2(x0 + MARGEM_DO_MINIMAPA + 82, y0 + 10), CORES.apoio)
+   end
+ end
+ 
++-- Pedido 36, Parte D.2: a freada da IA na próxima curva, pela posição do carro na volta de
++-- referência (o índice do ponto mais perto e o passo da grade).
++local function proximaFreada(carro)
++  local ref = mini.referencia
++  if not ref or type(ref.freadas) ~= 'table' or #ref.freadas == 0 then return nil end
++  tempoDaReferenciaPerto(ref.pontos, carro.position.x, carro.position.z)
++  local L = tonumber(mini.comprimento) or 0
++  if not mini.iCarro or L <= 0 then return nil end
++  local s = (mini.iCarro - 1) * L / #ref.pontos
++  local melhor, menor = nil, math.huge
++  for _, f in ipairs(ref.freadas) do
++    local d = ((tonumber(f.s) or 0) - s) % L
++    if d < menor then melhor, menor = f, d end
++  end
++  return melhor
++end
++
++local desenharMinimapa
++
+ -- Chamada a cada quadro pela janela do minimapa (manifest.ini, FUNCTION_MAIN).
+ function minimapa(dt)
++  local tamanho = ui.windowSize()
++  naJanelaInteira(tamanho.x, tamanho.y, desenharMinimapa, dt)
++end
++
++desenharMinimapa = function(dt)
+   local t = relogio()
+   mini.ultimoQuadro = t
+   local tamanho = ui.windowSize()
+@@ -829,7 +907,8 @@ function minimapa(dt)
+     return
+   end
+   local W, H = math.floor(tamanho.x), math.floor(tamanho.y)
+-  local agoraTamanho = W .. 'x' .. H
++  registrarAsMedidas('minimapa', W, H)
++  local agoraTamanho = W .. 'x' .. H .. '|' .. table.concat({ areaVisivel(W, H) }, ',')
+   if mini.tamanho ~= agoraTamanho then
+     mini.mudouEm = mini.mudouEm or t
+   else
+@@ -847,14 +926,26 @@ function minimapa(dt)
+ 
+   local ok, carro = pcall(ac.getCar, 0)
+   if not ok or not carro then return end
++  -- A freada da IA só na próxima curva: uma marca curta atravessando a pista, na cor do fantasma.
++  local f = proximaFreada(carro)
++  if f and f.pontos and f.pontos[1] and f.pontos[2] then
++    local a, b = naTela(f.pontos[1][1], f.pontos[1][2]), naTela(f.pontos[2][1], f.pontos[2][2])
++    local mx, my, dx, dy = (a.x + b.x) / 2, (a.y + b.y) / 2, b.x - a.x, b.y - a.y
++    local n = math.sqrt(dx * dx + dy * dy)
++    if n > 0.01 then
++      dx, dy = dx / n * 7, dy / n * 7
++      ui.drawLine(vec2(mx - dx, my - dy), vec2(mx + dx, my + dy), CORES.fantasma, 3)
++    end
++  end
+   local fx, fz = oFantasma(carro)
+   if fx then
+     desenharMarca(naTela(fx, fz), 5, CORES.fantasmaMiolo, CORES.fantasma, 2)
+   end
+   desenharMarca(naTela(carro.position.x, carro.position.z), 5.5, CORES.voce, CORES.vermelho, 2.5)
+-  desenharODeCima(t, W, notaDoFantasma())
++  local v = mini.visivel or { 0, 0, W, H }
++  desenharODeCima(t, v[3], notaDoFantasma(), v[1], v[2])
+   if estado.fora and mini.referencia then
+-    ui.dwriteDrawText('sem backend', 11, vec2(W - 74, H - 18), CORES.fraco)
++    ui.dwriteDrawText('sem backend', 11, vec2(v[3] - 74, v[4] - 18), CORES.fraco)
+   end
+ end
+ 
+@@ -925,8 +1016,15 @@ local function rotuloCentrado(texto, tamanhoDaFonte, sx, sy, cor)
+   ui.dwriteDrawText(texto, tamanhoDaFonte, vec2(sx - largura / 2, sy - tamanhoDaFonte / 2), cor)
+ end
+ 
++local desenharAproximado
++
+ -- Chamada a cada quadro pela janela do mapa aproximado (manifest.ini, FUNCTION_MAIN).
+ function aproximado(dt)
++  local tamanho = ui.windowSize()
++  naJanelaInteira(tamanho.x, tamanho.y, desenharAproximado, dt)
++end
++
++desenharAproximado = function(dt)
+   local t = relogio()
+   perto.ultimoQuadro = t
+   local tamanho = ui.windowSize()
+@@ -938,6 +1036,8 @@ function aproximado(dt)
+   local ok, carro = pcall(ac.getCar, 0)
+   if not ok or not carro then return end
+   local W, H = tamanho.x, tamanho.y
++  registrarAsMedidas('mapa aproximado', W, H)
++  local vx0, vy0, vx1, vy1 = areaVisivel(W, H)
+ 
+   -- O zoom pela roda do mouse, com o ponteiro sobre a janela.
+   if ui.windowHovered() then
+@@ -969,8 +1069,8 @@ function aproximado(dt)
+     perto.angulo = perto.angulo + giro * math.min(1, (tonumber(dt) or 0.016) / GIRO_S)
+   end
+   local cs, sn = math.cos(perto.angulo), math.sin(perto.angulo)
+-  local k = math.min(W, H) / perto.zoom
+-  local cx, cy = W * 0.5, H * CENTRO_VERTICAL
++  local k = math.min(vx1 - vx0, vy1 - vy0) / perto.zoom
++  local cx, cy = (vx0 + vx1) * 0.5, vy0 + (vy1 - vy0) * CENTRO_VERTICAL
+   local bu0, bv0 = z, -x
+   local function tela(px, pz)
+     local eu, ev = pz - bu0, -px - bv0
+@@ -1013,6 +1113,27 @@ function aproximado(dt)
+   end
+   tracar(rastro.pontos, #rastro.pontos, 3, 1.0, 5, tela, W, H)
+ 
++  -- Pedido 36, Parte D.2: a freada da IA em todas as curvas da janela, uma linha atravessando o
++  -- asfalto (um pouco além das bordas) com o rótulo. O seu traçado mostra onde você freou: o
++  -- vermelho começa ali.
++  if ref and type(ref.freadas) == 'table' then
++    local rotuloDaFreada = ref.tipo == 'minha_melhor' and 'freada da sua melhor' or 'freada da IA'
++    for _, f in ipairs(ref.freadas) do
++      if f.pontos and f.pontos[1] and f.pontos[2] then
++        local ax, ay = tela(f.pontos[1][1], f.pontos[1][2])
++        local bx, by = tela(f.pontos[2][1], f.pontos[2][2])
++        local mx, my = (ax + bx) / 2, (ay + by) / 2
++        if mx > -40 and mx < W + 40 and my > -40 and my < H + 40 then
++          local ex, ey = (bx - ax) * 0.15, (by - ay) * 0.15
++          ui.drawLine(vec2(ax - ex, ay - ey), vec2(bx + ex, by + ey), CORES.fantasma, 2.5)
++          local lx, ly = bx + ex, by + ey
++          if ax - ex > lx then lx, ly = ax - ex, ay - ey end
++          ui.dwriteDrawText(rotuloDaFreada, 11, vec2(lx + 4, ly - 7), CORES.fantasma)
++        end
++      end
++    end
++  end
++
+   -- O nome das curvas que estão na janela.
+   for _, c in ipairs(mini.rotulos) do
+     local sx, sy = tela(tonumber(c.x) or 0, tonumber(c.z) or 0)
+@@ -1040,10 +1161,366 @@ function aproximado(dt)
+   rotuloCentrado('Você · V' .. tostring((tonumber(carro.lapCount) or 0) + 1), 12, cx, cy + 18, CORES.texto)
+ 
+   -- O texto de cima numa faixa escura: a pista passa por baixo dele.
+-  ui.drawRectFilled(vec2(0, 0), vec2(W, TOPO_DO_MINIMAPA + 2), CORES.faixaDoTexto, 6)
+-  desenharODeCima(t, W, notaDoFantasma())
++  ui.drawRectFilled(vec2(vx0, vy0), vec2(vx1, vy0 + TOPO_DO_MINIMAPA + 2), CORES.faixaDoTexto, 6)
++  desenharODeCima(t, vx1, notaDoFantasma(), vx0, vy0)
+   if estado.fora and ref then
+-    ui.dwriteDrawText('sem backend', 11, vec2(W - 74, H - 18), CORES.fraco)
++    ui.dwriteDrawText('sem backend', 11, vec2(vx1 - 74, vy1 - 18), CORES.fraco)
++  end
++end
++
++-- ── o replay da curva (pedido 36, Parte E) ──────────────────────────────
++
++-- O que o engenheiro mostra quando fala de uma curva: a curva vista de cima, sobre a pista
++-- tratada (a `pista_detalhada.png`), com as duas linhas ("você" e "IA (referência)"), os dois
++-- carros andando cada um no seu próprio tempo a partir da mesma entrada, as duas freadas com
++-- a distância, as duas mínimas com o valor, o traçado e o tempo perdido. Os dados vêm de
++-- `/api/radio/replay/<id>`, uma vez por mensagem.
++--
++-- * Na reta: aparece junto com a fala de uma análise ou de uma frase do coach com causa,
++--   toca cada curva citada e some quando a janela de rádio acaba (o `restaS` da mensagem,
++--   calculado pelo backend na entrega). Nunca dentro das 14 curvas.
++-- * Nos boxes ou com o jogo pausado: a última análise, em repetição e com a janela maior,
++--   até você sair.
++local REPLAY_PAUSA_NO_FIM_S = 1.2       -- o fim de cada curva fica parado um pouco
++local REPLAY_MINIMO_S = 6               -- na reta, sem o `restaS` da mensagem (um backend antigo)
++local REPLAY_AUMENTO_NOS_BOXES = 1.6    -- nos boxes, a janela cresce isto
++local REPLAY_TOPO = 24
++local REPLAY_MARGEM = 18
++
++local rp = {
++  dados = {},            -- [id da mensagem] = { curvas }
++  ordem = {},            -- os ids guardados, do mais antigo ao mais novo (no máximo 6)
++  atual = nil, inicio = 0, ateQuando = 0,
++  ultimaAnalise = nil,
++  noBox = false, inicioNoBox = 0,
++  janela = nil, tamanhoOriginal = nil, avisouTamanho = false,
++  ultimoQuadro = -100,
++}
++
++local function guardarReplay(id, curvas)
++  rp.dados[id] = curvas
++  rp.ordem[#rp.ordem + 1] = id
++  while #rp.ordem > 6 do
++    local velho = table.remove(rp.ordem, 1)
++    if velho ~= rp.ultimaAnalise then rp.dados[velho] = nil end
++  end
++end
++
++-- Chamada quando uma mensagem com replay vira o cartão atual (`avancar`).
++comecarReplay = function(m, t)
++  if type(m.replay) ~= 'table' or type(m.replay.url) ~= 'string' then return end
++  local id = m.id
++  rp.atual, rp.inicio = id, t
++  rp.ateQuando = t + (tonumber(m.restaS) or REPLAY_MINIMO_S)
++  if m.origem == 'analise' then rp.ultimaAnalise = id end
++  if rp.dados[id] then return end
++  pedirAoBackend(BACKEND .. m.replay.url, function(err, r)
++    if err or not r or r.status ~= 200 then
++      log('replay: o backend não entregou o replay da mensagem ' .. tostring(id) .. ' (' .. tostring(err or (r and r.status)) .. ')')
++      return
++    end
++    local ok, dados = pcall(JSON.parse, r.body)
++    if ok and type(dados) == 'table' and type(dados.curvas) == 'table' and #dados.curvas > 0 then
++      guardarReplay(id, dados.curvas)
++    end
++  end)
++end
++
++-- A câmera da curva, a mesma da tela Ao vivo (frontend/src/aoVivo/replay.ts): a entrada para
++-- cima, na orientação do mapa do app (base(x, z) = (z, −x)), encaixada na área.
++local function cameraDaCurva(c, x0, y0, W, H)
++  local ref = c.linhas.referencia
++  local a, b = ref[1], ref[math.min(#ref, 11)]
++  local du, dv = b[2] - a[2], -(b[1] - a[1])
++  local ang = -math.pi / 2 - math.atan2(dv, du)
++  local cs, sn = math.cos(ang), math.sin(ang)
++  local function girar(x, z)
++    local u, v = z, -x
++    return u * cs - v * sn, u * sn + v * cs
++  end
++  local gx0, gx1, gy0, gy1 = math.huge, -math.huge, math.huge, -math.huge
++  for _, linha in ipairs({ c.linhas.voce, ref }) do
++    for _, p in ipairs(linha) do
++      local gx, gy = girar(p[1], p[2])
++      gx0, gx1 = math.min(gx0, gx), math.max(gx1, gx)
++      gy0, gy1 = math.min(gy0, gy), math.max(gy1, gy)
++    end
++  end
++  local k = math.min((W - 2 * REPLAY_MARGEM) / math.max(gx1 - gx0, 1),
++                     (H - 2 * REPLAY_MARGEM - REPLAY_TOPO) / math.max(gy1 - gy0, 1))
++  local ax, ay = x0 + W / 2, y0 + REPLAY_TOPO + (H - REPLAY_TOPO) / 2
++  local rcx, rcy = (gx0 + gx1) / 2, (gy0 + gy1) / 2
++  local cam = { k = k, ax = ax, ay = ay, rcx = rcx, rcy = rcy, cs = cs, sn = sn }
++  function cam.tela(x, z)
++    local gx, gy = girar(x, z)
++    return ax + k * (gx - rcx), ay + k * (gy - rcy)
++  end
++  -- O inverso, para a imagem da pista: da tela ao mundo e dele às coordenadas do mapa (x, −z).
++  function cam.mapa(sx, sy)
++    local gx, gy = (sx - ax) / k + rcx, (sy - ay) / k + rcy
++    local u, v = gx * cs + gy * sn, -gx * sn + gy * cs
++    local x, z = -v, u
++    return x, -z
++  end
++  return cam
++end
++
++-- Onde o carro está no tempo `t` (cada um no seu tempo; o fim da linha depois dela).
++local function posicaoNoTempo(linha, t)
++  local n = #linha
++  if n == 0 then return 0, 0 end
++  if t <= linha[1][3] then return linha[1][1], linha[1][2] end
++  if t >= linha[n][3] then return linha[n][1], linha[n][2] end
++  local a, b = 1, n
++  while b - a > 1 do
++    local m = math.floor((a + b) / 2)
++    if linha[m][3] <= t then a = m else b = m end
++  end
++  local p, q = linha[a], linha[b]
++  local u = q[3] > p[3] and (t - p[3]) / (q[3] - p[3]) or 0
++  return p[1] + (q[1] - p[1]) * u, p[2] + (q[2] - p[2]) * u
++end
++
++local function larguraDoRotulo(texto)
++  local largura = #texto * 6
++  if ui.measureDWriteText ~= nil then
++    local ok, medida = pcall(ui.measureDWriteText, texto, 11)
++    if ok and medida then largura = medida.x end
++  end
++  return largura + 6
++end
++
++-- Os rótulos do replay não cobrem um ao outro, nem os carros e as marcas, nem saem da janela:
++-- cada um tenta, em ordem, os lugares em volta do seu ponto (o preferido primeiro), encostado e
++-- depois cada vez mais longe (com um fio até o ponto); se nenhum estiver livre, fica no
++-- preferido, empurrado para dentro da janela.
++local LUGARES_DO_ROTULO = { 'direita', 'esquerda', 'abaixo', 'acima', 'direitaAcima', 'esquerdaAbaixo',
++                            'direitaAbaixo', 'esquerdaAcima' }
++local ALTURA_DO_ROTULO = 15
++local AFASTAMENTOS_DO_ROTULO = { 0, 14, 28, 44, 60 }
++local DIRECAO_DO_ROTULO = { direita = { 1, 0 }, esquerda = { -1, 0 }, abaixo = { 0, 1 }, acima = { 0, -1 },
++                            direitaAcima = { 0.7, -0.7 }, esquerdaAbaixo = { -0.7, 0.7 },
++                            direitaAbaixo = { 0.7, 0.7 }, esquerdaAcima = { -0.7, -0.7 } }
++
++local function novoQuadroDeRotulos(x0, y0, W, H)
++  return { area = { x0 + 2, y0 + REPLAY_TOPO + 2, x0 + W - 2, y0 + H - 2 }, ocupados = {} }
++end
++
++local function ocupar(q, x, y, raio)
++  q.ocupados[#q.ocupados + 1] = { x - raio, y - raio, x + raio, y + raio }
++end
++
++local function cantoDoRotulo(lugar, x, y, w, h)
++  if lugar == 'direita' then return x + 8, y - h / 2 end
++  if lugar == 'esquerda' then return x - 8 - w, y - h / 2 end
++  if lugar == 'abaixo' then return x - w / 2, y + 8 end
++  if lugar == 'acima' then return x - w / 2, y - 8 - h end
++  if lugar == 'direitaAcima' then return x + 6, y - 6 - h end
++  if lugar == 'esquerdaAbaixo' then return x - 6 - w, y + 6 end
++  if lugar == 'direitaAbaixo' then return x + 6, y + 6 end
++  return x - 6 - w, y - 6 - h
++end
++
++local function rotulo(q, texto, x, y, cor, preferido)
++  local w, h = larguraDoRotulo(texto), ALTURA_DO_ROTULO
++  local a = q.area
++  local function livre(bx, by)
++    if bx < a[1] or by < a[2] or bx + w > a[3] or by + h > a[4] then return false end
++    for _, r in ipairs(q.ocupados) do
++      if bx < r[3] and r[1] < bx + w and by < r[4] and r[2] < by + h then return false end
++    end
++    return true
++  end
++  local bx, by, longe
++  for _, d in ipairs(AFASTAMENTOS_DO_ROTULO) do
++    for i = 0, #LUGARES_DO_ROTULO do
++      local lugar = i == 0 and preferido or LUGARES_DO_ROTULO[i]
++      local dir = DIRECAO_DO_ROTULO[lugar]
++      local cx, cy = cantoDoRotulo(lugar, x + dir[1] * d, y + dir[2] * d, w, h)
++      if livre(cx, cy) then bx, by, longe = cx, cy, d > 0 break end
++    end
++    if bx then break end
++  end
++  if not bx then
++    bx, by = cantoDoRotulo(preferido, x, y, w, h)
++    bx = math.min(math.max(bx, a[1]), a[3] - w)
++    by = math.min(math.max(by, a[2]), a[4] - h)
++  end
++  q.ocupados[#q.ocupados + 1] = { bx, by, bx + w, by + h }
++  if longe then
++    ui.drawLine(vec2(x, y), vec2(math.min(math.max(x, bx), bx + w), math.min(math.max(y, by), by + h)), cor, 1)
++  end
++  ui.drawRectFilled(vec2(bx, by), vec2(bx + w, by + h), CORES.fantasmaMiolo, 3)
++  ui.dwriteDrawText(texto, 11, vec2(bx + 3, by + 1), cor)
++end
++
++local function desenharACurva(c, t, x0, y0, W, H)
++  local cam = cameraDaCurva(c, x0, y0, W, H)
++  ui.drawRectFilled(vec2(x0, y0), vec2(x0 + W, y0 + H), CORES.fundoDoMapa, 6)
++  local img = mini.imagem
++  if img then
++    local function uv(sx, sy)
++      local mx, my = cam.mapa(sx, sy)
++      return vec2((mx - img.x0) * img.pxPorMetro / img.largura, (my - img.y0) * img.pxPorMetro / img.altura)
++    end
++    ui.drawImageQuad(img.caminho, vec2(x0, y0), vec2(x0 + W, y0), vec2(x0 + W, y0 + H), vec2(x0, y0 + H), CORES.branco,
++      uv(x0, y0), uv(x0 + W, y0), uv(x0 + W, y0 + H), uv(x0, y0 + H))
++  end
++  local function linha(pontos, cor)
++    ui.pathClear()
++    for _, p in ipairs(pontos) do
++      local sx, sy = cam.tela(p[1], p[2])
++      ui.pathLineTo(vec2(sx, sy))
++    end
++    ui.pathStroke(cor, false, 2.5)
++  end
++  linha(c.linhas.referencia, CORES.fantasma)
++  linha(c.linhas.voce, CORES.vermelho)
++  -- Os pontos que os rótulos não cobrem: os dois carros, as freadas, as mínimas e o traçado.
++  local q = novoQuadroDeRotulos(x0, y0, W, H)
++  local rx, rz = posicaoNoTempo(c.linhas.referencia, t)
++  local vx, vz = posicaoNoTempo(c.linhas.voce, t)
++  local rsx, rsy = cam.tela(rx, rz)
++  local vsx, vsy = cam.tela(vx, vz)
++  ocupar(q, rsx, rsy, 9)
++  ocupar(q, vsx, vsy, 9)
++  local mv, mr = c.minimas.voce, c.minimas.referencia
++  local mvx, mvy = cam.tela(mv.x, mv.z)
++  local mrx, mry = cam.tela(mr.x, mr.z)
++  ocupar(q, mvx, mvy, 5)
++  ocupar(q, mrx, mry, 5)
++  local tv, tr = c.tracado.voce, c.tracado.referencia
++  local tvx, tvy = cam.tela(tv[1], tv[2])
++  local trx, try = cam.tela(tr[1], tr[2])
++  ocupar(q, tvx, tvy, 5)
++  ocupar(q, trx, try, 5)
++  -- As freadas: um traço em cada linha e a distância entre elas.
++  local contra = c.referencia == 'minha_melhor' and 'da sua melhor' or 'da IA'
++  local function traco(m, cor)
++    if type(m) ~= 'table' then return nil end
++    local sx, sy = cam.tela(tonumber(m.x) or 0, tonumber(m.z) or 0)
++    ui.drawLine(vec2(sx - 7, sy), vec2(sx + 7, sy), cor, 3)
++    ocupar(q, sx, sy, 7)
++    return sx, sy
++  end
++  local fx, fy = traco(c.freadas.voce, CORES.vermelho)
++  traco(c.freadas.referencia, CORES.fantasma)
++  local d = tonumber(c.freadas.distanciaM)
++  if fx and d then
++    local m = math.floor(math.abs(d) + 0.5)
++    local texto = m < 1 and ('você freia no mesmo ponto ' .. contra:gsub('^da ', 'que a '))
++      or ('você freia ' .. m .. ' m ' .. (d < 0 and 'antes ' or 'depois ') .. contra)
++    rotulo(q, texto, fx, fy, CORES.vermelho, 'direita')
++  end
++  -- O traçado: uma seta entre as duas linhas, no ponto da mínima da referência.
++  local amarelo = CORES_DO_PEDAL[0]
++  if math.sqrt((tvx - trx) ^ 2 + (tvy - try) ^ 2) > 2 then
++    ui.drawLine(vec2(trx, try), vec2(tvx, tvy), amarelo, 1.5)
++    local a = math.atan2(tvy - try, tvx - trx)
++    ui.drawTriangleFilled(vec2(tvx, tvy), vec2(tvx - 7 * math.cos(a - 0.5), tvy - 7 * math.sin(a - 0.5)),
++      vec2(tvx - 7 * math.cos(a + 0.5), tvy - 7 * math.sin(a + 0.5)), amarelo)
++  end
++  rotulo(q, 'você passa ' .. decimal(tonumber(c.tracado.distanciaM) or 0, 1) .. ' m mais à ' .. tostring(c.tracado.lado),
++    (tvx + trx) / 2, (tvy + try) / 2, amarelo, 'abaixo')
++  -- As mínimas, no ponto de cada uma.
++  ui.drawCircleFilled(vec2(mvx, mvy), 3.5, CORES.vermelho, 12)
++  ui.drawCircleFilled(vec2(mrx, mry), 3.5, CORES.fantasma, 12)
++  rotulo(q, 'mínima ' .. math.floor(mv.kmh + 0.5) .. ' km/h', mvx, mvy, CORES.vermelho, 'esquerda')
++  rotulo(q, 'mínima ' .. math.floor(mr.kmh + 0.5) .. ' km/h', mrx, mry, CORES.fantasma, 'direita')
++  -- Os dois carros, cada um no seu tempo.
++  desenharMarca(vec2(rsx, rsy), 6.5, CORES.fantasmaMiolo, CORES.fantasma, 2.5)
++  desenharMarca(vec2(vsx, vsy), 6.5, CORES.voce, CORES.vermelho, 2.5)
++  rotulo(q, tostring(c.rotuloDaReferencia or 'IA (referência)'), rsx, rsy, CORES.fantasma, 'direitaAcima')
++  rotulo(q, 'você', vsx, vsy, CORES.texto, 'esquerdaAbaixo')
++  -- O alto: a curva, a volta e o tempo perdido.
++  ui.drawRectFilled(vec2(x0, y0), vec2(x0 + W, y0 + REPLAY_TOPO), CORES.faixaDoTexto, 6)
++  local perda = tonumber(c.perdaS) or 0
++  local volta = c.volta and (' · volta ' .. tostring(c.volta)) or ''
++  ui.dwriteDrawText(tostring(c.curva) .. ', ' .. tostring(c.lado) .. volta .. ' · ' .. (perda >= 0 and 'perde ' or 'ganha ')
++    .. decimal(math.abs(perda), 2) .. ' s nesta curva', 12, vec2(x0 + 10, y0 + 5), CORES.texto)
++end
++
++-- Nos boxes, a janela cresce (e volta ao tamanho de antes na saída). A janela é achada pelo título.
++local function aumentarNosBoxes(aumentar)
++  if ac.accessAppWindow == nil or ac.getAppWindows == nil then return end
++  if not rp.janela then
++    local ok, janelas = pcall(ac.getAppWindows)
++    if ok and type(janelas) == 'table' then
++      for _, j in ipairs(janelas) do
++        if type(j.title) == 'string' and j.title:find('Replay da curva', 1, true) then
++          local okA, acesso = pcall(ac.accessAppWindow, j.name)
++          if okA and acesso then rp.janela = acesso end
++        end
++      end
++    end
++    if not rp.janela then
++      if not rp.avisouTamanho then
++        log('replay: não achei a janela para aumentar nos boxes; o replay fica no tamanho dela')
++        rp.avisouTamanho = true
++      end
++      return
++    end
++  end
++  pcall(function()
++    if aumentar then
++      rp.tamanhoOriginal = rp.janela:size()
++      rp.janela:resize(rp.tamanhoOriginal * REPLAY_AUMENTO_NOS_BOXES)
++    elseif rp.tamanhoOriginal then
++      rp.janela:resize(rp.tamanhoOriginal)
++      rp.tamanhoOriginal = nil
++    end
++  end)
++end
++
++local desenharOReplay
++
++-- Chamada a cada quadro pela janela do replay (manifest.ini, FUNCTION_MAIN).
++function replay(dt)
++  local tamanho = ui.windowSize()
++  naJanelaInteira(tamanho.x, tamanho.y, desenharOReplay, dt)
++end
++
++desenharOReplay = function(dt)
++  local t = relogio()
++  rp.ultimoQuadro = t
++  local tamanho = ui.windowSize()
++  if CALADO or not APROXIMADO then
++    local falta = CALADO and FALTA or (#FALTA_NO_MINIMAPA > 0 and FALTA_NO_MINIMAPA or FALTA_NO_APROXIMADO)
++    desenharAviso('Replay da curva: esta versão do CSP não tem ' .. table.concat(falta, ', ') .. '.', tamanho)
++    return
++  end
++  local W, H = tamanho.x, tamanho.y
++  registrarAsMedidas('replay', W, H)
++  local okC, carro = pcall(ac.getCar, 0)
++  local okS, sim = pcall(ac.getSim)
++  local noBox = (okC and carro and (carro.isInPitlane or carro.isInPit)) or (okS and sim and sim.isPaused) or false
++  if noBox ~= rp.noBox then
++    rp.noBox = noBox
++    rp.inicioNoBox = t
++    aumentarNosBoxes(noBox)
++  end
++  local curvas, inicio, repetir = nil, 0, false
++  if noBox and rp.ultimaAnalise and rp.dados[rp.ultimaAnalise] then
++    curvas, inicio, repetir = rp.dados[rp.ultimaAnalise], rp.inicioNoBox, true
++  elseif rp.atual and t < rp.ateQuando and rp.dados[rp.atual] then
++    curvas, inicio = rp.dados[rp.atual], rp.inicio
++  end
++  if not curvas then return end
++  -- Cada curva citada, uma depois da outra (e de novo, nos boxes).
++  local total = 0
++  for _, c in ipairs(curvas) do total = total + (tonumber(c.duracaoS) or 0) + REPLAY_PAUSA_NO_FIM_S end
++  local tc = t - inicio
++  if repetir and total > 0 then tc = tc % total end
++  local i = 1
++  while i < #curvas and tc > (tonumber(curvas[i].duracaoS) or 0) + REPLAY_PAUSA_NO_FIM_S do
++    tc = tc - (tonumber(curvas[i].duracaoS) or 0) - REPLAY_PAUSA_NO_FIM_S
++    i = i + 1
++  end
++  local c = curvas[i]
++  local x0, y0, x1, y1 = areaVisivel(W, H)
++  desenharACurva(c, math.min(tc, tonumber(c.duracaoS) or 0), x0, y0, x1 - x0, y1 - y0)
++  if noBox then
++    ui.dwriteDrawText('nos boxes: a última análise, em repetição', 11, vec2(x0 + 10, y1 - 18), CORES.apoio)
+   end
+ end
+ 
+@@ -1051,7 +1528,8 @@ end
+ 
+ local function novaContagem()
+   return { soma = 0, n = 0, minimo = math.huge, maximo = 0, parado = 0,
+-           mini = { ligado = 0, desligado = 0 }, perto = { ligado = 0, desligado = 0 } }
++           mini = { ligado = 0, desligado = 0 }, perto = { ligado = 0, desligado = 0 },
++           rep = { ligado = 0, desligado = 0 } }
+ end
+ local fps = novaContagem()
+ 
+@@ -1073,7 +1551,7 @@ local function amostrarOFps()
+     fps.minimo = math.min(fps.minimo, v)
+     fps.maximo = math.max(fps.maximo, v)
+     local agora = relogio()
+-    for nome, ultimo in pairs({ mini = mini.ultimoQuadro, perto = perto.ultimoQuadro }) do
++    for nome, ultimo in pairs({ mini = mini.ultimoQuadro, perto = perto.ultimoQuadro, rep = rp.ultimoQuadro }) do
+       local c = fps[nome]
+       if agora - ultimo < 0.5 then c.ligado = c.ligado + 1 else c.desligado = c.desligado + 1 end
+     end
+@@ -1082,7 +1560,7 @@ local function amostrarOFps()
+     if fps.n > 0 then
+       log('fps: média ' .. decimal(fps.soma / fps.n, 1) .. ' (mín ' .. decimal(fps.minimo, 0) .. ', máx '
+         .. decimal(fps.maximo, 0) .. ') em ' .. fps.n .. ' s; minimapa ' .. situacao(fps.mini)
+-        .. '; mapa aproximado ' .. situacao(fps.perto))
++        .. '; mapa aproximado ' .. situacao(fps.perto) .. '; replay ' .. situacao(fps.rep))
+     end
+     fps = novaContagem()
+   end
