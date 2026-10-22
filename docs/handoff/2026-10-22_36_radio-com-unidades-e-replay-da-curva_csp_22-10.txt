@@ -1,0 +1,33 @@
+Loading app: 'D:\SteamLibrary\steamapps\common\assettocorsa\apps\lua\radio_engenheiro'
+App is prepared for loading: 'D:\SteamLibrary\steamapps\common\assettocorsa\apps\lua\radio_engenheiro'
+Compiling bytecode: D:\SteamLibrary\steamapps\common\assettocorsa\apps\lua\radio_engenheiro\radio_engenheiro.lua
+[Lua: app] [radio_engenheiro] ligado; pede as mensagens a http://127.0.0.1:8000
+App is loaded: 'D:\SteamLibrary\steamapps\common\assettocorsa\apps\lua\radio_engenheiro', impl.: 000001B1E9CAE930, windows: 4
+[Lua: app] [radio_engenheiro] voz: Media Foundation disponível
+[Lua: app] [radio_engenheiro] minimapa: baixado (volta_ia|2026-10-04_03-42-10_vhe_interlagos#0013|); referência com 2167 pontos; 0 curva(s) da análise
+[Lua: app] [radio_engenheiro] fps: média 137,3 (mín 113, máx 155) em 10 s; minimapa desligado; mapa aproximado desligado; replay desligado
+[Lua: app] [radio_engenheiro] mapa aproximado: janela 360 x 360 em 1555 x 716; tela 2560 x 1080, escala 1,00; cursor 20 x 8; visível de 0,0 a 360,360
+[Lua: app] [radio_engenheiro] minimapa: janela 300 x 300 em -9 x 543; tela 2560 x 1080, escala 1,00; cursor 20 x 8; visível de 9,0 a 300,300
+[Lua: app] [radio_engenheiro] replay: janela 420 x 300 em 60 x 60; tela 2560 x 1080, escala 1,00; cursor 20 x 8; visível de 0,0 a 420,300
+[Lua: app] [radio_engenheiro] fps: média 118,3 (mín 45, máx 128) em 10 s; minimapa ligado e desligado; mapa aproximado ligado e desligado; replay ligado e desligado
+[Lua: app] [radio_engenheiro] fps: média 126,6 (mín 126, máx 128) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 116,9 (mín 86, máx 126) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 116,9 (mín 84, máx 128) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 114,3 (mín 99, máx 128) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 120,0 (mín 90, máx 128) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 121,2 (mín 89, máx 137) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 115,2 (mín 93, máx 129) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 119,1 (mín 97, máx 132) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 121,1 (mín 97, máx 126) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 125,8 (mín 118, máx 135) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 112,2 (mín 90, máx 121) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 121,7 (mín 118, máx 125) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 114,6 (mín 110, máx 122) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 118,2 (mín 93, máx 128) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 122,6 (mín 119, máx 126) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 123,0 (mín 118, máx 127) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 120,6 (mín 116, máx 126) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 121,3 (mín 117, máx 123) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 122,0 (mín 116, máx 126) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 115,1 (mín 110, máx 119) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+[Lua: app] [radio_engenheiro] fps: média 119,3 (mín 117, máx 122) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado

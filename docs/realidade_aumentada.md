@@ -35,7 +35,7 @@ A voz diz a curva, a diferença e a causa principal, quando o `evidence` do coac
   | cartão | fala | dura |
   |---|---|---|
   | C12, esquerda · +1,87 s para a volta da IA no microssetor 44 · a IA freia 54 m depois de você | "Curva 12: 1,9 segundo atrás da IA. Freia 54 metros antes da IA." | 6,2 s |
-  | C11, esquerda · +1,25 s para a volta da IA no microssetor 39 · mínima da IA 94 km/h, a sua 64 km/h | "Curva 11, esquerda: 1,3 segundo atrás da IA." (a mínima não coube: seção 2.6) | 3,9 s |
+  | C11, esquerda · +1,25 s para a volta da IA no microssetor 39 · mínima da IA 94 km/h, a sua 64 km/h | "Curva 11: 1,3 segundo atrás. Mínima de 64 contra 94 quilômetros por hora." | 7,2 s |
 
 O cartão continua com todos os números (os dois tempos, a freada e a mínima).
 
@@ -103,7 +103,7 @@ Na análise, vale a mediana de 3 voltas, que varia menos que uma volta: o corte 
 ### 2.5 Quanto cabe em cada janela
 
 - **A voz a 1,4x** (era 1,25x no pedido 31): os números falados por extenso faziam a frase com a causa, o resumo com a curva e a análise passarem de 6, 7 e 8 s. Não estava no pedido 35 e ficou registrada como desvio no relatório dele. **O Eduardo aprovou a 1,4x em 22/10** (pedido 36).
-- **As variantes:** cada mensagem traz a fala da mais completa à mais curta. O rádio gera o áudio e fica com a primeira que cabe no limite do tipo: 6,6 s (frase do coach), 7,7 s (resumo) e 8,8 s (análise), os 6, 7 e 8 s do pedido com 10% de folga.
+- **As variantes:** cada mensagem traz a fala da mais completa à mais curta. O rádio gera o áudio e fica com a primeira que cabe no limite do tipo: 7,3 s (frase do coach), 7,7 s (resumo) e 8,8 s (análise). Eram os 6, 7 e 8 s do pedido 35 com 10% de folga; a frase do coach subiu de 6,6 para 7,3 s no pedido 36, decisão do Eduardo, para a causa com a unidade caber (seção 2.6).
 - **A entrega:** só quando a fala inteira cabe no que resta da janela, pela velocidade do carro, com 0,3 s de folga.
 - **Nas duas sessões** (todas as falas couberam no que restava da janela):
 
@@ -137,13 +137,13 @@ Todo número falado tem a sua unidade (`backend/core/radio/texto.py`):
 - **O teste:** `test_todo_numero_falado_tem_a_unidade...` (em `backend/tests/test_radio.py`) passa todas as falas de todas as variantes por um leitor que acusa número sem unidade.
 - **Quantas mensagens perderam a causa** por causa das unidades, nas três sessões passadas pelo rádio (handoff do pedido 36), entre as que têm causa (a frase do coach com a causa, o resumo com a curva que mais perdeu e a análise):
 
-  | sessão | antes | depois |
-  |---|---|---|
-  | 13/10 | 0 de 12 | 2 de 12 |
-  | 18/10 | 0 de 13 | 2 de 13 |
-  | 21/10 | 0 de 18 | 6 de 18 |
+  | sessão | antes das unidades | com as unidades e o limite de 6,6 s | com o limite de 7,3 s (o atual) |
+  |---|---|---|---|
+  | 13/10 | 0 de 12 | 2 de 12 | 0 de 12 |
+  | 18/10 | 0 de 13 | 2 de 13 | 0 de 13 |
+  | 21/10 | 0 de 18 | 6 de 18 | 0 de 18 |
 
-  Todas são frases do coach da C11 com a mínima: "Curva 11, esquerda: 1,3 segundo atrás da IA. Mínima de 64 contra 94 quilômetros por hora." dura de 6,8 a 7,2 s na variante mais curta com a causa, e o limite é 6,6 s. A causa da C11 sai, e a voz diz só a curva e o tempo. Subir o limite da frase do coach para 7,3 s traria as 10 de volta; a decisão é do Eduardo.
+  Todas são frases do coach da C11 com a mínima: "Curva 11, esquerda: 1,3 segundo atrás da IA. Mínima de 64 contra 94 quilômetros por hora." dura de 6,8 a 7,2 s na variante mais curta com a causa, e o limite era 6,6 s: a causa da C11 saía, e a voz dizia só a curva e o tempo. **Com o limite de 7,3 s, nenhuma mensagem perde a causa** nas três sessões, e todas continuam sendo entregues (as frases do coach duram de 6,0 a 7,3 s).
 
 ## 3. As janelas de rádio
 
@@ -197,7 +197,7 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é 
   - **"Minimapa · Sistema de Telemetria e Otimização de Trajetórias":** a pista inteira, o carro e o fantasma;
   - **"Mapa aproximado · Sistema de Telemetria e Otimização de Trajetórias":** a vista de perto, que gira com o carro;
   - **"Replay da curva · Sistema de Telemetria e Otimização de Trajetórias"** (pedido 36, versão 0.4.0): a curva de que o rádio fala, com a sua linha e a da referência.
-- **O encaixe na janela** (pedido 36, Parte D.1): no teste de 21/10, o minimapa cortava à direita. Fora do jogo, isso não se reproduz; as causas possíveis são a janela passando da borda da tela, o recorte padrão do ImGui e o espaçamento interno da janela. Desde o pedido 36, os mapas e o replay se encaixam na parte visível da janela (a janela menos o que passa da tela, pelo `ui.windowPos` e o tamanho da tela do jogo) e desenham com o recorte da janela inteira. Cada janela escreve uma vez no log do CSP as suas medidas (`[radio_engenheiro] minimapa: janela 300 x 300 em 1600 x 40; tela 1920 x 1080, escala 1,00; cursor ...; visível de 0,0 a 300,300`), para confirmar a causa no jogo.
+- **O encaixe na janela** (pedido 36, Parte D.1): no teste de 21/10, o minimapa cortava à direita. Fora do jogo, isso não se reproduz; as causas possíveis são a janela passando da borda da tela, o recorte padrão do ImGui e o espaçamento interno da janela. Desde o pedido 36, os mapas e o replay se encaixam na parte visível da janela (a janela menos o que passa da tela, pelo `ui.windowPos` e o tamanho da tela do jogo) e desenham com o recorte da janela inteira. Cada janela escreve uma vez no log do CSP as suas medidas (`[radio_engenheiro] minimapa: janela 300 x 300 em 1600 x 40; tela 1920 x 1080, escala 1,00; cursor ...; visível de 0,0 a 300,300`), para confirmar a causa no jogo. **No teste de 22/10,** o minimapa estava em −9 × 543 numa tela de 2.560 × 1.080: 9 px da janela passavam da borda esquerda, e a área visível começou em 9 px. É a primeira causa (a janela passando da borda da tela), agora com o encaixe cuidando dela.
 - **O que não faz:** não muda o carro, os controles nem nada do jogo, e não desenha na pista.
 - **Onde grava:** só na subpasta `voz` da própria pasta do app (ADR 0021, item 6), que ele limpa dos `.wav` ao abrir.
 - **Onde pôr as janelas:** num canto, sem cobrir o centro da tela. A posição é a do modo de mover apps do jogo.
@@ -304,7 +304,7 @@ O engenheiro mostra o que diz: quando o rádio fala de uma curva, a janela mostr
 
   | dado | de onde vem |
   |---|---|
-  | a sua volta | na frase do coach, a volta em que a frase saiu (a volta ao vivo, ou a que acabou de fechar, se a entrega já passou da linha; só com o relógio medido em pelo menos 90% da curva). Na análise, das 3 voltas analisadas, a de perda na curva mais perto da mediana |
+  | a sua volta | na frase do coach, a volta em que a frase saiu (a volta ao vivo, ou a que acabou de fechar, se a entrega já passou da linha; só com o relógio medido em pelo menos 90% da curva). A volta de saída dos boxes não tem o relógio (ele começa na linha), e a frase dela fica sem replay. Na análise, das 3 voltas analisadas, a de perda na curva mais perto da mediana |
   | a referência | a volta do store v2 escolhida na Coleta, a mesma do rádio |
   | as linhas | a geometria oficial (o centro mais a normal vezes a posição lateral), o traçado da tela Volta, de 50 m antes da primeira freada (ou do começo da curva) até 60 m depois do fim da curva |
   | o tempo de cada carro | o relógio da grade, zerado na mesma entrada |
@@ -319,10 +319,12 @@ O engenheiro mostra o que diz: quando o rádio fala de uma curva, a janela mostr
   - o resumo na linha e a frase do coach sem causa não têm replay.
 - **Na tela Ao vivo:** sob o cartão da análise e da frase do coach com causa, a mesma animação, uma vez, e o botão "Repetir o replay".
 - **A rota:** `GET /api/radio/replay/<id>`, uma vez por mensagem. A mensagem diz se tem replay (`replay.url` e as curvas). Uma análise com 2 curvas ocupa cerca de 20 KB; uma frase do coach, cerca de 8 KB.
+- **A medida da frase do coach e a do replay não são a mesma** (achado da conferência ponta a ponta de 22/10, decisão pendente do Eduardo). A voz e o cartão da frase do coach dizem o que o coach mediu no microssetor (o `evidence`: a freada e as mínimas daquele trecho de cerca de 70 m); o replay mede a curva inteira, pela regra do relatório de evolução. Na C12 da volta 2 de 21/10, a voz diz "Freia 16 metros antes da IA." e o cartão "mínima da IA 145 km/h, a sua 101 km/h", e o replay mostra "você freia 56 m antes da IA" e as mínimas de 90 e 98 km/h. Na análise das voltas, a fala e o replay usam a mesma medida.
+- **A conferência ponta a ponta** (22/10): o backend do repositório numa porta de teste, com as pastas isoladas, tocou a sessão de 21/10 pelo caminho do jogo, e a tela Ao vivo, apontada para ele, mostrou o replay da frase da C12 da volta 2 sob o cartão, com o botão de repetir (capturas no handoff do pedido 36).
 - **A conferência fora do jogo:** uma prévia em HTML repete as contas da janela (a câmera, a imagem girada, as linhas, as marcas e o encaixe dos rótulos) com 3 curvas reais da sessão de 21/10: a C01 e a C10 da segunda análise e a C12 da primeira. Na C01 da segunda análise, os 7,9 m do traçado batem: a distância entre os dois pontos da seta é 7,941 m, e cada ponto está sobre a sua linha.
 - **O custo:**
   - **no backend:** montar o replay leva cerca de 1 ms numa frase do coach e 3 ms numa análise com 2 curvas (sessão de 21/10, 9 replays), uma vez, na entrega;
-  - **no jogo:** a cada quadro, uma imagem, duas linhas de 120 a 200 pontos, as marcas e os rótulos, e só enquanto o replay está na tela. O FPS entra no mesmo registro dos mapas (`replay ligado` ou `desligado`). A medida no jogo fica para o teste da Parte G do pedido 36.
+  - **no jogo:** a cada quadro, uma imagem, duas linhas de 120 a 200 pontos, as marcas e os rótulos, e só enquanto o replay está na tela. O FPS entra no mesmo registro dos mapas (`replay ligado` ou `desligado`). **No teste de 22/10,** com as 4 janelas ligadas, 119,4 FPS de média (21 blocos de 10 s, de 112 a 127), numa tela de 2.560 × 1.080. Só houve um bloco com tudo desligado (137,3, no começo), e o replay não chegou a aparecer, porque a IA dirigiu a sessão e o rádio ficou calado; o custo de cada janela ainda não está medido.
 
 ### 5.5 Instalar, ligar e remover
 

@@ -1,0 +1,3 @@
+2026-10-22 13:53:50,107 - diagnostico_do_replay - WARNING - replay da frase: curva=C11 volta=1 causa=True geometria=True ref=True -> 0 curva(s) | atual: volta=1.0 linhas=True pontos=2167 track=2167 janela=143 cobertura=0.0 | fechada=None
+2026-10-22 13:54:16,153 - diagnostico_do_replay - WARNING - replay da frase: curva=C12 volta=1 causa=True geometria=True ref=True -> 0 curva(s) | atual: volta=2.0 linhas=True pontos=2167 track=2167 janela=126 cobertura=0.0 | fechada=None
+2026-10-22 13:56:06,524 - diagnostico_do_replay - WARNING - replay da frase: curva=C12 volta=2 causa=True geometria=True ref=True -> 1 curva(s) | atual: volta=2.0 linhas=True pontos=2167 track=2167 janela=154 cobertura=0.994 | fechada=None
