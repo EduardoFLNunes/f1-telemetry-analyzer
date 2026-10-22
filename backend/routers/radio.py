@@ -66,8 +66,9 @@ def _minimapa():
         return {"disponivel": False, "motivo": "sem a geometria oficial no repositório configurado"}
     ref = main._referencia_do_radio()
     volta = main._volta_de_referencia_do_radio()
+    raiz = main.app_config.coach_root()
     return minimapa.montar(geometria.track, geometria.segmentos, volta, ref.get("tipo"), radio.ultima_analise(),
-                           minimapa.linha_do_jogo_m(main.app_config.coach_root()))
+                           minimapa.linha_do_jogo_m(raiz), minimapa.contorno_do_asfalto(raiz))
 
 
 @router.get("/minimapa")

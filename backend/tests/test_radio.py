@@ -326,8 +326,13 @@ def test_a_analise_so_curvas_perdidas_em_2_de_3_e_no_maximo_2():
     assert m["linhas"][0].startswith("C12, esquerda: perde 0,90 s por volta (0,85 · 0,90 · 1,02)")
     assert "mínima 80 contra 110 km/h" in m["linhas"][0] and "freada 50 m antes" in m["linhas"][0]
     assert "traçado 0,4 m mais à esquerda" in m["linhas"][0]        # o lado por extenso (ADR 0003)
-    assert m["fala"].startswith("Análise das voltas 6 a 8. Curva 12: 0,9 por volta: passa a 80 contra 110, "
-                                "freia 50 metros antes.")
+    # A fala no estilo da frase do coach: cada diferenca e uma frase ("Minima 80 contra 110.").
+    assert m["fala"].startswith("Análise das voltas 6 a 8. Curva 12: 0,9 por volta. Mínima 80 contra 110. "
+                                "Freia 50 metros antes.")
+    from core.radio.texto import _diferenca_falada
+    assert _diferenca_falada("tracado", -7.9, {}) == "Passa 8 metros mais à direita."
+    assert _diferenca_falada("tracado", 1.5, {}) == "Passa 1,5 metro mais à esquerda."
+    assert _diferenca_falada("acelerador", 14.0, {}) == "Acelera 14 metros depois."
     assert m["falaMaxS"] == 8.8 and m["referencia"] == {"tipo": "volta_ia", "volta": "ref#0013"}
     # Tres curvas perdidas em 2 das 3: so as 2 de maior perda mediana.
     voltas[1]["medidas"][2]["perdaS"] = 0.4
@@ -436,8 +441,11 @@ def test_o_minimapa_monta_a_pista_a_referencia_e_o_relogio_da_linha_do_jogo():
                   "elapsedS": (np.asarray(track.s) / 50.0).tolist(), "lateralM": [1.0] * n}
     analise = {"voltas": [6, 7, 8], "curvas": [{"curva": "C99", "perdaMedianaS": 0.9}]}
     m = minimapa.montar(track, [], referencia, "volta_ia", analise, 1.495)
-    assert m["disponivel"] and len(m["pista"]["esquerda"]) <= minimapa.PONTOS_DA_BORDA
-    assert len(m["pista"]["esquerda"]) == len(m["pista"]["direita"]) > 100
+    # Sem o cache da pista: as duas bordas da geometria oficial, como dois contornos.
+    assert m["disponivel"] and m["pista"]["origem"].startswith("geometria oficial")
+    esquerda, direita = m["pista"]["contornos"]
+    assert len(esquerda) == len(direita) > 100 and len(esquerda) <= minimapa.PONTOS_DA_BORDA
+    assert len(m["linhaDoS0"]) == 2
     ref = m["referencia"]
     assert ref["lapId"] == "ref#0013" and len(ref["pontos"]) <= minimapa.PONTOS_DA_REFERENCIA
     assert ref["tempoNaLinhaDoJogoS"] == pytest.approx(1.495 / 50.0, abs=1e-3)   # 50 m/s na referencia
@@ -535,3 +543,33 @@ def test_as_rotas_novas_pontos_novos_e_minimapa(tmp_path, monkeypatch):
     assert m["disponivel"] and m["linhaDoJogoM"] == 1.463 and m["referencia"]["lapId"] == "ref#0013"
     assert m["referencia"]["tempoNaLinhaDoJogoS"] == pytest.approx(1.463 / 50.0, abs=1e-3)
     assert m["versao"] == "volta_ia|ref#0013|" == radio.desde(0)["minimapaVersao"]
+
+
+def test_o_minimapa_usa_o_contorno_do_asfalto_tratado_do_cache(tmp_path):
+    """Fechamento do pedido 35: o contorno vem do asfalto tratado do cache (asphaltSurface.loops),
+    simplificado; os lacos pequenos ficam de fora; as camadas do cache estao em (x, -z)."""
+    import numpy as np
+
+    from core.radio import minimapa
+    from core.radio.janelas import CACHE_DA_PISTA
+
+    sys.path.insert(0, str(BACKEND / "tests"))
+    from test_lap_origin import circular_track
+
+    assert minimapa.contorno_do_asfalto(tmp_path) is None            # sem o cache
+    a = np.linspace(0, 2 * np.pi, 400, endpoint=False)
+    fora = np.column_stack([300 * np.cos(a), 300 * np.sin(a) + 50])  # (x, -z): um circulo de 300 m
+    miolo = np.column_stack([280 * np.cos(a), 280 * np.sin(a) + 50])
+    ilha = [[0, 0], [10, 0], [10, 10], [0, 10]]                      # 100 m2: fica de fora
+    cache = tmp_path / "data" / "cache" / "tracks" / CACHE_DA_PISTA
+    cache.parent.mkdir(parents=True)
+    cache.write_text(json.dumps({"asphaltSurface": {"loops": [{"points": fora.tolist()}, {"points": miolo.tolist()},
+                                                              {"points": ilha}]}}), encoding="utf-8")
+    contornos = minimapa.contorno_do_asfalto(tmp_path)
+    assert len(contornos) == 2                                        # a ilha de 100 m2 saiu
+    assert 30 < len(contornos[0]) < 400                               # simplificado (2 m de tolerancia)
+    p = np.array(contornos[0])
+    # (x, -z) do cache -> (x, z): o centro do circulo vai de y = +50 para z = -50
+    assert np.hypot(p[:, 0], p[:, 1] + 50).max() == pytest.approx(300, abs=0.5)
+    m = minimapa.montar(circular_track(), [], None, None, None, 1.495, contornos)
+    assert m["pista"] == {"origem": "asfalto tratado do cache", "contornos": contornos}

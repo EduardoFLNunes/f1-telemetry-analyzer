@@ -2,8 +2,14 @@
 
 Uma vez, quando o app abre ou a referencia muda (`versao`):
 
-* **a pista tratada:** as duas bordas do asfalto da geometria oficial (centro mais e
-  menos a largura, pela normal), simplificadas para `PONTOS_DA_BORDA` pontos cada;
+* **a pista tratada:** o contorno do asfalto do cache da pista (`asphaltSurface.loops`,
+  a mesma camada que o mapa do app e o mapa aproximado desenham), simplificado: os
+  lacos com pelo menos `AREA_MINIMA_M2` (o contorno de fora, o buraco do miolo, as areas
+  de escape e dos boxes) e cada laco pelo Douglas-Peucker com `TOLERANCIA_M` (363
+  pontos em 12 lacos em Interlagos). As camadas do cache estao em (x, -z); aqui viram
+  (x, z). Sem o cache, ficam as duas bordas da geometria oficial (centro mais e menos a
+  largura), e `pista.origem` diz isso;
+* **a linha do s = 0,** da geometria oficial, so como marca;
 * **a volta de referencia escolhida na Coleta:** a posicao (centro + normal x lateral,
   a mesma conta da tela Volta), o tempo desde o s = 0 e o pedal, em todos os pontos da
   grade do store (2 m). O pedal e o da tela Volta: 2 = freio (0,15 ou mais), 1 =
@@ -29,7 +35,9 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-PONTOS_DA_BORDA = 300
+PONTOS_DA_BORDA = 300           # so sem o cache: as bordas da geometria oficial
+AREA_MINIMA_M2 = 1000.0         # os lacos menores (ilhas de poucos metros) ficam de fora
+TOLERANCIA_M = 2.0              # meio pixel no minimapa (cerca de 0,25 px por metro)
 PONTOS_DA_REFERENCIA = 2200     # todos os pontos da grade do store (2.167 em Interlagos)
 FOLGA_DO_ROTULO_M = 9.0         # o nome da curva, de fora, como na tela Volta
 LINHA_DO_JOGO_REGISTRADA_M = 1.463   # pedido 33; vale a medida do store, se houver
@@ -82,18 +90,86 @@ def rotulos_das_curvas(track: Any, segmentos: List[Any]) -> List[Dict[str, Any]]
     return out
 
 
+def _douglas_peucker(p: np.ndarray, tol: float) -> np.ndarray:
+    if len(p) < 3:
+        return p
+    a, b = p[0], p[-1]
+    ab = b - a
+    n = float(np.hypot(*ab))
+    d = np.abs(ab[0] * (p[:, 1] - a[1]) - ab[1] * (p[:, 0] - a[0])) / n if n > 0 else np.hypot(*(p - a).T)
+    i = int(np.argmax(d))
+    if d[i] <= tol:
+        return np.vstack([a, b])
+    return np.vstack([_douglas_peucker(p[:i + 1], tol)[:-1], _douglas_peucker(p[i:], tol)])
+
+
+def _simplificar_laco(p: np.ndarray, tol: float) -> np.ndarray:
+    """Um laco fechado: partido no ponto mais longe do primeiro, cada metade pelo Douglas-Peucker."""
+    i = int(np.argmax(np.hypot(*(p - p[0]).T)))
+    return np.vstack([_douglas_peucker(p[:i + 1], tol)[:-1], _douglas_peucker(np.vstack([p[i:], p[:1]]), tol)[:-1]])
+
+
+def _area(p: np.ndarray) -> float:
+    return 0.5 * abs(float(np.dot(p[:, 0], np.roll(p[:, 1], -1)) - np.dot(p[:, 1], np.roll(p[:, 0], -1))))
+
+
+_CONTORNO: Dict[str, Any] = {}
+
+
+def contorno_do_asfalto(repositorio: Optional[Path]) -> Optional[List[List[List[float]]]]:
+    """O contorno do asfalto tratado do cache da pista, simplificado, em (x, z); None sem o cache.
+
+    Lido de novo so quando o arquivo muda (o backend do repositorio regrava o cache ao abrir)."""
+    from .janelas import CACHE_DA_PISTA
+
+    if repositorio is None:
+        return None
+    cache = Path(repositorio) / "data" / "cache" / "tracks" / CACHE_DA_PISTA
+    try:
+        chave = f"{cache}|{cache.stat().st_mtime_ns}"
+    except OSError:
+        return None
+    if _CONTORNO.get("chave") != chave:
+        try:
+            dados = json.loads(cache.read_text(encoding="utf-8"))
+            lacos = [np.asarray(l["points"], dtype=float) for l in dados["asphaltSurface"]["loops"]
+                     if len(l.get("points") or []) >= 3]
+        except (OSError, ValueError, KeyError, TypeError):
+            return None
+        contornos = []
+        for laco in lacos:
+            if _area(laco) < AREA_MINIMA_M2:
+                continue
+            s = _simplificar_laco(laco, TOLERANCIA_M)
+            # (x, -z) do mapa -> (x, z) do mundo
+            contornos.append([[round(float(px), 2), round(float(-py), 2)] for px, py in s])
+        _CONTORNO.update(chave=chave, contornos=contornos)
+    return _CONTORNO["contornos"]
+
+
 def montar(track: Any, segmentos: List[Any], referencia: Optional[Dict[str, Any]], tipo: Optional[str],
-           analise: Optional[Dict[str, Any]], linha_m: float) -> Dict[str, Any]:
+           analise: Optional[Dict[str, Any]], linha_m: float,
+           contornos: Optional[List[List[List[float]]]] = None) -> Dict[str, Any]:
     x, z = np.asarray(track.x, dtype=float), np.asarray(track.z, dtype=float)
     normal = np.asarray(track.normal, dtype=float)
     wl, wr = np.asarray(track.width_left, dtype=float), np.asarray(track.width_right, dtype=float)
-    k = _decimar(int(track.size), PONTOS_DA_BORDA)
-    esquerda = np.column_stack([x[k] + normal[k, 0] * wl[k], z[k] + normal[k, 1] * wl[k]])
-    direita = np.column_stack([x[k] - normal[k, 0] * wr[k], z[k] - normal[k, 1] * wr[k]])
+    if contornos:
+        pista = {"origem": "asfalto tratado do cache", "contornos": contornos}
+    else:
+        # Sem o cache: as duas bordas da geometria oficial, como dois contornos.
+        k = _decimar(int(track.size), PONTOS_DA_BORDA)
+        esquerda = np.column_stack([x[k] + normal[k, 0] * wl[k], z[k] + normal[k, 1] * wl[k]])
+        direita = np.column_stack([x[k] - normal[k, 0] * wr[k], z[k] - normal[k, 1] * wr[k]])
+        pista = {"origem": "geometria oficial (sem o cache da pista)",
+                 "contornos": [np.round(esquerda, 2).tolist(), np.round(direita, 2).tolist()]}
+    # A marca da linha do s = 0, de uma borda a outra da geometria oficial.
+    linha = [[round(float(x[0] + normal[0, 0] * wl[0]), 2), round(float(z[0] + normal[0, 1] * wl[0]), 2)],
+             [round(float(x[0] - normal[0, 0] * wr[0]), 2), round(float(z[0] - normal[0, 1] * wr[0]), 2)]]
     out: Dict[str, Any] = {
         "disponivel": True,
         "comprimentoM": round(float(track.length), 2),
-        "pista": {"esquerda": np.round(esquerda, 2).tolist(), "direita": np.round(direita, 2).tolist()},
+        "pista": pista,
+        "linhaDoS0": linha,
         "linhaDoJogoM": round(float(linha_m), 3),
         "referencia": None,
         "curvasDaAnalise": [],

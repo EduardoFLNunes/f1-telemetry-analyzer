@@ -2,9 +2,10 @@
 
 Dois arquivos na pasta do app (`radio_engenheiro/`), instalados pelo `instalar.ps1`:
 
-* **`pista.json`:** a pista simplificada do minimapa, para quando o backend estiver fora
-  do ar (o minimapa baixa a mesma pista de `GET /api/radio/minimapa`), o nome das 14
-  curvas e onde fica a imagem da pista detalhada no mundo;
+* **`pista.json`:** a pista do minimapa, para quando o backend estiver fora do ar (o
+  minimapa baixa a mesma pista de `GET /api/radio/minimapa`): o contorno do asfalto
+  tratado do cache, simplificado; a marca da linha do s = 0; o nome das 14 curvas; e
+  onde fica a imagem da pista detalhada no mundo;
 * **`pista_detalhada.png`:** a pista do mapa aproximado, desenhada uma vez com as camadas
   do cache que o mapa do app usa (`drawTrackSurface`, em
   `frontend/src/components/map/OverlayRenderer.tsx`): o asfalto, a pintura classificada
@@ -171,7 +172,8 @@ def main() -> None:
     if track is None:
         raise SystemExit("sem a geometria oficial em data/cache/tracks")
     pista = Pista.da_geometria(track)
-    dados = minimapa.montar(track, pista.segmentos, None, None, None, minimapa.linha_do_jogo_m(REPO))
+    dados = minimapa.montar(track, pista.segmentos, None, None, None, minimapa.linha_do_jogo_m(REPO),
+                            minimapa.contorno_do_asfalto(REPO))
     cache = json.loads((REPO / "data" / "cache" / "tracks" / CACHE_DA_PISTA).read_text(encoding="utf-8"))
     imagem, transformacao = gerar_imagem(cache)
     PASTA_DO_APP.mkdir(exist_ok=True)
@@ -179,11 +181,12 @@ def main() -> None:
     imagem.save(arquivo_da_imagem, optimize=True)
     saida = PASTA_DO_APP / "pista.json"
     saida.write_text(json.dumps({"comprimentoM": dados["comprimentoM"], "pista": dados["pista"],
-                                 "curvas": dados["curvas"], "imagem": transformacao,
+                                 "linhaDoS0": dados["linhaDoS0"], "curvas": dados["curvas"], "imagem": transformacao,
                                  "geometryId": getattr(track, "geometry_id", None)},
                                 separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
-    print(f"{saida}: {saida.stat().st_size} bytes, {len(dados['pista']['esquerda'])} pontos por borda, "
-          f"{len(dados['curvas'])} curvas")
+    contornos = dados["pista"]["contornos"]
+    print(f"{saida}: {saida.stat().st_size} bytes; pista: {dados['pista']['origem']}, {len(contornos)} contornos, "
+          f"{sum(len(c) for c in contornos)} pontos; {len(dados['curvas'])} curvas")
     print(f"{arquivo_da_imagem}: {transformacao['largura']} x {transformacao['altura']} px, "
           f"{arquivo_da_imagem.stat().st_size} bytes")
 
