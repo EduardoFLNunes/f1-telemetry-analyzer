@@ -49,8 +49,10 @@ def test_frase_de_diferenca_com_virgula_microssetor_a_partir_de_1_e_lado_por_ext
     assert m["texto"] == "+0,74 s para a volta da IA no microssetor 3"
     assert m["detalhe"] == "1,99 s contra 1,25 s · a IA freia 38 m depois de você · mínima da IA 157 km/h, a sua 94 km/h"
     # Pedido 35: a causa principal na voz (a freada passou do corte de 15 m: voce freou 38 m antes).
-    assert m["fala"] == "Curva 1, esquerda: 0,74 atrás da IA. Freia 38 metros antes."
-    assert m["falas"][-2:] == ["Curva 1, esquerda: 0,74 atrás da IA.", "Curva 1: 0,74 atrás."]
+    # Pedido 36: com a unidade (abaixo de 1 s, em decimos).
+    assert m["fala"] == "Curva 1, esquerda: 7 décimos atrás da IA. Freia 38 metros antes da IA."
+    assert m["falas"][-3:] == ["Curva 1, esquerda: 7 décimos atrás da IA.", "Curva 1: 7 décimos atrás da IA.",
+                               "Curva 1: 7 décimos atrás."]
     assert m["falaMaxS"] == 6.6                     # cerca de 6 s, com 10% de folga
     assert m["s"] == pytest.approx(3 * L / 60, abs=0.1)  # o fim do microssetor: ali o coach fecha a medida
     assert "." not in m["texto"].split(" s ")[0]  # numero com virgula
@@ -59,7 +61,7 @@ def test_frase_de_diferenca_com_virgula_microssetor_a_partir_de_1_e_lado_por_ext
 def test_frase_contra_a_sua_melhor_e_na_curva_da_direita():
     m = mensagem_de_diferenca(_evento(indice=29, perda=0.215, tipo="minha_melhor"), CURVAS, L)
     assert m["titulo"] == "C02, direita" and m["microssetor"] == 30
-    assert m["fala"] == "Curva 2, direita: 0,21 atrás da sua melhor. Freia 38 metros antes."
+    assert m["fala"] == "Curva 2, direita: 2 décimos atrás da sua melhor. Freia 38 metros antes da sua melhor."
     assert "na sua melhor volta você freou 38 m depois" in m["detalhe"]
 
 
@@ -71,7 +73,7 @@ def test_resumo_na_linha():
     m = mensagem_de_resumo(7, 88.132, 84.829, "volta_ia")
     assert m["titulo"] == "Volta 7: 1:28,132"
     assert m["texto"] == "+3,303 s para a volta da IA (1:24,829)"
-    assert m["fala"] == "Volta 7, 1 minuto e 28,1. 3,30 atrás da IA."
+    assert m["fala"] == "Volta 7: 1 minuto e 28,1 segundos, 3,3 segundos atrás da IA."
 
 
 # ----------------------------------------------------------------- janela ---
@@ -284,21 +286,23 @@ from core.radio.texto import causa_principal, mensagem_de_analise  # noqa: E402
 
 def test_a_causa_principal_freada_antes_da_minima_e_os_cortes():
     ev = {"brakeDeltaM": 15.0, "referenceMinSpeedKmh": 94.0, "yourMinSpeedKmh": 64.0}
-    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 15 metros antes."   # no corte: conta
+    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 15 metros antes da IA."   # no corte: conta
+    assert causa_principal(ev, "volta_ia")["falaCurta"] == "Freia 15 metros antes."
     ev["brakeDeltaM"] = -14.9                                                     # abaixo: vai para a minima
-    assert causa_principal(ev, "volta_ia")["fala"] == "Mínima 64 contra 94."
+    assert causa_principal(ev, "volta_ia")["fala"] == "Mínima de 64 contra 94 quilômetros por hora."
     ev["yourMinSpeedKmh"] = 94.0 - CORTE_MINIMA_KMH + 0.1                         # abaixo dos dois cortes
     assert causa_principal(ev, "volta_ia") is None
     ev["brakeDeltaM"] = -30.0
-    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 30 metros depois."
+    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 30 metros depois da IA."
     assert (CORTE_FREADA_M, CORTE_MINIMA_KMH) == (15.0, 8.0)
 
 
 def test_resumo_com_a_curva_de_maior_perda():
     m = mensagem_de_resumo(7, 90.363, 84.829, "volta_ia", {"curva": "C11", "lado": "esquerda", "perdaS": 1.14})
     assert m["detalhe"] == "mais perdeu na C11, esquerda: +1,14 s"
-    assert m["fala"] == "Volta 7, 1 minuto e 30,4. 5,53 atrás da IA. Mais perdeu na curva 11: 1,1."
-    assert m["falas"][-1] == "Volta 7, 1 e 30,4. 5,5 atrás."
+    assert m["fala"] == ("Volta 7: 1 minuto e 30,4 segundos, 5,5 segundos atrás da IA. "
+                         "Mais perdeu na curva 11: 1,1 segundo.")
+    assert m["falas"][-1] == "Volta 7: 5,5 segundos atrás."
     assert m["falaMaxS"] == 7.7 and m["curva"] == "C11"
 
 
@@ -323,16 +327,18 @@ def test_a_analise_so_curvas_perdidas_em_2_de_3_e_no_maximo_2():
     assert a["voltas"] == [6, 7, 8]
     m = mensagem_de_analise(a, "volta_ia", "ref#0013")
     assert m["titulo"] == "Análise das voltas 6 a 8"
-    assert m["linhas"][0].startswith("C12, esquerda: perde 0,90 s por volta (0,85 · 0,90 · 1,02)")
+    assert m["linhas"][0].startswith("C12, esquerda: perde 0,90 s por volta (0,85 s · 0,90 s · 1,02 s)")
     assert "mínima 80 contra 110 km/h" in m["linhas"][0] and "freada 50 m antes" in m["linhas"][0]
     assert "traçado 0,4 m mais à esquerda" in m["linhas"][0]        # o lado por extenso (ADR 0003)
-    # A fala no estilo da frase do coach: cada diferenca e uma frase ("Minima 80 contra 110.").
-    assert m["fala"].startswith("Análise das voltas 6 a 8. Curva 12: 0,9 por volta. Mínima 80 contra 110. "
-                                "Freia 50 metros antes.")
+    # A fala no estilo da frase do coach, cada diferenca uma frase, com as unidades (pedido 36).
+    assert m["fala"].startswith("Análise das voltas 6 a 8. Curva 12: perde 9 décimos por volta. "
+                                "Mínima de 80 contra 110 quilômetros por hora. Freia 50 metros antes da IA.")
     from core.radio.texto import _diferenca_falada
     assert _diferenca_falada("tracado", -7.9, {}) == "Passa 8 metros mais à direita."
     assert _diferenca_falada("tracado", 1.5, {}) == "Passa 1,5 metro mais à esquerda."
     assert _diferenca_falada("acelerador", 14.0, {}) == "Acelera 14 metros depois."
+    assert _diferenca_falada("tracado", -7.9, {}, "da IA") == "Passa 8 metros mais à direita que a IA."
+    assert _diferenca_falada("tracado", 2.4, {}, "da sua melhor") == "Passa 2 metros mais à esquerda que a sua melhor."
     assert m["falaMaxS"] == 8.8 and m["referencia"] == {"tipo": "volta_ia", "volta": "ref#0013"}
     # Tres curvas perdidas em 2 das 3: so as 2 de maior perda mediana.
     voltas[1]["medidas"][2]["perdaS"] = 0.4
@@ -394,9 +400,11 @@ def test_a_voz_fica_com_a_primeira_fala_que_cabe(tmp_path):
     radio.on_coaching_event(_evento(indice=2))
     _esperar_o_audio(radio)
     m = radio._pendentes[0]
-    assert 0.12 * len(m["falas"][0]) > 6.0               # a completa, com a causa, passa de 6 s
-    assert m["fala"] == m["falas"][1] == "Curva 1: 0,74 atrás. Freia 38 metros antes."
-    assert m["duracaoS"] <= 6.0 and ditas == m["falas"][:2]
+    assert 0.12 * len(m["falas"][0]) > 6.6               # a completa, com a causa, passa do limite
+    # O radio gera da mais completa a mais curta e fica com a primeira que cabe: ainda com a causa.
+    cabe = next(i for i, f in enumerate(m["falas"]) if 0.12 * len(f) <= 6.6)
+    assert m["fala"] == m["falas"][cabe] and "Freia 38 metros antes" in m["fala"]
+    assert m["duracaoS"] <= 6.6 and ditas == m["falas"][:cabe + 1]
 
 
 def test_volta_ao_vivo_manda_so_os_pontos_novos_e_guarda_a_volta_fechada():
@@ -623,3 +631,59 @@ def test_o_log_de_acesso_deixa_de_fora_so_as_rotas_frequentes_bem_sucedidas():
     silenciar_rotas_frequentes()
     silenciar_rotas_frequentes()
     assert sum(isinstance(f, SemPedidosFrequentes) for f in logging.getLogger(LOGGER_DE_ACESSO).filters) == 1
+
+
+def _numeros_sem_unidade(fala: str):
+    """Os numeros de medida da fala que nao tem a unidade logo depois (pedido 36, Parte C.5).
+
+    Ficam de fora os numeros que nao sao medida: a curva, a volta, o microssetor e a lista
+    das voltas da analise. Dois numeros juntos podem dividir a unidade, no fim:
+    "minima de 102 contra 128 quilometros por hora"."""
+    import re
+
+    resto = re.sub(r"\b(Curva|curva|Volta|Microssetor) \d+", "", fala)
+    resto = re.sub(r"(Análise das voltas|Voltas) [\d, ea]+?\.", "", resto)
+    unidade = r"(décimos?|segundos?|metros?|minutos?|quilômetros por hora)\b"
+    faltando = []
+    for m in re.finditer(r"\d+(,\d+)?", resto):
+        depois = resto[m.end():]
+        if re.match(r"\s+" + unidade, depois) or re.match(r"\s+contra\s+\d+(,\d+)?\s+" + unidade, depois):
+            continue
+        faltando.append((m.group(0), fala))
+    return faltando
+
+
+def test_todo_numero_falado_tem_a_unidade_em_todos_os_tipos_de_mensagem():
+    """Pedido 36, Parte C.5: em todas as variantes de fala de todos os tipos de mensagem."""
+    from core.radio.texto import mensagem_de_resumo, mensagem_de_teste
+
+    mensagens = []
+    for perda, freada, minima_sua, tipo in ((0.04, 38.0, 93.5, "volta_ia"), (0.742, -20.0, 150.0, "volta_ia"),
+                                           (1.253, 0.0, 64.0, "volta_ia"), (2.5, 3.0, 154.0, "minha_melhor"),
+                                           (0.97, 60.0, 157.0, "minha_melhor")):
+        ev = _evento(indice=38, perda=perda, tipo=tipo)
+        ev["evidence"].update(brakeDeltaM=freada, yourMinSpeedKmh=minima_sua)
+        mensagens.append(mensagem_de_diferenca(ev, CURVAS, L))
+    for tempo, ref, pior in ((88.132, 84.829, None), (90.363, 84.829, {"curva": "C11", "lado": "esquerda", "perdaS": 1.14}),
+                             (85.3, 84.829, {"curva": "C01", "lado": "esquerda", "perdaS": 0.7}),
+                             (136.188, 84.829, {"curva": "C12", "lado": "esquerda", "perdaS": 2.6}),
+                             (59.95, None, None), (84.1, 84.829, None)):
+        mensagens.append(mensagem_de_resumo(8, tempo, ref, "volta_ia", pior))
+    voltas = [{"volta": n, "medidas": _medidas(p, freada=f, minima=mi, acelerador=a, tracado=tr)}
+              for n, p, f, mi, a, tr in ((6, [0.85, 0.30, 0.9], -50.0, -30.0, 12.0, 7.9),
+                                         (7, [0.90, -0.1, 1.1], -46.0, -24.0, 14.0, -1.5),
+                                         (8, [1.02, 0.25, 0.95], -40.0, -26.0, -9.0, 2.0))]
+    a = analisar(voltas)
+    for c in a["curvas"]:
+        c["ditas"] = ["freada", "minima", "acelerador", "tracado"]     # todas as medidas faladas
+    mensagens.append(mensagem_de_analise(a, "volta_ia"))
+    mensagens.append(mensagem_de_analise(a, "minha_melhor"))
+    mensagens.append(mensagem_de_teste())
+    falas = [f for m in mensagens for f in (m.get("falas") or [m["fala"]])]
+    assert len(falas) > 40
+    faltando = [x for f in falas for x in _numeros_sem_unidade(f)]
+    assert faltando == []
+    # O teste do teste: um numero solto e achado.
+    assert _numeros_sem_unidade("Curva 4: 1,0 por volta. Mínima 102 contra 128.") == [
+        ("1,0", "Curva 4: 1,0 por volta. Mínima 102 contra 128."), ("102", "Curva 4: 1,0 por volta. Mínima 102 contra 128."),
+        ("128", "Curva 4: 1,0 por volta. Mínima 102 contra 128.")]
