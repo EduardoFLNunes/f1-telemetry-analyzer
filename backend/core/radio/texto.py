@@ -46,8 +46,9 @@ MICROSSETORES = 60
 LADO = {"esq": "esquerda", "dir": "direita"}
 REFERENCIA_LONGA = {"volta_ia": "volta da IA", "minha_melhor": "sua melhor volta"}
 # Pedido 35: o tempo maximo de cada fala, com a vinheta (o radio fica com a primeira que cabe):
-# "cerca de" 6, 7 e 8 s, com 10% de folga.
-FALA_MAXIMA_S = {"coach": 6.6, "resumo": 7.7, "analise": 8.8, "teste": 8.8}
+# "cerca de" 6, 7 e 8 s, com 10% de folga. Pedido 36: a frase do coach sobe para 7,3 s, para a
+# causa com a unidade caber ("Mínima de 64 contra 94 quilômetros por hora." passava de 6,6 s).
+FALA_MAXIMA_S = {"coach": 7.3, "resumo": 7.7, "analise": 8.8, "teste": 8.8}
 FALA_ALVO = {"volta_ia": "da IA", "minha_melhor": "da sua melhor"}
 
 
