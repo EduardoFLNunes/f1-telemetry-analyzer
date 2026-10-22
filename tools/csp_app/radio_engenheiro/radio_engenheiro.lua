@@ -244,6 +244,7 @@ local function lerAPistaDoApp()
   local okJ, dados = pcall(JSON.parse, texto)
   if okJ and type(dados) == 'table' and type(dados.pista) == 'table' and type(dados.pista.contornos) == 'table' then
     mini.pista = dados.pista
+    mini.comprimento = tonumber(dados.comprimentoM) or mini.comprimento
     mini.linhaDoS0 = type(dados.linhaDoS0) == 'table' and dados.linhaDoS0 or nil
     mini.origem = 'arquivo do app'
     mini.desenhado = nil
@@ -279,6 +280,7 @@ local function baixarOMinimapa(versao)
       return
     end
     mini.pista = dados.pista
+    mini.comprimento = tonumber(dados.comprimentoM) or mini.comprimento
     mini.linhaDoS0 = type(dados.linhaDoS0) == 'table' and dados.linhaDoS0 or mini.linhaDoS0
     mini.origem = 'backend'
     mini.referencia = type(dados.referencia) == 'table' and type(dados.referencia.pontos) == 'table'
@@ -627,12 +629,55 @@ end
 
 -- ── o minimapa: a pista desenhada uma vez ───────────────────────────────
 
+-- Pedido 36, Parte D.1: a parte da janela que está na tela. Uma janela posta na borda
+-- da tela fica com um pedaço para fora, e o desenho que encaixava na janela inteira saía
+-- cortado. As medidas usam a posição da janela e o tamanho da tela da interface do CSP
+-- (as mesmas unidades, já com a escala da interface).
+local function areaVisivel(W, H)
+  local x0, y0, x1, y1 = 0, 0, W, H
+  local okP, pos = pcall(ui.windowPos)
+  local okU, estadoUi = pcall(ac.getUI)
+  if okP and pos and okU and estadoUi and estadoUi.windowSize then
+    local tela = estadoUi.windowSize
+    x0, y0 = math.max(0, -pos.x), math.max(0, -pos.y)
+    x1, y1 = math.min(W, tela.x - pos.x), math.min(H, tela.y - pos.y)
+    if x1 - x0 < 80 or y1 - y0 < 80 then x0, y0, x1, y1 = 0, 0, W, H end
+  end
+  return math.floor(x0), math.floor(y0), math.floor(x1), math.floor(y1)
+end
+
+-- Uma vez por janela, as medidas no log do CSP, para conferir no jogo o que corta.
+local medidasRegistradas = {}
+local function registrarAsMedidas(nome, W, H)
+  if medidasRegistradas[nome] then return end
+  medidasRegistradas[nome] = true
+  local okP, pos = pcall(ui.windowPos)
+  local okU, estadoUi = pcall(ac.getUI)
+  local okC, cursor = pcall(ui.getCursor)
+  local function par(v) return v and (decimal(v.x, 0) .. ' x ' .. decimal(v.y, 0)) or '?' end
+  local x0, y0, x1, y1 = areaVisivel(W, H)
+  log(nome .. ': janela ' .. decimal(W, 0) .. ' x ' .. decimal(H, 0) .. ' em ' .. par(okP and pos)
+    .. '; tela ' .. par(okU and estadoUi and estadoUi.windowSize) .. ', escala ' .. decimal(okU and estadoUi and estadoUi.uiScale or 1, 2)
+    .. '; cursor ' .. par(okC and cursor) .. '; visível de ' .. x0 .. ',' .. y0 .. ' a ' .. x1 .. ',' .. y1)
+end
+
+-- Desenha `corpo` com o recorte na janela inteira: o recorte padrão do ImGui tira uma faixa
+-- das bordas (metade do espaçamento interno), como o app Mumble do próprio CSP evita.
+local function naJanelaInteira(W, H, corpo, ...)
+  local recorte = ui.pushClipRect ~= nil and ui.popClipRect ~= nil
+  if recorte then ui.pushClipRect(vec2(0, 0), vec2(W, H), false) end
+  local ok, erro = pcall(corpo, ...)
+  if recorte then ui.popClipRect() end
+  if not ok then error(erro, 0) end
+end
+
 -- A mesma orientação do mapa do app (frontend/src/volta/projecao.ts): base(x, z) = (z, −x).
 local function naTela(x, z)
   return vec2(mini.ox + mini.k * z, mini.oy - mini.k * x)
 end
 
 local function ajustarAEscala(W, H)
+  local x0, y0, x1, y1 = areaVisivel(W, H)
   local umin, umax, vmin, vmax = math.huge, -math.huge, math.huge, -math.huge
   for _, contorno in ipairs(mini.pista.contornos) do
     for _, q in ipairs(contorno) do
@@ -641,12 +686,13 @@ local function ajustarAEscala(W, H)
       vmin, vmax = math.min(vmin, v), math.max(vmax, v)
     end
   end
-  local largura = W - 2 * MARGEM_DO_MINIMAPA
-  local altura = H - 2 * MARGEM_DO_MINIMAPA - TOPO_DO_MINIMAPA
+  local largura = (x1 - x0) - 2 * MARGEM_DO_MINIMAPA
+  local altura = (y1 - y0) - 2 * MARGEM_DO_MINIMAPA - TOPO_DO_MINIMAPA
   local k = math.min(largura / math.max(umax - umin, 1), altura / math.max(vmax - vmin, 1))
   mini.k = k
-  mini.ox = MARGEM_DO_MINIMAPA + (largura - k * (umax - umin)) / 2 - k * umin
-  mini.oy = MARGEM_DO_MINIMAPA + TOPO_DO_MINIMAPA + (altura - k * (vmax - vmin)) / 2 - k * vmin
+  mini.ox = x0 + MARGEM_DO_MINIMAPA + (largura - k * (umax - umin)) / 2 - k * umin
+  mini.oy = y0 + MARGEM_DO_MINIMAPA + TOPO_DO_MINIMAPA + (altura - k * (vmax - vmin)) / 2 - k * vmin
+  mini.visivel = { x0, y0, x1, y1 }
 end
 
 local function desenharAPista(W, H)
@@ -680,12 +726,12 @@ local function desenharAPista(W, H)
       local q = naTela(tonumber(c.x) or 0, tonumber(c.z) or 0)
       ui.drawCircle(q, 7, CORES.perda, 16, 2)
       -- O nome do lado de dentro quando a marca está perto da borda direita.
-      local nx = q.x + 9 + 26 > W and q.x - 9 - 26 or q.x + 9
+      local nx = q.x + 9 + 26 > mini.visivel[3] and q.x - 9 - 26 or q.x + 9
       ui.dwriteDrawText(tostring(c.curva), 11, vec2(nx, q.y - 7), CORES.perda)
     end
   end)
   mini.desenhado = tostring(mini.versao) .. '|' .. tostring(mini.origem)
-  mini.tamanho = W .. 'x' .. H
+  mini.tamanho = W .. 'x' .. H .. '|' .. table.concat(mini.visivel, ',')
 end
 
 -- ── o minimapa: o fantasma e a diferença ────────────────────────────────
@@ -796,26 +842,51 @@ end
 
 -- O texto de cima das duas janelas: a diferença (10 vezes por segundo, para ler sem
 -- piscar) ou o aviso, que quebra a linha e cabe na largura da janela.
-local function desenharODeCima(t, W, nota)
+local function desenharODeCima(t, W, nota, x0, y0)
+  x0, y0 = x0 or 0, y0 or 0
   if t - mini.mostradaEm >= 0.1 then
     mini.mostrada = mini.diferenca
     mini.mostradaEm = t
   end
   if nota then
-    caixa(nota, 11, vec2(MARGEM_DO_MINIMAPA, 4), vec2(W - 8, TOPO_DO_MINIMAPA + 2), CORES.fraco)
+    caixa(nota, 11, vec2(x0 + MARGEM_DO_MINIMAPA, y0 + 4), vec2(W - 8, y0 + TOPO_DO_MINIMAPA + 2), CORES.fraco)
   elseif mini.mostrada then
     local d = mini.mostrada
     local sinal = d >= 0 and '+' or '−'
-    ui.dwriteDrawText(sinal .. decimal(math.abs(d), 2) .. ' s', 17, vec2(MARGEM_DO_MINIMAPA, 4),
+    ui.dwriteDrawText(sinal .. decimal(math.abs(d), 2) .. ' s', 17, vec2(x0 + MARGEM_DO_MINIMAPA, y0 + 4),
       d > 0 and CORES.perda or CORES.ganho)
     local ref = mini.referencia
     local contra = ref and ref.tipo == 'minha_melhor' and 'para a sua melhor' or 'para a volta da IA'
-    ui.dwriteDrawText(contra, 11, vec2(MARGEM_DO_MINIMAPA + 82, 10), CORES.apoio)
+    ui.dwriteDrawText(contra, 11, vec2(x0 + MARGEM_DO_MINIMAPA + 82, y0 + 10), CORES.apoio)
   end
 end
 
+-- Pedido 36, Parte D.2: a freada da IA na próxima curva, pela posição do carro na volta de
+-- referência (o índice do ponto mais perto e o passo da grade).
+local function proximaFreada(carro)
+  local ref = mini.referencia
+  if not ref or type(ref.freadas) ~= 'table' or #ref.freadas == 0 then return nil end
+  tempoDaReferenciaPerto(ref.pontos, carro.position.x, carro.position.z)
+  local L = tonumber(mini.comprimento) or 0
+  if not mini.iCarro or L <= 0 then return nil end
+  local s = (mini.iCarro - 1) * L / #ref.pontos
+  local melhor, menor = nil, math.huge
+  for _, f in ipairs(ref.freadas) do
+    local d = ((tonumber(f.s) or 0) - s) % L
+    if d < menor then melhor, menor = f, d end
+  end
+  return melhor
+end
+
+local desenharMinimapa
+
 -- Chamada a cada quadro pela janela do minimapa (manifest.ini, FUNCTION_MAIN).
 function minimapa(dt)
+  local tamanho = ui.windowSize()
+  naJanelaInteira(tamanho.x, tamanho.y, desenharMinimapa, dt)
+end
+
+desenharMinimapa = function(dt)
   local t = relogio()
   mini.ultimoQuadro = t
   local tamanho = ui.windowSize()
@@ -829,7 +900,8 @@ function minimapa(dt)
     return
   end
   local W, H = math.floor(tamanho.x), math.floor(tamanho.y)
-  local agoraTamanho = W .. 'x' .. H
+  registrarAsMedidas('minimapa', W, H)
+  local agoraTamanho = W .. 'x' .. H .. '|' .. table.concat({ areaVisivel(W, H) }, ',')
   if mini.tamanho ~= agoraTamanho then
     mini.mudouEm = mini.mudouEm or t
   else
@@ -847,14 +919,26 @@ function minimapa(dt)
 
   local ok, carro = pcall(ac.getCar, 0)
   if not ok or not carro then return end
+  -- A freada da IA só na próxima curva: uma marca curta atravessando a pista, na cor do fantasma.
+  local f = proximaFreada(carro)
+  if f and f.pontos and f.pontos[1] and f.pontos[2] then
+    local a, b = naTela(f.pontos[1][1], f.pontos[1][2]), naTela(f.pontos[2][1], f.pontos[2][2])
+    local mx, my, dx, dy = (a.x + b.x) / 2, (a.y + b.y) / 2, b.x - a.x, b.y - a.y
+    local n = math.sqrt(dx * dx + dy * dy)
+    if n > 0.01 then
+      dx, dy = dx / n * 7, dy / n * 7
+      ui.drawLine(vec2(mx - dx, my - dy), vec2(mx + dx, my + dy), CORES.fantasma, 3)
+    end
+  end
   local fx, fz = oFantasma(carro)
   if fx then
     desenharMarca(naTela(fx, fz), 5, CORES.fantasmaMiolo, CORES.fantasma, 2)
   end
   desenharMarca(naTela(carro.position.x, carro.position.z), 5.5, CORES.voce, CORES.vermelho, 2.5)
-  desenharODeCima(t, W, notaDoFantasma())
+  local v = mini.visivel or { 0, 0, W, H }
+  desenharODeCima(t, v[3], notaDoFantasma(), v[1], v[2])
   if estado.fora and mini.referencia then
-    ui.dwriteDrawText('sem backend', 11, vec2(W - 74, H - 18), CORES.fraco)
+    ui.dwriteDrawText('sem backend', 11, vec2(v[3] - 74, v[4] - 18), CORES.fraco)
   end
 end
 
@@ -925,8 +1009,15 @@ local function rotuloCentrado(texto, tamanhoDaFonte, sx, sy, cor)
   ui.dwriteDrawText(texto, tamanhoDaFonte, vec2(sx - largura / 2, sy - tamanhoDaFonte / 2), cor)
 end
 
+local desenharAproximado
+
 -- Chamada a cada quadro pela janela do mapa aproximado (manifest.ini, FUNCTION_MAIN).
 function aproximado(dt)
+  local tamanho = ui.windowSize()
+  naJanelaInteira(tamanho.x, tamanho.y, desenharAproximado, dt)
+end
+
+desenharAproximado = function(dt)
   local t = relogio()
   perto.ultimoQuadro = t
   local tamanho = ui.windowSize()
@@ -938,6 +1029,8 @@ function aproximado(dt)
   local ok, carro = pcall(ac.getCar, 0)
   if not ok or not carro then return end
   local W, H = tamanho.x, tamanho.y
+  registrarAsMedidas('mapa aproximado', W, H)
+  local vx0, vy0, vx1, vy1 = areaVisivel(W, H)
 
   -- O zoom pela roda do mouse, com o ponteiro sobre a janela.
   if ui.windowHovered() then
@@ -969,8 +1062,8 @@ function aproximado(dt)
     perto.angulo = perto.angulo + giro * math.min(1, (tonumber(dt) or 0.016) / GIRO_S)
   end
   local cs, sn = math.cos(perto.angulo), math.sin(perto.angulo)
-  local k = math.min(W, H) / perto.zoom
-  local cx, cy = W * 0.5, H * CENTRO_VERTICAL
+  local k = math.min(vx1 - vx0, vy1 - vy0) / perto.zoom
+  local cx, cy = (vx0 + vx1) * 0.5, vy0 + (vy1 - vy0) * CENTRO_VERTICAL
   local bu0, bv0 = z, -x
   local function tela(px, pz)
     local eu, ev = pz - bu0, -px - bv0
@@ -1013,6 +1106,27 @@ function aproximado(dt)
   end
   tracar(rastro.pontos, #rastro.pontos, 3, 1.0, 5, tela, W, H)
 
+  -- Pedido 36, Parte D.2: a freada da IA em todas as curvas da janela, uma linha atravessando o
+  -- asfalto (um pouco além das bordas) com o rótulo. O seu traçado mostra onde você freou: o
+  -- vermelho começa ali.
+  if ref and type(ref.freadas) == 'table' then
+    local rotuloDaFreada = ref.tipo == 'minha_melhor' and 'freada da sua melhor' or 'freada da IA'
+    for _, f in ipairs(ref.freadas) do
+      if f.pontos and f.pontos[1] and f.pontos[2] then
+        local ax, ay = tela(f.pontos[1][1], f.pontos[1][2])
+        local bx, by = tela(f.pontos[2][1], f.pontos[2][2])
+        local mx, my = (ax + bx) / 2, (ay + by) / 2
+        if mx > -40 and mx < W + 40 and my > -40 and my < H + 40 then
+          local ex, ey = (bx - ax) * 0.15, (by - ay) * 0.15
+          ui.drawLine(vec2(ax - ex, ay - ey), vec2(bx + ex, by + ey), CORES.fantasma, 2.5)
+          local lx, ly = bx + ex, by + ey
+          if ax - ex > lx then lx, ly = ax - ex, ay - ey end
+          ui.dwriteDrawText(rotuloDaFreada, 11, vec2(lx + 4, ly - 7), CORES.fantasma)
+        end
+      end
+    end
+  end
+
   -- O nome das curvas que estão na janela.
   for _, c in ipairs(mini.rotulos) do
     local sx, sy = tela(tonumber(c.x) or 0, tonumber(c.z) or 0)
@@ -1040,10 +1154,10 @@ function aproximado(dt)
   rotuloCentrado('Você · V' .. tostring((tonumber(carro.lapCount) or 0) + 1), 12, cx, cy + 18, CORES.texto)
 
   -- O texto de cima numa faixa escura: a pista passa por baixo dele.
-  ui.drawRectFilled(vec2(0, 0), vec2(W, TOPO_DO_MINIMAPA + 2), CORES.faixaDoTexto, 6)
-  desenharODeCima(t, W, notaDoFantasma())
+  ui.drawRectFilled(vec2(vx0, vy0), vec2(vx1, vy0 + TOPO_DO_MINIMAPA + 2), CORES.faixaDoTexto, 6)
+  desenharODeCima(t, vx1, notaDoFantasma(), vx0, vy0)
   if estado.fora and ref then
-    ui.dwriteDrawText('sem backend', 11, vec2(W - 74, H - 18), CORES.fraco)
+    ui.dwriteDrawText('sem backend', 11, vec2(vx1 - 74, vy1 - 18), CORES.fraco)
   end
 end
 

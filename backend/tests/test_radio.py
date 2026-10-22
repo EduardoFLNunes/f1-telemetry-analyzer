@@ -687,3 +687,41 @@ def test_todo_numero_falado_tem_a_unidade_em_todos_os_tipos_de_mensagem():
     assert _numeros_sem_unidade("Curva 4: 1,0 por volta. Mínima 102 contra 128.") == [
         ("1,0", "Curva 4: 1,0 por volta. Mínima 102 contra 128."), ("102", "Curva 4: 1,0 por volta. Mínima 102 contra 128."),
         ("128", "Curva 4: 1,0 por volta. Mínima 102 contra 128.")]
+
+
+def test_a_freada_da_ia_por_curva_pela_regra_do_relatorio_de_evolucao():
+    """Pedido 36, Parte D.2: o primeiro ponto, do apice anterior ao apice, em que o freio passa de 0,15
+    (`ml.comparison.evolution.braking_point`); a curva sem freada fica de fora; a linha atravessa a pista."""
+    import numpy as np
+
+    from core.radio import minimapa
+    from ml.comparison.evolution import braking_point
+
+    sys.path.insert(0, str(BACKEND / "tests"))
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    s = np.asarray(track.s)
+
+    class _Curva:
+        def __init__(self, label, apice):
+            self.label, self.apex_s = label, float(apice)
+
+    class _Trecho:
+        def __init__(self, label, apice):
+            self.corner = _Curva(label, apice)
+
+    trechos = [_Trecho("C01-esq", s[100]), _Trecho("C02-dir", s[300]), _Trecho("C03-esq", s[500])]
+    freio = np.zeros(track.size)
+    freio[80:100] = 0.6          # a freada da C01 comeca no ponto 80
+    freio[270:300] = 0.14        # na C02, o freio nao passa de 0,15: sem freada
+    freio[460:500] = 0.9         # a da C03 comeca no 460
+    freadas = minimapa.freadas_da_referencia(track, trechos, freio.tolist())
+    assert [f["curva"] for f in freadas] == ["C01", "C03"]
+    assert freadas[0]["s"] == pytest.approx(braking_point(freio, track, s[500], s[100]), abs=0.05)
+    assert freadas[1]["s"] == pytest.approx(float(s[460]), abs=0.05)
+    (ax, az), (bx, bz) = freadas[0]["pontos"]
+    i = 80
+    largura = float(np.asarray(track.width_left)[i] + np.asarray(track.width_right)[i])
+    assert np.hypot(ax - bx, az - bz) == pytest.approx(largura, abs=0.05)   # de uma borda a outra
+    assert minimapa.freadas_da_referencia(track, trechos, [0.0] * 10) == []  # sem a grade inteira
