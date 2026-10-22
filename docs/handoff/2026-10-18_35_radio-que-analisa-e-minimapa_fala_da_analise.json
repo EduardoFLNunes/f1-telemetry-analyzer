@@ -1,0 +1,148 @@
+[
+ {
+  "fonte": "radio_v2_final_18-10.json",
+  "voltas": [
+   3,
+   7,
+   8
+  ],
+  "falaAntiga": "Voltas 3, 7 e 8. Curva 4: 1,0 por volta: passa a 102 contra 128.",
+  "duracaoAntigaS": 8.06,
+  "falaNova": "Voltas 3, 7 e 8. Curva 4: 1,0 por volta. Mínima 102 contra 128.",
+  "duracaoNovaS": 8.56,
+  "tentadas": [
+   {
+    "fala": "Análise das voltas 3, 7 e 8. Curva 4: 1,0 por volta. Mínima 102 contra 128. Freia 40 metros antes. Curva 1: 1,0 por volta. Freia 52 metros antes.",
+    "duracaoS": 16.78
+   },
+   {
+    "fala": "Voltas 3, 7 e 8. Curva 4: 1,0 por volta. Mínima 102 contra 128. Curva 1: 1,0 por volta. Freia 52 metros antes.",
+    "duracaoS": 13.97
+   },
+   {
+    "fala": "Análise das voltas 3, 7 e 8. Curva 4: 1,0 por volta. Mínima 102 contra 128. Freia 40 metros antes.",
+    "duracaoS": 11.38
+   },
+   {
+    "fala": "Voltas 3, 7 e 8. Curva 4: 1,0 por volta. Mínima 102 contra 128. Freia 40 metros antes.",
+    "duracaoS": 10.78
+   },
+   {
+    "fala": "Voltas 3, 7 e 8. Curva 4: 1,0 por volta. Mínima 102 contra 128.",
+    "duracaoS": 8.56
+   }
+  ]
+ },
+ {
+  "fonte": "radio_v2_final_18-10.json",
+  "voltas": [
+   9,
+   12,
+   13
+  ],
+  "falaAntiga": "Análise das voltas 9, 12 e 13. Curva 1: 0,9 por volta: freia 46 metros antes.",
+  "duracaoAntigaS": 7.89,
+  "falaNova": "Análise das voltas 9, 12 e 13. Curva 1: 0,9 por volta. Freia 46 metros antes.",
+  "duracaoNovaS": 8.42,
+  "tentadas": [
+   {
+    "fala": "Análise das voltas 9, 12 e 13. Curva 1: 0,9 por volta. Freia 46 metros antes. Curva 5: 0,6 por volta.",
+    "duracaoS": 11.56
+   },
+   {
+    "fala": "Voltas 9, 12 e 13. Curva 1: 0,9 por volta. Freia 46 metros antes. Curva 5: 0,6 por volta.",
+    "duracaoS": 10.96
+   },
+   {
+    "fala": "Análise das voltas 9, 12 e 13. Curva 1: 0,9 por volta. Freia 46 metros antes.",
+    "duracaoS": 8.42
+   }
+  ]
+ },
+ {
+  "fonte": "radio_v2_final_13-10.json",
+  "voltas": [
+   6,
+   7,
+   8
+  ],
+  "falaAntiga": "Análise das voltas 6 a 8. Curva 1: 1,1 por volta: freia 36 metros antes.",
+  "duracaoAntigaS": 6.75,
+  "falaNova": "Análise das voltas 6 a 8. Curva 1: 1,1 por volta. Freia 36 metros antes.",
+  "duracaoNovaS": 7.3,
+  "tentadas": [
+   {
+    "fala": "Análise das voltas 6 a 8. Curva 1: 1,1 por volta. Freia 36 metros antes. Curva 11: 0,7 por volta. Mínima 149 contra 167.",
+    "duracaoS": 14.31
+   },
+   {
+    "fala": "Voltas 6 a 8. Curva 1: 1,1 por volta. Freia 36 metros antes. Curva 11: 0,7 por volta. Mínima 149 contra 167.",
+    "duracaoS": 13.73
+   },
+   {
+    "fala": "Análise das voltas 6 a 8. Curva 1: 1,1 por volta. Freia 36 metros antes.",
+    "duracaoS": 7.3
+   }
+  ]
+ },
+ {
+  "fonte": "2026-10-21_20-30-54_vhe_interlagos.jsonl",
+  "voltas": [
+   5,
+   9,
+   11
+  ],
+  "falaAntiga": "Análise das voltas 5, 9 e 11. Curva 1: 0,8 por volta: freia 30 metros antes.",
+  "duracaoAntigaS": 7.55,
+  "falaNova": "Análise das voltas 5, 9 e 11. Curva 1: 0,8 por volta. Freia 30 metros antes.",
+  "duracaoNovaS": 8.06,
+  "tentadas": [
+   {
+    "fala": "Análise das voltas 5, 9 e 11. Curva 1: 0,8 por volta. Freia 30 metros antes. Curva 12: 0,7 por volta. Freia 52 metros antes. Passa 4 metros mais à direita.",
+    "duracaoS": 16.46
+   },
+   {
+    "fala": "Voltas 5, 9 e 11. Curva 1: 0,8 por volta. Freia 30 metros antes. Curva 12: 0,7 por volta. Freia 52 metros antes.",
+    "duracaoS": 13.27
+   },
+   {
+    "fala": "Análise das voltas 5, 9 e 11. Curva 1: 0,8 por volta. Freia 30 metros antes.",
+    "duracaoS": 8.06
+   }
+  ]
+ },
+ {
+  "fonte": "2026-10-21_20-30-54_vhe_interlagos.jsonl",
+  "voltas": [
+   13,
+   16,
+   17
+  ],
+  "falaAntiga": "Voltas 13, 16 e 17. Curva 1: 1,2 por volta: passa 7,9 metro mais à direita.",
+  "duracaoAntigaS": 8.3,
+  "falaNova": "Voltas 13, 16 e 17. Curva 1: 1,2 por volta. Passa 8 metros mais à direita.",
+  "duracaoNovaS": 8.17,
+  "tentadas": [
+   {
+    "fala": "Análise das voltas 13, 16 e 17. Curva 1: 1,2 por volta. Passa 8 metros mais à direita. Mínima 71 contra 104. Curva 10: 0,5 por volta. Acelera 14 metros depois. Passa 1,8 metro mais à esquerda.",
+    "duracaoS": 20.39
+   },
+   {
+    "fala": "Voltas 13, 16 e 17. Curva 1: 1,2 por volta. Passa 8 metros mais à direita. Curva 10: 0,5 por volta. Acelera 14 metros depois.",
+    "duracaoS": 13.9
+   },
+   {
+    "fala": "Análise das voltas 13, 16 e 17. Curva 1: 1,2 por volta. Passa 8 metros mais à direita. Mínima 71 contra 104.",
+    "duracaoS": 11.68
+   },
+   {
+    "fala": "Voltas 13, 16 e 17. Curva 1: 1,2 por volta. Passa 8 metros mais à direita. Mínima 71 contra 104.",
+    "duracaoS": 11.1
+   },
+   {
+    "fala": "Voltas 13, 16 e 17. Curva 1: 1,2 por volta. Passa 8 metros mais à direita.",
+    "duracaoS": 8.17
+   }
+  ]
+ }
+]

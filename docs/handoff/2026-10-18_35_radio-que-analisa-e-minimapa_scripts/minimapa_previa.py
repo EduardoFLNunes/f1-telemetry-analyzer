@@ -76,34 +76,29 @@ HTML = """<!doctype html><html><head><meta charset="utf-8"><title>[teste] minima
 <canvas id="c" width="300" height="300"></canvas><script>
 const mm = __MINI__, agora = __AGORA__;
 // As constantes e as cores de radio_engenheiro.lua.
-const TOPO = 26, MARGEM = 12, W = 300, H = 300;
+const TOPO = 30, MARGEM = 12, W = 300, H = 300;
 const cor = (r, g, b, a) => `rgba(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)},${a})`;
 const CORES = { painel: cor(0.031, 0.035, 0.043, 0.62), texto: cor(0.949, 0.957, 0.961, 1), apoio: cor(0.72, 0.76, 0.80, 1),
   vermelho: cor(0.882, 0.024, 0, 1), voce: cor(1, 1, 1, 1), fantasma: cor(0.914, 0.929, 0.949, 0.9),
   fantasmaMiolo: cor(0.031, 0.035, 0.043, 0.6), pista: cor(0.165, 0.184, 0.212, 1), borda: cor(0.914, 0.929, 0.949, 0.35),
   perda: cor(1, 0.635, 0.29, 1), ganho: cor(0.435, 0.608, 1, 1) };
 const ctx = document.getElementById('c').getContext('2d');
-const E = mm.pista.esquerda, D = mm.pista.direita, n = Math.min(E.length, D.length);
+const C = mm.pista.contornos;
 let umin = Infinity, umax = -Infinity, vmin = Infinity, vmax = -Infinity;
-for (const lado of [E, D]) for (const q of lado) { const u = q[1], v = -q[0];
+for (const c of C) for (const q of c) { const u = q[1], v = -q[0];
   umin = Math.min(umin, u); umax = Math.max(umax, u); vmin = Math.min(vmin, v); vmax = Math.max(vmax, v); }
 const larg = W - 2 * MARGEM, alt = H - 2 * MARGEM - TOPO;
 const k = Math.min(larg / (umax - umin), alt / (vmax - vmin));
 const ox = MARGEM + (larg - k * (umax - umin)) / 2 - k * umin, oy = MARGEM + TOPO + (alt - k * (vmax - vmin)) / 2 - k * vmin;
 const tela = (x, z) => [ox + k * z, oy - k * x];
 function caminho(pts, fechado) { ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(...p) : ctx.moveTo(...p))); if (fechado) ctx.closePath(); }
-// o painel
 ctx.fillStyle = CORES.painel; ctx.beginPath(); ctx.roundRect(0, 0, W, H, 10); ctx.fill();
-// o asfalto: a linha do meio, da largura média; depois as bordas
-let largura = 0; const meio = [];
-for (let i = 0; i < n; i++) { const e = E[i], d = D[i]; largura += Math.hypot(e[0] - d[0], e[1] - d[1]); meio.push(tela((e[0] + d[0]) / 2, (e[1] + d[1]) / 2)); }
-caminho(meio, true); ctx.strokeStyle = CORES.pista; ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(3, k * largura / n + 1); ctx.stroke();
-for (const lado of [E, D]) { caminho(lado.slice(0, n).map((q) => tela(q[0], q[1])), true); ctx.strokeStyle = CORES.borda; ctx.lineWidth = 1; ctx.stroke(); }
-// a linha do s = 0 e as curvas da análise
-caminho([tela(E[0][0], E[0][1]), tela(D[0][0], D[0][1])], false); ctx.strokeStyle = CORES.texto; ctx.lineWidth = 2; ctx.stroke();
+// o contorno do asfalto tratado (radio_engenheiro.lua: CORES.contorno, 1,6 px)
+for (const c of C) { caminho(c.map((q) => tela(q[0], q[1])), true); ctx.strokeStyle = 'rgba(233,237,242,0.6)'; ctx.lineWidth = 1.6; ctx.lineJoin = 'round'; ctx.stroke(); }
+const L = mm.linhaDoS0; caminho([tela(L[0][0], L[0][1]), tela(L[1][0], L[1][1])], false); ctx.strokeStyle = CORES.texto; ctx.lineWidth = 2; ctx.stroke();
 ctx.font = '11px "Segoe UI", sans-serif'; ctx.textBaseline = 'top';
 for (const c of mm.curvasDaAnalise) { const [qx, qy] = tela(c.x, c.z); ctx.beginPath(); ctx.arc(qx, qy, 7, 0, 2 * Math.PI);
-  ctx.strokeStyle = CORES.perda; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = CORES.perda; ctx.fillText(c.curva, qx + 9, qy - 7); }
+  ctx.strokeStyle = CORES.perda; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = CORES.perda; ctx.fillText(c.curva, qx + 9 + 26 > W ? qx - 9 - 26 : qx + 9, qy - 7); }
 // o fantasma e o carro
 function marca(p, r, miolo, borda, esp) { ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, 2 * Math.PI); ctx.fillStyle = miolo; ctx.fill(); ctx.strokeStyle = borda; ctx.lineWidth = esp; ctx.stroke(); }
 marca(tela(...agora.fantasma), 5, CORES.fantasmaMiolo, CORES.fantasma, 2);

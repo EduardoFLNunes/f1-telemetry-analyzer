@@ -250,13 +250,19 @@ def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optio
 
 
 def _diferenca_falada(medida: str, valor: float, extra: Mapping[str, Any]) -> str:
+    """Uma diferenca da analise, falada como uma frase, no estilo da frase do coach
+    ("Freia 54 metros antes.", "Minima 64 contra 94."; fechamento do pedido 35)."""
     if medida == "freada":
-        return f"freia {int(round(abs(valor)))} metros {'antes' if valor < 0 else 'depois'}"
+        return f"Freia {int(round(abs(valor)))} metros {'antes' if valor < 0 else 'depois'}."
     if medida == "minima":
-        return f"passa a {int(round(extra.get('sua', 0)))} contra {int(round(extra.get('ref', 0)))}"
+        return f"Mínima {int(round(extra.get('sua', 0)))} contra {int(round(extra.get('ref', 0)))}."
     if medida == "acelerador":
-        return f"acelera {int(round(abs(valor)))} metros {'depois' if valor > 0 else 'antes'}"
-    return f"passa {decimal(abs(valor), 1)} metro mais à {'esquerda' if valor > 0 else 'direita'}"
+        return f"Acelera {int(round(abs(valor)))} metros {'depois' if valor > 0 else 'antes'}."
+    # Abaixo de 2 m, com a virgula e no singular ("1,8 metro"); de 2 m para cima, o numero inteiro,
+    # mais curto de falar ("8 metros"). O cartao continua com a decimal.
+    metros = round(abs(valor), 1)
+    quanto = f"{decimal(metros, 1)} metro" if metros < 2 else f"{int(round(metros))} metros"
+    return f"Passa {quanto} mais à {'esquerda' if valor > 0 else 'direita'}."
 
 
 def _diferenca_escrita(medida: str, valor: float, extra: Mapping[str, Any]) -> str:
@@ -295,8 +301,8 @@ def mensagem_de_analise(analise: Mapping[str, Any], tipo: Optional[str],
         nome = _nome_falado(c["curva"]) or c["curva"]
         difs = {d["medida"]: d for d in c.get("diferencas") or []}
         ditas = [_diferenca_falada(m, difs[m]["valor"], difs[m]) for m in c.get("ditas", [])[:quantas] if m in difs]
-        base = f"{nome}: {decimal(c['perdaMedianaS'], 1)} por volta"
-        return base + (": " + ", ".join(ditas) if ditas else "") + "."
+        base = f"{nome}: {decimal(c['perdaMedianaS'], 1)} por volta."
+        return base + (" " + " ".join(ditas) if ditas else "")
 
     abertura = f"Análise das voltas {intervalo}."
     curta = f"Voltas {intervalo}."

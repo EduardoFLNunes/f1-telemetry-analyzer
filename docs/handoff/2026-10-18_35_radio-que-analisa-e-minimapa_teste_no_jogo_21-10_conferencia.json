@@ -1,0 +1,985 @@
+{
+ "sessao": "2026-10-21_20-30-54_vhe_interlagos",
+ "quadros": 161726,
+ "referencia": {
+  "tipo": "volta_ia",
+  "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+  "tempoS": 84.8291625038158
+ },
+ "janelas": [
+  [
+   723.0,
+   1192.0
+  ],
+  [
+   1637.0,
+   1818.0
+  ],
+  [
+   3697.0,
+   104.0
+  ]
+ ],
+ "pendentesNoFim": 0,
+ "mensagens": [
+  {
+   "id": 1,
+   "origem": "coach",
+   "voltaDoCarro": 1,
+   "sCarro": 3697.4,
+   "velocidadeKmh": 222.1,
+   "janela": [
+    3697.0,
+    104.0
+   ],
+   "titulo": "C11, esquerda",
+   "texto": "+3,17 s para a volta da IA no microssetor 39",
+   "detalhe": "5,26 s contra 2,09 s · mínima da IA 94 km/h, a sua 37 km/h",
+   "linhas": null,
+   "fala": "Curva 11: 3,17 atrás. Mínima 37 contra 94.",
+   "duracaoS": 6.03,
+   "falaMaxS": 6.6,
+   "causa": {
+    "medida": "minima",
+    "valor": -57.3,
+    "fala": "Mínima 37 contra 94."
+   },
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 3.172,
+   "volta": 1,
+   "tempoS": null
+  },
+  {
+   "id": 2,
+   "origem": "coach",
+   "voltaDoCarro": 2,
+   "sCarro": 724.1,
+   "velocidadeKmh": 211.5,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "C12, esquerda",
+   "texto": "+0,70 s para a volta da IA no microssetor 44",
+   "detalhe": "2,05 s contra 1,35 s · a IA freia 16 m depois de você · mínima da IA 145 km/h, a sua 106 km/h",
+   "linhas": null,
+   "fala": "Curva 12, esquerda: 0,70 atrás da IA. Freia 16 metros antes.",
+   "duracaoS": 6.16,
+   "falaMaxS": 6.6,
+   "causa": {
+    "medida": "freada",
+    "valor": -16.5,
+    "fala": "Freia 16 metros antes."
+   },
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 0.696,
+   "volta": 1,
+   "tempoS": null
+  },
+  {
+   "id": 3,
+   "origem": "coach",
+   "voltaDoCarro": 2,
+   "sCarro": 3697.2,
+   "velocidadeKmh": 225.8,
+   "janela": [
+    3697.0,
+    104.0
+   ],
+   "titulo": "C12, esquerda",
+   "texto": "+0,64 s para a volta da IA no microssetor 44",
+   "detalhe": "1,99 s contra 1,35 s · a IA freia 16 m depois de você · mínima da IA 145 km/h, a sua 101 km/h",
+   "linhas": null,
+   "fala": "Curva 12, esquerda: 0,64 atrás da IA. Freia 16 metros antes.",
+   "duracaoS": 6.58,
+   "falaMaxS": 6.6,
+   "causa": {
+    "medida": "freada",
+    "valor": -16.5,
+    "fala": "Freia 16 metros antes."
+   },
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 0.635,
+   "volta": 2,
+   "tempoS": null
+  },
+  {
+   "id": 4,
+   "origem": "resumo",
+   "voltaDoCarro": 3,
+   "sCarro": 723.2,
+   "velocidadeKmh": 216.0,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 2: 2:16,194",
+   "texto": "+51,365 s para a volta da IA (1:24,829)",
+   "detalhe": null,
+   "linhas": null,
+   "fala": "Volta 2, 2 minutos e 16,2. 51,36 atrás da IA.",
+   "duracaoS": 6.76,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 51.365,
+   "volta": 2,
+   "tempoS": 136.194
+  },
+  {
+   "id": 5,
+   "origem": "resumo",
+   "voltaDoCarro": 4,
+   "sCarro": 724.0,
+   "velocidadeKmh": 217.4,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 3: 1:44,987",
+   "texto": "+20,158 s para a volta da IA (1:24,829)",
+   "detalhe": null,
+   "linhas": null,
+   "fala": "Volta 3, 1 minuto e 45,0. 20,16 atrás da IA.",
+   "duracaoS": 6.33,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 20.158,
+   "volta": 3,
+   "tempoS": 104.987
+  },
+  {
+   "id": 6,
+   "origem": "resumo",
+   "voltaDoCarro": 5,
+   "sCarro": 723.9,
+   "velocidadeKmh": 218.7,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 4: 1:34,332",
+   "texto": "+9,503 s para a volta da IA (1:24,829)",
+   "detalhe": null,
+   "linhas": null,
+   "fala": "Volta 4, 1 minuto e 34,3. 9,50 atrás da IA.",
+   "duracaoS": 6.24,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 9.503,
+   "volta": 4,
+   "tempoS": 94.332
+  },
+  {
+   "id": 7,
+   "origem": "coach",
+   "voltaDoCarro": 5,
+   "sCarro": 3697.6,
+   "velocidadeKmh": 222.5,
+   "janela": [
+    3697.0,
+    104.0
+   ],
+   "titulo": "C11, esquerda",
+   "texto": "+0,65 s para a volta da IA no microssetor 39",
+   "detalhe": "2,73 s contra 2,09 s · mínima da IA 94 km/h, a sua 64 km/h",
+   "linhas": null,
+   "fala": "Curva 11: 0,65 atrás. Mínima 64 contra 94.",
+   "duracaoS": 6.39,
+   "falaMaxS": 6.6,
+   "causa": {
+    "medida": "minima",
+    "valor": -30.0,
+    "fala": "Mínima 64 contra 94."
+   },
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 0.647,
+   "volta": 5,
+   "tempoS": null
+  },
+  {
+   "id": 8,
+   "origem": "resumo",
+   "voltaDoCarro": 6,
+   "sCarro": 723.3,
+   "velocidadeKmh": 216.2,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 5: 1:55,447",
+   "texto": "+30,618 s para a volta da IA (1:24,829)",
+   "detalhe": "mais perdeu na C12, esquerda: +26,54 s",
+   "linhas": null,
+   "fala": "Volta 5, 30,6 atrás. Mais perdeu na curva 12: 26,5.",
+   "duracaoS": 6.9,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": {
+    "curva": "C12",
+    "lado": "esquerda",
+    "perdaS": 26.538
+   },
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 30.618,
+   "volta": 5,
+   "tempoS": 115.447
+  },
+  {
+   "id": 9,
+   "origem": "resumo",
+   "voltaDoCarro": 7,
+   "sCarro": 723.6,
+   "velocidadeKmh": 217.9,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 6: 1:54,296",
+   "texto": "+29,467 s para a volta da IA (1:24,829)",
+   "detalhe": null,
+   "linhas": null,
+   "fala": "Volta 6, 1 minuto e 54,3. 29,47 atrás da IA.",
+   "duracaoS": 7.05,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 29.467,
+   "volta": 6,
+   "tempoS": 114.296
+  },
+  {
+   "id": 10,
+   "origem": "resumo",
+   "voltaDoCarro": 8,
+   "sCarro": 723.3,
+   "velocidadeKmh": 220.1,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 7: 1:34,494",
+   "texto": "+9,664 s para a volta da IA (1:24,829)",
+   "detalhe": null,
+   "linhas": null,
+   "fala": "Volta 7, 1 minuto e 34,5. 9,66 atrás da IA.",
+   "duracaoS": 6.49,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 9.664,
+   "volta": 7,
+   "tempoS": 94.494
+  },
+  {
+   "id": 11,
+   "origem": "coach",
+   "voltaDoCarro": 8,
+   "sCarro": 723.1,
+   "velocidadeKmh": 155.2,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "C11, esquerda",
+   "texto": "+1,79 s para a volta da IA no microssetor 39",
+   "detalhe": "3,88 s contra 2,09 s · mínima da IA 94 km/h, a sua 50 km/h",
+   "linhas": null,
+   "fala": "Curva 11: 1,79 atrás. Mínima 50 contra 94.",
+   "duracaoS": 5.89,
+   "falaMaxS": 6.6,
+   "causa": {
+    "medida": "minima",
+    "valor": -44.8,
+    "fala": "Mínima 50 contra 94."
+   },
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 1.795,
+   "volta": 8,
+   "tempoS": null
+  },
+  {
+   "id": 12,
+   "origem": "resumo",
+   "voltaDoCarro": 10,
+   "sCarro": 3697.3,
+   "velocidadeKmh": 224.8,
+   "janela": [
+    3697.0,
+    104.0
+   ],
+   "titulo": "Volta 9: 1:30,792",
+   "texto": "+5,963 s para a volta da IA (1:24,829)",
+   "detalhe": "mais perdeu na C01, esquerda: +0,76 s",
+   "linhas": null,
+   "fala": "Volta 9: 1 e 30,8, 6,0 atrás. Mais perdeu na curva 1: 0,8.",
+   "duracaoS": 7.68,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": {
+    "curva": "C01",
+    "lado": "esquerda",
+    "perdaS": 0.756
+   },
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 5.963,
+   "volta": 9,
+   "tempoS": 90.792
+  },
+  {
+   "id": 13,
+   "origem": "resumo",
+   "voltaDoCarro": 11,
+   "sCarro": 723.6,
+   "velocidadeKmh": 219.7,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 10: 1:29,518",
+   "texto": "+4,689 s para a volta da IA (1:24,829)",
+   "detalhe": null,
+   "linhas": null,
+   "fala": "Volta 10, 1 minuto e 29,5. 4,69 atrás da IA.",
+   "duracaoS": 6.47,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 4.689,
+   "volta": 10,
+   "tempoS": 89.518
+  },
+  {
+   "id": 14,
+   "origem": "resumo",
+   "voltaDoCarro": 12,
+   "sCarro": 3698.3,
+   "velocidadeKmh": 219.9,
+   "janela": [
+    3697.0,
+    104.0
+   ],
+   "titulo": "Volta 11: 1:28,116",
+   "texto": "+3,287 s para a volta da IA (1:24,829)",
+   "detalhe": "mais perdeu na C01, esquerda: +0,94 s",
+   "linhas": null,
+   "fala": "Volta 11: 1 e 28,1, 3,3 atrás. Mais perdeu na curva 1: 0,9.",
+   "duracaoS": 7.64,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": {
+    "curva": "C01",
+    "lado": "esquerda",
+    "perdaS": 0.945
+   },
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 3.287,
+   "volta": 11,
+   "tempoS": 88.116
+  },
+  {
+   "id": 15,
+   "origem": "resumo",
+   "voltaDoCarro": 13,
+   "sCarro": 723.3,
+   "velocidadeKmh": 213.7,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 12: 1:43,199",
+   "texto": "+18,370 s para a volta da IA (1:24,829)",
+   "detalhe": null,
+   "linhas": null,
+   "fala": "Volta 12, 1 minuto e 43,2. 18,37 atrás da IA.",
+   "duracaoS": 6.53,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 18.37,
+   "volta": 12,
+   "tempoS": 103.199
+  },
+  {
+   "id": 16,
+   "origem": "analise",
+   "voltaDoCarro": 13,
+   "sCarro": 3697.6,
+   "velocidadeKmh": 225.3,
+   "janela": [
+    3697.0,
+    104.0
+   ],
+   "titulo": "Análise das voltas 5, 9 e 11",
+   "texto": "C01 perde 0,76 s por volta · C12 perde 0,73 s por volta, contra a volta da IA",
+   "detalhe": "C01, esquerda: perde 0,76 s por volta (0,47 · 0,76 · 0,94); freada 30 m antes; mínima 100 contra 104 km/h; traçado 0,6 m mais à esquerda | C12, esquerda: perde 0,73 s por volta (26,54 · 0,73 · 0,51); freada 52 m antes; traçado 3,7 m mais à direita; acelerador cheio 8 m depois; mínima 100 contra 98 km/h",
+   "linhas": [
+    "C01, esquerda: perde 0,76 s por volta (0,47 · 0,76 · 0,94); freada 30 m antes; mínima 100 contra 104 km/h; traçado 0,6 m mais à esquerda",
+    "C12, esquerda: perde 0,73 s por volta (26,54 · 0,73 · 0,51); freada 52 m antes; traçado 3,7 m mais à direita; acelerador cheio 8 m depois; mínima 100 contra 98 km/h"
+   ],
+   "fala": "Análise das voltas 5, 9 e 11. Curva 1: 0,8 por volta. Freia 30 metros antes.",
+   "duracaoS": 8.06,
+   "falaMaxS": 8.8,
+   "causa": null,
+   "piorCurva": null,
+   "voltasAnalisadas": [
+    5,
+    9,
+    11
+   ],
+   "curvasDaAnalise": [
+    {
+     "curva": "C01",
+     "lado": "esquerda",
+     "perdaMedianaS": 0.756,
+     "perdas": [
+      0.466,
+      0.756,
+      0.945
+     ],
+     "perdidaEm": 3,
+     "diferencas": [
+      {
+       "medida": "freada",
+       "valor": -30.0,
+       "peso": 2.0
+      },
+      {
+       "medida": "minima",
+       "valor": -4.4,
+       "peso": 0.55,
+       "sua": 99.8,
+       "ref": 104.2
+      },
+      {
+       "medida": "tracado",
+       "valor": 0.56,
+       "peso": 0.31
+      }
+     ],
+     "ditas": [
+      "freada"
+     ]
+    },
+    {
+     "curva": "C12",
+     "lado": "esquerda",
+     "perdaMedianaS": 0.729,
+     "perdas": [
+      26.538,
+      0.729,
+      0.507
+     ],
+     "perdidaEm": 3,
+     "diferencas": [
+      {
+       "medida": "freada",
+       "valor": -52.0,
+       "peso": 3.47
+      },
+      {
+       "medida": "tracado",
+       "valor": -3.67,
+       "peso": 2.04
+      },
+      {
+       "medida": "acelerador",
+       "valor": 8.0,
+       "peso": 0.8
+      },
+      {
+       "medida": "minima",
+       "valor": 1.3,
+       "peso": 0.16,
+       "sua": 99.7,
+       "ref": 98.4
+      }
+     ],
+     "ditas": [
+      "freada",
+      "tracado"
+     ]
+    }
+   ],
+   "perdaS": 0.756,
+   "volta": 11,
+   "tempoS": null
+  },
+  {
+   "id": 17,
+   "origem": "resumo",
+   "voltaDoCarro": 14,
+   "sCarro": 723.3,
+   "velocidadeKmh": 209.2,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 13: 1:28,329",
+   "texto": "+3,500 s para a volta da IA (1:24,829)",
+   "detalhe": "mais perdeu na C01, esquerda: +0,81 s",
+   "linhas": null,
+   "fala": "Volta 13, 3,5 atrás. Mais perdeu na curva 1: 0,8.",
+   "duracaoS": 6.19,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": {
+    "curva": "C01",
+    "lado": "esquerda",
+    "perdaS": 0.805
+   },
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 3.5,
+   "volta": 13,
+   "tempoS": 88.329
+  },
+  {
+   "id": 18,
+   "origem": "coach",
+   "voltaDoCarro": 14,
+   "sCarro": 3697.2,
+   "velocidadeKmh": 225.7,
+   "janela": [
+    3697.0,
+    104.0
+   ],
+   "titulo": "C11, esquerda",
+   "texto": "+0,49 s para a volta da IA no microssetor 39",
+   "detalhe": "2,57 s contra 2,09 s · mínima da IA 94 km/h, a sua 77 km/h",
+   "linhas": null,
+   "fala": "Curva 11: 0,49 atrás. Mínima 77 contra 94.",
+   "duracaoS": 6.34,
+   "falaMaxS": 6.6,
+   "causa": {
+    "medida": "minima",
+    "valor": -17.2,
+    "fala": "Mínima 77 contra 94."
+   },
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 0.488,
+   "volta": 12,
+   "tempoS": null
+  },
+  {
+   "id": 19,
+   "origem": "resumo",
+   "voltaDoCarro": 15,
+   "sCarro": 723.8,
+   "velocidadeKmh": 215.3,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 15: 1:30,500",
+   "texto": "+5,671 s para a volta da IA (1:24,829)",
+   "detalhe": null,
+   "linhas": null,
+   "fala": "Volta 15, 1 minuto e 30,5. 5,67 atrás da IA.",
+   "duracaoS": 6.32,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 5.671,
+   "volta": 15,
+   "tempoS": 90.5
+  },
+  {
+   "id": 20,
+   "origem": "coach",
+   "voltaDoCarro": 15,
+   "sCarro": 3698.1,
+   "velocidadeKmh": 224.6,
+   "janela": [
+    3697.0,
+    104.0
+   ],
+   "titulo": "C12, esquerda",
+   "texto": "+0,72 s para a volta da IA no microssetor 44",
+   "detalhe": "2,07 s contra 1,35 s · a IA freia 56 m depois de você · mínima da IA 145 km/h, a sua 112 km/h",
+   "linhas": null,
+   "fala": "Curva 12: 0,72 atrás. Freia 56 metros antes.",
+   "duracaoS": 5.91,
+   "falaMaxS": 6.6,
+   "causa": {
+    "medida": "freada",
+    "valor": -56.3,
+    "fala": "Freia 56 metros antes."
+   },
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 0.716,
+   "volta": 15,
+   "tempoS": null
+  },
+  {
+   "id": 21,
+   "origem": "coach",
+   "voltaDoCarro": 15,
+   "sCarro": 3697.4,
+   "velocidadeKmh": 215.2,
+   "janela": [
+    3697.0,
+    104.0
+   ],
+   "titulo": "C11, esquerda",
+   "texto": "+0,68 s para a volta da IA no microssetor 39",
+   "detalhe": "2,76 s contra 2,09 s · mínima da IA 94 km/h, a sua 74 km/h",
+   "linhas": null,
+   "fala": "Curva 11: 0,68 atrás. Mínima 74 contra 94.",
+   "duracaoS": 6.34,
+   "falaMaxS": 6.6,
+   "causa": {
+    "medida": "minima",
+    "valor": -19.9,
+    "fala": "Mínima 74 contra 94."
+   },
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 0.675,
+   "volta": 15,
+   "tempoS": null
+  },
+  {
+   "id": 22,
+   "origem": "resumo",
+   "voltaDoCarro": 17,
+   "sCarro": 723.8,
+   "velocidadeKmh": 215.7,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 16: 1:30,180",
+   "texto": "+5,351 s para a volta da IA (1:24,829)",
+   "detalhe": "mais perdeu na C01, esquerda: +1,39 s",
+   "linhas": null,
+   "fala": "Volta 16, 5,4 atrás. Mais perdeu na curva 1: 1,4.",
+   "duracaoS": 6.49,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": {
+    "curva": "C01",
+    "lado": "esquerda",
+    "perdaS": 1.392
+   },
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 5.351,
+   "volta": 16,
+   "tempoS": 90.18
+  },
+  {
+   "id": 23,
+   "origem": "resumo",
+   "voltaDoCarro": 18,
+   "sCarro": 723.1,
+   "velocidadeKmh": 219.4,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 17: 1:28,539",
+   "texto": "+3,710 s para a volta da IA (1:24,829)",
+   "detalhe": "mais perdeu na C01, esquerda: +1,21 s",
+   "linhas": null,
+   "fala": "Volta 17, 3,7 atrás. Mais perdeu na curva 1: 1,2.",
+   "duracaoS": 6.32,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": {
+    "curva": "C01",
+    "lado": "esquerda",
+    "perdaS": 1.209
+   },
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 3.71,
+   "volta": 17,
+   "tempoS": 88.539
+  },
+  {
+   "id": 24,
+   "origem": "analise",
+   "voltaDoCarro": 18,
+   "sCarro": 3697.8,
+   "velocidadeKmh": 223.1,
+   "janela": [
+    3697.0,
+    104.0
+   ],
+   "titulo": "Análise das voltas 13, 16 e 17",
+   "texto": "C01 perde 1,21 s por volta · C10 perde 0,46 s por volta, contra a volta da IA",
+   "detalhe": "C01, esquerda: perde 1,21 s por volta (0,81 · 1,39 · 1,21); traçado 7,9 m mais à direita; mínima 71 contra 104 km/h; freada 34 m antes; acelerador cheio 18 m antes | C10, direita: perde 0,46 s por volta (0,49 · 0,46 · 0,18); acelerador cheio 14 m depois; traçado 1,8 m mais à esquerda; mínima 80 contra 81 km/h; freada 2 m antes",
+   "linhas": [
+    "C01, esquerda: perde 1,21 s por volta (0,81 · 1,39 · 1,21); traçado 7,9 m mais à direita; mínima 71 contra 104 km/h; freada 34 m antes; acelerador cheio 18 m antes",
+    "C10, direita: perde 0,46 s por volta (0,49 · 0,46 · 0,18); acelerador cheio 14 m depois; traçado 1,8 m mais à esquerda; mínima 80 contra 81 km/h; freada 2 m antes"
+   ],
+   "fala": "Voltas 13, 16 e 17. Curva 1: 1,2 por volta.",
+   "duracaoS": 5.65,
+   "falaMaxS": 8.8,
+   "causa": null,
+   "piorCurva": null,
+   "voltasAnalisadas": [
+    13,
+    16,
+    17
+   ],
+   "curvasDaAnalise": [
+    {
+     "curva": "C01",
+     "lado": "esquerda",
+     "perdaMedianaS": 1.209,
+     "perdas": [
+      0.805,
+      1.392,
+      1.209
+     ],
+     "perdidaEm": 3,
+     "diferencas": [
+      {
+       "medida": "tracado",
+       "valor": -7.94,
+       "peso": 4.41
+      },
+      {
+       "medida": "minima",
+       "valor": -32.8,
+       "peso": 4.1,
+       "sua": 71.4,
+       "ref": 104.2
+      },
+      {
+       "medida": "freada",
+       "valor": -34.0,
+       "peso": 2.27
+      },
+      {
+       "medida": "acelerador",
+       "valor": -18.0,
+       "peso": 1.8
+      }
+     ],
+     "ditas": [
+      "tracado",
+      "minima"
+     ]
+    },
+    {
+     "curva": "C10",
+     "lado": "direita",
+     "perdaMedianaS": 0.457,
+     "perdas": [
+      0.487,
+      0.457,
+      0.181
+     ],
+     "perdidaEm": 3,
+     "diferencas": [
+      {
+       "medida": "acelerador",
+       "valor": 14.0,
+       "peso": 1.4
+      },
+      {
+       "medida": "tracado",
+       "valor": 1.83,
+       "peso": 1.02
+      },
+      {
+       "medida": "minima",
+       "valor": -1.5,
+       "peso": 0.19,
+       "sua": 79.5,
+       "ref": 81.0
+      },
+      {
+       "medida": "freada",
+       "valor": -2.0,
+       "peso": 0.13
+      }
+     ],
+     "ditas": [
+      "acelerador",
+      "tracado"
+     ]
+    }
+   ],
+   "perdaS": 1.209,
+   "volta": 17,
+   "tempoS": null
+  },
+  {
+   "id": 25,
+   "origem": "resumo",
+   "voltaDoCarro": 19,
+   "sCarro": 723.2,
+   "velocidadeKmh": 212.4,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 18: 1:26,875",
+   "texto": "+2,045 s para a volta da IA (1:24,829)",
+   "detalhe": "mais perdeu na C01, esquerda: +0,68 s",
+   "linhas": null,
+   "fala": "Volta 18, 2,0 atrás. Mais perdeu na curva 1: 0,7.",
+   "duracaoS": 6.43,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": {
+    "curva": "C01",
+    "lado": "esquerda",
+    "perdaS": 0.676
+   },
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 2.045,
+   "volta": 18,
+   "tempoS": 86.875
+  },
+  {
+   "id": 26,
+   "origem": "coach",
+   "voltaDoCarro": 19,
+   "sCarro": 3697.4,
+   "velocidadeKmh": 156.9,
+   "janela": [
+    3697.0,
+    104.0
+   ],
+   "titulo": "C11, esquerda",
+   "texto": "+0,48 s para a volta da IA no microssetor 39",
+   "detalhe": "2,57 s contra 2,09 s · mínima da IA 94 km/h, a sua 77 km/h",
+   "linhas": null,
+   "fala": "Curva 11: 0,48 atrás. Mínima 77 contra 94.",
+   "duracaoS": 6.32,
+   "falaMaxS": 6.6,
+   "causa": {
+    "medida": "minima",
+    "valor": -17.0,
+    "fala": "Mínima 77 contra 94."
+   },
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 0.484,
+   "volta": 19,
+   "tempoS": null
+  },
+  {
+   "id": 27,
+   "origem": "coach",
+   "voltaDoCarro": 19,
+   "sCarro": 3977.9,
+   "velocidadeKmh": 131.7,
+   "janela": [
+    3697.0,
+    104.0
+   ],
+   "titulo": "C12, esquerda",
+   "texto": "+1,03 s para a volta da IA no microssetor 44",
+   "detalhe": "2,39 s contra 1,35 s · a IA freia 27 m depois de você · mínima da IA 145 km/h, a sua 95 km/h",
+   "linhas": null,
+   "fala": "Curva 12, esquerda: 1,03 atrás da IA. Freia 27 metros antes.",
+   "duracaoS": 5.89,
+   "falaMaxS": 6.6,
+   "causa": {
+    "medida": "freada",
+    "valor": -26.6,
+    "fala": "Freia 27 metros antes."
+   },
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 1.034,
+   "volta": 19,
+   "tempoS": null
+  },
+  {
+   "id": 28,
+   "origem": "resumo",
+   "voltaDoCarro": 20,
+   "sCarro": 8.1,
+   "velocidadeKmh": 45.1,
+   "janela": [
+    3697.0,
+    104.0
+   ],
+   "titulo": "Volta 19: 2:18,008",
+   "texto": "+53,179 s para a volta da IA (1:24,829)",
+   "detalhe": null,
+   "linhas": null,
+   "fala": "Volta 19, 2 minutos e 18,0. 53,18 atrás da IA.",
+   "duracaoS": 6.9,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 53.179,
+   "volta": 19,
+   "tempoS": 138.008
+  },
+  {
+   "id": 29,
+   "origem": "resumo",
+   "voltaDoCarro": 21,
+   "sCarro": 724.0,
+   "velocidadeKmh": 212.4,
+   "janela": [
+    723.0,
+    1192.0
+   ],
+   "titulo": "Volta 20: 3:17,412",
+   "texto": "+112,583 s para a volta da IA (1:24,829)",
+   "detalhe": null,
+   "linhas": null,
+   "fala": "Volta 20, 3 minutos e 17,4. 112,58 atrás da IA.",
+   "duracaoS": 7.02,
+   "falaMaxS": 7.7,
+   "causa": null,
+   "piorCurva": null,
+   "voltasAnalisadas": null,
+   "curvasDaAnalise": null,
+   "perdaS": 112.583,
+   "volta": 20,
+   "tempoS": 197.412
+  }
+ ]
+}

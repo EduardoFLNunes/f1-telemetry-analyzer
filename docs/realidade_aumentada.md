@@ -69,14 +69,19 @@ A curva que mais perdeu só entra numa volta completa (com todos os microssetore
 
   A volta do piloto é a grade que a volta ao vivo guarda, com a projeção que o coach já faz; a referência é a volta do store v2. Nenhuma conta de física nova.
 - **O que vai na fala:** as diferenças que mais pesam, até 2 por curva. O peso é a diferença dividida pelo corte da medida (seção 2.4); só entra o que passa do corte. Se a fala não couber em cerca de 8 s, sai a variante mais curta (seção 2.5).
+- **Como cada diferença é falada:** uma frase, como na frase do coach:
+  - "Freia 46 metros antes.";
+  - "Mínima 102 contra 128.";
+  - "Acelera 14 metros depois.";
+  - "Passa 8 metros mais à direita.": de 2 m para cima, o número inteiro; abaixo de 2 m, com a vírgula e no singular ("1,8 metro").
 - **O cartão:** as curvas com todos os números, uma linha por curva.
 - **Exemplos:**
 
   | sessão | cartão | fala | dura |
   |---|---|---|---|
-  | 18/10 | Análise das voltas 3, 7 e 8 · C04 perde 1,04 s por volta · C01 perde 0,95 s por volta, contra a volta da IA. Linha da C04: perde 1,04 s por volta (1,04 · 1,06 · 0,22); mínima 102 contra 128 km/h; freada 40 m antes; acelerador cheio 16 m depois; traçado 1,5 m mais à direita | "Voltas 3, 7 e 8. Curva 4: 1,0 por volta: passa a 102 contra 128." | 8,1 s |
-  | 18/10 | Análise das voltas 9, 12 e 13 · C01 perde 0,86 s por volta · C05 perde 0,55 s por volta | "Análise das voltas 9, 12 e 13. Curva 1: 0,9 por volta: freia 46 metros antes." | 7,9 s |
-  | 13/10 | Análise das voltas 6 a 8 · C01 perde 1,09 s por volta · C11 perde 0,70 s por volta | "Análise das voltas 6 a 8. Curva 1: 1,1 por volta: freia 36 metros antes." | 6,8 s |
+  | 18/10 | Análise das voltas 3, 7 e 8 · C04 perde 1,04 s por volta · C01 perde 0,95 s por volta, contra a volta da IA. Linha da C04: perde 1,04 s por volta (1,04 · 1,06 · 0,22); mínima 102 contra 128 km/h; freada 40 m antes; acelerador cheio 16 m depois; traçado 1,5 m mais à direita | "Voltas 3, 7 e 8. Curva 4: 1,0 por volta. Mínima 102 contra 128." | 8,6 s |
+  | 18/10 | Análise das voltas 9, 12 e 13 · C01 perde 0,86 s por volta · C05 perde 0,55 s por volta | "Análise das voltas 9, 12 e 13. Curva 1: 0,9 por volta. Freia 46 metros antes." | 8,4 s |
+  | 13/10 | Análise das voltas 6 a 8 · C01 perde 1,09 s por volta · C11 perde 0,70 s por volta | "Análise das voltas 6 a 8. Curva 1: 1,1 por volta. Freia 36 metros antes." | 7,3 s |
 
 ### 2.4 Os cortes e o porquê
 
@@ -93,7 +98,7 @@ Na análise, vale a mediana de 3 voltas, que varia menos que uma volta: o corte 
 
 ### 2.5 Quanto cabe em cada janela
 
-- **A voz a 1,4x** (era 1,25x no pedido 31): os números falados por extenso faziam a frase com a causa, o resumo com a curva e a análise passarem de 6, 7 e 8 s.
+- **A voz a 1,4x** (era 1,25x no pedido 31): os números falados por extenso faziam a frase com a causa, o resumo com a curva e a análise passarem de 6, 7 e 8 s. **Não estava no pedido 35:** está registrada como desvio no relatório dele, e a decisão de manter ou voltar é do Eduardo.
 - **As variantes:** cada mensagem traz a fala da mais completa à mais curta. O rádio gera o áudio e fica com a primeira que cabe no limite do tipo: 6,6 s (frase do coach), 7,7 s (resumo) e 8,8 s (análise), os 6, 7 e 8 s do pedido com 10% de folga.
 - **A entrega:** só quando a fala inteira cabe no que resta da janela, pela velocidade do carro, com 0,3 s de folga.
 - **Nas duas sessões** (todas as falas couberam no que restava da janela):
@@ -129,7 +134,7 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é 
 
 ## 4. A voz
 
-- **A escolhida:** **Microsoft Daniel (OneCore, pt-BR), a 1,4x** (`VELOCIDADE_PADRAO` em `core/radio/audio.py`; a 1,25x até o pedido 35).
+- **A escolhida:** **Microsoft Daniel (OneCore, pt-BR), a 1,4x** (`VELOCIDADE_PADRAO` em `core/radio/audio.py`; a 1,25x até o pedido 35). A 1,4x é um desvio do pedido 35, à espera da decisão do Eduardo (seção 2.5).
 - **Como é gerada:** pelo `backend/core/radio/voz.ps1`, com o PowerShell do Windows, sem instalar nada.
 - **As três vozes pt-BR deste Windows,** testadas no pedido 31 com a mesma frase ("Curva 1, esquerda: 0,74 atrás da IA."), a 1,25x:
 
@@ -182,17 +187,18 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é 
   - `[radio_engenheiro] voz: <caminho> tocou`, com os caminhos que falharam antes entre parênteses;
   - ou `[radio_engenheiro] voz: falhou: <caminho>: <motivo>; ...`.
 - **O volume:** `VOLUME_DO_RADIO`, no começo do arquivo, de 0 a 1. O som sai pelo áudio do jogo, e o volume geral do Assetto Corsa vale por cima.
-- **O que funcionou no jogo:** a preencher depois do teste no jogo do pedido 35 (Parte G), pelas linhas `voz:` do log.
+- **O que funcionou no jogo** (teste de 21/10): **a URL do backend.** As 30 mensagens da sessão tocaram por ela (`voz: url tocou`), sem nenhuma falha; os outros dois caminhos não foram precisos. O caminho fica guardado em `voz\caminho.txt`.
 - **Com o backend fora do ar:** um ponto apagado e "rádio sem backend" no rodapé da janela, e o aviso uma vez no log do CSP.
 - **Se a API do CSP não tiver o que o app usa:** avisa uma vez e fica calado. Se faltar só o que o minimapa ou o terceiro caminho da voz usam, só eles ficam de fora.
 
 ### 5.2 O minimapa
 
 - **A pista tratada:**
-  - **o que é:** as duas bordas do asfalto da geometria oficial, simplificadas para 271 pontos cada;
-  - **como é desenhada:** uma vez, num `ui.ExtraCanvas`, refeito só quando o minimapa muda ou a janela muda de tamanho. A cada quadro, o app só desenha essa imagem;
+  - **o que é:** o contorno do asfalto tratado do cache da pista (`asphaltSurface.loops`), a mesma camada que o mapa do app e o mapa aproximado desenham. Só entram os laços com pelo menos 1.000 m² (o contorno de fora, o buraco do miolo, as áreas de escape e dos boxes), e cada laço é simplificado pelo Douglas-Peucker com 2 m de tolerância: em Interlagos, 12 contornos e 363 pontos. As camadas do cache estão em (x, −z) e viram (x, z), a posição do carro (`core/radio/minimapa.py`, `contorno_do_asfalto`);
+  - **até o fechamento do pedido 35,** eram as duas bordas da geometria oficial (o centro mais e menos a largura do corredor). Elas só ficam quando o backend não tem o cache da pista, e a rota diz isso em `pista.origem`;
+  - **como é desenhada:** o contorno, sem preencher o asfalto (o desenho do CSP não preenche polígonos côncavos). Uma vez, num `ui.ExtraCanvas`, refeito só quando o minimapa muda ou a janela muda de tamanho. A cada quadro, o app só desenha essa imagem;
   - **a orientação:** a mesma do mapa do app (`base(x, z) = (z, −x)`, `frontend/src/volta/projecao.ts`);
-  - **as marcas:** a linha do s = 0 e as curvas da última análise, com um círculo e o nome (C01...).
+  - **as marcas:** a linha do s = 0 (da geometria oficial, só como marca) e as curvas da última análise, com um círculo e o nome (C01...).
 - **O carro:** a posição vem do próprio jogo, a cada quadro (`ac.getCar(0).position`), sem pedir nada ao backend. A posição do jogo e a da geometria oficial estão no mesmo sistema de coordenadas: é a mesma que o coach projeta.
 - **O fantasma da referência escolhida na Coleta:**
   - a volta é baixada do backend uma vez, quando o app abre ou quando a referência ou a análise mudam (a `minimapaVersao` das mensagens). Ela vem em todos os 2.167 pontos da grade do store (2 m), com a posição, o tempo e o pedal;
@@ -217,7 +223,8 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é 
   - se o backend cair depois de o app ter baixado a referência, o fantasma continua (os dados estão no app) e o canto de baixo diz "sem backend".
 - **O custo no jogo:**
   - a cada 10 s, o app escreve no log do CSP o FPS do jogo (`ac.getSim().fps`, lido a cada 1 s): a média, a mínima e a máxima, e se cada mapa estava ligado ou desligado. O formato da linha: `[radio_engenheiro] fps: média <n> (mín <n>, máx <n>) em 10 s; minimapa ligado; mapa aproximado desligado` (ou `ligado e desligado`, quando mudou no meio). Com o jogo pausado ou num replay, a leitura não conta;
-  - o custo medido no jogo: a preencher depois do teste do pedido 35 (Parte G);
+  - **o custo medido no jogo** (21/10, 285 janelas de 10 s): com os dois mapas desligados, 140,9 FPS de média; com os dois ligados, 136,9 (a tela Ao vivo aberta no app). Com a tela Sessões, 138,9 e 136,0. **Os dois mapas juntos custam de 3 a 4 FPS, cerca de 3%.** No teste, os dois foram desligados juntos, então o custo de cada um não aparece separado;
+  - **a tela do app não muda o FPS do jogo:** 137,0 de média com a tela Ao vivo aberta e 136,1 com a tela Sessões;
   - fora do jogo: a rota monta o minimapa em cerca de 20 ms, uma vez, e manda 64 KB. A cada quadro, o app desenha a imagem da pista, dois círculos e o texto, e procura o ponto mais perto em cerca de 34 segmentos da referência.
 
 ### 5.3 O mapa aproximado
@@ -232,7 +239,7 @@ Pedido depois do primeiro teste no jogo (21/10): a vista de perto da tela Volta 
   - as camadas do cache que o mapa do app desenha (`drawTrackSurface`): o asfalto, a pintura classificada (o limite em branco, os boxes em amarelo, as vias de serviço em cinza) e as zebras (a base escura com as faixas brancas), com as cores e as larguras do app;
   - desenhada uma vez numa imagem, `pista_detalhada.png` (2.788 × 4.118 px, 3 px por metro, 0,56 MB), pelo `gerar_pista.py`;
   - a cada quadro, o app desenha essa imagem girada (`ui.drawImageQuad`): cada canto da janela volta para o mundo e daí para a imagem, que está nas coordenadas do mapa (x, −z), as mesmas da posição do carro;
-  - sem a imagem, ou enquanto ela carrega, o app desenha só as bordas do asfalto.
+  - sem a imagem, ou enquanto ela carrega, o app desenha só o contorno do asfalto, como no minimapa.
 - **Por cima da pista:**
   - **o seu traçado** desde a linha, pintado pelo pedal: o freio em vermelho, o acelerador cheio em verde e o parcial em amarelo. O app lê a posição e os pedais do jogo 20 vezes por segundo e guarda um ponto a cada 1,5 m;
   - **o traçado do fantasma,** da linha até onde ele está, mais apagado, com o pedal da volta de referência;
@@ -243,7 +250,7 @@ Pedido depois do primeiro teste no jogo (21/10): a vista de perto da tela Volta 
 - **A conferência fora do jogo:** uma prévia em HTML repete as contas do app (a câmera, a imagem girada, os traçados e as marcas), com a referência da IA e instantes reais da sessão de 18/10:
   - **na saída da reta dos boxes,** a pintura amarela dos boxes fica à esquerda, como na tela Volta;
   - **na freada da C04,** o carro e os dois traçados ficam dentro do asfalto, e a curva vira para a esquerda.
-- **O custo:** uma imagem e algumas centenas de pontos por quadro. O FPS entra no mesmo registro do minimapa, com o mapa aproximado ligado ou desligado.
+- **O custo:** uma imagem e algumas centenas de pontos por quadro. O FPS entra no mesmo registro do minimapa. O custo medido está na seção 5.2: os dois mapas juntos, de 3 a 4 FPS.
 
 ### 5.4 Instalar, ligar e remover
 

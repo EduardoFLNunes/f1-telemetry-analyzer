@@ -37,3 +37,14 @@ exit 0
 21 passed
 
 ## app do jogo: a conferencia acima ja e a do mapa aproximado (38 chamadas da API, 9 metodos)
+
+# Fechamento (21/10, 5f48c019)
+
+## backend: ..\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider tests
+787 passed, 18 warnings in 637.34s (0:10:37)
+exit 0
+
+## backend, so o radio: tests/test_radio.py
+22 passed
+
+## app do jogo: _conferencia_do_lua.txt (38 chamadas da API, 9 metodos, todos no SDK do CSP)

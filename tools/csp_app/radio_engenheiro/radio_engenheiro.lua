@@ -80,6 +80,7 @@ local CORES = {
   fundoDoMapa = rgbm(0.067, 0.071, 0.078, 0.92),
   branco = rgbm(1, 1, 1, 1),
   rotulo = rgbm(0.914, 0.929, 0.949, 0.75),
+  contorno = rgbm(0.914, 0.929, 0.949, 0.6),  -- o contorno do asfalto no minimapa
   faixaDoTexto = rgbm(0.067, 0.071, 0.078, 0.78),
 }
 -- O traçado pintado pelo pedal, como a tela Volta: 0 = parcial ou sem pedal, 1 = acelerador cheio, 2 = freio.
@@ -180,7 +181,8 @@ local estado = {
 }
 
 local mini = {
-  pista = nil,             -- {esquerda = {{x, z}, ...}, direita = {...}}
+  pista = nil,             -- {origem, contornos = {{{x, z}, ...}, ...}}: o contorno do asfalto tratado
+  linhaDoS0 = nil,         -- a marca da linha do s = 0: {{x, z}, {x, z}}
   origem = nil,            -- 'backend' ou 'arquivo do app'
   referencia = nil,        -- {tipo, tempoNaLinhaDoJogoS, pontos = {{x, z, t}, ...}}
   curvas = {},
@@ -240,8 +242,9 @@ local function lerAPistaDoApp()
   local ok, texto = pcall(io.load, PASTA .. '\\pista.json')
   if not ok or type(texto) ~= 'string' then return end
   local okJ, dados = pcall(JSON.parse, texto)
-  if okJ and type(dados) == 'table' and type(dados.pista) == 'table' then
+  if okJ and type(dados) == 'table' and type(dados.pista) == 'table' and type(dados.pista.contornos) == 'table' then
     mini.pista = dados.pista
+    mini.linhaDoS0 = type(dados.linhaDoS0) == 'table' and dados.linhaDoS0 or nil
     mini.origem = 'arquivo do app'
     mini.desenhado = nil
     if type(dados.curvas) == 'table' then mini.rotulos = dados.curvas end
@@ -270,12 +273,13 @@ local function baixarOMinimapa(versao)
       return
     end
     mini.versao = versao
-    if dados.disponivel == false or type(dados.pista) ~= 'table' then
+    if dados.disponivel == false or type(dados.pista) ~= 'table' or type(dados.pista.contornos) ~= 'table' then
       mini.motivo = tostring(dados.motivo or 'o backend não tem o minimapa')
       log('minimapa: ' .. mini.motivo)
       return
     end
     mini.pista = dados.pista
+    mini.linhaDoS0 = type(dados.linhaDoS0) == 'table' and dados.linhaDoS0 or mini.linhaDoS0
     mini.origem = 'backend'
     mini.referencia = type(dados.referencia) == 'table' and type(dados.referencia.pontos) == 'table'
       and dados.referencia or nil
@@ -630,8 +634,8 @@ end
 
 local function ajustarAEscala(W, H)
   local umin, umax, vmin, vmax = math.huge, -math.huge, math.huge, -math.huge
-  for _, lado in ipairs({ mini.pista.esquerda, mini.pista.direita }) do
-    for _, q in ipairs(lado) do
+  for _, contorno in ipairs(mini.pista.contornos) do
+    for _, q in ipairs(contorno) do
       local u, v = q[2], -q[1]
       umin, umax = math.min(umin, u), math.max(umax, u)
       vmin, vmax = math.min(vmin, v), math.max(vmax, v)
@@ -656,33 +660,28 @@ local function desenharAPista(W, H)
   end
   mini.canvas = canvas
   ajustarAEscala(W, H)
-  local esquerda, direita = mini.pista.esquerda, mini.pista.direita
-  local n = math.min(#esquerda, #direita)
   canvas:clear(rgbm(0, 0, 0, 0))
   canvas:update(function()
     ui.drawRectFilled(vec2(0, 0), vec2(W, H), CORES.painel, 10)
-    -- O asfalto: a linha do meio, da largura média da pista; depois, as duas bordas.
-    local largura = 0
-    ui.pathClear()
-    for i = 1, n do
-      local e, d = esquerda[i], direita[i]
-      largura = largura + math.sqrt((e[1] - d[1]) ^ 2 + (e[2] - d[2]) ^ 2)
-      ui.pathLineTo(naTela((e[1] + d[1]) / 2, (e[2] + d[2]) / 2))
-    end
-    ui.pathStroke(CORES.pista, true, math.max(3, mini.k * largura / math.max(n, 1) + 1))
-    for _, lado in ipairs({ esquerda, direita }) do
+    -- O contorno do asfalto tratado (o de fora, o do miolo, as áreas de escape e dos boxes).
+    for _, contorno in ipairs(mini.pista.contornos) do
       ui.pathClear()
-      for i = 1, n do
-        ui.pathLineTo(naTela(lado[i][1], lado[i][2]))
+      for _, q in ipairs(contorno) do
+        ui.pathLineTo(naTela(q[1], q[2]))
       end
-      ui.pathStroke(CORES.borda, true, 1)
+      ui.pathStroke(CORES.contorno, true, 1.6)
     end
-    -- A linha do s = 0 e as curvas da última análise.
-    ui.drawLine(naTela(esquerda[1][1], esquerda[1][2]), naTela(direita[1][1], direita[1][2]), CORES.texto, 2)
+    -- A marca da linha do s = 0 e as curvas da última análise.
+    local l = mini.linhaDoS0
+    if l and l[1] and l[2] then
+      ui.drawLine(naTela(l[1][1], l[1][2]), naTela(l[2][1], l[2][2]), CORES.texto, 2)
+    end
     for _, c in ipairs(mini.curvas) do
       local q = naTela(tonumber(c.x) or 0, tonumber(c.z) or 0)
       ui.drawCircle(q, 7, CORES.perda, 16, 2)
-      ui.dwriteDrawText(tostring(c.curva), 11, vec2(q.x + 9, q.y - 7), CORES.perda)
+      -- O nome do lado de dentro quando a marca está perto da borda direita.
+      local nx = q.x + 9 + 26 > W and q.x - 9 - 26 or q.x + 9
+      ui.dwriteDrawText(tostring(c.curva), 11, vec2(nx, q.y - 7), CORES.perda)
     end
   end)
   mini.desenhado = tostring(mini.versao) .. '|' .. tostring(mini.origem)
@@ -997,10 +996,10 @@ function aproximado(dt)
     pronta = okP and p
   end
   if not pronta and mini.pista then
-    -- Sem a imagem (ou enquanto ela carrega): as bordas do asfalto, como no minimapa.
-    for _, lado in ipairs({ mini.pista.esquerda, mini.pista.direita }) do
+    -- Sem a imagem (ou enquanto ela carrega): o contorno do asfalto, como no minimapa.
+    for _, contorno in ipairs(mini.pista.contornos) do
       ui.pathClear()
-      for _, q in ipairs(lado) do
+      for _, q in ipairs(contorno) do
         local sx, sy = tela(q[1], q[2])
         ui.pathLineTo(vec2(sx, sy))
       end

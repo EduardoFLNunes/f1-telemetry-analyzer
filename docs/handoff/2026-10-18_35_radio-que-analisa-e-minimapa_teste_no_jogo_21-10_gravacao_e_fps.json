@@ -1,0 +1,117 @@
+{
+ "gravacao": {
+  "tela Ao vivo aberta": {
+   "de": "20:31:00",
+   "ate": "21:03:30",
+   "voltas (inteiras ou em parte)": 15,
+   "pares de amostras": 89521,
+   "intervalo mediano (ms)": 15.0,
+   "intervalo p99 (ms)": 45.0,
+   "repetidas: mesmo cronometro e lugar (%)": 2.11,
+   "cronometro parado e carro andou (%)": 0.0,
+   "buracos >= 50 ms (%)": 0.67,
+   "maior buraco (ms)": 312.0,
+   "relogio do gravador - cronometro, p99 (ms)": 9.0
+  },
+  "tela Sessoes (outra tela)": {
+   "de": "21:04:00",
+   "ate": "21:17:59",
+   "voltas (inteiras ou em parte)": 7,
+   "pares de amostras": 39984,
+   "intervalo mediano (ms)": 15.0,
+   "intervalo p99 (ms)": 36.0,
+   "repetidas: mesmo cronometro e lugar (%)": 1.67,
+   "cronometro parado e carro andou (%)": 0.0,
+   "buracos >= 50 ms (%)": 0.305,
+   "maior buraco (ms)": 291.0,
+   "relogio do gravador - cronometro, p99 (ms)": 8.9
+  },
+  "18/10, antes deste pedido (referencia)": {
+   "pares de amostras": 90271,
+   "intervalo mediano (ms)": 15.0,
+   "intervalo p99 (ms)": 48.0,
+   "repetidas: mesmo cronometro e lugar (%)": 3.98,
+   "cronometro parado e carro andou (%)": 0.001,
+   "buracos >= 50 ms (%)": 0.844,
+   "maior buraco (ms)": 288.0,
+   "relogio do gravador - cronometro, p99 (ms)": 13.4
+  }
+ },
+ "fps": {
+  "fora dos blocos": {
+   "minimapa desligado / aproximado desligado": {
+    "janelas de 10 s": 5,
+    "media": 126.2,
+    "mediana": 138.7,
+    "minimo": 30
+   },
+   "minimapa ligado e desligado / aproximado ligado e desligado": {
+    "janelas de 10 s": 1,
+    "media": 159.3,
+    "mediana": 159.3,
+    "minimo": 126
+   },
+   "todas": {
+    "janelas de 10 s": 6,
+    "media": 131.7,
+    "mediana": 139.9,
+    "minimo": 30
+   }
+  },
+  "tela Ao vivo aberta": {
+   "minimapa desligado / aproximado desligado": {
+    "janelas de 10 s": 9,
+    "media": 140.9,
+    "mediana": 141.1,
+    "minimo": 132
+   },
+   "minimapa ligado / aproximado ligado": {
+    "janelas de 10 s": 183,
+    "media": 136.9,
+    "mediana": 136.3,
+    "minimo": 78
+   },
+   "minimapa ligado e desligado / aproximado ligado e desligado": {
+    "janelas de 10 s": 3,
+    "media": 133.6,
+    "mediana": 133.5,
+    "minimo": 98
+   },
+   "todas": {
+    "janelas de 10 s": 195,
+    "media": 137.0,
+    "mediana": 136.8,
+    "minimo": 78
+   }
+  },
+  "tela Sessoes (outra tela)": {
+   "minimapa desligado / aproximado desligado": {
+    "janelas de 10 s": 4,
+    "media": 138.9,
+    "mediana": 140.1,
+    "minimo": 129
+   },
+   "minimapa ligado / aproximado ligado": {
+    "janelas de 10 s": 79,
+    "media": 136.0,
+    "mediana": 136.9,
+    "minimo": 76
+   },
+   "minimapa ligado e desligado / aproximado ligado e desligado": {
+    "janelas de 10 s": 1,
+    "media": 134.4,
+    "mediana": 134.4,
+    "minimo": 124
+   },
+   "todas": {
+    "janelas de 10 s": 84,
+    "media": 136.1,
+    "mediana": 136.9,
+    "minimo": 76
+   }
+  }
+ },
+ "fps_linhas": 285,
+ "fps_de": "2026-10-21 20:30:38.835000",
+ "fps_ate": "2026-10-21 21:17:58.825000"
+}
