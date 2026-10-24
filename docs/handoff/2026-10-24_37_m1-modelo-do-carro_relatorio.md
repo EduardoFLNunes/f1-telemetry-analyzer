@@ -7,7 +7,7 @@
   - `35b5c020` docs: pedido 37 (M1: o primeiro modelo do carro para a frente, fisica simples e correcao aprendida)
   - `e0a62949` Pedido 37, Parte A: o ADR 0022 e a M1 registrada antes de construir
   - `7bf5f565` Pedido 37, Parte B: os dados da M1 no cronometro do jogo e as conferencias de convencao
-  - o commit da Parte C (parada), com este relatório e o handoff: ver `git log` da branch (a mensagem começa com "Pedido 37, Parte C, parado")
+  - `4dab48c8` Pedido 37, Parte C, parado: a regra registrada para o entre-eixos nao identifica
 - **Arquivos de handoff** (`docs/handoff/`):
   - `2026-10-24_37_m1-modelo-do-carro_relatorio.md` (este)
   - `2026-10-24_37_m1-modelo-do-carro_resultados.json` (ADR 0007: commit, `geometry_id`, ambiente, comandos, hashes)
