@@ -170,3 +170,58 @@ equações:           dvx/dt = F_xr + F_xf·cos δ − F_yf·sin δ − R + vy·
 ### 1.8 O que se espera, antes de ver qualquer número
 
 A física simples deve bater a persistência com folga (critério 1), e a correção aprendida deve melhorar pouco sobre ela em 0,5 s, perto do limite de 0,20 contra R1, com o maior ganho na guinada e na velocidade lateral e o menor na longitudinal.
+
+## 2. Os dados (Parte B)
+
+Comando: `python -m ml.scripts.m1_modelo_carro dados`. As 5 gravações têm o mesmo sha256 registrado no meta do store v2, e o número de amostras cruas de cada uma das 57 voltas bate com o `raw_samples` do store: o corte é o mesmo.
+
+| sessão | voltas | amostras cruas | tiradas na limpeza | repetidas | buracos ≥ 50 ms | trechos | trechos curtos tirados | passos de 50 ms | segundos |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `2026-10-15_23-24-50` | 11 | 57.929 | 49 | 845 (1,5%) | 167 | 162 | 16 | 19.856 | 985 |
+| `2026-10-17_01-02-22` | 12 | 63.486 | 94 | 879 (1,4%) | 170 | 163 | 19 | 21.751 | 1.079 |
+| `2026-10-17_16-17-08` | 16 | 85.788 | 97 | 4.392 (5,1%) | 659 | 458 | 217 | 28.804 | 1.417 |
+| `2026-10-18_12-38-44` | 9 | 46.161 | 95 | 1.890 (4,1%) | 383 | 331 | 61 | 15.943 | 781 |
+| `2026-10-21_20-30-54` | 9 | 46.251 | 64 | 843 (1,8%) | 248 | 237 | 20 | 15.896 | 783 |
+| **total** | **57** | **299.615** | **399** | **8.849** | **1.627** | **1.351** | **333** | **102.250** | **5.045** |
+
+- **Tiradas na limpeza:** as que o `clean_lap` do store tira (horário do gravador repetido).
+- **Repetidas:** o cronômetro do jogo não andou. A sessão do pacote 0.4.0 (17/10 16:17) tem 5,1%, como o pedido 33 já tinha medido.
+- **Buracos:** a mesma sessão tem 659 buracos de 50 ms ou mais em 16 voltas, contra 15 por volta nas outras. Por isso ela perde 217 trechos curtos demais (menos de 2 pontos).
+- **Faixas (p1 / p50 / p99, todas as sessões):** `vx` de 19 a 74 m/s (mediana 46); `vy` de −4,6 a 5,0 m/s (mediana −0,23); guinada de −0,85 a 0,75 rad/s; volante de −0,47 a 0,47; `brakeBias` sempre 0,55; temperatura média dos pneus de 31 °C (início de sessão) a 93 °C. Todos os canais estão 100% preenchidos. O JSON completo, por sessão e por volta, está em `docs/handoff/2026-10-24_37_m1-modelo-do-carro_dados.json`.
+
+## 3. As conferências de convenção (Parte B.3)
+
+Comando: `python -m ml.scripts.m1_modelo_carro convencoes`. Todas batem, com a mesma convenção nas 5 sessões.
+
+| conferência | inclinação | correlação | esquerda / direita | resultado |
+|---|---:|---:|---|---|
+| aceleração lateral contra `vx` × guinada gravada | 0,972 | 0,985 | 0,977 / 0,989 (correlação 0,907 / 0,884) | bate; a guinada gravada já é positiva para a esquerda (`s_r = +1`) |
+| derivada do `heading` contra a guinada gravada | −0,999 | −0,999 | −1,001 / −1,000 | bate; o `heading` **diminui** girando para a esquerda (`ψ = −heading`) |
+| `localVelocity.x` contra a velocidade do mundo para a esquerda | 0,998 | 0,99998 | 0,997 / 1,000 | bate; `localVelocity.x` já é positiva para a esquerda (`s_vy = +1`) |
+| `localVelocity.z` contra a velocidade do mundo para a frente | 1,001 | 0,99999 | 1,001 / 1,001 | bate |
+| volante: sinal de `−steer` igual ao da guinada, com \|a_y\| ≥ 0,5 g | — | — | 99,8% / 99,5% (99,2% no geral) | bate |
+
+- **A direção do carro no mundo** é `(−sen h, cos h)` no plano (x, z), e a esquerda é `(cos h, sen h)`.
+- **A aceleração lateral positiva para a esquerda** (M0) confere com a geometria: positiva em 99,3% dos pontos com \|a_y\| ≥ 0,5 g nas curvas à esquerda, e negativa em 99,9% nas à direita.
+- **O sinal da velocidade lateral nas curvas:** `vy` é negativa nas curvas à esquerda (C01: mediana −0,83 m/s a 105 km/h) e positiva nas à direita (C10: +0,30 m/s a 83 km/h; C06: +2,5 m/s a 171 km/h). O carro aponta para dentro da curva e o centro dele anda para fora: a deriva do pneu traseiro vence o efeito geométrico em todas as 14 curvas, até nas lentas.
+- **A correlação dentro de cada lado.** Na guinada, a correlação calculada só dentro das curvas à esquerda (0,907) e só dentro das à direita (0,884) fica abaixo de 0,95. A regra registrada (1.3) pede a inclinação e a correlação em todas as amostras e o mesmo sinal nos dois lados, e isso é atendido. Dentro de um lado só, os valores ficam numa faixa estreita e a correlação cai sem que o sinal esteja em dúvida (a inclinação é 0,977 e 0,989). A primeira versão do código aplicava os limites também a cada lado, mais rígido que o texto; ela foi alinhada ao texto registrado. **Este ponto fica para o Eduardo confirmar** (relatório do pedido 37).
+
+## 4. A física: onde o trabalho parou (Parte C)
+
+**A regra registrada para o entre-eixos não funciona com estes dados.** Ela foi aplicada nas 4 sessões de treino de cada rodada, como registrado:
+
+| rodada (sessão de fora) | `m` (kg) | `w_f` | `h/L` | `b` (m) | `L` (m) | IC 95% de `L` | `k_δ` (rad) |
+|---|---:|---:|---:|---:|---:|---|---:|
+| `2026-10-15_23-24-50` | 648 | 0,428 | 0,135 | −0,08 | −0,18 | −1,75 a 1,31 | 0,066 |
+| `2026-10-17_01-02-22` | 639 | 0,431 | 0,137 | 0,20 | 0,45 | −0,08 a 1,04 | 0,079 |
+| `2026-10-17_16-17-08` | 578 | 0,451 | 0,163 | −0,22 | −0,49 | −2,47 a 1,00 | 0,014 |
+| `2026-10-18_12-38-44` | 630 | 0,425 | 0,142 | −0,16 | −0,37 | −1,94 a 0,89 | 0,048 |
+| `2026-10-21_20-30-54` | 653 | 0,417 | 0,135 | −0,17 | −0,40 | −2,21 a 1,05 | 0,051 |
+
+- **O que dá certo:** a distribuição do peso (`w_f` de 0,42 a 0,45), a carga aerodinâmica (`κ_L` de 0,0030 a 0,0036 1/m, cerca de 1,7 vez o peso a 270 km/h, com 43% a 45% na frente) e `h/L` (0,13 a 0,16) saem estáveis entre as rodadas. A massa (578 a 653 kg) fica abaixo da faixa registrada (700 a 900 kg): as amostras calmas (\|a_x\| e \|a_y\| < 0,1 g) estão quase todas nas retas, em alta velocidade, e o intercepto em `v = 0` é uma extrapolação. A massa não entra na conta da física (tudo é por unidade de massa), só no `h/L`.
+- **O que não dá:** `b` sai perto de zero e `L` sai negativo ou menor que 1,1 m, longe da faixa plausível (2,8 a 3,8 m), com um intervalo que passa de zero em 4 das 5 rodadas. Com `L` negativo a física não tem sentido, e o ajuste dela nas sessões de treino fica **pior que a persistência** já em um passo (0,095 contra 0,089 no erro normalizado) e em 0,5 s (skill −0,04 contra R0), com 3 parâmetros no limite (`k²`, `κ_D` e `c0`).
+- **Por quê (diagnóstico só nas sessões de treino da rodada 1):** a inclinação de `vy` contra `r` muda com a velocidade: −0,87 m entre 10 e 30 m/s, −1,05 entre 30 e 45, −2,41 entre 45 e 60, −3,55 entre 60 e 90. A regra supõe que a deriva do pneu traseiro por unidade de aceleração lateral é constante. Com a carga aerodinâmica, a rigidez do pneu cresce com a velocidade, a deriva cai, e a regressão confunde os dois termos. Além disso, com \|a_y\| ≤ 0,5 g a guinada quase não varia em alta velocidade (desvio de 0,04 rad/s acima de 60 m/s), e `r` e `vx·a_y` ficam quase colineares.
+- **Duas tentativas de diagnóstico, nenhuma adotada:**
+  - **a mesma regressão com a deriva dividida pela carga do eixo** (que cresce com `v²`): `b` de 0,16 a 0,56 m e `L` de 0,37 a 1,31 m, com intervalos que passam de zero. Também não identifica;
+  - **`L` e `k_δ` ajustados junto com a física** (com `b = w_f·L`, nos limites registrados): `L` vai para o limite de 3,8 m, `k_δ` sai 0,30 rad (17°, perto dos 15° que a M0 sugeriu), e a física passa a bater a persistência em um passo (0,078 contra 0,089). Em 0,5 s, nas próprias sessões de treino, o skill contra R0 é 0,09 (a velocidade lateral é a grandeza em que a física perde para a persistência); em 1,0 s, −0,39.
+- **O que isso muda:** a seção 1.4 precisa de outra regra para `b`, `L` e `k_δ`, e isso é uma mudança do registrado. **O trabalho parou aqui, antes de qualquer previsão na sessão de teste,** para o Eduardo decidir (relatório do pedido 37). Nenhum número de teste foi calculado.

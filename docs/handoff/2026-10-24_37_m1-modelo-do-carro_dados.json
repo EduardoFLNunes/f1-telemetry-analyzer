@@ -1,0 +1,1665 @@
+{
+ "pedido": 37,
+ "parte": "B",
+ "commit": "e0a62949558dec273da5dc88e1000ee22d952ca4",
+ "geometry_id": "0ed16f0dd2225990",
+ "dt_s": 0.05,
+ "buraco_s": 0.05,
+ "ambiente": {
+  "python": "3.9.7",
+  "numpy": "1.26.3",
+  "pandas": "2.1.4",
+  "scipy": "1.11.4",
+  "scikit-learn": "1.6.1",
+  "plataforma": "Windows-10-10.0.26200-SP0"
+ },
+ "comando": "python -m ml.scripts.m1_modelo_carro dados",
+ "lidos": {
+  "store_v2": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2.parquet",
+   "bytes": 380586213,
+   "sha256": "581012ea1b89741fa26c4cbbfca0cafe7173b488366f1433999cedd35b8ab5e8"
+  },
+  "store_v2_meta": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2_meta.json",
+   "bytes": 1336399,
+   "sha256": "6e12ff1a4bdf4bc3d6552e9daf63231112e055215e8b7b301495f8ff54dc92f2"
+  }
+ },
+ "gravacoes": {
+  "2026-10-15_23-24-50_vhe_interlagos": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\recordings\\2026-10-15_23-24-50_vhe_interlagos\\player.jsonl",
+   "bytes": 556513212,
+   "sha256": "21b6d30a29031ff686f4232abf9699b7afe72f0fe7cb933e4a3a9baab85ab32e",
+   "igual_ao_do_store": true
+  },
+  "2026-10-17_01-02-22_vhe_interlagos": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\recordings\\2026-10-17_01-02-22_vhe_interlagos\\player.jsonl",
+   "bytes": 767815886,
+   "sha256": "490dd97d79c6f75e336a62c68aae4ebb94255901cd7fdda21a061dbe56a12db3",
+   "igual_ao_do_store": true
+  },
+  "2026-10-17_16-17-08_vhe_interlagos": {
+   "arquivo": "C:\\Users\\Dokas\\AppData\\Roaming\\Automobilista Telemetria\\data\\recordings\\2026-10-17_16-17-08_vhe_interlagos\\player.jsonl",
+   "bytes": 651630041,
+   "sha256": "24535cda8fa03e97ec35748a4df42d96bd1b0a75a8b53ad1cfb2dc93742b18f7",
+   "igual_ao_do_store": true
+  },
+  "2026-10-18_12-38-44_vhe_interlagos": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\recordings\\2026-10-18_12-38-44_vhe_interlagos\\player.jsonl",
+   "bytes": 461494686,
+   "sha256": "92dbc61e7c479505d05a0a0bb6258afcbc47e603977afa833afdb266a3dddb4a",
+   "igual_ao_do_store": true
+  },
+  "2026-10-21_20-30-54_vhe_interlagos": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\recordings\\2026-10-21_20-30-54_vhe_interlagos\\player.jsonl",
+   "bytes": 700523954,
+   "sha256": "4c57e31c05b10f9fbc897dab73e772b07f8a57e045ae50dbe96817b9f0a28443",
+   "igual_ao_do_store": true
+  }
+ },
+ "escritos": {
+  "grade_2026-10-15_23-24-50_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-15_23-24-50_vhe_interlagos.parquet",
+   "bytes": 3774811,
+   "sha256": "dc3b44480dcdf929f3077860062698585768306b70cfb63dfae478542fadb224"
+  },
+  "grade_2026-10-17_01-02-22_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-17_01-02-22_vhe_interlagos.parquet",
+   "bytes": 4102235,
+   "sha256": "3827254fd6f847e812ebfd55191b09b4b3cb4d3b7652db6db3e0c0cbcf5e57c1"
+  },
+  "grade_2026-10-17_16-17-08_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-17_16-17-08_vhe_interlagos.parquet",
+   "bytes": 5464933,
+   "sha256": "837ecfa346626741581185bad76d49ee9e9c4b496e3016ae4958eb489bcb896b"
+  },
+  "grade_2026-10-18_12-38-44_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-18_12-38-44_vhe_interlagos.parquet",
+   "bytes": 2988922,
+   "sha256": "51c5fcbacd9abcc2fdff7edf84b547487220f08a2ce34e5f57c45af2826702af"
+  },
+  "grade_2026-10-21_20-30-54_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-21_20-30-54_vhe_interlagos.parquet",
+   "bytes": 2977614,
+   "sha256": "ae55aa0cd2a120ea1ff9e10c1d324abf446c574027accf8af033fa52d32f68d8"
+  }
+ },
+ "sessoes": {
+  "2026-10-15_23-24-50_vhe_interlagos": {
+   "voltas": 11,
+   "amostras_cruas": 57929,
+   "tiradas_na_limpeza": 49,
+   "repetidas": 845,
+   "buracos": 167,
+   "trechos": 162,
+   "trechos_curtos_tirados": 16,
+   "passos": 19856,
+   "segundos": 984.7000000000002,
+   "faixas": {
+    "speed_kmh": {
+     "n": 19856,
+     "min": 69.94480859665644,
+     "p1": 75.41370955149334,
+     "p50": 165.86201831272666,
+     "p99": 264.0331126258487,
+     "max": 266.5640147816051,
+     "preenchido": 1.0
+    },
+    "vel_wx": {
+     "n": 19856,
+     "min": -53.706264149058946,
+     "p1": -50.67050546010336,
+     "p50": 10.521323537826536,
+     "p99": 49.88659456888834,
+     "max": 52.14120610555013,
+     "preenchido": 1.0
+    },
+    "vel_wy": {
+     "n": 19856,
+     "min": -5.315470457077026,
+     "p1": -4.39861020247136,
+     "p50": -0.2238599076157521,
+     "p99": 4.803302113215124,
+     "max": 5.297342975934365,
+     "preenchido": 1.0
+    },
+    "vel_wz": {
+     "n": 19856,
+     "min": -69.48953603108724,
+     "p1": -68.3196797834124,
+     "p50": -5.945570014771986,
+     "p99": 71.14828947158087,
+     "max": 71.76578244295987,
+     "preenchido": 1.0
+    },
+    "velocity_long": {
+     "n": 19856,
+     "min": 19.42839141119094,
+     "p1": 20.947677202224735,
+     "p50": 46.03932971046082,
+     "p99": 73.34000818464492,
+     "max": 74.04423939098011,
+     "preenchido": 1.0
+    },
+    "velocity_lat": {
+     "n": 19856,
+     "min": -9.124726104736329,
+     "p1": -3.033573398236874,
+     "p50": -0.22478681008021004,
+     "p99": 5.033184302647941,
+     "max": 10.483232498168945,
+     "preenchido": 1.0
+    },
+    "yaw_rate": {
+     "n": 19856,
+     "min": -1.2151391704877217,
+     "p1": -0.819225172059875,
+     "p50": 0.08119135509644322,
+     "p99": 0.7321112877130506,
+     "max": 1.1271676950984502,
+     "preenchido": 1.0
+    },
+    "steer_angle": {
+     "n": 19856,
+     "min": -0.574079942703247,
+     "p1": -0.44456276918451065,
+     "p50": -0.01532549931046881,
+     "p99": 0.4541873803734781,
+     "max": 0.6453479647636414,
+     "preenchido": 1.0
+    },
+    "throttle": {
+     "n": 19856,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 0.8581924080848691,
+     "p99": 1.0,
+     "max": 1.0,
+     "preenchido": 1.0
+    },
+    "brake": {
+     "n": 19856,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 0.0,
+     "p99": 0.942994563863391,
+     "max": 1.0,
+     "preenchido": 1.0
+    },
+    "lateral_g": {
+     "n": 19856,
+     "min": -4.156246185302734,
+     "p1": -2.7568058834757063,
+     "p50": 0.43218101064364145,
+     "p99": 2.5001928949356307,
+     "max": 5.056200361251831,
+     "preenchido": 1.0
+    },
+    "longitudinal_g": {
+     "n": 19856,
+     "min": -3.010225050377111,
+     "p1": -2.1673383641242983,
+     "p50": 0.1866870000958441,
+     "p99": 0.7848977525035609,
+     "max": 1.3975089987118914,
+     "preenchido": 1.0
+    },
+    "wheel_load_fl": {
+     "n": 19856,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 2295.990315755214,
+     "p99": 5558.135069986984,
+     "max": 8995.106730143607,
+     "preenchido": 1.0
+    },
+    "wheel_load_fr": {
+     "n": 19856,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 3157.5607788086563,
+     "p99": 5444.9349975585665,
+     "max": 22764.65234374876,
+     "preenchido": 1.0
+    },
+    "wheel_load_rl": {
+     "n": 19856,
+     "min": 0.0,
+     "p1": 1065.4593652343754,
+     "p50": 3234.6959309895783,
+     "p99": 6037.495927734362,
+     "max": 12732.399414063064,
+     "preenchido": 1.0
+    },
+    "wheel_load_rr": {
+     "n": 19856,
+     "min": 0.0,
+     "p1": 1151.0405285646982,
+     "p50": 3658.5999620225984,
+     "p99": 6350.42504882813,
+     "max": 12926.251106770625,
+     "preenchido": 1.0
+    },
+    "brake_bias": {
+     "n": 19856,
+     "min": 0.550000011920929,
+     "p1": 0.550000011920929,
+     "p50": 0.550000011920929,
+     "p99": 0.550000011920929,
+     "max": 0.550000011920929,
+     "preenchido": 1.0
+    },
+    "tyre_core_temp": {
+     "n": 19856,
+     "min": 48.413426081339516,
+     "p1": 48.97943112850189,
+     "p50": 62.96858402144857,
+     "p99": 74.12282449722291,
+     "max": 76.53610134124756,
+     "preenchido": 1.0
+    }
+   },
+   "por_volta": [
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0001",
+     "amostras_cruas": 5614,
+     "raw_samples_store": 5614,
+     "tiradas_na_limpeza": 3,
+     "repetidas": 78,
+     "buracos": 13,
+     "trechos": 10,
+     "trechos_curtos": 4,
+     "passos": 1920,
+     "segundos": 95.50000000000001
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0002",
+     "amostras_cruas": 5627,
+     "raw_samples_store": 5627,
+     "tiradas_na_limpeza": 5,
+     "repetidas": 85,
+     "buracos": 15,
+     "trechos": 16,
+     "trechos_curtos": 0,
+     "passos": 1928,
+     "segundos": 95.60000000000001
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0003",
+     "amostras_cruas": 5303,
+     "raw_samples_store": 5303,
+     "tiradas_na_limpeza": 5,
+     "repetidas": 75,
+     "buracos": 21,
+     "trechos": 19,
+     "trechos_curtos": 3,
+     "passos": 1814,
+     "segundos": 89.75000000000001
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0005",
+     "amostras_cruas": 5256,
+     "raw_samples_store": 5256,
+     "tiradas_na_limpeza": 5,
+     "repetidas": 79,
+     "buracos": 14,
+     "trechos": 14,
+     "trechos_curtos": 1,
+     "passos": 1799,
+     "segundos": 89.25000000000001
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0006",
+     "amostras_cruas": 5398,
+     "raw_samples_store": 5398,
+     "tiradas_na_limpeza": 4,
+     "repetidas": 70,
+     "buracos": 14,
+     "trechos": 14,
+     "trechos_curtos": 1,
+     "passos": 1849,
+     "segundos": 91.75000000000001
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0007",
+     "amostras_cruas": 5039,
+     "raw_samples_store": 5039,
+     "tiradas_na_limpeza": 6,
+     "repetidas": 89,
+     "buracos": 14,
+     "trechos": 14,
+     "trechos_curtos": 1,
+     "passos": 1736,
+     "segundos": 86.10000000000001
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0008",
+     "amostras_cruas": 5038,
+     "raw_samples_store": 5038,
+     "tiradas_na_limpeza": 2,
+     "repetidas": 59,
+     "buracos": 15,
+     "trechos": 14,
+     "trechos_curtos": 2,
+     "passos": 1721,
+     "segundos": 85.35
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0011",
+     "amostras_cruas": 5246,
+     "raw_samples_store": 5246,
+     "tiradas_na_limpeza": 5,
+     "repetidas": 87,
+     "buracos": 16,
+     "trechos": 16,
+     "trechos_curtos": 1,
+     "passos": 1800,
+     "segundos": 89.2
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0012",
+     "amostras_cruas": 5111,
+     "raw_samples_store": 5111,
+     "tiradas_na_limpeza": 4,
+     "repetidas": 73,
+     "buracos": 16,
+     "trechos": 16,
+     "trechos_curtos": 1,
+     "passos": 1763,
+     "segundos": 87.35
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0014",
+     "amostras_cruas": 5179,
+     "raw_samples_store": 5179,
+     "tiradas_na_limpeza": 3,
+     "repetidas": 66,
+     "buracos": 12,
+     "trechos": 12,
+     "trechos_curtos": 1,
+     "passos": 1776,
+     "segundos": 88.20000000000002
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0017",
+     "amostras_cruas": 5118,
+     "raw_samples_store": 5118,
+     "tiradas_na_limpeza": 7,
+     "repetidas": 84,
+     "buracos": 17,
+     "trechos": 17,
+     "trechos_curtos": 1,
+     "passos": 1750,
+     "segundos": 86.64999999999999
+    }
+   ],
+   "tempo_s": 23.9
+  },
+  "2026-10-17_01-02-22_vhe_interlagos": {
+   "voltas": 12,
+   "amostras_cruas": 63486,
+   "tiradas_na_limpeza": 94,
+   "repetidas": 879,
+   "buracos": 170,
+   "trechos": 163,
+   "trechos_curtos_tirados": 19,
+   "passos": 21751,
+   "segundos": 1079.4,
+   "faixas": {
+    "speed_kmh": {
+     "n": 21751,
+     "min": 51.67830106947157,
+     "p1": 75.41258430480957,
+     "p50": 166.1329330444336,
+     "p99": 263.959715101454,
+     "max": 266.54364013671875,
+     "preenchido": 1.0
+    },
+    "vel_wx": {
+     "n": 21751,
+     "min": -52.40225092569987,
+     "p1": -50.35398779975044,
+     "p50": 11.469784312778076,
+     "p99": 49.820119222005204,
+     "max": 51.82439708709717,
+     "preenchido": 1.0
+    },
+    "vel_wy": {
+     "n": 21751,
+     "min": -5.276788314183553,
+     "p1": -4.414038234286842,
+     "p50": -0.2234881189134398,
+     "p99": 4.794932895236553,
+     "max": 5.270593643188474,
+     "preenchido": 1.0
+    },
+    "vel_wz": {
+     "n": 21751,
+     "min": -69.76069786435082,
+     "p1": -68.08119483221145,
+     "p50": -6.329677549997954,
+     "p99": 71.20336380004883,
+     "max": 71.75408554077148,
+     "preenchido": 1.0
+    },
+    "velocity_long": {
+     "n": 21751,
+     "min": 14.353205362955729,
+     "p1": 20.82409742143419,
+     "p50": 46.118877410888715,
+     "p99": 73.32108561197916,
+     "max": 74.03831100463867,
+     "preenchido": 1.0
+    },
+    "velocity_lat": {
+     "n": 21751,
+     "min": -5.703469170464418,
+     "p1": -2.4334746559460942,
+     "p50": -0.2239050087001576,
+     "p99": 4.017785271008817,
+     "max": 17.5792613559299,
+     "preenchido": 1.0
+    },
+    "yaw_rate": {
+     "n": 21751,
+     "min": -1.057887351512909,
+     "p1": -0.7934535483519208,
+     "p50": 0.07635897397994833,
+     "p99": 0.7187792102495827,
+     "max": 0.8598924527565651,
+     "preenchido": 1.0
+    },
+    "steer_angle": {
+     "n": 21751,
+     "min": -0.5206866374722233,
+     "p1": -0.3904445257150768,
+     "p50": -0.014579998950164546,
+     "p99": 0.4185899794101712,
+     "max": 0.5070299804210663,
+     "preenchido": 1.0
+    },
+    "throttle": {
+     "n": 21751,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 0.8060005625089024,
+     "p99": 1.0,
+     "max": 1.0,
+     "preenchido": 1.0
+    },
+    "brake": {
+     "n": 21751,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 0.0,
+     "p99": 0.8688619716299906,
+     "max": 1.0,
+     "preenchido": 1.0
+    },
+    "lateral_g": {
+     "n": 21751,
+     "min": -3.2783971627554394,
+     "p1": -2.5782242086198526,
+     "p50": 0.41695496439934215,
+     "p99": 2.452170491218567,
+     "max": 3.3596450222862613,
+     "preenchido": 1.0
+    },
+    "longitudinal_g": {
+     "n": 21751,
+     "min": -2.504241175121731,
+     "p1": -1.9809377325905686,
+     "p50": 0.18780515591303296,
+     "p99": 0.7622882048288953,
+     "max": 1.208574652671814,
+     "preenchido": 1.0
+    },
+    "wheel_load_fl": {
+     "n": 21751,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 2284.366796875,
+     "p99": 5189.96507161455,
+     "max": 9255.999999999525,
+     "preenchido": 1.0
+    },
+    "wheel_load_fr": {
+     "n": 21751,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 3165.967312282982,
+     "p99": 5321.158393012122,
+     "max": 7889.035481770522,
+     "preenchido": 1.0
+    },
+    "wheel_load_rl": {
+     "n": 21751,
+     "min": 0.0,
+     "p1": 1230.1824320475257,
+     "p50": 3207.1063639322806,
+     "p99": 5929.228151351787,
+     "max": 9676.232964408275,
+     "preenchido": 1.0
+    },
+    "wheel_load_rr": {
+     "n": 21751,
+     "min": 0.0,
+     "p1": 1309.3061286078628,
+     "p50": 3602.2723253039976,
+     "p99": 6270.105550129978,
+     "max": 9053.903705019155,
+     "preenchido": 1.0
+    },
+    "brake_bias": {
+     "n": 21751,
+     "min": 0.550000011920929,
+     "p1": 0.550000011920929,
+     "p50": 0.550000011920929,
+     "p99": 0.550000011920929,
+     "max": 0.550000011920929,
+     "preenchido": 1.0
+    },
+    "tyre_core_temp": {
+     "n": 21751,
+     "min": 21.56143569946289,
+     "p1": 31.021254102389015,
+     "p50": 59.59044780731201,
+     "p99": 69.25988486607869,
+     "max": 69.74242038726807,
+     "preenchido": 1.0
+    }
+   },
+   "por_volta": [
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0003",
+     "amostras_cruas": 5281,
+     "raw_samples_store": 5281,
+     "tiradas_na_limpeza": 9,
+     "repetidas": 96,
+     "buracos": 16,
+     "trechos": 17,
+     "trechos_curtos": 0,
+     "passos": 1806,
+     "segundos": 89.45
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0005",
+     "amostras_cruas": 5145,
+     "raw_samples_store": 5145,
+     "tiradas_na_limpeza": 6,
+     "repetidas": 73,
+     "buracos": 22,
+     "trechos": 20,
+     "trechos_curtos": 3,
+     "passos": 1764,
+     "segundos": 87.2
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0006",
+     "amostras_cruas": 5488,
+     "raw_samples_store": 5488,
+     "tiradas_na_limpeza": 3,
+     "repetidas": 78,
+     "buracos": 9,
+     "trechos": 9,
+     "trechos_curtos": 1,
+     "passos": 1887,
+     "segundos": 93.9
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0009",
+     "amostras_cruas": 5118,
+     "raw_samples_store": 5118,
+     "tiradas_na_limpeza": 6,
+     "repetidas": 70,
+     "buracos": 15,
+     "trechos": 14,
+     "trechos_curtos": 2,
+     "passos": 1749,
+     "segundos": 86.75
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0010",
+     "amostras_cruas": 5229,
+     "raw_samples_store": 5229,
+     "tiradas_na_limpeza": 11,
+     "repetidas": 63,
+     "buracos": 14,
+     "trechos": 13,
+     "trechos_curtos": 2,
+     "passos": 1796,
+     "segundos": 89.15
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0011",
+     "amostras_cruas": 5393,
+     "raw_samples_store": 5393,
+     "tiradas_na_limpeza": 7,
+     "repetidas": 73,
+     "buracos": 13,
+     "trechos": 14,
+     "trechos_curtos": 0,
+     "passos": 1846,
+     "segundos": 91.60000000000001
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0013",
+     "amostras_cruas": 5590,
+     "raw_samples_store": 5590,
+     "tiradas_na_limpeza": 9,
+     "repetidas": 74,
+     "buracos": 15,
+     "trechos": 11,
+     "trechos_curtos": 5,
+     "passos": 1914,
+     "segundos": 95.14999999999999
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0015",
+     "amostras_cruas": 5289,
+     "raw_samples_store": 5289,
+     "tiradas_na_limpeza": 8,
+     "repetidas": 69,
+     "buracos": 11,
+     "trechos": 12,
+     "trechos_curtos": 0,
+     "passos": 1817,
+     "segundos": 90.25
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0016",
+     "amostras_cruas": 5400,
+     "raw_samples_store": 5400,
+     "tiradas_na_limpeza": 11,
+     "repetidas": 60,
+     "buracos": 11,
+     "trechos": 12,
+     "trechos_curtos": 0,
+     "passos": 1851,
+     "segundos": 91.95
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0017",
+     "amostras_cruas": 5322,
+     "raw_samples_store": 5322,
+     "tiradas_na_limpeza": 8,
+     "repetidas": 69,
+     "buracos": 16,
+     "trechos": 14,
+     "trechos_curtos": 3,
+     "passos": 1821,
+     "segundos": 90.35000000000001
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0018",
+     "amostras_cruas": 5174,
+     "raw_samples_store": 5174,
+     "tiradas_na_limpeza": 8,
+     "repetidas": 82,
+     "buracos": 12,
+     "trechos": 12,
+     "trechos_curtos": 1,
+     "passos": 1769,
+     "segundos": 87.85
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0019",
+     "amostras_cruas": 5057,
+     "raw_samples_store": 5057,
+     "tiradas_na_limpeza": 8,
+     "repetidas": 72,
+     "buracos": 16,
+     "trechos": 15,
+     "trechos_curtos": 2,
+     "passos": 1731,
+     "segundos": 85.79999999999998
+    }
+   ],
+   "tempo_s": 29.5
+  },
+  "2026-10-17_16-17-08_vhe_interlagos": {
+   "voltas": 16,
+   "amostras_cruas": 85788,
+   "tiradas_na_limpeza": 97,
+   "repetidas": 4392,
+   "buracos": 659,
+   "trechos": 458,
+   "trechos_curtos_tirados": 217,
+   "passos": 28804,
+   "segundos": 1417.3,
+   "faixas": {
+    "speed_kmh": {
+     "n": 28804,
+     "min": 0.12045167535545107,
+     "p1": 68.36108138529458,
+     "p50": 163.8968044916789,
+     "p99": 257.15895853678387,
+     "max": 259.8726569281684,
+     "preenchido": 1.0
+    },
+    "vel_wx": {
+     "n": 28804,
+     "min": -54.29368167453342,
+     "p1": -49.78133360591077,
+     "p50": 10.507220141092944,
+     "p99": 47.72877607133655,
+     "max": 51.089456431070964,
+     "preenchido": 1.0
+    },
+    "vel_wy": {
+     "n": 28804,
+     "min": -5.158517360687249,
+     "p1": -4.365340523401917,
+     "p50": -0.19795232266187102,
+     "p99": 4.696990432966306,
+     "max": 5.1889355182647705,
+     "preenchido": 1.0
+    },
+    "vel_wz": {
+     "n": 28804,
+     "min": -68.81605699327257,
+     "p1": -67.16278065490722,
+     "p50": -4.4165229479472305,
+     "p99": 69.35641642252604,
+     "max": 69.83148193359375,
+     "preenchido": 1.0
+    },
+    "velocity_long": {
+     "n": 28804,
+     "min": -0.1854087505489398,
+     "p1": 18.84019812329607,
+     "p50": 45.49921221051898,
+     "p99": 71.43163590494791,
+     "max": 72.18512937757704,
+     "preenchido": 1.0
+    },
+    "velocity_lat": {
+     "n": 28804,
+     "min": -5.847202587127685,
+     "p1": -2.325453356901804,
+     "p50": -0.21863971898953793,
+     "p99": 3.77616070508957,
+     "max": 11.368950441148538,
+     "preenchido": 1.0
+    },
+    "yaw_rate": {
+     "n": 28804,
+     "min": -1.6087336540222072,
+     "p1": -0.8423615380184966,
+     "p50": 0.08101352718141322,
+     "p99": 0.7312698089571849,
+     "max": 0.9147333638234573,
+     "preenchido": 1.0
+    },
+    "steer_angle": {
+     "n": 28804,
+     "min": -0.6999817815693944,
+     "p1": -0.4442381742596626,
+     "p50": -0.016259998703996213,
+     "p99": 0.43803948828246914,
+     "max": 0.572579999764761,
+     "preenchido": 1.0
+    },
+    "throttle": {
+     "n": 28804,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 0.853261109193166,
+     "p99": 1.0,
+     "max": 1.0,
+     "preenchido": 1.0
+    },
+    "brake": {
+     "n": 28804,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 0.0,
+     "p99": 0.8714616374032839,
+     "max": 1.0,
+     "preenchido": 1.0
+    },
+    "lateral_g": {
+     "n": 28804,
+     "min": -4.640003458658857,
+     "p1": -2.586072407722479,
+     "p50": 0.4156205445528033,
+     "p99": 2.3539963817596443,
+     "max": 8.0,
+     "preenchido": 1.0
+    },
+    "longitudinal_g": {
+     "n": 28804,
+     "min": -2.4732618331909157,
+     "p1": -1.9675487596193975,
+     "p50": 0.18100590954224272,
+     "p99": 0.7315826324405117,
+     "max": 1.3756195584931985,
+     "preenchido": 1.0
+    },
+    "wheel_load_fl": {
+     "n": 28804,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 2134.3341166178107,
+     "p99": 5071.430770941803,
+     "max": 10798.008984375041,
+     "preenchido": 1.0
+    },
+    "wheel_load_fr": {
+     "n": 28804,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 3043.7783536043135,
+     "p99": 5004.180143337718,
+     "max": 18553.157492897728,
+     "preenchido": 1.0
+    },
+    "wheel_load_rl": {
+     "n": 28804,
+     "min": 0.0,
+     "p1": 1156.1045581054689,
+     "p50": 3119.0940314398476,
+     "p99": 5717.344204427111,
+     "max": 11061.65722656252,
+     "preenchido": 1.0
+    },
+    "wheel_load_rr": {
+     "n": 28804,
+     "min": 0.0,
+     "p1": 1152.781309000649,
+     "p50": 3525.003515625036,
+     "p99": 5941.3980664059345,
+     "max": 12302.21168154473,
+     "preenchido": 1.0
+    },
+    "brake_bias": {
+     "n": 28804,
+     "min": 0.550000011920929,
+     "p1": 0.550000011920929,
+     "p50": 0.550000011920929,
+     "p99": 0.550000011920929,
+     "max": 0.550000011920929,
+     "preenchido": 1.0
+    },
+    "tyre_core_temp": {
+     "n": 28804,
+     "min": 59.41359011332194,
+     "p1": 60.45245040734609,
+     "p50": 79.19189718034532,
+     "p99": 93.2060708213575,
+     "max": 99.14454078674316,
+     "preenchido": 1.0
+    }
+   },
+   "por_volta": [
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0001",
+     "amostras_cruas": 5220,
+     "raw_samples_store": 5220,
+     "tiradas_na_limpeza": 8,
+     "repetidas": 95,
+     "buracos": 22,
+     "trechos": 20,
+     "trechos_curtos": 3,
+     "passos": 1775,
+     "segundos": 87.75000000000001
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0002",
+     "amostras_cruas": 5219,
+     "raw_samples_store": 5219,
+     "tiradas_na_limpeza": 7,
+     "repetidas": 293,
+     "buracos": 51,
+     "trechos": 37,
+     "trechos_curtos": 15,
+     "passos": 1750,
+     "segundos": 85.64999999999999
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0003",
+     "amostras_cruas": 5164,
+     "raw_samples_store": 5164,
+     "tiradas_na_limpeza": 10,
+     "repetidas": 294,
+     "buracos": 58,
+     "trechos": 39,
+     "trechos_curtos": 20,
+     "passos": 1728,
+     "segundos": 84.45
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0004",
+     "amostras_cruas": 5210,
+     "raw_samples_store": 5210,
+     "tiradas_na_limpeza": 5,
+     "repetidas": 374,
+     "buracos": 66,
+     "trechos": 45,
+     "trechos_curtos": 22,
+     "passos": 1733,
+     "segundos": 84.39999999999999
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0006",
+     "amostras_cruas": 5987,
+     "raw_samples_store": 5987,
+     "tiradas_na_limpeza": 4,
+     "repetidas": 320,
+     "buracos": 45,
+     "trechos": 33,
+     "trechos_curtos": 13,
+     "passos": 2033,
+     "segundos": 100.0
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0007",
+     "amostras_cruas": 5324,
+     "raw_samples_store": 5324,
+     "tiradas_na_limpeza": 6,
+     "repetidas": 215,
+     "buracos": 40,
+     "trechos": 24,
+     "trechos_curtos": 17,
+     "passos": 1773,
+     "segundos": 87.45
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0009",
+     "amostras_cruas": 5428,
+     "raw_samples_store": 5428,
+     "tiradas_na_limpeza": 11,
+     "repetidas": 333,
+     "buracos": 31,
+     "trechos": 24,
+     "trechos_curtos": 8,
+     "passos": 1843,
+     "segundos": 90.95
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0010",
+     "amostras_cruas": 5455,
+     "raw_samples_store": 5455,
+     "tiradas_na_limpeza": 5,
+     "repetidas": 331,
+     "buracos": 26,
+     "trechos": 23,
+     "trechos_curtos": 4,
+     "passos": 1868,
+     "segundos": 92.24999999999999
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0011",
+     "amostras_cruas": 5334,
+     "raw_samples_store": 5334,
+     "tiradas_na_limpeza": 5,
+     "repetidas": 333,
+     "buracos": 24,
+     "trechos": 19,
+     "trechos_curtos": 6,
+     "passos": 1815,
+     "segundos": 89.8
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0012",
+     "amostras_cruas": 6015,
+     "raw_samples_store": 6015,
+     "tiradas_na_limpeza": 5,
+     "repetidas": 367,
+     "buracos": 46,
+     "trechos": 34,
+     "trechos_curtos": 13,
+     "passos": 2027,
+     "segundos": 99.64999999999999
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0013",
+     "amostras_cruas": 5273,
+     "raw_samples_store": 5273,
+     "tiradas_na_limpeza": 10,
+     "repetidas": 242,
+     "buracos": 37,
+     "trechos": 23,
+     "trechos_curtos": 15,
+     "passos": 1757,
+     "segundos": 86.70000000000002
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0015",
+     "amostras_cruas": 5361,
+     "raw_samples_store": 5361,
+     "tiradas_na_limpeza": 4,
+     "repetidas": 225,
+     "buracos": 36,
+     "trechos": 23,
+     "trechos_curtos": 14,
+     "passos": 1791,
+     "segundos": 88.4
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0016",
+     "amostras_cruas": 5086,
+     "raw_samples_store": 5086,
+     "tiradas_na_limpeza": 5,
+     "repetidas": 277,
+     "buracos": 51,
+     "trechos": 33,
+     "trechos_curtos": 19,
+     "passos": 1676,
+     "segundos": 82.15
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0018",
+     "amostras_cruas": 5090,
+     "raw_samples_store": 5090,
+     "tiradas_na_limpeza": 2,
+     "repetidas": 273,
+     "buracos": 49,
+     "trechos": 29,
+     "trechos_curtos": 21,
+     "passos": 1680,
+     "segundos": 82.55
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0020",
+     "amostras_cruas": 5321,
+     "raw_samples_store": 5321,
+     "tiradas_na_limpeza": 3,
+     "repetidas": 217,
+     "buracos": 40,
+     "trechos": 26,
+     "trechos_curtos": 15,
+     "passos": 1777,
+     "segundos": 87.55000000000001
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0021",
+     "amostras_cruas": 5301,
+     "raw_samples_store": 5301,
+     "tiradas_na_limpeza": 7,
+     "repetidas": 203,
+     "buracos": 37,
+     "trechos": 26,
+     "trechos_curtos": 12,
+     "passos": 1778,
+     "segundos": 87.60000000000001
+    }
+   ],
+   "tempo_s": 26.3
+  },
+  "2026-10-18_12-38-44_vhe_interlagos": {
+   "voltas": 9,
+   "amostras_cruas": 46161,
+   "tiradas_na_limpeza": 95,
+   "repetidas": 1890,
+   "buracos": 383,
+   "trechos": 331,
+   "trechos_curtos_tirados": 61,
+   "passos": 15943,
+   "segundos": 780.6,
+   "faixas": {
+    "speed_kmh": {
+     "n": 15943,
+     "min": 74.07987823486329,
+     "p1": 82.86049370320639,
+     "p50": 166.88816833496094,
+     "p99": 255.88193854437932,
+     "max": 258.0492431640625,
+     "preenchido": 1.0
+    },
+    "vel_wx": {
+     "n": 15943,
+     "min": -51.3977419535319,
+     "p1": -49.08145430131391,
+     "p50": 10.766250133514404,
+     "p99": 48.81233521185981,
+     "max": 51.37013668484158,
+     "preenchido": 1.0
+    },
+    "vel_wy": {
+     "n": 15943,
+     "min": -5.179058265686018,
+     "p1": -4.537366172790527,
+     "p50": -0.2262536659836769,
+     "p99": 4.649825471242263,
+     "max": 5.162413597106922,
+     "preenchido": 1.0
+    },
+    "vel_wz": {
+     "n": 15943,
+     "min": -68.79417114257812,
+     "p1": -67.47915720621745,
+     "p50": -5.0133364995320635,
+     "p99": 69.01334743245442,
+     "max": 69.5540305243598,
+     "preenchido": 1.0
+    },
+    "velocity_long": {
+     "n": 15943,
+     "min": 20.538181686401366,
+     "p1": 23.013495796203607,
+     "p50": 46.33953857421875,
+     "p99": 71.07731153276231,
+     "max": 71.67760009765625,
+     "preenchido": 1.0
+    },
+    "velocity_lat": {
+     "n": 15943,
+     "min": -8.651072311401368,
+     "p1": -3.0108261171976736,
+     "p50": -0.2430787861347203,
+     "p99": 3.216610987981167,
+     "max": 7.18138313293457,
+     "preenchido": 1.0
+    },
+    "yaw_rate": {
+     "n": 15943,
+     "min": -0.9493166108926128,
+     "p1": -0.8172667873170639,
+     "p50": 0.08134412558542393,
+     "p99": 0.7444241133928302,
+     "max": 0.9666234572728475,
+     "preenchido": 1.0
+    },
+    "steer_angle": {
+     "n": 15943,
+     "min": -0.5384999513626099,
+     "p1": -0.4297913798689845,
+     "p50": -0.016179999491821348,
+     "p99": 0.47325092327594787,
+     "max": 0.6911999464035035,
+     "preenchido": 1.0
+    },
+    "throttle": {
+     "n": 15943,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 0.9480399966239935,
+     "p99": 1.0,
+     "max": 1.0,
+     "preenchido": 1.0
+    },
+    "brake": {
+     "n": 15943,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 0.0,
+     "p99": 0.5501617631647322,
+     "max": 0.8325140476226807,
+     "preenchido": 1.0
+    },
+    "lateral_g": {
+     "n": 15943,
+     "min": -3.2006235917409347,
+     "p1": -2.548635608809358,
+     "p50": 0.4440685331821447,
+     "p99": 2.4674996441060797,
+     "max": 3.3003197246128764,
+     "preenchido": 1.0
+    },
+    "longitudinal_g": {
+     "n": 15943,
+     "min": -2.0345684422387005,
+     "p1": -1.4177531868616737,
+     "p50": 0.17316549817721033,
+     "p99": 0.7632044553756689,
+     "max": 1.1617894172668457,
+     "preenchido": 1.0
+    },
+    "wheel_load_fl": {
+     "n": 15943,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 2237.5121419270695,
+     "p99": 5065.337367187499,
+     "max": 7406.724609375,
+     "preenchido": 1.0
+    },
+    "wheel_load_fr": {
+     "n": 15943,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 3119.4640625,
+     "p99": 5174.559407009397,
+     "max": 8313.394042968743,
+     "preenchido": 1.0
+    },
+    "wheel_load_rl": {
+     "n": 15943,
+     "min": 0.0,
+     "p1": 1062.9221723429316,
+     "p50": 3183.324218749988,
+     "p99": 5682.733203125,
+     "max": 8338.176236979643,
+     "preenchido": 1.0
+    },
+    "wheel_load_rr": {
+     "n": 15943,
+     "min": 0.0,
+     "p1": 1231.4034223632907,
+     "p50": 3591.8793131510415,
+     "p99": 5988.404016113366,
+     "max": 8303.531168620535,
+     "preenchido": 1.0
+    },
+    "brake_bias": {
+     "n": 15943,
+     "min": 0.550000011920929,
+     "p1": 0.550000011920929,
+     "p50": 0.550000011920929,
+     "p99": 0.550000011920929,
+     "max": 0.550000011920929,
+     "preenchido": 1.0
+    },
+    "tyre_core_temp": {
+     "n": 15943,
+     "min": 66.77017307281494,
+     "p1": 67.52108374459402,
+     "p50": 82.1715202331543,
+     "p99": 90.92115620749337,
+     "max": 91.31908988952637,
+     "preenchido": 1.0
+    }
+   },
+   "por_volta": [
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0001",
+     "amostras_cruas": 5372,
+     "raw_samples_store": 5372,
+     "tiradas_na_limpeza": 9,
+     "repetidas": 232,
+     "buracos": 30,
+     "trechos": 23,
+     "trechos_curtos": 8,
+     "passos": 1831,
+     "segundos": 90.4
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0002",
+     "amostras_cruas": 5193,
+     "raw_samples_store": 5193,
+     "tiradas_na_limpeza": 11,
+     "repetidas": 227,
+     "buracos": 27,
+     "trechos": 21,
+     "trechos_curtos": 7,
+     "passos": 1772,
+     "segundos": 87.55000000000001
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0006",
+     "amostras_cruas": 5086,
+     "raw_samples_store": 5086,
+     "tiradas_na_limpeza": 10,
+     "repetidas": 287,
+     "buracos": 68,
+     "trechos": 55,
+     "trechos_curtos": 14,
+     "passos": 1753,
+     "segundos": 84.90000000000002
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0007",
+     "amostras_cruas": 5021,
+     "raw_samples_store": 5021,
+     "tiradas_na_limpeza": 14,
+     "repetidas": 280,
+     "buracos": 60,
+     "trechos": 51,
+     "trechos_curtos": 10,
+     "passos": 1728,
+     "segundos": 83.85000000000001
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0008",
+     "amostras_cruas": 5067,
+     "raw_samples_store": 5067,
+     "tiradas_na_limpeza": 9,
+     "repetidas": 272,
+     "buracos": 55,
+     "trechos": 45,
+     "trechos_curtos": 11,
+     "passos": 1758,
+     "segundos": 85.65
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0011",
+     "amostras_cruas": 5004,
+     "raw_samples_store": 5004,
+     "tiradas_na_limpeza": 12,
+     "repetidas": 140,
+     "buracos": 36,
+     "trechos": 36,
+     "trechos_curtos": 1,
+     "passos": 1746,
+     "segundos": 85.50000000000001
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0012",
+     "amostras_cruas": 5258,
+     "raw_samples_store": 5258,
+     "tiradas_na_limpeza": 12,
+     "repetidas": 146,
+     "buracos": 40,
+     "trechos": 38,
+     "trechos_curtos": 3,
+     "passos": 1827,
+     "segundos": 89.45000000000003
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0013",
+     "amostras_cruas": 5080,
+     "raw_samples_store": 5080,
+     "tiradas_na_limpeza": 7,
+     "repetidas": 144,
+     "buracos": 27,
+     "trechos": 25,
+     "trechos_curtos": 3,
+     "passos": 1770,
+     "segundos": 87.25000000000001
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0014",
+     "amostras_cruas": 5080,
+     "raw_samples_store": 5080,
+     "tiradas_na_limpeza": 11,
+     "repetidas": 162,
+     "buracos": 40,
+     "trechos": 37,
+     "trechos_curtos": 4,
+     "passos": 1758,
+     "segundos": 86.05
+    }
+   ],
+   "tempo_s": 18.0
+  },
+  "2026-10-21_20-30-54_vhe_interlagos": {
+   "voltas": 9,
+   "amostras_cruas": 46251,
+   "tiradas_na_limpeza": 64,
+   "repetidas": 843,
+   "buracos": 248,
+   "trechos": 237,
+   "trechos_curtos_tirados": 20,
+   "passos": 15896,
+   "segundos": 782.95,
+   "faixas": {
+    "speed_kmh": {
+     "n": 15896,
+     "min": 44.096749623616546,
+     "p1": 71.66878141574759,
+     "p50": 169.7009353637695,
+     "p99": 265.1474088668823,
+     "max": 267.5270487467448,
+     "preenchido": 1.0
+    },
+    "vel_wx": {
+     "n": 15896,
+     "min": -53.2926139831543,
+     "p1": -51.69093799591064,
+     "p50": 12.099980189583526,
+     "p99": 48.91244533538815,
+     "max": 51.50262222290039,
+     "preenchido": 1.0
+    },
+    "vel_wy": {
+     "n": 15896,
+     "min": -5.200427341461184,
+     "p1": -4.571604142785071,
+     "p50": -0.2894445459048129,
+     "p99": 4.898214760280791,
+     "max": 5.284797859191895,
+     "preenchido": 1.0
+    },
+    "vel_wz": {
+     "n": 15896,
+     "min": -70.4583762032645,
+     "p1": -68.88793180919829,
+     "p50": -5.682519435882568,
+     "p99": 71.49802881876627,
+     "max": 72.02768096923828,
+     "preenchido": 1.0
+    },
+    "velocity_long": {
+     "n": 15896,
+     "min": 12.245934985932852,
+     "p1": 19.843539396921795,
+     "p50": 47.08704339890253,
+     "p99": 73.65084171295166,
+     "max": 74.31161371866862,
+     "preenchido": 1.0
+    },
+    "velocity_lat": {
+     "n": 15896,
+     "min": -12.052751647101509,
+     "p1": -4.633153021903269,
+     "p50": -0.24494638095299404,
+     "p99": 4.008363422287834,
+     "max": 7.2430592945644,
+     "preenchido": 1.0
+    },
+    "yaw_rate": {
+     "n": 15896,
+     "min": -1.6022079706192014,
+     "p1": -0.8452814543412778,
+     "p50": 0.07516569665500089,
+     "p99": 0.749061675451018,
+     "max": 1.516872491155352,
+     "preenchido": 1.0
+    },
+    "steer_angle": {
+     "n": 15896,
+     "min": -0.6838885205132619,
+     "p1": -0.4683008324177491,
+     "p50": -0.013232999457977384,
+     "p99": 0.4618889768918354,
+     "max": 1.0,
+     "preenchido": 1.0
+    },
+    "throttle": {
+     "n": 15896,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 0.9312789397580283,
+     "p99": 1.0,
+     "max": 1.0,
+     "preenchido": 1.0
+    },
+    "brake": {
+     "n": 15896,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 0.0,
+     "p99": 0.6789655725657932,
+     "max": 1.0,
+     "preenchido": 1.0
+    },
+    "lateral_g": {
+     "n": 15896,
+     "min": -3.275191806611544,
+     "p1": -2.77180484016738,
+     "p50": 0.4371197974516281,
+     "p99": 2.4812096389134717,
+     "max": 6.944923686982867,
+     "preenchido": 1.0
+    },
+    "longitudinal_g": {
+     "n": 15896,
+     "min": -2.498743089040126,
+     "p1": -1.7062987410660946,
+     "p50": 0.19170356541872025,
+     "p99": 0.8632877574553557,
+     "max": 1.8775602579116821,
+     "preenchido": 1.0
+    },
+    "wheel_load_fl": {
+     "n": 15896,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 2365.898225911479,
+     "p99": 5621.526266276074,
+     "max": 17171.164306640625,
+     "preenchido": 1.0
+    },
+    "wheel_load_fr": {
+     "n": 15896,
+     "min": 0.0,
+     "p1": 0.0,
+     "p50": 3278.747501627611,
+     "p99": 5456.6390950520645,
+     "max": 22338.27226562573,
+     "preenchido": 1.0
+    },
+    "wheel_load_rl": {
+     "n": 15896,
+     "min": 0.0,
+     "p1": 1076.6959743923567,
+     "p50": 3298.957457042869,
+     "p99": 6084.254921603731,
+     "max": 8612.819726562446,
+     "preenchido": 1.0
+    },
+    "wheel_load_rr": {
+     "n": 15896,
+     "min": 0.0,
+     "p1": 1282.8556767781522,
+     "p50": 3735.210424804679,
+     "p99": 6355.892861328122,
+     "max": 12564.500325520798,
+     "preenchido": 1.0
+    },
+    "brake_bias": {
+     "n": 15896,
+     "min": 0.550000011920929,
+     "p1": 0.550000011920929,
+     "p50": 0.550000011920929,
+     "p99": 0.550000011920929,
+     "max": 0.550000011920929,
+     "preenchido": 1.0
+    },
+    "tyre_core_temp": {
+     "n": 15896,
+     "min": 51.36895017270689,
+     "p1": 51.89718695402146,
+     "p50": 63.42477070490519,
+     "p99": 77.6367453765869,
+     "max": 77.94208717346191,
+     "preenchido": 1.0
+    }
+   },
+   "por_volta": [
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0006",
+     "amostras_cruas": 5390,
+     "raw_samples_store": 5390,
+     "tiradas_na_limpeza": 9,
+     "repetidas": 81,
+     "buracos": 29,
+     "trechos": 29,
+     "trechos_curtos": 1,
+     "passos": 1861,
+     "segundos": 91.60000000000001
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0008",
+     "amostras_cruas": 5161,
+     "raw_samples_store": 5161,
+     "tiradas_na_limpeza": 6,
+     "repetidas": 100,
+     "buracos": 35,
+     "trechos": 31,
+     "trechos_curtos": 5,
+     "passos": 1771,
+     "segundos": 86.99999999999999
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0009",
+     "amostras_cruas": 5116,
+     "raw_samples_store": 5116,
+     "tiradas_na_limpeza": 8,
+     "repetidas": 101,
+     "buracos": 37,
+     "trechos": 35,
+     "trechos_curtos": 3,
+     "passos": 1757,
+     "segundos": 86.10000000000001
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0010",
+     "amostras_cruas": 5043,
+     "raw_samples_store": 5043,
+     "tiradas_na_limpeza": 4,
+     "repetidas": 93,
+     "buracos": 26,
+     "trechos": 27,
+     "trechos_curtos": 0,
+     "passos": 1740,
+     "segundos": 85.65
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0012",
+     "amostras_cruas": 5051,
+     "raw_samples_store": 5051,
+     "tiradas_na_limpeza": 10,
+     "repetidas": 111,
+     "buracos": 35,
+     "trechos": 32,
+     "trechos_curtos": 4,
+     "passos": 1735,
+     "segundos": 85.15
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0013",
+     "amostras_cruas": 5174,
+     "raw_samples_store": 5174,
+     "tiradas_na_limpeza": 10,
+     "repetidas": 100,
+     "buracos": 40,
+     "trechos": 38,
+     "trechos_curtos": 3,
+     "passos": 1774,
+     "segundos": 86.80000000000001
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0015",
+     "amostras_cruas": 5175,
+     "raw_samples_store": 5175,
+     "tiradas_na_limpeza": 8,
+     "repetidas": 90,
+     "buracos": 19,
+     "trechos": 18,
+     "trechos_curtos": 2,
+     "passos": 1777,
+     "segundos": 87.95
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0016",
+     "amostras_cruas": 5117,
+     "raw_samples_store": 5117,
+     "tiradas_na_limpeza": 4,
+     "repetidas": 93,
+     "buracos": 14,
+     "trechos": 14,
+     "trechos_curtos": 1,
+     "passos": 1754,
+     "segundos": 87.0
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0017",
+     "amostras_cruas": 5024,
+     "raw_samples_store": 5024,
+     "tiradas_na_limpeza": 5,
+     "repetidas": 74,
+     "buracos": 13,
+     "trechos": 13,
+     "trechos_curtos": 1,
+     "passos": 1727,
+     "segundos": 85.69999999999999
+    }
+   ],
+   "tempo_s": 26.1
+  }
+ },
+ "tempo_s": 124.3
+}

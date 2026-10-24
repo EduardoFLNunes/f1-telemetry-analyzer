@@ -111,3 +111,130 @@ def test_volante_com_sinal_trocado_nao_bate():
     frame["steer_angle"] = -frame["steer_angle"]
     result, _ = C.conferir(frame, corners, 20000.0)
     assert not result["volante"]["bate"] and not result["todas_batem"]
+
+
+# ------------------------------------------------------------ fisica ---
+
+from scipy.optimize import fsolve  # noqa: E402
+
+from ml.modelo_carro import correcao as K  # noqa: E402
+from ml.modelo_carro import fisica as F  # noqa: E402
+from ml.modelo_carro import validacao as V  # noqa: E402
+
+
+def _params(**extra) -> F.Parametros:
+    values = dict(m=750.0, kappa_L=0.0, w_f=0.45, f_aero=0.45, h_L=0.1, b=1.53, L=3.4, k_delta=0.3,
+                  brake_bias=0.55, env_speed=np.array([10.0, 90.0]), env_traction=np.array([10.0, 10.0]),
+                  C_alpha=20.0, mu=100.0, k2=1.5, kappa_D=0.0, c0=0.0, s_T=1.0, beta_B=30.0, transferencia=False)
+    values.update(extra)
+    return F.Parametros(**values)
+
+
+def test_curva_em_regime_permanente_da_o_que_a_conta_manda():
+    # Uma rigidez so e w_f = b/L: o carro e neutro, entao r = vx*delta/L, e a deriva traseira
+    # carrega a forca lateral do eixo: vy = b*r - vx*(vx*r)/(C_alpha*g).
+    p = _params(w_f=1.53 / 3.4)
+    vx, delta = 30.0, 0.01
+    steer = -delta / p.k_delta                       # volante positivo a direita; delta positivo a esquerda
+
+    def steady(z):
+        state = np.array([[vx, z[0], z[1]]])
+        return F.derivadas(state, np.array([[steer, 0.0, 0.0]]), p)[0, 1:]
+
+    vy, r = fsolve(steady, [0.0, 0.05])
+    assert r == pytest.approx(vx * delta / p.L, rel=0.01)
+    assert vy == pytest.approx(p.b * r - vx * vx * r / (p.C_alpha * D.G), rel=0.02)
+    assert r > 0                                      # volante a esquerda, giro a esquerda
+
+
+def test_freada_em_linha_reta_da_o_que_a_conta_manda():
+    state = np.array([[50.0, 0.0, 0.0]])
+    brake = np.array([[0.0, 0.0, 1.0]])
+    # Sem saturar: a desaceleracao e o pedido do freio mais o arrasto e o c0.
+    p = _params(kappa_D=0.001, c0=0.5, beta_B=20.0, mu=2.0, kappa_L=0.003)
+    d = F.derivadas(state, brake, p)[0]
+    assert d[0] == pytest.approx(-(20.0 + 0.001 * 2500 + 0.5))
+    assert d[1] == pytest.approx(0.0) and d[2] == pytest.approx(0.0)
+    # Saturado: cada eixo no limite de atrito, 0,99*mu*carga.
+    p = _params(beta_B=500.0, mu=1.5, kappa_L=0.003, f_aero=0.4)
+    d = F.derivadas(state, brake, p)[0]
+    assert d[0] == pytest.approx(-0.99 * 1.5 * (D.G + 0.003 * 2500))
+    # Com a transferencia, a soma das cargas nao muda e o freio saturado da o mesmo total.
+    d2 = F.derivadas(state, brake, replace_(p, transferencia=True))[0]
+    assert d2[0] == pytest.approx(d[0], rel=1e-6)
+
+
+def replace_(p, **kw):
+    from dataclasses import replace
+    return replace(p, **kw)
+
+
+def test_persistencia_e_posicoes():
+    states = np.tile(np.array([20.0, 0.0, 0.0]), (1, 11, 1))
+    pos = F.posicoes(states)
+    assert pos[0, -1, 0] == pytest.approx(20.0 * 0.5) and pos[0, -1, 1] == pytest.approx(0.0)
+    turning = np.tile(np.array([20.0, 0.0, 0.4]), (1, 41, 1))
+    # Em arco a esquerda, a posicao vai para y positivo.
+    assert F.posicoes(turning)[0, -1, 1] > 0
+    assert F.persistencia(np.array([[1.0, 2.0, 3.0]]), 4).shape == (1, 5, 3)
+
+
+# --------------------------------------------------------- malha aberta ---
+
+def _quadro(trechos=(("A", 25), ("B", 15))) -> pd.DataFrame:
+    blocks = []
+    for name, n in trechos:
+        k = np.arange(n)
+        blocks.append(pd.DataFrame({
+            "session_id": "s", "lap_id": "s#0001", "trecho": name, "k": k, "t": k * D.DT,
+            "x": 30.0 * k * D.DT, "z": 0.0, "heading": 0.0, "s": 30.0 * k * D.DT, "tyre_core_temp": 60.0,
+            "vx": 30.0, "vy": 0.0, "r": 0.0, "steer": 0.0, "T": 1.0, "B": 0.0, "a_y": 0.0, "a_x": 0.0,
+        }))
+    return pd.concat(blocks, ignore_index=True)
+
+
+def test_passo_e_caso_nao_atravessam_buraco():
+    frame = _quadro()
+    conv = C.Convencoes(s_r=1, s_psi=-1, s_vy=1, forma_heading="(-sen h, cos h)", s_esquerda=-1)
+    assert len(V.passos(frame)) == (25 - 1) + (15 - 1)
+    cs = V.casos(frame, conv)
+    # O trecho B (15 passos) nao tem 1,0 s pela frente; no A, inicios em k = 0, 2 e 4.
+    assert len(cs) == 3 and set(cs.trecho) == {"A"} and cs.k0.tolist() == [0, 2, 4]
+    assert np.all(cs.k0 + V.H_MAX <= 24)
+
+
+# ------------------------------------------------------------ metricas ---
+
+def test_skill_contra_referencia_conhecida():
+    true = np.zeros((40, 11, 3))
+    sigma = np.array([10.0, 1.0, 0.5])
+    ref = true + np.array([2.0, 0.2, 0.1])
+    model = true + np.array([1.0, 0.1, 0.05])        # metade do erro em toda grandeza
+    e_m, e_r = V.erro_combinado(model, true, sigma, 10), V.erro_combinado(ref, true, sigma, 10)
+    assert e_r == pytest.approx(0.2) and V.skill(e_m, e_r) == pytest.approx(0.5)
+    laps = np.repeat(np.arange(8), 5)
+    ci = V.bootstrap_skill(V.erro_quadrado(model, true, sigma, 10), V.erro_quadrado(ref, true, sigma, 10), laps, n=200)
+    assert ci["p2_5"] == pytest.approx(0.5) and ci["p97_5"] == pytest.approx(0.5)
+    assert V.por_grandeza(model, true, 10)["vx"] == {"rmse": pytest.approx(1.0), "vies": pytest.approx(1.0)}
+
+
+def test_regimes():
+    g = D.G
+    reg = K.regimes(B=np.array([0.5, 0.5, 0.0, 0.0, 0.0]), a_y=np.array([0.6, 0.1, -0.7, 0.0, 0.0]) * g,
+                    T=np.array([0.0, 0.0, 1.0, 1.0, 1.0]), a_x=np.array([-1.0, -2.0, 0.2, 0.5, 0.1]) * g)
+    assert reg.tolist() == ["freio e volante juntos", "freada", "curva", "tracao", "reta"]
+
+
+def test_ponto_fora_dos_dados_de_treino_e_marcado():
+    rng = np.random.default_rng(0)
+    n = 150
+    state = np.column_stack([rng.uniform(20, 70, n), rng.normal(0, 1, n), rng.normal(0, 0.3, n)])
+    u = np.column_stack([rng.normal(0, 0.2, n), rng.uniform(0, 1, n), rng.uniform(0, 0.3, n)])
+    resid = np.column_stack([0.01 * state[:, 1], 0.02 * u[:, 0], 0.01 * state[:, 2]]) + rng.normal(0, 0.002, (n, 3))
+    corr = K.Correcao().ajustar(np.column_stack([state, u]), resid)
+    _, _, inside = corr.prever(state, u)
+    cut = np.percentile(inside, 99)
+    far_state, far_u = np.array([[150.0, 8.0, 3.0]]), np.array([[1.5, 1.0, 1.0]])
+    mean, std, far = corr.prever(far_state, far_u)
+    assert far[0] > cut and far[0] > 5 * np.max(inside)
+    assert std.shape == (1, 3) and np.all(std > 0)
