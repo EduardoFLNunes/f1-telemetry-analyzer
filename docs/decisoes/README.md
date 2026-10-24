@@ -25,3 +25,4 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
 | [0019](0019-f1-tracado-de-referencia-2023-25.md) | A F1 entra no Modelo 1 como um traçado de referência único da época 2023–25 | aceita; refina 0018 |
 | [0020](0020-realidade-aumentada-app-lua-do-csp.md) | Realidade aumentada no Assetto Corsa: um app Lua do CSP, numa pasta própria do jogo | aceita (pedido 31); item 4 refinado por 0021 |
 | [0021](0021-radio-que-analisa-as-voltas-e-minimapa.md) | O rádio analisa as voltas e diz onde e por que o piloto perde tempo; o app do jogo ganha um minimapa | aceita (pedido 35); refina 0020 |
+| [0022](0022-validacao-da-m1-modelo-do-carro.md) | Validação da M1: como o modelo do carro para a frente é aprovado, e com que relógio | aceita (pedido 37); complementa 0006 e 0017 |
