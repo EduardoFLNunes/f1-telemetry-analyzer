@@ -555,4 +555,97 @@ Quase todo o tempo vai nos bootstraps do modelo leve. A leitura das gravações 
 
   Com os dois, rodo a H.4, completo o relatório e faço o merge.
 
+## Mudança de prioridade em 25/10, às 11:36: o instalador 0.5.0 antes da H.4
+
+- **O pedido** (Eduardo, no chat): gerar o instalador 0.5.0 do app nesta branch, sem trocar de branch, para testar sozinho o app instalado. A H.4 continua parada, esperando os rótulos. É uma exceção autorizada à regra "Não gere instalador" deste pedido.
+- **A pasta:** antes de começar, o `ListAgents` mostrou duas outras sessões nesta pasta, as duas paradas ("Modelo do carro 2026-10-24" e "Redesenho base 2026-10-14"). A branch não mudou durante o trabalho.
+- **A lista viva** corrigida pelo Cowork (a da Parte I mais a linha de validação de 25/10) foi commitada sozinha: `d988fe62`.
+- **O app completo nesta branch:**
+  - os commits do fechamento do pedido 36, `52ce0a02` (a frase do coach sobe para 7,3 s) e `db39300f` (o log do backend gira em 20 MB), estão na branch;
+  - `git diff --stat develop...HEAD` só mostra `backend/ml`, `backend/tests/test_modelo2.py` e `docs`. Nada em `desktop`, `frontend`, `tools/csp_app` nem no backend fora de `ml`.
+  - **Um ponto que não estava na lista, para você saber:** o app do jogo 0.4.1 (`0092ed38`, a janela salva fora da tela volta para dentro, do teste de 24/10) **não está nesta branch nem em `develop`**, só em `etapa/radio-unidades-e-replay`. O `instalar.ps1` desta branch instala o app do jogo **0.4.0**. Se uma janela do app sumir depois de trocar de monitor, é esse caso (ver os passos).
+- **Os testes:**
+  - **o front:** `vitest run` com 189 passaram em 17 arquivos; `tsc --noEmit` sem erro;
+  - **o `desktop`:** `npm test` com 4 passaram (a rotação do log);
+  - **o app do jogo:** `conferir_lua.py` contra o `lib.lua` dos apps do CSP instalado: 0 erros de léxico, os blocos fecham, e as 45 funções da API e os 11 métodos usados existem no SDK;
+  - **a suíte do backend** não rodou de novo: desde `28de6176`, só `backend/ml`, os testes do Modelo 2 e a versão mudaram, e a suíte de 05:29 (829 passaram) já cobre o `ml`.
+- **A versão:** `0.5.0-radio-e-replay`, no commit `825ef60d`. São os mesmos três lugares da 0.4.0: `desktop/package.json`, `BACKEND_PHASE_VERSION` em `backend/main.py` e `EXPECTED_BACKEND_VERSION` em `desktop/main.js`. O sufixo diz o que entrou desde a 0.4.0: o rádio que analisa e o replay da curva (pedidos 33 a 36).
+- **O build:** `npm run dist:win` (de `desktop`), terminou às 11:47 sem erro, em cerca de 9 minutos.
+  - **O instalador:** `versoes .5.0-radio-e-replay\Automobilista-Telemetria-Setup-0.5.0-radio-e-replay.exe`, 229 MB (229.288.854 bytes).
+  - **O sha256:** `4db96566280e46fc932b85c5a6b807a6b0794870a73845a81849d24c5b86d3d7`, no `sha256.txt` da pasta.
+  - **O `build-info.json`:** versão `0.5.0-radio-e-replay`, commit `825ef60`, branch `etapa/modelo2-erro-tecnica-e-estilo`. Ele marca `dirty`, mas o único arquivo fora do git é a pasta `recordings/` da raiz, que está assim desde 14/10.
+  - **O índice:** `versoes\LEIA-ME.md` foi refeito pelo `publish-version.js` (11 versões; a mais atual é a 0.5.0) e foi commitado com este relatório. O instalador fica fora do git, como os anteriores.
+  - **Nada foi baixado nem instalado:**
+    - o log diz "downloaded label=electron", mas o zip do Electron 42.3.3 já estava no cache local (`%LOCALAPPDATA%\electron\Cache`, de 07/06), e nenhum arquivo novo apareceu nos caches depois das 11:00;
+    - o "installing native dependencies" do `@electron/rebuild` não instalou nada, porque o projeto não tem módulo nativo ("no node modules returned");
+    - o PyInstaller e o resto já estavam no `.venv`.
+  - **Não rodei o instalador** e não mexi no app instalado nem no jogo.
+
+### Os passos para você, sozinho
+
+**1. Instalar o app 0.5.0 e o app do jogo**
+
+1. Feche o jogo e o app, inclusive o ícone na bandeja do Windows.
+2. Rode o instalador, por cima do instalado:
+
+   ```
+   C:\Users\Dokas\Desktop\f1-telemetry-analyzer\versoes\0.5.0-radio-e-replay\Automobilista-Telemetria-Setup-0.5.0-radio-e-replay.exe
+   ```
+
+   Escolha **todos os usuários** e mantenha a pasta `C:\Users\Dokas\AppData\Local\Programs\Automobilista Telemetria`. As gravações e a configuração em `%APPDATA%\Automobilista Telemetria` ficam.
+3. Instale o app do jogo, num PowerShell:
+
+   ```
+   powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer\tools\csp_app\instalar.ps1
+   ```
+
+   Aperte Enter para aceitar a pasta `D:\SteamLibrary\steamapps\common\assettocorsa`.
+4. **Confira as versões:**
+   - **o app:** pelo menu Iniciar ("Automobilista Telemetria"), na aba **Coleta de dados** ("Versão do app") ou em **Sistema**. Tem de aparecer `0.5.0-radio-e-replay`;
+   - **o app do jogo:** abra `D:\SteamLibrary\steamapps\common\assettocorsa\apps\lua\radio_engenheiro\manifest.ini` no Bloco de Notas. A linha `VERSION` tem de dizer `0.4.0` (a 0.4.1 não está nesta branch).
+
+**2. Testar o rádio no jogo, sem a IA**
+
+1. Abra o app instalado **antes** do jogo.
+2. Abra o Assetto Corsa pelo Content Manager: prática, `rss_formula_rss_3_v6_2026`, Interlagos (`vhe_interlagos`, traçado `gp`).
+3. **No jogo, ligue as 4 janelas** na barra de apps: "Rádio", "Minimapa", "Mapa aproximado" e "Replay da curva". Ponha o replay num canto, sem cobrir o centro.
+4. **No app, na tela Sistema, clique em "Mandar mensagem de teste":** o cartão e a voz têm de aparecer no jogo.
+5. **Ande pelo menos 8 voltas você mesmo,** com uma ida aos boxes depois da 3ª volta válida (é quando sai a primeira análise). Para medir o FPS de cada janela, desligue o replay por 2 ou 3 voltas e ligue de novo.
+6. **Não aperte Ctrl+C no jogo:** ele passa o carro para a IA, e o indicador da IA fica ligado até a sessão do jogo reiniciar. O rádio fica calado nas voltas da IA, de propósito, e as suas voltas depois do Ctrl+C também não contam para o foco. Se apertou sem querer, saia da sessão e comece outra.
+7. **Se uma janela do app sumir** depois de trocar de monitor: é o caso que a 0.4.1 corrige. Desligue e ligue a janela na barra de apps. Se ela não voltar, anote qual janela foi e siga com as outras.
+
+**3. Onde ficam as gravações e como trazê-las para o repositório**
+
+- **O app instalado grava em** `%APPDATA%\Automobilista Telemetria\data\recordings\`, uma pasta por sessão (por exemplo, `2026-10-26_10-00-00_vhe_interlagos`).
+- **O Modelo 2 e o resto do `ml` já leem as duas pastas** (a do repositório e a do app instalado). Mesmo assim, para guardar no repositório como as outras, copie cada sessão nova para `data\recordings`, num PowerShell. Troque o nome da pasta:
+
+  ```
+  robocopy "$env:APPDATA\Automobilista Telemetria\data\recordings\2026-10-26_10-00-00_vhe_interlagos" "C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\recordings\2026-10-26_10-00-00_vhe_interlagos" /E
+  ```
+
+  É uma cópia: a original fica no lugar. O `ml` marca as cópias com `duplicada_de` e não conta a mesma sessão duas vezes.
+- **Para a IA em níveis de força,** os passos são os da Parte B deste relatório. Cada nível é uma sessão do jogo nova, e cada sessão vira uma pasta. Anote cada pasta em `docs\experimentos\ia_niveis.csv`, com o nível, a agressividade e a variação.
+
+**4. O que anotar durante os testes** (num papel ou no Bloco de Notas; eu leio os logs depois)
+
+- **O horário de cada coisa,** pelo relógio do Windows: quando abriu o app e o jogo, a mensagem de teste, a ida aos boxes, quando desligou e religou o replay, e quando saiu.
+- **A versão** que o app mostrou e a `VERSION` do `manifest.ini`.
+- **A mensagem de teste:** se o cartão apareceu, se a voz saiu, e quanto tempo depois do clique.
+- **A cada fala do rádio:** a volta, a curva que ele citou, se a voz saiu numa reta, se a frase fez sentido e se o replay mostrou a curva certa.
+- **O FPS** que o jogo mostrar, com o replay ligado e desligado, se você tiver um contador na tela.
+- **Qualquer janela que sumiu, travou ou ficou cortada,** e em que monitor.
+- **Se apertou Ctrl+C sem querer,** em que volta.
+- **Para a sessão da IA:** o nome de cada pasta nova em `recordings`, o nível, a agressividade e a variação, e se os tempos de volta mudaram de um nível para o outro.
+
+**Onde ficam os logs, para eu ler depois:**
+
+- **o do app:** `%APPDATA%\Automobilista Telemetria\logs\backend.log` e `desktop.log`;
+- **o do app do jogo:** as linhas `[radio_engenheiro]` no log do CSP, em `Documentos\Assetto Corsa\logs\custom_shaders_patch.log`.
+
+  Não apague nem mova esses arquivos. O `backend.log` gira em 20 MB e guarda os 5 últimos.
+
+### O que falta
+
+- **A H.4** continua esperando os rótulos no CSV ("rotulei o kit"). O merge em `develop` vem depois dela, com a versão 0.5.0 junto.
+
 Arquivo: `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_relatorio.md`
