@@ -8,7 +8,9 @@
   - `946edea3` Pedido 39, Parte A: o ADR 0024 e a emenda 1.9 da M1, registrados antes de medir
   - `3b0f1535` Pedido 39, Parte A (continuacao): a emenda 1.9 da M1, registrada antes de medir
   - `b2f5abea` Pedido 39, Parte B: a primeira olhada na geometria do retrato da memoria
-  - o commit da Parte C, com este relatório: ver o fim do arquivo
+  - `28de6176` Pedido 39, Parte C: a ferramenta que mede a geometria pela memoria do jogo, parada para a sessao do Eduardo
+  - e o commit deste aviso sobre a sessão do pedido 38 (ver "Coisas que não batiam com o contexto")
+  - **também na branch, sem ser deste pedido:** `f38f89a5` docs: pedido 38, commitado pela sessão do pedido 38 depois que eu troquei a branch da pasta (abaixo)
 - **Arquivos de handoff** (`docs/handoff/`):
   - `2026-10-25_39_m1-geometria-medida_relatorio.md` (este)
   - `2026-10-25_39_m1-geometria-medida_retrato.json` (Parte B)
@@ -117,7 +119,13 @@ Se o jogo fechar antes do Ctrl+C, o arquivo do último minuto já está salvo.
 ## Coisas que não batiam com o contexto
 
 - **O carro do retrato é conhecido:** a página estática dele diz `rss_formula_rss_3_v6_2026` em `vhe_interlagos` (acima).
-- **A branch em que eu estava** era `etapa/modelo2-erro-tecnica-e-estilo`, do pedido 38, sem nenhum commit além de `develop`. Troquei para `etapa/m1-modelo-do-carro` sem perder nada. Os arquivos do pedido 38 (`docs/prompts/2026-10-24_38_...`, `docs/prompts/anexos-38/` e os três `docs/tecnica_de_pilotagem_*.md`) continuam fora do git, como estavam.
+- **Duas sessões de implementação na mesma pasta (ADR 0008).** Quando comecei, a pasta estava em `etapa/modelo2-erro-tecnica-e-estilo`, do pedido 38, sem nenhum commit além de `develop`. Conferi só isso, e não se havia outra sessão ativa nela. Havia: a sessão do pedido 38 estava trabalhando ali.
+  - **00:40:09:** troquei para `etapa/m1-modelo-do-carro` (`git switch`);
+  - **00:41:02:** a sessão do 38 commitou o texto do pedido 38 e as três pesquisas (`docs/tecnica_de_pilotagem_*.md`). O commit (`f38f89a5`) caiu na branch do 37, por causa da minha troca;
+  - **00:41:17:** o meu commit do pedido 39 (`23b2ea49`) ficou por cima dele.
+  - **A sessão do 38 parou** e deixou o relatório dela sem commit (`docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_relatorio.md`), com as opções. Ela também tirou a cópia não commitada do ADR 0023 de `docs/decisoes/`. Eu não mexi no relatório dela, no anexo dela, nem no `f38f89a5`.
+  - **O que isso muda aqui:** a branch do 37 e do 39 tem, entre o `5c8ed449` e o `23b2ea49`, o commit `f38f89a5` (só documentos do 38, 4 arquivos, nenhum código). Se nada for feito, ele vai para `develop` com o merge do fim deste pedido.
+  - **A decisão é sua,** e é a mesma que o relatório do 38 pede: (a) deixar como está (a recomendação dele, e a minha), ou (b) tirar o `f38f89a5` da branch depois do 39, reescrevendo o histórico, só com o seu ok. Daqui para frente, antes de trocar de branch, confiro se outra sessão está ativa na pasta.
 - **`recordings/` na raiz** continua fora do git; não mexi.
 
 Arquivo: `docs/handoff/2026-10-25_39_m1-geometria-medida_relatorio.md`
