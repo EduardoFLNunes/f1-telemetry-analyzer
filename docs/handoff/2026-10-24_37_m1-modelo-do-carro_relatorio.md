@@ -1,6 +1,7 @@
 # Relatório do pedido 37 — M1: o primeiro modelo do carro para a frente
 
 - **Pedido:** `docs/prompts/2026-10-24_37_m1-modelo-do-carro.md`
+- **Continuação:** o pedido 39 retoma este pedido com a geometria medida pela telemetria do jogo (ADR 0024): `docs/handoff/2026-10-25_39_m1-geometria-medida_relatorio.md`.
 - **Situação:** **parado na Parte C**, antes de qualquer previsão na sessão de teste. A regra registrada na Parte A para o entre-eixos e a unidade do volante não funciona com os dados, e mudá-la é decisão do Eduardo (Parte A.3). Nenhum número de teste foi calculado.
 - **Branch:** `etapa/m1-modelo-do-carro`, a partir de `develop` (`4782aefb`). **Sem merge em `develop`** (o pedido parou no meio). Sem push.
 - **Commits:**
