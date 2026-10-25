@@ -198,6 +198,14 @@ Se o jogo fechar antes do Ctrl+C, o arquivo do último minuto já está salvo.
 - **Por isso a Parte D, a leitura do teste do rádio e a Parte E não começaram.** Nada foi medido nem lido do teste.
 - **O que pode ter acontecido:** a ida ao jogo foi em outro computador, os arquivos ficaram noutra pasta, ou a ferramenta e o instalador não rodaram. Se os arquivos existirem em outro lugar, basta dizer onde. Se a sessão foi noutro computador, são precisos o `geometria_<data>_<hora>.parquet` (com o `.json` ao lado) e a pasta da gravação do app.
 
+## 25/10, às 13:38: "agora está instalado"
+
+- **O app 0.5.0 está instalado e rodando:** o `app.asar` em `C:\Users\Dokas\AppData\Local\Programs\Automobilista Telemetria` diz `0.5.0-radio-e-replay`, e o log girou como o 0.5.0 faz (o de 1 GB virou `backend.1.log`; o `backend.log` novo é de 13:39).
+- **Ainda não há medição nem teste do rádio:** nenhum `geometria_*.parquet` e nenhuma gravação nova. Os passos 2 a 9 continuam valendo.
+- **O app do jogo instalado é o 0.4.1, mais novo que o deste checkout.** Em `D:\SteamLibrary\steamapps\common\assettocorsa\apps\lua\radio_engenheiro` (de 24/10, 13:34), o `manifest.ini` diz `VERSION = 0.4.1` e o `radio_engenheiro.lua` tem a função que traz as janelas fora da tela de volta. É o commit `0092ed38` ("App do jogo 0.4.1"), que está só em `etapa/radio-unidades-e-replay`, **fora de `develop`** e fora desta branch, onde o app do jogo ainda é o 0.4.0.
+  - **Por isso, pule a instalação do app do jogo no passo 1.** O `instalar.ps1` rodado deste checkout trocaria o 0.4.1 pelo 0.4.0 e tiraria a correção das janelas. O 0.4.1 tem tudo do 0.4.0 e mais essa correção.
+  - **Fica para você decidir, fora deste pedido:** o merge do `0092ed38` em `develop`.
+
 ## O que vem depois do aviso
 
 - **Parte D:** medir `L`, `b`, `h`, `k_δ` (esquerdo, direito e médio) e `x_v`, aplicar os portões e relatar `h/L` contra o das cargas, `L/k_δ` contra a M0 e a linearidade do volante.
