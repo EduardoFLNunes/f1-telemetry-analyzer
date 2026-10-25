@@ -537,4 +537,22 @@ cd /c/Users/Dokas/Desktop/f1-telemetry-analyzer/backend && ../.venv/Scripts/pyth
 
 Quase todo o tempo vai nos bootstraps do modelo leve. A leitura das gravações (3 min 46 s na primeira vez) fica guardada em `data/ml/modelo2/derivados.parquet` e `fora_do_store.parquet`.
 
+## A H.4, pedida em 25/10 às 11:25: parada, sem os rótulos
+
+- **O pedido:** "Rotulei o kit. Rode a H.4, complete o relatório e faça o merge em develop. Inclua no commit a linha nova de `docs/tecnica_de_pilotagem_lista.md`, que o Cowork acrescentou."
+- **Os rótulos não estão no arquivo:**
+  - `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_rotulagem.csv` não muda desde 05:29, quando foi gerado. As 120 linhas estão com o `rotulo` vazio (24 por detector);
+  - a cópia em `data/ml/modelo2/rotulagem/` também está vazia;
+  - não há nenhum CSV, XLSX ou TXT novo depois de 05:31 na Área de Trabalho, em Downloads, em Documentos ou no OneDrive.
+- **Por isso,** a precisão e a revocação não foram calculadas e **o merge em `develop` não foi feito**. O pedido manda o merge no fim, e a H.4 é parte dele.
+- **A lista viva:**
+  - às 11:19, `docs/tecnica_de_pilotagem_lista.md` foi regravado na pasta com um conteúdo idêntico, byte a byte, à versão do Cowork de 01:07. Essa versão já está no commit `53d563f1`, com as minhas atualizações de B1, B2, B3, B10, E1, E2 e E3 e a linha do histórico;
+  - a regravação **não traz nenhuma linha nova**: ela só desfaz as minhas atualizações;
+  - **não commitei** a regravação e não mexi no arquivo. Ele continua modificado na pasta, sem commit.
+- **O que falta:**
+  1. **os rótulos no CSV:** se você rotulou em outro arquivo, me diga qual;
+  2. **qual é a linha nova do Cowork:** se ela existe, ainda não chegou à pasta.
+
+  Com os dois, rodo a H.4, completo o relatório e faço o merge.
+
 Arquivo: `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_relatorio.md`
