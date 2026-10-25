@@ -101,10 +101,10 @@ def slip_nature(laps: Sequence[Lap]) -> Dict[str, object]:
         if m.sum() < 20:
             continue
         out[name] = {"pontos": int(m.sum()),
-                     "dianteiro_mediana": round(float(np.median(p["slip_front"][m])), 4),
-                     "dianteiro_p95": round(float(np.percentile(p["slip_front"][m], 95)), 4),
-                     "traseiro_mediana": round(float(np.median(p["slip_rear"][m])), 4),
-                     "traseiro_p95": round(float(np.percentile(p["slip_rear"][m], 95)), 4)}
+                     "dianteiro_mediana": round(float(np.nanmedian(p["slip_front"][m])), 4),
+                     "dianteiro_p95": round(float(np.nanpercentile(p["slip_front"][m], 95)), 4),
+                     "traseiro_mediana": round(float(np.nanmedian(p["slip_rear"][m])), 4),
+                     "traseiro_p95": round(float(np.nanpercentile(p["slip_rear"][m], 95)), 4)}
     return out
 
 

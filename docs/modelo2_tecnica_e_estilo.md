@@ -293,3 +293,87 @@ A seção 1 não muda. A primeira rodada mostrou três coisas, registradas aqui 
   Uma regra melhor procuraria a última subida do acelerador antes do pleno.
 - **s_ti** é o começo da sequência de volante que contém o ápice. Um contraesterço antes do ápice corta essa sequência e fica fora da janela de E4.
 - **A frenagem "emendada":** quando a frenagem de uma curva continua depois do ápice da anterior (C09 para C10, por exemplo), s_b cai no ápice anterior. É a mesma situação que o relatório de evolução marca como "freada emendada".
+
+---
+
+## 3. O que o Modelo 2 faz, em linguagem simples
+
+O Modelo 2 olha cada curva das voltas gravadas e responde a três perguntas:
+
+1. **Onde eu perco tempo contra a IA, e por quê?**
+2. **Que técnicas a IA aplica e quais eu aplico?**
+3. **Como cada um pilota?** Esse é o estilo.
+
+Ele faz isso em quatro passos.
+
+### 3.1 As fases da curva (Parte C)
+
+Cada uma das 14 curvas é cortada em cinco pedaços:
+
+- **frenagem:** do ponto em que se começa a frear até a curva começar;
+- **entrada:** do começo da curva até perto do ápice;
+- **meio:** o trecho mais fechado, em volta do ápice;
+- **saída:** do meio até o fim da curva;
+- **reta seguinte:** até a frenagem da próxima curva.
+
+Os cortes são os mesmos em todas as voltas. Assim, "a frenagem da C04" é o mesmo pedaço de pista na volta da IA e na minha, e o tempo de cada pedaço pode ser comparado. Os 70 pedaços somam a volta inteira. A tabela com os metros de cada fronteira está no relatório do pedido 38.
+
+### 3.2 A localização do erro (Parte D)
+
+- **A perda:** para cada pedaço, é o tempo que levei nele menos o tempo da volta da IA no mesmo pedaço.
+- **O que entra no ranking:** a perda tem de aparecer em pelo menos 2 das 3 últimas voltas da sessão, para não confundir um erro de uma volta com um hábito.
+- **A cadeia causal:**
+  - uma perda na saída que vem de uma entrada mal feita é procurada na entrada;
+  - frear mais tarde e perder mais na entrada do que se ganhou na frenagem é um **falso ganho**, e não melhora.
+- **A atribuição:** para cada perda, o Modelo 2 procura o detector (3.3) em que eu e a IA fazemos diferente, e em que a minha melhor volta faz como a IA. Se nenhum detector explicar, a resposta é "não conclusivo", e o Modelo 2 não inventa causa.
+
+### 3.3 Os detectores de técnica e de erro (Parte E)
+
+Um detector é uma regra que olha os pedais, o volante, a velocidade e a guinada numa curva e diz se uma técnica foi aplicada (ou se um erro aconteceu). Por exemplo:
+
+- o **trail braking** aplica quando o freio continua um pouco apertado depois que o volante começa a virar;
+- a **soltura progressiva** aplica quando o freio é solto em rampa, e não de uma vez.
+
+Cada detector tem três respostas: **aplica**, **não aplica** e **não conclusivo**. A última aparece quando falta o canal, quando o canal falha naquele trecho ou quando o valor fica na faixa de dúvida.
+
+São 27 detectores, em quatro famílias:
+
+- frenagem;
+- entrada e equilíbrio;
+- meio e saída;
+- a volta inteira.
+
+Os limiares vêm da pesquisa e são ajustados pela IA na mesma curva, porque um número publicado para outro carro não vale para este.
+
+**Importante:** os detectores ainda não foram validados. O Eduardo vai rotular 120 passagens à mão (o kit da Parte H), e só depois se sabe quanto cada detector acerta (a precisão e a revocação). Até lá, nenhum deles vai para o rádio nem para o coach (ADR 0023, item 4).
+
+### 3.4 A assinatura de estilo (Parte F)
+
+O estilo é descrito por seis dimensões contínuas, sem rótulos fixos:
+
+- a forma da curva (V ou U);
+- o perfil de frenagem;
+- o uso dos pedais;
+- a resposta do carro na entrada;
+- a aplicação do volante;
+- o perfil do acelerador.
+
+Elas são calculadas para curvas lentas, médias e rápidas. Cada número é um escore-z: quantos "desvios típicos" eu ou a IA estamos acima ou abaixo do conjunto de todas as passagens. Para um iniciante, a assinatura muda de sessão para sessão, por isso ela se chama **assinatura atual**.
+
+A consistência (o quanto eu repito a mesma curva) fica de fora do estilo, porque mede habilidade.
+
+### 3.5 O modelo supervisionado leve (Parte G)
+
+Para cada curva, o modelo mede quais indicadores dos detectores andam junto com um tempo menor no trecho, nas minhas voltas, dentro de cada sessão. Ele é testado deixando uma sessão de fora de cada vez.
+
+Ele **mostra associação, não causa,** e não promete ganho (ADR 0004). Serve para ver quais detectores importam neste carro e nesta pista.
+
+### 3.6 Onde ficam as saídas
+
+| saída | onde |
+|---|---|
+| o comando | `python -m ml.scripts.modelo2 todos` (de `backend/`) |
+| os dados intermediários | `data/ml/modelo2/` (fora do git): as passagens, os estados de cada passagem, os derivados e o gabarito do kit |
+| os resultados do pedido 38 | `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_*.json` |
+| o kit de rotulagem | `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_kit_rotulagem.html` e `_rotulagem.csv` |
+| a precisão e a revocação, depois da rotulagem | `python -m ml.scripts.modelo2 rotulos --rotulos <o csv preenchido>` |

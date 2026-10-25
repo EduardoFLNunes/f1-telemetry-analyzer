@@ -411,8 +411,8 @@ ensina a chegar mais perto dela.
 | A — previsão de trajetória (LSTM geradora) | Modelo 1 | existe |
 | busca evolutiva | Modelo 1 | existe |
 | juiz do tempo | Modelo 1 | em construção: o juiz novo, o modelo do carro do [ADR 0017](decisoes/0017-modelo-fisico-do-carro.md), com a etapa M0 feita |
-| B — erro do piloto | Modelo 2 | em uso: versão 1, o relatório de evolução (pedidos 16 e 17) |
-| C — autocorreção | Modelo 2 | planejado |
+| B — erro do piloto | Modelo 2 | em uso: versão 1, o relatório de evolução (pedidos 16 e 17). Versão 2, offline (pedido 38, [ADR 0023](decisoes/0023-modelo-2-quatro-pecas-ia-e-piloto.md)): a perda por fase da curva, a cadeia causal, os detectores de técnica e de erro nas voltas da IA e do piloto, a assinatura de estilo e o modelo leve, em [`ml/modelo2/`](../backend/ml/modelo2/) e [`modelo2_tecnica_e_estilo.md`](modelo2_tecnica_e_estilo.md). Os detectores ainda não foram validados contra a rotulagem do Eduardo e não chegam ao rádio nem ao coach |
+| C — autocorreção | Modelo 2 | planejado; os detectores da versão 2 da peça B são a entrada dela, depois da validação (ADR 0023, item 4) |
 | D — tempo contrafactual | Modelo 2 | não passou ([fase1_validacao_contrafactual.md](fase1_validacao_contrafactual.md), seção 6; [ADR 0011](decisoes/0011-resultado-fase-2b-e-experimento-controlado.md)) |
 | E — avaliação | avalia os dois | em uso: a régua do [ADR 0006](decisoes/0006-protocolo-de-validacao.md) |
 
