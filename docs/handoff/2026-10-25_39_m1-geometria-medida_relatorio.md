@@ -1,7 +1,7 @@
 # Relatório do pedido 39 — M1: a geometria do carro medida pela telemetria do jogo
 
 - **Pedido:** `docs/prompts/2026-10-25_39_m1-geometria-medida.md`
-- **Situação:** **parado na Parte C, como o pedido manda,** esperando a sessão de medição do Eduardo. As Partes A, B e C estão feitas. As Partes D (a geometria medida) e E (a retomada do pedido 37) vêm depois do aviso "medi a geometria".
+- **Situação:** **parado na Parte C, como o pedido manda,** esperando a ida ao jogo do Eduardo (a medição e o teste do rádio com o app 0.5.0; passos abaixo). As Partes A, B e C estão feitas. As Partes D (a geometria medida) e E (a retomada do pedido 37) vêm depois do aviso "medi a geometria".
 - **Branch:** `etapa/m1-modelo-do-carro` (a mesma do pedido 37), sem merge em `develop` e sem push.
 - **Commits deste pedido:**
   - `23b2ea49` docs: pedido 39 (M1: a geometria do carro medida pela telemetria do jogo, e a retomada do pedido 37)
@@ -9,7 +9,8 @@
   - `3b0f1535` Pedido 39, Parte A (continuacao): a emenda 1.9 da M1, registrada antes de medir
   - `b2f5abea` Pedido 39, Parte B: a primeira olhada na geometria do retrato da memoria
   - `28de6176` Pedido 39, Parte C: a ferramenta que mede a geometria pela memoria do jogo, parada para a sessao do Eduardo
-  - e o commit deste aviso sobre a sessão do pedido 38 (ver "Coisas que não batiam com o contexto")
+  - `6171e279` Relatorio do pedido 39: o commit do pedido 38 que caiu nesta branch
+  - e o commit desta atualização (a decisão do `f38f89a5`, o instalador 0.5.0 já gerado e os passos de uma ida ao jogo): ver `git log` da branch
   - **também na branch, sem ser deste pedido:** `f38f89a5` docs: pedido 38, commitado pela sessão do pedido 38 depois que eu troquei a branch da pasta (abaixo)
 - **Arquivos de handoff** (`docs/handoff/`):
   - `2026-10-25_39_m1-geometria-medida_relatorio.md` (este)
@@ -89,7 +90,86 @@ Comando: `python -m ml.scripts.m1_modelo_carro retrato`. **É só uma olhada: ne
 
 **Suíte do backend: 814 passaram em 10 min 56 s** (`python -m pytest tests -q`), com os 20 da M1 (14 do pedido 37 e 6 deste).
 
-## Os passos para você: a sessão de medição
+## Mensagem de 25/10, às 11:57: o commit do 38 nesta branch, o instalador 0.5.0 e uma ida só ao jogo
+
+**Antes de tudo:** as duas outras sessões da pasta ("Modelo2 erro técnica e estilo" e "Redesenho base") estavam paradas, e não havia trava do git. A pasta estava em `etapa/modelo2-erro-tecnica-e-estilo`, limpa (só a `recordings/` da raiz, de sempre). Voltei para `etapa/m1-modelo-do-carro`.
+
+### O `f38f89a5` fica nesta branch (decisão do Eduardo)
+
+- **Decidido em 25/10:** o `f38f89a5` (o texto do pedido 38 e as três pesquisas) fica na branch do 37/39 e vai para `develop` com o merge.
+- **No merge em `develop`:** se `docs/tecnica_de_pilotagem_lista.md` der conflito, fica a versão de `develop`.
+- **Uma coisa que não bate com a mensagem:** hoje `develop` **ainda não tem** o `fcc94f86`. Ele está só na branch do 38 (`etapa/modelo2-erro-tecnica-e-estilo`), que não teve merge; `develop` continua em `4782aefb`. Então:
+  - **se o 38 for para `develop` antes do 39,** os arquivos do `f38f89a5` já estarão lá pelo `fcc94f86`, e a regra acima resolve a lista;
+  - **se o 39 for antes,** o `f38f89a5` leva os arquivos para `develop`. O conflito, se houver, aparece depois, no merge do 38, e a mesma regra vale.
+
+### O instalador 0.5.0: já gerado, não refiz
+
+- **A sessão do pedido 38 já gerou o instalador** na branch dela, com tudo o que a mensagem pede (está no relatório do 38, seção "Mudança de prioridade em 25/10, às 11:36"):
+  - o `git diff --stat develop...HEAD` só com `backend/ml`, os testes do Modelo 2 e `docs`;
+  - os testes: `vitest run` com 189 passando, `tsc --noEmit` sem erro, `npm test` do `desktop` com 4 passando e o `conferir_lua.py` sem erro;
+  - a versão `0.5.0-radio-e-replay` num commit próprio (`825ef60d`, as 3 linhas de versão de sempre);
+  - o `npm run dist:win` pelo `publish-version.js`, sem baixar pacote: o Electron 42.3.3 veio do cache local;
+  - o `versoes\LEIA-ME.md` commitado em `d4cff2c3`.
+- **O que conferi aqui:**
+  - **o instalador:** `versoes\0.5.0-radio-e-replay\Automobilista-Telemetria-Setup-0.5.0-radio-e-replay.exe`, 229.288.854 bytes, sha256 `4db96566280e…`. O `build-info.json` dá o commit `825ef60` e a branch do 38, e marca a árvore suja só pela `recordings/` da raiz;
+  - **o app nele é o de `develop`:** fora de `backend/ml`, dos testes e de `docs`, a branch do 38 só muda as 3 linhas de versão. **A branch do 37/39 tem o mesmo app:** o `git diff --stat develop...etapa/m1-modelo-do-carro` não mostra nada fora de `backend/ml`, dos testes da M1 e de `docs`.
+- **Por que não refiz:** um build daqui daria o mesmo app, mas sobrescreveria o `.exe` da mesma versão com outro sha256 e criaria um segundo commit da versão 0.5.0 em paralelo, que brigaria com o `825ef60d` no merge. **Não rodei o instalador e não mexi no app instalado nem na pasta do jogo.**
+
+### Onde o app instalado grava, e se o Modelo 2 lê
+
+- **O app instalado grava em** `%APPDATA%\Automobilista Telemetria\data\recordings\`, uma pasta por sessão, com o nome `<data>_<hora>_vhe_interlagos`.
+- **O `ml.scripts.modelo2` lê essa pasta:** ele acha as gravações por `list_all_sessions`, que lê as duas pastas (a do repositório e a do app instalado), como o resto do `ml` desde o ADR 0014. A M1 também.
+- **Não copie as sessões novas para `data\recordings`.** O relatório do 38 sugere uma cópia com `robocopy`, mas `list_all_sessions` **para com erro** quando o mesmo nome de sessão existe nas duas pastas ("compare as duas antes de seguir"). Com uma cópia, o Modelo 2, a M1 e o `atualizar_coach` param. Hoje não há nenhum nome repetido. Deixe as sessões onde o app grava.
+- **A ferramenta de medição** grava no repositório, em `data\ml\modelo_carro\geometria_<data>_<hora>.parquet`.
+
+## Os passos para você: uma ida ao jogo (instalação, medição e rádio)
+
+Uma sessão do jogo só, sem a IA. A ferramenta de medição grava a sessão inteira: o giro do volante no box e todas as voltas. As voltas do teste do rádio valem como as "3 voltas normais" da medição.
+
+**1. Instalar (com o jogo e o app fechados, inclusive na bandeja do Windows)**
+
+- O app 0.5.0: rode o instalador, escolha **todos os usuários** e mantenha a pasta `C:\Users\Dokas\AppData\Local\Programs\Automobilista Telemetria`:
+  ```
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\versoes\0.5.0-radio-e-replay\Automobilista-Telemetria-Setup-0.5.0-radio-e-replay.exe
+  ```
+- O app do jogo, num PowerShell:
+  ```
+  powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer\tools\csp_app\instalar.ps1
+  ```
+- Abra o app pelo menu Iniciar ("Automobilista Telemetria") e confira, na aba **Coleta de dados** ("Versão do app") ou em **Sistema**: tem de aparecer `0.5.0-radio-e-replay`.
+
+**2. Ligar a ferramenta de medição, antes de abrir o jogo**
+
+Num PowerShell separado, que fica aberto a sessão toda:
+```
+cd C:\Users\Dokas\Desktop\f1-telemetry-analyzer\backend
+..\.venv\Scripts\python -m ml.scripts.medir_geometria
+```
+Ela mostra `esperando o Assetto Corsa...` até o jogo abrir.
+
+**3. Abrir o jogo** com o `rss_formula_rss_3_v6_2026` em Interlagos (`vhe_interlagos`, traçado `gp`), num treino sozinho.
+- Na janela da ferramenta, espere `conectado; gravando em ...` e `carro rss_formula_rss_3_v6_2026, pista vhe_interlagos`, **sem** a palavra "ATENCAO".
+
+**4. No jogo, ligue as 4 janelas** na barra de apps: "Rádio", "Minimapa", "Mapa aproximado" e "Replay da curva". Ponha o replay num canto, sem cobrir o centro.
+
+**5. No app, na tela Sistema, "Mandar mensagem de teste":** confira o cartão e a voz no jogo.
+
+**6. A medição, parado no box:** com o carro parado e sem acelerar, gire o volante **devagar** de um batente ao outro e volte, **duas vezes** (uns 10 segundos para cada lado).
+
+**7. O teste do rádio:**
+- Confira que a IA não está dirigindo. **Não aperte Ctrl+C no jogo:** lá ele passa o carro para a IA.
+- Ande **pelo menos 8 voltas**, com **uma ida aos boxes depois da 3ª volta válida**.
+- Para o FPS: desligue o "Replay da curva" por 2 ou 3 voltas e ligue de novo.
+- Deixe a tela **Ao vivo** aberta no app.
+
+**8. Encerrar a ferramenta:** com o carro parado no box, troque para a janela do PowerShell (Alt+Tab) e aperte **Ctrl+C lá**. Espere `salvo: ... (N amostras, ... Hz)`; a taxa deve ficar perto de 60 Hz. Se o jogo fechar antes, o arquivo do último minuto já está salvo.
+
+**9. Feche o jogo e me avise:** "medi a geometria e testei o app 0.5.0".
+
+**Depois disso:** a Parte D, a leitura do teste do rádio sem mudar nada (numa seção nova do relatório do pedido 36) e a Parte E, com o merge em `develop` no fim.
+
+## Os primeiros passos, de 25/10 de madrugada (substituídos pelos de cima)
+
 
 1. **Abra o Assetto Corsa** com o `rss_formula_rss_3_v6_2026` em Interlagos (`vhe_interlagos`, traçado `gp`), numa sessão de treino sozinho. O app de telemetria pode ficar aberto ou fechado; a ferramenta não depende dele.
 2. **Rode a ferramenta** num terminal (PowerShell), antes ou depois de abrir o jogo:
@@ -125,7 +205,7 @@ Se o jogo fechar antes do Ctrl+C, o arquivo do último minuto já está salvo.
   - **00:41:17:** o meu commit do pedido 39 (`23b2ea49`) ficou por cima dele.
   - **A sessão do 38 parou** e deixou o relatório dela sem commit (`docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_relatorio.md`), com as opções. Ela também tirou a cópia não commitada do ADR 0023 de `docs/decisoes/`. Eu não mexi no relatório dela, no anexo dela, nem no `f38f89a5`.
   - **O que isso muda aqui:** a branch do 37 e do 39 tem, entre o `5c8ed449` e o `23b2ea49`, o commit `f38f89a5` (só documentos do 38, 4 arquivos, nenhum código). Se nada for feito, ele vai para `develop` com o merge do fim deste pedido.
-  - **A decisão é sua,** e é a mesma que o relatório do 38 pede: (a) deixar como está (a recomendação dele, e a minha), ou (b) tirar o `f38f89a5` da branch depois do 39, reescrevendo o histórico, só com o seu ok. Daqui para frente, antes de trocar de branch, confiro se outra sessão está ativa na pasta.
+  - **Decidido em 25/10:** o `f38f89a5` fica nesta branch (seção "Mensagem de 25/10, às 11:57"). Daqui para frente, antes de trocar de branch, confiro se outra sessão está ativa na pasta.
 - **`recordings/` na raiz** continua fora do git; não mexi.
 
 Arquivo: `docs/handoff/2026-10-25_39_m1-geometria-medida_relatorio.md`
