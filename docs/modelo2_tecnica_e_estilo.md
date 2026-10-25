@@ -270,3 +270,26 @@ São calculadas por tipo de curva (1.3), nas passagens conclusivas, para a IA e 
 ### 1.10 O que se espera, antes de ver qualquer número
 
 Espero que as maiores perdas contra a IA estejam na frenagem e na entrada das curvas lentas que alimentam retas longas (C01, C04 e C10), explicadas pelo ponto de frenagem antecipado e por uma soltura em degrau sem trail braking, que a IA aplica na maioria das curvas com frenagem e eu em poucas.
+
+---
+
+## 2. Emendas de 25/10/2026, depois da primeira rodada
+
+A seção 1 não muda. A primeira rodada mostrou três coisas, registradas aqui com o motivo:
+
+1. **Correção de código, sem mudar regra: as pontas das fases.** Na primeira rodada, a soma das 70 fases diferia da diferença de tempo de volta em até 0,069 s. O fim de uma fase e o começo da seguinte eram arredondados de jeitos diferentes, e um ponto da grade podia entrar em duas fases ou em nenhuma. Agora as duas pontas usam o mesmo índice da grade, e a soma fecha em 0,000 s, como a seção 1.6 diz.
+2. **O escorregamento acima de 10 sai da conta.** A seção 1.5 diz que um canal não confiável no trecho dá "não conclusivo", mas não registrou como reconhecer um escorregamento quebrado.
+   - **O que apareceu:** numa volta minha de 04/10, o escorregamento traseiro marcou 290 na C11, contra uns 0,4 nas outras voltas. Esse valor sozinho levava o R² do modelo leve da C11 a −1.027.
+   - **A distribuição no store v2:** mediana 0,20, percentil 99 de 1,05, percentil 99,99 de 7,6.
+   - **A regra nova:** um ponto com escorregamento acima de 10 é leitura quebrada (ou roda no ar) e sai da conta. Se a janela de um detector fica sem pontos, o detector dá "não conclusivo".
+3. **Um ranking informativo, ao lado do registrado.** O peso da curva (o comprimento da reta seguinte, seção 1.3) põe a perda na reta principal e na reta oposta à frente de tudo em todas as sessões. Ele também zera o peso das curvas seguidas de outra curva (C01, C07, C08 e C09). Por isso, a saída traz também os 3 itens de maior perda **sem o peso**, com a mesma atribuição. Ele não substitui o ranking registrado.
+
+**Limitações das regras registradas, sem mudança agora** (para decidir num pedido próprio):
+
+- **s_pu, a retomada,** é o primeiro acelerador ≥ 0,10 depois do fim da frenagem e do s_ti. A IA usa acelerador parcial na entrada: na mediana, ela "retoma" de 1,1 a 1,9 s antes da mínima nas curvas lentas. Com isso:
+  - M6 dá "não aplica" em quase todas as passagens, da IA e minhas;
+  - M7 (volante crescendo depois da retomada) dá "aplica" na IA.
+
+  Uma regra melhor procuraria a última subida do acelerador antes do pleno.
+- **s_ti** é o começo da sequência de volante que contém o ápice. Um contraesterço antes do ápice corta essa sequência e fica fora da janela de E4.
+- **A frenagem "emendada":** quando a frenagem de uma curva continua depois do ápice da anterior (C09 para C10, por exemplo), s_b cai no ápice anterior. É a mesma situação que o relatório de evolução marca como "freada emendada".
