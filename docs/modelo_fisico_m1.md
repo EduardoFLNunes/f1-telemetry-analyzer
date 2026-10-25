@@ -58,6 +58,8 @@ A convenção do modelo: **x para a frente, y para a esquerda, giro positivo par
 
 ### 1.4 A física simples (a referência R1)
 
+> **Emenda de 25/10 (ADR 0024):** `L`, `b`, `h/L` e `k_δ` passam a ser medidos pela telemetria do jogo, e a velocidade lateral é levada ao centro de massa. A regra é a da seção 1.9; a regra abaixo, das regressões cinemáticas, não identificou os parâmetros (seção 4).
+
 **A forma:** o modelo de bicicleta dinâmico, por unidade de massa (as forças divididas pela massa, em m/s²). As rodas de cada eixo viram uma só.
 
 ```
@@ -171,6 +173,44 @@ equações:           dvx/dt = F_xr + F_xf·cos δ − F_yf·sin δ − R + vy·
 
 A física simples deve bater a persistência com folga (critério 1), e a correção aprendida deve melhorar pouco sobre ela em 0,5 s, perto do limite de 0,20 contra R1, com o maior ganho na guinada e na velocidade lateral e o menor na longitudinal.
 
+### 1.9 Emenda de 25/10 (ADR 0024)
+
+Registrada antes de medir, num commit próprio (pedido 39, Parte A). Ela troca só a forma de obter `L`, `b`, `h/L` e `k_δ` da seção 1.4 e acrescenta o ponto `x_v` da velocidade gravada. A regra antiga das regressões cinemáticas fica registrada na 1.4: ela não identificou os parâmetros (seção 4). Todo o resto da seção 1, e os critérios do ADR 0022, não mudam.
+
+**A sessão de medição**
+
+- Gravada pela ferramenta `ml/scripts/medir_geometria.py`, que só lê a memória compartilhada do jogo, em cerca de 60 Hz. **Não é uma das 5 sessões da M1**, então nada da sessão de teste entra na geometria.
+- Só vale se a página estática disser `carModel = rss_formula_rss_3_v6_2026` e `track = vhe_interlagos`. Se não disser, nada é medido.
+- O roteiro: parado no box, o volante girado devagar de um batente ao outro, duas vezes; depois 3 voltas normais.
+- **A ordem dos campos 4 × 3:** `tyreContactPoint` e `tyreContactHeading` são lidos achatados, na ordem da memória; a roda `w` (0 = dianteira esquerda, 1 = dianteira direita, 2 = traseira esquerda, 3 = traseira direita) e a coordenada `c` (x, y, z do mundo) ficam no índice `3·w + c`.
+- **As duas partes da sessão:**
+  - **sem relógio** (só para `k_δ`): todas as amostras com um `packetId` da física diferente do anterior, inclusive paradas no box, onde o cronômetro da volta pode não andar;
+  - **com relógio** (para `L`, `h` e `x_v`): o mesmo preparo da Parte B. O relógio é o cronômetro do jogo (`iCurrentTime`), as amostras repetidas são descartadas, os trechos são cortados em buracos de 50 ms ou mais, e os dados são reamostrados em 50 ms.
+- **Os eixos do carro** saem do `heading` pela convenção da seção 3: frente `(−sen h, cos h)` e esquerda `(cos h, sen h)`, no plano (x, z) do mundo. "Em movimento" quer dizer `vx` ≥ 10 m/s.
+
+**Como cada parâmetro é medido**
+
+| parâmetro | regra |
+|---|---|
+| `L` | Em cada amostra, o ponto médio dos contatos dianteiros menos o ponto médio dos traseiros, no plano (x, z), projetado na frente do carro. **A mediana nas amostras em movimento com \|a_y\| < 0,2 g** (a reta). |
+| `b` | `b = w_f · L`, com `w_f` medido nas cargas das 4 sessões de treino de cada rodada, como na 1.4. `a = L − b`. |
+| `h/L` | A mediana de `cgHeight` nas amostras em movimento, dividida por `L`. Substitui o `h/L` das cargas, que fica só como conferência. |
+| `k_δ` | Cada direção de pneu é escrita nos eixos do carro, e o ângulo dela é `atan2(esquerda, frente)`. O ângulo das rodas é o da direção média dos dois dianteiros menos o da direção média dos dois traseiros, positivo para a esquerda. Na parte sem relógio, a regressão linear `ângulo = c + s · steerAngle` dá `k_δ = −s` (o volante é positivo à direita) e `c`, a convergência estática. O mesmo é feito com cada pneu dianteiro contra a média dos traseiros (esquerdo e direito, relatados à parte). **O modelo usa a regressão da média.** |
+| sentido de `tyreContactHeading` | Antes de medir o ângulo: se, na mediana, a direção dos pneus aponta contra o vetor do eixo traseiro para o dianteiro (produto escalar negativo), todas as direções são invertidas. |
+| `x_v` | Na parte com relógio, em movimento: a velocidade de cada ponto médio de eixo é a derivada no tempo da posição dele, dentro do trecho. A parte lateral é a projeção na esquerda do carro. Num corpo rígido, `vy_gravada = v_lat,traseiro + x_v · r`. Então `x_v` (em metros, a partir do eixo traseiro, positivo para a frente) é a inclinação de `vy_gravada − v_lat,traseiro` contra `r`, pela origem, com \|r\| ≥ 0,05 rad/s. A mesma conta com o eixo dianteiro (`x_v = L + inclinação`) é relatada como conferência. O intervalo de 95% sai de um bootstrap por trecho (200 reamostragens, semente 39). |
+| a velocidade lateral do modelo | `vy_cm = vy_gravada + (b − x_v) · r`, em todas as amostras das 5 sessões, antes de qualquer conta (o desvio-padrão de normalização, os passos, os casos e a correção usam `vy_cm`). |
+
+**Os portões**
+
+| parâmetro | passa quando | se não passar |
+|---|---|---|
+| `L` | fica entre 2,8 e 3,8 m, e a faixa entre os percentis 5 e 95 é menor que 3% do valor | usa o valor publicado, 2,943 m, declarado como fonte externa e exceção ao ADR 0017 |
+| `k_δ` | fica entre 0,05 e 1,5 rad, com R² ≥ 0,95 na regressão da média | sai da regressão em regime permanente `−steer = (L/k_δ) · κ + K · a_y`, com `κ = r/vx`, nas amostras em movimento com \|dr/dt\| < 0,1 rad/s², com o `L` medido |
+| `x_v` | a meia-largura do intervalo de 95% é menor que 0,2 m | supõe-se que a velocidade gravada é a do centro de massa (`x_v = b`, sem correção), e isso é relatado |
+
+- **A geometria é do carro, não do piloto:** é medida uma vez e usada nas 5 rodadas (só `b` muda de rodada, pelo `w_f`).
+- **O que também é relatado, sem decidir nada:** `h/L` pelo `cgHeight` contra o das cargas; `L/k_δ` contra a razão volante ÷ curvatura da M0 (cerca de 10,6); e se o ângulo da roda contra o volante é linear em toda a faixa (a razão por faixa de \|steer\|).
+
 ## 2. Os dados (Parte B)
 
 Comando: `python -m ml.scripts.m1_modelo_carro dados`. As 5 gravações têm o mesmo sha256 registrado no meta do store v2, e o número de amostras cruas de cada uma das 57 voltas bate com o `raw_samples` do store: o corte é o mesmo.
@@ -204,7 +244,7 @@ Comando: `python -m ml.scripts.m1_modelo_carro convencoes`. Todas batem, com a m
 - **A direção do carro no mundo** é `(−sen h, cos h)` no plano (x, z), e a esquerda é `(cos h, sen h)`.
 - **A aceleração lateral positiva para a esquerda** (M0) confere com a geometria: positiva em 99,3% dos pontos com \|a_y\| ≥ 0,5 g nas curvas à esquerda, e negativa em 99,9% nas à direita.
 - **O sinal da velocidade lateral nas curvas:** `vy` é negativa nas curvas à esquerda (C01: mediana −0,83 m/s a 105 km/h) e positiva nas à direita (C10: +0,30 m/s a 83 km/h; C06: +2,5 m/s a 171 km/h). O carro aponta para dentro da curva e o centro dele anda para fora: a deriva do pneu traseiro vence o efeito geométrico em todas as 14 curvas, até nas lentas.
-- **A correlação dentro de cada lado.** Na guinada, a correlação calculada só dentro das curvas à esquerda (0,907) e só dentro das à direita (0,884) fica abaixo de 0,95. A regra registrada (1.3) pede a inclinação e a correlação em todas as amostras e o mesmo sinal nos dois lados, e isso é atendido. Dentro de um lado só, os valores ficam numa faixa estreita e a correlação cai sem que o sinal esteja em dúvida (a inclinação é 0,977 e 0,989). A primeira versão do código aplicava os limites também a cada lado, mais rígido que o texto; ela foi alinhada ao texto registrado. **Este ponto fica para o Eduardo confirmar** (relatório do pedido 37).
+- **A correlação dentro de cada lado.** Na guinada, a correlação calculada só dentro das curvas à esquerda (0,907) e só dentro das à direita (0,884) fica abaixo de 0,95. A regra registrada (1.3) pede a inclinação e a correlação em todas as amostras e o mesmo sinal nos dois lados, e isso é atendido. Dentro de um lado só, os valores ficam numa faixa estreita e a correlação cai sem que o sinal esteja em dúvida (a inclinação é 0,977 e 0,989). A primeira versão do código aplicava os limites também a cada lado, mais rígido que o texto; ela foi alinhada ao texto registrado. **Decidido pelo Eduardo em 25/10 (pedido 39): vale a leitura do texto registrado, e a guinada bate.**
 
 ## 4. A física: onde o trabalho parou (Parte C)
 
