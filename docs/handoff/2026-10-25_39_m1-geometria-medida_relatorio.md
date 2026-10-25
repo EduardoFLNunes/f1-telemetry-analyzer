@@ -1,7 +1,7 @@
 # Relatório do pedido 39 — M1: a geometria do carro medida pela telemetria do jogo
 
 - **Pedido:** `docs/prompts/2026-10-25_39_m1-geometria-medida.md`
-- **Situação:** **parado na Parte C, como o pedido manda,** esperando a ida ao jogo do Eduardo (a medição e o teste do rádio com o app 0.5.0; passos abaixo). As Partes A, B e C estão feitas. As Partes D (a geometria medida) e E (a retomada do pedido 37) vêm depois do aviso "medi a geometria".
+- **Situação:** **parado na Parte C, como o pedido manda,** esperando a ida ao jogo do Eduardo (a medição e o teste do rádio com o app 0.5.0; passos abaixo). O aviso de 25/10, às 12:20, chegou sem os arquivos (seção "Aviso de 25/10, às 12:20"). As Partes A, B e C estão feitas. As Partes D (a geometria medida) e E (a retomada do pedido 37) vêm depois do aviso "medi a geometria".
 - **Branch:** `etapa/m1-modelo-do-carro` (a mesma do pedido 37), sem merge em `develop` e sem push.
 - **Commits deste pedido:**
   - `23b2ea49` docs: pedido 39 (M1: a geometria do carro medida pela telemetria do jogo, e a retomada do pedido 37)
@@ -186,6 +186,17 @@ Ela mostra `esperando o Assetto Corsa...` até o jogo abrir.
 6. **Me avise:** "medi a geometria".
 
 Se o jogo fechar antes do Ctrl+C, o arquivo do último minuto já está salvo.
+
+## Aviso de 25/10, às 12:20: "medi a geometria e testei o app 0.5.0", sem os arquivos
+
+- **Antes de tudo:** a sessão do pedido 38 estava parada, a pasta estava em `etapa/m1-modelo-do-carro`, limpa, e sem trava do git.
+- **O que procurei e não achei neste computador:**
+  - **o arquivo da medição:** nenhum `geometria_*.parquet` em `data\ml\modelo_carro\`, nem em outro lugar do repositório, de `%APPDATA%`, de `%LOCALAPPDATA%`, da Área de Trabalho ou de Documentos. Só os arquivos dos testes automáticos, na pasta temporária;
+  - **o app 0.5.0 instalado:** o app em `C:\Users\Dokas\AppData\Local\Programs\Automobilista Telemetria` continua na `0.4.0-redesenho` (o `app.asar` e o executável são de 17/10);
+  - **as gravações do teste do rádio:** a última em `%APPDATA%\Automobilista Telemetria\data\recordings` é de 18/10, e a última em `data\recordings` é de 24/10, 13:43;
+  - **os logs do app instalado:** o `backend.log` e o `desktop.log` são de 18/10. O 0.5.0 gira o log em 20 MB, e o `backend.log` tem 1 GB: o 0.5.0 não rodou.
+- **Por isso a Parte D, a leitura do teste do rádio e a Parte E não começaram.** Nada foi medido nem lido do teste.
+- **O que pode ter acontecido:** a ida ao jogo foi em outro computador, os arquivos ficaram noutra pasta, ou a ferramenta e o instalador não rodaram. Se os arquivos existirem em outro lugar, basta dizer onde. Se a sessão foi noutro computador, são precisos o `geometria_<data>_<hora>.parquet` (com o `.json` ao lado) e a pasta da gravação do app.
 
 ## O que vem depois do aviso
 
