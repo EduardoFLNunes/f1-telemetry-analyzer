@@ -13,7 +13,7 @@
   - `41a60fe6` Pedido 38, Partes F e G: a assinatura de estilo e o modelo supervisionado leve
   - `96cb0847` Pedido 38, Parte H: o kit de rotulagem, o comando, os testes e as emendas da primeira rodada
   - `53d563f1` Pedido 38, Parte I: a documentacao do Modelo 2, a lista viva e a arquitetura; a conferencia do escorregamento sem os pontos quebrados
-  - HASH_SAIDAS Pedido 38, Parte H, parado: as saidas, o kit de rotulagem e o relatorio
+  - `d705d43f` Pedido 38, Parte H, parado: as saidas, o kit de rotulagem e o relatorio
 - **Arquivos de handoff** (`docs/handoff/`, prefixo `2026-10-24_38_modelo2-erro-tecnica-e-estilo_`):
   - `relatorio.md` (este);
   - `resultados.json` (ADR 0007: o commit, o `geometry_id`, os comandos e os hashes dos arquivos lidos e escritos);
@@ -527,7 +527,7 @@ Por curva, nas minhas 130 passagens de 13 sessões. Ridge com a sessão centrada
 | `41a60fe6` | Partes F e G: `estilo.py` e `supervisionado.py` |
 | `96cb0847` | Parte H: `rotulagem.py`, o comando `ml/scripts/modelo2.py`, os testes e a seção 2 do documento |
 | `53d563f1` | Parte I: as seções 3 do documento, a lista viva, a arquitetura e a conferência do escorregamento com `nanmedian`. **É o commit da rodada final** (o `commit` do `resultados.json`) |
-| HASH_SAIDAS | as saídas em `docs/handoff/`, o kit e este relatório |
+| `d705d43f` | as saídas em `docs/handoff/`, o kit e este relatório |
 
 **O comando da rodada final** (de `backend/`, 4 min 26 s):
 
