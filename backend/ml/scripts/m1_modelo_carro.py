@@ -128,13 +128,69 @@ def cmd_convencoes(args) -> int:
     return 0 if payload["todas_batem"] else 2
 
 
+def cmd_retrato(args) -> int:
+    """Pedido 39, Parte B: a primeira olhada no retrato da memoria (so uma olhada; nada entra na M1)."""
+    import ast
+    from ml.modelo_carro import geometria_medida as GM
+    path = config.repo_root() / "data" / "debug" / "ac_shared_memory_full_inventory.csv"
+    table = pd.read_csv(path)
+
+    def value(structure, name):
+        row = table[(table["structure"] == structure) & (table["field_name"] == name)].iloc[0]
+        text = str(row["current_value"])
+        return ast.literal_eval(text) if text.startswith("[") else (float(text) if text.replace(".", "", 1).lstrip("-").isdigit() else text)
+
+    contact = GM.achatar_4x3(value("Physics", "tyreContactPoint"))
+    dirs = GM.achatar_4x3(value("Physics", "tyreContactHeading"))
+    heading = float(value("Physics", "heading"))
+    car = np.asarray(value("Graphics", "carCoordinates"), dtype=float)
+    steer = float(value("Physics", "steerAngle"))
+    inst = GM.instantaneas(contact[None], dirs[None], np.array([heading]), car[None])
+    sentido = float(inst["sentido"][0])
+    ang = GM.angulos_das_rodas(dirs[None], np.array([heading]), sentido)
+    # A velocidade no referencial do carro estava no antigo `brakeTemp` (pedido 18): [brakeBias, x, y, z].
+    old = value("Physics", "brakeTemp")
+    yaw = value("Physics", "localAngularVel")[1]
+    L = float(inst["L"][0])
+    payload = {
+        "pedido": 39, "parte": "B", "arquivo": file_entry(path),
+        "carModel": value("Static", "carModel"), "track": value("Static", "track"),
+        "acVersion": value("Static", "acVersion"),
+        "contatos_4x3": contact.tolist(), "direcoes_4x3": dirs.tolist(),
+        "entre_eixos_m": L, "bitola_dianteira_m": float(inst["bitola_dianteira"][0]),
+        "bitola_traseira_m": float(inst["bitola_traseira"][0]),
+        "carCoordinates_a_partir_do_eixo_traseiro_m": float(inst["x_carro"][0]),
+        "carCoordinates_fracao_do_entre_eixos": float(inst["x_carro"][0] / L),
+        "carCoordinates_desvio_lateral_m": float(inst["y_carro"][0]),
+        "carCoordinates_altura_sobre_os_contatos_m": float(inst["altura_carro"][0]),
+        "cgHeight_m": float(value("Physics", "cgHeight")),
+        "direcoes_apontam_para_tras": bool(sentido < 0),
+        "angulo_rodas_rad": {k: float(v[0]) for k, v in ang.items()},
+        "steerAngle": steer,
+        "k_delta_rad_por_unidade": {k: float(-v[0] / steer) for k, v in ang.items()},
+        "localVelocity_x_y_z": old[1:4], "guinada_rad_s": yaw,
+        "speedKmh": float(value("Physics", "speedKmh")),
+    }
+    k = payload["k_delta_rad_por_unidade"]["media"]
+    payload["k_delta_graus"] = float(np.degrees(k))
+    payload["L_sobre_k_delta"] = float(L / k)
+    payload["reportagem"] = {"entre_eixos_m": 2.943, "bitola_dianteira_m": 1.552, "bitola_traseira_m": 1.502}
+    payload["m0_razao_volante_curvatura"] = 10.6
+    out = Path(args.saida) if args.saida else D.raiz_dados() / "retrato_geometria.json"
+    _json(out, payload)
+    print(json.dumps({k: v for k, v in payload.items() if k not in ("contatos_4x3", "direcoes_4x3", "arquivo")}, indent=1, ensure_ascii=False))
+    return 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("dados")
     sub.add_parser("convencoes")
+    retrato = sub.add_parser("retrato")
+    retrato.add_argument("--saida")
     args = parser.parse_args(argv)
-    return {"dados": cmd_dados, "convencoes": cmd_convencoes}[args.cmd](args)
+    return {"dados": cmd_dados, "convencoes": cmd_convencoes, "retrato": cmd_retrato}[args.cmd](args)
 
 
 if __name__ == "__main__":
