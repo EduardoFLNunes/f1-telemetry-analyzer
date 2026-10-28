@@ -175,7 +175,10 @@ async def get_live_racing_line(
     includeVisualLine: bool = Query(True),
     includeComparison: bool = Query(True),
 ):
-    return live_racing_line_payload(
+    # Off the event loop: the build is synchronous and took 1 to 1.8 s every 6 s
+    # (the map's poll), seconds in which the collector read no samples.
+    return await asyncio.to_thread(
+        live_racing_line_payload,
         microSectors,
         include_visual_line=includeVisualLine,
         include_comparison=includeComparison,
