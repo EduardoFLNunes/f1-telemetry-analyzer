@@ -1,0 +1,119 @@
+item,onde está,quem usa,decisão
+Dashboard.tsx,frontend/src/Dashboard.tsx,ninguém (sem rota desde o pedido 30),removido
+AnalysisPage.tsx,frontend/src/pages/AnalysisPage.tsx,ninguém (sem rota desde o pedido 30),removido
+componente AIDebriefPanel,frontend/src/components/AIDebriefPanel.tsx,Dashboard,removido
+componente AIEngineerPanel,frontend/src/components/AIEngineerPanel.tsx,Dashboard,removido
+componente AssistedAnalysisPanel,frontend/src/components/AssistedAnalysisPanel.tsx,AnalysisPage,removido
+componente AssistedLapTraces,frontend/src/components/AssistedLapTraces.tsx,AnalysisPage,removido
+componente CoachingFeed,frontend/src/components/CoachingFeed.tsx,"Dashboard; o próprio teste CoachingFeed.test.ts (12 testes, removido junto)",removido
+componente CognitiveDashboard,frontend/src/components/CognitiveDashboard.tsx,ninguém,removido
+componente ElevationProfile,frontend/src/components/ElevationProfile.tsx,AnalysisPage,removido
+componente GGDiagram,frontend/src/components/GGDiagram.tsx,ninguém,removido
+componente Header,frontend/src/components/Header.tsx,Dashboard,removido
+componente LiveComparisonPanel,frontend/src/components/LiveComparisonPanel.tsx,Dashboard,removido
+componente LiveTelemetryPanels (com StabilityPanel),frontend/src/components/LiveTelemetryPanels.tsx,Dashboard,removido
+componente RacingLineAnalysisPanel,frontend/src/components/RacingLineAnalysisPanel.tsx,Dashboard,removido
+componente ReplayControls,frontend/src/components/ReplayControls.tsx,Dashboard,removido
+componente SectorComparison,frontend/src/components/SectorComparison.tsx,Dashboard,removido
+componente SessionLapsPanel,frontend/src/components/SessionLapsPanel.tsx,AnalysisPage,removido
+componente SessionTimeline,frontend/src/components/SessionTimeline.tsx,ninguém,removido
+componente TelemetryTraces,frontend/src/components/TelemetryTraces.tsx,Dashboard,removido
+types/racingLine.ts,frontend/src/types/racingLine.ts,RacingLineAnalysisPanel,removido
+utils/comparisonAnalysis.ts,frontend/src/utils/comparisonAnalysis.ts,LiveComparisonPanel,removido
+utils/sectorTimes.ts,frontend/src/utils/sectorTimes.ts,"SectorComparison; o próprio teste sectorTimes.test.ts (17 testes, removido junto)",removido
+função drawPolyline,frontend/src/components/map/OverlayRenderer.tsx,ninguém,removido
+função TrackSurfaceCache,frontend/src/components/map/OverlayRenderer.tsx,ninguém,removido
+"função RELIEF_*, rampColor, ELEVATION_STOPS, GRADIENT_STOPS, reliefValues, buildReliefCache, getReliefCache",frontend/src/components/map/OverlayRenderer.tsx,ninguém,removido
+função trackHasRelief,frontend/src/components/map/OverlayRenderer.tsx,ninguém,removido
+função reliefRange,frontend/src/components/map/OverlayRenderer.tsx,ninguém,removido
+"função reliefColorAt (só ElevationProfile, removido)",frontend/src/components/map/OverlayRenderer.tsx,ninguém,removido
+"função buildPath, getTrackSurfaceCache",frontend/src/components/map/OverlayRenderer.tsx,ninguém,removido
+"função indexInRanges, strokePolylineSegments",frontend/src/components/map/OverlayRenderer.tsx,ninguém,removido
+"função drawEdgePolygon, strokePointLine, strokePitGeometry, drawPitVisualGeometry",frontend/src/components/map/OverlayRenderer.tsx,ninguém,removido
+tipo ReliefMode,frontend/src/components/map/OverlayRenderer.tsx,drawTrackSurface (parâmetro aceito e ignorado),"fica, sem export"
+função drawTrajectory,frontend/src/components/map/CarRenderer.tsx,ninguém,removido
+api.uploadTrack,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.uploadTelemetry,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getTrackData,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getCurrentTrack,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getTrackCache,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getCarState,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getLiveTelemetry,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getLiveComparison,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getSession,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getSessionLap,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getOfflineLap,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getOfflineLapSummary,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getOfflineLapSamples,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getTelemetryData,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getAiRaceline,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getComparison,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getTrackLimits,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.listAssistedAnalysisLaps,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getAssistedLapTelemetry,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getAssistedAnalysis,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.requestAssistedAnalysis,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.getLiveVolta,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.listExternalReferences,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+api.importFastF1Reference,frontend/src/api/client.ts,"ninguém no código vivo (só Dashboard/AnalysisPage, ou nada)",removido
+"tipos AssistedAnalysisOptions, RequestAssistedAnalysisOptions, LiveTelemetryOptions",frontend/src/api/client.ts,só os métodos removidos,removido
+GET /api/debug/performance,backend/routers/debug.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/debug/projection,backend/routers/debug.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/debug/ac-shared-memory-full-inventory,backend/routers/debug.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/debug/track-file-manifest,backend/routers/debug.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/debug/kn5-inventory,backend/routers/debug.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/debug/kn5-surface-candidates,backend/routers/debug.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/debug/track-surface-polygon,backend/routers/debug.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/debug/track-edges-from-surface,backend/routers/debug.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/telemetry/live,backend/routers/legacy.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+POST /api/upload/telemetry,backend/routers/legacy.py,só um método do client.ts que o front vivo não chama (removido),removido
+POST /api/upload/track,backend/routers/legacy.py,só um método do client.ts que o front vivo não chama (removido),removido
+GET /api/data/track,backend/routers/legacy.py,só um método do client.ts que o front vivo não chama (removido),removido
+GET /api/data/telemetry,backend/routers/legacy.py,só um método do client.ts que o front vivo não chama (removido),removido
+GET /api/data/ai-raceline,backend/routers/legacy.py,só um método do client.ts que o front vivo não chama (removido),removido
+GET /api/data/track-limits,backend/routers/legacy.py,só um método do client.ts que o front vivo não chama (removido),removido
+GET /api/validation/laps,backend/routers/validation.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/validation/udp,backend/routers/validation.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/validation/track,backend/routers/validation.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes); citada na lista de rotas do README (atualizada)",removido
+GET /api/analysis/comparison,backend/routers/live.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/analysis/racing-line,backend/routers/live.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/live/source,backend/routers/live.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+POST /api/live/telemetry,backend/routers/live.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/track/current,backend/routers/track.py,só um método do client.ts que o front vivo não chama (removido),removido
+GET /api/track/cache,backend/routers/track.py,só um método do client.ts que o front vivo não chama (removido),removido
+POST /api/track/cache,backend/routers/track.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+POST /api/track/reconstruct,backend/routers/track.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/car/state,backend/routers/track.py,só um método do client.ts que o front vivo não chama (removido),removido
+POST /api/recording/start,backend/routers/recording.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes); citada na lista de rotas do README (atualizada)",removido
+POST /api/recording/stop,backend/routers/recording.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes); citada na lista de rotas do README (atualizada)",removido
+GET /api/sessions/{session_id},backend/routers/recording.py,só um método do client.ts que o front vivo não chama (removido),removido
+GET /api/sessions/{session_id}/laps/{lap_number},backend/routers/recording.py,só um método do client.ts que o front vivo não chama (removido),removido
+GET /api/laps/{lap_id},backend/routers/recording.py,só um método do client.ts que o front vivo não chama (removido),removido
+GET /api/assisted-analysis/laps,backend/routers/assisted_analysis.py,só um método do client.ts que o front vivo não chama (removido); citada na lista de rotas do README (atualizada),removido
+GET /api/assisted-analysis/laps/{lap_id}/analysis,backend/routers/assisted_analysis.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+POST /api/assisted-analysis/laps/{lap_id}/analysis,backend/routers/assisted_analysis.py,"ninguém (front vivo, desktop, app do jogo, backend, ml, scripts, testes)",removido
+GET /api/data/comparison,backend/routers/legacy.py,backend/test_api_comparison.py (script),fica
+POST /api/test/simulate,backend/routers/debug.py,backend/stress_test.py (script),fica
+GET /api/analysis/assisted/lap/{lapId},backend/routers/assisted_analysis.py,tests/test_assisted_analysis_validation_flow.py,fica
+POST /api/analysis/assisted/lap/{lapId},backend/routers/assisted_analysis.py,tests/test_assisted_analysis_validation_flow.py,fica
+GET /api/analysis/assisted/lap/{lapId}/telemetry,backend/routers/assisted_analysis.py,tests/test_assisted_analysis_validation_flow.py,fica
+GET /api/laps/{lap_id}/summary,backend/routers/recording.py,tests/test_assisted_analysis_validation_flow.py,fica
+GET /api/laps/{lap_id}/samples,backend/routers/recording.py,tests/test_assisted_analysis_validation_flow.py,fica
+GET /api/laps/{lap_id}/replay,backend/routers/recording.py,front (HeroSessoes) e tests/test_assisted_analysis_validation_flow.py,fica
+GET /api/live/telemetry,backend/routers/live.py,tests/test_udp_integration_contract.py,fica
+GET /api/live/opponents,backend/routers/live.py,front (useTelemetryWS) e tests/test_udp_integration_contract.py,fica
+POST /api/live/source/{source},backend/routers/live.py,tests/test_assetto_shared_memory_gate.py,fica
+GET /api/live/comparison,backend/routers/live.py,nenhum código; citada no checklist manual docs/phase12_distribution_checklist.md (dúvida),fica
+POST /api/references/external/fastf1/import,backend/routers/external_references.py,tests/test_external_references.py,fica
+GET /api/references/external,backend/routers/external_references.py,"nenhum código; par da rota de importar, que tem teste (dúvida)",fica
+GET /api/references/external/{reference_id},backend/routers/external_references.py,"nenhum código; par da rota de importar, que tem teste (dúvida)",fica
+GET /api/runtime/performance,backend/routers/health.py,"front (DesktopRuntimePanel), tools/runtime_performance_probe.py e tests/test_runtime_performance.py",fica
+"POST /api/teste/reproduzir, POST /api/teste/parar, GET /api/teste/estado",backend/routers/teste.py,"ferramenta de teste do pedido 35 (AT_TESTE_REPRODUTOR=1), usada nos testes de ponta a ponta",fica
+GET /api/radio/minimapa,backend/routers/radio.py,app do jogo e tools/csp_app/gerar_pista.py,fica
+demais rotas,backend/routers/*.py,"front vivo, desktop, app do jogo ou testes",fica
+window.__latestFrame,frontend/src,escrito em useTelemetryWS; lido em TrackRenderer,fica (alguém lê; trocar o canal é refatoração)
+window.__latestOpponents,frontend/src,escrito em useTelemetryWS; lido em TrackRenderer,fica (alguém lê; trocar o canal é refatoração)
+window.__telemetryPerf,frontend/src,"escrito em client.ts, useTelemetryWS e TrackRenderer; lido em DesktopRuntimePanel e TrackRenderer",fica (alguém lê; trocar o canal é refatoração)
+window.__replayMapDiagnostics,frontend/src,escrito e lido em TrackRenderer,fica (alguém lê; trocar o canal é refatoração)
+"métricas dashboardRps, tracesRps, ggDiagramRps, linePanelRps, comparisonRps",frontend/src/components/map/TrackRenderer.tsx,painel de desempenho da depuração; agora sempre 0,fica (dúvida: mexe na tela de depuração)
+"funções de main.py e módulos de core usados só pelas rotas removidas (kn5, debug, upload)","backend/main.py, backend/core",podem ter outros usos ou testes próprios,fica (dúvida; não conferido função a função)

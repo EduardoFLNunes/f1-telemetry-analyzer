@@ -205,10 +205,10 @@ Base local: `http://127.0.0.1:8000` (docs interativas em `/docs`).
 GET  /api/health, /api/runtime/status
 GET  /api/live/telemetry, /api/live/opponents, /api/live/player-physics
 GET  /api/live/racing-line, /api/live/comparison, /api/live/coach
-POST /api/recording/start, /api/recording/stop
+GET  /api/recording/status  (a gravação começa e para sozinha com o jogo)
 GET  /api/sessions, /api/sessions/{id}/laps, /api/laps/{lap_id}/replay
-GET  /api/assisted-analysis/laps, /api/analysis/assisted/lap/{lapId}
-GET  /api/validation/data-quality, /api/validation/track
+GET  /api/analysis/coach/lap/{lapId}, /api/analysis/assisted/lap/{lapId}
+GET  /api/validation/data-quality
 GET  /api/references/external  (referências FastF1 para Interlagos)
 ```
 

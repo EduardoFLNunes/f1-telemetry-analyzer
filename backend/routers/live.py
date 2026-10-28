@@ -4,14 +4,13 @@ import logging
 from datetime import datetime
 from typing import Any, Dict
 
-from fastapi import APIRouter, Body, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 
 import main
 from core.car_physics import build_car_physics_debug, build_opponent_car_physics, build_player_car_physics
 from core.comparison_analysis import build_live_comparison_payload
 from core.opponents import SOURCE_NAME as OPPONENTS_SOURCE_NAME
 from core.racing_line_analysis import build_live_racing_line_payload
-from core.telemetry.telemetry_models import TelemetrySample
 
 logger = logging.getLogger(__name__)
 
@@ -170,28 +169,10 @@ async def get_live_comparison(microSectors: int = Query(50, ge=1, le=200)):
     return live_comparison_payload(microSectors)
 
 
-@router.get("/api/analysis/comparison")
-async def get_analysis_comparison(microSectors: int = Query(50, ge=1, le=200)):
-    return live_comparison_payload(microSectors)
-
-
 @router.get("/api/live/racing-line")
 async def get_live_racing_line(
     microSectors: int = Query(50, ge=1, le=200),
     includeVisualLine: bool = Query(True),
-    includeComparison: bool = Query(True),
-):
-    return live_racing_line_payload(
-        microSectors,
-        include_visual_line=includeVisualLine,
-        include_comparison=includeComparison,
-    )
-
-
-@router.get("/api/analysis/racing-line")
-async def get_analysis_racing_line(
-    microSectors: int = Query(50, ge=1, le=200),
-    includeVisualLine: bool = Query(False),
     includeComparison: bool = Query(True),
 ):
     return live_racing_line_payload(
@@ -214,11 +195,6 @@ async def get_live_coach():
         "eventCount": len(main.recent_coaching_events),
         "events": main.recent_coaching_events[:20],
     }
-
-
-@router.get("/api/live/source")
-async def get_live_source():
-    return {"status": "success", **main.telemetry_status_payload()}
 
 
 @router.post("/api/live/source/{source}")
@@ -260,16 +236,3 @@ async def set_live_source(source: str):
         return {"status": "success", "source": selected, **main.telemetry_status_payload()}
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-
-
-@router.post("/api/live/telemetry")
-async def ingest_live_telemetry(payload: Any = Body(...)):
-    raw_samples = payload if isinstance(payload, list) else payload.get("samples", payload)
-    samples = [TelemetrySample.from_dict(item) for item in raw_samples] if isinstance(raw_samples, list) else [TelemetrySample.from_dict(raw_samples)]
-    for sample in samples:
-        main.player_reliability.observe(sample)
-    main.telemetry_buffer.add_samples(samples)
-    frame = main.runtime_state.update_car(samples[-1]) if samples else None
-    if frame:
-        await main.event_bus.emit("processed_frame", frame)
-    return {"status": "success", "ingested": len(samples), "car": frame}

@@ -5,7 +5,6 @@ from typing import Any, Dict, Tuple
 from fastapi import APIRouter, HTTPException, Query
 
 import main
-from core.recording.recording_runtime import CaptureGateClosed
 
 router = APIRouter()
 
@@ -145,26 +144,6 @@ async def get_recording_status():
     return {**main.recording_runtime.status().to_api(), "captureGate": capture_gate_payload()}
 
 
-@router.post("/api/recording/start")
-async def start_recording():
-    if not main.recording_runtime:
-        raise HTTPException(status_code=503, detail="Recording runtime is not available")
-    try:
-        return main.recording_runtime.start_recording().to_api()
-    except CaptureGateClosed as exc:
-        raise HTTPException(
-            status_code=409,
-            detail=CAPTURE_GATE_MESSAGES.get(exc.reason, "Aguardando o Assetto Corsa para iniciar a coleta."),
-        )
-
-
-@router.post("/api/recording/stop")
-async def stop_recording():
-    if not main.recording_runtime:
-        raise HTTPException(status_code=503, detail="Recording runtime is not available")
-    return main.recording_runtime.stop_recording().to_api()
-
-
 @router.get("/api/sessions")
 async def list_recorded_sessions(limit: int = Query(30, ge=1, le=200)):
     active_session_id = main.recording_runtime.status().sessionId if main.recording_runtime else None
@@ -180,18 +159,6 @@ async def list_recorded_sessions(limit: int = Query(30, ge=1, le=200)):
         "liveDependency": False,
         "sessions": sessions,
     }
-
-
-@router.get("/api/sessions/{session_id}")
-async def get_recorded_session(session_id: str):
-    try:
-        session = await asyncio.to_thread(main.session_repository.session_summary, session_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    if not session:
-        raise HTTPException(status_code=404, detail="Recorded session not found")
-    session = _enrich_recorded_session(session)
-    return {"status": "success", "session": session}
 
 
 @router.get("/api/sessions/{session_id}/laps")
@@ -212,51 +179,6 @@ async def get_recorded_session_laps(session_id: str):
         "offlineAvailable": True,
         "liveDependency": False,
         "laps": enriched.get("laps", []),
-    }
-
-
-@router.get("/api/sessions/{session_id}/laps/{lap_number}")
-async def get_recorded_lap(
-    session_id: str,
-    lap_number: int,
-    max_samples: int = Query(36_000, alias="maxSamples", ge=1_000, le=100_000),
-):
-    try:
-        lap = await asyncio.to_thread(
-            main.session_repository.lap_detail,
-            session_id,
-            lap_number,
-            max_samples,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    if not lap:
-        raise HTTPException(status_code=404, detail="Recorded lap not found")
-    return {"status": "success", **lap}
-
-
-@router.get("/api/laps/{lap_id}")
-async def get_offline_recorded_lap(lap_id: str):
-    try:
-        session, lap = await asyncio.to_thread(_offline_lap_summary_from_id, lap_id)
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    return {
-        "status": "success",
-        "recordingRoot": str(main.session_repository.root),
-        "offlineAvailable": True,
-        "liveDependency": False,
-        "session": {
-            "sessionId": session.get("sessionId"),
-            "track": session.get("track"),
-            "car": session.get("car"),
-            "startedAt": session.get("startedAt"),
-            "endedAt": session.get("endedAt"),
-            "bestLapTime": session.get("bestLapTime"),
-        },
-        "lap": lap,
     }
 
 

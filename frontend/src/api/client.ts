@@ -72,23 +72,6 @@ client.interceptors.response.use(
   },
 );
 
-type AssistedAnalysisOptions = {
-  includeExternalReference?: boolean;
-  externalReferenceId?: string | null;
-};
-
-type RequestAssistedAnalysisOptions = {
-  referenceLapId?: string | null;
-  force?: boolean;
-  includeExternalReference?: boolean;
-  externalReferenceId?: string | null;
-};
-
-type LiveTelemetryOptions = {
-  includeTrack?: boolean;
-  includeTrajectory?: boolean;
-};
-
 type RacingLineOptions = {
   includeVisualLine?: boolean;
   includeComparison?: boolean;
@@ -96,44 +79,11 @@ type RacingLineOptions = {
 
 export const api = {
   // ─── Track / Telemetry ───────────────────────────────────────────────────
-  uploadTrack: async (file: File): Promise<any> => {
-    const fd = new FormData();
-    fd.append('file', file);
-    const res = await client.post('/api/upload/track', fd, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return res.data;
-  },
-
-  uploadTelemetry: async (file: File): Promise<any> => {
-    const fd = new FormData();
-    fd.append('file', file);
-    const res = await client.post('/api/upload/telemetry', fd, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return res.data;
-  },
-
-  getTrackData: async (): Promise<any> => (await client.get('/api/data/track')).data,
-  getCurrentTrack: async (): Promise<any> => (await client.get('/api/track/current')).data,
   getTrackGeometry: async (): Promise<any> => (await client.get('/api/track/geometry')).data,
-  getTrackCache: async (): Promise<any> => (await client.get('/api/track/cache')).data,
-  getCarState: async (): Promise<any> => (await client.get('/api/car/state')).data,
   /** Curto de propósito: enquanto o backend sobe, cada tentativa falha rápido e o hero mostra a espera real. */
   getHealth: async (timeoutMs = 2500): Promise<any> => (await client.get('/api/health', { timeout: timeoutMs })).data,
   getRuntimeStatus: async (): Promise<any> => (await client.get('/api/runtime/status')).data,
   getDataQuality: async (): Promise<any> => (await client.get('/api/validation/data-quality')).data,
-  getLiveTelemetry: async (options: LiveTelemetryOptions = {}): Promise<any> => (
-    await client.get('/api/live/telemetry', {
-      params: {
-        includeTrack: options.includeTrack,
-        includeTrajectory: options.includeTrajectory,
-      },
-    })
-  ).data,
-  getLiveComparison: async (microSectors = 50): Promise<any> => (
-    await client.get('/api/live/comparison', { params: { microSectors } })
-  ).data,
   getRacingLine: async (microSectors = 50, options: RacingLineOptions = {}): Promise<any> => (
     await client.get('/api/live/racing-line', {
       params: {
@@ -146,65 +96,15 @@ export const api = {
   getPlayerPhysics: async (): Promise<any> => (await client.get('/api/live/player-physics')).data,
   getRecordingStatus: async (): Promise<any> => (await client.get('/api/recording/status')).data,
   getSessions: async (limit = 30): Promise<any> => (await client.get('/api/sessions', { params: { limit } })).data,
-  getSession: async (sessionId: string): Promise<any> => (
-    await client.get(`/api/sessions/${encodeURIComponent(sessionId)}`)
-  ).data,
   getSessionLaps: async (sessionId: string): Promise<any> => (
     await client.get(`/api/sessions/${encodeURIComponent(sessionId)}/laps`)
-  ).data,
-  getSessionLap: async (sessionId: string, lapNumber: number): Promise<any> => (
-    await client.get(`/api/sessions/${encodeURIComponent(sessionId)}/laps/${lapNumber}`)
-  ).data,
-  getOfflineLap: async (lapId: string): Promise<any> => (
-    await client.get(`/api/laps/${encodeURIComponent(lapId)}`)
-  ).data,
-  getOfflineLapSummary: async (lapId: string): Promise<any> => (
-    await client.get(`/api/laps/${encodeURIComponent(lapId)}/summary`)
-  ).data,
-  getOfflineLapSamples: async (lapId: string, limit = 10_000): Promise<any> => (
-    await client.get(`/api/laps/${encodeURIComponent(lapId)}/samples`, { params: { limit } })
   ).data,
   getOfflineLapReplay: async (lapId: string, maxSamples = 36_000): Promise<any> => (
     await client.get(`/api/laps/${encodeURIComponent(lapId)}/replay`, { params: { maxSamples } })
   ).data,
-  getTelemetryData: async (): Promise<any> => (await client.get('/api/data/telemetry')).data,
-  getAiRaceline: async (): Promise<any> => (await client.get('/api/data/ai-raceline')).data,
-  getComparison: async (): Promise<any> => (await client.get('/api/data/comparison')).data,
-  getTrackLimits: async (): Promise<any> => (await client.get('/api/data/track-limits')).data,
-
-  listAssistedAnalysisLaps: async (): Promise<any> => (await client.get('/api/assisted-analysis/laps')).data,
-  getAssistedLapTelemetry: async (lapId: string, maxSamples = 36_000): Promise<any> => (
-    await client.get(`/api/analysis/assisted/lap/${encodeURIComponent(lapId)}/telemetry`, {
-      params: { maxSamples },
-    })
-  ).data,
   /** Everything the coach would have said over a recorded lap. */
   getLapCoaching: async (lapId: string): Promise<any> => {
     const res = await client.get(`/api/analysis/coach/lap/${encodeURIComponent(lapId)}`);
-    return res.data;
-  },
-
-  getAssistedAnalysis: async (lapId: string, referenceLapId: string | null = null, options: AssistedAnalysisOptions = {}): Promise<any> => {
-    const res = await client.get(`/api/analysis/assisted/lap/${encodeURIComponent(lapId)}`, {
-      params: {
-        ...(referenceLapId ? { reference_lap_id: referenceLapId } : {}),
-        ...(options.includeExternalReference ? { includeExternalReference: true } : {}),
-        ...(options.externalReferenceId ? { externalReferenceId: options.externalReferenceId } : {}),
-      },
-    });
-    return res.data;
-  },
-  requestAssistedAnalysis: async (lapId: string, {
-    referenceLapId = null,
-    force = false,
-    includeExternalReference = false,
-    externalReferenceId = null,
-  }: RequestAssistedAnalysisOptions = {}): Promise<any> => {
-    const res = await client.post(
-      `/api/analysis/assisted/lap/${encodeURIComponent(lapId)}`,
-      { referenceLapId, force, includeExternalReference, externalReferenceId },
-      { timeout: 120_000 },
-    );
     return res.data;
   },
   // ─── Coleta de dados (pedido 28) ──────────────────────────────────────────
@@ -229,7 +129,6 @@ export const api = {
   ).data,
   postRadioTeste: async (): Promise<any> => (await client.post('/api/radio/teste', null, { timeout: 45_000 })).data,
   getRadioEstado: async (): Promise<any> => (await client.get('/api/radio/estado', { timeout: 30_000 })).data,
-  getLiveVolta: async (): Promise<any> => (await client.get('/api/live/volta')).data,
   /** Pedido 35: só os pontos novos da volta ao vivo (a volta inteira numa volta nova). */
   getLiveVoltaNovos: async (versao: number | null, desde: number | null): Promise<any> =>
     (await client.get('/api/live/volta/novos', { params: { versao: versao ?? undefined, desde: desde ?? undefined }, timeout: 2_000 })).data,
@@ -260,11 +159,6 @@ export const api = {
     await client.get(`/api/store/voltas/${encodeURIComponent(lapId)}`, { timeout: 60_000 })
   ).data,
   getGeometriaOficial: async (): Promise<any> => (await client.get('/api/geometria/oficial', { timeout: 60_000 })).data,
-
-  listExternalReferences: async (): Promise<any> => (await client.get('/api/references/external')).data,
-  importFastF1Reference: async (payload: Record<string, unknown>): Promise<any> => (
-    await client.post('/api/references/external/fastf1/import', payload, { timeout: 180_000 })
-  ).data,
 };
 
 export default client;

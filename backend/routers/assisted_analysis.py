@@ -64,26 +64,6 @@ def _run_assisted_analysis(
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@router.get("/api/assisted-analysis/laps")
-async def list_assisted_analysis_laps():
-    return main.assisted_analysis_service.list_laps()
-
-
-@router.get("/api/assisted-analysis/laps/{lap_id}/analysis")
-async def get_assisted_analysis(lap_id: str, reference_lap_id: Optional[str] = None):
-    return _get_assisted_analysis_or_404(lap_id, reference_lap_id)
-
-
-@router.post("/api/assisted-analysis/laps/{lap_id}/analysis")
-async def request_assisted_analysis(
-    lap_id: str,
-    reference_lap_id: Optional[str] = None,
-    force: bool = False,
-    payload: Optional[Dict[str, Any]] = Body(None),
-):
-    return _run_assisted_analysis(lap_id, reference_lap_id, force, payload)
-
-
 @router.get("/api/analysis/assisted/lap/{lapId}")
 async def get_phase14_assisted_analysis(
     lapId: str,
