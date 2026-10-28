@@ -40,7 +40,6 @@ class RecordingRuntime:
         self._auto_start_pending = False
         self._recording_track: Optional[str] = None
         self._last_lap: Optional[int] = None
-        self._last_session_time: Optional[float] = None
         self._last_gate_reason: Optional[str] = None
         self._last_gate_log_reason: Optional[str] = None
 
@@ -103,14 +102,12 @@ class RecordingRuntime:
         self._recording_track = track
         self._auto_start_pending = False
         self._last_lap = None
-        self._last_session_time = None
         return status
 
     def stop_recording(self):
         status = self.recorder.stop()
         self._recording_track = None
         self._last_lap = None
-        self._last_session_time = None
         return status
 
     def status(self):
@@ -138,12 +135,10 @@ class RecordingRuntime:
                 self.recorder.start(track=track, metadata=self._safe_metadata())
                 self._recording_track = track
                 self._last_lap = None
-                self._last_session_time = None
 
             self.recorder.enqueue_player(frame, track=track)
             self._recording_track = self._recording_track or track
             self._last_lap = self._frame_int(frame, "lap_number", "lap")
-            self._last_session_time = self._frame_float(frame, "sessionTime", "session_time")
         except Exception as exc:
             logger.warning("Recording player frame enqueue failed: %s", exc)
 
@@ -182,16 +177,13 @@ class RecordingRuntime:
         if track and self._recording_track and track != self._recording_track:
             return True
 
+        # The game's lap counter only goes back when the session restarts. It used to
+        # take the counter and the lap clock dropping on the same frame, but the
+        # counter drops one frame before the clock resets (2026-10-04_02-24-04: 14 -> 1
+        # at 264.7 s, the clock at 0.47 s on the next frame), so the restart was never
+        # seen and both runs landed in one file, two passes under each lap number.
         lap = self._frame_int(frame, "lap_number", "lap")
-        session_time = self._frame_float(frame, "sessionTime", "session_time")
-        return bool(
-            lap is not None
-            and self._last_lap is not None
-            and lap + 1 < self._last_lap
-            and session_time is not None
-            and self._last_session_time is not None
-            and session_time + 5.0 < self._last_session_time
-        )
+        return bool(lap is not None and self._last_lap is not None and lap < self._last_lap)
 
     @staticmethod
     def _track_from_frame(frame: Mapping[str, Any]) -> Optional[str]:
@@ -208,17 +200,6 @@ class RecordingRuntime:
                 value = frame.get(key)
                 if value is not None:
                     return int(value)
-            except (TypeError, ValueError):
-                continue
-        return None
-
-    @staticmethod
-    def _frame_float(frame: Mapping[str, Any], *keys: str) -> Optional[float]:
-        for key in keys:
-            try:
-                value = frame.get(key)
-                if value is not None:
-                    return float(value)
             except (TypeError, ValueError):
                 continue
         return None
