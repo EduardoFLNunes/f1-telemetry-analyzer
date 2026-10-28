@@ -571,7 +571,7 @@ Quase todo o tempo vai nos bootstraps do modelo leve. A leitura das gravações 
   - **a suíte do backend** não rodou de novo: desde `28de6176`, só `backend/ml`, os testes do Modelo 2 e a versão mudaram, e a suíte de 05:29 (829 passaram) já cobre o `ml`.
 - **A versão:** `0.5.0-radio-e-replay`, no commit `825ef60d`. São os mesmos três lugares da 0.4.0: `desktop/package.json`, `BACKEND_PHASE_VERSION` em `backend/main.py` e `EXPECTED_BACKEND_VERSION` em `desktop/main.js`. O sufixo diz o que entrou desde a 0.4.0: o rádio que analisa e o replay da curva (pedidos 33 a 36).
 - **O build:** `npm run dist:win` (de `desktop`), terminou às 11:47 sem erro, em cerca de 9 minutos.
-  - **O instalador:** `versoes .5.0-radio-e-replay\Automobilista-Telemetria-Setup-0.5.0-radio-e-replay.exe`, 229 MB (229.288.854 bytes).
+  - **O instalador:** `versoes\0.5.0-radio-e-replay\Automobilista-Telemetria-Setup-0.5.0-radio-e-replay.exe`, 229 MB (229.288.854 bytes).
   - **O sha256:** `4db96566280e46fc932b85c5a6b807a6b0794870a73845a81849d24c5b86d3d7`, no `sha256.txt` da pasta.
   - **O `build-info.json`:** versão `0.5.0-radio-e-replay`, commit `825ef60`, branch `etapa/modelo2-erro-tecnica-e-estilo`. Ele marca `dirty`, mas o único arquivo fora do git é a pasta `recordings/` da raiz, que está assim desde 14/10.
   - **O índice:** `versoes\LEIA-ME.md` foi refeito pelo `publish-version.js` (11 versões; a mais atual é a 0.5.0) e foi commitado com este relatório. O instalador fica fora do git, como os anteriores.
