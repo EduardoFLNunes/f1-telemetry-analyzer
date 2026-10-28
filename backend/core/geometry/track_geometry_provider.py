@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 import os
@@ -121,6 +122,99 @@ def apply_paint_correction(track_data: Dict[str, Any], track_name: str) -> Dict[
     except Exception:
         logger.exception("Pit corridor width measurement failed for %s; keeping assumed width", track_name)
     return track_data
+
+
+# Bump when the build itself changes what it writes from the same game files, so
+# every cache keyed under the old build is rebuilt once.
+SOURCE_KEY_VERSION = 1
+# Manifest entries never read for the key: `data.acd` is the game's encrypted data
+# and is never opened by this project.
+_SOURCE_KEY_SKIPPED = {"dataAcd"}
+
+
+def _source_files(manifest: Dict[str, Any]) -> List[Path]:
+    """Every game file the manifest points at, once each, in a stable order."""
+    found: Dict[str, Path] = {}
+
+    def walk(value: Any, key: str = "") -> None:
+        if key in _SOURCE_KEY_SKIPPED:
+            return
+        if isinstance(value, dict):
+            for child_key, child in value.items():
+                walk(child, child_key)
+        elif isinstance(value, list):
+            for child in value:
+                walk(child, key)
+        elif isinstance(value, str) and value:
+            path = Path(value)
+            if path.name.lower() != "data.acd" and path.is_file():
+                found[os.path.normcase(str(path.resolve()))] = path
+
+    walk(manifest)
+    return [found[key] for key in sorted(found)]
+
+
+def _source_stat(files: Sequence[Path]) -> List[Dict[str, Any]]:
+    return [
+        {"file": os.path.normcase(str(path.resolve())), "bytes": path.stat().st_size, "mtimeNs": path.stat().st_mtime_ns}
+        for path in files
+    ]
+
+
+def _source_digest(files: Sequence[Path]) -> str:
+    digest = hashlib.sha256()
+    digest.update(f"v{SOURCE_KEY_VERSION}".encode("utf-8"))
+    for path in files:
+        digest.update(os.path.normcase(str(path.resolve())).encode("utf-8"))
+        with path.open("rb") as handle:
+            for block in iter(lambda: handle.read(1 << 20), b""):
+                digest.update(block)
+    return digest.hexdigest()
+
+
+def _source_key_path(cache_path: Path) -> Path:
+    return cache_path.with_name(cache_path.stem + ".origem.json")
+
+
+def _read_source_key(cache_path: Path) -> Optional[Dict[str, Any]]:
+    try:
+        return json.loads(_source_key_path(cache_path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def _write_source_key(cache_path: Path, files: Sequence[Path], digest: str) -> None:
+    key = {"version": SOURCE_KEY_VERSION, "sha256": digest, "files": _source_stat(files)}
+    try:
+        _source_key_path(cache_path).write_text(json.dumps(key, indent=2), encoding="utf-8")
+    except OSError:
+        logger.warning("Could not write the track cache source key next to %s", cache_path)
+
+
+def _cache_matches_source(cache_path: Path, files: Sequence[Path]) -> bool:
+    """Was this cache built from these very game files?
+
+    The key lives next to the cache, not inside it: the cache is the file the ML
+    reads its geometry from, and it keeps its content. Same names, sizes and
+    dates settle it without reading 430 MB of KN5; a changed date with the same
+    size falls back to the content hash, so a copied or touched file does not
+    cost a 36 s rebuild.
+    """
+    key = _read_source_key(cache_path)
+    if not key or key.get("version") != SOURCE_KEY_VERSION or not files:
+        return False
+    stat = _source_stat(files)
+    stored = key.get("files") or []
+    if stat == stored:
+        return True
+    same_shape = [(f["file"], f["bytes"]) for f in stat] == [(f.get("file"), f.get("bytes")) for f in stored]
+    if not same_shape:
+        return False
+    digest = _source_digest(files)
+    if digest != key.get("sha256"):
+        return False
+    _write_source_key(cache_path, files, digest)
+    return True
 
 
 @dataclass
@@ -330,7 +424,22 @@ class Kn5SurfaceTrackGeometryProvider:
         cache_name = kn5_surface_cache_name(track_name, track_config)
         cache_path = self.cache.cache_dir / f"{self.cache._safe_name(cache_name)}.json"
         cached = self.cache.load_track(cache_name)
-        if (
+        try:
+            manifest_dict = TrackFileResolver(ac_root=self.ac_root).build_track_file_manifest(
+                track_name,
+                track_config,
+                source=source,
+                game_code=game_code,
+            ).to_dict()
+            source_files = _source_files(manifest_dict)
+        except Exception:
+            # No game install to compare against: the cache, if any, is all there is.
+            manifest_dict, source_files = None, []
+        keyed = bool(cached) and cached.get("provider") == self.provider and (
+            _cache_matches_source(cache_path, source_files)
+            or (manifest_dict is None and _read_source_key(cache_path) is not None)
+        )
+        if keyed or (
             cached
             and cached.get("provider") == self.provider
             and not _cache_predates_decoration(cached)
@@ -343,14 +452,13 @@ class Kn5SurfaceTrackGeometryProvider:
             cached.setdefault("metadata", {})["cachePath"] = str(cache_path)
             return TrackGeometryProviderResult(cache_name, cached, cache_path, self.provider, self.source, from_cache=True)
 
-        resolver = TrackFileResolver(ac_root=self.ac_root)
-        manifest = resolver.build_track_file_manifest(
-            track_name,
-            track_config,
-            source=source,
-            game_code=game_code,
-        )
-        manifest_dict = manifest.to_dict()
+        if manifest_dict is None:
+            manifest_dict = TrackFileResolver(ac_root=self.ac_root).build_track_file_manifest(
+                track_name,
+                track_config,
+                source=source,
+                game_code=game_code,
+            ).to_dict()
         if not (manifest_dict.get("candidateGeometryFiles") or {}).get("mainVisual"):
             logger.warning("KN5 provider skipped: missing main visual KN5 for %s/%s", track_name, track_config)
             return None
@@ -367,6 +475,8 @@ class Kn5SurfaceTrackGeometryProvider:
         track_data = track_data_from_interval_edges(result, cache_path=cache_path)
         apply_paint_correction(track_data, track_name)
         self.cache.save_track(cache_name, track_data)
+        if source_files:
+            _write_source_key(cache_path, source_files, _source_digest(source_files))
         track_data["cachePath"] = str(cache_path)
         track_data.setdefault("metadata", {})["cachePath"] = str(cache_path)
         return TrackGeometryProviderResult(cache_name, track_data, cache_path, self.provider, self.source, from_cache=False)
