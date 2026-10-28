@@ -1,3 +1,9 @@
+"""Cliente manual do WebSocket `/ws`: conecta no backend local e mostra 10 mensagens.
+
+Era `backend/test_ws_client.py`. O pytest o colhia como teste quando a suite rodava na
+pasta `backend`, e ele falhava (funcao assincrona, sem plugin para isso). Saiu da
+coleta no pedido 40. Uso, com o backend no ar: python tools/ws_client.py
+"""
 
 import asyncio
 import websockets
