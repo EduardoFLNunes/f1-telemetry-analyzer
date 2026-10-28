@@ -15,7 +15,7 @@
   - `f006a508` Parte D.7: a rota da linha de corrida calcula fora do laço do servidor
   - `5edc45fb` Parte E: o que o pedido 40 entregou, no inventário da dashboard
   - mais o commit deste relatório
-- **Merge em `develop`:** feito no fim, sem push (o hash está na Parte F).
+- **Merge em `develop`:** `63887947` Merge do pedido 40, sem push. Depois dele, em `develop`, só o commit que grava este hash no relatório.
 - **Handoff:**
   - este relatório;
   - `docs/handoff/2026-10-28_40_limpeza-e-app-do-jogo_remocoes.csv`.
@@ -282,7 +282,7 @@ Os 16 testes novos da Parte D (5 + 5 + 5 + 1) passam, e falhavam antes da corre�
 
 ## Parte F: merge e a pasta
 
-- **O merge:** `etapa/limpeza-e-app-do-jogo` em `develop`, sem push (o hash está na resposta do chat).
+- **O merge:** `63887947`, de `etapa/limpeza-e-app-do-jogo` em `develop`, sem push.
 - **A pasta:** antes de trocar de branch, conferi que as outras sessões estavam paradas e que a árvore estava limpa. Ela voltou para `etapa/m1-modelo-do-carro`.
 
 ## O que não foi feito
