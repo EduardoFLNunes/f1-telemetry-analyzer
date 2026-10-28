@@ -359,3 +359,18 @@ O rádio com as unidades, a freada da IA nos mapas e o replay da curva (ADR 0021
 - **A tela Ao vivo:** o mesmo replay sob o cartão da análise e da frase do coach com causa, com o botão "Repetir o replay".
 - **A rota nova:** `GET /api/radio/replay/{id}`.
 - **Falta:** o teste no jogo com o rádio falando. No teste de 22/10, a IA dirigiu a sessão, e o rádio ficou calado, como manda a regra; o replay no jogo e o FPS de cada janela ficaram sem medida.
+
+### O que o pedido 40 entregou (28/10)
+
+A limpeza do item 6 desta seção, os defeitos do backlog e o app do jogo 0.4.1 em `develop`. Detalhes em `docs/handoff/2026-10-28_40_limpeza-e-app-do-jogo_relatorio.md`; a lista de cada item, com quem o usa, em `docs/handoff/2026-10-28_40_limpeza-e-app-do-jogo_remocoes.csv`.
+
+- **O código sem uso (seção 2.H):**
+  - **saíram do front:** `Dashboard.tsx`, `AnalysisPage.tsx` e os 17 componentes que só eles usavam, entre eles `CognitiveDashboard`, `GGDiagram`, `SessionTimeline` e `StabilityPanel` (dentro de `LiveTelemetryPanels`); mais `types/racingLine.ts`, `utils/comparisonAnalysis.ts` e `utils/sectorTimes.ts`;
+  - **as funções mortas do mapa:** o relevo, o cache de superfície, os traços por trecho e o desenho do box, em `OverlayRenderer.tsx`; o `drawTrajectory`, em `CarRenderer.tsx`;
+  - **o `client.ts`:** 24 métodos que nenhuma tela chamava;
+  - **as rotas:** saíram 35 de 94, entre elas as 8 de depuração, as de upload e de dados antigos, as duplicatas da análise assistida, `/api/recording/start` e `/stop` e `/api/validation/laps`, `/udp` e `/track`. Ficaram as que um teste, um script ou o app do jogo usa;
+  - **os globais em `window`:** os quatro continuam, porque o mapa da depuração e o painel de desempenho os leem. Trocar o canal é refatoração.
+- **A conferir na implementação (seção 2):**
+  - **o canto inferior direito do mapa lendo `latestFrame` no replay e o `addFrame` mexendo no store no replay:** não acontecem mais. O replay do store só era aberto pela tela Pista e pela Análise, que saíram. A tela Volta e a Ao vivo têm o replay delas, fora do store;
+  - **a rota da linha de corrida travando o servidor (seção 2.G):** ainda acontecia, com o mapa da depuração aberto. Corrigida: o cálculo roda fora do laço do servidor.
+- **O app do jogo:** a versão 0.4.1 (a janela salva fora da tela volta para dentro) entrou em `develop`.

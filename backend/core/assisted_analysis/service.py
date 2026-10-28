@@ -73,6 +73,7 @@ class AssistedAnalysisService:
             buffer_provider=lambda: self.telemetry_buffer,
             runtime_state_provider=lambda: self.runtime_state,
             recordings_roots=recording_roots,
+            lookup_roots=self._recording_lookup_roots(),
         )
         self.segmenter = CornerSegmenter()
         self.metrics = CornerMetricsCalculator()
@@ -84,6 +85,21 @@ class AssistedAnalysisService:
         self.external_references = external_reference_repository or ExternalReferenceRepository(self.repo_root)
         self.external_mapper = InterlagosReferenceMapper()
         self._memory_cache: Dict[str, Dict[str, Any]] = {}
+
+    def _recording_lookup_roots(self) -> List[Path]:
+        """Where a lap asked for by id may also be: the configured recording folder
+        (`TELEMETRY_RECORDING_DIR`) and the installed app's, the folders the `ml` reads
+        (`ml.config.recordings_roots`). The coach phrases of a lap recorded there used
+        to come back 404 (pedido 30, achado 2)."""
+        from ml import config as ml_config
+
+        from ..recording.recording_runtime import config_from_env
+
+        roots = [config_from_env(self.runtime_root).output_root]
+        installed = ml_config.installed_app_recordings_root()
+        if installed is not None:
+            roots.append(installed)
+        return roots
 
     def list_laps(self) -> Dict[str, Any]:
         laps = [lap.to_api() for lap in self.loader.list_laps(include_buffer=False)]

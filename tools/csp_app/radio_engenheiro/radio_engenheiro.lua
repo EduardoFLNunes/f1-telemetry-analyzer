@@ -1566,6 +1566,42 @@ local function amostrarOFps()
   end
 end
 
+-- ── as janelas fora da tela ─────────────────────────────────────────────
+
+-- Teste de 24/10: o jogo trocou do monitor de 2.560 para o de 1.920 px, e o mapa aproximado abriu
+-- na posição salva (x = 2.188), fora da tela. Uma janela assim nunca é desenhada, e o mouse não a
+-- alcança. A cada 2 s, uma janela ligada do app com menos de 40 px dentro da tela volta para
+-- dentro, encostada na borda mais perto. Uma janela que passa um pouco da borda fica onde está.
+local MINIMO_NA_TELA = 40
+
+local function trazerAsJanelasParaATela()
+  if ac.getAppWindows == nil or ac.accessAppWindow == nil then return end
+  local okU, estadoUi = pcall(ac.getUI)
+  if not okU or not estadoUi or not estadoUi.windowSize then return end
+  local tw, th = estadoUi.windowSize.x, estadoUi.windowSize.y
+  local ok, janelas = pcall(ac.getAppWindows)
+  if not ok or type(janelas) ~= 'table' then return end
+  for _, j in ipairs(janelas) do
+    if j.visible and type(j.title) == 'string' and j.title:find('Sistema de Telemetria e Otimização de Trajetórias', 1, true)
+        and j.position and j.size then
+      local p, s = j.position, j.size
+      local dentroX = math.min(p.x + s.x, tw) - math.max(p.x, 0)
+      local dentroY = math.min(p.y + s.y, th) - math.max(p.y, 0)
+      if dentroX < MINIMO_NA_TELA or dentroY < MINIMO_NA_TELA then
+        local okA, acesso = pcall(ac.accessAppWindow, j.name)
+        if okA and acesso then
+          local nx = math.min(math.max(p.x, 0), math.max(tw - s.x, 0))
+          local ny = math.min(math.max(p.y, 0), math.max(th - s.y, 0))
+          local okM = pcall(function() acesso:move(vec2(nx, ny)) end)
+          log(j.title:match('^[^·]+'):gsub('%s+$', '') .. ': estava fora da tela, em ' .. decimal(p.x, 0) .. ' x '
+            .. decimal(p.y, 0) .. ' (tela ' .. decimal(tw, 0) .. ' x ' .. decimal(th, 0) .. '); '
+            .. (okM and ('trazida para ' .. decimal(nx, 0) .. ' x ' .. decimal(ny, 0)) or 'não consegui mover'))
+        end
+      end
+    end
+  end
+end
+
 -- ── ao abrir ────────────────────────────────────────────────────────────
 
 if CALADO then
@@ -1594,6 +1630,7 @@ else
     end)
   end)
   setInterval(pedir, PERIODO_S)
+  setInterval(function() pcall(trazerAsJanelasParaATela) end, 2)
   if MINIMAPA then
     lerAPistaDoApp()
     if APROXIMADO and not mini.imagem then

@@ -197,34 +197,3 @@ export function drawOpponentCar(
 
   ctx.restore();
 }
-
-export function drawTrajectory(ctx: CanvasRenderingContext2D, history: unknown[], scale: number) {
-  if (!history || history.length < 2) return;
-
-  ctx.save();
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.shadowBlur = 10 / scale;
-  ctx.shadowColor = 'rgba(34,211,238,0.35)';
-
-  for (let i = 1; i < history.length; i += 1) {
-    const a = history[i - 1];
-    const b = history[i];
-    const previous = resolveSampleMapPosition(a);
-    const current = resolveSampleMapPosition(b);
-    const ax = previous?.x;
-    const ay = previous?.y;
-    const bx = current?.x;
-    const by = current?.y;
-    if (!Number.isFinite(ax) || !Number.isFinite(ay) || !Number.isFinite(bx) || !Number.isFinite(by)) continue;
-    const alpha = Math.max(0.08, i / history.length);
-    ctx.beginPath();
-    ctx.moveTo(ax as number, ay as number);
-    ctx.lineTo(bx as number, by as number);
-    ctx.strokeStyle = `rgba(34,211,238,${alpha * 0.55})`;
-    ctx.lineWidth = 3 / scale;
-    ctx.stroke();
-  }
-
-  ctx.restore();
-}
