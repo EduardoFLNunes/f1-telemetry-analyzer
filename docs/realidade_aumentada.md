@@ -185,6 +185,7 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é 
 
 ## 5. O app do jogo
 
+- **A versão:** 0.4.1 (`manifest.ini`, `VERSION = 0.4.1`), a que está instalada no jogo desde 24/10. Ela entrou em `develop` no pedido 40; antes, só estava em `etapa/radio-unidades-e-replay` (commit `0092ed38`), e o `instalar.ps1` de `develop` instalava a 0.4.0.
 - **Onde fica:** `tools/csp_app/radio_engenheiro/`:
   - `manifest.ini`;
   - `radio_engenheiro.lua`;
@@ -198,6 +199,7 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é 
   - **"Mapa aproximado · Sistema de Telemetria e Otimização de Trajetórias":** a vista de perto, que gira com o carro;
   - **"Replay da curva · Sistema de Telemetria e Otimização de Trajetórias"** (pedido 36, versão 0.4.0): a curva de que o rádio fala, com a sua linha e a da referência.
 - **O encaixe na janela** (pedido 36, Parte D.1): no teste de 21/10, o minimapa cortava à direita. Fora do jogo, isso não se reproduz; as causas possíveis são a janela passando da borda da tela, o recorte padrão do ImGui e o espaçamento interno da janela. Desde o pedido 36, os mapas e o replay se encaixam na parte visível da janela (a janela menos o que passa da tela, pelo `ui.windowPos` e o tamanho da tela do jogo) e desenham com o recorte da janela inteira. Cada janela escreve uma vez no log do CSP as suas medidas (`[radio_engenheiro] minimapa: janela 300 x 300 em 1600 x 40; tela 1920 x 1080, escala 1,00; cursor ...; visível de 0,0 a 300,300`), para confirmar a causa no jogo. **No teste de 22/10,** o minimapa estava em −9 × 543 numa tela de 2.560 × 1.080: 9 px da janela passavam da borda esquerda, e a área visível começou em 9 px. É a primeira causa (a janela passando da borda da tela), agora com o encaixe cuidando dela.
+- **A janela salva fora da tela** (versão 0.4.1, teste de 24/10): o jogo trocou do monitor de 2.560 px para o de 1.920 px, e o mapa aproximado abriu na posição salva (x = 2.188), fora da tela; não era desenhado e o mouse não o alcançava. A cada 2 s, uma janela ligada do app com menos de 40 px dentro da tela volta para dentro (`ac.getAppWindows` e `AppWindowAccessor:move`), com uma linha no log do CSP.
 - **O que não faz:** não muda o carro, os controles nem nada do jogo, e não desenha na pista.
 - **Onde grava:** só na subpasta `voz` da própria pasta do app (ADR 0021, item 6), que ele limpa dos `.wav` ao abrir.
 - **Onde pôr as janelas:** num canto, sem cobrir o centro da tela. A posição é a do modo de mover apps do jogo.
