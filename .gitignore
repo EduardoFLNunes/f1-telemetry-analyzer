@@ -27,6 +27,7 @@ frontend/dist/
 logs/
 
 # Runtime recordings and generated caches (regenerated on demand, not source)
+/recordings/
 data/recordings/
 data/assisted_analysis/
 data/external_references/
