@@ -34,6 +34,7 @@ class LapDataLoader:
         buffer_provider: Callable[[], TelemetryBuffer],
         runtime_state_provider: Callable[[], RuntimeState],
         recordings_roots: Optional[Sequence[Path]] = None,
+        lookup_roots: Optional[Sequence[Path]] = None,
     ):
         self.repo_root = Path(repo_root)
         self.buffer_provider = buffer_provider
@@ -42,6 +43,9 @@ class LapDataLoader:
             recordings_roots or [self.repo_root / "data" / "recordings"]
         )
         self.recordings_root = self.recordings_roots[0]
+        # Folders searched when a lap is asked for by id, on top of the listed ones:
+        # the configured recording folder and the installed app's (pedido 40).
+        self.lookup_roots = self._unique_paths([*self.recordings_roots, *(lookup_roots or [])])
         self._recorded_lap_paths: Dict[str, Path] = {}
         self.telemetry_db_paths = [
             self.repo_root / "data" / "telemetry_db" / "telemetry.duckdb",
@@ -479,20 +483,33 @@ class LapDataLoader:
         return laps
 
     def _find_recording_session_dir(self, session_fragment: str) -> Path:
-        for recordings_root in reversed(self.recordings_roots):
-            direct = recordings_root / session_fragment
-            if (direct / "player.jsonl").exists():
-                return direct
-            if not recordings_root.exists():
-                continue
-            for session_dir in recordings_root.iterdir():
-                if (
-                    session_dir.is_dir()
+        """The session's folder, in any of the recording folders.
+
+        Same rule as `ml.data.recordings.list_all_sessions`: a session id must be
+        unique across the folders, and one found in two of them is an error,
+        because there is no telling on its own which copy counts.
+        """
+        found = [
+            recordings_root / session_fragment
+            for recordings_root in self.lookup_roots
+            if (recordings_root / session_fragment / "player.jsonl").exists()
+        ]
+        if not found:
+            for recordings_root in self.lookup_roots:
+                if not recordings_root.exists():
+                    continue
+                found.extend(
+                    session_dir
+                    for session_dir in recordings_root.iterdir()
+                    if session_dir.is_dir()
                     and safe_fragment(session_dir.name) == session_fragment
                     and (session_dir / "player.jsonl").exists()
-                ):
-                    return session_dir
-        return self.recordings_root / session_fragment
+                )
+        if len(found) > 1:
+            raise ValueError(
+                f"sessao {found[0].name} existe em {found[0]} e em {found[1]}; compare as duas antes de seguir"
+            )
+        return found[0] if found else self.recordings_root / session_fragment
 
     def _flatten_recording_sample(self, payload: Dict) -> Dict:
         sample = dict(payload.get("sample", payload))
