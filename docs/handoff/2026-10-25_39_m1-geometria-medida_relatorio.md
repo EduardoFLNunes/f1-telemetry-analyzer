@@ -361,6 +361,30 @@ Comando: `python -m ml.scripts.m1_modelo_carro validar --fase teste` (10 min), r
 - **O teste do rádio com o app 0.5.0** (Parte G do pedido 36) continua pendente. A leitura dele fica para depois, numa seção nova do relatório do pedido 36.
 - **A ordem do merge:** a mensagem pedia trazer `develop` para a branch e depois fazer o merge em `develop`. Fiz o merge da branch em `develop` direto (`b3576fd4`), porque nenhum arquivo mudou dos dois lados e não havia conflito com o pedido 40 a resolver. As suítes rodaram em `develop`, depois do merge: o mesmo código que a branch teria depois de trazer `develop`.
 
+## O envio ao GitHub (29/10, às 16:5x)
+
+**Pedido do Eduardo:** em `develop`, um commit só de documentos com os arquivos sem commit da pasta, e o envio da `etapa/m1-modelo-do-carro` e do `develop`, sem reescrever o remoto.
+
+- **Antes de tudo:** as outras sessões da pasta (os pedidos 38, 40 e 41) estavam paradas; a pasta estava em `develop`, sem trava do git.
+- **O commit de documentos** (`4c0b2100` docs: pedidos 41 a 44 e o relatorio e o inventario do pedido 41): `docs/prompts/2026-10-29_41_branches-e-github.md`, `..._42_modelo2-rodada-2.md`, `..._43_visuais-do-radio.md`, `..._44_corredor-e-retreino-da-lstm.md`, `docs/handoff/2026-10-29_41_branches-e-github_relatorio.md` e `..._inventario.csv`.
+- **Depois dele,** `b25585a5`: as decisões do fechamento no backlog e neste relatório.
+- **As conferências, nos 26 commits que ainda não estavam no remoto** (`origin/develop..develop`, que contém a `etapa/m1-modelo-do-carro`):
+  - **tamanho:** nada acima de 50 MB; o maior arquivo é a `figura_c01.png`, com 180 KB;
+  - **gravações:** nenhum `.jsonl`, `.parquet`, `.duckdb`, `data/ml/`, `recordings/`, `.exe`, `.zip` ou `.env` em nenhum dos commits;
+  - **segredos:** nenhum nas linhas acrescentadas (tokens do GitHub, chaves `sk-`, `AKIA`, chaves privadas, `password`, `senha`, `token` ou `api_key` com valor). Os padrões só aparecem citados no texto do pedido 41;
+  - **avanço simples:** o `origin/develop` (`770881b8`) é ancestral de `develop`, e o `origin/etapa/m1-modelo-do-carro` (`73565e79`) é ancestral da branch local.
+- **O envio:** `git push --no-tags origin refs/heads/etapa/m1-modelo-do-carro:… refs/heads/develop:…`, com `GIT_TERMINAL_PROMPT=0`. Sem `--force` nem `--force-with-lease`, sem `main` e sem tags. Não pediu login, e nada foi recusado:
+  - `develop`: `770881b8..b25585a5`;
+  - `etapa/m1-modelo-do-carro`: `73565e79..cb6778b9`.
+- **O `git ls-remote` depois do envio,** igual aos hashes locais:
+
+| ref | remoto | local |
+|---|---|---|
+| `refs/heads/develop` | `b25585a5c2843a8da50fa524699471f394f14c95` | `b25585a5c2843a8da50fa524699471f394f14c95` |
+| `refs/heads/etapa/m1-modelo-do-carro` | `cb6778b91059868aaa0374b9d0f7fc77de4fe0a9` | `cb6778b91059868aaa0374b9d0f7fc77de4fe0a9` |
+
+- **Este registro** é um commit novo em `develop`, por cima do `b25585a5`. Ele foi enviado em seguida, também por avanço simples, e o `ls-remote` conferido de novo; o hash final está no chat.
+
 ## Coisas que não batiam com o contexto
 
 - **O carro do retrato é conhecido:** a página estática dele diz `rss_formula_rss_3_v6_2026` em `vhe_interlagos` (acima).
