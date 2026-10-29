@@ -1,0 +1,129 @@
+{
+ "pedido": 37,
+ "situacao": "parado na Parte C, antes de qualquer previsao na sessao de teste",
+ "branch": "etapa/m1-modelo-do-carro",
+ "commit_base_develop": "4782aefb",
+ "commit_dados": "e0a62949558dec273da5dc88e1000ee22d952ca4",
+ "commit_convencoes": "e0a62949558dec273da5dc88e1000ee22d952ca4",
+ "geometry_id": "0ed16f0dd2225990",
+ "ambiente": {
+  "python": "3.9.7",
+  "numpy": "1.26.3",
+  "pandas": "2.1.4",
+  "scipy": "1.11.4",
+  "scikit-learn": "1.6.1",
+  "plataforma": "Windows-10-10.0.26200-SP0"
+ },
+ "comandos": [
+  "python -m ml.scripts.m1_modelo_carro dados",
+  "python -m ml.scripts.m1_modelo_carro convencoes",
+  "python docs/handoff/2026-10-24_37_m1-modelo-do-carro_sanidade_treino.py",
+  "python docs/handoff/2026-10-24_37_m1-modelo-do-carro_diagnostico_geometria.py",
+  "python docs/handoff/2026-10-24_37_m1-modelo-do-carro_geometria_por_rodada.py <saida.json>",
+  "python docs/handoff/2026-10-24_37_m1-modelo-do-carro_opcao_b_por_rodada.py",
+  "python -m pytest tests -q"
+ ],
+ "dt_s": 0.05,
+ "buraco_s": 0.05,
+ "lidos": {
+  "store_v2": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2.parquet",
+   "bytes": 380586213,
+   "sha256": "581012ea1b89741fa26c4cbbfca0cafe7173b488366f1433999cedd35b8ab5e8"
+  },
+  "store_v2_meta": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2_meta.json",
+   "bytes": 1336399,
+   "sha256": "6e12ff1a4bdf4bc3d6552e9daf63231112e055215e8b7b301495f8ff54dc92f2"
+  },
+  "gravacoes": {
+   "2026-10-15_23-24-50_vhe_interlagos": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\recordings\\2026-10-15_23-24-50_vhe_interlagos\\player.jsonl",
+    "bytes": 556513212,
+    "sha256": "21b6d30a29031ff686f4232abf9699b7afe72f0fe7cb933e4a3a9baab85ab32e",
+    "igual_ao_do_store": true
+   },
+   "2026-10-17_01-02-22_vhe_interlagos": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\recordings\\2026-10-17_01-02-22_vhe_interlagos\\player.jsonl",
+    "bytes": 767815886,
+    "sha256": "490dd97d79c6f75e336a62c68aae4ebb94255901cd7fdda21a061dbe56a12db3",
+    "igual_ao_do_store": true
+   },
+   "2026-10-17_16-17-08_vhe_interlagos": {
+    "arquivo": "C:\\Users\\Dokas\\AppData\\Roaming\\Automobilista Telemetria\\data\\recordings\\2026-10-17_16-17-08_vhe_interlagos\\player.jsonl",
+    "bytes": 651630041,
+    "sha256": "24535cda8fa03e97ec35748a4df42d96bd1b0a75a8b53ad1cfb2dc93742b18f7",
+    "igual_ao_do_store": true
+   },
+   "2026-10-18_12-38-44_vhe_interlagos": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\recordings\\2026-10-18_12-38-44_vhe_interlagos\\player.jsonl",
+    "bytes": 461494686,
+    "sha256": "92dbc61e7c479505d05a0a0bb6258afcbc47e603977afa833afdb266a3dddb4a",
+    "igual_ao_do_store": true
+   },
+   "2026-10-21_20-30-54_vhe_interlagos": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\recordings\\2026-10-21_20-30-54_vhe_interlagos\\player.jsonl",
+    "bytes": 700523954,
+    "sha256": "4c57e31c05b10f9fbc897dab73e772b07f8a57e045ae50dbe96817b9f0a28443",
+    "igual_ao_do_store": true
+   }
+  }
+ },
+ "escritos": {
+  "grade_2026-10-15_23-24-50_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-15_23-24-50_vhe_interlagos.parquet",
+   "bytes": 3774811,
+   "sha256": "dc3b44480dcdf929f3077860062698585768306b70cfb63dfae478542fadb224"
+  },
+  "grade_2026-10-17_01-02-22_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-17_01-02-22_vhe_interlagos.parquet",
+   "bytes": 4102235,
+   "sha256": "3827254fd6f847e812ebfd55191b09b4b3cb4d3b7652db6db3e0c0cbcf5e57c1"
+  },
+  "grade_2026-10-17_16-17-08_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-17_16-17-08_vhe_interlagos.parquet",
+   "bytes": 5464933,
+   "sha256": "837ecfa346626741581185bad76d49ee9e9c4b496e3016ae4958eb489bcb896b"
+  },
+  "grade_2026-10-18_12-38-44_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-18_12-38-44_vhe_interlagos.parquet",
+   "bytes": 2988922,
+   "sha256": "51c5fcbacd9abcc2fdff7edf84b547487220f08a2ce34e5f57c45af2826702af"
+  },
+  "grade_2026-10-21_20-30-54_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-21_20-30-54_vhe_interlagos.parquet",
+   "bytes": 2977614,
+   "sha256": "ae55aa0cd2a120ea1ff9e10c1d324abf446c574027accf8af033fa52d32f68d8"
+  },
+  "convencoes.json": {
+   "arquivo": "..\\data\\ml\\modelo_carro\\convencoes.json",
+   "bytes": 12756,
+   "sha256": "6d124338dadf038fb4a5da24a6d872e6952934a28bbc25bc72e1f973b3607ad3"
+  },
+  "dados_relatorio.json": {
+   "arquivo": "..\\data\\ml\\modelo_carro\\dados_relatorio.json",
+   "bytes": 43627,
+   "sha256": "41ed14d845d24dfec440b3fd2724da9fbd6ff4dd25df3e17c57cc5f07fedb2cd"
+  }
+ },
+ "convencoes": {
+  "s_r": 1,
+  "s_psi": -1,
+  "s_vy": 1,
+  "forma_heading": "(-sen h, cos h)",
+  "s_esquerda": -1
+ },
+ "convencoes_batem": true,
+ "totais": {
+  "voltas": 57,
+  "amostras_cruas": 299615,
+  "tiradas_na_limpeza": 399,
+  "repetidas": 8849,
+  "buracos": 1627,
+  "trechos": 1351,
+  "trechos_curtos_tirados": 333,
+  "passos": 102250,
+  "segundos": 5044.950000000001
+ },
+ "teste_calculado": false
+}

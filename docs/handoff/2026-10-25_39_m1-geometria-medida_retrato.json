@@ -1,0 +1,91 @@
+{
+ "pedido": 39,
+ "parte": "B",
+ "arquivo": {
+  "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\debug\\ac_shared_memory_full_inventory.csv",
+  "bytes": 30949,
+  "sha256": "96d37c2a5c20bfa22ce7b055b9b7ea629963f25833f75e974e19b23dfd739696"
+ },
+ "carModel": "rss_formula_rss_3_v6_2026",
+ "track": "vhe_interlagos",
+ "acVersion": "1.16.4",
+ "contatos_4x3": [
+  [
+   -268.2490234375,
+   5.308894157409668,
+   -528.4297485351562
+  ],
+  [
+   -268.75927734375,
+   5.330419063568115,
+   -529.9229736328125
+  ],
+  [
+   -265.4625244140625,
+   5.054322719573975,
+   -529.419677734375
+  ],
+  [
+   -265.9571838378906,
+   5.0707221031188965,
+   -530.8538208007812
+  ]
+ ],
+ "direcoes_4x3": [
+  [
+   0.9375143051147461,
+   -0.08455434441566467,
+   -0.3375168442726135
+  ],
+  [
+   0.9391902089118958,
+   -0.0851472020149231,
+   -0.3326737880706787
+  ],
+  [
+   0.9427303075790405,
+   -0.08758798241615295,
+   -0.3218509256839752
+  ],
+  [
+   0.9401422142982483,
+   -0.08750275522470474,
+   -0.3293569087982178
+  ]
+ ],
+ "entre_eixos_m": 2.9547245579343073,
+ "bitola_dianteira_m": 1.5779867363910896,
+ "bitola_traseira_m": 1.5170536456229102,
+ "carCoordinates_a_partir_do_eixo_traseiro_m": 1.055850396816071,
+ "carCoordinates_fracao_do_entre_eixos": 0.3573430876935047,
+ "carCoordinates_desvio_lateral_m": 0.007735836071755708,
+ "carCoordinates_altura_sobre_os_contatos_m": 0.22696316242218018,
+ "cgHeight_m": 0.2627067565917969,
+ "direcoes_apontam_para_tras": true,
+ "angulo_rodas_rad": {
+  "media": 0.010014414725354814,
+  "esquerda": 0.012585915215306935,
+  "direita": 0.007442783954237246
+ },
+ "steerAngle": -0.03749338909983635,
+ "k_delta_rad_por_unidade": {
+  "media": 0.26709814625422923,
+  "esquerda": 0.33568358362572964,
+  "direita": 0.1985092341057462
+ },
+ "localVelocity_x_y_z": [
+  -0.6903559565544128,
+  -0.39052021503448486,
+  53.46775436401367
+ ],
+ "guinada_rad_s": 0.14621564745903015,
+ "speedKmh": 192.5050811767578,
+ "k_delta_graus": 15.303596496135333,
+ "L_sobre_k_delta": 11.062317726166256,
+ "reportagem": {
+  "entre_eixos_m": 2.943,
+  "bitola_dianteira_m": 1.552,
+  "bitola_traseira_m": 1.502
+ },
+ "m0_razao_volante_curvatura": 10.6
+}

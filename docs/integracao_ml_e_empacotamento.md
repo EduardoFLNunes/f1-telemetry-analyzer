@@ -316,3 +316,11 @@ Anterior a este trabalho; ao vivo a fala aparece normalmente.
 e ignora os microsetores em que o piloto está à frente do traçado.
 
 **Os 3 commits não foram enviados** ao `origin/develop`.
+
+---
+
+## Adendo de 29/10/2026: a M1, o modelo do carro (pedidos 37 e 39)
+
+- **Nada muda no app nem no pacote.** O modelo do carro (`backend/ml/modelo_carro/`) e as ferramentas dele (`ml.scripts.m1_modelo_carro` e `ml.scripts.medir_geometria`) ficam em `backend/ml/`, fora do executável empacotado, como o resto do `ml/`. O app, o rádio, o coach, o gravador e o store v2 não leem nada deles.
+- **A ferramenta de medição** (`ml.scripts.medir_geometria`) só lê a memória compartilhada do jogo, pelo adaptador do backend e com a trava que espera o jogo abrir. Ela roda do repositório, num PowerShell, e grava em `data/ml/modelo_carro/`, fora do git.
+- **O resultado não mudou nada aqui:** a M1 não foi aprovada (`docs/modelo_fisico_m1.md`, seção 6), então nenhum alvo do coach e nenhum traçado exportado passa a depender dela. O juiz do tempo do traçado continua sendo o simulador quase-estacionário.

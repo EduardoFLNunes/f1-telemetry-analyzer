@@ -1,0 +1,456 @@
+{
+ "pedido": 37,
+ "parte": "B.3",
+ "commit": "e0a62949558dec273da5dc88e1000ee22d952ca4",
+ "geometry_id": "0ed16f0dd2225990",
+ "comando": "python -m ml.scripts.m1_modelo_carro convencoes",
+ "lidos": {
+  "grade_2026-10-15_23-24-50_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-15_23-24-50_vhe_interlagos.parquet",
+   "bytes": 3774811,
+   "sha256": "dc3b44480dcdf929f3077860062698585768306b70cfb63dfae478542fadb224"
+  },
+  "grade_2026-10-17_01-02-22_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-17_01-02-22_vhe_interlagos.parquet",
+   "bytes": 4102235,
+   "sha256": "3827254fd6f847e812ebfd55191b09b4b3cb4d3b7652db6db3e0c0cbcf5e57c1"
+  },
+  "grade_2026-10-17_16-17-08_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-17_16-17-08_vhe_interlagos.parquet",
+   "bytes": 5464933,
+   "sha256": "837ecfa346626741581185bad76d49ee9e9c4b496e3016ae4958eb489bcb896b"
+  },
+  "grade_2026-10-18_12-38-44_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-18_12-38-44_vhe_interlagos.parquet",
+   "bytes": 2988922,
+   "sha256": "51c5fcbacd9abcc2fdff7edf84b547487220f08a2ce34e5f57c45af2826702af"
+  },
+  "grade_2026-10-21_20-30-54_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-21_20-30-54_vhe_interlagos.parquet",
+   "bytes": 2977614,
+   "sha256": "ae55aa0cd2a120ea1ff9e10c1d324abf446c574027accf8af033fa52d32f68d8"
+  }
+ },
+ "convencoes": {
+  "s_r": 1,
+  "s_psi": -1,
+  "s_vy": 1,
+  "forma_heading": "(-sen h, cos h)",
+  "s_esquerda": -1
+ },
+ "conferencias": {
+  "a_y_contra_geometria": {
+   "esquerda_com_a_y_positiva": 0.9934056875944498,
+   "direita_com_a_y_negativa": 0.9990085266706326
+  },
+  "guinada": {
+   "nome": "a_y contra vx x guinada gravada",
+   "todas": {
+    "n": 102149,
+    "inclinacao": 0.9718461581338551,
+    "correlacao": 0.985156208940647
+   },
+   "esquerda": {
+    "n": 29663,
+    "inclinacao": 0.977007229454728,
+    "correlacao": 0.9065389882942657
+   },
+   "direita": {
+    "n": 15440,
+    "inclinacao": 0.988548965023539,
+    "correlacao": 0.883867281714013
+   },
+   "sinal": 1,
+   "bate": true
+  },
+  "heading": {
+   "nome": "derivada do heading contra a guinada gravada",
+   "todas": {
+    "n": 80618,
+    "inclinacao": -0.9992486709587018,
+    "correlacao": -0.9988612877817005
+   },
+   "esquerda": {
+    "n": 29504,
+    "inclinacao": -1.0005577654735474,
+    "correlacao": -0.9932218515160232
+   },
+   "direita": {
+    "n": 15368,
+    "inclinacao": -0.9996048784158496,
+    "correlacao": -0.9917555254996846
+   },
+   "sinal": -1,
+   "bate": true
+  },
+  "forma_heading": {
+   "escolhida": "(-sen h, cos h)",
+   "cosseno_mediano": {
+    "(sen h, cos h)": 0.3068257564560797,
+    "(-sen h, cos h)": 0.9999238771642981,
+    "(sen h, -cos h)": -0.9999238771642981,
+    "(-sen h, -cos h)": -0.3068257564560797,
+    "(cos h, sen h)": -0.004833374178826538,
+    "(-cos h, sen h)": 0.1925402571600613,
+    "(cos h, -sen h)": -0.1925402571600613,
+    "(-cos h, -sen h)": 0.004833374178826538
+   },
+   "giro_na_esquerda": -0.44167778215588194,
+   "giro_na_direita": 0.5414242869005091
+  },
+  "velocidade_lateral": {
+   "nome": "localVelocity.x contra a velocidade do mundo para a esquerda",
+   "todas": {
+    "n": 102155,
+    "inclinacao": 0.9983040994921455,
+    "correlacao": 0.9999834067175419
+   },
+   "esquerda": {
+    "n": 29663,
+    "inclinacao": 0.9974233858628163,
+    "correlacao": 0.9999625461582746
+   },
+   "direita": {
+    "n": 15446,
+    "inclinacao": 0.9997587731888535,
+    "correlacao": 0.9999957153111679
+   },
+   "sinal": 1,
+   "bate": true
+  },
+  "velocidade_longitudinal": {
+   "nome": "localVelocity.z contra a velocidade do mundo para a frente",
+   "todas": {
+    "n": 102155,
+    "inclinacao": 1.0008757311475496,
+    "correlacao": 0.9999916902040903
+   },
+   "esquerda": {
+    "n": 29663,
+    "inclinacao": 1.0014055986377304,
+    "correlacao": 0.9999783444251636
+   },
+   "direita": {
+    "n": 15446,
+    "inclinacao": 1.0013867931617586,
+    "correlacao": 0.9999922441935883
+   },
+   "sinal": 1,
+   "bate": true
+  },
+  "velocidade_longitudinal_contra_speedKmh": {
+   "n": 102155,
+   "inclinacao": 0.9996362383239898,
+   "correlacao": 0.9999496733762573
+  },
+  "volante": {
+   "todas": 0.9919989857869307,
+   "esquerda": 0.9976301689792554,
+   "direita": 0.9946460440214159,
+   "n": 70991,
+   "bate": true
+  },
+  "todas_batem": true
+ },
+ "por_sessao": {
+  "2026-10-15_23-24-50_vhe_interlagos": {
+   "todas_batem": true,
+   "convencoes": {
+    "s_r": 1,
+    "s_psi": -1,
+    "s_vy": 1,
+    "forma_heading": "(-sen h, cos h)",
+    "s_esquerda": -1
+   },
+   "guinada": {
+    "n": 19856,
+    "inclinacao": 0.9650746473202537,
+    "correlacao": 0.9809567913381696
+   },
+   "heading": {
+    "n": 15806,
+    "inclinacao": -0.9983680868756577,
+    "correlacao": -0.9989002115041729
+   },
+   "velocidade_lateral": {
+    "n": 19856,
+    "inclinacao": 0.99829670086126,
+    "correlacao": 0.9999845760995436
+   },
+   "velocidade_longitudinal": {
+    "n": 19856,
+    "inclinacao": 1.0008783121857365,
+    "correlacao": 0.9999919131192705
+   },
+   "volante": 0.9910488702808056
+  },
+  "2026-10-17_01-02-22_vhe_interlagos": {
+   "todas_batem": true,
+   "convencoes": {
+    "s_r": 1,
+    "s_psi": -1,
+    "s_vy": 1,
+    "forma_heading": "(-sen h, cos h)",
+    "s_esquerda": -1
+   },
+   "guinada": {
+    "n": 21751,
+    "inclinacao": 0.9761295418872088,
+    "correlacao": 0.9877550190938678
+   },
+   "heading": {
+    "n": 17024,
+    "inclinacao": -0.9995025053446798,
+    "correlacao": -0.999249154839761
+   },
+   "velocidade_lateral": {
+    "n": 21751,
+    "inclinacao": 0.9980032120651181,
+    "correlacao": 0.9999861613912321
+   },
+   "velocidade_longitudinal": {
+    "n": 21751,
+    "inclinacao": 1.0008773803541429,
+    "correlacao": 0.999992132229271
+   },
+   "volante": 0.992397699477755
+  },
+  "2026-10-17_16-17-08_vhe_interlagos": {
+   "todas_batem": true,
+   "convencoes": {
+    "s_r": 1,
+    "s_psi": -1,
+    "s_vy": 1,
+    "forma_heading": "(-sen h, cos h)",
+    "s_esquerda": -1
+   },
+   "guinada": {
+    "n": 28703,
+    "inclinacao": 0.9755336363147489,
+    "correlacao": 0.9865431321157423
+   },
+   "heading": {
+    "n": 22598,
+    "inclinacao": -1.000094794008387,
+    "correlacao": -0.9986385800810001
+   },
+   "velocidade_lateral": {
+    "n": 28709,
+    "inclinacao": 0.9980852769588213,
+    "correlacao": 0.99997921184726
+   },
+   "velocidade_longitudinal": {
+    "n": 28709,
+    "inclinacao": 1.0008781421234867,
+    "correlacao": 0.9999913957345419
+   },
+   "volante": 0.9927363234621832
+  },
+  "2026-10-18_12-38-44_vhe_interlagos": {
+   "todas_batem": true,
+   "convencoes": {
+    "s_r": 1,
+    "s_psi": -1,
+    "s_vy": 1,
+    "forma_heading": "(-sen h, cos h)",
+    "s_esquerda": -1
+   },
+   "guinada": {
+    "n": 15943,
+    "inclinacao": 0.9721145459337208,
+    "correlacao": 0.9858112010404381
+   },
+   "heading": {
+    "n": 12677,
+    "inclinacao": -0.9990264631732229,
+    "correlacao": -0.9987004122713535
+   },
+   "velocidade_lateral": {
+    "n": 15943,
+    "inclinacao": 0.9981971850667299,
+    "correlacao": 0.9999802788182575
+   },
+   "velocidade_longitudinal": {
+    "n": 15943,
+    "inclinacao": 1.000870856645206,
+    "correlacao": 0.99999101085441
+   },
+   "volante": 0.9936110861153604
+  },
+  "2026-10-21_20-30-54_vhe_interlagos": {
+   "todas_batem": true,
+   "convencoes": {
+    "s_r": 1,
+    "s_psi": -1,
+    "s_vy": 1,
+    "forma_heading": "(-sen h, cos h)",
+    "s_esquerda": -1
+   },
+   "guinada": {
+    "n": 15896,
+    "inclinacao": 0.968780902228041,
+    "correlacao": 0.9842842780424875
+   },
+   "heading": {
+    "n": 12513,
+    "inclinacao": -0.9987990181919107,
+    "correlacao": -0.9988645778548019
+   },
+   "velocidade_lateral": {
+    "n": 15896,
+    "inclinacao": 0.9989368528321259,
+    "correlacao": 0.9999854081894026
+   },
+   "velocidade_longitudinal": {
+    "n": 15896,
+    "inclinacao": 1.0008711030806565,
+    "correlacao": 0.9999918284735339
+   },
+   "volante": 0.9897422174649897
+  }
+ },
+ "mesma_convencao_nas_5_sessoes": true,
+ "sinais_por_curva": [
+  {
+   "curva": "C01-esq",
+   "n": 3827,
+   "vx_mediana_kmh": 104.81986923217774,
+   "vy_mediana": -0.8312639764377062,
+   "vy_positiva": 0.01149725633655605,
+   "r_mediana": 0.5810050020615259,
+   "menos_steer_mediana": 0.25791598558425893,
+   "a_y_mediana": 16.65165822560042
+  },
+  {
+   "curva": "C02-dir",
+   "n": 1954,
+   "vx_mediana_kmh": 121.26321807861328,
+   "vy_mediana": 0.9817631517524852,
+   "vy_positiva": 0.9984646878198568,
+   "r_mediana": -0.5420380542202603,
+   "menos_steer_mediana": -0.2820976996705643,
+   "a_y_mediana": -18.04129741621778
+  },
+  {
+   "curva": "C03-esq",
+   "n": 5711,
+   "vx_mediana_kmh": 180.50684692382816,
+   "vy_mediana": -1.3225634098053047,
+   "vy_positiva": 0.062335843109788125,
+   "r_mediana": 0.3279764175415043,
+   "menos_steer_mediana": 0.09588599428534508,
+   "a_y_mediana": 16.559078044160206
+  },
+  {
+   "curva": "C04-esq",
+   "n": 2656,
+   "vx_mediana_kmh": 127.1561668395996,
+   "vy_mediana": -1.1877139369646736,
+   "vy_positiva": 0.0,
+   "r_mediana": 0.5039112899984625,
+   "menos_steer_mediana": 0.2060216530053705,
+   "a_y_mediana": 18.16940148035963
+  },
+  {
+   "curva": "C05-esq",
+   "n": 2701,
+   "vx_mediana_kmh": 186.10538360595706,
+   "vy_mediana": -1.2220165411631303,
+   "vy_positiva": 0.004442798963346909,
+   "r_mediana": 0.3193473517894744,
+   "menos_steer_mediana": 0.08672399520874023,
+   "a_y_mediana": 16.388442231907806
+  },
+  {
+   "curva": "C06-dir",
+   "n": 4627,
+   "vx_mediana_kmh": 170.54087219238284,
+   "vy_mediana": 2.5315622329711913,
+   "vy_positiva": 0.9993516317268208,
+   "r_mediana": -0.46315492192904856,
+   "menos_steer_mediana": -0.17441999912261963,
+   "a_y_mediana": -22.645814111794483
+  },
+  {
+   "curva": "C07-dir",
+   "n": 3546,
+   "vx_mediana_kmh": 89.73641242980959,
+   "vy_mediana": 0.6002704117033237,
+   "vy_positiva": 0.9368302312464749,
+   "r_mediana": -0.6502975457244438,
+   "menos_steer_mediana": -0.3366119722525274,
+   "a_y_mediana": -16.420548256000473
+  },
+  {
+   "curva": "C08-esq",
+   "n": 5377,
+   "vx_mediana_kmh": 105.22503890991203,
+   "vy_mediana": -0.7310228645801544,
+   "vy_positiva": 0.02901246047982146,
+   "r_mediana": 0.6277773082256305,
+   "menos_steer_mediana": 0.3325319766998286,
+   "a_y_mediana": 18.19864386352062
+  },
+  {
+   "curva": "C09-dir",
+   "n": 1582,
+   "vx_mediana_kmh": 156.29281154814225,
+   "vy_mediana": 0.6468010246753693,
+   "vy_positiva": 0.9791403286978508,
+   "r_mediana": -0.24262111832698385,
+   "menos_steer_mediana": -0.06492999713453901,
+   "a_y_mediana": -10.591064412380927
+  },
+  {
+   "curva": "C10-dir",
+   "n": 3832,
+   "vx_mediana_kmh": 83.39713668823246,
+   "vy_mediana": 0.3045758025513804,
+   "vy_positiva": 0.8622129436325678,
+   "r_mediana": -0.7274817327658356,
+   "menos_steer_mediana": -0.37121731705135597,
+   "a_y_mediana": -17.194273277673158
+  },
+  {
+   "curva": "C11-esq",
+   "n": 4038,
+   "vx_mediana_kmh": 170.75469858986992,
+   "vy_mediana": -1.5237104647689472,
+   "vy_positiva": 0.006686478454680535,
+   "r_mediana": 0.41122629145781153,
+   "menos_steer_mediana": 0.14208999193376984,
+   "a_y_mediana": 19.633399675876852
+  },
+  {
+   "curva": "C12-esq",
+   "n": 2534,
+   "vx_mediana_kmh": 109.79074356079099,
+   "vy_mediana": -0.9745695491631815,
+   "vy_positiva": 0.004735595895816891,
+   "r_mediana": 0.5801245169507108,
+   "menos_steer_mediana": 0.27827998995780945,
+   "a_y_mediana": 17.933765857606033
+  },
+  {
+   "curva": "C13-esq",
+   "n": 1165,
+   "vx_mediana_kmh": 160.62358818054176,
+   "vy_mediana": -0.4449433982372262,
+   "vy_positiva": 0.0,
+   "r_mediana": 0.1911215191637979,
+   "menos_steer_mediana": 0.05337599813938101,
+   "a_y_mediana": 8.408679391574859
+  },
+  {
+   "curva": "C14-esq",
+   "n": 1654,
+   "vx_mediana_kmh": 213.77531349875713,
+   "vy_mediana": -1.3006957670052801,
+   "vy_positiva": 0.0024183796856106408,
+   "r_mediana": 0.2837919215361312,
+   "menos_steer_mediana": 0.06602699549661756,
+   "a_y_mediana": 16.320205925868446
+  }
+ ],
+ "todas_batem": true
+}
