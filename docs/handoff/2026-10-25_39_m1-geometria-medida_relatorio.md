@@ -1,8 +1,8 @@
 # Relatório do pedido 39 — M1: a geometria do carro medida pela telemetria do jogo
 
 - **Pedido:** `docs/prompts/2026-10-25_39_m1-geometria-medida.md`
-- **Situação (29/10):** **a M1 não foi aprovada, e o trabalho parou, como o pedido manda** ("se um critério não passar, relate e pare"). Em 0,5 s, a M1 tem skill de **0,202** contra a persistência (o critério 1 pede 0,50) e de **0,174** contra a física sozinha (o critério 2 pede 0,20). Os outros 5 critérios passam. A geometria medida passou nos portões de `L` e de `x_v`; `k_δ` seguiu o caminho do ADR 0024 por uma batida no fim da sessão de medição. Falta a sua decisão sobre o resto da Parte F e o merge (seção "O que precisa da sua decisão", no fim). O teste do rádio com o app 0.5.0 não foi feito e fica para depois, como você pediu.
-- **Branch:** `etapa/m1-modelo-do-carro` (a mesma do pedido 37), sem merge em `develop`. Eu não enviei nada ao remoto. Pelo relatório do pedido 41, a branch já estava no GitHub desde 28/10, igual à local de então; os commits de 29/10 estão só aqui.
+- **Situação (29/10):** **fechado. A M1 não foi aprovada,** e o resultado negativo está documentado, como o ADR 0022 manda. Em 0,5 s, a M1 tem skill de **0,202** contra a persistência (o critério 1 pede 0,50) e de **0,174** contra a física sozinha (o critério 2 pede 0,20); os outros 5 critérios passam. A geometria medida passou nos portões de `L` e de `x_v`; `k_δ` seguiu o caminho do ADR 0024 por uma batida no fim da sessão de medição. Depois do "Sim, fechar" do Eduardo, fiz o resto da Parte F e o merge em `develop` (seção "Fechamento", no fim). O teste do rádio com o app 0.5.0 não foi feito e fica para depois, como ele pediu.
+- **Branch:** `etapa/m1-modelo-do-carro` (a mesma do pedido 37), com merge em `develop`. Eu não enviei nada ao remoto. Pelo relatório do pedido 41, a branch já estava no GitHub desde 28/10, igual à local de então; os commits de 29/10 estão só aqui.
 - **Commits deste pedido:**
   - `23b2ea49` docs: pedido 39 (M1: a geometria do carro medida pela telemetria do jogo, e a retomada do pedido 37)
   - `946edea3` Pedido 39, Parte A: o ADR 0024 e a emenda 1.9 da M1, registrados antes de medir
@@ -15,11 +15,14 @@
   - `c3d48d3b` Relatorio do pedido 39: o app 0.5.0 instalado, e o app do jogo 0.4.1 que nao esta em develop
   - `121a83c7` Pedido 39, Parte D: a geometria medida pela telemetria do jogo e os portoes
   - `00fff510` Pedido 39, Parte E (treino): a fisica com a geometria medida, antes de qualquer sessao de teste
-  - o commit da Parte E (teste) com o veredito e este relatório: ver `git log` da branch (a mensagem começa com "Pedido 39, Parte E (teste)")
+  - `dbc8a112` Pedido 39, Parte E (teste): a M1 nao foi aprovada, e o trabalho para
+  - `d9ecd650` docs: backlog atualizado pelo Cowork com as propostas do pedido 41
+  - `cb6778b9` Pedido 39, Parte F: o resultado da M1 na arquitetura, na integracao e no backlog
+  - o commit deste fechamento do relatório, em `develop`, depois do merge: ver `git log develop`
   - **também na branch, sem ser deste pedido:**
     - `f38f89a5` docs: pedido 38, commitado pela sessão do pedido 38 depois que eu troquei a branch da pasta (abaixo);
     - `a85d16ad` chore: ignora gravacoes da raiz e `73565e79` docs: atualiza backlog do pedido 40, de 28/10, feitos por outra sessão
-- **Merges:** nenhum.
+- **Merges:** `b3576fd4` Merge do pedido 39 (e do 37) em `develop`, sem conflito.
 - **Arquivos de handoff** (`docs/handoff/`, prefixo `2026-10-25_39_m1-geometria-medida_`):
   - `relatorio.md` (este)
   - `retrato.json` (Parte B)
@@ -29,7 +32,8 @@
   - `validacao.json` (Parte E: o veredito, os horizontes, as tabelas, a correção por rodada, as figuras e a temperatura dos pneus)
   - `figura_c01.png` e `figura_c10.png` (Parte E)
   - `resultados.json` (ADR 0007: os commits, o `geometry_id`, os comandos e os hashes dos arquivos lidos)
-  - `pytest.txt` (a suíte do backend no fim)
+  - `pytest.txt` (a suíte do backend antes do merge)
+  - `pytest_pos_merge.txt` (a suíte do backend em `develop`, depois do merge)
 
 ## Parte A — registrado antes de medir
 
@@ -324,17 +328,35 @@ Comando: `python -m ml.scripts.m1_modelo_carro validar --fase teste` (10 min), r
 
 **A suíte do backend: 816 passaram em 8 min 13 s** (`python -m pytest tests -q`), com os 22 da M1. Saída em `pytest.txt`.
 
-## O que precisa da sua decisão
+## Fechamento (29/10, à tarde): a Parte F e o merge
 
-1. **O resto da Parte F e o merge em `develop`.** O pedido diz "se um critério não passar, relate e pare". Parei aqui. Já estão escritas a seção 6 de `docs/modelo_fisico_m1.md` (o veredito, para quem não é da área) e o fechamento da unidade do volante e do relógio na M0. **Não fiz:**
-   - a linha do cálculo do tempo de volta em `docs/arquitetura_ml.md` ("M1 feita, não aprovada");
-   - o que muda em `docs/integracao_ml_e_empacotamento.md` e em `docs/backlog.md`;
-   - a nota sobre o ADR 0004: o resultado não muda nada nele, porque a M1 não foi aprovada e o ADR 0004 só seria revisto com a M4;
-   - o merge em `develop`, com os conflitos do pedido 40 (manter os dois lados) e as suítes depois.
+**Pedido do Eduardo:** "Sim, fechar": documentar o resultado negativo e fazer o merge em `develop`.
 
-   Se você quiser, faço tudo isso, documentando o resultado negativo como o ADR 0022 manda.
-2. **O `k_δ` da batida.** O modelo usou 0,304 rad, pelo caminho do ADR 0024. Antes da batida, o pneu dá 0,2974 rad, com R² de 0,9998. A diferença é de 2%, e é improvável que ela mude o veredito, mas a decisão de regravar é sua.
-3. **O "não conclusivo",** que não funcionou com o índice registrado. Mudar a regra exige um ADR antes de rodar de novo.
+- **Antes de tudo:** as outras sessões da pasta (os pedidos 38 e 41) estavam paradas; a pasta estava em `etapa/m1-modelo-do-carro`, no meu último commit, sem trava do git.
+- **O backlog do Cowork:** as edições dele com as propostas do pedido 41 estavam sem commit. Foram para um commit só delas (`d9ecd650`), antes das minhas.
+- **A Parte F** (`cb6778b9`):
+  - **`docs/arquitetura_ml.md`:** na tabela das peças, o juiz do tempo fica "a M1 feita e não aprovada", e um parágrafo diz o que isso muda: o simulador quase-estacionário continua sendo o juiz;
+  - **`docs/integracao_ml_e_empacotamento.md`:** um adendo. Nada muda no app nem no pacote: a M1 e as ferramentas dela ficam em `backend/ml/`, fora do executável;
+  - **`docs/backlog.md`:** a linha do modelo físico com a M1 não aprovada; a unidade do `steerAngle` fechada; e quatro linhas novas (a falha nas curvas, o "não conclusivo" que não funcionou, o `k_δ` da batida e a indicação da temperatura dos pneus para a M2);
+  - **o ADR 0004:** o resultado **não muda nada nele**. A M1 não foi aprovada, e mesmo uma M1 aprovada só levaria à revisão dele na M4, porque prever o movimento do carro não é estimar ganho de tempo. O ADR 0004 não foi mexido; a nota está em `docs/arquitetura_ml.md` e em `docs/modelo_fisico_m1.md`, seção 6.8;
+  - **a M0:** a unidade do volante e o relógio já tinham sido fechados no commit da fase de treino (`00fff510`).
+- **O merge em `develop`:** `b3576fd4` "Merge do pedido 39 (e do 37): a M1, o modelo do carro para a frente, com a geometria medida pela telemetria do jogo; nao aprovada".
+  - **Nenhum conflito:** desde a base comum (`4782aefb`), nenhum arquivo mudou dos dois lados. O pedido 40 mexeu no `backend/main.py`, no front, no gravador e no app do jogo; a M1, em `backend/ml/`, nos testes dela e em `docs/`.
+  - **Foram junto,** sem ser da M1: o `f38f89a5` (o texto do pedido 38 e as três pesquisas, como você decidiu), o `a85d16ad` (`.gitignore`) e os dois commits do backlog. Como o pedido 38 ainda não foi para `develop`, a lista `docs/tecnica_de_pilotagem_lista.md` entrou pelo `f38f89a5`. Se ela der conflito no merge do 38, fica a versão de `develop`, como você decidiu.
+  - **O fim de linha:** os arquivos novos da M1 ficam com CRLF na pasta depois do merge, como os outros. Isso pode mudar a chave do cache do `atualizar_coach` na próxima vez.
+- **As suítes depois do merge, em `develop`:**
+  - **o backend:** 832 passaram em 8 min 35 s (`pytest_pos_merge.txt`). São mais que os 816 de antes porque `develop` já tinha os testes do pedido 40;
+  - **o front:** `vitest run` com 164 passando em 15 arquivos, e `tsc --noEmit` sem erro (saída 0);
+  - **o `desktop`:** `npm test` com 4 passando.
+  - **O `conferir_lua.py` não rodou:** o merge não mexeu no app do jogo.
+- **Nada foi enviado ao remoto.** `develop` está um merge à frente do `origin/develop`, que o pedido 41 tinha atualizado.
+
+## O que fica em aberto
+
+1. **O `k_δ` da batida.** O modelo usou 0,304 rad, pelo caminho do ADR 0024. Antes da batida, o pneu dá 0,2974 rad, com R² de 0,9998. A diferença é de 2%, e é improvável que ela mude o veredito. Regravar fica para quando a M1 voltar.
+2. **O "não conclusivo",** que não funcionou com o índice registrado. Mudar a regra exige um ADR antes de rodar de novo.
+3. **A M1 nas curvas.** Uma forma nova do pneu ou do estado exige um ADR antes de rodar de novo. As linhas estão no backlog.
+4. **O teste do rádio com o app 0.5.0** (Parte G do pedido 36) não foi feito. A leitura dele fica para depois, numa seção nova do relatório do pedido 36.
 
 ## Coisas que não batiam com o contexto
 
