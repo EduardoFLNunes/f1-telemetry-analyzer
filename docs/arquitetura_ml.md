@@ -410,7 +410,7 @@ ensina a chegar mais perto dela.
 |---|---|---|
 | A — previsão de trajetória (LSTM geradora) | Modelo 1 | existe |
 | busca evolutiva | Modelo 1 | existe |
-| juiz do tempo | Modelo 1 | em construção: o juiz novo, o modelo do carro do [ADR 0017](decisoes/0017-modelo-fisico-do-carro.md), com a etapa M0 feita |
+| juiz do tempo | Modelo 1 | o simulador quase-estacionário continua sendo o juiz. O juiz novo, o modelo do carro do [ADR 0017](decisoes/0017-modelo-fisico-do-carro.md): a M0 feita; **a M1 feita e não aprovada** (pedidos 37 e 39, [`modelo_fisico_m1.md`](modelo_fisico_m1.md), seção 6): em 0,5 s, skill de 0,20 contra a persistência e de 0,17 contra a física sozinha, abaixo dos critérios 1 e 2 do [ADR 0022](decisoes/0022-validacao-da-m1-modelo-do-carro.md) |
 | B — erro do piloto | Modelo 2 | em uso: versão 1, o relatório de evolução (pedidos 16 e 17) |
 | C — autocorreção | Modelo 2 | planejado |
 | D — tempo contrafactual | Modelo 2 | não passou ([fase1_validacao_contrafactual.md](fase1_validacao_contrafactual.md), seção 6; [ADR 0011](decisoes/0011-resultado-fase-2b-e-experimento-controlado.md)) |
@@ -419,3 +419,11 @@ ensina a chegar mais perto dela.
 O juiz é compartilhado: hoje é o simulador quase-estacionário
 ([`optimization/lap_time_model.py`](../backend/ml/optimization/lap_time_model.py)),
 e a peça D refeita sobre o modelo do carro é a M4 do ADR 0017.
+
+**Depois da M1 (29/10).** O modelo do carro para a frente está em
+[`backend/ml/modelo_carro/`](../backend/ml/modelo_carro/), com a geometria medida pela
+telemetria do jogo ([ADR 0024](decisoes/0024-m1-geometria-medida-pela-telemetria.md)).
+Ele acerta reta, freada e tração e falha nas curvas, pela velocidade lateral. Como não
+passou na régua, ele não vira o juiz nem a base da M4: o simulador quase-estacionário
+continua, e o [ADR 0004](decisoes/0004-simulador-nao-estima-ganho-local.md) continua
+valendo sem mudança.
