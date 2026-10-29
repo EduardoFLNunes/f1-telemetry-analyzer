@@ -1,8 +1,8 @@
 # Relatório do pedido 39 — M1: a geometria do carro medida pela telemetria do jogo
 
 - **Pedido:** `docs/prompts/2026-10-25_39_m1-geometria-medida.md`
-- **Situação:** **parado na Parte C, como o pedido manda,** esperando a ida ao jogo do Eduardo (a medição e o teste do rádio com o app 0.5.0; passos abaixo). O aviso de 25/10, às 12:20, chegou sem os arquivos (seção "Aviso de 25/10, às 12:20"). As Partes A, B e C estão feitas. As Partes D (a geometria medida) e E (a retomada do pedido 37) vêm depois do aviso "medi a geometria".
-- **Branch:** `etapa/m1-modelo-do-carro` (a mesma do pedido 37), sem merge em `develop` e sem push.
+- **Situação (29/10):** **a M1 não foi aprovada, e o trabalho parou, como o pedido manda** ("se um critério não passar, relate e pare"). Em 0,5 s, a M1 tem skill de **0,202** contra a persistência (o critério 1 pede 0,50) e de **0,174** contra a física sozinha (o critério 2 pede 0,20). Os outros 5 critérios passam. A geometria medida passou nos portões de `L` e de `x_v`; `k_δ` seguiu o caminho do ADR 0024 por uma batida no fim da sessão de medição. Falta a sua decisão sobre o resto da Parte F e o merge (seção "O que precisa da sua decisão", no fim). O teste do rádio com o app 0.5.0 não foi feito e fica para depois, como você pediu.
+- **Branch:** `etapa/m1-modelo-do-carro` (a mesma do pedido 37), sem merge em `develop`. Eu não enviei nada ao remoto. Pelo relatório do pedido 41, a branch já estava no GitHub desde 28/10, igual à local de então; os commits de 29/10 estão só aqui.
 - **Commits deste pedido:**
   - `23b2ea49` docs: pedido 39 (M1: a geometria do carro medida pela telemetria do jogo, e a retomada do pedido 37)
   - `946edea3` Pedido 39, Parte A: o ADR 0024 e a emenda 1.9 da M1, registrados antes de medir
@@ -10,12 +10,26 @@
   - `b2f5abea` Pedido 39, Parte B: a primeira olhada na geometria do retrato da memoria
   - `28de6176` Pedido 39, Parte C: a ferramenta que mede a geometria pela memoria do jogo, parada para a sessao do Eduardo
   - `6171e279` Relatorio do pedido 39: o commit do pedido 38 que caiu nesta branch
-  - e o commit desta atualização (a decisão do `f38f89a5`, o instalador 0.5.0 já gerado e os passos de uma ida ao jogo): ver `git log` da branch
-  - **também na branch, sem ser deste pedido:** `f38f89a5` docs: pedido 38, commitado pela sessão do pedido 38 depois que eu troquei a branch da pasta (abaixo)
-- **Arquivos de handoff** (`docs/handoff/`):
-  - `2026-10-25_39_m1-geometria-medida_relatorio.md` (este)
-  - `2026-10-25_39_m1-geometria-medida_retrato.json` (Parte B)
-  - `2026-10-25_39_m1-geometria-medida_pytest_parte_c.txt` (a suíte do backend)
+  - `85123d10` Relatorio do pedido 39: o f38f89a5 fica nesta branch, o instalador 0.5.0 ja gerado e uma ida so ao jogo
+  - `ac8fdaa9` Relatorio do pedido 39: o aviso da medicao chegou sem o arquivo nem o app 0.5.0 instalado
+  - `c3d48d3b` Relatorio do pedido 39: o app 0.5.0 instalado, e o app do jogo 0.4.1 que nao esta em develop
+  - `121a83c7` Pedido 39, Parte D: a geometria medida pela telemetria do jogo e os portoes
+  - `00fff510` Pedido 39, Parte E (treino): a fisica com a geometria medida, antes de qualquer sessao de teste
+  - o commit da Parte E (teste) com o veredito e este relatório: ver `git log` da branch (a mensagem começa com "Pedido 39, Parte E (teste)")
+  - **também na branch, sem ser deste pedido:**
+    - `f38f89a5` docs: pedido 38, commitado pela sessão do pedido 38 depois que eu troquei a branch da pasta (abaixo);
+    - `a85d16ad` chore: ignora gravacoes da raiz e `73565e79` docs: atualiza backlog do pedido 40, de 28/10, feitos por outra sessão
+- **Merges:** nenhum.
+- **Arquivos de handoff** (`docs/handoff/`, prefixo `2026-10-25_39_m1-geometria-medida_`):
+  - `relatorio.md` (este)
+  - `retrato.json` (Parte B)
+  - `pytest_parte_c.txt` (a suíte do backend na Parte C)
+  - `geometria.json` (Parte D: a geometria medida e os portões)
+  - `fisica_treino.json` (Parte E: a física nas sessões de treino, por rodada)
+  - `validacao.json` (Parte E: o veredito, os horizontes, as tabelas, a correção por rodada, as figuras e a temperatura dos pneus)
+  - `figura_c01.png` e `figura_c10.png` (Parte E)
+  - `resultados.json` (ADR 0007: os commits, o `geometry_id`, os comandos e os hashes dos arquivos lidos)
+  - `pytest.txt` (a suíte do backend no fim)
 
 ## Parte A — registrado antes de medir
 
@@ -269,14 +283,58 @@ Comando: `python -m ml.scripts.m1_modelo_carro validar --fase treino` (3 min). *
 - **Em 0,5 s ela empata com a persistência** (skill de −0,06 a 0,18), e em 1,0 s perde. A velocidade longitudinal e a guinada saem bem melhores que na persistência. **A velocidade lateral sai pior:** em malha aberta, o erro dela cresce mais rápido que o da persistência.
 - **O que isso diz do critério 1** (skill da M1 contra R0 ≥ 0,50): a correção aprendida teria de cortar mais da metade do erro da física em 0,5 s. Nada foi mudado por isso. A fase de teste segue como registrada.
 
-## O que vem depois do aviso
+## Parte E.3 — a M1 e a validação: não aprovada
 
-- **Parte D:** medir `L`, `b`, `h`, `k_δ` (esquerdo, direito e médio) e `x_v`, aplicar os portões e relatar `h/L` contra o das cargas, `L/k_δ` contra a M0 e a linearidade do volante.
-- **Parte E:** retomar as Partes C a F do pedido 37 com a geometria medida:
-  - a física nas sessões de treino, antes e depois da geometria medida;
-  - a M1, as 5 rodadas e a tabela do veredito;
-  - as tabelas, as figuras e a temperatura dos pneus;
-  - a documentação e o merge em `develop`.
+Comando: `python -m ml.scripts.m1_modelo_carro validar --fase teste` (10 min), rodado depois do commit da fase de treino (`00fff510`). O texto completo, para quem não é da área, está em `docs/modelo_fisico_m1.md`, seção 6; os números, em `validacao.json`.
+
+**A tabela do veredito** (todos em 0,5 s; 39.142 casos nas 5 sessões de teste):
+
+| nº | critério | medido | resultado |
+|---|---|---|---|
+| 1 | skill contra R0 ≥ 0,50 | **0,202** | **não passa** |
+| 2 | skill contra R1 ≥ 0,20 | **0,174** | **não passa** |
+| 3 | limite inferior do IC 95% do skill contra R1 > 0 | 0,159 (IC 0,159 a 0,191) | passa |
+| 4 | skill contra R1 positivo em pelo menos 4 das 5 sessões | 5 de 5 | passa |
+| 5 | \|viés\| de cada grandeza ≤ 25% do erro de R1 | `vx` 3,9%; `vy` 2,2%; `r` 3,3% | passa |
+| 6 | o intervalo de 90% cobre de 80% a 97%, no passo de Δt | 85,7% (`vx` 93,2%; `vy` 81,5%; `r` 82,5%) | passa |
+| 7 | pelo menos 5 sessões testáveis | 5 | passa |
+
+- **O erro combinado em 0,5 s:** M1 0,351; R1 0,425; R0 0,440. Em 0,25 s, a M1 tem skill de 0,30 contra R0; em 1,0 s, −0,27.
+- **Onde a M1 falha:** nas curvas, que são 65% dos casos. Ali a física perde para a persistência (skill −0,07) e a correção a leva só a 0,13. Fora das curvas (reta, freada, tração), a física sozinha já tem skill de 0,65 a 0,72 contra a persistência.
+- **Por grandeza, em 0,5 s:** a correção tira o viés da física na velocidade longitudinal (+0,68 m/s) e corta o erro dela pela metade. A guinada sai melhor que nas duas referências. **A velocidade lateral só empata com a persistência** (0,68 contra 0,70 m/s), e é ela que pesa no erro combinado.
+- **Por sessão:** o skill contra R0 vai de 0,14 a 0,34 e contra R1 de 0,15 a 0,20. A sessão do pacote 0.4.0 (`2026-10-17_16-17-08`) é a melhor nos dois.
+
+**A correção por rodada:** 2.000 passos (400 de cada regime), de 68 a 89 s para ajustar os 3 Processos Gaussianos. O ruído aprendido fica entre 34% e 53% da variância do resíduo de `vx`, e entre 4% e 9% no de `vy` e no de `r`. Os comprimentos de cada rodada estão em `validacao.json`.
+
+**"Não conclusivo": o corte não funcionou.** Ele saiu 1,000 nas 5 rodadas (o teto do índice), e nenhum caso foi marcado. O índice registrado chega a 1 em mais de 1% dos casos de treino, porque os Processos Gaussianos aprenderam comprimentos curtos (de 0,06 a 0,45 desvio-padrão na velocidade lateral, na guinada e no volante). Isso não muda o veredito: as métricas usam todos os casos. **Mas, com o índice como está, a M1 não sabe dizer quando está fora dos dados.**
+
+**As figuras** (rodada sem a sessão `2026-10-21_20-30-54`, volta 6):
+- **a freada da C01**, a 266 km/h (`figura_c01.png`): a M1 segue o gravado quase em cima da linha. Em 0,5 s, ela erra a velocidade em 0,08 m/s, contra 0,71 da física sozinha e 7,2 da persistência;
+- **a curva lenta, a C10**, a 76 km/h, com o volante em 0,87 (`figura_c10.png`): a física e a M1 fazem o carro escorregar para fora (`vy` de 1,5 m/s em 0,5 s e de 3,5 m/s em 1,0 s) e exageram a guinada; o carro gravado faz a curva com `vy` perto de zero.
+
+**A indicação para a M2:** a correlação de Spearman entre o resíduo da M1 no primeiro passo e a temperatura média dos pneus é **−0,22 na velocidade longitudinal** e quase zero na lateral (0,00) e na guinada (−0,01). A temperatura muda junto com o combustível e o desgaste ao longo da sessão, então isso não separa a causa.
+
+**Nenhum critério, corte ou parâmetro foi mudado depois de ver o teste.**
+
+### Testes
+
+- **`tests/test_m1_modelo_carro.py`: 16 passaram** (os 14 do pedido 37, mais o início da figura dentro do trecho e o veredito com números conhecidos).
+- **`tests/test_m1_geometria_medida.py`: 6 passaram.**
+- **A suíte do backend:** ver abaixo.
+
+**A suíte do backend: 816 passaram em 8 min 13 s** (`python -m pytest tests -q`), com os 22 da M1. Saída em `pytest.txt`.
+
+## O que precisa da sua decisão
+
+1. **O resto da Parte F e o merge em `develop`.** O pedido diz "se um critério não passar, relate e pare". Parei aqui. Já estão escritas a seção 6 de `docs/modelo_fisico_m1.md` (o veredito, para quem não é da área) e o fechamento da unidade do volante e do relógio na M0. **Não fiz:**
+   - a linha do cálculo do tempo de volta em `docs/arquitetura_ml.md` ("M1 feita, não aprovada");
+   - o que muda em `docs/integracao_ml_e_empacotamento.md` e em `docs/backlog.md`;
+   - a nota sobre o ADR 0004: o resultado não muda nada nele, porque a M1 não foi aprovada e o ADR 0004 só seria revisto com a M4;
+   - o merge em `develop`, com os conflitos do pedido 40 (manter os dois lados) e as suítes depois.
+
+   Se você quiser, faço tudo isso, documentando o resultado negativo como o ADR 0022 manda.
+2. **O `k_δ` da batida.** O modelo usou 0,304 rad, pelo caminho do ADR 0024. Antes da batida, o pneu dá 0,2974 rad, com R² de 0,9998. A diferença é de 2%, e é improvável que ela mude o veredito, mas a decisão de regravar é sua.
+3. **O "não conclusivo",** que não funcionou com o índice registrado. Mudar a regra exige um ADR antes de rodar de novo.
 
 ## Coisas que não batiam com o contexto
 

@@ -1,0 +1,215 @@
+{
+ "pedido": 39,
+ "situacao": "M1 nao aprovada (criterios 1 e 2 do ADR 0022); parado antes do resto da Parte F e do merge",
+ "branch": "etapa/m1-modelo-do-carro",
+ "commit_ao_gerar": "00fff51028e4aadefa8fbc6d6d26e12bc4cc2dee",
+ "commits": {
+  "parte_d": "121a83c7",
+  "parte_e_treino": "00fff510",
+  "geometria_rodou_em": "73565e790e5aebd9e8fc249db6cb28b3cc3a07d0",
+  "treino_rodou_em": "121a83c7cad24d24868ccee07b2f87414ecf91a9",
+  "teste_rodou_em": "00fff51028e4aadefa8fbc6d6d26e12bc4cc2dee"
+ },
+ "geometry_id": "0ed16f0dd2225990",
+ "ambiente": {
+  "python": "3.9.7",
+  "numpy": "1.26.3",
+  "pandas": "2.1.4",
+  "scipy": "1.11.4",
+  "scikit-learn": "1.6.1",
+  "plataforma": "Windows-10-10.0.26200-SP0"
+ },
+ "comandos": [
+  "python -m ml.scripts.m1_modelo_carro retrato",
+  "python -m ml.scripts.m1_modelo_carro geometria --sessao geometria_2026-10-28_13-23-49.parquet",
+  "python -m ml.scripts.m1_modelo_carro validar --fase treino",
+  "python -m ml.scripts.m1_modelo_carro validar --fase teste",
+  "python -m pytest tests -q"
+ ],
+ "lidos": {
+  "sessao_de_medicao": {
+   "arquivo": "..\\data\\ml\\modelo_carro\\geometria_2026-10-28_13-23-49.parquet",
+   "bytes": 6743783,
+   "sha256": "cec892b273f8ca26d6d1e2142938c35f47f88ba99ecb23882780d69f2b4d49da",
+   "meta": {
+    "carModel": "rss_formula_rss_3_v6_2026",
+    "track": "vhe_interlagos",
+    "acVersion": "1.16.4",
+    "smVersion": "1.7",
+    "inicio": "2026-10-28T13:23:49",
+    "hz_pedido": 60.0,
+    "ferramenta": "ml.scripts.medir_geometria",
+    "amostras": 20292,
+    "segundos": 339.08,
+    "hz_medio": 59.84
+   }
+  },
+  "grade_2026-10-15_23-24-50_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-15_23-24-50_vhe_interlagos.parquet",
+   "bytes": 3774811,
+   "sha256": "dc3b44480dcdf929f3077860062698585768306b70cfb63dfae478542fadb224"
+  },
+  "grade_2026-10-17_01-02-22_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-17_01-02-22_vhe_interlagos.parquet",
+   "bytes": 4102235,
+   "sha256": "3827254fd6f847e812ebfd55191b09b4b3cb4d3b7652db6db3e0c0cbcf5e57c1"
+  },
+  "grade_2026-10-17_16-17-08_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-17_16-17-08_vhe_interlagos.parquet",
+   "bytes": 5464933,
+   "sha256": "837ecfa346626741581185bad76d49ee9e9c4b496e3016ae4958eb489bcb896b"
+  },
+  "grade_2026-10-18_12-38-44_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-18_12-38-44_vhe_interlagos.parquet",
+   "bytes": 2988922,
+   "sha256": "51c5fcbacd9abcc2fdff7edf84b547487220f08a2ce34e5f57c45af2826702af"
+  },
+  "grade_2026-10-21_20-30-54_vhe_interlagos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\grade_2026-10-21_20-30-54_vhe_interlagos.parquet",
+   "bytes": 2977614,
+   "sha256": "ae55aa0cd2a120ea1ff9e10c1d324abf446c574027accf8af033fa52d32f68d8"
+  },
+  "laps_grid_v2.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2.parquet",
+   "bytes": 380586213,
+   "sha256": "581012ea1b89741fa26c4cbbfca0cafe7173b488366f1433999cedd35b8ab5e8"
+  },
+  "geometria_medida.json": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\geometria_medida.json",
+   "bytes": 6527,
+   "sha256": "3c1f3322abb47cdb150ea707760d0ae7de1d0a573281dfe05e3bab87b2da0a0b"
+  },
+  "convencoes.json": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\convencoes.json",
+   "bytes": 12756,
+   "sha256": "6d124338dadf038fb4a5da24a6d872e6952934a28bbc25bc72e1f973b3607ad3"
+  },
+  "rodadas_treino.json": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\rodadas_treino.json",
+   "bytes": 29957,
+   "sha256": "01fdd1b787c027b9434a46b8a424f0f16c35636cf5677c843aeb2463425aaeb8"
+  }
+ },
+ "escritos": {
+  "geometria_medida.json": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\geometria_medida.json",
+   "bytes": 6527,
+   "sha256": "3c1f3322abb47cdb150ea707760d0ae7de1d0a573281dfe05e3bab87b2da0a0b"
+  },
+  "rodadas_treino.json": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\rodadas_treino.json",
+   "bytes": 29957,
+   "sha256": "01fdd1b787c027b9434a46b8a424f0f16c35636cf5677c843aeb2463425aaeb8"
+  },
+  "validacao.json": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\validacao.json",
+   "bytes": 33726,
+   "sha256": "11587f251abb52b0854a1c3a2f578c00af7b9446eb48ed9f7c2a665ad81b31b0"
+  },
+  "validacao_casos.parquet": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\modelo_carro\\validacao_casos.parquet",
+   "bytes": 20052406,
+   "sha256": "77508117338cb1f21ba79160161d6b869eb338d5829afd2a1ad748a36bf8968c"
+  }
+ },
+ "geometria_usada": {
+  "L": 2.9636409495155203,
+  "k_delta": 0.3039644940480894,
+  "x_v": 1.2090462535398445,
+  "cg_height": 0.271194111217152,
+  "h_L": 0.09150707384492217
+ },
+ "portoes": {
+  "L": {
+   "valor": 2.9636409495155203,
+   "passa": true,
+   "usado": 2.9636409495155203,
+   "fonte": "medido"
+  },
+  "k_delta": {
+   "valor": 0.3117222881543686,
+   "passa": false,
+   "usado": 0.3039644940480894,
+   "fonte": "regressao em regime permanente"
+  },
+  "x_v": {
+   "valor": 1.2090462535398445,
+   "passa": true,
+   "usado": 1.2090462535398445,
+   "fonte": "medido"
+  },
+  "h_L": {
+   "valor": 0.09150707384492217
+  }
+ },
+ "veredito": {
+  "aprovada": false,
+  "erro_0_5s": {
+   "M1": 0.3507062205694694,
+   "R1": 0.4248140930213927,
+   "R0": 0.4396530967114851
+  },
+  "criterios": [
+   {
+    "n": 1,
+    "criterio": "skill contra R0 >= 0,50",
+    "passa": false,
+    "valor": 0.20231149696731376
+   },
+   {
+    "n": 2,
+    "criterio": "skill contra R1 >= 0,20",
+    "passa": false,
+    "valor": 0.1744477729654591
+   },
+   {
+    "n": 3,
+    "criterio": "limite inferior do IC 95% do skill contra R1 > 0",
+    "passa": true,
+    "valor": 0.15857127671995264
+   },
+   {
+    "n": 4,
+    "criterio": "skill contra R1 positivo em pelo menos 4 das 5 sessoes",
+    "passa": true,
+    "valor": 5
+   },
+   {
+    "n": 5,
+    "criterio": "|vies| de cada grandeza <= 25% do erro de R1",
+    "passa": true,
+    "valor": {
+     "vx": 0.0393822820577644,
+     "vy": 0.02156657358169701,
+     "r": 0.033160110273520914
+    }
+   },
+   {
+    "n": 6,
+    "criterio": "o intervalo de 90% cobre de 80% a 97% no passo de dt",
+    "passa": true,
+    "valor": 0.8572377497317459
+   },
+   {
+    "n": 7,
+    "criterio": "pelo menos 5 sessoes testaveis (>= 100 casos)",
+    "passa": true,
+    "valor": 5
+   }
+  ]
+ },
+ "nao_conclusivo": {
+  "fracao": 0.0,
+  "cortes": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ]
+ },
+ "tempo_s": {
+  "treino": 172.6,
+  "teste": 573.4
+ }
+}

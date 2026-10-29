@@ -292,3 +292,110 @@ Comando: `python -m ml.scripts.m1_modelo_carro geometria --sessao data/ml/modelo
 - **`x_v` fica perto do centro de massa:** com o `w_f` das cargas de cada rodada (0,417 a 0,451), `b = w_f · L` vai de 1,24 a 1,34 m. A velocidade gravada é medida de 0,03 a 0,13 m atrás do centro de massa, e a correção `vy_cm = vy_gravada + (b − x_v)·r` é pequena (em 0,6 rad/s de guinada, de 0,02 a 0,08 m/s). **A hipótese do ADR 0024, de que a velocidade gravada estaria longe do centro de massa, não se confirma.** A falta da parte geométrica no ângulo de deriva (seção 4) vem do pneu, não do ponto de medida.
 - **`h/L` pelo `cgHeight` (0,0915) fica abaixo do das cargas** (0,135 a 0,163, pedido 37). A estimativa pelas cargas inclui a transferência pela suspensão e pela aerodinâmica na freada, que a altura do centro de massa sozinha não tem. Pelo ADR 0024, o modelo usa o `cgHeight`.
 - **As bitolas,** entre os pontos de contato em reta: 1,588 m na frente e 1,509 m atrás. O retrato de maio deu 2,955 m de entre-eixos (0,3% abaixo do medido aqui) e a reportagem, 2,943 m.
+
+## 6. A validação e o veredito (pedido 39, Parte E; ADR 0022)
+
+**Em uma frase: a M1 não foi aprovada.** A física simples com a correção aprendida prevê o carro melhor que só a física e melhor que "o carro continua igual", mas não com a folga que o ADR 0022 exige: em 0,5 s, ela corta 20% do erro da persistência (o critério pede 50%) e 17% do erro da física (o critério pede 20%).
+
+### 6.1 Como foi testado
+
+- **As 5 rodadas:** em cada uma, uma sessão inteira fica de fora. Tudo o que é ajustado usa só as outras 4: as cargas, o envelope, `b = w_f · L`, o desvio-padrão de normalização, os 7 parâmetros da física, a correção e o corte de "não conclusivo". A geometria (`L`, `k_δ`, `x_v`, `h/L`) vem da sessão de medição, que não é nenhuma das 5 (seção 5).
+- **Os casos:** 39.142 inícios de previsão, a cada 0,1 s, em todos os trechos das 5 sessões de teste com pelo menos 1,0 s pela frente (de 5.125 a 10.314 por sessão). Em cada um, o modelo anda em malha aberta, com o volante, o acelerador e o freio gravados, sem olhar o estado gravado no caminho.
+- **A correção:** um Processo Gaussiano por grandeza, treinado em 2.000 passos por rodada (400 de cada regime; todos os regimes tinham mais de 400). Ajustar os três leva de 68 a 89 s por rodada.
+- **Comandos:** `python -m ml.scripts.m1_modelo_carro validar --fase treino` e, depois do commit da fase de treino, `validar --fase teste` (10 min).
+
+### 6.2 O veredito (todos em 0,5 s)
+
+| nº | critério | medido | resultado |
+|---|---|---|---|
+| 1 | skill contra R0 ≥ 0,50 | **0,202** | **não passa** |
+| 2 | skill contra R1 ≥ 0,20 | **0,174** | **não passa** |
+| 3 | limite inferior do IC 95% do skill contra R1 > 0 | 0,159 (IC de 0,159 a 0,191; 57 voltas, 2.000 reamostragens) | passa |
+| 4 | skill contra R1 positivo em pelo menos 4 das 5 sessões | 5 de 5 | passa |
+| 5 | \|viés\| de cada grandeza ≤ 25% do erro de R1 | `vx` 3,9%; `vy` 2,2%; `r` 3,3% | passa |
+| 6 | o intervalo de 90% cobre de 80% a 97%, no passo de Δt | 85,7% (`vx` 93,2%; `vy` 81,5%; `r` 82,5%) | passa |
+| 7 | pelo menos 5 sessões testáveis | 5 | passa |
+
+- **O erro combinado em 0,5 s:** M1 0,351; R1 (só a física) 0,425; R0 (persistência) 0,440.
+- **Pela regra do ADR 0022, a M1 não é aprovada.** Também não vale o caso "só a física passa": a física sozinha bate a persistência por só 3% em 0,5 s.
+
+### 6.3 Os horizontes e cada grandeza
+
+| horizonte | erro M1 / R1 / R0 | skill M1 contra R0 | skill M1 contra R1 | skill R1 contra R0 |
+|---|---|---:|---:|---:|
+| 0,25 s | 0,189 / 0,212 / 0,270 | 0,30 | 0,11 | 0,22 |
+| **0,5 s** | **0,351 / 0,425 / 0,440** | **0,20** | **0,17** | **0,03** |
+| 1,0 s | 0,849 / 1,059 / 0,666 | −0,27 | 0,20 | −0,59 |
+
+| em 0,5 s | `vx` (m/s): raiz do erro quadrático, viés | `vy` (m/s) | `r` (rad/s) | posição (m): média, p90 |
+|---|---|---|---|---|
+| M1 | 0,40; −0,03 | 0,68; +0,02 | 0,094; −0,004 | 0,13; 0,27 |
+| R1 | 0,85; **+0,68** | 0,84; −0,07 | 0,108; +0,012 | 0,26; 0,44 |
+| R0 | 2,69; +0,03 | **0,70**; +0,01 | 0,174; 0,000 | 0,58; 1,11 |
+
+- **Na velocidade longitudinal,** a correção tira o viés da física (+0,68 m/s, o carro previsto mais rápido que o gravado em 0,5 s) e corta o erro pela metade.
+- **Na guinada,** a M1 é a melhor das três.
+- **Na velocidade lateral, a M1 só empata com a persistência** (0,68 contra 0,70 m/s), e é ela que pesa no erro combinado, porque tem o menor desvio-padrão (cerca de 1,25 m/s). Em 1,0 s, a lateral da M1 erra 1,77 m/s, contra 1,03 da persistência.
+- **A posição** sai melhor na M1 em todos os horizontes: 0,13 m de erro médio em 0,5 s e 0,53 m em 1,0 s.
+
+### 6.4 Por sessão, por regime e por velocidade (0,5 s)
+
+| sessão | casos | skill M1 contra R0 | skill M1 contra R1 | skill R1 contra R0 |
+|---|---:|---:|---:|---:|
+| `2026-10-15_23-24-50` | 8.438 | 0,16 | 0,15 | 0,01 |
+| `2026-10-17_01-02-22` | 9.420 | 0,20 | 0,16 | 0,05 |
+| `2026-10-17_16-17-08` | 10.314 | 0,34 | 0,20 | 0,18 |
+| `2026-10-18_12-38-44` | 5.125 | 0,14 | 0,20 | −0,07 |
+| `2026-10-21_20-30-54` | 5.845 | 0,15 | 0,18 | −0,04 |
+
+| regime | casos | erro M1 / R1 / R0 | skill M1 contra R0 | skill M1 contra R1 |
+|---|---:|---|---:|---:|
+| reta | 6.953 | 0,076 / 0,080 / 0,226 | 0,66 | 0,05 |
+| freada | 2.936 | 0,134 / 0,139 / 0,422 | 0,68 | 0,04 |
+| tração | 1.725 | 0,111 / 0,110 / 0,387 | 0,71 | −0,01 |
+| **curva** | **25.251** | **0,412 / 0,505 / 0,474** | **0,13** | **0,19** |
+| freio e volante juntos | 2.277 | 0,431 / 0,473 / 0,578 | 0,25 | 0,09 |
+
+| faixa de velocidade | casos | skill M1 contra R0 | skill M1 contra R1 |
+|---|---:|---:|---:|
+| abaixo de 100 km/h | 4.718 | 0,22 | 0,21 |
+| 100 a 160 km/h | 13.779 | 0,24 | 0,21 |
+| 160 a 220 km/h | 12.580 | 0,08 | 0,12 |
+| acima de 220 km/h | 8.064 | 0,55 | −0,03 |
+
+- **Fora das curvas** (reta, freada e tração), a física sozinha já passa a persistência com folga (skill de 0,65 a 0,72), e a correção quase não muda nada.
+- **Nas curvas**, que são 65% dos casos, a física perde para a persistência (skill −0,07), e a correção a leva só a 0,13. É aí que a M1 não passa. A pior faixa é a de 160 a 220 km/h, a das curvas rápidas.
+- **Um caso** (sessão `2026-10-17_16-17-08`, volta 12) começa com `vx` de −0,7 km/h e fica fora das faixas de velocidade.
+
+### 6.5 "Não conclusivo": o corte não funcionou
+
+- **O corte saiu 1,000 nas 5 rodadas, e nenhum caso de teste foi marcado.** O índice registrado (1.6) vai de 0 a 1 e chega a 1 em mais de 1% dos casos de treino, então o percentil 99 dele é o próprio teto, e nada fica acima.
+- **Por quê:** o índice é o maior das 3 grandezas e dos 10 passos do caminho. O Processo Gaussiano da velocidade longitudinal aprendeu comprimentos muito curtos em algumas entradas (perto de 1 desvio-padrão), e os da velocidade lateral e da guinada aprenderam comprimentos ainda mais curtos (de 0,06 a 0,45 desvio-padrão) na velocidade lateral, na guinada e no volante. Assim, um caminho de 0,5 s sai do que o treino cobriu em quase qualquer lugar.
+- **Isso não muda o veredito:** as métricas da aprovação usam todos os casos (1.6), e os resultados "só nos conclusivos" são os mesmos.
+- **O que isso quer dizer:** com o índice como registrado, a M1 não sabe dizer quando está fora dos dados. Corrigir isso é uma mudança da regra e fica para depois.
+
+### 6.6 As figuras
+
+Na rodada em que a sessão `2026-10-21_20-30-54` é a de teste, volta 6, com a faixa de 5% a 95% da M1 (200 caminhos):
+
+- **a freada da C01** (`docs/handoff/2026-10-25_39_m1-geometria-medida_figura_c01.png`), a 266 km/h: a M1 segue o gravado quase em cima da linha. Em 0,5 s, ela erra a velocidade em 0,08 m/s; a física sozinha, em 0,71 m/s; a persistência, em 7,2 m/s;
+- **a curva lenta, a C10** (`..._figura_c10.png`), a 76 km/h, com o volante em 0,87 (perto do batente): a física e a M1 fazem o carro escorregar para fora (`vy` sobe a 1,5 m/s em 0,5 s e a 3,5 m/s em 1,0 s) e exageram a guinada. No gravado, o carro faz a curva com `vy` perto de zero. A faixa de incerteza cobre o gravado, mas é larga. É o retrato do que falha nas curvas: com muito volante, a física prevê uma derrapagem que o carro do jogo não faz.
+
+### 6.7 Indicação para a M2: o resíduo e a temperatura dos pneus
+
+Só a correlação de Spearman entre o resíduo da M1 no primeiro passo e a temperatura média dos 4 pneus, nos 39.142 casos:
+
+| grandeza | Spearman |
+|---|---:|
+| `vx` | **−0,22** |
+| `vy` | 0,00 |
+| `r` | −0,01 |
+
+- **Na velocidade longitudinal há uma correlação clara:** com os pneus mais quentes, o carro desacelera um pouco mais do que a M1 prevê (ou acelera menos). A temperatura também muda ao longo da sessão, junto com o combustível e o desgaste, então isso não separa a causa.
+- **Na lateral e na guinada, nada.** A falha da M1 nas curvas não parece vir da temperatura.
+
+### 6.8 O que o resultado quer dizer
+
+- **Para quem não é da área:** o modelo acerta bem o que o carro faz em reta, na freada e na aceleração. Ele erra quando o carro está virando, principalmente com muito volante, porque o pneu do jogo segura o carro de um jeito que a física simples não descreve. A correção aprendida dos dados ajuda, mas não o bastante para o critério.
+- **Pela regra do ADR 0022:** a M1 não vira a base da etapa M4 nem do cálculo do tempo de volta. O simulador quase-estacionário continua como está, e o ADR 0004 continua valendo.
+- **Nenhum critério, corte ou parâmetro foi mudado depois de ver o teste.**
