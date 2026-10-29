@@ -206,6 +206,29 @@ Se o jogo fechar antes do Ctrl+C, o arquivo do último minuto já está salvo.
   - **Por isso, pule a instalação do app do jogo no passo 1.** O `instalar.ps1` rodado deste checkout trocaria o 0.4.1 pelo 0.4.0 e tiraria a correção das janelas. O 0.4.1 tem tudo do 0.4.0 e mais essa correção.
   - **Fica para você decidir, fora deste pedido:** o merge do `0092ed38` em `develop`.
 
+## Parte D — a geometria medida (29/10)
+
+- **Antes de tudo:** as outras três sessões da pasta (o pedido 38, o 40 e o 41) estavam paradas; a pasta estava em `etapa/m1-modelo-do-carro`, sem trava do git. O pedido 41 deixou três arquivos sem commit (o pedido, o inventário e o relatório dele), que não são meus e ficaram como estavam.
+- **Os commits do backlog e do `.gitignore`,** pedidos em 28/10, já estavam feitos nesta branch quando voltei (`a85d16ad` e `73565e79`, de 28/10, às 20:03 e 20:04). A linha com tabulação descrita no backlog não existia: faltava a linha `recordings/`, e o `a85d16ad` a acrescentou.
+- **A sessão usada:** `data\ml\modelo_carro\geometria_2026-10-28_13-23-49.parquet` (20.292 amostras, 339 s, 59,8 Hz). O `geometria_2026-10-28_13-20-17` (teste de conexão) não foi usado.
+- **O desvio do roteiro:** 1 volta completa, e não 3. Os portões decidiram: os de `L` e de `x_v` passaram com folga, então a volta bastou para eles.
+- **Comando:** `python -m ml.scripts.m1_modelo_carro geometria --sessao data/ml/modelo_carro/geometria_2026-10-28_13-23-49.parquet`. A saída completa está em `2026-10-25_39_m1-geometria-medida_geometria.json`.
+
+| parâmetro | medido | portão | resultado | usado no modelo |
+|---|---|---|---|---|
+| `L` | **2,964 m** (p5 a p95: 2,952 a 2,965 m) | 2,8 a 3,8 m, faixa < 3% | **passa** (0,46%) | 2,964 m, medido |
+| `b = w_f · L` | de 1,236 a 1,336 m, conforme o `w_f` da rodada (0,417 a 0,451) | — | — | por rodada |
+| `h` | `cgHeight` = **0,271 m**; `h/L` = **0,0915** | — | — | 0,0915 |
+| `k_δ` (média) | 0,312 rad, **R² = 0,744** | 0,05 a 1,5 rad, R² ≥ 0,95 | **não passa** | **0,304 rad**, pela regressão em regime permanente (o caminho do ADR 0024) |
+| `k_δ` esquerdo / direito | 0,297 (R² 0,9996) / 0,327 (R² 0,443) | — | — | — |
+| `x_v` | **1,209 m** do eixo traseiro (IC 95%: 1,201 a 1,214; pelo eixo dianteiro, 1,214) | meia-largura < 0,2 m | **passa** (0,006 m) | 1,209 m, medido |
+
+- **Por que `k_δ` não passou: uma batida, e não a falta de dados.** Aos 325 s da sessão há um impacto de 18,9 g, e o carro para. Depois dele, a direção do pneu dianteiro direito fica 0,57 rad fora do que o volante pede: a direção daquele lado entortou. Os 566 pontos ruins (3%) vêm todos depois do impacto. Como o portão falhou por outro motivo que não a falta de dados, segui o caminho registrado (a regressão de reserva) e não parei. **Se você preferir regravar a sessão sem a batida, o valor muda pouco:** antes do impacto, `k_δ` = 0,2974 rad, com R² de 0,9998, os dois lados iguais (0,2969 e 0,2980) e a convergência simétrica de ±0,003 rad. O usado, 0,304, fica 2% acima.
+- **`h/L` pelo `cgHeight` contra o das cargas:** 0,0915 contra 0,135 a 0,163 (pedido 37). As cargas incluem a transferência pela suspensão e pela aerodinâmica, que a altura do centro de massa sozinha não tem. O modelo usa 0,0915, pelo ADR 0024.
+- **`L/k_δ` contra a M0:** 9,75 (9,97 com o valor de antes da batida), contra 10,1 a 10,6 da razão volante ÷ curvatura da M0, que inclui a deriva dos pneus.
+- **A linearidade:** antes da batida, a razão local vai de 0,296 rad perto do centro a 0,299 nos batentes; é linear em toda a faixa. O volante vai de −1,0 a +1,0: **é uma fração do curso, e no batente a roda vira cerca de 0,30 rad (17°).**
+- **`x_v` fica perto do centro de massa:** de 0,03 a 0,13 m atrás dele, conforme a rodada. A correção da velocidade lateral é pequena (de 0,02 a 0,08 m/s com 0,6 rad/s de guinada). A falta da parte geométrica no ângulo de deriva, vista no pedido 37, vem do pneu, e não do ponto onde a velocidade é medida.
+
 ## O que vem depois do aviso
 
 - **Parte D:** medir `L`, `b`, `h`, `k_δ` (esquerdo, direito e médio) e `x_v`, aplicar os portões e relatar `h/L` contra o das cargas, `L/k_δ` contra a M0 e a linearidade do volante.

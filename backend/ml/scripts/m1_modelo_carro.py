@@ -182,6 +182,50 @@ def cmd_retrato(args) -> int:
     return 0
 
 
+GEOMETRIA_MEDIDA = "geometria_medida.json"
+IMPACTO_G = 5.0
+
+
+def cmd_geometria(args) -> int:
+    """Pedido 39, Parte D: a geometria medida pela regra da secao 1.9, com os portoes do ADR 0024."""
+    from ml.modelo_carro import geometria_medida as GM
+    path = Path(args.sessao)
+    meta = json.loads(path.with_suffix(".json").read_text(encoding="utf-8"))
+    if meta.get("carModel") != GM.CARRO or meta.get("track") != GM.PISTA:
+        raise SystemExit(f"a sessao e de {meta.get('carModel')} em {meta.get('track')}; a 1.9 so aceita {GM.CARRO} em {GM.PISTA}")
+    raw = pd.read_parquet(path)
+    K = GM.medir_k_delta(raw)
+    L = GM.medir_relogio(raw)
+    gates = GM.portoes(L, K)
+
+    # So para informacao (nao decide nada): o maior impacto da sessao e as contas antes dele.
+    g = np.hypot(raw["acc_x"].to_numpy(dtype=float), raw["acc_z"].to_numpy(dtype=float))
+    hit = np.flatnonzero(g >= IMPACTO_G)
+    info = {"impacto_g_max": float(g.max()), "impacto_t_wall_s": float(raw["t_wall"].iloc[hit[0]]) if hit.size else None}
+    if hit.size:
+        pre = raw.iloc[:hit[0]].reset_index(drop=True)
+        Kp, Lp = GM.medir_k_delta(pre), GM.medir_relogio(pre)
+        info["antes_do_impacto"] = {
+            "k_delta": {s: {k: Kp[s][k] for k in ("k_delta", "r2", "convergencia_rad")} for s in ("media", "esquerda", "direita")},
+            "linearidade": Kp["linearidade"], "L": Lp["L"], "x_v": Lp["x_v"],
+            "reserva_k_delta": Lp["reserva_k_delta"]["k_delta"]}
+    clean = lambda d: {k: v for k, v in d.items() if not str(k).startswith("_")}
+    payload = {
+        "pedido": 39, "parte": "D", "commit": git_commit(), "comando": "python -m ml.scripts.m1_modelo_carro geometria --sessao " + path.name,
+        "sessao": {**file_entry(path), "meta": meta},
+        "k_delta": clean(K), "relogio": L, "portoes": gates, "informativo": info,
+        "usados": {"L": gates["L"]["usado"], "k_delta": gates["k_delta"]["usado"], "x_v": gates["x_v"]["usado"],
+                   "cg_height": L["cg_height"], "h_L": gates["h_L"]["valor"]},
+    }
+    out = D.raiz_dados() / GEOMETRIA_MEDIDA
+    _json(out, payload)
+    if args.saida:
+        _json(Path(args.saida), payload)
+    print(json.dumps({"portoes": gates, "usados": payload["usados"], "informativo": {k: v for k, v in info.items() if k != "antes_do_impacto"}},
+                     indent=1, ensure_ascii=False, default=float))
+    return 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -189,8 +233,12 @@ def main(argv=None) -> int:
     sub.add_parser("convencoes")
     retrato = sub.add_parser("retrato")
     retrato.add_argument("--saida")
+    geometria = sub.add_parser("geometria")
+    geometria.add_argument("--sessao", required=True)
+    geometria.add_argument("--saida")
     args = parser.parse_args(argv)
-    return {"dados": cmd_dados, "convencoes": cmd_convencoes, "retrato": cmd_retrato}[args.cmd](args)
+    return {"dados": cmd_dados, "convencoes": cmd_convencoes, "retrato": cmd_retrato,
+            "geometria": cmd_geometria}[args.cmd](args)
 
 
 if __name__ == "__main__":

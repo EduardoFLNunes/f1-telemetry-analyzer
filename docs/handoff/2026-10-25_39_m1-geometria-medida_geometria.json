@@ -1,0 +1,290 @@
+{
+ "pedido": 39,
+ "parte": "D",
+ "commit": "73565e790e5aebd9e8fc249db6cb28b3cc3a07d0",
+ "comando": "python -m ml.scripts.m1_modelo_carro geometria --sessao geometria_2026-10-28_13-23-49.parquet",
+ "sessao": {
+  "arquivo": "..\\data\\ml\\modelo_carro\\geometria_2026-10-28_13-23-49.parquet",
+  "bytes": 6743783,
+  "sha256": "cec892b273f8ca26d6d1e2142938c35f47f88ba99ecb23882780d69f2b4d49da",
+  "meta": {
+   "carModel": "rss_formula_rss_3_v6_2026",
+   "track": "vhe_interlagos",
+   "acVersion": "1.16.4",
+   "smVersion": "1.7",
+   "inicio": "2026-10-28T13:23:49",
+   "hz_pedido": 60.0,
+   "ferramenta": "ml.scripts.medir_geometria",
+   "amostras": 20292,
+   "segundos": 339.08,
+   "hz_medio": 59.84
+  }
+ },
+ "k_delta": {
+  "sentido_invertido": true,
+  "amostras": 19045,
+  "steer_faixa": [
+   -1.0,
+   1.0
+  ],
+  "media": {
+   "inclinacao": -0.3117222881543686,
+   "intercepto": 0.007748146344238745,
+   "r2": 0.7440673272829639,
+   "n": 19045,
+   "k_delta": 0.3117222881543686,
+   "convergencia_rad": 0.007748146344238745
+  },
+  "esquerda": {
+   "inclinacao": -0.2968285286527712,
+   "intercepto": 0.002984225898315358,
+   "r2": 0.9995782696495465,
+   "n": 19045,
+   "k_delta": 0.2968285286527712,
+   "convergencia_rad": 0.002984225898315358
+  },
+  "direita": {
+   "inclinacao": -0.326657072660174,
+   "intercepto": 0.012526402372957874,
+   "r2": 0.44292025264215895,
+   "n": 19045,
+   "k_delta": 0.326657072660174,
+   "convergencia_rad": 0.012526402372957874
+  },
+  "linearidade": [
+   {
+    "steer_de": 0.02,
+    "steer_ate": 0.1,
+    "n": 5996,
+    "k_delta_local": 0.185362982854506
+   },
+   {
+    "steer_de": 0.1,
+    "steer_ate": 0.2,
+    "n": 3053,
+    "k_delta_local": 0.24850229331576584
+   },
+   {
+    "steer_de": 0.2,
+    "steer_ate": 0.3,
+    "n": 1341,
+    "k_delta_local": 0.3213400255693646
+   },
+   {
+    "steer_de": 0.3,
+    "steer_ate": 0.4,
+    "n": 821,
+    "k_delta_local": 0.2802262026497201
+   },
+   {
+    "steer_de": 0.4,
+    "steer_ate": 0.5,
+    "n": 472,
+    "k_delta_local": 0.3123561518781621
+   },
+   {
+    "steer_de": 0.5,
+    "steer_ate": 0.6,
+    "n": 272,
+    "k_delta_local": 0.28369343442906103
+   },
+   {
+    "steer_de": 0.6,
+    "steer_ate": 0.7,
+    "n": 173,
+    "k_delta_local": 0.30790443717985067
+   },
+   {
+    "steer_de": 0.7,
+    "steer_ate": 0.8,
+    "n": 141,
+    "k_delta_local": 0.306852012589172
+   },
+   {
+    "steer_de": 0.8,
+    "steer_ate": 0.9,
+    "n": 123,
+    "k_delta_local": 0.29003977646215284
+   },
+   {
+    "steer_de": 0.9,
+    "steer_ate": 1.0,
+    "n": 144,
+    "k_delta_local": 0.2915474111537971
+   },
+   {
+    "steer_de": 1.0,
+    "steer_ate": 1.5,
+    "n": 363,
+    "k_delta_local": 0.30688386993068106
+   }
+  ]
+ },
+ "relogio": {
+  "L": 2.9636409495155203,
+  "L_p5": 2.95180553157296,
+  "L_p95": 2.9654884185762143,
+  "L_amostras": 1114,
+  "L_largura_relativa": 0.004616917918309556,
+  "cg_height": 0.271194111217152,
+  "cg_height_p5_p95": [
+   0.26301883061726883,
+   0.27576077779134145
+  ],
+  "x_v": 1.2090462535398445,
+  "x_v_ic95": [
+   1.2014021276726101,
+   1.2142247782996107
+  ],
+  "x_v_meia_largura": 0.0064113253135003045,
+  "x_v_pelo_eixo_dianteiro": 1.2140347221801375,
+  "x_v_amostras": 3475,
+  "x_v_trechos": 7,
+  "bitola_dianteira": 1.588265798273207,
+  "bitola_traseira": 1.5093837581773797,
+  "passos": 6360,
+  "trechos": 11,
+  "sinal_acc_x": 1,
+  "reserva_k_delta": {
+   "L_sobre_k": 9.749957667906603,
+   "K": 0.0016516639360058755,
+   "amostras": 1358,
+   "k_delta": 0.3039644940480894
+  }
+ },
+ "portoes": {
+  "L": {
+   "valor": 2.9636409495155203,
+   "faixa": [
+    2.8,
+    3.8
+   ],
+   "largura_relativa": 0.004616917918309556,
+   "passa": true,
+   "usado": 2.9636409495155203,
+   "fonte": "medido"
+  },
+  "k_delta": {
+   "valor": 0.3117222881543686,
+   "faixa": [
+    0.05,
+    1.5
+   ],
+   "r2": 0.7440673272829639,
+   "passa": false,
+   "usado": 0.3039644940480894,
+   "fonte": "regressao em regime permanente"
+  },
+  "x_v": {
+   "valor": 1.2090462535398445,
+   "meia_largura": 0.0064113253135003045,
+   "passa": true,
+   "usado": 1.2090462535398445,
+   "fonte": "medido"
+  },
+  "h_L": {
+   "valor": 0.09150707384492217
+  }
+ },
+ "informativo": {
+  "impacto_g_max": 18.862214762817054,
+  "impacto_t_wall_s": 325.2547834,
+  "antes_do_impacto": {
+   "k_delta": {
+    "media": {
+     "k_delta": 0.2974492319973447,
+     "r2": 0.9998494854569867,
+     "convergencia_rad": -7.417823386540251e-06
+    },
+    "esquerda": {
+     "k_delta": 0.2968589116506831,
+     "r2": 0.9995815347659407,
+     "convergencia_rad": 0.0030014146539078476
+    },
+    "direita": {
+     "k_delta": 0.29803939155313847,
+     "r2": 0.9995322997579296,
+     "convergencia_rad": -0.003016364291093956
+    }
+   },
+   "linearidade": [
+    {
+     "steer_de": 0.02,
+     "steer_ate": 0.1,
+     "n": 5620,
+     "k_delta_local": 0.2957803784951187
+    },
+    {
+     "steer_de": 0.1,
+     "steer_ate": 0.2,
+     "n": 2978,
+     "k_delta_local": 0.2956729998424118
+    },
+    {
+     "steer_de": 0.2,
+     "steer_ate": 0.3,
+     "n": 1217,
+     "k_delta_local": 0.2955013728109149
+    },
+    {
+     "steer_de": 0.3,
+     "steer_ate": 0.4,
+     "n": 821,
+     "k_delta_local": 0.2961012885137719
+    },
+    {
+     "steer_de": 0.4,
+     "steer_ate": 0.5,
+     "n": 472,
+     "k_delta_local": 0.29588490917280347
+    },
+    {
+     "steer_de": 0.5,
+     "steer_ate": 0.6,
+     "n": 272,
+     "k_delta_local": 0.29656085344315086
+    },
+    {
+     "steer_de": 0.6,
+     "steer_ate": 0.7,
+     "n": 173,
+     "k_delta_local": 0.29666035172613064
+    },
+    {
+     "steer_de": 0.7,
+     "steer_ate": 0.8,
+     "n": 141,
+     "k_delta_local": 0.2968383908621161
+    },
+    {
+     "steer_de": 0.8,
+     "steer_ate": 0.9,
+     "n": 123,
+     "k_delta_local": 0.2977159860465817
+    },
+    {
+     "steer_de": 0.9,
+     "steer_ate": 1.0,
+     "n": 144,
+     "k_delta_local": 0.2987569196590693
+    },
+    {
+     "steer_de": 1.0,
+     "steer_ate": 1.5,
+     "n": 363,
+     "k_delta_local": 0.29914290175253905
+    }
+   ],
+   "L": 2.963627169378569,
+   "x_v": 1.2113647664182938,
+   "reserva_k_delta": 0.3011112105144226
+  }
+ },
+ "usados": {
+  "L": 2.9636409495155203,
+  "k_delta": 0.3039644940480894,
+  "x_v": 1.2090462535398445,
+  "cg_height": 0.271194111217152,
+  "h_L": 0.09150707384492217
+ }
+}

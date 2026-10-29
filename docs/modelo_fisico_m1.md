@@ -265,3 +265,30 @@ Comando: `python -m ml.scripts.m1_modelo_carro convencoes`. Todas batem, com a m
   - **a mesma regressão com a deriva dividida pela carga do eixo** (que cresce com `v²`): `b` de 0,16 a 0,56 m e `L` de 0,37 a 1,31 m, com intervalos que passam de zero. Também não identifica;
   - **`L` e `k_δ` ajustados junto com a física** (com `b = w_f·L`, nos limites registrados): `L` vai para o limite de 3,8 m, `k_δ` sai 0,30 rad (17°, perto dos 15° que a M0 sugeriu), e a física passa a bater a persistência em um passo (0,078 contra 0,089). Em 0,5 s, nas próprias sessões de treino, o skill contra R0 é 0,09 (a velocidade lateral é a grandeza em que a física perde para a persistência); em 1,0 s, −0,39.
 - **O que isso muda:** a seção 1.4 precisa de outra regra para `b`, `L` e `k_δ`, e isso é uma mudança do registrado. **O trabalho parou aqui, antes de qualquer previsão na sessão de teste,** para o Eduardo decidir (relatório do pedido 37). Nenhum número de teste foi calculado.
+
+## 5. A geometria medida pela telemetria do jogo (pedido 39, Parte D; ADR 0024)
+
+Comando: `python -m ml.scripts.m1_modelo_carro geometria --sessao data/ml/modelo_carro/geometria_2026-10-28_13-23-49.parquet`. A regra é a da seção 1.9.
+
+**A sessão de medição** (28/10, 13:23, gravada pela ferramenta `ml.scripts.medir_geometria`):
+- `rss_formula_rss_3_v6_2026` em `vhe_interlagos`, AC 1.16.4: 20.292 amostras em 339 s (59,8 Hz);
+- o volante de batente a batente duas vezes, parado no box; depois a volta de saída, **1 volta completa** e parte da seguinte;
+- **um desvio do roteiro:** foi 1 volta, e não as 3 dos passos. Pela decisão do Eduardo, os portões decidem se isso basta. Os de `L` e de `x_v` passaram com folga;
+- **uma batida no fim:** aos 325 s há um impacto de 18,9 g, e o carro para. Depois dela, a direção do pneu dianteiro direito fica 0,57 rad (33°) fora do que o volante pede, enquanto a do esquerdo continua certa: a direção daquele lado entortou com o dano.
+
+**Os parâmetros e os portões:**
+
+| parâmetro | medido | portão | resultado | usado no modelo |
+|---|---|---|---|---|
+| `L` (entre-eixos) | **2,964 m** (percentis 5 e 95: 2,952 e 2,965 m; 1.114 amostras em reta) | 2,8 a 3,8 m, faixa < 3% | **passa** (faixa de 0,46%) | 2,964 m, medido |
+| `k_δ` (roda por unidade de volante) | 0,312 rad na regressão da média, com **R² = 0,744** | 0,05 a 1,5 rad, R² ≥ 0,95 | **não passa** | **0,304 rad**, pela regressão em regime permanente (`−steer = 9,75·κ + 0,0017·a_y`, 1.358 amostras) |
+| `x_v` (onde a velocidade é medida, a partir do eixo traseiro) | **1,209 m** (IC 95%: 1,201 a 1,214 m); pelo eixo dianteiro, 1,214 m | meia-largura < 0,2 m | **passa** (0,006 m) | 1,209 m, medido |
+| `h` (`cgHeight`) | **0,271 m** (percentis 5 e 95: 0,263 e 0,276 m) | — | — | `h/L = 0,0915` |
+
+- **Por que `k_δ` não passou:** pela batida no fim. Na sessão inteira, o pneu esquerdo dá R² de 0,9996 e o direito, 0,443. Os 566 pontos ruins do direito (3% da sessão) vêm todos depois do impacto. **O caminho é o do ADR 0024, e o modelo usa 0,304 rad.** Nenhuma regra foi mudada depois de ver o número.
+- **Só para informação, sem decidir nada: antes da batida** (as amostras até 325 s), `k_δ` = 0,2974 rad, com R² de 0,9998; o esquerdo dá 0,2969 e o direito 0,2980, com a convergência estática de ±0,003 rad (simétrica). A regressão de reserva dá 0,301. O valor usado (0,304) fica 2% acima.
+- **A curva do ângulo da roda contra o volante é linear em toda a faixa** (antes da batida): a razão local vai de 0,296 rad perto do centro a 0,299 rad nos batentes, menos de 1% de diferença. **O volante gravado é uma fração do curso:** ele vai de −1,0 a +1,0, de batente a batente, e no batente a roda vira cerca de 0,30 rad (17°). Isso fecha a pendência da seção 3 da M0.
+- **`L/k_δ` = 2,964 / 0,304 = 9,75** (9,97 com o valor de antes da batida), contra a razão volante ÷ curvatura da M0 em baixa velocidade, de 10,1 a 10,6 nas voltas do Eduardo. A razão da M0 inclui a deriva dos pneus, que a deixa maior.
+- **`x_v` fica perto do centro de massa:** com o `w_f` das cargas de cada rodada (0,417 a 0,451), `b = w_f · L` vai de 1,24 a 1,34 m. A velocidade gravada é medida de 0,03 a 0,13 m atrás do centro de massa, e a correção `vy_cm = vy_gravada + (b − x_v)·r` é pequena (em 0,6 rad/s de guinada, de 0,02 a 0,08 m/s). **A hipótese do ADR 0024, de que a velocidade gravada estaria longe do centro de massa, não se confirma.** A falta da parte geométrica no ângulo de deriva (seção 4) vem do pneu, não do ponto de medida.
+- **`h/L` pelo `cgHeight` (0,0915) fica abaixo do das cargas** (0,135 a 0,163, pedido 37). A estimativa pelas cargas inclui a transferência pela suspensão e pela aerodinâmica na freada, que a altura do centro de massa sozinha não tem. Pelo ADR 0024, o modelo usa o `cgHeight`.
+- **As bitolas,** entre os pontos de contato em reta: 1,588 m na frente e 1,509 m atrás. O retrato de maio deu 2,955 m de entre-eixos (0,3% abaixo do medido aqui) e a reportagem, 2,943 m.
