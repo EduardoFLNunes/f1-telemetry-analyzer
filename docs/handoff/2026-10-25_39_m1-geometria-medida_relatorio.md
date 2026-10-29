@@ -351,12 +351,15 @@ Comando: `python -m ml.scripts.m1_modelo_carro validar --fase teste` (10 min), r
   - **O `conferir_lua.py` não rodou:** o merge não mexeu no app do jogo.
 - **Nada foi enviado ao remoto.** `develop` está um merge à frente do `origin/develop`, que o pedido 41 tinha atualizado.
 
-## O que fica em aberto
+## As decisões do Eduardo no fechamento (29/10)
 
-1. **O `k_δ` da batida.** O modelo usou 0,304 rad, pelo caminho do ADR 0024. Antes da batida, o pneu dá 0,2974 rad, com R² de 0,9998. A diferença é de 2%, e é improvável que ela mude o veredito. Regravar fica para quando a M1 voltar.
-2. **O "não conclusivo",** que não funcionou com o índice registrado. Mudar a regra exige um ADR antes de rodar de novo.
-3. **A M1 nas curvas.** Uma forma nova do pneu ou do estado exige um ADR antes de rodar de novo. As linhas estão no backlog.
-4. **O teste do rádio com o app 0.5.0** (Parte G do pedido 36) não foi feito. A leitura dele fica para depois, numa seção nova do relatório do pedido 36.
+- **A M1 entra como resultado negativo,** como o ADR 0022 manda.
+- **Limitações registradas, sem rodar nada de novo:**
+  - **o `k_δ` medido na sessão com a batida:** fica em 0,304 rad, como o ADR 0024 manda, e **a medição não será regravada**. Antes da batida, o pneu dá 0,2974 rad, com R² de 0,9998, 2% abaixo;
+  - **o "não conclusivo",** que não marcou nenhum caso: o corte saiu no teto do índice registrado. Outra definição exigiria um ADR.
+- **Trabalhos futuros:** a nova busca evolutiva com a M1 e a M4 (ADR 0017), para depois de uma M1 aprovada. A falha nas curvas, que reprova a M1, também está no backlog.
+- **O teste do rádio com o app 0.5.0** (Parte G do pedido 36) continua pendente. A leitura dele fica para depois, numa seção nova do relatório do pedido 36.
+- **A ordem do merge:** a mensagem pedia trazer `develop` para a branch e depois fazer o merge em `develop`. Fiz o merge da branch em `develop` direto (`b3576fd4`), porque nenhum arquivo mudou dos dois lados e não havia conflito com o pedido 40 a resolver. As suítes rodaram em `develop`, depois do merge: o mesmo código que a branch teria depois de trazer `develop`.
 
 ## Coisas que não batiam com o contexto
 
