@@ -17,6 +17,20 @@ Para uma curva citada pelo radio (uma analise das voltas ou uma frase do coach c
 Sempre "voce" e "IA (referencia)", a diferenca medida contra uma volta real (ADR 0012).
 So le as grades que o radio ja tem (a volta ao vivo e a referencia do store); nada de
 fisica nova.
+
+Pedido 43:
+
+* **os numeros da voz no replay da frase do coach** (`voz`): os rotulos mostram os numeros
+  que o coach disse (a freada, as minimas e o tempo, arredondados como no cartao), e as
+  marcas ficam onde o coach mediu: as freadas nos inicios de frenagem que o coach guardou
+  (`yourBrakeOnsetM`, `referenceBrakeOnsetM`) e as minimas no ponto mais lento de cada grade
+  dentro do microssetor da fala (a mesma regra do coach: a menor velocidade do microssetor).
+  O coach nao mede o tracado: o replay da frase nao tem tracado. A janela cresce, se preciso,
+  para conter o microssetor da fala (o "trecho da fala") e as freadas do coach;
+* **os dados dos visuais** (C.1 a C.3), na mesma rota: a velocidade das duas voltas em cada
+  ponto, o passo da grade (a distancia desde a entrada e `indice x passoM`), a distancia de
+  cada marca desde a entrada (`dM`) e as separacoes da diferenca acumulada (`secoes`). O
+  tempo e o pedal ja vinham nas linhas.
 """
 from __future__ import annotations
 
@@ -28,6 +42,7 @@ ANTES_DA_FREADA_M = 50.0     # a entrada: um pouco antes da primeira freada (ou 
 DEPOIS_DA_CURVA_M = 60.0     # a saida: um pouco depois do fim da curva
 LIMIAR_DO_FREIO = 0.15       # o pedal, como a tela Volta (Fantasma.tsx)
 ACELERADOR_CHEIO = 0.9
+MICROSSETORES = 60           # os do coach (`texto.MICROSSETORES`)
 
 
 def _pedal(freio: np.ndarray, acelerador: np.ndarray) -> np.ndarray:
@@ -84,24 +99,91 @@ def janela_da_curva(pista: Any, codigo: str, volta: Dict[str, np.ndarray], ref: 
     return None
 
 
+def _estender(track: Any, indices: np.ndarray, pontos: Sequence[Optional[float]]) -> np.ndarray:
+    """Pedido 43: a janela crescida para conter `pontos` (s, em metros), para tras ou para a frente."""
+    from ml.comparison.lap_vs_reference import _signed_distance, _window
+
+    inicio, fim = float(track.s[indices[0]]), float(track.s[indices[-1]])
+    for s in pontos:
+        if s is None:
+            continue
+        if _signed_distance(track, inicio, s) > 0:
+            inicio = float(s)
+        if _signed_distance(track, s, fim) > 0:
+            fim = float(s)
+    return _window(track, inicio, fim)
+
+
+def _microssetor(track: Any, indice: int) -> np.ndarray:
+    """Os pontos da grade dentro do microssetor `indice` do coach ([inicio, fim), em metros)."""
+    L = float(track.length)
+    inicio = int(indice) * L / MICROSSETORES
+    dentro = np.mod(np.asarray(track.s, dtype=float) - inicio, L) < L / MICROSSETORES
+    return np.flatnonzero(dentro)
+
+
+def _numero(valor: Any) -> Optional[float]:
+    try:
+        n = float(valor)
+    except (TypeError, ValueError):
+        return None
+    return n if np.isfinite(n) else None
+
+
+def janela_da_frase(pista: Any, codigo: str, volta: Dict[str, np.ndarray], ref: Dict[str, np.ndarray],
+                    voz: Optional[Dict[str, Any]] = None):
+    """A janela do replay (`janela_da_curva`); com a `voz` da frase do coach (pedido 43), as freadas
+    sao as do coach e a janela cresce para conter o microssetor da fala e essas freadas."""
+    janela = janela_da_curva(pista, codigo, volta, ref)
+    indice = _numero((voz or {}).get("microsector"))
+    if janela is None or voz is None or indice is None:
+        return janela
+    seg, k, indices, _, _ = janela
+    track = pista.track
+    L = float(track.length)
+    # a freada e a distancia sao as do coach (os inicios de frenagem que ele guardou)
+    freada_v, freada_r = _numero(voz.get("yourBrakeOnsetM")), _numero(voz.get("referenceBrakeOnsetM"))
+    if freada_v is None or freada_r is None or _numero(voz.get("brakeDeltaM")) is None:
+        freada_v = freada_r = None
+    inicio, fim = int(indice) * L / MICROSSETORES, (int(indice) + 1) * L / MICROSSETORES
+    return seg, k, _estender(track, indices, [inicio, fim, freada_v, freada_r]), freada_v, freada_r
+
+
 def dados_da_curva(pista: Any, codigo: str, volta: Dict[str, np.ndarray], volta_total: float,
                    ref: Dict[str, np.ndarray], ref_total: float, numero_da_volta: Optional[int],
-                   tipo: Optional[str]) -> Optional[Dict[str, Any]]:
+                   tipo: Optional[str], voz: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
     """O replay de uma curva: as duas linhas com o tempo e o pedal, as freadas, as minimas,
-    o tracado e a perda. `volta` e `ref` sao grades completas (`analise.grade`)."""
+    o tracado e a perda. `volta` e `ref` sao grades completas (`analise.grade`).
+
+    `voz` (pedido 43, so na frase do coach): o `evidence` da frase (`microsector`,
+    `lossSeconds`, `yourBrakeOnsetM`, `referenceBrakeOnsetM`, `brakeDeltaM`, `yourMinSpeedKmh`,
+    `referenceMinSpeedKmh`). Os rotulos passam a ter os numeros da voz, e as marcas, os pontos
+    onde o coach mediu."""
     from ml.comparison.evolution import segment_time
     from ml.comparison.lap_vs_reference import _signed_distance, _window
 
-    janela = janela_da_curva(pista, codigo, volta, ref)
+    janela = janela_da_frase(pista, codigo, volta, ref, voz)
     if janela is None:
         return None
     seg, _, indices, freada_v, freada_r = janela
     track = pista.track
     corner = seg.corner
+    L = float(track.length)
+    ev = voz or {}
+    indice_da_fala = _numero(ev.get("microsector"))
+    if voz is not None and indice_da_fala is not None:
+        inicio_fala = int(indice_da_fala) * L / MICROSSETORES
+        fim_fala = (int(indice_da_fala) + 1) * L / MICROSSETORES
     pos_v, pos_r = _posicoes(track, volta["lateral"], indices), _posicoes(track, ref["lateral"], indices)
     t_v, t_r = _tempos(volta["elapsed"], indices, volta_total), _tempos(ref["elapsed"], indices, ref_total)
     ped_v = _pedal(volta["freio"][indices], volta["acelerador"][indices])
     ped_r = _pedal(ref["freio"][indices], ref["acelerador"][indices])
+    entrada = float(track.s[indices[0]])
+    ultimo_d = float((indices.size - 1) * track.step)
+
+    def distancia(s: float) -> float:
+        """A distancia desde a entrada do replay, em metros, dentro da janela."""
+        return round(min(max(float(np.mod(s - entrada, L)), 0.0), ultimo_d), 1)
 
     def linha(pos, t, ped):
         return [[round(float(a), 2), round(float(b), 2), round(float(c), 3), int(d)] for (a, b), c, d in zip(pos, t, ped)]
@@ -111,16 +193,61 @@ def dados_da_curva(pista: Any, codigo: str, volta: Dict[str, np.ndarray], volta_
             return None
         i = np.array([int(track.index_of(s))])
         p = _posicoes(track, lateral, i)[0]
-        return {"x": round(float(p[0]), 2), "z": round(float(p[1]), 2), "s": round(float(s), 1)}
+        return {"x": round(float(p[0]), 2), "z": round(float(p[1]), 2), "s": round(float(s), 1), "dM": distancia(s)}
+
+    def minima(i: int, grade: Dict[str, np.ndarray], kmh: float) -> Dict[str, Any]:
+        p = _posicoes(track, grade["lateral"], np.array([i]))[0]
+        return {"x": round(float(p[0]), 2), "z": round(float(p[1]), 2), "kmh": kmh,
+                "dM": distancia(float(track.s[i]))}
 
     dentro = _window(track, corner.start_s, corner.end_s)
     i_v = int(dentro[int(np.nanargmin(volta["velocidade"][dentro]))])
     i_r = int(dentro[int(np.nanargmin(ref["velocidade"][dentro]))])
-    mv, mr = _posicoes(track, volta["lateral"], np.array([i_v])), _posicoes(track, ref["lateral"], np.array([i_r]))
+    minimas: Optional[Dict[str, Any]] = {"voce": minima(i_v, volta, round(float(volta["velocidade"][i_v]), 1)),
+                                         "referencia": minima(i_r, ref, round(float(ref["velocidade"][i_r]), 1))}
     # o tracado: no ponto da minima da referencia, a sua posicao e a dela
     tv = _posicoes(track, volta["lateral"], np.array([i_r]))[0]
+    mr = _posicoes(track, ref["lateral"], np.array([i_r]))[0]
     dif_lateral = float(np.nan_to_num(volta["lateral"][i_r]) - np.nan_to_num(ref["lateral"][i_r]))
+    tracado: Optional[Dict[str, Any]] = {
+        "voce": [round(float(tv[0]), 2), round(float(tv[1]), 2)],
+        "referencia": [round(float(mr[0]), 2), round(float(mr[1]), 2)],
+        "distanciaM": round(abs(dif_lateral), 2),
+        "lado": "esquerda" if dif_lateral > 0 else "direita",
+    }
+    # positivo = voce freou depois da referencia; negativo = antes
+    distancia_das_freadas = (round(float(_signed_distance(track, freada_v, freada_r)), 1)
+                             if freada_v is not None and freada_r is not None else None)
+    da_fala = None
+    if voz is not None and indice_da_fala is not None:
+        # Os numeros da voz, arredondados como no cartao (`texto.mensagem_de_diferenca`): o
+        # cliente so escreve, sem arredondar de novo (o `Math.round` do JS arredonda 16,5 para 17).
+        delta = _numero(ev.get("brakeDeltaM"))
+        distancia_das_freadas = float(-round(delta)) if delta is not None and freada_v is not None else None
+        no_trecho = _microssetor(track, int(indice_da_fala))
+        sua, dela = _numero(ev.get("yourMinSpeedKmh")), _numero(ev.get("referenceMinSpeedKmh"))
+        if sua is not None and dela is not None and no_trecho.size:
+            j_v = int(no_trecho[int(np.nanargmin(volta["velocidade"][no_trecho]))])
+            j_r = int(no_trecho[int(np.nanargmin(ref["velocidade"][no_trecho]))])
+            minimas = {"voce": minima(j_v, volta, float(round(sua))), "referencia": minima(j_r, ref, float(round(dela)))}
+        else:
+            minimas = None
+        tracado = None   # o coach nao mede o lado
+        perda_da_fala = _numero(ev.get("lossSeconds"))
+        da_fala = {
+            "microssetor": int(indice_da_fala) + 1,
+            "inicioM": distancia(inicio_fala),
+            "fimM": distancia(fim_fala),
+            "perdaS": round(perda_da_fala, 2) if perda_da_fala is not None else None,
+        }
     perda = segment_time(volta["elapsed"], volta_total, track, seg) - segment_time(ref["elapsed"], ref_total, track, seg)
+    freadas = {"voce": ponto(freada_v, volta["lateral"]), "referencia": ponto(freada_r, ref["lateral"]),
+               "distanciaM": distancia_das_freadas}
+    # As separacoes da diferenca acumulada (C.2): a primeira freada, a minima da referencia e o fim da curva.
+    ds_freada = [f["dM"] for f in (freadas["voce"], freadas["referencia"]) if f]
+    secoes = {"freadaM": min(ds_freada) if ds_freada else None,
+              "minimaM": minimas["referencia"]["dM"] if minimas else None,
+              "saidaM": distancia(corner.end_s)}
     return {
         "curva": codigo,
         "lado": "esquerda" if corner.label.endswith("esq") else "direita",
@@ -130,25 +257,15 @@ def dados_da_curva(pista: Any, codigo: str, volta: Dict[str, np.ndarray], volta_
         "perdaS": round(float(perda), 3),
         "linhas": {"voce": linha(pos_v, t_v, ped_v), "referencia": linha(pos_r, t_r, ped_r)},
         "duracaoS": round(float(max(t_v[-1], t_r[-1])), 3),
-        "freadas": {
-            "voce": ponto(freada_v, volta["lateral"]),
-            "referencia": ponto(freada_r, ref["lateral"]),
-            # positivo = voce freou depois da referencia; negativo = antes
-            "distanciaM": round(float(_signed_distance(track, freada_v, freada_r)), 1)
-            if freada_v is not None and freada_r is not None else None,
-        },
-        "minimas": {
-            "voce": {"x": round(float(mv[0, 0]), 2), "z": round(float(mv[0, 1]), 2),
-                     "kmh": round(float(volta["velocidade"][i_v]), 1)},
-            "referencia": {"x": round(float(mr[0, 0]), 2), "z": round(float(mr[0, 1]), 2),
-                           "kmh": round(float(ref["velocidade"][i_r]), 1)},
-        },
-        "tracado": {
-            "voce": [round(float(tv[0]), 2), round(float(tv[1]), 2)],
-            "referencia": [round(float(mr[0, 0]), 2), round(float(mr[0, 1]), 2)],
-            "distanciaM": round(abs(dif_lateral), 2),
-            "lado": "esquerda" if dif_lateral > 0 else "direita",
-        },
+        "freadas": freadas,
+        "minimas": minimas,
+        "tracado": tracado,
+        # Pedido 43: os visuais (a distancia de cada ponto e `indice x passoM`) e o trecho da fala.
+        "passoM": round(float(track.step), 4),
+        "velocidades": {"voce": [round(float(v), 1) for v in np.nan_to_num(volta["velocidade"][indices])],
+                        "referencia": [round(float(v), 1) for v in np.nan_to_num(ref["velocidade"][indices])]},
+        "secoes": secoes,
+        "voz": da_fala,
     }
 
 

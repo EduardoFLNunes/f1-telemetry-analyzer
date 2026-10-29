@@ -831,3 +831,135 @@ def test_a_rota_do_replay(tmp_path, monkeypatch):
         with pytest.raises(HTTPException) as erro:
             asyncio.run(rota.get_replay(sem))
         assert erro.value.status_code == 404
+
+
+# ------------------------------------------------------------ pedido 43 ---
+
+def _voz_de_teste(s, comprimento):
+    """O evidence de uma frase do coach no microssetor que contem a sua minima na C03 de teste (s[425])."""
+    indice = int(float(s[425]) / (comprimento / 60))
+    return indice, {"microsector": indice, "lossSeconds": 0.635, "yourBrakeOnsetM": float(s[380]),
+                    "referenceBrakeOnsetM": float(s[395]), "brakeDeltaM": 30.5,
+                    "yourMinSpeedKmh": 100.7, "referenceMinSpeedKmh": 144.5}
+
+
+def test_o_replay_da_frase_do_coach_escreve_os_numeros_da_voz_nos_pontos_do_coach():
+    """Pedido 43, Parte B: os rotulos com os numeros da voz (arredondados como o cartao), as freadas
+    onde o coach mediu, as minimas no microssetor da fala, sem tracado, e o trecho da fala."""
+    from core.radio.replay import dados_da_curva
+
+    track, pista, s = _pista_de_teste_com_uma_curva()
+    voce = _grade_de_teste(s, 45.0, 1.5, freia_em=370, minima_em=425, minima_kmh=95.0)
+    ia = _grade_de_teste(s, 50.0, 0.0, freia_em=400, minima_em=430, minima_kmh=110.0)
+    indice, voz = _voz_de_teste(s, float(track.length))
+    args = (pista, "C03", voce, float(s[-1] / 45.0), ia, float(s[-1] / 50.0), 7, "volta_ia")
+    sem, d = dados_da_curva(*args), dados_da_curva(*args, voz=voz)
+    # sem a voz, o replay e o da curva inteira (a freada pela regra do relatorio de evolucao)
+    assert sem["voz"] is None and sem["tracado"] is not None
+    assert sem["freadas"]["distanciaM"] == pytest.approx(float(s[370] - s[400]), abs=0.1)
+    # com a voz: 30,5 m vira 30 (o `round` do cartao); o cliente escreve sem arredondar de novo
+    assert d["freadas"]["distanciaM"] == -30.0
+    assert d["freadas"]["voce"]["s"] == pytest.approx(float(s[380]), abs=0.05)
+    assert d["freadas"]["referencia"]["s"] == pytest.approx(float(s[395]), abs=0.05)
+    assert d["minimas"]["voce"]["kmh"] == 101.0 and d["minimas"]["referencia"]["kmh"] == 144.0   # round(144,5) = 144
+    assert d["tracado"] is None                                      # o coach nao mede o lado
+    assert d["voz"]["microssetor"] == indice + 1 and d["voz"]["perdaS"] == 0.64
+    assert d["voz"]["fimM"] - d["voz"]["inicioM"] == pytest.approx(float(track.length) / 60, abs=0.2)
+    # as minimas no ponto mais lento de cada grade dentro do microssetor: a sua em s[425]
+    for lado in ("voce", "referencia"):
+        assert d["voz"]["inicioM"] - 0.1 <= d["minimas"][lado]["dM"] <= d["voz"]["fimM"] + 0.1
+    assert d["minimas"]["voce"]["dM"] == pytest.approx(d["freadas"]["voce"]["dM"] + float(s[425] - s[380]), abs=0.2)
+    # as linhas e os carros continuam os da curva inteira
+    assert d["linhas"] == sem["linhas"] and d["perdaS"] == sem["perdaS"]
+
+
+def test_o_replay_da_frase_cresce_para_conter_o_trecho_da_fala():
+    """Pedido 43, B.3: o microssetor da fala que comeca antes da janela da curva entra no replay."""
+    from core.radio.replay import dados_da_curva
+
+    track, pista, s = _pista_de_teste_com_uma_curva()
+    voce = _grade_de_teste(s, 45.0, 1.5, freia_em=380, minima_em=425, minima_kmh=95.0)
+    ia = _grade_de_teste(s, 50.0, 0.0, freia_em=395, minima_em=430, minima_kmh=110.0)
+    args = (pista, "C03", voce, float(s[-1] / 45.0), ia, float(s[-1] / 50.0), 7, "volta_ia")
+    sem = dados_da_curva(*args)
+    indice = int(float(s[340]) / (float(track.length) / 60))      # a janela comeca em s[355]
+    d = dados_da_curva(*args, voz={"microsector": indice, "lossSeconds": 0.2, "yourMinSpeedKmh": 150.0,
+                                   "referenceMinSpeedKmh": 160.0})
+    assert len(d["linhas"]["voce"]) > len(sem["linhas"]["voce"])
+    assert d["voz"]["inicioM"] == pytest.approx(0.0, abs=track.step)
+    assert d["freadas"] == {"voce": None, "referencia": None, "distanciaM": None}   # a voz nao falou da freada
+
+
+def test_os_dados_dos_visuais_vem_na_rota_do_replay():
+    """Pedido 43, Parte C: a velocidade em cada ponto, o passo da grade, as marcas e as separacoes."""
+    from core.radio.replay import dados_da_curva
+
+    track, pista, s = _pista_de_teste_com_uma_curva()
+    voce = _grade_de_teste(s, 45.0, 1.5, freia_em=380, minima_em=425, minima_kmh=95.0)
+    ia = _grade_de_teste(s, 50.0, 0.0, freia_em=395, minima_em=430, minima_kmh=110.0)
+    d = dados_da_curva(pista, "C03", voce, float(s[-1] / 45.0), ia, float(s[-1] / 50.0), 7, "volta_ia")
+    n = len(d["linhas"]["voce"])
+    assert d["passoM"] == pytest.approx(track.step, abs=1e-3)
+    assert len(d["velocidades"]["voce"]) == len(d["velocidades"]["referencia"]) == n
+    assert min(d["velocidades"]["voce"]) == 95.0 and min(d["velocidades"]["referencia"]) == 110.0
+    # a minima marcada no ponto da velocidade minima, na mesma distancia do eixo
+    k = d["velocidades"]["voce"].index(95.0)
+    assert d["minimas"]["voce"]["dM"] == pytest.approx(k * d["passoM"], abs=0.1)
+    assert d["freadas"]["voce"]["dM"] == pytest.approx(d["freadas"]["referencia"]["dM"] - float(s[395] - s[380]), abs=0.2)
+    sec = d["secoes"]
+    assert sec["freadaM"] == d["freadas"]["voce"]["dM"]                       # a primeira das duas freadas
+    assert sec["minimaM"] == d["minimas"]["referencia"]["dM"]
+    assert sec["freadaM"] < sec["minimaM"] < sec["saidaM"] <= (n - 1) * d["passoM"] + 0.1
+
+
+def test_a_grade_da_sessao_tem_as_perdas_da_analise_as_voltas_de_fora_e_as_citadas(tmp_path, monkeypatch):
+    """Pedido 43, C.4: a perda de cada curva e a da analise; a IA, a incompleta e a rodada ficam fora."""
+    import asyncio
+    from types import SimpleNamespace
+
+    import main
+    from routers import radio as rota
+
+    pista = _Pista()
+    radio = _radio(tmp_path, pista)
+    radio._geometria = SimpleNamespace(segmentos=[SimpleNamespace(corner=SimpleNamespace(label=c))
+                                                  for c in ("C01-esq", "C04-esq", "C12-esq")])
+    sequencia = iter([_medidas([0.85, 0.30, 0.9]), _medidas([9.0, 0.1, 0.1]), _medidas([0.90, -0.1, -0.1]),
+                      _medidas([0.5, 0.5, 0.5]), _medidas([1.02, 0.25, -0.2])])
+    monkeypatch.setattr(radio, "_medidas_da_volta", lambda volta: next(sequencia))
+
+    def linha(n, momento, **extra):
+        pista.volta = {"volta": n, "tempoS": 90.0 + n, "teveIA": False, "momento": momento, "completa": True, **extra}
+        radio.on_frame(QUADRO)
+        pista.agora += 1.0
+        radio.on_frame(QUADRO)
+
+    pista.s = 50.0
+    linha(5, 0, teveIA=True)
+    linha(6, 1)
+    linha(7, 2)                         # rodada: 9 s na C12
+    linha(8, 3)
+    linha(9, 4, completa=False)
+    linha(10, 5)
+    g = radio.grade_da_sessao()
+    assert g["curvas"] == ["C01", "C04", "C12"]
+    assert [v["volta"] for v in g["voltas"]] == [6, 8, 10]
+    assert g["voltas"][0]["perdas"] == [0.9, 0.3, 0.85]          # na ordem das curvas da pista
+    assert [f["volta"] for f in g["fora"]] == [5, 7, 9]
+    assert g["fora"][0]["motivo"].startswith("a IA") and g["fora"][2]["motivo"].startswith("volta incompleta")
+    assert g["fora"][1]["motivo"] == "rodada ou saída de pista: perdeu 9,0 s na C12"
+    # a analise das voltas 6, 8 e 10 cita a C12 na volta da mediana (0,90 s, a volta 8), ao ser entregue
+    analise = [m for m in radio._pendentes if m["origem"] == "analise"][0]
+    assert analise["_citadas"][0] == {"volta": 8, "curva": "C12", "perdaS": 0.9}
+    radio._entregar(analise, pista.agora, {"s": 500.0})
+    assert {"volta": 8, "curva": "C12", "origem": "analise"}.items() <= radio.grade_da_sessao()["citadas"][0].items()
+    assert g["voltas"][1]["perdas"][2] == analise["_citadas"][0]["perdaS"]   # a celula tem o numero da analise
+    # a frase do coach marca a curva dela na volta dela, e guarda o que o coach mediu
+    radio.on_coaching_event(_evento(indice=3, volta=11))
+    frase = [m for m in radio._pendentes if m["origem"] == "coach"][0]
+    frase["_futuro"].result(timeout=5)
+    assert frase["_voz"]["brakeDeltaM"] == 38.0 and "_voz" not in radio._publica(frase)
+    radio._entregar(frase, pista.agora, {"s": 500.0})
+    assert {"volta": 11, "curva": "C01", "origem": "coach"}.items() <= radio.grade_da_sessao()["citadas"][-1].items()
+    monkeypatch.setattr(main, "radio_do_engenheiro", radio)
+    assert json.loads(asyncio.run(rota.get_grade()).body)["voltas"][0]["volta"] == 6

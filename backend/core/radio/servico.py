@@ -16,6 +16,9 @@
 4. **E entregue:** ganha um id, entra na lista que o app do jogo e a tela Ao vivo
    leem (`desde(id)`) e e registrada em `<pasta de dados>/data/radio/<sessao>.jsonl`,
    fora da pasta de gravacoes.
+5. **A grade da sessao** (pedido 43, C.4): cada volta que fecha entra na grade, com a perda
+   por curva da analise (`medidas_da_volta`), ou fica fora com o motivo (a IA, a volta
+   incompleta, a rodada); as curvas citadas pelo radio ficam marcadas na volta citada.
 
 O radio nao decide nada do coach: quais frases saem, o limite de 3 por volta, o foco e
 o limiar continuam no coach. A analise so le o que a volta ao vivo e o store ja medem.
@@ -38,7 +41,7 @@ from . import audio as audio_do_radio
 from .analise import (COBERTURA_MINIMA, VOLTAS_POR_ANALISE, Pista, analisar, cobertura, grade, medidas_da_volta,
                       teve_rodada)
 from .janelas import Janela, carregar_geometria, curvas_da_geometria, dentro, janelas_de_radio, tempo_que_resta
-from .replay import cobertura_na_curva, dados_da_curva, janela_da_curva, replay_da_analise
+from .replay import cobertura_na_curva, dados_da_curva, janela_da_frase, replay_da_analise, volta_mais_perto_da_mediana
 from .texto import (
     FALA_MAXIMA_S,
     CurvaDaPista,
@@ -109,6 +112,10 @@ class RadioDoEngenheiro:
         self._sessao_da_analise: Optional[str] = None
         self._voltas_validas: List[Dict[str, Any]] = []
         self._ultima_analise: Optional[Dict[str, Any]] = None
+        # Pedido 43 (C.4): a grade da sessao (as voltas, as que ficaram fora e as curvas citadas).
+        self._grade_voltas: List[Dict[str, Any]] = []
+        self._grade_fora: List[Dict[str, Any]] = []
+        self._grade_citadas: List[Dict[str, Any]] = []
         self.erro_da_voz: Optional[str] = None
 
     # ------------------------------------------------------------- pista ---
@@ -185,6 +192,8 @@ class RadioDoEngenheiro:
             mensagem = mensagem_de_diferenca(evento, self._curvas or [], float(self._comprimento or 0.0))
             if mensagem is None:
                 return
+            # Pedido 43: o que o coach mediu, para o replay escrever os numeros da voz.
+            mensagem["_voz"] = dict(evento.get("evidence") or {})
             self._pendentes.append(self._nova(mensagem))
 
     # ---------------------------------------------------------- entregar ---
@@ -253,7 +262,11 @@ class RadioDoEngenheiro:
     def _na_linha(self) -> None:
         """A volta acabou: o resumo (com a curva que mais perdeu) e, a cada 3 voltas validas, a analise."""
         volta, self._resumo_desde = self._resumo, None
-        if not volta or volta.get("teveIA"):
+        if not volta:
+            return
+        self._conferir_a_sessao()
+        if volta.get("teveIA"):
+            self._fora_da_grade(volta, "a IA pilotou parte da volta")
             return
         ref = self._referencia() or {}
         medidas = self._medidas_da_volta(volta)
@@ -271,13 +284,36 @@ class RadioDoEngenheiro:
                                                                  ref.get("tempoS"), ref.get("tipo"), pior)))
         self._analise_da_volta(volta, medidas, ref)
 
-    def _analise_da_volta(self, volta: Dict[str, Any], medidas: Optional[List[Dict[str, Any]]],
-                          ref: Dict[str, Any]) -> None:
+    def _conferir_a_sessao(self) -> None:
+        """Outra sessao: a analise e a grade comecam de novo."""
         sessao = self._sessao()
         if sessao != self._sessao_da_analise:
             self._sessao_da_analise, self._voltas_validas = sessao, []
-        if medidas is None or volta.get("completa") is False or teve_rodada(medidas):
+            self._grade_voltas, self._grade_fora, self._grade_citadas = [], [], []
+
+    def _fora_da_grade(self, volta: Dict[str, Any], motivo: str) -> None:
+        numero = int(volta["volta"]) if volta.get("volta") is not None else None
+        tempo = round(float(volta["tempoS"]), 3) if volta.get("tempoS") is not None else None
+        self._grade_fora.append({"volta": numero, "tempoS": tempo, "motivo": motivo})
+
+    def _analise_da_volta(self, volta: Dict[str, Any], medidas: Optional[List[Dict[str, Any]]],
+                          ref: Dict[str, Any]) -> None:
+        self._conferir_a_sessao()
+        # Pedido 43 (C.4): a volta que nao entra na analise fica fora da grade, com o motivo.
+        if medidas is None:
+            self._fora_da_grade(volta, "sem as medidas da volta (a referência ou a grade da volta)")
             return
+        if volta.get("completa") is False:
+            self._fora_da_grade(volta, "volta incompleta (nem todos os microssetores medidos)")
+            return
+        if teve_rodada(medidas):
+            pior = max(medidas, key=lambda m: float(m.get("perdaS") or 0.0))
+            perdeu = f"{pior['perdaS']:.1f}".replace(".", ",")
+            self._fora_da_grade(volta, f"rodada ou saída de pista: perdeu {perdeu} s na {pior['curva']}")
+            return
+        self._grade_voltas.append({"volta": int(volta["volta"]) if volta.get("volta") is not None else None,
+                                   "tempoS": round(float(volta["tempoS"]), 3),
+                                   "perdas": {m["curva"]: m["perdaS"] for m in medidas}})
         guardada = self._grade_da_ultima if (self._grade_da_ultima or {}).get("volta") == volta.get("volta") else None
         self._voltas_validas.append({"volta": int(volta["volta"]) if volta.get("volta") is not None else None,
                                      "medidas": medidas, "grade": (guardada or {}).get("grade"),
@@ -290,6 +326,14 @@ class RadioDoEngenheiro:
         self._ultima_analise = resultado
         if mensagem is not None:
             mensagem["_replay"] = self._replay_da_analise(tres, resultado, ref.get("tipo"))
+            # Pedido 43 (C.4): cada curva citada, na volta das 3 mais perto da mediana (a do replay).
+            citadas = []
+            for curva in resultado.get("curvas") or []:
+                i = volta_mais_perto_da_mediana(tres, curva)
+                if i is not None:
+                    citadas.append({"volta": tres[i]["volta"], "curva": curva["curva"],
+                                    "perdaS": curva["perdaMedianaS"]})
+            mensagem["_citadas"] = citadas
             self._pendentes.append(self._nova(mensagem))
 
     # ------------------------------------------------------------- replay ---
@@ -331,12 +375,13 @@ class RadioDoEngenheiro:
                 continue
             try:
                 g = grade(candidata["linhas"])
-                janela = janela_da_curva(self._geometria, codigo, g, ref["grade"])
+                # Pedido 43: a janela com o trecho da fala; o relogio tem de ter sido medido nela inteira.
+                janela = janela_da_frase(self._geometria, codigo, g, ref["grade"], mensagem.get("_voz"))
                 if janela is None or cobertura_na_curva(candidata["linhas"], janela[2]) < COBERTURA_MINIMA:
                     continue
                 total = float(np.nanmax(g["elapsed"]))
                 d = dados_da_curva(self._geometria, codigo, g, total, ref["grade"], ref["tempoS"], numero,
-                                   (self._referencia() or {}).get("tipo"))
+                                   (self._referencia() or {}).get("tipo"), voz=mensagem.get("_voz"))
                 return [d] if d else []
             except Exception as erro:
                 logger.warning("Radio sem o replay da frase: %s", erro)
@@ -380,6 +425,7 @@ class RadioDoEngenheiro:
         if mensagem.get("_replay"):
             mensagem["replay"] = {"url": f"/api/radio/replay/{mensagem['id']}",
                                   "curvas": [c["curva"] for c in mensagem["_replay"]]}
+        self._citar(mensagem)
         if arquivo is not None:
             mensagem["audio"] = f"/api/radio/audio/{mensagem['id']}"
             mensagem["audioArquivo"] = str(Path(arquivo).resolve())   # pedido 35: o 2o caminho da voz no jogo
@@ -388,6 +434,26 @@ class RadioDoEngenheiro:
         self._entregues.append(mensagem)
         self._registrar(mensagem)
         return mensagem
+
+    def _citar(self, mensagem: Dict[str, Any]) -> None:
+        """Pedido 43 (C.4): a curva citada fica marcada na grade, na volta citada."""
+        self._conferir_a_sessao()
+        if mensagem.get("origem") == "coach" and mensagem.get("curva") and mensagem.get("volta") is not None:
+            self._grade_citadas.append({"volta": mensagem["volta"], "curva": mensagem["curva"], "origem": "coach",
+                                        "id": mensagem["id"]})
+        for c in mensagem.get("_citadas") or []:
+            self._grade_citadas.append({**c, "origem": "analise", "id": mensagem["id"]})
+
+    def grade_da_sessao(self) -> Dict[str, Any]:
+        """Pedido 43 (C.4): as voltas validas da sessao com a perda em cada curva (a mesma da
+        analise), as que ficaram fora com o motivo e as curvas citadas pelo radio."""
+        with self._lock:
+            self._pista()
+            curvas = [seg.corner.label[:3] for seg in self._geometria.segmentos] if self._geometria else []
+            return {"sessao": self._sessao_da_analise, "curvas": curvas,
+                    "voltas": [{"volta": v["volta"], "tempoS": v["tempoS"],
+                                "perdas": [v["perdas"].get(c) for c in curvas]} for v in self._grade_voltas],
+                    "fora": list(self._grade_fora), "citadas": list(self._grade_citadas)}
 
     def _registrar(self, mensagem: Dict[str, Any]) -> None:
         sessao = mensagem.get("sessao") or f"sem-gravacao_{datetime.now():%Y-%m-%d}"

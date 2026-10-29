@@ -6,6 +6,9 @@
 * `GET /api/radio/audio/{id}`: o WAV da mensagem (vinheta e voz).
 * `POST /api/radio/teste`: uma mensagem de teste, entregue na hora, so pela tela
   Sistema, para conferir o radio sem andar no jogo.
+* `GET /api/radio/replay/{id}`: os dados do replay da curva de uma mensagem (pedido 36) e,
+  desde o pedido 43, os dos visuais e os numeros da voz na frase do coach.
+* `GET /api/radio/grade`: a grade da sessao, as voltas validas por curva (pedido 43, C.4).
 * `GET /api/radio/estado`: as janelas, a voz e o que esta esperando.
 * `GET /api/radio/minimapa`: a pista simplificada, a volta de referencia e as curvas da
   ultima analise, para o minimapa do app do jogo (pedido 35, Parte E).
@@ -52,6 +55,13 @@ async def get_replay(id_: int):
     if dados is None:
         raise HTTPException(status_code=404, detail="mensagem sem replay")
     return _json(dados)
+
+
+@router.get("/grade")
+async def get_grade():
+    """Pedido 43, C.4: a grade da sessao (a perda por curva das voltas validas, as que ficaram fora
+    e as curvas citadas), para a tela Ao vivo e a janela do replay nos boxes."""
+    return _json(_radio().grade_da_sessao())
 
 
 @router.post("/teste")
