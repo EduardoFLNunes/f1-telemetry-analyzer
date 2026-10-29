@@ -10,7 +10,8 @@ import { base } from '../volta/projecao';
 
 /** [x, z, tempo desde a entrada da curva, pedal (0 parcial, 1 acelerador, 2 freio)] */
 export type PontoDoReplay = [number, number, number, number];
-type Marca = { x: number; z: number; s?: number };
+/** `dM`: a distância desde a entrada do replay, em metros (pedido 43; ausente num backend antigo). */
+type Marca = { x: number; z: number; s?: number; dM?: number };
 
 export type CurvaDoReplay = {
   curva: string;
@@ -22,8 +23,15 @@ export type CurvaDoReplay = {
   duracaoS: number;
   linhas: { voce: PontoDoReplay[]; referencia: PontoDoReplay[] };
   freadas: { voce: Marca | null; referencia: Marca | null; distanciaM: number | null };
-  minimas: { voce: Marca & { kmh: number }; referencia: Marca & { kmh: number } };
-  tracado: { voce: [number, number]; referencia: [number, number]; distanciaM: number; lado: string };
+  /** Pedido 43: `null` na frase do coach sem as duas mínimas. */
+  minimas: { voce: Marca & { kmh: number }; referencia: Marca & { kmh: number } } | null;
+  /** Pedido 43: `null` na frase do coach (o coach não mede o lado). */
+  tracado: { voce: [number, number]; referencia: [number, number]; distanciaM: number; lado: string } | null;
+  // Pedido 43 (os visuais e os números da voz); um backend antigo não manda.
+  passoM?: number;
+  velocidades?: { voce: number[]; referencia: number[] };
+  secoes?: { freadaM: number | null; minimaM: number | null; saidaM: number | null };
+  voz?: { microssetor: number; inicioM: number; fimM: number; perdaS: number | null } | null;
 };
 
 export type DadosDoReplay = { id: number; origem: string; curvas: CurvaDoReplay[] };
@@ -103,6 +111,154 @@ export function textoDaPerda(perdaS: number): string {
   return `${perdaS >= 0 ? 'perde' : 'ganha'} ${nf(Math.abs(perdaS), 2)} s nesta curva`;
 }
 
+/**
+ * O alto do replay. Na frase do coach (pedido 43), o tempo é o da voz, no trecho da fala; na
+ * análise, a perda na curva: "C12, esquerda · volta 2 · perde 0,64 s no trecho da fala".
+ */
+export function textoDoAlto(c: CurvaDoReplay): string {
+  const inicio = `${c.curva}, ${c.lado}${c.volta ? ` · volta ${c.volta}` : ''}`;
+  if (c.voz) {
+    const p = c.voz.perdaS;
+    return p === null || p === undefined ? inicio : `${inicio} · ${p >= 0 ? 'perde' : 'ganha'} ${nf(Math.abs(p), 2)} s no trecho da fala`;
+  }
+  return `${inicio} · ${textoDaPerda(c.perdaS)}`;
+}
+
+// ── os visuais (pedido 43, Parte C) ─────────────────────────────────────
+
+/** A curva tem os dados dos visuais (um backend antigo não manda). */
+export function temVisuais(c: CurvaDoReplay): boolean {
+  return !!c.passoM && !!c.velocidades && c.velocidades.voce.length === c.linhas.voce.length
+    && c.velocidades.referencia.length === c.linhas.referencia.length;
+}
+
+/** Onde o carro está no tempo `t`, em metros desde a entrada (o cursor dos visuais). */
+export function distanciaNoTempo(linha: PontoDoReplay[], t: number, passoM: number): number {
+  const n = linha.length;
+  if (!n) return 0;
+  if (t <= linha[0][2]) return 0;
+  if (t >= linha[n - 1][2]) return (n - 1) * passoM;
+  let a = 0;
+  let b = n - 1;
+  while (b - a > 1) {
+    const m = (a + b) >> 1;
+    if (linha[m][2] <= t) a = m;
+    else b = m;
+  }
+  const u = linha[b][2] > linha[a][2] ? (t - linha[a][2]) / (linha[b][2] - linha[a][2]) : 0;
+  return (a + u) * passoM;
+}
+
+/**
+ * A diferença acumulada (C.2), ponto a ponto: o seu tempo menos o da referência desde a mesma
+ * entrada. Sobe quando você perde, desce quando ganha.
+ */
+export function diferencaAcumulada(c: CurvaDoReplay): number[] {
+  const v = c.linhas.voce;
+  const r = c.linhas.referencia;
+  return v.map((p, i) => p[2] - (r[i] ? r[i][2] : r[r.length - 1][2]));
+}
+
+/** As faixas do pedal (C.3): trechos seguidos com o mesmo pedal, em metros [de, até, pedal]. */
+export function faixasDoPedal(linha: PontoDoReplay[], passoM: number): [number, number, number][] {
+  const out: [number, number, number][] = [];
+  for (let i = 0; i < linha.length; i += 1) {
+    const pedal = linha[i][3];
+    const de = Math.max(0, (i - 0.5) * passoM);
+    const ate = Math.min((linha.length - 1) * passoM, (i + 0.5) * passoM);
+    const ultimo = out[out.length - 1];
+    if (ultimo && ultimo[2] === pedal) ultimo[1] = ate;
+    else out.push([de, ate, pedal]);
+  }
+  return out;
+}
+
+/** Os índices da linha dentro do trecho da fala (para a faixa clara na pista). */
+export function indicesDoTrecho(c: CurvaDoReplay): [number, number] | null {
+  if (!c.voz || !c.passoM) return null;
+  const n = c.linhas.referencia.length;
+  const a = Math.max(0, Math.round(c.voz.inicioM / c.passoM));
+  const b = Math.min(n - 1, Math.round(c.voz.fimM / c.passoM));
+  return b > a ? [a, b] : null;
+}
+
+/**
+ * Onde cada parte fica na área do replay (pedido 43). A ordem de importância, quando a altura
+ * não dá para tudo: o replay, a faixa do pedal, a diferença acumulada e a velocidade. O replay
+ * fica com pelo menos `REPLAY_MINIMO`; cada visual só entra se ainda sobrar isso para ele.
+ * A mesma regra da janela do jogo (`radio_engenheiro.lua`, `dividirAJanela`).
+ */
+export const ALTURAS_DOS_VISUAIS = { pedal: 30, diferenca: 60, velocidade: 74 } as const;
+export const REPLAY_MINIMO = 150;
+export type Area = { x: number; y: number; w: number; h: number };
+export type Divisao = { replay: Area; pedal: Area | null; diferenca: Area | null; velocidade: Area | null };
+
+export function dividirAArea(x: number, y: number, w: number, h: number, comVisuais: boolean): Divisao {
+  const out: Divisao = { replay: { x, y, w, h }, pedal: null, diferenca: null, velocidade: null };
+  if (!comVisuais) return out;
+  let resto = h;
+  const entram: (keyof typeof ALTURAS_DOS_VISUAIS)[] = [];
+  for (const nome of ['pedal', 'diferenca', 'velocidade'] as const) {
+    if (resto - ALTURAS_DOS_VISUAIS[nome] < REPLAY_MINIMO) break;
+    resto -= ALTURAS_DOS_VISUAIS[nome];
+    entram.push(nome);
+  }
+  out.replay = { x, y, w, h: resto };
+  // De cima para baixo, sob o replay: o pedal (colado nos carros), a diferença e a velocidade.
+  let yy = y + resto;
+  for (const nome of ['pedal', 'diferenca', 'velocidade'] as const) {
+    if (!entram.includes(nome)) continue;
+    out[nome] = { x, y: yy, w, h: ALTURAS_DOS_VISUAIS[nome] };
+    yy += ALTURAS_DOS_VISUAIS[nome];
+  }
+  return out;
+}
+
+// ── a grade da sessão (pedido 43, C.4) ──────────────────────────────────
+
+export type GradeDaSessao = {
+  sessao: string | null;
+  curvas: string[];
+  voltas: { volta: number | null; tempoS: number; perdas: (number | null)[] }[];
+  fora: { volta: number | null; tempoS: number | null; motivo: string }[];
+  citadas: { volta: number; curva: string; origem: 'coach' | 'analise'; id: number; perdaS?: number }[];
+};
+
+/** A perda que pinta a célula com a cor mais forte. */
+export const PERDA_FORTE_S = 1.0;
+
+/** "0,81 s", "−0,36 s" (com a unidade). */
+export function textoDaCelula(perdaS: number): string {
+  return `${perdaS < 0 ? '−' : ''}${nf(Math.abs(perdaS), 2)} s`;
+}
+
+/** A força da cor da célula, de 0,15 a 0,9, pela perda (a perda e o ganho, cada um na sua cor). */
+export function forcaDaCelula(perdaS: number): number {
+  return 0.15 + 0.75 * Math.min(1, Math.abs(perdaS) / PERDA_FORTE_S);
+}
+
+/** As curvas citadas numa volta, cada uma com quem citou. */
+export function citadasNaVolta(g: GradeDaSessao, volta: number | null): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  for (const c of g.citadas) {
+    if (c.volta !== volta) continue;
+    out.set(c.curva, [...(out.get(c.curva) ?? []), c.origem]);
+  }
+  return out;
+}
+
+/** "volta 5: a IA pilotou parte da volta (1:55,447)" — o tempo no formato M:SS,mmm. */
+export function textoDaVoltaDeFora(f: GradeDaSessao['fora'][number]): string {
+  const tempo = f.tempoS === null || f.tempoS === undefined ? '' : ` (${tempoDeVolta(f.tempoS)})`;
+  return `volta ${f.volta ?? '?'}: ${f.motivo}${tempo}`;
+}
+
+export function tempoDeVolta(s: number): string {
+  const m = Math.floor(s / 60);
+  const resto = s - 60 * m;
+  return `${m}:${resto < 10 ? '0' : ''}${nf(resto, 3)}`;
+}
+
 /** "você freia 42 m antes da IA" (a distância de `freadas.distanciaM`: negativa = antes). */
 export function textoDaFreada(distanciaM: number | null, contra = 'da IA'): string | null {
   if (distanciaM === null || distanciaM === undefined) return null;
@@ -112,7 +268,7 @@ export function textoDaFreada(distanciaM: number | null, contra = 'da IA'): stri
 }
 
 /** "você passa 7,9 m mais à direita" (no ponto da mínima da referência; ADR 0003). */
-export function textoDoTracado(t: CurvaDoReplay['tracado']): string {
+export function textoDoTracado(t: NonNullable<CurvaDoReplay['tracado']>): string {
   return `você passa ${nf(t.distanciaM, 1)} m mais à ${t.lado}`;
 }
 
