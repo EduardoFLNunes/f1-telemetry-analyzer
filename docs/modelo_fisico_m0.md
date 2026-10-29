@@ -129,6 +129,7 @@ O gravador do repositório passa a gravar, no bloco `carPhysics`:
   - **Fração do curso do volante?** A razão seria o entre-eixos dividido pelo esterço máximo da roda. Com 10,6 e um entre-eixos de 2,8 m, a roda teria cerca de 0,26 rad (15°) no fim do curso.
   - **IA contra você:** a IA dá mais volante para a mesma curvatura. Pode ser o carro escorregando mais na frente no limite, com mais ângulo de deriva, e não outra escala; ela passa pouco abaixo de 80 km/h, então só tem 12 pontos.
 - **Para fechar a unidade:** uma volta com a guinada gravada (`localAngularVelocity`, agora no gravador) dá a curvatura sem depender da aceleração lateral. Uma sessão com o ajuste de rotação do volante conhecido diria se o valor é uma fração.
+- **Fechada no pedido 39 (M1, ADR 0024):** o `steerAngle` gravado é **uma fração do curso do volante**. Ele vai de −1,0 a +1,0 de batente a batente, e o ângulo da roda é linear nele, cerca de **0,30 rad (17°) por unidade**. Medido pela direção dos pneus na memória do jogo (`tyreContactHeading`), numa sessão de 28/10 com o volante girado de batente a batente. O modelo usa 0,304 rad; antes de uma batida no fim da sessão, 0,297 rad. Detalhes em `docs/modelo_fisico_m1.md`, seção 5.
 
 ## 4. O que entrou no store e as checagens (Parte C)
 
@@ -196,13 +197,13 @@ As definições estão na seção 1.7 do `docs/store_v2_e_evolucao.md`, e o form
   - uma sessão conta quando todas as voltas dela no store têm `origem` igual a `humano` e os três canais estão em pelo menos 95% dos pontos da grade dessas voltas;
   - o total aparece como "n de 5".
 - **Antes do pedido 28** não havia código para a contagem: o "0 de 5" era conferido à mão nos relatórios. Em 11/10, a contagem oficial pelo código deu **0 de 5**, com o store de 10/10 (612 voltas).
-- **A unidade do volante,** fechada com a guinada gravada (seção 3).
-- **O entre-eixos e os dados do carro** que não vêm do `data.acd`: o modelo da M1 vai ter de estimá-los dos dados ou recebê-los de fora.
+- **A unidade do volante:** fechada no pedido 39, pela direção dos pneus na memória do jogo (seção 3).
+- **O entre-eixos e os dados do carro** que não vêm do `data.acd`: medidos pela telemetria do jogo no pedido 39 (ADR 0024): entre-eixos de 2,964 m, `cgHeight` de 0,271 m e a velocidade gravada medida a 1,209 m do eixo traseiro (`docs/modelo_fisico_m1.md`, seção 5).
 - **A embreagem antiga não serve:** todas as gravações anteriores têm 0 nela.
 
-### O relógio da M1 (pendente, sem mudança agora; pedido 34)
+### O relógio da M1 (decidido no ADR 0022; pedido 37)
 
-O pedido 33 (A.5) mediu o tempo das amostras nas gravações, e a recomendação fica registrada aqui. **A decisão fica para o pedido que retreinar a M1.**
+O pedido 33 (A.5) mediu o tempo das amostras nas gravações, e a recomendação ficou registrada aqui. **A decisão saiu no ADR 0022 e foi aplicada na M1 (pedido 37, `docs/modelo_fisico_m1.md`, seções 1.2 e 2):** o cronômetro do jogo é o relógio, as amostras repetidas são descartadas, os trechos terminam em buracos de 50 ms ou mais, e os dados são reamostrados em 50 ms.
 
 - **Usar o cronômetro do jogo como relógio da M1,** e não o horário do gravador.
   - O cronômetro anda em passos de física de 3 ms, e o tempo e a posição de cada amostra vêm do mesmo passo: o erro entre eles tem p99 abaixo de 0,5 ms nas sessões novas.

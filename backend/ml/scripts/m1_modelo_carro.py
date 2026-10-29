@@ -226,6 +226,99 @@ def cmd_geometria(args) -> int:
     return 0
 
 
+def _carregar_geometria() -> dict:
+    payload = json.loads((D.raiz_dados() / GEOMETRIA_MEDIDA).read_text(encoding="utf-8"))
+    return payload["usados"]
+
+
+def _convencoes():
+    payload = json.loads((D.raiz_dados() / "convencoes.json").read_text(encoding="utf-8"))
+    return C.Convencoes(**payload["convencoes"])
+
+
+def _lidos() -> dict:
+    files = {grade_path(s).name: file_entry(grade_path(s)) for s in D.SESSOES_M1}
+    files["laps_grid_v2.parquet"] = file_entry(config.artifacts_root() / "laps_grid_v2.parquet")
+    files[GEOMETRIA_MEDIDA] = file_entry(D.raiz_dados() / GEOMETRIA_MEDIDA)
+    files["convencoes.json"] = file_entry(D.raiz_dados() / "convencoes.json")
+    return files
+
+
+def cmd_validar(args) -> int:
+    """Pedido 39, Parte E: as 5 rodadas. `--fase treino` nao le nenhuma sessao de teste."""
+    from ml.modelo_carro import experimento as X
+    started = time.time()
+    geo = _carregar_geometria()
+    conv = _convencoes()
+    grades = {s: pd.read_parquet(grade_path(s)) for s in D.SESSOES_M1}
+    treino_path = D.raiz_dados() / "rodadas_treino.json"
+    handoff = Path(args.handoff) if args.handoff else None
+    if args.fase == "treino":
+        store = pd.read_parquet(config.artifacts_root() / "laps_grid_v2.parquet",
+                                columns=["lap_id", "speed_kmh", "lateral_g", "longitudinal_g", "throttle", "brake"])
+        rodadas = []
+        for test in D.SESSOES_M1:
+            print(f"rodada sem {test}", flush=True)
+            rodadas.append(X.fase_treino(test, grades, conv, geo, store))
+        payload = {"pedido": 39, "parte": "E, fase de treino", "commit": git_commit(), "ambiente": _ambiente(),
+                   "comando": "python -m ml.scripts.m1_modelo_carro validar --fase treino", "geometria": geo,
+                   "lidos": _lidos(), "rodadas": rodadas, "tempo_s": round(time.time() - started, 1)}
+        _json(treino_path, payload)
+        if handoff:
+            _json(Path(str(handoff) + "_fisica_treino.json"),
+                  {**payload, "rodadas": [{k: v for k, v in r.items() if k != "params"} for r in rodadas]})
+        for r in rodadas:
+            d = r["treino"]
+            print(r["sessao_de_teste"][:19], {h: round(v, 3) for h, v in d["skill_R1_contra_R0"].items()},
+                  "um passo", round(d["um_passo"]["R1"], 4), round(d["um_passo"]["R0"], 4), "limite", r["no_limite"])
+        return 0
+
+    from ml.modelo_carro import figuras as FG
+    from ml.track.corners import detect_corners
+    treino = json.loads(treino_path.read_text(encoding="utf-8"))
+    partes, infos, figs = [], [], {}
+    geometry = load_geometry()
+    corners = {c.label[:3]: c for c in detect_corners(geometry)}
+    for rodada in treino["rodadas"]:
+        print(f"rodada sem {rodada['sessao_de_teste']}", flush=True)
+        out = X.fase_teste(rodada, grades, conv, geo)
+        partes.append(out["casos"])
+        infos.append(out["info"])
+        if rodada["sessao_de_teste"] == "2026-10-21_20-30-54_vhe_interlagos" and handoff:
+            p, corr, _, frame = out["_modelos"]
+            for tipo, label, titulo in (("freada", "C01", "A freada da C01 (S do Senna)"),
+                                        ("curva", "C10", "A curva lenta, a C10 (Bico de Pato)")):
+                start = FG.achar_inicio(frame, corners[label], geometry.length, tipo)
+                if start is None:
+                    figs[label] = {"erro": "nenhuma volta cobre o caso"}
+                    continue
+                figs[label] = FG.desenhar(frame, start, p, corr, titulo, Path(str(handoff) + f"_figura_{label.lower()}.png"))
+    cases = X.juntar(partes)
+    nc = cases["nao_conclusivo"]
+    payload = {
+        "pedido": 39, "parte": "E, fase de teste", "commit": git_commit(), "ambiente": _ambiente(),
+        "comando": "python -m ml.scripts.m1_modelo_carro validar --fase teste", "geometria": geo,
+        "lidos": {**_lidos(), "rodadas_treino.json": file_entry(treino_path)},
+        "rodadas": infos, "veredito": X.veredito(cases),
+        "horizontes": X.resumo_horizontes(cases),
+        "horizontes_so_conclusivos": X.resumo_horizontes(cases, ~nc),
+        "por_sessao": X.tabela(cases, "sessao"), "por_regime": X.tabela(cases, "regime"),
+        "por_faixa": X.tabela(cases, "faixa"), "nao_conclusivo": float(np.mean(nc)),
+        "temperatura_dos_pneus": X.correlacao_pneus(cases), "figuras": figs,
+        "tempo_s": round(time.time() - started, 1),
+    }
+    _json(D.raiz_dados() / "validacao.json", payload)
+    flat = {k: (list(v) if v.ndim > 1 else v) for k, v in cases.items()}
+    pd.DataFrame(flat).to_parquet(D.raiz_dados() / "validacao_casos.parquet", index=False)
+    if handoff:
+        _json(Path(str(handoff) + "_validacao.json"), payload)
+    for c in payload["veredito"]["criterios"]:
+        value = c["valor"] if not isinstance(c["valor"], dict) else {k: round(v["razao"], 3) for k, v in c["valor"].items()}
+        print(c["n"], c["criterio"], value, "passa" if c["passa"] else "NAO PASSA")
+    print("aprovada:", payload["veredito"]["aprovada"])
+    return 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -236,9 +329,12 @@ def main(argv=None) -> int:
     geometria = sub.add_parser("geometria")
     geometria.add_argument("--sessao", required=True)
     geometria.add_argument("--saida")
+    validar = sub.add_parser("validar")
+    validar.add_argument("--fase", choices=("treino", "teste"), required=True)
+    validar.add_argument("--handoff", help="prefixo dos arquivos de handoff (docs/handoff/<pedido>)")
     args = parser.parse_args(argv)
     return {"dados": cmd_dados, "convencoes": cmd_convencoes, "retrato": cmd_retrato,
-            "geometria": cmd_geometria}[args.cmd](args)
+            "geometria": cmd_geometria, "validar": cmd_validar}[args.cmd](args)
 
 
 if __name__ == "__main__":

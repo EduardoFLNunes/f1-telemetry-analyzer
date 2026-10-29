@@ -238,3 +238,42 @@ def test_ponto_fora_dos_dados_de_treino_e_marcado():
     mean, std, far = corr.prever(far_state, far_u)
     assert far[0] > cut and far[0] > 5 * np.max(inside)
     assert std.shape == (1, 3) and np.all(std > 0)
+
+
+# ----------------------------------------------- experimento e figuras ---
+
+from ml.modelo_carro import experimento as X  # noqa: E402
+from ml.modelo_carro import figuras as FG  # noqa: E402
+
+
+def test_inicio_da_figura_pela_regra_e_dentro_do_trecho():
+    frame = _quadro(trechos=(("A", 60),))
+    frame["B"] = np.where(frame["k"] >= 30, 1.0, 0.0)          # freio a partir de s = 45 m
+    frame["vx"] = 30.0 + np.where(frame["k"] == 45, -5.0, 0.0)  # o minimo da curva em k = 45
+    curva = type("Curva", (), {"start_s": 60.0, "apex_s": 70.0, "end_s": 80.0})()
+    assert FG.achar_inicio(frame, curva, 5000.0, "freada") == 30 - FG.ANTES_DA_FREADA
+    assert FG.achar_inicio(frame, curva, 5000.0, "curva") == 45 - FG.ANTES_DO_MINIMO
+    # Sem 1,0 s pela frente dentro do trecho, o caso nao cabe.
+    curto = _quadro(trechos=(("A", 40),))
+    curto["B"] = np.where(curto["k"] >= 30, 1.0, 0.0)
+    assert FG.achar_inicio(curto, curva, 5000.0, "freada") is None
+
+
+def test_veredito_com_numeros_conhecidos():
+    n, rng = 600, np.random.default_rng(1)
+    h = V.H_PRINCIPAL
+    cases = {"sessao": np.repeat(np.array([f"s{i}" for i in range(5)], dtype=object), n // 5),
+             "volta": np.repeat(np.arange(30), n // 30), "nao_conclusivo": np.zeros(n, dtype=bool),
+             "regime": np.full(n, "reta", dtype=object), "faixa": np.full(n, "x", dtype=object),
+             "dentro_90": rng.random((n, 3)) < 0.9}
+    for name, hh in V.HORIZONTES.items():
+        for model, scale in (("M1", 0.25), ("R1", 0.5), ("R0", 1.0)):
+            err = scale * np.ones((n, 3)) * np.where(np.arange(n) % 2 == 0, 1.0, -1.0)[:, None]
+            cases[f"err_{model}_{hh}"] = err
+            cases[f"sq_{model}_{hh}"] = np.sum(err ** 2, axis=1)
+    out = X.veredito(cases)
+    by = {c["n"]: c for c in out["criterios"]}
+    assert by[1]["valor"] == pytest.approx(0.75) and by[1]["passa"]
+    assert by[2]["valor"] == pytest.approx(0.5) and by[2]["passa"]
+    assert by[3]["passa"] and by[4]["valor"] == 5 and by[5]["passa"] and by[7]["valor"] == 5
+    assert 0.8 <= by[6]["valor"] <= 0.97 and out["aprovada"]

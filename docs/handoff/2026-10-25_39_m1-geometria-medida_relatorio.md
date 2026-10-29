@@ -229,6 +229,46 @@ Se o jogo fechar antes do Ctrl+C, o arquivo do último minuto já está salvo.
 - **A linearidade:** antes da batida, a razão local vai de 0,296 rad perto do centro a 0,299 nos batentes; é linear em toda a faixa. O volante vai de −1,0 a +1,0: **é uma fração do curso, e no batente a roda vira cerca de 0,30 rad (17°).**
 - **`x_v` fica perto do centro de massa:** de 0,03 a 0,13 m atrás dele, conforme a rodada. A correção da velocidade lateral é pequena (de 0,02 a 0,08 m/s com 0,6 rad/s de guinada). A falta da parte geométrica no ângulo de deriva, vista no pedido 37, vem do pneu, e não do ponto onde a velocidade é medida.
 
+## Parte E.1 e E.2 — a física com a geometria medida, só nas sessões de treino
+
+Comando: `python -m ml.scripts.m1_modelo_carro validar --fase treino` (3 min). **Nenhuma sessão de teste foi lida nesta fase.** Em cada rodada, a geometria fica fixa (`L` = 2,964 m, `k_δ` = 0,304 rad, `x_v` = 1,209 m, `h/L` = 0,0915), `b = w_f · L` vem das cargas das 4 sessões de treino, a velocidade lateral é levada ao centro de massa, e os 7 parâmetros são ajustados por mínimos quadrados. Saída completa: `2026-10-25_39_m1-geometria-medida_fisica_treino.json`.
+
+**Os parâmetros por rodada:**
+
+| rodada (sessão de fora) | `w_f` | `b` (m) | `b − x_v` (m) | `Cα` (1/rad) | `μ` | `k²` (m²) | `κ_D` (1/m) | `c0` (m/s²) | `s_T` | `β_B` (m/s²) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `2026-10-15_23-24-50` | 0,428 | 1,268 | 0,058 | 32,7 | 1,68 | 3,31 | **0,0003** | **0** | 1,08 | 19,2 |
+| `2026-10-17_01-02-22` | 0,431 | 1,276 | 0,067 | 32,8 | 1,67 | 3,12 | **0,0003** | **0** | 1,04 | 20,7 |
+| `2026-10-17_16-17-08` | 0,451 | 1,335 | 0,126 | 29,9 | 1,53 | 2,44 | **0,0003** | **0** | 0,89 | 17,6 |
+| `2026-10-18_12-38-44` | 0,425 | 1,261 | 0,051 | 32,0 | 1,65 | 3,52 | **0,0003** | **0** | 1,06 | 21,3 |
+| `2026-10-21_20-30-54` | 0,417 | 1,237 | 0,028 | 32,9 | 1,70 | 3,84 | **0,0003** | **0** | 1,12 | 21,9 |
+
+- **No limite, nas 5 rodadas:** o arrasto (`κ_D`, no mínimo de 0,0003) e a desaceleração sem acelerador (`c0`, em 0). O resto fica dentro das faixas e estável entre as rodadas, menos na rodada sem a sessão do pacote 0.4.0, que tem `k²` e `μ` mais baixos.
+- **A transferência de carga entrou nas 5 rodadas** pela regra dos 2%: o erro de um passo cai de 0,082–0,085 para 0,078–0,081 (4% a 5%).
+- **`k²` de 2,4 a 3,8 m²** (raio de giração de 1,6 a 2,0 m) fica alto para um carro de 2,96 m de entre-eixos.
+
+**O erro da física (R1) contra a persistência (R0), nas próprias sessões de treino** (inícios a cada 0,1 s; erro normalizado do ADR 0022; skill = 1 − R1 ÷ R0):
+
+| rodada (sessão de fora) | 1 passo: R1 / R0 | skill em 0,25 s | **skill em 0,5 s** | skill em 1,0 s | `vy` em 0,5 s: R1 / R0 (m/s) |
+|---|---|---:|---:|---:|---|
+| `2026-10-15_23-24-50` | 0,078 / 0,089 | 0,21 | **0,03** | −0,57 | 0,82 / 0,68 |
+| `2026-10-17_01-02-22` | 0,081 / 0,093 | 0,23 | **0,04** | −0,58 | 0,85 / 0,73 |
+| `2026-10-17_16-17-08` | 0,079 / 0,091 | 0,25 | **0,18** | −0,05 | 0,73 / 0,71 |
+| `2026-10-18_12-38-44` | 0,080 / 0,090 | 0,20 | **0,00** | −0,66 | 0,87 / 0,70 |
+| `2026-10-21_20-30-54` | 0,080 / 0,090 | 0,19 | **−0,06** | −0,85 | 0,89 / 0,69 |
+
+**Contra a regra antiga** (pedido 37, rodada sem `2026-10-15_23-24-50`, nas mesmas sessões de treino):
+
+| | 1 passo: R1 / R0 | skill em 0,25 s | skill em 0,5 s | skill em 1,0 s |
+|---|---|---:|---:|---:|
+| regra das regressões cinemáticas (`L` = −0,18 m) | 0,095 / 0,089 | −0,02 | −0,04 | −0,09 |
+| `L` e `k_δ` ajustados junto (diagnóstico do 37, não adotado) | 0,078 / 0,089 | 0,21 | 0,09 | −0,39 |
+| **a geometria medida (este pedido)** | **0,078 / 0,089** | **0,21** | **0,03** | **−0,57** |
+
+- **A geometria medida faz a física bater a persistência em um passo e em 0,25 s,** nas 5 rodadas, o que a regra antiga não fazia.
+- **Em 0,5 s ela empata com a persistência** (skill de −0,06 a 0,18), e em 1,0 s perde. A velocidade longitudinal e a guinada saem bem melhores que na persistência. **A velocidade lateral sai pior:** em malha aberta, o erro dela cresce mais rápido que o da persistência.
+- **O que isso diz do critério 1** (skill da M1 contra R0 ≥ 0,50): a correção aprendida teria de cortar mais da metade do erro da física em 0,5 s. Nada foi mudado por isso. A fase de teste segue como registrada.
+
 ## O que vem depois do aviso
 
 - **Parte D:** medir `L`, `b`, `h`, `k_δ` (esquerdo, direito e médio) e `x_v`, aplicar os portões e relatar `h/L` contra o das cargas, `L/k_δ` contra a M0 e a linearidade do volante.
