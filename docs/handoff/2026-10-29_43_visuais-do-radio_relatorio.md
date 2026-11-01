@@ -25,6 +25,20 @@
   - **a conferência:** `rotulos_antes.json`, `rotulos_depois.json`, `visuais.json`, `radio_antes_21-10.json` e `radio_depois_13-10.json`, `_18-10.json` e `_21-10.json`;
   - **os scripts:** `radio_offline.py`, `radio_offline_antes.py`, `rodar_conferencia.sh`, `conferir_rotulos.py`, `medir_visuais.py`, `contar_locais.py`, `previa.py`, `fotografar.sh` e `folha.py`.
 
+## O segundo aviso (01/11, 17:46): o fechamento não foi feito
+
+O aviso "Testei os visuais no jogo" chegou com todos os campos em branco ("[...]"), e os registros continuam mostrando que o jogo não rodou:
+
+| onde | o que está lá às 17:47 |
+|---|---|
+| o app no jogo | **versão 0.4.1, de 24/10:** o `instalar.ps1` desta branch não foi rodado |
+| `log.txt` e `custom_shaders_patch.log` do jogo | **de 28/10, 13:31, com o CSP 0.2.11** |
+| `dataecordings` e `dataadio` | os últimos são de 24/10 |
+| as gravações do app instalado | a última é de 18/10 |
+
+- **O que não fiz:** nenhuma conferência de fala, nenhuma medida de FPS, nenhum resultado de jogo, nenhum merge em `develop` e nenhuma troca para 0.6.0.
+- **O pedido 42, ajustado pelo Cowork:** continua modificado na pasta, sem commit. O pedido é commitá-lo junto com o fechamento, que ainda não aconteceu.
+
 ## O aviso de 01/11: as decisões estão feitas, mas o jogo não rodou
 
 **A sua mensagem dizia "Testei os visuais no jogo", e as anotações vieram como o texto-modelo** ("[as suas anotações: os números em cada fala, os visuais, janelas que sumiram, o FPS]"). Fui conferir, como o pedido manda, e **nada mostra um teste:**
