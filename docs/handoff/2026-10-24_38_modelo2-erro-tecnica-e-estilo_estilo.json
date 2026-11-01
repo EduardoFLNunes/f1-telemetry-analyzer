@@ -1,0 +1,6882 @@
+{
+ "total": [
+  {
+   "tipo": "lenta",
+   "quem": "ia",
+   "passagens": 84,
+   "voltas": 14,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.9332,
+      "n": 84,
+      "z": -0.15,
+      "z_intervalo_90": [
+       -0.18,
+       -0.14
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.4697,
+      "n": 84,
+      "z": -0.15,
+      "z_intervalo_90": [
+       -0.19,
+       -0.14
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.5818,
+      "n": 84,
+      "z": 0.08,
+      "z_intervalo_90": [
+       0.02,
+       0.08
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 1.0,
+      "n": 84,
+      "z": 1.41,
+      "z_intervalo_90": [
+       1.41,
+       1.41
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.0193,
+      "n": 69,
+      "z": -1.54,
+      "z_intervalo_90": [
+       -1.57,
+       -1.52
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 1.2883,
+      "n": 82,
+      "z": 1.13,
+      "z_intervalo_90": [
+       0.8,
+       1.61
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.1401,
+      "n": 69,
+      "z": -0.43,
+      "z_intervalo_90": [
+       -0.47,
+       -0.36
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.1083,
+      "n": 84,
+      "z": 0.45,
+      "z_intervalo_90": [
+       0.44,
+       0.46
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 12.394,
+      "n": 6,
+      "z": 0.63,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": 3.6158,
+      "n": 6,
+      "z": 0.55,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 6,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.4105,
+      "n": 84,
+      "z": 0.6,
+      "z_intervalo_90": [
+       0.47,
+       0.71
+      ]
+     },
+     "reversoes": {
+      "mediana": 5.0,
+      "n": 77,
+      "z": 2.7,
+      "z_intervalo_90": [
+       2.7,
+       2.7
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.5086,
+      "n": 84,
+      "z": 1.14,
+      "z_intervalo_90": [
+       1.04,
+       1.2
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 0.9368,
+      "n": 84,
+      "z": -0.54,
+      "z_intervalo_90": [
+       -0.58,
+       -0.49
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.1111,
+      "n": 84,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.08,
+       0.0
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 3.908,
+    "v_min": 0.706,
+    "retomada_s": 0.11
+   }
+  },
+  {
+   "tipo": "lenta",
+   "quem": "piloto",
+   "passagens": 780,
+   "voltas": 130,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.0041,
+      "n": 780,
+      "z": 0.03,
+      "z_intervalo_90": [
+       -0.06,
+       0.09
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.5312,
+      "n": 780,
+      "z": 0.01,
+      "z_intervalo_90": [
+       -0.0,
+       0.03
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.5541,
+      "n": 780,
+      "z": -0.01,
+      "z_intervalo_90": [
+       -0.06,
+       0.03
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.5612,
+      "n": 528,
+      "z": -0.12,
+      "z_intervalo_90": [
+       -0.21,
+       -0.04
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2112,
+      "n": 520,
+      "z": 0.16,
+      "z_intervalo_90": [
+       0.09,
+       0.26
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.6894,
+      "n": 490,
+      "z": -0.11,
+      "z_intervalo_90": [
+       -0.17,
+       0.0
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.4147,
+      "n": 336,
+      "z": 0.18,
+      "z_intervalo_90": [
+       0.07,
+       0.27
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 780,
+      "z": -0.25,
+      "z_intervalo_90": [
+       -0.25,
+       -0.25
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 10.1796,
+      "n": 382,
+      "z": -0.01,
+      "z_intervalo_90": [
+       -0.14,
+       0.1
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 2.8596,
+      "n": 381,
+      "z": -0.01,
+      "z_intervalo_90": [
+       -0.14,
+       0.15
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 382,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 0.8621,
+      "n": 777,
+      "z": -0.12,
+      "z_intervalo_90": [
+       -0.15,
+       -0.05
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 725,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.4099,
+      "n": 780,
+      "z": -0.02,
+      "z_intervalo_90": [
+       -0.09,
+       0.02
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 1.6967,
+      "n": 501,
+      "z": 0.16,
+      "z_intervalo_90": [
+       0.08,
+       0.24
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.1111,
+      "n": 780,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.04,
+       0.1
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 22.233,
+    "v_min": 8.394,
+    "retomada_s": 0.887
+   }
+  },
+  {
+   "tipo": "media",
+   "quem": "ia",
+   "passagens": 98,
+   "voltas": 14,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.3227,
+      "n": 98,
+      "z": -0.02,
+      "z_intervalo_90": [
+       -0.02,
+       -0.02
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 98,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 98,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 1.0,
+      "n": 37,
+      "z": 0.38,
+      "z_intervalo_90": [
+       0.38,
+       0.38
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.0185,
+      "n": 16,
+      "z": -2.01,
+      "z_intervalo_90": [
+       -2.02,
+       -2.01
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 1.673,
+      "n": 35,
+      "z": 1.12,
+      "z_intervalo_90": [
+       0.83,
+       1.27
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.0,
+      "n": 37,
+      "z": -0.2,
+      "z_intervalo_90": [
+       -0.2,
+       -0.2
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 98,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 10.2583,
+      "n": 6,
+      "z": -0.01,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": 1.8003,
+      "n": 6,
+      "z": 0.16,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 6,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 2.3379,
+      "n": 97,
+      "z": 0.56,
+      "z_intervalo_90": [
+       0.37,
+       0.65
+      ]
+     },
+     "reversoes": {
+      "mediana": 9.0,
+      "n": 84,
+      "z": 1.35,
+      "z_intervalo_90": [
+       1.35,
+       1.35
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1468,
+      "n": 98,
+      "z": -0.06,
+      "z_intervalo_90": [
+       -0.07,
+       -0.05
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -1.1582,
+      "n": 98,
+      "z": -0.36,
+      "z_intervalo_90": [
+       -0.36,
+       -0.36
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 98,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 13.787,
+    "v_min": 1.047,
+    "retomada_s": 0.029
+   }
+  },
+  {
+   "tipo": "media",
+   "quem": "piloto",
+   "passagens": 910,
+   "voltas": 130,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.3372,
+      "n": 910,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.0,
+       0.02
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 910,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 910,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.8197,
+      "n": 213,
+      "z": -0.33,
+      "z_intervalo_90": [
+       -0.51,
+       -0.16
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2354,
+      "n": 161,
+      "z": 0.1,
+      "z_intervalo_90": [
+       -0.08,
+       0.3
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.7171,
+      "n": 205,
+      "z": -0.11,
+      "z_intervalo_90": [
+       -0.23,
+       0.02
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.2917,
+      "n": 145,
+      "z": 0.37,
+      "z_intervalo_90": [
+       0.13,
+       0.54
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 910,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 10.2976,
+      "n": 433,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.06,
+       0.06
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 1.5647,
+      "n": 433,
+      "z": -0.0,
+      "z_intervalo_90": [
+       -0.06,
+       0.06
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 433,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.6424,
+      "n": 887,
+      "z": -0.07,
+      "z_intervalo_90": [
+       -0.16,
+       -0.01
+      ]
+     },
+     "reversoes": {
+      "mediana": 5.0,
+      "n": 797,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.154,
+      "n": 910,
+      "z": 0.02,
+      "z_intervalo_90": [
+       -0.03,
+       0.04
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.5069,
+      "n": 692,
+      "z": 0.04,
+      "z_intervalo_90": [
+       -0.04,
+       0.13
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 907,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 25.608,
+    "v_min": 11.537,
+    "retomada_s": 0.862
+   }
+  },
+  {
+   "tipo": "rapida",
+   "quem": "ia",
+   "passagens": 14,
+   "voltas": 14,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.0859,
+      "n": 14,
+      "z": 0.53,
+      "z_intervalo_90": [
+       0.39,
+       0.61
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.9995,
+      "n": 14,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0114,
+      "n": 14,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 14,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 14.0577,
+      "n": 1,
+      "z": -0.22,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": 2.1767,
+      "n": 1,
+      "z": 1.09,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 1,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.6583,
+      "n": 14,
+      "z": -0.16,
+      "z_intervalo_90": [
+       -0.23,
+       -0.08
+      ]
+     },
+     "reversoes": {
+      "mediana": 21.0,
+      "n": 12,
+      "z": 1.45,
+      "z_intervalo_90": [
+       1.45,
+       1.45
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1216,
+      "n": 14,
+      "z": 1.78,
+      "z_intervalo_90": [
+       1.69,
+       1.83
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -2.2347,
+      "n": 14,
+      "z": -0.2,
+      "z_intervalo_90": [
+       -0.21,
+       -0.2
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 14,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 1.396,
+    "retomada_s": 0.015
+   }
+  },
+  {
+   "tipo": "rapida",
+   "quem": "piloto",
+   "passagens": 130,
+   "voltas": 130,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.946,
+      "n": 130,
+      "z": -0.14,
+      "z_intervalo_90": [
+       -0.38,
+       0.04
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 130,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 130,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 130,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 14.3505,
+      "n": 64,
+      "z": 0.04,
+      "z_intervalo_90": [
+       -0.26,
+       0.28
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 1.7258,
+      "n": 64,
+      "z": -0.04,
+      "z_intervalo_90": [
+       -0.21,
+       0.36
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 64,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.8353,
+      "n": 130,
+      "z": 0.11,
+      "z_intervalo_90": [
+       -0.07,
+       0.27
+      ]
+     },
+     "reversoes": {
+      "mediana": 7.0,
+      "n": 119,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.21,
+       0.1
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.0901,
+      "n": 130,
+      "z": -0.08,
+      "z_intervalo_90": [
+       -0.21,
+       0.05
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.9639,
+      "n": 127,
+      "z": 0.5,
+      "z_intervalo_90": [
+       -0.05,
+       0.56
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 130,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 14.895,
+    "retomada_s": 1.621
+   }
+  }
+ ],
+ "piloto_por_sessao": [
+  {
+   "tipo": "lenta",
+   "sessao": "2026-10-04",
+   "passagens": 66,
+   "voltas": 11,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.0066,
+      "n": 66,
+      "z": 0.01,
+      "z_intervalo_90": [
+       -0.43,
+       0.27
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.5246,
+      "n": 66,
+      "z": -0.02,
+      "z_intervalo_90": [
+       -0.05,
+       0.07
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.4186,
+      "n": 66,
+      "z": -0.42,
+      "z_intervalo_90": [
+       -0.87,
+       -0.25
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.4779,
+      "n": 44,
+      "z": -0.38,
+      "z_intervalo_90": [
+       -0.52,
+       -0.1
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2554,
+      "n": 43,
+      "z": 0.42,
+      "z_intervalo_90": [
+       0.2,
+       0.66
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.5683,
+      "n": 34,
+      "z": -0.3,
+      "z_intervalo_90": [
+       -0.45,
+       -0.01
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.2893,
+      "n": 24,
+      "z": -0.27,
+      "z_intervalo_90": [
+       -0.91,
+       0.06
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 66,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.37
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 0.9126,
+      "n": 66,
+      "z": 0.07,
+      "z_intervalo_90": [
+       -0.02,
+       0.31
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 49,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.3592,
+      "n": 66,
+      "z": -0.66,
+      "z_intervalo_90": [
+       -0.81,
+       -0.46
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 2.0801,
+      "n": 28,
+      "z": 0.32,
+      "z_intervalo_90": [
+       0.0,
+       0.62
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.1111,
+      "n": 66,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.34,
+       0.34
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 14.724,
+    "v_min": 6.558,
+    "retomada_s": 0.995
+   }
+  },
+  {
+   "tipo": "lenta",
+   "sessao": "2026-10-05",
+   "passagens": 42,
+   "voltas": 7,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.8076,
+      "n": 42,
+      "z": -0.5,
+      "z_intervalo_90": [
+       -0.65,
+       -0.15
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.5189,
+      "n": 42,
+      "z": -0.03,
+      "z_intervalo_90": [
+       -0.1,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.5745,
+      "n": 42,
+      "z": 0.06,
+      "z_intervalo_90": [
+       -0.09,
+       0.35
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.5977,
+      "n": 28,
+      "z": 0.17,
+      "z_intervalo_90": [
+       -0.26,
+       0.35
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2266,
+      "n": 28,
+      "z": 0.15,
+      "z_intervalo_90": [
+       -0.6,
+       0.57
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.7887,
+      "n": 28,
+      "z": 0.25,
+      "z_intervalo_90": [
+       -0.47,
+       0.56
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.3934,
+      "n": 19,
+      "z": -0.05,
+      "z_intervalo_90": [
+       -0.34,
+       0.14
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 42,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 0.9599,
+      "n": 42,
+      "z": 0.13,
+      "z_intervalo_90": [
+       0.03,
+       0.17
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 42,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.3836,
+      "n": 42,
+      "z": -0.34,
+      "z_intervalo_90": [
+       -0.74,
+       -0.18
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 2.1667,
+      "n": 24,
+      "z": 0.4,
+      "z_intervalo_90": [
+       -0.05,
+       0.61
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.127,
+      "n": 42,
+      "z": 0.05,
+      "z_intervalo_90": [
+       -0.34,
+       0.96
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 9.215,
+    "v_min": 6.243,
+    "retomada_s": 1.081
+   }
+  },
+  {
+   "tipo": "lenta",
+   "sessao": "2026-10-05-2",
+   "passagens": 60,
+   "voltas": 10,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.0167,
+      "n": 60,
+      "z": 0.03,
+      "z_intervalo_90": [
+       -0.3,
+       0.31
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.5463,
+      "n": 60,
+      "z": 0.04,
+      "z_intervalo_90": [
+       -0.02,
+       0.12
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.4623,
+      "n": 60,
+      "z": -0.28,
+      "z_intervalo_90": [
+       -0.52,
+       -0.17
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.4968,
+      "n": 40,
+      "z": -0.29,
+      "z_intervalo_90": [
+       -0.54,
+       -0.14
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2585,
+      "n": 39,
+      "z": 0.45,
+      "z_intervalo_90": [
+       -0.14,
+       1.73
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.5807,
+      "n": 22,
+      "z": -0.27,
+      "z_intervalo_90": [
+       -0.54,
+       0.22
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.335,
+      "n": 27,
+      "z": -0.17,
+      "z_intervalo_90": [
+       -0.32,
+       0.27
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 60,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 0.9663,
+      "n": 60,
+      "z": 0.14,
+      "z_intervalo_90": [
+       -0.05,
+       0.41
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 43,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.39,
+      "n": 60,
+      "z": -0.26,
+      "z_intervalo_90": [
+       -0.44,
+       0.15
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 1.9235,
+      "n": 40,
+      "z": 0.19,
+      "z_intervalo_90": [
+       -0.2,
+       0.4
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.1548,
+      "n": 60,
+      "z": 0.13,
+      "z_intervalo_90": [
+       -0.34,
+       0.34
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 14.388,
+    "v_min": 6.672,
+    "retomada_s": 0.769
+   }
+  },
+  {
+   "tipo": "lenta",
+   "sessao": "2026-10-09",
+   "passagens": 24,
+   "voltas": 4,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.9944,
+      "n": 24,
+      "z": -0.02,
+      "z_intervalo_90": [
+       -0.27,
+       0.14
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.5337,
+      "n": 24,
+      "z": 0.01,
+      "z_intervalo_90": [
+       -0.05,
+       0.11
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.5316,
+      "n": 24,
+      "z": -0.07,
+      "z_intervalo_90": [
+       -0.17,
+       0.25
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.4369,
+      "n": 17,
+      "z": -0.57,
+      "z_intervalo_90": [
+       -0.89,
+       -0.27
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2172,
+      "n": 17,
+      "z": 0.06,
+      "z_intervalo_90": [
+       -0.26,
+       0.93
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.4691,
+      "n": 17,
+      "z": -0.55,
+      "z_intervalo_90": [
+       -0.96,
+       -0.37
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.2201,
+      "n": 13,
+      "z": -0.43,
+      "z_intervalo_90": [
+       -0.56,
+       -0.34
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.019,
+      "n": 24,
+      "z": 0.11,
+      "z_intervalo_90": [
+       0.0,
+       0.95
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.217,
+      "n": 23,
+      "z": 0.48,
+      "z_intervalo_90": [
+       0.21,
+       0.69
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 23,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.3961,
+      "n": 24,
+      "z": -0.18,
+      "z_intervalo_90": [
+       -0.62,
+       -0.02
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 1.952,
+      "n": 16,
+      "z": 0.22,
+      "z_intervalo_90": [
+       -0.07,
+       0.4
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.3095,
+      "n": 24,
+      "z": 0.6,
+      "z_intervalo_90": [
+       0.55,
+       0.69
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 9.992,
+    "v_min": 3.236,
+    "retomada_s": 1.019
+   }
+  },
+  {
+   "tipo": "lenta",
+   "sessao": "2026-10-10",
+   "passagens": 66,
+   "voltas": 11,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.9646,
+      "n": 66,
+      "z": -0.1,
+      "z_intervalo_90": [
+       -0.32,
+       0.24
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.5267,
+      "n": 66,
+      "z": -0.01,
+      "z_intervalo_90": [
+       -0.05,
+       0.06
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.5473,
+      "n": 66,
+      "z": -0.02,
+      "z_intervalo_90": [
+       -0.14,
+       0.04
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.4868,
+      "n": 46,
+      "z": -0.34,
+      "z_intervalo_90": [
+       -0.7,
+       -0.24
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.1689,
+      "n": 45,
+      "z": -0.4,
+      "z_intervalo_90": [
+       -0.56,
+       -0.2
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.6175,
+      "n": 45,
+      "z": -0.18,
+      "z_intervalo_90": [
+       -0.6,
+       0.26
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.1999,
+      "n": 22,
+      "z": -0.47,
+      "z_intervalo_90": [
+       -0.91,
+       0.23
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 66,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 0.8354,
+      "n": 66,
+      "z": -0.04,
+      "z_intervalo_90": [
+       -0.23,
+       0.19
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 64,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.67
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.4229,
+      "n": 66,
+      "z": 0.17,
+      "z_intervalo_90": [
+       -0.01,
+       0.46
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 1.661,
+      "n": 43,
+      "z": -0.03,
+      "z_intervalo_90": [
+       -0.35,
+       0.22
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.1667,
+      "n": 66,
+      "z": 0.17,
+      "z_intervalo_90": [
+       0.0,
+       0.48
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 25.414,
+    "v_min": 7.835,
+    "retomada_s": 0.896
+   }
+  },
+  {
+   "tipo": "lenta",
+   "sessao": "2026-10-11",
+   "passagens": 96,
+   "voltas": 16,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.0384,
+      "n": 96,
+      "z": 0.09,
+      "z_intervalo_90": [
+       0.0,
+       0.34
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.5256,
+      "n": 96,
+      "z": -0.01,
+      "z_intervalo_90": [
+       -0.07,
+       0.02
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.5676,
+      "n": 96,
+      "z": 0.04,
+      "z_intervalo_90": [
+       -0.06,
+       0.18
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.6265,
+      "n": 67,
+      "z": 0.3,
+      "z_intervalo_90": [
+       0.11,
+       0.47
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2076,
+      "n": 66,
+      "z": -0.03,
+      "z_intervalo_90": [
+       -0.17,
+       0.22
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.6689,
+      "n": 67,
+      "z": -0.05,
+      "z_intervalo_90": [
+       -0.31,
+       0.01
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.6044,
+      "n": 34,
+      "z": 0.42,
+      "z_intervalo_90": [
+       -0.26,
+       0.59
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 96,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.48
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 0.7326,
+      "n": 96,
+      "z": -0.18,
+      "z_intervalo_90": [
+       -0.27,
+       -0.03
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 94,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.4536,
+      "n": 96,
+      "z": 0.57,
+      "z_intervalo_90": [
+       0.18,
+       0.78
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 1.6186,
+      "n": 68,
+      "z": -0.07,
+      "z_intervalo_90": [
+       -0.24,
+       0.09
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.1111,
+      "n": 96,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.34,
+       0.48
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 15.976,
+    "v_min": 4.483,
+    "retomada_s": 0.838
+   }
+  },
+  {
+   "tipo": "lenta",
+   "sessao": "2026-10-13",
+   "passagens": 42,
+   "voltas": 7,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.0909,
+      "n": 42,
+      "z": 0.22,
+      "z_intervalo_90": [
+       -0.12,
+       0.36
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.5314,
+      "n": 42,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.05,
+       0.08
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.5696,
+      "n": 42,
+      "z": 0.05,
+      "z_intervalo_90": [
+       -0.25,
+       0.35
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.6851,
+      "n": 28,
+      "z": 0.57,
+      "z_intervalo_90": [
+       0.44,
+       0.61
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2688,
+      "n": 28,
+      "z": 0.55,
+      "z_intervalo_90": [
+       -0.07,
+       1.02
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.8499,
+      "n": 28,
+      "z": 0.4,
+      "z_intervalo_90": [
+       0.33,
+       0.7
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.4133,
+      "n": 20,
+      "z": -0.0,
+      "z_intervalo_90": [
+       -0.5,
+       0.21
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 42,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.56
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 0.8798,
+      "n": 42,
+      "z": 0.02,
+      "z_intervalo_90": [
+       -0.22,
+       0.2
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 41,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.4477,
+      "n": 42,
+      "z": 0.5,
+      "z_intervalo_90": [
+       0.43,
+       0.68
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 1.3692,
+      "n": 29,
+      "z": -0.28,
+      "z_intervalo_90": [
+       -0.51,
+       0.09
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 42,
+      "z": -0.34,
+      "z_intervalo_90": [
+       -0.34,
+       0.17
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 10.711,
+    "v_min": 3.907,
+    "retomada_s": 0.669
+   }
+  },
+  {
+   "tipo": "lenta",
+   "sessao": "2026-10-16",
+   "passagens": 66,
+   "voltas": 11,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.0694,
+      "n": 66,
+      "z": 0.16,
+      "z_intervalo_90": [
+       0.04,
+       0.5
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.5331,
+      "n": 66,
+      "z": 0.01,
+      "z_intervalo_90": [
+       -0.04,
+       0.08
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.527,
+      "n": 66,
+      "z": -0.08,
+      "z_intervalo_90": [
+       -0.42,
+       0.16
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.6875,
+      "n": 44,
+      "z": 0.58,
+      "z_intervalo_90": [
+       0.15,
+       0.8
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.1931,
+      "n": 44,
+      "z": -0.17,
+      "z_intervalo_90": [
+       -0.39,
+       0.16
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.8159,
+      "n": 42,
+      "z": 0.31,
+      "z_intervalo_90": [
+       0.07,
+       0.96
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.4957,
+      "n": 30,
+      "z": 0.18,
+      "z_intervalo_90": [
+       -0.2,
+       0.25
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 66,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.27
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 9.559,
+      "n": 66,
+      "z": -0.18,
+      "z_intervalo_90": [
+       -0.33,
+       0.14
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 2.2599,
+      "n": 66,
+      "z": -0.45,
+      "z_intervalo_90": [
+       -0.53,
+       -0.21
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 66,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 0.7448,
+      "n": 66,
+      "z": -0.16,
+      "z_intervalo_90": [
+       -0.3,
+       -0.06
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 64,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.67
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.4104,
+      "n": 66,
+      "z": 0.01,
+      "z_intervalo_90": [
+       -0.15,
+       0.05
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 1.7995,
+      "n": 41,
+      "z": 0.09,
+      "z_intervalo_90": [
+       -0.09,
+       0.54
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.1944,
+      "n": 66,
+      "z": 0.25,
+      "z_intervalo_90": [
+       0.1,
+       0.67
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 11.795,
+    "v_min": 6.992,
+    "retomada_s": 0.728
+   }
+  },
+  {
+   "tipo": "lenta",
+   "sessao": "2026-10-17",
+   "passagens": 66,
+   "voltas": 11,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.0391,
+      "n": 66,
+      "z": 0.09,
+      "z_intervalo_90": [
+       -0.06,
+       0.17
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.5412,
+      "n": 66,
+      "z": 0.03,
+      "z_intervalo_90": [
+       -0.01,
+       0.07
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.5195,
+      "n": 66,
+      "z": -0.11,
+      "z_intervalo_90": [
+       -0.2,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.5911,
+      "n": 43,
+      "z": 0.14,
+      "z_intervalo_90": [
+       -0.01,
+       0.89
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2239,
+      "n": 43,
+      "z": 0.12,
+      "z_intervalo_90": [
+       -0.06,
+       0.31
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.7455,
+      "n": 42,
+      "z": 0.14,
+      "z_intervalo_90": [
+       -0.32,
+       0.56
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.3051,
+      "n": 33,
+      "z": -0.24,
+      "z_intervalo_90": [
+       -0.79,
+       -0.09
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 66,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 9.3408,
+      "n": 66,
+      "z": -0.24,
+      "z_intervalo_90": [
+       -0.31,
+       -0.03
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 2.4388,
+      "n": 66,
+      "z": -0.31,
+      "z_intervalo_90": [
+       -0.44,
+       -0.08
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 66,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 0.841,
+      "n": 66,
+      "z": -0.03,
+      "z_intervalo_90": [
+       -0.17,
+       0.12
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 64,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.3903,
+      "n": 66,
+      "z": -0.26,
+      "z_intervalo_90": [
+       -0.45,
+       -0.04
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 1.6636,
+      "n": 36,
+      "z": -0.03,
+      "z_intervalo_90": [
+       -0.33,
+       0.26
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 66,
+      "z": -0.34,
+      "z_intervalo_90": [
+       -0.34,
+       0.13
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 12.841,
+    "v_min": 4.012,
+    "retomada_s": 0.708
+   }
+  },
+  {
+   "tipo": "lenta",
+   "sessao": "2026-10-17-2",
+   "passagens": 90,
+   "voltas": 15,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.0497,
+      "n": 90,
+      "z": 0.12,
+      "z_intervalo_90": [
+       -0.1,
+       0.22
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.53,
+      "n": 90,
+      "z": -0.0,
+      "z_intervalo_90": [
+       -0.04,
+       0.04
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.5676,
+      "n": 90,
+      "z": 0.04,
+      "z_intervalo_90": [
+       -0.03,
+       0.23
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.7095,
+      "n": 60,
+      "z": 0.68,
+      "z_intervalo_90": [
+       0.46,
+       0.87
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2642,
+      "n": 59,
+      "z": 0.5,
+      "z_intervalo_90": [
+       0.15,
+       0.78
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.8828,
+      "n": 60,
+      "z": 0.48,
+      "z_intervalo_90": [
+       0.33,
+       0.75
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.4625,
+      "n": 41,
+      "z": 0.1,
+      "z_intervalo_90": [
+       -0.19,
+       0.3
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0423,
+      "n": 90,
+      "z": 0.25,
+      "z_intervalo_90": [
+       0.0,
+       0.65
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 10.5263,
+      "n": 90,
+      "z": 0.1,
+      "z_intervalo_90": [
+       -0.12,
+       0.21
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 2.7895,
+      "n": 89,
+      "z": -0.05,
+      "z_intervalo_90": [
+       -0.29,
+       0.15
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 90,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 0.9008,
+      "n": 90,
+      "z": 0.05,
+      "z_intervalo_90": [
+       -0.06,
+       0.24
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 86,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.3926,
+      "n": 90,
+      "z": -0.23,
+      "z_intervalo_90": [
+       -0.34,
+       -0.05
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 1.8176,
+      "n": 54,
+      "z": 0.1,
+      "z_intervalo_90": [
+       -0.13,
+       0.19
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.1944,
+      "n": 90,
+      "z": 0.25,
+      "z_intervalo_90": [
+       -0.21,
+       0.67
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 13.514,
+    "v_min": 7.018,
+    "retomada_s": 0.644
+   }
+  },
+  {
+   "tipo": "lenta",
+   "sessao": "2026-10-18",
+   "passagens": 54,
+   "voltas": 9,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.958,
+      "n": 54,
+      "z": -0.12,
+      "z_intervalo_90": [
+       -0.28,
+       0.11
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.5426,
+      "n": 54,
+      "z": 0.03,
+      "z_intervalo_90": [
+       0.01,
+       0.06
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.6136,
+      "n": 54,
+      "z": 0.18,
+      "z_intervalo_90": [
+       0.11,
+       0.34
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.4347,
+      "n": 36,
+      "z": -0.58,
+      "z_intervalo_90": [
+       -0.69,
+       -0.37
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.1989,
+      "n": 36,
+      "z": -0.12,
+      "z_intervalo_90": [
+       -0.48,
+       0.1
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.6619,
+      "n": 34,
+      "z": -0.07,
+      "z_intervalo_90": [
+       -0.19,
+       0.07
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.2958,
+      "n": 20,
+      "z": -0.26,
+      "z_intervalo_90": [
+       -0.76,
+       0.26
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 54,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 9.9463,
+      "n": 54,
+      "z": -0.07,
+      "z_intervalo_90": [
+       -0.24,
+       0.3
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 3.0475,
+      "n": 54,
+      "z": 0.14,
+      "z_intervalo_90": [
+       -0.14,
+       0.41
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 54,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 0.9681,
+      "n": 54,
+      "z": 0.14,
+      "z_intervalo_90": [
+       -0.06,
+       0.28
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 53,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.4345,
+      "n": 54,
+      "z": 0.32,
+      "z_intervalo_90": [
+       0.18,
+       0.53
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 1.6057,
+      "n": 41,
+      "z": -0.08,
+      "z_intervalo_90": [
+       -0.28,
+       0.2
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0417,
+      "n": 54,
+      "z": -0.21,
+      "z_intervalo_90": [
+       -0.34,
+       0.17
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 11.825,
+    "v_min": 4.667,
+    "retomada_s": 0.434
+   }
+  },
+  {
+   "tipo": "lenta",
+   "sessao": "2026-10-21",
+   "passagens": 54,
+   "voltas": 9,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.8415,
+      "n": 54,
+      "z": -0.41,
+      "z_intervalo_90": [
+       -0.64,
+       -0.2
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.5144,
+      "n": 54,
+      "z": -0.04,
+      "z_intervalo_90": [
+       -0.07,
+       -0.01
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.6248,
+      "n": 54,
+      "z": 0.22,
+      "z_intervalo_90": [
+       0.04,
+       0.41
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.5005,
+      "n": 38,
+      "z": -0.28,
+      "z_intervalo_90": [
+       -0.76,
+       -0.07
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.1782,
+      "n": 36,
+      "z": -0.31,
+      "z_intervalo_90": [
+       -0.4,
+       -0.09
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.5532,
+      "n": 37,
+      "z": -0.34,
+      "z_intervalo_90": [
+       -0.62,
+       -0.25
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.4733,
+      "n": 26,
+      "z": 0.13,
+      "z_intervalo_90": [
+       -0.07,
+       0.27
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 54,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.82
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 10.4391,
+      "n": 53,
+      "z": 0.08,
+      "z_intervalo_90": [
+       0.01,
+       0.19
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 3.4529,
+      "n": 53,
+      "z": 0.44,
+      "z_intervalo_90": [
+       0.12,
+       0.61
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 53,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 0.8108,
+      "n": 53,
+      "z": -0.07,
+      "z_intervalo_90": [
+       -0.16,
+       -0.01
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 52,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.4087,
+      "n": 54,
+      "z": -0.02,
+      "z_intervalo_90": [
+       -0.16,
+       0.04
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 1.2332,
+      "n": 36,
+      "z": -0.39,
+      "z_intervalo_90": [
+       -0.57,
+       0.01
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0833,
+      "n": 54,
+      "z": -0.08,
+      "z_intervalo_90": [
+       -0.34,
+       0.0
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 10.881,
+    "v_min": 8.659,
+    "retomada_s": 0.739
+   }
+  },
+  {
+   "tipo": "lenta",
+   "sessao": "2026-10-24",
+   "passagens": 54,
+   "voltas": 9,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.9545,
+      "n": 54,
+      "z": -0.13,
+      "z_intervalo_90": [
+       -0.36,
+       -0.01
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.5332,
+      "n": 54,
+      "z": 0.01,
+      "z_intervalo_90": [
+       -0.04,
+       0.03
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.5928,
+      "n": 54,
+      "z": 0.12,
+      "z_intervalo_90": [
+       -0.03,
+       0.3
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.5151,
+      "n": 37,
+      "z": -0.21,
+      "z_intervalo_90": [
+       -0.31,
+       0.1
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.1642,
+      "n": 36,
+      "z": -0.45,
+      "z_intervalo_90": [
+       -0.49,
+       -0.25
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.734,
+      "n": 34,
+      "z": 0.11,
+      "z_intervalo_90": [
+       -0.03,
+       0.25
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.6138,
+      "n": 27,
+      "z": 0.44,
+      "z_intervalo_90": [
+       0.22,
+       0.63
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0211,
+      "n": 54,
+      "z": 0.12,
+      "z_intervalo_90": [
+       0.0,
+       0.42
+      ]
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 11.3623,
+      "n": 53,
+      "z": 0.34,
+      "z_intervalo_90": [
+       0.03,
+       0.52
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 3.6151,
+      "n": 53,
+      "z": 0.56,
+      "z_intervalo_90": [
+       0.25,
+       0.89
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 53,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 0.859,
+      "n": 53,
+      "z": -0.0,
+      "z_intervalo_90": [
+       -0.12,
+       0.21
+      ]
+     },
+     "reversoes": {
+      "mediana": 1.0,
+      "n": 50,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.4347,
+      "n": 54,
+      "z": 0.33,
+      "z_intervalo_90": [
+       0.12,
+       0.41
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 1.4636,
+      "n": 45,
+      "z": -0.2,
+      "z_intervalo_90": [
+       -0.45,
+       -0.09
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0417,
+      "n": 54,
+      "z": -0.21,
+      "z_intervalo_90": [
+       -0.34,
+       0.0
+      ]
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 12.599,
+    "v_min": 4.94,
+    "retomada_s": 0.596
+   }
+  },
+  {
+   "tipo": "media",
+   "sessao": "2026-10-04",
+   "passagens": 77,
+   "voltas": 11,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.4445,
+      "n": 77,
+      "z": 0.15,
+      "z_intervalo_90": [
+       0.06,
+       0.45
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 77,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 77,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.6808,
+      "n": 29,
+      "z": -0.45,
+      "z_intervalo_90": [
+       -0.85,
+       -0.18
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2575,
+      "n": 19,
+      "z": 0.22,
+      "z_intervalo_90": [
+       -0.3,
+       0.93
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.5998,
+      "n": 26,
+      "z": -0.14,
+      "z_intervalo_90": [
+       -0.21,
+       0.24
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.5757,
+      "n": 24,
+      "z": 0.49,
+      "z_intervalo_90": [
+       0.15,
+       0.81
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 77,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.75,
+      "n": 74,
+      "z": 0.1,
+      "z_intervalo_90": [
+       -0.21,
+       0.29
+      ]
+     },
+     "reversoes": {
+      "mediana": 5.0,
+      "n": 53,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.67,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1601,
+      "n": 77,
+      "z": 0.07,
+      "z_intervalo_90": [
+       -0.08,
+       0.17
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 0.1487,
+      "n": 49,
+      "z": 0.4,
+      "z_intervalo_90": [
+       -0.03,
+       0.78
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 77,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 13.828,
+    "v_min": 10.417,
+    "retomada_s": 0.652
+   }
+  },
+  {
+   "tipo": "media",
+   "sessao": "2026-10-05",
+   "passagens": 49,
+   "voltas": 7,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.3267,
+      "n": 49,
+      "z": -0.01,
+      "z_intervalo_90": [
+       -0.06,
+       0.05
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 49,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 49,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.9554,
+      "n": 12,
+      "z": 0.44,
+      "z_intervalo_90": [
+       -0.66,
+       0.62
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2066,
+      "n": 8,
+      "z": -0.29,
+      "z_intervalo_90": [
+       -0.94,
+       0.24
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.4784,
+      "n": 12,
+      "z": -0.28,
+      "z_intervalo_90": [
+       -0.54,
+       0.21
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.0,
+      "n": 9,
+      "z": -0.5,
+      "z_intervalo_90": [
+       -0.5,
+       0.63
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 49,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.665,
+      "n": 48,
+      "z": 0.02,
+      "z_intervalo_90": [
+       -0.2,
+       0.5
+      ]
+     },
+     "reversoes": {
+      "mediana": 5.0,
+      "n": 48,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.34
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.13,
+      "n": 49,
+      "z": -0.28,
+      "z_intervalo_90": [
+       -0.31,
+       -0.06
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.8372,
+      "n": 30,
+      "z": -0.2,
+      "z_intervalo_90": [
+       -0.37,
+       0.24
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 49,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 15.908,
+    "v_min": 7.145,
+    "retomada_s": 0.41
+   }
+  },
+  {
+   "tipo": "media",
+   "sessao": "2026-10-05-2",
+   "passagens": 70,
+   "voltas": 10,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.3357,
+      "n": 70,
+      "z": -0.0,
+      "z_intervalo_90": [
+       -0.03,
+       0.06
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 70,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 70,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.7434,
+      "n": 20,
+      "z": -0.25,
+      "z_intervalo_90": [
+       -0.89,
+       0.53
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2014,
+      "n": 14,
+      "z": -0.34,
+      "z_intervalo_90": [
+       -0.43,
+       0.0
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.5143,
+      "n": 16,
+      "z": -0.24,
+      "z_intervalo_90": [
+       -0.53,
+       -0.02
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.2083,
+      "n": 15,
+      "z": -0.14,
+      "z_intervalo_90": [
+       -0.5,
+       0.4
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 70,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.6102,
+      "n": 70,
+      "z": -0.03,
+      "z_intervalo_90": [
+       -0.22,
+       0.21
+      ]
+     },
+     "reversoes": {
+      "mediana": 3.0,
+      "n": 29,
+      "z": -0.67,
+      "z_intervalo_90": [
+       -0.67,
+       -0.34
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1454,
+      "n": 70,
+      "z": -0.1,
+      "z_intervalo_90": [
+       -0.13,
+       -0.04
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.1888,
+      "n": 53,
+      "z": 0.19,
+      "z_intervalo_90": [
+       0.01,
+       0.38
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 69,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 34.151,
+    "v_min": 10.763,
+    "retomada_s": 1.165
+   }
+  },
+  {
+   "tipo": "media",
+   "sessao": "2026-10-09",
+   "passagens": 28,
+   "voltas": 4,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.2868,
+      "n": 28,
+      "z": -0.07,
+      "z_intervalo_90": [
+       -0.08,
+       -0.01
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 28,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 28,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.04
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.7109,
+      "n": 7,
+      "z": -0.35,
+      "z_intervalo_90": [
+       -0.71,
+       -0.25
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.3618,
+      "n": 7,
+      "z": 1.27,
+      "z_intervalo_90": [
+       1.27,
+       1.8
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.4921,
+      "n": 8,
+      "z": -0.27,
+      "z_intervalo_90": [
+       -0.58,
+       0.59
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.0,
+      "n": 3,
+      "z": -0.5,
+      "z_intervalo_90": [
+       -0.5,
+       -0.5
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 28,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.5787,
+      "n": 27,
+      "z": -0.06,
+      "z_intervalo_90": [
+       -0.14,
+       0.05
+      ]
+     },
+     "reversoes": {
+      "mediana": 6.0,
+      "n": 27,
+      "z": 0.34,
+      "z_intervalo_90": [
+       0.34,
+       0.67
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1355,
+      "n": 28,
+      "z": -0.22,
+      "z_intervalo_90": [
+       -0.35,
+       -0.06
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.8361,
+      "n": 19,
+      "z": -0.2,
+      "z_intervalo_90": [
+       -0.53,
+       0.16
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 28,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 41.07,
+    "v_min": 7.601,
+    "retomada_s": 0.848
+   }
+  },
+  {
+   "tipo": "media",
+   "sessao": "2026-10-10",
+   "passagens": 77,
+   "voltas": 11,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.344,
+      "n": 77,
+      "z": 0.01,
+      "z_intervalo_90": [
+       -0.01,
+       0.11
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 77,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 77,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.7705,
+      "n": 18,
+      "z": -0.16,
+      "z_intervalo_90": [
+       -0.51,
+       0.03
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.1949,
+      "n": 12,
+      "z": -0.41,
+      "z_intervalo_90": [
+       -0.79,
+       -0.06
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.5423,
+      "n": 18,
+      "z": -0.21,
+      "z_intervalo_90": [
+       -0.48,
+       0.03
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.2315,
+      "n": 13,
+      "z": -0.1,
+      "z_intervalo_90": [
+       -0.24,
+       0.15
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 77,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.6977,
+      "n": 77,
+      "z": 0.05,
+      "z_intervalo_90": [
+       -0.16,
+       0.14
+      ]
+     },
+     "reversoes": {
+      "mediana": 4.0,
+      "n": 72,
+      "z": -0.34,
+      "z_intervalo_90": [
+       -0.67,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1538,
+      "n": 77,
+      "z": -0.0,
+      "z_intervalo_90": [
+       -0.09,
+       0.03
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.4922,
+      "n": 55,
+      "z": 0.01,
+      "z_intervalo_90": [
+       -0.07,
+       0.47
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 76,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 10.329,
+    "v_min": 7.052,
+    "retomada_s": 0.994
+   }
+  },
+  {
+   "tipo": "media",
+   "sessao": "2026-10-11",
+   "passagens": 112,
+   "voltas": 16,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.3219,
+      "n": 112,
+      "z": -0.02,
+      "z_intervalo_90": [
+       -0.05,
+       0.03
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 112,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 112,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.8499,
+      "n": 24,
+      "z": 0.1,
+      "z_intervalo_90": [
+       -0.14,
+       0.34
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2415,
+      "n": 16,
+      "z": 0.06,
+      "z_intervalo_90": [
+       -0.45,
+       0.42
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.592,
+      "n": 25,
+      "z": -0.15,
+      "z_intervalo_90": [
+       -0.33,
+       0.17
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": -0.5,
+      "z_intervalo_90": [
+       -0.5,
+       -0.5
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 112,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.5483,
+      "n": 110,
+      "z": -0.09,
+      "z_intervalo_90": [
+       -0.21,
+       0.16
+      ]
+     },
+     "reversoes": {
+      "mediana": 5.0,
+      "n": 107,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1573,
+      "n": 112,
+      "z": 0.04,
+      "z_intervalo_90": [
+       -0.07,
+       0.17
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.6922,
+      "n": 93,
+      "z": -0.11,
+      "z_intervalo_90": [
+       -0.16,
+       -0.07
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 112,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 12.446,
+    "v_min": 7.943,
+    "retomada_s": 0.638
+   }
+  },
+  {
+   "tipo": "media",
+   "sessao": "2026-10-13",
+   "passagens": 49,
+   "voltas": 7,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.3978,
+      "n": 49,
+      "z": 0.08,
+      "z_intervalo_90": [
+       -0.01,
+       0.16
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 49,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 49,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.9424,
+      "n": 10,
+      "z": 0.4,
+      "z_intervalo_90": [
+       -0.41,
+       0.62
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2652,
+      "n": 7,
+      "z": 0.3,
+      "z_intervalo_90": [
+       -0.03,
+       1.87
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 1.1422,
+      "n": 10,
+      "z": 0.51,
+      "z_intervalo_90": [
+       0.07,
+       1.07
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.0,
+      "n": 8,
+      "z": -0.5,
+      "z_intervalo_90": [
+       -0.5,
+       0.09
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 49,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.5683,
+      "n": 48,
+      "z": -0.07,
+      "z_intervalo_90": [
+       -0.29,
+       0.13
+      ]
+     },
+     "reversoes": {
+      "mediana": 6.0,
+      "n": 46,
+      "z": 0.34,
+      "z_intervalo_90": [
+       0.0,
+       0.67
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1552,
+      "n": 49,
+      "z": 0.01,
+      "z_intervalo_90": [
+       -0.09,
+       0.17
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.4255,
+      "n": 37,
+      "z": 0.05,
+      "z_intervalo_90": [
+       -0.31,
+       0.12
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 49,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 14.6,
+    "v_min": 11.028,
+    "retomada_s": 0.75
+   }
+  },
+  {
+   "tipo": "media",
+   "sessao": "2026-10-16",
+   "passagens": 77,
+   "voltas": 11,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.3419,
+      "n": 77,
+      "z": 0.01,
+      "z_intervalo_90": [
+       -0.06,
+       0.13
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 77,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 77,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 1.0101,
+      "n": 15,
+      "z": 0.62,
+      "z_intervalo_90": [
+       0.29,
+       0.62
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2623,
+      "n": 11,
+      "z": 0.27,
+      "z_intervalo_90": [
+       -0.11,
+       1.97
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.7475,
+      "n": 15,
+      "z": 0.04,
+      "z_intervalo_90": [
+       -0.35,
+       0.84
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.4813,
+      "n": 8,
+      "z": 0.33,
+      "z_intervalo_90": [
+       -0.47,
+       0.8
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 77,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 10.0943,
+      "n": 74,
+      "z": -0.08,
+      "z_intervalo_90": [
+       -0.28,
+       0.15
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 1.5923,
+      "n": 74,
+      "z": 0.02,
+      "z_intervalo_90": [
+       -0.08,
+       0.13
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 74,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.844,
+      "n": 74,
+      "z": 0.19,
+      "z_intervalo_90": [
+       0.06,
+       0.33
+      ]
+     },
+     "reversoes": {
+      "mediana": 5.0,
+      "n": 70,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.34
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1516,
+      "n": 77,
+      "z": -0.03,
+      "z_intervalo_90": [
+       -0.14,
+       0.06
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.5693,
+      "n": 54,
+      "z": -0.04,
+      "z_intervalo_90": [
+       -0.16,
+       0.37
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 77,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 12.317,
+    "v_min": 13.351,
+    "retomada_s": 0.892
+   }
+  },
+  {
+   "tipo": "media",
+   "sessao": "2026-10-17",
+   "passagens": 77,
+   "voltas": 11,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.3243,
+      "n": 77,
+      "z": -0.02,
+      "z_intervalo_90": [
+       -0.05,
+       0.04
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 77,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 77,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.945,
+      "n": 19,
+      "z": 0.41,
+      "z_intervalo_90": [
+       -0.32,
+       0.62
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2762,
+      "n": 15,
+      "z": 0.41,
+      "z_intervalo_90": [
+       -0.16,
+       0.82
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.9624,
+      "n": 17,
+      "z": 0.29,
+      "z_intervalo_90": [
+       -0.09,
+       0.4
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.0,
+      "n": 15,
+      "z": -0.5,
+      "z_intervalo_90": [
+       -0.5,
+       0.67
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 77,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 10.4287,
+      "n": 76,
+      "z": 0.05,
+      "z_intervalo_90": [
+       -0.07,
+       0.12
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 1.3752,
+      "n": 76,
+      "z": -0.13,
+      "z_intervalo_90": [
+       -0.16,
+       0.0
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 76,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.5826,
+      "n": 76,
+      "z": -0.06,
+      "z_intervalo_90": [
+       -0.18,
+       0.12
+      ]
+     },
+     "reversoes": {
+      "mediana": 5.0,
+      "n": 72,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.34,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1385,
+      "n": 77,
+      "z": -0.18,
+      "z_intervalo_90": [
+       -0.33,
+       0.0
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.7624,
+      "n": 53,
+      "z": -0.16,
+      "z_intervalo_90": [
+       -0.27,
+       0.39
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 76,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 20.049,
+    "v_min": 6.163,
+    "retomada_s": 0.644
+   }
+  },
+  {
+   "tipo": "media",
+   "sessao": "2026-10-17-2",
+   "passagens": 105,
+   "voltas": 15,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.337,
+      "n": 105,
+      "z": -0.0,
+      "z_intervalo_90": [
+       -0.01,
+       0.08
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 105,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 105,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.8146,
+      "n": 22,
+      "z": -0.02,
+      "z_intervalo_90": [
+       -0.24,
+       0.23
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2585,
+      "n": 20,
+      "z": 0.23,
+      "z_intervalo_90": [
+       -0.19,
+       0.46
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 1.1515,
+      "n": 21,
+      "z": 0.52,
+      "z_intervalo_90": [
+       0.38,
+       0.8
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.343,
+      "n": 13,
+      "z": 0.09,
+      "z_intervalo_90": [
+       -0.32,
+       0.54
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 105,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 10.0932,
+      "n": 105,
+      "z": -0.08,
+      "z_intervalo_90": [
+       -0.15,
+       -0.01
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 1.2465,
+      "n": 105,
+      "z": -0.22,
+      "z_intervalo_90": [
+       -0.27,
+       -0.1
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 105,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.7096,
+      "n": 105,
+      "z": 0.06,
+      "z_intervalo_90": [
+       -0.13,
+       0.16
+      ]
+     },
+     "reversoes": {
+      "mediana": 5.0,
+      "n": 100,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.34,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1322,
+      "n": 105,
+      "z": -0.26,
+      "z_intervalo_90": [
+       -0.3,
+       -0.15
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.8414,
+      "n": 85,
+      "z": -0.2,
+      "z_intervalo_90": [
+       -0.29,
+       -0.11
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 105,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 18.127,
+    "v_min": 8.743,
+    "retomada_s": 0.461
+   }
+  },
+  {
+   "tipo": "media",
+   "sessao": "2026-10-18",
+   "passagens": 63,
+   "voltas": 9,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.309,
+      "n": 63,
+      "z": -0.04,
+      "z_intervalo_90": [
+       -0.05,
+       0.01
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 63,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 63,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.6906,
+      "n": 16,
+      "z": -0.42,
+      "z_intervalo_90": [
+       -0.87,
+       -0.24
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2524,
+      "n": 13,
+      "z": 0.17,
+      "z_intervalo_90": [
+       -0.63,
+       0.92
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.7149,
+      "n": 17,
+      "z": -0.0,
+      "z_intervalo_90": [
+       -0.23,
+       0.73
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.2892,
+      "n": 13,
+      "z": -0.0,
+      "z_intervalo_90": [
+       -0.33,
+       0.78
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 63,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 10.8263,
+      "n": 57,
+      "z": 0.2,
+      "z_intervalo_90": [
+       0.02,
+       0.38
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 1.5086,
+      "n": 57,
+      "z": -0.04,
+      "z_intervalo_90": [
+       -0.13,
+       0.02
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 57,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.8043,
+      "n": 57,
+      "z": 0.16,
+      "z_intervalo_90": [
+       -0.21,
+       0.6
+      ]
+     },
+     "reversoes": {
+      "mediana": 7.0,
+      "n": 57,
+      "z": 0.67,
+      "z_intervalo_90": [
+       0.51,
+       1.01
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1629,
+      "n": 63,
+      "z": 0.11,
+      "z_intervalo_90": [
+       0.01,
+       0.24
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.7408,
+      "n": 49,
+      "z": -0.14,
+      "z_intervalo_90": [
+       -0.28,
+       0.31
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 63,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 12.385,
+    "v_min": 10.166,
+    "retomada_s": 0.955
+   }
+  },
+  {
+   "tipo": "media",
+   "sessao": "2026-10-21",
+   "passagens": 63,
+   "voltas": 9,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.315,
+      "n": 63,
+      "z": -0.03,
+      "z_intervalo_90": [
+       -0.08,
+       0.03
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 63,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 63,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.7267,
+      "n": 12,
+      "z": -0.3,
+      "z_intervalo_90": [
+       -0.61,
+       0.62
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.2155,
+      "n": 10,
+      "z": -0.2,
+      "z_intervalo_90": [
+       -0.81,
+       0.22
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.7837,
+      "n": 11,
+      "z": 0.08,
+      "z_intervalo_90": [
+       -0.62,
+       0.39
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.7639,
+      "n": 8,
+      "z": 0.82,
+      "z_intervalo_90": [
+       0.11,
+       0.98
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 63,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 10.701,
+      "n": 60,
+      "z": 0.15,
+      "z_intervalo_90": [
+       -0.1,
+       0.44
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 1.7561,
+      "n": 60,
+      "z": 0.13,
+      "z_intervalo_90": [
+       0.1,
+       0.39
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 60,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.5397,
+      "n": 60,
+      "z": -0.1,
+      "z_intervalo_90": [
+       -0.26,
+       0.22
+      ]
+     },
+     "reversoes": {
+      "mediana": 4.0,
+      "n": 58,
+      "z": -0.34,
+      "z_intervalo_90": [
+       -0.67,
+       0.34
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1641,
+      "n": 63,
+      "z": 0.12,
+      "z_intervalo_90": [
+       0.02,
+       0.32
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": 0.1787,
+      "n": 56,
+      "z": 0.42,
+      "z_intervalo_90": [
+       0.04,
+       0.51
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 63,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 17.943,
+    "v_min": 10.603,
+    "retomada_s": 0.81
+   }
+  },
+  {
+   "tipo": "media",
+   "sessao": "2026-10-24",
+   "passagens": 63,
+   "voltas": 9,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.3366,
+      "n": 63,
+      "z": -0.0,
+      "z_intervalo_90": [
+       -0.01,
+       0.04
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 63,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 63,
+      "z": 0.0,
+      "z_intervalo_90": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": 0.7944,
+      "n": 9,
+      "z": -0.08,
+      "z_intervalo_90": [
+       -0.47,
+       0.3
+      ]
+     },
+     "pico_fracao": {
+      "mediana": 0.1844,
+      "n": 9,
+      "z": -0.51,
+      "z_intervalo_90": [
+       -0.73,
+       -0.03
+      ]
+     },
+     "taxa_soltura": {
+      "mediana": 0.9273,
+      "n": 9,
+      "z": 0.25,
+      "z_intervalo_90": [
+       -0.25,
+       0.36
+      ]
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": 0.5792,
+      "n": 5,
+      "z": 0.5,
+      "z_intervalo_90": [
+       0.15,
+       0.97
+      ]
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 63,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 10.1266,
+      "n": 61,
+      "z": -0.06,
+      "z_intervalo_90": [
+       -0.2,
+       0.05
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 1.7065,
+      "n": 61,
+      "z": 0.1,
+      "z_intervalo_90": [
+       0.05,
+       0.16
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 61,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.4647,
+      "n": 61,
+      "z": -0.17,
+      "z_intervalo_90": [
+       -0.39,
+       -0.12
+      ]
+     },
+     "reversoes": {
+      "mediana": 4.5,
+      "n": 58,
+      "z": -0.17,
+      "z_intervalo_90": [
+       -0.67,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1779,
+      "n": 63,
+      "z": 0.28,
+      "z_intervalo_90": [
+       0.24,
+       0.45
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.7972,
+      "n": 59,
+      "z": -0.18,
+      "z_intervalo_90": [
+       -0.32,
+       0.05
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 63,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": 20.276,
+    "v_min": 8.204,
+    "retomada_s": 0.498
+   }
+  },
+  {
+   "tipo": "rapida",
+   "sessao": "2026-10-04",
+   "passagens": 11,
+   "voltas": 11,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.8186,
+      "n": 11,
+      "z": -0.58,
+      "z_intervalo_90": [
+       -1.04,
+       0.75
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.3915,
+      "n": 11,
+      "z": -0.59,
+      "z_intervalo_90": [
+       -1.05,
+       -0.04
+      ]
+     },
+     "reversoes": {
+      "mediana": 7.0,
+      "n": 7,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.25,
+       0.74
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.0879,
+      "n": 11,
+      "z": -0.17,
+      "z_intervalo_90": [
+       -0.29,
+       1.04
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -2.3365,
+      "n": 10,
+      "z": -0.53,
+      "z_intervalo_90": [
+       -0.73,
+       0.07
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 15.815,
+    "retomada_s": 1.261
+   }
+  },
+  {
+   "tipo": "rapida",
+   "sessao": "2026-10-05",
+   "passagens": 7,
+   "voltas": 7,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.9565,
+      "n": 7,
+      "z": 0.05,
+      "z_intervalo_90": [
+       -0.11,
+       0.13
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 7,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 7,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 7,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.8317,
+      "n": 7,
+      "z": -0.0,
+      "z_intervalo_90": [
+       -0.58,
+       0.64
+      ]
+     },
+     "reversoes": {
+      "mediana": 5.0,
+      "n": 7,
+      "z": -0.25,
+      "z_intervalo_90": [
+       -0.49,
+       0.61
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.0945,
+      "n": 7,
+      "z": 0.32,
+      "z_intervalo_90": [
+       -1.1,
+       0.47
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.8659,
+      "n": 7,
+      "z": 0.04,
+      "z_intervalo_90": [
+       -0.85,
+       0.18
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 7,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 1.665,
+    "retomada_s": 1.498
+   }
+  },
+  {
+   "tipo": "rapida",
+   "sessao": "2026-10-05-2",
+   "passagens": 10,
+   "voltas": 10,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.9062,
+      "n": 10,
+      "z": -0.18,
+      "z_intervalo_90": [
+       -0.52,
+       0.05
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 10,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 10,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 10,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.7564,
+      "n": 10,
+      "z": -0.1,
+      "z_intervalo_90": [
+       -0.65,
+       0.48
+      ]
+     },
+     "reversoes": {
+      "mediana": 8.0,
+      "n": 5,
+      "z": 0.12,
+      "z_intervalo_90": [
+       -0.49,
+       0.49
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.0896,
+      "n": 10,
+      "z": -0.04,
+      "z_intervalo_90": [
+       -0.4,
+       0.29
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -2.1542,
+      "n": 10,
+      "z": -0.46,
+      "z_intervalo_90": [
+       -1.27,
+       -0.13
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 10,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 5.475,
+    "retomada_s": 1.557
+   }
+  },
+  {
+   "tipo": "rapida",
+   "sessao": "2026-10-09",
+   "passagens": 4,
+   "voltas": 4,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.0558,
+      "n": 4,
+      "z": 0.5,
+      "z_intervalo_90": [
+       -1.83,
+       0.92
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 0.999,
+      "n": 4,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0227,
+      "n": 4,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 4,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.6456,
+      "n": 4,
+      "z": -0.25,
+      "z_intervalo_90": [
+       -1.56,
+       0.49
+      ]
+     },
+     "reversoes": {
+      "mediana": 2.5,
+      "n": 4,
+      "z": -0.55,
+      "z_intervalo_90": [
+       -0.74,
+       -0.43
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1012,
+      "n": 4,
+      "z": 0.81,
+      "z_intervalo_90": [
+       -0.12,
+       2.46
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.7627,
+      "n": 4,
+      "z": 0.08,
+      "z_intervalo_90": [
+       -0.39,
+       0.1
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 4,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 11.142,
+    "retomada_s": 0.613
+   }
+  },
+  {
+   "tipo": "rapida",
+   "sessao": "2026-10-10",
+   "passagens": 11,
+   "voltas": 11,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.9252,
+      "n": 11,
+      "z": -0.1,
+      "z_intervalo_90": [
+       -0.69,
+       0.17
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 2.0992,
+      "n": 11,
+      "z": 0.35,
+      "z_intervalo_90": [
+       -0.48,
+       0.69
+      ]
+     },
+     "reversoes": {
+      "mediana": 7.0,
+      "n": 11,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.49,
+       0.25
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.095,
+      "n": 11,
+      "z": 0.35,
+      "z_intervalo_90": [
+       0.16,
+       1.61
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.8648,
+      "n": 10,
+      "z": 0.04,
+      "z_intervalo_90": [
+       -0.83,
+       0.18
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 38.321,
+    "retomada_s": 2.129
+   }
+  },
+  {
+   "tipo": "rapida",
+   "sessao": "2026-10-11",
+   "passagens": 16,
+   "voltas": 16,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.0193,
+      "n": 16,
+      "z": 0.34,
+      "z_intervalo_90": [
+       -0.36,
+       0.65
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 16,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 16,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 16,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 2.2464,
+      "n": 16,
+      "z": 0.54,
+      "z_intervalo_90": [
+       0.12,
+       0.99
+      ]
+     },
+     "reversoes": {
+      "mediana": 6.5,
+      "n": 16,
+      "z": -0.06,
+      "z_intervalo_90": [
+       -0.49,
+       0.74
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.0882,
+      "n": 16,
+      "z": -0.14,
+      "z_intervalo_90": [
+       -0.31,
+       0.24
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.8213,
+      "n": 16,
+      "z": 0.06,
+      "z_intervalo_90": [
+       -0.51,
+       0.16
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 16,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 2.99,
+    "retomada_s": 1.623
+   }
+  },
+  {
+   "tipo": "rapida",
+   "sessao": "2026-10-13",
+   "passagens": 7,
+   "voltas": 7,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.2739,
+      "n": 7,
+      "z": 1.5,
+      "z_intervalo_90": [
+       0.21,
+       1.63
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 7,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 7,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 7,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "beta_entrada": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "contra_s": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 2.0511,
+      "n": 7,
+      "z": 0.28,
+      "z_intervalo_90": [
+       -0.63,
+       1.12
+      ]
+     },
+     "reversoes": {
+      "mediana": 3.0,
+      "n": 7,
+      "z": -0.49,
+      "z_intervalo_90": [
+       -0.74,
+       0.25
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.1054,
+      "n": 7,
+      "z": 1.12,
+      "z_intervalo_90": [
+       -0.02,
+       1.67
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.5166,
+      "n": 7,
+      "z": 0.17,
+      "z_intervalo_90": [
+       -0.66,
+       0.27
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 7,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 2.668,
+    "retomada_s": 1.606
+   }
+  },
+  {
+   "tipo": "rapida",
+   "sessao": "2026-10-16",
+   "passagens": 11,
+   "voltas": 11,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.9477,
+      "n": 11,
+      "z": 0.01,
+      "z_intervalo_90": [
+       -0.79,
+       0.32
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 13.9675,
+      "n": 11,
+      "z": -0.33,
+      "z_intervalo_90": [
+       -2.04,
+       0.54
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 1.8458,
+      "n": 11,
+      "z": 0.3,
+      "z_intervalo_90": [
+       -0.14,
+       1.28
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.6797,
+      "n": 11,
+      "z": -0.21,
+      "z_intervalo_90": [
+       -0.7,
+       0.21
+      ]
+     },
+     "reversoes": {
+      "mediana": 10.0,
+      "n": 10,
+      "z": 0.37,
+      "z_intervalo_90": [
+       -0.31,
+       1.23
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.0906,
+      "n": 11,
+      "z": 0.04,
+      "z_intervalo_90": [
+       -0.34,
+       0.81
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -2.2508,
+      "n": 11,
+      "z": -0.5,
+      "z_intervalo_90": [
+       -1.25,
+       0.16
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 3.69,
+    "retomada_s": 1.723
+   }
+  },
+  {
+   "tipo": "rapida",
+   "sessao": "2026-10-17",
+   "passagens": 11,
+   "voltas": 11,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.026,
+      "n": 11,
+      "z": 0.37,
+      "z_intervalo_90": [
+       -0.73,
+       0.78
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 14.7374,
+      "n": 11,
+      "z": 0.33,
+      "z_intervalo_90": [
+       0.15,
+       0.66
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 1.9046,
+      "n": 11,
+      "z": 0.45,
+      "z_intervalo_90": [
+       -0.16,
+       0.88
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.8549,
+      "n": 11,
+      "z": 0.03,
+      "z_intervalo_90": [
+       -0.79,
+       0.42
+      ]
+     },
+     "reversoes": {
+      "mediana": 4.0,
+      "n": 11,
+      "z": -0.37,
+      "z_intervalo_90": [
+       -0.49,
+       1.72
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.0849,
+      "n": 11,
+      "z": -0.39,
+      "z_intervalo_90": [
+       -1.02,
+       0.26
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.8693,
+      "n": 11,
+      "z": 0.04,
+      "z_intervalo_90": [
+       -1.25,
+       0.18
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 11,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 9.078,
+    "retomada_s": 1.641
+   }
+  },
+  {
+   "tipo": "rapida",
+   "sessao": "2026-10-17-2",
+   "passagens": 15,
+   "voltas": 15,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.8937,
+      "n": 15,
+      "z": -0.24,
+      "z_intervalo_90": [
+       -0.89,
+       -0.03
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 15,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 15,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 15,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 13.4517,
+      "n": 15,
+      "z": -0.78,
+      "z_intervalo_90": [
+       -0.9,
+       0.33
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 1.5738,
+      "n": 15,
+      "z": -0.38,
+      "z_intervalo_90": [
+       -1.21,
+       -0.05
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 15,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.8435,
+      "n": 15,
+      "z": 0.01,
+      "z_intervalo_90": [
+       -0.71,
+       0.37
+      ]
+     },
+     "reversoes": {
+      "mediana": 11.0,
+      "n": 15,
+      "z": 0.49,
+      "z_intervalo_90": [
+       -0.37,
+       1.1
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.0842,
+      "n": 15,
+      "z": -0.43,
+      "z_intervalo_90": [
+       -0.85,
+       0.19
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -2.5468,
+      "n": 14,
+      "z": -0.62,
+      "z_intervalo_90": [
+       -1.32,
+       0.07
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 15,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 17.851,
+    "retomada_s": 1.936
+   }
+  },
+  {
+   "tipo": "rapida",
+   "sessao": "2026-10-18",
+   "passagens": 9,
+   "voltas": 9,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.8445,
+      "n": 9,
+      "z": -0.47,
+      "z_intervalo_90": [
+       -0.75,
+       -0.33
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 13.556,
+      "n": 9,
+      "z": -0.69,
+      "z_intervalo_90": [
+       -0.96,
+       -0.19
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 1.4519,
+      "n": 9,
+      "z": -0.69,
+      "z_intervalo_90": [
+       -1.15,
+       0.13
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.9538,
+      "n": 9,
+      "z": 0.16,
+      "z_intervalo_90": [
+       -0.05,
+       0.57
+      ]
+     },
+     "reversoes": {
+      "mediana": 13.0,
+      "n": 8,
+      "z": 0.74,
+      "z_intervalo_90": [
+       0.12,
+       2.15
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.0854,
+      "n": 9,
+      "z": -0.35,
+      "z_intervalo_90": [
+       -0.66,
+       0.52
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -2.1938,
+      "n": 9,
+      "z": -0.48,
+      "z_intervalo_90": [
+       -0.57,
+       0.0
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 5.84,
+    "retomada_s": 1.428
+   }
+  },
+  {
+   "tipo": "rapida",
+   "sessao": "2026-10-21",
+   "passagens": 9,
+   "voltas": 9,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 1.3497,
+      "n": 9,
+      "z": 1.85,
+      "z_intervalo_90": [
+       0.74,
+       2.18
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 15.4171,
+      "n": 9,
+      "z": 0.92,
+      "z_intervalo_90": [
+       0.04,
+       1.73
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 2.168,
+      "n": 9,
+      "z": 1.12,
+      "z_intervalo_90": [
+       0.84,
+       2.19
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 1.6702,
+      "n": 9,
+      "z": -0.22,
+      "z_intervalo_90": [
+       -0.81,
+       -0.18
+      ]
+     },
+     "reversoes": {
+      "mediana": 7.0,
+      "n": 9,
+      "z": 0.0,
+      "z_intervalo_90": [
+       -0.49,
+       0.86
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.0985,
+      "n": 9,
+      "z": 0.61,
+      "z_intervalo_90": [
+       0.35,
+       1.57
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -1.5988,
+      "n": 9,
+      "z": -0.25,
+      "z_intervalo_90": [
+       -1.24,
+       0.11
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 1.957,
+    "retomada_s": 1.741
+   }
+  },
+  {
+   "tipo": "rapida",
+   "sessao": "2026-10-24",
+   "passagens": 9,
+   "voltas": 9,
+   "dimensoes": {
+    "forma_v_ou_u": {
+     "plato_s": {
+      "mediana": 0.8489,
+      "n": 9,
+      "z": -0.45,
+      "z_intervalo_90": [
+       -0.64,
+       0.08
+      ]
+     },
+     "vmin_sobre_ventrada": {
+      "mediana": 1.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "vmin_posicao": {
+      "mediana": 0.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "perfil_de_frenagem": {
+     "pico_rel": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pico_fracao": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "taxa_soltura": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "uso_dos_pedais": {
+     "acelerador_min_antes": {
+      "mediana": null,
+      "n": 0,
+      "z": null,
+      "z_intervalo_90": null
+     },
+     "pedais_juntos_s": {
+      "mediana": 0.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "resposta_na_entrada": {
+     "guinada_por_roda": {
+      "mediana": 14.209,
+      "n": 9,
+      "z": -0.12,
+      "z_intervalo_90": [
+       -0.63,
+       0.39
+      ]
+     },
+     "beta_entrada": {
+      "mediana": 1.7436,
+      "n": 9,
+      "z": 0.05,
+      "z_intervalo_90": [
+       -0.33,
+       0.8
+      ]
+     },
+     "contra_s": {
+      "mediana": 0.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    },
+    "aplicacao_do_volante": {
+     "taxa_entrada": {
+      "mediana": 2.3187,
+      "n": 9,
+      "z": 0.64,
+      "z_intervalo_90": [
+       -1.25,
+       1.12
+      ]
+     },
+     "reversoes": {
+      "mediana": 5.0,
+      "n": 9,
+      "z": -0.25,
+      "z_intervalo_90": [
+       -0.25,
+       0.0
+      ]
+     },
+     "delta_pk": {
+      "mediana": 0.0897,
+      "n": 9,
+      "z": -0.03,
+      "z_intervalo_90": [
+       -0.31,
+       1.06
+      ]
+     }
+    },
+    "perfil_do_acelerador": {
+     "apice_ao_pleno_s": {
+      "mediana": -0.8858,
+      "n": 9,
+      "z": 0.03,
+      "z_intervalo_90": [
+       -0.35,
+       0.05
+      ]
+     },
+     "f20_60_saida": {
+      "mediana": 0.0,
+      "n": 9,
+      "z": null,
+      "z_intervalo_90": null
+     }
+    }
+   },
+   "consistencia_a_parte": {
+    "s_b_rel": null,
+    "v_min": 4.692,
+    "retomada_s": 1.164
+   }
+  }
+ ]
+}

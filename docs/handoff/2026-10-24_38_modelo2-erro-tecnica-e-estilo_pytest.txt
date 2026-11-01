@@ -1,0 +1,55 @@
+........................................................................ [  8%]
+........................................................................ [ 17%]
+........................................................................ [ 26%]
+........................................................................ [ 34%]
+........................................................................ [ 43%]
+........................................................................ [ 52%]
+........................................................................ [ 60%]
+........................................................................ [ 69%]
+........................................................................ [ 78%]
+........................................................................ [ 86%]
+........................................................................ [ 95%]
+.....................................                                    [100%]
+============================== warnings summary ===============================
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:64
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:64: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    prop = Group((name + Suppress("=") + comma_separated(value)) | oneOf(_CONSTANTS))
+
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    parse = parser.parseString(pattern)
+
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+    parser.resetCache()
+
+..\.venv\lib\site-packages\matplotlib\_mathtext.py:45
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_mathtext.py:45: PyparsingDeprecationWarning: 'enablePackrat' deprecated - use 'enable_packrat'
+    ParserElement.enablePackrat()
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 1 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 2 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 4 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+829 passed, 18 warnings in 492.82s (0:08:12)
+exit 0
