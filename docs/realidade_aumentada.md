@@ -353,7 +353,7 @@ O engenheiro mostra o que diz: quando o rádio fala de uma curva, a janela mostr
 - **O cursor:** uma linha de cada cor, em cada visual, onde cada carro está, no mesmo tempo da animação.
 - **Os números:** os visuais não escrevem número; os eixos dizem a unidade ("velocidade (km/h) pela distância (m)", "diferença acumulada (s)"). Na frase do coach, o único número continua sendo o da voz.
 - **De onde vem cada dado:** da mesma rota do replay, uma vez por mensagem. A velocidade de cada ponto (`velocidades`), o passo da grade (`passoM`, a distância é o índice vezes o passo), a distância de cada marca desde a entrada (`dM`), as separações (`secoes`) e o trecho da fala (`voz`). O tempo e o pedal já vinham nas linhas. Nada de física nova.
-- **Quando a janela é pequena:** o replay fica com pelo menos 150 px; os visuais entram enquanto couberem, na ordem pedal, diferença e velocidade (a velocidade sai primeiro). Na janela de 420 × 300 e na de 300 × 300, entram o pedal e a diferença; com 334 px ou mais de altura, entram os três.
+- **Quando a janela é pequena:** o replay fica com pelo menos 150 px; os visuais entram enquanto couberem, na ordem pedal, diferença e velocidade (a velocidade sai primeiro). Na janela de 420 × 300 e na de 300 × 300, entram o pedal e a diferença; com 314 px ou mais de altura, entram os três. Nos boxes, a grade ocupa até 185 px (8 voltas e 2 de fora) da janela 1,6 vez maior: numa janela de 420 × 300, com 8 voltas, a velocidade também fica de fora; numa de 420 × 480 ou maior, os três entram.
 - **Com o backend do 0.5.0** (sem os campos novos), a janela e a tela mostram o replay como antes, sem os visuais e sem erro.
 
 **A diferença acumulada contra a voz:**
@@ -364,9 +364,11 @@ O engenheiro mostra o que diz: quando o rádio fala de uma curva, a janela mostr
 **A grade da sessão** (C.4, `GET /api/radio/grade`):
 
 - **o que mostra:** as voltas válidas da sessão nas linhas e as 14 curvas nas colunas. Cada célula tem a perda na curva contra a referência, em segundos, com a cor (laranja quando você perde, azul quando ganha, mais forte até 1 s). É a mesma perda da análise: a célula da curva citada, na volta citada, tem o número que a análise usou;
-- **as curvas citadas** ficam com o contorno vermelho, na volta citada: a frase do coach na volta dela; a análise na volta das 3 mais perto da mediana (a do replay);
+- **as curvas citadas** ficam com o contorno vermelho, na volta citada: a frase do coach na volta dela; a análise na volta das 3 mais perto da mediana (a do replay). A frase citada numa volta que ficou de fora não tem célula para marcar: nas 3 sessões, só 1 das 18 frases do coach caiu numa volta da grade;
 - **as voltas de fora,** com o motivo: a IA no volante, a volta incompleta (nem todos os microssetores medidos), a rodada ou saída de pista (uma curva com mais de 5 s), a volta sem as medidas e a que o rádio não viu fechar na linha (achada pelo buraco na numeração das voltas);
 - **onde:** na tela Ao vivo, sob os cartões do rádio, lida a cada 5 s; no jogo, só nos boxes ou com o jogo pausado, embaixo da janela grande do replay, com as últimas 8 voltas válidas e as 2 últimas de fora. O backend do 0.5.0 não tem a rota: a janela fica sem a grade e registra isso uma vez no log do CSP.
+
+**A conferência ponta a ponta** (01/11): o backend do repositório na porta 8011, com as pastas isoladas, tocou 21/10 desde a volta 1, e a tela Ao vivo, numa aba "[teste]", mostrou o replay da frase da C12 da volta 2 e o da primeira análise, com os visuais, e a grade com as curvas citadas (capturas no handoff do pedido 43).
 
 **O custo:**
 

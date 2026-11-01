@@ -24094,63 +24094,85 @@
  "temposDoReplay": [
   {
    "tipo": "frase",
-   "ms": 1.97,
+   "ms": 2.0,
    "curvas": 0
   },
   {
    "tipo": "frase",
-   "ms": 1.0,
+   "ms": 1.43,
    "curvas": 0
   },
   {
    "tipo": "frase",
-   "ms": 3.81,
+   "ms": 4.38,
    "curvas": 1
   },
   {
    "tipo": "frase",
-   "ms": 3.82,
+   "ms": 3.84,
    "curvas": 1
   },
   {
    "tipo": "frase",
-   "ms": 1.9,
+   "ms": 1.87,
    "curvas": 0
   },
   {
    "tipo": "frase",
-   "ms": 3.53,
+   "ms": 4.01,
    "curvas": 1
   },
   {
    "tipo": "analise",
-   "ms": 4.04,
+   "ms": 6.56,
    "curvas": 2
   },
   {
    "tipo": "frase",
-   "ms": 3.66,
+   "ms": 4.2,
    "curvas": 1
   },
   {
    "tipo": "frase",
-   "ms": 4.52,
+   "ms": 3.54,
    "curvas": 0
   },
   {
    "tipo": "analise",
-   "ms": 4.03,
+   "ms": 5.85,
    "curvas": 2
   },
   {
    "tipo": "frase",
-   "ms": 3.53,
+   "ms": 3.94,
    "curvas": 1
   },
   {
    "tipo": "frase",
-   "ms": 3.45,
+   "ms": 3.74,
    "curvas": 1
+  }
+ ],
+ "iniciosForaDaLinha": [
+  {
+   "volta": 1.0,
+   "microssetor": 4
+  },
+  {
+   "volta": 8.0,
+   "microssetor": 4
+  },
+  {
+   "volta": 8.0,
+   "microssetor": 4
+  },
+  {
+   "volta": 15.0,
+   "microssetor": 4
+  },
+  {
+   "volta": 21.0,
+   "microssetor": 4
   }
  ],
  "grade": {
@@ -24325,6 +24347,11 @@
     "motivo": "volta incompleta (nem todos os microssetores medidos)"
    },
    {
+    "volta": 8,
+    "tempoS": null,
+    "motivo": "o rádio não viu esta volta fechar na linha"
+   },
+   {
     "volta": 10,
     "tempoS": 89.518,
     "motivo": "volta incompleta (nem todos os microssetores medidos)"
@@ -24333,6 +24360,11 @@
     "volta": 12,
     "tempoS": 103.199,
     "motivo": "volta incompleta (nem todos os microssetores medidos)"
+   },
+   {
+    "volta": 14,
+    "tempoS": null,
+    "motivo": "o rádio não viu esta volta fechar na linha"
    },
    {
     "volta": 15,
