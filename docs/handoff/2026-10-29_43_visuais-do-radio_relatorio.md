@@ -40,7 +40,7 @@ O aviso foi "Realizado os testes", sem anotações. **Tudo abaixo vem dos regist
 | 7. A grade nos boxes | **quase não foi exercitada** (abaixo) | o log do backend e a gravação |
 | 8. Desligar o replay | **passou:** desligado das 20:10:59 às 20:19:59 | o log do CSP |
 
-Nas 13 voltas gravadas, nenhuma amostra da IA. Cada replay foi pedido uma vez pelo jogo.
+Nas 14 passagens gravadas, nenhuma amostra da IA. Cada replay foi pedido uma vez pelo jogo.
 
 **A subida no trecho da fala contra a voz, nas 4 frases:**
 
