@@ -321,12 +321,58 @@ O engenheiro mostra o que diz: quando o rádio fala de uma curva, a janela mostr
   - o resumo na linha e a frase do coach sem causa não têm replay.
 - **Na tela Ao vivo:** sob o cartão da análise e da frase do coach com causa, a mesma animação, uma vez, e o botão "Repetir o replay".
 - **A rota:** `GET /api/radio/replay/<id>`, uma vez por mensagem. A mensagem diz se tem replay (`replay.url` e as curvas). Uma análise com 2 curvas ocupa cerca de 20 KB; uma frase do coach, cerca de 8 KB.
-- **A medida da frase do coach e a do replay não são a mesma** (achado da conferência ponta a ponta de 22/10, decisão pendente do Eduardo). A voz e o cartão da frase do coach dizem o que o coach mediu no microssetor (o `evidence`: a freada e as mínimas daquele trecho de cerca de 70 m); o replay mede a curva inteira, pela regra do relatório de evolução. Na C12 da volta 2 de 21/10, a voz diz "Freia 16 metros antes da IA." e o cartão "mínima da IA 145 km/h, a sua 101 km/h", e o replay mostra "você freia 56 m antes da IA" e as mínimas de 90 e 98 km/h. Na análise das voltas, a fala e o replay usam a mesma medida.
+- **A medida da frase do coach e a do replay não eram a mesma** (achado da conferência ponta a ponta de 22/10; resolvido pelo pedido 43, na seção 5.4.1). A voz e o cartão da frase do coach dizem o que o coach mediu no microssetor (o `evidence`: a freada e as mínimas daquele trecho de cerca de 70 m); o replay mede a curva inteira, pela regra do relatório de evolução. Na C12 da volta 2 de 21/10, a voz diz "Freia 16 metros antes da IA." e o cartão "mínima da IA 145 km/h, a sua 101 km/h", e o replay mostra "você freia 56 m antes da IA" e as mínimas de 90 e 98 km/h. Na análise das voltas, a fala e o replay usam a mesma medida.
 - **A conferência ponta a ponta** (22/10): o backend do repositório numa porta de teste, com as pastas isoladas, tocou a sessão de 21/10 pelo caminho do jogo, e a tela Ao vivo, apontada para ele, mostrou o replay da frase da C12 da volta 2 sob o cartão, com o botão de repetir (capturas no handoff do pedido 36).
 - **A conferência fora do jogo:** uma prévia em HTML repete as contas da janela (a câmera, a imagem girada, as linhas, as marcas e o encaixe dos rótulos) com 3 curvas reais da sessão de 21/10: a C01 e a C10 da segunda análise e a C12 da primeira. Na C01 da segunda análise, os 7,9 m do traçado batem: a distância entre os dois pontos da seta é 7,941 m, e cada ponto está sobre a sua linha.
 - **O custo:**
   - **no backend:** montar o replay leva cerca de 1 ms numa frase do coach e 3 ms numa análise com 2 curvas (sessão de 21/10, 9 replays), uma vez, na entrega;
   - **no jogo:** a cada quadro, uma imagem, duas linhas de 120 a 200 pontos, as marcas e os rótulos, e só enquanto o replay está na tela. O FPS entra no mesmo registro dos mapas (`replay ligado` ou `desligado`). **No teste de 22/10,** com as 4 janelas ligadas, 119,4 FPS de média (21 blocos de 10 s, de 112 a 127), numa tela de 2.560 × 1.080. Só houve um bloco com tudo desligado (137,3, no começo), e o replay não chegou a aparecer, porque a IA dirigiu a sessão e o rádio ficou calado; o custo de cada janela ainda não está medido.
+
+#### 5.4.1 Os números da voz e os 4 visuais (pedido 43)
+
+**A regra dos números da voz** (decisão do Eduardo de 29/10): no replay de uma frase do coach, todo número escrito é o da voz, com a unidade e o arredondamento do cartão. As linhas e os carros continuam os da curva inteira.
+
+| rótulo | na frase do coach (pedido 43) | na análise (não muda) |
+|---|---|---|
+| a freada | "você freia 16 m antes da IA": o `brakeDeltaM` do coach, arredondado como no cartão; as duas marcas nos inícios de frenagem que o coach guardou (`yourBrakeOnsetM`, `referenceBrakeOnsetM`) | a regra do relatório de evolução |
+| as mínimas | "mínima 101 km/h" e "mínima 145 km/h": os números do cartão; as marcas no ponto mais lento de cada grade dentro do microssetor da fala (a mesma regra do coach: a menor velocidade do microssetor) | a menor velocidade dentro da curva |
+| o traçado | **não aparece:** o coach não mede o lado | a posição lateral no ponto da mínima da referência |
+| o alto | "C12, esquerda · volta 2 · perde 0,64 s no trecho da fala": o tempo do cartão | "perde 1,21 s nesta curva" |
+| o trecho da fala | o microssetor que a voz mediu, uma faixa clara na pista e nos visuais, com o rótulo "trecho da fala" | — |
+
+- **Sem a freada na voz** (a frase só com a mínima), o replay da frase não tem as marcas de freada.
+- **A janela cresce** para conter o microssetor da fala e as freadas do coach. O microssetor 39, que o coach chama de "Curva 11", fica quase todo na saída da C10 e começa 55 m antes da janela da C11. O relógio da volta tem de ter sido medido em 90% da janela crescida; sem isso, a frase fica sem replay (em 21/10, a frase da C11 da volta 15, cuja grade só tinha pontos a partir de 38 m dentro do trecho).
+- **A conferência fora do tempo real** (as sessões de 13/10, 18/10 e 21/10, com a voz de verdade): antes, os 15 replays de frases do coach tinham algum rótulo com um número que não estava no cartão nem na voz. Depois, nenhum dos 14 (a frase da C11 da volta 15 de 21/10 ficou sem replay). Nas análises, 5 de 5, antes e depois: o replay mostra a volta das 3 mais perto da mediana, e o cartão, a mediana de cada medida (a análise não mudou, como pedido).
+
+**Os 4 visuais.** Sob a animação, no jogo e no cartão da tela Ao vivo, de cima para baixo:
+
+1. **a faixa do pedal** (C.3): duas faixas pela distância, "você" e "IA", com o freio, o acelerador parcial e o acelerador cheio nas cores do traçado pintado pelo pedal (freio a partir de 0,15; acelerador cheio a partir de 0,9: as do mapa aproximado e da tela Volta);
+2. **a diferença acumulada** (C.2): o seu tempo menos o da referência, desde a mesma entrada; sobe quando você perde (área laranja) e desce quando você ganha (azul), com as separações na freada (a primeira das duas), na mínima (a da referência) e na saída (o fim da curva);
+3. **a velocidade** (C.1): as duas velocidades pela distância, com as freadas (traço) e as mínimas (ponto).
+
+- **O cursor:** uma linha de cada cor, em cada visual, onde cada carro está, no mesmo tempo da animação.
+- **Os números:** os visuais não escrevem número; os eixos dizem a unidade ("velocidade (km/h) pela distância (m)", "diferença acumulada (s)"). Na frase do coach, o único número continua sendo o da voz.
+- **De onde vem cada dado:** da mesma rota do replay, uma vez por mensagem. A velocidade de cada ponto (`velocidades`), o passo da grade (`passoM`, a distância é o índice vezes o passo), a distância de cada marca desde a entrada (`dM`), as separações (`secoes`) e o trecho da fala (`voz`). O tempo e o pedal já vinham nas linhas. Nada de física nova.
+- **Quando a janela é pequena:** o replay fica com pelo menos 150 px; os visuais entram enquanto couberem, na ordem pedal, diferença e velocidade (a velocidade sai primeiro). Na janela de 420 × 300 e na de 300 × 300, entram o pedal e a diferença; com 334 px ou mais de altura, entram os três.
+- **Com o backend do 0.5.0** (sem os campos novos), a janela e a tela mostram o replay como antes, sem os visuais e sem erro.
+
+**A diferença acumulada contra a voz:**
+
+- **na frase do coach,** a subida dentro do trecho da fala ficou a até 0,05 s do tempo da voz em 12 das 14 frases (o arredondamento da voz, em décimos). As duas outras são da C11 (−0,06 s). O coach mede nos quadros, com a passagem interpolada entre dois quadros e a referência do modelo; o replay usa a grade da volta ao vivo e a volta do store;
+- **na análise, o fim da linha não é o "perde X s nesta curva":** a linha vai da entrada à saída do replay, e a perda é a do trecho da curva (do meio da reta anterior ao meio da seguinte). Os dois trechos não coincidem: o da C01 começa 300 m antes da entrada do replay, e o da C14 termina 386 m depois da saída. Nas 10 curvas das 5 análises, a diferença foi de −0,31 a +0,35 s. Fica para decisão do Eduardo (relatório do pedido 43).
+
+**A grade da sessão** (C.4, `GET /api/radio/grade`):
+
+- **o que mostra:** as voltas válidas da sessão nas linhas e as 14 curvas nas colunas. Cada célula tem a perda na curva contra a referência, em segundos, com a cor (laranja quando você perde, azul quando ganha, mais forte até 1 s). É a mesma perda da análise: a célula da curva citada, na volta citada, tem o número que a análise usou;
+- **as curvas citadas** ficam com o contorno vermelho, na volta citada: a frase do coach na volta dela; a análise na volta das 3 mais perto da mediana (a do replay);
+- **as voltas de fora,** com o motivo: a IA no volante, a volta incompleta (nem todos os microssetores medidos), a rodada ou saída de pista (uma curva com mais de 5 s) e a volta sem as medidas;
+- **onde:** na tela Ao vivo, sob os cartões do rádio, lida a cada 5 s; no jogo, só nos boxes ou com o jogo pausado, embaixo da janela grande do replay, com as últimas 8 voltas válidas e as 2 últimas de fora. O backend do 0.5.0 não tem a rota: a janela fica sem a grade e registra isso uma vez no log do CSP.
+
+**O custo:**
+
+- **a rota:** uma frase do coach passou de 6,7 a 8,2 KB para 8,3 a 11,4 KB; uma análise com 2 curvas, de 15,7 a 18,3 KB para 19,6 a 22,8 KB (as 3 sessões). Longe dos 60 KB;
+- **montar o replay no backend:** a mediana foi de 3,4 para 3,8 ms numa frase do coach e de 3,9 para 4,0 ms numa análise, uma vez, na entrega;
+- **no jogo:** a cada quadro, enquanto o replay está na tela, mais 3 linhas de 120 a 200 pontos, os trechos do pedal e as áreas da diferença. O FPS é medido no teste no jogo.
 
 ### 5.5 Instalar, ligar e remover
 
@@ -385,7 +431,8 @@ O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
 | `POST /api/radio/teste` | a mensagem de teste, entregue na hora (só pela tela Sistema) |
 | `GET /api/radio/estado` | as janelas, a voz, o que está esperando e as voltas válidas da sessão |
 | `GET /api/radio/minimapa` | a pista simplificada, a volta de referência com o tempo e o pedal, o alinhamento da linha do jogo, o nome das 14 curvas e as curvas da última análise (pedido 35); desde o pedido 36, a freada da referência em cada curva (`referencia.freadas`) |
-| `GET /api/radio/replay/{id}` | os dados do replay da curva de uma mensagem entregue (pedido 36); 404 sem replay |
+| `GET /api/radio/replay/{id}` | os dados do replay da curva de uma mensagem entregue (pedido 36); 404 sem replay. Desde o pedido 43, os dados dos visuais e, na frase do coach, os números da voz e o trecho da fala |
+| `GET /api/radio/grade` | a grade da sessão (pedido 43): a perda por curva das voltas válidas, as voltas de fora com o motivo e as curvas citadas |
 | `GET /api/live/volta` | a volta em andamento inteira, na grade oficial |
 | `GET /api/live/volta/novos?versao=<v>&desde=<seq>` | só os pontos novos e a posição do carro (pedido 35); a volta inteira só numa volta nova |
 | `POST /api/teste/reproduzir`, `POST /api/teste/parar`, `GET /api/teste/estado` | só nos testes (`AT_TESTE_REPRODUTOR=1`): toca uma gravação pelo caminho do jogo, para medir a tela Ao vivo sem o jogo |
