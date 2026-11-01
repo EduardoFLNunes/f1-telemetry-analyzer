@@ -324,10 +324,11 @@ Feita, faltando o FPS no jogo e as decisões:
   | ref | hash local | hash no remoto (`git ls-remote origin`) |
   |---|---|---|
   | `refs/heads/etapa/visuais-do-radio` | `5c5e1bcb7abcbc8becdfd09b0ae814f25a2a34b6` | `5c5e1bcb7abcbc8becdfd09b0ae814f25a2a34b6` |
+  | `refs/heads/etapa/visuais-do-radio` (01/11, com as decisões) | `ff2caf114a3a6bb7f339d3e54dbea7afa38cf05f` | `ff2caf114a3a6bb7f339d3e54dbea7afa38cf05f` |
 
-- **O commit deste registro** foi enviado em seguida. O hash final da branch está no chat.
+- **O commit deste registro** foi enviado em seguida. O hash final da branch está no chat. `develop`, `main` e as tags continuam sem envio deste pedido.
 
 ## O que falta
 
-- **De você:** o teste no jogo (os passos na Parte E) e as 4 decisões ("O que precisa de você").
-- **De mim, depois do seu aviso:** a conferência do registro e do log do CSP, o FPS, o fechamento da documentação, o merge em `develop` e o envio.
+- **De você:** o teste no jogo, pelos passos da Parte E, e o aviso com as anotações preenchidas.
+- **De mim, depois do aviso:** a conferência do registro e do log do CSP, o FPS, o fechamento da documentação, o merge em `develop` e o envio.
