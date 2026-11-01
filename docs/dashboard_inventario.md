@@ -383,4 +383,5 @@ Os números da voz no replay da frase do coach e os 4 visuais do rádio (ADR 002
 - **Os visuais sob a animação** (a tela Ao vivo, `ReplayDaCurva.tsx`, e a janela do jogo): a faixa do pedal, a diferença acumulada e a velocidade pela distância, com o cursor de cada carro. Os dados vêm na mesma rota do replay.
 - **A grade da sessão** (`GradeDaSessao.tsx`, sob os cartões do rádio; no jogo, nos boxes): a perda por curva das voltas válidas, a mesma da análise, com as curvas citadas marcadas e as voltas de fora com o motivo e as curvas citadas nelas. A rota nova é `GET /api/radio/grade`.
 - **O app do jogo:** a versão 0.4.2 (`tools/csp_app/radio_engenheiro/`). Com o backend do 0.5.0, ele mostra o replay como antes.
-- **Falta:** o teste no jogo (Parte E do pedido).
+- **O teste no jogo (01/11):** o Lua rodou no CSP 0.3.1 sem erro, e os números do replay batem com a voz e com o cartão. **Sem confirmação:** a grade nos boxes no jogo, o cartão da mensagem de teste e os visuais na tela do jogo.
+- **A versão:** 0.6.0 em `develop`, sem instalador.

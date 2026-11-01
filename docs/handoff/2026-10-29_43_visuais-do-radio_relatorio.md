@@ -1,7 +1,7 @@
 # Relatório do pedido 43: os 4 visuais do rádio e os números da voz no replay
 
 - **Pedido:** `docs/prompts/2026-10-29_43_visuais-do-radio.md`.
-- **Situação (01/11, 20:40):** **o teste no jogo aconteceu e passou no que os registros mostram, mas a grade nos boxes quase não foi exercitada** (ver "O teste no jogo de 01/11"). **O pedido 43 não tem merge em `develop`:** espera a resposta do Eduardo.
+- **Situação (01/11):** **fechado, com merge em `develop` e a versão 0.6.0.** O Eduardo decidiu fazer o merge sem refazer o teste da grade. **Três coisas ficam sem confirmação:** a grade nos boxes no jogo, o cartão da mensagem de teste e os visuais na tela do jogo (ver "O teste no jogo de 01/11").
 - **Branch:** `etapa/visuais-do-radio`, a partir de `develop` (`4ac3d7af`).
 - **Commits:**
   - `df26996f` Partes B e C no backend: os números da voz, os dados dos visuais na rota e a grade da sessão
@@ -69,7 +69,7 @@ Nas 14 passagens gravadas, nenhuma amostra da IA. Cada replay foi pedido uma vez
 
 **A tela Ao vivo não foi aberta durante o teste:** não há nenhum pedido dela. Ela foi conferida na ponta a ponta com a reprodução.
 
-**O que falta:** confirmar a grade nos boxes e o que você viu. Só depois vêm o merge, a 0.6.0 e o commit do pedido 42.
+**A decisão do Eduardo (01/11):** fazer o merge sem refazer o teste da grade. Ficam sem confirmação, porque só o olho do piloto diz: a grade nos boxes no jogo, o cartão da mensagem de teste e se os visuais apareceram sob a animação. A grade foi para o backlog.
 
 ## O segundo aviso (01/11, 17:46): o fechamento não foi feito
 
@@ -411,5 +411,5 @@ Feita, faltando o FPS no jogo e as decisões:
 
 ## O que falta
 
-- **De você:** o teste no jogo com esta branch, já com o pedido 38 junto, pelos passos da Parte E, e o aviso com as anotações preenchidas.
-- **De mim, depois do aviso:** a conferência do registro e do log do CSP, o FPS, o fechamento da documentação, o merge em `develop` e o envio.
+- **Sem confirmação:** a grade nos boxes no jogo, o cartão da mensagem de teste e os visuais na tela do jogo. Se algo estiver errado, a correção vem num pedido novo.
+- **O instalador 0.6.0:** não foi gerado. Sai quando o Eduardo pedir, com o app do jogo 0.4.2 instalado à parte.
