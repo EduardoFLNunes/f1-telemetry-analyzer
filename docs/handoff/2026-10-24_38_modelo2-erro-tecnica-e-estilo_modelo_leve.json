@@ -1,0 +1,2654 @@
+[
+ {
+  "curva": "C01-esq",
+  "tipo": "lenta",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "s_b_rel",
+   "t_pico",
+   "pico_fracao",
+   "taxa_soltura",
+   "sobreposicao_s",
+   "escorr_dianteiro",
+   "pedais_juntos_s",
+   "escorr_reducao",
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "s_vmin_rel",
+   "plato_s",
+   "afastamento_m",
+   "sem_pedal_s",
+   "retomada_s",
+   "volante_depois",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": 0.318,
+  "alfa": 0.3,
+  "alfas_por_rodada": [
+   0.3,
+   0.3,
+   0.3,
+   0.3,
+   3.0,
+   0.3,
+   0.3,
+   0.3,
+   0.3,
+   0.3,
+   0.3,
+   0.3,
+   0.3
+  ],
+  "coeficientes": [
+   {
+    "entrada": "sem_pedal_s",
+    "s_por_desvio": 0.4774,
+    "intervalo_90": [
+     0.1919,
+     0.6003
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_vmin_rel",
+    "s_por_desvio": -0.3543,
+    "intervalo_90": [
+     -0.4525,
+     -0.1809
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "sobreposicao_s",
+    "s_por_desvio": 0.3041,
+    "intervalo_90": [
+     0.1113,
+     0.3864
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.1624,
+    "intervalo_90": [
+     -0.2275,
+     -0.0592
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": 0.1386,
+    "intervalo_90": [
+     0.0263,
+     0.2299
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "volante_depois",
+    "s_por_desvio": 0.1217,
+    "intervalo_90": [
+     0.0045,
+     0.2182
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": -0.1181,
+    "intervalo_90": [
+     -0.2621,
+     0.0131
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": 0.1065,
+    "intervalo_90": [
+     0.0052,
+     0.2
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "pedais_juntos_s",
+    "s_por_desvio": -0.0763,
+    "intervalo_90": [
+     -0.124,
+     -0.0233
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "pico_fracao",
+    "s_por_desvio": 0.0707,
+    "intervalo_90": [
+     -0.0575,
+     0.1993
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "t_pico",
+    "s_por_desvio": -0.0694,
+    "intervalo_90": [
+     -0.1991,
+     0.0501
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_b_rel",
+    "s_por_desvio": -0.0621,
+    "intervalo_90": [
+     -0.139,
+     0.0117
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "alivio",
+    "s_por_desvio": -0.0458,
+    "intervalo_90": [
+     -0.0841,
+     0.0114
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "taxa_soltura",
+    "s_por_desvio": -0.0419,
+    "intervalo_90": [
+     -0.0998,
+     0.0133
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_reducao",
+    "s_por_desvio": 0.0409,
+    "intervalo_90": [
+     -0.0783,
+     0.1479
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": -0.04,
+    "intervalo_90": [
+     -0.1023,
+     0.0163
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": -0.0333,
+    "intervalo_90": [
+     -0.11,
+     0.0535
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_dianteiro",
+    "s_por_desvio": -0.0252,
+    "intervalo_90": [
+     -0.1463,
+     0.0908
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": 0.0175,
+    "intervalo_90": [
+     -0.0557,
+     0.0871
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": 0.0041,
+    "intervalo_90": [
+     -0.1027,
+     0.1066
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": 0.0024,
+    "intervalo_90": [
+     -0.0404,
+     0.0636
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ },
+ {
+  "curva": "C02-dir",
+  "tipo": "lenta",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "sobreposicao_s",
+   "pedais_juntos_s",
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "s_vmin_rel",
+   "plato_s",
+   "afastamento_m",
+   "sem_pedal_s",
+   "retomada_s",
+   "volante_depois",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": 0.014,
+  "alfa": 100.0,
+  "alfas_por_rodada": [
+   1.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   30.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   3.0,
+   30.0
+  ],
+  "coeficientes": [
+   {
+    "entrada": "sem_pedal_s",
+    "s_por_desvio": 0.0324,
+    "intervalo_90": [
+     0.014,
+     0.0399
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.0274,
+    "intervalo_90": [
+     -0.0351,
+     -0.017
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": 0.0163,
+    "intervalo_90": [
+     0.0065,
+     0.0259
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": 0.0158,
+    "intervalo_90": [
+     0.0035,
+     0.0257
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "volante_depois",
+    "s_por_desvio": -0.0129,
+    "intervalo_90": [
+     -0.0197,
+     -0.0059
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": -0.0123,
+    "intervalo_90": [
+     -0.0207,
+     -0.0036
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "alivio",
+    "s_por_desvio": -0.0088,
+    "intervalo_90": [
+     -0.0161,
+     0.0021
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": 0.0086,
+    "intervalo_90": [
+     -0.0005,
+     0.0146
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_vmin_rel",
+    "s_por_desvio": 0.0077,
+    "intervalo_90": [
+     -0.0019,
+     0.017
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": -0.0072,
+    "intervalo_90": [
+     -0.0186,
+     0.0019
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": -0.0068,
+    "intervalo_90": [
+     -0.0165,
+     -0.0011
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "pedais_juntos_s",
+    "s_por_desvio": 0.0057,
+    "intervalo_90": [
+     -0.0019,
+     0.0098
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "sobreposicao_s",
+    "s_por_desvio": 0.0051,
+    "intervalo_90": [
+     -0.0019,
+     0.0094
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": -0.0028,
+    "intervalo_90": [
+     -0.0085,
+     0.0034
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": -0.0002,
+    "intervalo_90": [
+     -0.0068,
+     0.0064
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ },
+ {
+  "curva": "C03-esq",
+  "tipo": "media",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "s_vmin_rel",
+   "plato_s",
+   "afastamento_m",
+   "sem_pedal_s",
+   "retomada_s",
+   "volante_depois",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": 0.157,
+  "alfa": 10.0,
+  "alfas_por_rodada": [
+   1.0,
+   10.0,
+   3.0,
+   10.0,
+   10.0,
+   10.0,
+   0.3,
+   10.0,
+   10.0,
+   30.0,
+   10.0,
+   30.0,
+   10.0
+  ],
+  "coeficientes": [
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.125,
+    "intervalo_90": [
+     -0.1535,
+     -0.084
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": 0.1037,
+    "intervalo_90": [
+     0.035,
+     0.1405
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "sem_pedal_s",
+    "s_por_desvio": 0.092,
+    "intervalo_90": [
+     0.0529,
+     0.1156
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": -0.075,
+    "intervalo_90": [
+     -0.0949,
+     -0.0373
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": 0.0644,
+    "intervalo_90": [
+     0.0162,
+     0.0908
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "alivio",
+    "s_por_desvio": 0.057,
+    "intervalo_90": [
+     0.022,
+     0.0885
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_vmin_rel",
+    "s_por_desvio": -0.0193,
+    "intervalo_90": [
+     -0.0485,
+     0.018
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": 0.0172,
+    "intervalo_90": [
+     -0.01,
+     0.0428
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": -0.0114,
+    "intervalo_90": [
+     -0.0388,
+     0.0136
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": 0.0064,
+    "intervalo_90": [
+     -0.0282,
+     0.043
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": -0.0064,
+    "intervalo_90": [
+     -0.0299,
+     0.0191
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "volante_depois",
+    "s_por_desvio": 0.0048,
+    "intervalo_90": [
+     -0.022,
+     0.0276
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": 0.0006,
+    "intervalo_90": [
+     -0.0329,
+     0.0401
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ },
+ {
+  "curva": "C04-esq",
+  "tipo": "media",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "s_b_rel",
+   "t_pico",
+   "pico_fracao",
+   "taxa_soltura",
+   "sobreposicao_s",
+   "escorr_dianteiro",
+   "pedais_juntos_s",
+   "escorr_reducao",
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "s_vmin_rel",
+   "plato_s",
+   "afastamento_m",
+   "sem_pedal_s",
+   "retomada_s",
+   "volante_depois",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": 0.262,
+  "alfa": 0.3,
+  "alfas_por_rodada": [
+   0.3,
+   10.0,
+   0.3,
+   0.3,
+   0.3,
+   0.3,
+   0.3,
+   0.3,
+   0.3,
+   0.3,
+   0.3,
+   0.3,
+   0.3
+  ],
+  "coeficientes": [
+   {
+    "entrada": "s_vmin_rel",
+    "s_por_desvio": -0.2247,
+    "intervalo_90": [
+     -0.2955,
+     -0.1428
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "sem_pedal_s",
+    "s_por_desvio": 0.204,
+    "intervalo_90": [
+     0.119,
+     0.2749
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "t_pico",
+    "s_por_desvio": 0.1991,
+    "intervalo_90": [
+     -0.0111,
+     0.3803
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "pico_fracao",
+    "s_por_desvio": -0.1828,
+    "intervalo_90": [
+     -0.3528,
+     -0.006
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "sobreposicao_s",
+    "s_por_desvio": 0.1667,
+    "intervalo_90": [
+     0.0574,
+     0.2368
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": -0.1461,
+    "intervalo_90": [
+     -0.2163,
+     -0.0369
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": -0.1193,
+    "intervalo_90": [
+     -0.1772,
+     -0.0349
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": 0.1141,
+    "intervalo_90": [
+     0.0323,
+     0.1682
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_b_rel",
+    "s_por_desvio": -0.0988,
+    "intervalo_90": [
+     -0.1566,
+     -0.0203
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": 0.0831,
+    "intervalo_90": [
+     0.021,
+     0.1188
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": 0.072,
+    "intervalo_90": [
+     -0.0119,
+     0.1297
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": 0.0408,
+    "intervalo_90": [
+     -0.0121,
+     0.0999
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_reducao",
+    "s_por_desvio": 0.0358,
+    "intervalo_90": [
+     -0.0166,
+     0.0837
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "taxa_soltura",
+    "s_por_desvio": -0.0322,
+    "intervalo_90": [
+     -0.0667,
+     0.0077
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "pedais_juntos_s",
+    "s_por_desvio": -0.0306,
+    "intervalo_90": [
+     -0.0549,
+     0.0184
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "volante_depois",
+    "s_por_desvio": -0.0187,
+    "intervalo_90": [
+     -0.0782,
+     0.0571
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": -0.0163,
+    "intervalo_90": [
+     -0.0747,
+     0.0355
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": 0.0152,
+    "intervalo_90": [
+     -0.0432,
+     0.0653
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.0133,
+    "intervalo_90": [
+     -0.0654,
+     0.0386
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "alivio",
+    "s_por_desvio": -0.0015,
+    "intervalo_90": [
+     -0.0453,
+     0.0713
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_dianteiro",
+    "s_por_desvio": -0.0003,
+    "intervalo_90": [
+     -0.0444,
+     0.0403
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ },
+ {
+  "curva": "C05-esq",
+  "tipo": "media",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "sobreposicao_s",
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "s_vmin_rel",
+   "plato_s",
+   "afastamento_m",
+   "retomada_s",
+   "volante_depois",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": 0.355,
+  "alfa": 100.0,
+  "alfas_por_rodada": [
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   30.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0
+  ],
+  "coeficientes": [
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": 0.0567,
+    "intervalo_90": [
+     0.0291,
+     0.0725
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.0436,
+    "intervalo_90": [
+     -0.0564,
+     -0.0236
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": 0.0357,
+    "intervalo_90": [
+     0.019,
+     0.0453
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "volante_depois",
+    "s_por_desvio": 0.0282,
+    "intervalo_90": [
+     0.0145,
+     0.0356
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": 0.0268,
+    "intervalo_90": [
+     0.0126,
+     0.0365
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "sobreposicao_s",
+    "s_por_desvio": 0.0236,
+    "intervalo_90": [
+     0.0,
+     0.0339
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_vmin_rel",
+    "s_por_desvio": 0.0225,
+    "intervalo_90": [
+     0.0,
+     0.0296
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": -0.0218,
+    "intervalo_90": [
+     -0.0489,
+     -0.002
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": 0.0124,
+    "intervalo_90": [
+     -0.0051,
+     0.0258
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "alivio",
+    "s_por_desvio": 0.0096,
+    "intervalo_90": [
+     -0.0044,
+     0.0206
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": -0.0081,
+    "intervalo_90": [
+     -0.0228,
+     0.0088
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": -0.008,
+    "intervalo_90": [
+     -0.0257,
+     0.0121
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": -0.0069,
+    "intervalo_90": [
+     -0.0167,
+     0.004
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ },
+ {
+  "curva": "C06-dir",
+  "tipo": "media",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "sobreposicao_s",
+   "pedais_juntos_s",
+   "escorr_reducao",
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "s_vmin_rel",
+   "plato_s",
+   "afastamento_m",
+   "sem_pedal_s",
+   "retomada_s",
+   "volante_depois",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": -0.044,
+  "alfa": 100.0,
+  "alfas_por_rodada": [
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   30.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0
+  ],
+  "coeficientes": [
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.1112,
+    "intervalo_90": [
+     -0.1372,
+     -0.0651
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": 0.0984,
+    "intervalo_90": [
+     -0.0043,
+     0.1736
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": -0.0899,
+    "intervalo_90": [
+     -0.1363,
+     -0.015
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "sem_pedal_s",
+    "s_por_desvio": 0.0619,
+    "intervalo_90": [
+     0.0014,
+     0.1014
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "volante_depois",
+    "s_por_desvio": 0.0371,
+    "intervalo_90": [
+     0.0041,
+     0.0647
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": -0.0291,
+    "intervalo_90": [
+     -0.0572,
+     0.0024
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "sobreposicao_s",
+    "s_por_desvio": 0.0272,
+    "intervalo_90": [
+     -0.0096,
+     0.0608
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": 0.0253,
+    "intervalo_90": [
+     0.0008,
+     0.046
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": -0.0224,
+    "intervalo_90": [
+     -0.0419,
+     0.002
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "alivio",
+    "s_por_desvio": 0.0146,
+    "intervalo_90": [
+     -0.0132,
+     0.0476
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": -0.0105,
+    "intervalo_90": [
+     -0.0312,
+     0.0088
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "pedais_juntos_s",
+    "s_por_desvio": -0.0072,
+    "intervalo_90": [
+     -0.069,
+     0.0488
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": -0.0068,
+    "intervalo_90": [
+     -0.0406,
+     0.0282
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_vmin_rel",
+    "s_por_desvio": -0.0035,
+    "intervalo_90": [
+     -0.0291,
+     0.0232
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_reducao",
+    "s_por_desvio": 0.0024,
+    "intervalo_90": [
+     -0.022,
+     0.0269
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": 0.0011,
+    "intervalo_90": [
+     -0.0346,
+     0.036
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ },
+ {
+  "curva": "C07-dir",
+  "tipo": "lenta",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "s_b_rel",
+   "t_pico",
+   "pico_fracao",
+   "taxa_soltura",
+   "sobreposicao_s",
+   "escorr_dianteiro",
+   "pedais_juntos_s",
+   "escorr_reducao",
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "s_vmin_rel",
+   "plato_s",
+   "afastamento_m",
+   "sem_pedal_s",
+   "retomada_s",
+   "volante_depois",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": -0.187,
+  "alfa": 100.0,
+  "alfas_por_rodada": [
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0
+  ],
+  "coeficientes": [
+   {
+    "entrada": "volante_depois",
+    "s_por_desvio": 0.0646,
+    "intervalo_90": [
+     0.0073,
+     0.1077
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": 0.0384,
+    "intervalo_90": [
+     0.0183,
+     0.0511
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.0337,
+    "intervalo_90": [
+     -0.0463,
+     -0.0087
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": 0.0303,
+    "intervalo_90": [
+     0.0033,
+     0.0576
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "alivio",
+    "s_por_desvio": -0.0282,
+    "intervalo_90": [
+     -0.0571,
+     0.0013
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "sem_pedal_s",
+    "s_por_desvio": 0.0276,
+    "intervalo_90": [
+     0.0099,
+     0.0383
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": -0.0231,
+    "intervalo_90": [
+     -0.0663,
+     -0.0094
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_b_rel",
+    "s_por_desvio": 0.0218,
+    "intervalo_90": [
+     0.001,
+     0.0406
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "escorr_reducao",
+    "s_por_desvio": 0.0212,
+    "intervalo_90": [
+     -0.0056,
+     0.0377
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "taxa_soltura",
+    "s_por_desvio": 0.0197,
+    "intervalo_90": [
+     -0.0254,
+     0.0653
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "t_pico",
+    "s_por_desvio": 0.0194,
+    "intervalo_90": [
+     0.0023,
+     0.033
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": 0.0181,
+    "intervalo_90": [
+     -0.0176,
+     0.0413
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_vmin_rel",
+    "s_por_desvio": -0.0177,
+    "intervalo_90": [
+     -0.0331,
+     0.0045
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "pedais_juntos_s",
+    "s_por_desvio": -0.0163,
+    "intervalo_90": [
+     -0.0338,
+     0.0052
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": -0.0147,
+    "intervalo_90": [
+     -0.0263,
+     0.0026
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "pico_fracao",
+    "s_por_desvio": 0.0133,
+    "intervalo_90": [
+     0.0003,
+     0.0273
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": 0.012,
+    "intervalo_90": [
+     -0.006,
+     0.03
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": -0.0053,
+    "intervalo_90": [
+     -0.0308,
+     0.0168
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_dianteiro",
+    "s_por_desvio": 0.0049,
+    "intervalo_90": [
+     -0.0221,
+     0.0258
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "sobreposicao_s",
+    "s_por_desvio": 0.0022,
+    "intervalo_90": [
+     -0.0178,
+     0.0187
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": -0.0015,
+    "intervalo_90": [
+     -0.0118,
+     0.0145
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ },
+ {
+  "curva": "C08-esq",
+  "tipo": "lenta",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "sobreposicao_s",
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "s_vmin_rel",
+   "plato_s",
+   "afastamento_m",
+   "sem_pedal_s",
+   "retomada_s",
+   "volante_depois",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": 0.161,
+  "alfa": 100.0,
+  "alfas_por_rodada": [
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0
+  ],
+  "coeficientes": [
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": 0.1248,
+    "intervalo_90": [
+     0.0368,
+     0.1658
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.0916,
+    "intervalo_90": [
+     -0.1215,
+     -0.044
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": 0.0841,
+    "intervalo_90": [
+     0.0086,
+     0.1343
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "sem_pedal_s",
+    "s_por_desvio": 0.0824,
+    "intervalo_90": [
+     -0.0066,
+     0.1455
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "alivio",
+    "s_por_desvio": -0.0609,
+    "intervalo_90": [
+     -0.1061,
+     0.0152
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": -0.0318,
+    "intervalo_90": [
+     -0.0482,
+     0.0076
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": -0.0248,
+    "intervalo_90": [
+     -0.042,
+     0.0323
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_vmin_rel",
+    "s_por_desvio": -0.0223,
+    "intervalo_90": [
+     -0.0361,
+     -0.0028
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "volante_depois",
+    "s_por_desvio": -0.0216,
+    "intervalo_90": [
+     -0.0664,
+     0.035
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": 0.0172,
+    "intervalo_90": [
+     -0.024,
+     0.0563
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": 0.0148,
+    "intervalo_90": [
+     -0.0073,
+     0.0317
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "sobreposicao_s",
+    "s_por_desvio": 0.0108,
+    "intervalo_90": [
+     -0.0186,
+     0.0329
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": -0.0104,
+    "intervalo_90": [
+     -0.0379,
+     0.0064
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": 0.0009,
+    "intervalo_90": [
+     -0.021,
+     0.0217
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ },
+ {
+  "curva": "C09-dir",
+  "tipo": "media",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "sobreposicao_s",
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "s_vmin_rel",
+   "plato_s",
+   "afastamento_m",
+   "sem_pedal_s",
+   "retomada_s",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": 0.676,
+  "alfa": 3.0,
+  "alfas_por_rodada": [
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   10.0,
+   3.0
+  ],
+  "coeficientes": [
+   {
+    "entrada": "sem_pedal_s",
+    "s_por_desvio": 0.2358,
+    "intervalo_90": [
+     0.1028,
+     0.2911
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": 0.0757,
+    "intervalo_90": [
+     0.0178,
+     0.1086
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "alivio",
+    "s_por_desvio": 0.0643,
+    "intervalo_90": [
+     0.033,
+     0.0931
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.0311,
+    "intervalo_90": [
+     -0.0542,
+     -0.0038
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": 0.0289,
+    "intervalo_90": [
+     -0.0089,
+     0.0521
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": 0.026,
+    "intervalo_90": [
+     -0.0199,
+     0.0538
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": -0.0157,
+    "intervalo_90": [
+     -0.0356,
+     0.0072
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": 0.015,
+    "intervalo_90": [
+     -0.0252,
+     0.0501
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": 0.0113,
+    "intervalo_90": [
+     -0.0119,
+     0.0329
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_vmin_rel",
+    "s_por_desvio": 0.0045,
+    "intervalo_90": [
+     -0.0412,
+     0.0358
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": -0.0037,
+    "intervalo_90": [
+     -0.0337,
+     0.0247
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "sobreposicao_s",
+    "s_por_desvio": 0.0009,
+    "intervalo_90": [
+     -0.0242,
+     0.0264
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": 0.0,
+    "intervalo_90": [
+     -0.0303,
+     0.0281
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ },
+ {
+  "curva": "C10-dir",
+  "tipo": "lenta",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "s_b_rel",
+   "t_pico",
+   "pico_fracao",
+   "taxa_soltura",
+   "sobreposicao_s",
+   "escorr_dianteiro",
+   "pedais_juntos_s",
+   "escorr_reducao",
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "s_vmin_rel",
+   "plato_s",
+   "afastamento_m",
+   "sem_pedal_s",
+   "retomada_s",
+   "volante_depois",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": 0.257,
+  "alfa": 30.0,
+  "alfas_por_rodada": [
+   30.0,
+   30.0,
+   3.0,
+   30.0,
+   30.0,
+   30.0,
+   30.0,
+   30.0,
+   30.0,
+   30.0,
+   30.0,
+   30.0,
+   30.0
+  ],
+  "coeficientes": [
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.1071,
+    "intervalo_90": [
+     -0.1246,
+     -0.0687
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "sem_pedal_s",
+    "s_por_desvio": 0.0923,
+    "intervalo_90": [
+     0.042,
+     0.1143
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "alivio",
+    "s_por_desvio": 0.067,
+    "intervalo_90": [
+     0.0306,
+     0.0898
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": 0.0637,
+    "intervalo_90": [
+     0.0287,
+     0.0885
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "sobreposicao_s",
+    "s_por_desvio": 0.054,
+    "intervalo_90": [
+     0.0228,
+     0.0701
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": 0.0415,
+    "intervalo_90": [
+     0.0063,
+     0.0811
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": 0.0332,
+    "intervalo_90": [
+     0.0082,
+     0.0497
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": 0.0289,
+    "intervalo_90": [
+     0.0085,
+     0.0492
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": -0.0269,
+    "intervalo_90": [
+     -0.05,
+     -0.0062
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "taxa_soltura",
+    "s_por_desvio": -0.0249,
+    "intervalo_90": [
+     -0.0468,
+     0.0009
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_vmin_rel",
+    "s_por_desvio": 0.0169,
+    "intervalo_90": [
+     -0.0064,
+     0.0383
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": 0.0165,
+    "intervalo_90": [
+     -0.0198,
+     0.0453
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": 0.0149,
+    "intervalo_90": [
+     -0.0047,
+     0.0355
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "pedais_juntos_s",
+    "s_por_desvio": 0.012,
+    "intervalo_90": [
+     -0.0165,
+     0.0323
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "pico_fracao",
+    "s_por_desvio": -0.0089,
+    "intervalo_90": [
+     -0.027,
+     0.0114
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_b_rel",
+    "s_por_desvio": -0.0083,
+    "intervalo_90": [
+     -0.0245,
+     0.0136
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_dianteiro",
+    "s_por_desvio": 0.0071,
+    "intervalo_90": [
+     -0.0108,
+     0.0253
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": -0.0058,
+    "intervalo_90": [
+     -0.0287,
+     0.0183
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "volante_depois",
+    "s_por_desvio": -0.005,
+    "intervalo_90": [
+     -0.0287,
+     0.0182
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "t_pico",
+    "s_por_desvio": 0.0047,
+    "intervalo_90": [
+     -0.0126,
+     0.0215
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_reducao",
+    "s_por_desvio": -0.0017,
+    "intervalo_90": [
+     -0.0239,
+     0.0177
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ },
+ {
+  "curva": "C11-esq",
+  "tipo": "media",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "s_vmin_rel",
+   "plato_s",
+   "afastamento_m",
+   "sem_pedal_s",
+   "retomada_s",
+   "volante_depois",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": -0.294,
+  "alfa": 1.0,
+  "alfas_por_rodada": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   0.3,
+   1.0,
+   10.0,
+   1.0,
+   1.0,
+   3.0,
+   1.0,
+   1.0,
+   0.3
+  ],
+  "coeficientes": [
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": -0.3641,
+    "intervalo_90": [
+     -0.5478,
+     -0.1842
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": 0.3253,
+    "intervalo_90": [
+     0.1959,
+     0.464
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.3148,
+    "intervalo_90": [
+     -0.3995,
+     -0.1533
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": -0.1659,
+    "intervalo_90": [
+     -0.2469,
+     -0.023
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "sem_pedal_s",
+    "s_por_desvio": 0.1512,
+    "intervalo_90": [
+     0.0425,
+     0.2218
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": 0.0845,
+    "intervalo_90": [
+     0.0215,
+     0.1426
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": -0.0809,
+    "intervalo_90": [
+     -0.1225,
+     0.0003
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": -0.0497,
+    "intervalo_90": [
+     -0.0934,
+     0.0071
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_vmin_rel",
+    "s_por_desvio": 0.0491,
+    "intervalo_90": [
+     -0.161,
+     0.2246
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "alivio",
+    "s_por_desvio": 0.0347,
+    "intervalo_90": [
+     -0.0231,
+     0.0783
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": 0.0305,
+    "intervalo_90": [
+     -0.0542,
+     0.0837
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "volante_depois",
+    "s_por_desvio": -0.0293,
+    "intervalo_90": [
+     -0.083,
+     0.0466
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": 0.0031,
+    "intervalo_90": [
+     -0.1297,
+     0.1432
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ },
+ {
+  "curva": "C12-esq",
+  "tipo": "lenta",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "s_b_rel",
+   "t_pico",
+   "pico_fracao",
+   "taxa_soltura",
+   "sobreposicao_s",
+   "escorr_dianteiro",
+   "pedais_juntos_s",
+   "escorr_reducao",
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "s_vmin_rel",
+   "plato_s",
+   "afastamento_m",
+   "sem_pedal_s",
+   "retomada_s",
+   "volante_depois",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": 0.501,
+  "alfa": 1.0,
+  "alfas_por_rodada": [
+   1.0,
+   1.0,
+   0.3,
+   1.0,
+   0.3,
+   1.0,
+   0.3,
+   1.0,
+   1.0,
+   3.0,
+   1.0,
+   1.0,
+   0.3
+  ],
+  "coeficientes": [
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.4644,
+    "intervalo_90": [
+     -0.6324,
+     -0.1401
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "sem_pedal_s",
+    "s_por_desvio": 0.2125,
+    "intervalo_90": [
+     0.1048,
+     0.2709
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": 0.1521,
+    "intervalo_90": [
+     0.0896,
+     0.1993
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "t_pico",
+    "s_por_desvio": -0.1083,
+    "intervalo_90": [
+     -0.192,
+     0.0176
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "pico_fracao",
+    "s_por_desvio": 0.0941,
+    "intervalo_90": [
+     -0.0368,
+     0.1825
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "volante_depois",
+    "s_por_desvio": 0.0922,
+    "intervalo_90": [
+     -0.0248,
+     0.1684
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "alivio",
+    "s_por_desvio": 0.0775,
+    "intervalo_90": [
+     0.014,
+     0.1118
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "sobreposicao_s",
+    "s_por_desvio": 0.0721,
+    "intervalo_90": [
+     -0.003,
+     0.1299
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_vmin_rel",
+    "s_por_desvio": 0.054,
+    "intervalo_90": [
+     -0.0904,
+     0.1288
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": 0.0499,
+    "intervalo_90": [
+     -0.0089,
+     0.0869
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "taxa_soltura",
+    "s_por_desvio": -0.0461,
+    "intervalo_90": [
+     -0.0829,
+     0.0031
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_dianteiro",
+    "s_por_desvio": -0.0346,
+    "intervalo_90": [
+     -0.0793,
+     0.0167
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "pedais_juntos_s",
+    "s_por_desvio": 0.0343,
+    "intervalo_90": [
+     -0.0178,
+     0.0719
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": 0.027,
+    "intervalo_90": [
+     -0.021,
+     0.0712
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": 0.0238,
+    "intervalo_90": [
+     -0.042,
+     0.066
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_b_rel",
+    "s_por_desvio": -0.0145,
+    "intervalo_90": [
+     -0.105,
+     0.0497
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_reducao",
+    "s_por_desvio": -0.0133,
+    "intervalo_90": [
+     -0.0525,
+     0.0424
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": 0.0062,
+    "intervalo_90": [
+     -0.1142,
+     0.0942
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": 0.0057,
+    "intervalo_90": [
+     -0.0404,
+     0.0495
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": -0.0026,
+    "intervalo_90": [
+     -0.048,
+     0.0354
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": -0.001,
+    "intervalo_90": [
+     -0.0413,
+     0.0428
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ },
+ {
+  "curva": "C13-esq",
+  "tipo": "media",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "plato_s",
+   "afastamento_m",
+   "retomada_s",
+   "volante_depois",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": -0.134,
+  "alfa": 100.0,
+  "alfas_por_rodada": [
+   0.3,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   0.3
+  ],
+  "coeficientes": [
+   {
+    "entrada": "alivio",
+    "s_por_desvio": 0.0672,
+    "intervalo_90": [
+     0.0137,
+     0.108
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": -0.0499,
+    "intervalo_90": [
+     -0.0853,
+     -0.007
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.0488,
+    "intervalo_90": [
+     -0.0834,
+     -0.0064
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": 0.0368,
+    "intervalo_90": [
+     0.0043,
+     0.0549
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": 0.0308,
+    "intervalo_90": [
+     0.0131,
+     0.0449
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": 0.0275,
+    "intervalo_90": [
+     -0.0054,
+     0.0414
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "volante_depois",
+    "s_por_desvio": 0.0251,
+    "intervalo_90": [
+     -0.0024,
+     0.0486
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": 0.0232,
+    "intervalo_90": [
+     -0.0536,
+     0.0527
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": -0.0206,
+    "intervalo_90": [
+     -0.0584,
+     0.0221
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": -0.0091,
+    "intervalo_90": [
+     -0.033,
+     0.015
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": -0.0053,
+    "intervalo_90": [
+     -0.0214,
+     0.0134
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ },
+ {
+  "curva": "C14-esq",
+  "tipo": "rapida",
+  "passagens": 130,
+  "sessoes": 13,
+  "entradas": [
+   "s_ti_rel",
+   "reversoes",
+   "irregularidade",
+   "uso_aderencia",
+   "s_vmin_rel",
+   "plato_s",
+   "afastamento_m",
+   "sem_pedal_s",
+   "retomada_s",
+   "volante_depois",
+   "alivio",
+   "escorr_traseiro",
+   "taxa_carga"
+  ],
+  "r2_deixando_uma_sessao_de_fora": 0.251,
+  "alfa": 100.0,
+  "alfas_por_rodada": [
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   100.0,
+   30.0,
+   100.0,
+   100.0,
+   100.0
+  ],
+  "coeficientes": [
+   {
+    "entrada": "uso_aderencia",
+    "s_por_desvio": -0.2405,
+    "intervalo_90": [
+     -0.3712,
+     -0.0463
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "alivio",
+    "s_por_desvio": 0.2319,
+    "intervalo_90": [
+     0.0768,
+     0.4132
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "irregularidade",
+    "s_por_desvio": -0.1437,
+    "intervalo_90": [
+     -0.2505,
+     -0.0065
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "afastamento_m",
+    "s_por_desvio": 0.0994,
+    "intervalo_90": [
+     -0.0084,
+     0.1841
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "retomada_s",
+    "s_por_desvio": 0.0822,
+    "intervalo_90": [
+     -0.0029,
+     0.1498
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_ti_rel",
+    "s_por_desvio": 0.0404,
+    "intervalo_90": [
+     0.0132,
+     0.0723
+    ],
+    "sinal_estavel": true
+   },
+   {
+    "entrada": "escorr_traseiro",
+    "s_por_desvio": -0.0401,
+    "intervalo_90": [
+     -0.1136,
+     0.0353
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "plato_s",
+    "s_por_desvio": -0.0399,
+    "intervalo_90": [
+     -0.1198,
+     0.0454
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "sem_pedal_s",
+    "s_por_desvio": 0.0376,
+    "intervalo_90": [
+     0.0,
+     0.0492
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "volante_depois",
+    "s_por_desvio": 0.0314,
+    "intervalo_90": [
+     -0.0012,
+     0.058
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "s_vmin_rel",
+    "s_por_desvio": 0.027,
+    "intervalo_90": [
+     -0.0103,
+     0.0555
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "taxa_carga",
+    "s_por_desvio": -0.0241,
+    "intervalo_90": [
+     -0.0725,
+     0.0433
+    ],
+    "sinal_estavel": false
+   },
+   {
+    "entrada": "reversoes",
+    "s_por_desvio": -0.0026,
+    "intervalo_90": [
+     -0.0212,
+     0.0169
+    ],
+    "sinal_estavel": false
+   }
+  ],
+  "situacao": "ajustado"
+ }
+]

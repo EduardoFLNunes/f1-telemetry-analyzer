@@ -26,4 +26,5 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
 | [0020](0020-realidade-aumentada-app-lua-do-csp.md) | Realidade aumentada no Assetto Corsa: um app Lua do CSP, numa pasta própria do jogo | aceita (pedido 31); item 4 refinado por 0021 |
 | [0021](0021-radio-que-analisa-as-voltas-e-minimapa.md) | O rádio analisa as voltas e diz onde e por que o piloto perde tempo; o app do jogo ganha um minimapa | aceita (pedido 35); refina 0020 |
 | [0022](0022-validacao-da-m1-modelo-do-carro.md) | Validação da M1: como o modelo do carro para a frente é aprovado, e com que relógio | aceita (pedido 37); complementa 0006 e 0017 |
+| [0023](0023-modelo-2-quatro-pecas-ia-e-piloto.md) | Modelo 2: as quatro peças para achar o erro, a técnica e o estilo, nas voltas da IA e do piloto | aceita (pedido 38); refina 0018 |
 | [0024](0024-m1-geometria-medida-pela-telemetria.md) | M1: a geometria do carro medida pela telemetria do jogo | aceita (pedido 39); refina 0022 e a seção 1.4 da M1 |
