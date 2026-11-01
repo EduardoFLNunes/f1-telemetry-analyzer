@@ -329,7 +329,10 @@ Feita, faltando o FPS no jogo e as decisões:
   | `refs/heads/etapa/visuais-do-radio` | `5c5e1bcb7abcbc8becdfd09b0ae814f25a2a34b6` | `5c5e1bcb7abcbc8becdfd09b0ae814f25a2a34b6` |
   | `refs/heads/etapa/visuais-do-radio` (01/11, com as decisões) | `ff2caf114a3a6bb7f339d3e54dbea7afa38cf05f` | `ff2caf114a3a6bb7f339d3e54dbea7afa38cf05f` |
 
-- **O commit deste registro** foi enviado em seguida. O hash final da branch está no chat. `develop`, `main` e as tags continuam sem envio deste pedido.
+  | `refs/heads/develop` (01/11, com o pedido 38) | `4b6ca40cf82b619ce7e5d5508e8711914073cf8f` | `4b6ca40cf82b619ce7e5d5508e8711914073cf8f` |
+  | `refs/heads/etapa/visuais-do-radio` (01/11, com o pedido 38) | `02c937e6b3d44aa3c8b1721db091393d2e28af61` | `02c937e6b3d44aa3c8b1721db091393d2e28af61` |
+
+- **O commit deste registro** foi enviado em seguida. O hash final da branch está no chat. `main` e as tags continuam sem envio; `develop` foi com o pedido 38, por pedido do Eduardo, sem o pedido 43.
 
 ## A versão do app (pergunta do Eduardo, 01/11)
 
