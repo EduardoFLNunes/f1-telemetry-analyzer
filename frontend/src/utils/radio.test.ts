@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { decimal, diferencaComSinal, mensagemDoEvento, mensagemDoRadio } from './radio';
+import { chaveDaMensagem, decimal, diferencaComSinal, mensagemDoEvento, mensagemDoRadio } from './radio';
+
+describe('a chave da mensagem na lista (pedido 43)', () => {
+  it('não muda quando a mensagem anda na lista; muda com outra abertura do backend', () => {
+    const m = { id: 3, instancia: 'a', origem: 'coach', titulo: '', texto: '', detalhe: null, microssetor: null, curva: null, s: null };
+    expect(chaveDaMensagem(m, 0)).toBe(chaveDaMensagem(m, 5));
+    expect(chaveDaMensagem({ ...m, instancia: 'b' }, 0)).not.toBe(chaveDaMensagem(m, 0));
+    expect(chaveDaMensagem({ ...m, id: undefined }, 2)).toBe('sem-id-2');
+  });
+});
 
 // Um evento como o `_emit_reference_event` do coach publica (driving_coach.py).
 const eventoReferencia = {

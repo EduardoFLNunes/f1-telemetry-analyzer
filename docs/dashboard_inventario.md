@@ -374,3 +374,14 @@ A limpeza do item 6 desta seção, os defeitos do backlog e o app do jogo 0.4.1 
   - **o canto inferior direito do mapa lendo `latestFrame` no replay e o `addFrame` mexendo no store no replay:** não acontecem mais. O replay do store só era aberto pela tela Pista e pela Análise, que saíram. A tela Volta e a Ao vivo têm o replay delas, fora do store;
   - **a rota da linha de corrida travando o servidor (seção 2.G):** ainda acontecia, com o mapa da depuração aberto. Corrigida: o cálculo roda fora do laço do servidor.
 - **O app do jogo:** a versão 0.4.1 (a janela salva fora da tela volta para dentro) entrou em `develop`.
+
+### O que o pedido 43 entregou (29/10)
+
+Os números da voz no replay da frase do coach e os 4 visuais do rádio (ADR 0021, atualização de 29/10). Detalhes em `docs/realidade_aumentada.md` (seção 5.4.1) e em `docs/handoff/2026-10-29_43_visuais-do-radio_relatorio.md`.
+
+- **O replay da frase do coach** (`backend/core/radio/replay.py`): os rótulos mostram os números da voz (a freada, as mínimas e o tempo, como no cartão), nos pontos onde o coach mediu, e o microssetor da fala aparece como "trecho da fala". Sem o traçado, que o coach não mede. Na análise, os rótulos mostram as medianas do cartão, e a diferença acumulada cobre o trecho inteiro da curva e termina no "perde X s" (decisões de 01/11).
+- **Os visuais sob a animação** (a tela Ao vivo, `ReplayDaCurva.tsx`, e a janela do jogo): a faixa do pedal, a diferença acumulada e a velocidade pela distância, com o cursor de cada carro. Os dados vêm na mesma rota do replay.
+- **A grade da sessão** (`GradeDaSessao.tsx`, sob os cartões do rádio; no jogo, nos boxes): a perda por curva das voltas válidas, a mesma da análise, com as curvas citadas marcadas e as voltas de fora com o motivo e as curvas citadas nelas. A rota nova é `GET /api/radio/grade`.
+- **O app do jogo:** a versão 0.4.2 (`tools/csp_app/radio_engenheiro/`). Com o backend do 0.5.0, ele mostra o replay como antes.
+- **O teste no jogo (01/11):** o Lua rodou no CSP 0.3.1 sem erro, e os números do replay batem com a voz e com o cartão. **Sem confirmação:** a grade nos boxes no jogo, o cartão da mensagem de teste e os visuais na tela do jogo.
+- **A versão:** 0.6.0 em `develop`, sem instalador.

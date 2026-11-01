@@ -14,6 +14,7 @@ import type { EstadoDoApp } from '../hooks/useEstadoDoApp';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { CartaoNumero, EtiquetaEstado, PainelVidro, type Tom } from '../components/ui/base';
 import { RadioAoVivo } from '../aoVivo/RadioAoVivo';
+import { GradeDaSessaoAoVivo } from '../aoVivo/GradeDaSessao';
 import { FantasmaAoVivo } from '../aoVivo/FantasmaAoVivo';
 import { formatarNumero, ROTULO_ESTADO, tomDoEstado, type EstadoCanal } from '../utils/coleta';
 
@@ -117,6 +118,7 @@ export const AoVivoPage: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
           <PainelVidro id="ao-vivo-radio" titulo="Rádio" nota="nas retas: até 3 frases por volta, o resumo da volta e, a cada 3 voltas válidas, a análise" style={{ flex: '1 1 400px', minWidth: 0 }}>
             <RadioAoVivo pronto={pronto} />
             <span className="texto-fraco dado">/api/radio/mensagens · as 20 mais recentes</span>
+            <GradeDaSessaoAoVivo pronto={pronto} />
           </PainelVidro>
         </div>
       </div>

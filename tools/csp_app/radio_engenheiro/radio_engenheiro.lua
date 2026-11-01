@@ -1181,11 +1181,28 @@ end
 --   calculado pelo backend na entrega). Nunca dentro das 14 curvas.
 -- * Nos boxes ou com o jogo pausado: a última análise, em repetição e com a janela maior,
 --   até você sair.
+-- Pedido 43:
+-- * na frase do coach, os números da voz (a freada, as mínimas e o tempo, onde o coach mediu)
+--   e o trecho da fala, uma faixa clara na pista e nos visuais; sem o traçado (o coach não o mede);
+-- * sob a animação, os visuais: a faixa do pedal, a diferença acumulada e a velocidade, pela
+--   distância desde a entrada, com o cursor de cada carro. Só quando a rota traz os dados (o
+--   backend do 0.5.0 não traz: a janela fica como antes). Quando a janela é pequena, sai primeiro
+--   a velocidade, depois a diferença e por último o pedal; o replay fica com pelo menos 150 px;
+-- * nos boxes ou com o jogo pausado, a grade da sessão (as últimas 8 voltas válidas), embaixo.
 local REPLAY_PAUSA_NO_FIM_S = 1.2       -- o fim de cada curva fica parado um pouco
 local REPLAY_MINIMO_S = 6               -- na reta, sem o `restaS` da mensagem (um backend antigo)
 local REPLAY_AUMENTO_NOS_BOXES = 1.6    -- nos boxes, a janela cresce isto
 local REPLAY_TOPO = 24
 local REPLAY_MARGEM = 18
+-- Pedido 43: as alturas dos visuais e o mínimo do replay (frontend/src/aoVivo/replay.ts, dividirAArea).
+local ALTURA_DO_PEDAL, ALTURA_DA_DIFERENCA, ALTURA_DA_VELOCIDADE = 30, 60, 74
+local REPLAY_MINIMO = 150
+local COLUNA_DOS_NOMES = 34
+local GRADE_VOLTAS = 8                 -- nos boxes, as últimas 8 voltas válidas
+local GRADE_LEITURA_S = 5
+local GRADE_PERDA_FORTE_S = 1.0
+local COR_DO_TRECHO = rgbm(1, 1, 1, 0.16)            -- o trecho da fala nos visuais
+local COR_DO_TRECHO_NA_PISTA = rgbm(1, 1, 1, 0.32)   -- e sobre a pista, mais forte
 
 local rp = {
   dados = {},            -- [id da mensagem] = { curvas }
@@ -1195,6 +1212,7 @@ local rp = {
   noBox = false, inicioNoBox = 0,
   janela = nil, tamanhoOriginal = nil, avisouTamanho = false,
   ultimoQuadro = -100,
+  grade = nil, gradeLidaEm = -100, gradeSemRota = false,   -- pedido 43: a grade da sessão
 }
 
 local function guardarReplay(id, curvas)
@@ -1354,6 +1372,29 @@ local function rotulo(q, texto, x, y, cor, preferido)
   ui.dwriteDrawText(texto, 11, vec2(bx + 3, by + 1), cor)
 end
 
+-- Pedido 43: os índices da linha dentro do trecho da fala, ou nada.
+local function indicesDoTrecho(c)
+  if type(c.voz) ~= 'table' or not tonumber(c.passoM) then return nil end
+  local n = #c.linhas.referencia
+  local a = math.max(1, math.floor((tonumber(c.voz.inicioM) or 0) / c.passoM + 0.5) + 1)
+  local b = math.min(n, math.floor((tonumber(c.voz.fimM) or 0) / c.passoM + 0.5) + 1)
+  if b > a then return a, b end
+  return nil
+end
+
+-- O alto: "C12, esquerda · volta 2 · perde 0,64 s no trecho da fala" (o tempo da voz), ou a perda na curva.
+local function textoDoAlto(c)
+  local volta = c.volta and (' · volta ' .. tostring(c.volta)) or ''
+  local inicio = tostring(c.curva) .. ', ' .. tostring(c.lado) .. volta
+  if type(c.voz) == 'table' then
+    local p = tonumber(c.voz.perdaS)
+    if not p then return inicio end
+    return inicio .. ' · ' .. (p >= 0 and 'perde ' or 'ganha ') .. decimal(math.abs(p), 2) .. ' s no trecho da fala'
+  end
+  local perda = tonumber(c.perdaS) or 0
+  return inicio .. ' · ' .. (perda >= 0 and 'perde ' or 'ganha ') .. decimal(math.abs(perda), 2) .. ' s nesta curva'
+end
+
 local function desenharACurva(c, t, x0, y0, W, H)
   local cam = cameraDaCurva(c, x0, y0, W, H)
   ui.drawRectFilled(vec2(x0, y0), vec2(x0 + W, y0 + H), CORES.fundoDoMapa, 6)
@@ -1374,6 +1415,17 @@ local function desenharACurva(c, t, x0, y0, W, H)
     end
     ui.pathStroke(cor, false, 2.5)
   end
+  -- Pedido 43: o trecho da fala, uma faixa clara sobre a pista (o microssetor que a voz mediu).
+  local ta, tb = indicesDoTrecho(c)
+  if ta then
+    ui.pathClear()
+    for i = ta, tb do
+      local p = c.linhas.referencia[i]
+      local sx, sy = cam.tela(p[1], p[2])
+      ui.pathLineTo(vec2(sx, sy))
+    end
+    ui.pathStroke(COR_DO_TRECHO_NA_PISTA, false, 16)
+  end
   linha(c.linhas.referencia, CORES.fantasma)
   linha(c.linhas.voce, CORES.vermelho)
   -- Os pontos que os rótulos não cobrem: os dois carros, as freadas, as mínimas e o traçado.
@@ -1384,16 +1436,30 @@ local function desenharACurva(c, t, x0, y0, W, H)
   local vsx, vsy = cam.tela(vx, vz)
   ocupar(q, rsx, rsy, 9)
   ocupar(q, vsx, vsy, 9)
-  local mv, mr = c.minimas.voce, c.minimas.referencia
-  local mvx, mvy = cam.tela(mv.x, mv.z)
-  local mrx, mry = cam.tela(mr.x, mr.z)
-  ocupar(q, mvx, mvy, 5)
-  ocupar(q, mrx, mry, 5)
-  local tv, tr = c.tracado.voce, c.tracado.referencia
-  local tvx, tvy = cam.tela(tv[1], tv[2])
-  local trx, try = cam.tela(tr[1], tr[2])
-  ocupar(q, tvx, tvy, 5)
-  ocupar(q, trx, try, 5)
+  -- Pedido 43: na frase do coach, a rota pode vir sem as mínimas e sem o traçado.
+  local mv = type(c.minimas) == 'table' and c.minimas.voce or nil
+  local mr = type(c.minimas) == 'table' and c.minimas.referencia or nil
+  local mvx, mvy, mrx, mry
+  if mv and mr then
+    mvx, mvy = cam.tela(mv.x, mv.z)
+    mrx, mry = cam.tela(mr.x, mr.z)
+    ocupar(q, mvx, mvy, 5)
+    ocupar(q, mrx, mry, 5)
+  end
+  local tem_tracado = type(c.tracado) == 'table'
+  local tvx, tvy, trx, try
+  if tem_tracado then
+    local tv, tr = c.tracado.voce, c.tracado.referencia
+    tvx, tvy = cam.tela(tv[1], tv[2])
+    trx, try = cam.tela(tr[1], tr[2])
+    ocupar(q, tvx, tvy, 5)
+    ocupar(q, trx, try, 5)
+  end
+  if ta then
+    local meio = c.linhas.referencia[math.floor((ta + tb) / 2)]
+    local sx, sy = cam.tela(meio[1], meio[2])
+    rotulo(q, 'trecho da fala', sx, sy, CORES.texto, 'esquerda')
+  end
   -- As freadas: um traço em cada linha e a distância entre elas.
   local contra = c.referencia == 'minha_melhor' and 'da sua melhor' or 'da IA'
   local function traco(m, cor)
@@ -1403,41 +1469,301 @@ local function desenharACurva(c, t, x0, y0, W, H)
     ocupar(q, sx, sy, 7)
     return sx, sy
   end
-  local fx, fy = traco(c.freadas.voce, CORES.vermelho)
-  traco(c.freadas.referencia, CORES.fantasma)
-  local d = tonumber(c.freadas.distanciaM)
+  local freadas = type(c.freadas) == 'table' and c.freadas or {}
+  local fx, fy = traco(freadas.voce, CORES.vermelho)
+  traco(freadas.referencia, CORES.fantasma)
+  local d = tonumber(freadas.distanciaM)
   if fx and d then
     local m = math.floor(math.abs(d) + 0.5)
     local texto = m < 1 and ('você freia no mesmo ponto ' .. contra:gsub('^da ', 'que a '))
       or ('você freia ' .. m .. ' m ' .. (d < 0 and 'antes ' or 'depois ') .. contra)
     rotulo(q, texto, fx, fy, CORES.vermelho, 'direita')
   end
-  -- O traçado: uma seta entre as duas linhas, no ponto da mínima da referência.
+  -- O traçado: uma seta entre as duas linhas, no ponto da mínima da referência (só na análise).
   local amarelo = CORES_DO_PEDAL[0]
-  if math.sqrt((tvx - trx) ^ 2 + (tvy - try) ^ 2) > 2 then
-    ui.drawLine(vec2(trx, try), vec2(tvx, tvy), amarelo, 1.5)
-    local a = math.atan2(tvy - try, tvx - trx)
-    ui.drawTriangleFilled(vec2(tvx, tvy), vec2(tvx - 7 * math.cos(a - 0.5), tvy - 7 * math.sin(a - 0.5)),
-      vec2(tvx - 7 * math.cos(a + 0.5), tvy - 7 * math.sin(a + 0.5)), amarelo)
+  if tem_tracado then
+    if math.sqrt((tvx - trx) ^ 2 + (tvy - try) ^ 2) > 2 then
+      ui.drawLine(vec2(trx, try), vec2(tvx, tvy), amarelo, 1.5)
+      local a = math.atan2(tvy - try, tvx - trx)
+      ui.drawTriangleFilled(vec2(tvx, tvy), vec2(tvx - 7 * math.cos(a - 0.5), tvy - 7 * math.sin(a - 0.5)),
+        vec2(tvx - 7 * math.cos(a + 0.5), tvy - 7 * math.sin(a + 0.5)), amarelo)
+    end
+    rotulo(q, 'você passa ' .. decimal(tonumber(c.tracado.distanciaM) or 0, 1) .. ' m mais à ' .. tostring(c.tracado.lado),
+      (tvx + trx) / 2, (tvy + try) / 2, amarelo, 'abaixo')
   end
-  rotulo(q, 'você passa ' .. decimal(tonumber(c.tracado.distanciaM) or 0, 1) .. ' m mais à ' .. tostring(c.tracado.lado),
-    (tvx + trx) / 2, (tvy + try) / 2, amarelo, 'abaixo')
   -- As mínimas, no ponto de cada uma.
-  ui.drawCircleFilled(vec2(mvx, mvy), 3.5, CORES.vermelho, 12)
-  ui.drawCircleFilled(vec2(mrx, mry), 3.5, CORES.fantasma, 12)
-  rotulo(q, 'mínima ' .. math.floor(mv.kmh + 0.5) .. ' km/h', mvx, mvy, CORES.vermelho, 'esquerda')
-  rotulo(q, 'mínima ' .. math.floor(mr.kmh + 0.5) .. ' km/h', mrx, mry, CORES.fantasma, 'direita')
+  if mv and mr then
+    ui.drawCircleFilled(vec2(mvx, mvy), 3.5, CORES.vermelho, 12)
+    ui.drawCircleFilled(vec2(mrx, mry), 3.5, CORES.fantasma, 12)
+    rotulo(q, 'mínima ' .. math.floor(mv.kmh + 0.5) .. ' km/h', mvx, mvy, CORES.vermelho, 'esquerda')
+    rotulo(q, 'mínima ' .. math.floor(mr.kmh + 0.5) .. ' km/h', mrx, mry, CORES.fantasma, 'direita')
+  end
   -- Os dois carros, cada um no seu tempo.
   desenharMarca(vec2(rsx, rsy), 6.5, CORES.fantasmaMiolo, CORES.fantasma, 2.5)
   desenharMarca(vec2(vsx, vsy), 6.5, CORES.voce, CORES.vermelho, 2.5)
   rotulo(q, tostring(c.rotuloDaReferencia or 'IA (referência)'), rsx, rsy, CORES.fantasma, 'direitaAcima')
   rotulo(q, 'você', vsx, vsy, CORES.texto, 'esquerdaAbaixo')
-  -- O alto: a curva, a volta e o tempo perdido.
+  -- O alto: a curva, a volta e o tempo perdido (na frase do coach, o da voz).
   ui.drawRectFilled(vec2(x0, y0), vec2(x0 + W, y0 + REPLAY_TOPO), CORES.faixaDoTexto, 6)
-  local perda = tonumber(c.perdaS) or 0
-  local volta = c.volta and (' · volta ' .. tostring(c.volta)) or ''
-  ui.dwriteDrawText(tostring(c.curva) .. ', ' .. tostring(c.lado) .. volta .. ' · ' .. (perda >= 0 and 'perde ' or 'ganha ')
-    .. decimal(math.abs(perda), 2) .. ' s nesta curva', 12, vec2(x0 + 10, y0 + 5), CORES.texto)
+  ui.dwriteDrawText(textoDoAlto(c), 12, vec2(x0 + 10, y0 + 5), CORES.texto)
+end
+
+-- ── os visuais (pedido 43, Parte C) ────────────────────────────────────
+-- As mesmas contas da tela Ao vivo (frontend/src/aoVivo/replay.ts e ReplayDaCurva.tsx).
+
+local function temVisuais(c)
+  local v = c.velocidades
+  return tonumber(c.passoM) ~= nil and type(v) == 'table' and type(v.voce) == 'table' and type(v.referencia) == 'table'
+    and #v.voce == #c.linhas.voce and #v.referencia == #c.linhas.referencia
+end
+
+-- Onde o carro está no tempo `t`, em metros desde a entrada (o cursor dos visuais).
+local function distanciaNoTempo(linha, t, passo)
+  local n = #linha
+  if n == 0 or t <= linha[1][3] then return 0 end
+  if t >= linha[n][3] then return (n - 1) * passo end
+  local a, b = 1, n
+  while b - a > 1 do
+    local m = math.floor((a + b) / 2)
+    if linha[m][3] <= t then a = m else b = m end
+  end
+  local u = linha[b][3] > linha[a][3] and (t - linha[a][3]) / (linha[b][3] - linha[a][3]) or 0
+  return (a - 1 + u) * passo
+end
+
+-- A divisão da área: o replay fica com pelo menos REPLAY_MINIMO; na ordem de importância, entram
+-- o pedal, a diferença e a velocidade, enquanto couberem. De cima para baixo: o replay, o pedal,
+-- a diferença e a velocidade.
+local function dividirAJanela(x0, y0, W, H, comVisuais)
+  local d = { replay = { x0, y0, W, H } }
+  if not comVisuais then return d end
+  local resto = H
+  local alturas = { pedal = ALTURA_DO_PEDAL, diferenca = ALTURA_DA_DIFERENCA, velocidade = ALTURA_DA_VELOCIDADE }
+  local entram = {}
+  for _, nome in ipairs({ 'pedal', 'diferenca', 'velocidade' }) do
+    if resto - alturas[nome] < REPLAY_MINIMO then break end
+    resto = resto - alturas[nome]
+    entram[nome] = true
+  end
+  d.replay = { x0, y0, W, resto }
+  local y = y0 + resto
+  for _, nome in ipairs({ 'pedal', 'diferenca', 'velocidade' }) do
+    if entram[nome] then
+      d[nome] = { x0, y, W, alturas[nome] }
+      y = y + alturas[nome]
+    end
+  end
+  return d
+end
+
+-- O fundo de um visual, a faixa do trecho da fala, o título; devolve a escala de x (metros -> tela).
+local function moldura(c, a, titulo, totalM)
+  local x, y, w, h = a[1], a[2], a[3], a[4]
+  ui.drawRectFilled(vec2(x, y), vec2(x + w, y + h - 2), CORES.fundoDoMapa, 0)
+  local x0 = x + COLUNA_DOS_NOMES
+  local largura = w - COLUNA_DOS_NOMES - 8
+  local total = totalM or math.max((#c.linhas.voce - 1) * c.passoM, 1)
+  local function emX(dm) return x0 + largura * dm / total end
+  if type(c.voz) == 'table' then
+    ui.drawRectFilled(vec2(emX(tonumber(c.voz.inicioM) or 0), y), vec2(emX(tonumber(c.voz.fimM) or 0), y + h - 2), COR_DO_TRECHO, 0)
+  end
+  if titulo ~= '' then ui.dwriteDrawText(titulo, 10, vec2(x0 + 2, y + 2), CORES.fraco) end
+  return emX
+end
+
+local function cursores(c, t, a, emX, deslocamento, totalM)
+  for _, par in ipairs({ { c.linhas.referencia, CORES.fantasma }, { c.linhas.voce, CORES.vermelho } }) do
+    local dm = distanciaNoTempo(par[1], t, c.passoM) + (deslocamento or 0)
+    -- na análise, o carro pode estar fora do trecho da curva
+    if dm >= 0 and dm <= (totalM or math.huge) then
+      local xx = emX(dm)
+      ui.drawLine(vec2(xx, a[2]), vec2(xx, a[2] + a[4] - 2), par[2], 1.5)
+    end
+  end
+end
+
+-- C.3: as duas faixas do pedal, pelas cores do traçado pintado pelo pedal (o mapa aproximado).
+local function desenharOPedal(c, t, a)
+  local emX = moldura(c, a, '')
+  local function faixa(linha, y, nome, cor)
+    local n = #linha
+    local i = 1
+    while i <= n do
+      local pedal = linha[i][4] or 0
+      local j = i
+      while j < n and (linha[j + 1][4] or 0) == pedal do j = j + 1 end
+      local de = math.max(0, (i - 1.5) * c.passoM)
+      local ate = math.min((n - 1) * c.passoM, (j - 0.5) * c.passoM)
+      ui.drawRectFilled(vec2(emX(de), y), vec2(math.max(emX(ate), emX(de) + 1), y + 10), CORES_DO_PEDAL[pedal] or CORES_DO_PEDAL[0], 0)
+      i = j + 1
+    end
+    ui.dwriteDrawText(nome, 10, vec2(a[1] + 4, y - 1), cor)
+  end
+  faixa(c.linhas.voce, a[2] + 3, 'você', CORES.vermelho)
+  faixa(c.linhas.referencia, a[2] + 15, c.referencia == 'minha_melhor' and 'sua' or 'IA', CORES.fantasma)
+  cursores(c, t, a, emX)
+end
+
+-- C.2: a diferença acumulada (o seu tempo menos o da referência), com as separações na freada, na
+-- mínima e na saída. Na análise, cobre o trecho inteiro da curva e termina na perda da curva (o eixo
+-- não é o da animação); na frase do coach, vai da entrada à saída do replay.
+local function desenharADiferenca(c, t, a)
+  local trecho = type(c.diferencaNoTrecho) == 'table' and c.diferencaNoTrecho or nil
+  local dif, maior, passo, totalM, deslocamento = {}, 0.05, c.passoM, nil, 0
+  local titulo = 'diferença acumulada (s): sobe quando você perde'
+  if trecho and type(trecho.valores) == 'table' and #trecho.valores > 1 then
+    dif, passo = trecho.valores, tonumber(trecho.passoM) or c.passoM
+    totalM, deslocamento = tonumber(trecho.comprimentoM), tonumber(trecho.entradaDoReplayM) or 0
+    titulo = 'diferença acumulada no trecho da curva (s): sobe quando você perde'
+  else
+    local v, r = c.linhas.voce, c.linhas.referencia
+    for i = 1, #v do dif[i] = v[i][3] - (r[i] or r[#r])[3] end
+  end
+  local emX = moldura(c, a, titulo, totalM)
+  local n = #dif
+  for i = 1, n do maior = math.max(maior, math.abs(dif[i])) end
+  local topo = a[2] + 16
+  local meio = topo + (a[4] - 20) / 2
+  local function emY(x) return meio - ((a[4] - 22) / 2) * (x / maior) end
+  ui.drawLine(vec2(emX(0), meio), vec2(emX((n - 1) * passo), meio), CORES.borda, 1)
+  local perda, ganho = comAlfa(CORES.perda, 0.35), comAlfa(CORES.ganho, 0.35)
+  for i = 1, n - 1 do
+    local xa, xb = emX((i - 1) * passo), emX(i * passo)
+    local ya, yb = emY(dif[i]), emY(dif[i + 1])
+    if dif[i] >= 0 and dif[i + 1] >= 0 then
+      ui.drawQuadFilled(vec2(xa, meio), vec2(xa, ya), vec2(xb, yb), vec2(xb, meio), perda)
+    elseif dif[i] <= 0 and dif[i + 1] <= 0 then
+      ui.drawQuadFilled(vec2(xa, meio), vec2(xb, meio), vec2(xb, yb), vec2(xa, ya), ganho)
+    end
+  end
+  ui.pathClear()
+  for i = 1, n do ui.pathLineTo(vec2(emX((i - 1) * passo), emY(dif[i]))) end
+  ui.pathStroke(CORES.vermelho, false, 1.5)
+  local s = type(c.secoes) == 'table' and c.secoes or {}
+  for _, par in ipairs({ { s.freadaM, 'freada' }, { s.minimaM, 'mínima' }, { s.saidaM, 'saída' } }) do
+    local dm = tonumber(par[1])
+    if dm then dm = dm + deslocamento end
+    if dm and dm >= 0 and dm <= (totalM or math.huge) then
+      local xx = emX(dm)
+      for yy = topo, a[2] + a[4] - 4, 6 do
+        ui.drawLine(vec2(xx, yy), vec2(xx, math.min(yy + 3, a[2] + a[4] - 2)), CORES.contorno, 1)
+      end
+      ui.dwriteDrawText(par[2], 10, vec2(xx - larguraDoRotulo(par[2]) / 2 + 3, a[2] + a[4] - 14), CORES.apoio)
+    end
+  end
+  cursores(c, t, a, emX, deslocamento, totalM)
+end
+
+-- C.1: as duas velocidades pela distância, com as freadas e as mínimas marcadas.
+local function desenharAVelocidade(c, t, a)
+  local emX = moldura(c, a, 'velocidade (km/h) pela distância (m)')
+  local vel = c.velocidades
+  local v0, v1 = math.huge, -math.huge
+  for _, serie in ipairs({ vel.voce, vel.referencia }) do
+    for _, x in ipairs(serie) do v0, v1 = math.min(v0, x), math.max(v1, x) end
+  end
+  local function emY(x) return a[2] + a[4] - 6 - (a[4] - 24) * (x - v0) / math.max(v1 - v0, 1) end
+  for _, par in ipairs({ { vel.referencia, CORES.fantasma }, { vel.voce, CORES.vermelho } }) do
+    ui.pathClear()
+    for i, x in ipairs(par[1]) do ui.pathLineTo(vec2(emX((i - 1) * c.passoM), emY(x))) end
+    ui.pathStroke(par[2], false, 1.5)
+  end
+  local function naSerie(serie, dm)
+    return serie[math.min(#serie, math.max(1, math.floor(dm / c.passoM + 0.5) + 1))]
+  end
+  local freadas = type(c.freadas) == 'table' and c.freadas or {}
+  for _, par in ipairs({ { freadas.voce, vel.voce, CORES.vermelho }, { freadas.referencia, vel.referencia, CORES.fantasma } }) do
+    local m = par[1]
+    if type(m) == 'table' and tonumber(m.dM) then
+      local xx, yy = emX(m.dM), emY(naSerie(par[2], m.dM))
+      ui.drawLine(vec2(xx, yy - 6), vec2(xx, yy + 6), par[3], 3)
+    end
+  end
+  if type(c.minimas) == 'table' then
+    for _, par in ipairs({ { c.minimas.voce, vel.voce, CORES.vermelho }, { c.minimas.referencia, vel.referencia, CORES.fantasma } }) do
+      local m = par[1]
+      if type(m) == 'table' and tonumber(m.dM) then
+        ui.drawCircleFilled(vec2(emX(m.dM), emY(naSerie(par[2], m.dM))), 3.5, par[3], 12)
+      end
+    end
+  end
+  cursores(c, t, a, emX)
+end
+
+-- ── a grade da sessão (pedido 43, C.4), nos boxes ───────────────────────
+
+local function lerAGrade(t)
+  if rp.gradeSemRota or t - rp.gradeLidaEm < GRADE_LEITURA_S then return end
+  rp.gradeLidaEm = t
+  pedirAoBackend(BACKEND .. '/api/radio/grade', function(err, r)
+    if err or not r then return end
+    if r.status == 404 then
+      -- o backend do 0.5.0 não tem a rota: sem a grade, e sem pedir de novo
+      rp.gradeSemRota = true
+      log('replay: o backend não tem a grade da sessão (/api/radio/grade); a janela fica sem ela')
+      return
+    end
+    if r.status ~= 200 then return end
+    local ok, dados = pcall(JSON.parse, r.body)
+    if ok and type(dados) == 'table' and type(dados.voltas) == 'table' and type(dados.curvas) == 'table' then
+      rp.grade = dados
+    end
+  end)
+end
+
+-- A altura que a grade ocupa (0 sem a grade): o título, o cabeçalho, as voltas e as de fora.
+local function alturaDaGrade()
+  local g = rp.grade
+  if not g or #g.voltas == 0 then return 0 end
+  local fora = type(g.fora) == 'table' and math.min(#g.fora, 2) or 0
+  return 18 + 15 + 15 * math.min(#g.voltas, GRADE_VOLTAS) + 13 * fora + 6
+end
+
+local function desenharAGrade(x0, y0, W, H)
+  local g = rp.grade
+  ui.drawRectFilled(vec2(x0, y0), vec2(x0 + W, y0 + H), CORES.fundoDoMapa, 6)
+  ui.dwriteDrawText('Grade da sessão: a perda em cada curva (laranja perde, azul ganha; contorno: citada)', 10,
+    vec2(x0 + 6, y0 + 3), CORES.apoio)
+  local nc = #g.curvas
+  local cw = (W - 40 - 6) / math.max(nc, 1)
+  local fonte = math.min(10, cw / 3.6)
+  local y = y0 + 18
+  for k, nome in ipairs(g.curvas) do
+    ui.dwriteDrawText(tostring(nome), fonte, vec2(x0 + 40 + (k - 1) * cw + 2, y), CORES.fraco)
+  end
+  y = y + 15
+  local citadas = {}
+  for _, c in ipairs(type(g.citadas) == 'table' and g.citadas or {}) do
+    citadas[tostring(c.volta) .. ':' .. tostring(c.curva)] = true
+  end
+  local primeira = math.max(1, #g.voltas - GRADE_VOLTAS + 1)
+  for i = primeira, #g.voltas do
+    local v = g.voltas[i]
+    ui.dwriteDrawText('volta ' .. tostring(v.volta), fonte, vec2(x0 + 4, y + 1), CORES.texto)
+    for k = 1, nc do
+      local p = tonumber(v.perdas[k])
+      local a = vec2(x0 + 40 + (k - 1) * cw + 1, y)
+      local b = vec2(x0 + 40 + k * cw - 1, y + 13)
+      if p then
+        local forca = 0.15 + 0.75 * math.min(1, math.abs(p) / GRADE_PERDA_FORTE_S)
+        ui.drawRectFilled(a, b, comAlfa(p >= 0 and CORES.perda or CORES.ganho, forca), 2)
+        local texto = (p < 0 and '−' or '') .. decimal(math.abs(p), 2) .. ' s'
+        ui.dwriteDrawText(texto, fonte, vec2(a.x + 2, y + 1), math.abs(p) > 0.6 and CORES.fundo or CORES.texto)
+      end
+      if citadas[tostring(v.volta) .. ':' .. tostring(g.curvas[k])] then
+        ui.drawRect(a, b, CORES.vermelho, 2, nil, 2)
+      end
+    end
+    y = y + 15
+  end
+  if type(g.fora) == 'table' then
+    for i = 1, math.min(#g.fora, 2) do
+      local f = g.fora[#g.fora - i + 1]
+      local citadas = type(f.citadas) == 'table' and #f.citadas > 0 and ('; citada: ' .. table.concat(f.citadas, ', ')) or ''
+      ui.dwriteDrawText('fora: volta ' .. tostring(f.volta) .. ': ' .. tostring(f.motivo) .. citadas, 10, vec2(x0 + 6, y), CORES.fraco)
+      y = y + 13
+    end
+  end
 end
 
 -- Nos boxes, a janela cresce (e volta ao tamanho de antes na saída). A janela é achada pelo título.
@@ -1518,9 +1844,23 @@ desenharOReplay = function(dt)
   end
   local c = curvas[i]
   local x0, y0, x1, y1 = areaVisivel(W, H)
-  desenharACurva(c, math.min(tc, tonumber(c.duracaoS) or 0), x0, y0, x1 - x0, y1 - y0)
+  local tempo = math.min(tc, tonumber(c.duracaoS) or 0)
+  -- Pedido 43: nos boxes, a grade da sessão embaixo (se o replay ainda ficar com o mínimo).
+  local altGrade = 0
   if noBox then
-    ui.dwriteDrawText('nos boxes: a última análise, em repetição', 11, vec2(x0 + 10, y1 - 18), CORES.apoio)
+    lerAGrade(t)
+    altGrade = alturaDaGrade()
+    if (y1 - y0) - altGrade < REPLAY_MINIMO then altGrade = 0 end
+  end
+  local d = dividirAJanela(x0, y0, x1 - x0, y1 - y0 - altGrade, temVisuais(c))
+  local r = d.replay
+  desenharACurva(c, tempo, r[1], r[2], r[3], r[4])
+  if d.pedal then desenharOPedal(c, tempo, d.pedal) end
+  if d.diferenca then desenharADiferenca(c, tempo, d.diferenca) end
+  if d.velocidade then desenharAVelocidade(c, tempo, d.velocidade) end
+  if altGrade > 0 then desenharAGrade(x0, y1 - altGrade, x1 - x0, altGrade) end
+  if noBox then
+    ui.dwriteDrawText('nos boxes: a última análise, em repetição', 11, vec2(r[1] + 10, r[2] + r[4] - 18), CORES.apoio)
   end
 end
 

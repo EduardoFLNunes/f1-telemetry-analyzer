@@ -1,0 +1,473 @@
+{
+ "modo": "depois",
+ "resumo": [
+  {
+   "sessao": "2026-10-13",
+   "origem": "analise",
+   "replays": 1,
+   "comOutroNumero": 0,
+   "comNumeroForaDaVoz": 1
+  },
+  {
+   "sessao": "2026-10-13",
+   "origem": "coach",
+   "replays": 5,
+   "comOutroNumero": 0,
+   "comNumeroForaDaVoz": 4
+  },
+  {
+   "sessao": "2026-10-18",
+   "origem": "analise",
+   "replays": 2,
+   "comOutroNumero": 0,
+   "comNumeroForaDaVoz": 2
+  },
+  {
+   "sessao": "2026-10-18",
+   "origem": "coach",
+   "replays": 3,
+   "comOutroNumero": 0,
+   "comNumeroForaDaVoz": 3
+  },
+  {
+   "sessao": "2026-10-21",
+   "origem": "analise",
+   "replays": 2,
+   "comOutroNumero": 0,
+   "comNumeroForaDaVoz": 2
+  },
+  {
+   "sessao": "2026-10-21",
+   "origem": "coach",
+   "replays": 6,
+   "comOutroNumero": 0,
+   "comNumeroForaDaVoz": 6
+  }
+ ],
+ "detalhes": [
+  {
+   "sessao": "2026-10-13",
+   "id": 3,
+   "origem": "coach",
+   "volta": 4,
+   "titulo": "C11, esquerda",
+   "fala": "Curva 11: 1,1 segundo atrás da IA. Mínima de 80 contra 94 quilômetros por hora.",
+   "rotulos": [
+    "C11, esquerda · volta 4 · perde 1,14 s no trecho da fala",
+    "trecho da fala",
+    "mínima 80 km/h",
+    "mínima 94 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C11: C11, esquerda · volta 4 · perde 1,14 s no trecho da fala"
+   ]
+  },
+  {
+   "sessao": "2026-10-13",
+   "id": 5,
+   "origem": "coach",
+   "volta": 4,
+   "titulo": "C12, esquerda",
+   "fala": "Curva 12, esquerda: 1,9 segundo atrás da IA. Freia 54 metros antes da IA.",
+   "rotulos": [
+    "C12, esquerda · volta 4 · perde 1,87 s no trecho da fala",
+    "trecho da fala",
+    "você freia 54 m antes da IA",
+    "mínima 80 km/h",
+    "mínima 145 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C12: C12, esquerda · volta 4 · perde 1,87 s no trecho da fala",
+    "C12: mínima 80 km/h",
+    "C12: mínima 145 km/h"
+   ]
+  },
+  {
+   "sessao": "2026-10-13",
+   "id": 7,
+   "origem": "coach",
+   "volta": 5,
+   "titulo": "C12, esquerda",
+   "fala": "Curva 12, esquerda: 7 décimos atrás da IA. Freia 50 metros antes da IA.",
+   "rotulos": [
+    "C12, esquerda · volta 5 · perde 0,73 s no trecho da fala",
+    "trecho da fala",
+    "você freia 50 m antes da IA",
+    "mínima 116 km/h",
+    "mínima 145 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C12: C12, esquerda · volta 5 · perde 0,73 s no trecho da fala",
+    "C12: mínima 116 km/h",
+    "C12: mínima 145 km/h"
+   ]
+  },
+  {
+   "sessao": "2026-10-13",
+   "id": 11,
+   "origem": "analise",
+   "volta": 8,
+   "titulo": "Análise das voltas 6 a 8",
+   "fala": "Análise das voltas 6 a 8. Curva 1: perde 1,1 segundo por volta. Freia 36 metros antes da IA.",
+   "rotulos": [
+    "C01, esquerda · volta 7 · perde 1,09 s nesta curva",
+    "você freia 36 m antes da IA",
+    "você passa 0,3 m mais à direita",
+    "mínima 104 km/h",
+    "mínima 104 km/h",
+    "C11, esquerda · volta 6 · perde 0,70 s nesta curva",
+    "você passa 0,3 m mais à direita",
+    "mínima 149 km/h",
+    "mínima 167 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C01: C01, esquerda · volta 7 · perde 1,09 s nesta curva",
+    "C01: você passa 0,3 m mais à direita",
+    "C01: mínima 104 km/h",
+    "C01: mínima 104 km/h",
+    "C11: C11, esquerda · volta 6 · perde 0,70 s nesta curva",
+    "C11: você passa 0,3 m mais à direita",
+    "C11: mínima 149 km/h",
+    "C11: mínima 167 km/h"
+   ]
+  },
+  {
+   "sessao": "2026-10-13",
+   "id": 13,
+   "origem": "coach",
+   "volta": 9,
+   "titulo": "C11, esquerda",
+   "fala": "Curva 11: 5 décimos atrás da IA. Mínima de 76 contra 94 quilômetros por hora.",
+   "rotulos": [
+    "C11, esquerda · volta 9 · perde 0,50 s no trecho da fala",
+    "trecho da fala",
+    "mínima 76 km/h",
+    "mínima 94 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": []
+  },
+  {
+   "sessao": "2026-10-13",
+   "id": 15,
+   "origem": "coach",
+   "volta": 11,
+   "titulo": "C12, esquerda",
+   "fala": "Curva 12, esquerda: 4,4 segundos atrás da IA. Freia 24 metros antes da IA.",
+   "rotulos": [
+    "C12, esquerda · volta 11 · perde 4,39 s no trecho da fala",
+    "trecho da fala",
+    "você freia 24 m antes da IA",
+    "mínima 34 km/h",
+    "mínima 145 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C12: C12, esquerda · volta 11 · perde 4,39 s no trecho da fala",
+    "C12: mínima 34 km/h",
+    "C12: mínima 145 km/h"
+   ]
+  },
+  {
+   "sessao": "2026-10-18",
+   "id": 3,
+   "origem": "coach",
+   "volta": 4,
+   "titulo": "C11, esquerda",
+   "fala": "Curva 11: 1,3 segundo atrás. Mínima de 64 contra 94 quilômetros por hora.",
+   "rotulos": [
+    "C11, esquerda · volta 4 · perde 1,25 s no trecho da fala",
+    "trecho da fala",
+    "mínima 64 km/h",
+    "mínima 94 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C11: C11, esquerda · volta 4 · perde 1,25 s no trecho da fala"
+   ]
+  },
+  {
+   "sessao": "2026-10-18",
+   "id": 8,
+   "origem": "analise",
+   "volta": 8,
+   "titulo": "Análise das voltas 3, 7 e 8",
+   "fala": "Curva 4: perde 1,0 segundo por volta. Mínima de 102 contra 128 quilômetros por hora.",
+   "rotulos": [
+    "C04, esquerda · volta 3 · perde 1,04 s nesta curva",
+    "você freia 40 m antes da IA",
+    "você passa 1,5 m mais à direita",
+    "mínima 102 km/h",
+    "mínima 128 km/h",
+    "C01, esquerda · volta 3 · perde 0,95 s nesta curva",
+    "você freia 52 m antes da IA",
+    "você passa 0,5 m mais à direita",
+    "mínima 97 km/h",
+    "mínima 104 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C04: C04, esquerda · volta 3 · perde 1,04 s nesta curva",
+    "C04: você freia 40 m antes da IA",
+    "C04: você passa 1,5 m mais à direita",
+    "C01: C01, esquerda · volta 3 · perde 0,95 s nesta curva",
+    "C01: você freia 52 m antes da IA",
+    "C01: você passa 0,5 m mais à direita",
+    "C01: mínima 97 km/h",
+    "C01: mínima 104 km/h"
+   ]
+  },
+  {
+   "sessao": "2026-10-18",
+   "id": 10,
+   "origem": "coach",
+   "volta": 9,
+   "titulo": "C11, esquerda",
+   "fala": "Curva 11: 5 décimos atrás da IA. Mínima de 85 contra 94 quilômetros por hora.",
+   "rotulos": [
+    "C11, esquerda · volta 9 · perde 0,46 s no trecho da fala",
+    "trecho da fala",
+    "mínima 85 km/h",
+    "mínima 94 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C11: C11, esquerda · volta 9 · perde 0,46 s no trecho da fala"
+   ]
+  },
+  {
+   "sessao": "2026-10-18",
+   "id": 11,
+   "origem": "coach",
+   "volta": 10,
+   "titulo": "C08, esquerda",
+   "fala": "Curva 8: 8 décimos atrás da IA. Mínima de 74 contra 90 quilômetros por hora.",
+   "rotulos": [
+    "C08, esquerda · volta 10 · perde 0,85 s no trecho da fala",
+    "trecho da fala",
+    "mínima 74 km/h",
+    "mínima 90 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C08: C08, esquerda · volta 10 · perde 0,85 s no trecho da fala"
+   ]
+  },
+  {
+   "sessao": "2026-10-18",
+   "id": 16,
+   "origem": "analise",
+   "volta": 13,
+   "titulo": "Análise das voltas 9, 12 e 13",
+   "fala": "Análise das voltas 9, 12 e 13. Curva 1: perde 9 décimos por volta. Freia 46 metros antes da IA.",
+   "rotulos": [
+    "C01, esquerda · volta 12 · perde 0,86 s nesta curva",
+    "você freia 46 m antes da IA",
+    "você passa 0,1 m mais à direita",
+    "mínima 97 km/h",
+    "mínima 104 km/h",
+    "C05, esquerda · volta 12 · perde 0,55 s nesta curva",
+    "você passa 0,3 m mais à direita",
+    "mínima 171 km/h",
+    "mínima 179 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C01: C01, esquerda · volta 12 · perde 0,86 s nesta curva",
+    "C01: você passa 0,1 m mais à direita",
+    "C01: mínima 97 km/h",
+    "C01: mínima 104 km/h",
+    "C05: C05, esquerda · volta 12 · perde 0,55 s nesta curva",
+    "C05: você passa 0,3 m mais à direita",
+    "C05: mínima 171 km/h",
+    "C05: mínima 179 km/h"
+   ]
+  },
+  {
+   "sessao": "2026-10-21",
+   "id": 3,
+   "origem": "coach",
+   "volta": 2,
+   "titulo": "C12, esquerda",
+   "fala": "Curva 12, esquerda: 6 décimos atrás da IA. Freia 16 metros antes da IA.",
+   "rotulos": [
+    "C12, esquerda · volta 2 · perde 0,64 s no trecho da fala",
+    "trecho da fala",
+    "você freia 16 m antes da IA",
+    "mínima 101 km/h",
+    "mínima 145 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C12: C12, esquerda · volta 2 · perde 0,64 s no trecho da fala",
+    "C12: mínima 101 km/h",
+    "C12: mínima 145 km/h"
+   ]
+  },
+  {
+   "sessao": "2026-10-21",
+   "id": 7,
+   "origem": "coach",
+   "volta": 5,
+   "titulo": "C11, esquerda",
+   "fala": "Curva 11: 6 décimos atrás da IA. Mínima de 64 contra 94 quilômetros por hora.",
+   "rotulos": [
+    "C11, esquerda · volta 5 · perde 0,65 s no trecho da fala",
+    "trecho da fala",
+    "mínima 64 km/h",
+    "mínima 94 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C11: C11, esquerda · volta 5 · perde 0,65 s no trecho da fala"
+   ]
+  },
+  {
+   "sessao": "2026-10-21",
+   "id": 15,
+   "origem": "coach",
+   "volta": 12,
+   "titulo": "C11, esquerda",
+   "fala": "Curva 11: 5 décimos atrás da IA. Mínima de 77 contra 94 quilômetros por hora.",
+   "rotulos": [
+    "C11, esquerda · volta 12 · perde 0,49 s no trecho da fala",
+    "trecho da fala",
+    "mínima 77 km/h",
+    "mínima 94 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C11: C11, esquerda · volta 12 · perde 0,49 s no trecho da fala"
+   ]
+  },
+  {
+   "sessao": "2026-10-21",
+   "id": 18,
+   "origem": "analise",
+   "volta": 13,
+   "titulo": "Análise das voltas 9, 11 e 13",
+   "fala": "Análise das voltas 9, 11 e 13. Curva 1: perde 8 décimos por volta. Freia 42 metros antes da IA.",
+   "rotulos": [
+    "C01, esquerda · volta 13 · perde 0,81 s nesta curva",
+    "você freia 42 m antes da IA",
+    "você passa 0,3 m mais à esquerda",
+    "mínima 100 km/h",
+    "mínima 104 km/h",
+    "C12, esquerda · volta 11 · perde 0,51 s nesta curva",
+    "você freia 52 m antes da IA",
+    "você passa 3,7 m mais à direita",
+    "mínima 100 km/h",
+    "mínima 98 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C01: C01, esquerda · volta 13 · perde 0,81 s nesta curva",
+    "C01: você passa 0,3 m mais à esquerda",
+    "C01: mínima 100 km/h",
+    "C01: mínima 104 km/h",
+    "C12: C12, esquerda · volta 11 · perde 0,51 s nesta curva",
+    "C12: você freia 52 m antes da IA",
+    "C12: você passa 3,7 m mais à direita",
+    "C12: mínima 100 km/h",
+    "C12: mínima 98 km/h"
+   ]
+  },
+  {
+   "sessao": "2026-10-21",
+   "id": 20,
+   "origem": "coach",
+   "volta": 15,
+   "titulo": "C12, esquerda",
+   "fala": "Curva 12, esquerda: 7 décimos atrás da IA. Freia 56 metros antes da IA.",
+   "rotulos": [
+    "C12, esquerda · volta 15 · perde 0,72 s no trecho da fala",
+    "trecho da fala",
+    "você freia 56 m antes da IA",
+    "mínima 112 km/h",
+    "mínima 145 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C12: C12, esquerda · volta 15 · perde 0,72 s no trecho da fala",
+    "C12: mínima 112 km/h",
+    "C12: mínima 145 km/h"
+   ]
+  },
+  {
+   "sessao": "2026-10-21",
+   "id": 25,
+   "origem": "analise",
+   "volta": 18,
+   "titulo": "Análise das voltas 16 a 18",
+   "fala": "Voltas 16 a 18. Curva 1: perde 1,2 segundo por volta. Passa 8 metros mais à direita que a IA.",
+   "rotulos": [
+    "C01, esquerda · volta 17 · perde 1,21 s nesta curva",
+    "você freia 34 m antes da IA",
+    "você passa 7,9 m mais à direita",
+    "mínima 71 km/h",
+    "mínima 104 km/h",
+    "C10, direita · volta 16 · perde 0,46 s nesta curva",
+    "você freia 5 m antes da IA",
+    "você passa 1,8 m mais à esquerda",
+    "mínima 75 km/h",
+    "mínima 81 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C01: C01, esquerda · volta 17 · perde 1,21 s nesta curva",
+    "C01: você freia 34 m antes da IA",
+    "C01: você passa 7,9 m mais à direita",
+    "C01: mínima 71 km/h",
+    "C01: mínima 104 km/h",
+    "C10: C10, direita · volta 16 · perde 0,46 s nesta curva",
+    "C10: você freia 5 m antes da IA",
+    "C10: você passa 1,8 m mais à esquerda",
+    "C10: mínima 75 km/h",
+    "C10: mínima 81 km/h"
+   ]
+  },
+  {
+   "sessao": "2026-10-21",
+   "id": 26,
+   "origem": "coach",
+   "volta": 19,
+   "titulo": "C11, esquerda",
+   "fala": "Curva 11: 5 décimos atrás da IA. Mínima de 77 contra 94 quilômetros por hora.",
+   "rotulos": [
+    "C11, esquerda · volta 19 · perde 0,48 s no trecho da fala",
+    "trecho da fala",
+    "mínima 77 km/h",
+    "mínima 94 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C11: C11, esquerda · volta 19 · perde 0,48 s no trecho da fala"
+   ]
+  },
+  {
+   "sessao": "2026-10-21",
+   "id": 27,
+   "origem": "coach",
+   "volta": 19,
+   "titulo": "C12, esquerda",
+   "fala": "Curva 12, esquerda: 1,0 segundo atrás da IA. Freia 27 metros antes da IA.",
+   "rotulos": [
+    "C12, esquerda · volta 19 · perde 1,03 s no trecho da fala",
+    "trecho da fala",
+    "você freia 27 m antes da IA",
+    "mínima 95 km/h",
+    "mínima 145 km/h"
+   ],
+   "foraDaMensagem": [],
+   "foraDaVoz": [
+    "C12: C12, esquerda · volta 19 · perde 1,03 s no trecho da fala",
+    "C12: mínima 95 km/h",
+    "C12: mínima 145 km/h"
+   ]
+  }
+ ]
+}
