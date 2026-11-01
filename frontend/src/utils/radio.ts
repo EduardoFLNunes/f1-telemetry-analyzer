@@ -102,6 +102,7 @@ function clausulaDaMinima(tipo: string | null, referenciaKmh: number, suaKmh: nu
  */
 export type MensagemDoBackend = {
   id?: number;
+  instancia?: string | null;
   origem: 'coach' | 'resumo' | 'teste' | string;
   titulo: string;
   texto: string;
@@ -124,6 +125,14 @@ export type MensagemDoBackend = {
 export type MensagemRadioComAudio = MensagemRadio & { audio: string | null; sCarro: number | null };
 
 const TAG_DA_ORIGEM: Record<string, string> = { coach: 'Rádio', resumo: 'Volta', teste: 'Teste', analise: 'Análise' };
+
+/**
+ * A chave da mensagem na lista: não depende da posição (pedido 43). Com a posição, cada mensagem
+ * nova remontava todos os replays da tela, que pediam a rota de novo e recomeçavam a animação.
+ */
+export function chaveDaMensagem(m: MensagemDoBackend, indice = 0): string {
+  return m.id === undefined || m.id === null ? `sem-id-${indice}` : `${m.instancia ?? ''}-${m.id}`;
+}
 
 export function mensagemDoRadio(m: MensagemDoBackend, indice = 0): MensagemRadioComAudio {
   const ponto = numero(m.sCarro) ?? numero(m.s);

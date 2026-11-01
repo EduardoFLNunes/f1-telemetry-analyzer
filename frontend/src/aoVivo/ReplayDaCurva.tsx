@@ -29,7 +29,8 @@ const ALTURA_DO_REPLAY = 250;
 const PAUSA_NO_FIM_S = 1.2;      // o fim de cada curva fica parado um pouco, antes da próxima
 const COR_VOCE = '#e10600';
 const COR_REF = 'rgba(233,237,242,0.9)';
-const COR_TRECHO = 'rgba(255,255,255,0.16)';
+const COR_TRECHO = 'rgba(255,255,255,0.16)';           // o trecho da fala nos visuais
+const COR_TRECHO_NA_PISTA = 'rgba(255,255,255,0.32)';  // e sobre a pista, mais forte
 // As cores do pedal, as do traçado pintado pelo pedal (a tela Volta e o mapa aproximado do jogo).
 const CORES_DO_PEDAL: Record<number, string> = { 0: '#f5c542', 1: '#3ddc84', 2: '#ff5a5f' };
 const COR_PERDA = 'rgba(255,162,74,0.35)';
@@ -77,7 +78,7 @@ function desenharACurva(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: numb
   };
   // Pedido 43: o trecho da fala, uma faixa clara sobre a pista (o microssetor que a voz mediu).
   const trecho = indicesDoTrecho(c);
-  if (trecho) linha(c.linhas.referencia.slice(trecho[0], trecho[1] + 1), COR_TRECHO, 16);
+  if (trecho) linha(c.linhas.referencia.slice(trecho[0], trecho[1] + 1), COR_TRECHO_NA_PISTA, 16);
   ctx.lineCap = 'butt';
   linha(c.linhas.referencia, COR_REF, 2.5);
   linha(c.linhas.voce, COR_VOCE, 2.5);

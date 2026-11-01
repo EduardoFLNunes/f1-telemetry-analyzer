@@ -1201,7 +1201,8 @@ local COLUNA_DOS_NOMES = 34
 local GRADE_VOLTAS = 8                 -- nos boxes, as últimas 8 voltas válidas
 local GRADE_LEITURA_S = 5
 local GRADE_PERDA_FORTE_S = 1.0
-local COR_DO_TRECHO = rgbm(1, 1, 1, 0.16)
+local COR_DO_TRECHO = rgbm(1, 1, 1, 0.16)            -- o trecho da fala nos visuais
+local COR_DO_TRECHO_NA_PISTA = rgbm(1, 1, 1, 0.32)   -- e sobre a pista, mais forte
 
 local rp = {
   dados = {},            -- [id da mensagem] = { curvas }
@@ -1423,7 +1424,7 @@ local function desenharACurva(c, t, x0, y0, W, H)
       local sx, sy = cam.tela(p[1], p[2])
       ui.pathLineTo(vec2(sx, sy))
     end
-    ui.pathStroke(COR_DO_TRECHO, false, 16)
+    ui.pathStroke(COR_DO_TRECHO_NA_PISTA, false, 16)
   end
   linha(c.linhas.referencia, CORES.fantasma)
   linha(c.linhas.voce, CORES.vermelho)
