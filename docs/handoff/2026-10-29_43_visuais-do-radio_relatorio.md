@@ -292,6 +292,7 @@ Nenhuma análise chegou perto dos 60 KB, então não precisei propor uma grade m
    ```powershell
    $env:AT_BACKEND_USE_PYTHON_RUNNER='true'; cd C:\Users\Dokas\Desktop\f1-telemetry-analyzer\desktop; npm.cmd run desktop:prod:autostart
    ```
+   **Confira na aba Coleta de dados, em "Versão do app":** tem de aparecer "rodando do código-fonte". O número continua `0.5.0-radio-e-replay`, igual ao do app instalado, então é essa frase que mostra que você abriu o certo.
 4. **No jogo, ligue as 4 janelas** na barra de apps: "Rádio", "Minimapa", "Mapa aproximado" e "Replay da curva". Ponha o replay num canto, sem cobrir o centro, e **estique-o para 420 × 480**, para os três visuais aparecerem.
 5. **Na tela Sistema, clique em "Mandar mensagem de teste".** O cartão e a voz têm de sair no jogo.
 6. **Ande pelo menos 8 voltas, você mesmo, e vá aos boxes depois da 3ª volta válida,** para ver a grade. Ela só aparece nos boxes ou com o jogo pausado, embaixo da janela grande.
@@ -328,7 +329,6 @@ Feita, faltando o FPS no jogo e as decisões:
   |---|---|---|
   | `refs/heads/etapa/visuais-do-radio` | `5c5e1bcb7abcbc8becdfd09b0ae814f25a2a34b6` | `5c5e1bcb7abcbc8becdfd09b0ae814f25a2a34b6` |
   | `refs/heads/etapa/visuais-do-radio` (01/11, com as decisões) | `ff2caf114a3a6bb7f339d3e54dbea7afa38cf05f` | `ff2caf114a3a6bb7f339d3e54dbea7afa38cf05f` |
-
   | `refs/heads/develop` (01/11, com o pedido 38) | `4b6ca40cf82b619ce7e5d5508e8711914073cf8f` | `4b6ca40cf82b619ce7e5d5508e8711914073cf8f` |
   | `refs/heads/etapa/visuais-do-radio` (01/11, com o pedido 38) | `02c937e6b3d44aa3c8b1721db091393d2e28af61` | `02c937e6b3d44aa3c8b1721db091393d2e28af61` |
 
@@ -347,7 +347,7 @@ Feita, faltando o FPS no jogo e as decisões:
 - **`develop` recebeu o pedido 38, sem a H.4, por decisão do Eduardo:** merge `f77c0c72`; os detalhes estão na seção "Merge sem a H.4 (01/11)" do relatório do 38. Suítes em `develop` (`4b6ca40c`): backend com 867 testes passando; front com 164, `tsc` e build sem erro.
 - **Esta branch recebeu `develop`** (merge `77ca63eb`). Houve 1 conflito, no histórico de `docs/tecnica_de_pilotagem_lista.md`, com os dois lados mantidos, em ordem de data. Nenhum conflito em código.
 - **As suítes nesta branch, em `77ca63eb`:** backend com 872 testes passando; front com 174, `tsc` e build sem erro; `conferir_lua.py` sem erro. O `frontend/dist` foi refeito nesta branch, para o teste.
-- **A versão:** com o merge, esta branch passou a mostrar `0.5.0-radio-e-replay`, o mesmo número do app instalado, embora tenha mais conteúdo. O app do jogo continua 0.4.2.
+- **A versão:** com o merge, esta branch passou a mostrar `0.5.0-radio-e-replay`, o mesmo número do app instalado, embora tenha mais conteúdo. A troca para 0.6.0 fica para depois do merge do pedido 43, na ordem combinada. O app do jogo continua 0.4.2.
 
 ## O que falta
 
