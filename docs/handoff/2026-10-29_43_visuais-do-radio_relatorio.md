@@ -1,7 +1,7 @@
 # Relatório do pedido 43: os 4 visuais do rádio e os números da voz no replay
 
 - **Pedido:** `docs/prompts/2026-10-29_43_visuais-do-radio.md`.
-- **Situação (01/11):** **parado na Parte E, como o pedido manda,** esperando o seu teste no jogo. As Partes A a D estão feitas, e a Parte F está feita até onde dá sem o jogo. Sem merge em `develop`.
+- **Situação (01/11, 15:15):** **as suas 4 decisões estão implementadas, mas o teste no jogo não aconteceu** (ver "O aviso de 01/11"). O código Lua nunca rodou e o FPS não foi medido. **Sem merge em `develop`:** o merge espera o teste.
 - **Branch:** `etapa/visuais-do-radio`, a partir de `develop` (`4ac3d7af`).
 - **Commits:**
   - `df26996f` Partes B e C no backend: os números da voz, os dados dos visuais na rota e a grade da sessão
@@ -11,13 +11,80 @@
   - `70d59270` Partes D e F: as prévias, a conferência dos rótulos e dos visuais, os limites do LuaJIT e a documentação
   - `f6de673a` C.4: a grade também lista a volta que o rádio não viu fechar na linha
   - `5c5e1bcb` o relatório, com a ponta a ponta e as saídas
-  - o commit deste registro do envio (ver "O envio ao GitHub")
+  - `92ce23b4` o registro do envio
+  - `593e672a` as decisões: os números do cartão na análise, a diferença no trecho inteiro, as citadas nas voltas de fora e o backlog
+  - o commit do fechamento destas decisões (ver "O aviso de 01/11")
 - **Arquivos de handoff** (`docs/handoff/`, prefixo `2026-10-29_43_visuais-do-radio_`):
   - `relatorio.md` (este), `patch.diff` e `pytest.txt`;
   - **as prévias:** `previas.png` (a folha com as 8), `c12_v2_antes.png`, `c12_v2_depois.png`, `boxes_com_a_grade.png` e `janela_com_o_backend_050.png`;
-  - **a tela Ao vivo:** `ao_vivo_c12_v2.jpg`, `ao_vivo_c01_v13.jpg` e `ao_vivo_grade.jpg`;
+  - **as prévias da análise, com as decisões:** `c01_v17_depois.png` e `c10_v16_depois.png`;
+  - **a tela Ao vivo:** `ao_vivo_c12_v2.jpg`, `ao_vivo_c01_v13.jpg` e `ao_vivo_grade.jpg` (com as decisões);
   - **a conferência:** `rotulos_antes.json`, `rotulos_depois.json`, `visuais.json`, `radio_antes_21-10.json` e `radio_depois_13-10.json`, `_18-10.json` e `_21-10.json`;
   - **os scripts:** `radio_offline.py`, `radio_offline_antes.py`, `rodar_conferencia.sh`, `conferir_rotulos.py`, `medir_visuais.py`, `contar_locais.py`, `previa.py`, `fotografar.sh` e `folha.py`.
+
+## O aviso de 01/11: as decisões estão feitas, mas o jogo não rodou
+
+**A sua mensagem dizia "Testei os visuais no jogo", e as anotações vieram como o texto-modelo** ("[as suas anotações: os números em cada fala, os visuais, janelas que sumiram, o FPS]"). Fui conferir, como o pedido manda, e **nada mostra um teste:**
+
+| onde | o que está lá |
+|---|---|
+| o app no jogo (`apps\lua\radio_engenheiro`) | **versão 0.4.1, de 24/10.** O `instalar.ps1` desta branch não foi rodado, então os visuais não estavam no jogo |
+| `Documents\Assetto Corsa\logs\log.txt` e `custom_shaders_patch.log` | **de 28/10, 13:31, ainda com o CSP 0.2.11.** O jogo reescreve esses arquivos ao abrir; ele não abriu desde então, nem depois da atualização do CSP de 31/10 |
+| `data\recordings` | a última gravação é de 24/10 |
+| `data\radio` | o último registro é de 24/10 |
+| as pastas do app instalado | nenhum registro do rádio nem log do backend depois de 29/10 |
+
+A única coisa recente é `cfg\video.ini`, de 01/11, 12:46. Não sei o que a mudou; o jogo não abriu.
+
+**Por isso, não fiz nada do que depende do teste:** não há fala para comparar, nem linhas `[radio_engenheiro]` novas, nem FPS. **Não escrevi nenhum resultado de jogo, e o merge em `develop` não foi feito.** Se você testou em outro computador ou em outra pasta, me diga onde estão a gravação e o log, e eu os confiro.
+
+**As 4 decisões:**
+
+| decisão | o que ficou | conferido |
+|---|---|---|
+| 1. A linha da análise cobre o trecho inteiro | começa em zero na entrada do trecho; a animação não mudou | **fim da linha = "perde X s" nas 10 curvas das 5 análises (diferença 0,000 s),** e a janela da animação ficou com os mesmos pontos nas 10 |
+| 2. Os números do cartão nos rótulos da análise | as medianas no alto, na freada, nas mínimas e no traçado; a distância entre as marcas de freada mede o rótulo | **replays com outro número: de 5 em 5 para 0 em 5.** Nas 8 curvas com freada, a distância entre as marcas é o número do rótulo |
+| 3. Sem a seta na frase do coach | já estava assim | sem traçado nas 14 frases |
+| 4. As citadas nas voltas de fora | "volta 12: incompleta (1:43,199); citada: C11"; o motivo "incompleta" ficou curto, como no seu exemplo | na tela Ao vivo e nas 3 sessões; 13 voltas de fora têm curva citada |
+
+**O que decidi na implementação, e você pode querer rever:**
+
+- **A seta do traçado também mede o rótulo.** Você pediu isso para a freada, e a seta não estava na lista do que continua na volta. Sem isso, a seta podia contradizer o texto: na análise das voltas 9, 12 e 13 de 18/10, a volta mostrada passa à esquerda, e o cartão diz 0,1 m à direita. A ponta da seta pode ficar fora da sua linha vermelha.
+- **As mínimas têm o número da mediana, no ponto da volta mostrada.** Você não pediu marca nova para elas. Na C01 da volta 17, o rótulo diz 71 km/h no ponto onde aquela volta fez 69.
+- **Na análise, a linha da diferença tem outro eixo.** Ela vai pelo trecho, e o pedal e a velocidade, pela janela. As linhas verticais não alinham entre os visuais, o cursor some quando o carro está fora do trecho e uma separação fora do trecho não aparece: a freada da C10 fica 32 m antes da entrada dele. O título diz "no trecho da curva".
+- **A volta citada antes da primeira que fechou também entra entre as de fora** (a volta 1 de 21/10). A citada depois da última que fechou não entra: ainda está em andamento.
+- **No jogo, a grade continua listando só as 2 últimas voltas de fora,** por falta de espaço. A tela Ao vivo lista todas.
+
+**Os números depois das decisões** (as 3 sessões, uma de cada vez):
+
+| | frase do coach | análise |
+|---|---|---|
+| o tamanho da rota | 8,4 a 11,4 KB | 22,3 a 25,4 KB (antes do pedido: 15,7 a 18,3 KB) |
+| o tempo para montar (mediana) | 4,3 ms | 7,4 ms (antes do pedido: 3,9 ms) |
+
+A análise custa mais porque leva a linha do trecho. Continua longe dos 60 KB e é calculada uma vez, na entrega.
+
+**As conferências depois das decisões:**
+
+- **Backend:** 837 testes passando, em `593e672a`.
+- **Front:** 174 testes passando; `tsc` e build sem erro.
+- **Lua:** o `conferir_lua.py` passa contra o SDK do CSP 0.3.1; 141 locais, de 200.
+- **A tela Ao vivo:** repeti a parte da análise e da grade com o código final, desde a volta 8, em velocidade 3, em aba "[teste]", fechada no fim. A frase da C12 da volta 2 não foi repetida com o código final; o código da frase não mudou nas decisões.
+- **Defeito achado pelo teste:** a proteção contra o relógio que volta usava "mais de meia volta" e teria quebrado um trecho longo. Corrigida antes do commit.
+
+**O backlog** (`docs/backlog.md`), como pedido próprio:
+
+- **as voltas de tempo normal marcadas como incompletas:** 9 das 19 em 21/10;
+- **os buracos na numeração das voltas;**
+- **o erro "attached to a different loop":** 15.671 vezes no `backend.1.log` do app instalado, 70 no `logs/backend.log` do repositório e 9 nas passagens do reprodutor. Portanto, não é só do reprodutor, e isso responde à dúvida que deixei na Parte D.
+
+**O que falta, em ordem:**
+
+1. **O seu teste no jogo,** pelos passos da Parte E, com esta branch. A prévia não substitui: **o Lua novo nunca rodou.**
+2. **Depois do aviso, com as anotações preenchidas,** eu confiro o registro e o log do CSP, meço o FPS e completo o relatório.
+3. **O merge em `develop` e o envio.**
+
+**As seções abaixo são o relatório da parada de 29/10 a 01/11.** Onde falam da análise sem as decisões (a decisão 1 "não cumprida", os 5 em 5 e a tabela do fim da linha), elas mostram o antes; o estado atual é o desta seção.
 
 ## Resumo
 

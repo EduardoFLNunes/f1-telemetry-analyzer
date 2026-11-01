@@ -5,7 +5,7 @@
    "sessao": "2026-10-13",
    "origem": "analise",
    "replays": 1,
-   "comOutroNumero": 1,
+   "comOutroNumero": 0,
    "comNumeroForaDaVoz": 1
   },
   {
@@ -19,7 +19,7 @@
    "sessao": "2026-10-18",
    "origem": "analise",
    "replays": 2,
-   "comOutroNumero": 2,
+   "comOutroNumero": 0,
    "comNumeroForaDaVoz": 2
   },
   {
@@ -33,7 +33,7 @@
    "sessao": "2026-10-21",
    "origem": "analise",
    "replays": 2,
-   "comOutroNumero": 2,
+   "comOutroNumero": 0,
    "comNumeroForaDaVoz": 2
   },
   {
@@ -120,12 +120,10 @@
     "mínima 104 km/h",
     "C11, esquerda · volta 6 · perde 0,70 s nesta curva",
     "você passa 0,3 m mais à direita",
-    "mínima 147 km/h",
+    "mínima 149 km/h",
     "mínima 167 km/h"
    ],
-   "foraDaMensagem": [
-    "C11: mínima 147 km/h"
-   ],
+   "foraDaMensagem": [],
    "foraDaVoz": [
     "C01: C01, esquerda · volta 7 · perde 1,09 s nesta curva",
     "C01: você passa 0,3 m mais à direita",
@@ -133,7 +131,7 @@
     "C01: mínima 104 km/h",
     "C11: C11, esquerda · volta 6 · perde 0,70 s nesta curva",
     "C11: você passa 0,3 m mais à direita",
-    "C11: mínima 147 km/h",
+    "C11: mínima 149 km/h",
     "C11: mínima 167 km/h"
    ]
   },
@@ -201,32 +199,25 @@
    "fala": "Curva 4: perde 1,0 segundo por volta. Mínima de 102 contra 128 quilômetros por hora.",
    "rotulos": [
     "C04, esquerda · volta 3 · perde 1,04 s nesta curva",
-    "você freia 6 m antes da IA",
-    "você passa 4,2 m mais à direita",
-    "mínima 86 km/h",
+    "você freia 40 m antes da IA",
+    "você passa 1,5 m mais à direita",
+    "mínima 102 km/h",
     "mínima 128 km/h",
     "C01, esquerda · volta 3 · perde 0,95 s nesta curva",
     "você freia 52 m antes da IA",
-    "você passa 0,9 m mais à direita",
-    "mínima 90 km/h",
+    "você passa 0,5 m mais à direita",
+    "mínima 97 km/h",
     "mínima 104 km/h"
    ],
-   "foraDaMensagem": [
-    "C04: você freia 6 m antes da IA",
-    "C04: você passa 4,2 m mais à direita",
-    "C04: mínima 86 km/h",
-    "C01: você passa 0,9 m mais à direita",
-    "C01: mínima 90 km/h"
-   ],
+   "foraDaMensagem": [],
    "foraDaVoz": [
     "C04: C04, esquerda · volta 3 · perde 1,04 s nesta curva",
-    "C04: você freia 6 m antes da IA",
-    "C04: você passa 4,2 m mais à direita",
-    "C04: mínima 86 km/h",
+    "C04: você freia 40 m antes da IA",
+    "C04: você passa 1,5 m mais à direita",
     "C01: C01, esquerda · volta 3 · perde 0,95 s nesta curva",
     "C01: você freia 52 m antes da IA",
-    "C01: você passa 0,9 m mais à direita",
-    "C01: mínima 90 km/h",
+    "C01: você passa 0,5 m mais à direita",
+    "C01: mínima 97 km/h",
     "C01: mínima 104 km/h"
    ]
   },
@@ -276,27 +267,23 @@
    "rotulos": [
     "C01, esquerda · volta 12 · perde 0,86 s nesta curva",
     "você freia 46 m antes da IA",
-    "você passa 1,0 m mais à esquerda",
+    "você passa 0,1 m mais à direita",
     "mínima 97 km/h",
     "mínima 104 km/h",
     "C05, esquerda · volta 12 · perde 0,55 s nesta curva",
-    "você passa 2,2 m mais à direita",
-    "mínima 170 km/h",
+    "você passa 0,3 m mais à direita",
+    "mínima 171 km/h",
     "mínima 179 km/h"
    ],
-   "foraDaMensagem": [
-    "C01: você passa 1,0 m mais à esquerda",
-    "C05: você passa 2,2 m mais à direita",
-    "C05: mínima 170 km/h"
-   ],
+   "foraDaMensagem": [],
    "foraDaVoz": [
     "C01: C01, esquerda · volta 12 · perde 0,86 s nesta curva",
-    "C01: você passa 1,0 m mais à esquerda",
+    "C01: você passa 0,1 m mais à direita",
     "C01: mínima 97 km/h",
     "C01: mínima 104 km/h",
     "C05: C05, esquerda · volta 12 · perde 0,55 s nesta curva",
-    "C05: você passa 2,2 m mais à direita",
-    "C05: mínima 170 km/h",
+    "C05: você passa 0,3 m mais à direita",
+    "C05: mínima 171 km/h",
     "C05: mínima 179 km/h"
    ]
   },
@@ -366,9 +353,9 @@
    "fala": "Análise das voltas 9, 11 e 13. Curva 1: perde 8 décimos por volta. Freia 42 metros antes da IA.",
    "rotulos": [
     "C01, esquerda · volta 13 · perde 0,81 s nesta curva",
-    "você freia 76 m antes da IA",
+    "você freia 42 m antes da IA",
     "você passa 0,3 m mais à esquerda",
-    "mínima 104 km/h",
+    "mínima 100 km/h",
     "mínima 104 km/h",
     "C12, esquerda · volta 11 · perde 0,51 s nesta curva",
     "você freia 52 m antes da IA",
@@ -376,14 +363,11 @@
     "mínima 100 km/h",
     "mínima 98 km/h"
    ],
-   "foraDaMensagem": [
-    "C01: você freia 76 m antes da IA"
-   ],
+   "foraDaMensagem": [],
    "foraDaVoz": [
     "C01: C01, esquerda · volta 13 · perde 0,81 s nesta curva",
-    "C01: você freia 76 m antes da IA",
     "C01: você passa 0,3 m mais à esquerda",
-    "C01: mínima 104 km/h",
+    "C01: mínima 100 km/h",
     "C01: mínima 104 km/h",
     "C12: C12, esquerda · volta 11 · perde 0,51 s nesta curva",
     "C12: você freia 52 m antes da IA",
@@ -424,23 +408,23 @@
     "C01, esquerda · volta 17 · perde 1,21 s nesta curva",
     "você freia 34 m antes da IA",
     "você passa 7,9 m mais à direita",
-    "mínima 69 km/h",
+    "mínima 71 km/h",
     "mínima 104 km/h",
     "C10, direita · volta 16 · perde 0,46 s nesta curva",
+    "você freia 5 m antes da IA",
     "você passa 1,8 m mais à esquerda",
     "mínima 75 km/h",
     "mínima 81 km/h"
    ],
-   "foraDaMensagem": [
-    "C01: mínima 69 km/h"
-   ],
+   "foraDaMensagem": [],
    "foraDaVoz": [
     "C01: C01, esquerda · volta 17 · perde 1,21 s nesta curva",
     "C01: você freia 34 m antes da IA",
     "C01: você passa 7,9 m mais à direita",
-    "C01: mínima 69 km/h",
+    "C01: mínima 71 km/h",
     "C01: mínima 104 km/h",
     "C10: C10, direita · volta 16 · perde 0,46 s nesta curva",
+    "C10: você freia 5 m antes da IA",
     "C10: você passa 1,8 m mais à esquerda",
     "C10: mínima 75 km/h",
     "C10: mínima 81 km/h"

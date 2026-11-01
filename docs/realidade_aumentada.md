@@ -332,22 +332,23 @@ O engenheiro mostra o que diz: quando o rádio fala de uma curva, a janela mostr
 
 **A regra dos números da voz** (decisão do Eduardo de 29/10): no replay de uma frase do coach, todo número escrito é o da voz, com a unidade e o arredondamento do cartão. As linhas e os carros continuam os da curva inteira.
 
-| rótulo | na frase do coach (pedido 43) | na análise (não muda) |
+| rótulo | na frase do coach | na análise (decisão do Eduardo de 01/11) |
 |---|---|---|
-| a freada | "você freia 16 m antes da IA": o `brakeDeltaM` do coach, arredondado como no cartão; as duas marcas nos inícios de frenagem que o coach guardou (`yourBrakeOnsetM`, `referenceBrakeOnsetM`) | a regra do relatório de evolução |
-| as mínimas | "mínima 101 km/h" e "mínima 145 km/h": os números do cartão; as marcas no ponto mais lento de cada grade dentro do microssetor da fala (a mesma regra do coach: a menor velocidade do microssetor) | a menor velocidade dentro da curva |
-| o traçado | **não aparece:** o coach não mede o lado | a posição lateral no ponto da mínima da referência |
-| o alto | "C12, esquerda · volta 2 · perde 0,64 s no trecho da fala": o tempo do cartão | "perde 1,21 s nesta curva" |
+| a freada | "você freia 16 m antes da IA": o `brakeDeltaM` do coach, arredondado como no cartão; as duas marcas nos inícios de frenagem que o coach guardou (`yourBrakeOnsetM`, `referenceBrakeOnsetM`) | "você freia 42 m antes da IA": a mediana do cartão; a marca da referência na freada dela, e a sua a essa distância |
+| as mínimas | "mínima 101 km/h" e "mínima 145 km/h": os números do cartão; as marcas no ponto mais lento de cada grade dentro do microssetor da fala (a mesma regra do coach: a menor velocidade do microssetor) | as medianas do cartão; as marcas nos pontos da volta mostrada |
+| o traçado | **não aparece:** o coach não mede o lado (decisão do Eduardo: sem a seta) | a mediana do cartão; a seta mede o rótulo, no ponto da mínima da referência |
+| o alto | "C12, esquerda · volta 2 · perde 0,64 s no trecho da fala": o tempo do cartão | "perde 0,81 s nesta curva": a perda mediana do cartão |
 | o trecho da fala | o microssetor que a voz mediu, uma faixa clara na pista e nos visuais, com o rótulo "trecho da fala" | — |
 
 - **Sem a freada na voz** (a frase só com a mínima), o replay da frase não tem as marcas de freada.
 - **A janela cresce** para conter o microssetor da fala e as freadas do coach. O microssetor 39, que o coach chama de "Curva 11", fica quase todo na saída da C10 e começa 55 m antes da janela da C11. O relógio da volta tem de ter sido medido em 90% da janela crescida; sem isso, a frase fica sem replay (em 21/10, a frase da C11 da volta 15, cuja grade só tinha pontos a partir de 38 m dentro do trecho).
-- **A conferência fora do tempo real** (as sessões de 13/10, 18/10 e 21/10, com a voz de verdade): antes, os 15 replays de frases do coach tinham algum rótulo com um número que não estava no cartão nem na voz. Depois, nenhum dos 14 (a frase da C11 da volta 15 de 21/10 ficou sem replay). Nas análises, 5 de 5, antes e depois: o replay mostra a volta das 3 mais perto da mediana, e o cartão, a mediana de cada medida (a análise não mudou, como pedido).
+- **A conferência fora do tempo real** (as sessões de 13/10, 18/10 e 21/10, com a voz de verdade): antes, os 15 replays de frases do coach tinham algum rótulo com um número que não estava no cartão nem na voz. Depois, nenhum dos 14 (a frase da C11 da volta 15 de 21/10 ficou sem replay). Nas análises, de 5 em 5 para 0 em 5.
+- **Na análise, as linhas, os carros e a faixa do pedal continuam os da volta mais perto da mediana;** os rótulos e as marcas de freada mostram as medianas. Por isso a marca da sua freada pode não coincidir com o ponto em que aquela volta freou, e a ponta da seta do traçado pode ficar fora da sua linha. Nas 10 curvas das 3 sessões, a janela da animação não mudou.
 
 **Os 4 visuais.** Sob a animação, no jogo e no cartão da tela Ao vivo, de cima para baixo:
 
 1. **a faixa do pedal** (C.3): duas faixas pela distância, "você" e "IA", com o freio, o acelerador parcial e o acelerador cheio nas cores do traçado pintado pelo pedal (freio a partir de 0,15; acelerador cheio a partir de 0,9: as do mapa aproximado e da tela Volta);
-2. **a diferença acumulada** (C.2): o seu tempo menos o da referência, desde a mesma entrada; sobe quando você perde (área laranja) e desce quando você ganha (azul), com as separações na freada (a primeira das duas), na mínima (a da referência) e na saída (o fim da curva);
+2. **a diferença acumulada** (C.2): o seu tempo menos o da referência; sobe quando você perde (área laranja) e desce quando você ganha (azul), com as separações na freada (a primeira das duas), na mínima (a da referência) e na saída (o fim da curva). **Na análise, cobre o trecho inteiro da curva:** começa em zero na entrada do trecho e termina exatamente no "perde X s". O eixo dela é o do trecho, e não o da animação; o cursor some quando o carro está fora do trecho. Na frase do coach, vai da entrada à saída do replay;
 3. **a velocidade** (C.1): as duas velocidades pela distância, com as freadas (traço) e as mínimas (ponto).
 
 - **O cursor:** uma linha de cada cor, em cada visual, onde cada carro está, no mesmo tempo da animação.
@@ -359,22 +360,22 @@ O engenheiro mostra o que diz: quando o rádio fala de uma curva, a janela mostr
 **A diferença acumulada contra a voz:**
 
 - **na frase do coach,** a subida dentro do trecho da fala ficou a até 0,05 s do tempo da voz em 12 das 14 frases (o arredondamento da voz, em décimos). As duas outras são da C11 (−0,06 s). O coach mede nos quadros, com a passagem interpolada entre dois quadros e a referência do modelo; o replay usa a grade da volta ao vivo e a volta do store;
-- **na análise, o fim da linha não é o "perde X s nesta curva":** a linha vai da entrada à saída do replay, e a perda é a do trecho da curva (do meio da reta anterior ao meio da seguinte). Os dois trechos não coincidem: o da C01 começa 300 m antes da entrada do replay, e o da C14 termina 386 m depois da saída. Nas 10 curvas das 5 análises, a diferença foi de −0,31 a +0,35 s. Fica para decisão do Eduardo (relatório do pedido 43).
+- **na análise, o fim da linha é o "perde X s nesta curva":** nas 10 curvas das 5 análises, a diferença é 0,000 s. Antes da decisão de 01/11, a linha cobria a janela do replay, e a diferença ia de −0,31 a +0,35 s, porque o trecho da curva não coincide com a janela: o da C01 começa 300 m antes da entrada do replay, e o da C14 termina 386 m depois da saída.
 
 **A grade da sessão** (C.4, `GET /api/radio/grade`):
 
 - **o que mostra:** as voltas válidas da sessão nas linhas e as 14 curvas nas colunas. Cada célula tem a perda na curva contra a referência, em segundos, com a cor (laranja quando você perde, azul quando ganha, mais forte até 1 s). É a mesma perda da análise: a célula da curva citada, na volta citada, tem o número que a análise usou;
-- **as curvas citadas** ficam com o contorno vermelho, na volta citada: a frase do coach na volta dela; a análise na volta das 3 mais perto da mediana (a do replay). A frase citada numa volta que ficou de fora não tem célula para marcar: nas 3 sessões, só 1 das 18 frases do coach caiu numa volta da grade;
-- **as voltas de fora,** com o motivo: a IA no volante, a volta incompleta (nem todos os microssetores medidos), a rodada ou saída de pista (uma curva com mais de 5 s), a volta sem as medidas e a que o rádio não viu fechar na linha (achada pelo buraco na numeração das voltas);
+- **as curvas citadas** ficam com o contorno vermelho, na volta citada: a frase do coach na volta dela; a análise na volta das 3 mais perto da mediana (a do replay). A frase citada numa volta que ficou de fora não tem célula para marcar e aparece na lista das voltas de fora: nas 3 sessões, só 1 das 18 frases do coach caiu numa volta da grade;
+- **as voltas de fora,** com o motivo e as curvas citadas nelas ("volta 12: incompleta (1:43,199); citada: C11"): a IA no volante, a volta incompleta (nem todos os microssetores medidos), a rodada ou saída de pista (uma curva com mais de 5 s), a volta sem as medidas e a que o rádio não viu fechar na linha (achada pelo buraco na numeração das voltas);
 - **onde:** na tela Ao vivo, sob os cartões do rádio, lida a cada 5 s; no jogo, só nos boxes ou com o jogo pausado, embaixo da janela grande do replay, com as últimas 8 voltas válidas e as 2 últimas de fora. O backend do 0.5.0 não tem a rota: a janela fica sem a grade e registra isso uma vez no log do CSP.
 
-**A conferência ponta a ponta** (01/11): o backend do repositório na porta 8011, com as pastas isoladas, tocou 21/10 desde a volta 1, e a tela Ao vivo, numa aba "[teste]", mostrou o replay da frase da C12 da volta 2 e o da primeira análise, com os visuais, e a grade com as curvas citadas (capturas no handoff do pedido 43).
+**A conferência ponta a ponta** (01/11): o backend do repositório na porta 8011, com as pastas isoladas, tocou 21/10 desde a volta 1, e a tela Ao vivo, numa aba "[teste]", mostrou o replay da frase da C12 da volta 2 e o da primeira análise, com os visuais, e a grade com as curvas citadas. A análise e a grade foram repetidas com as decisões de 01/11, desde a volta 8, em velocidade 3 (capturas no handoff do pedido 43).
 
 **O custo:**
 
-- **a rota:** uma frase do coach passou de 6,7 a 8,2 KB para 8,3 a 11,4 KB; uma análise com 2 curvas, de 15,7 a 18,3 KB para 19,6 a 22,8 KB (as 3 sessões). Longe dos 60 KB;
-- **montar o replay no backend:** a mediana foi de 3,4 para 3,8 ms numa frase do coach e de 3,9 para 4,0 ms numa análise, uma vez, na entrega;
-- **no jogo:** a cada quadro, enquanto o replay está na tela, mais 3 linhas de 120 a 200 pontos, os trechos do pedal e as áreas da diferença. O FPS é medido no teste no jogo.
+- **a rota:** uma frase do coach passou de 6,7 a 8,2 KB para 8,3 a 11,4 KB; uma análise com 2 curvas, de 15,7 a 18,3 KB para 22,3 a 25,4 KB (as 3 sessões). Longe dos 60 KB;
+- **montar o replay no backend:** a mediana foi de 3,4 para 4,3 ms numa frase do coach e de 3,9 para 7,4 ms numa análise, uma vez, na entrega;
+- **no jogo:** a cada quadro, enquanto o replay está na tela, mais 3 linhas de 120 a 200 pontos, os trechos do pedal e as áreas da diferença. O FPS ainda não foi medido: o teste no jogo não aconteceu até 01/11.
 
 ### 5.5 Instalar, ligar e remover
 

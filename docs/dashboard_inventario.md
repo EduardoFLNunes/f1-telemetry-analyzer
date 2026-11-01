@@ -379,8 +379,8 @@ A limpeza do item 6 desta seção, os defeitos do backlog e o app do jogo 0.4.1 
 
 Os números da voz no replay da frase do coach e os 4 visuais do rádio (ADR 0021, atualização de 29/10). Detalhes em `docs/realidade_aumentada.md` (seção 5.4.1) e em `docs/handoff/2026-10-29_43_visuais-do-radio_relatorio.md`.
 
-- **O replay da frase do coach** (`backend/core/radio/replay.py`): os rótulos mostram os números da voz (a freada, as mínimas e o tempo, como no cartão), nos pontos onde o coach mediu, e o microssetor da fala aparece como "trecho da fala". Sem o traçado, que o coach não mede. Na análise, nada muda.
+- **O replay da frase do coach** (`backend/core/radio/replay.py`): os rótulos mostram os números da voz (a freada, as mínimas e o tempo, como no cartão), nos pontos onde o coach mediu, e o microssetor da fala aparece como "trecho da fala". Sem o traçado, que o coach não mede. Na análise, os rótulos mostram as medianas do cartão, e a diferença acumulada cobre o trecho inteiro da curva e termina no "perde X s" (decisões de 01/11).
 - **Os visuais sob a animação** (a tela Ao vivo, `ReplayDaCurva.tsx`, e a janela do jogo): a faixa do pedal, a diferença acumulada e a velocidade pela distância, com o cursor de cada carro. Os dados vêm na mesma rota do replay.
-- **A grade da sessão** (`GradeDaSessao.tsx`, sob os cartões do rádio; no jogo, nos boxes): a perda por curva das voltas válidas, a mesma da análise, com as curvas citadas marcadas e as voltas de fora com o motivo. A rota nova é `GET /api/radio/grade`.
+- **A grade da sessão** (`GradeDaSessao.tsx`, sob os cartões do rádio; no jogo, nos boxes): a perda por curva das voltas válidas, a mesma da análise, com as curvas citadas marcadas e as voltas de fora com o motivo e as curvas citadas nelas. A rota nova é `GET /api/radio/grade`.
 - **O app do jogo:** a versão 0.4.2 (`tools/csp_app/radio_engenheiro/`). Com o backend do 0.5.0, ele mostra o replay como antes.
 - **Falta:** o teste no jogo (Parte E do pedido).
