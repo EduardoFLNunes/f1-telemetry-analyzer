@@ -32,7 +32,11 @@ export type CurvaDoReplay = {
   velocidades?: { voce: number[]; referencia: number[] };
   secoes?: { freadaM: number | null; minimaM: number | null; saidaM: number | null };
   voz?: { microssetor: number; inicioM: number; fimM: number; perdaS: number | null } | null;
+  /** Na análise: a diferença acumulada no trecho da curva, do zero à perda da curva. */
+  diferencaNoTrecho?: DiferencaNoTrecho | null;
 };
+
+export type DiferencaNoTrecho = { comprimentoM: number; passoM: number; entradaDoReplayM: number; valores: number[] };
 
 export type DadosDoReplay = { id: number; origem: string; curvas: CurvaDoReplay[] };
 
@@ -159,6 +163,23 @@ export function diferencaAcumulada(c: CurvaDoReplay): number[] {
   return v.map((p, i) => p[2] - (r[i] ? r[i][2] : r[r.length - 1][2]));
 }
 
+/**
+ * A linha da diferença acumulada e o seu eixo. Na análise, o trecho inteiro da curva (o eixo
+ * não é o da animação: `deslocamento` leva a distância do replay para ele). Na frase do coach e
+ * num backend antigo, a janela do replay.
+ */
+export type SerieDaDiferenca = { valores: number[]; passoM: number; totalM: number; deslocamento: number };
+
+export function serieDaDiferenca(c: CurvaDoReplay): SerieDaDiferenca {
+  const n = c.diferencaNoTrecho;
+  if (n && n.valores.length > 1) {
+    return { valores: n.valores, passoM: n.passoM, totalM: n.comprimentoM, deslocamento: n.entradaDoReplayM };
+  }
+  const passoM = c.passoM ?? 1;
+  const valores = diferencaAcumulada(c);
+  return { valores, passoM, totalM: Math.max((valores.length - 1) * passoM, 1), deslocamento: 0 };
+}
+
 /** As faixas do pedal (C.3): trechos seguidos com o mesmo pedal, em metros [de, até, pedal]. */
 export function faixasDoPedal(linha: PontoDoReplay[], passoM: number): [number, number, number][] {
   const out: [number, number, number][] = [];
@@ -220,7 +241,7 @@ export type GradeDaSessao = {
   sessao: string | null;
   curvas: string[];
   voltas: { volta: number | null; tempoS: number; perdas: (number | null)[] }[];
-  fora: { volta: number | null; tempoS: number | null; motivo: string }[];
+  fora: { volta: number | null; tempoS: number | null; motivo: string; citadas?: string[] }[];
   citadas: { volta: number; curva: string; origem: 'coach' | 'analise'; id: number; perdaS?: number }[];
 };
 
@@ -247,10 +268,11 @@ export function citadasNaVolta(g: GradeDaSessao, volta: number | null): Map<stri
   return out;
 }
 
-/** "volta 5: a IA pilotou parte da volta (1:55,447)" — o tempo no formato M:SS,mmm. */
+/** "volta 12: incompleta (1:43,199); citada: C11" — o tempo no formato M:SS,mmm. */
 export function textoDaVoltaDeFora(f: GradeDaSessao['fora'][number]): string {
   const tempo = f.tempoS === null || f.tempoS === undefined ? '' : ` (${tempoDeVolta(f.tempoS)})`;
-  return `volta ${f.volta ?? '?'}: ${f.motivo}${tempo}`;
+  const citadas = f.citadas && f.citadas.length ? `; citada: ${f.citadas.join(', ')}` : '';
+  return `volta ${f.volta ?? '?'}: ${f.motivo}${tempo}${citadas}`;
 }
 
 export function tempoDeVolta(s: number): string {

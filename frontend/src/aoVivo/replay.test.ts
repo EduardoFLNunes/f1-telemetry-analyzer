@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   QuadroDeRotulos, cameraDaCurva, citadasNaVolta, diferencaAcumulada, distanciaNoTempo, dividirAArea, faixasDoPedal,
-  forcaDaCelula, posicaoNoTempo, temVisuais, textoDaCelula, textoDaFreada, textoDaMinima, textoDaPerda, textoDaVoltaDeFora,
+  forcaDaCelula, posicaoNoTempo, serieDaDiferenca, temVisuais, textoDaCelula, textoDaFreada, textoDaMinima, textoDaPerda, textoDaVoltaDeFora,
   textoDoAlto, textoDoTracado, type CurvaDoReplay, type GradeDaSessao, type PontoDoReplay,
 } from './replay';
 
@@ -120,6 +120,17 @@ describe('os visuais e os números da voz (pedido 43)', () => {
     expect(d.every((v, i) => i === 0 || v >= d[i - 1])).toBe(true);
   });
 
+  it('na análise, a linha cobre o trecho da curva e termina na perda; sem o trecho, fica a janela do replay', () => {
+    const trecho = { comprimentoM: 568, passoM: 2, entradaDoReplayM: 300, valores: [0, 0.4, 0.92] };
+    expect(serieDaDiferenca({ ...comVisuais, diferencaNoTrecho: trecho })).toEqual({
+      valores: [0, 0.4, 0.92], passoM: 2, totalM: 568, deslocamento: 300,
+    });
+    const janela = serieDaDiferenca(comVisuais);
+    expect(janela.deslocamento).toBe(0);
+    expect(janela.totalM).toBe(200);
+    expect(janela.valores).toEqual(diferencaAcumulada(comVisuais));
+  });
+
   it('as faixas do pedal juntam os pontos seguidos com o mesmo pedal', () => {
     expect(faixasDoPedal(curva.linhas.voce, 2)).toEqual([[0, 59, 2], [59, 200, 1]]);
   });
@@ -152,5 +163,7 @@ describe('os visuais e os números da voz (pedido 43)', () => {
     expect(citadasNaVolta(grade, 13).get('C01')).toEqual(['analise', 'coach']);
     expect(citadasNaVolta(grade, 12).size).toBe(0);
     expect(textoDaVoltaDeFora(grade.fora[0])).toBe('volta 5: rodada ou saída de pista: perdeu 26,5 s na C12 (1:55,447)');
+    expect(textoDaVoltaDeFora({ volta: 12, tempoS: null, motivo: 'incompleta', citadas: ['C11', 'C12'] }))
+      .toBe('volta 12: incompleta; citada: C11, C12');
   });
 });

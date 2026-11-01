@@ -1557,12 +1557,12 @@ local function dividirAJanela(x0, y0, W, H, comVisuais)
 end
 
 -- O fundo de um visual, a faixa do trecho da fala, o título; devolve a escala de x (metros -> tela).
-local function moldura(c, a, titulo)
+local function moldura(c, a, titulo, totalM)
   local x, y, w, h = a[1], a[2], a[3], a[4]
   ui.drawRectFilled(vec2(x, y), vec2(x + w, y + h - 2), CORES.fundoDoMapa, 0)
   local x0 = x + COLUNA_DOS_NOMES
   local largura = w - COLUNA_DOS_NOMES - 8
-  local total = math.max((#c.linhas.voce - 1) * c.passoM, 1)
+  local total = totalM or math.max((#c.linhas.voce - 1) * c.passoM, 1)
   local function emX(dm) return x0 + largura * dm / total end
   if type(c.voz) == 'table' then
     ui.drawRectFilled(vec2(emX(tonumber(c.voz.inicioM) or 0), y), vec2(emX(tonumber(c.voz.fimM) or 0), y + h - 2), COR_DO_TRECHO, 0)
@@ -1571,10 +1571,14 @@ local function moldura(c, a, titulo)
   return emX
 end
 
-local function cursores(c, t, a, emX)
+local function cursores(c, t, a, emX, deslocamento, totalM)
   for _, par in ipairs({ { c.linhas.referencia, CORES.fantasma }, { c.linhas.voce, CORES.vermelho } }) do
-    local xx = emX(distanciaNoTempo(par[1], t, c.passoM))
-    ui.drawLine(vec2(xx, a[2]), vec2(xx, a[2] + a[4] - 2), par[2], 1.5)
+    local dm = distanciaNoTempo(par[1], t, c.passoM) + (deslocamento or 0)
+    -- na análise, o carro pode estar fora do trecho da curva
+    if dm >= 0 and dm <= (totalM or math.huge) then
+      local xx = emX(dm)
+      ui.drawLine(vec2(xx, a[2]), vec2(xx, a[2] + a[4] - 2), par[2], 1.5)
+    end
   end
 end
 
@@ -1600,24 +1604,31 @@ local function desenharOPedal(c, t, a)
   cursores(c, t, a, emX)
 end
 
--- C.2: a diferença acumulada (o seu tempo menos o da referência, desde a mesma entrada), com
--- as separações na freada, na mínima e na saída.
+-- C.2: a diferença acumulada (o seu tempo menos o da referência), com as separações na freada, na
+-- mínima e na saída. Na análise, cobre o trecho inteiro da curva e termina na perda da curva (o eixo
+-- não é o da animação); na frase do coach, vai da entrada à saída do replay.
 local function desenharADiferenca(c, t, a)
-  local emX = moldura(c, a, 'diferença acumulada (s): sobe quando você perde')
-  local v, r = c.linhas.voce, c.linhas.referencia
-  local n = #v
-  local dif, maior = {}, 0.05
-  for i = 1, n do
-    dif[i] = v[i][3] - (r[i] or r[#r])[3]
-    maior = math.max(maior, math.abs(dif[i]))
+  local trecho = type(c.diferencaNoTrecho) == 'table' and c.diferencaNoTrecho or nil
+  local dif, maior, passo, totalM, deslocamento = {}, 0.05, c.passoM, nil, 0
+  local titulo = 'diferença acumulada (s): sobe quando você perde'
+  if trecho and type(trecho.valores) == 'table' and #trecho.valores > 1 then
+    dif, passo = trecho.valores, tonumber(trecho.passoM) or c.passoM
+    totalM, deslocamento = tonumber(trecho.comprimentoM), tonumber(trecho.entradaDoReplayM) or 0
+    titulo = 'diferença acumulada no trecho da curva (s): sobe quando você perde'
+  else
+    local v, r = c.linhas.voce, c.linhas.referencia
+    for i = 1, #v do dif[i] = v[i][3] - (r[i] or r[#r])[3] end
   end
+  local emX = moldura(c, a, titulo, totalM)
+  local n = #dif
+  for i = 1, n do maior = math.max(maior, math.abs(dif[i])) end
   local topo = a[2] + 16
   local meio = topo + (a[4] - 20) / 2
   local function emY(x) return meio - ((a[4] - 22) / 2) * (x / maior) end
-  ui.drawLine(vec2(emX(0), meio), vec2(emX((n - 1) * c.passoM), meio), CORES.borda, 1)
+  ui.drawLine(vec2(emX(0), meio), vec2(emX((n - 1) * passo), meio), CORES.borda, 1)
   local perda, ganho = comAlfa(CORES.perda, 0.35), comAlfa(CORES.ganho, 0.35)
   for i = 1, n - 1 do
-    local xa, xb = emX((i - 1) * c.passoM), emX(i * c.passoM)
+    local xa, xb = emX((i - 1) * passo), emX(i * passo)
     local ya, yb = emY(dif[i]), emY(dif[i + 1])
     if dif[i] >= 0 and dif[i + 1] >= 0 then
       ui.drawQuadFilled(vec2(xa, meio), vec2(xa, ya), vec2(xb, yb), vec2(xb, meio), perda)
@@ -1626,12 +1637,13 @@ local function desenharADiferenca(c, t, a)
     end
   end
   ui.pathClear()
-  for i = 1, n do ui.pathLineTo(vec2(emX((i - 1) * c.passoM), emY(dif[i]))) end
+  for i = 1, n do ui.pathLineTo(vec2(emX((i - 1) * passo), emY(dif[i]))) end
   ui.pathStroke(CORES.vermelho, false, 1.5)
   local s = type(c.secoes) == 'table' and c.secoes or {}
   for _, par in ipairs({ { s.freadaM, 'freada' }, { s.minimaM, 'mínima' }, { s.saidaM, 'saída' } }) do
     local dm = tonumber(par[1])
-    if dm then
+    if dm then dm = dm + deslocamento end
+    if dm and dm >= 0 and dm <= (totalM or math.huge) then
       local xx = emX(dm)
       for yy = topo, a[2] + a[4] - 4, 6 do
         ui.drawLine(vec2(xx, yy), vec2(xx, math.min(yy + 3, a[2] + a[4] - 2)), CORES.contorno, 1)
@@ -1639,7 +1651,7 @@ local function desenharADiferenca(c, t, a)
       ui.dwriteDrawText(par[2], 10, vec2(xx - larguraDoRotulo(par[2]) / 2 + 3, a[2] + a[4] - 14), CORES.apoio)
     end
   end
-  cursores(c, t, a, emX)
+  cursores(c, t, a, emX, deslocamento, totalM)
 end
 
 -- C.1: as duas velocidades pela distância, com as freadas e as mínimas marcadas.
@@ -1747,7 +1759,8 @@ local function desenharAGrade(x0, y0, W, H)
   if type(g.fora) == 'table' then
     for i = 1, math.min(#g.fora, 2) do
       local f = g.fora[#g.fora - i + 1]
-      ui.dwriteDrawText('fora: volta ' .. tostring(f.volta) .. ', ' .. tostring(f.motivo), 10, vec2(x0 + 6, y), CORES.fraco)
+      local citadas = type(f.citadas) == 'table' and #f.citadas > 0 and ('; citada: ' .. table.concat(f.citadas, ', ')) or ''
+      ui.dwriteDrawText('fora: volta ' .. tostring(f.volta) .. ': ' .. tostring(f.motivo) .. citadas, 10, vec2(x0 + 6, y), CORES.fraco)
       y = y + 13
     end
   end

@@ -20,8 +20,8 @@ import { drawTrackSurface } from '../components/map/OverlayRenderer';
 import { lerCamadasDaPista, useLeitura } from '../volta/dados';
 import { transformarCamadas } from '../volta/projecao';
 import {
-  ALTURAS_DOS_VISUAIS, QuadroDeRotulos, cameraDaCurva, diferencaAcumulada, distanciaNoTempo, dividirAArea,
-  faixasDoPedal, indicesDoTrecho, posicaoNoTempo, temVisuais, textoDaFreada, textoDaMinima, textoDoAlto,
+  ALTURAS_DOS_VISUAIS, QuadroDeRotulos, cameraDaCurva, distanciaNoTempo, dividirAArea,
+  faixasDoPedal, indicesDoTrecho, posicaoNoTempo, serieDaDiferenca, temVisuais, textoDaFreada, textoDaMinima, textoDoAlto,
   textoDoTracado, type Area, type CurvaDoReplay, type DadosDoReplay, type LugarDoRotulo,
 } from './replay';
 
@@ -195,12 +195,12 @@ function desenharACurva(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: numb
 }
 
 /** O fundo de um visual, a faixa do trecho da fala, o nome à esquerda e a escala de x (metros). */
-function moldura(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, a: Area, titulo: string) {
+function moldura(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, a: Area, titulo: string, totalM?: number) {
   ctx.fillStyle = '#16181b';
   ctx.fillRect(a.x, a.y, a.w, a.h - 2);
   const x0 = a.x + COLUNA_DOS_NOMES;
   const largura = a.w - COLUNA_DOS_NOMES - 8;
-  const total = Math.max((c.linhas.voce.length - 1) * (c.passoM ?? 1), 1);
+  const total = totalM ?? Math.max((c.linhas.voce.length - 1) * (c.passoM ?? 1), 1);
   const x = (d: number) => x0 + (largura * d) / total;
   if (c.voz) {
     ctx.fillStyle = COR_TRECHO;
@@ -214,10 +214,13 @@ function moldura(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, a: Area, titul
   return x;
 }
 
-function cursores(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: number, a: Area, x: (d: number) => number) {
+function cursores(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: number, a: Area, x: (d: number) => number,
+  deslocamento = 0, totalM = Infinity) {
   const passo = c.passoM ?? 1;
   for (const [linha, cor] of [[c.linhas.referencia, COR_REF], [c.linhas.voce, COR_VOCE]] as const) {
-    const xx = x(distanciaNoTempo(linha, t, passo));
+    const d = distanciaNoTempo(linha, t, passo) + deslocamento;
+    if (d < 0 || d > totalM) continue;   // na análise, o carro pode estar fora do trecho da curva
+    const xx = x(d);
     ctx.beginPath();
     ctx.moveTo(xx, a.y);
     ctx.lineTo(xx, a.y + a.h - 2);
@@ -246,11 +249,16 @@ function desenharOPedal(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: numb
   cursores(ctx, c, t, a, x);
 }
 
-/** C.2: a diferença acumulada desde a entrada, com as separações na freada, na mínima e na saída. */
+/**
+ * C.2: a diferença acumulada, com as separações na freada, na mínima e na saída. Na análise, cobre o
+ * trecho inteiro da curva e termina na perda da curva; na frase do coach, vai da entrada à saída do replay.
+ */
 function desenharADiferenca(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: number, a: Area) {
-  const x = moldura(ctx, c, a, 'diferença acumulada (s): sobe quando você perde');
-  const dif = diferencaAcumulada(c);
-  const passo = c.passoM ?? 1;
+  const serie = serieDaDiferenca(c);
+  const titulo = c.diferencaNoTrecho ? 'diferença acumulada no trecho da curva (s): sobe quando você perde' : 'diferença acumulada (s): sobe quando você perde';
+  const x = moldura(ctx, c, a, titulo, serie.totalM);
+  const dif = serie.valores;
+  const passo = serie.passoM;
   const maior = Math.max(0.05, ...dif.map(Math.abs));
   const topo = a.y + 16;
   const meio = topo + (a.h - 20) / 2;
@@ -282,19 +290,21 @@ function desenharADiferenca(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: 
     ctx.textAlign = 'center';
     for (const [d, nome] of [[s.freadaM, 'freada'], [s.minimaM, 'mínima'], [s.saidaM, 'saída']] as [number | null, string][]) {
       if (d === null || d === undefined) continue;
+      const noEixo = d + serie.deslocamento;
+      if (noEixo < 0 || noEixo > serie.totalM) continue;
       ctx.setLineDash([3, 3]);
       ctx.beginPath();
-      ctx.moveTo(x(d), topo);
-      ctx.lineTo(x(d), a.y + a.h - 2);
+      ctx.moveTo(x(noEixo), topo);
+      ctx.lineTo(x(noEixo), a.y + a.h - 2);
       ctx.strokeStyle = 'rgba(233,237,242,0.5)';
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle = '#b8c1cc';
-      ctx.fillText(nome, x(d), a.y + a.h - 13);
+      ctx.fillText(nome, x(noEixo), a.y + a.h - 13);
     }
     ctx.textAlign = 'left';
   }
-  cursores(ctx, c, t, a, x);
+  cursores(ctx, c, t, a, x, serie.deslocamento, serie.totalM);
 }
 
 /** C.1: as duas velocidades pela distância, com as freadas e as mínimas marcadas. */

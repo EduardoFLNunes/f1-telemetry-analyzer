@@ -301,10 +301,10 @@ class RadioDoEngenheiro:
         self._conferir_a_sessao()
         # Pedido 43 (C.4): a volta que nao entra na analise fica fora da grade, com o motivo.
         if medidas is None:
-            self._fora_da_grade(volta, "sem as medidas da volta (a referência ou a grade da volta)")
+            self._fora_da_grade(volta, "sem as medidas da volta")
             return
         if volta.get("completa") is False:
-            self._fora_da_grade(volta, "volta incompleta (nem todos os microssetores medidos)")
+            self._fora_da_grade(volta, "incompleta")
             return
         if teve_rodada(medidas):
             pior = max(medidas, key=lambda m: float(m.get("perdaS") or 0.0))
@@ -453,13 +453,19 @@ class RadioDoEngenheiro:
             # A volta que nao fecha na linha para o coach (`ultima_volta`: o carro movido, a volta que
             # nao comecou na linha, o contador do jogo ja adiantado na passagem) nao passa pelo radio:
             # ela aparece aqui pelo buraco na numeracao.
+            # A volta citada antes da primeira que fechou (a de saida dos boxes) tambem entra; a citada
+            # depois da ultima que fechou ainda esta em andamento.
             fora = list(self._grade_fora)
             vistas = {v["volta"] for v in self._grade_voltas} | {f["volta"] for f in fora}
             vistas.discard(None)
             if vistas:
+                inicio = min(vistas | {c["volta"] for c in self._grade_citadas})
                 fora += [{"volta": n, "tempoS": None, "motivo": "o rádio não viu esta volta fechar na linha"}
-                         for n in range(min(vistas), max(vistas)) if n not in vistas]
+                         for n in range(inicio, max(vistas)) if n not in vistas]
                 fora.sort(key=lambda f: f["volta"] if f["volta"] is not None else -1)
+            # Decisao do Eduardo: cada volta de fora lista as curvas citadas pelo radio nela.
+            fora = [{**f, "citadas": list(dict.fromkeys(c["curva"] for c in self._grade_citadas
+                                                        if c["volta"] == f["volta"]))} for f in fora]
             return {"sessao": self._sessao_da_analise, "curvas": curvas,
                     "voltas": [{"volta": v["volta"], "tempoS": v["tempoS"],
                                 "perdas": [v["perdas"].get(c) for c in curvas]} for v in self._grade_voltas],

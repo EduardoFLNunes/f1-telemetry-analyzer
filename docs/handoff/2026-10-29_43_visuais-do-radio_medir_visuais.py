@@ -6,8 +6,9 @@ Para cada replay de uma passagem do `radio_offline.py` (depois do pedido 43):
   menos o da referencia, das linhas da rota, interpolado nas bordas do trecho) contra o tempo
   que a voz e o cartao disseram (`lossSeconds` do coach). E, nas minimas, a velocidade da grade
   no ponto marcado contra o numero da voz (o coach mede nos quadros; a grade e a projecao deles);
-* **na analise:** o fim da linha (a diferenca acumulada na saida do replay) contra o "perde X s
-  nesta curva" (a perda no trecho da curva, do meio da reta anterior ao meio da seguinte).
+* **na analise:** o fim da linha (`diferencaNoTrecho`, ou, numa passagem antiga, a diferenca na
+  saida do replay) contra o "perde X s nesta curva" (a perda no trecho da curva, do meio da reta
+  anterior ao meio da seguinte).
 
 Uso: python medir_visuais.py <passagem.json> [...]
 """
@@ -58,7 +59,13 @@ for arq in map(Path, sys.argv[1:]):
                     "fimDaLinhaS": round(fim, 3), "perdaNaCurvaS": c["perdaS"], "minimas": minimas,
                 })
             else:
+                trecho = c.get("diferencaNoTrecho")
+                fim = trecho["valores"][-1] if trecho else fim
                 linha.update({"fimDaLinhaS": round(fim, 3), "perdaNaCurvaS": c["perdaS"],
-                              "diferencaS": round(fim - c["perdaS"], 3)})
+                              "diferencaS": round(fim - c["perdaS"], 3), "pontos": len(trecho["valores"]) if trecho else None,
+                              "linhaComecaEmZero": trecho["valores"][0] == 0.0 if trecho else None,
+                              "freadaNoRotulo": c["freadas"]["distanciaM"],
+                              "pontasDaFreada": round(c["freadas"]["voce"]["s"] - c["freadas"]["referencia"]["s"], 1)
+                              if c["freadas"]["voce"] else None})
             saida.append(linha)
 print(json.dumps(saida, ensure_ascii=False, indent=1))

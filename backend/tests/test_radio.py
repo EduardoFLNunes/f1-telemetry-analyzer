@@ -912,6 +912,47 @@ def test_os_dados_dos_visuais_vem_na_rota_do_replay():
     assert sec["freadaM"] < sec["minimaM"] < sec["saidaM"] <= (n - 1) * d["passoM"] + 0.1
 
 
+def test_o_replay_da_analise_escreve_os_numeros_do_cartao_e_a_linha_termina_na_perda():
+    """Decisoes do fechamento do pedido 43: as medianas nos rotulos, as marcas medindo o rotulo, as
+    linhas da volta mais perto da mediana e a diferenca acumulada cobrindo o trecho da curva."""
+    import numpy as np
+
+    from core.radio.replay import dados_da_curva
+
+    track, pista, s = _pista_de_teste_com_uma_curva()
+    voce = _grade_de_teste(s, 45.0, 1.5, freia_em=370, minima_em=425, minima_kmh=95.0)
+    ia = _grade_de_teste(s, 50.0, 0.0, freia_em=400, minima_em=430, minima_kmh=110.0)
+    args = (pista, "C03", voce, float(s[-1] / 45.0), ia, float(s[-1] / 50.0), 7, "volta_ia")
+    curva = {"curva": "C03", "diferencas": [{"medida": "freada", "valor": -42.5, "peso": 2.8},
+                                            {"medida": "minima", "valor": -20.0, "peso": 2.5, "sua": 90.5, "ref": 110.0},
+                                            {"medida": "tracado", "valor": -7.94, "peso": 4.4}]}
+    sem, d = dados_da_curva(*args), dados_da_curva(*args, da_analise=curva)
+    assert sem["diferencaNoTrecho"] is None
+    assert d["freadas"]["distanciaM"] == -42.0                                # round(-42,5), como o cartao
+    assert d["freadas"]["referencia"]["s"] == sem["freadas"]["referencia"]["s"]
+    assert d["freadas"]["referencia"]["s"] - d["freadas"]["voce"]["s"] == pytest.approx(42.5, abs=0.1)  # a marca mede o rotulo
+    assert d["minimas"]["voce"]["kmh"] == 90.0 and d["minimas"]["referencia"]["kmh"] == 110.0
+    t = d["tracado"]
+    assert t["distanciaM"] == 7.9 and t["lado"] == "direita"
+    assert np.hypot(t["voce"][0] - t["referencia"][0], t["voce"][1] - t["referencia"][1]) == pytest.approx(7.94, abs=0.02)
+    # as linhas, os carros e o pedal continuam os da volta; so crescem se a marca cair antes da janela
+    assert d["linhas"] == sem["linhas"] and d["perdaS"] == sem["perdaS"] and d["velocidades"] == sem["velocidades"]
+    fora = dados_da_curva(*args, da_analise={**curva, "diferencas": [{"medida": "freada", "valor": -300.0, "peso": 20}]})
+    assert len(fora["linhas"]["voce"]) > len(sem["linhas"]["voce"]) and fora["freadas"]["voce"]["dM"] <= track.step
+    sem_freada = dados_da_curva(*args, da_analise={**curva, "diferencas": []})
+    assert sem_freada["freadas"] == {"voce": None, "referencia": None, "distanciaM": None}
+    assert sem_freada["minimas"]["voce"]["kmh"] == sem["minimas"]["voce"]["kmh"]
+    # a diferenca: zero na entrada do trecho e, no fim, exatamente a perda da curva
+    n = d["diferencaNoTrecho"]
+    seg = pista.segmentos[1]
+    assert n["valores"][0] == 0.0 and n["valores"][-1] == d["perdaS"]
+    assert n["comprimentoM"] == pytest.approx(float(np.mod(seg.end_s - seg.start_s, track.length)), abs=0.1)
+    assert (len(n["valores"]) - 1) * n["passoM"] == pytest.approx(n["comprimentoM"], abs=0.1)
+    entrada = d["freadas"]["referencia"]["s"] - d["freadas"]["referencia"]["dM"]
+    assert n["entradaDoReplayM"] == pytest.approx(entrada - float(seg.start_s), abs=0.2)
+    assert all(b >= a for a, b in zip(n["valores"], n["valores"][1:]))        # sempre perdendo, nesta volta de teste
+
+
 def test_a_grade_da_sessao_tem_as_perdas_da_analise_as_voltas_de_fora_e_as_citadas(tmp_path, monkeypatch):
     """Pedido 43, C.4: a perda de cada curva e a da analise; a IA, a incompleta e a rodada ficam fora."""
     import asyncio
@@ -946,7 +987,7 @@ def test_a_grade_da_sessao_tem_as_perdas_da_analise_as_voltas_de_fora_e_as_citad
     assert [v["volta"] for v in g["voltas"]] == [6, 8, 10]
     assert g["voltas"][0]["perdas"] == [0.9, 0.3, 0.85]          # na ordem das curvas da pista
     assert [f["volta"] for f in g["fora"]] == [5, 7, 9]
-    assert g["fora"][0]["motivo"].startswith("a IA") and g["fora"][2]["motivo"].startswith("volta incompleta")
+    assert g["fora"][0]["motivo"].startswith("a IA") and g["fora"][2]["motivo"] == "incompleta"
     assert g["fora"][1]["motivo"] == "rodada ou saída de pista: perdeu 9,0 s na C12"
     # a volta que nao fechou na linha nao passa pelo radio: aparece pelo buraco na numeracao
     radio._grade_fora.append({"volta": 14, "tempoS": 95.0, "motivo": "a IA pilotou parte da volta"})
@@ -967,5 +1008,14 @@ def test_a_grade_da_sessao_tem_as_perdas_da_analise_as_voltas_de_fora_e_as_citad
     assert frase["_voz"]["brakeDeltaM"] == 38.0 and "_voz" not in radio._publica(frase)
     radio._entregar(frase, pista.agora, {"s": 500.0})
     assert {"volta": 11, "curva": "C01", "origem": "coach"}.items() <= radio.grade_da_sessao()["citadas"][-1].items()
+    # cada volta de fora lista as curvas citadas nela (decisao do fechamento); a 11 ainda nao fechou
+    assert all(f["citadas"] == [] for f in radio.grade_da_sessao()["fora"])
+    for volta_citada in (9, 4):                                        # a 4: antes da primeira volta que fechou
+        radio.on_coaching_event(_evento(indice=3, volta=volta_citada))
+        outra = [m for m in radio._pendentes if m["origem"] == "coach"][-1]
+        outra["_futuro"].result(timeout=5)
+        radio._entregar(outra, pista.agora, {"s": 500.0})
+    por_volta = {f["volta"]: f["citadas"] for f in radio.grade_da_sessao()["fora"]}
+    assert por_volta[9] == ["C01"] and por_volta[4] == ["C01"] and por_volta[5] == [] and 11 not in por_volta
     monkeypatch.setattr(main, "radio_do_engenheiro", radio)
     assert json.loads(asyncio.run(rota.get_grade()).body)["voltas"][0]["volta"] == 6

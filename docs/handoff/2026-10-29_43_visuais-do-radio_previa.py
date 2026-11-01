@@ -131,12 +131,12 @@ function curvaDoReplay() {
   else alto = `${c.curva}, ${c.lado}${volta} · ${c.perdaS >= 0 ? 'perde' : 'ganha'} ${dec(Math.abs(c.perdaS), 2)} s nesta curva`;
   ctx.fillText(alto, RX + 10, RY + 5);
 }
-function moldura(a, titulo) { const [x, y, w, h] = a; ctx.fillStyle = FUNDO_MAPA; ctx.fillRect(x, y, w, h - 2);
-  const x0 = x + COL, larg = w - COL - 8, total = Math.max((c.linhas.voce.length - 1) * c.passoM, 1), emX = d => x0 + larg * d / total;
+function moldura(a, titulo, totalM) { const [x, y, w, h] = a; ctx.fillStyle = FUNDO_MAPA; ctx.fillRect(x, y, w, h - 2);
+  const x0 = x + COL, larg = w - COL - 8, total = totalM || Math.max((c.linhas.voce.length - 1) * c.passoM, 1), emX = d => x0 + larg * d / total;
   if (c.voz) { ctx.fillStyle = TRECHO; ctx.fillRect(emX(c.voz.inicioM), y, emX(c.voz.fimM) - emX(c.voz.inicioM), h - 2); }
   if (titulo) { ctx.font = '10px "Segoe UI", sans-serif'; ctx.fillStyle = FRACO; ctx.textBaseline = 'top'; ctx.fillText(titulo, x0 + 2, y + 2); }
   return emX; }
-function cursores(a, emX) { for (const [linha, cor] of [[ref, FANTASMA], [c.linhas.voce, VERMELHO]]) { const xx = emX(distancia(linha, T, c.passoM)); ctx.beginPath(); ctx.moveTo(xx, a[1]); ctx.lineTo(xx, a[1] + a[3] - 2); ctx.strokeStyle = cor; ctx.lineWidth = 1.5; ctx.stroke(); } }
+function cursores(a, emX, desl = 0, totalM = Infinity) { for (const [linha, cor] of [[ref, FANTASMA], [c.linhas.voce, VERMELHO]]) { const dd = distancia(linha, T, c.passoM) + desl; if (dd < 0 || dd > totalM) continue; const xx = emX(dd); ctx.beginPath(); ctx.moveTo(xx, a[1]); ctx.lineTo(xx, a[1] + a[3] - 2); ctx.strokeStyle = cor; ctx.lineWidth = 1.5; ctx.stroke(); } }
 function pedal(a) { const emX = moldura(a, '');
   const faixa = (linha, y, nome, cor) => { const n = linha.length; let i = 0;
     while (i < n) { const p = linha[i][3]; let j = i; while (j < n - 1 && linha[j + 1][3] === p) j++;
@@ -144,19 +144,21 @@ function pedal(a) { const emX = moldura(a, '');
       ctx.fillStyle = PEDAL[p]; ctx.fillRect(emX(de), y, Math.max(emX(ate) - emX(de), 1), 10); i = j + 1; }
     ctx.font = '10px "Segoe UI", sans-serif'; ctx.fillStyle = cor; ctx.textBaseline = 'top'; ctx.fillText(nome, a[0] + 4, y - 1); };
   faixa(c.linhas.voce, a[1] + 3, 'você', VERMELHO); faixa(ref, a[1] + 15, c.referencia === 'minha_melhor' ? 'sua' : 'IA', FANTASMA); cursores(a, emX); }
-function diferenca(a) { const emX = moldura(a, 'diferença acumulada (s): sobe quando você perde');
-  const v = c.linhas.voce, n = v.length, dif = v.map((p, i) => p[2] - (ref[i] || ref[ref.length - 1])[2]);
+function diferenca(a) { const tr = c.diferencaNoTrecho && c.diferencaNoTrecho.valores.length > 1 ? c.diferencaNoTrecho : null;
+  const passo = tr ? tr.passoM : c.passoM, totalM = tr ? tr.comprimentoM : undefined, desl = tr ? tr.entradaDoReplayM : 0;
+  const emX = moldura(a, tr ? 'diferença acumulada no trecho da curva (s): sobe quando você perde' : 'diferença acumulada (s): sobe quando você perde', totalM);
+  const v = c.linhas.voce, dif = tr ? tr.valores : v.map((p, i) => p[2] - (ref[i] || ref[ref.length - 1])[2]), n = dif.length;
   const maior = Math.max(0.05, ...dif.map(Math.abs)), topo = a[1] + 16, meio = topo + (a[3] - 20) / 2, emY = x => meio - ((a[3] - 22) / 2) * (x / maior);
-  ctx.beginPath(); ctx.moveTo(emX(0), meio); ctx.lineTo(emX((n - 1) * c.passoM), meio); ctx.strokeStyle = 'rgba(233,237,242,0.35)'; ctx.lineWidth = 1; ctx.stroke();
-  for (let i = 0; i < n - 1; i++) { const xa = emX(i * c.passoM), xb = emX((i + 1) * c.passoM);
+  ctx.beginPath(); ctx.moveTo(emX(0), meio); ctx.lineTo(emX((n - 1) * passo), meio); ctx.strokeStyle = 'rgba(233,237,242,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+  for (let i = 0; i < n - 1; i++) { const xa = emX(i * passo), xb = emX((i + 1) * passo);
     if (dif[i] >= 0 && dif[i + 1] >= 0) ctx.fillStyle = 'rgba(255,162,74,0.35)'; else if (dif[i] <= 0 && dif[i + 1] <= 0) ctx.fillStyle = 'rgba(111,155,255,0.35)'; else continue;
     ctx.beginPath(); ctx.moveTo(xa, meio); ctx.lineTo(xa, emY(dif[i])); ctx.lineTo(xb, emY(dif[i + 1])); ctx.lineTo(xb, meio); ctx.closePath(); ctx.fill(); }
-  ctx.beginPath(); dif.forEach((x, i) => i ? ctx.lineTo(emX(i * c.passoM), emY(x)) : ctx.moveTo(emX(0), emY(x))); ctx.strokeStyle = VERMELHO; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.beginPath(); dif.forEach((x, i) => i ? ctx.lineTo(emX(i * passo), emY(x)) : ctx.moveTo(emX(0), emY(x))); ctx.strokeStyle = VERMELHO; ctx.lineWidth = 1.5; ctx.stroke();
   const s = c.secoes || {};
-  for (const [d, nome] of [[s.freadaM, 'freada'], [s.minimaM, 'mínima'], [s.saidaM, 'saída']]) { if (d === null || d === undefined) continue; const xx = emX(d);
+  for (const [d, nome] of [[s.freadaM, 'freada'], [s.minimaM, 'mínima'], [s.saidaM, 'saída']]) { if (d === null || d === undefined) continue; const noEixo = d + desl; if (noEixo < 0 || (totalM && noEixo > totalM)) continue; const xx = emX(noEixo);
     for (let yy = topo; yy < a[1] + a[3] - 4; yy += 6) { ctx.beginPath(); ctx.moveTo(xx, yy); ctx.lineTo(xx, Math.min(yy + 3, a[1] + a[3] - 2)); ctx.strokeStyle = 'rgba(233,237,242,0.6)'; ctx.lineWidth = 1; ctx.stroke(); }
     ctx.font = '10px "Segoe UI", sans-serif'; ctx.fillStyle = APOIO; ctx.textBaseline = 'top'; const w = ctx.measureText(nome).width; ctx.fillText(nome, xx - w / 2, a[1] + a[3] - 14); }
-  cursores(a, emX); }
+  cursores(a, emX, desl, totalM === undefined ? Infinity : totalM); }
 function velocidade(a) { const emX = moldura(a, 'velocidade (km/h) pela distância (m)'); const vel = c.velocidades;
   const todas = [...vel.voce, ...vel.referencia], v0 = Math.min(...todas), v1 = Math.max(...todas), emY = x => a[1] + a[3] - 6 - (a[3] - 24) * (x - v0) / Math.max(v1 - v0, 1);
   for (const [serie, cor] of [[vel.referencia, FANTASMA], [vel.voce, VERMELHO]]) { ctx.beginPath(); serie.forEach((x, i) => i ? ctx.lineTo(emX(i * c.passoM), emY(x)) : ctx.moveTo(emX(0), emY(x))); ctx.strokeStyle = cor; ctx.lineWidth = 1.5; ctx.stroke(); }
@@ -181,7 +183,7 @@ function desenharAGrade(x0, y0, w, h) {
       if (cit.has(`${v.volta}:${G.curvas[k]}`)) { ctx.strokeStyle = VERMELHO; ctx.lineWidth = 2; ctx.strokeRect(ax_, y, bx - ax_, 13); } });
     y += 15; }
   ctx.font = '10px "Segoe UI", sans-serif'; ctx.fillStyle = FRACO;
-  for (let i = 0; i < Math.min(G.fora.length, 2); i++) { const f = G.fora[G.fora.length - 1 - i]; ctx.fillText(`fora: volta ${f.volta}, ${f.motivo}`, x0 + 6, y); y += 13; }
+  for (let i = 0; i < Math.min(G.fora.length, 2); i++) { const f = G.fora[G.fora.length - 1 - i]; ctx.fillText(`fora: volta ${f.volta}: ${f.motivo}${f.citadas && f.citadas.length ? '; citada: ' + f.citadas.join(', ') : ''}`, x0 + 6, y); y += 13; }
 }
 </script></body></html>"""
 SAIDA.write_text(HTML.replace("__CURVA__", json.dumps(curva)).replace("__IMG__", json.dumps(img))
