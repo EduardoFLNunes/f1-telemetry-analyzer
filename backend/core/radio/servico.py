@@ -450,10 +450,20 @@ class RadioDoEngenheiro:
         with self._lock:
             self._pista()
             curvas = [seg.corner.label[:3] for seg in self._geometria.segmentos] if self._geometria else []
+            # A volta que nao fecha na linha para o coach (`ultima_volta`: o carro movido, a volta que
+            # nao comecou na linha, o contador do jogo ja adiantado na passagem) nao passa pelo radio:
+            # ela aparece aqui pelo buraco na numeracao.
+            fora = list(self._grade_fora)
+            vistas = {v["volta"] for v in self._grade_voltas} | {f["volta"] for f in fora}
+            vistas.discard(None)
+            if vistas:
+                fora += [{"volta": n, "tempoS": None, "motivo": "o rádio não viu esta volta fechar na linha"}
+                         for n in range(min(vistas), max(vistas)) if n not in vistas]
+                fora.sort(key=lambda f: f["volta"] if f["volta"] is not None else -1)
             return {"sessao": self._sessao_da_analise, "curvas": curvas,
                     "voltas": [{"volta": v["volta"], "tempoS": v["tempoS"],
                                 "perdas": [v["perdas"].get(c) for c in curvas]} for v in self._grade_voltas],
-                    "fora": list(self._grade_fora), "citadas": list(self._grade_citadas)}
+                    "fora": fora, "citadas": list(self._grade_citadas)}
 
     def _registrar(self, mensagem: Dict[str, Any]) -> None:
         sessao = mensagem.get("sessao") or f"sem-gravacao_{datetime.now():%Y-%m-%d}"

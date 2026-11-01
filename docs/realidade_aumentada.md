@@ -365,7 +365,7 @@ O engenheiro mostra o que diz: quando o rádio fala de uma curva, a janela mostr
 
 - **o que mostra:** as voltas válidas da sessão nas linhas e as 14 curvas nas colunas. Cada célula tem a perda na curva contra a referência, em segundos, com a cor (laranja quando você perde, azul quando ganha, mais forte até 1 s). É a mesma perda da análise: a célula da curva citada, na volta citada, tem o número que a análise usou;
 - **as curvas citadas** ficam com o contorno vermelho, na volta citada: a frase do coach na volta dela; a análise na volta das 3 mais perto da mediana (a do replay);
-- **as voltas de fora,** com o motivo: a IA no volante, a volta incompleta (nem todos os microssetores medidos), a rodada ou saída de pista (uma curva com mais de 5 s) e a volta sem as medidas;
+- **as voltas de fora,** com o motivo: a IA no volante, a volta incompleta (nem todos os microssetores medidos), a rodada ou saída de pista (uma curva com mais de 5 s), a volta sem as medidas e a que o rádio não viu fechar na linha (achada pelo buraco na numeração das voltas);
 - **onde:** na tela Ao vivo, sob os cartões do rádio, lida a cada 5 s; no jogo, só nos boxes ou com o jogo pausado, embaixo da janela grande do replay, com as últimas 8 voltas válidas e as 2 últimas de fora. O backend do 0.5.0 não tem a rota: a janela fica sem a grade e registra isso uma vez no log do CSP.
 
 **O custo:**

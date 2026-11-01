@@ -948,6 +948,12 @@ def test_a_grade_da_sessao_tem_as_perdas_da_analise_as_voltas_de_fora_e_as_citad
     assert [f["volta"] for f in g["fora"]] == [5, 7, 9]
     assert g["fora"][0]["motivo"].startswith("a IA") and g["fora"][2]["motivo"].startswith("volta incompleta")
     assert g["fora"][1]["motivo"] == "rodada ou saída de pista: perdeu 9,0 s na C12"
+    # a volta que nao fechou na linha nao passa pelo radio: aparece pelo buraco na numeracao
+    radio._grade_fora.append({"volta": 14, "tempoS": 95.0, "motivo": "a IA pilotou parte da volta"})
+    com_buraco = radio.grade_da_sessao()["fora"]
+    assert [f["volta"] for f in com_buraco] == [5, 7, 9, 11, 12, 13, 14]
+    assert com_buraco[3]["tempoS"] is None and com_buraco[3]["motivo"] == "o rádio não viu esta volta fechar na linha"
+    radio._grade_fora.pop()
     # a analise das voltas 6, 8 e 10 cita a C12 na volta da mediana (0,90 s, a volta 8), ao ser entregue
     analise = [m for m in radio._pendentes if m["origem"] == "analise"][0]
     assert analise["_citadas"][0] == {"volta": 8, "curva": "C12", "perdaS": 0.9}

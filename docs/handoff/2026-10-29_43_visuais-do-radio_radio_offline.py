@@ -59,6 +59,19 @@ def _cronometrar(nome, f):
 RadioDoEngenheiro._replay_da_analise = _cronometrar("analise", RadioDoEngenheiro._replay_da_analise)
 RadioDoEngenheiro._replay_da_frase = _cronometrar("frase", RadioDoEngenheiro._replay_da_frase)
 
+# Pedido 43: onde o coach recomecou a contar fora da linha (a volta nao fecha para o radio).
+INICIOS_FORA_DA_LINHA = []
+_start_lap = dc.LiveDrivingCoach._start_lap
+
+
+def _start_lap_com_registro(self, lap_number, index, clock, progress, at_line=False):
+    if not at_line:
+        INICIOS_FORA_DA_LINHA.append({"volta": lap_number, "microssetor": index + 1})
+    return _start_lap(self, lap_number, index, clock, progress, at_line=at_line)
+
+
+dc.LiveDrivingCoach._start_lap = _start_lap_com_registro
+
 REPO = Path(os.getcwd()).parent
 PASTA, SAIDA = Path(sys.argv[1]), Path(sys.argv[2])
 SESSAO = PASTA.name
@@ -159,6 +172,7 @@ resultado = {"sessao": SESSAO, "quadros": quadros, "referencia": {"tipo": modelo
              "replays": {str(m["id"]): radio.replay(m["id"]) for m in saida["mensagens"] if m.get("replay")},
              "evidencias": EVIDENCIAS,
              "temposDoReplay": TEMPOS,
+             "iniciosForaDaLinha": INICIOS_FORA_DA_LINHA,
              "grade": radio.grade_da_sessao() if hasattr(radio, "grade_da_sessao") else None,
              # pedido 43: o tamanho da resposta da rota (o JSON como o FastAPI devolve, sem espacos)
              "bytesDaRota": {str(m["id"]): len(json.dumps(radio.replay(m["id"]), ensure_ascii=False,
