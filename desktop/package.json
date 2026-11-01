@@ -2,7 +2,7 @@
   "name": "automobilista-telemetria-desktop",
   "private": true,
   "productName": "Automobilista Telemetria",
-  "version": "0.5.0-radio-e-replay",
+  "version": "0.6.0-visuais-do-radio",
   "description": "Sistema desktop de telemetria e analise de desempenho para simulacao automobilistica com Assetto Corsa.",
   "author": "Eduardo Francisco",
   "copyright": "Copyright (c) 2026 Eduardo Francisco",
