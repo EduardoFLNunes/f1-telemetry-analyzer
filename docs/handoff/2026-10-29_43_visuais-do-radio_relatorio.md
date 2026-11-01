@@ -1,7 +1,7 @@
 # Relatório do pedido 43: os 4 visuais do rádio e os números da voz no replay
 
 - **Pedido:** `docs/prompts/2026-10-29_43_visuais-do-radio.md`.
-- **Situação (01/11, 15:15):** **as suas 4 decisões estão implementadas, mas o teste no jogo não aconteceu** (ver "O aviso de 01/11"). O código Lua nunca rodou e o FPS não foi medido. **Sem merge em `develop`:** o merge espera o teste.
+- **Situação (01/11):** **parado na Parte E de novo, com o pedido 38 junto.** As suas 4 decisões estão implementadas, mas o teste no jogo não aconteceu (ver "O aviso de 01/11"). O código Lua nunca rodou e o FPS não foi medido. **O pedido 43 não tem merge em `develop`:** o merge espera o teste.
 - **Branch:** `etapa/visuais-do-radio`, a partir de `develop` (`4ac3d7af`).
 - **Commits:**
   - `df26996f` Partes B e C no backend: os números da voz, os dados dos visuais na rota e a grade da sessão
@@ -13,7 +13,10 @@
   - `5c5e1bcb` o relatório, com a ponta a ponta e as saídas
   - `92ce23b4` o registro do envio
   - `593e672a` as decisões: os números do cartão na análise, a diferença no trecho inteiro, as citadas nas voltas de fora e o backlog
-  - o commit do fechamento destas decisões (ver "O aviso de 01/11")
+  - `ff2caf11` e `9abdfb45` o fechamento das decisões e o registro do envio
+  - `a9b7cea7` o app para produção e a resposta sobre a versão 0.6
+  - `77ca63eb` merge de `develop`, com o pedido 38 junto
+  - o commit do registro deste envio (ver "O envio ao GitHub")
 - **Arquivos de handoff** (`docs/handoff/`, prefixo `2026-10-29_43_visuais-do-radio_`):
   - `relatorio.md` (este), `patch.diff` e `pytest.txt`;
   - **as prévias:** `previas.png` (a folha com as 8), `c12_v2_antes.png`, `c12_v2_depois.png`, `boxes_com_a_grade.png` e `janela_com_o_backend_050.png`;
@@ -336,7 +339,14 @@ Feita, faltando o FPS no jogo e as decisões:
 - **O que o app faz e onde está cada alteração:** `docs/app_para_producao.md`.
 - **A centralização não foi feita:** o merge do pedido 38 depende da H.4, e os rótulos não chegaram. A simulação não mostra conflito em código, só em 3 documentos. Aguarda decisão do Eduardo.
 
+## O pedido 38 junto (01/11)
+
+- **`develop` recebeu o pedido 38, sem a H.4, por decisão do Eduardo:** merge `f77c0c72`; os detalhes estão na seção "Merge sem a H.4 (01/11)" do relatório do 38. Suítes em `develop` (`4b6ca40c`): backend com 867 testes passando; front com 164, `tsc` e build sem erro.
+- **Esta branch recebeu `develop`** (merge `77ca63eb`). Houve 1 conflito, no histórico de `docs/tecnica_de_pilotagem_lista.md`, com os dois lados mantidos, em ordem de data. Nenhum conflito em código.
+- **As suítes nesta branch, em `77ca63eb`:** backend com 872 testes passando; front com 174, `tsc` e build sem erro; `conferir_lua.py` sem erro. O `frontend/dist` foi refeito nesta branch, para o teste.
+- **A versão:** com o merge, esta branch passou a mostrar `0.5.0-radio-e-replay`, o mesmo número do app instalado, embora tenha mais conteúdo. O app do jogo continua 0.4.2.
+
 ## O que falta
 
-- **De você:** o teste no jogo, pelos passos da Parte E, e o aviso com as anotações preenchidas.
+- **De você:** o teste no jogo com esta branch, já com o pedido 38 junto, pelos passos da Parte E, e o aviso com as anotações preenchidas.
 - **De mim, depois do aviso:** a conferência do registro e do log do CSP, o FPS, o fechamento da documentação, o merge em `develop` e o envio.
