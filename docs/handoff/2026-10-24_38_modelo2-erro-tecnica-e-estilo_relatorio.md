@@ -1,8 +1,8 @@
 # Relatório do pedido 38: Modelo 2, o erro que custou tempo, as técnicas e o estilo
 
 - **Pedido:** `docs/prompts/2026-10-24_38_modelo2-erro-tecnica-e-estilo.md`, retomado nesta pasta por decisão do Eduardo ("Pare a outra sessão. Retome o 38 nesta pasta", 25/10).
-- **Situação:** **parado na Parte H, como o pedido manda,** esperando a rotulagem do Eduardo. As Partes A a H.3 e a Parte I estão feitas. Falta a H.4: a precisão e a revocação, depois dos rótulos.
-- **Branch:** `etapa/modelo2-erro-tecnica-e-estilo`, a partir de `develop` (`4782aefb`). **Sem merge em `develop`:** o pedido parou na rotulagem, como no pedido 37. Sem push.
+- **Situação (01/11):** **com merge em `develop`, sem a H.4, por decisão do Eduardo** (seção "Merge sem a H.4 (01/11)"). As Partes A a H.3 e a Parte I estão feitas. A precisão e a revocação saem quando os rótulos chegarem, na Parte E do pedido 42.
+- **Branch:** `etapa/modelo2-erro-tecnica-e-estilo`, a partir de `develop` (`4782aefb`). **Merge em `develop`:** `f77c0c72`.
 - **Commits** (ver "Os commits" no fim para os do relatório e das saídas):
   - `fcc94f86` docs: pedido 38 (Modelo 2: o erro, as tecnicas e o estilo, nas voltas da IA e do piloto) e as pesquisas de 24/10
   - `2cbac952` Pedido 38, Parte A: o ADR 0023 e o Modelo 2 registrado antes de construir
@@ -617,13 +617,8 @@ Quase todo o tempo vai nos bootstraps do modelo leve. A leitura das gravações 
 **3. Onde ficam as gravações e como trazê-las para o repositório**
 
 - **O app instalado grava em** `%APPDATA%\Automobilista Telemetria\data\recordings\`, uma pasta por sessão (por exemplo, `2026-10-26_10-00-00_vhe_interlagos`).
-- **O Modelo 2 e o resto do `ml` já leem as duas pastas** (a do repositório e a do app instalado). Mesmo assim, para guardar no repositório como as outras, copie cada sessão nova para `data\recordings`, num PowerShell. Troque o nome da pasta:
-
-  ```
-  robocopy "$env:APPDATA\Automobilista Telemetria\data\recordings\2026-10-26_10-00-00_vhe_interlagos" "C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\recordings\2026-10-26_10-00-00_vhe_interlagos" /E
-  ```
-
-  É uma cópia: a original fica no lugar. O `ml` marca as cópias com `duplicada_de` e não conta a mesma sessão duas vezes.
+- **O Modelo 2 e o resto do `ml` já leem as duas pastas** (a do repositório e a do app instalado). **Não copie as sessões:** deixe-as onde o app grava.
+- **Correção de 01/11:** este passo sugeria copiar cada sessão com `robocopy`, e estava errado. O mesmo nome nas duas pastas faz o `list_all_sessions` parar com erro, e param junto o Modelo 2, a M1 e o `atualizar_coach` (ver "Merge sem a H.4 (01/11)").
 - **Para a IA em níveis de força,** os passos são os da Parte B deste relatório. Cada nível é uma sessão do jogo nova, e cada sessão vira uma pasta. Anote cada pasta em `docs\experimentos\ia_niveis.csv`, com o nível, a agressividade e a variação.
 
 **4. O que anotar durante os testes** (num papel ou no Bloco de Notas; eu leio os logs depois)
@@ -644,8 +639,27 @@ Quase todo o tempo vai nos bootstraps do modelo leve. A leitura das gravações 
 
   Não apague nem mova esses arquivos. O `backend.log` gira em 20 MB e guarda os 5 últimos.
 
-### O que falta
+### O que faltava em 25/10
 
-- **A H.4** continua esperando os rótulos no CSV ("rotulei o kit"). O merge em `develop` vem depois dela, com a versão 0.5.0 junto.
+- **A H.4** continuava esperando os rótulos no CSV ("rotulei o kit"). O merge em `develop` viria depois dela, com a versão 0.5.0 junto. A decisão de 01/11 mudou essa ordem.
+
+## Merge sem a H.4 (01/11)
+
+- **A decisão é do Eduardo** (01/11): o merge em `develop` sai agora, sem a H.4. Antes, o pedido o deixava para depois dos rótulos.
+- **O merge:** `f77c0c72`, a partir de `4de43780`. Conferi antes que nenhuma outra sessão estava ativa na pasta.
+- **A precisão e a revocação** saem quando os rótulos chegarem, **com as duas rodadas juntas, na Parte E do pedido 42.** Até lá, os detectores do Modelo 2 continuam sem validação. O CSV de rótulos continua vazio, e não calculei nenhuma das duas.
+- **O que entra em `develop`:** o Modelo 2 offline (`backend/ml/modelo2/`, o script e os testes) e os 3 pontos da versão `0.5.0-radio-e-replay`. Nada do app usa o Modelo 2 em execução: nenhuma tela, rota ou serviço, então os detectores continuam sem chegar ao rádio nem ao coach.
+- **Os 3 conflitos, só em documentos,** com os dois lados mantidos:
+  - **`docs/tecnica_de_pilotagem_lista.md`:** as linhas B1, B2, B3, B10, E1, E2, E3 e o histórico do 38, mais o que só `develop` tinha: a nota do iniciante na B3 e o detalhe do dataset na E3. **Na B10, troquei o próximo passo:** de "pedido 38, Parte H.4" para "pedido 42, Parte E";
+  - **`docs/arquitetura_ml.md`:** o juiz com a M1, de `develop`, e as peças B e C com o Modelo 2, do 38;
+  - **`docs/decisoes/README.md`:** os ADRs 0022, 0023 e 0024, em ordem.
+- **O pedido 42 precisa de ajuste do Cowork:** o "Quando começar" dele ainda diz "depois do merge dos pedidos 38 (com a H.4)", e a Parte E fala em pôr a rodada 2 "ao lado da rodada 1 (a H.4 do pedido 38)". Essa H.4 não existe mais como etapa separada. Não mudei o pedido.
+
+**A cópia com `robocopy`: fazia parar, e corrigi os passos.**
+
+- **A reprodução,** em pastas temporárias, com o mesmo nome de sessão nas duas: o `list_all_sessions` parou com "sessao 2026-10-24_13-43-32_vhe_interlagos existe em ... e em ...; compare as duas antes de seguir".
+- **O texto antigo estava errado também no motivo:** o `duplicada_de` marca a mesma volta gravada por dois backends ao mesmo tempo, e não a cópia de uma pasta. Uma cópia nem chega nele, porque a leitura para antes.
+- **A situação real:** hoje as 151 sessões não têm nome repetido, então a sugestão não causou dano. O relatório do pedido 39 já avisava isso.
+- **O passo corrigido** está na seção "Onde ficam as gravações": não copiar, porque o `ml` já lê as duas pastas.
 
 Arquivo: `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_relatorio.md`
