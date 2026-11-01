@@ -1,0 +1,243 @@
+  26553     M 🔹 Loading app: `D:\SteamLibrary\steamapps\common\assettocorsa\apps\lua\radio_engenheiro`
+  26670     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] ligado; pede as mensagens a http://127.0.0.1:8000
+  26763     M 🔹 App is loaded: `D:\SteamLibrary\steamapps\common\assettocorsa\apps\lua\radio_engenheiro`, windows: 4
+  26796     M 🔹   App radio_engenheiro is not allowed to load
+  27299     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: Media Foundation disponível
+  27441     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] minimapa: baixado (volta_ia|2026-10-04_03-42-10_vhe_interlagos#0013|); referência com 2167 pontos; 0 curva(s) da análise
+  33089     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] minimapa: janela 300 x 300 em -9 x 543; tela 2560 x 1080, escala 1,00; cursor 20 x 8; visível de 9,0 a 300,300
+  33507     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] replay: janela 657 x 386 em 1 x 114; tela 2560 x 1080, escala 1,00; cursor 20 x 8; visível de 0,0 a 657,386
+  33894     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] mapa aproximado: janela 360 x 360 em 1560 x 705; tela 2560 x 1080, escala 1,00; cursor 20 x 8; visível de 0,0 a 360,360
+  36743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,8 (mín 73, máx 115) em 10 s; minimapa ligado e desligado; mapa aproximado ligado e desligado; replay ligado e desligado
+  58913     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 48,1 (mín 30, máx 108) em 10 s; minimapa ligado e desligado; mapa aproximado ligado e desligado; replay ligado e desligado
+  59041     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 55,1 (mín 46, máx 62) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+  66741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 87,4 (mín 57, máx 113) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+  76746     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 95,8 (mín 84, máx 125) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+  86738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 95,6 (mín 86, máx 107) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+  96738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,0 (mín 88, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 106748     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 95,7 (mín 82, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 116737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 96,3 (mín 86, máx 110) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 126737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 97,0 (mín 91, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 136740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 98,9 (mín 91, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 146748     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,7 (mín 89, máx 115) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 156741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 94,7 (mín 75, máx 111) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 166740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 98,6 (mín 81, máx 113) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 176743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,1 (mín 86, máx 112) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 186747     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 92,9 (mín 80, máx 110) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 196745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 96,7 (mín 86, máx 112) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 206748     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 92,3 (mín 86, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 216747     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 88,9 (mín 78, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 226748     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 86,7 (mín 77, máx 113) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 236740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 89,2 (mín 81, máx 97) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 246744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 81,1 (mín 34, máx 96) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 256744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 90,6 (mín 84, máx 97) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 266742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 90,4 (mín 82, máx 101) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 276743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 88,0 (mín 77, máx 99) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 278646     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 286737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 88,6 (mín 61, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 296738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 91,4 (mín 79, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 306740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 93,0 (mín 82, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 316737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 86,8 (mín 77, máx 98) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 326749     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 86,5 (mín 77, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 336742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 83,7 (mín 74, máx 95) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 346745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 85,6 (mín 73, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 356740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 93,3 (mín 78, máx 118) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 366746     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 96,7 (mín 71, máx 112) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 376745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,0 (mín 89, máx 108) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 386740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 93,1 (mín 71, máx 110) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 396742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,2 (mín 68, máx 109) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 406738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 95,0 (mín 72, máx 107) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 416742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 94,7 (mín 76, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 426742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 98,5 (mín 78, máx 115) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 436743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 95,1 (mín 65, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 446743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,4 (mín 82, máx 108) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 451757     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 456744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 98,4 (mín 79, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 466738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,5 (mín 88, máx 107) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 476748     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 103,0 (mín 97, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 477147     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 486740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 98,8 (mín 94, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 496738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,8 (mín 98, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 506744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,2 (mín 99, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 516739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,8 (mín 98, máx 109) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 526743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,9 (mín 96, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 536739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 104,0 (mín 101, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 545056     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 546737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,9 (mín 97, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 556738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 98,9 (mín 98, máx 101) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 566745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,1 (mín 98, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 570438     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 576741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,3 (mín 95, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 586744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,2 (mín 95, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 596743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,4 (mín 92, máx 101) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 606737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,7 (mín 100, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 616744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,2 (mín 100, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 626739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,6 (mín 88, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 636740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,6 (mín 99, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 646739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,7 (mín 96, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 656739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,7 (mín 93, máx 101) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 666740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,7 (mín 92, máx 101) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 676742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 95,2 (mín 73, máx 113) em 8 s; minimapa ligado e desligado; mapa aproximado ligado e desligado; replay ligado e desligado
+ 686748     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,0 (mín 72, máx 112) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 696737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,9 (mín 83, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 706740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 84,2 (mín 73, máx 101) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 716744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 89,9 (mín 66, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 726743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,7 (mín 84, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 736742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 98,1 (mín 75, máx 113) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 746745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 95,3 (mín 68, máx 109) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 756746     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 86,0 (mín 73, máx 110) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 766739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 90,1 (mín 71, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 776741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,3 (mín 80, máx 108) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 786742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,0 (mín 91, máx 111) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 796737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,4 (mín 83, máx 108) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 806744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 97,3 (mín 90, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 816747     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,4 (mín 100, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 826739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 103,0 (mín 101, máx 107) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 836742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 98,7 (mín 94, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 846743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,5 (mín 98, máx 115) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 856738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,2 (mín 96, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 866739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 98,2 (mín 85, máx 120) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 876746     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,1 (mín 100, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 886738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,9 (mín 95, máx 101) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 896737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,2 (mín 100, máx 111) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 906743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,4 (mín 97, máx 103) em 9 s; minimapa ligado e desligado; mapa aproximado ligado e desligado; replay ligado e desligado
+ 916738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 107,1 (mín 101, máx 110) em 10 s; minimapa ligado e desligado; mapa aproximado ligado e desligado; replay ligado e desligado
+ 926743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 107,2 (mín 102, máx 118) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 936740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,1 (mín 95, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 946738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,1 (mín 95, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 956742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,0 (mín 95, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 966739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 94,4 (mín 81, máx 99) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 976745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,6 (mín 99, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 986738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 103,7 (mín 99, máx 111) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 996738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 104,2 (mín 103, máx 109) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1006742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 104,0 (mín 102, máx 109) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1016740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,5 (mín 92, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1026742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,6 (mín 100, máx 107) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1036745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,6 (mín 99, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1046741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,0 (mín 95, máx 108) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1056740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 104,3 (mín 101, máx 108) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1066743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,3 (mín 98, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1076743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,0 (mín 99, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1086738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 103,1 (mín 100, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1096738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,0 (mín 94, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1106741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,3 (mín 99, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1116737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,7 (mín 100, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1126744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,9 (mín 99, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1136740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,3 (mín 97, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1146742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 105,2 (mín 102, máx 109) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1156746     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,8 (mín 98, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1166740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,3 (mín 100, máx 108) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1175543     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 1176738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 103,6 (mín 101, máx 107) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1186745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,5 (mín 95, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1196738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,6 (mín 99, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1206743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,0 (mín 100, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1216737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,2 (mín 98, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1226745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,3 (mín 97, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1236745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 105,2 (mín 103, máx 108) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1246747     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,5 (mín 99, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1250152     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] minimapa: baixado (volta_ia|2026-10-04_03-42-10_vhe_interlagos#0013|2-5-6); referência com 2167 pontos; 2 curva(s) da análise
+ 1256743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,8 (mín 99, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1265238     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 1266747     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 103,5 (mín 100, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1276738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,7 (mín 95, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1286742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,5 (mín 99, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1296747     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,4 (mín 101, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1306744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 103,3 (mín 99, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1316748     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,0 (mín 96, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1326746     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 104,9 (mín 102, máx 108) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1329821     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 1336738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 98,9 (mín 85, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1346740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,3 (mín 100, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1356740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 1356746     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 103,1 (mín 101, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1366746     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 96,5 (mín 94, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1376739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,7 (mín 97, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1386745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,2 (mín 100, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1396741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,7 (mín 100, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1406740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,3 (mín 97, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1416748     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,2 (mín 95, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1426741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,6 (mín 98, máx 108) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1436748     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,0 (mín 100, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1446744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,6 (mín 98, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1450965     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 1456741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,6 (mín 96, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 1466745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 113,0 (mín 93, máx 129) em 9 s; minimapa ligado e desligado; mapa aproximado ligado e desligado; replay ligado e desligado
+ 1476740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 126,5 (mín 124, máx 128) em 10 s; minimapa desligado; mapa aproximado desligado; replay desligado
+ 1486745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 127,3 (mín 125, máx 129) em 10 s; minimapa desligado; mapa aproximado desligado; replay desligado
+ 1496743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 123,1 (mín 114, máx 128) em 10 s; minimapa ligado e desligado; mapa aproximado ligado e desligado; replay ligado e desligado
+ 1506742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 123,9 (mín 116, máx 128) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado e desligado
+ 1516744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 123,4 (mín 115, máx 141) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1526741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 119,3 (mín 113, máx 127) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1536744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 111,0 (mín 106, máx 118) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1546737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 114,0 (mín 109, máx 120) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1556737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 115,2 (mín 111, máx 120) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1566739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 113,8 (mín 108, máx 118) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1576741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 112,5 (mín 105, máx 118) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1586740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 117,7 (mín 112, máx 121) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1595260     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 1596743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 115,0 (mín 109, máx 121) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1606744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 111,1 (mín 109, máx 115) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1616744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 115,0 (mín 107, máx 122) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1626737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 113,9 (mín 106, máx 121) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1636740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 112,6 (mín 102, máx 119) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1646743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 115,9 (mín 105, máx 122) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1656738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 120,0 (mín 118, máx 122) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1666739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 119,4 (mín 118, máx 121) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1676738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 120,4 (mín 118, máx 121) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1686742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 111,8 (mín 105, máx 115) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1696741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 113,9 (mín 109, máx 117) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1706742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 115,3 (mín 111, máx 121) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1716745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 115,5 (mín 110, máx 123) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1726740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 111,6 (mín 105, máx 120) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1736739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 118,5 (mín 114, máx 122) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1741336     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 1746746     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 111,4 (mín 108, máx 115) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1756739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 112,5 (mín 107, máx 121) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1766747     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 113,1 (mín 108, máx 114) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1776747     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 115,3 (mín 114, máx 118) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1786742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 115,0 (mín 107, máx 120) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1796740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 114,9 (mín 112, máx 117) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1806747     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 103,9 (mín 102, máx 111) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1816739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 95,0 (mín 71, máx 112) em 10 s; minimapa ligado e desligado; mapa aproximado ligado e desligado; replay desligado
+ 1826738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,4 (mín 80, máx 110) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1833136     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 1836741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,0 (mín 95, máx 109) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1846747     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 95,0 (mín 80, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1856737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 92,8 (mín 78, máx 101) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1866740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,0 (mín 99, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1876737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,3 (mín 94, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1886748     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 95,8 (mín 74, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1896738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,6 (mín 95, máx 107) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1901843     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 1906747     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 95,2 (mín 74, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1916744     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 85,9 (mín 62, máx 99) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1926742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,5 (mín 96, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1927927     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 1936745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 96,8 (mín 93, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1946740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 98,2 (mín 92, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1956745     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,1 (mín 98, máx 101) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1966741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,5 (mín 97, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1976741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 97,5 (mín 94, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1986738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 101,2 (mín 100, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 1992930     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 1996741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 94,6 (mín 43, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay desligado
+ 2003472     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] minimapa: baixado (volta_ia|2026-10-04_03-42-10_vhe_interlagos#0013|7-8-12); referência com 2167 pontos; 2 curva(s) da análise
+ 2006740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,6 (mín 96, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado e desligado
+ 2016742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,9 (mín 97, máx 104) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2019173     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 2026740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 96,7 (mín 92, máx 101) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2036737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,8 (mín 96, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2046739     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,4 (mín 97, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2056741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 97,4 (mín 88, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2066743     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 92,6 (mín 88, máx 96) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2076741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 96,0 (mín 93, máx 100) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2086740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 98,5 (mín 97, máx 100) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2096742     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 100,6 (mín 98, máx 103) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2106740     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 98,2 (mín 94, máx 102) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2116741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 102,1 (mín 100, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2126532     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 2126738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,2 (mín 88, máx 105) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2136741     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 97,7 (mín 96, máx 101) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2138533     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] voz: url tocou
+ 2146737     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 99,9 (mín 97, máx 106) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado
+ 2156738     M ✅ [Lua: App: Rádio do engenheiro] [radio_engenheiro] fps: média 106,4 (mín 103, máx 110) em 10 s; minimapa ligado; mapa aproximado ligado; replay ligado

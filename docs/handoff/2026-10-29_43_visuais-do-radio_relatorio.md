@@ -1,7 +1,7 @@
 # Relatório do pedido 43: os 4 visuais do rádio e os números da voz no replay
 
 - **Pedido:** `docs/prompts/2026-10-29_43_visuais-do-radio.md`.
-- **Situação (01/11):** **parado na Parte E de novo, com o pedido 38 junto.** As suas 4 decisões estão implementadas, mas o teste no jogo não aconteceu (ver "O aviso de 01/11"). O código Lua nunca rodou e o FPS não foi medido. **O pedido 43 não tem merge em `develop`:** o merge espera o teste.
+- **Situação (01/11, 20:40):** **o teste no jogo aconteceu e passou no que os registros mostram, mas a grade nos boxes quase não foi exercitada** (ver "O teste no jogo de 01/11"). **O pedido 43 não tem merge em `develop`:** espera a resposta do Eduardo.
 - **Branch:** `etapa/visuais-do-radio`, a partir de `develop` (`4ac3d7af`).
 - **Commits:**
   - `df26996f` Partes B e C no backend: os números da voz, os dados dos visuais na rota e a grade da sessão
@@ -24,6 +24,52 @@
   - **a tela Ao vivo:** `ao_vivo_c12_v2.jpg`, `ao_vivo_c01_v13.jpg` e `ao_vivo_grade.jpg` (com as decisões);
   - **a conferência:** `rotulos_antes.json`, `rotulos_depois.json`, `visuais.json`, `radio_antes_21-10.json` e `radio_depois_13-10.json`, `_18-10.json` e `_21-10.json`;
   - **os scripts:** `radio_offline.py`, `radio_offline_antes.py`, `rodar_conferencia.sh`, `conferir_rotulos.py`, `medir_visuais.py`, `contar_locais.py`, `previa.py`, `fotografar.sh` e `folha.py`.
+
+## O teste no jogo de 01/11 (19:47 a 20:22)
+
+O aviso foi "Realizado os testes", sem anotações. **Tudo abaixo vem dos registros;** o que só os seus olhos dizem está marcado. Os dados estão em `teste_jogo.json`, `teste_rotulos.json`, `teste_fps.json` e `teste_csp.txt`. A gravação `2026-11-01_19-47-03_vhe_interlagos` fica em `dataecordings`, fora do git.
+
+| teste | resultado | de onde vem |
+|---|---|---|
+| 1. O app certo | **passou:** `0.5.0-radio-e-replay`, do repositório, commit `b85638d` | o backend |
+| 2. As 4 janelas | **passou:** "windows: 4", no CSP 0.3.1, **sem nenhum erro de Lua no log.** A do replay com 657 × 386 | o log do CSP |
+| 3. A mensagem de teste | **a voz passou** (19:51:14, "voz: url tocou"); o cartão **não sei** | o registro e o log |
+| 4. Os números da voz | **passou:** nenhum dos 4 replays de frases tem rótulo com outro número, e nenhum tem seta | o `conferir_rotulos.py` |
+| 5. Os visuais | **os dados chegaram** nos 6 replays, e a janela comporta os 3 visuais; **se apareceram na tela, não sei** | a rota e o tamanho da janela |
+| 6. A análise | **passou:** nenhum dos 2 replays com outro número; nas 4 curvas, a linha começa em zero e termina na perda | a rota |
+| 7. A grade nos boxes | **quase não foi exercitada** (abaixo) | o log do backend e a gravação |
+| 8. Desligar o replay | **passou:** desligado das 20:10:59 às 20:19:59 | o log do CSP |
+
+Nas 13 voltas gravadas, nenhuma amostra da IA. Cada replay foi pedido uma vez pelo jogo.
+
+**A subida no trecho da fala contra a voz, nas 4 frases:**
+
+| msg. | curva e volta | a voz e o cartão (s) | a subida (s) | diferença (s) |
+|---|---|---|---|---|
+| 4 | C12, v2 | 0,716 | 0,737 | +0,021 |
+| 12 | C07, v10 | 0,781 | 0,788 | +0,007 |
+| 14 | C07, v10 | 0,607 | 0,607 | 0,000 |
+| 19 | C12, v13 | 0,938 | 0,957 | +0,019 |
+
+**A grade.** O jogo só pede a grade nos boxes ou pausado, a cada 5 s, com uma análise já entregue. **Nesta sessão, ela foi pedida uma única vez,** entre as 20:08:47 e as 20:15:38. A parada perto dos boxes (20:15:57 a 20:16:52) caiu com a janela do replay desligada. O carro parou às 20:10:55, e a janela foi desligada às 20:10:59, então a minha leitura é que a grade ficou no máximo uns 4 s na tela, se ficou. **O código da grade no jogo não deu erro, mas não dá para dizer que foi visto.** O backend entregou a grade certa: as 4 células citadas têm o número da análise.
+
+**O FPS** (213 blocos de 10 s, em 2.560 × 1.080):
+
+| situação | blocos | FPS médio |
+|---|---|---|
+| as 4 janelas ligadas | 153 | 98,3 (de 55,1 a 107,2) |
+| o replay desligado, os mapas ligados | 48 | 108,4 (de 85,9 a 123,4) |
+| tudo desligado | 2 | 126,9 |
+
+- **O custo da janela do replay não saiu limpo.** Ao desligar, o FPS foi de 101,9 para 114,8, cerca de 13 a mais. Mas, ainda desligada, ele caiu para 97,8 nos últimos 3 minutos, e ao religar ficou em 99,1. O FPS varia muito com o trecho e a situação da sessão, e não investiguei por quê.
+- **Desenhar o replay custa pouco:** nos 5 blocos com o replay na tela, a média é 99,3, contra cerca de 101,5 nos blocos vizinhos. São poucos blocos, porque cada replay dura uns 12 s.
+- **Não compare com os 119,4 de 22/10:** o CSP era outro (0.2.11), e a IA dirigia.
+
+**A linha "App radio_engenheiro is not allowed to load"** aparece uma vez no log, logo depois de "App is loaded" e no meio da carga de outro app. O app rodou a sessão inteira: abriu as 4 janelas e tocou a voz. Registro sem saber o que ela significa.
+
+**A tela Ao vivo não foi aberta durante o teste:** não há nenhum pedido dela. Ela foi conferida na ponta a ponta com a reprodução.
+
+**O que falta:** confirmar a grade nos boxes e o que você viu. Só depois vêm o merge, a 0.6.0 e o commit do pedido 42.
 
 ## O segundo aviso (01/11, 17:46): o fechamento não foi feito
 

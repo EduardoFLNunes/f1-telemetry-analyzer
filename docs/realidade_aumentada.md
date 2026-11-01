@@ -375,7 +375,7 @@ O engenheiro mostra o que diz: quando o rádio fala de uma curva, a janela mostr
 
 - **a rota:** uma frase do coach passou de 6,7 a 8,2 KB para 8,3 a 11,4 KB; uma análise com 2 curvas, de 15,7 a 18,3 KB para 22,3 a 25,4 KB (as 3 sessões). Longe dos 60 KB;
 - **montar o replay no backend:** a mediana foi de 3,4 para 4,3 ms numa frase do coach e de 3,9 para 7,4 ms numa análise, uma vez, na entrega;
-- **no jogo:** a cada quadro, enquanto o replay está na tela, mais 3 linhas de 120 a 200 pontos, os trechos do pedal e as áreas da diferença. O FPS ainda não foi medido: o teste no jogo não aconteceu até 01/11.
+- **no jogo:** a cada quadro, enquanto o replay está na tela, mais 3 linhas de 120 a 200 pontos, os trechos do pedal e as áreas da diferença. **No teste de 01/11** (CSP 0.3.1, 2.560 × 1.080), com as 4 janelas ligadas, 98,3 FPS de média (153 blocos de 10 s, de 55,1 a 107,2); com o replay desligado, 108,4 (48 blocos); com tudo desligado, 126,9 (2 blocos). Nos 5 blocos com o replay na tela, 99,3, contra cerca de 101,5 nos vizinhos. O custo de ter a janela aberta não saiu limpo, porque o FPS varia muito ao longo da sessão.
 
 ### 5.5 Instalar, ligar e remover
 
