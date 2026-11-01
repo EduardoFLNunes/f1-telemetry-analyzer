@@ -328,6 +328,14 @@ Feita, faltando o FPS no jogo e as decisões:
 
 - **O commit deste registro** foi enviado em seguida. O hash final da branch está no chat. `develop`, `main` e as tags continuam sem envio deste pedido.
 
+## A versão do app (pergunta do Eduardo, 01/11)
+
+- **A regra:** se o app tem todas as alterações da 0.5, vira 0.6; se não tem, centralizar as alterações e indicar o que o app faz para produção.
+- **O resultado: não tem todas.** A 0.5.0 saiu de `825ef60d`, na branch do pedido 38, que não está nesta branch nem em `develop`. Faltam aqui o Modelo 2 (`backend/ml/modelo2/`, o script e os testes) e os 3 pontos da versão. Nada do app usa o Modelo 2 em execução, então o que o piloto vê da 0.5.0 está aqui.
+- **Por isso, o número não mudou para 0.6.**
+- **O que o app faz e onde está cada alteração:** `docs/app_para_producao.md`.
+- **A centralização não foi feita:** o merge do pedido 38 depende da H.4, e os rótulos não chegaram. A simulação não mostra conflito em código, só em 3 documentos. Aguarda decisão do Eduardo.
+
 ## O que falta
 
 - **De você:** o teste no jogo, pelos passos da Parte E, e o aviso com as anotações preenchidas.
