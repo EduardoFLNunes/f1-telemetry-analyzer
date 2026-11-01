@@ -10,7 +10,8 @@
   - `ab2d718d` Parte C: a faixa do trecho da fala mais forte sobre a pista; o replay de cada mensagem só pede a rota uma vez
   - `70d59270` Partes D e F: as prévias, a conferência dos rótulos e dos visuais, os limites do LuaJIT e a documentação
   - `f6de673a` C.4: a grade também lista a volta que o rádio não viu fechar na linha
-  - o commit deste relatório, com a ponta a ponta e as saídas (ver "O envio ao GitHub")
+  - `5c5e1bcb` o relatório, com a ponta a ponta e as saídas
+  - o commit deste registro do envio (ver "O envio ao GitHub")
 - **Arquivos de handoff** (`docs/handoff/`, prefixo `2026-10-29_43_visuais-do-radio_`):
   - `relatorio.md` (este), `patch.diff` e `pytest.txt`;
   - **as prévias:** `previas.png` (a folha com as 8), `c12_v2_antes.png`, `c12_v2_depois.png`, `boxes_com_a_grade.png` e `janela_com_o_backend_050.png`;
@@ -249,3 +250,17 @@ Feita, faltando o FPS no jogo e as decisões:
 - **`docs/tecnica_de_pilotagem_lista.md`:** a linha D3 e o histórico.
 
 ## O envio ao GitHub
+
+- **Antes do envio, conferi nos commits:** o maior arquivo tem 420 KB (nada acima de 50 MB); nenhum arquivo em `recordings/`, `data/recordings` ou `data/ml`; nenhum segredo.
+- **O envio:** `etapa/visuais-do-radio`, branch nova, sem forçar. `develop`, `main` e as tags não foram.
+
+  | ref | hash local | hash no remoto (`git ls-remote origin`) |
+  |---|---|---|
+  | `refs/heads/etapa/visuais-do-radio` | `5c5e1bcb7abcbc8becdfd09b0ae814f25a2a34b6` | `5c5e1bcb7abcbc8becdfd09b0ae814f25a2a34b6` |
+
+- **O commit deste registro** foi enviado em seguida. O hash final da branch está no chat.
+
+## O que falta
+
+- **De você:** o teste no jogo (os passos na Parte E) e as 4 decisões ("O que precisa de você").
+- **De mim, depois do seu aviso:** a conferência do registro e do log do CSP, o FPS, o fechamento da documentação, o merge em `develop` e o envio.
