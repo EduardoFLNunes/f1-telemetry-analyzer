@@ -5,7 +5,7 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
 | nº | decisão | status |
 |---|---|---|
 | [0001](0001-processo-de-desenvolvimento.md) | Processo de desenvolvimento com vários agentes | aceita; itens 2 e 3 substituídos por 0008 |
-| [0002](0002-geometria-unica.md) | Uma única geometria oficial da pista | aceita; implementação em andamento, começando pelo coach (0013) |
+| [0002](0002-geometria-unica.md) | Uma única geometria oficial da pista | aceita; implementação em andamento, começando pelo coach (0013); emendada por 0025 |
 | [0003](0003-convencao-sinal-lateral.md) | Convenção de sinal do deslocamento lateral | aceita; implementada |
 | [0004](0004-simulador-nao-estima-ganho-local.md) | O simulador não estima ganho de tempo local | aceita; o caminho para um modelo físico novo está no 0017 |
 | [0005](0005-estimador-empirico-e-predicao-seletiva.md) | Estimador empírico de ganho e predição seletiva | aceita; Fase 2b |
@@ -28,3 +28,5 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
 | [0022](0022-validacao-da-m1-modelo-do-carro.md) | Validação da M1: como o modelo do carro para a frente é aprovado, e com que relógio | aceita (pedido 37); complementa 0006 e 0017 |
 | [0023](0023-modelo-2-quatro-pecas-ia-e-piloto.md) | Modelo 2: as quatro peças para achar o erro, a técnica e o estilo, nas voltas da IA e do piloto | aceita (pedido 38); refina 0018 |
 | [0024](0024-m1-geometria-medida-pela-telemetria.md) | M1: a geometria do carro medida pela telemetria do jogo | aceita (pedido 39); refina 0022 e a seção 1.4 da M1 |
+| [0025](0025-corredor-pela-borda-da-superficie.md) | O corredor do Modelo 1 vai pela borda da superfície, com um `corridor_id` à parte | aceita (pedido 44); emenda 0002 |
+| [0026](0026-retreino-da-lstm-geradora.md) | Retreino da LSTM geradora: a régua e os critérios | aceita (pedido 44); adapta 0006; refina 0018 e 0019 |
