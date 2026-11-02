@@ -1,0 +1,790 @@
+{
+ "pedido": "docs/prompts/2026-10-29_44_corredor-e-retreino-da-lstm.md",
+ "adr": "docs/decisoes/0026-retreino-da-lstm-geradora.md",
+ "gerado_em": "2026-11-02T19:04:02.643580+00:00",
+ "commit": "d772253be2764c385ab0febca8df414b3588e096",
+ "geometry_id": "0ed16f0dd2225990",
+ "corridor_id": "56f5356b141982c2",
+ "ambiente": {
+  "python": "3.9.7",
+  "plataforma": "Windows-10-10.0.26200-SP0"
+ },
+ "dados": [
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2.parquet",
+   "bytes": 380586213,
+   "sha256": "581012ea1b89741fa26c4cbbfca0cafe7173b488366f1433999cedd35b8ab5e8"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2_meta.json",
+   "bytes": 1336399,
+   "sha256": "6e12ff1a4bdf4bc3d6552e9daf63231112e055215e8b7b301495f8ff54dc92f2"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\externo\\f1_referencia\\referencia_2023_25.csv",
+   "bytes": 84574,
+   "sha256": "5de1c1d0636574b9bae5998eee7cfcfe38b631a364ebf5d1699f4e7799273400"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\cache\\tracks\\vhe_interlagos_gp_kn5_surface_interval_geometry.json",
+   "bytes": 2816095,
+   "sha256": "44ae485c820b9ddfd5921c38ec7168ce6e46af34e7655a18b7d826f19efc2cae"
+  }
+ ],
+ "store": {
+  "grid_size": 2167,
+  "track_length": 4334.079567901616,
+  "source_hash": "8c3e058486e0d691a52769eca59d209ea170a3e988da078ae6ec7c726b909609"
+ },
+ "voltas": 150,
+ "por_origem": {
+  "humano": 136,
+  "ia": 14
+ },
+ "por_fonte_do_rotulo": {
+  "indicador": 94,
+  "anotacao_sessao": 55,
+  "anotacao": 1
+ },
+ "fora_do_store": 16,
+ "por_sessao": [
+  {
+   "sessao": "2026-10-04",
+   "gravacoes": [
+    "2026-10-04_02-24-04_vhe_interlagos",
+    "2026-10-04_03-21-52_vhe_interlagos",
+    "2026-10-04_03-42-10_vhe_interlagos"
+   ],
+   "humano": 11,
+   "ia": 13,
+   "fora_do_store": 0,
+   "melhor_s": 84.8291625038158,
+   "mediana_s": 85.18546176908498
+  },
+  {
+   "sessao": "2026-10-05",
+   "gravacoes": [
+    "2026-10-04_23-51-42_vhe_interlagos"
+   ],
+   "humano": 7,
+   "ia": 0,
+   "fora_do_store": 0,
+   "melhor_s": 90.21810805864652,
+   "mediana_s": 91.39585453324815
+  },
+  {
+   "sessao": "2026-10-05-2",
+   "gravacoes": [
+    "2026-10-05_20-33-47_vhe_interlagos"
+   ],
+   "humano": 10,
+   "ia": 0,
+   "fora_do_store": 0,
+   "melhor_s": 90.62882023014576,
+   "mediana_s": 92.59584396403213
+  },
+  {
+   "sessao": "2026-10-09",
+   "gravacoes": [
+    "2026-10-08_23-56-13_vhe_interlagos"
+   ],
+   "humano": 4,
+   "ia": 0,
+   "fora_do_store": 0,
+   "melhor_s": 90.61358720371433,
+   "mediana_s": 92.84862407221802
+  },
+  {
+   "sessao": "2026-10-10",
+   "gravacoes": [
+    "2026-10-10_09-57-09_vhe_interlagos"
+   ],
+   "humano": 11,
+   "ia": 0,
+   "fora_do_store": 0,
+   "melhor_s": 90.31345991473677,
+   "mediana_s": 92.20563870497296
+  },
+  {
+   "sessao": "2026-10-11",
+   "gravacoes": [
+    "2026-10-11_14-19-52_vhe_interlagos"
+   ],
+   "humano": 16,
+   "ia": 0,
+   "fora_do_store": 0,
+   "melhor_s": 87.5937304267852,
+   "mediana_s": 89.5466640082455
+  },
+  {
+   "sessao": "2026-10-13",
+   "gravacoes": [
+    "2026-10-13_19-24-10_vhe_interlagos"
+   ],
+   "humano": 7,
+   "ia": 0,
+   "fora_do_store": 0,
+   "melhor_s": 89.76816951605684,
+   "mediana_s": 90.36469668081286
+  },
+  {
+   "sessao": "2026-10-16",
+   "gravacoes": [
+    "2026-10-15_23-24-50_vhe_interlagos"
+   ],
+   "humano": 11,
+   "ia": 0,
+   "fora_do_store": 0,
+   "melhor_s": 87.01447367589712,
+   "mediana_s": 90.8606843845034
+  },
+  {
+   "sessao": "2026-10-17",
+   "gravacoes": [
+    "2026-10-17_01-02-22_vhe_interlagos"
+   ],
+   "humano": 11,
+   "ia": 0,
+   "fora_do_store": 0,
+   "melhor_s": 87.61918404124265,
+   "mediana_s": 91.20024254656026
+  },
+  {
+   "sessao": "2026-10-17-2",
+   "gravacoes": [
+    "2026-10-17_16-17-08_vhe_interlagos"
+   ],
+   "humano": 15,
+   "ia": 0,
+   "fora_do_store": 0,
+   "melhor_s": 88.13213954949634,
+   "mediana_s": 91.75001152085942
+  },
+  {
+   "sessao": "2026-10-18",
+   "gravacoes": [
+    "2026-10-18_12-38-44_vhe_interlagos"
+   ],
+   "humano": 9,
+   "ia": 0,
+   "fora_do_store": 0,
+   "melhor_s": 89.06068481697116,
+   "mediana_s": 90.27076638754586
+  },
+  {
+   "sessao": "2026-10-21",
+   "gravacoes": [
+    "2026-10-21_20-30-54_vhe_interlagos"
+   ],
+   "humano": 9,
+   "ia": 0,
+   "fora_do_store": 0,
+   "melhor_s": 86.87593230576083,
+   "mediana_s": 89.51979372461393
+  },
+  {
+   "sessao": "2026-10-22",
+   "gravacoes": [
+    "2026-10-22_09-46-01_vhe_interlagos"
+   ],
+   "humano": 0,
+   "ia": 1,
+   "fora_do_store": 1,
+   "melhor_s": 89.1061565555681,
+   "mediana_s": 89.1061565555681
+  },
+  {
+   "sessao": "2026-10-24",
+   "gravacoes": [
+    "2026-10-24_13-26-12_vhe_interlagos",
+    "2026-10-24_13-43-32_vhe_interlagos"
+   ],
+   "humano": 9,
+   "ia": 0,
+   "fora_do_store": 9,
+   "melhor_s": 86.56766752684575,
+   "mediana_s": 88.84129294057347
+  },
+  {
+   "sessao": "2026-11-01",
+   "gravacoes": [
+    "2026-11-01_19-47-03_vhe_interlagos"
+   ],
+   "humano": 6,
+   "ia": 0,
+   "fora_do_store": 6,
+   "melhor_s": 89.43313199804213,
+   "mediana_s": 91.63507871240198
+  }
+ ],
+ "tempo_da_primeira_linha_contra_o_da_volta_max_s": 0.0,
+ "fora_de_pista": [
+  {
+   "gravacao": "2026-10-04_02-24-04_vhe_interlagos",
+   "amostras": 197563,
+   "com_o_bloco": 197563,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-04_03-21-52_vhe_interlagos",
+   "amostras": 48896,
+   "com_o_bloco": 48896,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-04_03-42-10_vhe_interlagos",
+   "amostras": 137761,
+   "com_o_bloco": 137761,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-04_23-51-42_vhe_interlagos",
+   "amostras": 142459,
+   "com_o_bloco": 142459,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-05_20-33-47_vhe_interlagos",
+   "amostras": 130957,
+   "com_o_bloco": 130957,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-08_23-56-13_vhe_interlagos",
+   "amostras": 65925,
+   "com_o_bloco": 65925,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-10_09-57-09_vhe_interlagos",
+   "amostras": 142067,
+   "com_o_bloco": 142067,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-11_14-19-52_vhe_interlagos",
+   "amostras": 130442,
+   "com_o_bloco": 130442,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-13_19-24-10_vhe_interlagos",
+   "amostras": 95087,
+   "com_o_bloco": 95087,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-15_23-24-50_vhe_interlagos",
+   "amostras": 128707,
+   "com_o_bloco": 128707,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-17_01-02-22_vhe_interlagos",
+   "amostras": 178203,
+   "com_o_bloco": 178203,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-17_16-17-08_vhe_interlagos",
+   "amostras": 149397,
+   "com_o_bloco": 149397,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-18_12-38-44_vhe_interlagos",
+   "amostras": 106557,
+   "com_o_bloco": 106557,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-21_20-30-54_vhe_interlagos",
+   "amostras": 161726,
+   "com_o_bloco": 161726,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-22_09-46-01_vhe_interlagos",
+   "amostras": 13598,
+   "com_o_bloco": 13598,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-24_13-26-12_vhe_interlagos",
+   "amostras": 39085,
+   "com_o_bloco": 39085,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-10-24_13-43-32_vhe_interlagos",
+   "amostras": 134614,
+   "com_o_bloco": 134614,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  },
+  {
+   "gravacao": "2026-11-01_19-47-03_vhe_interlagos",
+   "amostras": 121661,
+   "com_o_bloco": 121661,
+   "bloco_sem_offTrack": 0,
+   "depende_do_false_do_leitor": false
+  }
+ ],
+ "relatorio_de_fora_do_store": {
+  "2026-10-22_09-46-01_vhe_interlagos": [
+   {
+    "lap_id": "2026-10-22_09-46-01_vhe_interlagos#0000",
+    "amostras": 7451,
+    "valida": false,
+    "motivos_portao": [
+     "faltam 225.6 m de pista (limite 6 m)",
+     "carro parado em 22.7% das amostras"
+    ],
+    "origem": "misturada",
+    "fracao_ia": 0.7815058381425312,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 129.17753711691972
+   },
+   {
+    "lap_id": "2026-10-22_09-46-01_vhe_interlagos#0001",
+    "amostras": 5180,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "ia",
+    "fracao_ia": 1.0,
+    "tempo_grade_s": 89.1061565555681,
+    "tempo_jogo_s": 89.10358588460039,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-10-22_09-46-01_vhe_interlagos#0002",
+    "amostras": 967,
+    "valida": false,
+    "motivos_portao": [
+     "volta curta demais (16.6s < 55s)",
+     "faltam 3491.9 m de pista (limite 6 m)"
+    ],
+    "origem": "ia",
+    "fracao_ia": 1.0,
+    "motivo": "portoes de qualidade"
+   }
+  ],
+  "2026-10-24_13-26-12_vhe_interlagos": [
+   {
+    "lap_id": "2026-10-24_13-26-12_vhe_interlagos#0000",
+    "amostras": 9237,
+    "valida": false,
+    "motivos_portao": [
+     "faltam 225.5 m de pista (limite 6 m)",
+     "carro parado em 34.0% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 164.6795299604518
+   },
+   {
+    "lap_id": "2026-10-24_13-26-12_vhe_interlagos#0001",
+    "amostras": 10939,
+    "valida": false,
+    "motivos_portao": [
+     "carro parado em 34.9% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 191.6556085913971
+   },
+   {
+    "lap_id": "2026-10-24_13-26-12_vhe_interlagos#0002",
+    "amostras": 5026,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 88.84129294057347,
+    "tempo_jogo_s": 88.8401377079398,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-10-24_13-26-12_vhe_interlagos#0003",
+    "amostras": 4938,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 87.38210512698694,
+    "tempo_jogo_s": 87.38154231218759,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-10-24_13-26-12_vhe_interlagos#0004",
+    "amostras": 5169,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 89.2260769853059,
+    "tempo_jogo_s": 89.22663970605724,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-10-24_13-26-12_vhe_interlagos#0005",
+    "amostras": 3776,
+    "valida": false,
+    "motivos_portao": [
+     "faltam 1764.6 m de pista (limite 6 m)",
+     "carro parado em 14.0% das amostras",
+     "fora de pista em 18.3% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade"
+   }
+  ],
+  "2026-10-24_13-43-32_vhe_interlagos": [
+   {
+    "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0000",
+    "amostras": 11300,
+    "valida": false,
+    "motivos_portao": [
+     "faltam 225.5 m de pista (limite 6 m)",
+     "carro parado em 46.5% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 199.7647399065307
+   },
+   {
+    "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0001",
+    "amostras": 5055,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 89.31354689030299,
+    "tempo_jogo_s": 89.3135074311246,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0002",
+    "amostras": 5015,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 88.05744031082851,
+    "tempo_jogo_s": 88.05654378907055,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0003",
+    "amostras": 4952,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 86.56766752684575,
+    "tempo_jogo_s": 86.5685428530845,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0004",
+    "amostras": 13047,
+    "valida": false,
+    "motivos_portao": [
+     "volta longa demais (229.3s > 200s)",
+     "carro parado em 35.8% das amostras",
+     "fora de pista em 7.4% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 229.2905869634454
+   },
+   {
+    "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0005",
+    "amostras": 5785,
+    "valida": false,
+    "motivos_portao": [
+     "fora de pista em 10.9% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 99.9185784992849
+   },
+   {
+    "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0006",
+    "amostras": 58677,
+    "valida": false,
+    "motivos_portao": [
+     "volta longa demais (1021.1s > 200s)",
+     "carro parado em 87.5% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 1021.1255804822399
+   },
+   {
+    "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0007",
+    "amostras": 6423,
+    "valida": false,
+    "motivos_portao": [
+     "carro parado em 9.8% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 113.75287877679072
+   },
+   {
+    "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0008",
+    "amostras": 5350,
+    "valida": false,
+    "motivos_portao": [
+     "faltam 14.0 m de pista (limite 6 m)",
+     "fora de pista em 5.2% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 92.59576430108109
+   },
+   {
+    "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0009",
+    "amostras": 5142,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 89.18531867221267,
+    "tempo_jogo_s": 89.18461729501502,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0010",
+    "amostras": 5115,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 88.31895497780624,
+    "tempo_jogo_s": 88.31754392226912,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0011",
+    "amostras": 5327,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 91.81134458445437,
+    "tempo_jogo_s": 91.80957838330738,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0012",
+    "amostras": 3426,
+    "valida": false,
+    "motivos_portao": [
+     "faltam 3963.7 m de pista (limite 6 m)",
+     "carro parado em 82.1% das amostras",
+     "fora de pista em 85.9% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade"
+   }
+  ],
+  "2026-11-01_19-47-03_vhe_interlagos": [
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0000",
+    "amostras": 24203,
+    "valida": false,
+    "motivos_portao": [
+     "volta longa demais (434.5s > 200s)",
+     "faltam 225.7 m de pista (limite 6 m)",
+     "carro parado em 74.5% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 439.56262162343177
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0001",
+    "amostras": 5358,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 93.48249594632763,
+    "tempo_jogo_s": 93.48264503649018,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002",
+    "amostras": 16286,
+    "valida": false,
+    "motivos_portao": [
+     "volta longa demais (285.7s > 200s)",
+     "carro parado em 48.9% das amostras",
+     "fora de pista em 9.1% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 285.74458345223513
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0003",
+    "amostras": 12915,
+    "valida": false,
+    "motivos_portao": [
+     "volta longa demais (224.2s > 200s)",
+     "carro parado em 41.5% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 224.23656511443983
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0004",
+    "amostras": 5321,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 91.71049373564757,
+    "tempo_jogo_s": 91.70955702644638,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0005",
+    "amostras": 5197,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 89.60120365777615,
+    "tempo_jogo_s": 89.60059864541181,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0006",
+    "amostras": 5181,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 89.43313199804213,
+    "tempo_jogo_s": 89.43155975753787,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0007",
+    "amostras": 5591,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 96.40033318445893,
+    "tempo_jogo_s": 96.39954169360239,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0008",
+    "amostras": 9644,
+    "valida": false,
+    "motivos_portao": [
+     "carro parado em 25.8% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 167.91152844100648
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0009",
+    "amostras": 8451,
+    "valida": false,
+    "motivos_portao": [
+     "carro parado em 23.2% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 145.96665437527187
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0010",
+    "amostras": 9228,
+    "valida": false,
+    "motivos_portao": [
+     "carro parado em 32.9% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 159.68756246190057
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0011",
+    "amostras": 5278,
+    "valida": true,
+    "motivos_portao": [],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "tempo_grade_s": 91.55966368915638,
+    "tempo_jogo_s": 91.56656985763766,
+    "relogio_ok": true
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0012",
+    "amostras": 7961,
+    "valida": false,
+    "motivos_portao": [
+     "carro parado em 4.7% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade",
+    "tempo_jogo_s": 137.3741376761486
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0013",
+    "amostras": 1047,
+    "valida": false,
+    "motivos_portao": [
+     "volta curta demais (18.3s < 55s)",
+     "faltam 4018.1 m de pista (limite 6 m)",
+     "carro parado em 27.7% das amostras"
+    ],
+    "origem": "humano",
+    "fracao_ia": 0.0,
+    "motivo": "portoes de qualidade"
+   }
+  ]
+ }
+}
