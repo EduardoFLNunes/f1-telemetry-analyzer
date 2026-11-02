@@ -16,7 +16,11 @@
   - `ff2caf11` e `9abdfb45` o fechamento das decisões e o registro do envio
   - `a9b7cea7` o app para produção e a resposta sobre a versão 0.6
   - `77ca63eb` merge de `develop`, com o pedido 38 junto
-  - o commit do registro deste envio (ver "O envio ao GitHub")
+  - os registros do teste no jogo (`76516acd` e `460a99e6`)
+  - `082115e1` o fechamento, com o pedido 42 ajustado pelo Cowork
+  - `05ded85f` **merge em `develop`**
+  - `8d04814e` a versão `0.6.0-visuais-do-radio`
+  - o commit deste registro (ver "O envio ao GitHub")
 - **Arquivos de handoff** (`docs/handoff/`, prefixo `2026-10-29_43_visuais-do-radio_`):
   - `relatorio.md` (este), `patch.diff` e `pytest.txt`;
   - **as prévias:** `previas.png` (a folha com as 8), `c12_v2_antes.png`, `c12_v2_depois.png`, `boxes_com_a_grade.png` e `janela_com_o_backend_050.png`;
@@ -24,6 +28,15 @@
   - **a tela Ao vivo:** `ao_vivo_c12_v2.jpg`, `ao_vivo_c01_v13.jpg` e `ao_vivo_grade.jpg` (com as decisões);
   - **a conferência:** `rotulos_antes.json`, `rotulos_depois.json`, `visuais.json`, `radio_antes_21-10.json` e `radio_depois_13-10.json`, `_18-10.json` e `_21-10.json`;
   - **os scripts:** `radio_offline.py`, `radio_offline_antes.py`, `rodar_conferencia.sh`, `conferir_rotulos.py`, `medir_visuais.py`, `contar_locais.py`, `previa.py`, `fotografar.sh` e `folha.py`.
+
+## O fechamento (01/11)
+
+- **O merge:** `05ded85f`, em `develop`.
+- **A versão:** `0.6.0-visuais-do-radio`, nos 3 pontos (`8d04814e`). Pela regra do Eduardo: `develop` tem todas as alterações da 0.5.0, então vira 0.6. Sem instalador. O app do jogo fica no 0.4.2, já instalado.
+- **As suítes em `develop`, em `8d04814e`:** backend com 872 testes passando; front com 174, `tsc` e build sem erro; `conferir_lua.py` sem erro.
+- **O pedido 42,** ajustado pelo Cowork ao merge do 38 sem a H.4, foi commitado junto com o fechamento (`082115e1`).
+- **O backlog:** entraram a grade e os visuais sem confirmação no jogo, e o FPS que varia ao longo da sessão.
+- **O app ainda aberto:** o backend que subiu para o teste continua com o código de antes. A versão 0.6.0 aparece quando o app for aberto de novo.
 
 ## O teste no jogo de 01/11 (19:47 a 20:22)
 
@@ -392,7 +405,8 @@ Feita, faltando o FPS no jogo e as decisões:
   | `refs/heads/develop` (01/11, com o pedido 38) | `4b6ca40cf82b619ce7e5d5508e8711914073cf8f` | `4b6ca40cf82b619ce7e5d5508e8711914073cf8f` |
   | `refs/heads/etapa/visuais-do-radio` (01/11, com o pedido 38) | `02c937e6b3d44aa3c8b1721db091393d2e28af61` | `02c937e6b3d44aa3c8b1721db091393d2e28af61` |
 
-- **O commit deste registro** foi enviado em seguida. O hash final da branch está no chat. `main` e as tags continuam sem envio; `develop` foi com o pedido 38, por pedido do Eduardo, sem o pedido 43.
+- **`etapa/visuais-do-radio`** ficou em `082115e1`, igual no remoto.
+- **`develop` com o pedido 43:** o hash final está no chat, porque este registro vai no próprio envio. `main` e as tags não foram.
 
 ## A versão do app (pergunta do Eduardo, 01/11)
 

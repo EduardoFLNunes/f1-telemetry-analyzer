@@ -480,6 +480,2480 @@ index 7ec32a74..edfbb0b6 100644
      def _registrar(self, mensagem: Dict[str, Any]) -> None:
          sessao = mensagem.get("sessao") or f"sem-gravacao_{datetime.now():%Y-%m-%d}"
          linha = {k: mensagem.get(k) for k in CAMPOS_DO_REGISTRO if k in mensagem}
+diff --git a/backend/main.py b/backend/main.py
+index a8685a8e..f5443da6 100644
+--- a/backend/main.py
++++ b/backend/main.py
+@@ -108,7 +108,7 @@ TRACK_CACHE_DIR = RUNTIME_ROOT / "data" / "cache" / "tracks"
+ PRIMARY_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetry.csv"
+ DEBUG_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetryOld.csv"
+ BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
+-BACKEND_PHASE_VERSION = "redesenho"
++BACKEND_PHASE_VERSION = "visuais-do-radio"
+ 
+ runtime_state = RuntimeState()
+ telemetry_buffer = TelemetryBuffer(max_size=20000)
+diff --git a/backend/ml/modelo2/__init__.py b/backend/ml/modelo2/__init__.py
+new file mode 100644
+index 00000000..6e470da4
+--- /dev/null
++++ b/backend/ml/modelo2/__init__.py
+@@ -0,0 +1,17 @@
++"""Modelo 2: o erro que custou tempo, as tecnicas e o estilo (pedido 38, ADR 0023).
++
++As regras foram registradas antes de rodar nas voltas, em
++`docs/modelo2_tecnica_e_estilo.md`, secao 1. As pecas:
++
++* `dados` -- as voltas rotuladas da IA e do piloto (store v2 e as gravacoes
++  posteriores a ele) e as taxas no tempo original, levadas a grade;
++* `conferencias` -- os canais antes de qualquer detector (Parte B.3);
++* `fases` -- as fases de cada curva, fixas para todas as voltas (Parte C);
++* `detectores` -- uma regra por tecnica ou erro, com tres estados (Parte E);
++* `perda` -- a perda por fase, o ranking, a cadeia causal e a atribuicao (Parte D);
++* `estilo` -- as dimensoes de estilo por tipo de curva (Parte F);
++* `supervisionado` -- o tempo do trecho contra os indicadores (Parte G);
++* `rotulagem` -- o kit para validar 5 detectores (Parte H).
++
++Nada daqui e lido pelo app, pelo radio ou pelo coach.
++"""
+diff --git a/backend/ml/modelo2/conferencias.py b/backend/ml/modelo2/conferencias.py
+new file mode 100644
+index 00000000..b38c5202
+--- /dev/null
++++ b/backend/ml/modelo2/conferencias.py
+@@ -0,0 +1,148 @@
++"""As conferencias dos canais antes de qualquer detector (Parte B.3).
++
++* o desvio do volante em linha reta;
++* os sinais numa curva a esquerda e numa a direita;
++* a unidade do volante e o entre-eixos (a razao volante / curvatura em baixa velocidade);
++* o escorregamento: longitudinal, lateral ou combinado;
++* o ABS: o ajuste gravado (`carState.abs`) e a oscilacao do escorregamento na frenagem forte.
++"""
++
++from __future__ import annotations
++
++import json
++from typing import Dict, List, Sequence
++
++import numpy as np
++
++from .detectores import Lap
++from .fases import CornerPhases, window
++from ..data.recordings import Session
++from ..track.geometry import TrackGeometry
++
++
++def _pool(laps: Sequence[Lap], names: Sequence[str]):
++    blocks = {n: [] for n in names}
++    for lap in laps:
++        arrays = [lap.a(n) for n in names]
++        if any(a is None for a in arrays):
++            continue
++        for n, a in zip(names, arrays):
++            blocks[n].append(a)
++    return {n: (np.concatenate(v) if v else np.array([])) for n, v in blocks.items()}
++
++
++def steer_offset(laps: Sequence[Lap]) -> Dict[str, object]:
++    out = {}
++    for origem in ("humano", "ia"):
++        p = _pool([l for l in laps if l.volta.origem == origem], ("steer", "lateral_g", "speed_kmh"))
++        if not p["steer"].size:
++            continue
++        m = (np.abs(p["lateral_g"]) < 0.05) & (p["speed_kmh"] > 100)
++        s = p["steer"][m]
++        out[origem] = {"pontos": int(m.sum()), "media": float(np.mean(s)), "mediana": float(np.median(s)),
++                       "p5": float(np.percentile(s, 5)), "p95": float(np.percentile(s, 95)),
++                       "pico_tipico_nas_curvas": float(np.percentile(np.abs(p["steer"]), 99))}
++    return out
++
++
++def signs(laps: Sequence[Lap], track: TrackGeometry, phases: Sequence[CornerPhases]) -> List[Dict[str, object]]:
++    """Por curva, perto do apice com |a_y| >= 0,5 g: o sinal do volante, da guinada, de a_y e de v_lat."""
++    out = []
++    for cp in phases:
++        idx = window(track, cp.m1, cp.m2)
++        vals = {"steer": [], "yaw_rate": [], "lateral_g": [], "velocity_lat": []}
++        for lap in laps:
++            lat = lap.a("lateral_g")
++            if lat is None:
++                continue
++            m = np.abs(lat[idx]) >= 0.5
++            for n in vals:
++                a = lap.a(n)
++                if a is not None:
++                    vals[n].append(a[idx][m])
++        row = {"curva": cp.curva, "sentido": "esquerda" if cp.direcao > 0 else "direita"}
++        for n, v in vals.items():
++            v = np.concatenate(v) if v else np.array([])
++            row[n] = None if not v.size else {"mediana": round(float(np.median(v)), 4),
++                                              "fracao_positiva": round(float((v > 0).mean()), 4), "pontos": int(v.size)}
++        out.append(row)
++    return out
++
++
++def steer_per_curvature(laps: Sequence[Lap]) -> Dict[str, object]:
++    """|volante| / (|r| / v_x) em baixa velocidade: perto de L / k_delta num carro sem deriva."""
++    p = _pool([l for l in laps if l.a("yaw_rate") is not None], ("steer", "yaw_rate", "velocity_long", "lateral_g"))
++    if not p["steer"].size:
++        return {}
++    out = {}
++    for lo, hi in ((10, 20), (20, 30), (30, 45), (45, 90)):
++        m = (p["velocity_long"] >= lo) & (p["velocity_long"] < hi) & (np.abs(p["yaw_rate"]) >= 0.1) & (np.abs(p["lateral_g"]) >= 0.3)
++        if m.sum() < 50:
++            continue
++        ratio = np.abs(p["steer"][m]) / (np.abs(p["yaw_rate"][m]) / p["velocity_long"][m])
++        out[f"{lo}-{hi} m/s"] = {"mediana_m": round(float(np.median(ratio)), 3), "pontos": int(m.sum())}
++    return out
++
++
++def slip_nature(laps: Sequence[Lap]) -> Dict[str, object]:
++    """O escorregamento em tres situacoes: frenagem em reta, curva sem pedal e reta em pe embaixo."""
++    p = _pool(laps, ("steer", "lateral_g", "brake", "throttle", "speed_kmh", "slip_front", "slip_rear"))
++    if not p["steer"].size:
++        return {}
++    big = np.percentile(np.abs(p["steer"]), 99)
++    cases = {
++        "frenagem_em_reta": (p["brake"] >= 0.5) & (np.abs(p["lateral_g"]) < 0.1) & (np.abs(p["steer"]) < 0.05 * big),
++        "curva_sem_pedal": (p["brake"] < 0.05) & (p["throttle"] < 0.05) & (np.abs(p["lateral_g"]) >= 1.0),
++        "curva_com_aceleracao_parcial": (p["brake"] < 0.05) & (p["throttle"] > 0.2) & (p["throttle"] < 0.8) & (np.abs(p["lateral_g"]) >= 1.0),
++        "reta_pe_embaixo": (p["throttle"] > 0.98) & (np.abs(p["lateral_g"]) < 0.1) & (p["speed_kmh"] > 150),
++    }
++    out = {}
++    for name, m in cases.items():
++        if m.sum() < 20:
++            continue
++        out[name] = {"pontos": int(m.sum()),
++                     "dianteiro_mediana": round(float(np.nanmedian(p["slip_front"][m])), 4),
++                     "dianteiro_p95": round(float(np.nanpercentile(p["slip_front"][m], 95)), 4),
++                     "traseiro_mediana": round(float(np.nanmedian(p["slip_rear"][m])), 4),
++                     "traseiro_p95": round(float(np.nanpercentile(p["slip_rear"][m], 95)), 4)}
++    return out
++
++
++def abs_setting(session: Session, every: int = 50) -> Dict[str, object]:
++    """Os valores de `carState.abs` e `carState.tc` gravados (uma amostra a cada `every`)."""
++    values, tcs = {}, {}
++    with session.player_stream.open("r", encoding="utf-8", errors="replace") as handle:
++        for i, line in enumerate(handle):
++            if i % every:
++                continue
++            try:
++                state = json.loads(line)["sample"]["carPhysics"]["carState"]
++            except (KeyError, TypeError, json.JSONDecodeError):
++                continue
++            values[state.get("abs")] = values.get(state.get("abs"), 0) + 1
++            tcs[state.get("tc")] = tcs.get(state.get("tc"), 0) + 1
++    return {"gravacao": session.session_id, "abs": {str(k): v for k, v in values.items()},
++            "tc": {str(k): v for k, v in tcs.items()}}
++
++
++def abs_cycles(laps: Sequence[Lap]) -> Dict[str, object]:
++    """Na frenagem forte em reta (freio >= 0,9 por 0,5 s ou mais): reversoes do escorregamento dianteiro por segundo."""
++    from .detectores import count_reversals, runs
++    rates, maxima = [], []
++    for lap in laps:
++        brake, sf, lat, el = lap.a("brake"), lap.a("slip_front"), lap.a("lateral_g"), lap.a("elapsed_s")
++        if any(x is None for x in (brake, sf, lat, el)):
++            continue
++        for lo, hi in runs((brake >= 0.9) & (np.abs(lat) < 0.3)):
++            dur = float(el[min(hi, el.size - 1)] - el[lo])
++            if dur < 0.5:
++                continue
++            seg = sf[lo:hi]
++            rates.append(count_reversals(seg, 0.02) / dur)
++            maxima.append(float(np.nanmax(seg)))
++    if not rates:
++        return {}
++    return {"trechos": len(rates), "reversoes_por_s_mediana": round(float(np.median(rates)), 2),
++            "reversoes_por_s_p90": round(float(np.percentile(rates, 90)), 2),
++            "escorregamento_max_mediana": round(float(np.median(maxima)), 4),
++            "nota": "a grade de 2 m (cerca de 25 a 40 ms por ponto na frenagem) so resolve ciclos abaixo de ~12 Hz"}
+diff --git a/backend/ml/modelo2/dados.py b/backend/ml/modelo2/dados.py
+new file mode 100644
+index 00000000..ee8076d1
+--- /dev/null
++++ b/backend/ml/modelo2/dados.py
+@@ -0,0 +1,383 @@
++"""As voltas do Modelo 2 e as taxas no tempo original (secoes 1.1 e 1.2).
++
++* **Store v2:** as voltas `humano` com o equipamento atual (o filtro do
++  relatorio de evolucao) e as `ia` de sessoes a partir de 04/10.
++* **Fora do store:** as gravacoes posteriores a construcao dele, lidas com as
++  mesmas funcoes do store, sem escrever nele. A origem sai do indicador
++  `isAIControlled` (tudo `true` ou tudo `false`; mistura fica fora) e o relogio
++  e conferido contra o tempo do jogo costurado na troca de volta.
++* **As taxas** (freio, acelerador, volante, fracao de carga dianteira) sao
++  diferencas centradas de +-0,05 s no cronometro do jogo, sem as amostras em
++  que ele nao andou; as medias moveis do volante tambem. Depois, cada canal e
++  levado a grade pelo `s` das amostras originais.
++
++As gravacoes so sao lidas.
++"""
++
++from __future__ import annotations
++
++import hashlib
++import json
++from dataclasses import dataclass, field
++from datetime import datetime
++from pathlib import Path
++from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
++
++import numpy as np
++import pandas as pd
++
++from .. import config
++from ..comparison.evolution import driver_laps as evolution_driver_laps
++from ..comparison.evolution import group_sessions
++from ..data.ai_detector import pit_lap
++from ..data.coach_references import AI_SINCE
++from ..data.origin import AI, CURRENT_EQUIPMENT, HUMAN
++from ..data.recordings import RawLap, Session, iter_laps, list_all_sessions
++from ..data.store_v2 import PHYSICAL_COLUMNS, game_lap_time, load_store_v2, store_v2_meta
++from ..preprocessing.alignment import align_lap
++from ..preprocessing.cleaning import clean_lap
++from ..preprocessing.quality import evaluate_lap
++from ..preprocessing.resampling import lap_time_from_grid, resample_lap
++from ..track.geometry import TrackGeometry
++from ..track.microsectors import build_microsectors
++
++# Gravacoes posteriores ao store v2 (construido em 22/10, 03:34).
++FORA_DO_STORE = (
++    "2026-10-22_09-46-01_vhe_interlagos",
++    "2026-10-24_13-26-12_vhe_interlagos",
++    "2026-10-24_13-43-32_vhe_interlagos",
++)
++CLOCK_TOLERANCE_S = 0.05      # tempo da grade contra o tempo do jogo, voltas de fora do store
++EQUIPMENT_SINCE = "2026-10-01"
++
++RATE_HALF_S = 0.05            # diferenca centrada de +-0,05 s
++HOLE_S = 0.20                 # buraco no cronometro que torna a taxa nao confiavel
++MA_LONG_S = 0.5               # media movel da suavidade do volante
++MA_SHORT_S = 0.1              # media movel das reversoes
++MA_STEER_S = 0.2              # media movel do volante crescendo depois da retomada
++
++DERIVED = ("brake_rate", "throttle_rate", "steer_rate", "steer_ma01", "steer_ma02", "steer_dev05",
++           "front_share", "front_share_rate", "raw_dt", "t_raw")
++
++AI_LEVELS_FILE = config.repo_root() / "docs" / "experimentos" / "ia_niveis.csv"
++
++
++def raiz() -> Path:
++    return config.artifacts_root() / "modelo2"
++
++
++def sha256(path: Path) -> str:
++    digest = hashlib.sha256()
++    with Path(path).open("rb") as handle:
++        for block in iter(lambda: handle.read(1 << 22), b""):
++            digest.update(block)
++    return digest.hexdigest()
++
++
++# ------------------------------------------------------------ taxas ---
++
++def dedupe_clock(frame: pd.DataFrame, clock: str = "lap_time_s") -> pd.DataFrame:
++    """So as amostras em que o cronometro andou (maior que o maximo anterior)."""
++    t = pd.to_numeric(frame[clock], errors="coerce").to_numpy(dtype=float)
++    finite = np.isfinite(t)
++    before = np.concatenate([[-np.inf], np.fmax.accumulate(np.where(finite, t, -np.inf))[:-1]])
++    return frame.loc[finite & (t > before)].reset_index(drop=True)
++
++
++def centred_rate(t: np.ndarray, v: np.ndarray, half: float = RATE_HALF_S) -> np.ndarray:
++    """(v(t + h) - v(t - h)) / 2h, com interpolacao linear e as pontas cortadas."""
++    good = np.isfinite(v)
++    if good.sum() < 2:
++        return np.full(t.size, np.nan)
++    tg, vg = t[good], v[good]
++    lo = np.clip(t - half, tg[0], tg[-1])
++    hi = np.clip(t + half, tg[0], tg[-1])
++    span = hi - lo
++    out = (np.interp(hi, tg, vg) - np.interp(lo, tg, vg)) / np.where(span > 0, span, np.nan)
++    return out
++
++
++def moving_average(t: np.ndarray, v: np.ndarray, width: float) -> np.ndarray:
++    """Media movel centrada de largura `width` segundos, pela integral (amostragem irregular)."""
++    good = np.isfinite(v)
++    if good.sum() < 2:
++        return np.full(t.size, np.nan)
++    tg, vg = t[good], v[good]
++    integral = np.concatenate([[0.0], np.cumsum(np.diff(tg) * (vg[1:] + vg[:-1]) / 2.0)])
++    lo = np.clip(t - width / 2.0, tg[0], tg[-1])
++    hi = np.clip(t + width / 2.0, tg[0], tg[-1])
++    span = hi - lo
++    return (np.interp(hi, tg, integral) - np.interp(lo, tg, integral)) / np.where(span > 0, span, np.nan)
++
++
++def raw_derived(aligned: pd.DataFrame) -> pd.DataFrame:
++    """As colunas derivadas no tempo original, uma linha por amostra mantida."""
++    raw = dedupe_clock(aligned)
++    t = raw["lap_time_s"].to_numpy(dtype=float)
++    out = pd.DataFrame({"s_unwrapped": raw["s_unwrapped"].to_numpy(dtype=float), "t_raw": t})
++
++    def col(name):
++        return pd.to_numeric(raw[name], errors="coerce").to_numpy(dtype=float) if name in raw else np.full(t.size, np.nan)
++
++    steer = col("steer_angle")
++    if not np.isfinite(steer).any():
++        steer = col("steering")
++    out["brake_rate"] = centred_rate(t, col("brake"))
++    out["throttle_rate"] = centred_rate(t, col("throttle"))
++    out["steer_rate"] = centred_rate(t, steer)
++    out["steer_ma01"] = moving_average(t, steer, MA_SHORT_S)
++    out["steer_ma02"] = moving_average(t, np.abs(steer), MA_STEER_S)
++    out["steer_dev05"] = np.abs(steer - moving_average(t, steer, MA_LONG_S))
++    loads = [col(f"wheel_load_{w}") for w in ("fl", "fr", "rl", "rr")]
++    total = loads[0] + loads[1] + loads[2] + loads[3]
++    share = np.where(total > 0, (loads[0] + loads[1]) / total, np.nan)
++    out["front_share"] = share
++    out["front_share_rate"] = centred_rate(t, share)
++    dt = np.diff(t)
++    out["raw_dt"] = np.concatenate([dt, [np.nan]])
++    return out
++
++
++def to_grid(raw: pd.DataFrame, track: TrackGeometry) -> pd.DataFrame:
++    """Leva as colunas de `raw_derived` a grade, pela posicao de cada amostra."""
++    s = np.maximum.accumulate(raw["s_unwrapped"].to_numpy(dtype=float))
++    if s.size:
++        s = s - track.length * np.round(s[0] / track.length)
++    s, first = np.unique(s, return_index=True)
++    grid = {"grid_index": np.arange(track.size)}
++    for column in DERIVED:
++        values = raw[column].to_numpy(dtype=float)[first]
++        good = np.isfinite(values)
++        if column == "raw_dt":
++            # O intervalo que contem cada ponto da grade (degrau, nao interpolacao).
++            pos = np.clip(np.searchsorted(s, track.s, side="right") - 1, 0, max(s.size - 1, 0))
++            grid[column] = values[pos] if s.size else np.full(track.size, np.nan)
++        elif good.sum() >= 2:
++            grid[column] = np.interp(track.s, s[good], values[good])
++        else:
++            grid[column] = np.full(track.size, np.nan)
++    return pd.DataFrame(grid)
++
++
++# ------------------------------------------------------------ voltas ---
++
++@dataclass
++class Volta:
++    lap_id: str
++    gravacao: str
++    origem: str
++    tempo_s: float
++    grid: pd.DataFrame
++    fora_do_store: bool = False
++    sessao: Optional[str] = None
++    canais: Tuple[str, ...] = ()
++    nivel_ia: Optional[Dict[str, object]] = None
++
++    @property
++    def ia(self) -> bool:
++        return self.origem == AI
++
++
++def store_selection(laps: pd.DataFrame) -> pd.DataFrame:
++    """As voltas rotuladas do store v2: as do piloto (filtro da evolucao) e as da IA."""
++    human = evolution_driver_laps(laps)
++    ai = laps[(laps["origem"] == AI) & laps["relogio_verificado"].fillna(False).astype(bool)
++              & ~laps["relogio_suspeito"].fillna(True).astype(bool)
++              & (laps["session_id"].str[:10] >= AI_SINCE)]
++    return pd.concat([human, ai]).drop_duplicates("lap_id")
++
++
++def _origin_from_indicator(raw: pd.DataFrame) -> Tuple[str, float]:
++    if "ai_controlled" not in raw.columns:
++        return "desconhecida", float("nan")
++    flags = raw["ai_controlled"].dropna()
++    if flags.empty:
++        return "desconhecida", float("nan")
++    share = float(flags.astype(bool).mean())
++    if share == 1.0:
++        return AI, share
++    if share == 0.0:
++        return HUMAN, share
++    return "misturada", share
++
++
++def read_outside(session: Session, track: TrackGeometry) -> Tuple[List[Volta], List[Dict[str, object]], Dict[str, pd.DataFrame]]:
++    """As voltas de uma gravacao de fora do store, pelas regras de 1.1. Devolve (voltas, relatorio, derivados)."""
++    sectors = build_microsectors(track)
++    kept: List[Volta] = []
++    report: List[Dict[str, object]] = []
++    derived: Dict[str, pd.DataFrame] = {}
++    pending = None
++    for lap in iter_laps(session):
++        if pending is not None:
++            prev_lap, entry, volta = pending
++            game = game_lap_time(prev_lap, lap, track)
++            entry["tempo_jogo_s"] = game
++            if volta is not None:
++                ok = game is not None and abs(volta.tempo_s - game) <= CLOCK_TOLERANCE_S
++                entry["relogio_ok"] = bool(ok)
++                if ok:
++                    kept.append(volta)
++                else:
++                    entry["motivo"] = "relogio: tempo da grade contra o do jogo"
++            pending = None
++        cleaned, _ = clean_lap(lap.frame)
++        aligned, alignment = align_lap(cleaned, track)
++        quality = evaluate_lap(aligned, track, alignment)
++        origin, share = _origin_from_indicator(lap.frame)
++        entry = {"lap_id": lap.lap_id, "amostras": lap.sample_count, "valida": bool(quality.valid),
++                 "motivos_portao": list(quality.reasons), "origem": origin, "fracao_ia": share}
++        volta = None
++        if quality.valid:
++            grid = resample_lap(aligned, track, line_clock=True)
++            if pit_lap(grid, sectors):
++                entry["motivo"] = "box"
++            elif origin not in (AI, HUMAN):
++                entry["motivo"] = f"origem {origin}"
++            else:
++                grid = grid.reset_index(drop=True)
++                channels = tuple(c for c in PHYSICAL_COLUMNS if c in grid and np.isfinite(grid[c].to_numpy(dtype=float)).any())
++                volta = Volta(lap_id=lap.lap_id, gravacao=session.session_id, origem=origin,
++                              tempo_s=float(lap_time_from_grid(grid)), grid=grid, fora_do_store=True,
++                              canais=channels)
++                entry["tempo_grade_s"] = volta.tempo_s
++                derived[lap.lap_id] = to_grid(raw_derived(aligned), track)
++        else:
++            entry["motivo"] = "portoes de qualidade"
++        report.append(entry)
++        pending = (lap, entry, volta)
++    if pending is not None and pending[2] is not None:
++        pending[1]["relogio_ok"] = False
++        pending[1]["motivo"] = "ultima volta: sem a seguinte para o tempo do jogo"
++    return kept, report, derived
++
++
++def derived_for_session(session: Session, sequences: Mapping[int, int], track: TrackGeometry) -> Dict[str, pd.DataFrame]:
++    """As taxas de cada volta pedida de uma gravacao do store. `sequences[seq] = raw_samples` do store."""
++    out: Dict[str, pd.DataFrame] = {}
++    for lap in iter_laps(session):
++        expected = sequences.get(lap.sequence)
++        if expected is None:
++            continue
++        if int(expected) != lap.sample_count:
++            raise ValueError(f"{lap.lap_id}: {lap.sample_count} amostras, o store tem {expected}")
++        cleaned, _ = clean_lap(lap.frame)
++        aligned, _ = align_lap(cleaned, track)
++        out[lap.lap_id] = to_grid(raw_derived(aligned), track)
++    missing = set(f"{session.session_id}#{q:04d}" for q in sequences) - set(out)
++    if missing:
++        raise ValueError(f"voltas do store nao encontradas na gravacao: {sorted(missing)}")
++    return out
++
++
++def ai_levels(path: Path = AI_LEVELS_FILE) -> pd.DataFrame:
++    """Os blocos da IA em niveis de forca: gravacao, volta_de, volta_ate, nivel, agressividade, variacao."""
++    if not Path(path).exists():
++        return pd.DataFrame(columns=["gravacao", "volta_de", "volta_ate", "nivel", "agressividade", "variacao"])
++    return pd.read_csv(path, dtype={"gravacao": str})
++
++
++def recording_period(session_id: str, laps: pd.DataFrame) -> Dict[str, object]:
++    start = datetime.strptime(session_id[:19], "%Y-%m-%d_%H-%M-%S")
++    return {"inicio": start.isoformat(), "duracao_s": None}
++
++
++@dataclass
++class Conjunto:
++    voltas: Dict[str, Volta]
++    store_meta: Dict[str, object]
++    fora_relatorio: Dict[str, List[Dict[str, object]]] = field(default_factory=dict)
++    lidos: List[Dict[str, object]] = field(default_factory=list)
++
++    def da_ia(self) -> List[Volta]:
++        return [v for v in self.voltas.values() if v.ia]
++
++    def do_piloto(self) -> List[Volta]:
++        return [v for v in self.voltas.values() if not v.ia]
++
++
++def carregar(track: TrackGeometry, cache: bool = True, progress=print) -> Conjunto:
++    """Todas as voltas rotuladas, com a grade do store (ou a de fora) e as taxas derivadas."""
++    meta = store_v2_meta()
++    if not meta or not meta.get("aprovado"):
++        raise SystemExit("PARADO: store v2 ausente ou nao aprovado.")
++    store = load_store_v2(track=track)
++    selected = store_selection(store.laps)
++    root = raiz()
++    root.mkdir(parents=True, exist_ok=True)
++    derived_cache = root / "derivados.parquet"
++    outside_cache = root / "fora_do_store.parquet"
++    outside_meta = root / "fora_do_store.json"
++
++    sessions = {s.session_id: s for s in list_all_sessions()}
++    derived: Dict[str, pd.DataFrame] = {}
++    if cache and derived_cache.exists():
++        frame = pd.read_parquet(derived_cache)
++        derived = {k: g.drop(columns="lap_id").reset_index(drop=True) for k, g in frame.groupby("lap_id")}
++    wanted = selected[~selected["lap_id"].isin(derived)]
++    for position, (sid, rows) in enumerate(sorted(wanted.groupby("session_id")), start=1):
++        progress(f"  taxas [{position}] {sid}: {len(rows)} voltas")
++        derived.update(derived_for_session(sessions[sid], dict(zip(rows["sequence"].astype(int), rows["raw_samples"].astype(int))), track))
++
++    outside_laps: List[Volta] = []
++    outside_report: Dict[str, List[Dict[str, object]]] = {}
++    if cache and outside_cache.exists() and outside_meta.exists():
++        info = json.loads(outside_meta.read_text(encoding="utf-8"))
++        frame = pd.read_parquet(outside_cache)
++        grids = {k: g.drop(columns="lap_id").reset_index(drop=True) for k, g in frame.groupby("lap_id")}
++        for entry in info["voltas"]:
++            outside_laps.append(Volta(lap_id=entry["lap_id"], gravacao=entry["gravacao"], origem=entry["origem"],
++                                      tempo_s=entry["tempo_s"], grid=grids[entry["lap_id"]], fora_do_store=True,
++                                      canais=tuple(entry["canais"])))
++        outside_report = info["relatorio"]
++    else:
++        for sid in FORA_DO_STORE:
++            if sid not in sessions:
++                outside_report[sid] = [{"motivo": "gravacao nao encontrada"}]
++                continue
++            progress(f"  fora do store: {sid}")
++            laps, report, extra = read_outside(sessions[sid], track)
++            outside_laps.extend(laps)
++            outside_report[sid] = report
++            derived.update(extra)
++        if outside_laps:
++            pd.concat([v.grid.assign(lap_id=v.lap_id) for v in outside_laps]).to_parquet(outside_cache)
++        outside_meta.write_text(json.dumps({
++            "voltas": [{"lap_id": v.lap_id, "gravacao": v.gravacao, "origem": v.origem, "tempo_s": v.tempo_s,
++                        "canais": list(v.canais)} for v in outside_laps],
++            "relatorio": outside_report}, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
++    pd.concat([g.assign(lap_id=k) for k, g in derived.items()]).to_parquet(derived_cache)
++
++    channels = meta.get("canais_por_volta", {})
++    voltas: Dict[str, Volta] = {}
++    grouped = {k: g.reset_index(drop=True) for k, g in store.frame[store.frame["lap_id"].isin(selected["lap_id"])].groupby("lap_id")}
++    for _, row in selected.iterrows():
++        grid = grouped[row["lap_id"]].sort_values("grid_index").reset_index(drop=True)
++        voltas[row["lap_id"]] = Volta(lap_id=row["lap_id"], gravacao=row["session_id"], origem=row["origem"],
++                                      tempo_s=float(row["lap_time_s"]), grid=grid,
++                                      canais=tuple(channels.get(row["lap_id"], [])))
++    for v in outside_laps:
++        voltas[v.lap_id] = v
++    for lap_id, volta in voltas.items():
++        extra = derived[lap_id]
++        base = volta.grid.drop(columns=[c for c in DERIVED if c in volta.grid.columns])
++        volta.grid = pd.concat([base.reset_index(drop=True), extra.drop(columns="grid_index").reset_index(drop=True)], axis=1)
++
++    periods = dict(meta.get("periodos_das_gravacoes") or {})
++    for v in outside_laps:
++        periods.setdefault(v.gravacao, recording_period(v.gravacao, pd.DataFrame()))
++    sessions_of = group_sessions({v.gravacao: periods[v.gravacao] for v in voltas.values()})
++    levels = ai_levels()
++    for v in voltas.values():
++        v.sessao = sessions_of[v.gravacao]
++        if not levels.empty:
++            number = int(v.lap_id.split("#")[1])
++            match = levels[(levels["gravacao"] == v.gravacao) & (levels["volta_de"] <= number) & (levels["volta_ate"] >= number)]
++            if len(match):
++                v.nivel_ia = match.iloc[0].to_dict()
++
++    read = [config.artifacts_root() / "laps_grid_v2.parquet", config.artifacts_root() / "laps_grid_v2_meta.json"]
++    for sid in sorted({v.gravacao for v in voltas.values()} | (set(FORA_DO_STORE) & set(sessions))):
++        read.append(sessions[sid].player_stream)
++    return Conjunto(voltas=voltas, store_meta=meta, fora_relatorio=outside_report,
++                    lidos=[{"arquivo": str(p), "bytes": p.stat().st_size} for p in read])
+diff --git a/backend/ml/modelo2/detectores.py b/backend/ml/modelo2/detectores.py
+new file mode 100644
+index 00000000..0f4a93cc
+--- /dev/null
++++ b/backend/ml/modelo2/detectores.py
+@@ -0,0 +1,757 @@
++"""Os detectores de tecnica e de erro (secoes 1.4 e 1.5).
++
++Em duas etapas:
++
++1. `measure_passage` mede os eventos e os indicadores de uma passagem (uma
++   volta numa curva), sem estado nenhum;
++2. `assign_states` calibra nas passagens da IA da mesma curva e da a cada
++   passagem "aplica", "nao aplica" ou "nao conclusivo".
++
++Tipo P (regra fisica): o limiar e fixo e a referencia so alarga a faixa de
++duvida (metade do intervalo entre os dois limiares, ou 0,5 x o desvio robusto
++da IA, o que for maior). Tipo C (comparacao): o limiar e relativo as passagens
++da IA, com um minimo fixo.
++"""
++
++from __future__ import annotations
++
++from dataclasses import dataclass, field
++from typing import Callable, Dict, List, Optional, Sequence, Tuple
++
++import numpy as np
++import pandas as pd
++
++from .dados import HOLE_S, Volta
++from .fases import CornerPhases, ahead, window
++from ..track.geometry import TrackGeometry
++
++APLICA, NAO_APLICA, NC = "aplica", "nao_aplica", "nao_conclusivo"
++STATES = (APLICA, NAO_APLICA, NC)
++
++PEDAL_EPS = 0.05
++BRAKE_MIN_PEAK = 0.15
++MERGE_M = 10.0
++TURN_IN_SHARE = 0.15
++PICKUP = 0.10
++FULL = 0.95
++
++# Medida substituta do subesterco (1.2): o retrato da memoria do jogo, pedido 39, Parte B.
++WHEELBASE_SUBSTITUTE_M = 2.955
++STEER_GAIN_SUBSTITUTE_RAD = 0.267
++G = 9.80665
++SLIP_RELIABLE_MAX = 10.0
++
++# Detector -> (familia, tecnica ou erro, tipo, nome, fases para a atribuicao).
++CATALOG = {
++    "F1": ("frenagem", "tecnica", "C", "referencia de frenagem"),
++    "F2": ("frenagem", "tecnica", "C", "frenagem no limiar"),
++    "F3": ("frenagem", "tecnica", "P", "perfil com carga aerodinamica"),
++    "F4": ("frenagem", "tecnica", "P", "soltura progressiva"),
++    "F5": ("frenagem", "tecnica", "P", "trail braking"),
++    "F6": ("frenagem", "erro", "C", "travamento de roda"),
++    "F7": ("frenagem", "tecnica", "P", "sobreposicao de pedais"),
++    "F8": ("frenagem", "erro", "C", "reducao de marcha brusca"),
++    "E1": ("entrada", "erro", "C", "entrada antecipada"),
++    "E2": ("entrada", "erro", "C", "subesterco (substituta)"),
++    "E3": ("entrada", "erro", "C", "sobresterco"),
++    "E4": ("entrada", "erro", "P", "contraesterco"),
++    "E5": ("entrada", "erro", "C", "reversoes do volante"),
++    "E6": ("entrada", "tecnica", "C", "suavidade do volante"),
++    "M1": ("meio_saida", "tecnica", "P", "uso do circulo de atrito"),
++    "M2": ("meio_saida", "erro", "C", "apice antecipado"),
++    "M3": ("meio_saida", "tecnica", "P", "forma em U"),
++    "M4": ("meio_saida", "tecnica", "C", "uso da largura na saida"),
++    "M5": ("meio_saida", "erro", "P", "fase sem pedal"),
++    "M6": ("meio_saida", "tecnica", "C", "retomada do acelerador"),
++    "M7": ("meio_saida", "erro", "P", "acelerador cedo"),
++    "M8": ("meio_saida", "erro", "P", "alivio depois da retomada"),
++    "M9": ("meio_saida", "erro", "C", "patinacao"),
++    "V1": ("volta", "tecnica", "P", "uso decidido do acelerador"),
++    "V2": ("volta", "tecnica", "C", "rotacao de troca"),
++    "V3": ("volta", "erro", "C", "transferencia de carga brusca"),
++    "V4": ("volta", "tecnica", "C", "pneus na faixa da IA"),
++    "V5": ("volta", "tecnica", "P", "consistencia"),
++}
++PER_CORNER = [d for d in CATALOG if d not in ("V1", "V2", "V4", "V5")]
++PHASE_DETECTORS = {
++    "frenagem": ("F1", "F2", "F3", "F6", "F7", "F8", "V3"),
++    "entrada": ("F4", "F5", "E1", "E5", "E6", "M5"),
++    "meio": ("E2", "E3", "E4", "M1", "M2", "M3", "M5"),
++    "saida": ("M6", "M7", "M8", "M9", "M4", "E3"),
++    "reta": ("M4", "M6", "M8"),
++}
++# O indicador principal de cada detector (atribuicao, estilo e modelo leve).
++PRIMARY = {"F1": "s_b_rel", "F2": "t_pico", "F3": "pico_fracao", "F4": "taxa_soltura", "F5": "sobreposicao_s",
++           "F6": "escorr_dianteiro", "F7": "pedais_juntos_s", "F8": "escorr_reducao", "E1": "s_ti_rel",
++           "E2": "ua_graus", "E3": "beta_p95", "E4": "contra_s", "E5": "reversoes", "E6": "irregularidade",
++           "M1": "uso_aderencia", "M2": "s_vmin_rel", "M3": "plato_s", "M4": "afastamento_m", "M5": "sem_pedal_s",
++           "M6": "retomada_s", "M7": "volante_depois", "M8": "alivio", "M9": "escorr_traseiro",
++           "V3": "taxa_carga"}
++
++
++def _f(frame: pd.DataFrame, name: str) -> Optional[np.ndarray]:
++    if name not in frame.columns:
++        return None
++    values = frame[name].to_numpy(dtype=float)
++    return values if np.isfinite(values).any() else None
++
++
++def robust_sd(values: Sequence[float]) -> float:
++    v = np.asarray([x for x in values if x is not None and np.isfinite(x)], dtype=float)
++    if v.size < 2:
++        return float("nan")
++    q75, q25 = np.percentile(v, [75, 25])
++    return float((q75 - q25) / 1.349)
++
++
++def runs(mask: np.ndarray) -> List[Tuple[int, int]]:
++    """Sequencias de True como (inicio, fim exclusivo)."""
++    if mask.size == 0 or not mask.any():
++        return []
++    padded = np.concatenate([[False], mask, [False]]).astype(int)
++    edges = np.diff(padded)
++    return list(zip(np.flatnonzero(edges == 1).tolist(), np.flatnonzero(edges == -1).tolist()))
++
++
++def merged_runs(mask: np.ndarray, gap_points: int) -> List[Tuple[int, int]]:
++    out: List[Tuple[int, int]] = []
++    for a, b in runs(mask):
++        if out and a - out[-1][1] < gap_points:
++            out[-1] = (out[-1][0], b)
++        else:
++            out.append((a, b))
++    return out
++
++
++def count_reversals(signal: np.ndarray, gap: float) -> int:
++    """Mudancas de sentido com excursao >= `gap` (contagem com histerese)."""
++    x = signal[np.isfinite(signal)]
++    if x.size < 3 or not np.isfinite(gap) or gap <= 0:
++        return 0
++    direction, extreme, count = 0, x[0], 0
++    for v in x[1:]:
++        if direction >= 0 and v > extreme:
++            extreme = v
++            if direction == 0 and v - x[0] >= gap:
++                direction = 1
++        elif direction <= 0 and v < extreme:
++            extreme = v
++            if direction == 0 and x[0] - v >= gap:
++                direction = -1
++        if direction == 1 and extreme - v >= gap:
++            count += 1
++            direction, extreme = -1, v
++        elif direction == -1 and v - extreme >= gap:
++            count += 1
++            direction, extreme = 1, v
++    return count
++
++
++# ------------------------------------------------------- passagem ---
++
++@dataclass
++class Lap:
++    """Os canais de uma volta prontos para as contas."""
++
++    volta: Volta
++    total: float
++    arrays: Dict[str, Optional[np.ndarray]]
++    dt: np.ndarray                # tempo de cada ponto ao seguinte (o ultimo fecha a volta)
++
++    @classmethod
++    def build(cls, volta: Volta) -> "Lap":
++        g = volta.grid
++        names = ("brake", "throttle", "speed_kmh", "lateral_g", "longitudinal_g", "lateral", "gear", "rpm",
++                 "yaw_rate", "velocity_long", "velocity_lat", "brake_rate", "throttle_rate", "steer_rate",
++                 "steer_ma01", "steer_ma02", "steer_dev05", "front_share", "front_share_rate", "raw_dt",
++                 "elapsed_s", "wheel_slip_fl", "wheel_slip_fr", "wheel_slip_rl", "wheel_slip_rr",
++                 "tyre_core_temp_fl", "tyre_core_temp_fr", "tyre_core_temp_rl", "tyre_core_temp_rr")
++        arrays = {n: _f(g, n) for n in names}
++        steer = _f(g, "steer_angle")
++        arrays["steer"] = steer if steer is not None else _f(g, "steering")
++        # Secao 2 (emenda de 25/10): escorregamento acima de 10 e leitura quebrada ou
++        # roda no ar; o ponto sai da conta ("canal nao confiavel no trecho").
++        for w in ("fl", "fr", "rl", "rr"):
++            slip = arrays[f"wheel_slip_{w}"]
++            if slip is not None:
++                arrays[f"wheel_slip_{w}"] = np.where(slip > SLIP_RELIABLE_MAX, np.nan, slip)
++        fl, fr, rl, rr = (arrays[f"wheel_slip_{w}"] for w in ("fl", "fr", "rl", "rr"))
++        arrays["slip_front"] = None if fl is None or fr is None else np.fmax(fl, fr)
++        arrays["slip_rear"] = None if rl is None or rr is None else np.fmax(rl, rr)
++        elapsed = arrays["elapsed_s"]
++        total = float(volta.tempo_s)
++        dt = np.append(np.diff(elapsed), total - elapsed[-1] + elapsed[0])
++        dt = np.where(np.isfinite(dt) & (dt >= 0), dt, 0.0)
++        return cls(volta=volta, total=total, arrays=arrays, dt=dt)
++
++    def a(self, name: str) -> Optional[np.ndarray]:
++        return self.arrays.get(name)
++
++
++def phase_time(lap: Lap, track: TrackGeometry, start: float, end: float) -> float:
++    idx = window(track, start, end)
++    return float(lap.dt[idx].sum()) if idx.size else 0.0
++
++
++@dataclass
++class Window:
++    idx: np.ndarray
++    t: np.ndarray                 # tempo desde o inicio da janela, s
++    offsets: Dict[str, int]       # marcos da curva como indice dentro da janela
++
++
++def corner_window(lap: Lap, track: TrackGeometry, cp: CornerPhases, previous: CornerPhases) -> Window:
++    """Do apice anterior ate e_k + 100 m, com os marcos da curva."""
++    start = previous.apice
++    end = float(np.mod(cp.e + 100.0, track.length))
++    idx = window(track, start, end)
++    t = np.concatenate([[0.0], np.cumsum(lap.dt[idx[:-1]])])
++    step = track.step
++
++    def off(s):
++        return int(min(round(ahead(track, start, s) / step), idx.size - 1))
++
++    offsets = {"p_prev": 0, "b": off(cp.b), "a": off(cp.a), "m1": off(cp.m1), "apice": off(cp.apice),
++               "m2": off(cp.m2), "e": off(cp.e), "e50": off(np.mod(cp.e + 50.0, track.length)),
++               "e60": off(np.mod(cp.e + 60.0, track.length)), "fim": idx.size - 1}
++    return Window(idx=idx, t=t, offsets=offsets)
++
++
++def _seg(values: Optional[np.ndarray], w: Window) -> Optional[np.ndarray]:
++    return None if values is None else values[w.idx]
++
++
++def _sum_dt(mask: np.ndarray, t: np.ndarray) -> float:
++    if mask.size < 2:
++        return 0.0
++    dt = np.diff(t)
++    return float(dt[mask[:-1]].sum())
++
++
++def _holes(lap: Lap, w: Window, lo: int, hi: int) -> bool:
++    raw_dt = _seg(lap.a("raw_dt"), w)
++    if raw_dt is None:
++        return True
++    part = raw_dt[lo:max(hi, lo + 1)]
++    return bool(np.nanmax(part) >= HOLE_S) if part.size and np.isfinite(part).any() else True
++
++
++def measure_passage(lap: Lap, track: TrackGeometry, cp: CornerPhases, previous: CornerPhases,
++                    envelope: Callable[[np.ndarray], np.ndarray]) -> Dict[str, object]:
++    """Eventos e indicadores de uma passagem (1.4 e 1.5), sem estado."""
++    w = corner_window(lap, track, cp, previous)
++    o, t, step = w.offsets, w.t, track.step
++    brake = np.nan_to_num(_seg(lap.a("brake"), w))
++    throttle = np.nan_to_num(_seg(lap.a("throttle"), w))
++    speed = _seg(lap.a("speed_kmh"), w)
++    steer = _seg(lap.a("steer"), w)
++    out: Dict[str, object] = {"lap_id": lap.volta.lap_id, "curva": cp.curva, "k": cp.k, "origem": lap.volta.origem,
++                              "sessao": lap.volta.sessao, "gravacao": lap.volta.gravacao,
++                              "fora_do_store": lap.volta.fora_do_store}
++    missing: Dict[str, str] = {}
++
++    # ---- eventos
++    a, e, apex = o["a"], o["e"], o["apice"]
++    into = None if steer is None else -steer * cp.direcao        # positivo virando para dentro da curva
++    d_pk = float(np.nanmax(np.abs(steer[a:e + 1]))) if steer is not None else float("nan")
++    out["delta_pk"] = d_pk
++    braking_zone = brake[:apex + 1]
++    ib = ie = itpk = None
++    b_pk = float(braking_zone.max()) if braking_zone.size else 0.0
++    if b_pk >= BRAKE_MIN_PEAK:
++        segs = merged_runs(braking_zone >= PEDAL_EPS, int(round(MERGE_M / step)))
++        peak = int(np.argmax(braking_zone))
++        for lo, hi in segs:
++            if lo <= peak < hi:
++                ib, ie = lo, hi
++        if ib is not None:
++            b_pk = float(brake[ib:ie].max())
++            itpk = ib + int(np.flatnonzero(brake[ib:ie] >= 0.9 * b_pk)[0])
++    out["freia"] = ib is not None
++    out["s_b_rel"] = None if ib is None else (ib - a) * step
++    out["pico_freio"] = b_pk if ib is not None else None
++    iti = None
++    if into is not None and np.isfinite(d_pk) and d_pk > 0:
++        mask = into >= TURN_IN_SHARE * d_pk
++        for lo, hi in runs(mask):
++            if lo <= apex < hi:
++                iti = lo
++    out["s_ti_rel"] = None if iti is None else (iti - a) * step
++    ivmin = a + int(np.nanargmin(speed[a:e + 1])) if speed is not None else None
++    out["s_vmin_rel"] = None if ivmin is None else (ivmin - a) * step
++    out["v_min"] = None if ivmin is None else float(speed[ivmin])
++    after = max([x for x in (ie, iti) if x is not None] or [a])
++    ipu = ifull = None
++    cand = np.flatnonzero(throttle[after:o["e50"] + 1] >= PICKUP)
++    if cand.size:
++        ipu = after + int(cand[0])
++        full = np.flatnonzero(throttle[ipu:] >= FULL)
++        ifull = ipu + int(full[0]) if full.size else None
++    out["retoma"] = ipu is not None
++
++    # ---- frenagem
++    if ib is not None:
++        out["t_pico"] = float(t[itpk] - t[ib])
++        end_t = t[min(ie, t.size - 1)]
++        dur = float(end_t - t[ib])
++        out["duracao_freio"] = dur
++        if dur >= 0.6:
++            out["pico_fracao"] = (t[itpk] - t[ib]) / dur
++            mid = (t >= t[ib] + dur / 3.0) & (t <= t[ib] + 2.0 * dur / 3.0)
++            out["queda_meio"] = float((b_pk - np.median(brake[mid])) / b_pk) if mid.any() else None
++        else:
++            missing["F3"] = "frenagem com menos de 0,6 s"
++        rel = ib + int(np.flatnonzero(brake[ib:ie] >= 0.5 * b_pk)[-1])
++        rate = _seg(lap.a("brake_rate"), w)
++        if rate is None or _holes(lap, w, ib, ie):
++            missing["F4"] = "buraco no cronometro ou sem taxa"
++        else:
++            t0, t1 = t[rel], end_t
++            last = (t >= t0 + 2.0 * (t1 - t0) / 3.0) & (t <= t1)
++            last[min(ie, t.size - 1)] = True
++            out["taxa_soltura"] = float(-np.nanmin(rate[last]))
++            fsr = _seg(lap.a("front_share_rate"), w)
++            out["queda_carga_dianteira"] = None if fsr is None else float(-np.nanmin(fsr[rel:min(ie, t.size - 1) + 1]))
++        sf = _seg(lap.a("slip_front"), w)
++        if sf is None or steer is None:
++            missing["F6"] = "sem escorregamento"
++        else:
++            straight = (brake[ib:ie] >= 0.3) & (np.abs(steer[ib:ie]) <= 0.1 * d_pk)
++            if straight.any():
++                out["escorr_dianteiro"] = float(np.nanmax(sf[ib:ie][straight]))
++            else:
++                missing["F6"] = "sem frenagem em linha reta"
++    # trail braking
++    if iti is not None and into is not None:
++        x1 = float(brake[iti] / b_pk) if ib is not None and b_pk > 0 else 0.0
++        both = (brake >= PEDAL_EPS) & (into >= TURN_IN_SHARE * d_pk)
++        both[:iti] = False
++        both[e + 1:] = False
++        out["retencao"] = x1
++        out["sobreposicao_s"] = _sum_dt(both, t)
++        if both.sum() >= 5:
++            from scipy.stats import spearmanr
++            rho = spearmanr(brake[both], np.abs(steer[both])).correlation
++            out["coordenacao"] = None if not np.isfinite(rho) else float(rho)
++    # pedais juntos e reducoes
++    gear = _seg(lap.a("gear"), w)
++    fb, fm1 = o["b"], o["m1"]
++    downs = []
++    if gear is not None:
++        g = np.nan_to_num(gear)
++        downs = [i for i in range(max(fb, 1), fm1) if g[i] < g[i - 1]]
++    both = (brake >= PEDAL_EPS) & (throttle >= PEDAL_EPS)
++    keep = np.zeros_like(both)
++    keep[fb:fm1] = True
++    for i in downs:
++        keep &= ~(np.abs(t - t[i]) <= 0.15)
++    out["pedais_juntos_s"] = _sum_dt(both & keep, t)
++    out["reducoes"] = len(downs) if gear is not None else None
++    sr = _seg(lap.a("slip_rear"), w)
++    if gear is None or sr is None:
++        missing["F8"] = "sem marcha ou escorregamento"
++    elif not downs:
++        missing["F8"] = "sem reducao"
++    else:
++        out["escorr_reducao"] = float(max(np.nanmax(sr[(t >= t[i]) & (t <= t[i] + 0.3)]) for i in downs))
++
++    # ---- entrada e equilibrio
++    srate = _seg(lap.a("steer_rate"), w)
++    if iti is not None and srate is not None and np.isfinite(d_pk) and d_pk > 0:
++        span = (t >= t[iti]) & (t <= t[iti] + 0.5)
++        out["taxa_entrada"] = float(np.nanmax(np.abs(srate[span])) / d_pk)
++    yaw, vx, vy = _seg(lap.a("yaw_rate"), w), _seg(lap.a("velocity_long"), w), _seg(lap.a("velocity_lat"), w)
++    lat = _seg(lap.a("lateral_g"), w)
++    if yaw is None or vx is None or steer is None or lat is None:
++        missing["E2"] = "sem guinada ou velocidade no referencial do carro"
++    else:
++        sl = slice(o["m1"], o["m2"])
++        m = (np.abs(lat[sl]) >= 0.4) & (np.abs(yaw[sl]) >= 0.05) & (vx[sl] > 5.0)
++        if m.any():
++            wheel = -STEER_GAIN_SUBSTITUTE_RAD * steer[sl][m]
++            ua = np.sign(yaw[sl][m]) * (wheel - WHEELBASE_SUBSTITUTE_M * yaw[sl][m] / vx[sl][m])
++            out["ua_graus"] = float(np.degrees(np.median(ua)))
++        else:
++            missing["E2"] = "sem pontos com |a_y| >= 0,4 g no meio"
++    if vx is None or vy is None:
++        missing["E3"] = "sem velocidades no referencial do carro"
++    else:
++        beta = np.degrees(np.arctan2(vy[a:e + 1], np.where(vx[a:e + 1] > 1.0, vx[a:e + 1], np.nan)))
++        out["beta_p95"] = float(np.nanpercentile(np.abs(beta), 95)) if np.isfinite(beta).any() else None
++        # resposta na entrada (estilo): guinada / angulo de roda nos 0,5 s depois de s_ti
++        if iti is not None and yaw is not None and steer is not None:
++            span = (t >= t[iti]) & (t <= t[iti] + 0.5)
++            wheel = np.abs(STEER_GAIN_SUBSTITUTE_RAD * steer[span])
++            ok = wheel > 0.005
++            out["guinada_por_roda"] = float(np.median(np.abs(yaw[span][ok]) / wheel[ok])) if ok.any() else None
++            out["beta_entrada"] = float(np.nanmax(np.abs(beta[max(iti - a, 0):max(apex - a, 1)]))) if apex > iti else None
++    if yaw is None or steer is None or iti is None:
++        missing["E4"] = "sem guinada ou sem entrada"
++    else:
++        counter = (steer * yaw > 0) & (np.abs(steer) >= 0.05 * d_pk) & (np.abs(yaw) >= 0.05)
++        counter[:iti] = False
++        counter[e + 1:] = False
++        longest = 0.0
++        for lo, hi in runs(counter):
++            longest = max(longest, float(t[min(hi, t.size - 1)] - t[lo]))
++        out["contra_s"] = longest
++    ma01 = _seg(lap.a("steer_ma01"), w)
++    dev = _seg(lap.a("steer_dev05"), w)
++    if iti is None or ma01 is None or _holes(lap, w, iti, e):
++        missing["E5"] = missing["E6"] = "sem entrada ou buraco no cronometro"
++    else:
++        out["reversoes"] = count_reversals(ma01[iti:e + 1], 0.05 * d_pk)
++        out["irregularidade"] = float(np.nanmean(dev[iti:e + 1]) / d_pk) if dev is not None else None
++
++    # ---- meio e saida
++    lon = _seg(lap.a("longitudinal_g"), w)
++    if lat is not None and lon is not None and speed is not None:
++        comb = np.hypot(lat, lon)
++        env = envelope(speed)
++        use = comb[fb:e + 1] / env[fb:e + 1]
++        out["uso_aderencia"] = float(np.nanpercentile(use, 95)) if np.isfinite(use).any() else None
++        if ib is not None:
++            seg = slice(ib, apex + 1)
++            diag = (np.abs(lon[seg]) >= 0.3 * env[seg]) & (np.abs(lat[seg]) >= 0.3 * env[seg])
++            out["fracao_diagonal"] = float(diag.mean())
++    lateral = _seg(lap.a("lateral"), w)
++    if lateral is not None:
++        out["lateral_apice"] = float(lateral[apex])
++        out["afastamento_m"] = float(np.nanmax(-cp.direcao * lateral[o["m2"]:o["e60"] + 1]))
++    if speed is not None and ivmin is not None:
++        vmin = speed[ivmin]
++        out["plato_s"] = _sum_dt(speed[fb:e + 1] <= 1.03 * vmin, t[fb:e + 1])
++        v_ref = speed[ib] if ib is not None else speed[fb]
++        out["vmin_sobre_ventrada"] = float(vmin / v_ref) if v_ref > 0 else None
++        out["vmin_posicao"] = float((ivmin - a) / max(e - a, 1))
++        coast = (throttle < PEDAL_EPS) & (brake < PEDAL_EPS) & (speed > 18.0)
++        part = np.zeros_like(coast)
++        part[fb:e + 1] = True
++        total = 0.0
++        for lo, hi in runs(coast & part):
++            d = float(t[min(hi, t.size - 1)] - t[lo])
++            total += d if d >= 0.1 else 0.0
++        out["sem_pedal_s"] = total
++        # o menor acelerador entre o alivio e s_b (estilo: uso dos pedais)
++        if ib is not None:
++            lifted = np.flatnonzero(throttle[:ib] < 0.95)
++            out["acelerador_min_antes"] = float(throttle[lifted[0]:ib + 1].min()) if lifted.size else None
++    if ipu is not None and ivmin is not None:
++        out["retomada_s"] = float(t[ipu] - t[ivmin])
++        if ifull is not None:
++            out["apice_ao_pleno_s"] = float(t[ifull] - t[ivmin])
++        stop = ifull if ifull is not None else o["fim"]
++        seg_thr = throttle[ipu:stop + 1]
++        out["alivio"] = float(np.max(np.maximum.accumulate(seg_thr) - seg_thr)) if seg_thr.size else 0.0
++        ma02 = _seg(lap.a("steer_ma02"), w)
++        if ma02 is not None and ipu < e and np.isfinite(d_pk) and d_pk > 0:
++            out["volante_depois"] = float((np.nanmax(ma02[ipu:e + 1]) - ma02[ipu]) / d_pk)
++        else:
++            missing["M7"] = "retomada depois do fim da curva"
++        saida = slice(o["m2"], e + 1)
++        out["f20_60_saida"] = float(((throttle[saida] >= 0.2) & (throttle[saida] <= 0.6)).mean())
++    if sr is None:
++        missing["M9"] = "sem escorregamento"
++    else:
++        zone = np.zeros(t.size, dtype=bool)
++        zone[o["m2"]:] = True
++        zone &= throttle >= 0.3
++        out["escorr_traseiro"] = float(np.nanmax(sr[zone])) if zone.any() else None
++    fsr = _seg(lap.a("front_share_rate"), w)
++    lo_v3 = ib if ib is not None else fb
++    if fsr is None or _holes(lap, w, lo_v3, e):
++        missing["V3"] = "sem cargas ou buraco no cronometro"
++    else:
++        out["taxa_carga"] = float(np.nanmax(np.abs(fsr[lo_v3:e + 1])))
++    out["_ausente"] = missing
++    return out
++
++
++def lap_measures(lap: Lap) -> Dict[str, object]:
++    """V1, V2 e V4: por volta."""
++    thr = lap.a("throttle")
++    out: Dict[str, object] = {"lap_id": lap.volta.lap_id, "origem": lap.volta.origem, "sessao": lap.volta.sessao,
++                              "gravacao": lap.volta.gravacao, "fora_do_store": lap.volta.fora_do_store,
++                              "tempo_s": lap.total}
++    if thr is not None:
++        w = lap.dt / lap.dt.sum()
++        out["f0"] = float(w[thr < 0.02].sum())
++        out["f100"] = float(w[thr > 0.98].sum())
++        out["f20_60"] = float(w[(thr >= 0.2) & (thr <= 0.6)].sum())
++        out["decidido"] = out["f0"] + out["f100"]
++    gear, rpm = lap.a("gear"), lap.a("rpm")
++    if gear is not None and rpm is not None:
++        g = np.nan_to_num(gear)
++        ups = [i - 1 for i in range(1, g.size) if g[i] > g[i - 1] and g[i - 1] >= 1]
++        out["rpm_troca"] = float(np.median(rpm[ups])) if ups else None
++        out["_rpm"] = rpm
++    temps = [lap.a(f"tyre_core_temp_{w}") for w in ("fl", "fr", "rl", "rr")]
++    if all(x is not None for x in temps):
++        out["pneu_c"] = float(np.nanmean(np.vstack(temps)))
++    return out
++
++
++def envelope_from(laps: Sequence[Lap], bin_kmh: float = 20.0):
++    """E(v): o percentil 98 da aceleracao combinada por faixa de 20 km/h, em todas as voltas rotuladas."""
++    speeds, combs = [], []
++    for lap in laps:
++        lat, lon, v = lap.a("lateral_g"), lap.a("longitudinal_g"), lap.a("speed_kmh")
++        if lat is None or lon is None or v is None:
++            continue
++        speeds.append(v)
++        combs.append(np.hypot(lat, lon))
++    v = np.concatenate(speeds)
++    c = np.concatenate(combs)
++    edges = np.arange(0.0, 320.0, bin_kmh)
++    centres, values = [], []
++    for lo in edges:
++        m = (v >= lo) & (v < lo + bin_kmh) & np.isfinite(c)
++        if m.sum() >= 50:
++            centres.append(lo + bin_kmh / 2.0)
++            values.append(float(np.percentile(c[m], 98)))
++    centres, values = np.asarray(centres), np.asarray(values)
++
++    def env(speed: np.ndarray) -> np.ndarray:
++        return np.interp(np.nan_to_num(speed), centres, values)
++
++    env.table = {"faixa_kmh": centres.tolist(), "p98_g": values.tolist()}
++    return env
++
++
++# ------------------------------------------------------- estados ---
++
++def _two(x, aplica_le: bool, t_aplica: float, t_nao: float, sdr: float = float("nan"), widen: bool = False) -> str:
++    """Estado de uma condicao com dois limiares. `widen`: tipo P, a faixa e max(meio intervalo, 0,5 x sdr)."""
++    if x is None or not np.isfinite(x):
++        return NC
++    if widen and np.isfinite(sdr):
++        centre = (t_aplica + t_nao) / 2.0
++        half = max(abs(t_nao - t_aplica) / 2.0, 0.5 * sdr)
++        t_aplica = centre - half if aplica_le else centre + half
++        t_nao = centre + half if aplica_le else centre - half
++    if aplica_le:
++        return APLICA if x <= t_aplica else (NAO_APLICA if x >= t_nao else NC)
++    return APLICA if x >= t_aplica else (NAO_APLICA if x <= t_nao else NC)
++
++
++def _combine(states: Sequence[str]) -> str:
++    """Aplica se todas aplicam; nao aplica se alguma nao aplica; senao, nao conclusivo."""
++    if any(s == NAO_APLICA for s in states):
++        return NAO_APLICA
++    if states and all(s == APLICA for s in states):
++        return APLICA
++    return NC
++
++
++@dataclass
++class Ref:
++    n: int
++    med: float
++    q90: float
++    q95: float
++    sdr: float
++
++    @classmethod
++    def of(cls, values: Sequence[Optional[float]]) -> "Ref":
++        v = np.asarray([x for x in values if x is not None and np.isfinite(x)], dtype=float)
++        if v.size == 0:
++            return cls(0, float("nan"), float("nan"), float("nan"), float("nan"))
++        return cls(int(v.size), float(np.median(v)), float(np.percentile(v, 90)), float(np.percentile(v, 95)),
++                   robust_sd(v) if v.size >= 2 else float("nan"))
++
++
++def _num(row: Dict[str, object], key: str) -> Optional[float]:
++    v = row.get(key)
++    return None if v is None or (isinstance(v, float) and not np.isfinite(v)) else float(v)
++
++
++def corner_refs(ai_rows: Sequence[Dict[str, object]]) -> Dict[str, Ref]:
++    keys = set()
++    for r in ai_rows:
++        keys |= {k for k, v in r.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
++    return {k: Ref.of([_num(r, k) for r in ai_rows]) for k in keys}
++
++
++def state_of(det: str, row: Dict[str, object], ref: Dict[str, Ref]) -> Tuple[str, Optional[str], Optional[float]]:
++    """(estado, motivo do nao conclusivo, valor usado na regra) de um detector por curva."""
++    missing = row.get("_ausente", {})
++    if det in missing:
++        return NC, missing[det], None
++    R = lambda k: ref.get(k, Ref(0, float("nan"), float("nan"), float("nan"), float("nan")))
++    x = lambda k: _num(row, k)
++
++    def need_ref(k):
++        return R(k).n >= 1
++
++    if det == "F1":
++        ai_brake_share = R("_freia").med if "_freia" in ref else float("nan")
++        if np.isfinite(ai_brake_share) and ai_brake_share < 0.5:
++            return NC, "a referencia nao freia", None
++        if not row.get("freia"):
++            return NAO_APLICA, "sem frenagem com a IA freando", None
++        if not need_ref("s_b_rel"):
++            return NC, "sem referencia", None
++        d = x("s_b_rel") - R("s_b_rel").med
++        T = max(10.0, 2.0 * R("s_b_rel").sdr) if np.isfinite(R("s_b_rel").sdr) else 10.0
++        return _two(abs(d), True, T, T + 5.0), None, d
++    if det in ("F2", "F3", "F4", "F5", "F6") and not row.get("freia"):
++        return NC, "sem frenagem", None
++    if det == "F2":
++        if not need_ref("t_pico"):
++            return NC, "sem referencia", None
++        T1 = max(0.38, R("t_pico").q90)
++        rel = x("pico_freio") / R("pico_freio").med if R("pico_freio").med > 0 else None
++        return _combine([_two(x("t_pico"), True, T1, T1 + 0.20), _two(rel, False, 0.90, 0.80)]), None, x("t_pico")
++    if det == "F3":
++        return _combine([_two(x("pico_fracao"), True, 0.35, 0.50, R("pico_fracao").sdr, True),
++                         _two(x("queda_meio"), False, 0.10, 0.03, R("queda_meio").sdr, True)]), None, x("pico_fracao")
++    if det == "F4":
++        return _two(x("taxa_soltura"), True, 3.0 - 0.75, 3.0 + 0.75, R("taxa_soltura").sdr, True), None, x("taxa_soltura")
++    if det == "F5":
++        if x("sobreposicao_s") is None:
++            return NC, "sem entrada", None
++        return _combine([_two(x("sobreposicao_s"), False, 0.20, 0.05, R("sobreposicao_s").sdr, True),
++                         _two(x("retencao"), False, 0.10, 0.03, R("retencao").sdr, True)]), None, x("sobreposicao_s")
++    if det in ("F6", "F8", "M9", "V3"):
++        key, q = {"F6": ("escorr_dianteiro", "q95"), "F8": ("escorr_reducao", "q95"),
++                  "M9": ("escorr_traseiro", "q95"), "V3": ("taxa_carga", "q90")}[det]
++        if x(key) is None:
++            return NC, "sem o evento", None
++        base = getattr(R(key), q)
++        if not need_ref(key) or not base > 0:
++            return NC, "sem referencia", None
++        ratio = x(key) / base
++        return _two(ratio, False, 1.5, 1.1), None, ratio
++    if det == "F7":
++        return _two(x("pedais_juntos_s"), False, 0.20, 0.05, R("pedais_juntos_s").sdr, True), None, x("pedais_juntos_s")
++    if det in ("E1", "M2"):
++        key = "s_ti_rel" if det == "E1" else "s_vmin_rel"
++        if x(key) is None:
++            return NC, "sem o evento", None
++        if not need_ref(key):
++            return NC, "sem referencia", None
++        d = x(key) - R(key).med
++        T = max(10.0, 2.0 * R(key).sdr) if np.isfinite(R(key).sdr) else 10.0
++        return _two(d, True, -(T + 5.0), -T), None, d
++    if det == "E2":
++        if x("ua_graus") is None:
++            return NC, "sem o evento", None
++        if not need_ref("ua_graus"):
++            return NC, "sem referencia com guinada", None
++        d = x("ua_graus") - R("ua_graus").med
++        return _two(d, False, 0.5, 0.2), None, d
++    if det == "E3":
++        if x("beta_p95") is None:
++            return NC, "sem o evento", None
++        if not need_ref("beta_p95"):
++            return NC, "sem referencia com velocidades no referencial do carro", None
++        d = x("beta_p95") - R("beta_p95").med
++        return _two(d, False, 1.0, 0.3), None, d
++    if det == "E4":
++        return _two(x("contra_s"), False, 0.10, 0.03, R("contra_s").sdr, True), None, x("contra_s")
++    if det == "E5":
++        if not need_ref("reversoes"):
++            return NC, "sem referencia", None
++        d = x("reversoes") - R("reversoes").med
++        return _two(d, False, 2.0, 0.0), None, d
++    if det == "E6":
++        if not need_ref("irregularidade") or not R("irregularidade").q90 > 0:
++            return NC, "sem referencia", None
++        q = R("irregularidade").q90
++        return _two(x("irregularidade"), True, 1.2 * q, 1.6 * q), None, x("irregularidade")
++    if det == "M1":
++        return _two(x("uso_aderencia"), False, 0.90, 0.80, R("uso_aderencia").sdr, True), None, x("uso_aderencia")
++    if det == "M3":
++        return _two(x("plato_s"), False, 0.60, 0.30, R("plato_s").sdr, True), None, x("plato_s")
++    if det == "M4":
++        if x("afastamento_m") is None or not need_ref("afastamento_m"):
++            return NC, "sem referencia", None
++        d = x("afastamento_m") - R("afastamento_m").med
++        return _two(d, False, -0.5, -1.5), None, d
++    if det == "M5":
++        return _two(x("sem_pedal_s"), False, 0.25 + 0.05, 0.25 - 0.05, R("sem_pedal_s").sdr, True), None, x("sem_pedal_s")
++    if det == "M7":
++        if not row.get("retoma"):
++            return NC, "sem retomada", None
++        return _two(x("volante_depois"), False, 0.10, 0.03, R("volante_depois").sdr, True), None, x("volante_depois")
++    if det == "M8":
++        if not row.get("retoma"):
++            return NC, "sem retomada", None
++        return _two(x("alivio"), False, 0.15, 0.05, R("alivio").sdr, True), None, x("alivio")
++    raise KeyError(det)
++
++
++def m6_state(row: Dict[str, object], ref: Dict[str, Ref], m7: str, m8: str, ai_picks_up: bool) -> Tuple[str, Optional[str], Optional[float]]:
++    """M6 depende de M7 e M8 (1.5)."""
++    if not row.get("retoma"):
++        return (NAO_APLICA, "sem retomada com a IA retomando", None) if ai_picks_up else (NC, "sem retomada", None)
++    x1 = _num(row, "retomada_s")
++    r = ref.get("retomada_s")
++    if r is None or r.n == 0 or x1 is None:
++        return NC, "sem referencia", None
++    x2 = x1 - r.med
++    aplica = x1 >= -0.10 and x2 <= 0.20 and m7 == NAO_APLICA and m8 == NAO_APLICA
++    nao = x1 <= -0.30 or x2 >= 0.50 or m7 == APLICA or m8 == APLICA
++    return (APLICA if aplica else NAO_APLICA if nao else NC), None, x2
++
++
++def assign_states(rows: Sequence[Dict[str, object]]) -> Tuple[pd.DataFrame, Dict[str, Dict[str, Ref]]]:
++    """Os estados de todos os detectores por curva, calibrados na IA de cada curva."""
++    by_corner: Dict[str, List[Dict[str, object]]] = {}
++    for r in rows:
++        by_corner.setdefault(r["curva"], []).append(r)
++    out = []
++    refs_out: Dict[str, Dict[str, Ref]] = {}
++    for curva, items in by_corner.items():
++        ai = [r for r in items if r["origem"] == "ia"]
++        ref = corner_refs(ai)
++        ref["_freia"] = Ref.of([1.0 if r.get("freia") else 0.0 for r in ai]) if ai else Ref.of([])
++        refs_out[curva] = ref
++        ai_picks = bool(ai) and np.mean([bool(r.get("retoma")) for r in ai]) >= 0.5
++        for r in items:
++            states = {}
++            for det in PER_CORNER:
++                if det == "M6":
++                    continue
++                states[det] = state_of(det, r, ref)
++            states["M6"] = m6_state(r, ref, states["M7"][0], states["M8"][0], ai_picks)
++            for det, (state, why, value) in states.items():
++                out.append({"lap_id": r["lap_id"], "curva": curva, "k": r["k"], "origem": r["origem"],
++                            "sessao": r["sessao"], "gravacao": r["gravacao"], "fora_do_store": r["fora_do_store"],
++                            "detector": det, "estado": state, "motivo": why,
++                            "valor_regra": value, "indicador": _num(r, PRIMARY[det])})
++    return pd.DataFrame(out), refs_out
++
++
++def lap_states(rows: Sequence[Dict[str, object]]) -> pd.DataFrame:
++    """V1, V2 e V4, calibrados nas voltas da IA."""
++    ai = [r for r in rows if r["origem"] == "ia"]
++    rpm_ref = Ref.of([r.get("rpm_troca") for r in ai])
++    tyre_ref = Ref.of([r.get("pneu_c") for r in ai])
++    dec_ref = Ref.of([r.get("decidido") for r in ai])
++    out = []
++    for r in rows:
++        v1 = _two(r.get("decidido"), False, 0.85, 0.75, dec_ref.sdr, True)
++        v2 = NC if r.get("rpm_troca") is None or rpm_ref.n == 0 else _two(abs(r["rpm_troca"] - rpm_ref.med), True, 300, 600)
++        v4 = NC if r.get("pneu_c") is None or tyre_ref.n == 0 else _two(abs(r["pneu_c"] - tyre_ref.med), True, 5, 10)
++        for det, st, val in (("V1", v1, r.get("decidido")),
++                             ("V2", v2, None if r.get("rpm_troca") is None or rpm_ref.n == 0 else r["rpm_troca"] - rpm_ref.med),
++                             ("V4", v4, None if r.get("pneu_c") is None or tyre_ref.n == 0 else r["pneu_c"] - tyre_ref.med)):
++            out.append({"lap_id": r["lap_id"], "origem": r["origem"], "sessao": r["sessao"], "detector": det,
++                        "estado": st, "valor_regra": val})
++    return pd.DataFrame(out)
++
++
++def consistency_states(segment_times: pd.DataFrame) -> pd.DataFrame:
++    """V5 por (origem, sessao, curva), com 5 voltas ou mais: o desvio do tempo do trecho."""
++    out = []
++    for (origem, sessao, curva), g in segment_times.groupby(["origem", "sessao", "curva"]):
++        values = g["tempo_trecho_s"].to_numpy(dtype=float)
++        if values.size < 5:
++            state, sd = NC, None
++        else:
++            sd = float(np.std(values, ddof=1))
++            state = _two(sd, True, 0.08, 0.15)
++        out.append({"origem": origem, "sessao": sessao, "curva": curva, "detector": "V5", "estado": state,
++                    "valor_regra": sd, "voltas": int(values.size)})
++    return pd.DataFrame(out)
+diff --git a/backend/ml/modelo2/estilo.py b/backend/ml/modelo2/estilo.py
+new file mode 100644
+index 00000000..c398a640
+--- /dev/null
++++ b/backend/ml/modelo2/estilo.py
+@@ -0,0 +1,84 @@
++"""As dimensoes de estilo por tipo de curva (secao 1.7).
++
++Escore-z = (mediana da medida - mediana de todas as passagens rotuladas daquele
++tipo de curva) / desvio robusto dessas passagens. A incerteza e o intervalo de
++90% da mediana por bootstrap das voltas. A consistencia fica fora do vetor.
++"""
++
++from __future__ import annotations
++
++from typing import Dict, List, Sequence
++
++import numpy as np
++import pandas as pd
++
++from .detectores import robust_sd
++
++DIMENSIONS = {
++    "forma_v_ou_u": ("plato_s", "vmin_sobre_ventrada", "vmin_posicao"),
++    "perfil_de_frenagem": ("pico_rel", "pico_fracao", "taxa_soltura"),
++    "uso_dos_pedais": ("acelerador_min_antes", "pedais_juntos_s"),
++    "resposta_na_entrada": ("guinada_por_roda", "beta_entrada", "contra_s"),
++    "aplicacao_do_volante": ("taxa_entrada", "reversoes", "delta_pk"),
++    "perfil_do_acelerador": ("apice_ao_pleno_s", "f20_60_saida"),
++}
++CONSISTENCY = ("s_b_rel", "v_min", "retomada_s")
++RESAMPLES = 1000
++SEED = 38
++
++
++def with_relative_peak(passages: pd.DataFrame) -> pd.DataFrame:
++    ai_peak = passages[passages["origem"] == "ia"].groupby("curva")["pico_freio"].median()
++    out = passages.copy()
++    out["pico_rel"] = out["pico_freio"] / out["curva"].map(ai_peak)
++    return out
++
++
++def _median_ci(frame: pd.DataFrame, measure: str, rng: np.random.Generator) -> tuple:
++    values = frame[["lap_id", measure]].dropna()
++    if values.empty:
++        return None, None, None, 0
++    by_lap = [g[measure].to_numpy(dtype=float) for _, g in values.groupby("lap_id")]
++    median = float(np.median(values[measure]))
++    if len(by_lap) < 2:
++        return median, None, None, len(values)
++    meds = []
++    for _ in range(RESAMPLES):
++        pick = rng.integers(0, len(by_lap), size=len(by_lap))
++        meds.append(np.median(np.concatenate([by_lap[i] for i in pick])))
++    lo, hi = np.percentile(meds, [5, 95])
++    return median, float(lo), float(hi), len(values)
++
++
++def signatures(passages: pd.DataFrame, group_cols: Sequence[str]) -> List[Dict[str, object]]:
++    """Uma assinatura por (tipo de curva, grupo), com o escore-z e o intervalo de cada medida."""
++    rng = np.random.default_rng(SEED)
++    out = []
++    for tipo, typed in passages.groupby("tipo"):
++        pooled = {m: (float(np.nanmedian(typed[m])), robust_sd(typed[m].tolist()))
++                  for dims in DIMENSIONS.values() for m in dims if m in typed}
++        for key, g in typed.groupby(list(group_cols)):
++            key = key if isinstance(key, tuple) else (key,)
++            entry = {"tipo": tipo, **dict(zip(group_cols, key)), "passagens": int(len(g)), "voltas": int(g["lap_id"].nunique()),
++                     "dimensoes": {}}
++            for dim, measures in DIMENSIONS.items():
++                block = {}
++                for m in measures:
++                    if m not in g:
++                        continue
++                    med, lo, hi, n = _median_ci(g, m, rng)
++                    centre, sd = pooled.get(m, (np.nan, np.nan))
++                    z = None if med is None or not np.isfinite(sd) or sd <= 0 else (med - centre) / sd
++                    zlo = None if lo is None or z is None else (lo - centre) / sd
++                    zhi = None if hi is None or z is None else (hi - centre) / sd
++                    block[m] = {"mediana": None if med is None else round(med, 4), "n": n,
++                                "z": None if z is None else round(z, 2),
++                                "z_intervalo_90": None if zlo is None else [round(zlo, 2), round(zhi, 2)]}
++                entry["dimensoes"][dim] = block
++            cons = {}
++            for m in CONSISTENCY:
++                per = g.groupby("curva")[m].agg(lambda s: float(np.std(s.dropna(), ddof=1)) if s.notna().sum() >= 3 else np.nan)
++                cons[m] = None if per.dropna().empty else round(float(per.dropna().median()), 3)
++            entry["consistencia_a_parte"] = cons
++            out.append(entry)
++    return out
+diff --git a/backend/ml/modelo2/fases.py b/backend/ml/modelo2/fases.py
+new file mode 100644
+index 00000000..4789c499
+--- /dev/null
++++ b/backend/ml/modelo2/fases.py
+@@ -0,0 +1,164 @@
++"""As fases de cada curva, fixas para todas as voltas (secao 1.3).
++
++frenagem [b_k, a_k), entrada [a_k, m1_k), meio [m1_k, m2_k), saida [m2_k, e_k)
++e reta seguinte [e_k, b_(k+1)). A geometria (a curvatura da centerline) da a
++entrada, o meio e a saida; o pedal das voltas rotuladas, uma vez, da o inicio da
++frenagem. Juntas, as 70 fases cobrem a volta.
++"""
++
++from __future__ import annotations
++
++from dataclasses import asdict, dataclass
++from typing import Dict, List, Optional, Sequence
++
++import numpy as np
++
++from ..comparison.evolution import Segment, corner_segments
++from ..comparison.lap_vs_reference import _signed_distance
++from ..track.corners import Corner
++from ..track.geometry import TrackGeometry
++
++PHASES = ("frenagem", "entrada", "meio", "saida", "reta")
++MID_SHARE = 0.6            # o meio: |curvatura| >= 0,6 x a maior da curva
++MID_MIN_M = 10.0
++EDGE_MIN_M = 4.0           # o que sobra, no minimo, para a entrada e para a saida
++BRAKE_MARGIN_M = 10.0
++SLOW_KMH = 120.0           # Krause e Bentley, carro com carga aerodinamica
++FAST_KMH = 180.0           # escolha registrada (1.3)
++
++
++def window(track: TrackGeometry, start_s: float, end_s: float) -> np.ndarray:
++    """Indices da grade de `start_s` (incluido) a `end_s` (excluido); vazio se forem iguais."""
++    # As duas pontas pelo mesmo `index_of`: o fim de uma fase e o comeco da
++    # seguinte caem no mesmo ponto, e as 70 fases somam a volta sem sobra.
++    start, end = int(track.index_of(start_s)), int(track.index_of(end_s))
++    if np.mod(end_s - start_s, track.length) < track.step / 2.0 or start == end:
++        return np.array([], dtype=int)
++    return (start + np.arange(int(np.mod(end - start, track.size)))) % track.size
++
++
++def ahead(track: TrackGeometry, a: float, b: float) -> float:
++    """Metros de `a` ate `b`, andando para a frente (0 a L)."""
++    return float(np.mod(b - a, track.length))
++
++
++def corner_type(min_speed_kmh: float) -> str:
++    if min_speed_kmh < SLOW_KMH:
++        return "lenta"
++    if min_speed_kmh < FAST_KMH:
++        return "media"
++    return "rapida"
++
++
++@dataclass
++class CornerPhases:
++    k: int
++    curva: str
++    direcao: int
++    a: float
++    apice: float
++    e: float
++    m1: float
++    m2: float
++    b: float
++    b_seguinte: float
++    trecho: tuple
++    tipo: str
++    minima_ia_kmh: float
++    reta_m: float
++    peso: float
++    sem_frenagem: bool
++
++    def bounds(self) -> Dict[str, tuple]:
++        return {"frenagem": (self.b, self.a), "entrada": (self.a, self.m1), "meio": (self.m1, self.m2),
++                "saida": (self.m2, self.e), "reta": (self.e, self.b_seguinte)}
++
++    def to_dict(self) -> Dict[str, object]:
++        out = asdict(self)
++        out["trecho"] = list(self.trecho)
++        return out
++
++
++def middle(track: TrackGeometry, corner: Corner) -> tuple:
++    """(m1, m2): o trecho em volta do apice com |curvatura| >= 0,6 x a maior, com as folgas de 1.3."""
++    idx = window(track, corner.start_s, corner.end_s)
++    curv = np.abs(track.curvature[idx])
++    peak = int(np.argmax(curv))
++    strong = curv >= MID_SHARE * curv[peak]
++    lo = hi = peak
++    while lo > 0 and strong[lo - 1]:
++        lo -= 1
++    while hi < idx.size - 1 and strong[hi + 1]:
++        hi += 1
++    step = track.step
++    need = int(np.ceil(MID_MIN_M / step))
++    while (hi - lo + 1) < need and (lo > 0 or hi < idx.size - 1):
++        if lo > 0:
++            lo -= 1
++        if (hi - lo + 1) < need and hi < idx.size - 1:
++            hi += 1
++    edge = int(np.ceil(EDGE_MIN_M / step))
++    lo = max(lo, min(edge, idx.size - 1))
++    hi = min(hi, max(idx.size - 1 - edge, lo))
++    m1 = float(np.mod(corner.start_s + lo * step, track.length))
++    m2 = float(np.mod(corner.start_s + (hi + 1) * step, track.length))
++    return m1, m2
++
++
++def braking_start(track: TrackGeometry, corner: Corner, previous: Corner,
++                  ai_onsets: Sequence[Optional[float]], driver_onsets: Sequence[Optional[float]]) -> tuple:
++    """(b_k, sem_frenagem): a regra de 1.3, em metros antes de a_k, limitada a [e_(k-1), a_k]."""
++    def before(values):
++        return [_signed_distance(track, corner.start_s, v) for v in values if v is not None]
++
++    ai_d, drv_d = before(ai_onsets), before(driver_onsets)
++    ai_brakes = len(ai_d) * 2 > len(ai_onsets) if len(ai_onsets) else False
++    drv_brakes = len(drv_d) * 2 > len(driver_onsets) if len(driver_onsets) else False
++    if not ai_brakes and not drv_brakes:
++        return float(corner.start_s), True
++    candidates = []
++    if ai_d:
++        candidates.append(float(np.median(ai_d)))
++    if drv_d:
++        candidates.append(float(np.percentile(drv_d, 90)))
++    offset = max(candidates) + BRAKE_MARGIN_M
++    gap = ahead(track, previous.end_s, corner.start_s)
++    offset = float(np.clip(offset, 0.0, gap))
++    return float(np.mod(corner.start_s - offset, track.length)), False
++
++
++def build_phases(track: TrackGeometry, corners: Sequence[Corner], ai_min_speed: Sequence[float],
++                 ai_onsets: Sequence[Sequence[Optional[float]]],
++                 driver_onsets: Sequence[Sequence[Optional[float]]]) -> List[CornerPhases]:
++    """As fases das 14 curvas. `ai_min_speed[k]` e a minima da volta da IA do coach na curva k."""
++    segments: List[Segment] = corner_segments(track, corners)
++    count = len(corners)
++    starts = []
++    for k, corner in enumerate(corners):
++        starts.append(braking_start(track, corner, corners[k - 1], ai_onsets[k], driver_onsets[k]))
++    out = []
++    straights = []
++    for k, corner in enumerate(corners):
++        nxt = starts[(k + 1) % count][0]
++        straights.append(ahead(track, corner.end_s, nxt))
++    mean_straight = float(np.mean(straights))
++    for k, corner in enumerate(corners):
++        m1, m2 = middle(track, corner)
++        out.append(CornerPhases(
++            k=k, curva=corner.label, direcao=int(corner.direction), a=float(corner.start_s),
++            apice=float(corner.apex_s), e=float(corner.end_s), m1=m1, m2=m2, b=starts[k][0],
++            b_seguinte=starts[(k + 1) % count][0],
++            trecho=(float(segments[k].start_s), float(segments[k].end_s)),
++            tipo=corner_type(float(ai_min_speed[k])), minima_ia_kmh=float(ai_min_speed[k]),
++            reta_m=straights[k], peso=straights[k] / mean_straight, sem_frenagem=starts[k][1],
++        ))
++    return out
++
++
++def check_partition(track: TrackGeometry, phases: Sequence[CornerPhases]) -> float:
++    """Soma dos comprimentos das 70 fases, em metros: tem de ser o comprimento da volta."""
++    total = 0.0
++    for cp in phases:
++        for start, end in cp.bounds().values():
++            total += ahead(track, start, end) if np.mod(end - start, track.length) > 1e-9 else 0.0
++    return total
+diff --git a/backend/ml/modelo2/perda.py b/backend/ml/modelo2/perda.py
+new file mode 100644
+index 00000000..3f4bc650
+--- /dev/null
++++ b/backend/ml/modelo2/perda.py
+@@ -0,0 +1,212 @@
++"""A perda por fase, o ranking, a cadeia causal e a atribuicao do erro (secao 1.6).
++
++"Erro" e sempre uma diferenca medida contra uma volta real, com o tempo que
++custou (ADR 0012). Um trecho em que o piloto e mais rapido que a IA nao e erro.
++"""
++
++from __future__ import annotations
++
++from typing import Dict, List, Optional, Sequence
++
++import numpy as np
++import pandas as pd
++
++from .detectores import APLICA, NAO_APLICA, NC, PHASE_DETECTORS, Lap, phase_time, robust_sd
++from .fases import PHASES, CornerPhases
++from ..track.geometry import TrackGeometry
++
++LAST = 3
++MIN_LOSS_S = 0.02
++MIN_REPEATS = 2
++LAP_SD_LIMIT_S = 1.0
++BRAKE_SD_LIMIT_M = 15.0
++CONSISTENCY_MIN_LAPS = 5
++LATE_PICKUP_S = 0.20
++LOW_VMIN_KMH = -2.0
++TOP = 3
++
++
++def phase_losses(lap: Lap, ref: Lap, track: TrackGeometry, phases: Sequence[CornerPhases]) -> List[Dict[str, object]]:
++    """A perda de uma volta em cada uma das 70 fases contra a referencia."""
++    out = []
++    for cp in phases:
++        for phase, (start, end) in cp.bounds().items():
++            out.append({"curva": cp.curva, "k": cp.k, "fase": phase,
++                        "perda_s": phase_time(lap, track, start, end) - phase_time(ref, track, start, end)})
++    return out
++
++
++def loss_table(laps: Sequence[Lap], ref: Lap, best: Lap, track: TrackGeometry,
++               phases: Sequence[CornerPhases]) -> pd.DataFrame:
++    rows = []
++    for lap in laps:
++        vs_ai = phase_losses(lap, ref, track, phases)
++        vs_best = phase_losses(lap, best, track, phases)
++        for a, b in zip(vs_ai, vs_best):
++            rows.append({"lap_id": lap.volta.lap_id, "sessao": lap.volta.sessao, "origem": lap.volta.origem,
++                         **a, "perda_vs_melhor_s": b["perda_s"]})
++    return pd.DataFrame(rows)
++
++
++def majority(states: Sequence[str], minimum: int) -> str:
++    conclusive = [s for s in states if s != NC]
++    if len(conclusive) < minimum:
++        return NC
++    yes = sum(s == APLICA for s in conclusive)
++    no = len(conclusive) - yes
++    return APLICA if yes > no else NAO_APLICA if no > yes else NC
++
++
++def attribute(curva: str, origin_phases: Sequence[str], last_ids: Sequence[str], best_id: str,
++              states: pd.DataFrame, session_ids: Sequence[str]) -> Dict[str, object]:
++    """Que detector da fase de origem explica o item (regra de 1.6)."""
++    corner = states[states["curva"] == curva]
++    detectors = []
++    for phase in origin_phases:
++        detectors += [d for d in PHASE_DETECTORS[phase] if d not in detectors]
++    explaining, never_shown, checked = [], [], []
++    for det in detectors:
++        d = corner[corner["detector"] == det]
++        if d.empty:
++            continue
++        mine = d[d["lap_id"].isin(last_ids)]
++        ai = d[d["origem"] == "ia"]
++        best = d[d["lap_id"] == best_id]
++        s_mine = majority(mine["estado"].tolist(), 2)
++        s_ai = majority(ai["estado"].tolist(), 1)
++        s_best = best["estado"].iloc[0] if len(best) else NC
++        x_mine = mine["indicador"].dropna()
++        x_ai = ai["indicador"].dropna()
++        pool = d[d["lap_id"].isin(session_ids)]["indicador"].dropna()
++        if len(pool) < 5:
++            pool = d[d["origem"] != "ia"]["indicador"].dropna()
++        sd = robust_sd(pool.tolist())
++        diff = float(x_mine.median() - x_ai.median()) if len(x_mine) and len(x_ai) else None
++        z = diff / sd if diff is not None and np.isfinite(sd) and sd > 0 else None
++        entry = {"detector": det, "estado_piloto": s_mine, "estado_ia": s_ai, "estado_melhor_volta": s_best,
++                 "diferenca": None if diff is None else round(diff, 4), "diferenca_em_desvios": None if z is None else round(z, 2)}
++        checked.append(entry)
++        if s_mine == NC or s_ai == NC or s_mine == s_ai:
++            continue
++        if s_best != NC and s_best != s_ai:
++            never_shown.append(entry)
++            continue
++        if z is None or abs(z) <= 1.0:
++            continue
++        explaining.append(entry)
++    explaining.sort(key=lambda e: -abs(e["diferenca_em_desvios"]))
++    return {"explica": explaining[0] if explaining else None, "outros_que_explicam": explaining[1:],
++            "tecnica_nunca_mostrada": never_shown, "conferidos": checked,
++            "conclusao": "explicado" if explaining else "nao_conclusivo"}
++
++
++def session_ranking(session: str, laps: Sequence[Lap], losses: pd.DataFrame, passages: pd.DataFrame,
++                    states: pd.DataFrame, phases: Sequence[CornerPhases], best_id: str,
++                    ai_passages: pd.DataFrame) -> Dict[str, object]:
++    """Os 3 maiores erros da sessao (1.6)."""
++    ordered = sorted(laps, key=lambda l: (l.volta.gravacao, int(l.volta.lap_id.split("#")[1])))
++    ids = [l.volta.lap_id for l in ordered]
++    last = ids[-LAST:]
++    times = np.array([l.total for l in ordered])
++    out: Dict[str, object] = {"sessao": session, "voltas": len(ids), "ultimas_3": last,
++                              "tempos_ultimas_3_s": [round(float(t), 3) for t in times[-LAST:]]}
++    if len(last) < LAST:
++        out["situacao"] = "poucas voltas: menos de 3 validas"
++        out["itens"] = []
++        return out
++    cp_by = {cp.curva: cp for cp in phases}
++    sess = losses[losses["lap_id"].isin(last)]
++
++    # consistencia primeiro
++    consistency = None
++    lap_sd = float(np.std(times, ddof=1)) if times.size > 1 else 0.0
++    brake_sd = {}
++    if len(ids) >= CONSISTENCY_MIN_LAPS:
++        p = passages[passages["lap_id"].isin(ids)]
++        for curva, g in p.groupby("curva"):
++            v = g["s_b_rel"].dropna()
++            if len(v) >= CONSISTENCY_MIN_LAPS:
++                brake_sd[curva] = float(np.std(v, ddof=1))
++    worst_brake = max(brake_sd.items(), key=lambda kv: kv[1]) if brake_sd else (None, 0.0)
++    if lap_sd > LAP_SD_LIMIT_S or worst_brake[1] > BRAKE_SD_LIMIT_M:
++        consistency = {"item": "consistencia", "desvio_volta_s": round(lap_sd, 3),
++                       "curva_de_maior_desvio_da_frenagem": worst_brake[0],
++                       "desvio_frenagem_m": round(worst_brake[1], 1),
++                       "curvas_com_desvio_de_frenagem_acima_de_15_m": sorted(c for c, v in brake_sd.items() if v > BRAKE_SD_LIMIT_M)}
++
++    # medianas por passagem para a cadeia causal
++    p_last = passages[passages["lap_id"].isin(last)].set_index(["lap_id", "curva"])
++    ai_by = ai_passages.groupby("curva")
++    states_last = states[states["lap_id"].isin(last)]
++
++    items = []
++    for cp in phases:
++        rows = sess[sess["curva"] == cp.curva]
++        per_phase = {ph: rows[rows["fase"] == ph].set_index("lap_id").reindex(last) for ph in PHASES}
++        # falso ganho
++        f1 = states_last[(states_last["curva"] == cp.curva) & (states_last["detector"] == "F1")].set_index("lap_id")
++        hits = 0
++        ai_sb = ai_by.get_group(cp.curva)["s_b_rel"].dropna() if cp.curva in ai_by.groups else pd.Series(dtype=float)
++        sdr_sb = robust_sd(ai_sb.tolist())
++        T = max(10.0, 2.0 * sdr_sb) if np.isfinite(sdr_sb) else 10.0
++        for lap_id in last:
++            g_brake = per_phase["frenagem"].at[lap_id, "perda_s"]
++            d = f1.at[lap_id, "valor_regra"] if lap_id in f1.index else None
++            later = d is not None and np.isfinite(d) and d > T
++            entry_mid = per_phase["entrada"].at[lap_id, "perda_s"] + per_phase["meio"].at[lap_id, "perda_s"]
++            if g_brake < 0 and later and entry_mid > -g_brake:
++                hits += 1
++        false_gain = hits >= MIN_REPEATS
++        used = set()
++        if false_gain:
++            net = (per_phase["frenagem"]["perda_s"] + per_phase["entrada"]["perda_s"] + per_phase["meio"]["perda_s"]).to_numpy()
++            net_best = (per_phase["frenagem"]["perda_vs_melhor_s"] + per_phase["entrada"]["perda_vs_melhor_s"]
++                        + per_phase["meio"]["perda_vs_melhor_s"]).to_numpy()
++            items.append(_item(cp, "frenagem+entrada+meio (falso ganho)", net, net_best, ["frenagem"], "frenagem", True))
++            used = {"frenagem", "entrada", "meio"}
++        for ph in PHASES:
++            if ph in used:
++                continue
++            values = per_phase[ph]["perda_s"].to_numpy()
++            if (values >= MIN_LOSS_S).sum() < MIN_REPEATS:
++                continue
++            origin = [ph]
++            origin_label = ph
++            if ph in ("saida", "reta"):
++                late = []
++                low = []
++                for lap_id in last:
++                    if (lap_id, cp.curva) in p_last.index:
++                        row = p_last.loc[(lap_id, cp.curva)]
++                        ai = ai_by.get_group(cp.curva) if cp.curva in ai_by.groups else None
++                        if ai is not None:
++                            if row.get("retomada_s") is not None and np.isfinite(row.get("retomada_s", np.nan)):
++                                late.append(row["retomada_s"] - ai["retomada_s"].median())
++                            if row.get("v_min") is not None:
++                                low.append(row["v_min"] - ai["v_min"].median())
++                if late and low and np.median(late) > LATE_PICKUP_S and np.median(low) < LOW_VMIN_KMH:
++                    origin = ["frenagem", "entrada", "meio"]
++                    origin_label = "entrada (cadeia causal)"
++            items.append(_item(cp, ph, values, per_phase[ph]["perda_vs_melhor_s"].to_numpy(), origin, origin_label, False))
++    for item in items:
++        item["atribuicao"] = attribute(item["curva"], item["_origem"], last, best_id, states, ids)
++        del item["_origem"]
++    items.sort(key=lambda i: -i["pontuacao"])
++    out["consistencia"] = consistency
++    top = ([consistency] if consistency else []) + items[: TOP - (1 if consistency else 0)]
++    out["itens"] = top
++    # Informativo, fora da regra registrada: os 3 de maior perda sem o peso da reta seguinte.
++    out["itens_sem_peso_informativo"] = sorted(items, key=lambda i: -i["perda_mediana_s"])[:TOP]
++    out["todos_os_itens"] = [{k: v for k, v in i.items() if k != "atribuicao"} for i in items]
++    return out
++
++
++def _item(cp: CornerPhases, phase: str, values: np.ndarray, vs_best: np.ndarray, origin: List[str],
++          origin_label: str, false_gain: bool) -> Dict[str, object]:
++    median = float(np.median(values))
++    return {"item": "perda", "curva": cp.curva, "fase_sintoma": phase, "fase_origem": origin_label,
++            "falso_ganho": false_gain, "perda_mediana_s": round(median, 3),
++            "perdas_ultimas_3_s": [round(float(v), 3) for v in values],
++            "perda_vs_melhor_volta_mediana_s": round(float(np.median(vs_best)), 3),
++            "peso": round(cp.peso, 3), "pontuacao": round(median * cp.peso, 4),
++            "referencia": "volta da IA do coach", "_origem": origin}
+diff --git a/backend/ml/modelo2/rotulagem.py b/backend/ml/modelo2/rotulagem.py
+new file mode 100644
+index 00000000..525ca220
+--- /dev/null
++++ b/backend/ml/modelo2/rotulagem.py
+@@ -0,0 +1,199 @@
++"""O kit de rotulagem dos 5 detectores (secao 1.9) e a precisao e a revocacao depois.
++
++O kit mostra a posicao na pista e os tracos de pedal, volante, velocidade e
++guinada, com as fronteiras das fases. Ele esconde o estado do detector e a
++origem da volta (IA ou piloto): os dois ficam no gabarito, fora do git.
++"""
++
++from __future__ import annotations
++
++import csv
++import html
++import json
++from pathlib import Path
++from typing import Dict, List, Sequence
++
++import numpy as np
++import pandas as pd
++
++from .detectores import APLICA, NAO_APLICA, NC, Lap
++from .fases import CornerPhases, ahead, window
++from ..track.geometry import TrackGeometry
++
++DETECTORS = ("F4", "F5", "M6", "E2", "E3")
++PER_DETECTOR = 24
++PER_STATE = 8
++SEED = 38
++
++QUESTIONS = {
++    "F4": ("Soltura progressiva do freio",
++           "O freio é solto de forma gradual no fim da frenagem (uma rampa), sem um degrau em que ele cai de uma vez?"),
++    "F5": ("Trail braking",
++           "O freio continua aplicado (mesmo pouco) depois que o volante começa a virar, e vai diminuindo enquanto o volante aumenta?"),
++    "M6": ("Retomada do acelerador",
++           "O acelerador volta depois da velocidade mínima, sem o volante voltar a crescer e sem alívio (acelera, solta e acelera de novo)?"),
++    "E2": ("Subesterço",
++           "No meio da curva, o carro pede mais volante do que a curva pede (a frente escorrega: volante grande para pouca guinada)?"),
++    "E3": ("Sobresterço",
++           "A traseira escorrega: a guinada passa do que o volante pede, ou aparece contraesterço?"),
++}
++
++
++def select(states: pd.DataFrame, detector: str, rng: np.random.Generator) -> pd.DataFrame:
++    d = states[states["detector"] == detector]
++    if detector in ("E2", "E3"):
++        d = d[d["motivo"].isna() | ~d["motivo"].fillna("").str.startswith("sem guinada")]
++        d = d[~d["motivo"].fillna("").str.contains("sem velocidades|sem o evento|sem referencia")]
++    chosen = []
++    for state in (APLICA, NAO_APLICA, NC):
++        pool = d[d["estado"] == state]
++        ai, mine = pool[pool["origem"] == "ia"], pool[pool["origem"] != "ia"]
++        n_ai = min(len(ai), PER_STATE // 3)
++        pick_ai = ai.sample(n=n_ai, random_state=int(rng.integers(1 << 30))) if n_ai else ai.iloc[:0]
++        n_mine = min(len(mine), PER_STATE - n_ai)
++        pick_mine = mine.sample(n=n_mine, random_state=int(rng.integers(1 << 30))) if n_mine else mine.iloc[:0]
++        chosen.append(pd.concat([pick_ai, pick_mine]))
++    chosen = pd.concat(chosen)
++    if len(chosen) < PER_DETECTOR:
++        rest = d.drop(chosen.index)
++        extra = rest.sample(n=min(len(rest), PER_DETECTOR - len(chosen)), random_state=int(rng.integers(1 << 30)))
++        chosen = pd.concat([chosen, extra])
++    return chosen.sample(frac=1.0, random_state=int(rng.integers(1 << 30)))
++
++
++def _poly(xs, ys, x0, x1, y0, y1, w, h, top, colour, width=1.4):
++    pts = []
++    for x, y in zip(xs, ys):
++        if not np.isfinite(y):
++            continue
++        px = (x - x0) / (x1 - x0) * w
++        py = top + h - (y - y0) / (y1 - y0) * h if y1 > y0 else top + h / 2
++        pts.append(f"{px:.1f},{py:.1f}")
++    return f'<polyline fill="none" stroke="{colour}" stroke-width="{width}" points="{" ".join(pts)}"/>'
++
++
++def trace_svg(lap: Lap, track: TrackGeometry, cp: CornerPhases, previous: CornerPhases) -> str:
++    start = float(np.mod(min(cp.b, cp.a) - 60.0, track.length)) if cp.b != cp.a else float(np.mod(cp.a - 120.0, track.length))
++    start = previous.apice if ahead(track, previous.apice, cp.a) < ahead(track, start, cp.a) else start
++    end = float(np.mod(cp.e + 100.0, track.length))
++    idx = window(track, start, end)
++    x = np.arange(idx.size) * track.step
++    W, rowh, gap = 760, 70, 16
++    rows = [("freio (vermelho) e acelerador (verde), 0 a 1", [("brake", "#c0392b"), ("throttle", "#27ae60")], (0, 1)),
++            ("volante para dentro da curva, dividido pelo maior da curva", [("_steer", "#2c3e50")], None),
++            ("velocidade, km/h", [("speed_kmh", "#8e44ad")], None),
++            ("guinada, rad/s (para dentro da curva)", [("_yaw", "#d35400")], None)]
++    steer = lap.a("steer")
++    dpk = np.nanmax(np.abs(steer[window(track, cp.a, cp.e)])) if steer is not None else np.nan
++    series = {"_steer": None if steer is None else -steer[idx] * cp.direcao / dpk,
++              "_yaw": None if lap.a("yaw_rate") is None else lap.a("yaw_rate")[idx] * cp.direcao}
++    parts = []
++    H = len(rows) * (rowh + gap) + 20
++    for r, (label, lines, rng) in enumerate(rows):
++        top = r * (rowh + gap) + 14
++        parts.append(f'<text x="2" y="{top - 3}" font-size="10" fill="#555">{html.escape(label)}</text>')
++        parts.append(f'<rect x="0" y="{top}" width="{W}" height="{rowh}" fill="none" stroke="#ddd"/>')
++        values = []
++        for name, colour in lines:
++            v = series.get(name) if name.startswith("_") else (None if lap.a(name) is None else lap.a(name)[idx])
++            values.append((v, colour))
++        finite = np.concatenate([v[np.isfinite(v)] for v, _ in values if v is not None] or [np.array([0.0])])
++        lo, hi = rng if rng else (float(np.min(finite)), float(np.max(finite)))
++        if hi - lo < 1e-6:
++            hi = lo + 1.0
++        for v, colour in values:
++            if v is None:
++                parts.append(f'<text x="{W/2}" y="{top + rowh/2}" font-size="11" fill="#999" text-anchor="middle">sem o canal</text>')
++                continue
++            parts.append(_poly(x, v, 0, max(x[-1], 1), lo, hi, W, rowh, top, colour))
++        if lo < 0 < hi:
++            y0 = top + rowh - (0 - lo) / (hi - lo) * rowh
++            parts.append(f'<line x1="0" x2="{W}" y1="{y0:.1f}" y2="{y0:.1f}" stroke="#bbb" stroke-dasharray="2,3"/>')
++    for name, s in (("frenagem", cp.b), ("entrada", cp.a), ("meio", cp.m1), ("saida", cp.m2), ("reta", cp.e)):
++        off = ahead(track, start, s)
++        if off <= x[-1]:
++            px = off / max(x[-1], 1) * W
++            parts.append(f'<line x1="{px:.1f}" x2="{px:.1f}" y1="10" y2="{H - 14}" stroke="#3498db" stroke-dasharray="4,3"/>')
++            parts.append(f'<text x="{px + 2:.1f}" y="{H - 2}" font-size="10" fill="#3498db">{name}</text>')
++    return f'<svg viewBox="0 0 {W} {H}" width="100%" style="max-width:{W}px">{"".join(parts)}</svg>'
++
++
++def map_svg(track: TrackGeometry, cp: CornerPhases) -> str:
++    x, z = track.x, -track.z
++    x0, x1, z0, z1 = x.min(), x.max(), z.min(), z.max()
++    size = 170
++    sc = size / max(x1 - x0, z1 - z0)
++    def pts(ix):
++        return " ".join(f"{(x[i]-x0)*sc:.1f},{(z[i]-z0)*sc:.1f}" for i in ix)
++    corner = window(track, cp.b, cp.e)
++    return (f'<svg viewBox="-4 -4 {size+8} {size+8}" width="{size}" height="{size}">'
++            f'<polyline fill="none" stroke="#bbb" stroke-width="2" points="{pts(range(track.size))}"/>'
++            f'<polyline fill="none" stroke="#c0392b" stroke-width="4" points="{pts(corner)}"/></svg>')
++
++
++def build_kit(states: pd.DataFrame, laps: Dict[str, Lap], track: TrackGeometry, phases: Sequence[CornerPhases],
++              out_html: Path, out_csv: Path, out_key: Path) -> Dict[str, object]:
++    rng = np.random.default_rng(SEED)
++    cp_by = {cp.curva: cp for cp in phases}
++    cards, key, rows = [], [], []
++    summary = {}
++    for det in DETECTORS:
++        chosen = select(states, det, rng)
++        title, question = QUESTIONS[det]
++        cards.append(f'<h2 id="{det}">{det}: {html.escape(title)}</h2><p class="q">{html.escape(question)}</p>')
++        summary[det] = {"passagens": int(len(chosen)), "por_estado": chosen["estado"].value_counts().to_dict(),
++                        "ia": int((chosen["origem"] == "ia").sum())}
++        for n, (_, r) in enumerate(chosen.iterrows(), start=1):
++            pid = f"{det}-{n:02d}"
++            cp = cp_by[r["curva"]]
++            previous = phases[cp.k - 1]
++            lap = laps[r["lap_id"]]
++            cards.append(
++                f'<div class="card"><div class="head"><b>{pid}</b> · curva {html.escape(cp.curva)} '
++                f'({"esquerda" if cp.direcao > 0 else "direita"}) · trecho de {cp.b:.0f} m a {cp.e + 100:.0f} m</div>'
++                f'<div class="row">{map_svg(track, cp)}<div class="tr">{trace_svg(lap, track, cp, previous)}</div></div></div>')
++            key.append({"id": pid, "detector": det, "lap_id": r["lap_id"], "curva": r["curva"], "origem": r["origem"],
++                        "estado": r["estado"], "valor_regra": r["valor_regra"]})
++            rows.append({"id": pid, "detector": det, "curva": r["curva"], "rotulo": "", "observacao": ""})
++    page = f"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
++<title>Kit de rotulagem</title><style>
++body{{font-family:system-ui,sans-serif;margin:16px;max-width:1000px;color:#222;background:#fff}}
++.card{{border:1px solid #ddd;border-radius:6px;padding:8px;margin:10px 0}} .head{{margin-bottom:6px}}
++.row{{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}} .tr{{flex:1;min-width:300px}}
++.q{{background:#f4f6f8;padding:8px;border-left:4px solid #3498db}}
++</style></head><body>
++<h1>Kit de rotulagem: 5 detectores, {sum(s['passagens'] for s in summary.values())} passagens</h1>
++<p>Para cada passagem, olhe os traços e responda à pergunta do detector com <b>aplica</b>, <b>nao aplica</b> ou <b>nao sei</b>,
++na coluna <code>rotulo</code> de <code>{html.escape(out_csv.name)}</code> (na mesma pasta). A coluna <code>observacao</code> é livre.
++O kit não mostra o que o detector respondeu nem se a volta é sua ou da IA. As linhas azuis são as fronteiras das fases (frenagem, entrada, meio, saída e reta seguinte).
++O volante está dividido pelo maior volante da curva e virado para dentro da curva (positivo = virando para dentro).</p>
++{''.join(cards)}</body></html>"""
++    out_html.write_text(page, encoding="utf-8")
++    with out_csv.open("w", newline="", encoding="utf-8") as handle:
++        writer = csv.DictWriter(handle, fieldnames=["id", "detector", "curva", "rotulo", "observacao"])
++        writer.writeheader()
++        writer.writerows(rows)
++    out_key.write_text(json.dumps(key, indent=1, ensure_ascii=False, default=float), encoding="utf-8")
++    return summary
++
++
++def precision_recall(labels_csv: Path, key_json: Path) -> Dict[str, object]:
++    """Precisao e revocacao de "aplica", nas passagens com rotulo aplica ou nao aplica e estado conclusivo."""
++    labels = pd.read_csv(labels_csv, dtype=str).fillna("")
++    key = pd.DataFrame(json.loads(key_json.read_text(encoding="utf-8")))
++    merged = key.merge(labels[["id", "rotulo"]], on="id")
++    norm = merged["rotulo"].str.strip().str.lower().str.replace("ã", "a").str.replace(" ", "_")
++    merged["rotulo_n"] = norm.map({"aplica": APLICA, "nao_aplica": NAO_APLICA, "nao_sei": "nao_sei"}).fillna("vazio")
++    out = {}
++    for det, g in merged.groupby("detector"):
++        used = g[g["rotulo_n"].isin([APLICA, NAO_APLICA]) & (g["estado"] != NC)]
++        tp = int(((used["estado"] == APLICA) & (used["rotulo_n"] == APLICA)).sum())
++        fp = int(((used["estado"] == APLICA) & (used["rotulo_n"] == NAO_APLICA)).sum())
++        fn = int(((used["estado"] == NAO_APLICA) & (used["rotulo_n"] == APLICA)).sum())
++        out[det] = {"usadas": int(len(used)), "vp": tp, "fp": fp, "fn": fn,
++                    "precisao": None if tp + fp == 0 else round(tp / (tp + fp), 3),
++                    "revocacao": None if tp + fn == 0 else round(tp / (tp + fn), 3),
++                    "nao_sei": int((g["rotulo_n"] == "nao_sei").sum()),
++                    "detector_nao_conclusivo": int((g["estado"] == NC).sum()),
++                    "sem_rotulo": int((g["rotulo_n"] == "vazio").sum())}
++    return out
+diff --git a/backend/ml/modelo2/supervisionado.py b/backend/ml/modelo2/supervisionado.py
+new file mode 100644
+index 00000000..cb247c5f
+--- /dev/null
++++ b/backend/ml/modelo2/supervisionado.py
+@@ -0,0 +1,97 @@
++"""O modelo supervisionado leve (secao 1.8): o tempo do trecho contra os indicadores, por curva.
++
++Ridge com o alvo e as entradas centrados pela media de cada sessao (a sessao
++como efeito fixo), validado deixando uma sessao de fora. Descritivo: mostra
++associacao, nao causa, e nao vira ganho estimado (ADR 0004).
++"""
++
++from __future__ import annotations
++
++from typing import Dict, List, Sequence
++
++import numpy as np
++import pandas as pd
++from sklearn.linear_model import Ridge
++
++ALPHAS = (0.3, 1.0, 3.0, 10.0, 30.0, 100.0)
++MIN_PASSES = 30
++MIN_SESSIONS = 3
++COVERAGE = 0.80
++BOOTSTRAP = 500
++SEED = 38
++
++
++def _prepare(train: pd.DataFrame, test: pd.DataFrame, features: Sequence[str]):
++    med = train[list(features)].median()
++    def centred(frame):
++        X = frame[list(features)].fillna(med)
++        X = X - X.groupby(frame["sessao"]).transform("mean")
++        y = frame["tempo_trecho_s"] - frame.groupby("sessao")["tempo_trecho_s"].transform("mean")
++        return X, y
++    Xtr, ytr = centred(train)
++    Xte, yte = centred(test)
++    sd = Xtr.std(ddof=0).replace(0, 1.0)
++    return (Xtr / sd).to_numpy(), ytr.to_numpy(), (Xte / sd).to_numpy(), yte.to_numpy()
++
++
++def _loso(frame: pd.DataFrame, features: Sequence[str], alpha: float) -> tuple:
++    sse = sst = 0.0
++    for s in frame["sessao"].unique():
++        tr, te = frame[frame["sessao"] != s], frame[frame["sessao"] == s]
++        Xtr, ytr, Xte, yte = _prepare(tr, te, features)
++        model = Ridge(alpha=alpha, fit_intercept=False).fit(Xtr, ytr)
++        sse += float(((yte - model.predict(Xte)) ** 2).sum())
++        sst += float((yte ** 2).sum())
++    return sse, sst
++
++
++def choose_alpha(frame: pd.DataFrame, features: Sequence[str]) -> float:
++    best, best_sse = ALPHAS[0], np.inf
++    if frame["sessao"].nunique() < 3:
++        return 10.0
++    for alpha in ALPHAS:
++        sse, _ = _loso(frame, features, alpha)
++        if sse < best_sse:
++            best, best_sse = alpha, sse
++    return best
++
++
++def fit_corner(frame: pd.DataFrame, candidates: Sequence[str]) -> Dict[str, object]:
++    frame = frame.dropna(subset=["tempo_trecho_s"])
++    features = [c for c in candidates if c in frame and frame[c].notna().mean() >= COVERAGE and frame[c].nunique() > 2]
++    out = {"passagens": int(len(frame)), "sessoes": int(frame["sessao"].nunique()), "entradas": features}
++    if len(frame) < MIN_PASSES or frame["sessao"].nunique() < MIN_SESSIONS or not features:
++        out["situacao"] = "poucos dados"
++        return out
++    sse = sst = 0.0
++    alphas = []
++    for s in frame["sessao"].unique():
++        tr, te = frame[frame["sessao"] != s], frame[frame["sessao"] == s]
++        alpha = choose_alpha(tr, features)
++        alphas.append(alpha)
++        Xtr, ytr, Xte, yte = _prepare(tr, te, features)
++        model = Ridge(alpha=alpha, fit_intercept=False).fit(Xtr, ytr)
++        sse += float(((yte - model.predict(Xte)) ** 2).sum())
++        sst += float((yte ** 2).sum())
++    out["r2_deixando_uma_sessao_de_fora"] = round(1.0 - sse / sst, 3) if sst > 0 else None
++    alpha = choose_alpha(frame, features)
++    X, y, _, _ = _prepare(frame, frame.iloc[:1], features)
++    coef = Ridge(alpha=alpha, fit_intercept=False).fit(X, y).coef_
++    rng = np.random.default_rng(SEED)
++    boots = []
++    groups = [g.index.to_numpy() for _, g in frame.groupby("sessao")]
++    for _ in range(BOOTSTRAP):
++        pick = np.concatenate([rng.choice(g, size=g.size, replace=True) for g in groups])
++        sample = frame.loc[pick].reset_index(drop=True)
++        Xb, yb, _, _ = _prepare(sample, sample.iloc[:1], features)
++        boots.append(Ridge(alpha=alpha, fit_intercept=False).fit(Xb, yb).coef_)
++    boots = np.array(boots)
++    lo, hi = np.percentile(boots, [5, 95], axis=0)
++    out["alfa"] = alpha
++    out["alfas_por_rodada"] = alphas
++    out["coeficientes"] = sorted([
++        {"entrada": f, "s_por_desvio": round(float(c), 4), "intervalo_90": [round(float(a), 4), round(float(b), 4)],
++         "sinal_estavel": bool(a > 0 or b < 0)}
++        for f, c, a, b in zip(features, coef, lo, hi)], key=lambda d: -abs(d["s_por_desvio"]))
++    out["situacao"] = "ajustado"
++    return out
+diff --git a/backend/ml/scripts/modelo2.py b/backend/ml/scripts/modelo2.py
+new file mode 100644
+index 00000000..44008df5
+--- /dev/null
++++ b/backend/ml/scripts/modelo2.py
+@@ -0,0 +1,340 @@
++"""Modelo 2: o erro, as tecnicas e o estilo, nas voltas da IA e do piloto (pedido 38).
++
++    python -m ml.scripts.modelo2 todos [--handoff PREFIXO]
++    python -m ml.scripts.modelo2 rotulos --rotulos ARQUIVO.csv
++
++As regras estao em `docs/modelo2_tecnica_e_estilo.md`, secao 1, registradas
++antes de rodar. As saidas ficam em `data/ml/modelo2/` (fora do git) e, com
++`--handoff`, uma copia dos JSON vai para `docs/handoff/`.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import platform
++import subprocess
++import sys
++import time
++from pathlib import Path
++from typing import Dict, List
++
++import numpy as np
++import pandas as pd
++
++BACKEND = Path(__file__).resolve().parents[2]
++if str(BACKEND) not in sys.path:
++    sys.path.insert(0, str(BACKEND))
++
++from core.assisted_analysis.reference_model import REFERENCE_AI, DriverReferenceModel, model_path  # noqa: E402
++from ml import config  # noqa: E402
++from ml.data.recordings import list_all_sessions  # noqa: E402
++from ml.modelo2 import conferencias as conf  # noqa: E402
++from ml.modelo2 import estilo, rotulagem, supervisionado  # noqa: E402
++from ml.modelo2.dados import FORA_DO_STORE, ai_levels, carregar, raiz, sha256  # noqa: E402
++from ml.modelo2.detectores import (APLICA, CATALOG, NAO_APLICA, NC, PER_CORNER, PRIMARY, Lap,  # noqa: E402
++                                   assign_states, consistency_states, envelope_from, lap_measures, lap_states,
++                                   measure_passage, phase_time)
++from ml.modelo2.fases import build_phases, check_partition, window  # noqa: E402
++from ml.modelo2.perda import loss_table, session_ranking  # noqa: E402
++from ml.track.corners import detect_corners  # noqa: E402
++from ml.track.geometry import load_geometry  # noqa: E402
++
++TRACK = "vhe_interlagos"
++
++
++def _clean(value):
++    if isinstance(value, dict):
++        return {str(k): _clean(v) for k, v in value.items() if not str(k).startswith("_")}
++    if isinstance(value, (list, tuple)):
++        return [_clean(v) for v in value]
++    if isinstance(value, (np.floating, float)):
++        return None if not np.isfinite(value) else round(float(value), 5)
++    if isinstance(value, (np.integer,)):
++        return int(value)
++    if isinstance(value, (np.bool_,)):
++        return bool(value)
++    return value
++
++
++def write(path: Path, data) -> Path:
++    path.parent.mkdir(parents=True, exist_ok=True)
++    path.write_text(json.dumps(_clean(data), indent=1, ensure_ascii=False), encoding="utf-8")
++    return path
++
++
++CHANNELS = {"guinada": ("yaw_rate",), "velocidades_no_carro": ("velocity_long", "velocity_lat"),
++            "cargas": ("wheel_load_fl",), "escorregamento": ("wheel_slip_fl",),
++            "temperatura_pneus": ("tyre_core_temp_fl",), "temperatura_freios": ("brake_temp_fl",),
++            "volante": ("steer_angle",), "pedais": ("brake", "throttle"), "marcha": ("gear",)}
++
++
++def channels_of(lap: Lap) -> Dict[str, bool]:
++    g = lap.volta.grid
++    def has(c):
++        return c in g and np.isfinite(g[c].to_numpy(dtype=float)).any() and np.nanmax(np.abs(g[c].to_numpy(dtype=float))) > 0
++    return {name: all(has(c) for c in cols) for name, cols in CHANNELS.items()}
++
++
++def fractions(states: pd.DataFrame) -> pd.DataFrame:
++    rows = []
++    for (curva, det, who), g in states.assign(quem=np.where(states["origem"] == "ia", "ia", "piloto")).groupby(
++            ["curva", "detector", "quem"]):
++        n = len(g)
++        conclusive = g[g["estado"] != NC]
++        rows.append({"curva": curva, "detector": det, "quem": who, "passagens": n,
++                     "conclusivas": len(conclusive),
++                     "fracao_aplica": None if conclusive.empty else round(float((conclusive["estado"] == APLICA).mean()), 3),
++                     "fracao_nao_conclusivo": round(float((g["estado"] == NC).mean()), 3)})
++    return pd.DataFrame(rows)
++
++
++def run(handoff_prefix: str = None) -> Dict[str, object]:
++    started = time.time()
++    timings = {}
++    track = load_geometry()
++    corners = detect_corners(track)
++    if len(corners) != 14:
++        raise SystemExit(f"PARADO: {len(corners)} curvas, o radio e o relatorio usam 14.")
++    data = carregar(track)
++    timings["leitura_s"] = round(time.time() - started, 1)
++    laps = {k: Lap.build(v) for k, v in data.voltas.items()}
++
++    model_file = model_path(BACKEND.parent, TRACK)
++    model = DriverReferenceModel.load(model_file)
++    ref_id = (model.references or {}).get(REFERENCE_AI, {}).get("lap_id")
++    if ref_id not in laps:
++        raise SystemExit(f"PARADO: a volta da IA do coach ({ref_id}) nao esta nas voltas rotuladas.")
++    ref = laps[ref_id]
++    humans = [l for l in laps.values() if l.volta.origem != "ia"]
++    ais = [l for l in laps.values() if l.volta.origem == "ia"]
++    best = min(humans, key=lambda l: l.total)
++
++    # --- fases: primeiro sem frenagem, para medir os pontos de frenagem; depois as definitivas
++    speed = ref.a("speed_kmh")
++    ai_min = [float(np.nanmin(speed[window(track, c.start_s, c.end_s)])) for c in corners]
++    empty = [[] for _ in corners]
++    provisional = build_phases(track, corners, ai_min, empty, empty)
++    env = envelope_from(list(laps.values()))
++    ai_on, drv_on = [[] for _ in corners], [[] for _ in corners]
++    for lap in laps.values():
++        for cp in provisional:
++            r = measure_passage(lap, track, cp, provisional[cp.k - 1], env)
++            s = None if r["s_b_rel"] is None else float(np.mod(cp.a + r["s_b_rel"], track.length))
++            (ai_on if lap.volta.origem == "ia" else drv_on)[cp.k].append(s)
++    phases = build_phases(track, corners, ai_min, ai_on, drv_on)
++    covered = check_partition(track, phases)
++
++    # --- passagens e estados
++    rows = []
++    for lap in laps.values():
++        for cp in phases:
++            r = measure_passage(lap, track, cp, phases[cp.k - 1], env)
++            r["tipo"] = cp.tipo
++            r["tempo_trecho_s"] = phase_time(lap, track, *cp.trecho)
++            rows.append(r)
++    states, refs = assign_states(rows)
++    passages = pd.DataFrame([{k: v for k, v in r.items() if k != "_ausente"} for r in rows])
++    lap_rows = [lap_measures(l) for l in laps.values()]
++    lstates = lap_states(lap_rows)
++    seg_times = passages[["origem", "sessao", "curva", "lap_id", "tempo_trecho_s"]].copy()
++    seg_times["origem"] = np.where(seg_times["origem"] == "ia", "ia", "humano")
++    v5 = consistency_states(seg_times)
++    timings["detectores_s"] = round(time.time() - started, 1)
++
++    # --- Parte B: canais por volta e conferencias
++    per_lap = [{"lap_id": l.volta.lap_id, "origem": l.volta.origem, "sessao": l.volta.sessao,
++                "fora_do_store": l.volta.fora_do_store, "tempo_s": round(l.total, 3), **channels_of(l)}
++               for l in sorted(laps.values(), key=lambda l: l.volta.lap_id)]
++    sessions = {s.session_id: s for s in list_all_sessions()}
++    checks = {
++        "volante_em_reta": conf.steer_offset(list(laps.values())),
++        "sinais_por_curva": conf.signs([l for l in laps.values() if l.a("yaw_rate") is not None], track, phases),
++        "volante_por_curvatura": conf.steer_per_curvature(list(laps.values())),
++        "unidade_e_entre_eixos": {
++            "m1_pedido_37": "nao identificados: a regra registrada deu L negativo ou < 1,1 m; na opcao (a), L foi ao limite de 3,8 m e k_delta = 0,30 rad",
++            "retrato_pedido_39": {"L_m": 2.955, "k_delta_rad": 0.267, "L_sobre_k": round(2.955 / 0.267, 2)},
++            "reportagem_m": 2.943,
++            "usado_no_e2": "retrato do pedido 39, como medida substituta (secao 1.2)"},
++        "escorregamento": conf.slip_nature(list(laps.values())),
++        "abs_ciclos": conf.abs_cycles(list(laps.values())),
++        "abs_ajuste": [conf.abs_setting(sessions[s]) for s in ("2026-10-22_09-46-01_vhe_interlagos",
++                                                               "2026-10-21_20-30-54_vhe_interlagos",
++                                                               "2026-10-24_13-43-32_vhe_interlagos") if s in sessions],
++    }
++
++    # --- Parte D
++    losses = loss_table(humans, ref, best, track, phases)
++    ai_passages = passages[passages["origem"] == "ia"]
++    rankings = []
++    by_session: Dict[str, List[Lap]] = {}
++    for l in humans:
++        by_session.setdefault(l.volta.sessao, []).append(l)
++    for session, items in sorted(by_session.items()):
++        rankings.append(session_ranking(session, items, losses, passages, states, phases, best.volta.lap_id, ai_passages))
++    phase_sum = losses.groupby("lap_id")["perda_s"].sum()
++    lap_diff = pd.Series({l.volta.lap_id: l.total - ref.total for l in humans})
++    closure = float((phase_sum - lap_diff.reindex(phase_sum.index)).abs().max())
++
++    # --- Parte E
++    all_states = pd.concat([states, lstates.assign(curva="volta")], ignore_index=True)
++    frac = fractions(states)
++    lists = []
++    for (curva, det), g in frac.groupby(["curva", "detector"]):
++        ia = g[g["quem"] == "ia"]
++        me = g[g["quem"] == "piloto"]
++        if ia.empty or me.empty:
++            continue
++        ia, me = ia.iloc[0], me.iloc[0]
++        if ia["conclusivas"] >= 3 and me["conclusivas"] >= 3 and ia["fracao_aplica"] is not None and me["fracao_aplica"] is not None:
++            if ia["fracao_aplica"] >= 0.6 and me["fracao_aplica"] <= 0.3:
++                lists.append({"lista": "ia_aplica_piloto_nao", "curva": curva, "detector": det,
++                              "ia": ia["fracao_aplica"], "piloto": me["fracao_aplica"]})
++            elif me["fracao_aplica"] >= 0.6 and ia["fracao_aplica"] <= 0.3:
++                lists.append({"lista": "piloto_aplica_ia_nao", "curva": curva, "detector": det,
++                              "ia": ia["fracao_aplica"], "piloto": me["fracao_aplica"]})
++    mine = states[states["origem"] != "ia"]
++    evolution = []
++    for (sess, det), g in mine.groupby(["sessao", "detector"]):
++        c = g[g["estado"] != NC]
++        evolution.append({"sessao": sess, "detector": det, "passagens": len(g), "conclusivas": len(c),
++                          "fracao_aplica": None if c.empty else round(float((c["estado"] == APLICA).mean()), 3)})
++    # verificacoes proprias da IA
++    def pedal_share(group):
++        out = {}
++        for pedal in ("brake", "throttle"):
++            vals = np.concatenate([l.a(pedal) for l in group if l.a(pedal) is not None])
++            out[pedal] = round(float(((vals > 0.05) & (vals < 0.95)).mean()), 4)
++        return out
++    ai_disp = []
++    for curva, g in ai_passages.groupby("curva"):
++        ai_disp.append({"curva": curva, **{f"desvio_{m}": None if g[m].notna().sum() < 3 else round(float(np.std(g[m].dropna(), ddof=1)), 3)
++                                           for m in ("s_b_rel", "v_min", "retomada_s")},
++                        "sobreposicao_freio_volante_s_mediana": None if g["sobreposicao_s"].dropna().empty else round(float(g["sobreposicao_s"].median()), 3)})
++    hum_disp = []
++    for curva, g in passages[passages["origem"] != "ia"].groupby("curva"):
++        hum_disp.append({"curva": curva, **{f"desvio_{m}": None if g[m].notna().sum() < 3 else round(float(np.std(g[m].dropna(), ddof=1)), 3)
++                                            for m in ("s_b_rel", "v_min", "retomada_s")}})
++    ai_states = states[states["origem"] == "ia"]
++    changes = []
++    for det, g in ai_states.groupby("detector"):
++        per_corner = g[g["estado"] != NC].groupby("curva")["estado"].agg(lambda s: s.value_counts().idxmax())
++        if per_corner.nunique() > 1:
++            changes.append({"detector": det, "aplica_em": sorted(per_corner[per_corner == APLICA].index.tolist()),
++                            "nao_aplica_em": sorted(per_corner[per_corner == NAO_APLICA].index.tolist())})
++    levels = ai_levels()
++    ai_checks = {
++        "fracao_de_pedal_intermediario": {"ia": pedal_share(ais), "piloto": pedal_share(humans),
++                                          "nota": "na grade de 2 m; valores entre 0,05 e 0,95"},
++        "trail_hint": "nao legivel: o ai.ini do carro so existe dentro do data.acd, que nao foi aberto",
++        "dispersao_volta_a_volta_ia": ai_disp,
++        "dispersao_volta_a_volta_piloto": hum_disp,
++        "ia_muda_a_tecnica_entre_curvas": changes,
++        "niveis_de_forca": ("nao conclusivo: ainda nao ha sessao da IA em niveis de forca "
++                            "(docs/experimentos/ia_niveis.csv nao existe)") if levels.empty else levels.to_dict("records"),
++    }
++
++    # --- Parte F
++    styled = estilo.with_relative_peak(passages.assign(quem=np.where(passages["origem"] == "ia", "ia", "piloto")))
++    signature = {"total": estilo.signatures(styled, ["quem"]),
++                 "piloto_por_sessao": estilo.signatures(styled[styled["quem"] == "piloto"], ["sessao"])}
++
++    # --- Parte G
++    features = [PRIMARY[d] for d in PER_CORNER]
++    models = []
++    human_passages = passages[passages["origem"] != "ia"].reset_index(drop=True)
++    for cp in phases:
++        g = human_passages[human_passages["curva"] == cp.curva].reset_index(drop=True)
++        models.append({"curva": cp.curva, "tipo": cp.tipo, **supervisionado.fit_corner(g, features)})
++    timings["modelos_s"] = round(time.time() - started, 1)
++
++    # --- Parte H
++    root = raiz()
++    kit_dir = root / "rotulagem"
++    kit_dir.mkdir(parents=True, exist_ok=True)
++    stem = handoff_prefix or "kit"
++    kit_html = kit_dir / f"{Path(stem).name}_kit_rotulagem.html"
++    kit_csv = kit_dir / f"{Path(stem).name}_rotulagem.csv"
++    key = root / "rotulagem_gabarito.json"
++    kit = rotulagem.build_kit(states, laps, track, phases, kit_html, kit_csv, key)
++
++    # --- saidas
++    outputs = {
++        "fases": {"curvas": [cp.to_dict() for cp in phases], "metros_cobertos": covered, "comprimento_da_volta": track.length,
++                  "envelope": env.table},
++        "canais_e_conferencias": {"voltas": per_lap, "fora_do_store": data.fora_relatorio, "conferencias": checks},
++        "erros_por_sessao": {"referencia": {"volta_ia": ref_id, "tempo_s": ref.total, "melhor_volta": best.volta.lap_id,
++                                            "melhor_tempo_s": best.total},
++                             "fechamento_soma_das_fases_s": closure, "sessoes": rankings},
++        "tecnicas": {"fracoes": frac.to_dict("records"), "listas": lists, "evolucao_piloto": evolution,
++                     "por_volta": lstates.to_dict("records"), "consistencia_v5": v5.to_dict("records"),
++                     "verificacoes_da_ia": ai_checks,
++                     "estados": all_states[["lap_id", "curva", "detector", "estado", "motivo", "valor_regra", "indicador",
++                                            "origem", "sessao"]].to_dict("records")},
++        "estilo": signature,
++        "modelo_leve": models,
++    }
++    paths = {}
++    for name, payload in outputs.items():
++        paths[name] = write(root / f"{name}.json", payload)
++    passages.to_parquet(root / "passagens.parquet")
++    timings["total_s"] = round(time.time() - started, 1)
++
++    commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=str(BACKEND.parent), capture_output=True, text=True).stdout.strip()
++    read_files = [dict(e, sha256=sha256(Path(e["arquivo"]))) for e in data.lidos]
++    read_files.append({"arquivo": str(model_file), "bytes": model_file.stat().st_size, "sha256": sha256(model_file)})
++    results = {
++        "pedido": "docs/prompts/2026-10-24_38_modelo2-erro-tecnica-e-estilo.md",
++        "commit": commit, "geometry_id": track.geometry_id, "geometria_source_hash": track.source_hash,
++        "store_v2": {"commit": data.store_meta.get("commit"), "construido_em": data.store_meta.get("construido_em")},
++        "ambiente": {"python": platform.python_version(), "numpy": np.__version__, "pandas": pd.__version__},
++        "comandos": ["python -m ml.scripts.modelo2 todos --handoff docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo"],
++        "voltas": {"total": len(laps), "piloto": len(humans), "ia": len(ais),
++                   "fora_do_store": sum(l.volta.fora_do_store for l in laps.values())},
++        "lidos": read_files,
++        "escritos": [{"arquivo": str(p), "sha256": sha256(p)} for p in list(paths.values()) + [kit_html, kit_csv, key]],
++        "kit": kit, "tempos": timings,
++    }
++    write(root / "resultados.json", results)
++    if handoff_prefix:
++        base = BACKEND.parent / handoff_prefix
++        for name, p in paths.items():
++            payload = outputs[name]
++            if name == "tecnicas":
++                # Os estados de cada passagem (~13 MB) ficam so em data/ml/modelo2/tecnicas.json.
++                payload = {k: v for k, v in payload.items() if k != "estados"}
++            write(base.parent / f"{base.name}_{name}.json", payload)
++        for p in (kit_html, kit_csv):
++            target = base.parent / p.name.replace("kit_kit", "kit").replace(Path(stem).name, base.name)
++            target.write_text(p.read_text(encoding="utf-8"), encoding="utf-8")
++        (base.parent / f"{base.name}_resultados.json").write_text((root / "resultados.json").read_text(encoding="utf-8"), encoding="utf-8")
++    return {"saidas": outputs, "resultados": results}
++
++
++def labels(path: Path) -> int:
++    out = rotulagem.precision_recall(path, raiz() / "rotulagem_gabarito.json")
++    write(raiz() / "precisao_revocacao.json", out)
++    print(json.dumps(out, indent=1, ensure_ascii=False))
++    return 0
++
++
++def main(argv=None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    parser.add_argument("comando", choices=["todos", "rotulos"])
++    parser.add_argument("--handoff", default=None)
++    parser.add_argument("--rotulos", type=Path, default=None)
++    args = parser.parse_args(argv)
++    if args.comando == "rotulos":
++        return labels(args.rotulos)
++    try:
++        result = run(args.handoff)
++    except SystemExit as stop:
++        print(stop)
++        return 2
++    r = result["resultados"]
++    print(json.dumps({"voltas": r["voltas"], "tempos": r["tempos"], "kit": r["kit"]}, indent=1, ensure_ascii=False))
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
 diff --git a/backend/routers/radio.py b/backend/routers/radio.py
 index bbba104f..3910283e 100644
 --- a/backend/routers/radio.py
@@ -508,6 +2982,357 @@ index bbba104f..3910283e 100644
  @router.post("/teste")
  async def post_teste():
      return await asyncio.to_thread(_radio().teste)
+diff --git a/backend/tests/test_modelo2.py b/backend/tests/test_modelo2.py
+new file mode 100644
+index 00000000..0cf0b705
+--- /dev/null
++++ b/backend/tests/test_modelo2.py
+@@ -0,0 +1,345 @@
++"""Pedido 38: o Modelo 2 (fases, detectores, atribuicao do erro), com dados sinteticos."""
++
++from __future__ import annotations
++
++from types import SimpleNamespace
++
++import numpy as np
++import pandas as pd
++import pytest
++
++from ml.modelo2 import detectores as det
++from ml.modelo2.dados import Volta, raw_derived, to_grid
++from ml.modelo2.detectores import APLICA, NAO_APLICA, NC, Lap, corner_refs, measure_passage, phase_time, state_of
++from ml.modelo2.fases import build_phases, check_partition
++from ml.modelo2.perda import session_ranking
++from ml.track.corners import detect_corners
++
++try:
++    from ml.track.geometry import load_geometry
++    TRACK = load_geometry()
++except FileNotFoundError:  # pragma: no cover - maquina sem o cache da pista
++    TRACK = None
++
++pytestmark = pytest.mark.skipif(TRACK is None, reason="sem a geometria da pista")
++
++
++@pytest.fixture(scope="module")
++def corners():
++    return detect_corners(TRACK)
++
++
++@pytest.fixture(scope="module")
++def phases(corners):
++    onsets_ai = [[float(np.mod(c.start_s - 60.0, TRACK.length))] * 3 for c in corners]
++    onsets_me = [[float(np.mod(c.start_s - 80.0, TRACK.length))] * 3 for c in corners]
++    return build_phases(TRACK, corners, [100.0] * len(corners), onsets_ai, onsets_me)
++
++
++def synthetic_lap(lap_id="s#0001", origem="humano", speed_kmh=None, channels=None, hz=60.0,
++                  with_yaw=True, sessao="2026-10-30"):
++    """Uma volta sintetica: canais como funcao de s, gravados a 60 Hz, levados a grade como no dados.py."""
++    L = TRACK.length
++    v = (lambda s: np.full_like(s, 150.0)) if speed_kmh is None else speed_kmh
++    s_fine = np.linspace(0.0, L, 20000)
++    t_fine = np.concatenate([[0.0], np.cumsum(np.diff(s_fine) / (v(s_fine[1:]) / 3.6))])
++    total = float(t_fine[-1])
++    t = np.arange(0.0, total, 1.0 / hz)
++    s = np.interp(t, t_fine, s_fine)
++    channels = dict(channels or {})
++    raw = {"s_unwrapped": s, "lap_time_s": t, "speed_kmh": v(s)}
++    for name in ("brake", "throttle", "steer_angle", "lateral_g", "longitudinal_g", "yaw_rate",
++                 "velocity_long", "velocity_lat", "gear", "rpm", "lateral",
++                 "wheel_slip_fl", "wheel_slip_fr", "wheel_slip_rl", "wheel_slip_rr",
++                 "wheel_load_fl", "wheel_load_fr", "wheel_load_rl", "wheel_load_rr",
++                 "tyre_core_temp_fl", "tyre_core_temp_fr", "tyre_core_temp_rl", "tyre_core_temp_rr"):
++        default = {"throttle": 1.0, "gear": 4.0, "rpm": 7000.0, "velocity_long": None, "wheel_load_fl": 2000.0,
++                   "wheel_load_fr": 2000.0, "wheel_load_rl": 3000.0, "wheel_load_rr": 3000.0}.get(name, 0.0)
++        f = channels.get(name)
++        if name == "velocity_long" and f is None:
++            raw[name] = v(s) / 3.6
++        elif f is not None:
++            raw[name] = f(s)
++        else:
++            raw[name] = np.full(s.size, default)
++        if not with_yaw and name in ("yaw_rate", "velocity_long", "velocity_lat"):
++            raw[name] = np.full(s.size, np.nan)
++    frame = pd.DataFrame(raw)
++    derived = to_grid(raw_derived(frame), TRACK)
++    grid = pd.DataFrame({"grid_index": np.arange(TRACK.size)})
++    for name, values in raw.items():
++        if name in ("s_unwrapped", "lap_time_s"):
++            continue
++        grid[name] = np.interp(TRACK.s, s, values) if np.isfinite(values).any() else np.nan
++    grid["elapsed_s"] = np.interp(TRACK.s, s_fine, t_fine)
++    grid = pd.concat([grid, derived.drop(columns="grid_index")], axis=1)
++    volta = Volta(lap_id=lap_id, gravacao=lap_id.split("#")[0], origem=origem, tempo_s=total, grid=grid, sessao=sessao)
++    return Lap.build(volta)
++
++
++def corner_of(phases, label="C04"):
++    return next(cp for cp in phases if cp.curva.startswith(label))
++
++
++def bump(centre, half, value):
++    return lambda s: np.where(np.abs(s - centre) <= half, value, 0.0)
++
++
++# ---------------------------------------------------------------- fases ---
++
++def test_fases_cobrem_a_volta_e_sao_as_mesmas_em_todas_as_voltas(phases):
++    assert check_partition(TRACK, phases) == pytest.approx(TRACK.length, abs=1e-6)
++    fast = synthetic_lap("a#0001")
++    slow = synthetic_lap("b#0001", speed_kmh=lambda s: 120.0 + 60.0 * (np.sin(s / 200.0) > 0))
++    for lap in (fast, slow):
++        total = sum(phase_time(lap, TRACK, *bounds) for cp in phases for bounds in cp.bounds().values())
++        assert total == pytest.approx(lap.total, abs=1e-9)
++    again = build_phases(TRACK, detect_corners(TRACK), [100.0] * 14,
++                         [[float(np.mod(c.start_s - 60.0, TRACK.length))] * 3 for c in detect_corners(TRACK)],
++                         [[float(np.mod(c.start_s - 80.0, TRACK.length))] * 3 for c in detect_corners(TRACK)])
++    assert [cp.bounds() for cp in again] == [cp.bounds() for cp in phases]
++    for cp in phases:
++        assert cp.b <= cp.a or cp.b > cp.e      # b_k vem antes do comeco da curva (ou da volta)
++
++
++def test_curva_sem_frenagem_tem_a_fase_vazia(corners):
++    none = [[None, None, None] for _ in corners]
++    phases = build_phases(TRACK, corners, [200.0] * 14, none, none)
++    assert all(cp.sem_frenagem and cp.b == cp.a for cp in phases)
++    assert all(cp.tipo == "rapida" for cp in phases)
++
++
++# -------------------------------------------------- medicao (sintetica) ---
++
++def _measure(lap, phases, label="C04"):
++    cp = corner_of(phases, label)
++    env = lambda v: np.full_like(np.asarray(v, dtype=float), 3.0)
++    return measure_passage(lap, TRACK, cp, phases[cp.k - 1], env), cp
++
++
++def _braking_lap(phases, release, trail, label="C04", lap_id="x#0001", **kw):
++    cp = corner_of(phases, label)
++    a = cp.a
++    steer_in = -cp.direcao * 0.3      # volante positivo a direita; para dentro da curva
++
++    def brake(s):
++        out = np.zeros_like(s)
++        on = (s >= a - 120.0) & (s < a - 20.0)
++        out[on] = 0.9
++        tail = (s >= a - 20.0) & (s < a + 20.0)
++        if release == "rampa":
++            out[tail] = 0.9 * (1.0 - (s[tail] - (a - 20.0)) / 40.0)
++        else:
++            out[(s >= a - 20.0) & (s < a + 5.0)] = 0.9
++        return out if trail else np.where(s >= a, 0.0, out)
++
++    def steer(s):
++        ramp = np.clip((s - (a - 5.0)) / 30.0, 0.0, 1.0)
++        down = np.clip((cp.e - s) / 30.0, 0.0, 1.0)
++        return steer_in * np.minimum(ramp, down)
++
++    def throttle(s):
++        return np.where((s >= a - 125.0) & (s < cp.apice + 10.0), 0.0, 1.0)
++
++    channels = {"brake": brake, "steer_angle": steer, "throttle": throttle, **kw}
++    return synthetic_lap(lap_id, channels=channels)
++
++
++def test_soltura_em_rampa_e_em_degrau(phases):
++    ramp, _ = _measure(_braking_lap(phases, "rampa", True), phases)
++    step, _ = _measure(_braking_lap(phases, "degrau", True), phases)
++    assert ramp["freia"] and step["freia"]
++    assert ramp["taxa_soltura"] < 3.0 - 0.75
++    assert step["taxa_soltura"] > 3.0 + 0.75
++    ref = corner_refs([])
++    assert state_of("F4", ramp, ref)[0] == APLICA
++    assert state_of("F4", step, ref)[0] == NAO_APLICA
++
++
++def test_trail_braking_com_e_sem(phases):
++    yes, _ = _measure(_braking_lap(phases, "rampa", True), phases)
++    no, _ = _measure(_braking_lap(phases, "rampa", False), phases)
++    ref = corner_refs([])
++    assert state_of("F5", yes, ref)[0] == APLICA
++    assert state_of("F5", no, ref)[0] == NAO_APLICA
++
++
++def test_sem_guinada_da_nao_conclusivo_nos_detectores_de_equilibrio(phases):
++    lap = synthetic_lap("y#0001", with_yaw=False,
++                        channels={"lateral_g": lambda s: np.full_like(s, 1.0),
++                                  "steer_angle": lambda s: np.full_like(s, -0.2)})
++    row, _ = _measure(lap, phases)
++    ref = corner_refs([row])
++    for d in ("E2", "E3", "E4"):
++        assert state_of(d, row, ref)[0] == NC
++
++
++def test_fase_sem_pedal_e_alivio(phases):
++    cp = corner_of(phases)
++    coast = synthetic_lap("c#0001", channels={"throttle": lambda s: np.where((s > cp.a) & (s < cp.a + 40.0), 0.0, 1.0)})
++    row, _ = _measure(coast, phases)
++    assert row["sem_pedal_s"] > 0.5
++    assert state_of("M5", row, corner_refs([]))[0] == APLICA
++    smooth = synthetic_lap("d#0001", channels={"throttle": lambda s: np.where(s < cp.apice, 0.0, 1.0),
++                                                "brake": bump(cp.a - 40.0, 40.0, 0.8)})
++    lift = synthetic_lap("e#0001", channels={
++        # sobe a 0,6, cai a 0,3 e so depois vai ao pleno: "sobe, cai e sobe"
++        "throttle": lambda s: np.where(s < cp.apice, 0.0, np.where(s < cp.apice + 20, 0.6,
++                                                                   np.where(s < cp.apice + 30, 0.3, 1.0))),
++        "brake": bump(cp.a - 40.0, 40.0, 0.8)})
++    r_smooth, _ = _measure(smooth, phases)
++    r_lift, _ = _measure(lift, phases)
++    assert r_smooth["alivio"] == pytest.approx(0.0, abs=1e-6)
++    assert state_of("M8", r_smooth, corner_refs([]))[0] == NAO_APLICA
++    assert state_of("M8", r_lift, corner_refs([]))[0] == APLICA
++
++
++def test_contraesterco(phases):
++    cp = corner_of(phases)
++    sign = cp.direcao
++    counter = synthetic_lap("f#0001", channels={
++        "yaw_rate": lambda s: np.full_like(s, 0.3 * sign),
++        # volante "normal": -volante com o sinal da guinada; aqui ele tem o sinal oposto num trecho
++        "steer_angle": lambda s: np.where((s > cp.apice + 5.0) & (s < cp.apice + 20.0), 0.1 * sign, -0.3 * sign),
++        "lateral_g": lambda s: np.full_like(s, 1.0 * sign)})
++    normal = synthetic_lap("g#0001", channels={
++        "yaw_rate": lambda s: np.full_like(s, 0.3 * sign),
++        "steer_angle": lambda s: np.full_like(s, -0.3 * sign),
++        "lateral_g": lambda s: np.full_like(s, 1.0 * sign)})
++    r_counter, _ = _measure(counter, phases)
++    r_normal, _ = _measure(normal, phases)
++    assert state_of("E4", r_counter, corner_refs([]))[0] == APLICA
++    assert state_of("E4", r_normal, corner_refs([]))[0] == NAO_APLICA
++
++
++def test_escorregamento_quebrado_sai_da_conta(phases):
++    lap = synthetic_lap("h#0001", channels={"wheel_slip_rl": lambda s: np.full_like(s, 290.0),
++                                            "wheel_slip_rr": lambda s: np.full_like(s, 290.0)})
++    assert np.isnan(lap.a("slip_rear")).all()
++
++
++# ----------------------------------------- estados de cada detector ---
++
++AI_ROWS = [{"s_b_rel": -100.0 + d, "freia": True, "pico_freio": 1.0, "t_pico": 0.10, "pico_fracao": 0.2, "queda_meio": 0.2,
++            "taxa_soltura": 1.5, "sobreposicao_s": 0.5, "retencao": 0.3, "escorr_dianteiro": 0.5, "pedais_juntos_s": 0.0,
++            "escorr_reducao": 0.5, "s_ti_rel": 0.0 + d, "ua_graus": 1.0, "beta_p95": 2.0, "contra_s": 0.0,
++            "reversoes": 2.0, "irregularidade": 0.02, "uso_aderencia": 0.95, "s_vmin_rel": 50.0 + d, "plato_s": 0.4,
++            "afastamento_m": 5.0, "sem_pedal_s": 0.0, "retomada_s": 0.3, "volante_depois": 0.0, "alivio": 0.0,
++            "escorr_traseiro": 0.5, "taxa_carga": 0.5, "retoma": True} for d in (-1.0, 0.0, 1.0)]
++REF = corner_refs(AI_ROWS)
++REF["_freia"] = det.Ref.of([1.0, 1.0, 1.0])
++
++# detector -> (valores que aplicam, valores que nao aplicam, chave que some no "sem canal")
++CASES = {
++    "F1": ({"s_b_rel": -102.0}, {"s_b_rel": -140.0}, "s_b_rel"),
++    "F2": ({"t_pico": 0.2, "pico_freio": 0.98}, {"t_pico": 1.2, "pico_freio": 0.98}, "t_pico"),
++    "F3": ({"pico_fracao": 0.2, "queda_meio": 0.2}, {"pico_fracao": 0.7, "queda_meio": 0.2}, "pico_fracao"),
++    "F4": ({"taxa_soltura": 1.0}, {"taxa_soltura": 6.0}, "taxa_soltura"),
++    "F5": ({"sobreposicao_s": 0.5, "retencao": 0.3}, {"sobreposicao_s": 0.0, "retencao": 0.0}, "sobreposicao_s"),
++    "F6": ({"escorr_dianteiro": 2.0}, {"escorr_dianteiro": 0.4}, "escorr_dianteiro"),
++    "F7": ({"pedais_juntos_s": 0.5}, {"pedais_juntos_s": 0.0}, "pedais_juntos_s"),
++    "F8": ({"escorr_reducao": 2.0}, {"escorr_reducao": 0.4}, "escorr_reducao"),
++    "E1": ({"s_ti_rel": -40.0}, {"s_ti_rel": 0.0}, "s_ti_rel"),
++    "E2": ({"ua_graus": 2.0}, {"ua_graus": 1.0}, "ua_graus"),
++    "E3": ({"beta_p95": 4.0}, {"beta_p95": 2.0}, "beta_p95"),
++    "E4": ({"contra_s": 0.3}, {"contra_s": 0.0}, "contra_s"),
++    "E5": ({"reversoes": 6.0}, {"reversoes": 2.0}, "reversoes"),
++    "E6": ({"irregularidade": 0.01}, {"irregularidade": 0.08}, "irregularidade"),
++    "M1": ({"uso_aderencia": 0.97}, {"uso_aderencia": 0.6}, "uso_aderencia"),
++    "M2": ({"s_vmin_rel": 20.0}, {"s_vmin_rel": 50.0}, "s_vmin_rel"),
++    "M3": ({"plato_s": 0.9}, {"plato_s": 0.1}, "plato_s"),
++    "M4": ({"afastamento_m": 5.0}, {"afastamento_m": 2.0}, "afastamento_m"),
++    "M5": ({"sem_pedal_s": 0.6}, {"sem_pedal_s": 0.0}, "sem_pedal_s"),
++    "M7": ({"volante_depois": 0.3}, {"volante_depois": 0.0}, "volante_depois"),
++    "M8": ({"alivio": 0.4}, {"alivio": 0.0}, "alivio"),
++    "M9": ({"escorr_traseiro": 2.0}, {"escorr_traseiro": 0.4}, "escorr_traseiro"),
++    "V3": ({"taxa_carga": 2.0}, {"taxa_carga": 0.4}, "taxa_carga"),
++}
++
++
++def _row(values, freia=True):
++    return {"freia": freia, "retoma": True, "_ausente": {}, **values}
++
++
++@pytest.mark.parametrize("detector", sorted(CASES))
++def test_cada_detector_aplica_nao_aplica_e_sem_canal(detector):
++    yes, no, key = CASES[detector]
++    assert state_of(detector, _row(yes), REF)[0] == APLICA
++    assert state_of(detector, _row(no), REF)[0] == NAO_APLICA
++    missing = _row({k: v for k, v in yes.items() if k != key})
++    missing["_ausente"] = {detector: "sem o canal"}
++    assert state_of(detector, missing, REF)[0] == NC
++
++
++def test_m6_retomada():
++    good = _row({"retomada_s": 0.3})
++    early = _row({"retomada_s": -0.6})
++    assert det.m6_state(good, REF, NAO_APLICA, NAO_APLICA, True)[0] == APLICA
++    assert det.m6_state(early, REF, NAO_APLICA, NAO_APLICA, True)[0] == NAO_APLICA
++    assert det.m6_state(good, REF, APLICA, NAO_APLICA, True)[0] == NAO_APLICA
++    assert det.m6_state(_row({"retomada_s": 0.3}), {}, NAO_APLICA, NAO_APLICA, True)[0] == NC
++
++
++def test_detectores_por_volta_e_consistencia():
++    rows = [{"lap_id": f"ia#{i}", "origem": "ia", "sessao": "s", "decidido": 0.9, "rpm_troca": 8000.0, "pneu_c": 70.0}
++            for i in range(3)]
++    rows += [{"lap_id": "me#1", "origem": "humano", "sessao": "s", "decidido": 0.9, "rpm_troca": 8100.0, "pneu_c": 72.0},
++             {"lap_id": "me#2", "origem": "humano", "sessao": "s", "decidido": 0.5, "rpm_troca": 7000.0, "pneu_c": 50.0},
++             {"lap_id": "me#3", "origem": "humano", "sessao": "s", "decidido": None, "rpm_troca": None, "pneu_c": None}]
++    st = det.lap_states(rows).set_index(["lap_id", "detector"])["estado"]
++    assert (st["me#1", "V1"], st["me#1", "V2"], st["me#1", "V4"]) == (APLICA, APLICA, APLICA)
++    assert (st["me#2", "V1"], st["me#2", "V2"], st["me#2", "V4"]) == (NAO_APLICA, NAO_APLICA, NAO_APLICA)
++    assert (st["me#3", "V1"], st["me#3", "V2"], st["me#3", "V4"]) == (NC, NC, NC)
++    seg = pd.DataFrame({"origem": "humano", "sessao": ["a"] * 5 + ["b"] * 5 + ["c"] * 2, "curva": "C01",
++                        "lap_id": range(12), "tempo_trecho_s": [10.0, 10.01, 10.02, 10.0, 10.01,
++                                                                  10.0, 10.5, 9.7, 10.3, 9.9, 10.0, 10.0]})
++    v5 = det.consistency_states(seg).set_index("sessao")["estado"]
++    assert (v5["a"], v5["b"], v5["c"]) == (APLICA, NAO_APLICA, NC)
++
++
++# ------------------------------------------ atribuicao e ranking ---
++
++def _ranking_inputs(phases, losses_by_lap, f1_values):
++    cp = corner_of(phases)
++    ids = [f"r#{i:04d}" for i in range(1, 4)]
++    laps = [SimpleNamespace(volta=SimpleNamespace(gravacao="r", lap_id=i, sessao="s"), total=90.0) for i in ids]
++    rows = []
++    for lap_id in ids:
++        for k, other in enumerate(phases):
++            for ph in ("frenagem", "entrada", "meio", "saida", "reta"):
++                loss = losses_by_lap[lap_id].get(ph, 0.0) if other.curva == cp.curva else 0.0
++                rows.append({"lap_id": lap_id, "sessao": "s", "origem": "humano", "curva": other.curva, "k": k,
++                             "fase": ph, "perda_s": loss, "perda_vs_melhor_s": loss})
++    losses = pd.DataFrame(rows)
++    passages = pd.DataFrame([{"lap_id": i, "curva": cp.curva, "s_b_rel": -80.0, "retomada_s": 0.2, "v_min": 100.0}
++                             for i in ids])
++    ai = pd.DataFrame([{"lap_id": f"ia#{i}", "curva": cp.curva, "s_b_rel": -110.0, "retomada_s": 0.2, "v_min": 100.0}
++                       for i in range(3)])
++    states = pd.DataFrame([{"lap_id": i, "curva": cp.curva, "detector": "F1", "estado": NAO_APLICA,
++                            "valor_regra": v, "indicador": -80.0, "origem": "humano"} for i, v in zip(ids, f1_values)]
++                          + [{"lap_id": f"ia#{i}", "curva": cp.curva, "detector": "F1", "estado": APLICA,
++                              "valor_regra": 0.0, "indicador": -110.0, "origem": "ia"} for i in range(3)])
++    return laps, losses, passages, states, ai, cp
++
++
++def test_falso_ganho_da_frenagem_tardia(phases):
++    loss = {"frenagem": -0.10, "entrada": 0.25, "meio": 0.05}
++    laps, losses, passages, states, ai, cp = _ranking_inputs(
++        phases, {f"r#{i:04d}": loss for i in range(1, 4)}, [30.0, 30.0, 30.0])
++    out = session_ranking("s", laps, losses, passages, states, phases, "r#0001", ai)
++    items = [i for i in out["todos_os_itens"] if i["curva"] == cp.curva]
++    assert len(items) == 1
++    assert items[0]["falso_ganho"] is True
++    assert items[0]["perda_mediana_s"] == pytest.approx(0.20)
++    assert all(i["fase_sintoma"] != "frenagem" for i in items)
++
++
++def test_perda_numa_volta_so_nao_entra_no_ranking(phases):
++    by_lap = {"r#0001": {"meio": 0.5}, "r#0002": {}, "r#0003": {}}
++    laps, losses, passages, states, ai, cp = _ranking_inputs(phases, by_lap, [0.0, 0.0, 0.0])
++    out = session_ranking("s", laps, losses, passages, states, phases, "r#0001", ai)
++    assert not [i for i in out["todos_os_itens"] if i["curva"] == cp.curva]
++    by_lap = {"r#0001": {"meio": 0.5}, "r#0002": {"meio": 0.3}, "r#0003": {}}
++    laps, losses, passages, states, ai, cp = _ranking_inputs(phases, by_lap, [0.0, 0.0, 0.0])
++    out = session_ranking("s", laps, losses, passages, states, phases, "r#0001", ai)
++    assert [i["fase_sintoma"] for i in out["todos_os_itens"] if i["curva"] == cp.curva] == ["meio"]
 diff --git a/backend/tests/test_radio.py b/backend/tests/test_radio.py
 index 01e6df11..33045ac2 100644
 --- a/backend/tests/test_radio.py
@@ -704,22 +3529,108 @@ index 01e6df11..33045ac2 100644
 +    assert por_volta[9] == ["C01"] and por_volta[4] == ["C01"] and por_volta[5] == [] and 11 not in por_volta
 +    monkeypatch.setattr(main, "radio_do_engenheiro", radio)
 +    assert json.loads(asyncio.run(rota.get_grade()).body)["voltas"][0]["volta"] == 6
+diff --git a/desktop/main.js b/desktop/main.js
+index 3432d59d..97191ef9 100644
+--- a/desktop/main.js
++++ b/desktop/main.js
+@@ -29,7 +29,7 @@ const BACKEND_EXE_NAME = process.platform === 'win32' ? 'automobilista-backend.e
+ // to `_internal`, instead of unpacking ~0.37 GB into %TEMP% on every start.
+ const BACKEND_DIR_NAME = 'automobilista-backend';
+ const EXPECTED_BACKEND_SERVICE = 'automobilista-telemetria-backend';
+-const EXPECTED_BACKEND_VERSION = 'redesenho';
++const EXPECTED_BACKEND_VERSION = 'visuais-do-radio';
+ const WINDOW_ICON_NAME = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
+ const ASSETTO_PLUGIN_ID = 'ac_opponents_exporter';
+ const ASSETTO_PLUGIN_DISPLAY_NAME = 'Opponents Exporter';
+diff --git a/desktop/package.json b/desktop/package.json
+index 1e78b844..89f78f86 100644
+--- a/desktop/package.json
++++ b/desktop/package.json
+@@ -2,7 +2,7 @@
+   "name": "automobilista-telemetria-desktop",
+   "private": true,
+   "productName": "Automobilista Telemetria",
+-  "version": "0.4.0-redesenho",
++  "version": "0.6.0-visuais-do-radio",
+   "description": "Sistema desktop de telemetria e analise de desempenho para simulacao automobilistica com Assetto Corsa.",
+   "author": "Eduardo Francisco",
+   "copyright": "Copyright (c) 2026 Eduardo Francisco",
+diff --git a/docs/app_para_producao.md b/docs/app_para_producao.md
+new file mode 100644
+index 00000000..3590a96c
+--- /dev/null
++++ b/docs/app_para_producao.md
+@@ -0,0 +1,52 @@
++# O app para produção: o que ele faz e onde está cada alteração
++
++- **Data:** 01/11/2026. **Fonte:** o código e os commits das branches citadas. O que depende do jogo está marcado como não testado.
++- **Para que serve:** dizer o que o app faz hoje, em que versão está cada alteração e o que falta para gerar a próxima versão.
++
++## 1. O que o app faz
++
++O **Automobilista Telemetria** é um app de Windows (Electron e backend em Python, tudo local, em `127.0.0.1`) para o Assetto Corsa com o Custom Shaders Patch. Ele tem duas partes, instaladas separadamente: o app do Windows e o app do jogo.
++
++| parte | o que faz |
++|---|---|
++| **Gravação** | grava as voltas do jogo, com o piloto e a IA separados, na pasta de dados |
++| **Coach ao vivo** | mede a volta na geometria oficial contra uma volta real de referência e, nos microssetores de foco, publica no máximo 3 frases por volta |
++| **Rádio** | leva ao piloto a frase do coach, o resumo na linha e, a cada 3 voltas válidas, a análise, em cartão e em voz, só nas retas |
++| **Replay da curva** | mostra a curva citada pelo rádio, com a sua linha e a da referência, as freadas, as mínimas e o tempo |
++| **Tela Sessões** | as sessões, a tendência e as gravações que ainda não entraram no relatório |
++| **Tela Ao vivo** | o rádio, a volta com o fantasma e o estado dos canais |
++| **Tela Volta** | uma volta gravada com a referência, na geometria oficial |
++| **Tela Evolução** | a tendência e a perda e a técnica por curva entre as sessões |
++| **Tela Coleta de dados** | a coleta, o store e a rodada do coach |
++| **Tela Sistema** | a mensagem de teste do rádio, a depuração e o guia visual |
++| **App do jogo** (`Rádio do engenheiro`) | 4 janelas no jogo: o rádio, o minimapa, o mapa aproximado e o replay. Só lê o jogo e o backend, e só grava na própria pasta |
++
++**Fora do app, só em scripts:** o Modelo 2 (`backend/ml/modelo2/`) e a M1 (`backend/ml/modelo_carro/`). Nenhuma tela, rota ou serviço do app usa os dois em execução. A M1 não foi aprovada.
++
++## 2. Onde está cada alteração
++
++| alteração | 0.5.0 instalada (`825ef60d`, 25/10) | `develop` (a 0.6.0) |
++|---|---|---|
++| Rádio com análise, voz com unidades e replay da curva (pedidos 33 a 36) | sim | sim |
++| Limpeza do código sem uso e defeitos do backlog (pedido 40), como o corte no reinício e o cache da pista | **não** | sim |
++| M1, fora do app (pedidos 37 e 39) | **não** | sim |
++| Números da voz, 4 visuais e grade da sessão (pedido 43) | **não** | sim |
++| Modelo 2, fora do app (pedido 38, sem a H.4) | sim | sim |
++| Número da versão do app do Windows | `0.5.0-radio-e-replay` | `0.6.0-visuais-do-radio` |
++| App do jogo que acompanha | 0.4.0 | 0.4.2 |
++
++**`develop` tem tudo o que a 0.5.0 tinha e mais.** As alterações estão centralizadas desde 01/11.
++
++## 3. O que falta para a próxima versão
++
++1. **Olhar no jogo o que ficou sem confirmação:** a grade nos boxes, o cartão da mensagem de teste e os visuais na tela. O teste de 01/11, no CSP 0.3.1, não teve erro de Lua, e os números do replay batem com a voz e com o cartão.
++2. **Gerar o instalador,** só quando o Eduardo pedir, com `npm run dist:win` na pasta `desktop`. O pacote não leva o app do jogo: o `instalar.ps1` é rodado à parte.
++
++**Numa próxima versão,** troque o número nos 3 pontos, juntos: `desktop/package.json` (`version`), `backend/main.py` (`BACKEND_PHASE_VERSION`) e `desktop/main.js` (`EXPECTED_BACKEND_VERSION`). Os dois últimos têm de ser iguais.
++
++## 4. Riscos conhecidos
++
++- **O app do jogo 0.4.1 ou mais antigo com o backend novo dá erro na janela do replay** nas frases do coach, que vêm sem o traçado. Instale o 0.4.2 junto.
++- **O app do jogo 0.4.2 com o backend da 0.5.0** funciona, sem os visuais e sem a grade.
++- **Os detectores do Modelo 2 não foram validados:** o merge do pedido 38 saiu sem a H.4, por decisão do Eduardo, e a precisão e a revocação ficam para a Parte E do pedido 42. Nada do app os usa em execução.
++- **No backlog, sem pedido ainda:** a grade e os visuais sem confirmação no jogo, as voltas de tempo normal marcadas como incompletas (9 das 19 em 21/10), os buracos na numeração das voltas e o erro "attached to a different loop" do WebSocket, que também aparece no app instalado.
 diff --git a/docs/backlog.md b/docs/backlog.md
-index 25f1c141..fb160f03 100644
+index 25f1c141..572e4f63 100644
 --- a/docs/backlog.md
 +++ b/docs/backlog.md
-@@ -41,3 +41,6 @@ Lista viva de problemas conhecidos e tarefas adiadas, mantida pelo Claude (Cowor
+@@ -41,3 +41,8 @@ Lista viva de problemas conhecidos e tarefas adiadas, mantida pelo Claude (Cowor
  | O app instalado (0.5.0) não tem as correções do pedido 40: o corte no reinício e o cache da pista | Pedido 40 | Gravações feitas pelo app instalado ainda podem juntar passagens | Entram no instalador final |
  | 39 branches locais já contidas em `develop` (37 `etapa/*` e 2 `feature/*`) | Pedido 41, D1 | Só poluem a lista de branches | Apagar com `git branch -d`, depois do ok do Eduardo |
  | Branches antigas só no remoto: `telemetria-ai`, `master`, `feat/analise-comparativa` e `recovery/restore-pre-cache-rollback`, de outro histórico (antes do filter-repo de 07/08) | Pedido 41, D2 | Nenhum no código; os `refs/pull/1` e `refs/pull/2` mantêm o histórico antigo público, e só o suporte do GitHub os apaga | Decidir depois do TCC; antes de apagar `telemetria-ai` e `master`, guardar como tag local |
 +| Voltas de tempo normal marcadas como incompletas: 9 das 19 que o rádio viu fechar em 21/10, como a volta 10 (1:29,518). O coach exige todos os microssetores comparados (`completa`), e a causa não foi investigada | Pedido 43, C.4 (decisão do Eduardo de 01/11: pedido próprio) | Essas voltas ficam fora da análise das voltas e da grade da sessão, e quase todas as frases do coach caem nelas (só 1 de 18 numa volta da grade, nas sessões de 13, 18 e 21/10) | Pedido próprio; a regra é do coach |
 +| Buracos na numeração das voltas do rádio: em 13/10, o 10 aparece duas vezes e o 9 some (a passagem sai com o contador do jogo já adiantado); em 21/10, a 8 e a 14 não fecham na linha para o coach | Pedido 43, C.4 (decisão do Eduardo de 01/11: pedido próprio) | A grade lista essas voltas como "o rádio não viu esta volta fechar na linha", e uma linha pode trazer o número da volta errado | Pedido próprio; ver a numeração da gravação, do coach e do store |
 +| Erro "attached to a different loop" no envio por WebSocket (`TelemetryBroadcaster._drain_frames`, `core/websocket_server.py`): 15.671 vezes no `backend.1.log` do app instalado, 70 no `logs/backend.log` do repositório e 9 nas duas passagens do reprodutor do pedido 43 | Pedido 43, D.5 (decisão do Eduardo de 01/11: pedido próprio) | O envio da telemetria à tela falha e recomeça; não é só do reprodutor. Efeito na tela não medido | Pedido próprio |
++| A grade da sessão nos boxes, no jogo, e os visuais na tela do jogo sem confirmação visual: no teste de 01/11, a ida aos boxes caiu com a janela do replay desligada, e a grade foi pedida uma vez só | Pedido 43, Parte E (decisão do Eduardo de 01/11: merge sem refazer) | O backend entrega a grade certa, e o Lua não deu erro, mas ninguém confirmou o desenho | Olhar na próxima sessão no jogo: janela do replay ligada, uma análise entregue e 20 s nos boxes |
++| O FPS varia muito ao longo da sessão, e o custo de deixar aberta a janela do replay não saiu limpo: com as 4 janelas, 98,3; sem o replay, de 114,8 a 97,8; sem nada, 126,9. No log do CSP, uma linha "App radio_engenheiro is not allowed to load", sem efeito visível | Pedido 43, Parte E | Sem medida confiável do custo de cada janela | Sem pedido |
 diff --git a/docs/dashboard_inventario.md b/docs/dashboard_inventario.md
-index b86058a8..7e7bb754 100644
+index b86058a8..fa5dfcf3 100644
 --- a/docs/dashboard_inventario.md
 +++ b/docs/dashboard_inventario.md
-@@ -374,3 +374,13 @@ A limpeza do item 6 desta seção, os defeitos do backlog e o app do jogo 0.4.1
+@@ -374,3 +374,14 @@ A limpeza do item 6 desta seção, os defeitos do backlog e o app do jogo 0.4.1
    - **o canto inferior direito do mapa lendo `latestFrame` no replay e o `addFrame` mexendo no store no replay:** não acontecem mais. O replay do store só era aberto pela tela Pista e pela Análise, que saíram. A tela Volta e a Ao vivo têm o replay delas, fora do store;
    - **a rota da linha de corrida travando o servidor (seção 2.G):** ainda acontecia, com o mapa da depuração aberto. Corrigida: o cálculo roda fora do laço do servidor.
  - **O app do jogo:** a versão 0.4.1 (a janela salva fora da tela volta para dentro) entrou em `develop`.
@@ -732,7 +3643,8 @@ index b86058a8..7e7bb754 100644
 +- **Os visuais sob a animação** (a tela Ao vivo, `ReplayDaCurva.tsx`, e a janela do jogo): a faixa do pedal, a diferença acumulada e a velocidade pela distância, com o cursor de cada carro. Os dados vêm na mesma rota do replay.
 +- **A grade da sessão** (`GradeDaSessao.tsx`, sob os cartões do rádio; no jogo, nos boxes): a perda por curva das voltas válidas, a mesma da análise, com as curvas citadas marcadas e as voltas de fora com o motivo e as curvas citadas nelas. A rota nova é `GET /api/radio/grade`.
 +- **O app do jogo:** a versão 0.4.2 (`tools/csp_app/radio_engenheiro/`). Com o backend do 0.5.0, ele mostra o replay como antes.
-+- **Falta:** o teste no jogo (Parte E do pedido).
++- **O teste no jogo (01/11):** o Lua rodou no CSP 0.3.1 sem erro, e os números do replay batem com a voz e com o cartão. **Sem confirmação:** a grade nos boxes no jogo, o cartão da mensagem de teste e os visuais na tela do jogo.
++- **A versão:** 0.6.0 em `develop`, sem instalador.
 diff --git a/docs/decisoes/0021-radio-que-analisa-as-voltas-e-minimapa.md b/docs/decisoes/0021-radio-que-analisa-as-voltas-e-minimapa.md
 index 11cec48d..c1966f60 100644
 --- a/docs/decisoes/0021-radio-que-analisa-as-voltas-e-minimapa.md
@@ -743,8 +3655,81 @@ index 11cec48d..c1966f60 100644
  - **22/10/2026 (pedido 36), o replay da curva e as marcas de freada:** o app do jogo ganha uma quarta janela, "Replay da curva": a curva de que o rádio fala (a análise ou a frase do coach com causa), vista de cima, com a sua linha e a da referência, os dois carros cada um no seu tempo, as freadas, as mínimas, o traçado e o tempo perdido. Aparece na reta junto com a fala e some quando a janela de rádio acaba; nos boxes ou pausado, mostra a última análise em repetição. Os dados vêm de `/api/radio/replay/<id>`, só com as grades que o rádio já tem. Os dois mapas marcam a freada da IA pela regra do relatório de evolução: o minimapa só a da próxima curva, o mapa aproximado todas as da janela, com o rótulo. A gravação do app continua só dentro da pasta dele.
 +- **29/10/2026 (pedido 43), os números da voz no replay e os 4 visuais:** no replay de uma frase do coach, todo número escrito é o da voz, arredondado como no cartão (a freada, as mínimas e o tempo), e as marcas ficam onde o coach mediu: as freadas nos inícios de frenagem que o coach guardou e as mínimas no ponto mais lento do microssetor da fala. O microssetor aparece como "trecho da fala". O coach não mede o traçado, e o replay da frase não tem traçado. As linhas e os carros continuam os da curva inteira; a janela só cresce para conter o trecho da fala. Sob a animação, no jogo e na tela Ao vivo, entram a faixa do pedal, a diferença acumulada e a velocidade pela distância, com os dados da mesma rota do replay. A grade da sessão (a perda por curva das voltas válidas, a mesma da análise, com as curvas citadas) entra na tela Ao vivo e, nos boxes ou pausado, na janela grande do jogo (`GET /api/radio/grade`). Nenhum modelo, store ou critério do coach muda.
 +- **01/11/2026 (pedido 43), a análise e a grade:** na análise, os rótulos do replay usam os números do cartão (as medianas), e as marcas de freada acompanham o rótulo; as linhas, os carros e a faixa do pedal continuam os da volta mais perto da mediana. A diferença acumulada da análise cobre o trecho inteiro da curva: começa em zero na entrada do trecho e termina no "perde X s", e a animação não muda. Na frase do coach, o replay fica sem a seta do traçado. Na grade, cada volta de fora lista as curvas citadas pelo rádio.
+diff --git a/docs/decisoes/0023-modelo-2-quatro-pecas-ia-e-piloto.md b/docs/decisoes/0023-modelo-2-quatro-pecas-ia-e-piloto.md
+new file mode 100644
+index 00000000..c883762d
+--- /dev/null
++++ b/docs/decisoes/0023-modelo-2-quatro-pecas-ia-e-piloto.md
+@@ -0,0 +1,57 @@
++# 0023 — Modelo 2: as quatro peças para achar o erro, a técnica e o estilo, nas voltas da IA e do piloto
++
++- **Status:** aceita
++- **Data:** 2026-10-24
++- **Decisor:** Eduardo
++- **Refina:** 0018 (peças B e C do Modelo 2). **Mantém:** 0012 (diferença medida, nunca ganho prometido), 0014 e 0015 (origem das voltas e equipamento atual), 0004 (o simulador não estima ganho local)
++
++## Contexto
++
++1. **O problema que o Eduardo identificou (24/10):** ensinar onde e quando frear não basta; sem os conceitos técnicos, o piloto continua perdendo tempo. O Modelo 2 precisa achar o erro que custou tempo, ver se o piloto aplica as técnicas e saber se a técnica combina com o estilo dele.
++2. **A pesquisa de 24/10** (`docs/tecnica_de_pilotagem_pesquisa.md`) concluiu:
++   - **o cluster não serve como resultado principal.** Os estudos que agruparam voltas de simulador (Remonda et al. 2021; Hojaji et al. 2026) encontraram níveis de tempo de volta e estágios de aprendizagem, não estilos, e o método pede de 20 a 30 casos por grupo;
++   - **o que funciona** é combinar quatro peças: a comparação com uma volta real, detectores de técnica por regras, dimensões contínuas de estilo e um modelo supervisionado pelo tempo de cada trecho;
++   - **cada técnica e cada erro** tem um indicador calculável com os canais que o Assetto Corsa grava.
++3. **A decisão do Eduardo (24/10):**
++   - seguir com a combinação das quatro peças;
++   - identificar tudo nas voltas gravadas, **tanto da IA quanto do piloto**: o erro que fez o piloto perder tempo contra a IA, as técnicas que cada um usa e o estilo de cada um;
++   - montar o estilo também com dados externos de outras categorias, porque há pouca informação sobre este carro, e posicionar a IA e o piloto pelos vizinhos mais próximos (KNN) entre pilotos de estilo bem definido.
++
++## Decisão
++
++### 1. As quatro peças
++
++| Peça | Pergunta | Como |
++|---|---|---|
++| **Comparação com uma volta real** | Onde e quanto o piloto perde? | A diferença de tempo na grade de 2 m, somada por curva e por fase da curva (frenagem, entrada, meio, saída e reta seguinte), contra a volta da IA e contra a melhor volta do piloto |
++| **Detectores de técnica por regras** | O piloto aplica a técnica? Que erro ocorreu? | Uma regra física por técnica, com três estados: "aplica", "não aplica" e "não conclusivo". Os limiares são calibrados pela distribuição das voltas de referência na mesma curva |
++| **Dimensões contínuas de estilo** | Como o piloto executa? | Um vetor de medidas por tipo de curva (por exemplo, forma em V ou U, perfil de frenagem, uso dos pedais, aplicação do volante e perfil do acelerador), sem forçar categorias |
++| **Modelo supervisionado leve** | Que medidas explicam o tempo nesta curva? | O tempo do trecho como alvo e as medidas dos detectores como entrada, validado deixando uma sessão de fora. Mostra associação, não causa, e não estima ganho (ADR 0004) |
++
++### 2. Nas voltas da IA e nas do piloto
++
++- **As mesmas regras rodam nos dois.** Só entram voltas de origem rotulada: `humano` com o equipamento atual e `ia` pelo indicador ou por anotação (ADR 0014, 0015 e 0018).
++- **"Erro" é sempre uma diferença medida** contra uma volta real, com o tempo que ela custou. Uma passagem em que o piloto é mais rápido que a IA não é erro.
++- **A IA não é o alvo.** A IA do jogo não pilota como um humano; uma diferença de técnica contra ela é uma diferença, não necessariamente um defeito. A melhor volta do próprio piloto é a outra referência.
++
++### 3. O estilo com dados externos e o KNN
++
++- **É um caminho próprio,** ao lado das quatro peças, desenhado depois da pesquisa de datasets.
++- **Regras fixadas desde já:**
++  - só entram medidas calculáveis nos dois lados (no nosso dado e no dataset externo);
++  - as medidas são normalizadas para tirar o efeito do carro (por exemplo, relativas a uma referência do mesmo carro ou adimensionais);
++  - os rótulos de estilo dos pilotos de referência vêm de fontes documentadas, com o tipo de evidência;
++  - o KNN é validado deixando um piloto de fora: ele precisa acertar o estilo documentado de quem ficou de fora;
++  - a posição da IA e a do piloto vêm com a distância aos vizinhos e com "não conclusivo" quando nenhum vizinho fica perto.
++
++### 4. Antes de chegar ao piloto
++
++- **Os detectores são validados** contra passagens rotuladas à mão pelo Eduardo (precisão e revocação) antes de qualquer frase nova no rádio.
++- **O rádio e o coach não mudam** por causa desta decisão. A mudança do rádio para "uma correção por vez, com confirmação e retirada" é outra decisão (item C3 de `docs/tecnica_de_pilotagem_lista.md`).
++
++## Consequências
++
++- **O ângulo de subesterço** precisa da unidade do volante e do entre-eixos, que saem da M1 (ADR 0022, pedido 37). Até lá, ele usa uma medida substituta, marcada como tal.
++- **As voltas da IA rotuladas de 04/10** não têm a guinada nem as velocidades no referencial do carro, porque foram gravadas antes do pedido 18. Os detectores que dependem desses canais ficam "não conclusivo" na IA até haver uma sessão nova da IA gravada pelo app do repositório.
++- **A biblioteca de conceitos** (o que é cada técnica, por que funciona, como se treina e como medir) é outra peça, independente desta decisão, e entra no relatório depois da sessão.
++- **Resultados negativos são aceitos e documentados.** Se um detector não passar na validação, ele não chega ao piloto.
+diff --git a/docs/decisoes/README.md b/docs/decisoes/README.md
+index 7723bf37..cc8e02ce 100644
+--- a/docs/decisoes/README.md
++++ b/docs/decisoes/README.md
+@@ -26,4 +26,5 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
+ | [0020](0020-realidade-aumentada-app-lua-do-csp.md) | Realidade aumentada no Assetto Corsa: um app Lua do CSP, numa pasta própria do jogo | aceita (pedido 31); item 4 refinado por 0021 |
+ | [0021](0021-radio-que-analisa-as-voltas-e-minimapa.md) | O rádio analisa as voltas e diz onde e por que o piloto perde tempo; o app do jogo ganha um minimapa | aceita (pedido 35); refina 0020 |
+ | [0022](0022-validacao-da-m1-modelo-do-carro.md) | Validação da M1: como o modelo do carro para a frente é aprovado, e com que relógio | aceita (pedido 37); complementa 0006 e 0017 |
++| [0023](0023-modelo-2-quatro-pecas-ia-e-piloto.md) | Modelo 2: as quatro peças para achar o erro, a técnica e o estilo, nas voltas da IA e do piloto | aceita (pedido 38); refina 0018 |
+ | [0024](0024-m1-geometria-medida-pela-telemetria.md) | M1: a geometria do carro medida pela telemetria do jogo | aceita (pedido 39); refina 0022 e a seção 1.4 da M1 |
 diff --git a/docs/realidade_aumentada.md b/docs/realidade_aumentada.md
-index 99d84c56..64df54c4 100644
+index 99d84c56..89f827c2 100644
 --- a/docs/realidade_aumentada.md
 +++ b/docs/realidade_aumentada.md
 @@ -321,13 +321,62 @@ O engenheiro mostra o que diz: quando o rádio fala de uma curva, a janela mostr
@@ -798,7 +3783,7 @@ index 99d84c56..64df54c4 100644
 +- **o que mostra:** as voltas válidas da sessão nas linhas e as 14 curvas nas colunas. Cada célula tem a perda na curva contra a referência, em segundos, com a cor (laranja quando você perde, azul quando ganha, mais forte até 1 s). É a mesma perda da análise: a célula da curva citada, na volta citada, tem o número que a análise usou;
 +- **as curvas citadas** ficam com o contorno vermelho, na volta citada: a frase do coach na volta dela; a análise na volta das 3 mais perto da mediana (a do replay). A frase citada numa volta que ficou de fora não tem célula para marcar e aparece na lista das voltas de fora: nas 3 sessões, só 1 das 18 frases do coach caiu numa volta da grade;
 +- **as voltas de fora,** com o motivo e as curvas citadas nelas ("volta 12: incompleta (1:43,199); citada: C11"): a IA no volante, a volta incompleta (nem todos os microssetores medidos), a rodada ou saída de pista (uma curva com mais de 5 s), a volta sem as medidas e a que o rádio não viu fechar na linha (achada pelo buraco na numeração das voltas);
-+- **onde:** na tela Ao vivo, sob os cartões do rádio, lida a cada 5 s; no jogo, só nos boxes ou com o jogo pausado, embaixo da janela grande do replay, com as últimas 8 voltas válidas e as 2 últimas de fora. O backend do 0.5.0 não tem a rota: a janela fica sem a grade e registra isso uma vez no log do CSP.
++- **onde:** na tela Ao vivo, sob os cartões do rádio, lida a cada 5 s; no jogo, só nos boxes ou com o jogo pausado, depois de uma análise entregue e com a janela do replay ligada, embaixo da janela grande do replay, com as últimas 8 voltas válidas e as 2 últimas de fora. **No jogo, ela não foi confirmada:** no teste de 01/11, a ida aos boxes caiu com a janela desligada. O backend do 0.5.0 não tem a rota: a janela fica sem a grade e registra isso uma vez no log do CSP.
 +
 +**A conferência ponta a ponta** (01/11): o backend do repositório na porta 8011, com as pastas isoladas, tocou 21/10 desde a volta 1, e a tela Ao vivo, numa aba "[teste]", mostrou o replay da frase da C12 da volta 2 e o da primeira análise, com os visuais, e a grade com as curvas citadas. A análise e a grade foram repetidas com as decisões de 01/11, desde a volta 8, em velocidade 3 (capturas no handoff do pedido 43).
 +
@@ -806,7 +3791,7 @@ index 99d84c56..64df54c4 100644
 +
 +- **a rota:** uma frase do coach passou de 6,7 a 8,2 KB para 8,3 a 11,4 KB; uma análise com 2 curvas, de 15,7 a 18,3 KB para 22,3 a 25,4 KB (as 3 sessões). Longe dos 60 KB;
 +- **montar o replay no backend:** a mediana foi de 3,4 para 4,3 ms numa frase do coach e de 3,9 para 7,4 ms numa análise, uma vez, na entrega;
-+- **no jogo:** a cada quadro, enquanto o replay está na tela, mais 3 linhas de 120 a 200 pontos, os trechos do pedal e as áreas da diferença. O FPS ainda não foi medido: o teste no jogo não aconteceu até 01/11.
++- **no jogo:** a cada quadro, enquanto o replay está na tela, mais 3 linhas de 120 a 200 pontos, os trechos do pedal e as áreas da diferença. **No teste de 01/11** (CSP 0.3.1, 2.560 × 1.080), com as 4 janelas ligadas, 98,3 FPS de média (153 blocos de 10 s, de 55,1 a 107,2); com o replay desligado, 108,4 (48 blocos); com tudo desligado, 126,9 (2 blocos). Nos 5 blocos com o replay na tela, 99,3, contra cerca de 101,5 nos vizinhos. O custo de ter a janela aberta não saiu limpo, porque o FPS varia muito ao longo da sessão.
 +
  ### 5.5 Instalar, ligar e remover
  
@@ -822,9 +3807,43 @@ index 99d84c56..64df54c4 100644
  | `GET /api/live/volta/novos?versao=<v>&desde=<seq>` | só os pontos novos e a posição do carro (pedido 35); a volta inteira só numa volta nova |
  | `POST /api/teste/reproduzir`, `POST /api/teste/parar`, `GET /api/teste/estado` | só nos testes (`AT_TESTE_REPRODUTOR=1`): toca uma gravação pelo caminho do jogo, para medir a tela Ao vivo sem o jogo |
 diff --git a/docs/tecnica_de_pilotagem_lista.md b/docs/tecnica_de_pilotagem_lista.md
-index dbecfb64..971fe845 100644
+index dbecfb64..8977b8b6 100644
 --- a/docs/tecnica_de_pilotagem_lista.md
 +++ b/docs/tecnica_de_pilotagem_lista.md
+@@ -59,16 +59,16 @@
+ 
+ | # | Requisito | Preenchido quando | Estado | Onde está | O que falta |
+ |---|---|---|---|---|---|
+-| B1 | **Identificar o erro que levou à perda de tempo** | Regra para ir do microssetor que perdeu tempo até a fase da curva e o comando que originaram a perda, com teste em sessões reais | 🟡 | Pesquisa: desenho, etapas 1 e 2 (perda por fase da curva, repetição em 2 de 3 voltas, peso pela reta seguinte, cadeia causal entrada → meio → saída, falso ganho da frenagem tardia) | Implementação: pedido 38 (item E1) |
+-| B2 | **Identificar se o piloto aplica cada técnica** | Um detector por técnica, com os estados "aplica", "não aplica" e "não conclusivo", calibrado nas voltas de referência e validado (B10) | 🟡 | Pesquisa: desenho, etapa 3 (9 detectores em ordem de progressão) | Implementação: pedido 38 (item E2), nas voltas da IA e nas do piloto |
+-| B3 | **Catalogar o estilo do piloto** | Assinatura atual em dimensões contínuas, por tipo de curva, com incerteza, comparada com o histórico dele | 🟡 | Pesquisa: desenho, etapa 4 (vetor de escores-z em 7 dimensões) | Implementação: pedido 38 (a assinatura da IA e a do piloto). Para um iniciante, a assinatura muda depressa: tratar como "assinatura atual", não como traço fixo |
++| B1 | **Identificar o erro que levou à perda de tempo** | Regra para ir do microssetor que perdeu tempo até a fase da curva e o comando que originaram a perda, com teste em sessões reais | 🟡 | Implementado offline (pedido 38, Parte D): `backend/ml/modelo2/perda.py`; regras em `docs/modelo2_tecnica_e_estilo.md`, 1.6 e 2; saída por sessão em `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_erros_por_sessao.json` | Validar os detectores (B10) antes de qualquer frase. Decidir se o peso pela reta seguinte fica: ele põe as duas retas longas à frente de tudo e zera C01, C07, C08 e C09 (emenda 2.3) |
++| B2 | **Identificar se o piloto aplica cada técnica** | Um detector por técnica, com os estados "aplica", "não aplica" e "não conclusivo", calibrado nas voltas de referência e validado (B10) | 🟡 | 27 detectores com três estados, calibrados nas passagens da IA da mesma curva (pedido 38, Parte E): `backend/ml/modelo2/detectores.py`; regras em `docs/modelo2_tecnica_e_estilo.md`, 1.5 | A validação (B10). Limitações já vistas: a retomada (s_pu) e o ponto de entrada (s_ti), na seção 2 do documento |
++| B3 | **Catalogar o estilo do piloto** | Assinatura atual em dimensões contínuas, por tipo de curva, com incerteza, comparada com o histórico dele | 🟡 | Assinatura atual da IA e minha por tipo de curva, com intervalo de bootstrap, e a minha sessão a sessão (pedido 38, Parte F): `backend/ml/modelo2/estilo.py`, `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_estilo.json` | Separar estilo de habilidade com a população externa (E3, partes b a d). Para um iniciante, a assinatura muda depressa: tratar como "assinatura atual", não como traço fixo |
+ | B4 | **Decidir se a técnica faz sentido para o estilo** | Regras explícitas de compatibilidade, com o silêncio como resposta quando nenhuma passa | 🟡 | Pesquisa: desenho, etapa 5 (aparece numa volta real mais rápida; o nível permite; o passo combina com a assinatura; não é problema de acerto) | Decisão (C2) |
+ | B5 | **Ensinar os conceitos técnicos, e não só onde e quando frear** | Para cada técnica: o que é, por que funciona (física em linguagem simples), como se executa, o erro típico, um exercício e como medir se deu certo | ⬜ | A pesquisa tem o conteúdo de base e cinco exercícios codificáveis (marco de frenagem que avança, terceira marcha sem freio, subesterço proposital, construção lenta do acelerador, tempos de soltura do freio) | **Montar a biblioteca de técnicas e exercícios** e decidir onde ela aparece (relatório depois da sessão, tela do app) |
+ | B6 | Progressão por nível | As técnicas avançadas ficam bloqueadas até as básicas estarem dominadas, com um critério de domínio | 🟡 | Pesquisa: ordem dos detectores e regra "4 das últimas 6 passagens" | Decisão do critério de domínio |
+ | B7 | Comunicação: rádio e relatório | O rádio diz "o quê" e "onde" (um item, foco externo, diferença medida, confirmação, retirada); o relatório diz "por quê" e "como" | 🟡 | Pesquisa: "Falar uma coisa, verificar e retirar a ajuda" | Decisão (C3): muda o rádio de hoje (até 3 frases por volta e a análise a cada 3 voltas válidas) |
+ | B8 | Nível do piloto | Nível pelo ritmo médio das melhores voltas e pela dispersão, não pela melhor volta isolada (critério da FIA) | 🟡 | Pesquisa: recomendação final da seção do cluster | Implementação |
+ | B9 | Avaliação: o piloto aprendeu? | Desenho de sujeito único, com linha de base, intervenção e retenção sem rádio, ou alternância entre curva-alvo e curva de controle | ⬜ | Pesquisa: "Avaliar com desenho de sujeito único" | Decisão (C4): muda o plano de sessões |
+-| B10 | Validação dos detectores | Precisão e revocação de cada detector contra passagens rotuladas à mão pelo Eduardo | ⬜ | Pesquisa: fim da etapa 3 | Protocolo de rotulagem e a sessão de rotulagem |
++| B10 | Validação dos detectores | Precisão e revocação de cada detector contra passagens rotuladas à mão pelo Eduardo | 🟡 | Kit de 120 passagens (5 detectores × 24), sem o estado do detector e sem a origem: `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_kit_rotulagem.html` e `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_rotulagem.csv` | A rotulagem do Eduardo; depois, a precisão e a revocação, com as duas rodadas juntas (pedido 42, Parte E) |
+ | B11 | Regra do projeto mantida | Toda fala é diferença medida contra uma volta real, nunca ganho prometido (ADR 0012) | ✅ | O desenho inteiro segue a regra | — |
+ 
+ ---
+@@ -90,9 +90,9 @@
+ 
+ | # | Objetivo | Preenchido quando | Estado | Onde está | O que falta |
+ |---|---|---|---|---|---|
+-| E1 | **Qual erro o piloto cometeu que o fez perder tempo contra a IA** | Em cada sessão, por curva e por fase da curva: a perda medida contra a volta da IA e a diferença de técnica que a explica, ou "não conclusivo" | ⬜ | Pedido 38, Parte D | Executar o pedido 38 (depois do 37) |
+-| E2 | **Quais técnicas a IA usa e quais o piloto usa** | Os detectores rodam nas voltas da IA e nas do piloto, e há, por curva, a fração das passagens em que cada um aplica cada técnica | ⬜ | Pedido 38, Parte E | **Dados:** as voltas da IA rotuladas (04/10) não têm a guinada nem as velocidades no referencial do carro. É preciso uma sessão nova da IA, gravada pelo app do repositório |
+-| E3 | **Estilos por datasets e um cluster de estilo; o estilo da IA e o do piloto catalogados** | (a) a assinatura de estilo da IA e a do piloto no nosso dado; (b) um dataset externo com pilotos identificados e canais comparáveis; (c) um espaço de estilo construído sobre o resíduo contra o tempo (sem o eixo de habilidade) e validado pelos seis testes da pesquisa; (d) a IA e o piloto posicionados nele, com a distância e a incerteza | 🟡 | (a) pedido 38, Parte F. (b) a (d) desenhados: pesquisa de datasets, "Pergunta 3". **O dataset é o Assetto Corsa Gym** (NeurIPS 2024, CC BY 4.0): 15 pilotos (1 profissional de esports, 4 especialistas, 5 casuais e 5 iniciantes), 927 voltas, Dallara F317, GT3 e Miata, praticamente os mesmos canais do projeto, sem Interlagos | As ações F1 a F5 |
++| E1 | **Qual erro o piloto cometeu que o fez perder tempo contra a IA** | Em cada sessão, por curva e por fase da curva: a perda medida contra a volta da IA e a diferença de técnica que a explica, ou "não conclusivo" | 🟡 | Pedido 38, Parte D: os 3 maiores erros por sessão, com a curva, a fase, o tempo e o detector que explica, ou "não conclusivo" (`docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_erros_por_sessao.json`) | Validar os detectores (B10). A volta da IA com todos os canais é uma só (22/10, 89,1 s, mais lenta que as de 04/10) |
++| E2 | **Quais técnicas a IA usa e quais o piloto usa** | Os detectores rodam nas voltas da IA e nas do piloto, e há, por curva, a fração das passagens em que cada um aplica cada técnica | 🟡 | Pedido 38, Parte E: a fração das passagens em que a IA e eu aplicamos cada técnica, por curva, e a minha evolução por sessão (`docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_tecnicas.json`) | Os detectores de equilíbrio (subesterço, sobresterço, contraesterço) têm uma só volta da IA com a guinada. Falta a sessão da IA em níveis de força (F3), com os passos no relatório do pedido 38 |
++| E3 | **Estilos por datasets e um cluster de estilo; o estilo da IA e o do piloto catalogados** | (a) a assinatura de estilo da IA e a do piloto no nosso dado; (b) um dataset externo com pilotos identificados e canais comparáveis; (c) um espaço de estilo construído sobre o resíduo contra o tempo (sem o eixo de habilidade) e validado pelos seis testes da pesquisa; (d) a IA e o piloto posicionados nele, com a distância e a incerteza | 🟡 | (a) feita: pedido 38, Parte F (`docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_estilo.json`). (b) a (d) desenhados: pesquisa de datasets, "Pergunta 3". **O dataset é o Assetto Corsa Gym** (NeurIPS 2024, CC BY 4.0): 15 pilotos (1 profissional de esports, 4 especialistas, 5 casuais e 5 iniciantes), 927 voltas, Dallara F317, GT3 e Miata, praticamente os mesmos canais do projeto, sem Interlagos | As ações F1 a F5. As 10 medidas adimensionais e os canais de cada uma estão no relatório do pedido 38 (Parte F.4) |
+ | E4 | **A biblioteca de estilos de referência, com KNN:** pilotos de estilo bem definido como referência e a busca dos "vizinhos" com padrão parecido; a busca vai além da F3, porque há pouca informação desse carro | (a) as âncoras de referência; (b) a telemetria delas num dataset; (c) as medidas comparáveis entre carros (no máximo 10, adimensionais, por fase da curva); (d) o KNN validado deixando um piloto de fora e trocando o carro; (e) a IA e o piloto posicionados, com "não conclusivo" quando nenhuma âncora fica perto | 🟡 | Desenhado: pesquisa de datasets, "Pergunta 4". **Três achados mudam o desenho:** (1) não existe biblioteca pública de estilos em nenhuma categoria, e pilotos com estilo "bem definido" não existem como verdade de referência (na F1, os rótulos são jornalísticos e mudam com o carro); as âncoras passam a ser **grupos** (por experiência ou por arquétipo extraído dos dados); (2) com medidas absolutas, o KNN acha **carros** parecidos, não estilos (na F1, o construtor explica cerca de 88% da variância dos resultados); (3) a busca se amplia por **semelhança de condição**, não por categoria: em vez de trazer pilotos de outras categorias até Interlagos, **levar o piloto e a IA até o F317 numa pista do Assetto Corsa Gym**. A F1 em Interlagos (FastF1) entra só com o traço de velocidade, como contexto de forma de curva | As ações F1 a F5 |
+ | E5 | **As duas bibliotecas são diferentes e as duas fazem falta** | A biblioteca de estilos (E4) diz com quem o piloto se parece; a biblioteca de conceitos (B5) diz o que é cada técnica, por que funciona, como se treina e como medir. A primeira escolhe a técnica que combina; a segunda ensina | 🟡 | Esta lista | O Eduardo confirmar que as duas entram |
+ 
 @@ -117,7 +117,7 @@
  |---|---|---|
  | D1 | O coach já mede a perda por microssetor contra uma volta real: é a base da localização (B1) | ✅ existe |
@@ -834,12 +3853,16 @@ index dbecfb64..971fe845 100644
  | D4 | **Canais a confirmar antes dos detectores:** a unidade do volante e o entre-eixos (o ângulo de subesterço precisa dos dois); a presença de ABS no carro; o escorregamento das rodas, que mistura os componentes longitudinal e lateral | ⛔ A M1 (pedido 37) parou: as regressões não identificaram o entre-eixos. **Pelo ADR 0024, o volante e o entre-eixos passam a ser medidos pelos pontos de contato e pela direção dos pneus na memória do jogo (pedido 39).** Um retrato antigo da memória já dá cerca de 2,96 m e 15° de roda por unidade de volante. O ABS e o escorregamento ainda não têm pedido |
  | D5 | As taxas (aplicação do freio, velocidade do volante, reversões) são calculadas nos cerca de 60 Hz originais, com o cronômetro do jogo (ADR 0022), e só depois projetadas na grade de 2 m | ⬜ regra para os pedidos de implementação |
  | D6 | Separar as voltas da IA (indicador do jogo) e as anteriores a 01/10/2026 (o equipamento novo) | ✅ já é regra do store (ADR 0014 e 0015) |
-@@ -134,3 +134,5 @@
+@@ -134,3 +134,9 @@
  | 24/10/2026 | **Decisão C1: seguir com as 4 peças.** Entraram os objetivos E1 a E5 (nas voltas da IA e do piloto). E1, E2 e a parte (a) de E3 vão para o pedido 38. A parte externa de E3 e o E4 dependem da pesquisa de datasets. Encontrada uma lacuna de dados: as voltas da IA de 04/10 não têm a guinada nem as velocidades no referencial do carro |
  | 24/10/2026 | Validada contra a pesquisa de datasets. E3 e E4 passam a 🟡 (desenhados): o dataset externo é o Assetto Corsa Gym, as âncoras são grupos e não pilotos nomeados, e a busca se amplia por semelhança de condição. Entrou a seção F (ações F1 a F6). O pedido 38 ganhou a IA em níveis de força, as verificações da IA e as medidas adimensionais |
  | 25/10/2026 | A M1 parou na Parte C (entre-eixos não identificado). D4 atualizado: a geometria será medida pela telemetria do jogo (ADR 0024, pedido 39). O pedido 38 continua depois do 39 |
++| 25/10/2026 | O pedido 39 parou na Parte C, esperando a sessão de medição (o retrato confirma L = 2,955 m e k_δ = 0,267 rad, deste carro). O pedido 38 foi aberto ao mesmo tempo na mesma pasta e parou antes da Parte A; o commit dos documentos dele (`f38f89a5`) ficou na branch do 37/39 e entra em `develop` com o merge do 39. O pedido 38 recomeça de `develop`, depois do merge |
++| 25/10/2026 | **Pedido 38 executado até a Parte H (parado para a rotulagem).** B1, B2, B3, E1, E2 e E3(a) implementados offline em `backend/ml/modelo2/`, nas 130 voltas minhas e 14 da IA; B10 com o kit de rotulagem pronto. O subesterço usa o entre-eixos e a unidade do volante do retrato do pedido 39, como medida substituta, até a M1 medir |
++| 25/10/2026 | Validada contra o relatório do pedido 38: as linhas B1, B2, B3, B10, E1, E2 e E3 conferem com o que foi entregue. Recomendação do Cowork para a ordem: rotular o kit antes (os rótulos são da passagem e continuam valendo quando o subesterço for recalculado com a geometria medida); a sessão da IA em níveis de força (F3) vai na mesma ida ao jogo da medição do pedido 39. Cuidado registrado para a B10: no subesterço (E2), o kit não mostra quanto volante a curva pede, então "nao sei" é uma resposta válida e esperada |
 +| 29/10/2026 | **Decisão do Eduardo:** no replay de uma frase do coach, os rótulos mostram os números da voz, e as linhas e os carros continuam os da curva inteira. O pedido 43 entregou essa regra, o trecho da fala e os 4 visuais (D3). A grade da sessão marca as curvas citadas na volta em que foram citadas, para ver se melhoraram nas voltas seguintes |
 +| 01/11/2026 | **Decisões do Eduardo no pedido 43:** a mesma regra vale para a análise (os rótulos do replay com as medianas do cartão); a diferença acumulada da análise cobre o trecho da curva e termina no "perde X s"; as voltas de fora da grade listam as curvas citadas. Foram para o backlog as voltas de tempo normal marcadas como incompletas, que deixam a maioria das frases do coach fora da grade |
++| 01/11/2026 | **Decisão do Eduardo: o merge do pedido 38 em `develop` sai sem a H.4.** O Modelo 2 continua offline, e nada do app o usa. A precisão e a revocação (B10) saem quando os rótulos chegarem, com as duas rodadas juntas, na Parte E do pedido 42 |
 diff --git a/frontend/src/aoVivo/GradeDaSessao.tsx b/frontend/src/aoVivo/GradeDaSessao.tsx
 new file mode 100644
 index 00000000..66179a4c
