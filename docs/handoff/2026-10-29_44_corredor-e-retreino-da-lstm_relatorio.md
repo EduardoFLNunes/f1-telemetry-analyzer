@@ -24,7 +24,7 @@
 5. **Um achado que vale olhar antes de rodar:** a regra da opção 3 abre trechos de até 28,2 m de largura, e parte deles passa sobre o que o cache marca como buraco no asfalto (Parte B.3).
 6. **Nada foi enviado ao GitHub.** O controle de permissões desta sessão recusou o envio. Os três commits estão só na pasta local.
 
-Nenhum número da régua foi visto: nenhuma rodada real terminou, e os treinos curtos de medida não calcularam nem guardaram resultado para leitura. O modelo em `data/ml/models/` ainda é o de agosto.
+Nenhum número da régua foi visto: nenhuma rodada real rodou, e os treinos curtos de medida só imprimiram o tempo, com os erros descartados sem leitura. O modelo em `data/ml/models/` ainda é o de agosto.
 
 ## Parte A: os ADRs
 
@@ -62,7 +62,7 @@ O desenho que evita mudar o resto: `load_geometry` continua igual e devolve as l
 | critério da F1 | `external/f1_line.py`, `f1_band.py`, `scripts/alinhar_fastf1.py`, `faixa_f1_secas.py`, `referencia_f1.py` | corredor novo, e a saída registra o `corridor_id` |
 | scripts do Modelo 1 | `train_models.py`, `optimize_line.py`, `run_pipeline.py`, `compare_lap.py`, `plot_comparison.py`, `validate.py` | corredor novo; os que gravam resultado registram o `corridor_id` |
 | `outside_corridor_fraction` | `preprocessing/quality.py`, chamado pelo inventário, pelo store e pelo Modelo 2 | **nada:** eles passam a pista de `load_geometry`, e o inventário fica como está. O valor novo foi calculado à parte (Parte C) |
-| Modelo 2 e M1 | `modelo2/dados.py`, `modelo_carro/dados.py` | **nada:** usam o `evaluate_lap` só pelo portão, que não olha o corredor |
+| Modelo 2 e M1 | `modelo2/dados.py`, `modelo_carro/dados.py` | **nada:** nenhum dos dois lê as larguras; o Modelo 2 usa o `evaluate_lap` só pelo portão, que não olha o corredor |
 | rádio: rótulos do minimapa | `core/radio/minimapa.py` | **nada:** larguras de antes |
 | app e tela Volta | `core/leitura/arquivos.py` (`larguraEsquerdaM` e `larguraDireitaM`) | **nada:** larguras de antes |
 | mapa do app | `routers/legacy.py` e o front, pelo `boundsLeft` e `boundsRight` do cache | **nada** |
@@ -194,7 +194,7 @@ O valor por volta está no resumo. A coluna do inventário segue com o corredor 
 
 **D.4: a F1 está registrada no ADR 0026** (tabela da Parte A), e o código só lê as colunas `lateral` e `pouco_confiavel`. O erro de alinhamento registrado: ICP de 3,28 m até a linha central, escala de 0,0998 m por unidade, comprimento 2,54% menor, e o excesso sobre o corredor novo da tabela C.1.
 
-**D.5: a estimativa de tempo.** Medi treinos reais de 3 épocas, com a F1, no maior conjunto de janelas (14.280 de treino, 2.856 de validação e 1.170 da F1).
+**D.5: a estimativa de tempo.** Medi treinos reais de 3 épocas, com a F1, rodando vários processos juntos (na primeira rodada medida: 14.280 janelas de treino, 2.856 de validação e 1.170 da F1).
 
 | arranjo | segundos por época em cada processo | segundos por época equivalente |
 |---|---|---|
