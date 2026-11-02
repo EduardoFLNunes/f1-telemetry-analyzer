@@ -36,7 +36,7 @@
 - **As suítes em `develop`, em `8d04814e`:** backend com 872 testes passando; front com 174, `tsc` e build sem erro; `conferir_lua.py` sem erro.
 - **O pedido 42,** ajustado pelo Cowork ao merge do 38 sem a H.4, foi commitado junto com o fechamento (`082115e1`).
 - **O backlog:** entraram a grade e os visuais sem confirmação no jogo, e o FPS que varia ao longo da sessão.
-- **O app ainda aberto:** o backend que subiu para o teste continua com o código de antes. A versão 0.6.0 aparece quando o app for aberto de novo.
+- **Onde ver a versão:** a 0.6.0 aparece ao abrir o app pelo repositório, em `develop`. O app instalado continua sendo o 0.5.0.
 
 ## O teste no jogo de 01/11 (19:47 a 20:22)
 
