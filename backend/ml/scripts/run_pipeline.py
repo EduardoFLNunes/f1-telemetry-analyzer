@@ -100,7 +100,7 @@ def main(argv=None) -> int:
     from ml.optimization.vehicle_model import load_envelope
     from ml.preprocessing.splits import split_by_session
     from ml.track.corners import detect_corners
-    from ml.track.geometry import load_geometry
+    from ml.track.geometry import load_corridor_geometry
     from ml.track.microsectors import build_microsectors
 
     pipeline = Pipeline()
@@ -142,7 +142,7 @@ def main(argv=None) -> int:
 
     # ---------------------------------------------- 2. pre-processamento ----
     def preprocessing() -> Stage:
-        track = load_geometry()
+        track = load_corridor_geometry()
         if args.from_scratch:
             from ml.data.lap_store import build_store, save_store
 
@@ -351,7 +351,8 @@ def main(argv=None) -> int:
     pipeline.run("resultado final — tracado otimizado e comparacao", final)
 
     total = sum(stage.seconds for stage in pipeline.stages)
-    payload = {"etapas": [stage.to_dict() for stage in pipeline.stages], "segundos_totais": total}
+    payload = {"geometry_id": track.geometry_id, "corridor_id": track.corridor_id,
+               "etapas": [stage.to_dict() for stage in pipeline.stages], "segundos_totais": total}
     destination = root / "pipeline_run.json"
     destination.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 

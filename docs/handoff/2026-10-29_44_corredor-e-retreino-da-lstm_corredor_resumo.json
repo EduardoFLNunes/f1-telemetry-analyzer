@@ -1,0 +1,2468 @@
+{
+ "pedido": "docs/prompts/2026-10-29_44_corredor-e-retreino-da-lstm.md",
+ "adr": "docs/decisoes/0025-corredor-pela-borda-da-superficie.md",
+ "gerado_em": "2026-11-02T15:48:53.697475+00:00",
+ "commit": "7e933a7c66f3df04bdc486af83e85ff2210baec1",
+ "parte_b": {
+  "identidade": {
+   "geometry_id_antes": "0ed16f0dd2225990",
+   "geometry_id_novo": "0ed16f0dd2225990",
+   "corridor_id_antes": "2a6912207d9cbc87",
+   "corridor_id_novo": "56f5356b141982c2",
+   "meia_bitola_m": 1.0,
+   "folga_de_zebra_m": 0.5
+  },
+  "grade_igual": {
+   "s": true,
+   "x": true,
+   "z": true,
+   "elevation": true,
+   "tangent": true,
+   "normal": true,
+   "curvature": true
+  },
+  "pontos_que_ficaram_com_a_borda_de_antes": {
+   "esquerda": 1,
+   "direita": 0
+  },
+  "larguras": {
+   "esquerda_antes": {
+    "mediana_m": 6.909671064515183,
+    "p10_m": 4.941170034818872,
+    "p90_m": 8.876150361844383,
+    "min_m": 1.853781668508272,
+    "max_m": 11.597382803585887
+   },
+   "esquerda_nova": {
+    "mediana_m": 8.6,
+    "p10_m": 5.4,
+    "p90_m": 11.100000000000001,
+    "min_m": 4.6000000000000005,
+    "max_m": 28.200000000000003
+   },
+   "direita_antes": {
+    "mediana_m": 7.328859076190568,
+    "p10_m": 5.27894323553328,
+    "p90_m": 9.982603139935835,
+    "min_m": 2.863397722269187,
+    "max_m": 12.662457652386335
+   },
+   "direita_nova": {
+    "mediana_m": 7.550000000000001,
+    "p10_m": 5.45,
+    "p90_m": 10.8,
+    "min_m": 3.0500000000000003,
+    "max_m": 25.55
+   }
+  },
+  "s_e_lateral": {
+   "sessao": "2026-10-10_09-57-09_vhe_interlagos",
+   "voltas": 21,
+   "amostras": 141884,
+   "ponto_a_ponto_igual": true,
+   "maior_diferenca_para_o_store_m": 0.0
+  },
+  "coach": {
+   "geometry_id_carregado": "0ed16f0dd2225990",
+   "geometria_oficial": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\reference_models\\vhe_interlagos.geometry.json",
+    "geometry_id": "0ed16f0dd2225990",
+    "sha256": "811da4c989e6efd4b89167b2439983a1aedf10d29ee46ac5b67f12a6a906867b"
+   },
+   "modelo_do_coach": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\reference_models\\vhe_interlagos.json",
+    "geometry_id": "0ed16f0dd2225990",
+    "sha256": "df5a763f1d0e8be0b7524bf7b33e0324f1a8409bef75a4adf513b4e80ecbe130"
+   },
+   "coach_fala": true
+  },
+  "sinal_do_jogo": {
+   "referencia_do_pedido_27": {
+    "estreito_demais": 6764,
+    "largo_demais": 411
+   },
+   "as_58_do_pedido_27": {
+    "voltas": "as 58 do pedido 27",
+    "voltas_usadas": 58,
+    "voltas_sem_canal": [],
+    "corredor_novo": {
+     "estreito_demais": 6764,
+     "largo_demais": 411,
+     "por_lado": {
+      "esquerda": {
+       "amostras": 136144,
+       "pneus_fora": 184,
+       "largo_demais": 91,
+       "estreito_demais": 2774
+      },
+      "direita": {
+       "amostras": 167489,
+       "pneus_fora": 1092,
+       "largo_demais": 320,
+       "estreito_demais": 3990
+      }
+     }
+    },
+    "pela_conta_da_opcao_3_do_pedido_27": {
+     "estreito_demais": 6764,
+     "largo_demais": 411
+    },
+    "corredor_de_antes": {
+     "estreito_demais": 15338,
+     "largo_demais": 548
+    }
+   },
+   "todas_as_do_treino": {
+    "voltas": "as voltas do treino",
+    "voltas_usadas": 150,
+    "voltas_sem_canal": [],
+    "corredor_novo": {
+     "estreito_demais": 12814,
+     "largo_demais": 1236,
+     "por_lado": {
+      "esquerda": {
+       "amostras": 348539,
+       "pneus_fora": 836,
+       "largo_demais": 296,
+       "estreito_demais": 4851
+      },
+      "direita": {
+       "amostras": 435257,
+       "pneus_fora": 2741,
+       "largo_demais": 940,
+       "estreito_demais": 7963
+      }
+     }
+    },
+    "pela_conta_da_opcao_3_do_pedido_27": {
+     "estreito_demais": 12814,
+     "largo_demais": 1236
+    },
+    "corredor_de_antes": {
+     "estreito_demais": 40732,
+     "largo_demais": 1333
+    }
+   }
+  },
+  "degraus": {
+   "esquerda_antes": {
+    "acima_de_0_3m": 85,
+    "acima_de_1m": 0,
+    "acima_de_3m": 0,
+    "maior_m": 0.652,
+    "fechamento_do_laco_m": 0.084,
+    "maiores": [
+     {
+      "s_m": 382.0,
+      "de_m": 9.7,
+      "para_m": 9.05,
+      "degrau_m": 0.65,
+      "camada_junto_da_borda": []
+     },
+     {
+      "s_m": 384.0,
+      "de_m": 9.05,
+      "para_m": 8.43,
+      "degrau_m": 0.62,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 3894.1,
+      "de_m": 8.82,
+      "para_m": 9.39,
+      "degrau_m": 0.57,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 3896.1,
+      "de_m": 9.39,
+      "para_m": 9.93,
+      "degrau_m": 0.54,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 2138.0,
+      "de_m": 8.8,
+      "para_m": 8.26,
+      "degrau_m": 0.53,
+      "camada_junto_da_borda": [
+       "zebra"
+      ]
+     },
+     {
+      "s_m": 2136.0,
+      "de_m": 9.33,
+      "para_m": 8.8,
+      "degrau_m": 0.53,
+      "camada_junto_da_borda": []
+     },
+     {
+      "s_m": 2140.0,
+      "de_m": 8.26,
+      "para_m": 7.75,
+      "degrau_m": 0.51,
+      "camada_junto_da_borda": [
+       "zebra"
+      ]
+     },
+     {
+      "s_m": 1990.0,
+      "de_m": 9.09,
+      "para_m": 8.58,
+      "degrau_m": 0.51,
+      "camada_junto_da_borda": [
+       "zebra"
+      ]
+     },
+     {
+      "s_m": 2846.1,
+      "de_m": 8.8,
+      "para_m": 8.3,
+      "degrau_m": 0.5,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 380.0,
+      "de_m": 10.19,
+      "para_m": 9.7,
+      "degrau_m": 0.5,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     }
+    ]
+   },
+   "esquerda_nova": {
+    "acima_de_0_3m": 163,
+    "acima_de_1m": 43,
+    "acima_de_3m": 7,
+    "maior_m": 20.2,
+    "fechamento_do_laco_m": 0.0,
+    "maiores": [
+     {
+      "s_m": 3560.1,
+      "de_m": 7.9,
+      "para_m": 28.1,
+      "degrau_m": 20.2,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 3484.1,
+      "de_m": 28.2,
+      "para_m": 8.2,
+      "degrau_m": 20.0,
+      "camada_junto_da_borda": [
+       "asfalto",
+       "pintura"
+      ]
+     },
+     {
+      "s_m": 774.0,
+      "de_m": 6.5,
+      "para_m": 12.9,
+      "degrau_m": 6.4,
+      "camada_junto_da_borda": [
+       "asfalto",
+       "pintura"
+      ]
+     },
+     {
+      "s_m": 3938.1,
+      "de_m": 14.6,
+      "para_m": 8.45,
+      "degrau_m": 6.15,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 3478.1,
+      "de_m": 17.55,
+      "para_m": 21.55,
+      "degrau_m": 4.0,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 3480.1,
+      "de_m": 21.55,
+      "para_m": 24.95,
+      "degrau_m": 3.4,
+      "camada_junto_da_borda": [
+       "asfalto",
+       "pintura"
+      ]
+     },
+     {
+      "s_m": 3482.1,
+      "de_m": 24.95,
+      "para_m": 28.2,
+      "degrau_m": 3.25,
+      "camada_junto_da_borda": [
+       "asfalto",
+       "pintura"
+      ]
+     },
+     {
+      "s_m": 2134.0,
+      "de_m": 6.0,
+      "para_m": 8.75,
+      "degrau_m": 2.75,
+      "camada_junto_da_borda": [
+       "zebra"
+      ]
+     },
+     {
+      "s_m": 2786.1,
+      "de_m": 8.2,
+      "para_m": 5.5,
+      "degrau_m": 2.7,
+      "camada_junto_da_borda": [
+       "zebra"
+      ]
+     },
+     {
+      "s_m": 2844.1,
+      "de_m": 5.7,
+      "para_m": 8.4,
+      "degrau_m": 2.7,
+      "camada_junto_da_borda": [
+       "asfalto",
+       "zebra"
+      ]
+     }
+    ]
+   },
+   "direita_antes": {
+    "acima_de_0_3m": 107,
+    "acima_de_1m": 1,
+    "acima_de_3m": 0,
+    "maior_m": 1.639,
+    "fechamento_do_laco_m": 1.639,
+    "maiores": [
+     {
+      "s_m": 4332.1,
+      "de_m": 9.0,
+      "para_m": 7.36,
+      "degrau_m": 1.64,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 290.0,
+      "de_m": 10.65,
+      "para_m": 9.84,
+      "degrau_m": 0.81,
+      "camada_junto_da_borda": []
+     },
+     {
+      "s_m": 292.0,
+      "de_m": 9.84,
+      "para_m": 9.17,
+      "degrau_m": 0.68,
+      "camada_junto_da_borda": []
+     },
+     {
+      "s_m": 288.0,
+      "de_m": 11.32,
+      "para_m": 10.65,
+      "degrau_m": 0.67,
+      "camada_junto_da_borda": []
+     },
+     {
+      "s_m": 1390.0,
+      "de_m": 9.23,
+      "para_m": 8.62,
+      "degrau_m": 0.61,
+      "camada_junto_da_borda": []
+     },
+     {
+      "s_m": 278.0,
+      "de_m": 11.78,
+      "para_m": 12.38,
+      "degrau_m": 0.6,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 938.0,
+      "de_m": 5.5,
+      "para_m": 6.06,
+      "degrau_m": 0.56,
+      "camada_junto_da_borda": []
+     },
+     {
+      "s_m": 286.0,
+      "de_m": 11.88,
+      "para_m": 11.32,
+      "degrau_m": 0.56,
+      "camada_junto_da_borda": []
+     },
+     {
+      "s_m": 1388.0,
+      "de_m": 9.78,
+      "para_m": 9.23,
+      "degrau_m": 0.55,
+      "camada_junto_da_borda": []
+     },
+     {
+      "s_m": 1392.0,
+      "de_m": 8.62,
+      "para_m": 8.09,
+      "degrau_m": 0.53,
+      "camada_junto_da_borda": []
+     }
+    ]
+   },
+   "direita_nova": {
+    "acima_de_0_3m": 88,
+    "acima_de_1m": 38,
+    "acima_de_3m": 10,
+    "maior_m": 19.95,
+    "fechamento_do_laco_m": 0.0,
+    "maiores": [
+     {
+      "s_m": 2784.1,
+      "de_m": 5.6,
+      "para_m": 25.55,
+      "degrau_m": 19.95,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 3092.1,
+      "de_m": 5.4,
+      "para_m": 19.7,
+      "degrau_m": 14.3,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 826.0,
+      "de_m": 16.45,
+      "para_m": 3.65,
+      "degrau_m": 12.8,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 2626.0,
+      "de_m": 18.1,
+      "para_m": 6.2,
+      "degrau_m": 11.9,
+      "camada_junto_da_borda": []
+     },
+     {
+      "s_m": 3172.1,
+      "de_m": 15.65,
+      "para_m": 5.9,
+      "degrau_m": 9.75,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 192.0,
+      "de_m": 17.0,
+      "para_m": 7.65,
+      "degrau_m": 9.35,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 730.0,
+      "de_m": 8.2,
+      "para_m": 17.4,
+      "degrau_m": 9.2,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 176.0,
+      "de_m": 9.45,
+      "para_m": 17.1,
+      "degrau_m": 7.65,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 2786.1,
+      "de_m": 25.55,
+      "para_m": 19.3,
+      "degrau_m": 6.25,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     },
+     {
+      "s_m": 3874.1,
+      "de_m": 7.15,
+      "para_m": 10.6,
+      "degrau_m": 3.45,
+      "camada_junto_da_borda": [
+       "asfalto"
+      ]
+     }
+    ]
+   },
+   "fechamento_cru_do_cache": {
+    "largura_direita_primeiro_vertice_m": 7.358094112791558,
+    "largura_direita_ultimo_vertice_m": 9.009500799412955,
+    "degrau_no_cache_m": 1.6514066866213968
+   }
+  },
+  "figura": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\corredor\\novo\\corredor_novo_x_pintura.png"
+ },
+ "parte_c": {
+  "criterio_da_f1": {
+   "alinhamento": {
+    "corredor_de_antes": {
+     "pontos_fora": 44,
+     "fracao_fora": 0.02030456852791878,
+     "p95_m": 0.0,
+     "max_m": 2.2631628071937717,
+     "aceito": true
+    },
+    "corredor_novo": {
+     "pontos_fora": 8,
+     "fracao_fora": 0.0036917397323488694,
+     "p95_m": 0.0,
+     "max_m": 0.40119999999999933,
+     "aceito": true
+    }
+   },
+   "voltas_escolhidas": 80,
+   "de_aceita_para_recusada": 0,
+   "de_recusada_para_aceita": 0,
+   "voltas_que_mudam": [],
+   "voltas_da_epoca_que_mudam": [],
+   "referencia_2023_25": {
+    "corredor_de_antes": {
+     "pontos_fora": 41,
+     "fracao_fora": 0.018920166128287955,
+     "p95_m": 0.0,
+     "max_m": 2.057007362412957
+    },
+    "corredor_novo": {
+     "pontos_fora": 4,
+     "fracao_fora": 0.0018458698661744347,
+     "p95_m": 0.0,
+     "max_m": 0.17799999999999905
+    }
+   },
+   "por_volta": [
+    {
+     "chave": "2019_Q_HAM_15",
+     "ano": 2019,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.024,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2019_Q_VER_5",
+     "ano": 2019,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0235,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2019_Q_LEC_16",
+     "ano": 2019,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0249,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2019_Q_VET_11",
+     "ano": 2019,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.024,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2019_Q_ALB_10",
+     "ano": 2019,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.024,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2019_Q_BOT_13",
+     "ano": 2019,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0245,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2019_Q_RAI_11",
+     "ano": 2019,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2019_Q_GAS_12",
+     "ano": 2019,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0245,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2019_Q_MAG_8",
+     "ano": 2019,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0245,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2019_Q_GRO_7",
+     "ano": 2019,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0245,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2021_Q_RIC_21",
+     "ano": 2021,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0198,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2021_Q_NOR_21",
+     "ano": 2021,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0203,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2021_Q_GAS_17",
+     "ano": 2021,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0203,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2021_Q_PER_21",
+     "ano": 2021,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0198,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2021_Q_ALO_18",
+     "ano": 2021,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0212,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2021_Q_LEC_15",
+     "ano": 2021,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0203,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2021_Q_VER_13",
+     "ano": 2021,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0208,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2021_Q_HAM_22",
+     "ano": 2021,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0203,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2021_Q_SAI_18",
+     "ano": 2021,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0208,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2021_Q_BOT_16",
+     "ano": 2021,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0203,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2022_Q_PER_20",
+     "ano": 2022,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2022_Q_LEC_20",
+     "ano": 2022,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0217,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2022_Q_VER_19",
+     "ano": 2022,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0291,
+     "fracao_fora_depois": 0.0005,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2022_Q_SAI_20",
+     "ano": 2022,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2022_Q_HAM_17",
+     "ano": 2022,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0272,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2022_Q_RUS_20",
+     "ano": 2022,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0277,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2022_Q_ALO_13",
+     "ano": 2022,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0286,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2022_Q_OCO_17",
+     "ano": 2022,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0286,
+     "fracao_fora_depois": 0.0005,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2022_Q_NOR_20",
+     "ano": 2022,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.024,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2022_Q_MAG_22",
+     "ano": 2022,
+     "na_epoca_2023_25": false,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0277,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_Q_SAI_14",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0166,
+     "fracao_fora_depois": 0.0032,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_Q_LEC_14",
+     "ano": 2023,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2023_Q_RUS_14",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0189,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_Q_STR_12",
+     "ano": 2023,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2023_Q_ALO_14",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.018,
+     "fracao_fora_depois": 0.0023,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_Q_HAM_17",
+     "ano": 2023,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2023_Q_VER_11",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0189,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_Q_PER_13",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0171,
+     "fracao_fora_depois": 0.0014,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_Q_NOR_9",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0162,
+     "fracao_fora_depois": 0.0018,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_Q_PIA_8",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0189,
+     "fracao_fora_depois": 0.0028,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_SQ_VER_15",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0185,
+     "fracao_fora_depois": 0.0032,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_SQ_PER_15",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.018,
+     "fracao_fora_depois": 0.0032,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_SQ_LEC_14",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0194,
+     "fracao_fora_depois": 0.0018,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_SQ_TSU_11",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0194,
+     "fracao_fora_depois": 0.0037,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_SQ_RIC_10",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0171,
+     "fracao_fora_depois": 0.0023,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_SQ_NOR_14",
+     "ano": 2023,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2023_SQ_HAM_13",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.018,
+     "fracao_fora_depois": 0.0014,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_SQ_SAI_12",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0171,
+     "fracao_fora_depois": 0.0037,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_SQ_RUS_13",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0166,
+     "fracao_fora_depois": 0.0023,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2023_SQ_PIA_13",
+     "ano": 2023,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0194,
+     "fracao_fora_depois": 0.0028,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2024_SQ_NOR_11",
+     "ano": 2024,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2024_SQ_RUS_14",
+     "ano": 2024,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0185,
+     "fracao_fora_depois": 0.0009,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2024_SQ_BEA_8",
+     "ano": 2024,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0189,
+     "fracao_fora_depois": 0.0018,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2024_SQ_PIA_15",
+     "ano": 2024,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2024_SQ_ALB_8",
+     "ano": 2024,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.018,
+     "fracao_fora_depois": 0.0009,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2024_SQ_LEC_17",
+     "ano": 2024,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0189,
+     "fracao_fora_depois": 0.0014,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2024_SQ_SAI_14",
+     "ano": 2024,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0189,
+     "fracao_fora_depois": 0.0023,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2024_SQ_GAS_11",
+     "ano": 2024,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0148,
+     "fracao_fora_depois": 0.0018,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2024_SQ_LAW_7",
+     "ano": 2024,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0152,
+     "fracao_fora_depois": 0.0014,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2024_SQ_VER_11",
+     "ano": 2024,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0189,
+     "fracao_fora_depois": 0.0005,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_SQ_VER_14",
+     "ano": 2025,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0171,
+     "fracao_fora_depois": 0.0009,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_SQ_NOR_19",
+     "ano": 2025,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0102,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_SQ_HAD_8",
+     "ano": 2025,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0194,
+     "fracao_fora_depois": 0.0023,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_SQ_ANT_12",
+     "ano": 2025,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0148,
+     "fracao_fora_depois": 0.0018,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_SQ_ALO_8",
+     "ano": 2025,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2025_SQ_LEC_15",
+     "ano": 2025,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2025_SQ_STR_8",
+     "ano": 2025,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2025_SQ_HUL_8",
+     "ano": 2025,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0185,
+     "fracao_fora_depois": 0.0037,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_SQ_RUS_6",
+     "ano": 2025,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2025_SQ_PIA_11",
+     "ano": 2025,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2025_Q_NOR_20",
+     "ano": 2025,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0185,
+     "fracao_fora_depois": 0.0023,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_Q_PIA_10",
+     "ano": 2025,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0175,
+     "fracao_fora_depois": 0.0018,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_Q_HUL_16",
+     "ano": 2025,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    },
+    {
+     "chave": "2025_Q_RUS_8",
+     "ano": 2025,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0171,
+     "fracao_fora_depois": 0.0014,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_Q_GAS_14",
+     "ano": 2025,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0125,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_Q_HAD_20",
+     "ano": 2025,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.018,
+     "fracao_fora_depois": 0.0005,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_Q_ANT_15",
+     "ano": 2025,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0148,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_Q_LAW_11",
+     "ano": 2025,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.0185,
+     "fracao_fora_depois": 0.0,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_Q_BEA_10",
+     "ano": 2025,
+     "na_epoca_2023_25": true,
+     "antes": "aceita",
+     "depois": "aceita",
+     "fracao_fora_antes": 0.018,
+     "fracao_fora_depois": 0.0032,
+     "p95_antes_m": 0.0,
+     "p95_depois_m": 0.0
+    },
+    {
+     "chave": "2025_Q_LEC_15",
+     "ano": 2025,
+     "antes": "recusada",
+     "depois": "recusada",
+     "motivo": "cobertura ou buraco, que nao dependem do corredor"
+    }
+   ]
+  },
+  "outside_corridor_fraction": {
+   "voltas": 150,
+   "mediana_antes": 0.05136678458038502,
+   "mediana_depois": 0.015865563065451956,
+   "media_antes": 0.05449841921573845,
+   "media_depois": 0.019236689432166307,
+   "por_origem": {
+    "humano": {
+     "voltas": 136,
+     "mediana_antes": 0.05193976320939547,
+     "mediana_depois": 0.016912849928881292
+    },
+    "ia": {
+     "voltas": 14,
+     "mediana_antes": 0.03433522574451269,
+     "mediana_depois": 0.015400179218354449
+    }
+   },
+   "nota": "calculada aqui; a coluna do inventario segue com o corredor de antes, porque o inventario nao muda",
+   "por_volta": [
+    {
+     "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0001",
+     "origem": "humano",
+     "sessao": "2026-10-04",
+     "antes": 0.07479,
+     "depois": 0.03326
+    },
+    {
+     "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0002",
+     "origem": "humano",
+     "sessao": "2026-10-04",
+     "antes": 0.07781,
+     "depois": 0.04338
+    },
+    {
+     "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0004",
+     "origem": "ia",
+     "sessao": "2026-10-04",
+     "antes": 0.06059,
+     "depois": 0.01304
+    },
+    {
+     "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0005",
+     "origem": "ia",
+     "sessao": "2026-10-04",
+     "antes": 0.03042,
+     "depois": 0.01625
+    },
+    {
+     "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0009",
+     "origem": "humano",
+     "sessao": "2026-10-04",
+     "antes": 0.0544,
+     "depois": 0.0211
+    },
+    {
+     "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0010",
+     "origem": "ia",
+     "sessao": "2026-10-04",
+     "antes": 0.05138,
+     "depois": 0.0133
+    },
+    {
+     "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0011",
+     "origem": "ia",
+     "sessao": "2026-10-04",
+     "antes": 0.03608,
+     "depois": 0.01492
+    },
+    {
+     "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0012",
+     "origem": "ia",
+     "sessao": "2026-10-04",
+     "antes": 0.03227,
+     "depois": 0.01614
+    },
+    {
+     "lap_id": "2026-10-04_02-24-04_vhe_interlagos#0018",
+     "origem": "humano",
+     "sessao": "2026-10-04",
+     "antes": 0.02622,
+     "depois": 0.02039
+    },
+    {
+     "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0001",
+     "origem": "humano",
+     "sessao": "2026-10-04",
+     "antes": 0.09076,
+     "depois": 0.0335
+    },
+    {
+     "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0002",
+     "origem": "humano",
+     "sessao": "2026-10-04",
+     "antes": 0.06443,
+     "depois": 0.00509
+    },
+    {
+     "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0004",
+     "origem": "humano",
+     "sessao": "2026-10-04",
+     "antes": 0.10015,
+     "depois": 0.0211
+    },
+    {
+     "lap_id": "2026-10-04_03-21-52_vhe_interlagos#0005",
+     "origem": "humano",
+     "sessao": "2026-10-04",
+     "antes": 0.0831,
+     "depois": 0.02635
+    },
+    {
+     "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0002",
+     "origem": "humano",
+     "sessao": "2026-10-04",
+     "antes": 0.07866,
+     "depois": 0.04585
+    },
+    {
+     "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0003",
+     "origem": "humano",
+     "sessao": "2026-10-04",
+     "antes": 0.05064,
+     "depois": 0.04404
+    },
+    {
+     "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0005",
+     "origem": "humano",
+     "sessao": "2026-10-04",
+     "antes": 0.14972,
+     "depois": 0.11957
+    },
+    {
+     "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0009",
+     "origem": "ia",
+     "sessao": "2026-10-04",
+     "antes": 0.0564,
+     "depois": 0.0138
+    },
+    {
+     "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0010",
+     "origem": "ia",
+     "sessao": "2026-10-04",
+     "antes": 0.02679,
+     "depois": 0.01551
+    },
+    {
+     "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0011",
+     "origem": "ia",
+     "sessao": "2026-10-04",
+     "antes": 0.02687,
+     "depois": 0.01649
+    },
+    {
+     "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0012",
+     "origem": "ia",
+     "sessao": "2026-10-04",
+     "antes": 0.05853,
+     "depois": 0.0113
+    },
+    {
+     "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0013",
+     "origem": "ia",
+     "sessao": "2026-10-04",
+     "antes": 0.02705,
+     "depois": 0.01688
+    },
+    {
+     "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0016",
+     "origem": "ia",
+     "sessao": "2026-10-04",
+     "antes": 0.03259,
+     "depois": 0.01529
+    },
+    {
+     "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0017",
+     "origem": "ia",
+     "sessao": "2026-10-04",
+     "antes": 0.06365,
+     "depois": 0.01309
+    },
+    {
+     "lap_id": "2026-10-04_03-42-10_vhe_interlagos#0018",
+     "origem": "ia",
+     "sessao": "2026-10-04",
+     "antes": 0.02722,
+     "depois": 0.01593
+    },
+    {
+     "lap_id": "2026-10-04_23-51-42_vhe_interlagos#0004",
+     "origem": "humano",
+     "sessao": "2026-10-05",
+     "antes": 0.01798,
+     "depois": 0.03745
+    },
+    {
+     "lap_id": "2026-10-04_23-51-42_vhe_interlagos#0006",
+     "origem": "humano",
+     "sessao": "2026-10-05",
+     "antes": 0.02915,
+     "depois": 0.0121
+    },
+    {
+     "lap_id": "2026-10-04_23-51-42_vhe_interlagos#0007",
+     "origem": "humano",
+     "sessao": "2026-10-05",
+     "antes": 0.00795,
+     "depois": 0.00388
+    },
+    {
+     "lap_id": "2026-10-04_23-51-42_vhe_interlagos#0008",
+     "origem": "humano",
+     "sessao": "2026-10-05",
+     "antes": 0.03371,
+     "depois": 0.04275
+    },
+    {
+     "lap_id": "2026-10-04_23-51-42_vhe_interlagos#0010",
+     "origem": "humano",
+     "sessao": "2026-10-05",
+     "antes": 0.04332,
+     "depois": 0.00502
+    },
+    {
+     "lap_id": "2026-10-04_23-51-42_vhe_interlagos#0011",
+     "origem": "humano",
+     "sessao": "2026-10-05",
+     "antes": 0.06429,
+     "depois": 0.03888
+    },
+    {
+     "lap_id": "2026-10-04_23-51-42_vhe_interlagos#0012",
+     "origem": "humano",
+     "sessao": "2026-10-05",
+     "antes": 0.07387,
+     "depois": 0.04267
+    },
+    {
+     "lap_id": "2026-10-05_20-33-47_vhe_interlagos#0001",
+     "origem": "humano",
+     "sessao": "2026-10-05-2",
+     "antes": 0.01877,
+     "depois": 0.01741
+    },
+    {
+     "lap_id": "2026-10-05_20-33-47_vhe_interlagos#0002",
+     "origem": "humano",
+     "sessao": "2026-10-05-2",
+     "antes": 0.0296,
+     "depois": 0.01948
+    },
+    {
+     "lap_id": "2026-10-05_20-33-47_vhe_interlagos#0003",
+     "origem": "humano",
+     "sessao": "2026-10-05-2",
+     "antes": 0.03472,
+     "depois": 0.03194
+    },
+    {
+     "lap_id": "2026-10-05_20-33-47_vhe_interlagos#0004",
+     "origem": "humano",
+     "sessao": "2026-10-05-2",
+     "antes": 0.02822,
+     "depois": 0.01665
+    },
+    {
+     "lap_id": "2026-10-05_20-33-47_vhe_interlagos#0005",
+     "origem": "humano",
+     "sessao": "2026-10-05-2",
+     "antes": 0.07416,
+     "depois": 0.02217
+    },
+    {
+     "lap_id": "2026-10-05_20-33-47_vhe_interlagos#0006",
+     "origem": "humano",
+     "sessao": "2026-10-05-2",
+     "antes": 0.05035,
+     "depois": 0.01766
+    },
+    {
+     "lap_id": "2026-10-05_20-33-47_vhe_interlagos#0007",
+     "origem": "humano",
+     "sessao": "2026-10-05-2",
+     "antes": 0.02806,
+     "depois": 0.01984
+    },
+    {
+     "lap_id": "2026-10-05_20-33-47_vhe_interlagos#0008",
+     "origem": "humano",
+     "sessao": "2026-10-05-2",
+     "antes": 0.03876,
+     "depois": 0.03325
+    },
+    {
+     "lap_id": "2026-10-05_20-33-47_vhe_interlagos#0012",
+     "origem": "humano",
+     "sessao": "2026-10-05-2",
+     "antes": 0.04357,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-05_20-33-47_vhe_interlagos#0023",
+     "origem": "humano",
+     "sessao": "2026-10-05-2",
+     "antes": 0.07888,
+     "depois": 0.05371
+    },
+    {
+     "lap_id": "2026-10-08_23-56-13_vhe_interlagos#0001",
+     "origem": "humano",
+     "sessao": "2026-10-09",
+     "antes": 0.04748,
+     "depois": 0.02646
+    },
+    {
+     "lap_id": "2026-10-08_23-56-13_vhe_interlagos#0003",
+     "origem": "humano",
+     "sessao": "2026-10-09",
+     "antes": 0.03289,
+     "depois": 0.01884
+    },
+    {
+     "lap_id": "2026-10-08_23-56-13_vhe_interlagos#0004",
+     "origem": "humano",
+     "sessao": "2026-10-09",
+     "antes": 0.05552,
+     "depois": 0.02635
+    },
+    {
+     "lap_id": "2026-10-08_23-56-13_vhe_interlagos#0007",
+     "origem": "humano",
+     "sessao": "2026-10-09",
+     "antes": 0.05135,
+     "depois": 0.01168
+    },
+    {
+     "lap_id": "2026-10-10_09-57-09_vhe_interlagos#0002",
+     "origem": "humano",
+     "sessao": "2026-10-10",
+     "antes": 0.07732,
+     "depois": 0.04853
+    },
+    {
+     "lap_id": "2026-10-10_09-57-09_vhe_interlagos#0003",
+     "origem": "humano",
+     "sessao": "2026-10-10",
+     "antes": 0.09544,
+     "depois": 0.04282
+    },
+    {
+     "lap_id": "2026-10-10_09-57-09_vhe_interlagos#0004",
+     "origem": "humano",
+     "sessao": "2026-10-10",
+     "antes": 0.06185,
+     "depois": 0.0087
+    },
+    {
+     "lap_id": "2026-10-10_09-57-09_vhe_interlagos#0005",
+     "origem": "humano",
+     "sessao": "2026-10-10",
+     "antes": 0.09626,
+     "depois": 0.02962
+    },
+    {
+     "lap_id": "2026-10-10_09-57-09_vhe_interlagos#0007",
+     "origem": "humano",
+     "sessao": "2026-10-10",
+     "antes": 0.02675,
+     "depois": 0.01157
+    },
+    {
+     "lap_id": "2026-10-10_09-57-09_vhe_interlagos#0009",
+     "origem": "humano",
+     "sessao": "2026-10-10",
+     "antes": 0.10139,
+     "depois": 0.05032
+    },
+    {
+     "lap_id": "2026-10-10_09-57-09_vhe_interlagos#0012",
+     "origem": "humano",
+     "sessao": "2026-10-10",
+     "antes": 0.08045,
+     "depois": 0.05113
+    },
+    {
+     "lap_id": "2026-10-10_09-57-09_vhe_interlagos#0013",
+     "origem": "humano",
+     "sessao": "2026-10-10",
+     "antes": 0.03246,
+     "depois": 0.02102
+    },
+    {
+     "lap_id": "2026-10-10_09-57-09_vhe_interlagos#0015",
+     "origem": "humano",
+     "sessao": "2026-10-10",
+     "antes": 0.07427,
+     "depois": 0.00131
+    },
+    {
+     "lap_id": "2026-10-10_09-57-09_vhe_interlagos#0017",
+     "origem": "humano",
+     "sessao": "2026-10-10",
+     "antes": 0.01671,
+     "depois": 0.00551
+    },
+    {
+     "lap_id": "2026-10-10_09-57-09_vhe_interlagos#0018",
+     "origem": "humano",
+     "sessao": "2026-10-10",
+     "antes": 0.00019,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0001",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.04017,
+     "depois": 0.01783
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0002",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.06243,
+     "depois": 0.0123
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0003",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.04907,
+     "depois": 0.00884
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0004",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.06087,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0005",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.08968,
+     "depois": 0.02437
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0006",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.03903,
+     "depois": 0.0158
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0008",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.09475,
+     "depois": 0.02124
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0009",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.06786,
+     "depois": 0.02313
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0010",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.07783,
+     "depois": 0.03009
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0011",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.0652,
+     "depois": 0.02102
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0014",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.06112,
+     "depois": 0.03396
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0015",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.0524,
+     "depois": 0.01036
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0017",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.04098,
+     "depois": 0.03386
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0018",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.05258,
+     "depois": 0.01923
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0019",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.05576,
+     "depois": 0.01976
+    },
+    {
+     "lap_id": "2026-10-11_14-19-52_vhe_interlagos#0020",
+     "origem": "humano",
+     "sessao": "2026-10-11",
+     "antes": 0.0763,
+     "depois": 0.02366
+    },
+    {
+     "lap_id": "2026-10-13_19-24-10_vhe_interlagos#0001",
+     "origem": "humano",
+     "sessao": "2026-10-13",
+     "antes": 0.08861,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-13_19-24-10_vhe_interlagos#0005",
+     "origem": "humano",
+     "sessao": "2026-10-13",
+     "antes": 0.08024,
+     "depois": 0.03929
+    },
+    {
+     "lap_id": "2026-10-13_19-24-10_vhe_interlagos#0006",
+     "origem": "humano",
+     "sessao": "2026-10-13",
+     "antes": 0.01462,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-13_19-24-10_vhe_interlagos#0007",
+     "origem": "humano",
+     "sessao": "2026-10-13",
+     "antes": 0.02192,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-13_19-24-10_vhe_interlagos#0009",
+     "origem": "humano",
+     "sessao": "2026-10-13",
+     "antes": 0.07625,
+     "depois": 0.00418
+    },
+    {
+     "lap_id": "2026-10-13_19-24-10_vhe_interlagos#0012",
+     "origem": "humano",
+     "sessao": "2026-10-13",
+     "antes": 0.0446,
+     "depois": 0.01524
+    },
+    {
+     "lap_id": "2026-10-13_19-24-10_vhe_interlagos#0013",
+     "origem": "humano",
+     "sessao": "2026-10-13",
+     "antes": 0.08744,
+     "depois": 0.03498
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0001",
+     "origem": "humano",
+     "sessao": "2026-10-16",
+     "antes": 0.08091,
+     "depois": 0.00731
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0002",
+     "origem": "humano",
+     "sessao": "2026-10-16",
+     "antes": 0.1455,
+     "depois": 0.03949
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0003",
+     "origem": "humano",
+     "sessao": "2026-10-16",
+     "antes": 0.07437,
+     "depois": 0.02359
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0005",
+     "origem": "humano",
+     "sessao": "2026-10-16",
+     "antes": 0.06056,
+     "depois": 0.01257
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0006",
+     "origem": "humano",
+     "sessao": "2026-10-16",
+     "antes": 0.13775,
+     "depois": 0.06859
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0007",
+     "origem": "humano",
+     "sessao": "2026-10-16",
+     "antes": 0.04669,
+     "depois": 0.01411
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0008",
+     "origem": "humano",
+     "sessao": "2026-10-16",
+     "antes": 0.09214,
+     "depois": 0.01529
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0011",
+     "origem": "humano",
+     "sessao": "2026-10-16",
+     "antes": 0.00229,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0012",
+     "origem": "humano",
+     "sessao": "2026-10-16",
+     "antes": 0.01508,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0014",
+     "origem": "humano",
+     "sessao": "2026-10-16",
+     "antes": 0.04849,
+     "depois": 0.01777
+    },
+    {
+     "lap_id": "2026-10-15_23-24-50_vhe_interlagos#0017",
+     "origem": "humano",
+     "sessao": "2026-10-16",
+     "antes": 0.08531,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0003",
+     "origem": "humano",
+     "sessao": "2026-10-17",
+     "antes": 0.04628,
+     "depois": 0.00759
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0005",
+     "origem": "humano",
+     "sessao": "2026-10-17",
+     "antes": 0.03853,
+     "depois": 0.00448
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0006",
+     "origem": "humano",
+     "sessao": "2026-10-17",
+     "antes": 0.06764,
+     "depois": 0.02425
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0009",
+     "origem": "humano",
+     "sessao": "2026-10-17",
+     "antes": 0.05869,
+     "depois": 0.01663
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0010",
+     "origem": "humano",
+     "sessao": "2026-10-17",
+     "antes": 0.04369,
+     "depois": 0.01054
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0011",
+     "origem": "humano",
+     "sessao": "2026-10-17",
+     "antes": 0.07167,
+     "depois": 0.00316
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0015",
+     "origem": "humano",
+     "sessao": "2026-10-17",
+     "antes": 0.04374,
+     "depois": 0.00322
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0016",
+     "origem": "humano",
+     "sessao": "2026-10-17",
+     "antes": 0.0707,
+     "depois": 0.03748
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0017",
+     "origem": "humano",
+     "sessao": "2026-10-17",
+     "antes": 0.02522,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0018",
+     "origem": "humano",
+     "sessao": "2026-10-17",
+     "antes": 0.0362,
+     "depois": 0.00871
+    },
+    {
+     "lap_id": "2026-10-17_01-02-22_vhe_interlagos#0019",
+     "origem": "humano",
+     "sessao": "2026-10-17",
+     "antes": 0.02575,
+     "depois": 0.01169
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0001",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.03665,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0002",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.03223,
+     "depois": 0.00403
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0003",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.04598,
+     "depois": 0.01145
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0004",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.02325,
+     "depois": 0.00768
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0006",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.03276,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0007",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.03084,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0009",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.02714,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0010",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.0356,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0011",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.03359,
+     "depois": 0.02289
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0013",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.05111,
+     "depois": 0.01387
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0015",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.03976,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0016",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.04251,
+     "depois": 0.00079
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0018",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.06309,
+     "depois": 0.03223
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0020",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.01504,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-17_16-17-08_vhe_interlagos#0021",
+     "origem": "humano",
+     "sessao": "2026-10-17-2",
+     "antes": 0.05875,
+     "depois": 0.00812
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0001",
+     "origem": "humano",
+     "sessao": "2026-10-18",
+     "antes": 0.02834,
+     "depois": 0.00858
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0002",
+     "origem": "humano",
+     "sessao": "2026-10-18",
+     "antes": 0.06137,
+     "depois": 0.02393
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0006",
+     "origem": "humano",
+     "sessao": "2026-10-18",
+     "antes": 0.04669,
+     "depois": 0.00611
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0007",
+     "origem": "humano",
+     "sessao": "2026-10-18",
+     "antes": 0.03176,
+     "depois": 0.01718
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0008",
+     "origem": "humano",
+     "sessao": "2026-10-18",
+     "antes": 0.08264,
+     "depois": 0.01206
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0011",
+     "origem": "humano",
+     "sessao": "2026-10-18",
+     "antes": 0.03405,
+     "depois": 0.00741
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0012",
+     "origem": "humano",
+     "sessao": "2026-10-18",
+     "antes": 0.03736,
+     "depois": 0.00191
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0013",
+     "origem": "humano",
+     "sessao": "2026-10-18",
+     "antes": 0.0887,
+     "depois": 0.03923
+    },
+    {
+     "lap_id": "2026-10-18_12-38-44_vhe_interlagos#0014",
+     "origem": "humano",
+     "sessao": "2026-10-18",
+     "antes": 0.06885,
+     "depois": 0.02269
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0006",
+     "origem": "humano",
+     "sessao": "2026-10-21",
+     "antes": 0.11968,
+     "depois": 0.08493
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0008",
+     "origem": "humano",
+     "sessao": "2026-10-21",
+     "antes": 0.03783,
+     "depois": 0.02619
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0009",
+     "origem": "humano",
+     "sessao": "2026-10-21",
+     "antes": 0.07165,
+     "depois": 0.05462
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0010",
+     "origem": "humano",
+     "sessao": "2026-10-21",
+     "antes": 0.03771,
+     "depois": 0.01052
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0012",
+     "origem": "humano",
+     "sessao": "2026-10-21",
+     "antes": 0.07379,
+     "depois": 0.02698
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0013",
+     "origem": "humano",
+     "sessao": "2026-10-21",
+     "antes": 0.07978,
+     "depois": 0.04919
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0015",
+     "origem": "humano",
+     "sessao": "2026-10-21",
+     "antes": 0.03193,
+     "depois": 0.00619
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0016",
+     "origem": "humano",
+     "sessao": "2026-10-21",
+     "antes": 0.02621,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-21_20-30-54_vhe_interlagos#0017",
+     "origem": "humano",
+     "sessao": "2026-10-21",
+     "antes": 0.02809,
+     "depois": 0.01215
+    },
+    {
+     "lap_id": "2026-10-22_09-46-01_vhe_interlagos#0001",
+     "origem": "ia",
+     "sessao": "2026-10-22",
+     "antes": 0.05914,
+     "depois": 0.01566
+    },
+    {
+     "lap_id": "2026-10-24_13-26-12_vhe_interlagos#0002",
+     "origem": "humano",
+     "sessao": "2026-10-24",
+     "antes": 0.03507,
+     "depois": 0.0
+    },
+    {
+     "lap_id": "2026-10-24_13-26-12_vhe_interlagos#0003",
+     "origem": "humano",
+     "sessao": "2026-10-24",
+     "antes": 0.03668,
+     "depois": 0.01297
+    },
+    {
+     "lap_id": "2026-10-24_13-26-12_vhe_interlagos#0004",
+     "origem": "humano",
+     "sessao": "2026-10-24",
+     "antes": 0.08774,
+     "depois": 0.02944
+    },
+    {
+     "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0001",
+     "origem": "humano",
+     "sessao": "2026-10-24",
+     "antes": 0.05628,
+     "depois": 0.0216
+    },
+    {
+     "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0002",
+     "origem": "humano",
+     "sessao": "2026-10-24",
+     "antes": 0.05046,
+     "depois": 0.01456
+    },
+    {
+     "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0003",
+     "origem": "humano",
+     "sessao": "2026-10-24",
+     "antes": 0.06531,
+     "depois": 0.01799
+    },
+    {
+     "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0009",
+     "origem": "humano",
+     "sessao": "2026-10-24",
+     "antes": 0.08311,
+     "depois": 0.03036
+    },
+    {
+     "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0010",
+     "origem": "humano",
+     "sessao": "2026-10-24",
+     "antes": 0.06265,
+     "depois": 0.02956
+    },
+    {
+     "lap_id": "2026-10-24_13-43-32_vhe_interlagos#0011",
+     "origem": "humano",
+     "sessao": "2026-10-24",
+     "antes": 0.06415,
+     "depois": 0.00602
+    },
+    {
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0001",
+     "origem": "humano",
+     "sessao": "2026-11-01",
+     "antes": 0.07276,
+     "depois": 0.02114
+    },
+    {
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0004",
+     "origem": "humano",
+     "sessao": "2026-11-01",
+     "antes": 0.05148,
+     "depois": 0.01829
+    },
+    {
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0005",
+     "origem": "humano",
+     "sessao": "2026-11-01",
+     "antes": 0.06,
+     "depois": 0.01466
+    },
+    {
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0006",
+     "origem": "humano",
+     "sessao": "2026-11-01",
+     "antes": 0.04473,
+     "depois": 0.01472
+    },
+    {
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0007",
+     "origem": "humano",
+     "sessao": "2026-11-01",
+     "antes": 0.07198,
+     "depois": 0.0088
+    },
+    {
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0011",
+     "origem": "humano",
+     "sessao": "2026-11-01",
+     "antes": 0.07536,
+     "depois": 0.00892
+    }
+   ]
+  },
+  "evolutivo": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\optimization\\optimised_lateral.npy",
+   "marcado_em": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\optimization\\PROVENIENCIA_pedido44.json"
+  }
+ }
+}

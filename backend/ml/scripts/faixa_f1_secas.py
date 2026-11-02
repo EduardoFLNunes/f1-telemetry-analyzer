@@ -55,7 +55,7 @@ from ml.scripts.alinhar_fastf1 import (  # noqa: E402
     lateral_matrix,
 )
 from ml.track.corners import detect_corners  # noqa: E402
-from ml.track.geometry import TrackGeometry, load_geometry  # noqa: E402
+from ml.track.geometry import TrackGeometry, load_corridor_geometry  # noqa: E402
 from ml.track.microsectors import Microsectors, build_microsectors  # noqa: E402
 from ml.visualization.track_plots import draw_track  # noqa: E402
 
@@ -298,7 +298,7 @@ def conference_with_p22(track: TrackGeometry, fit: f1_band.LapFit) -> Dict[str, 
 
 def run(out_dir: Path, years: Sequence[int] = f1_dry_laps.YEARS) -> Dict[str, object]:
     started = time.perf_counter()
-    track = load_geometry()
+    track = load_corridor_geometry()
     if track.geometry_id != OFFICIAL_GEOMETRY_ID:
         raise SystemExit(f"PARADO: a geometria carregada e {track.geometry_id}, e o pedido fala da "
                          f"{OFFICIAL_GEOMETRY_ID}.")
@@ -422,6 +422,7 @@ def run(out_dir: Path, years: Sequence[int] = f1_dry_laps.YEARS) -> Dict[str, ob
 
     result: Dict[str, object] = {
         "pedido": PEDIDO,
+        "corridor_id": track.corridor_id,
         "gerado_em": datetime.now(timezone.utc).isoformat(),
         "commit": git_commit(),
         "fastf1_versao": getattr(fastf1, "__version__", None),
@@ -531,6 +532,7 @@ def run(out_dir: Path, years: Sequence[int] = f1_dry_laps.YEARS) -> Dict[str, ob
     result = _round(result)
     manifest = {
         "pedido": PEDIDO,
+        "corridor_id": track.corridor_id,
         "gerado_em": result["gerado_em"],
         "commit": result["commit"],
         "sessoes_fora_do_plano": result["sessoes_fora_do_plano"],

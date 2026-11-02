@@ -23,7 +23,7 @@ from ml.optimization.lap_time_model import simulate
 from ml.optimization.representation import build_encoding
 from ml.optimization.vehicle_model import load_envelope
 from ml.track.corners import detect_corners
-from ml.track.geometry import load_geometry
+from ml.track.geometry import load_corridor_geometry
 from ml.track.microsectors import build_microsectors, split_times
 from ml.visualization.comparison_plots import (
     TrajectorySeries,
@@ -58,7 +58,7 @@ def main(argv=None) -> int:
     )
     args = parser.parse_args(argv)
 
-    track = load_geometry()
+    track = load_corridor_geometry()
     sectors = build_microsectors(track)
     corners = detect_corners(track)
     store = load_store(track=track)
