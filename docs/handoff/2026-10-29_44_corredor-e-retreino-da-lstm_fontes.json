@@ -1,10 +1,10 @@
 {
  "pedido": "docs/prompts/2026-10-29_44_corredor-e-retreino-da-lstm.md",
  "adr": "docs/decisoes/0026-retreino-da-lstm-geradora.md",
- "gerado_em": "2026-11-02T19:04:02.643580+00:00",
- "commit": "d772253be2764c385ab0febca8df414b3588e096",
+ "gerado_em": "2026-11-04T16:12:08.211172+00:00",
+ "commit": "fca94a96bc82d92cc33091829ade54fd14260943",
  "geometry_id": "0ed16f0dd2225990",
- "corridor_id": "56f5356b141982c2",
+ "corridor_id": "707d07029036abd6",
  "ambiente": {
   "python": "3.9.7",
   "plataforma": "Windows-10-10.0.26200-SP0"
