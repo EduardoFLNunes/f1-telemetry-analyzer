@@ -244,8 +244,18 @@ def round_path(version: str, held_out: str) -> Path:
     return root() / "rodadas" / version / f"{held_out}.json"
 
 
+def check_finished_rounds(track, versions=VERSIONS) -> None:
+    """Uma rodada de outro corredor nao pode ser somada as novas (ADR 0025)."""
+    for version in versions:
+        for path in sorted((root() / "rodadas" / version).glob("*.json")):
+            recorded = json.loads(path.read_text(encoding="utf-8"))["corridor_id"]
+            if recorded != track.corridor_id:
+                raise SystemExit(f"PARADO: {path} e do corredor {recorded}, e o de agora e {track.corridor_id}.")
+
+
 def run_all(parallel: int, threads: int, versions=VERSIONS) -> None:
     """As rodadas que faltam, em `parallel` processos. O que ja terminou nao roda de novo."""
+    check_finished_rounds(load_corridor_geometry(), versions)
     table = pd.read_parquet(root() / "voltas_tabela.parquet")
     pending = [(v, s) for v in versions for s in R.session_order(table) if not round_path(v, s).exists()]
     print(f"{len(pending)} rodadas", flush=True)
@@ -446,6 +456,13 @@ def final(threads: int) -> Dict[str, object]:
         ("reference", REFERENCE_TASK, int(choice["epocas"]), extra, choice["versao"]),
         ("surrogate", SURROGATE_TASK, int(results["substituta"]["melhor_epoca_mediana"]), None, SUBSTITUTA),
     ):
+        # Rodado de novo, nao refaz o modelo que ja terminou com este corredor e estas rodadas.
+        stage = root() / f"final_{name}.json"
+        if stage.exists():
+            saved = json.loads(stage.read_text(encoding="utf-8"))
+            if saved["corridor_id"] == track.corridor_id and saved["versao"] == tag and saved["epocas"] == epochs:
+                reports[name] = saved
+                continue
         trained = train_model(task, build_sequences(frames, task, laps), None, model_config=architecture(task),
                               config=TrainConfig(epochs=max(epochs, 1), patience=max(epochs, 1) + 1),
                               verbose=False, extra_train=source_extra)
@@ -455,7 +472,9 @@ def final(threads: int) -> Dict[str, object]:
         }
         directory = save_model(trained, output / name)
         reports[name] = {"pasta": str(directory), "epocas": epochs, "segundos": trained.seconds,
-                         "sha256_pesos": sha256(directory / "weights.pt"), "perda_final": trained.history[-1]["train_loss"]}
+                         "sha256_pesos": sha256(directory / "weights.pt"), "perda_final": trained.history[-1]["train_loss"],
+                         "corridor_id": track.corridor_id, "versao": tag}
+        stage.write_text(json.dumps(reports[name], indent=1, ensure_ascii=False), encoding="utf-8")
     (output / "metrics.json").write_text(json.dumps({
         **base, "regua": "data/ml/retreino_lstm/resultados.json", "reference": reference.to_dict(),
         "voltas": laps, "modelos": reports,

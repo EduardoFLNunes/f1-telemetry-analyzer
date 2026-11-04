@@ -5,6 +5,12 @@ coordenadas de mapa `(x, y)`, e no mundo `z = -y`. Em cada ponto dado, um raio
 sai ao longo da normal, com passo de 0,05 m e ate 30 m, e a borda e o inicio do
 primeiro trecho de ao menos 0,3 m fora da superficie: menos que isso e emenda
 entre poligonos.
+
+No asfalto, quem decide e a classificacao dos aneis, e nao a contagem par-impar:
+o menor anel que contem o ponto diz se ali ha asfalto. A contagem so acerta
+quando os aneis se aninham certinho. No cache de Interlagos, um `internal_hole`
+pode ficar fora de qualquer anel externo ou dentro de outro buraco, e ai a
+contagem da impar e o buraco vira pista.
 """
 
 from __future__ import annotations
@@ -40,18 +46,43 @@ def polyline_segments(points: np.ndarray, closed: bool) -> np.ndarray:
 
 @dataclass
 class Layer:
-    """Uma camada de poligonos (regra par-impar): os segmentos e os caminhos para o teste de ponto."""
+    """Uma camada de poligonos: os segmentos e os caminhos para o teste de ponto.
+
+    Sem `solid`, vale a regra par-impar. Com `solid`, os aneis vem do maior para o
+    menor, cada um diz se e cheio ou buraco, e o menor anel que contem o ponto decide.
+    """
 
     name: str
     segments: np.ndarray
     paths: List[MPath] = field(default_factory=list)
+    solid: Optional[List[bool]] = None
+    ring_segments: List[np.ndarray] = field(default_factory=list)
 
     def inside(self, points: np.ndarray) -> np.ndarray:
-        """Par-impar: dentro se o ponto cai num numero impar de aneis (furos inclusos)."""
+        if self.solid is not None:
+            out = np.zeros(len(points), dtype=bool)
+            for path, solid in zip(self.paths, self.solid):
+                out[path.contains_points(points)] = solid
+            return out
         count = np.zeros(len(points), dtype=int)
         for path in self.paths:
             count += path.contains_points(points).astype(int)
         return (count % 2) == 1
+
+    def along_rays(self, origins: np.ndarray, directions: np.ndarray, samples: np.ndarray) -> np.ndarray:
+        """(raios, amostras): dentro ou fora da camada ao longo de cada raio, a mesma leitura de `inside`."""
+        out = np.zeros((len(origins), samples.size), dtype=bool)
+        if self.solid is None:
+            flags = self.inside(origins)
+            for i, hits in enumerate(ray_hits(origins, directions, self.segments)):
+                out[i] = profile(bool(flags[i]), hits, samples)
+            return out
+        for path, segments, solid in zip(self.paths, self.ring_segments, self.solid):
+            starts = path.contains_points(origins)
+            for i, hits in enumerate(ray_hits(origins, directions, segments)):
+                if starts[i] or hits.size:
+                    out[i, profile(bool(starts[i]), hits, samples)] = solid
+        return out
 
 
 def polygon_layer(name: str, rings: Iterable[np.ndarray]) -> Layer:
@@ -60,9 +91,24 @@ def polygon_layer(name: str, rings: Iterable[np.ndarray]) -> Layer:
     return Layer(name, segments, [MPath(r) for r in rings])
 
 
+def ring_area(ring: np.ndarray) -> float:
+    x, z = ring[:, 0], ring[:, 1]
+    return 0.5 * abs(float(np.dot(x, np.roll(z, -1)) - np.dot(z, np.roll(x, -1))))
+
+
+def asphalt_layer(loops: Iterable[Dict[str, object]]) -> Layer:
+    """O asfalto pela classificacao dos aneis, do maior para o menor."""
+    rings = [(to_world(loop["points"]), loop.get("classification") != "internal_hole")
+             for loop in loops if len(loop["points"]) >= 3]
+    rings.sort(key=lambda item: -ring_area(item[0]))
+    segments = [polyline_segments(ring, True) for ring, _ in rings]
+    return Layer("asfalto", np.vstack(segments) if segments else np.zeros((0, 4)), [MPath(ring) for ring, _ in rings],
+                 [solid for _, solid in rings], segments)
+
+
 def surface_layers(raw: Dict[str, object]) -> Tuple[Layer, Layer, Layer]:
     """Asfalto, zebra e pintura do cache, no mundo."""
-    asphalt = polygon_layer("asfalto", [to_world(loop["points"]) for loop in raw["asphaltSurface"]["loops"]])
+    asphalt = asphalt_layer(raw["asphaltSurface"]["loops"])
     kerb = polygon_layer("zebra", [to_world(p["points"]) for p in raw["kerbGeometry"]["polygons"]])
     paint_rings = [to_world(ring) for poly in raw["markingGeometry"]["polygons"] for ring in poly["rings"]]
     return asphalt, kerb, polygon_layer("pintura", paint_rings)
@@ -120,16 +166,14 @@ def surface_edges(raw: Dict[str, object], points: np.ndarray, normal: np.ndarray
     normal = np.asarray(normal, dtype=float)
     samples = np.arange(0.0, MAX_RAY_M + RAY_STEP_M / 2, RAY_STEP_M)
     layers = surface_layers(raw)
-    flags = [layer.inside(points) for layer in layers]
     out = []
     for sign in (1.0, -1.0):
-        hits = [ray_hits(points, sign * normal, layer.segments) for layer in layers]
+        surface = np.zeros((len(points), samples.size), dtype=bool)
+        for layer in layers:
+            surface |= layer.along_rays(points, sign * normal, samples)
         edge = np.full(len(points), np.nan)
         for i in range(len(points)):
-            surface = np.zeros(samples.size, dtype=bool)
-            for k in range(len(layers)):
-                surface |= profile(bool(flags[k][i]), hits[k][i], samples)
-            found = first_exit(surface, samples)
+            found = first_exit(surface[i], samples)
             if found is not None:
                 edge[i] = found
         out.append(edge)

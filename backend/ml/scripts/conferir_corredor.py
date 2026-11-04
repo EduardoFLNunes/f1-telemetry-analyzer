@@ -204,9 +204,13 @@ def classify(corridor_m: float, stripe_m: Optional[float], surface_edge_m: Optio
 
 
 def measure_side(origin_flags: Dict[str, bool], hits: Dict[str, np.ndarray], stripe_hits: np.ndarray,
-                 corridor_m: float, samples: np.ndarray) -> SideMeasure:
-    """As medidas de um lado de um ponto, a partir dos cruzamentos do raio com cada camada."""
-    asphalt = profile(origin_flags["asfalto"], hits["asfalto"], samples)
+                 corridor_m: float, samples: np.ndarray, asphalt: Optional[np.ndarray] = None) -> SideMeasure:
+    """As medidas de um lado de um ponto, a partir dos cruzamentos do raio com cada camada.
+
+    `asphalt` e o asfalto ao longo do raio pela classificacao dos aneis (`Layer.along_rays`).
+    """
+    if asphalt is None:
+        asphalt = profile(origin_flags["asfalto"], hits["asfalto"], samples)
     kerb = profile(origin_flags["zebra"], hits["zebra"], samples)
     paint = profile(origin_flags["pintura"], hits["pintura"], samples)
     surface = asphalt | kerb | paint
@@ -242,9 +246,10 @@ def measure_track(track, layers: TrackLayers) -> Dict[str, List[SideMeasure]]:
         hits = {layer.name: ray_hits(origins, directions, layer.segments)
                 for layer in (layers.asphalt, layers.kerb, layers.paint)}
         stripe_hits = ray_hits(origins, directions, layers.stripes)
+        asphalt = layers.asphalt.along_rays(origins, directions, samples)
         out[side] = [
             measure_side({name: bool(flags[name][i]) for name in flags},
-                         {name: hits[name][i] for name in hits}, stripe_hits[i], float(widths[i]), samples)
+                         {name: hits[name][i] for name in hits}, stripe_hits[i], float(widths[i]), samples, asphalt[i])
             for i in range(track.size)
         ]
     return out

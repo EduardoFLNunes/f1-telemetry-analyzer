@@ -29,3 +29,5 @@ Em 29/10, o Eduardo escolheu a opção 3, com o `corridor_id` separado.
 - O que depende das larguras é refeito: a LSTM geradora, a substituta, o critério da F1 e a métrica `outside_corridor_fraction`. O evolutivo é refeito no pedido da nova busca.
 - O `optimised_lateral.npy` de 24/08 fica guardado como está, marcado como de outra geometria.
 - O ADR 0002 ganha uma linha de atualização: o `geometry_id` não cobre mais o que o corredor do Modelo 1 significa.
+
+**Atualização (pedido 44, 04/11, decisão do Eduardo de 02/11):** a leitura dos buracos do asfalto foi corrigida antes de rodar. A contagem par-ímpar tratava como superfície um `internal_hole` fora de qualquer anel externo ou dentro de outro buraco; agora o menor anel que contém o ponto decide. A regra da decisão não muda: os acessos e as áreas de escape ligados à pista continuam. O `corridor_id` passa de `56f5356b141982c2` para **`707d07029036abd6`**, e o `geometry_id` continua `0ed16f0dd2225990`. Contra o sinal do jogo, nas 58 voltas do pedido 27, os 6.764 e 411 passam a 6.802 e 257.

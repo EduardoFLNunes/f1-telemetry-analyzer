@@ -29,6 +29,10 @@ OFFICIAL_GEOMETRY_ID = "0ed16f0dd2225990"
 SESSION_TO_COMPARE = "2026-10-10_09-57-09_vhe_interlagos"
 OPTION_3 = cc.OPTION_SURFACE
 PEDIDO_27 = {"estreito_demais": 6764, "largo_demais": 411}
+# As larguras gravadas antes da correcao dos buracos internos, com a leitura par-impar.
+PARITY_WIDTHS = ("corredor", "novo_antes_dos_buracos", "larguras.csv")
+PARITY_READING = "leitura par-impar (antes da correcao dos buracos)"
+PARITY_CORRIDOR_ID = "56f5356b141982c2"
 
 
 def sha256(path: Path) -> str:
@@ -97,8 +101,10 @@ def coach_check(track) -> Dict[str, object]:
     return out
 
 
-def game_signal(new, old_measures, new_measures, store, lap_ids, sessions, label: str) -> Dict[str, object]:
+def game_signal(new, old_measures, new_measures, store, lap_ids, sessions, label: str, parity) -> Dict[str, object]:
     edges = cc.option_edges(old_measures)
+    shrink = config.CAR_HALF_WIDTH_M - config.KERB_ALLOWANCE_M
+    edges[PARITY_READING] = {cc.LEFT: parity[0] - shrink, cc.RIGHT: parity[1] - shrink}
     check = cc.tyres_out_check(new, new_measures, store, lap_ids, sessions, edges)
     totals = check["totais"]
     options = check["opcoes_da_parte_f"]
@@ -114,11 +120,93 @@ def game_signal(new, old_measures, new_measures, store, lap_ids, sessions, label
             "estreito_demais": int(sum(options[OPTION_3][s]["estreito_demais"] for s in cc.SIDES)),
             "largo_demais": int(sum(options[OPTION_3][s]["largo_demais"] for s in cc.SIDES)),
         },
+        "leitura_par_impar": {
+            "estreito_demais": int(sum(options[PARITY_READING][s]["estreito_demais"] for s in cc.SIDES)),
+            "largo_demais": int(sum(options[PARITY_READING][s]["largo_demais"] for s in cc.SIDES)),
+        },
         "corredor_de_antes": {
             "estreito_demais": int(sum(options[today][s]["estreito_demais"] for s in cc.SIDES)),
             "largo_demais": int(sum(options[today][s]["largo_demais"] for s in cc.SIDES)),
         },
     }
+
+
+def ring_audit(raw, track, parity) -> Dict[str, object]:
+    """Anel por anel: onde a contagem par-impar e a classificacao discordam, dentro das bordas de antes."""
+    from matplotlib.path import Path as MPath
+
+    from core.geometry.surface_edge import ring_area, surface_layers, to_world
+
+    loops = raw["asphaltSurface"]["loops"]
+    rings = [{"indice": i, "classificacao": l.get("classification"), "componente": l.get("componentId"),
+              "area_m2": round(ring_area(to_world(l["points"])), 1), "pts": to_world(l["points"]),
+              "path": MPath(to_world(l["points"]))} for i, l in enumerate(loops)]
+    externals = [r for r in rings if r["classificacao"] != "internal_hole"]
+    holes = [r for r in rings if r["classificacao"] == "internal_hole"]
+    for hole in holes:
+        hole["vertices_em_anel_externo_pct"] = round(100.0 * float(np.mean(np.any(
+            [e["path"].contains_points(hole["pts"]) for e in externals], axis=0))), 1)
+        others = [o for o in holes if o is not hole and o["area_m2"] > hole["area_m2"]]
+        hole["vertices_em_buraco_maior_pct"] = round(100.0 * float(np.mean(np.any(
+            [o["path"].contains_points(hole["pts"]) for o in others], axis=0)))) if others else 0.0
+
+    asphalt, kerb, paint = surface_layers(raw)
+    cases = {"buraco_fora_de_anel_externo": 0, "buraco_dentro_de_buraco": 0, "externos_sobrepostos": 0, "outros": 0}
+    by_ring: Dict[int, Dict[str, object]] = {}
+    for side, sign, widths in ((cc.LEFT, 1.0, parity[0]), (cc.RIGHT, -1.0, parity[1])):
+        for i in range(track.size):
+            t = np.arange(0.025, widths[i], 0.05)
+            if t.size == 0:
+                continue
+            points = track.points[i] + sign * track.normal[i] * t[:, None]
+            member = np.array([r["path"].contains_points(points) for r in rings])
+            count = member.sum(axis=0)
+            new_reading = asphalt.inside(points)
+            for k in np.flatnonzero(((count % 2) == 1) != new_reading):
+                inside = [rings[j] for j in np.flatnonzero(member[:, k])]
+                n_ext = sum(r["classificacao"] != "internal_hole" for r in inside)
+                n_hole = len(inside) - n_ext
+                if n_ext == 0 and n_hole:
+                    case = "buraco_fora_de_anel_externo"
+                elif n_ext == 1 and n_hole >= 2:
+                    case = "buraco_dentro_de_buraco"
+                elif n_ext >= 2 and n_hole == 0:
+                    case = "externos_sobrepostos"
+                else:
+                    case = "outros"
+                cases[case] += 1
+                decider = min(inside, key=lambda r: r["area_m2"])
+                entry = by_ring.setdefault(decider["indice"], {"amostras": 0, "lados": set(), "s": []})
+                entry["amostras"] += 1
+                entry["lados"].add(side)
+                entry["s"].append(float(track.s[i]))
+    table = []
+    for index, entry in sorted(by_ring.items(), key=lambda kv: -kv[1]["amostras"]):
+        ring = rings[index]
+        table.append({"anel": index, "classificacao": ring["classificacao"], "componente": ring["componente"],
+                      "area_m2": ring["area_m2"],
+                      "vertices_em_anel_externo_pct": ring.get("vertices_em_anel_externo_pct"),
+                      "vertices_em_buraco_maior_pct": ring.get("vertices_em_buraco_maior_pct"),
+                      "amostras_de_raio_em_que_a_leitura_muda": entry["amostras"], "lados": sorted(entry["lados"]),
+                      "s_de_m": round(min(entry["s"]), 1), "s_ate_m": round(max(entry["s"]), 1)})
+    return {
+        "regra_nova": "o menor anel que contem o ponto decide: external e asfalto, internal_hole nao e",
+        "aneis": {"externos": len(externals), "buracos": len(holes)},
+        "buracos_com_vertice_fora_de_anel_externo": [
+            {"anel": h["indice"], "area_m2": h["area_m2"], "vertices_em_anel_externo_pct": h["vertices_em_anel_externo_pct"]}
+            for h in holes if h["vertices_em_anel_externo_pct"] < 100.0],
+        "amostras_de_raio_a_cada_0_05m_em_que_a_leitura_muda": cases,
+        "por_anel": table,
+    }
+
+
+def wide_points(track, widths: np.ndarray, limit: float = 15.0) -> Dict[str, object]:
+    mask = widths > limit
+    idx = np.flatnonzero(mask)
+    runs = np.split(idx, np.flatnonzero(np.diff(idx) > 1) + 1) if idx.size else []
+    return {"pontos": int(mask.sum()),
+            "trechos": [{"de_m": round(float(track.s[r[0]]), 1), "ate_m": round(float(track.s[r[-1]]), 1),
+                         "maximo_m": round(float(widths[r].max()), 2)} for r in runs]}
 
 
 def f1_criterion(old, new) -> Dict[str, object]:
@@ -240,6 +328,8 @@ def run(out_dir: Path) -> Dict[str, object]:
     centre_closed = np.vstack([old.points, old.points[:1]])
     layers = cc.load_layers(raw, centre_closed, old.s, old.step)
     surface = (layers.asphalt, layers.kerb, layers.paint)
+    saved = pd.read_csv(config.artifacts_root().joinpath(*PARITY_WIDTHS))
+    parity = (saved["largura_esq_nova"].to_numpy(dtype=float), saved["largura_dir_nova"].to_numpy(dtype=float))
 
     store = load_store_v2(track=new)
     sessions = list_all_sessions()
@@ -248,11 +338,11 @@ def run(out_dir: Path) -> Dict[str, object]:
 
     previous = json.loads((config.artifacts_root() / "corredor" / "resumo.json").read_text(encoding="utf-8"))
     laps_27 = previous["parte_c"]["voltas_usadas"]
-    signal_27 = game_signal(new, old_measures, new_measures, store, laps_27, sessions, "as 58 do pedido 27")
+    signal_27 = game_signal(new, old_measures, new_measures, store, laps_27, sessions, "as 58 do pedido 27", parity)
 
     sources = load_sources(new)
     signal_all = game_signal(new, old_measures, new_measures, store, sources.table["lap_id"].tolist(), sessions,
-                             "as voltas do treino")
+                             "as voltas do treino", parity)
 
     same_frame = {k: bool(np.array_equal(getattr(old, k), getattr(new, k)))
                   for k in ("s", "x", "z", "elevation", "tangent", "normal", "curvature")}
@@ -290,6 +380,21 @@ def run(out_dir: Path) -> Dict[str, object]:
                            "corridor_id_antes": old.corridor_id, "corridor_id_novo": new.corridor_id,
                            "meia_bitola_m": config.CAR_HALF_WIDTH_M, "folga_de_zebra_m": config.KERB_ALLOWANCE_M},
             "grade_igual": same_frame,
+            "aneis": ring_audit(raw, new, parity),
+            "centro_sobre_a_superficie_pct": float(100.0 * np.mean(
+                layers.asphalt.inside(new.points) | layers.kerb.inside(new.points) | layers.paint.inside(new.points))),
+            "correcao_dos_buracos": {
+                "corridor_id_com_a_leitura_par_impar": PARITY_CORRIDOR_ID,
+                "pontos_que_mudam": {
+                    "esquerda": int(np.sum(np.abs(new.width_left - parity[0]) > 1e-9)),
+                    "direita": int(np.sum(np.abs(new.width_right - parity[1]) > 1e-9))},
+                "maior_mudanca_m": {
+                    "esquerda": round(float(np.max(np.abs(new.width_left - parity[0]))), 2),
+                    "direita": round(float(np.max(np.abs(new.width_right - parity[1]))), 2)},
+            },
+            "acima_de_15m": {
+                "esquerda_par_impar": wide_points(new, parity[0]), "esquerda_nova": wide_points(new, new.width_left),
+                "direita_par_impar": wide_points(new, parity[1]), "direita_nova": wide_points(new, new.width_right)},
             "pontos_que_ficaram_com_a_borda_de_antes": {
                 "esquerda": int(np.sum(new.width_left == old.width_left)),
                 "direita": int(np.sum(new.width_right == old.width_right))},
@@ -299,6 +404,8 @@ def run(out_dir: Path) -> Dict[str, object]:
             "coach": coach_check(new),
             "sinal_do_jogo": {"referencia_do_pedido_27": PEDIDO_27, "as_58_do_pedido_27": signal_27, "todas_as_do_treino": signal_all},
             "degraus": {
+                "esquerda_par_impar": steps_table(new, parity[0], surface, 1.0),
+                "direita_par_impar": steps_table(new, parity[1], surface, -1.0),
                 "esquerda_antes": steps_table(old, old.width_left, surface, 1.0),
                 "esquerda_nova": steps_table(new, new.width_left, surface, 1.0),
                 "direita_antes": steps_table(old, old.width_right, surface, -1.0),

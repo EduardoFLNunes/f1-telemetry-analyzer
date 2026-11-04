@@ -17,7 +17,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from core.geometry.surface_edge import surface_edges  # noqa: E402
+from core.geometry.surface_edge import surface_edges, surface_layers  # noqa: E402
 from ml import config  # noqa: E402
 from ml.models import retreino as R  # noqa: E402
 from ml.models.sequences import REFERENCE_TASK, TaskSpec, SequenceSet  # noqa: E402
@@ -90,6 +90,70 @@ class SurfaceEdges(unittest.TestCase):
         margin = config.CAR_HALF_WIDTH_M - config.KERB_ALLOWANCE_M
         self.assertTrue(np.allclose(high, new.width_left - margin))
         self.assertTrue(np.allclose(low, -(new.width_right - margin)))
+
+
+def ring_cache(extra_loops, kerbs=()) -> dict:
+    """Asfalto de z = -5 a z = +5 num anel externo, com os aneis pedidos em volta."""
+    loops = [{"points": rect_map(-10, 300, -5.0, 5.0), "classification": "external"}, *extra_loops]
+    return {"asphaltSurface": {"loops": loops}, "kerbGeometry": {"polygons": [{"points": k} for k in kerbs]},
+            "markingGeometry": {"polygons": [], "features": []}}
+
+
+class InternalHoles(unittest.TestCase):
+    """A leitura do cache de Interlagos: o menor anel que contem o ponto decide (pedido 44)."""
+
+    def edges(self, raw):
+        track = straight_track()
+        return surface_edges(raw, track.points, track.normal)
+
+    def test_um_buraco_fora_do_anel_externo_nao_e_superficie(self):
+        # A esquerda (z negativo), logo alem do asfalto, um `internal_hole` sozinho: contado, daria impar.
+        hole = {"points": rect_map(-10, 300, -20.0, -5.0), "classification": "internal_hole"}
+        left, right = self.edges(ring_cache([hole]))
+        self.assertTrue(np.allclose(left, 5.0, atol=0.051))
+        self.assertTrue(np.allclose(right, 5.0, atol=0.051))
+
+    def test_um_buraco_dentro_de_outro_buraco_nao_e_superficie(self):
+        outer = {"points": rect_map(-10, 300, -3.0, -1.0), "classification": "internal_hole"}
+        inner = {"points": rect_map(-10, 300, -2.5, -1.5), "classification": "internal_hole"}
+        left, right = self.edges(ring_cache([outer, inner]))
+        self.assertTrue(np.allclose(left, 1.0, atol=0.051))
+        self.assertTrue(np.allclose(right, 5.0, atol=0.051))
+
+    def test_um_anel_externo_dentro_de_um_buraco_e_superficie(self):
+        hole = {"points": rect_map(-10, 300, -5.2, -3.0), "classification": "internal_hole"}
+        island = {"points": rect_map(-10, 300, -2.0, -1.0), "classification": "external"}
+        hole_only = self.edges(ring_cache([hole]))[0]
+        self.assertTrue(np.allclose(hole_only, 3.0, atol=0.051))
+        big_hole = {"points": rect_map(-10, 300, -3.0, -0.5), "classification": "internal_hole"}
+        left = self.edges(ring_cache([big_hole, island]))[0]
+        self.assertTrue(np.allclose(left, 0.5, atol=0.051))
+        track = straight_track()
+        layer = surface_layers(ring_cache([big_hole, island]))[0]
+        self.assertTrue(layer.inside(np.array([[50.0, -1.5]]))[0])
+        self.assertFalse(layer.inside(np.array([[50.0, -0.7]]))[0])
+        self.assertTrue(layer.inside(track.points).all())
+
+    def test_a_zebra_sobre_um_buraco_continua_superficie(self):
+        hole = {"points": rect_map(-10, 300, -9.0, -5.0), "classification": "internal_hole"}
+        left = self.edges(ring_cache([hole], kerbs=[rect_map(-10, 300, -7.0, -5.0)]))[0]
+        self.assertTrue(np.allclose(left, 7.0, atol=0.051))
+
+    def test_um_acesso_ligado_a_pista_continua_superficie(self):
+        access = {"points": rect_map(100, 140, -18.0, -5.0), "classification": "external"}
+        track = straight_track()
+        left = self.edges(ring_cache([access]))[0]
+        self.assertTrue(np.allclose(left[(track.s > 105) & (track.s < 135)], 18.0, atol=0.051))
+        self.assertTrue(np.allclose(left[track.s < 95], 5.0, atol=0.051))
+
+    def test_a_leitura_ao_longo_do_raio_e_a_mesma_do_ponto(self):
+        hole = {"points": rect_map(-10, 300, -9.0, -5.0), "classification": "internal_hole"}
+        layer = surface_layers(ring_cache([hole]))[0]
+        origins = np.array([[50.0, 0.0]])
+        samples = np.arange(0.0, 12.0, 0.05)
+        along = layer.along_rays(origins, np.array([[0.0, -1.0]]), samples)[0]
+        points = origins + np.array([[0.0, -1.0]]) * samples[:, None]
+        self.assertTrue(np.array_equal(along[1:], layer.inside(points)[1:]))
 
 
 class CorridorId(unittest.TestCase):
