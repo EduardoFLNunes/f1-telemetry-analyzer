@@ -1,0 +1,60 @@
+﻿[2026-11-04 14:04:23] Retreino da LSTM no commit ec06b0f1, branch etapa/corredor-e-retreino-lstm. Log: C:\Users\Dokas\Desktop\f1-telemetry-analyzer\logs\retreino_lstm_2026-11-04_14-04-22.log
+[2026-11-04 14:04:23] Comecando: as 45 rodadas.
+45 rodadas
+[  32.7 min] sem_f1 2026-10-16: saida 0; faltam 37 + 7
+[  34.5 min] sem_f1 2026-10-13: saida 0; faltam 36 + 7
+[  35.3 min] sem_f1 2026-10-04: saida 0; faltam 35 + 7
+[  39.6 min] sem_f1 2026-10-11: saida 0; faltam 34 + 7
+[  42.8 min] sem_f1 2026-10-10: saida 0; faltam 33 + 7
+[  46.9 min] sem_f1 2026-10-05-2: saida 0; faltam 32 + 7
+[  52.3 min] sem_f1 2026-10-09: saida 0; faltam 31 + 7
+[  55.8 min] sem_f1 2026-10-05: saida 0; faltam 30 + 7
+[  63.8 min] sem_f1 2026-10-17: saida 0; faltam 29 + 7
+[  71.6 min] sem_f1 2026-10-21: saida 0; faltam 28 + 7
+[  73.0 min] sem_f1 2026-10-18: saida 0; faltam 27 + 7
+[  78.8 min] sem_f1 2026-10-17-2: saida 0; faltam 26 + 7
+[  78.8 min] sem_f1 2026-10-24: saida 0; faltam 26 + 6
+[  81.6 min] sem_f1 2026-11-01: saida 0; faltam 24 + 7
+[  86.9 min] com_f1 2026-10-04: saida 0; faltam 23 + 7
+[  87.3 min] sem_f1 2026-10-22: saida 0; faltam 22 + 7
+[ 102.7 min] com_f1 2026-10-05: saida 0; faltam 21 + 7
+[ 110.5 min] com_f1 2026-10-05-2: saida 0; faltam 20 + 7
+[ 112.2 min] com_f1 2026-10-16: saida 0; faltam 19 + 7
+[ 114.8 min] com_f1 2026-10-13: saida 0; faltam 18 + 7
+[ 115.0 min] com_f1 2026-10-10: saida 0; faltam 17 + 7
+[ 119.2 min] com_f1 2026-10-17: saida 0; faltam 16 + 7
+[ 124.1 min] com_f1 2026-10-11: saida 0; faltam 15 + 7
+[ 131.9 min] com_f1 2026-10-09: saida 0; faltam 14 + 7
+[ 141.4 min] com_f1 2026-10-17-2: saida 0; faltam 13 + 7
+[ 147.4 min] com_f1 2026-10-18: saida 0; faltam 12 + 7
+[ 152.2 min] com_f1 2026-10-24: saida 0; faltam 11 + 7
+[ 157.3 min] com_f1 2026-11-01: saida 0; faltam 10 + 7
+[ 158.4 min] com_f1 2026-10-21: saida 0; faltam 9 + 7
+[ 160.8 min] com_f1 2026-10-22: saida 0; faltam 8 + 7
+[ 165.2 min] substituta 2026-10-04: saida 0; faltam 7 + 7
+[ 201.3 min] substituta 2026-10-05: saida 0; faltam 6 + 7
+[ 207.1 min] substituta 2026-10-13: saida 0; faltam 5 + 7
+[ 208.8 min] substituta 2026-10-16: saida 0; faltam 4 + 7
+[ 212.2 min] substituta 2026-10-05-2: saida 0; faltam 3 + 7
+[ 219.9 min] substituta 2026-10-11: saida 0; faltam 2 + 7
+[ 248.2 min] substituta 2026-10-10: saida 0; faltam 1 + 7
+[ 255.0 min] substituta 2026-10-09: saida 0; faltam 0 + 7
+[ 255.4 min] substituta 2026-10-18: saida 0; faltam 0 + 6
+[ 264.1 min] substituta 2026-10-24: saida 0; faltam 0 + 5
+[ 264.2 min] substituta 2026-10-17-2: saida 0; faltam 0 + 4
+[ 264.5 min] substituta 2026-10-21: saida 0; faltam 0 + 3
+[ 273.9 min] substituta 2026-10-17: saida 0; faltam 0 + 2
+[ 280.3 min] substituta 2026-10-22: saida 0; faltam 0 + 1
+[ 295.1 min] substituta 2026-11-01: saida 0; faltam 0 + 0
+[2026-11-04 18:59:32] Terminou: as 45 rodadas.
+[2026-11-04 18:59:32] Comecando: a regua.
+{"modelo_final": {"versao": "sem_f1", "aprovado_na_regua": false, "epocas": 10}, "f1": {"diferenca": -0.04516501252681504, "ic95_inf": -0.09297311973942671, "ic95_sup": 0.0012167394895209855}}
+[2026-11-04 18:59:38] Terminou: a regua.
+[2026-11-04 18:59:38] Comecando: os modelos finais.
+{"reference": {"pasta": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\models\\reference", "epocas": 10, "segundos": 344.64175295829773, "sha256_pesos": "d7622dcaf471dfc800c9ebca2b4afcc7f61d93acce81070c018670f58931bd66", "perda_final": 0.029842197868753882, "corridor_id": "707d07029036abd6", "versao": "sem_f1"}, "surrogate": {"pasta": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\models\\surrogate", "epocas": 25, "segundos": 1166.8874230384827, "sha256_pesos": "dd8024fe2349c0f7fef4ad211d084c8da162618fb60b2504f409e4459761d799", "perda_final": 0.013020865891640093, "corridor_id": "707d07029036abd6", "versao": "substituta"}}
+[2026-11-04 19:25:03] Terminou: os modelos finais.
+[2026-11-04 19:25:03] Comecando: a linha de referencia.
+{"corredor_util_antes_do_corte": {"saida_crua_da_rede": {"pontos_fora": 49, "max_excesso_m": 0.5232920985164222, "s_dos_fora_m": [1428.0, 1430.0, 1432.0, 1434.0, 1436.0, 1438.0, 1440.0, 1442.0, 1444.0, 1446.0, 1448.0, 1450.0, 1838.0, 1840.0, 1842.0, 1844.0, 1846.0, 1848.0, 1850.0, 1852.0, 1854.0, 1856.0, 1858.0, 1860.0, 1862.0, 1864.0, 1866.0, 1868.0, 1870.0, 1872.0, 1874.0, 1876.0, 1878.0, 1880.0, 1882.0, 1884.0, 1886.0, 1888.0, 1890.0, 1892.0]}, "depois_da_projecao_em_splines": {"pontos_fora": 17, "max_excesso_m": 0.22677558991527125, "s_dos_fora_m": [1432.0, 1434.0, 1436.0, 1438.0, 1440.0, 1442.0, 1444.0, 1884.0, 1886.0, 1888.0, 1890.0, 1892.0, 1894.0, 1896.0, 1898.0, 1900.0, 1902.0]}, "linha_final_com_o_corte": {"pontos_fora": 0, "max_excesso_m": 0.0, "s_dos_fora_m": []}}, "resposta_a_perda": {"velocidade_mediana_kmh": {"perda_0": 206.8849892707587, "perda_0_5": 148.1255203701469}, "deslocamento_da_linha_m": {"mediana": 3.1214182922259606, "p90": 9.209131554375784, "max": 14.316363453235908}}, "distancia_resumo_m": {"ia_do_coach": {"mediana": 0.528, "max": 4.32}, "minha_melhor": {"mediana": 1.355, "max": 7.873}, "f1": {"mediana": 1.363, "max": 4.641}}}
+[2026-11-04 19:25:13] Terminou: a linha de referencia.
+[2026-11-04 19:25:13] Tempo desta execucao: 5,3 h.
+[2026-11-04 19:25:13] RETREINO CONCLUIDO.

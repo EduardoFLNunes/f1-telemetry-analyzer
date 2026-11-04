@@ -1,0 +1,6 @@
+{"medidas": [
+ {"paralelo": 8, "threads": 1, "segundos_por_epoca_em_cada_processo": 131.91, "segundos_por_epoca_equivalente": 16.49},
+ {"paralelo": 4, "threads": 2, "segundos_por_epoca_em_cada_processo": 77.45, "segundos_por_epoca_equivalente": 19.36},
+ {"paralelo": 2, "threads": 4, "segundos_por_epoca_em_cada_processo": 48.01, "segundos_por_epoca_equivalente": 24.01}],
+ "janelas_medidas": {"treino": 14280, "validacao": 2856, "f1": 1170},
+ "referencia_do_treino_de_agosto": {"geradora_epocas": 80, "geradora_melhor": 70, "substituta_epocas": 26, "substituta_melhor": 16}}

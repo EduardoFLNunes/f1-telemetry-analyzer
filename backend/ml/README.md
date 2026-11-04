@@ -183,8 +183,57 @@ comparação misturaria tempo medido, previsto e simulado.
 Na mesma física, contra a melhor volta real (84,848 s medidos, 85,525 s
 simulados): a volta prevista fica +3,44 s e o traçado otimizado +0,34 s.
 
+## O retreino da geradora (pedido 44, 04/11)
+
+Os modelos em `data/ml/models/` são os deste retreino, e os de agosto estão em
+`data/ml/_backup_pre_pedido44/`. Eles guardam em `model.json` o `corridor_id`, o
+commit e os hashes dos dados. Para consultá-los, use `load_corridor_geometry`: com a
+pista de `load_geometry`, `generate` recusa.
+
+**A régua ([ADR 0026](../../docs/decisoes/0026-retreino-da-lstm-geradora.md)): reprovada.**
+São 150 voltas em 15 sessões, deixando uma sessão inteira de fora a cada rodada.
+
+| | sem a F1 (o modelo final) | com a F1 |
+|---|---:|---:|
+| erro de lateral (m) | 1,474 | 1,544 |
+| referência: a lateral mediana do treino (m) | 1,540 | 1,540 |
+| skill (mínimo 0,20) | 0,042 | −0,003 |
+| IC 95% do skill | +0,001 a +0,089 | −0,067 a +0,066 |
+| sessões com skill positivo (mínimo 70%) | 66,7% | 66,7% |
+
+| sem a F1 | erro | referência | skill |
+|---|---:|---:|---:|
+| voltas abaixo de 88 s (m) | 1,379 | 1,557 | 0,114 |
+| voltas a partir de 88 s (m) | 1,492 | 1,536 | 0,029 |
+| voltas do Eduardo (m) | 1,480 | 1,534 | 0,035 |
+| voltas da IA (m) | 1,422 | 1,594 | 0,108 |
+| velocidade (km/h) | 3,320 | 8,165 | 0,593 |
+| freio (0–1) | 0,028 | 0,033 | 0,146 |
+| acelerador (0–1) | 0,074 | 0,090 | 0,174 |
+
+A substituta não tem critério de aprovação. Deixando uma sessão de fora, ela erra
+0,00177 s por passo (a mediana do treino, 0,00257 s) e 1,679 s por volta (a mediana,
+2,768 s).
+
+Para refazer: `tools/retreino_lstm.ps1`. Rodado de novo, ele retoma de onde parou.
+
 ## Limitações conhecidas
 
+- **A lateral não é prevista melhor que a mediana.** Com o condicionamento de hoje, a
+  geradora ganha da lateral mediana do treino por 4%. A velocidade sai bem porque as
+  perdas da volta dizem o ritmo; a lateral, não.
+- **A linha de perda 0 fica perto da IA.** Ela passa a 0,53 m da volta da IA do coach
+  (mediana por microssetor) e a 1,36 m da melhor volta do Eduardo. A melhor volta do
+  treino é da IA, então perda 0 tende a pedir o que a IA faz. Isso é uma leitura, não
+  uma medida de causa.
+- **13 das 14 voltas da IA estão numa só sessão.** Quando ela sai para teste, o treino
+  fica com uma volta da IA.
+- **Antes do corte, a linha sai do corredor em dois trechos:** 49 pontos na saída crua
+  e 17 depois das splines, com até 0,23 m (perto de 1.432 m e 1.884 m). O corte resolve,
+  mas a rede não aprendeu esse limite.
+- **O corredor tem trechos muito largos:** 104 pontos acima de 15 m, até 28,2 m, em
+  acessos e áreas de escape ligados à pista (ADR 0025). A próxima busca evolutiva pode
+  usá-los, porque o corredor é o limite dela.
 - **Um piloto só.** O que o sistema aprende é variação entre voltas do mesmo
   piloto, não entre estilos.
 - **Custo de representação.** Uma trajetória expressa em pontos de controle

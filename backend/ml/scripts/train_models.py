@@ -22,7 +22,7 @@ from ml.models.sequences import REFERENCE_TASK, SURROGATE_TASK, build_sequences
 from ml.models.training import TrainConfig, evaluate, save_model, train_model
 from ml.preprocessing.splits import describe, split_by_session
 from ml.track.corners import detect_corners
-from ml.track.geometry import load_geometry
+from ml.track.geometry import load_corridor_geometry
 from ml.track.microsectors import build_microsectors
 
 
@@ -37,7 +37,7 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     started = time.time()
-    track = load_geometry()
+    track = load_corridor_geometry()
     sectors = build_microsectors(track)
     corners = detect_corners(track)
     store = load_store(track=track)
@@ -114,6 +114,8 @@ def main(argv=None) -> int:
     (output_root / "metrics.json").write_text(
         json.dumps(
             {
+                "geometry_id": track.geometry_id,
+                "corridor_id": track.corridor_id,
                 "split": split.to_dict(),
                 "reference": reference.to_dict(),
                 "metrics": results,

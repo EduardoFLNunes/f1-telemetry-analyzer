@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -79,6 +79,8 @@ class TrackGeometry:
     # Identidade do que foi carregado: `geometry_id` muda quando a centerline,
     # as bordas ou os parametros de processamento mudam; `source_hash` e o
     # hash dos arquivos do jogo que o cache declara. Ver `geometry_fingerprint`.
+    # As larguras daqui tambem definem o corredor, que tem identidade propria:
+    # ver `corridor_id` e `load_corridor_geometry` (ADR 0025).
     geometry_id: str = ""
     source_hash: str = ""
 
@@ -98,6 +100,11 @@ class TrackGeometry:
 
     def width(self) -> np.ndarray:
         return self.width_left + self.width_right
+
+    @property
+    def corridor_id(self) -> str:
+        """Identidade do corredor destas larguras (ADR 0025)."""
+        return corridor_fingerprint(self.width_left, self.width_right, self.geometry_id)
 
     def index_of(self, s_values) -> np.ndarray:
         """Indice da grade para distancias arbitrarias (com wrap na linha)."""
@@ -447,6 +454,62 @@ def geometry_fingerprint(raw: dict, parameters: dict) -> str:
     digest.update(f"{float(raw['trackLength']):.3f}".encode())
     digest.update(json.dumps(parameters, sort_keys=True).encode())
     return digest.hexdigest()[:16]
+
+
+def corridor_fingerprint(
+    width_left: np.ndarray,
+    width_right: np.ndarray,
+    geometry_id: str,
+    car_half_width: Optional[float] = None,
+    kerb_allowance: Optional[float] = None,
+) -> str:
+    """Identidade do corredor: as larguras, o recuo do carro e a geometria em que valem.
+
+    O `geometry_id` so diz de onde saem o `s` e o `lateral`. O corredor pode mudar
+    sem que ele mude, e nesse caso o que depende das larguras precisa ser refeito
+    sem refazer o store, o inventario e o coach. Larguras arredondadas ao
+    milimetro, como em `geometry_fingerprint`.
+    """
+    half = config.CAR_HALF_WIDTH_M if car_half_width is None else car_half_width
+    kerb = config.KERB_ALLOWANCE_M if kerb_allowance is None else kerb_allowance
+    digest = hashlib.sha256()
+    digest.update(np.round(np.asarray(width_left, dtype=float), 3).tobytes())
+    digest.update(np.round(np.asarray(width_right, dtype=float), 3).tobytes())
+    digest.update(json.dumps(
+        {"car_half_width_m": float(half), "kerb_allowance_m": float(kerb), "geometry_id": str(geometry_id)},
+        sort_keys=True,
+    ).encode())
+    return digest.hexdigest()[:16]
+
+
+def with_surface_corridor(track: TrackGeometry, raw: dict) -> TrackGeometry:
+    """A mesma grade, com as larguras pela borda da superficie do cache (ADR 0025).
+
+    So as larguras mudam: a linha central, as normais, o `s`, o `lateral` e o
+    `geometry_id` sao os de `track`. Onde o raio nao sai da superficie ate o
+    alcance dele, fica a largura de `track`.
+    """
+    from core.geometry.surface_edge import surface_edges
+
+    left, right = surface_edges(raw, track.points, track.normal)
+    return replace(
+        track,
+        width_left=np.where(np.isfinite(left), left, track.width_left),
+        width_right=np.where(np.isfinite(right), right, track.width_right),
+    )
+
+
+def load_corridor_geometry(path: Optional[Path] = None, **kwargs) -> TrackGeometry:
+    """A geometria do Modelo 1: a de `load_geometry`, com o corredor pela borda da superficie.
+
+    O resto do sistema (coach, Modelo 2, M1, radio e app) continua em
+    `load_geometry`, e nada do que ele le muda.
+    """
+    geometry_path = (
+        Path(path) if path else config.track_cache_root() / config.INTERLAGOS_GEOMETRY_FILE
+    )
+    track = load_geometry(geometry_path, **kwargs)
+    return with_surface_corridor(track, json.loads(geometry_path.read_text(encoding="utf-8")))
 
 
 def load_geometry(

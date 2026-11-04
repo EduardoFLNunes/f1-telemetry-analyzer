@@ -26,3 +26,5 @@ O time da TUM na Indy Autonomous Challenge usa um único mapa (bordas, inclinaç
 - Muda o comportamento do runtime. Precisa de validação com voltas reais antes de ir para o app.
 - As gravações antigas mantêm o `s` e o `p` originais. Quando necessário, são reprojetadas pela posição no mundo, o que a sessão 2 mostrou ser fiel: 0,0 m em 266 amostras nativas.
 - É pré-requisito para integrar o modelo à interface.
+
+**Atualização (pedido 44, [0025](0025-corredor-pela-borda-da-superficie.md)):** o `geometry_id` continua cobrindo a linha central, as normais e a grade (de onde saem o `s` e o `lateral`), e não mudou; as larguras do corredor do Modelo 1 passam a ter identidade própria, o `corridor_id`.

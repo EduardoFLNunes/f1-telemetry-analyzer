@@ -43,7 +43,7 @@ from ml.data.store_v2 import git_commit, load_store_v2, store_v2_meta  # noqa: E
 from ml.external import f1_band, f1_reference  # noqa: E402
 from ml.scripts.alinhar_fastf1 import OFFICIAL_GEOMETRY_ID, _round, labelled_ai_laps, lateral_matrix  # noqa: E402
 from ml.scripts.faixa_f1_secas import COLOURS, MANIFEST_FILE, SUMMARY_FILE, _abs_summary, _sector_rows  # noqa: E402
-from ml.track.geometry import TrackGeometry, load_geometry  # noqa: E402
+from ml.track.geometry import TrackGeometry, load_corridor_geometry  # noqa: E402
 from ml.track.microsectors import Microsectors, build_microsectors  # noqa: E402
 
 PEDIDO = "docs/prompts/2026-10-08_24_f1-referencia-2023-25.md"
@@ -114,7 +114,7 @@ def compare_with_p23(sectors: Microsectors, new: Dict[str, object], p23: Dict[st
 
 
 def run(band_dir: Path, out_dir: Path) -> Dict[str, object]:
-    track = load_geometry()
+    track = load_corridor_geometry()
     if track.geometry_id != OFFICIAL_GEOMETRY_ID:
         raise SystemExit(f"PARADO: a geometria carregada e {track.geometry_id}, e o pedido fala da "
                          f"{OFFICIAL_GEOMETRY_ID}.")
@@ -180,7 +180,7 @@ def run(band_dir: Path, out_dir: Path) -> Dict[str, object]:
         "gerado_em": datetime.now(timezone.utc).isoformat(),
         "commit": git_commit(),
         "adr": "docs/decisoes/0019-f1-tracado-de-referencia-2023-25.md",
-        "geometria": {"geometry_id": track.geometry_id, "comprimento_m": track.length,
+        "geometria": {"geometry_id": track.geometry_id, "corridor_id": track.corridor_id, "comprimento_m": track.length,
                       "pontos_da_grade": track.size, "passo_m": track.step},
         "entrada": {
             "faixa_do_pedido_23": str(band_dir),

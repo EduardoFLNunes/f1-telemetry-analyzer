@@ -40,7 +40,7 @@ from ml.data.origin import AI, SOURCE_ANNOTATION, SOURCE_INDICATOR, SOURCE_SESSI
 from ml.data.store_v2 import file_entry, git_commit, load_store_v2, store_v2_meta  # noqa: E402
 from ml.external import f1_line  # noqa: E402
 from ml.track.corners import Corner, detect_corners  # noqa: E402
-from ml.track.geometry import TrackGeometry, load_geometry  # noqa: E402
+from ml.track.geometry import TrackGeometry, load_corridor_geometry  # noqa: E402
 from ml.track.microsectors import build_microsectors  # noqa: E402
 from ml.track.trajectory import path_length  # noqa: E402
 from ml.validation.controlled import CORNER_NAMES  # noqa: E402
@@ -182,7 +182,7 @@ def _round(value, digits: int = 4):
 
 
 def run(reference: Path, out_dir: Path) -> Dict[str, object]:
-    track = load_geometry()
+    track = load_corridor_geometry()
     if track.geometry_id != OFFICIAL_GEOMETRY_ID:
         raise SystemExit(f"PARADO: a geometria carregada e {track.geometry_id}, e o pedido 22 fala da "
                          f"{OFFICIAL_GEOMETRY_ID}.")
@@ -268,6 +268,7 @@ def run(reference: Path, out_dir: Path) -> Dict[str, object]:
         },
         "geometria": {
             "geometry_id": track.geometry_id,
+            "corridor_id": track.corridor_id,
             "comprimento_m": track.length,
             "pontos_da_grade": track.size,
             "passo_m": track.step,

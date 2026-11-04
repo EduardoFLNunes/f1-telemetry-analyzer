@@ -33,7 +33,7 @@ from ml.optimization.surrogate import SurrogateFeatures
 from ml.optimization.vehicle_model import load_envelope
 from ml.preprocessing.splits import split_by_session
 from ml.track.corners import detect_corners
-from ml.track.geometry import load_geometry
+from ml.track.geometry import load_corridor_geometry
 from ml.track.microsectors import build_microsectors
 from ml.validation import gather, holdout, per_lap_error, responds_to_input, unknown_lap
 from ml.validation.search import compare
@@ -111,7 +111,7 @@ def main(argv=None) -> int:
     }
 
     print("carregando pista, store e modelos...", flush=True)
-    track = load_geometry()
+    track = load_corridor_geometry()
     sectors = build_microsectors(track)
     corners = detect_corners(track)
     store = load_store(track=track)

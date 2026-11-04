@@ -207,6 +207,13 @@ recorde em todos os trechos ao mesmo tempo, e que ele nunca deu.
 mediana; pedindo 0,5 s, responde 134 km/h, e a linha se desloca 3,4 m em média.
 Se ela tivesse aprendido a média, as duas respostas seriam iguais.
 
+**O retreino de novembro (pedido 44).** A rede retreinada responde 207 km/h com
+perda 0 e 148 km/h com 0,5 s, e a linha se desloca 3,1 m na mediana. As duas
+respostas ficam fora do que as voltas reais fazem: a mediana de velocidade de
+uma volta real vai de 155 a 202 km/h. E 0,5 s em cada um dos 60 microssetores
+somariam 30 s, com a perda da volta pedida em 0,5 s. O condicionamento faz
+efeito, mas essa consulta é uma extrapolação, não uma volta possível.
+
 ---
 
 ## Figura 5 — Função de aptidão
@@ -408,13 +415,26 @@ ensina a chegar mais perto dela.
 
 | peça | modelo | situação |
 |---|---|---|
-| A — previsão de trajetória (LSTM geradora) | Modelo 1 | existe |
+| A — previsão de trajetória (LSTM geradora) | Modelo 1 | existe; **retreinada com as fontes do ADR 0018 e reprovada na régua** (pedido 44, [ADR 0026](decisoes/0026-retreino-da-lstm-geradora.md)) |
 | busca evolutiva | Modelo 1 | existe |
 | juiz do tempo | Modelo 1 | o simulador quase-estacionário continua sendo o juiz. O juiz novo, o modelo do carro do [ADR 0017](decisoes/0017-modelo-fisico-do-carro.md): a M0 feita; **a M1 feita e não aprovada** (pedidos 37 e 39, [`modelo_fisico_m1.md`](modelo_fisico_m1.md), seção 6): em 0,5 s, skill de 0,20 contra a persistência e de 0,17 contra a física sozinha, abaixo dos critérios 1 e 2 do [ADR 0022](decisoes/0022-validacao-da-m1-modelo-do-carro.md) |
 | B — erro do piloto | Modelo 2 | em uso: versão 1, o relatório de evolução (pedidos 16 e 17). Versão 2, offline (pedido 38, [ADR 0023](decisoes/0023-modelo-2-quatro-pecas-ia-e-piloto.md)): a perda por fase da curva, a cadeia causal, os detectores de técnica e de erro nas voltas da IA e do piloto, a assinatura de estilo e o modelo leve, em [`ml/modelo2/`](../backend/ml/modelo2/) e [`modelo2_tecnica_e_estilo.md`](modelo2_tecnica_e_estilo.md). Os detectores ainda não foram validados contra a rotulagem do Eduardo e não chegam ao rádio nem ao coach |
 | C — autocorreção | Modelo 2 | planejado; os detectores da versão 2 da peça B são a entrada dela, depois da validação (ADR 0023, item 4) |
 | D — tempo contrafactual | Modelo 2 | não passou ([fase1_validacao_contrafactual.md](fase1_validacao_contrafactual.md), seção 6; [ADR 0011](decisoes/0011-resultado-fase-2b-e-experimento-controlado.md)) |
 | E — avaliação | avalia os dois | em uso: a régua do [ADR 0006](decisoes/0006-protocolo-de-validacao.md) |
+
+**O corredor do Modelo 1 (pedido 44, [ADR 0025](decisoes/0025-corredor-pela-borda-da-superficie.md)).**
+A largura vai até a borda da superfície do cache (asfalto, zebra e pintura), e o
+corredor útil é ela menos 0,5 m. O `corridor_id` (`707d07029036abd6`) identifica as
+larguras e o recuo do carro, à parte do `geometry_id`, que continua cobrindo a linha
+central, as normais e a grade. Só o Modelo 1 usa esse corredor, por
+`load_corridor_geometry`; coach, Modelo 2, M1, rádio e app seguem em `load_geometry`,
+com as larguras de antes.
+
+**As fontes da geradora (pedido 44, ADR 0026).** O treino usa 150 voltas em 15 sessões:
+136 `humano` do equipamento atual e 14 `ia` rotuladas pelo indicador do jogo. As voltas
+antigas de origem `desconhecida` ficam fora. O traçado da F1 foi testado como terceira
+fonte, só com a posição, e ficou fora do modelo final, porque não melhorou a régua.
 
 O juiz é compartilhado: hoje é o simulador quase-estacionário
 ([`optimization/lap_time_model.py`](../backend/ml/optimization/lap_time_model.py)),

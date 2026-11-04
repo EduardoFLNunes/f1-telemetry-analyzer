@@ -75,6 +75,8 @@ class TrainedModel:
     seconds: float = float("nan")
     """Tempo de parede do treino. Fica no artefato porque "quanto custa treinar"
     e uma pergunta que se faz depois, quando ninguem lembra mais."""
+    metadata: Dict[str, object] = field(default_factory=dict)
+    """De onde o modelo veio (ADR 0007): geometria, corredor, commit e dados."""
 
     def predict(self, inputs: np.ndarray, batch_size: int = 256) -> np.ndarray:
         """(n, passos, n_in) cru -> (n, passos, n_out) nas unidades originais."""
@@ -83,10 +85,23 @@ class TrainedModel:
         return self.transform.inverse(raw)
 
 
-def _loaders(train: SequenceSet, validation: Optional[SequenceSet], scaler, transform, config):
+def _masked_loss(criterion, prediction, target):
+    """A perda so nos alvos que existem. A linha da F1 nao tem velocidade nem pedal (ADR 0026)."""
+    present = torch.isfinite(target)
+    if bool(present.all()):
+        return criterion(prediction, target)
+    return criterion(prediction[present], target[present])
+
+
+def _loaders(train: SequenceSet, validation: Optional[SequenceSet], scaler, transform, config,
+             extra_train: Optional[SequenceSet] = None):
     _require_torch()
-    inputs = torch.as_tensor(scaler.transform(train.inputs).astype(np.float32))
-    targets = torch.as_tensor(transform.forward(train.targets).astype(np.float32))
+    train_inputs, train_targets = train.inputs, train.targets
+    if extra_train is not None and len(extra_train):
+        train_inputs = np.concatenate([train_inputs, extra_train.inputs], axis=0)
+        train_targets = np.concatenate([train_targets, extra_train.targets], axis=0)
+    inputs = torch.as_tensor(scaler.transform(train_inputs).astype(np.float32))
+    targets = torch.as_tensor(transform.forward(train_targets).astype(np.float32))
     # Gerador proprio para o embaralhamento. Sem ele o `RandomSampler` puxa do
     # RNG global, que o dropout tambem consome a cada passagem -- a ordem das
     # amostras passaria a depender de quantos numeros o dropout gastou antes,
@@ -120,8 +135,12 @@ def train_model(
     model_config: Optional[LSTMConfig] = None,
     config: Optional[TrainConfig] = None,
     verbose: bool = True,
+    extra_train: Optional[SequenceSet] = None,
 ) -> TrainedModel:
-    """Treina a rede da tarefa e devolve o melhor estado visto na validacao."""
+    """Treina a rede da tarefa e devolve o melhor estado visto na validacao.
+
+    `extra_train` entra so na perda de treino: a normalizacao sai de `train`.
+    """
     _require_torch()
     settings = config or TrainConfig()
     torch.manual_seed(settings.seed)
@@ -145,7 +164,7 @@ def train_model(
     )
     criterion = nn.SmoothL1Loss(beta=0.5)
 
-    train_loader, validation_loader = _loaders(train, validation, scaler, transform, settings)
+    train_loader, validation_loader = _loaders(train, validation, scaler, transform, settings, extra_train)
 
     history: List[Dict[str, float]] = []
     best_state = None
@@ -160,7 +179,7 @@ def train_model(
         for batch_inputs, batch_targets in train_loader:
             optimiser.zero_grad()
             prediction = model(batch_inputs)
-            loss = criterion(prediction, batch_targets)
+            loss = _masked_loss(criterion, prediction, batch_targets)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), settings.grad_clip)
             optimiser.step()
@@ -179,6 +198,8 @@ def train_model(
                     seen += batch_inputs.shape[0]
             validation_loss = running / max(seen, 1)
             schedule.step(validation_loss)
+        else:
+            schedule.step(train_loss)
 
         score = validation_loss if validation_loader is not None else train_loss
         history.append(
@@ -260,6 +281,7 @@ def save_model(trained: TrainedModel, directory: Path) -> Path:
                 "best_validation": trained.best_validation,
                 "seconds": trained.seconds,
                 "history": trained.history,
+                "metadata": trained.metadata,
             },
             indent=2,
             ensure_ascii=False,
@@ -287,4 +309,5 @@ def load_model(directory: Path) -> TrainedModel:
         best_epoch=int(payload.get("best_epoch", 0)),
         best_validation=float(payload.get("best_validation", float("nan"))),
         seconds=float(payload.get("seconds", float("nan"))),
+        metadata=dict(payload.get("metadata") or {}),
     )

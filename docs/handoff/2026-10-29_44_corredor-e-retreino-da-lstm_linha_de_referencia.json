@@ -1,0 +1,541 @@
+{
+ "commit": "ec06b0f11a63bdc4fd2209a1cf86973d78bba64b",
+ "geometry_id": "0ed16f0dd2225990",
+ "corridor_id": "707d07029036abd6",
+ "ambiente": {
+  "python": "3.9.7",
+  "plataforma": "Windows-10-10.0.26200-SP0"
+ },
+ "dados": [
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2.parquet",
+   "bytes": 380586213,
+   "sha256": "581012ea1b89741fa26c4cbbfca0cafe7173b488366f1433999cedd35b8ab5e8"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2_meta.json",
+   "bytes": 1336399,
+   "sha256": "6e12ff1a4bdf4bc3d6552e9daf63231112e055215e8b7b301495f8ff54dc92f2"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\externo\\f1_referencia\\referencia_2023_25.csv",
+   "bytes": 84574,
+   "sha256": "5de1c1d0636574b9bae5998eee7cfcfe38b631a364ebf5d1699f4e7799273400"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\cache\\tracks\\vhe_interlagos_gp_kn5_surface_interval_geometry.json",
+   "bytes": 2816095,
+   "sha256": "44ae485c820b9ddfd5921c38ec7168ce6e46af34e7655a18b7d826f19efc2cae"
+  }
+ ],
+ "modelo": {
+  "commit": "ec06b0f11a63bdc4fd2209a1cf86973d78bba64b",
+  "geometry_id": "0ed16f0dd2225990",
+  "corridor_id": "707d07029036abd6",
+  "ambiente": {
+   "python": "3.9.7",
+   "plataforma": "Windows-10-10.0.26200-SP0"
+  },
+  "dados": [
+   {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2.parquet",
+    "bytes": 380586213,
+    "sha256": "581012ea1b89741fa26c4cbbfca0cafe7173b488366f1433999cedd35b8ab5e8"
+   },
+   {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\laps_grid_v2_meta.json",
+    "bytes": 1336399,
+    "sha256": "6e12ff1a4bdf4bc3d6552e9daf63231112e055215e8b7b301495f8ff54dc92f2"
+   },
+   {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\ml\\externo\\f1_referencia\\referencia_2023_25.csv",
+    "bytes": 84574,
+    "sha256": "5de1c1d0636574b9bae5998eee7cfcfe38b631a364ebf5d1699f4e7799273400"
+   },
+   {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\cache\\tracks\\vhe_interlagos_gp_kn5_surface_interval_geometry.json",
+    "bytes": 2816095,
+    "sha256": "44ae485c820b9ddfd5921c38ec7168ce6e46af34e7655a18b7d826f19efc2cae"
+   }
+  ],
+  "pedido": 44,
+  "adr": "0026",
+  "versao": "sem_f1",
+  "voltas": 150,
+  "sessoes": 15,
+  "epocas_fixadas": 10,
+  "aprovado_na_regua": false
+ },
+ "contexto_neutro": {
+  "fuel": 20.548948152529295,
+  "tyre_wear": 99.98624241454637,
+  "grip_index": 0.7530186436689281
+ },
+ "corredor_util_antes_do_corte": {
+  "saida_crua_da_rede": {
+   "pontos_fora": 49,
+   "max_excesso_m": 0.5232920985164222,
+   "s_dos_fora_m": [
+    1428.0,
+    1430.0,
+    1432.0,
+    1434.0,
+    1436.0,
+    1438.0,
+    1440.0,
+    1442.0,
+    1444.0,
+    1446.0,
+    1448.0,
+    1450.0,
+    1838.0,
+    1840.0,
+    1842.0,
+    1844.0,
+    1846.0,
+    1848.0,
+    1850.0,
+    1852.0,
+    1854.0,
+    1856.0,
+    1858.0,
+    1860.0,
+    1862.0,
+    1864.0,
+    1866.0,
+    1868.0,
+    1870.0,
+    1872.0,
+    1874.0,
+    1876.0,
+    1878.0,
+    1880.0,
+    1882.0,
+    1884.0,
+    1886.0,
+    1888.0,
+    1890.0,
+    1892.0
+   ]
+  },
+  "depois_da_projecao_em_splines": {
+   "pontos_fora": 17,
+   "max_excesso_m": 0.22677558991527125,
+   "s_dos_fora_m": [
+    1432.0,
+    1434.0,
+    1436.0,
+    1438.0,
+    1440.0,
+    1442.0,
+    1444.0,
+    1884.0,
+    1886.0,
+    1888.0,
+    1890.0,
+    1892.0,
+    1894.0,
+    1896.0,
+    1898.0,
+    1900.0,
+    1902.0
+   ]
+  },
+  "linha_final_com_o_corte": {
+   "pontos_fora": 0,
+   "max_excesso_m": 0.0,
+   "s_dos_fora_m": []
+  }
+ },
+ "resposta_a_perda": {
+  "velocidade_mediana_kmh": {
+   "perda_0": 206.8849892707587,
+   "perda_0_5": 148.1255203701469
+  },
+  "deslocamento_da_linha_m": {
+   "mediana": 3.1214182922259606,
+   "p90": 9.209131554375784,
+   "max": 14.316363453235908
+  }
+ },
+ "referencias": {
+  "ia_do_coach": "2026-10-04_03-42-10_vhe_interlagos#0013",
+  "minha_melhor": "2026-10-21_20-30-54_vhe_interlagos#0017"
+ },
+ "distancia_por_microssetor": [
+  {
+   "microsetor": "MS01 (0-72 m)",
+   "ia_do_coach": 0.169,
+   "minha_melhor": 1.041,
+   "f1": 1.042
+  },
+  {
+   "microsetor": "MS02 (72-144 m)",
+   "ia_do_coach": 0.362,
+   "minha_melhor": 0.879,
+   "f1": 2.022
+  },
+  {
+   "microsetor": "MS03 (144-217 m)",
+   "ia_do_coach": 0.108,
+   "minha_melhor": 0.951,
+   "f1": 2.633
+  },
+  {
+   "microsetor": "MS04 (217-289 m)",
+   "ia_do_coach": 0.373,
+   "minha_melhor": 0.863,
+   "f1": 2.356
+  },
+  {
+   "microsetor": "MS05 (289-361 m)",
+   "ia_do_coach": 0.535,
+   "minha_melhor": 1.107,
+   "f1": 3.322
+  },
+  {
+   "microsetor": "MS06 (361-433 m)",
+   "ia_do_coach": 0.517,
+   "minha_melhor": 0.786,
+   "f1": 0.876
+  },
+  {
+   "microsetor": "MS07 (433-506 m)",
+   "ia_do_coach": 0.658,
+   "minha_melhor": 1.074,
+   "f1": 1.088
+  },
+  {
+   "microsetor": "MS08 (506-578 m)",
+   "ia_do_coach": 0.333,
+   "minha_melhor": 0.692,
+   "f1": 1.978
+  },
+  {
+   "microsetor": "MS09 (578-650 m)",
+   "ia_do_coach": 0.601,
+   "minha_melhor": 0.317,
+   "f1": 2.359
+  },
+  {
+   "microsetor": "MS10 (650-722 m)",
+   "ia_do_coach": 0.359,
+   "minha_melhor": 2.081,
+   "f1": 3.489
+  },
+  {
+   "microsetor": "MS11 (722-795 m)",
+   "ia_do_coach": 0.31,
+   "minha_melhor": 0.438,
+   "f1": 0.397
+  },
+  {
+   "microsetor": "MS12 (795-867 m)",
+   "ia_do_coach": 0.732,
+   "minha_melhor": 0.931,
+   "f1": 1.262
+  },
+  {
+   "microsetor": "MS13 (867-939 m)",
+   "ia_do_coach": 0.774,
+   "minha_melhor": 1.809,
+   "f1": 0.583
+  },
+  {
+   "microsetor": "MS14 (939-1011 m)",
+   "ia_do_coach": 0.359,
+   "minha_melhor": 1.131,
+   "f1": 0.82
+  },
+  {
+   "microsetor": "MS15 (1011-1084 m)",
+   "ia_do_coach": 0.426,
+   "minha_melhor": 0.37,
+   "f1": 1.534
+  },
+  {
+   "microsetor": "MS16 (1084-1156 m)",
+   "ia_do_coach": 0.302,
+   "minha_melhor": 1.106,
+   "f1": 2.03
+  },
+  {
+   "microsetor": "MS17 (1156-1228 m)",
+   "ia_do_coach": 0.058,
+   "minha_melhor": 0.29,
+   "f1": 2.387
+  },
+  {
+   "microsetor": "MS18 (1228-1300 m)",
+   "ia_do_coach": 0.396,
+   "minha_melhor": 0.107,
+   "f1": 2.318
+  },
+  {
+   "microsetor": "MS19 (1300-1372 m)",
+   "ia_do_coach": 0.861,
+   "minha_melhor": 0.562,
+   "f1": 0.864
+  },
+  {
+   "microsetor": "MS20 (1372-1445 m)",
+   "ia_do_coach": 0.613,
+   "minha_melhor": 1.053,
+   "f1": 0.19
+  },
+  {
+   "microsetor": "MS21 (1445-1517 m)",
+   "ia_do_coach": 0.866,
+   "minha_melhor": 1.668,
+   "f1": 1.103
+  },
+  {
+   "microsetor": "MS22 (1517-1589 m)",
+   "ia_do_coach": 1.041,
+   "minha_melhor": 0.574,
+   "f1": 1.402
+  },
+  {
+   "microsetor": "MS23 (1589-1661 m)",
+   "ia_do_coach": 0.218,
+   "minha_melhor": 1.103,
+   "f1": 1.984
+  },
+  {
+   "microsetor": "MS24 (1661-1734 m)",
+   "ia_do_coach": 0.436,
+   "minha_melhor": 1.667,
+   "f1": 0.679
+  },
+  {
+   "microsetor": "MS25 (1734-1806 m)",
+   "ia_do_coach": 0.152,
+   "minha_melhor": 5.204,
+   "f1": 3.109
+  },
+  {
+   "microsetor": "MS26 (1806-1878 m)",
+   "ia_do_coach": 0.605,
+   "minha_melhor": 1.856,
+   "f1": 3.754
+  },
+  {
+   "microsetor": "MS27 (1878-1950 m)",
+   "ia_do_coach": 0.808,
+   "minha_melhor": 0.336,
+   "f1": 1.812
+  },
+  {
+   "microsetor": "MS28 (1950-2023 m)",
+   "ia_do_coach": 1.008,
+   "minha_melhor": 1.292,
+   "f1": 3.143
+  },
+  {
+   "microsetor": "MS29 (2023-2095 m)",
+   "ia_do_coach": 4.32,
+   "minha_melhor": 3.2,
+   "f1": 4.044
+  },
+  {
+   "microsetor": "MS30 (2095-2167 m)",
+   "ia_do_coach": 2.058,
+   "minha_melhor": 0.288,
+   "f1": 1.639
+  },
+  {
+   "microsetor": "MS31 (2167-2239 m)",
+   "ia_do_coach": 0.297,
+   "minha_melhor": 0.17,
+   "f1": 0.699
+  },
+  {
+   "microsetor": "MS32 (2239-2312 m)",
+   "ia_do_coach": 0.138,
+   "minha_melhor": 1.803,
+   "f1": 1.102
+  },
+  {
+   "microsetor": "MS33 (2312-2384 m)",
+   "ia_do_coach": 0.648,
+   "minha_melhor": 3.594,
+   "f1": 0.667
+  },
+  {
+   "microsetor": "MS34 (2384-2456 m)",
+   "ia_do_coach": 0.879,
+   "minha_melhor": 7.431,
+   "f1": 4.571
+  },
+  {
+   "microsetor": "MS35 (2456-2528 m)",
+   "ia_do_coach": 0.603,
+   "minha_melhor": 5.459,
+   "f1": 1.757
+  },
+  {
+   "microsetor": "MS36 (2528-2600 m)",
+   "ia_do_coach": 1.626,
+   "minha_melhor": 1.579,
+   "f1": 0.56
+  },
+  {
+   "microsetor": "MS37 (2600-2673 m)",
+   "ia_do_coach": 1.501,
+   "minha_melhor": 3.576,
+   "f1": 2.74
+  },
+  {
+   "microsetor": "MS38 (2673-2745 m)",
+   "ia_do_coach": 0.633,
+   "minha_melhor": 3.605,
+   "f1": 1.832
+  },
+  {
+   "microsetor": "MS39 (2745-2817 m)",
+   "ia_do_coach": 0.544,
+   "minha_melhor": 1.147,
+   "f1": 0.294
+  },
+  {
+   "microsetor": "MS40 (2817-2889 m)",
+   "ia_do_coach": 0.283,
+   "minha_melhor": 3.314,
+   "f1": 3.098
+  },
+  {
+   "microsetor": "MS41 (2889-2962 m)",
+   "ia_do_coach": 0.19,
+   "minha_melhor": 6.188,
+   "f1": 2.298
+  },
+  {
+   "microsetor": "MS42 (2962-3034 m)",
+   "ia_do_coach": 0.257,
+   "minha_melhor": 2.484,
+   "f1": 0.889
+  },
+  {
+   "microsetor": "MS43 (3034-3106 m)",
+   "ia_do_coach": 0.587,
+   "minha_melhor": 2.13,
+   "f1": 1.016
+  },
+  {
+   "microsetor": "MS44 (3106-3178 m)",
+   "ia_do_coach": 0.521,
+   "minha_melhor": 0.446,
+   "f1": 3.128
+  },
+  {
+   "microsetor": "MS45 (3178-3251 m)",
+   "ia_do_coach": 0.555,
+   "minha_melhor": 1.124,
+   "f1": 2.632
+  },
+  {
+   "microsetor": "MS46 (3251-3323 m)",
+   "ia_do_coach": 2.826,
+   "minha_melhor": 4.303,
+   "f1": 1.198
+  },
+  {
+   "microsetor": "MS47 (3323-3395 m)",
+   "ia_do_coach": 1.0,
+   "minha_melhor": 0.965,
+   "f1": 0.992
+  },
+  {
+   "microsetor": "MS48 (3395-3467 m)",
+   "ia_do_coach": 0.412,
+   "minha_melhor": 3.432,
+   "f1": 4.641
+  },
+  {
+   "microsetor": "MS49 (3467-3539 m)",
+   "ia_do_coach": 0.547,
+   "minha_melhor": 3.767,
+   "f1": 4.435
+  },
+  {
+   "microsetor": "MS50 (3539-3612 m)",
+   "ia_do_coach": 0.245,
+   "minha_melhor": 3.423,
+   "f1": 2.057
+  },
+  {
+   "microsetor": "MS51 (3612-3684 m)",
+   "ia_do_coach": 0.093,
+   "minha_melhor": 0.967,
+   "f1": 0.159
+  },
+  {
+   "microsetor": "MS52 (3684-3756 m)",
+   "ia_do_coach": 1.222,
+   "minha_melhor": 7.506,
+   "f1": 0.11
+  },
+  {
+   "microsetor": "MS53 (3756-3828 m)",
+   "ia_do_coach": 0.268,
+   "minha_melhor": 7.873,
+   "f1": 0.204
+  },
+  {
+   "microsetor": "MS54 (3828-3901 m)",
+   "ia_do_coach": 0.315,
+   "minha_melhor": 2.332,
+   "f1": 0.556
+  },
+  {
+   "microsetor": "MS55 (3901-3973 m)",
+   "ia_do_coach": 1.397,
+   "minha_melhor": 2.287,
+   "f1": 1.324
+  },
+  {
+   "microsetor": "MS56 (3973-4045 m)",
+   "ia_do_coach": 0.373,
+   "minha_melhor": 4.244,
+   "f1": 0.637
+  },
+  {
+   "microsetor": "MS57 (4045-4117 m)",
+   "ia_do_coach": 0.31,
+   "minha_melhor": 4.04,
+   "f1": 0.785
+  },
+  {
+   "microsetor": "MS58 (4117-4190 m)",
+   "ia_do_coach": 0.479,
+   "minha_melhor": 2.227,
+   "f1": 1.177
+  },
+  {
+   "microsetor": "MS59 (4190-4262 m)",
+   "ia_do_coach": 1.203,
+   "minha_melhor": 1.418,
+   "f1": 0.265
+  },
+  {
+   "microsetor": "MS60 (4262-4334 m)",
+   "ia_do_coach": 1.053,
+   "minha_melhor": 1.01,
+   "f1": 0.814
+  }
+ ],
+ "distancia_resumo_m": {
+  "ia_do_coach": {
+   "mediana": 0.528,
+   "max": 4.32
+  },
+  "minha_melhor": {
+   "mediana": 1.355,
+   "max": 7.873
+  },
+  "f1": {
+   "mediana": 1.363,
+   "max": 4.641
+  }
+ }
+}

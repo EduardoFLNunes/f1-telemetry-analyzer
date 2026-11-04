@@ -146,6 +146,12 @@ def generate(
     `warmup` e quantos pontos da propria volta entram antes e depois da grade
     para a rede chegar aquecida nas duas pontas; o padrao e a janela de treino.
     """
+    recorded = (getattr(trained, "metadata", None) or {}).get("corridor_id")
+    if recorded and recorded != track.corridor_id:
+        raise ValueError(
+            f"o modelo foi treinado com o corredor {recorded}, e a pista carregada tem o "
+            f"{track.corridor_id} (ADR 0025). Use `load_corridor_geometry`."
+        )
     pad = task.window if warmup is None else int(warmup)
     inputs = build_inputs(track, corners, context, sector_loss, lap_loss, task, trained)
     predicted = drop_warmup(trained.predict(with_warmup(inputs, pad)), pad)[0]

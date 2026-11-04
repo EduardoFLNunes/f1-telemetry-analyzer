@@ -43,10 +43,10 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
@@ -56,18 +56,25 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
-from matplotlib.path import Path as MPath  # noqa: E402
 
+from core.geometry.surface_edge import (  # noqa: E402
+    MAX_RAY_M,
+    MIN_GAP_M,
+    RAY_STEP_M,
+    Layer,
+    first_exit,
+    polygon_layer,
+    polyline_segments,
+    profile,
+    ray_hits,
+    surface_layers,
+    to_world,
+)
 from ml import config  # noqa: E402
 
 LEFT, RIGHT = "esquerda", "direita"
 SIDES = (LEFT, RIGHT)
 
-# Medicao ao longo da normal.
-MAX_RAY_M = 30.0
-RAY_STEP_M = 0.05
-# Um trecho fora da superficie mais curto que isto e emenda entre poligonos, nao borda.
-MIN_GAP_M = 0.3
 # Uma faixa alem da borda da superficie por mais que isto e de outro trecho da pista.
 STRIPE_BEYOND_EDGE_M = 1.0
 # Classes (pedido 27, Parte B): "coincide" ate esta distancia da faixa.
@@ -96,23 +103,6 @@ PROFILE_BINS_M = np.round(np.arange(-1.5, 3.01, 0.25), 2)
 
 # ------------------------------------------------------------------- camadas ---
 
-def to_world(points) -> np.ndarray:
-    """Camadas do cache, em coordenadas de mapa (x, y), para o mundo (x, z = -y)."""
-    out = np.array(points, dtype=float).reshape(-1, 2).copy()
-    out[:, 1] = -out[:, 1]
-    return out
-
-
-def polyline_segments(points: np.ndarray, closed: bool) -> np.ndarray:
-    """(n, 4) com (x0, z0, x1, z1) de cada segmento; fecha o anel se `closed`."""
-    pts = np.asarray(points, dtype=float)
-    if closed and len(pts) > 2 and not np.allclose(pts[0], pts[-1]):
-        pts = np.vstack([pts, pts[:1]])
-    if len(pts) < 2:
-        return np.zeros((0, 4))
-    return np.hstack([pts[:-1], pts[1:]])
-
-
 def segment_crossings(segments: np.ndarray, other: np.ndarray) -> np.ndarray:
     """Para cada segmento de `segments`, se ele cruza algum de `other` (os dois (n, 4))."""
     out = np.zeros(len(segments), dtype=bool)
@@ -129,28 +119,6 @@ def segment_crossings(segments: np.ndarray, other: np.ndarray) -> np.ndarray:
 
 
 @dataclass
-class Layer:
-    """Uma camada de poligonos (regra par-impar): os segmentos e os caminhos para o teste de ponto."""
-
-    name: str
-    segments: np.ndarray
-    paths: List[MPath] = field(default_factory=list)
-
-    def inside(self, points: np.ndarray) -> np.ndarray:
-        """Par-impar: dentro se o ponto cai num numero impar de aneis (furos inclusos)."""
-        count = np.zeros(len(points), dtype=int)
-        for path in self.paths:
-            count += path.contains_points(points).astype(int)
-        return (count % 2) == 1
-
-
-def polygon_layer(name: str, rings: Iterable[np.ndarray]) -> Layer:
-    rings = [np.asarray(r, dtype=float) for r in rings if len(r) >= 3]
-    segments = np.vstack([polyline_segments(r, True) for r in rings]) if rings else np.zeros((0, 4))
-    return Layer(name, segments, [MPath(r) for r in rings])
-
-
-@dataclass
 class TrackLayers:
     asphalt: Layer
     kerb: Layer
@@ -163,10 +131,7 @@ class TrackLayers:
 
 def load_layers(raw: Dict[str, object], centre: np.ndarray, s_values: np.ndarray, step: float) -> TrackLayers:
     """As camadas do cache no mundo. `centre` e a linha central da grade, fechada no laco."""
-    asphalt = polygon_layer("asfalto", [to_world(loop["points"]) for loop in raw["asphaltSurface"]["loops"]])
-    kerb = polygon_layer("zebra", [to_world(p["points"]) for p in raw["kerbGeometry"]["polygons"]])
-    paint_rings = [to_world(ring) for poly in raw["markingGeometry"]["polygons"] for ring in poly["rings"]]
-    paint = polygon_layer("pintura", paint_rings)
+    asphalt, kerb, paint = surface_layers(raw)
     centre_segments = polyline_segments(centre, True)
     stripes, stripe_lines, transversals, others = [], [], [], []
     for feature in raw["markingGeometry"]["features"]:
@@ -205,49 +170,6 @@ def transversal_positions(segments: np.ndarray, centre_segments: np.ndarray, s_v
 
 # --------------------------------------------------------------------- raios ---
 
-def ray_hits(origins: np.ndarray, directions: np.ndarray, segments: np.ndarray,
-             max_t: float = MAX_RAY_M, chunk: int = 64) -> List[np.ndarray]:
-    """Para cada raio, as distancias (0 < t <= max_t) em que ele cruza algum segmento, em ordem."""
-    out: List[np.ndarray] = []
-    if len(segments) == 0:
-        return [np.zeros(0) for _ in range(len(origins))]
-    q, sv = segments[:, :2], segments[:, 2:] - segments[:, :2]
-    for start in range(0, len(origins), chunk):
-        o = origins[start:start + chunk][:, None, :]
-        d = directions[start:start + chunk][:, None, :]
-        den = d[..., 0] * sv[None, :, 1] - d[..., 1] * sv[None, :, 0]
-        ok = np.abs(den) > 1e-12
-        safe = np.where(ok, den, 1.0)
-        diff = q[None, :, :] - o
-        t = (diff[..., 0] * sv[None, :, 1] - diff[..., 1] * sv[None, :, 0]) / safe
-        u = (diff[..., 0] * d[..., 1] - diff[..., 1] * d[..., 0]) / safe
-        hit = ok & (t > 1e-9) & (t <= max_t) & (u >= 0) & (u < 1)
-        for row in range(hit.shape[0]):
-            out.append(np.sort(t[row][hit[row]]))
-    return out
-
-
-def profile(start_inside: bool, hits: np.ndarray, samples: np.ndarray) -> np.ndarray:
-    """Dentro/fora da camada ao longo do raio, pela paridade dos cruzamentos ate cada amostra."""
-    crossed = np.searchsorted(hits, samples, side="right")
-    return np.logical_xor(bool(start_inside), (crossed % 2) == 1)
-
-
-def first_exit(mask: np.ndarray, samples: np.ndarray, min_gap_m: float = MIN_GAP_M) -> Optional[float]:
-    """Onde a superficie acaba: o inicio do primeiro trecho fora dela com ao menos `min_gap_m`.
-
-    `None` se o raio nao sai dela ate o fim. Se ja comeca fora, a borda e 0.
-    """
-    step = float(samples[1] - samples[0]) if len(samples) > 1 else RAY_STEP_M
-    need = max(int(np.ceil(min_gap_m / step)), 1)
-    run = 0
-    for k, inside in enumerate(mask):
-        run = 0 if inside else run + 1
-        if run >= need:
-            return float(samples[k - need + 1])
-    return None
-
-
 @dataclass
 class SideMeasure:
     corridor_m: float
@@ -282,9 +204,13 @@ def classify(corridor_m: float, stripe_m: Optional[float], surface_edge_m: Optio
 
 
 def measure_side(origin_flags: Dict[str, bool], hits: Dict[str, np.ndarray], stripe_hits: np.ndarray,
-                 corridor_m: float, samples: np.ndarray) -> SideMeasure:
-    """As medidas de um lado de um ponto, a partir dos cruzamentos do raio com cada camada."""
-    asphalt = profile(origin_flags["asfalto"], hits["asfalto"], samples)
+                 corridor_m: float, samples: np.ndarray, asphalt: Optional[np.ndarray] = None) -> SideMeasure:
+    """As medidas de um lado de um ponto, a partir dos cruzamentos do raio com cada camada.
+
+    `asphalt` e o asfalto ao longo do raio pela classificacao dos aneis (`Layer.along_rays`).
+    """
+    if asphalt is None:
+        asphalt = profile(origin_flags["asfalto"], hits["asfalto"], samples)
     kerb = profile(origin_flags["zebra"], hits["zebra"], samples)
     paint = profile(origin_flags["pintura"], hits["pintura"], samples)
     surface = asphalt | kerb | paint
@@ -320,9 +246,10 @@ def measure_track(track, layers: TrackLayers) -> Dict[str, List[SideMeasure]]:
         hits = {layer.name: ray_hits(origins, directions, layer.segments)
                 for layer in (layers.asphalt, layers.kerb, layers.paint)}
         stripe_hits = ray_hits(origins, directions, layers.stripes)
+        asphalt = layers.asphalt.along_rays(origins, directions, samples)
         out[side] = [
             measure_side({name: bool(flags[name][i]) for name in flags},
-                         {name: hits[name][i] for name in hits}, stripe_hits[i], float(widths[i]), samples)
+                         {name: hits[name][i] for name in hits}, stripe_hits[i], float(widths[i]), samples, asphalt[i])
             for i in range(track.size)
         ]
     return out
@@ -668,7 +595,8 @@ def figure_windows(track, segments: List[Dict[str, object]], count: int = 8, mar
     return [{**seg, "janela": (max(seg["inicio_m"] - margin_m, 0.0), seg["fim_m"] + margin_m)} for seg in chosen]
 
 
-def draw_figure(path: Path, track, layers: TrackLayers, raw, windows, ai_laps: np.ndarray, my_laps: np.ndarray) -> Path:
+def draw_figure(path: Path, track, layers: TrackLayers, raw, windows, ai_laps: np.ndarray, my_laps: np.ndarray,
+                previous=None, title: str = "Corredor do modelo x pista desenhada: trechos de maior desvio (pedido 27)") -> Path:
     n = len(windows)
     cols = 2 if n > 1 else 1
     rows = int(np.ceil(n / cols)) if n else 1
@@ -704,6 +632,10 @@ def draw_figure(path: Path, track, layers: TrackLayers, raw, windows, ai_laps: n
         for widths, sign in ((track.width_left, 1.0), (track.width_right, -1.0)):
             edge = track.to_world(track.s[idx], sign * widths[idx])
             ax.plot(edge[:, 0], edge[:, 1], color="#ff7f0e", linewidth=1.6, linestyle="--", zorder=7)
+        if previous is not None:
+            for widths, sign in ((previous.width_left, 1.0), (previous.width_right, -1.0)):
+                edge = previous.to_world(previous.s[idx], sign * widths[idx])
+                ax.plot(edge[:, 0], edge[:, 1], color="#17becf", linewidth=1.1, linestyle=":", zorder=7)
         span = np.vstack([track.to_world(track.s[idx], track.width_left[idx] + 3.0),
                           track.to_world(track.s[idx], -track.width_right[idx] - 3.0)])
         pad = 4.0
@@ -723,8 +655,10 @@ def draw_figure(path: Path, track, layers: TrackLayers, raw, windows, ai_laps: n
         plt.Line2D([], [], color="#2f7bd6", linewidth=1.0, label="voltas da IA (04/10)"),
         plt.Line2D([], [], color="#2e9d3f", linewidth=1.0, label="suas voltas (equipamento atual)"),
     ]
+    if previous is not None:
+        handles.append(plt.Line2D([], [], color="#17becf", linewidth=1.1, linestyle=":", label="corredor de antes"))
     fig.legend(handles=handles, loc="lower center", ncol=3, fontsize=9, frameon=False)
-    fig.suptitle("Corredor do modelo x pista desenhada: trechos de maior desvio (pedido 27)", fontsize=12)
+    fig.suptitle(title, fontsize=12)
     fig.tight_layout(rect=(0, 0.04, 1, 0.97))
     fig.savefig(path, dpi=110)
     plt.close(fig)
