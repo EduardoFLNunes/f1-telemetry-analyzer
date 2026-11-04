@@ -286,7 +286,9 @@ class LiveDrivingCoach:
                         numero = self._numero_no_meio if self._numero_no_meio is not None else lap_number
                         self.ultima_volta = {"volta": numero, "tempoS": crossing - self._lap_line_clock,
                                              "teveIA": self._lap_had_ai, "momento": time.time(),
-                                             "completa": len(self._lap_diffs) == model.microsectors}
+                                             "completa": len(self._lap_diffs) == model.microsectors,
+                                             # Pedido 45 (B.1): so leitura, para dizer o motivo na lista.
+                                             "semMedida": sorted(set(range(model.microsectors)) - set(self._lap_diffs))}
                     self._start_lap(lap_number, 0, crossing, 0.0, at_line=True)
                     self._last_progress, self._last_clock = progress, clock
                     if index == 0:

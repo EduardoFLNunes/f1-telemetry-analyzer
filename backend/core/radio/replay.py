@@ -39,6 +39,12 @@ Decisoes do Eduardo sobre a analise, no fechamento do pedido 43:
   mais perto da mediana;
 * **a diferenca acumulada cobre o trecho inteiro da curva** (`diferencaNoTrecho`): comeca em zero na
   entrada do trecho e termina na perda da curva. A animacao nao muda.
+
+Pedido 45:
+
+* **o trecho da causa** (`causa`): a parte da curva que mais perdeu (C.2), com a mesma medida da voz;
+* **o alto do replay** (`textoDaVoz`): os numeros que a voz disse, mesmo com a marca fora da tela;
+* **a volta inteira** (`dados_da_volta`), para os boxes, no mesmo formato, com a perda de cada curva.
 """
 from __future__ import annotations
 
@@ -189,7 +195,8 @@ def janela_da_frase(pista: Any, codigo: str, volta: Dict[str, np.ndarray], ref: 
 def dados_da_curva(pista: Any, codigo: str, volta: Dict[str, np.ndarray], volta_total: float,
                    ref: Dict[str, np.ndarray], ref_total: float, numero_da_volta: Optional[int],
                    tipo: Optional[str], voz: Optional[Dict[str, Any]] = None,
-                   da_analise: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+                   da_analise: Optional[Dict[str, Any]] = None,
+                   causa: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
     """O replay de uma curva: as duas linhas com o tempo e o pedal, as freadas, as minimas,
     o tracado e a perda. `volta` e `ref` sao grades completas (`analise.grade`).
 
@@ -199,7 +206,9 @@ def dados_da_curva(pista: Any, codigo: str, volta: Dict[str, np.ndarray], volta_
     onde o coach mediu.
 
     `da_analise` (so na analise): a curva de `analise.analisar`. Os rotulos passam a ter as medianas
-    do cartao, e a marca da sua freada e a ponta da seta do tracado medem esses numeros."""
+    do cartao, e a marca da sua freada e a ponta da seta do tracado medem esses numeros.
+
+    `causa` (pedido 45, na curva da volta): a de `analise.causa_da_curva`. O trecho dela fica marcado."""
     from ml.comparison.evolution import segment_time
     from ml.comparison.lap_vs_reference import _signed_distance, _window
 
@@ -314,6 +323,15 @@ def dados_da_curva(pista: Any, codigo: str, volta: Dict[str, np.ndarray], volta_
     secoes = {"freadaM": min(ds_freada) if ds_freada else None,
               "minimaM": minimas["referencia"]["dM"] if minimas else None,
               "saidaM": distancia(corner.end_s)}
+    trecho_da_causa = None
+    if causa and causa.get("trecho"):
+        # O trecho da causa, nas mesmas separacoes da diferenca acumulada (`analise.partes_da_perda`).
+        limites = {"freada": (secoes["freadaM"], secoes["minimaM"]), "minima": (secoes["minimaM"], secoes["saidaM"]),
+                   "saida": (secoes["saidaM"], ultimo_d)}.get(str(causa["trecho"]))
+        if limites and limites[0] is not None and limites[1] is not None and limites[1] > limites[0]:
+            trecho_da_causa = {"trecho": causa["trecho"], "inicioM": limites[0], "fimM": limites[1],
+                               "perdaS": causa.get("perdaTrechoS"), "medida": causa.get("medida"),
+                               "valor": causa.get("valor")}
     return {
         "curva": codigo,
         "lado": "esquerda" if corner.label.endswith("esq") else "direita",
@@ -332,8 +350,58 @@ def dados_da_curva(pista: Any, codigo: str, volta: Dict[str, np.ndarray], volta_
                         "referencia": [round(float(v), 1) for v in np.nan_to_num(ref["velocidade"][indices])]},
         "secoes": secoes,
         "voz": da_fala,
+        "causa": trecho_da_causa,
         "diferencaNoTrecho": _diferenca_no_trecho(track, seg, volta, volta_total, ref, ref_total, entrada)
         if da_analise is not None else None,
+    }
+
+
+def dados_da_volta(pista: Any, volta: Dict[str, np.ndarray], volta_total: float, ref: Dict[str, np.ndarray],
+                   ref_total: float, numero_da_volta: Optional[int], tipo: Optional[str],
+                   perdas: Optional[Dict[str, float]] = None) -> Dict[str, Any]:
+    """Pedido 45 (E.3): a volta inteira, no formato de uma curva: as duas linhas de s = 0 a s = 0, o tempo
+    desde a linha, o pedal e a velocidade. `curvasNaVolta`: onde cada curva fica (a distancia e o tempo
+    em que "voce" entra nela), para a celula da curva ficar acesa e um clique pular para ela."""
+    track = pista.track
+    indices = np.arange(int(track.size))
+    pos_v, pos_r = _posicoes(track, volta["lateral"], indices), _posicoes(track, ref["lateral"], indices)
+    t_v = np.maximum.accumulate(np.nan_to_num(np.asarray(volta["elapsed"], dtype=float)))
+    t_r = np.maximum.accumulate(np.nan_to_num(np.asarray(ref["elapsed"], dtype=float)))
+    ped_v, ped_r = _pedal(volta["freio"], volta["acelerador"]), _pedal(ref["freio"], ref["acelerador"])
+    passo = float(track.step)
+
+    def linha(pos, t, ped):
+        return [[round(float(a), 2), round(float(b), 2), round(float(c), 3), int(d)] for (a, b), c, d in zip(pos, t, ped)]
+
+    na_volta = []
+    for seg in pista.segmentos:
+        corner = seg.corner
+        i, j = int(track.index_of(corner.start_s)), int(track.index_of(corner.end_s))
+        codigo = corner.label[:3]
+        na_volta.append({"curva": codigo, "inicioM": round(i * passo, 1), "fimM": round(j * passo, 1),
+                         "tempoS": round(float(t_v[i]), 3), "perdaS": (perdas or {}).get(codigo)})
+    total_perda = round(float(volta_total) - float(ref_total), 3)
+    return {
+        "curva": None,
+        "voltaInteira": True,
+        "lado": "",
+        "volta": numero_da_volta,
+        "referencia": tipo,
+        "rotuloDaReferencia": "IA (referência)" if tipo == "volta_ia" else "sua melhor (referência)",
+        "perdaS": total_perda,
+        "linhas": {"voce": linha(pos_v, t_v, ped_v), "referencia": linha(pos_r, t_r, ped_r)},
+        "duracaoS": round(float(max(t_v[-1], t_r[-1])), 3),
+        "freadas": {"voce": None, "referencia": None, "distanciaM": None},
+        "minimas": None,
+        "tracado": None,
+        "passoM": round(passo, 4),
+        "velocidades": {"voce": [round(float(v), 1) for v in np.nan_to_num(volta["velocidade"])],
+                        "referencia": [round(float(v), 1) for v in np.nan_to_num(ref["velocidade"])]},
+        "secoes": None,
+        "voz": None,
+        "causa": None,
+        "diferencaNoTrecho": None,
+        "curvasNaVolta": na_volta,
     }
 
 

@@ -36,6 +36,15 @@ Pedido 36 (Parte C): **todo numero falado tem a sua unidade.**
 A unidade nunca sai da fala: quando nao cabe, sai primeiro a segunda causa, depois a
 primeira, e por ultimo as palavras que dizem contra quem ("da IA"), nunca a unidade.
 O numero que nao e medida (a curva, a volta, o microssetor) nao tem unidade.
+
+Pedido 45 (ADR 0027): **o radio diz onde e por que.**
+
+* o resumo diz, nesta ordem de importancia: a diferenca para a sua melhor volta da sessao (ou
+  "melhor volta", ou "recorde pessoal"), a curva da volta com a perda e a causa, a diferenca para
+  a referencia, a diferenca para a anterior (so quando melhorou sem ser a melhor) e o tempo. As
+  variantes perdem os itens de baixo para cima;
+* uma correcao por mensagem: uma curva e uma causa (`causa_falada`);
+* a frase do coach e a analise usam as mesmas palavras ("freou 15 metros antes da IA").
 """
 from __future__ import annotations
 
@@ -48,8 +57,9 @@ REFERENCIA_LONGA = {"volta_ia": "volta da IA", "minha_melhor": "sua melhor volta
 # Pedido 35: o tempo maximo de cada fala, com a vinheta (o radio fica com a primeira que cabe):
 # "cerca de" 6, 7 e 8 s, com 10% de folga. Pedido 36: a frase do coach sobe para 7,3 s, para a
 # causa com a unidade caber ("Mínima de 64 contra 94 quilômetros por hora." passava de 6,6 s).
-FALA_MAXIMA_S = {"coach": 7.3, "resumo": 7.7, "analise": 8.8, "teste": 8.8}
+FALA_MAXIMA_S = {"coach": 7.3, "resumo": 7.7, "analise": 8.8, "teste": 8.8, "curva": 7.3}
 FALA_ALVO = {"volta_ia": "da IA", "minha_melhor": "da sua melhor"}
+TRECHO_FALADO = {"freada": "freada", "minima": "mínima", "saida": "saída"}
 
 
 @dataclass(frozen=True)
@@ -140,9 +150,55 @@ def metros_falados(metros: float) -> str:
     return f"{decimal(v, 1)} metro" if v < 2 else f"{int(round(v))} metros"
 
 
-def minima_falada(sua: float, ref: float) -> str:
-    """As duas minimas, com a unidade uma vez, no fim (pedido 36)."""
-    return f"Mínima de {int(round(sua))} contra {int(round(ref))} quilômetros por hora."
+def quilometros_falados(kmh: float) -> str:
+    """A velocidade, falada: "9 quilômetros por hora" (no singular, "1 quilômetro por hora")."""
+    v = int(round(abs(float(kmh))))
+    return f"{v} quilômetro{'s' if v != 1 else ''} por hora"
+
+
+def minima_falada(sua: float, ref: float, alvo: str = "") -> str:
+    """Pedido 45 (C.2): a diferenca da minima: "Mínima 9 quilômetros por hora abaixo da IA."."""
+    contra = f" {alvo}" if alvo else ""
+    return f"Mínima {quilometros_falados(float(sua) - float(ref))} {'abaixo' if sua < ref else 'acima'}{contra}."
+
+
+def causa_falada(causa: Optional[Mapping[str, Any]], alvo: str = "") -> Optional[str]:
+    """Pedido 45 (C.2): a causa, com a medida do trecho que mais perdeu; sem uma medida acima do corte,
+    so o trecho. Em minusculas e sem ponto, para vir depois da perda: "freou 15 metros antes da IA"."""
+    if not causa:
+        return None
+    contra = f" {alvo}" if alvo else ""
+    medida, valor = causa.get("medida"), _numero(causa.get("valor"))
+    if medida == "freada" and valor is not None:
+        return f"freou {metros_falados(valor)} {'antes' if valor < 0 else 'depois'}{contra}"
+    if medida == "minima" and valor is not None:
+        return f"mínima {quilometros_falados(valor)} abaixo{contra}"
+    if medida == "tracado" and valor is not None:
+        return f"passou {metros_falados(valor)} por {causa.get('lado')} no ápice"
+    if medida == "saida" and valor is not None:
+        return f"saiu {quilometros_falados(valor)} mais lento"
+    perda = _numero(causa.get("perdaTrechoS"))
+    trecho = TRECHO_FALADO.get(str(causa.get("trecho")))
+    return f"perdeu {tempo_falado(perda)} na {trecho}" if perda is not None and trecho else None
+
+
+def causa_escrita(causa: Optional[Mapping[str, Any]], alvo: str = "") -> Optional[str]:
+    """A causa no cartao, com o numero completo: "na freada, +0,52 s; freou 15 m antes da IA"."""
+    if not causa:
+        return None
+    contra = f" {alvo}" if alvo else ""
+    medida, valor = causa.get("medida"), _numero(causa.get("valor"))
+    perda = _numero(causa.get("perdaTrechoS"))
+    partes = [f"na {TRECHO_FALADO.get(str(causa.get('trecho')))}, {com_sinal(perda)}"] if perda is not None else []
+    if medida == "freada" and valor is not None:
+        partes.append(f"freou {int(round(abs(valor)))} m {'antes' if valor < 0 else 'depois'}{contra}")
+    elif medida == "minima" and valor is not None:
+        partes.append(f"mínima {int(round(abs(valor)))} km/h abaixo{contra}")
+    elif medida == "tracado" and valor is not None:
+        partes.append(f"passou {decimal(abs(valor), 1)} m por {causa.get('lado')} no ápice")
+    elif medida == "saida" and valor is not None:
+        partes.append(f"saiu {int(round(abs(valor)))} km/h mais lento")
+    return "; ".join(partes) or None
 
 
 def _clausula_da_freada(tipo: Optional[str], delta_m: float) -> str:
@@ -181,12 +237,12 @@ def causa_principal(ev: Mapping[str, Any], tipo: Optional[str]) -> Optional[Dict
     alvo = FALA_ALVO.get(tipo or "", "da referência")
     if freada is not None and abs(freada) >= CORTE_FREADA_M:
         lado = "antes" if freada > 0 else "depois"
-        base = f"Freia {metros_falados(freada)} {lado}"
+        base = f"Freou {metros_falados(freada)} {lado}"
         return {"medida": "freada", "valor": round(-freada, 1), "fala": f"{base} {alvo}.", "falaCurta": f"{base}."}
     ref, sua = _numero(ev.get("referenceMinSpeedKmh")), _numero(ev.get("yourMinSpeedKmh"))
     if ref is not None and sua is not None and abs(sua - ref) >= CORTE_MINIMA_KMH:
-        fala = minima_falada(sua, ref)
-        return {"medida": "minima", "valor": round(sua - ref, 1), "fala": fala, "falaCurta": fala}
+        return {"medida": "minima", "valor": round(sua - ref, 1), "fala": minima_falada(sua, ref, alvo),
+                "falaCurta": minima_falada(sua, ref)}
     return None
 
 
@@ -257,43 +313,125 @@ def mensagem_de_diferenca(evento: Mapping[str, Any], curvas: Sequence[CurvaDaPis
     }
 
 
-def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optional[float],
-                       tipo: Optional[str], pior: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
-    """O resumo na linha de chegada: o tempo da volta, a diferenca para a referencia escolhida e,
-    desde o pedido 35, a curva em que a volta mais perdeu (`pior`: curva, lado e perda)."""
-    rotulo = REFERENCIA_LONGA.get(tipo or "", "referência")
+def _frase_da_melhor(melhor: Optional[Mapping[str, Any]]) -> Optional[str]:
+    """Pedido 45 (C.1, item 1): a diferenca para a melhor volta da sessao, ou que esta e a melhor."""
+    if not melhor:
+        return None
+    situacao, dif = melhor.get("situacao"), _numero(melhor.get("difS"))
+    if situacao in ("melhor", "recorde"):
+        nome = "Recorde pessoal" if situacao == "recorde" else "Melhor volta"
+        return f"{nome}, {tempo_falado(dif)} mais rápida" if dif is not None and abs(dif) >= 0.05 else nome
+    if dif is None:
+        return None
+    return f"{tempo_falado(dif)} {'atrás' if dif >= 0 else 'à frente'} da sua melhor"
+
+
+def _juntar(*frases: Optional[str]) -> str:
+    """As frases presentes: as diferencas separadas por virgula, numa frase so."""
+    return ", ".join(f for f in frases if f)
+
+
+def falas_da_curva(pior: Mapping[str, Any], tipo: Optional[str]) -> Dict[str, str]:
+    """As falas da curva da volta: com a causa, com a causa sem dizer contra quem, e so a curva."""
+    nome = _nome_falado(pior.get("curva")) or str(pior.get("curva"))
+    perda = tempo_falado(float(pior["perdaS"]))
     alvo = FALA_ALVO.get(tipo or "", "da referência")
+    causa, curta = causa_falada(pior.get("causa"), alvo), causa_falada(pior.get("causa"))
+    return {"completa": f"{nome}: {perda}, {causa}." if causa else f"{nome}: {perda}.",
+            "curta": f"{nome}: {perda}, {curta}." if curta else f"{nome}: {perda}.",
+            "semCausa": f"{nome}: {perda}."}
+
+
+def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optional[float],
+                       tipo: Optional[str], pior: Optional[Mapping[str, Any]] = None,
+                       melhor: Optional[Mapping[str, Any]] = None, anterior_s: Optional[float] = None,
+                       rodada: bool = False) -> Dict[str, Any]:
+    """O resumo na linha de chegada (pedido 45, C.1). `pior`: a curva da volta (`analise.curva_da_volta`);
+    `melhor`: {situacao: melhor | recorde | atras, difS, melhorS}; `anterior_s`: quanto esta volta foi mais
+    rapida que a anterior (so quando melhorou sem ser a melhor); `rodada`: a volta com rodada, que diz
+    o tempo e a diferenca, sem a curva.
+
+    Sempre a diferenca medida contra uma volta real (ADR 0012). As falas vao da mais completa a mais
+    curta e perdem os itens de baixo para cima, na ordem de importancia: o tempo, a anterior, a
+    referencia, a causa e a curva. `falasComACausa` diz quantas das primeiras falas tem a curva com
+    a causa: se o radio ficar com uma das seguintes, a curva vai numa mensagem propria.
+    """
+    rotulo = REFERENCIA_LONGA.get(tipo or "", "referência")
+    alvo = "da IA" if tipo == "volta_ia" else "da referência"
     volta = int(volta) if _numero(volta) is not None else None
     falado = tempo_de_volta_falado(tempo_s)
-    abertura = f"Volta {volta}" if volta else "Volta"
-    if referencia_s:
-        dif = tempo_s - referencia_s
-        texto = f"{com_sinal(dif, 3)} para a {rotulo} ({tempo_de_volta(referencia_s)})"
-        lado = "atrás" if dif > 0 else "à frente"
-        dif_alvo, dif_curta = f"{tempo_falado(dif)} {lado} {alvo}", f"{tempo_falado(dif)} {lado}"
-        inteiras = [f"{abertura}: {falado}, {dif_alvo}.", f"{abertura}: {dif_alvo}.", f"{abertura}: {dif_curta}."]
-    else:
-        texto = "sem referência para comparar"
-        inteiras = [f"{abertura}: {falado}."]
+    frase_melhor = _frase_da_melhor(melhor)
+    dif = tempo_s - referencia_s if referencia_s else None
+    frase_ref = f"{tempo_falado(dif)} {'atrás' if dif > 0 else 'à frente'} {alvo}" if dif is not None else None
+    frase_ant = f"{tempo_falado(anterior_s)} mais rápida que a anterior" if anterior_s else None
+    frase_tempo = f"Tempo: {falado}."
     perda_pior = _numero((pior or {}).get("perdaS"))
     tem_pior = bool(pior and pior.get("curva") and perda_pior is not None and perda_pior > 0)
     falas = []
+    com_causa = 0
+
+    def por(*partes: Optional[str]) -> None:
+        f = " ".join(p for p in partes if p)
+        if f and f not in falas:
+            falas.append(f)
+
+    def frase(*diferencas: Optional[str]) -> Optional[str]:
+        junta = _juntar(*diferencas)
+        return f"{junta}." if junta else None
+
+    if rodada:
+        # C.5: "Volta com rodada: 1 minuto e 36,4 segundos, 7,0 segundos atrás da sua melhor."
+        contra = frase_melhor or frase_ref
+        por(f"Volta com rodada: {falado}" + (f", {contra}." if contra else "."))
+        if contra:
+            por(f"Volta com rodada: {contra}.")
+    elif tem_pior:
+        curva = falas_da_curva(pior, tipo)
+        por(frase(frase_melhor, frase_ant, frase_ref), curva["completa"], frase_tempo)
+        por(frase(frase_melhor, frase_ant, frase_ref), curva["completa"])
+        por(frase(frase_melhor, frase_ref), curva["completa"])
+        por(frase(frase_melhor), curva["completa"])
+        por(frase(frase_melhor), curva["curta"])
+        com_causa = len(falas)
+        if curva["semCausa"] != curva["curta"]:
+            por(frase(frase_melhor), curva["semCausa"])
+        por(frase(frase_melhor or frase_ref))
+    else:
+        por(frase(frase_melhor, frase_ant, frase_ref), frase_tempo)
+        por(frase(frase_melhor, frase_ant, frase_ref))
+        por(frase(frase_melhor, frase_ref))
+        por(frase(frase_melhor or frase_ref))
+        por(frase_tempo)
+    partes_do_texto = []
+    if melhor and _numero(melhor.get("melhorS")) is not None:
+        d = _numero(melhor.get("difS"))
+        if melhor.get("situacao") in ("melhor", "recorde"):
+            nome = "recorde pessoal" if melhor.get("situacao") == "recorde" else "melhor volta"
+            partes_do_texto.append(nome + (f", {com_sinal(-abs(d), 3)}" if d else ""))
+        elif d is not None:
+            partes_do_texto.append(f"{com_sinal(d, 3)} para a sua melhor ({tempo_de_volta(float(melhor['melhorS']))})")
+    if dif is not None:
+        partes_do_texto.append(f"{com_sinal(dif, 3)} para a {rotulo} ({tempo_de_volta(referencia_s)})")
+    if anterior_s:
+        partes_do_texto.append(f"{com_sinal(-abs(anterior_s), 3)} para a anterior")
     detalhe = None
     if tem_pior:
         lado_curva = f", {pior['lado']}" if pior.get("lado") else ""
-        detalhe = f"mais perdeu na {pior['curva']}{lado_curva}: {com_sinal(perda_pior)}"
-        nome = (_nome_falado(pior["curva"]) or pior["curva"]).lower()
-        falas += [f"{f} Mais perdeu na {nome}: {tempo_falado(perda_pior)}." for f in inteiras]
-    falas += [f for f in inteiras if f not in falas]
+        escrita = causa_escrita(pior.get("causa"), FALA_ALVO.get(tipo or "", "da referência"))
+        detalhe = f"mais perdeu na {pior['curva']}{lado_curva}: {com_sinal(perda_pior)}" + (f"; {escrita}" if escrita else "")
+    elif rodada:
+        detalhe = "volta com rodada: fora da análise"
     return {
         "origem": "resumo",
         "titulo": f"Volta {volta}: {tempo_de_volta(tempo_s)}" if volta else f"Volta: {tempo_de_volta(tempo_s)}",
-        "texto": texto,
+        "texto": " · ".join(partes_do_texto) or "sem referência para comparar",
         "detalhe": detalhe,
         "fala": falas[0],
         "falas": falas,
         "falaMaxS": FALA_MAXIMA_S["resumo"],
+        "falasComACausa": com_causa,
         "piorCurva": dict(pior) if tem_pior else None,
+        "melhor": dict(melhor) if melhor else None,
         "microssetor": None,
         "curva": pior["curva"] if tem_pior else None,
         "s": 0.0,
@@ -303,21 +441,60 @@ def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optio
     }
 
 
-def _diferenca_falada(medida: str, valor: float, extra: Mapping[str, Any], alvo: str = "") -> str:
-    """Uma diferenca da analise, falada como uma frase, no estilo da frase do coach, com a
-    unidade (pedido 36): "Freia 46 metros antes da IA.", "Minima de 102 contra 128 quilometros
-    por hora.". `alvo` ("da IA") diz contra quem; vazio, a forma curta. O tracado de 2 m para
-    cima vai com o numero inteiro, mais curto de falar; o cartao continua com a decimal."""
+def mensagem_da_curva(volta: Optional[int], pior: Mapping[str, Any], tipo: Optional[str]) -> Dict[str, Any]:
+    """Pedido 45 (C.1, item 5): a curva que nao coube no resumo, numa mensagem propria."""
+    curva = falas_da_curva(pior, tipo)
+    falas = list(dict.fromkeys([curva["completa"], curva["curta"], curva["semCausa"]]))
+    escrita = causa_escrita(pior.get("causa"), FALA_ALVO.get(tipo or "", "da referência"))
+    lado = f", {pior['lado']}" if pior.get("lado") else ""
+    return {
+        "origem": "curva",
+        "titulo": f"{pior['curva']}{lado}",
+        "texto": f"{com_sinal(float(pior['perdaS']))} na volta {volta}" if volta else com_sinal(float(pior["perdaS"])),
+        "detalhe": escrita,
+        "fala": falas[0],
+        "falas": falas,
+        "falaMaxS": FALA_MAXIMA_S["curva"],
+        "piorCurva": dict(pior),
+        "microssetor": None,
+        "curva": pior["curva"],
+        "s": None,
+        "perdaS": float(pior["perdaS"]),
+        "volta": int(volta) if _numero(volta) is not None else None,
+    }
+
+
+def fala_da_curva(fala: Optional[str], codigo: Optional[str]) -> Optional[str]:
+    """Pedido 45 (D.6): o pedaco da fala sobre uma curva, para o alto do replay: os numeros da voz."""
+    nome = _nome_falado(codigo)
+    if not fala or not nome or nome not in fala:
+        return None
+    resto = fala[fala.index(nome):]
+    seguinte = resto.find(" Curva ", 1)
+    resto = resto[:seguinte] if seguinte > 0 else resto
+    corte = resto.find(" Tempo:")
+    return (resto[:corte] if corte > 0 else resto).strip()
+
+
+def _diferenca_falada(medida: str, valor: float, extra: Mapping[str, Any], alvo: str = "",
+                      lado: Optional[str] = None) -> str:
+    """Uma diferenca da analise, falada como uma frase, com a unidade (pedido 36) e as palavras da
+    C.2 (pedido 45): "Freou 46 metros antes da IA.", "Mínima 26 quilômetros por hora abaixo da IA.",
+    "Passou 3 metros por fora no ápice.". `alvo` ("da IA") diz contra quem; vazio, a forma curta.
+    O tracado de 2 m para cima vai com o numero inteiro, mais curto de falar; o cartao continua
+    com a decimal. Sem o lado da curva, o tracado diz esquerda ou direita."""
     contra = f" {alvo}" if alvo else ""
     if medida == "freada":
-        return f"Freia {metros_falados(valor)} {'antes' if valor < 0 else 'depois'}{contra}."
+        return f"Freou {metros_falados(valor)} {'antes' if valor < 0 else 'depois'}{contra}."
     if medida == "minima":
-        return minima_falada(extra.get("sua", 0), extra.get("ref", 0))
+        return minima_falada(extra.get("sua", 0), extra.get("ref", 0), alvo)
     if medida == "acelerador":
-        return f"Acelera {metros_falados(valor)} {'depois' if valor > 0 else 'antes'}{contra}."
-    # "da IA" -> "que a IA"; "da sua melhor" -> "que a sua melhor"
+        return f"Acelerou {metros_falados(valor)} {'depois' if valor > 0 else 'antes'}{contra}."
+    if lado in ("esquerda", "direita"):
+        por_dentro = (valor > 0) == (lado == "esquerda")
+        return f"Passou {metros_falados(valor)} por {'dentro' if por_dentro else 'fora'} no ápice."
     que = f" que a {alvo[3:] if alvo.startswith('da ') else alvo}" if alvo else ""
-    return f"Passa {metros_falados(valor)} mais à {'esquerda' if valor > 0 else 'direita'}{que}."
+    return f"Passou {metros_falados(valor)} mais à {'esquerda' if valor > 0 else 'direita'}{que}."
 
 
 def _diferenca_escrita(medida: str, valor: float, extra: Mapping[str, Any]) -> str:
@@ -330,8 +507,19 @@ def _diferenca_escrita(medida: str, valor: float, extra: Mapping[str, Any]) -> s
     return f"traçado {decimal(abs(valor), 1)} m mais à {'esquerda' if valor > 0 else 'direita'}"
 
 
+def frase_da_tendencia(media_s: Optional[float], media_anterior_s: Optional[float]) -> Optional[str]:
+    """Pedido 45 (C.3): a media das 3 voltas contra a das 3 anteriores; None se elas empatam em decimos."""
+    if media_s is None or media_anterior_s is None:
+        return None
+    dif = float(media_s) - float(media_anterior_s)
+    if abs(dif) < 0.05:
+        return None
+    return f"Média {tempo_falado(dif)} {'mais lenta' if dif > 0 else 'mais rápida'} que as 3 anteriores."
+
+
 def mensagem_de_analise(analise: Mapping[str, Any], tipo: Optional[str],
-                        referencia_lap_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+                        referencia_lap_id: Optional[str] = None,
+                        tendencia: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """A analise das 3 ultimas voltas validas (pedido 35, ADR 0021); None sem curva para dizer.
 
     Sempre a diferenca medida contra uma volta real (ADR 0012), nunca um ganho prometido.
@@ -357,7 +545,7 @@ def mensagem_de_analise(analise: Mapping[str, Any], tipo: Optional[str],
     def trecho(c: Mapping[str, Any], quantas: int, com_alvo: bool = True) -> str:
         nome = _nome_falado(c["curva"]) or c["curva"]
         difs = {d["medida"]: d for d in c.get("diferencas") or []}
-        ditas = [_diferenca_falada(m, difs[m]["valor"], difs[m], alvo if com_alvo else "")
+        ditas = [_diferenca_falada(m, difs[m]["valor"], difs[m], alvo if com_alvo else "", c.get("lado"))
                  for m in c.get("ditas", [])[:quantas] if m in difs]
         base = f"{nome}: perde {tempo_falado(c['perdaMedianaS'])} por volta."
         return base + (" " + " ".join(ditas) if ditas else "")
@@ -367,6 +555,12 @@ def mensagem_de_analise(analise: Mapping[str, Any], tipo: Optional[str],
     abertura = f"Análise das voltas {intervalo}."
     curta = f"Voltas {intervalo}."
     candidatas = []
+    if tendencia:
+        # Pedido 45 (C.3): se couber, comeca pela tendencia.
+        if len(curvas) > 1:
+            candidatas.append(f"{tendencia} {trecho(curvas[0], 1)} {trecho(curvas[1], 1)}")
+        candidatas.append(f"{tendencia} {trecho(curvas[0], 2)}")
+        candidatas.append(f"{tendencia} {trecho(curvas[0], 1)}")
     if len(curvas) > 1:
         candidatas.append(f"{abertura} {trecho(curvas[0], 2)} {trecho(curvas[1], 2)}")
         candidatas.append(f"{curta} {trecho(curvas[0], 1)} {trecho(curvas[1], 1)}")
@@ -386,6 +580,7 @@ def mensagem_de_analise(analise: Mapping[str, Any], tipo: Optional[str],
         "origem": "analise",
         "titulo": f"Análise das voltas {intervalo}",
         "texto": f"{texto}, contra a {rotulo}",
+        "tendencia": tendencia,
         "detalhe": " | ".join(linhas),
         "linhas": linhas,
         "fala": falas[0],

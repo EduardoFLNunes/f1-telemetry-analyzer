@@ -50,7 +50,7 @@ def test_frase_de_diferenca_com_virgula_microssetor_a_partir_de_1_e_lado_por_ext
     assert m["detalhe"] == "1,99 s contra 1,25 s · a IA freia 38 m depois de você · mínima da IA 157 km/h, a sua 94 km/h"
     # Pedido 35: a causa principal na voz (a freada passou do corte de 15 m: voce freou 38 m antes).
     # Pedido 36: com a unidade (abaixo de 1 s, em decimos).
-    assert m["fala"] == "Curva 1, esquerda: 7 décimos atrás da IA. Freia 38 metros antes da IA."
+    assert m["fala"] == "Curva 1, esquerda: 7 décimos atrás da IA. Freou 38 metros antes da IA."
     assert m["falas"][-3:] == ["Curva 1, esquerda: 7 décimos atrás da IA.", "Curva 1: 7 décimos atrás da IA.",
                                "Curva 1: 7 décimos atrás."]
     assert m["falaMaxS"] == 7.3                     # cerca de 6 s, com folga para a causa (pedido 36)
@@ -61,7 +61,7 @@ def test_frase_de_diferenca_com_virgula_microssetor_a_partir_de_1_e_lado_por_ext
 def test_frase_contra_a_sua_melhor_e_na_curva_da_direita():
     m = mensagem_de_diferenca(_evento(indice=29, perda=0.215, tipo="minha_melhor"), CURVAS, L)
     assert m["titulo"] == "C02, direita" and m["microssetor"] == 30
-    assert m["fala"] == "Curva 2, direita: 2 décimos atrás da sua melhor. Freia 38 metros antes da sua melhor."
+    assert m["fala"] == "Curva 2, direita: 2 décimos atrás da sua melhor. Freou 38 metros antes da sua melhor."
     assert "na sua melhor volta você freou 38 m depois" in m["detalhe"]
 
 
@@ -73,7 +73,7 @@ def test_resumo_na_linha():
     m = mensagem_de_resumo(7, 88.132, 84.829, "volta_ia")
     assert m["titulo"] == "Volta 7: 1:28,132"
     assert m["texto"] == "+3,303 s para a volta da IA (1:24,829)"
-    assert m["fala"] == "Volta 7: 1 minuto e 28,1 segundos, 3,3 segundos atrás da IA."
+    assert m["fala"] == "3,3 segundos atrás da IA. Tempo: 1 minuto e 28,1 segundos."
 
 
 # ----------------------------------------------------------------- janela ---
@@ -286,23 +286,23 @@ from core.radio.texto import causa_principal, mensagem_de_analise  # noqa: E402
 
 def test_a_causa_principal_freada_antes_da_minima_e_os_cortes():
     ev = {"brakeDeltaM": 15.0, "referenceMinSpeedKmh": 94.0, "yourMinSpeedKmh": 64.0}
-    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 15 metros antes da IA."   # no corte: conta
-    assert causa_principal(ev, "volta_ia")["falaCurta"] == "Freia 15 metros antes."
+    assert causa_principal(ev, "volta_ia")["fala"] == "Freou 15 metros antes da IA."   # no corte: conta
+    assert causa_principal(ev, "volta_ia")["falaCurta"] == "Freou 15 metros antes."
     ev["brakeDeltaM"] = -14.9                                                     # abaixo: vai para a minima
-    assert causa_principal(ev, "volta_ia")["fala"] == "Mínima de 64 contra 94 quilômetros por hora."
+    assert causa_principal(ev, "volta_ia")["fala"] == "Mínima 30 quilômetros por hora abaixo da IA."
     ev["yourMinSpeedKmh"] = 94.0 - CORTE_MINIMA_KMH + 0.1                         # abaixo dos dois cortes
     assert causa_principal(ev, "volta_ia") is None
     ev["brakeDeltaM"] = -30.0
-    assert causa_principal(ev, "volta_ia")["fala"] == "Freia 30 metros depois da IA."
+    assert causa_principal(ev, "volta_ia")["fala"] == "Freou 30 metros depois da IA."
     assert (CORTE_FREADA_M, CORTE_MINIMA_KMH) == (15.0, 8.0)
 
 
 def test_resumo_com_a_curva_de_maior_perda():
     m = mensagem_de_resumo(7, 90.363, 84.829, "volta_ia", {"curva": "C11", "lado": "esquerda", "perdaS": 1.14})
     assert m["detalhe"] == "mais perdeu na C11, esquerda: +1,14 s"
-    assert m["fala"] == ("Volta 7: 1 minuto e 30,4 segundos, 5,5 segundos atrás da IA. "
-                         "Mais perdeu na curva 11: 1,1 segundo.")
-    assert m["falas"][-1] == "Volta 7: 5,5 segundos atrás."
+    assert m["fala"] == ("5,5 segundos atrás da IA. Curva 11: 1,1 segundo. "
+                         "Tempo: 1 minuto e 30,4 segundos.")
+    assert m["falas"][-1] == "5,5 segundos atrás da IA."
     assert m["falaMaxS"] == 7.7 and m["curva"] == "C11"
 
 
@@ -332,13 +332,13 @@ def test_a_analise_so_curvas_perdidas_em_2_de_3_e_no_maximo_2():
     assert "traçado 0,4 m mais à esquerda" in m["linhas"][0]        # o lado por extenso (ADR 0003)
     # A fala no estilo da frase do coach, cada diferenca uma frase, com as unidades (pedido 36).
     assert m["fala"].startswith("Análise das voltas 6 a 8. Curva 12: perde 9 décimos por volta. "
-                                "Mínima de 80 contra 110 quilômetros por hora. Freia 50 metros antes da IA.")
+                                "Mínima 30 quilômetros por hora abaixo da IA. Freou 50 metros antes da IA.")
     from core.radio.texto import _diferenca_falada
-    assert _diferenca_falada("tracado", -7.9, {}) == "Passa 8 metros mais à direita."
-    assert _diferenca_falada("tracado", 1.5, {}) == "Passa 1,5 metro mais à esquerda."
-    assert _diferenca_falada("acelerador", 14.0, {}) == "Acelera 14 metros depois."
-    assert _diferenca_falada("tracado", -7.9, {}, "da IA") == "Passa 8 metros mais à direita que a IA."
-    assert _diferenca_falada("tracado", 2.4, {}, "da sua melhor") == "Passa 2 metros mais à esquerda que a sua melhor."
+    assert _diferenca_falada("tracado", -7.9, {}) == "Passou 8 metros mais à direita."
+    assert _diferenca_falada("tracado", 1.5, {}) == "Passou 1,5 metro mais à esquerda."
+    assert _diferenca_falada("acelerador", 14.0, {}) == "Acelerou 14 metros depois."
+    assert _diferenca_falada("tracado", -7.9, {}, "da IA") == "Passou 8 metros mais à direita que a IA."
+    assert _diferenca_falada("tracado", 2.4, {}, "da sua melhor") == "Passou 2 metros mais à esquerda que a sua melhor."
     assert m["falaMaxS"] == 8.8 and m["referencia"] == {"tipo": "volta_ia", "volta": "ref#0013"}
     # Tres curvas perdidas em 2 das 3: so as 2 de maior perda mediana.
     voltas[1]["medidas"][2]["perdaS"] = 0.4
@@ -403,7 +403,7 @@ def test_a_voz_fica_com_a_primeira_fala_que_cabe(tmp_path):
     assert 0.12 * len(m["falas"][0]) > 7.3               # a completa, com a causa, passa do limite
     # O radio gera da mais completa a mais curta e fica com a primeira que cabe: ainda com a causa.
     cabe = next(i for i, f in enumerate(m["falas"]) if 0.12 * len(f) <= 7.3)
-    assert m["fala"] == m["falas"][cabe] and "Freia 38 metros antes" in m["fala"]
+    assert m["fala"] == m["falas"][cabe] and "Freou 38 metros antes" in m["fala"]
     assert m["duracaoS"] <= 7.3 and ditas == m["falas"][:cabe + 1]
 
 

@@ -178,6 +178,21 @@ def _volta_de_referencia_do_radio() -> Optional[Dict[str, Any]]:
     return leitor_do_store.ler_volta(app_config.coach_root(), str(ref["volta"]))
 
 
+def _melhor_do_store_do_radio() -> Optional[float]:
+    """Pedido 45 (C.1): a melhor volta do carro e da pista em todas as sessoes do store."""
+    from core.coleta.estado import melhor_do_store
+
+    frame_track = getattr(live_driving_coach, "_track", None) if live_driving_coach is not None else None
+    return melhor_do_store(app_config.coach_root(), frame_track, source_manager.current_car_model())
+
+
+def _volta_no_store_do_radio(sessao: Optional[str], tempo_s: Optional[float]) -> Optional[Dict[str, Any]]:
+    """Pedido 45 (E.6): a volta no store, para o caminho ate a tela Volta."""
+    from core.coleta.estado import volta_no_store
+
+    return volta_no_store(app_config.coach_root(), sessao, tempo_s)
+
+
 def _sessao_do_radio() -> Optional[str]:
     if recording_runtime is None:
         return None
@@ -203,6 +218,7 @@ def _ligar_o_radio() -> None:
             volta_fechada=lambda: volta_ao_vivo.ultima_fechada() if volta_ao_vivo is not None else None,
             volta_de_referencia=_volta_de_referencia_do_radio,
             volta_atual=lambda: volta_ao_vivo.estado() if volta_ao_vivo is not None else None,
+            melhor_do_store=_melhor_do_store_do_radio,
         )
         event_bus.subscribe(PROCESSED_FRAME, radio_do_engenheiro.on_frame)
         event_bus.subscribe(COACHING_EVENT, radio_do_engenheiro.on_coaching_event)

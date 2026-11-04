@@ -11,6 +11,8 @@ So le o que ja e medido; nenhuma conta de fisica nova:
   - a perda no trecho da curva (do meio da reta anterior ao meio da seguinte);
   - o ponto de freada (o freio passa de 0,15, do apice anterior ao apice);
   - a minima dentro da curva;
+  e, com os mesmos canais da grade (pedido 45, C.2), a velocidade no fim da curva e as partes da
+  perda (`partes_da_perda`), para dizer onde e por que a curva perdeu (`causa_da_curva`);
   e duas montadas aqui com os mesmos canais da grade:
   - **a volta ao acelerador cheio:** o primeiro ponto, do apice ao fim do trecho, com
     o acelerador em `ACELERADOR_CHEIO` ou mais;
@@ -150,6 +152,8 @@ def medidas_da_volta(volta: Dict[str, np.ndarray], total: float, ref: Dict[str, 
         ponto_min_ref = int(dentro[int(np.nanargmin(ref["velocidade"][dentro]))])
         acel_v = _primeiro_acelerador_cheio(volta["acelerador"], track, corner.apex_s, seg.end_s)
         acel_r = _primeiro_acelerador_cheio(ref["acelerador"], track, corner.apex_s, seg.end_s)
+        fim = int(track.index_of(corner.end_s))
+        saida_v, saida_r = float(volta["velocidade"][fim]), float(ref["velocidade"][fim])
         out.append({
             "curva": corner.label[:3],
             "lado": "esquerda" if corner.label.endswith("esq") else "direita",
@@ -163,8 +167,102 @@ def medidas_da_volta(volta: Dict[str, np.ndarray], total: float, ref: Dict[str, 
             if acel_v is not None and acel_r is not None else None,
             "tracadoM": round(float(volta["lateral"][ponto_min_ref] - ref["lateral"][ponto_min_ref]), 2),
             "sDaCurva": round(float(corner.apex_s), 1),
+            # Pedido 45 (C.2): a velocidade no fim da curva e as partes da perda.
+            "saidaKmh": round(saida_v - saida_r, 1),
+            "saidaSuaKmh": round(saida_v, 1),
+            "saidaRefKmh": round(saida_r, 1),
+            "trechos": partes_da_perda(track, seg, volta, total, ref, ref_total, freada_v, freada_r, ponto_min_ref),
         })
     return out
+
+
+def partes_da_perda(track: Any, seg: Any, volta: Dict[str, np.ndarray], total: float, ref: Dict[str, np.ndarray],
+                    ref_total: float, freada_v: Optional[float], freada_r: Optional[float],
+                    ponto_min_ref: int) -> Dict[str, float]:
+    """Pedido 45 (C.2): a perda da curva, dividida nas separacoes da diferenca acumulada do pedido 43.
+
+    A diferenca acumulada (a sua volta menos a referencia, desde a entrada do trecho) comeca em zero e
+    termina na perda da curva. As separacoes sao as de `replay.secoes`: a primeira freada, a minima da
+    referencia e o fim da curva. As partes somam a perda:
+
+    * `reta`: da entrada do trecho a primeira freada (o que veio da curva anterior: nao e causa desta);
+    * `freada`: da primeira freada a minima da referencia;
+    * `minima`: da minima da referencia ao fim da curva;
+    * `saida`: do fim da curva ao fim do trecho.
+
+    Sem freada nas duas voltas (uma curva de pe embaixo), a parte `freada` fica vazia.
+    """
+    from ml.comparison.evolution import time_at
+
+    L = float(track.length)
+    comprimento = float(np.mod(seg.end_s - seg.start_s, L))
+
+    def desde_a_entrada(s: float) -> float:
+        return min(float(np.mod(s - seg.start_s, L)), comprimento)
+
+    def diferenca(d: float) -> float:
+        def relogio(elapsed: np.ndarray, tot: float) -> float:
+            t = float(np.mod(time_at(elapsed, tot, track, seg.start_s + d) - time_at(elapsed, tot, track, seg.start_s), tot))
+            return t - tot if t > 0.9 * tot and d < comprimento else t
+        return relogio(volta["elapsed"], total) - relogio(ref["elapsed"], ref_total)
+
+    d_min = desde_a_entrada(float(track.s[ponto_min_ref]))
+    d_fim = max(desde_a_entrada(float(seg.corner.end_s)), d_min)
+    freadas = [desde_a_entrada(s) for s in (freada_v, freada_r) if s is not None]
+    d_freada = min(min(freadas), d_min) if freadas else d_min
+    no_freada, no_min, no_fim, no_total = diferenca(d_freada), diferenca(d_min), diferenca(d_fim), diferenca(comprimento)
+    return {"reta": round(no_freada, 3), "freada": round(no_min - no_freada, 3), "minima": round(no_fim - no_min, 3),
+            "saida": round(no_total - no_fim, 3)}
+
+
+def causa_da_curva(medida: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Pedido 45 (C.2): o trecho da curva com a maior parte da perda e a medida desse trecho, se ela
+    passa do corte. `medida` fica None quando o trecho nao tem causa acima do corte (a voz diz so o
+    trecho); None sem nenhum trecho que perdeu.
+
+    * freada: o ponto de freada, antes ou depois da referencia;
+    * minima: a minima abaixo da referencia; senao, o tracado no apice, por fora ou por dentro (ADR
+      0003: positivo = mais a esquerda; numa curva a esquerda, mais a direita e por fora);
+    * saida: a velocidade mais baixa no fim da curva.
+
+    Uma minima ou uma saida mais rapidas que a referencia nao explicam uma perda: nao sao causa.
+    """
+    partes = medida.get("trechos") or {}
+    candidatos = {k: float(partes.get(k) or 0.0) for k in ("freada", "minima", "saida")}
+    trecho = max(candidatos, key=lambda k: candidatos[k])
+    if candidatos[trecho] <= 0:
+        return None
+    out: Dict[str, Any] = {"trecho": trecho, "perdaTrechoS": round(candidatos[trecho], 3), "medida": None, "valor": None}
+    if trecho == "freada":
+        v = medida.get("freadaM")
+        if v is not None and abs(float(v)) >= CORTE_FREADA_M:
+            out.update(medida="freada", valor=float(v))
+    elif trecho == "minima":
+        v = medida.get("minimaKmh")
+        lateral = medida.get("tracadoM")
+        if v is not None and float(v) <= -CORTE_MINIMA_KMH:
+            out.update(medida="minima", valor=float(v))
+        elif lateral is not None and abs(float(lateral)) >= CORTE_TRACADO_M:
+            a_esquerda = float(lateral) > 0
+            por_dentro = a_esquerda == (medida.get("lado") == "esquerda")
+            out.update(medida="tracado", valor=float(lateral), lado="dentro" if por_dentro else "fora")
+    else:
+        v = medida.get("saidaKmh")
+        if v is not None and float(v) <= -CORTE_SAIDA_KMH:
+            out.update(medida="saida", valor=float(v))
+    return out
+
+
+def curva_da_volta(medidas: Optional[Sequence[Dict[str, Any]]]) -> Optional[Dict[str, Any]]:
+    """Pedido 45 (C.2): a curva que mais perdeu, com a mesma perda da analise e da grade, e a causa.
+    Abaixo de `PERDA_MINIMA_PARA_CITAR_S`, nenhuma curva e citada."""
+    if not medidas:
+        return None
+    m = max(medidas, key=lambda x: x["perdaS"])
+    if float(m["perdaS"]) < PERDA_MINIMA_PARA_CITAR_S:
+        return None
+    return {"curva": m["curva"], "lado": m["lado"], "perdaS": m["perdaS"], "causa": causa_da_curva(m),
+            "sDaCurva": m.get("sDaCurva")}
 
 
 def _mediana(valores: Sequence[Optional[float]]) -> Optional[float]:
