@@ -61,6 +61,14 @@ CORTE_FREADA_M = 15.0
 CORTE_MINIMA_KMH = 8.0
 CORTE_ACELERADOR_M = 10.0
 CORTE_TRACADO_M = 1.8
+# Pedido 45 (C.2), registrado antes de rodar as sessoes. A velocidade no fim da curva e a mesma
+# grandeza da minima, medida do mesmo jeito (a velocidade da grade, uma volta contra a outra, num
+# ponto da curva): o que o corte da minima mede (a variacao normal da velocidade do piloto numa
+# curva, de uma volta para outra) vale para ela. Por isso, o mesmo valor, sem um ajuste proprio.
+CORTE_SAIDA_KMH = CORTE_MINIMA_KMH
+# Pedido 45 (C.2): abaixo disto, nenhuma curva e citada: a voz arredonda para decimos, e menos de 1
+# decimo nao diz nada. O tracado usa o corte que a analise ja tinha (CORTE_TRACADO_M).
+PERDA_MINIMA_PARA_CITAR_S = 0.1
 
 
 @dataclass
