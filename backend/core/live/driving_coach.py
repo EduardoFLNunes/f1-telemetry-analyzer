@@ -190,6 +190,10 @@ class LiveDrivingCoach:
         self._lap_line_clock: Optional[float] = None
         self._volta_do_jogo: Optional[float] = None
         self.ultima_volta: Optional[Dict[str, Any]] = None
+        # Pedido 45 (B.2): o numero da volta que esta em andamento. O contador do jogo muda perto da
+        # linha, e em algumas passagens ele muda antes do s = 0 (13/10, a volta 9; 21/10, a 14): no
+        # quadro da passagem ele ja diz a volta seguinte. No meio da volta, ele e sempre o certo.
+        self._numero_no_meio: Optional[float] = None
 
     # ── the hot path ─────────────────────────────────────────────────────
 
@@ -229,6 +233,8 @@ class LiveDrivingCoach:
 
         lap_number = _number(frame.get("lap_number") or frame.get("lap"))
         self._volta_do_jogo = lap_number  # pedido 31: so para quem le a posicao
+        if self._numero_no_meio is None and progress >= 0.5:
+            self._numero_no_meio = lap_number
         index = min(int(progress * model.microsectors), model.microsectors - 1)
         if not _legacy(model):
             if ai_controlled(frame) is True:
@@ -277,7 +283,8 @@ class LiveDrivingCoach:
                         # o jogo ainda conta a volta que acabou.
                         # Pedido 35: "completa" (todos os microsetores comparados), so leitura, para
                         # o radio contar as voltas validas da analise com a mesma regra do foco.
-                        self.ultima_volta = {"volta": lap_number, "tempoS": crossing - self._lap_line_clock,
+                        numero = self._numero_no_meio if self._numero_no_meio is not None else lap_number
+                        self.ultima_volta = {"volta": numero, "tempoS": crossing - self._lap_line_clock,
                                              "teveIA": self._lap_had_ai, "momento": time.time(),
                                              "completa": len(self._lap_diffs) == model.microsectors}
                     self._start_lap(lap_number, 0, crossing, 0.0, at_line=True)
@@ -342,6 +349,7 @@ class LiveDrivingCoach:
         """Start counting from here; nothing is said about the slice it starts in."""
         self._partial_sector = None if at_line else index
         self._lap_number = lap_number
+        self._numero_no_meio = lap_number if progress >= 0.5 else None
         self._sector_index = index
         self._sector_entry_clock = clock
         self._last_progress = progress
@@ -422,6 +430,11 @@ class LiveDrivingCoach:
             "timestamp": time.time(),
         })
 
+    def _numero_da_volta(self, frame: Dict[str, Any]) -> int:
+        """Pedido 45 (B.2): o numero da volta em andamento, o mesmo do `ultima_volta`."""
+        numero = self._numero_no_meio if self._numero_no_meio is not None else _number(frame.get("lap_number") or frame.get("lap"))
+        return int(numero or 0)
+
     def posicao_oficial(self) -> Optional[Dict[str, Any]]:
         """Pedido 31: onde o carro esta, na projecao da geometria oficial que o coach ja faz.
 
@@ -435,7 +448,8 @@ class LiveDrivingCoach:
         tempo = (self._last_clock - self._lap_line_clock
                  if self._lap_line_clock is not None and self._last_clock is not None else None)
         return {"s": float(self._last_progress) * length, "comprimento": length,
-                "lateral": self._last_lateral, "volta": self._volta_do_jogo,
+                "lateral": self._last_lateral,
+                "volta": self._numero_no_meio if self._numero_no_meio is not None else self._volta_do_jogo,
                 "tempoDaVolta": tempo, "desdeALinha": self._lap_line_clock is not None}
 
     def _position_m(self, frame: Dict[str, Any], progress: float) -> Optional[float]:
@@ -669,7 +683,7 @@ class LiveDrivingCoach:
             "severity": round(min(1.0, loss / 0.5), 2),
             "evidence": evidence,
             "driver_id": str(frame.get("driver_id") or "player_1"),
-            "lap_number": int(_number(frame.get("lap_number") or frame.get("lap")) or 0),
+            "lap_number": self._numero_da_volta(frame),
             "s": _number(frame.get("s")) or 0.0,
             "timestamp": time.time(),
             "corner_id": _number(frame.get("corner_id")),

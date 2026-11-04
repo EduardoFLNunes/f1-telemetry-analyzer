@@ -264,6 +264,9 @@ class RadioDoEngenheiro:
         volta, self._resumo_desde = self._resumo, None
         if not volta:
             return
+        # Pedido 45 (B.1): a geometria so era lida na primeira frase do coach ou na primeira janela; a
+        # primeira volta que fechava antes disso saia "sem as medidas" (13/10 e 18/10, a volta 2).
+        self._pista()
         self._conferir_a_sessao()
         if volta.get("teveIA"):
             self._fora_da_grade(volta, "a IA pilotou parte da volta")
