@@ -1,96 +1,187 @@
-# Relatório do pedido 44: corredor pela borda da superfície e retreino da LSTM geradora (parado à espera do retreino noturno)
+# Relatório do pedido 44: corredor pela borda da superfície e retreino da LSTM geradora
 
 - **Pedido:** `docs/prompts/2026-10-29_44_corredor-e-retreino-da-lstm.md`, com as decisões do Eduardo de 02/11.
-- **Branch:** `etapa/corredor-e-retreino-lstm`, a partir de `develop` em `9a460bdc`. **Sem merge:** ele vem depois do retreino.
-- **Commits:**
+- **Branch:** `etapa/corredor-e-retreino-lstm`, a partir de `develop` em `9a460bdc`, **com merge em `develop`**.
+- **Commits e merge:**
   - `7e933a7c` Pedido 44, Parte A: ADRs 0025 (corredor pela borda da superficie e corridor_id) e 0026 (regua do retreino da LSTM geradora), antes de rodar
   - `d772253b` Pedido 44, Partes B e C: corredor pela borda da superficie, corridor_id, conferencias, criterio da F1 e outside_corridor_fraction
   - `c9dc90b0` Pedido 44, Parte D: voltas das fontes, regua do ADR 0026 em codigo, entrada da F1 so pela posicao, testes e a estimativa de tempo
   - `68f2b070` Relatorio do pedido 44 ate a parada da Parte D.5 (tempo acima de 6 horas)
   - `c74b1417` Relatorio do pedido 44: tres frases corrigidas contra o que foi feito
   - `fca94a96` Pedido 44: leitura dos buracos internos do asfalto (o menor anel decide), corridor_id 707d07029036abd6, retomada do modelo final e tools/retreino_lstm.ps1
-  - o commit deste relatório: "Relatorio do pedido 44: buracos internos corrigidos e o retreino pronto para rodar a noite"
+  - `ec06b0f1` Relatorio do pedido 44: buracos internos corrigidos e o retreino pronto para rodar a noite (o retreino rodou neste commit)
+  - `2c650142` Pedido 44, Parte E: o retreino rodado (45 rodadas, modelos finais e linha de referencia): reprovado na regua, sem a F1
+  - `0d710231` Pedido 44, Parte F: documentacao do corredor novo e do resultado do retreino; linhas nos ADRs 0018, 0019 e 0026
+  - `5fc393d6` Pedido 44: a saida da suite com os modelos finais no lugar
+  - `41efd098` Merge etapa/corredor-e-retreino-lstm (pedido 44: corredor pela borda da superficie e retreino da LSTM geradora, reprovado na regua, sem a F1)
+  - o commit deste relatório, em `develop`: "Relatorio do pedido 44: o retreino, a regua, o merge e os comandos de envio"
 - **Arquivos de handoff:**
   - `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm_relatorio.md` (este)
+  - `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm_resultados.json` (a régua inteira, com os hashes dos dados)
+  - `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm_linha_de_referencia.json` (as conferências da linha, com os 60 microssetores)
+  - `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm_erros_por_volta.csv` (o erro de cada volta de teste, com e sem a F1)
+  - `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm_log_do_retreino.txt` (o log da corrida de 04/11)
   - `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm_corredor_figura.png` (os 8 trechos do pedido 27, com as bordas corrigidas)
   - `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm_corredor_resumo.json` (Partes B e C, gerado em `fca94a96`)
   - `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm_fontes.json` (as voltas, por fonte e por sessão, com os hashes dos dados)
-  - `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm_estimativa.json` (as medidas de tempo)
+  - `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm_estimativa.json` (as medidas de tempo antes de rodar)
   - `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm_testes.txt` (suíte `backend/tests`)
+  - `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm.patch` (de `9a460bdc` até o merge; sha256 `35bb2d4b…4d4807`)
 
 ## Em resumo
 
-1. **Pronto para você rodar à noite.** As decisões de 02/11 estão feitas e commitadas. O comando está logo abaixo.
-2. **A causa dos trechos largos foi confirmada anel por anel, em duas formas:** um `internal_hole` fora de qualquer anel externo, ou um `internal_hole` dentro de outro buraco. Os dois davam contagem ímpar e viravam superfície. Agora o menor anel que contém o ponto decide.
-3. **O `corridor_id` passou a `707d07029036abd6`,** e o `geometry_id` continua `0ed16f0dd2225990`. Contra o sinal do jogo, os 6.764 e 411 passam a **6.802 e 257**.
-4. **Nenhum veredito da F1 mudou** na C.1, então não houve parada.
-5. **Nenhum critério nem configuração do treino mudou.** O ADR 0026 é o mesmo de `7e933a7c`.
-6. **Testei a cadeia inteira antes de deixar para você,** numa pasta temporária: `regua`, `final` e `linha` nunca tinham rodado com dados reais. A suíte passa com 905 testes.
-
-## Para rodar o retreino
-
-**O comando.** Abra uma janela do PowerShell fora desta sessão:
-
-```powershell
-cd C:\Users\Dokas\Desktop\f1-telemetry-analyzer
-powershell -NoProfile -ExecutionPolicy Bypass -File tools\retreino_lstm.ps1
-```
-
-Ele roda em sequência `todas --paralelo 8 --threads 1`, `regua`, `final --threads 8` e `linha`, e grava o log em `logs\retreino_lstm_AAAA-MM-DD_HH-mm-ss.log`.
-
-**Quanto esperar: de 8 a 14 horas.** A conta está na Parte D.5. As primeiras rodadas só terminam depois de 1 h 30 a 3 h, porque as 8 primeiras começam juntas. Até lá, a janela fica sem linha nova, e isso é normal.
-
-**Como conferir se terminou:**
-
-```powershell
-Get-Content (Get-ChildItem logs\retreino_lstm_*.log | Sort-Object LastWriteTime | Select-Object -Last 1) -Tail 5
-```
-
-- A última linha diz `RETREINO CONCLUIDO.` ou `RETREINO PARADO.`
-- Para ver o andamento, conte as rodadas prontas. O total é 45:
-
-```powershell
-(Get-ChildItem data\ml\retreino_lstm\rodadas -Recurse -Filter *.json).Count
-```
-
-**O que você não pode fazer enquanto ele roda:**
-
-- **Desligar, reiniciar, suspender ou hibernar o computador, nem fechar a janela.** O script pede ao Windows para não suspender sozinho enquanto roda, sem mudar nenhuma configuração de energia. Ele não segura uma reinicialização do Windows Update nem a tampa fechada de um notebook.
-- **Trocar de branch, dar `pull` ou `merge`, ou editar `backend/`.** Cada rodada nova lê o código de novo. Isso vale também para outra sessão de implementação nesta pasta (ADR 0008), então o pedido 45 espera.
-- **Subir o backend de desenvolvimento com a raiz no repositório.** Ele regrava `data/cache/tracks`, de onde saem as larguras, e o `corridor_id` pode mudar no meio.
-- **Rodar `atualizar_coach` ou qualquer coisa que regrave `data/ml`, e apagar `data/ml/retreino_lstm`.**
-- **Jogar.** Os 8 núcleos ficam ocupados: o jogo engasga, a gravação sai ruim e o treino atrasa. Navegador e tarefas leves podem.
-
-**Se parar no meio:** rode o mesmo comando de novo.
-
-- As rodadas e os modelos finais já terminados ficam. Só o que estava em andamento recomeça do zero.
-- Se uma rodada falhar, o script para tudo e diz no log. O log de cada rodada fica em `data\ml\retreino_lstm\logs\`.
-- Se a janela for fechada, os processos podem continuar vivos, e o script se recusa a rodar junto com eles. Para encerrá-los:
-
-```powershell
-Get-CimInstance Win32_Process -Filter "Name = 'python.exe'" | Where-Object { $_.CommandLine -like '*ml.scripts.retreino_lstm*' } | ForEach-Object { Stop-Process -Id $_.ProcessId }
-```
-
-Quando terminar, é só avisar "terminou o retreino". Eu leio o log e faço a Parte E, a Parte F, o merge e os envios.
+1. **O retreino foi feito e reprovou na régua, nas duas versões.** O melhor skill é 0,042, contra o mínimo de 0,20. A geradora quase não prevê a lateral melhor que a lateral mediana do treino: 1,474 m contra 1,540 m. É um resultado negativo, e os ADRs 0006, 0022 e 0026 mandam aceitá-lo e registrá-lo. Nenhum critério mudou.
+2. **A F1 ficou fora do modelo final.** Com ela, o skill cai para −0,003. A diferença é −0,045, com IC 95% de −0,093 a +0,001.
+3. **O modelo final é o sem a F1, salvo e marcado como reprovado.** Nada o consome hoje: o coach, o rádio, o app, o store v2, o Modelo 2 e a M1 não mudaram.
+4. **Uma conferência da linha de referência não passou:** antes do corte, há pontos fora do corredor útil (Parte E.4).
+5. **Errei a estimativa de tempo.** Previ de 8 a 14 h, e a corrida levou **5,3 h**, dentro do limite original de 6 h. As rodadas pararam muito mais cedo do que supus (Parte D.5).
+6. **Merge feito em `develop`, sem envio ao GitHub.** Os comandos estão logo abaixo, para você rodar. A branch ainda não existe no remoto.
 
 ## Para enviar ao GitHub
 
-O controle de permissões desta sessão recusa o envio, então nada foi enviado. Pelo terminal:
+O controle de permissões desta sessão recusa o envio, então é com você, pelo terminal:
 
 ```powershell
 cd C:\Users\Dokas\Desktop\f1-telemetry-analyzer
 git push -u origin etapa/corredor-e-retreino-lstm
-git rev-parse HEAD
-git ls-remote origin refs/heads/etapa/corredor-e-retreino-lstm
+git push origin develop
+git rev-parse etapa/corredor-e-retreino-lstm develop
+git ls-remote origin refs/heads/etapa/corredor-e-retreino-lstm refs/heads/develop
 ```
 
-Os dois hashes têm de ser iguais. Quando você avisar, eu confiro também. Pode enviar com o retreino rodando: o envio não troca a branch nem mexe no código.
+Os hashes de cada ref têm de ser iguais nas duas últimas saídas. Quando você avisar, eu confiro também. Os dois envios são só de avanço; `main` e as tags não vão.
 
-| ref | hash local | hash no remoto |
+| ref | hash local | hash no remoto (conferido antes do envio) |
 |---|---|---|
-| `etapa/corredor-e-retreino-lstm` | o do commit deste relatório (`git rev-parse HEAD`) | ainda não existe |
+| `etapa/corredor-e-retreino-lstm` | `5fc393d6` | não existe |
+| `develop` | o do commit deste relatório (`git rev-parse develop`) | `9a460bdc` |
 
-**Conferido antes do envio, de `9a460bdc` até aqui:** nenhum arquivo acima de 50 MB, nenhum segredo e nada de `recordings/`, `data/recordings` ou `data/ml`. Os modelos ficam em `data/ml`, fora do git, e `logs/` também está fora.
+**Conferido, de `9a460bdc` até o merge:** nenhum arquivo acima de 50 MB, nenhum segredo e nada de `recordings/`, `data/recordings` ou `data/ml`. Os modelos ficam em `data/ml`, fora do git.
+
+## Parte E: o retreino e a régua
+
+A corrida foi em 04/11, das 14:04 às 19:25, no commit `ec06b0f1`, com o `corridor_id` `707d07029036abd6`. As 45 rodadas terminaram sem falha nem retomada.
+
+**Conferi por fora do código da régua:** as 45 rodadas têm o mesmo corredor e o mesmo commit; nenhuma sessão de fora entrou na validação; cada rodada soma as 150 voltas; os dados têm os mesmos hashes de agora. Um recálculo do skill e do bootstrap, com outra semente, dá os mesmos números (IC sem a F1: +0,001 a +0,088).
+
+### E.2: a tabela dos critérios
+
+| critério | exigido | sem a F1 | com a F1 |
+|---|---|---|---|
+| skill | ≥ 0,20 | **0,042: não** | **−0,003: não** |
+| limite inferior do IC 95% | > 0 | +0,001: sim (IC até +0,089) | **−0,067: não** (IC até +0,066) |
+| sessões com skill positivo | ≥ 70% | **66,7%, 10 de 15: não** | **66,7%, 10 de 15: não** |
+| sessões testáveis | ≥ 5 | 15: sim | 15: sim |
+| **veredito** | | **reprovada** | **reprovada** |
+
+**A F1 fica?** Não. Era preciso skill maior com ela e limite inferior do IC da diferença acima de 0. A diferença é −0,045, com IC 95% de −0,093 a +0,001. Pela regra do ADR 0026, o modelo final é o sem a F1.
+
+### Os números que o ADR manda relatar
+
+| | sem a F1: erro / ingênua / skill | com a F1: erro / ingênua / skill |
+|---|---|---|
+| lateral (m) | 1,474 / 1,540 / 0,042 | 1,544 / 1,540 / −0,003 |
+| velocidade (km/h) | 3,320 / 8,165 / 0,593 | 3,441 / 8,165 / 0,579 |
+| freio (0–1) | 0,028 / 0,033 / 0,146 | 0,029 / 0,033 / 0,121 |
+| acelerador (0–1) | 0,074 / 0,090 / 0,174 | 0,076 / 0,090 / 0,159 |
+| lateral, voltas abaixo de 88 s (23 voltas) | 1,379 / 1,557 / 0,114 | 1,652 / 1,557 / −0,061 |
+| lateral, voltas a partir de 88 s (127) | 1,492 / 1,536 / 0,029 | 1,524 / 1,536 / 0,008 |
+| lateral, voltas do Eduardo (136) | 1,480 / 1,534 / 0,035 | 1,512 / 1,534 / 0,014 |
+| lateral, voltas da IA (14) | 1,422 / 1,594 / 0,108 | 1,850 / 1,594 / −0,161 |
+
+O skill médio por sessão é 0,035 sem a F1 e 0,021 com ela. A sessão maior é 2026-10-04, com 16% das voltas, e, sem ela, o skill fica em 0,048 e 0,030: não é ela que decide. Nenhuma volta teve lateral incompleta.
+
+**Por sessão** (erro de lateral em metros; a referência ingênua é a mesma nas duas versões):
+
+| sessão | voltas | ingênua | sem a F1: erro | skill | melhor época | com a F1: erro | skill | melhor época |
+|---|---|---|---|---|---|---|---|---|
+| 2026-10-04 | 24 | 1,612 | 1,586 | 0,016 | 10 | 1,877 | −0,165 | 6 |
+| 2026-10-05 | 7 | 1,600 | 1,700 | −0,062 | 18 | 1,605 | −0,003 | 8 |
+| 2026-10-05-2 | 10 | 1,488 | 1,617 | −0,086 | 15 | 1,574 | −0,058 | 9 |
+| 2026-10-09 | 4 | 1,596 | 1,595 | 0,000 | 16 | 1,599 | −0,002 | 17 |
+| 2026-10-10 | 11 | 1,699 | 1,663 | 0,021 | 12 | 1,686 | 0,008 | 7 |
+| 2026-10-11 | 16 | 1,498 | 1,233 | 0,177 | 12 | 1,261 | 0,158 | 13 |
+| 2026-10-13 | 7 | 1,494 | 1,226 | 0,179 | 7 | 1,344 | 0,101 | 5 |
+| 2026-10-16 | 11 | 1,721 | 1,632 | 0,052 | 7 | 1,642 | 0,046 | 2 |
+| 2026-10-17 | 11 | 1,401 | 1,443 | −0,030 | 6 | 1,359 | 0,030 | 5 |
+| 2026-10-17-2 | 15 | 1,299 | 1,348 | −0,038 | 14 | 1,491 | −0,148 | 9 |
+| 2026-10-18 | 9 | 1,382 | 1,312 | 0,051 | 9 | 1,373 | 0,006 | 7 |
+| 2026-10-21 | 9 | 1,680 | 1,502 | 0,106 | 6 | 1,578 | 0,061 | 11 |
+| 2026-10-22 | 1 | 1,326 | 1,422 | −0,072 | 12 | 1,140 | 0,140 | 11 |
+| 2026-10-24 | 9 | 1,564 | 1,332 | 0,149 | 6 | 1,360 | 0,131 | 7 |
+| 2026-11-01 | 6 | 1,649 | 1,544 | 0,063 | 5 | 1,620 | 0,017 | 8 |
+
+Em 2026-10-09, o skill sem a F1 é +0,0004 e conta como positivo. Faltou uma sessão para os 70%, mas o skill está longe do mínimo de qualquer forma.
+
+**Como eu leio isso.** O que segue é leitura, não medida de causa:
+
+- **A velocidade sai bem, a lateral não.** A perda da volta diz o ritmo, e o ritmo explica a velocidade. Ela diz pouco sobre por onde o carro passa.
+- **A referência ingênua já é boa.** As voltas passam perto umas das outras, e a mediana delas erra só 1,54 m.
+- **As rodadas param cedo:** melhor época mediana de 10 sem a F1 e de 8 com ela. A validação é de outras sessões, e ela para de melhorar logo.
+- **Comparar com a auditoria não vale diretamente.** Os 0,528 m e 2,898 m de agosto são de outro modelo, outra divisão e outras voltas. A distância entre os dois ritmos sumiu (1,379 m e 1,492 m), mas a rede nova também quase não ganha da mediana.
+- **Com a F1, o que piora mais são as voltas rápidas e as da IA.** Isso é coerente com ensinar à rede, em perda 0, uma linha diferente da que as voltas rápidas deste carro fazem.
+
+### E.3: os modelos finais
+
+Treinados nas 150 voltas e salvos em `data/ml/models/`, com o `corridor_id`, o commit e os hashes dos dados no `model.json`. Os de agosto estão em `data/ml/_backup_pre_pedido44/`.
+
+| modelo | versão | épocas | tempo | sha256 dos pesos | régua |
+|---|---|---|---|---|---|
+| geradora (`reference`) | sem a F1 | 10 | 345 s | `d7622dca…931bd66` | **reprovada** (`aprovado_na_regua: false`) |
+| substituta (`surrogate`) | sem a F1 | 25 | 1.167 s | `dd8024fe…761d799` | sem critério |
+
+Com a pista de `load_geometry`, `generate` recusa o modelo; testei isso com o modelo real. Com a de `load_corridor_geometry`, a linha sai finita e dentro do corredor.
+
+**A substituta, deixando uma sessão de fora** (sem critério de aprovação, ADR 0026):
+
+| | modelo | mediana do treino |
+|---|---:|---:|
+| erro por passo | 0,00177 s | 0,00257 s |
+| erro por volta | 1,679 s | 2,768 s |
+| viés por volta | +0,035 s | — |
+
+O pior erro por volta é o da sessão 2026-10-04, com 2,937 s, a que tem as voltas da IA. O melhor é o da 2026-10-22, com 0,593 s, numa volta só. A tabela inteira está em `substituta.por_sessao` dos resultados.
+
+### E.4: as conferências da linha de referência
+
+**Nenhum ponto fora do corredor útil antes do corte: não passou.**
+
+| etapa | pontos fora | maior excesso | onde |
+|---|---:|---:|---|
+| saída crua da rede | 49 | 0,52 m | 1.428–1.450 m e 1.838–1.892 m ou mais |
+| depois da projeção em splines | 17 | 0,23 m | 1.432–1.444 m e 1.884–1.902 m |
+| linha final, com o corte | 0 | 0 m | — |
+
+O corte resolve, e o excesso é pequeno. Mas a rede não aprendeu esse limite por conta própria. A lista da saída crua mostra só os 40 primeiros pontos, e o resto do segundo trecho não foi listado. Isso não é critério de aprovação, e não parei por causa disso.
+
+**A resposta com perda 0 e com perda 0,5 s:**
+
+| | perda 0 | perda 0,5 s | na `docs/arquitetura_ml.md` (agosto) |
+|---|---:|---:|---:|
+| velocidade mediana | 206,9 km/h | 148,1 km/h | 199 e 134 km/h |
+| quanto a linha se desloca | | mediana de 3,12 m, p90 de 9,21 m, máximo de 14,32 m | 3,4 m em média |
+
+- **O condicionamento faz efeito,** e a rede não virou uma média.
+- **As duas consultas ficam fora do real.** A mediana de velocidade de uma volta real vai de 154,5 a 201,6 km/h (IA: 200,9; Eduardo: 188,2). A perda 0 passa disso, e a de 0,5 s fica abaixo.
+- **A consulta de 0,5 s é contraditória:** 0,5 s em cada um dos 60 microssetores somam 30 s, com a perda da volta pedida em 0,5 s. Por isso a queda de velocidade não é uma medida física.
+
+**A distância até a linha nova, por microssetor (mediana de |diferença|):**
+
+| comparada com | mediana dos 60 | maior | onde estão as maiores |
+|---|---:|---:|---|
+| IA do coach (`2026-10-04_03-42-10#0013`) | 0,528 m | 4,320 m | MS29, MS46, MS30 |
+| minha melhor (`2026-10-21_20-30-54#0017`) | 1,355 m | 7,873 m | MS53, MS52, MS34 |
+| F1 2023–25 | 1,363 m | 4,641 m | MS48, MS34, MS49 |
+
+A linha nova fica mais perto da IA em 39 dos 60 microssetores, da melhor volta do Eduardo em 11 e da F1 em 10. **A linha de perda 0 é, na prática, a da IA.** A melhor volta do treino é da IA (1:24,829), então perda 0 tende a pedir o que a IA faz. É exatamente o que o ADR 0018 queria evitar, mesmo com só 14 voltas da IA em 150. A F1 não entrou neste modelo: a distância até ela é só comparação.
+
+### E.5: os testes
+
+Na seção "Testes", abaixo. A suíte passa com os modelos finais no lugar.
+
+## O script do retreino
+
+Rodou como planejado: `powershell -NoProfile -ExecutionPolicy Bypass -File tools\retreino_lstm.ps1`. Ele continua servindo para refazer o retreino, e retoma de onde parou. O log da corrida está em `logs\retreino_lstm_2026-11-04_14-04-22.log` e copiado no handoff.
 
 ## Parte A: os ADRs
 
@@ -311,7 +402,16 @@ São 45 rodadas (15 sem a F1, 15 com a F1 e 15 da substituta) e os 2 modelos fin
 | 60 | 8,3 h | 1,8 h | 0,8 h | **10,9 h** |
 | 80 | 11,0 h | 1,8 h | 1,1 h | **13,9 h** |
 
-Pela sua decisão de 02/11, o limite de 6 h fica suspenso só para este retreino, sem mudar o passo da janela nem pôr teto de épocas.
+Pela sua decisão de 02/11, o limite de 6 h ficou suspenso só para este retreino, sem mudar o passo da janela nem pôr teto de épocas.
+
+**O que aconteceu de verdade: 5,3 h.** As rodadas da geradora levaram de 12 a 28 épocas (mediana de 20 sem a F1 e de 18 com ela), e as da substituta, de 23 a 59 (mediana de 35). Minha conta supunha de 40 a 80 épocas na geradora, a partir do treino de agosto, e eu disse que parar em até 27 épocas era improvável. **Errei:** a maioria parou antes disso, e a corrida coube no limite original. A substituta foi a parte mais cara. A parada que propus não era necessária, embora só rodando desse para saber.
+
+## Parte F: a documentação
+
+- **ADRs:** linhas de atualização no 0002 (Parte A), no 0025 (os buracos), no 0018 e no 0019; seção "Resultado" no 0026; a linha dele no índice.
+- **`docs/arquitetura_ml.md`:** o corredor novo, as fontes da geradora, a peça A na tabela e uma nota na Figura 4, sem apagar os números de agosto.
+- **`backend/ml/README.md`:** os resultados medidos e as limitações.
+- **`docs/auditoria_ml.md`:** uma nota na seção 3 apontando para o resultado novo, sem apagar o antigo.
 
 ## Testes
 
@@ -324,26 +424,35 @@ Pela sua decisão de 02/11, o limite de 6 h fica suspenso só para este retreino
   - a perda que ignora alvos ausentes e a F1 fora da normalização;
   - os critérios, um a um, e o bootstrap pareado;
   - o modelo que recusa outro corredor.
-- **Suíte `backend/tests`:** 905 passando, com 37 avisos, em 12 min 43 s (com a CPU dividida com as conferências). A saída está no arquivo `_testes.txt`.
-- **Ensaio da cadeia inteira,** numa pasta temporária, com 4 sessões e 1 época, sem tocar em `data/ml`:
-  - `todas`, com os processos paralelos; apaguei uma rodada, e só ela rodou de novo;
-  - `regua`, `final` nas duas versões (com e sem a F1; na segunda vez, a substituta pronta não rodou de novo) e `linha`;
-  - os modelos saem com o `corridor_id`, o commit e os hashes dos dados.
-  - Os números de 1 época não significam nada. Só olhei se a estrutura saiu completa.
-- **`tools/retreino_lstm.ps1`, testado com um python simulado:** a sequência completa termina em `RETREINO CONCLUIDO`; uma falha em `regua` para em `RETREINO PARADO`, com saída 1; ele se recusa a rodar com outro processo do retreino vivo e com mudança sem commit em `backend/`. Os logs desses testes foram apagados.
+- **Suíte `backend/tests`:** 905 passando, com 37 avisos, em 12 min 55 s, com os modelos finais no lugar. A saída está no arquivo `_testes.txt`.
+- **Ensaio da cadeia inteira, antes de rodar:** numa pasta temporária, com 4 sessões e 1 época, incluindo a retomada. Os números de 1 época não significam nada, e só olhei se a estrutura saiu completa.
+- **`tools/retreino_lstm.ps1`:** testado com um python simulado em sucesso, falha, processo duplicado e mudança sem commit, e depois na corrida real de 04/11.
 
-**O que o ensaio não cobre:** o tempo real, o comportamento em 8 a 14 h seguidas e o script completo com o python de verdade. As peças foram testadas separadamente, não juntas.
+## O que não mudou
 
-Nenhum número da régua foi visto: nenhuma rodada real rodou, e o modelo em `data/ml/models/` ainda é o de agosto.
+- **Coach:** `vhe_interlagos.json` e `vhe_interlagos.geometry.json` têm os mesmos hashes (`df5a763f…` e `811da4c9…`).
+- **Store v2 e inventário:** continuam com as datas de antes (22/10 e 30/09), e o hash do store é o que os modelos registram.
+- **Cache da pista:** o hash não mudou (`44ae485c…`), e o `geometry_id` continua `0ed16f0dd2225990`.
+- **Rádio, app, Modelo 2 e M1:** nenhum arquivo deles foi tocado. Fora de `backend/ml/` e `docs/`, o merge só traz `backend/core/geometry/surface_edge.py`, o teste novo e o script.
+- **Gravações:** só foram lidas. O `data.acd` não foi aberto, e nenhum pacote foi instalado.
+
+**Uma consequência que continua valendo:** a próxima rodada do `atualizar_coach` lê tudo de novo uma vez, cerca de 25 min, porque `ml/track/geometry.py` entra na chave do cache de sessão. O resultado não muda.
+
+## Para decidir e para o backlog
+
+Nada aqui trava o pedido. O backlog é mantido pelo Cowork, então não o editei. Estes são os itens para ele:
+
+1. **A linha "Retreinar a LSTM geradora":** feito no pedido 44, reprovado, sem a F1.
+2. **O que fazer com a reprovação:** o que os números apontam é que a perda da volta não diz por onde o carro passa, e que perda 0 pede a linha da IA. Mudar isso é outro experimento, com outro ADR antes de rodar.
+3. **Antes da nova busca evolutiva:**
+   - decidir se a semente usa esta geradora: `optimize_line.py` a usa se o modelo existir, salvo com `--no-lstm`, e ela agora está reprovada;
+   - rever o corredor nos acessos e áreas de escape: 104 pontos acima de 15 m, até 28,2 m. Hoje isso quase não pesa, mas o corredor é o limite da busca.
+4. **Zebra e pintura:** seguem na leitura par-ímpar, e não conferi se têm defeito parecido com o dos buracos.
+5. **ML e app com corredores diferentes:** o minimapa e a tela Volta seguem com as larguras de antes, incluindo o degrau de 1,64 m no fechamento do laço.
+6. **Voltas da IA:** 13 das 14 estão em 04/10. Sessões novas da IA melhorariam o teste por fonte.
 
 ## O que falta
 
-Depois que você avisar "terminou o retreino":
-
-- **Parte E:** a tabela dos critérios com e sem a F1, o veredito, as conferências da linha de referência e a substituta.
-- **Parte F:** `docs/arquitetura_ml.md`, `backend/ml/README.md`, a nota em `docs/auditoria_ml.md` e as linhas de atualização nos ADRs 0018 e 0019.
-- **O merge em `develop`,** com os comandos de envio para você rodar.
-
-**Nada precisa de decisão agora.** A pasta fica na branch `etapa/corredor-e-retreino-lstm`. O `docs/prompts/2026-11-02_45_replay-de-perto-e-radio-que-ensina.md` continua sem commit, como estava. As gravações só foram lidas, o `data.acd` não foi aberto, e nenhum pacote foi instalado.
+Só o envio ao GitHub, pelos comandos do começo deste relatório, e a conferência dos hashes quando você avisar. A pasta está em `develop`, e o pedido 45 continua sem commit, como estava.
 
 `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm_relatorio.md`
