@@ -241,6 +241,15 @@ CPU, 8 threads, sem GPU.
 
 ## 3. Capacidade de generalização
 
+> **Nota (pedido 44, 04/11):** a LSTM geradora foi retreinada com as voltas do
+> equipamento atual e testada deixando uma sessão inteira de fora
+> ([ADR 0026](decisoes/0026-retreino-da-lstm-geradora.md)). O erro de lateral é de
+> 1,379 m abaixo de 88 s e 1,492 m a partir de 88 s, e o skill contra a lateral
+> mediana é 0,042: **reprovada**. Esses números não se comparam diretamente com os
+> desta seção, que são de outro modelo, outra divisão e outras voltas. Esta seção fica
+> como o registro do modelo de agosto. Resultado completo em
+> [`backend/ml/README.md`](../backend/ml/README.md).
+
 Divisão **por sessão**, não por volta: voltas da mesma sessão são quase cópias
 uma da outra (mesmo carro, mesmo pneu, mesmo piloto em minutos consecutivos), e
 dividir por volta deixaria o modelo ver no treino praticamente a mesma volta que

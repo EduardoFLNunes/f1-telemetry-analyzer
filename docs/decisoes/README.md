@@ -29,4 +29,4 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
 | [0023](0023-modelo-2-quatro-pecas-ia-e-piloto.md) | Modelo 2: as quatro peças para achar o erro, a técnica e o estilo, nas voltas da IA e do piloto | aceita (pedido 38); refina 0018 |
 | [0024](0024-m1-geometria-medida-pela-telemetria.md) | M1: a geometria do carro medida pela telemetria do jogo | aceita (pedido 39); refina 0022 e a seção 1.4 da M1 |
 | [0025](0025-corredor-pela-borda-da-superficie.md) | O corredor do Modelo 1 vai pela borda da superfície, com um `corridor_id` à parte | aceita (pedido 44); emenda 0002 |
-| [0026](0026-retreino-da-lstm-geradora.md) | Retreino da LSTM geradora: a régua e os critérios | aceita (pedido 44); adapta 0006; refina 0018 e 0019 |
+| [0026](0026-retreino-da-lstm-geradora.md) | Retreino da LSTM geradora: a régua e os critérios | aceita (pedido 44); adapta 0006; refina 0018 e 0019; resultado: reprovado, sem a F1 |

@@ -76,3 +76,16 @@ Como mandam os ADRs 0006 e 0022. Mudar um critério exige um novo ADR, registrad
 - As voltas antigas de origem `desconhecida` ficam fora (esclarecimento do ADR 0018). As sessões fora do store v2 entram lidas com as funções do store, sem gravar nele, marcadas `fora_do_store`.
 - A nova busca evolutiva com a M1 como juiz não entra aqui: ela espera a M1 aprovada.
 - A volta do Modelo 1 só vira referência do coach pelo item 4 do ADR 0018, seja qual for o resultado desta régua.
+
+## Resultado (04/11, commit `ec06b0f1`, `corridor_id` `707d07029036abd6`)
+
+**Reprovado nas duas versões. A F1 ficou fora.** O modelo final é o sem a F1, marcado como reprovado. Resultado negativo, aceito e registrado.
+
+| critério | exigido | sem a F1 | com a F1 |
+|---|---|---|---|
+| skill | ≥ 0,20 | 0,042, não | −0,003, não |
+| limite inferior do IC 95% | > 0 | +0,001, sim | −0,067, não |
+| sessões com skill positivo | ≥ 70% | 66,7% (10 de 15), não | 66,7% (10 de 15), não |
+| sessões testáveis | ≥ 5 | 15, sim | 15, sim |
+
+Os números completos estão em `docs/handoff/2026-10-29_44_corredor-e-retreino-da-lstm_relatorio.md`.

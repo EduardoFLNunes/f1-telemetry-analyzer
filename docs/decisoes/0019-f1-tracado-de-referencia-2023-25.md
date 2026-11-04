@@ -31,3 +31,5 @@ A leitura é de um traçado de referência por época (2019, 2021–22 e 2023–
 - O retreino da LSTM geradora usa essa referência como a fonte externa.
 - Se outra fonte mostrar que a posição do FastF1 é a linha real de cada carro, este ADR é revisto.
 - A hipótese "na chuva os pilotos fogem da linha seca" não pode ser medida com estes dados.
+
+**Atualização (pedido 44, [0026](0026-retreino-da-lstm-geradora.md), 04/11):** o item 6 foi respondido na régua: **a F1 não ajudou e ficou fora do modelo final.** O skill com ela é −0,003, contra 0,042 sem ela; a diferença é −0,045, com IC 95% de −0,093 a +0,001. O item 7 foi tratado assim: a lateral da F1 ficou fora da perda nos microssetores de faixa pouco confiável. O resultado vale para esta forma de entrada (um traçado único, com perda 0 e o peso de uma sessão típica), e não para qualquer uso da F1.

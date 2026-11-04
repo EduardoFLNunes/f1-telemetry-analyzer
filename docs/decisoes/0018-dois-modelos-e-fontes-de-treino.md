@@ -77,3 +77,5 @@ Continuam valendo:
 - **Elas podem entrar depois num teste à parte**, treinando com e sem elas e comparando na régua do ADR 0006. O teste está no backlog.
 
 **Refinado por [0019](0019-f1-tracado-de-referencia-2023-25.md)** (08/10): a F1 entra como traçado de referência único da época 2023–25.
+
+**Atualização (pedido 44, [0026](0026-retreino-da-lstm-geradora.md), 04/11):** o retreino da LSTM geradora com as fontes do item 3 foi feito e **reprovado** na régua: skill de 0,042 sem a F1, contra o mínimo de 0,20. O item 4 e o ADR 0009 continuam valendo: a volta do Modelo 1 não vira referência do coach. A nova busca evolutiva segue esperando a M1 aprovada.
