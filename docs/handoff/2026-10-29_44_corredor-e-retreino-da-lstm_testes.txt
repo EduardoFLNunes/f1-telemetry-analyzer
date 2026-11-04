@@ -95,4 +95,4 @@ tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
     warnings.warn(
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-905 passed, 37 warnings in 763.48s (0:12:43)
+905 passed, 37 warnings in 775.21s (0:12:55)
