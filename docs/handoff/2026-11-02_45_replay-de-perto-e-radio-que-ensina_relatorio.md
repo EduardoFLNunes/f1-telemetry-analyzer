@@ -20,6 +20,10 @@
   - `_previa.py`, `_previa_camera_c01.png`, `_c06.png` e `_c12.png`;
   - `_abrir_no_app_v7_c01.jpg` e `_abrir_no_app_v7_inteira.jpg`.
 
+## Atualização de 04/11: a sua decisão no B.1
+
+**Você decidiu: a regra "boxes" só no pit lane. Aplicada** em `driving_coach.py` (`PIT_LANE_POR_PISTA`), com testes; em outra pista, ela continua na volta inteira. **O C.6 abaixo ainda é de antes desta regra:** os números de voltas e de frases do coach vão mudar quando ele for refeito. O efeito nas frases do coach não foi medido. A contagem do WebSocket com a tela aberta deu 0 no código antigo, e a do código novo não foi lida; esse item segue sem distinguir os dois.
+
 ## O que falta e o que precisa de você
 
 **Falta conferir ou fazer (nesta ordem):**
@@ -40,9 +44,8 @@ Uma contagem do WebSocket na porta 8011 também estava rodando quando parei, e e
 
 **Decisões suas:**
 
-1. **O critério das voltas que contam (B.1).** Ver a Parte B.
-2. **O limite do resumo.** Ver a Parte C.
-3. **A volta da IA continua calada.** A C.1 diz "o tempo e a diferença para a melhor, como hoje", mas hoje ela não tem resumo, e a G.8 diz que o rádio se cala. Deixei calada.
+1. **O limite do resumo.** Ver a Parte C.
+2. **A volta da IA continua calada.** A C.1 diz "o tempo e a diferença para a melhor, como hoje", mas hoje ela não tem resumo, e a G.8 diz que o rádio se cala. Deixei calada.
 
 ## Parte A: as conferências
 
@@ -57,7 +60,7 @@ Uma contagem do WebSocket na porta 8011 também estava rodando quando parei, e e
 
 ## Parte B: as voltas que o rádio não vê
 
-### B.1 As voltas incompletas: **parei neste item, a decisão é sua**
+### B.1 As voltas incompletas: **decidido em 04/11, a regra só no pit lane**
 
 **A causa não é um buraco na amostragem.** É a regra "boxes" do coach: um microssetor com a lateral acima de 10 m e abaixo de 90 km/h não é comparado, **em qualquer ponto da pista.** A volta 10 de 21/10 (1:29,518) caiu nela por um microssetor, o 38, com 11,0 m e 81,9 km/h.
 
@@ -68,7 +71,7 @@ Uma contagem do WebSocket na porta 8011 também estava rodando quando parei, e e
 | 21/10 | 17 | 7 | 9 |
 | 01/11 | 9 | 6 | 7 |
 
-**Proposta, não aplicada:** a regra vale só onde existe pit lane (microssetores 54 a 59 e 0 a 10). Ela ganha 5 voltas nas 4 sessões: 1:33,120 (13/10), 1:40,073 (18/10), 1:34,494 e 1:29,518 (21/10) e 2:17,368 (01/11). A de 2:17,368 ainda cai na regra da rodada, se perder mais de 5 s numa curva. **Só 1 das 5 tem tempo realmente bom.** A maioria das incompletas é parada de verdade ou saída de pista, e continua incompleta.
+**A regra, aplicada depois da sua decisão:** ela vale só onde existe pit lane (microssetores 54 a 59 e 0 a 10). Ela ganha 5 voltas nas 4 sessões: 1:33,120 (13/10), 1:40,073 (18/10), 1:34,494 e 1:29,518 (21/10) e 2:17,368 (01/11). A de 2:17,368 ainda cai na regra da rodada, se perder mais de 5 s numa curva. **Só 1 das 5 tem tempo realmente bom.** A maioria das incompletas é parada de verdade ou saída de pista, e continua incompleta.
 
 **Um defeito de verdade, corrigido:** o rádio só lia a geometria na primeira frase do coach ou na primeira janela. A primeira volta que fechava antes disso saía "sem as medidas" (a volta 2 de 13/10 e de 18/10).
 

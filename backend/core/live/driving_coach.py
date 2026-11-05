@@ -106,6 +106,10 @@ BRAKE_ONSET = 0.15
 STOPPED_KMH = 5.0
 PIT_LATERAL_M = 10.0
 PIT_SPEED_KMH = 90.0
+# Pedido 45 (B.1, decisao do Eduardo de 04/11): a regra dos boxes so vale onde existe pit lane. Nas outras
+# partes da pista, longe do tracado e devagar e uma saida larga, e nao os boxes (21/10, a volta de 1:29,518:
+# 11,0 m a 81,9 km/h no microssetor 38). Pista fora desta lista: a regra vale na volta inteira, como antes.
+PIT_LANE_POR_PISTA = {"vhe_interlagos": frozenset(range(54, 60)) | frozenset(range(0, 11))}
 
 
 def _legacy(model: Any) -> bool:
@@ -469,8 +473,10 @@ class LiveDrivingCoach:
             self._partial_sector = None
             return
         stopped = self._closing_min_speed is not None and self._closing_min_speed < STOPPED_KMH
+        pit_lane = PIT_LANE_POR_PISTA.get(self._track or "")
         in_pits = (
-            self._closing_max_lateral is not None and self._closing_max_lateral > PIT_LATERAL_M
+            (pit_lane is None or finished in pit_lane)
+            and self._closing_max_lateral is not None and self._closing_max_lateral > PIT_LATERAL_M
             and self._closing_min_speed is not None and self._closing_min_speed < PIT_SPEED_KMH
         )
         if stopped or in_pits:

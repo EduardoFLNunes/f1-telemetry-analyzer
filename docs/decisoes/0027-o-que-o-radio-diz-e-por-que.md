@@ -1,6 +1,6 @@
 # 0027 — O que o rádio diz, em que ordem e por quê
 
-- **Status:** aceita (pedido 45); complementa 0012, 0020 e 0021; duas decisões em aberto (ver o fim)
+- **Status:** aceita (pedido 45); complementa 0012, 0020 e 0021; uma decisão em aberto (ver o fim)
 - **Data:** 2026-11-04
 - **Decisor:** Eduardo
 
@@ -78,10 +78,13 @@ Vence **o contador do jogo no meio da volta,** o mesmo `game_lap_number` que o s
 
 A diferença é medida contra uma volta real, nunca um ganho prometido (ADR 0012). Nada é dito dentro das 14 curvas. A referência é a escolhida na Coleta. No replay de uma mensagem com curva, os números da voz.
 
+## A regra dos boxes (decisão do Eduardo, 04/11)
+
+A regra "boxes" do coach (a lateral acima de 10 m, abaixo de 90 km/h) passa a valer só onde existe pit lane: em Interlagos, os microssetores 54 a 59 e 0 a 10. Fora dele, é uma saída larga, e o microssetor é medido. A volta de 1:29,518 de 21/10 caía nela por um microssetor, com 11,0 m a 81,9 km/h. Numa pista fora da lista, a regra continua na volta inteira. A parada (abaixo de 5 km/h) e a rodada (mais de 5 s numa curva) não mudam.
+
 ## Decisões em aberto, do Eduardo
 
-1. **O critério das voltas que contam.** A regra "boxes" do coach marca como boxes um microssetor com a lateral acima de 10 m e abaixo de 90 km/h, em qualquer ponto da pista. A volta de 1:29,518 de 21/10 caiu nela por um microssetor, numa saída larga. Não foi mudada (pedido 45, B.1).
-2. **O limite do resumo.** Os exemplos do pedido duram de 7,13 a 8,73 s com a voz de verdade, e o limite é 7,7 s. Pela ordem acima, a diferença para a IA é a primeira a sair quando a curva precisa caber.
+1. **O limite do resumo.** Os exemplos do pedido duram de 7,13 a 8,73 s com a voz de verdade, e o limite é 7,7 s. Pela ordem acima, a diferença para a IA é a primeira a sair quando a curva precisa caber.
 
 Os números e as opções estão em `docs/handoff/2026-11-02_45_replay-de-perto-e-radio-que-ensina_relatorio.md`.
 

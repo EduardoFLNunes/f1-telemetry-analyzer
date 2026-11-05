@@ -352,3 +352,35 @@ def test_o_radio_lista_e_toca_a_volta_parcial_sem_resumo(tmp_path):
     assert not radio._pendentes                        # sem resumo: a voz nao muda
     assert not radio._voltas_validas                   # e fora da analise
     assert "não começou na linha" in radio.replay_da_volta(3)["curvas"][0]["aviso"]
+
+
+def _coach_para_fechar(pista, lateral=11.0, kmh=81.9):
+    from types import SimpleNamespace
+
+    from core.live import driving_coach as dc
+
+    coach = dc.LiveDrivingCoach(_Bus(), model_provider=lambda _: None)
+    coach._track = pista
+    coach._closing_max_lateral, coach._closing_min_speed = lateral, kmh
+    alvo = SimpleNamespace(index=0, reference_seconds=1.0, best_seconds=1.0)
+    modelo = SimpleNamespace(mode="reference", microsectors=60, target_at=lambda _p: alvo)
+    coach._threshold_for = lambda _t: 99.0      # nada e dito: so a medida interessa aqui
+    return coach, modelo
+
+
+@pytest.mark.parametrize("pista,microssetor,medido", [
+    ("vhe_interlagos", 38, True),    # a saida larga da volta de 1:29,518: agora e medida
+    ("vhe_interlagos", 5, False),    # no pit lane, a regra continua
+    ("vhe_interlagos", 56, False),
+    ("spa", 38, False),              # pista fora da lista: a regra vale na volta inteira, como antes
+])
+def test_a_regra_dos_boxes_so_vale_no_pit_lane(pista, microssetor, medido):
+    coach, modelo = _coach_para_fechar(pista)
+    coach._close_sector({}, modelo, microssetor, 10.0, 11.5)
+    assert (microssetor in coach._lap_diffs) is medido
+
+
+def test_parado_nao_e_medido_em_nenhum_ponto_da_pista():
+    coach, modelo = _coach_para_fechar("vhe_interlagos", lateral=1.0, kmh=0.0)
+    coach._close_sector({}, modelo, 38, 10.0, 11.5)
+    assert 38 not in coach._lap_diffs
