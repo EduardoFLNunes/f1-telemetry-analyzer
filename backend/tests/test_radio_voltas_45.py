@@ -322,3 +322,33 @@ def test_o_pedido_para_abrir_o_app(tmp_path, monkeypatch):
     monkeypatch.setattr(manager, "active_connections", [Cliente()])
     assert asyncio.run(rota.post_abrir_no_app({"volta": 2, "curva": "C03"}))["entregue"] is True
     assert '"type":"abrir_replay"' in enviados[0] and '"curva":"C03"' in enviados[0]
+
+
+def test_a_volta_que_nao_comecou_na_linha_fica_guardada_para_o_replay():
+    pos = {"s": 10.0, "comprimento": 100.0, "lateral": 0.0, "volta": 3, "tempoDaVolta": None, "desdeALinha": False}
+    v = VoltaAoVivo(lambda: pos, lambda: 100)
+    for s, cronometro in ((10.0, 5.0), (50.0, 6.0), (99.0, 7.0)):
+        pos["s"] = s
+        v.on_frame({"speedKmh": 100.0, "lap_time": cronometro})
+    pos.update(s=1.0, volta=4, desdeALinha=True, tempoDaVolta=0.0)
+    v.on_frame({"speedKmh": 100.0, "lap_time": 0.1})
+    assert v.ultima_fechada() is None                  # para o coach e o radio, ela nao fechou
+    parcial = v.ultima_parcial()
+    assert parcial["volta"] == 3 and parcial["tempoS"] == 2.0
+    assert parcial["linhas"]["elapsed"][50] == 1.0     # o tempo corrido, no lugar do relogio desde a linha
+
+
+def test_o_radio_lista_e_toca_a_volta_parcial_sem_resumo(tmp_path):
+    radio, _, np, _ = _radio_com_voltas(tmp_path)
+    n = int(radio._geometria.track.size)
+    tempos = list(np.linspace(0.0, 90.0, n))
+    linhas = {"elapsed": tempos, "velocidade": [100.0] * n, "acelerador": [1.0] * n, "freio": [0.0] * n, "lateral": [0.0] * n}
+    radio._volta_parcial = lambda: {"versao": 1, "volta": 3, "pontosDaGrade": n, "tempoS": 90.0, "linhas": linhas}
+    radio._guardar_a_parcial()
+    radio._guardar_a_parcial()                         # a mesma volta nao entra duas vezes
+    lista = radio.voltas_da_sessao()["voltas"]
+    assert len(lista) == 1 and lista[0]["volta"] == 3 and lista[0]["temReplay"] is True
+    assert lista[0]["estado"] == "incompleta" and "não começou na linha" in lista[0]["motivo"]
+    assert not radio._pendentes                        # sem resumo: a voz nao muda
+    assert not radio._voltas_validas                   # e fora da analise
+    assert "não começou na linha" in radio.replay_da_volta(3)["curvas"][0]["aviso"]

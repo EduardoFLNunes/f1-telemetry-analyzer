@@ -30,3 +30,4 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
 | [0024](0024-m1-geometria-medida-pela-telemetria.md) | M1: a geometria do carro medida pela telemetria do jogo | aceita (pedido 39); refina 0022 e a seção 1.4 da M1 |
 | [0025](0025-corredor-pela-borda-da-superficie.md) | O corredor do Modelo 1 vai pela borda da superfície, com um `corridor_id` à parte | aceita (pedido 44); emenda 0002 |
 | [0026](0026-retreino-da-lstm-geradora.md) | Retreino da LSTM geradora: a régua e os critérios | aceita (pedido 44); adapta 0006; refina 0018 e 0019; resultado: reprovado, sem a F1 |
+| [0027](0027-o-que-o-radio-diz-e-por-que.md) | O que o rádio diz, em que ordem e por quê | aceita (pedido 45); complementa 0012, 0020 e 0021; duas decisões em aberto |

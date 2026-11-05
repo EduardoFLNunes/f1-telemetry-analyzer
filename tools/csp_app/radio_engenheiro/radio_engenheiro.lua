@@ -2246,7 +2246,9 @@ desenharOReplay = function(dt)
       desenharAsVoltas(t, x0, y1 - altVoltas, x1 - x0, altVoltas, nil)
     elseif noBox then
       ui.drawRectFilled(vec2(x0, y0), vec2(x1, y1), CORES.fundoDoMapa, 6)
-      caixa('nenhuma volta fechada nesta sessão', 13, vec2(x0 + 14, y0 + 14), vec2(x1 - 10, y1 - 6), CORES.apoio)
+      -- Um backend sem a rota nova (0.5.0 e 0.6.0) não sabe das voltas: a janela só não tem análise ainda.
+      local texto = bx.semRota and 'nos boxes: ainda sem uma análise para repetir' or 'nenhuma volta fechada nesta sessão'
+      caixa(texto, 13, vec2(x0 + 14, y0 + 14), vec2(x1 - 10, y1 - 6), CORES.apoio)
     end
     return
   end

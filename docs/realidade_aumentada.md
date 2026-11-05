@@ -41,14 +41,26 @@ O cartão continua com todos os números (os dois tempos, a freada e a mínima).
 
 ### 2.2 O resumo na linha
 
-O tempo da volta (o período de s = 0 a s = 0, que o coach mede como o store v2), a diferença para a referência escolhida e a curva em que a volta mais perdeu, com a perda:
+**Pedido 45 (ADR 0027):** o resumo diz onde e por quê. Pela ordem de importância:
+
+1. a diferença para a sua melhor volta da sessão; ou "melhor volta", com o quanto ela foi mais rápida; ou "recorde pessoal", se bater a melhor de todas as sessões do store, para o carro e a pista;
+2. a curva da volta, com a perda e a causa;
+3. a diferença para a referência escolhida (a IA por padrão);
+4. a diferença para a anterior, só quando a volta melhorou sem ser a melhor;
+5. o tempo. O cartão sempre traz o tempo e todos os números.
+
+As variantes vão da mais completa à mais curta e perdem os itens de baixo para cima; fica a primeira que cabe em 7,7 s.
 
 | cartão | fala | dura |
 |---|---|---|
-| Volta 8: 1:29,059 · +4,230 s para a volta da IA (1:24,829) · mais perdeu na C01, esquerda: +0,75 s | "Volta 8: 4,2 segundos atrás da IA. Mais perdeu na curva 1: 7 décimos." | 6,7 s |
-| Volta 4: 1:40,073 · +15,244 s para a volta da IA (1:24,829) | "Volta 4: 1 minuto e 40,1 segundos, 15,2 segundos atrás da IA." | 6,0 s |
+| Volta 7: 1:29,432 · melhor volta, −0,168 s · +4,603 s para a volta da IA (1:24,829) · mais perdeu na C01, esquerda: +0,77 s; na mínima, +0,44 s; passou 7,5 m por fora no ápice | "Melhor volta, 2 décimos mais rápida. Curva 1: 8 décimos, passou 8 metros por fora no ápice." | 7,3 s |
+| Volta 11: 2:39,687 · +70,3 s para a sua melhor · volta com rodada: fora da análise | "Volta com rodada: 2 minutos e 39,7 segundos, 70,3 segundos atrás da sua melhor." | 5,5 s (estimado) |
 
-A curva que mais perdeu só entra numa volta completa (com todos os microssetores medidos): numa volta com parada, "mais perdeu na curva 1: 66,4" é verdade, mas não ajuda.
+- **A melhor volta** é a mais rápida da sessão entre as que contam para a análise.
+- **A curva e a causa** só entram numa volta que conta: completa pela regra do coach, com as medidas e sem rodada. A volta da IA continua calada.
+- **O porquê:** o trecho da curva (freada, mínima ou saída) com a maior parte da perda, pelas separações da diferença acumulada do pedido 43; a causa é a medida desse trecho, se ela passar do corte (ADR 0027). Sem medida acima do corte, a voz diz só o trecho: "perdeu 3 décimos na saída".
+- **A curva que não cabe** vai numa mensagem própria (`origem: curva`), no fim da fila. Se o carro passar pela curva antes de achar uma janela, a mensagem sai da fila.
+- **O replay do resumo:** a curva citada, com o trecho da causa marcado.
 
 ### 2.3 A análise das voltas
 
@@ -377,6 +389,31 @@ O engenheiro mostra o que diz: quando o rádio fala de uma curva, a janela mostr
 - **montar o replay no backend:** a mediana foi de 3,4 para 4,3 ms numa frase do coach e de 3,9 para 7,4 ms numa análise, uma vez, na entrega;
 - **no jogo:** a cada quadro, enquanto o replay está na tela, mais 3 linhas de 120 a 200 pontos, os trechos do pedal e as áreas da diferença. **No teste de 01/11** (CSP 0.3.1, 2.560 × 1.080), com as 4 janelas ligadas, 98,3 FPS de média (153 blocos de 10 s, de 55,1 a 107,2); com o replay desligado, 108,4 (48 blocos); com tudo desligado, 126,9 (2 blocos). Nos 5 blocos com o replay na tela, 99,3, contra cerca de 101,5 nos vizinhos. O custo de ter a janela aberta não saiu limpo, porque o FPS varia muito ao longo da sessão.
 
+#### 5.4.2 O replay de perto, os boxes e o botão (pedido 45)
+
+**A câmera** (`cameraDaCurva` no app do jogo e `cameraDePerto` na tela Ao vivo, a mesma conta):
+
+- **acompanha os carros:** o centro fica entre "você" e a referência, com 80 m no lado menor da área. Com 80 m, um carro de 4,5 m fica com cerca de 15 px numa janela de 300 px. A orientação continua a de antes (a entrada para cima), fixa durante a curva;
+- **o começo:** a curva inteira por 1 s, parada na entrada, e 0,8 s de aproximação;
+- **os dois carros sempre na tela:** se eles se afastam mais que a janela, a câmera se afasta o necessário, no máximo até a curva inteira, onde os dois sempre cabem;
+- **o trecho da causa ou da fala** fica marcado na pista e passa na metade da velocidade, quando o tempo deixar. Na reta, o replay continua acabando com a janela de rádio (`restaS`); se a curva não couber, ele começa um pouco antes do trecho;
+- **a roda do mouse** muda o zoom, de 50 a 400 m, como no mapa aproximado. Sobre a lista, ela rola a lista;
+- **os rótulos** continuam sem se sobrepor. A marca fora da tela não ganha rótulo: os números da voz ficam no alto (`textoDaVoz`).
+
+**Os boxes** (nos boxes ou com o jogo pausado):
+
+- **a janela abre sozinha,** mesmo desligada, cresce 2 vezes e volta como estava na saída. Quem vigia é um `setInterval`: uma janela desligada não é chamada;
+- **a lista:** todas as voltas da sessão, com o número, o tempo (M:SS,mmm), a diferença para a melhor e o estado, com o motivo: válida, com rodada, da IA ou incompleta. A lista rola;
+- **a grade é o caminho para o replay:** um clique numa célula toca a curva; um clique na volta toca a volta inteira, com a célula da curva acesa, e um clique numa curva pula para ela. As voltas com rodada também tocam, com o aviso "fora da análise: rodada". As da IA ficam fora;
+- **a volta que não começou na linha** (a saída dos boxes, o carro movido) entra na lista e toca, com o tempo corrido do cronômetro do jogo. Ela não tem resumo e fica fora da análise;
+- **sem volta fechada,** a janela diz "nenhuma volta fechada nesta sessão".
+
+**O botão "Abrir no app":** o app do jogo só faz o pedido ao backend local (`POST /api/radio/abrir-no-app`), e o backend avisa o app do Windows pelo WebSocket que já existe (`abrir_replay`). Nada de protocolo registrado, pacote novo ou arquivo na pasta do jogo. O app abre a tela Ao vivo com o replay grande, com os 4 visuais e, se a volta já estiver no store, o caminho para a tela Volta. Sem nenhuma janela do app ligada, o botão diz "o app do Windows está fechado". A janela pede para vir para a frente; o Windows pode só piscar a barra de tarefas.
+
+**O minimapa** mostra também a diferença ao vivo para a melhor volta da sessão, quando ela existe (`GET /api/radio/melhor`).
+
+**O app do jogo 0.5.0 com o backend do 0.5.0 e do 0.6.0:** sem `/api/radio/voltas` (404), a janela fica como antes, com a última análise e a grade; sem `melhorVolta`, o minimapa fica com a diferença de sempre.
+
 ### 5.5 Instalar, ligar e remover
 
 O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
@@ -436,6 +473,21 @@ O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
 | `GET /api/radio/minimapa` | a pista simplificada, a volta de referência com o tempo e o pedal, o alinhamento da linha do jogo, o nome das 14 curvas e as curvas da última análise (pedido 35); desde o pedido 36, a freada da referência em cada curva (`referencia.freadas`) |
 | `GET /api/radio/replay/{id}` | os dados do replay da curva de uma mensagem entregue (pedido 36); 404 sem replay. Desde o pedido 43, os dados dos visuais e, na frase do coach, os números da voz e o trecho da fala |
 | `GET /api/radio/grade` | a grade da sessão (pedido 43): a perda por curva das voltas válidas, as voltas de fora com o motivo e as curvas citadas |
+| `GET /api/radio/voltas` | todas as voltas da sessão (pedido 45): o tempo, a diferença para a melhor, o estado com o motivo, a perda por curva e se tem replay |
+| `GET /api/radio/replay-da-volta/{volta}?curva=C01` | o replay de qualquer volta ou curva da sessão, no formato de `/replay/{id}` (pedido 45); sem `curva`, a volta inteira; 404 sem os pontos da volta |
+| `GET /api/radio/melhor` | a melhor volta da sessão, em pontos, para a diferença no minimapa (pedido 45) |
+| `POST /api/radio/abrir-no-app` | o pedido do botão da janela do jogo (pedido 45): avisa o app do Windows pelo WebSocket; diz se ele está fechado |
+| `GET /api/store/numeros` | o número do jogo de cada volta do store, para a tela Volta usar o mesmo número do rádio (pedido 45) |
 | `GET /api/live/volta` | a volta em andamento inteira, na grade oficial |
 | `GET /api/live/volta/novos?versao=<v>&desde=<seq>` | só os pontos novos e a posição do carro (pedido 35); a volta inteira só numa volta nova |
 | `POST /api/teste/reproduzir`, `POST /api/teste/parar`, `GET /api/teste/estado` | só nos testes (`AT_TESTE_REPRODUTOR=1`): toca uma gravação pelo caminho do jogo, para medir a tela Ao vivo sem o jogo |
+
+## 8. A pesquisa do que o rádio diz (pedido 45)
+
+Como engenheiros e coaches falam com o piloto: curto e direto, na reta, um número e um alvo, uma correção por vez. "0,8 s mais lento no setor 2" não diz o que fazer; "freando cedo demais na curva 5" diz. A decisão e as fontes estão no ADR 0027:
+
+- Autosport, "The secrets of in-race radio chat": https://www.autosport.com/f1/news/the-secrets-of-in-race-radio-chat-5102490/5102490/
+- Formula1.com, "FIA clarifies radio transmission restrictions" (2014): https://www.formula1.com/en/latest/article/fia-clarifies-radio-transmission-restrictions.4uSbLsruNnnmXXDqUjh7yV
+- RACER, 18/03/2016: https://racer.com/2016/03/18/f1-radio-coaching-intolerable-whiting/
+- Coach Dave Academy, "How to use Auto Insights (AI coaching) in Delta": https://coachdaveacademy.com/documentation/how-to-use-auto-insights-ai-coaching-in-delta/
+- Trophi.ai, "Mansell": https://www.trophi.ai/sim-racing-features/mansell

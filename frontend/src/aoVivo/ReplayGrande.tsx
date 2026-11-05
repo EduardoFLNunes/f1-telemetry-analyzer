@@ -6,14 +6,15 @@
  */
 import React, { useEffect, useState } from 'react';
 import { create } from 'zustand';
-import { curvaNoTempo, type DadosDoReplay } from './replay';
+import type { DadosDoReplay } from './replay';
 import { ReplayDaCurva } from './ReplayDaCurva';
 
-export type PedidoDeReplay = { volta: number; curva: string | null };
+/** `vez`: o mesmo pedido de novo lê o replay de novo (a volta pode ter fechado depois do primeiro). */
+export type PedidoDeReplay = { volta: number; curva: string | null; vez?: number };
 
 export const usePedidoDeReplay = create<{ pedido: PedidoDeReplay | null; abrir: (p: PedidoDeReplay) => void; fechar: () => void }>((set) => ({
   pedido: null,
-  abrir: (pedido) => set({ pedido }),
+  abrir: (pedido) => set((e) => ({ pedido: { ...pedido, vez: (e.pedido?.vez ?? 0) + 1 } })),
   fechar: () => set({ pedido: null }),
 }));
 
@@ -48,7 +49,7 @@ export const ReplayGrande: React.FC = () => {
   const noStore = dados?.voltaNoStore ?? null;
   return (
     <div role="dialog" aria-label="Replay da volta" style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(8,9,11,0.82)', padding: 24, overflow: 'auto' }}>
-      <div className="painel" style={{ maxWidth: 1400, margin: '0 auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="painel" style={{ maxWidth: 1400, margin: '0 auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 10, background: '#0e0f12' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <strong>Volta {pedido.volta}{pedido.curva ? ` · ${pedido.curva}` : ''}</strong>
           {pedido.curva && (
@@ -72,10 +73,9 @@ export const ReplayGrande: React.FC = () => {
             ))}
           </div>
         )}
-        <ReplayDaCurva url={urlDoReplay(pedido)} alturaFixa={altura} repetir aoLer={setDados} />
+        <ReplayDaCurva key={pedido.vez} url={urlDoReplay(pedido)} alturaFixa={altura} repetir aoLer={setDados} />
       </div>
     </div>
   );
 };
 
-export { curvaNoTempo };

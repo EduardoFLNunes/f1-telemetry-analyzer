@@ -385,3 +385,12 @@ Os números da voz no replay da frase do coach e os 4 visuais do rádio (ADR 002
 - **O app do jogo:** a versão 0.4.2 (`tools/csp_app/radio_engenheiro/`). Com o backend do 0.5.0, ele mostra o replay como antes.
 - **O teste no jogo (01/11):** o Lua rodou no CSP 0.3.1 sem erro, e os números do replay batem com a voz e com o cartão. **Sem confirmação:** a grade nos boxes no jogo, o cartão da mensagem de teste e os visuais na tela do jogo.
 - **A versão:** 0.6.0 em `develop`, sem instalador.
+
+### O que o pedido 45 entregou (04/11)
+
+O rádio que diz onde e por quê, o replay de perto e os boxes (ADR 0027 e ADR 0021, atualização de 04/11). Detalhes em `docs/realidade_aumentada.md` (seções 2.2 e 5.4.2) e em `docs/handoff/2026-11-02_45_replay-de-perto-e-radio-que-ensina_relatorio.md`.
+
+- **O replay** (`frontend/src/aoVivo/replay.ts`, `ReplayDaCurva.tsx`): a câmera acompanha os carros (`cameraDePerto`), com o trecho da causa em câmera lenta, a roda do mouse no zoom e os números da voz no alto. A mesma conta na janela do jogo.
+- **O replay grande** (`frontend/src/aoVivo/ReplayGrande.tsx`): abre em qualquer tela, no aviso `abrir_replay` do WebSocket, com os 4 visuais e o caminho para a tela Volta quando a volta já está no store.
+- **A tela Volta** mostra o número do jogo (`/api/store/numeros`), o mesmo do rádio. O `#NNNN` do id é só a ordem no arquivo.
+- **O app do Electron** ganhou `trazerParaAFrente`, para o replay grande.

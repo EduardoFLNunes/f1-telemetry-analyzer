@@ -31,8 +31,9 @@ O **Automobilista Telemetria** é um app de Windows (Electron e backend em Pytho
 | Limpeza do código sem uso e defeitos do backlog (pedido 40), como o corte no reinício e o cache da pista | **não** | sim |
 | M1, fora do app (pedidos 37 e 39) | **não** | sim |
 | Números da voz, 4 visuais e grade da sessão (pedido 43) | **não** | sim |
+| O rádio que diz onde e por quê, o replay de perto, os boxes e o botão "Abrir no app" (pedido 45) | **não** | sim, depois do teste no jogo |
 | Modelo 2, fora do app (pedido 38, sem a H.4) | sim | sim |
-| Número da versão do app do Windows | `0.5.0-radio-e-replay` | `0.6.0-visuais-do-radio` |
+| Número da versão do app do Windows | `0.5.0-radio-e-replay` | `0.7.0-radio-que-ensina` |
 | App do jogo que acompanha | 0.4.0 | 0.4.2 |
 
 **`develop` tem tudo o que a 0.5.0 tinha e mais.** As alterações estão centralizadas desde 01/11.

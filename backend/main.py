@@ -108,7 +108,7 @@ TRACK_CACHE_DIR = RUNTIME_ROOT / "data" / "cache" / "tracks"
 PRIMARY_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetry.csv"
 DEBUG_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetryOld.csv"
 BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
-BACKEND_PHASE_VERSION = "visuais-do-radio"
+BACKEND_PHASE_VERSION = "radio-que-ensina"
 
 runtime_state = RuntimeState()
 telemetry_buffer = TelemetryBuffer(max_size=20000)
@@ -219,6 +219,7 @@ def _ligar_o_radio() -> None:
             volta_de_referencia=_volta_de_referencia_do_radio,
             volta_atual=lambda: volta_ao_vivo.estado() if volta_ao_vivo is not None else None,
             melhor_do_store=_melhor_do_store_do_radio,
+            volta_parcial=lambda: volta_ao_vivo.ultima_parcial() if volta_ao_vivo is not None else None,
         )
         event_bus.subscribe(PROCESSED_FRAME, radio_do_engenheiro.on_frame)
         event_bus.subscribe(COACHING_EVENT, radio_do_engenheiro.on_coaching_event)

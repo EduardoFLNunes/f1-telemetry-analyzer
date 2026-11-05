@@ -89,6 +89,7 @@ class RadioDoEngenheiro:
         volta_de_referencia: Callable[[], Optional[Dict[str, Any]]] = lambda: None,
         volta_atual: Callable[[], Optional[Dict[str, Any]]] = lambda: None,
         melhor_do_store: Callable[[], Optional[float]] = lambda: None,
+        volta_parcial: Callable[[], Optional[Dict[str, Any]]] = lambda: None,
     ):
         self.pasta = Path(pasta_de_dados) / "data" / "radio"
         self.pasta_audio = self.pasta / "audio"
@@ -103,6 +104,8 @@ class RadioDoEngenheiro:
         self._volta_de_referencia = volta_de_referencia
         self._volta_atual = volta_atual
         self._melhor_do_store = melhor_do_store
+        self._volta_parcial = volta_parcial
+        self._parcial_vista: Optional[int] = None
         self._grade_da_ultima: Optional[Dict[str, Any]] = None   # pedido 36: a grade da volta que fechou
         self._lock = threading.RLock()
         self._audio = ThreadPoolExecutor(max_workers=1, thread_name_prefix="radio-voz")
@@ -234,6 +237,7 @@ class RadioDoEngenheiro:
                 self._resumo = volta
             if self._resumo_desde is not None and agora - self._resumo_desde >= ESPERA_DO_RESUMO_S:
                 self._na_linha()
+            self._guardar_a_parcial()
             self._tirar_as_curvas_que_passaram()
             if not self._pendentes or agora < self._ocupado_ate:
                 return
@@ -278,6 +282,29 @@ class RadioDoEngenheiro:
         except Exception as erro:
             logger.warning("Radio sem as medidas da volta: %s", erro)
             return None
+
+    def _guardar_a_parcial(self) -> None:
+        """Pedido 45 (E.3): a volta que cruzou a linha sem ter comecado nela fica na lista e toca o replay.
+        Nao tem resumo, nao conta para a analise e nao entra na grade: a voz e a regra do coach nao mudam."""
+        parcial = self._volta_parcial()
+        if not parcial or parcial.get("versao") == self._parcial_vista:
+            return
+        self._parcial_vista = parcial.get("versao")
+        self._pista()
+        self._conferir_a_sessao()
+        ref = self._grade_da_referencia()
+        if self._geometria is None or ref is None or int(parcial.get("pontosDaGrade") or 0) != int(self._geometria.track.size):
+            return
+        try:
+            g = grade(parcial["linhas"])
+            tempo = float(parcial["tempoS"])
+            medidas = medidas_da_volta(g, tempo, ref["grade"], ref["tempoS"], self._geometria)
+        except Exception as erro:
+            logger.warning("Radio sem a volta que nao comecou na linha: %s", erro)
+            return
+        numero = {"volta": parcial.get("volta"), "tempoS": tempo}
+        self._grade_da_ultima = {"volta": parcial.get("volta"), "grade": g, "tempoS": tempo}
+        self._guardar_a_volta(numero, "incompleta", "fora da análise: não começou na linha (boxes ou carro movido)", medidas)
 
     def _tirar_as_curvas_que_passaram(self) -> None:
         """Pedido 45 (C.1, item 5): a curva que vai passar de novo antes da janela sai da fila."""
@@ -670,7 +697,8 @@ class RadioDoEngenheiro:
             return None
         g = {k: np.asarray(v, dtype=float) for k, v in achada["grade"].items()}
         aviso = "fora da análise: rodada" if achada["estado"] == "rodada" else (
-            "fora da análise: incompleta" if achada["estado"] == "incompleta" else None)
+            (achada["motivo"] if achada["motivo"].startswith("fora da análise") else "fora da análise: incompleta")
+            if achada["estado"] == "incompleta" else None)
         medidas = achada["medidas"] or []
         if curva is None:
             perdas = {m["curva"]: m["perdaS"] for m in medidas}
