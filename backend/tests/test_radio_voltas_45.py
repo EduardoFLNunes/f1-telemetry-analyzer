@@ -384,3 +384,27 @@ def test_parado_nao_e_medido_em_nenhum_ponto_da_pista():
     coach, modelo = _coach_para_fechar("vhe_interlagos", lateral=1.0, kmh=0.0)
     coach._close_sector({}, modelo, 38, 10.0, 11.5)
     assert 38 not in coach._lap_diffs
+
+
+def test_uma_volta_tem_um_numero_so_mesmo_com_o_carro_movido(tmp_path):
+    radio, guardar, np, _ = _radio_com_voltas(tmp_path)
+    n = int(radio._geometria.track.size)
+
+    def parcial(versao, volta, medidos):
+        el = [float(i) if i < medidos else None for i in range(n)]
+        linhas = {"elapsed": el, "velocidade": [100.0] * n, "acelerador": [1.0] * n, "freio": [0.0] * n, "lateral": [0.0] * n}
+        radio._volta_parcial = lambda: {"versao": versao, "volta": volta, "pontosDaGrade": n, "tempoS": float(medidos), "linhas": linhas}
+        radio._guardar_a_parcial()
+
+    parcial(1, 8, n // 2)
+    parcial(2, 8, n // 4)                  # o resto da mesma volta, com menos pontos: nao entra
+    assert [v["tempoS"] for v in radio._voltas_da_sessao] == [float(n // 2)]
+    parcial(3, 8, n - 1)                   # com mais pontos: fica no lugar
+    assert [v["tempoS"] for v in radio._voltas_da_sessao] == [float(n - 1)]
+    guardar(9, 45.0)
+    radio._melhor_s, radio._melhor_volta = 90.0, 9
+    parcial(4, 9, n - 1)                   # a volta que fechou na linha vence
+    lista = radio.voltas_da_sessao()["voltas"]
+    assert [v["volta"] for v in lista] == [8, 9]
+    assert lista[0]["difMelhorS"] is None  # o tempo corrido nao se compara com a melhor
+    assert lista[1]["estado"] == "valida"

@@ -302,9 +302,19 @@ class RadioDoEngenheiro:
         except Exception as erro:
             logger.warning("Radio sem a volta que nao comecou na linha: %s", erro)
             return
-        numero = {"volta": parcial.get("volta"), "tempoS": tempo}
+        # Uma volta tem um numero so (B.2). O carro movido no meio da volta tambem fecha uma parcial, com
+        # o mesmo numero: fica a que mediu mais pontos, e a volta que fechou na linha sempre vence.
+        pontos = sum(1 for v in parcial["linhas"]["elapsed"] if v is not None)
+        numero = int(parcial["volta"]) if parcial.get("volta") is not None else None
+        for ja in list(self._voltas_da_sessao):
+            if ja["volta"] == numero:
+                if not ja.get("parcial") or ja.get("pontosMedidos", 0) >= pontos:
+                    return
+                self._voltas_da_sessao.remove(ja)
         self._grade_da_ultima = {"volta": parcial.get("volta"), "grade": g, "tempoS": tempo}
-        self._guardar_a_volta(numero, "incompleta", "fora da análise: não começou na linha (boxes ou carro movido)", medidas)
+        self._guardar_a_volta({"volta": parcial.get("volta"), "tempoS": tempo}, "incompleta",
+                              "fora da análise: não começou na linha (boxes ou carro movido)", medidas)
+        self._voltas_da_sessao[-1].update(parcial=True, pontosMedidos=pontos)
 
     def _tirar_as_curvas_que_passaram(self) -> None:
         """Pedido 45 (C.1, item 5): a curva que vai passar de novo antes da janela sai da fila."""
@@ -666,7 +676,8 @@ class RadioDoEngenheiro:
             for v in self._voltas_da_sessao:
                 perdas = {m["curva"]: m["perdaS"] for m in v["medidas"]} if v["medidas"] else {}
                 linhas.append({"volta": v["volta"], "tempoS": v["tempoS"],
-                               "difMelhorS": round(v["tempoS"] - melhor, 3) if melhor is not None else None,
+                               # O tempo da parcial e o corrido, com as paradas: nao se compara com a melhor.
+                               "difMelhorS": round(v["tempoS"] - melhor, 3) if melhor is not None and not v.get("parcial") else None,
                                "estado": v["estado"], "motivo": v["motivo"],
                                "perdas": [perdas.get(c) for c in curvas],
                                "citadas": sorted({c["curva"] for c in self._grade_citadas if c["volta"] == v["volta"]}),
