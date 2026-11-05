@@ -16,7 +16,9 @@
 --     pedal, o carro, o fantasma, o nome das curvas e a diferença;
 --   * o replay da curva (`replay`, pedido 36, Parte E): a curva citada pelo rádio, vista de
 --     cima, com a sua linha e a da referência, os dois carros, as freadas, as mínimas, o
---     traçado e o tempo perdido. Na reta, junto com a fala; nos boxes, a última análise.
+--     traçado e o tempo perdido. Na reta, junto com a fala; nos boxes, as voltas da sessão
+--     para estudar (pedido 45): a janela abre sozinha, com a lista das voltas, a grade e o botão
+--     "Abrir no app", que só faz um pedido ao backend local.
 --
 -- A voz tem três caminhos, um depois do outro (pedido 35, Parte B): a URL do backend;
 -- o arquivo que o backend grava em data/radio/audio/; e o áudio baixado para a
@@ -48,7 +50,7 @@ local ESPERA_NA_PRIMEIRA_S = 5      -- na primeira mensagem, o CSP ainda pode es
 local ESPERA_DO_DOWNLOAD_S = 4
 
 -- O minimapa.
-local TOPO_DO_MINIMAPA = 30         -- a faixa de cima, com a diferença ou o aviso (até duas linhas)
+local TOPO_DO_MINIMAPA = 40         -- a faixa de cima: a diferença, a da melhor volta (pedido 45) ou o aviso
 local MARGEM_DO_MINIMAPA = 12
 local DIFERENCA_MAXIMA_S = 20       -- mais que isto é a linha (o relógio do jogo ainda na volta anterior)
 local LONGE_DA_REFERENCIA_M = 60    -- mais longe que isto da volta de referência (os boxes): sem diferença
@@ -92,7 +94,7 @@ local CORES_DO_PEDAL = {
   [1] = rgbm(0.239, 0.863, 0.518, 1),        -- --acelerador (#3ddc84)
   [2] = rgbm(1.0, 0.353, 0.373, 1),          -- --freio (#ff5a5f)
 }
-local TAG = { coach = 'RÁDIO', resumo = 'VOLTA', analise = 'ANÁLISE', teste = 'TESTE' }
+local TAG = { coach = 'RÁDIO', resumo = 'VOLTA', analise = 'ANÁLISE', teste = 'TESTE', curva = 'CURVA' }
 
 local function log(texto)
   if ac ~= nil and ac.log ~= nil then
@@ -210,6 +212,11 @@ local mini = {
   diferenca = nil,
   mostrada = nil,
   mostradaEm = 0,
+  melhor = nil,            -- pedido 45: a melhor volta da sessão: {volta, pontos = {{x, z, t}, ...}}
+  melhorVolta = nil,       -- o número que o rádio anunciou
+  baixandoMelhor = false,
+  iMelhor = nil,
+  difMelhor = nil,
 }
 
 -- ── conversa com o backend (no máximo dois pedidos de uma vez) ──────────
@@ -220,12 +227,18 @@ local function bombear()
   while rede.emVoo < MAXIMO_DE_PEDIDOS and #rede.fila > 0 do
     local p = table.remove(rede.fila, 1)
     rede.emVoo = rede.emVoo + 1
-    local ok = pcall(web.get, p.url, function(err, resposta)
+    local function aoResponder(err, resposta)
       rede.emVoo = rede.emVoo - 1
       local okCb, erro = pcall(p.cb, err, resposta)
       if not okCb then log('erro: ' .. tostring(erro)) end
       bombear()
-    end)
+    end
+    local ok
+    if p.corpo then
+      ok = pcall(web.post, p.url, { ['Content-Type'] = 'application/json' }, p.corpo, aoResponder)
+    else
+      ok = pcall(web.get, p.url, aoResponder)
+    end
     if not ok then
       rede.emVoo = rede.emVoo - 1
       pcall(p.cb, 'o web.get recusou o pedido', nil)
@@ -233,8 +246,8 @@ local function bombear()
   end
 end
 
-local function pedirAoBackend(url, cb)
-  rede.fila[#rede.fila + 1] = { url = url, cb = cb }
+local function pedirAoBackend(url, cb, corpo)
+  rede.fila[#rede.fila + 1] = { url = url, cb = cb, corpo = corpo }
   bombear()
 end
 
@@ -299,6 +312,23 @@ local function baixarOMinimapa(versao)
   end)
 end
 
+-- Pedido 45 (C.4): a melhor volta da sessão, para a diferença ao vivo no minimapa. Um backend sem a
+-- rota nem anuncia `melhorVolta`: a diferença fica só a de sempre.
+local function baixarAMelhor(numero)
+  if mini.baixandoMelhor then return end
+  mini.baixandoMelhor = true
+  pedirAoBackend(BACKEND .. '/api/radio/melhor', function(err, r)
+    mini.baixandoMelhor = false
+    if err or not r or r.status ~= 200 then return end
+    local ok, dados = pcall(JSON.parse, r.body)
+    if ok and type(dados) == 'table' and dados.disponivel and type(dados.pontos) == 'table' then
+      mini.melhor = dados
+      mini.melhorVolta = numero
+      mini.iMelhor = nil
+    end
+  end)
+end
+
 local function receber(err, resposta)
   estado.pedindo = false
   if err or not resposta or resposta.status ~= 200 then
@@ -332,6 +362,12 @@ local function receber(err, resposta)
   local versao = tostring(dados.minimapaVersao or 'sem versão')
   if MINIMAPA and versao ~= mini.versao then
     baixarOMinimapa(versao)
+  end
+  local melhor = tonumber(dados.melhorVolta)
+  if MINIMAPA and melhor and melhor ~= mini.melhorVolta then
+    baixarAMelhor(melhor)
+  elseif MINIMAPA and not melhor then
+    mini.melhor, mini.melhorVolta, mini.difMelhor = nil, nil, nil   -- outra sessão
   end
 end
 
@@ -589,9 +625,10 @@ local function desenharCartao(m, alfa, tamanho)
     end
     return
   end
-  ui.dwriteDrawText(corte(m.texto, 66), 17, vec2(20, 60), comAlfa(CORES.texto, alfa))
+  -- Pedido 45: o cartão traz todos os números: o texto pode ir a duas linhas.
+  caixa(m.texto, 15, vec2(20, 56), vec2(w - 14, 94), comAlfa(CORES.texto, alfa))
   if type(m.detalhe) == 'string' and m.detalhe ~= '' then
-    ui.dwriteDrawText(corte(m.detalhe, 90), 13, vec2(20, 88), comAlfa(CORES.apoio, alfa))
+    ui.dwriteDrawText(corte(m.detalhe, 90), 13, vec2(20, 96), comAlfa(CORES.apoio, alfa))
   end
 end
 
@@ -835,6 +872,24 @@ local function oFantasma(carro)
     local d = tCarro - tRef
     if math.abs(d) < DIFERENCA_MAXIMA_S then mini.diferenca = d end
   end
+  -- Pedido 45 (C.4): a mesma conta, contra a melhor volta da sessão.
+  local melhor = mini.melhor
+  mini.difMelhor = nil
+  if melhor and #melhor.pontos > 1 then
+    local n = #melhor.pontos
+    local d2, tempo, indice = math.huge, nil, nil
+    if mini.iMelhor then
+      d2, tempo, indice = melhorEntre(melhor.pontos, carro.position.x, carro.position.z,
+        math.max(1, mini.iMelhor - 8), math.min(n - 1, mini.iMelhor + 25))
+    end
+    if d2 > 30 * 30 then
+      d2, tempo, indice = melhorEntre(melhor.pontos, carro.position.x, carro.position.z, 1, n - 1)
+    end
+    mini.iMelhor = indice
+    if tempo and d2 <= LONGE_DA_REFERENCIA_M * LONGE_DA_REFERENCIA_M and math.abs(tCarro - tempo) < DIFERENCA_MAXIMA_S then
+      mini.difMelhor = tCarro - tempo
+    end
+  end
   return fx, fz
 end
 
@@ -865,6 +920,12 @@ local function desenharODeCima(t, W, nota, x0, y0)
     local ref = mini.referencia
     local contra = ref and ref.tipo == 'minha_melhor' and 'para a sua melhor' or 'para a volta da IA'
     ui.dwriteDrawText(contra, 11, vec2(x0 + MARGEM_DO_MINIMAPA + 82, y0 + 10), CORES.apoio)
+    -- Pedido 45 (C.4): a diferença para a sua melhor volta da sessão, quando ela existe.
+    local dm = mini.difMelhor
+    if dm then
+      ui.dwriteDrawText((dm >= 0 and '+' or '−') .. decimal(math.abs(dm), 2) .. ' s para a sua melhor', 11,
+        vec2(x0 + MARGEM_DO_MINIMAPA, y0 + 25), dm > 0 and CORES.perda or CORES.ganho)
+    end
   end
 end
 
@@ -1191,8 +1252,14 @@ end
 -- * nos boxes ou com o jogo pausado, a grade da sessão (as últimas 8 voltas válidas), embaixo.
 local REPLAY_PAUSA_NO_FIM_S = 1.2       -- o fim de cada curva fica parado um pouco
 local REPLAY_MINIMO_S = 6               -- na reta, sem o `restaS` da mensagem (um backend antigo)
-local REPLAY_AUMENTO_NOS_BOXES = 1.6    -- nos boxes, a janela cresce isto
+local REPLAY_AUMENTO_NOS_BOXES = 2.0    -- nos boxes, a janela cresce isto (pedido 45: 2 vezes, para caber a lista)
 local REPLAY_TOPO = 24
+local REPLAY_TOPO_COM_A_VOZ = 42         -- com os números da voz na segunda linha
+-- Pedido 45 (Parte D): a câmera de perto, a mesma da tela Ao vivo (frontend/src/aoVivo/replay.ts).
+local REPLAY_ZOOM_M = 80                 -- no lado menor da área: um carro de 4,5 m fica com ~15 px em 300 px
+local REPLAY_ENQUADRAR_S = 1.0           -- a curva inteira, para se localizar
+local REPLAY_APROXIMAR_S = 0.8           -- e a aproximação
+local REPLAY_LENTIDAO = 0.5              -- o trecho da causa, na metade da velocidade
 local REPLAY_MARGEM = 18
 -- Pedido 43: as alturas dos visuais e o mínimo do replay (frontend/src/aoVivo/replay.ts, dividirAArea).
 local ALTURA_DO_PEDAL, ALTURA_DA_DIFERENCA, ALTURA_DA_VELOCIDADE = 30, 60, 74
@@ -1213,6 +1280,14 @@ local rp = {
   janela = nil, tamanhoOriginal = nil, avisouTamanho = false,
   ultimoQuadro = -100,
   grade = nil, gradeLidaEm = -100, gradeSemRota = false,   -- pedido 43: a grade da sessão
+  zoom = REPLAY_ZOOM_M, vigiado = nil, estavaVisivel = nil,  -- pedido 45
+}
+
+-- Pedido 45 (Parte E): as voltas da sessão, nos boxes.
+local bx = {
+  lista = nil, lidaEm = -100, semRota = false,
+  rolagem = 0, dados = nil, inicio = 0, volta = nil, curva = nil, carregando = false,
+  aviso = nil, avisoAte = 0, motivo = nil,
 }
 
 local function guardarReplay(id, curvas)
@@ -1245,8 +1320,14 @@ comecarReplay = function(m, t)
 end
 
 -- A câmera da curva, a mesma da tela Ao vivo (frontend/src/aoVivo/replay.ts): a entrada para
--- cima, na orientação do mapa do app (base(x, z) = (z, −x)), encaixada na área.
-local function cameraDaCurva(c, x0, y0, W, H)
+-- cima, na orientação do mapa do app (base(x, z) = (z, −x)), fixa durante a curva.
+-- Pedido 45 (Parte D): ela acompanha os carros. O centro fica entre "você" e a referência, com
+-- `zoomM` no lado menor da área; se os dois se afastam mais que a janela, ela se afasta o necessário,
+-- no máximo até a curva inteira, onde os dois sempre cabem. `real` é o tempo desde o começo do
+-- replay: a curva inteira por REPLAY_ENQUADRAR_S, e depois a aproximação.
+local posicaoNoTempo
+
+local function cameraDaCurva(c, t, real, zoomM, x0, y0, W, H, topo)
   local ref = c.linhas.referencia
   local a, b = ref[1], ref[math.min(#ref, 11)]
   local du, dv = b[2] - a[2], -(b[1] - a[1])
@@ -1256,18 +1337,36 @@ local function cameraDaCurva(c, x0, y0, W, H)
     local u, v = z, -x
     return u * cs - v * sn, u * sn + v * cs
   end
-  local gx0, gx1, gy0, gy1 = math.huge, -math.huge, math.huge, -math.huge
-  for _, linha in ipairs({ c.linhas.voce, ref }) do
-    for _, p in ipairs(linha) do
-      local gx, gy = girar(p[1], p[2])
-      gx0, gx1 = math.min(gx0, gx), math.max(gx1, gx)
-      gy0, gy1 = math.min(gy0, gy), math.max(gy1, gy)
+  -- A caixa das duas linhas muda só com a curva: na volta inteira são milhares de pontos por quadro.
+  local caixa = c.caixaDaCamera
+  if not caixa then
+    local gx0, gx1, gy0, gy1 = math.huge, -math.huge, math.huge, -math.huge
+    for _, linha in ipairs({ c.linhas.voce, ref }) do
+      for _, p in ipairs(linha) do
+        local gx, gy = girar(p[1], p[2])
+        gx0, gx1 = math.min(gx0, gx), math.max(gx1, gx)
+        gy0, gy1 = math.min(gy0, gy), math.max(gy1, gy)
+      end
     end
+    caixa = { gx0, gx1, gy0, gy1 }
+    c.caixaDaCamera = caixa
   end
-  local k = math.min((W - 2 * REPLAY_MARGEM) / math.max(gx1 - gx0, 1),
-                     (H - 2 * REPLAY_MARGEM - REPLAY_TOPO) / math.max(gy1 - gy0, 1))
-  local ax, ay = x0 + W / 2, y0 + REPLAY_TOPO + (H - REPLAY_TOPO) / 2
-  local rcx, rcy = (gx0 + gx1) / 2, (gy0 + gy1) / 2
+  local uteisX, uteisY = math.max(W - 2 * REPLAY_MARGEM, 1), math.max(H - 2 * REPLAY_MARGEM - topo, 1)
+  local kCheia = math.min(uteisX / math.max(caixa[2] - caixa[1], 1), uteisY / math.max(caixa[4] - caixa[3], 1))
+  local ax, ay = x0 + W / 2, y0 + topo + (H - topo) / 2
+  local rcx, rcy = (caixa[1] + caixa[2]) / 2, (caixa[3] + caixa[4]) / 2
+  local vx, vz = posicaoNoTempo(c.linhas.voce, t)
+  local rx, rz = posicaoNoTempo(ref, t)
+  local gvx, gvy = girar(vx, vz)
+  local grx, gry = girar(rx, rz)
+  local kPerto = math.min(uteisX, uteisY) / math.max(zoomM, 1)
+  local kDosDois = math.min(uteisX / math.max(math.abs(gvx - grx), 0.001), uteisY / math.max(math.abs(gvy - gry), 0.001))
+  local kAlvo = math.min(kPerto, kDosDois)
+  local f = math.max(0, math.min(1, (real - REPLAY_ENQUADRAR_S) / REPLAY_APROXIMAR_S))
+  local suave = f * f * (3 - 2 * f)
+  local k = kCheia * (kAlvo / kCheia) ^ suave
+  rcx = rcx + ((gvx + grx) / 2 - rcx) * suave
+  rcy = rcy + ((gvy + gry) / 2 - rcy) * suave
   local cam = { k = k, ax = ax, ay = ay, rcx = rcx, rcy = rcy, cs = cs, sn = sn }
   function cam.tela(x, z)
     local gx, gy = girar(x, z)
@@ -1283,8 +1382,49 @@ local function cameraDaCurva(c, x0, y0, W, H)
   return cam
 end
 
+-- O trecho marcado na pista e nos visuais: o da fala (pedido 43) ou o da causa (pedido 45).
+local function trechoMarcado(c)
+  if type(c.voz) == 'table' then return tonumber(c.voz.inicioM) or 0, tonumber(c.voz.fimM) or 0, 'trecho da fala' end
+  if type(c.causa) == 'table' then return tonumber(c.causa.inicioM) or 0, tonumber(c.causa.fimM) or 0, 'trecho da causa' end
+  return nil
+end
+
+-- Pedido 45 (D.4): do tempo real ao tempo do replay (`planoDoTempo` da tela Ao vivo). Primeiro
+-- REPLAY_ENQUADRAR_S parado na entrada; o trecho em câmera lenta quando o tempo deixar. `disponivel`: o que
+-- resta da janela de rádio, na reta. Se a curva não couber, o replay começa um pouco antes do trecho.
+local function planoDoTempo(c, disponivel)
+  local linha = c.linhas.voce
+  local passo = tonumber(c.passoM) or 0
+  local ia, ib = trechoMarcado(c)
+  local ta, tb = 0, 0
+  if ia and passo > 0 then
+    local function noTempo(d) return linha[math.min(#linha, math.max(1, math.floor(d / passo + 0.5) + 1))][3] end
+    ta, tb = noTempo(ia), noTempo(ib)
+  end
+  local duracao = tonumber(c.duracaoS) or 0
+  local t0 = 0
+  if disponivel and REPLAY_ENQUADRAR_S + duracao > disponivel and tb > ta then
+    t0 = math.max(0, math.min(ta - 1.5, duracao - (disponivel - REPLAY_ENQUADRAR_S)))
+  end
+  local extra = tb > ta and (tb - ta) * (1 / REPLAY_LENTIDAO - 1) or 0
+  local semLento = REPLAY_ENQUADRAR_S + duracao - t0
+  local lento = extra > 0 and (not disponivel or semLento + extra <= disponivel)
+  return { t0 = t0, lentoDe = ta, lentoAte = tb, lento = lento, totalReal = semLento + (lento and extra or 0) }
+end
+
+local function tempoNoReplay(p, real)
+  local r = real - REPLAY_ENQUADRAR_S
+  if r <= 0 then return p.t0 end
+  local t = p.t0 + r
+  if not p.lento or t <= p.lentoDe then return t end
+  local noLento = (t - p.lentoDe) * REPLAY_LENTIDAO
+  local dur = p.lentoAte - p.lentoDe
+  if noLento <= dur then return p.lentoDe + noLento end
+  return p.lentoAte + (t - p.lentoDe - dur / REPLAY_LENTIDAO)
+end
+
 -- Onde o carro está no tempo `t` (cada um no seu tempo; o fim da linha depois dela).
-local function posicaoNoTempo(linha, t)
+posicaoNoTempo = function(linha, t)
   local n = #linha
   if n == 0 then return 0, 0 end
   if t <= linha[1][3] then return linha[1][1], linha[1][2] end
@@ -1320,8 +1460,8 @@ local DIRECAO_DO_ROTULO = { direita = { 1, 0 }, esquerda = { -1, 0 }, abaixo = {
                             direitaAcima = { 0.7, -0.7 }, esquerdaAbaixo = { -0.7, 0.7 },
                             direitaAbaixo = { 0.7, 0.7 }, esquerdaAcima = { -0.7, -0.7 } }
 
-local function novoQuadroDeRotulos(x0, y0, W, H)
-  return { area = { x0 + 2, y0 + REPLAY_TOPO + 2, x0 + W - 2, y0 + H - 2 }, ocupados = {} }
+local function novoQuadroDeRotulos(x0, y0, W, H, topo)
+  return { area = { x0 + 2, y0 + topo + 2, x0 + W - 2, y0 + H - 2 }, ocupados = {} }
 end
 
 local function ocupar(q, x, y, raio)
@@ -1340,8 +1480,10 @@ local function cantoDoRotulo(lugar, x, y, w, h)
 end
 
 local function rotulo(q, texto, x, y, cor, preferido)
-  local w, h = larguraDoRotulo(texto), ALTURA_DO_ROTULO
   local a = q.area
+  -- Pedido 45 (D.6): a marca fora da tela não ganha rótulo: os números da voz estão no alto.
+  if x < a[1] or x > a[3] or y < a[2] or y > a[4] then return end
+  local w, h = larguraDoRotulo(texto), ALTURA_DO_ROTULO
   local function livre(bx, by)
     if bx < a[1] or by < a[2] or bx + w > a[3] or by + h > a[4] then return false end
     for _, r in ipairs(q.ocupados) do
@@ -1374,18 +1516,31 @@ end
 
 -- Pedido 43: os índices da linha dentro do trecho da fala, ou nada.
 local function indicesDoTrecho(c)
-  if type(c.voz) ~= 'table' or not tonumber(c.passoM) then return nil end
+  local inicioM, fimM = trechoMarcado(c)
+  if not inicioM or not tonumber(c.passoM) then return nil end
   local n = #c.linhas.referencia
-  local a = math.max(1, math.floor((tonumber(c.voz.inicioM) or 0) / c.passoM + 0.5) + 1)
-  local b = math.min(n, math.floor((tonumber(c.voz.fimM) or 0) / c.passoM + 0.5) + 1)
+  local a = math.max(1, math.floor(inicioM / c.passoM + 0.5) + 1)
+  local b = math.min(n, math.floor(fimM / c.passoM + 0.5) + 1)
   if b > a then return a, b end
   return nil
 end
 
 -- O alto: "C12, esquerda · volta 2 · perde 0,64 s no trecho da fala" (o tempo da voz), ou a perda na curva.
+local function tempoDeVolta(s)
+  local m = math.floor(s / 60)
+  local resto = s - 60 * m
+  return m .. ':' .. (resto < 10 and '0' or '') .. decimal(resto, 3)
+end
+
 local function textoDoAlto(c)
+  local aviso = type(c.aviso) == 'string' and (' · ' .. c.aviso) or ''
+  if c.voltaInteira then
+    local p = tonumber(c.perdaS) or 0
+    local tempo = tonumber(c.tempoDaVoltaS) and (' · ' .. tempoDeVolta(tonumber(c.tempoDaVoltaS))) or ''
+    return 'volta ' .. tostring(c.volta) .. tempo .. ' · ' .. (p >= 0 and '+' or '−') .. decimal(math.abs(p), 3) .. ' s' .. aviso
+  end
   local volta = c.volta and (' · volta ' .. tostring(c.volta)) or ''
-  local inicio = tostring(c.curva) .. ', ' .. tostring(c.lado) .. volta
+  local inicio = tostring(c.curva) .. ', ' .. tostring(c.lado) .. volta .. aviso
   if type(c.voz) == 'table' then
     local p = tonumber(c.voz.perdaS)
     if not p then return inicio end
@@ -1395,8 +1550,9 @@ local function textoDoAlto(c)
   return inicio .. ' · ' .. (perda >= 0 and 'perde ' or 'ganha ') .. decimal(math.abs(perda), 2) .. ' s nesta curva'
 end
 
-local function desenharACurva(c, t, x0, y0, W, H)
-  local cam = cameraDaCurva(c, x0, y0, W, H)
+local function desenharACurva(c, t, real, x0, y0, W, H)
+  local topo = type(c.textoDaVoz) == 'string' and REPLAY_TOPO_COM_A_VOZ or REPLAY_TOPO
+  local cam = cameraDaCurva(c, t, real, rp.zoom, x0, y0, W, H, topo)
   ui.drawRectFilled(vec2(x0, y0), vec2(x0 + W, y0 + H), CORES.fundoDoMapa, 6)
   local img = mini.imagem
   if img then
@@ -1429,7 +1585,7 @@ local function desenharACurva(c, t, x0, y0, W, H)
   linha(c.linhas.referencia, CORES.fantasma)
   linha(c.linhas.voce, CORES.vermelho)
   -- Os pontos que os rótulos não cobrem: os dois carros, as freadas, as mínimas e o traçado.
-  local q = novoQuadroDeRotulos(x0, y0, W, H)
+  local q = novoQuadroDeRotulos(x0, y0, W, H, topo)
   local rx, rz = posicaoNoTempo(c.linhas.referencia, t)
   local vx, vz = posicaoNoTempo(c.linhas.voce, t)
   local rsx, rsy = cam.tela(rx, rz)
@@ -1458,7 +1614,8 @@ local function desenharACurva(c, t, x0, y0, W, H)
   if ta then
     local meio = c.linhas.referencia[math.floor((ta + tb) / 2)]
     local sx, sy = cam.tela(meio[1], meio[2])
-    rotulo(q, 'trecho da fala', sx, sy, CORES.texto, 'esquerda')
+    local _, _, nomeDoTrecho = trechoMarcado(c)
+    rotulo(q, nomeDoTrecho or 'trecho', sx, sy, CORES.texto, 'esquerda')
   end
   -- As freadas: um traço em cada linha e a distância entre elas.
   local contra = c.referencia == 'minha_melhor' and 'da sua melhor' or 'da IA'
@@ -1504,8 +1661,12 @@ local function desenharACurva(c, t, x0, y0, W, H)
   rotulo(q, tostring(c.rotuloDaReferencia or 'IA (referência)'), rsx, rsy, CORES.fantasma, 'direitaAcima')
   rotulo(q, 'você', vsx, vsy, CORES.texto, 'esquerdaAbaixo')
   -- O alto: a curva, a volta e o tempo perdido (na frase do coach, o da voz).
-  ui.drawRectFilled(vec2(x0, y0), vec2(x0 + W, y0 + REPLAY_TOPO), CORES.faixaDoTexto, 6)
+  ui.drawRectFilled(vec2(x0, y0), vec2(x0 + W, y0 + topo), CORES.faixaDoTexto, 6)
   ui.dwriteDrawText(textoDoAlto(c), 12, vec2(x0 + 10, y0 + 5), CORES.texto)
+  -- Pedido 45 (D.6): os números da voz, mesmo quando a marca está fora da tela.
+  if type(c.textoDaVoz) == 'string' then
+    ui.dwriteDrawText(corte(c.textoDaVoz, 90), 11, vec2(x0 + 10, y0 + 23), CORES.perda)
+  end
 end
 
 -- ── os visuais (pedido 43, Parte C) ────────────────────────────────────
@@ -1564,8 +1725,9 @@ local function moldura(c, a, titulo, totalM)
   local largura = w - COLUNA_DOS_NOMES - 8
   local total = totalM or math.max((#c.linhas.voce - 1) * c.passoM, 1)
   local function emX(dm) return x0 + largura * dm / total end
-  if type(c.voz) == 'table' then
-    ui.drawRectFilled(vec2(emX(tonumber(c.voz.inicioM) or 0), y), vec2(emX(tonumber(c.voz.fimM) or 0), y + h - 2), COR_DO_TRECHO, 0)
+  local inicioM, fimM = trechoMarcado(c)
+  if inicioM then
+    ui.drawRectFilled(vec2(emX(inicioM), y), vec2(emX(fimM), y + h - 2), COR_DO_TRECHO, 0)
   end
   if titulo ~= '' then ui.dwriteDrawText(titulo, 10, vec2(x0 + 2, y + 2), CORES.fraco) end
   return emX
@@ -1767,8 +1929,8 @@ local function desenharAGrade(x0, y0, W, H)
 end
 
 -- Nos boxes, a janela cresce (e volta ao tamanho de antes na saída). A janela é achada pelo título.
-local function aumentarNosBoxes(aumentar)
-  if ac.accessAppWindow == nil or ac.getAppWindows == nil then return end
+local function aJanelaDoReplay()
+  if ac.accessAppWindow == nil or ac.getAppWindows == nil then return nil end
   if not rp.janela then
     local ok, janelas = pcall(ac.getAppWindows)
     if ok and type(janelas) == 'table' then
@@ -1779,23 +1941,247 @@ local function aumentarNosBoxes(aumentar)
         end
       end
     end
-    if not rp.janela then
-      if not rp.avisouTamanho then
-        log('replay: não achei a janela para aumentar nos boxes; o replay fica no tamanho dela')
-        rp.avisouTamanho = true
-      end
-      return
+    if not rp.janela and not rp.avisouTamanho then
+      log('replay: não achei a janela do replay; ela não abre sozinha nos boxes e fica no tamanho dela')
+      rp.avisouTamanho = true
     end
   end
+  return rp.janela
+end
+
+local function aumentarNosBoxes(aumentar)
+  local janela = aJanelaDoReplay()
+  if not janela then return end
   pcall(function()
     if aumentar then
-      rp.tamanhoOriginal = rp.janela:size()
-      rp.janela:resize(rp.tamanhoOriginal * REPLAY_AUMENTO_NOS_BOXES)
+      rp.tamanhoOriginal = janela:size()
+      janela:resize(rp.tamanhoOriginal * REPLAY_AUMENTO_NOS_BOXES)
     elseif rp.tamanhoOriginal then
-      rp.janela:resize(rp.tamanhoOriginal)
+      janela:resize(rp.tamanhoOriginal)
       rp.tamanhoOriginal = nil
     end
   end)
+end
+
+local function estaNosBoxes()
+  local okC, carro = pcall(ac.getCar, 0)
+  local okS, sim = pcall(ac.getSim)
+  return (okC and carro and (carro.isInPitlane or carro.isInPit)) or (okS and sim and sim.isPaused) or false
+end
+
+-- Pedido 45 (E.1): nos boxes ou com o jogo pausado, a janela do replay aparece, mesmo desligada, e volta
+-- como estava na saída. Fora do desenho da janela: uma janela desligada não é chamada.
+local function vigiarOsBoxes()
+  local noBox = estaNosBoxes() and true or false
+  if noBox == rp.vigiado then return end
+  local primeira = rp.vigiado == nil
+  rp.vigiado = noBox
+  if primeira and not noBox then return end
+  local janela = aJanelaDoReplay()
+  if janela then
+    pcall(function()
+      if noBox then
+        rp.estavaVisivel = janela:visible()
+        janela:setVisible(true)
+      elseif rp.estavaVisivel == false then
+        janela:setVisible(false)
+      end
+    end)
+  end
+  aumentarNosBoxes(noBox)
+  log('replay: ' .. (noBox and 'nos boxes: a janela abre' or 'fora dos boxes: a janela volta como estava'))
+end
+
+-- ── as voltas da sessão, nos boxes (pedido 45, Parte E) ─────────────────
+
+local LISTA_LINHA = 16
+local LISTA_CABECALHO = 34
+local LISTA_RODAPE = 18
+local LISTA_COLUNAS = 172        -- o número, o tempo e a diferença
+local ESTADOS_DA_VOLTA = { valida = 'válida', invalida = 'inválida', rodada = 'rodada', ia = 'IA', incompleta = 'incompleta' }
+
+local function lerAsVoltas(t)
+  if bx.semRota or t - bx.lidaEm < GRADE_LEITURA_S then return end
+  bx.lidaEm = t
+  pedirAoBackend(BACKEND .. '/api/radio/voltas', function(err, r)
+    if err or not r then return end
+    if r.status == 404 then
+      -- O backend do 0.5.0 e do 0.6.0 não tem a rota: a janela mostra o replay como hoje.
+      bx.semRota = true
+      log('replay: o backend não tem as voltas da sessão (/api/radio/voltas); a janela fica como antes')
+      return
+    end
+    if r.status ~= 200 then return end
+    local ok, dados = pcall(JSON.parse, r.body)
+    if ok and type(dados) == 'table' and type(dados.voltas) == 'table' then bx.lista = dados end
+  end)
+end
+
+-- Um replay por vez, só daqui (nos boxes ou com o jogo pausado).
+local function tocarAVolta(t, volta, curva)
+  if bx.carregando then return end
+  bx.carregando = true
+  bx.motivo = nil
+  local url = BACKEND .. '/api/radio/replay-da-volta/' .. tostring(volta) .. (curva and ('?curva=' .. curva) or '')
+  pedirAoBackend(url, function(err, r)
+    bx.carregando = false
+    if err or not r or r.status ~= 200 then
+      bx.motivo = 'o backend não entregou o replay da volta ' .. tostring(volta)
+      return
+    end
+    local ok, dados = pcall(JSON.parse, r.body)
+    if ok and type(dados) == 'table' and type(dados.curvas) == 'table' and #dados.curvas > 0 then
+      bx.dados, bx.volta, bx.curva = dados.curvas, volta, curva
+      bx.inicio = relogio()
+      bx.saltoS = nil
+    end
+  end)
+end
+
+-- E.6: o app do jogo só faz o pedido ao backend local; o backend avisa o app do Windows.
+local function abrirNoApp()
+  if not bx.volta then return end
+  local corpo = '{"volta":' .. tostring(bx.volta) .. (bx.curva and (',"curva":"' .. bx.curva .. '"') or '') .. '}'
+  bx.aviso, bx.avisoAte = 'pedindo ao app do Windows...', relogio() + 5
+  pedirAoBackend(BACKEND .. '/api/radio/abrir-no-app', function(err, r)
+    bx.avisoAte = relogio() + 8
+    if err or not r or r.status ~= 200 then
+      bx.aviso = 'o backend não respondeu ao pedido'
+      return
+    end
+    local ok, dados = pcall(JSON.parse, r.body)
+    if ok and type(dados) == 'table' and dados.entregue then
+      bx.aviso = 'aberto no app do Windows: o jogo pode ir para segundo plano'
+    else
+      bx.aviso = 'o app do Windows está fechado'
+    end
+    log('replay: abrir no app, volta ' .. tostring(bx.volta) .. ': ' .. tostring(bx.aviso))
+  end, corpo)
+end
+
+-- A curva em que "você" está, na volta inteira (a célula acesa).
+local function curvaNoTempo(c, t)
+  if type(c.curvasNaVolta) ~= 'table' or not tonumber(c.passoM) then return nil end
+  local d = distanciaNoTempo(c.linhas.voce, t, c.passoM)
+  for _, x in ipairs(c.curvasNaVolta) do
+    if x.inicioM <= x.fimM and d >= x.inicioM and d <= x.fimM then return x.curva end
+    if x.inicioM > x.fimM and (d >= x.inicioM or d <= x.fimM) then return x.curva end
+  end
+  return nil
+end
+
+-- A lista das voltas e a grade: um clique na volta toca a volta inteira; um clique numa célula toca
+-- a curva (ou, na volta inteira que está tocando, pula para a curva). A lista rola com a roda do mouse.
+local function desenharAsVoltas(t, x0, y0, W, H, acesa)
+  local g = bx.lista
+  ui.drawRectFilled(vec2(x0, y0), vec2(x0 + W, y0 + H), CORES.fundoDoMapa, 6)
+  local mouse = ui.mouseLocalPos()
+  local dentro = ui.windowHovered() and mouse.x >= x0 and mouse.x <= x0 + W and mouse.y >= y0 and mouse.y <= y0 + H
+  local clicou = dentro and ui.mouseClicked(ui.MouseButton.Left)
+
+  -- O botão, com o aviso de que o jogo vai para segundo plano.
+  local fechado = g.appDoWindowsAberto == false
+  local rotuloDoBotao = fechado and 'App do Windows fechado' or 'Abrir no app'
+  local larguraDoBotao = larguraDoRotulo(rotuloDoBotao) + 10
+  local bx0, by0, bx1, by1 = x0 + W - larguraDoBotao - 6, y0 + 2, x0 + W - 6, y0 + 17
+  local noBotao = dentro and mouse.x >= bx0 and mouse.x <= bx1 and mouse.y >= by0 and mouse.y <= by1
+  local podeAbrir = bx.volta ~= nil
+  ui.drawRectFilled(vec2(bx0, by0), vec2(bx1, by1), (noBotao and podeAbrir) and CORES.vermelho or CORES.painel, 3)
+  ui.dwriteDrawText(rotuloDoBotao, 11, vec2(bx0 + 7, by0 + 1), podeAbrir and CORES.texto or CORES.fraco)
+  if clicou and noBotao and podeAbrir then abrirNoApp() end
+  local aviso = (bx.aviso and t < bx.avisoAte) and bx.aviso
+    or (podeAbrir and 'abre esta volta no app do Windows; o jogo vai para segundo plano' or 'escolha uma volta ou uma célula')
+  ui.dwriteDrawText('Voltas da sessão · ' .. aviso, 10, vec2(x0 + 6, y0 + 4), CORES.apoio)
+
+  -- O cabeçalho das curvas.
+  local nc = #g.curvas
+  local cw = (W - LISTA_COLUNAS - 8) / math.max(nc, 1)
+  local fonte = math.min(10, cw / 3.6)
+  local colunaDasCelulas = x0 + LISTA_COLUNAS
+  for k, nome in ipairs(g.curvas) do
+    ui.dwriteDrawText(tostring(nome), fonte, vec2(colunaDasCelulas + (k - 1) * cw + 2, y0 + 19), CORES.fraco)
+  end
+  local topoDasLinhas, altura = y0 + LISTA_CABECALHO, H - LISTA_CABECALHO - LISTA_RODAPE
+  local conteudo = LISTA_LINHA * #g.voltas
+  local maximo = math.max(0, conteudo - altura)
+  if dentro then
+    local roda = tonumber(ui.mouseWheel()) or 0
+    if roda ~= 0 then bx.rolagem = bx.rolagem - roda * LISTA_LINHA * 2 end
+  end
+  bx.rolagem = math.max(0, math.min(maximo, bx.rolagem))
+  local recorte = ui.pushClipRect ~= nil and ui.popClipRect ~= nil
+  if recorte then ui.pushClipRect(vec2(x0, topoDasLinhas), vec2(x0 + W, topoDasLinhas + altura), true) end
+  local sobre = nil
+  for i, v in ipairs(g.voltas) do
+    local y = topoDasLinhas + (i - 1) * LISTA_LINHA - bx.rolagem
+    if y + LISTA_LINHA >= topoDasLinhas and y <= topoDasLinhas + altura then
+      local naLinha = dentro and mouse.y >= y and mouse.y < y + LISTA_LINHA and mouse.y >= topoDasLinhas and mouse.y < topoDasLinhas + altura
+      local selecionada = bx.volta == v.volta
+      if selecionada or naLinha then
+        ui.drawRectFilled(vec2(x0, y), vec2(x0 + W, y + LISTA_LINHA), comAlfa(CORES.branco, selecionada and 0.14 or 0.07), 0)
+      end
+      if naLinha then sobre = v end
+      local temReplay = v.temReplay == true
+      local corTexto = temReplay and CORES.texto or CORES.fraco
+      ui.dwriteDrawText('V' .. tostring(v.volta), 10, vec2(x0 + 6, y + 2), corTexto)
+      if tonumber(v.tempoS) then
+        ui.dwriteDrawText(tempoDeVolta(tonumber(v.tempoS)), 10, vec2(x0 + 32, y + 2), corTexto)
+      end
+      local d = tonumber(v.difMelhorS)
+      if d then
+        local melhor = g.melhorVolta == v.volta
+        ui.dwriteDrawText(melhor and 'melhor' or ((d >= 0 and '+' or '−') .. decimal(math.abs(d), 3)), 10, vec2(x0 + 82, y + 2),
+          melhor and CORES.ganho or CORES.apoio)
+      end
+      local nomeDoEstado = ESTADOS_DA_VOLTA[v.estado] or tostring(v.estado)
+      ui.dwriteDrawText(nomeDoEstado, 9, vec2(x0 + 124, y + 3), v.estado == 'valida' and CORES.fraco or CORES.perda)
+      local temCelulas = false
+      for k = 1, nc do
+        local p = tonumber(v.perdas[k])
+        if p then
+          temCelulas = true
+          local a = vec2(colunaDasCelulas + (k - 1) * cw + 1, y + 1)
+          local b = vec2(colunaDasCelulas + k * cw - 1, y + LISTA_LINHA - 1)
+          local forca = 0.15 + 0.75 * math.min(1, math.abs(p) / GRADE_PERDA_FORTE_S)
+          ui.drawRectFilled(a, b, comAlfa(p >= 0 and CORES.perda or CORES.ganho, forca), 2)
+          ui.dwriteDrawText((p < 0 and '−' or '') .. decimal(math.abs(p), 2), fonte, vec2(a.x + 2, y + 2),
+            math.abs(p) > 0.6 and CORES.fundo or CORES.texto)
+          local citada = false
+          for _, nome in ipairs(type(v.citadas) == 'table' and v.citadas or {}) do
+            if nome == g.curvas[k] then citada = true end
+          end
+          if citada then ui.drawRect(a, b, CORES.vermelho, 2, nil, 1.5) end
+          if selecionada and (acesa == g.curvas[k] or bx.curva == g.curvas[k]) then
+            ui.drawRect(a, b, CORES.branco, 2, nil, 2)
+          end
+        end
+      end
+      if not temCelulas then
+        ui.dwriteDrawText(corte(v.motivo, 70), 9, vec2(colunaDasCelulas + 2, y + 3), CORES.fraco)
+      end
+      if clicou and naLinha then
+        if temReplay then
+          local k = math.floor((mouse.x - colunaDasCelulas) / cw) + 1
+          local curva = (temCelulas and k >= 1 and k <= nc) and g.curvas[k] or nil
+          local daInteira = bx.dados and bx.dados[1] and bx.dados[1].voltaInteira and bx.volta == v.volta
+          if curva and daInteira then
+            -- Na volta inteira, um clique numa curva pula para ela.
+            for _, x in ipairs(bx.dados[1].curvasNaVolta or {}) do
+              if x.curva == curva then bx.saltoS = tonumber(x.tempoS) or 0; bx.inicio = t - REPLAY_ENQUADRAR_S - REPLAY_APROXIMAR_S end
+            end
+          else
+            tocarAVolta(t, v.volta, curva)
+          end
+        else
+          bx.motivo = 'volta ' .. tostring(v.volta) .. ': ' .. tostring(v.motivo)
+        end
+      end
+    end
+  end
+  if recorte then ui.popClipRect() end
+  local rodape = sobre and ('volta ' .. tostring(sobre.volta) .. ': ' .. tostring(sobre.motivo))
+    or bx.motivo or (bx.carregando and 'lendo o replay...' or 'clique na volta para a volta inteira; numa célula, para a curva')
+  ui.dwriteDrawText(corte(rodape, 110), 10, vec2(x0 + 6, y0 + H - LISTA_RODAPE + 3), CORES.fraco)
 end
 
 local desenharOReplay
@@ -1817,49 +2203,98 @@ desenharOReplay = function(dt)
   end
   local W, H = tamanho.x, tamanho.y
   registrarAsMedidas('replay', W, H)
-  local okC, carro = pcall(ac.getCar, 0)
-  local okS, sim = pcall(ac.getSim)
-  local noBox = (okC and carro and (carro.isInPitlane or carro.isInPit)) or (okS and sim and sim.isPaused) or false
+  local noBox = estaNosBoxes() and true or false
   if noBox ~= rp.noBox then
     rp.noBox = noBox
     rp.inicioNoBox = t
-    aumentarNosBoxes(noBox)
+    if not noBox then bx.dados, bx.volta, bx.curva, bx.motivo = nil, nil, nil, nil end
   end
-  local curvas, inicio, repetir = nil, 0, false
-  if noBox and rp.ultimaAnalise and rp.dados[rp.ultimaAnalise] then
+  local x0, y0, x1, y1 = areaVisivel(W, H)
+  -- Pedido 45: nos boxes, as voltas da sessão, se a rota existir.
+  local comAsVoltas = false
+  local altVoltas = 0
+  if noBox then
+    lerAsVoltas(t)
+    if bx.lista and not bx.semRota then
+      comAsVoltas = true
+      altVoltas = math.min((y1 - y0) * 0.5, LISTA_CABECALHO + LISTA_RODAPE + LISTA_LINHA * math.max(#bx.lista.voltas, 3))
+    end
+  end
+  local curvas, inicio, repetir, disponivel = nil, 0, false, nil
+  if comAsVoltas and bx.dados then
+    curvas, inicio, repetir = bx.dados, bx.inicio, true
+  elseif noBox and rp.ultimaAnalise and rp.dados[rp.ultimaAnalise] then
     curvas, inicio, repetir = rp.dados[rp.ultimaAnalise], rp.inicioNoBox, true
   elseif rp.atual and t < rp.ateQuando and rp.dados[rp.atual] then
     curvas, inicio = rp.dados[rp.atual], rp.inicio
+    disponivel = rp.ateQuando - rp.inicio
   end
-  if not curvas then return end
-  -- Cada curva citada, uma depois da outra (e de novo, nos boxes).
+  -- A roda do mouse muda o zoom, como no mapa aproximado (sobre a lista, ela rola a lista).
+  if ui.windowHovered() then
+    local m = ui.mouseLocalPos()
+    if not comAsVoltas or m.y < y1 - altVoltas then
+      local roda = tonumber(ui.mouseWheel()) or 0
+      if roda ~= 0 then rp.zoom = math.max(ZOOM_MINIMO_M, math.min(ZOOM_MAXIMO_M, rp.zoom * (roda > 0 and 0.87 or 1.15))) end
+    end
+  end
+  if not curvas then
+    if comAsVoltas then
+      local vazia = #bx.lista.voltas == 0
+      ui.drawRectFilled(vec2(x0, y0), vec2(x1, y1 - altVoltas), CORES.fundoDoMapa, 6)
+      caixa(vazia and 'nenhuma volta fechada nesta sessão' or 'escolha uma volta ou uma célula na lista para tocar o replay',
+        13, vec2(x0 + 14, y0 + 14), vec2(x1 - 10, y1 - altVoltas - 6), CORES.apoio)
+      desenharAsVoltas(t, x0, y1 - altVoltas, x1 - x0, altVoltas, nil)
+    elseif noBox then
+      ui.drawRectFilled(vec2(x0, y0), vec2(x1, y1), CORES.fundoDoMapa, 6)
+      caixa('nenhuma volta fechada nesta sessão', 13, vec2(x0 + 14, y0 + 14), vec2(x1 - 10, y1 - 6), CORES.apoio)
+    end
+    return
+  end
+  -- Cada curva citada, uma depois da outra (e de novo, nos boxes). O plano do tempo de cada uma é
+  -- feito uma vez: a câmera lenta só entra se couber no que resta da janela de rádio.
+  if rp.planosDe ~= curvas or rp.planosCom ~= disponivel then
+    rp.planosDe, rp.planosCom, rp.planos = curvas, disponivel, {}
+    local resta = disponivel
+    for k, c in ipairs(curvas) do
+      local p = planoDoTempo(c, resta)
+      rp.planos[k] = p
+      if resta then resta = math.max(0, resta - p.totalReal - REPLAY_PAUSA_NO_FIM_S) end
+    end
+  end
   local total = 0
-  for _, c in ipairs(curvas) do total = total + (tonumber(c.duracaoS) or 0) + REPLAY_PAUSA_NO_FIM_S end
+  for _, p in ipairs(rp.planos) do total = total + p.totalReal + REPLAY_PAUSA_NO_FIM_S end
   local tc = t - inicio
   if repetir and total > 0 then tc = tc % total end
   local i = 1
-  while i < #curvas and tc > (tonumber(curvas[i].duracaoS) or 0) + REPLAY_PAUSA_NO_FIM_S do
-    tc = tc - (tonumber(curvas[i].duracaoS) or 0) - REPLAY_PAUSA_NO_FIM_S
+  while i < #curvas and tc > rp.planos[i].totalReal + REPLAY_PAUSA_NO_FIM_S do
+    tc = tc - rp.planos[i].totalReal - REPLAY_PAUSA_NO_FIM_S
     i = i + 1
   end
   local c = curvas[i]
-  local x0, y0, x1, y1 = areaVisivel(W, H)
-  local tempo = math.min(tc, tonumber(c.duracaoS) or 0)
+  local tempo = math.min(tempoNoReplay(rp.planos[i], tc), tonumber(c.duracaoS) or 0)
+  if comAsVoltas and bx.saltoS then
+    -- A volta inteira depois de um clique numa curva: o tempo anda a partir dela.
+    tempo = math.min(bx.saltoS + math.max(0, tc - REPLAY_ENQUADRAR_S - REPLAY_APROXIMAR_S), tonumber(c.duracaoS) or 0)
+  end
   -- Pedido 43: nos boxes, a grade da sessão embaixo (se o replay ainda ficar com o mínimo).
-  local altGrade = 0
-  if noBox then
+  local altGrade = altVoltas
+  if noBox and not comAsVoltas then
     lerAGrade(t)
     altGrade = alturaDaGrade()
     if (y1 - y0) - altGrade < REPLAY_MINIMO then altGrade = 0 end
   end
   local d = dividirAJanela(x0, y0, x1 - x0, y1 - y0 - altGrade, temVisuais(c))
   local r = d.replay
-  desenharACurva(c, tempo, r[1], r[2], r[3], r[4])
+  desenharACurva(c, tempo, tc, r[1], r[2], r[3], r[4])
   if d.pedal then desenharOPedal(c, tempo, d.pedal) end
   if d.diferenca then desenharADiferenca(c, tempo, d.diferenca) end
   if d.velocidade then desenharAVelocidade(c, tempo, d.velocidade) end
-  if altGrade > 0 then desenharAGrade(x0, y1 - altGrade, x1 - x0, altGrade) end
-  if noBox then
+  if comAsVoltas then
+    desenharAsVoltas(t, x0, y1 - altVoltas, x1 - x0, altVoltas, curvaNoTempo(c, tempo))
+  elseif altGrade > 0 then
+    desenharAGrade(x0, y1 - altGrade, x1 - x0, altGrade)
+  end
+  if noBox and not comAsVoltas then
     ui.dwriteDrawText('nos boxes: a última análise, em repetição', 11, vec2(r[1] + 10, r[2] + r[4] - 18), CORES.apoio)
   end
 end
@@ -1979,5 +2414,6 @@ else
     setInterval(acompanharAVolta, 0.25)
     setInterval(gravarORastro, RASTRO_PERIODO_S)
     setInterval(amostrarOFps, FPS_AMOSTRA_S)
+    setInterval(function() pcall(vigiarOsBoxes) end, 0.5)
   end
 end

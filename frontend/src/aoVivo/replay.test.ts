@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  QuadroDeRotulos, cameraDaCurva, citadasNaVolta, diferencaAcumulada, distanciaNoTempo, dividirAArea, faixasDoPedal,
+  APROXIMAR_S, ENQUADRAR_S, QuadroDeRotulos, cameraDaCurva, cameraDePerto, citadasNaVolta, curvaNoTempo, planoDoTempo, tempoNoReplay, trechoMarcado, diferencaAcumulada, distanciaNoTempo, dividirAArea, faixasDoPedal,
   forcaDaCelula, posicaoNoTempo, serieDaDiferenca, temVisuais, textoDaCelula, textoDaFreada, textoDaMinima, textoDaPerda, textoDaVoltaDeFora,
   textoDoAlto, textoDoTracado, type CurvaDoReplay, type GradeDaSessao, type PontoDoReplay,
 } from './replay';
@@ -165,5 +165,77 @@ describe('os visuais e os números da voz (pedido 43)', () => {
     expect(textoDaVoltaDeFora(grade.fora[0])).toBe('volta 5: rodada ou saída de pista: perdeu 26,5 s na C12 (1:55,447)');
     expect(textoDaVoltaDeFora({ volta: 12, tempoS: null, motivo: 'incompleta', citadas: ['C11', 'C12'] }))
       .toBe('volta 12: incompleta; citada: C11, C12');
+  });
+});
+
+describe('o replay de perto (pedido 45, Parte D)', () => {
+  const W = 300;
+  const H = 300;
+  const dentro = (p: [number, number]) => p[0] >= 0 && p[0] <= W && p[1] >= 0 && p[1] <= H;
+
+  it('começa na curva inteira e depois aproxima', () => {
+    const cheia = cameraDaCurva(curva, W, H);
+    expect(cameraDePerto(curva, 0, 0, W, H).k).toBeCloseTo(cheia.k, 6);
+    const perto = cameraDePerto(curva, 0, ENQUADRAR_S + APROXIMAR_S, W, H);
+    expect(perto.k).toBeGreaterThan(cheia.k);
+    // 80 m no lado menor da area util
+    expect(perto.k).toBeCloseTo(Math.min(W - 36, H - 36 - 26) / 80, 6);
+  });
+
+  it('acompanha o meio dos dois carros, com a orientação fixa', () => {
+    const a = cameraDePerto(curva, 1, 5, W, H);
+    const b = cameraDePerto(curva, 3, 5, W, H);
+    expect(a.ang).toBe(b.ang);
+    const [vx, vz] = posicaoNoTempo(curva.linhas.voce, 3);
+    const [rx, rz] = posicaoNoTempo(curva.linhas.referencia, 3);
+    const v = b.tela(vx, vz);
+    const r = b.tela(rx, rz);
+    expect((v[0] + r[0]) / 2).toBeCloseTo(b.ax, 6);
+    expect((v[1] + r[1]) / 2).toBeCloseTo(b.ay, 6);
+  });
+
+  it('os dois carros sempre na tela: se eles se afastam, a câmera se afasta, até a curva inteira', () => {
+    const longe: CurvaDoReplay = { ...curva, duracaoS: 40,
+      linhas: { voce: linha(-7.9, 5), referencia: linha(0, 50) } };
+    const cheia = cameraDaCurva(longe, W, H);
+    for (const t of [0, 1, 2, 3, 4, 10, 40]) {
+      const cam = cameraDePerto(longe, t, 99, W, H);
+      expect(cam.k).toBeGreaterThanOrEqual(cheia.k - 1e-9);
+      const [vx, vz] = posicaoNoTempo(longe.linhas.voce, t);
+      const [rx, rz] = posicaoNoTempo(longe.linhas.referencia, t);
+      expect(dentro(cam.tela(vx, vz))).toBe(true);
+      expect(dentro(cam.tela(rx, rz))).toBe(true);
+    }
+  });
+
+  it('marca o trecho da causa e o passa em câmera lenta quando o tempo deixa', () => {
+    const c: CurvaDoReplay = { ...curva, passoM: 2, causa: { trecho: 'freada', inicioM: 40, fimM: 80, perdaS: 0.5, medida: 'freada', valor: -15 } };
+    expect(trechoMarcado(c)?.nome).toBe('trecho da causa');
+    const p = planoDoTempo(c);
+    expect(p.lento).toBe(true);
+    expect(tempoNoReplay(p, 0.5)).toBe(0);                 // a curva inteira, parada
+    expect(tempoNoReplay(p, ENQUADRAR_S + p.lentoDe)).toBeCloseTo(p.lentoDe, 6);
+    expect(tempoNoReplay(p, ENQUADRAR_S + p.lentoDe + 0.2)).toBeCloseTo(p.lentoDe + 0.1, 6);   // metade da velocidade
+    const fim = ENQUADRAR_S + p.lentoDe + 2 * (p.lentoAte - p.lentoDe);
+    expect(tempoNoReplay(p, fim + 0.3)).toBeCloseTo(p.lentoAte + 0.3, 6);
+  });
+
+  it('na reta, sem tempo, não fica lento e começa mais perto do trecho', () => {
+    const c: CurvaDoReplay = { ...curva, duracaoS: 12, passoM: 2,
+      linhas: { voce: linha(-7.9, 200 / 12), referencia: linha(0, 18) },
+      causa: { trecho: 'saida', inicioM: 160, fimM: 190, perdaS: 0.3, medida: 'saida', valor: -9 } };
+    const p = planoDoTempo(c, 6);
+    expect(p.lento).toBe(false);
+    expect(p.t0).toBeGreaterThan(0);
+    expect(p.t0).toBeLessThanOrEqual(p.lentoDe);
+    expect(p.totalReal).toBeLessThanOrEqual(6 + 1e-6);
+  });
+
+  it('a volta inteira: a célula acesa é a da curva em que você está', () => {
+    const c: CurvaDoReplay = { ...curva, curva: null, voltaInteira: true, passoM: 2, tempoDaVoltaS: 89.518,
+      curvasNaVolta: [{ curva: 'C01', inicioM: 40, fimM: 80, tempoS: 1, perdaS: 0.2 }] };
+    expect(curvaNoTempo(c, 0)).toBeNull();
+    expect(curvaNoTempo(c, 60 / 45)).toBe('C01');
+    expect(textoDoAlto(c)).toContain('volta 17 · 1:29,518');
   });
 });

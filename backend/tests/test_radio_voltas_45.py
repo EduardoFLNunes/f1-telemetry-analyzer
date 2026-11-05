@@ -187,3 +187,138 @@ def test_a_tendencia_da_analise():
     assert frase_da_tendencia(89.0, 89.5) == "Média 5 décimos mais rápida que as 3 anteriores."
     assert frase_da_tendencia(90.2, 89.0) == "Média 1,2 segundo mais lenta que as 3 anteriores."
     assert frase_da_tendencia(89.0, 89.04) is None
+
+
+# ------------------------------------------------------------- Parte E ---
+
+
+def _radio_com_voltas(tmp_path):
+    import numpy as np
+    from tests.test_radio import L, _Pista, _pista_de_teste_com_uma_curva, _radio, _grade_de_teste
+
+    track, pista, s = _pista_de_teste_com_uma_curva()
+    estado = _Pista()
+    tempo_ref = float(s[-1] / 50.0)
+    estado.referencia = {**_grade_de_teste(s, 50.0, 0.0, 395, 430, 110.0), "tempoS": tempo_ref}
+    radio = _radio(tmp_path, estado)
+    radio._geometria = pista
+    radio._referencia = lambda: {"tipo": "volta_ia", "tempoS": tempo_ref}
+
+    def guardar(numero, velocidade, estado_da_volta="valida", motivo="válida", perda=0.3):
+        g = _grade_de_teste(s, velocidade, 1.0, 385, 428, 100.0)
+        tempo = float(s[-1] / velocidade)
+        radio._grade_da_ultima = {"volta": numero, "grade": g, "tempoS": tempo}
+        medidas = [{"curva": "C03", "lado": "esquerda", "perdaS": perda, "freadaM": -20.0, "minimaKmh": -3.0, "tracadoM": 0.2,
+                    "saidaKmh": 0.0, "trechos": {"reta": 0.0, "freada": perda, "minima": 0.0, "saida": 0.0}}]
+        radio._guardar_a_volta({"volta": numero, "tempoS": tempo}, estado_da_volta, motivo, medidas)
+        return tempo
+
+    return radio, guardar, np, L
+
+
+def test_a_lista_tem_todas_as_voltas_com_o_estado_e_o_motivo(tmp_path):
+    radio, guardar, _, _ = _radio_com_voltas(tmp_path)
+    assert radio.voltas_da_sessao()["mensagem"] == "nenhuma volta fechada nesta sessão"
+    tempo = guardar(2, 45.0)
+    radio._melhor_s, radio._melhor_volta = tempo, 2
+    guardar(3, 40.0, "rodada", "fora da análise: rodada (perdeu 7,0 s na C03)", 7.0)
+    radio._guardar_a_volta({"volta": 5, "tempoS": 95.0}, "ia", "a IA pilotou parte da volta", None)
+    lista = radio.voltas_da_sessao()
+    assert [v["volta"] for v in lista["voltas"]] == [2, 3, 4, 5]
+    assert lista["melhorVolta"] == 2 and lista["mensagem"] is None
+    por = {v["volta"]: v for v in lista["voltas"]}
+    assert por[2]["estado"] == "valida" and por[2]["difMelhorS"] == 0 and por[2]["temReplay"] is True
+    assert por[3]["estado"] == "rodada" and por[3]["temReplay"] is True          # a rodada tambem toca
+    assert por[5]["estado"] == "ia" and por[5]["temReplay"] is False             # a da IA fica fora
+    assert por[4]["tempoS"] is None and "não fechou na linha" in por[4]["motivo"]  # o buraco tem motivo
+
+
+def test_o_replay_de_qualquer_volta_e_de_qualquer_curva(tmp_path):
+    radio, guardar, np, _ = _radio_com_voltas(tmp_path)
+    guardar(2, 45.0)
+    guardar(3, 40.0, "rodada", "fora da análise: rodada", 7.0)
+    curva = radio.replay_da_volta(2, "C03")["curvas"][0]
+    assert curva["curva"] == "C03" and curva["volta"] == 2 and curva["aviso"] is None
+    assert curva["causa"]["trecho"] == "freada"
+    assert curva["textoDaVoz"] == "Curva 3: 3 décimos, freou 20 metros antes da IA."
+    inteira = radio.replay_da_volta(2)["curvas"][0]
+    assert inteira["voltaInteira"] is True and inteira["curva"] is None
+    assert len(inteira["linhas"]["voce"]) == radio._geometria.track.size
+    assert next(c for c in inteira["curvasNaVolta"] if c["curva"] == "C03")["perdaS"] == 0.3
+    tempos = [p[2] for p in inteira["linhas"]["voce"]]
+    assert all(b >= a for a, b in zip(tempos, tempos[1:]))
+    assert radio.replay_da_volta(3, "C03")["curvas"][0]["aviso"] == "fora da análise: rodada"
+    assert radio.replay_da_volta(99) is None
+    # a volta guardada ocupa pouco: 5 linhas em float32
+    assert radio._voltas_da_sessao[0]["grade"]["elapsed"].dtype == np.float32
+
+
+def test_a_melhor_da_sessao_para_o_minimapa(tmp_path):
+    radio, guardar, _, _ = _radio_com_voltas(tmp_path)
+    assert radio.melhor_da_sessao() == {"disponivel": False}
+    tempo = guardar(2, 45.0)
+    radio._melhor_s, radio._melhor_volta = tempo, 2
+    dados = radio.melhor_da_sessao()
+    assert dados["disponivel"] and dados["volta"] == 2 and len(dados["pontos"][0]) == 3
+
+
+def test_recorde_so_contra_o_store_e_sem_ele_e_melhor_volta(tmp_path):
+    radio, _, _, _ = _radio_com_voltas(tmp_path)
+    assert radio._melhor_da_volta(90.0, True)["situacao"] == "melhor"
+    radio._melhor_do_store = lambda: 89.0
+    assert radio._melhor_da_volta(90.0, True)["situacao"] == "melhor"
+    r = radio._melhor_da_volta(88.5, True)
+    assert r["situacao"] == "recorde" and r["difS"] == 0.5
+    radio._melhor_s = 90.0
+    assert radio._melhor_da_volta(91.0, True) == {"situacao": "atras", "difS": 1.0, "melhorS": 90.0}
+    # a volta que nao conta nunca e a melhor
+    assert radio._melhor_da_volta(80.0, False)["situacao"] == "atras"
+
+
+def test_a_curva_que_nao_coube_vai_numa_mensagem_propria_e_sai_da_fila_se_passar(tmp_path):
+    from tests.test_radio import _Pista, _radio, _esperar_o_audio
+
+    estado = _Pista()
+    # Toda fala do resumo com a causa passa do limite: fica a que nao tem a curva.
+    radio = _radio(tmp_path, estado, falar=lambda texto, destino: 9.0 if "Curva" in texto else 2.0)
+    pior = {"curva": "C02", "lado": "direita", "perdaS": 0.7,
+            "causa": {"trecho": "freada", "perdaTrechoS": 0.5, "medida": "freada", "valor": -15.0}}
+    m = mensagem_de_resumo(7, 89.0, 84.8, "volta_ia", pior, {"situacao": "atras", "difS": 0.3, "melhorS": 88.7})
+    m["_curvaDaVolta"] = pior
+    radio._pendentes.append(radio._nova(m))
+    _esperar_o_audio(radio)
+    resumo = radio._pendentes[0]
+    assert "Curva" not in resumo["fala"]
+    estado.s = 800.0
+    radio.on_frame({"speedKmh": 100.0})
+    assert radio.contagem["curvaEmMensagemPropria"] == 1
+    propria = radio._pendentes[-1]
+    assert propria["origem"] == "curva" and propria["_curvaS"] == 2000.0
+    # passou da curva antes de achar uma janela: sai da fila
+    radio._ocupado_ate = estado.agora + 1000.0
+    for s in (1900.0, 2100.0):
+        estado.s = s
+        radio.on_frame({"speedKmh": 100.0})
+    assert radio.contagem["curvaSaiuDaFila"] == 1
+    assert not any(x.get("origem") == "curva" for x in radio._pendentes)
+
+
+def test_o_pedido_para_abrir_o_app(tmp_path, monkeypatch):
+    import main
+    from core.websocket_server import manager
+    from routers import radio as rota
+
+    radio, _, _, _ = _radio_com_voltas(tmp_path)
+    monkeypatch.setattr(main, "radio_do_engenheiro", radio)
+    monkeypatch.setattr(manager, "active_connections", [])
+    # o app fechado: o botao diz isso
+    assert asyncio.run(rota.post_abrir_no_app({"volta": 2})) == {"entregue": False, "motivo": "o app do Windows está fechado"}
+    enviados = []
+
+    class Cliente:
+        async def send_text(self, texto):
+            enviados.append(texto)
+
+    monkeypatch.setattr(manager, "active_connections", [Cliente()])
+    assert asyncio.run(rota.post_abrir_no_app({"volta": 2, "curva": "C03"}))["entregue"] is True
+    assert '"type":"abrir_replay"' in enviados[0] and '"curva":"C03"' in enviados[0]

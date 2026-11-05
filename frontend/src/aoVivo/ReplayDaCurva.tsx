@@ -13,6 +13,9 @@
  *   coach mediu) e o trecho da fala, uma faixa clara na pista e nos visuais; sem o traçado;
  * - **os visuais sob a animação:** a faixa do pedal (C.3), a diferença acumulada (C.2) e a
  *   velocidade (C.1), pela distância desde a entrada, com o cursor de cada carro.
+ *
+ * Pedido 45: a câmera acompanha os carros (`cameraDePerto`, a mesma da janela do jogo); a roda do
+ * mouse muda o zoom; o trecho da causa em câmera lenta; os números da voz no alto.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
@@ -20,9 +23,9 @@ import { drawTrackSurface } from '../components/map/OverlayRenderer';
 import { lerCamadasDaPista, useLeitura } from '../volta/dados';
 import { transformarCamadas } from '../volta/projecao';
 import {
-  ALTURAS_DOS_VISUAIS, QuadroDeRotulos, cameraDaCurva, distanciaNoTempo, dividirAArea,
-  faixasDoPedal, indicesDoTrecho, posicaoNoTempo, serieDaDiferenca, temVisuais, textoDaFreada, textoDaMinima, textoDoAlto,
-  textoDoTracado, type Area, type CurvaDoReplay, type DadosDoReplay, type LugarDoRotulo,
+  ALTURAS_DOS_VISUAIS, QuadroDeRotulos, ZOOM_DO_REPLAY_M, ZOOM_MAXIMO_M, ZOOM_MINIMO_M, cameraDePerto, distanciaNoTempo, dividirAArea,
+  faixasDoPedal, indicesDoTrecho, planoDoTempo, posicaoNoTempo, serieDaDiferenca, temVisuais, tempoNoReplay, textoDaFreada, textoDaMinima,
+  textoDoAlto, textoDoTracado, trechoMarcado, type Area, type CurvaDoReplay, type DadosDoReplay, type LugarDoRotulo,
 } from './replay';
 
 const ALTURA_DO_REPLAY = 250;
@@ -39,9 +42,11 @@ const FONTE = '600 11px "Barlow", "Segoe UI", sans-serif';
 const FONTE_PEQUENA = '600 10px "Barlow", "Segoe UI", sans-serif';
 const COLUNA_DOS_NOMES = 34;     // à esquerda dos visuais: "você", "IA" e os títulos
 
-function desenharACurva(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: number, a: Area, camadas: any) {
+function desenharACurva(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: number, a: Area, camadas: any,
+  real: number, zoomM: number) {
   const { x: X, y: Y, w: W, h: H } = a;
-  const cam0 = cameraDaCurva(c, W, H);
+  const topo = c.textoDaVoz ? 44 : 26;
+  const cam0 = cameraDePerto(c, t, real, W, H, zoomM, 18, topo);
   const tela = (x: number, z: number): [number, number] => {
     const [sx, sy] = cam0.tela(x, z);
     return [X + sx, Y + sy];
@@ -83,7 +88,7 @@ function desenharACurva(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: numb
   linha(c.linhas.referencia, COR_REF, 2.5);
   linha(c.linhas.voce, COR_VOCE, 2.5);
   // Os pontos que os rótulos não cobrem: os dois carros, as freadas, as mínimas e o traçado.
-  const q = new QuadroDeRotulos([X + 2, Y + 26, X + W - 2, Y + H - 2]);
+  const q = new QuadroDeRotulos([X + 2, Y + topo, X + W - 2, Y + H - 2]);
   const [rx, rz] = posicaoNoTempo(c.linhas.referencia, t);
   const [vx, vz] = posicaoNoTempo(c.linhas.voce, t);
   const [rsx, rsy] = tela(rx, rz);
@@ -99,6 +104,8 @@ function desenharACurva(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: numb
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   const rotulo = (texto: string, x: number, y: number, cor: string, preferido: LugarDoRotulo) => {
+    // Pedido 45 (D.6): a marca fora da tela não ganha rótulo: os números da voz estão no alto.
+    if (x < X || x > X + W || y < Y + topo || y > Y + H) return;
     const w = ctx.measureText(texto).width + 6;
     const [bx, by, longe] = q.colocar(x, y, w, 15, preferido);
     if (longe) {
@@ -117,7 +124,7 @@ function desenharACurva(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: numb
   if (trecho) {
     const meio = c.linhas.referencia[Math.round((trecho[0] + trecho[1]) / 2)];
     const [x, y] = tela(meio[0], meio[1]);
-    rotulo('trecho da fala', x, y, '#f2f4f5', 'esquerda');
+    rotulo(trechoMarcado(c)?.nome ?? 'trecho', x, y, '#f2f4f5', 'esquerda');
   }
   // As freadas: um traço atravessando cada linha, e a distância entre elas.
   const traco = (m: { x: number; z: number } | null, cor: string) => {
@@ -186,11 +193,16 @@ function desenharACurva(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: numb
   rotulo('você', vsx, vsy, '#ffffff', 'esquerdaAbaixo');
   // O alto: a curva, a volta e o tempo (na frase do coach, o da voz).
   ctx.fillStyle = 'rgba(8,9,11,0.8)';
-  ctx.fillRect(X, Y, W, 24);
+  ctx.fillRect(X, Y, W, topo - 2);
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#f2f4f5';
   ctx.font = '600 12px "Barlow", "Segoe UI", sans-serif';
   ctx.fillText(textoDoAlto(c), X + 10, Y + 16);
+  if (c.textoDaVoz) {
+    // Pedido 45 (D.6): os números da voz, mesmo com a marca fora da tela.
+    ctx.fillStyle = '#ffa24a';
+    ctx.fillText(c.textoDaVoz, X + 10, Y + 34);
+  }
   ctx.restore();
 }
 
@@ -202,9 +214,10 @@ function moldura(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, a: Area, titul
   const largura = a.w - COLUNA_DOS_NOMES - 8;
   const total = totalM ?? Math.max((c.linhas.voce.length - 1) * (c.passoM ?? 1), 1);
   const x = (d: number) => x0 + (largura * d) / total;
-  if (c.voz) {
+  const marcado = trechoMarcado(c);
+  if (marcado) {
     ctx.fillStyle = COR_TRECHO;
-    ctx.fillRect(x(c.voz.inicioM), a.y, x(c.voz.fimM) - x(c.voz.inicioM), a.h - 2);
+    ctx.fillRect(x(marcado.inicioM), a.y, x(marcado.fimM) - x(marcado.inicioM), a.h - 2);
   }
   ctx.font = FONTE_PEQUENA;
   ctx.textBaseline = 'top';
@@ -348,9 +361,10 @@ function desenharAVelocidade(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t:
   cursores(ctx, c, t, a, x);
 }
 
-export function desenhar(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: number, W: number, H: number, camadas: any) {
+export function desenhar(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: number, W: number, H: number, camadas: any,
+  real = Number.POSITIVE_INFINITY, zoomM = ZOOM_DO_REPLAY_M) {
   const div = dividirAArea(0, 0, W, H, temVisuais(c));
-  desenharACurva(ctx, c, t, div.replay, camadas);
+  desenharACurva(ctx, c, t, div.replay, camadas, real, zoomM);
   if (div.pedal) desenharOPedal(ctx, c, t, div.pedal);
   if (div.diferenca) desenharADiferenca(ctx, c, t, div.diferenca);
   if (div.velocidade) desenharAVelocidade(ctx, c, t, div.velocidade);
@@ -362,20 +376,30 @@ export function alturaDoQuadro(dados: DadosDoReplay | null): number {
   return ALTURA_DO_REPLAY + (com ? ALTURAS_DOS_VISUAIS.pedal + ALTURAS_DOS_VISUAIS.diferenca + ALTURAS_DOS_VISUAIS.velocidade : 0);
 }
 
-export const ReplayDaCurva: React.FC<{ url: string }> = ({ url }) => {
+export const ReplayDaCurva: React.FC<{ url: string; alturaFixa?: number; repetir?: boolean;
+  aoLer?: (d: DadosDoReplay) => void; inicioS?: number }> = ({ url, alturaFixa, repetir, aoLer, inicioS }) => {
   const [dados, setDados] = useState<DadosDoReplay | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [vez, setVez] = useState(0);
   const camadas = useLeitura('camadas', lerCamadasDaPista);
   const tela = useRef<HTMLCanvasElement | null>(null);
-  const altura = alturaDoQuadro(dados);
+  const zoom = useRef(ZOOM_DO_REPLAY_M);
+  const altura = alturaFixa ?? alturaDoQuadro(dados);
 
   useEffect(() => {
     let vivo = true;
-    api.getRadioReplay(url).then((d) => vivo && setDados(d)).catch(() => vivo && setErro('o backend não entregou o replay'));
+    setDados(null);
+    setErro(null);
+    api.getRadioReplay(url).then((d) => {
+      if (!vivo) return;
+      setDados(d);
+      aoLer?.(d);
+    }).catch(() => vivo && setErro('o backend não entregou o replay'));
     return () => {
       vivo = false;
     };
+    // `aoLer` muda a cada desenho da tela; o que pede de novo é só o endereço.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   useEffect(() => {
@@ -389,29 +413,37 @@ export const ReplayDaCurva: React.FC<{ url: string }> = ({ url }) => {
     cv.height = Math.round(altura * d);
     ctx.setTransform(d, 0, 0, d, 0, 0);
     const curvas = dados.curvas;
+    const planos = curvas.map((c) => planoDoTempo(c));
+    if (inicioS !== undefined && planos[0]) planos[0] = { ...planos[0], t0: inicioS, lento: false };
+    const total = planos.reduce((s, p) => s + p.totalReal + PAUSA_NO_FIM_S, 0);
     const inicio = performance.now();
     let quadro = 0;
     const passo = () => {
       let t = (performance.now() - inicio) / 1000;
+      if (repetir && total > 0) t %= total;
       let i = 0;
-      while (i < curvas.length - 1 && t > curvas[i].duracaoS + PAUSA_NO_FIM_S) {
-        t -= curvas[i].duracaoS + PAUSA_NO_FIM_S;
+      while (i < curvas.length - 1 && t > planos[i].totalReal + PAUSA_NO_FIM_S) {
+        t -= planos[i].totalReal + PAUSA_NO_FIM_S;
         i += 1;
       }
       ctx.setTransform(d, 0, 0, d, 0, 0);
       ctx.clearRect(0, 0, W, altura);
-      desenhar(ctx, curvas[i], Math.min(t, curvas[i].duracaoS), W, altura, camadas.dado);
-      if (i < curvas.length - 1 || t < curvas[i].duracaoS + PAUSA_NO_FIM_S) quadro = requestAnimationFrame(passo);
+      desenhar(ctx, curvas[i], Math.min(tempoNoReplay(planos[i], t), curvas[i].duracaoS), W, altura, camadas.dado, t, zoom.current);
+      if (repetir || i < curvas.length - 1 || t < planos[i].totalReal + PAUSA_NO_FIM_S) quadro = requestAnimationFrame(passo);
     };
     quadro = requestAnimationFrame(passo);
     return () => cancelAnimationFrame(quadro);
-  }, [dados, vez, camadas.dado, altura]);
+  }, [dados, vez, camadas.dado, altura, repetir, inicioS]);
 
   if (erro) return <p className="texto-fraco" style={{ margin: 0 }}>Replay: {erro}.</p>;
   if (!dados) return <p className="texto-fraco" style={{ margin: 0 }}>Lendo o replay da curva…</p>;
   return (
     <div className="replay-da-curva" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <canvas ref={tela} style={{ width: '100%', height: altura, borderRadius: 8 }}
+        onWheel={(e) => {
+          // Pedido 45 (D.5): a roda do mouse muda o zoom, como no mapa aproximado.
+          zoom.current = Math.max(ZOOM_MINIMO_M, Math.min(ZOOM_MAXIMO_M, zoom.current * (e.deltaY > 0 ? 1.15 : 1 / 1.15)));
+        }}
         aria-label="Replay da curva: você e a referência, com o pedal, a diferença acumulada e a velocidade" />
       <button type="button" className="botao botao--pequeno" style={{ alignSelf: 'flex-start' }} onClick={() => setVez((v) => v + 1)}>
         Repetir o replay
