@@ -1,163 +1,297 @@
 # Relatório parcial do pedido 45: o replay de perto, as voltas nos boxes e o rádio que diz onde e por quê
 
-- **Pedido:** `docs/prompts/2026-11-02_45_replay-de-perto-e-radio-que-ensina.md`.
-- **Situação:** **parado antes de fechar a Parte F, porque o limite de uso da sessão acabou.** A Parte G (o teste no jogo) ainda não foi liberada, e não há merge nem envio.
+- **Pedido:** `docs/prompts/2026-11-02_45_replay-de-perto-e-radio-que-ensina.md`, com a sua decisão de 04/11 no item B.1.
+- **Situação:** **parado na Parte G, para o teste no jogo com você.** Sem merge em `develop`. O envio é você quem faz: os comandos estão no fim.
 - **Branch:** `etapa/replay-e-radio-que-ensina`, a partir de `develop` em `bd04b93e`.
 - **Commits:**
   - em `develop`: `bd04b93e` Pedido 45: texto do pedido, atualizacao de 04/11 do pedido 42 e backlog;
   - `29dec5ba` Parte B: um numero so para cada volta, a primeira volta com as medidas e o erro do WebSocket;
   - `460acdc9` Parte C: os cortes novos, antes de rodar as sessoes;
-  - `e2ebc931` Parte C e rotas da Parte E;
-  - `7c9d2d5e` Partes C.4, D e E;
+  - `e2ebc931` Parte C e rotas da Parte E: o radio diz onde e por que; as voltas da sessao ficam guardadas;
+  - `7c9d2d5e` Partes C.4, D e E: a camera de perto, os boxes, o botao e a diferenca para a melhor;
   - `3fc07fa0` Parte H e E.3: documentacao, ADR 0027, versao 0.7.0 e as voltas que nao comecam na linha;
-  - o commit deste relatório.
+  - `6c87e3ed` Relatorio parcial do pedido 45 (a primeira parada);
+  - `9c1f9349` B.1: a regra dos boxes do coach so vale no pit lane (sua decisao de 04/11);
+  - `d6594970` B.2: a volta com o carro movido no meio nao repete o numero na lista;
+  - o commit deste relatório: "Pedido 45: o relatorio da parada da Parte G, as previas e a documentacao corrigida".
 - **Arquivos de handoff** (`docs/handoff/2026-11-02_45_replay-de-perto-e-radio-que-ensina…`):
   - `_relatorio.md` (este);
-  - `.c6.json` (o rádio antes e depois, fala a fala; **gerado antes de as voltas que não começam na linha entrarem na lista**);
-  - `_incompletas.py` e `_incompletas.json` (B.1, hoje e com a proposta);
-  - `_duracao_das_falas.json` (a voz de verdade, variante a variante);
-  - `_conferir_lua.txt`;
-  - `_previa.py`, `_previa_camera_c01.png`, `_c06.png` e `_c12.png`;
-  - `_abrir_no_app_v7_c01.jpg` e `_abrir_no_app_v7_inteira.jpg`.
+  - `_radio_antes_e_depois.json` (o C.6: as 4 sessões, fala a fala, com a voz de verdade);
+  - `_duracao_das_falas.json` (quanto dura cada variante);
+  - `_incompletas.py` e `_incompletas.json` (o B.1, rodado **antes** da regra nova: com ela, as duas colunas do script ficam iguais);
+  - `_previa.py`, `_previa_camera.png` (a folha inteira), `_previa_camera_c01.png`, `_c06.png`, `_c12.png` e `_previa_lista_01-11.jpg`;
+  - `_abrir_no_app_v7_c01.jpg` e `_abrir_no_app_v7_inteira.jpg`;
+  - `_conferir_lua.txt` e `_testes.txt`.
 
-## Atualização de 04/11: a sua decisão no B.1
+## O que precisa de você
 
-**Você decidiu: a regra "boxes" só no pit lane. Aplicada** em `driving_coach.py` (`PIT_LANE_POR_PISTA`), com testes; em outra pista, ela continua na volta inteira. **O C.6 abaixo ainda é de antes desta regra:** os números de voltas e de frases do coach vão mudar quando ele for refeito. O efeito nas frases do coach não foi medido. A contagem do WebSocket com a tela aberta deu 0 no código antigo, e a do código novo não foi lida; esse item segue sem distinguir os dois.
+1. **O teste no jogo:** os passos e a tabela estão na Parte G. **Antes, rode os comandos de envio** (no fim), porque o pedido manda enviar a branch antes da parada.
+2. **Decisão: o limite do resumo** (Parte C). O que você quer ouvir nem sempre cabe em 7,7 s, e a diferença para a IA quase sumiu da voz: ela está em 7 dos 51 resumos.
+3. **Decisão: a volta da IA.** A C.1 diz "o tempo e a diferença para a melhor, como hoje", mas hoje ela não tem resumo, e a G.8 diz que o rádio se cala. Deixei calada.
+4. **Confira uma escolha minha:** a parte da perda antes da primeira freada não conta como causa (Parte C).
 
-## O que falta e o que precisa de você
+## O que este pedido ainda não prova
 
-**Falta conferir ou fazer (nesta ordem):**
-
-1. **A suíte inteira do backend não terminou de rodar.** Só `test_radio.py` e `test_radio_voltas_45.py` têm resultado: 56 passando. Mudei `driving_coach.py`, `main.py` e `core/coleta/estado.py`, então a suíte precisa passar antes do teste no jogo.
-2. **Refazer o C.6 com o código final.** O rádio com a voz de verdade foi repetido, mas 21/10 não tinha terminado quando parei. As tabelas abaixo são da passagem anterior; a fala não deveria mudar, só a lista dos boxes.
-3. **A prévia da lista e da grade de 01/11, com as voltas com rodada:** o script está pronto (`_previa.py voltas`), a imagem não foi gerada. **A janela dos boxes em Lua nunca foi desenhada** fora do jogo.
-4. **Corrigir uma tabela da documentação:** em `docs/realidade_aumentada.md`, seção 2.2, o cartão da volta 7 e a linha da volta 11 têm números que escrevi como exemplo, sem conferir (`+0,44 s`, `7,5 m`, e "5,5 s (estimado)"). Os exemplos das seções 2.1, 2.3 e 2.6 ainda têm as palavras antigas ("Freia", "Mínima de").
-5. **A Parte G:** os passos e a tabela de anotação ainda precisam entrar neste relatório, depois dos itens acima. Por isso **não teste no jogo ainda.**
-
-**Processos meus que ficaram abertos: feche antes de abrir o jogo.** Duas instâncias do backend de teste continuam vivas, nas portas 8021 e 8022 (pastas isoladas no rascunho). Meu script não as encerrou, e o controle de permissões recusou o meu `Stop-Process`; não contornei. Se o jogo abrir com elas vivas, **elas podem começar a gravar a sessão na pasta isolada,** porque estão esperando o processo do jogo. Rode:
-
-```powershell
-Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where-Object { $_.CommandLine -match 'uvicorn main:app --port (8021|8022|8011)' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
-```
-
-Uma contagem do WebSocket na porta 8011 também estava rodando quando parei, e ela encerra o próprio backend. O resultado dela não vale, porque fechei a aba da tela no meio.
-
-**Decisões suas:**
-
-1. **O limite do resumo.** Ver a Parte C.
-2. **A volta da IA continua calada.** A C.1 diz "o tempo e a diferença para a melhor, como hoje", mas hoje ela não tem resumo, e a G.8 diz que o rádio se cala. Deixei calada.
+- **Nada do app do jogo foi visto dentro do jogo:** a janela que abre sozinha, a lista, o clique, a roda do mouse e o botão. Não há Lua neste computador. A conferência cobre o léxico, os blocos e a API; as prévias repetem as contas num HTML.
+- **O erro do WebSocket não apareceu em nenhuma reprodução de gravação, nem no código antigo** (Parte B.3). A correção está provada direto no código; falta contar no log depois do teste no jogo.
+- **Se o rádio ensina:** a eficácia só um teste de retenção prova.
+- **O caminho com o backend do 0.5.0 e do 0.6.0** foi conferido só lendo o código.
 
 ## Parte A: as conferências
 
-1. **Os caminhos do contexto:** todos onde o contexto diz.
-2. **O antes:** ver a tabela da Parte C.
-3. **O que o backend guardava:** só a última volta fechada e as válidas da análise. Agora toda volta fica guardada em 5 linhas float32, cerca de 43 KB por volta, sem ler a gravação.
-4. **O que a análise mede:** a freada, a mínima, o acelerador, o traçado e a perda. Entraram a velocidade no fim da curva e as partes da perda.
-5. **O app do Windows:** ele ouve o WebSocket, e o aviso novo passa por ali. A tela Volta abre numa volta (`#/volta/<lapId>`), mas **só nas voltas do store,** e a sessão ao vivo não está nele. Por isso, fiz o replay grande na tela Ao vivo.
-6. **As placas de freada:** o projeto não tem. Registrei no backlog.
+1. **Os caminhos do contexto:** todos estão onde o contexto diz.
+2. **O antes:** na tabela do C.6, com o motivo. As falas, volta a volta, estão no JSON.
+3. **O que o backend guardava das voltas:** só a última fechada e as válidas da análise. Agora toda volta fica guardada, em 5 linhas float32: **43 KB por volta,** de 563 a 867 KB por sessão, sem ler a gravação.
+4. **O que a análise mede por curva:** a perda, a freada, a mínima, o acelerador e o traçado (com corte de 1,8 m). Entraram a velocidade no fim da curva e as partes da perda.
+5. **O app do Windows:** ele ouve o WebSocket, e o aviso novo passa por ali. A tela Volta abre numa volta (`#/volta/<lapId>`), mas só nas voltas do store, e a sessão ao vivo não está nele. Por isso, a tela Ao vivo abre o replay em tamanho grande, como o pedido manda.
+6. **As placas de freada:** o projeto não tem. Registrei no backlog, e a freada fica dita pela IA.
 
-**O que não bate com o pedido:** não existe o estado "inválida". As gravações e o quadro não trazem esse sinal. A lista tem válida, com rodada, da IA e incompleta. Registrei no backlog.
+**O que não bate com o pedido:** o estado "inválida" não existe. As gravações e o quadro do jogo não trazem esse sinal. A lista tem válida, com rodada, da IA e incompleta. Registrei no backlog.
 
 ## Parte B: as voltas que o rádio não vê
 
-### B.1 As voltas incompletas: **decidido em 04/11, a regra só no pit lane**
+### B.1 As voltas incompletas
 
-**A causa não é um buraco na amostragem.** É a regra "boxes" do coach: um microssetor com a lateral acima de 10 m e abaixo de 90 km/h não é comparado, **em qualquer ponto da pista.** A volta 10 de 21/10 (1:29,518) caiu nela por um microssetor, o 38, com 11,0 m e 81,9 km/h.
+**A causa não era um buraco na amostragem.** Era a regra "boxes" do coach: um microssetor com a lateral acima de 10 m e abaixo de 90 km/h não era comparado, em qualquer ponto da pista. A volta 10 de 21/10 (1:29,518) caía nela por um microssetor, o 38, com 11,0 m e 81,9 km/h.
 
-| sessão | voltas que fecham | completas hoje | com a proposta |
-|---|---:|---:|---:|
-| 13/10 | 13 | 7 | 8 |
-| 18/10 | 13 | 9 | 10 |
-| 21/10 | 17 | 7 | 9 |
-| 01/11 | 9 | 6 | 7 |
+**Sua decisão, aplicada:** a regra só vale no pit lane, nos microssetores 54 a 59 e 0 a 10 de Interlagos. Em outra pista, ela continua na volta inteira.
 
-**A regra, aplicada depois da sua decisão:** ela vale só onde existe pit lane (microssetores 54 a 59 e 0 a 10). Ela ganha 5 voltas nas 4 sessões: 1:33,120 (13/10), 1:40,073 (18/10), 1:34,494 e 1:29,518 (21/10) e 2:17,368 (01/11). A de 2:17,368 ainda cai na regra da rodada, se perder mais de 5 s numa curva. **Só 1 das 5 tem tempo realmente bom.** A maioria das incompletas é parada de verdade ou saída de pista, e continua incompleta.
+**Um defeito corrigido junto:** o rádio só lia a geometria na primeira frase do coach ou na primeira janela, e a primeira volta que fechava antes disso saía "sem as medidas" (a volta 2 de 13/10 e de 18/10).
 
-**Um defeito de verdade, corrigido:** o rádio só lia a geometria na primeira frase do coach ou na primeira janela. A primeira volta que fechava antes disso saía "sem as medidas" (a volta 2 de 13/10 e de 18/10).
+| | 13/10 | 18/10 | 21/10 | 01/11 |
+|---|---:|---:|---:|---:|
+| voltas que fecham na linha | 13 | 13 | 17 | 9 |
+| completas, antes | 7 | 9 | 7 | 6 |
+| completas, depois | 8 | 10 | 9 | 7 |
+| **na grade, antes** | 6 | 8 | 6 | 6 |
+| **na grade, depois** | 8 | 9 | 8 | 6 |
+
+As 5 voltas que ficaram completas: 1:33,120 (13/10), 1:40,073 (18/10), 1:34,494 e 1:29,518 (21/10) e 2:17,368 (01/11). A de 2:17,368 continua fora da grade, por rodada. **A maioria das incompletas é parada ou saída de verdade, e continua incompleta.**
+
+**A regra mudou também as frases do coach,** porque mais microssetores são medidos e o foco muda: de 26 para 31 nas 4 sessões (5→5, 3→4, 10→15 e 8→7). As regras de quando falar não mudaram. Não medi se essas frases novas são boas: confira no teste.
 
 ### B.2 A numeração
 
-**De onde vinham os buracos:**
+**De onde vinha cada buraco:**
 
-- **no coach:** o contador do jogo muda cerca de 1 a 2 m depois do s = 0, mas em 2 passagens ele mudou antes (13/10, a volta 9; 21/10, a 14). A volta saía com o número seguinte, e perdia as medidas, porque o número não batia com o da volta ao vivo;
-- **voltas que não começam na linha:** a saída dos boxes ou o carro movido (21/10, a 8 e a 15; 01/11, a 3, a 4 e a 9). A sua observação de que a 14 não fecha era esse número errado: quem não fecha é a 15.
+- **o coach:** o contador do jogo muda cerca de 1 a 2 m depois do s = 0, mas em 2 passagens ele mudou antes (13/10, a volta 9; 21/10, a 14). A volta saía com o número seguinte e perdia as medidas, porque o número não batia com o da volta ao vivo;
+- **voltas que não começam na linha:** a saída dos boxes ou o carro movido (21/10, a 8 e a 15; 01/11, a 3, a 4 e a 9). Em 21/10, a 14 fecha na linha; quem não fecha é a 15. O número errado escondia isso;
+- **a gravação e o store não têm buracos.** O store já guarda o número certo (`game_lap_number`).
 
-**Qual vence: o contador do jogo no meio da volta.** É o número que você vê no jogo, ele existe ao vivo e é igual ao `game_lap_number` do store (conferi 13/10 e 21/10). O `#NNNN` é a ordem no arquivo. A tela Volta passou a mostrar o número do jogo.
+**Qual vence: o contador do jogo no meio da volta.** É o número que você vê no jogo, ele existe ao vivo e bateu com o store nas voltas que conferi em 13/10 e 21/10. O `#NNNN` do id é só a ordem no arquivo. A tela Volta passou a mostrar o número do jogo, e o botão cruza pelo tempo da volta (±0,15 s).
 
-**Números repetidos, depois:** 0 nas 4 sessões (antes, 1 em 13/10).
+| números repetidos na lista | 13/10 | 18/10 | 21/10 | 01/11 |
+|---|---:|---:|---:|---:|
+| antes | 1 | 0 | 0 | 0 |
+| depois | 0 | 0 | 0 | 0 |
+
+**A prévia achou um defeito meu, corrigido:** com o carro movido no meio da volta, a mesma volta entrava duas vezes (a 8 de 21/10). Agora fica o pedaço que mediu mais pontos.
 
 ### B.3 O erro "attached to a different loop"
 
 **A causa:** no Python 3.9, `asyncio.Lock()` guarda o laço em que nasce, e o gerente nasce ao importar o módulo, antes do laço do servidor. Só dá erro quando dois envios disputam a trava. **A correção:** a trava nasce no laço que envia.
 
-**O que está provado:** com o módulo antigo e 3 envios ao mesmo tempo, 2 falham com esse erro; com o novo, nenhum. Há um teste para isso.
+| como | antes | depois |
+|---|---:|---:|
+| 3 envios ao mesmo tempo, direto no módulo | **2 de 3 falham** | 0 |
+| gravação, clientes lentos e travados, adversários a 40 Hz | 0 | 0 |
+| gravação com a tela Ao vivo aberta, velocidade 3, adversários a 40 Hz, 240 s | 0 | 0 |
 
-**O que não está provado: a contagem numa reprodução de gravação não distingue os dois.** Deu **0 antes e 0 depois,** com clientes lentos e travados e com adversários falsos a 40 Hz (75 resumos de adversários no log). As 9 do pedido 43 foram com a tela aberta, e a repetição nessa montagem ficou sem resultado. **Depois do teste no jogo, é preciso contar o erro no log.**
+**O pedido manda contar numa reprodução de gravação, e ela não distingue os dois:** não consegui fazer o erro aparecer assim, mesmo no código antigo. As 9 ocorrências do pedido 43 não se repetiram. O `logs/backend.log` tem 133, de sessões com o jogo. **A prova que falta é contar no log depois do teste no jogo.**
 
-### Antes e depois (as 4 sessões)
-
-| | 13/10 | 18/10 | 21/10 | 01/11 |
-|---|---:|---:|---:|---:|
-| voltas na grade, antes | 6 | 8 | 6 | 6 |
-| voltas na grade, depois | 7 | 9 | 6 | 6 |
-| erros do WebSocket | ver B.3 | | | |
+**Duas medições foram descartadas:** um backend meu que tinha sobrado na porta respondia no lugar do novo, e numa delas fechei a tela no meio. Os números acima são os refeitos, com um cliente ligado em cada passagem.
 
 ## Parte C: o rádio
 
-**Os cortes novos** (`460acdc9`, antes de rodar): a velocidade no fim da curva usa o corte da mínima, 8 km/h, porque é a mesma grandeza, medida do mesmo jeito. O traçado usa o que a análise já tinha, 1,8 m. Abaixo de 1 décimo, nenhuma curva é citada.
+**Os cortes novos** (`460acdc9`, antes de rodar as sessões): a velocidade no fim da curva usa o corte da mínima, 8 km/h, porque é a mesma grandeza, medida do mesmo jeito. O traçado usa o que a análise já tinha, 1,8 m. Abaixo de 1 décimo, nenhuma curva é citada.
 
-**Uma escolha minha, para você conferir:** as separações do pedido 43 são 3 marcas, então a perda ficou em 4 partes. A parte antes da primeira freada (`reta`) não conta como causa, porque veio da curva anterior. As outras são freada (da freada à mínima da referência), mínima (dali ao fim da curva) e saída.
+**A escolha minha, para você conferir:** as separações do pedido 43 são 3 marcas, então a perda ficou em 4 partes, e o trecho que explica a perda é um dos 3 últimos:
 
-### C.6 Antes e depois (passagem anterior ao código final)
+| parte | de onde a onde | é causa? |
+|---|---|---|
+| reta | da entrada do trecho à primeira freada | não: veio da curva anterior |
+| freada | da primeira freada à mínima da referência | sim |
+| mínima | da mínima da referência ao fim da curva | sim |
+| saída | do fim da curva ao fim do trecho | sim |
 
-| resumos | 13/10 | 18/10 | 21/10 | 01/11 |
-|---|---:|---:|---:|---:|
-| total | 13 | 13 | 17 | 8 |
-| **antes:** com a curva | 6 | 8 | 6 | 6 |
-| **antes:** só a diferença para a IA | 7 | 5 | 11 | 2 |
-| **depois:** com a diferença para a melhor | 13 | 13 | 11 | 8 |
-| **depois:** com a diferença para a IA | 2 | 0 | 8 | 0 |
-| **depois:** com a curva | 7 | 9 | 6 | 6 |
-| **depois:** com a curva e a causa | 6 | 6 | 3 | 3 |
-| curva que foi para mensagem própria | 1 | 3 | 3 | 3 |
-| dessas, saíram da fila | 0 | 2 | 0 | 1 |
+**Outra escolha:** uma mínima ou uma saída mais rápidas que a IA não contam como causa do resumo, porque não explicam uma perda.
 
-- **O motivo no antes:** incompleta (5, 4, 9 e 2), sem as medidas (2, 1, 1 e 0) e rodada (0, 0, 1 e 0).
-- **A causa, por trecho:** freada 17, mínima 9, saída 2. Por medida: freada 17, mínima 8, saída 2, traçado 1. Nenhuma curva ficou sem trecho.
-- **As durações:** nenhuma passou do limite do tipo: resumo até 7,69 s (limite 7,7), coach até 7,18 s (7,3), análise até 8,73 s (8,8) e curva até 5,70 s (7,3).
-- **Os números do replay na fala:** 50 de 58 curvas. As outras 8 são a segunda curva de uma análise, que a voz não citou: não têm número falado, e o replay mostra o do cartão.
+### C.6 Antes e depois, com a voz de verdade e o código final
+
+| resumos | 13/10 | 18/10 | 21/10 | 01/11 | total |
+|---|---:|---:|---:|---:|---:|
+| total | 13 | 13 | 17 | 8 | 51 |
+| **antes:** com a curva | 6 | 8 | 6 | 6 | 26 |
+| **antes:** só a diferença para a IA | 7 | 5 | 11 | 2 | 25 |
+| motivo: incompleta | 5 | 4 | 9 | 2 | 20 |
+| motivo: sem as medidas | 2 | 1 | 1 | 0 | 4 |
+| motivo: rodada | 0 | 0 | 1 | 0 | 1 |
+| **depois:** com a diferença para a melhor | 13 | 13 | 12 | 8 | 46 |
+| **depois:** com a diferença para a IA | 1 | 0 | 6 | 0 | 7 |
+| **depois:** com a curva | 8 | 9 | 8 | 6 | 31 |
+| **depois:** com a curva e a causa | 7 | 6 | 3 | 3 | 19 |
+| curva ou causa sem lugar: mensagem própria criada | 1 | 3 | 5 | 3 | 12 |
+| dessas, faladas | 1 | 1 | 1 | 2 | 5 |
+| dessas, saíram da fila (a curva passou antes) | 0 | 2 | 4 | 1 | 7 |
+
+- **A causa de cada curva citada (31):** por trecho, freada 18, mínima 11 e saída 2. Por medida, freada 17, mínima 10, saída 2, traçado 1 e só o trecho 1.
+- **Quanto cada fala dura, contra o limite:** nenhuma passou. Resumo até 7,69 s (limite 7,7), coach até 7,30 s (7,3), análise até 8,73 s (8,8) e curva até 5,70 s (7,3).
+- **Os números do replay na fala:** 52 de 60 curvas. As outras 8 são a segunda curva de uma análise, que a voz não citou: elas não têm número falado, e o replay mostra o do cartão.
+- **"Recorde pessoal" apareceu:** volta 18 de 21/10 (1:26,875). Fora do tempo real, o recorde foi medido contra as sessões anteriores do store.
+
+**O problema que continua: 12 das 31 curvas citadas ficaram sem a causa no resumo, e só 5 dessas falaram numa mensagem própria.** É o mesmo limite da decisão abaixo.
+
+Exemplos de 21/10, com a voz de verdade:
+
+- volta 18: "Recorde pessoal, 1 décimo mais rápida. Curva 1: 7 décimos, freou 46 metros antes da IA." (7,44 s);
+- volta 10: "Melhor volta, 1,3 segundo mais rápida. Curva 11: 1,5 segundo." (6,28 s; a causa não coube);
+- volta 14: "2,4 segundos atrás da sua melhor, 5,7 segundos atrás da IA." (5,59 s; a volta não conta, sem a curva).
 
 ### Decisão: o limite do resumo
 
-**O que você quer ouvir nem sempre cabe em 7,7 s.** Medido com a voz de verdade:
-
-| fala | dura |
+| os seus exemplos (C.5) | dura |
 |---|---:|
 | "3 décimos atrás da sua melhor, 4,2 segundos atrás da IA. Curva 1: 7 décimos, freou 15 metros antes da IA." | **8,73 s** |
 | "Melhor volta, 2 décimos mais rápida. Curva 12: 4 décimos, saiu 8 quilômetros por hora mais lento." | **7,72 s** |
 | "1,1 segundo atrás da sua melhor. Curva 6: 5 décimos, passou 3 metros por fora no ápice." | 7,48 s |
 | "Volta com rodada: 1 minuto e 36,4 segundos, 7,0 segundos atrás da sua melhor." | 7,13 s |
 
-Pela sua ordem, a IA sai antes da curva. Por isso **a diferença para a IA quase sumiu da voz** (10 de 51 resumos); no cartão ela continua. As janelas têm de 7,8 a 8,7 s, então subir o limite para cerca de 8,7 s faria o seu primeiro exemplo caber só na janela mais longa. A alternativa é aceitar a IA só no cartão. **Não mudei o limite.**
+| cada variante, das 4 causas | dura |
+|---|---:|
+| tudo: a melhor, a anterior, a IA, a curva e o tempo | 14,8 a 16,1 s |
+| sem o tempo | 11,0 a 12,4 s |
+| sem a anterior | 8,7 a 10,1 s |
+| sem a IA | 6,4 a 7,8 s |
+| sem dizer contra quem ("da IA") | 6,2 a 7,5 s |
+| sem a causa | 4,7 a 5,2 s |
+| só a melhor | 2,4 s |
 
-## Partes D e E: o que foi feito
+As janelas têm de 7,8 a 8,7 s. **As duas opções:**
 
-- **A câmera:** 80 m no lado menor; a curva inteira por 1 s e 0,8 s de aproximação; os dois carros sempre na tela; o trecho em câmera lenta; a roda do mouse; os números da voz no alto. A mesma conta no Lua e na tela. Prévias de C01, C06 e C12 nos 3 tamanhos, feitas na volta 6 de 01/11.
-- **Os boxes:** a janela abre sozinha e cresce 2 vezes (eram 1,6, para caber a lista). Lista, grade clicável, aviso de rodada e o botão. **As voltas que não começam na linha também tocam,** como a 3 e a 4 de 01/11 que você citou, com o tempo corrido do jogo e fora da análise.
-- **O tamanho das rotas (01/11, volta 7, no backend de teste):** a volta inteira, 138 KB em 43 ms, abaixo dos 500 KB; uma curva, 11 KB em 11 ms; a melhor, 17 KB; a lista, 830 bytes com 3 voltas.
-- **Ponta a ponta:** com o reprodutor e a pasta isolada, o pedido ao backend abriu a volta 7 na C01 e a volta inteira, na aba "[teste]" (já fechada). O pedido com a aba fechada respondeu "o app do Windows está fechado". **O teste achou um defeito, já corrigido:** repetir o mesmo pedido não relia o replay.
-- **O que não foi visto:** o clique no botão dentro do jogo (o pedido foi feito direto à rota) e o que o Windows faz com a janela, que só o teste no jogo mostra.
-- **O caminho sem as rotas novas:** um 404 em `/api/radio/voltas` deixa a janela como antes. Conferido só lendo o código: não há Lua neste computador.
+- **subir o limite do resumo para 8,0 s:** o seu segundo exemplo passa a caber, e a causa cabe mais vezes (não medi quantas). A IA continua fora na maioria. Com a folga de 0,3 s, a fala precisa de 8,3 s de janela, então as janelas mais curtas ficam de fora;
+- **subir para cerca de 8,7 s:** o seu primeiro exemplo cabe, mas só na janela mais longa, e o resumo pode esperar a volta seguinte.
+
+**Recomendo 8,0 s.** A causa foi o que você pediu, e a IA fica no cartão. **Não mudei o limite:** ouça no teste e decida.
+
+### C.3 e C.4
+
+- **A frase do coach e a análise** usam as palavras novas. A análise começa pela tendência, se couber: "Média 9 décimos mais lenta que as 3 anteriores."
+- **O minimapa:** uma rota nova (`/api/radio/melhor`) e uma linha, "+0,31 s para a sua melhor". Coube no que o pedido pediu. A faixa de cima cresceu de 30 para 40 px.
+
+## Parte D: o replay de perto
+
+**O zoom: 80 m no lado menor.** Numa janela de 300 px, um carro de 4,5 m fica com cerca de 15 px.
+
+As prévias repetem as contas da janela do jogo, na volta 6 de 01/11, em 300 × 300, em 420 × 300 e na área do replay dos boxes (560 × 400), com a câmera de antes e a de depois: `_previa_camera_c01.png`, `_c06.png`, `_c12.png` e a folha inteira. **Os carros ficam bem maiores, e o trecho da causa fica marcado.**
+
+- **O começo:** a curva inteira por 1 s, parada, e 0,8 s de aproximação.
+- **Os dois carros sempre na tela:** há um teste com um carro muito mais lento.
+- **Câmera lenta:** só quando cabe no que resta da janela. Na reta, se a curva não couber, o replay começa um pouco antes do trecho, para ele aparecer. Isso não estava no pedido, mas sem isso a janela acabaria antes da causa.
+- **A marca fora da tela** não ganha rótulo; os números da voz ficam no alto.
+
+## Parte E: os boxes e o botão
+
+- **A janela** abre sozinha e cresce 2 vezes, para 840 × 600. Eram 1,6 vez: mudei para a lista caber. Na saída, ela volta como estava.
+- **A lista e a grade de 01/11** estão em `_previa_lista_01-11.jpg`. Elas mostram o que você descreveu: a C06 e a C13 na volta 3, a C01 e a C06 na volta 4, a C05 na volta 10 e a C01 na volta 11.
+- **As voltas 3 e 4 de 01/11 não começam na linha,** então não fechavam para o rádio. Elas agora entram na lista e tocam, com o tempo corrido do jogo, sem resumo, fora da análise e sem a diferença para a melhor, porque esse tempo inclui as paradas.
+- **Sem volta fechada:** "nenhuma volta fechada nesta sessão".
+
+**O tamanho e o tempo das rotas, nas 4 sessões:**
+
+| rota | tamanho máximo | tempo máximo |
+|---|---:|---:|
+| a lista das voltas | 5,1 KB | 0,2 ms para serializar |
+| a volta inteira | **140,5 KB** (limite de 500 KB) | 42 ms |
+| uma curva | 31,9 KB | 9 ms |
+| a melhor volta (01/11) | 17 KB | 5,5 ms |
+
+**Ponta a ponta,** com o reprodutor e a pasta isolada, numa aba "[teste]" já fechada: o pedido feito direto à rota abriu a volta 7 na C01 (`_abrir_no_app_v7_c01.jpg`) e a volta inteira (`_abrir_no_app_v7_inteira.jpg`), com os 4 visuais. Com a aba fechada, a resposta foi "o app do Windows está fechado". **O teste achou um defeito, corrigido:** repetir o mesmo pedido não relia o replay. **Não repeti depois da regra do pit lane e da correção do número,** que não mexem nesse caminho.
+
+**O caminho para a tela Volta:** o botão aparece quando a volta já está no store. Numa sessão ao vivo, ele só aparece depois da próxima rodada do coach, e o replay grande diz isso.
+
+**O que o Windows faz** (o app vir para a frente ou só piscar) só o teste no jogo mostra.
 
 ## Os testes
 
+- **Backend:** 934 passando, 37 avisos (`_testes.txt`), no código de `d6594970`.
 - **Front:** 180 passando, `tsc` e build sem erro.
-- **Lua:** `conferir_lua.py` contra o SDK do CSP: 0 erros de léxico, blocos fechados, API e métodos no SDK.
-- **Backend:** `test_radio.py` e `test_radio_voltas_45.py`, 56 passando. **A suíte inteira não terminou.**
+- **Lua:** `conferir_lua.py` contra o SDK do CSP: 0 erros de léxico, blocos fechados, API e métodos no SDK. 172 locais no topo, de 200.
+
+## Parte H: a documentação e a versão
+
+Feita: `docs/realidade_aumentada.md` (seções 2.2, 5.4.2, 7 e 8), ADR 0027 (novo), ADR 0021, `docs/backlog.md` (os 3 itens da Parte B fechados, o do FPS continua e 2 novos: as placas e o estado "inválida"), `docs/app_para_producao.md`, `docs/dashboard_inventario.md` e `docs/tecnica_de_pilotagem_lista.md`. Os exemplos antigos da documentação, medidos com as palavras de antes, ficaram como estão, com um aviso.
+
+**A versão:** `0.7.0-radio-que-ensina` nos 3 pontos e o app do jogo 0.5.0. **Falta completar, depois do teste:** o FPS e o que o Windows faz.
+
+## Parte G: o teste no jogo, com você
+
+**A versão nova do app do jogo é a 0.5.0.** O número é igual ao do app do Windows instalado, mas são dois programas diferentes.
+
+**O app do jogo novo fica instalado depois do teste. Ele funciona com o 0.5.0 instalado:** sem as rotas novas, a janela mostra o replay como hoje, sem a lista e sem o botão. Conferi isso lendo o código; o teste não passa por esse caminho.
+
+**Os passos:**
+
+1. **Feche o jogo e o app instalado, inclusive o ícone na bandeja.**
+2. **Instale o app do jogo 0.5.0.** A pasta tem de estar na branch `etapa/replay-e-radio-que-ensina`:
+   ```powershell
+   git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer branch --show-current
+   ```
+   ```powershell
+   powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer\tools\csp_app\instalar.ps1
+   ```
+3. **Abra o app pelo repositório.** Ele grava em `C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\recordings`:
+   ```powershell
+   $env:AT_BACKEND_USE_PYTHON_RUNNER='true'; cd C:\Users\Dokas\Desktop\f1-telemetry-analyzer\desktop; npm.cmd run desktop:prod:autostart
+   ```
+   **Confira na aba Coleta de dados, em "Versão do app":** tem de aparecer `0.7.0-radio-que-ensina`, "rodando do código-fonte".
+4. **No jogo, ligue o rádio, o minimapa e o replay** na barra de apps. Ponha o replay num canto, sem cobrir o centro.
+5. **Na tela Sistema, clique em "Mandar mensagem de teste"** e olhe o cartão. Ele ficou sem confirmação no pedido 43.
+6. **Ande pelo menos 8 voltas, você mesmo, com uma ida aos boxes depois da 3ª volta válida e outra no fim, de pelo menos 1 minuto cada.**
+7. **Nos boxes:**
+   - veja se a janela abriu sozinha, e se volta como estava na saída;
+   - toque 2 voltas (clique no número) e 2 curvas (clique na célula);
+   - gire a roda do mouse sobre o replay e sobre a lista;
+   - aperte "Abrir no app" uma vez e anote se o app veio para a frente ou só piscou.
+8. **Nunca aperte Ctrl+C:** ele passa o carro para a IA, e o rádio se cala.
+9. **Desligue o replay por 2 ou 3 voltas e ligue de novo,** para o FPS.
+10. **Anote, em cada fala, na tabela abaixo.**
+11. **Avise: "testei o rádio e o replay no jogo".**
+
+| volta | o que eu ouvi | entendi onde perdi? | entendi por quê? | o replay mostrou? |
+|---|---|---|---|---|
+| | | | | |
+| | | | | |
+| | | | | |
+| | | | | |
+| | | | | |
+| | | | | |
+| | | | | |
+| | | | | |
+
+**Se puder, responda também:** o resumo ficou comprido? Sentiu falta da diferença para a IA na voz? As frases do coach em curvas novas fizeram sentido?
+
+**Depois do seu aviso, eu:**
+
+- confiro que o teste aconteceu (a versão na pasta do jogo, a data do `log.txt` e a última gravação);
+- confiro o registro do rádio e os replays entregues;
+- **conto "different loop" no log do backend;**
+- leio, sem mudar nada, as linhas `[radio_engenheiro]` do log do CSP;
+- meço o FPS com o replay ligado e desligado;
+- completo este relatório e a documentação, com as suas decisões;
+- faço o merge em `develop`.
 
 ## O envio ao GitHub
 
-**Nada foi enviado.** O `develop` remoto está em `aa576597`; o local, em `bd04b93e`. Conferi nos commits que nenhuma gravação entrou (`recordings/` e `data/` não foram tocados). Quando quiser uma cópia do que está aqui, rode no terminal:
+**Nada foi enviado.** No pedido 44, o controle de permissões recusou o envio, então é você quem roda.
+
+**Conferido antes do envio, nos commits desde `aa576597`:** o maior arquivo tem 1,3 MB (nada acima de 50 MB); nenhum arquivo em `recordings/`, `data/recordings` ou `data/ml`; nenhum segredo.
+
+| ref | hash local | no remoto |
+|---|---|---|
+| `refs/heads/etapa/replay-e-radio-que-ensina` | o último commit desta branch (o do relatório) | ainda não existe |
+| `refs/heads/develop` | `bd04b93e` | `aa576597` |
+
+**Só a branch vai agora.** Ela já leva `bd04b93e`. O `develop` vai depois do merge. `main` e as tags não vão. Sem `--force`.
 
 ```powershell
 git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer push -u origin etapa/replay-e-radio-que-ensina
@@ -167,4 +301,6 @@ git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer push -u origin etapa/replay-
 git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer ls-remote origin refs/heads/etapa/replay-e-radio-que-ensina
 ```
 
-Sem `--force`. O `develop`, `main` e as tags não vão agora.
+Me avise quando rodar, para eu conferir o hash remoto. Se pedir login, se recusar ou se o remoto tiver divergido, pare e me avise.
+
+**O que abri para testar já está fechado:** não sobrou backend nas portas de teste (8011, 8021, 8022, 8031, 8032, 8041, 8042), nem o servidor das prévias, nem aba "[teste]". Nenhum Electron foi aberto.
