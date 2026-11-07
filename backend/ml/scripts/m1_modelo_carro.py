@@ -319,6 +319,153 @@ def cmd_validar(args) -> int:
     return 0
 
 
+def _v1_por_sessao() -> dict:
+    payload = json.loads((D.raiz_dados() / "rodadas_treino.json").read_text(encoding="utf-8"))
+    return {r["sessao_de_teste"]: r for r in payload["rodadas"]}
+
+
+def _geo_v2() -> dict:
+    payload = json.loads((D.raiz_dados() / GEOMETRIA_MEDIDA).read_text(encoding="utf-8"))
+    geo = dict(payload["usados"])
+    geo["bitola_dianteira"] = payload["relogio"]["bitola_dianteira"]
+    geo["bitola_traseira"] = payload["relogio"]["bitola_traseira"]
+    return geo
+
+
+SESSOES_DEPOIS = ("2026-10-24_13-26-12_vhe_interlagos", "2026-10-24_13-43-32_vhe_interlagos",
+                  "2026-11-01_19-47-03_vhe_interlagos")
+
+
+def grades_depois() -> dict:
+    """C.4, so para informacao: as sessoes depois de 21/10, com as voltas rotuladas no pedido 44."""
+    table = pd.read_parquet(config.artifacts_root() / "retreino_lstm" / "voltas_tabela.parquet")
+    geometry = load_geometry()
+    out = {}
+    for session_id in SESSOES_DEPOIS:
+        path = D.raiz_dados() / f"grade_depois_{session_id}.parquet"
+        if path.exists():
+            out[session_id] = pd.read_parquet(path)
+            continue
+        wanted = set(table.loc[table["gravacao"] == session_id, "lap_id"])
+        blocks = []
+        for lap in D.iter_voltas_m1(D.sessao_por_id(session_id)):
+            if lap.lap_id in wanted:
+                frame, _ = D.processar_volta(lap, geometry)
+                blocks.append(frame)
+        frame = pd.concat(blocks, ignore_index=True)
+        frame.to_parquet(path, index=False)
+        out[session_id] = frame
+    return out
+
+
+def cmd_validar_v2(args) -> int:
+    """Pedido 46, Partes B e C: as 5 rodadas da M1 v2. `--fase treino` nao le nenhuma sessao de teste."""
+    from ml.modelo_carro import cargas_v2 as CG
+    from ml.modelo_carro import experimento as X
+    from ml.modelo_carro import experimento_v2 as X2
+    from ml.modelo_carro import fisica_v2 as F2
+    from ml.modelo_carro import geometria as Ge
+    started = time.time()
+    geo = _geo_v2()
+    conv = _convencoes()
+    v1 = _v1_por_sessao()
+    grades = {s: pd.read_parquet(grade_path(s)) for s in D.SESSOES_M1}
+    treino_path = D.raiz_dados() / "rodadas_treino_v2.json"
+    handoff = Path(args.handoff) if args.handoff else None
+    lidos = {**_lidos(), "rodadas_treino.json (v1)": file_entry(D.raiz_dados() / "rodadas_treino.json")}
+    if args.fase == "treino":
+        # B.5: a carga lateral primeiro, nas 5 rodadas; se nao for identificavel, para antes do pneu.
+        cargas = {}
+        for test in D.SESSOES_M1:
+            train = X.no_modelo(grades, [s for s in D.SESSOES_M1 if s != test], conv)
+            loads = Ge.medir(train)
+            train = X.levar_ao_centro(train, loads["w_f"] * geo["L"], geo["x_v"])
+            cargas[test] = CG.medir_lateral(train, loads["m"], geo["bitola_dianteira"], geo["bitola_traseira"])
+            c = cargas[test]
+            print(test[:19], "lam", round(c["lam"], 3), "h_y", round(c["h_y"], 3), "IC c_f",
+                  [round(c["incerteza_bootstrap"]["c_f"][k], 4) for k in ("p2_5", "p97_5")], "IC c_r",
+                  [round(c["incerteza_bootstrap"]["c_r"][k], 4) for k in ("p2_5", "p97_5")], flush=True)
+        fora = all(not (c["lam_na_faixa"] and c["h_y_na_faixa"]) for c in cargas.values())
+        zero = any(c["intervalo_passa_de_zero"] for c in cargas.values())
+        if fora or zero:
+            payload = {"pedido": 46, "parte": "B.5", "parado": True, "commit": git_commit(), "cargas": cargas,
+                       "motivo": "fora da faixa em todas as rodadas" if fora else "intervalo de c_f ou c_r passa de zero"}
+            _json(D.raiz_dados() / "carga_lateral_v2.json", payload)
+            print("PARADO (B.5):", payload["motivo"])
+            return 2
+        store = pd.read_parquet(config.artifacts_root() / "laps_grid_v2.parquet",
+                                columns=["lap_id", "speed_kmh", "lateral_g", "longitudinal_g", "throttle", "brake"])
+        rodadas = []
+        for test in D.SESSOES_M1:
+            print(f"rodada sem {test}", flush=True)
+            rodadas.append(X2.fase_treino(test, grades, conv, geo, store, v1[test]))
+        payload = {"pedido": 46, "parte": "B, fase de treino da M1 v2", "commit": git_commit(), "ambiente": _ambiente(),
+                   "comando": "python -m ml.scripts.m1_modelo_carro validar-v2 --fase treino", "geometria": geo,
+                   "lidos": lidos, "rodadas": rodadas, "tempo_s": round(time.time() - started, 1)}
+        _json(treino_path, payload)
+        if handoff:
+            _json(Path(str(handoff) + "_fisica_treino_v2.json"),
+                  {**payload, "rodadas": [{k: v for k, v in r.items() if k != "params"} for r in rodadas]})
+        for r in rodadas:
+            d = r["treino"]
+            print(r["sessao_de_teste"][:19], "v2 contra R0", {h: round(v, 3) for h, v in d["skill_v2_contra_R0"].items()},
+                  "v2 contra v1", {h: round(v, 3) for h, v in d["skill_v2_contra_v1"].items()},
+                  "limite", r["no_limite"], flush=True)
+        return 0
+
+    from ml.modelo_carro import figuras_v2 as FG2
+    from ml.track.corners import detect_corners
+    treino = json.loads(treino_path.read_text(encoding="utf-8"))
+    v1_cases = pd.read_parquet(D.raiz_dados() / "validacao_casos.parquet")
+    partes, infos, figs, depois = [], [], {}, {}
+    geometry = load_geometry()
+    corners = {c.label[:3]: c for c in detect_corners(geometry)}
+    for rodada in treino["rodadas"]:
+        print(f"rodada sem {rodada['sessao_de_teste']}", flush=True)
+        out = X2.fase_teste(rodada, grades, conv, geo, v1[rodada["sessao_de_teste"]])
+        partes.append(out["casos"])
+        infos.append(out["info"])
+        if rodada["sessao_de_teste"] == "2026-10-21_20-30-54_vhe_interlagos":
+            depois = X2.informativo(out["_modelos"], grades_depois(), conv, geo)
+            if handoff:
+                figs = FG2.figuras_c01_c10(out["_modelos"], corners, geometry.length, Path(str(handoff)))
+    cases = X.juntar(partes)
+    # A M1 v1 (pedido 39) nos mesmos casos: confere a ordem antes de usar.
+    same = (len(v1_cases) == len(cases["volta"])
+            and np.array_equal(v1_cases["volta"].to_numpy().astype(str), cases["volta"].astype(str))
+            and np.allclose(v1_cases["sq_R0_10"].to_numpy(dtype=float), cases["sq_R0_10"]))
+    v1c = v1_cases if same else None
+    nc = cases["nao_conclusivo"]
+    h = 10
+    payload = {
+        "pedido": 46, "parte": "C, fase de teste da M1 v2", "commit": git_commit(), "ambiente": _ambiente(),
+        "comando": "python -m ml.scripts.m1_modelo_carro validar-v2 --fase teste", "geometria": geo,
+        "lidos": {**lidos, "rodadas_treino_v2.json": file_entry(treino_path),
+                  "validacao_casos.parquet (v1)": file_entry(D.raiz_dados() / "validacao_casos.parquet")},
+        "mesmos_casos_da_v1": bool(same),
+        "rodadas": infos, "veredito": X.veredito(cases),
+        "horizontes": X.resumo_horizontes(cases), "horizontes_so_conclusivos": X.resumo_horizontes(cases, ~nc),
+        "lado_a_lado": {hn: X2.lado_a_lado(cases, v1c, None, hh) for hn, hh in X.V.HORIZONTES.items()},
+        "por_grandeza": {hn: X2.por_grandeza(cases, v1c, hh) for hn, hh in X.V.HORIZONTES.items()},
+        "por_grandeza_curvas_0_5s": X2.por_grandeza(cases, v1c, h, cases["regime"] == "curva"),
+        "por_sessao": X2.lado_a_lado(cases, v1c, "sessao"), "por_regime": X2.lado_a_lado(cases, v1c, "regime"),
+        "por_faixa": X2.lado_a_lado(cases, v1c, "faixa"), "nao_conclusivo": X2.nao_conclusivo(cases),
+        "temperatura_dos_pneus": X.correlacao_pneus(cases), "figuras": figs,
+        "depois_de_21_10_so_informativo": depois,
+        "tempo_s": round(time.time() - started, 1),
+    }
+    _json(D.raiz_dados() / "validacao_v2.json", payload)
+    flat = {k: (list(v) if v.ndim > 1 else v) for k, v in cases.items()}
+    pd.DataFrame(flat).to_parquet(D.raiz_dados() / "validacao_casos_v2.parquet", index=False)
+    if handoff:
+        _json(Path(str(handoff) + "_validacao_v2.json"), payload)
+    for c in payload["veredito"]["criterios"]:
+        value = c["valor"] if not isinstance(c["valor"], dict) else {k: round(v["razao"], 3) for k, v in c["valor"].items()}
+        print(c["n"], c["criterio"], value, "passa" if c["passa"] else "NAO PASSA")
+    print("aprovada:", payload["veredito"]["aprovada"], "| mesmos casos da v1:", same)
+    return 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -332,9 +479,12 @@ def main(argv=None) -> int:
     validar = sub.add_parser("validar")
     validar.add_argument("--fase", choices=("treino", "teste"), required=True)
     validar.add_argument("--handoff", help="prefixo dos arquivos de handoff (docs/handoff/<pedido>)")
+    validar2 = sub.add_parser("validar-v2")
+    validar2.add_argument("--fase", choices=("treino", "teste"), required=True)
+    validar2.add_argument("--handoff", help="prefixo dos arquivos de handoff (docs/handoff/<pedido>)")
     args = parser.parse_args(argv)
     return {"dados": cmd_dados, "convencoes": cmd_convencoes, "retrato": cmd_retrato,
-            "geometria": cmd_geometria, "validar": cmd_validar}[args.cmd](args)
+            "geometria": cmd_geometria, "validar": cmd_validar, "validar-v2": cmd_validar_v2}[args.cmd](args)
 
 
 if __name__ == "__main__":

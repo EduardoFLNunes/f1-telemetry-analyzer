@@ -157,6 +157,32 @@ def fase_teste(rodada: Dict[str, object], grades: Dict[str, pd.DataFrame], conv:
     return {"info": info, "casos": per_case, "_modelos": (p, p1, corr, sigma, test_frame, train)}
 
 
+def informativo(modelos, frames: Dict[str, pd.DataFrame], conv: C.Convencoes, geo: Dict[str, float]) -> Dict[str, object]:
+    """C.4, fora do veredito: os modelos de uma rodada nas sessoes gravadas depois, em 0,5 s."""
+    p, p1, corr, sigma, _, _ = modelos
+    out = {"modelos": "os da rodada sem a sessao 2026-10-21_20-30-54 (treinados nas 4 sessoes de 15/10 a 18/10)"}
+    for session_id, raw in frames.items():
+        frame = levar_ao_centro(C.no_modelo(raw, conv), p.b, geo["x_v"])
+        try:
+            cs = V.casos(frame, conv)
+        except ValueError as exc:
+            out[session_id] = {"erro": str(exc)}
+            continue
+        r0 = F.persistencia(cs.S0, V.H_MAX)
+        preds = {"M1 v2": F2.malha_aberta(cs.S0, cs.U, p, corr), "fisica v2": F2.malha_aberta(cs.S0, cs.U, p),
+                 "fisica v1": F.malha_aberta(cs.S0, cs.U, p1)[0], "R0": r0}
+        h = V.H_PRINCIPAL
+        e = {k: V.erro_combinado(v, cs.S, sigma, h) for k, v in preds.items()}
+        curva = cs.regime == "curva"
+        out[session_id] = {"voltas": int(frame["lap_id"].nunique()), "casos": len(cs), "erro_0_5s": e,
+                           "skill_M1_v2_contra_R0": V.skill(e["M1 v2"], e["R0"]),
+                           "skill_M1_v2_contra_fisica_v2": V.skill(e["M1 v2"], e["fisica v2"]),
+                           "skill_fisica_v2_contra_fisica_v1": V.skill(e["fisica v2"], e["fisica v1"]),
+                           "curvas": {k: V.erro_combinado(v, cs.S, sigma, h, curva) for k, v in preds.items()},
+                           "vy_rmse": {k: float(np.sqrt(np.mean((v[:, h, 1] - cs.S[:, h, 1]) ** 2))) for k, v in preds.items()}}
+    return out
+
+
 # ---------------------------------------------------------- relatorios ---
 
 def _erro(sq: np.ndarray, mask: Optional[np.ndarray] = None) -> float:
