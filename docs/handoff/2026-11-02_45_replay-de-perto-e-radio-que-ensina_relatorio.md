@@ -13,7 +13,8 @@
   - `6c87e3ed` Relatorio parcial do pedido 45 (a primeira parada);
   - `9c1f9349` B.1: a regra dos boxes do coach so vale no pit lane (sua decisao de 04/11);
   - `d6594970` B.2: a volta com o carro movido no meio nao repete o numero na lista;
-  - o commit deste relatório: "Pedido 45: o relatorio da parada da Parte G, as previas e a documentacao corrigida".
+  - `0907aec8` Pedido 45: o relatorio da parada da Parte G, as previas e a documentacao corrigida (enviado e conferido no remoto);
+  - o commit da nota de 06/11: "Pedido 45: o aviso de teste chegou, mas o jogo nao abriu desde 01/11".
 - **Arquivos de handoff** (`docs/handoff/2026-11-02_45_replay-de-perto-e-radio-que-ensina…`):
   - `_relatorio.md` (este);
   - `_radio_antes_e_depois.json` (o C.6: as 4 sessões, fala a fala, com a voz de verdade);
@@ -22,6 +23,21 @@
   - `_previa.py`, `_previa_camera.png` (a folha inteira), `_previa_camera_c01.png`, `_c06.png`, `_c12.png` e `_previa_lista_01-11.jpg`;
   - `_abrir_no_app_v7_c01.jpg` e `_abrir_no_app_v7_inteira.jpg`;
   - `_conferir_lua.txt` e `_testes.txt`.
+
+## 06/11: o aviso de teste chegou, mas o teste ainda não aconteceu
+
+- **O envio da branch está conferido:** `git ls-remote` dá `0907aec8d5e93c089f5e836275c75b11b072bcea` no remoto, igual ao local.
+- **Em 06/11, às 23:27, chegou o aviso "Testei no jogo",** sem a tabela preenchida. Antes de ler qualquer resultado, conferi se o jogo abriu (23:28):
+
+| sinal | o que tem | o que teria depois do teste |
+|---|---|---|
+| `apps\lua\radio_engenheiro\manifest.ini` na pasta do jogo | `VERSION = 0.4.2`, gravado em 01/11 às 16:02 | `VERSION = 0.5.0`, gravado pelo `instalar.ps1` |
+| logs do jogo (`Documents\Assetto Corsa\logs`) | o último é de 01/11 às 20:22 (`custom_shaders_patch.log`, `py_log.txt`) | data de 05/11 ou 06/11 |
+| última gravação em `data/recordings` | `2026-11-01_21-07-46_spa` | uma sessão de Interlagos de 05/11 ou 06/11 |
+| última gravação do app instalado | `2026-10-18_12-18-08_vhe_interlagos` | — |
+
+- **Ou seja: o app do jogo 0.5.0 não foi instalado, e o jogo não abriu desde 01/11.** Não escrevi nenhum resultado de jogo, não medi o FPS, não li log do CSP e **não fiz o merge em `develop`**, porque tudo isso depende do teste.
+- **Para seguir:** os passos da Parte G continuam valendo, a partir do passo 1. O passo 2 (o `instalar.ps1`) é o que deixa a pasta do jogo na 0.5.0. Depois, avise de novo, com a tabela se puder.
 
 ## O que precisa de você
 
@@ -288,7 +304,7 @@ Feita: `docs/realidade_aumentada.md` (seções 2.2, 5.4.2, 7 e 8), ADR 0027 (nov
 
 | ref | hash local | no remoto |
 |---|---|---|
-| `refs/heads/etapa/replay-e-radio-que-ensina` | o último commit desta branch (o do relatório) | ainda não existe |
+| `refs/heads/etapa/replay-e-radio-que-ensina` | `0907aec8` (e depois o commit da nota de 06/11) | `0907aec8`, conferido em 06/11 |
 | `refs/heads/develop` | `bd04b93e` | `aa576597` |
 
 **Só a branch vai agora.** Ela já leva `bd04b93e`. O `develop` vai depois do merge. `main` e as tags não vão. Sem `--force`.
