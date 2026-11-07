@@ -229,3 +229,14 @@ git push origin develop
 
 - `etapa/m1-v2-e-modelo1` em `e264f39e3c69d88a6fd62ab88e58df7c1c5f5d0c`;
 - `develop` no commit deste relatório, depois de `1124b16325839aee9451564312e8ddb6d357d77f`.
+
+## O envio, conferido (07/11, 14:25)
+
+Você avisou que enviou. Conferi com `git ls-remote origin`:
+
+| ref | hash local | hash no remoto | confere |
+|---|---|---|---|
+| `etapa/m1-v2-e-modelo1` | `e264f39e3c69d88a6fd62ab88e58df7c1c5f5d0c` | `e264f39e3c69d88a6fd62ab88e58df7c1c5f5d0c` | sim |
+| `develop` | `0d2ca732cc7bbf16af7efee4d4e466eb98b70f01` | `0d2ca732cc7bbf16af7efee4d4e466eb98b70f01` | sim |
+
+Este registro do envio fica num commit local em `develop`, que vai no próximo envio.
