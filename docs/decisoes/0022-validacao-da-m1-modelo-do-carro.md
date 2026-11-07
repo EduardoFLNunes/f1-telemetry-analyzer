@@ -76,3 +76,7 @@ Para aprovar a M1, todos precisam ser atendidos no horizonte de 0,5 s:
 - **Se só a física passar** (critério 1 sim, critério 2 não), a física simples fica como o modelo do carro, e a correção aprendida volta para quando houver mais sessões.
 - **O tempo de volta não é avaliado aqui.** Uma volta inteira em malha aberta diverge. Prever tempo de volta precisa de um piloto que siga a linha (etapas M3 e M4).
 - **O relógio decidido aqui** fecha a pendência da seção 6 de `docs/modelo_fisico_m0.md`.
+
+## Atualização de 07/11/2026
+
+- **A M1 v2** (pedido 46, ADR 0028) é validada com estes mesmos 7 critérios, as mesmas 5 sessões e os mesmos casos, com R1 sendo a física v2. O índice de "não conclusivo" do item 6 não funcionou na v1 (o corte saiu no teto) e foi trocado, na v2, por uma regra registrada no ADR 0028, item 7. Ele continua fora da aprovação.

@@ -67,3 +67,7 @@ A peça C continua por último. O simulador quase-estacionário fica como linha 
 - **O store fica maior e o `atualizar_coach` mais lento.** O modo incremental, já no backlog, fica mais urgente.
 - **Riscos conhecidos:** a unidade do volante gravado não está documentada; a temperatura dos freios pode não estar sendo gravada; e os parâmetros do carro podem não ser acessíveis.
 - **O item do backlog "decidir se o AC vira o simulador do ganho",** que apontava para este ADR, fica coberto aqui, menos a escolha de como o jogo executa as variações, que vai para antes da M4. O item "simulador + corretor aprendido" vira a M1.
+
+## Atualização de 07/11/2026
+
+- **A M1 tem uma segunda tentativa, a M1 v2** (pedido 46, ADR 0028): quatro rodas, a carga por roda com a transferência lateral, e o pneu com sensibilidade à carga e pico. Os critérios do ADR 0022 não mudam, e a v2 é a última tentativa neste TCC.

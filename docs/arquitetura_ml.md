@@ -447,3 +447,49 @@ Ele acerta reta, freada e tração e falha nas curvas, pela velocidade lateral. 
 passou na régua, ele não vira o juiz nem a base da M4: o simulador quase-estacionário
 continua, e o [ADR 0004](decisoes/0004-simulador-nao-estima-ganho-local.md) continua
 valendo sem mudança.
+
+---
+
+## O medidor do tempo e o resultado final do Modelo 1 (pedido 46; ADR 0028, item 10)
+
+**O medidor** é o simulador quase-estacionário das Figuras 5 e 6 (`ml/optimization/lap_time_model.py`), com o envelope das voltas reais (`data/ml/vehicle_envelope.json`, sha256 começando por `3e31fd30e528281b`). O ADR 0028 previa trocar o envelope pelo da M1 v2 se ela fosse aprovada. Ela não foi (skill de 0,487 contra a persistência, com mínimo de 0,50; `docs/modelo_fisico_m1.md`, 7.3), e o medidor ficou como estava.
+
+**A busca:** o algoritmo genético da Figura 6, com as configurações abaixo, nas duas versões:
+
+- 100 indivíduos e 250 gerações, sem parada por estagnação;
+- o corredor do pedido 44 (`corridor_id` `707d07029036abd6`);
+- semente 46;
+- a aptidão só com a física do medidor, sem a rede substituta;
+- as sementes: as 150 voltas rotuladas do pedido 44 (136 `humano`, 14 `ia`) e a composição dos melhores trechos;
+- as duas versões: sem a LSTM geradora e com ela como semente.
+
+Comando: `python -m ml.scripts.modelo1_final` (3 min e 40 s no total).
+
+| linha | tempo no medidor | contra a IA no medidor | cronômetro do jogo | forma e corredor |
+|---|---:|---:|---:|---|
+| volta da IA `2026-10-04_03-42-10#0013` | 1:26,284 | — | 1:24,829 | fora (0,011 m médio fora do corredor) |
+| a mesma, passada pela codificação | 1:27,955 | +1,671 | — | dentro |
+| melhor volta do Eduardo `2026-10-24_13-43-32#0003` | 1:24,048 | −2,236 | 1:26,568 | fora (0,012 m médio fora do corredor) |
+| a mesma, passada pela codificação | 1:27,679 | +1,395 | — | dentro |
+| linha da LSTM geradora | 1:28,244 | +1,960 | — | dentro |
+| **linha gerada sem a LSTM** | **1:22,898** | **−3,386** | — | **dentro** |
+| **linha gerada com a LSTM** | **1:23,481** | **−2,803** | — | **dentro** |
+
+- **Pelo critério registrado, as duas linhas geradas aprovam.** Elas ficam abaixo da volta da IA no mesmo medidor, dentro do corredor, e com o serpenteio e a variação de curvatura abaixo do percentil 95 das 150 voltas.
+- **A LSTM geradora como semente não ajudou.** Sem ela, a busca chegou a 1:22,898; com ela, a 1:23,481. As duas passaram a volta da IA logo no começo (geração 4 sem, geração 3 com). As duas usaram as 250 gerações sem estagnar. A distância média entre as duas linhas é de 0,94 m (máxima de 3,96 m).
+- **A diferença por microssetor:** a linha sem a LSTM ganha da IA em 24 microssetores e perde em 22. O ganho se concentra no microssetor 36, perto da C10 (−0,92 s), e nos microssetores 0 e 1, depois da linha de chegada (−0,62 s e −0,37 s). As maiores perdas ficam em cerca de 0,10 s.
+
+**A incerteza: o que esta comparação mede e o que não mede.** Isto é tempo simulado, não tempo de pista.
+
+- **O erro conhecido do medidor era de 1,36 s em média por volta** (ADR 0017, no store antigo).
+- **Nas 150 voltas rotuladas,** com a configuração deste pedido:
+  - o erro médio é de 5,0 s;
+  - o medidor sai 4,8 s mais rápido que o cronômetro;
+  - a correlação entre o simulado e o cronômetro é de 0,36, e a de Spearman é de 0,23.
+- **O medidor só vê a linha:** ele supõe que o carro é levado sempre ao limite do envelope. As voltas da IA (média de 85,3 s no cronômetro) e as do Eduardo (91,5 s) saem com quase o mesmo tempo simulado (86,2 e 86,1 s). A diferença real entre elas é de execução: frear, acelerar e chegar ao limite. O medidor não modela isso.
+- **Ele chega a inverter a ordem das duas voltas da comparação:** no cronômetro, a volta da IA é 1,74 s mais rápida que a do Eduardo; no medidor, ela é 2,24 s mais lenta.
+- **A codificação custa de 1,4 a 1,7 s** às voltas reais: a busca só produz linhas que os pontos de controle representam, e as voltas cruas têm detalhes que eles não têm. Mesmo contra a volta da IA codificada, as linhas geradas ficam abaixo (−5,1 s e −4,5 s).
+- **O que a comparação mede:** para o mesmo carro, levado ao limite do mesmo envelope, a linha gerada dá menos tempo que a linha da IA.
+- **O que ela não mede:** que um piloto, ou a própria IA do jogo, faria uma volta mais rápida seguindo essa linha. O resultado não é um tempo de volta previsto.
+
+**A linha gerada não vai para o coach** (ADR 0009, que continua valendo: o medidor não passou no teste de "prever zero"). Ela está salva em `data/ml/modelo1_final/` (`linha_sem_lstm.npy`, `linha_com_lstm.npy` e `resultado.json`, com o `geometry_id`, o `corridor_id`, o medidor e o commit). Figuras: `docs/handoff/2026-11-07_46_m1-v2-e-modelo1-final_linhas.png`, `_diferenca_acumulada.png` e `_evolucao.png`.
