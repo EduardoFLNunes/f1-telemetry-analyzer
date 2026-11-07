@@ -76,8 +76,31 @@
 - **As falas:** nenhuma passou do limite. A causa entrou no resumo em 2 das 3 voltas válidas; na volta 4, saiu numa mensagem própria (id 6).
 - **Os replays:** o app do jogo 0.4.2 pediu 16 replays (`/api/radio/replay/<id>`), todos com resposta 200.
 - **O erro "attached to a different loop":** 0 no log do backend de hoje (31 mil linhas). Com o código antigo, foram 70 em 24/10 e 63 em 01/11. É a primeira prova no jogo de que a correção da B.3 funciona.
-- **Ainda sem ler:** as linhas `[radio_engenheiro]` do log do CSP (o `log.txt` fica vazio enquanto o jogo está aberto) e o FPS.
+- **Depois da primeira leitura** (o jogo ficou aberto até cerca de 19:11), o rádio falou mais 5 vezes, todas dentro do limite:
+  - 11 (coach, volta 7): "Curva 12, esquerda: 8 décimos atrás da IA. Freou 32 metros antes da IA." (6,11 s);
+  - 12 (coach, volta 7): "Curva 12: 1,3 segundo atrás da IA. Mínima 57 quilômetros por hora abaixo da IA." (6,84 s);
+  - 13 (resumo, volta 8): "11,9 segundos atrás da sua melhor. Curva 1: 3,9 segundos." (6,03 s);
+  - 14 (curva, volta 8): "Curva 1: 3,9 segundos, freou 72 metros depois da IA." (5,01 s);
+  - 15 (coach, volta 9): "Curva 11, esquerda: 5 décimos atrás da IA." (3,52 s).
+- **As idas aos boxes:** a gravação tem 10 voltas. A 7 levou 5:42,195, com a parada; a 10 terminou nos boxes (velocidade máxima de 53 km/h). A volta 7 ficou sem resumo, como manda a regra do pit lane. Com a 0.4.2, a janela dos boxes não existia.
+- **O log do CSP** (`custom_shaders_patch.log`; o `log.txt` só tem avisos de ícone):
+  - nenhum erro de Lua;
+  - a voz tocou 15 vezes, e o backend entregou os áudios de 1 a 15 (o 1, duas vezes);
+  - 3 "Slow script", o pior com 328 ms, no desenho do rádio, logo antes da primeira voz;
+  - 2 "App radio_engenheiro is not allowed to load", no começo, seguidos de uma recarga normal;
+  - no fim, "o backend não respondeu", quando o app do Windows foi fechado, às 19:11.
+- **O FPS:** a média foi de 106,2 fps com o replay ligado (126 medidas de 10 s; mediana 107,5, a pior 69,2). Com o replay desligado, há só 2 medidas (97,4 de média), no começo e antes de entrar na pista. **Não dá para comparar:** o replay não foi desligado durante as voltas. E, na 0.4.2, o replay não tem a câmera de perto.
 - **As suas anotações** (a tabela da Parte G) não chegaram.
+
+## 07/11: o app do Windows 0.7.0 instalado, a seu pedido
+
+- Às 19:07, você pediu para atualizar o app instalado para esta versão. Perguntei qual dos dois e você escolheu o app do Windows. Isso abre uma exceção às regras "Não gere instalador" e "Não mexa no app instalado".
+- `npm run dist:win`, na pasta `desktop`: gerou `versoes/0.7.0-radio-que-ensina/Automobilista-Telemetria-Setup-0.7.0-radio-que-ensina.exe` (229 MB), do commit `0bbc0c2`, com a árvore limpa (`build-info.json`: `dirty: false`). Nada foi enviado: o `publicar` só copia para `versoes/`.
+- Instalei sem perguntas (`/S`), por cima da 0.5.0, com o jogo e o app fechados. O instalador saiu com o código 0. O executável instalado é a 0.7.0.0 e o desinstalador, a `0.7.0-radio-que-ensina`.
+- As 100 gravações do app instalado continuam em `%APPDATA%\Automobilista Telemetria\data\recordings`.
+- O `versoes/LEIA-ME.md` foi refeito (`npm run versoes`) e agora diz que a instalada é a mais atual.
+- **Não abri o app instalado:** a versão foi conferida pelo executável e pelo desinstalador, não pela tela.
+- **O app do jogo continua na 0.4.2.** O `instalar.ps1` desta branch (que já está na pasta) é o que leva para a 0.5.0.
 
 ## O que precisa de você
 
