@@ -39,6 +39,46 @@
 - **Ou seja: o app do jogo 0.5.0 não foi instalado, e o jogo não abriu desde 01/11.** Não escrevi nenhum resultado de jogo, não medi o FPS, não li log do CSP e **não fiz o merge em `develop`**, porque tudo isso depende do teste.
 - **Para seguir:** os passos da Parte G continuam valendo, a partir do passo 1. O passo 2 (o `instalar.ps1`) é o que deixa a pasta do jogo na 0.5.0. Depois, avise de novo, com a tabela se puder.
 
+## 07/11: o primeiro teste no jogo, com o app do jogo errado
+
+**A pasta mudou de branch no meio do teste:**
+
+- 10:46: abri o app do Windows pelo repositório, nesta branch (backend `radio-que-ensina`, porta 8000).
+- 11:22:49: a sessão do pedido 46 trocou a pasta para `develop`. Às 14:21, ela fez o merge do pedido 46 em `develop` (`a780c9d1` no fim).
+- Depois disso, o `instalar.ps1` copiou o app do jogo de `develop`: a pasta do jogo ficou com `VERSION = 0.4.2`, com a data 11:22:49 (a do checkout).
+- O backend já estava carregado desta branch, e o rádio falou com as palavras novas. **O app do jogo 0.5.0 não foi testado:** a janela nos boxes, a lista, a grade, a roda do mouse e o botão "Abrir no app" não existem na 0.4.2. O log do backend não tem nenhum pedido às rotas novas vindo do jogo.
+- Às 19:06, com a sua autorização, voltei a pasta para esta branch, para repetir o teste.
+
+**O que o teste mostrou** (sessão `2026-11-07_18-46-00_vhe_interlagos`; às 19:03 o jogo ainda estava aberto):
+
+| id | hora | origem | volta | fala | s | limite |
+|---|---|---|---|---|---|---|
+| 1 | 18:47 | teste | – | "Teste do rádio. Se você me ouve, está tudo certo." | 4,09 | – |
+| 2 | 18:50 | coach | 2 | "Curva 11, esquerda: 6 décimos atrás da IA. Mínima 15 quilômetros por hora abaixo da IA." | 6,50 | 7,3 |
+| 3 | 18:51 | resumo | 2 | "Volta com rodada: 1 minuto e 35,1 segundos, 10,3 segundos atrás da IA." | 6,37 | 7,7 |
+| 4 | 18:52 | resumo | 3 | "Melhor volta. Curva 1: 1,0 segundo, freou 104 metros antes da IA." | 6,13 | 7,7 |
+| 5 | 18:54 | resumo | 4 | "Melhor volta, 1,8 segundo mais rápida. Curva 1: 7 décimos." | 5,74 | 7,7 |
+| 6 | 18:55 | curva | 4 | "Curva 1: 7 décimos, freou 46 metros antes da IA." | 4,33 | 7,3 |
+| 7 | 18:55 | resumo | 5 | "Volta com rodada: 1 minuto e 45,5 segundos, 17,0 segundos atrás da sua melhor." | 7,43 | 7,7 |
+| 8 | 18:57 | resumo | 6 | "Melhor volta, 3 décimos mais rápida. Curva 1: 6 décimos, perdeu 2 décimos na freada." | 6,95 | 7,7 |
+| 9 | 18:58 | analise | 6 | "Voltas 3, 4 e 6. Curva 1: perde 7 décimos por volta. Freou 46 metros antes da IA." | 8,29 | 8,8 |
+| 10 | 19:00 | coach | 7 | "Curva 11, esquerda: 5 décimos atrás da IA. Mínima 23 quilômetros por hora abaixo da IA." | 6,89 | 7,3 |
+
+- **As voltas:**
+  - 1: incompleta, 3:17,442 (saída dos boxes);
+  - 2: com rodada, 1:35,129;
+  - 3: válida, 1:30,362;
+  - 4: válida, 1:28,544;
+  - 5: com rodada, 1:45,547;
+  - 6: válida, 1:28,246 (a melhor).
+
+  A volta 7 estava em curso.
+- **As falas:** nenhuma passou do limite. A causa entrou no resumo em 2 das 3 voltas válidas; na volta 4, saiu numa mensagem própria (id 6).
+- **Os replays:** o app do jogo 0.4.2 pediu 16 replays (`/api/radio/replay/<id>`), todos com resposta 200.
+- **O erro "attached to a different loop":** 0 no log do backend de hoje (31 mil linhas). Com o código antigo, foram 70 em 24/10 e 63 em 01/11. É a primeira prova no jogo de que a correção da B.3 funciona.
+- **Ainda sem ler:** as linhas `[radio_engenheiro]` do log do CSP (o `log.txt` fica vazio enquanto o jogo está aberto) e o FPS.
+- **As suas anotações** (a tabela da Parte G) não chegaram.
+
 ## O que precisa de você
 
 1. **O teste no jogo:** os passos e a tabela estão na Parte G. **Antes, rode os comandos de envio** (no fim), porque o pedido manda enviar a branch antes da parada.
