@@ -1,8 +1,8 @@
 # Versões do app Automobilista Telemetria
 
-Gerado por `desktop/scripts/publish-version.js` em 07/11/2026, 19:22. Não edite à mão: o arquivo é refeito a cada build (`npm run dist:win`) e por `npm run versoes` (na pasta `desktop`).
+Gerado por `desktop/scripts/publish-version.js` em 07/11/2026, 20:29. Não edite à mão: o arquivo é refeito a cada build (`npm run dist:win`) e por `npm run versoes` (na pasta `desktop`).
 
-- **A mais atual:** `0.7.0-radio-que-ensina`, gerada em 07/11/2026, 19:11, commit `0bbc0c2`.
+- **A mais atual:** `0.7.0-radio-que-ensina`, gerada em 07/11/2026, 20:17, commit `60d3f9e`.
   - Instalador: `versoes\0.7.0-radio-que-ensina\Automobilista-Telemetria-Setup-0.7.0-radio-que-ensina.exe`
 - **Instalada neste computador:** `0.7.0-radio-que-ensina`, para todos os usuários, em `C:\Users\Dokas\AppData\Local\Programs\Automobilista Telemetria`.
   - É a mais atual.
@@ -24,7 +24,7 @@ A "mais atual" é a de build mais recente, não a de número maior: a `0.2.0-ass
 
 | versão | gerada em | commit | instalador | tamanho | sha256 |
 |---|---|---|---|---:|---|
-| `0.7.0-radio-que-ensina` (mais atual) (instalada) | 07/11/2026, 19:11 | `0bbc0c2` | `Automobilista-Telemetria-Setup-0.7.0-radio-que-ensina.exe` | 229 MB | `01ebf6d78ee0…` |
+| `0.7.0-radio-que-ensina` (mais atual) (instalada) | 07/11/2026, 20:17 | `60d3f9e` | `Automobilista-Telemetria-Setup-0.7.0-radio-que-ensina.exe` | 229 MB | `4ab7b3afcce9…` |
 | `0.5.0-radio-e-replay` | 25/10/2026, 11:41 | `825ef60` | `Automobilista-Telemetria-Setup-0.5.0-radio-e-replay.exe` | 229 MB | `4db96566280e…` |
 | `0.4.0-redesenho` | 17/10/2026, 03:03 | `429a5c4` | `Automobilista-Telemetria-Setup-0.4.0-redesenho.exe` | 229 MB | `cbeb346dcc3d…` |
 | `0.3.0-coleta-modelos` | 14/10/2026, 10:01 | `e0f64ec` | `Automobilista-Telemetria-Setup-0.3.0-coleta-modelos.exe` | 229 MB | `7b27fe71ffe9…` |

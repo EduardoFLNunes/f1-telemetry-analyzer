@@ -102,6 +102,32 @@
 - **Não abri o app instalado:** a versão foi conferida pelo executável e pelo desinstalador, não pela tela.
 - **O app do jogo continua na 0.4.2.** O `instalar.ps1` desta branch (que já está na pasta) é o que leva para a 0.5.0.
 
+## 07/11, 19:52 a 20:16: o segundo teste, com o app instalado 0.7.0 e o app do jogo 0.5.0
+
+- **O teste aconteceu:**
+  - a pasta do jogo tem `VERSION = 0.5.0` (você rodou o `instalar.ps1` desta branch);
+  - às 19:50, conferi que o app aberto era o instalado 0.7.0 (backend `radio-que-ensina`, porta 8000);
+  - a gravação é `2026-11-07_19-52-33_vhe_interlagos`, no app instalado. Ela fica lá: o pedido proíbe copiar gravações para o repositório;
+  - o jogo foi aberto às 19:52 e de novo às 20:05. **O log do CSP das 19:52 se perdeu** quando o jogo reabriu. O das 20:05 foi lido e guardado fora do repositório.
+- **Defeito encontrado: o app instalado não tinha voz.** O log dele mostra "Radio sem voz" em cada fala: o `voz.ps1` não estava em `_internal\core\radio`. O build (`backend/packaging/build_backend.ps1`) nunca incluiu esse arquivo. Pelo script, o defeito vem de antes deste pedido e também valia para a 0.5.0. O rádio entregou 5 mensagens sem áudio, e o app do jogo registrou "voz: falhou: a mensagem N veio sem áudio".
+- **O que funcionou, pelo log do CSP das 20:05 e pelo log do backend:**
+  - nenhum erro de Lua;
+  - a janela do replay **abriu sozinha nas 3 entradas nos boxes** ("nos boxes: a janela abre") e **voltou como estava nas 2 saídas**;
+  - a lista das voltas foi pedida 49 vezes (`/api/radio/voltas`), e uma curva foi aberta pelo clique (`/api/radio/replay-da-volta/1?curva=C07`, resposta 200);
+  - `/api/radio/melhor`, uma vez: a referência foi a sua melhor volta do store (`minha_melhor|2026-10-21_20-30-54_vhe_interlagos#0017`);
+  - nenhum "different loop" e nenhum erro grave no log do backend.
+- **O que não foi usado:** o botão "Abrir no app" (0 pedidos a `/api/radio/abrir-no-app`) e a roda do mouse (não aparece no log).
+- **Para você conferir:** o log registrou uma vez "replay: janela 32 x 32", logo no começo. A janela do replay apareceu pequena demais na tela?
+- **As falas (sem som):** o teste do rádio; 3 frases do coach na volta de saída, contra "a sua melhor"; e 1 resumo: "Melhor volta, 2,5 segundos atrás da referência. Curva 3: 7 décimos, mínima 24 quilômetros por hora abaixo da sua melhor. Tempo: 1 minuto e 29,4 segundos." **Esse resumo precisa ser revisto:** uma "melhor volta" que está "atrás da referência" confunde. A referência aqui é a sua melhor do store, e não a volta da IA.
+- **O FPS (20:05 a 20:15):** média de 97,0 com o replay ligado (55 medidas de 10 s, mediana 97,9, a pior 80,4). **De novo, nenhuma medida com o replay desligado durante as voltas.**
+
+## 07/11, 20:16 a 20:53: a voz no app instalado, corrigida
+
+- `60d3f9e7`: `build_backend.ps1` passa a incluir o `voz.ps1` com `--add-data ...;core\radio`. O `audio.py` procura o arquivo ao lado dele mesmo, e no pacote isso é `_internal\core\radio`. É o único arquivo do backend que não é Python.
+- `npm run dist:win` de novo, no commit `60d3f9e`. O `build-info.json` diz `dirty: true` só por causa de `versoes/LEIA-ME.md` (refeito pelo próprio build) e do pedido 47, que não é deste pedido e não está no commit.
+- A instalação (`/S`) ficou parada até você aceitar a permissão de administrador do Windows, às 20:48. Ela terminou com o código 0, e o `voz.ps1` agora está no app instalado.
+- **Conferido às 20:53:** abri o app instalado e mandei a mensagem de teste (`POST /api/radio/teste`). O backend gerou o áudio (`duracaoS` 4,09; um `.wav` de 131 KB), e nenhum "Radio sem voz" apareceu no log depois da instalação. **O som não foi ouvido no jogo.** O app instalado ficou aberto.
+
 ## O que precisa de você
 
 1. **O teste no jogo:** os passos e a tabela estão na Parte G. **Antes, rode os comandos de envio** (no fim), porque o pedido manda enviar a branch antes da parada.
