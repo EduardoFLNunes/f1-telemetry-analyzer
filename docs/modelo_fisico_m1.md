@@ -399,3 +399,27 @@ Só a correlação de Spearman entre o resíduo da M1 no primeiro passo e a temp
 - **Para quem não é da área:** o modelo acerta bem o que o carro faz em reta, na freada e na aceleração. Ele erra quando o carro está virando, principalmente com muito volante, porque o pneu do jogo segura o carro de um jeito que a física simples não descreve. A correção aprendida dos dados ajuda, mas não o bastante para o critério.
 - **Pela regra do ADR 0022:** a M1 não vira a base da etapa M4 nem do cálculo do tempo de volta. O simulador quase-estacionário continua como está, e o ADR 0004 continua valendo.
 - **Nenhum critério, corte ou parâmetro foi mudado depois de ver o teste.**
+
+## 7. M1 v2 (pedido 46; ADR 0028)
+
+**A M1 v2 é a segunda e última tentativa da M1 neste TCC.** Ela foi desenhada depois de ver o teste da v1, com o diagnóstico dela (as curvas, a velocidade lateral, a C10), e é testada nas mesmas sessões, com os mesmos 7 critérios do ADR 0022. Se não passar, não há v3 ajustada nas mesmas sessões. A v1 (seções 1 a 6) fica como está, como resultado negativo, e aparece ao lado da v2 em todas as tabelas.
+
+### 7.1 Registrado antes de rodar (Parte A)
+
+O registro completo, com as fórmulas, as faixas e os porquês, está no **ADR 0028**, commitado antes de qualquer conta nas sessões. Em resumo, o que muda da v1:
+
+| | v1 | v2 |
+|---|---|---|
+| rodas | bicicleta: as duas rodas de cada eixo viram uma | quatro rodas, cada uma com o seu ângulo de deriva, a sua carga e a sua força; o momento de guinada inclui os lados |
+| carga | por eixo: peso parado, downforce e transferência longitudinal (pela regra dos 2%) | por roda: o mesmo, com a transferência longitudinal sempre, mais a transferência lateral `λ·h_y·a_y/t` em cada eixo, com `λ` e `h_y` medidos contra `wheel_load_*` |
+| atrito | `μ` constante | `μ(n) = μ_ref·(n/n_ref)^(q−1)`, `n_ref = g/4`, `q` de 0,6 a 1,0 |
+| curva do pneu | `tanh`: satura e fica no máximo | Fórmula Mágica de Pacejka sem deslocamentos: pico em `α_pico` (3° a 12°) e queda até `f` (0,7 a 1,0); a mesma rigidez `C_α·n` da v1 |
+| elipse de atrito | por eixo | por roda |
+| parâmetros ajustados | 7 | 10 (`μ` vira `μ_ref` e `q`; entram `α_pico` e `f`) |
+| amostra da correção | 2.000 passos, 400 por regime, semente 37 | 6.000 passos, na proporção dos regimes no treino, semente 46 |
+| "não conclusivo" | o desvio do Processo Gaussiano sem o ruído, o maior de 3 grandezas e 10 passos; o corte saiu no teto | a distância média aos 10 vizinhos de treino nas 6 entradas; o corte é o percentil 99 nos casos de treino, sem os vizinhos da mesma volta |
+| critérios | os 7 do ADR 0022 | os mesmos 7, com R1 sendo a física v2; a física v1 entra como terceira referência, só relatada |
+
+**O que se espera, escrito antes de rodar (ADR 0028, item 9):** a v2 deve ganhar nas curvas, mais na faixa de 160 a 220 km/h, e na velocidade lateral; na reta, na freada e na tração ela não deve mudar. O critério 1 é o mais difícil, e não há garantia de que a v2 passe.
+
+**Comandos:** `python -m ml.scripts.m1_modelo_carro validar-v2 --fase treino` (Parte B) e, depois do commit da fase de treino, `validar-v2 --fase teste` (Parte C). Os arquivos da v1 em `data/ml/modelo_carro/` não são sobrescritos: os da v2 levam o sufixo `_v2`.
