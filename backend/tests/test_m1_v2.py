@@ -207,3 +207,28 @@ def test_envelope_da_m1_v2_cresce_com_o_downforce_e_respeita_a_aderencia():
     assert env.longitudinal_available(np.array([50.0]), env.lateral_limit(50.0), braking=True)[0] == pytest.approx(0.0, abs=1e-9)
     half = env.longitudinal_available(np.array([50.0]), 0.5 * env.lateral_limit(50.0), braking=True)[0]
     assert half == pytest.approx(env.braking_limit(50.0)[0] * np.sqrt(0.75))
+
+
+# ------------------------------------------------------------ medidor ---
+
+def test_medidor_da_o_mesmo_tempo_para_a_mesma_linha_nas_duas_chamadas():
+    from tests.test_ml_pipeline import circular_track, flat_envelope
+    from ml.optimization.lap_time_model import simulate
+
+    track = circular_track()
+    lateral = 0.5 * np.sin(np.linspace(0, 6 * np.pi, track.s.size, endpoint=False))
+    env = flat_envelope()
+    first = simulate(track, lateral, env)
+    second = simulate(track, lateral.copy(), env)
+    assert first.lap_time_s == second.lap_time_s
+    np.testing.assert_array_equal(first.step_time_s, second.step_time_s)
+
+
+def test_envelope_da_m1_v2_no_simulador_e_repetivel():
+    from tests.test_ml_pipeline import circular_track
+    from ml.optimization.lap_time_model import simulate
+
+    track = circular_track()
+    env = F2.envelope(_v2(), np.linspace(15.0, 85.0, 12), top_speed_mps=85.0)
+    lateral = np.zeros(track.s.size)
+    assert simulate(track, lateral, env).lap_time_s == simulate(track, lateral, env).lap_time_s

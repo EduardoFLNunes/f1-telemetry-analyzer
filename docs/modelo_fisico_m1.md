@@ -423,3 +423,185 @@ O registro completo, com as fórmulas, as faixas e os porquês, está no **ADR 0
 **O que se espera, escrito antes de rodar (ADR 0028, item 9):** a v2 deve ganhar nas curvas, mais na faixa de 160 a 220 km/h, e na velocidade lateral; na reta, na freada e na tração ela não deve mudar. O critério 1 é o mais difícil, e não há garantia de que a v2 passe.
 
 **Comandos:** `python -m ml.scripts.m1_modelo_carro validar-v2 --fase treino` (Parte B) e, depois do commit da fase de treino, `validar-v2 --fase teste` (Parte C). Os arquivos da v1 em `data/ml/modelo_carro/` não são sobrescritos: os da v2 levam o sufixo `_v2`.
+
+### 7.2 A carga e o pneu medidos (Parte B)
+
+Comando: `python -m ml.scripts.m1_modelo_carro validar-v2 --fase treino` (1 h 35 min), só com as 4 sessões de treino de cada rodada. JSON: `docs/handoff/2026-11-07_46_m1-v2-e-modelo1-final_fisica_treino_v2.json`.
+
+**A carga lateral é identificável nas 5 rodadas,** então a parada da B.5 não se aplica:
+
+| rodada (sessão de fora) | `λ` (fração na frente) | `h_y` (m) | IC 95% de `c_f` | IC 95% de `c_r` |
+|---|---:|---:|---|---|
+| `2026-10-15_23-24-50` | 0,647 | 0,324 | 0,262 a 0,267 | 0,149 a 0,154 |
+| `2026-10-17_01-02-22` | 0,647 | 0,329 | 0,266 a 0,271 | 0,151 a 0,156 |
+| `2026-10-17_16-17-08` | 0,651 | 0,363 | 0,295 a 0,301 | 0,165 a 0,171 |
+| `2026-10-18_12-38-44` | 0,647 | 0,334 | 0,270 a 0,276 | 0,153 a 0,159 |
+| `2026-10-21_20-30-54` | 0,645 | 0,322 | 0,260 a 0,264 | 0,149 a 0,154 |
+
+- **`λ` e `h_y` ficam dentro das faixas** (0,30 a 0,70 e 0,15 a 0,45 m) nas 5 rodadas, e nenhum intervalo passa de zero. O intervalo de 95% de `λ` tem cerca de ±0,005.
+- **`h_y` sai de 19% a 34% acima do `cgHeight`** (0,271 m). Parte disso vem da massa: ela é a das regressões da v1 (578 a 653 kg, abaixo da faixa), e as cargas por unidade de massa saem infladas na mesma proporção. A sessão de 17/10 16:17, a de massa mais baixa (578 kg), é a de `h_y` mais alto.
+- **Cerca de 65% da transferência lateral vai para a frente.**
+- **O erro da carga prevista** (com `vx`, `a_x` e `a_y` gravados) contra `wheel_load_*`:
+  - no geral, fica entre 18% e 24% da carga média de cada roda;
+  - na reta, entre 16% e 17%;
+  - é maior na roda dianteira esquerda nas curvas (26% a 28%).
+
+  A carga gravada oscila com as zebras e as ondulações, e o modelo de carga não tem suspensão.
+
+**O pneu ajustado (10 parâmetros):**
+
+| parâmetro | faixa nas 5 rodadas | no limite? |
+|---|---|---|
+| `C_α` (1/rad) | 30,4 a 34,8 | não |
+| `μ_ref` | 2,10 a 2,23 | não |
+| `q` | 0,600 nas 5 | **sim, no limite de baixo** |
+| `α_pico` | 12,0° nas 5 | **sim, no limite de cima** |
+| `f` | 0,700 nas 5 | **sim, no limite de baixo** |
+| `k²` (m²) | 2,08 a 3,03 | não |
+| `κ_D` (1/m) | 0,0003 nas 5 | sim, no limite de baixo (como na v1) |
+| `c0` (m/s²) | 0 a 0,43 | no limite de baixo em 3 rodadas (como na v1) |
+| `s_T` | 0,82 a 1,04 | não |
+| `β_B` (m/s²) | 24,5 a 25,7 | não |
+
+- **A figura** (`docs/handoff/2026-11-07_46_m1-v2-e-modelo1-final_curva_do_pneu.png`) mostra o porquê dos limites:
+  - os pontos das sessões de treino quase não passam de 6° de deriva;
+  - o ajuste empurra o pico para o fim da faixa (12°), fora dos dados, e com ele a queda (`f`) fica sem efeito onde há dados;
+  - dentro dos dados, a curva sobe e satura, como a da v1.
+- **O que pesa é a sensibilidade à carga.** Com `q = 0,6`, o atrito cai de 2,2 com a roda parada para cerca de 1,4 a 1,6 a 270 km/h, e a curva fica mais baixa em alta velocidade. Os pontos de treino mostram o mesmo: a força por carga satura mais baixo em alta velocidade.
+- **`q` no limite de 0,6** quer dizer que os dados pediriam um expoente ainda menor. A faixa foi registrada antes e não muda.
+
+**A física v2 sozinha nas sessões de treino (B.4), antes de qualquer teste:**
+
+| rodada | erro de um passo: v2 / v1 / R0 | skill v2 contra R0 em 0,5 s | skill v2 contra a v1 em 0,5 s | v1 contra R0 em 0,5 s (pedido 39) |
+|---|---|---:|---:|---:|
+| `2026-10-15_23-24-50` | 0,0749 / 0,0783 / 0,0887 | 0,356 | 0,338 | 0,027 |
+| `2026-10-17_01-02-22` | 0,0772 / 0,0809 / 0,0929 | 0,391 | 0,364 | 0,043 |
+| `2026-10-17_16-17-08` | 0,0745 / 0,0788 / 0,0912 | 0,394 | 0,259 | 0,183 |
+| `2026-10-18_12-38-44` | 0,0769 / 0,0804 / 0,0901 | 0,320 | 0,319 | 0,002 |
+| `2026-10-21_20-30-54` | 0,0777 / 0,0804 / 0,0904 | 0,212 | 0,253 | −0,056 |
+
+Nas curvas das sessões de treino, o erro em 0,5 s da física v2 fica entre 0,30 e 0,42. O da v1 fica entre 0,42 e 0,56, e o da persistência entre 0,46 e 0,49.
+
+### 7.3 A validação e o veredito (Parte C)
+
+Comando: `python -m ml.scripts.m1_modelo_carro validar-v2 --fase teste` (1 h 34 min), rodado depois do commit da fase de treino. Os casos são os mesmos 39.142 da v1, conferidos caso a caso. JSON: `docs/handoff/2026-11-07_46_m1-v2-e-modelo1-final_validacao_v2.json`.
+
+**Em uma frase: a M1 v2 não foi aprovada, por pouco.** Em 0,5 s, ela corta 48,7% do erro da persistência, e o critério 1 pede 50%. Os outros 6 critérios passam, inclusive o 2, que a v1 não passava.
+
+| nº | critério | v1 (pedido 39) | **v2** | resultado da v2 |
+|---|---|---|---|---|
+| 1 | skill contra R0 ≥ 0,50 | 0,202 | **0,487** | **não passa** |
+| 2 | skill contra R1 ≥ 0,20 | 0,174 | **0,207** | passa |
+| 3 | limite inferior do IC 95% do skill contra R1 > 0 | 0,159 | 0,172 (IC de 0,172 a 0,245) | passa |
+| 4 | skill contra R1 positivo em pelo menos 4 das 5 sessões | 5 | 5 | passa |
+| 5 | \|viés\| ≤ 25% do erro de R1 (`vx` / `vy` / `r`) | 3,9% / 2,2% / 3,3% | 1,9% / 0,4% / 2,8% | passa |
+| 6 | o intervalo de 90% cobre de 80% a 97% | 85,7% | 89,6% (`vx` 91,3%; `vy` 88,9%; `r` 88,5%) | passa |
+| 7 | pelo menos 5 sessões testáveis | 5 | 5 | passa |
+
+- **Pela regra do ADR 0022, a M1 v2 não é aprovada.** O caso "só a física passa" também não vale: a física v2 sozinha corta 35% do erro da persistência, e o critério 1 pede 50%.
+- **Nenhum critério, corte ou parâmetro foi mudado depois de ver o teste.** Pelo ADR 0028, item 1, não há v3.
+
+**Os horizontes, lado a lado (erro combinado):**
+
+| horizonte | M1 v2 | física v2 (R1) | M1 v1 | física v1 | R0 | skill M1 v2 contra R0 | skill M1 v1 contra R0 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 0,25 s | 0,153 | 0,178 | 0,189 | 0,212 | 0,270 | 0,43 | 0,30 |
+| **0,5 s** | **0,226** | **0,285** | **0,351** | **0,425** | **0,440** | **0,49** | **0,20** |
+| 1,0 s | 0,378 | 0,500 | 0,849 | 1,059 | 0,666 | 0,43 | −0,27 |
+
+- **Em 1,0 s, a v2 continua melhor que a persistência** (skill de 0,43). A v1 ficava pior (−0,27).
+- **Em 0,5 s, a física v2 sozinha corta 33% do erro da física v1,** e a M1 v2 corta 36% do erro da M1 v1.
+
+**Cada grandeza em 0,5 s** (raiz do erro quadrático; viés):
+
+| | `vx` (m/s) | **`vy` (m/s)** | `r` (rad/s) |
+|---|---|---|---|
+| M1 v2 | 0,39; −0,01 | **0,42; 0,00** | 0,070; −0,002 |
+| física v2 | 0,73; +0,46 | 0,55; −0,10 | 0,077; +0,015 |
+| M1 v1 | 0,40; −0,03 | 0,68; +0,02 | 0,094; −0,004 |
+| física v1 | 0,85; +0,68 | 0,84; −0,07 | 0,108; +0,012 |
+| R0 | 2,69; +0,03 | 0,70; +0,01 | 0,174; 0,000 |
+
+- **A velocidade lateral é onde a v2 mais ganha:**
+  - no geral, 0,42 m/s, contra 0,68 da M1 v1 e 0,70 da persistência;
+  - nas curvas, 0,48 contra 0,81 e 0,78.
+
+  A v1 só empatava com a persistência nessa grandeza.
+- **Na longitudinal, a v2 e a v1 ficam iguais** (0,39 e 0,40 m/s). A física v2 ainda prevê o carro mais rápido que o gravado (+0,46 m/s em 0,5 s), e a correção tira esse viés, como na v1.
+
+**Por sessão, por regime e por faixa de velocidade** (skill em 0,5 s):
+
+| sessão | casos | M1 v2 contra R0 | física v2 contra R0 | M1 v1 contra R0 | M1 v2 contra a física v2 |
+|---|---:|---:|---:|---:|---:|
+| `2026-10-15_23-24-50` | 8.438 | 0,50 | 0,35 | 0,16 | 0,22 |
+| `2026-10-17_01-02-22` | 9.420 | 0,51 | 0,38 | 0,20 | 0,20 |
+| `2026-10-17_16-17-08` | 10.314 | 0,55 | 0,48 | 0,34 | 0,15 |
+| `2026-10-18_12-38-44` | 5.125 | 0,45 | 0,29 | 0,14 | 0,23 |
+| `2026-10-21_20-30-54` | 5.845 | 0,41 | 0,25 | 0,15 | 0,21 |
+
+| regime | casos | M1 v2 contra R0 | física v2 contra R0 | M1 v1 contra R0 | física v2 contra a física v1 |
+|---|---:|---:|---:|---:|---:|
+| reta | 6.953 | 0,68 | 0,66 | 0,66 | 0,03 |
+| freada | 2.936 | 0,71 | 0,68 | 0,68 | 0,04 |
+| tração | 1.725 | 0,73 | 0,71 | 0,71 | −0,01 |
+| **curva** | **25.251** | **0,46** | **0,30** | **0,13** | **0,34** |
+| freio e volante juntos | 2.277 | 0,45 | 0,43 | 0,25 | 0,31 |
+
+| faixa | casos | M1 v2 contra R0 | física v2 contra R0 | M1 v1 contra R0 | física v2 contra a física v1 |
+|---|---:|---:|---:|---:|---:|
+| abaixo de 100 km/h | 4.718 | 0,44 | 0,39 | 0,22 | 0,37 |
+| 100 a 160 km/h | 13.779 | 0,49 | 0,34 | 0,24 | 0,32 |
+| **160 a 220 km/h** | **12.580** | **0,49** | **0,31** | **0,08** | **0,34** |
+| acima de 220 km/h | 8.064 | 0,58 | 0,54 | 0,55 | −0,06 |
+
+- **O que se esperava (7.1) se confirmou:**
+  - o ganho está nas curvas, onde a física v2 corta 34% do erro da v1;
+  - na faixa de 160 a 220 km/h, o skill contra a persistência sobe de 0,08 para 0,49;
+  - na velocidade lateral, como mostra a tabela anterior;
+  - na reta, na freada e na tração, nada mudou.
+- **O que não passa:** as curvas continuam abaixo de 0,50 (0,46), e elas são 65% dos casos. Duas sessões passam de 0,50 sozinhas (17/10 01:02 e 17/10 16:17), e a de 21/10 fica em 0,41.
+
+**O "não conclusivo", pela regra nova:**
+
+- o corte ficou entre 0,79 e 0,87 nas 5 rodadas;
+- **443 dos 39.142 casos (1,1%) foram marcados;**
+- por regime: 0,3% na reta, 0,6% na freada, 0,5% na tração, 1,2% nas curvas e 4,5% com freio e volante juntos. Abaixo de 100 km/h, 4,7%;
+- por sessão: de 0,6% (17/10 01:02) a 2,3% (21/10);
+- nos casos conclusivos, o erro em 0,5 s é 0,201 na M1 v2, 0,264 na física v2 e 0,415 em R0.
+
+**A regra funciona como foi pensada:** ela marca perto de 1% dos casos, e mais onde o piloto faz coisas raras.
+
+**As figuras** (rodada sem 21/10, volta 6, com a faixa de 5% a 95% da M1 v2):
+
+- **a freada da C01** (`..._figura_c01_v2.png`), a 266 km/h. O erro da velocidade em 0,5 s:
+  - M1 v2: 0,14 m/s;
+  - física v2: −0,37;
+  - M1 v1: 0,08;
+  - física v1: 0,71;
+  - persistência: 7,2.
+- **a curva lenta, a C10** (`..._figura_c10_v2.png`), a 76 km/h, com o volante em 0,87. **A v2 escorrega bem menos que a v1:**
+  - em 0,5 s, `vy` sai 0,62 m/s acima do gravado na M1 v2, contra 1,47 na M1 v1;
+  - em 1,0 s, 1,4 m/s contra 3,5.
+
+  O carro do jogo ainda faz a curva com `vy` perto de zero, e a v2 também exagera a guinada. O retrato da falha da v1 melhorou, mas não sumiu.
+
+**Só para informação, fora do veredito (C.4):** os modelos da rodada sem 21/10 (treinados nas sessões de 15/10 a 18/10), nas voltas rotuladas no pedido 44.
+
+| sessão | voltas | casos | erro em 0,5 s: M1 v2 / física v2 / física v1 / R0 | skill M1 v2 contra R0 | `vy` (m/s): M1 v2 / R0 |
+|---|---:|---:|---|---:|---|
+| `2026-10-24_13-26-12` | 3 | 1.807 | 0,255 / 0,411 / 0,609 / 0,438 | 0,42 | 0,47 / 0,66 |
+| `2026-10-24_13-43-32` | 6 | 3.930 | 0,291 / 0,444 / 0,608 / 0,496 | 0,41 | 0,55 / 0,78 |
+| `2026-11-01_19-47-03` | 6 | 4.468 | 0,366 / 0,452 / 0,530 / 0,415 | 0,12 | 0,73 / 0,61 |
+
+Em 24/10, a v2 se comporta como nas sessões de teste. Em 01/11 ela piora: nessa sessão, a persistência prevê a velocidade lateral melhor que a M1 v2.
+
+**A temperatura dos pneus (indicação para a M2):** o Spearman entre o resíduo de um passo e a temperatura média dos pneus dá −0,22 na longitudinal, 0,01 na lateral e −0,01 na guinada, como na v1.
+
+**O que o resultado quer dizer:**
+
+- **Para quem não é da área:** a segunda versão do modelo prevê o carro bem melhor que a primeira, principalmente nas curvas e no quanto ele escorrega de lado. Ela erra metade do que erraria quem dissesse "o carro continua como está", e o critério pede um pouco mais que isso. Pela regra combinada antes, ela não passa.
+- **Pela regra do ADR 0022:** a M1 não vira a base da etapa M4 nem do medidor do tempo. Pelo ADR 0028, este é o fim da M1 neste TCC.
+
+### 7.4 O Modelo 1 com a M1 v2 reprovada (Parte D)
+
+Como a M1 v2 não foi aprovada, o medidor do Modelo 1 continua sendo o simulador quase-estacionário com o envelope das voltas reais. O resultado final do Modelo 1 está em `docs/arquitetura_ml.md`, na seção "O medidor do tempo e o resultado final do Modelo 1".
