@@ -63,6 +63,12 @@ INTERLAGOS_GEOMETRY_FILE = "vhe_interlagos_gp_kn5_surface_interval_geometry.json
 # Nomes de pista que contam como Interlagos no indice de sessoes.
 INTERLAGOS_TRACK_PREFIXES = ("vhe_interlagos",)
 
+# Pistas de teste: copias de Interlagos com a linha da IA trocada (pedido 47,
+# ADR 0029). Comecam com o prefixo acima, mas as sessoes delas ficam fora do
+# store, do treino, do coach e da evolucao: so o resultado do pedido 47 as le,
+# pedindo explicitamente (`incluir_pistas_de_teste=True`).
+TEST_TRACK_NAMES = ("vhe_interlagos_teste_m1",)
+
 
 # ------------------------------------------------------- grade de distancia ---
 
