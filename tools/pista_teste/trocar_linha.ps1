@@ -7,7 +7,9 @@
   - Copia data\pista_teste\linhas\<Condicao>\fast_lane.ai para <copia>\gp\ai\fast_lane.ai, com a data de agora.
   - Apaga so na copia o que deriva da linha (gp\ai\fast_lane.aip, se existir).
   - Escreve uma linha em data\pista_teste\registro.csv (hora, condicao, sha256, arquivo).
-  - Lista, sem apagar, os caches do CSP com o nome da copia (data\pista_teste\caches_csp.log).
+  - Apaga, nas pastas de cache do CSP (cache\ai_grids, cache\ai_payloads, cache\ai_alt_lanes), so os
+    arquivos cujo nome comeca com "vhe_interlagos_teste_m1_", e lista o que apagou em
+    data\pista_teste\caches_csp.log (ADR 0029, item 15; autorizado pelo Eduardo em 08/11).
   - Confere que o fast_lane.ai original nao mudou.
 
 .EXAMPLE
@@ -45,6 +47,8 @@ foreach ($derivado in @("$LAYOUT\ai\fast_lane.aip")) {
     Conferir-DentroDaCopia $p $alvo
     if (Test-Path -LiteralPath $alvo) { Remove-Item -LiteralPath $alvo -Force; Write-Host "apagado na copia: $alvo" }
 }
+$apagados = Apagar-CachesDaCopia $p
+foreach ($a in $apagados) { Write-Host "cache do CSP apagado: $a" }
 Copy-Item -LiteralPath $fonte -Destination $destino -Force
 (Get-Item -LiteralPath $destino).LastWriteTime = Get-Date
 $shaDestino = Sha256 $destino
@@ -57,17 +61,10 @@ if (-not (Test-Path -LiteralPath $registro)) {
 $hora = Hora-Local
 [System.IO.File]::AppendAllText($registro, "$hora,$Condicao,$shaDestino,$destino`r`n", $UTF8)
 
-$cache = Join-Path $p.Jogo 'cache'
 $log = Join-Path $p.Saida 'caches_csp.log'
-$achados = @()
-foreach ($sub in @('ai_grids', 'ai_payloads', 'ai_alt_lanes')) {
-    $pasta = Join-Path $cache $sub
-    if (Test-Path -LiteralPath $pasta) {
-        $achados += Get-ChildItem -LiteralPath $pasta -File | Where-Object { $_.Name.StartsWith($PISTA_COPIA) } |
-            ForEach-Object { "$sub\$($_.Name) $($_.Length) $($_.LastWriteTime.ToString('s'))" }
-    }
-}
-[System.IO.File]::AppendAllText($log, "$hora $Condicao`r`n" + (($achados | ForEach-Object { "  $_" }) -join "`r`n") + "`r`n", $UTF8)
+$texto = "$hora ${Condicao}: $($apagados.Count) cache(s) do CSP apagado(s)`r`n"
+foreach ($a in $apagados) { $texto += "  apagado $a`r`n" }
+[System.IO.File]::AppendAllText($log, $texto, $UTF8)
 
 Conferir-OriginalIntacta $p $copiaJson | Out-Null
 Write-Host "pronto: $Condicao na copia ($shaDestino), registrado em $registro as $hora"

@@ -299,6 +299,68 @@ def test_trocar_linha_recusa_copia_que_e_juncao_para_a_original(jogo_falso):
     assert _hash_da_pasta(f["pista"]) == antes
 
 
+def _caches(jogo: Path) -> dict:
+    """Os caches do CSP de uma pasta de jogo falsa: os da copia (que somem) e os parecidos (que ficam)."""
+    cache = jogo / "cache"
+    da_copia = [cache / "ai_grids" / "vhe_interlagos_teste_m1_gp_47d532fea323c4b3.bin",
+                cache / "ai_payloads" / "vhe_interlagos_teste_m1_gp__96fff5b2a6d0da18.bin",
+                cache / "ai_alt_lanes" / "vhe_interlagos_teste_m1_gp_x.bin"]
+    ficam = [cache / "ai_grids" / "vhe_interlagos_gp_47d532fea323c4b3.bin",            # a original
+             cache / "ai_payloads" / "vhe_interlagos_gp__96fff5b2a6d0da18.bin",
+             cache / "ai_grids" / "vhe_interlagos40_gp_58bbabadde5bac84.bin",          # outra pista
+             cache / "ai_grids" / "vhe_interlagos_teste_m1x_gp.bin",                    # sem o "_" depois do nome
+             cache / "ai_grids" / "VHE_INTERLAGOS_TESTE_M1_gp.bin",                     # outra caixa
+             cache / "tracks_data" / "vhe_interlagos_teste_m1_.zip",                    # outra pasta de cache
+             cache / "vhe_interlagos_teste_m1_solto.bin",                               # fora das tres pastas
+             cache / "ai_grids" / "vhe_interlagos_teste_m1_pasta" / "dentro.bin"]       # dentro de uma subpasta
+    for p in da_copia + ficam:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(p.name.encode("utf-8"))
+    return {"da_copia": da_copia, "ficam": ficam}
+
+
+@pytestmark_windows
+def test_trocar_linha_apaga_so_os_caches_do_csp_da_copia(jogo_falso):
+    f = jogo_falso
+    assert _ps("criar_copia.ps1", *_args(f)).returncode == 0
+    caches = _caches(f["jogo"])
+    antes = {p: p.read_bytes() for p in caches["ficam"]}
+    r = _ps("trocar_linha.ps1", "-Condicao", "C1", *_args(f))
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert not any(p.exists() for p in caches["da_copia"])
+    assert {p: p.read_bytes() for p in caches["ficam"]} == antes
+    log = (f["repo"] / "data" / "pista_teste" / "caches_csp.log").read_text(encoding="utf-8")
+    assert "C1: 3 cache(s) do CSP apagado(s)" in log
+    for p in caches["da_copia"]:
+        assert f"apagado {p.parent.name}\\{p.name} " in log
+    # sem caches da copia, a troca seguinte registra zero e nao mexe em nada
+    r = _ps("trocar_linha.ps1", "-Condicao", "C4", *_args(f))
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "C4: 0 cache(s) do CSP apagado(s)" in (f["repo"] / "data" / "pista_teste" / "caches_csp.log").read_text(encoding="utf-8")
+    assert {p: p.read_bytes() for p in caches["ficam"]} == antes
+
+
+@pytestmark_windows
+def test_trocar_linha_recusa_pasta_de_cache_que_e_juncao(jogo_falso):
+    f = jogo_falso
+    assert _ps("criar_copia.ps1", *_args(f)).returncode == 0
+    alheia = f["base"] / "alheia"
+    alheia.mkdir()
+    vitima = alheia / "vhe_interlagos_teste_m1_gp_x.bin"
+    vitima.write_bytes(b"nao apagar")
+    (f["jogo"] / "cache").mkdir()
+    subprocess.run(["cmd", "/c", "mklink", "/J", str(f["jogo"] / "cache" / "ai_grids"), str(alheia)], check=True,
+                   capture_output=True)
+    try:
+        linha = (f["copia"] / "gp" / "ai" / "fast_lane.ai").read_bytes()
+        r = _ps("trocar_linha.ps1", "-Condicao", "C3", *_args(f))
+        assert r.returncode == 1 and "juncao" in r.stdout, r.stdout + r.stderr
+        assert vitima.read_bytes() == b"nao apagar"
+        assert (f["copia"] / "gp" / "ai" / "fast_lane.ai").read_bytes() == linha
+    finally:
+        os.rmdir(f["jogo"] / "cache" / "ai_grids")
+
+
 @pytestmark_windows
 def test_trocar_linha_recusa_arquivo_que_nao_bate_com_o_manifesto(jogo_falso):
     f = jogo_falso
@@ -396,6 +458,24 @@ def test_papeis_saida_primeira_lancada_e_as_que_contam():
     R.papeis("C0 final", voltas)
     assert [v.papel for v in voltas] == ["saida", "primeira lancada", "conta", "conta", "saida", "conta", "conta",
                                          "alem das que contam", "alem das que contam"]
+
+
+# ------------------------------------------------- conferencia da troca ---
+
+def test_conferencia_da_troca_pela_distancia_as_linhas():
+    theta = np.linspace(0, 2 * np.pi, 400, endpoint=False)
+    circulo = lambda r: np.column_stack([r * np.cos(theta), r * np.sin(theta)])  # noqa: E731
+    linhas = {"C0": circulo(100.0), "C1": circulo(103.0), "C2": circulo(97.0), "C3": circulo(101.0), "C4": circulo(99.0)}
+    rng = np.random.default_rng(0)
+    gravada = lambda r: circulo(r) + rng.normal(0, 0.2, size=(400, 2))  # noqa: E731
+    out = E.conferir_troca({"C0": [gravada(100.0)], "C1": [gravada(103.0), gravada(103.1)],
+                            "C2": [gravada(100.0)], "C0 final": [gravada(100.0)], "C4": []}, linhas)
+    assert out["C0"]["troca_pegou"] and out["C0 final"]["troca_pegou"]
+    assert out["C1"]["troca_pegou"] and out["C1"]["voltas"] == 2
+    assert out["C1"]["mediana_ate_a_linha_da_condicao_m"] < 0.5 < out["C1"]["mediana_ate_a_linha_original_m"]
+    assert not out["C2"]["troca_pegou"]            # a IA ficou na linha original: a troca nao pegou
+    assert "C4" not in out                         # sem voltas, sem conferencia
+    assert not any("tempo" in k for r in out.values() for k in r)
 
 
 # ------------------------------------------------------ veredito do ADR ---

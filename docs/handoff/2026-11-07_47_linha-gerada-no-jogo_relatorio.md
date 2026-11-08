@@ -11,7 +11,8 @@
   - `9544ff0b` Pedido 47, Parte B: ADR 0029 (a linha gerada dirigida pela IA do jogo), registrado antes do jogo, com o medidor de cada condicao;
   - `15b46894` Pedido 47, Parte C: as linhas C1 a C4 (fora do git, com o sha256), os scripts da copia da pista, a figura, o resultado e os testes;
   - `3e48e0d7` Pedido 47, parada da Parte D: emenda do ADR 0029 antes do jogo, o roteiro, a tabela das anotacoes, a suite e o relatorio;
-  - o commit que registra o envio conferido (veja "O envio ao GitHub").
+  - `afe690ef` Relatorio do pedido 47: o envio da parada conferido;
+  - o commit das duas mudanças de 08/11 (os caches do CSP e a conferência entre as sessões; veja "Atualização de 08/11").
 - **Arquivos de handoff** (`docs/handoff/2026-11-07_47_linha-gerada-no-jogo…`):
   - `_relatorio.md` (este);
   - `_parte_a.json` (Parte A: a pasta, o formato, o referencial, os campos, a linha nova em 3D e os caches do CSP);
@@ -208,7 +209,7 @@ Nenhum item parou. O plano B não foi necessário.
 | script | o que faz |
 |---|---|
 | `criar_copia.ps1` | registra o sha256 do `fast_lane.ai` original em `data\pista_teste\copia.json`, copia a pista inteira para `vhe_interlagos_teste_m1` sem abrir os arquivos, troca o nome em `ui\gp` e `ui\norm` (UTF-8 sem BOM, só a linha do nome) e confere a original depois |
-| `trocar_linha.ps1 -Condicao C0\|C1\|C2\|C3\|C4` | confere o arquivo da condição contra o `linhas.json`, apaga na cópia o `gp\ai\fast_lane.aip` (se existir), copia a linha com a data de agora, escreve no `registro.csv` (hora, condição, sha256, arquivo), lista os caches do CSP e confere a original antes e depois |
+| `trocar_linha.ps1 -Condicao C0\|C1\|C2\|C3\|C4` | confere o arquivo da condição contra o `linhas.json`, apaga na cópia o `gp\ai\fast_lane.aip` (se existir), apaga os caches do CSP da cópia (só `cache\ai_grids`, `ai_payloads` e `ai_alt_lanes`, só nomes que começam com `vhe_interlagos_teste_m1_`; desde 08/11), copia a linha com a data de agora, escreve no `registro.csv` (hora, condição, sha256, arquivo) e no `caches_csp.log` (o que apagou), e confere a original antes e depois |
 | `remover_copia.ps1` | apaga a cópia, e só ela, conferindo a original antes e depois |
 
 **Os três:**
@@ -282,7 +283,7 @@ O `.ps1` só tem ASCII, para o PowerShell 5.1.
 7. **Duas sessões de no máximo 45 minutos.** Uma condição de 9 voltas leva cerca de 14 minutos (13 de voltas e 1 de troca).
    - **Sessão 1:** C0, C1 e C4 (cerca de 42 min).
    - **Sessão 2:** C2, C3 e C0 final (cerca de 38 min).
-   - Entre as duas, não rode nenhum script. A cópia fica instalada.
+   - **Entre as duas** (mudança de 08/11): ao fim da sessão 1, com o jogo fechado, avise "terminei a sessão 1". Eu faço só a conferência da troca (sem nenhum tempo) e digo se você pode seguir. Até lá, não rode nenhum script. A cópia fica instalada.
 8. **Se a IA rodar ou sair da pista,** deixe seguir: a volta é descartada pelo resultado. Se ela não conseguir andar (presa, rodando a cada volta), feche o jogo, anote e passe para a próxima condição.
 9. **Se algum script parar** com "PARADO: …", não contorne: anote a mensagem e me avise.
 
@@ -365,6 +366,28 @@ Nenhum arquivo deste pedido toca em `core/leitura`.
 | antes da parada (Parte C, a emenda e este relatório) | `etapa/linha-gerada-no-jogo` | `3e48e0d724813dec6651ac1f1c7057e68e58d2f7` | `3e48e0d724813dec6651ac1f1c7057e68e58d2f7` | sim |
 
 Este registro vai num commit à parte (`Relatorio do pedido 47: o envio da parada conferido`), também enviado; o hash dele está no chat.
+
+## Atualização de 08/11: as duas mudanças de mecânica, antes do teste
+
+Você pediu, antes do teste (nenhum critério muda):
+
+1. **O `trocar_linha.ps1` apaga os caches do CSP da cópia.** A cada troca, ele apaga, nas pastas `cache\ai_grids`, `cache\ai_payloads` e `cache\ai_alt_lanes`, só os arquivos cujo nome começa com `vhe_interlagos_teste_m1_`, e lista o que apagou em `data\pista_teste\caches_csp.log`.
+   - **Testado na pasta falsa "[teste]":**
+     - os três caches da cópia somem;
+     - oito arquivos parecidos ficam: os da original, os de `vhe_interlagos40`, um nome sem o `_` depois de `teste_m1`, um em maiúsculas, um em `tracks_data`, um solto em `cache\` e um dentro de uma subpasta;
+     - uma troca sem caches registra zero;
+     - uma pasta de cache que é junção é recusada, sem apagar nada e sem trocar a linha.
+   - **A emenda está no ADR 0029, item 15,** antes de qualquer gravação na cópia.
+   - **A troca do C0 que você já fez** (08/11, 00:13:08, com a versão anterior do script) vale como está. Ainda não havia cache da cópia, porque o jogo não tinha aberto a cópia, e nenhuma gravação da cópia existe. **Não precisa rodar o C0 de novo:** a próxima troca (C1) já apaga os caches que a sessão do C0 criar.
+2. **A conferência entre as sessões:** o comando novo `python -m ml.scripts.pista_teste conferencia --rotulo sessao1` faz só a E.1:
+   - a atribuição das gravações;
+   - as voltas por papel e quantas a IA dirigiu;
+   - a distância mediana das posições das voltas que contam até a linha da condição e até a original;
+   - "a troca pegou?".
+
+   **Ele não mede nem mostra nenhum tempo.** O cronômetro só separa as voltas, como no store. Testado com dados sintéticos. Quando você avisar "terminei a sessão 1", eu rodo o comando e digo se você pode seguir.
+
+**Testes:** `test_pista_teste.py` agora tem 23 testes, todos passando. Os três novos são a limpeza dos caches, a junção na pasta de cache e a conferência da troca.
 
 ## O que falta (depois do seu aviso "rodei a IA nas linhas")
 

@@ -87,6 +87,39 @@ function Ler-ShaOriginal([object]$pastas) {
     return (Get-Content -LiteralPath $arquivo -Raw -Encoding UTF8 | ConvertFrom-Json)
 }
 
+$PASTAS_DE_CACHE_DO_CSP = @('ai_grids', 'ai_payloads', 'ai_alt_lanes')
+
+function Apagar-CachesDaCopia([object]$pastas) {
+    # Emenda do ADR 0029 (item 15, autorizada pelo Eduardo em 08/11): apaga, nas tres pastas de cache do CSP,
+    # so os arquivos cujo nome comeca com "vhe_interlagos_teste_m1_". Nenhum outro arquivo dessas pastas.
+    $prefixo = $PISTA_COPIA + '_'
+    $cache = Caminho-Completo (Join-Path $pastas.Jogo 'cache')
+    $apagados = @()
+    if (-not (Test-Path -LiteralPath $cache -PathType Container)) { return , $apagados }
+    if ((Get-Item -LiteralPath $cache -Force).Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+        Parar "recusado: $cache e uma juncao ou um link"
+    }
+    foreach ($sub in $PASTAS_DE_CACHE_DO_CSP) {
+        $pasta = Caminho-Completo (Join-Path $cache $sub)
+        if (-not (Test-Path -LiteralPath $pasta -PathType Container)) { continue }
+        if ((Get-Item -LiteralPath $pasta -Force).Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+            Parar "recusado: $pasta e uma juncao ou um link"
+        }
+        $alvos = @(Get-ChildItem -LiteralPath $pasta -File -Force | Where-Object { $_.Name.StartsWith($prefixo, [System.StringComparison]::Ordinal) })
+        foreach ($arquivo in $alvos) {
+            $cheio = Caminho-Completo $arquivo.FullName
+            if ((Caminho-Completo $arquivo.DirectoryName) -ne $pasta) { Parar "recusado: $cheio fora de $pasta" }
+            if (-not $arquivo.Name.StartsWith($prefixo, [System.StringComparison]::Ordinal)) { Parar "recusado: $cheio nao e da copia" }
+            if ($arquivo.Attributes -band [System.IO.FileAttributes]::ReparsePoint) { Parar "recusado: $cheio e um link" }
+            $linha = "$sub\$($arquivo.Name) $($arquivo.Length) $($arquivo.LastWriteTime.ToString('s'))"
+            Remove-Item -LiteralPath $cheio -Force
+            if (Test-Path -LiteralPath $cheio) { Parar "nao consegui apagar $cheio" }
+            $apagados += $linha
+        }
+    }
+    return , $apagados
+}
+
 function Conferir-OriginalIntacta([object]$pastas, [object]$copiaJson) {
     $agora = Sha256 (Join-Path $pastas.Original "$LAYOUT\ai\fast_lane.ai")
     if ($agora -ne $copiaJson.sha256_fast_lane_original) {

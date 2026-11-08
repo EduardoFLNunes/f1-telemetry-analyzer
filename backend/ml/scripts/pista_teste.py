@@ -3,6 +3,7 @@
     python -m ml.scripts.pista_teste parte-a  [--handoff PREFIXO]
     python -m ml.scripts.pista_teste medidor  [--handoff PREFIXO]
     python -m ml.scripts.pista_teste linhas   [--handoff PREFIXO]
+    python -m ml.scripts.pista_teste conferencia [--rotulo sessao1] [--handoff PREFIXO]
     python -m ml.scripts.pista_teste resultado [--handoff PREFIXO]
 
 * `parte-a`: so leitura e contas. A pasta da pista (nomes e tamanhos), o
@@ -12,6 +13,8 @@
   jogo;
 * `linhas`: os `fast_lane.ai` de C1 a C4 em `data/pista_teste/linhas/` (fora do
   git), com o sha256, e a figura;
+* `conferencia`: so a conferencia da troca (E.1), entre as sessoes no jogo,
+  sem calcular nem mostrar nenhum tempo (pedido do Eduardo de 08/11);
 * `resultado`: depois do teste no jogo (Parte E).
 
 Nada aqui escreve na pasta do jogo: quem copia e troca a linha sao os scripts
@@ -274,15 +277,17 @@ def medidor(args) -> int:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("comando", choices=("parte-a", "medidor", "linhas", "resultado"))
+    parser.add_argument("comando", choices=("parte-a", "medidor", "linhas", "conferencia", "resultado"))
     parser.add_argument("--handoff", help="prefixo dos arquivos de handoff")
+    parser.add_argument("--rotulo", default="sessao1", help="conferencia: o nome do arquivo de saida")
     args = parser.parse_args(argv)
     if args.comando == "parte-a":
         return parte_a(args)
     if args.comando == "medidor":
         return medidor(args)
     from ml.pista_teste import etapas
-    return etapas.linhas(args) if args.comando == "linhas" else etapas.resultado(args)
+    acoes = {"linhas": etapas.linhas, "conferencia": etapas.conferencia, "resultado": etapas.resultado}
+    return acoes[args.comando](args)
 
 
 if __name__ == "__main__":

@@ -185,6 +185,22 @@ Escrita ao implementar a Parte E, **antes de qualquer sessão na cópia.** Ela n
 - **A conferência das medidas, em voltas antigas** (não da cópia): na gravação de 04/10, as 9 voltas da IA saem válidas (saída máxima do corredor de 0,84 m, ângulo máximo de 22°). As voltas humanas e as que passam pelos boxes saem inválidas, com o motivo.
 - **Os caches do CSP** com o nome da cópia (`cache\ai_grids`, `ai_payloads`, `ai_alt_lanes`, na pasta do jogo) ficam fora da cópia. Os scripts não os apagam: o `trocar_linha.ps1` só os lista em `data/pista_teste/caches_csp.log`, a cada troca, e põe a data de agora no arquivo novo. Se o CSP reusar um cache velho, a conferência da troca (item 9) mostra.
 
+### 15. Emenda antes do jogo (08/11, pedido do Eduardo): os caches do CSP e a conferência entre as sessões
+
+Escrita antes de qualquer gravação na cópia. São duas mudanças de mecânica, e **nenhum critério muda.**
+
+- **Os caches do CSP:** a cada troca, o `trocar_linha.ps1` apaga, nas pastas `cache\ai_grids`, `cache\ai_payloads` e `cache\ai_alt_lanes` do jogo, **só os arquivos cujo nome começa com `vhe_interlagos_teste_m1_`**, e lista o que apagou em `data\pista_teste\caches_csp.log`. Isso substitui o último ponto do item 14, que só listava.
+  - Nenhum outro arquivo dessas pastas é tocado: nem os da pista original (`vhe_interlagos_gp_…`), nem os de outras pistas, nem nomes parecidos sem o `_` depois do nome da cópia.
+  - Também não são tocadas subpastas, outras pastas de cache (como `tracks_data`) ou arquivos soltos em `cache\`.
+  - O script recusa uma pasta de cache que seja junção ou link.
+  - Tudo isso foi testado numa pasta falsa "[teste]" (`test_trocar_linha_apaga_so_os_caches_do_csp_da_copia` e `test_trocar_linha_recusa_pasta_de_cache_que_e_juncao`).
+  - **A troca do C0 de 08/11 às 00:13:08** foi feita com a versão anterior do script. Não havia nenhum cache da cópia (o `caches_csp.log` daquela troca está vazio), porque o jogo ainda não tinha aberto a cópia. Ela vale como está.
+- **A conferência entre as sessões:** depois da sessão 1 (C0, C1 e C4), o Eduardo avisa, e só a conferência da troca do item 9 é feita (`python -m ml.scripts.pista_teste conferencia --rotulo sessao1`):
+  - a distância mediana das posições das voltas que contam até a linha da condição e até a original;
+  - a atribuição das gravações e o número de voltas por papel.
+
+  **Nenhum tempo é calculado nem mostrado.** O cronômetro do jogo só é usado para separar as voltas (`iter_laps`, como no store). Nenhum tempo de volta, de microssetor ou de grade é medido. O resultado diz ao Eduardo se ele pode seguir para a sessão 2. Uma troca que não pegou na sessão 1 continua saindo do veredito pelo item 9; o que fazer com ela (repetir a condição, por exemplo) é decisão do Eduardo, registrada antes da sessão 2.
+
 ## Consequências
 
 - **O resultado vem do cronômetro do jogo, com a mesma execução.** É o medidor que faltava no pedido 46, mas mede só uma execução: a da IA do Assetto Corsa, com o planejamento de velocidade dela.

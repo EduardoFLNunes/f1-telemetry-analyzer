@@ -241,6 +241,104 @@ def tempo_mmss(segundos: float) -> str:
     return f"{m}:{s:06.3f}".replace(".", ",")
 
 
+# ------------------------------------------- parte E.1: a troca pegou? ---
+
+def conferir_troca(pontos: Dict[str, List[np.ndarray]], linhas_xz: Dict[str, np.ndarray]) -> Dict[str, dict]:
+    """ADR 0029, item 9: a mediana das distancias das posicoes gravadas a linha da condicao e a linha original.
+
+    `pontos`: {condicao: [posicoes X/Z de cada volta que conta]}. A troca pegou quando a mediana ate a
+    linha da condicao e menor que ate a original (no C0 e no C0 final, a linha e a propria original).
+    """
+    out = {}
+    for cond, lista in pontos.items():
+        lista = [p for p in lista if len(p)]
+        if not lista:
+            continue
+        base = "C0" if cond == R.C0_FINAL else cond
+        pts = np.vstack(lista)
+        d_linha = float(np.median(N._projetar_na_polilinha(pts, linhas_xz[base])[2]))
+        d_orig = float(np.median(N._projetar_na_polilinha(pts, linhas_xz["C0"])[2]))
+        out[cond] = {"voltas": len(lista), "mediana_ate_a_linha_da_condicao_m": d_linha,
+                     "mediana_ate_a_linha_original_m": d_orig,
+                     "troca_pegou": True if base == "C0" else bool(d_linha < d_orig)}
+    return out
+
+
+def conferencia(args) -> int:
+    """So a conferencia da troca (E.1), entre as sessoes no jogo. **Nao calcula nem mostra nenhum tempo.**
+
+    Cada volta passa por `clean_lap` e `align_lap` (as posicoes e a cobertura); os papeis (saida, primeira
+    lancada, as que contam) sao os do ADR 0029. Sai `data/pista_teste/conferencia_<rotulo>.json`.
+    """
+    from ..data.recordings import iter_laps, list_all_sessions
+    from ..data.store_v2 import git_commit
+    from ..preprocessing.alignment import align_lap
+    from ..preprocessing.cleaning import clean_lap
+    from ..track.geometry import load_corridor_geometry
+
+    saida = C.raiz_saida()
+    if not (saida / "registro.csv").exists():
+        raise SystemExit(f"PARADO: sem {saida / 'registro.csv'}.")
+    manifesto = json.loads((pasta_das_linhas() / "linhas.json").read_text(encoding="utf-8"))
+    esperado = {k: v["sha256"] for k, v in manifesto["condicoes"].items()}
+    sha_original_agora = A.sha256_arquivo(C.fast_lane_original())
+    trocas = R.ler(saida / "registro.csv")
+    track = load_corridor_geometry()
+    linhas_xz = {k: A.ler(pasta_das_linhas() / k / "fast_lane.ai").pos[:, [0, 2]].astype(float) for k in C.CONDICOES}
+    sessoes = list_all_sessions(track_prefixes=(C.PISTA_COPIA,), incluir_pistas_de_teste=True)
+    inicios = {s.session_id: _inicio(s) for s in sessoes}
+    atrib = R.atribuir({k: v for k, v in inicios.items() if v is not None}, trocas, esperado)
+    por_sessao = {a.sessao: a for a in atrib}
+
+    por_condicao: Dict[str, List[dict]] = {}
+    for sessao in sessoes:
+        a = por_sessao.get(sessao.session_id)
+        if a is None or not a.condicao:
+            continue
+        laps = list(iter_laps(sessao))
+        for i, lap in enumerate(laps):
+            cleaned, _ = clean_lap(lap.frame)
+            aligned, alignment = align_lap(cleaned, track)
+            ai = lap.frame["ai_controlled"] if "ai_controlled" in lap.frame else None
+            ordem = float(lap.frame["timestamp_s"].iloc[0]) if "timestamp_s" in lap.frame else float(i)
+            por_condicao.setdefault(a.condicao, []).append({
+                "sessao": sessao.session_id, "sequencia": lap.sequence, "ordem": ordem, "primeira": i == 0,
+                "interrompida": i == len(laps) - 1 and alignment.coverage < COBERTURA_MINIMA,
+                "cobertura": float(alignment.coverage),
+                "ia_dirigiu": bool(ai is not None and ai.fillna(False).astype(bool).all()),
+                "xz": aligned[["x", "z"]].to_numpy(float) if len(aligned) else np.zeros((0, 2))})
+    papeis_por_condicao = {}
+    for cond, lista in por_condicao.items():
+        objs = [R.VoltaNaCondicao(v["sessao"], v["sequencia"], v["ordem"], v["primeira"], v["interrompida"]) for v in lista]
+        R.papeis(cond, objs)
+        papel = {(o.sessao, o.sequencia): o.papel for o in objs}
+        for v in lista:
+            v["papel"] = papel[(v["sessao"], v["sequencia"])]
+        papeis_por_condicao[cond] = {p: sum(v["papel"] == p for v in lista) for p in
+                                     ("saida", "primeira lancada", "conta", "alem das que contam", "interrompida")}
+        papeis_por_condicao[cond]["que_contam_com_a_ia_dirigindo"] = sum(v["papel"] == "conta" and v["ia_dirigiu"] for v in lista)
+    troca = conferir_troca({c: [v["xz"] for v in lista if v["papel"] == "conta"] for c, lista in por_condicao.items()},
+                           linhas_xz)
+    payload = {"pedido": 47, "parte": "E.1 entre as sessoes (sem tempos)", "commit": git_commit(),
+               "comando": f"python -m ml.scripts.pista_teste conferencia --rotulo {args.rotulo}",
+               "original_intacto": manifesto["original"]["sha256"] == sha_original_agora,
+               "trocas_no_registro": [{"hora": t.hora.isoformat(), "condicao": t.condicao, "sha256": t.sha256} for t in trocas],
+               "atribuicao": [{"sessao": a.sessao, "inicio": a.inicio.isoformat(), "condicao": a.condicao, "motivo": a.motivo}
+                              for a in atrib],
+               "voltas_por_papel": papeis_por_condicao, "a_ia_seguiu_a_linha": troca}
+    _json(saida / f"conferencia_{args.rotulo}.json", payload)
+    if args.handoff:
+        _json(Path(str(args.handoff) + f"_conferencia_{args.rotulo}.json"), payload)
+    print("original intacto:", payload["original_intacto"])
+    for a in payload["atribuicao"]:
+        print(f"gravacao {a['sessao']}: {a['condicao'] or 'sem condicao (' + a['motivo'] + ')'}")
+    for cond, r in troca.items():
+        print(f"{cond:9s} voltas que contam {r['voltas']}  ate a linha da condicao {r['mediana_ate_a_linha_da_condicao_m']:.2f} m"
+              f"  ate a original {r['mediana_ate_a_linha_original_m']:.2f} m  troca pegou: {r['troca_pegou']}"
+              f"  (IA dirigindo em {papeis_por_condicao[cond]['que_contam_com_a_ia_dirigindo']})")
+    return 0
+
+
 # ------------------------------------------------------- parte E: resultado ---
 
 def _inicio(session) -> Optional[datetime]:
@@ -317,17 +415,8 @@ def resultado(args) -> int:
             v["papel"] = papel[(v["sessao"], v["sequencia"])]
 
     # E.1: a IA seguiu a linha da condicao?
-    conferencia = {}
-    for cond, lista in por_condicao.items():
-        base = "C0" if cond == R.C0_FINAL else cond
-        pts = [v["xz"] for v in lista if v.get("papel") == "conta" and len(v["xz"])]
-        if not pts:
-            continue
-        pts = np.vstack(pts)
-        d_linha = float(np.median(N._projetar_na_polilinha(pts, linhas_xz[base])[2]))
-        d_orig = float(np.median(N._projetar_na_polilinha(pts, linhas_xz["C0"])[2]))
-        conferencia[cond] = {"mediana_ate_a_linha_da_condicao_m": d_linha, "mediana_ate_a_linha_original_m": d_orig,
-                             "troca_pegou": True if base == "C0" else bool(d_linha < d_orig)}
+    conferencia = conferir_troca({cond: [v["xz"] for v in lista if v.get("papel") == "conta"]
+                                  for cond, lista in por_condicao.items()}, linhas_xz)
 
     def validas(cond):
         return [v for v in por_condicao.get(cond, []) if v.get("papel") == "conta" and v["valida"]]
