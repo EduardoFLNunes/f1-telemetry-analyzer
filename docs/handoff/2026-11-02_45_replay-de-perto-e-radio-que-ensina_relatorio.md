@@ -1,7 +1,7 @@
 # Relatório parcial do pedido 45: o replay de perto, as voltas nos boxes e o rádio que diz onde e por quê
 
 - **Pedido:** `docs/prompts/2026-11-02_45_replay-de-perto-e-radio-que-ensina.md`, com a sua decisão de 04/11 no item B.1.
-- **Situação:** **parado na Parte G, para o teste no jogo com você.** Sem merge em `develop`. O envio é você quem faz: os comandos estão no fim.
+- **Situação (07/11, 21:07):** **parado na Parte G.** Você testa depois, com o app instalado 0.7.0 (já com voz) e o app do jogo 0.5.0. Faltam ouvir o rádio no jogo, o botão "Abrir no app", a roda do mouse e o FPS com o replay desligado. Sem merge em `develop`. O envio é você quem faz: os comandos estão no fim.
 - **Branch:** `etapa/replay-e-radio-que-ensina`, a partir de `develop` em `bd04b93e`.
 - **Commits:**
   - em `develop`: `bd04b93e` Pedido 45: texto do pedido, atualizacao de 04/11 do pedido 42 e backlog;
