@@ -24,3 +24,7 @@ O ADR 0001 previa uma worktree por sessão e uma divisão de domínios entre dua
 - Não há mais conflito de arquivos entre sessões nem dependência de ordem entre pedidos.
 - O trabalho fica sequencial. Uma tarefa de app (como a geometria única, ADR 0002) espera a etapa científica em andamento, ou o contrário.
 - O trabalho da worktree `elastic-kepler-a8182e` é trazido para `develop` pelo patch já revisado (`2026-09-30_coach_mapeamento.patch`). Depois disso, a worktree é removida.
+
+## Atualização de 07/11/2026
+
+- Pastas separadas por `git worktree` são permitidas, com uma sessão em cada; decisão de 07/11, pedido 47. A primeira é `f1-telemetry-analyzer-47` (branch `etapa/linha-gerada-no-jogo`), criada pelo Eduardo enquanto a pasta principal fica com o pedido 45.
