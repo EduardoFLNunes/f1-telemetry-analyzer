@@ -389,6 +389,23 @@ Você pediu, antes do teste (nenhum critério muda):
 
 **Testes:** `test_pista_teste.py` agora tem 23 testes, todos passando. Os três novos são a limpeza dos caches, a junção na pasta de cache e a conferência da troca.
 
+## Conferência de 08/11, 13:40: os caches do CSP depois da troca para C1
+
+Você perguntou por que a troca para C1 (08/11 às 02:00:28) registrou "0 cache(s) do CSP apagado(s)". Conferi só nomes, tamanhos e datas, sem nenhum tempo de volta:
+
+1. **Nenhum arquivo de `cache\ai_grids`, `cache\ai_payloads` ou `cache\ai_alt_lanes` foi criado ou modificado depois de 08/11 00:13.** Nenhum arquivo de nenhuma outra pasta de `cache\` do jogo mudou depois disso.
+2. **Não existe gravação da cópia** no app instalado, nem no repositório. A última gravação do app é `2026-11-07_19-52-33_vhe_interlagos` (o teste do pedido 45).
+3. **O jogo não rodou desde 07/11 às 20:15:**
+   - o `Documents\Assetto Corsa\logs\log.txt` (reescrito a cada vez que o jogo abre) e o `custom_shaders_patch.log` são de 07/11 20:15:38;
+   - o `cfg\race.ini`, que o Content Manager escreve a cada largada, aponta para `TRACK=vhe_interlagos` (a original), e não para a cópia;
+   - nenhum processo do jogo estava aberto.
+4. **Então o CSP não gravou nenhum cache da cópia, com nenhum nome.** Ele nunca carregou a cópia. Não há o que ajustar no padrão `vhe_interlagos_teste_m1_` por enquanto. Ele só pode ser conferido depois da primeira sessão na cópia: a troca seguinte lista no `caches_csp.log` o que apagou.
+
+**A consequência: a sessão do C0 não aconteceu.**
+- O `registro.csv` tem a troca do C0 (00:13:08) e logo depois a do C1 (02:00:28), sem nenhuma gravação entre elas. A cópia está hoje com a linha da C1 (sha256 `9fc17f49…`).
+- **Para seguir a ordem do ADR (C0 primeiro),** o próximo passo é trocar de novo para C0 e rodar a sessão dele.
+- **Mas o código de hoje leria esse C0 novo como "C0 final",** porque ele vem depois de uma troca para C1 no registro. A correção proposta, só de mecânica: uma troca seguida de outra antes de qualquer gravação não conta. O C0 final passa a ser só um C0 que vem depois de uma condição que teve gravação. **Espera a sua decisão.**
+
 ## O que falta (depois do seu aviso "rodei a IA nas linhas")
 
 1. **A Parte E:** `python -m ml.scripts.pista_teste resultado`, com as conferências E.1 a E.6 e os vereditos do ADR 0029, sem mudar nada do registro.
