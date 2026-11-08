@@ -201,6 +201,14 @@ Escrita antes de qualquer gravação na cópia. São duas mudanças de mecânica
 
   **Nenhum tempo é calculado nem mostrado.** O cronômetro do jogo só é usado para separar as voltas (`iter_laps`, como no store). Nenhum tempo de volta, de microssetor ou de grade é medido. O resultado diz ao Eduardo se ele pode seguir para a sessão 2. Uma troca que não pegou na sessão 1 continua saindo do veredito pelo item 9; o que fazer com ela (repetir a condição, por exemplo) é decisão do Eduardo, registrada antes da sessão 2.
 
+### 16. Emenda antes do jogo (08/11, aprovada pelo Eduardo às 13:48): uma troca sem gravação não conta
+
+Escrita antes de qualquer gravação na cópia. É uma mudança de mecânica, e nenhum critério muda.
+
+- **O caso:** o registro tem a troca do C0 (08/11 00:13:08) e logo depois a do C1 (02:00:28), sem nenhuma sessão do jogo entre elas. O jogo não rodou desde 07/11 às 20:15, e o `log.txt` e o `race.ini` mostram isso. O C0 foi trocado de novo às 13:48:25, para seguir a ordem do item 3. Pela regra antiga do item 6, esse C0 seria lido como "C0 final", porque vem depois de uma troca para C1.
+- **A regra:** uma gravação continua pertencendo à última troca antes do início dela. **Uma troca só faz o C0 seguinte virar o C0 final se teve pelo menos uma gravação.** Uma troca seguida de outra, sem gravação entre elas, não conta, e o resultado a lista com a nota "sem gravação". Com o registro de hoje, uma sessão que comece depois de 13:48:25 é o C0, e o C0 final é o C0 que vier depois de uma condição com gravação.
+- **Testado** com dados sintéticos (`test_troca_sem_gravacao_nao_faz_o_c0_virar_final`), com a sequência de 08/11 e a ordem completa depois dela.
+
 ## Consequências
 
 - **O resultado vem do cronômetro do jogo, com a mesma execução.** É o medidor que faltava no pedido 46, mas mede só uma execução: a da IA do Assetto Corsa, com o planejamento de velocidade dela.

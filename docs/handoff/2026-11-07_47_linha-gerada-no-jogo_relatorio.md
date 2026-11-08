@@ -404,7 +404,24 @@ Você perguntou por que a troca para C1 (08/11 às 02:00:28) registrou "0 cache(
 **A consequência: a sessão do C0 não aconteceu.**
 - O `registro.csv` tem a troca do C0 (00:13:08) e logo depois a do C1 (02:00:28), sem nenhuma gravação entre elas. A cópia está hoje com a linha da C1 (sha256 `9fc17f49…`).
 - **Para seguir a ordem do ADR (C0 primeiro),** o próximo passo é trocar de novo para C0 e rodar a sessão dele.
-- **Mas o código de hoje leria esse C0 novo como "C0 final",** porque ele vem depois de uma troca para C1 no registro. A correção proposta, só de mecânica: uma troca seguida de outra antes de qualquer gravação não conta. O C0 final passa a ser só um C0 que vem depois de uma condição que teve gravação. **Espera a sua decisão.**
+- **Mas o código daquele momento leria esse C0 novo como "C0 final",** porque ele vem depois de uma troca para C1 no registro. Propus uma correção só de mecânica: uma troca seguida de outra antes de qualquer gravação não conta.
+
+### A correção, aprovada por você às 13:48 ("Sim, corrija")
+
+- **A regra (ADR 0029, item 16):**
+  - uma gravação continua pertencendo à última troca antes do início dela;
+  - **o C0 final é só um C0 que vem depois de uma condição que teve gravação;**
+  - as trocas sem gravação aparecem no resultado e na conferência com a nota "sem gravação".
+- **O código:** `backend/ml/pista_teste/registro.py`:
+  - o `ler` devolve as condições como estão escritas;
+  - o `atribuir` decide o C0 final depois de saber quais trocas tiveram gravação;
+  - o `trocas_rotuladas` mostra cada troca com o rótulo e as gravações dela.
+- **Testado** com a sequência de 08/11 e a ordem completa depois dela: C0 e C1 sem gravação, e depois C0, C1, C4, C2, C3 e C0 final, todos com gravação. Saem C0, C1, C4, C2, C3 e "C0 final". `test_pista_teste.py` tem 24 testes, todos passando.
+- **O registro real,** lido com a correção:
+  - a troca do C0 de 00:13:08 e a do C1 de 02:00:28 ficam "sem gravação";
+  - **você já trocou para o C0 de novo às 13:48:25.** A cópia está com a linha original (sha256 `36b57fd8…`), sem nenhum cache do CSP, e não há gravação da cópia;
+  - **uma sessão que comece agora conta como C0.**
+- **Você pode começar a sessão 1** (C0, C1 e C4), pelo roteiro.
 
 ## O que falta (depois do seu aviso "rodei a IA nas linhas")
 

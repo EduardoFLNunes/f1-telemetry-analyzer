@@ -322,7 +322,7 @@ def conferencia(args) -> int:
     payload = {"pedido": 47, "parte": "E.1 entre as sessoes (sem tempos)", "commit": git_commit(),
                "comando": f"python -m ml.scripts.pista_teste conferencia --rotulo {args.rotulo}",
                "original_intacto": manifesto["original"]["sha256"] == sha_original_agora,
-               "trocas_no_registro": [{"hora": t.hora.isoformat(), "condicao": t.condicao, "sha256": t.sha256} for t in trocas],
+               "trocas_no_registro": R.trocas_rotuladas({k: v for k, v in inicios.items() if v is not None}, trocas),
                "atribuicao": [{"sessao": a.sessao, "inicio": a.inicio.isoformat(), "condicao": a.condicao, "motivo": a.motivo}
                               for a in atrib],
                "voltas_por_papel": papeis_por_condicao, "a_ia_seguiu_a_linha": troca}
@@ -470,7 +470,7 @@ def resultado(args) -> int:
         "pedido": 47, "parte": "E", "commit": git_commit(), "comando": "python -m ml.scripts.pista_teste resultado",
         "conferencia_do_teste": {
             "gravacoes_da_copia": [s.session_id for s in sessoes], "gravacoes_sem_inicio": sem_inicio,
-            "trocas_no_registro": [{"hora": t.hora.isoformat(), "condicao": t.condicao, "sha256": t.sha256} for t in trocas],
+            "trocas_no_registro": R.trocas_rotuladas({k: v for k, v in inicios.items() if v is not None}, trocas),
             "sha256_original_antes": manifesto["original"]["sha256"], "sha256_original_agora": sha_original_agora,
             "original_intacto": manifesto["original"]["sha256"] == sha_original_agora,
             "copia_ai_existe": copia_ai.exists()},

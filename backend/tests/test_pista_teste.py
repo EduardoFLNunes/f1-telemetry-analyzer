@@ -240,7 +240,8 @@ def test_scripts_criam_trocam_e_removem_sem_tocar_na_original(jogo_falso):
         sha = hashlib.sha256((f["copia"] / "gp" / "ai" / "fast_lane.ai").read_bytes()).hexdigest()
         assert sha == f["manifesto"]["condicoes"][cond]["sha256"]
     registro = R.ler(f["repo"] / "data" / "pista_teste" / "registro.csv")
-    assert [t.condicao for t in registro] == ["C0", "C3", "C0 final"]
+    assert [t.condicao for t in registro] == ["C0", "C3", "C0"]
+    assert [t.condicao for t in R.rotular([(t.hora, t.condicao, t.sha256, "") for t in registro])] == ["C0", "C3", "C0 final"]
     assert _hash_da_pasta(f["pista"]) == antes
 
     r = _ps("remover_copia.ps1", *_args(f))
@@ -443,7 +444,32 @@ def test_registro_csv_lido_com_o_c0_final(tmp_path):
     p.write_text("hora,condicao,sha256,arquivo\r\n2026-11-08T10:00:00,C0,AA,x\r\n2026-11-08T10:30:00,C2,bb,x\r\n"
                  "2026-11-08T11:00:00,C0,aa,x\r\n", encoding="utf-8")
     trocas = R.ler(p)
-    assert [(t.condicao, t.sha256) for t in trocas] == [("C0", "aa"), ("C2", "bb"), ("C0 final", "aa")]
+    assert [(t.condicao, t.sha256) for t in trocas] == [("C0", "aa"), ("C2", "bb"), ("C0", "aa")]
+    sessoes = {"s0": datetime(2026, 11, 8, 10, 5), "s2": datetime(2026, 11, 8, 10, 35), "sf": datetime(2026, 11, 8, 11, 5)}
+    esperado = {"C0": "aa", "C2": "bb"}
+    assert [a.condicao for a in R.atribuir(sessoes, trocas, esperado)] == ["C0", "C2", "C0 final"]
+
+
+def test_troca_sem_gravacao_nao_faz_o_c0_virar_final():
+    """ADR 0029, item 16: o caso de 08/11. C0 (00:13) e C1 (02:00) sem gravacao; depois C0 de novo, e a ordem segue."""
+    dia = datetime(2026, 11, 8)
+    hora = lambda h, m=0: dia + timedelta(hours=h, minutes=m)  # noqa: E731
+    trocas = [R.Troca(hora(0, 13), "C0", SHA["C0"]), R.Troca(hora(2, 0), "C1", SHA["C1"]),
+                             R.Troca(hora(14, 0), "C0", SHA["C0"]), R.Troca(hora(14, 20), "C1", SHA["C1"]),
+                             R.Troca(hora(14, 40), "C4", SHA["C4"]), R.Troca(hora(16, 0), "C2", SHA["C2"]),
+                             R.Troca(hora(16, 20), "C3", SHA["C3"]), R.Troca(hora(16, 40), "C0", SHA["C0"])]
+    sessoes = {"c0": hora(14, 2), "c1": hora(14, 22), "c4": hora(14, 42), "c2": hora(16, 2), "c3": hora(16, 22),
+               "c0f": hora(16, 42)}
+    atrib = {a.sessao: a.condicao for a in R.atribuir(sessoes, trocas, SHA)}
+    assert atrib == {"c0": "C0", "c1": "C1", "c4": "C4", "c2": "C2", "c3": "C3", "c0f": "C0 final"}
+    rot = R.trocas_rotuladas(sessoes, trocas)
+    assert [r["condicao"] for r in rot] == ["C0", "C1", "C0", "C1", "C4", "C2", "C3", "C0 final"]
+    assert [bool(r["gravacoes"]) for r in rot] == [False, False, True, True, True, True, True, True]
+    assert "sem gravacao" in rot[0]["nota"] and "sem gravacao" in rot[1]["nota"] and rot[2]["nota"] == ""
+    # so com as duas primeiras trocas e uma gravacao depois do C1: e C1 (a troca do C0 antes dela nao muda nada)
+    assert [a.condicao for a in R.atribuir({"x": hora(2, 5)}, trocas[:2], SHA)] == ["C1"]
+    # sem saber das gravacoes, todas as trocas contam (como antes)
+    assert R.rotular([(t.hora, t.condicao, t.sha256, "") for t in trocas[:3]])[2].condicao == "C0 final"
 
 
 def test_papeis_saida_primeira_lancada_e_as_que_contam():
