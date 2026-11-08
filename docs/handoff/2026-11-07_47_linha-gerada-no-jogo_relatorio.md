@@ -10,7 +10,8 @@
   - `fbec60a4` Pedido 47, Parte A: leitor e escritor do fast_lane.ai (ida e volta byte a byte), as regras da linha nova, o referencial e a exclusao das sessoes da pista de teste;
   - `9544ff0b` Pedido 47, Parte B: ADR 0029 (a linha gerada dirigida pela IA do jogo), registrado antes do jogo, com o medidor de cada condicao;
   - `15b46894` Pedido 47, Parte C: as linhas C1 a C4 (fora do git, com o sha256), os scripts da copia da pista, a figura, o resultado e os testes;
-  - o commit deste relatório, com a emenda do ADR 0029 (item 14), a saída dos testes e a tabela das anotações (veja "O envio ao GitHub").
+  - `3e48e0d7` Pedido 47, parada da Parte D: emenda do ADR 0029 antes do jogo, o roteiro, a tabela das anotacoes, a suite e o relatorio;
+  - o commit que registra o envio conferido (veja "O envio ao GitHub").
 - **Arquivos de handoff** (`docs/handoff/2026-11-07_47_linha-gerada-no-jogo…`):
   - `_relatorio.md` (este);
   - `_parte_a.json` (Parte A: a pasta, o formato, o referencial, os campos, a linha nova em 3D e os caches do CSP);
@@ -361,7 +362,9 @@ Nenhum arquivo deste pedido toca em `core/leitura`.
 |---|---|---|---|---|
 | depois da Parte 0 | `etapa/linha-gerada-no-jogo` (nova) | `c0bbe9fde5fc0d65aab305bf1957fb6d2bf0a665` | `c0bbe9fde5fc0d65aab305bf1957fb6d2bf0a665` | sim |
 | depois das Partes A e B | `etapa/linha-gerada-no-jogo` | `9544ff0bb02282ba0b794b23cf940a65537693fe` | `9544ff0bb02282ba0b794b23cf940a65537693fe` | sim |
-| antes da parada (Parte C, a emenda e este relatório) | `etapa/linha-gerada-no-jogo` | o commit deste relatório | conferido logo depois do envio; registrado no commit seguinte | — |
+| antes da parada (Parte C, a emenda e este relatório) | `etapa/linha-gerada-no-jogo` | `3e48e0d724813dec6651ac1f1c7057e68e58d2f7` | `3e48e0d724813dec6651ac1f1c7057e68e58d2f7` | sim |
+
+Este registro vai num commit à parte (`Relatorio do pedido 47: o envio da parada conferido`), também enviado; o hash dele está no chat.
 
 ## O que falta (depois do seu aviso "rodei a IA nas linhas")
 
