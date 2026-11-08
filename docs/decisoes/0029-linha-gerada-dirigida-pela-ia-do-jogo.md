@@ -172,6 +172,19 @@ Neste pedido, a linha não vai para o coach (ADR 0009). Se ela passar, a decisã
 - **Com a exclusão,** as sessões da cópia ficam fora do inventário, do store v2, do treino do coach, da evolução e do Modelo 2. Só o resultado deste pedido as lê, pedindo explicitamente (`incluir_pistas_de_teste=True`).
 - **O app instalado** foi gerado antes desta exclusão. Até o merge do pedido 47, o botão "Atualizar coach e relatório" e o `atualizar_coach` da pasta principal **não podem rodar** com as gravações da cópia na pasta do app.
 
+### 14. Emenda antes do jogo (07/11, pedido 47, Parte C)
+
+Escrita ao implementar a Parte E, **antes de qualquer sessão na cópia.** Ela não muda nenhum valor dos itens 1 a 13: só diz como cada um é aplicado.
+
+- **O tempo da volta** (item 5) é o `lap_time_s` do store v2: `lap_time_from_grid` com `resample_lap(..., line_clock=True)`, o mesmo que dá 1:24,829 para a `#0013`. O `tempo_jogo_s` do store (`game_lap_time`, o cronômetro costurado na troca de volta) vai ao lado, só relatado. Na gravação de 04/10, os dois concordam em 3 ms ou menos nas 9 voltas da IA, e em até 0,06 s nas outras, salvo a volta de saída dos boxes.
+- **Os boxes** (item 5): a volta também é inválida quando a marca de box do store (`pit_lap`) a acusa.
+- **A volta de saída** (item 4) é a primeira volta de cada gravação. Se uma condição tiver duas gravações (o jogo reaberto), a primeira volta de cada uma fica fora. A primeira lançada fica fora uma vez só, por condição.
+- **A última volta de uma gravação,** quando não está completa (cobertura abaixo de 95%), é a volta interrompida pelo fim da sessão. Ela não ocupa lugar entre as que contam.
+- **O bootstrap** (item 7) usa um gerador novo, `numpy.random.default_rng(47)`, em cada comparação. Em cada reamostragem, ele sorteia primeiro as voltas da condição e depois as do C0.
+- **"Incompleta"** (item 7): quando há menos de 5 válidas e menos de 7 voltas no lugar das que contam, o resultado marca "incompleta" para conferir nas anotações do Eduardo. Com as 7 voltas lá e menos de 5 válidas, é "não dirigível pela IA".
+- **A conferência das medidas, em voltas antigas** (não da cópia): na gravação de 04/10, as 9 voltas da IA saem válidas (saída máxima do corredor de 0,84 m, ângulo máximo de 22°). As voltas humanas e as que passam pelos boxes saem inválidas, com o motivo.
+- **Os caches do CSP** com o nome da cópia (`cache\ai_grids`, `ai_payloads`, `ai_alt_lanes`, na pasta do jogo) ficam fora da cópia. Os scripts não os apagam: o `trocar_linha.ps1` só os lista em `data/pista_teste/caches_csp.log`, a cada troca, e põe a data de agora no arquivo novo. Se o CSP reusar um cache velho, a conferência da troca (item 9) mostra.
+
 ## Consequências
 
 - **O resultado vem do cronômetro do jogo, com a mesma execução.** É o medidor que faltava no pedido 46, mas mede só uma execução: a da IA do Assetto Corsa, com o planejamento de velocidade dela.
