@@ -657,7 +657,14 @@ Esta subseção foi commitada antes de qualquer conta nas sessões, inclusive a 
   - **O atraso a mais** é o atraso do gravado menos o da física v2, os dois calculados do mesmo jeito. A guinada passa pela grade de 50 ms (o gravado nos instantes da grade, a física no próprio passo) e volta a 5 ms por interpolação linear. A taxa do volante é a das amostras cruas reamostradas a 5 ms.
   - O atraso do gravado direto a 5 ms também é relatado. A diferença entre as duas versões do gravado mede o efeito da grade.
   - A velocidade de cada faixa, para o produto, é a média de `vx` nas entradas dela. Uma faixa com menos de 20 entradas não decide.
-  - **A entrada de cada passo** do modelo é a média das entradas em `k` e `k+1`, e a física integra o passo inteiro com ela. Isso é a regra do trapézio e não atrasa nem adianta a resposta. O teste da Parte E confere que o estimador não acha atraso num sistema sem atraso rodado na mesma grade.
+  - **A entrada de cada passo** do modelo é a média das entradas em `k` e `k+1`, e a física integra o passo inteiro com ela. O teste da Parte E confere quanto isso desloca o atraso medido de um sistema de primeira ordem rodado na mesma grade.
+  - **Emenda de 09/11, antes de qualquer conta nas sessões:** a frase anterior dizia que a entrada média "não atrasa nem adianta a resposta". O teste sintético da Parte E mostrou que isso só vale para dinâmicas lentas. Num sistema de primeira ordem com constante de tempo τ, rodado na grade de 50 ms com a entrada média, o atraso medido sobe em relação ao do sistema contínuo amostrado na mesma grade:
+
+    | τ | 10 ms | 20 ms | 40 ms | 80 ms | 150 ms | 300 ms |
+    |---|---:|---:|---:|---:|---:|---:|
+    | atraso a mais criado pela grade | 16,1 ms | 10,0 ms | 5,6 ms | 2,9 ms | 1,7 ms | 1,1 ms |
+
+    Com τ curto, a resposta chega ao fim dentro do passo e reflete a entrada do meio do passo, que é meio passo (25 ms) mais velha. **A regra da H2 não muda.** O atraso a mais continua sendo o gravado na grade menos a física v2. Esse efeito faz parte do modelo da M1, que anda na grade, e puxa o atraso a mais para baixo, o que é relatado junto com o resultado.
   - **Uma entrada de curva** começa no instante em que |`steer`| passa de 0,1 para cima, desde que |`steer`| suba nos quatro intervalos de 50 ms seguintes (0,2 s). Ela é procurada nas voltas válidas das 5 sessões, e o trecho de amostras cruas (intervalos de até 20 ms) tem de cobrir de 0,5 s antes a 1,2 s depois.
   - A correlação usa a janela de 0,25 s antes a 0,75 s depois do início. Cada sessão usa os modelos da rodada em que ela é a de teste.
 - **H3:** o ganho efetivo `k_ef` sai da regressão de `L·r/vx` contra `−steer`, com um `k_ef` por faixa de |`steer`| e um `K` comum multiplicando `−a_y`, e com o `L` medido.
