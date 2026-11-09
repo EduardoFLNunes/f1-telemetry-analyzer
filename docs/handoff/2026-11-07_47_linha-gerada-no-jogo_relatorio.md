@@ -12,7 +12,11 @@
   - `15b46894` Pedido 47, Parte C: as linhas C1 a C4 (fora do git, com o sha256), os scripts da copia da pista, a figura, o resultado e os testes;
   - `3e48e0d7` Pedido 47, parada da Parte D: emenda do ADR 0029 antes do jogo, o roteiro, a tabela das anotacoes, a suite e o relatorio;
   - `afe690ef` Relatorio do pedido 47: o envio da parada conferido;
-  - o commit das duas mudanças de 08/11 (os caches do CSP e a conferência entre as sessões; veja "Atualização de 08/11").
+  - `3e741bdf` Pedido 47, antes do jogo: o trocar_linha apaga so os caches do CSP da copia, a conferencia da troca entre as sessoes (sem tempos) e a emenda do ADR 0029 (item 15);
+  - `3c8e7128` Relatorio do pedido 47: a conferencia dos caches do CSP de 08/11;
+  - `f38927b5` Pedido 47, antes do jogo: uma troca sem gravacao nao faz o C0 virar o C0 final (ADR 0029, item 16);
+  - `7a6a262d` Pedido 47, antes do jogo: a confirmacao por escrito da emenda 16 do ADR 0029;
+  - o commit da sessão 1 e da conferência entre as sessões (veja "Sessão 1 (09/11)").
 - **Arquivos de handoff** (`docs/handoff/2026-11-07_47_linha-gerada-no-jogo…`):
   - `_relatorio.md` (este);
   - `_parte_a.json` (Parte A: a pasta, o formato, o referencial, os campos, a linha nova em 3D e os caches do CSP);
@@ -20,6 +24,7 @@
   - `_linhas.json` (Parte C: os arquivos e os sha256);
   - `_linhas_na_pista.png` (C.3: as 5 linhas, com a C10 e a saída da linha de chegada);
   - `_anotacoes.csv` (D.3: a tabela para as suas anotações);
+  - `_conferencia_sessao1.json` (E.1 entre as sessões, sem tempos);
   - `_testes.txt` (a suíte do backend).
 
 ## Em uma frase
@@ -433,6 +438,37 @@ Você perguntou por que a troca para C1 (08/11 às 02:00:28) registrou "0 cache(
   - a última troca é a do C0 (sha256 `36b57fd8…`, a linha original);
   - o `caches_csp.log` registra "0 cache(s)" nas duas trocas que apagam caches.
 - **Você pode jogar a sessão 1** (C0, depois C1 e C4).
+
+## Sessão 1 (09/11) e a conferência da troca, sem tempos
+
+**O que aconteceu** (lido nos arquivos, sem nenhum tempo):
+- **C0:** a troca de 08/11 13:48:25 recebeu três gravações.
+  - Duas, de 08:57:37 e 08:58:12, são do carro parado nos boxes, sem volta.
+  - A de 08:59:24 tem as voltas da IA.
+- **C1:** a troca de 09:14:29 (sha256 `9fc17f49…`) recebeu a gravação de 09:15:20, com 12 voltas completas.
+- **C4:** a troca de 09:59:34 (sha256 `0f747583…`) recebeu a gravação de 10:00:41, com 12 voltas completas.
+- **Os caches do CSP:**
+  - as trocas para C1 e para C4 apagaram 4 caches da cópia cada uma (2 em `ai_grids` e 2 em `ai_payloads`, todos com o prefixo `vhe_interlagos_teste_m1_`), e nenhum outro arquivo;
+  - o CSP recriou os caches com os mesmos nomes, mas com outros tamanhos. O nome não depende da linha, e o conteúdo depende. Por isso apagar a cada troca era necessário.
+  - O padrão do `trocar_linha.ps1` não precisou de ajuste.
+- **O que você relatou como "C2 rodou"** foi a C1. O registro não tem nenhuma troca para C2 nesta sessão.
+
+**A conferência** (`python -m ml.scripts.pista_teste conferencia --rotulo sessao1`, commit `7a6a262d`, em `2026-11-07_47_linha-gerada-no-jogo_conferencia_sessao1.json`):
+
+| condição | voltas que contam | com a IA dirigindo | mediana até a linha da condição | mediana até a original | a troca pegou? |
+|---|---|---|---|---|---|
+| C0 | 7 | 7 | 0,24 m | 0,24 m | sim |
+| C1 | 7 | 7 | 0,21 m | 0,48 m | sim |
+| C4 | 7 | 7 | 0,26 m | 0,98 m | sim |
+
+- **A original está intacta:** o sha256 do `fast_lane.ai` da pista original é o mesmo de antes.
+- **Os papéis das voltas:**
+  - C0: 3 de saída (uma por gravação), 1 primeira lançada, 7 que contam e 1 interrompida;
+  - C1 e C4: 1 de saída, 1 primeira lançada, 7 que contam, 3 além das que contam e 1 interrompida (a que entra nos boxes).
+- **As trocas do registro:** as duas de 08/11 (00:13 e 02:00) ficam "sem gravação" (item 16), e as três seguintes têm gravação.
+- **A conferência não calculou nem mostrou nenhum tempo.** O JSON não tem nenhum campo de tempo.
+
+**Resposta: você pode seguir para a sessão 2** (C2, C3 e C0 final). Nas três condições, a troca pegou, e as 7 voltas que contam foram todas com a IA dirigindo.
 
 ## O que falta (depois do seu aviso "rodei a IA nas linhas")
 
