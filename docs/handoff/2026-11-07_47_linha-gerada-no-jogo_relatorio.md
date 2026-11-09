@@ -1,10 +1,14 @@
 # Relatório do pedido 47: a linha gerada dirigida pela IA do jogo
 
 - **Pedido:** `docs/prompts/2026-11-07_47_linha-gerada-no-jogo.md`.
-- **Situação:** **parado na Parte D,** esperando o teste no jogo, como o pedido manda. As Partes 0, A, B e C estão feitas e conferidas, e os testes passam. As Partes E (o resultado) e F (a documentação com o resultado), o merge e o envio de `develop` ficam para depois do seu aviso "rodei a IA nas linhas".
+- **Situação:** **concluído.**
+  - O teste no jogo foi em 09/11, em duas sessões.
+  - **O veredito de C3 e C4 é "não conclusivo (deriva)":** +0,576 s e +0,482 s contra a linha da IA, com a deriva de 0,229 s. Sem a deriva, as duas seriam "mais lentas".
+  - A codificação custa +2,1 s no jogo.
+  - As Partes E e F, o merge em `develop` e o envio estão feitos (veja "O merge e o envio de 09/11").
 - **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47` (a pasta separada, por `git worktree`).
-- **Branch:** `etapa/linha-gerada-no-jogo`, a partir de `develop` em `a780c9d1`. **Ela fica nesta branch durante a parada.**
-- **Commits** (todos na branch, nenhum merge ainda):
+- **Branch:** `etapa/linha-gerada-no-jogo`, a partir de `develop` em `a780c9d1`. Ela foi juntada a `develop` em 09/11 (veja "O merge e o envio de 09/11"), e a pasta separada voltou para ela.
+- **Commits** (na branch; o merge e o último commit estão em "O merge e o envio de 09/11"):
   - `61fbe559` Pedido 47: o texto do pedido (a linha gerada dirigida pela IA do jogo);
   - `c0bbe9fd` Pedido 47, Parte 0: linha no ADR 0008 (pastas por git worktree) e data/pista_teste/ e *.ai no .gitignore;
   - `fbec60a4` Pedido 47, Parte A: leitor e escritor do fast_lane.ai (ida e volta byte a byte), as regras da linha nova, o referencial e a exclusao das sessoes da pista de teste;
@@ -16,7 +20,8 @@
   - `3c8e7128` Relatorio do pedido 47: a conferencia dos caches do CSP de 08/11;
   - `f38927b5` Pedido 47, antes do jogo: uma troca sem gravacao nao faz o C0 virar o C0 final (ADR 0029, item 16);
   - `7a6a262d` Pedido 47, antes do jogo: a confirmacao por escrito da emenda 16 do ADR 0029;
-  - o commit da sessão 1 e da conferência entre as sessões (veja "Sessão 1 (09/11)").
+  - `3ceb0c84` Pedido 47, sessao 1 no jogo (C0, C1, C4): a conferencia da troca sem tempos (a troca pegou nas tres);
+  - o commit das Partes E e F (o resultado, o ADR 0029, a arquitetura e a suíte), com o hash em "O merge e o envio de 09/11".
 - **Arquivos de handoff** (`docs/handoff/2026-11-07_47_linha-gerada-no-jogo…`):
   - `_relatorio.md` (este);
   - `_parte_a.json` (Parte A: a pasta, o formato, o referencial, os campos, a linha nova em 3D e os caches do CSP);
@@ -25,11 +30,18 @@
   - `_linhas_na_pista.png` (C.3: as 5 linhas, com a C10 e a saída da linha de chegada);
   - `_anotacoes.csv` (D.3: a tabela para as suas anotações);
   - `_conferencia_sessao1.json` (E.1 entre as sessões, sem tempos);
-  - `_testes.txt` (a suíte do backend).
+  - `_resultado.json` (Parte E: a conferência, as voltas, os tempos, os vereditos, os microssetores e a ordem);
+  - `_testes.txt` (a suíte do backend, de 09/11).
 
 ## Em uma frase
 
-**Dá para fazer, e está pronto para o jogo.** O `fast_lane.ai` foi decifrado inteiro, e o leitor e o escritor refazem o arquivo byte a byte. A IA de 04/10 seguiu essa linha a 0,21 m (mediana). Cada campo de uma linha nova tem uma regra conferida no próprio original. As quatro linhas estão gravadas fora do git, e os três scripts estão prontos e testados numa pasta falsa. O ADR 0029 foi commitado antes de qualquer arquivo de linha.
+**Depois do jogo (09/11):** a IA dirigiu as seis condições, a troca pegou em todas e as 39 voltas que contam são válidas.
+- **As linhas geradas ficaram atrás da linha da IA:** +0,576 s (C3) e +0,482 s (C4).
+- **Pelo ADR 0029, o veredito é "não conclusivo (deriva)":** o C0 final ficou 0,229 s mais lento que o C0. Sem a deriva, seria "mais lenta".
+- **O maior custo é a codificação:** +2,1 s no jogo, contra os ±0,3 s esperados. Com a mesma codificação, as linhas geradas ganham 1,5 a 1,6 s da volta da IA codificada.
+- **O medidor do pedido 46 não previu o jogo:** o ganho de −1,0 s na C10 não aparece.
+
+**Antes do jogo (07/11): dá para fazer, e está pronto para o jogo.** O `fast_lane.ai` foi decifrado inteiro, e o leitor e o escritor refazem o arquivo byte a byte. A IA de 04/10 seguiu essa linha a 0,21 m (mediana). Cada campo de uma linha nova tem uma regra conferida no próprio original. As quatro linhas estão gravadas fora do git, e os três scripts estão prontos e testados numa pasta falsa. O ADR 0029 foi commitado antes de qualquer arquivo de linha.
 
 ## Parte 0: a pasta separada
 
@@ -470,28 +482,172 @@ Você perguntou por que a troca para C1 (08/11 às 02:00:28) registrou "0 cache(
 
 **Resposta: você pode seguir para a sessão 2** (C2, C3 e C0 final). Nas três condições, a troca pegou, e as 7 voltas que contam foram todas com a IA dirigindo.
 
-## O que falta (depois do seu aviso "rodei a IA nas linhas")
+## Sessão 2 (09/11): C2, C3 e C0 final
 
-1. **A Parte E:** `python -m ml.scripts.pista_teste resultado`, com as conferências E.1 a E.6 e os vereditos do ADR 0029, sem mudar nada do registro.
-2. **A Parte F:**
-   - o resultado no ADR 0029 e no índice;
-   - a seção do teste no jogo em `docs/arquitetura_ml.md`;
-   - uma linha no ADR 0009, se o resultado mudar o que ele diz;
-   - os itens do backlog.
-3. **O merge em `develop`, na pasta separada.**
-   - Se `develop` tiver andado (o merge do 45), trago `develop` antes. O conflito esperado é a linha do índice dos ADRs.
-   - **Se a pasta principal estiver com `develop` aberta, eu paro e aviso.**
-   - Depois do merge e do envio, a pasta separada volta para a branch do pedido.
-4. **A cópia fica instalada** até você rodar o `remover_copia.ps1`. A pasta separada não é apagada.
+Conferi a troca depois de cada condição, sem tempos (`conferencia --rotulo sessao2_c2`, `sessao2_c3` e `sessao2_c0final`, em `data\pista_teste\`):
+- **C2:**
+  - a troca foi às 11:17:37 (sha256 `015d939e…`);
+  - o app dividiu a gravação em duas: 11:19:24, só o começo da volta de saída, e 11:19:46.
+- **C3:**
+  - a troca foi às 14:30:08 (sha256 `85e94218…`);
+  - houve duas gravações, 14:32:22 e 14:37:38, e cada uma teve a sua volta de saída fora.
+- **C0 final:**
+  - a troca foi às 15:01:13 (sha256 `36b57fd8…`);
+  - a gravação é a de 15:01:32;
+  - ela ficou rotulada "C0 final" pelo item 16.
+- **Os caches:** cada troca apagou os 4 caches da cópia, e nenhum outro arquivo.
 
-**Nada aqui precisa de decisão sua agora.** Só o teste no jogo.
+## Parte E: o resultado (09/11, depois do seu aviso "rodei a IA nas linhas")
+
+**O comando:** `python -m ml.scripts.pista_teste resultado --handoff …`, no commit `3ceb0c84`. A saída inteira está em `_resultado.json`.
+
+### E.1, o teste aconteceu e a troca pegou
+
+- **As 10 gravações da cópia** estão na pasta do app instalado, de 08:57:37 a 15:01:32 de 09/11. Todas têm o `startedAt`.
+- **O `registro.csv`** tem 8 trocas:
+  - as duas de 08/11 (00:13 e 02:00) ficam "sem gravação" (item 16);
+  - as outras seis têm gravação, na ordem do ADR.
+- **O sha256 do `fast_lane.ai` original** é `36b57fd8…` antes e depois. A pasta da original não foi escrita.
+- **A troca pegou em todas:**
+
+| condição | mediana até a linha da condição | mediana até a original | pegou? |
+|---|---:|---:|---|
+| C0 | 0,24 m | 0,24 m | sim (é a mesma linha) |
+| C1 | 0,21 m | 0,48 m | sim |
+| C4 | 0,26 m | 0,98 m | sim |
+| C2 | 0,26 m | 1,15 m | sim |
+| C3 | 0,30 m | 1,00 m | sim |
+| C0 final | 0,26 m | 0,26 m | sim (é a mesma linha) |
+
+### E.2, cada volta numa condição
+
+| condição | gravações | saída | primeira lançada | contam | além das que contam | interrompida |
+|---|---|---:|---:|---:|---:|---:|
+| C0 | 08:57:37 e 08:58:12 (paradas nos boxes) e 08:59:24 | 3 | 1 | 7 | 0 | 1 |
+| C1 | 09:15:20 | 1 | 1 | 7 | 3 | 1 |
+| C4 | 10:00:41 | 1 | 1 | 7 | 3 | 1 |
+| C2 | 11:19:24 e 11:19:46 | 2 | 1 | 7 | 2 | 1 |
+| C3 | 14:32:22 e 14:37:38 | 2 | 1 | 7 | 4 | 2 |
+| C0 final | 15:01:32 | 1 | 1 | 4 | 4 | 1 |
+
+- **Nenhuma volta ficou sem condição.**
+- **O número da volta do jogo** (`volta_do_jogo` no JSON) se repete em algumas voltas seguidas, como na memória "numeração das voltas". Conferi pela hora de início: as voltas que contam são todas distintas, a cerca de 85 a 88 s uma da outra.
+
+### E.3, as voltas válidas e as descartadas
+
+- **Todas as voltas que contam são válidas:** 7 de 7 em C0 a C4 e 4 de 4 no C0 final.
+  - A maior saída do corredor nelas é de 0,53 m (o limite é 1,0 m), e o maior ângulo é de 23,5° (o limite é 45°).
+  - Nenhuma tem boxes.
+  - A IA dirigiu todas as amostras.
+- **O tempo (item 14) e o cronômetro do jogo** concordam em 2 ms ou menos em todas elas.
+- **As descartadas, com o motivo de cada uma:**
+  - as voltas de saída (a garagem e o pit lane);
+  - as interrompidas (incompletas, quase todas entrando nos boxes);
+  - quatro voltas além das que contam, que passam pelos boxes: uma em C1, uma em C4 e duas em C3. Os motivos são "fora do corredor" e "boxes", e uma da C3 tem também "rodada (63°)", com o ângulo medido no pit lane.
+- **Todas as voltas com rodada ou saída do corredor passam pelos boxes ou estão incompletas.** Nenhuma volta lançada na pista tem uma das duas.
+
+### E.4, os tempos e os vereditos
+
+| condição | mediana | menor | maior | desvio |
+|---|---:|---:|---:|---:|
+| C0 | 1:25,438 | 1:25,353 | 1:25,583 | 0,100 s |
+| C1 | 1:27,517 | 1:27,329 | 1:27,636 | 0,106 s |
+| C4 | 1:25,920 | 1:25,787 | 1:26,129 | 0,114 s |
+| C2 | 1:27,014 | 1:26,923 | 1:27,340 | 0,196 s |
+| C3 | 1:26,015 | 1:25,849 | 1:26,206 | 0,116 s |
+| C0 final | 1:25,667 | 1:25,438 | 1:25,724 | 0,133 s |
+
+- **A deriva é de +0,229 s** (o C0 final contra o C0). Ela passa do limite de 0,15 s, e o C0 final tem as 4 voltas válidas, então a deriva conta.
+
+| linha | Cx − C0 | intervalo de 95% (bootstrap, 10.000, semente 47) | **veredito (ADR 0029, itens 7 e 8)** |
+|---|---:|---|---|
+| C3 (sem a LSTM) | +0,576 s | +0,411 a +0,714 s | **não conclusivo (deriva)** |
+| C4 (com a LSTM) | +0,482 s | +0,328 a +0,661 s | **não conclusivo (deriva)** |
+
+- **Só relatado, fora do veredito:**
+  - **sem a deriva,** a regra do item 7 daria "mais lenta" para as duas, porque o limite inferior passa de +0,10 s;
+  - **contra a mediana do C0 final,** a diferença é de +0,347 s (C3) e +0,253 s (C4).
+
+  **Nenhuma leitura deixa as linhas geradas à frente da linha da IA.**
+- **O C0 final continuou depois das 4 voltas que contam,** com mais 4 voltas válidas. Pelo item 4, elas ficam fora, e eu não calculei nada com elas.
+- **O C0 ficou em 1:25,438.** É um pouco mais lento do que o item 11 esperava (1:24,8 a 1:25,2), com o preset de 09/11.
+
+**Os comparativos só relatados (item 9):**
+
+| comparação | diferença | intervalo de 95% | o que se esperava | o medidor |
+|---|---:|---|---|---:|
+| C1 − C0 | +2,078 s | +1,916 a +2,205 s | ±0,3 s | +2,638 s |
+| C2 − C0 | +1,575 s | +1,368 a +1,957 s | mais lenta | +2,363 s |
+| C3 − C1 | −1,502 s | −1,659 a −1,317 s | — | −5,057 s |
+| C4 − C1 | −1,597 s | −1,716 a −1,418 s | — | −4,473 s |
+
+- **A codificação** (pontos de controle a cada 25 m) **custa cerca de 2,1 s também no jogo.** O item 11 esperava ±0,3 s e errou.
+- **Com a mesma codificação, as linhas geradas ganham 1,5 a 1,6 s da volta da IA codificada.** A busca melhora o ponto de partida, mas não compensa o custo da codificação.
+- **A sua linha (C2) com a execução da IA** fica 1,6 s atrás da linha da IA e 0,5 s à frente da volta da IA codificada.
+
+### E.5, onde a linha ganha ou perde no jogo (C3 contra C0, por microssetor)
+
+| microssetor | jogo | medidor |
+|---|---:|---:|
+| **36** (perto da C10) | +0,051 s | −1,001 s |
+| **0** (depois da linha) | +0,010 s | 0,000 s |
+| **1** | +0,015 s | −0,013 s |
+
+- **O ganho que o medidor via na C10 não aparece no jogo.** O microssetor seguinte, o 37, é o que mais perde (+0,233 s). Para a C4, os números são parecidos: +0,054 s no 36 e +0,221 s no 37.
+- **Onde a C3 ganha no jogo:** nos microssetores 28 e 29 (−0,194 e −0,188 s) e no 17 (−0,097 s). O medidor também via ganho no 28 e no 29.
+- **Onde a C3 perde:** no 37 (+0,233 s), no 31 (+0,127 s) e no 32 (+0,103 s).
+- **Onde a C4 perde:** a maior perda é no microssetor 4 (+0,278 s).
+- **A correlação entre o jogo e o medidor,** nos 60 microssetores, é de 0,17 (C3) e 0,09 (C4).
+
+### E.6, o medidor contra o jogo (só relatado)
+
+- **A ordem:**
+  - no jogo: C0, C4, C3, C2, C1;
+  - no medidor (ADR 0029, item 10): C3, C4, C0, C2, C1.
+- **Onde os dois concordam:** C2 e C1 ficam por último, e a C4 fica perto da C3 (no jogo, a C4 fica 0,10 s à frente).
+- **Onde eles discordam:** o medidor põe as linhas geradas 1,8 a 2,4 s à frente da linha da IA, e no jogo elas ficam cerca de 0,5 s atrás.
+
+### E.7, testes
+
+- **Os testes da Parte E** estão em `backend/tests/test_pista_teste.py`: são 24, com dados sintéticos (veja "Testes").
+- **A suíte do backend rodou de novo** em 09/11, depois do teste no jogo e antes do merge: `1 failed, 943 passed, 37 warnings in 835.97s`. A saída inteira está em `_testes.txt`.
+  - A falha é a mesma de 07/11: `test_leitura.py::test_volta_da_conferencia_nos_arquivos_reais`, com `KeyError: 'geometryId'`. **É do ambiente:** falta, na pasta separada, o `data/reference_models/vhe_interlagos.geometry.json`, que o git ignora.
+  - Os 4 testes a mais em relação a 07/11 são os novos do `test_pista_teste.py`.
+- **Os dados da pasta principal ficaram intactos:** a foto de `data\ml`, `data\cache` e `data\recordings` (932 arquivos) é a mesma antes e depois da suíte, sem nenhuma diferença.
+
+### As suas anotações
+
+O `_anotacoes.csv` ficou como estava em 07/11, sem as suas linhas. O resultado não depende dele: nenhuma condição ficou incompleta. Se quiser registrar o que viu, pode preencher e me avisar.
+
+## Parte F: a documentação
+
+- **ADR 0029:**
+  - a seção "Resultado" foi escrita sem mudar nada acima dela;
+  - a linha do índice (`docs/decisoes/README.md`) ganhou o resultado.
+- **`docs/arquitetura_ml.md`:** ganhou a seção nova "O teste no jogo como medidor da linha (pedido 47; ADR 0029)".
+- **O ADR 0009 não muda.** A linha gerada não passou, e ele continua dizendo o mesmo: a linha não vai para o coach.
+- **`docs/backlog.md` não foi editado.** Os itens estão no fim deste relatório.
+- **A cópia continua instalada** até você rodar:
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\remover_copia.ps1
+  ```
 
 ## Itens para o backlog (para o Cowork)
 
-1. **O cache do CSP para a linha da IA** (`cache\ai_grids`, `ai_payloads`, na pasta do jogo) tem uma chave que eu não conheço. Se a E.1 mostrar que uma troca não pegou, limpar esses caches pede um pedido próprio, porque eles ficam fora da cópia.
+1. **O cache do CSP para a linha da IA** (`cache\ai_grids`, `ai_payloads`): resolvido no pedido 47.
+   - O `trocar_linha.ps1` apaga só os caches da cópia (item 15), e a troca pegou nas seis condições.
+   - O CSP recria os caches com o mesmo nome e outro conteúdo, então o nome não depende da linha.
+   - Qualquer teste futuro com a linha da IA precisa apagar esses caches.
 2. **O app instalado precisa ser refeito depois do merge do 47,** para ganhar a exclusão das sessões da cópia. Até lá, vale a regra do roteiro: nada de "Atualizar coach" com as gravações da cópia na pasta do app.
 3. **`vhe_interlagos40`** também passa no filtro de prefixo do ML. Vale conferir se as sessões dessa outra pista deveriam entrar (hoje entram, se existirem).
 4. **O medidor dá 1 s de diferença entre a linha do `fast_lane.ai` e a volta `#0013`,** que fica a 0,21 m dela. Isso reforça o item 2 do backlog do pedido 46: o medidor é sensível ao ruído da linha.
 5. **A pasta `_obj_export`** (877 MB) dentro da pista não é do jogo. Ela vai junto na cópia. Vale saber de onde veio.
 6. **A regra de memória "toda sessão com mais de 5 voltas entra no coach e vai para `data\recordings`"** não vale para as sessões da cópia. Vale registrar essa exceção onde a regra estiver escrita.
 7. **A cambagem** da regra difere do original em 3,9% dos pontos (erro acima de 0,01). A fórmula pode ter mais um termo; o efeito no teste é desconhecido e igual para C1 a C4.
+8. **A codificação custa cerca de 2,1 s no jogo** (C1 contra C0), mais do que o esperado. É o maior custo achado no teste.
+   - Uma busca com mais pontos de controle, ou que parta da linha do `fast_lane.ai` em vez da volta codificada, seria o próximo passo do Modelo 1, num pedido próprio.
+   - Com a mesma codificação, a busca já ganha 1,5 a 1,6 s da volta da IA.
+9. **A deriva de 0,23 s** entre o C0 e o C0 final, com o preset fixo, ficou sem causa conhecida. Um teste futuro pode intercalar o C0 entre as condições, ou dar mais voltas a ele, para separar a deriva do efeito da linha.
+10. **O medidor do pedido 46 não prevê o jogo por microssetor** (correlação de 0,09 a 0,17), e a C10 é o pior caso. O teste no jogo pode servir para calibrar o medidor: é o plano B da Parte A, agora com dados.
+11. **O app instalado dividiu algumas gravações em duas.** Isso aconteceu no C2 (aos 22 s da primeira) e no C3, e o C0 teve duas gravações curtas com o carro parado nos boxes. O teste não perdeu nada, porque a volta de saída de cada gravação já ficava fora. Mas vale saber por que o gravador fecha e abre uma sessão nova.
+12. **O `volta_do_jogo` do resultado repete números** em voltas seguidas, como na numeração do store. É só cosmético: o resultado cruza as voltas pela hora de início.

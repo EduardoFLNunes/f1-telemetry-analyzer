@@ -219,4 +219,91 @@ Escrita antes de qualquer gravação na cópia. É uma mudança de mecânica, e 
 
 ## Resultado
 
-(preenchido depois do teste no jogo, sem mudar nada acima)
+Escrito depois do teste no jogo, sem mudar nada acima.
+
+- **O teste:** 09/11, em duas sessões, na ordem do item 3.
+- **O comando:** `python -m ml.scripts.pista_teste resultado`, no commit `3ceb0c84`.
+- **Os arquivos:** `docs/handoff/2026-11-07_47_linha-gerada-no-jogo_resultado.json` e o relatório do pedido 47.
+
+### A conferência
+
+- **A original está intacta:** o sha256 do `fast_lane.ai` original é `36b57fd8…` antes e depois do teste.
+- **Cada uma das 10 gravações da cópia ficou numa condição.** As duas trocas de 08/11 ficam "sem gravação" (item 16).
+- **A troca pegou nas seis condições:**
+
+| condição | mediana até a linha da condição | mediana até a original |
+|---|---:|---:|
+| C0 | 0,24 m | 0,24 m (é a mesma linha) |
+| C1 | 0,21 m | 0,48 m |
+| C2 | 0,26 m | 1,15 m |
+| C3 | 0,30 m | 1,00 m |
+| C4 | 0,26 m | 0,98 m |
+| C0 final | 0,26 m | 0,26 m (é a mesma linha) |
+
+- **Os caches do CSP:** cada troca apagou os 4 caches da cópia. O CSP os recriou com o mesmo nome e outro conteúdo.
+- **Todas as voltas que contam são válidas:** 7 de 7 em C0 a C4 e 4 de 4 no C0 final.
+  - a maior saída do corredor ficou em 0,53 m e o maior ângulo em 23,5°;
+  - a IA dirigiu todas as amostras;
+  - o tempo do item 14 e o cronômetro concordam em 2 ms ou menos.
+
+### Os tempos
+
+| condição | mediana | menor | maior | desvio |
+|---|---:|---:|---:|---:|
+| C0 | 1:25,438 | 1:25,353 | 1:25,583 | 0,100 s |
+| C1 | 1:27,517 | 1:27,329 | 1:27,636 | 0,106 s |
+| C4 | 1:25,920 | 1:25,787 | 1:26,129 | 0,114 s |
+| C2 | 1:27,014 | 1:26,923 | 1:27,340 | 0,196 s |
+| C3 | 1:26,015 | 1:25,849 | 1:26,206 | 0,116 s |
+| C0 final | 1:25,667 | 1:25,438 | 1:25,724 | 0,133 s |
+
+### O veredito (item 7, com o item 8)
+
+- **A deriva é de +0,229 s** (o C0 final contra o C0). Ela passa de 0,15 s, e o C0 final tem as 4 voltas válidas.
+- **Os vereditos:**
+
+| linha | Cx − C0 | intervalo de 95% | veredito |
+|---|---:|---|---|
+| **C3** (sem a LSTM) | +0,576 s | +0,411 a +0,714 s | **não conclusivo (deriva)** |
+| **C4** (com a LSTM) | +0,482 s | +0,328 a +0,661 s | **não conclusivo (deriva)** |
+
+- **Só relatado, fora do veredito:** sem a deriva, a regra do item 7 daria "mais lenta" para as duas, porque o limite inferior passa de +0,10 s.
+- **Também só relatado:** contra a mediana do C0 final, a diferença é de +0,347 s para a C3 e +0,253 s para a C4, sem intervalo.
+- **Nenhuma leitura deixa as linhas geradas à frente da linha da IA.**
+
+### Só relatados (item 9)
+
+| comparação | diferença | intervalo de 95% | o que se esperava (item 11) | o medidor (item 10) |
+|---|---:|---|---|---:|
+| C1 − C0 (o custo da codificação e da regra) | +2,078 s | +1,916 a +2,205 s | ±0,3 s | +2,638 s |
+| C2 − C0 (a linha do Eduardo com a execução da IA) | +1,575 s | +1,368 a +1,957 s | mais lenta | +2,363 s |
+| C3 − C1 (mesma codificação) | −1,502 s | −1,659 a −1,317 s | — | −5,057 s |
+| C4 − C1 (mesma codificação) | −1,597 s | −1,716 a −1,418 s | — | −4,473 s |
+
+- **A codificação custa cerca de 2,1 s também no jogo.** O item 11 esperava ±0,3 s e errou: o custo que o medidor mostrava não vinha do próprio medidor.
+- **Com a mesma codificação, as linhas geradas ganham 1,5 a 1,6 s da volta da IA codificada.** A busca melhora o ponto de partida dela, mas não o bastante para compensar a codificação.
+
+### O medidor contra o jogo (só relatado)
+
+- **A ordem:**
+  - no jogo: C0, C4, C3, C2, C1;
+  - no medidor: C3, C4, C0, C2, C1.
+
+  Os dois põem C2 e C1 por último e a C4 perto da C3. Mas o medidor põe as linhas geradas 1,8 a 2,4 s à frente do C0, e no jogo elas ficam 0,5 s atrás.
+- **Por microssetor, C3 contra C0:**
+  - o microssetor 36, perto da C10, onde o medidor previa −1,001 s, dá +0,051 s no jogo;
+  - o 0 e o 1 dão +0,010 e +0,015 s (o medidor previa 0,000 e −0,013 s).
+- **Onde a C3 ganha no jogo:** nos microssetores 28 e 29 (−0,19 s cada).
+- **Onde a C3 perde:** no 37, logo depois do 36 (+0,23 s), e no 31 e no 32 (+0,13 e +0,10 s).
+- **A correlação entre o jogo e o medidor,** nos 60 microssetores, é de 0,17 para a C3 e de 0,09 para a C4.
+
+### O que isto quer dizer
+
+- **Para o objetivo do TCC, o teste não mostra uma volta gerada pelo menos tão rápida quanto a da IA.**
+  - Pela regra registrada, o veredito é "não conclusivo (deriva)".
+  - Sem a deriva, ele seria "mais lenta".
+- **O que o teste mostra:**
+  - o gargalo é a codificação, com os pontos de controle a cada 25 m (+2,1 s no jogo);
+  - dentro dela, a busca acha linhas 1,5 s melhores que a da IA codificada;
+  - o medidor do pedido 46 não prevê onde a linha ganha no jogo.
+- **A linha não vai para o coach** (item 12; o ADR 0009 continua como está).

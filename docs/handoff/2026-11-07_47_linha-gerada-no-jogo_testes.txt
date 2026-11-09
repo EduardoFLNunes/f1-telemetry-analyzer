@@ -8,14 +8,14 @@
 ........................................................................ [ 61%]
 ........................................................................ [ 68%]
 ........................................................................ [ 76%]
-........................................................................ [ 84%]
+........................................................................ [ 83%]
 ........................................................................ [ 91%]
 ........................................................................ [ 99%]
-....                                                                     [100%]
+........                                                                 [100%]
 ================================== FAILURES ===================================
 ________________ test_volta_da_conferencia_nos_arquivos_reais _________________
 
-    @pytest.mark.skipif(not (REPO / "data" / "ml" / "laps_grid_v2.parquet").exists(), reason="store v2 do repositório ausente")
+    @pytest.mark.skipif(not (REPO / "data" / "ml" / "laps_grid_v2.parquet").exists(), reason="store v2 do repositÃ³rio ausente")
     def test_volta_da_conferencia_nos_arquivos_reais():
         """Pedido 30: a volta 8 de 05/10 20:33 e a volta da IA do coach, como o store v2 as guarda."""
         leitor = arquivos.LeitorDoStore()
@@ -114,5 +114,4 @@ tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 =========================== short test summary info ===========================
 FAILED tests/test_leitura.py::test_volta_da_conferencia_nos_arquivos_reais - ...
-1 failed, 939 passed, 37 warnings in 943.15s (0:15:43)
-saida 1
+1 failed, 943 passed, 37 warnings in 835.97s (0:13:55)
