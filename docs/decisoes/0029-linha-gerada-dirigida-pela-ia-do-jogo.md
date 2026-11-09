@@ -208,6 +208,7 @@ Escrita antes de qualquer gravação na cópia. É uma mudança de mecânica, e 
 - **O caso:** o registro tem a troca do C0 (08/11 00:13:08) e logo depois a do C1 (02:00:28), sem nenhuma sessão do jogo entre elas. O jogo não rodou desde 07/11 às 20:15, e o `log.txt` e o `race.ini` mostram isso. O C0 foi trocado de novo às 13:48:25, para seguir a ordem do item 3. Pela regra antiga do item 6, esse C0 seria lido como "C0 final", porque vem depois de uma troca para C1.
 - **A regra:** uma gravação continua pertencendo à última troca antes do início dela. **Uma troca só faz o C0 seguinte virar o C0 final se teve pelo menos uma gravação.** Uma troca seguida de outra, sem gravação entre elas, não conta, e o resultado a lista com a nota "sem gravação". Com o registro de hoje, uma sessão que comece depois de 13:48:25 é o C0, e o C0 final é o C0 que vier depois de uma condição com gravação.
 - **Testado** com dados sintéticos (`test_troca_sem_gravacao_nao_faz_o_c0_virar_final`), com a sequência de 08/11 e a ordem completa depois dela.
+- **Confirmada por escrito pelo Eduardo (08/11, 21:46):** "uma troca seguida de outra antes de qualquer gravação não conta, e o C0 final é só um C0 que vem depois de uma condição com gravação". **A troca para C0 de 08/11 13:48:25 é a do C0 inicial.**
 
 ## Consequências
 

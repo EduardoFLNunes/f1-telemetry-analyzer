@@ -423,6 +423,17 @@ Você perguntou por que a troca para C1 (08/11 às 02:00:28) registrou "0 cache(
   - **uma sessão que comece agora conta como C0.**
 - **Você pode começar a sessão 1** (C0, C1 e C4), pelo roteiro.
 
+### A confirmação por escrito (08/11, 21:46)
+
+- Você aprovou a emenda com estas palavras: "uma troca seguida de outra antes de qualquer gravação não conta, e o C0 final é só um C0 que vem depois de uma condição com gravação". **A troca para C0 das 13:48:25 é a do C0 inicial.**
+- **Registrado no ADR 0029, item 16.** Nenhum critério mudou.
+- **O que já estava feito:** o teste `test_troca_sem_gravacao_nao_faz_o_c0_virar_final` (24 testes passando) e o commit `f38927b5`, enviado e conferido com `git ls-remote`.
+- **Conferido de novo às 21:46:**
+  - o `registro.csv` tem três trocas: C0 00:13:08, C1 02:00:28 e C0 13:48:25;
+  - a última troca é a do C0 (sha256 `36b57fd8…`, a linha original);
+  - o `caches_csp.log` registra "0 cache(s)" nas duas trocas que apagam caches.
+- **Você pode jogar a sessão 1** (C0, depois C1 e C4).
+
 ## O que falta (depois do seu aviso "rodei a IA nas linhas")
 
 1. **A Parte E:** `python -m ml.scripts.pista_teste resultado`, com as conferências E.1 a E.6 e os vereditos do ADR 0029, sem mudar nada do registro.
