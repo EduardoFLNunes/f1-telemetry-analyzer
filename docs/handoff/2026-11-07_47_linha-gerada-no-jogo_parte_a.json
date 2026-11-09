@@ -1,0 +1,479 @@
+{
+ "pedido": 47,
+ "parte": "A",
+ "commit": "c0bbe9fde5fc0d65aab305bf1957fb6d2bf0a665",
+ "comando": "python -m ml.scripts.pista_teste parte-a",
+ "ambiente": {
+  "python": "3.9.7",
+  "plataforma": "Windows-10-10.0.26200-SP0"
+ },
+ "arquivo": {
+  "caminho": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\gp\\ai\\fast_lane.ai",
+  "sha256": "36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342"
+ },
+ "geometry_id": "0ed16f0dd2225990",
+ "corridor_id": "707d07029036abd6",
+ "pasta": {
+  "jogo": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa",
+  "pista": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos",
+  "layouts": [
+   "gp",
+   "norm"
+  ],
+  "arquivos_ai": {
+   "gp": {
+    "fast_lane.ai": 1274780,
+    "pit_lane.ai": 125236
+   },
+   "norm": {
+    "fast_lane.ai": 1274780,
+    "pit_lane.ai": 125236
+   }
+  },
+  "ai_hints_ini": {
+   "gp": false,
+   "norm": false
+  },
+  "arquivos": 157,
+  "bytes": 1527801625,
+  "espaco_livre_bytes": {
+   "D:\\": 126624739328,
+   "C:\\": 24709730304
+  },
+  "copia": {
+   "nome": "vhe_interlagos_teste_m1",
+   "existe": false,
+   "nome_no_jogo": {
+    "gp": "Interlagos [teste]",
+    "norm": "Interlagos National [teste]"
+   }
+  },
+  "sha256": {
+   "gp": {
+    "fast_lane.ai": "36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342",
+    "pit_lane.ai": "57c2dfc5a8fde4b177964f20a806a1659f228ff42e5daa750156799828abea7a"
+   },
+   "norm": {
+    "fast_lane.ai": "36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342",
+    "pit_lane.ai": "57c2dfc5a8fde4b177964f20a806a1659f228ff42e5daa750156799828abea7a"
+   }
+  }
+ },
+ "formato": {
+  "cabecalho": {
+   "versao": 7,
+   "pontos": 2680,
+   "tempo_de_volta": 0,
+   "amostras": 0
+  },
+  "bytes": 1274780,
+  "indices_em_ordem": true,
+  "extras": {
+   "velocidade": {
+    "min": 19.292720794677734,
+    "p50": 48.69500732421875,
+    "max": 71.86760711669922,
+    "unicos": 2680
+   },
+   "acelerador": {
+    "min": 0.0,
+    "p50": 1.0,
+    "max": 1.0,
+    "unicos": 193
+   },
+   "freio": {
+    "min": 0.0,
+    "p50": 0.0,
+    "max": 1.0,
+    "unicos": 338
+   },
+   "obsolete_lat_g": {
+    "min": 0.0,
+    "p50": 0.0,
+    "max": 0.0,
+    "unicos": 1
+   },
+   "raio": {
+    "min": 22.006427764892578,
+    "p50": 290.71998596191406,
+    "max": 2844573.75,
+    "unicos": 2680
+   },
+   "lateral_esquerda": {
+    "min": 0.8255333304405212,
+    "p50": 5.780029535293579,
+    "max": 15.032856941223145,
+    "unicos": 2680
+   },
+   "lateral_direita": {
+    "min": 0.7816386818885803,
+    "p50": 5.510706901550293,
+    "max": 16.71076011657715,
+    "unicos": 2680
+   },
+   "cambagem": {
+    "min": -0.04182292893528938,
+    "p50": 0.02375801093876362,
+    "max": 0.15857109427452087,
+    "unicos": 2679
+   },
+   "direcao": {
+    "min": -1.0,
+    "p50": 1.0,
+    "max": 1.0,
+    "unicos": 3
+   },
+   "normal_x": {
+    "min": -0.08650331944227219,
+    "p50": 0.019375481642782688,
+    "max": 0.14744368195533752,
+    "unicos": 2679
+   },
+   "normal_y": {
+    "min": 0.9856972694396973,
+    "p50": 0.9985744655132294,
+    "max": 0.9999992847442627,
+    "unicos": 2592
+   },
+   "normal_z": {
+    "min": -0.11499468237161636,
+    "p50": -0.012157142627984285,
+    "max": 0.11373444646596909,
+    "unicos": 2679
+   },
+   "comprimento": {
+    "min": 1.5000325441360474,
+    "p50": 1.5678303241729736,
+    "max": 8.299424171447754,
+    "unicos": 2676
+   },
+   "frente_x": {
+    "min": -0.9994872212409973,
+    "p50": 0.17328012734651566,
+    "max": 0.9999683499336243,
+    "unicos": 2680
+   },
+   "frente_y": {
+    "min": -0.1366100162267685,
+    "p50": -0.005449650110676885,
+    "max": 0.10121170431375504,
+    "unicos": 2680
+   },
+   "frente_z": {
+    "min": -0.9999920725822449,
+    "p50": 0.05016317218542099,
+    "max": 0.9999102354049683,
+    "unicos": 2680
+   },
+   "marca": {
+    "min": 0.0,
+    "p50": 0.0,
+    "max": 0.0,
+    "unicos": 1
+   },
+   "inclinacao": {
+    "min": -0.1379028558731079,
+    "p50": -0.0054497309029102325,
+    "max": 0.10173411667346954,
+    "unicos": 2680
+   }
+  },
+  "grade": {
+   "tem_grade": 1,
+   "maximo": [
+    530.9563598632812,
+    0.0,
+    828.5530395507812
+   ],
+   "minimo": [
+    -825.6666259765625,
+    0.0,
+    -902.9832763671875
+   ],
+   "vizinhos": 10,
+   "densidade_m": 10.0,
+   "colunas_linhas": [
+    135,
+    173
+   ],
+   "folga_m": 350.0000305175781,
+   "recalculada": {
+    "celulas": 23355,
+    "iguais_na_ordem": 23326,
+    "diferentes_com_o_mesmo_conjunto": 28,
+    "extremos_iguais": true
+   }
+  },
+  "bytes_depois_da_grade": 0,
+  "ida_e_volta_byte_a_byte": true,
+  "fontes": {
+   "actools": "https://github.com/gro-ove/actools/tree/master/AcTools/AiFile (AiSpline.cs, AiPointExtra.cs, AiSplineGrid.cs)",
+   "addon": "https://github.com/leBluem/io_import_accsv (import_ai.py)",
+   "addon_overwrite": "https://www.modland.net/assetto-corsa-mods/other/blender-addon-importexport-aicsvini-files.html"
+  }
+ },
+ "referencial": {
+  "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+  "pontos_gravados": 2167,
+  "fast_lane_ate_a_volta_m": {
+   "mediana": 0.21369052412781903,
+   "p95": 0.937177726443704,
+   "max": 1.3301952845911311
+  },
+  "volta_ate_o_fast_lane_m": {
+   "mediana": 0.21272362434590616,
+   "p95": 0.9453044695549057
+  },
+  "com_z_invertido_mediana_m": 49.19866251153735,
+  "mesmo_referencial": true
+ },
+ "campos": {
+  "regras_conferidas_no_original": {
+   "raio": {
+    "erro_mediano": 0.34714508056640625,
+    "erro_p95": 15.769775390625012,
+    "erro_max": 46598.90625,
+    "erro_relativo_mediano": 0.0009569962469116627,
+    "erro_relativo_p95": 0.014151868732538868
+   },
+   "lateral_esquerda": {
+    "erro_mediano": 0.0,
+    "erro_p95": 0.0,
+    "erro_max": 0.0
+   },
+   "lateral_direita": {
+    "erro_mediano": 0.0,
+    "erro_p95": 0.0,
+    "erro_max": 0.0
+   },
+   "cambagem": {
+    "erro_mediano": 0.0002908480819314718,
+    "erro_p95": 0.007726150099188094,
+    "erro_max": 0.09853151068091393
+   },
+   "direcao": {
+    "erro_mediano": 0.0,
+    "erro_p95": 0.0,
+    "erro_max": 0.0,
+    "iguais": 1.0
+   },
+   "normal_x": {
+    "erro_mediano": 0.0,
+    "erro_p95": 7.450580596923828e-09,
+    "erro_max": 1.4901161193847656e-08
+   },
+   "normal_y": {
+    "erro_mediano": 5.960464477539063e-08,
+    "erro_p95": 5.960464477539063e-08,
+    "erro_max": 1.1920928955078125e-07
+   },
+   "normal_z": {
+    "erro_mediano": 0.0,
+    "erro_p95": 3.725290298461914e-09,
+    "erro_max": 1.4901161193847656e-08
+   },
+   "comprimento": {
+    "erro_mediano": 0.0006163716316223145,
+    "erro_p95": 0.00680968165397644,
+    "erro_max": 0.014635205268859863
+   },
+   "frente_x": {
+    "erro_mediano": 0.0,
+    "erro_p95": 5.960464477539063e-08,
+    "erro_max": 1.1920928955078125e-07
+   },
+   "frente_y": {
+    "erro_mediano": 0.0,
+    "erro_p95": 7.450580596923828e-09,
+    "erro_max": 1.4901161193847656e-08
+   },
+   "frente_z": {
+    "erro_mediano": 0.0,
+    "erro_p95": 5.960464477539063e-08,
+    "erro_max": 1.1920928955078125e-07
+   },
+   "inclinacao": {
+    "erro_mediano": 1.0926276445388794e-05,
+    "erro_p95": 0.0004090216010808946,
+    "erro_max": 0.0012928545475006104
+   },
+   "distancia": {
+    "erro_mediano": 0.2117919921875,
+    "erro_p95": 0.6474731445312499,
+    "erro_max": 0.69140625
+   },
+   "altura": {
+    "erro_max": 0.0
+   }
+  },
+  "bordas_contra_o_corredor_do_pedido_44_m": {
+   "esquerda": {
+    "mediana": 1.4045364530356492,
+    "p95": 5.86429926845395
+   },
+   "direita": {
+    "mediana": 1.5712725329548078,
+    "p95": 4.5031853480056485
+   },
+   "largura_da_ia_menos_a_do_corredor": {
+    "mediana": -3.01552324295044,
+    "p5": -9.27841368675232,
+    "p95": -0.8738482570648237
+   }
+  },
+  "velocidade": {
+   "tempo_da_volta_pela_velocidade_gravada_s": 95.14072835786244,
+   "volta_da_ia_no_cronometro_s": 84.829163,
+   "aceleracao_lateral_v2_sobre_r_m_s2": {
+    "p50": 7.634591715899468,
+    "p95": 17.953363718683605,
+    "max": 27.732007019905726
+   }
+  },
+  "pedais": {
+   "pontos_com_acelerador_abaixo_de_1": 778,
+   "pontos_com_freio": 795
+  },
+  "ultimo_ponto": {
+   "comprimento": 8.299424171447754,
+   "direcao": 0.09999996423721313
+  }
+ },
+ "linha_nova": {
+  "C1": {
+   "pontos": 2680,
+   "mesmo_numero_do_original": true,
+   "espacamento_m": {
+    "min": 1.2631034851074219,
+    "p50": 1.5745456218719482,
+    "max": 5.035280227661133
+   },
+   "fechamento_m": 1.7619329690933228,
+   "comprimento_total_m": 4226.345703125,
+   "sentido_igual": true,
+   "ponto_0_estacao_s": 4334.050031568231,
+   "deslocamento_do_original_m": {
+    "mediana": 0.31772246898000667,
+    "max": 1.370340843096197
+   },
+   "altura_m": {
+    "min": -24.452238082885742,
+    "max": 18.54712677001953
+   },
+   "laterais_negativas_antes_do_piso": {
+    "esquerda": 0,
+    "direita": 0,
+    "maior_movimento_da_borda_m": 0.0
+   }
+  },
+  "C2": {
+   "pontos": 2680,
+   "mesmo_numero_do_original": true,
+   "espacamento_m": {
+    "min": 1.176035761833191,
+    "p50": 1.581889271736145,
+    "max": 5.0352396965026855
+   },
+   "fechamento_m": 1.7613083124160767,
+   "comprimento_total_m": 4246.16064453125,
+   "sentido_igual": true,
+   "ponto_0_estacao_s": 4334.050031568231,
+   "deslocamento_do_original_m": {
+    "mediana": 1.31137589344812,
+    "max": 11.293253768599099
+   },
+   "altura_m": {
+    "min": -24.452192306518555,
+    "max": 18.54704475402832
+   },
+   "laterais_negativas_antes_do_piso": {
+    "esquerda": 8,
+    "direita": 0,
+    "maior_movimento_da_borda_m": 0.08292007651763111
+   }
+  },
+  "C3": {
+   "pontos": 2680,
+   "mesmo_numero_do_original": true,
+   "espacamento_m": {
+    "min": 1.1392645835876465,
+    "p50": 1.5793906450271606,
+    "max": 5.036135673522949
+   },
+   "fechamento_m": 1.7631622552871704,
+   "comprimento_total_m": 4239.93359375,
+   "sentido_igual": true,
+   "ponto_0_estacao_s": 4334.050031568231,
+   "deslocamento_do_original_m": {
+    "mediana": 0.9895071300675946,
+    "max": 10.756310641043163
+   },
+   "altura_m": {
+    "min": -24.45223617553711,
+    "max": 18.54705238342285
+   },
+   "laterais_negativas_antes_do_piso": {
+    "esquerda": 0,
+    "direita": 0,
+    "maior_movimento_da_borda_m": 0.0
+   }
+  },
+  "C4": {
+   "pontos": 2680,
+   "mesmo_numero_do_original": true,
+   "espacamento_m": {
+    "min": 1.1168237924575806,
+    "p50": 1.5780539512634277,
+    "max": 5.0351386070251465
+   },
+   "fechamento_m": 1.7612727880477905,
+   "comprimento_total_m": 4232.171875,
+   "sentido_igual": true,
+   "ponto_0_estacao_s": 4334.050031568231,
+   "deslocamento_do_original_m": {
+    "mediana": 1.0588700276877838,
+    "max": 10.06573601779707
+   },
+   "altura_m": {
+    "min": -24.452234268188477,
+    "max": 18.54708480834961
+   },
+   "laterais_negativas_antes_do_piso": {
+    "esquerda": 0,
+    "direita": 4,
+    "maior_movimento_da_borda_m": 0.014308504082081841
+   }
+  },
+  "original": {
+   "espacamento_m": {
+    "min": 1.5000325441360474,
+    "p50": 1.5678303241729736,
+    "max_sem_o_ultimo": 5.033443450927734
+   },
+   "comprimento_total_m": 4224.853515625
+  }
+ },
+ "caches_do_csp": {
+  "ai_grids": [
+   "vhe_interlagos40_gp_58bbabadde5bac84.bin (11851 bytes)",
+   "vhe_interlagos40_gp_a7b58b13cd3e8b58.bin (28825 bytes)",
+   "vhe_interlagos_gp_47d532fea323c4b3.bin (11851 bytes)",
+   "vhe_interlagos_gp_7e91b0ceafcefee2.bin (28825 bytes)"
+  ],
+  "ai_payloads": [
+   "vhe_interlagos_gp__96fff5b2a6d0da18.bin (160963 bytes)",
+   "vhe_interlagos_gp__96fff5b2a6d0da19.bin (161581 bytes)",
+   "vhe_interlagos_gp__976ec1e7a1142c80.bin (51381 bytes)",
+   "vhe_interlagos_gp__976ec1e7a1142c81.bin (71501 bytes)"
+  ],
+  "ai_alt_lanes": [],
+  "tracks_data": [
+   "vhe_interlagos.zip (5667 bytes)",
+   "vhe_interlagos40.zip (5667 bytes)"
+  ],
+  "csp_configs": [
+   "vhe_interlagos.zip (3589 bytes)"
+  ]
+ },
+ "tempo_s": 36.5
+}

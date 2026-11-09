@@ -84,3 +84,7 @@ versoes/*
 !versoes/LEIA-ME.md
 docs/estudos/*.mp4
 data/radio/
+
+# Pedido 47: as linhas da pista de teste derivam do fast_lane.ai do jogo e nunca vao para o git.
+data/pista_teste/
+*.ai

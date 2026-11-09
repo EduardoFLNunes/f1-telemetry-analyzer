@@ -1,0 +1,130 @@
+{
+ "pedido": 47,
+ "parte": "E.1 entre as sessoes (sem tempos)",
+ "commit": "7a6a262da1e17a174ca98f11d7caee630b785402",
+ "comando": "python -m ml.scripts.pista_teste conferencia --rotulo sessao1",
+ "original_intacto": true,
+ "trocas_no_registro": [
+  {
+   "hora": "2026-11-08T00:13:08",
+   "condicao": "C0",
+   "sha256": "36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342",
+   "gravacoes": [],
+   "nota": "sem gravacao: nao conta para o C0 final (ADR 0029, item 16)"
+  },
+  {
+   "hora": "2026-11-08T02:00:28",
+   "condicao": "C1",
+   "sha256": "9fc17f49070aa68908908e971c9d8a571ece6be4f4d3843cf37270c2cd5381d4",
+   "gravacoes": [],
+   "nota": "sem gravacao: nao conta para o C0 final (ADR 0029, item 16)"
+  },
+  {
+   "hora": "2026-11-08T13:48:25",
+   "condicao": "C0",
+   "sha256": "36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342",
+   "gravacoes": [
+    "2026-11-09_08-57-37_vhe_interlagos_teste_m1",
+    "2026-11-09_08-58-12_vhe_interlagos_teste_m1",
+    "2026-11-09_08-59-24_vhe_interlagos_teste_m1"
+   ],
+   "nota": ""
+  },
+  {
+   "hora": "2026-11-09T09:14:29",
+   "condicao": "C1",
+   "sha256": "9fc17f49070aa68908908e971c9d8a571ece6be4f4d3843cf37270c2cd5381d4",
+   "gravacoes": [
+    "2026-11-09_09-15-20_vhe_interlagos_teste_m1"
+   ],
+   "nota": ""
+  },
+  {
+   "hora": "2026-11-09T09:59:34",
+   "condicao": "C4",
+   "sha256": "0f747583c8b6d3ee7a7e87d83d32ee778438cce3ac7cb41dc1149bf82ee2f5d5",
+   "gravacoes": [
+    "2026-11-09_10-00-41_vhe_interlagos_teste_m1"
+   ],
+   "nota": ""
+  }
+ ],
+ "atribuicao": [
+  {
+   "sessao": "2026-11-09_08-57-37_vhe_interlagos_teste_m1",
+   "inicio": "2026-11-09T08:57:37.014276",
+   "condicao": "C0",
+   "motivo": ""
+  },
+  {
+   "sessao": "2026-11-09_08-58-12_vhe_interlagos_teste_m1",
+   "inicio": "2026-11-09T08:58:12.913664",
+   "condicao": "C0",
+   "motivo": ""
+  },
+  {
+   "sessao": "2026-11-09_08-59-24_vhe_interlagos_teste_m1",
+   "inicio": "2026-11-09T08:59:24.918067",
+   "condicao": "C0",
+   "motivo": ""
+  },
+  {
+   "sessao": "2026-11-09_09-15-20_vhe_interlagos_teste_m1",
+   "inicio": "2026-11-09T09:15:20.784597",
+   "condicao": "C1",
+   "motivo": ""
+  },
+  {
+   "sessao": "2026-11-09_10-00-41_vhe_interlagos_teste_m1",
+   "inicio": "2026-11-09T10:00:41.023523",
+   "condicao": "C4",
+   "motivo": ""
+  }
+ ],
+ "voltas_por_papel": {
+  "C0": {
+   "saida": 3,
+   "primeira lancada": 1,
+   "conta": 7,
+   "alem das que contam": 0,
+   "interrompida": 1,
+   "que_contam_com_a_ia_dirigindo": 7
+  },
+  "C1": {
+   "saida": 1,
+   "primeira lancada": 1,
+   "conta": 7,
+   "alem das que contam": 3,
+   "interrompida": 1,
+   "que_contam_com_a_ia_dirigindo": 7
+  },
+  "C4": {
+   "saida": 1,
+   "primeira lancada": 1,
+   "conta": 7,
+   "alem das que contam": 3,
+   "interrompida": 1,
+   "que_contam_com_a_ia_dirigindo": 7
+  }
+ },
+ "a_ia_seguiu_a_linha": {
+  "C0": {
+   "voltas": 7,
+   "mediana_ate_a_linha_da_condicao_m": 0.2351862826855235,
+   "mediana_ate_a_linha_original_m": 0.2351862826855235,
+   "troca_pegou": true
+  },
+  "C1": {
+   "voltas": 7,
+   "mediana_ate_a_linha_da_condicao_m": 0.21072230782028806,
+   "mediana_ate_a_linha_original_m": 0.4814829235520717,
+   "troca_pegou": true
+  },
+  "C4": {
+   "voltas": 7,
+   "mediana_ate_a_linha_da_condicao_m": 0.26011499368823615,
+   "mediana_ate_a_linha_original_m": 0.9833365885698174,
+   "troca_pegou": true
+  }
+ }
+}
