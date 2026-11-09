@@ -632,6 +632,31 @@ O `_anotacoes.csv` ficou como estava em 07/11, sem as suas linhas. O resultado n
   powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\remover_copia.ps1
   ```
 
+## O merge e o envio de 09/11
+
+**Antes do merge:**
+- `develop` não tinha andado: local e remoto em `a780c9d1`, o mesmo ponto de partida da branch;
+- **nenhuma pasta estava com `develop` aberta.** A principal está em `etapa/replay-e-radio-que-ensina`, e a do pedido 48 em `etapa/diagnostico-m1`.
+
+**O que foi feito, na pasta separada:**
+- `0a1d8412`: Pedido 47, Partes E e F: o resultado do teste no jogo (C3 e C4 nao conclusivo por deriva; a codificacao custa 2,1 s), o ADR 0029, a arquitetura e a suite.
+- `24dd4fe1`: Merge do pedido 47: a linha gerada dirigida pela IA do jogo (ADR 0029; C3 e C4 nao conclusivo por deriva). É um `--no-ff` em `develop`, sem conflito.
+- **O commit deste registro foi feito em `develop`** (`Relatorio do pedido 47: o merge e o envio conferidos`). Depois, a branch do pedido avançou até ele por avanço simples, e a pasta separada voltou para a branch. **O hash dele está no chat.**
+
+**Conferido antes do envio de `develop`** (as 29 mudanças desde `a780c9d1`):
+- nenhum arquivo passa de 50 MB;
+- nenhum `.ai`, nada de `recordings/` nem de `data/ml/`;
+- nenhum segredo.
+
+| envio | ref | hash local | hash no remoto (`git ls-remote origin`) | confere |
+|---|---|---|---|---|
+| as Partes E e F | `etapa/linha-gerada-no-jogo` | `0a1d8412554ad0591ae32b377cb5f79904a51053` | `0a1d8412554ad0591ae32b377cb5f79904a51053` | sim |
+| o merge | `develop` | `24dd4fe1c96072ad1b3a1c6b526d5ea4d7822ffb` | `24dd4fe1c96072ad1b3a1c6b526d5ea4d7822ffb` | sim |
+
+- Todos foram avanços simples, sem `--force`.
+- `main` e as tags não foram.
+- **A pasta separada não foi apagada,** e a cópia da pista continua instalada.
+
 ## Itens para o backlog (para o Cowork)
 
 1. **O cache do CSP para a linha da IA** (`cache\ai_grids`, `ai_payloads`): resolvido no pedido 47.
