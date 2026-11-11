@@ -446,7 +446,8 @@ telemetria do jogo ([ADR 0024](decisoes/0024-m1-geometria-medida-pela-telemetria
 Ele acerta reta, freada e tração e falha nas curvas, pela velocidade lateral. Como não
 passou na régua, ele não vira o juiz nem a base da M4: o simulador quase-estacionário
 continua, e o [ADR 0004](decisoes/0004-simulador-nao-estima-ganho-local.md) continua
-valendo sem mudança.
+valendo sem mudança. O diagnóstico de onde e por que a M1 v2 errou está na seção 7.5 de
+[`modelo_fisico_m1.md`](modelo_fisico_m1.md) (pedido 48), sem mudar o veredito.
 
 ---
 

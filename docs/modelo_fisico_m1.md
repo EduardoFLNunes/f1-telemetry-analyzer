@@ -605,3 +605,290 @@ Em 24/10, a v2 se comporta como nas sessões de teste. Em 01/11 ela piora: nessa
 ### 7.4 O Modelo 1 com a M1 v2 reprovada (Parte D)
 
 Como a M1 v2 não foi aprovada, o medidor do Modelo 1 continua sendo o simulador quase-estacionário com o envelope das voltas reais. O resultado final do Modelo 1 está em `docs/arquitetura_ml.md`, na seção "O medidor do tempo e o resultado final do Modelo 1".
+
+### 7.5 Diagnóstico da M1 v2 (pedido 48)
+
+**O que é:** uma análise de onde e por que a M1 v2 errou, com os modelos do pedido 46 sem mudança. **Nenhum modelo novo é ajustado, nenhum parâmetro é reajustado e nenhum veredito muda.** O ADR 0028, item 1, continua valendo: a v2 foi a última tentativa nas mesmas sessões de teste. Os dados de manobra e um modelo novo ficam como trabalhos futuros (7.5.4).
+
+#### 7.5.1 Registrado antes de calcular (Parte A)
+
+Esta subseção foi commitada antes de qualquer conta nas sessões, inclusive a reprodução da Parte B. **Nenhuma regra muda depois de ver os números.**
+
+**As definições comuns:**
+
+- **Os modelos e os casos são os do pedido 46:** as 5 rodadas, os 39.142 casos, as 3 grandezas normalizadas pelo desvio-padrão do treino de cada rodada e o erro combinado da seção 1.7. O **skill** é sempre o da M1 v2 contra a persistência (R0) em 0,5 s (10 passos), salvo quando outro modelo ou horizonte é dito.
+- **A reprodução:** os parâmetros da física de cada rodada vêm de `rodadas_treino_v2.json`. Os Processos Gaussianos não foram salvos pelo pedido 46. Por isso, são reajustados pela função `fase_teste` do pedido 46, sem mudança: o mesmo código, a mesma amostra (6.000 passos, semente 46) e o mesmo núcleo. Até 0,002 de diferença nos números da seção 7.3, o trabalho segue; acima disso, para.
+- **A deriva estimada** de cada roda vem do estado gravado e da geometria medida de cada rodada, pela fórmula do ADR 0028, item 3. A fórmula é `α_i = δ_i − atan2(vy + x_i·r, vx − y_i·r)`, com:
+  - `vy` levada ao centro de massa, como no modelo;
+  - `δ = −k_δ·steer` nas duas rodas da frente e `δ = 0` atrás;
+  - `vx` de pelo menos 5 m/s.
+
+  Ela não usa o modelo do pneu. **A deriva de um eixo** é a média das duas rodas, e as faixas usam o módulo, em graus.
+- **As faixas:**
+  - de velocidade, as da seção 7.3 (`vx` no início: abaixo de 100 km/h, 100 a 160, 160 a 220 e acima de 220);
+  - de |`steer`|: 0 a 0,1, 0,1 a 0,2, 0,2 a 0,4, 0,4 a 0,6 e acima de 0,6;
+  - de deriva: abaixo de 3°, 3° a 6°, 6° a 8°, 8° a 10° e acima de 10°;
+  - de |`a_y`|: abaixo de 0,5 g (só fora das curvas), 0,5 a 1,0 g, 1,0 a 1,5, 1,5 a 2,0 e acima de 2,0;
+  - da taxa do volante, |d`steer`/dt| (diferença central na grade de 50 ms, dentro do trecho): os tercis de todos os passos das 4 sessões de treino de cada rodada.
+- **As curvas e as fases:** as 14 curvas (C01 a C14) de `detect_corners` na geometria do store v2 (`0ed16f0dd2225990`), pelo `s` do início do caso. A **entrada** vai do início da curva ao ápice, e a **saída**, do ápice ao fim. Um caso fora de todas as curvas fica em "fora".
+- **A parte de um grupo no erro:** a soma do erro quadrático normalizado da M1 v2 em 0,5 s nos casos do grupo, dividida pela soma no conjunto de referência (as curvas, por exemplo). As partes somam 100%.
+- **As curvas, nas regras abaixo,** são os casos do regime "curva" (seção 1.5) no início. Freio e volante juntos são relatados à parte, com as mesmas tabelas.
+
+**As hipóteses e as regras.** Cada hipótese recebe um rótulo: **apoiada, não apoiada ou inconclusiva.** O que não for nem apoiada nem não apoiada é inconclusiva. Uma hipótese sem dados, por um canal não gravado, é "sem dados", com o motivo.
+
+| | hipótese | evidência | apoiada | não apoiada |
+|---|---|---|---|---|
+| H1 | **o pico do pneu:** os casos com deriva alta concentram o erro das curvas | C.2, C.6 | o skill acima de 6° fica pelo menos 0,15 abaixo do skill abaixo de 3°, e as faixas acima de 6° têm pelo menos 15% do erro das curvas | a diferença fica abaixo de 0,05 |
+| H2 | **a relaxação do pneu:** o carro do jogo responde ao volante com um atraso que a física não tem | C.3 | o atraso a mais tem o IC 95% acima de +10 ms em pelo menos 3 das 4 faixas de velocidade, e o produto do atraso a mais pela velocidade fica a até ±35% da mediana dele nessas faixas | o atraso a mais fica abaixo de 10 ms em todas as faixas |
+| H3 | **a direção:** o ângulo da roda não é linear no volante (Ackermann, complacência), e isso erra com muito volante | C.4 | o ganho efetivo com \|`steer`\| ≥ 0,4 difere pelo menos 15% do ganho com \|`steer`\| < 0,2, e o erro de `r` em 0,5 s com \|`steer`\| ≥ 0,4 fica pelo menos 1,5 vez a mediana das curvas | a diferença fica abaixo de 5% |
+| H4 | **a carga:** a aerodinâmica muda com a altura do carro (e com o DRS), e o modelo de carga não tem isso | C.5 | a altura e a velocidade explicam pelo menos 30% da variância do resíduo da carga de cada eixo, e o skill no quartil de maior erro de carga fica pelo menos 0,10 abaixo do quartil de menor | menos de 10% e diferença abaixo de 0,05 |
+| H5 | **o acúmulo no horizonte:** o ajuste mira um passo, e o erro cresce ao realimentar o próprio estado | C.7 | a razão de acúmulo nas curvas é pelo menos 1,3 | a razão fica até 1,1 |
+| H6 | **a correção sem memória:** o resíduo depende do que aconteceu antes, e o Processo Gaussiano só vê o passo atual | C.7 | a autocorrelação do resíduo de um passo no atraso 1 é pelo menos 0,5 em `vy` ou em `r`, nas curvas | fica até 0,2 nas duas |
+| H7a | **01/11, a pilotagem:** a queda vem de mais escorregamento | C.8 | nos casos com deriva abaixo de 3°, o skill de 01/11 fica a até 0,10 do de 24/10 nos mesmos casos | o H7b é apoiado |
+| H7b | **01/11, o carro ou o jogo mudou** (CSP 0.3.1 ou outra condição) | C.8 | nesses casos, o skill de 01/11 fica mais de 0,20 abaixo do de 24/10 | o H7a é apoiado |
+
+**Como cada regra é medida.** Onde o pedido deixa uma escolha, ela é fixada aqui, antes das contas:
+
+- **H1:** a deriva no início do caso, nas curvas.
+  - A regra é aplicada à deriva do eixo dianteiro e à do traseiro, separadamente.
+  - É **apoiada** se as duas condições valem em pelo menos um eixo, e **não apoiada** se a diferença de skill (abaixo de 3° menos acima de 6°) fica abaixo de 0,05 nos dois eixos.
+  - Uma faixa com menos de 100 casos tem o skill relatado, mas não decide. Se a faixa acima de 6° tiver menos de 100 casos nos dois eixos, a H1 é inconclusiva.
+- **H2:** o atraso de cada faixa é o pico da correlação entre a taxa do volante e a taxa da guinada (d`r`/dt), somada em todas as entradas da faixa.
+  - **O atraso a mais** é o atraso do gravado menos o da física v2, os dois calculados do mesmo jeito. A guinada passa pela grade de 50 ms (o gravado nos instantes da grade, a física no próprio passo) e volta a 5 ms por interpolação linear. A taxa do volante é a das amostras cruas reamostradas a 5 ms.
+  - O atraso do gravado direto a 5 ms também é relatado. A diferença entre as duas versões do gravado mede o efeito da grade.
+  - A velocidade de cada faixa, para o produto, é a média de `vx` nas entradas dela. Uma faixa com menos de 20 entradas não decide.
+  - **A entrada de cada passo** do modelo é a média das entradas em `k` e `k+1`, e a física integra o passo inteiro com ela. O teste da Parte E confere quanto isso desloca o atraso medido de um sistema de primeira ordem rodado na mesma grade.
+  - **Emenda de 09/11, antes de qualquer conta nas sessões:** a frase anterior dizia que a entrada média "não atrasa nem adianta a resposta". O teste sintético da Parte E mostrou que isso só vale para dinâmicas lentas. Num sistema de primeira ordem com constante de tempo τ, rodado na grade de 50 ms com a entrada média, o atraso medido sobe em relação ao do sistema contínuo amostrado na mesma grade:
+
+    | τ | 10 ms | 20 ms | 40 ms | 80 ms | 150 ms | 300 ms |
+    |---|---:|---:|---:|---:|---:|---:|
+    | atraso a mais criado pela grade | 16,1 ms | 10,0 ms | 5,6 ms | 2,9 ms | 1,7 ms | 1,1 ms |
+
+    Com τ curto, a resposta chega ao fim dentro do passo e reflete a entrada do meio do passo, que é meio passo (25 ms) mais velha. **A regra da H2 não muda.** O atraso a mais continua sendo o gravado na grade menos a física v2. Esse efeito faz parte do modelo da M1, que anda na grade, e puxa o atraso a mais para baixo, o que é relatado junto com o resultado.
+  - **Uma entrada de curva** começa no instante em que |`steer`| passa de 0,1 para cima, desde que |`steer`| suba nos quatro intervalos de 50 ms seguintes (0,2 s). Ela é procurada nas voltas válidas das 5 sessões, e o trecho de amostras cruas (intervalos de até 20 ms) tem de cobrir de 0,5 s antes a 1,2 s depois.
+  - A correlação usa a janela de 0,25 s antes a 0,75 s depois do início. Cada sessão usa os modelos da rodada em que ela é a de teste.
+- **H3:** o ganho efetivo `k_ef` sai da regressão de `L·r/vx` contra `−steer`, com um `k_ef` por faixa de |`steer`| e um `K` comum multiplicando `−a_y`, e com o `L` medido.
+  - **As amostras** são as quase estacionárias das 5 sessões: |d`r`/dt| < 0,1 rad/s², taxa do volante no tercil de baixo de todos os passos das 5 sessões e `vx` ≥ 10 m/s.
+  - **A regra usa a regressão com todas as velocidades juntas;** as regressões por faixa de velocidade são relatadas.
+  - O ganho com \|`steer`\| ≥ 0,4 é a média dos `k_ef` das faixas de 0,4 a 0,6 e acima de 0,6, pesada pelo número de amostras. O ganho com \|`steer`\| < 0,2 é a média das faixas de 0 a 0,1 e de 0,1 a 0,2. Só entram faixas com pelo menos 200 amostras.
+  - O erro de `r` é o módulo do erro da M1 v2 em 0,5 s. A regra compara a mediana dele nos casos de curva com \|`steer`\| ≥ 0,4 com a mediana em todos os casos de curva.
+- **H4:** o resíduo da carga de um eixo é a soma das duas rodas, prevista menos gravada, em N. A carga prevista vem da conta da seção 7.2, com os parâmetros de cada rodada, nos passos das sessões de teste.
+  - O R² é o da regressão linear com intercepto e os termos `rideHeight_f`, `rideHeight_r`, `vx²`, `vx²·rideHeight_f` e `vx²·rideHeight_r`. A regra pede pelo menos 30% nos dois eixos para apoiada, e menos de 10% nos dois para não apoiada.
+  - Uma segunda regressão, com o `suspensionTravel` das 4 rodas a mais, é relatada sem decidir.
+  - **O erro de carga no início do caso** é a soma, nas 4 rodas, de \|prevista − gravada\|, dividida pela soma das cargas gravadas. Os quartis são os de todos os casos, e o skill é o de todos os casos de cada quartil.
+- **H5:** a razão de acúmulo é o erro combinado da M1 v2 em 0,5 s em malha aberta, dividido pelo erro combinado em 0,5 s da soma dos incrementos de um passo. Cada incremento é previsto a partir do estado gravado no passo, com a entrada do passo: é o mesmo modelo, sem realimentar o próprio estado. A regra usa os casos de curva.
+- **H6:** o resíduo de um passo é o estado gravado em `k+1` menos a previsão de um passo da M1 v2 a partir do gravado em `k`, em todos os passos das sessões de teste.
+  - A autocorrelação de cada grandeza usa os pares de passos (`k`, `k+j`) do mesmo trecho em que os dois passos são de curva. A da reta (os dois passos de reta) é a comparação para o efeito da interpolação.
+  - **A correlação parcial** com a taxa do volante é a do resíduo com a média da taxa do volante de 0,1 a 0,3 s antes (passos `k−6` a `k−2`), descontada a parte linear das 6 entradas do Processo Gaussiano no passo `k`.
+- **H7:** os modelos são os da rodada sem 21/10 (como na C.4 do pedido 46), nas voltas rotuladas no pedido 44.
+  - "Deriva abaixo de 3°" quer dizer os dois eixos abaixo de 3° no início do caso. As duas sessões de 24/10 entram juntas.
+  - Se a diferença (24/10 menos 01/11) ficar até 0,10, a H7a é apoiada e a H7b não apoiada. Se passar de 0,20, a H7b é apoiada e a H7a não apoiada. Entre os dois valores, as duas são inconclusivas.
+  - Se 01/11 ou 24/10 tiverem menos de 100 casos nessa faixa, as duas são inconclusivas.
+
+**As outras regras da Parte C:**
+
+- **C.1:** o IC 95% do skill do critério 1, por bootstrap agrupado por volta (10.000 reamostragens, semente 48, percentis 2,5 e 97,5): no geral, por sessão e só nas curvas. **Isso não muda o veredito:** o critério é o valor pontual (ADR 0022).
+- **C.2, o skill que as curvas precisariam ter,** com o resto igual, para o total chegar a 0,50. Com `Σ` a soma do erro quadrático normalizado:
+  - a soma das curvas teria de ser `Σ*_curvas = 0,25·Σ_R0,todos − Σ_M1,resto`;
+  - o skill das curvas teria de ser `1 − √(Σ*_curvas / Σ_R0,curvas)`.
+- **C.6, a cobertura:** a fração dos passos com deriva acima de 6°, 8° e 10°, em cada eixo, em quatro conjuntos:
+  - **treino:** todos os passos das 5 sessões (cada uma é de treino em 4 das 5 rodadas), com a geometria da rodada sem 21/10;
+  - **teste:** os inícios dos 39.142 casos, com a geometria de cada rodada;
+  - **24/10 e 01/11:** os passos das voltas rotuladas, com a geometria da rodada sem 21/10.
+- **C.8, os 7 episódios:**
+  - as voltas são achadas pelos tempos do contexto (3, 4, 10 e 11 no `session-index.json`);
+  - o pico é a amostra de maior \|`atan2(vy, vx)`\| entre o início da curva e 50 m depois do fim dela;
+  - os casos começam 1,0, 0,5 e 0,25 s antes do pico, numa grade de 50 ms que termina no pico;
+  - a regra de "acompanha a escapada" é a do pedido, aplicada à M1 v2. A física v2 é relatada ao lado.
+
+**O que se espera, antes de calcular, e o porquê:**
+
+- **H1:** os dados quase não passam de 6° (seção 7.2). Por isso, as faixas acima de 6° devem ter pouco do erro das curvas, mesmo com skill pior nelas. Espera-se **não apoiada ou inconclusiva** pela parte do erro. O pico do pneu explica a falha da identificação (`α_pico` no limite), mas não deve explicar a maior parte do erro das curvas.
+- **H2:** um pneu com relaxação atrasa a força lateral por `σ/v`. Com um comprimento de relaxação de algumas dezenas de centímetros, o atraso fica entre 10 e 40 ms abaixo de 100 km/h e é menor em alta. Espera-se um atraso a mais **perto do limite de 10 ms**, apoiado só em baixa velocidade, e por isso **inconclusiva**.
+- **H3:** a C10 (volante em 0,87, `vy` exagerada) sugere que a roda vira menos do que `k_δ·steer` com muito volante. Espera-se o ganho caindo com |`steer`|, e **apoiada** se a faixa acima de 0,4 tiver amostras quase estacionárias suficientes.
+- **H4:** num carro de fórmula, a carga aerodinâmica depende da altura, e o erro da carga é de 18% a 24%. Espera-se um R² de 10% a 30%, porque a carga gravada oscila com as zebras, que a altura não explica. A expectativa é **inconclusiva**.
+- **H5:** a física foi ajustada no erro de um passo, e o erro de 0,5 s é 1,5 vez o de 0,25 s. Espera-se uma razão acima de 1,3 nas curvas: **apoiada**.
+- **H6:** a reamostragem a 50 ms e o estado escondido (a carga das molas, a temperatura) criam correlação de um passo para o outro. Espera-se autocorrelação acima de 0,5 nas curvas, mas também alta na reta, o que enfraquece a leitura. A expectativa é **apoiada pela regra**, com essa ressalva.
+- **H7:** a sessão de 01/11 tem as saídas de traseira que o Eduardo sentiu. Espera-se que, nos casos de pouca deriva, o skill de 01/11 fique perto do de 24/10: **H7a apoiada**.
+
+#### 7.5.2 Os dados e a reprodução (Parte B)
+
+Comandos: `python -m ml.scripts.m1_diagnostico dados`, `reproduzir` e `analisar`. Tudo o que sai fica em `data/diagnostico_m1/`, fora do git. JSON com todos os números: `docs/handoff/2026-11-09_48_diagnostico-da-m1-v2.json`.
+
+- **Os canais extras** (`rideHeight`, `wheelSlip`, `suspensionTravel`, DRS, combustível, ar e pista) foram lidos das gravações com o mesmo corte de volta e a mesma reamostragem do pedido 46. A grade refeita é igual à do 46 chave a chave e coluna a coluna, nas 5 sessões e nas 3 de depois (24/10 e 01/11). Os canais estão preenchidos em 100% dos passos.
+- **Os Processos Gaussianos foram reajustados** pela `fase_teste` do pedido 46, sem mudança. Os 39.142 casos têm o erro quadrático de cada modelo **igual ao do 46, com diferença 0,0**, e os 515 números da seção 7.3 (os critérios, os horizontes e as tabelas por sessão, regime e faixa) se repetem com diferença máxima de 0,0. O critério 1 dá 0,4868, e o 2, 0,2069.
+
+#### 7.5.3 O resultado das análises (Parte C)
+
+**C.1, o acaso perto do limite** (bootstrap por volta, 10.000 reamostragens, semente 48). O veredito não muda: o critério é o valor pontual.
+
+| conjunto | skill | IC 95% | 0,50 dentro? |
+|---|---:|---|---|
+| todos os casos | 0,487 | 0,447 a 0,523 | sim |
+| só as curvas | 0,458 | 0,409 a 0,501 | sim (no limite) |
+| `2026-10-15_23-24-50` | 0,496 | 0,446 a 0,542 | sim |
+| `2026-10-17_01-02-22` | 0,509 | 0,374 a 0,613 | sim |
+| `2026-10-17_16-17-08` | 0,552 | 0,506 a 0,601 | não (acima) |
+| `2026-10-18_12-38-44` | 0,453 | 0,404 a 0,505 | sim |
+| `2026-10-21_20-30-54` | 0,407 | 0,272 a 0,485 | não (abaixo) |
+
+Com 57 voltas, a diferença entre 0,487 e 0,50 está dentro do que o acaso das voltas produz.
+
+**C.2, onde está o erro das curvas** (25.251 casos, skill 0,458; figura `..._mapa_do_erro.png`):
+
+- **Com o resto igual, as curvas precisariam de 0,475** para o total chegar a 0,50: faltam 0,017.
+- **Por grandeza:** a velocidade lateral tem 75,8% do erro das curvas (skill 0,38), a guinada 23,9% (skill 0,58) e a longitudinal 0,3%.
+- **Por volante e velocidade:** \|`steer`\| de 0,1 a 0,4 tem 69% do erro. As duas células mais pesadas são \|`steer`\| de 0,2 a 0,4 a 100–160 km/h (21,6% do erro, skill 0,30) e \|`steer`\| de 0,1 a 0,2 a 160–220 km/h (21,7%, skill 0,26). Com \|`steer`\| de 0,4 a 0,6, o skill cai para 0,22 (10,3% do erro).
+- **Por \|`a_y`\|:** acima de 2,0 g estão 21% dos casos e 50,5% do erro, com skill de 0,29. De 0,5 a 1,0 g, o skill é 0,61.
+- **Por deriva estimada:**
+
+| faixa | dianteira: casos | skill | parte do erro | traseira: casos | skill | parte do erro |
+|---|---:|---:|---:|---:|---:|---:|
+| abaixo de 3° | 14.511 | 0,67 | 16,7% | 19.034 | 0,58 | 30,2% |
+| 3° a 6° | 7.656 | 0,43 | 35,2% | 5.613 | 0,33 | 43,7% |
+| 6° a 8° | 2.210 | 0,13 | 23,8% | 311 | 0,38 | 9,7% |
+| 8° a 10° | 551 | 0,26 | 10,0% | 90 | 0,36 | 5,0% |
+| acima de 10° | 323 | 0,34 | 14,3% | 203 | 0,39 | 11,4% |
+
+- **Por taxa do volante:** o volante parado (tercil de baixo) é o pior, com skill de 0,30, e nele a física v2 sozinha quase não ganha da persistência (0,02). O tercil de cima tem skill de 0,53.
+- **Por fase:** na entrada, o skill é 0,35 (44,1% do erro); na saída, 0,43 (35,0%), onde a física sozinha fica em 0,10. Os casos de regime "curva" fora das 14 curvas têm 20,9% do erro, com skill de 0,60.
+- **Por curva:** a C06 tem 20,3% do erro (skill 0,34), a C02 10,7% (skill −0,05), a C08 10,0% e a C04 8,8%. A C10 tem 4,6%.
+- **Freio e volante juntos** (2.277 casos, skill 0,45): o mesmo retrato, com a velocidade lateral em 79% do erro e o skill caindo com \|`a_y`\| e com a deriva.
+
+**C.3, o atraso do volante para a guinada: sem dados pela regra.**
+
+- Nas amostras cruas, de 16% a 30% dos intervalos passam de 20 ms (a mediana é de 15 a 18 ms, e o percentil 95, de 30 a 33 ms). O trecho mais longo só com intervalos de até 20 ms dura de 0,22 a 0,29 s, conforme a sessão. **Nenhuma entrada de curva cabe na janela de 1,7 s**, então a H2 fica "sem dados".
+- **Só para informação, sem decidir:** a mesma conta com os trechos da seção 1.2 (intervalos menores que 50 ms) tem 412 entradas. O resultado vai na figura `..._atraso.png`:
+
+| faixa | entradas | gravado (5 ms) | gravado (grade) | física v2 | M1 v2 | gravado − física v2 (IC 95%) |
+|---|---:|---:|---:|---:|---:|---|
+| abaixo de 100 km/h | 55 | 35 ms | 48 ms | 59 ms | 49 ms | −11 ms (−144 a +8) |
+| 100 a 160 km/h | 276 | 46 ms | 44 ms | 80 ms | 58 ms | −36 ms (−51 a −20) |
+| 160 a 220 km/h | 78 | 28 ms | 27 ms | 61 ms | 39 ms | −34 ms (−45 a −27) |
+| acima de 220 km/h | 3 | — | — | — | — | poucas entradas |
+
+  O sinal é o contrário do que a relaxação do pneu daria: **o carro do jogo responde ao volante de 30 a 36 ms antes da física v2**, e a M1 v2 fica no meio. A emenda de 09/11 mostra que a grade de 50 ms atrasa a física em alguns milissegundos, mas não em 30 ms com dinâmicas de 50 a 80 ms. Uma explicação possível, não testada aqui, é uma inércia de guinada alta (`k²` de 2,1 a 3,0 m²).
+
+**C.4, a direção com muito volante.** Foram 9.985 amostras quase estacionárias (tercil de baixo da taxa do volante: 0,04 rad/s), com `L` = 2,964 m:
+
+| \|`steer`\| | amostras | `k_ef` | `k_ef`/`k_δ` |
+|---|---:|---:|---:|
+| 0 a 0,1 | 8.734 | 0,300 | 0,99 |
+| 0,1 a 0,2 | 531 | 0,251 | 0,82 |
+| 0,2 a 0,4 | 491 | 0,229 | 0,75 |
+| 0,4 a 0,6 | 223 | 0,215 | 0,71 |
+| acima de 0,6 | 6 | (menos de 200) | — |
+
+- O ganho com \|`steer`\| ≥ 0,4 (0,215) fica **28% abaixo** do ganho com \|`steer`\| < 0,2 (0,297). A regressão tem R² de 0,94, e `K` comum de 0,0003 rad/(m/s²).
+- **Nas curvas, o erro de `r` em 0,5 s** tem mediana de 0,082 rad/s com \|`steer`\| ≥ 0,4, contra 0,029 em todas as curvas: 2,8 vezes. Acima de 0,6, a mediana é de 0,17 rad/s, em 73 casos.
+- **As regressões por faixa de velocidade não identificam o ganho.** Dentro de uma faixa, `L·r/vx` e `a_y` andam juntos (`a_y ≈ vx·r`), e o `K` troca de lugar com o `k_ef`, que sai entre 0,10 e 0,14. Elas são relatadas no JSON, mas não são lidas.
+- **O que a regressão não separa:** a curva do pneu dianteiro saturando também baixa o ganho efetivo, e o termo `K·a_y` é linear. Parte da queda pode ser o pneu, e não a direção (ver 7.5.4).
+
+**C.5, a carga.**
+
+- **O resíduo da carga** (prevista − gravada, por eixo, nos 102.250 passos de teste) tem média de −355 N na frente e −635 N atrás: o modelo prevê carga a menos. A altura e a velocidade explicam **57% (dianteiro) e 61% (traseiro)** da variância dele. Com o `suspensionTravel`, explicam 65% e 72%. Só `vx²` explica 3%.
+- **A leitura tem um limite:** a altura do carro também é efeito da carga, porque as molas comprimem com ela. O R² alto mostra que o estado da suspensão explica o resíduo; ele não prova sozinho que a aerodinâmica muda com a altura.
+- **O DRS foi gravado,** e ficou desligado em 100% dos passos.
+- **A massa pela soma das cargas** com o carro quase parado (`vx` < 15 m/s, \|`a_x`\| e \|`a_y`\| < 0,1 g, em todas as amostras da gravação) fica **entre 735 e 752 kg**, com 8 a 30 L de combustível. Ela cabe na faixa de 700 a 900 kg da seção 1.4. As regressões da v1 deram de 578 a 653 kg, e um F3 real pesa 673 kg com o piloto. **A massa das regressões estava de 13% a 22% abaixo da soma das cargas gravadas.**
+- **O skill por quartil do erro de carga no início:** 0,62, 0,58, 0,51 e 0,33, do menor para o maior. Nas curvas: 0,60, 0,57, 0,48 e 0,31. Três casos sem carga gravada (soma zero) ficam fora.
+
+**C.6, a cobertura do pneu.**
+
+| conjunto | dianteira > 6° | > 8° | > 10° | traseira > 6° | > 8° | > 10° |
+|---|---:|---:|---:|---:|---:|---:|
+| treino (5 sessões) | 8,2% | 2,4% | 0,9% | 1,8% | 0,9% | 0,6% |
+| teste (inícios dos casos) | 8,4% | 2,5% | 1,0% | 1,9% | 0,9% | 0,6% |
+| 24/10 | 12,7% | 3,2% | 0,6% | 2,0% | 0,6% | 0,4% |
+| 01/11 | 5,2% | 0,8% | 0,1% | 0,8% | 0,3% | 0,1% |
+
+- A figura `..._deriva.png` mostra a distribuição, com as marcas de 6° e de 12° (o `α_pico` ajustado). Menos de 1% dos passos passa de 10°.
+- **O `wheelSlip`** vai de 0 a 1,35 (percentis 1 e 99, com picos acima de 7). Ele cresce junto com a deriva estimada (Spearman de 0,98 na frente e 0,94 atrás) e com a força lateral por carga (0,96 e 0,92). A força por carga cresce até o último decil do `wheelSlip` (mediana de 1,32 na frente e 1,35 atrás), cada vez mais devagar, e não para de crescer dentro dos dados. O que o `wheelSlip` mede não está documentado; a relação é relatada sem concluir o significado (figura `..._wheelslip.png`).
+
+**C.7, o acúmulo e a memória.**
+
+- **A razão de acúmulo nas curvas é 0,76** (M1 v2) e 0,80 (física v2): o erro em malha aberta é **menor** que o da soma dos incrementos de um passo. No geral, é 0,74; na reta, 0,42. Somar os incrementos a partir do gravado também soma o ruído do gravado em cada passo, e a malha aberta não tem esse ruído.
+- **O skill por horizonte nas curvas** (M1 v2): 0,16 em 1 passo, 0,25 em 2, 0,40 em 5, 0,46 em 10 e 0,38 em 20. Ele sobe com o horizonte até 0,5 s, porque a persistência piora mais rápido.
+- **A autocorrelação do resíduo de um passo da M1 v2 nas curvas,** no atraso 1: 0,69 em `vx`, 0,51 em `vy` e 0,16 em `r`. No atraso 2, `vy` cai para 0,13, e `r` fica negativa (−0,38). **Na reta é maior:** 0,85 em `vy` e 0,52 em `r`, no atraso 1.
+- **A correlação parcial** do resíduo com a taxa do volante de 0,1 a 0,3 s antes fica em 0,01 (`vx`), 0,05 (`vy`) e −0,01 (`r`): o resíduo quase não depende do volante de antes.
+
+**C.8, 01/11 e as saídas de traseira** (modelos da rodada sem 21/10):
+
+| sessão | casos | skill M1 v2 | skill física v2 | não conclusivo | pneus (média) | ar / pista gravados | app |
+|---|---:|---:|---:|---:|---:|---|---|
+| `2026-10-24_13-26-12` | 1.807 | 0,42 | 0,06 | 0,1% | 86 °C | 24 / 36 °C | 0.4.0-redesenho |
+| `2026-10-24_13-43-32` | 3.930 | 0,41 | 0,11 | 1,2% | 89 °C | 25 / 35 °C | 0.4.0-redesenho |
+| `2026-11-01_19-47-03` | 4.468 | 0,12 | −0,09 | 0,3% | 58 °C | 0 / 0,9 °C | 0.5.0-radio-e-replay |
+
+- **A versão do CSP não é gravada.** Pela informação do Eduardo, 01/11 é a primeira no 0.3.1; nas outras ela é "não registrada".
+- **O ar e a pista em 0 °C** também aparecem nas três sessões da noite do treino (15/10 23:24, 17/10 01:02 e 21/10 20:30), com os pneus entre 60 e 63 °C. Nas do dia, os pneus ficam entre 79 e 89 °C. Não está claro se o 0 °C é a temperatura de verdade ou um campo que o jogo não preenche à noite.
+- **Em 01/11 há menos deriva alta que em 24/10,** e não mais: 5,2% dos passos acima de 6° na frente, contra 12,7%.
+- **Com os dois eixos abaixo de 3°,** o skill é 0,75 em 24/10 (3.876 casos) e 0,58 em 01/11 (3.169 casos), uma diferença de 0,17. **Com a deriva de 3° a 6°,** 01/11 cai para −0,41 (1.078 casos), e 24/10 fica em 0,41.
+- **Os 7 episódios** (figuras `..._episodios.png`, pela regra, e `..._episodios_vx10.png`, só informativa):
+  - **pela regra,** o pico de maior \|`atan2(vy, vx)`\| caiu, nos 7, com o carro já girado e parado ou andando de ré (β entre ±156° e ±180°, `vx` de 0 a −55 km/h). Nesses instantes a variação de `vy` é pequena, e a contagem pela regra (a M1 v2 "acompanha" em 4 dos 7; a física v2 em 5) não diz nada sobre a escapada;
+  - **só para informação,** com o pico procurado só onde `vx` ≥ 10 m/s, a M1 v2 acompanha em 2 dos 7 e a física v2 em 3. As voltas 3 e 4 passam mais de uma vez pela região da curva (o carro gira e volta), e o pico de "volta 3, C05" caiu numa passagem a 186 km/h com β de −1,9°, que não é a escapada;
+  - **o início é "não conclusivo"** em 38 dos 42 casos (7 episódios, 3 inícios e as duas versões), contra o corte de 0,82. Só os 3 inícios da passagem a 186 km/h e um da volta 10 ficam abaixo dele. Os modelos não viram nada parecido no treino.
+
+**C.9, o que o jogo expõe:**
+
+- **A memória compartilhada que o repositório lê** (`SPageFilePhysics` em `backend/core/assetto_adapter.py`, 75 campos até `iDiffOut`; o retrato em `data/debug/ac_shared_memory_full_inventory.json`, de 17/05) tem, por roda:
+  - `wheelSlip`, `wheelLoad`, `wheelsPressure`, `wheelAngularSpeed`, `camberRAD` e `suspensionTravel`;
+  - `tyreContactPoint`, `tyreContactNormal` e `tyreContactHeading`;
+  - mais `rideHeight` (dois valores), `drs` e `cgHeight`.
+
+  **Não tem o ângulo de deriva, a razão de escorregamento nem as forças do pneu.**
+- **O gravador grava** `wheelSlip`, `wheelLoad`, `suspensionTravel`, `rideHeight`, `camberRad`, as temperaturas, a pressão, o desgaste, o DRS e o combustível. **Não grava** `wheelAngularSpeed` nem `tyreContactHeading`, que o adaptador lê.
+- **A telemetria por UDP do Assetto Corsa** (a estrutura `RTCarInfo`, no "AC Socket Document": https://docs.google.com/document/d/1KfkZiIluXZ6mMhLWfDX1qAGbvhGRC3ZUzjVIt5FQpp4/pub) tem `slipAngle[4]`, `slipAngle_ContactPatch[4]`, `slipRatio[4]`, `tyreSlip[4]`, `load[4]`, `Dy[4]` e `Mz[4]`.
+- **No CSP,** o SDK de Lua (https://github.com/ac-custom-shaders-patch/acc-lua-sdk) define o estado do carro por `ac.getCar`. A definição dos campos de cada roda não foi encontrada nos arquivos públicos abertos nesta análise: "não confirmado". O app do jogo do repositório (`tools/csp_app/radio_engenheiro`) lê só a volta e o tempo.
+- **O que um pedido futuro teria de mudar para gravar esses canais:**
+  - gravar `wheelAngularSpeed` e `tyreContactHeading`, que o adaptador já lê. Com eles e o raio da roda, dá para estimar a razão de escorregamento e o ângulo real de cada roda;
+  - ou ler a telemetria por UDP (`RTCarInfo`) ao lado da memória compartilhada, para ter a deriva e o escorregamento do próprio jogo;
+  - ou, se o SDK do CSP expuser os campos da roda, gravá-los pelo app do jogo.
+
+  Nenhum desses caminhos foi testado, e o gravador e o app não mudaram.
+
+#### 7.5.4 O quadro das causas e os trabalhos futuros (Parte D)
+
+| | hipótese | o número que decidiu | rótulo | figura |
+|---|---|---|---|---|
+| H1 | o pico do pneu | dianteira: skill 0,67 abaixo de 3° contra 0,24 acima de 6° (diferença 0,43), e 48,1% do erro das curvas acima de 6°. Traseira: 0,58 contra 0,38, com 26,1% | **apoiada** | `_mapa_do_erro`, `_deriva` |
+| H2 | a relaxação do pneu | nenhuma entrada de curva nos trechos de até 20 ms. Só para informação, nos de até 50 ms, o jogo responde de 30 a 36 ms **antes** da física v2 | **sem dados** | `_atraso` |
+| H3 | a direção com muito volante | ganho 28% menor com \|`steer`\| ≥ 0,4; erro de `r` 2,8 vezes a mediana das curvas | **apoiada** | — |
+| H4 | a carga com a altura e o DRS | R² de 0,57 e 0,61; skill do quartil de menor erro de carga 0,29 acima do de maior | **apoiada** (com o limite da C.5) | — |
+| H5 | o acúmulo no horizonte | razão de acúmulo de 0,76 nas curvas | **não apoiada** | — |
+| H6 | a correção sem memória | autocorrelação de 0,51 em `vy` no atraso 1 (pela regra); na reta, 0,85 | **apoiada pela regra**, mas a leitura é fraca: a reta tem mais, e o volante de antes não explica o resíduo (parcial de 0,05) | — |
+| H7a | 01/11, a pilotagem | diferença de 0,17 com deriva abaixo de 3° | **inconclusiva** | `_episodios` |
+| H7b | 01/11, o carro ou o jogo | a mesma diferença, abaixo de 0,20 | **inconclusiva** | `_episodios` |
+
+**A ordem, pela parte do erro das curvas que cada causa apoiada explica** (as partes se sobrepõem e não são somadas):
+
+1. **O pico do pneu (H1):** os casos com a deriva dianteira acima de 6° têm 12% dos casos de curva e 48,1% do erro.
+2. **A carga (H4):** o quartil de maior erro de carga no início tem 50,0% do erro das curvas.
+3. **A direção (H3):** os casos com \|`steer`\| ≥ 0,4 têm 13,5% do erro.
+4. **A memória (H6)** não tem parte mensurável; a regra a apoia, mas a evidência é fraca.
+
+**Onde elas se misturam:**
+- 63% dos casos com \|`steer`\| ≥ 0,4 têm a deriva dianteira acima de 6°, e a interseção tem 11,2% do erro.
+- Deriva alta e erro de carga alto juntos têm 21,6% do erro.
+- As três juntas têm 6,1%, e a união delas, 77,6%.
+- A deriva dianteira alta acontece a 124 km/h em média, contra 157 km/h no resto das curvas, e 61% desses casos estão acima de 2 g.
+- **A deriva dianteira estimada usa `k_δ` linear.** Se a roda vira menos com muito volante (H3), a deriva estimada nesses casos fica alta demais. Parte do que a H1 mostra pode ser a direção, e parte do que a H3 mostra pode ser o pneu saturando. Os dados de rua não separam as duas: isso pede a manobra da rampa de volante (abaixo).
+
+**Os trabalhos futuros:**
+
+- **Dados de manobra, numa sessão própria** (cerca de 15 a 20 voltas ou trechos, numa pista de teste ou numa reta larga):
+  - **um círculo de raio constante com a velocidade subindo devagar,** nos dois sentidos, 3 a 4 vezes cada. Ele identifica a curva do pneu até o pico, o subesterço e o `K`. Responde à H1 e à falta de dados acima de 6°, que é a mesma limitação descrita por "Learning-Based On-Track System Identification for Scaled Autonomous Racing in Under a Minute" (2024, https://arxiv.org/abs/2411.17508) e por "Bayesian Optimization-based Tire Parameter and Uncertainty Estimation for Real-World Data" (2025, https://arxiv.org/abs/2504.20863);
+  - **uma rampa de volante a velocidade constante,** em 3 velocidades, 2 vezes cada. Ela identifica o ganho da direção e separa a H3 da H1. "Short-Horizon Position Accuracy of Single-Track Models" (2026, https://arxiv.org/abs/2606.14216) aponta a complacência da direção como fonte de erro;
+  - **um seno de volante em 3 ou 4 velocidades,** 2 vezes cada, **com o gravador sem cair para 20 Hz.** Ele identifica o atraso e a relaxação (Pacejka, "Tire and Vehicle Dynamics"; Clemson, grupo de B. Ayalew, "On the Frequency Domain Analysis of Tire Relaxation Effects on Transient On-Center Vehicle Handling Performance"). A H2 ficou sem dados por causa dos intervalos das amostras, e o informativo sugere que o problema é a física lenta, e não o jogo atrasado.
+- **Um modelo novo,** só se sobrar tempo depois do pedido 42, testado em sessões novas que ele não tenha visto (ADR 0028, item 1):
+  - **prioridade, com hipótese apoiada:**
+    - a curva do pneu identificada com dados que cheguem ao pico (H1);
+    - a direção não linear (H3);
+    - a carga com a altura e a massa medida pela soma das cargas, em vez da regressão (H4);
+  - **a testar:**
+    - a correção com o histórico de estados e entradas e a guarda física (H6, fraca), como em Spielberg et al. (2019, https://doi.org/10.1126/scirobotics.aaw1975) e Chrosniak et al. (2024, https://arxiv.org/abs/2312.04374), ou o Processo Gaussiano no resíduo como em Kabzan et al. (2019, https://doi.org/10.1109/LRA.2019.2926677) e Jain et al. (2020, https://arxiv.org/abs/2005.04755);
+    - a relaxação do pneu e a inércia de guinada (H2, sem dados);
+    - o ajuste em vários passos (H5 não apoiada: a razão de acúmulo ficou abaixo de 1). A literatura diz que ele ajuda quando o modelo é mal especificado: Lambert, Pister e Calandra (2022, https://arxiv.org/abs/2203.09637) e "Learning with Imperfect Models: When Multi-step Prediction Mitigates Compounding Error" (2025, https://arxiv.org/abs/2504.01766). O ajuste fino de uma rede física híbrida ("Fine-Tuning Hybrid Physics-Informed Neural Networks for Vehicle Dynamics Model Estimation", 2024, https://arxiv.org/abs/2409.19647) é outra forma de testar isso.
+
+#### 7.5.5 Para quem não é da área
+
+A segunda versão do modelo do carro errou quase só nas curvas, e quase só no quanto o carro escorrega de lado. O erro se concentra nos momentos em que os pneus da frente trabalham muito torcidos e o carro faz muita força lateral, acima de 2 g. Nesses momentos, o modelo de pneu foi ajustado sem dados suficientes: o jogo raramente leva o carro até ali nas voltas normais. O volante também parece virar a roda menos do que o modelo supõe quando é muito girado. E o modelo calculava as cargas nas rodas com um carro de 100 a 170 kg mais leve do que o jogo mostra. A diferença para a meta (0,487 contra 0,50) está dentro do que o acaso das voltas produziria, mas a regra combinada antes vale como está, e o veredito não muda. Para um modelo novo, o que mais falta são dados de manobras feitas de propósito, que levem o carro ao limite de forma controlada.
