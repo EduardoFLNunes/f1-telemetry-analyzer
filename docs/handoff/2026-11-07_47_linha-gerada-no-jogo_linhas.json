@@ -1,0 +1,71 @@
+{
+ "pedido": 47,
+ "parte": "C",
+ "commit": "9544ff0bb02282ba0b794b23cf940a65537693fe",
+ "comando": "python -m ml.scripts.pista_teste linhas",
+ "original": {
+  "caminho": "D:\\SteamLibrary\\steamapps\\common\\assettocorsa\\content\\tracks\\vhe_interlagos\\gp\\ai\\fast_lane.ai",
+  "sha256": "36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342",
+  "bytes": 1274780
+ },
+ "geometry_id": "0ed16f0dd2225990",
+ "corridor_id": "707d07029036abd6",
+ "condicoes": {
+  "C0": {
+   "descricao": "a linha original (o arquivo da copia sem mudanca)",
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\pista_teste\\linhas\\C0\\fast_lane.ai",
+   "bytes": 1274780,
+   "sha256": "36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342",
+   "pontos": 2680,
+   "relido_igual": true
+  },
+  "C1": {
+   "descricao": "a volta da IA 2026-10-04_03-42-10_vhe_interlagos#0013, codificada como as linhas da busca do pedido 46",
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\pista_teste\\linhas\\C1\\fast_lane.ai",
+   "bytes": 1274780,
+   "sha256": "9fc17f49070aa68908908e971c9d8a571ece6be4f4d3843cf37270c2cd5381d4",
+   "pontos": 2680,
+   "relido_igual": true,
+   "deslocamento_do_original_m": {
+    "mediana": 0.31772246898000667,
+    "max": 1.370340843096197
+   }
+  },
+  "C2": {
+   "descricao": "a melhor volta do Eduardo 2026-10-24_13-43-32_vhe_interlagos#0003, codificada do mesmo jeito",
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\pista_teste\\linhas\\C2\\fast_lane.ai",
+   "bytes": 1282396,
+   "sha256": "015d939eaa852f634bced7e6424c2a45e434170b44dd797f0a539764415ca7c1",
+   "pontos": 2680,
+   "relido_igual": true,
+   "deslocamento_do_original_m": {
+    "mediana": 1.31137589344812,
+    "max": 11.293253768599099
+   }
+  },
+  "C3": {
+   "descricao": "a linha gerada sem a LSTM (data/ml/modelo1_final/linha_sem_lstm.npy)",
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\pista_teste\\linhas\\C3\\fast_lane.ai",
+   "bytes": 1282396,
+   "sha256": "85e94218c6a353c1d5f194aac197be26701be2c0d0980adc87234ecc4bb50c10",
+   "pontos": 2680,
+   "relido_igual": true,
+   "deslocamento_do_original_m": {
+    "mediana": 0.9895071300675946,
+    "max": 10.756310641043163
+   }
+  },
+  "C4": {
+   "descricao": "a linha gerada com a LSTM (data/ml/modelo1_final/linha_com_lstm.npy)",
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\pista_teste\\linhas\\C4\\fast_lane.ai",
+   "bytes": 1282396,
+   "sha256": "0f747583c8b6d3ee7a7e87d83d32ee778438cce3ac7cb41dc1149bf82ee2f5d5",
+   "pontos": 2680,
+   "relido_igual": true,
+   "deslocamento_do_original_m": {
+    "mediana": 1.0588700276877838,
+    "max": 10.06573601779707
+   }
+  }
+ }
+}

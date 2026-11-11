@@ -1,0 +1,678 @@
+# Relatório do pedido 47: a linha gerada dirigida pela IA do jogo
+
+- **Pedido:** `docs/prompts/2026-11-07_47_linha-gerada-no-jogo.md`.
+- **Situação:** **concluído.**
+  - O teste no jogo foi em 09/11, em duas sessões.
+  - **O veredito de C3 e C4 é "não conclusivo (deriva)":** +0,576 s e +0,482 s contra a linha da IA, com a deriva de 0,229 s. Sem a deriva, as duas seriam "mais lentas".
+  - A codificação custa +2,1 s no jogo.
+  - As Partes E e F, o merge em `develop` e o envio estão feitos (veja "O merge e o envio de 09/11").
+- **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47` (a pasta separada, por `git worktree`).
+- **Branch:** `etapa/linha-gerada-no-jogo`, a partir de `develop` em `a780c9d1`. Ela foi juntada a `develop` em 09/11 (veja "O merge e o envio de 09/11"), e a pasta separada voltou para ela.
+- **Commits** (na branch; o merge e o último commit estão em "O merge e o envio de 09/11"):
+  - `61fbe559` Pedido 47: o texto do pedido (a linha gerada dirigida pela IA do jogo);
+  - `c0bbe9fd` Pedido 47, Parte 0: linha no ADR 0008 (pastas por git worktree) e data/pista_teste/ e *.ai no .gitignore;
+  - `fbec60a4` Pedido 47, Parte A: leitor e escritor do fast_lane.ai (ida e volta byte a byte), as regras da linha nova, o referencial e a exclusao das sessoes da pista de teste;
+  - `9544ff0b` Pedido 47, Parte B: ADR 0029 (a linha gerada dirigida pela IA do jogo), registrado antes do jogo, com o medidor de cada condicao;
+  - `15b46894` Pedido 47, Parte C: as linhas C1 a C4 (fora do git, com o sha256), os scripts da copia da pista, a figura, o resultado e os testes;
+  - `3e48e0d7` Pedido 47, parada da Parte D: emenda do ADR 0029 antes do jogo, o roteiro, a tabela das anotacoes, a suite e o relatorio;
+  - `afe690ef` Relatorio do pedido 47: o envio da parada conferido;
+  - `3e741bdf` Pedido 47, antes do jogo: o trocar_linha apaga so os caches do CSP da copia, a conferencia da troca entre as sessoes (sem tempos) e a emenda do ADR 0029 (item 15);
+  - `3c8e7128` Relatorio do pedido 47: a conferencia dos caches do CSP de 08/11;
+  - `f38927b5` Pedido 47, antes do jogo: uma troca sem gravacao nao faz o C0 virar o C0 final (ADR 0029, item 16);
+  - `7a6a262d` Pedido 47, antes do jogo: a confirmacao por escrito da emenda 16 do ADR 0029;
+  - `3ceb0c84` Pedido 47, sessao 1 no jogo (C0, C1, C4): a conferencia da troca sem tempos (a troca pegou nas tres);
+  - o commit das Partes E e F (o resultado, o ADR 0029, a arquitetura e a suíte), com o hash em "O merge e o envio de 09/11".
+- **Arquivos de handoff** (`docs/handoff/2026-11-07_47_linha-gerada-no-jogo…`):
+  - `_relatorio.md` (este);
+  - `_parte_a.json` (Parte A: a pasta, o formato, o referencial, os campos, a linha nova em 3D e os caches do CSP);
+  - `_medidor.json` (B.8: o medidor de cada condição, por microssetor);
+  - `_linhas.json` (Parte C: os arquivos e os sha256);
+  - `_linhas_na_pista.png` (C.3: as 5 linhas, com a C10 e a saída da linha de chegada);
+  - `_anotacoes.csv` (D.3: a tabela para as suas anotações);
+  - `_conferencia_sessao1.json` (E.1 entre as sessões, sem tempos);
+  - `_resultado.json` (Parte E: a conferência, as voltas, os tempos, os vereditos, os microssetores e a ordem);
+  - `_testes.txt` (a suíte do backend, de 09/11).
+
+## Em uma frase
+
+**Depois do jogo (09/11):** a IA dirigiu as seis condições, a troca pegou em todas e as 39 voltas que contam são válidas.
+- **As linhas geradas ficaram atrás da linha da IA:** +0,576 s (C3) e +0,482 s (C4).
+- **Pelo ADR 0029, o veredito é "não conclusivo (deriva)":** o C0 final ficou 0,229 s mais lento que o C0. Sem a deriva, seria "mais lenta".
+- **O maior custo é a codificação:** +2,1 s no jogo, contra os ±0,3 s esperados. Com a mesma codificação, as linhas geradas ganham 1,5 a 1,6 s da volta da IA codificada.
+- **O medidor do pedido 46 não previu o jogo:** o ganho de −1,0 s na C10 não aparece.
+
+**Antes do jogo (07/11): dá para fazer, e está pronto para o jogo.** O `fast_lane.ai` foi decifrado inteiro, e o leitor e o escritor refazem o arquivo byte a byte. A IA de 04/10 seguiu essa linha a 0,21 m (mediana). Cada campo de uma linha nova tem uma regra conferida no próprio original. As quatro linhas estão gravadas fora do git, e os três scripts estão prontos e testados numa pasta falsa. O ADR 0029 foi commitado antes de qualquer arquivo de linha.
+
+## Parte 0: a pasta separada
+
+- **O comando** (você rodou, depois do meu primeiro aviso de que a pasta não existia):
+  `git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer worktree add C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 -b etapa/linha-gerada-no-jogo develop`
+- **0.2, o texto do pedido:**
+  - copiado para a pasta separada e commitado (`61fbe559`);
+  - as duas cópias de trabalho tinham o mesmo sha256 (`f4cb1e4a…686b`). O commit guarda o texto com fim de linha LF (`core.autocrlf=true`); com CRLF, ele dá o mesmo sha256;
+  - **na pasta principal, apaguei só `docs/prompts/2026-11-07_47_linha-gerada-no-jogo.md`.** Ela ficou limpa, na branch `etapa/replay-e-radio-que-ensina`, sem commit.
+- **0.3, os imports:** uso o `.venv` da pasta principal, rodando de dentro de `f1-telemetry-analyzer-47\backend`. Com isso, `core` e `ml` vêm da pasta separada: conferi `core.__file__` e `ml.__file__`. Nada foi instalado.
+- **0.4, os dados:** três junções de pasta, só para leitura, da pasta separada para a principal: `data\recordings`, `data\ml` e `data\cache`. O git as ignora.
+  - **Nada foi escrito nos dados da principal.** Tirei uma foto dos 932 arquivos (nome, tamanho e data) antes de começar e comparei depois da suíte de testes: zero diferenças (veja "Testes");
+  - o que este pedido gera vai para `data\pista_teste\` da pasta separada (no `.gitignore`, junto com `*.ai`). Nenhuma gravação foi copiada.
+- **0.5, o processador:** o `acs.exe` estava fechado antes de cada conta pesada e da suíte.
+- **0.6:** uma linha de atualização no ADR 0008 (`c0bbe9fd`).
+
+## Parte A: dá para fazer? Sim
+
+### A.1, a pasta da pista
+
+- **O jogo** está em `D:\SteamLibrary\steamapps\common\assettocorsa`. A pista fica em `content\tracks\vhe_interlagos`: 157 arquivos, 1,53 GB.
+- **Layouts:** `gp` e `norm`, cada um com `ai\fast_lane.ai` (1.274.780 bytes) e `ai\pit_lane.ai` (125.236 bytes). Os dois `fast_lane.ai` são iguais (sha256 `36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342`). **As gravações são do `gp`** (o `trackCache` delas é `vhe_interlagos_gp_…`).
+- **Não há `data\ai_hints.ini`** em nenhum layout.
+- **O espaço livre:** 126,6 GB no D: (onde a cópia fica) e 24,7 GB no C:.
+- **O nome da cópia:** `vhe_interlagos_teste_m1`, que está livre. No jogo, o `gp` vira "Interlagos [teste]" e o `norm`, "Interlagos National [teste]" (o `ui_track.json` original diz "Interlagos - GP" e "Interlagos - National").
+- **Uma pasta `_obj_export`** de 877 MB está dentro da pista. Ela não é do jogo, mas é copiada junto, sem ser aberta.
+
+### A.2, o formato do `fast_lane.ai` (versão 7, 2.680 pontos)
+
+| bloco | conteúdo | conferido |
+|---|---|---|
+| cabeçalho | 4 inteiros: versão 7, 2.680 pontos, tempo de volta 0, amostras 0 | o arquivo e o `AiSpline.cs` |
+| pontos | por ponto: x, altura, z, a distância acumulada (floats) e o índice (inteiro), de 0 a 2.679 | idem; o leitor que o repositório já tinha (`core/kn5/track_edges_from_surface.py`) |
+| extras | um inteiro (2.680) e 18 floats por ponto: velocidade, acelerador, freio, `ObsoleteLatG`, raio, lateral esquerda, lateral direita, cambagem, direção, normal (3), comprimento, vetor para a frente (3), marca e inclinação (`Grade`) | o `AiPointExtra.cs` |
+| grade | `HasGrid` (1), o máximo e o mínimo (3 floats cada), 10 vizinhos, a densidade de 10 m, 135 colunas; por coluna, 173 células; por célula, a contagem (10) e 10 índices | o `AiSplineGrid.cs` e o arquivo |
+
+- **O item 5 do contexto confere,** com duas correções:
+  - **o addon lê o bloco de 18 floats sem pular o inteiro da contagem.** Por isso, os rótulos dele ficam deslocados: o "unknown" do índice 0 é o 18º campo (`Grade`, a inclinação), e a velocidade vem no índice 1. Pelos valores, a ordem do `AiPointExtra.cs` é a certa (a velocidade, de 19 a 72 m/s, é o primeiro float depois da contagem);
+  - **depois dos extras vem a grade de vizinhos,** que o addon não lê.
+- **A grade é recalculável:**
+  - os extremos são os dos pontos, com 350 m de folga;
+  - colunas e linhas são o piso de extensão / 10 m;
+  - cada célula guarda os 10 pontos mais próximos do centro dela, em X/Z, do mais perto ao mais longe.
+
+  Recalculada, ela fica igual em 23.326 das 23.355 células, e os extremos são iguais. Nas outras 29, os pontos empatam em menos de 0,05 mm: 28 têm o mesmo conjunto e 1 troca o 10º vizinho.
+- **O leitor e o escritor** estão em `backend/ml/pista_teste/ai_spline.py`. **Ler o original e escrever de novo dá o arquivo byte a byte igual.** Não há bytes depois da grade.
+- **As fontes:**
+  - `gro-ove/actools`, pasta `AcTools/AiFile` (`AiSpline.cs`, `AiPointExtra.cs`, `AiSplineGrid.cs`): https://github.com/gro-ove/actools/tree/master/AcTools/AiFile;
+  - o addon `io_import_accsv` (`import_ai.py`): https://github.com/leBluem/io_import_accsv;
+  - a regra do addon de sobrescrever só uma linha com o mesmo número de pontos: https://www.modland.net/assetto-corsa-mods/other/blender-addon-importexport-aicsvini-files.html.
+
+### A.3, o referencial
+
+| medida | mediana | p95 | máximo |
+|---|---:|---:|---:|
+| pontos do `fast_lane.ai` até a volta `#0013` gravada | **0,21 m** | 0,94 m | 1,33 m |
+| volta `#0013` até o `fast_lane.ai` | 0,21 m | 0,95 m | — |
+| o mesmo, com o `z` invertido | 49,2 m | — | — |
+
+**É o mesmo referencial** (`x` e `z` do mundo, como as gravações), e a mediana fica bem abaixo dos 2 m. **A IA de 04/10 segue a linha do arquivo de perto.**
+
+### A.4, os campos e a regra de cada um para uma linha nova
+
+| campo | o que guarda no original (pelos valores) | regra para a linha nova | erro da regra aplicada ao próprio original |
+|---|---|---|---|
+| posição | x, altura, z | o ponto `i` na mesma estação `s` da pista que o ponto `i` original | — |
+| distância | o comprimento 3D acumulado (1 mm por passo) | o mesmo, da linha nova | até 0,69 m de deriva acumulada em 4,2 km |
+| velocidade | de 19,3 a 71,9 m/s; dá uma volta de **95,1 s**, e a IA faz 84,8 s | a do ponto original da mesma estação | — |
+| acelerador, freio | os pedais gravados (778 pontos com acelerador abaixo de 1; 795 com freio) | os do ponto original da mesma estação | — |
+| `ObsoleteLatG`, marca | sempre 0 | 0 | — |
+| raio | o raio do círculo pelos pontos `i−1`, `i` e `i+1`, em X/Z | o mesmo, da linha nova | 0,1% (mediana), 1,4% (p95) |
+| direção | o lado da curva (±1) | o mesmo, da linha nova | igual em 100% |
+| vetor para a frente | a direção a partir do ponto anterior | o mesmo, da linha nova | exato |
+| inclinação | o Y do vetor para a frente | o mesmo | 1e-5 (mediana) |
+| comprimento | o segmento 3D até o ponto anterior | o mesmo | 1,5 cm no máximo |
+| normal | a normal da superfície | a do ponto mais próximo da linha original (interpolada) | exata |
+| cambagem | `direção × (normal · esquerda)` | a mesma fórmula, com a normal e a direção da linha nova | 3e-4 (mediana); erro maior que 0,01 em 105 pontos (3,9%) |
+| laterais | as distâncias até as bordas, na esquerda `(fz, −fx)` do ponto | **a borda fica no mesmo lugar e a distância muda.** Onde a linha passa da borda da IA, a lateral fica em 0 | exatas |
+
+- **O último ponto do original** traz um comprimento de 8,3 m e uma direção de 0,1, que não saem da geometria (sobra da gravação). A regra recalcula esse ponto como os outros.
+- **As bordas da IA são outras.** A largura entre as laterais é 3,0 m menor que a do corredor do pedido 44 (mediana; p5 de −9,3 m). As bordas ficam a 1,4 m (esquerda) e a 1,6 m (direita) das bordas do corredor (mediana). **Por isso, onde uma linha do corredor passa da borda da IA, a lateral fica em 0:** isso acontece em 8 pontos da C2 (até 8 cm) e em 4 da C4 (até 1,4 cm).
+- **A velocidade e os pedais:** as fontes não concordam, e a velocidade gravada não é o teto da IA (95,1 s contra 84,8 s). **A regra é manter os do original na mesma estação,** igual para C1 a C4, e está registrada no ADR 0029 com o porquê. Assim, C1 contra C0 mede o custo da regra e da codificação juntas.
+- **As dicas da IA:** não há `ai_hints.ini`, e nada muda.
+
+**Todos os campos têm uma regra defensável.** Não parei.
+
+### A.5, o app com outro nome de pista
+
+- **O gravador** grava qualquer pista: a aba Coleta só avisa quando a pista não é `vhe_interlagos` (`core/coleta/requisitos.py`). A pasta da gravação leva o nome da pista (`<data>_vhe_interlagos_teste_m1`).
+- **O backend** resolve a pasta da pista pelo nome exato (`core/track_file_resolver.py`): a cópia vira ela mesma, e a original continua ela mesma. O cache de geometria que ele monta para a cópia tem o nome dela, num arquivo à parte.
+- **O ML incluiria as sessões da cópia.** O filtro de `ml.data.recordings.list_sessions` é o prefixo `vhe_interlagos`, e `vhe_interlagos_teste_m1` começa com ele. Todos os caminhos do inventário, do store v2, do treino do coach (`train_reference_model`), da evolução (que lê o store), do Modelo 2 e do retreino passam por essa função.
+- **A exclusão explícita:** `config.TEST_TRACK_NAMES = ("vhe_interlagos_teste_m1",)`. O `list_sessions` sempre a exclui, salvo com `incluir_pistas_de_teste=True`, que só o resultado deste pedido usa. **Testado:** com sessões sintéticas, e com uma varredura do código que confere que só `ml/pista_teste/etapas.py` pede as sessões da cópia.
+- **O cuidado até o merge:** o app instalado (0.7.0) e a pasta principal não têm essa exclusão. O botão "Atualizar coach e relatório" roda o `atualizar_coach` da pasta principal. **Até o merge do 47, ele não pode ser apertado** com as gravações da cópia na pasta do app (está no roteiro).
+
+### A.6, a linha nova em 3D
+
+| | pontos | espaçamento (mín. / mediana / máx.) | fechamento | comprimento | maior distância do original | laterais no piso de 0 |
+|---|---:|---|---:|---:|---:|---|
+| original | 2.680 | 1,50 / 1,568 / 5,03 m | 1,76 m | 4.224,9 m | — | — |
+| C1 | 2.680 | 1,26 / 1,575 / 5,04 m | 1,76 m | 4.226,3 m | 1,37 m (mediana 0,32) | nenhuma |
+| C2 | 2.680 | 1,18 / 1,582 / 5,04 m | 1,76 m | 4.246,2 m | 11,29 m (mediana 1,31) | 8 pontos, até 8 cm |
+| C3 | 2.680 | 1,14 / 1,579 / 5,04 m | 1,76 m | 4.239,9 m | 10,76 m (mediana 0,99) | nenhuma |
+| C4 | 2.680 | 1,12 / 1,578 / 5,04 m | 1,76 m | 4.232,2 m | 10,07 m (mediana 1,06) | 4 pontos, até 1,4 cm |
+
+- **O mesmo número de pontos do original** (2.680), cada um na mesma estação do ponto original. O ponto 0 fica no mesmo lugar ao longo da pista.
+- **O sentido** é o mesmo: as estações crescem sempre.
+- **A linha fecha:** o último ponto antecede o primeiro, a 1,76 m.
+- **A altura** é a do ponto mais próximo da linha original, projetada no segmento. O espaço de 5 m que já existe no original aparece também nas linhas novas.
+
+### A.7, os arquivos derivados
+
+- **Na pasta da pista** não há nada derivado da linha além do próprio `fast_lane.ai`. O `ai\` tem só o `fast_lane.ai` e o `pit_lane.ai`.
+  - O `data\ideal_line.ai` tem o mesmo tamanho do `fast_lane.ai`, mas é outro arquivo (a linha que o jogo mostra), e o conteúdo dele não foi lido;
+  - o `data\side_l.csv` e o `data\side_r.csv` não foram abertos.
+- **O CSP guarda caches da linha da IA fora da pasta da pista,** em `cache\ai_grids`, `cache\ai_payloads` e `cache\ai_alt_lanes`, com o nome da pista e um hash: hoje há 4 arquivos de `vhe_interlagos_gp` em cada uma das duas primeiras pastas. **A cópia terá caches próprios,** porque o nome entra na chave. Eu não sei se o hash muda com o conteúdo da linha.
+  - **O que os scripts fazem:**
+    - a cada troca, o `trocar_linha.ps1` apaga na cópia o `gp\ai\fast_lane.aip`, se existir;
+    - ele põe a data de agora no arquivo novo;
+    - ele lista, sem apagar, os caches da cópia em `data\pista_teste\caches_csp.log`;
+  - **apagar os caches seria escrever fora da cópia,** o que o pedido não permite. Se o CSP reusar um cache velho, a conferência E.1 mostra, e a condição sai do veredito.
+
+### A.8
+
+Nenhum item parou. O plano B não foi necessário.
+
+## Parte B: os valores fixos (ADR 0029)
+
+**Registrado em `9544ff0b`, antes de gerar qualquer arquivo de linha e antes de qualquer sessão no jogo.** Depois, uma **emenda antes do jogo** (item 14) diz como cada valor é aplicado, sem mudar nenhum; ela vai no commit deste relatório, também antes do jogo.
+
+| o quê | valor |
+|---|---|
+| condições | C0 a linha original; C1 a volta da IA `#0013` codificada; C2 a sua `2026-10-24_13-43-32#0003` codificada; C3 `linha_sem_lstm.npy`; C4 `linha_com_lstm.npy`; C0 final |
+| preset | Formula RSS 3 2026 V6, acerto padrão, prática sozinho, 30 L sem consumo, composto padrão sem desgaste, ar a 25 °C ("Clear"), aderência fixa em 100%, 14:00 com o tempo parado, IA a 100% e agressividade 0% |
+| ordem | `numpy.random.default_rng(47).permutation(["C1","C2","C3","C4"])` = C1, C4, C2, C3. **Ordem completa: C0, C1, C4, C2, C3, C0 final** |
+| voltas | 9 por condição (6 no C0 final); a de saída e a primeira lançada ficam fora; contam 7 (4 no C0 final) |
+| volta válida | completa (cobertura ≥ 95%); saída do corredor útil ≤ 1,0 m e sem `offTrack`; sem rodada (ângulo > 45° acima de 30 km/h); sem boxes (a 3 m do `pit_lane.ai` e 1 m fora do corredor, ou `pit_lap` do store); `isAIControlled` em todas as amostras |
+| atribuição | a gravação pertence à condição da última troca do `registro.csv` antes do `startedAt` dela; com o sha256 conferido |
+| veredito | diferença das medianas contra C0, IC 95% por bootstrap (10.000, semente 47): mais rápida (sup. < 0); tão rápida (sup. ≤ +0,10 s); mais lenta (inf. > +0,10 s); não conclusivo; não dirigível (< 5 válidas das 7) |
+| deriva | C0 final contra C0 > 0,15 s: "não conclusivo (deriva)" |
+| só relatados | C1 contra C0, C2 contra C0, C3 e C4 contra C1, e a conferência da troca |
+
+**O medidor de cada condição (B.8), calculado antes do jogo:**
+
+| condição | medidor | contra C0 | microssetor 36 | microssetor 0 | microssetor 1 |
+|---|---:|---:|---:|---:|---:|
+| C0 | 1:25,316 | — | — | — | — |
+| C1 | 1:27,955 | +2,638 | −0,119 | +0,029 | +0,014 |
+| C2 | 1:27,679 | +2,363 | −0,414 | +0,025 | +0,011 |
+| C3 | 1:22,898 | −2,419 | −1,001 | 0,000 | −0,013 |
+| C4 | 1:23,481 | −1,835 | −1,013 | 0,000 | −0,009 |
+
+- **A ordem no medidor:** C3, C4, C0, C2, C1.
+- **O C0 do medidor** é a linha do arquivo, projetada na grade, e dá 1:25,316. A volta `#0013`, que fica a 0,21 m dessa linha, dá 1:26,284 no mesmo medidor. Uma diferença de 1 s por 0,2 m de linha reforça o que o pedido 46 achou: o medidor é sensível ao ruído da linha.
+
+**O que se espera (B.9, no ADR):**
+- C0 perto de 1:24,8 a 1:25,2;
+- C1 a ±0,3 s de C0 (o medidor prevê +2,6 s);
+- **C3 e C4 entre −0,3 e +0,5 s de C0,** com "tão rápida quanto" ou "não conclusivo" como o mais provável. Por quê:
+  - o ganho do medidor está quase todo no microssetor 36;
+  - a IA não anda no limite do envelope;
+  - a velocidade e os pedais ficam os da linha original;
+- C2 mais lenta.
+
+## Parte C: os arquivos e os scripts
+
+### As linhas (em `data\pista_teste\linhas\`, fora do git)
+
+| condição | arquivo | bytes | sha256 |
+|---|---|---:|---|
+| C0 | `C0\fast_lane.ai` (cópia do original) | 1.274.780 | `36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342` |
+| C1 | `C1\fast_lane.ai` | 1.274.780 | `9fc17f49070aa68908908e971c9d8a571ece6be4f4d3843cf37270c2cd5381d4` |
+| C2 | `C2\fast_lane.ai` | 1.282.396 | `015d939eaa852f634bced7e6424c2a45e434170b44dd797f0a539764415ca7c1` |
+| C3 | `C3\fast_lane.ai` | 1.282.396 | `85e94218c6a353c1d5f194aac197be26701be2c0d0980adc87234ecc4bb50c10` |
+| C4 | `C4\fast_lane.ai` | 1.282.396 | `0f747583c8b6d3ee7a7e87d83d32ee778438cce3ac7cb41dc1149bf82ee2f5d5` |
+
+- **Os arquivos de C2 a C4 têm 7.616 bytes a mais,** porque a grade recalculada ganhou uma coluna: as linhas se afastam até 11 m do original, e os extremos mudam. A grade descreve o próprio tamanho, então o jogo lê as contagens do arquivo.
+- **Cada arquivo foi relido** e volta igual, byte a byte, com 2.680 pontos.
+- **O comando:** `python -m ml.scripts.pista_teste linhas` (de `backend\`). O `data\pista_teste\` está no `.gitignore`, e nenhum `.ai` entrou nos commits (conferido).
+
+### Os scripts (`tools\pista_teste\`, você roda)
+
+| script | o que faz |
+|---|---|
+| `criar_copia.ps1` | registra o sha256 do `fast_lane.ai` original em `data\pista_teste\copia.json`, copia a pista inteira para `vhe_interlagos_teste_m1` sem abrir os arquivos, troca o nome em `ui\gp` e `ui\norm` (UTF-8 sem BOM, só a linha do nome) e confere a original depois |
+| `trocar_linha.ps1 -Condicao C0\|C1\|C2\|C3\|C4` | confere o arquivo da condição contra o `linhas.json`, apaga na cópia o `gp\ai\fast_lane.aip` (se existir), apaga os caches do CSP da cópia (só `cache\ai_grids`, `ai_payloads` e `ai_alt_lanes`, só nomes que começam com `vhe_interlagos_teste_m1_`; desde 08/11), copia a linha com a data de agora, escreve no `registro.csv` (hora, condição, sha256, arquivo) e no `caches_csp.log` (o que apagou), e confere a original antes e depois |
+| `remover_copia.ps1` | apaga a cópia, e só ela, conferindo a original antes e depois |
+
+**Os três:**
+- recusam rodar com o jogo aberto (`acs`, `acs_x86`, `AssettoCorsa`);
+- conferem o caminho antes de escrever ou apagar: tem de ficar dentro de `content\tracks\vhe_interlagos_teste_m1`, nunca dentro da original e sem junção ou link no caminho;
+- usam `-LiteralPath` em tudo.
+
+O `.ps1` só tem ASCII, para o PowerShell 5.1.
+
+### A figura
+
+`_linhas_na_pista.png`: as 5 linhas sobre a pista inteira, com o detalhe da C10 (e o microssetor 36, na freada dela) e da saída da linha de chegada (microssetores 0 e 1).
+
+### O código
+
+- `backend/ml/pista_teste/ai_spline.py`: o leitor, o escritor e a grade;
+- `backend/ml/pista_teste/linha_nova.py`: as regras de cada campo e a conferência delas no original;
+- `backend/ml/pista_teste/condicoes.py`: as condições e as linhas laterais;
+- `backend/ml/pista_teste/registro.py`: o `registro.csv`, a atribuição e os papéis das voltas;
+- `backend/ml/pista_teste/etapas.py`: a Parte C e o resultado da Parte E (pronto, ainda sem dados);
+- `backend/ml/scripts/pista_teste.py`: os comandos `parte-a`, `medidor`, `linhas` e `resultado`;
+- `backend/ml/config.py` e `backend/ml/data/recordings.py`: a exclusão da A.5.
+
+**O coach, o rádio, o app, o store v2, a M1 e o Modelo 2 não mudaram,** salvo a exclusão da A.5.
+
+**Antes da parada, testei as medidas da Parte E numa gravação antiga** (04/10, não da cópia). As 9 voltas da IA saem válidas: saída máxima do corredor de 0,84 m e ângulo máximo de 22°. As voltas humanas e as que passam pelos boxes saem inválidas, com o motivo. O tempo do store bate com o cronômetro do jogo em até 3 ms nas voltas da IA.
+
+## Parte D: o teste no jogo, com você
+
+### O roteiro
+
+**Antes de começar:**
+
+1. **Não aperte "Atualizar coach e relatório"** no app nem rode o `atualizar_coach` na pasta principal até o merge do 47. O código deles ainda não exclui a cópia.
+2. **Não traga as gravações da cópia** para `data\recordings`: elas ficam na pasta do app instalado e só são lidas.
+3. **Grave com o app instalado** (0.7.0, o de hoje). **Por quê:**
+   - ele grava em `%APPDATA%\Automobilista Telemetria`, fora dos dois repositórios;
+   - o app de desenvolvimento da pasta separada leria e escreveria `data\` pelas junções, ou seja, na pasta principal. O backend de desenvolvimento regrava `data\cache\tracks`.
+
+   A aba Coleta vai avisar que a pista não é a esperada: é só um aviso, e a gravação segue. O rádio pode ficar desligado.
+4. **No Content Manager,** grave o preset "pedido 47 [teste]":
+   - carro: Formula RSS 3 2026 V6, com o acerto padrão;
+   - pista: "Interlagos [teste]", layout GP;
+   - modo: prática, sozinho, largando dos boxes;
+   - combustível: 30 L, com o consumo em 0×;
+   - pneus: o composto padrão, com o desgaste em 0×;
+   - clima: "Clear", com o ar a 25 °C;
+   - pista: 100% ("Optimum"), sem evolução;
+   - horário: 14:00, com o tempo em 0×;
+   - ajudas: as de sempre, anotadas na primeira linha das anotações.
+
+   Na primeira vez, a cópia só aparece depois do passo 5.
+
+**A cópia e as trocas** (PowerShell, com o jogo fechado; o Content Manager pode ficar aberto):
+
+5. Uma vez só, no começo:
+   ```powershell
+   cd C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47
+   powershell -ExecutionPolicy Bypass -File tools\pista_teste\criar_copia.ps1
+   ```
+6. **Para cada condição, nesta ordem: C0, C1, C4, C2, C3 e C0 de novo** (o C0 final):
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File tools\pista_teste\trocar_linha.ps1 -Condicao C0
+   ```
+   (troque `C0` pela condição da vez). Depois:
+   - abra o jogo pelo preset;
+   - nos boxes, aperte **Ctrl+C** para a IA dirigir, com nível 100% e agressividade 0%, e deixe-a sair dos boxes;
+   - **deixe a IA completar 9 voltas** (6 no C0 final). A 1ª é a de saída e a 2ª, a primeira lançada; as outras contam. **Espere a IA cruzar a linha ao fim da última volta antes de sair**, para o tempo dela ficar completo;
+   - **feche o jogo** (sair do jogo, até o `acs.exe` fechar) antes da próxima troca;
+   - anote a linha da condição no `_anotacoes.csv`.
+7. **Duas sessões de no máximo 45 minutos.** Uma condição de 9 voltas leva cerca de 14 minutos (13 de voltas e 1 de troca).
+   - **Sessão 1:** C0, C1 e C4 (cerca de 42 min).
+   - **Sessão 2:** C2, C3 e C0 final (cerca de 38 min).
+   - **Entre as duas** (mudança de 08/11): ao fim da sessão 1, com o jogo fechado, avise "terminei a sessão 1". Eu faço só a conferência da troca (sem nenhum tempo) e digo se você pode seguir. Até lá, não rode nenhum script. A cópia fica instalada.
+8. **Se a IA rodar ou sair da pista,** deixe seguir: a volta é descartada pelo resultado. Se ela não conseguir andar (presa, rodando a cada volta), feche o jogo, anote e passe para a próxima condição.
+9. **Se algum script parar** com "PARADO: …", não contorne: anote a mensagem e me avise.
+
+**A linha ideal do jogo não mostra a troca** (ela vem do `data\ideal_line.ai`). A conferência é a da E.1: as posições gravadas têm de ficar mais perto da linha da condição do que da original.
+
+**Ao terminar, avise: "rodei a IA nas linhas".** Eu confiro o teste (E.1 a E.6), gravo o resultado, faço a Parte F, o merge e o envio. A cópia fica instalada até você rodar o `remover_copia.ps1`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\remover_copia.ps1
+```
+
+### A tabela das anotações
+
+`docs/handoff/2026-11-07_47_linha-gerada-no-jogo_anotacoes.csv`:
+
+| ordem | condicao | hora_inicio | hora_fim | voltas_completas | ia_saiu_da_pista | ia_rodou | entrou_nos_boxes | jogo_travou_ou_fechou | observacoes |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | C0 | | | | | | | | |
+| 2 | C1 | | | | | | | | |
+| 3 | C4 | | | | | | | | |
+| 4 | C2 | | | | | | | | |
+| 5 | C3 | | | | | | | | |
+| 6 | C0 final | | | | | | | | |
+
+## Testes
+
+**`backend/tests/test_pista_teste.py`: 20 testes, todos com dados sintéticos, todos passando:**
+
+- **a ida e volta,** byte a byte: o arquivo inteiro, os campos, a grade, o tamanho esperado de cada bloco, um cabeçalho com tempo e amostras e bytes depois da grade. O leitor recusa outra versão;
+- **a grade recalculada:** a mesma nas duas chamadas, com a folga de 350 m e as células ordenadas pela distância;
+- **as regras reproduzem um original sintético** (a linha da IA num círculo);
+- **a linha nova,** 1 m para fora no círculo:
+  - o mesmo número de pontos, no raio certo, fechada;
+  - no sentido certo, com o ponto 0 na mesma estação;
+  - com o espaçamento do original na proporção do raio e as alturas do original;
+  - laterais de 4 e 6 m (a borda fica no lugar);
+  - a velocidade do original e o raio da linha nova;
+- **a lateral além da borda fica em 0**, e uma linha da grade errada é recusada;
+- **os scripts, numa pasta falsa `[teste] pista falsa` (apagada no fim, com isso conferido):**
+  - o `criar_copia`, o `trocar_linha` (C0, C3, C0) e o `remover_copia` funcionam, com o nome trocado em UTF-8 e o "São Paulo" intacto;
+  - o `registro.csv` sai como `C0, C3, C0 final`;
+  - **o hash de todos os arquivos da pista original é o mesmo antes e depois;**
+  - **com o jogo "aberto"** (o nome do processo do próprio PowerShell), os três recusam e nada muda;
+  - **um caminho fora da cópia** (dentro da original, em outra pista, fora do jogo) é recusado;
+  - **uma cópia que é uma junção para a original é recusada,** e a original não muda;
+  - um arquivo de linha que não bate com o `linhas.json` é recusado;
+- **a exclusão:**
+  - com sessões sintéticas, a da cópia fica fora do `list_sessions` e do `list_all_sessions`, e só entra com a opção;
+  - uma varredura do código confere que só `ml/pista_teste/etapas.py` pede a opção;
+  - o inventário, o store, o treino do coach, o Modelo 2 e a M1 listam sem ela;
+- **a atribuição pelo `registro.csv`:**
+  - a última troca antes do início, o C0 final, a recusa por sha256 errado e a gravação anterior à primeira troca;
+  - o CSV real com BOM e maiúsculas;
+  - os papéis das voltas (saída, primeira lançada, as 7 que contam, as além delas, duas gravações na mesma condição);
+- **o veredito e o bootstrap:** as 5 saídas, a deriva, a semente fixa e o formato M:SS,mmm.
+
+**A suíte do backend:** `1 failed, 939 passed, 37 warnings in 943.15s` (a saída inteira em `_testes.txt`). A falha é `test_leitura.py::test_volta_da_conferencia_nos_arquivos_reais`, e **é do ambiente, não do código:**
+
+- o teste lê `data/reference_models/vhe_interlagos.geometry.json`, que o git ignora;
+- o arquivo existe na pasta principal, e a pasta separada não tem junção para `data/reference_models` (a pasta é versionada em parte, com os `*.optimal.json`);
+- com o código da pasta separada lendo esse arquivo da principal, as mesmas asserções passam (conferido).
+
+Nenhum arquivo deste pedido toca em `core/leitura`.
+
+**Os dados da pasta principal ficaram intactos:** a foto de `data\ml` (616 arquivos), `data\cache` (3) e `data\recordings` (313) é a mesma antes de tudo e depois da suíte, sem nenhuma diferença de nome, tamanho ou data.
+
+## O envio ao GitHub
+
+**Antes do primeiro envio, conferi:**
+- nenhum arquivo passa de 50 MB (o maior é a figura, com menos de 1 MB);
+- nada de `recordings/`, `data/recordings` ou `data/ml`, e nenhum `.ai`;
+- nenhum segredo, por busca no diff.
+
+**Só a branch do pedido vai, como avanço simples e sem `--force`.** `develop`, `main` e as tags não vão antes do merge.
+
+| envio | ref | hash local | hash no remoto (`git ls-remote origin`) | confere |
+|---|---|---|---|---|
+| depois da Parte 0 | `etapa/linha-gerada-no-jogo` (nova) | `c0bbe9fde5fc0d65aab305bf1957fb6d2bf0a665` | `c0bbe9fde5fc0d65aab305bf1957fb6d2bf0a665` | sim |
+| depois das Partes A e B | `etapa/linha-gerada-no-jogo` | `9544ff0bb02282ba0b794b23cf940a65537693fe` | `9544ff0bb02282ba0b794b23cf940a65537693fe` | sim |
+| antes da parada (Parte C, a emenda e este relatório) | `etapa/linha-gerada-no-jogo` | `3e48e0d724813dec6651ac1f1c7057e68e58d2f7` | `3e48e0d724813dec6651ac1f1c7057e68e58d2f7` | sim |
+
+Este registro vai num commit à parte (`Relatorio do pedido 47: o envio da parada conferido`), também enviado; o hash dele está no chat.
+
+## Atualização de 08/11: as duas mudanças de mecânica, antes do teste
+
+Você pediu, antes do teste (nenhum critério muda):
+
+1. **O `trocar_linha.ps1` apaga os caches do CSP da cópia.** A cada troca, ele apaga, nas pastas `cache\ai_grids`, `cache\ai_payloads` e `cache\ai_alt_lanes`, só os arquivos cujo nome começa com `vhe_interlagos_teste_m1_`, e lista o que apagou em `data\pista_teste\caches_csp.log`.
+   - **Testado na pasta falsa "[teste]":**
+     - os três caches da cópia somem;
+     - oito arquivos parecidos ficam: os da original, os de `vhe_interlagos40`, um nome sem o `_` depois de `teste_m1`, um em maiúsculas, um em `tracks_data`, um solto em `cache\` e um dentro de uma subpasta;
+     - uma troca sem caches registra zero;
+     - uma pasta de cache que é junção é recusada, sem apagar nada e sem trocar a linha.
+   - **A emenda está no ADR 0029, item 15,** antes de qualquer gravação na cópia.
+   - **A troca do C0 que você já fez** (08/11, 00:13:08, com a versão anterior do script) vale como está. Ainda não havia cache da cópia, porque o jogo não tinha aberto a cópia, e nenhuma gravação da cópia existe. **Não precisa rodar o C0 de novo:** a próxima troca (C1) já apaga os caches que a sessão do C0 criar.
+2. **A conferência entre as sessões:** o comando novo `python -m ml.scripts.pista_teste conferencia --rotulo sessao1` faz só a E.1:
+   - a atribuição das gravações;
+   - as voltas por papel e quantas a IA dirigiu;
+   - a distância mediana das posições das voltas que contam até a linha da condição e até a original;
+   - "a troca pegou?".
+
+   **Ele não mede nem mostra nenhum tempo.** O cronômetro só separa as voltas, como no store. Testado com dados sintéticos. Quando você avisar "terminei a sessão 1", eu rodo o comando e digo se você pode seguir.
+
+**Testes:** `test_pista_teste.py` agora tem 23 testes, todos passando. Os três novos são a limpeza dos caches, a junção na pasta de cache e a conferência da troca.
+
+## Conferência de 08/11, 13:40: os caches do CSP depois da troca para C1
+
+Você perguntou por que a troca para C1 (08/11 às 02:00:28) registrou "0 cache(s) do CSP apagado(s)". Conferi só nomes, tamanhos e datas, sem nenhum tempo de volta:
+
+1. **Nenhum arquivo de `cache\ai_grids`, `cache\ai_payloads` ou `cache\ai_alt_lanes` foi criado ou modificado depois de 08/11 00:13.** Nenhum arquivo de nenhuma outra pasta de `cache\` do jogo mudou depois disso.
+2. **Não existe gravação da cópia** no app instalado, nem no repositório. A última gravação do app é `2026-11-07_19-52-33_vhe_interlagos` (o teste do pedido 45).
+3. **O jogo não rodou desde 07/11 às 20:15:**
+   - o `Documents\Assetto Corsa\logs\log.txt` (reescrito a cada vez que o jogo abre) e o `custom_shaders_patch.log` são de 07/11 20:15:38;
+   - o `cfg\race.ini`, que o Content Manager escreve a cada largada, aponta para `TRACK=vhe_interlagos` (a original), e não para a cópia;
+   - nenhum processo do jogo estava aberto.
+4. **Então o CSP não gravou nenhum cache da cópia, com nenhum nome.** Ele nunca carregou a cópia. Não há o que ajustar no padrão `vhe_interlagos_teste_m1_` por enquanto. Ele só pode ser conferido depois da primeira sessão na cópia: a troca seguinte lista no `caches_csp.log` o que apagou.
+
+**A consequência: a sessão do C0 não aconteceu.**
+- O `registro.csv` tem a troca do C0 (00:13:08) e logo depois a do C1 (02:00:28), sem nenhuma gravação entre elas. A cópia está hoje com a linha da C1 (sha256 `9fc17f49…`).
+- **Para seguir a ordem do ADR (C0 primeiro),** o próximo passo é trocar de novo para C0 e rodar a sessão dele.
+- **Mas o código daquele momento leria esse C0 novo como "C0 final",** porque ele vem depois de uma troca para C1 no registro. Propus uma correção só de mecânica: uma troca seguida de outra antes de qualquer gravação não conta.
+
+### A correção, aprovada por você às 13:48 ("Sim, corrija")
+
+- **A regra (ADR 0029, item 16):**
+  - uma gravação continua pertencendo à última troca antes do início dela;
+  - **o C0 final é só um C0 que vem depois de uma condição que teve gravação;**
+  - as trocas sem gravação aparecem no resultado e na conferência com a nota "sem gravação".
+- **O código:** `backend/ml/pista_teste/registro.py`:
+  - o `ler` devolve as condições como estão escritas;
+  - o `atribuir` decide o C0 final depois de saber quais trocas tiveram gravação;
+  - o `trocas_rotuladas` mostra cada troca com o rótulo e as gravações dela.
+- **Testado** com a sequência de 08/11 e a ordem completa depois dela: C0 e C1 sem gravação, e depois C0, C1, C4, C2, C3 e C0 final, todos com gravação. Saem C0, C1, C4, C2, C3 e "C0 final". `test_pista_teste.py` tem 24 testes, todos passando.
+- **O registro real,** lido com a correção:
+  - a troca do C0 de 00:13:08 e a do C1 de 02:00:28 ficam "sem gravação";
+  - **você já trocou para o C0 de novo às 13:48:25.** A cópia está com a linha original (sha256 `36b57fd8…`), sem nenhum cache do CSP, e não há gravação da cópia;
+  - **uma sessão que comece agora conta como C0.**
+- **Você pode começar a sessão 1** (C0, C1 e C4), pelo roteiro.
+
+### A confirmação por escrito (08/11, 21:46)
+
+- Você aprovou a emenda com estas palavras: "uma troca seguida de outra antes de qualquer gravação não conta, e o C0 final é só um C0 que vem depois de uma condição com gravação". **A troca para C0 das 13:48:25 é a do C0 inicial.**
+- **Registrado no ADR 0029, item 16.** Nenhum critério mudou.
+- **O que já estava feito:** o teste `test_troca_sem_gravacao_nao_faz_o_c0_virar_final` (24 testes passando) e o commit `f38927b5`, enviado e conferido com `git ls-remote`.
+- **Conferido de novo às 21:46:**
+  - o `registro.csv` tem três trocas: C0 00:13:08, C1 02:00:28 e C0 13:48:25;
+  - a última troca é a do C0 (sha256 `36b57fd8…`, a linha original);
+  - o `caches_csp.log` registra "0 cache(s)" nas duas trocas que apagam caches.
+- **Você pode jogar a sessão 1** (C0, depois C1 e C4).
+
+## Sessão 1 (09/11) e a conferência da troca, sem tempos
+
+**O que aconteceu** (lido nos arquivos, sem nenhum tempo):
+- **C0:** a troca de 08/11 13:48:25 recebeu três gravações.
+  - Duas, de 08:57:37 e 08:58:12, são do carro parado nos boxes, sem volta.
+  - A de 08:59:24 tem as voltas da IA.
+- **C1:** a troca de 09:14:29 (sha256 `9fc17f49…`) recebeu a gravação de 09:15:20, com 12 voltas completas.
+- **C4:** a troca de 09:59:34 (sha256 `0f747583…`) recebeu a gravação de 10:00:41, com 12 voltas completas.
+- **Os caches do CSP:**
+  - as trocas para C1 e para C4 apagaram 4 caches da cópia cada uma (2 em `ai_grids` e 2 em `ai_payloads`, todos com o prefixo `vhe_interlagos_teste_m1_`), e nenhum outro arquivo;
+  - o CSP recriou os caches com os mesmos nomes, mas com outros tamanhos. O nome não depende da linha, e o conteúdo depende. Por isso apagar a cada troca era necessário.
+  - O padrão do `trocar_linha.ps1` não precisou de ajuste.
+- **O que você relatou como "C2 rodou"** foi a C1. O registro não tem nenhuma troca para C2 nesta sessão.
+
+**A conferência** (`python -m ml.scripts.pista_teste conferencia --rotulo sessao1`, commit `7a6a262d`, em `2026-11-07_47_linha-gerada-no-jogo_conferencia_sessao1.json`):
+
+| condição | voltas que contam | com a IA dirigindo | mediana até a linha da condição | mediana até a original | a troca pegou? |
+|---|---|---|---|---|---|
+| C0 | 7 | 7 | 0,24 m | 0,24 m | sim |
+| C1 | 7 | 7 | 0,21 m | 0,48 m | sim |
+| C4 | 7 | 7 | 0,26 m | 0,98 m | sim |
+
+- **A original está intacta:** o sha256 do `fast_lane.ai` da pista original é o mesmo de antes.
+- **Os papéis das voltas:**
+  - C0: 3 de saída (uma por gravação), 1 primeira lançada, 7 que contam e 1 interrompida;
+  - C1 e C4: 1 de saída, 1 primeira lançada, 7 que contam, 3 além das que contam e 1 interrompida (a que entra nos boxes).
+- **As trocas do registro:** as duas de 08/11 (00:13 e 02:00) ficam "sem gravação" (item 16), e as três seguintes têm gravação.
+- **A conferência não calculou nem mostrou nenhum tempo.** O JSON não tem nenhum campo de tempo.
+
+**Resposta: você pode seguir para a sessão 2** (C2, C3 e C0 final). Nas três condições, a troca pegou, e as 7 voltas que contam foram todas com a IA dirigindo.
+
+## Sessão 2 (09/11): C2, C3 e C0 final
+
+Conferi a troca depois de cada condição, sem tempos (`conferencia --rotulo sessao2_c2`, `sessao2_c3` e `sessao2_c0final`, em `data\pista_teste\`):
+- **C2:**
+  - a troca foi às 11:17:37 (sha256 `015d939e…`);
+  - o app dividiu a gravação em duas: 11:19:24, só o começo da volta de saída, e 11:19:46.
+- **C3:**
+  - a troca foi às 14:30:08 (sha256 `85e94218…`);
+  - houve duas gravações, 14:32:22 e 14:37:38, e cada uma teve a sua volta de saída fora.
+- **C0 final:**
+  - a troca foi às 15:01:13 (sha256 `36b57fd8…`);
+  - a gravação é a de 15:01:32;
+  - ela ficou rotulada "C0 final" pelo item 16.
+- **Os caches:** cada troca apagou os 4 caches da cópia, e nenhum outro arquivo.
+
+## Parte E: o resultado (09/11, depois do seu aviso "rodei a IA nas linhas")
+
+**O comando:** `python -m ml.scripts.pista_teste resultado --handoff …`, no commit `3ceb0c84`. A saída inteira está em `_resultado.json`.
+
+### E.1, o teste aconteceu e a troca pegou
+
+- **As 10 gravações da cópia** estão na pasta do app instalado, de 08:57:37 a 15:01:32 de 09/11. Todas têm o `startedAt`.
+- **O `registro.csv`** tem 8 trocas:
+  - as duas de 08/11 (00:13 e 02:00) ficam "sem gravação" (item 16);
+  - as outras seis têm gravação, na ordem do ADR.
+- **O sha256 do `fast_lane.ai` original** é `36b57fd8…` antes e depois. A pasta da original não foi escrita.
+- **A troca pegou em todas:**
+
+| condição | mediana até a linha da condição | mediana até a original | pegou? |
+|---|---:|---:|---|
+| C0 | 0,24 m | 0,24 m | sim (é a mesma linha) |
+| C1 | 0,21 m | 0,48 m | sim |
+| C4 | 0,26 m | 0,98 m | sim |
+| C2 | 0,26 m | 1,15 m | sim |
+| C3 | 0,30 m | 1,00 m | sim |
+| C0 final | 0,26 m | 0,26 m | sim (é a mesma linha) |
+
+### E.2, cada volta numa condição
+
+| condição | gravações | saída | primeira lançada | contam | além das que contam | interrompida |
+|---|---|---:|---:|---:|---:|---:|
+| C0 | 08:57:37 e 08:58:12 (paradas nos boxes) e 08:59:24 | 3 | 1 | 7 | 0 | 1 |
+| C1 | 09:15:20 | 1 | 1 | 7 | 3 | 1 |
+| C4 | 10:00:41 | 1 | 1 | 7 | 3 | 1 |
+| C2 | 11:19:24 e 11:19:46 | 2 | 1 | 7 | 2 | 1 |
+| C3 | 14:32:22 e 14:37:38 | 2 | 1 | 7 | 4 | 2 |
+| C0 final | 15:01:32 | 1 | 1 | 4 | 4 | 1 |
+
+- **Nenhuma volta ficou sem condição.**
+- **O número da volta do jogo** (`volta_do_jogo` no JSON) se repete em algumas voltas seguidas, como na memória "numeração das voltas". Conferi pela hora de início: as voltas que contam são todas distintas, a cerca de 85 a 88 s uma da outra.
+
+### E.3, as voltas válidas e as descartadas
+
+- **Todas as voltas que contam são válidas:** 7 de 7 em C0 a C4 e 4 de 4 no C0 final.
+  - A maior saída do corredor nelas é de 0,53 m (o limite é 1,0 m), e o maior ângulo é de 23,5° (o limite é 45°).
+  - Nenhuma tem boxes.
+  - A IA dirigiu todas as amostras.
+- **O tempo (item 14) e o cronômetro do jogo** concordam em 2 ms ou menos em todas elas.
+- **As descartadas, com o motivo de cada uma:**
+  - as voltas de saída (a garagem e o pit lane);
+  - as interrompidas (incompletas, quase todas entrando nos boxes);
+  - quatro voltas além das que contam, que passam pelos boxes: uma em C1, uma em C4 e duas em C3. Os motivos são "fora do corredor" e "boxes", e uma da C3 tem também "rodada (63°)", com o ângulo medido no pit lane.
+- **Todas as voltas com rodada ou saída do corredor passam pelos boxes ou estão incompletas.** Nenhuma volta lançada na pista tem uma das duas.
+
+### E.4, os tempos e os vereditos
+
+| condição | mediana | menor | maior | desvio |
+|---|---:|---:|---:|---:|
+| C0 | 1:25,438 | 1:25,353 | 1:25,583 | 0,100 s |
+| C1 | 1:27,517 | 1:27,329 | 1:27,636 | 0,106 s |
+| C4 | 1:25,920 | 1:25,787 | 1:26,129 | 0,114 s |
+| C2 | 1:27,014 | 1:26,923 | 1:27,340 | 0,196 s |
+| C3 | 1:26,015 | 1:25,849 | 1:26,206 | 0,116 s |
+| C0 final | 1:25,667 | 1:25,438 | 1:25,724 | 0,133 s |
+
+- **A deriva é de +0,229 s** (o C0 final contra o C0). Ela passa do limite de 0,15 s, e o C0 final tem as 4 voltas válidas, então a deriva conta.
+
+| linha | Cx − C0 | intervalo de 95% (bootstrap, 10.000, semente 47) | **veredito (ADR 0029, itens 7 e 8)** |
+|---|---:|---|---|
+| C3 (sem a LSTM) | +0,576 s | +0,411 a +0,714 s | **não conclusivo (deriva)** |
+| C4 (com a LSTM) | +0,482 s | +0,328 a +0,661 s | **não conclusivo (deriva)** |
+
+- **Só relatado, fora do veredito:**
+  - **sem a deriva,** a regra do item 7 daria "mais lenta" para as duas, porque o limite inferior passa de +0,10 s;
+  - **contra a mediana do C0 final,** a diferença é de +0,347 s (C3) e +0,253 s (C4).
+
+  **Nenhuma leitura deixa as linhas geradas à frente da linha da IA.**
+- **O C0 final continuou depois das 4 voltas que contam,** com mais 4 voltas válidas. Pelo item 4, elas ficam fora, e eu não calculei nada com elas.
+- **O C0 ficou em 1:25,438.** É um pouco mais lento do que o item 11 esperava (1:24,8 a 1:25,2), com o preset de 09/11.
+
+**Os comparativos só relatados (item 9):**
+
+| comparação | diferença | intervalo de 95% | o que se esperava | o medidor |
+|---|---:|---|---|---:|
+| C1 − C0 | +2,078 s | +1,916 a +2,205 s | ±0,3 s | +2,638 s |
+| C2 − C0 | +1,575 s | +1,368 a +1,957 s | mais lenta | +2,363 s |
+| C3 − C1 | −1,502 s | −1,659 a −1,317 s | — | −5,057 s |
+| C4 − C1 | −1,597 s | −1,716 a −1,418 s | — | −4,473 s |
+
+- **A codificação** (pontos de controle a cada 25 m) **custa cerca de 2,1 s também no jogo.** O item 11 esperava ±0,3 s e errou.
+- **Com a mesma codificação, as linhas geradas ganham 1,5 a 1,6 s da volta da IA codificada.** A busca melhora o ponto de partida, mas não compensa o custo da codificação.
+- **A sua linha (C2) com a execução da IA** fica 1,6 s atrás da linha da IA e 0,5 s à frente da volta da IA codificada.
+
+### E.5, onde a linha ganha ou perde no jogo (C3 contra C0, por microssetor)
+
+| microssetor | jogo | medidor |
+|---|---:|---:|
+| **36** (perto da C10) | +0,051 s | −1,001 s |
+| **0** (depois da linha) | +0,010 s | 0,000 s |
+| **1** | +0,015 s | −0,013 s |
+
+- **O ganho que o medidor via na C10 não aparece no jogo.** O microssetor seguinte, o 37, é o que mais perde (+0,233 s). Para a C4, os números são parecidos: +0,054 s no 36 e +0,221 s no 37.
+- **Onde a C3 ganha no jogo:** nos microssetores 28 e 29 (−0,194 e −0,188 s) e no 17 (−0,097 s). O medidor também via ganho no 28 e no 29.
+- **Onde a C3 perde:** no 37 (+0,233 s), no 31 (+0,127 s) e no 32 (+0,103 s).
+- **Onde a C4 perde:** a maior perda é no microssetor 4 (+0,278 s).
+- **A correlação entre o jogo e o medidor,** nos 60 microssetores, é de 0,17 (C3) e 0,09 (C4).
+
+### E.6, o medidor contra o jogo (só relatado)
+
+- **A ordem:**
+  - no jogo: C0, C4, C3, C2, C1;
+  - no medidor (ADR 0029, item 10): C3, C4, C0, C2, C1.
+- **Onde os dois concordam:** C2 e C1 ficam por último, e a C4 fica perto da C3 (no jogo, a C4 fica 0,10 s à frente).
+- **Onde eles discordam:** o medidor põe as linhas geradas 1,8 a 2,4 s à frente da linha da IA, e no jogo elas ficam cerca de 0,5 s atrás.
+
+### E.7, testes
+
+- **Os testes da Parte E** estão em `backend/tests/test_pista_teste.py`: são 24, com dados sintéticos (veja "Testes").
+- **A suíte do backend rodou de novo** em 09/11, depois do teste no jogo e antes do merge: `1 failed, 943 passed, 37 warnings in 835.97s`. A saída inteira está em `_testes.txt`.
+  - A falha é a mesma de 07/11: `test_leitura.py::test_volta_da_conferencia_nos_arquivos_reais`, com `KeyError: 'geometryId'`. **É do ambiente:** falta, na pasta separada, o `data/reference_models/vhe_interlagos.geometry.json`, que o git ignora.
+  - Os 4 testes a mais em relação a 07/11 são os novos do `test_pista_teste.py`.
+- **Os dados da pasta principal ficaram intactos:** a foto de `data\ml`, `data\cache` e `data\recordings` (932 arquivos) é a mesma antes e depois da suíte, sem nenhuma diferença.
+
+### As suas anotações
+
+O `_anotacoes.csv` ficou como estava em 07/11, sem as suas linhas. O resultado não depende dele: nenhuma condição ficou incompleta. Se quiser registrar o que viu, pode preencher e me avisar.
+
+## Parte F: a documentação
+
+- **ADR 0029:**
+  - a seção "Resultado" foi escrita sem mudar nada acima dela;
+  - a linha do índice (`docs/decisoes/README.md`) ganhou o resultado.
+- **`docs/arquitetura_ml.md`:** ganhou a seção nova "O teste no jogo como medidor da linha (pedido 47; ADR 0029)".
+- **O ADR 0009 não muda.** A linha gerada não passou, e ele continua dizendo o mesmo: a linha não vai para o coach.
+- **`docs/backlog.md` não foi editado.** Os itens estão no fim deste relatório.
+- **A cópia continua instalada** até você rodar:
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\remover_copia.ps1
+  ```
+
+## O merge e o envio de 09/11
+
+**Antes do merge:**
+- `develop` não tinha andado: local e remoto em `a780c9d1`, o mesmo ponto de partida da branch;
+- **nenhuma pasta estava com `develop` aberta.** A principal está em `etapa/replay-e-radio-que-ensina`, e a do pedido 48 em `etapa/diagnostico-m1`.
+
+**O que foi feito, na pasta separada:**
+- `0a1d8412`: Pedido 47, Partes E e F: o resultado do teste no jogo (C3 e C4 nao conclusivo por deriva; a codificacao custa 2,1 s), o ADR 0029, a arquitetura e a suite.
+- `24dd4fe1`: Merge do pedido 47: a linha gerada dirigida pela IA do jogo (ADR 0029; C3 e C4 nao conclusivo por deriva). É um `--no-ff` em `develop`, sem conflito.
+- **O commit deste registro foi feito em `develop`** (`Relatorio do pedido 47: o merge e o envio conferidos`). Depois, a branch do pedido avançou até ele por avanço simples, e a pasta separada voltou para a branch. **O hash dele está no chat.**
+
+**Conferido antes do envio de `develop`** (as 29 mudanças desde `a780c9d1`):
+- nenhum arquivo passa de 50 MB;
+- nenhum `.ai`, nada de `recordings/` nem de `data/ml/`;
+- nenhum segredo.
+
+| envio | ref | hash local | hash no remoto (`git ls-remote origin`) | confere |
+|---|---|---|---|---|
+| as Partes E e F | `etapa/linha-gerada-no-jogo` | `0a1d8412554ad0591ae32b377cb5f79904a51053` | `0a1d8412554ad0591ae32b377cb5f79904a51053` | sim |
+| o merge | `develop` | `24dd4fe1c96072ad1b3a1c6b526d5ea4d7822ffb` | `24dd4fe1c96072ad1b3a1c6b526d5ea4d7822ffb` | sim |
+
+- Todos foram avanços simples, sem `--force`.
+- `main` e as tags não foram.
+- **A pasta separada não foi apagada,** e a cópia da pista continua instalada.
+
+## Itens para o backlog (para o Cowork)
+
+1. **O cache do CSP para a linha da IA** (`cache\ai_grids`, `ai_payloads`): resolvido no pedido 47.
+   - O `trocar_linha.ps1` apaga só os caches da cópia (item 15), e a troca pegou nas seis condições.
+   - O CSP recria os caches com o mesmo nome e outro conteúdo, então o nome não depende da linha.
+   - Qualquer teste futuro com a linha da IA precisa apagar esses caches.
+2. **O app instalado precisa ser refeito depois do merge do 47,** para ganhar a exclusão das sessões da cópia. Até lá, vale a regra do roteiro: nada de "Atualizar coach" com as gravações da cópia na pasta do app.
+3. **`vhe_interlagos40`** também passa no filtro de prefixo do ML. Vale conferir se as sessões dessa outra pista deveriam entrar (hoje entram, se existirem).
+4. **O medidor dá 1 s de diferença entre a linha do `fast_lane.ai` e a volta `#0013`,** que fica a 0,21 m dela. Isso reforça o item 2 do backlog do pedido 46: o medidor é sensível ao ruído da linha.
+5. **A pasta `_obj_export`** (877 MB) dentro da pista não é do jogo. Ela vai junto na cópia. Vale saber de onde veio.
+6. **A regra de memória "toda sessão com mais de 5 voltas entra no coach e vai para `data\recordings`"** não vale para as sessões da cópia. Vale registrar essa exceção onde a regra estiver escrita.
+7. **A cambagem** da regra difere do original em 3,9% dos pontos (erro acima de 0,01). A fórmula pode ter mais um termo; o efeito no teste é desconhecido e igual para C1 a C4.
+8. **A codificação custa cerca de 2,1 s no jogo** (C1 contra C0), mais do que o esperado. É o maior custo achado no teste.
+   - Uma busca com mais pontos de controle, ou que parta da linha do `fast_lane.ai` em vez da volta codificada, seria o próximo passo do Modelo 1, num pedido próprio.
+   - Com a mesma codificação, a busca já ganha 1,5 a 1,6 s da volta da IA.
+9. **A deriva de 0,23 s** entre o C0 e o C0 final, com o preset fixo, ficou sem causa conhecida. Um teste futuro pode intercalar o C0 entre as condições, ou dar mais voltas a ele, para separar a deriva do efeito da linha.
+10. **O medidor do pedido 46 não prevê o jogo por microssetor** (correlação de 0,09 a 0,17), e a C10 é o pior caso. O teste no jogo pode servir para calibrar o medidor: é o plano B da Parte A, agora com dados.
+11. **O app instalado dividiu algumas gravações em duas.** Isso aconteceu no C2 (aos 22 s da primeira) e no C3, e o C0 teve duas gravações curtas com o carro parado nos boxes. O teste não perdeu nada, porque a volta de saída de cada gravação já ficava fora. Mas vale saber por que o gravador fecha e abre uma sessão nova.
+12. **O `volta_do_jogo` do resultado repete números** em voltas seguidas, como na numeração do store. É só cosmético: o resultado cruza as voltas pela hora de início.

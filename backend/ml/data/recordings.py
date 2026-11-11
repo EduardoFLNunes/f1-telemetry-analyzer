@@ -96,8 +96,18 @@ class RawLap:
         return f"<RawLap {self.lap_id} n={self.sample_count}>"
 
 
+def is_test_track_session(track: Optional[str], directory_name: str = "") -> bool:
+    """A sessao e de uma pista de teste (pedido 47, ADR 0029)? Pelo nome da pista ou, sem ele, pelo do diretorio."""
+    names = config.TEST_TRACK_NAMES
+    if track:
+        return str(track) in names
+    return any(str(directory_name).endswith(name) for name in names)
+
+
 def list_sessions(
-    root: Optional[Path] = None, track_prefixes: Sequence[str] = config.INTERLAGOS_TRACK_PREFIXES
+    root: Optional[Path] = None,
+    track_prefixes: Sequence[str] = config.INTERLAGOS_TRACK_PREFIXES,
+    incluir_pistas_de_teste: bool = False,
 ) -> List[Session]:
     """Sessoes gravadas disponiveis, filtradas por pista.
 
@@ -105,6 +115,11 @@ def list_sessions(
     diretorio: ha sessoes cujo diretorio traz o sufixo de um experimento de
     geometria (`..._InterlagosPitAccessAsphaltMergeFix`) e que continuam sendo
     Interlagos.
+
+    As pistas de teste (`config.TEST_TRACK_NAMES`) ficam sempre fora, mesmo
+    comecando com o prefixo de Interlagos, salvo com `incluir_pistas_de_teste`:
+    so o resultado do pedido 47 pede isso. Assim, o store, o treino, o coach e a
+    evolucao nunca as leem.
     """
     base = Path(root) if root else config.recordings_root()
     if not base.exists():
@@ -118,6 +133,8 @@ def list_sessions(
         track = _session_track(directory, stream)
         if track_prefixes and not any(str(track or "").startswith(p) for p in track_prefixes):
             continue
+        if not incluir_pistas_de_teste and is_test_track_session(track, directory.name):
+            continue
         sessions.append(Session(session_id=directory.name, directory=directory, track=track))
     return sessions
 
@@ -125,6 +142,7 @@ def list_sessions(
 def list_all_sessions(
     roots: Optional[Sequence[Path]] = None,
     track_prefixes: Sequence[str] = config.INTERLAGOS_TRACK_PREFIXES,
+    incluir_pistas_de_teste: bool = False,
 ) -> List[Session]:
     """Sessoes das duas pastas de gravacoes: a do repositorio e a do app instalado.
 
@@ -137,7 +155,8 @@ def list_all_sessions(
     sessions: List[Session] = []
     seen: Dict[str, Path] = {}
     for base in bases:
-        for session in list_sessions(root=base, track_prefixes=track_prefixes):
+        for session in list_sessions(root=base, track_prefixes=track_prefixes,
+                                     incluir_pistas_de_teste=incluir_pistas_de_teste):
             if session.session_id in seen:
                 raise ValueError(
                     f"sessao {session.session_id} existe em {seen[session.session_id]} e em "

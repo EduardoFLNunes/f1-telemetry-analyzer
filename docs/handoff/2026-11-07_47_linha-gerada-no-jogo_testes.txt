@@ -1,0 +1,117 @@
+........................................................................ [  7%]
+........................................................................ [ 15%]
+........................................................................ [ 22%]
+........................................................................ [ 30%]
+........................................................................ [ 38%]
+........................................................................ [ 45%]
+....F................................................................... [ 53%]
+........................................................................ [ 61%]
+........................................................................ [ 68%]
+........................................................................ [ 76%]
+........................................................................ [ 83%]
+........................................................................ [ 91%]
+........................................................................ [ 99%]
+........                                                                 [100%]
+================================== FAILURES ===================================
+________________ test_volta_da_conferencia_nos_arquivos_reais _________________
+
+    @pytest.mark.skipif(not (REPO / "data" / "ml" / "laps_grid_v2.parquet").exists(), reason="store v2 do repositório ausente")
+    def test_volta_da_conferencia_nos_arquivos_reais():
+        """Pedido 30: a volta 8 de 05/10 20:33 e a volta da IA do coach, como o store v2 as guarda."""
+        leitor = arquivos.LeitorDoStore()
+        volta = leitor.ler_volta(REPO, "2026-10-05_20-33-47_vhe_interlagos#0008")
+        assert volta["disponivel"] and volta["pontosDaGrade"] == 2167 and len(volta["elapsedS"]) == 2167
+        assert volta["tempoS"] == pytest.approx(90.6288, abs=1e-3)
+        assert volta["replayLapId"] == "rec__2026-10-05_20-33-47_vhe_interlagos__9"
+        geo = arquivos.ler_geometria(REPO)
+>       assert geo["geometryId"] == volta["geometryId"] == "0ed16f0dd2225990"
+E       KeyError: 'geometryId'
+
+tests\test_leitura.py:123: KeyError
+============================== warnings summary ===============================
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:64
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:64: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    prop = Group((name + Suppress("=") + comma_separated(value)) | oneOf(_CONSTANTS))
+
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:85: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    parse = parser.parseString(pattern)
+
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:89: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+    parser.resetCache()
+
+..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_mathtext.py:45
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_mathtext.py:45: PyparsingDeprecationWarning: 'enablePackrat' deprecated - use 'enable_packrat'
+    ParserElement.enablePackrat()
+
+tests/test_m1_modelo_carro.py::test_convencoes_numa_curva_a_esquerda_e_numa_a_direita
+tests/test_m1_modelo_carro.py::test_sinal_da_velocidade_lateral_sai_da_velocidade_do_mundo
+tests/test_m1_modelo_carro.py::test_volante_com_sinal_trocado_nao_bate
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\numpy\lib\function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+    c /= stddev[:, None]
+
+tests/test_m1_modelo_carro.py::test_convencoes_numa_curva_a_esquerda_e_numa_a_direita
+tests/test_m1_modelo_carro.py::test_sinal_da_velocidade_lateral_sai_da_velocidade_do_mundo
+tests/test_m1_modelo_carro.py::test_volante_com_sinal_trocado_nao_bate
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\numpy\lib\function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+    c /= stddev[None, :]
+
+tests/test_m1_modelo_carro.py::test_ponto_fora_dos_dados_de_treino_e_marcado
+tests/test_m1_modelo_carro.py::test_ponto_fora_dos_dados_de_treino_e_marcado
+tests/test_m1_modelo_carro.py::test_ponto_fora_dos_dados_de_treino_e_marcado
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 0 of parameter k1__k2__length_scale is close to the specified upper bound 100.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_m1_modelo_carro.py::test_ponto_fora_dos_dados_de_treino_e_marcado
+tests/test_m1_modelo_carro.py::test_ponto_fora_dos_dados_de_treino_e_marcado
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 2 of parameter k1__k2__length_scale is close to the specified upper bound 100.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_m1_modelo_carro.py::test_ponto_fora_dos_dados_de_treino_e_marcado
+tests/test_m1_modelo_carro.py::test_ponto_fora_dos_dados_de_treino_e_marcado
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 3 of parameter k1__k2__length_scale is close to the specified upper bound 100.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_m1_modelo_carro.py::test_ponto_fora_dos_dados_de_treino_e_marcado
+tests/test_m1_modelo_carro.py::test_ponto_fora_dos_dados_de_treino_e_marcado
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 4 of parameter k1__k2__length_scale is close to the specified upper bound 100.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_m1_modelo_carro.py::test_ponto_fora_dos_dados_de_treino_e_marcado
+tests/test_m1_modelo_carro.py::test_ponto_fora_dos_dados_de_treino_e_marcado
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 5 of parameter k1__k2__length_scale is close to the specified upper bound 100.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_m1_modelo_carro.py::test_ponto_fora_dos_dados_de_treino_e_marcado
+tests/test_m1_modelo_carro.py::test_ponto_fora_dos_dados_de_treino_e_marcado
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 1 of parameter k1__k2__length_scale is close to the specified upper bound 100.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 1 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 2 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 4 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_leitura.py::test_volta_da_conferencia_nos_arquivos_reais - ...
+1 failed, 943 passed, 37 warnings in 835.97s (0:13:55)

@@ -494,3 +494,36 @@ Comando: `python -m ml.scripts.modelo1_final` (3 min e 40 s no total).
 - **O que ela não mede:** que um piloto, ou a própria IA do jogo, faria uma volta mais rápida seguindo essa linha. O resultado não é um tempo de volta previsto.
 
 **A linha gerada não vai para o coach** (ADR 0009, que continua valendo: o medidor não passou no teste de "prever zero"). Ela está salva em `data/ml/modelo1_final/` (`linha_sem_lstm.npy`, `linha_com_lstm.npy` e `resultado.json`, com o `geometry_id`, o `corridor_id`, o medidor e o commit). Figuras: `docs/handoff/2026-11-07_46_m1-v2-e-modelo1-final_linhas.png`, `_diferenca_acumulada.png` e `_evolucao.png`.
+
+## O teste no jogo como medidor da linha (pedido 47; ADR 0029)
+
+**O medidor:** a IA do Assetto Corsa dirige a linha. Ela fica num `fast_lane.ai` de uma cópia da pista (`vhe_interlagos_teste_m1`, "Interlagos [teste]"). O piloto, o carro e o preset são os mesmos em todas as condições; só a linha muda, e o tempo vem do cronômetro do jogo.
+
+**O código:**
+- `ml/pista_teste/`:
+  - `ai_spline.py` lê e escreve o formato versão 7, byte a byte;
+  - `linha_nova.py` preenche os campos de uma linha nova;
+  - `registro.py` põe cada gravação numa condição pelo `registro.csv`;
+  - `etapas.py` faz a conferência e o resultado;
+- `ml/scripts/pista_teste.py` roda as etapas;
+- `tools/pista_teste/*.ps1` são os scripts da cópia, que o Eduardo roda.
+
+As sessões da cópia ficam fora do ML (`config.TEST_TRACK_NAMES`).
+
+**O resultado (09/11):** a IA seguiu cada linha (a 0,21 a 0,30 m da linha da condição), e as 39 voltas que contam são válidas.
+
+| linha | mediana no jogo | contra a linha da IA (C0) | no medidor (pedido 46) |
+|---|---:|---:|---:|
+| C0, a linha da IA | 1:25,438 | — | — |
+| C1, a volta da IA codificada | 1:27,517 | +2,078 s | +2,638 s |
+| C2, a volta do Eduardo codificada | 1:27,014 | +1,575 s | +2,363 s |
+| C3, a gerada sem a LSTM | 1:26,015 | +0,576 s (de +0,411 a +0,714) | −2,419 s |
+| C4, a gerada com a LSTM | 1:25,920 | +0,482 s (de +0,328 a +0,661) | −1,835 s |
+
+- **O veredito de C3 e C4 é "não conclusivo (deriva)":** o C0 repetido no fim ficou 0,229 s mais lento, acima do limite de 0,15 s. Sem a deriva, as duas seriam "mais lentas".
+- **A codificação** (pontos de controle a cada 25 m) **custa cerca de 2,1 s no jogo.** Com a mesma codificação, as linhas geradas ganham 1,5 a 1,6 s da volta da IA codificada.
+- **O medidor do pedido 46 não prevê onde a linha ganha no jogo:**
+  - no microssetor 36, onde ele previa −1,0 s, o jogo dá +0,05 s;
+  - a correlação por microssetor fica entre 0,09 e 0,17.
+
+**A linha gerada continua fora do coach** (ADR 0009).
