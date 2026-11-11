@@ -905,27 +905,22 @@ def c5_carga(passos: pd.DataFrame, cases: pd.DataFrame, depois: Dict[str, pd.Dat
                      "r2_so_velocidade": _r2(vx2[ok][:, None], res[ok])}
     drs = passos["drs"].to_numpy()
     out["drs"] = {"gravado": bool(np.isfinite(drs).any()), "fracao_dos_passos_com_drs": float(np.nanmean(drs > 0.5))}
-    # A massa pela soma das cargas, por sessao.
-    massa = {}
-    frames = {**cinco_raw, **depois}
-    for s, f in frames.items():
-        loads = f[[f"wheel_load_{w}" for w in D.WHEELS]].to_numpy(float).sum(1)
-        ax, ay = f["longitudinal_g"].to_numpy(float), f["lateral_g"].to_numpy(float)
-        vx = f["velocity_long"].to_numpy(float)
-        sel = (vx < 15) & (np.abs(ax) < 0.1) & (np.abs(ay) < 0.1) & np.isfinite(loads)
-        fuel = f["fuel"].to_numpy(float)
-        massa[s] = {"amostras": int(sel.sum()), "massa_kg_mediana": float(np.median(loads[sel]) / G) if sel.any() else None,
-                    "massa_kg_media": float(np.mean(loads[sel]) / G) if sel.any() else None,
-                    "combustivel_l": {"media": float(np.nanmean(fuel)), "min": float(np.nanmin(fuel)), "max": float(np.nanmax(fuel))}
-                    if np.isfinite(fuel).any() else "nao gravado"}
+    # A massa pela soma das cargas, por sessao, em todas as amostras da gravacao (nao so nas voltas validas).
+    massa = massa_por_sessao()
+    for sid, f in {**cinco_raw, **depois}.items():
+        fu = f["fuel"].to_numpy(float)
+        massa[sid]["combustivel_l_nas_voltas"] = {"media": float(np.nanmean(fu)), "min": float(np.nanmin(fu)),
+                                                  "max": float(np.nanmax(fu))}
     out["massa_por_sessao"] = massa
     out["massa_referencias"] = {"regressoes_da_v1_kg": [578, 653], "f3_real_kg": 673, "faixa_da_secao_1_4_kg": [700, 900]}
     # O skill por quartil do erro de carga no inicio do caso.
     true = cases[[f"carga_{w}" for w in D.WHEELS]].to_numpy()
     pred = cases[[f"carga_prevista_{w}" for w in D.WHEELS]].to_numpy()
-    err = np.abs(pred - true).sum(1) / true.sum(1)
+    soma = true.sum(1)
+    err = np.where(soma > 0, np.abs(pred - true).sum(1) / np.where(soma > 0, soma, 1.0), np.nan)
+    out["casos_sem_carga_gravada"] = int((soma <= 0).sum())
     q = np.nanpercentile(err, [25, 50, 75])
-    quart = np.digitize(err, q)
+    quart = np.where(np.isfinite(err), np.digitize(err, q), -1)
     sq_m, sq_r = cases["sq_M1_10"].to_numpy(), cases["sq_R0_10"].to_numpy()
     curva = cases["regime"].to_numpy() == "curva"
     out["quartis_do_erro_de_carga"] = {"limites": [float(v) for v in q],
@@ -941,6 +936,38 @@ def c5_carga(passos: pd.DataFrame, cases: pd.DataFrame, depois: Dict[str, pd.Dat
     else:
         label = "inconclusiva"
     out["regra_h4"] = {"r2": r2s, "diferenca_de_skill_q1_menos_q4": diff, "rotulo": label}
+    return out
+
+
+def massa_por_sessao() -> dict:
+    """A soma das 4 cargas / g com vx < 15 m/s e |a_x|, |a_y| < 0,1 g, em todas as amostras da sessao.
+
+    So entram amostras com as 4 cargas maiores que zero (com zero, a roda nao esta no chao ou o jogo
+    nao mandou o dado). A gravacao e lida inteira, uma vez, e nada e escrito.
+    """
+    out = {}
+    for s in (*D.SESSOES_M1, *SESSOES_DEPOIS):
+        loads, fuel, n_total = [], [], 0
+        for lap in iter_voltas_diag(D.sessao_por_id(s)):
+            f = lap.frame
+            cols = [f"wheel_load_{w}" for w in D.WHEELS]
+            if not all(c in f for c in cols):
+                continue
+            L = f[cols].apply(pd.to_numeric, errors="coerce").to_numpy(float)
+            vx = pd.to_numeric(f["velocity_long"], errors="coerce").to_numpy(float)
+            ax = pd.to_numeric(f["longitudinal_g"], errors="coerce").to_numpy(float)
+            ay = pd.to_numeric(f["lateral_g"], errors="coerce").to_numpy(float)
+            fu = pd.to_numeric(f["fuel"], errors="coerce").to_numpy(float)
+            n_total += len(f)
+            sel = (vx < 15) & (np.abs(ax) < 0.1) & (np.abs(ay) < 0.1) & (L > 0).all(1) & np.isfinite(L).all(1)
+            loads.append(L[sel].sum(1))
+            fuel.append(fu[sel])
+        Ls, Fu = np.concatenate(loads), np.concatenate(fuel)
+        out[s] = {"amostras": int(Ls.size), "amostras_da_sessao": n_total,
+                  "massa_kg_mediana": float(np.median(Ls) / G) if Ls.size else None,
+                  "massa_kg_p10_p90": [float(np.percentile(Ls, 10) / G), float(np.percentile(Ls, 90) / G)] if Ls.size else None,
+                  "combustivel_l_nessas_amostras": float(np.nanmedian(Fu)) if Fu.size else None}
+        print(f"  massa {s[:19]}: {out[s]['amostras']} amostras, {out[s]['massa_kg_mediana']}", flush=True)
     return out
 
 
@@ -1170,13 +1197,19 @@ def c8_0111(conv, geo, grades, depois_frames: Dict[str, pd.DataFrame]) -> dict:
                        "casos_01_11": n01, "diferenca": diff, "skill_24_10_todos": a24, "skill_01_11_todos": a01,
                        "rotulo_h7a": la, "rotulo_h7b": lb}
     out["episodios"] = c8_episodios(conv, geo, p, corr, sigma, viz, cut, corners, length)
+    out["episodios_informativo_vx_10"] = c8_episodios(conv, geo, p, corr, sigma, viz, cut, corners, length, vx_min=10.0)
+    for key in ("episodios", "episodios_informativo_vx_10"):
+        out[f"{key}_acompanha_0_5s"] = {m: int(sum(ep["casos"]["0.5 s"]["acompanha"][m] for ep in out[key]))
+                                        for m in ("M1_v2", "fisica_v2")}
+        out[f"{key}_pico_com_vx_abaixo_de_5_m_s"] = int(sum(ep["vx_pico_kmh"] < 18.0 for ep in out[key]))
     return out
 
 
 EPISODIOS = ((3, "C05"), (3, "C06"), (3, "C13"), (4, "C01"), (4, "C06"), (10, "C05"), (11, "C01"))
 
 
-def c8_episodios(conv, geo, p, corr, sigma, viz, cut, corners, length) -> List[dict]:
+def c8_episodios(conv, geo, p, corr, sigma, viz, cut, corners, length, vx_min: Optional[float] = None) -> List[dict]:
+    """Os 7 episodios. `vx_min` = None e a regra do pedido; 10 m/s so informa (o pico antes do carro parar)."""
     from ml.modelo_carro import diagnostico as DG
     from ml.modelo_carro import fisica as F
     from ml.modelo_carro import fisica_v2 as F2
@@ -1186,7 +1219,13 @@ def c8_episodios(conv, geo, p, corr, sigma, viz, cut, corners, length) -> List[d
         raw = pd.read_parquet(raiz() / f"episodio_volta{volta}_cru.parquet")
         cru = _cru_modelo(raw, conv, p.b, geo["x_v"])
         c = by[label]
-        i = DG.indice_do_pico(cru["s"].to_numpy(), cru["vx"].to_numpy(), cru["vy"].to_numpy(), c.start_s, c.end_s, length)
+        vx_all, vy_all = cru["vx"].to_numpy(), cru["vy"].to_numpy()
+        if vx_min is None:
+            vx_busca, vy_busca = vx_all, vy_all
+        else:                                   # fora da faixa, beta = 0: a amostra nao e escolhida
+            ok = vx_all >= vx_min
+            vx_busca, vy_busca = np.where(ok, vx_all, 1.0), np.where(ok, vy_all, 0.0)
+        i = DG.indice_do_pico(cru["s"].to_numpy(), vx_busca, vy_busca, c.start_s, c.end_s, length)
         t = cru["t"].to_numpy()
         tp = float(t[i])
         al = DG.deriva_rodas(cru["vx"].to_numpy()[[i]], cru["vy"].to_numpy()[[i]], cru["r"].to_numpy()[[i]],
@@ -1340,7 +1379,7 @@ def figuras(cases, c2, res, c6, prefix: Path) -> None:
     # 2. A distribuicao da deriva estimada.
     f = c6["_fig"]
     fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True)
-    for ax, key, name in ((axes[0], "af", "dianteira"), (axes[1], "ar", "traseira")):
+    for ax, key, name in ((axes[0], "af", "dianteiro"), (axes[1], "ar", "traseiro")):
         a = f[key][np.isfinite(f[key])]
         ax.hist(np.clip(a, 0, 15), bins=np.arange(0, 15.25, 0.25), color="#4a78b5")
         ax.set_yscale("log")
@@ -1359,7 +1398,7 @@ def figuras(cases, c2, res, c6, prefix: Path) -> None:
     # 3. O atraso por velocidade.
     if "C3" in res:
         fonte = res["C3"] if res["C3"]["entradas"] else res["C3_informativo_trechos_de_50ms"]
-        nota = "" if res["C3"]["entradas"] else " (informativo: trechos da seção 1.2, a regra de 20 ms não tem dados)"
+        nota = "" if res["C3"]["entradas"] else " (informativo)\ntrechos < 50 ms; a regra de 20 ms não tem dados"
         fx = fonte["faixas"]
         names = [n for n in vb if fx.get(n, {}).get("entradas", 0) >= 3]
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
@@ -1409,8 +1448,11 @@ def figuras(cases, c2, res, c6, prefix: Path) -> None:
     plt.close(fig)
 
     # 5. Os 7 episodios de 01/11.
-    if "C8" in res:
-        eps = res["C8"]["episodios"]
+    for chave, sufixo, extra in (("episodios", "_episodios.png", "pico pela regra do pedido"),
+                                 ("episodios_informativo_vx_10", "_episodios_vx10.png", "informativo: pico com vx >= 10 m/s")):
+        if "C8" not in res:
+            break
+        eps = res["C8"][chave]
         fig, axes = plt.subplots(2, len(eps), figsize=(3.0 * len(eps), 6), sharex=True)
         for j, ep in enumerate(eps):
             cs = ep["casos"]
@@ -1431,9 +1473,9 @@ def figuras(cases, c2, res, c6, prefix: Path) -> None:
                 if row == 1:
                     ax.set_xlabel("t − pico (s)")
         axes[0, 0].legend(fontsize=6)
-        fig.suptitle("01/11: os 7 episódios de saída de traseira (rodada sem 21/10)")
+        fig.suptitle(f"01/11: os 7 episódios de saída de traseira (rodada sem 21/10; {extra})")
         fig.tight_layout()
-        fig.savefig(str(prefix) + "_episodios.png", dpi=110)
+        fig.savefig(str(prefix) + sufixo, dpi=110)
         plt.close(fig)
 
 
