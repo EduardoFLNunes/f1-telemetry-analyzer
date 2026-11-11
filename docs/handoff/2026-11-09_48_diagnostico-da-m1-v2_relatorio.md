@@ -197,3 +197,12 @@ Os números completos estão no JSON e na seção 7.5.3 de `docs/modelo_fisico_m
 5. **Gravar a versão do CSP** no `metadata.json` da sessão.
 6. **O `geometry.json` de `data/reference_models`** falta nas pastas separadas, e o `test_leitura` falha nelas: copiar ou pular o teste com uma razão clara.
 7. **Apagar a pasta do 48 e os 4,4 GB de `data\diagnostico_m1`** quando o Eduardo decidir.
+
+## O envio conferido (11/11)
+
+| ref | hash local | hash no remoto (`git ls-remote origin`) |
+|---|---|---|
+| `refs/heads/develop` | `3a3aed00fceb1ff81cd769c2dcaa228056436eb2` | `3a3aed00fceb1ff81cd769c2dcaa228056436eb2` |
+| `refs/heads/etapa/diagnostico-m1` | `3a3aed00fceb1ff81cd769c2dcaa228056436eb2` | `3a3aed00fceb1ff81cd769c2dcaa228056436eb2` |
+
+O commit que acrescenta esta tabela vai nas duas refs pelo mesmo caminho: commit em `develop`, avanço simples da branch e envio das duas, com o hash conferido no chat. Nada pediu login, nada foi recusado, e o remoto não tinha divergido (`develop` estava em `545f6c8d` nos dois lados antes do merge).
