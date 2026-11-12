@@ -1,7 +1,7 @@
 # Relatório parcial do pedido 45: o replay de perto, as voltas nos boxes e o rádio que diz onde e por quê
 
 - **Pedido:** `docs/prompts/2026-11-02_45_replay-de-perto-e-radio-que-ensina.md`, com a sua decisão de 04/11 no item B.1.
-- **Situação (12/11):** **as suas quatro decisões estão aplicadas; o merge espera a sua confirmação.** Os registros não mostram o teste do rádio depois da correção da voz, e as anotações não vieram (seção "12/11"). Sem merge em `develop`. O envio é você quem faz: os comandos estão no fim.
+- **Situação (12/11, 14:26):** **as suas quatro decisões estão aplicadas; você decidiu testar no jogo antes do merge.** Os registros não mostram o teste do rádio depois da correção da voz, e as anotações não vieram (seção "12/11"). Sem merge em `develop`. O envio é você quem faz: os comandos estão no fim.
 - **Branch:** `etapa/replay-e-radio-que-ensina`, a partir de `develop` em `bd04b93e`.
 - **Commits:**
   - em `develop`: `bd04b93e` Pedido 45: texto do pedido, atualizacao de 04/11 do pedido 42 e backlog;
