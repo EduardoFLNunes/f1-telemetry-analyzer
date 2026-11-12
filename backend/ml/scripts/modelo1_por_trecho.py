@@ -95,14 +95,15 @@ def carregar_linhas(track) -> Dict[str, dict]:
 
 
 def carregar_voltas_do_teste(track, resultado: dict) -> Dict[str, object]:
-    from ml.data.recordings import iter_laps, list_all_sessions
+    from ml.data.recordings import iter_laps
+    from ml.pista_teste.etapas import sessoes_da_copia
     from ml.preprocessing.alignment import align_lap
     from ml.preprocessing.cleaning import clean_lap
     from ml.preprocessing.resampling import lap_time_from_grid, resample_lap
 
     queridas = {(v["sessao"], int(v["sequencia"])): v for v in resultado["voltas"]
                 if v.get("papel") == "conta" and v.get("valida")}
-    sessoes = list_all_sessions(track_prefixes=(C.PISTA_COPIA,), incluir_pistas_de_teste=True)
+    sessoes = sessoes_da_copia()
     por_condicao: Dict[str, List[dict]] = {c: [] for c in CONDICOES_DO_TESTE}
     arquivos = []
     achadas = set()

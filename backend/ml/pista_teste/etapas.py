@@ -341,6 +341,14 @@ def conferencia(args) -> int:
 
 # ------------------------------------------------------- parte E: resultado ---
 
+def sessoes_da_copia():
+    """As sessoes gravadas na copia da pista. O pedido 49 (ADR 0030) le por aqui, para este modulo continuar
+    sendo o unico que pede as sessoes da copia (`test_so_o_resultado_do_pedido_47_pede_as_sessoes_da_copia`)."""
+    from ..data.recordings import list_all_sessions
+
+    return list_all_sessions(track_prefixes=(C.PISTA_COPIA,), incluir_pistas_de_teste=True)
+
+
 def _inicio(session) -> Optional[datetime]:
     meta = session.metadata() if hasattr(session, "metadata") else {}
     texto = meta.get("startedAt")
