@@ -90,3 +90,5 @@ data/pista_teste/
 *.ai
 # Pedido 48: o diagnostico da M1 v2 (casos e contas, regenerados pelo script)
 data/diagnostico_m1/
+# Pedido 49: a referencia por trecho deriva do fast_lane.ai do jogo e nunca vai para o git.
+data/modelo1_por_trecho/

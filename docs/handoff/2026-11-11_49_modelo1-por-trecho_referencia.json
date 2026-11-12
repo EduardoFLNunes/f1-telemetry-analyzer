@@ -1,0 +1,2151 @@
+{
+ "pedido": 49,
+ "adr": "docs/decisoes/0030-modelo1-por-trecho.md",
+ "commit": "686003de3a1acd8250900b2d5ce81b3548e867d1",
+ "commit_da_conta": "686003de3a1acd8250900b2d5ce81b3548e867d1",
+ "comando": "python -m ml.scripts.referencia_por_trecho",
+ "geometry_id": "0ed16f0dd2225990",
+ "corridor_id": "707d07029036abd6",
+ "grade_m": 2.000036717997977,
+ "gravacoes": {
+  "copia_da_pista": [
+   {
+    "sessao": "2026-11-09_08-59-24_vhe_interlagos_teste_m1",
+    "arquivo": "metadata.json",
+    "bytes": 1086,
+    "sha256": "f3af11295896268bbc3d6b29193b5b1bfca60c9a03c2723067efaa8c055982c4"
+   },
+   {
+    "sessao": "2026-11-09_08-59-24_vhe_interlagos_teste_m1",
+    "arquivo": "opponents.jsonl",
+    "bytes": 1081163,
+    "sha256": "0c79a4394597235e5a65e11077ae9bfc40aa0c0322cfcc41d5b882cfa8f4134c"
+   },
+   {
+    "sessao": "2026-11-09_08-59-24_vhe_interlagos_teste_m1",
+    "arquivo": "player.jsonl",
+    "bytes": 217931734,
+    "sha256": "8af49dc97d8d2a7b29ca0d37eb51d0e108b619c47435ccdee7e2e77963bdca6d"
+   },
+   {
+    "sessao": "2026-11-09_08-59-24_vhe_interlagos_teste_m1",
+    "arquivo": "session-index.json",
+    "bytes": 5647,
+    "sha256": "76862ca46ad7bb8b303bccfb3b11680886db3a6939ffcf5788b87c9a1675ec56"
+   },
+   {
+    "sessao": "2026-11-09_09-15-20_vhe_interlagos_teste_m1",
+    "arquivo": "metadata.json",
+    "bytes": 1087,
+    "sha256": "ce63bb55c5a4b466571a68cf10bba0ddbce6c1426eb89c29ba12245c2e31b0a4"
+   },
+   {
+    "sessao": "2026-11-09_09-15-20_vhe_interlagos_teste_m1",
+    "arquivo": "opponents.jsonl",
+    "bytes": 1376795,
+    "sha256": "cc74af0d5935c33ab4e8d83fc7ffa0ec050a948ae425e627dfac65043475581f"
+   },
+   {
+    "sessao": "2026-11-09_09-15-20_vhe_interlagos_teste_m1",
+    "arquivo": "player.jsonl",
+    "bytes": 269982659,
+    "sha256": "8cdc8ce7a730be72082f8f30c668ee169de78ca0153ecc1ad8e4859890863d29"
+   },
+   {
+    "sessao": "2026-11-09_09-15-20_vhe_interlagos_teste_m1",
+    "arquivo": "session-index.json",
+    "bytes": 7287,
+    "sha256": "1c4cd095389a3fa44b7a5e2c6909fd553a2329389e55fd7b2d6681ee4ddc8666"
+   },
+   {
+    "sessao": "2026-11-09_10-00-41_vhe_interlagos_teste_m1",
+    "arquivo": "metadata.json",
+    "bytes": 1087,
+    "sha256": "a13e1b5a2c80106013de468b4c7ed5cbe8951037d28f0a1b360d8bd47ebefc79"
+   },
+   {
+    "sessao": "2026-11-09_10-00-41_vhe_interlagos_teste_m1",
+    "arquivo": "opponents.jsonl",
+    "bytes": 1332029,
+    "sha256": "061120754dbc49b2d396fce4334c84b34b83e3c66c9493655a2981dc55cb82f0"
+   },
+   {
+    "sessao": "2026-11-09_10-00-41_vhe_interlagos_teste_m1",
+    "arquivo": "player.jsonl",
+    "bytes": 271109917,
+    "sha256": "3bb19a015d292f29c9e5bb908d621dade41a7150636fcf6d2f3e1c783ec9183c"
+   },
+   {
+    "sessao": "2026-11-09_10-00-41_vhe_interlagos_teste_m1",
+    "arquivo": "session-index.json",
+    "bytes": 7308,
+    "sha256": "a5330948968056189979a024efa538b096cec6568be0ccd87dc42212a1f17442"
+   },
+   {
+    "sessao": "2026-11-09_11-19-46_vhe_interlagos_teste_m1",
+    "arquivo": "metadata.json",
+    "bytes": 756,
+    "sha256": "49de1cc6f091a740343f6345acb598b1b0be1d453826e07506e889234e39ab7a"
+   },
+   {
+    "sessao": "2026-11-09_11-19-46_vhe_interlagos_teste_m1",
+    "arquivo": "opponents.jsonl",
+    "bytes": 1249653,
+    "sha256": "e691b1175dfb208bb6aa2ad98ddbf83806ac1af8c0b05ed6d5b42671375dd0a6"
+   },
+   {
+    "sessao": "2026-11-09_11-19-46_vhe_interlagos_teste_m1",
+    "arquivo": "player.jsonl",
+    "bytes": 253523724,
+    "sha256": "3e0b277beb7b60255be5c317e3231eee496e8958c3ff23bd8cc32e07c8639dcf"
+   },
+   {
+    "sessao": "2026-11-09_11-19-46_vhe_interlagos_teste_m1",
+    "arquivo": "session-index.json",
+    "bytes": 6749,
+    "sha256": "a3f5853f35f2a08a7e2fb9106f6c35f2b41952e73d2cd377af021d8a3e44c832"
+   },
+   {
+    "sessao": "2026-11-09_14-32-22_vhe_interlagos_teste_m1",
+    "arquivo": "metadata.json",
+    "bytes": 1095,
+    "sha256": "b1284b351a8b18d8b7d43649101219ad78e062ccbd8c33c62c87b29dbc7fd83e"
+   },
+   {
+    "sessao": "2026-11-09_14-32-22_vhe_interlagos_teste_m1",
+    "arquivo": "opponents.jsonl",
+    "bytes": 353447,
+    "sha256": "682887484a7c5a11670b5b1f9a3d77b5443d4b00bdfe4c44db0d39cd6301c8aa"
+   },
+   {
+    "sessao": "2026-11-09_14-32-22_vhe_interlagos_teste_m1",
+    "arquivo": "player.jsonl",
+    "bytes": 72899589,
+    "sha256": "709fd42ee2dafab77243dff603e4dc8047360275c37d57a9847c579c702621f8"
+   },
+   {
+    "sessao": "2026-11-09_14-32-22_vhe_interlagos_teste_m1",
+    "arquivo": "session-index.json",
+    "bytes": 2352,
+    "sha256": "f4fbe28f8abaecce1c1e7129abe392138e83d33694214d6042994a9a81acae6c"
+   },
+   {
+    "sessao": "2026-11-09_14-37-38_vhe_interlagos_teste_m1",
+    "arquivo": "metadata.json",
+    "bytes": 1095,
+    "sha256": "2cf5a37ea10475aaecdb0e76d452f3362ec39654dda17591794006c9fbd7d079"
+   },
+   {
+    "sessao": "2026-11-09_14-37-38_vhe_interlagos_teste_m1",
+    "arquivo": "opponents.jsonl",
+    "bytes": 1242724,
+    "sha256": "876441383e5a85b39002e45d3d856d35d567b0d81d9f1063b4c59d694e900b51"
+   },
+   {
+    "sessao": "2026-11-09_14-37-38_vhe_interlagos_teste_m1",
+    "arquivo": "player.jsonl",
+    "bytes": 254851937,
+    "sha256": "8881f124faa8ba6a251d7d9950008aafa3358b8cbf806bea0de73dcf0c210308"
+   },
+   {
+    "sessao": "2026-11-09_14-37-38_vhe_interlagos_teste_m1",
+    "arquivo": "session-index.json",
+    "bytes": 6762,
+    "sha256": "17e2b91ef8d7d546dc8b694f483fd01a79b94f8034ae132e02a716ea03b647b2"
+   },
+   {
+    "sessao": "2026-11-09_15-01-32_vhe_interlagos_teste_m1",
+    "arquivo": "metadata.json",
+    "bytes": 765,
+    "sha256": "4160cfd64a90ba02db8b6045fcf09623d9dee30597471bdad8fac975d8a8b01f"
+   },
+   {
+    "sessao": "2026-11-09_15-01-32_vhe_interlagos_teste_m1",
+    "arquivo": "opponents.jsonl",
+    "bytes": 1071646,
+    "sha256": "141053ede9a01566711299fe4777489282272f330ca11136e4799703338b8624"
+   },
+   {
+    "sessao": "2026-11-09_15-01-32_vhe_interlagos_teste_m1",
+    "arquivo": "player.jsonl",
+    "bytes": 218078742,
+    "sha256": "df78f991d4376420aeece1124f6eacbead49c4d06dbc3c058e8876a07fc6446b"
+   },
+   {
+    "sessao": "2026-11-09_15-01-32_vhe_interlagos_teste_m1",
+    "arquivo": "session-index.json",
+    "bytes": 6204,
+    "sha256": "cac7a918e905f29f4a189b326f5eb1ccaa63da7f4cf89a0359371adefb6c72ef"
+   }
+  ],
+  "voltas_humano": [
+   {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\ml\\retreino_lstm\\voltas.parquet",
+    "sha256": "83a1c91039401729a78a6221e6f8a68da84d22505afbdc77f426c76260bf6869"
+   },
+   {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\ml\\retreino_lstm\\voltas_tabela.parquet",
+    "sha256": "0d13e0be1c7d4a1840f5bf6b474c1a2b26c1e7ac50548982e3c60701917b23b2"
+   },
+   {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\ml\\retreino_lstm\\fontes.json",
+    "sha256": "00c4b4b930754a6d71bc3315139abe8ee0676691dee22b21190c10cede002a69"
+   }
+  ]
+ },
+ "arquivos": {
+  "conta": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\modelo1_por_trecho\\conta.json",
+   "sha256": "abcf0ae555bed83c01d3c291b329f44a1ede1e00a8db4aeec4ff35b82f7ecf32"
+  },
+  "resultado_47": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\docs\\handoff\\2026-11-07_47_linha-gerada-no-jogo_resultado.json",
+   "sha256": "a35e232dd383845e7af5385d8c5adb7c8c27c026cde817ca378c04a848a3de3c"
+  },
+  "linhas": {
+   "C0": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\pista_teste\\linhas\\C0\\fast_lane.ai",
+    "sha256": "36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342"
+   },
+   "C1": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\pista_teste\\linhas\\C1\\fast_lane.ai",
+    "sha256": "9fc17f49070aa68908908e971c9d8a571ece6be4f4d3843cf37270c2cd5381d4"
+   },
+   "C2": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\pista_teste\\linhas\\C2\\fast_lane.ai",
+    "sha256": "015d939eaa852f634bced7e6424c2a45e434170b44dd797f0a539764415ca7c1"
+   },
+   "C3": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\pista_teste\\linhas\\C3\\fast_lane.ai",
+    "sha256": "85e94218c6a353c1d5f194aac197be26701be2c0d0980adc87234ecc4bb50c10"
+   },
+   "C4": {
+    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\pista_teste\\linhas\\C4\\fast_lane.ai",
+    "sha256": "0f747583c8b6d3ee7a7e87d83d32ee778438cce3ac7cb41dc1149bf82ee2f5d5"
+   }
+  }
+ },
+ "aviso": "Referencia por trecho do Modelo 1 (pedido 49; ADR 0030). O coach nao le este arquivo. A referencia de todo trecho e a linha da IA (C0); uma candidata so vira referencia depois de vencer num teste novo no jogo; as propostas provisorias dependem da confirmacao do Eduardo (decisoes 3 e 5 do desenho).",
+ "trechos": [
+  {
+   "trecho": "C01",
+   "inicio_s": 0.0,
+   "fim_s": 334.0061319056622,
+   "pontos_de_linha_s": {
+    "entrada": 224.00411241577345,
+    "apice": 298.0054709816986,
+    "saida": 334.0061319056622
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": -4.335507105695846,
+     "apice": 7.8222705457459725,
+     "saida": 1.480032881399038
+    },
+    "pontos_na_grade": 167
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": 136.00249682386246,
+      "desvio": 0.9759179894969829,
+      "voltas_com_a_medida": 7
+     },
+     "freio_maximo": {
+      "mediana": 0.9900000095367432,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": 162.00297415783612,
+      "desvio": 0.9759179894969829,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 108.02399166575131,
+      "desvio": 0.7884942684264659,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 322.00591159767436,
+      "desvio": 0.9759179894969967,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 0.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 332.00609518766424,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 3
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 2.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "6->0",
+       "0->5",
+       "5->0",
+       "0->4",
+       "4->0",
+       "0->3",
+       "3->0",
+       "0->2"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       184.0033780558139,
+       190.00348820980784,
+       204.00374523579367,
+       208.00381867178965,
+       218.0040022617795,
+       220.0040389797775,
+       254.0046631857431,
+       258.0047366217391
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "6->5",
+       "5->4",
+       "4->3",
+       "3->2"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       190.00348820980784,
+       208.00381867178965,
+       220.0040389797775,
+       258.0047366217391
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 6.392341917391659,
+     "desvio_s": 0.014417203388976686,
+     "iqr_s": 0.014185553856467692
+    }
+   },
+   "candidata": null,
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": 100.26753094999268,
+    "frenagem_da_ia_s": 136.00249682386246,
+    "rampa_do_freio_m": 35.73496587386979,
+    "voltas_com_frenagem": 136,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 224.00411241577345,
+      "limite_m": 1.5426236550059524,
+      "mediana_do_eduardo_m": -4.079270033315875
+     },
+     "apice": {
+      "s": 298.0054709816986,
+      "limite_m": 2.7365565164700563,
+      "mediana_do_eduardo_m": 7.068989659501498
+     },
+     "saida": {
+      "s": 334.0061319056622,
+      "limite_m": 4.722655410153486,
+      "mediana_do_eduardo_m": 0.26421452613635166
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C02",
+   "inicio_s": 334.0061319056622,
+   "fim_s": 422.0077474975732,
+   "pontos_de_linha_s": {
+    "entrada": 358.0065725216379,
+    "apice": 390.00716000960557,
+    "saida": 422.0077474975732
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": -2.2079431704185457,
+     "apice": -5.99880351291781,
+     "saida": 2.057626424508518
+    },
+    "pontos_na_grade": 44
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": 360.0066092396359,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "freio_maximo": {
+      "mediana": 0.9900000095367432,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": 30.000550769969664,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 114.46269379752886,
+      "desvio": 1.228276869617852,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 334.0061319056622,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 2.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": "sem retomada no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 2.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [],
+      "voltas_com_ela": 7,
+      "s_mediano": []
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [],
+      "voltas_com_ela": 7,
+      "s_mediano": []
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 2.406172299346591,
+     "desvio_s": 0.009477907659785853,
+     "iqr_s": 0.00916750492249907
+    }
+   },
+   "candidata": null,
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": "sem dados",
+    "frenagem_da_ia_s": 360.0066092396359,
+    "rampa_do_freio_m": "sem dados",
+    "voltas_com_frenagem": 1,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 358.0065725216379,
+      "limite_m": 3.597001803221996,
+      "mediana_do_eduardo_m": -1.5847215753384527
+     },
+     "apice": {
+      "s": 390.00716000960557,
+      "limite_m": 2.4300304167744473,
+      "mediana_do_eduardo_m": -6.396905578076368
+     },
+     "saida": {
+      "s": 422.0077474975732,
+      "limite_m": 3.436913584239796,
+      "mediana_do_eduardo_m": 1.7071647327497141
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C03",
+   "inicio_s": 422.0077474975732,
+   "fim_s": 692.0127044273002,
+   "pontos_de_linha_s": {
+    "entrada": 434.00796780556107,
+    "apice": 490.0089959095044,
+    "saida": 692.0127044273002
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": 4.515512851700121,
+     "apice": 7.1990325053544115,
+     "saida": -0.026757521290496827
+    },
+    "pontos_na_grade": 135
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "freio_maximo": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 131.46311421065866,
+      "desvio": 0.17780597692897843,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 422.0077474975732,
+      "desvio": 6.139790967464725e-14,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 0.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 558.0102443214356,
+      "desvio": 1.069064594245129,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 2.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "2->0",
+       "0->3",
+       "3->0",
+       "0->4"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       448.0082248315469,
+       450.0082615495449,
+       554.0101708854397,
+       556.0102076034377
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "2->3",
+       "3->4"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       450.0082615495449,
+       556.0102076034377
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 5.284317996949676,
+     "desvio_s": 0.005428834501143707,
+     "iqr_s": 0.00654620437259279
+    }
+   },
+   "candidata": null,
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": "sem dados",
+    "frenagem_da_ia_s": null,
+    "rampa_do_freio_m": "sem dados",
+    "voltas_com_frenagem": 0,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 434.00796780556107,
+      "limite_m": 3.484469289949934,
+      "mediana_do_eduardo_m": 4.2115442298251
+     },
+     "apice": {
+      "s": 490.0089959095044,
+      "limite_m": 2.4501072025692414,
+      "mediana_do_eduardo_m": 5.361350632600409
+     },
+     "saida": {
+      "s": 692.0127044273002,
+      "limite_m": 3.945393700077676,
+      "mediana_do_eduardo_m": 0.821381595443438
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C04",
+   "inicio_s": 692.0127044273002,
+   "fim_s": 1402.025739316582,
+   "pontos_de_linha_s": {
+    "entrada": 1312.024087006673,
+    "apice": 1372.0251885466123,
+    "saida": 1402.025739316582
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": -0.3909249556417177,
+     "apice": 6.24790622606592,
+     "saida": -0.44025388229118717
+    },
+    "pontos_na_grade": 355
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": 1210.0222143887763,
+      "desvio": 1.1547217375252155,
+      "voltas_com_a_medida": 7
+     },
+     "freio_maximo": {
+      "mediana": 0.9900000095367432,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": 162.00297415783598,
+      "desvio": 1.1547217375252155,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 126.81910472440752,
+      "desvio": 0.5239892951717974,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 1374.0252252646103,
+      "desvio": 1.573620474505221,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 0.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 1386.0254455725983,
+      "desvio": 1.5118856482344372,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 3.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "4->0",
+       "0->5",
+       "5->0",
+       "0->6",
+       "6->0",
+       "0->5",
+       "5->0",
+       "0->4",
+       "4->0",
+       "0->3"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       738.0135489412536,
+       742.0136223772496,
+       996.0182855629927,
+       1000.0183589989886,
+       1258.0230956207276,
+       1262.0231690567236,
+       1278.0234628007074,
+       1282.0235362367034,
+       1308.0240135706772,
+       1312.024087006673
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "4->5",
+       "5->6",
+       "6->5",
+       "5->4",
+       "4->3"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       742.0136223772496,
+       1000.0183589989886,
+       1262.0231690567236,
+       1282.0235362367034,
+       1312.024087006673
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 11.642517837031281,
+     "desvio_s": 0.014372253104883315,
+     "iqr_s": 0.02624702709114146
+    }
+   },
+   "candidata": null,
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": 1174.6775297081483,
+    "frenagem_da_ia_s": 1210.0222143887763,
+    "rampa_do_freio_m": 35.344684680628006,
+    "voltas_com_frenagem": 135,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 1312.024087006673,
+      "limite_m": 1.7977515649338347,
+      "mediana_do_eduardo_m": -0.21851301400524878
+     },
+     "apice": {
+      "s": 1372.0251885466123,
+      "limite_m": 3.489423992902858,
+      "mediana_do_eduardo_m": 5.219805197435548
+     },
+     "saida": {
+      "s": 1402.025739316582,
+      "limite_m": 3.8997321729069045,
+      "mediana_do_eduardo_m": -2.361512326364193
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C05",
+   "inicio_s": 1402.025739316582,
+   "fim_s": 1606.0294845523756,
+   "pontos_de_linha_s": {
+    "entrada": 1480.0271713185032,
+    "apice": 1520.0279056784627,
+    "saida": 1606.0294845523756
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": -2.121379469686476,
+     "apice": 3.146174576813582,
+     "saida": 3.1935320626434014
+    },
+    "pontos_na_grade": 102
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "freio_maximo": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 139.00223061766573,
+      "desvio": 1.172163427507383,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 1402.025739316582,
+      "desvio": 2.45591638698589e-13,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 0.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 1514.0277955244687,
+      "desvio": 2.9277539684909906,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 3.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "3->0",
+       "0->4"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       1512.0277588064707,
+       1514.0277955244687
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "3->4"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       1514.0277955244687
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 4.098007024321305,
+     "desvio_s": 0.019652458576109696,
+     "iqr_s": 0.024905730490312195
+    }
+   },
+   "candidata": null,
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": "sem dados",
+    "frenagem_da_ia_s": null,
+    "rampa_do_freio_m": "sem dados",
+    "voltas_com_frenagem": 0,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 1480.0271713185032,
+      "limite_m": 3.0857280891237275,
+      "mediana_do_eduardo_m": -1.7280964083465042
+     },
+     "apice": {
+      "s": 1520.0279056784627,
+      "limite_m": 3.350110161054791,
+      "mediana_do_eduardo_m": 2.6968984048222353
+     },
+     "saida": {
+      "s": 1606.0294845523756,
+      "limite_m": 3.214672796571109,
+      "mediana_do_eduardo_m": 0.48191620143473746
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C06",
+   "inicio_s": 1606.0294845523756,
+   "fim_s": 2140.039288257836,
+   "pontos_de_linha_s": {
+    "entrada": 1938.03557974004,
+    "apice": 2102.038590615874,
+    "saida": 2140.039288257836
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": 1.1995818741963218,
+     "apice": -2.2310518280206115,
+     "saida": 0.1330179687947238
+    },
+    "pontos_na_grade": 267
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": 1894.0347719440845,
+      "desvio": 2.45591638698589e-13,
+      "voltas_com_a_medida": 7
+     },
+     "freio_maximo": {
+      "mediana": 0.7997680174162182,
+      "desvio": 0.2811119321940668,
+      "voltas_com_a_medida": 7
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": 208.00381867178953,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 150.1059305576447,
+      "desvio": 0.415269818524443,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 2108.038700769868,
+      "desvio": 1.7995038581678788,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 0.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 2114.038810923862,
+      "desvio": 2.13812918849043,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 4.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "4->0",
+       "0->5",
+       "5->0",
+       "0->4"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       1702.0312470162787,
+       1706.0313204522745,
+       2006.0368281519711,
+       2010.0369015879671
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "4->5",
+       "5->4"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       1706.0313204522745,
+       2010.0369015879671
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 9.662296855524339,
+     "desvio_s": 0.01565378024525488,
+     "iqr_s": 0.02196274618393801
+    }
+   },
+   "candidata": {
+    "linha": "C3",
+    "marca": "a validar no jogo",
+    "ganho_contra_c0_s": -0.23417395393078166,
+    "ic95_contra_c0_s": [
+     -0.2455229464159352,
+     -0.20835720264939894
+    ],
+    "p_contra_c0": 0.0005827505827505828,
+    "ganho_contra_c0_final_s": -0.26448864126716565,
+    "ic95_contra_c0_final_s": [
+     -0.27622421273861164,
+     -0.24253411408674808
+    ],
+    "p_contra_c0_final": 0.0030303030303030303,
+    "outras_candidatas": [
+     "C4"
+    ],
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": -0.3212004694809819,
+     "apice": -4.412445252823155,
+     "saida": 0.5786954053238292
+    }
+   },
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": 1877.2125842777832,
+    "frenagem_da_ia_s": 1894.0347719440845,
+    "rampa_do_freio_m": 16.822187666301147,
+    "voltas_com_frenagem": 28,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 1938.03557974004,
+      "limite_m": 2.0564927166711056,
+      "mediana_do_eduardo_m": 0.24098753017778796
+     },
+     "apice": {
+      "s": 2102.038590615874,
+      "limite_m": 4.204467056790863,
+      "mediana_do_eduardo_m": -4.700849077816274
+     },
+     "saida": {
+      "s": 2140.039288257836,
+      "limite_m": 3.3274146397135747,
+      "mediana_do_eduardo_m": -0.1355126627412132
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C07",
+   "inicio_s": 2140.039288257836,
+   "fim_s": 2334.0428499036393,
+   "pontos_de_linha_s": {
+    "entrada": 2246.041234311728,
+    "apice": 2282.041895235692,
+    "saida": 2334.0428499036393
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": 2.749437599323927,
+     "apice": -6.298432237406148,
+     "saida": -1.6757468208604294
+    },
+    "pontos_na_grade": 97
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": 2202.040426515773,
+      "desvio": 0.7559428241171328,
+      "voltas_com_a_medida": 7
+     },
+     "freio_maximo": {
+      "mediana": 0.9900000095367432,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": 80.0014687199191,
+      "desvio": 0.7559428241171325,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 87.02757037936709,
+      "desvio": 0.28016457566387143,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 2300.042225697674,
+      "desvio": 1.0690645942453114,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 0.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 2330.0427764676433,
+      "desvio": null,
+      "voltas_com_a_medida": 1
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 1.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "4->0",
+       "0->3",
+       "3->0",
+       "0->2",
+       "2->0",
+       "0->1",
+       "1->0"
+      ],
+      "voltas_com_ela": 4,
+      "s_mediano": [
+       2216.040683541759,
+       2220.040756977755,
+       2232.0409772857424,
+       2236.0410507217384,
+       2287.041987030687,
+       2290.0420421076838,
+       2332.0428131856415
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "4->3",
+       "3->2",
+       "2->1"
+      ],
+      "voltas_com_ela": 5,
+      "s_mediano": [
+       2220.040756977755,
+       2236.0410507217384,
+       2290.0420421076838
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 5.36414668554751,
+     "desvio_s": 0.01381883885431253,
+     "iqr_s": 0.008397522874815877
+    }
+   },
+   "candidata": null,
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": 2183.2686262559682,
+    "frenagem_da_ia_s": 2202.040426515773,
+    "rampa_do_freio_m": 18.771800259804877,
+    "voltas_com_frenagem": 134,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 2246.041234311728,
+      "limite_m": 3.5698665838993886,
+      "mediana_do_eduardo_m": 1.9061927695707284
+     },
+     "apice": {
+      "s": 2282.041895235692,
+      "limite_m": 3.639837928524219,
+      "mediana_do_eduardo_m": -6.158178753198396
+     },
+     "saida": {
+      "s": 2334.0428499036393,
+      "limite_m": 5.11523407265305,
+      "mediana_do_eduardo_m": 1.989678379323379
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C08",
+   "inicio_s": 2334.0428499036393,
+   "fim_s": 2498.0458607794735,
+   "pontos_de_linha_s": {
+    "entrada": 2350.0431436476233,
+    "apice": 2394.043951443579,
+    "saida": 2498.0458607794735
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": 0.6745702601008183,
+     "apice": 5.446988263051681,
+     "saida": 4.090867725978888
+    },
+    "pontos_na_grade": 82
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": 2362.0433639556113,
+      "desvio": 0.7559428241173045,
+      "voltas_com_a_medida": 7
+     },
+     "freio_maximo": {
+      "mediana": 0.9900000095367432,
+      "desvio": 0.05700091375648688,
+      "voltas_com_a_medida": 7
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": 32.00058748796755,
+      "desvio": 0.7559428241173045,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 101.88579512422399,
+      "desvio": 0.6311476887623751,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 2416.0443553415566,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 2.0,
+      "desvio": 0.7559289460184545,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 2482.0455670354895,
+      "desvio": 2.6904202290535824,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 2.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "0->2"
+      ],
+      "voltas_com_ela": 4,
+      "s_mediano": [
+       2334.0428499036393
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "1->2"
+      ],
+      "voltas_com_ela": 5,
+      "s_mediano": [
+       2334.0428499036393
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 4.83199542594992,
+     "desvio_s": 0.02104769053583884,
+     "iqr_s": 0.03775005130518494
+    }
+   },
+   "candidata": null,
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": "sem dados",
+    "frenagem_da_ia_s": 2362.0433639556113,
+    "rampa_do_freio_m": "sem dados",
+    "voltas_com_frenagem": 4,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 2350.0431436476233,
+      "limite_m": 4.097006750824921,
+      "mediana_do_eduardo_m": 2.6798802633444128
+     },
+     "apice": {
+      "s": 2394.043951443579,
+      "limite_m": 3.100488854234813,
+      "mediana_do_eduardo_m": 4.961523304300125
+     },
+     "saida": {
+      "s": 2498.0458607794735,
+      "limite_m": 3.713292034154235,
+      "mediana_do_eduardo_m": -2.214677604064347
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C09",
+   "inicio_s": 2498.0458607794735,
+   "fim_s": 2626.048210731344,
+   "pontos_de_linha_s": {
+    "entrada": 2566.0471091914046,
+    "apice": 2610.04791698736,
+    "saida": 2626.048210731344
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": -1.9039255141180793,
+     "apice": -0.11737577966807637,
+     "saida": 2.3863725829120708
+    },
+    "pontos_na_grade": 64
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "freio_maximo": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 123.99983777798754,
+      "desvio": 2.0459099843571695,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 2498.0458607794735,
+      "desvio": 4.91183277397178e-13,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 0.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 2538.046595139433,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 2
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 2.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "2->0",
+       "0->3"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       2534.046521703437,
+       2536.0465584214353
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "2->3"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       2536.0465584214353
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 2.9492395453520786,
+     "desvio_s": 0.025196563697686455,
+     "iqr_s": 0.025788044052966086
+    }
+   },
+   "candidata": {
+    "linha": "C4",
+    "marca": "a validar no jogo",
+    "ganho_contra_c0_s": -0.14008806633431448,
+    "ic95_contra_c0_s": [
+     -0.16470708101348208,
+     -0.09703417706575834
+    ],
+    "p_contra_c0": 0.0005827505827505828,
+    "ganho_contra_c0_final_s": -0.11053092770295692,
+    "ic95_contra_c0_final_s": [
+     -0.1378250710143476,
+     -0.09267069192578248
+    ],
+    "p_contra_c0_final": 0.0030303030303030303,
+    "outras_candidatas": [
+     "C3"
+    ],
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": -2.8814843270018775,
+     "apice": -3.651627076417726,
+     "saida": -2.693792879413851
+    }
+   },
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": "sem dados",
+    "frenagem_da_ia_s": null,
+    "rampa_do_freio_m": 14.81255931011492,
+    "voltas_com_frenagem": 68,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 2566.0471091914046,
+      "limite_m": 3.3826291955273047,
+      "mediana_do_eduardo_m": -1.7103207839397236
+     },
+     "apice": {
+      "s": 2610.04791698736,
+      "limite_m": 3.11093216961759,
+      "mediana_do_eduardo_m": -1.4154348863296307
+     },
+     "saida": {
+      "s": 2626.048210731344,
+      "limite_m": 2.8524195071781,
+      "mediana_do_eduardo_m": -0.22571960698163512
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C10",
+   "inicio_s": 2626.048210731344,
+   "fim_s": 2758.0506341192104,
+   "pontos_de_linha_s": {
+    "entrada": 2672.0490552452975,
+    "apice": 2728.050083349241,
+    "saida": 2758.0506341192104
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": 3.119336667227266,
+     "apice": -6.424531390880921,
+     "saida": -0.01435029950137072
+    },
+    "pontos_na_grade": 66
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": 2652.048688065318,
+      "desvio": 9.827256713523756,
+      "voltas_com_a_medida": 7
+     },
+     "freio_maximo": {
+      "mediana": 0.8813432854915529,
+      "desvio": 0.1053658636082999,
+      "voltas_com_a_medida": 7
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": 76.0013952839231,
+      "desvio": 9.827256713523756,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 78.34672317069072,
+      "desvio": 1.829559120345313,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 2734.050193503235,
+      "desvio": 2.22543541707323,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 0.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 2744.0503770932246,
+      "desvio": 2.2254354170732293,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 1.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "3->0",
+       "0->2",
+       "2->0",
+       "0->1"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       2670.0490185272997,
+       2672.0490552452975,
+       2692.0494224252775,
+       2694.0494591432753
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "3->2",
+       "2->1"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       2672.0490552452975,
+       2694.0494591432753
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 4.225211214018287,
+     "desvio_s": 0.03503543898838011,
+     "iqr_s": 0.049855989623196706
+    }
+   },
+   "candidata": null,
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": 2644.595734441608,
+    "frenagem_da_ia_s": 2652.048688065318,
+    "rampa_do_freio_m": 7.452953623710073,
+    "voltas_com_frenagem": 31,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 2672.0490552452975,
+      "limite_m": 2.206204854755774,
+      "mediana_do_eduardo_m": 1.833527699797362
+     },
+     "apice": {
+      "s": 2728.050083349241,
+      "limite_m": 4.16931681597973,
+      "mediana_do_eduardo_m": -4.442756312632756
+     },
+     "saida": {
+      "s": 2758.0506341192104,
+      "limite_m": 3.4769793076962214,
+      "mediana_do_eduardo_m": 2.0736287535657754
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C11",
+   "inicio_s": 2758.0506341192104,
+   "fim_s": 3024.0555176129415,
+   "pontos_de_linha_s": {
+    "entrada": 2850.0523231471175,
+    "apice": 2884.0529473530833,
+    "saida": 3024.0555176129415
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": 0.9131189301276093,
+     "apice": 5.8449385250374615,
+     "saida": -2.7829966526757683
+    },
+    "pontos_na_grade": 133
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "freio_maximo": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 102.63580546630892,
+      "desvio": 3.2357398760915235,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 2758.0506341192104,
+      "desvio": 4.91183277397178e-13,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 0.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 2930.0537918670366,
+      "desvio": 4.577461118231825,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 1.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "1->0",
+       "0->2",
+       "2->0",
+       "0->3",
+       "3->0",
+       "0->4"
+      ],
+      "voltas_com_ela": 4,
+      "s_mediano": [
+       2765.0507626322033,
+       2767.0507993502015,
+       2824.0518458131437,
+       2827.051900890141,
+       2927.0537367900397,
+       2929.053773508038
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "1->2",
+       "2->3",
+       "3->4"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       2766.0507809912024,
+       2826.051882531142,
+       2928.053755149039
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 5.818965036969296,
+     "desvio_s": 0.048255553862177614,
+     "iqr_s": 0.07564860377617677
+    }
+   },
+   "candidata": null,
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": "sem dados",
+    "frenagem_da_ia_s": null,
+    "rampa_do_freio_m": "sem dados",
+    "voltas_com_frenagem": 0,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 2850.0523231471175,
+      "limite_m": 3.2008594551609275,
+      "mediana_do_eduardo_m": -0.6000227872192355
+     },
+     "apice": {
+      "s": 2884.0529473530833,
+      "limite_m": 3.039054942102073,
+      "mediana_do_eduardo_m": 3.6570243189162626
+     },
+     "saida": {
+      "s": 3024.0555176129415,
+      "limite_m": 2.9059992792335696,
+      "mediana_do_eduardo_m": -0.8222076190641696
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C12",
+   "inicio_s": 3024.0555176129415,
+   "fim_s": 3262.059887054701,
+   "pontos_de_linha_s": {
+    "entrada": 3188.0585284887757,
+    "apice": 3222.0591526947414,
+    "saida": 3262.059887054701
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": -0.7935551038502158,
+     "apice": 6.315775994293169,
+     "saida": -0.14726296324920873
+    },
+    "pontos_na_grade": 119
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": 3124.0573535128406,
+      "desvio": 1.0690645942450683,
+      "voltas_com_a_medida": 7
+     },
+     "freio_maximo": {
+      "mediana": 0.9900000095367432,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": 98.00179918190088,
+      "desvio": 1.0690645942450683,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 102.51464377721308,
+      "desvio": 0.3057914729009166,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 3222.0591526947414,
+      "desvio": 3.779714120586007,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 0.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 3252.0597034647108,
+      "desvio": 2.2678284723515603,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 2.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "4->0",
+       "0->5",
+       "5->0",
+       "0->4",
+       "4->0",
+       "0->3",
+       "3->0",
+       "0->2"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       3108.0570597688566,
+       3112.0571332048526,
+       3166.058124590798,
+       3170.058198026794,
+       3172.0582347447917,
+       3176.0583081807877,
+       3190.058565206774,
+       3192.0586019247717
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "4->5",
+       "5->4",
+       "4->3",
+       "3->2"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       3112.0571332048526,
+       3170.058198026794,
+       3176.0583081807877,
+       3192.0586019247717
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 5.201573896168597,
+     "desvio_s": 0.00932867724252448,
+     "iqr_s": 0.007715607938429514
+    }
+   },
+   "candidata": null,
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": 3100.4884560133983,
+    "frenagem_da_ia_s": 3124.0573535128406,
+    "rampa_do_freio_m": 23.5688974994423,
+    "voltas_com_frenagem": 134,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 3188.0585284887757,
+      "limite_m": 2.313934307741978,
+      "mediana_do_eduardo_m": -1.3390506376565556
+     },
+     "apice": {
+      "s": 3222.0591526947414,
+      "limite_m": 2.635004389997123,
+      "mediana_do_eduardo_m": 5.843579974647362
+     },
+     "saida": {
+      "s": 3262.059887054701,
+      "limite_m": 3.2224855387809157,
+      "mediana_do_eduardo_m": -2.1589780723167555
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C13",
+   "inicio_s": 3262.059887054701,
+   "fim_s": 3380.0620534165814,
+   "pontos_de_linha_s": {
+    "entrada": 3334.061208902628,
+    "apice": 3356.061612800606,
+    "saida": 3380.0620534165814
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": -0.29601702944199404,
+     "apice": 3.7830648740821324,
+     "saida": 4.088832812318243
+    },
+    "pontos_na_grade": 59
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "freio_maximo": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 118.29380726865115,
+      "desvio": 0.28396368166801916,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 3262.059887054701,
+      "desvio": 4.91183277397178e-13,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 0.0,
+      "desvio": 0.7559289460184545,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 3308.0607315686543,
+      "desvio": 1.5118856482344372,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 2.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "2->0",
+       "0->3"
+      ],
+      "voltas_com_ela": 6,
+      "s_mediano": [
+       3306.0606948506565,
+       3308.0607315686543
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "2->3"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       3308.0607315686543
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 2.8478734798689374,
+     "desvio_s": 0.004002520934313741,
+     "iqr_s": 0.003041536088268515
+    }
+   },
+   "candidata": {
+    "linha": "C4",
+    "marca": "a validar no jogo",
+    "ganho_contra_c0_s": -0.013300693665854624,
+    "ic95_contra_c0_s": [
+     -0.019184475604333784,
+     -0.008128916648956874
+    ],
+    "p_contra_c0": 0.0005827505827505828,
+    "ganho_contra_c0_final_s": -0.016345565483746327,
+    "ic95_contra_c0_final_s": [
+     -0.020980116851134767,
+     -0.010833387271134143
+    ],
+    "p_contra_c0_final": 0.0030303030303030303,
+    "outras_candidatas": [],
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": -0.7530148695768877,
+     "apice": 0.22487794449068774,
+     "saida": -2.1689027646795633
+    }
+   },
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": "sem dados",
+    "frenagem_da_ia_s": null,
+    "rampa_do_freio_m": "sem dados",
+    "voltas_com_frenagem": 0,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 3334.061208902628,
+      "limite_m": 2.5339700433667094,
+      "mediana_do_eduardo_m": -1.1273249559485705
+     },
+     "apice": {
+      "s": 3356.061612800606,
+      "limite_m": 3.3054237538177937,
+      "mediana_do_eduardo_m": 1.2154726988108884
+     },
+     "saida": {
+      "s": 3380.0620534165814,
+      "limite_m": 3.5774748050663843,
+      "mediana_do_eduardo_m": -0.8695134164287606
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C14",
+   "inicio_s": 3380.0620534165814,
+   "fim_s": 3666.067304090292,
+   "pontos_de_linha_s": {
+    "entrada": 3578.0656884983814,
+    "apice": 3640.0668267563187,
+    "saida": 3666.067304090292
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": 5.004721456701532,
+     "apice": 5.660911028112489,
+     "saida": 3.9524835373242992
+    },
+    "pontos_na_grade": 143
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "freio_maximo": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 171.39290952603125,
+      "desvio": 0.20478375265624424,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 3380.0620534165814,
+      "desvio": 4.91183277397178e-13,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 0.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 3650.0670103463085,
+      "desvio": 5.589207658420144,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 3.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "3->0",
+       "0->4",
+       "4->0",
+       "0->5"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       3422.062824494539,
+       3426.062897930535,
+       3646.0669369103125,
+       3650.0670103463085
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "3->4",
+       "4->5"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       3426.062897930535,
+       3650.0670103463085
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 5.094812733198239,
+     "desvio_s": 0.00528991823951617,
+     "iqr_s": 0.006732509399277831
+    }
+   },
+   "candidata": null,
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": "sem dados",
+    "frenagem_da_ia_s": null,
+    "rampa_do_freio_m": "sem dados",
+    "voltas_com_frenagem": 0,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 3578.0656884983814,
+      "limite_m": 4.537153009832496,
+      "mediana_do_eduardo_m": 3.0539793129311237
+     },
+     "apice": {
+      "s": 3640.0668267563187,
+      "limite_m": 5.080163389935736,
+      "mediana_do_eduardo_m": 3.9984711827754364
+     },
+     "saida": {
+      "s": 3666.067304090292,
+      "limite_m": 5.476710116798705,
+      "mediana_do_eduardo_m": 2.1857344255911624
+     }
+    }
+   }
+  },
+  {
+   "trecho": "C14->linha",
+   "inicio_s": 3666.067304090292,
+   "fim_s": 4334.079567901616,
+   "pontos_de_linha_s": {
+    "entrada": 3666.067304090292,
+    "apice": 4000.0734359959542,
+    "saida": 4334.079567901616
+   },
+   "linha_de_referencia": {
+    "linha": "C0",
+    "descricao": "a linha da IA (o fast_lane.ai original), projetada na grade",
+    "lateral_nos_pontos_de_linha_m": {
+     "entrada": 3.9524835373242992,
+     "apice": 8.297612557664102,
+     "saida": -6.479966376061959
+    },
+    "pontos_na_grade": 334
+   },
+   "execucao_da_ia": {
+    "linha": "C0",
+    "voltas": 7,
+    "medidas": {
+     "voltas": 7,
+     "frenagem_inicio_s": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "freio_maximo": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "frenagem_ate_o_apice_m": {
+      "mediana": "sem frenagem no trecho",
+      "desvio": null,
+      "voltas_com_a_medida": 0
+     },
+     "velocidade_minima_kmh": {
+      "mediana": 217.69516338032267,
+      "desvio": 0.15236747338075798,
+      "voltas_com_a_medida": 7
+     },
+     "velocidade_minima_s": {
+      "mediana": 3666.067304090292,
+      "desvio": 4.91183277397178e-13,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima": {
+      "mediana": 0.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "retomada_s": {
+      "mediana": 4034.07406020192,
+      "desvio": 3.4365618626143783,
+      "voltas_com_a_medida": 7
+     },
+     "marcha_minima_sem_neutro": {
+      "mediana": 5.0,
+      "desvio": 0.0,
+      "voltas_com_a_medida": 7
+     },
+     "trocas": {
+      "sequencia_mais_comum": [
+       "5->0",
+       "0->6"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       4030.073986765924,
+       4032.0740234839222
+      ]
+     },
+     "trocas_sem_neutro": {
+      "sequencia_mais_comum": [
+       "5->6"
+      ],
+      "voltas_com_ela": 7,
+      "s_mediano": [
+       4032.0740234839222
+      ]
+     }
+    },
+    "tempo_do_trecho": {
+     "mediana_s": 9.618028248018916,
+     "desvio_s": 0.009410014766704371,
+     "iqr_s": 0.010814144686065674
+    }
+   },
+   "candidata": null,
+   "provisorio": {
+    "marca": "provisorio, sem confirmacao",
+    "frenagem_traduzida_s": "sem dados",
+    "frenagem_da_ia_s": null,
+    "rampa_do_freio_m": "sem dados",
+    "voltas_com_frenagem": 4,
+    "limite_de_linha": {
+     "entrada": {
+      "s": 3666.067304090292,
+      "limite_m": 5.476710116798705,
+      "mediana_do_eduardo_m": 2.1857344255911624
+     },
+     "apice": {
+      "s": 4000.0734359959542,
+      "limite_m": 6.108589576922484,
+      "mediana_do_eduardo_m": 3.4719967239928273
+     },
+     "saida": {
+      "s": 0.0,
+      "limite_m": 1.4449068548413355,
+      "mediana_do_eduardo_m": -6.324058595201873
+     }
+    }
+   }
+  }
+ ]
+}

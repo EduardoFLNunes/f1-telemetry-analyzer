@@ -527,3 +527,29 @@ As sessões da cópia ficam fora do ML (`config.TEST_TRACK_NAMES`).
   - a correlação por microssetor fica entre 0,09 e 0,17.
 
 **A linha gerada continua fora do coach** (ADR 0009).
+
+## O Modelo 1 por trecho (pedido 49; ADR 0030)
+
+**A pergunta:** em que trecho a linha gerada ganha ou perde no jogo, com a mesma IA, e qual é a referência de cada trecho.
+
+**Os trechos:** um por curva oficial (C01 a C14 de `detect_corners`, os mesmos do coach e do rádio), do fim da curva anterior ao fim dela, mais o trecho da C14 até a linha. Os 15 cobrem a volta sem buraco nem sobreposição. O tempo de cada um sai do cronômetro da volta na grade (`line_clock`), e a soma bate com o tempo da volta (até 0,33 ms nas voltas da IA).
+
+**O código:**
+- `ml/pista_teste/por_trecho.py`: as regras como funções puras:
+  - os trechos e os tempos;
+  - a regra do ganho: a diferença das medianas, o IC por bootstrap (semente 49), a permutação exata da diferença das médias e o Holm;
+  - as medidas da execução (frenagem, mínima, marcha, retomada);
+  - a rugosidade da curvatura;
+  - a rampa do freio e o limite "de linha";
+  - o formato da referência;
+- `ml/scripts/modelo1_por_trecho.py`: a conta (Parte B). Ele lê as voltas que contam no pedido 47 (refeitas das gravações da cópia), as 136 voltas `humano` do pedido 44 e as linhas do 47;
+- `ml/scripts/referencia_por_trecho.py`: gera `data/modelo1_por_trecho/referencia_por_trecho.json`, fora do git.
+
+**O resultado (12/11):**
+- **As candidatas** (ganho contra o C0 e contra o C0 final, no Holm): a C3 e a C4 na C06 (−0,22 a −0,23 s) e na C09 (−0,10 a −0,14 s), e a C4 na C13 (−0,01 s). **Elas ficam "a validar no jogo";** a referência de todos os trechos continua a linha da IA (C0).
+- **A deriva do C0 final** fica no fim da volta: C03, C14 e C14→linha passam no Holm e somam 0,13 s.
+- **A codificação:** 41% da perda da C1 vem do trecho C14→linha (+0,84 s). Ali, a IA freia na C1 e na C2, e não nas outras linhas. O menor raio do arquivo nesse trecho é de 85 a 90 m nas duas, contra 134 a 226 m nas outras.
+- **As hipóteses registradas** (as dicas e a rugosidade espalhada) não se confirmaram.
+- **O teto da referência por trecho** é de −0,73 s. É um teto, e não uma previsão.
+
+**O coach não lê a referência,** e o ADR 0009 não muda. As propostas provisórias (o ponto de frenagem traduzido pela rampa e o limite "de linha") esperam a confirmação do Eduardo.
