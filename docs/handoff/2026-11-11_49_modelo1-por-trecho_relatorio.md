@@ -15,8 +15,9 @@
   - `96865958` Pedido 49, Parte D: a suite do backend (1 falha de ambiente, test_leitura) e as saidas refeitas com o codigo commitado;
   - `266ed75e` Pedido 49, Parte E: o resultado no ADR 0030, a linha no ADR 0029, o indice e a arquitetura;
   - `a2cc3da4` Pedido 49, Parte E: o commit das contas no resultado do ADR 0030;
-  - `Relatorio do pedido 49: …` (este relatório, antes do merge; o hash está em "O merge").
-- **Merge:** em `develop`, com `--no-ff`. O hash dele e o do commit final deste relatório estão em "O merge".
+  - `d8d2f45e` Relatorio do pedido 49: o Modelo 1 por trecho (candidatas na C06, C09 e C13; a referencia continua a linha da IA).
+- **Merge:** `4175c251` Merge do pedido 49: o Modelo 1 por trecho (ADR 0030; candidatas C3 e C4 na C06 e na C09, C4 na C13; a referencia continua a linha da IA). É um `--no-ff` em `develop`, sem conflito.
+- **O commit final deste relatório** (os hashes do merge e o envio) foi feito em `develop`, e a branch do pedido avançou até ele por avanço simples. O hash dele está no chat.
 - **Arquivos de handoff** (`docs/handoff/2026-11-11_49_modelo1-por-trecho…`):
   - `_relatorio.md` (este);
   - `_conta.json` (Parte B: os trechos, as voltas, os tempos, as comparações, a execução, as hipóteses, as minhas voltas e o teto; sem a lateral ponto a ponto);
@@ -440,7 +441,12 @@ O arquivo também traz:
 - `develop` não tinha andado: local e remoto em `bbff5c97`, o mesmo ponto de partida da branch;
 - nenhuma pasta estava com `develop` aberta. A principal está em `etapa/replay-e-radio-que-ensina`, e a do 48 em `etapa/diagnostico-m1`.
 
-O merge foi feito na pasta do 47. Os hashes estão no commit final deste relatório.
+**O que foi feito, na pasta do 47:**
+- `git switch develop` e `git merge --no-ff etapa/modelo1-por-trecho`: o merge `4175c251`, sem conflito, com 17 arquivos;
+- o commit final deste relatório, em `develop`;
+- a branch do pedido avançou até ele por avanço simples, e a pasta voltou para `etapa/modelo1-por-trecho`.
+
+**Nada foi enviado ao GitHub** (veja "O envio ao GitHub").
 
 ## O envio ao GitHub
 
