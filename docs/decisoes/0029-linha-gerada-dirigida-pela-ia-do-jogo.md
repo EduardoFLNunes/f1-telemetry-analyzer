@@ -4,6 +4,7 @@
 - **Data:** 2026-11-07
 - **Decisor:** Eduardo
 - **Refina:** 0028 (o medidor do Modelo 1). **Mantém:** 0009 (a linha não vai para o coach), o corredor do 0025 e o 0008 (com a atualização de 07/11: uma sessão por pasta)
+- **Atualização (12/11, pedido 49):** a conta por trecho das voltas deste teste, a deriva por trecho, as candidatas (C3 e C4 na C06 e na C09, C4 na C13) e as hipóteses dos 2,1 s estão no ADR 0030.
 
 ## Contexto
 

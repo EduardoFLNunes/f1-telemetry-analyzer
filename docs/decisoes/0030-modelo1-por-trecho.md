@@ -196,4 +196,104 @@ Este registro é commitado antes de qualquer conta nas gravações. O resultado 
 
 ## Resultado
 
-(Escrito depois das contas, no pedido 49.)
+Escrito depois das contas, em 12/11, sem mudar nada acima. As contas são do commit `2457540b` (`python -m ml.scripts.modelo1_por_trecho` e `python -m ml.scripts.referencia_por_trecho`). As saídas estão em `docs/handoff/2026-11-11_49_modelo1-por-trecho_conta.json`, `_referencia.json` e `_por_trecho.png`, e o relatório tem as tabelas inteiras.
+
+### A conferência
+
+- **As 39 voltas que contam no 47** foram refeitas das gravações. O tempo refeito é igual ao do 47 (diferença máxima de 0,0 ms).
+- **A soma dos 15 trechos bate com o tempo da volta:**
+  - nas voltas da IA, em até 0,33 ms;
+  - nas 136 voltas do Eduardo, em até 1,85 ms.
+- **Os canais:** o freio vai de 0 a 0,99 nas voltas da IA e de 0 a 1 nas do Eduardo. Nenhum canal faltou.
+
+### As candidatas (itens 3 e 4)
+
+| trecho | linha | contra o C0 (IC 95%) | contra o C0 final (IC 95%) |
+|---|---|---|---|
+| C06 | C3 | −0,234 s (−0,246 a −0,208) | −0,264 s (−0,276 a −0,243) |
+| C06 | C4 | −0,223 s (−0,236 a −0,196) | −0,253 s (−0,265 a −0,232) |
+| C09 | C3 | −0,105 s (−0,112 a −0,059) | −0,075 s (−0,089 a −0,064) |
+| C09 | C4 | −0,140 s (−0,165 a −0,097) | −0,111 s (−0,138 a −0,093) |
+| C13 | C4 | −0,013 s (−0,019 a −0,008) | −0,016 s (−0,021 a −0,011) |
+
+- **Os p-valores** ficam no piso: 0,0006 contra o C0 e 0,0030 contra o C0 final, ou seja, separação completa. Todos passam no Holm.
+- **Na referência (item 9),** cada trecho com candidata leva a de maior ganho contra o C0: C3 na C06, C4 na C09 e C4 na C13. A outra fica como "outras candidatas".
+- **Nenhuma vira referência:** todas levam a marca "a validar no jogo".
+- **As perdas pela regra:**
+  - C3: C02, C03, C07 e C10;
+  - C4: C01, C02, C03, C10 e C12.
+
+  Os outros trechos ficam em empate.
+
+### A deriva (C0 final contra C0, só relatado)
+
+- **A deriva ficou no fim da volta.** Três trechos passam no Holm: C03 (+0,014 s), C14 (+0,038 s) e C14→linha (+0,079 s). Juntos, eles somam 0,131 s dos 0,248 s da soma das medianas.
+- Nos outros trechos, a diferença fica entre −0,030 e +0,056 s, sem significância.
+
+### As linhas codificadas (C1 e C2)
+
+- **A C1 perde em 9 trechos e ganha em 1 (C09, −0,057 s).** O trecho C14→linha sozinho custa +0,836 s, 41% da soma (+2,045 s pela soma das medianas).
+- **A C2 ganha na C04 (−0,187 s) e na C06 (−0,176 s)** e perde em 7 trechos. O trecho C14→linha custa +0,856 s.
+- **No trecho C14→linha, a IA freia na C1 e na C2,** a partir de 3.860 m e 3.866 m, e cai para 204 e 208 km/h. No C0, na C3 e na C4, ela não freia ali e passa a 218 a 220 km/h.
+
+### As hipóteses dos 2,1 s (item 6, só relatadas)
+
+- **As dicas da linha: o esperado não se confirmou.**
+  - Nos 8 trechos em que a IA freia no C0 e na C1, o início da frenagem fica a menos de 4 m em só 2 (C02 e C12).
+  - Nos outros, a frenagem da C1 vem de −4 a +32 m do C0 (+32 m na C10).
+  - **A IA também não freia no lugar da dica no C0:** em 6 dos 7 trechos com dica de freio, ela começa a frear de 12 a 46 m depois do ponto do arquivo.
+  - Na C14→linha, o arquivo não tem freio, e mesmo assim a IA freia na C1.
+- **A curvatura, como registrada: o esperado também não se confirmou.**
+  - O ρ da perda da C1 com a diferença de rugosidade é de +0,03 (p = 0,81).
+  - O ρ com o afastamento lateral é de +0,36 (p = 0,004).
+  - Na C3 e na C4, os dois ρ ficam entre −0,04 e +0,18, sem significância.
+- **O que a conta mostra (leitura depois de ver os dados, só relatada):**
+  - **as quatro linhas codificadas têm a curvatura de 4 a 5 vezes mais rugosa que a do C0** (de 1,32 a 1,46 × 10⁻³ contra 0,31 × 10⁻³ 1/m, média dos pontos). A rugosidade é comum às quatro e não separa a C1 da C3;
+  - **o menor raio do arquivo no trecho C14→linha é de 85 m na C1 e de 90 m na C2,** em 3.898 m, justo onde a IA freia. Na C3 e na C4, ele é de 134 e 136 m, e no C0, de 226 m. Nas três, a IA não freia;
+  - **a perda grande da codificação parece vir de um raio fechado num ponto só,** e não de uma rugosidade espalhada. A medida registrada (a média numa janela de 20 m por microssetor) não pega isso.
+
+### A linha do Eduardo (item 7 e item 8, só relatados)
+
+- **As 136 voltas:** a mediana fica atrás do C0 em 14 dos 15 trechos. A exceção é a C06 (−0,023 s). A melhor volta de cada trecho fica à frente do C0 em 12 deles.
+- **As 9 de 24/10:** a mediana fica atrás em 14 trechos e à frente na C06 (−0,385 s).
+- **A linha:** a distância da mediana dele à linha da IA fica dentro do limite (o percentil 90 da repetibilidade dele) em 43 dos 45 pontos. Ela passa do limite na saída da C08 (6,31 m contra 3,71 m) e na saída da C13 (4,96 m contra 3,58 m).
+  - O limite vai de 1,44 a 6,11 m, porque as 136 voltas juntam semanas diferentes.
+  - A fração do trecho acima do limite chega a 0,45 na C14 e é zero em 8 trechos.
+- **A execução:**
+  - ele começa a frear antes da IA na C01 (52 m), na C04 (32 m), na C06 (58 m), na C07 (25 m), na C10 (10 m) e na C12 (45 m);
+  - o freio máximo dele (mediana de 0,15 a 0,75) fica abaixo do da IA (0,80 a 0,99);
+  - a mínima dele é mais baixa em 11 trechos;
+  - ele usa uma marcha acima da IA em 8 trechos (contando sem o neutro da troca).
+- **As propostas provisórias:**
+  - **a rampa do freio** vai de 7,5 m (C10) a 35,7 m (C01) nos 7 trechos com pelo menos 5 voltas com frenagem;
+  - **o ponto de frenagem traduzido** sai nos 6 trechos em que a IA também freia: C01 100,3 m, C04 1.174,7 m, C06 1.877,2 m, C07 2.183,3 m, C10 2.644,6 m e C12 3.100,5 m;
+  - nos outros 9 trechos, ele fica "sem dados".
+
+### O teto (só relatado)
+
+**A linha mais rápida de cada trecho, somada, dá 84,712 s contra 85,438 s do C0 (−0,726 s).** É um teto, e não uma previsão. Ele junta a C2 na C04, a C3 na C06, na C11 e na C12, a C4 na C07, na C08, na C09 e na C13, e a C1 na C14.
+
+### O que se esperava (item 10) e o que veio
+
+| item | esperado | resultado |
+|---|---|---|
+| 1 | ganho na C06 e talvez na C08; perda no C01/C02, C03, C07 e C10 | **em parte:** ganho na C06 e na C09 (não na C08); perda no C02, C03 e C10 nas duas, no C01 só na C4, no C07 só na C3 |
+| 2 | 0,1 s ou mais passa no Holm contra o C0 | **sim** |
+| 3 | quase nada passa contra o C0 final; no máximo a C06 | **não:** o desvio por trecho vai de 0,002 a 0,12 s, quase sempre abaixo de 0,03 s, e a separação completa é comum; 5 candidatas |
+| 4 | a deriva se espalha, sem trecho no Holm | **não:** 3 trechos passam, no fim da volta |
+| 5 | a C1 perde em quase todos, mais nos longos e rápidos | **em parte:** 9 perdas; a maior é a C14→linha (+0,836 s), mas a C11 empata e a C12 perde +0,366 s |
+| 6 | a curvatura explica mais que as dicas | **nenhuma das duas, como registradas;** um raio fechado num ponto explica a maior perda (leitura depois de ver os dados) |
+| 7 | o Eduardo perde em quase todos, mais pela execução; a linha passa do limite no ápice das curvas lentas | **em parte:** perde em 14 de 15 e freia antes; a linha passa do limite só em 2 saídas (C08 e C13) |
+| 8 | teto de −0,2 a −0,5 s | **não:** −0,726 s |
+
+### Duas leituras acrescentadas depois de ver os dados (só relatadas, fora das regras)
+
+1. **A marcha sem o neutro da troca.** O gravador guarda a marcha como `gear − 1` do jogo (−1 é a ré, 0 o neutro e 1 a primeira). O carro passa pelo neutro em cada troca, de 2 a 6 m na grade (16 m no máximo, nas voltas do pedido 44). Por isso, a marcha mínima do item 5 sai 0 em todo trecho com troca. A leitura sem o neutro ignora o 0 e junta `5 → 0 → 4` em `5 → 4`. A medida registrada continua no JSON.
+2. **O menor raio do arquivo em cada trecho,** para a frenagem da IA no trecho C14→linha.
+
+### O que isto quer dizer
+
+- **Há onde a linha gerada ganha no jogo,** com a mesma IA: na C06 (−0,22 a −0,23 s, com cerca de 20 km/h a mais de mínima) e na C09 (−0,10 a −0,14 s). São candidatas para um teste novo no jogo, e não referências.
+- **A referência de todos os trechos continua sendo a linha da IA (C0).**
+- **O custo da codificação parece vir de pontos com o raio fechado** (85 m num trecho de 226 m), mais do que de uma rugosidade espalhada. Isso é uma pista para a codificação de um próximo pedido, e não uma conclusão.
+- **O coach não muda,** e o ADR 0009 continua como está.
