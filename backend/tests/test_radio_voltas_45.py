@@ -138,13 +138,13 @@ CURVA_6 = {"curva": "C06", "lado": "direita", "perdaS": 0.5,
 def test_os_exemplos_do_pedido():
     atras = {"situacao": "atras", "difS": 0.3, "melhorS": 88.0}
     m = mensagem_de_resumo(7, 89.0, 84.8, "volta_ia", CURVA_1, atras)
-    assert m["falas"][1] == "3 décimos atrás da sua melhor, 4,2 segundos atrás da IA. Curva 1: 7 décimos, freou 15 metros antes da IA."
+    assert m["falas"][1] == "3 décimos atrás da melhor da sessão, 4,2 segundos atrás da IA. Curva 1: 7 décimos, freou 15 metros antes da IA."
     m = mensagem_de_resumo(8, 87.8, 84.8, "volta_ia", CURVA_12, {"situacao": "melhor", "difS": 0.2, "melhorS": 88.0})
-    assert "Melhor volta, 2 décimos mais rápida. Curva 12: 4 décimos, saiu 8 quilômetros por hora mais lento." in m["falas"]
+    assert "Melhor volta da sessão, 2 décimos mais rápida. Curva 12: 4 décimos, saiu 8 quilômetros por hora mais lento." in m["falas"]
     m = mensagem_de_resumo(9, 89.1, 84.8, "volta_ia", CURVA_6, {"situacao": "atras", "difS": 1.1, "melhorS": 88.0})
-    assert "1,1 segundo atrás da sua melhor. Curva 6: 5 décimos, passou 3 metros por fora no ápice." in m["falas"]
+    assert "1,1 segundo atrás da melhor da sessão. Curva 6: 5 décimos, passou 3 metros por fora no ápice." in m["falas"]
     m = mensagem_de_resumo(10, 96.4, 84.8, "volta_ia", None, {"situacao": "atras", "difS": 7.0, "melhorS": 89.4}, rodada=True)
-    assert m["fala"] == "Volta com rodada: 1 minuto e 36,4 segundos, 7,0 segundos atrás da sua melhor."
+    assert m["fala"] == "Volta com rodada: 1 minuto e 36,4 segundos, 7,0 segundos atrás da melhor da sessão."
     assert m["curva"] is None
 
 
@@ -157,18 +157,40 @@ def test_as_variantes_perdem_os_itens_de_baixo_para_cima():
     assert "anterior" not in f[2] and "4,2 segundos" in f[2]      # sai a anterior
     assert "4,2 segundos" not in f[3] and "freou 15 metros antes da IA" in f[3]   # sai a IA
     assert "antes." in f[4]                                        # sai o "da IA"
-    assert f[-2] == "3 décimos atrás da sua melhor. Curva 1: 7 décimos."           # sai a causa
-    assert f[-1] == "3 décimos atrás da sua melhor."                              # e a curva por ultimo
+    assert f[-2] == "3 décimos atrás da melhor da sessão. Curva 1: 7 décimos."           # sai a causa
+    assert f[-1] == "3 décimos atrás da melhor da sessão."                              # e a curva por ultimo
     assert m["falasComACausa"] == 5
     assert all("décimo" in x or "segundo" in x for x in f)         # a unidade nunca sai
 
 
 def test_melhor_volta_e_recorde():
     m = mensagem_de_resumo(3, 88.0, 84.8, "volta_ia", None, {"situacao": "melhor", "difS": None, "melhorS": None})
-    assert m["fala"].startswith("Melhor volta, 3,2 segundos atrás da IA")
+    assert m["fala"].startswith("Melhor volta da sessão, 3,2 segundos atrás da IA")
     m = mensagem_de_resumo(3, 86.0, 84.8, "volta_ia", None, {"situacao": "recorde", "difS": 0.6, "melhorS": 86.6})
     assert m["fala"].startswith("Recorde pessoal, 6 décimos mais rápida")
     assert m["texto"].startswith("recorde pessoal, −0,600 s")
+
+
+def test_o_resumo_sempre_diz_contra_quem():
+    # Decisao do Eduardo de 12/11: o app instalado tinha a referencia "minha_melhor" e disse
+    # "Melhor volta, 2,5 segundos atras da referencia" (07/11). Agora diz contra quem.
+    melhor = {"situacao": "melhor", "difS": None, "melhorS": None}
+    m = mensagem_de_resumo(2, 89.4, 86.9, "minha_melhor", None, melhor)
+    assert m["fala"].startswith("Melhor volta da sessão, 2,5 segundos atrás do seu recorde.")
+    assert "+2,500 s para o seu recorde (1:26,900)" in m["texto"]
+    m = mensagem_de_resumo(2, 89.4, 84.8, "volta_ia", None, {"situacao": "atras", "difS": 0.4, "melhorS": 89.0})
+    assert m["fala"].startswith("4 décimos atrás da melhor da sessão, 4,6 segundos atrás da IA.")
+    assert "+0,400 s para a melhor da sessão (1:29,000)" in m["texto"]
+    m = mensagem_de_resumo(2, 89.4, 84.8, None, None, {"situacao": "atras", "difS": 0.4, "melhorS": 89.0})
+    assert "4,6 segundos atrás da referência" in m["fala"]
+    # o recorde novo contra o recorde antigo: a diferenca vai uma vez so
+    m = mensagem_de_resumo(2, 86.0, 86.6, "minha_melhor", None, {"situacao": "recorde", "difS": 0.6, "melhorS": 86.6})
+    assert m["fala"].startswith("Recorde pessoal, 6 décimos mais rápida.") and "seu recorde" not in m["fala"]
+    # a causa da curva tambem diz contra quem
+    m = mensagem_de_resumo(2, 89.4, 88.7, "minha_melhor", CURVA_1, {"situacao": "atras", "difS": 0.4, "melhorS": 89.0})
+    assert m["falas"][1] == ("4 décimos atrás da melhor da sessão, 7 décimos atrás do seu recorde. "
+                             "Curva 1: 7 décimos, freou 15 metros antes do seu recorde.")
+    assert m["falaMaxS"] == 8.0
 
 
 def test_a_curva_em_mensagem_propria_e_o_alto_do_replay():
@@ -176,7 +198,7 @@ def test_a_curva_em_mensagem_propria_e_o_alto_do_replay():
     assert m["origem"] == "curva" and m["fala"] == "Curva 1: 7 décimos, freou 15 metros antes da IA."
     assert m["falas"][-1] == "Curva 1: 7 décimos."
     # o alto do replay: so o pedaco da curva, com os numeros da voz
-    fala = "3 décimos atrás da sua melhor. Curva 1: 7 décimos, freou 15 metros antes da IA. Tempo: 1 minuto e 29,0 segundos."
+    fala = "3 décimos atrás da melhor da sessão. Curva 1: 7 décimos, freou 15 metros antes da IA. Tempo: 1 minuto e 29,0 segundos."
     assert fala_da_curva(fala, "C01") == "Curva 1: 7 décimos, freou 15 metros antes da IA."
     duas = "Curva 1: perde 7 décimos por volta. Curva 12: perde 4 décimos por volta."
     assert fala_da_curva(duas, "C12") == "Curva 12: perde 4 décimos por volta."

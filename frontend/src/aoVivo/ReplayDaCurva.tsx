@@ -141,7 +141,7 @@ function desenharACurva(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: numb
   };
   const fv = traco(c.freadas.voce, COR_VOCE);
   traco(c.freadas.referencia, COR_REF);
-  const contra = c.referencia === 'minha_melhor' ? 'da sua melhor' : 'da IA';
+  const contra = c.referencia === 'minha_melhor' ? 'do seu recorde' : 'da IA';
   const tf = textoDaFreada(c.freadas.distanciaM, contra);
   if (fv && tf) rotulo(tf, fv[0], fv[1], COR_VOCE, 'direita');
   // O traçado: uma seta entre as duas linhas, no ponto da mínima da referência (só na análise).

@@ -1,6 +1,6 @@
 # 0027 — O que o rádio diz, em que ordem e por quê
 
-- **Status:** aceita (pedido 45); complementa 0012, 0020 e 0021; uma decisão em aberto (ver o fim)
+- **Status:** aceita (pedido 45); complementa 0012, 0020 e 0021; as decisões do Eduardo de 12/11 estão no fim
 - **Data:** 2026-11-04
 - **Decisor:** Eduardo
 
@@ -25,13 +25,15 @@ Na F1, em corrida, a FIA restringiu o coaching por rádio em 2014 e 2016. O noss
 
 Pela ordem de importância:
 
-1. a diferença para a sua melhor volta da sessão; ou "melhor volta", com o quanto ela foi mais rápida que a melhor anterior; ou "recorde pessoal", se ela bater a melhor de todas as sessões do store, para o carro e a pista;
+1. a diferença para a melhor volta da sessão ("atrás da melhor da sessão"); ou "melhor volta da sessão", com o quanto ela foi mais rápida que a melhor anterior; ou "recorde pessoal", se ela bater a melhor de todas as sessões do store, para o carro e a pista;
 2. a curva da volta, com a perda e a causa;
-3. a diferença para a referência escolhida na Coleta (a IA por padrão);
+3. a diferença para a referência escolhida na Coleta: "da IA" (o padrão) ou "do seu recorde" (a sua melhor volta limpa do store);
 4. a diferença para a volta anterior, só quando a volta melhorou sobre a anterior sem ser a melhor;
 5. o tempo da volta. O cartão sempre traz o tempo e todos os números.
 
-As variantes da fala vão da mais completa à mais curta e perdem os itens de baixo para cima. A unidade nunca sai (pedido 36). A fala tem de caber no limite do tipo (7,7 s no resumo).
+As variantes da fala vão da mais completa à mais curta e perdem os itens de baixo para cima. A unidade nunca sai (pedido 36). A fala tem de caber no limite do tipo (8,0 s no resumo, decisão de 12/11; era 7,7 s).
+
+**Toda diferença diz contra quem** (decisão de 12/11): "Melhor volta da sessão, 2,5 segundos atrás do seu recorde." Antes, a melhor da sessão e a referência "minha melhor" eram as duas "a sua melhor", e o app instalado disse em 07/11 "Melhor volta, 2,5 segundos atrás da referência", que parece se contradizer. Quando a volta é recorde pessoal e a referência é a sua melhor, a diferença para a referência não é dita: o recorde já diz quanto bateu o antigo.
 
 **A melhor volta** é a mais rápida da sessão entre as que contam para a análise: completa pela regra do coach, com as medidas e sem rodada.
 
@@ -82,11 +84,14 @@ A diferença é medida contra uma volta real, nunca um ganho prometido (ADR 0012
 
 A regra "boxes" do coach (a lateral acima de 10 m, abaixo de 90 km/h) passa a valer só onde existe pit lane: em Interlagos, os microssetores 54 a 59 e 0 a 10. Fora dele, é uma saída larga, e o microssetor é medido. A volta de 1:29,518 de 21/10 caía nela por um microssetor, com 11,0 m a 81,9 km/h. Numa pista fora da lista, a regra continua na volta inteira. A parada (abaixo de 5 km/h) e a rodada (mais de 5 s numa curva) não mudam.
 
-## Decisões em aberto, do Eduardo
+## As decisões do Eduardo de 12/11
 
-1. **O limite do resumo.** Os exemplos do pedido duram de 7,13 a 8,73 s com a voz de verdade, e o limite é 7,7 s. Pela ordem acima, a diferença para a IA é a primeira a sair quando a curva precisa caber.
+1. **O limite do resumo passa a 8,0 s.** Os exemplos do pedido duravam de 7,13 a 8,73 s com a voz de verdade, e com 7,7 s a causa saía da voz em boa parte das voltas.
+2. **A volta da IA fica calada.** Ela não tem resumo.
+3. **A perda antes da primeira freada não conta como causa** (a parte `reta`, na tabela acima).
+4. **Toda diferença diz contra quem** (acima, em "O resumo da volta").
 
-Os números e as opções estão em `docs/handoff/2026-11-02_45_replay-de-perto-e-radio-que-ensina_relatorio.md`.
+Os números estão em `docs/handoff/2026-11-02_45_replay-de-perto-e-radio-que-ensina_relatorio.md`.
 
 ## Fontes
 

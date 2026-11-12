@@ -1,7 +1,7 @@
 # Relatório parcial do pedido 45: o replay de perto, as voltas nos boxes e o rádio que diz onde e por quê
 
 - **Pedido:** `docs/prompts/2026-11-02_45_replay-de-perto-e-radio-que-ensina.md`, com a sua decisão de 04/11 no item B.1.
-- **Situação (07/11, 21:07):** **parado na Parte G.** Você testa depois, com o app instalado 0.7.0 (já com voz) e o app do jogo 0.5.0. Faltam ouvir o rádio no jogo, o botão "Abrir no app", a roda do mouse e o FPS com o replay desligado. Sem merge em `develop`. O envio é você quem faz: os comandos estão no fim.
+- **Situação (12/11):** **as suas quatro decisões estão aplicadas; o merge espera a sua confirmação.** Os registros não mostram o teste do rádio depois da correção da voz, e as anotações não vieram (seção "12/11"). Sem merge em `develop`. O envio é você quem faz: os comandos estão no fim.
 - **Branch:** `etapa/replay-e-radio-que-ensina`, a partir de `develop` em `bd04b93e`.
 - **Commits:**
   - em `develop`: `bd04b93e` Pedido 45: texto do pedido, atualizacao de 04/11 do pedido 42 e backlog;
@@ -22,7 +22,8 @@
   - `_incompletas.py` e `_incompletas.json` (o B.1, rodado **antes** da regra nova: com ela, as duas colunas do script ficam iguais);
   - `_previa.py`, `_previa_camera.png` (a folha inteira), `_previa_camera_c01.png`, `_c06.png`, `_c12.png` e `_previa_lista_01-11.jpg`;
   - `_abrir_no_app_v7_c01.jpg` e `_abrir_no_app_v7_inteira.jpg`;
-  - `_conferir_lua.txt` e `_testes.txt`.
+  - `_conferir_lua.txt` e `_testes.txt`;
+  - `_limite_8s.json` (12/11: o resumo com 7,7 s e com 8,0 s, nas 4 sessões, fala a fala).
 
 ## 06/11: o aviso de teste chegou, mas o teste ainda não aconteceu
 
@@ -127,6 +128,64 @@
 - `npm run dist:win` de novo, no commit `60d3f9e`. O `build-info.json` diz `dirty: true` só por causa de `versoes/LEIA-ME.md` (refeito pelo próprio build) e do pedido 47, que não é deste pedido e não está no commit.
 - A instalação (`/S`) ficou parada até você aceitar a permissão de administrador do Windows, às 20:48. Ela terminou com o código 0, e o `voz.ps1` agora está no app instalado.
 - **Conferido às 20:53:** abri o app instalado e mandei a mensagem de teste (`POST /api/radio/teste`). O backend gerou o áudio (`duracaoS` 4,09; um `.wav` de 131 KB), e nenhum "Radio sem voz" apareceu no log depois da instalação. **O som não foi ouvido no jogo.** O app instalado ficou aberto.
+
+## 12/11: as suas decisões e o aviso de teste
+
+**O aviso:** "Testei o rádio e o replay no jogo", com as quatro decisões e "pode fechar o pedido e fazer o merge". **As anotações não vieram na mensagem.**
+
+**O que os registros mostram depois da correção da voz (07/11, 20:53):**
+
+- nenhuma fala do rádio: o último registro do rádio é de 07/11 (`data/radio` do app instalado e do repositório), e o último áudio é o da mensagem de teste das 20:53;
+- as 10 sessões de 09/11 (8:57 a 15:16) são na pista `vhe_interlagos_teste_m1`, a cópia da pista do pedido 47, em que a IA do jogo dirige a linha gerada (ADR 0029). Com a IA dirigindo, o rádio se cala, como manda a regra (decisão 2). O log do backend de 09/11 tem 28 pedidos da lista dos boxes e nenhum de áudio;
+- o log do CSP da última abertura (09/11, 15:01): nenhum erro de Lua; a janela do replay abriu sozinha nos boxes e voltou como estava na saída; o FPS com o replay ligado foi de 192,5 de média (86 medidas), numa janela de 1078 × 802. **Não dá para comparar** com os 97 e 106 de 07/11, em tela cheia.
+
+**O que, por isso, nenhum teste mostrou:** o rádio falando pelo app instalado, o botão "Abrir no app" (0 pedidos, em todos os logs), a roda do mouse e o FPS com o replay desligado durante as voltas. A janela do replay aparece como 32 × 32 no log, logo depois de carregar, nas aberturas de 07/11 e de 09/11: falta saber se ela fica pequena na tela.
+
+### As decisões, aplicadas
+
+1. **O limite do resumo passa a 8,0 s** (`FALA_MAXIMA_S`, em `backend/core/radio/texto.py`).
+2. **A volta da IA fica calada:** já era assim; está registrado no ADR 0027.
+3. **A perda antes da primeira freada não conta como causa:** já era assim; está registrado no ADR 0027.
+4. **O resumo sempre diz contra quem:**
+   - a melhor volta desta sessão é "melhor volta da sessão", e a diferença para ela é "atrás da melhor da sessão";
+   - a referência "minha melhor" (a sua melhor volta limpa do store) é "do seu recorde", na voz, no cartão ("para o seu recorde (1:26,900)"), na causa ("freou 15 metros antes do seu recorde"), na frase do coach e na análise;
+   - a IA continua "da IA"; sem referência conhecida, "da referência";
+   - quando a volta é recorde pessoal e a referência é a sua melhor, a diferença para a referência não é dita: o recorde já diz quanto bateu o antigo;
+   - o seu exemplo agora sai assim: "Melhor volta da sessão, 2,5 segundos atrás do seu recorde.";
+   - as mesmas palavras no replay ("seu recorde (referência)"), no app do jogo ("para o seu recorde", "para a melhor da sessão", "freada do seu recorde"; versão **0.5.1**) e no replay da tela Ao vivo.
+
+**Por que o app instalado usou a sua melhor no lugar da volta da IA:** a configuração dele, `%APPDATA%\Automobilista Telemetria\data\configuracao\app.json`, tem `"referenciaCoach": "minha_melhor"`, gravada em 14/10/2026 às 11:58. É a escolha "Minha melhor" da tela Coleta de dados, feita no app instalado. O app do repositório não tem esse arquivo e usa o padrão, a volta da IA. Em 07/11, a referência do app instalado foi a volta `2026-10-21_20-30-54_vhe_interlagos#0017`, e o resumo comparou a melhor volta da sessão com ela: "Melhor volta, 2,5 segundos atrás da referência". **Para voltar à IA:** na tela Coleta de dados do app instalado, escolha "Volta da IA".
+
+### O que o limite de 8,0 s mudou, com a voz de verdade
+
+As 4 sessões de novo, pelo mesmo caminho do C.6 (`radio_depois.py`), com o código de hoje. Os números estão em `…_limite_8s.json`.
+
+| | com 7,7 s e as palavras de antes | com 8,0 s e as palavras novas |
+|---|---|---|
+| resumos | 51 | 49 |
+| resumos de voltas que contam (com a curva) | 31 | 30 |
+| a curva na voz | 31 | 30 |
+| a curva e a causa na voz | 19 | 17 |
+| mensagens próprias da curva | 5 | 5 |
+| a diferença para a IA na voz | 7 | 7 |
+| falas acima do limite | 0 | 0 |
+| o resumo mais longo | 7,69 s | 7,94 s |
+
+- **O limite novo não deu mais causas, porque as palavras novas custam o mesmo tempo.** A causa entrou numa volta (21/10, volta 17: "4 décimos atrás da melhor da sessão. Curva 1: 1,2 segundo, mínima 35 quilômetros por hora abaixo.", 7,94 s) e saiu de duas: 18/10, volta 8, e 01/11, volta 6. Nas duas, "Melhor volta da sessão, … Curva 1: 7 décimos, freou 46 metros antes." passa de 8,0 s. Antes, com "Melhor volta", cabia em 7,69 e 7,67 s.
+- **Os 2 resumos a menos** são os da última volta de 13/10 (volta 14) e de 21/10 (volta 20, com rodada): a gravação acaba antes de o rádio achar uma janela para eles.
+- **Se você quiser as causas de volta:** um limite de 8,3 s, ou "Melhor da sessão" no lugar de "Melhor volta da sessão". Não mudei nada além do que você decidiu.
+
+### Os testes
+
+- backend: a suíte inteira (resultado abaixo, em "Os testes de 12/11");
+- os testes do rádio: 63 passando, com um teste novo para a decisão 4 (`test_o_resumo_sempre_diz_contra_quem`);
+- front: 180 passando; `tsc` sem erro;
+- Lua: a conferência contra o SDK do CSP passa (34.612 tokens, nenhum erro de léxico, toda a API existe).
+
+### O que ficou instalado
+
+- **O app do Windows instalado** é a 0.7.0 de `60d3f9e`: tem a voz, mas não as palavras de hoje nem o limite de 8,0 s. Elas só chegam no próximo instalador, quando você pedir.
+- **A pasta do jogo** tem o app do jogo 0.5.0. A 0.5.1, com as palavras novas, vai pelo `instalar.ps1`, que você roda.
 
 ## O que precisa de você
 

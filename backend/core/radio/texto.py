@@ -39,10 +39,12 @@ O numero que nao e medida (a curva, a volta, o microssetor) nao tem unidade.
 
 Pedido 45 (ADR 0027): **o radio diz onde e por que.**
 
-* o resumo diz, nesta ordem de importancia: a diferenca para a sua melhor volta da sessao (ou
-  "melhor volta", ou "recorde pessoal"), a curva da volta com a perda e a causa, a diferenca para
-  a referencia, a diferenca para a anterior (so quando melhorou sem ser a melhor) e o tempo. As
-  variantes perdem os itens de baixo para cima;
+* o resumo diz, nesta ordem de importancia: a diferenca para a melhor volta da sessao (ou
+  "melhor volta da sessao", ou "recorde pessoal"), a curva da volta com a perda e a causa, a
+  diferenca para a referencia ("da IA" ou "do seu recorde"), a diferenca para a anterior (so quando
+  melhorou sem ser a melhor) e o tempo. As variantes perdem os itens de baixo para cima;
+* toda diferenca diz contra quem (decisao de 12/11): "Melhor volta da sessao, 2,5 segundos atras
+  do seu recorde.";
 * uma correcao por mensagem: uma curva e uma causa (`causa_falada`);
 * a frase do coach e a analise usam as mesmas palavras ("freou 15 metros antes da IA").
 """
@@ -57,8 +59,14 @@ REFERENCIA_LONGA = {"volta_ia": "volta da IA", "minha_melhor": "sua melhor volta
 # Pedido 35: o tempo maximo de cada fala, com a vinheta (o radio fica com a primeira que cabe):
 # "cerca de" 6, 7 e 8 s, com 10% de folga. Pedido 36: a frase do coach sobe para 7,3 s, para a
 # causa com a unidade caber ("Mínima de 64 contra 94 quilômetros por hora." passava de 6,6 s).
-FALA_MAXIMA_S = {"coach": 7.3, "resumo": 7.7, "analise": 8.8, "teste": 8.8, "curva": 7.3}
-FALA_ALVO = {"volta_ia": "da IA", "minha_melhor": "da sua melhor"}
+# Pedido 45 (decisao do Eduardo de 12/11): o resumo passa a 8,0 s, para a curva e a causa caberem.
+FALA_MAXIMA_S = {"coach": 7.3, "resumo": 8.0, "analise": 8.8, "teste": 8.8, "curva": 7.3}
+# Pedido 45 (decisao do Eduardo de 12/11): toda diferenca diz contra quem. A referencia `minha_melhor`
+# (a sua melhor volta limpa do store, escolhida na Coleta) e "o seu recorde"; a melhor volta desta
+# sessao e "a melhor da sessao". Antes as duas eram "a sua melhor", e o resumo saia contraditorio:
+# "Melhor volta, 2,5 segundos atras da referencia" (07/11).
+FALA_ALVO = {"volta_ia": "da IA", "minha_melhor": "do seu recorde"}
+REFERENCIA_COM_ARTIGO = {"volta_ia": "a volta da IA", "minha_melhor": "o seu recorde"}
 TRECHO_FALADO = {"freada": "freada", "minima": "mínima", "saida": "saída"}
 
 
@@ -319,11 +327,11 @@ def _frase_da_melhor(melhor: Optional[Mapping[str, Any]]) -> Optional[str]:
         return None
     situacao, dif = melhor.get("situacao"), _numero(melhor.get("difS"))
     if situacao in ("melhor", "recorde"):
-        nome = "Recorde pessoal" if situacao == "recorde" else "Melhor volta"
+        nome = "Recorde pessoal" if situacao == "recorde" else "Melhor volta da sessão"
         return f"{nome}, {tempo_falado(dif)} mais rápida" if dif is not None and abs(dif) >= 0.05 else nome
     if dif is None:
         return None
-    return f"{tempo_falado(dif)} {'atrás' if dif >= 0 else 'à frente'} da sua melhor"
+    return f"{tempo_falado(dif)} {'atrás' if dif >= 0 else 'à frente'} da melhor da sessão"
 
 
 def _juntar(*frases: Optional[str]) -> str:
@@ -356,13 +364,16 @@ def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optio
     referencia, a causa e a curva. `falasComACausa` diz quantas das primeiras falas tem a curva com
     a causa: se o radio ficar com uma das seguintes, a curva vai numa mensagem propria.
     """
-    rotulo = REFERENCIA_LONGA.get(tipo or "", "referência")
-    alvo = "da IA" if tipo == "volta_ia" else "da referência"
+    com_artigo = REFERENCIA_COM_ARTIGO.get(tipo or "", "a referência")
+    alvo = FALA_ALVO.get(tipo or "", "da referência")
     volta = int(volta) if _numero(volta) is not None else None
     falado = tempo_de_volta_falado(tempo_s)
     frase_melhor = _frase_da_melhor(melhor)
     dif = tempo_s - referencia_s if referencia_s else None
     frase_ref = f"{tempo_falado(dif)} {'atrás' if dif > 0 else 'à frente'} {alvo}" if dif is not None else None
+    if tipo == "minha_melhor" and (melhor or {}).get("situacao") == "recorde":
+        # O recorde novo ja diz quanto bateu o antigo: "a frente do seu recorde" repetiria o mesmo.
+        frase_ref = None
     frase_ant = f"{tempo_falado(anterior_s)} mais rápida que a anterior" if anterior_s else None
     frase_tempo = f"Tempo: {falado}."
     perda_pior = _numero((pior or {}).get("perdaS"))
@@ -380,7 +391,7 @@ def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optio
         return f"{junta}." if junta else None
 
     if rodada:
-        # C.5: "Volta com rodada: 1 minuto e 36,4 segundos, 7,0 segundos atrás da sua melhor."
+        # C.5: "Volta com rodada: 1 minuto e 36,4 segundos, 7,0 segundos atrás da melhor da sessão."
         contra = frase_melhor or frase_ref
         por(f"Volta com rodada: {falado}" + (f", {contra}." if contra else "."))
         if contra:
@@ -406,12 +417,12 @@ def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optio
     if melhor and _numero(melhor.get("melhorS")) is not None:
         d = _numero(melhor.get("difS"))
         if melhor.get("situacao") in ("melhor", "recorde"):
-            nome = "recorde pessoal" if melhor.get("situacao") == "recorde" else "melhor volta"
+            nome = "recorde pessoal" if melhor.get("situacao") == "recorde" else "melhor volta da sessão"
             partes_do_texto.append(nome + (f", {com_sinal(-abs(d), 3)}" if d else ""))
         elif d is not None:
-            partes_do_texto.append(f"{com_sinal(d, 3)} para a sua melhor ({tempo_de_volta(float(melhor['melhorS']))})")
+            partes_do_texto.append(f"{com_sinal(d, 3)} para a melhor da sessão ({tempo_de_volta(float(melhor['melhorS']))})")
     if dif is not None:
-        partes_do_texto.append(f"{com_sinal(dif, 3)} para a {rotulo} ({tempo_de_volta(referencia_s)})")
+        partes_do_texto.append(f"{com_sinal(dif, 3)} para {com_artigo} ({tempo_de_volta(referencia_s)})")
     if anterior_s:
         partes_do_texto.append(f"{com_sinal(-abs(anterior_s), 3)} para a anterior")
     detalhe = None

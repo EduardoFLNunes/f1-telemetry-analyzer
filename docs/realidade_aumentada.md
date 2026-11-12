@@ -45,20 +45,20 @@ O cartão continua com todos os números (os dois tempos, a freada e a mínima).
 
 **Pedido 45 (ADR 0027):** o resumo diz onde e por quê. Pela ordem de importância:
 
-1. a diferença para a sua melhor volta da sessão; ou "melhor volta", com o quanto ela foi mais rápida; ou "recorde pessoal", se bater a melhor de todas as sessões do store, para o carro e a pista;
+1. a diferença para a melhor volta da sessão ("atrás da melhor da sessão"); ou "melhor volta da sessão", com o quanto ela foi mais rápida; ou "recorde pessoal", se bater a melhor de todas as sessões do store, para o carro e a pista;
 2. a curva da volta, com a perda e a causa;
-3. a diferença para a referência escolhida (a IA por padrão);
+3. a diferença para a referência escolhida: "da IA" (o padrão) ou "do seu recorde" (a sua melhor volta limpa do store);
 4. a diferença para a anterior, só quando a volta melhorou sem ser a melhor;
 5. o tempo. O cartão sempre traz o tempo e todos os números.
 
-As variantes vão da mais completa à mais curta e perdem os itens de baixo para cima; fica a primeira que cabe em 7,7 s.
+As variantes vão da mais completa à mais curta e perdem os itens de baixo para cima; fica a primeira que cabe em 8,0 s (decisão do Eduardo de 12/11; era 7,7 s). **Toda diferença diz contra quem** (mesma decisão): "Melhor volta da sessão, 2,5 segundos atrás do seu recorde."
 
 | cartão | fala | dura |
 |---|---|---|
 | Volta 7: 1:29,432 · melhor volta, −0,168 s · +4,603 s para a volta da IA (1:24,829) · mais perdeu na C01, esquerda: +0,77 s; na mínima, +0,41 s; passou 7,5 m por fora no ápice | "Melhor volta, 2 décimos mais rápida. Curva 1: 8 décimos, passou 8 metros por fora no ápice." | 7,33 s |
 | Volta 11: 2:39,687 · +70,255 s para a sua melhor (1:29,432) · +74,857 s para a volta da IA (1:24,829) · volta com rodada: fora da análise | "Volta com rodada: 2 minutos e 39,7 segundos, 70,3 segundos atrás da sua melhor." | 7,41 s |
 
-Os dois são de 01/11, com a voz de verdade. **O que cabe:** pela ordem de importância, a diferença para a IA é a primeira a sair quando a curva precisa caber. Ela quase sempre fica só no cartão (a decisão em aberto do ADR 0027).
+Os dois são de 01/11, com a voz de verdade e as palavras de antes de 12/11 ("Melhor volta", "da sua melhor"). **O que cabe:** pela ordem de importância, a diferença para a IA é a primeira a sair quando a curva precisa caber. Com o limite de 8,0 s, os números de cada sessão estão no relatório do pedido 45.
 
 - **A melhor volta** é a mais rápida da sessão entre as que contam para a análise.
 - **A curva e a causa** só entram numa volta que conta: completa pela regra do coach, com as medidas e sem rodada. A volta da IA continua calada.
@@ -93,7 +93,7 @@ Os dois são de 01/11, com a voz de verdade. **O que cabe:** pela ordem de impor
   - "Acelerou 14 metros depois da IA.";
   - "Passou 8 metros por fora no ápice.": de 2 m para cima, o número inteiro; abaixo de 2 m, com a vírgula e no singular ("1,8 metro").
 
-  Contra a sua melhor volta, "da sua melhor". Se couber, a análise começa pela tendência: "Média 9 décimos mais lenta que as 3 anteriores." (pedido 45).
+  Contra a sua melhor volta (a referência "minha melhor"), "do seu recorde" (era "da sua melhor" até 12/11). Se couber, a análise começa pela tendência: "Média 9 décimos mais lenta que as 3 anteriores." (pedido 45).
 - **O cartão:** as curvas com todos os números, uma linha por curva.
 - **Exemplos:**
 
@@ -122,7 +122,7 @@ Na análise, vale a mediana de 3 voltas, que varia menos que uma volta: o corte 
 ### 2.5 Quanto cabe em cada janela
 
 - **A voz a 1,4x** (era 1,25x no pedido 31): os números falados por extenso faziam a frase com a causa, o resumo com a curva e a análise passarem de 6, 7 e 8 s. Não estava no pedido 35 e ficou registrada como desvio no relatório dele. **O Eduardo aprovou a 1,4x em 22/10** (pedido 36).
-- **As variantes:** cada mensagem traz a fala da mais completa à mais curta. O rádio gera o áudio e fica com a primeira que cabe no limite do tipo: 7,3 s (frase do coach), 7,7 s (resumo) e 8,8 s (análise). Eram os 6, 7 e 8 s do pedido 35 com 10% de folga; a frase do coach subiu de 6,6 para 7,3 s no pedido 36, decisão do Eduardo, para a causa com a unidade caber (seção 2.6).
+- **As variantes:** cada mensagem traz a fala da mais completa à mais curta. O rádio gera o áudio e fica com a primeira que cabe no limite do tipo: 7,3 s (frase do coach), 7,7 s (resumo; 8,0 s desde 12/11, pedido 45) e 8,8 s (análise). Eram os 6, 7 e 8 s do pedido 35 com 10% de folga; a frase do coach subiu de 6,6 para 7,3 s no pedido 36, decisão do Eduardo, para a causa com a unidade caber (seção 2.6).
 - **A entrega:** só quando a fala inteira cabe no que resta da janela, pela velocidade do carro, com 0,3 s de folga.
 - **Nas duas sessões** (todas as falas couberam no que restava da janela):
 
@@ -150,7 +150,7 @@ Todo número falado tem a sua unidade (`backend/core/radio/texto.py`):
 | mínima | a diferença, com a unidade (pedido 45) | "Mínima 26 quilômetros por hora abaixo da IA." |
 | velocidade na saída | a diferença, com a unidade (pedido 45) | "saiu 8 quilômetros por hora mais lento" |
 
-- **Contra quem:** a diferença diz a referência ("atrás da IA", "antes da IA", "que a IA"; "da sua melhor" contra a sua melhor volta). Sem espaço, sai ("Freia 15 metros antes.").
+- **Contra quem:** a diferença diz a referência ("atrás da IA", "antes da IA", "que a IA"; "do seu recorde" contra a sua melhor volta, desde 12/11). Sem espaço, sai ("Freia 15 metros antes.").
 - **A ordem do corte,** quando a fala não cabe no limite do tipo (seção 2.5): **a unidade nunca sai.**
   - na frase do coach: sai o lado da curva, depois o "contra quem" e, por último, a causa;
   - na análise: sai a segunda curva, depois a abertura encurta ("Voltas 16 a 18."), depois a segunda causa, o "contra quem", a abertura inteira e, por último, a primeira causa.
@@ -303,7 +303,7 @@ Pedido depois do primeiro teste no jogo (21/10): a vista de perto da tela Volta 
   - **o fantasma,** com "IA" ou "Sua melhor". Fora da janela, ele vira uma seta na borda, apontando para onde está;
   - **o carro,** "Você · V<n>", com o número da volta do jogo;
   - **a diferença,** a mesma do minimapa, numa faixa escura no alto;
-  - **a freada da IA** (pedido 36): em todas as curvas que aparecem na janela, uma linha atravessando o asfalto, um pouco além das bordas, com o rótulo "freada da IA" ("freada da sua melhor", contra a sua melhor volta). O ponto é o mesmo do minimapa. O seu traçado mostra onde você freou: o vermelho começa ali.
+  - **a freada da IA** (pedido 36): em todas as curvas que aparecem na janela, uma linha atravessando o asfalto, um pouco além das bordas, com o rótulo "freada da IA" ("freada do seu recorde", contra a sua melhor volta, desde 12/11). O ponto é o mesmo do minimapa. O seu traçado mostra onde você freou: o vermelho começa ali.
 - **A conferência fora do jogo:** uma prévia em HTML repete as contas do app (a câmera, a imagem girada, os traçados e as marcas), com a referência da IA e instantes reais da sessão de 18/10:
   - **na saída da reta dos boxes,** a pintura amarela dos boxes fica à esquerda, como na tela Volta;
   - **na freada da C04,** o carro e os dois traçados ficam dentro do asfalto, e a curva vira para a esquerda.

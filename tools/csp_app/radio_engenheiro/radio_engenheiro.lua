@@ -918,12 +918,12 @@ local function desenharODeCima(t, W, nota, x0, y0)
     ui.dwriteDrawText(sinal .. decimal(math.abs(d), 2) .. ' s', 17, vec2(x0 + MARGEM_DO_MINIMAPA, y0 + 4),
       d > 0 and CORES.perda or CORES.ganho)
     local ref = mini.referencia
-    local contra = ref and ref.tipo == 'minha_melhor' and 'para a sua melhor' or 'para a volta da IA'
+    local contra = ref and ref.tipo == 'minha_melhor' and 'para o seu recorde' or 'para a volta da IA'
     ui.dwriteDrawText(contra, 11, vec2(x0 + MARGEM_DO_MINIMAPA + 82, y0 + 10), CORES.apoio)
     -- Pedido 45 (C.4): a diferença para a sua melhor volta da sessão, quando ela existe.
     local dm = mini.difMelhor
     if dm then
-      ui.dwriteDrawText((dm >= 0 and '+' or '−') .. decimal(math.abs(dm), 2) .. ' s para a sua melhor', 11,
+      ui.dwriteDrawText((dm >= 0 and '+' or '−') .. decimal(math.abs(dm), 2) .. ' s para a melhor da sessão', 11,
         vec2(x0 + MARGEM_DO_MINIMAPA, y0 + 25), dm > 0 and CORES.perda or CORES.ganho)
     end
   end
@@ -1178,7 +1178,7 @@ desenharAproximado = function(dt)
   -- asfalto (um pouco além das bordas) com o rótulo. O seu traçado mostra onde você freou: o
   -- vermelho começa ali.
   if ref and type(ref.freadas) == 'table' then
-    local rotuloDaFreada = ref.tipo == 'minha_melhor' and 'freada da sua melhor' or 'freada da IA'
+    local rotuloDaFreada = ref.tipo == 'minha_melhor' and 'freada do seu recorde' or 'freada da IA'
     for _, f in ipairs(ref.freadas) do
       if f.pontos and f.pontos[1] and f.pontos[2] then
         local ax, ay = tela(f.pontos[1][1], f.pontos[1][2])
@@ -1618,7 +1618,7 @@ local function desenharACurva(c, t, real, x0, y0, W, H)
     rotulo(q, nomeDoTrecho or 'trecho', sx, sy, CORES.texto, 'esquerda')
   end
   -- As freadas: um traço em cada linha e a distância entre elas.
-  local contra = c.referencia == 'minha_melhor' and 'da sua melhor' or 'da IA'
+  local contra = c.referencia == 'minha_melhor' and 'do seu recorde' or 'da IA'
   local function traco(m, cor)
     if type(m) ~= 'table' then return nil end
     local sx, sy = cam.tela(tonumber(m.x) or 0, tonumber(m.z) or 0)

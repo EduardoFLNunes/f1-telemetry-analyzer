@@ -61,7 +61,7 @@ def test_frase_de_diferenca_com_virgula_microssetor_a_partir_de_1_e_lado_por_ext
 def test_frase_contra_a_sua_melhor_e_na_curva_da_direita():
     m = mensagem_de_diferenca(_evento(indice=29, perda=0.215, tipo="minha_melhor"), CURVAS, L)
     assert m["titulo"] == "C02, direita" and m["microssetor"] == 30
-    assert m["fala"] == "Curva 2, direita: 2 décimos atrás da sua melhor. Freou 38 metros antes da sua melhor."
+    assert m["fala"] == "Curva 2, direita: 2 décimos atrás do seu recorde. Freou 38 metros antes do seu recorde."
     assert "na sua melhor volta você freou 38 m depois" in m["detalhe"]
 
 
@@ -303,7 +303,7 @@ def test_resumo_com_a_curva_de_maior_perda():
     assert m["fala"] == ("5,5 segundos atrás da IA. Curva 11: 1,1 segundo. "
                          "Tempo: 1 minuto e 30,4 segundos.")
     assert m["falas"][-1] == "5,5 segundos atrás da IA."
-    assert m["falaMaxS"] == 7.7 and m["curva"] == "C11"
+    assert m["falaMaxS"] == 8.0 and m["curva"] == "C11"
 
 
 def _medidas(perdas, freada=-50.0, minima=-30.0, acelerador=12.0, tracado=0.4):
