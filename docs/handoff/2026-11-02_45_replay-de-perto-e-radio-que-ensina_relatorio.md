@@ -177,7 +177,7 @@ As 4 sessões de novo, pelo mesmo caminho do C.6 (`radio_depois.py`), com o cód
 
 ### Os testes
 
-- backend: a suíte inteira (resultado abaixo, em "Os testes de 12/11");
+- backend: a suíte inteira, **935 passando** (37 avisos do scikit-learn, como antes), em 10 min 37 s, com o código de `7c9f6c9c`;
 - os testes do rádio: 63 passando, com um teste novo para a decisão 4 (`test_o_resumo_sempre_diz_contra_quem`);
 - front: 180 passando; `tsc` sem erro;
 - Lua: a conferência contra o SDK do CSP passa (34.612 tokens, nenhum erro de léxico, toda a API existe).
