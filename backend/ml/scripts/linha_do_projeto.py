@@ -135,7 +135,7 @@ def conferencia(args) -> int:
     escolhido = None
     for par in CN.ESCADA:
         cod = CN.construir(track, b.curvas, *par)
-        c0 = CN.conferir_c0(cod, b.xz_c0, b.estacao, raio_arquivo, b.trechos)
+        c0 = CN.conferir_c0(cod, b.xz_c0, b.estacao, raio_arquivo, b.trechos, lateral_do_arquivo=b.lateral_c0)
         v13 = CN.conferir_volta(cod, laterais[C.VOLTA_IA], b.trechos, C.VOLTA_IA)
         item = {"par_m": list(par), "codificacao": cod.descricao(),
                 "c0": {k: v for k, v in c0.items() if k != "genes"}, "volta_0013": {k: v for k, v in v13.items() if k != "genes"},

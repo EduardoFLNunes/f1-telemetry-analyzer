@@ -173,6 +173,20 @@ A regra do pedido 47 (ADR 0029, item 1): a velocidade, o acelerador e o freio do
 
 Este registro é commitado antes de qualquer busca, calibração ou arquivo de linha. O resultado entra numa seção no fim, sem mudar nada acima dela.
 
+### 13. Emenda à conferência (12/11, decisão do Eduardo, opção "a")
+
+**Por quê:** a conferência do item 4.5 não passou em nenhum degrau da escada (commit `02f6fd8e`).
+- A distância passou folgada: p95 de 0,007 a 0,026 m.
+- O menor raio por trecho não ficou a 5%. A `#0013` convergiu com o espaçamento fino (5,0% em 5/12,5 m). O C0 piorou (−18% na C01): sem regularização, a spline fina segue o ruído dos pontos do próprio arquivo, e o raio de três pontos é um valor extremo, decidido por um ponto só.
+
+**O que muda, só no item 4.5 (antes de qualquer linha nova, busca ou arquivo):**
+- **o menor raio do C0** passa a ser medido como o da `#0013`: pela curvatura de 12 m do item 4.4, na lateral da grade, fora da emenda da volta. São comparados o C0 codificado pelos pontos do arquivo e decodificado na grade, e a lateral do arquivo na grade (`condicoes.lateral_da_linha`). O raio de três pontos do arquivo continua relatado, fora da conferência;
+- **a tolerância do raio** passa de 5% para **10%**, nas duas linhas;
+- **a distância** continua como estava (0,10 m em 95% dos pontos);
+- a escada e a ordem dela (item 4.6) não mudam: vale o primeiro par que passar.
+
+**Calculado antes desta emenda, depois da falha, só para a decisão:** com esta regra, o primeiro par que passa é 6/15 m (C0 9,1%, `#0013` 6,6%).
+
 ## Consequências
 
 - **A linha do projeto só vai para o coach pela regra do item 11.** Até lá, o ADR 0009 vale como está.

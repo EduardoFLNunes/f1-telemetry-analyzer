@@ -44,7 +44,8 @@ FRACAO_DO_RAIO = 0.90
 FRACAO_DA_TAXA = 1.10
 CONFERENCIA_DISTANCIA_M = 0.10
 CONFERENCIA_PERCENTIL = 95.0
-CONFERENCIA_RAIO_RELATIVO = 0.05
+# Emenda do ADR 0031 (item 13, decisao do Eduardo de 12/11): 10%, e o C0 medido pela curvatura de 12 m.
+CONFERENCIA_RAIO_RELATIVO = 0.10
 JANELA_DA_CURVATURA_M = config.CURVATURE_SMOOTHING_M   # 12 m
 
 
@@ -300,8 +301,13 @@ def raio_de_tres_pontos(xz: np.ndarray) -> np.ndarray:
 
 
 def conferir_c0(cod: CodificacaoNova, xz_arquivo: np.ndarray, estacao_s: np.ndarray, raio_arquivo: np.ndarray,
-                trechos) -> Dict[str, object]:
-    """Item 4.5: a linha da IA codificada pelos pontos do arquivo, contra o proprio arquivo."""
+                trechos, lateral_do_arquivo: np.ndarray = None) -> Dict[str, object]:
+    """Item 4.5 com a emenda do item 13: a linha da IA codificada pelos pontos do arquivo, contra o proprio arquivo.
+
+    A distancia e a do ponto codificado ate a polilinha do arquivo. O raio da conferencia e o da curvatura de
+    12 m na grade (o C0 codificado e decodificado contra `lateral_do_arquivo`, a lateral do arquivo na grade).
+    O raio de tres pontos do arquivo (o campo `raio`) contra o da curva nas mesmas estacoes so e relatado.
+    """
     from ..pista_teste.linha_nova import _projetar_na_polilinha
 
     s = np.mod(np.asarray(estacao_s, float), cod.track.length)
@@ -309,17 +315,25 @@ def conferir_c0(cod: CodificacaoNova, xz_arquivo: np.ndarray, estacao_s: np.ndar
     novo = cod.curva(g, s)
     _, _, d = _projetar_na_polilinha(novo, np.asarray(xz_arquivo, float))
     r_novo = raio_de_tres_pontos(novo)
-    por_trecho = []
+    tres_pontos = []
     for t in trechos:
         m = (s >= t.inicio_s - 1e-9) & (s < t.fim_s - 1e-9)
         a, b = float(raio_arquivo[m].min()), float(r_novo[m].min())
-        por_trecho.append({"trecho": t.nome, "raio_original_m": a, "raio_codificado_m": b, "relativo": (b - a) / a})
+        tres_pontos.append({"trecho": t.nome, "raio_original_m": a, "raio_codificado_m": b, "relativo": (b - a) / a})
+    if lateral_do_arquivo is None:
+        por_trecho = tres_pontos
+    else:
+        m0 = medidas_por_trecho(cod.track, lateral_do_arquivo, trechos)
+        m1 = medidas_por_trecho(cod.track, cod.decode(g), trechos)
+        por_trecho = [{"trecho": t.nome, "raio_original_m": float(a), "raio_codificado_m": float(b), "relativo": float((b - a) / a)}
+                      for t, a, b in zip(trechos, m0["raio_min_m"], m1["raio_min_m"])]
     p = float(np.percentile(d, CONFERENCIA_PERCENTIL))
     rel = max(abs(x["relativo"]) for x in por_trecho)
     return {"linha": "C0 (o arquivo da IA)", "pontos": int(len(d)), "distancia_p50_m": float(np.median(d)),
             "distancia_p95_m": p, "distancia_max_m": float(d.max()),
             "fracao_ate_0_10_m": float(np.mean(d <= CONFERENCIA_DISTANCIA_M)),
             "raio_por_trecho": por_trecho, "maior_diferenca_relativa_do_raio": rel,
+            "raio_de_tres_pontos_so_relatado": tres_pontos,
             "passa": bool(p <= CONFERENCIA_DISTANCIA_M and rel <= CONFERENCIA_RAIO_RELATIVO), "genes": g}
 
 
