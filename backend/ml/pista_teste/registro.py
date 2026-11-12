@@ -17,7 +17,9 @@ from typing import Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 C0_FINAL = "C0 final"
 CABECALHO = ("hora", "condicao", "sha256", "arquivo")
-VOLTAS_QUE_CONTAM = {"C0": 7, "C1": 7, "C2": 7, "C3": 7, "C4": 7, C0_FINAL: 4}
+# L1 e L2: as linhas do projeto do pedido 50 (ADR 0031).
+CONDICOES_CONHECIDAS = ("C0", "C1", "C2", "C3", "C4", "L1", "L2")
+VOLTAS_QUE_CONTAM = {"C0": 7, "C1": 7, "C2": 7, "C3": 7, "C4": 7, C0_FINAL: 4, "L1": 7, "L2": 7}
 
 
 @dataclass(frozen=True)
@@ -39,7 +41,7 @@ def ler(path: Path) -> List[Troca]:
     trocas = [Troca(_hora(r["hora"]), r["condicao"].strip(), r["sha256"].strip().lower(), r.get("arquivo", ""))
               for r in linhas]
     for t in trocas:
-        if t.condicao not in ("C0", "C1", "C2", "C3", "C4"):
+        if t.condicao not in CONDICOES_CONHECIDAS:
             raise ValueError(f"condicao desconhecida no registro: {t.condicao!r}")
     return sorted(trocas, key=lambda t: t.hora)
 
@@ -59,7 +61,7 @@ def rotular(linhas: Sequence[Tuple[datetime, str, str, str]], com_gravacao: Opti
     outra_antes = False
     for i, (hora, cond, sha, arquivo) in enumerate(sorted(linhas, key=lambda r: r[0])):
         cond = _base(cond)
-        if cond not in ("C0", "C1", "C2", "C3", "C4"):
+        if cond not in CONDICOES_CONHECIDAS:
             raise ValueError(f"condicao desconhecida no registro: {cond!r}")
         rotulo = C0_FINAL if cond == "C0" and outra_antes else cond
         if cond != "C0" and (com_gravacao is None or i in com_gravacao):
@@ -159,3 +161,47 @@ def atribuicoes_por_condicao(atrib: Sequence[Atribuicao]) -> Dict[str, List[str]
         if a.condicao:
             out.setdefault(a.condicao, []).append(a.sessao)
     return out
+
+
+# ------------------------------------------------- os blocos do pedido 50 ---
+
+@dataclass(frozen=True)
+class Bloco:
+    numero: int            # 1, 2, ... na ordem da hora
+    condicao: str          # C0, L1 ou L2
+    hora: datetime
+    sha256: str
+
+
+def blocos(trocas: Sequence[Troca], desde: datetime) -> List[Bloco]:
+    """ADR 0031, item 3: cada troca do registro com hora depois de `desde` (o commit do ADR) e um bloco."""
+    ordem = sorted((t for t in trocas if t.hora > desde), key=lambda t: t.hora)
+    return [Bloco(i + 1, _base(t.condicao), t.hora, t.sha256) for i, t in enumerate(ordem)]
+
+
+def atribuir_aos_blocos(sessoes: Mapping[str, datetime], lista: Sequence[Bloco],
+                        esperado: Mapping[str, str]) -> List[Dict[str, object]]:
+    """Cada gravacao no bloco da ultima troca antes do inicio dela; o sha256 da troca tem de ser o da condicao."""
+    out = []
+    for sessao, inicio in sorted(sessoes.items(), key=lambda kv: kv[1]):
+        antes = [b for b in lista if b.hora <= inicio]
+        if not antes:
+            out.append({"sessao": sessao, "inicio": inicio, "bloco": None, "condicao": None,
+                        "motivo": "comecou antes do primeiro bloco do pedido 50"})
+            continue
+        b = antes[-1]
+        if esperado.get(b.condicao, "").lower() != b.sha256.lower():
+            out.append({"sessao": sessao, "inicio": inicio, "bloco": None, "condicao": None,
+                        "motivo": f"a troca de {b.hora.isoformat()} registrou um sha256 que nao e o da {b.condicao}"})
+            continue
+        out.append({"sessao": sessao, "inicio": inicio, "bloco": b.numero, "condicao": b.condicao, "motivo": ""})
+    return out
+
+
+def vizinhos_de_c0(lista: Sequence[Bloco], numero: int) -> Tuple[Optional[Bloco], Optional[Bloco]]:
+    """Os blocos de C0 logo antes e logo depois do bloco `numero` (ADR 0031, item 2)."""
+    antes = [b for b in lista if b.numero < numero]
+    depois = [b for b in lista if b.numero > numero]
+    a = antes[-1] if antes and antes[-1].condicao == "C0" else None
+    d = depois[0] if depois and depois[0].condicao == "C0" else None
+    return a, d

@@ -1,9 +1,10 @@
 <#
 .SYNOPSIS
-  Poe a linha de uma condicao na copia vhe_interlagos_teste_m1 (pedido 47, ADR 0029).
+  Poe a linha de uma condicao na copia vhe_interlagos_teste_m1 (pedido 47, ADR 0029; L1 e L2: pedido 50, ADR 0031).
 
 .DESCRIPTION
-  - Recusa rodar com o jogo aberto, sem a copia ou com um arquivo de linha que nao bate com o linhas.json.
+  - Recusa rodar com o jogo aberto, sem a copia ou com um arquivo de linha que nao bate com o manifesto:
+    o linhas.json (C0 a C4, pedido 47) ou o linha_do_projeto.json (L1 e L2, pedido 50).
   - Copia data\pista_teste\linhas\<Condicao>\fast_lane.ai para <copia>\gp\ai\fast_lane.ai, com a data de agora.
   - Apaga so na copia o que deriva da linha (gp\ai\fast_lane.aip, se existir).
   - Escreve uma linha em data\pista_teste\registro.csv (hora, condicao, sha256, arquivo).
@@ -14,9 +15,10 @@
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\pista_teste\trocar_linha.ps1 -Condicao C1
+  powershell -ExecutionPolicy Bypass -File tools\pista_teste\trocar_linha.ps1 -Condicao L1
 #>
 param(
-    [Parameter(Mandatory = $true)][ValidateSet('C0', 'C1', 'C2', 'C3', 'C4')][string]$Condicao,
+    [Parameter(Mandatory = $true)][ValidateSet('C0', 'C1', 'C2', 'C3', 'C4', 'L1', 'L2')][string]$Condicao,
     [string]$JogoRaiz = '',
     [string]$RepoRaiz = '',
     [string[]]$ProcessosDoJogo = @()
@@ -30,15 +32,20 @@ if (-not (Test-Path -LiteralPath $p.Copia -PathType Container)) { Parar "a copia
 $copiaJson = Ler-ShaOriginal $p
 Conferir-OriginalIntacta $p $copiaJson | Out-Null
 
-$manifesto = Join-Path $p.Saida 'linhas\linhas.json'
+# C0 a C4: o manifesto do pedido 47. L1 e L2: o do pedido 50 (ADR 0031, item 9), a parte.
+$nomeDoManifesto = 'linhas.json'
+if ($Condicao -eq 'L1' -or $Condicao -eq 'L2') { $nomeDoManifesto = 'linha_do_projeto.json' }
+$manifesto = Join-Path $p.Saida "linhas\$nomeDoManifesto"
 if (-not (Test-Path -LiteralPath $manifesto)) { Parar "falta $manifesto" }
 $linhas = Get-Content -LiteralPath $manifesto -Raw -Encoding UTF8 | ConvertFrom-Json
-$esperado = $linhas.condicoes.$Condicao.sha256
+$esperado = $null
+if ($linhas.condicoes.PSObject.Properties.Name -contains $Condicao) { $esperado = $linhas.condicoes.$Condicao.sha256 }
+if (-not $esperado) { Parar "o manifesto $manifesto nao tem a condicao $Condicao" }
 if ($Condicao -eq 'C0' -and $esperado -ne $copiaJson.sha256_fast_lane_original) { Parar "o C0 do linhas.json nao e o original" }
 $fonte = Join-Path $p.Saida "linhas\$Condicao\fast_lane.ai"
 if (-not (Test-Path -LiteralPath $fonte)) { Parar "falta $fonte" }
 $shaFonte = Sha256 $fonte
-if ($shaFonte -ne $esperado) { Parar "o arquivo de $Condicao nao bate com o linhas.json: $shaFonte, esperado $esperado" }
+if ($shaFonte -ne $esperado) { Parar "o arquivo de $Condicao nao bate com o ${nomeDoManifesto}: $shaFonte, esperado $esperado" }
 
 $destino = Join-Path $p.Copia "$LAYOUT\ai\fast_lane.ai"
 Conferir-DentroDaCopia $p $destino
