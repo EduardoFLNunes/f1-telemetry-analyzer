@@ -1,0 +1,1153 @@
+{
+ "pedido": 50,
+ "adr": "0031",
+ "parte": "B.1",
+ "commit": "99d76e2f4c88782bc2e975671e4c220695af0f8e",
+ "comando": "python -m ml.scripts.linha_do_projeto conferencia",
+ "ambiente": {
+  "python": "3.9.7",
+  "numpy": "1.26.3",
+  "plataforma": "Windows-10-10.0.26200-SP0"
+ },
+ "geometry_id": "0ed16f0dd2225990",
+ "corridor_id": "707d07029036abd6",
+ "escada": [
+  [
+   10.0,
+   25.0
+  ],
+  [
+   8.0,
+   20.0
+  ],
+  [
+   6.0,
+   15.0
+  ],
+  [
+   5.0,
+   12.5
+  ]
+ ],
+ "tentativas": [
+  {
+   "par_m": [
+    10.0,
+    25.0
+   ],
+   "codificacao": {
+    "genes": 331,
+    "dentro_m": 10.0,
+    "fora_m": 25.0,
+    "espacamento_m": {
+     "min": 9.714411603999906,
+     "p50": 9.866823329999988,
+     "max": 24.60655685600068
+    }
+   },
+   "c0": {
+    "linha": "C0 (o arquivo da IA)",
+    "pontos": 2680,
+    "distancia_p50_m": 0.002063629843821097,
+    "distancia_p95_m": 0.012775648109530097,
+    "distancia_max_m": 0.8137141835181424,
+    "fracao_ate_0_10_m": 0.9828358208955223,
+    "raio_por_trecho": [
+     {
+      "trecho": "C01",
+      "raio_original_m": 32.9472878684692,
+      "raio_codificado_m": 35.481222612750074,
+      "relativo": 0.0769087505592794
+     },
+     {
+      "trecho": "C02",
+      "raio_original_m": 45.500089306418545,
+      "raio_codificado_m": 45.26674199981755,
+      "relativo": -0.005128502166875521
+     },
+     {
+      "trecho": "C03",
+      "raio_original_m": 73.49617973849999,
+      "raio_codificado_m": 73.70298797792881,
+      "relativo": 0.0028138637976102892
+     },
+     {
+      "trecho": "C04",
+      "raio_original_m": 54.99662524515111,
+      "raio_codificado_m": 55.9299669477045,
+      "relativo": 0.016970890457240952
+     },
+     {
+      "trecho": "C05",
+      "raio_original_m": 109.9803683015745,
+      "raio_codificado_m": 113.84724112570686,
+      "relativo": 0.0351596642550705
+     },
+     {
+      "trecho": "C06",
+      "raio_original_m": 73.32719417824718,
+      "raio_codificado_m": 73.32209166955947,
+      "relativo": -6.958548932487186e-05
+     },
+     {
+      "trecho": "C07",
+      "raio_original_m": 29.33699247326066,
+      "raio_codificado_m": 30.05432361447612,
+      "relativo": 0.02445142056975592
+     },
+     {
+      "trecho": "C08",
+      "raio_original_m": 35.011086276393364,
+      "raio_codificado_m": 35.52173830929387,
+      "relativo": 0.014585438134343818
+     },
+     {
+      "trecho": "C09",
+      "raio_original_m": 180.73697471270813,
+      "raio_codificado_m": 180.24079577438116,
+      "relativo": -0.002745309525710954
+     },
+     {
+      "trecho": "C10",
+      "raio_original_m": 22.782759792609074,
+      "raio_codificado_m": 22.997557553130296,
+      "relativo": 0.009428083448911408
+     },
+     {
+      "trecho": "C11",
+      "raio_original_m": 72.15241797267878,
+      "raio_codificado_m": 73.08299002935735,
+      "relativo": 0.012897309374038457
+     },
+     {
+      "trecho": "C12",
+      "raio_original_m": 35.228475487264,
+      "raio_codificado_m": 37.837587852404546,
+      "relativo": 0.07406259649481023
+     },
+     {
+      "trecho": "C13",
+      "raio_original_m": 110.21050095247536,
+      "raio_codificado_m": 113.89212122535072,
+      "relativo": 0.03340534922768331
+     },
+     {
+      "trecho": "C14",
+      "raio_original_m": 139.85017835326465,
+      "raio_codificado_m": 164.6876486169109,
+      "relativo": 0.17760056194498552
+     },
+     {
+      "trecho": "C14->linha",
+      "raio_original_m": 235.20885010372714,
+      "raio_codificado_m": 245.16826963312576,
+      "relativo": 0.04234287751080162
+     }
+    ],
+    "maior_diferenca_relativa_do_raio": 0.17760056194498552,
+    "raio_de_tres_pontos_so_relatado": [
+     {
+      "trecho": "C01",
+      "raio_original_m": 37.68803405761719,
+      "raio_codificado_m": 35.04824688130562,
+      "relativo": -0.07004311162200388
+     },
+     {
+      "trecho": "C02",
+      "raio_original_m": 46.75318908691406,
+      "raio_codificado_m": 45.013832175575864,
+      "relativo": -0.037202957601560366
+     },
+     {
+      "trecho": "C03",
+      "raio_original_m": 76.58338928222656,
+      "raio_codificado_m": 73.86228269305231,
+      "relativo": -0.035531289678841206
+     },
+     {
+      "trecho": "C04",
+      "raio_original_m": 58.52946853637695,
+      "raio_codificado_m": 55.63486407279296,
+      "relativo": -0.04945550567890352
+     },
+     {
+      "trecho": "C05",
+      "raio_original_m": 104.8758544921875,
+      "raio_codificado_m": 114.42218185988271,
+      "relativo": 0.0910250258643313
+     },
+     {
+      "trecho": "C06",
+      "raio_original_m": 71.8567886352539,
+      "raio_codificado_m": 72.73303379891577,
+      "relativo": 0.012194326803410276
+     },
+     {
+      "trecho": "C07",
+      "raio_original_m": 28.915807723999023,
+      "raio_codificado_m": 30.119887278999883,
+      "relativo": 0.04164087569310814
+     },
+     {
+      "trecho": "C08",
+      "raio_original_m": 34.1529426574707,
+      "raio_codificado_m": 35.33522163868909,
+      "relativo": 0.03461719223071906
+     },
+     {
+      "trecho": "C09",
+      "raio_original_m": 176.65447998046875,
+      "raio_codificado_m": 173.42212250169175,
+      "relativo": -0.018297625280346015
+     },
+     {
+      "trecho": "C10",
+      "raio_original_m": 22.006427764892578,
+      "raio_codificado_m": 22.728222980888063,
+      "relativo": 0.0327992904485381
+     },
+     {
+      "trecho": "C11",
+      "raio_original_m": 71.0133056640625,
+      "raio_codificado_m": 73.870290524925,
+      "relativo": 0.04023168382525139
+     },
+     {
+      "trecho": "C12",
+      "raio_original_m": 38.14409255981445,
+      "raio_codificado_m": 37.659831265717244,
+      "relativo": -0.012695577784104572
+     },
+     {
+      "trecho": "C13",
+      "raio_original_m": 112.98368072509766,
+      "raio_codificado_m": 116.6959595376223,
+      "relativo": 0.032856770010503085
+     },
+     {
+      "trecho": "C14",
+      "raio_original_m": 141.43563842773438,
+      "raio_codificado_m": 162.79113435878713,
+      "relativo": 0.15099091126147962
+     },
+     {
+      "trecho": "C14->linha",
+      "raio_original_m": 226.4583282470703,
+      "raio_codificado_m": 248.51589085832177,
+      "relativo": 0.09740230258692999
+     }
+    ],
+    "passa": false
+   },
+   "volta_0013": {
+    "linha": "2026-10-04_03-42-10_vhe_interlagos#0013",
+    "pontos": 2138,
+    "distancia_p50_m": 0.0025144238490425706,
+    "distancia_p95_m": 0.025729312882304418,
+    "distancia_max_m": 0.875013861202194,
+    "fracao_ate_0_10_m": 0.9794200187090739,
+    "raio_por_trecho": [
+     {
+      "trecho": "C01",
+      "raio_original_m": 35.8496518221805,
+      "raio_codificado_m": 36.57340626459711,
+      "relativo": 0.020188604508811988
+     },
+     {
+      "trecho": "C02",
+      "raio_original_m": 49.05381447254487,
+      "raio_codificado_m": 52.69467033733718,
+      "relativo": 0.07422166663165558
+     },
+     {
+      "trecho": "C03",
+      "raio_original_m": 74.40789949282016,
+      "raio_codificado_m": 73.37036672038704,
+      "relativo": -0.013943852460628039
+     },
+     {
+      "trecho": "C04",
+      "raio_original_m": 53.32694686963528,
+      "raio_codificado_m": 56.969127783225076,
+      "relativo": 0.06829907068359992
+     },
+     {
+      "trecho": "C05",
+      "raio_original_m": 129.60571261580262,
+      "raio_codificado_m": 128.18005594869283,
+      "relativo": -0.010999952381234494
+     },
+     {
+      "trecho": "C06",
+      "raio_original_m": 59.455600349143346,
+      "raio_codificado_m": 78.17613384460661,
+      "relativo": 0.31486577186219594
+     },
+     {
+      "trecho": "C07",
+      "raio_original_m": 30.21912941966986,
+      "raio_codificado_m": 29.2422910549047,
+      "relativo": -0.03232516566573642
+     },
+     {
+      "trecho": "C08",
+      "raio_original_m": 34.1022024648389,
+      "raio_codificado_m": 35.23350366835418,
+      "relativo": 0.03317384572687664
+     },
+     {
+      "trecho": "C09",
+      "raio_original_m": 146.26448229840835,
+      "raio_codificado_m": 170.76056029613494,
+      "relativo": 0.16747796602971432
+     },
+     {
+      "trecho": "C10",
+      "raio_original_m": 23.289800849172522,
+      "raio_codificado_m": 23.958352762776613,
+      "relativo": 0.028705780609019006
+     },
+     {
+      "trecho": "C11",
+      "raio_original_m": 75.53225984215156,
+      "raio_codificado_m": 75.13932515636299,
+      "relativo": -0.0052022101100872055
+     },
+     {
+      "trecho": "C12",
+      "raio_original_m": 38.269698007389,
+      "raio_codificado_m": 38.6202945772417,
+      "relativo": 0.009161205551844324
+     },
+     {
+      "trecho": "C13",
+      "raio_original_m": 101.08886426328314,
+      "raio_codificado_m": 112.04258861626595,
+      "relativo": 0.10835737875592441
+     },
+     {
+      "trecho": "C14",
+      "raio_original_m": 141.97248940035593,
+      "raio_codificado_m": 157.8780393775844,
+      "relativo": 0.11203262015344079
+     },
+     {
+      "trecho": "C14->linha",
+      "raio_original_m": 248.04063273150226,
+      "raio_codificado_m": 268.0992597631243,
+      "relativo": 0.0808683110131193
+     }
+    ],
+    "maior_diferenca_relativa_do_raio": 0.31486577186219594,
+    "passa": false
+   },
+   "passa": false
+  },
+  {
+   "par_m": [
+    8.0,
+    20.0
+   ],
+   "codificacao": {
+    "genes": 412,
+    "dentro_m": 8.0,
+    "fora_m": 20.0,
+    "espacamento_m": {
+     "min": 7.636437071999808,
+     "p50": 7.942153506999944,
+     "max": 19.80527746900043
+    }
+   },
+   "c0": {
+    "linha": "C0 (o arquivo da IA)",
+    "pontos": 2680,
+    "distancia_p50_m": 0.0013238101627584624,
+    "distancia_p95_m": 0.009071936033626092,
+    "distancia_max_m": 0.7703436662763677,
+    "fracao_ate_0_10_m": 0.9824626865671642,
+    "raio_por_trecho": [
+     {
+      "trecho": "C01",
+      "raio_original_m": 32.9472878684692,
+      "raio_codificado_m": 37.40129774400843,
+      "relativo": 0.13518593376548446
+     },
+     {
+      "trecho": "C02",
+      "raio_original_m": 45.500089306418545,
+      "raio_codificado_m": 46.258771429849055,
+      "relativo": 0.016674299655132452
+     },
+     {
+      "trecho": "C03",
+      "raio_original_m": 73.49617973849999,
+      "raio_codificado_m": 73.54677340571364,
+      "relativo": 0.0006883849935283683
+     },
+     {
+      "trecho": "C04",
+      "raio_original_m": 54.99662524515111,
+      "raio_codificado_m": 54.800250980453775,
+      "relativo": -0.0035706602690979976
+     },
+     {
+      "trecho": "C05",
+      "raio_original_m": 109.9803683015745,
+      "raio_codificado_m": 114.62039637803886,
+      "relativo": 0.04218960300024685
+     },
+     {
+      "trecho": "C06",
+      "raio_original_m": 73.32719417824718,
+      "raio_codificado_m": 73.3881752812984,
+      "relativo": 0.0008316301166929058
+     },
+     {
+      "trecho": "C07",
+      "raio_original_m": 29.33699247326066,
+      "raio_codificado_m": 30.033049122974226,
+      "relativo": 0.0237262442749709
+     },
+     {
+      "trecho": "C08",
+      "raio_original_m": 35.011086276393364,
+      "raio_codificado_m": 34.343760701244896,
+      "relativo": -0.019060407605759423
+     },
+     {
+      "trecho": "C09",
+      "raio_original_m": 180.73697471270813,
+      "raio_codificado_m": 183.39596684089983,
+      "relativo": 0.014711943322158182
+     },
+     {
+      "trecho": "C10",
+      "raio_original_m": 22.782759792609074,
+      "raio_codificado_m": 23.68940763328769,
+      "relativo": 0.03979534740004328
+     },
+     {
+      "trecho": "C11",
+      "raio_original_m": 72.15241797267878,
+      "raio_codificado_m": 73.98682575469314,
+      "relativo": 0.025424065243509694
+     },
+     {
+      "trecho": "C12",
+      "raio_original_m": 35.228475487264,
+      "raio_codificado_m": 37.37320649740915,
+      "relativo": 0.0608806081012653
+     },
+     {
+      "trecho": "C13",
+      "raio_original_m": 110.21050095247536,
+      "raio_codificado_m": 116.10048239472539,
+      "relativo": 0.05344301487922547
+     },
+     {
+      "trecho": "C14",
+      "raio_original_m": 139.85017835326465,
+      "raio_codificado_m": 136.74760658102196,
+      "relativo": -0.0221849682908915
+     },
+     {
+      "trecho": "C14->linha",
+      "raio_original_m": 235.20885010372714,
+      "raio_codificado_m": 231.35206145714602,
+      "relativo": -0.016397293915089838
+     }
+    ],
+    "maior_diferenca_relativa_do_raio": 0.13518593376548446,
+    "raio_de_tres_pontos_so_relatado": [
+     {
+      "trecho": "C01",
+      "raio_original_m": 37.68803405761719,
+      "raio_codificado_m": 36.450479027914355,
+      "relativo": -0.03283681573336693
+     },
+     {
+      "trecho": "C02",
+      "raio_original_m": 46.75318908691406,
+      "raio_codificado_m": 46.0614124991591,
+      "relativo": -0.014796350821522667
+     },
+     {
+      "trecho": "C03",
+      "raio_original_m": 76.58338928222656,
+      "raio_codificado_m": 72.62721875976115,
+      "relativo": -0.051658336873627496
+     },
+     {
+      "trecho": "C04",
+      "raio_original_m": 58.52946853637695,
+      "raio_codificado_m": 53.79268708969011,
+      "relativo": -0.08092985576561078
+     },
+     {
+      "trecho": "C05",
+      "raio_original_m": 104.8758544921875,
+      "raio_codificado_m": 113.59847894721665,
+      "relativo": 0.08317095004626562
+     },
+     {
+      "trecho": "C06",
+      "raio_original_m": 71.8567886352539,
+      "raio_codificado_m": 72.73554228255482,
+      "relativo": 0.012229236290553943
+     },
+     {
+      "trecho": "C07",
+      "raio_original_m": 28.915807723999023,
+      "raio_codificado_m": 30.124421308569417,
+      "relativo": 0.04179767676236449
+     },
+     {
+      "trecho": "C08",
+      "raio_original_m": 34.1529426574707,
+      "raio_codificado_m": 33.733804149744415,
+      "relativo": -0.012272398075033938
+     },
+     {
+      "trecho": "C09",
+      "raio_original_m": 176.65447998046875,
+      "raio_codificado_m": 178.79133096827348,
+      "relativo": 0.012096217361942867
+     },
+     {
+      "trecho": "C10",
+      "raio_original_m": 22.006427764892578,
+      "raio_codificado_m": 23.678143487137344,
+      "relativo": 0.07596488353787693
+     },
+     {
+      "trecho": "C11",
+      "raio_original_m": 71.0133056640625,
+      "raio_codificado_m": 74.43767694610978,
+      "relativo": 0.048221544540493586
+     },
+     {
+      "trecho": "C12",
+      "raio_original_m": 38.14409255981445,
+      "raio_codificado_m": 36.52117483112644,
+      "relativo": -0.042547026807443086
+     },
+     {
+      "trecho": "C13",
+      "raio_original_m": 112.98368072509766,
+      "raio_codificado_m": 120.31431152015712,
+      "relativo": 0.06488220907668722
+     },
+     {
+      "trecho": "C14",
+      "raio_original_m": 141.43563842773438,
+      "raio_codificado_m": 133.1533250037117,
+      "relativo": -0.05855888597875895
+     },
+     {
+      "trecho": "C14->linha",
+      "raio_original_m": 226.4583282470703,
+      "raio_codificado_m": 232.20902849423462,
+      "relativo": 0.02539407709876839
+     }
+    ],
+    "passa": false
+   },
+   "volta_0013": {
+    "linha": "2026-10-04_03-42-10_vhe_interlagos#0013",
+    "pontos": 2138,
+    "distancia_p50_m": 0.0017046691614266418,
+    "distancia_p95_m": 0.01690524891485707,
+    "distancia_max_m": 0.8779151856070913,
+    "fracao_ate_0_10_m": 0.9808231992516371,
+    "raio_por_trecho": [
+     {
+      "trecho": "C01",
+      "raio_original_m": 35.8496518221805,
+      "raio_codificado_m": 36.95006003746696,
+      "relativo": 0.030695087939616523
+     },
+     {
+      "trecho": "C02",
+      "raio_original_m": 49.05381447254487,
+      "raio_codificado_m": 50.813344087353826,
+      "relativo": 0.03586937394631671
+     },
+     {
+      "trecho": "C03",
+      "raio_original_m": 74.40789949282016,
+      "raio_codificado_m": 74.08978184149716,
+      "relativo": -0.004275320946987667
+     },
+     {
+      "trecho": "C04",
+      "raio_original_m": 53.32694686963528,
+      "raio_codificado_m": 56.80335150460393,
+      "relativo": 0.06519039320715622
+     },
+     {
+      "trecho": "C05",
+      "raio_original_m": 129.60571261580262,
+      "raio_codificado_m": 131.9892474343278,
+      "relativo": 0.01839066172639192
+     },
+     {
+      "trecho": "C06",
+      "raio_original_m": 59.455600349143346,
+      "raio_codificado_m": 71.02054505198761,
+      "relativo": 0.1945139673122634
+     },
+     {
+      "trecho": "C07",
+      "raio_original_m": 30.21912941966986,
+      "raio_codificado_m": 30.300961655377606,
+      "relativo": 0.002707961389995629
+     },
+     {
+      "trecho": "C08",
+      "raio_original_m": 34.1022024648389,
+      "raio_codificado_m": 35.00514535142298,
+      "relativo": 0.026477553393070678
+     },
+     {
+      "trecho": "C09",
+      "raio_original_m": 146.26448229840835,
+      "raio_codificado_m": 144.68252923883205,
+      "relativo": -0.01081570204001277
+     },
+     {
+      "trecho": "C10",
+      "raio_original_m": 23.289800849172522,
+      "raio_codificado_m": 23.243691128678087,
+      "relativo": -0.0019798245933079087
+     },
+     {
+      "trecho": "C11",
+      "raio_original_m": 75.53225984215156,
+      "raio_codificado_m": 75.94002411536529,
+      "relativo": 0.005398544596254383
+     },
+     {
+      "trecho": "C12",
+      "raio_original_m": 38.269698007389,
+      "raio_codificado_m": 38.57302978691212,
+      "relativo": 0.007926160782992159
+     },
+     {
+      "trecho": "C13",
+      "raio_original_m": 101.08886426328314,
+      "raio_codificado_m": 110.68742198512514,
+      "relativo": 0.09495168228265798
+     },
+     {
+      "trecho": "C14",
+      "raio_original_m": 141.97248940035593,
+      "raio_codificado_m": 144.79092135465834,
+      "relativo": 0.019851958405508848
+     },
+     {
+      "trecho": "C14->linha",
+      "raio_original_m": 248.04063273150226,
+      "raio_codificado_m": 241.7454224628124,
+      "relativo": -0.025379754112723394
+     }
+    ],
+    "maior_diferenca_relativa_do_raio": 0.1945139673122634,
+    "passa": false
+   },
+   "passa": false
+  },
+  {
+   "par_m": [
+    6.0,
+    15.0
+   ],
+   "codificacao": {
+    "genes": 546,
+    "dentro_m": 6.0,
+    "fora_m": 15.0,
+    "espacamento_m": {
+     "min": 5.79315915799998,
+     "p50": 5.956615130999921,
+     "max": 14.823887953000167
+    }
+   },
+   "c0": {
+    "linha": "C0 (o arquivo da IA)",
+    "pontos": 2680,
+    "distancia_p50_m": 0.0006699272964138796,
+    "distancia_p95_m": 0.0072236806900917,
+    "distancia_max_m": 0.7896051615854968,
+    "fracao_ate_0_10_m": 0.983955223880597,
+    "raio_por_trecho": [
+     {
+      "trecho": "C01",
+      "raio_original_m": 32.9472878684692,
+      "raio_codificado_m": 33.88548826102366,
+      "relativo": 0.028475800384538518
+     },
+     {
+      "trecho": "C02",
+      "raio_original_m": 45.500089306418545,
+      "raio_codificado_m": 42.015512346782735,
+      "relativo": -0.07658395868564268
+     },
+     {
+      "trecho": "C03",
+      "raio_original_m": 73.49617973849999,
+      "raio_codificado_m": 73.19496746947368,
+      "relativo": -0.004098339125897755
+     },
+     {
+      "trecho": "C04",
+      "raio_original_m": 54.99662524515111,
+      "raio_codificado_m": 53.43590562591524,
+      "relativo": -0.028378461628851902
+     },
+     {
+      "trecho": "C05",
+      "raio_original_m": 109.9803683015745,
+      "raio_codificado_m": 111.29866927597996,
+      "relativo": 0.011986693577808169
+     },
+     {
+      "trecho": "C06",
+      "raio_original_m": 73.32719417824718,
+      "raio_codificado_m": 74.31983240420513,
+      "relativo": 0.01353710907777264
+     },
+     {
+      "trecho": "C07",
+      "raio_original_m": 29.33699247326066,
+      "raio_codificado_m": 29.643674335490182,
+      "relativo": 0.0104537594475319
+     },
+     {
+      "trecho": "C08",
+      "raio_original_m": 35.011086276393364,
+      "raio_codificado_m": 35.28464996893587,
+      "relativo": 0.007813630527852437
+     },
+     {
+      "trecho": "C09",
+      "raio_original_m": 180.73697471270813,
+      "raio_codificado_m": 180.27414542594929,
+      "relativo": -0.002560789166104727
+     },
+     {
+      "trecho": "C10",
+      "raio_original_m": 22.782759792609074,
+      "raio_codificado_m": 23.094720226341547,
+      "relativo": 0.01369282898877228
+     },
+     {
+      "trecho": "C11",
+      "raio_original_m": 72.15241797267878,
+      "raio_codificado_m": 74.4381646992831,
+      "relativo": 0.03167941963455543
+     },
+     {
+      "trecho": "C12",
+      "raio_original_m": 35.228475487264,
+      "raio_codificado_m": 38.42497878287481,
+      "relativo": 0.09073635039263701
+     },
+     {
+      "trecho": "C13",
+      "raio_original_m": 110.21050095247536,
+      "raio_codificado_m": 118.66769116645209,
+      "relativo": 0.07673670059465218
+     },
+     {
+      "trecho": "C14",
+      "raio_original_m": 139.85017835326465,
+      "raio_codificado_m": 140.2214569184784,
+      "relativo": 0.0026548308310046257
+     },
+     {
+      "trecho": "C14->linha",
+      "raio_original_m": 235.20885010372714,
+      "raio_codificado_m": 243.80048286308923,
+      "relativo": 0.03652767638451178
+     }
+    ],
+    "maior_diferenca_relativa_do_raio": 0.09073635039263701,
+    "raio_de_tres_pontos_so_relatado": [
+     {
+      "trecho": "C01",
+      "raio_original_m": 37.68803405761719,
+      "raio_codificado_m": 31.055565057913732,
+      "relativo": -0.1759834166346747
+     },
+     {
+      "trecho": "C02",
+      "raio_original_m": 46.75318908691406,
+      "raio_codificado_m": 40.25899194789206,
+      "relativo": -0.13890383235567744
+     },
+     {
+      "trecho": "C03",
+      "raio_original_m": 76.58338928222656,
+      "raio_codificado_m": 72.58748301895882,
+      "relativo": -0.05217719274008561
+     },
+     {
+      "trecho": "C04",
+      "raio_original_m": 58.52946853637695,
+      "raio_codificado_m": 51.45193450198686,
+      "relativo": -0.12092257475379767
+     },
+     {
+      "trecho": "C05",
+      "raio_original_m": 104.8758544921875,
+      "raio_codificado_m": 108.92160813216363,
+      "relativo": 0.038576597631226034
+     },
+     {
+      "trecho": "C06",
+      "raio_original_m": 71.8567886352539,
+      "raio_codificado_m": 67.22895399402553,
+      "relativo": -0.06440358286423473
+     },
+     {
+      "trecho": "C07",
+      "raio_original_m": 28.915807723999023,
+      "raio_codificado_m": 29.520517356471466,
+      "relativo": 0.02091276986776185
+     },
+     {
+      "trecho": "C08",
+      "raio_original_m": 34.1529426574707,
+      "raio_codificado_m": 35.15748281099442,
+      "relativo": 0.029412989785346788
+     },
+     {
+      "trecho": "C09",
+      "raio_original_m": 176.65447998046875,
+      "raio_codificado_m": 172.8445050276847,
+      "relativo": -0.021567383704083155
+     },
+     {
+      "trecho": "C10",
+      "raio_original_m": 22.006427764892578,
+      "raio_codificado_m": 23.024676851352286,
+      "relativo": 0.04627053047129016
+     },
+     {
+      "trecho": "C11",
+      "raio_original_m": 71.0133056640625,
+      "raio_codificado_m": 74.39954211935766,
+      "relativo": 0.047684534942144294
+     },
+     {
+      "trecho": "C12",
+      "raio_original_m": 38.14409255981445,
+      "raio_codificado_m": 37.81685498111854,
+      "relativo": -0.008578984496295652
+     },
+     {
+      "trecho": "C13",
+      "raio_original_m": 112.98368072509766,
+      "raio_codificado_m": 121.57653901927675,
+      "relativo": 0.07605397734462653
+     },
+     {
+      "trecho": "C14",
+      "raio_original_m": 141.43563842773438,
+      "raio_codificado_m": 132.38552309611634,
+      "relativo": -0.0639875170941596
+     },
+     {
+      "trecho": "C14->linha",
+      "raio_original_m": 226.4583282470703,
+      "raio_codificado_m": 242.4714190039546,
+      "relativo": 0.07071098193135868
+     }
+    ],
+    "passa": true
+   },
+   "volta_0013": {
+    "linha": "2026-10-04_03-42-10_vhe_interlagos#0013",
+    "pontos": 2138,
+    "distancia_p50_m": 0.001020899426440694,
+    "distancia_p95_m": 0.011593412059245934,
+    "distancia_max_m": 0.8491291680373596,
+    "fracao_ate_0_10_m": 0.980355472404116,
+    "raio_por_trecho": [
+     {
+      "trecho": "C01",
+      "raio_original_m": 35.8496518221805,
+      "raio_codificado_m": 37.01759564710528,
+      "relativo": 0.03257894471940635
+     },
+     {
+      "trecho": "C02",
+      "raio_original_m": 49.05381447254487,
+      "raio_codificado_m": 50.55038510207794,
+      "relativo": 0.030508751370817235
+     },
+     {
+      "trecho": "C03",
+      "raio_original_m": 74.40789949282016,
+      "raio_codificado_m": 74.265427860014,
+      "relativo": -0.0019147380019766717
+     },
+     {
+      "trecho": "C04",
+      "raio_original_m": 53.32694686963528,
+      "raio_codificado_m": 56.603949254839485,
+      "relativo": 0.06145115326431998
+     },
+     {
+      "trecho": "C05",
+      "raio_original_m": 129.60571261580262,
+      "raio_codificado_m": 132.06208719777584,
+      "relativo": 0.018952672165422128
+     },
+     {
+      "trecho": "C06",
+      "raio_original_m": 59.455600349143346,
+      "raio_codificado_m": 61.143961281198756,
+      "relativo": 0.02839700418700316
+     },
+     {
+      "trecho": "C07",
+      "raio_original_m": 30.21912941966986,
+      "raio_codificado_m": 30.483973218241868,
+      "relativo": 0.008764110801935298
+     },
+     {
+      "trecho": "C08",
+      "raio_original_m": 34.1022024648389,
+      "raio_codificado_m": 35.25641568750594,
+      "relativo": 0.03384570905228456
+     },
+     {
+      "trecho": "C09",
+      "raio_original_m": 146.26448229840835,
+      "raio_codificado_m": 150.7150735589515,
+      "relativo": 0.03042838008658224
+     },
+     {
+      "trecho": "C10",
+      "raio_original_m": 23.289800849172522,
+      "raio_codificado_m": 23.571243621295295,
+      "relativo": 0.012084378649067433
+     },
+     {
+      "trecho": "C11",
+      "raio_original_m": 75.53225984215156,
+      "raio_codificado_m": 76.36034980365928,
+      "relativo": 0.010963394491814086
+     },
+     {
+      "trecho": "C12",
+      "raio_original_m": 38.269698007389,
+      "raio_codificado_m": 39.84568238424118,
+      "relativo": 0.04118099851605544
+     },
+     {
+      "trecho": "C13",
+      "raio_original_m": 101.08886426328314,
+      "raio_codificado_m": 107.75871467714958,
+      "relativo": 0.0659800707276224
+     },
+     {
+      "trecho": "C14",
+      "raio_original_m": 141.97248940035593,
+      "raio_codificado_m": 143.31348856966127,
+      "relativo": 0.009445486058385523
+     },
+     {
+      "trecho": "C14->linha",
+      "raio_original_m": 248.04063273150226,
+      "raio_codificado_m": 238.25680451606007,
+      "relativo": -0.039444457578178056
+     }
+    ],
+    "maior_diferenca_relativa_do_raio": 0.0659800707276224,
+    "passa": true
+   },
+   "passa": true
+  }
+ ],
+ "escolhido": [
+  6.0,
+  15.0
+ ],
+ "janelas_das_curvas": [
+  [
+   184.00411241577345,
+   732.0127044273002
+  ],
+  [
+   1272.024087006673,
+   1646.0294845523756
+  ],
+  [
+   1898.03557974004,
+   2180.039288257836
+  ],
+  [
+   2206.041234311728,
+   2798.0506341192104
+  ],
+  [
+   2810.0523231471175,
+   3064.0555176129415
+  ],
+  [
+   3148.0585284887757,
+   3420.0620534165814
+  ],
+  [
+   3538.0656884983814,
+   3706.067304090292
+  ]
+ ],
+ "arquivo_c0": {
+  "sha256": "36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342",
+  "pontos": 2680
+ },
+ "restricoes": {
+  "voltas": 150,
+  "emenda_fora_m": 30.0,
+  "por_trecho": [
+   {
+    "trecho": "C01",
+    "inicio_s": 0.0,
+    "fim_s": 334.0061319056622,
+    "menor_raio_das_voltas_m": 24.670828087029058,
+    "raio_min_m": 22.203745278326153,
+    "maior_taxa_das_voltas": 0.004727363012874925,
+    "taxa_max": 0.005200099314162418
+   },
+   {
+    "trecho": "C02",
+    "inicio_s": 334.0061319056622,
+    "fim_s": 422.0077474975732,
+    "menor_raio_das_voltas_m": 20.80494797900892,
+    "raio_min_m": 18.72445318110803,
+    "maior_taxa_das_voltas": 0.010605157641673935,
+    "taxa_max": 0.011665673405841329
+   },
+   {
+    "trecho": "C03",
+    "inicio_s": 422.0077474975732,
+    "fim_s": 692.0127044273002,
+    "menor_raio_das_voltas_m": 37.0299959967109,
+    "raio_min_m": 33.326996397039814,
+    "maior_taxa_das_voltas": 0.0044088842471753575,
+    "taxa_max": 0.004849772671892893
+   },
+   {
+    "trecho": "C04",
+    "inicio_s": 692.0127044273002,
+    "fim_s": 1402.025739316582,
+    "menor_raio_das_voltas_m": 28.77196899117988,
+    "raio_min_m": 25.894772092061892,
+    "maior_taxa_das_voltas": 0.004148556773196842,
+    "taxa_max": 0.004563412450516526
+   },
+   {
+    "trecho": "C05",
+    "inicio_s": 1402.025739316582,
+    "fim_s": 1606.0294845523756,
+    "menor_raio_das_voltas_m": 44.50536505836,
+    "raio_min_m": 40.054828552524,
+    "maior_taxa_das_voltas": 0.003553919332280837,
+    "taxa_max": 0.003909311265508921
+   },
+   {
+    "trecho": "C06",
+    "inicio_s": 1606.0294845523756,
+    "fim_s": 2140.039288257836,
+    "menor_raio_das_voltas_m": 19.812858073509815,
+    "raio_min_m": 17.831572266158833,
+    "maior_taxa_das_voltas": 0.012645076603359652,
+    "taxa_max": 0.013909584263695618
+   },
+   {
+    "trecho": "C07",
+    "inicio_s": 2140.039288257836,
+    "fim_s": 2334.0428499036393,
+    "menor_raio_das_voltas_m": 5.5489236885316,
+    "raio_min_m": 4.99403131967844,
+    "maior_taxa_das_voltas": 0.04996738207789432,
+    "taxa_max": 0.05496412028568376
+   },
+   {
+    "trecho": "C08",
+    "inicio_s": 2334.0428499036393,
+    "fim_s": 2498.0458607794735,
+    "menor_raio_das_voltas_m": 8.384909688831167,
+    "raio_min_m": 7.546418719948051,
+    "maior_taxa_das_voltas": 0.026425304574678635,
+    "taxa_max": 0.0290678350321465
+   },
+   {
+    "trecho": "C09",
+    "inicio_s": 2498.0458607794735,
+    "fim_s": 2626.048210731344,
+    "menor_raio_das_voltas_m": 46.77881827735525,
+    "raio_min_m": 42.100936449619724,
+    "maior_taxa_das_voltas": 0.003349541262831388,
+    "taxa_max": 0.003684495389114527
+   },
+   {
+    "trecho": "C10",
+    "inicio_s": 2626.048210731344,
+    "fim_s": 2758.0506341192104,
+    "menor_raio_das_voltas_m": 16.77859902313659,
+    "raio_min_m": 15.100739120822931,
+    "maior_taxa_das_voltas": 0.007143171303338377,
+    "taxa_max": 0.007857488433672215
+   },
+   {
+    "trecho": "C11",
+    "inicio_s": 2758.0506341192104,
+    "fim_s": 3024.0555176129415,
+    "menor_raio_das_voltas_m": 32.869365224527684,
+    "raio_min_m": 29.582428702074917,
+    "maior_taxa_das_voltas": 0.005177739690802341,
+    "taxa_max": 0.005695513659882576
+   },
+   {
+    "trecho": "C12",
+    "inicio_s": 3024.0555176129415,
+    "fim_s": 3262.059887054701,
+    "menor_raio_das_voltas_m": 17.94965107505138,
+    "raio_min_m": 16.154685967546243,
+    "maior_taxa_das_voltas": 0.012671281923704588,
+    "taxa_max": 0.013938410116075047
+   },
+   {
+    "trecho": "C13",
+    "inicio_s": 3262.059887054701,
+    "fim_s": 3380.0620534165814,
+    "menor_raio_das_voltas_m": 44.20689785682463,
+    "raio_min_m": 39.78620807114217,
+    "maior_taxa_das_voltas": 0.00371381672831935,
+    "taxa_max": 0.004085198401151286
+   },
+   {
+    "trecho": "C14",
+    "inicio_s": 3380.0620534165814,
+    "fim_s": 3666.067304090292,
+    "menor_raio_das_voltas_m": 20.550234475369916,
+    "raio_min_m": 18.495211027832923,
+    "maior_taxa_das_voltas": 0.009045084287460805,
+    "taxa_max": 0.009949592716206887
+   },
+   {
+    "trecho": "C14->linha",
+    "inicio_s": 3666.067304090292,
+    "fim_s": 4334.079567901616,
+    "menor_raio_das_voltas_m": 53.09031537896605,
+    "raio_min_m": 47.781283841069445,
+    "maior_taxa_das_voltas": 0.00553721198735861,
+    "taxa_max": 0.006090933186094471
+   }
+  ]
+ },
+ "tempo_s": 4.5
+}

@@ -422,3 +422,98 @@ def figura(b: Base, laterais: Dict[str, np.ndarray], destino: Path) -> None:
     fig.tight_layout()
     fig.savefig(destino, dpi=110)
     plt.close(fig)
+
+
+# ------------------------------------------- a conferencia entre as sessoes ---
+
+# ADR 0031, item 3: os blocos sao as trocas do registro depois do commit do ADR (3f777af4, 12/11 09:39:42).
+DESDE = "2026-11-12T09:39:42"
+
+
+def conferencia(args) -> int:
+    """So a conferencia da troca, entre as sessoes no jogo. **Nao calcula nem mostra nenhum tempo.**
+
+    Cada gravacao vai para o bloco da ultima troca antes dela (`registro.blocos`); em cada bloco, os papeis das
+    voltas (saida, primeira lancada, as 7 que contam) e a troca que pegou: a mediana da distancia das posicoes
+    das voltas que contam ate a linha da condicao, contra ate a linha original.
+    """
+    from datetime import datetime
+
+    from ml.data.recordings import iter_laps
+    from ml.pista_teste import ai_spline as A
+    from ml.pista_teste import etapas as E
+    from ml.pista_teste import linha_nova as N
+    from ml.pista_teste import registro as R
+    from ml.preprocessing.alignment import align_lap
+    from ml.preprocessing.cleaning import clean_lap
+    from ml.track.geometry import load_corridor_geometry
+
+    saida = C.raiz_saida()
+    pasta = saida / "linhas"
+    m47 = _ler_json(pasta / "linhas.json")
+    m50 = _ler_json(pasta / "linha_do_projeto.json")
+    esperado = {"C0": m47["condicoes"]["C0"]["sha256"], **{k: v["sha256"] for k, v in m50["condicoes"].items()}}
+    for k in ("L1", "L2"):
+        if A.sha256_arquivo(pasta / k / "fast_lane.ai") != esperado[k]:
+            raise SystemExit(f"PARADO: o arquivo da {k} nao bate com o linha_do_projeto.json.")
+    linhas_xz = {k: A.ler(pasta / k / "fast_lane.ai").pos[:, [0, 2]].astype(float) for k in ("C0", "L1", "L2")}
+    sha_original_agora = A.sha256_arquivo(C.fast_lane_original())
+    trocas = R.ler(saida / "registro.csv") if (saida / "registro.csv").exists() else []
+    lista = R.blocos(trocas, datetime.fromisoformat(DESDE))
+    track = load_corridor_geometry()
+    sessoes = E.sessoes_da_copia()
+    inicios = {s.session_id: E._inicio(s) for s in sessoes}
+    atrib = R.atribuir_aos_blocos({k: v for k, v in inicios.items() if v is not None}, lista, esperado)
+    bloco_da = {a["sessao"]: a for a in atrib}
+    por_bloco = {}
+    for sessao in sessoes:
+        a = bloco_da.get(sessao.session_id)
+        if a is None or a["bloco"] is None:
+            continue
+        laps = list(iter_laps(sessao))
+        for i, lap in enumerate(laps):
+            cleaned, _ = clean_lap(lap.frame)
+            aligned, alignment = align_lap(cleaned, track)
+            ai = lap.frame["ai_controlled"] if "ai_controlled" in lap.frame else None
+            ordem = float(lap.frame["timestamp_s"].iloc[0]) if "timestamp_s" in lap.frame else float(i)
+            por_bloco.setdefault(a["bloco"], []).append({
+                "sessao": sessao.session_id, "sequencia": lap.sequence, "ordem": ordem, "primeira": i == 0,
+                "interrompida": i == len(laps) - 1 and alignment.coverage < E.COBERTURA_MINIMA,
+                "ia_dirigiu": bool(ai is not None and ai.fillna(False).astype(bool).all()),
+                "xz": aligned[["x", "z"]].to_numpy(float) if len(aligned) else np.zeros((0, 2))})
+    blocos_out = []
+    for b in lista:
+        voltas = por_bloco.get(b.numero, [])
+        objs = [R.VoltaNaCondicao(v["sessao"], v["sequencia"], v["ordem"], v["primeira"], v["interrompida"]) for v in voltas]
+        R.papeis(b.condicao, objs)
+        papel = {(o.sessao, o.sequencia): o.papel for o in objs}
+        contam = [v for v in voltas if papel[(v["sessao"], v["sequencia"])] == "conta"]
+        item = {"bloco": b.numero, "condicao": b.condicao, "troca": b.hora.isoformat(),
+                "gravacoes": sorted({v["sessao"] for v in voltas}),
+                "voltas_por_papel": {p: sum(papel[(v["sessao"], v["sequencia"])] == p for v in voltas)
+                                     for p in ("saida", "primeira lancada", "conta", "alem das que contam", "interrompida")},
+                "que_contam_com_a_ia_dirigindo": sum(v["ia_dirigiu"] for v in contam)}
+        pts = [v["xz"] for v in contam if len(v["xz"])]
+        if pts:
+            p = np.vstack(pts)
+            d_linha = float(np.median(N._projetar_na_polilinha(p, linhas_xz[b.condicao])[2]))
+            d_orig = float(np.median(N._projetar_na_polilinha(p, linhas_xz["C0"])[2]))
+            item.update(mediana_ate_a_linha_da_condicao_m=d_linha, mediana_ate_a_linha_original_m=d_orig,
+                        troca_pegou=True if b.condicao == "C0" else bool(d_linha < d_orig))
+        blocos_out.append(item)
+    payload = {"pedido": 50, "parte": "D.3 entre as sessoes (sem tempos)", "commit": _cabecalho("", "", track)["commit"],
+               "comando": f"python -m ml.scripts.linha_do_projeto conferencia-sessao --rotulo {args.rotulo}",
+               "desde": DESDE, "original_intacto": m47["original"]["sha256"] == sha_original_agora,
+               "atribuicao": [{**a, "inicio": a["inicio"].isoformat()} for a in atrib if a["bloco"] is not None],
+               "gravacoes_fora_dos_blocos": sum(1 for a in atrib if a["bloco"] is None), "blocos": blocos_out}
+    _json(raiz() / f"conferencia_{args.rotulo}.json", payload)
+    print("original intacto:", payload["original_intacto"])
+    print("blocos no registro desde", DESDE, ":", len(lista), "| gravacoes fora dos blocos:", payload["gravacoes_fora_dos_blocos"])
+    for item in blocos_out:
+        extra = ""
+        if "troca_pegou" in item:
+            extra = (f"  ate a linha da condicao {item['mediana_ate_a_linha_da_condicao_m']:.2f} m, ate a original "
+                     f"{item['mediana_ate_a_linha_original_m']:.2f} m, troca pegou: {item['troca_pegou']}")
+        print(f"bloco {item['bloco']} {item['condicao']}: {item['voltas_por_papel']} (IA dirigindo em "
+              f"{item['que_contam_com_a_ia_dirigindo']}){extra}")
+    return 0

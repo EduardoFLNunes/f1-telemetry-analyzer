@@ -1,0 +1,484 @@
+{
+ "pedido": 50,
+ "adr": "0031",
+ "parte": "B.3 (L1)",
+ "commit": "99d76e2f4c88782bc2e975671e4c220695af0f8e",
+ "comando": "python -m ml.scripts.linha_do_projeto l1",
+ "ambiente": {
+  "python": "3.9.7",
+  "numpy": "1.26.3",
+  "plataforma": "Windows-10-10.0.26200-SP0"
+ },
+ "geometry_id": "0ed16f0dd2225990",
+ "corridor_id": "707d07029036abd6",
+ "codificacao": {
+  "genes": 546,
+  "dentro_m": 6.0,
+  "fora_m": 15.0,
+  "espacamento_m": {
+   "min": 5.79315915799998,
+   "p50": 5.956615130999921,
+   "max": 14.823887953000167
+  }
+ },
+ "escolha_por_trecho": [
+  {
+   "trecho": "C01",
+   "linha": "C3",
+   "mediana_no_jogo_s": 6.446596862629438,
+   "c0_mediana_no_jogo_s": 6.392341917391659,
+   "contra_c0_s": 0.05425494523777896
+  },
+  {
+   "trecho": "C02",
+   "linha": "C2",
+   "mediana_no_jogo_s": 2.459240508304542,
+   "c0_mediana_no_jogo_s": 2.406172299346591,
+   "contra_c0_s": 0.05306820895795106
+  },
+  {
+   "trecho": "C03",
+   "linha": "C2",
+   "mediana_no_jogo_s": 5.312855615034406,
+   "c0_mediana_no_jogo_s": 5.284317996949676,
+   "contra_c0_s": 0.0285376180847301
+  },
+  {
+   "trecho": "C04",
+   "linha": "C2",
+   "mediana_no_jogo_s": 11.455414586319211,
+   "c0_mediana_no_jogo_s": 11.642517837031281,
+   "contra_c0_s": -0.18710325071207023
+  },
+  {
+   "trecho": "C05",
+   "linha": "C4",
+   "mediana_no_jogo_s": 4.108545639157885,
+   "c0_mediana_no_jogo_s": 4.098007024321305,
+   "contra_c0_s": 0.010538614836580251
+  },
+  {
+   "trecho": "C06",
+   "linha": "C3",
+   "mediana_no_jogo_s": 9.428122901593557,
+   "c0_mediana_no_jogo_s": 9.662296855524339,
+   "contra_c0_s": -0.23417395393078166
+  },
+  {
+   "trecho": "C07",
+   "linha": "C4",
+   "mediana_no_jogo_s": 5.290023242960466,
+   "c0_mediana_no_jogo_s": 5.36414668554751,
+   "contra_c0_s": -0.07412344258704451
+  },
+  {
+   "trecho": "C08",
+   "linha": "C4",
+   "mediana_no_jogo_s": 4.830039436351299,
+   "c0_mediana_no_jogo_s": 4.83199542594992,
+   "contra_c0_s": -0.0019559895986205333
+  },
+  {
+   "trecho": "C09",
+   "linha": "C4",
+   "mediana_no_jogo_s": 2.809151479017764,
+   "c0_mediana_no_jogo_s": 2.9492395453520786,
+   "contra_c0_s": -0.14008806633431448
+  },
+  {
+   "trecho": "C10",
+   "linha": "C2",
+   "mediana_no_jogo_s": 4.290701804661964,
+   "c0_mediana_no_jogo_s": 4.225211214018287,
+   "contra_c0_s": 0.06549059064367668
+  },
+  {
+   "trecho": "C11",
+   "linha": "C3",
+   "mediana_no_jogo_s": 5.769249026774979,
+   "c0_mediana_no_jogo_s": 5.818965036969296,
+   "contra_c0_s": -0.049716010194316596
+  },
+  {
+   "trecho": "C12",
+   "linha": "C3",
+   "mediana_no_jogo_s": 5.178810892638914,
+   "c0_mediana_no_jogo_s": 5.201573896168597,
+   "contra_c0_s": -0.022763003529682635
+  },
+  {
+   "trecho": "C13",
+   "linha": "C4",
+   "mediana_no_jogo_s": 2.8345727862030827,
+   "c0_mediana_no_jogo_s": 2.8478734798689374,
+   "contra_c0_s": -0.013300693665854624
+  },
+  {
+   "trecho": "C14",
+   "linha": "C4",
+   "mediana_no_jogo_s": 5.113041431267163,
+   "c0_mediana_no_jogo_s": 5.094812733198239,
+   "contra_c0_s": 0.018228698068924132
+  },
+  {
+   "trecho": "C14->linha",
+   "linha": "C4",
+   "mediana_no_jogo_s": 9.650944317152266,
+   "c0_mediana_no_jogo_s": 9.618028248018916,
+   "contra_c0_s": 0.03291606913334988
+  }
+ ],
+ "soma_das_diferencas_contra_c0_s": -0.4601896655896942,
+ "emendas": [
+  {
+   "de": "C3",
+   "para": "C2",
+   "entre": "C01/C02",
+   "centro_s": 346.0063522136501,
+   "janela_m": 24.00044061597572,
+   "distancia_entre_as_linhas_no_centro_m": 1.021478692321024,
+   "reta_m": 24.00044061597572
+  },
+  {
+   "de": "C2",
+   "para": "C4",
+   "entre": "C04/C05",
+   "centro_s": 1440.0264369585436,
+   "janela_m": 40.0,
+   "distancia_entre_as_linhas_no_centro_m": 0.9555337995701647,
+   "reta_m": 78.0014320019211
+  },
+  {
+   "de": "C4",
+   "para": "C3",
+   "entre": "C05/C06",
+   "centro_s": 1722.0316141962585,
+   "janela_m": 40.0,
+   "distancia_entre_as_linhas_no_centro_m": 0.0005676225081190367,
+   "reta_m": 332.0060951876644
+  },
+  {
+   "de": "C3",
+   "para": "C4",
+   "entre": "C06/C07",
+   "centro_s": 2192.040242925783,
+   "janela_m": 40.0,
+   "distancia_entre_as_linhas_no_centro_m": 0.02200972236928056,
+   "reta_m": 106.00194605389242
+  },
+  {
+   "de": "C4",
+   "para": "C2",
+   "entre": "C09/C10",
+   "centro_s": 2652.048688065318,
+   "janela_m": 40.0,
+   "distancia_entre_as_linhas_no_centro_m": 4.052476313345299,
+   "reta_m": 46.000844513953325
+  },
+  {
+   "de": "C2",
+   "para": "C3",
+   "entre": "C10/C11",
+   "centro_s": 2778.0510012991904,
+   "janela_m": 40.0,
+   "distancia_entre_as_linhas_no_centro_m": 0.8408748047953836,
+   "reta_m": 92.0016890279071
+  },
+  {
+   "de": "C3",
+   "para": "C4",
+   "entre": "C12/C13",
+   "centro_s": 3282.0602542346805,
+   "janela_m": 40.0,
+   "distancia_entre_as_linhas_no_centro_m": 1.0684425903769705,
+   "reta_m": 72.0013218479271
+  },
+  {
+   "de": "C4",
+   "para": "C3",
+   "entre": "C14->linha/C01",
+   "centro_s": 150.0027538498483,
+   "janela_m": 40.0,
+   "distancia_entre_as_linhas_no_centro_m": 0.0006469934715065406,
+   "reta_m": 224.00411241577345
+  }
+ ],
+ "codificada_contra_montada_m": {
+  "p50": 0.0008865995450055841,
+  "p95": 0.010668770382074373,
+  "max": 0.03896916312171028
+ },
+ "reparo_do_corredor_rodadas": 0,
+ "linha": {
+  "genes": 546,
+  "tempo_previsto": {
+   "M-real": {
+    "tempo_s": 84.22777742863391,
+    "contra_c0_s": -1.0885596739065022
+   },
+   "M-cal": {
+    "tempo_s": 85.4253407447358,
+    "contra_c0_s": -0.012967603110270759
+   },
+   "M-v2": {
+    "tempo_s": 85.19646960078474,
+    "contra_c0_s": -1.3580025229936297
+   }
+  },
+  "forma_e_corredor": {
+   "serpenteio": 0.06823670543767374,
+   "limite_serpenteio": 0.07242191814740921,
+   "variacao_de_curvatura": 0.00024835341095627415,
+   "limite_variacao": 0.00031908935634789053,
+   "fora_do_corredor_m": 0.0,
+   "dentro": true
+  },
+  "dentro_das_restricoes": true,
+  "por_trecho": [
+   {
+    "trecho": "C01",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.2879816310609442,
+     "max": 1.3577318353924375
+    },
+    "raio_min_12m_m": 39.52764122133661,
+    "raio_min_em_s": 250.00458974974714,
+    "raio_limite_m": 22.203745278326153,
+    "taxa_max": 0.0017286725356953367,
+    "taxa_limite": 0.005200099314162418,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 38.531734466552734,
+    "raio_min_do_arquivo_em_s": 249.0441341443436
+   },
+   {
+    "trecho": "C02",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.7592316883090073,
+     "max": 1.956420514066979
+    },
+    "raio_min_12m_m": 42.72245313805648,
+    "raio_min_em_s": 390.00716000960557,
+    "raio_limite_m": 18.72445318110803,
+    "taxa_max": 0.0044498227992161785,
+    "taxa_limite": 0.011665673405841329,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 42.53108596801758,
+    "raio_min_do_arquivo_em_s": 389.7063730500289
+   },
+   {
+    "trecho": "C03",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.9090653225086225,
+     "max": 1.959510945388995
+    },
+    "raio_min_12m_m": 88.18274244493904,
+    "raio_min_em_s": 422.0077474975732,
+    "raio_limite_m": 33.326996397039814,
+    "taxa_max": 0.0010748057499990421,
+    "taxa_limite": 0.004849772671892893,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 88.62996673583984,
+    "raio_min_do_arquivo_em_s": 422.37602551626236
+   },
+   {
+    "trecho": "C04",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 1.0662936529719313,
+     "max": 2.3562755053872406
+    },
+    "raio_min_12m_m": 57.09629887108044,
+    "raio_min_em_s": 1338.0245643406467,
+    "raio_limite_m": 25.894772092061892,
+    "taxa_max": 0.0006936976263858165,
+    "taxa_limite": 0.004563412450516526,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 56.53329849243164,
+    "raio_min_do_arquivo_em_s": 1337.5283988172118
+   },
+   {
+    "trecho": "C05",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.44405285784294346,
+     "max": 2.115756584279672
+    },
+    "raio_min_12m_m": 75.99763016183412,
+    "raio_min_em_s": 1402.025739316582,
+    "raio_limite_m": 40.054828552524,
+    "taxa_max": 0.001441243674929296,
+    "taxa_limite": 0.003909311265508921,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 76.72956085205078,
+    "raio_min_do_arquivo_em_s": 1402.8225151123186
+   },
+   {
+    "trecho": "C06",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.9032733086227092,
+     "max": 3.702072418774499
+    },
+    "raio_min_12m_m": 87.52639168034729,
+    "raio_min_em_s": 2010.0369015879671,
+    "raio_limite_m": 17.831572266158833,
+    "taxa_max": 0.0005281526157103693,
+    "taxa_limite": 0.013909584263695618,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 85.74053192138672,
+    "raio_min_do_arquivo_em_s": 2008.8655906885983
+   },
+   {
+    "trecho": "C07",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.5008137008494278,
+     "max": 2.0399949760490936
+    },
+    "raio_min_12m_m": 31.060821480589965,
+    "raio_min_em_s": 2274.0417483637,
+    "raio_limite_m": 4.99403131967844,
+    "taxa_max": 0.0013195448345567065,
+    "taxa_limite": 0.05496412028568376,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 30.65380096435547,
+    "raio_min_do_arquivo_em_s": 2271.7011674160917
+   },
+   {
+    "trecho": "C08",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.4614813870518353,
+     "max": 4.100391077686986
+    },
+    "raio_min_12m_m": 39.200470137677776,
+    "raio_min_em_s": 2424.044502213548,
+    "raio_limite_m": 7.546418719948051,
+    "taxa_max": 0.0017130157737079066,
+    "taxa_limite": 0.0290678350321465,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 39.264713287353516,
+    "raio_min_do_arquivo_em_s": 2423.128101618375
+   },
+   {
+    "trecho": "C09",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 3.337006127155846,
+     "max": 4.8993053004321805
+    },
+    "raio_min_12m_m": 113.00991329473175,
+    "raio_min_em_s": 2580.0473662173904,
+    "raio_limite_m": 42.100936449619724,
+    "taxa_max": 0.000562793472498487,
+    "taxa_limite": 0.003684495389114527,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 112.49430847167969,
+    "raio_min_do_arquivo_em_s": 2581.577228067696
+   },
+   {
+    "trecho": "C10",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 2.413772324516972,
+     "max": 5.69214098541487
+    },
+    "raio_min_12m_m": 25.051531457549814,
+    "raio_min_em_s": 2730.050120067239,
+    "raio_limite_m": 15.100739120822931,
+    "taxa_max": 0.0026530575893213095,
+    "taxa_limite": 0.007857488433672215,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 25.04208755493164,
+    "raio_min_do_arquivo_em_s": 2728.958131441579
+   },
+   {
+    "trecho": "C11",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.919624400048205,
+     "max": 2.2090375099380526
+    },
+    "raio_min_12m_m": 92.21617716836755,
+    "raio_min_em_s": 2868.0526536090993,
+    "raio_limite_m": 29.582428702074917,
+    "taxa_max": 0.001232401895743338,
+    "taxa_limite": 0.005695513659882576,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 90.1006088256836,
+    "raio_min_do_arquivo_em_s": 2868.762343925544
+   },
+   {
+    "trecho": "C12",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.6334202074364392,
+     "max": 3.3280968445834356
+    },
+    "raio_min_12m_m": 39.36115656978583,
+    "raio_min_em_s": 3224.059189412739,
+    "raio_limite_m": 16.154685967546243,
+    "taxa_max": 0.001214065889692454,
+    "taxa_limite": 0.013938410116075047,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 39.0368537902832,
+    "raio_min_do_arquivo_em_s": 3222.725199541127
+   },
+   {
+    "trecho": "C13",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 1.940633514499027,
+     "max": 6.080101011095501
+    },
+    "raio_min_12m_m": 69.7999432651815,
+    "raio_min_em_s": 3262.059887054701,
+    "raio_limite_m": 39.78620807114217,
+    "taxa_max": 0.0007411995341167277,
+    "taxa_limite": 0.004085198401151286,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 69.45226287841797,
+    "raio_min_do_arquivo_em_s": 3264.710960638983
+   },
+   {
+    "trecho": "C14",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 6.2380133138706855,
+     "max": 8.631479414359138
+    },
+    "raio_min_12m_m": 142.17462140025702,
+    "raio_min_em_s": 3408.062567468553,
+    "raio_limite_m": 18.495211027832923,
+    "taxa_max": 0.000509513772021163,
+    "taxa_limite": 0.009949592716206887,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 136.0990753173828,
+    "raio_min_do_arquivo_em_s": 3407.9169013276046
+   },
+   {
+    "trecho": "C14->linha",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 2.249594895374271,
+     "max": 10.066735248607245
+    },
+    "raio_min_12m_m": 134.15069820208797,
+    "raio_min_em_s": 3898.071563378058,
+    "raio_limite_m": 47.781283841069445,
+    "taxa_max": 0.001226915770061479,
+    "taxa_limite": 0.006090933186094471,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 125.17615509033203,
+    "raio_min_do_arquivo_em_s": 3898.1412782301045
+   }
+  ],
+  "distancia_a_linha_da_ia_m": {
+   "mediana": 1.051856053698769,
+   "max": 10.066735248607245
+  }
+ },
+ "c0_nos_medidores": {
+  "M-real": {
+   "tempo_s": 85.31633710254042,
+   "contra_c0_s": 0.0
+  },
+  "M-cal": {
+   "tempo_s": 85.43830834784607,
+   "contra_c0_s": 0.0
+  },
+  "M-v2": {
+   "tempo_s": 86.55447212377837,
+   "contra_c0_s": 0.0
+  }
+ },
+ "tempo_s": 8.9
+}

@@ -5,6 +5,7 @@
     python -m ml.scripts.linha_do_projeto l1          [--handoff PREFIXO]
     python -m ml.scripts.linha_do_projeto l2          [--handoff PREFIXO]
     python -m ml.scripts.linha_do_projeto arquivos    [--handoff PREFIXO]
+    python -m ml.scripts.linha_do_projeto conferencia-sessao --rotulo sessao1
 
 * `conferencia`: a codificacao nova (item 4), com a escada do espacamento e a
   conferencia do item 4.5 na linha da IA e na volta `#0013`, mais os limites das
@@ -14,7 +15,9 @@
 * `l1`: a montagem por trecho (item 7);
 * `l2`: a busca nova (item 7), a partir da L1;
 * `arquivos`: os `fast_lane.ai` da L1 e da L2 em `data/pista_teste/linhas/`,
-  com o sha256 e a figura (B.3 e B.4).
+  com o sha256 e a figura (B.3 e B.4);
+* `conferencia-sessao`: so a conferencia da troca entre as sessoes no jogo,
+  sem nenhum tempo (Parte D).
 
 Tudo o que sai vai para `data/linha_do_projeto/` (fora do git). Nada aqui le a
 pasta do jogo: o arquivo da linha da IA vem de `data/pista_teste/linhas/C0`,
@@ -171,13 +174,15 @@ def conferencia(args) -> int:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("comando", choices=("conferencia", "medidor", "l1", "l2", "arquivos"))
+    parser.add_argument("comando", choices=("conferencia", "medidor", "l1", "l2", "arquivos", "conferencia-sessao"))
     parser.add_argument("--handoff", help="prefixo dos arquivos de handoff")
+    parser.add_argument("--rotulo", default="sessao1", help="conferencia-sessao: o nome do arquivo de saida")
     args = parser.parse_args(argv)
     if args.comando == "conferencia":
         return conferencia(args)
     from ml.scripts import linha_do_projeto_etapas as E
-    return {"medidor": E.medidor, "l1": E.l1, "l2": E.l2, "arquivos": E.arquivos}[args.comando](args)
+    return {"medidor": E.medidor, "l1": E.l1, "l2": E.l2, "arquivos": E.arquivos,
+            "conferencia-sessao": E.conferencia}[args.comando](args)
 
 
 if __name__ == "__main__":
