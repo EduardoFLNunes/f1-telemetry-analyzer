@@ -196,7 +196,7 @@ Este registro é commitado antes de qualquer conta nas gravações. O resultado 
 
 ## Resultado
 
-Escrito depois das contas, em 12/11, sem mudar nada acima. As contas são do commit `2457540b` (`python -m ml.scripts.modelo1_por_trecho` e `python -m ml.scripts.referencia_por_trecho`). As saídas estão em `docs/handoff/2026-11-11_49_modelo1-por-trecho_conta.json`, `_referencia.json` e `_por_trecho.png`, e o relatório tem as tabelas inteiras.
+Escrito depois das contas, em 12/11, sem mudar nada acima. As contas são do commit `686003de` (`python -m ml.scripts.modelo1_por_trecho` e `python -m ml.scripts.referencia_por_trecho`; as mesmas de `2457540b`, refeitas depois de o script passar a ler as sessões da cópia pelo `etapas.py`). As saídas estão em `docs/handoff/2026-11-11_49_modelo1-por-trecho_conta.json`, `_referencia.json` e `_por_trecho.png`, e o relatório tem as tabelas inteiras.
 
 ### A conferência
 
