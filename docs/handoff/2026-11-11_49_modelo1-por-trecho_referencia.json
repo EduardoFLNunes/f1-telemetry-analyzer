@@ -1,8 +1,8 @@
 {
  "pedido": 49,
  "adr": "docs/decisoes/0030-modelo1-por-trecho.md",
- "commit": "41a09840cd9bb36cd4028e355cfe7097719969ed",
- "commit_da_conta": "41a09840cd9bb36cd4028e355cfe7097719969ed",
+ "commit": "686003de3a1acd8250900b2d5ce81b3548e867d1",
+ "commit_da_conta": "686003de3a1acd8250900b2d5ce81b3548e867d1",
  "comando": "python -m ml.scripts.referencia_por_trecho",
  "geometry_id": "0ed16f0dd2225990",
  "corridor_id": "707d07029036abd6",
@@ -196,7 +196,7 @@
  "arquivos": {
   "conta": {
    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\modelo1_por_trecho\\conta.json",
-   "sha256": "6bb0ff7a5a1c9ccb9bfca112b86f45e121c065093a044cc45b4478202e9bb5a5"
+   "sha256": "abcf0ae555bed83c01d3c291b329f44a1ede1e00a8db4aeec4ff35b82f7ecf32"
   },
   "resultado_47": {
    "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\docs\\handoff\\2026-11-07_47_linha-gerada-no-jogo_resultado.json",

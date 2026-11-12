@@ -2,7 +2,7 @@
  "pedido": 49,
  "adr": "docs/decisoes/0030-modelo1-por-trecho.md",
  "parte": "B",
- "commit": "41a09840cd9bb36cd4028e355cfe7097719969ed",
+ "commit": "686003de3a1acd8250900b2d5ce81b3548e867d1",
  "comando": "python -m ml.scripts.modelo1_por_trecho",
  "ambiente": {
   "python": "3.9.7"
@@ -13889,5 +13889,5 @@
   "soma_das_medianas_do_c0_s": 85.43750019565664,
   "teto_menos_c0_s": -0.7256017580171061
  },
- "tempo_s": 46.7
+ "tempo_s": 47.3
 }
