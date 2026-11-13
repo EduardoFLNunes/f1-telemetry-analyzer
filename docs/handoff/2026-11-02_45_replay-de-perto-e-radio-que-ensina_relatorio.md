@@ -1,7 +1,7 @@
 # Relatório do pedido 45: o replay de perto, as voltas nos boxes e o rádio que diz onde e por quê
 
 - **Pedido:** `docs/prompts/2026-11-02_45_replay-de-perto-e-radio-que-ensina.md`, com as suas decisões de 04/11 (item B.1) e de 12/11 (o resumo e o "contra quem").
-- **Situação (12/11, 22:49):** **fechado, com o merge em `develop` (`16cdf04d`), a seu pedido, durante o teste no jogo.** O resultado desse teste ainda não está aqui: ele entra quando você mandar as anotações (seção "12/11, 22:49"). O envio é você quem faz: os comandos estão no fim.
+- **Situação (12/11, 23:19):** **fechado, com o merge em `develop` (`16cdf04d`), a seu pedido, durante o teste no jogo.** O teste de 22:56 está na seção "12/11, 22:56 a 23:19": o rádio falou 14 vezes dentro do limite e dizendo contra quem, e o "Abrir no app" funcionou no jogo. As suas quatro sugestões estão em "As suas sugestões do teste de 12/11". O envio é você quem faz: os comandos estão no fim.
 - **Branch:** `etapa/replay-e-radio-que-ensina`, a partir de `develop` em `bd04b93e`.
 - **Merge:** `16cdf04d` Merge do pedido 45: o radio que diz onde e por que, o replay de perto e os boxes (ADR 0027; decisoes do Eduardo de 12/11; merge pedido durante o teste no jogo). Feito numa pasta à parte (`f1-telemetry-analyzer-merge45`), para não mexer nos arquivos do app aberto para o teste. Um conflito, no índice dos ADRs (`docs/decisoes/README.md`): ficaram as linhas dos dois lados, a 0027 antes da 0028.
 - **Commits:**
@@ -217,12 +217,54 @@ As 4 sessões de novo, pelo mesmo caminho do C.6 (`radio_depois.py`), com o cód
 - **O front, o Electron e o app do jogo** não mudaram em `develop` desde `bd04b93e`: valem os resultados desta branch (180 testes do front, `tsc` sem erro, a conferência do Lua).
 - **A suíte inteira com os dados de verdade** roda na pasta principal quando ela passar para `develop`, depois do seu teste (hoje o app aberto está nela).
 
+## 12/11, 22:56 a 23:19: o teste no jogo, com o rádio falando
+
+**O teste aconteceu:** o jogo abriu às 22:56, com o app do jogo **0.5.1** na pasta do jogo e o app do Windows do repositório (`b5cd47f2`, a referência padrão, a volta da IA). A gravação é `2026-11-12_22-57-03_vhe_interlagos`, em `data/recordings`. Às 23:19, o jogo continuava aberto.
+
+**As voltas** (pela lista do rádio): 1 incompleta (2:33,804, a saída dos boxes); 2, 3, 5 e 8 válidas (1:31,341, 1:31,023, 1:29,389 e **1:27,962**, a melhor); 4, 6 e 9 com rodada; 7 incompleta (1:32,299).
+
+**O que o rádio disse** (14 falas além do teste, **nenhuma acima do limite**, todas dizendo contra quem):
+
+| volta | origem | fala | s / limite |
+|---|---|---|---|
+| 2 | coach | "Curva 11, esquerda: 5 décimos atrás da IA." | 3,52 / 7,3 |
+| 2 | resumo | "Melhor volta da sessão. Curva 10: 1,1 segundo, passou 7 metros por fora no ápice." | 6,64 / 8,0 |
+| 3 | resumo | "Melhor volta da sessão, 3 décimos mais rápida. Curva 1: 8 décimos, freou 34 metros antes da IA." | 7,70 / 8,0 |
+| 4 | resumo | "Volta com rodada: 2 minutos e 39,1 segundos, 68,0 segundos atrás da melhor da sessão." | 7,72 / 8,0 |
+| 5 | resumo | "Melhor volta da sessão, 1,6 segundo mais rápida. Curva 1: 1,1 segundo." | 6,32 / 8,0 |
+| 4 | coach | "Curva 11, esquerda: 8 décimos atrás da IA. Mínima 29 quilômetros por hora abaixo da IA." | 6,77 / 7,3 |
+| 6 | resumo | "Volta com rodada: 1 minuto e 48,7 segundos, 19,3 segundos atrás da melhor da sessão." | 7,47 / 8,0 |
+| 5 | análise | "Análise das voltas 2, 3 e 5. Curva 1: perde 9 décimos por volta. Freou 22 metros antes da IA." | 8,53 / 8,8 |
+| 7 | resumo | "2,9 segundos atrás da melhor da sessão, 7,5 segundos atrás da IA." | 5,75 / 8,0 |
+| 6 | coach | "Curva 12: 1,0 segundo atrás da IA. Mínima 54 quilômetros por hora abaixo da IA." | 6,89 / 7,3 |
+| 8 | resumo | "Melhor volta da sessão, 1,4 segundo mais rápida. Curva 1: 7 décimos." | 6,23 / 8,0 |
+| 8 | curva | "Curva 1: 7 décimos, freou 38 metros antes da IA." | 4,23 / 7,3 |
+| 9 | resumo | "Volta com rodada: 1 minuto e 40,0 segundos, 12,1 segundos atrás da melhor da sessão." | 6,72 / 8,0 |
+
+- **A voz tocou:** o backend entregou 15 áudios, e o log do CSP tem 14 "voz: url tocou" (o 15º é o da mensagem de teste das 22:50, antes de o jogo abrir). Nenhum "Rádio sem voz".
+- **"Abrir no app" funcionou no jogo:** o log do CSP diz "abrir no app, volta 8: aberto no app do Windows", e o backend recebeu o pedido (`POST /api/radio/abrir-no-app`, 200) e entregou a volta 8 (`/api/radio/replay-da-volta/8`, duas vezes).
+- **Os boxes:** a janela do replay abriu sozinha nas duas idas aos boxes (no começo e às 23:13) e voltou como estava na saída. A lista foi pedida 97 vezes.
+- **Nenhum erro:** nenhum erro de Lua, nenhum "different loop" e nenhum erro grave no backend.
+- **A roda do mouse** não deixa registro no log: só você pode dizer se o zoom funcionou.
+- **O FPS:** média de 85,3 com o replay ligado (138 medidas de 10 s, a pior 43,7). **De novo, nenhuma medida com o replay desligado durante as voltas**, então o custo do replay continua sem medida.
+- **A janela do replay com 32 × 32** aparece de novo no log, logo depois de carregar.
+
+## As suas sugestões do teste de 12/11
+
+Você mandou quatro pontos novos. São trabalho novo, fora do que o pedido 45 pediu; ficam registrados aqui e no backlog para virar pedido:
+
+1. **As cores no replay dos boxes:** amarelo para perda, verde para ganho e roxo quando você foi melhor que a IA, como nas telas de cronometragem. Só as cores, sem a marca de ninguém.
+2. **Os controles do replay no app do Windows:** pausar e tocar, avançar e voltar 1 quadro, ir para a próxima curva, e a velocidade de 0,5 a 2,0x.
+3. **O coach explicando a volta:** um texto que conta o que aconteceu na volta e onde melhorar, escrito por um modelo de linguagem a partir das medidas que o rádio já tem.
+4. **Os nomes das curvas:** a opção de dizer "S do Senna", "Curva do Sol", "Pinheirinho" no lugar de "Curva 1". Hoje o projeto tem uma regra de nomes técnicos (C01 a C14, `docs/dashboard_visoes.md`), e só dois nomes estão ligados a um código (C01, o S do Senna; C10, o Bico de Pato). Antes, precisa da tabela das 14 curvas com o nome popular de cada uma, conferida na geometria.
+
 ## O que precisa de você
 
-1. **As anotações do teste de 12/11:** a tabela da Parte G, se puder.
+1. **As anotações do teste de 12/11,** se quiser: a roda do mouse e se a janela do replay apareceu pequena.
 2. **Decisão (backlog):** o limite de 8,0 s não trouxe causas novas, porque as palavras novas custam o mesmo tempo. 8,3 s, ou "Melhor da sessão"?
-3. **O envio:** os comandos estão no fim.
-4. **A pasta à parte do merge** (`f1-telemetry-analyzer-merge45`): eu a removo depois do envio, com o seu ok.
+3. **As quatro sugestões:** viram um pedido novo.
+4. **O envio:** os comandos estão no fim.
+5. **A pasta à parte do merge** (`f1-telemetry-analyzer-merge45`): eu a removo depois do envio, com o seu ok.
 
 ## O que este pedido ainda não prova
 
