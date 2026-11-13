@@ -4,7 +4,7 @@
 - **Situação:** **parado na Parte D,** com o roteiro do teste no jogo pronto para você.
   - As Partes 0, A, B e C estão feitas.
   - A conferência da codificação (A.4) parou uma vez. Você escolheu a emenda (a), que entrou no ADR 0031 antes de seguir.
-  - **Nada foi enviado ao GitHub.** O envio do pedido 49 ainda não foi feito, e este pedido espera por ele (veja "O envio").
+  - **Nada foi enviado ao GitHub por esta sessão.** Em 13/11, o `develop` remoto já tinha o 49, e tentei o envio da branch deste pedido. O controle de permissões recusou, e os comandos estão em "O envio".
 - **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47`.
 - **Branch:** `etapa/linha-do-projeto`, a partir de `develop` em `e873d6a6`.
 - **Commits:**
@@ -402,7 +402,7 @@ A cópia fica instalada até você rodar o `remover_copia.ps1`.
 
 ## Os dados da pasta principal
 
-**Nada foi escrito nos dados da principal.** A foto de `data\ml`, `data\cache` e `dataecordings` (932 arquivos: nome, tamanho e data) foi tirada antes das contas da Parte B e de novo depois da suíte, **sem nenhuma diferença.** As duas fotos estão em `data\linha_do_projetooto_antes.tsv` e `foto_depois.tsv`, fora do git.
+**Nada foi escrito nos dados da principal.** A foto de `data\ml`, `data\cache` e `data\recordings` (932 arquivos: nome, tamanho e data) foi tirada antes das contas da Parte B e de novo depois da suíte, **sem nenhuma diferença.** As duas fotos estão em `data\linha_do_projeto\foto_antes.tsv` e `foto_depois.tsv`, fora do git.
 
 ## O envio
 
