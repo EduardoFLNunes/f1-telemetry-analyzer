@@ -134,6 +134,8 @@ export const api = {
     (await client.get('/api/live/volta/novos', { params: { versao: versao ?? undefined, desde: desde ?? undefined }, timeout: 2_000 })).data,
   /** Pedido 36: os dados do replay da curva de uma mensagem (`/api/radio/replay/<id>`). */
   getRadioReplay: async (caminho: string): Promise<any> => (await client.get(caminho, { timeout: 10_000 })).data,
+  /** Pedido 45 (B.2): o número do jogo de cada volta do store, o mesmo do rádio. */
+  getNumerosDoStore: async (): Promise<Record<string, number>> => (await client.get('/api/store/numeros', { timeout: 10_000 })).data,
   /** Pedido 43 (C.4): a grade da sessão, a perda por curva das voltas válidas (`/api/radio/grade`). */
   getRadioGrade: async (): Promise<any> => (await client.get('/api/radio/grade', { timeout: 5_000 })).data,
   /** O endereço completo do áudio de uma mensagem (`/api/radio/audio/<id>`). */

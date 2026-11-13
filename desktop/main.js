@@ -29,7 +29,7 @@ const BACKEND_EXE_NAME = process.platform === 'win32' ? 'automobilista-backend.e
 // to `_internal`, instead of unpacking ~0.37 GB into %TEMP% on every start.
 const BACKEND_DIR_NAME = 'automobilista-backend';
 const EXPECTED_BACKEND_SERVICE = 'automobilista-telemetria-backend';
-const EXPECTED_BACKEND_VERSION = 'visuais-do-radio';
+const EXPECTED_BACKEND_VERSION = 'radio-que-ensina';
 const WINDOW_ICON_NAME = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
 const ASSETTO_PLUGIN_ID = 'ac_opponents_exporter';
 const ASSETTO_PLUGIN_DISPLAY_NAME = 'Opponents Exporter';
@@ -1139,6 +1139,16 @@ async function runProjectUpdate(event) {
 ipcMain.handle('backend:health', backendHealth);
 ipcMain.handle('desktop:runtime', desktopRuntimeStatus);
 ipcMain.handle('desktop:open-logs', openLogsDir);
+// Pedido 45 (E.6): o botao "Abrir no app", na janela do jogo. O Windows pode so piscar a barra de tarefas
+// (ele so deixa roubar o foco de quem esta na frente em alguns casos): isso nao e erro.
+ipcMain.handle('janela:trazer-para-a-frente', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return { ok: false };
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+  mainWindow.flashFrame(!mainWindow.isFocused());
+  return { ok: true, focada: mainWindow.isFocused() };
+});
 ipcMain.handle('version:status', versionStatus);
 ipcMain.handle('update:run', (event) => runProjectUpdate(event));
 ipcMain.handle('assetto:detect', detectAssettoCorsaInstallPaths);

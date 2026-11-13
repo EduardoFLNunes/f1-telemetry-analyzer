@@ -71,6 +71,7 @@ contextBridge.exposeInMainWorld('desktopRuntime', {
 
 contextBridge.exposeInMainWorld('automobilistaDesktop', {
   backendHealth: () => ipcRenderer.invoke('backend:health'),
+  trazerParaAFrente: () => ipcRenderer.invoke('janela:trazer-para-a-frente'),
   runtimeStatus: () => ipcRenderer.invoke('desktop:runtime'),
   // `fetch: true` vai ate o remoto antes de contar; sem isso a contagem e
   // contra o que foi puxado da ultima vez, que e o numero que o usuario esta

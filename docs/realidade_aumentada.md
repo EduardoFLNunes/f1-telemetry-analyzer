@@ -32,6 +32,8 @@ A voz diz a curva, a diferença e a causa principal, quando o `evidence` do coac
   3. abaixo dos dois cortes, a voz não diz causa.
 - **exemplos:**
 
+  *Medidos antes do pedido 45, com as palavras de então ("Freia", "Mínima de", "Passa"). As palavras de hoje estão nas seções 2.2 e 2.6; a duração nova de cada variante está no relatório do pedido 45.*
+
   | cartão | fala | dura |
   |---|---|---|
   | C12, esquerda · +1,87 s para a volta da IA no microssetor 44 · a IA freia 54 m depois de você | "Curva 12: 1,9 segundo atrás da IA. Freia 54 metros antes da IA." | 6,2 s |
@@ -41,14 +43,29 @@ O cartão continua com todos os números (os dois tempos, a freada e a mínima).
 
 ### 2.2 O resumo na linha
 
-O tempo da volta (o período de s = 0 a s = 0, que o coach mede como o store v2), a diferença para a referência escolhida e a curva em que a volta mais perdeu, com a perda:
+**Pedido 45 (ADR 0027):** o resumo diz onde e por quê. Pela ordem de importância:
+
+1. a diferença para a melhor volta da sessão ("atrás da melhor da sessão"); ou "melhor volta da sessão", com o quanto ela foi mais rápida; ou "recorde pessoal", se bater a melhor de todas as sessões do store, para o carro e a pista;
+2. a curva da volta, com a perda e a causa;
+3. a diferença para a referência escolhida: "da IA" (o padrão) ou "do seu recorde" (a sua melhor volta limpa do store);
+4. a diferença para a anterior, só quando a volta melhorou sem ser a melhor;
+5. o tempo. O cartão sempre traz o tempo e todos os números.
+
+As variantes vão da mais completa à mais curta e perdem os itens de baixo para cima; fica a primeira que cabe em 8,0 s (decisão do Eduardo de 12/11; era 7,7 s). **Toda diferença diz contra quem** (mesma decisão): "Melhor volta da sessão, 2,5 segundos atrás do seu recorde."
 
 | cartão | fala | dura |
 |---|---|---|
-| Volta 8: 1:29,059 · +4,230 s para a volta da IA (1:24,829) · mais perdeu na C01, esquerda: +0,75 s | "Volta 8: 4,2 segundos atrás da IA. Mais perdeu na curva 1: 7 décimos." | 6,7 s |
-| Volta 4: 1:40,073 · +15,244 s para a volta da IA (1:24,829) | "Volta 4: 1 minuto e 40,1 segundos, 15,2 segundos atrás da IA." | 6,0 s |
+| Volta 7: 1:29,432 · melhor volta, −0,168 s · +4,603 s para a volta da IA (1:24,829) · mais perdeu na C01, esquerda: +0,77 s; na mínima, +0,41 s; passou 7,5 m por fora no ápice | "Melhor volta, 2 décimos mais rápida. Curva 1: 8 décimos, passou 8 metros por fora no ápice." | 7,33 s |
+| Volta 11: 2:39,687 · +70,255 s para a sua melhor (1:29,432) · +74,857 s para a volta da IA (1:24,829) · volta com rodada: fora da análise | "Volta com rodada: 2 minutos e 39,7 segundos, 70,3 segundos atrás da sua melhor." | 7,41 s |
 
-A curva que mais perdeu só entra numa volta completa (com todos os microssetores medidos): numa volta com parada, "mais perdeu na curva 1: 66,4" é verdade, mas não ajuda.
+Os dois são de 01/11, com a voz de verdade e as palavras de antes de 12/11 ("Melhor volta", "da sua melhor"). **O que cabe:** pela ordem de importância, a diferença para a IA é a primeira a sair quando a curva precisa caber. Com o limite de 8,0 s, os números de cada sessão estão no relatório do pedido 45.
+
+- **A melhor volta** é a mais rápida da sessão entre as que contam para a análise.
+- **A curva e a causa** só entram numa volta que conta: completa pela regra do coach, com as medidas e sem rodada. A volta da IA continua calada.
+- **A regra "boxes" do coach** (a lateral acima de 10 m, abaixo de 90 km/h) só vale no pit lane desde o pedido 45: em Interlagos, os microssetores 54 a 59 e 0 a 10. Antes, uma saída larga em qualquer ponto da pista deixava a volta incompleta.
+- **O porquê:** o trecho da curva (freada, mínima ou saída) com a maior parte da perda, pelas separações da diferença acumulada do pedido 43; a causa é a medida desse trecho, se ela passar do corte (ADR 0027). Sem medida acima do corte, a voz diz só o trecho: "perdeu 3 décimos na saída".
+- **A curva que não cabe** vai numa mensagem própria (`origem: curva`), no fim da fila. Se o carro passar pela curva antes de achar uma janela, a mensagem sai da fila.
+- **O replay do resumo:** a curva citada, com o trecho da causa marcado.
 
 ### 2.3 A análise das voltas
 
@@ -71,14 +88,16 @@ A curva que mais perdeu só entra numa volta completa (com todos os microssetore
   A volta do piloto é a grade que a volta ao vivo guarda, com a projeção que o coach já faz; a referência é a volta do store v2. Nenhuma conta de física nova.
 - **O que vai na fala:** as diferenças que mais pesam, até 2 por curva. O peso é a diferença dividida pelo corte da medida (seção 2.4); só entra o que passa do corte. Se a fala não couber em cerca de 8 s, sai a variante mais curta (seção 2.5).
 - **Como cada diferença é falada:** uma frase, como na frase do coach, com a unidade e contra quem (seção 2.6):
-  - "Freia 46 metros antes da IA.";
-  - "Mínima de 102 contra 128 quilômetros por hora.";
-  - "Acelera 14 metros depois da IA.";
-  - "Passa 8 metros mais à direita que a IA.": de 2 m para cima, o número inteiro; abaixo de 2 m, com a vírgula e no singular ("1,8 metro").
+  - "Freou 46 metros antes da IA.";
+  - "Mínima 26 quilômetros por hora abaixo da IA.";
+  - "Acelerou 14 metros depois da IA.";
+  - "Passou 8 metros por fora no ápice.": de 2 m para cima, o número inteiro; abaixo de 2 m, com a vírgula e no singular ("1,8 metro").
 
-  Contra a sua melhor volta, "da sua melhor" e "que a sua melhor".
+  Contra a sua melhor volta (a referência "minha melhor"), "do seu recorde" (era "da sua melhor" até 12/11). Se couber, a análise começa pela tendência: "Média 9 décimos mais lenta que as 3 anteriores." (pedido 45).
 - **O cartão:** as curvas com todos os números, uma linha por curva.
 - **Exemplos:**
+
+  *Medidos antes do pedido 45, com as palavras de então ("Freia", "Mínima de", "Passa"). As palavras de hoje estão nas seções 2.2 e 2.6; a duração nova de cada variante está no relatório do pedido 45.*
 
   | sessão | cartão | fala | dura |
   |---|---|---|---|
@@ -103,7 +122,7 @@ Na análise, vale a mediana de 3 voltas, que varia menos que uma volta: o corte 
 ### 2.5 Quanto cabe em cada janela
 
 - **A voz a 1,4x** (era 1,25x no pedido 31): os números falados por extenso faziam a frase com a causa, o resumo com a curva e a análise passarem de 6, 7 e 8 s. Não estava no pedido 35 e ficou registrada como desvio no relatório dele. **O Eduardo aprovou a 1,4x em 22/10** (pedido 36).
-- **As variantes:** cada mensagem traz a fala da mais completa à mais curta. O rádio gera o áudio e fica com a primeira que cabe no limite do tipo: 7,3 s (frase do coach), 7,7 s (resumo) e 8,8 s (análise). Eram os 6, 7 e 8 s do pedido 35 com 10% de folga; a frase do coach subiu de 6,6 para 7,3 s no pedido 36, decisão do Eduardo, para a causa com a unidade caber (seção 2.6).
+- **As variantes:** cada mensagem traz a fala da mais completa à mais curta. O rádio gera o áudio e fica com a primeira que cabe no limite do tipo: 7,3 s (frase do coach), 7,7 s (resumo; 8,0 s desde 12/11, pedido 45) e 8,8 s (análise). Eram os 6, 7 e 8 s do pedido 35 com 10% de folga; a frase do coach subiu de 6,6 para 7,3 s no pedido 36, decisão do Eduardo, para a causa com a unidade caber (seção 2.6).
 - **A entrega:** só quando a fala inteira cabe no que resta da janela, pela velocidade do carro, com 0,3 s de folga.
 - **Nas duas sessões** (todas as falas couberam no que restava da janela):
 
@@ -128,9 +147,10 @@ Todo número falado tem a sua unidade (`backend/core/radio/texto.py`):
 | tempo de 1 s para cima | uma casa, "segundo" no singular abaixo de 2 | "1,2 segundo", "5,4 segundos" |
 | tempo da volta | minutos e segundos | "1 minuto e 29,1 segundos", "2 minutos e 8,2 segundos" |
 | distância | o inteiro; abaixo de 2 m, uma casa e no singular | "46 metros", "1,8 metro" |
-| mínima | as duas velocidades e a unidade uma vez, no fim | "Mínima de 102 contra 128 quilômetros por hora." |
+| mínima | a diferença, com a unidade (pedido 45) | "Mínima 26 quilômetros por hora abaixo da IA." |
+| velocidade na saída | a diferença, com a unidade (pedido 45) | "saiu 8 quilômetros por hora mais lento" |
 
-- **Contra quem:** a diferença diz a referência ("atrás da IA", "antes da IA", "que a IA"; "da sua melhor" contra a sua melhor volta). Sem espaço, sai ("Freia 15 metros antes.").
+- **Contra quem:** a diferença diz a referência ("atrás da IA", "antes da IA", "que a IA"; "do seu recorde" contra a sua melhor volta, desde 12/11). Sem espaço, sai ("Freia 15 metros antes.").
 - **A ordem do corte,** quando a fala não cabe no limite do tipo (seção 2.5): **a unidade nunca sai.**
   - na frase do coach: sai o lado da curva, depois o "contra quem" e, por último, a causa;
   - na análise: sai a segunda curva, depois a abertura encurta ("Voltas 16 a 18."), depois a segunda causa, o "contra quem", a abertura inteira e, por último, a primeira causa.
@@ -283,7 +303,7 @@ Pedido depois do primeiro teste no jogo (21/10): a vista de perto da tela Volta 
   - **o fantasma,** com "IA" ou "Sua melhor". Fora da janela, ele vira uma seta na borda, apontando para onde está;
   - **o carro,** "Você · V<n>", com o número da volta do jogo;
   - **a diferença,** a mesma do minimapa, numa faixa escura no alto;
-  - **a freada da IA** (pedido 36): em todas as curvas que aparecem na janela, uma linha atravessando o asfalto, um pouco além das bordas, com o rótulo "freada da IA" ("freada da sua melhor", contra a sua melhor volta). O ponto é o mesmo do minimapa. O seu traçado mostra onde você freou: o vermelho começa ali.
+  - **a freada da IA** (pedido 36): em todas as curvas que aparecem na janela, uma linha atravessando o asfalto, um pouco além das bordas, com o rótulo "freada da IA" ("freada do seu recorde", contra a sua melhor volta, desde 12/11). O ponto é o mesmo do minimapa. O seu traçado mostra onde você freou: o vermelho começa ali.
 - **A conferência fora do jogo:** uma prévia em HTML repete as contas do app (a câmera, a imagem girada, os traçados e as marcas), com a referência da IA e instantes reais da sessão de 18/10:
   - **na saída da reta dos boxes,** a pintura amarela dos boxes fica à esquerda, como na tela Volta;
   - **na freada da C04,** o carro e os dois traçados ficam dentro do asfalto, e a curva vira para a esquerda.
@@ -377,6 +397,31 @@ O engenheiro mostra o que diz: quando o rádio fala de uma curva, a janela mostr
 - **montar o replay no backend:** a mediana foi de 3,4 para 4,3 ms numa frase do coach e de 3,9 para 7,4 ms numa análise, uma vez, na entrega;
 - **no jogo:** a cada quadro, enquanto o replay está na tela, mais 3 linhas de 120 a 200 pontos, os trechos do pedal e as áreas da diferença. **No teste de 01/11** (CSP 0.3.1, 2.560 × 1.080), com as 4 janelas ligadas, 98,3 FPS de média (153 blocos de 10 s, de 55,1 a 107,2); com o replay desligado, 108,4 (48 blocos); com tudo desligado, 126,9 (2 blocos). Nos 5 blocos com o replay na tela, 99,3, contra cerca de 101,5 nos vizinhos. O custo de ter a janela aberta não saiu limpo, porque o FPS varia muito ao longo da sessão.
 
+#### 5.4.2 O replay de perto, os boxes e o botão (pedido 45)
+
+**A câmera** (`cameraDaCurva` no app do jogo e `cameraDePerto` na tela Ao vivo, a mesma conta):
+
+- **acompanha os carros:** o centro fica entre "você" e a referência, com 80 m no lado menor da área. Com 80 m, um carro de 4,5 m fica com cerca de 15 px numa janela de 300 px. A orientação continua a de antes (a entrada para cima), fixa durante a curva;
+- **o começo:** a curva inteira por 1 s, parada na entrada, e 0,8 s de aproximação;
+- **os dois carros sempre na tela:** se eles se afastam mais que a janela, a câmera se afasta o necessário, no máximo até a curva inteira, onde os dois sempre cabem;
+- **o trecho da causa ou da fala** fica marcado na pista e passa na metade da velocidade, quando o tempo deixar. Na reta, o replay continua acabando com a janela de rádio (`restaS`); se a curva não couber, ele começa um pouco antes do trecho;
+- **a roda do mouse** muda o zoom, de 50 a 400 m, como no mapa aproximado. Sobre a lista, ela rola a lista;
+- **os rótulos** continuam sem se sobrepor. A marca fora da tela não ganha rótulo: os números da voz ficam no alto (`textoDaVoz`).
+
+**Os boxes** (nos boxes ou com o jogo pausado):
+
+- **a janela abre sozinha,** mesmo desligada, cresce 2 vezes e volta como estava na saída. Quem vigia é um `setInterval`: uma janela desligada não é chamada;
+- **a lista:** todas as voltas da sessão, com o número, o tempo (M:SS,mmm), a diferença para a melhor e o estado, com o motivo: válida, com rodada, da IA ou incompleta. A lista rola;
+- **a grade é o caminho para o replay:** um clique numa célula toca a curva; um clique na volta toca a volta inteira, com a célula da curva acesa, e um clique numa curva pula para ela. As voltas com rodada também tocam, com o aviso "fora da análise: rodada". As da IA ficam fora;
+- **a volta que não começou na linha** (a saída dos boxes, o carro movido) entra na lista e toca, com o tempo corrido do cronômetro do jogo. Ela não tem resumo, fica fora da análise e não mostra a diferença para a melhor, porque esse tempo inclui as paradas. Com o carro movido no meio da volta, fica o pedaço que mediu mais pontos;
+- **sem volta fechada,** a janela diz "nenhuma volta fechada nesta sessão".
+
+**O botão "Abrir no app":** o app do jogo só faz o pedido ao backend local (`POST /api/radio/abrir-no-app`), e o backend avisa o app do Windows pelo WebSocket que já existe (`abrir_replay`). Nada de protocolo registrado, pacote novo ou arquivo na pasta do jogo. O app abre a tela Ao vivo com o replay grande, com os 4 visuais e, se a volta já estiver no store, o caminho para a tela Volta. Sem nenhuma janela do app ligada, o botão diz "o app do Windows está fechado". A janela pede para vir para a frente; o Windows pode só piscar a barra de tarefas.
+
+**O minimapa** mostra também a diferença ao vivo para a melhor volta da sessão, quando ela existe (`GET /api/radio/melhor`).
+
+**O app do jogo 0.5.0 com o backend do 0.5.0 e do 0.6.0:** sem `/api/radio/voltas` (404), a janela fica como antes, com a última análise e a grade; sem `melhorVolta`, o minimapa fica com a diferença de sempre.
+
 ### 5.5 Instalar, ligar e remover
 
 O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
@@ -436,6 +481,21 @@ O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
 | `GET /api/radio/minimapa` | a pista simplificada, a volta de referência com o tempo e o pedal, o alinhamento da linha do jogo, o nome das 14 curvas e as curvas da última análise (pedido 35); desde o pedido 36, a freada da referência em cada curva (`referencia.freadas`) |
 | `GET /api/radio/replay/{id}` | os dados do replay da curva de uma mensagem entregue (pedido 36); 404 sem replay. Desde o pedido 43, os dados dos visuais e, na frase do coach, os números da voz e o trecho da fala |
 | `GET /api/radio/grade` | a grade da sessão (pedido 43): a perda por curva das voltas válidas, as voltas de fora com o motivo e as curvas citadas |
+| `GET /api/radio/voltas` | todas as voltas da sessão (pedido 45): o tempo, a diferença para a melhor, o estado com o motivo, a perda por curva e se tem replay |
+| `GET /api/radio/replay-da-volta/{volta}?curva=C01` | o replay de qualquer volta ou curva da sessão, no formato de `/replay/{id}` (pedido 45); sem `curva`, a volta inteira; 404 sem os pontos da volta |
+| `GET /api/radio/melhor` | a melhor volta da sessão, em pontos, para a diferença no minimapa (pedido 45) |
+| `POST /api/radio/abrir-no-app` | o pedido do botão da janela do jogo (pedido 45): avisa o app do Windows pelo WebSocket; diz se ele está fechado |
+| `GET /api/store/numeros` | o número do jogo de cada volta do store, para a tela Volta usar o mesmo número do rádio (pedido 45) |
 | `GET /api/live/volta` | a volta em andamento inteira, na grade oficial |
 | `GET /api/live/volta/novos?versao=<v>&desde=<seq>` | só os pontos novos e a posição do carro (pedido 35); a volta inteira só numa volta nova |
 | `POST /api/teste/reproduzir`, `POST /api/teste/parar`, `GET /api/teste/estado` | só nos testes (`AT_TESTE_REPRODUTOR=1`): toca uma gravação pelo caminho do jogo, para medir a tela Ao vivo sem o jogo |
+
+## 8. A pesquisa do que o rádio diz (pedido 45)
+
+Como engenheiros e coaches falam com o piloto: curto e direto, na reta, um número e um alvo, uma correção por vez. "0,8 s mais lento no setor 2" não diz o que fazer; "freando cedo demais na curva 5" diz. A decisão e as fontes estão no ADR 0027:
+
+- Autosport, "The secrets of in-race radio chat": https://www.autosport.com/f1/news/the-secrets-of-in-race-radio-chat-5102490/5102490/
+- Formula1.com, "FIA clarifies radio transmission restrictions" (2014): https://www.formula1.com/en/latest/article/fia-clarifies-radio-transmission-restrictions.4uSbLsruNnnmXXDqUjh7yV
+- RACER, 18/03/2016: https://racer.com/2016/03/18/f1-radio-coaching-intolerable-whiting/
+- Coach Dave Academy, "How to use Auto Insights (AI coaching) in Delta": https://coachdaveacademy.com/documentation/how-to-use-auto-insights-ai-coaching-in-delta/
+- Trophi.ai, "Mansell": https://www.trophi.ai/sim-racing-features/mansell

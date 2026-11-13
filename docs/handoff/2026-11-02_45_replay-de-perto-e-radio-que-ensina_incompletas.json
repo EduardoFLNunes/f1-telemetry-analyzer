@@ -1,0 +1,1828 @@
+{
+ "2026-10-13_19-24-10_vhe_interlagos": {
+  "hoje": [
+   {
+    "volta": 2,
+    "tempoS": 90.154,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 3,
+    "tempoS": 109.183,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     19,
+     32,
+     33
+    ],
+    "motivos": {
+     "19": {
+      "motivo": "boxes",
+      "lateralM": 13.8,
+      "kmh": 25.7,
+      "noPitLane": false
+     },
+     "32": {
+      "motivo": "boxes",
+      "lateralM": 20.3,
+      "kmh": 37.4,
+      "noPitLane": false
+     },
+     "33": {
+      "motivo": "parado",
+      "kmh": 1.8
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 4,
+    "tempoS": 128.163,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     31
+    ],
+    "motivos": {
+     "31": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 5,
+    "tempoS": 95.99,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     30,
+     31,
+     32,
+     36,
+     37,
+     38
+    ],
+    "motivos": {
+     "30": {
+      "motivo": "boxes",
+      "lateralM": 25.6,
+      "kmh": 80.9,
+      "noPitLane": false
+     },
+     "31": {
+      "motivo": "boxes",
+      "lateralM": 43.5,
+      "kmh": 59.1,
+      "noPitLane": false
+     },
+     "32": {
+      "motivo": "boxes",
+      "lateralM": 29.8,
+      "kmh": 55.6,
+      "noPitLane": false
+     },
+     "36": {
+      "motivo": "boxes",
+      "lateralM": 50.0,
+      "kmh": 85.2,
+      "noPitLane": false
+     },
+     "38": {
+      "motivo": "boxes",
+      "lateralM": 15.7,
+      "kmh": 77.4,
+      "noPitLane": false
+     }
+    },
+    "semMotivo": [
+     37
+    ]
+   },
+   {
+    "volta": 6,
+    "tempoS": 92.514,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 7,
+    "tempoS": 90.363,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 8,
+    "tempoS": 90.23,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 9,
+    "tempoS": 93.12,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     31,
+     32
+    ],
+    "motivos": {
+     "31": {
+      "motivo": "boxes",
+      "lateralM": 40.3,
+      "kmh": 56.4,
+      "noPitLane": false
+     },
+     "32": {
+      "motivo": "boxes",
+      "lateralM": 25.6,
+      "kmh": 46.0,
+      "noPitLane": false
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 10,
+    "tempoS": 89.767,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 11,
+    "tempoS": 165.313,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     35,
+     36,
+     37,
+     38,
+     40,
+     55,
+     56,
+     57,
+     58,
+     59
+    ],
+    "motivos": {
+     "35": {
+      "motivo": "parado",
+      "kmh": 4.0
+     },
+     "36": {
+      "motivo": "boxes",
+      "lateralM": 49.9,
+      "kmh": 25.0,
+      "noPitLane": false
+     },
+     "38": {
+      "motivo": "boxes",
+      "lateralM": 25.0,
+      "kmh": 24.3,
+      "noPitLane": false
+     },
+     "40": {
+      "motivo": "boxes",
+      "lateralM": 10.9,
+      "kmh": 20.7,
+      "noPitLane": false
+     },
+     "55": {
+      "motivo": "boxes",
+      "lateralM": 30.2,
+      "kmh": 75.9,
+      "noPitLane": true
+     },
+     "56": {
+      "motivo": "boxes",
+      "lateralM": 29.2,
+      "kmh": 75.5,
+      "noPitLane": true
+     },
+     "57": {
+      "motivo": "boxes",
+      "lateralM": 17.6,
+      "kmh": 79.8,
+      "noPitLane": true
+     },
+     "58": {
+      "motivo": "boxes",
+      "lateralM": 16.4,
+      "kmh": 62.6,
+      "noPitLane": true
+     },
+     "59": {
+      "motivo": "boxes",
+      "lateralM": 16.0,
+      "kmh": 63.9,
+      "noPitLane": true
+     }
+    },
+    "semMotivo": [
+     37
+    ]
+   },
+   {
+    "volta": 12,
+    "tempoS": 168.154,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8
+    ],
+    "motivos": {
+     "0": {
+      "motivo": "boxes",
+      "lateralM": 15.3,
+      "kmh": 79.9,
+      "noPitLane": true
+     },
+     "1": {
+      "motivo": "boxes",
+      "lateralM": 15.3,
+      "kmh": 79.6,
+      "noPitLane": true
+     },
+     "2": {
+      "motivo": "boxes",
+      "lateralM": 21.4,
+      "kmh": 32.4,
+      "noPitLane": true
+     },
+     "3": {
+      "motivo": "parado",
+      "kmh": 0.0
+     },
+     "4": {
+      "motivo": "boxes",
+      "lateralM": 31.1,
+      "kmh": 50.4,
+      "noPitLane": true
+     },
+     "5": {
+      "motivo": "boxes",
+      "lateralM": 39.8,
+      "kmh": 79.8,
+      "noPitLane": true
+     },
+     "6": {
+      "motivo": "boxes",
+      "lateralM": 39.3,
+      "kmh": 79.9,
+      "noPitLane": true
+     },
+     "7": {
+      "motivo": "boxes",
+      "lateralM": 34.5,
+      "kmh": 79.9,
+      "noPitLane": true
+     },
+     "8": {
+      "motivo": "boxes",
+      "lateralM": 24.3,
+      "kmh": 80.0,
+      "noPitLane": true
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 13,
+    "tempoS": 90.928,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 14,
+    "tempoS": 91.696,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   }
+  ],
+  "proposta": [
+   {
+    "volta": 2,
+    "tempoS": 90.154,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 3,
+    "tempoS": 109.183,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     33
+    ],
+    "motivos": {
+     "33": {
+      "motivo": "parado",
+      "kmh": 1.8
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 4,
+    "tempoS": 128.163,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     31
+    ],
+    "motivos": {
+     "31": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 5,
+    "tempoS": 95.99,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     37
+    ],
+    "motivos": {},
+    "semMotivo": [
+     37
+    ]
+   },
+   {
+    "volta": 6,
+    "tempoS": 92.514,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 7,
+    "tempoS": 90.363,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 8,
+    "tempoS": 90.23,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 9,
+    "tempoS": 93.12,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 10,
+    "tempoS": 89.767,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 11,
+    "tempoS": 165.313,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     35,
+     37,
+     55,
+     56,
+     57,
+     58,
+     59
+    ],
+    "motivos": {
+     "35": {
+      "motivo": "parado",
+      "kmh": 4.0
+     },
+     "55": {
+      "motivo": "boxes",
+      "lateralM": 30.2,
+      "kmh": 75.9,
+      "noPitLane": true
+     },
+     "56": {
+      "motivo": "boxes",
+      "lateralM": 29.2,
+      "kmh": 75.5,
+      "noPitLane": true
+     },
+     "57": {
+      "motivo": "boxes",
+      "lateralM": 17.6,
+      "kmh": 79.8,
+      "noPitLane": true
+     },
+     "58": {
+      "motivo": "boxes",
+      "lateralM": 16.4,
+      "kmh": 62.6,
+      "noPitLane": true
+     },
+     "59": {
+      "motivo": "boxes",
+      "lateralM": 16.0,
+      "kmh": 63.9,
+      "noPitLane": true
+     }
+    },
+    "semMotivo": [
+     37
+    ]
+   },
+   {
+    "volta": 12,
+    "tempoS": 168.154,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8
+    ],
+    "motivos": {
+     "0": {
+      "motivo": "boxes",
+      "lateralM": 15.3,
+      "kmh": 79.9,
+      "noPitLane": true
+     },
+     "1": {
+      "motivo": "boxes",
+      "lateralM": 15.3,
+      "kmh": 79.6,
+      "noPitLane": true
+     },
+     "2": {
+      "motivo": "boxes",
+      "lateralM": 21.4,
+      "kmh": 32.4,
+      "noPitLane": true
+     },
+     "3": {
+      "motivo": "parado",
+      "kmh": 0.0
+     },
+     "4": {
+      "motivo": "boxes",
+      "lateralM": 31.1,
+      "kmh": 50.4,
+      "noPitLane": true
+     },
+     "5": {
+      "motivo": "boxes",
+      "lateralM": 39.8,
+      "kmh": 79.8,
+      "noPitLane": true
+     },
+     "6": {
+      "motivo": "boxes",
+      "lateralM": 39.3,
+      "kmh": 79.9,
+      "noPitLane": true
+     },
+     "7": {
+      "motivo": "boxes",
+      "lateralM": 34.5,
+      "kmh": 79.9,
+      "noPitLane": true
+     },
+     "8": {
+      "motivo": "boxes",
+      "lateralM": 24.3,
+      "kmh": 80.0,
+      "noPitLane": true
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 13,
+    "tempoS": 90.928,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 14,
+    "tempoS": 91.696,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   }
+  ]
+ },
+ "2026-10-18_12-38-44_vhe_interlagos": {
+  "hoje": [
+   {
+    "volta": 2,
+    "tempoS": 93.294,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 3,
+    "tempoS": 90.269,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 4,
+    "tempoS": 100.073,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     30,
+     31,
+     32
+    ],
+    "motivos": {
+     "30": {
+      "motivo": "boxes",
+      "lateralM": 24.3,
+      "kmh": 89.7,
+      "noPitLane": false
+     },
+     "31": {
+      "motivo": "boxes",
+      "lateralM": 40.0,
+      "kmh": 42.3,
+      "noPitLane": false
+     },
+     "32": {
+      "motivo": "boxes",
+      "lateralM": 25.9,
+      "kmh": 30.3,
+      "noPitLane": false
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 6,
+    "tempoS": 105.367,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     30,
+     31,
+     32
+    ],
+    "motivos": {
+     "30": {
+      "motivo": "boxes",
+      "lateralM": 27.3,
+      "kmh": 47.8,
+      "noPitLane": false
+     },
+     "31": {
+      "motivo": "parado",
+      "kmh": 0.0
+     },
+     "32": {
+      "motivo": "boxes",
+      "lateralM": 34.4,
+      "kmh": 16.7,
+      "noPitLane": false
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 7,
+    "tempoS": 90.828,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 8,
+    "tempoS": 89.059,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 9,
+    "tempoS": 90.401,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 10,
+    "tempoS": 159.748,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     19,
+     20,
+     36,
+     37,
+     38,
+     45
+    ],
+    "motivos": {
+     "19": {
+      "motivo": "boxes",
+      "lateralM": 57.6,
+      "kmh": 37.7,
+      "noPitLane": false
+     },
+     "20": {
+      "motivo": "parado",
+      "kmh": 0.0
+     },
+     "36": {
+      "motivo": "boxes",
+      "lateralM": 49.8,
+      "kmh": 82.0,
+      "noPitLane": false
+     },
+     "38": {
+      "motivo": "boxes",
+      "lateralM": 17.2,
+      "kmh": 76.5,
+      "noPitLane": false
+     },
+     "45": {
+      "motivo": "boxes",
+      "lateralM": 12.3,
+      "kmh": 81.1,
+      "noPitLane": false
+     }
+    },
+    "semMotivo": [
+     37
+    ]
+   },
+   {
+    "volta": 11,
+    "tempoS": 104.317,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     20
+    ],
+    "motivos": {
+     "20": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 12,
+    "tempoS": 89.346,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 13,
+    "tempoS": 93.309,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 14,
+    "tempoS": 89.884,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 15,
+    "tempoS": 89.713,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   }
+  ],
+  "proposta": [
+   {
+    "volta": 2,
+    "tempoS": 93.294,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 3,
+    "tempoS": 90.269,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 4,
+    "tempoS": 100.073,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 6,
+    "tempoS": 105.367,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     31
+    ],
+    "motivos": {
+     "31": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 7,
+    "tempoS": 90.828,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 8,
+    "tempoS": 89.059,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 9,
+    "tempoS": 90.401,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 10,
+    "tempoS": 159.748,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     20,
+     37
+    ],
+    "motivos": {
+     "20": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": [
+     37
+    ]
+   },
+   {
+    "volta": 11,
+    "tempoS": 104.317,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     20
+    ],
+    "motivos": {
+     "20": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 12,
+    "tempoS": 89.346,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 13,
+    "tempoS": 93.309,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 14,
+    "tempoS": 89.884,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 15,
+    "tempoS": 89.713,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   }
+  ]
+ },
+ "2026-10-21_20-30-54_vhe_interlagos": {
+  "hoje": [
+   {
+    "volta": 2,
+    "tempoS": 136.194,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     4,
+     5,
+     30,
+     34
+    ],
+    "motivos": {
+     "4": {
+      "motivo": "boxes",
+      "lateralM": 14.5,
+      "kmh": 76.4,
+      "noPitLane": true
+     },
+     "5": {
+      "motivo": "boxes",
+      "lateralM": 14.3,
+      "kmh": 73.7,
+      "noPitLane": true
+     },
+     "30": {
+      "motivo": "parado",
+      "kmh": 0.0
+     },
+     "34": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 3,
+    "tempoS": 104.987,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     20
+    ],
+    "motivos": {
+     "20": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 4,
+    "tempoS": 94.332,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     36,
+     37,
+     38
+    ],
+    "motivos": {
+     "28": {
+      "motivo": "boxes",
+      "lateralM": 18.3,
+      "kmh": 42.7,
+      "noPitLane": false
+     },
+     "29": {
+      "motivo": "boxes",
+      "lateralM": 35.0,
+      "kmh": 43.5,
+      "noPitLane": false
+     },
+     "30": {
+      "motivo": "boxes",
+      "lateralM": 49.7,
+      "kmh": 55.4,
+      "noPitLane": false
+     },
+     "32": {
+      "motivo": "boxes",
+      "lateralM": 30.0,
+      "kmh": 64.2,
+      "noPitLane": false
+     },
+     "33": {
+      "motivo": "boxes",
+      "lateralM": 14.5,
+      "kmh": 69.0,
+      "noPitLane": false
+     },
+     "36": {
+      "motivo": "boxes",
+      "lateralM": 49.5,
+      "kmh": 82.8,
+      "noPitLane": false
+     },
+     "38": {
+      "motivo": "boxes",
+      "lateralM": 16.2,
+      "kmh": 77.7,
+      "noPitLane": false
+     }
+    },
+    "semMotivo": [
+     31,
+     37
+    ]
+   },
+   {
+    "volta": 5,
+    "tempoS": 115.447,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 6,
+    "tempoS": 114.296,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     19
+    ],
+    "motivos": {
+     "19": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 7,
+    "tempoS": 94.494,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     33,
+     34
+    ],
+    "motivos": {
+     "33": {
+      "motivo": "boxes",
+      "lateralM": 13.6,
+      "kmh": 44.1,
+      "noPitLane": false
+     },
+     "34": {
+      "motivo": "boxes",
+      "lateralM": 12.7,
+      "kmh": 66.8,
+      "noPitLane": false
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 9,
+    "tempoS": 90.792,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 10,
+    "tempoS": 89.518,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     38
+    ],
+    "motivos": {
+     "38": {
+      "motivo": "boxes",
+      "lateralM": 11.0,
+      "kmh": 81.9,
+      "noPitLane": false
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 11,
+    "tempoS": 88.116,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 12,
+    "tempoS": 103.199,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     29
+    ],
+    "motivos": {
+     "29": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 13,
+    "tempoS": 88.329,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 14,
+    "tempoS": 90.5,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     5
+    ],
+    "motivos": {
+     "5": {
+      "motivo": "boxes",
+      "lateralM": 12.7,
+      "kmh": 89.1,
+      "noPitLane": true
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 16,
+    "tempoS": 90.18,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 17,
+    "tempoS": 88.539,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 18,
+    "tempoS": 86.875,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 19,
+    "tempoS": 138.008,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     21,
+     57,
+     58,
+     59
+    ],
+    "motivos": {
+     "21": {
+      "motivo": "boxes",
+      "lateralM": 21.6,
+      "kmh": 65.4,
+      "noPitLane": false
+     },
+     "57": {
+      "motivo": "boxes",
+      "lateralM": 20.1,
+      "kmh": 74.2,
+      "noPitLane": true
+     },
+     "58": {
+      "motivo": "boxes",
+      "lateralM": 12.3,
+      "kmh": 56.2,
+      "noPitLane": true
+     },
+     "59": {
+      "motivo": "boxes",
+      "lateralM": 23.7,
+      "kmh": 45.7,
+      "noPitLane": true
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 20,
+    "tempoS": 197.412,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     31,
+     45
+    ],
+    "motivos": {
+     "0": {
+      "motivo": "boxes",
+      "lateralM": 25.4,
+      "kmh": 43.5,
+      "noPitLane": true
+     },
+     "1": {
+      "motivo": "boxes",
+      "lateralM": 25.8,
+      "kmh": 57.6,
+      "noPitLane": true
+     },
+     "2": {
+      "motivo": "boxes",
+      "lateralM": 25.7,
+      "kmh": 49.1,
+      "noPitLane": true
+     },
+     "3": {
+      "motivo": "parado",
+      "kmh": 0.0
+     },
+     "4": {
+      "motivo": "boxes",
+      "lateralM": 31.3,
+      "kmh": 44.5,
+      "noPitLane": true
+     },
+     "5": {
+      "motivo": "boxes",
+      "lateralM": 40.8,
+      "kmh": 50.0,
+      "noPitLane": true
+     },
+     "31": {
+      "motivo": "parado",
+      "kmh": 0.0
+     },
+     "45": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   }
+  ],
+  "proposta": [
+   {
+    "volta": 2,
+    "tempoS": 136.194,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     4,
+     5,
+     34
+    ],
+    "motivos": {
+     "4": {
+      "motivo": "boxes",
+      "lateralM": 14.5,
+      "kmh": 76.4,
+      "noPitLane": true
+     },
+     "5": {
+      "motivo": "boxes",
+      "lateralM": 14.3,
+      "kmh": 73.7,
+      "noPitLane": true
+     },
+     "34": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 3,
+    "tempoS": 104.987,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     20
+    ],
+    "motivos": {
+     "20": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 4,
+    "tempoS": 94.332,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     31,
+     37
+    ],
+    "motivos": {},
+    "semMotivo": [
+     31,
+     37
+    ]
+   },
+   {
+    "volta": 5,
+    "tempoS": 115.447,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 6,
+    "tempoS": 114.296,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     19
+    ],
+    "motivos": {
+     "19": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 7,
+    "tempoS": 94.494,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 9,
+    "tempoS": 90.792,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 10,
+    "tempoS": 89.518,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 11,
+    "tempoS": 88.116,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 12,
+    "tempoS": 103.199,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     29
+    ],
+    "motivos": {
+     "29": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 13,
+    "tempoS": 88.329,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 14,
+    "tempoS": 90.5,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     5
+    ],
+    "motivos": {
+     "5": {
+      "motivo": "boxes",
+      "lateralM": 12.7,
+      "kmh": 89.1,
+      "noPitLane": true
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 16,
+    "tempoS": 90.18,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 17,
+    "tempoS": 88.539,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 18,
+    "tempoS": 86.875,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 19,
+    "tempoS": 138.008,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     57,
+     58,
+     59
+    ],
+    "motivos": {
+     "57": {
+      "motivo": "boxes",
+      "lateralM": 20.1,
+      "kmh": 74.2,
+      "noPitLane": true
+     },
+     "58": {
+      "motivo": "boxes",
+      "lateralM": 12.3,
+      "kmh": 56.2,
+      "noPitLane": true
+     },
+     "59": {
+      "motivo": "boxes",
+      "lateralM": 23.7,
+      "kmh": 45.7,
+      "noPitLane": true
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 20,
+    "tempoS": 197.412,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     31,
+     45
+    ],
+    "motivos": {
+     "0": {
+      "motivo": "boxes",
+      "lateralM": 25.4,
+      "kmh": 43.5,
+      "noPitLane": true
+     },
+     "1": {
+      "motivo": "boxes",
+      "lateralM": 25.8,
+      "kmh": 57.6,
+      "noPitLane": true
+     },
+     "2": {
+      "motivo": "boxes",
+      "lateralM": 25.7,
+      "kmh": 49.1,
+      "noPitLane": true
+     },
+     "3": {
+      "motivo": "parado",
+      "kmh": 0.0
+     },
+     "4": {
+      "motivo": "boxes",
+      "lateralM": 31.3,
+      "kmh": 44.5,
+      "noPitLane": true
+     },
+     "5": {
+      "motivo": "boxes",
+      "lateralM": 40.8,
+      "kmh": 50.0,
+      "noPitLane": true
+     },
+     "31": {
+      "motivo": "parado",
+      "kmh": 0.0
+     },
+     "45": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   }
+  ]
+ },
+ "2026-11-01_19-47-03_vhe_interlagos": {
+  "hoje": [
+   {
+    "volta": 2,
+    "tempoS": 93.481,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 5,
+    "tempoS": 91.709,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 6,
+    "tempoS": 89.6,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 7,
+    "tempoS": 89.432,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 8,
+    "tempoS": 96.399,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 10,
+    "tempoS": 145.967,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     21
+    ],
+    "motivos": {
+     "21": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 11,
+    "tempoS": 159.687,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     3,
+     4,
+     5
+    ],
+    "motivos": {
+     "3": {
+      "motivo": "parado",
+      "kmh": 0.0
+     },
+     "4": {
+      "motivo": "boxes",
+      "lateralM": 29.7,
+      "kmh": 49.0,
+      "noPitLane": true
+     },
+     "5": {
+      "motivo": "boxes",
+      "lateralM": 43.6,
+      "kmh": 87.8,
+      "noPitLane": true
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 12,
+    "tempoS": 91.559,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 13,
+    "tempoS": 137.368,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     33
+    ],
+    "motivos": {
+     "33": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   }
+  ],
+  "proposta": [
+   {
+    "volta": 2,
+    "tempoS": 93.481,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 5,
+    "tempoS": 91.709,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 6,
+    "tempoS": 89.6,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 7,
+    "tempoS": 89.432,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 8,
+    "tempoS": 96.399,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 10,
+    "tempoS": 145.967,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     21
+    ],
+    "motivos": {
+     "21": {
+      "motivo": "parado",
+      "kmh": 0.0
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 11,
+    "tempoS": 159.687,
+    "completa": false,
+    "ia": false,
+    "semMedida": [
+     3,
+     4,
+     5
+    ],
+    "motivos": {
+     "3": {
+      "motivo": "parado",
+      "kmh": 0.0
+     },
+     "4": {
+      "motivo": "boxes",
+      "lateralM": 29.7,
+      "kmh": 49.0,
+      "noPitLane": true
+     },
+     "5": {
+      "motivo": "boxes",
+      "lateralM": 43.6,
+      "kmh": 87.8,
+      "noPitLane": true
+     }
+    },
+    "semMotivo": []
+   },
+   {
+    "volta": 12,
+    "tempoS": 91.559,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   },
+   {
+    "volta": 13,
+    "tempoS": 137.368,
+    "completa": true,
+    "ia": false,
+    "semMedida": [],
+    "motivos": {},
+    "semMotivo": []
+   }
+  ]
+ }
+}

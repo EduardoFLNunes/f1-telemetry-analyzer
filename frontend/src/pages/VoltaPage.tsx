@@ -41,7 +41,7 @@ import {
   tempoEm,
   valorEm,
 } from '../volta/medidas';
-import { nf, nomeDaSessao, numeroDaVolta, sg, tempo } from '../volta/formato';
+import { guardarNumerosDoJogo, nf, nomeDaSessao, numeroDaVolta, sg, tempo } from '../volta/formato';
 import { EixoDeDistancia, GraficoPorDistancia } from '../volta/Graficos';
 import { MapaMicrossetores } from '../volta/MapaMicrossetores';
 import { TabelaDasCurvas } from '../volta/TabelaDasCurvas';
@@ -80,6 +80,9 @@ export const VoltaPage: React.FC<{ sub: string | null; navegar: (tela: Tela, sub
   const [referencia, setReferencia] = useState<Referencia>('ia');
 
   const sessoes = relatorio.dado?.sessoes ?? [];
+  // Pedido 45 (B.2): um número só para cada volta, o do jogo, antes de escrever os números desta tela.
+  const numeros = useLeitura('numeros-do-store', () => api.getNumerosDoStore());
+  if (numeros.dado) guardarNumerosDoJogo(numeros.dado);
   const lapId = useMemo(() => {
     if (sub && sub.includes('#')) return sub;
     if (!sessoes.length) return null;

@@ -10,6 +10,10 @@
   desde o pedido 43, os dos visuais e os numeros da voz na frase do coach.
 * `GET /api/radio/grade`: a grade da sessao, as voltas validas por curva (pedido 43, C.4).
 * `GET /api/radio/estado`: as janelas, a voz e o que esta esperando.
+* Pedido 45: `GET /api/radio/voltas` (todas as voltas da sessao, com o estado e o motivo),
+  `GET /api/radio/replay-da-volta/{volta}?curva=C01` (o replay de qualquer volta ou curva),
+  `GET /api/radio/melhor` (a melhor volta, para o minimapa) e `POST /api/radio/abrir-no-app`
+  (o app do jogo pede, e o backend avisa o app do Windows pelo WebSocket que ja existe).
 * `GET /api/radio/minimapa`: a pista simplificada, a volta de referencia e as curvas da
   ultima analise, para o minimapa do app do jogo (pedido 35, Parte E).
 * `GET /api/live/volta`: a volta em andamento inteira (pedido 31, Parte D).
@@ -20,7 +24,7 @@ import asyncio
 import json
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 from fastapi.responses import FileResponse, Response
 
 import main
@@ -62,6 +66,51 @@ async def get_grade():
     """Pedido 43, C.4: a grade da sessao (a perda por curva das voltas validas, as que ficaram fora
     e as curvas citadas), para a tela Ao vivo e a janela do replay nos boxes."""
     return _json(_radio().grade_da_sessao())
+
+
+def _clientes_do_app() -> int:
+    """Quantas janelas do app do Windows estao ligadas ao WebSocket (pedido 45, E.6)."""
+    from core.websocket_server import manager
+
+    return len(manager.active_connections)
+
+
+@router.get("/voltas")
+async def get_voltas():
+    """Pedido 45 (E.2): todas as voltas da sessao, para a janela do replay nos boxes."""
+    return _json({**_radio().voltas_da_sessao(), "appDoWindowsAberto": _clientes_do_app() > 0})
+
+
+@router.get("/replay-da-volta/{volta}")
+async def get_replay_da_volta(volta: int, curva: Optional[str] = None):
+    """Pedido 45 (E.3): o replay de qualquer volta e de qualquer curva da sessao."""
+    dados = await asyncio.to_thread(_radio().replay_da_volta, volta, curva)
+    if dados is None:
+        raise HTTPException(status_code=404, detail="volta sem replay")
+    dados["voltaNoStore"] = main._volta_no_store_do_radio(_radio()._sessao_da_analise, dados["curvas"][0].get("tempoDaVoltaS"))
+    return _json(dados)
+
+
+@router.get("/melhor")
+async def get_melhor():
+    """Pedido 45 (C.4): a melhor volta da sessao, para a diferenca ao vivo no minimapa."""
+    return _json(await asyncio.to_thread(_radio().melhor_da_sessao))
+
+
+@router.post("/abrir-no-app")
+async def post_abrir_no_app(corpo: dict = Body(...)):
+    """Pedido 45 (E.6): o app do jogo pede; o backend avisa o app do Windows pelo WebSocket que ja existe.
+    Sem nenhuma janela ligada, a resposta diz isso, e o botao tambem."""
+    from core.websocket_server import manager
+
+    volta = corpo.get("volta")
+    if volta is None:
+        raise HTTPException(status_code=400, detail="falta a volta")
+    clientes = _clientes_do_app()
+    if clientes == 0:
+        return {"entregue": False, "motivo": "o app do Windows está fechado"}
+    await manager.broadcast({"type": "abrir_replay", "data": {"volta": int(volta), "curva": corpo.get("curva")}})
+    return {"entregue": True, "clientes": clientes}
 
 
 @router.post("/teste")
