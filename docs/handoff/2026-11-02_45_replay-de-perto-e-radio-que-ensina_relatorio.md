@@ -1,7 +1,7 @@
 # Relatório do pedido 45: o replay de perto, as voltas nos boxes e o rádio que diz onde e por quê
 
 - **Pedido:** `docs/prompts/2026-11-02_45_replay-de-perto-e-radio-que-ensina.md`, com as suas decisões de 04/11 (item B.1) e de 12/11 (o resumo e o "contra quem").
-- **Situação (12/11, 23:19):** **fechado, com o merge em `develop` (`16cdf04d`), a seu pedido, durante o teste no jogo.** O teste de 22:56 está na seção "12/11, 22:56 a 23:19": o rádio falou 14 vezes dentro do limite e dizendo contra quem, e o "Abrir no app" funcionou no jogo. As suas quatro sugestões estão em "As suas sugestões do teste de 12/11". O envio é você quem faz: os comandos estão no fim.
+- **Situação (12/11, 23:19):** **fechado, com o merge em `develop` (`16cdf04d`), a seu pedido, durante o teste no jogo.** O teste de 22:56 está na seção "12/11, 22:56 a 23:19": o rádio falou 14 vezes dentro do limite e dizendo contra quem, e o "Abrir no app" funcionou no jogo. As suas quatro sugestões estão em "As suas sugestões do teste de 12/11". **Em 13/11:** você enviou `develop` (o remoto ficou em `4c7bcbae`), a pasta à parte foi removida, a pasta principal passou para `develop` e a suíte do backend com os dados de verdade deu **1014 passando** (seção "13/11: o envio, a pasta em `develop` e a suíte inteira").
 - **Branch:** `etapa/replay-e-radio-que-ensina`, a partir de `develop` em `bd04b93e`.
 - **Merge:** `16cdf04d` Merge do pedido 45: o radio que diz onde e por que, o replay de perto e os boxes (ADR 0027; decisoes do Eduardo de 12/11; merge pedido durante o teste no jogo). Feito numa pasta à parte (`f1-telemetry-analyzer-merge45`), para não mexer nos arquivos do app aberto para o teste. Um conflito, no índice dos ADRs (`docs/decisoes/README.md`): ficaram as linhas dos dois lados, a 0027 antes da 0028.
 - **Commits:**
@@ -25,7 +25,8 @@
   - `5a17b570` a suite do backend com as decisoes de 12/11 (935 passando);
   - `43686100` o teste no jogo antes do merge;
   - `b5cd47f2` o aviso de 14:48 repetido, sem teste novo no jogo; merge nao feito;
-  - em `develop`, depois do merge: o commit deste relatório e da documentação de fechamento.
+  - em `develop`, depois do merge: o commit deste relatório e da documentação de fechamento; `4c7bcbae` o teste no jogo de 12/11 e as suas sugestões no backlog (enviado por você em 13/11);
+  - em `develop`, em 13/11: o commit que registra o envio e a suíte inteira (o hash está no chat; um commit não sabe o próprio hash).
 - **Arquivos de handoff** (`docs/handoff/2026-11-02_45_replay-de-perto-e-radio-que-ensina…`):
   - `_relatorio.md` (este);
   - `_radio_antes_e_depois.json` (o C.6: as 4 sessões, fala a fala, com a voz de verdade);
@@ -215,7 +216,7 @@ As 4 sessões de novo, pelo mesmo caminho do C.6 (`radio_depois.py`), com o cód
 - **Os 4 erros são de ambiente,** todos em `tests/test_ml_service.py`. A pasta à parte não tem os arquivos que o git não guarda: `data/cache/tracks/vhe_interlagos_gp_kn5_surface_interval_geometry.json` e `data/ml/vehicle_envelope.json`. Copiei os dois só para ela, sem mudar os originais. Com eles, o arquivo de testes dá **4 passando e 2 pulados**.
 - **Os 41 pulados** são testes que pedem artefatos de `data/` ("artefatos de data/ml ausentes; rode o pipeline antes"), que a pasta à parte não tem.
 - **O front, o Electron e o app do jogo** não mudaram em `develop` desde `bd04b93e`: valem os resultados desta branch (180 testes do front, `tsc` sem erro, a conferência do Lua).
-- **A suíte inteira com os dados de verdade** roda na pasta principal quando ela passar para `develop`, depois do seu teste (hoje o app aberto está nela).
+- **A suíte inteira com os dados de verdade** roda na pasta principal quando ela passar para `develop`, depois do seu teste (hoje o app aberto está nela). **Feito em 13/11:** 1014 passando, nenhum erro (seção "13/11").
 
 ## 12/11, 22:56 a 23:19: o teste no jogo, com o rádio falando
 
@@ -263,8 +264,9 @@ Você mandou quatro pontos novos. São trabalho novo, fora do que o pedido 45 pe
 1. **As anotações do teste de 12/11,** se quiser: a roda do mouse e se a janela do replay apareceu pequena.
 2. **Decisão (backlog):** o limite de 8,0 s não trouxe causas novas, porque as palavras novas custam o mesmo tempo. 8,3 s, ou "Melhor da sessão"?
 3. **As quatro sugestões:** viram um pedido novo.
-4. **O envio:** os comandos estão no fim.
-5. **A pasta à parte do merge** (`f1-telemetry-analyzer-merge45`): eu a removo depois do envio, com o seu ok.
+4. **O envio deste commit de 13/11:** `develop` fica um commit à frente do remoto (comando no fim).
+
+O envio de `4c7bcbae` e a remoção da pasta à parte já foram feitos em 13/11.
 
 ## O que este pedido ainda não prova
 
@@ -542,3 +544,16 @@ Me avise quando rodar, para eu conferir o hash remoto. Se pedir login, se recusa
 Nos commits de `bbff5c97` (o `develop` remoto) até `16cdf04d`: 70 arquivos; o maior é `…_previa_camera.png`, com 1,27 MB (nada acima de 50 MB); nenhum arquivo em `recordings/`, `data/recordings` ou `data/ml`; nenhum segredo (procurei tokens do GitHub, chaves e senhas no texto da diferença). O commit deste relatório só muda documentos.
 
 **O que está aberto para o teste:** o app do Windows pelo repositório (backend na porta 8000). Ele fica aberto até você terminar; depois, feche pelo próprio app.
+
+## 13/11: o envio, a pasta em `develop` e a suíte inteira
+
+- **O envio de `develop`:** as duas primeiras tentativas não chegaram (o remoto continuou em `bbff5c97`, e o registro local não tinha nenhum envio de `develop` depois de 11/11, 20:03). A terceira deu `bbff5c97..4c7bcbae  develop -> develop`, e o `ls-remote` confirmou `4c7bcbae` no remoto, igual ao local. A branch do pedido segue em `b5cd47f2` nos dois lados.
+- **A pasta à parte** (`f1-telemetry-analyzer-merge45`) foi removida com o seu ok. Fora do git, ela só tinha os dois arquivos copiados para os testes do merge, idênticos aos da pasta principal (conferi o hash de cada um), então nada se perdeu.
+- **A pasta principal em `develop`:** sem trava do git, sem mudança solta e sem processo rodando dela antes da troca. Ficou em `4c7bcbae`, igual a `origin/develop`.
+- **A suíte do backend com os dados de verdade,** em `4c7bcbae`: **1014 passando**, nenhum pulado e nenhum erro, 37 avisos do scikit-learn (os mesmos de antes), em 9 min 38 s. A suíte não mudou nenhum arquivo da pasta. A diferença para os 935 da branch são os testes dos pedidos 46 a 49, que já estavam em `develop`. Os 4 erros e os 41 pulados da pasta à parte não aparecem aqui: eram os arquivos de `data/` que só a pasta principal tem.
+
+**O envio deste commit,** quando quiser (avanço simples a partir de `4c7bcbae`, só documento):
+
+```powershell
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer push origin develop
+```
