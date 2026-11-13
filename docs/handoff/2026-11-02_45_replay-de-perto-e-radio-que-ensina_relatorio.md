@@ -211,7 +211,11 @@ As 4 sessões de novo, pelo mesmo caminho do C.6 (`radio_depois.py`), com o cód
 
 ### Os testes do merge
 
-(preenchido abaixo)
+- **A suíte do backend em `16cdf04d`,** na pasta à parte: **969 passando, 41 pulados, 4 erros** (11 min 27 s).
+- **Os 4 erros são de ambiente,** todos em `tests/test_ml_service.py`. A pasta à parte não tem os arquivos que o git não guarda: `data/cache/tracks/vhe_interlagos_gp_kn5_surface_interval_geometry.json` e `data/ml/vehicle_envelope.json`. Copiei os dois só para ela, sem mudar os originais. Com eles, o arquivo de testes dá **4 passando e 2 pulados**.
+- **Os 41 pulados** são testes que pedem artefatos de `data/` ("artefatos de data/ml ausentes; rode o pipeline antes"), que a pasta à parte não tem.
+- **O front, o Electron e o app do jogo** não mudaram em `develop` desde `bd04b93e`: valem os resultados desta branch (180 testes do front, `tsc` sem erro, a conferência do Lua).
+- **A suíte inteira com os dados de verdade** roda na pasta principal quando ela passar para `develop`, depois do seu teste (hoje o app aberto está nela).
 
 ## O que precisa de você
 
