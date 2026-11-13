@@ -25,18 +25,19 @@ O **Automobilista Telemetria** é um app de Windows (Electron e backend em Pytho
 
 ## 2. Onde está cada alteração
 
-| alteração | 0.5.0 instalada (`825ef60d`, 25/10) | `develop` (a 0.6.0) |
+| alteração | 0.7.0 instalada (`60d3f9e7`, 07/11) | `develop` (a 0.7.0, depois do merge do pedido 45) |
 |---|---|---|
 | Rádio com análise, voz com unidades e replay da curva (pedidos 33 a 36) | sim | sim |
-| Limpeza do código sem uso e defeitos do backlog (pedido 40), como o corte no reinício e o cache da pista | **não** | sim |
-| M1, fora do app (pedidos 37 e 39) | **não** | sim |
-| Números da voz, 4 visuais e grade da sessão (pedido 43) | **não** | sim |
-| O rádio que diz onde e por quê, o replay de perto, os boxes e o botão "Abrir no app" (pedido 45) | **não** | sim, depois do teste no jogo |
+| Limpeza do código sem uso e defeitos do backlog (pedido 40), como o corte no reinício e o cache da pista | sim | sim |
+| M1, fora do app (pedidos 37 e 39) | sim | sim |
+| Números da voz, 4 visuais e grade da sessão (pedido 43) | sim | sim |
+| O rádio que diz onde e por quê, o replay de perto, os boxes e o botão "Abrir no app" (pedido 45) | sim, sem as decisões de 12/11 (o resumo em 8,0 s e "contra quem") | sim |
+| A voz no app instalado (o `voz.ps1` no pacote, pedido 45) | sim | sim |
 | Modelo 2, fora do app (pedido 38, sem a H.4) | sim | sim |
-| Número da versão do app do Windows | `0.5.0-radio-e-replay` | `0.7.0-radio-que-ensina` |
-| App do jogo que acompanha | 0.4.0 | 0.4.2 |
+| Número da versão do app do Windows | `0.7.0-radio-que-ensina` | `0.7.0-radio-que-ensina` |
+| App do jogo que acompanha | 0.5.0 | 0.5.1 |
 
-**`develop` tem tudo o que a 0.5.0 tinha e mais.** As alterações estão centralizadas desde 01/11.
+**`develop` tem tudo o que a 0.7.0 instalada tem e mais.** O que os pedidos 46 a 49 fizeram (a M1 v2 e o Modelo 1) fica fora do app. As alterações estão centralizadas desde 01/11.
 
 ## 3. O que falta para a próxima versão
 

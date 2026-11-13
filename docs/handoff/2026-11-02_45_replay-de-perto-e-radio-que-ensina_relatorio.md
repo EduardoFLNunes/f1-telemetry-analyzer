@@ -1,8 +1,9 @@
-# Relatório parcial do pedido 45: o replay de perto, as voltas nos boxes e o rádio que diz onde e por quê
+# Relatório do pedido 45: o replay de perto, as voltas nos boxes e o rádio que diz onde e por quê
 
-- **Pedido:** `docs/prompts/2026-11-02_45_replay-de-perto-e-radio-que-ensina.md`, com a sua decisão de 04/11 no item B.1.
-- **Situação (12/11, 14:49):** **as suas quatro decisões estão aplicadas; você decidiu testar no jogo antes do merge.** Às 14:48 chegou de novo o mesmo aviso de 09:27, com o mesmo texto e sem as anotações. Às 14:49, o jogo não tinha aberto desde 09/11 às 15:16, a pasta do jogo continuava com o app do jogo 0.5.0 (a 0.5.1 não foi instalada), e não havia gravação nem fala do rádio nova. Por isso o merge não foi feito. Os registros não mostram o teste do rádio depois da correção da voz, e as anotações não vieram (seção "12/11"). Sem merge em `develop`. O envio é você quem faz: os comandos estão no fim.
+- **Pedido:** `docs/prompts/2026-11-02_45_replay-de-perto-e-radio-que-ensina.md`, com as suas decisões de 04/11 (item B.1) e de 12/11 (o resumo e o "contra quem").
+- **Situação (12/11, 22:49):** **fechado, com o merge em `develop` (`16cdf04d`), a seu pedido, durante o teste no jogo.** O resultado desse teste ainda não está aqui: ele entra quando você mandar as anotações (seção "12/11, 22:49"). O envio é você quem faz: os comandos estão no fim.
 - **Branch:** `etapa/replay-e-radio-que-ensina`, a partir de `develop` em `bd04b93e`.
+- **Merge:** `16cdf04d` Merge do pedido 45: o radio que diz onde e por que, o replay de perto e os boxes (ADR 0027; decisoes do Eduardo de 12/11; merge pedido durante o teste no jogo). Feito numa pasta à parte (`f1-telemetry-analyzer-merge45`), para não mexer nos arquivos do app aberto para o teste. Um conflito, no índice dos ADRs (`docs/decisoes/README.md`): ficaram as linhas dos dois lados, a 0027 antes da 0028.
 - **Commits:**
   - em `develop`: `bd04b93e` Pedido 45: texto do pedido, atualizacao de 04/11 do pedido 42 e backlog;
   - `29dec5ba` Parte B: um numero so para cada volta, a primeira volta com as medidas e o erro do WebSocket;
@@ -13,8 +14,18 @@
   - `6c87e3ed` Relatorio parcial do pedido 45 (a primeira parada);
   - `9c1f9349` B.1: a regra dos boxes do coach so vale no pit lane (sua decisao de 04/11);
   - `d6594970` B.2: a volta com o carro movido no meio nao repete o numero na lista;
-  - `0907aec8` Pedido 45: o relatorio da parada da Parte G, as previas e a documentacao corrigida (enviado e conferido no remoto);
-  - o commit da nota de 06/11: "Pedido 45: o aviso de teste chegou, mas o jogo nao abriu desde 01/11".
+  - `0907aec8` o relatorio da parada da Parte G, as previas e a documentacao corrigida;
+  - `bb4bcf41` o aviso de teste chegou, mas o jogo nao abriu desde 01/11;
+  - `0bbc0c22` o primeiro teste no jogo de 07/11, com o app do jogo 0.4.2 instalado por engano;
+  - `f13e6208` o resto do teste de 07/11 (log do CSP e FPS) e o app do Windows 0.7.0 instalado a seu pedido;
+  - `60d3f9e7` o pacote do backend leva o voz.ps1 (o app instalado ficava sem voz);
+  - `e924cd4d` o segundo teste no jogo (app do jogo 0.5.0, app instalado sem voz) e a voz corrigida no pacote;
+  - `56de28e8` a situacao da parada, com o teste no jogo para depois;
+  - `7c9f6c9c` as decisoes do Eduardo de 12/11 (resumo em 8,0 s; o resumo diz contra quem; app do jogo 0.5.1);
+  - `5a17b570` a suite do backend com as decisoes de 12/11 (935 passando);
+  - `43686100` o teste no jogo antes do merge;
+  - `b5cd47f2` o aviso de 14:48 repetido, sem teste novo no jogo; merge nao feito;
+  - em `develop`, depois do merge: o commit deste relatório e da documentação de fechamento.
 - **Arquivos de handoff** (`docs/handoff/2026-11-02_45_replay-de-perto-e-radio-que-ensina…`):
   - `_relatorio.md` (este);
   - `_radio_antes_e_depois.json` (o C.6: as 4 sessões, fala a fala, com a voz de verdade);
@@ -187,12 +198,27 @@ As 4 sessões de novo, pelo mesmo caminho do C.6 (`radio_depois.py`), com o cód
 - **O app do Windows instalado** é a 0.7.0 de `60d3f9e`: tem a voz, mas não as palavras de hoje nem o limite de 8,0 s. Elas só chegam no próximo instalador, quando você pedir.
 - **A pasta do jogo** tem o app do jogo 0.5.0. A 0.5.1, com as palavras novas, vai pelo `instalar.ps1`, que você roda.
 
+## 12/11, 22:49: o merge, durante o teste no jogo
+
+**O seu pedido:** "execute essa versão; enquanto realizo o teste, preciso que realize o merge com a versão 0.7.0".
+
+- **O app para o teste:** abri o app do Windows pelo repositório, nesta branch (`b5cd47f2`, backend `radio-que-ensina` na porta 8000, gravando em `data/recordings`). A mensagem de teste gerou a voz (4,09 s). A pasta do jogo já estava com o app do jogo **0.5.1** (você rodou o `instalar.ps1`). Este app usa a referência padrão, a volta da IA.
+- **O merge** (`16cdf04d`): feito numa pasta à parte, `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-merge45`, em `develop`. A pasta principal continua nesta branch, para o app aberto não ler arquivos de outra versão no meio do teste (o problema de 07/11). Um conflito, no índice dos ADRs: ficaram as linhas dos dois lados, a 0027 antes da 0028.
+- **O que `develop` ganha:** tudo deste pedido, com as decisões de 12/11, junto com os pedidos 46 a 49 que já estavam lá. O front, o Electron e o app do jogo não mudaram em `develop` desde `bd04b93e`, então os testes deles feitos nesta branch valem para o merge.
+- **A suíte do backend no resultado do merge:** o resultado está em "Os testes do merge", logo abaixo.
+- **A documentação de fechamento** (no commit deste relatório, em `develop`): `docs/app_para_producao.md` (a 0.7.0 instalada e o que `develop` tem), `docs/dashboard_inventario.md` (as decisões de 12/11, a voz no pacote e a versão) e `docs/tecnica_de_pilotagem_lista.md` (a linha de 12/11).
+- **O teste no jogo deste momento ainda não está aqui:** quando você mandar as anotações, eu confiro o registro do rádio, os logs e o FPS, como nas outras vezes, e completo o relatório num commit em `develop`.
+
+### Os testes do merge
+
+(preenchido abaixo)
+
 ## O que precisa de você
 
-1. **O teste no jogo:** os passos e a tabela estão na Parte G. **Antes, rode os comandos de envio** (no fim), porque o pedido manda enviar a branch antes da parada.
-2. **Decisão: o limite do resumo** (Parte C). O que você quer ouvir nem sempre cabe em 7,7 s, e a diferença para a IA quase sumiu da voz: ela está em 7 dos 51 resumos.
-3. **Decisão: a volta da IA.** A C.1 diz "o tempo e a diferença para a melhor, como hoje", mas hoje ela não tem resumo, e a G.8 diz que o rádio se cala. Deixei calada.
-4. **Confira uma escolha minha:** a parte da perda antes da primeira freada não conta como causa (Parte C).
+1. **As anotações do teste de 12/11:** a tabela da Parte G, se puder.
+2. **Decisão (backlog):** o limite de 8,0 s não trouxe causas novas, porque as palavras novas custam o mesmo tempo. 8,3 s, ou "Melhor da sessão"?
+3. **O envio:** os comandos estão no fim.
+4. **A pasta à parte do merge** (`f1-telemetry-analyzer-merge45`): eu a removo depois do envio, com o seu ok.
 
 ## O que este pedido ainda não prova
 
@@ -446,25 +472,27 @@ Feita: `docs/realidade_aumentada.md` (seções 2.2, 5.4.2, 7 e 8), ADR 0027 (nov
 
 ## O envio ao GitHub
 
-**Nada foi enviado.** No pedido 44, o controle de permissões recusou o envio, então é você quem roda.
+**É você quem envia:** no pedido 44, o controle de permissões recusou o envio.
 
-**Conferido antes do envio, nos commits desde `aa576597`:** o maior arquivo tem 1,3 MB (nada acima de 50 MB); nenhum arquivo em `recordings/`, `data/recordings` ou `data/ml`; nenhum segredo.
-
-| ref | hash local | no remoto |
+| ref | hash local (12/11) | no remoto (12/11, 22:55) |
 |---|---|---|
-| `refs/heads/etapa/replay-e-radio-que-ensina` | `0907aec8` (e depois o commit da nota de 06/11) | `0907aec8`, conferido em 06/11 |
-| `refs/heads/develop` | `bd04b93e` | `aa576597` |
+| `refs/heads/etapa/replay-e-radio-que-ensina` | `b5cd47f2` | `b5cd47f2` (você já enviou) |
+| `refs/heads/develop` | o commit deste relatório, depois de `16cdf04d` | `bbff5c97`: um ancestral do local, então o envio é um avanço simples |
 
-**Só a branch vai agora.** Ela já leva `bd04b93e`. O `develop` vai depois do merge. `main` e as tags não vão. Sem `--force`.
+**Agora vai o `develop`.** `main` e as tags não vão. Sem `--force`. A conferência antes do envio está em "A conferência do envio de `develop`", logo abaixo.
 
 ```powershell
-git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer push -u origin etapa/replay-e-radio-que-ensina
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer push origin develop
 ```
 
 ```powershell
-git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer ls-remote origin refs/heads/etapa/replay-e-radio-que-ensina
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer ls-remote origin refs/heads/develop
 ```
 
 Me avise quando rodar, para eu conferir o hash remoto. Se pedir login, se recusar ou se o remoto tiver divergido, pare e me avise.
 
-**O que abri para testar já está fechado:** não sobrou backend nas portas de teste (8011, 8021, 8022, 8031, 8032, 8041, 8042), nem o servidor das prévias, nem aba "[teste]". Nenhum Electron foi aberto.
+### A conferência do envio de `develop`
+
+Nos commits de `bbff5c97` (o `develop` remoto) até `16cdf04d`: 70 arquivos; o maior é `…_previa_camera.png`, com 1,27 MB (nada acima de 50 MB); nenhum arquivo em `recordings/`, `data/recordings` ou `data/ml`; nenhum segredo (procurei tokens do GitHub, chaves e senhas no texto da diferença). O commit deste relatório só muda documentos.
+
+**O que está aberto para o teste:** o app do Windows pelo repositório (backend na porta 8000). Ele fica aberto até você terminar; depois, feche pelo próprio app.

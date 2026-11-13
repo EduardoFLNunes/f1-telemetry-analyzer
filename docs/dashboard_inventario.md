@@ -386,7 +386,7 @@ Os números da voz no replay da frase do coach e os 4 visuais do rádio (ADR 002
 - **O teste no jogo (01/11):** o Lua rodou no CSP 0.3.1 sem erro, e os números do replay batem com a voz e com o cartão. **Sem confirmação:** a grade nos boxes no jogo, o cartão da mensagem de teste e os visuais na tela do jogo.
 - **A versão:** 0.6.0 em `develop`, sem instalador.
 
-### O que o pedido 45 entregou (04/11)
+### O que o pedido 45 entregou (04/11; merge em 12/11)
 
 O rádio que diz onde e por quê, o replay de perto e os boxes (ADR 0027 e ADR 0021, atualização de 04/11). Detalhes em `docs/realidade_aumentada.md` (seções 2.2 e 5.4.2) e em `docs/handoff/2026-11-02_45_replay-de-perto-e-radio-que-ensina_relatorio.md`.
 
@@ -394,3 +394,6 @@ O rádio que diz onde e por quê, o replay de perto e os boxes (ADR 0027 e ADR 0
 - **O replay grande** (`frontend/src/aoVivo/ReplayGrande.tsx`): abre em qualquer tela, no aviso `abrir_replay` do WebSocket, com os 4 visuais e o caminho para a tela Volta quando a volta já está no store.
 - **A tela Volta** mostra o número do jogo (`/api/store/numeros`), o mesmo do rádio. O `#NNNN` do id é só a ordem no arquivo.
 - **O app do Electron** ganhou `trazerParaAFrente`, para o replay grande.
+- **As decisões do Eduardo de 12/11:** o resumo cabe em 8,0 s, e toda diferença diz contra quem ("melhor volta da sessão", "do seu recorde", "da IA").
+- **O pacote do app** leva o `voz.ps1`: até a 0.7.0 de 07/11, o app instalado ficava sem voz.
+- **A versão:** `0.7.0-radio-que-ensina`, instalada em 07/11 (sem as decisões de 12/11); o app do jogo 0.5.1.
