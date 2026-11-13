@@ -406,27 +406,37 @@ A cópia fica instalada até você rodar o `remover_copia.ps1`.
 
 ## O envio
 
-**Nada foi enviado.** O envio do pedido 49 ainda não foi feito (`origin/develop` em `bbff5c97`), e este pedido manda esperar por ele. **Primeiro, os comandos do 49** (do relatório dele):
+**Em 12/11, nada foi enviado:** o `develop` remoto estava em `bbff5c97`, sem o 49, e este pedido manda esperar por ele.
 
-```powershell
-git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 push -u origin etapa/modelo1-por-trecho
-```
+**Em 13/11, o `develop` remoto já tinha o 49.**
+- O local e o remoto estão em `4c7bcbae` (o relatório do pedido 45), que contém o `e873d6a6` do 49. O merge do 45 (`16cdf04d`) entrou por cima dele.
+- **A branch `etapa/modelo1-por-trecho` não está no remoto.**
+- Pela B.6, tentei enviar a branch deste pedido. **O controle de permissões da sessão recusou o envio,** e não tentei de novo.
 
-```powershell
-git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 push origin develop
-```
+**Antes, conferi o que vai** (as mudanças desde `e873d6a6`): nenhum arquivo acima de 50 MB, nenhum segredo, nada de `recordings/`, `data/recordings`, `data/ml` ou `data/linha_do_projeto`, e nenhum `.ai`.
 
-**Depois, a branch deste pedido:**
+**Os comandos para você rodar pelo terminal, nesta ordem:**
 
 ```powershell
 git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 push -u origin etapa/linha-do-projeto
 ```
 
 ```powershell
-git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 ls-remote origin refs/heads/develop refs/heads/etapa/modelo1-por-trecho refs/heads/etapa/linha-do-projeto
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 push -u origin etapa/modelo1-por-trecho
 ```
 
-O hash de cada ref no `ls-remote` tem de ser o mesmo do local (`git -C … rev-parse develop etapa/modelo1-por-trecho etapa/linha-do-projeto`). **Antes do envio, conferi o que vai** (as mudanças desde `e873d6a6`): nenhum arquivo acima de 50 MB, nenhum segredo, nada de `recordings/`, `data/recordings`, `data/ml` ou `data/linha_do_projeto`, e nenhum `.ai`.
+```powershell
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 rev-parse etapa/linha-do-projeto etapa/modelo1-por-trecho
+```
+
+```powershell
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 ls-remote origin refs/heads/etapa/linha-do-projeto refs/heads/etapa/modelo1-por-trecho
+```
+
+- **O segundo é a branch do 49,** que faltou no envio dele. É um envio de branch nova, como o primeiro.
+- **Depois de cada envio,** o hash do `rev-parse` e o do `ls-remote` têm de ser iguais.
+- **Os dois são branch nova,** sem `--force`. `develop`, `main` e as tags não vão agora: `develop` só vai depois do merge deste pedido (depois da Parte F).
+- **O `develop` andou com o 45:** antes do merge deste pedido, eu trago `develop` para a branch, como manda o pedido.
 
 ## Itens para o backlog (para o Cowork)
 
