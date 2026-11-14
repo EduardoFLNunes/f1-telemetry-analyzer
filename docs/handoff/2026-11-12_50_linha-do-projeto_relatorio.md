@@ -4,7 +4,8 @@
 - **Situação:** **parado na Parte D,** com o roteiro do teste no jogo pronto para você.
   - As Partes 0, A, B e C estão feitas.
   - A conferência da codificação (A.4) parou uma vez. Você escolheu a emenda (a), que entrou no ADR 0031 antes de seguir.
-  - **Nada foi enviado ao GitHub por esta sessão.** Em 13/11, o `develop` remoto já tinha o 49, e tentei o envio da branch deste pedido. O controle de permissões recusou, e os comandos estão em "O envio".
+  - **O envio foi feito por você e conferido em 14/11:** `etapa/linha-do-projeto` está em `6eb4dd41` e `etapa/modelo1-por-trecho` em `e873d6a6`, no remoto e no local (veja "O envio").
+  - **A cópia da pista foi removida depois de 12/11.** O roteiro da Parte D começa por recriá-la.
 - **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47`.
 - **Branch:** `etapa/linha-do-projeto`, a partir de `develop` em `e873d6a6`.
 - **Commits:**
@@ -318,55 +319,107 @@ Além disso, a volta passa pelas regras de volta válida do ADR 0029, item 5.
 
 ## Parte D: o roteiro do teste no jogo, com você
 
-**Antes de começar:**
-1. **O app instalado grava, como no 47.** Ninguém aperta "Atualizar coach" nem roda o `atualizar_coach` com as gravações da cópia.
-2. **O preset "pedido 47 [teste]", sem mudança:**
-   - o carro, a pista "Interlagos [teste]" (layout GP) e a prática sozinho, largando dos boxes;
-   - o combustível em 30 L com o consumo em 0×, e o desgaste do pneu em 0×;
-   - "Clear" a 25 °C, a pista "Optimum" sem evolução e 14:00 com o tempo parado;
-   - a IA com nível 100% e agressividade 0%, e as mesmas ajudas.
-3. **A cópia da pista continua instalada.** Não rode o `criar_copia.ps1`.
+**Atualização de 14/11: a cópia da pista foi removida depois de 12/11.**
+- A pasta `content\tracks\vhe_interlagos_teste_m1` não existe mais. A original está lá, com o sha256 de sempre.
+- Por isso, o passo 1 abaixo recria a cópia. O conteúdo é o mesmo da original, byte a byte (o script confere), e o nome no jogo continua "Interlagos [teste]".
 
-**Cada bloco** (PowerShell, com o jogo fechado; o Content Manager pode ficar aberto):
+### Antes da sessão 1 (uma vez)
 
+1. **Recrie a cópia,** com o jogo fechado (leva alguns minutos: a pasta tem cerca de 2,4 GB):
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\criar_copia.ps1
+   ```
+   - **Ele termina com** "pronto: copia criada em …" e "próximo passo: trocar_linha.ps1 -Condicao C0".
+   - **Se ele parar com "PARADO: …",** não contorne: me avise com a mensagem.
+2. **O app instalado do Windows aberto, gravando,** como no 47.
+   - A aba Coleta avisa que a pista não é a esperada: é só um aviso, e a gravação segue.
+   - O rádio pode ficar desligado.
+   - **Ninguém aperta "Atualizar coach"** nem roda o `atualizar_coach` até o fim deste pedido.
+3. **O preset "pedido 47 [teste]" do Content Manager, sem mudar nada:**
+   - o carro Formula RSS 3 2026 V6, com o acerto padrão;
+   - a pista "Interlagos [teste]", layout GP;
+   - a prática sozinho, largando dos boxes;
+   - 30 L de combustível, com o consumo em 0×, e o desgaste do pneu em 0×;
+   - "Clear" a 25 °C, a pista em 100% ("Optimum") sem evolução, e 14:00 com o tempo parado;
+   - a IA com nível 100% e agressividade 0%, e as ajudas de sempre.
+
+   Como a cópia foi recriada, o Content Manager pode precisar recarregar a lista de pistas para mostrá-la.
+
+### Cada bloco: os mesmos 6 passos
+
+1. **O jogo fechado:** o `acs.exe` não pode estar aberto (confira no Gerenciador de Tarefas).
+2. **A troca,** com a condição do bloco:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao C0
+   ```
+   Ele termina com "pronto: <condição> na copia (<sha256>), registrado em … às <hora>". O sha256 tem de começar com:
+
+   | condição | o sha256 começa com |
+   |---|---|
+   | C0 | `36b57fd8` |
+   | L1 | `c3d30412` |
+   | L2 | `4e9f1250` |
+
+3. **Abra o jogo pelo preset.** Nos boxes, aperte **Ctrl+C** para a IA dirigir, e deixe-a sair dos boxes.
+4. **Deixe a IA completar 9 voltas:** a 1ª é a de saída, a 2ª é a primeira lançada, e as 7 seguintes contam. **Espere a IA cruzar a linha ao fim da 9ª volta** antes de sair. Um bloco leva cerca de 14 minutos.
+5. **Saia do jogo** e espere o `acs.exe` fechar.
+6. **Anote:** a condição, a hora e o que viu de estranho. Por exemplo, a IA rodou, saiu da pista ou freou onde não costuma.
+   - Na L1 e na L2, vale olhar dois lugares: **a subida dos boxes** (perto de 3.900 m, onde a C1 e a C2 frearam no 47) e **a reta curta entre a C09 e a C10** (a emenda que cruza 4 m de pista).
+   - Só olhar. Nada disso muda o resultado.
+
+### A ordem (sorteada com a semente 50)
+
+| sessão | bloco | condição | duração aproximada |
+|---|---|---|---|
+| 1 | 1 | C0 | 14 min |
+| 1 | 2 | L1 | 14 min |
+| 1 | 3 | C0 | 14 min |
+| 2 | 4 | L2 | 14 min |
+| 2 | 5 | C0 | 14 min |
+
+**Sessão 1** (cerca de 45 min, com a cópia):
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao C0
+```
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao L1
+```
 ```powershell
 powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao C0
 ```
 
-(troque `C0` pela condição do bloco). Depois:
-- abra o jogo pelo preset;
-- nos boxes, aperte **Ctrl+C** para a IA dirigir, e deixe-a sair dos boxes;
-- **deixe a IA completar 9 voltas:** a 1ª é a de saída, a 2ª é a primeira lançada, e as 7 seguintes contam. **Espere a IA cruzar a linha ao fim da 9ª volta antes de sair;**
-- **feche o jogo** (até o `acs.exe` fechar) antes da próxima troca.
+**Entre as sessões:** com o jogo fechado, avise "terminei a sessão 1".
+- Eu faço só a conferência da troca, **sem nenhum tempo:** `python -m ml.scripts.linha_do_projeto conferencia-sessao --rotulo sessao1`.
+- Ela confere o original intacto, os 3 blocos no registro, as voltas de cada um e se a IA seguiu a linha do bloco.
+- Depois eu digo se você pode seguir. Até lá, não rode nenhum script e não remova a cópia.
 
-**A ordem, sorteada com a semente 50, em duas sessões de até 45 minutos** (um bloco leva cerca de 14 minutos):
-- **Sessão 1: C0, L1, C0** (cerca de 42 min):
-  ```powershell
-  powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao C0
-  ```
-  ```powershell
-  powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao L1
-  ```
-  ```powershell
-  powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao C0
-  ```
-- **Entre as sessões:** com o jogo fechado, avise "terminei a sessão 1". Eu faço só a conferência da troca, sem nenhum tempo (`conferencia-sessao --rotulo sessao1`), e digo se você pode seguir. Até lá, não rode nenhum script.
-- **Sessão 2: L2, C0** (cerca de 28 min):
-  ```powershell
-  powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao L2
-  ```
-  ```powershell
-  powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao C0
-  ```
+**Sessão 2** (cerca de 30 min):
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao L2
+```
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao C0
+```
 
-**Se a IA rodar ou sair da pista,** deixe seguir: a volta é descartada pelo resultado. Se ela não conseguir andar (presa, ou rodando a cada volta), feche o jogo, anote e passe para o próximo bloco. **Se um script parar** com "PARADO: …", não contorne: anote a mensagem e me avise.
+### Se algo sair do roteiro
 
-**Ao terminar, avise: "rodei a linha do projeto".** Aí eu faço:
-- a Parte E: a conferência, as voltas, o veredito da meta, a comparação por trecho, os medidores contra o jogo e a referência para o app;
-- a Parte F: os ADRs e a arquitetura;
-- o merge e o envio.
+- **A IA roda ou sai da pista:** deixe seguir. A volta é descartada pelo resultado.
+- **A IA não consegue andar** (presa, ou rodando a cada volta): feche o jogo, anote e passe para o próximo bloco. O bloco fica "não conclusivo" se tiver menos de 5 voltas válidas.
+- **O jogo trava ou fecha no meio de um bloco:**
+  - abra de novo pelo preset, **sem rodar o `trocar_linha.ps1`**;
+  - a gravação nova fica no mesmo bloco, e a 1ª volta dela é de saída e não conta;
+  - deixe a IA dar as voltas que faltavam, mais uma, e anote.
+- **Uma troca errada** (por exemplo, a condição errada, ou duas trocas seguidas): **não rode outra troca por cima e me avise.** Cada troca no registro vira um bloco, e uma troca sem jogo no meio da ordem deixaria um bloco vazio entre a linha e o C0 vizinho.
+- **Um script para** com "PARADO: …": não contorne, anote a mensagem e me avise.
 
-A cópia fica instalada até você rodar o `remover_copia.ps1`.
+### Ao terminar
+
+Avise **"rodei a linha do projeto"**. Aí eu faço:
+- **a Parte E:** a conferência (o registro, a troca que pegou em cada bloco e o original intacto), as voltas válidas e os tempos, o veredito da meta, a comparação por trecho, os medidores contra o jogo e a referência para o app;
+- **a Parte F:** os ADRs e a arquitetura;
+- **o merge** (trazendo antes o `develop`, que andou com o 45) e o envio.
+
+**Não remova a cópia até eu terminar a Parte E:** o resultado confere a pasta da cópia. Depois, ela fica até você rodar o `remover_copia.ps1`.
 
 ## O que se esperava e o que veio (até a Parte D)
 
@@ -438,6 +491,8 @@ git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 ls-remote origin refs/hea
 - **Os dois são branch nova,** sem `--force`. `develop`, `main` e as tags não vão agora: `develop` só vai depois do merge deste pedido (depois da Parte F).
 - **O `develop` andou com o 45:** antes do merge deste pedido, eu trago `develop` para a branch, como manda o pedido.
 
+**Conferido em 14/11:** você rodou os envios. O `ls-remote` dá `etapa/linha-do-projeto` em `6eb4dd41` e `etapa/modelo1-por-trecho` em `e873d6a6`, iguais ao local. `develop` continua em `4c7bcbae`, no local e no remoto.
+
 ## Itens para o backlog (para o Cowork)
 
 1. **A linha central do projeto ondula na subida dos boxes** (curvatura de ±0,013 1/m entre 3.860 e 3.940 m). Toda linha guardada como lateral em relação a ela, e decodificada sem compensar, leva essa ondulação. Isso inclui a C3 e a C4 do 46, e a L1 e a L2 no trecho C14→linha. Suavizar a linha central ali, num pedido próprio, mudaria o `geometry_id`.
@@ -455,4 +510,4 @@ git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 ls-remote origin refs/hea
 - **O teste no jogo (Parte D),** com você.
 - **Depois do seu aviso "rodei a linha do projeto":** a Parte E (o resultado, o veredito e a referência), a Parte F (os ADRs 0031, 0028, 0009, 0029 e 0030 e a arquitetura), o merge em `develop` e o envio.
 - **O envio do 49 e o deste pedido:** os comandos acima.
-- **A cópia da pista continua instalada,** e a pasta do 47 não foi apagada.
+- **A cópia da pista foi removida** (o roteiro a recria), e a pasta do 47 não foi apagada.
