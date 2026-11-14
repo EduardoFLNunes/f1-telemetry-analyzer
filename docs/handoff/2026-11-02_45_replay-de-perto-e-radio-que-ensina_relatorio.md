@@ -262,7 +262,7 @@ Você mandou quatro pontos novos. São trabalho novo, fora do que o pedido 45 pe
 ## O que precisa de você
 
 1. **As anotações do teste de 12/11,** se quiser: a roda do mouse e se a janela do replay apareceu pequena.
-2. **Decisão (backlog):** o limite de 8,0 s não trouxe causas novas, porque as palavras novas custam o mesmo tempo. 8,3 s, ou "Melhor da sessão"?
+2. ~~**Decisão (backlog):** 8,3 s, ou "Melhor da sessão"?~~ **Decidido em 13/11:** fica 8,0 s, e "Melhor volta da sessão" vira "Melhor da sessão" no próximo pedido do app (registrado no backlog, sem mudar o código agora).
 3. **As quatro sugestões:** viram um pedido novo.
 4. **O envio deste commit de 13/11:** `develop` fica um commit à frente do remoto (comando no fim).
 
