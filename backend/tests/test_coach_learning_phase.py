@@ -218,7 +218,7 @@ class WallClockStutterTest(LiveFinishLineTest):
 # ── Parte C: as duas referencias (ADR 0016) ─────────────────────────────────
 
 from core.assisted_analysis.reference_model import (  # noqa: E402
-    REFERENCE_AI,
+    REFERENCE_MODEL_LAP,
     REFERENCE_OWN_BEST,
     configured_reference_kind,
     reference_from_laps,
@@ -283,7 +283,7 @@ FOCUS_OF_MODEL = (5, 14, 40)
 
 
 class TwoReferencesTest(unittest.TestCase):
-    """A IA freia em 300 m; o piloto freia em outro ponto."""
+    """A volta de referencia (a volta do modelo, ADR 0032) freia em 300 m; o piloto freia em outro ponto."""
 
     def setUp(self):
         self.track = circular_track()
@@ -297,10 +297,10 @@ class TwoReferencesTest(unittest.TestCase):
                                brake_at=296.0)) for i in range(3)]
         ai = [("ia", seconds, int(seconds * HZ), synthetic_lap(self.track, seconds, brake_at=300.0))]
         self.model = build_reference_model(mine, track="t", geometry=self.geometry)
-        for kind, laps in ((REFERENCE_OWN_BEST, mine), (REFERENCE_AI, ai)):
+        for kind, laps in ((REFERENCE_OWN_BEST, mine), (REFERENCE_MODEL_LAP, ai)):
             reference, _ = reference_from_laps(laps, geometry=self.geometry, kind=kind)
             self.model.references[kind] = reference
-        self.model.use_reference(REFERENCE_AI)
+        self.model.use_reference(REFERENCE_MODEL_LAP)
         self.sector = int(300.0 / self.track.length * 60)
 
     def drive(self, lap):
@@ -323,7 +323,7 @@ class TwoReferencesTest(unittest.TestCase):
         slow = [(5, 0.2), (10, 0.5), (20, 0.4), (30, 0.3), (40, 0.25)]
         bus = self.drive(synthetic_lap(self.track, 62.0, slow=slow, brake_at=290.0))
         summary = bus.of(ENGINEER_SPEECH)[0]["message"]
-        self.assertIn("Maiores diferencas para a volta da IA", summary)
+        self.assertIn("Maiores diferencas para a volta de referência", summary)
         self.assertLess(summary.index("setor 10"), summary.index("setor 20"))
         self.assertLess(summary.index("setor 20"), summary.index("setor 30"))
         self.assertNotIn("setor 40", summary)
@@ -332,17 +332,17 @@ class TwoReferencesTest(unittest.TestCase):
         for driver_at, word in ((288.0, "depois"), (312.0, "antes")):
             bus = self.drive(synthetic_lap(self.track, 60.5, slow=[(self.sector, 0.4)], brake_at=driver_at))
             event = [e for e in phrases_of(bus) if e["evidence"]["microsector"] == self.sector][0]
-            self.assertIn(f"A IA freia 12 m {word} de voce", event["event"])
+            self.assertIn(f"A referencia freia 12 m {word} de voce", event["event"])
             self.assertAlmostEqual(event["evidence"]["brakeDeltaM"], 300.0 - driver_at, delta=1.5)
 
     def test_phrases_name_the_reference_and_never_promise(self):
         texts = []
-        for kind in (REFERENCE_AI, REFERENCE_OWN_BEST):
+        for kind in (REFERENCE_MODEL_LAP, REFERENCE_OWN_BEST):
             self.model.use_reference(kind)
             bus = self.drive(synthetic_lap(self.track, 62.0, slow=[(self.sector, 0.6), (40, 0.5)], brake_at=288.0))
             events = phrases_of(bus)
             self.assertTrue(events)
-            name = "volta da IA" if kind == REFERENCE_AI else "sua melhor volta"
+            name = "volta de referência" if kind == REFERENCE_MODEL_LAP else "sua melhor volta"
             for event in events:
                 self.assertIn(f"atras da {name} neste trecho", event["event"])
                 self.assertEqual(event["evidence"]["referenceKind"], kind)
@@ -359,7 +359,10 @@ class TwoReferencesTest(unittest.TestCase):
             os.environ["AT_COACH_REFERENCE"] = "minha_melhor"
             self.assertEqual(configured_reference_kind(), REFERENCE_OWN_BEST)
             os.environ["AT_COACH_REFERENCE"] = "qualquer"
-            self.assertEqual(configured_reference_kind(), REFERENCE_AI)
+            self.assertEqual(configured_reference_kind(), REFERENCE_MODEL_LAP)
+            # ADR 0032: o valor antigo da volta da IA vale como a volta do modelo.
+            os.environ["AT_COACH_REFERENCE"] = "volta_ia"
+            self.assertEqual(configured_reference_kind(), REFERENCE_MODEL_LAP)
         finally:
             if previous is None:
                 os.environ.pop("AT_COACH_REFERENCE", None)

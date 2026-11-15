@@ -186,8 +186,7 @@ def estado_do_coach(service: Any, config: AppConfig, pista: str = PISTA_ESPERADA
     volta_do_modelo = config.volta_do_modelo() if hasattr(config, "volta_do_modelo") else None
     if volta_do_modelo is not None:
         referencias["volta_do_modelo"] = {"volta": volta_do_modelo.get("lap_id"),
-                                          "tempoS": (referencias.get("volta_do_modelo") or {}).get("tempoS")
-                                          or volta_do_modelo.get("tempo_s"),
+                                          "tempoS": volta_do_modelo.get("tempo_s"),      # o tempo da grade, M:SS,mmm
                                           "tempoStoreS": volta_do_modelo.get("tempo_s"),
                                           "carro": volta_do_modelo.get("carro"), "marca": volta_do_modelo.get("marca"),
                                           "rotulo": "Volta de referência"}

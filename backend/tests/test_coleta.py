@@ -129,8 +129,8 @@ class AppConfigTest(unittest.TestCase):
     def test_defaults_come_from_the_repository_electron_passes(self):
         config = AppConfig(self.root, default_repository=self.root / "repo")
         self.assertEqual(config.repository(), (self.root / "repo", "AT_REPO_PATH"))
-        self.assertEqual(config.reference(), ("volta_ia", "padrao"))
-        self.assertEqual(config.coach_reference(), "volta_ia")
+        self.assertEqual(config.reference(), ("volta_do_modelo", "padrao"))
+        self.assertEqual(config.coach_reference(), "volta_do_modelo")
 
     def test_the_tab_saves_the_repository_and_the_reference(self):
         repo = self.root / "outro"
@@ -157,8 +157,8 @@ class AppConfigTest(unittest.TestCase):
     def test_the_variable_still_wins_in_the_development_app(self):
         config = AppConfig(self.root)
         config.save({"referenciaCoach": "minha_melhor"})
-        os.environ["AT_COACH_REFERENCE"] = "volta_ia"
-        self.assertEqual(config.reference(), ("volta_ia", "AT_COACH_REFERENCE"))
+        os.environ["AT_COACH_REFERENCE"] = "volta_ia"      # ADR 0032: o valor antigo vale como a volta do modelo
+        self.assertEqual(config.reference(), ("volta_do_modelo", "AT_COACH_REFERENCE"))
         self.assertTrue(config.to_api()["referenciaTravadaPelaVariavel"])
 
     def test_empty_value_goes_back_to_the_default(self):

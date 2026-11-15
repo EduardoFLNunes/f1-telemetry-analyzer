@@ -77,8 +77,13 @@ def test_sem_arquivo_ou_nome_invalido_diz_por_que(tmp_path):
 def test_referencias_do_modelo_do_coach(tmp_path):
     ref = arquivos.ler_referencias(_repositorio(tmp_path))
     assert ref["disponivel"] and ref["geometryId"] == "abc"
-    assert ref["referencias"]["volta_ia"] == {"volta": "ia#0013", "tempoS": 84.828, "carro": "c"}
+    # Pedido 51 (ADR 0032): a volta da IA de um modelo antigo nao aparece; sem o arquivo da volta do modelo, a frase.
+    assert "volta_ia" not in ref["referencias"]
     assert ref["referencias"]["minha_melhor"]["volta"] == "eu#0018"
+    assert ref["avisoReferencia"] == "A volta de referência desta pista ainda não foi gerada pelo modelo"
+    modelo = {"lap_id": "m#0008", "tempo_s": 84.552, "carro": "c", "marca": "linha do projeto, meta atingida em 2026-11-15"}
+    com = arquivos.ler_referencias(_repositorio(tmp_path), arquivos.PISTA, modelo)
+    assert com["referencias"]["volta_do_modelo"]["volta"] == "m#0008" and com["avisoReferencia"] is None
 
 
 def test_volta_do_store_na_ordem_da_grade_e_sem_conta(tmp_path):

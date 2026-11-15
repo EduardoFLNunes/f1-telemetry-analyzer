@@ -137,26 +137,26 @@ CURVA_6 = {"curva": "C06", "lado": "direita", "perdaS": 0.5,
 
 def test_os_exemplos_do_pedido():
     atras = {"situacao": "atras", "difS": 0.3, "melhorS": 88.0}
-    m = mensagem_de_resumo(7, 89.0, 84.8, "volta_ia", CURVA_1, atras)
-    assert m["falas"][1] == "3 décimos atrás da melhor da sessão, 4,2 segundos atrás da IA. Curva 1: 7 décimos, freou 15 metros antes da IA."
-    m = mensagem_de_resumo(8, 87.8, 84.8, "volta_ia", CURVA_12, {"situacao": "melhor", "difS": 0.2, "melhorS": 88.0})
-    assert "Melhor volta da sessão, 2 décimos mais rápida. Curva 12: 4 décimos, saiu 8 quilômetros por hora mais lento." in m["falas"]
-    m = mensagem_de_resumo(9, 89.1, 84.8, "volta_ia", CURVA_6, {"situacao": "atras", "difS": 1.1, "melhorS": 88.0})
+    m = mensagem_de_resumo(7, 89.0, 84.8, "volta_do_modelo", CURVA_1, atras)
+    assert m["falas"][1] == "3 décimos atrás da melhor da sessão, 4,2 segundos atrás da referência. Curva 1: 7 décimos, freou 15 metros antes da referência."
+    m = mensagem_de_resumo(8, 87.8, 84.8, "volta_do_modelo", CURVA_12, {"situacao": "melhor", "difS": 0.2, "melhorS": 88.0})
+    assert "Melhor da sessão, 2 décimos mais rápida. Curva 12: 4 décimos, saiu 8 quilômetros por hora mais lento." in m["falas"]
+    m = mensagem_de_resumo(9, 89.1, 84.8, "volta_do_modelo", CURVA_6, {"situacao": "atras", "difS": 1.1, "melhorS": 88.0})
     assert "1,1 segundo atrás da melhor da sessão. Curva 6: 5 décimos, passou 3 metros por fora no ápice." in m["falas"]
-    m = mensagem_de_resumo(10, 96.4, 84.8, "volta_ia", None, {"situacao": "atras", "difS": 7.0, "melhorS": 89.4}, rodada=True)
+    m = mensagem_de_resumo(10, 96.4, 84.8, "volta_do_modelo", None, {"situacao": "atras", "difS": 7.0, "melhorS": 89.4}, rodada=True)
     assert m["fala"] == "Volta com rodada: 1 minuto e 36,4 segundos, 7,0 segundos atrás da melhor da sessão."
     assert m["curva"] is None
 
 
 def test_as_variantes_perdem_os_itens_de_baixo_para_cima():
-    m = mensagem_de_resumo(7, 89.0, 84.8, "volta_ia", CURVA_1, {"situacao": "atras", "difS": 0.3, "melhorS": 88.7},
+    m = mensagem_de_resumo(7, 89.0, 84.8, "volta_do_modelo", CURVA_1, {"situacao": "atras", "difS": 0.3, "melhorS": 88.7},
                            anterior_s=0.4)
     f = m["falas"]
-    assert "Tempo:" in f[0] and "anterior" in f[0] and "da IA" in f[0]
+    assert "Tempo:" in f[0] and "anterior" in f[0] and "da referência" in f[0]
     assert "Tempo:" not in f[1] and "anterior" in f[1]            # sai o tempo
     assert "anterior" not in f[2] and "4,2 segundos" in f[2]      # sai a anterior
-    assert "4,2 segundos" not in f[3] and "freou 15 metros antes da IA" in f[3]   # sai a IA
-    assert "antes." in f[4]                                        # sai o "da IA"
+    assert "4,2 segundos" not in f[3] and "freou 15 metros antes da referência" in f[3]   # sai a IA
+    assert "antes." in f[4]                                        # sai o "da referência"
     assert f[-2] == "3 décimos atrás da melhor da sessão. Curva 1: 7 décimos."           # sai a causa
     assert f[-1] == "3 décimos atrás da melhor da sessão."                              # e a curva por ultimo
     assert m["falasComACausa"] == 5
@@ -164,9 +164,9 @@ def test_as_variantes_perdem_os_itens_de_baixo_para_cima():
 
 
 def test_melhor_volta_e_recorde():
-    m = mensagem_de_resumo(3, 88.0, 84.8, "volta_ia", None, {"situacao": "melhor", "difS": None, "melhorS": None})
-    assert m["fala"].startswith("Melhor volta da sessão, 3,2 segundos atrás da IA")
-    m = mensagem_de_resumo(3, 86.0, 84.8, "volta_ia", None, {"situacao": "recorde", "difS": 0.6, "melhorS": 86.6})
+    m = mensagem_de_resumo(3, 88.0, 84.8, "volta_do_modelo", None, {"situacao": "melhor", "difS": None, "melhorS": None})
+    assert m["fala"].startswith("Melhor da sessão, 3,2 segundos atrás da referência")
+    m = mensagem_de_resumo(3, 86.0, 84.8, "volta_do_modelo", None, {"situacao": "recorde", "difS": 0.6, "melhorS": 86.6})
     assert m["fala"].startswith("Recorde pessoal, 6 décimos mais rápida")
     assert m["texto"].startswith("recorde pessoal, −0,600 s")
 
@@ -176,10 +176,10 @@ def test_o_resumo_sempre_diz_contra_quem():
     # "Melhor volta, 2,5 segundos atras da referencia" (07/11). Agora diz contra quem.
     melhor = {"situacao": "melhor", "difS": None, "melhorS": None}
     m = mensagem_de_resumo(2, 89.4, 86.9, "minha_melhor", None, melhor)
-    assert m["fala"].startswith("Melhor volta da sessão, 2,5 segundos atrás do seu recorde.")
+    assert m["fala"].startswith("Melhor da sessão, 2,5 segundos atrás do seu recorde.")
     assert "+2,500 s para o seu recorde (1:26,900)" in m["texto"]
-    m = mensagem_de_resumo(2, 89.4, 84.8, "volta_ia", None, {"situacao": "atras", "difS": 0.4, "melhorS": 89.0})
-    assert m["fala"].startswith("4 décimos atrás da melhor da sessão, 4,6 segundos atrás da IA.")
+    m = mensagem_de_resumo(2, 89.4, 84.8, "volta_do_modelo", None, {"situacao": "atras", "difS": 0.4, "melhorS": 89.0})
+    assert m["fala"].startswith("4 décimos atrás da melhor da sessão, 4,6 segundos atrás da referência.")
     assert "+0,400 s para a melhor da sessão (1:29,000)" in m["texto"]
     m = mensagem_de_resumo(2, 89.4, 84.8, None, None, {"situacao": "atras", "difS": 0.4, "melhorS": 89.0})
     assert "4,6 segundos atrás da referência" in m["fala"]
@@ -194,12 +194,12 @@ def test_o_resumo_sempre_diz_contra_quem():
 
 
 def test_a_curva_em_mensagem_propria_e_o_alto_do_replay():
-    m = mensagem_da_curva(7, CURVA_1, "volta_ia")
-    assert m["origem"] == "curva" and m["fala"] == "Curva 1: 7 décimos, freou 15 metros antes da IA."
+    m = mensagem_da_curva(7, CURVA_1, "volta_do_modelo")
+    assert m["origem"] == "curva" and m["fala"] == "Curva 1: 7 décimos, freou 15 metros antes da referência."
     assert m["falas"][-1] == "Curva 1: 7 décimos."
     # o alto do replay: so o pedaco da curva, com os numeros da voz
-    fala = "3 décimos atrás da melhor da sessão. Curva 1: 7 décimos, freou 15 metros antes da IA. Tempo: 1 minuto e 29,0 segundos."
-    assert fala_da_curva(fala, "C01") == "Curva 1: 7 décimos, freou 15 metros antes da IA."
+    fala = "3 décimos atrás da melhor da sessão. Curva 1: 7 décimos, freou 15 metros antes da referência. Tempo: 1 minuto e 29,0 segundos."
+    assert fala_da_curva(fala, "C01") == "Curva 1: 7 décimos, freou 15 metros antes da referência."
     duas = "Curva 1: perde 7 décimos por volta. Curva 12: perde 4 décimos por volta."
     assert fala_da_curva(duas, "C12") == "Curva 12: perde 4 décimos por volta."
     assert fala_da_curva(duas, "C03") is None
@@ -224,7 +224,7 @@ def _radio_com_voltas(tmp_path):
     estado.referencia = {**_grade_de_teste(s, 50.0, 0.0, 395, 430, 110.0), "tempoS": tempo_ref}
     radio = _radio(tmp_path, estado)
     radio._geometria = pista
-    radio._referencia = lambda: {"tipo": "volta_ia", "tempoS": tempo_ref}
+    radio._referencia = lambda: {"tipo": "volta_do_modelo", "tempoS": tempo_ref}
 
     def guardar(numero, velocidade, estado_da_volta="valida", motivo="válida", perda=0.3):
         g = _grade_de_teste(s, velocidade, 1.0, 385, 428, 100.0)
@@ -262,7 +262,7 @@ def test_o_replay_de_qualquer_volta_e_de_qualquer_curva(tmp_path):
     curva = radio.replay_da_volta(2, "C03")["curvas"][0]
     assert curva["curva"] == "C03" and curva["volta"] == 2 and curva["aviso"] is None
     assert curva["causa"]["trecho"] == "freada"
-    assert curva["textoDaVoz"] == "Curva 3: 3 décimos, freou 20 metros antes da IA."
+    assert curva["textoDaVoz"] == "Curva 3: 3 décimos, freou 20 metros antes da referência."
     inteira = radio.replay_da_volta(2)["curvas"][0]
     assert inteira["voltaInteira"] is True and inteira["curva"] is None
     assert len(inteira["linhas"]["voce"]) == radio._geometria.track.size
@@ -305,7 +305,7 @@ def test_a_curva_que_nao_coube_vai_numa_mensagem_propria_e_sai_da_fila_se_passar
     radio = _radio(tmp_path, estado, falar=lambda texto, destino: 9.0 if "Curva" in texto else 2.0)
     pior = {"curva": "C02", "lado": "direita", "perdaS": 0.7,
             "causa": {"trecho": "freada", "perdaTrechoS": 0.5, "medida": "freada", "valor": -15.0}}
-    m = mensagem_de_resumo(7, 89.0, 84.8, "volta_ia", pior, {"situacao": "atras", "difS": 0.3, "melhorS": 88.7})
+    m = mensagem_de_resumo(7, 89.0, 84.8, "volta_do_modelo", pior, {"situacao": "atras", "difS": 0.3, "melhorS": 88.7})
     m["_curvaDaVolta"] = pior
     radio._pendentes.append(radio._nova(m))
     _esperar_o_audio(radio)
