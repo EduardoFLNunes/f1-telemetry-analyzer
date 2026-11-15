@@ -1,11 +1,11 @@
 # Versões do app Automobilista Telemetria
 
-Gerado por `desktop/scripts/publish-version.js` em 07/11/2026, 20:29. Não edite à mão: o arquivo é refeito a cada build (`npm run dist:win`) e por `npm run versoes` (na pasta `desktop`).
+Gerado por `desktop/scripts/publish-version.js` em 15/11/2026, 17:17. Não edite à mão: o arquivo é refeito a cada build (`npm run dist:win`) e por `npm run versoes` (na pasta `desktop`).
 
-- **A mais atual:** `0.7.0-radio-que-ensina`, gerada em 07/11/2026, 20:17, commit `60d3f9e`.
-  - Instalador: `versoes\0.7.0-radio-que-ensina\Automobilista-Telemetria-Setup-0.7.0-radio-que-ensina.exe`
+- **A mais atual:** `0.8.0-volta-do-modelo`, gerada em 15/11/2026, 17:10, commit `46e8db8`.
+  - Instalador: `versoes\0.8.0-volta-do-modelo\Automobilista-Telemetria-Setup-0.8.0-volta-do-modelo.exe`
 - **Instalada neste computador:** `0.7.0-radio-que-ensina`, para todos os usuários, em `C:\Users\Dokas\AppData\Local\Programs\Automobilista Telemetria`.
-  - É a mais atual.
+  - **Não é a mais atual.** Instale a mais atual pelos passos abaixo.
 
 A "mais atual" é a de build mais recente, não a de número maior: a `0.2.0-assetto-udp` (14/06) é anterior à `0.1.7-phase-16` (25/08).
 
@@ -24,7 +24,8 @@ A "mais atual" é a de build mais recente, não a de número maior: a `0.2.0-ass
 
 | versão | gerada em | commit | instalador | tamanho | sha256 |
 |---|---|---|---|---:|---|
-| `0.7.0-radio-que-ensina` (mais atual) (instalada) | 07/11/2026, 20:17 | `60d3f9e` | `Automobilista-Telemetria-Setup-0.7.0-radio-que-ensina.exe` | 229 MB | `4ab7b3afcce9…` |
+| `0.8.0-volta-do-modelo` (mais atual) | 15/11/2026, 17:10 | `46e8db8` | `Automobilista-Telemetria-Setup-0.8.0-volta-do-modelo.exe` | 229 MB | `573c110ef778…` |
+| `0.7.0-radio-que-ensina` (instalada) | 07/11/2026, 20:17 | `60d3f9e` | `Automobilista-Telemetria-Setup-0.7.0-radio-que-ensina.exe` | 229 MB | `4ab7b3afcce9…` |
 | `0.5.0-radio-e-replay` | 25/10/2026, 11:41 | `825ef60` | `Automobilista-Telemetria-Setup-0.5.0-radio-e-replay.exe` | 229 MB | `4db96566280e…` |
 | `0.4.0-redesenho` | 17/10/2026, 03:03 | `429a5c4` | `Automobilista-Telemetria-Setup-0.4.0-redesenho.exe` | 229 MB | `cbeb346dcc3d…` |
 | `0.3.0-coleta-modelos` | 14/10/2026, 10:01 | `e0f64ec` | `Automobilista-Telemetria-Setup-0.3.0-coleta-modelos.exe` | 229 MB | `7b27fe71ffe9…` |
