@@ -1,0 +1,1213 @@
+{
+ "pedido": 52,
+ "geometry_id": "0ed16f0dd2225990",
+ "comprimentoM": 4334.08,
+ "voltaDoModelo": {
+  "tempo_s": 84.551581,
+  "origem": {
+   "sessao": "2026-11-15_02-47-12_vhe_interlagos_teste_m1",
+   "sequencia": 8,
+   "volta_do_jogo": 9,
+   "pista_da_gravacao": "vhe_interlagos_teste_m1",
+   "app": "0.7.0-radio-que-ensina",
+   "pasta": "gravacoes do app instalado",
+   "arquivos": [
+    {
+     "arquivo": "metadata.json",
+     "bytes": 1086,
+     "sha256": "f67bde47cbf4aa0cafc2cb827b8fe586d36b40e21e010f578bf13335e53ea245"
+    },
+    {
+     "arquivo": "opponents.jsonl",
+     "bytes": 954576,
+     "sha256": "98c65e9b431ab64ad1409077c29537ae90cecb3e80f0242ddfe7a6f226acc2a8"
+    },
+    {
+     "arquivo": "player.jsonl",
+     "bytes": 197304630,
+     "sha256": "180b7cf701cb5d25ace77192b5e380b088ca4a9981f16f9a3771fce0b83cfc5a"
+    }
+   ],
+   "copiada": false
+  },
+  "marca": "linha do projeto, meta atingida em 2026-11-15"
+ },
+ "trechos": [
+  {
+   "trecho": "C01",
+   "inicio": 0.0,
+   "fim": 334.0,
+   "tempoS": 6.4791
+  },
+  {
+   "trecho": "C02",
+   "inicio": 334.0,
+   "fim": 422.0,
+   "tempoS": 2.4579
+  },
+  {
+   "trecho": "C03",
+   "inicio": 422.0,
+   "fim": 692.0,
+   "tempoS": 5.263
+  },
+  {
+   "trecho": "C04",
+   "inicio": 692.0,
+   "fim": 1402.0,
+   "tempoS": 11.4091
+  },
+  {
+   "trecho": "C05",
+   "inicio": 1402.0,
+   "fim": 1606.0,
+   "tempoS": 4.06
+  },
+  {
+   "trecho": "C06",
+   "inicio": 1606.0,
+   "fim": 2140.0,
+   "tempoS": 9.2685
+  },
+  {
+   "trecho": "C07",
+   "inicio": 2140.0,
+   "fim": 2334.0,
+   "tempoS": 5.2302
+  },
+  {
+   "trecho": "C08",
+   "inicio": 2334.0,
+   "fim": 2498.0,
+   "tempoS": 4.8191
+  },
+  {
+   "trecho": "C09",
+   "inicio": 2498.0,
+   "fim": 2626.0,
+   "tempoS": 2.8406
+  },
+  {
+   "trecho": "C10",
+   "inicio": 2626.0,
+   "fim": 2758.1,
+   "tempoS": 4.4188
+  },
+  {
+   "trecho": "C11",
+   "inicio": 2758.1,
+   "fim": 3024.1,
+   "tempoS": 5.6714
+  },
+  {
+   "trecho": "C12",
+   "inicio": 3024.1,
+   "fim": 3262.1,
+   "tempoS": 5.1638
+  },
+  {
+   "trecho": "C13",
+   "inicio": 3262.1,
+   "fim": 3380.1,
+   "tempoS": 2.8362
+  },
+  {
+   "trecho": "C14",
+   "inicio": 3380.1,
+   "fim": 3666.1,
+   "tempoS": 5.1045
+  },
+  {
+   "trecho": "C14->linha",
+   "inicio": 3666.1,
+   "fim": 4334.1,
+   "tempoS": 9.5293
+  }
+ ],
+ "somaDosTrechosS": 84.55158,
+ "blocos": [
+  {
+   "trecho": "C01",
+   "antes": "C01",
+   "depoisDe": "C14",
+   "inicio": 3618.066422858341,
+   "acao": 122.00223979787661,
+   "fim": 44.8,
+   "duracaoS": 10.88,
+   "motivo": null,
+   "comprimentoM": 760.8
+  },
+  {
+   "trecho": "C02",
+   "antes": "C02",
+   "depoisDe": "C01",
+   "inicio": null,
+   "acao": 358.0065725216379,
+   "fim": null,
+   "duracaoS": null,
+   "motivo": "sem retomada no trecho anterior"
+  },
+  {
+   "trecho": "C03",
+   "antes": "C03",
+   "depoisDe": "C02",
+   "inicio": 410.00752718958535,
+   "acao": 434.00796780556107,
+   "fim": null,
+   "duracaoS": -0.33,
+   "motivo": "a primeira ação vem menos de 1,0 s depois da retomada"
+  },
+  {
+   "trecho": "C04",
+   "antes": "C04",
+   "depoisDe": "C03",
+   "inicio": 554.0101708854397,
+   "acao": 1216.02232454277,
+   "fim": 1141.0,
+   "duracaoS": 9.09,
+   "motivo": null,
+   "comprimentoM": 587.0
+  },
+  {
+   "trecho": "C05",
+   "antes": "C05",
+   "depoisDe": "C04",
+   "inicio": 1390.025519008594,
+   "acao": 1480.0271713185032,
+   "fim": 1433.5,
+   "duracaoS": 1.08,
+   "motivo": null,
+   "comprimentoM": 43.5
+  },
+  {
+   "trecho": "C06",
+   "antes": "C06",
+   "depoisDe": "C05",
+   "inicio": 1510.0277220884727,
+   "acao": 1904.0349555340742,
+   "fim": 1838.4,
+   "duracaoS": 5.48,
+   "motivo": null,
+   "comprimentoM": 328.4
+  },
+  {
+   "trecho": "C07",
+   "antes": "C07",
+   "depoisDe": "C06",
+   "inicio": null,
+   "acao": 2194.040279643781,
+   "fim": null,
+   "duracaoS": null,
+   "motivo": "sem retomada no trecho anterior"
+  },
+  {
+   "trecho": "C08",
+   "antes": "C08",
+   "depoisDe": "C07",
+   "inicio": 2332.0428131856415,
+   "acao": 2350.0431436476233,
+   "fim": null,
+   "duracaoS": -0.42,
+   "motivo": "a primeira ação vem menos de 1,0 s depois da retomada"
+  },
+  {
+   "trecho": "C09",
+   "antes": "C09",
+   "depoisDe": "C08",
+   "inicio": 2488.0456771894837,
+   "acao": 2454.045052983518,
+   "fim": null,
+   "duracaoS": null,
+   "motivo": "a primeira ação vem antes da retomada do trecho anterior"
+  },
+  {
+   "trecho": "C10",
+   "antes": "C10",
+   "depoisDe": "C09",
+   "inicio": null,
+   "acao": 2622.048137295348,
+   "fim": null,
+   "duracaoS": null,
+   "motivo": "sem retomada no trecho anterior"
+  },
+  {
+   "trecho": "C11",
+   "antes": "C11",
+   "depoisDe": "C10",
+   "inicio": 2750.050487247219,
+   "acao": 2850.0523231471175,
+   "fim": 2807.2,
+   "duracaoS": 1.71,
+   "motivo": null,
+   "comprimentoM": 57.2
+  },
+  {
+   "trecho": "C12",
+   "antes": "C12",
+   "depoisDe": "C11",
+   "inicio": 2922.0536449950446,
+   "acao": 3124.0573535128406,
+   "fim": 3063.4,
+   "duracaoS": 2.49,
+   "motivo": null,
+   "comprimentoM": 141.4
+  },
+  {
+   "trecho": "C13",
+   "antes": "C13",
+   "depoisDe": "C12",
+   "inicio": 3258.059813618705,
+   "acao": 3334.061208902628,
+   "fim": 3292.5,
+   "duracaoS": 0.97,
+   "motivo": null,
+   "comprimentoM": 34.4
+  },
+  {
+   "trecho": "C14",
+   "antes": "C14",
+   "depoisDe": "C13",
+   "inicio": 3306.0606948506565,
+   "acao": 3578.0656884983814,
+   "fim": 3520.7,
+   "duracaoS": 4.35,
+   "motivo": null,
+   "comprimentoM": 214.6
+  }
+ ],
+ "placasAntesDaFreada": [
+  {
+   "placas": [
+    {
+     "s": 16.4,
+     "valor": 200,
+     "lado": "direita",
+     "freadaMenosPlacaM": 105.6
+    },
+    {
+     "s": 114.0,
+     "valor": 100,
+     "lado": "direita",
+     "freadaMenosPlacaM": 8.0
+    },
+    {
+     "s": 156.1,
+     "valor": 50,
+     "lado": "direita",
+     "freadaMenosPlacaM": -34.1
+    }
+   ],
+   "decrescente": true,
+   "freadaDepoisDaPrimeira": {
+    "trecho": "C01",
+    "s": 122.0,
+    "depoisDaPrimeiraM": 105.6
+   }
+  },
+  {
+   "placas": [
+    {
+     "s": 1141.2,
+     "valor": 200,
+     "lado": "direita",
+     "freadaMenosPlacaM": 74.8
+    },
+    {
+     "s": 1227.2,
+     "valor": 100,
+     "lado": "direita",
+     "freadaMenosPlacaM": -11.2
+    },
+    {
+     "s": 1272.8,
+     "valor": 50,
+     "lado": "direita",
+     "freadaMenosPlacaM": -56.8
+    }
+   ],
+   "decrescente": true,
+   "freadaDepoisDaPrimeira": {
+    "trecho": "C04",
+    "s": 1216.0,
+    "depoisDaPrimeiraM": 74.8
+   }
+  },
+  {
+   "placas": [
+    {
+     "s": 1857.8,
+     "valor": 100,
+     "lado": "esquerda",
+     "freadaMenosPlacaM": 46.2
+    },
+    {
+     "s": 1903.4,
+     "valor": 50,
+     "lado": "esquerda",
+     "freadaMenosPlacaM": 0.6
+    }
+   ],
+   "decrescente": true,
+   "freadaDepoisDaPrimeira": {
+    "trecho": "C06",
+    "s": 1904.0,
+    "depoisDaPrimeiraM": 46.2
+   }
+  },
+  {
+   "placas": [
+    {
+     "s": 3108.5,
+     "valor": 100,
+     "lado": "esquerda",
+     "freadaMenosPlacaM": 15.6
+    },
+    {
+     "s": 3154.2,
+     "valor": 50,
+     "lado": "esquerda",
+     "freadaMenosPlacaM": -30.1
+    }
+   ],
+   "decrescente": true,
+   "freadaDepoisDaPrimeira": {
+    "trecho": "C12",
+    "s": 3124.1,
+    "depoisDaPrimeiraM": 15.6
+   }
+  }
+ ],
+ "frases": [
+  {
+   "trecho": "C01",
+   "pontos": {
+    "trecho": "C01",
+    "freada": 122.0,
+    "entrada": 224.0,
+    "retomada": null,
+    "minimaKmh": 107.2,
+    "velocidadeNaFreadaKmh": 277.3
+   },
+   "freie": {
+    "acao": "freie",
+    "frase": "freie 10 metros depois da placa de 100",
+    "marco": {
+     "id": "M003",
+     "tipo": "placa",
+     "valor": 100,
+     "lado": "direita",
+     "ponta": null,
+     "sMarco": 114.0,
+     "nome": "placa de 100"
+    },
+    "d": 8.0,
+    "custo": -7.0,
+    "sDito": 124.0,
+    "comMarco": true,
+    "fala": "Curva 1: freie 10 metros depois da placa de 100.",
+    "sPonto": 122.0
+   },
+   "vire": {
+    "acao": "vire",
+    "frase": "vire 35 metros antes do começo da zebra à esquerda",
+    "marco": {
+     "id": "M006",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "esquerda",
+     "ponta": "comeco",
+     "sMarco": 261.1,
+     "nome": "começo da zebra à esquerda"
+    },
+    "d": -37.1,
+    "custo": 45.6,
+    "sDito": 226.1,
+    "comMarco": true,
+    "fala": "Curva 1: vire 35 metros antes do começo da zebra à esquerda.",
+    "sPonto": 224.0
+   },
+   "acelere": null
+  },
+  {
+   "trecho": "C02",
+   "pontos": {
+    "trecho": "C02",
+    "freada": 366.0,
+    "entrada": 358.0,
+    "retomada": 410.0,
+    "minimaKmh": 116.6,
+    "velocidadeNaFreadaKmh": 131.3
+   },
+   "freie": {
+    "acao": "freie",
+    "frase": "freie no começo da zebra à direita",
+    "marco": {
+     "id": "M008",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "comeco",
+     "sMarco": 366.3,
+     "nome": "começo da zebra à direita"
+    },
+    "d": -0.3,
+    "custo": 0.4,
+    "sDito": 366.3,
+    "comMarco": true,
+    "fala": "Curva 2: freie no começo da zebra à direita.",
+    "sPonto": 366.0
+   },
+   "vire": {
+    "acao": "vire",
+    "frase": "vire 5 metros depois do começo da zebra à direita",
+    "marco": {
+     "id": "M007",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "comeco",
+     "sMarco": 351.2,
+     "nome": "começo da zebra à direita"
+    },
+    "d": 6.8,
+    "custo": -3.2,
+    "sDito": 356.2,
+    "comMarco": true,
+    "fala": "Curva 2: vire 5 metros depois do começo da zebra à direita.",
+    "sPonto": 358.0
+   },
+   "acelere": {
+    "acao": "acelere",
+    "frase": "acelere no fim da zebra à direita",
+    "marco": {
+     "id": "M008",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "fim",
+     "sMarco": 406.9,
+     "nome": "fim da zebra à direita"
+    },
+    "d": 3.1,
+    "custo": -6.9,
+    "sDito": 406.9,
+    "comMarco": true,
+    "fala": "Curva 2: acelere no fim da zebra à direita.",
+    "sPonto": 410.0
+   }
+  },
+  {
+   "trecho": "C03",
+   "pontos": {
+    "trecho": "C03",
+    "freada": null,
+    "entrada": 434.0,
+    "retomada": 554.0,
+    "minimaKmh": 140.1,
+    "velocidadeNaFreadaKmh": null
+   },
+   "freie": null,
+   "vire": {
+    "acao": "vire",
+    "frase": "vire 10 metros depois do começo da zebra à esquerda",
+    "marco": {
+     "id": "M009",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "esquerda",
+     "ponta": "comeco",
+     "sMarco": 425.0,
+     "nome": "começo da zebra à esquerda"
+    },
+    "d": 9.0,
+    "custo": -1.0,
+    "sDito": 435.0,
+    "comMarco": true,
+    "fala": "Curva 3: vire 10 metros depois do começo da zebra à esquerda.",
+    "sPonto": 434.0
+   },
+   "acelere": {
+    "acao": "acelere",
+    "frase": "acelere no ponto marcado",
+    "marco": null,
+    "d": null,
+    "sDito": 554.0101708854397,
+    "comMarco": false,
+    "fala": "Curva 3: acelere no ponto marcado.",
+    "sPonto": 554.0
+   }
+  },
+  {
+   "trecho": "C04",
+   "pontos": {
+    "trecho": "C04",
+    "freada": 1216.0,
+    "entrada": 1312.0,
+    "retomada": 1390.0,
+    "minimaKmh": 133.2,
+    "velocidadeNaFreadaKmh": 270.4
+   },
+   "freie": {
+    "acao": "freie",
+    "frase": "freie 10 metros antes da placa de 100",
+    "marco": {
+     "id": "M016",
+     "tipo": "placa",
+     "valor": 100,
+     "lado": "direita",
+     "ponta": null,
+     "sMarco": 1227.2,
+     "nome": "placa de 100"
+    },
+    "d": -11.2,
+    "custo": 1.8,
+    "sDito": 1217.2,
+    "comMarco": true,
+    "fala": "Curva 4: freie 10 metros antes da placa de 100.",
+    "sPonto": 1216.0
+   },
+   "vire": {
+    "acao": "vire",
+    "frase": "vire no começo da zebra à esquerda",
+    "marco": {
+     "id": "M018",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "esquerda",
+     "ponta": "comeco",
+     "sMarco": 1309.8,
+     "nome": "começo da zebra à esquerda"
+    },
+    "d": 2.2,
+    "custo": -7.8,
+    "sDito": 1309.8,
+    "comMarco": true,
+    "fala": "Curva 4: vire no começo da zebra à esquerda.",
+    "sPonto": 1312.0
+   },
+   "acelere": {
+    "acao": "acelere",
+    "frase": "acelere 15 metros depois do começo da zebra à direita",
+    "marco": {
+     "id": "M020",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "comeco",
+     "sMarco": 1376.7,
+     "nome": "começo da zebra à direita"
+    },
+    "d": 13.3,
+    "custo": 3.3,
+    "sDito": 1391.7,
+    "comMarco": true,
+    "fala": "Curva 4: acelere 15 metros depois do começo da zebra à direita.",
+    "sPonto": 1390.0
+   }
+  },
+  {
+   "trecho": "C05",
+   "pontos": {
+    "trecho": "C05",
+    "freada": null,
+    "entrada": 1480.0,
+    "retomada": 1510.0,
+    "minimaKmh": 177.0,
+    "velocidadeNaFreadaKmh": null
+   },
+   "freie": null,
+   "vire": {
+    "acao": "vire",
+    "frase": "vire no começo da zebra à esquerda",
+    "marco": {
+     "id": "M021",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "esquerda",
+     "ponta": "comeco",
+     "sMarco": 1476.2,
+     "nome": "começo da zebra à esquerda"
+    },
+    "d": 3.8,
+    "custo": -6.2,
+    "sDito": 1476.2,
+    "comMarco": true,
+    "fala": "Curva 5: vire no começo da zebra à esquerda.",
+    "sPonto": 1480.0
+   },
+   "acelere": {
+    "acao": "acelere",
+    "frase": "acelere 35 metros depois do começo da zebra à esquerda",
+    "marco": {
+     "id": "M021",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "esquerda",
+     "ponta": "comeco",
+     "sMarco": 1476.2,
+     "nome": "começo da zebra à esquerda"
+    },
+    "d": 33.8,
+    "custo": 23.8,
+    "sDito": 1511.2,
+    "comMarco": true,
+    "fala": "Curva 5: acelere 35 metros depois do começo da zebra à esquerda.",
+    "sPonto": 1510.0
+   }
+  },
+  {
+   "trecho": "C06",
+   "pontos": {
+    "trecho": "C06",
+    "freada": 1904.0,
+    "entrada": 1938.0,
+    "retomada": null,
+    "minimaKmh": 175.5,
+    "velocidadeNaFreadaKmh": 235.7
+   },
+   "freie": {
+    "acao": "freie",
+    "frase": "freie na placa de 50",
+    "marco": {
+     "id": "M024",
+     "tipo": "placa",
+     "valor": 50,
+     "lado": "esquerda",
+     "ponta": null,
+     "sMarco": 1903.4,
+     "nome": "placa de 50"
+    },
+    "d": 0.6,
+    "custo": -14.4,
+    "sDito": 1903.4,
+    "comMarco": true,
+    "fala": "Curva 6: freie na placa de 50.",
+    "sPonto": 1904.0
+   },
+   "vire": {
+    "acao": "vire",
+    "frase": "vire no começo da zebra à direita",
+    "marco": {
+     "id": "M025",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "comeco",
+     "sMarco": 1941.0,
+     "nome": "começo da zebra à direita"
+    },
+    "d": -3.0,
+    "custo": -5.6,
+    "sDito": 1941.0,
+    "comMarco": true,
+    "fala": "Curva 6: vire no começo da zebra à direita.",
+    "sPonto": 1938.0
+   },
+   "acelere": null
+  },
+  {
+   "trecho": "C07",
+   "pontos": {
+    "trecho": "C07",
+    "freada": 2194.0,
+    "entrada": 2246.0,
+    "retomada": 2332.0,
+    "minimaKmh": 91.8,
+    "velocidadeNaFreadaKmh": 191.4
+   },
+   "freie": {
+    "acao": "freie",
+    "frase": "freie 35 metros antes do começo da zebra à direita",
+    "marco": {
+     "id": "M028",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "comeco",
+     "sMarco": 2231.4,
+     "nome": "começo da zebra à direita"
+    },
+    "d": -37.4,
+    "custo": 56.0,
+    "sDito": 2196.4,
+    "comMarco": true,
+    "fala": "Curva 7: freie 35 metros antes do começo da zebra à direita.",
+    "sPonto": 2194.0
+   },
+   "vire": {
+    "acao": "vire",
+    "frase": "vire 15 metros depois do começo da zebra à direita",
+    "marco": {
+     "id": "M028",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "comeco",
+     "sMarco": 2231.4,
+     "nome": "começo da zebra à direita"
+    },
+    "d": 14.6,
+    "custo": 4.6,
+    "sDito": 2246.4,
+    "comMarco": true,
+    "fala": "Curva 7: vire 15 metros depois do começo da zebra à direita.",
+    "sPonto": 2246.0
+   },
+   "acelere": {
+    "acao": "acelere",
+    "frase": "acelere no fim da zebra à direita",
+    "marco": {
+     "id": "M028",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "fim",
+     "sMarco": 2335.5,
+     "nome": "fim da zebra à direita"
+    },
+    "d": -3.5,
+    "custo": -4.8,
+    "sDito": 2335.5,
+    "comMarco": true,
+    "fala": "Curva 7: acelere no fim da zebra à direita.",
+    "sPonto": 2332.0
+   }
+  },
+  {
+   "trecho": "C08",
+   "pontos": {
+    "trecho": "C08",
+    "freada": 2356.0,
+    "entrada": 2350.0,
+    "retomada": 2488.0,
+    "minimaKmh": 97.5,
+    "velocidadeNaFreadaKmh": 124.1
+   },
+   "freie": {
+    "acao": "freie",
+    "frase": "freie no começo da zebra à esquerda",
+    "marco": {
+     "id": "M030",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "esquerda",
+     "ponta": "comeco",
+     "sMarco": 2358.9,
+     "nome": "começo da zebra à esquerda"
+    },
+    "d": -2.9,
+    "custo": 4.3,
+    "sDito": 2358.9,
+    "comMarco": true,
+    "fala": "Curva 8: freie no começo da zebra à esquerda.",
+    "sPonto": 2356.0
+   },
+   "vire": {
+    "acao": "vire",
+    "frase": "vire 10 metros antes do começo da zebra à esquerda",
+    "marco": {
+     "id": "M030",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "esquerda",
+     "ponta": "comeco",
+     "sMarco": 2358.9,
+     "nome": "começo da zebra à esquerda"
+    },
+    "d": -8.9,
+    "custo": 3.3,
+    "sDito": 2348.9,
+    "comMarco": true,
+    "fala": "Curva 8: vire 10 metros antes do começo da zebra à esquerda.",
+    "sPonto": 2350.0
+   },
+   "acelere": {
+    "acao": "acelere",
+    "frase": "acelere 15 metros antes do começo da zebra à direita",
+    "marco": {
+     "id": "M031",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "comeco",
+     "sMarco": 2502.7,
+     "nome": "começo da zebra à direita"
+    },
+    "d": -14.7,
+    "custo": 12.0,
+    "sDito": 2487.7,
+    "comMarco": true,
+    "fala": "Curva 8: acelere 15 metros antes do começo da zebra à direita.",
+    "sPonto": 2488.0
+   }
+  },
+  {
+   "trecho": "C09",
+   "pontos": {
+    "trecho": "C09",
+    "freada": 2454.0,
+    "entrada": 2566.0,
+    "retomada": null,
+    "minimaKmh": 164.4,
+    "velocidadeNaFreadaKmh": 119.9
+   },
+   "freie": {
+    "acao": "freie",
+    "frase": "freie 50 metros antes do começo da zebra à direita",
+    "marco": {
+     "id": "M031",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "comeco",
+     "sMarco": 2502.7,
+     "nome": "começo da zebra à direita"
+    },
+    "d": -48.7,
+    "custo": 73.0,
+    "sDito": 2452.7,
+    "comMarco": true,
+    "fala": "Curva 9: freie 50 metros antes do começo da zebra à direita.",
+    "sPonto": 2454.0
+   },
+   "vire": {
+    "acao": "vire",
+    "frase": "vire 30 metros antes do fim da zebra à direita",
+    "marco": {
+     "id": "M031",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "fim",
+     "sMarco": 2595.5,
+     "nome": "fim da zebra à direita"
+    },
+    "d": -29.5,
+    "custo": 34.2,
+    "sDito": 2565.5,
+    "comMarco": true,
+    "fala": "Curva 9: vire 30 metros antes do fim da zebra à direita.",
+    "sPonto": 2566.0
+   },
+   "acelere": null
+  },
+  {
+   "trecho": "C10",
+   "pontos": {
+    "trecho": "C10",
+    "freada": 2622.0,
+    "entrada": 2672.0,
+    "retomada": 2750.1,
+    "minimaKmh": 82.7,
+    "velocidadeNaFreadaKmh": 180.7
+   },
+   "freie": {
+    "acao": "freie",
+    "frase": "freie 10 metros antes do começo da zebra à direita",
+    "marco": {
+     "id": "M033",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "comeco",
+     "sMarco": 2630.4,
+     "nome": "começo da zebra à direita"
+    },
+    "d": -8.4,
+    "custo": 12.5,
+    "sDito": 2620.4,
+    "comMarco": true,
+    "fala": "Curva 10: freie 10 metros antes do começo da zebra à direita.",
+    "sPonto": 2622.0
+   },
+   "vire": {
+    "acao": "vire",
+    "frase": "vire 15 metros antes do começo da zebra à direita",
+    "marco": {
+     "id": "M034",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "comeco",
+     "sMarco": 2687.1,
+     "nome": "começo da zebra à direita"
+    },
+    "d": -15.1,
+    "custo": 12.6,
+    "sDito": 2672.1,
+    "comMarco": true,
+    "fala": "Curva 10: vire 15 metros antes do começo da zebra à direita.",
+    "sPonto": 2672.0
+   },
+   "acelere": {
+    "acao": "acelere",
+    "frase": "acelere no começo da zebra à esquerda",
+    "marco": {
+     "id": "M035",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "esquerda",
+     "ponta": "comeco",
+     "sMarco": 2750.7,
+     "nome": "começo da zebra à esquerda"
+    },
+    "d": -0.6,
+    "custo": -9.0,
+    "sDito": 2750.7,
+    "comMarco": true,
+    "fala": "Curva 10: acelere no começo da zebra à esquerda.",
+    "sPonto": 2750.1
+   }
+  },
+  {
+   "trecho": "C11",
+   "pontos": {
+    "trecho": "C11",
+    "freada": null,
+    "entrada": 2850.1,
+    "retomada": 2922.1,
+    "minimaKmh": 163.2,
+    "velocidadeNaFreadaKmh": null
+   },
+   "freie": null,
+   "vire": {
+    "acao": "vire",
+    "frase": "vire 5 metros depois do começo da zebra à esquerda",
+    "marco": {
+     "id": "M036",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "esquerda",
+     "ponta": "comeco",
+     "sMarco": 2844.3,
+     "nome": "começo da zebra à esquerda"
+    },
+    "d": 5.8,
+    "custo": -4.2,
+    "sDito": 2849.3,
+    "comMarco": true,
+    "fala": "Curva 11: vire 5 metros depois do começo da zebra à esquerda.",
+    "sPonto": 2850.1
+   },
+   "acelere": {
+    "acao": "acelere",
+    "frase": "acelere 80 metros depois do começo da zebra à esquerda",
+    "marco": {
+     "id": "M036",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "esquerda",
+     "ponta": "comeco",
+     "sMarco": 2844.3,
+     "nome": "começo da zebra à esquerda"
+    },
+    "d": 77.8,
+    "custo": 67.8,
+    "sDito": 2924.3,
+    "comMarco": true,
+    "fala": "Curva 11: acelere 80 metros depois do começo da zebra à esquerda.",
+    "sPonto": 2922.1
+   }
+  },
+  {
+   "trecho": "C12",
+   "pontos": {
+    "trecho": "C12",
+    "freada": 3124.1,
+    "entrada": 3188.1,
+    "retomada": 3258.1,
+    "minimaKmh": 112.0,
+    "velocidadeNaFreadaKmh": 220.6
+   },
+   "freie": {
+    "acao": "freie",
+    "frase": "freie 15 metros depois da placa de 100",
+    "marco": {
+     "id": "M038",
+     "tipo": "placa",
+     "valor": 100,
+     "lado": "esquerda",
+     "ponta": null,
+     "sMarco": 3108.5,
+     "nome": "placa de 100"
+    },
+    "d": 15.6,
+    "custo": 0.6,
+    "sDito": 3123.5,
+    "comMarco": true,
+    "fala": "Curva 12: freie 15 metros depois da placa de 100.",
+    "sPonto": 3124.1
+   },
+   "vire": {
+    "acao": "vire",
+    "frase": "vire 20 metros depois do começo da zebra à esquerda",
+    "marco": {
+     "id": "M040",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "esquerda",
+     "ponta": "comeco",
+     "sMarco": 3170.1,
+     "nome": "começo da zebra à esquerda"
+    },
+    "d": 18.0,
+    "custo": 8.0,
+    "sDito": 3190.1,
+    "comMarco": true,
+    "fala": "Curva 12: vire 20 metros depois do começo da zebra à esquerda.",
+    "sPonto": 3188.1
+   },
+   "acelere": {
+    "acao": "acelere",
+    "frase": "acelere 10 metros depois do começo da zebra à direita",
+    "marco": {
+     "id": "M042",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "comeco",
+     "sMarco": 3247.0,
+     "nome": "começo da zebra à direita"
+    },
+    "d": 11.1,
+    "custo": 1.1,
+    "sDito": 3257.0,
+    "comMarco": true,
+    "fala": "Curva 12: acelere 10 metros depois do começo da zebra à direita.",
+    "sPonto": 3258.1
+   }
+  },
+  {
+   "trecho": "C13",
+   "pontos": {
+    "trecho": "C13",
+    "freada": null,
+    "entrada": 3334.1,
+    "retomada": 3306.1,
+    "minimaKmh": 158.9,
+    "velocidadeNaFreadaKmh": null
+   },
+   "freie": null,
+   "vire": {
+    "acao": "vire",
+    "frase": "vire no fim da zebra à direita",
+    "marco": {
+     "id": "M042",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "fim",
+     "sMarco": 3335.5,
+     "nome": "fim da zebra à direita"
+    },
+    "d": -1.4,
+    "custo": -7.8,
+    "sDito": 3335.5,
+    "comMarco": true,
+    "fala": "Curva 13: vire no fim da zebra à direita.",
+    "sPonto": 3334.1
+   },
+   "acelere": {
+    "acao": "acelere",
+    "frase": "acelere 30 metros antes do fim da zebra à direita",
+    "marco": {
+     "id": "M042",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "direita",
+     "ponta": "fim",
+     "sMarco": 3335.5,
+     "nome": "fim da zebra à direita"
+    },
+    "d": -29.4,
+    "custo": 34.2,
+    "sDito": 3305.5,
+    "comMarco": true,
+    "fala": "Curva 13: acelere 30 metros antes do fim da zebra à direita.",
+    "sPonto": 3306.1
+   }
+  },
+  {
+   "trecho": "C14",
+   "pontos": {
+    "trecho": "C14",
+    "freada": null,
+    "entrada": 3578.1,
+    "retomada": 3618.1,
+    "minimaKmh": 211.5,
+    "velocidadeNaFreadaKmh": null
+   },
+   "freie": null,
+   "vire": {
+    "acao": "vire",
+    "frase": "vire 40 metros depois do fim da zebra à esquerda",
+    "marco": {
+     "id": "M046",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "esquerda",
+     "ponta": "fim",
+     "sMarco": 3539.5,
+     "nome": "fim da zebra à esquerda"
+    },
+    "d": 38.6,
+    "custo": 28.6,
+    "sDito": 3579.5,
+    "comMarco": true,
+    "fala": "Curva 14: vire 40 metros depois do fim da zebra à esquerda.",
+    "sPonto": 3578.1
+   },
+   "acelere": {
+    "acao": "acelere",
+    "frase": "acelere no começo da zebra à esquerda",
+    "marco": {
+     "id": "M048",
+     "tipo": "zebra",
+     "valor": null,
+     "lado": "esquerda",
+     "ponta": "comeco",
+     "sMarco": 3613.3,
+     "nome": "começo da zebra à esquerda"
+    },
+    "d": 4.8,
+    "custo": -5.2,
+    "sDito": 3613.3,
+    "comMarco": true,
+    "fala": "Curva 14: acelere no começo da zebra à esquerda.",
+    "sPonto": 3618.1
+   }
+  },
+  {
+   "trecho": "C14->linha",
+   "pontos": {
+    "trecho": "C14->linha",
+    "freada": null,
+    "entrada": null,
+    "retomada": 3980.1,
+    "minimaKmh": null,
+    "velocidadeNaFreadaKmh": null
+   },
+   "freie": null,
+   "vire": null,
+   "acelere": {
+    "acao": "acelere",
+    "frase": "acelere 15 metros antes do posto de bandeira à direita",
+    "marco": {
+     "id": "M053",
+     "tipo": "posto",
+     "valor": null,
+     "lado": "direita",
+     "ponta": null,
+     "sMarco": 3992.6,
+     "nome": "posto de bandeira à direita"
+    },
+    "d": -12.5,
+    "custo": 18.8,
+    "sDito": 3977.6,
+    "comMarco": true,
+    "fala": "Acelere 15 metros antes do posto de bandeira à direita.",
+    "sPonto": 3980.1
+   }
+  }
+ ]
+}

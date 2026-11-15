@@ -55,7 +55,9 @@
         "to": "data/reference_models",
         "filter": [
           "*.optimal.json",
-          "*.volta_do_modelo.json"
+          "*.volta_do_modelo.json",
+          "*.marcos.json",
+          "*.ruido_por_trecho.json"
         ]
       },
       {

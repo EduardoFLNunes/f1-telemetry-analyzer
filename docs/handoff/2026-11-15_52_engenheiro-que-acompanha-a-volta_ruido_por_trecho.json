@@ -1,0 +1,123 @@
+{
+ "formato": "ruido-por-trecho/1",
+ "pista": "vhe_interlagos",
+ "pedido": 52,
+ "adr": "0033",
+ "regra": "o desvio padrao amostral (ddof = 1) dos tempos do trecho nas 7 voltas que contam do bloco 4 do pedido 50 (a L2)",
+ "origem": "../docs/handoff/2026-11-12_50_linha-do-projeto_resultado.json",
+ "geometry_id": "0ed16f0dd2225990",
+ "voltas": [
+  {
+   "sessao": "2026-11-15_02-47-12_vhe_interlagos_teste_m1",
+   "sequencia": 2,
+   "tempo_s": 84.81537286204592
+  },
+  {
+   "sessao": "2026-11-15_02-47-12_vhe_interlagos_teste_m1",
+   "sequencia": 3,
+   "tempo_s": 84.90900793742074
+  },
+  {
+   "sessao": "2026-11-15_02-47-12_vhe_interlagos_teste_m1",
+   "sequencia": 4,
+   "tempo_s": 84.70407645376672
+  },
+  {
+   "sessao": "2026-11-15_02-47-12_vhe_interlagos_teste_m1",
+   "sequencia": 5,
+   "tempo_s": 84.57130192968962
+  },
+  {
+   "sessao": "2026-11-15_02-47-12_vhe_interlagos_teste_m1",
+   "sequencia": 6,
+   "tempo_s": 84.77824106374639
+  },
+  {
+   "sessao": "2026-11-15_02-47-12_vhe_interlagos_teste_m1",
+   "sequencia": 7,
+   "tempo_s": 84.68714141607076
+  },
+  {
+   "sessao": "2026-11-15_02-47-12_vhe_interlagos_teste_m1",
+   "sequencia": 8,
+   "tempo_s": 84.55158121991376
+  }
+ ],
+ "trechos": [
+  {
+   "trecho": "C01",
+   "ruidoS": 0.02614,
+   "medianaS": 6.469978
+  },
+  {
+   "trecho": "C02",
+   "ruidoS": 0.005608,
+   "medianaS": 2.455483
+  },
+  {
+   "trecho": "C03",
+   "ruidoS": 0.004598,
+   "medianaS": 5.270484
+  },
+  {
+   "trecho": "C04",
+   "ruidoS": 0.011439,
+   "medianaS": 11.418751
+  },
+  {
+   "trecho": "C05",
+   "ruidoS": 0.020695,
+   "medianaS": 4.084701
+  },
+  {
+   "trecho": "C06",
+   "ruidoS": 0.018891,
+   "medianaS": 9.288631
+  },
+  {
+   "trecho": "C07",
+   "ruidoS": 0.02936,
+   "medianaS": 5.244119
+  },
+  {
+   "trecho": "C08",
+   "ruidoS": 0.015112,
+   "medianaS": 4.820243
+  },
+  {
+   "trecho": "C09",
+   "ruidoS": 0.010051,
+   "medianaS": 2.840596
+  },
+  {
+   "trecho": "C10",
+   "ruidoS": 0.014156,
+   "medianaS": 4.43879
+  },
+  {
+   "trecho": "C11",
+   "ruidoS": 0.036246,
+   "medianaS": 5.747214
+  },
+  {
+   "trecho": "C12",
+   "ruidoS": 0.014399,
+   "medianaS": 5.167375
+  },
+  {
+   "trecho": "C13",
+   "ruidoS": 0.00444,
+   "medianaS": 2.841693
+  },
+  {
+   "trecho": "C14",
+   "ruidoS": 0.005981,
+   "medianaS": 5.110612
+  },
+  {
+   "trecho": "C14->linha",
+   "ruidoS": 0.012139,
+   "medianaS": 9.528053
+  }
+ ]
+}
