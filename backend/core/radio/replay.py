@@ -14,7 +14,7 @@ Para uma curva citada pelo radio (uma analise das voltas ou uma frase do coach c
   lado por extenso (ADR 0003: positivo = mais a esquerda);
 * **o tempo perdido na curva** (o trecho do relatorio de evolucao, a mesma perda da analise).
 
-Sempre "voce" e "IA (referencia)", a diferenca medida contra uma volta real (ADR 0012).
+Sempre "voce" e "Referencia" (a volta do modelo, ADR 0032) ou "seu recorde", a diferenca medida contra uma volta real (ADR 0012).
 So le as grades que o radio ja tem (a volta ao vivo e a referencia do store); nada de
 fisica nova.
 
@@ -337,7 +337,7 @@ def dados_da_curva(pista: Any, codigo: str, volta: Dict[str, np.ndarray], volta_
         "lado": "esquerda" if corner.label.endswith("esq") else "direita",
         "volta": numero_da_volta,
         "referencia": tipo,
-        "rotuloDaReferencia": "IA (referência)" if tipo == "volta_ia" else "seu recorde (referência)",
+        "rotuloDaReferencia": "seu recorde (referência)" if tipo == "minha_melhor" else "Referência",
         "perdaS": round(float(perda), 3),
         "linhas": {"voce": linha(pos_v, t_v, ped_v), "referencia": linha(pos_r, t_r, ped_r)},
         "duracaoS": round(float(max(t_v[-1], t_r[-1])), 3),
@@ -387,7 +387,7 @@ def dados_da_volta(pista: Any, volta: Dict[str, np.ndarray], volta_total: float,
         "lado": "",
         "volta": numero_da_volta,
         "referencia": tipo,
-        "rotuloDaReferencia": "IA (referência)" if tipo == "volta_ia" else "seu recorde (referência)",
+        "rotuloDaReferencia": "seu recorde (referência)" if tipo == "minha_melhor" else "Referência",
         "perdaS": total_perda,
         "linhas": {"voce": linha(pos_v, t_v, ped_v), "referencia": linha(pos_r, t_r, ped_r)},
         "duracaoS": round(float(max(t_v[-1], t_r[-1])), 3),

@@ -1,0 +1,1782 @@
+{
+ "regras": "Pedido 51, Parte D.1: junta as tres rodadas do radio fora do tempo real (antes, palavras, depois) das 4 sessoes.\n\nUso: python <este arquivo> <pasta das rodadas> <saida.json>\n\n* entregues: as mensagens que o radio entregou (todas as da lista), por origem;\n* a causa na voz: a fala tem a causa (\"Freou\", \"Mínima\", \"Passou\", \"Saiu\", \"Acelerou\", com maiuscula ou\n  minuscula). \"Perdeu a causa\": a mesma mensagem (a mesma origem, volta e titulo, na ordem) tinha a causa\n  no `antes` e nao tem no `palavras` (so as palavras mudam entre os dois);\n* \"IA\" na fala, no texto, no detalhe e nos rotulos do replay;\n* acima do limite: a duracao passa do `falaMaxS` (7,3, 8,0 e 8,8 s nao mudam).\n",
+ "sessoes": {
+  "2026-10-13": {
+   "antes": {
+    "referencia": {
+     "tipo": "volta_ia",
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+     "tempoS": 84.8291625038158
+    },
+    "entregues": 20,
+    "porOrigem": {
+     "resumo": 12,
+     "coach": 5,
+     "curva": 1,
+     "analise": 2
+    },
+    "pendentesNoFim": 1,
+    "comCausaNaVoz": 13,
+    "comIA": [
+     "Melhor volta da sessão. Curva 1: 1,7 segundo, freou 24 metros antes da IA.",
+     "Volta com rodada: 1 minuto e 49,2 segundos, 19,0 segundos atrás da melhor da sessão.",
+     "Curva 11, esquerda: 1,1 segundo atrás da IA. Mínima 14 quilômetros por hora abaixo da IA.",
+     "Volta com rodada: 2 minutos e 8,2 segundos, 38,0 segundos atrás da melhor da sessão.",
+     "Curva 12, esquerda: 1,9 segundo atrás da IA. Freou 54 metros antes da IA.",
+     "5,8 segundos atrás da melhor da sessão, 11,2 segundos atrás da IA.",
+     "Curva 12, esquerda: 7 décimos atrás da IA. Freou 50 metros antes da IA.",
+     "2,4 segundos atrás da melhor da sessão. Curva 3: 1,2 segundo.",
+     "Curva 3: 1,2 segundo, mínima 18 quilômetros por hora abaixo da IA.",
+     "2 décimos atrás da melhor da sessão. Curva 1: 1,1 segundo, freou 36 metros antes da IA.",
+     "Voltas 2, 6 e 7. Curva 1: perde 1,1 segundo por volta. Freou 24 metros antes da IA.",
+     "1 décimo atrás da melhor da sessão. Curva 1: 1,6 segundo, freou 68 metros antes da IA.",
+     "Curva 11, esquerda: 5 décimos atrás da IA. Mínima 18 quilômetros por hora abaixo da IA.",
+     "3,0 segundos atrás da melhor da sessão. Curva 8: 1,6 segundo, perdeu 6 décimos na freada.",
+     "Melhor volta da sessão, 4 décimos mais rápida. Curva 1: 1,1 segundo, freou 70 metros antes da IA.",
+     "Análise das voltas 8 a 10. Curva 1: perde 1,2 segundo por volta. Freou 68 metros antes da IA.",
+     "Curva 12, esquerda: 4,4 segundos atrás da IA. Freou 24 metros antes da IA.",
+     "Volta com rodada: 75,5 segundos atrás da melhor da sessão.",
+     "Volta com rodada: 78,4 segundos atrás da melhor da sessão.",
+     "1,2 segundo atrás da melhor da sessão. Curva 1: 1,5 segundo, freou 60 metros antes da IA."
+    ],
+    "rotulosDoReplay": [
+     "None"
+    ],
+    "acimaDoLimite": [],
+    "maiorDuracaoPorOrigem": {
+     "resumo": 7.87,
+     "coach": 7.1,
+     "curva": 5.31,
+     "analise": 8.54
+    }
+   },
+   "palavras": {
+    "referencia": {
+     "tipo": "volta_ia",
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+     "tempoS": 84.8291625038158
+    },
+    "entregues": 21,
+    "porOrigem": {
+     "resumo": 13,
+     "coach": 5,
+     "curva": 1,
+     "analise": 2
+    },
+    "pendentesNoFim": 0,
+    "comCausaNaVoz": 14,
+    "comIA": [],
+    "rotulosDoReplay": [
+     "None"
+    ],
+    "acimaDoLimite": [],
+    "maiorDuracaoPorOrigem": {
+     "resumo": 7.98,
+     "coach": 7.22,
+     "curva": 5.7,
+     "analise": 8.37
+    }
+   },
+   "depois": {
+    "referencia": {
+     "tipo": "volta_do_modelo",
+     "volta": "2026-11-15_02-47-12_vhe_interlagos_teste_m1#0008",
+     "tempoS": 84.551581
+    },
+    "entregues": 23,
+    "porOrigem": {
+     "coach": 8,
+     "resumo": 13,
+     "analise": 2
+    },
+    "pendentesNoFim": 1,
+    "comCausaNaVoz": 15,
+    "comIA": [],
+    "rotulosDoReplay": [
+     "None"
+    ],
+    "acimaDoLimite": [],
+    "maiorDuracaoPorOrigem": {
+     "coach": 7.21,
+     "resumo": 7.9,
+     "analise": 8.27
+    }
+   },
+   "antesContraPalavras": {
+    "pares": 20,
+    "perderamACausa": [],
+    "ganharamACausa": [],
+    "falas": [
+     {
+      "origem": "resumo",
+      "volta": 2,
+      "titulo": "Volta 2: 1:30,154",
+      "antes": "Melhor volta da sessão. Curva 1: 1,7 segundo, freou 24 metros antes da IA.",
+      "antesS": 6.63,
+      "depois": "Melhor da sessão. Curva 1: 1,7 segundo, freou 24 metros antes da referência.",
+      "depoisS": 6.73
+     },
+     {
+      "origem": "resumo",
+      "volta": 3,
+      "titulo": "Volta 3: 1:49,183",
+      "antes": "Volta com rodada: 1 minuto e 49,2 segundos, 19,0 segundos atrás da melhor da sessão.",
+      "antesS": 7.36,
+      "depois": "Volta com rodada: 1 minuto e 49,2 segundos, 19,0 segundos atrás da melhor da sessão.",
+      "depoisS": 7.36
+     },
+     {
+      "origem": "coach",
+      "volta": 4,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11, esquerda: 1,1 segundo atrás da IA. Mínima 14 quilômetros por hora abaixo da IA.",
+      "antesS": 7.01,
+      "depois": "Curva 11: 1,1 segundo atrás da referência. Mínima 14 quilômetros por hora abaixo da referência.",
+      "depoisS": 7.09
+     },
+     {
+      "origem": "resumo",
+      "volta": 4,
+      "titulo": "Volta 4: 2:08,163",
+      "antes": "Volta com rodada: 2 minutos e 8,2 segundos, 38,0 segundos atrás da melhor da sessão.",
+      "antesS": 7.36,
+      "depois": "Volta com rodada: 2 minutos e 8,2 segundos, 38,0 segundos atrás da melhor da sessão.",
+      "depoisS": 7.36
+     },
+     {
+      "origem": "coach",
+      "volta": 4,
+      "titulo": "C12, esquerda",
+      "antes": "Curva 12, esquerda: 1,9 segundo atrás da IA. Freou 54 metros antes da IA.",
+      "antesS": 6.85,
+      "depois": "Curva 12: 1,9 segundo atrás da referência. Freou 54 metros antes da referência.",
+      "depoisS": 6.96
+     },
+     {
+      "origem": "resumo",
+      "volta": 5,
+      "titulo": "Volta 5: 1:35,990",
+      "antes": "5,8 segundos atrás da melhor da sessão, 11,2 segundos atrás da IA.",
+      "antesS": 5.61,
+      "depois": "5,8 segundos atrás da melhor da sessão, 11,2 segundos atrás da referência.",
+      "depoisS": 5.99
+     },
+     {
+      "origem": "coach",
+      "volta": 5,
+      "titulo": "C12, esquerda",
+      "antes": "Curva 12, esquerda: 7 décimos atrás da IA. Freou 50 metros antes da IA.",
+      "antesS": 6.09,
+      "depois": "Curva 12, esquerda: 7 décimos atrás da referência. Freou 50 metros antes da referência.",
+      "depoisS": 6.88
+     },
+     {
+      "origem": "resumo",
+      "volta": 6,
+      "titulo": "Volta 6: 1:32,514",
+      "antes": "2,4 segundos atrás da melhor da sessão. Curva 3: 1,2 segundo.",
+      "antesS": 6.27,
+      "depois": "2,4 segundos atrás da melhor da sessão. Curva 3: 1,2 segundo.",
+      "depoisS": 6.27
+     },
+     {
+      "origem": "curva",
+      "volta": 6,
+      "titulo": "C03, esquerda",
+      "antes": "Curva 3: 1,2 segundo, mínima 18 quilômetros por hora abaixo da IA.",
+      "antesS": 5.31,
+      "depois": "Curva 3: 1,2 segundo, mínima 18 quilômetros por hora abaixo da referência.",
+      "depoisS": 5.7
+     },
+     {
+      "origem": "resumo",
+      "volta": 7,
+      "titulo": "Volta 7: 1:30,363",
+      "antes": "2 décimos atrás da melhor da sessão. Curva 1: 1,1 segundo, freou 36 metros antes da IA.",
+      "antesS": 7.19,
+      "depois": "2 décimos atrás da melhor da sessão. Curva 1: 1,1 segundo, freou 36 metros antes da referência.",
+      "depoisS": 7.61
+     },
+     {
+      "origem": "resumo",
+      "volta": 8,
+      "titulo": "Volta 8: 1:30,230",
+      "antes": "1 décimo atrás da melhor da sessão. Curva 1: 1,6 segundo, freou 68 metros antes da IA.",
+      "antesS": 7.29,
+      "depois": "1 décimo atrás da melhor da sessão. Curva 1: 1,6 segundo, freou 68 metros antes da referência.",
+      "depoisS": 7.71
+     },
+     {
+      "origem": "analise",
+      "volta": 7,
+      "titulo": "Análise das voltas 2, 6 e 7",
+      "antes": "Voltas 2, 6 e 7. Curva 1: perde 1,1 segundo por volta. Freou 24 metros antes da IA.",
+      "antesS": 8.42,
+      "depois": "Voltas 2, 6 e 7. Curva 1: perde 1,1 segundo por volta. Freou 24 metros antes.",
+      "depoisS": 8.18
+     },
+     {
+      "origem": "resumo",
+      "volta": 9,
+      "titulo": "Volta 9: 1:33,120",
+      "antes": "3,0 segundos atrás da melhor da sessão. Curva 8: 1,6 segundo, perdeu 6 décimos na freada.",
+      "antesS": 7.85,
+      "depois": "3,0 segundos atrás da melhor da sessão. Curva 8: 1,6 segundo, perdeu 6 décimos na freada.",
+      "depoisS": 7.85
+     },
+     {
+      "origem": "resumo",
+      "volta": 10,
+      "titulo": "Volta 10: 1:29,767",
+      "antes": "Melhor volta da sessão, 4 décimos mais rápida. Curva 1: 1,1 segundo, freou 70 metros antes da IA.",
+      "antesS": 7.87,
+      "depois": "Melhor da sessão, 4 décimos mais rápida. Curva 1: 1,1 segundo, freou 70 metros antes da referência.",
+      "depoisS": 7.98
+     },
+     {
+      "origem": "coach",
+      "volta": 9,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11, esquerda: 5 décimos atrás da IA. Mínima 18 quilômetros por hora abaixo da IA.",
+      "antesS": 6.7,
+      "depois": "Curva 11: 5 décimos atrás da referência. Mínima 18 quilômetros por hora abaixo da referência.",
+      "depoisS": 6.8
+     },
+     {
+      "origem": "analise",
+      "volta": 10,
+      "titulo": "Análise das voltas 8 a 10",
+      "antes": "Análise das voltas 8 a 10. Curva 1: perde 1,2 segundo por volta. Freou 68 metros antes da IA.",
+      "antesS": 8.54,
+      "depois": "Voltas 8 a 10. Curva 1: perde 1,2 segundo por volta. Freou 68 metros antes da referência.",
+      "depoisS": 8.37
+     },
+     {
+      "origem": "resumo",
+      "volta": 11,
+      "titulo": "Volta 11: 2:45,313",
+      "antes": "Volta com rodada: 75,5 segundos atrás da melhor da sessão.",
+      "antesS": 5.09,
+      "depois": "Volta com rodada: 75,5 segundos atrás da melhor da sessão.",
+      "depoisS": 5.09
+     },
+     {
+      "origem": "coach",
+      "volta": 11,
+      "titulo": "C12, esquerda",
+      "antes": "Curva 12, esquerda: 4,4 segundos atrás da IA. Freou 24 metros antes da IA.",
+      "antesS": 7.1,
+      "depois": "Curva 12: 4,4 segundos atrás da referência. Freou 24 metros antes da referência.",
+      "depoisS": 7.22
+     },
+     {
+      "origem": "resumo",
+      "volta": 12,
+      "titulo": "Volta 12: 2:48,154",
+      "antes": "Volta com rodada: 78,4 segundos atrás da melhor da sessão.",
+      "antesS": 5.07,
+      "depois": "Volta com rodada: 78,4 segundos atrás da melhor da sessão.",
+      "depoisS": 5.07
+     },
+     {
+      "origem": "resumo",
+      "volta": 13,
+      "titulo": "Volta 13: 1:30,928",
+      "antes": "1,2 segundo atrás da melhor da sessão. Curva 1: 1,5 segundo, freou 60 metros antes da IA.",
+      "antesS": 7.74,
+      "depois": "1,2 segundo atrás da melhor da sessão. Curva 1: 1,5 segundo, freou 60 metros antes.",
+      "depoisS": 7.52
+     }
+    ]
+   },
+   "depoisFalas": [
+    {
+     "origem": "coach",
+     "volta": 1,
+     "fala": "Curva 7, direita: 8 décimos atrás da referência. Freou 39 metros antes da referência.",
+     "duracaoS": 6.93
+    },
+    {
+     "origem": "resumo",
+     "volta": 2,
+     "fala": "Melhor da sessão. Curva 1: 1,5 segundo, freou 18 metros antes da referência.",
+     "duracaoS": 6.48
+    },
+    {
+     "origem": "resumo",
+     "volta": 3,
+     "fala": "Volta com rodada: 1 minuto e 49,2 segundos, 19,0 segundos atrás da melhor da sessão.",
+     "duracaoS": 7.36
+    },
+    {
+     "origem": "coach",
+     "volta": 4,
+     "fala": "Curva 7: 2,0 segundos atrás da referência. Freou 44 metros depois da referência.",
+     "duracaoS": 7.21
+    },
+    {
+     "origem": "resumo",
+     "volta": 4,
+     "fala": "Volta com rodada: 2 minutos e 8,2 segundos, 38,0 segundos atrás da melhor da sessão.",
+     "duracaoS": 7.36
+    },
+    {
+     "origem": "coach",
+     "volta": 4,
+     "fala": "Curva 11: 1,1 segundo atrás da referência. Mínima 10 quilômetros por hora abaixo da referência.",
+     "duracaoS": 6.76
+    },
+    {
+     "origem": "resumo",
+     "volta": 5,
+     "fala": "5,8 segundos atrás da melhor da sessão, 11,4 segundos atrás da referência.",
+     "duracaoS": 6.1
+    },
+    {
+     "origem": "coach",
+     "volta": 4,
+     "fala": "Curva 12: 1,9 segundo atrás da referência. Freou 56 metros antes da referência.",
+     "duracaoS": 6.88
+    },
+    {
+     "origem": "resumo",
+     "volta": 6,
+     "fala": "2,4 segundos atrás da melhor da sessão. Curva 4: 1,2 segundo.",
+     "duracaoS": 6.32
+    },
+    {
+     "origem": "coach",
+     "volta": 5,
+     "fala": "Curva 7: 1,0 segundo atrás da referência. Freou 44 metros depois da referência.",
+     "duracaoS": 7.01
+    },
+    {
+     "origem": "resumo",
+     "volta": 7,
+     "fala": "2 décimos atrás da melhor da sessão. Curva 1: 9 décimos, freou 30 metros antes da referência.",
+     "duracaoS": 7.06
+    },
+    {
+     "origem": "coach",
+     "volta": 5,
+     "fala": "Curva 12, esquerda: 7 décimos atrás da referência. Freou 51 metros antes da referência.",
+     "duracaoS": 7.05
+    },
+    {
+     "origem": "resumo",
+     "volta": 8,
+     "fala": "1 décimo atrás da melhor da sessão. Curva 1: 1,5 segundo, freou 62 metros antes da referência.",
+     "duracaoS": 7.75
+    },
+    {
+     "origem": "analise",
+     "volta": 7,
+     "fala": "Voltas 2, 6 e 7. Curva 1: perde 9 décimos por volta. Freou 18 metros antes da referência.",
+     "duracaoS": 8.27
+    },
+    {
+     "origem": "resumo",
+     "volta": 9,
+     "fala": "3,0 segundos atrás da melhor da sessão. Curva 8: 1,8 segundo, perdeu 8 décimos na freada.",
+     "duracaoS": 7.89
+    },
+    {
+     "origem": "resumo",
+     "volta": 10,
+     "fala": "Melhor da sessão, 4 décimos mais rápida. Curva 1: 1,0 segundo, freou 64 metros antes.",
+     "duracaoS": 7.9
+    },
+    {
+     "origem": "coach",
+     "volta": 9,
+     "fala": "Curva 7: 7 décimos atrás da referência. Mínima 22 quilômetros por hora abaixo da referência.",
+     "duracaoS": 7.06
+    },
+    {
+     "origem": "analise",
+     "volta": 10,
+     "fala": "Voltas 8 a 10. Curva 1: perde 1,1 segundo por volta. Freou 62 metros antes da referência.",
+     "duracaoS": 8.25
+    },
+    {
+     "origem": "resumo",
+     "volta": 11,
+     "fala": "Volta com rodada: 75,5 segundos atrás da melhor da sessão.",
+     "duracaoS": 5.09
+    },
+    {
+     "origem": "coach",
+     "volta": 11,
+     "fala": "Curva 12: 4,4 segundos atrás da referência. Freou 26 metros antes da referência.",
+     "duracaoS": 7.15
+    },
+    {
+     "origem": "resumo",
+     "volta": 12,
+     "fala": "Volta com rodada: 78,4 segundos atrás da melhor da sessão.",
+     "duracaoS": 5.07
+    },
+    {
+     "origem": "resumo",
+     "volta": 13,
+     "fala": "1,2 segundo atrás da melhor da sessão. Curva 1: 1,3 segundo, freou 54 metros antes.",
+     "duracaoS": 7.84
+    },
+    {
+     "origem": "resumo",
+     "volta": 14,
+     "fala": "1,9 segundo atrás da melhor da sessão. Curva 5: 1,1 segundo.",
+     "duracaoS": 5.82
+    }
+   ]
+  },
+  "2026-10-18": {
+   "antes": {
+    "referencia": {
+     "tipo": "volta_ia",
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+     "tempoS": 84.8291625038158
+    },
+    "entregues": 20,
+    "porOrigem": {
+     "coach": 4,
+     "resumo": 13,
+     "analise": 2,
+     "curva": 1
+    },
+    "pendentesNoFim": 1,
+    "comCausaNaVoz": 12,
+    "comIA": [
+     "Curva 11: 1,7 segundo atrás da IA. Mínima 45 quilômetros por hora abaixo da IA.",
+     "Melhor volta da sessão. Curva 1: 1,4 segundo, mínima 30 quilômetros por hora abaixo da IA.",
+     "Melhor volta da sessão, 3,0 segundos mais rápida. Curva 4: 1,0 segundo.",
+     "Curva 11, esquerda: 1,3 segundo atrás da IA. Mínima 31 quilômetros por hora abaixo da IA.",
+     "Volta com rodada: 1 minuto e 40,1 segundos, 9,8 segundos atrás da melhor da sessão.",
+     "Volta com rodada: 1 minuto e 45,4 segundos, 15,1 segundos atrás da melhor da sessão.",
+     "6 décimos atrás da melhor da sessão. Curva 4: 1,1 segundo, freou 54 metros antes da IA.",
+     "Melhor volta da sessão, 1,2 segundo mais rápida. Curva 1: 7 décimos.",
+     "Voltas 2, 3 e 7. Curva 1: perde 1,0 segundo por volta. Freou 52 metros antes da IA.",
+     "1,3 segundo atrás da melhor da sessão. Curva 14: 1,0 segundo.",
+     "Curva 11, esquerda: 5 décimos atrás da IA. Mínima 9 quilômetros por hora abaixo da IA.",
+     "Curva 8, esquerda: 8 décimos atrás da IA. Mínima 16 quilômetros por hora abaixo da IA.",
+     "Volta com rodada: 2 minutos e 39,7 segundos, 70,7 segundos atrás da melhor da sessão.",
+     "Volta com rodada: 1 minuto e 44,3 segundos, 15,3 segundos atrás da melhor da sessão.",
+     "3 décimos atrás da melhor da sessão. Curva 1: 9 décimos, freou 46 metros antes da IA.",
+     "Análise das voltas 8, 9 e 12. Curva 1: perde 9 décimos por volta. Freou 46 metros antes da IA.",
+     "4,2 segundos atrás da melhor da sessão. Curva 6: 3,1 segundos.",
+     "8 décimos atrás da melhor da sessão. Curva 1: 9 décimos, freou 82 metros antes da IA.",
+     "7 décimos atrás da melhor da sessão. Curva 1: 9 décimos, mínima 9 quilômetros por hora abaixo da IA."
+    ],
+    "rotulosDoReplay": [
+     "None"
+    ],
+    "acimaDoLimite": [],
+    "maiorDuracaoPorOrigem": {
+     "coach": 7.18,
+     "resumo": 7.71,
+     "analise": 8.73,
+     "curva": 5.62
+    }
+   },
+   "palavras": {
+    "referencia": {
+     "tipo": "volta_ia",
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+     "tempoS": 84.8291625038158
+    },
+    "entregues": 19,
+    "porOrigem": {
+     "coach": 4,
+     "resumo": 12,
+     "analise": 2,
+     "curva": 1
+    },
+    "pendentesNoFim": 2,
+    "comCausaNaVoz": 12,
+    "comIA": [],
+    "rotulosDoReplay": [
+     "None"
+    ],
+    "acimaDoLimite": [],
+    "maiorDuracaoPorOrigem": {
+     "coach": 7.26,
+     "resumo": 7.8,
+     "analise": 8.56,
+     "curva": 5.62
+    }
+   },
+   "depois": {
+    "referencia": {
+     "tipo": "volta_do_modelo",
+     "volta": "2026-11-15_02-47-12_vhe_interlagos_teste_m1#0008",
+     "tempoS": 84.551581
+    },
+    "entregues": 19,
+    "porOrigem": {
+     "coach": 4,
+     "resumo": 13,
+     "analise": 2
+    },
+    "pendentesNoFim": 1,
+    "comCausaNaVoz": 12,
+    "comIA": [],
+    "rotulosDoReplay": [
+     "None"
+    ],
+    "acimaDoLimite": [],
+    "maiorDuracaoPorOrigem": {
+     "coach": 7.16,
+     "resumo": 7.86,
+     "analise": 8.36
+    }
+   },
+   "antesContraPalavras": {
+    "pares": 19,
+    "perderamACausa": [],
+    "ganharamACausa": [
+     {
+      "origem": "resumo",
+      "volta": 8,
+      "titulo": "Volta 8: 1:29,059",
+      "antes": "Melhor volta da sessão, 1,2 segundo mais rápida. Curva 1: 7 décimos.",
+      "antesS": 6.12,
+      "depois": "Melhor da sessão, 1,2 segundo mais rápida. Curva 1: 7 décimos, freou 46 metros antes.",
+      "depoisS": 7.8
+     }
+    ],
+    "falas": [
+     {
+      "origem": "coach",
+      "volta": 1,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11: 1,7 segundo atrás da IA. Mínima 45 quilômetros por hora abaixo da IA.",
+      "antesS": 6.8,
+      "depois": "Curva 11: 1,7 segundo atrás. Mínima 45 quilômetros por hora abaixo da referência.",
+      "depoisS": 6.97
+     },
+     {
+      "origem": "resumo",
+      "volta": 2,
+      "titulo": "Volta 2: 1:33,294",
+      "antes": "Melhor volta da sessão. Curva 1: 1,4 segundo, mínima 30 quilômetros por hora abaixo da IA.",
+      "antesS": 7.05,
+      "depois": "Melhor da sessão. Curva 1: 1,4 segundo, mínima 30 quilômetros por hora abaixo da referência.",
+      "depoisS": 7.13
+     },
+     {
+      "origem": "resumo",
+      "volta": 3,
+      "titulo": "Volta 3: 1:30,269",
+      "antes": "Melhor volta da sessão, 3,0 segundos mais rápida. Curva 4: 1,0 segundo.",
+      "antesS": 6.99,
+      "depois": "Melhor da sessão, 3,0 segundos mais rápida. Curva 4: 1,0 segundo.",
+      "depoisS": 6.67
+     },
+     {
+      "origem": "coach",
+      "volta": 4,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11, esquerda: 1,3 segundo atrás da IA. Mínima 31 quilômetros por hora abaixo da IA.",
+      "antesS": 7.18,
+      "depois": "Curva 11: 1,3 segundo atrás da referência. Mínima 31 quilômetros por hora abaixo da referência.",
+      "depoisS": 7.26
+     },
+     {
+      "origem": "resumo",
+      "volta": 4,
+      "titulo": "Volta 4: 1:40,073",
+      "antes": "Volta com rodada: 1 minuto e 40,1 segundos, 9,8 segundos atrás da melhor da sessão.",
+      "antesS": 6.76,
+      "depois": "Volta com rodada: 1 minuto e 40,1 segundos, 9,8 segundos atrás da melhor da sessão.",
+      "depoisS": 6.76
+     },
+     {
+      "origem": "resumo",
+      "volta": 6,
+      "titulo": "Volta 6: 1:45,367",
+      "antes": "Volta com rodada: 1 minuto e 45,4 segundos, 15,1 segundos atrás da melhor da sessão.",
+      "antesS": 7.15,
+      "depois": "Volta com rodada: 1 minuto e 45,4 segundos, 15,1 segundos atrás da melhor da sessão.",
+      "depoisS": 7.15
+     },
+     {
+      "origem": "resumo",
+      "volta": 7,
+      "titulo": "Volta 7: 1:30,828",
+      "antes": "6 décimos atrás da melhor da sessão. Curva 4: 1,1 segundo, freou 54 metros antes da IA.",
+      "antesS": 7.71,
+      "depois": "6 décimos atrás da melhor da sessão. Curva 4: 1,1 segundo, freou 54 metros antes.",
+      "depoisS": 7.48
+     },
+     {
+      "origem": "analise",
+      "volta": 7,
+      "titulo": "Análise das voltas 2, 3 e 7",
+      "antes": "Voltas 2, 3 e 7. Curva 1: perde 1,0 segundo por volta. Freou 52 metros antes da IA.",
+      "antesS": 8.55,
+      "depois": "Voltas 2, 3 e 7. Curva 1: perde 1,0 segundo por volta. Freou 52 metros antes.",
+      "depoisS": 8.32
+     },
+     {
+      "origem": "resumo",
+      "volta": 8,
+      "titulo": "Volta 8: 1:29,059",
+      "antes": "Melhor volta da sessão, 1,2 segundo mais rápida. Curva 1: 7 décimos.",
+      "antesS": 6.12,
+      "depois": "Melhor da sessão, 1,2 segundo mais rápida. Curva 1: 7 décimos, freou 46 metros antes.",
+      "depoisS": 7.8
+     },
+     {
+      "origem": "coach",
+      "volta": 9,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11, esquerda: 5 décimos atrás da IA. Mínima 9 quilômetros por hora abaixo da IA.",
+      "antesS": 6.49,
+      "depois": "Curva 11, esquerda: 5 décimos atrás da referência. Mínima 9 quilômetros por hora abaixo da referência.",
+      "depoisS": 7.25
+     },
+     {
+      "origem": "resumo",
+      "volta": 9,
+      "titulo": "Volta 9: 1:30,401",
+      "antes": "1,3 segundo atrás da melhor da sessão. Curva 14: 1,0 segundo.",
+      "antesS": 6.18,
+      "depois": "1,3 segundo atrás da melhor da sessão. Curva 14: 1,0 segundo.",
+      "depoisS": 6.18
+     },
+     {
+      "origem": "curva",
+      "volta": 9,
+      "titulo": "C14, esquerda",
+      "antes": "Curva 14: 1,0 segundo, saiu 22 quilômetros por hora mais lento.",
+      "antesS": 5.62,
+      "depois": "Curva 14: 1,0 segundo, saiu 22 quilômetros por hora mais lento.",
+      "depoisS": 5.62
+     },
+     {
+      "origem": "coach",
+      "volta": 10,
+      "titulo": "C08, esquerda",
+      "antes": "Curva 8, esquerda: 8 décimos atrás da IA. Mínima 16 quilômetros por hora abaixo da IA.",
+      "antesS": 6.64,
+      "depois": "Curva 8: 8 décimos atrás da referência. Mínima 16 quilômetros por hora abaixo da referência.",
+      "depoisS": 6.73
+     },
+     {
+      "origem": "resumo",
+      "volta": 10,
+      "titulo": "Volta 10: 2:39,748",
+      "antes": "Volta com rodada: 2 minutos e 39,7 segundos, 70,7 segundos atrás da melhor da sessão.",
+      "antesS": 7.69,
+      "depois": "Volta com rodada: 2 minutos e 39,7 segundos, 70,7 segundos atrás da melhor da sessão.",
+      "depoisS": 7.69
+     },
+     {
+      "origem": "resumo",
+      "volta": 11,
+      "titulo": "Volta 11: 1:44,317",
+      "antes": "Volta com rodada: 1 minuto e 44,3 segundos, 15,3 segundos atrás da melhor da sessão.",
+      "antesS": 7.22,
+      "depois": "Volta com rodada: 1 minuto e 44,3 segundos, 15,3 segundos atrás da melhor da sessão.",
+      "depoisS": 7.22
+     },
+     {
+      "origem": "resumo",
+      "volta": 12,
+      "titulo": "Volta 12: 1:29,346",
+      "antes": "3 décimos atrás da melhor da sessão. Curva 1: 9 décimos, freou 46 metros antes da IA.",
+      "antesS": 6.95,
+      "depois": "3 décimos atrás da melhor da sessão. Curva 1: 9 décimos, freou 46 metros antes da referência.",
+      "depoisS": 7.37
+     },
+     {
+      "origem": "analise",
+      "volta": 12,
+      "titulo": "Análise das voltas 8, 9 e 12",
+      "antes": "Análise das voltas 8, 9 e 12. Curva 1: perde 9 décimos por volta. Freou 46 metros antes da IA.",
+      "antesS": 8.73,
+      "depois": "Voltas 8, 9 e 12. Curva 1: perde 9 décimos por volta. Freou 46 metros antes da referência.",
+      "depoisS": 8.56
+     },
+     {
+      "origem": "resumo",
+      "volta": 13,
+      "titulo": "Volta 13: 1:33,309",
+      "antes": "4,2 segundos atrás da melhor da sessão. Curva 6: 3,1 segundos.",
+      "antesS": 6.34,
+      "depois": "4,2 segundos atrás da melhor da sessão. Curva 6: 3,1 segundos.",
+      "depoisS": 6.34
+     },
+     {
+      "origem": "resumo",
+      "volta": 14,
+      "titulo": "Volta 14: 1:29,884",
+      "antes": "8 décimos atrás da melhor da sessão. Curva 1: 9 décimos, freou 82 metros antes da IA.",
+      "antesS": 6.98,
+      "depois": "8 décimos atrás da melhor da sessão. Curva 1: 9 décimos, freou 82 metros antes da referência.",
+      "depoisS": 7.41
+     }
+    ]
+   },
+   "depoisFalas": [
+    {
+     "origem": "coach",
+     "volta": 1,
+     "fala": "Curva 11: 1,7 segundo atrás. Mínima 41 quilômetros por hora abaixo da referência.",
+     "duracaoS": 6.84
+    },
+    {
+     "origem": "resumo",
+     "volta": 2,
+     "fala": "Melhor da sessão. Curva 6: 1,3 segundo, mínima 28 quilômetros por hora abaixo da referência.",
+     "duracaoS": 7.49
+    },
+    {
+     "origem": "resumo",
+     "volta": 3,
+     "fala": "Melhor da sessão, 3,0 segundos mais rápida. Curva 4: 1,3 segundo.",
+     "duracaoS": 6.63
+    },
+    {
+     "origem": "coach",
+     "volta": 4,
+     "fala": "Curva 11: 1,2 segundo atrás. Mínima 26 quilômetros por hora abaixo da referência.",
+     "duracaoS": 6.76
+    },
+    {
+     "origem": "resumo",
+     "volta": 4,
+     "fala": "Volta com rodada: 1 minuto e 40,1 segundos, 9,8 segundos atrás da melhor da sessão.",
+     "duracaoS": 6.76
+    },
+    {
+     "origem": "coach",
+     "volta": 6,
+     "fala": "Curva 7: 1,1 segundo atrás. Mínima 67 quilômetros por hora abaixo da referência.",
+     "duracaoS": 6.92
+    },
+    {
+     "origem": "resumo",
+     "volta": 6,
+     "fala": "Volta com rodada: 1 minuto e 45,4 segundos, 15,1 segundos atrás da melhor da sessão.",
+     "duracaoS": 7.15
+    },
+    {
+     "origem": "resumo",
+     "volta": 7,
+     "fala": "6 décimos atrás da melhor da sessão. Curva 4: 1,3 segundo, freou 64 metros antes.",
+     "duracaoS": 7.58
+    },
+    {
+     "origem": "analise",
+     "volta": 7,
+     "fala": "Curva 4: perde 1,3 segundo por volta. Mínima 31 quilômetros por hora abaixo.",
+     "duracaoS": 6.56
+    },
+    {
+     "origem": "resumo",
+     "volta": 8,
+     "fala": "Melhor da sessão, 1,2 segundo mais rápida. Curva 6: 6 décimos.",
+     "duracaoS": 5.98
+    },
+    {
+     "origem": "resumo",
+     "volta": 9,
+     "fala": "1,3 segundo atrás da melhor da sessão. Curva 1: 8 décimos, freou 24 metros antes da referência.",
+     "duracaoS": 7.86
+    },
+    {
+     "origem": "coach",
+     "volta": 10,
+     "fala": "Curva 7: 1,0 segundo atrás da referência. Mínima 20 quilômetros por hora abaixo da referência.",
+     "duracaoS": 7.16
+    },
+    {
+     "origem": "resumo",
+     "volta": 10,
+     "fala": "Volta com rodada: 2 minutos e 39,7 segundos, 70,7 segundos atrás da melhor da sessão.",
+     "duracaoS": 7.69
+    },
+    {
+     "origem": "resumo",
+     "volta": 11,
+     "fala": "Volta com rodada: 1 minuto e 44,3 segundos, 15,3 segundos atrás da melhor da sessão.",
+     "duracaoS": 7.22
+    },
+    {
+     "origem": "resumo",
+     "volta": 12,
+     "fala": "3 décimos atrás da melhor da sessão. Curva 6: 9 décimos, mínima 25 quilômetros por hora abaixo.",
+     "duracaoS": 7.62
+    },
+    {
+     "origem": "analise",
+     "volta": 12,
+     "fala": "Voltas 8, 9 e 12. Curva 1: perde 7 décimos por volta. Freou 40 metros antes da referência.",
+     "duracaoS": 8.36
+    },
+    {
+     "origem": "resumo",
+     "volta": 13,
+     "fala": "4,2 segundos atrás da melhor da sessão. Curva 6: 3,5 segundos.",
+     "duracaoS": 6.59
+    },
+    {
+     "origem": "resumo",
+     "volta": 14,
+     "fala": "8 décimos atrás da melhor da sessão. Curva 9: 8 décimos, mínima 43 quilômetros por hora abaixo.",
+     "duracaoS": 7.58
+    },
+    {
+     "origem": "resumo",
+     "volta": 15,
+     "fala": "7 décimos atrás da melhor da sessão. Curva 1: 8 décimos, freou 52 metros antes da referência.",
+     "duracaoS": 7.54
+    }
+   ]
+  },
+  "2026-10-21": {
+   "antes": {
+    "referencia": {
+     "tipo": "volta_ia",
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+     "tempoS": 84.8291625038158
+    },
+    "entregues": 34,
+    "porOrigem": {
+     "coach": 15,
+     "resumo": 16,
+     "curva": 1,
+     "analise": 2
+    },
+    "pendentesNoFim": 1,
+    "comCausaNaVoz": 22,
+    "comIA": [
+     "Curva 11: 3,2 segundos atrás da IA. Mínima 57 quilômetros por hora abaixo da IA.",
+     "Curva 12, esquerda: 7 décimos atrás da IA. Freou 16 metros antes da IA.",
+     "Curva 12, esquerda: 6 décimos atrás da IA. Freou 16 metros antes da IA.",
+     "Volta com rodada: 2 minutos e 16,2 segundos, 51,4 segundos atrás da IA.",
+     "Volta com rodada: 1 minuto e 45,0 segundos, 20,2 segundos atrás da IA.",
+     "Volta com rodada: 1 minuto e 34,3 segundos, 9,5 segundos atrás da IA.",
+     "Curva 11, esquerda: 6 décimos atrás da IA. Mínima 30 quilômetros por hora abaixo da IA.",
+     "Volta com rodada: 1 minuto e 55,4 segundos, 30,6 segundos atrás da IA.",
+     "Curva 12, esquerda: 10,1 segundos atrás da IA. Freou 33 metros antes da IA.",
+     "Volta com rodada: 1 minuto e 54,3 segundos, 29,5 segundos atrás da IA.",
+     "Melhor volta da sessão. Curva 8: 5,0 segundos, mínima 48 quilômetros por hora abaixo da IA.",
+     "Curva 11: 1,8 segundo atrás da IA. Mínima 45 quilômetros por hora abaixo da IA.",
+     "Melhor volta da sessão, 3,7 segundos mais rápida. Curva 1: 8 décimos.",
+     "Curva 1: 8 décimos, mínima 13 quilômetros por hora abaixo da IA.",
+     "Melhor volta da sessão, 1,3 segundo mais rápida. Curva 11: 1,5 segundo.",
+     "Curva 11, esquerda: 9 décimos atrás da IA. Mínima 12 quilômetros por hora abaixo da IA.",
+     "Melhor volta da sessão, 1,4 segundo mais rápida. Curva 1: 9 décimos.",
+     "Voltas 7, 9 e 10. Curva 11: perde 9 décimos por volta. Acelerou 62 metros depois da IA.",
+     "Volta com rodada: 1 minuto e 43,2 segundos, 15,1 segundos atrás da melhor da sessão.",
+     "Curva 7: 1,7 segundo atrás da IA. Mínima 44 quilômetros por hora abaixo da IA.",
+     "2 décimos atrás da melhor da sessão. Curva 1: 8 décimos, freou 76 metros antes da IA.",
+     "Curva 11, esquerda: 5 décimos atrás da IA. Mínima 17 quilômetros por hora abaixo da IA.",
+     "2,4 segundos atrás da melhor da sessão, 5,7 segundos atrás da IA.",
+     "Curva 10, direita: 1,3 segundo atrás da IA. Mínima 37 quilômetros por hora abaixo da IA.",
+     "Curva 12, esquerda: 7 décimos atrás da IA. Freou 56 metros antes da IA.",
+     "Curva 11, esquerda: 7 décimos atrás da IA. Mínima 20 quilômetros por hora abaixo da IA.",
+     "2,1 segundos atrás da melhor da sessão. Curva 1: 1,4 segundo.",
+     "Voltas 11, 13 e 16. Curva 1: perde 9 décimos por volta. Freou 42 metros antes da IA.",
+     "4 décimos atrás da melhor da sessão. Curva 1: 1,2 segundo, mínima 35 quilômetros por hora abaixo.",
+     "Recorde pessoal, 1 décimo mais rápida. Curva 1: 7 décimos, freou 46 metros antes da IA.",
+     "Curva 2, direita: 9 décimos atrás da IA. Mínima 35 quilômetros por hora abaixo da IA.",
+     "Curva 11, esquerda: 5 décimos atrás da IA. Mínima 17 quilômetros por hora abaixo da IA.",
+     "Curva 12, esquerda: 1,0 segundo atrás da IA. Freou 27 metros antes da IA.",
+     "Volta com rodada: 2 minutos e 18,0 segundos, 51,1 segundos atrás da melhor da sessão."
+    ],
+    "rotulosDoReplay": [
+     "None"
+    ],
+    "acimaDoLimite": [],
+    "maiorDuracaoPorOrigem": {
+     "coach": 7.3,
+     "resumo": 7.94,
+     "curva": 4.54,
+     "analise": 8.42
+    }
+   },
+   "palavras": {
+    "referencia": {
+     "tipo": "volta_ia",
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+     "tempoS": 84.8291625038158
+    },
+    "entregues": 34,
+    "porOrigem": {
+     "coach": 15,
+     "resumo": 16,
+     "curva": 1,
+     "analise": 2
+    },
+    "pendentesNoFim": 1,
+    "comCausaNaVoz": 23,
+    "comIA": [],
+    "rotulosDoReplay": [
+     "None"
+    ],
+    "acimaDoLimite": [],
+    "maiorDuracaoPorOrigem": {
+     "coach": 7.2,
+     "resumo": 7.94,
+     "curva": 4.92,
+     "analise": 8.79
+    }
+   },
+   "depois": {
+    "referencia": {
+     "tipo": "volta_do_modelo",
+     "volta": "2026-11-15_02-47-12_vhe_interlagos_teste_m1#0008",
+     "tempoS": 84.551581
+    },
+    "entregues": 34,
+    "porOrigem": {
+     "coach": 16,
+     "resumo": 16,
+     "analise": 2
+    },
+    "pendentesNoFim": 1,
+    "comCausaNaVoz": 24,
+    "comIA": [],
+    "rotulosDoReplay": [
+     "None"
+    ],
+    "acimaDoLimite": [],
+    "maiorDuracaoPorOrigem": {
+     "coach": 7.26,
+     "resumo": 7.72,
+     "analise": 8.41
+    }
+   },
+   "antesContraPalavras": {
+    "pares": 34,
+    "perderamACausa": [],
+    "ganharamACausa": [
+     {
+      "origem": "resumo",
+      "volta": 11,
+      "titulo": "Volta 11: 1:28,116",
+      "antes": "Melhor volta da sessão, 1,4 segundo mais rápida. Curva 1: 9 décimos.",
+      "antesS": 6.16,
+      "depois": "Melhor da sessão, 1,4 segundo mais rápida. Curva 1: 9 décimos, freou 42 metros antes.",
+      "depoisS": 7.82
+     }
+    ],
+    "falas": [
+     {
+      "origem": "coach",
+      "volta": 1,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11: 3,2 segundos atrás da IA. Mínima 57 quilômetros por hora abaixo da IA.",
+      "antesS": 7.03,
+      "depois": "Curva 11: 3,2 segundos atrás. Mínima 57 quilômetros por hora abaixo da referência.",
+      "depoisS": 7.16
+     },
+     {
+      "origem": "coach",
+      "volta": 1,
+      "titulo": "C12, esquerda",
+      "antes": "Curva 12, esquerda: 7 décimos atrás da IA. Freou 16 metros antes da IA.",
+      "antesS": 6.08,
+      "depois": "Curva 12, esquerda: 7 décimos atrás da referência. Freou 16 metros antes da referência.",
+      "depoisS": 6.87
+     },
+     {
+      "origem": "coach",
+      "volta": 2,
+      "titulo": "C12, esquerda",
+      "antes": "Curva 12, esquerda: 6 décimos atrás da IA. Freou 16 metros antes da IA.",
+      "antesS": 6.02,
+      "depois": "Curva 12, esquerda: 6 décimos atrás da referência. Freou 16 metros antes da referência.",
+      "depoisS": 6.81
+     },
+     {
+      "origem": "resumo",
+      "volta": 2,
+      "titulo": "Volta 2: 2:16,194",
+      "antes": "Volta com rodada: 2 minutos e 16,2 segundos, 51,4 segundos atrás da IA.",
+      "antesS": 7.09,
+      "depois": "Volta com rodada: 2 minutos e 16,2 segundos, 51,4 segundos atrás da referência.",
+      "depoisS": 7.48
+     },
+     {
+      "origem": "resumo",
+      "volta": 3,
+      "titulo": "Volta 3: 1:44,987",
+      "antes": "Volta com rodada: 1 minuto e 45,0 segundos, 20,2 segundos atrás da IA.",
+      "antesS": 6.71,
+      "depois": "Volta com rodada: 1 minuto e 45,0 segundos, 20,2 segundos atrás da referência.",
+      "depoisS": 7.09
+     },
+     {
+      "origem": "resumo",
+      "volta": 4,
+      "titulo": "Volta 4: 1:34,332",
+      "antes": "Volta com rodada: 1 minuto e 34,3 segundos, 9,5 segundos atrás da IA.",
+      "antesS": 6.64,
+      "depois": "Volta com rodada: 1 minuto e 34,3 segundos, 9,5 segundos atrás da referência.",
+      "depoisS": 7.03
+     },
+     {
+      "origem": "coach",
+      "volta": 5,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11, esquerda: 6 décimos atrás da IA. Mínima 30 quilômetros por hora abaixo da IA.",
+      "antesS": 6.59,
+      "depois": "Curva 11: 6 décimos atrás da referência. Mínima 30 quilômetros por hora abaixo da referência.",
+      "depoisS": 6.68
+     },
+     {
+      "origem": "resumo",
+      "volta": 5,
+      "titulo": "Volta 5: 1:55,447",
+      "antes": "Volta com rodada: 1 minuto e 55,4 segundos, 30,6 segundos atrás da IA.",
+      "antesS": 6.94,
+      "depois": "Volta com rodada: 1 minuto e 55,4 segundos, 30,6 segundos atrás da referência.",
+      "depoisS": 7.32
+     },
+     {
+      "origem": "coach",
+      "volta": 5,
+      "titulo": "C12, esquerda",
+      "antes": "Curva 12, esquerda: 10,1 segundos atrás da IA. Freou 33 metros antes da IA.",
+      "antesS": 6.61,
+      "depois": "Curva 12: 10,1 segundos atrás da referência. Freou 33 metros antes da referência.",
+      "depoisS": 6.72
+     },
+     {
+      "origem": "resumo",
+      "volta": 6,
+      "titulo": "Volta 6: 1:54,296",
+      "antes": "Volta com rodada: 1 minuto e 54,3 segundos, 29,5 segundos atrás da IA.",
+      "antesS": 7.19,
+      "depois": "Volta com rodada: 1 minuto e 54,3 segundos, 29,5 segundos atrás da referência.",
+      "depoisS": 7.58
+     },
+     {
+      "origem": "resumo",
+      "volta": 7,
+      "titulo": "Volta 7: 1:34,494",
+      "antes": "Melhor volta da sessão. Curva 8: 5,0 segundos, mínima 48 quilômetros por hora abaixo da IA.",
+      "antesS": 7.8,
+      "depois": "Melhor da sessão. Curva 8: 5,0 segundos, mínima 48 quilômetros por hora abaixo da referência.",
+      "depoisS": 7.87
+     },
+     {
+      "origem": "coach",
+      "volta": 8,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11: 1,8 segundo atrás da IA. Mínima 45 quilômetros por hora abaixo da IA.",
+      "antesS": 6.72,
+      "depois": "Curva 11: 1,8 segundo atrás. Mínima 45 quilômetros por hora abaixo da referência.",
+      "depoisS": 6.89
+     },
+     {
+      "origem": "resumo",
+      "volta": 9,
+      "titulo": "Volta 9: 1:30,792",
+      "antes": "Melhor volta da sessão, 3,7 segundos mais rápida. Curva 1: 8 décimos.",
+      "antesS": 6.34,
+      "depois": "Melhor da sessão, 3,7 segundos mais rápida. Curva 1: 8 décimos.",
+      "depoisS": 6.03
+     },
+     {
+      "origem": "curva",
+      "volta": 9,
+      "titulo": "C01, esquerda",
+      "antes": "Curva 1: 8 décimos, mínima 13 quilômetros por hora abaixo da IA.",
+      "antesS": 4.54,
+      "depois": "Curva 1: 8 décimos, mínima 13 quilômetros por hora abaixo da referência.",
+      "depoisS": 4.92
+     },
+     {
+      "origem": "resumo",
+      "volta": 10,
+      "titulo": "Volta 10: 1:29,518",
+      "antes": "Melhor volta da sessão, 1,3 segundo mais rápida. Curva 11: 1,5 segundo.",
+      "antesS": 6.68,
+      "depois": "Melhor da sessão, 1,3 segundo mais rápida. Curva 11: 1,5 segundo.",
+      "depoisS": 6.38
+     },
+     {
+      "origem": "coach",
+      "volta": 10,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11, esquerda: 9 décimos atrás da IA. Mínima 12 quilômetros por hora abaixo da IA.",
+      "antesS": 6.43,
+      "depois": "Curva 11, esquerda: 9 décimos atrás da referência. Mínima 12 quilômetros por hora abaixo da referência.",
+      "depoisS": 7.2
+     },
+     {
+      "origem": "resumo",
+      "volta": 11,
+      "titulo": "Volta 11: 1:28,116",
+      "antes": "Melhor volta da sessão, 1,4 segundo mais rápida. Curva 1: 9 décimos.",
+      "antesS": 6.16,
+      "depois": "Melhor da sessão, 1,4 segundo mais rápida. Curva 1: 9 décimos, freou 42 metros antes.",
+      "depoisS": 7.82
+     },
+     {
+      "origem": "resumo",
+      "volta": 12,
+      "titulo": "Volta 12: 1:43,199",
+      "antes": "Volta com rodada: 1 minuto e 43,2 segundos, 15,1 segundos atrás da melhor da sessão.",
+      "antesS": 6.98,
+      "depois": "Volta com rodada: 1 minuto e 43,2 segundos, 15,1 segundos atrás da melhor da sessão.",
+      "depoisS": 6.98
+     },
+     {
+      "origem": "analise",
+      "volta": 10,
+      "titulo": "Análise das voltas 7, 9 e 10",
+      "antes": "Voltas 7, 9 e 10. Curva 11: perde 9 décimos por volta. Acelerou 62 metros depois da IA.",
+      "antesS": 8.41,
+      "depois": "Voltas 7, 9 e 10. Curva 11: perde 9 décimos por volta. Acelerou 62 metros depois da referência.",
+      "depoisS": 8.79
+     },
+     {
+      "origem": "resumo",
+      "volta": 13,
+      "titulo": "Volta 13: 1:28,329",
+      "antes": "2 décimos atrás da melhor da sessão. Curva 1: 8 décimos, freou 76 metros antes da IA.",
+      "antesS": 7.0,
+      "depois": "2 décimos atrás da melhor da sessão. Curva 1: 8 décimos, freou 76 metros antes da referência.",
+      "depoisS": 7.42
+     },
+     {
+      "origem": "coach",
+      "volta": 12,
+      "titulo": "C07, direita",
+      "antes": "Curva 7: 1,7 segundo atrás da IA. Mínima 44 quilômetros por hora abaixo da IA.",
+      "antesS": 6.92,
+      "depois": "Curva 7: 1,7 segundo atrás. Mínima 44 quilômetros por hora abaixo da referência.",
+      "depoisS": 7.09
+     },
+     {
+      "origem": "resumo",
+      "volta": 14,
+      "titulo": "Volta 14: 1:30,500",
+      "antes": "2,4 segundos atrás da melhor da sessão, 5,7 segundos atrás da IA.",
+      "antesS": 5.86,
+      "depois": "2,4 segundos atrás da melhor da sessão, 5,7 segundos atrás da referência.",
+      "depoisS": 6.25
+     },
+     {
+      "origem": "coach",
+      "volta": 12,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11, esquerda: 5 décimos atrás da IA. Mínima 17 quilômetros por hora abaixo da IA.",
+      "antesS": 6.79,
+      "depois": "Curva 11: 5 décimos atrás da referência. Mínima 17 quilômetros por hora abaixo da referência.",
+      "depoisS": 6.88
+     },
+     {
+      "origem": "coach",
+      "volta": 15,
+      "titulo": "C10, direita",
+      "antes": "Curva 10, direita: 1,3 segundo atrás da IA. Mínima 37 quilômetros por hora abaixo da IA.",
+      "antesS": 7.3,
+      "depois": "Curva 10: 1,3 segundo atrás. Mínima 37 quilômetros por hora abaixo da referência.",
+      "depoisS": 6.82
+     },
+     {
+      "origem": "coach",
+      "volta": 15,
+      "titulo": "C12, esquerda",
+      "antes": "Curva 12, esquerda: 7 décimos atrás da IA. Freou 56 metros antes da IA.",
+      "antesS": 6.4,
+      "depois": "Curva 12, esquerda: 7 décimos atrás da referência. Freou 56 metros antes da referência.",
+      "depoisS": 7.2
+     },
+     {
+      "origem": "coach",
+      "volta": 15,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11, esquerda: 7 décimos atrás da IA. Mínima 20 quilômetros por hora abaixo da IA.",
+      "antesS": 6.58,
+      "depois": "Curva 11: 7 décimos atrás da referência. Mínima 20 quilômetros por hora abaixo da referência.",
+      "depoisS": 6.68
+     },
+     {
+      "origem": "resumo",
+      "volta": 16,
+      "titulo": "Volta 16: 1:30,180",
+      "antes": "2,1 segundos atrás da melhor da sessão. Curva 1: 1,4 segundo.",
+      "antesS": 5.9,
+      "depois": "2,1 segundos atrás da melhor da sessão. Curva 1: 1,4 segundo.",
+      "depoisS": 5.9
+     },
+     {
+      "origem": "analise",
+      "volta": 16,
+      "titulo": "Análise das voltas 11, 13 e 16",
+      "antes": "Voltas 11, 13 e 16. Curva 1: perde 9 décimos por volta. Freou 42 metros antes da IA.",
+      "antesS": 8.42,
+      "depois": "Voltas 11, 13 e 16. Curva 1: perde 9 décimos por volta. Freou 42 metros antes.",
+      "depoisS": 8.18
+     },
+     {
+      "origem": "resumo",
+      "volta": 17,
+      "titulo": "Volta 17: 1:28,539",
+      "antes": "4 décimos atrás da melhor da sessão. Curva 1: 1,2 segundo, mínima 35 quilômetros por hora abaixo.",
+      "antesS": 7.94,
+      "depois": "4 décimos atrás da melhor da sessão. Curva 1: 1,2 segundo, mínima 35 quilômetros por hora abaixo.",
+      "depoisS": 7.94
+     },
+     {
+      "origem": "resumo",
+      "volta": 18,
+      "titulo": "Volta 18: 1:26,875",
+      "antes": "Recorde pessoal, 1 décimo mais rápida. Curva 1: 7 décimos, freou 46 metros antes da IA.",
+      "antesS": 7.44,
+      "depois": "Recorde pessoal, 1 décimo mais rápida. Curva 1: 7 décimos, freou 46 metros antes da referência.",
+      "depoisS": 7.85
+     },
+     {
+      "origem": "coach",
+      "volta": 17,
+      "titulo": "C02, direita",
+      "antes": "Curva 2, direita: 9 décimos atrás da IA. Mínima 35 quilômetros por hora abaixo da IA.",
+      "antesS": 6.88,
+      "depois": "Curva 2: 9 décimos atrás da referência. Mínima 35 quilômetros por hora abaixo da referência.",
+      "depoisS": 6.99
+     },
+     {
+      "origem": "coach",
+      "volta": 19,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11, esquerda: 5 décimos atrás da IA. Mínima 17 quilômetros por hora abaixo da IA.",
+      "antesS": 6.79,
+      "depois": "Curva 11: 5 décimos atrás da referência. Mínima 17 quilômetros por hora abaixo da referência.",
+      "depoisS": 6.88
+     },
+     {
+      "origem": "resumo",
+      "volta": 19,
+      "titulo": "Volta 19: 2:18,008",
+      "antes": "Volta com rodada: 2 minutos e 18,0 segundos, 51,1 segundos atrás da melhor da sessão.",
+      "antesS": 7.42,
+      "depois": "Volta com rodada: 2 minutos e 18,0 segundos, 51,1 segundos atrás da melhor da sessão.",
+      "depoisS": 7.42
+     },
+     {
+      "origem": "coach",
+      "volta": 19,
+      "titulo": "C12, esquerda",
+      "antes": "Curva 12, esquerda: 1,0 segundo atrás da IA. Freou 27 metros antes da IA.",
+      "antesS": 6.67,
+      "depois": "Curva 12: 1,0 segundo atrás da referência. Freou 27 metros antes da referência.",
+      "depoisS": 6.78
+     }
+    ]
+   },
+   "depoisFalas": [
+    {
+     "origem": "coach",
+     "volta": 1,
+     "fala": "Curva 11: 3,1 segundos atrás. Mínima 53 quilômetros por hora abaixo da referência.",
+     "duracaoS": 6.92
+    },
+    {
+     "origem": "coach",
+     "volta": 1,
+     "fala": "Curva 12, esquerda: 7 décimos atrás da referência. Freou 18 metros antes da referência.",
+     "duracaoS": 6.85
+    },
+    {
+     "origem": "coach",
+     "volta": 2,
+     "fala": "Curva 7: 2,2 segundos atrás. Mínima 65 quilômetros por hora abaixo da referência.",
+     "duracaoS": 7.2
+    },
+    {
+     "origem": "resumo",
+     "volta": 2,
+     "fala": "Volta com rodada: 2 minutos e 16,2 segundos, 51,6 segundos atrás da referência.",
+     "duracaoS": 7.37
+    },
+    {
+     "origem": "coach",
+     "volta": 2,
+     "fala": "Curva 12, esquerda: 6 décimos atrás da referência. Freou 18 metros antes da referência.",
+     "duracaoS": 6.79
+    },
+    {
+     "origem": "resumo",
+     "volta": 3,
+     "fala": "Volta com rodada: 1 minuto e 45,0 segundos, 20,4 segundos atrás da referência.",
+     "duracaoS": 7.21
+    },
+    {
+     "origem": "coach",
+     "volta": 4,
+     "fala": "Curva 7: 2,5 segundos atrás. Mínima 60 quilômetros por hora abaixo da referência.",
+     "duracaoS": 6.97
+    },
+    {
+     "origem": "resumo",
+     "volta": 4,
+     "fala": "Volta com rodada: 1 minuto e 34,3 segundos, 9,8 segundos atrás da referência.",
+     "duracaoS": 6.96
+    },
+    {
+     "origem": "coach",
+     "volta": 5,
+     "fala": "Curva 11: 6 décimos atrás da referência. Mínima 26 quilômetros por hora abaixo da referência.",
+     "duracaoS": 6.95
+    },
+    {
+     "origem": "resumo",
+     "volta": 5,
+     "fala": "Volta com rodada: 1 minuto e 55,4 segundos, 30,9 segundos atrás da referência.",
+     "duracaoS": 7.34
+    },
+    {
+     "origem": "coach",
+     "volta": 5,
+     "fala": "Curva 12: 10,1 segundos atrás da referência. Freou 35 metros antes da referência.",
+     "duracaoS": 6.79
+    },
+    {
+     "origem": "resumo",
+     "volta": 6,
+     "fala": "Volta com rodada: 1 minuto e 54,3 segundos, 29,7 segundos atrás da referência.",
+     "duracaoS": 7.57
+    },
+    {
+     "origem": "resumo",
+     "volta": 7,
+     "fala": "Volta com rodada: 1 minuto e 34,5 segundos, 9,9 segundos atrás da referência.",
+     "duracaoS": 7.04
+    },
+    {
+     "origem": "coach",
+     "volta": 8,
+     "fala": "Curva 11: 1,7 segundo atrás da referência. Mínima 40 quilômetros por hora abaixo da referência.",
+     "duracaoS": 7.26
+    },
+    {
+     "origem": "resumo",
+     "volta": 9,
+     "fala": "Melhor da sessão. Curva 12: 9 décimos, freou 76 metros antes da referência.",
+     "duracaoS": 6.44
+    },
+    {
+     "origem": "coach",
+     "volta": 10,
+     "fala": "Curva 11, esquerda: 9 décimos atrás da referência. Mínima 8 quilômetros por hora abaixo da referência.",
+     "duracaoS": 7.18
+    },
+    {
+     "origem": "resumo",
+     "volta": 10,
+     "fala": "Melhor da sessão, 1,3 segundo mais rápida. Curva 11: 1,4 segundo.",
+     "duracaoS": 6.4
+    },
+    {
+     "origem": "resumo",
+     "volta": 11,
+     "fala": "Melhor da sessão, 1,4 segundo mais rápida. Curva 1: 8 décimos, freou 36 metros antes.",
+     "duracaoS": 7.72
+    },
+    {
+     "origem": "resumo",
+     "volta": 12,
+     "fala": "Volta com rodada: 1 minuto e 43,2 segundos, 15,1 segundos atrás da melhor da sessão.",
+     "duracaoS": 6.98
+    },
+    {
+     "origem": "analise",
+     "volta": 11,
+     "fala": "Voltas 9 a 11. Curva 1: perde 7 décimos por volta. Mínima 16 quilômetros por hora abaixo da referência.",
+     "duracaoS": 8.41
+    },
+    {
+     "origem": "resumo",
+     "volta": 13,
+     "fala": "2 décimos atrás da melhor da sessão. Curva 1: 7 décimos, freou 70 metros antes da referência.",
+     "duracaoS": 7.22
+    },
+    {
+     "origem": "coach",
+     "volta": 12,
+     "fala": "Curva 7: 1,7 segundo atrás. Mínima 47 quilômetros por hora abaixo da referência.",
+     "duracaoS": 7.08
+    },
+    {
+     "origem": "resumo",
+     "volta": 14,
+     "fala": "2,4 segundos atrás da melhor da sessão, 5,9 segundos atrás da referência.",
+     "duracaoS": 6.17
+    },
+    {
+     "origem": "coach",
+     "volta": 15,
+     "fala": "Curva 7: 2,0 segundos atrás. Mínima 51 quilômetros por hora abaixo da referência.",
+     "duracaoS": 7.04
+    },
+    {
+     "origem": "coach",
+     "volta": 15,
+     "fala": "Curva 12, esquerda: 7 décimos atrás da referência. Freou 58 metros antes da referência.",
+     "duracaoS": 7.22
+    },
+    {
+     "origem": "coach",
+     "volta": 15,
+     "fala": "Curva 11: 6 décimos atrás da referência. Mínima 16 quilômetros por hora abaixo da referência.",
+     "duracaoS": 6.77
+    },
+    {
+     "origem": "resumo",
+     "volta": 16,
+     "fala": "2,1 segundos atrás da melhor da sessão. Curva 1: 1,2 segundo, freou 28 metros antes.",
+     "duracaoS": 7.65
+    },
+    {
+     "origem": "resumo",
+     "volta": 17,
+     "fala": "4 décimos atrás da melhor da sessão. Curva 1: 1,1 segundo, freou 28 metros antes da referência.",
+     "duracaoS": 7.65
+    },
+    {
+     "origem": "resumo",
+     "volta": 18,
+     "fala": "Recorde pessoal, 1 décimo mais rápida. Curva 1: 5 décimos, freou 40 metros antes da referência.",
+     "duracaoS": 7.57
+    },
+    {
+     "origem": "coach",
+     "volta": 17,
+     "fala": "Curva 2: 9 décimos atrás da referência. Mínima 38 quilômetros por hora abaixo da referência.",
+     "duracaoS": 6.94
+    },
+    {
+     "origem": "analise",
+     "volta": 17,
+     "fala": "Curva 1: perde 1,1 segundo por volta. Mínima 36 quilômetros por hora abaixo.",
+     "duracaoS": 6.32
+    },
+    {
+     "origem": "coach",
+     "volta": 19,
+     "fala": "Curva 7: 1,3 segundo atrás. Mínima 33 quilômetros por hora abaixo da referência.",
+     "duracaoS": 6.84
+    },
+    {
+     "origem": "coach",
+     "volta": 19,
+     "fala": "Curva 12: 1,0 segundo atrás da referência. Freou 26 metros depois da referência.",
+     "duracaoS": 6.76
+    },
+    {
+     "origem": "resumo",
+     "volta": 19,
+     "fala": "Volta com rodada: 2 minutos e 18,0 segundos, 51,1 segundos atrás da melhor da sessão.",
+     "duracaoS": 7.42
+    }
+   ]
+  },
+  "2026-11-12": {
+   "antes": {
+    "referencia": {
+     "tipo": "volta_ia",
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+     "tempoS": 84.8291625038158
+    },
+    "entregues": 13,
+    "porOrigem": {
+     "coach": 3,
+     "resumo": 8,
+     "analise": 1,
+     "curva": 1
+    },
+    "pendentesNoFim": 0,
+    "comCausaNaVoz": 6,
+    "comIA": [
+     "Curva 11, esquerda: 5 décimos atrás da IA.",
+     "Melhor volta da sessão. Curva 10: 1,1 segundo, passou 7 metros por fora no ápice.",
+     "Melhor volta da sessão, 3 décimos mais rápida. Curva 1: 8 décimos, freou 34 metros antes da IA.",
+     "Volta com rodada: 2 minutos e 39,1 segundos, 68,0 segundos atrás da melhor da sessão.",
+     "Melhor volta da sessão, 1,6 segundo mais rápida. Curva 1: 1,1 segundo.",
+     "Curva 11, esquerda: 8 décimos atrás da IA. Mínima 29 quilômetros por hora abaixo da IA.",
+     "Volta com rodada: 1 minuto e 48,7 segundos, 19,3 segundos atrás da melhor da sessão.",
+     "Análise das voltas 2, 3 e 5. Curva 1: perde 9 décimos por volta. Freou 22 metros antes da IA.",
+     "2,9 segundos atrás da melhor da sessão. Curva 8: 3,7 segundos.",
+     "Curva 12: 1,0 segundo atrás da IA. Mínima 54 quilômetros por hora abaixo da IA.",
+     "Melhor volta da sessão, 1,4 segundo mais rápida. Curva 1: 7 décimos.",
+     "Curva 1: 7 décimos, freou 38 metros antes da IA.",
+     "Volta com rodada: 1 minuto e 40,0 segundos, 12,1 segundos atrás da melhor da sessão."
+    ],
+    "rotulosDoReplay": [
+     "None"
+    ],
+    "acimaDoLimite": [],
+    "maiorDuracaoPorOrigem": {
+     "coach": 6.89,
+     "resumo": 7.72,
+     "analise": 8.53,
+     "curva": 4.23
+    }
+   },
+   "palavras": {
+    "referencia": {
+     "tipo": "volta_ia",
+     "volta": "2026-10-04_03-42-10_vhe_interlagos#0013",
+     "tempoS": 84.8291625038158
+    },
+    "entregues": 12,
+    "porOrigem": {
+     "coach": 3,
+     "resumo": 8,
+     "analise": 1
+    },
+    "pendentesNoFim": 0,
+    "comCausaNaVoz": 6,
+    "comIA": [],
+    "rotulosDoReplay": [
+     "None"
+    ],
+    "acimaDoLimite": [],
+    "maiorDuracaoPorOrigem": {
+     "coach": 7.05,
+     "resumo": 7.91,
+     "analise": 8.34
+    }
+   },
+   "depois": {
+    "referencia": {
+     "tipo": "volta_do_modelo",
+     "volta": "2026-11-15_02-47-12_vhe_interlagos_teste_m1#0008",
+     "tempoS": 84.551581
+    },
+    "entregues": 13,
+    "porOrigem": {
+     "resumo": 8,
+     "coach": 4,
+     "analise": 1
+    },
+    "pendentesNoFim": 0,
+    "comCausaNaVoz": 7,
+    "comIA": [],
+    "rotulosDoReplay": [
+     "None"
+    ],
+    "acimaDoLimite": [],
+    "maiorDuracaoPorOrigem": {
+     "resumo": 7.72,
+     "coach": 7.09,
+     "analise": 8.69
+    }
+   },
+   "antesContraPalavras": {
+    "pares": 12,
+    "perderamACausa": [],
+    "ganharamACausa": [
+     {
+      "origem": "resumo",
+      "volta": 8,
+      "titulo": "Volta 8: 1:27,962",
+      "antes": "Melhor volta da sessão, 1,4 segundo mais rápida. Curva 1: 7 décimos.",
+      "antesS": 6.23,
+      "depois": "Melhor da sessão, 1,4 segundo mais rápida. Curva 1: 7 décimos, freou 38 metros antes.",
+      "depoisS": 7.82
+     }
+    ],
+    "falas": [
+     {
+      "origem": "coach",
+      "volta": 2,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11, esquerda: 5 décimos atrás da IA.",
+      "antesS": 3.52,
+      "depois": "Curva 11, esquerda: 5 décimos atrás da referência.",
+      "depoisS": 3.91
+     },
+     {
+      "origem": "resumo",
+      "volta": 2,
+      "titulo": "Volta 2: 1:31,341",
+      "antes": "Melhor volta da sessão. Curva 10: 1,1 segundo, passou 7 metros por fora no ápice.",
+      "antesS": 6.64,
+      "depois": "Melhor da sessão. Curva 10: 1,1 segundo, passou 7 metros por fora no ápice.",
+      "depoisS": 6.32
+     },
+     {
+      "origem": "resumo",
+      "volta": 3,
+      "titulo": "Volta 3: 1:31,023",
+      "antes": "Melhor volta da sessão, 3 décimos mais rápida. Curva 1: 8 décimos, freou 34 metros antes da IA.",
+      "antesS": 7.7,
+      "depois": "Melhor da sessão, 3 décimos mais rápida. Curva 1: 8 décimos, freou 34 metros antes da referência.",
+      "depoisS": 7.81
+     },
+     {
+      "origem": "resumo",
+      "volta": 4,
+      "titulo": "Volta 4: 2:39,061",
+      "antes": "Volta com rodada: 2 minutos e 39,1 segundos, 68,0 segundos atrás da melhor da sessão.",
+      "antesS": 7.72,
+      "depois": "Volta com rodada: 2 minutos e 39,1 segundos, 68,0 segundos atrás da melhor da sessão.",
+      "depoisS": 7.72
+     },
+     {
+      "origem": "resumo",
+      "volta": 5,
+      "titulo": "Volta 5: 1:29,389",
+      "antes": "Melhor volta da sessão, 1,6 segundo mais rápida. Curva 1: 1,1 segundo.",
+      "antesS": 6.32,
+      "depois": "Melhor da sessão, 1,6 segundo mais rápida. Curva 1: 1,1 segundo, perdeu 4 décimos na freada.",
+      "depoisS": 7.91
+     },
+     {
+      "origem": "resumo",
+      "volta": 6,
+      "titulo": "Volta 6: 1:48,713",
+      "antes": "Volta com rodada: 1 minuto e 48,7 segundos, 19,3 segundos atrás da melhor da sessão.",
+      "antesS": 7.47,
+      "depois": "Volta com rodada: 1 minuto e 48,7 segundos, 19,3 segundos atrás da melhor da sessão.",
+      "depoisS": 7.47
+     },
+     {
+      "origem": "coach",
+      "volta": 4,
+      "titulo": "C11, esquerda",
+      "antes": "Curva 11, esquerda: 8 décimos atrás da IA. Mínima 29 quilômetros por hora abaixo da IA.",
+      "antesS": 6.77,
+      "depois": "Curva 11: 8 décimos atrás da referência. Mínima 29 quilômetros por hora abaixo da referência.",
+      "depoisS": 6.88
+     },
+     {
+      "origem": "resumo",
+      "volta": 7,
+      "titulo": "Volta 7: 1:32,299",
+      "antes": "2,9 segundos atrás da melhor da sessão. Curva 8: 3,7 segundos.",
+      "antesS": 6.47,
+      "depois": "2,9 segundos atrás da melhor da sessão. Curva 8: 3,7 segundos.",
+      "depoisS": 6.47
+     },
+     {
+      "origem": "analise",
+      "volta": 5,
+      "titulo": "Análise das voltas 2, 3 e 5",
+      "antes": "Análise das voltas 2, 3 e 5. Curva 1: perde 9 décimos por volta. Freou 22 metros antes da IA.",
+      "antesS": 8.53,
+      "depois": "Voltas 2, 3 e 5. Curva 1: perde 9 décimos por volta. Freou 22 metros antes da referência.",
+      "depoisS": 8.34
+     },
+     {
+      "origem": "resumo",
+      "volta": 8,
+      "titulo": "Volta 8: 1:27,962",
+      "antes": "Melhor volta da sessão, 1,4 segundo mais rápida. Curva 1: 7 décimos.",
+      "antesS": 6.23,
+      "depois": "Melhor da sessão, 1,4 segundo mais rápida. Curva 1: 7 décimos, freou 38 metros antes.",
+      "depoisS": 7.82
+     },
+     {
+      "origem": "coach",
+      "volta": 6,
+      "titulo": "C12, esquerda",
+      "antes": "Curva 12: 1,0 segundo atrás da IA. Mínima 54 quilômetros por hora abaixo da IA.",
+      "antesS": 6.89,
+      "depois": "Curva 12: 1,0 segundo atrás. Mínima 54 quilômetros por hora abaixo da referência.",
+      "depoisS": 7.05
+     },
+     {
+      "origem": "resumo",
+      "volta": 9,
+      "titulo": "Volta 9: 1:40,018",
+      "antes": "Volta com rodada: 1 minuto e 40,0 segundos, 12,1 segundos atrás da melhor da sessão.",
+      "antesS": 6.72,
+      "depois": "Volta com rodada: 1 minuto e 40,0 segundos, 12,1 segundos atrás da melhor da sessão.",
+      "depoisS": 6.72
+     }
+    ]
+   },
+   "depoisFalas": [
+    {
+     "origem": "resumo",
+     "volta": 2,
+     "fala": "Melhor da sessão. Curva 4: 1,1 segundo, freou 34 metros antes da referência.",
+     "duracaoS": 6.76
+    },
+    {
+     "origem": "resumo",
+     "volta": 3,
+     "fala": "Melhor da sessão, 3 décimos mais rápida. Curva 4: 9 décimos, freou 68 metros antes.",
+     "duracaoS": 7.5
+    },
+    {
+     "origem": "coach",
+     "volta": 4,
+     "fala": "Curva 7: 1,0 segundo atrás. Mínima 57 quilômetros por hora abaixo da referência.",
+     "duracaoS": 7.09
+    },
+    {
+     "origem": "resumo",
+     "volta": 4,
+     "fala": "Volta com rodada: 2 minutos e 39,1 segundos, 68,0 segundos atrás da melhor da sessão.",
+     "duracaoS": 7.72
+    },
+    {
+     "origem": "resumo",
+     "volta": 5,
+     "fala": "Melhor da sessão, 1,6 segundo mais rápida. Curva 1: 9 décimos, perdeu 5 décimos na freada.",
+     "duracaoS": 7.61
+    },
+    {
+     "origem": "coach",
+     "volta": 4,
+     "fala": "Curva 11: 7 décimos atrás da referência. Mínima 24 quilômetros por hora abaixo da referência.",
+     "duracaoS": 7.07
+    },
+    {
+     "origem": "resumo",
+     "volta": 6,
+     "fala": "Volta com rodada: 1 minuto e 48,7 segundos, 19,3 segundos atrás da melhor da sessão.",
+     "duracaoS": 7.47
+    },
+    {
+     "origem": "analise",
+     "volta": 5,
+     "fala": "Voltas 2, 3 e 5. Curva 4: perde 9 décimos por volta. Freou 34 metros antes da referência.",
+     "duracaoS": 8.69
+    },
+    {
+     "origem": "resumo",
+     "volta": 7,
+     "fala": "2,9 segundos atrás da melhor da sessão. Curva 8: 3,9 segundos.",
+     "duracaoS": 6.4
+    },
+    {
+     "origem": "coach",
+     "volta": 6,
+     "fala": "Curva 12: 1,0 segundo atrás. Mínima 51 quilômetros por hora abaixo da referência.",
+     "duracaoS": 6.82
+    },
+    {
+     "origem": "resumo",
+     "volta": 8,
+     "fala": "Melhor da sessão, 1,4 segundo mais rápida. Curva 4: 1,0 segundo.",
+     "duracaoS": 6.55
+    },
+    {
+     "origem": "coach",
+     "volta": 7,
+     "fala": "Curva 7: 1,3 segundo atrás. Mínima 72 quilômetros por hora abaixo da referência.",
+     "duracaoS": 6.93
+    },
+    {
+     "origem": "resumo",
+     "volta": 9,
+     "fala": "Volta com rodada: 1 minuto e 40,0 segundos, 12,1 segundos atrás da melhor da sessão.",
+     "duracaoS": 6.72
+    }
+   ]
+  }
+ }
+}

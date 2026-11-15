@@ -18,10 +18,10 @@ measured difference ("0.12 s behind your reference lap here"), never a promised
 gain or an "ideal lap". The old comparison -- the best ever done in each slice --
 is still here as `best_per_microsector`, off unless the model asks for it.
 
-Since ADR 0016 (the learning phase) the reference is either the AI's lap
-(`volta_ia`, the default) or the driver's best (`minha_melhor`), and every
-phrase names it: "0.60s atras da volta da IA neste trecho". Braking is said
-relative to the reference ("a IA freia 12 m depois de voce"), at most three
+Since ADR 0032 (pedido 51) the reference is either the model's lap
+(`volta_do_modelo`, the default) or the driver's best (`minha_melhor`), and every
+phrase names it: "0.60s atras da volta de referência neste trecho". Braking is said
+relative to the reference ("a referencia freia 12 m depois de voce"), at most three
 phrases a lap -- the first that clear the bar -- and the lap closes with the
 three slices furthest from the reference.
 
@@ -866,15 +866,13 @@ def _braking_clause(kind: Optional[str], delta_m: float) -> str:
         if metres < 1:
             return "na sua melhor volta voce freou no mesmo ponto"
         return f"na sua melhor volta voce freou {metres:.0f} m {'depois' if delta_m > 0 else 'antes'}"
-    subject = "a IA" if kind == "volta_ia" else "a referencia"
+    subject = "a referencia"   # ADR 0032: a volta do modelo e "a referencia"
     if metres < 1:
         return f"{subject} freia no mesmo ponto que voce"
     return f"{subject} freia {metres:.0f} m {'depois' if delta_m > 0 else 'antes'} de voce"
 
 
 def _min_speed_clause(kind: Optional[str], reference_kmh: float, yours_kmh: float) -> str:
-    if kind == "volta_ia":
-        return f"minima da IA {reference_kmh:.0f} km/h, a sua {yours_kmh:.0f} km/h"
     if kind == "minha_melhor":
         return f"minima na sua melhor volta {reference_kmh:.0f} km/h, agora {yours_kmh:.0f} km/h"
     return f"minima na referencia {reference_kmh:.0f} km/h, a sua {yours_kmh:.0f} km/h"

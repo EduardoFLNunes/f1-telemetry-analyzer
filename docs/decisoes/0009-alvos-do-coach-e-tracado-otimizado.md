@@ -4,6 +4,7 @@
 - **Data:** 2026-10-02
 - **Decisor:** Eduardo
 - **Atualização (15/11, pedido 50):** a linha do projeto vai para a referência do coach se atingir a meta do ADR 0031. A L2 atingiu, e é a referência de todos os trechos em `data/modelo1_por_trecho/referencia_por_trecho.json`; o coach ainda não lê esse arquivo.
+- **Atualização (15/11, pedido 51):** a referência do coach é a volta do modelo (ADR 0032): a melhor volta válida da L2 (1:24,552), num arquivo derivado. A volta da IA do jogo saiu do app.
 
 ## Contexto
 

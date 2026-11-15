@@ -3,6 +3,7 @@
 - **Status:** aceita (pedido 50). Registrada antes de qualquer busca, calibração ou arquivo de linha; o resultado entra no fim, sem mudar o registro
 - **Data:** 2026-11-12
 - **Decisor:** Eduardo
+- **Atualização (15/11, pedido 51):** a melhor volta válida da L2 (1:24,552, `2026-11-15_02-47-12_vhe_interlagos_teste_m1`, sequência 8) virou a volta de referência do app (ADR 0032), num arquivo derivado em `data/reference_models/vhe_interlagos.volta_do_modelo.json`; a linha da IA fica só nos testes de desenvolvimento.
 - **Refina:** 0029 (o teste no jogo como medidor) e 0030 (o Modelo 1 por trecho). **Mantém:** 0009 até o resultado (a referência do coach só muda pela regra do item 11), o corredor do 0025 e a geometria do 0002. **Usa:** a busca do 0028, item 10
 
 ## Contexto

@@ -26,7 +26,8 @@ BACKEND = Path(__file__).resolve().parents[2]
 if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
-from core.assisted_analysis.reference_model import REFERENCE_AI, DriverReferenceModel, model_path  # noqa: E402
+from core.assisted_analysis.reference_model import LEGACY_AI_KIND, DriverReferenceModel, model_path  # noqa: E402
+from ml.pista_teste.condicoes import VOLTA_IA as VOLTA_0013  # noqa: E402
 from ml import config  # noqa: E402
 from ml.data.recordings import list_all_sessions  # noqa: E402
 from ml.modelo2 import conferencias as conf  # noqa: E402
@@ -102,7 +103,8 @@ def run(handoff_prefix: str = None) -> Dict[str, object]:
 
     model_file = model_path(BACKEND.parent, TRACK)
     model = DriverReferenceModel.load(model_file)
-    ref_id = (model.references or {}).get(REFERENCE_AI, {}).get("lap_id")
+    # ADR 0032, item 6: a volta da IA saiu do modelo do coach; o Modelo 2 (que nao muda) segue na `#0013`.
+    ref_id = ((model.references or {}).get(LEGACY_AI_KIND) or {}).get("lap_id") or VOLTA_0013
     if ref_id not in laps:
         raise SystemExit(f"PARADO: a volta da IA do coach ({ref_id}) nao esta nas voltas rotuladas.")
     ref = laps[ref_id]

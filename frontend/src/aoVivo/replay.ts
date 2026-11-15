@@ -4,7 +4,7 @@
  * Os dados vêm de `/api/radio/replay/<id>` (`backend/core/radio/replay.py`): para cada
  * curva citada pelo rádio, as duas linhas (você e a referência) na geometria oficial, com
  * o tempo desde a mesma entrada e o pedal, as freadas, as mínimas, o traçado e a perda.
- * Sempre "você" e "IA (referência)": a diferença medida contra uma volta real (ADR 0012).
+ * Sempre "você" e "Referência" (ou "seu recorde"): a diferença medida contra uma volta real (ADR 0012).
  */
 import { base } from '../volta/projecao';
 
@@ -403,8 +403,8 @@ export function tempoDeVolta(s: number): string {
   return `${m}:${resto < 10 ? '0' : ''}${nf(resto, 3)}`;
 }
 
-/** "você freia 42 m antes da IA" (a distância de `freadas.distanciaM`: negativa = antes). */
-export function textoDaFreada(distanciaM: number | null, contra = 'da IA'): string | null {
+/** "você freia 42 m antes da referência" (a distância de `freadas.distanciaM`: negativa = antes). */
+export function textoDaFreada(distanciaM: number | null, contra = 'da referência'): string | null {
   if (distanciaM === null || distanciaM === undefined) return null;
   const m = Math.round(Math.abs(distanciaM));
   if (m < 1) return `você freia no mesmo ponto ${contra.replace(/^da /, 'que a ')}`;

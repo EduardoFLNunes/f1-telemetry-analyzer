@@ -7,7 +7,7 @@
  *   relógio da grade, como o store v2 (`lap_time_s`). A lista de sessões do
  *   gravador (`/api/sessions`) mede a volta de outro jeito e dá outros números
  *   (13/10: 13 válidas e 1:29,757 contra 9 e 1:29,768); dela só sai a data;
- * - sua melhor volta e a volta da IA: as referências do modelo do coach
+ * - sua melhor volta e a volta de referência (a volta do modelo, ADR 0032): as referências do coach
  *   (`/api/coleta/antes`, `coach.modelo.referencias`);
  * - a M1: a contagem oficial (`/api/coleta/m1/oficial`).
  *

@@ -17,8 +17,8 @@ Em ordem:
    decide, e o que ele nao resolve fica `desconhecida`;
 4. copia o modelo do repositorio para `data/reference_models/backup/` e o
    treina de novo;
-5. imprime o resumo: as duas referencias, as voltas de cada origem, o limiar e
-   o foco inicial;
+5. imprime o resumo: as duas referencias (a volta do modelo, do arquivo derivado,
+   e a sua melhor; ADR 0032), as voltas de cada origem, o limiar e o foco inicial;
 6. refaz o store v2 com as checagens (`ml.scripts.build_lap_store_v2`, pedido
    16), para as sessoes novas entrarem no relatorio de evolucao; as voltas das
    sessoes que nao mudaram saem do cache em `data/ml/cache_store_v2/`, e os
@@ -150,7 +150,8 @@ def summary(model: DriverReferenceModel, inventory: pd.DataFrame) -> Dict[str, o
                 for k in sectors
             },
         }
-    model.use_reference(DEFAULT_REFERENCE)
+    if not model.use_reference(DEFAULT_REFERENCE):
+        model.use_reference("minha_melhor")      # ADR 0032, item 4: sem a volta do modelo
     return {
         "referencias": references,
         "referencia_padrao": model.reference_kind,
@@ -174,9 +175,10 @@ def print_summary(result: Dict[str, object]) -> None:
     for kind, reference in result["referencias"].items():
         label = REFERENCE_LABELS.get(kind, kind)
         if reference is None:
-            print(f"  {kind:13s}: nenhuma volta valida")
+            print(f"  {kind:15s}: " + ("A volta de referencia desta pista ainda nao foi gerada pelo modelo"
+                                        if kind == "volta_do_modelo" else "nenhuma volta valida"))
             continue
-        print(f"  {kind:13s}: {reference['tempo_s']:.3f} s  {reference['volta']}  ({label})")
+        print(f"  {kind:15s}: {reference['tempo_s']:.3f} s  {reference['volta']}  ({label})")
     print(f"  referencia padrao do app: {result['referencia_padrao']}")
     counts = result["voltas_por_origem"]
     print(f"  voltas por origem, equipamento atual: {counts['equipamento_atual']}")

@@ -20,6 +20,8 @@ O rádio leva o que o coach já decide até o piloto, durante a volta, com o jog
 
 ## 2. O que o rádio diz (pedido 35)
 
+> **Desde o pedido 51 (ADR 0032), a referência é a volta do modelo:** a melhor volta válida da L2, 1:24,552. Onde os exemplos abaixo dizem "da IA", a fala de hoje diz "da referência" ("atrás da referência", "freou 34 metros antes da referência", "a referência freia 12 m depois de você"); "do seu recorde" e "da melhor da sessão" ficam, e "Melhor volta da sessão" virou "Melhor da sessão". Os exemplos ficam como foram medidos na época. Nas 4 sessões de 13/10, 18/10, 21/10 e 12/11, fora do tempo real e com a voz de verdade, nenhuma mensagem perdeu a causa com a troca, três ganharam a causa (o "Melhor da sessão" é mais curto), nenhuma fala passou do limite e nenhuma fala, cartão ou rótulo diz "IA" para a referência (`docs/handoff/2026-11-15_51_volta-de-referencia-do-modelo_radio_antes_e_depois.json`).
+
 Os exemplos são das sessões de 13/10 e 18/10, passadas pelo rádio fora do tempo real, com a voz de verdade e o cronômetro do gravador (handoff do pedido 35). Desde o pedido 36, as falas são as com as unidades (seção 2.6), da mesma passagem refeita (handoff do pedido 36).
 
 ### 2.1 A frase do coach com a causa
@@ -139,6 +141,8 @@ Na análise, vale a mediana de 3 voltas, que varia menos que uma volta: o corte 
 
 ### 2.6 As unidades (pedido 36)
 
+Pedido 51: as palavras que dizem contra quem passaram a "da referência" (a volta do modelo), "do seu recorde" ou "da melhor da sessão". A regra da unidade não mudou: quando a fala não cabe, sai primeiro a segunda causa, depois a primeira, e por último o "da referência", nunca a unidade (`test_todo_numero_falado_tem_a_unidade_em_todos_os_tipos_de_mensagem` e `tests/test_referencia_do_app.py`).
+
 Todo número falado tem a sua unidade (`backend/core/radio/texto.py`):
 
 | o quê | regra | exemplos |
@@ -248,6 +252,8 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é 
 
 ### 5.2 O minimapa
 
+Pedido 51 (app do jogo 0.6.0): o fantasma é a volta do modelo, com o rótulo "Referência"; a diferença diz "para a referência" (ou "para o seu recorde"). Prévia: `docs/handoff/2026-11-15_51_volta-de-referencia-do-modelo_minimapa_boxes.png`.
+
 - **A pista tratada:**
   - **o que é:** o contorno do asfalto tratado do cache da pista (`asphaltSurface.loops`), a mesma camada que o mapa do app e o mapa aproximado desenham. Só entram os laços com pelo menos 1.000 m² (o contorno de fora, o buraco do miolo, as áreas de escape e dos boxes), e cada laço é simplificado pelo Douglas-Peucker com 2 m de tolerância: em Interlagos, 12 contornos e 363 pontos. As camadas do cache estão em (x, −z) e viram (x, z), a posição do carro (`core/radio/minimapa.py`, `contorno_do_asfalto`);
   - **até o fechamento do pedido 35,** eram as duas bordas da geometria oficial (o centro mais e menos a largura do corredor). Elas só ficam quando o backend não tem o cache da pista, e a rota diz isso em `pista.origem`;
@@ -284,6 +290,8 @@ Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é 
   - fora do jogo: a rota monta o minimapa em cerca de 20 ms, uma vez, e manda 64 KB. A cada quadro, o app desenha a imagem da pista, dois círculos e o texto, e procura o ponto mais perto em cerca de 34 segmentos da referência.
 
 ### 5.3 O mapa aproximado
+
+Pedido 51 (app do jogo 0.6.0): a marca "freada da IA" virou "freada da referência", e o rótulo do fantasma, "Referência". Prévia na freada da C04: `docs/handoff/2026-11-15_51_volta-de-referencia-do-modelo_aproximado_c04.png`.
 
 Pedido depois do primeiro teste no jogo (21/10): a vista de perto da tela Volta ("fantasma por curva"), dentro do jogo, ao lado do minimapa.
 

@@ -3,7 +3,7 @@
  * partir dos números do evento.
  *
  * O backend manda a frase pronta, sem acento e com ponto decimal ("0.31s atras
- * da volta da IA"); mudar isso seria mudar o coach. Os números estão todos no
+ * da volta de referência"); mudar isso seria mudar o coach. Os números estão todos no
  * `evidence` do evento, então a tela monta a frase com eles: os mesmos números
  * e a mesma regra, só a escrita muda. Evento sem os números → a frase do
  * backend, como veio.
@@ -83,14 +83,13 @@ function clausulaDaFreada(tipo: string | null, deltaM: number): string {
   if (tipo === 'minha_melhor') {
     return metros < 1 ? 'na sua melhor volta você freou no mesmo ponto' : `na sua melhor volta você freou ${metros} m ${lado}`;
   }
-  const quem = tipo === 'volta_ia' ? 'a IA' : 'a referência';
+  const quem = 'a referência';
   return metros < 1 ? `${quem} freia no mesmo ponto que você` : `${quem} freia ${metros} m ${lado} de você`;
 }
 
 function clausulaDaMinima(tipo: string | null, referenciaKmh: number, suaKmh: number): string {
   const ref = Math.round(referenciaKmh);
   const sua = Math.round(suaKmh);
-  if (tipo === 'volta_ia') return `mínima da IA ${ref} km/h, a sua ${sua} km/h`;
   if (tipo === 'minha_melhor') return `mínima na sua melhor volta ${ref} km/h, agora ${sua} km/h`;
   return `mínima na referência ${ref} km/h, a sua ${sua} km/h`;
 }

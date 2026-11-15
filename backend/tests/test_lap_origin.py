@@ -276,10 +276,12 @@ class SelectionTests(unittest.TestCase):
 
 class CoachTrainingFilterTests(unittest.TestCase):
     def test_the_trainer_chooses_laps_from_the_labelled_inventory_before_loading_anything(self):
-        """ADR 0016: a referencia da IA e a oscilacao do piloto saem do inventario rotulado."""
+        """ADR 0016: a oscilacao do piloto sai do inventario rotulado. ADR 0032 (pedido 51): a referencia
+        padrao e a volta do modelo, do arquivo derivado; o construtor nao procura mais voltas da IA."""
         source = (BACKEND / "tools" / "train_reference_model.py").read_text(encoding="utf-8")
         self.assertIn("driver_laps(inventory, pits, cars=cars, car=car)", source)
-        self.assertIn("ai_laps(inventory, pits, cars=cars, car=car, since=args.ia_desde)", source)
+        self.assertNotIn("ai_laps(", source)
+        self.assertIn("volta_do_modelo.encontrar([repo], args.track)", source)
         self.assertIn('{"origem", "equipamento", "relogio_suspeito"} - set(inventory.columns)', source)
         self.assertLess(source.index("driver_laps(inventory, pits, cars"), source.index("load_laps(mine, sessions)"))
 

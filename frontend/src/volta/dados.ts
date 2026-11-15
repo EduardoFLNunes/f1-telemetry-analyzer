@@ -60,7 +60,7 @@ export type Sessao = {
 };
 
 export type Referencias = {
-  volta_ia?: { volta: string; tempoS: number };
+  volta_do_modelo?: { volta: string; tempoS: number; marca?: string; rotulo?: string };
   minha_melhor?: { volta: string; tempoS: number };
 };
 

@@ -6,7 +6,8 @@ As regras foram registradas antes da primeira rodada, em
 * **voltas** -- do store v2, `humano`, equipamento `atual`, com o relogio
   conferido e sem `relogio_suspeito`;
 * **sessao** -- as gravacoes do mesmo dia;
-* **referencia** -- a volta da IA do coach (`volta_ia`);
+* **referencia** -- a volta da IA do coach (`volta_ia`); desde o pedido 51 (ADR 0032),
+  a volta do modelo (`volta_do_modelo`), cujos pedais nao sao julgados;
 * **unidades** -- as 14 curvas de `detect_corners`, cada uma com o trecho que
   vai do meio da reta anterior ao meio da seguinte; os 14 trechos cobrem a
   volta, e a soma das perdas e a diferenca de tempo de volta;
@@ -465,8 +466,12 @@ def _rounded(value):
 
 
 def technique_report(laps: pd.DataFrame, lap_grids: Dict[str, pd.DataFrame], ref: pd.DataFrame,
-                     track: TrackGeometry, segments: Sequence[Segment]) -> Dict[str, object]:
-    """O bloco `tecnica` de uma sessao (formato em `docs/store_v2_e_evolucao.md`)."""
+                     track: TrackGeometry, segments: Sequence[Segment], judge_reference: bool = True) -> Dict[str, object]:
+    """O bloco `tecnica` de uma sessao (formato em `docs/store_v2_e_evolucao.md`).
+
+    `judge_reference=False` (pedido 51, ADR 0032, item 5): a referencia e a volta do modelo, cujos
+    pedais sao o comando do controlador da IA; a coluna da referencia fica "nao julgada".
+    """
     laps = laps.sort_values(["session_id", "sequence"])
     lap_ids = list(laps["lap_id"])
     corners = []
@@ -483,7 +488,8 @@ def technique_report(laps: pd.DataFrame, lap_grids: Dict[str, pd.DataFrame], ref
             }
 
         rows = [{"volta": lap_id, **measure(lap_grids[lap_id])} for lap_id in lap_ids]
-        ai = measure(ref)
+        ai = measure(ref) if judge_reference else {key: None for key in
+                                                   ("uso_da_aderencia_g", "freio_e_volante_m", "emendada", "freio_max_c")}
         grip = _summary([r["uso_da_aderencia_g"] for r in rows])
         chained = [r["emendada"] for r in rows]
         brake_temps = _summary([r["freio_max_c"] for r in rows], 1)
@@ -501,7 +507,8 @@ def technique_report(laps: pd.DataFrame, lap_grids: Dict[str, pd.DataFrame], ref
                 "voltas_emendadas": sum(1 for c in chained if c is True),
                 "voltas_com_frenagem": sum(1 for c in chained if c is not None),
                 "voltas_sem_frenagem": sum(1 for c in chained if c is None),
-                "ia": "sem frenagem" if ai["emendada"] is None else ("emendada" if ai["emendada"] else "nao emendada"),
+                "ia": ("nao julgada" if not judge_reference else
+                       "sem frenagem" if ai["emendada"] is None else ("emendada" if ai["emendada"] else "nao emendada")),
             },
             "temperatura_freio_max_c": brake_temps if brake_temps["voltas"] else None,
             "por_volta": [{key: _rounded(value) for key, value in r.items()} for r in rows],

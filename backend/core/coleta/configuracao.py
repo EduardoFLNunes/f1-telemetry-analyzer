@@ -7,8 +7,11 @@ Dois valores:
   geometria oficial). O modelo nao e copiado para o pacote nem para a pasta de
   dados, porque muda a cada `atualizar_coach`. A contagem oficial da M1 tambem
   le o store v2 de la (`data/ml/`).
-* **referenciaCoach**: `volta_ia`, `minha_melhor` ou `desligado`. Substitui a
-  variavel `AT_COACH_REFERENCE` e o "renomeie o arquivo para treinar sem o coach".
+* **referenciaCoach**: `volta_do_modelo` ("Volta de referencia", a padrao),
+  `minha_melhor` ("Sua melhor volta") ou `desligado`. Substitui a variavel
+  `AT_COACH_REFERENCE` e o "renomeie o arquivo para treinar sem o coach". Desde
+  o ADR 0032 (pedido 51), o valor antigo `volta_ia` vira `volta_do_modelo` ao
+  abrir, e o arquivo e regravado com ele.
 
 O arquivo fica em `<pasta de dados>/data/configuracao/app.json`, fora da pasta
 de gravacoes. Nenhum leitor do ML olha para ele.
@@ -17,7 +20,7 @@ Quem vale, quando ha mais de uma fonte:
 
 * referencia: `AT_COACH_REFERENCE`, se estiver definida (o app de
   desenvolvimento continua obedecendo a ela), depois a configuracao, depois
-  `volta_ia`;
+  `volta_do_modelo`;
 * repositorio: a configuracao, depois `AT_REPO_PATH` (o Electron passa o
   repositorio em que o app foi construido, quando ele ainda existe), depois a
   raiz do codigo, quando o backend roda do codigo-fonte.
@@ -31,12 +34,17 @@ import threading
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-from ..assisted_analysis.reference_model import DEFAULT_REFERENCE, REFERENCE_KINDS, REFERENCE_LABELS
+from ..assisted_analysis import volta_do_modelo
+from ..assisted_analysis.reference_model import (
+    DEFAULT_REFERENCE, LEGACY_AI_KIND, REFERENCE_KINDS, REFERENCE_MODEL_LAP, REFERENCE_OWN_BEST, normalized_kind,
+)
 
 COACH_OFF = "desligado"
 REFERENCE_CHOICES = tuple(REFERENCE_KINDS) + (COACH_OFF,)
-CHOICE_LABELS = {**REFERENCE_LABELS, COACH_OFF: "coach desligado"}
+# Os nomes da tela Coleta de dados (ADR 0032, item 1).
+CHOICE_LABELS = {REFERENCE_MODEL_LAP: "Volta de referência", REFERENCE_OWN_BEST: "Sua melhor volta", COACH_OFF: "coach desligado"}
 CONFIG_RELATIVE = Path("data") / "configuracao" / "app.json"
+PISTA = "vhe_interlagos"
 
 
 class ConfigError(ValueError):
@@ -45,8 +53,10 @@ class ConfigError(ValueError):
 
 class AppConfig:
     def __init__(self, runtime_root: Path, default_repository: Optional[Path] = None,
-                 default_source: str = "AT_REPO_PATH"):
+                 default_source: str = "AT_REPO_PATH", resource_root: Optional[Path] = None):
         self.path = Path(runtime_root) / CONFIG_RELATIVE
+        self.runtime_root = Path(runtime_root)
+        self.resource_root = Path(resource_root) if resource_root else None
         self.default_repository = Path(default_repository) if default_repository else None
         self.default_source = default_source
         self._lock = threading.Lock()
@@ -63,7 +73,20 @@ class AppConfig:
                         self._cache = {}
                 except (OSError, json.JSONDecodeError):
                     self._cache = {}
+                if self._cache.get("referenciaCoach") == LEGACY_AI_KIND:
+                    # ADR 0032: a volta da IA saiu do app; a configuracao antiga vira a volta do modelo.
+                    self._cache["referenciaCoach"] = normalized_kind(LEGACY_AI_KIND)
+                    self._gravar(self._cache)
             return dict(self._cache)
+
+    def _gravar(self, valores: Dict[str, Any]) -> None:
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            temporary = self.path.with_suffix(".tmp")
+            temporary.write_text(json.dumps(valores, ensure_ascii=False, indent=2), encoding="utf-8")
+            os.replace(temporary, self.path)
+        except OSError:
+            pass
 
     def save(self, changes: Dict[str, Any]) -> Dict[str, Any]:
         """Grava as mudancas validas. Valor vazio volta ao padrao."""
@@ -78,7 +101,7 @@ class AppConfig:
                     raise ConfigError(f"A pasta {folder} não existe.")
                 current["repositorio"] = str(folder.resolve())
         if "referenciaCoach" in changes:
-            value = changes.get("referenciaCoach")
+            value = normalized_kind(changes.get("referenciaCoach")) if changes.get("referenciaCoach") else None
             if value in (None, ""):
                 current.pop("referenciaCoach", None)
             elif value not in REFERENCE_CHOICES:
@@ -106,7 +129,7 @@ class AppConfig:
 
     def reference(self) -> Tuple[str, str]:
         """(escolha, de onde ela veio). A escolha e uma de `REFERENCE_CHOICES`."""
-        env = (os.environ.get("AT_COACH_REFERENCE") or "").strip().lower()
+        env = normalized_kind(os.environ.get("AT_COACH_REFERENCE") or "")
         if env:
             # Como antes do pedido 28: valor desconhecido vira a referencia padrao.
             return (env if env in REFERENCE_CHOICES else DEFAULT_REFERENCE), "AT_COACH_REFERENCE"
@@ -127,9 +150,16 @@ class AppConfig:
         choice, _ = self.reference()
         return None if choice == COACH_OFF else choice
 
+    def volta_do_modelo(self, pista: str = PISTA) -> Optional[Dict[str, Any]]:
+        """O arquivo da volta do modelo (ADR 0032): no repositorio, na pasta de dados e na de recursos."""
+        return volta_do_modelo.encontrar([self.coach_root(), self.runtime_root, self.resource_root], pista)
+
     def to_api(self) -> Dict[str, Any]:
         folder, folder_source = self.repository()
         choice, choice_source = self.reference()
+        modelo = self.volta_do_modelo()
+        # ADR 0032, item 4: sem a volta do modelo, so "Sua melhor volta", com a frase.
+        opcoes = [c for c in REFERENCE_CHOICES if modelo is not None or c != REFERENCE_MODEL_LAP]
         return {
             "arquivo": str(self.path),
             "repositorio": str(folder) if folder else None,
@@ -140,5 +170,10 @@ class AppConfig:
             "referenciaCoachRotulo": CHOICE_LABELS.get(choice, choice),
             "referenciaCoachFonte": choice_source,
             "referenciaTravadaPelaVariavel": choice_source == "AT_COACH_REFERENCE",
-            "opcoesReferencia": [{"id": c, "rotulo": CHOICE_LABELS[c]} for c in REFERENCE_CHOICES],
+            "opcoesReferencia": [{"id": c, "rotulo": CHOICE_LABELS[c]} for c in opcoes],
+            "voltaDoModelo": None if modelo is None else {
+                "volta": modelo.get("lap_id"), "tempoS": modelo.get("tempo_s"), "tempo": modelo.get("tempo"),
+                "marca": modelo.get("marca"), "executadaPor": modelo.get("executada_por"),
+                "linha": (modelo.get("linha") or {}).get("nome"), "arquivo": modelo.get("_arquivo")},
+            "avisoReferencia": None if modelo is not None else volta_do_modelo.SEM_VOLTA_DO_MODELO,
         }

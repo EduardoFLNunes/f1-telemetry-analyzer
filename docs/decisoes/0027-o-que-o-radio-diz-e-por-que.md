@@ -3,6 +3,7 @@
 - **Status:** aceita (pedido 45); complementa 0012, 0020 e 0021; as decisões do Eduardo de 12/11 estão no fim
 - **Data:** 2026-11-04
 - **Decisor:** Eduardo
+- **Atualização (15/11, pedido 51):** a referência é a volta do modelo (ADR 0032), e toda diferença contra ela diz "da referência" ("atrás da referência", "freou 34 metros antes da referência"); "Melhor volta da sessão" virou "Melhor da sessão". Os limites (7,3, 8,0 e 8,8 s) e a ordem do corte não mudaram.
 
 ## Contexto
 

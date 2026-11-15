@@ -22,7 +22,7 @@
   a configuração do app, depois `AT_REPO_PATH`, depois a raiz do código quando
   roda do código-fonte), só lendo. A linha ótima continua sendo procurada no
   repositório, na pasta de dados e na de recursos, nessa ordem.
-- **Referência do coach:** a configuração do app (`volta_ia`, `minha_melhor` ou
+- **Referência do coach:** a configuração do app (`volta_do_modelo`, `minha_melhor` ou
   `desligado`); `AT_COACH_REFERENCE`, quando definida, vale mais.
 - **Versão do serviço** em `/api/health`: `coleta-modelos`.
 - **Escritas novas na pasta de dados:** `data/configuracao/app.json` e

@@ -16,7 +16,7 @@ import { EtiquetaEstado, type Tom } from '../ui/base';
 import { ROTULO_DO_PASSO, tempoDaReferencia, type EstadoDoPasso } from './regrasDoCoachNoApp';
 
 const TOM_DO_PASSO: Record<EstadoDoPasso, Tom> = { pendente: 'neutro', rodando: 'aviso', feito: 'ok', parado: 'erro' };
-const NOME_DA_REFERENCIA: Record<string, string> = { volta_ia: 'Volta da IA', minha_melhor: 'Sua melhor' };
+const NOME_DA_REFERENCIA: Record<string, string> = { volta_do_modelo: 'Volta de referência', minha_melhor: 'Sua melhor' };
 
 function Referencias({ antes, depois }: { antes: any; depois: any }) {
   const tipos = Array.from(new Set([...Object.keys(antes || {}), ...Object.keys(depois || {})]));

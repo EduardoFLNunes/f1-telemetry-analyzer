@@ -101,14 +101,14 @@ def _default_repository():
     return None, None
 
 
-app_config = AppConfig(RUNTIME_ROOT, *_default_repository())
+app_config = AppConfig(RUNTIME_ROOT, *_default_repository(), resource_root=RESOURCE_ROOT)
 REPLAY_TRACK_CACHE_NAME = "telemetry_reconstructed_multilap_v1"
 LIVE_TRACK_CACHE_PREFIX = "assetto_corsa"
 TRACK_CACHE_DIR = RUNTIME_ROOT / "data" / "cache" / "tracks"
 PRIMARY_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetry.csv"
 DEBUG_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetryOld.csv"
 BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
-BACKEND_PHASE_VERSION = "radio-que-ensina"
+BACKEND_PHASE_VERSION = "volta-do-modelo"
 
 runtime_state = RuntimeState()
 telemetry_buffer = TelemetryBuffer(max_size=20000)
@@ -163,13 +163,22 @@ def _referencia_do_radio() -> Dict[str, Any]:
     from core.coleta.estado import tempos_do_store
 
     lap_id = getattr(model, "reference_lap_id", None)
-    tempo = tempos_do_store(app_config.coach_root()).get(str(lap_id)) if lap_id else None
-    return {"tipo": getattr(model, "reference_kind", None), "volta": lap_id,
+    tipo = getattr(model, "reference_kind", None)
+    if tipo == "volta_do_modelo":
+        # ADR 0032: a volta do modelo nao esta no store; o tempo e o do arquivo dela (a grade).
+        modelo = app_config.volta_do_modelo()
+        tempo = modelo.get("tempo_s") if modelo is not None and modelo.get("lap_id") == lap_id else None
+    else:
+        tempo = tempos_do_store(app_config.coach_root()).get(str(lap_id)) if lap_id else None
+    return {"tipo": tipo, "volta": lap_id,
             "tempoS": tempo if tempo is not None else getattr(model, "reference_lap_seconds", None)}
 
 
 def _volta_de_referencia_do_radio() -> Optional[Dict[str, Any]]:
-    """Pedido 35: a volta de referencia escolhida, na grade do store v2 (a mesma leitura da tela Volta)."""
+    """Pedido 35: a volta de referencia escolhida, na grade do store v2 (a mesma leitura da tela Volta).
+
+    Pedido 51 (ADR 0032): a volta do modelo vem do arquivo dela, no mesmo formato.
+    """
     ref = _referencia_do_radio()
     if not ref.get("volta"):
         return None

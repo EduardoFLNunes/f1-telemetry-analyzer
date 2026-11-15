@@ -4,14 +4,18 @@ Fit the coach's reference model for the learning phase (ADR 0016).
     python tools/train_reference_model.py [--track vhe_interlagos]
         [--inventario data/ml/origem/lap_inventory.parquet]
         [--geometria-arquivo <pista>.geometry.json] [--saida ARQUIVO]
-        [--carro CARRO] [--ia-desde 2026-10-04] [--dry-run]
+        [--carro CARRO] [--dry-run]
 
-The model carries two references, both real, complete laps:
+The model carries two references, both real, complete laps (ADR 0032, pedido 51):
 
-* ``volta_ia`` (the default): the best clean lap of the game's AI, from sessions
-  recorded from 2026-10-04 on (the current recorder and AI), in the same car;
+* ``volta_do_modelo`` (the default, "Volta de referência"): the model's lap,
+  read from `data/reference_models/<track>.volta_do_modelo.json`
+  (`ml.scripts.volta_do_modelo`). Without that file the model has no
+  `volta_do_modelo` and the app offers only "Sua melhor volta";
 * ``minha_melhor``: the driver's best clean lap, `humano` with the current
   equipment (ADR 0015).
+
+The game's AI laps are no longer a reference of the app (ADR 0032, item 1).
 
 The driver's spread through each microsector -- the speaking threshold -- comes
 only from his own laps (`humano`, current equipment). Which laps are which comes
@@ -45,7 +49,7 @@ import pandas as pd  # noqa: E402
 from core.assisted_analysis.official_geometry import OfficialGeometry, find_official_geometry  # noqa: E402
 from core.assisted_analysis.reference_model import (  # noqa: E402
     DEFAULT_REFERENCE,
-    REFERENCE_AI,
+    REFERENCE_MODEL_LAP,
     REFERENCE_OWN_BEST,
     build_reference_model,
     model_path,
@@ -53,7 +57,8 @@ from core.assisted_analysis.reference_model import (  # noqa: E402
 )
 from ml import config  # noqa: E402
 from ml.data.ai_detector import pit_lap  # noqa: E402
-from ml.data.coach_references import AI_SINCE, ai_laps, driver_laps, most_common_car  # noqa: E402
+from core.assisted_analysis import volta_do_modelo  # noqa: E402
+from ml.data.coach_references import driver_laps, most_common_car  # noqa: E402
 from ml.data.recordings import iter_laps, list_all_sessions  # noqa: E402
 from ml.data.session_annotations import cars_with_annotations  # noqa: E402
 from ml.track.geometry import load_geometry  # noqa: E402
@@ -101,7 +106,6 @@ def main(argv=None) -> int:
     parser.add_argument("--saida", type=Path, default=None,
                         help="onde gravar (padrao: data/reference_models do repositorio, lido pelo app de desenvolvimento)")
     parser.add_argument("--carro", default=None, help="carModel (padrao: o das voltas do piloto)")
-    parser.add_argument("--ia-desde", default=AI_SINCE, help="data minima das sessoes da IA")
     parser.add_argument("--dry-run", action="store_true", help="nao grava o modelo")
     args = parser.parse_args(argv)
 
@@ -142,30 +146,40 @@ def main(argv=None) -> int:
     mine = driver_laps(inventory, pits)
     car = args.carro or most_common_car(mine, cars)
     mine = driver_laps(inventory, pits, cars=cars, car=car)
-    theirs = ai_laps(inventory, pits, cars=cars, car=car, since=args.ia_desde)
     print(f"carro             : {car}")
     print(f"voltas do piloto  : {len(mine)} (humano, equipamento atual, limpas)")
-    print(f"voltas da IA      : {len(theirs)} (ia, sessoes desde {args.ia_desde}, limpas)")
     if mine.empty:
         print("PARADO: nenhuma volta limpa do piloto com o equipamento atual. Modelo nao gravado.")
         return 2
 
     my_laps = load_laps(mine, sessions)
-    ai_lap_tuples = load_laps(theirs, sessions)
     model = build_reference_model(
         my_laps, track=args.track, built_at=datetime.now(timezone.utc).isoformat(), geometry=geometry,
     )
-    for kind, laps in ((REFERENCE_OWN_BEST, my_laps), (REFERENCE_AI, ai_lap_tuples)):
-        reference, candidates = reference_from_laps(laps, geometry=geometry, kind=kind) if laps else (None, [])
-        print(f"\nreferencia {kind}:")
-        for candidate in candidates:
-            print(f"  {candidate['lap_seconds']:.3f}s  {candidate['lap_id']}  -> {candidate['motivo']}")
-        if reference is None:
-            print("  (nenhuma volta valida e completa)")
-            continue
+    reference, candidates = reference_from_laps(my_laps, geometry=geometry, kind=REFERENCE_OWN_BEST) if my_laps else (None, [])
+    print(f"\nreferencia {REFERENCE_OWN_BEST}:")
+    for candidate in candidates:
+        print(f"  {candidate['lap_seconds']:.3f}s  {candidate['lap_id']}  -> {candidate['motivo']}")
+    if reference is None:
+        print("  (nenhuma volta valida e completa)")
+    else:
         reference["carro"] = car
-        model.references[kind] = reference
-    active = model.use_reference(DEFAULT_REFERENCE)
+        model.references[REFERENCE_OWN_BEST] = reference
+
+    # ADR 0032: a volta do modelo vem do arquivo derivado, no mesmo carro e na mesma geometria.
+    print(f"\nreferencia {REFERENCE_MODEL_LAP}:")
+    dados = volta_do_modelo.encontrar([repo], args.track)
+    if dados is None:
+        print(f"  ({volta_do_modelo.SEM_VOLTA_DO_MODELO}: {volta_do_modelo.caminho(repo, args.track)})")
+    elif dados.get("geometry_id") != geometry.geometry_id:
+        print(f"  fora: o arquivo e da geometria {dados.get('geometry_id')}, a oficial e {geometry.geometry_id}")
+    elif car is not None and dados.get("carro") not in (None, car):
+        print(f"  fora: o arquivo e do carro {dados.get('carro')}, as voltas do piloto sao do {car}")
+    else:
+        volta_do_modelo.anexar(model, dados)
+        ref = model.references[REFERENCE_MODEL_LAP]
+        print(f"  {ref['lap_seconds']:.3f}s  {ref['lap_id']}  -> {dados.get('marca')} ({dados.get('_arquivo')})")
+    active = model.use_reference(DEFAULT_REFERENCE) or model.use_reference(REFERENCE_OWN_BEST)
 
     spreads = [t.median_seconds - t.best_seconds for t in model.targets]
     print()

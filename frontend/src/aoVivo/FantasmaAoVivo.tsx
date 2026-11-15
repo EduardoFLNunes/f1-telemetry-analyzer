@@ -4,7 +4,7 @@
  *
  * - o carro na posição atual, sobre a pista tratada (as camadas do cache);
  * - o traçado da volta em andamento, colorido pelo pedal;
- * - o fantasma da referência escolhida na Coleta (volta da IA ou sua melhor),
+ * - o fantasma da referência escolhida na Coleta (volta de referência ou sua melhor),
  *   posicionado pelo tempo.
  *
  * Pedido 35 (Parte D): o mapa não trava mais.
@@ -44,7 +44,7 @@ export const FantasmaAoVivo: React.FC<{ pronto: boolean }> = ({ pronto }) => {
   const relatorio = useSessoesDoRelatorio();
   const escolha = useLeitura(pronto ? 'coach-escolha' : null, async () => {
     const antes = await api.getColetaAntes();
-    const tipo = antes?.coach?.referencia === 'minha_melhor' ? 'minha_melhor' : 'volta_ia';
+    const tipo = antes?.coach?.referencia === 'minha_melhor' ? 'minha_melhor' : 'volta_do_modelo';
     return { tipo, lapId: antes?.coach?.modelo?.referencias?.[tipo]?.volta ?? null } as { tipo: string; lapId: string | null };
   });
   const lapRef = escolha.dado?.lapId ?? null;
@@ -161,7 +161,7 @@ export const FantasmaAoVivo: React.FC<{ pronto: boolean }> = ({ pronto }) => {
       curvas={curvas}
       volta={volta}
       voltaRef={ref.dado}
-      referencia={escolha.dado?.tipo === 'minha_melhor' ? 'melhor' : 'ia'}
+      referencia={escolha.dado?.tipo === 'minha_melhor' ? 'melhor' : 'modelo'}
       camadas={camadas.dado}
       aoVivo
       fonteAoVivo={fonte}

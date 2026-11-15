@@ -3,7 +3,7 @@
  * do protótipo (`frontend/mockups/prototipo_dashboard.html`).
  *
  * - Barra de contexto: sessão, volta, tempo e a diferença para a referência.
- * - Escolha da sessão, da volta e da referência (volta da IA ou sua melhor).
+ * - Escolha da sessão, da volta e da referência (volta de referência ou sua melhor; ADR 0032).
  * - Volta com fantasma, com o replay.
  * - Mapa dos 60 microssetores e a tabela das 14 curvas, lado a lado.
  * - Diferença acumulada por distância, velocidade, acelerador e freio.
@@ -49,9 +49,9 @@ import { Fantasma } from '../volta/Fantasma';
 import { frasesDosEventos, RadioDaVolta } from '../volta/RadioDaVolta';
 import { api } from '../api/client';
 
-type Referencia = 'ia' | 'melhor';
+type Referencia = 'modelo' | 'melhor';
 
-const NOME_DA_REFERENCIA: Record<Referencia, string> = { ia: 'volta da IA', melhor: 'sua melhor volta' };
+const NOME_DA_REFERENCIA: Record<Referencia, string> = { modelo: 'volta de referência', melhor: 'sua melhor volta' };
 
 function melhorDaSessao(s: Sessao): string | null {
   const v = [...s.voltas].sort((a, b) => a.tempo_s - b.tempo_s)[0];
@@ -77,7 +77,7 @@ export const VoltaPage: React.FC<{ sub: string | null; navegar: (tela: Tela, sub
   const referencias = useLeitura('referencias', lerReferencias);
   const geometria = useLeitura('geometria', lerGeometria);
   const camadas = useLeitura('camadas', lerCamadasDaPista);
-  const [referencia, setReferencia] = useState<Referencia>('ia');
+  const [referencia, setReferencia] = useState<Referencia>('modelo');
 
   const sessoes = relatorio.dado?.sessoes ?? [];
   // Pedido 45 (B.2): um número só para cada volta, o do jogo, antes de escrever os números desta tela.
@@ -91,13 +91,13 @@ export const VoltaPage: React.FC<{ sub: string | null; navegar: (tela: Tela, sub
   }, [sub, sessoes]);
   const sessaoDaVolta = useMemo(() => sessoes.find((s) => s.voltas.some((v) => v.volta === lapId)) ?? null, [sessoes, lapId]);
 
-  const lapIa = referencias.dado?.volta_ia?.volta ?? null;
+  const lapModelo = referencias.dado?.volta_do_modelo?.volta ?? null;
   const lapMelhor = referencias.dado?.minha_melhor?.volta ?? null;
-  const lapRef = referencia === 'ia' ? lapIa : lapMelhor;
+  const lapRef = referencia === 'modelo' ? lapModelo : lapMelhor;
   const volta = useLeitura(lapId ? `volta:${lapId}` : null, () => lerVolta(lapId as string));
-  const voltaIa = useLeitura(lapIa ? `volta:${lapIa}` : null, () => lerVolta(lapIa as string));
+  const voltaModelo = useLeitura(lapModelo ? `volta:${lapModelo}` : null, () => lerVolta(lapModelo as string));
   const voltaMelhor = useLeitura(lapMelhor ? `volta:${lapMelhor}` : null, () => lerVolta(lapMelhor as string));
-  const ref = referencia === 'ia' ? voltaIa : voltaMelhor;
+  const ref = referencia === 'modelo' ? voltaModelo : voltaMelhor;
   const replayLapId = volta.dado?.replayLapId ?? null;
   const coach = useLeitura(replayLapId ? `coach:${replayLapId}` : null, () =>
     api.getLapCoaching(replayLapId as string).catch((e) => {
@@ -133,7 +133,7 @@ export const VoltaPage: React.FC<{ sub: string | null; navegar: (tela: Tela, sub
   }, [v, r, geo, sessoes, sessaoDaVolta]);
 
   const frases = useMemo(() => (coach.dado && v ? frasesDosEventos(coach.dado.events, v.comprimentoM) : null), [coach.dado, v]);
-  const medianas = referencia === 'ia' && sessaoDaVolta ? sessaoDaVolta.curvas.map((c) => c.perda_para_ia_s?.mediana ?? null) : null;
+  const medianas = referencia === 'modelo' && sessaoDaVolta ? sessaoDaVolta.curvas.map((c) => c.perda_para_ia_s?.mediana ?? null) : null;
   const carregando = relatorio.carregando || referencias.carregando || geometria.carregando || volta.carregando || ref.carregando;
   const falha = relatorio.erro || referencias.erro || geometria.erro || volta.erro || ref.erro;
   const nomeRef = NOME_DA_REFERENCIA[referencia];
@@ -183,8 +183,8 @@ export const VoltaPage: React.FC<{ sub: string | null; navegar: (tela: Tela, sub
           <div role="group" aria-label="Referência" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span className="rotulo">Comparar com</span>
             <div className="chips">
-              <button type="button" className="chip" aria-pressed={referencia === 'ia'} disabled={!lapIa} onClick={() => setReferencia('ia')}>
-                Volta da IA · {voltaIa.dado ? tempo(voltaIa.dado.tempoS) : '—'}
+              <button type="button" className="chip" aria-pressed={referencia === 'modelo'} disabled={!lapModelo} onClick={() => setReferencia('modelo')}>
+                Volta de referência · {voltaModelo.dado ? tempo(voltaModelo.dado.tempoS) : '—'}
               </button>
               <button type="button" className="chip" aria-pressed={referencia === 'melhor'} disabled={!lapMelhor} onClick={() => setReferencia('melhor')}>
                 Sua melhor · {voltaMelhor.dado ? tempo(voltaMelhor.dado.tempoS) : '—'}

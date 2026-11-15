@@ -40,7 +40,7 @@ const pegar = async (rota: string) => {
 };
 
 const refs = await pegar('/api/coach/referencias');
-const idIA = refs.referencias.volta_ia.volta as string;
+const idIA = refs.referencias.volta_do_modelo.volta as string;
 const [sessao, volta, ia] = await Promise.all([
   pegar(`/api/evolucao/sessoes/${SESSAO}`),
   pegar(`/api/store/voltas/${encodeURIComponent(VOLTA)}`),

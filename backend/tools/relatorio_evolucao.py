@@ -2,9 +2,9 @@
 
     python tools/relatorio_evolucao.py [--saida data/ml/evolucao] [--modelo ARQUIVO]
 
-Le o store v2 (recusa um store cujas checagens nao passaram), pega a volta da
-IA do coach (`volta_ia` do modelo do repositorio) como referencia e escreve,
-fora do git:
+Le o store v2 (recusa um store cujas checagens nao passaram), pega a volta do
+modelo (`volta_do_modelo`, o arquivo derivado ao lado do modelo do coach; ADR
+0032, pedido 51) como referencia e escreve, fora do git:
 
 * `sessao_<AAAA-MM-DD>.json` -- uma sessao (as gravacoes do mesmo dia): as
   voltas, o resumo, as 14 curvas e os 60 microsetores;
@@ -32,7 +32,8 @@ if str(BACKEND_DIR) not in sys.path:
 import pandas as pd  # noqa: E402
 
 from core.assisted_analysis.official_geometry import OfficialGeometry, find_official_geometry  # noqa: E402
-from core.assisted_analysis.reference_model import REFERENCE_AI, DriverReferenceModel, model_path  # noqa: E402
+from core.assisted_analysis import volta_do_modelo as VM  # noqa: E402
+from core.assisted_analysis.reference_model import REFERENCE_MODEL_LAP, DriverReferenceModel, model_path  # noqa: E402
 from ml import config  # noqa: E402
 from ml.comparison import evolution as ev  # noqa: E402
 from ml.data.store_v2 import STORE_V2_FILENAME, file_entry, load_store_v2, store_v2_meta  # noqa: E402
@@ -73,6 +74,26 @@ def render_panel(template: str, data: Dict[str, object]) -> str:
     return template.replace(PANEL_MARKER, payload)
 
 
+def reference_lap(model: Optional[DriverReferenceModel], model_file: Path, geometry_id: str):
+    """A volta do modelo (ADR 0032) na grade do store: (id, grade, tempo, arquivo). PARADO sem ela."""
+    import numpy as np
+
+    dados = VM.encontrar([Path(model_file).parent.parent.parent], TRACK)
+    if dados is None:
+        raise SystemExit(f"PARADO: {VM.SEM_VOLTA_DO_MODELO} ({VM.caminho(Path(model_file).parent.parent.parent, TRACK)}).")
+    if dados.get("geometry_id") != geometry_id:
+        raise SystemExit(f"PARADO: a volta do modelo e da geometria {dados.get('geometry_id')}, o store v2 e {geometry_id}.")
+    in_model = ((model.references or {}).get(REFERENCE_MODEL_LAP) or {}).get("lap_id") if model is not None else None
+    if in_model is not None and in_model != dados.get("lap_id"):
+        raise SystemExit(f"PARADO: o modelo do coach tem a volta do modelo {in_model}, o arquivo tem {dados.get('lap_id')}.")
+    grade = dados["grade"]
+    frame = pd.DataFrame({"grid_index": np.arange(int(grade["pontos"]))})
+    for column in ("elapsed_s", "lateral", "x", "z", "speed_kmh", "gear", "throttle", "brake"):
+        frame[column] = pd.to_numeric(pd.Series(grade.get(column)), errors="coerce").astype(float)
+    frame["lap_id"] = dados["lap_id"]
+    return dados["lap_id"], frame, float(dados["tempo_s"]), dados.get("_arquivo")
+
+
 def run(out_dir: Path, model_file: Path, store_root: Optional[Path] = None) -> Dict[str, object]:
     """Roda o relatorio; levanta SystemExit("PARADO: ...") nas travas."""
     meta = store_v2_meta(store_root)
@@ -83,14 +104,7 @@ def run(out_dir: Path, model_file: Path, store_root: Optional[Path] = None) -> D
     track = load_geometry()
     store = load_store_v2(store_root, track=track)
     model = DriverReferenceModel.load(model_file)
-    reference = (model.references or {}).get(REFERENCE_AI) if model is not None else None
-    if not reference:
-        raise SystemExit(f"PARADO: o modelo {model_file} nao tem a referencia {REFERENCE_AI}.")
-    ref_id = reference["lap_id"]
-    if ref_id not in set(store.lap_ids):
-        raise SystemExit(f"PARADO: a volta da IA do coach ({ref_id}) nao esta no store v2.")
-    ref_grid = store.lap(ref_id)
-    ref_total = float(store.laps.set_index("lap_id").at[ref_id, "lap_time_s"])
+    ref_id, ref_grid, ref_total, ref_file = reference_lap(model, model_file, store.geometry_id)
 
     corners = detect_corners(track)
     segments = ev.corner_segments(track, corners)
@@ -110,8 +124,9 @@ def run(out_dir: Path, model_file: Path, store_root: Optional[Path] = None) -> D
     common = {
         "store": {"arquivo": str(store_file), "sha256": file_entry(store_file)["sha256"],
                   "commit_do_store": meta.get("commit"), "geometry_id": store.geometry_id},
-        "referencia": {"tipo": REFERENCE_AI, "volta": ref_id, "tempo_s": round(ref_total, 3),
-                       "modelo": str(model_file)},
+        "referencia": {"tipo": REFERENCE_MODEL_LAP, "rotulo": "Volta de referência", "volta": ref_id,
+                       "tempo_s": round(ref_total, 3), "modelo": str(model_file), "arquivo": ref_file,
+                       "pedais": "da volta do modelo: desenhados, nunca julgados (ADR 0032, item 5)"},
         "regras": "docs/store_v2_e_evolucao.md, secao 1.4",
     }
     reports = []
@@ -120,7 +135,7 @@ def run(out_dir: Path, model_file: Path, store_root: Optional[Path] = None) -> D
         grids = {lap_id: store.lap(lap_id) for lap_id in rows["lap_id"]}
         report = {**ev.session_report(session, rows, grids, ref_grid, ref_total, track, segments, sectors), **common}
         # Pedido 18 (secao 1.7): descritivo; so le o store e nao mexe no resto do relatorio.
-        report["tecnica"] = ev.technique_report(rows, grids, ref_grid, track, segments)
+        report["tecnica"] = ev.technique_report(rows, grids, ref_grid, track, segments, judge_reference=False)
         path = out_dir / f"sessao_{session}.json"
         path.write_text(json.dumps(report, indent=1, ensure_ascii=False), encoding="utf-8")
         reports.append(report)
@@ -144,7 +159,7 @@ def run(out_dir: Path, model_file: Path, store_root: Optional[Path] = None) -> D
 def print_report(result: Dict[str, object]) -> None:
     summary = result["resumo"]
     print("=" * 70)
-    print(f"EVOLUCAO  (referencia: volta da IA {summary['referencia']['volta']}, {summary['referencia']['tempo_s']} s)")
+    print(f"EVOLUCAO  (referencia: volta do modelo {summary['referencia']['volta']}, {summary['referencia']['tempo_s']} s)")
     for session in summary["sessoes"]:
         print(f"  {session['sessao']}: {session['voltas']} voltas, melhor {session['melhor_s']} s, mediana "
               f"{session['mediana_s']} s (desvio {session['desvio_s']}), mediana - IA {session['mediana_menos_ia_s']} s"

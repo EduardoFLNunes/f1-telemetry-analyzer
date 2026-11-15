@@ -25,7 +25,7 @@ O **Automobilista Telemetria** é um app de Windows (Electron e backend em Pytho
 
 ## 2. Onde está cada alteração
 
-| alteração | 0.7.0 instalada (`60d3f9e7`, 07/11) | `develop` (a 0.7.0, depois do merge do pedido 45) |
+| alteração | 0.7.0 instalada (`60d3f9e7`, 07/11) | `develop` (a 0.8.0, depois do merge do pedido 51) |
 |---|---|---|
 | Rádio com análise, voz com unidades e replay da curva (pedidos 33 a 36) | sim | sim |
 | Limpeza do código sem uso e defeitos do backlog (pedido 40), como o corte no reinício e o cache da pista | sim | sim |
@@ -34,8 +34,9 @@ O **Automobilista Telemetria** é um app de Windows (Electron e backend em Pytho
 | O rádio que diz onde e por quê, o replay de perto, os boxes e o botão "Abrir no app" (pedido 45) | sim, sem as decisões de 12/11 (o resumo em 8,0 s e "contra quem") | sim |
 | A voz no app instalado (o `voz.ps1` no pacote, pedido 45) | sim | sim |
 | Modelo 2, fora do app (pedido 38, sem a H.4) | sim | sim |
-| Número da versão do app do Windows | `0.7.0-radio-que-ensina` | `0.7.0-radio-que-ensina` |
-| App do jogo que acompanha | 0.5.0 | 0.5.1 |
+| A volta de referência do app é a volta do modelo; a volta da IA sai do app; "da referência" e "Melhor da sessão" (pedido 51, ADR 0032) | não | sim |
+| Número da versão do app do Windows | `0.7.0-radio-que-ensina` | `0.8.0-volta-do-modelo` |
+| App do jogo que acompanha | 0.5.0 | 0.6.0 |
 
 **`develop` tem tudo o que a 0.7.0 instalada tem e mais.** O que os pedidos 46 a 49 fizeram (a M1 v2 e o Modelo 1) fica fora do app. As alterações estão centralizadas desde 01/11.
 
@@ -47,6 +48,8 @@ O **Automobilista Telemetria** é um app de Windows (Electron e backend em Pytho
 **Numa próxima versão,** troque o número nos 3 pontos, juntos: `desktop/package.json` (`version`), `backend/main.py` (`BACKEND_PHASE_VERSION`) e `desktop/main.js` (`EXPECTED_BACKEND_VERSION`). Os dois últimos têm de ser iguais.
 
 ## 4. Riscos conhecidos
+
+- **A volta do modelo é um arquivo fora do git** (`data/reference_models/vhe_interlagos.volta_do_modelo.json`). O instalador o leva da pasta do repositório; sem ele, o pacote sai sem a volta de referência, e o app oferece só "Sua melhor volta". Gere de novo com `python -m ml.scripts.volta_do_modelo` (pedido 51).
 
 - **O app do jogo 0.4.1 ou mais antigo com o backend novo dá erro na janela do replay** nas frases do coach, que vêm sem o traçado. Instale o 0.4.2 junto.
 - **O app do jogo 0.4.2 com o backend da 0.5.0** funciona, sem os visuais e sem a grade.
