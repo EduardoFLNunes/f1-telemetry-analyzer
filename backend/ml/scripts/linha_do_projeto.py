@@ -6,6 +6,8 @@
     python -m ml.scripts.linha_do_projeto l2          [--handoff PREFIXO]
     python -m ml.scripts.linha_do_projeto arquivos    [--handoff PREFIXO]
     python -m ml.scripts.linha_do_projeto conferencia-sessao --rotulo sessao1
+    python -m ml.scripts.linha_do_projeto resultado   [--handoff PREFIXO]
+    python -m ml.scripts.linha_do_projeto referencia  [--handoff PREFIXO]
 
 * `conferencia`: a codificacao nova (item 4), com a escada do espacamento e a
   conferencia do item 4.5 na linha da IA e na volta `#0013`, mais os limites das
@@ -174,7 +176,8 @@ def conferencia(args) -> int:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("comando", choices=("conferencia", "medidor", "l1", "l2", "arquivos", "conferencia-sessao"))
+    parser.add_argument("comando", choices=("conferencia", "medidor", "l1", "l2", "arquivos", "conferencia-sessao",
+                                            "resultado", "referencia"))
     parser.add_argument("--handoff", help="prefixo dos arquivos de handoff")
     parser.add_argument("--rotulo", default="sessao1", help="conferencia-sessao: o nome do arquivo de saida")
     args = parser.parse_args(argv)
@@ -182,7 +185,8 @@ def main(argv=None) -> int:
         return conferencia(args)
     from ml.scripts import linha_do_projeto_etapas as E
     return {"medidor": E.medidor, "l1": E.l1, "l2": E.l2, "arquivos": E.arquivos,
-            "conferencia-sessao": E.conferencia}[args.comando](args)
+            "conferencia-sessao": E.conferencia, "resultado": E.resultado,
+            "referencia": E.referencia}[args.comando](args)
 
 
 if __name__ == "__main__":

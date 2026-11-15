@@ -326,3 +326,21 @@ def test_trocar_linha_recusa_l1_sem_o_manifesto_do_projeto(jogo_falso):
     assert r.returncode == 1 and "linha_do_projeto.json" in r.stdout
     r = _ps("trocar_linha.ps1", "-Condicao", "L3", *_args(f))
     assert r.returncode != 0
+
+
+# ------------------------------------------------- a referencia (item 11) ---
+
+def test_formato_da_referencia_com_a_linha_do_projeto():
+    from ml.pista_teste import por_trecho as PT
+    from test_modelo1_por_trecho import _referencia
+
+    p = _referencia()
+    PT.conferir_formato_da_referencia(p, n_trechos=4)                       # o do 49 continua valendo
+    for t in p["trechos"]:
+        t["linha_de_referencia"].update(linha="L2", marca=PT.MARCA_DA_LINHA_DO_PROJETO + "2026-11-15")
+    PT.conferir_formato_da_referencia(p, n_trechos=4, linha="L2")
+    with pytest.raises(ValueError):
+        PT.conferir_formato_da_referencia(p, n_trechos=4)                   # o padrao continua exigindo o C0
+    p["trechos"][2]["linha_de_referencia"].pop("marca")
+    with pytest.raises(ValueError):
+        PT.conferir_formato_da_referencia(p, n_trechos=4, linha="L2")       # sem a marca, recusa

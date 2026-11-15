@@ -162,6 +162,18 @@ class Medidores:
                 out["M-cal"] = {"tempo_s": self.j0 + d, "contra_c0_s": d}
         return out
 
+    def prever_por_trecho(self, lateral: np.ndarray) -> Dict[str, np.ndarray]:
+        """A diferenca contra o C0 em cada trecho, por medidor (o M-cal com o beta do trecho)."""
+        K = len(self.b.trechos)
+        out = {}
+        for k, e in self.env.items():
+            p = self.simulate(self.b.track, lateral, e).step_time_s
+            d = np.bincount(self.passo_trecho, weights=p - self.base[k], minlength=K)
+            out[k] = d
+            if k == "M-real":
+                out["M-cal"] = d * self.beta
+        return out
+
 
 def _base_com_c0_do_47(b: Base) -> Base:
     """A lateral do C0 como o 47 e o medidor a usaram (`condicoes.linhas`), para a base dos medidores."""
@@ -516,4 +528,337 @@ def conferencia(args) -> int:
                      f"{item['mediana_ate_a_linha_original_m']:.2f} m, troca pegou: {item['troca_pegou']}")
         print(f"bloco {item['bloco']} {item['condicao']}: {item['voltas_por_papel']} (IA dirigindo em "
               f"{item['que_contam_com_a_ia_dirigindo']}){extra}")
+    return 0
+
+
+# ------------------------------------------------------- parte E: resultado ---
+
+VOLTA_0013_S = 84.829163
+
+
+def _voltas_dos_blocos(b: Base, lista, atrib, sessoes, sectors, pit_xz):
+    """Cada volta das gravacoes dos blocos, refeita pelo caminho do 47, com a validade (ADR 0029, item 5)."""
+    from ml.data.recordings import iter_laps
+    from ml.data.store_v2 import game_lap_time
+    from ml.pista_teste import etapas as E
+    from ml.pista_teste import por_trecho as PT
+    from ml.preprocessing.alignment import align_lap
+    from ml.preprocessing.cleaning import clean_lap
+    from ml.preprocessing.resampling import lap_time_from_grid, resample_lap
+
+    track = b.track
+    bloco_da = {a["sessao"]: a for a in atrib}
+    por_bloco = {bl.numero: [] for bl in lista}
+    for sessao in sessoes:
+        a = bloco_da.get(sessao.session_id)
+        if a is None or a["bloco"] is None:
+            continue
+        laps = list(iter_laps(sessao))
+        for i, lap in enumerate(laps):
+            cleaned, _ = clean_lap(lap.frame)
+            aligned, alignment = align_lap(cleaned, track)
+            grid = resample_lap(aligned, track, line_clock=True)
+            seguinte = laps[i + 1] if i + 1 < len(laps) else None
+            tempo = float(lap_time_from_grid(grid))
+            v = {"sessao": sessao.session_id, "sequencia": int(lap.sequence), "volta_do_jogo": lap.lap_number,
+                 "bloco": a["bloco"], "condicao": a["condicao"], "tempo_s": tempo,
+                 "tempo_jogo_s": game_lap_time(lap, seguinte, track),
+                 "inicio_s": float(lap.frame["timestamp_s"].iloc[0]) if "timestamp_s" in lap.frame else float(i),
+                 "primeira_da_gravacao": i == 0,
+                 "interrompida": i == len(laps) - 1 and alignment.coverage < E.COBERTURA_MINIMA}
+            v.update(E.validade(track, sectors, lap.frame, aligned, alignment, grid, pit_xz))
+            v["xz"] = aligned[["x", "z"]].to_numpy(float) if len(aligned) else np.zeros((0, 2))
+            if v["valida"] and np.isfinite(tempo):
+                t = PT.tempos_por_trecho(grid["elapsed_s"].to_numpy(float), track.s, tempo, b.trechos)
+                v["soma_menos_tempo_s"] = PT.conferir_soma(t, tempo)
+                v["trechos_s"] = t
+                v["microssetores_s"] = E.tempos_por_microssetor(grid, track, sectors, tempo)
+                v["canais"] = {k: (grid[k].to_numpy(float) if k in grid else None)
+                               for k in ("brake", "throttle", "gear", "speed_kmh", "lateral")}
+            por_bloco[a["bloco"]].append(v)
+    for numero, voltas in por_bloco.items():
+        cond = next(bl.condicao for bl in lista if bl.numero == numero)
+        from ml.pista_teste import registro as R
+        objs = [R.VoltaNaCondicao(v["sessao"], v["sequencia"], v["inicio_s"], v["primeira_da_gravacao"], v["interrompida"])
+                for v in voltas]
+        R.papeis(cond, objs)
+        papel = {(o.sessao, o.sequencia): o.papel for o in objs}
+        for v in voltas:
+            v["papel"] = papel[(v["sessao"], v["sequencia"])]
+        voltas.sort(key=lambda v: v["inicio_s"])
+    return por_bloco
+
+
+def _contam_validas(voltas):
+    return [v for v in voltas if v["papel"] == "conta" and v["valida"]]
+
+
+def resultado(args) -> int:
+    """Parte E (ADR 0031): a conferencia, as voltas e os tempos, o veredito da meta, por trecho e os medidores."""
+    from datetime import datetime
+
+    from ml.pista_teste import ai_spline as A
+    from ml.pista_teste import etapas as E
+    from ml.pista_teste import linha_do_projeto as LP
+    from ml.pista_teste import linha_nova as N
+    from ml.pista_teste import por_trecho as PT
+    from ml.pista_teste import registro as R
+    from ml.track.microsectors import build_microsectors
+
+    t0 = time.time()
+    b = _base_com_c0_do_47(Base())
+    track = b.track
+    sectors = build_microsectors(track)
+    nomes = [t.nome for t in b.trechos]
+    saida = C.raiz_saida()
+    pasta = saida / "linhas"
+    m47 = _ler_json(pasta / "linhas.json")
+    m50 = _ler_json(pasta / "linha_do_projeto.json")
+    esperado = {"C0": m47["condicoes"]["C0"]["sha256"], **{k: v["sha256"] for k, v in m50["condicoes"].items()}}
+    for k in ("L1", "L2"):
+        if A.sha256_arquivo(pasta / k / "fast_lane.ai") != esperado[k]:
+            raise SystemExit(f"PARADO: o arquivo da {k} nao bate com o linha_do_projeto.json.")
+    linhas_xz = {k: A.ler(pasta / k / "fast_lane.ai").pos[:, [0, 2]].astype(float) for k in ("C0", "L1", "L2")}
+    original = C.fast_lane_original()
+    sha_agora = A.sha256_arquivo(original)
+    copia_ai = C.pasta_do_jogo() / "content" / "tracks" / C.PISTA_COPIA / C.LAYOUT / "ai"
+    pit = original.with_name("pit_lane.ai")
+    pit_xz = A.ler(pit).pos[:, [0, 2]].astype(float) if pit.exists() else None
+    trocas = R.ler(saida / "registro.csv")
+    lista = R.blocos(trocas, datetime.fromisoformat(DESDE))
+    if [bl.condicao for bl in lista] != ["C0", "L1", "C0", "L2", "C0"]:
+        raise SystemExit(f"PARADO: os blocos do registro nao sao C0, L1, C0, L2, C0: {[bl.condicao for bl in lista]}")
+    sessoes = E.sessoes_da_copia()
+    inicios = {s.session_id: E._inicio(s) for s in sessoes}
+    atrib = R.atribuir_aos_blocos({k: v for k, v in inicios.items() if v is not None}, lista, esperado)
+    por_bloco = _voltas_dos_blocos(b, lista, atrib, sessoes, sectors, pit_xz)
+
+    # E.1: a troca pegou em cada bloco?
+    conferencia = {}
+    for bl in lista:
+        pts = [v["xz"] for v in por_bloco[bl.numero] if v["papel"] == "conta" and len(v["xz"])]
+        p = np.vstack(pts) if pts else np.zeros((0, 2))
+        d_linha = float(np.median(N._projetar_na_polilinha(p, linhas_xz[bl.condicao])[2])) if len(p) else None
+        d_orig = float(np.median(N._projetar_na_polilinha(p, linhas_xz["C0"])[2])) if len(p) else None
+        conferencia[bl.numero] = {"condicao": bl.condicao, "troca": bl.hora.isoformat(), "sha256": bl.sha256,
+                                  "gravacoes": sorted({v["sessao"] for v in por_bloco[bl.numero]}),
+                                  "mediana_ate_a_linha_do_bloco_m": d_linha, "mediana_ate_a_original_m": d_orig,
+                                  "troca_pegou": bool(d_linha is not None and (bl.condicao == "C0" or d_linha < d_orig))}
+
+    # E.2: as voltas validas e os tempos de cada bloco.
+    resumo = {}
+    for bl in lista:
+        vs = por_bloco[bl.numero]
+        validas = _contam_validas(vs)
+        t = np.array([v["tempo_s"] for v in validas], float)
+        resumo[bl.numero] = {"condicao": bl.condicao, "voltas": len(vs),
+                             "papeis": {p: sum(v["papel"] == p for v in vs) for p in
+                                        ("saida", "primeira lancada", "conta", "alem das que contam", "interrompida")},
+                             "contam": sum(v["papel"] == "conta" for v in vs), "validas": int(t.size),
+                             "motivos_das_invalidas": [{"sequencia": v["sequencia"], "motivos": v["motivos"]}
+                                                       for v in vs if v["papel"] == "conta" and not v["valida"]],
+                             "tempos_s": t.tolist(),
+                             "melhor_s": float(t.min()) if t.size else None, "mediana_s": float(np.median(t)) if t.size else None,
+                             "desvio_s": float(np.std(t, ddof=1)) if t.size > 1 else None,
+                             "melhor": E.tempo_mmss(float(t.min())) if t.size else "-",
+                             "mediana": E.tempo_mmss(float(np.median(t))) if t.size else "-"}
+
+    # A.2: o veredito da meta, e os so relatados.
+    vereditos = {}
+    for bl in lista:
+        if bl.condicao == "C0":
+            continue
+        antes, depois = R.vizinhos_de_c0(lista, bl.numero)
+        tl = resumo[bl.numero]["tempos_s"]
+        ta = resumo[antes.numero]["tempos_s"] if antes else []
+        td = resumo[depois.numero]["tempos_s"] if depois else []
+        v = LP.veredito_da_meta(tl, ta, td, troca_pegou=conferencia[bl.numero]["troca_pegou"])
+        v["blocos"] = {"linha": bl.numero, "c0_antes": antes.numero if antes else None, "c0_depois": depois.numero if depois else None}
+        v["contra_os_dois_c0_vizinhos"] = LP.diferenca_contra_os_vizinhos(tl, ta, td)
+        v["contra_a_0013_s"] = (resumo[bl.numero]["melhor_s"] - VOLTA_0013_S) if resumo[bl.numero]["melhor_s"] else None
+        vereditos[bl.condicao] = v
+
+    # A deriva: o 2o e o 3o C0 contra o 1o.
+    c0s = [bl.numero for bl in lista if bl.condicao == "C0"]
+    deriva = {f"bloco {n} contra o bloco {c0s[0]}": E.bootstrap_diferenca(resumo[n]["tempos_s"], resumo[c0s[0]]["tempos_s"], semente=LP.SEMENTE)
+              for n in c0s[1:] if resumo[n]["tempos_s"] and resumo[c0s[0]]["tempos_s"]}
+
+    # E.3: por trecho, cada linha contra os dois C0 vizinhos, pela regra do ADR 0030.
+    def matriz(numero, chave="trechos_s"):
+        return np.array([v[chave] for v in _contam_validas(por_bloco[numero])], float)
+
+    por_trecho = {}
+    for bl in lista:
+        if bl.condicao == "C0":
+            continue
+        antes, depois = R.vizinhos_de_c0(lista, bl.numero)
+        x, ya, yd = matriz(bl.numero), matriz(antes.numero), matriz(depois.numero)
+        ca = PT.comparar(x, ya, nomes)
+        cd = PT.comparar(x, yd, nomes)
+        cl = PT.classificar(ca, cd)
+        por_trecho[bl.condicao] = [{"trecho": n, "mediana_s": float(np.median(x[:, j])),
+                                    "c0_antes_mediana_s": float(np.median(ya[:, j])), "c0_depois_mediana_s": float(np.median(yd[:, j])),
+                                    "contra_c0_antes": ca[j], "contra_c0_depois": cd[j], "regra": cl[j]}
+                                   for j, n in enumerate(nomes)]
+
+    # E.4: os medidores contra o jogo (a volta e por trecho), contra os dois C0 vizinhos juntos.
+    medidores = Medidores(b)
+    medicao = {}
+    for bl in lista:
+        if bl.condicao == "C0":
+            continue
+        antes, depois = R.vizinhos_de_c0(lista, bl.numero)
+        lateral = np.load(raiz() / f"{bl.condicao.lower()}_lateral.npy")
+        y = np.vstack([matriz(antes.numero), matriz(depois.numero)])
+        x = matriz(bl.numero)
+        jogo_trecho = np.median(x, axis=0) - np.median(y, axis=0)
+        jogo_volta = float(np.median(x.sum(axis=1)) - np.median(y.sum(axis=1)))
+        prev = medidores.prever(lateral)
+        prev_trecho = medidores.prever_por_trecho(lateral)
+        from scipy.stats import spearmanr
+        medicao[bl.condicao] = {"jogo_volta_contra_c0_s": jogo_volta, "jogo_por_trecho_contra_c0_s": dict(zip(nomes, jogo_trecho.tolist())),
+                                "medidores": {k: {"volta_contra_c0_s": prev[k]["contra_c0_s"],
+                                                  "erro_s": prev[k]["contra_c0_s"] - jogo_volta,
+                                                  "por_trecho_contra_c0_s": dict(zip(nomes, prev_trecho[k].tolist())),
+                                                  "spearman_por_trecho": float(spearmanr(prev_trecho[k], jogo_trecho)[0])}
+                                              for k in prev}}
+
+    # A execucao da IA em cada linha (ADR 0030, item 5), para a referencia (item 11 do ADR 0031).
+    execucao = {}
+    for bl in lista:
+        if bl.condicao == "C0":
+            continue
+        voltas = _contam_validas(por_bloco[bl.numero])
+        execucao[bl.condicao] = {t.nome: PT.resumir_medidas([PT.medidas_da_execucao(v["canais"], track.s, track.length, t)
+                                                             for v in voltas]) for t in b.trechos}
+
+    payload = {**_cabecalho("E", "python -m ml.scripts.linha_do_projeto resultado", track),
+               "conferencia_do_teste": {"desde": DESDE, "blocos": conferencia,
+                                        "sha256_original_antes": m47["original"]["sha256"], "sha256_original_agora": sha_agora,
+                                        "original_intacto": m47["original"]["sha256"] == sha_agora, "copia_ai_existe": copia_ai.exists(),
+                                        "atribuicao": [{**a, "inicio": a["inicio"].isoformat()} for a in atrib if a["bloco"] is not None],
+                                        "gravacoes_fora_dos_blocos": sum(1 for a in atrib if a["bloco"] is None)},
+               "voltas": {n: [{k: v for k, v in item.items() if k not in ("xz", "canais", "microssetores_s")} for item in vs]
+                          for n, vs in por_bloco.items()},
+               "resumo": resumo, "vereditos": vereditos, "deriva": deriva, "por_trecho": por_trecho,
+               "medidores_contra_o_jogo": medicao, "execucao": execucao,
+               "a_0013": {"volta": C.VOLTA_IA, "tempo_s": VOLTA_0013_S, "tempo": E.tempo_mmss(VOLTA_0013_S)},
+               "tempo_s": round(time.time() - t0, 1)}
+    _json(raiz() / "resultado.json", payload)
+    if args.handoff:
+        _json(Path(str(args.handoff) + "_resultado.json"), payload)
+        figura_por_trecho(por_trecho, Path(str(args.handoff) + "_por_trecho.png"))
+    for n, r in resumo.items():
+        print(f"bloco {n} {r['condicao']}: validas {r['validas']}/{r['contam']}  melhor {r['melhor']}  mediana {r['mediana']}"
+              f"  troca pegou {conferencia[n]['troca_pegou']}")
+    for k, v in vereditos.items():
+        print(k, v["veredito"], v.get("falta_s"), {kk: round(vv, 3) for kk, vv in (v["contra_os_dois_c0_vizinhos"] or {}).items()
+                                                  if isinstance(vv, float)})
+    print("deriva:", {k: round(v["diferenca_s"], 3) for k, v in deriva.items()})
+    for k, rows in por_trecho.items():
+        print(k, [f"{r['trecho']}:{r['regra']}" for r in rows if r["regra"] != "empate"])
+    return 0
+
+
+def figura_por_trecho(por_trecho: Dict[str, list], destino: Path) -> None:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig, axes = plt.subplots(len(por_trecho), 1, figsize=(12, 3.6 * len(por_trecho)), sharex=True)
+    axes = np.atleast_1d(axes)
+    for ax, (linha, rows) in zip(axes, por_trecho.items()):
+        x = np.arange(len(rows))
+        for desl, chave, cor, rotulo in ((-0.15, "contra_c0_antes", "#1f77b4", "contra o C0 antes"),
+                                         (0.15, "contra_c0_depois", "#ff7f0e", "contra o C0 depois")):
+            d = np.array([r[chave]["diferenca_s"] for r in rows])
+            lo = np.array([r[chave]["ic95_inferior_s"] for r in rows])
+            hi = np.array([r[chave]["ic95_superior_s"] for r in rows])
+            sig = np.array([r[chave]["significativo_holm"] for r in rows])
+            ax.errorbar(x + desl, d, yerr=[d - lo, hi - d], fmt="none", ecolor=cor, alpha=0.7)
+            ax.scatter(x[sig] + desl, d[sig], color=cor, label=rotulo + " (cheio: Holm)", zorder=3)
+            ax.scatter(x[~sig] + desl, d[~sig], facecolors="white", edgecolors=cor, zorder=3)
+        for i, r in enumerate(rows):
+            if r["regra"] != "empate":
+                ax.annotate(r["regra"], (i, ax.get_ylim()[1]), ha="center", va="top", fontsize=8)
+        ax.axhline(0, color="black", lw=0.8)
+        ax.set_ylabel(f"{linha} − C0 (s)\n(negativo = mais rápida)")
+        ax.grid(alpha=0.3)
+        ax.legend(fontsize=8, loc="lower left")
+    axes[-1].set_xticks(np.arange(len(next(iter(por_trecho.values())))))
+    axes[-1].set_xticklabels([r["trecho"] for r in next(iter(por_trecho.values()))], rotation=45)
+    fig.suptitle("Pedido 50: cada linha do projeto contra os dois blocos de C0 vizinhos, por trecho (mediana e IC de 95%)")
+    fig.tight_layout()
+    fig.savefig(destino, dpi=110)
+    plt.close(fig)
+
+
+# ------------------------------------------------- parte E.5: a referencia ---
+
+def referencia(args) -> int:
+    """ADR 0031, item 11: a linha que atingiu a meta vira a referencia de todos os trechos (com a marca e a execucao)."""
+    import shutil
+
+    from ml.pista_teste import ai_spline as A
+    from ml.pista_teste import por_trecho as PT
+
+    b = Base()
+    track = b.track
+    res = _ler_json(raiz() / "resultado.json")
+    atingiram = [k for k, v in res["vereditos"].items() if v["veredito"] == "meta atingida"]
+    if not atingiram:
+        print("nenhuma linha atingiu a meta: a referencia nao muda (ADR 0031, item 11).")
+        return 0
+    linha = min(atingiram, key=lambda k: res["vereditos"][k]["melhor_s"]["linha"])
+    numero = res["vereditos"][linha]["blocos"]["linha"]
+    data = res["conferencia_do_teste"]["blocos"][str(numero)]["troca"][:10]
+    marca = PT.MARCA_DA_LINHA_DO_PROJETO + data
+    pasta = _repo() / "data" / "modelo1_por_trecho"
+    arquivo = pasta / "referencia_por_trecho.json"
+    copia = pasta / "referencia_por_trecho_pedido49.json"
+    if not copia.exists():
+        shutil.copy2(arquivo, copia)
+    anterior = _ler_json(copia)
+    PT.conferir_formato_da_referencia(anterior)
+    lateral = np.load(raiz() / f"{linha.lower()}_lateral.npy")
+    voltas = [v for v in res["voltas"][str(numero)] if v["papel"] == "conta" and v["valida"]]
+    tempos = np.array([v["trechos_s"] for v in voltas], float)
+    trechos = []
+    for j, t in enumerate(anterior["trechos"]):
+        idx = np.rint(np.mod(np.asarray(t["linha_de_referencia"]["s"], float), track.length) / track.step).astype(int) % track.size
+        pontos = {k: float(lateral[int(np.rint(np.mod(s, track.length) / track.step)) % track.size])
+                  for k, s in t["pontos_de_linha_s"].items()}
+        x = tempos[:, j]
+        novo = dict(t)
+        novo["linha_de_referencia"] = {
+            "linha": linha, "marca": marca,
+            "descricao": f"a {linha}, a linha do projeto do pedido 50 (ADR 0031), que atingiu a meta no teste no jogo",
+            "lateral_nos_pontos_de_linha_m": pontos, "s": t["linha_de_referencia"]["s"], "lateral_m": lateral[idx].tolist()}
+        novo["execucao_da_ia"] = {"linha": linha, "voltas": int(len(x)), "bloco": numero,
+                                  "medidas": res["execucao"][linha][t["trecho"]],
+                                  "tempo_do_trecho": {"mediana_s": float(np.median(x)), "desvio_s": float(np.std(x, ddof=1)),
+                                                      "iqr_s": float(np.subtract(*np.percentile(x, [75, 25])))}}
+        novo["referencia_anterior"] = {"linha": t["linha_de_referencia"]["linha"], "descricao": t["linha_de_referencia"]["descricao"],
+                                       "lateral_nos_pontos_de_linha_m": t["linha_de_referencia"]["lateral_nos_pontos_de_linha_m"],
+                                       "tempo_do_trecho": t["execucao_da_ia"]["tempo_do_trecho"], "pedido": 49}
+        novo["provisorio"] = {**t["provisorio"], "nota_do_pedido_50": "calculado sobre a execucao da IA no C0 (pedido 49), nao refeito"}
+        trechos.append(novo)
+    manifesto = _ler_json(C.raiz_saida() / "linhas" / "linha_do_projeto.json")
+    payload = {**anterior, "pedido": 50, "adr": "0030 e 0031", "commit": _cabecalho("", "", track)["commit"],
+               "comando": "python -m ml.scripts.linha_do_projeto referencia",
+               "aviso": ("Referencia por trecho do Modelo 1 (pedidos 49 e 50; ADR 0030 e 0031). O coach nao le este arquivo. "
+                         f"A referencia de todo trecho e a {linha}, a linha do projeto que atingiu a meta do ADR 0031 em {data}; "
+                         "a anterior (a linha da IA, C0) fica em 'referencia_anterior'. As candidatas do pedido 49 continuam "
+                         "'a validar no jogo', e as propostas provisorias dependem da confirmacao do Eduardo."),
+               "arquivos": {**anterior["arquivos"], "linha_do_projeto": {"linha": linha, "sha256_do_fast_lane": manifesto["condicoes"][linha]["sha256"],
+                                                                         "resultado_do_pedido_50": str(raiz() / "resultado.json")}},
+               "trechos": trechos}
+    PT.conferir_formato_da_referencia(payload, linha=linha)
+    _json(arquivo, payload)
+    resumo = {**payload, "trechos": [{k: (v if k != "linha_de_referencia" else {kk: vv for kk, vv in v.items() if kk not in ("s", "lateral_m")})
+                                      for k, v in t.items()} for t in trechos]}
+    PT.conferir_formato_da_referencia(resumo, com_lateral=False, linha=linha)
+    if args.handoff:
+        _json(Path(str(args.handoff) + "_referencia.json"), resumo)
+    print(f"a referencia de todos os trechos agora e a {linha} ({marca}); a do pedido 49 ficou em {copia.name}")
     return 0
