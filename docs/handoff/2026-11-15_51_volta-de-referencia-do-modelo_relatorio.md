@@ -361,6 +361,6 @@ Quando você avisar, confiro com `git ls-remote origin` que os hashes remotos s�
 ## O que falta
 
 1. ~~A instalação da 0.8.0~~: feita em 15/11, 17:23.
-2. **O app do jogo 0.6.0,** pelo `instalar.ps1`, que você roda (o comando está na Parte E).
+2. ~~O app do jogo 0.6.0~~: instalado por você pelo `instalar.ps1` (15/11, 17:36) e conferido: a pasta `apps\luaadio_engenheiro` do jogo tem a `VERSION = 0.6.0`, e os 4 arquivos (`radio_engenheiro.lua`, `manifest.ini`, `pista.json` e `pista_detalhada.png`) são iguais aos do repositório; o Lua tem "freada da referência" e "Referência", e nenhum "freada da IA".
 3. ~~O envio~~: feito e conferido em 15/11, 17:38.
 4. **A trava do store v2,** num pedido próprio (backlog, item 1). Até lá, a tela Evolução mostra o relatório de 22/10, contra a `#0013`, com o rótulo "volta de referência".
