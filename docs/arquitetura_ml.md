@@ -553,3 +553,33 @@ As sessões da cópia ficam fora do ML (`config.TEST_TRACK_NAMES`).
 - **O teto da referência por trecho** é de −0,73 s. É um teto, e não uma previsão.
 
 **O coach não lê a referência,** e o ADR 0009 não muda. As propostas provisórias (o ponto de frenagem traduzido pela rampa e o limite "de linha") esperam a confirmação do Eduardo.
+
+## A linha do projeto (pedido 50; ADR 0031)
+
+**A pergunta:** uma linha feita só pelos algoritmos do projeto chega à volta mais rápida da IA, com a mesma IA dirigindo? A linha da IA do jogo (o `fast_lane.ai`) é a adversária, e nunca a saída.
+
+**A codificação nova** (`ml/optimization/codificacao_nova.py`):
+- uma spline cúbica periódica no plano X/Z, pelos pontos `c(s) + n(s)·g` de cada gene, com a curvatura contínua;
+- os pontos de controle a cada 6 m nas janelas das curvas e a cada 15 m fora delas (546 genes);
+- o arquivo do jogo é a curva avaliada direto nas estações do original (`ml/pista_teste/linha_do_projeto.py`), sem a interpolação linear da grade, que criava raios fechados no `fast_lane.ai`;
+- as restrições por trecho (o raio mínimo e a taxa de variação da curvatura, tirados das 150 voltas).
+
+**O medidor** (`ml/optimization/medidor_calibrado.py`): três candidatos, escolhidos pelo Spearman por microssetor nas linhas do pedido 47 deixadas de fora:
+- **M-real:** o simulador quase-estacionário com o envelope das voltas reais;
+- **M-cal:** o M-real com uma escala por trecho;
+- **M-v2:** o simulador com o envelope da M1 v2.
+
+O escolhido foi o M-v2 (ρ 0,48).
+
+**As duas linhas:**
+- **L1** (`ml/optimization/montagem.py`): em cada trecho do ADR 0030, a mais rápida no jogo entre a C2, a C3 e a C4, com emendas de grau 5 nas retas;
+- **L2:** a busca genética do ADR 0028, item 10, a partir da L1, a até 1,0 m dela (`ml/optimization/aptidao_do_projeto.py`), com a LSTM geradora como semente.
+
+**O script:** `ml/scripts/linha_do_projeto.py`, com as etapas `conferencia`, `medidor`, `l1`, `l2`, `arquivos`, `conferencia-sessao`, `resultado` e `referencia`. O `trocar_linha.ps1` aceita L1 e L2.
+
+**O resultado (15/11)**, em cinco blocos de 9 voltas da IA, na ordem C0, L1, C0, L2, C0:
+- **a L2 atingiu a meta:** a melhor volta (1:24,552) fica abaixo da melhor dos dois C0 vizinhos (1:24,766 e 1:24,670), e a mediana fica 0,12 s abaixo deles;
+- **a L1 não:** +0,44 s. As duas ganham na C04, na C06 e na C09, e perdem na C10, logo depois da emenda da C09 para a C10;
+- **os medidores erram muito fora das linhas do 47:** o M-v2 previu −1,36 s para a L1 e −2,33 s para a L2.
+
+**A referência por trecho** (`data/modelo1_por_trecho/referencia_por_trecho.json`, fora do git) passou a ser a L2 em todos os trechos, com a marca "linha do projeto, meta atingida em 2026-11-15". O coach ainda não lê esse arquivo.

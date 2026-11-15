@@ -4,6 +4,7 @@
 - **Data:** 2026-11-12
 - **Decisor:** Eduardo
 - **Refina:** 0029 (o teste no jogo como medidor da linha). **Mantém:** 0009 (a linha gerada não vai para o coach), o corredor do 0025 e a geometria do 0002
+- **Atualização (15/11, pedido 50):** a L1 do ADR 0031 é a montagem por trecho da tabela B.1 deste ADR, e a regra do item 3 mediu a L1 e a L2 contra os C0 vizinhos. A L2 atingiu a meta e virou a referência de todos os trechos (item 11 do ADR 0031).
 
 ## Contexto
 

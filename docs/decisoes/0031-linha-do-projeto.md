@@ -192,3 +192,119 @@ Este registro é commitado antes de qualquer busca, calibração ou arquivo de l
 - **A linha do projeto só vai para o coach pela regra do item 11.** Até lá, o ADR 0009 vale como está.
 - **O escritor do pedido 47 (`linha_nova.montar`) continua como está,** para os arquivos C1 a C4 continuarem os mesmos. A codificação nova usa só a parte dele que recebe as posições (`montar_por_posicoes`).
 - **As sessões da cópia continuam fora do ML** (ADR 0029, item 13).
+
+## Resultado
+
+Escrito depois do teste no jogo, em 15/11, sem mudar nada acima. As contas são dos commits `99d76e2f` (a Parte B: a conferência, o medidor, a L1, a L2 e os arquivos) e `62fb43ac` (a Parte E: `python -m ml.scripts.linha_do_projeto resultado` e `referencia`). As saídas estão em `docs/handoff/2026-11-12_50_linha-do-projeto_*.json`, com as figuras `_linhas.png` e `_por_trecho.png`.
+
+### Antes do jogo
+
+- **A conferência (item 4.5):**
+  - na regra registrada, nenhum par da escada passou: o raio do C0 ficou de 8% a 18% longe, e o da `#0013` de 5% a 32%;
+  - **com a emenda do item 13,** passou o 3º par, **6/15 m** (546 genes): C0 com p95 de 0,007 m e 9,1% no raio; `#0013` com 0,012 m e 6,6%.
+- **O medidor (item 5):** o escolhido foi o **M-v2**, pelo Spearman por microssetor nas linhas deixadas de fora.
+
+  | medidor | ρ |
+  |---|---:|
+  | M-v2 | 0,484 |
+  | M-cal | 0,469 |
+  | M-real | 0,458 |
+
+  Na volta inteira, o M-cal foi o que mais se aproximou do jogo nas linhas do 47.
+- **A L1:**
+  - C3 na C01, C06, C11 e C12; C2 na C02, C03, C04 e C10; C4 nos outros 7 trechos;
+  - 8 emendas. A da C09 para a C10 cruza 4 m de pista em 40 m;
+  - dentro do corredor, da forma e das restrições.
+- **A L2:** 250 gerações, a no máximo 0,63 m da L1, sem penalização.
+- **Os tempos previstos contra o C0:**
+
+  | linha | M-v2 | M-real | M-cal |
+  |---|---:|---:|---:|
+  | L1 | −1,36 s | −1,09 s | −0,01 s |
+  | L2 | −2,33 s | −2,22 s | −0,41 s |
+
+- **A subida dos boxes:** o menor raio do arquivo em 3.898 m ficou em 125 m (L1) e 138 m (L2), contra 226 m na linha da IA. A ondulação da linha central continua nas linhas vindas da C4.
+
+### O teste no jogo (14 e 15/11)
+
+- **A conferência:**
+  - os 5 blocos, na ordem C0, L1, C0, L2, C0, com uma gravação cada;
+  - a troca pegou em todos: a mediana até a linha do bloco ficou entre 0,25 e 0,32 m, e na L1 e na L2 a mediana até a original ficou em 1,00 e 0,92 m;
+  - o original está intacto;
+  - as 35 voltas que contam são válidas, todas dirigidas pela IA.
+- **A cópia da pista foi removida depois de 12/11 e recriada em 14/11** pelo `criar_copia.ps1`, com a original igual byte a byte.
+- **Os blocos ficaram com 3 a 4 horas de intervalo,** mais que os 45 minutos da D.2.
+
+| bloco | condição | válidas | melhor | mediana | desvio |
+|---|---|---:|---|---|---:|
+| 1 | C0 | 7/7 | 1:24,775 | 1:24,854 | 0,102 s |
+| 2 | L1 | 7/7 | 1:25,188 | 1:25,307 | 0,196 s |
+| 3 | C0 | 7/7 | 1:24,766 | 1:25,046 | 0,224 s |
+| 4 | L2 | 7/7 | **1:24,552** | 1:24,704 | 0,129 s |
+| 5 | C0 | 7/7 | 1:24,670 | 1:24,823 | 0,250 s |
+
+### O veredito (item 2)
+
+- **L2: meta atingida.**
+  - A melhor volta é 1:24,552, 0,214 s abaixo da melhor do C0 de antes (bloco 3) e 0,119 s abaixo da do C0 de depois (bloco 5).
+  - Só relatado: a diferença das medianas contra os dois C0 vizinhos é **−0,121 s** (IC 95% de −0,514 a −0,004). Pela regra do ADR 0029, seria "mais rápida que a linha da IA".
+- **L1: meta não atingida.**
+  - A melhor volta é 1:25,188, 0,413 s acima da do bloco 1 e 0,422 s acima da do bloco 3.
+  - Só relatado: +0,440 s (de +0,193 a +0,779), "mais lenta" pela regra do ADR 0029.
+- **A deriva (só relatada):** contra o bloco 1, o bloco 3 ficou +0,192 s (de −0,169 a +0,365) e o bloco 5 −0,031 s (de −0,282 a +0,375). Os C0 deste teste têm duas faixas de tempo, perto de 1:24,8 e de 1:25,2.
+- **A `#0013` (1:24,829, na pista original, com outro preset):** a melhor da L2 fica 0,278 s abaixo dela. Mas os três blocos de C0 deste teste ficaram cerca de 0,5 s mais rápidos que o C0 do 47 (medianas de 1:24,82 a 1:25,05, contra 1:25,438), com o mesmo app e o mesmo carro. **A causa não foi confirmada.** A comparação justa é com os C0 vizinhos.
+
+### Por trecho (a regra do ADR 0030, contra os dois C0 vizinhos)
+
+| trecho | L1 | L2 |
+|---|---|---|
+| C01 | perda (+0,07 a +0,08 s) | perda (+0,09 a +0,10 s) |
+| C02 | perda (+0,08 a +0,09 s) | perda (+0,05 a +0,06 s) |
+| C03 | perda (+0,03 s) | empate |
+| C04 | **ganho (−0,13 s)** | **ganho (−0,20 a −0,21 s)** |
+| C05 | empate | empate |
+| C06 | **ganho (−0,23 a −0,24 s)** | **ganho (−0,28 a −0,30 s)** |
+| C07 | empate | **ganho (−0,09 a −0,10 s)** |
+| C08 | perda (+0,03 a +0,04 s) | empate |
+| C09 | **ganho (−0,06 s)** | **ganho (−0,08 s)** |
+| C10 | perda (+0,32 a +0,43 s) | perda (+0,23 a +0,36 s) |
+| C11 | empate | empate |
+| C12 | empate | **ganho (−0,03 a −0,04 s)** |
+| C13 | perda (+0,02 s) | empate |
+| C14 | perda (+0,06 s) | perda (+0,03 s) |
+| C14→linha | perda (+0,07 s) | perda (+0,02 a +0,03 s) |
+
+- **O que a L2 ganhou da L1:** C04, C06, C07, C09 e C12 melhoraram, e C03, C08 e C13 saíram da perda.
+- **As duas perdem mais na C10,** logo depois da emenda da C09 para a C10.
+- **A subida dos boxes** (C14→linha) perde pouco nas duas (+0,02 a +0,07 s). O raio de 125 a 138 m não fez a IA perder o que a C1 e a C2 perderam no 47.
+
+### Os medidores contra o jogo (só relatado)
+
+| linha | jogo (contra os C0 vizinhos) | M-v2, o escolhido | M-real | M-cal |
+|---|---:|---:|---:|---:|
+| L1 | +0,440 s | −1,358 s | −1,089 s | −0,013 s |
+| L2 | −0,121 s | −2,332 s | −2,215 s | −0,410 s |
+
+- **O medidor escolhido errou o sinal da L1** e superestimou o ganho da L2 em 2,2 s.
+- **O M-cal ficou mais perto nas duas,** mas também previu a L1 mais rápida.
+- **Por trecho,** o Spearman da diferença prevista contra a do jogo ficou entre 0,32 e 0,43 nos três medidores.
+
+### A referência (item 11)
+
+**A L2 virou a referência de todos os trechos** de `data/modelo1_por_trecho/referencia_por_trecho.json` (fora do git):
+- com a marca "linha do projeto, meta atingida em 2026-11-15";
+- com a execução da IA nas 7 voltas do bloco 4 (as medidas do ADR 0030, item 5).
+
+A referência anterior (a linha da IA, C0) fica em cada trecho como `referencia_anterior`, e o arquivo do pedido 49 foi guardado em `referencia_por_trecho_pedido49.json`. As candidatas do 49 continuam "a validar no jogo", e as propostas provisórias não foram refeitas. **O coach ainda não lê esse arquivo.**
+
+### O que se esperava (item 10) e o que veio
+
+| item | esperado | resultado |
+|---|---|---|
+| 10.1 | a conferência passa no 1º ou no 2º par | **não:** só com a emenda (item 13), no 3º par |
+| 10.2 | o raio do arquivo da L1 no trecho C14→linha passa de 200 m | **não:** 125 m em 3.898 m; mesmo assim, a IA quase não perdeu ali |
+| 10.3 | o M-cal é o escolhido | **não:** o M-v2, por pouco |
+| 10.4 | a L2 de 0,1 a 0,3 s mais rápida que a L1 no medidor, perto de 1,0 m em poucos trechos | **não:** 0,97 s no M-v2; 0,63 m no máximo |
+| 10.5 | a L1 entre −0,3 e +0,2 s dos C0 vizinhos | **não:** +0,44 s |
+| 10.6 | a meta perto de meio a meio para a L1, um pouco menos para a L2 | **ao contrário:** a L2 atingiu, a L1 não |
+| 10.7 | a `#0013` fora de alcance | **não:** a melhor da L2 fica 0,28 s abaixo dela, mas com os C0 do teste também abaixo dela (a causa não foi confirmada) |

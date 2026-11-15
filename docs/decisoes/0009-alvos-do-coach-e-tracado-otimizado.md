@@ -3,6 +3,7 @@
 - **Status:** aceita
 - **Data:** 2026-10-02
 - **Decisor:** Eduardo
+- **Atualização (15/11, pedido 50):** a linha do projeto vai para a referência do coach se atingir a meta do ADR 0031. A L2 atingiu, e é a referência de todos os trechos em `data/modelo1_por_trecho/referencia_por_trecho.json`; o coach ainda não lê esse arquivo.
 
 ## Contexto
 
