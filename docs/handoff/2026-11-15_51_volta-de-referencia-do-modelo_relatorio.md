@@ -2,7 +2,7 @@
 
 - **Pedido:** `docs/prompts/2026-11-15_51_volta-de-referencia-do-modelo.md`, continuado em 15/11 à tarde pelos itens 1 a 6 do relatório parcial (`263c5fd6`), com a sua instrução: o instalador só depois das conferências da Parte D, e a instalação só com o seu "pode instalar". Às 17:10, a sua decisão sobre a trava do store v2: "Siga sem resolver: gere o instalador e faça o merge".
 - **Pasta e branch:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer`, `etapa/volta-do-modelo` (a partir de `develop` em `51ad8cde`).
-- **Situação:** **feito, salvo a instalação e o envio.** O instalador `0.8.0-volta-do-modelo` foi gerado e conferido; o merge está em `develop` (`c4869295`), e a pasta principal ficou em `develop`. A trava do store v2 fica para um pedido próprio, por sua decisão de 15/11 às 17:10. A instalação espera o seu "pode instalar"; o envio, os seus comandos.
+- **Situação:** **feito, salvo o envio.** O instalador `0.8.0-volta-do-modelo` foi gerado, conferido e **instalado** com o seu "pode instalar" (15/11, 17:23). O merge está em `develop` (`c4869295`), e a pasta principal ficou em `develop`. A trava do store v2 fica para um pedido próprio, por sua decisão de 15/11 às 17:10. O envio espera os seus comandos.
 - **Commits:**
   - `88bcdcdd` Pedido 51: o texto do pedido
   - `79990728` Parte A: o ADR 0032, antes do código
@@ -14,7 +14,7 @@
   - `3707c48d` Parte D.5: a suíte (1043 passando), o front, o desktop e o Lua
   - `46e8db8f` o relatório, parado na trava (o commit de onde o instalador foi gerado)
   - `dcabd0fc` Parte E: o instalador no índice das versões (`versoes/LEIA-ME.md`)
-  - em `develop`, depois do merge: o commit deste relatório final
+  - em `develop`, depois do merge: `b1442d42` o relatório com o instalador e o merge, e o commit deste relatório com a instalação
 - **Merge:** `c4869295` Merge do pedido 51 em `develop` (`--no-ff`, sem conflito). **Envio:** nenhum (os comandos estão no fim).
 - **Arquivos de handoff** (`docs/handoff/2026-11-15_51_volta-de-referencia-do-modelo_…`):
   - `_relatorio.md` (este);
@@ -276,9 +276,17 @@ Saída em `_testes.txt` e `_conferir_lua.txt`.
 - **o `voz.ps1`**, em `resources\backend\automobilista-backend\_internal\core\radio\`;
 - **o front novo:** "Volta de referência" está no pacote. O único "Volta da IA" que sobrou é o da origem ("IA no volante: Volta da IA: não conta como sua"), de propósito.
 
-**Não instalei:** a instalação espera o seu "pode instalar". Depois dele:
-- instalo sem perguntas (`/S`), por cima da 0.7.0, com o jogo e o app fechados;
-- confiro que a configuração continua `"minha_melhor"`.
+**A instalação** (15/11, 17:23, depois do seu "pode instalar"):
+- **antes:** o jogo e o app fechados, nenhum processo do app aberto, e a configuração em `"minha_melhor"`;
+- **o comando:** o instalador com `/S /allusers /D=C:\Users\Dokas\AppData\Local\Programs\Automobilista Telemetria`, por cima da 0.7.0, como ela estava instalada (para todos os usuários, na mesma pasta). O sha256 foi conferido antes de rodar. Saída 0;
+- **depois:**
+  - o registro do Windows mostra `0.8.0-volta-do-modelo`;
+  - a pasta tem o `vhe_interlagos.volta_do_modelo.json`, igual ao do repositório pelo sha256, e o `voz.ps1`;
+  - **a configuração continua `"minha_melhor"`;**
+  - o app não ficou aberto;
+- **o índice das versões** (`versoes/LEIA-ME.md`) diz que a instalada é a mais atual.
+
+**Para ver a volta do modelo no app instalado,** escolha "Volta de referência" na tela Coleta de dados. Ele está em "Sua melhor volta", como você deixou em 14/10.
 
 **O app do jogo 0.6.0** vai pelo `instalar.ps1`, que você roda (de preferência junto com o app do Windows 0.8.0):
 
@@ -343,7 +351,7 @@ Quando você avisar, confiro com `git ls-remote origin` que os hashes remotos s�
 
 ## O que falta
 
-1. **A instalação da 0.8.0,** com o seu "pode instalar" no chat.
+1. ~~A instalação da 0.8.0~~: feita em 15/11, 17:23.
 2. **O app do jogo 0.6.0,** pelo `instalar.ps1`, que você roda (o comando está na Parte E).
 3. **O envio** de `etapa/volta-do-modelo` e de `develop`, pelos comandos acima.
 4. **A trava do store v2,** num pedido próprio (backlog, item 1). Até lá, a tela Evolução mostra o relatório de 22/10, contra a `#0013`, com o rótulo "volta de referência".

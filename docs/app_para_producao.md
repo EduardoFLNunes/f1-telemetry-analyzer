@@ -38,6 +38,8 @@ O **Automobilista Telemetria** é um app de Windows (Electron e backend em Pytho
 | Número da versão do app do Windows | `0.7.0-radio-que-ensina` | `0.8.0-volta-do-modelo` |
 | App do jogo que acompanha | 0.5.0 | 0.6.0 |
 
+**Em 15/11/2026, 17:23, a 0.8.0 (`46e8db8`) foi instalada por cima da 0.7.0** (pedido 51): a coluna da 0.7.0 fica como histórico.
+
 **`develop` tem tudo o que a 0.7.0 instalada tem e mais.** O que os pedidos 46 a 49 fizeram (a M1 v2 e o Modelo 1) fica fora do app. As alterações estão centralizadas desde 01/11.
 
 ## 3. O que falta para a próxima versão
