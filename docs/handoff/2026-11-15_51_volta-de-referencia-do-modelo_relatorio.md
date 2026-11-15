@@ -2,7 +2,7 @@
 
 - **Pedido:** `docs/prompts/2026-11-15_51_volta-de-referencia-do-modelo.md`, continuado em 15/11 à tarde pelos itens 1 a 6 do relatório parcial (`263c5fd6`), com a sua instrução: o instalador só depois das conferências da Parte D, e a instalação só com o seu "pode instalar". Às 17:10, a sua decisão sobre a trava do store v2: "Siga sem resolver: gere o instalador e faça o merge".
 - **Pasta e branch:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer`, `etapa/volta-do-modelo` (a partir de `develop` em `51ad8cde`).
-- **Situação:** **feito, salvo o envio.** O instalador `0.8.0-volta-do-modelo` foi gerado, conferido e **instalado** com o seu "pode instalar" (15/11, 17:23). O merge está em `develop` (`c4869295`), e a pasta principal ficou em `develop`. A trava do store v2 fica para um pedido próprio, por sua decisão de 15/11 às 17:10. O envio espera os seus comandos.
+- **Situação:** **feito.** O instalador `0.8.0-volta-do-modelo` foi gerado, conferido e **instalado** com o seu "pode instalar" (15/11, 17:23). O merge está em `develop` (`c4869295`), e a pasta principal ficou em `develop`. A trava do store v2 fica para um pedido próprio, por sua decisão de 15/11 às 17:10. O envio foi feito por você e conferido (17:38).
 - **Commits:**
   - `88bcdcdd` Pedido 51: o texto do pedido
   - `79990728` Parte A: o ADR 0032, antes do código
@@ -315,7 +315,16 @@ powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-ana
 
 ## O que foi enviado ao GitHub
 
-**Nada:** o `git push` é recusado pelo controle de permissões desta sessão. Os comandos estão abaixo, para você rodar pelo terminal.
+**Enviado por você em 15/11** (o `git push` é recusado pelo controle de permissões desta sessão), conferido com `git ls-remote origin`:
+
+| ref | hash local | no remoto (15/11, 17:38) |
+|---|---|---|
+| `etapa/volta-do-modelo` | `dcabd0fc` | `dcabd0fc` ✔ |
+| `develop` | `36152415` | `36152415` ✔ (antes `4c7bcbae`: o envio levou os pedidos 50 e 51 e os 2 commits só locais do 45) |
+
+Os dois envios foram avanços simples, sem reescrever o remoto. Depois deles, só este registro ficou local, em `develop` (envio pequeno, quando quiser).
+
+**O que estava antes do envio:**
 
 **A conferência antes do primeiro envio** (os arquivos dos commits do pedido contra o `develop` de antes):
 - nenhum arquivo acima de 50 MB;
@@ -353,5 +362,5 @@ Quando você avisar, confiro com `git ls-remote origin` que os hashes remotos s�
 
 1. ~~A instalação da 0.8.0~~: feita em 15/11, 17:23.
 2. **O app do jogo 0.6.0,** pelo `instalar.ps1`, que você roda (o comando está na Parte E).
-3. **O envio** de `etapa/volta-do-modelo` e de `develop`, pelos comandos acima.
+3. ~~O envio~~: feito e conferido em 15/11, 17:38.
 4. **A trava do store v2,** num pedido próprio (backlog, item 1). Até lá, a tela Evolução mostra o relatório de 22/10, contra a `#0013`, com o rótulo "volta de referência".
