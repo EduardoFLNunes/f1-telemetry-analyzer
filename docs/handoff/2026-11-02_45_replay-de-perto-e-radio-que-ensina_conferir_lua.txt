@@ -1,0 +1,5 @@
+arquivo: tools\csp_app\radio_engenheiro\radio_engenheiro.lua
+tokens: 34612; erros de lexico: 0 []
+blocos: ok
+no SDK do CSP: todas existem
+metodos no SDK do CSP: todos existem

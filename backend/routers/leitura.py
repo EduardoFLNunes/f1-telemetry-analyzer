@@ -34,6 +34,14 @@ async def get_coach_referencias():
     return await asyncio.to_thread(arquivos.ler_referencias, _raiz())
 
 
+@router.get("/api/store/numeros")
+async def get_store_numeros():
+    """Pedido 45 (B.2): o numero do jogo de cada volta do store (o mesmo do radio), para a tela Volta."""
+    from core.coleta.estado import numeros_do_store
+
+    return numeros_do_store(_raiz())
+
+
 @router.get("/api/store/voltas/{lap_id}")
 async def get_store_volta(lap_id: str):
     return await asyncio.to_thread(leitor_do_store.ler_volta, _raiz(), lap_id)

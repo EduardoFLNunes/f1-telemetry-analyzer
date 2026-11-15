@@ -19,6 +19,7 @@ import EvolucaoPage from './pages/EvolucaoPage';
 import ColetaPage from './pages/ColetaPage';
 import SistemaPage from './pages/SistemaPage';
 import { aplicarVidro, vidroLigado } from './theme/vidro';
+import { ReplayGrande } from './aoVivo/ReplayGrande';
 
 const App: React.FC = () => {
   useTelemetryWS();
@@ -46,6 +47,7 @@ const App: React.FC = () => {
         {tela === 'coleta' && <ColetaPage />}
         {tela === 'sistema' && <SistemaPage sub={sub} />}
       </main>
+      <ReplayGrande />
     </div>
   );
 };

@@ -14,7 +14,8 @@ export type PontoDoReplay = [number, number, number, number];
 type Marca = { x: number; z: number; s?: number; dM?: number };
 
 export type CurvaDoReplay = {
-  curva: string;
+  /** Pedido 45: `null` na volta inteira (`voltaInteira`). */
+  curva: string | null;
   lado: string;
   volta: number | null;
   referencia: string | null;
@@ -34,11 +35,25 @@ export type CurvaDoReplay = {
   voz?: { microssetor: number; inicioM: number; fimM: number; perdaS: number | null } | null;
   /** Na análise: a diferença acumulada no trecho da curva, do zero à perda da curva. */
   diferencaNoTrecho?: DiferencaNoTrecho | null;
+  // Pedido 45: o trecho da causa, os números da voz, a volta inteira e o aviso.
+  causa?: { trecho: string; inicioM: number; fimM: number; perdaS: number | null; medida: string | null; valor: number | null } | null;
+  textoDaVoz?: string | null;
+  voltaInteira?: boolean;
+  curvasNaVolta?: { curva: string; inicioM: number; fimM: number; tempoS: number; perdaS: number | null }[];
+  aviso?: string | null;
+  tempoDaVoltaS?: number;
 };
 
 export type DiferencaNoTrecho = { comprimentoM: number; passoM: number; entradaDoReplayM: number; valores: number[] };
 
-export type DadosDoReplay = { id: number; origem: string; curvas: CurvaDoReplay[] };
+export type DadosDoReplay = {
+  id: number | null;
+  origem: string;
+  curvas: CurvaDoReplay[];
+  volta?: number;
+  /** Pedido 45: a volta já no store (o caminho até a tela Volta); `null` enquanto a sessão não entrou nele. */
+  voltaNoStore?: { lapId: string; numero: number | null } | null;
+};
 
 const nf = (v: number, casas: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
 
@@ -110,6 +125,107 @@ export function cameraDaCurva(c: CurvaDoReplay, largura: number, altura: number,
   };
 }
 
+// ── a câmera de perto (pedido 45, Parte D) ──────────────────────────────
+
+/** O que cabe no lado menor da área: 80 m (entre 60 e 100 m, um carro de 4,5 m fica com 13 a 20 px em 300 px). */
+export const ZOOM_DO_REPLAY_M = 80;
+export const ZOOM_MINIMO_M = 50;
+export const ZOOM_MAXIMO_M = 400;
+export const ENQUADRAR_S = 1.0;      // a curva inteira, para se localizar
+export const APROXIMAR_S = 0.8;      // e a aproximação
+export const LENTIDAO = 0.5;         // o trecho da causa, na metade da velocidade
+
+/**
+ * A câmera que acompanha os carros (a mesma do app do jogo, `radio_engenheiro.lua`): a orientação de
+ * `cameraDaCurva`, fixa; o centro entre "você" e a referência; `zoomM` no lado menor da área. Se os dois se
+ * afastam mais que a janela, ela se afasta o necessário, no máximo até a curva inteira, onde os dois sempre
+ * cabem. `real` é o tempo desde o começo do replay: a curva inteira por `ENQUADRAR_S`, depois a aproximação.
+ */
+export function cameraDePerto(c: CurvaDoReplay, t: number, real: number, largura: number, altura: number,
+  zoomM = ZOOM_DO_REPLAY_M, margem = 18, topo = 26): Camera {
+  const cheia = cameraDaCurva(c, largura, altura, margem, topo);
+  const cs = Math.cos(cheia.ang);
+  const sn = Math.sin(cheia.ang);
+  const girar = (x: number, z: number): [number, number] => {
+    const [u, v] = base(x, z);
+    return [u * cs - v * sn, u * sn + v * cs];
+  };
+  const [vx, vz] = posicaoNoTempo(c.linhas.voce, t);
+  const [rx, rz] = posicaoNoTempo(c.linhas.referencia, t);
+  const gv = girar(vx, vz);
+  const gr = girar(rx, rz);
+  const uteisX = Math.max(largura - 2 * margem, 1);
+  const uteisY = Math.max(altura - 2 * margem - topo, 1);
+  const kPerto = Math.min(uteisX, uteisY) / Math.max(zoomM, 1);
+  const kDosDois = Math.min(uteisX / Math.max(Math.abs(gv[0] - gr[0]), 1e-3), uteisY / Math.max(Math.abs(gv[1] - gr[1]), 1e-3));
+  const kAlvo = Math.min(kPerto, kDosDois);
+  const f = Math.max(0, Math.min(1, (real - ENQUADRAR_S) / APROXIMAR_S));
+  const suave = f * f * (3 - 2 * f);
+  const k = cheia.k * Math.pow(kAlvo / cheia.k, suave);
+  const rcx = cheia.rcx + ((gv[0] + gr[0]) / 2 - cheia.rcx) * suave;
+  const rcy = cheia.rcy + ((gv[1] + gr[1]) / 2 - cheia.rcy) * suave;
+  const { ang, ax, ay } = cheia;
+  return {
+    ang, k, ax, ay, rcx, rcy,
+    tela: (x, z) => {
+      const [gx, gy] = girar(x, z);
+      return [ax + k * (gx - rcx), ay + k * (gy - rcy)];
+    },
+  };
+}
+
+/** O trecho marcado na pista e nos visuais: o da fala (pedido 43) ou o da causa (pedido 45). */
+export function trechoMarcado(c: CurvaDoReplay): { inicioM: number; fimM: number; nome: string } | null {
+  if (c.voz) return { inicioM: c.voz.inicioM, fimM: c.voz.fimM, nome: 'trecho da fala' };
+  if (c.causa) return { inicioM: c.causa.inicioM, fimM: c.causa.fimM, nome: 'trecho da causa' };
+  return null;
+}
+
+export type PlanoDoTempo = { t0: number; lentoDe: number; lentoAte: number; lento: boolean; totalReal: number };
+
+/**
+ * Pedido 45 (D.4): do tempo real ao tempo do replay. Primeiro `ENQUADRAR_S` parado na entrada; o trecho
+ * marcado em câmera lenta quando o tempo deixar. `disponivelS`: o que resta da janela de rádio, na reta
+ * (`restaS`); sem limite, nos boxes e na tela. Na reta, se a curva não couber, o replay começa um pouco
+ * antes do trecho, para ele aparecer antes de a janela acabar.
+ */
+export function planoDoTempo(c: CurvaDoReplay, disponivelS: number | null = null): PlanoDoTempo {
+  const passo = c.passoM ?? 0;
+  const trecho = trechoMarcado(c);
+  const linha = c.linhas.voce;
+  const noTempo = (d: number) => linha[Math.min(linha.length - 1, Math.max(0, Math.round(d / Math.max(passo, 1e-6))))][2];
+  const ta = trecho && passo ? noTempo(trecho.inicioM) : 0;
+  const tb = trecho && passo ? noTempo(trecho.fimM) : 0;
+  let t0 = 0;
+  if (disponivelS !== null && ENQUADRAR_S + c.duracaoS > disponivelS && tb > ta) {
+    t0 = Math.max(0, Math.min(ta - 1.5, c.duracaoS - (disponivelS - ENQUADRAR_S)));
+  }
+  const extra = tb > ta ? (tb - ta) * (1 / LENTIDAO - 1) : 0;
+  const semLento = ENQUADRAR_S + c.duracaoS - t0;
+  const lento = extra > 0 && (disponivelS === null || semLento + extra <= disponivelS);
+  return { t0, lentoDe: ta, lentoAte: tb, lento, totalReal: semLento + (lento ? extra : 0) };
+}
+
+export function tempoNoReplay(p: PlanoDoTempo, real: number): number {
+  const r = real - ENQUADRAR_S;
+  if (r <= 0) return p.t0;
+  const t = p.t0 + r;
+  if (!p.lento || t <= p.lentoDe) return t;
+  const noLento = (t - p.lentoDe) * LENTIDAO;
+  const dur = p.lentoAte - p.lentoDe;
+  return noLento <= dur ? p.lentoDe + noLento : p.lentoAte + (t - p.lentoDe - dur / LENTIDAO);
+}
+
+/** Pedido 45 (E.3): a curva em que "você" está, na volta inteira (a célula acesa). */
+export function curvaNoTempo(c: CurvaDoReplay, t: number): string | null {
+  if (!c.curvasNaVolta || !c.passoM) return null;
+  const d = distanciaNoTempo(c.linhas.voce, t, c.passoM);
+  for (const x of c.curvasNaVolta) {
+    if (x.inicioM <= x.fimM ? d >= x.inicioM && d <= x.fimM : d >= x.inicioM || d <= x.fimM) return x.curva;
+  }
+  return null;
+}
+
 /** "perde 0,92 s nesta curva" (com a unidade). */
 export function textoDaPerda(perdaS: number): string {
   return `${perdaS >= 0 ? 'perde' : 'ganha'} ${nf(Math.abs(perdaS), 2)} s nesta curva`;
@@ -120,7 +236,12 @@ export function textoDaPerda(perdaS: number): string {
  * análise, a perda na curva: "C12, esquerda · volta 2 · perde 0,64 s no trecho da fala".
  */
 export function textoDoAlto(c: CurvaDoReplay): string {
-  const inicio = `${c.curva}, ${c.lado}${c.volta ? ` · volta ${c.volta}` : ''}`;
+  const aviso = c.aviso ? ` · ${c.aviso}` : '';
+  if (c.voltaInteira) {
+    const tempo = c.tempoDaVoltaS !== undefined ? ` · ${tempoDeVolta(c.tempoDaVoltaS)}` : '';
+    return `volta ${c.volta ?? '?'}${tempo} · ${c.perdaS >= 0 ? '+' : '−'}${nf(Math.abs(c.perdaS), 3)} s${aviso}`;
+  }
+  const inicio = `${c.curva}, ${c.lado}${c.volta ? ` · volta ${c.volta}` : ''}${aviso}`;
   if (c.voz) {
     const p = c.voz.perdaS;
     return p === null || p === undefined ? inicio : `${inicio} · ${p >= 0 ? 'perde' : 'ganha'} ${nf(Math.abs(p), 2)} s no trecho da fala`;
@@ -196,10 +317,11 @@ export function faixasDoPedal(linha: PontoDoReplay[], passoM: number): [number, 
 
 /** Os índices da linha dentro do trecho da fala (para a faixa clara na pista). */
 export function indicesDoTrecho(c: CurvaDoReplay): [number, number] | null {
-  if (!c.voz || !c.passoM) return null;
+  const trecho = trechoMarcado(c);
+  if (!trecho || !c.passoM) return null;
   const n = c.linhas.referencia.length;
-  const a = Math.max(0, Math.round(c.voz.inicioM / c.passoM));
-  const b = Math.min(n - 1, Math.round(c.voz.fimM / c.passoM));
+  const a = Math.max(0, Math.round(trecho.inicioM / c.passoM));
+  const b = Math.min(n - 1, Math.round(trecho.fimM / c.passoM));
   return b > a ? [a, b] : null;
 }
 

@@ -11,6 +11,11 @@ devolve so os pontos gravados depois de `desde`, com a posicao atual do carro.
 A volta inteira vem so na abertura da tela, numa volta nova (`versao` muda) ou se
 a tela ficou para tras mais do que o registro guarda. A volta fechada fica
 guardada (`ultima_fechada`), para o radio analisar as voltas (ADR 0021).
+
+Pedido 45 (E.3): a volta que nao comecou na linha (a saida dos boxes, o carro movido) nao tem o relogio
+do coach, mas o Eduardo quer ver o replay dela, porque e onde o carro saiu de traseira (01/11, as voltas 3
+e 4). Ela fica guardada a parte (`ultima_parcial`), com o tempo corrido do cronometro do jogo no lugar
+do relogio desde a linha. So leitura: nao entra na analise nem na grade.
 """
 from __future__ import annotations
 
@@ -48,6 +53,7 @@ class VoltaAoVivo:
         self._mudancas: Deque[Tuple[int, int]] = deque(maxlen=REGISTRO_DE_MUDANCAS)   # (seq, indice)
         self._carro: Dict[str, Any] = {}
         self._fechada: Optional[Dict[str, Any]] = None
+        self._parcial: Optional[Dict[str, Any]] = None
         self._zerar()
 
     def _zerar(self) -> None:
@@ -55,6 +61,9 @@ class VoltaAoVivo:
         self._indice: Optional[int] = None
         self._desde_a_linha = False
         self._mudancas.clear()
+        self._corrido: List[Optional[float]] = [None] * self._n      # pedido 45: o tempo corrido na volta
+        self._corrido_s = 0.0
+        self._cronometro_anterior: Optional[float] = None
 
     def _fechar(self) -> None:
         """A volta acabou na linha: guarda o que ela mediu, para o radio analisar (pedido 35)."""
@@ -66,6 +75,17 @@ class VoltaAoVivo:
                 "comprimentoM": self._comprimento,
                 "linhas": {k: list(v) for k, v in self._linhas.items()},
             }
+        elif self._n:
+            # Pedido 45 (E.3): nao comecou na linha: o tempo corrido no lugar do relogio.
+            medidos = [v for v in self._corrido if v is not None]
+            if medidos:
+                self._parcial = {
+                    "versao": self._versao,
+                    "volta": self._volta,
+                    "pontosDaGrade": self._n,
+                    "tempoS": max(medidos),
+                    "linhas": {**{k: list(v) for k, v in self._linhas.items()}, "elapsed": list(self._corrido)},
+                }
 
     def on_frame(self, frame: Any) -> None:
         if not isinstance(frame, dict):
@@ -91,6 +111,12 @@ class VoltaAoVivo:
             self._desde_a_linha = bool(pos.get("desdeALinha"))
             k = min(int(s / (L / n)), n - 1)
             self._indice = k
+            cronometro = _numero(frame.get("lap_time"))
+            if cronometro is not None:
+                if self._cronometro_anterior is not None and cronometro > self._cronometro_anterior:
+                    self._corrido_s += cronometro - self._cronometro_anterior
+                self._cronometro_anterior = cronometro
+            self._corrido[k] = self._corrido_s
             linhas = self._linhas
             linhas["elapsed"][k] = _numero(pos.get("tempoDaVolta"))
             linhas["lateral"][k] = _numero(pos.get("lateral"))
@@ -143,3 +169,8 @@ class VoltaAoVivo:
     def ultima_fechada(self) -> Optional[Dict[str, Any]]:
         with self._lock:
             return self._fechada
+
+    def ultima_parcial(self) -> Optional[Dict[str, Any]]:
+        """Pedido 45 (E.3): a ultima volta que cruzou a linha sem ter comecado nela."""
+        with self._lock:
+            return self._parcial

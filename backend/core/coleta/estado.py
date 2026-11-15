@@ -17,6 +17,9 @@ STORE_V2_META = Path("data") / "ml" / "laps_grid_v2_meta.json"
 _tempos_do_store: Dict[str, Any] = {"chave": None, "tempos": {}}
 
 
+_melhor_do_store: Dict[str, Any] = {}
+
+
 def tempos_do_store(raiz: Optional[Path]) -> Dict[str, float]:
     """`lap_time_s` de cada volta do store v2 (pedido 31, A.3: uma fonte para cada numero).
 
@@ -43,6 +46,60 @@ def tempos_do_store(raiz: Optional[Path]) -> Dict[str, float]:
         }
         _tempos_do_store["chave"] = chave
     return _tempos_do_store["tempos"]
+
+
+def melhor_do_store(raiz: Optional[Path], pista: Optional[str], carro: Optional[str]) -> Optional[float]:
+    """Pedido 45 (C.1): a melhor volta humana de todas as sessoes do store, para o carro e a pista; None
+    sem o carro (as voltas antigas nao dizem qual era) ou sem voltas dele. So leitura."""
+    if raiz is None or not pista or not carro:
+        return None
+    arquivo = Path(raiz) / STORE_V2_META
+    try:
+        info = arquivo.stat()
+    except OSError:
+        return None
+    chave = (str(arquivo), info.st_mtime, info.st_size, pista, carro)
+    if _melhor_do_store.get("chave") != chave:
+        try:
+            meta = json.loads(arquivo.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        tempos = [float(v["lap_time_s"]) for v in meta.get("laps") or []
+                  if v.get("track") == pista and v.get("carModel") == carro and v.get("origem") == "humano"
+                  and v.get("lap_time_s") is not None]
+        _melhor_do_store.update(chave=chave, tempo=min(tempos) if tempos else None)
+    return _melhor_do_store.get("tempo")
+
+
+def volta_no_store(raiz: Optional[Path], sessao: Optional[str], tempo_s: Optional[float]) -> Optional[Dict[str, Any]]:
+    """Pedido 45 (E.6): a volta da sessao ja no store, pelo tempo (os numeros so cruzam pelo tempo, +-0,15 s),
+    com o numero do jogo (`game_lap_number`). None enquanto a sessao nao entrou no store."""
+    if raiz is None or not sessao or tempo_s is None:
+        return None
+    arquivo = Path(raiz) / STORE_V2_META
+    try:
+        meta = json.loads(arquivo.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    candidatas = [v for v in meta.get("laps") or [] if v.get("session_id") == sessao and v.get("lap_time_s") is not None
+                  and abs(float(v["lap_time_s"]) - float(tempo_s)) <= 0.15]
+    if not candidatas:
+        return None
+    v = min(candidatas, key=lambda x: abs(float(x["lap_time_s"]) - float(tempo_s)))
+    return {"lapId": v.get("lap_id"), "numero": v.get("game_lap_number")}
+
+
+def numeros_do_store(raiz: Optional[Path]) -> Dict[str, int]:
+    """Pedido 45 (B.2): o numero do jogo de cada volta do store, para a tela Volta mostrar o mesmo
+    numero do radio. O id do store (`#NNNN`) e a ordem no arquivo, e nao o numero da volta."""
+    if raiz is None:
+        return {}
+    try:
+        meta = json.loads((Path(raiz) / STORE_V2_META).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return {str(v["lap_id"]): int(v["game_lap_number"]) for v in meta.get("laps") or []
+            if v.get("lap_id") and v.get("game_lap_number") is not None}
 
 
 def espaco_em_disco(pasta: Path) -> Dict[str, Any]:

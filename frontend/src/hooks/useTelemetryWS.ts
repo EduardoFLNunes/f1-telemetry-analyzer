@@ -2,6 +2,7 @@
  * Resilient WebSocket Client for Telemetry Streaming
  * Handles backpressure, reconnection, and event dispatching.
  */
+import { aoPedirOReplay } from '../aoVivo/ReplayGrande';
 import { useEffect, useRef, useCallback } from 'react';
 import { PerformanceMode, useTelemetryStore, TelemetryFrame, CoachingEvent, EngineerSpeech, CognitiveState, normalizeOpponent } from '../store/useTelemetryStore';
 import { WS_URL, apiUrl } from '../config/runtime';
@@ -168,6 +169,9 @@ export const useTelemetryWS = () => {
           };
         } else if (payload.data?.type === 'coaching_event' || payload.data?.type === 'predictive_warning' || payload.type === 'coaching_event') {
           addCoachingEvent(payload.data || payload);
+        } else if (payload.type === 'abrir_replay') {
+          // Pedido 45 (E.6): o botão "Abrir no app", na janela do jogo.
+          aoPedirOReplay(payload.data ?? {});
         } else if (payload.type === 'event') {
             if (payload.data?.metrics) {
                 setCognitiveState(payload.data as CognitiveState);

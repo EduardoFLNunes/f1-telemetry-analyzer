@@ -124,7 +124,7 @@ export type MensagemDoBackend = {
 
 export type MensagemRadioComAudio = MensagemRadio & { audio: string | null; sCarro: number | null };
 
-const TAG_DA_ORIGEM: Record<string, string> = { coach: 'Rádio', resumo: 'Volta', teste: 'Teste', analise: 'Análise' };
+const TAG_DA_ORIGEM: Record<string, string> = { coach: 'Rádio', resumo: 'Volta', teste: 'Teste', analise: 'Análise', curva: 'Curva' };
 
 /**
  * A chave da mensagem na lista: não depende da posição (pedido 43). Com a posição, cada mensagem

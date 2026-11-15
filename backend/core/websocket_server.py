@@ -91,9 +91,20 @@ class ConnectionManager:
     """Manages active websocket connections."""
     def __init__(self):
         self.active_connections: List[WebSocket] = []
-        self._broadcast_lock = asyncio.Lock()
+        # Pedido 45 (B.3): a trava nasce no laco que envia. No Python 3.9, `asyncio.Lock()` guarda o
+        # laco do momento em que e criada, e este objeto nasce ao importar o modulo, antes do laco
+        # do servidor: dois envios ao mesmo tempo davam "attached to a different loop".
+        self._broadcast_lock: Optional[asyncio.Lock] = None
+        self._broadcast_lock_loop: Optional[asyncio.AbstractEventLoop] = None
         self.send_timeout_seconds = max(float(os.getenv("TELEMETRY_WS_SEND_TIMEOUT", "0.25")), 0.05)
         self._pending_broadcasts = 0
+
+    def _trava_do_envio(self) -> asyncio.Lock:
+        laco = asyncio.get_running_loop()
+        if self._broadcast_lock is None or self._broadcast_lock_loop is not laco:
+            self._broadcast_lock = asyncio.Lock()
+            self._broadcast_lock_loop = laco
+        return self._broadcast_lock
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -120,7 +131,7 @@ class ConnectionManager:
         )
         self._pending_broadcasts += 1
         try:
-            async with self._broadcast_lock:
+            async with self._trava_do_envio():
                 performance_metrics.mark_websocket_message(message_type=message.get("type"))
                 connections = list(self.active_connections)
                 tasks = [

@@ -1,0 +1,162 @@
+{
+ "exemplosDoPedido": [
+  {
+   "fala": "3 décimos atrás da sua melhor, 4,2 segundos atrás da IA. Curva 1: 7 décimos, freou 15 metros antes da IA.",
+   "s": 8.73
+  },
+  {
+   "fala": "Melhor volta, 2 décimos mais rápida. Curva 12: 4 décimos, saiu 8 quilômetros por hora mais lento.",
+   "s": 7.72
+  },
+  {
+   "fala": "1,1 segundo atrás da sua melhor. Curva 6: 5 décimos, passou 3 metros por fora no ápice.",
+   "s": 7.48
+  },
+  {
+   "fala": "Volta com rodada: 1 minuto e 36,4 segundos, 7,0 segundos atrás da sua melhor.",
+   "s": 7.13
+  }
+ ],
+ "variantes": [
+  {
+   "causa": "freada",
+   "fala": "3 décimos atrás da sua melhor, 4 décimos mais rápida que a anterior, 4,2 segundos atrás da IA. Curva 1: 7 décimos, freou 15 metros antes da IA. Tempo: 1 minuto e 29,0 segundos.",
+   "s": 14.78
+  },
+  {
+   "causa": "freada",
+   "fala": "3 décimos atrás da sua melhor, 4 décimos mais rápida que a anterior, 4,2 segundos atrás da IA. Curva 1: 7 décimos, freou 15 metros antes da IA.",
+   "s": 11.01
+  },
+  {
+   "causa": "freada",
+   "fala": "3 décimos atrás da sua melhor, 4,2 segundos atrás da IA. Curva 1: 7 décimos, freou 15 metros antes da IA.",
+   "s": 8.73
+  },
+  {
+   "causa": "freada",
+   "fala": "3 décimos atrás da sua melhor. Curva 1: 7 décimos, freou 15 metros antes da IA.",
+   "s": 6.44
+  },
+  {
+   "causa": "freada",
+   "fala": "3 décimos atrás da sua melhor. Curva 1: 7 décimos, freou 15 metros antes.",
+   "s": 6.22
+  },
+  {
+   "causa": "freada",
+   "fala": "3 décimos atrás da sua melhor. Curva 1: 7 décimos.",
+   "s": 4.66
+  },
+  {
+   "causa": "freada",
+   "fala": "3 décimos atrás da sua melhor.",
+   "s": 2.36
+  },
+  {
+   "causa": "saida",
+   "fala": "3 décimos atrás da sua melhor, 4 décimos mais rápida que a anterior, 4,2 segundos atrás da IA. Curva 12: 4 décimos, saiu 8 quilômetros por hora mais lento. Tempo: 1 minuto e 29,0 segundos.",
+   "s": 15.52
+  },
+  {
+   "causa": "saida",
+   "fala": "3 décimos atrás da sua melhor, 4 décimos mais rápida que a anterior, 4,2 segundos atrás da IA. Curva 12: 4 décimos, saiu 8 quilômetros por hora mais lento.",
+   "s": 11.73
+  },
+  {
+   "causa": "saida",
+   "fala": "3 décimos atrás da sua melhor, 4,2 segundos atrás da IA. Curva 12: 4 décimos, saiu 8 quilômetros por hora mais lento.",
+   "s": 9.44
+  },
+  {
+   "causa": "saida",
+   "fala": "3 décimos atrás da sua melhor. Curva 12: 4 décimos, saiu 8 quilômetros por hora mais lento.",
+   "s": 7.16
+  },
+  {
+   "causa": "saida",
+   "fala": "3 décimos atrás da sua melhor. Curva 12: 4 décimos.",
+   "s": 4.87
+  },
+  {
+   "causa": "saida",
+   "fala": "3 décimos atrás da sua melhor.",
+   "s": 2.36
+  },
+  {
+   "causa": "tracado",
+   "fala": "3 décimos atrás da sua melhor, 4 décimos mais rápida que a anterior, 4,2 segundos atrás da IA. Curva 6: 5 décimos, passou 3 metros por fora no ápice. Tempo: 1 minuto e 29,0 segundos.",
+   "s": 15.39
+  },
+  {
+   "causa": "tracado",
+   "fala": "3 décimos atrás da sua melhor, 4 décimos mais rápida que a anterior, 4,2 segundos atrás da IA. Curva 6: 5 décimos, passou 3 metros por fora no ápice.",
+   "s": 11.64
+  },
+  {
+   "causa": "tracado",
+   "fala": "3 décimos atrás da sua melhor, 4,2 segundos atrás da IA. Curva 6: 5 décimos, passou 3 metros por fora no ápice.",
+   "s": 9.35
+  },
+  {
+   "causa": "tracado",
+   "fala": "3 décimos atrás da sua melhor. Curva 6: 5 décimos, passou 3 metros por fora no ápice.",
+   "s": 7.07
+  },
+  {
+   "causa": "tracado",
+   "fala": "3 décimos atrás da sua melhor. Curva 6: 5 décimos.",
+   "s": 4.86
+  },
+  {
+   "causa": "tracado",
+   "fala": "3 décimos atrás da sua melhor.",
+   "s": 2.36
+  },
+  {
+   "causa": "minima",
+   "fala": "3 décimos atrás da sua melhor, 4 décimos mais rápida que a anterior, 4,2 segundos atrás da IA. Curva 3: 1,3 segundo, mínima 30 quilômetros por hora abaixo da IA. Tempo: 1 minuto e 29,0 segundos.",
+   "s": 16.12
+  },
+  {
+   "causa": "minima",
+   "fala": "3 décimos atrás da sua melhor, 4 décimos mais rápida que a anterior, 4,2 segundos atrás da IA. Curva 3: 1,3 segundo, mínima 30 quilômetros por hora abaixo da IA.",
+   "s": 12.35
+  },
+  {
+   "causa": "minima",
+   "fala": "3 décimos atrás da sua melhor, 4,2 segundos atrás da IA. Curva 3: 1,3 segundo, mínima 30 quilômetros por hora abaixo da IA.",
+   "s": 10.06
+  },
+  {
+   "causa": "minima",
+   "fala": "3 décimos atrás da sua melhor. Curva 3: 1,3 segundo, mínima 30 quilômetros por hora abaixo da IA.",
+   "s": 7.78
+  },
+  {
+   "causa": "minima",
+   "fala": "3 décimos atrás da sua melhor. Curva 3: 1,3 segundo, mínima 30 quilômetros por hora abaixo.",
+   "s": 7.54
+  },
+  {
+   "causa": "minima",
+   "fala": "3 décimos atrás da sua melhor. Curva 3: 1,3 segundo.",
+   "s": 5.2
+  },
+  {
+   "causa": "minima",
+   "fala": "3 décimos atrás da sua melhor.",
+   "s": 2.36
+  },
+  {
+   "causa": "coach",
+   "fala": "Curva 1, esquerda: 7 décimos atrás da IA. Freou 38 metros antes da IA.",
+   "s": 6.06
+  },
+  {
+   "causa": "coach",
+   "fala": "Curva 3, direita: 1,3 segundo atrás da IA. Mínima 30 quilômetros por hora abaixo da IA.",
+   "s": 7.05
+  }
+ ]
+}

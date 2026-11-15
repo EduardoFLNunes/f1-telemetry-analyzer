@@ -7,9 +7,18 @@ export function nomeDaSessao(id: string): string {
   return `${p[2]}/${p[1]}${p[3] ? ` (${p[3]})` : ''}`;
 }
 
-/** `…#0008` → 8. */
+/**
+ * Pedido 45 (B.2): o número do jogo de cada volta do store (`game_lap_number`), o mesmo do rádio. O
+ * `#NNNN` do id é a ordem no arquivo, e não o número da volta: ele só vale até os números chegarem.
+ */
+let numerosDoJogo: Record<string, number> = {};
+export function guardarNumerosDoJogo(numeros: Record<string, number> | null | undefined): void {
+  numerosDoJogo = numeros ?? {};
+}
+
+/** O número da volta (o do jogo, o mesmo do rádio). */
 export function numeroDaVolta(lapId: string): number {
-  return parseInt(String(lapId).split('#')[1] || '0', 10);
+  return numerosDoJogo[lapId] ?? parseInt(String(lapId).split('#')[1] || '0', 10);
 }
 
 /** Número com vírgula e `casas` casas fixas. */
