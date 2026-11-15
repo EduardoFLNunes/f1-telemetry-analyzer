@@ -421,6 +421,25 @@ Avise **"rodei a linha do projeto"**. Aí eu faço:
 
 **Não remova a cópia até eu terminar a Parte E:** o resultado confere a pasta da cópia. Depois, ela fica até você rodar o `remover_copia.ps1`.
 
+### A conferência entre as sessões (sem tempos)
+
+**14/11, depois do seu aviso "terminei a sessão":**
+- **A cópia foi recriada** às 18:55:42 (`copia.json`), com o sha256 da original igual ao de antes.
+- **No registro, desde o commit do ADR 0031, há uma troca só:** C0 às 18:58:46. A troca apagou 4 caches do CSP da cópia (`caches_csp.log`).
+- **Uma gravação:** `2026-11-14_19-01-15_vhe_interlagos_teste_m1`, das 19:01 às 19:14, atribuída ao bloco 1 (C0).
+- **A conferência** (`python -m ml.scripts.linha_do_projeto conferencia-sessao --rotulo sessao1_bloco1`, commit `979782b3`; a saída em `_conferencia_sessao1_bloco1.json`):
+
+| bloco | condição | saída | primeira lançada | contam | além das que contam | interrompida | IA dirigindo nas que contam | até a linha do bloco | até a original | troca pegou |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| 1 | C0 | 1 | 1 | 7 | 0 | 1 | 7 | 0,25 m | 0,25 m | sim |
+
+- **O original está intacto.**
+- **A volta "interrompida"** é o pedaço gravado depois de a IA cruzar a linha no fim da 9ª volta. Ela não conta, e é o esperado.
+- **Nenhum tempo foi calculado nem olhado.**
+- **A sessão 1 ficou com 1 dos 3 blocos.** Faltam o bloco 2 (L1) e o bloco 3 (C0).
+  - Se eles forem rodados depois, o intervalo entre os blocos 1 e 2 passa dos 45 minutos da D.2. Isso vai no relatório do resultado.
+  - O veredito compara a L1 com os dois C0 vizinhos, e o jogo tem o horário e o clima parados, então o intervalo não muda a regra.
+
 ## O que se esperava e o que veio (até a Parte D)
 
 | item do ADR | esperado | resultado |
