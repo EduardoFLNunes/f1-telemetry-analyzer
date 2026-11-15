@@ -1,8 +1,8 @@
 /**
  * As 14 curvas da volta contra a referência (pedido 30), como no protótipo A.
  * Os números são os do método do relatório de evolução (`medidas.ts`); a
- * coluna "Mediana da sessão" só aparece contra a volta da IA, que é a
- * referência do relatório.
+ * coluna "Mediana da sessão" só aparece contra a volta de referência (a volta do
+ * modelo, ADR 0032), que é a referência do relatório.
  */
 import React from 'react';
 import { useEstadoDaVolta } from './estado';
@@ -11,10 +11,10 @@ import { nf, sg, textoDaFreada, textoDaLateral, textoDaMinima } from './formato'
 
 type Props = {
   medidas: MedidaDaCurva[];
-  /** Mediana da perda para a IA na sessão, por curva; `null` sem a coluna. */
+  /** Mediana da perda para a referência na sessão, por curva; `null` sem a coluna. */
   medianas: Array<number | null> | null;
   diferencaDaVolta: number;
-  referencia: 'ia' | 'melhor';
+  referencia: 'modelo' | 'melhor';
 };
 
 export const TabelaDasCurvas: React.FC<Props> = ({ medidas, medianas, diferencaDaVolta, referencia }) => {

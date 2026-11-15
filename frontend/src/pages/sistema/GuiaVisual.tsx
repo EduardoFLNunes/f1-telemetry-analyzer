@@ -36,7 +36,7 @@ const GRUPOS: Grupo[] = [
   ] },
   { nome: 'Volta', onde: 'traços e mapa', cores: [
     { token: '--voce', nome: 'Você', papel: 'a sua volta' },
-    { token: '--referencia', nome: 'Referência', papel: 'volta da IA ou sua melhor' },
+    { token: '--referencia', nome: 'Referência', papel: 'volta de referência ou sua melhor' },
   ] },
   { nome: 'Cronometragem', onde: 'só em tempos', cores: [
     { token: '--tempo-roxo', nome: 'Roxo', papel: 'a melhor de todas' },
@@ -64,7 +64,7 @@ function valorDoToken(token: string): string {
 const EXEMPLO_RADIO = [
   mensagemDoEvento({
     type: 'coaching_event',
-    evidence: { microsector: 12, yourSeconds: 3.12, referenceSeconds: 2.81, lossSeconds: 0.31, referenceKind: 'volta_ia', referenceLabel: 'volta da IA', brakeDeltaM: -12 },
+    evidence: { microsector: 12, yourSeconds: 3.12, referenceSeconds: 2.81, lossSeconds: 0.31, referenceKind: 'volta_do_modelo', referenceLabel: 'volta de referência', brakeDeltaM: -12 },
     lap_number: 7,
   }),
   mensagemDoEvento({ type: 'coaching_focus', focusSectors: [3, 12, 41], focusSource: 'modelo', lap_number: 6 }),
@@ -80,7 +80,7 @@ const ESTADOS: Array<{ estado: string; tom: 'ok' | 'aviso' | 'erro' | 'neutro'; 
 ];
 
 export const GuiaVisual: React.FC = () => {
-  const [referencia, setReferencia] = useState<'ia' | 'melhor'>('ia');
+  const [referencia, setReferencia] = useState<'modelo' | 'melhor'>('modelo');
   const [volta, setVolta] = useState(5);
   const [dica, setDica] = useState<{ x: number; y: number } | null>(null);
   const contraste = useMemo(() => {
@@ -130,7 +130,7 @@ export const GuiaVisual: React.FC = () => {
           </div>
           <div className="superficie" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span className="rotulo">Texto · Instrument Sans</span>
-            <div style={{ fontSize: 24, fontWeight: 600, lineHeight: 1.2 }}>A IA freia 12 m depois de você</div>
+            <div style={{ fontSize: 24, fontWeight: 600, lineHeight: 1.2 }}>A referência freia 12 m depois de você</div>
             <p className="texto-apoio" style={{ margin: 0 }}>Diferença medida contra uma volta real, nunca ganho prometido. Ação, trajetória, mínima, cedilha e til.</p>
             <span className="texto-fraco">Corpo do app, 14 px; frase do rádio, 16 px.</span>
           </div>
@@ -181,7 +181,7 @@ export const GuiaVisual: React.FC = () => {
             <span className="rotulo">Cartão de número</span>
             <div className="grade-cartoes" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
               <CartaoNumero rotulo="Sua melhor volta" valor="1:29,389" cor="tempo-verde" detalhe="04/10 · volta 18" />
-              <CartaoNumero rotulo="Para a volta da IA" valor="+4,561 s" cor="perda" detalhe="IA: 1:24,828" />
+              <CartaoNumero rotulo="Para a referência" valor="+4,284 s" cor="perda" detalhe="Referência: 1:24,552" />
               <CartaoNumero rotulo="Sem dado" valor={null} detalhe="sem dados" />
             </div>
             <span className="rotulo" style={{ marginTop: 6 }}>Etiqueta de estado</span>
@@ -191,7 +191,7 @@ export const GuiaVisual: React.FC = () => {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <span className="rotulo">Segmentado e chips</span>
-            <Segmentado rotulo="Comparar com" opcoes={[{ id: 'ia', texto: 'Volta da IA' }, { id: 'melhor', texto: 'Sua melhor' }]} valor={referencia} aoMudar={setReferencia} />
+            <Segmentado rotulo="Comparar com" opcoes={[{ id: 'modelo', texto: 'Volta de referência' }, { id: 'melhor', texto: 'Sua melhor' }]} valor={referencia} aoMudar={setReferencia} />
             <div className="chips">
               {[3, 5, 8].map((n) => <Chip key={n} ativo={volta === n} onClick={() => setVolta(n)}>V{n}</Chip>)}
               <Chip disabled>V9 · inválida</Chip>

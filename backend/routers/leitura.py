@@ -12,7 +12,7 @@ import main
 from core.leitura import arquivos
 
 router = APIRouter()
-leitor_do_store = arquivos.LeitorDoStore()
+leitor_do_store = arquivos.LeitorDoStore(volta_do_modelo=lambda: main.app_config.volta_do_modelo())
 
 
 def _raiz():
@@ -31,7 +31,7 @@ async def get_evolucao_sessao(sessao: str):
 
 @router.get("/api/coach/referencias")
 async def get_coach_referencias():
-    return await asyncio.to_thread(arquivos.ler_referencias, _raiz())
+    return await asyncio.to_thread(arquivos.ler_referencias, _raiz(), arquivos.PISTA, main.app_config.volta_do_modelo())
 
 
 @router.get("/api/store/numeros")

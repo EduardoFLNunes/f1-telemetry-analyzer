@@ -244,6 +244,14 @@ const AntesDePilotar: React.FC<{ antes: any; runtime: any; recording: any; falho
                 </button>
               ))}
             </div>
+            {config?.avisoReferencia && (
+              <div style={{ fontSize: 13, color: 'var(--texto-2)', marginTop: 6 }}>{config.avisoReferencia}.</div>
+            )}
+            {config?.voltaDoModelo && (
+              <div style={{ fontSize: 13, color: 'var(--texto-2)', marginTop: 6 }}>
+                Volta de referência: {config.voltaDoModelo.tempo} ({config.voltaDoModelo.marca}; {config.voltaDoModelo.executadaPor}).
+              </div>
+            )}
             {config?.referenciaTravadaPelaVariavel && (
               <div style={{ fontSize: 13, color: 'var(--amber)', marginTop: 6 }}>
                 Definida pela variável AT_COACH_REFERENCE (app de desenvolvimento). Tire a variável para escolher aqui.

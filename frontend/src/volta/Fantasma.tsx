@@ -48,7 +48,7 @@ type Props = {
   curvas: Curva[];
   volta: VoltaDoStore;
   voltaRef: VoltaDoStore;
-  referencia: 'ia' | 'melhor';
+  referencia: 'modelo' | 'melhor';
   /** As camadas da pista do cache (`/api/track/geometry`); sem elas, a linha central. */
   camadas: any | null;
   /** O que vai embaixo do replay (as frases do coach). */
@@ -130,7 +130,7 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
     const doPonto = (v: VoltaDoStore) => v.linhas.freio.map((f, i) => (Number(f) >= 0.15 ? 'freio' : Number(v.linhas.acelerador[i]) >= 0.9 ? 'acelerador' : 'parcial') as Pedal);
     return { volta: doPonto(volta), ref: doPonto(ref) };
   }, [volta, ref]);
-  const rotuloRef = referencia === 'ia' ? 'IA' : 'Sua melhor';
+  const rotuloRef = referencia === 'modelo' ? 'Referência' : 'Sua melhor';
 
   // Pedido 35: na tela Ao vivo os dados da volta mudam no mesmo objeto a cada leitura; o traçado e
   // os pedais da volta são refeitos quando a versão dos dados muda, sem renderizar de novo.
@@ -561,7 +561,7 @@ export const Fantasma: React.FC<Props> = ({ grade: g, geometria: geo, curvas, vo
   );
 };
 
-type PropsDaLeitura = { grade: Grade; volta: VoltaDoStore; ref_: VoltaDoStore; curvas: Curva[]; referencia?: 'ia' | 'melhor'; aoVivo?: boolean };
+type PropsDaLeitura = { grade: Grade; volta: VoltaDoStore; ref_: VoltaDoStore; curvas: Curva[]; referencia?: 'modelo' | 'melhor'; aoVivo?: boolean };
 
 function TituloDoFantasma({ grade: g, volta, curvas, referencia, aoVivo }: PropsDaLeitura) {
   const s = useEstadoDaVolta((e) => e.s) ?? 0;
@@ -569,7 +569,7 @@ function TituloDoFantasma({ grade: g, volta, curvas, referencia, aoVivo }: Props
   const c = curvaEm(curvas, s);
   return (
     <div className="fantasma-titulo">
-      <b>{aoVivo ? 'Ao vivo: volta' : 'Volta'} {numeroDaVolta(volta.lapId)} contra a {referencia === 'ia' ? 'volta da IA' : 'sua melhor'}</b>
+      <b>{aoVivo ? 'Ao vivo: volta' : 'Volta'} {numeroDaVolta(volta.lapId)} contra a {referencia === 'modelo' ? 'volta de referência' : 'sua melhor'}</b>
       <span>{modo === 'curva' ? 'fantasma por curva' : 'fantasma na volta inteira'} · {nf(s, 0)} m{c ? ` · ${c.codigo}` : ''}</span>
       {void g}
     </div>
@@ -597,7 +597,7 @@ function Hud({ grade: g, volta, ref_: ref, curvas, referencia }: PropsDaLeitura)
         <span className="hud-unidade">{modo === 'curva' ? `diferença nesta curva${f.curva ? ` (${f.curva})` : ''}` : 'diferença na volta'}</span>
       </div>
       <div className="hud-coluna">
-        <span className="hud-quem">{referencia === 'ia' ? 'Volta da IA' : 'Sua melhor'}</span>
+        <span className="hud-quem">{referencia === 'modelo' ? 'Referência' : 'Sua melhor'}</span>
         <span className="hud-estado" style={{ color: cor(pr) }}>{NOME_DO_PEDAL[pr]}</span>
         <span className="hud-velocidade">{nf(valorEm(g, ref.linhas.velocidade, f.sFantasma), 0)}</span>
         <span className="hud-unidade">KM/H</span>

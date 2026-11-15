@@ -2,7 +2,7 @@
   "name": "automobilista-telemetria-desktop",
   "private": true,
   "productName": "Automobilista Telemetria",
-  "version": "0.7.0-radio-que-ensina",
+  "version": "0.8.0-volta-do-modelo",
   "description": "Sistema desktop de telemetria e analise de desempenho para simulacao automobilistica com Assetto Corsa.",
   "author": "Eduardo Francisco",
   "copyright": "Copyright (c) 2026 Eduardo Francisco",
@@ -54,7 +54,8 @@
         "from": "../data/reference_models",
         "to": "data/reference_models",
         "filter": [
-          "*.optimal.json"
+          "*.optimal.json",
+          "*.volta_do_modelo.json"
         ]
       },
       {

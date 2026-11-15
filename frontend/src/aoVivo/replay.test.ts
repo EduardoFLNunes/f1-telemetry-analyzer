@@ -5,12 +5,12 @@ import {
   textoDoAlto, textoDoTracado, type CurvaDoReplay, type GradeDaSessao, type PontoDoReplay,
 } from './replay';
 
-// Uma curva de mentira: as duas linhas indo de z = 0 a z = 200 (para cima no mapa do app), a IA mais rápida.
+// Uma curva de mentira: as duas linhas indo de z = 0 a z = 200 (para cima no mapa do app), a referência mais rápida.
 function linha(lateral: number, velocidade: number): PontoDoReplay[] {
   return Array.from({ length: 101 }, (_, i) => [lateral, i * 2, (i * 2) / velocidade, i < 30 ? 2 : 1] as PontoDoReplay);
 }
 const curva: CurvaDoReplay = {
-  curva: 'C01', lado: 'esquerda', volta: 17, referencia: 'volta_ia', rotuloDaReferencia: 'IA (referência)',
+  curva: 'C01', lado: 'esquerda', volta: 17, referencia: 'volta_do_modelo', rotuloDaReferencia: 'Referência',
   perdaS: 0.92, duracaoS: 200 / 45,
   linhas: { voce: linha(-7.9, 45), referencia: linha(0, 50) },
   freadas: { voce: { x: -7.9, z: 10 }, referencia: { x: 0, z: 52 }, distanciaM: -42 },
@@ -22,7 +22,7 @@ describe('o replay da curva (pedido 36, Parte E)', () => {
   it('põe cada carro no seu próprio tempo, desde a mesma entrada', () => {
     expect(posicaoNoTempo(curva.linhas.referencia, 0)).toEqual([0, 0]);
     expect(posicaoNoTempo(curva.linhas.referencia, 1)).toEqual([0, 50]);       // 50 m/s
-    expect(posicaoNoTempo(curva.linhas.voce, 1)).toEqual([-7.9, 45]);          // 45 m/s: a IA abre 5 m
+    expect(posicaoNoTempo(curva.linhas.voce, 1)).toEqual([-7.9, 45]);          // 45 m/s: a referência abre 5 m
     expect(posicaoNoTempo(curva.linhas.voce, 99)).toEqual([-7.9, 200]);        // depois do fim, no fim
   });
 
@@ -52,7 +52,7 @@ describe('o replay da curva (pedido 36, Parte E)', () => {
   it('escreve os números com a unidade', () => {
     expect(textoDaPerda(0.92)).toBe('perde 0,92 s nesta curva');
     expect(textoDaPerda(-0.1)).toBe('ganha 0,10 s nesta curva');
-    expect(textoDaFreada(-42)).toBe('você freia 42 m antes da IA');
+    expect(textoDaFreada(-42)).toBe('você freia 42 m antes da referência');
     expect(textoDaFreada(16, 'da sua melhor')).toBe('você freia 16 m depois da sua melhor');
     expect(textoDaFreada(null)).toBeNull();
     expect(textoDoTracado(curva.tracado!)).toBe('você passa 7,9 m mais à direita');
@@ -99,7 +99,7 @@ describe('os visuais e os números da voz (pedido 43)', () => {
   });
 
   it('a freada da voz não é arredondada de novo (16,0 m continua 16)', () => {
-    expect(textoDaFreada(-16)).toBe('você freia 16 m antes da IA');
+    expect(textoDaFreada(-16)).toBe('você freia 16 m antes da referência');
   });
 
   it('só desenha os visuais quando a rota traz os dados (o backend do 0.5.0 não traz)', () => {

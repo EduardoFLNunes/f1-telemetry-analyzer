@@ -529,7 +529,11 @@ def check_line() -> Dict[str, object]:
 
     store = load_store_v2(track=track)
     coach = json.loads((config.repo_root() / "data" / "reference_models" / "vhe_interlagos.json").read_text(encoding="utf-8"))
-    refs = coach.get("references", {})
+    refs = dict(coach.get("references", {}))
+    # ADR 0032, item 6: a volta da IA saiu do modelo do coach; este script de desenvolvimento segue na `#0013`.
+    if "volta_ia" not in refs:
+        from ml.pista_teste.condicoes import VOLTA_IA
+        refs["volta_ia"] = {"lap_id": VOLTA_IA}
     lateral_of = lambda lap_id: store.lap(lap_id)["lateral"].to_numpy(dtype=float)  # noqa: E731
     compare = {
         "linha_nova": zero.lateral,

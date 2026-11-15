@@ -32,7 +32,7 @@ type Dados = {
   sessoesLidas: boolean;
   conferencia: { estado: string; resumo: ResumoConferido | null } | null;
   minhaMelhor: Referencia | null;
-  voltaIA: Referencia | null;
+  voltaDoModelo: Referencia | null;
   coachConstruidoEm: string | null;
   carro: string | null;
   referenciasLidas: boolean;
@@ -47,7 +47,7 @@ const VAZIO: Dados = {
   sessoesLidas: false,
   conferencia: null,
   minhaMelhor: null,
-  voltaIA: null,
+  voltaDoModelo: null,
   coachConstruidoEm: null,
   carro: null,
   referenciasLidas: false,
@@ -133,7 +133,7 @@ export const HeroSessoes: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
       juntar({
         referenciasLidas: true,
         minhaMelhor,
-        voltaIA: referencia(refs.volta_ia),
+        voltaDoModelo: referencia(refs.volta_do_modelo),
         coachConstruidoEm: antes?.coach?.modelo?.construidoEm ?? null,
         carro: minhaMelhor?.carro ?? antes?.jogo?.carroEsperado ?? null,
       });
@@ -167,8 +167,8 @@ export const HeroSessoes: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
 
   const fase = estado.backend.fase;
   const aguardando = fase !== 'pronto' ? 'aguardando o backend' : null;
-  const { minhaMelhor, voltaIA } = dados;
-  const diferencaIA = minhaMelhor?.tempoS != null && voltaIA?.tempoS != null ? minhaMelhor.tempoS - voltaIA.tempoS : null;
+  const { minhaMelhor, voltaDoModelo } = dados;
+  const diferencaDoModelo = minhaMelhor?.tempoS != null && voltaDoModelo?.tempoS != null ? minhaMelhor.tempoS - voltaDoModelo.tempoS : null;
   const resumo = dados.conferencia?.resumo ?? null;
 
   let detalheUltima: React.ReactNode = aguardando ?? (dados.sessoesLidas ? 'sem dados' : 'lendo…');
@@ -238,15 +238,15 @@ export const HeroSessoes: React.FC<{ estado: EstadoDoApp }> = ({ estado }) => {
               : dados.referenciasLidas ? 'sem dados' : 'lendo…')}
           />
           <CartaoNumero
-            rotulo="Volta da IA"
-            valor={voltaIA?.tempoS != null ? formatarTempo(voltaIA.tempoS) : null}
-            detalhe={aguardando ?? (voltaIA ? (
+            rotulo="Volta de referência"
+            valor={voltaDoModelo?.tempoS != null ? formatarTempo(voltaDoModelo.tempoS) : null}
+            detalhe={aguardando ?? (voltaDoModelo ? (
               <>
-                {dataDaReferencia(voltaIA)}
-                {diferencaIA != null && (
+                {dataDaReferencia(voltaDoModelo)}
+                {diferencaDoModelo != null && (
                   <>
                     {' · sua melhor '}
-                    <span className="cor-perda">{diferencaComSinal(diferencaIA, 3)}</span>
+                    <span className="cor-perda">{diferencaComSinal(diferencaDoModelo, 3)}</span>
                   </>
                 )}
               </>

@@ -39,14 +39,14 @@ export function tempo(t: number): string {
   return `${m}:${s < 10 ? '0' : ''}${nf(s, 3)}`;
 }
 
-export function textoDaFreada(freadaM: number | null, refFreia: boolean, longo: boolean, rotuloRef: 'ia' | 'melhor'): string {
+export function textoDaFreada(freadaM: number | null, refFreia: boolean, longo: boolean, rotuloRef: 'modelo' | 'melhor'): string {
   if (freadaM === null) {
     if (refFreia) return longo ? 'sem freada medida nesta volta' : 'não medida';
-    return longo ? (rotuloRef === 'ia' ? 'a IA não freia aqui' : 'a referência não freia aqui') : 'ref. não freia';
+    return longo ? (rotuloRef === 'modelo' ? 'a referência não freia aqui' : 'sua melhor não freia aqui') : 'ref. não freia';
   }
   const m = Math.round(freadaM);
   if (m === 0) return longo ? 'no mesmo ponto' : 'mesmo ponto';
-  return `${Math.abs(m)} m ${m < 0 ? 'antes' : 'depois'}${longo ? (rotuloRef === 'ia' ? ' da IA' : ' da referência') : ''}`;
+  return `${Math.abs(m)} m ${m < 0 ? 'antes' : 'depois'}${longo ? (rotuloRef === 'modelo' ? ' da referência' : ' da sua melhor') : ''}`;
 }
 
 export function textoDaMinima(v: number, longo: boolean): string {

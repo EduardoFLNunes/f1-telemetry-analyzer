@@ -177,15 +177,30 @@ def estado_do_coach(service: Any, config: AppConfig, pista: str = PISTA_ESPERADA
     referencias = {}
     if modelo is not None:
         for kind, ref in (modelo.references or {}).items():
+            if kind not in ("volta_do_modelo", "minha_melhor"):
+                continue          # ADR 0032: a volta da IA de um modelo antigo nao aparece
             referencias[kind] = {"volta": ref.get("lap_id"), "tempoS": ref.get("lap_seconds"),
                                  "tempoStoreS": tempos_do_store(raiz).get(str(ref.get("lap_id"))),
                                  "carro": ref.get("carro")}
+    # ADR 0032: a volta do modelo vem do arquivo dela (o tempo e o da grade, como o do store para as outras).
+    volta_do_modelo = config.volta_do_modelo() if hasattr(config, "volta_do_modelo") else None
+    if volta_do_modelo is not None:
+        referencias["volta_do_modelo"] = {"volta": volta_do_modelo.get("lap_id"),
+                                          "tempoS": (referencias.get("volta_do_modelo") or {}).get("tempoS")
+                                          or volta_do_modelo.get("tempo_s"),
+                                          "tempoStoreS": volta_do_modelo.get("tempo_s"),
+                                          "carro": volta_do_modelo.get("carro"), "marca": volta_do_modelo.get("marca"),
+                                          "rotulo": "Volta de referência"}
+    else:
+        referencias.pop("volta_do_modelo", None)
     return {
         "ativo": motivo is None,
         "motivoCalado": motivo,
         "referencia": escolha,
         "referenciaRotulo": CHOICE_LABELS.get(escolha, escolha),
         "referenciaFonte": fonte,
+        "referenciaAtiva": getattr(ativo_modelo, "reference_kind", None),
+        "avisoReferencia": None if volta_do_modelo is not None else "A volta de referência desta pista ainda não foi gerada pelo modelo",
         "repositorio": str(raiz) if raiz else None,
         "modelo": {
             "arquivo": str(arquivo_modelo) if arquivo_modelo else None,

@@ -13,15 +13,15 @@ describe('a chave da mensagem na lista (pedido 43)', () => {
 // Um evento como o `_emit_reference_event` do coach publica (driving_coach.py).
 const eventoReferencia = {
   type: 'coaching_event',
-  event: 'Setor 12: 0.31s atras da volta da IA neste trecho (3.12s contra 2.81s). A IA freia 12 m depois de voce.',
+  event: 'Setor 12: 0.31s atras da volta de referência neste trecho (3.12s contra 2.81s). A referencia freia 12 m depois de voce.',
   severity: 0.62,
   evidence: {
     microsector: 12,
     yourSeconds: 3.12,
     referenceSeconds: 2.81,
     lossSeconds: 0.31,
-    referenceKind: 'volta_ia',
-    referenceLabel: 'volta da IA',
+    referenceKind: 'volta_do_modelo',
+    referenceLabel: 'volta de referência',
     referenceBrakeOnsetM: 812.4,
     yourBrakeOnsetM: 800.1,
     brakeDeltaM: 12.3,
@@ -36,9 +36,11 @@ describe('mensagens de rádio', () => {
   it('monta a frase em português com os números do evento, sem mudar os números', () => {
     const m = mensagemDoEvento(eventoReferencia);
     expect(m.tipo).toBe('diferenca');
-    expect(m.frase).toBe('+0,31 s para a volta da IA neste trecho');
+    expect(m.frase).toBe('+0,31 s para a volta de referência neste trecho');
     expect(m.onde).toBe('volta 7 · microssetor 13');
-    expect(m.detalhe).toBe('3,12 s contra 2,81 s · a IA freia 12 m depois de você · mínima da IA 104 km/h, a sua 96 km/h');
+    expect(m.detalhe).toBe('3,12 s contra 2,81 s · a referência freia 12 m depois de você · mínima na referência 104 km/h, a sua 96 km/h');
+    // Pedido 51 (ADR 0032): nenhum texto ligado à referência diz "IA".
+    expect(`${m.frase} ${m.detalhe}`).not.toMatch(/IA/);
     expect(m.perdaS).toBeCloseTo(0.31);
   });
 
@@ -84,7 +86,7 @@ describe('mensagens de rádio', () => {
 describe('a análise das voltas (pedido 35)', () => {
   it('vira um cartão com a tag Análise e uma linha por curva', () => {
     const m = mensagemDoRadio({
-      id: 8, origem: 'analise', titulo: 'Análise das voltas 6 a 8', texto: 'C12 perde 0,90 s por volta, contra a volta da IA',
+      id: 8, origem: 'analise', titulo: 'Análise das voltas 6 a 8', texto: 'C12 perde 0,90 s por volta, contra a volta de referência',
       detalhe: 'C12, esquerda: … | C04, esquerda: …', linhas: ['C12, esquerda: perde 0,90 s por volta', 'C04, esquerda: perde 0,25 s por volta'],
       microssetor: null, curva: 'C12', s: null, sCarro: 3697.5, entregueEm: '2026-10-20T10:00:05', audio: '/api/radio/audio/8',
     });

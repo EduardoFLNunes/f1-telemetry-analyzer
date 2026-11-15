@@ -918,7 +918,7 @@ local function desenharODeCima(t, W, nota, x0, y0)
     ui.dwriteDrawText(sinal .. decimal(math.abs(d), 2) .. ' s', 17, vec2(x0 + MARGEM_DO_MINIMAPA, y0 + 4),
       d > 0 and CORES.perda or CORES.ganho)
     local ref = mini.referencia
-    local contra = ref and ref.tipo == 'minha_melhor' and 'para o seu recorde' or 'para a volta da IA'
+    local contra = ref and ref.tipo == 'minha_melhor' and 'para o seu recorde' or 'para a referência'
     ui.dwriteDrawText(contra, 11, vec2(x0 + MARGEM_DO_MINIMAPA + 82, y0 + 10), CORES.apoio)
     -- Pedido 45 (C.4): a diferença para a sua melhor volta da sessão, quando ela existe.
     local dm = mini.difMelhor
@@ -929,7 +929,7 @@ local function desenharODeCima(t, W, nota, x0, y0)
   end
 end
 
--- Pedido 36, Parte D.2: a freada da IA na próxima curva, pela posição do carro na volta de
+-- Pedido 36, Parte D.2: a freada da referência na próxima curva, pela posição do carro na volta de
 -- referência (o índice do ponto mais perto e o passo da grade).
 local function proximaFreada(carro)
   local ref = mini.referencia
@@ -987,7 +987,7 @@ desenharMinimapa = function(dt)
 
   local ok, carro = pcall(ac.getCar, 0)
   if not ok or not carro then return end
-  -- A freada da IA só na próxima curva: uma marca curta atravessando a pista, na cor do fantasma.
+  -- A freada da referência só na próxima curva: uma marca curta atravessando a pista, na cor do fantasma.
   local f = proximaFreada(carro)
   if f and f.pontos and f.pontos[1] and f.pontos[2] then
     local a, b = naTela(f.pontos[1][1], f.pontos[1][2]), naTela(f.pontos[2][1], f.pontos[2][2])
@@ -1174,11 +1174,11 @@ desenharAproximado = function(dt)
   end
   tracar(rastro.pontos, #rastro.pontos, 3, 1.0, 5, tela, W, H)
 
-  -- Pedido 36, Parte D.2: a freada da IA em todas as curvas da janela, uma linha atravessando o
+  -- Pedido 36, Parte D.2: a freada da referência em todas as curvas da janela, uma linha atravessando o
   -- asfalto (um pouco além das bordas) com o rótulo. O seu traçado mostra onde você freou: o
   -- vermelho começa ali.
   if ref and type(ref.freadas) == 'table' then
-    local rotuloDaFreada = ref.tipo == 'minha_melhor' and 'freada do seu recorde' or 'freada da IA'
+    local rotuloDaFreada = ref.tipo == 'minha_melhor' and 'freada do seu recorde' or 'freada da referência'
     for _, f in ipairs(ref.freadas) do
       if f.pontos and f.pontos[1] and f.pontos[2] then
         local ax, ay = tela(f.pontos[1][1], f.pontos[1][2])
@@ -1204,7 +1204,7 @@ desenharAproximado = function(dt)
   end
 
   -- O fantasma (ou uma seta na borda, se ele estiver fora da janela) e o carro.
-  local rotuloDaRef = ref and ref.tipo == 'minha_melhor' and 'Sua melhor' or 'IA'
+  local rotuloDaRef = ref and ref.tipo == 'minha_melhor' and 'Sua melhor' or 'Referência'
   if fx then
     local gx, gy = tela(fx, fz)
     if gx > 14 and gx < W - 14 and gy > 14 and gy < H - 14 then
@@ -1232,7 +1232,7 @@ end
 -- ── o replay da curva (pedido 36, Parte E) ──────────────────────────────
 
 -- O que o engenheiro mostra quando fala de uma curva: a curva vista de cima, sobre a pista
--- tratada (a `pista_detalhada.png`), com as duas linhas ("você" e "IA (referência)"), os dois
+-- tratada (a `pista_detalhada.png`), com as duas linhas ("você" e "Referência"), os dois
 -- carros andando cada um no seu próprio tempo a partir da mesma entrada, as duas freadas com
 -- a distância, as duas mínimas com o valor, o traçado e o tempo perdido. Os dados vêm de
 -- `/api/radio/replay/<id>`, uma vez por mensagem.
@@ -1618,7 +1618,7 @@ local function desenharACurva(c, t, real, x0, y0, W, H)
     rotulo(q, nomeDoTrecho or 'trecho', sx, sy, CORES.texto, 'esquerda')
   end
   -- As freadas: um traço em cada linha e a distância entre elas.
-  local contra = c.referencia == 'minha_melhor' and 'do seu recorde' or 'da IA'
+  local contra = c.referencia == 'minha_melhor' and 'do seu recorde' or 'da referência'
   local function traco(m, cor)
     if type(m) ~= 'table' then return nil end
     local sx, sy = cam.tela(tonumber(m.x) or 0, tonumber(m.z) or 0)
@@ -1658,7 +1658,7 @@ local function desenharACurva(c, t, real, x0, y0, W, H)
   -- Os dois carros, cada um no seu tempo.
   desenharMarca(vec2(rsx, rsy), 6.5, CORES.fantasmaMiolo, CORES.fantasma, 2.5)
   desenharMarca(vec2(vsx, vsy), 6.5, CORES.voce, CORES.vermelho, 2.5)
-  rotulo(q, tostring(c.rotuloDaReferencia or 'IA (referência)'), rsx, rsy, CORES.fantasma, 'direitaAcima')
+  rotulo(q, tostring(c.rotuloDaReferencia or 'Referência'), rsx, rsy, CORES.fantasma, 'direitaAcima')
   rotulo(q, 'você', vsx, vsy, CORES.texto, 'esquerdaAbaixo')
   -- O alto: a curva, a volta e o tempo perdido (na frase do coach, o da voz).
   ui.drawRectFilled(vec2(x0, y0), vec2(x0 + W, y0 + topo), CORES.faixaDoTexto, 6)
@@ -1762,7 +1762,7 @@ local function desenharOPedal(c, t, a)
     ui.dwriteDrawText(nome, 10, vec2(a[1] + 4, y - 1), cor)
   end
   faixa(c.linhas.voce, a[2] + 3, 'você', CORES.vermelho)
-  faixa(c.linhas.referencia, a[2] + 15, c.referencia == 'minha_melhor' and 'sua' or 'IA', CORES.fantasma)
+  faixa(c.linhas.referencia, a[2] + 15, c.referencia == 'minha_melhor' and 'sua' or 'ref.', CORES.fantasma)
   cursores(c, t, a, emX)
 end
 

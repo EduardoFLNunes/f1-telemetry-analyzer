@@ -34,19 +34,22 @@ Pedido 36 (Parte C): **todo numero falado tem a sua unidade.**
   fim, para os dois numeros).
 
 A unidade nunca sai da fala: quando nao cabe, sai primeiro a segunda causa, depois a
-primeira, e por ultimo as palavras que dizem contra quem ("da IA"), nunca a unidade.
+primeira, e por ultimo as palavras que dizem contra quem ("da referência"), nunca a unidade.
 O numero que nao e medida (a curva, a volta, o microssetor) nao tem unidade.
 
 Pedido 45 (ADR 0027): **o radio diz onde e por que.**
 
 * o resumo diz, nesta ordem de importancia: a diferenca para a melhor volta da sessao (ou
-  "melhor volta da sessao", ou "recorde pessoal"), a curva da volta com a perda e a causa, a
-  diferenca para a referencia ("da IA" ou "do seu recorde"), a diferenca para a anterior (so quando
+  "melhor da sessao", ou "recorde pessoal"), a curva da volta com a perda e a causa, a
+  diferenca para a referencia ("da referência" ou "do seu recorde"), a diferenca para a anterior (so quando
   melhorou sem ser a melhor) e o tempo. As variantes perdem os itens de baixo para cima;
-* toda diferenca diz contra quem (decisao de 12/11): "Melhor volta da sessao, 2,5 segundos atras
+* toda diferenca diz contra quem (decisao de 12/11): "Melhor da sessao, 2,5 segundos atras
   do seu recorde.";
 * uma correcao por mensagem: uma curva e uma causa (`causa_falada`);
-* a frase do coach e a analise usam as mesmas palavras ("freou 15 metros antes da IA").
+* a frase do coach e a analise usam as mesmas palavras ("freou 15 metros antes da referência").
+
+Pedido 51 (ADR 0032): a referencia do app e a volta do modelo, e a fala diz "da referência";
+a volta da IA do jogo nao e mais referencia. "Melhor volta da sessão" virou "Melhor da sessão".
 """
 from __future__ import annotations
 
@@ -55,7 +58,8 @@ from typing import Any, Dict, Mapping, Optional, Sequence
 
 MICROSSETORES = 60
 LADO = {"esq": "esquerda", "dir": "direita"}
-REFERENCIA_LONGA = {"volta_ia": "volta da IA", "minha_melhor": "sua melhor volta"}
+# Pedido 51 (ADR 0032): a referencia do app e a volta do modelo, "a referencia"; a volta da IA saiu do app.
+REFERENCIA_LONGA = {"volta_do_modelo": "volta de referência", "minha_melhor": "sua melhor volta"}
 # Pedido 35: o tempo maximo de cada fala, com a vinheta (o radio fica com a primeira que cabe):
 # "cerca de" 6, 7 e 8 s, com 10% de folga. Pedido 36: a frase do coach sobe para 7,3 s, para a
 # causa com a unidade caber ("Mínima de 64 contra 94 quilômetros por hora." passava de 6,6 s).
@@ -65,8 +69,8 @@ FALA_MAXIMA_S = {"coach": 7.3, "resumo": 8.0, "analise": 8.8, "teste": 8.8, "cur
 # (a sua melhor volta limpa do store, escolhida na Coleta) e "o seu recorde"; a melhor volta desta
 # sessao e "a melhor da sessao". Antes as duas eram "a sua melhor", e o resumo saia contraditorio:
 # "Melhor volta, 2,5 segundos atras da referencia" (07/11).
-FALA_ALVO = {"volta_ia": "da IA", "minha_melhor": "do seu recorde"}
-REFERENCIA_COM_ARTIGO = {"volta_ia": "a volta da IA", "minha_melhor": "o seu recorde"}
+FALA_ALVO = {"volta_do_modelo": "da referência", "minha_melhor": "do seu recorde"}
+REFERENCIA_COM_ARTIGO = {"volta_do_modelo": "a referência", "minha_melhor": "o seu recorde"}
 TRECHO_FALADO = {"freada": "freada", "minima": "mínima", "saida": "saída"}
 
 
@@ -214,14 +218,11 @@ def _clausula_da_freada(tipo: Optional[str], delta_m: float) -> str:
     lado = "depois" if delta_m > 0 else "antes"
     if tipo == "minha_melhor":
         return "na sua melhor volta você freou no mesmo ponto" if metros < 1 else f"na sua melhor volta você freou {metros} m {lado}"
-    quem = "a IA" if tipo == "volta_ia" else "a referência"
-    return f"{quem} freia no mesmo ponto que você" if metros < 1 else f"{quem} freia {metros} m {lado} de você"
+    return "a referência freia no mesmo ponto que você" if metros < 1 else f"a referência freia {metros} m {lado} de você"
 
 
 def _clausula_da_minima(tipo: Optional[str], ref_kmh: float, sua_kmh: float) -> str:
     ref, sua = round(ref_kmh), round(sua_kmh)
-    if tipo == "volta_ia":
-        return f"mínima da IA {ref} km/h, a sua {sua} km/h"
     if tipo == "minha_melhor":
         return f"mínima na sua melhor volta {ref} km/h, agora {sua} km/h"
     return f"mínima na referência {ref} km/h, a sua {sua} km/h"
@@ -327,7 +328,7 @@ def _frase_da_melhor(melhor: Optional[Mapping[str, Any]]) -> Optional[str]:
         return None
     situacao, dif = melhor.get("situacao"), _numero(melhor.get("difS"))
     if situacao in ("melhor", "recorde"):
-        nome = "Recorde pessoal" if situacao == "recorde" else "Melhor volta da sessão"
+        nome = "Recorde pessoal" if situacao == "recorde" else "Melhor da sessão"
         return f"{nome}, {tempo_falado(dif)} mais rápida" if dif is not None and abs(dif) >= 0.05 else nome
     if dif is None:
         return None
@@ -417,7 +418,7 @@ def mensagem_de_resumo(volta: Optional[int], tempo_s: float, referencia_s: Optio
     if melhor and _numero(melhor.get("melhorS")) is not None:
         d = _numero(melhor.get("difS"))
         if melhor.get("situacao") in ("melhor", "recorde"):
-            nome = "recorde pessoal" if melhor.get("situacao") == "recorde" else "melhor volta da sessão"
+            nome = "recorde pessoal" if melhor.get("situacao") == "recorde" else "melhor da sessão"
             partes_do_texto.append(nome + (f", {com_sinal(-abs(d), 3)}" if d else ""))
         elif d is not None:
             partes_do_texto.append(f"{com_sinal(d, 3)} para a melhor da sessão ({tempo_de_volta(float(melhor['melhorS']))})")

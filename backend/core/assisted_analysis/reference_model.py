@@ -34,14 +34,17 @@ Two modes, since ADR 0012:
   the second half of a session realised none of the "time on the table" fitted
   on the first half, and each microsector best was matched by 3-5 % of laps.
 
-Two references, since ADR 0016 (the learning phase):
+Two references, since ADR 0032 (pedido 51; before it, ADR 0016):
 
-* ``volta_ia`` (the default): the best clean lap of the game's AI, in the same
-  car, from sessions recorded with the current recorder. The AI repeats its
-  line within centimetres, so the reference does not move while the driver
-  learns.
-* ``minha_melhor``: the driver's best clean lap, `humano` with the current
-  equipment (ADR 0015).
+* ``volta_do_modelo`` (the default, "Volta de referência"): the model's lap --
+  the best valid lap of a project line that met the goal of ADR 0031, driven
+  in the game by the AI on that line, read from a derived file
+  (`volta_do_modelo.py`). The game's own AI lap is never a reference of the
+  app any more (ADR 0032, item 1).
+* ``minha_melhor`` ("Sua melhor volta"): the driver's best clean lap, `humano`
+  with the current equipment (ADR 0015).
+
+An old ``volta_ia`` setting reads as ``volta_do_modelo`` (`normalized_kind`).
 
 The model keeps both (`references`) and one is active (`use_reference`), chosen
 by configuration. The driver's spread through each slice -- the speaking
@@ -72,20 +75,29 @@ MODE_REFERENCE_LAP = "reference_lap"
 MODE_BEST_PER_MICROSECTOR = "best_per_microsector"
 MODES = (MODE_REFERENCE_LAP, MODE_BEST_PER_MICROSECTOR)
 
-# The two references of the learning phase (ADR 0016) and how the coach names them.
-REFERENCE_AI = "volta_ia"
+# The two references of the app (ADR 0032) and how the coach names them.
+REFERENCE_MODEL_LAP = "volta_do_modelo"
 REFERENCE_OWN_BEST = "minha_melhor"
-REFERENCE_KINDS = (REFERENCE_AI, REFERENCE_OWN_BEST)
-DEFAULT_REFERENCE = REFERENCE_AI
-REFERENCE_LABELS = {REFERENCE_AI: "volta da IA", REFERENCE_OWN_BEST: "sua melhor volta"}
+REFERENCE_KINDS = (REFERENCE_MODEL_LAP, REFERENCE_OWN_BEST)
+DEFAULT_REFERENCE = REFERENCE_MODEL_LAP
+REFERENCE_LABELS = {REFERENCE_MODEL_LAP: "volta de referência", REFERENCE_OWN_BEST: "sua melhor volta"}
+# ADR 0032, item 1: the old setting of the game's AI lap now means the model's lap.
+LEGACY_AI_KIND = "volta_ia"
 
+
+def normalized_kind(value: Optional[str]) -> Optional[str]:
+    """The kind after ADR 0032: `volta_ia` becomes `volta_do_modelo`; anything else as given."""
+    if value is None:
+        return None
+    value = str(value).strip().lower()
+    return REFERENCE_MODEL_LAP if value == LEGACY_AI_KIND else value
 
 
 def configured_reference_kind() -> str:
-    """Which reference the coach uses: `AT_COACH_REFERENCE`, `volta_ia` by default."""
+    """Which reference the coach uses: `AT_COACH_REFERENCE`, `volta_do_modelo` by default."""
     import os
 
-    value = (os.environ.get("AT_COACH_REFERENCE") or "").strip().lower()
+    value = normalized_kind(os.environ.get("AT_COACH_REFERENCE") or "")
     return value if value in REFERENCE_KINDS else DEFAULT_REFERENCE
 
 

@@ -89,8 +89,19 @@ def ler_sessao(raiz: Optional[Path], sessao: str) -> Dict[str, Any]:
 
 # ------------------------------------------------------- referencias ---
 
-def ler_referencias(raiz: Optional[Path], pista: str = PISTA) -> Dict[str, Any]:
-    """Qual volta e cada referencia do coach, lido do modelo do repositorio."""
+# ADR 0032: as duas referencias do app. A `volta_ia` de um modelo antigo nao aparece na rota.
+TIPOS_DO_APP = ("volta_do_modelo", "minha_melhor")
+
+
+def ler_referencias(raiz: Optional[Path], pista: str = PISTA,
+                    volta_do_modelo: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Qual volta e cada referencia do coach, lido do modelo do repositorio.
+
+    Pedido 51 (ADR 0032): a volta do modelo vem do arquivo dela (`volta_do_modelo`), com
+    o tempo da grade; sem o arquivo, a rota diz a frase do ADR 0032, item 4.
+    """
+    from core.assisted_analysis import volta_do_modelo as VM
+
     if raiz is None:
         return {"disponivel": False, "motivo": "o repositório não está configurado na Coleta de dados"}
     caminho = Path(raiz) / "data" / "reference_models" / f"{pista}.json"
@@ -99,9 +110,16 @@ def ler_referencias(raiz: Optional[Path], pista: str = PISTA) -> Dict[str, Any]:
         return {"disponivel": False, "motivo": f"o modelo do coach não foi encontrado em {caminho}", "arquivo": str(caminho)}
     referencias = {}
     for tipo, ref in (modelo.get("references") or {}).items():
-        if isinstance(ref, dict):
+        if isinstance(ref, dict) and tipo in TIPOS_DO_APP:
             referencias[tipo] = {"volta": ref.get("lap_id"), "tempoS": ref.get("lap_seconds"), "carro": ref.get("carro")}
+    if volta_do_modelo is not None:
+        referencias["volta_do_modelo"] = {"volta": volta_do_modelo.get("lap_id"), "tempoS": volta_do_modelo.get("tempo_s"),
+                                          "carro": volta_do_modelo.get("carro"), "marca": volta_do_modelo.get("marca"),
+                                          "rotulo": "Volta de referência"}
+    else:
+        referencias.pop("volta_do_modelo", None)
     return {
+        "avisoReferencia": None if "volta_do_modelo" in referencias else VM.SEM_VOLTA_DO_MODELO,
         "disponivel": True,
         "arquivo": str(caminho),
         "geometryId": modelo.get("geometry_id"),
@@ -121,8 +139,10 @@ class LeitorDoStore:
     invalidadas quando o arquivo muda.
     """
 
-    def __init__(self, capacidade: int = 24) -> None:
+    def __init__(self, capacidade: int = 24, volta_do_modelo=None) -> None:
         self.capacidade = capacidade
+        # Pedido 51 (ADR 0032): a volta do modelo nao esta no store; vem do arquivo dela.
+        self._volta_do_modelo = volta_do_modelo or (lambda: None)
         self._voltas: "OrderedDict[tuple, Dict[str, Any]]" = OrderedDict()
         self._metas: Dict[tuple, Dict[str, Any]] = {}
         self._lock = threading.Lock()
@@ -158,6 +178,11 @@ class LeitorDoStore:
     def ler_volta(self, raiz: Optional[Path], lap_id: str) -> Dict[str, Any]:
         if not VOLTA.match(str(lap_id or "")):
             return {"disponivel": False, "motivo": f"id de volta inválido: {lap_id!r}"}
+        modelo = self._volta_do_modelo()
+        if modelo is not None and modelo.get("lap_id") == lap_id:
+            from core.assisted_analysis.volta_do_modelo import como_volta_do_store
+
+            return como_volta_do_store(modelo)
         if raiz is None:
             return {"disponivel": False, "motivo": "o repositório não está configurado na Coleta de dados"}
         parquet = Path(raiz) / "data" / "ml" / STORE_V2

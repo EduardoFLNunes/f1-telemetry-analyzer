@@ -3,7 +3,7 @@
  *
  * Sob o cartão da análise e da frase do coach com causa: a curva vista de cima, sobre a
  * pista tratada (as camadas do cache que o mapa do app desenha), com as duas linhas
- * ("você" e "IA (referência)"), os dois carros andando cada um no seu próprio tempo a
+ * ("você" e "Referência"), os dois carros andando cada um no seu próprio tempo a
  * partir da mesma entrada, as duas freadas com a distância, as duas mínimas com o valor,
  * o traçado no ponto da mínima da referência e o tempo perdido na curva. Toca cada curva
  * citada uma vez; o botão repete.
@@ -40,7 +40,7 @@ const COR_PERDA = 'rgba(255,162,74,0.35)';
 const COR_GANHO = 'rgba(111,155,255,0.35)';
 const FONTE = '600 11px "Barlow", "Segoe UI", sans-serif';
 const FONTE_PEQUENA = '600 10px "Barlow", "Segoe UI", sans-serif';
-const COLUNA_DOS_NOMES = 34;     // à esquerda dos visuais: "você", "IA" e os títulos
+const COLUNA_DOS_NOMES = 34;     // à esquerda dos visuais: "você", "ref." e os títulos
 
 function desenharACurva(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: number, a: Area, camadas: any,
   real: number, zoomM: number) {
@@ -141,7 +141,7 @@ function desenharACurva(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: numb
   };
   const fv = traco(c.freadas.voce, COR_VOCE);
   traco(c.freadas.referencia, COR_REF);
-  const contra = c.referencia === 'minha_melhor' ? 'do seu recorde' : 'da IA';
+  const contra = c.referencia === 'minha_melhor' ? 'do seu recorde' : 'da referência';
   const tf = textoDaFreada(c.freadas.distanciaM, contra);
   if (fv && tf) rotulo(tf, fv[0], fv[1], COR_VOCE, 'direita');
   // O traçado: uma seta entre as duas linhas, no ponto da mínima da referência (só na análise).
@@ -243,7 +243,7 @@ function cursores(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: number, a:
   }
 }
 
-/** C.3: as duas faixas do pedal, você e a IA, pela distância. */
+/** C.3: as duas faixas do pedal, você e a referência, pela distância. */
 function desenharOPedal(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: number, a: Area) {
   const x = moldura(ctx, c, a, '');
   const passo = c.passoM ?? 1;
@@ -258,7 +258,7 @@ function desenharOPedal(ctx: CanvasRenderingContext2D, c: CurvaDoReplay, t: numb
     ctx.fillText(nome, a.x + 4, y);
   };
   faixa(c.linhas.voce, a.y + 3, 'você', COR_VOCE);
-  faixa(c.linhas.referencia, a.y + 15, c.referencia === 'minha_melhor' ? 'sua' : 'IA', COR_REF);
+  faixa(c.linhas.referencia, a.y + 15, c.referencia === 'minha_melhor' ? 'sua' : 'ref.', COR_REF);
   cursores(ctx, c, t, a, x);
 }
 

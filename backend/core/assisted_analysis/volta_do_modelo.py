@@ -41,11 +41,29 @@ def caminho(raiz: Path, pista: str) -> Path:
     return Path(raiz) / "data" / "reference_models" / f"{safe}.volta_do_modelo.json"
 
 
+_lidos: Dict[tuple, Optional[Dict[str, Any]]] = {}
+
+
 def ler(arquivo: Path) -> Optional[Dict[str, Any]]:
-    """O arquivo, se existir e for do formato; senao None (um arquivo ruim nao derruba o app)."""
+    """O arquivo, se existir e for do formato; senao None (um arquivo ruim nao derruba o app).
+
+    Guardado pela data e pelo tamanho: o arquivo so muda quando o script o gera de novo.
+    """
     arquivo = Path(arquivo)
-    if not arquivo.exists():
+    try:
+        info = arquivo.stat()
+    except OSError:
         return None
+    chave = (str(arquivo), info.st_mtime_ns, info.st_size)
+    if chave in _lidos:
+        return _lidos[chave]
+    dados = _ler_do_disco(arquivo)
+    _lidos.clear()
+    _lidos[chave] = dados
+    return dados
+
+
+def _ler_do_disco(arquivo: Path) -> Optional[Dict[str, Any]]:
     try:
         dados = json.loads(arquivo.read_text(encoding="utf-8"))
     except (OSError, ValueError) as erro:

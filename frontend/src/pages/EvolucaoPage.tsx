@@ -21,10 +21,10 @@ const codigoDaCurva = (curva: string) => curva.split('-')[0];
 function textoDaEmendada(t: TecnicaDaCurva): React.ReactNode {
   const e = t.freada_emendada;
   if (!e) return '—';
-  const ia = String(e.ia ?? '—').replace('nao', 'não');
+  const ref = String(e.ia ?? '—').replace('nao', 'não');
   return (
     <>
-      {e.voltas_com_frenagem ? `${e.voltas_emendadas} de ${e.voltas_com_frenagem} voltas` : 'sem frenagem'} <span className="texto-fraco">(IA: {ia})</span>
+      {e.voltas_com_frenagem ? `${e.voltas_emendadas} de ${e.voltas_com_frenagem} voltas` : 'sem frenagem'} <span className="texto-fraco">(referência: {ref})</span>
     </>
   );
 }
@@ -36,7 +36,7 @@ export const EvolucaoPage: React.FC<{ navegar: (tela: Tela, sub?: string | null)
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const resumo = relatorio.dado?.resumo;
   const sessoes = relatorio.dado?.sessoes ?? [];
-  const tempoIa = resumo?.referencia?.tempo_s ?? null;
+  const tempoRef = resumo?.referencia?.tempo_s ?? null;
   const a15 = resumo?.criterio_adr_0015;
   const sessaoTecnica = sessoes.find((s) => s.sessao === escolhida) ?? sessoes[sessoes.length - 1] ?? null;
   const curvas = sessoes[0]?.curvas.map((c) => c.curva) ?? [];
@@ -46,7 +46,7 @@ export const EvolucaoPage: React.FC<{ navegar: (tela: Tela, sub?: string | null)
       <div className="tela-conteudo">
         <header className="cabecalho-tela">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div className="sobrancelha">Interlagos · referência: volta da IA {tempoIa === null ? '—' : tempo(tempoIa)}</div>
+            <div className="sobrancelha">Interlagos · referência: volta de referência {tempoRef === null ? '—' : tempo(tempoRef)}</div>
             <h1 className="titulo-tela">Evolução</h1>
           </div>
         </header>
@@ -68,17 +68,17 @@ export const EvolucaoPage: React.FC<{ navegar: (tela: Tela, sub?: string | null)
                   de {a15.sessoes_necessarias} necessárias).
                 </p>
               )}
-              <GraficoTendencia sessoes={resumo.sessoes} tempoIa={tempoIa} />
+              <GraficoTendencia sessoes={resumo.sessoes} tempoRef={tempoRef} />
               <span className="legenda">
                 <span><i className="linha" style={{ borderColor: 'var(--voce)' }} />mediana</span>
                 <span><i className="linha" style={{ borderColor: 'var(--voce)', borderTopStyle: 'dashed' }} />melhor volta</span>
-                <span><i className="linha" style={{ borderColor: 'var(--referencia)', borderTopStyle: 'dashed' }} />volta da IA</span>
+                <span><i className="linha" style={{ borderColor: 'var(--referencia)', borderTopStyle: 'dashed' }} />volta de referência</span>
               </span>
             </PainelVidro>
 
             <PainelVidro titulo="Perda por curva entre sessões">
               <p className="texto-apoio" style={{ margin: 0 }}>
-                Ponto: perda mediana para a IA, em segundos. Traço: faixa de 90% de confiança. Ponto vazio: sem diferença consistente.
+                Ponto: perda mediana para a referência, em segundos. Traço: faixa de 90% de confiança. Ponto vazio: sem diferença consistente.
               </p>
               <div className="superficie tabela-caixa">
                 <table className="tabela tabela--curvas">
@@ -129,9 +129,9 @@ export const EvolucaoPage: React.FC<{ navegar: (tela: Tela, sub?: string | null)
                       <tr>
                         <th scope="col">Curva</th>
                         <th scope="col" className="num">Uso da aderência (g)</th>
-                        <th scope="col" className="num">IA (g)</th>
+                        <th scope="col" className="num">Referência (g)</th>
                         <th scope="col" className="num">Freio e volante juntos (m)</th>
-                        <th scope="col" className="num">IA (m)</th>
+                        <th scope="col" className="num">Referência (m)</th>
                         <th scope="col">Freada emendada</th>
                       </tr>
                     </thead>

@@ -213,7 +213,7 @@ const GravacoesFora: React.FC<{ pronto: boolean; noRelatorio: Set<string> | null
 };
 
 /** Uma sessão do relatório, como o `sescard` do protótipo. */
-const CartaoDaSessao: React.FC<{ s: Sessao; doResumo: Resumo['sessoes'][number] | undefined; tempoIa: number | null }> = ({ s, doResumo, tempoIa }) => {
+const CartaoDaSessao: React.FC<{ s: Sessao; doResumo: Resumo['sessoes'][number] | undefined; tempoRef: number | null }> = ({ s, doResumo, tempoRef }) => {
   const melhor = [...s.voltas].sort((a, b) => a.tempo_s - b.tempo_s)[0];
   const consistentes = s.curvas.filter((c) => c.situacao === 'diferenca_consistente').length;
   return (
@@ -225,10 +225,10 @@ const CartaoDaSessao: React.FC<{ s: Sessao; doResumo: Resumo['sessoes'][number] 
           <span>melhor {tempo(s.resumo.melhor_s)}</span>
           <span>mediana {tempo(s.resumo.mediana_s)}</span>
           {doResumo?.desvio_s !== null && doResumo?.desvio_s !== undefined && <span>desvio {nf(doResumo.desvio_s, 3)} s</span>}
-          <span>mediana {sg(s.resumo.mediana_s - s.resumo.volta_da_ia_s, 3)} s da IA</span>
+          <span>mediana {sg(s.resumo.mediana_s - s.resumo.volta_da_ia_s, 3)} s da referência</span>
           <span>{consistentes} de {s.curvas.length} curvas com diferença consistente</span>
         </div>
-        <FaixaDeVoltas voltas={s.voltas} tempoIa={tempoIa} />
+        <FaixaDeVoltas voltas={s.voltas} tempoRef={tempoRef} />
       </div>
       {melhor && (
         <a className="botao" href={hashDaRota('volta', melhor.volta)}>
@@ -243,7 +243,7 @@ const SessoesDoRelatorio: React.FC = () => {
   const relatorio = useSessoesDoRelatorio();
   const resumo = relatorio.dado?.resumo;
   const sessoes = relatorio.dado?.sessoes ?? [];
-  const tempoIa = resumo?.referencia?.tempo_s ?? null;
+  const tempoRef = resumo?.referencia?.tempo_s ?? null;
   const a15 = resumo?.criterio_adr_0015;
   if (relatorio.erro) {
     return (
@@ -263,7 +263,7 @@ const SessoesDoRelatorio: React.FC = () => {
         ) : (
           <div className="lista-sessoes">
             {[...sessoes].reverse().map((x) => (
-              <CartaoDaSessao key={x.sessao} s={x} doResumo={resumo.sessoes.find((r) => r.sessao === x.sessao)} tempoIa={tempoIa} />
+              <CartaoDaSessao key={x.sessao} s={x} doResumo={resumo.sessoes.find((r) => r.sessao === x.sessao)} tempoRef={tempoRef} />
             ))}
           </div>
         )}
@@ -271,7 +271,7 @@ const SessoesDoRelatorio: React.FC = () => {
       {resumo && (
         <PainelVidro titulo="Mediana e melhor volta por sessão">
           <p className="texto-apoio" style={{ margin: 0 }}>
-            Linha cheia: mediana. Tracejada: melhor volta. A volta da IA é a referência.
+            Linha cheia: mediana. Tracejada: melhor volta. A linha da referência é a volta de referência (a volta do modelo).
             {resumo.tendencia_mediana_s_por_sessao !== null && <> Tendência da mediana: {sg(resumo.tendencia_mediana_s_por_sessao, 3)} s por sessão.</>}
             {a15 && (
               <>
@@ -280,7 +280,7 @@ const SessoesDoRelatorio: React.FC = () => {
               </>
             )}
           </p>
-          <GraficoTendencia sessoes={resumo.sessoes} tempoIa={tempoIa} />
+          <GraficoTendencia sessoes={resumo.sessoes} tempoRef={tempoRef} />
         </PainelVidro>
       )}
     </>

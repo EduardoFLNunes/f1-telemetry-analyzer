@@ -22,6 +22,8 @@ from .corner_metrics import CornerMetricsCalculator
 from .models import CornerComparison, CornerMetrics, DrivingError, LapDescriptor
 from .reference_model import (
     MODE_REFERENCE_LAP,
+    REFERENCE_MODEL_LAP,
+    REFERENCE_OWN_BEST,
     DriverReferenceModel,
     configured_reference_kind,
     lap_is_usable,
@@ -29,6 +31,7 @@ from .reference_model import (
     model_path,
 )
 from .official_geometry import find_official_geometry
+from . import volta_do_modelo
 from .optimal_line import attach, find_optimal_line
 from .corner_segmentation import CornerSegmenter
 from .utils import finite_float
@@ -36,6 +39,15 @@ from .vehicle_dynamics_analyzer import VehicleDynamicsAnalyzer
 
 
 ANALYSIS_VERSION = "phase14.post_lap_assisted_analysis.v1"
+
+
+def _use_reference_or_own_best(model: DriverReferenceModel, kind: Optional[str]) -> bool:
+    """ADR 0032, item 4: without the model's lap for this track, the coach uses "Sua melhor volta"."""
+    if model.use_reference(kind):
+        return True
+    if kind == REFERENCE_MODEL_LAP:
+        return model.use_reference(REFERENCE_OWN_BEST)
+    return False
 
 
 class AssistedAnalysisService:
@@ -446,9 +458,10 @@ class AssistedAnalysisService:
                 cached[key] = self._configured_reference_model(key)
                 return cached[key]
             model = DriverReferenceModel.load(model_path(self.runtime_root, key))
-            # ADR 0016: the reference by configuration (`AT_COACH_REFERENCE`).
+            # ADR 0016: the reference by configuration (`AT_COACH_REFERENCE`); ADR 0032: the model's lap.
             if model is not None:
-                model.use_reference(configured_reference_kind())
+                volta_do_modelo.anexar(model, volta_do_modelo.encontrar([self.runtime_root, self.repo_root], key))
+                _use_reference_or_own_best(model, configured_reference_kind())
             # The optimised line lives in its own file and is optional. Attaching
             # it here means everything downstream -- the live coach, the debrief,
             # the analysis payload -- sees it without asking for it, and tracks
@@ -470,7 +483,9 @@ class AssistedAnalysisService:
             return None
         model = DriverReferenceModel.load(model_path(folder, key))
         if model is not None:
-            model.use_reference(kind)
+            # ADR 0032: a model written before 0.8.0 gets the model's lap from its file.
+            volta_do_modelo.anexar(model, volta_do_modelo.encontrar([folder, self.runtime_root, self.repo_root], key))
+            _use_reference_or_own_best(model, kind)
         attach(model, find_optimal_line([folder, self.runtime_root, self.repo_root], key))
         return model
 

@@ -2,9 +2,9 @@
  * Gráficos das telas Sessões e Evolução (pedido 30), como no protótipo A:
  *
  * - `GraficoTendencia`: mediana (linha cheia) e melhor volta (tracejada) por
- *   sessão, com a volta da IA como referência;
+ *   sessão, com a volta de referência (a volta do modelo, ADR 0032);
  * - `FaixaDeVoltas`: uma marca por volta válida da sessão, numa faixa de tempo;
- * - `IntervaloDaCurva`: a perda mediana de uma curva para a IA, com a faixa de
+ * - `IntervaloDaCurva`: a perda mediana de uma curva para a referência, com a faixa de
  *   90% de confiança (ponto vazio: sem diferença consistente).
  */
 import React from 'react';
@@ -15,7 +15,7 @@ import { nomeDaSessao, numeroDaVolta, sg, tempo } from '../volta/formato';
 /** M:SS sem os milésimos, para os eixos. */
 const tempoCurto = (t: number) => tempo(t).replace(/,\d+$/, '');
 
-export const GraficoTendencia: React.FC<{ sessoes: SessaoDoResumo[]; tempoIa: number | null }> = ({ sessoes, tempoIa }) => {
+export const GraficoTendencia: React.FC<{ sessoes: SessaoDoResumo[]; tempoRef: number | null }> = ({ sessoes, tempoRef }) => {
   const [caixa, W0] = useLargura<HTMLDivElement>();
   const W = Math.max(280, W0);
   const H = 200;
@@ -24,7 +24,7 @@ export const GraficoTendencia: React.FC<{ sessoes: SessaoDoResumo[]; tempoIa: nu
   const topo = 14;
   const base = 30;
   const valores = sessoes.flatMap((s) => [s.mediana_s, s.melhor_s]);
-  if (tempoIa !== null) valores.push(tempoIa);
+  if (tempoRef !== null) valores.push(tempoRef);
   const mn = Math.floor(Math.min(...valores)) - 1;
   const mx = Math.ceil(Math.max(...valores)) + 1;
   const x = (i: number) => pl + (sessoes.length === 1 ? 0.5 : i / (sessoes.length - 1)) * (W - pl - pr);
@@ -41,10 +41,10 @@ export const GraficoTendencia: React.FC<{ sessoes: SessaoDoResumo[]; tempoIa: nu
               <text x={pl - 6} y={y(v) + 3} textAnchor="end" className="grafico-texto">{tempoCurto(v)}</text>
             </g>
           ))}
-          {tempoIa !== null && (
+          {tempoRef !== null && (
             <g>
-              <line x1={pl} x2={W - pr} y1={y(tempoIa)} y2={y(tempoIa)} style={{ stroke: 'var(--referencia)', strokeDasharray: '5 4' }} />
-              <text x={W - pr} y={y(tempoIa) - 5} textAnchor="end" className="grafico-texto">volta da IA {tempo(tempoIa)}</text>
+              <line x1={pl} x2={W - pr} y1={y(tempoRef)} y2={y(tempoRef)} style={{ stroke: 'var(--referencia)', strokeDasharray: '5 4' }} />
+              <text x={W - pr} y={y(tempoRef) - 5} textAnchor="end" className="grafico-texto">referência {tempo(tempoRef)}</text>
             </g>
           )}
           {(['mediana_s', 'melhor_s'] as const).map((campo) => (
@@ -75,7 +75,7 @@ export const GraficoTendencia: React.FC<{ sessoes: SessaoDoResumo[]; tempoIa: nu
   );
 };
 
-export const FaixaDeVoltas: React.FC<{ voltas: Array<{ volta: string; tempo_s: number }>; tempoIa: number | null }> = ({ voltas, tempoIa }) => {
+export const FaixaDeVoltas: React.FC<{ voltas: Array<{ volta: string; tempo_s: number }>; tempoRef: number | null }> = ({ voltas, tempoRef }) => {
   const [caixa, W0] = useLargura<HTMLDivElement>();
   const W = Math.max(260, W0);
   const H = 34;
@@ -87,10 +87,10 @@ export const FaixaDeVoltas: React.FC<{ voltas: Array<{ volta: string; tempo_s: n
       {W0 > 0 && (
         <svg width={W} height={H} role="img" aria-label={`Tempos das ${voltas.length} voltas válidas da sessão`} style={{ display: 'block' }}>
           <line x1={4} x2={W - 4} y1={14} y2={14} style={{ stroke: 'var(--linha)' }} />
-          {tempoIa !== null && (
+          {tempoRef !== null && (
             <g>
-              <line x1={x(tempoIa)} x2={x(tempoIa)} y1={4} y2={24} style={{ stroke: 'var(--referencia)', strokeDasharray: '3 2' }} />
-              <text x={x(tempoIa) + 4} y={10} className="grafico-texto">IA</text>
+              <line x1={x(tempoRef)} x2={x(tempoRef)} y1={4} y2={24} style={{ stroke: 'var(--referencia)', strokeDasharray: '3 2' }} />
+              <text x={x(tempoRef) + 4} y={10} className="grafico-texto">Ref.</text>
             </g>
           )}
           {voltas.map((v) => (
