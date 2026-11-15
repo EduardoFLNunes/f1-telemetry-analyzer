@@ -1,0 +1,875 @@
+{
+ "pedido": 51,
+ "adr": "0032",
+ "parte": "B",
+ "commit": "79990728cb7b0d89e7e6cbbb2e38779adef4eab2",
+ "gerado_em": "2026-11-15T11:12:06",
+ "comando": "python -m ml.scripts.volta_do_modelo",
+ "ambiente": {
+  "python": "3.9.7",
+  "numpy": "1.26.3"
+ },
+ "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer\\data\\reference_models\\vhe_interlagos.volta_do_modelo.json",
+ "bytes": 125708,
+ "sha256": "e8651d452f6bda85b2fe213ca55f3e6827350e3eed9712d1d911c9533e99f20b",
+ "anterior_guardada": null,
+ "volta": {
+  "lap_id": "2026-11-15_02-47-12_vhe_interlagos_teste_m1#0008",
+  "sessao": "2026-11-15_02-47-12_vhe_interlagos_teste_m1",
+  "sequencia": 8,
+  "volta_do_jogo": 9,
+  "arquivos_da_gravacao": [
+   {
+    "arquivo": "metadata.json",
+    "bytes": 1086,
+    "sha256": "f67bde47cbf4aa0cafc2cb827b8fe586d36b40e21e010f578bf13335e53ea245"
+   },
+   {
+    "arquivo": "opponents.jsonl",
+    "bytes": 954576,
+    "sha256": "98c65e9b431ab64ad1409077c29537ae90cecb3e80f0242ddfe7a6f226acc2a8"
+   },
+   {
+    "arquivo": "player.jsonl",
+    "bytes": 197304630,
+    "sha256": "180b7cf701cb5d25ace77192b5e380b088ca4a9981f16f9a3771fce0b83cfc5a"
+   }
+  ]
+ },
+ "pista_da_gravacao": {
+  "arquivos": [
+   {
+    "arquivo": "gp/ai/fast_lane.ai",
+    "sha256_original": "36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342",
+    "sha256_copia": "36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342",
+    "igual": true,
+    "papel": "a linha da IA (troca de proposito no teste)"
+   },
+   {
+    "arquivo": "gp/ai/pit_lane.ai",
+    "sha256_original": "57c2dfc5a8fde4b177964f20a806a1659f228ff42e5daa750156799828abea7a",
+    "sha256_copia": "57c2dfc5a8fde4b177964f20a806a1659f228ff42e5daa750156799828abea7a",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "gp/data/groove.ini",
+    "sha256_original": "5b40c7570f7e3736cbb71354fcf38ede59c08b4e5b05736ac1c2940297632db3",
+    "sha256_copia": "5b40c7570f7e3736cbb71354fcf38ede59c08b4e5b05736ac1c2940297632db3",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "gp/data/groveline.csv",
+    "sha256_original": "c146b9663dfb83e4fa7f4ef0305188d10486e1d302a9ff3427f9feee1c349716",
+    "sha256_copia": "c146b9663dfb83e4fa7f4ef0305188d10486e1d302a9ff3427f9feee1c349716",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "gp/data/line.spl",
+    "sha256_original": "5a64ad92dd32c7b47f79d44b2bef34a89afdd6a3af0ebb442ab3ddfaf3a61900",
+    "sha256_copia": "5a64ad92dd32c7b47f79d44b2bef34a89afdd6a3af0ebb442ab3ddfaf3a61900",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "gp/data/map.ini",
+    "sha256_original": "0362f19fa946f351734eb0389b3d2ccaaa984712c3fef90293af682f97f26a27",
+    "sha256_copia": "0362f19fa946f351734eb0389b3d2ccaaa984712c3fef90293af682f97f26a27",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "gp/data/surfaces.ini",
+    "sha256_original": "4520b16b49249f269abfaf8aade0b64a694d8c7b9fdd913845f2ca9dca58106e",
+    "sha256_copia": "4520b16b49249f269abfaf8aade0b64a694d8c7b9fdd913845f2ca9dca58106e",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "heli_redfly.kn5",
+    "sha256_original": "fe7dffb35b7f79ec6ff4e25589df49eb3888e6acd4acc59c1ebdba1000282648",
+    "sha256_copia": "fe7dffb35b7f79ec6ff4e25589df49eb3888e6acd4acc59c1ebdba1000282648",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "models_gp.ini",
+    "sha256_original": "c3ca5f9e12f708d14ce1e54a425274d6018f2d4f4e34e21833fd53bc2a2a95b1",
+    "sha256_copia": "c3ca5f9e12f708d14ce1e54a425274d6018f2d4f4e34e21833fd53bc2a2a95b1",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "obj_barriers.kn5",
+    "sha256_original": "a8376405fd56b954acebd5a1ba8d6fb7a0b8583dc4f12dcff55c77d8173b91c7",
+    "sha256_copia": "a8376405fd56b954acebd5a1ba8d6fb7a0b8583dc4f12dcff55c77d8173b91c7",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "obj_box.kn5",
+    "sha256_original": "a2346ea37a872b5f03965365593d6dcc07cc75bccdd9c26fba0e27c9c69d77f5",
+    "sha256_copia": "a2346ea37a872b5f03965365593d6dcc07cc75bccdd9c26fba0e27c9c69d77f5",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "obj_buildings.kn5",
+    "sha256_original": "66ffe7277a5cd1f7498e1275d0ae204a248c6b2fccb10d41b5bab71bed98433b",
+    "sha256_copia": "66ffe7277a5cd1f7498e1275d0ae204a248c6b2fccb10d41b5bab71bed98433b",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "obj_cf.kn5",
+    "sha256_original": "a3cc8f63a9c9ff05b0f02b2c10a77b3dc66d1d49e1bb0f52a86b1eab5ececaf7",
+    "sha256_copia": "a3cc8f63a9c9ff05b0f02b2c10a77b3dc66d1d49e1bb0f52a86b1eab5ececaf7",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "obj_collider.kn5",
+    "sha256_original": "d09127b73e2612ff9721e23f784276b5db717d4f7fabf0313e94062222431268",
+    "sha256_copia": "d09127b73e2612ff9721e23f784276b5db717d4f7fabf0313e94062222431268",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "obj_extra.kn5",
+    "sha256_original": "c88965b5d71edad3a5c181abb5ad89dfba15cbaab129f39b9889719c0204bfbb",
+    "sha256_copia": "c88965b5d71edad3a5c181abb5ad89dfba15cbaab129f39b9889719c0204bfbb",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "obj_fence.kn5",
+    "sha256_original": "0d6cb53dd95f6d51e6d6c159c322675a2fa2d5143f7f351863e35df3c212a39b",
+    "sha256_copia": "0d6cb53dd95f6d51e6d6c159c322675a2fa2d5143f7f351863e35df3c212a39b",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "obj_groove.kn5",
+    "sha256_original": "cde592be2abcf7f923141d0f4f1d4193360972be00f2dea9cd0b8b20b9b5b6a2",
+    "sha256_copia": "cde592be2abcf7f923141d0f4f1d4193360972be00f2dea9cd0b8b20b9b5b6a2",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "obj_trees.kn5",
+    "sha256_original": "2fefec0542d7618e27840140a7c2417f43e13eb5c44b4bd176e6b01f2ff1936a",
+    "sha256_copia": "2fefec0542d7618e27840140a7c2417f43e13eb5c44b4bd176e6b01f2ff1936a",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   },
+   {
+    "arquivo": "vhe_interlagos.kn5",
+    "sha256_original": "ce1f3bb2f93d419a3fc571712c051f4c2ce5a22e9e8397b7f456cb7abe1da9d3",
+    "sha256_copia": "ce1f3bb2f93d419a3fc571712c051f4c2ce5a22e9e8397b7f456cb7abe1da9d3",
+    "igual": true,
+    "papel": "superficie e dados do layout"
+   }
+  ],
+  "superficie_igual": true,
+  "kn5_da_pista": {
+   "arquivo": "vhe_interlagos.kn5",
+   "sha256_original": "ce1f3bb2f93d419a3fc571712c051f4c2ce5a22e9e8397b7f456cb7abe1da9d3",
+   "sha256_copia": "ce1f3bb2f93d419a3fc571712c051f4c2ce5a22e9e8397b7f456cb7abe1da9d3",
+   "igual": true,
+   "papel": "superficie e dados do layout"
+  },
+  "sha256_da_origem_do_cache": "6e267c629a46ee22a5bb2d0543f3229ec0672cdead590315c4f770ded24784e4",
+  "pista_da_gravacao": "vhe_interlagos_teste_m1",
+  "cache_da_pista_na_gravacao": "vhe_interlagos_gp_kn5_surface_interval_geometry",
+  "geometry_id_das_voltas": "0ed16f0dd2225990",
+  "geometry_id_da_original": "0ed16f0dd2225990",
+  "mesma_geometria": true
+ },
+ "tempo": {
+  "refeito_na_grade_s": 84.55158121991376,
+  "refeito": "1:24,552",
+  "do_resultado_50_s": 84.55158121991376,
+  "diferenca_ms": 0.0,
+  "contra_1_24_552_ms": -0.41878008624962604,
+  "dentro_de_5_ms": true,
+  "cronometro_do_jogo_s": 84.55064041226211,
+  "soma_dos_60_microssetores_do_coach_s": 84.55
+ },
+ "trechos": {
+  "nomes": [
+   "C01",
+   "C02",
+   "C03",
+   "C04",
+   "C05",
+   "C06",
+   "C07",
+   "C08",
+   "C09",
+   "C10",
+   "C11",
+   "C12",
+   "C13",
+   "C14",
+   "C14->linha"
+  ],
+  "refeitos_s": [
+   6.479124288959596,
+   2.4579404497785333,
+   5.263007935266778,
+   11.409116640487383,
+   4.059997418039021,
+   9.26854959550808,
+   5.230183181661658,
+   4.819149784914387,
+   2.8405958439347287,
+   4.418769583427853,
+   5.671406353895563,
+   5.163767331416608,
+   2.8361579707359397,
+   5.1044642663244275,
+   9.5293505755632
+  ],
+  "do_resultado_50_s": [
+   6.479124288959596,
+   2.4579404497785333,
+   5.263007935266778,
+   11.409116640487383,
+   4.059997418039021,
+   9.26854959550808,
+   5.230183181661658,
+   4.819149784914387,
+   2.8405958439347287,
+   4.418769583427853,
+   5.671406353895563,
+   5.163767331416608,
+   2.8361579707359397,
+   5.1044642663244275,
+   9.5293505755632
+  ],
+  "diferenca_max_ms": 0.0,
+  "batem": true
+ },
+ "distancia": {
+  "pontos": 4835,
+  "ate_a_L2_m": {
+   "mediana": 0.2748722150112258,
+   "p95": 0.8413813090174097
+  },
+  "ate_a_linha_da_ia_m": {
+   "mediana": 0.9234101727952857,
+   "p95": 6.825638298275753
+  },
+  "e_a_L2": true
+ },
+ "microssetores_lado_a_lado": {
+  "a_0013": "2026-10-04_03-42-10_vhe_interlagos#0013",
+  "a_0013_s": 84.828,
+  "modelo": "2026-11-15_02-47-12_vhe_interlagos_teste_m1#0008",
+  "modelo_s": 84.55,
+  "linhas": [
+   {
+    "microssetor": 0,
+    "modelo_s": 0.9418,
+    "a_0013_s": 0.9249,
+    "diferenca_s": 0.0169,
+    "modelo_minima_kmh": 273.01,
+    "a_0013_minima_kmh": 277.94,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 1,
+    "modelo_s": 0.9451,
+    "a_0013_s": 0.9239,
+    "diferenca_s": 0.0212,
+    "modelo_minima_kmh": 251.82,
+    "a_0013_minima_kmh": 263.34,
+    "modelo_freada_m": 122.3,
+    "a_0013_freada_m": 127.0
+   },
+   {
+    "microssetor": 2,
+    "modelo_s": 1.3145,
+    "a_0013_s": 1.2488,
+    "diferenca_s": 0.0657,
+    "modelo_minima_kmh": 151.16,
+    "a_0013_minima_kmh": 156.98,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 3,
+    "modelo_s": 2.0286,
+    "a_0013_s": 2.0326,
+    "diferenca_s": -0.004,
+    "modelo_minima_kmh": 112.52,
+    "a_0013_minima_kmh": 104.23,
+    "modelo_freada_m": 230.2,
+    "a_0013_freada_m": 249.3
+   },
+   {
+    "microssetor": 4,
+    "modelo_s": 2.0881,
+    "a_0013_s": 2.0679,
+    "diferenca_s": 0.0202,
+    "modelo_minima_kmh": 107.2,
+    "a_0013_minima_kmh": 104.25,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": 359.4
+   },
+   {
+    "microssetor": 5,
+    "modelo_s": 1.9265,
+    "a_0013_s": 1.9962,
+    "diferenca_s": -0.0697,
+    "modelo_minima_kmh": 116.62,
+    "a_0013_minima_kmh": 116.11,
+    "modelo_freada_m": 364.9,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 6,
+    "modelo_s": 1.5878,
+    "a_0013_s": 1.5982,
+    "diferenca_s": -0.0104,
+    "modelo_minima_kmh": 139.72,
+    "a_0013_minima_kmh": 135.62,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 7,
+    "modelo_s": 1.3714,
+    "a_0013_s": 1.3589,
+    "diferenca_s": 0.0125,
+    "modelo_minima_kmh": 171.43,
+    "a_0013_minima_kmh": 171.15,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 8,
+    "modelo_s": 1.2836,
+    "a_0013_s": 1.2555,
+    "diferenca_s": 0.0281,
+    "modelo_minima_kmh": 189.89,
+    "a_0013_minima_kmh": 191.38,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 9,
+    "modelo_s": 1.2228,
+    "a_0013_s": 1.2097,
+    "diferenca_s": 0.0131,
+    "modelo_minima_kmh": 203.0,
+    "a_0013_minima_kmh": 206.13,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 10,
+    "modelo_s": 1.1655,
+    "a_0013_s": 1.1483,
+    "diferenca_s": 0.0172,
+    "modelo_minima_kmh": 216.31,
+    "a_0013_minima_kmh": 218.83,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 11,
+    "modelo_s": 1.1082,
+    "a_0013_s": 1.0894,
+    "diferenca_s": 0.0188,
+    "modelo_minima_kmh": 227.9,
+    "a_0013_minima_kmh": 231.77,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 12,
+    "modelo_s": 1.0618,
+    "a_0013_s": 1.0425,
+    "diferenca_s": 0.0193,
+    "modelo_minima_kmh": 238.74,
+    "a_0013_minima_kmh": 243.05,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 13,
+    "modelo_s": 1.0253,
+    "a_0013_s": 1.0075,
+    "diferenca_s": 0.0178,
+    "modelo_minima_kmh": 247.73,
+    "a_0013_minima_kmh": 252.54,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 14,
+    "modelo_s": 1.0003,
+    "a_0013_s": 0.9829,
+    "diferenca_s": 0.0174,
+    "modelo_minima_kmh": 254.92,
+    "a_0013_minima_kmh": 259.45,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 15,
+    "modelo_s": 0.9778,
+    "a_0013_s": 0.9608,
+    "diferenca_s": 0.017,
+    "modelo_minima_kmh": 261.41,
+    "a_0013_minima_kmh": 265.9,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 16,
+    "modelo_s": 0.9623,
+    "a_0013_s": 0.9572,
+    "diferenca_s": 0.0051,
+    "modelo_minima_kmh": 263.2,
+    "a_0013_minima_kmh": 251.72,
+    "modelo_freada_m": 1216.0,
+    "a_0013_freada_m": 1206.3
+   },
+   {
+    "microssetor": 17,
+    "modelo_s": 1.1949,
+    "a_0013_s": 1.3203,
+    "diferenca_s": -0.1254,
+    "modelo_minima_kmh": 174.5,
+    "a_0013_minima_kmh": 162.06,
+    "modelo_freada_m": 1229.9,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 18,
+    "modelo_s": 1.6215,
+    "a_0013_s": 1.7804,
+    "diferenca_s": -0.1589,
+    "modelo_minima_kmh": 134.46,
+    "a_0013_minima_kmh": 128.42,
+    "modelo_freada_m": 1305.2,
+    "a_0013_freada_m": 1301.2
+   },
+   {
+    "microssetor": 19,
+    "modelo_s": 1.7915,
+    "a_0013_s": 1.791,
+    "diferenca_s": 0.0005,
+    "modelo_minima_kmh": 133.15,
+    "a_0013_minima_kmh": 128.53,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 20,
+    "modelo_s": 1.4727,
+    "a_0013_s": 1.4641,
+    "diferenca_s": 0.0086,
+    "modelo_minima_kmh": 162.89,
+    "a_0013_minima_kmh": 163.13,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 21,
+    "modelo_s": 1.2815,
+    "a_0013_s": 1.2584,
+    "diferenca_s": 0.0231,
+    "modelo_minima_kmh": 187.06,
+    "a_0013_minima_kmh": 189.22,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 22,
+    "modelo_s": 1.2452,
+    "a_0013_s": 1.2184,
+    "diferenca_s": 0.0268,
+    "modelo_minima_kmh": 201.03,
+    "a_0013_minima_kmh": 204.21,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 23,
+    "modelo_s": 1.1816,
+    "a_0013_s": 1.163,
+    "diferenca_s": 0.0186,
+    "modelo_minima_kmh": 213.82,
+    "a_0013_minima_kmh": 217.42,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 24,
+    "modelo_s": 1.1416,
+    "a_0013_s": 1.1229,
+    "diferenca_s": 0.0187,
+    "modelo_minima_kmh": 223.17,
+    "a_0013_minima_kmh": 227.16,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 25,
+    "modelo_s": 1.1117,
+    "a_0013_s": 1.0925,
+    "diferenca_s": 0.0192,
+    "modelo_minima_kmh": 229.96,
+    "a_0013_minima_kmh": 234.18,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 26,
+    "modelo_s": 1.2025,
+    "a_0013_s": 1.2353,
+    "diferenca_s": -0.0328,
+    "modelo_minima_kmh": 189.36,
+    "a_0013_minima_kmh": 186.7,
+    "modelo_freada_m": 1903.5,
+    "a_0013_freada_m": 1891.2
+   },
+   {
+    "microssetor": 27,
+    "modelo_s": 1.3924,
+    "a_0013_s": 1.3589,
+    "diferenca_s": 0.0335,
+    "modelo_minima_kmh": 175.45,
+    "a_0013_minima_kmh": 180.07,
+    "modelo_freada_m": 1950.9,
+    "a_0013_freada_m": 2015.2
+   },
+   {
+    "microssetor": 28,
+    "modelo_s": 1.4061,
+    "a_0013_s": 1.6517,
+    "diferenca_s": -0.2456,
+    "modelo_minima_kmh": 176.61,
+    "a_0013_minima_kmh": 152.45,
+    "modelo_freada_m": 2075.9,
+    "a_0013_freada_m": 2041.6
+   },
+   {
+    "microssetor": 29,
+    "modelo_s": 1.4201,
+    "a_0013_s": 1.583,
+    "diferenca_s": -0.1629,
+    "modelo_minima_kmh": 176.28,
+    "a_0013_minima_kmh": 154.63,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 30,
+    "modelo_s": 1.5736,
+    "a_0013_s": 1.6385,
+    "diferenca_s": -0.0649,
+    "modelo_minima_kmh": 115.07,
+    "a_0013_minima_kmh": 112.05,
+    "modelo_freada_m": 2194.7,
+    "a_0013_freada_m": 2199.0
+   },
+   {
+    "microssetor": 31,
+    "modelo_s": 2.3144,
+    "a_0013_s": 2.4605,
+    "diferenca_s": -0.1461,
+    "modelo_minima_kmh": 91.83,
+    "a_0013_minima_kmh": 86.44,
+    "modelo_freada_m": 2253.9,
+    "a_0013_freada_m": 2250.3
+   },
+   {
+    "microssetor": 32,
+    "modelo_s": 2.3093,
+    "a_0013_s": 2.2912,
+    "diferenca_s": 0.0181,
+    "modelo_minima_kmh": 95.3,
+    "a_0013_minima_kmh": 89.67,
+    "modelo_freada_m": 2356.3,
+    "a_0013_freada_m": 2359.0
+   },
+   {
+    "microssetor": 33,
+    "modelo_s": 2.1622,
+    "a_0013_s": 2.3109,
+    "diferenca_s": -0.1487,
+    "modelo_minima_kmh": 97.47,
+    "a_0013_minima_kmh": 91.54,
+    "modelo_freada_m": 2453.3,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 34,
+    "modelo_s": 1.9215,
+    "a_0013_s": 2.0032,
+    "diferenca_s": -0.0817,
+    "modelo_minima_kmh": 121.02,
+    "a_0013_minima_kmh": 109.59,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 35,
+    "modelo_s": 1.5668,
+    "a_0013_s": 1.6005,
+    "diferenca_s": -0.0337,
+    "modelo_minima_kmh": 149.25,
+    "a_0013_minima_kmh": 144.55,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 36,
+    "modelo_s": 1.81,
+    "a_0013_s": 1.7064,
+    "diferenca_s": 0.1036,
+    "modelo_minima_kmh": 105.29,
+    "a_0013_minima_kmh": 115.43,
+    "modelo_freada_m": 2622.3,
+    "a_0013_freada_m": 2621.7
+   },
+   {
+    "microssetor": 37,
+    "modelo_s": 2.6201,
+    "a_0013_s": 2.5671,
+    "diferenca_s": 0.053,
+    "modelo_minima_kmh": 82.69,
+    "a_0013_minima_kmh": 80.99,
+    "modelo_freada_m": 2679.3,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 38,
+    "modelo_s": 2.1559,
+    "a_0013_s": 2.0862,
+    "diferenca_s": 0.0697,
+    "modelo_minima_kmh": 90.03,
+    "a_0013_minima_kmh": 94.4,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 39,
+    "modelo_s": 1.5737,
+    "a_0013_s": 1.5272,
+    "diferenca_s": 0.0465,
+    "modelo_minima_kmh": 149.02,
+    "a_0013_minima_kmh": 152.81,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 40,
+    "modelo_s": 1.338,
+    "a_0013_s": 1.2779,
+    "diferenca_s": 0.0601,
+    "modelo_minima_kmh": 176.67,
+    "a_0013_minima_kmh": 181.79,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 41,
+    "modelo_s": 1.2702,
+    "a_0013_s": 1.2639,
+    "diferenca_s": 0.0063,
+    "modelo_minima_kmh": 192.76,
+    "a_0013_minima_kmh": 198.25,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 42,
+    "modelo_s": 1.2155,
+    "a_0013_s": 1.1966,
+    "diferenca_s": 0.0189,
+    "modelo_minima_kmh": 205.83,
+    "a_0013_minima_kmh": 209.96,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 43,
+    "modelo_s": 1.3551,
+    "a_0013_s": 1.3531,
+    "diferenca_s": 0.002,
+    "modelo_minima_kmh": 141.24,
+    "a_0013_minima_kmh": 144.67,
+    "modelo_freada_m": 3123.8,
+    "a_0013_freada_m": 3122.1
+   },
+   {
+    "microssetor": 44,
+    "modelo_s": 2.0555,
+    "a_0013_s": 2.1889,
+    "diferenca_s": -0.1334,
+    "modelo_minima_kmh": 111.94,
+    "a_0013_minima_kmh": 98.35,
+    "modelo_freada_m": 3196.3,
+    "a_0013_freada_m": 3215.1
+   },
+   {
+    "microssetor": 45,
+    "modelo_s": 1.9463,
+    "a_0013_s": 1.9953,
+    "diferenca_s": -0.049,
+    "modelo_minima_kmh": 113.89,
+    "a_0013_minima_kmh": 104.17,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 46,
+    "modelo_s": 1.5637,
+    "a_0013_s": 1.5324,
+    "diferenca_s": 0.0313,
+    "modelo_minima_kmh": 154.41,
+    "a_0013_minima_kmh": 153.14,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 47,
+    "modelo_s": 1.4075,
+    "a_0013_s": 1.3705,
+    "diferenca_s": 0.037,
+    "modelo_minima_kmh": 178.61,
+    "a_0013_minima_kmh": 179.65,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 48,
+    "modelo_s": 1.3106,
+    "a_0013_s": 1.2705,
+    "diferenca_s": 0.0401,
+    "modelo_minima_kmh": 193.74,
+    "a_0013_minima_kmh": 196.53,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 49,
+    "modelo_s": 1.2149,
+    "a_0013_s": 1.1766,
+    "diferenca_s": 0.0383,
+    "modelo_minima_kmh": 205.38,
+    "a_0013_minima_kmh": 209.44,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 50,
+    "modelo_s": 1.1497,
+    "a_0013_s": 1.1289,
+    "diferenca_s": 0.0208,
+    "modelo_minima_kmh": 215.15,
+    "a_0013_minima_kmh": 218.61,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 51,
+    "modelo_s": 1.1444,
+    "a_0013_s": 1.1262,
+    "diferenca_s": 0.0182,
+    "modelo_minima_kmh": 222.8,
+    "a_0013_minima_kmh": 225.81,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 52,
+    "modelo_s": 1.1003,
+    "a_0013_s": 1.0804,
+    "diferenca_s": 0.0199,
+    "modelo_minima_kmh": 231.14,
+    "a_0013_minima_kmh": 235.01,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 53,
+    "modelo_s": 1.0644,
+    "a_0013_s": 1.0466,
+    "diferenca_s": 0.0178,
+    "modelo_minima_kmh": 238.64,
+    "a_0013_minima_kmh": 242.81,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 54,
+    "modelo_s": 1.0354,
+    "a_0013_s": 1.0124,
+    "diferenca_s": 0.023,
+    "modelo_minima_kmh": 245.5,
+    "a_0013_minima_kmh": 250.16,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 55,
+    "modelo_s": 1.0109,
+    "a_0013_s": 0.9711,
+    "diferenca_s": 0.0398,
+    "modelo_minima_kmh": 252.21,
+    "a_0013_minima_kmh": 256.97,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 56,
+    "modelo_s": 0.9971,
+    "a_0013_s": 0.9676,
+    "diferenca_s": 0.0295,
+    "modelo_minima_kmh": 257.78,
+    "a_0013_minima_kmh": 262.66,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 57,
+    "modelo_s": 0.9757,
+    "a_0013_s": 0.957,
+    "diferenca_s": 0.0187,
+    "modelo_minima_kmh": 263.09,
+    "a_0013_minima_kmh": 268.12,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 58,
+    "modelo_s": 0.9615,
+    "a_0013_s": 0.9426,
+    "diferenca_s": 0.0189,
+    "modelo_minima_kmh": 266.84,
+    "a_0013_minima_kmh": 272.4,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   },
+   {
+    "microssetor": 59,
+    "modelo_s": 0.9513,
+    "a_0013_s": 0.9324,
+    "diferenca_s": 0.0189,
+    "modelo_minima_kmh": 270.1,
+    "a_0013_minima_kmh": 275.68,
+    "modelo_freada_m": null,
+    "a_0013_freada_m": null
+   }
+  ]
+ }
+}
