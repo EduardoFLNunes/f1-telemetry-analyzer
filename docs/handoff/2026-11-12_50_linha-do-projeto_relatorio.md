@@ -1,7 +1,9 @@
-# Relatório do pedido 50: a linha do projeto (feito até a Parte F; parado antes do merge)
+# Relatório do pedido 50: a linha do projeto (concluído, salvo o envio)
 
 - **Pedido:** `docs/prompts/2026-11-12_50_linha-do-projeto.md`.
-- **Situação:** **as Partes 0 a F estão feitas. Parei antes do merge em `develop`,** porque a pasta principal está com `develop` aberta, e o pedido manda parar e avisar nesse caso (veja "O merge").
+- **Situação:** **concluído, salvo o envio.** As Partes 0 a F e o merge em `develop` estão feitos.
+  - O merge esperou você tirar a pasta principal de `develop` (veja "O merge").
+  - O envio fica com os comandos em "O envio": o controle de permissões recusa o `push` nesta sessão.
   - A conferência da codificação (A.4) parou uma vez. Você escolheu a emenda (a), que entrou no ADR 0031 (item 13) antes de seguir.
   - O teste no jogo rodou em 14 e 15/11, com os 5 blocos. **A L2 atingiu a meta e virou a referência por trecho; a L1 não.**
   - A cópia da pista tinha sido removida depois de 12/11 e foi recriada por você em 14/11, antes do teste. Ela continua instalada.
@@ -20,10 +22,11 @@
   - `62fb43ac` Pedido 50, Parte E: o resultado do teste no jogo e a referência pela linha que atingir a meta;
   - `d1980b12` Pedido 50, Partes E e F: o resultado, o ADR 0031, as linhas nos ADRs 0009, 0028, 0029 e 0030 e a arquitetura;
   - `45456980` Pedido 50: traz o `develop` (com o merge do pedido 45) para a branch antes do merge;
-  - o commit deste relatório (o hash está no chat).
+  - `8748027d` Relatório do pedido 50: as Partes E e F, a suíte na branch com o `develop` e a parada antes do merge.
 - **Merges:**
   - `45456980`: `develop` (`11046e28`) trazido para a branch, sem conflito;
-  - **o merge da branch em `develop` não foi feito** (veja "O merge").
+  - **`b969a7df` Merge do pedido 50** em `develop`, `--no-ff`, sem conflito.
+- **O commit final deste relatório** foi feito em `develop`, e a branch do pedido avançou até ele por avanço simples. O hash dele está no chat.
 - **Arquivos de handoff** (`docs/handoff/2026-11-12_50_linha-do-projeto…`):
   - `_relatorio.md` (este);
   - `_conferencia.json` (B.1: a escada, a conferência por trecho e os limites das restrições);
@@ -622,15 +625,16 @@ A suíte está em "Testes".
 - `git merge --no-ff develop`, em `45456980`, sem conflito. A branch tem agora tudo do `develop` local (`11046e28`);
 - a suíte foi rodada nessa branch (veja "Testes").
 
-**O que não foi feito, e por quê:**
-- **a pasta principal está com `develop` aberta** (`git worktree list`: `C:/Users/Dokas/Desktop/f1-telemetry-analyzer` em `11046e28 [develop]`). O relatório do 45 diz que ela ficou assim de propósito;
-- **o pedido manda parar e avisar:** "se `develop` estiver aberta em outra pasta, pare e me avise". O git também não deixa abrir `develop` na pasta do 47 enquanto ela estiver aberta na principal;
-- por isso, o merge em `develop` e o envio de `develop` esperam a sua decisão.
+**A parada, em 15/11:**
+- **A pasta principal estava com `develop` aberta** (`11046e28`), e o pedido manda parar e avisar nesse caso. O relatório do 45 diz que ela ficou assim de propósito.
+- **A sua decisão: (a).** Você rodou `git switch` na pasta principal, que foi para `etapa/replay-e-radio-que-ensina`, limpa.
 
-**As saídas possíveis:**
-- **(a) Você tira a pasta principal de `develop`** (por exemplo, `git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer switch etapa/replay-e-radio-que-ensina`, se ela não tiver mudança sem commit). Eu faço o merge na pasta do 47, como nos pedidos 47 e 49, e volto a pasta do 47 para a branch do pedido.
-- **(b) Eu faço o merge na própria pasta principal,** onde `develop` já está aberta (`git -C … merge --no-ff etapa/linha-do-projeto`). Isso toca a pasta principal, que este pedido não toca sem você dizer.
-- **(c) Você faz o merge.**
+**Depois, na pasta do 47:**
+- esperei a suíte terminar, para não trocar os arquivos debaixo dela;
+- conferi que nenhuma pasta tinha `develop` aberta;
+- `git switch develop` e `git merge --no-ff etapa/linha-do-projeto`: o merge **`b969a7df`**, sem conflito;
+- o commit final deste relatório, em `develop`;
+- a branch do pedido avançou até ele por avanço simples, e **a pasta do 47 voltou para `etapa/linha-do-projeto`.**
 
 ## O que se esperava e o que veio
 
@@ -682,21 +686,28 @@ A suíte está em "Testes".
 
 **Antes, conferi o que vai** (as mudanças desde `6eb4dd41`): nenhum arquivo acima de 50 MB, nenhum segredo, nada de `recordings/`, `data/recordings`, `data/ml`, `data/linha_do_projeto` ou `data/modelo1_por_trecho`, e nenhum `.ai`.
 
-**O envio da branch, para você rodar pelo terminal** (um avanço simples, sem `--force`):
+**Os comandos, para você rodar pelo terminal, nesta ordem** (os dois são avanço simples, sem `--force`):
+
+```powershell
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 push origin develop
+```
 
 ```powershell
 git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 push origin etapa/linha-do-projeto
 ```
 
 ```powershell
-git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 rev-parse etapa/linha-do-projeto
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 rev-parse develop etapa/linha-do-projeto
 ```
 
 ```powershell
-git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 ls-remote origin refs/heads/etapa/linha-do-projeto
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 ls-remote origin refs/heads/develop refs/heads/etapa/linha-do-projeto
 ```
 
-**O envio de `develop`** vem depois do merge (veja "O merge"). `main` e as tags não vão.
+- **O `develop`** vai de `4c7bcbae` para o commit final deste relatório. Leva os dois commits de documentação do 45 (`270531fa` e `11046e28`), que também estavam só no local, e o merge do 50.
+- **Depois de cada envio,** o hash do `rev-parse` e o do `ls-remote` têm de ser iguais.
+- **`main` e as tags não vão.**
+- **Antes, conferi o que vai** (as mudanças desde `4c7bcbae`): nenhum arquivo acima de 50 MB, nenhum segredo, nada de `recordings/`, `data/recordings`, `data/ml`, `data/linha_do_projeto`, `data/modelo1_por_trecho` ou `data/pista_teste`, e nenhum `.ai`.
 
 ## Itens para o backlog (para o Cowork)
 
@@ -715,7 +726,6 @@ git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 ls-remote origin refs/hea
 
 ## O que falta
 
-- **O merge em `develop`:** a sua decisão entre (a), (b) e (c) em "O merge". Depois dele, o envio de `develop` e a volta da pasta do 47 para a branch do pedido.
-- **O envio da branch deste pedido:** os comandos acima.
+- **O envio:** os comandos em "O envio". Depois deles, me avise que eu confiro o hash remoto.
 - **A cópia da pista continua instalada.** Ela pode ser removida pelo `remover_copia.ps1` quando você quiser: o resultado já está gravado.
 - **A pasta do 47 não foi apagada.** Você decide quando.
