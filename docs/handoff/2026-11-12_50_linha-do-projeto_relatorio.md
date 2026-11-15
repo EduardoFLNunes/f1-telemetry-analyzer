@@ -440,6 +440,29 @@ Avise **"rodei a linha do projeto"**. Aí eu faço:
   - Se eles forem rodados depois, o intervalo entre os blocos 1 e 2 passa dos 45 minutos da D.2. Isso vai no relatório do resultado.
   - O veredito compara a L1 com os dois C0 vizinhos, e o jogo tem o horário e o clima parados, então o intervalo não muda a regra.
 
+**15/11, depois do seu aviso "realizado o L1 e C0" (a sessão 1 completa):**
+- **As trocas desde o commit do ADR 0031,** cada uma com uma gravação:
+
+| bloco | troca | condição | sha256 da troca | gravação |
+|---|---|---|---|---|
+| 1 | 14/11 18:58:46 | C0 | `36b57fd8…` | `2026-11-14_19-01-15` |
+| 2 | 14/11 22:50:27 | L1 | `c3d30412…` | `2026-11-14_22-52-59` |
+| 3 | 15/11 02:28:11 | C0 | `36b57fd8…` | `2026-11-15_02-29-50` |
+
+  Cada troca apagou 4 caches do CSP da cópia (`caches_csp.log`).
+- **A conferência** (`conferencia-sessao --rotulo sessao1`, commit `56e02484`; a saída em `_conferencia_sessao1.json`):
+
+| bloco | condição | saída | primeira lançada | contam | interrompida | IA dirigindo nas que contam | até a linha do bloco | até a original | troca pegou |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| 1 | C0 | 1 | 1 | 7 | 1 | 7 | 0,25 m | 0,25 m | sim |
+| 2 | L1 | 1 | 1 | 7 | 1 | 7 | **0,32 m** | **1,00 m** | **sim** |
+| 3 | C0 | 1 | 1 | 7 | 1 | 7 | 0,25 m | 0,25 m | sim |
+
+- **O original está intacto.** Nenhum tempo foi calculado nem olhado.
+- **Na L1, a IA seguiu a linha nova:** a mediana até a L1 é de 0,32 m, contra 1,00 m até a original.
+- **O intervalo entre os blocos passou dos 45 minutos da D.2:** cerca de 3 h 35 min entre o fim do bloco 1 e a troca do bloco 2, e 3 h 20 min entre o fim do bloco 2 e a troca do bloco 3. Vai no relatório do resultado, ao lado da deriva medida pelos três C0.
+- **Pode seguir com a sessão 2:** L2 e depois C0.
+
 ## O que se esperava e o que veio (até a Parte D)
 
 | item do ADR | esperado | resultado |
