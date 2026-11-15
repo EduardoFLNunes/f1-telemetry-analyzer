@@ -29,7 +29,7 @@ O app instalado roda o mesmo código de `develop`; no pacote mudam só os caminh
 
   Sem os arquivos, ou com outro `geometry_id`, o coach fica calado e a aba
   diz por quê.
-- **Referência do coach.** `volta_ia`, `minha_melhor` ou coach desligado, na
+- **Referência do coach.** `volta_do_modelo` (a volta de referência, ADR 0032), `minha_melhor` ou coach desligado, na
   aba. A variável `AT_COACH_REFERENCE` continua valendo no app de
   desenvolvimento e, quando definida, trava a escolha da aba.
 - **Origem do dado.** O Electron passa o carimbo do build ao backend
@@ -319,7 +319,7 @@ The frontend also continues to support:
   used by the setup diagnostics before Steam/default path detection.
 - `AT_REPO_PATH`: repositório de onde o coach lê o modelo e a geometria
   (pedido 28); a configuração salva na aba "Coleta de dados" vale mais.
-- `AT_COACH_REFERENCE`: `volta_ia`, `minha_melhor` ou `desligado`; quando
+- `AT_COACH_REFERENCE`: `volta_do_modelo`, `minha_melhor` ou `desligado` (`volta_ia` vale como `volta_do_modelo`); quando
   definida, vale mais que a aba (app de desenvolvimento).
 - `AT_DESKTOP_USER_DATA_DIR`: pasta de usuário do Electron no lugar de
   `%APPDATA%\Automobilista Telemetria` (teste do pacote).

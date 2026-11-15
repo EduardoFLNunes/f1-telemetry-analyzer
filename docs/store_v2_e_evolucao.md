@@ -95,6 +95,7 @@ Decidida pelo Eduardo em 18/10 (opção 1 do relatório do pedido 33) e registra
   - válidas (todas as do store v2 são), relógio conferido e sem `relogio_suspeito`.
 - **Sessão:** as gravações do mesmo dia, pela data no nome da gravação. A sessão de 04/10 junta as 7 gravações daquele dia.
 - **Referência:** a volta da IA do coach (`volta_ia`) do modelo do repositório (`data/reference_models/vhe_interlagos.json`), lida do store v2 pelo `lap_id`. Se ela não estiver no store v2, o relatório para.
+- **Atualização (15/11, pedido 51, ADR 0032):** a referência passa a ser a volta do modelo (`volta_do_modelo`), lida do arquivo derivado `data/reference_models/vhe_interlagos.volta_do_modelo.json`, e não do store v2. A coluna da técnica da referência fica "nao julgada". As chaves com `ia` no nome continuam, agora medindo contra a volta do modelo.
 - **Unidades:** as 14 curvas de `detect_corners`. Os microsetores ficam como detalhe.
   - **Trecho de cada curva:** vai do meio da reta anterior ao meio da reta seguinte. A fronteira é o ponto médio entre o fim de uma curva e o início da próxima.
   - Os 14 trechos cobrem a volta inteira, então a soma das perdas por curva é a diferença de tempo de volta.

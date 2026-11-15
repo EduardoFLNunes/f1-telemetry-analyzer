@@ -397,3 +397,14 @@ O rádio que diz onde e por quê, o replay de perto e os boxes (ADR 0027 e ADR 0
 - **As decisões do Eduardo de 12/11:** o resumo cabe em 8,0 s, e toda diferença diz contra quem ("melhor volta da sessão", "do seu recorde", "da IA").
 - **O pacote do app** leva o `voz.ps1`: até a 0.7.0 de 07/11, o app instalado ficava sem voz.
 - **A versão:** `0.7.0-radio-que-ensina`, instalada em 07/11 (sem as decisões de 12/11); o app do jogo 0.5.1.
+
+### O que o pedido 51 entregou (15/11)
+
+A referência do app é a volta do modelo (ADR 0032). Detalhes em `docs/handoff/2026-11-15_51_volta-de-referencia-do-modelo_relatorio.md`.
+
+- **As referências:** "Volta de referência" (`volta_do_modelo`, a padrão; a melhor volta válida da L2, 1:24,552) e "Sua melhor volta" (`minha_melhor`). A volta da IA do jogo não é mais opção nem padrão, e a rota `/api/coach/referencias` não a mostra.
+- **A tela Coleta de dados** mostra as duas opções e a volta do modelo (o tempo, a marca e "executada pela IA do jogo na linha do projeto"). Sem o arquivo, só "Sua melhor volta", com a frase "A volta de referência desta pista ainda não foi gerada pelo modelo". A configuração `volta_ia` vira `volta_do_modelo` ao abrir.
+- **As telas Ao vivo, Volta, Evolução e Sessões:** os rótulos de "IA" ligados à referência viraram "Referência" ("Volta de referência", "para a referência", "freada da referência"). Os que falam de quem dirigiu (o indicador de IA, as voltas da IA fora da estatística) ficam.
+- **A grade da volta do modelo** vem do arquivo derivado, pela mesma rota da volta do store (`/api/store/voltas/{lap}`), e o fantasma a desenha como as outras.
+- **A Evolução** usa a volta do modelo como régua; a técnica da referência (a freada emendada) fica "não julgada", porque os pedais dela são o comando da IA (ADR 0032, item 5). As chaves dos JSONs (`perda_para_ia_s`, `volta_da_ia_s`) não mudaram de nome.
+- **A versão:** `0.8.0-volta-do-modelo` em `develop`; o app do jogo 0.6.0.
