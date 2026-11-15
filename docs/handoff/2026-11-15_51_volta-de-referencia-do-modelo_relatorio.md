@@ -1,8 +1,8 @@
 # Pedido 51: relatório
 
-- **Pedido:** `docs/prompts/2026-11-15_51_volta-de-referencia-do-modelo.md`, continuado em 15/11 à tarde pelos itens 1 a 6 do relatório parcial (`263c5fd6`), com a sua instrução: o instalador só depois das conferências da Parte D, e a instalação só com o seu "pode instalar".
+- **Pedido:** `docs/prompts/2026-11-15_51_volta-de-referencia-do-modelo.md`, continuado em 15/11 à tarde pelos itens 1 a 6 do relatório parcial (`263c5fd6`), com a sua instrução: o instalador só depois das conferências da Parte D, e a instalação só com o seu "pode instalar". Às 17:10, a sua decisão sobre a trava do store v2: "Siga sem resolver: gere o instalador e faça o merge".
 - **Pasta e branch:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer`, `etapa/volta-do-modelo` (a partir de `develop` em `51ad8cde`).
-- **Situação:** **parado antes do instalador e do merge, pela trava do store v2** (seção "O construtor rodado e a trava do store v2"). As Partes A, B, C, D e F estão feitas e conferidas; o instalador, a instalação, o merge e o envio esperam a sua decisão.
+- **Situação:** **feito, salvo a instalação e o envio.** O instalador `0.8.0-volta-do-modelo` foi gerado e conferido; o merge está em `develop` (`c4869295`), e a pasta principal ficou em `develop`. A trava do store v2 fica para um pedido próprio, por sua decisão de 15/11 às 17:10. A instalação espera o seu "pode instalar"; o envio, os seus comandos.
 - **Commits:**
   - `88bcdcdd` Pedido 51: o texto do pedido
   - `79990728` Parte A: o ADR 0032, antes do código
@@ -12,8 +12,10 @@
   - `5dbe4fa8` Parte D: os testes do backend, o teste novo, o rádio fora do tempo real, as prévias e as capturas
   - `a168e41f` Parte F: a documentação e a conferência do Lua
   - `3707c48d` Parte D.5: a suíte (1043 passando), o front, o desktop e o Lua
-  - (este relatório, no commit seguinte)
-- **Merges:** nenhum. **Envio:** nenhum.
+  - `46e8db8f` o relatório, parado na trava (o commit de onde o instalador foi gerado)
+  - `dcabd0fc` Parte E: o instalador no índice das versões (`versoes/LEIA-ME.md`)
+  - em `develop`, depois do merge: o commit deste relatório final
+- **Merge:** `c4869295` Merge do pedido 51 em `develop` (`--no-ff`, sem conflito). **Envio:** nenhum (os comandos estão no fim).
 - **Arquivos de handoff** (`docs/handoff/2026-11-15_51_volta-de-referencia-do-modelo_…`):
   - `_relatorio.md` (este);
   - `_conferencia.json` (a Parte B: a pista, o tempo, os trechos, a distância e os microssetores lado a lado);
@@ -262,13 +264,21 @@ Saída em `_testes.txt` e `_conferir_lua.txt`.
 - **o relatório de evolução continua o de 22/10, contra a `#0013`.** Com os rótulos novos, a tela Evolução vai mostrar "volta de referência 1:24,828" até o passo 7 rodar. **É um rótulo errado enquanto a trava não for resolvida;**
 - **o modelo do coach já está com a volta do modelo:** o coach e o rádio do app de desenvolvimento e do instalado (que lê o modelo do repositório) já usam a volta do modelo.
 
-## Parte E: o instalador (não gerado)
+## Parte E: o instalador
 
-**Não gerei o instalador:** a decisão sobre a trava vem antes. O que já está pronto para ele:
-- o `package.json` leva o arquivo da volta do modelo (`*.volta_do_modelo.json`) e o `voz.ps1` (que já ia desde a 0.7.0);
-- a versão é `0.8.0-volta-do-modelo`.
+**Gerado** com `npm run dist:win` na pasta `desktop`, às 17:10, com a árvore limpa, o jogo e o app fechados:
+- **o arquivo:** `versoes\0.8.0-volta-do-modelo\Automobilista-Telemetria-Setup-0.8.0-volta-do-modelo.exe` (229 MB);
+- **o sha256:** `573c110ef7789d162c574955596754c6e672299720cc62097613376d8b880342`;
+- **o carimbo:** o commit `46e8db8`, a branch `etapa/volta-do-modelo`, `dirty: false`. O código é o mesmo do merge: depois dele, só entraram o índice das versões e este relatório.
 
-**Quando for gerar:** `npm run dist:win` na pasta `desktop`, com a árvore limpa. Depois, só com o seu "pode instalar": a instalação sem perguntas (`/S`), com o jogo e o app fechados, e a conferência de que a configuração continua `"minha_melhor"`.
+**O que ele leva, conferido no pacote:**
+- **a volta do modelo:** `resources\data\reference_models\vhe_interlagos.volta_do_modelo.json`, igual byte a byte ao do repositório, ao lado do `vhe_interlagos.optimal.json`;
+- **o `voz.ps1`**, em `resources\backend\automobilista-backend\_internal\core\radio\`;
+- **o front novo:** "Volta de referência" está no pacote. O único "Volta da IA" que sobrou é o da origem ("IA no volante: Volta da IA: não conta como sua"), de propósito.
+
+**Não instalei:** a instalação espera o seu "pode instalar". Depois dele:
+- instalo sem perguntas (`/S`), por cima da 0.7.0, com o jogo e o app fechados;
+- confiro que a configuração continua `"minha_melhor"`.
 
 **O app do jogo 0.6.0** vai pelo `instalar.ps1`, que você roda (de preferência junto com o app do Windows 0.8.0):
 
@@ -297,9 +307,29 @@ powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-ana
 
 ## O que foi enviado ao GitHub
 
-**Nada.** O envio fica para depois do merge, com os comandos no fim. O remoto continua com `develop` em `4c7bcbae`, sem o pedido 50.
+**Nada:** o `git push` é recusado pelo controle de permissões desta sessão. Os comandos estão abaixo, para você rodar pelo terminal.
 
-**A conferência antes do primeiro envio** (os 76 arquivos dos commits do pedido contra `develop`): nenhum arquivo acima de 50 MB, nenhuma gravação (`recordings/`, `data/recordings`, `data/ml`), nenhum `.ai` e nenhum segredo. O arquivo da volta do modelo fica fora do git.
+**A conferência antes do primeiro envio** (os arquivos dos commits do pedido contra o `develop` de antes):
+- nenhum arquivo acima de 50 MB;
+- nenhuma gravação (`recordings/`, `data/recordings`, `data/ml`), nenhum `.ai` e nenhum segredo;
+- o arquivo da volta do modelo e o instalador ficam fora do git.
+
+| ref | hash local | no remoto (15/11, 17:20) |
+|---|---|---|
+| `etapa/volta-do-modelo` | `dcabd0fc` | não existe |
+| `develop` | `c4869295` + o commit deste relatório | `4c7bcbae` (sem os pedidos 50 e 51 e sem 2 commits do 45) |
+
+**Os comandos** (envios que não reescrevem o remoto: uma branch nova e um avanço simples):
+
+```bash
+git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer push origin etapa/volta-do-modelo
+```
+
+```bash
+git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer push origin develop
+```
+
+Quando você avisar, confiro com `git ls-remote origin` que os hashes remotos são os locais.
 
 ## Itens para o backlog
 
@@ -311,24 +341,9 @@ powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-ana
 6. **O script do rádio fora do tempo real** não guardou o rótulo do replay (olhou o lugar errado); ele é conferido pelo teste.
 7. **A cópia da pista** (`vhe_interlagos_teste_m1`) continua instalada; o resultado do 50 já está gravado, e a volta do modelo já foi derivada.
 
-## O que falta e o que precisa de decisão
+## O que falta
 
-**Decisão sua: o que fazer com a trava do store v2 antes do instalador e do merge.**
-- **(a) Seguir sem ela:** gerar o instalador e fazer o merge com o store reprovado. A tela Evolução fica com o relatório de 22/10 (contra a `#0013`) e o rótulo "volta de referência" até a trava ser resolvida num pedido próprio.
-- **(b) Parar:** investigar a linha do jogo das sessões desde 01/11 primeiro, para o passo 7 rodar e a Evolução ficar contra a volta do modelo antes do instalador.
-
-**Depois da decisão:**
-1. o instalador `0.8.0-volta-do-modelo` (`npm run dist:win`), conferido;
-2. a instalação, só com o seu "pode instalar";
-3. o merge em `develop` (a pasta principal fica em `develop`, para o pedido 42);
-4. os comandos de envio, para você rodar:
-
-```bash
-git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer push origin etapa/volta-do-modelo
-```
-
-```bash
-git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer push origin develop
-```
-
-O segundo só depois do merge. Ele leva também o pedido 50 e os 2 commits só locais do 45.
+1. **A instalação da 0.8.0,** com o seu "pode instalar" no chat.
+2. **O app do jogo 0.6.0,** pelo `instalar.ps1`, que você roda (o comando está na Parte E).
+3. **O envio** de `etapa/volta-do-modelo` e de `develop`, pelos comandos acima.
+4. **A trava do store v2,** num pedido próprio (backlog, item 1). Até lá, a tela Evolução mostra o relatório de 22/10, contra a `#0013`, com o rótulo "volta de referência".
