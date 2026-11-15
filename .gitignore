@@ -92,3 +92,5 @@ data/pista_teste/
 data/diagnostico_m1/
 # Pedido 49: a referencia por trecho deriva do fast_lane.ai do jogo e nunca vai para o git.
 data/modelo1_por_trecho/
+# Pedido 50: a linha do projeto (laterais, genes, contas e figuras); deriva das linhas do 47 e nunca vai para o git.
+data/linha_do_projeto/

@@ -1,0 +1,51 @@
+{
+ "pedido": 50,
+ "adr": "0031",
+ "parte": "B.4",
+ "commit": "99d76e2f4c88782bc2e975671e4c220695af0f8e",
+ "comando": "python -m ml.scripts.linha_do_projeto arquivos",
+ "original": {
+  "sha256": "36b57fd8d259755d9b25ffdc1f61e328479045fc275e554b7b7e3de7eb3d8342",
+  "pontos": 2680
+ },
+ "geometry_id": "0ed16f0dd2225990",
+ "corridor_id": "707d07029036abd6",
+ "codificacao": {
+  "genes": 546,
+  "dentro_m": 6.0,
+  "fora_m": 15.0,
+  "espacamento_m": {
+   "min": 5.79315915799998,
+   "p50": 5.956615130999921,
+   "max": 14.823887953000167
+  }
+ },
+ "condicoes": {
+  "L1": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\pista_teste\\linhas\\L1\\fast_lane.ai",
+   "bytes": 1282396,
+   "sha256": "c3d304129468e86e60cbc2abbe50cff3619bcb6e3edd722619c9ca47a19e8012",
+   "pontos": 2680,
+   "relido_igual": true,
+   "velocidade_e_pedais_do_original": true,
+   "deslocamento_do_original_m": {
+    "mediana": 1.0526483733714536,
+    "max": 10.066813309158276
+   },
+   "raio_do_arquivo_min_m": 25.04208755493164
+  },
+  "L2": {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\pista_teste\\linhas\\L2\\fast_lane.ai",
+   "bytes": 1282396,
+   "sha256": "4e9f125094c08a9572c89f85da8d0ab8aa0a6d23b8f27430db13bd00a180fd1e",
+   "pontos": 2680,
+   "relido_igual": true,
+   "velocidade_e_pedais_do_original": true,
+   "deslocamento_do_original_m": {
+    "mediana": 0.9691856113869936,
+    "max": 9.655006780122669
+   },
+   "raio_do_arquivo_min_m": 22.359050750732422
+  }
+ }
+}

@@ -1,0 +1,91 @@
+{
+ "pedido": 50,
+ "parte": "D.3 entre as sessoes (sem tempos)",
+ "commit": "56e024846f9a97f567d99028efc1177a0e092365",
+ "comando": "python -m ml.scripts.linha_do_projeto conferencia-sessao --rotulo sessao1",
+ "desde": "2026-11-12T09:39:42",
+ "original_intacto": true,
+ "atribuicao": [
+  {
+   "sessao": "2026-11-14_19-01-15_vhe_interlagos_teste_m1",
+   "inicio": "2026-11-14T19:01:15.066113",
+   "bloco": 1,
+   "condicao": "C0",
+   "motivo": ""
+  },
+  {
+   "sessao": "2026-11-14_22-52-59_vhe_interlagos_teste_m1",
+   "inicio": "2026-11-14T22:52:59.826650",
+   "bloco": 2,
+   "condicao": "L1",
+   "motivo": ""
+  },
+  {
+   "sessao": "2026-11-15_02-29-50_vhe_interlagos_teste_m1",
+   "inicio": "2026-11-15T02:29:50.063659",
+   "bloco": 3,
+   "condicao": "C0",
+   "motivo": ""
+  }
+ ],
+ "gravacoes_fora_dos_blocos": 10,
+ "blocos": [
+  {
+   "bloco": 1,
+   "condicao": "C0",
+   "troca": "2026-11-14T18:58:46",
+   "gravacoes": [
+    "2026-11-14_19-01-15_vhe_interlagos_teste_m1"
+   ],
+   "voltas_por_papel": {
+    "saida": 1,
+    "primeira lancada": 1,
+    "conta": 7,
+    "alem das que contam": 0,
+    "interrompida": 1
+   },
+   "que_contam_com_a_ia_dirigindo": 7,
+   "mediana_ate_a_linha_da_condicao_m": 0.2545275705047757,
+   "mediana_ate_a_linha_original_m": 0.2545275705047757,
+   "troca_pegou": true
+  },
+  {
+   "bloco": 2,
+   "condicao": "L1",
+   "troca": "2026-11-14T22:50:27",
+   "gravacoes": [
+    "2026-11-14_22-52-59_vhe_interlagos_teste_m1"
+   ],
+   "voltas_por_papel": {
+    "saida": 1,
+    "primeira lancada": 1,
+    "conta": 7,
+    "alem das que contam": 0,
+    "interrompida": 1
+   },
+   "que_contam_com_a_ia_dirigindo": 7,
+   "mediana_ate_a_linha_da_condicao_m": 0.317043293986591,
+   "mediana_ate_a_linha_original_m": 1.0013489910826239,
+   "troca_pegou": true
+  },
+  {
+   "bloco": 3,
+   "condicao": "C0",
+   "troca": "2026-11-15T02:28:11",
+   "gravacoes": [
+    "2026-11-15_02-29-50_vhe_interlagos_teste_m1"
+   ],
+   "voltas_por_papel": {
+    "saida": 1,
+    "primeira lancada": 1,
+    "conta": 7,
+    "alem das que contam": 0,
+    "interrompida": 1
+   },
+   "que_contam_com_a_ia_dirigindo": 7,
+   "mediana_ate_a_linha_da_condicao_m": 0.2537504359943842,
+   "mediana_ate_a_linha_original_m": 0.2537504359943842,
+   "troca_pegou": true
+  }
+ ]
+}

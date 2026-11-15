@@ -1,0 +1,39 @@
+{
+ "pedido": 50,
+ "parte": "D.3 entre as sessoes (sem tempos)",
+ "commit": "979782b37ca4f94efc3f4d9c7f4222f49f283e1a",
+ "comando": "python -m ml.scripts.linha_do_projeto conferencia-sessao --rotulo sessao1_bloco1",
+ "desde": "2026-11-12T09:39:42",
+ "original_intacto": true,
+ "atribuicao": [
+  {
+   "sessao": "2026-11-14_19-01-15_vhe_interlagos_teste_m1",
+   "inicio": "2026-11-14T19:01:15.066113",
+   "bloco": 1,
+   "condicao": "C0",
+   "motivo": ""
+  }
+ ],
+ "gravacoes_fora_dos_blocos": 10,
+ "blocos": [
+  {
+   "bloco": 1,
+   "condicao": "C0",
+   "troca": "2026-11-14T18:58:46",
+   "gravacoes": [
+    "2026-11-14_19-01-15_vhe_interlagos_teste_m1"
+   ],
+   "voltas_por_papel": {
+    "saida": 1,
+    "primeira lancada": 1,
+    "conta": 7,
+    "alem das que contam": 0,
+    "interrompida": 1
+   },
+   "que_contam_com_a_ia_dirigindo": 7,
+   "mediana_ate_a_linha_da_condicao_m": 0.2545275705047757,
+   "mediana_ate_a_linha_original_m": 0.2545275705047757,
+   "troca_pegou": true
+  }
+ ]
+}

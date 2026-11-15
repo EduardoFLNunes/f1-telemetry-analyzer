@@ -436,8 +436,16 @@ CHAVES_DO_TRECHO = ("trecho", "inicio_s", "fim_s", "pontos_de_linha_s", "linha_d
                     "candidata", "provisorio")
 
 
-def conferir_formato_da_referencia(payload: Dict[str, object], n_trechos: int = 15, com_lateral: bool = True) -> None:
-    """O formato do JSON da Parte C (ADR 0030, item 9); levanta ValueError no primeiro problema."""
+MARCA_DA_LINHA_DO_PROJETO = "linha do projeto, meta atingida em "
+
+
+def conferir_formato_da_referencia(payload: Dict[str, object], n_trechos: int = 15, com_lateral: bool = True,
+                                   linha: str = "C0") -> None:
+    """O formato do JSON da Parte C (ADR 0030, item 9); levanta ValueError no primeiro problema.
+
+    `linha`: a linha de referencia esperada em todos os trechos. O C0 no pedido 49; uma linha do projeto (L1
+    ou L2) depois de atingir a meta do ADR 0031 (item 11), com a marca "linha do projeto, meta atingida em <data>".
+    """
     for k in CHAVES_DA_REFERENCIA:
         if k not in payload:
             raise ValueError(f"falta a chave {k!r}")
@@ -448,8 +456,10 @@ def conferir_formato_da_referencia(payload: Dict[str, object], n_trechos: int = 
         for k in CHAVES_DO_TRECHO:
             if k not in t:
                 raise ValueError(f"o trecho {t.get('trecho')} nao tem {k!r}")
-        if t["linha_de_referencia"]["linha"] != "C0":
-            raise ValueError("a referencia de todo trecho e a linha da IA (C0) neste pedido")
+        if t["linha_de_referencia"]["linha"] != linha:
+            raise ValueError(f"a referencia de todo trecho e a linha {linha} neste arquivo")
+        if linha != "C0" and not str(t["linha_de_referencia"].get("marca", "")).startswith(MARCA_DA_LINHA_DO_PROJETO):
+            raise ValueError("a linha do projeto na referencia precisa da marca 'linha do projeto, meta atingida em <data>'")
         if com_lateral and len(t["linha_de_referencia"]["lateral_m"]) != len(t["linha_de_referencia"]["s"]):
             raise ValueError("a lateral e o s da referencia tem tamanhos diferentes")
         if t["candidata"] is not None and t["candidata"].get("marca") != "a validar no jogo":

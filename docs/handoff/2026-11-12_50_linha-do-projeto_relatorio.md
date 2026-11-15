@@ -1,0 +1,721 @@
+# Relatório do pedido 50: a linha do projeto (feito até a Parte F; parado antes do merge)
+
+- **Pedido:** `docs/prompts/2026-11-12_50_linha-do-projeto.md`.
+- **Situação:** **as Partes 0 a F estão feitas. Parei antes do merge em `develop`,** porque a pasta principal está com `develop` aberta, e o pedido manda parar e avisar nesse caso (veja "O merge").
+  - A conferência da codificação (A.4) parou uma vez. Você escolheu a emenda (a), que entrou no ADR 0031 (item 13) antes de seguir.
+  - O teste no jogo rodou em 14 e 15/11, com os 5 blocos. **A L2 atingiu a meta e virou a referência por trecho; a L1 não.**
+  - A cópia da pista tinha sido removida depois de 12/11 e foi recriada por você em 14/11, antes do teste. Ela continua instalada.
+- **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47`.
+- **Branch:** `etapa/linha-do-projeto`, a partir de `develop` em `e873d6a6`.
+- **Commits** (na branch):
+  - `2bf248c1` Pedido 50: o texto do pedido (a linha do projeto);
+  - `3f777af4` Pedido 50, Parte A: ADR 0031 (a linha do projeto), registrado antes de qualquer busca, calibração ou arquivo de linha;
+  - `02f6fd8e` Relatório do pedido 50: parado na conferência da codificação (A.4); o medidor (M-v2 escolhido), o `trocar_linha.ps1` com L1 e L2 e o código da Parte B;
+  - `eb6064b6` Pedido 50: emenda ao ADR 0031 (item 13, a sua decisão, opção a): o raio do C0 pela curvatura de 12 m e a tolerância de 10% na conferência;
+  - `99d76e2f` Pedido 50, Parte B: a L1 (montagem por trecho), a L2 (busca com o M-v2 e a região de confiança) e os arquivos do jogo;
+  - `1a41af67` Relatório do pedido 50: parado na Parte D (o roteiro do teste no jogo), com a L1 e a L2 prontas, a Parte C, a conferência entre as sessões e a suíte;
+  - `3a8a45ad` e `6eb4dd41` Relatório do pedido 50: o envio de 13/11 e os caminhos corrigidos;
+  - `979782b3` Relatório do pedido 50: o roteiro do teste no jogo detalhado (a cópia foi removida e é recriada no passo 1) e o envio conferido em 14/11;
+  - `56e02484` e `9dc664ef` Pedido 50, teste no jogo: a conferência do bloco 1 e da sessão 1, sem tempos;
+  - `62fb43ac` Pedido 50, Parte E: o resultado do teste no jogo e a referência pela linha que atingir a meta;
+  - `d1980b12` Pedido 50, Partes E e F: o resultado, o ADR 0031, as linhas nos ADRs 0009, 0028, 0029 e 0030 e a arquitetura;
+  - `45456980` Pedido 50: traz o `develop` (com o merge do pedido 45) para a branch antes do merge;
+  - o commit deste relatório (o hash está no chat).
+- **Merges:**
+  - `45456980`: `develop` (`11046e28`) trazido para a branch, sem conflito;
+  - **o merge da branch em `develop` não foi feito** (veja "O merge").
+- **Arquivos de handoff** (`docs/handoff/2026-11-12_50_linha-do-projeto…`):
+  - `_relatorio.md` (este);
+  - `_conferencia.json` (B.1: a escada, a conferência por trecho e os limites das restrições);
+  - `_medidor.json` (B.2: os três medidores, os `β` e o Spearman por microssetor);
+  - `_l1.json` e `_l2.json` (B.3: a escolha por trecho, as emendas, a busca e as medidas de cada linha);
+  - `_arquivos.json` (B.4: os arquivos do jogo e os sha256);
+  - `_linhas.png` (B.3: as linhas sobre a pista, com a C06, a C09, a C10 e a subida dos boxes);
+  - `_conferencia_sessao1_bloco1.json` e `_conferencia_sessao1.json` (a conferência entre as sessões, sem tempos);
+  - `_resultado.json` (Parte E: a conferência, as voltas, os tempos, os vereditos, a deriva, por trecho, os medidores e a execução);
+  - `_por_trecho.png` (E.3: cada linha contra os dois C0 vizinhos, por trecho);
+  - `_referencia.json` (E.5: a referência por trecho com a L2, sem a lateral ponto a ponto);
+  - `_testes.txt` (a suíte do backend de 12/11) e `_testes_15-11.txt` (a suíte na branch com o `develop`).
+
+## Em uma frase
+
+**A linha do projeto chegou lá: a L2 (a busca genética a partir da montagem por trecho) fez a melhor volta do teste, 1:24,552,** abaixo da melhor dos dois C0 vizinhos (1:24,766 e 1:24,670).
+- **A meta do ADR 0031 foi atingida pela L2.** A mediana dela fica 0,121 s abaixo dos C0 vizinhos (IC de −0,514 a −0,004 s).
+- **A L1 (a montagem por trecho) não atingiu:** +0,44 s. A soma dos melhores trechos do 49 não se repetiu quando os trechos foram emendados.
+- **As duas ganham na C04, na C06 e na C09, e perdem mais na C10,** logo depois da emenda da C09 para a C10.
+- **A L2 virou a referência de todos os trechos** em `data/modelo1_por_trecho/referencia_por_trecho.json`, com a marca "linha do projeto, meta atingida em 2026-11-15". O coach ainda não lê esse arquivo.
+- **Os medidores erraram muito:** o escolhido (M-v2) previu −1,36 s para a L1 e −2,33 s para a L2, contra +0,44 e −0,12 s no jogo.
+- **Os C0 deste teste ficaram cerca de 0,5 s mais rápidos que os do 47,** com o mesmo app e o mesmo carro. A causa não foi confirmada. O veredito compara com os C0 do mesmo teste.
+
+## Parte 0: a pasta
+
+1. **A pasta do 47** estava como a Parte 0 pede:
+   - na branch `etapa/modelo1-por-trecho`, sem mudança sem commit;
+   - já juntada a `develop` (as duas em `e873d6a6`);
+   - nenhuma pasta tinha `develop` aberta. A principal está em `etapa/replay-e-radio-que-ensina`, e a do 48 em `etapa/diagnostico-m1`. As duas não foram tocadas, salvo o item 2.
+2. **O envio do 49 não foi feito:** `origin/develop` está em `bbff5c97`, 13 commits atrás do local, sem divergir (o remoto é ancestral do local). Por isso, segui sem enviar nada.
+3. **O texto do pedido:** copiado e commitado (`2bf248c1`). O commit guarda LF, e com CRLF o sha256 bate com o da principal (`dda355a7…6a01a36`). **Apaguei só esse arquivo na principal,** que ficou limpa.
+4. **Os imports e os dados:**
+   - o `.venv` da principal, rodando de dentro de `f1-telemetry-analyzer-47\backend`. Nada foi instalado;
+   - as junções (`data\ml`, `data\recordings`, `data\cache`) só foram lidas;
+   - as gravações da cópia (as 7 sessões do 47, 28 arquivos) só foram lidas, pelo `carregar_voltas_do_teste` do 49. Os sha256 delas estão no `_medidor.json`;
+   - a saída vai para `data\linha_do_projeto\`, que entrou no `.gitignore` (`3f777af4`). Os `fast_lane.ai` vão para `data\pista_teste\linhas\L1` e `L2`.
+   - **A foto de `data\ml`, `data\cache` e `data\recordings` da principal** foi tirada antes das contas da Parte B e de novo depois da suíte (veja "Os dados da pasta principal").
+5. **O `acs.exe`** estava fechado antes de cada conta (a conferência, o medidor, a L1, a busca e a suíte).
+
+## Parte A: o ADR 0031 (`3f777af4`)
+
+**Commitado antes de qualquer busca, calibração ou arquivo de linha.** O número estava livre em todas as branches, locais e remotas, e uma linha no índice entrou no mesmo commit.
+
+**Medido antes do registro, só a geometria** (Contexto, item 4 do ADR):
+- **a grade de 2 m sozinha estraga o raio do arquivo.** A linha da IA projetada na grade e escrita de volta pelo escritor do 47 cai de 37,7 m para 19,9 m de menor raio na C01. A interpolação linear cria quinas, e o raio de três pontos do arquivo pega cada uma;
+- **a linha central ondula na subida dos boxes:** a curvatura vai de −0,011 a +0,013 1/m entre 3.860 e 3.940 m;
+- **a `#0013` não fecha na linha de chegada:** perto de s = 0, o raio estimado cai para 3 a 15 m.
+
+**O que o ADR fixa:**
+- **a linha do projeto:** produzida pelos algoritmos do projeto, no formato do projeto, sem copiar o `fast_lane.ai`;
+- **a meta:** a melhor volta válida da linha, igual ou menor que a dos dois blocos de C0 vizinhos;
+- **o teste:** cinco blocos de 9 voltas, na ordem sorteada com a semente 50: **C0, L1, C0, L2, C0**;
+- **a codificação nova:** uma spline cúbica periódica no plano X/Z, com a curvatura contínua e os pontos mais densos nas janelas das curvas. A escada de espaçamento é 10/25, 8/20, 6/15 e 5/12,5 m. As restrições por trecho são 90% do menor raio e 110% da maior taxa das 150 voltas;
+- **os três medidores e a escolha** pelo Spearman por microssetor;
+- **a região de confiança:** 1,0 m da L1;
+- **a L1, a L2, os arquivos, o que se espera e a regra da referência** para a Parte E.
+
+**Uma diferença do pedido:** ele cita o item 4 do ADR 0029 para a volta válida, mas a regra está no item 5 (o item 4 é o das voltas). O ADR 0031 segue o item 5 e registra isso.
+
+## A parada na conferência e a emenda (a)
+
+- **A primeira conferência (A.4) não passou em nenhum degrau da escada.**
+  - A distância passou folgada.
+  - O menor raio por trecho não ficou a 5%: a `#0013` convergiu com o espaçamento fino, e o C0 piorou. Sem regularização, a spline fina segue o ruído dos pontos do próprio arquivo, e o menor raio é um valor extremo, decidido por um ponto só.
+- **Parei, relatei (`02f6fd8e`) e perguntei.**
+- **A sua decisão: a opção (a).**
+  - Entrou no ADR como o item 13 (`eb6064b6`), antes de refazer a conferência e antes de qualquer linha nova.
+  - O raio do C0 passa a ser medido como o da `#0013`: pela curvatura de 12 m, na lateral da grade.
+  - A tolerância do raio passa a 10%. A distância continua em 0,10 m.
+
+## Parte B.1: a codificação nova e a conferência
+
+O comando: `python -m ml.scripts.linha_do_projeto conferencia`.
+
+| par (m) | genes | C0: p95 da distância | C0: pior raio | `#0013`: p95 | `#0013`: pior raio | passa |
+|---|---:|---:|---|---:|---|---|
+| 10/25 | 331 | 0,013 m | 17,8% | 0,026 m | 31,5% | não |
+| 8/20 | 412 | 0,009 m | 13,5% | 0,017 m | 19,5% | não |
+| **6/15** | **546** | **0,007 m** | **9,1% (C12)** | **0,012 m** | **6,6% (C13)** | **sim** |
+
+**A escolhida é 6/15 m:** 6 m nas janelas das curvas e 15 m fora delas, com 546 genes. A distância fica a até 0,10 m em 98,4% dos pontos do C0 e em 98,0% da `#0013`.
+
+**O menor raio de cada trecho com 6/15 m** (a curvatura de 12 m; a última coluna é o raio de três pontos do arquivo, só relatado):
+
+| trecho | C0 (12 m) | `#0013` (12 m) | C0, raio de três pontos (só relatado) |
+|---|---|---|---|
+| C01 | 32,9 → 33,9 m (+2,8%) | 35,8 → 37,0 m (+3,3%) | 37,7 → 31,1 m (−17,6%) |
+| C02 | 45,5 → 42,0 m (−7,7%) | 49,1 → 50,6 m (+3,1%) | 46,8 → 40,3 m (−13,9%) |
+| C03 | 73,5 → 73,2 m (−0,4%) | 74,4 → 74,3 m (−0,2%) | 76,6 → 72,6 m (−5,2%) |
+| C04 | 55,0 → 53,4 m (−2,8%) | 53,3 → 56,6 m (+6,1%) | 58,5 → 51,5 m (−12,1%) |
+| C05 | 110,0 → 111,3 m (+1,2%) | 129,6 → 132,1 m (+1,9%) | 104,9 → 108,9 m (+3,9%) |
+| C06 | 73,3 → 74,3 m (+1,4%) | 59,5 → 61,1 m (+2,8%) | 71,9 → 67,2 m (−6,4%) |
+| C07 | 29,3 → 29,6 m (+1,0%) | 30,2 → 30,5 m (+0,9%) | 28,9 → 29,5 m (+2,1%) |
+| C08 | 35,0 → 35,3 m (+0,8%) | 34,1 → 35,3 m (+3,4%) | 34,2 → 35,2 m (+2,9%) |
+| C09 | 180,7 → 180,3 m (−0,3%) | 146,3 → 150,7 m (+3,0%) | 176,7 → 172,8 m (−2,2%) |
+| C10 | 22,8 → 23,1 m (+1,4%) | 23,3 → 23,6 m (+1,2%) | 22,0 → 23,0 m (+4,6%) |
+| C11 | 72,2 → 74,4 m (+3,2%) | 75,5 → 76,4 m (+1,1%) | 71,0 → 74,4 m (+4,8%) |
+| C12 | 35,2 → 38,4 m (+9,1%) | 38,3 → 39,8 m (+4,1%) | 38,1 → 37,8 m (−0,9%) |
+| C13 | 110,2 → 118,7 m (+7,7%) | 101,1 → 107,8 m (+6,6%) | 113,0 → 121,6 m (+7,6%) |
+| C14 | 139,9 → 140,2 m (+0,3%) | 142,0 → 143,3 m (+0,9%) | 141,4 → 132,4 m (−6,4%) |
+| C14→linha | 235,2 → 243,8 m (+3,7%) | 248,0 → 238,3 m (−3,9%) | 226,5 → 242,5 m (+7,1%) |
+
+**Os limites das restrições (item 4.4) saíram frouxos.**
+- O menor raio das 150 voltas num trecho pega voltas com uma correção ou uma escorregada. Por exemplo, 5,5 m na C07 e 8,4 m na C08.
+- Com isso, 90% desse raio quase não restringe nada. A regra é a registrada, e o relatório só aponta isso (está nos itens para o backlog).
+
+## Parte B.2: os três medidores
+
+O comando: `python -m ml.scripts.linha_do_projeto medidor`.
+
+- **A conferência:** o M-real dá 85,316 s no C0 e 82,898 s na C3, os mesmos números do pedido 47.
+- **Os tempos por microssetor** foram refeitos das gravações da cópia (as 39 voltas que contam), e cada volta soma o tempo dela em até 5 ms.
+
+**O Spearman da diferença contra o C0, por microssetor,** nas linhas deixadas de fora (4 linhas × 60 microssetores):
+
+| medidor | ρ juntos (p) | C1 | C2 | C3 | C4 |
+|---|---|---:|---:|---:|---:|
+| M-real (o envelope das voltas reais) | 0,458 (7 × 10⁻¹⁴) | 0,54 | 0,73 | 0,26 | 0,21 |
+| M-cal (a escala por trecho) | 0,469 (2 × 10⁻¹⁴) | 0,56 | 0,70 | 0,31 | 0,21 |
+| **M-v2 (o envelope da M1 v2), o escolhido** | **0,484 (2 × 10⁻¹⁵)** | 0,53 | 0,72 | 0,29 | 0,29 |
+
+**A volta inteira, contra o C0 (s):**
+
+| linha | jogo | M-real | M-v2 | M-cal (com a linha de fora) |
+|---|---:|---:|---:|---:|
+| C1 | +2,078 | +2,638 | +2,890 | +1,288 |
+| C2 | +1,575 | +2,363 | +1,694 | +1,219 |
+| C3 | +0,576 | −2,419 | −2,559 | −0,582 |
+| C4 | +0,482 | −1,835 | −1,929 | −0,188 |
+
+- **O esperado (item 10.3, o M-cal escolhido) não se confirmou.** O M-v2 ganhou por pouco no Spearman por microssetor, que é a regra registrada.
+- **Na volta inteira, o M-cal acerta muito mais:** é o único que põe a C3 e a C4 perto do C0. Ele ainda erra o sinal das duas.
+- **Os `β` por trecho, com as quatro linhas:** C01 0,41; C02 0,76; C03 1,36; C04 0,00; C05 0,56; C06 0,33; C07 0,00; C08 0,00; C09 0,14; C10 0,00; C11 0,25; C12 0,68; C13 1,13; C14 0,63; C14→linha 0,71. Com 0, o medidor deixa de usar o trecho: o simulador apontava a direção errada ali.
+
+## Parte B.3: a L1 e a L2
+
+### A L1, a montagem por trecho
+
+O comando: `python -m ml.scripts.linha_do_projeto l1`.
+
+**A escolha, pela tabela B.1 do 49** (a menor mediana do trecho entre C2, C3 e C4):
+
+| trecho | linha | contra o C0 no jogo (s) |
+|---|---|---:|
+| C01 | C3 | +0,054 |
+| C02 | C2 | +0,053 |
+| C03 | C2 | +0,029 |
+| C04 | C2 | −0,187 |
+| C05 | C4 | +0,011 |
+| C06 | C3 | −0,234 |
+| C07 | C4 | −0,074 |
+| C08 | C4 | −0,002 |
+| C09 | C4 | −0,140 |
+| C10 | C2 | +0,065 |
+| C11 | C3 | −0,050 |
+| C12 | C3 | −0,023 |
+| C13 | C4 | −0,013 |
+| C14 | C4 | +0,018 |
+| C14→linha | C4 | +0,033 |
+| **soma (o teto)** | | **−0,460** |
+
+**As 8 emendas, nas retas:**
+
+| entre | de → para | centro (m) | janela (m) | distância entre as linhas no centro (m) |
+|---|---|---:|---:|---:|
+| C01/C02 | C3 → C2 | 346,0 | 24 (a reta só tem 24 m) | 1,02 |
+| C04/C05 | C2 → C4 | 1.440,0 | 40 | 0,96 |
+| C05/C06 | C4 → C3 | 1.722,0 | 40 | 0,00 |
+| C06/C07 | C3 → C4 | 2.192,0 | 40 | 0,02 |
+| C09/C10 | C4 → C2 | 2.652,0 | 40 | **4,05** |
+| C10/C11 | C2 → C3 | 2.778,1 | 40 | 0,84 |
+| C12/C13 | C3 → C4 | 3.282,1 | 40 | 1,07 |
+| C14→linha/C01 | C4 → C3 | 150,0 | 40 | 0,00 |
+
+- **A emenda da C09 para a C10 é a mais forte:** as duas linhas ficam a 4 m uma da outra na reta curta antes da C10, então a L1 cruza a pista em 40 m. A figura mostra isso.
+- **A codificação nova** reproduz a montagem a 0,011 m no percentil 95 (0,039 m no máximo).
+- **A L1 ficou** dentro do corredor (sem precisar de reparo), da forma (serpenteio 0,068 contra 0,072 de limite; variação 0,00025 contra 0,00032) e das restrições em todos os trechos.
+
+### A L2, a busca nova
+
+O comando: `python -m ml.scripts.linha_do_projeto l2`.
+
+- **O medidor** é o M-v2; **a semente** é 50.
+- **As sementes:** a L1, a composição dos melhores trechos, a LSTM geradora (`model.json` `a4a10733…`, `weights.pt` `d7622dca…`) e as 87 voltas mais rápidas das 150. Todas foram trazidas para a região de confiança, e 10 são aleatórias dentro dela.
+- **A busca:** 250 gerações (parou pelo limite, e ainda melhorava: 84,262 s na 240ª e 84,223 s na 250ª), com 25.101 avaliações em 150 s.
+- **O custo foi de 85,196 s (a L1) para 84,223 s,** sem nenhuma penalização: corredor, forma, restrições e região, todas em zero.
+- **O afastamento da L1** é de 0,63 m no máximo e de 0,38 m no percentil 95. Ela nunca chegou ao limite de 1,0 m.
+
+### As duas linhas lado a lado
+
+**O tempo previsto pelos três medidores** (s):
+
+| linha | M-real (contra o C0) | M-v2, o escolhido (contra o C0) | M-cal (tempo / contra o C0) |
+|---|---:|---:|---|
+| C0 | 85,316 (0) | 86,554 (0) | 85,438 (0) |
+| L1 | 84,228 (−1,089) | 85,196 (−1,358) | 85,425 (−0,013) |
+| L2 | 83,101 (−2,215) | 84,223 (−2,332) | 85,028 (−0,410) |
+
+**Por trecho:**
+- a distância à linha da IA (mediana / máximo);
+- o menor raio pela curvatura de 12 m e o menor raio do arquivo (o que a IA lê);
+- a maior taxa de variação da curvatura.
+
+Todas ficam dentro dos limites, e o corredor fica sem penalização nas duas.
+
+| trecho | L1: distância (m) | L1: raio 12 m / arquivo (m) | L1: taxa (1/m²) | L2: distância (m) | L2: raio 12 m / arquivo (m) | L2: taxa (1/m²) |
+|---|---|---|---:|---|---|---:|
+| C01 | 0,29 / 1,36 | 39,5 / 38,5 | 1,7 × 10⁻³ | 0,24 / 0,96 | 40,4 / 40,2 | 1,9 × 10⁻³ |
+| C02 | 0,76 / 1,96 | 42,7 / 42,5 | 4,5 × 10⁻³ | 0,66 / 1,84 | 44,9 / 44,9 | 4,0 × 10⁻³ |
+| C03 | 0,91 / 1,96 | 88,2 / 88,6 | 1,1 × 10⁻³ | 0,89 / 1,83 | 85,4 / 78,0 | 1,5 × 10⁻³ |
+| C04 | 1,07 / 2,36 | 57,1 / 56,5 | 0,7 × 10⁻³ | 0,90 / 2,37 | 60,5 / 60,1 | 0,7 × 10⁻³ |
+| C05 | 0,44 / 2,12 | 76,0 / 76,7 | 1,4 × 10⁻³ | 0,49 / 2,15 | 75,1 / 74,9 | 1,0 × 10⁻³ |
+| C06 | 0,90 / 3,70 | 87,5 / 85,7 | 0,5 × 10⁻³ | 0,96 / 3,92 | 65,4 / 56,8 | 2,4 × 10⁻³ |
+| C07 | 0,50 / 2,04 | 31,1 / 30,7 | 1,3 × 10⁻³ | 0,45 / 2,26 | 31,9 / 31,2 | 2,3 × 10⁻³ |
+| C08 | 0,46 / 4,10 | 39,2 / 39,3 | 1,7 × 10⁻³ | 0,59 / 4,38 | 39,3 / 39,1 | 2,3 × 10⁻³ |
+| C09 | 3,34 / 4,90 | 113,0 / 112,5 | 0,6 × 10⁻³ | 3,24 / 4,99 | 109,9 / 106,1 | 0,6 × 10⁻³ |
+| C10 | 2,41 / 5,69 | 25,1 / 25,0 | 2,7 × 10⁻³ | 2,38 / 5,30 | 22,8 / 22,4 | 3,2 × 10⁻³ |
+| C11 | 0,92 / 2,21 | 92,2 / 90,1 | 1,2 × 10⁻³ | 0,80 / 2,29 | 78,4 / 71,0 | 1,7 × 10⁻³ |
+| C12 | 0,63 / 3,33 | 39,4 / 39,0 | 1,2 × 10⁻³ | 0,60 / 2,96 | 35,0 / 31,9 | 2,6 × 10⁻³ |
+| C13 | 1,94 / 6,08 | 69,8 / 69,5 | 0,7 × 10⁻³ | 2,01 / 5,87 | 75,9 / 71,6 | 1,8 × 10⁻³ |
+| C14 | 6,24 / 8,63 | 142,2 / 136,1 | 0,5 × 10⁻³ | 5,90 / 8,28 | 131,2 / 116,3 | 1,1 × 10⁻³ |
+| C14→linha | 2,25 / 10,07 | 134,2 / **125,2 em 3.898 m** | 1,2 × 10⁻³ | 2,07 / 9,65 | 147,9 / **137,8 em 3.898 m** | 1,1 × 10⁻³ |
+
+**A subida dos boxes:** o raio do arquivo em 3.898 m é de 125 m na L1 e 138 m na L2. Na linha da IA é 226 m, e era 136 m no arquivo da C4 do 47.
+- O ponto é o mesmo de 85 a 90 m da C1 e da C2, onde a IA freou.
+- Quem vai nesse trecho é a C4, e a linha dela no mundo já carrega a ondulação da linha central. A spline de 15 m fora das curvas segue essa ondulação.
+- **O esperado (item 10.2, mais de 200 m) não se confirmou.** No 47, a IA não freou na C4 ali, com 136 m. O teste no jogo vai mostrar se 125 m basta.
+
+### A figura
+
+`_linhas.png`: a pista inteira, a C06, a C09, a C10 e a subida dos boxes (s de 3.800 a 4.050 m), com a linha da IA em cinza e as bordas do corredor do pedido 44.
+- **A L1 e a L2 quase se sobrepõem.**
+- **As duas se afastam da linha da IA** na C09 (cerca de 3 m), na C10 (cerca de 2 a 5 m) e no fim da volta (C14: cerca de 6 m).
+
+## Parte B.4: os arquivos do jogo (fora dos commits)
+
+O comando: `python -m ml.scripts.linha_do_projeto arquivos`. O manifesto à parte é `data\pista_teste\linhas\linha_do_projeto.json`, e o `linhas.json` do 47 não mudou.
+
+| linha | arquivo | bytes | sha256 | menor raio do arquivo |
+|---|---|---:|---|---:|
+| L1 | `data\pista_teste\linhas\L1\fast_lane.ai` | 1.282.396 | `c3d304129468e86e60cbc2abbe50cff3619bcb6e3edd722619c9ca47a19e8012` | 25,0 m |
+| L2 | `data\pista_teste\linhas\L2\fast_lane.ai` | 1.282.396 | `4e9f125094c08a9572c89f85da8d0ab8aa0a6d23b8f27430db13bd00a180fd1e` | 22,4 m |
+
+- **Os dois arquivos** têm 2.680 pontos e voltam iguais depois de relidos.
+- **A velocidade, o acelerador e o freio** são os do original, ponto a ponto (item 8).
+- **O original** continua com o sha256 `36b57fd8…3d8342`.
+
+## Parte B.5: o `trocar_linha.ps1`
+
+- **O script aceita `-Condicao L1` e `-Condicao L2`.** Para elas, o sha256 vem do `linha_do_projeto.json`, e ele recusa uma condição que o manifesto não tem.
+- **As travas são as mesmas do 47:** o jogo fechado, só a cópia, nenhum link ou junção no caminho, os caches do CSP da cópia apagados, a linha no `registro.csv` e a original conferida antes e depois.
+- **O `registro.py`** aceita L1 e L2 e ganhou os blocos do pedido 50:
+  - `blocos`: as trocas depois do commit do ADR;
+  - `atribuir_aos_blocos`: cada gravação no bloco da última troca, com o sha256 conferido;
+  - `vizinhos_de_c0`.
+- **A conferência entre as sessões, sem tempos:** `python -m ml.scripts.linha_do_projeto conferencia-sessao --rotulo <nome>`. Antes do teste, ela dá 0 blocos, deixa as 10 gravações do 47 de fora e confirma o original intacto.
+
+## Parte C: mais carros da IA na pista (só leitura e relatório)
+
+### C.1, o que cada carro da IA expõe
+
+| fonte | carros | posição | velocidade | volante, acelerador, freio, marcha | cargas e escorregamento | confirmado por |
+|---|---|---|---|---|---|---|
+| **memória compartilhada** (`acpmf_physics`, `acpmf_graphics`, `acpmf_static`) | **só o carro do jogador** (o físico inteiro), mais o `numCars` | `carCoordinates[3]`, um ponto só | `speedKmh` e a velocidade, só do jogador | do jogador (`gas`, `brake`, `steerAngle`, `gear`) | do jogador (`wheelLoad[4]`, `wheelSlip[4]`) | as estruturas do projeto (`backend/core/assetto_adapter.py`), feitas a partir da documentação oficial do fórum. **Não abri o documento oficial** ([referência do C#](https://github.com/mdjarv/assettocorsasharedmemory)) |
+| **telemetria por UDP** (porta 9996) | `RTCarInfo`: **um carro**, sem identificador; `RTLap`: o fim de volta de todos os carros | `carCoordinates[3]` | `speed_Kmh` | `gas`, `brake`, `steer`, `gear` | `load[4]`, `ndSlip[4]`, `slipAngle[4]`, `slipRatio[4]` | [o documento da telemetria remota](https://docs.google.com/document/d/1KfkZiIluXZ6mMhLWfDX1qAGbvhGRC3ZUzjVIt5FQpp4/pub). Que o `RTCarInfo` é do carro do jogador ou do focado: **não confirmado** |
+| **API em Python do jogo** (`ac.getCarState(carId, acsys.CS.…)`) | **todos os carros, por `carId`** | `WorldPosition` | `SpeedKMH` | **não confirmado** para os outros carros | **não confirmado** | o exportador do projeto (`tools/assetto_opponents_exporter/`) já lê, de cada carro, `WorldPosition`, `SpeedKMH`, `Heading`, `NormalizedSplinePosition`, `LapCount`, `LapTime` e `RacePosition`. Os nomes das constantes ficam no `acsys.py` do jogo, e a documentação tem erros ([fórum](https://www.assettocorsamods.net/threads/ac-python-documentation-missing-identifier.3198)) |
+| **API em Lua do CSP** (`ac.getCar(i)` → `ac.StateCar`) | **todos os carros, pelo índice** (0 é o jogador) | `position` | `velocity`, `speedKmh` | `gas`, `brake` (lidos no carro 0 pelo app do rádio); volante e marcha **não confirmados** | `wheels[i]` (carga e escorregamento): **não confirmado** | o SDK do CSP ([ac_car_cphys.lua](https://www.github.com/ac-custom-shaders-patch/acc-lua-sdk/blob/main/ac_car_cphys.lua)) declara `ac.StateCar`. Os campos são gerados no build (`__definitions('core')` em [ac_common.lua](https://github.com/ac-custom-shaders-patch/acc-lua-sdk)) e eu não os achei escritos. Um app de IA lê o combustível dos outros carros por `ac.getCar(id)` ([DumbAI](https://www.gtplanet.net/forum/threads/dumbai.434461/post-14567224)) |
+
+**A leitura:**
+- **o gravador de hoje (a memória compartilhada) só vê um carro;**
+- **a API em Lua do CSP é o caminho mais provável para os outros,** porque o app do jogo do projeto já é um app Lua. A lista de campos válidos para um carro da IA precisa de um teste próprio no jogo: ler `ac.getCar(i)` de 2 a 3 carros e gravar quais campos mudam.
+
+### C.2, o modo do jogo e a IA no tráfego
+
+- **Vários carros da IA, sem largada:** uma sessão de prática ou de "track day" com IA, pelo Content Manager e pelo CSP.
+  - O "AI Flood" do CSP mantém carros da IA passando perto do jogador ([Realistic Trackday](https://www.gtplanet.net/forum/downloads/assetto-corsa-realistic-trackday.7387)).
+  - **Que o "Track Day" é um modo do próprio Content Manager e como ele escolhe o número de carros: não confirmado** (não achei documentação oficial).
+- **A IA muda a linha no tráfego:**
+  - com o "New AI Behaviour" do CSP, a IA abre para um lado para deixar passar e volta para a linha depois ([Realistic Trackday](https://www.gtplanet.net/forum/downloads/assetto-corsa-realistic-trackday.7387));
+  - o CSP tem linhas alternativas para a IA (a pasta `cache\ai_alt_lanes`, que o pedido 47 apaga na cópia). A documentação delas eu não achei; há só relatos de usuários ([GTPlanet](https://www.gtplanet.net/forum/threads/assetto-corsa-pc-mods-general-discussion.307899/post-14504459)). **Não confirmado;**
+  - **as voltas com tráfego não servem como linha ideal.**
+
+### C.3, a regra para uma volta com tráfego ficar fora (proposta)
+
+Uma volta de um carro da IA fica fora quando, em qualquer amostra:
+- **outro carro está a menos de 2,0 s à frente,** pela distância ao longo da pista (`NormalizedSplinePosition` ou `s`) dividida pela velocidade do carro;
+- **ou outro carro está lado a lado:** menos de 10 m ao longo da pista e menos de 4 m na lateral;
+- **ou outro carro está a menos de 1,0 s atrás** (com o "New AI Behaviour", a IA abre para deixar passar).
+
+Além disso, a volta passa pelas regras de volta válida do ADR 0029, item 5.
+
+### C.4, um plano para um pedido próprio, depois do merge do 45
+
+- **O que muda:** o app do jogo (Lua, CSP) grava, de cada carro da IA:
+  - por `ac.getCar(i)`, a posição, a velocidade, o volante, o acelerador, o freio, a marcha, as cargas e o escorregamento das quatro rodas, e o `isAIControlled`;
+  - um arquivo por carro, como o `player.jsonl`, só com esses canais;
+  - antes, um teste curto confere quais campos variam nos carros da IA.
+
+  O gravador do app do Windows não muda: ele continua lendo o jogador pela memória compartilhada.
+- **Quantos carros:** de 6 a 10. Com mais, sobe a chance de tráfego, e as voltas fora pela regra C.3 aumentam.
+- **Quantas voltas:** numa sessão de 45 minutos, cada carro dá cerca de 30 voltas (1:25 por volta). Com 8 carros, são cerca de 240 voltas por sessão, menos as com tráfego (estimativa: metade fica). Hoje, um bloco dá 9.
+- **Quanto disco:** a gravação do jogador ocupa cerca de 21 MB por volta (1.558 MB nas 75 voltas das 7 sessões do 47, no `player.jsonl`).
+  - Com os canais do item acima, a estimativa é de 1 a 2 MB por volta e por carro, ou de 0,3 a 0,5 GB por sessão com 8 carros.
+  - Com o formato do jogador inteiro, seriam uns 5 GB por sessão.
+
+  São estimativas, não medidas.
+
+## Parte D: o roteiro do teste no jogo, com você
+
+**Atualização de 14/11: a cópia da pista foi removida depois de 12/11.**
+- A pasta `content\tracks\vhe_interlagos_teste_m1` não existe mais. A original está lá, com o sha256 de sempre.
+- Por isso, o passo 1 abaixo recria a cópia. O conteúdo é o mesmo da original, byte a byte (o script confere), e o nome no jogo continua "Interlagos [teste]".
+
+### Antes da sessão 1 (uma vez)
+
+1. **Recrie a cópia,** com o jogo fechado (leva alguns minutos: a pasta tem cerca de 2,4 GB):
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\criar_copia.ps1
+   ```
+   - **Ele termina com** "pronto: copia criada em …" e "próximo passo: trocar_linha.ps1 -Condicao C0".
+   - **Se ele parar com "PARADO: …",** não contorne: me avise com a mensagem.
+2. **O app instalado do Windows aberto, gravando,** como no 47.
+   - A aba Coleta avisa que a pista não é a esperada: é só um aviso, e a gravação segue.
+   - O rádio pode ficar desligado.
+   - **Ninguém aperta "Atualizar coach"** nem roda o `atualizar_coach` até o fim deste pedido.
+3. **O preset "pedido 47 [teste]" do Content Manager, sem mudar nada:**
+   - o carro Formula RSS 3 2026 V6, com o acerto padrão;
+   - a pista "Interlagos [teste]", layout GP;
+   - a prática sozinho, largando dos boxes;
+   - 30 L de combustível, com o consumo em 0×, e o desgaste do pneu em 0×;
+   - "Clear" a 25 °C, a pista em 100% ("Optimum") sem evolução, e 14:00 com o tempo parado;
+   - a IA com nível 100% e agressividade 0%, e as ajudas de sempre.
+
+   Como a cópia foi recriada, o Content Manager pode precisar recarregar a lista de pistas para mostrá-la.
+
+### Cada bloco: os mesmos 6 passos
+
+1. **O jogo fechado:** o `acs.exe` não pode estar aberto (confira no Gerenciador de Tarefas).
+2. **A troca,** com a condição do bloco:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao C0
+   ```
+   Ele termina com "pronto: <condição> na copia (<sha256>), registrado em … às <hora>". O sha256 tem de começar com:
+
+   | condição | o sha256 começa com |
+   |---|---|
+   | C0 | `36b57fd8` |
+   | L1 | `c3d30412` |
+   | L2 | `4e9f1250` |
+
+3. **Abra o jogo pelo preset.** Nos boxes, aperte **Ctrl+C** para a IA dirigir, e deixe-a sair dos boxes.
+4. **Deixe a IA completar 9 voltas:** a 1ª é a de saída, a 2ª é a primeira lançada, e as 7 seguintes contam. **Espere a IA cruzar a linha ao fim da 9ª volta** antes de sair. Um bloco leva cerca de 14 minutos.
+5. **Saia do jogo** e espere o `acs.exe` fechar.
+6. **Anote:** a condição, a hora e o que viu de estranho. Por exemplo, a IA rodou, saiu da pista ou freou onde não costuma.
+   - Na L1 e na L2, vale olhar dois lugares: **a subida dos boxes** (perto de 3.900 m, onde a C1 e a C2 frearam no 47) e **a reta curta entre a C09 e a C10** (a emenda que cruza 4 m de pista).
+   - Só olhar. Nada disso muda o resultado.
+
+### A ordem (sorteada com a semente 50)
+
+| sessão | bloco | condição | duração aproximada |
+|---|---|---|---|
+| 1 | 1 | C0 | 14 min |
+| 1 | 2 | L1 | 14 min |
+| 1 | 3 | C0 | 14 min |
+| 2 | 4 | L2 | 14 min |
+| 2 | 5 | C0 | 14 min |
+
+**Sessão 1** (cerca de 45 min, com a cópia):
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao C0
+```
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao L1
+```
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao C0
+```
+
+**Entre as sessões:** com o jogo fechado, avise "terminei a sessão 1".
+- Eu faço só a conferência da troca, **sem nenhum tempo:** `python -m ml.scripts.linha_do_projeto conferencia-sessao --rotulo sessao1`.
+- Ela confere o original intacto, os 3 blocos no registro, as voltas de cada um e se a IA seguiu a linha do bloco.
+- Depois eu digo se você pode seguir. Até lá, não rode nenhum script e não remova a cópia.
+
+**Sessão 2** (cerca de 30 min):
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao L2
+```
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47\tools\pista_teste\trocar_linha.ps1 -Condicao C0
+```
+
+### Se algo sair do roteiro
+
+- **A IA roda ou sai da pista:** deixe seguir. A volta é descartada pelo resultado.
+- **A IA não consegue andar** (presa, ou rodando a cada volta): feche o jogo, anote e passe para o próximo bloco. O bloco fica "não conclusivo" se tiver menos de 5 voltas válidas.
+- **O jogo trava ou fecha no meio de um bloco:**
+  - abra de novo pelo preset, **sem rodar o `trocar_linha.ps1`**;
+  - a gravação nova fica no mesmo bloco, e a 1ª volta dela é de saída e não conta;
+  - deixe a IA dar as voltas que faltavam, mais uma, e anote.
+- **Uma troca errada** (por exemplo, a condição errada, ou duas trocas seguidas): **não rode outra troca por cima e me avise.** Cada troca no registro vira um bloco, e uma troca sem jogo no meio da ordem deixaria um bloco vazio entre a linha e o C0 vizinho.
+- **Um script para** com "PARADO: …": não contorne, anote a mensagem e me avise.
+
+### Ao terminar
+
+Avise **"rodei a linha do projeto"**. Aí eu faço:
+- **a Parte E:** a conferência (o registro, a troca que pegou em cada bloco e o original intacto), as voltas válidas e os tempos, o veredito da meta, a comparação por trecho, os medidores contra o jogo e a referência para o app;
+- **a Parte F:** os ADRs e a arquitetura;
+- **o merge** (trazendo antes o `develop`, que andou com o 45) e o envio.
+
+**Não remova a cópia até eu terminar a Parte E:** o resultado confere a pasta da cópia. Depois, ela fica até você rodar o `remover_copia.ps1`.
+
+### A conferência entre as sessões (sem tempos)
+
+**14/11, depois do seu aviso "terminei a sessão":**
+- **A cópia foi recriada** às 18:55:42 (`copia.json`), com o sha256 da original igual ao de antes.
+- **No registro, desde o commit do ADR 0031, há uma troca só:** C0 às 18:58:46. A troca apagou 4 caches do CSP da cópia (`caches_csp.log`).
+- **Uma gravação:** `2026-11-14_19-01-15_vhe_interlagos_teste_m1`, das 19:01 às 19:14, atribuída ao bloco 1 (C0).
+- **A conferência** (`python -m ml.scripts.linha_do_projeto conferencia-sessao --rotulo sessao1_bloco1`, commit `979782b3`; a saída em `_conferencia_sessao1_bloco1.json`):
+
+| bloco | condição | saída | primeira lançada | contam | além das que contam | interrompida | IA dirigindo nas que contam | até a linha do bloco | até a original | troca pegou |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| 1 | C0 | 1 | 1 | 7 | 0 | 1 | 7 | 0,25 m | 0,25 m | sim |
+
+- **O original está intacto.**
+- **A volta "interrompida"** é o pedaço gravado depois de a IA cruzar a linha no fim da 9ª volta. Ela não conta, e é o esperado.
+- **Nenhum tempo foi calculado nem olhado.**
+- **A sessão 1 ficou com 1 dos 3 blocos.** Faltam o bloco 2 (L1) e o bloco 3 (C0).
+  - Se eles forem rodados depois, o intervalo entre os blocos 1 e 2 passa dos 45 minutos da D.2. Isso vai no relatório do resultado.
+  - O veredito compara a L1 com os dois C0 vizinhos, e o jogo tem o horário e o clima parados, então o intervalo não muda a regra.
+
+**15/11, depois do seu aviso "realizado o L1 e C0" (a sessão 1 completa):**
+- **As trocas desde o commit do ADR 0031,** cada uma com uma gravação:
+
+| bloco | troca | condição | sha256 da troca | gravação |
+|---|---|---|---|---|
+| 1 | 14/11 18:58:46 | C0 | `36b57fd8…` | `2026-11-14_19-01-15` |
+| 2 | 14/11 22:50:27 | L1 | `c3d30412…` | `2026-11-14_22-52-59` |
+| 3 | 15/11 02:28:11 | C0 | `36b57fd8…` | `2026-11-15_02-29-50` |
+
+  Cada troca apagou 4 caches do CSP da cópia (`caches_csp.log`).
+- **A conferência** (`conferencia-sessao --rotulo sessao1`, commit `56e02484`; a saída em `_conferencia_sessao1.json`):
+
+| bloco | condição | saída | primeira lançada | contam | interrompida | IA dirigindo nas que contam | até a linha do bloco | até a original | troca pegou |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| 1 | C0 | 1 | 1 | 7 | 1 | 7 | 0,25 m | 0,25 m | sim |
+| 2 | L1 | 1 | 1 | 7 | 1 | 7 | **0,32 m** | **1,00 m** | **sim** |
+| 3 | C0 | 1 | 1 | 7 | 1 | 7 | 0,25 m | 0,25 m | sim |
+
+- **O original está intacto.** Nenhum tempo foi calculado nem olhado.
+- **Na L1, a IA seguiu a linha nova:** a mediana até a L1 é de 0,32 m, contra 1,00 m até a original.
+- **O intervalo entre os blocos passou dos 45 minutos da D.2:** cerca de 3 h 35 min entre o fim do bloco 1 e a troca do bloco 2, e 3 h 20 min entre o fim do bloco 2 e a troca do bloco 3. Vai no relatório do resultado, ao lado da deriva medida pelos três C0.
+- **Pode seguir com a sessão 2:** L2 e depois C0.
+
+## Parte E: o resultado do teste no jogo
+
+**O comando:** `python -m ml.scripts.linha_do_projeto resultado --handoff …` (commit `62fb43ac`). Tudo está em `_resultado.json`.
+
+### E.1, a conferência
+
+- **O registro:** desde o commit do ADR 0031, há 5 trocas, cada uma com uma gravação da cópia:
+
+| bloco | troca | condição | sha256 | gravação |
+|---|---|---|---|---|
+| 1 | 14/11 18:58:46 | C0 | `36b57fd8…` | `2026-11-14_19-01-15` |
+| 2 | 14/11 22:50:27 | L1 | `c3d30412…` | `2026-11-14_22-52-59` |
+| 3 | 15/11 02:28:11 | C0 | `36b57fd8…` | `2026-11-15_02-29-50` |
+| 4 | 15/11 02:46:55 | L2 | `4e9f1250…` | `2026-11-15_02-47-12` |
+| 5 | 15/11 03:00:53 | C0 | `36b57fd8…` | `2026-11-15_03-01-09` |
+
+- **A troca pegou em todos os blocos:** a mediana das posições até a linha do bloco ficou entre 0,25 e 0,32 m. Na L1 e na L2, a mediana até a original ficou em 1,00 e 0,92 m.
+- **O `fast_lane.ai` original tem o mesmo sha256 de antes** (`36b57fd8…3d8342`), e a cópia existe.
+- **As 10 gravações do 47 ficam fora dos blocos,** porque começaram antes do commit do ADR.
+- **O tempo refeito na grade** bate com o cronômetro do jogo costurado (`game_lap_time`) a até 1,5 ms, e a soma dos 15 trechos bate com o tempo da volta.
+- **O app e o carro** são os mesmos do 47 (`0.7.0-radio-que-ensina`, `rss_formula_rss_3_v6_2026`, pelos metadados das gravações).
+
+### E.2, as voltas válidas, os tempos e o veredito
+
+| bloco | condição | válidas / que contam | melhor | mediana | desvio |
+|---|---|---|---|---|---:|
+| 1 | C0 | 7/7 | 1:24,775 | 1:24,854 | 0,102 s |
+| 2 | L1 | 7/7 | 1:25,188 | 1:25,307 | 0,196 s |
+| 3 | C0 | 7/7 | 1:24,766 | 1:25,046 | 0,224 s |
+| 4 | L2 | 7/7 | **1:24,552** | **1:24,704** | 0,129 s |
+| 5 | C0 | 7/7 | 1:24,670 | 1:24,823 | 0,250 s |
+
+- **Todas as 35 voltas que contam são válidas.** A maior saída do corredor foi de 0,55 m (o limite é 1,0 m).
+
+**O veredito da A.2:**
+
+| linha | a melhor dela | a melhor do C0 antes | a melhor do C0 depois | diferença (antes / depois) | veredito |
+|---|---|---|---|---|---|
+| L1 | 1:25,188 | 1:24,775 (bloco 1) | 1:24,766 (bloco 3) | +0,413 / +0,422 s | **meta não atingida** |
+| L2 | **1:24,552** | 1:24,766 (bloco 3) | 1:24,670 (bloco 5) | **−0,214 / −0,119 s** | **meta atingida** |
+
+**Só relatados:**
+- **A diferença das medianas contra os dois C0 vizinhos juntos** (bootstrap de 10.000, semente 50):
+  - L1: +0,440 s (de +0,193 a +0,779). Pela regra do ADR 0029, "mais lenta";
+  - L2: −0,121 s (de −0,514 a −0,004). Pela regra do ADR 0029, "mais rápida que a linha da IA", e "não inferior" (o limite superior fica abaixo de +0,10 s).
+- **A deriva, pelos três C0:** contra o bloco 1, o bloco 3 ficou +0,192 s (de −0,169 a +0,365), e o bloco 5 ficou −0,031 s (de −0,282 a +0,375).
+  - Os tempos dos C0 se juntam em duas faixas, perto de 1:24,8 e de 1:25,2, nos três blocos.
+  - A deriva não decide o veredito, porque a meta compara cada linha com os dois vizinhos.
+- **A `#0013`** (1:24,829, de 04/10):
+
+| | a `#0013` | este teste |
+|---|---|---|
+| pista | a original (`vhe_interlagos`) | a cópia (`vhe_interlagos_teste_m1`) |
+| preset | o de 04/10 | "pedido 47 [teste]" |
+| melhor | 1:24,829 | L2 1:24,552 (−0,278 s); C0 1:24,670 a 1:24,775 |
+
+  - **Os C0 deste teste ficaram cerca de 0,5 s mais rápidos que o C0 do pedido 47** (medianas de 1:24,82 a 1:25,05, contra 1:25,438), com o mesmo app e o mesmo carro.
+  - **A causa não foi confirmada.** Pode ser o preset, uma atualização do jogo ou do CSP, ou a cópia recriada.
+  - Por isso, a comparação justa é com os C0 vizinhos, e não com a `#0013` nem com os tempos do 47.
+- **O intervalo entre os blocos:** de 3 a 4 horas entre os blocos 1, 2 e 3, e de 1 a 4 minutos entre o fim de um bloco e a troca do seguinte nos blocos 3, 4 e 5. Na sessão 1, isso passou dos 45 minutos da D.2.
+
+### E.3, por trecho (a regra do ADR 0030, contra os dois C0 vizinhos)
+
+**A regra:** ganho ou perda só quando a diferença é significativa no Holm contra os dois vizinhos, com o mesmo sinal na mediana e na média. A figura é `_por_trecho.png`.
+
+| trecho | L1 − C0 antes | L1 − C0 depois | L1 | L2 − C0 antes | L2 − C0 depois | L2 |
+|---|---:|---:|---|---:|---:|---|
+| C01 | +0,079 | +0,065 | perda | +0,094 | +0,104 | perda |
+| C02 | +0,086 | +0,083 | perda | +0,053 | +0,062 | perda |
+| C03 | +0,027 | +0,028 | perda | −0,006 | +0,001 | empate |
+| C04 | −0,125 | −0,128 | **ganho** | −0,210 | −0,197 | **ganho** |
+| C05 | +0,002 | +0,014 | empate | −0,017 | −0,032 | empate |
+| C06 | −0,236 | −0,234 | **ganho** | −0,283 | −0,295 | **ganho** |
+| C07 | −0,007 | +0,003 | empate | −0,088 | −0,100 | **ganho** |
+| C08 | +0,035 | +0,034 | perda | −0,004 | +0,004 | empate |
+| C09 | −0,059 | −0,063 | **ganho** | −0,081 | −0,079 | **ganho** |
+| C10 | +0,434 | +0,321 | perda | +0,227 | +0,360 | perda |
+| C11 | +0,027 | −0,056 | empate | −0,021 | +0,083 | empate |
+| C12 | +0,008 | +0,007 | empate | −0,043 | −0,027 | **ganho** |
+| C13 | +0,017 | +0,017 | perda | −0,014 | −0,006 | empate |
+| C14 | +0,062 | +0,065 | perda | +0,028 | +0,031 | perda |
+| C14→linha | +0,072 | +0,066 | perda | +0,023 | +0,027 | perda |
+
+(diferença das medianas, s; os IC e os p-valores estão no `_resultado.json`)
+
+- **O que a busca mudou:** a L2 ganha onde a L1 ganhava (C04, C06 e C09), e ganhou mais nesses trechos. Passou a ganhar na C07 e na C12, e saiu da perda na C03, na C08 e na C13.
+- **A maior perda das duas é a C10,** logo depois da emenda da C09 para a C10 (a reta curta em que a L1 cruza 4 m de pista). No 49, a C2 perdia só +0,065 s na C10.
+- **A subida dos boxes (C14→linha)** perde pouco nas duas, +0,02 a +0,07 s, com o raio de 125 a 138 m no arquivo. Isso está longe dos +0,84 s da C1 no 47.
+- **A soma por trecho da tabela B.1 do 49** previa −0,46 s para a L1, e veio +0,44 s. As emendas e a mudança de entrada de um trecho para o seguinte custaram mais do que o teto sugeria.
+
+### E.4, os medidores contra o jogo
+
+| linha | jogo (contra os C0 vizinhos) | M-v2 (o escolhido) | M-real | M-cal |
+|---|---:|---:|---:|---:|
+| L1 | +0,440 s | −1,358 s | −1,089 s | −0,013 s |
+| L2 | −0,121 s | −2,332 s | −2,215 s | −0,410 s |
+
+- **O medidor escolhido errou o sinal da L1 e superestimou o ganho da L2 em 2,2 s.** A busca da L2 foi para onde o M-v2 via ganho, e uma parte disso apareceu no jogo, mas muito menor.
+- **O M-cal ficou mais perto nas duas,** mas também previu a L1 mais rápida.
+- **Por trecho, o Spearman** da diferença prevista contra a do jogo ficou entre 0,32 e 0,43 nos três medidores, nas duas linhas.
+
+### E.5, a referência para o app
+
+**A L2 atingiu a meta,** então virou a linha de referência de todos os trechos de `data/modelo1_por_trecho/referencia_por_trecho.json` (fora do git), pelo item 11 do ADR 0031. O comando foi `python -m ml.scripts.linha_do_projeto referencia --handoff …`, e o resumo, sem a lateral ponto a ponto, está em `_referencia.json`.
+- **A marca:** "linha do projeto, meta atingida em 2026-11-15".
+- **A execução da IA na L2,** medida nas 7 voltas do bloco 4: a frenagem, o freio máximo, a mínima, a marcha, a retomada e o tempo do trecho (as medidas do ADR 0030, item 5).
+- **A referência anterior** (a linha da IA, C0) fica em cada trecho como `referencia_anterior`. O arquivo do pedido 49 foi guardado em `data/modelo1_por_trecho/referencia_por_trecho_pedido49.json`.
+- **O que não mudou:**
+  - as candidatas do 49 continuam "a validar no jogo";
+  - as propostas provisórias (o ponto de frenagem traduzido e o limite "de linha") continuam calculadas sobre o C0, com uma nota;
+  - **o coach ainda não lê esse arquivo.**
+- **O formato é conferido antes de gravar:** `conferir_formato_da_referencia` ganhou o parâmetro `linha`, que exige a marca quando a linha não é o C0. O padrão continua o C0, e os testes do 49 passam.
+
+### E.6, os testes
+
+**Os testes sintéticos do pedido** (`backend/tests/test_linha_do_projeto.py`, 20 testes) cobrem o que a E.6 pede:
+- a codificação nova (a curvatura contínua, o raio mínimo, a taxa de variação e a conferência);
+- a calibração do medidor com uma linha de fora;
+- a região de confiança;
+- a montagem por trecho e as emendas;
+- o veredito da A.2 com os blocos vizinhos e os blocos do registro;
+- o `trocar_linha.ps1` com L1 e L2, nas travas do 47;
+- o formato da referência com a linha do projeto.
+
+A suíte está em "Testes".
+
+## Parte F: a documentação
+
+- **ADR 0031:** o resultado entrou numa seção no fim, sem mudar nada acima dela, e o índice ganhou o resultado (`d1980b12`).
+- **ADR 0028:** "a M1 v2 testada como medidor no pedido 50, só relatado; o veredito não muda", com o erro dela na L2.
+- **ADR 0009:** "a linha do projeto vai para a referência do coach se atingir a meta do ADR 0031", mais o fato de que a L2 atingiu e de que o coach ainda não lê o arquivo.
+- **ADRs 0029 e 0030:** uma linha de atualização cada, apontando para o 0031.
+- **`docs/arquitetura_ml.md`:** a seção "A linha do projeto (pedido 50; ADR 0031)".
+- **`docs/backlog.md`:** não editado. Os itens estão no fim deste relatório.
+
+## O merge
+
+**`develop` andou depois do início deste pedido:**
+- o merge do 45 (`16cdf04d`) e os relatórios dele foram até `4c7bcbae`, que está no remoto;
+- depois, mais dois commits só locais, de documentação: `270531fa` (o relatório do 45) e `11046e28` (o backlog de 13/11).
+
+**O que foi feito, na pasta do 47:**
+- `git merge --no-ff develop`, em `45456980`, sem conflito. A branch tem agora tudo do `develop` local (`11046e28`);
+- a suíte foi rodada nessa branch (veja "Testes").
+
+**O que não foi feito, e por quê:**
+- **a pasta principal está com `develop` aberta** (`git worktree list`: `C:/Users/Dokas/Desktop/f1-telemetry-analyzer` em `11046e28 [develop]`). O relatório do 45 diz que ela ficou assim de propósito;
+- **o pedido manda parar e avisar:** "se `develop` estiver aberta em outra pasta, pare e me avise". O git também não deixa abrir `develop` na pasta do 47 enquanto ela estiver aberta na principal;
+- por isso, o merge em `develop` e o envio de `develop` esperam a sua decisão.
+
+**As saídas possíveis:**
+- **(a) Você tira a pasta principal de `develop`** (por exemplo, `git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer switch etapa/replay-e-radio-que-ensina`, se ela não tiver mudança sem commit). Eu faço o merge na pasta do 47, como nos pedidos 47 e 49, e volto a pasta do 47 para a branch do pedido.
+- **(b) Eu faço o merge na própria pasta principal,** onde `develop` já está aberta (`git -C … merge --no-ff etapa/linha-do-projeto`). Isso toca a pasta principal, que este pedido não toca sem você dizer.
+- **(c) Você faz o merge.**
+
+## O que se esperava e o que veio
+
+| item do ADR | esperado | resultado |
+|---|---|---|
+| 10.1 | a conferência passa no 1º ou no 2º par | **não:** nenhum passou na regra registrada; com a emenda (a), passou o 3º (6/15 m) |
+| 10.2 | o raio do arquivo da L1 no trecho C14→linha passa de 200 m | **não:** 125 m em 3.898 m (a C4 carrega a ondulação da linha central); mesmo assim, a perda ali ficou pequena (+0,07 s) |
+| 10.3 | o M-cal é o escolhido | **não:** o M-v2 (ρ 0,484 contra 0,469) |
+| 10.4 | o medidor prevê a L2 de 0,1 a 0,3 s mais rápida que a L1, perto de 1,0 m em poucos trechos | **não:** 0,97 s mais rápida no M-v2; no máximo 0,63 m da L1 |
+| 10.5 | no jogo, a L1 entre −0,3 e +0,2 s da mediana dos C0 vizinhos | **não:** +0,44 s |
+| 10.6 | a meta perto de meio a meio para a L1, um pouco menos para a L2 | **ao contrário:** a L2 atingiu, e a L1 não |
+| 10.7 | a `#0013` fora de alcance | **não:** a melhor da L2 fica 0,28 s abaixo dela. Mas os C0 deste teste também ficaram abaixo dela, com a causa não confirmada |
+
+## Testes
+
+- **`backend/tests/test_linha_do_projeto.py`: 20 testes, todos sintéticos.** Eles cobrem:
+  - as janelas e os pontos de controle;
+  - a curvatura contínua;
+  - a ida e volta;
+  - o raio mínimo e a taxa;
+  - a emenda da volta;
+  - a conferência (passa num círculo e reprova um raio fechado);
+  - o reparo do corredor;
+  - a calibração com uma linha de fora, os pesos e o Spearman;
+  - a região de confiança;
+  - a montagem e as emendas;
+  - o veredito da meta;
+  - os blocos do registro;
+  - o arquivo pela curva;
+  - o `trocar_linha.ps1` com L1 e L2 e as travas, numa pasta falsa "[teste]" apagada no fim;
+  - o formato da referência com a linha do projeto.
+- **A suíte do backend em 12/11** (código de `99d76e2f`): `1 failed, 1003 passed, 37 warnings in 699.54s` (`_testes.txt`).
+- **A suíte do backend em 15/11, na branch com o `develop` dentro** (`45456980`): `1 failed, 1033 passed, 37 warnings in 559.99s`. São 30 testes a mais que em 12/11, vindos do pedido 45 (o `develop` trazido) e do teste novo da referência (`_testes_15-11.txt`).
+- **A falha é a de ambiente, conhecida:** `test_leitura.py::test_volta_da_conferencia_nos_arquivos_reais`, com `KeyError: 'geometryId'`. Falta, na pasta separada, o `data/reference_models/vhe_interlagos.geometry.json`, que o git ignora. Não corrigi.
+- **As etapas `conferencia-sessao`, `resultado` e `referencia`** não têm teste próprio. Elas leem as gravações reais, e as funções puras que usam têm teste.
+
+## Os dados da pasta principal
+
+**Nada foi escrito nos dados da principal.**
+- **De 12/11:** a foto de `data\ml`, `data\cache` e `data\recordings` (932 arquivos: nome, tamanho e data) foi tirada antes das contas da Parte B e de novo depois da suíte, sem nenhuma diferença (`data\linha_do_projeto\foto_antes.tsv` e `foto_depois.tsv`, fora do git).
+- **De 15/11:** a foto (937 arquivos) foi tirada antes e depois da suíte de 15/11, **sem nenhuma diferença** (`foto_antes_da_suite_15-11.tsv` e `foto_depois_da_suite_15-11.tsv`). Contra a foto de 12/11, a única mudança é a gravação `2026-11-12_22-57-03_vhe_interlagos` (5 arquivos), do teste no jogo do pedido 45 na pista original, que não é deste pedido.
+
+## O envio
+
+- **Em 12/11, nada foi enviado:** o `develop` remoto ainda não tinha o 49, e este pedido manda esperar por ele.
+- **Em 13/11, tentei enviar a branch deste pedido,** e o controle de permissões recusou.
+- **Em 14/11, você enviou as duas branches,** conferidas no `ls-remote`: `etapa/linha-do-projeto` em `6eb4dd41` e `etapa/modelo1-por-trecho` em `e873d6a6`, iguais ao local.
+- **Agora, a branch deste pedido está à frente do remoto** (com as Partes E e F, o `develop` trazido e este relatório).
+
+**Antes, conferi o que vai** (as mudanças desde `6eb4dd41`): nenhum arquivo acima de 50 MB, nenhum segredo, nada de `recordings/`, `data/recordings`, `data/ml`, `data/linha_do_projeto` ou `data/modelo1_por_trecho`, e nenhum `.ai`.
+
+**O envio da branch, para você rodar pelo terminal** (um avanço simples, sem `--force`):
+
+```powershell
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 push origin etapa/linha-do-projeto
+```
+
+```powershell
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 rev-parse etapa/linha-do-projeto
+```
+
+```powershell
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 ls-remote origin refs/heads/etapa/linha-do-projeto
+```
+
+**O envio de `develop`** vem depois do merge (veja "O merge"). `main` e as tags não vão.
+
+## Itens para o backlog (para o Cowork)
+
+1. **A linha do projeto (a L2) é a referência por trecho, mas o coach ainda não lê o arquivo.** Um pedido próprio poderia ligar o coach a ela. Seriam a linha de cada trecho e a execução da IA nela, e o ADR 0009 precisaria ser revisto.
+2. **A emenda da C09 para a C10 custa caro:** +0,23 a +0,43 s na C10 nas duas linhas. Um teste com a L2 e só a C10 trocada pela linha da IA (ou com a emenda mais longa) diria quanto dá para tirar dali.
+3. **Os C0 deste teste ficaram cerca de 0,5 s mais rápidos que os do 47,** com o mesmo app e o mesmo carro. A causa não foi confirmada: pode ser o preset, uma atualização do jogo ou do CSP, ou a cópia recriada. Vale conferir o preset e a versão do CSP antes de comparar tempos entre testes.
+4. **Os medidores erram muito fora das linhas que os calibraram:** o escolhido previu −2,33 s para a L2, que deu −0,12 s no jogo. Com as 7 linhas medidas no jogo (as 5 do 47 e a L1 e a L2), dá para registrar e testar um medidor novo, num pedido próprio.
+5. **A linha central do projeto ondula na subida dos boxes** (curvatura de ±0,013 1/m entre 3.860 e 3.940 m). As linhas vindas da C4 ainda têm 125 a 138 m de raio ali, e o custo no jogo foi pequeno. Suavizar a linha central mudaria o `geometry_id`.
+6. **O raio de três pontos do `fast_lane.ai` é muito sensível ao ruído dos pontos.** Qualquer escritor de linha precisa de uma curva suave no plano X/Z, e não da grade de 2 m em linha reta (o escritor do 47).
+7. **As restrições pelo menor raio das 150 voltas ficaram frouxas** (5,5 m na C07, 8,4 m na C08). Um percentil por trecho restringiria de verdade.
+8. **A conferência por "menor raio do trecho" também é um valor extremo.** Um percentil, ou o raio numa janela fixa, seria mais estável.
+9. **A busca da L2 parou pelo limite de 250 gerações, ainda melhorando no medidor.** Como o medidor errou muito, mais gerações não garantem mais ganho no jogo.
+10. **Mais carros da IA (Parte C):** um pedido próprio, agora que o 45 entrou, começando por um teste de quais campos do `ac.getCar(i)` valem para os carros da IA.
+11. **Uma troca sem jogo vira um bloco vazio** no `registro.csv` (a regra do ADR 0031, item 3). Num próximo teste, vale registrar antes uma regra como a do item 16 do ADR 0029.
+12. **A falha do `test_leitura` volta em toda pasta separada** (falta o `data/reference_models/vhe_interlagos.geometry.json`, que o git ignora).
+
+## O que falta
+
+- **O merge em `develop`:** a sua decisão entre (a), (b) e (c) em "O merge". Depois dele, o envio de `develop` e a volta da pasta do 47 para a branch do pedido.
+- **O envio da branch deste pedido:** os comandos acima.
+- **A cópia da pista continua instalada.** Ela pode ser removida pelo `remover_copia.ps1` quando você quiser: o resultado já está gravado.
+- **A pasta do 47 não foi apagada.** Você decide quando.

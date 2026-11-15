@@ -1,0 +1,424 @@
+{
+ "pedido": 50,
+ "adr": "0031",
+ "parte": "B.3 (L2)",
+ "commit": "99d76e2f4c88782bc2e975671e4c220695af0f8e",
+ "comando": "python -m ml.scripts.linha_do_projeto l2",
+ "ambiente": {
+  "python": "3.9.7",
+  "numpy": "1.26.3",
+  "plataforma": "Windows-10-10.0.26200-SP0"
+ },
+ "geometry_id": "0ed16f0dd2225990",
+ "corridor_id": "707d07029036abd6",
+ "codificacao": {
+  "genes": 546,
+  "dentro_m": 6.0,
+  "fora_m": 15.0,
+  "espacamento_m": {
+   "min": 5.79315915799998,
+   "p50": 5.956615130999921,
+   "max": 14.823887953000167
+  }
+ },
+ "medidor": "M-v2",
+ "config": {
+  "generations": 250,
+  "population_size": 100,
+  "elite": 4,
+  "tournament_pressure": 3,
+  "crossover_rate": 0.9,
+  "mutation_rate": 0.3,
+  "mutation_amplitude_m": 0.6,
+  "mutation_amplitude_final_m": 0.15,
+  "stagnation_patience": 25,
+  "stagnation_tolerance_s": 0.001,
+  "seed": 50,
+  "populacao_inicial_semente": 50,
+  "aleatorias": 10,
+  "sementes": [
+   "L1",
+   "composicao dos melhores trechos",
+   "LSTM geradora",
+   "2026-10-04_03-42-10_vhe_interlagos#0013",
+   "2026-10-04_03-42-10_vhe_interlagos#0012",
+   "2026-10-04_03-42-10_vhe_interlagos#0011",
+   "2026-10-04_02-24-04_vhe_interlagos#0012",
+   "2026-10-04_03-42-10_vhe_interlagos#0010",
+   "2026-10-04_02-24-04_vhe_interlagos#0005",
+   "2026-10-04_02-24-04_vhe_interlagos#0011",
+   "2026-10-04_03-42-10_vhe_interlagos#0009",
+   "2026-10-04_03-42-10_vhe_interlagos#0017",
+   "2026-10-04_02-24-04_vhe_interlagos#0004",
+   "2026-10-04_02-24-04_vhe_interlagos#0010",
+   "2026-10-04_03-42-10_vhe_interlagos#0018",
+   "2026-10-04_03-42-10_vhe_interlagos#0016",
+   "2026-10-24_13-43-32_vhe_interlagos#0003",
+   "2026-10-21_20-30-54_vhe_interlagos#0017",
+   "2026-10-15_23-24-50_vhe_interlagos#0008",
+   "2026-10-24_13-26-12_vhe_interlagos#0003",
+   "2026-10-15_23-24-50_vhe_interlagos#0007",
+   "2026-10-11_14-19-52_vhe_interlagos#0019",
+   "2026-10-17_01-02-22_vhe_interlagos#0019",
+   "2026-10-11_14-19-52_vhe_interlagos#0018",
+   "2026-10-11_14-19-52_vhe_interlagos#0020",
+   "2026-10-11_14-19-52_vhe_interlagos#0011",
+   "2026-10-24_13-43-32_vhe_interlagos#0002",
+   "2026-10-21_20-30-54_vhe_interlagos#0010",
+   "2026-10-17_16-17-08_vhe_interlagos#0018",
+   "2026-10-17_16-17-08_vhe_interlagos#0016",
+   "2026-10-11_14-19-52_vhe_interlagos#0010",
+   "2026-10-24_13-43-32_vhe_interlagos#0010",
+   "2026-10-21_20-30-54_vhe_interlagos#0012",
+   "2026-10-17_01-02-22_vhe_interlagos#0009",
+   "2026-10-15_23-24-50_vhe_interlagos#0017",
+   "2026-10-21_20-30-54_vhe_interlagos#0016",
+   "2026-10-11_14-19-52_vhe_interlagos#0009",
+   "2026-10-24_13-26-12_vhe_interlagos#0002",
+   "2026-10-15_23-24-50_vhe_interlagos#0012",
+   "2026-10-18_12-38-44_vhe_interlagos#0007",
+   "2026-10-17_16-17-08_vhe_interlagos#0003",
+   "2026-10-22_09-46-01_vhe_interlagos#0001",
+   "2026-10-11_14-19-52_vhe_interlagos#0017",
+   "2026-10-24_13-43-32_vhe_interlagos#0009",
+   "2026-10-17_01-02-22_vhe_interlagos#0018",
+   "2026-10-24_13-26-12_vhe_interlagos#0004",
+   "2026-10-24_13-43-32_vhe_interlagos#0001",
+   "2026-10-18_12-38-44_vhe_interlagos#0011",
+   "2026-10-04_02-24-04_vhe_interlagos#0018",
+   "2026-10-15_23-24-50_vhe_interlagos#0014",
+   "2026-11-01_19-47-03_vhe_interlagos#0006",
+   "2026-10-11_14-19-52_vhe_interlagos#0005",
+   "2026-10-17_01-02-22_vhe_interlagos#0005",
+   "2026-10-21_20-30-54_vhe_interlagos#0009",
+   "2026-11-01_19-47-03_vhe_interlagos#0005",
+   "2026-10-11_14-19-52_vhe_interlagos#0006",
+   "2026-10-11_14-19-52_vhe_interlagos#0015",
+   "2026-10-18_12-38-44_vhe_interlagos#0014",
+   "2026-10-13_19-24-10_vhe_interlagos#0009",
+   "2026-10-18_12-38-44_vhe_interlagos#0013",
+   "2026-10-17_16-17-08_vhe_interlagos#0001",
+   "2026-10-17_16-17-08_vhe_interlagos#0002",
+   "2026-10-17_16-17-08_vhe_interlagos#0004",
+   "2026-10-13_19-24-10_vhe_interlagos#0001",
+   "2026-10-21_20-30-54_vhe_interlagos#0015",
+   "2026-10-04_23-51-42_vhe_interlagos#0011",
+   "2026-10-11_14-19-52_vhe_interlagos#0002",
+   "2026-10-13_19-24-10_vhe_interlagos#0007",
+   "2026-10-18_12-38-44_vhe_interlagos#0002",
+   "2026-10-10_09-57-09_vhe_interlagos#0017",
+   "2026-10-13_19-24-10_vhe_interlagos#0006",
+   "2026-10-18_12-38-44_vhe_interlagos#0008",
+   "2026-10-04_23-51-42_vhe_interlagos#0012",
+   "2026-10-21_20-30-54_vhe_interlagos#0013",
+   "2026-10-10_09-57-09_vhe_interlagos#0018",
+   "2026-10-04_23-51-42_vhe_interlagos#0008",
+   "2026-10-08_23-56-13_vhe_interlagos#0004",
+   "2026-10-05_20-33-47_vhe_interlagos#0008",
+   "2026-10-11_14-19-52_vhe_interlagos#0003",
+   "2026-10-11_14-19-52_vhe_interlagos#0008",
+   "2026-10-10_09-57-09_vhe_interlagos#0005",
+   "2026-10-05_20-33-47_vhe_interlagos#0004",
+   "2026-10-17_01-02-22_vhe_interlagos#0010",
+   "2026-10-21_20-30-54_vhe_interlagos#0008",
+   "2026-10-11_14-19-52_vhe_interlagos#0004",
+   "2026-10-10_09-57-09_vhe_interlagos#0007",
+   "2026-10-18_12-38-44_vhe_interlagos#0006",
+   "2026-10-15_23-24-50_vhe_interlagos#0005",
+   "2026-10-11_14-19-52_vhe_interlagos#0001",
+   "2026-10-13_19-24-10_vhe_interlagos#0012"
+  ],
+  "regiao_de_confianca_m": 1.0
+ },
+ "lstm": [
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\ml\\models\\reference\\model.json",
+   "bytes": 4979,
+   "sha256": "a4a107331bb503a88a910cfdcb76add0a1a10793273fce5d323321a4e18bb248"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-47\\data\\ml\\models\\reference\\weights.pt",
+   "bytes": 1237866,
+   "sha256": "d7622dcaf471dfc800c9ebca2b4afcc7f61d93acce81070c018670f58931bd66"
+  }
+ ],
+ "l1_na_aptidao_s": 85.19646960078506,
+ "busca": {
+  "geracoes": 250,
+  "parada": "geracoes",
+  "avaliacoes": 25101,
+  "custo_inicial": 85.19646960078474,
+  "custo_final": 84.22273609690956
+ },
+ "penalizacoes_da_l2": {
+  "total": 0.0,
+  "corridor": 0.0,
+  "weaving": 0.0,
+  "curvature_jerk": 0.0,
+  "restricoes": 0.0,
+  "regiao": 0.0
+ },
+ "sem_penalizacao": true,
+ "afastamento_da_l1_m": {
+  "max": 0.6293654118377745,
+  "p95": 0.38498857548744525
+ },
+ "linha": {
+  "genes": 546,
+  "tempo_previsto": {
+   "M-real": {
+    "tempo_s": 83.1012652170601,
+    "contra_c0_s": -2.215071885480313
+   },
+   "M-cal": {
+    "tempo_s": 85.02830987111003,
+    "contra_c0_s": -0.40999847673605094
+   },
+   "M-v2": {
+    "tempo_s": 84.22273609690956,
+    "contra_c0_s": -2.3317360268688105
+   }
+  },
+  "forma_e_corredor": {
+   "serpenteio": 0.06691405785845385,
+   "limite_serpenteio": 0.07242191814740921,
+   "variacao_de_curvatura": 0.0003043582629079844,
+   "limite_variacao": 0.00031908935634789053,
+   "fora_do_corredor_m": 0.0,
+   "dentro": true
+  },
+  "dentro_das_restricoes": true,
+  "por_trecho": [
+   {
+    "trecho": "C01",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.23646475689678148,
+     "max": 0.9595271849480762
+    },
+    "raio_min_12m_m": 40.364621907390905,
+    "raio_min_em_s": 304.0055811356925,
+    "raio_limite_m": 22.203745278326153,
+    "taxa_max": 0.0018527572340269198,
+    "taxa_limite": 0.005200099314162418,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 40.18698501586914,
+    "raio_min_do_arquivo_em_s": 302.8031681206299
+   },
+   {
+    "trecho": "C02",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.6602353622392089,
+     "max": 1.8388264117105495
+    },
+    "raio_min_12m_m": 44.88429886716387,
+    "raio_min_em_s": 390.00716000960557,
+    "raio_limite_m": 18.72445318110803,
+    "taxa_max": 0.003947319477412822,
+    "taxa_limite": 0.011665673405841329,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 44.87733840942383,
+    "raio_min_do_arquivo_em_s": 389.7063730500289
+   },
+   {
+    "trecho": "C03",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.886596918182712,
+     "max": 1.830229960078516
+    },
+    "raio_min_12m_m": 85.35139319998135,
+    "raio_min_em_s": 422.0077474975732,
+    "raio_limite_m": 33.326996397039814,
+    "taxa_max": 0.001454638282051036,
+    "taxa_limite": 0.004849772671892893,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 78.03813171386719,
+    "raio_min_do_arquivo_em_s": 422.37602551626236
+   },
+   {
+    "trecho": "C04",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.9000674434490084,
+     "max": 2.3679372866506854
+    },
+    "raio_min_12m_m": 60.47858436808778,
+    "raio_min_em_s": 1386.0254455725983,
+    "raio_limite_m": 25.894772092061892,
+    "taxa_max": 0.0007042386643825154,
+    "taxa_limite": 0.004563412450516526,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 60.10622024536133,
+    "raio_min_do_arquivo_em_s": 1384.2097987930333
+   },
+   {
+    "trecho": "C05",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.48987029782531133,
+     "max": 2.1485237619243263
+    },
+    "raio_min_12m_m": 75.14937964782882,
+    "raio_min_em_s": 1402.025739316582,
+    "raio_limite_m": 40.054828552524,
+    "taxa_max": 0.001020297603298831,
+    "taxa_limite": 0.003909311265508921,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 74.89350891113281,
+    "raio_min_do_arquivo_em_s": 1402.8225151123186
+   },
+   {
+    "trecho": "C06",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.9622103988735291,
+     "max": 3.9226592125047848
+    },
+    "raio_min_12m_m": 65.40356795476814,
+    "raio_min_em_s": 1950.0358000480278,
+    "raio_limite_m": 17.831572266158833,
+    "taxa_max": 0.0023895431777180053,
+    "taxa_limite": 0.013909584263695618,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 56.82908248901367,
+    "raio_min_do_arquivo_em_s": 1950.518152392674
+   },
+   {
+    "trecho": "C07",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.4507363111728335,
+     "max": 2.2588780725070396
+    },
+    "raio_min_12m_m": 31.937913036405547,
+    "raio_min_em_s": 2272.041711645702,
+    "raio_limite_m": 4.99403131967844,
+    "taxa_max": 0.0023287340997591183,
+    "taxa_limite": 0.05496412028568376,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 31.15434455871582,
+    "raio_min_do_arquivo_em_s": 2271.7011674160917
+   },
+   {
+    "trecho": "C08",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.5925789299412924,
+     "max": 4.382568975715931
+    },
+    "raio_min_12m_m": 39.283657463934524,
+    "raio_min_em_s": 2396.0439881615766,
+    "raio_limite_m": 7.546418719948051,
+    "taxa_max": 0.0022852534795108842,
+    "taxa_limite": 0.0290678350321465,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 39.05046844482422,
+    "raio_min_do_arquivo_em_s": 2396.399496220323
+   },
+   {
+    "trecho": "C09",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 3.2380383348370225,
+     "max": 4.9859568953765665
+    },
+    "raio_min_12m_m": 109.85741795477112,
+    "raio_min_em_s": 2586.0474763713846,
+    "raio_limite_m": 42.100936449619724,
+    "taxa_max": 0.000618992435916945,
+    "taxa_limite": 0.003684495389114527,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 106.09933471679688,
+    "raio_min_do_arquivo_em_s": 2504.882751327594
+   },
+   {
+    "trecho": "C10",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 2.382451379240382,
+     "max": 5.29916089634747
+    },
+    "raio_min_12m_m": 22.79595681136992,
+    "raio_min_em_s": 2732.050156785237,
+    "raio_limite_m": 15.100739120822931,
+    "taxa_max": 0.0031571666546606376,
+    "taxa_limite": 0.007857488433672215,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 22.359050750732422,
+    "raio_min_do_arquivo_em_s": 2731.0494012468275
+   },
+   {
+    "trecho": "C11",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.7965658151576678,
+     "max": 2.287480499856033
+    },
+    "raio_min_12m_m": 78.36673589533495,
+    "raio_min_em_s": 2968.0544895089984,
+    "raio_limite_m": 29.582428702074917,
+    "taxa_max": 0.0016958564968744488,
+    "taxa_limite": 0.005695513659882576,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 70.96727752685547,
+    "raio_min_do_arquivo_em_s": 3010.432007516289
+   },
+   {
+    "trecho": "C12",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 0.6040280671604545,
+     "max": 2.96442967282329
+    },
+    "raio_min_12m_m": 34.98869161464185,
+    "raio_min_em_s": 3218.0590792587454,
+    "raio_limite_m": 16.154685967546243,
+    "taxa_max": 0.00262345464988422,
+    "taxa_limite": 0.013938410116075047,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 31.853055953979492,
+    "raio_min_do_arquivo_em_s": 3218.6456266403643
+   },
+   {
+    "trecho": "C13",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 2.005726584902621,
+     "max": 5.865471062212901
+    },
+    "raio_min_12m_m": 75.9158908976186,
+    "raio_min_em_s": 3266.059960490697,
+    "raio_limite_m": 39.78620807114217,
+    "taxa_max": 0.001800829458919232,
+    "taxa_limite": 0.004085198401151286,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 71.5959243774414,
+    "raio_min_do_arquivo_em_s": 3266.241685081811
+   },
+   {
+    "trecho": "C14",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 5.899423450393093,
+     "max": 8.28089545682094
+    },
+    "raio_min_12m_m": 131.2163331231361,
+    "raio_min_em_s": 3422.062824494539,
+    "raio_limite_m": 18.495211027832923,
+    "taxa_max": 0.00106360316792875,
+    "taxa_limite": 0.009949592716206887,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 116.30045318603516,
+    "raio_min_do_arquivo_em_s": 3407.9169013276046
+   },
+   {
+    "trecho": "C14->linha",
+    "distancia_a_linha_da_ia_m": {
+     "mediana": 2.065933493443585,
+     "max": 9.654894262898384
+    },
+    "raio_min_12m_m": 147.85272328240836,
+    "raio_min_em_s": 3898.071563378058,
+    "raio_limite_m": 47.781283841069445,
+    "taxa_max": 0.00107860983969576,
+    "taxa_limite": 0.006090933186094471,
+    "dentro_das_restricoes": true,
+    "raio_min_do_arquivo_m": 137.7783660888672,
+    "raio_min_do_arquivo_em_s": 3898.1412782301045
+   }
+  ],
+  "distancia_a_linha_da_ia_m": {
+   "mediana": 0.9614609938953165,
+   "max": 9.654894262898384
+  }
+ },
+ "tempo_s": 200.6
+}
