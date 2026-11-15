@@ -1,21 +1,29 @@
-# Relatório do pedido 50: a linha do projeto (parado na Parte D, o teste no jogo)
+# Relatório do pedido 50: a linha do projeto (feito até a Parte F; parado antes do merge)
 
 - **Pedido:** `docs/prompts/2026-11-12_50_linha-do-projeto.md`.
-- **Situação:** **parado na Parte D,** com o roteiro do teste no jogo pronto para você.
-  - As Partes 0, A, B e C estão feitas.
-  - A conferência da codificação (A.4) parou uma vez. Você escolheu a emenda (a), que entrou no ADR 0031 antes de seguir.
-  - **O envio foi feito por você e conferido em 14/11:** `etapa/linha-do-projeto` está em `6eb4dd41` e `etapa/modelo1-por-trecho` em `e873d6a6`, no remoto e no local (veja "O envio").
-  - **A cópia da pista foi removida depois de 12/11.** O roteiro da Parte D começa por recriá-la.
+- **Situação:** **as Partes 0 a F estão feitas. Parei antes do merge em `develop`,** porque a pasta principal está com `develop` aberta, e o pedido manda parar e avisar nesse caso (veja "O merge").
+  - A conferência da codificação (A.4) parou uma vez. Você escolheu a emenda (a), que entrou no ADR 0031 (item 13) antes de seguir.
+  - O teste no jogo rodou em 14 e 15/11, com os 5 blocos. **A L2 atingiu a meta e virou a referência por trecho; a L1 não.**
+  - A cópia da pista tinha sido removida depois de 12/11 e foi recriada por você em 14/11, antes do teste. Ela continua instalada.
 - **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47`.
 - **Branch:** `etapa/linha-do-projeto`, a partir de `develop` em `e873d6a6`.
-- **Commits:**
+- **Commits** (na branch):
   - `2bf248c1` Pedido 50: o texto do pedido (a linha do projeto);
   - `3f777af4` Pedido 50, Parte A: ADR 0031 (a linha do projeto), registrado antes de qualquer busca, calibração ou arquivo de linha;
   - `02f6fd8e` Relatório do pedido 50: parado na conferência da codificação (A.4); o medidor (M-v2 escolhido), o `trocar_linha.ps1` com L1 e L2 e o código da Parte B;
   - `eb6064b6` Pedido 50: emenda ao ADR 0031 (item 13, a sua decisão, opção a): o raio do C0 pela curvatura de 12 m e a tolerância de 10% na conferência;
   - `99d76e2f` Pedido 50, Parte B: a L1 (montagem por trecho), a L2 (busca com o M-v2 e a região de confiança) e os arquivos do jogo;
-  - o commit deste relatório, com a conferência entre as sessões e os arquivos de handoff (o hash está no chat).
-- **Merges:** nenhum. O merge vem depois das Partes E e F.
+  - `1a41af67` Relatório do pedido 50: parado na Parte D (o roteiro do teste no jogo), com a L1 e a L2 prontas, a Parte C, a conferência entre as sessões e a suíte;
+  - `3a8a45ad` e `6eb4dd41` Relatório do pedido 50: o envio de 13/11 e os caminhos corrigidos;
+  - `979782b3` Relatório do pedido 50: o roteiro do teste no jogo detalhado (a cópia foi removida e é recriada no passo 1) e o envio conferido em 14/11;
+  - `56e02484` e `9dc664ef` Pedido 50, teste no jogo: a conferência do bloco 1 e da sessão 1, sem tempos;
+  - `62fb43ac` Pedido 50, Parte E: o resultado do teste no jogo e a referência pela linha que atingir a meta;
+  - `d1980b12` Pedido 50, Partes E e F: o resultado, o ADR 0031, as linhas nos ADRs 0009, 0028, 0029 e 0030 e a arquitetura;
+  - `45456980` Pedido 50: traz o `develop` (com o merge do pedido 45) para a branch antes do merge;
+  - o commit deste relatório (o hash está no chat).
+- **Merges:**
+  - `45456980`: `develop` (`11046e28`) trazido para a branch, sem conflito;
+  - **o merge da branch em `develop` não foi feito** (veja "O merge").
 - **Arquivos de handoff** (`docs/handoff/2026-11-12_50_linha-do-projeto…`):
   - `_relatorio.md` (este);
   - `_conferencia.json` (B.1: a escada, a conferência por trecho e os limites das restrições);
@@ -23,15 +31,21 @@
   - `_l1.json` e `_l2.json` (B.3: a escolha por trecho, as emendas, a busca e as medidas de cada linha);
   - `_arquivos.json` (B.4: os arquivos do jogo e os sha256);
   - `_linhas.png` (B.3: as linhas sobre a pista, com a C06, a C09, a C10 e a subida dos boxes);
-  - `_testes.txt` (a suíte do backend).
+  - `_conferencia_sessao1_bloco1.json` e `_conferencia_sessao1.json` (a conferência entre as sessões, sem tempos);
+  - `_resultado.json` (Parte E: a conferência, as voltas, os tempos, os vereditos, a deriva, por trecho, os medidores e a execução);
+  - `_por_trecho.png` (E.3: cada linha contra os dois C0 vizinhos, por trecho);
+  - `_referencia.json` (E.5: a referência por trecho com a L2, sem a lateral ponto a ponto);
+  - `_testes.txt` (a suíte do backend de 12/11) e `_testes_15-11.txt` (a suíte na branch com o `develop`).
 
 ## Em uma frase
 
-**As duas linhas do projeto estão prontas para o jogo,** sem nada do `fast_lane.ai` na saída.
-- **A L1** é a montagem por trecho da C2, da C3 e da C4, com 8 emendas nas retas. O teto dela no jogo do 49 é −0,46 s.
-- **A L2** é a busca genética a partir da L1, a até 1,0 m dela (usou no máximo 0,63 m).
-- **A codificação nova** (uma spline no plano X/Z) tira as quinas da grade, mas não a ondulação da linha central na subida dos boxes: a L1 ainda tem um raio de 125 m em 3.898 m. Ali, a C4 não fez a IA frear no 47.
-- **Os medidores discordam muito.** Contra o C0, o M-v2 (o escolhido) prevê −1,36 s para a L1 e −2,33 s para a L2. O calibrado (M-cal) prevê −0,01 s e −0,41 s, e é o que mais acertou o jogo na volta inteira.
+**A linha do projeto chegou lá: a L2 (a busca genética a partir da montagem por trecho) fez a melhor volta do teste, 1:24,552,** abaixo da melhor dos dois C0 vizinhos (1:24,766 e 1:24,670).
+- **A meta do ADR 0031 foi atingida pela L2.** A mediana dela fica 0,121 s abaixo dos C0 vizinhos (IC de −0,514 a −0,004 s).
+- **A L1 (a montagem por trecho) não atingiu:** +0,44 s. A soma dos melhores trechos do 49 não se repetiu quando os trechos foram emendados.
+- **As duas ganham na C04, na C06 e na C09, e perdem mais na C10,** logo depois da emenda da C09 para a C10.
+- **A L2 virou a referência de todos os trechos** em `data/modelo1_por_trecho/referencia_por_trecho.json`, com a marca "linha do projeto, meta atingida em 2026-11-15". O coach ainda não lê esse arquivo.
+- **Os medidores erraram muito:** o escolhido (M-v2) previu −1,36 s para a L1 e −2,33 s para a L2, contra +0,44 e −0,12 s no jogo.
+- **Os C0 deste teste ficaram cerca de 0,5 s mais rápidos que os do 47,** com o mesmo app e o mesmo carro. A causa não foi confirmada. O veredito compara com os C0 do mesmo teste.
 
 ## Parte 0: a pasta
 
@@ -463,19 +477,176 @@ Avise **"rodei a linha do projeto"**. Aí eu faço:
 - **O intervalo entre os blocos passou dos 45 minutos da D.2:** cerca de 3 h 35 min entre o fim do bloco 1 e a troca do bloco 2, e 3 h 20 min entre o fim do bloco 2 e a troca do bloco 3. Vai no relatório do resultado, ao lado da deriva medida pelos três C0.
 - **Pode seguir com a sessão 2:** L2 e depois C0.
 
-## O que se esperava e o que veio (até a Parte D)
+## Parte E: o resultado do teste no jogo
+
+**O comando:** `python -m ml.scripts.linha_do_projeto resultado --handoff …` (commit `62fb43ac`). Tudo está em `_resultado.json`.
+
+### E.1, a conferência
+
+- **O registro:** desde o commit do ADR 0031, há 5 trocas, cada uma com uma gravação da cópia:
+
+| bloco | troca | condição | sha256 | gravação |
+|---|---|---|---|---|
+| 1 | 14/11 18:58:46 | C0 | `36b57fd8…` | `2026-11-14_19-01-15` |
+| 2 | 14/11 22:50:27 | L1 | `c3d30412…` | `2026-11-14_22-52-59` |
+| 3 | 15/11 02:28:11 | C0 | `36b57fd8…` | `2026-11-15_02-29-50` |
+| 4 | 15/11 02:46:55 | L2 | `4e9f1250…` | `2026-11-15_02-47-12` |
+| 5 | 15/11 03:00:53 | C0 | `36b57fd8…` | `2026-11-15_03-01-09` |
+
+- **A troca pegou em todos os blocos:** a mediana das posições até a linha do bloco ficou entre 0,25 e 0,32 m. Na L1 e na L2, a mediana até a original ficou em 1,00 e 0,92 m.
+- **O `fast_lane.ai` original tem o mesmo sha256 de antes** (`36b57fd8…3d8342`), e a cópia existe.
+- **As 10 gravações do 47 ficam fora dos blocos,** porque começaram antes do commit do ADR.
+- **O tempo refeito na grade** bate com o cronômetro do jogo costurado (`game_lap_time`) a até 1,5 ms, e a soma dos 15 trechos bate com o tempo da volta.
+- **O app e o carro** são os mesmos do 47 (`0.7.0-radio-que-ensina`, `rss_formula_rss_3_v6_2026`, pelos metadados das gravações).
+
+### E.2, as voltas válidas, os tempos e o veredito
+
+| bloco | condição | válidas / que contam | melhor | mediana | desvio |
+|---|---|---|---|---|---:|
+| 1 | C0 | 7/7 | 1:24,775 | 1:24,854 | 0,102 s |
+| 2 | L1 | 7/7 | 1:25,188 | 1:25,307 | 0,196 s |
+| 3 | C0 | 7/7 | 1:24,766 | 1:25,046 | 0,224 s |
+| 4 | L2 | 7/7 | **1:24,552** | **1:24,704** | 0,129 s |
+| 5 | C0 | 7/7 | 1:24,670 | 1:24,823 | 0,250 s |
+
+- **Todas as 35 voltas que contam são válidas.** A maior saída do corredor foi de 0,55 m (o limite é 1,0 m).
+
+**O veredito da A.2:**
+
+| linha | a melhor dela | a melhor do C0 antes | a melhor do C0 depois | diferença (antes / depois) | veredito |
+|---|---|---|---|---|---|
+| L1 | 1:25,188 | 1:24,775 (bloco 1) | 1:24,766 (bloco 3) | +0,413 / +0,422 s | **meta não atingida** |
+| L2 | **1:24,552** | 1:24,766 (bloco 3) | 1:24,670 (bloco 5) | **−0,214 / −0,119 s** | **meta atingida** |
+
+**Só relatados:**
+- **A diferença das medianas contra os dois C0 vizinhos juntos** (bootstrap de 10.000, semente 50):
+  - L1: +0,440 s (de +0,193 a +0,779). Pela regra do ADR 0029, "mais lenta";
+  - L2: −0,121 s (de −0,514 a −0,004). Pela regra do ADR 0029, "mais rápida que a linha da IA", e "não inferior" (o limite superior fica abaixo de +0,10 s).
+- **A deriva, pelos três C0:** contra o bloco 1, o bloco 3 ficou +0,192 s (de −0,169 a +0,365), e o bloco 5 ficou −0,031 s (de −0,282 a +0,375).
+  - Os tempos dos C0 se juntam em duas faixas, perto de 1:24,8 e de 1:25,2, nos três blocos.
+  - A deriva não decide o veredito, porque a meta compara cada linha com os dois vizinhos.
+- **A `#0013`** (1:24,829, de 04/10):
+
+| | a `#0013` | este teste |
+|---|---|---|
+| pista | a original (`vhe_interlagos`) | a cópia (`vhe_interlagos_teste_m1`) |
+| preset | o de 04/10 | "pedido 47 [teste]" |
+| melhor | 1:24,829 | L2 1:24,552 (−0,278 s); C0 1:24,670 a 1:24,775 |
+
+  - **Os C0 deste teste ficaram cerca de 0,5 s mais rápidos que o C0 do pedido 47** (medianas de 1:24,82 a 1:25,05, contra 1:25,438), com o mesmo app e o mesmo carro.
+  - **A causa não foi confirmada.** Pode ser o preset, uma atualização do jogo ou do CSP, ou a cópia recriada.
+  - Por isso, a comparação justa é com os C0 vizinhos, e não com a `#0013` nem com os tempos do 47.
+- **O intervalo entre os blocos:** de 3 a 4 horas entre os blocos 1, 2 e 3, e de 1 a 4 minutos entre o fim de um bloco e a troca do seguinte nos blocos 3, 4 e 5. Na sessão 1, isso passou dos 45 minutos da D.2.
+
+### E.3, por trecho (a regra do ADR 0030, contra os dois C0 vizinhos)
+
+**A regra:** ganho ou perda só quando a diferença é significativa no Holm contra os dois vizinhos, com o mesmo sinal na mediana e na média. A figura é `_por_trecho.png`.
+
+| trecho | L1 − C0 antes | L1 − C0 depois | L1 | L2 − C0 antes | L2 − C0 depois | L2 |
+|---|---:|---:|---|---:|---:|---|
+| C01 | +0,079 | +0,065 | perda | +0,094 | +0,104 | perda |
+| C02 | +0,086 | +0,083 | perda | +0,053 | +0,062 | perda |
+| C03 | +0,027 | +0,028 | perda | −0,006 | +0,001 | empate |
+| C04 | −0,125 | −0,128 | **ganho** | −0,210 | −0,197 | **ganho** |
+| C05 | +0,002 | +0,014 | empate | −0,017 | −0,032 | empate |
+| C06 | −0,236 | −0,234 | **ganho** | −0,283 | −0,295 | **ganho** |
+| C07 | −0,007 | +0,003 | empate | −0,088 | −0,100 | **ganho** |
+| C08 | +0,035 | +0,034 | perda | −0,004 | +0,004 | empate |
+| C09 | −0,059 | −0,063 | **ganho** | −0,081 | −0,079 | **ganho** |
+| C10 | +0,434 | +0,321 | perda | +0,227 | +0,360 | perda |
+| C11 | +0,027 | −0,056 | empate | −0,021 | +0,083 | empate |
+| C12 | +0,008 | +0,007 | empate | −0,043 | −0,027 | **ganho** |
+| C13 | +0,017 | +0,017 | perda | −0,014 | −0,006 | empate |
+| C14 | +0,062 | +0,065 | perda | +0,028 | +0,031 | perda |
+| C14→linha | +0,072 | +0,066 | perda | +0,023 | +0,027 | perda |
+
+(diferença das medianas, s; os IC e os p-valores estão no `_resultado.json`)
+
+- **O que a busca mudou:** a L2 ganha onde a L1 ganhava (C04, C06 e C09), e ganhou mais nesses trechos. Passou a ganhar na C07 e na C12, e saiu da perda na C03, na C08 e na C13.
+- **A maior perda das duas é a C10,** logo depois da emenda da C09 para a C10 (a reta curta em que a L1 cruza 4 m de pista). No 49, a C2 perdia só +0,065 s na C10.
+- **A subida dos boxes (C14→linha)** perde pouco nas duas, +0,02 a +0,07 s, com o raio de 125 a 138 m no arquivo. Isso está longe dos +0,84 s da C1 no 47.
+- **A soma por trecho da tabela B.1 do 49** previa −0,46 s para a L1, e veio +0,44 s. As emendas e a mudança de entrada de um trecho para o seguinte custaram mais do que o teto sugeria.
+
+### E.4, os medidores contra o jogo
+
+| linha | jogo (contra os C0 vizinhos) | M-v2 (o escolhido) | M-real | M-cal |
+|---|---:|---:|---:|---:|
+| L1 | +0,440 s | −1,358 s | −1,089 s | −0,013 s |
+| L2 | −0,121 s | −2,332 s | −2,215 s | −0,410 s |
+
+- **O medidor escolhido errou o sinal da L1 e superestimou o ganho da L2 em 2,2 s.** A busca da L2 foi para onde o M-v2 via ganho, e uma parte disso apareceu no jogo, mas muito menor.
+- **O M-cal ficou mais perto nas duas,** mas também previu a L1 mais rápida.
+- **Por trecho, o Spearman** da diferença prevista contra a do jogo ficou entre 0,32 e 0,43 nos três medidores, nas duas linhas.
+
+### E.5, a referência para o app
+
+**A L2 atingiu a meta,** então virou a linha de referência de todos os trechos de `data/modelo1_por_trecho/referencia_por_trecho.json` (fora do git), pelo item 11 do ADR 0031. O comando foi `python -m ml.scripts.linha_do_projeto referencia --handoff …`, e o resumo, sem a lateral ponto a ponto, está em `_referencia.json`.
+- **A marca:** "linha do projeto, meta atingida em 2026-11-15".
+- **A execução da IA na L2,** medida nas 7 voltas do bloco 4: a frenagem, o freio máximo, a mínima, a marcha, a retomada e o tempo do trecho (as medidas do ADR 0030, item 5).
+- **A referência anterior** (a linha da IA, C0) fica em cada trecho como `referencia_anterior`. O arquivo do pedido 49 foi guardado em `data/modelo1_por_trecho/referencia_por_trecho_pedido49.json`.
+- **O que não mudou:**
+  - as candidatas do 49 continuam "a validar no jogo";
+  - as propostas provisórias (o ponto de frenagem traduzido e o limite "de linha") continuam calculadas sobre o C0, com uma nota;
+  - **o coach ainda não lê esse arquivo.**
+- **O formato é conferido antes de gravar:** `conferir_formato_da_referencia` ganhou o parâmetro `linha`, que exige a marca quando a linha não é o C0. O padrão continua o C0, e os testes do 49 passam.
+
+### E.6, os testes
+
+**Os testes sintéticos do pedido** (`backend/tests/test_linha_do_projeto.py`, 20 testes) cobrem o que a E.6 pede:
+- a codificação nova (a curvatura contínua, o raio mínimo, a taxa de variação e a conferência);
+- a calibração do medidor com uma linha de fora;
+- a região de confiança;
+- a montagem por trecho e as emendas;
+- o veredito da A.2 com os blocos vizinhos e os blocos do registro;
+- o `trocar_linha.ps1` com L1 e L2, nas travas do 47;
+- o formato da referência com a linha do projeto.
+
+A suíte está em "Testes".
+
+## Parte F: a documentação
+
+- **ADR 0031:** o resultado entrou numa seção no fim, sem mudar nada acima dela, e o índice ganhou o resultado (`d1980b12`).
+- **ADR 0028:** "a M1 v2 testada como medidor no pedido 50, só relatado; o veredito não muda", com o erro dela na L2.
+- **ADR 0009:** "a linha do projeto vai para a referência do coach se atingir a meta do ADR 0031", mais o fato de que a L2 atingiu e de que o coach ainda não lê o arquivo.
+- **ADRs 0029 e 0030:** uma linha de atualização cada, apontando para o 0031.
+- **`docs/arquitetura_ml.md`:** a seção "A linha do projeto (pedido 50; ADR 0031)".
+- **`docs/backlog.md`:** não editado. Os itens estão no fim deste relatório.
+
+## O merge
+
+**`develop` andou depois do início deste pedido:**
+- o merge do 45 (`16cdf04d`) e os relatórios dele foram até `4c7bcbae`, que está no remoto;
+- depois, mais dois commits só locais, de documentação: `270531fa` (o relatório do 45) e `11046e28` (o backlog de 13/11).
+
+**O que foi feito, na pasta do 47:**
+- `git merge --no-ff develop`, em `45456980`, sem conflito. A branch tem agora tudo do `develop` local (`11046e28`);
+- a suíte foi rodada nessa branch (veja "Testes").
+
+**O que não foi feito, e por quê:**
+- **a pasta principal está com `develop` aberta** (`git worktree list`: `C:/Users/Dokas/Desktop/f1-telemetry-analyzer` em `11046e28 [develop]`). O relatório do 45 diz que ela ficou assim de propósito;
+- **o pedido manda parar e avisar:** "se `develop` estiver aberta em outra pasta, pare e me avise". O git também não deixa abrir `develop` na pasta do 47 enquanto ela estiver aberta na principal;
+- por isso, o merge em `develop` e o envio de `develop` esperam a sua decisão.
+
+**As saídas possíveis:**
+- **(a) Você tira a pasta principal de `develop`** (por exemplo, `git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer switch etapa/replay-e-radio-que-ensina`, se ela não tiver mudança sem commit). Eu faço o merge na pasta do 47, como nos pedidos 47 e 49, e volto a pasta do 47 para a branch do pedido.
+- **(b) Eu faço o merge na própria pasta principal,** onde `develop` já está aberta (`git -C … merge --no-ff etapa/linha-do-projeto`). Isso toca a pasta principal, que este pedido não toca sem você dizer.
+- **(c) Você faz o merge.**
+
+## O que se esperava e o que veio
 
 | item do ADR | esperado | resultado |
 |---|---|---|
 | 10.1 | a conferência passa no 1º ou no 2º par | **não:** nenhum passou na regra registrada; com a emenda (a), passou o 3º (6/15 m) |
-| 10.2 | o raio do arquivo da L1 no trecho C14→linha passa de 200 m | **não:** 125 m em 3.898 m (a C4 carrega a ondulação da linha central) |
+| 10.2 | o raio do arquivo da L1 no trecho C14→linha passa de 200 m | **não:** 125 m em 3.898 m (a C4 carrega a ondulação da linha central); mesmo assim, a perda ali ficou pequena (+0,07 s) |
 | 10.3 | o M-cal é o escolhido | **não:** o M-v2 (ρ 0,484 contra 0,469) |
 | 10.4 | o medidor prevê a L2 de 0,1 a 0,3 s mais rápida que a L1, perto de 1,0 m em poucos trechos | **não:** 0,97 s mais rápida no M-v2; no máximo 0,63 m da L1 |
-| 10.5 a 10.7 | no jogo | depois do teste |
+| 10.5 | no jogo, a L1 entre −0,3 e +0,2 s da mediana dos C0 vizinhos | **não:** +0,44 s |
+| 10.6 | a meta perto de meio a meio para a L1, um pouco menos para a L2 | **ao contrário:** a L2 atingiu, e a L1 não |
+| 10.7 | a `#0013` fora de alcance | **não:** a melhor da L2 fica 0,28 s abaixo dela. Mas os C0 deste teste também ficaram abaixo dela, com a causa não confirmada |
 
 ## Testes
 
-- **`backend/tests/test_linha_do_projeto.py`: 19 testes, todos sintéticos.** Eles cobrem:
+- **`backend/tests/test_linha_do_projeto.py`: 20 testes, todos sintéticos.** Eles cobrem:
   - as janelas e os pontos de controle;
   - a curvatura contínua;
   - a ida e volta;
@@ -489,67 +660,62 @@ Avise **"rodei a linha do projeto"**. Aí eu faço:
   - o veredito da meta;
   - os blocos do registro;
   - o arquivo pela curva;
-  - o `trocar_linha.ps1` com L1 e L2 e as travas, numa pasta falsa "[teste]" apagada no fim.
-- **A suíte do backend:** `1 failed, 1003 passed, 37 warnings in 699.54s` (a saída inteira em `_testes.txt`, rodada com o código de `99d76e2f`).
-  - **A falha é a de ambiente, conhecida:** `test_leitura.py::test_volta_da_conferencia_nos_arquivos_reais`, com `KeyError: 'geometryId'`. Falta, na pasta separada, o `data/reference_models/vhe_interlagos.geometry.json`, que o git ignora. Não corrigi.
-  - **Os testes do 47 continuam passando,** inclusive os do `trocar_linha.ps1`.
-  - A conferência entre as sessões (`conferencia-sessao`) entrou depois da suíte e não tem teste próprio. As funções de blocos que ela usa têm.
+  - o `trocar_linha.ps1` com L1 e L2 e as travas, numa pasta falsa "[teste]" apagada no fim;
+  - o formato da referência com a linha do projeto.
+- **A suíte do backend em 12/11** (código de `99d76e2f`): `1 failed, 1003 passed, 37 warnings in 699.54s` (`_testes.txt`).
+- **A suíte do backend em 15/11, na branch com o `develop` dentro** (`45456980`): `1 failed, 1033 passed, 37 warnings in 559.99s`. São 30 testes a mais que em 12/11, vindos do pedido 45 (o `develop` trazido) e do teste novo da referência (`_testes_15-11.txt`).
+- **A falha é a de ambiente, conhecida:** `test_leitura.py::test_volta_da_conferencia_nos_arquivos_reais`, com `KeyError: 'geometryId'`. Falta, na pasta separada, o `data/reference_models/vhe_interlagos.geometry.json`, que o git ignora. Não corrigi.
+- **As etapas `conferencia-sessao`, `resultado` e `referencia`** não têm teste próprio. Elas leem as gravações reais, e as funções puras que usam têm teste.
 
 ## Os dados da pasta principal
 
-**Nada foi escrito nos dados da principal.** A foto de `data\ml`, `data\cache` e `data\recordings` (932 arquivos: nome, tamanho e data) foi tirada antes das contas da Parte B e de novo depois da suíte, **sem nenhuma diferença.** As duas fotos estão em `data\linha_do_projeto\foto_antes.tsv` e `foto_depois.tsv`, fora do git.
+**Nada foi escrito nos dados da principal.**
+- **De 12/11:** a foto de `data\ml`, `data\cache` e `data\recordings` (932 arquivos: nome, tamanho e data) foi tirada antes das contas da Parte B e de novo depois da suíte, sem nenhuma diferença (`data\linha_do_projeto\foto_antes.tsv` e `foto_depois.tsv`, fora do git).
+- **De 15/11:** a foto (937 arquivos) foi tirada antes e depois da suíte de 15/11, **sem nenhuma diferença** (`foto_antes_da_suite_15-11.tsv` e `foto_depois_da_suite_15-11.tsv`). Contra a foto de 12/11, a única mudança é a gravação `2026-11-12_22-57-03_vhe_interlagos` (5 arquivos), do teste no jogo do pedido 45 na pista original, que não é deste pedido.
 
 ## O envio
 
-**Em 12/11, nada foi enviado:** o `develop` remoto estava em `bbff5c97`, sem o 49, e este pedido manda esperar por ele.
+- **Em 12/11, nada foi enviado:** o `develop` remoto ainda não tinha o 49, e este pedido manda esperar por ele.
+- **Em 13/11, tentei enviar a branch deste pedido,** e o controle de permissões recusou.
+- **Em 14/11, você enviou as duas branches,** conferidas no `ls-remote`: `etapa/linha-do-projeto` em `6eb4dd41` e `etapa/modelo1-por-trecho` em `e873d6a6`, iguais ao local.
+- **Agora, a branch deste pedido está à frente do remoto** (com as Partes E e F, o `develop` trazido e este relatório).
 
-**Em 13/11, o `develop` remoto já tinha o 49.**
-- O local e o remoto estão em `4c7bcbae` (o relatório do pedido 45), que contém o `e873d6a6` do 49. O merge do 45 (`16cdf04d`) entrou por cima dele.
-- **A branch `etapa/modelo1-por-trecho` não está no remoto.**
-- Pela B.6, tentei enviar a branch deste pedido. **O controle de permissões da sessão recusou o envio,** e não tentei de novo.
+**Antes, conferi o que vai** (as mudanças desde `6eb4dd41`): nenhum arquivo acima de 50 MB, nenhum segredo, nada de `recordings/`, `data/recordings`, `data/ml`, `data/linha_do_projeto` ou `data/modelo1_por_trecho`, e nenhum `.ai`.
 
-**Antes, conferi o que vai** (as mudanças desde `e873d6a6`): nenhum arquivo acima de 50 MB, nenhum segredo, nada de `recordings/`, `data/recordings`, `data/ml` ou `data/linha_do_projeto`, e nenhum `.ai`.
-
-**Os comandos para você rodar pelo terminal, nesta ordem:**
+**O envio da branch, para você rodar pelo terminal** (um avanço simples, sem `--force`):
 
 ```powershell
-git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 push -u origin etapa/linha-do-projeto
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 push origin etapa/linha-do-projeto
 ```
 
 ```powershell
-git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 push -u origin etapa/modelo1-por-trecho
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 rev-parse etapa/linha-do-projeto
 ```
 
 ```powershell
-git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 rev-parse etapa/linha-do-projeto etapa/modelo1-por-trecho
+git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 ls-remote origin refs/heads/etapa/linha-do-projeto
 ```
 
-```powershell
-git -C C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47 ls-remote origin refs/heads/etapa/linha-do-projeto refs/heads/etapa/modelo1-por-trecho
-```
-
-- **O segundo é a branch do 49,** que faltou no envio dele. É um envio de branch nova, como o primeiro.
-- **Depois de cada envio,** o hash do `rev-parse` e o do `ls-remote` têm de ser iguais.
-- **Os dois são branch nova,** sem `--force`. `develop`, `main` e as tags não vão agora: `develop` só vai depois do merge deste pedido (depois da Parte F).
-- **O `develop` andou com o 45:** antes do merge deste pedido, eu trago `develop` para a branch, como manda o pedido.
-
-**Conferido em 14/11:** você rodou os envios. O `ls-remote` dá `etapa/linha-do-projeto` em `6eb4dd41` e `etapa/modelo1-por-trecho` em `e873d6a6`, iguais ao local. `develop` continua em `4c7bcbae`, no local e no remoto.
+**O envio de `develop`** vem depois do merge (veja "O merge"). `main` e as tags não vão.
 
 ## Itens para o backlog (para o Cowork)
 
-1. **A linha central do projeto ondula na subida dos boxes** (curvatura de ±0,013 1/m entre 3.860 e 3.940 m). Toda linha guardada como lateral em relação a ela, e decodificada sem compensar, leva essa ondulação. Isso inclui a C3 e a C4 do 46, e a L1 e a L2 no trecho C14→linha. Suavizar a linha central ali, num pedido próprio, mudaria o `geometry_id`.
-2. **O raio de três pontos do `fast_lane.ai` é muito sensível ao ruído dos pontos.** Qualquer escritor de linha precisa de uma curva suave no plano X/Z, e não da grade de 2 m em linha reta (o escritor do 47).
-3. **As restrições pelo menor raio das 150 voltas ficaram frouxas** (5,5 m na C07, 8,4 m na C08), porque um valor extremo pega uma correção ou uma escorregada. Um percentil por trecho, ou as voltas de uma sessão só, restringiria de verdade.
-4. **A conferência por "menor raio do trecho" também é um valor extremo.** Um percentil, ou o raio numa janela fixa, seria mais estável.
-5. **O medidor escolhido (M-v2) prevê −2,3 s para a L2, e o calibrado, −0,4 s.** Os três medidores erram o sinal da C3 e da C4 no 47. O teste no jogo vai dizer qual errou menos fora das linhas do 47. Vale registrar antes, num pedido próprio, um medidor que use o tempo por trecho do jogo como dado de treino.
-6. **A busca da L2 parou pelo limite de 250 gerações, ainda melhorando.** Com mais gerações, ela iria mais longe no medidor, e não necessariamente no jogo.
-7. **A emenda da C09 para a C10 cruza 4 m de pista em 40 m.** Se a L1 perder na C10, essa emenda é a primeira suspeita.
-8. **Mais carros da IA (Parte C):** um pedido próprio, depois do merge do 45, começando por um teste de quais campos do `ac.getCar(i)` valem para os carros da IA.
-9. **A falha do `test_leitura` volta em toda pasta separada** (falta o `data/reference_models/vhe_interlagos.geometry.json`, que o git ignora).
+1. **A linha do projeto (a L2) é a referência por trecho, mas o coach ainda não lê o arquivo.** Um pedido próprio poderia ligar o coach a ela. Seriam a linha de cada trecho e a execução da IA nela, e o ADR 0009 precisaria ser revisto.
+2. **A emenda da C09 para a C10 custa caro:** +0,23 a +0,43 s na C10 nas duas linhas. Um teste com a L2 e só a C10 trocada pela linha da IA (ou com a emenda mais longa) diria quanto dá para tirar dali.
+3. **Os C0 deste teste ficaram cerca de 0,5 s mais rápidos que os do 47,** com o mesmo app e o mesmo carro. A causa não foi confirmada: pode ser o preset, uma atualização do jogo ou do CSP, ou a cópia recriada. Vale conferir o preset e a versão do CSP antes de comparar tempos entre testes.
+4. **Os medidores erram muito fora das linhas que os calibraram:** o escolhido previu −2,33 s para a L2, que deu −0,12 s no jogo. Com as 7 linhas medidas no jogo (as 5 do 47 e a L1 e a L2), dá para registrar e testar um medidor novo, num pedido próprio.
+5. **A linha central do projeto ondula na subida dos boxes** (curvatura de ±0,013 1/m entre 3.860 e 3.940 m). As linhas vindas da C4 ainda têm 125 a 138 m de raio ali, e o custo no jogo foi pequeno. Suavizar a linha central mudaria o `geometry_id`.
+6. **O raio de três pontos do `fast_lane.ai` é muito sensível ao ruído dos pontos.** Qualquer escritor de linha precisa de uma curva suave no plano X/Z, e não da grade de 2 m em linha reta (o escritor do 47).
+7. **As restrições pelo menor raio das 150 voltas ficaram frouxas** (5,5 m na C07, 8,4 m na C08). Um percentil por trecho restringiria de verdade.
+8. **A conferência por "menor raio do trecho" também é um valor extremo.** Um percentil, ou o raio numa janela fixa, seria mais estável.
+9. **A busca da L2 parou pelo limite de 250 gerações, ainda melhorando no medidor.** Como o medidor errou muito, mais gerações não garantem mais ganho no jogo.
+10. **Mais carros da IA (Parte C):** um pedido próprio, agora que o 45 entrou, começando por um teste de quais campos do `ac.getCar(i)` valem para os carros da IA.
+11. **Uma troca sem jogo vira um bloco vazio** no `registro.csv` (a regra do ADR 0031, item 3). Num próximo teste, vale registrar antes uma regra como a do item 16 do ADR 0029.
+12. **A falha do `test_leitura` volta em toda pasta separada** (falta o `data/reference_models/vhe_interlagos.geometry.json`, que o git ignora).
 
 ## O que falta
 
-- **O teste no jogo (Parte D),** com você.
-- **Depois do seu aviso "rodei a linha do projeto":** a Parte E (o resultado, o veredito e a referência), a Parte F (os ADRs 0031, 0028, 0009, 0029 e 0030 e a arquitetura), o merge em `develop` e o envio.
-- **O envio do 49 e o deste pedido:** os comandos acima.
-- **A cópia da pista foi removida** (o roteiro a recria), e a pasta do 47 não foi apagada.
+- **O merge em `develop`:** a sua decisão entre (a), (b) e (c) em "O merge". Depois dele, o envio de `develop` e a volta da pasta do 47 para a branch do pedido.
+- **O envio da branch deste pedido:** os comandos acima.
+- **A cópia da pista continua instalada.** Ela pode ser removida pelo `remover_copia.ps1` quando você quiser: o resultado já está gravado.
+- **A pasta do 47 não foi apagada.** Você decide quando.
