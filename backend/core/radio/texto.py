@@ -53,6 +53,8 @@ a volta da IA do jogo nao e mais referencia. "Melhor volta da sessão" virou "Me
 """
 from __future__ import annotations
 
+import re
+
 from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Optional, Sequence
 
@@ -84,6 +86,16 @@ class CurvaDaPista:
     fim_m: float
     trecho_inicio_m: float
     trecho_fim_m: float
+
+
+# Pedido 52 (ADR 0033, emenda de 16/11, item 1): a fala diz uma das causas medidas do 45 (a freada, a minima,
+# o tracado, a saida ou o acelerador), pelas palavras com que `causa_falada`, `causa_principal` e
+# `_diferenca_falada` as abrem.
+CAUSA_NA_FALA = re.compile(r"\b([Ff]reou|[Mm]ínima|[Pp]assou|[Ss]aiu|[Aa]celerou)\b")
+
+
+def fala_tem_causa(fala: Optional[str]) -> bool:
+    return bool(fala and CAUSA_NA_FALA.search(fala))
 
 
 def _numero(valor: Any) -> Optional[float]:

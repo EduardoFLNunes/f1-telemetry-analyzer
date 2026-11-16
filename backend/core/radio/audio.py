@@ -78,8 +78,10 @@ def _cortar_silencio(dados: array.array, taxa: int) -> array.array:
     return dados[max(0, sons[0] - folga): min(len(dados), sons[-1] + folga)]
 
 
-def falar(texto: str, destino: Path, voz: str = VOZ_PADRAO, velocidade: float = VELOCIDADE_PADRAO) -> float:
-    """Grava `destino` (WAV) com a vinheta e a voz; devolve a duracao em segundos."""
+def falar(texto: str, destino: Path, voz: str = VOZ_PADRAO, velocidade: float = VELOCIDADE_PADRAO,
+          vinheta_antes: bool = True) -> float:
+    """Grava `destino` (WAV) com a vinheta e a voz; devolve a duracao em segundos. `vinheta_antes=False`:
+    so a voz (o aviso do engenheiro, ADR 0033, emenda de 16/11, item 2)."""
     if sys.platform != "win32":
         raise VozIndisponivel("a voz do radio usa as vozes do Windows")
     destino = Path(destino)
@@ -100,7 +102,7 @@ def falar(texto: str, destino: Path, voz: str = VOZ_PADRAO, velocidade: float = 
             raise VozIndisponivel((r.stderr or r.stdout or f"código {r.returncode}").strip()[:300])
         taxa, fala = _ler_wav(cru)
     fala = _cortar_silencio(fala, taxa)
-    tudo = vinheta(taxa)
+    tudo = vinheta(taxa) if vinheta_antes else array.array("h")
     tudo.extend(fala)
     tudo.extend([0] * int(taxa * 0.15))
     temporario = destino.with_suffix(".tmp")

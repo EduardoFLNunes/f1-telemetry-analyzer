@@ -133,8 +133,12 @@ def _primeiro_acelerador_cheio(acelerador: np.ndarray, track: Any, inicio_s: flo
 
 
 def medidas_da_volta(volta: Dict[str, np.ndarray], total: float, ref: Dict[str, np.ndarray], ref_total: float,
-                     pista: Pista) -> List[Dict[str, Any]]:
-    """Por curva: a perda e as quatro diferencas (volta menos referencia)."""
+                     pista: Pista, inicio_da_freada: Optional[Dict[str, float]] = None) -> List[Dict[str, Any]]:
+    """Por curva: a perda e as quatro diferencas (volta menos referencia).
+
+    `inicio_da_freada` (curva -> s): onde comeca a busca do ponto de freada. Sem ele, o apice da curva
+    anterior (a regra do 45, que o feedback do radio usa). O engenheiro passa a saida do trecho anterior
+    (ADR 0033, emenda de 16/11, item 4)."""
     from ml.comparison.evolution import braking_point, segment_time
     from ml.comparison.lap_vs_reference import _signed_distance, _window
 
@@ -143,6 +147,8 @@ def medidas_da_volta(volta: Dict[str, np.ndarray], total: float, ref: Dict[str, 
     for k, seg in enumerate(pista.segmentos):
         corner = seg.corner
         anterior = pista.segmentos[k - 1].corner.apex_s
+        if inicio_da_freada and corner.label[:3] in inicio_da_freada:
+            anterior = float(inicio_da_freada[corner.label[:3]]) % float(track.length)
         perda = segment_time(volta["elapsed"], total, track, seg) - segment_time(ref["elapsed"], ref_total, track, seg)
         freada_v = braking_point(volta["freio"], track, anterior, corner.apex_s)
         freada_r = braking_point(ref["freio"], track, anterior, corner.apex_s)

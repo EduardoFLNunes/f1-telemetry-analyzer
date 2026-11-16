@@ -110,6 +110,16 @@ def conferencia() -> Dict[str, Any]:
     frases = []
     for t, p in zip(trechos, pontos):
         linha = {"trecho": t.nome, "pontos": {k: (round(v, 1) if isinstance(v, float) else v) for k, v in p.items()}}
+        # ADR 0033, emenda de 16/11, item 3: a referencia nao freia nem alivia: "sem tirar o pé", para qualquer causa
+        if t.tem_curva and p.get("semTirarOPe"):
+            f = R.frase_sem_tirar_o_pe(t.entrada_s, L)
+            f["fala"] = R.fala_do_aviso(t.nome, f["frase"])
+            f["escrita"] = R.escrita_do_aviso(t.nome, f["frase"])
+            f["sPonto"] = round(float(t.entrada_s), 1)
+            linha[R.SEM_TIRAR_O_PE] = f
+            linha.update(freie=None, vire=None, acelere=None)
+            frases.append(linha)
+            continue
         for acao, chave in (("freie", "freada"), ("vire", "entrada"), ("acelere", "retomada")):
             s = p.get(chave)
             if s is None:
@@ -117,6 +127,7 @@ def conferencia() -> Dict[str, Any]:
                 continue
             f = R.frase_da_acao(acao, s, pontos_marcos, L)
             f["fala"] = R.fala_do_aviso(t.nome, f["frase"])
+            f["escrita"] = R.escrita_do_aviso(t.nome, f["frase"])
             f["sPonto"] = round(float(s), 1)
             linha[acao] = f
         frases.append(linha)

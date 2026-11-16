@@ -2498,7 +2498,8 @@ desenharOEngenheiro = function(dt)
     caixa(texto, 20, vec2(20, y), vec2(W - 70, y + 52), CORES.texto)
     local dist = aFrente(s, tonumber(it.sAcao), L)
     ui.dwriteDrawText('a ' .. decimal(dist, 0) .. ' m' .. (it.voz and '' or ' · só na janela'), 12, vec2(20, y + 54), CORES.apoio)
-    if not MARCA_3D and okC and carro then
+    -- "sem tirar o pé" (ADR 0033, emenda de 16/11, item 3): sem marca e sem contagem (o item nao traz x e z)
+    if not MARCA_3D and okC and carro and it.x then
       local n = contagem321(it, s, L, carro)
       if n then ui.dwriteDrawText(n, 44, vec2(W - 60, y), CORES.vermelho) end
     end

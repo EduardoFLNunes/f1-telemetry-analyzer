@@ -63,6 +63,10 @@ class Engenheiro:
         self.ativo = self.motivo is None
         self.pontos_dos_marcos = M.pontos_de_referencia(self.marcos["marcos"]) if self.marcos else []
         self.ruido_por_trecho = {t["trecho"]: float(t["ruidoS"]) for t in (self.ruido or {}).get("trechos", [])}
+        # ADR 0033, emenda de 16/11, item 4: a busca da freada comeca na saida do trecho anterior (tambem na
+        # medida da causa do engenheiro; o feedback do radio continua com a regra do 45)
+        self.inicio_da_freada = {t.nome[:3]: R.inicio_da_busca_da_freada(self.trechos, k)
+                                 for k, t in enumerate(self.trechos) if t.tem_curva}
         if dados is not None:
             store = VM.como_volta_do_store(dados)
             self.modelo = {"grade": grade(store), "tempoS": float(store["tempoS"]), "origem": "volta_do_modelo",
@@ -71,6 +75,8 @@ class Engenheiro:
             self.blocos = R.blocos_de_voz(self.modelo["grade"], self.modelo["tempoS"], track, self.trechos)
         else:
             self.modelo, self.tempos_modelo, self.blocos = None, None, []
+        # ADR 0033, emenda de 16/11, item 1: as retas longas (os blocos de 8,8 s ou mais na volta do modelo)
+        self.retas_longas = [b for b in self.blocos if b.get("fim") is not None and (b.get("duracaoS") or 0) >= R.RETA_LONGA_S]
         # o estado da sessao
         self.lista: Dict[str, Dict[str, Any]] = {}
         self.versao = 0
@@ -154,7 +160,8 @@ class Engenheiro:
                 chave = id(ref["grade"])
                 if chave not in medidas_por_ref:
                     try:
-                        medidas_por_ref[chave] = medidas_da_volta(grade, total, ref["grade"], ref["tempoS"], self.pista)
+                        medidas_por_ref[chave] = medidas_da_volta(grade, total, ref["grade"], ref["tempoS"], self.pista,
+                                                                  inicio_da_freada=self.inicio_da_freada)
                     except Exception as erro:
                         logger.warning("Engenheiro sem as medidas da volta: %s", erro)
                         medidas_por_ref[chave] = []
@@ -204,24 +211,33 @@ class Engenheiro:
                                 "sFala": None, "sAcao": None, "conferencia": None}
         if causa is None:
             return item
-        chave = {"freie": "freada", "vire": "entrada", "acelere": "retomada"}[causa["acao"]]
+        acao = causa["acao"]
+        # ADR 0033, emenda de 16/11, item 3: a referencia nao freia nem alivia no trecho: "sem tirar o pé"
+        sem_tirar = bool(pts.get("semTirarOPe"))
+        if sem_tirar:
+            acao = R.SEM_TIRAR_O_PE
+        chave = {"freie": "freada", "vire": "entrada", "acelere": "retomada", R.SEM_TIRAR_O_PE: "entrada"}[acao]
         s_acao = pts.get(chave)
-        item.update(causa=causa["causa"], acao=causa["acao"], valorDaCausa=causa["valor"], unidade=causa["unidade"])
+        item.update(causa=causa["causa"], acao=acao, valorDaCausa=causa["valor"], unidade=causa["unidade"])
         if s_acao is None:
             item["semPonto"] = f"a referência não tem {chave} no trecho"
             return item
-        f = R.frase_da_acao(causa["acao"], s_acao, self.pontos_dos_marcos, self.L)
+        f = (R.frase_sem_tirar_o_pe(s_acao, self.L) if sem_tirar
+             else R.frase_da_acao(acao, s_acao, self.pontos_dos_marcos, self.L))
         fala = R.fala_do_aviso(t.nome, f["frase"])
-        lateral = np.asarray(ref["grade"]["lateral"], float)
-        lat = float(lateral[int(self.track.index_of(s_acao))]) if np.isfinite(lateral).any() else 0.0
-        x, z = self.track.to_world([s_acao], [lat])[0]
         k_ponto = int(self.track.index_of(s_acao))
-        item.update(frase=f["frase"], fala=fala, comMarco=f["comMarco"], marco=f["marco"], d=f["d"], sDito=f["sDito"],
+        item.update(frase=f["frase"], fala=fala, escrita=R.escrita_do_aviso(t.nome, f["frase"]), comMarco=f["comMarco"],
+                    marco=f["marco"], d=f["d"], sDito=f["sDito"],
                     sAcao=round(float(s_acao), 1), refMinimaKmh=pts.get("minimaKmh"),
                     refFreada=pts.get("freada"), vFreadaKmh=pts.get("velocidadeNaFreadaKmh"),
-                    vNoPontoKmh=float(np.asarray(ref["grade"]["velocidade"], float)[k_ponto]),
-                    x=round(float(x), 2), z=round(float(z), 2),
-                    direcao=[round(float(self.track.tangent[k_ponto][0]), 4), round(float(self.track.tangent[k_ponto][1]), 4)])
+                    vNoPontoKmh=float(np.asarray(ref["grade"]["velocidade"], float)[k_ponto]))
+        if not sem_tirar:
+            # a marca no asfalto (ADR 0033, item 7); "sem tirar o pé" nao tem marca nem contagem
+            lateral = np.asarray(ref["grade"]["lateral"], float)
+            lat = float(lateral[k_ponto]) if np.isfinite(lateral).any() else 0.0
+            x, z = self.track.to_world([s_acao], [lat])[0]
+            item.update(x=round(float(x), 2), z=round(float(z), 2),
+                        direcao=[round(float(self.track.tangent[k_ponto][0]), 4), round(float(self.track.tangent[k_ponto][1]), 4)])
         # a voz mede a frase; ate la, a estimativa (so para a janela)
         self._pedir_a_voz(fala)
         self._planejar(item)
@@ -259,7 +275,11 @@ class Engenheiro:
         t_frase = dur if dur is not None else DURACAO_ESTIMADA_S
         item["duracaoS"] = round(dur, 2) if dur is not None else None
         bloco = R.bloco_do_trecho(self.blocos, item["trecho"])
-        if item.get("refFreada") is not None and item.get("vFreadaKmh"):
+        if item.get("acao") == R.SEM_TIRAR_O_PE:
+            item["sFala"] = round(R.s_fala(item["sAcao"], item.get("vNoPontoKmh") or 100.0, t_frase, self.L), 1)
+            item["voz"] = False
+            item["porqueSoNaJanela"] = "sem tirar o pé (a referência não freia nem alivia no trecho)"
+        elif item.get("refFreada") is not None and item.get("vFreadaKmh"):
             sf = R.s_fala(item["refFreada"], item["vFreadaKmh"], t_frase, self.L)
             item["sFala"] = round(sf, 1)
             item["voz"] = bool(item.get("comMarco") and bloco and R.dentro_do_bloco(sf, bloco, self.L))
@@ -327,7 +347,8 @@ class Engenheiro:
                 if motivo is None:
                     pela_voz = True
                     arquivo, dur = self.audio(item["fala"])
-                    aviso = {"origem": "aviso", "titulo": f"Engenheiro · {item['trecho']}", "texto": item["frase"],
+                    aviso = {"origem": "aviso", "titulo": f"Engenheiro · {item['trecho']}",
+                             "texto": item.get("escrita") or item["frase"],
                              "detalhe": f"{item['causa']}; perdeu {item['perdaS']:.2f} s no trecho".replace(".", ","),
                              "fala": item["fala"], "falas": [item["fala"]], "falaMaxS": 99.0, "curva": item["trecho"],
                              "s": item["sFala"], "perdaS": item["perdaS"], "duracaoS": round(dur, 2),
@@ -359,6 +380,10 @@ class Engenheiro:
     def bloco_em(self, s: float) -> Optional[Dict[str, Any]]:
         return next((b for b in self.blocos if b.get("fim") is not None and R.dentro_do_bloco(s, b, self.L)), None)
 
+    def reta_longa(self, bloco: Optional[Dict[str, Any]]) -> bool:
+        """ADR 0033, emenda de 16/11, item 1: a reta dos boxes e a reta oposta (os blocos de 8,8 s ou mais)."""
+        return bloco is not None and any(b is bloco for b in self.retas_longas)
+
     def reserva(self, s: float) -> Optional[float]:
         """O `s` em que o feedback tem de acabar: o primeiro `s_fala` pela voz no bloco do carro, ou o fim do bloco.
         None: o carro nao esta num bloco."""
@@ -383,7 +408,7 @@ class Engenheiro:
             for i in self._ordenada():
                 if i.get("frase") is not None and i.get("duracaoS") is None and self.duracao(i.get("fala")) is not None:
                     self._planejar(i)
-                janela = (f"Curva {i['curva']}: {i['frase']}" if i.get("frase") and i.get("curva") else
+                janela = (i.get("escrita") if i.get("frase") and i.get("escrita") else
                           (i.get("frase") or f"{i['trecho']}: perdeu {i['perdaS']:.2f} s, sem causa medida".replace(".", ",")))
                 itens.append({k: i.get(k) for k in ("trecho", "curva", "causa", "acao", "frase", "voz", "sFala", "sAcao",
                                                      "sDito", "x", "z", "direcao", "perdaS", "referencia", "comMarco",

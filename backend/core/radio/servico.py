@@ -24,9 +24,10 @@
    volta e de qualquer curva nos boxes, sem ler a gravacao.
 
 7. **O engenheiro** (pedido 52, ADR 0033; `core.engenheiro`): a lista dos trechos com perda, o aviso pela
-   voz antes da curva (com prioridade sobre o feedback) e, com ele ligado, o feedback so no comeco dos
-   blocos de voz, na variante mais completa que caiba antes da reserva dos avisos. `AT_ENGENHEIRO=desligado`
-   volta ao radio do pedido 51.
+   voz antes da curva (com prioridade sobre o feedback; so a frase, sem a vinheta) e, com ele ligado, o
+   feedback so no comeco dos blocos de voz, antes da reserva dos avisos: espera o bloco em que cabe a
+   variante mais completa com a causa; na primeira reta longa depois de nascer, sai a mais completa que
+   couber (a emenda de 16/11). `AT_ENGENHEIRO=desligado` volta ao radio do pedido 51.
 
 O radio nao decide nada do coach: quais frases saem, o limite de 3 por volta, o foco e
 o limiar continuam no coach. A analise so le o que a volta ao vivo e o store ja medem.
@@ -56,6 +57,7 @@ from .replay import (cobertura_na_curva, dados_da_curva, dados_da_volta, janela_
 from .texto import (
     FALA_MAXIMA_S,
     CurvaDaPista,
+    fala_tem_causa,
     fala_da_curva,
     falas_da_curva,
     frase_da_tendencia,
@@ -109,6 +111,11 @@ class RadioDoEngenheiro:
         self._referencia = referencia
         self._sessao = sessao
         self._falar = falar
+        try:
+            import inspect
+            self._falar_aceita_sem_vinheta = "vinheta_antes" in inspect.signature(falar).parameters
+        except (TypeError, ValueError):
+            self._falar_aceita_sem_vinheta = False
         self._relogio = relogio
         self._volta_fechada = volta_fechada
         self._volta_de_referencia = volta_de_referencia
@@ -199,6 +206,9 @@ class RadioDoEngenheiro:
             nome = hashlib.sha1(fala.encode("utf-8")).hexdigest()[:12]
             arquivo = self.pasta_audio / f"{self.instancia}_aviso_{nome}.wav"
             self.pasta_audio.mkdir(parents=True, exist_ok=True)
+            # ADR 0033, emenda de 16/11, item 2: o aviso e so a frase, sem a vinheta
+            if self._falar_aceita_sem_vinheta:
+                return arquivo, float(self._falar(fala, arquivo, vinheta_antes=False))
             return arquivo, float(self._falar(fala, arquivo))
         return self._audio_do_engenheiro.submit(gerar)
 
@@ -223,6 +233,17 @@ class RadioDoEngenheiro:
     def _nova(self, mensagem: Dict[str, Any]) -> Dict[str, Any]:
         mensagem = dict(mensagem)
         mensagem["criadaEm"] = self._relogio()
+        # ADR 0033, emenda de 16/11, item 1: o bloco em que a mensagem nasce (a reta longa em que ela nasce nao
+        # conta como "a primeira reta longa depois de nascer")
+        eng = self._eng()
+        if eng is not None:
+            try:
+                pos = self._posicao() or {}
+                bloco = eng.bloco_em(float(pos["s"])) if pos.get("s") is not None else None
+            except Exception:
+                bloco = None
+            mensagem["_blocoAtual"] = id(bloco) if bloco is not None else None
+            mensagem["_retaLongaDepoisDeNascer"] = False
         mensagem["audio"] = None
         mensagem["duracaoS"] = None
         mensagem["_futuro"] = self._audio.submit(self._gerar_audio, mensagem)
@@ -327,6 +348,7 @@ class RadioDoEngenheiro:
                 pos = self._posicao() or {}
                 if pos.get("s") is not None:
                     self._acompanhar_a_volta_lenta(pos)
+                    self._acompanhar_as_retas_longas(eng, float(pos["s"]))
                     aviso = eng.no_quadro(float(pos["s"]), self._velocidade_kmh, bool(pos.get("desdeALinha", True)),
                                           self._ia_no_quadro, falando=agora < self._ocupado_ate)
                     if aviso is not None:
@@ -358,9 +380,25 @@ class RadioDoEngenheiro:
                 return
             self._entregar(self._pendentes.popleft(), agora, pos)
 
+    def _acompanhar_as_retas_longas(self, eng, s: float) -> None:
+        """ADR 0033, emenda de 16/11, item 1: marca as mensagens na fila que ja viram o carro entrar numa reta
+        longa (a reta dos boxes ou a oposta) depois de nascer."""
+        bloco = eng.bloco_em(s)
+        atual = id(bloco) if bloco is not None else None
+        longa = eng.reta_longa(bloco)
+        for m in self._pendentes:
+            if "_blocoAtual" not in m:
+                continue
+            if m["_blocoAtual"] != atual:
+                m["_blocoAtual"] = atual
+                if longa and not m.get("_retaLongaDepoisDeNascer"):
+                    m["_retaLongaDepoisDeNascer"] = True
+
     def _escolher_a_variante(self, mensagem: Dict[str, Any], eng, s: float, L: float, agora: float) -> bool:
-        """Pedido 52 (ADR 0033, item 5): com o carro num bloco, a primeira variante (da mais completa a mais curta)
-        que cabe no limite do tipo e no tempo ate a reserva, na velocidade do carro. False: espera."""
+        """Pedido 52 (ADR 0033, item 5, com a emenda de 16/11, item 1): com o carro num bloco, a variante alvo
+        (a mais completa com a causa, no limite do tipo) se couber no tempo ate a reserva, na velocidade do
+        carro. Desde a primeira reta longa depois de a mensagem nascer (ou sem variante com a causa), a mais
+        completa que couber. False: espera."""
         reserva = eng.reserva(s)
         v = float(self._velocidade_kmh or 0.0) / 3.6
         if reserva is None or v <= 1.0:
@@ -372,16 +410,29 @@ class RadioDoEngenheiro:
             # sem voz (a voz falhou ou demorou): sai so o cartao, como antes
             futuro = mensagem.get("_futuro")
             return futuro is None or futuro.done() or agora - mensagem["criadaEm"] >= ESPERA_DO_AUDIO_S
-        for k, arquivo, dur, fala in variantes:
-            if dur <= maximo and dur <= disponivel:
+        futuro = mensagem.get("_futuro")
+        gerando = futuro is not None and not futuro.done()
+        no_limite = [x for x in variantes if x[2] <= maximo]
+        alvo = next((x for x in no_limite if fala_tem_causa(x[3])), None)
+        if alvo is None and gerando and any(fala_tem_causa(f) for f in (mensagem.get("falas") or [])):
+            return False       # a variante com a causa ainda esta sendo gerada
+        if alvo is not None and not mensagem.get("_retaLongaDepoisDeNascer"):
+            candidatas = [alvo]           # espera o bloco em que a variante alvo cabe
+        else:
+            candidatas = no_limite        # a mais completa que couber (a regra do 45)
+        for k, arquivo, dur, fala in candidatas:
+            if dur <= disponivel:
                 mensagem["_falaEscolhida"] = k
                 mensagem["fala"] = fala
                 mensagem["duracaoS"] = round(dur, 2)
                 mensagem["_arquivoPronto"] = str(arquivo)
                 mensagem["_reservaEm"] = round(reserva, 1)
+                mensagem["_comACausa"] = fala_tem_causa(fala)
+                mensagem["_saiuNaRegra"] = ("a variante com a causa" if candidatas is not no_limite else
+                                            "a mais completa que coube, depois da reta longa" if alvo is not None else
+                                            "a mais completa que coube (sem variante com a causa)")
                 return True
-        futuro = mensagem.get("_futuro")
-        if futuro is not None and not futuro.done():
+        if gerando:
             return False       # as variantes mais curtas ainda estao sendo geradas
         mensagem["_esperouOBloco"] = True
         return False

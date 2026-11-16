@@ -135,7 +135,9 @@ def test_a_frase_pelo_marco_de_menor_custo_com_o_bonus_da_placa():
     assert R.frase_da_acao("freie", 102.0, MARCOS, L)["frase"] == "freie na placa de 100"   # |d| < 5
     f = R.frase_da_acao("freie", 90.0, MARCOS, L)                              # a placa depois: 1,5 x 10 - 15
     assert f["frase"] == "freie 10 metros antes da placa de 100" and f["sDito"] == 90.0
-    assert R.fala_do_aviso("C01", f["frase"]) == "Curva 1: freie 10 metros antes da placa de 100."
+    # o molde curto da voz (emenda de 16/11, item 2): so a frase; o cartao e a janela com "Curva N:"
+    assert R.fala_do_aviso("C01", f["frase"]) == "Freie 10 metros antes da placa de 100."
+    assert R.escrita_do_aviso("C01", f["frase"]) == "Curva 1: freie 10 metros antes da placa de 100"
 
 
 def test_a_janela_de_cada_acao_e_o_marco_depois_custa_mais():
@@ -363,3 +365,129 @@ def test_os_arquivos_do_engenheiro_vao_no_instalador():
     assert '"version": "0.9.0-engenheiro"' in pacote
     manifesto = (BACKEND.parent / "tools" / "csp_app" / "radio_engenheiro" / "manifest.ini").read_text(encoding="utf-8")
     assert "VERSION = 0.7.0" in manifesto and "FUNCTION_MAIN = engenheiro" in manifesto
+
+
+# ── as decisoes do Eduardo de 16/11 (ADR 0033, emenda) ─────────────────
+
+def test_a_freada_so_e_buscada_depois_da_saida_do_trecho_anterior():
+    """Item 4: um toque de freio entre o apice e a saida da curva anterior nao e a freada da curva."""
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    g = _volta_de_teste(track)
+    s = np.asarray(track.s, float)
+    g["freio"] = np.where((s >= 270) & (s < 280), 0.5, g["freio"])        # o toque: depois do apice (250) da C01
+    total = float(track.length) / 50.0
+    trechos = _trechos_de_teste(track)
+    assert R.inicio_da_busca_da_freada(trechos, 1) == pytest.approx(300.0)  # a saida da C01
+    assert R.inicio_da_busca_da_freada(trechos, 0) == pytest.approx(float(track.length))  # a linha
+    assert R.pontos_do_trecho(g, total, track, trechos, 1)["freada"] == pytest.approx(380.0, abs=2.0)
+    # a regra antiga (do apice anterior) pegava o toque
+    assert R.ponto_de_freada(g["freio"], track, 250.0, 450.0) == pytest.approx(270.0, abs=2.0)
+
+
+def test_sem_tirar_o_pe_quando_a_referencia_nao_freia_nem_alivia():
+    """Item 3: o acelerador em 0,90 ou mais do comeco ao fim do trecho; a frase sem marco e a conferencia."""
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    g = _volta_de_teste(track)
+    total = float(track.length) / 50.0
+    trechos = _trechos_de_teste(track)
+    assert R.pontos_do_trecho(g, total, track, trechos, 0)["semTirarOPe"] is True    # a C01: cheio no trecho todo
+    p2 = R.pontos_do_trecho(g, total, track, trechos, 1)
+    assert p2["semTirarOPe"] is False and p2["aceleradorMinimo"] == pytest.approx(0.2)
+    f = R.frase_sem_tirar_o_pe(200.0, L)
+    assert f["frase"] == "sem tirar o pé" and f["comMarco"] is False and f["marco"] is None
+    assert R.fala_do_aviso("C13", f["frase"]) == "Sem tirar o pé."
+    assert R.escrita_do_aviso("C13", f["frase"]) == "Curva 13: sem tirar o pé"
+    item = {"trecho": "C13", "acao": R.SEM_TIRAR_O_PE, "sDito": 200.0}
+    c = R.conferir(item, {"semTirarOPe": True, "aceleradorMinimo": 0.97}, L)
+    assert c["aplicada"] is True and R.texto_da_conferencia(item, c, L) == "C13: sem tirar o pé"
+    c = R.conferir(item, {"semTirarOPe": False, "aceleradorMinimo": 0.62}, L)
+    assert c["aplicada"] is False and R.texto_da_conferencia(item, c, L) == "C13: tirou o pé (acelerador a 62%)"
+
+
+class _EngDosBlocos:
+    """Dois blocos: um curto (0 a 300 m) e a reta longa (400 a 900 m); a reserva e o fim do bloco."""
+
+    def __init__(self):
+        self.curto = {"inicio": 0.0, "fim": 300.0}
+        self.longo = {"inicio": 400.0, "fim": 900.0}
+
+    def bloco_em(self, s):
+        return self.curto if 0.0 <= s <= 300.0 else self.longo if 400.0 <= s <= 900.0 else None
+
+    def reta_longa(self, bloco):
+        return bloco is self.longo
+
+    def reserva(self, s):
+        b = self.bloco_em(s)
+        return None if b is None else b["fim"]
+
+
+def _radio_com_variantes(tmp_path, s_ao_nascer):
+    from core.radio.servico import RadioDoEngenheiro
+
+    eng = _EngDosBlocos()
+    pos = {"s": s_ao_nascer}
+    radio = RadioDoEngenheiro(tmp_path, lambda: None, lambda: dict(pos), lambda: None, lambda: {}, lambda: None,
+                              falar=lambda texto, destino: 2.0, engenheiro=False)
+    radio._eng = lambda: eng
+    radio._velocidade_kmh = 180.0                      # 50 m/s
+    m = radio._nova({"origem": "coach", "fala": "x", "falas": [], "falaMaxS": 7.3})
+    m["_futuro"].result(timeout=10)
+    m["_futuro"] = None
+    m["_variantes"] = [(0, Path("a.wav"), 5.0, "Curva 7: 8 décimos atrás. Freou 39 metros antes da referência."),
+                       (1, Path("b.wav"), 2.5, "Curva 7: 8 décimos atrás.")]
+    radio._pendentes.append(m)
+    return radio, eng, m, pos
+
+
+def test_o_feedback_espera_o_bloco_em_que_cabe_a_variante_com_a_causa(tmp_path):
+    """Item 1: num bloco curto em que so cabe a variante sem a causa, a mensagem espera; num bloco em que a
+    variante com a causa cabe, sai ela."""
+    radio, eng, m, pos = _radio_com_variantes(tmp_path, 350.0)       # nasce fora dos blocos
+    L = 1000.0
+    radio._acompanhar_as_retas_longas(eng, 150.0)
+    assert radio._escolher_a_variante(m, eng, 150.0, L, 0.0) is False          # 150 m / 50 - 0,3 = 2,7 s: so a curta
+    assert radio._escolher_a_variante(m, eng, 0.0, L, 0.0) is True             # 5,7 s: a com a causa (5,0 s) cabe
+    assert m["_falaEscolhida"] == 0 and "Freou" in m["fala"]
+
+
+def test_na_primeira_reta_longa_sai_a_mais_completa_que_couber(tmp_path):
+    """Item 1: a variante com a causa nao cabe nem na primeira reta longa depois de nascer: sai a mais completa
+    que couber, e a mensagem nao espera mais."""
+    radio, eng, m, pos = _radio_com_variantes(tmp_path, 350.0)
+    L = 1000.0
+    radio._acompanhar_as_retas_longas(eng, 450.0)                              # entrou na reta longa
+    assert m["_retaLongaDepoisDeNascer"] is True
+    assert radio._escolher_a_variante(m, eng, 750.0, L, 0.0) is True           # 3,0 s ate a reserva
+    assert m["_falaEscolhida"] == 1 and m["_saiuNaRegra"].startswith("a mais completa que coube, depois")
+
+
+def test_a_reta_longa_em_que_a_mensagem_nasce_nao_conta(tmp_path):
+    radio, eng, m, pos = _radio_com_variantes(tmp_path, 700.0)       # nasce dentro da reta longa
+    L = 1000.0
+    radio._acompanhar_as_retas_longas(eng, 750.0)
+    assert m["_retaLongaDepoisDeNascer"] is False
+    assert radio._escolher_a_variante(m, eng, 750.0, L, 0.0) is False          # 3,0 s: espera a com a causa
+    for s in (950.0, 100.0, 350.0, 420.0):                                     # sai, passa o curto, entra de novo
+        radio._acompanhar_as_retas_longas(eng, s)
+    assert m["_retaLongaDepoisDeNascer"] is True
+
+
+def test_o_aviso_e_falado_sem_a_vinheta(tmp_path):
+    from core.radio.servico import RadioDoEngenheiro
+
+    chamadas = []
+
+    def falar(texto, destino, vinheta_antes=True):
+        chamadas.append((texto, vinheta_antes))
+        Path(destino).write_bytes(b"RIFF")
+        return 2.4
+
+    radio = RadioDoEngenheiro(tmp_path, lambda: None, lambda: None, lambda: None, lambda: {}, lambda: None,
+                              falar=falar, engenheiro=False)
+    arquivo, dur = radio._falar_o_aviso("Freie na placa de 50.").result(timeout=10)
+    assert chamadas == [("Freie na placa de 50.", False)] and dur == pytest.approx(2.4)

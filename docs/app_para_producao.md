@@ -12,7 +12,7 @@ O **Automobilista Telemetria** é um app de Windows (Electron e backend em Pytho
 | **Gravação** | grava as voltas do jogo, com o piloto e a IA separados, na pasta de dados |
 | **Coach ao vivo** | mede a volta na geometria oficial contra uma volta real de referência e, nos microssetores de foco, publica no máximo 3 frases por volta |
 | **Rádio** | leva ao piloto a frase do coach, o resumo na linha e, a cada 3 voltas válidas, a análise, em cartão e em voz, só nas retas |
-| **Engenheiro** (0.9.0) | a lista dos trechos com perda contra a volta do modelo e, antes da curva, o aviso pelo marco da pista ("Curva 1: freie 10 metros depois da placa de 100"), na voz (C01, C04 e C06) e na janela do jogo, com a conferência da dica (ADR 0033) |
+| **Engenheiro** (0.9.0) | a lista dos trechos com perda contra a volta do modelo e, antes da curva, o aviso pelo marco da pista (a voz diz "Freie 10 metros depois da placa de 100."; o cartão e a janela, com "Curva 1:"), na voz (C01, C04 e C06) e na janela do jogo, com a conferência da dica (ADR 0033) |
 | **Replay da curva** | mostra a curva citada pelo rádio, com a sua linha e a da referência, as freadas, as mínimas e o tempo |
 | **Tela Sessões** | as sessões, a tendência e as gravações que ainda não entraram no relatório |
 | **Tela Ao vivo** | o rádio, a volta com o fantasma e o estado dos canais |

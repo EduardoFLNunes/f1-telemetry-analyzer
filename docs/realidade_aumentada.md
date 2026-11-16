@@ -513,13 +513,15 @@ Como engenheiros e coaches falam com o piloto: curto e direto, na reta, um núme
 
 ## 9. O engenheiro que acompanha a volta (pedido 52, ADR 0033)
 
-O engenheiro diz o que fazer **antes da curva**, por um marco que se vê na pista: "Curva 1: freie 10 metros depois da placa de 100." O Modelo 1 diz onde e quanto (a volta do modelo, ADR 0032); o rádio do 45 diz por quê; o engenheiro diz o que fazer. Ele fica ligado por padrão; `AT_ENGENHEIRO=desligado` volta ao rádio do pedido 51.
+O engenheiro diz o que fazer **antes da curva**, por um marco que se vê na pista: a voz diz "Freie 10 metros depois da placa de 100.", e o cartão e a janela escrevem "Curva 1: freie 10 metros depois da placa de 100". O Modelo 1 diz onde e quanto (a volta do modelo, ADR 0032); o rádio do 45 diz por quê; o engenheiro diz o que fazer. Ele fica ligado por padrão; `AT_ENGENHEIRO=desligado` volta ao rádio do pedido 51.
 
 ### 9.1 A lista da volta
 
 - **Na linha,** numa volta que conta (completa, com as medidas, sem rodada, sem a IA), os 15 trechos do ADR 0030 são comparados com a referência de cada trecho: a volta do modelo, ou a melhor passagem do piloto (a "Sua melhor volta" e as voltas da sessão) onde ela for mais rápida.
 - **Entra** todo trecho com perda acima do ruído do trecho: o desvio dos tempos daquele trecho nas 7 voltas do bloco 4 do pedido 50 (de 4,4 ms na C13 a 36,2 ms na C11; `data/reference_models/vhe_interlagos.ruido_por_trecho.json`). É o ruído da IA, que é muito constante: na prática, quase todo trecho com perda entra.
-- **A causa** é a do 45 (a parte da perda que mais perdeu): freada cedo ou tarde → "freie"; mínima baixa ou traçado → "vire"; na saída, o acelerador cheio 10 m ou mais depois → "acelere". "Freada leve" e "marcha acima" ficaram fora (ADR 0033, contexto, item 4). Um trecho sem causa acima do corte fica na lista só com a perda.
+- **A causa** é a do 45 (a parte da perda que mais perdeu): freada cedo ou tarde → "freie"; mínima baixa ou traçado → "vire"; na saída, o acelerador cheio 10 m ou mais depois → "acelere". "Freada leve" e "marcha acima" ficaram para uma versão futura (ADR 0033, contexto, item 4, e a decisão de 16/11, item 6; o backlog). Um trecho sem causa acima do corte fica na lista só com a perda.
+- **"Sem tirar o pé"** (decisão de 16/11, item 3): num trecho com curva em que a referência do trecho não freia nem alivia (o acelerador em 0,90 ou mais do começo ao fim do trecho), a frase de qualquer causa é "sem tirar o pé", sem marco e sem metros, só na janela, até o início da curva, sem a marca no asfalto. É aplicada se o acelerador da volta ficou em 0,90 ou mais no trecho inteiro.
+- **O ponto de freada do engenheiro** (decisão de 16/11, item 4): o freio acima de 0,15, da saída do trecho anterior ao ápice (antes, do ápice anterior). O feedback do rádio continua com a regra do 45.
 - **A dica não aplicada continua na lista** até ser aplicada.
 
 ### 9.2 Os marcos
@@ -532,7 +534,7 @@ O marco de menor custo na janela da ação (para frear, até 150 m antes do pont
 
 ### 9.4 A voz e os blocos
 
-- **O aviso** sai em `s_fala = s_freada − v × (t_frase + 1,0 s)`, só nos trechos em que a referência freia e cuja frase cabe no bloco de voz antes da freada. Na hora, ele só sai se o tempo até a freada, na velocidade do carro, for pelo menos a fala mais 1,0 s; nunca por cima de outra fala, nunca na volta de saída dos boxes nem com a IA.
+- **O aviso** é só a frase, sem "Curva N:" e sem a vinheta (decisão de 16/11, item 2). Sai em `s_fala = s_freada − v × (t_frase + 1,0 s)`, só nos trechos em que a referência freia e cuja frase cabe no bloco de voz antes da freada. Na hora, ele só sai se o tempo até a freada, na velocidade do carro, for pelo menos a fala mais 1,0 s; nunca por cima de outra fala, nunca na volta de saída dos boxes nem com a IA.
 - **Os blocos de voz** (na volta do modelo, da retomada do trecho anterior a 1,0 s antes da primeira ação):
 
 | bloco | de | até | duração |
@@ -547,7 +549,7 @@ O marco de menor custo na janela da ação (para frear, até 150 m antes do pont
 | antes da C14 | 3.306 m | 3.521 m | 4,4 s |
 
 - **Pela voz, só a C01, a C04 e a C06** têm aviso possível: nas outras, a referência não freia, não há bloco antes da freada ou a frase não cabe (a C12: 2,5 s de bloco e 3,6 s de frase).
-- **O feedback** (a frase do coach, o resumo e a análise) sai no começo de um bloco, na variante mais completa que caiba antes da reserva dos avisos; se nenhuma couber, espera o bloco seguinte. Com o engenheiro, todas as variantes que cabem no limite do tipo são geradas de antemão.
+- **O feedback** (a frase do coach, o resumo e a análise) sai no começo de um bloco, antes da reserva dos avisos (decisão de 16/11, item 1): espera o bloco em que cabe a variante mais completa com a causa ("freou", "mínima", "passou", "saiu" ou "acelerou"); na prática, a reta dos boxes ou a reta oposta, as **retas longas** (os blocos de 8,8 s ou mais). Se ela não couber nem na primeira reta longa em que o carro entra depois de a mensagem nascer, sai nessa reta a variante mais completa que couber, e a mensagem não espera mais. Uma mensagem sem variante com a causa sai na mais completa que caiba, no primeiro bloco em que caiba. Com o engenheiro, todas as variantes que cabem no limite do tipo são geradas de antemão.
 
 ### 9.5 A janela "Engenheiro" e a marca na pista (app do jogo 0.7.0)
 
