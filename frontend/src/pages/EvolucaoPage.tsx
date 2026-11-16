@@ -132,7 +132,7 @@ export const EvolucaoPage: React.FC<{ navegar: (tela: Tela, sub?: string | null)
                         <th scope="col" className="num">Referência (g)</th>
                         <th scope="col" className="num">Freio e volante juntos (m)</th>
                         <th scope="col" className="num">Referência (m)</th>
-                        <th scope="col">Freada emendada</th>
+                        <th scope="col">Frenagem emendada</th>
                       </tr>
                     </thead>
                     <tbody>

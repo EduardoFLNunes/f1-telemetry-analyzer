@@ -43,7 +43,7 @@ ACELERADOR_DA_RETOMADA = 0.90
 # Decisao do Eduardo de 16/11 (ADR 0033, emenda, item 3): o trecho em que a referencia nao freia nem alivia
 SEM_TIRAR_O_PE = "sem tirar o pé"
 
-ACAO_DA_CAUSA = {"freada cedo": "freie", "freada tarde": "freie", "mínima baixa": "vire",
+ACAO_DA_CAUSA = {"frenagem cedo": "freie", "frenagem tarde": "freie", "mínima baixa": "vire",
                  "traçado por fora": "vire", "traçado por dentro": "vire", "acelerador tarde": "acelere"}
 
 
@@ -170,7 +170,7 @@ def causa_do_engenheiro(medida: Optional[Dict[str, Any]]) -> Optional[Dict[str, 
     if not c:
         return None
     if c["trecho"] == "freada" and c.get("medida") == "freada":
-        causa = "freada cedo" if float(c["valor"]) < 0 else "freada tarde"
+        causa = "frenagem cedo" if float(c["valor"]) < 0 else "frenagem tarde"
         return {"causa": causa, "acao": "freie", "valor": float(c["valor"]), "unidade": "m"}
     if c["trecho"] == "minima" and c.get("medida") == "minima":
         return {"causa": "mínima baixa", "acao": "vire", "valor": float(c["valor"]), "unidade": "km/h"}
@@ -327,7 +327,7 @@ def conferir(item: Dict[str, Any], pontos_da_volta: Dict[str, Any], L: float) ->
     if acao == "freie":
         v = pontos_da_volta.get("freada")
         if v is None:
-            return {"aplicada": None, "valor": None, "motivo": "sem freada na volta"}
+            return {"aplicada": None, "valor": None, "motivo": "sem frenagem na volta"}
         dif = _d(v, item["sDito"], L)
         return {"aplicada": abs(dif) <= APLICADA_FREADA_M, "valor": round(float(v), 1), "difM": round(dif, 1)}
     if acao == "vire":

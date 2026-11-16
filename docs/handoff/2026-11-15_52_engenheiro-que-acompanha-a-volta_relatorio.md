@@ -374,11 +374,19 @@ Uma saída possível para a C10: se o freio já estiver apertado na saída do tr
 - **Onde "freada" aparece hoje:**
   - **na voz**, só no fim da causa sem medida ("perdeu 3 décimos na freada"). O aviso diz "Freie…" e o feedback diz "Freou 39 metros antes…", que são formas do verbo;
   - **no texto escrito**, em mais lugares: o cartão ("na freada, +0,52 s", "freada 15 m antes"), a causa do engenheiro ("freada cedo" e "freada tarde"), os rótulos do replay ("freada da referência") e o minimapa.
-- **A proposta:** trocar o substantivo por "frenagem" na voz e no texto ("perdeu 3 décimos na frenagem", "frenagem 15 m antes", "frenagem cedo", "frenagem da referência") e manter o verbo ("Freie", "Freou"). Não mudei nada: espero a sua resposta. Se for aplicar, entra antes da D.1, porque muda a duração das falas.
+- **A proposta:** trocar o substantivo por "frenagem" na voz e no texto ("perdeu 3 décimos na frenagem", "frenagem 15 m antes", "frenagem cedo", "frenagem da referência") e manter o verbo ("Freie", "Freou").
+- **Aplicada (sua resposta: "Sim, frenagem"; ADR 0033, emenda, item 9):**
+  - **no rádio:** a causa falada sem medida ("na frenagem"), o cartão ("na frenagem, +0,52 s"; "frenagem 15 m antes") e as linhas da análise;
+  - **no engenheiro:** as causas "frenagem cedo" e "frenagem tarde" e os motivos da janela e do registro ("sem bloco de voz antes da frenagem", "pouco tempo até a frenagem");
+  - **no app do jogo:** "frenagem da referência", "frenagem do seu recorde" e o rótulo do replay;
+  - **nas telas:** "Início da frenagem" (Volta), "Frenagem emendada" (Evolução) e "sem frenagem medida nesta volta";
+  - **na base de conhecimento:** "Frenagem antecipada" e "Frenagem tardia".
+- **O que não mudou:** o verbo e as chaves internas (`freada`, `freadaM`). O texto técnico da documentação também ficou como estava.
+- **Os testes:** 114 do backend passando (o engenheiro, o rádio, o 45, a referência, a análise assistida e o coach). No front, 180 passando e o `tsc` sem erro. O Lua continua passando na conferência contra o SDK.
 
 ### O que falta
 
-1. **A sua resposta** aos dois pontos acima e ao termo.
+1. **A sua resposta** aos dois pontos acima (a C13 e a C10). O termo já está aplicado.
 2. **Medir a voz de novo** (a frase curta, sem a vinheta) e refazer a tabela da B.4: quais avisos cabem na voz agora.
 3. **Refazer a D.1** nas 4 sessões. Os dois passos esperam o jogo fechar (o `acs.exe` estava aberto às 14h, com 1h47 de CPU), porque são contas pesadas. Também dependem da resposta acima, que muda a C10.
 4. **A suíte inteira do backend** e o relatório com a D.1 nova. Depois disso, aviso você antes do teste no jogo, como pedido.

@@ -178,7 +178,7 @@ def _medida(freada=None, minima=0.0, tracado=0.0, acelerador=None, partes=None, 
 
 
 def test_a_causa_do_engenheiro_vem_da_causa_do_45():
-    assert R.causa_do_engenheiro(_medida(freada=-30.0))["causa"] == "freada cedo"
+    assert R.causa_do_engenheiro(_medida(freada=-30.0))["causa"] == "frenagem cedo"
     assert R.causa_do_engenheiro(_medida(freada=20.0))["acao"] == "freie"
     assert R.causa_do_engenheiro(_medida(freada=-10.0)) is None                       # abaixo do corte de 15 m
     mp = {"reta": 0.0, "freada": 0.0, "minima": 0.3, "saida": 0.0}
@@ -270,7 +270,7 @@ def test_a_conferencia_da_dica():
 def test_a_dica_dada_antes_da_linha_espera_o_carro_passar_a_acao():
     item = {"k": 0, "trecho": "C01", "frase": "freie na placa de 100", "fala": "Curva 1: freie na placa de 100.",
             "voz": False, "porqueSoNaJanela": "teste", "sFala": 950.0, "sAcao": 50.0, "sDito": 50.0, "acao": "freie",
-            "causa": "freada cedo", "perdaS": 0.2, "duracaoS": 3.0, "refFreada": 50.0}
+            "causa": "frenagem cedo", "perdaS": 0.2, "duracaoS": 3.0, "refFreada": 50.0}
     e = _engenheiro_sem_arquivos([], {"C01": item})
     for s in (900.0, 940.0, 960.0):
         e.no_quadro(s, 200.0, True, False, False)
@@ -284,7 +284,7 @@ def test_a_dica_dada_antes_da_linha_espera_o_carro_passar_a_acao():
 
 def test_o_aviso_pela_voz_tem_prioridade_e_nunca_fala_por_cima():
     item = {"k": 0, "trecho": "C04", "frase": "freie na placa de 100", "fala": "Curva 4: freie na placa de 100.",
-            "voz": True, "sFala": 500.0, "sAcao": 700.0, "sDito": 700.0, "acao": "freie", "causa": "freada cedo",
+            "voz": True, "sFala": 500.0, "sAcao": 700.0, "sDito": 700.0, "acao": "freie", "causa": "frenagem cedo",
             "perdaS": 0.3, "duracaoS": 3.0, "refFreada": 700.0, "bloco": [0.0, 640.0]}
 
     class _Pronto:

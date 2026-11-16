@@ -97,7 +97,7 @@ def test_o_rotulo_do_replay_e_referencia():
 
 def test_o_app_do_jogo_nao_diz_ia_para_a_referencia():
     lua = (BACKEND.parent / "tools" / "csp_app" / "radio_engenheiro" / "radio_engenheiro.lua").read_text(encoding="utf-8")
-    assert "'freada da referência'" in lua and "'Referência'" in lua
+    assert "'frenagem da referência'" in lua and "'Referência'" in lua
     for proibido in ("'freada da IA'", "or 'IA'", "'da IA'", "'para a volta da IA'", "'IA (referência)'"):
         assert proibido not in lua, proibido
     manifest = (BACKEND.parent / "tools" / "csp_app" / "radio_engenheiro" / "manifest.ini").read_text(encoding="utf-8")

@@ -30,7 +30,7 @@ export const TabelaDasCurvas: React.FC<Props> = ({ medidas, medianas, diferencaD
             <th scope="col">Curva</th>
             <th scope="col" style={{ minWidth: 150 }}>Perda (s)</th>
             {comMediana && <th scope="col" className="num">Mediana da sessão</th>}
-            <th scope="col">Início da freada</th>
+            <th scope="col">Início da frenagem</th>
             <th scope="col" className="num">Velocidade mínima</th>
             <th scope="col">Posição no ápice</th>
           </tr>

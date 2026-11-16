@@ -285,7 +285,7 @@ class Engenheiro:
             item["voz"] = bool(item.get("comMarco") and bloco and R.dentro_do_bloco(sf, bloco, self.L))
             item["porqueSoNaJanela"] = None if item["voz"] else (
                 "sem marco na janela" if not item.get("comMarco") else
-                "sem bloco de voz antes da freada" if not bloco else "a frase não cabe no bloco")
+                "sem bloco de voz antes da frenagem" if not bloco else "a frase não cabe no bloco")
         else:
             item["sFala"] = round(R.s_fala(item["sAcao"], item.get("vNoPontoKmh") or 100.0, t_frase, self.L), 1)
             item["voz"] = False
@@ -343,7 +343,7 @@ class Engenheiro:
                     ate = (float(item["refFreada"]) - float(s)) % self.L
                     precisa = float(item["duracaoS"]) + R.FOLGA_ANTES_DA_FREADA_S
                     if v <= 1.0 or ate / v < precisa:
-                        motivo = f"pouco tempo até a freada ({ate / v:.1f} s)" if v > 1.0 else "carro parado"
+                        motivo = f"pouco tempo até a frenagem ({ate / v:.1f} s)" if v > 1.0 else "carro parado"
                 if motivo is None:
                     pela_voz = True
                     arquivo, dur = self.audio(item["fala"])

@@ -41,7 +41,7 @@ export function tempo(t: number): string {
 
 export function textoDaFreada(freadaM: number | null, refFreia: boolean, longo: boolean, rotuloRef: 'modelo' | 'melhor'): string {
   if (freadaM === null) {
-    if (refFreia) return longo ? 'sem freada medida nesta volta' : 'não medida';
+    if (refFreia) return longo ? 'sem frenagem medida nesta volta' : 'não medida';
     return longo ? (rotuloRef === 'modelo' ? 'a referência não freia aqui' : 'sua melhor não freia aqui') : 'ref. não freia';
   }
   const m = Math.round(freadaM);

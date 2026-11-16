@@ -1182,7 +1182,7 @@ desenharAproximado = function(dt)
   -- asfalto (um pouco além das bordas) com o rótulo. O seu traçado mostra onde você freou: o
   -- vermelho começa ali.
   if ref and type(ref.freadas) == 'table' then
-    local rotuloDaFreada = ref.tipo == 'minha_melhor' and 'freada do seu recorde' or 'freada da referência'
+    local rotuloDaFreada = ref.tipo == 'minha_melhor' and 'frenagem do seu recorde' or 'frenagem da referência'
     for _, f in ipairs(ref.freadas) do
       if f.pontos and f.pontos[1] and f.pontos[2] then
         local ax, ay = tela(f.pontos[1][1], f.pontos[1][2])
@@ -1806,7 +1806,7 @@ local function desenharADiferenca(c, t, a)
   for i = 1, n do ui.pathLineTo(vec2(emX((i - 1) * passo), emY(dif[i]))) end
   ui.pathStroke(CORES.vermelho, false, 1.5)
   local s = type(c.secoes) == 'table' and c.secoes or {}
-  for _, par in ipairs({ { s.freadaM, 'freada' }, { s.minimaM, 'mínima' }, { s.saidaM, 'saída' } }) do
+  for _, par in ipairs({ { s.freadaM, 'frenagem' }, { s.minimaM, 'mínima' }, { s.saidaM, 'saída' } }) do
     local dm = tonumber(par[1])
     if dm then dm = dm + deslocamento end
     if dm and dm >= 0 and dm <= (totalM or math.huge) then

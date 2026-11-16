@@ -328,7 +328,7 @@ def test_a_analise_so_curvas_perdidas_em_2_de_3_e_no_maximo_2():
     m = mensagem_de_analise(a, "volta_do_modelo", "ref#0013")
     assert m["titulo"] == "Análise das voltas 6 a 8"
     assert m["linhas"][0].startswith("C12, esquerda: perde 0,90 s por volta (0,85 s · 0,90 s · 1,02 s)")
-    assert "mínima 80 contra 110 km/h" in m["linhas"][0] and "freada 50 m antes" in m["linhas"][0]
+    assert "mínima 80 contra 110 km/h" in m["linhas"][0] and "frenagem 50 m antes" in m["linhas"][0]
     assert "traçado 0,4 m mais à esquerda" in m["linhas"][0]        # o lado por extenso (ADR 0003)
     # A fala no estilo da frase do coach, cada diferenca uma frase, com as unidades (pedido 36).
     assert m["fala"].startswith("Análise das voltas 6 a 8. Curva 12: perde 9 décimos por volta. "

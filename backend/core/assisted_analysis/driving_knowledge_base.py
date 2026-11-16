@@ -10,7 +10,7 @@ class DrivingKnowledgeBase:
         self._concepts: Dict[str, DrivingKnowledgeConcept] = {
             "EARLY_BRAKING": self._concept(
                 "EARLY_BRAKING",
-                "Freada antecipada",
+                "Frenagem antecipada",
                 "Transferencia de peso longitudinal antes da zona ideal",
                 "Threshold braking no ponto de referencia",
                 ["brakeStartDeltaM negativo", "velocidade de entrada abaixo ou tempo perdido antes do apex"],
@@ -20,7 +20,7 @@ class DrivingKnowledgeBase:
             ),
             "LATE_BRAKING": self._concept(
                 "LATE_BRAKING",
-                "Freada tardia",
+                "Frenagem tardia",
                 "Pico de demanda longitudinal muito perto da entrada",
                 "Threshold braking com margem para rotacionar",
                 ["brakeStartDeltaM positivo", "entrySpeedDeltaKmh positivo", "minSpeedDeltaKmh positivo"],

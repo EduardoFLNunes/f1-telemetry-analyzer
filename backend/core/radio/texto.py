@@ -73,7 +73,7 @@ FALA_MAXIMA_S = {"coach": 7.3, "resumo": 8.0, "analise": 8.8, "teste": 8.8, "cur
 # "Melhor volta, 2,5 segundos atras da referencia" (07/11).
 FALA_ALVO = {"volta_do_modelo": "da referência", "minha_melhor": "do seu recorde"}
 REFERENCIA_COM_ARTIGO = {"volta_do_modelo": "a referência", "minha_melhor": "o seu recorde"}
-TRECHO_FALADO = {"freada": "freada", "minima": "mínima", "saida": "saída"}
+TRECHO_FALADO = {"freada": "frenagem", "minima": "mínima", "saida": "saída"}
 
 
 @dataclass(frozen=True)
@@ -207,7 +207,7 @@ def causa_falada(causa: Optional[Mapping[str, Any]], alvo: str = "") -> Optional
 
 
 def causa_escrita(causa: Optional[Mapping[str, Any]], alvo: str = "") -> Optional[str]:
-    """A causa no cartao, com o numero completo: "na freada, +0,52 s; freou 15 m antes da IA"."""
+    """A causa no cartao, com o numero completo: "na frenagem, +0,52 s; freou 15 m antes da IA"."""
     if not causa:
         return None
     contra = f" {alvo}" if alvo else ""
@@ -523,7 +523,7 @@ def _diferenca_falada(medida: str, valor: float, extra: Mapping[str, Any], alvo:
 
 def _diferenca_escrita(medida: str, valor: float, extra: Mapping[str, Any]) -> str:
     if medida == "freada":
-        return f"freada {int(round(abs(valor)))} m {'antes' if valor < 0 else 'depois'}"
+        return f"frenagem {int(round(abs(valor)))} m {'antes' if valor < 0 else 'depois'}"
     if medida == "minima":
         return f"mínima {int(round(extra.get('sua', 0)))} contra {int(round(extra.get('ref', 0)))} km/h"
     if medida == "acelerador":
