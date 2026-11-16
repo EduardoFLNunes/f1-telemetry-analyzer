@@ -1,0 +1,23 @@
+Pedido 52, D.4: as suites (15/11/2026, na branch etapa/engenheiro)
+
+== backend: a suite inteira (pytest -q, na pasta backend) ==
+1062 passed, 37 warnings in 767.12s (0:12:47)
+
+== backend: o engenheiro, o radio, o 45 e a referencia ==
+...................                                                      [100%]
+91 passed in 4.02s
+
+== front (vitest run) e tsc --noEmit ==
+15 arquivos, 180 testes passando; tsc sem erro (saida 0)
+
+== desktop (node --test) ==
+4 testes passando, 0 falhas
+
+== Lua ==
+arquivo: tools\csp_app\radio_engenheiro\radio_engenheiro.lua
+tokens: 38559; erros de lexico: 0 []
+blocos: ok
+API usada (55): JSON.parse, ac.FolderID, ac.accessAppWindow, ac.getAppWindows, ac.getCar, ac.getFolder, ac.getSim, ac.getUI, ac.log, io.createDir, io.deleteFile, io.fileExists, io.load, io.save, io.scanDir, os.preciseClock, physics.raycastTrack, render.on, render.quad, rgbm, setInterval, ui.Alignment, ui.ExtraCanvas, ui.MediaPlayer, ui.MouseButton, ui.drawCircle, ui.drawCircleFilled, ui.drawImage, ui.drawImageQuad, ui.drawLine, ui.drawQuadFilled, ui.drawRect, ui.drawRectFilled, ui.drawTriangleFilled, ui.dwriteDrawText, ui.dwriteDrawTextClipped, ui.getCursor, ui.isImageReady, ui.measureDWriteText, ui.mouseClicked, ui.mouseLocalPos, ui.mouseWheel, ui.pathClear, ui.pathLineTo, ui.pathStroke, ui.popClipRect, ui.pushClipRect, ui.windowHovered, ui.windowPos, ui.windowSize, vec2, vec3, web.get, web.post, web.timeouts
+metodos usados (14): clear, currentTime, dispose, move, pause, play, resize, setAutoPlay, setSource, setVisible, setVolume, size, update, visible
+no SDK do CSP: todas existem
+metodos no SDK do CSP: todos existem

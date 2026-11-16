@@ -8,7 +8,8 @@
   - `1578276f` Parte A: o ADR 0033, antes do código
   - `78869c7d` Parte B: os marcos da pista (só leitura dos kn5), o ruído por trecho e a conferência na volta do modelo
   - `626db885` Parte C: o engenheiro no rádio e no app do jogo (0.9.0-engenheiro; app do jogo 0.7.0)
-  - o commit das Partes D e F e deste relatório (o hash está na seção "O que foi enviado ao GitHub")
+  - `d185d927` Partes D e F: as conferências sem jogo, os testes, a documentação e o relatório
+  - o commit da suíte do backend (1062 passando), da conferência da rota e deste relatório final (o hash está na seção "O que foi enviado ao GitHub")
 - **Merge:** nenhum (depois do teste no jogo). **Envio:** nenhum feito por mim (os comandos estão no fim).
 - **Arquivos de handoff** (`docs/handoff/2026-11-15_52_engenheiro-que-acompanha-a-volta_…`):
   - `_relatorio.md` (este);
@@ -241,15 +242,16 @@ Não há como rodar o app Lua fora do jogo: a prévia repete o desenho da janela
 
 ### D.4, as suítes
 
-- **backend, a suíte inteira:** o resultado está em `_testes.txt` (a seção "A suíte do backend", abaixo, diz o número);
+- **backend, a suíte inteira:** **1062 passando** (`_testes.txt`);
 - **os testes do rádio, do 45, da referência e do engenheiro:** 91 passando. Dois testes antigos mudaram só pela versão (`test_a_versao_do_backend` agora pede `engenheiro`; `test_o_app_do_jogo_nao_diz_ia_para_a_referencia`, o app do jogo 0.7.0);
 - **front:** 180 testes passando; `tsc` sem erro (o front não mudou);
 - **desktop:** 4 testes passando;
 - **Lua** (`conferir_lua.py`, agora também com `render.`, `physics.` e `vec3`, contra o `lib.lua` do SDK do CSP): 38.559 tokens, nenhum erro de léxico, os blocos ok, as 55 chamadas da API e os 14 métodos existem (`_conferir_lua.txt`).
 
-### A suíte do backend
+### A suíte do backend e a rota
 
-(preenchido na seção seguinte depois de a rodada acabar)
+- **backend, a suíte inteira:** **1062 passando**, nenhuma falha (12 min 47 s; 37 avisos do scikit-learn, os de sempre). Saída em `_testes.txt`.
+- **A rota no backend de verdade** (16/11, 09:32): um backend de teste na porta 8017, com a pasta de dados no scratchpad (`AT_BACKEND_RUNTIME_ROOT`) e o repositório como fonte. `GET /api/radio/engenheiro` respondeu `disponivel: true`, com a lista vazia (sem jogo) e os 8 blocos de voz; `/api/radio/estado` mostra o engenheiro ligado e o registro na pasta isolada; `/api/radio/mensagens` traz o `engenheiroVersao`. O backend foi encerrado com `taskkill /T`, e o cache da pista do repositório não mudou (01/11).
 
 ## Parte E: o teste no jogo, com você (não feito)
 
