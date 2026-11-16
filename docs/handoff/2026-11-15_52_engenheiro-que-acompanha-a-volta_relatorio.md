@@ -2,14 +2,18 @@
 
 - **Pedido:** `docs/prompts/2026-11-15_52_engenheiro-que-acompanha-a-volta.md` (o engenheiro que acompanha a volta).
 - **Pasta e branch:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer`, `etapa/engenheiro` (a partir de `develop` em `14fe1ca0`, com o merge do 51, `c4869295`).
-- **Situação:** **parado na Parte E, como o pedido manda.** As Partes A a D e a documentação da F estão feitas e commitadas. Falta o seu teste no jogo ("rodei o engenheiro"); depois dele, a minha leitura da sessão, o merge em `develop` e o instalador 0.9.0. Há **três pontos para a sua decisão** (a seção "O que precisa de decisão").
+- **Atualização de 16/11 (a seção no fim):** as decisões estão no ADR 0033 e no código. **Parei antes de medir a voz e refazer a D.1:** o jogo (`acs.exe`) está aberto, e há dois pontos em que a regra escrita não faz o que a decisão esperava (a C13 e a C10). Falta a sua resposta.
+- **Situação antes da atualização:** **parado na Parte E, como o pedido manda.** As Partes A a D e a documentação da F estão feitas e commitadas. Falta o seu teste no jogo ("rodei o engenheiro"); depois dele, a minha leitura da sessão, o merge em `develop` e o instalador 0.9.0. Há **três pontos para a sua decisão** (a seção "O que precisa de decisão").
 - **Commits** (em `etapa/engenheiro`):
   - `227e46cc` Pedido 52: o texto do pedido
   - `1578276f` Parte A: o ADR 0033, antes do código
   - `78869c7d` Parte B: os marcos da pista (só leitura dos kn5), o ruído por trecho e a conferência na volta do modelo
   - `626db885` Parte C: o engenheiro no rádio e no app do jogo (0.9.0-engenheiro; app do jogo 0.7.0)
   - `d185d927` Partes D e F: as conferências sem jogo, os testes, a documentação e o relatório
-  - o commit da suíte do backend (1062 passando), da conferência da rota e deste relatório final (o hash está na seção "O que foi enviado ao GitHub")
+  - `ef0251a0` a suíte do backend (1062 passando), a conferência da rota e o relatório
+  - `fa1262ed` atualização de 16/11: as decisões no ADR 0033, antes do código
+  - `a95c0843` atualização de 16/11: as decisões 1 a 4 e 6 no código, os testes e a documentação
+  - o commit deste relatório atualizado
 - **Merge:** nenhum (depois do teste no jogo). **Envio:** nenhum feito por mim (os comandos estão no fim).
 - **Arquivos de handoff** (`docs/handoff/2026-11-15_52_engenheiro-que-acompanha-a-volta_…`):
   - `_relatorio.md` (este);
@@ -323,3 +327,50 @@ Quando você avisar, confiro com `git ls-remote origin` que o hash remoto é o l
 2. **As decisões** da seção acima.
 3. **O merge em `develop`,** o envio e **o instalador 0.9.0** (a instalação só com o seu "pode instalar").
 4. **O envio da branch,** pelo comando acima.
+
+## Atualização de 16/11: as suas decisões (parado antes da D.1)
+
+**O pedido:** a "Atualização de 16/11" no fim do pedido 52.
+
+### O que foi feito
+
+- **O ADR 0033** ganhou a seção "Decisões do Eduardo de 16/11", como emenda, sem mudar o texto acima (`fa1262ed`, antes do código). Onde a decisão deixava lacuna, fixei no ADR:
+  - **a variante com a causa** é a fala que diz "freou", "mínima", "passou", "saiu" ou "acelerou" (as causas medidas do 45; é a mesma conta da D.1);
+  - **as retas longas** são os blocos de voz de 8,8 s ou mais na volta do modelo: a reta dos boxes (10,9 s) e a reta oposta (9,1 s);
+  - **a primeira reta longa depois de a mensagem nascer** é a primeira em que o carro *entra* depois disso; a reta em que a mensagem nasce não conta;
+  - **"sem tirar o pé"** fica só na janela (a referência não freia), até o início da curva, sem marca no asfalto e sem contagem; é aplicada se o acelerador da volta ficou em 0,90 ou mais no trecho inteiro;
+  - **a freada desde a saída do trecho anterior** vale para tudo o que o engenheiro mede (a referência, os blocos, a causa "freada cedo ou tarde" e a conferência). O feedback do rádio continua com a regra do 45, porque a decisão fala da freada de cada trecho do engenheiro.
+- **O código** (`a95c0843`):
+  - o feedback espera a reta longa com a causa (`core/radio/servico.py`);
+  - o aviso é falado curto e sem a vinheta (`audio.falar` ganhou `vinheta_antes`), e o cartão e a janela continuam com "Curva N:";
+  - "sem tirar o pé" e a freada desde a saída do trecho anterior (`core/engenheiro/regras.py` e `servico.py`); a busca da freada do 45 aceita outro começo só quando o engenheiro pede (`medidas_da_volta(..., inicio_da_freada=...)`);
+  - no app do jogo, só uma linha: sem contagem 3-2-1 quando o item não tem marca. O app continua 0.7.0, que ainda não foi instalado. A conferência do Lua contra o SDK passou (`_conferir_lua.txt`).
+- **Os testes:** 24 do engenheiro (6 novos: a freada desde a saída, "sem tirar o pé", o feedback que espera a variante com a causa, a mais completa na primeira reta longa, a reta em que a mensagem nasce, e o aviso sem a vinheta). Com os do rádio, do 45 e da referência, **97 passando**. A suíte inteira fica para depois da D.1.
+- **O backlog** (decisão 6): duas linhas novas em `docs/backlog.md`. A volta ao vivo deve guardar a marcha e a força do freio. A força do freio deve ser comparada com a sua melhor passagem, nunca com o pedal da volta do modelo.
+- **A documentação:** a seção 9 de `docs/realidade_aumentada.md`, a linha do engenheiro em `docs/app_para_producao.md` e uma linha no ADR 0027.
+- **A conferência da volta do modelo** foi refeita (`_conferencia_da_volta_do_modelo.json`).
+
+### O que mudou nos 15 trechos (decisões 3 e 4, na volta do modelo)
+
+| trecho | freada antes | freada agora | a frase do "freie" agora | sem tirar o pé |
+|---|---:|---:|---|---|
+| C09 | 2.454 m (o toque na saída da C08) | — (sem freada) | — | não |
+| C10 | 2.622 m | **2.680 m** | "Freie 5 metros antes do começo da zebra à direita." (antes, 10 m antes) | não |
+| os outros 13 | iguais | iguais | iguais | **nenhum** |
+
+- **A C09** perdeu o toque de freio, como você queria: a frase do "freie" some, e ficam "vire" e o bloco curto antes da C09 (0,9 s, que não cabe frase).
+- Os blocos de voz só mudaram na C09; os outros sete são os mesmos.
+
+### Os dois pontos que precisam da sua decisão
+
+1. **"Sem tirar o pé" não pega nenhum trecho da volta do modelo, nem a C13.** A volta do modelo não freia na C13, mas alivia: o acelerador vai a 0 dentro do trecho da C13 antes de 3.306 m, que é a retomada. Pela regra escrita ("o acelerador fica em 0,90 ou mais do começo ao fim do trecho"), a C13 continua com "vire no fim da zebra" e "acelere 30 metros antes do fim da zebra". A regra só vai pegar um trecho em que a referência for a sua melhor passagem e ela não aliviar. Não mudei a regra.
+2. **Na C10, a freada da referência começa 4 m antes da saída da C09.** A referência freia a 0,99 desde 2.622 m, e a saída da C09 é 2.626 m. A busca que começa na saída já encontra o freio apertado, então pega a segunda pisada, em 2.680 m. Essa pisada vem depois do ponto de virar (2.672 m), com o freio a 0,67. Antes da decisão, a freada da C10 era 2.622 m. A C10 não tem bloco de voz, então essa frase só aparece na janela. Ainda assim, a dica e a conferência do "freie" na C10 passam a usar a segunda pisada. Não mudei a regra.
+
+Uma saída possível para a C10: se o freio já estiver apertado na saída do trecho anterior, a freada é onde essa pisada começou. Com ela, a C10 volta a 2.622 m e a C09 continua sem freada. Para a C13, uma regra como "a referência não freia no trecho" pegaria a C13, mas também a C03, a C05, a C11 e a C14, que aliviam. Escolher entre essas saídas cabe a você.
+
+### O que falta
+
+1. **A sua resposta** aos dois pontos acima.
+2. **Medir a voz de novo** (a frase curta, sem a vinheta) e refazer a tabela da B.4: quais avisos cabem na voz agora.
+3. **Refazer a D.1** nas 4 sessões. Os dois passos esperam o jogo fechar (o `acs.exe` estava aberto às 14h, com 1h47 de CPU), porque são contas pesadas. Também dependem da resposta acima, que muda a C10.
+4. **A suíte inteira do backend** e o relatório com a D.1 nova. Depois disso, aviso você antes do teste no jogo, como pedido.
