@@ -14,6 +14,7 @@
   `GET /api/radio/replay-da-volta/{volta}?curva=C01` (o replay de qualquer volta ou curva),
   `GET /api/radio/melhor` (a melhor volta, para o minimapa) e `POST /api/radio/abrir-no-app`
   (o app do jogo pede, e o backend avisa o app do Windows pelo WebSocket que ja existe).
+* Pedido 52: `GET /api/radio/engenheiro` (a lista do engenheiro, para a janela "Engenheiro" do app do jogo).
 * `GET /api/radio/minimapa`: a pista simplificada, a volta de referencia e as curvas da
   ultima analise, para o minimapa do app do jogo (pedido 35, Parte E).
 * `GET /api/live/volta`: a volta em andamento inteira (pedido 31, Parte D).
@@ -111,6 +112,13 @@ async def post_abrir_no_app(corpo: dict = Body(...)):
         return {"entregue": False, "motivo": "o app do Windows está fechado"}
     await manager.broadcast({"type": "abrir_replay", "data": {"volta": int(volta), "curva": corpo.get("curva")}})
     return {"entregue": True, "clientes": clientes}
+
+
+@router.get("/engenheiro")
+async def get_engenheiro():
+    """Pedido 52 (ADR 0033): a lista do engenheiro para a janela do app do jogo (a frase, o s_fala, o ponto da
+    acao, a conferencia, a acuracia e a volta lenta)."""
+    return _json(await asyncio.to_thread(_radio().engenheiro))
 
 
 @router.post("/teste")

@@ -6,7 +6,8 @@ Nao ha interpretador de Lua neste computador. O que da para conferir:
    token de erro e um erro de lexico (string sem fechar, caractere estranho).
 2. **Os blocos:** cada `function`, `if`, `for`, `while` e `do` solto fecha com um
    `end`, e cada `repeat` com um `until`, na ordem.
-3. **A API usada:** cada chamada `web.`, `ui.`, `ac.`, `JSON.`, `os.`, `io.` (pedido 35) e
+3. **A API usada:** cada chamada `web.`, `ui.`, `ac.`, `JSON.`, `os.`, `io.` (pedido 35), `render.` e
+   `physics.` (pedido 52) e
    `setInterval` existe no `lib.lua` do SDK do CSP instalado (so leitura).
 
 4. **A conferencia da API no proprio app:** nenhuma funcao da API conferida com
@@ -67,7 +68,9 @@ for linha, texto in enumerate(codigo.splitlines(), 1):
             re.search(r"type\(\s*setInterval\s*\)\s*[~=]=\s*'function'", texto):
         problemas.append(f"linha {linha}: `type(...) == 'function'` numa funcao da API (no CSP pode ser 'cdata')")
 
-chamadas = sorted(set(re.findall(r"\b((?:web|ui|ac|JSON|os|io)\.[A-Za-z_]+|setInterval|rgbm|vec2)\b", codigo)))
+# Pedido 52: tambem `render.` e `physics.` (a marca na pista) e o `vec3`.
+chamadas = sorted(set(re.findall(r"\b((?:web|ui|ac|JSON|os|io|render|physics)\.[A-Za-z_]+|setInterval|rgbm|vec2|vec3)\b",
+                                 codigo)))
 faltam = []
 if sdk and sdk.exists():
     lib = sdk.read_text(encoding="utf-8", errors="replace")

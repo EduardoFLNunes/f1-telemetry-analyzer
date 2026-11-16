@@ -23,13 +23,20 @@
    motivo e os pontos na grade (5 linhas em float32, ~43 KB por volta), para o replay de qualquer
    volta e de qualquer curva nos boxes, sem ler a gravacao.
 
+7. **O engenheiro** (pedido 52, ADR 0033; `core.engenheiro`): a lista dos trechos com perda, o aviso pela
+   voz antes da curva (com prioridade sobre o feedback) e, com ele ligado, o feedback so no comeco dos
+   blocos de voz, na variante mais completa que caiba antes da reserva dos avisos. `AT_ENGENHEIRO=desligado`
+   volta ao radio do pedido 51.
+
 O radio nao decide nada do coach: quais frases saem, o limite de 3 por volta, o foco e
 o limiar continuam no coach. A analise so le o que a volta ao vivo e o store ja medem.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
+import os
 import threading
 import time
 from collections import deque
@@ -90,6 +97,9 @@ class RadioDoEngenheiro:
         volta_atual: Callable[[], Optional[Dict[str, Any]]] = lambda: None,
         melhor_do_store: Callable[[], Optional[float]] = lambda: None,
         volta_parcial: Callable[[], Optional[Dict[str, Any]]] = lambda: None,
+        engenheiro: Optional[bool] = None,
+        raizes: Optional[Callable[[], List[Optional[Path]]]] = None,
+        sua_melhor_volta: Callable[[], Optional[Dict[str, Any]]] = lambda: None,
     ):
         self.pasta = Path(pasta_de_dados) / "data" / "radio"
         self.pasta_audio = self.pasta / "audio"
@@ -138,6 +148,17 @@ class RadioDoEngenheiro:
         self._s_da_fila: Optional[float] = None
         self.contagem = {"curvaEmMensagemPropria": 0, "curvaSaiuDaFila": 0}
         self.erro_da_voz: Optional[str] = None
+        # Pedido 52 (ADR 0033): o engenheiro, ligado salvo `AT_ENGENHEIRO=desligado`.
+        if engenheiro is None:
+            engenheiro = os.environ.get("AT_ENGENHEIRO", "").strip().lower() not in ("desligado", "0", "nao", "não", "off")
+        self.engenheiro_ligado = bool(engenheiro)
+        self._raizes = raizes or (lambda: [self._repositorio()])
+        self._sua_melhor_volta = sua_melhor_volta
+        self._engenheiro = None
+        self._engenheiro_erro: Optional[str] = None
+        self._audio_do_engenheiro = ThreadPoolExecutor(max_workers=1, thread_name_prefix="radio-engenheiro")
+        self._lenta: Dict[str, Any] = {"volta": None, "lenta": False, "motivo": None}
+        self._ia_no_quadro = False
 
     # ------------------------------------------------------------- pista ---
 
@@ -155,7 +176,42 @@ class RadioDoEngenheiro:
                 logger.warning("Radio sem a geometria oficial: %s", erro)
                 self._curvas, self._comprimento, self._geometria = [], None, None
             self._janelas = janelas_de_radio(self._curvas or [], self._comprimento or 0.0)
+            self._engenheiro = None
+            if self.engenheiro_ligado and self._geometria is not None:
+                try:
+                    from core.engenheiro.servico import Engenheiro
+                    self._engenheiro = Engenheiro(self._geometria.track, self._geometria, self._raizes,
+                                                  self._falar_o_aviso, self._registrar_o_engenheiro)
+                    self._engenheiro_erro = self._engenheiro.motivo
+                except Exception as erro:  # sem o engenheiro, o radio continua o do pedido 51
+                    logger.warning("Radio sem o engenheiro: %s", erro)
+                    self._engenheiro, self._engenheiro_erro = None, str(erro)
         return bool(self._curvas and self._comprimento)
+
+    def _eng(self):
+        """O engenheiro ativo (com a volta do modelo, os marcos e o ruido), ou None."""
+        e = self._engenheiro
+        return e if e is not None and e.ativo else None
+
+    def _falar_o_aviso(self, fala: str):
+        """Pedido 52: a voz de um aviso, em segundo plano, guardada pelo texto (a mesma frase nao e gerada duas vezes)."""
+        def gerar():
+            nome = hashlib.sha1(fala.encode("utf-8")).hexdigest()[:12]
+            arquivo = self.pasta_audio / f"{self.instancia}_aviso_{nome}.wav"
+            self.pasta_audio.mkdir(parents=True, exist_ok=True)
+            return arquivo, float(self._falar(fala, arquivo))
+        return self._audio_do_engenheiro.submit(gerar)
+
+    def _registrar_o_engenheiro(self, linha: Dict[str, Any]) -> None:
+        """Pedido 52 (ADR 0033, item 10): `<pasta de dados>/data/radio/<sessao>.engenheiro.jsonl`."""
+        sessao = self._sessao() or f"sem-gravacao_{datetime.now():%Y-%m-%d}"
+        try:
+            self.pasta.mkdir(parents=True, exist_ok=True)
+            with (self.pasta / f"{sessao}.engenheiro.jsonl").open("a", encoding="utf-8") as saida:
+                saida.write(json.dumps({"em": datetime.fromtimestamp(self._relogio()).isoformat(timespec="seconds"),
+                                        "sessao": sessao, **linha}, ensure_ascii=False) + "\n")
+        except OSError as erro:
+            logger.warning("Engenheiro sem registro: %s", erro)
 
     def janelas(self) -> List[Janela]:
         with self._lock:
@@ -178,11 +234,27 @@ class RadioDoEngenheiro:
         maximo = float(mensagem.get("falaMaxS") or FALA_MAXIMA_S.get(mensagem.get("origem"), 8.0))
         base = self.pasta_audio / f"{self.instancia}_{id(mensagem)}"
         escolhido = None
+        # Pedido 52 (ADR 0033, item 5): com o engenheiro, a fala e escolhida na entrega, pelo tempo que resta
+        # antes da reserva dos avisos: todas as variantes que cabem no limite do tipo sao geradas, da mais
+        # completa a mais curta (a mais completa fica pronta primeiro).
+        todas = self._eng() is not None
+        if todas:
+            mensagem.setdefault("_variantes", [])
         try:
             self.pasta_audio.mkdir(parents=True, exist_ok=True)
             for k, fala in enumerate(falas):
                 arquivo = base.with_name(f"{base.name}_{k}.wav")
                 dur = float(self._falar(fala, arquivo))
+                if todas:
+                    # a ultima fica mesmo acima do limite se nenhuma couber (como sem o engenheiro)
+                    if dur <= maximo or (k == len(falas) - 1 and not mensagem["_variantes"]):
+                        mensagem["_variantes"].append((k, arquivo, dur, fala))
+                    else:
+                        try:
+                            arquivo.unlink()
+                        except OSError:
+                            pass
+                    continue
                 if escolhido is not None:
                     try:
                         escolhido[0].unlink()
@@ -197,6 +269,14 @@ class RadioDoEngenheiro:
             logger.warning("Radio sem voz: %s", erro)
             return None
         self.erro_da_voz = None
+        if todas:
+            if not mensagem.get("_variantes"):
+                return None
+            k, arquivo, dur, fala = mensagem["_variantes"][0]
+            mensagem["_falaEscolhida"] = k
+            mensagem["fala"] = fala
+            mensagem["duracaoS"] = round(dur, 2)
+            return arquivo
         if escolhido is None:
             return None
         arquivo, dur, fala = escolhido
@@ -229,6 +309,8 @@ class RadioDoEngenheiro:
                 self._velocidade_kmh = float(v) if v is not None else self._velocidade_kmh
             except (TypeError, ValueError):
                 pass
+            if "isAIControlled" in frame:
+                self._ia_no_quadro = bool(frame.get("isAIControlled"))
         with self._lock:
             volta = self._ultima_volta()
             if volta and volta.get("momento") != self._volta_vista:
@@ -239,6 +321,18 @@ class RadioDoEngenheiro:
                 self._na_linha()
             self._guardar_a_parcial()
             self._tirar_as_curvas_que_passaram()
+            # Pedido 52 (ADR 0033, item 5): o aviso do engenheiro vem antes de tudo e nunca espera o feedback.
+            eng = self._eng()
+            if eng is not None:
+                pos = self._posicao() or {}
+                if pos.get("s") is not None:
+                    self._acompanhar_a_volta_lenta(pos)
+                    aviso = eng.no_quadro(float(pos["s"]), self._velocidade_kmh, bool(pos.get("desdeALinha", True)),
+                                          self._ia_no_quadro, falando=agora < self._ocupado_ate)
+                    if aviso is not None:
+                        aviso["criadaEm"] = agora
+                        self._entregar(aviso, agora, pos)
+                        return
             if not self._pendentes or agora < self._ocupado_ate:
                 return
             proxima = self._pendentes[0]
@@ -249,6 +343,13 @@ class RadioDoEngenheiro:
                 return
             L = float(self._comprimento or pos["comprimento"])
             s = float(pos["s"])
+            if eng is not None:
+                # Pedido 52: o feedback no comeco de um bloco de voz, na variante mais completa que cabe antes da
+                # reserva dos avisos; se nenhuma couber, espera o bloco seguinte.
+                if not self._escolher_a_variante(proxima, eng, s, L, agora):
+                    return
+                self._entregar(self._pendentes.popleft(), agora, pos)
+                return
             if dentro(self._janelas, s, L) is None:
                 return
             # Pedido 35: so se a fala inteira cabe no que resta da janela, na velocidade do carro.
@@ -257,8 +358,61 @@ class RadioDoEngenheiro:
                 return
             self._entregar(self._pendentes.popleft(), agora, pos)
 
+    def _escolher_a_variante(self, mensagem: Dict[str, Any], eng, s: float, L: float, agora: float) -> bool:
+        """Pedido 52 (ADR 0033, item 5): com o carro num bloco, a primeira variante (da mais completa a mais curta)
+        que cabe no limite do tipo e no tempo ate a reserva, na velocidade do carro. False: espera."""
+        reserva = eng.reserva(s)
+        v = float(self._velocidade_kmh or 0.0) / 3.6
+        if reserva is None or v <= 1.0:
+            return False
+        disponivel = ((reserva - s) % L) / v - FOLGA_NA_JANELA_S
+        variantes = list(mensagem.get("_variantes") or [])
+        maximo = float(mensagem.get("falaMaxS") or FALA_MAXIMA_S.get(mensagem.get("origem"), 8.0))
+        if not variantes:
+            # sem voz (a voz falhou ou demorou): sai so o cartao, como antes
+            futuro = mensagem.get("_futuro")
+            return futuro is None or futuro.done() or agora - mensagem["criadaEm"] >= ESPERA_DO_AUDIO_S
+        for k, arquivo, dur, fala in variantes:
+            if dur <= maximo and dur <= disponivel:
+                mensagem["_falaEscolhida"] = k
+                mensagem["fala"] = fala
+                mensagem["duracaoS"] = round(dur, 2)
+                mensagem["_arquivoPronto"] = str(arquivo)
+                mensagem["_reservaEm"] = round(reserva, 1)
+                return True
+        futuro = mensagem.get("_futuro")
+        if futuro is not None and not futuro.done():
+            return False       # as variantes mais curtas ainda estao sendo geradas
+        mensagem["_esperouOBloco"] = True
+        return False
+
+    def _acompanhar_a_volta_lenta(self, pos: Dict[str, Any]) -> None:
+        """ADR 0033, item 6: a volta lenta (5,0 s ou mais atras da melhor da sessao naquele ponto, a volta de saida
+        dos boxes); uma vez lenta, a volta fica lenta ate a linha (uma rodada, uma parada)."""
+        volta = pos.get("volta")
+        if volta != self._lenta.get("volta"):
+            self._lenta = {"volta": volta, "lenta": False, "motivo": None, "difMelhorS": None}
+        if not pos.get("desdeALinha", True):
+            self._lenta.update(lenta=True, motivo="volta de saída dos boxes")
+            return
+        melhor = next((v for v in self._voltas_da_sessao if v["volta"] == self._melhor_volta and v["grade"] is not None), None)
+        t = pos.get("tempoDaVolta")
+        if melhor is None or t is None or self._geometria is None:
+            return
+        try:
+            from core.engenheiro.regras import VOLTA_LENTA_S, tempo_em
+            el = np.asarray(melhor["grade"]["elapsed"], dtype=float)
+            dif = float(t) - tempo_em(el, float(melhor["tempoS"]), self._geometria.track, float(pos["s"]))
+        except Exception:
+            return
+        self._lenta["difMelhorS"] = round(dif, 2)
+        if dif >= VOLTA_LENTA_S and not self._lenta["lenta"]:
+            self._lenta.update(lenta=True, motivo=f"{dif:.1f} s atrás da melhor da sessão".replace(".", ","))
+
     def _audio_pronto(self, mensagem: Dict[str, Any], agora: float) -> bool:
         futuro = mensagem.get("_futuro")
+        if mensagem.get("_variantes"):
+            return True        # pedido 52: a variante mais completa ja esta pronta
         return futuro is None or futuro.done() or agora - mensagem["criadaEm"] >= ESPERA_DO_AUDIO_S
 
     def _medidas_da_volta(self, volta: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
@@ -386,6 +540,8 @@ class RadioDoEngenheiro:
         self._pista()
         self._conferir_a_sessao()
         if volta.get("teveIA"):
+            if self._eng() is not None:
+                self._eng().na_linha(volta.get("volta"), None, None, conta=False)
             self._guardar_a_volta(volta, "ia", "a IA pilotou parte da volta", None)
             self._fora_da_grade(volta, "a IA pilotou parte da volta")
             return
@@ -406,6 +562,7 @@ class RadioDoEngenheiro:
             anterior = round(self._anterior_que_contou - tempo, 3)
         mensagem = mensagem_de_resumo(volta.get("volta"), tempo, ref.get("tempoS"), ref.get("tipo"), pior, melhor,
                                       anterior, rodada=rodada)
+        self._engenheiro_na_linha(volta, mensagem, conta)
         if pior:
             mensagem["_replay"] = self._replay_da_curva_da_volta(volta, pior, ref.get("tipo"))
             mensagem["_curvaDaVolta"] = pior
@@ -421,6 +578,30 @@ class RadioDoEngenheiro:
         else:
             self._anterior_que_contou = None
         self._analise_da_volta(volta, medidas, ref)
+
+    def _engenheiro_na_linha(self, volta: Dict[str, Any], mensagem: Dict[str, Any], conta: bool) -> None:
+        """Pedido 52 (ADR 0033, itens 1, 8 e 9): a conferencia das dicas e a lista nova; a acuracia vai no cartao
+        do resumo e na variante mais completa da fala (o primeiro item a sair no corte)."""
+        eng = self._eng()
+        if eng is None:
+            return
+        guardada = self._grade_da_ultima if (self._grade_da_ultima or {}).get("volta") == volta.get("volta") else None
+        try:
+            conf = eng.na_linha(volta.get("volta"), guardada["grade"] if guardada else None,
+                                guardada["tempoS"] if guardada else None, conta and guardada is not None)
+        except Exception as erro:
+            logger.warning("Engenheiro sem a linha: %s", erro)
+            return
+        if not conf or not conf.get("texto"):
+            return
+        falas = list(mensagem.get("falas") or [mensagem["fala"]])
+        frase = conf["texto"][0].upper() + conf["texto"][1:] + "."
+        mensagem["falas"] = [f"{falas[0]} {frase}"] + falas
+        mensagem["fala"] = mensagem["falas"][0]
+        if mensagem.get("falasComACausa"):
+            mensagem["falasComACausa"] = int(mensagem["falasComACausa"]) + 1
+        mensagem["texto"] = f"{mensagem.get('texto')} · {conf['texto']}"
+        mensagem["acuracia"] = conf["texto"]
 
     @staticmethod
     def _estado_da_volta(volta: Dict[str, Any], medidas: Optional[List[Dict[str, Any]]], rodada: bool):
@@ -450,6 +631,12 @@ class RadioDoEngenheiro:
         """Outra sessao: a analise e a grade comecam de novo."""
         sessao = self._sessao()
         if sessao != self._sessao_da_analise:
+            if self._eng() is not None:
+                try:
+                    self._eng().nova_sessao(sessao, self._sua_melhor_volta())
+                except Exception as erro:
+                    logger.warning("Engenheiro sem a sua melhor volta: %s", erro)
+                    self._eng().nova_sessao(sessao, None)
             self._sessao_da_analise, self._voltas_validas = sessao, []
             self._grade_voltas, self._grade_fora, self._grade_citadas = [], [], []
             self._voltas_da_sessao = []
@@ -570,7 +757,16 @@ class RadioDoEngenheiro:
     def _entregar(self, mensagem: Dict[str, Any], agora: float, pos: Dict[str, Any]) -> Dict[str, Any]:
         futuro = mensagem.pop("_futuro", None)
         arquivo = None
-        if futuro is not None and futuro.done():
+        pronto = mensagem.pop("_arquivoPronto", None)
+        if pronto is not None:
+            arquivo = Path(pronto)
+            for k, outro, _d, _f in mensagem.pop("_variantes", None) or []:
+                if Path(outro) != arquivo:
+                    try:
+                        Path(outro).unlink()
+                    except OSError:
+                        pass
+        elif futuro is not None and futuro.done():
             try:
                 arquivo = futuro.result()
             except Exception:
@@ -769,7 +965,8 @@ class RadioDoEngenheiro:
             return {"instancia": self.instancia, "ultimoId": self._proximo_id - 1, "mensagens": novas,
                     "pendentes": len(self._pendentes), "erroDaVoz": self.erro_da_voz,
                     "minimapaVersao": self.versao_do_minimapa(), "melhorVolta": self._melhor_volta,
-                    "voltasDaSessao": len(self._voltas_da_sessao)}
+                    "voltasDaSessao": len(self._voltas_da_sessao),
+                    "engenheiroVersao": self._eng().versao if self._eng() is not None else None}
 
     def versao_do_minimapa(self) -> str:
         """Pedido 35: muda quando a referencia ou a ultima analise mudam (o app do jogo baixa o minimapa de novo).
@@ -810,4 +1007,19 @@ class RadioDoEngenheiro:
                     "entregues": len(self._entregues), "instancia": self.instancia,
                     "voz": audio_do_radio.VOZ_PADRAO, "velocidade": audio_do_radio.VELOCIDADE_PADRAO,
                     "erroDaVoz": self.erro_da_voz, "pastaDoRegistro": str(self.pasta),
-                    "voltasValidasDaSessao": len(self._voltas_validas), "contagem": dict(self.contagem)}
+                    "voltasValidasDaSessao": len(self._voltas_validas), "contagem": dict(self.contagem),
+                    "engenheiro": {"ligado": self.engenheiro_ligado, "ativo": self._eng() is not None,
+                                   "motivo": self._engenheiro_erro,
+                                   "blocos": [[b["inicio"], b["fim"]] for b in (self._eng().blocos if self._eng() else [])
+                                              if b.get("fim") is not None]}}
+
+    def engenheiro(self) -> Dict[str, Any]:
+        """Pedido 52: a lista do engenheiro para a janela do app do jogo (`GET /api/radio/engenheiro`)."""
+        with self._lock:
+            self._pista()
+            eng = self._eng()
+            if eng is None:
+                motivo = ("o engenheiro está desligado (AT_ENGENHEIRO)" if not self.engenheiro_ligado else
+                          self._engenheiro_erro or "sem a geometria oficial")
+                return {"disponivel": False, "motivo": motivo}
+            return eng.estado_publico(dict(self._lenta))

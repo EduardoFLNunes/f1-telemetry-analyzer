@@ -108,7 +108,7 @@ TRACK_CACHE_DIR = RUNTIME_ROOT / "data" / "cache" / "tracks"
 PRIMARY_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetry.csv"
 DEBUG_TELEMETRY_FIXTURE = RESOURCE_ROOT / "data" / "example_telemetryOld.csv"
 BACKEND_SERVICE_NAME = "automobilista-telemetria-backend"
-BACKEND_PHASE_VERSION = "volta-do-modelo"
+BACKEND_PHASE_VERSION = "engenheiro"
 
 runtime_state = RuntimeState()
 telemetry_buffer = TelemetryBuffer(max_size=20000)
@@ -187,6 +187,21 @@ def _volta_de_referencia_do_radio() -> Optional[Dict[str, Any]]:
     return leitor_do_store.ler_volta(app_config.coach_root(), str(ref["volta"]))
 
 
+def _sua_melhor_volta_do_radio() -> Optional[Dict[str, Any]]:
+    """Pedido 52 (ADR 0033, item 2): a "Sua melhor volta" do modelo do coach, na grade, para a melhor passagem."""
+    model = getattr(live_driving_coach, "_model", None) if live_driving_coach is not None else None
+    lap_id = ((getattr(model, "references", None) or {}).get("minha_melhor") or {}).get("lap_id")
+    if not lap_id:
+        return None
+    from core.radio.analise import grade
+    from routers.leitura import leitor_do_store
+
+    volta = leitor_do_store.ler_volta(app_config.coach_root(), str(lap_id))
+    if not volta or not volta.get("disponivel", True) or volta.get("tempoS") is None:
+        return None
+    return {"grade": grade(volta), "tempoS": float(volta["tempoS"]), "lapId": lap_id}
+
+
 def _melhor_do_store_do_radio() -> Optional[float]:
     """Pedido 45 (C.1): a melhor volta do carro e da pista em todas as sessoes do store."""
     from core.coleta.estado import melhor_do_store
@@ -229,6 +244,10 @@ def _ligar_o_radio() -> None:
             volta_atual=lambda: volta_ao_vivo.estado() if volta_ao_vivo is not None else None,
             melhor_do_store=_melhor_do_store_do_radio,
             volta_parcial=lambda: volta_ao_vivo.ultima_parcial() if volta_ao_vivo is not None else None,
+            # Pedido 52 (ADR 0033): os arquivos do engenheiro (a volta do modelo, os marcos e o ruido) no
+            # repositorio, na pasta de dados e na de recursos, e a "Sua melhor volta" para a melhor passagem.
+            raizes=lambda: [app_config.coach_root(), app_config.runtime_root, app_config.resource_root],
+            sua_melhor_volta=_sua_melhor_volta_do_radio,
         )
         event_bus.subscribe(PROCESSED_FRAME, radio_do_engenheiro.on_frame)
         event_bus.subscribe(COACHING_EVENT, radio_do_engenheiro.on_coaching_event)

@@ -1,6 +1,6 @@
 -- Rádio do engenheiro (pedido 31, ADR 0020; pedido 35, ADR 0021).
 --
--- Quatro janelas, cada uma ligada e desligada na barra de apps do jogo (manifest.ini):
+-- Cinco janelas, cada uma ligada e desligada na barra de apps do jogo (manifest.ini):
 --
 --   * o rádio (`janela`): a cada 0,3 s, pede ao backend local as mensagens novas
 --     (/api/radio/mensagens) e mostra o cartão por alguns segundos, com a vinheta e a
@@ -18,14 +18,18 @@
 --     cima, com a sua linha e a da referência, os dois carros, as freadas, as mínimas, o
 --     traçado e o tempo perdido. Na reta, junto com a fala; nos boxes, as voltas da sessão
 --     para estudar (pedido 45): a janela abre sozinha, com a lista das voltas, a grade e o botão
---     "Abrir no app", que só faz um pedido ao backend local.
+--     "Abrir no app", que só faz um pedido ao backend local;
+--   * o engenheiro (`engenheiro`, pedido 52, ADR 0033): a frase de cada trecho da lista antes da curva,
+--     pelo marco da pista, a conferência depois da linha e, na volta lenta, a lista inteira; com ela
+--     aberta, a marca do ponto da ação no asfalto (ou a contagem 3-2-1, se o CSP não tiver a API).
 --
 -- A voz tem três caminhos, um depois do outro (pedido 35, Parte B): a URL do backend;
 -- o arquivo que o backend grava em data/radio/audio/; e o áudio baixado para a
 -- subpasta `voz` da pasta do app, que o próprio app limpa ao abrir. O app começa pelo
 -- caminho que tocou da última vez e escreve uma linha no log do CSP por mensagem.
 --
--- O que não faz: não muda o carro, os controles nem o jogo, e não desenha na pista.
+-- O que não faz: não muda o carro, os controles nem o jogo. Desenha na pista só a marca do engenheiro
+-- (pedido 52; ADR 0021, atualização de 15/11).
 -- Só grava dentro da pasta dele: a subpasta `voz` (ADR 0021, item 6).
 
 local BACKEND = 'http://127.0.0.1:8000'
@@ -94,7 +98,7 @@ local CORES_DO_PEDAL = {
   [1] = rgbm(0.239, 0.863, 0.518, 1),        -- --acelerador (#3ddc84)
   [2] = rgbm(1.0, 0.353, 0.373, 1),          -- --freio (#ff5a5f)
 }
-local TAG = { coach = 'RÁDIO', resumo = 'VOLTA', analise = 'ANÁLISE', teste = 'TESTE', curva = 'CURVA' }
+local TAG = { coach = 'RÁDIO', resumo = 'VOLTA', analise = 'ANÁLISE', teste = 'TESTE', curva = 'CURVA', aviso = 'ENGENHEIRO' }
 
 local function log(texto)
   if ac ~= nil and ac.log ~= nil then
@@ -2301,12 +2305,256 @@ desenharOReplay = function(dt)
   end
 end
 
+-- ── o engenheiro (pedido 52, ADR 0033) ──────────────────────────────────
+--
+-- A quinta janela: a frase de cada trecho da lista do engenheiro, do `sFala` até o ponto da ação (os
+-- trechos com voz e os sem voz); depois da linha, o sinal da conferência por trecho e a acurácia; na volta
+-- lenta, a lista inteira com os valores. A lista vem do backend (`/api/radio/engenheiro`), uma vez por
+-- segundo, com a janela aberta. A posição do carro na volta é a do minimapa: o ponto da volta de
+-- referência mais perto do carro.
+--
+-- A marca na pista (ADR 0033, item 7): onde o CSP tem `render.on`, `render.quad` e `physics.raycastTrack`,
+-- uma faixa no asfalto, na cor do fantasma, no ponto da ação de cada trecho da lista, do `sFala` até o
+-- carro passar. Sem isso, a janela mostra a contagem 3-2-1 até o ponto (a distância pela velocidade).
+
+local ENG_PERIODO_S = 1
+local ENG_CONFERENCIA_S = 8         -- depois da linha, o sinal da conferência fica isto na janela
+local ENG_ABERTA_S = 2              -- a janela (ou a marca) desenhada há menos disto: pede a lista
+local MARCA_COMPRIMENTO_M = 1.5
+local MARCA_LARGURA_M = 6
+local MARCA_ALTURA_M = 0.04         -- um pouco acima do asfalto, para não piscar com ele
+local MARCA_DEPOIS_M = 5            -- a marca some 5 m depois do ponto
+
+local FALTA_NA_MARCA = conferir({
+  { render, 'render', 'on' }, { render, 'render', 'quad' }, { physics, 'physics', 'raycastTrack' },
+})
+local MARCA_3D = MINIMAPA and #FALTA_NA_MARCA == 0
+
+local eng = {
+  dados = nil, pedindo = false, ultimoQuadro = -100,
+  voltaDaConferencia = nil, conferenciaEm = -100, alturas = {}, s = nil, iCarro = nil, avisouFalta = false,
+}
+
+local function lerOEngenheiro()
+  if CALADO or eng.pedindo then return end
+  local t = relogio()
+  if t - eng.ultimoQuadro > ENG_ABERTA_S then return end
+  eng.pedindo = true
+  pedirAoBackend(BACKEND .. '/api/radio/engenheiro', function(err, r)
+    eng.pedindo = false
+    if err or not r or r.status ~= 200 then return end
+    local ok, d = pcall(JSON.parse, r.body)
+    if not ok or type(d) ~= 'table' then return end
+    local c = d.ultimaConferencia
+    if type(c) == 'table' and c.volta ~= nil and c.volta ~= eng.voltaDaConferencia then
+      eng.voltaDaConferencia = c.volta
+      eng.conferenciaEm = relogio()
+    end
+    eng.dados = d
+  end)
+end
+
+-- O s do carro na volta: o ponto da volta de referência mais perto (projetado no segmento), com o passo dela.
+local function sDoCarro(carro)
+  local ref = mini.referencia
+  local L = tonumber(mini.comprimento) or 0
+  if not ref or not carro or L <= 0 then return nil end
+  local pontos = ref.pontos
+  local n = #pontos
+  if n < 2 then return nil end
+  local x, z = carro.position.x, carro.position.z
+  local function procurar(de, ate)
+    local melhor, im, um = math.huge, nil, 0
+    for i = de, ate do
+      local p, q = pontos[i], pontos[i + 1]
+      local dx, dz = q[1] - p[1], q[2] - p[2]
+      local l2 = dx * dx + dz * dz
+      local u = 0
+      if l2 > 0 then u = math.max(0, math.min(1, ((x - p[1]) * dx + (z - p[2]) * dz) / l2)) end
+      local ex, ez = p[1] + dx * u - x, p[2] + dz * u - z
+      local d2 = ex * ex + ez * ez
+      if d2 < melhor then melhor, im, um = d2, i, u end
+    end
+    return melhor, im, um
+  end
+  local d2, i, u = math.huge, nil, 0
+  if eng.iCarro then
+    d2, i, u = procurar(math.max(1, eng.iCarro - 8), math.min(n - 1, eng.iCarro + 25))
+  end
+  if d2 > 30 * 30 then d2, i, u = procurar(1, n - 1) end
+  eng.iCarro = i
+  if not i or d2 > LONGE_DA_REFERENCIA_M * LONGE_DA_REFERENCIA_M then return nil end
+  return ((i - 1 + u) * L / n) % L
+end
+
+local function aFrente(de, ate, L)
+  return (ate - de) % L
+end
+
+-- Os trechos da lista com o carro entre o sFala e o ponto da ação.
+local function ativos(s, L)
+  local out = {}
+  local d = eng.dados
+  if not d or type(d.lista) ~= 'table' or not s then return out end
+  for _, it in ipairs(d.lista) do
+    local sf, sa = tonumber(it.sFala), tonumber(it.sAcao)
+    if sf and sa and it.frase then
+      if aFrente(sf, s, L) <= aFrente(sf, sa, L) then out[#out + 1] = it end
+    end
+  end
+  return out
+end
+
+local function voltaLenta()
+  local d = eng.dados
+  if d and type(d.lenta) == 'table' and d.lenta.lenta then return true, d.lenta.motivo end
+  if mini.difMelhor and mini.difMelhor >= (tonumber(d and d.voltaLentaS) or 5) then
+    return true, decimal(mini.difMelhor, 1) .. ' s atrás da melhor da sessão'
+  end
+  return false, nil
+end
+
+local function contagem321(it, s, L, carro)
+  local v = (tonumber(carro.speedKmh) or 0) / 3.6
+  if v < 3 then return nil end
+  local t = aFrente(s, tonumber(it.sAcao), L) / v
+  if t > 3 then return nil end
+  return tostring(math.max(1, math.ceil(t)))
+end
+
+local desenharOEngenheiro
+
+-- Chamada a cada quadro pela janela do engenheiro (manifest.ini, FUNCTION_MAIN).
+function engenheiro(dt)
+  local tamanho = ui.windowSize()
+  naJanelaInteira(tamanho.x, tamanho.y, desenharOEngenheiro, dt)
+end
+
+desenharOEngenheiro = function(dt)
+  local t = relogio()
+  eng.ultimoQuadro = t
+  local W = ui.windowSize().x
+  local H = ui.windowSize().y
+  ui.drawRectFilled(vec2(0, 0), vec2(W, H), CORES.painel, 10)
+  ui.drawRectFilled(vec2(0, 0), vec2(6, H), CORES.vermelho, 3)
+  ui.dwriteDrawText('ENGENHEIRO', 13, vec2(20, 8), CORES.vermelho)
+  local d = eng.dados
+  if not d then
+    caixa(estado.fora and 'sem backend' or 'lendo a lista do engenheiro', 13, vec2(20, 30), vec2(W - 10, H - 10), CORES.fraco)
+    return
+  end
+  if d.disponivel == false then
+    caixa('Engenheiro: ' .. tostring(d.motivo or 'indisponível'), 13, vec2(20, 30), vec2(W - 10, H - 10), CORES.fraco)
+    return
+  end
+  local L = tonumber(d.comprimentoM) or tonumber(mini.comprimento) or 0
+  local okC, carro = pcall(ac.getCar, 0)
+  local s = okC and carro and sDoCarro(carro) or nil
+  eng.s = s
+  local lenta, motivo = voltaLenta()
+  local lista = type(d.lista) == 'table' and d.lista or {}
+  local conf = d.ultimaConferencia
+  -- Depois da linha: o sinal da conferência por trecho e a acurácia.
+  if not lenta and type(conf) == 'table' and t - eng.conferenciaEm < ENG_CONFERENCIA_S and type(conf.conferidas) == 'table'
+      and #conf.conferidas > 0 then
+    local partes = {}
+    for _, c in ipairs(conf.conferidas) do
+      partes[#partes + 1] = c.trecho .. (c.aplicada == true and ' aplicada' or (c.aplicada == false and ' não' or ' sem medida'))
+    end
+    caixa(table.concat(partes, ' · '), 18, vec2(20, 30), vec2(W - 10, H - 40), CORES.texto)
+    if conf.texto then ui.dwriteDrawText(conf.texto, 15, vec2(20, H - 30), CORES.apoio) end
+    return
+  end
+  if lenta then
+    -- A volta lenta: a lista inteira, com a frase, a perda e a conferência com os valores.
+    ui.dwriteDrawText('volta lenta: ' .. tostring(motivo or ''), 12, vec2(120, 10), CORES.apoio)
+    local y = 30
+    for _, it in ipairs(lista) do
+      if y > H - 18 then break end
+      local perda = it.perdaS and ('−' .. decimal(math.abs(tonumber(it.perdaS)), 2) .. ' s') or ''
+      local linha = tostring(it.janela or it.trecho) .. '  ' .. perda .. (it.voz and '' or '  (só na janela)')
+      ui.dwriteDrawText(corte(linha, 80), 13, vec2(20, y), CORES.texto)
+      y = y + 17
+      if it.conferencia and y <= H - 18 then
+        ui.dwriteDrawText(corte('   ' .. it.conferencia, 84), 12, vec2(20, y), it.aplicada and CORES.ganho or CORES.perda)
+        y = y + 16
+      end
+    end
+    if #lista == 0 then ui.dwriteDrawText('nenhum trecho na lista', 13, vec2(20, y), CORES.fraco) end
+    return
+  end
+  -- A volta rápida: a frase de cada trecho entre o sFala e o ponto da ação.
+  local agora = ativos(s, L)
+  if #agora == 0 then
+    local n = #lista
+    ui.dwriteDrawText(n == 0 and 'nenhum trecho na lista' or (n .. (n == 1 and ' trecho' or ' trechos') .. ' na lista'),
+      12, vec2(120, 10), CORES.fraco)
+    if not s then ui.dwriteDrawText('sem a posição do carro (o minimapa ainda não baixou a referência)', 12, vec2(20, 30), CORES.fraco) end
+    return
+  end
+  local y = 30
+  for _, it in ipairs(agora) do
+    local texto = tostring(it.janela or it.frase)
+    caixa(texto, 20, vec2(20, y), vec2(W - 70, y + 52), CORES.texto)
+    local dist = aFrente(s, tonumber(it.sAcao), L)
+    ui.dwriteDrawText('a ' .. decimal(dist, 0) .. ' m' .. (it.voz and '' or ' · só na janela'), 12, vec2(20, y + 54), CORES.apoio)
+    if not MARCA_3D and okC and carro then
+      local n = contagem321(it, s, L, carro)
+      if n then ui.dwriteDrawText(n, 44, vec2(W - 60, y), CORES.vermelho) end
+    end
+    y = y + 76
+    if y > H - 40 then break end
+  end
+end
+
+-- A marca no asfalto, no ponto da ação (ADR 0033, item 7).
+local function alturaDoAsfalto(it, carro)
+  local chave = tostring(it.sAcao)
+  local h = eng.alturas[chave]
+  if h then return h end
+  local topo = (carro and carro.position.y or 0) + 30
+  local ok, dist = pcall(physics.raycastTrack, vec3(it.x, topo, it.z), vec3(0, -1, 0), 200)
+  if ok and tonumber(dist) and dist >= 0 then
+    h = topo - dist
+    eng.alturas[chave] = h
+    return h
+  end
+  return nil
+end
+
+local function desenharAMarca()
+  -- A marca acompanha a janela do engenheiro: desligada a janela na barra de apps, a marca some.
+  if relogio() - eng.ultimoQuadro > ENG_ABERTA_S then return end
+  local d = eng.dados
+  if not d or d.disponivel == false or not eng.s then return end
+  local L = tonumber(d.comprimentoM) or 0
+  local okC, carro = pcall(ac.getCar, 0)
+  if not okC or not carro or L <= 0 then return end
+  for _, it in ipairs(type(d.lista) == 'table' and d.lista or {}) do
+    local sf, sa = tonumber(it.sFala), tonumber(it.sAcao)
+    if it.frase and sf and sa and it.x and it.z and type(it.direcao) == 'table'
+        and aFrente(sf, eng.s, L) <= aFrente(sf, sa, L) + MARCA_DEPOIS_M then
+      local y = alturaDoAsfalto(it, carro)
+      if y then
+        local dx, dz = tonumber(it.direcao[1]) or 0, tonumber(it.direcao[2]) or 0
+        local nx, nz = -dz, dx
+        local a, b = MARCA_COMPRIMENTO_M / 2, MARCA_LARGURA_M / 2
+        local yy = y + MARCA_ALTURA_M
+        render.quad(vec3(it.x - dx * a - nx * b, yy, it.z - dz * a - nz * b),
+          vec3(it.x - dx * a + nx * b, yy, it.z - dz * a + nz * b),
+          vec3(it.x + dx * a + nx * b, yy, it.z + dz * a + nz * b),
+          vec3(it.x + dx * a - nx * b, yy, it.z + dz * a - nz * b), CORES.fantasma)
+      end
+    end
+  end
+end
+
 -- ── o custo no jogo: o FPS com os mapas ligados e desligados ────────────
 
 local function novaContagem()
   return { soma = 0, n = 0, minimo = math.huge, maximo = 0, parado = 0,
            mini = { ligado = 0, desligado = 0 }, perto = { ligado = 0, desligado = 0 },
-           rep = { ligado = 0, desligado = 0 } }
+           rep = { ligado = 0, desligado = 0 }, eng = { ligado = 0, desligado = 0 } }
 end
 local fps = novaContagem()
 
@@ -2328,7 +2576,8 @@ local function amostrarOFps()
     fps.minimo = math.min(fps.minimo, v)
     fps.maximo = math.max(fps.maximo, v)
     local agora = relogio()
-    for nome, ultimo in pairs({ mini = mini.ultimoQuadro, perto = perto.ultimoQuadro, rep = rp.ultimoQuadro }) do
+    for nome, ultimo in pairs({ mini = mini.ultimoQuadro, perto = perto.ultimoQuadro, rep = rp.ultimoQuadro,
+                                eng = eng.ultimoQuadro }) do
       local c = fps[nome]
       if agora - ultimo < 0.5 then c.ligado = c.ligado + 1 else c.desligado = c.desligado + 1 end
     end
@@ -2337,7 +2586,8 @@ local function amostrarOFps()
     if fps.n > 0 then
       log('fps: média ' .. decimal(fps.soma / fps.n, 1) .. ' (mín ' .. decimal(fps.minimo, 0) .. ', máx '
         .. decimal(fps.maximo, 0) .. ') em ' .. fps.n .. ' s; minimapa ' .. situacao(fps.mini)
-        .. '; mapa aproximado ' .. situacao(fps.perto) .. '; replay ' .. situacao(fps.rep))
+        .. '; mapa aproximado ' .. situacao(fps.perto) .. '; replay ' .. situacao(fps.rep)
+        .. '; engenheiro ' .. situacao(fps.eng) .. (MARCA_3D and ' (com a marca na pista)' or ' (com a contagem)'))
     end
     fps = novaContagem()
   end
@@ -2417,5 +2667,20 @@ else
     setInterval(gravarORastro, RASTRO_PERIODO_S)
     setInterval(amostrarOFps, FPS_AMOSTRA_S)
     setInterval(function() pcall(vigiarOsBoxes) end, 0.5)
+    -- Pedido 52: a lista do engenheiro (com a janela aberta) e a marca na pista.
+    setInterval(lerOEngenheiro, ENG_PERIODO_S)
+    if MARCA_3D then
+      local okR = pcall(render.on, 'main.track.transparent', function()
+        local ok, erro = pcall(desenharAMarca)
+        if not ok and not eng.avisouFalta then
+          log('engenheiro: a marca na pista falhou: ' .. tostring(erro))
+          eng.avisouFalta = true
+        end
+      end)
+      log('engenheiro: ' .. (okR and 'a marca na pista ligada (render.on)' or 'render.on recusou; a janela mostra a contagem'))
+      if not okR then MARCA_3D = false end
+    else
+      log('engenheiro: a API do CSP não tem ' .. table.concat(FALTA_NA_MARCA, ', ') .. '; a janela mostra a contagem 3-2-1')
+    end
   end
 end
