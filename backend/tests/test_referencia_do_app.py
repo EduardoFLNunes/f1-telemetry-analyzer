@@ -101,7 +101,7 @@ def test_o_app_do_jogo_nao_diz_ia_para_a_referencia():
     for proibido in ("'freada da IA'", "or 'IA'", "'da IA'", "'para a volta da IA'", "'IA (referência)'"):
         assert proibido not in lua, proibido
     manifest = (BACKEND.parent / "tools" / "csp_app" / "radio_engenheiro" / "manifest.ini").read_text(encoding="utf-8")
-    assert "VERSION = 0.6.0" in manifest
+    assert "VERSION = 0.7.0" in manifest           # pedido 52: o app do jogo 0.7.0
 
 
 def test_os_tipos_do_app():
@@ -178,4 +178,5 @@ def test_a_volta_do_modelo_no_formato_da_volta_do_store_e_so_na_mesma_geometria(
 
 @pytest.mark.parametrize("arquivo", ["main.py"])
 def test_a_versao_do_backend(arquivo):
-    assert 'BACKEND_PHASE_VERSION = "volta-do-modelo"' in (BACKEND / arquivo).read_text(encoding="utf-8")
+    # pedido 52: a 0.9.0-engenheiro
+    assert 'BACKEND_PHASE_VERSION = "engenheiro"' in (BACKEND / arquivo).read_text(encoding="utf-8")

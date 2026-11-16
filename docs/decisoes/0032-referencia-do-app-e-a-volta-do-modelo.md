@@ -3,6 +3,7 @@
 - **Status:** aceita (pedido 51). Registrada antes de qualquer mudança no código e antes de gerar o arquivo da volta do modelo
 - **Data:** 2026-11-15
 - **Decisor:** Eduardo
+- **Atualização (15/11, pedido 52):** o engenheiro (ADR 0033) usa a volta do modelo como referência de cada trecho, salvo onde a melhor passagem do piloto é mais rápida; os pontos de freada, de entrada e de retomada dela viram o ponto da ação das frases. O freio dela continua só como ponto, e nunca como força ("freada leve" ficou fora).
 - **Substitui:** a `volta_ia` como referência do app (ADR 0016, item da referência padrão; ADR 0009, a referência do coach). **Usa:** a meta e o teste no jogo do ADR 0031 e o medidor do ADR 0029. **Mantém:** a geometria do 0002, o detector de origem do 0014, o equipamento do 0015 e as regras do rádio do 0027 (os limites de 7,3, 8,0 e 8,8 s e a ordem do corte)
 
 ## Contexto

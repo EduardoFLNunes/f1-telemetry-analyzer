@@ -1,4 +1,4 @@
-# Realidade aumentada: o rádio do engenheiro, os mapas e o replay da curva (pedido 31, ADR 0020; pedidos 35 e 36, ADR 0021)
+# Realidade aumentada: o rádio do engenheiro, os mapas, o replay da curva e o engenheiro que acompanha a volta (pedido 31, ADR 0020; pedidos 35 e 36, ADR 0021; pedido 52, ADR 0033)
 
 O rádio leva o que o coach já decide até o piloto, durante a volta, com o jogo em tela cheia: uma mensagem curta, num cartão dentro do jogo e em voz, no momento em que dá para ouvir. É o jeito de o Modelo 2 chegar ao piloto (ADR 0018). O rádio não decide nada do coach: quais frases saem, o limite de 3 por volta, o foco e o limiar continuam no coach. Desde o pedido 35, ele também analisa as voltas a cada 3 voltas válidas, lendo só o que a volta ao vivo e o store já medem (ADR 0021). O app do jogo ganhou dois mapas com o fantasma da referência: o minimapa, com a pista inteira, e o mapa aproximado, a vista de perto da tela Volta. Desde o pedido 36, todo número falado tem a unidade (seção 2.6), os dois mapas marcam a freada da IA e o engenheiro mostra o que diz: o replay da curva (seção 5.4), no jogo e na tela Ao vivo.
 
@@ -184,6 +184,8 @@ Em Interlagos, isso dá três janelas:
 | 723 a 1.192 m | a reta oposta, depois do S do Senna |
 | 1.637 a 1.818 m | entre a C05 e a C06 |
 | 3.697 a 104 m | a reta dos boxes, que cruza a linha |
+
+**Com o engenheiro ligado (pedido 52),** o feedback não usa mais estas janelas: usa os blocos de voz da seção 9.4.
 
 Uma frase do miolo (C06 a C14) espera a reta dos boxes. A posição do carro é a projeção na geometria oficial que o coach já faz (`LiveDrivingCoach.posicao_oficial`), sem cálculo novo.
 
@@ -492,6 +494,7 @@ O Eduardo roda os scripts; o Claude Code não grava na pasta do jogo (ADR 0020).
 | `GET /api/radio/voltas` | todas as voltas da sessão (pedido 45): o tempo, a diferença para a melhor, o estado com o motivo, a perda por curva e se tem replay |
 | `GET /api/radio/replay-da-volta/{volta}?curva=C01` | o replay de qualquer volta ou curva da sessão, no formato de `/replay/{id}` (pedido 45); sem `curva`, a volta inteira; 404 sem os pontos da volta |
 | `GET /api/radio/melhor` | a melhor volta da sessão, em pontos, para a diferença no minimapa (pedido 45) |
+| `GET /api/radio/engenheiro` | a lista do engenheiro (pedido 52): a frase, o `s_fala`, o ponto da ação, a voz ou só a janela, a conferência, a acurácia e a volta lenta |
 | `POST /api/radio/abrir-no-app` | o pedido do botão da janela do jogo (pedido 45): avisa o app do Windows pelo WebSocket; diz se ele está fechado |
 | `GET /api/store/numeros` | o número do jogo de cada volta do store, para a tela Volta usar o mesmo número do rádio (pedido 45) |
 | `GET /api/live/volta` | a volta em andamento inteira, na grade oficial |
@@ -507,3 +510,52 @@ Como engenheiros e coaches falam com o piloto: curto e direto, na reta, um núme
 - RACER, 18/03/2016: https://racer.com/2016/03/18/f1-radio-coaching-intolerable-whiting/
 - Coach Dave Academy, "How to use Auto Insights (AI coaching) in Delta": https://coachdaveacademy.com/documentation/how-to-use-auto-insights-ai-coaching-in-delta/
 - Trophi.ai, "Mansell": https://www.trophi.ai/sim-racing-features/mansell
+
+## 9. O engenheiro que acompanha a volta (pedido 52, ADR 0033)
+
+O engenheiro diz o que fazer **antes da curva**, por um marco que se vê na pista: "Curva 1: freie 10 metros depois da placa de 100." O Modelo 1 diz onde e quanto (a volta do modelo, ADR 0032); o rádio do 45 diz por quê; o engenheiro diz o que fazer. Ele fica ligado por padrão; `AT_ENGENHEIRO=desligado` volta ao rádio do pedido 51.
+
+### 9.1 A lista da volta
+
+- **Na linha,** numa volta que conta (completa, com as medidas, sem rodada, sem a IA), os 15 trechos do ADR 0030 são comparados com a referência de cada trecho: a volta do modelo, ou a melhor passagem do piloto (a "Sua melhor volta" e as voltas da sessão) onde ela for mais rápida.
+- **Entra** todo trecho com perda acima do ruído do trecho: o desvio dos tempos daquele trecho nas 7 voltas do bloco 4 do pedido 50 (de 4,4 ms na C13 a 36,2 ms na C11; `data/reference_models/vhe_interlagos.ruido_por_trecho.json`). É o ruído da IA, que é muito constante: na prática, quase todo trecho com perda entra.
+- **A causa** é a do 45 (a parte da perda que mais perdeu): freada cedo ou tarde → "freie"; mínima baixa ou traçado → "vire"; na saída, o acelerador cheio 10 m ou mais depois → "acelere". "Freada leve" e "marcha acima" ficaram fora (ADR 0033, contexto, item 4). Um trecho sem causa acima do corte fica na lista só com a perda.
+- **A dica não aplicada continua na lista** até ser aplicada.
+
+### 9.2 Os marcos
+
+Lidos dos arquivos da pista, só leitura (`python -m core.engenheiro.marcos <pasta da pista>`, na pasta `backend`), para `data/reference_models/vhe_interlagos.marcos.json` (fora do git; o instalador leva pelo filtro `*.marcos.json`): 10 placas de freada (200, 100 e 50 antes da C01 e da C04; 100 e 50 antes da C06 e da C12), 2 placas do DRS, 2 passarelas, o pórtico da largada, 8 postos de bandeira a até 14 m da linha central e 31 zebras.
+
+### 9.3 A frase
+
+O marco de menor custo na janela da ação (para frear, até 150 m antes do ponto ou 60 m depois; para virar e acelerar, 80 m antes ou 40 m depois). O custo é a distância, 1,5 vez quando o marco vem depois; uma placa vale 15 m a menos para frear, e o começo ou o fim de uma zebra, 10 m a menos para virar e acelerar. Os metros vão arredondados a 5 m; abaixo de 5 m, "na placa de 100". Sem marco na janela, a frase fica só na janela do jogo, "no ponto marcado".
+
+### 9.4 A voz e os blocos
+
+- **O aviso** sai em `s_fala = s_freada − v × (t_frase + 1,0 s)`, só nos trechos em que a referência freia e cuja frase cabe no bloco de voz antes da freada. Na hora, ele só sai se o tempo até a freada, na velocidade do carro, for pelo menos a fala mais 1,0 s; nunca por cima de outra fala, nunca na volta de saída dos boxes nem com a IA.
+- **Os blocos de voz** (na volta do modelo, da retomada do trecho anterior a 1,0 s antes da primeira ação):
+
+| bloco | de | até | duração |
+|---|---:|---:|---:|
+| reta dos boxes, antes da C01 | 3.618 m | 45 m | 10,9 s |
+| reta oposta, antes da C04 | 554 m | 1.141 m | 9,1 s |
+| antes da C05 | 1.390 m | 1.434 m | 1,1 s |
+| antes da C06 | 1.510 m | 1.838 m | 5,5 s |
+| antes da C11 | 2.750 m | 2.807 m | 1,7 s |
+| antes da C12 | 2.922 m | 3.063 m | 2,5 s |
+| antes da C13 | 3.258 m | 3.293 m | 1,0 s |
+| antes da C14 | 3.306 m | 3.521 m | 4,4 s |
+
+- **Pela voz, só a C01, a C04 e a C06** têm aviso possível: nas outras, a referência não freia, não há bloco antes da freada ou a frase não cabe (a C12: 2,5 s de bloco e 3,6 s de frase).
+- **O feedback** (a frase do coach, o resumo e a análise) sai no começo de um bloco, na variante mais completa que caiba antes da reserva dos avisos; se nenhuma couber, espera o bloco seguinte. Com o engenheiro, todas as variantes que cabem no limite do tipo são geradas de antemão.
+
+### 9.5 A janela "Engenheiro" e a marca na pista (app do jogo 0.7.0)
+
+- **Na volta rápida:** a frase de cada trecho da lista, do `s_fala` até o ponto da ação, com a distância; depois da linha, por 8 s, o sinal da conferência ("C01 aplicada · C04 não") e a acurácia ("2 de 3 avisos aplicados").
+- **Na volta lenta** (5,0 s ou mais atrás da melhor da sessão naquele ponto, ou a volta de saída dos boxes; uma vez lenta, até a linha): a lista inteira, com a perda e a conferência com os valores.
+- **A marca:** com a janela aberta, uma faixa de 1,5 m × 6 m no asfalto, na cor do fantasma, centrada na linha da referência, no ponto da ação de cada trecho da lista (`render.on('main.track.transparent')`, `render.quad` e `physics.raycastTrack` para a altura do asfalto). Sem essa API, a janela mostra a contagem 3-2-1 até o ponto.
+- **A conferência da dica:** freou a até 10 m do ponto dito, a mínima a até 5 km/h da referência ou a retomada a até 10 m do ponto dito. Só é conferida a dica cujo ponto da ação o carro passou depois de ela ser dada (a da C01, dada antes da linha, é conferida na volta seguinte).
+
+### 9.6 O registro
+
+`<pasta de dados>/data/radio/<sessão>.engenheiro.jsonl`: uma linha por aviso (o trecho, a causa, a frase, o `s_fala`, se foi pela voz ou só pela janela e por quê, a folga até a freada), uma por conferência (aplicada ou não, com o valor) e uma por volta que conta (a perda em cada um dos 15 trechos e a lista). É a entrada do protocolo de avaliação e da tela Volta (pedido 53).

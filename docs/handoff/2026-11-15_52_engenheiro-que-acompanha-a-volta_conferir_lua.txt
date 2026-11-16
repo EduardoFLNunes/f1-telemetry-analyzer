@@ -1,0 +1,7 @@
+arquivo: tools\csp_app\radio_engenheiro\radio_engenheiro.lua
+tokens: 38559; erros de lexico: 0 []
+blocos: ok
+API usada (55): JSON.parse, ac.FolderID, ac.accessAppWindow, ac.getAppWindows, ac.getCar, ac.getFolder, ac.getSim, ac.getUI, ac.log, io.createDir, io.deleteFile, io.fileExists, io.load, io.save, io.scanDir, os.preciseClock, physics.raycastTrack, render.on, render.quad, rgbm, setInterval, ui.Alignment, ui.ExtraCanvas, ui.MediaPlayer, ui.MouseButton, ui.drawCircle, ui.drawCircleFilled, ui.drawImage, ui.drawImageQuad, ui.drawLine, ui.drawQuadFilled, ui.drawRect, ui.drawRectFilled, ui.drawTriangleFilled, ui.dwriteDrawText, ui.dwriteDrawTextClipped, ui.getCursor, ui.isImageReady, ui.measureDWriteText, ui.mouseClicked, ui.mouseLocalPos, ui.mouseWheel, ui.pathClear, ui.pathLineTo, ui.pathStroke, ui.popClipRect, ui.pushClipRect, ui.windowHovered, ui.windowPos, ui.windowSize, vec2, vec3, web.get, web.post, web.timeouts
+metodos usados (14): clear, currentTime, dispose, move, pause, play, resize, setAutoPlay, setSource, setVisible, setVolume, size, update, visible
+no SDK do CSP: todas existem
+metodos no SDK do CSP: todos existem
