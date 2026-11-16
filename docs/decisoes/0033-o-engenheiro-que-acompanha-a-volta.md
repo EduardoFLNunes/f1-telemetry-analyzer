@@ -125,3 +125,22 @@ Nada sem medida (ADR 0012); nenhum conselho de setup; a volta da IA do jogo nunc
 - O app do jogo ganha a quinta janela e desenha na pista (a exceção do ADR 0020 continua do mesmo tamanho: só a pasta do app, só pelos scripts).
 - Os marcos e o ruído por trecho são arquivos derivados, fora do git, que o instalador leva pelo mesmo filtro do `extraResources`.
 - O engenheiro pode ser desligado no backend (`AT_ENGENHEIRO=desligado`); com ele desligado, o rádio volta a ser o do pedido 51.
+
+## Decisões do Eduardo de 16/11
+
+Emenda depois do relatório da parada na Parte E (o pedido 52, "Atualização de 16/11"). O texto acima fica como estava; onde ele e esta seção divergem, vale esta seção. Registrada antes de mudar o código.
+
+1. **O feedback espera a reta longa com a causa** (muda o item 5, "o feedback nas retas"):
+   - **a variante com a causa** é a fala que diz uma das causas medidas do rádio do 45 (a freada, a mínima, o traçado, a saída ou o acelerador: "freou", "mínima", "passou", "saiu" ou "acelerou"). **A variante alvo** de uma mensagem é a mais completa com a causa entre as que cabem no limite do tipo (7,3, 8,0 e 8,8 s);
+   - a frase do coach, o resumo e a análise (e a curva da volta que não coube no resumo) saem no começo do bloco em que a variante alvo cabe antes da reserva dos avisos, na velocidade do carro;
+   - **as retas longas** são os blocos de voz que duram pelo menos o maior limite do feedback (8,8 s) na volta do modelo: a reta dos boxes (10,9 s) e a reta oposta (9,1 s);
+   - **a primeira reta longa depois de a mensagem nascer** é a primeira em que o carro entra depois disso (a reta em que a mensagem nasce não conta). Se a variante alvo não couber nem nela, sai nessa reta a variante mais completa que couber, como o rádio do 45 fazia. A mensagem nunca espera mais do que até essa reta: dali em diante, sai no primeiro bloco em que alguma variante caiba antes da reserva;
+   - uma mensagem sem nenhuma variante com a causa segue a regra do item 5 (a mais completa que caiba, no primeiro bloco em que caiba);
+   - os limites (7,3, 8,0 e 8,8 s) e a ordem do corte não mudam. O aviso de freada continua com a prioridade: nunca é cortado nem adiado pelo feedback, e o feedback nunca passa da reserva.
+2. **O molde curto do aviso** (muda o item 4, "o molde da voz"): a voz diz só a frase, sem "Curva N:" e sem a vinheta: "Freie 10 metros depois da placa de 100.". O cartão do rádio e a janela do jogo continuam escrevendo "Curva N: <frase>". O `t_frase` do `s_fala` é a duração dessa fala curta, medida com a voz do projeto.
+3. **"Sem tirar o pé"** (muda o item 4, "a ação"): num trecho com curva em que a referência do trecho não freia nem alivia (o acelerador fica em 0,90 ou mais do começo ao fim do trecho), a frase de qualquer causa é "sem tirar o pé", sem marco e sem metros. Vale para todo trecho nessa condição, e não só para a C13. Por ser um trecho em que a referência não freia, a frase fica só na janela (item 5), de `s_fala` até o início da curva (`pontos_de_linha_s.entrada`), sem a marca no asfalto e sem a contagem 3-2-1. **A conferência** (item 8): aplicada se, na volta, o acelerador ficou em 0,90 ou mais do começo ao fim do trecho.
+4. **A freada só depois da saída do trecho anterior** (muda o item 2, "a freada"): a busca do ponto de freada de cada trecho começa na saída do trecho anterior (`pontos_de_linha_s.saida`; antes da C01, o fim do trecho da chegada, que é a linha) e vai até o ápice do trecho, e não mais do ápice anterior. Vale para todos os trechos e para tudo o que o engenheiro mede com ela: o ponto de freada da referência, os blocos de voz, a medida "freada cedo ou tarde" da causa do engenheiro e a conferência do "freie". O feedback do rádio (as medidas do 45 nas frases do coach, no resumo e na análise) continua com a regra dele.
+5. **A C02 e a C08 ficam como estão:** a referência freia já mudando de direção, e "freie no começo da zebra" está certa.
+6. **"Freada leve" e "marcha acima" ficam para uma versão futura** (o contexto, item 4, continua valendo): o coach deve ler a pressão aplicada no freio e a marcha usada na curva. Vão para o backlog: a volta ao vivo guardar a marcha e a força do freio; e a força do freio comparada com a melhor passagem do piloto, nunca com o pedal da volta do modelo (ADR 0032, item 5).
+7. **A conferência fora do tempo real (a D.1) é refeita** nas 4 sessões com as decisões 1 a 4, antes do teste no jogo.
+8. **A marca no asfalto fica como está** (item 7) para o teste no jogo; o Eduardo diz no jogo se ela aparece a tempo.

@@ -129,3 +129,16 @@ Escreva o **ADR 0033, "O engenheiro que acompanha a volta"** (confira o número)
   - o que foi enviado ao GitHub: a ref, o hash local e o hash no remoto;
   - os itens para o backlog.
 - Se algo do contexto não bater com o repositório, pare e registre no relatório.
+
+## Atualização de 16/11 — as minhas decisões depois do relatório da parada na Parte E
+
+Li o relatório (`docs/handoff/2026-11-15_52_engenheiro-que-acompanha-a-volta_relatorio.md`). Aplique estas decisões **antes do meu teste no jogo**, registre cada uma no ADR 0033 numa seção "Decisões do Eduardo de 16/11" (como emenda, sem mudar o texto acima dela) e só depois mude o código.
+
+1. **O feedback espera a reta longa com a causa.** A frase do coach, o resumo e a análise esperam o bloco em que cabe a variante mais completa com a causa, depois da reserva dos avisos. Na prática, a reta dos boxes ou a reta oposta. Se a variante com a causa não couber nem na primeira reta longa depois de a mensagem nascer, sai nessa reta a variante mais completa que couber, como o rádio do 45 fazia. A mensagem nunca espera mais do que até essa reta longa. Os limites de 7,3, 8,0 e 8,8 s e a ordem do corte não mudam. O aviso de freada continua com a prioridade.
+2. **O molde curto do aviso:** a voz diz só a frase, sem "Curva N:" e sem a vinheta, por exemplo "Freie 10 metros depois da placa de 100.". O cartão e a janela continuam escrevendo "Curva N:". Meça de novo a duração de cada aviso possível dos 15 trechos com a voz do projeto e refaça a tabela da B.4: quais cabem na voz agora.
+3. **"Sem tirar o pé":** em todo trecho em que a referência não freia nem alivia (o acelerador fica em 0,90 ou mais do começo ao fim do trecho), a frase é "sem tirar o pé", sem marco e sem metros. Vale para todos os trechos nessa condição, e não só para a C13. O relatório diz quais trechos mudaram.
+4. **A freada só depois da saída do trecho anterior:** a busca do ponto de freada de cada trecho começa na saída do trecho anterior (`pontos_de_linha_s`, saída), e não no ápice anterior. Vale para todos os trechos. Na C09, o toque de freio na saída da C08 deixa de ser a freada da C09. O relatório diz quais trechos mudaram.
+5. **A C02 e a C08 ficam como estão:** a referência freia já mudando de direção, e a frase "freie no começo da zebra" está certa.
+6. **"Freada leve" e "marcha acima" ficam para uma versão futura.** O ideal é o coach ler a pressão aplicada no freio e a marcha usada na curva. Liste no backlog: a volta ao vivo guardar a marcha e a força do freio; e a força do freio comparada com a minha melhor passagem, nunca com o pedal da volta do modelo (ADR 0032, item 5).
+7. **Refaça a D.1** nas 4 sessões com as decisões 1 a 4 e traga a tabela de novo: os avisos pela voz e só na janela, a folga até a freada, o feedback com a causa na voz (sem e com o engenheiro) e as mensagens que mudaram de bloco. Depois, siga para a Parte E, o meu teste no jogo, como está acima.
+8. **A marca no asfalto** fica como está para o teste: eu digo no jogo se ela aparece a tempo.
