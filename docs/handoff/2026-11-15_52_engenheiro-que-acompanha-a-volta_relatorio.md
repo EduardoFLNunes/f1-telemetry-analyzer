@@ -368,9 +368,17 @@ Quando você avisar, confiro com `git ls-remote origin` que o hash remoto é o l
 
 Uma saída possível para a C10: se o freio já estiver apertado na saída do trecho anterior, a freada é onde essa pisada começou. Com ela, a C10 volta a 2.622 m e a C09 continua sem freada. Para a C13, uma regra como "a referência não freia no trecho" pegaria a C13, mas também a C03, a C05, a C11 e a C14, que aliviam. Escolher entre essas saídas cabe a você.
 
+### O termo "freada" (a sua pergunta de 16/11, 14h19)
+
+- **No Brasil, o termo técnico é "frenagem":** "ponto de frenagem", "zona de frenagem". "Freada" é a forma coloquial; em Portugal, diz-se "travagem". A busca não achou um glossário oficial, só o uso em matérias de automobilismo, como a da Band sobre o S do Senna.
+- **Onde "freada" aparece hoje:**
+  - **na voz**, só no fim da causa sem medida ("perdeu 3 décimos na freada"). O aviso diz "Freie…" e o feedback diz "Freou 39 metros antes…", que são formas do verbo;
+  - **no texto escrito**, em mais lugares: o cartão ("na freada, +0,52 s", "freada 15 m antes"), a causa do engenheiro ("freada cedo" e "freada tarde"), os rótulos do replay ("freada da referência") e o minimapa.
+- **A proposta:** trocar o substantivo por "frenagem" na voz e no texto ("perdeu 3 décimos na frenagem", "frenagem 15 m antes", "frenagem cedo", "frenagem da referência") e manter o verbo ("Freie", "Freou"). Não mudei nada: espero a sua resposta. Se for aplicar, entra antes da D.1, porque muda a duração das falas.
+
 ### O que falta
 
-1. **A sua resposta** aos dois pontos acima.
+1. **A sua resposta** aos dois pontos acima e ao termo.
 2. **Medir a voz de novo** (a frase curta, sem a vinheta) e refazer a tabela da B.4: quais avisos cabem na voz agora.
 3. **Refazer a D.1** nas 4 sessões. Os dois passos esperam o jogo fechar (o `acs.exe` estava aberto às 14h, com 1h47 de CPU), porque são contas pesadas. Também dependem da resposta acima, que muda a C10.
 4. **A suíte inteira do backend** e o relatório com a D.1 nova. Depois disso, aviso você antes do teste no jogo, como pedido.
