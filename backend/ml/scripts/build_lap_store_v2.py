@@ -202,6 +202,9 @@ def main(argv=None) -> int:
         "entradas": inputs,
         "aprovado": bool(result["todas_passaram"]),
         "checagens": result["checagens"],
+        # Pedido 54: as sessoes aceitas com margem na checagem da linha do jogo e a margem
+        # (o pedido 42 le estas duas chaves).
+        **store_checks.margin_meta(result["checagens"]),
         # 05/10: para o relatorio de evolucao separar as sessoes pelas pausas.
         "periodos_das_gravacoes": recording_periods(inventory, used),
     }
@@ -226,6 +229,10 @@ def main(argv=None) -> int:
     print(f"selecao: {json.dumps({k: v for k, v in result['selecao'].items() if not isinstance(v, list)})}")
     for name, check in checks.items():
         print(f"  [{'ok' if check['passou'] else 'FALHOU'}] {check['checagem']}")
+        for text in check.get("avisos_aceitas_com_margem", []):
+            print(f"     {text}")
+        for text in check.get("motivos", []) if not check["passou"] else []:
+            print(f"     {text}")
     period = checks["principal_periodo"]
     print(f"     periodo - jogo (ms): {period['diferenca_ms']}  sem fechamento medido: "
           f"{period['voltas_sem_fechamento_medido']}")
