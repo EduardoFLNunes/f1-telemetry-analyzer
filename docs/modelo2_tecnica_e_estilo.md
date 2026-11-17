@@ -377,3 +377,180 @@ Ele **mostra associação, não causa,** e não promete ganho (ADR 0004). Serve 
 | os resultados do pedido 38 | `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_*.json` |
 | o kit de rotulagem | `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_kit_rotulagem.html` e `_rotulagem.csv` |
 | a precisão e a revocação, depois da rotulagem | `python -m ml.scripts.modelo2 rotulos --rotulos <o csv preenchido>` |
+
+---
+
+## 4. Rodada 2: as emendas de 29/10 e a referência de 15/11 (registrado em 17/11/2026, antes de rodar)
+
+Pedido 42, Parte A. Esta seção foi escrita e commitada **antes de qualquer conta da rodada 2**, antes da rodada 1 refeita e sem ler o store v2. As seções 1 e 2 não mudam: a rodada 1 continua registrada como está, e as duas rodadas aparecem lado a lado.
+
+### 4.1 A honestidade da rodada
+
+A rodada 2 muda duas coisas, decididas antes de qualquer conta deste pedido:
+
+- **as três emendas** (4.2), decididas pelo Eduardo em 29/10, **depois de ver a rodada 1 e antes da H.4** (a precisão contra os rótulos, que ainda não rodou);
+- **a referência** (4.4): a volta do modelo, por decisão do Eduardo de 15/11 (ADR 0032).
+
+Para separar os dois efeitos, a perda e o ranking da rodada 2 também são calculados **contra a `#0013`**, a referência da rodada 1. Essas saídas são marcadas "só comparação" e não valem como resultado.
+
+### 4.2 As emendas, com os valores fixos
+
+**A retomada, s_pu (troca a regra de 1.4).**
+
+- **A busca:** de s_vmin (a menor velocidade entre a_k e e_k, como em 1.4) até e_k + 50 m, o mesmo fim da rodada 1. A retomada nunca fica antes da mínima.
+- **O começo da subida:** o último ponto, desde s_vmin, em que o acelerador está no menor valor visto até ali, com uma tolerância de 0,02.
+- **A subida** tem de levar o acelerador a pelo menos **0,10 acima** do valor do começo. É o mesmo 0,10 da rodada 1, agora como subida, e não como nível.
+- **"Contínua"** quer dizer que, nos **0,5 s** depois do começo, o acelerador nunca fica abaixo do valor do começo menos **0,02**. Uma subida que volta abaixo disso é descartada, e a procura segue do novo mínimo.
+- **O porquê dos valores** (da definição, sem olhar dados):
+  - 0,5 s é o horizonte que a seção 1.5 já usa para a resposta da entrada. É mais longo que uma correção de pedal e mais curto que a ida da mínima ao pleno;
+  - 0,02 é menos da metade do limiar de pedal de 1.4 (0,05). Ele existe para o ruído do canal não cortar a subida.
+- **Acelerador já alto na mínima:** se o acelerador está em 0,90 ou mais em s_vmin, não há subida possível de 0,10. Então s_pu = s_vmin, e a passagem é marcada `retomada_no_pleno`.
+- **Sem subida até e_k + 50 m:** a passagem fica "sem retomada", como na rodada 1.
+- **s_full não muda:** o primeiro ponto depois de s_pu com acelerador ≥ 0,95.
+
+**A entrada, s_ti (troca a regra de 1.4).**
+
+- **O limiar:** o volante no sentido da curva passa de **0,15·δ_pk**, o mesmo número de 1.4 e do F5.
+- **O porquê do limiar** (da definição):
+  - "começar a virar para a curva" é medido em relação ao volante que a própria curva pede (δ_pk);
+  - um limiar em graus confundiria uma correção de reta com a entrada numa curva rápida, e chegaria tarde num cotovelo;
+  - manter o 0,15 deixa o F5 e o E1 com a mesma definição de "volante para dentro".
+
+  O que muda é só o corte.
+- **A regra nova:** a sequência de pontos com o volante acima do limiar, que contém o ápice, **não é cortada numa troca de sinal**. Dois trechos acima do limiar são unidos quando, no buraco entre eles, o volante passa para o outro lado além de **0,05·δ_pk** (o mesmo ruído do E4). s_ti é o começo dessa sequência unida.
+- **Um buraco sem troca de sinal** (o volante só aliviou, sem passar para o outro lado) continua cortando, como na rodada 1.
+
+**A janela do E4 (troca a janela de 1.5).**
+
+- **O começo:** b_k, o início da fase de frenagem, fixo para todas as voltas (1.3).
+- **Nas curvas sem frenagem** (C03, C05, C11, C13 e C14, conferidas nas fases da rodada 1), b_k = a_k: a janela começa no início da curva.
+- **O fim** continua em e_k. O resto do E4 não muda.
+
+**O ranking sem o peso (troca a pontuação de 1.6).**
+
+- A pontuação de um item passa a ser **a perda mediana nas 3 voltas**, sem o peso da reta seguinte. O ranking sem peso, informativo na rodada 1 (seção 2, item 3), passa a ser o registrado.
+- O ranking ponderado fica nas saídas como informativo.
+- A fase "reta seguinte" continua sendo uma fase, com a perda dela. A consistência (V5) não muda.
+
+### 4.3 A família inteira das emendas
+
+Tudo o que usa s_pu, s_ti ou a janela do E4 segue as regras novas:
+
+| o quê | usa | onde aparece |
+|---|---|---|
+| M6, retomada | s_pu (`retomada_s`) | detector; atribuição; indicador principal no modelo leve |
+| M7, volante crescendo depois da retomada | s_pu | detector; condição do M6 |
+| M8, alívio depois da retomada | s_pu até s_full | detector; condição do M6 |
+| `retoma` (houve retomada) | s_pu | "não conclusivo" do M6, M7 e M8; "a IA retoma" do M6 |
+| `apice_ao_pleno_s` | s_full, que depende de s_pu | estilo, perfil do acelerador |
+| `retomada_s` na consistência do estilo e no desvio volta a volta da IA | s_pu | estilo; verificações da IA |
+| a cadeia causal (retomada atrasada) | s_pu | ranking (1.6) |
+| E1, entrada antecipada | s_ti (`s_ti_rel`) | detector; atribuição; indicador principal no modelo leve |
+| F5, trail braking | s_ti (retenção e sobreposição desde s_ti) | detector; kit |
+| E5 e E6, reversões e suavidade | s_ti até e_k | detectores |
+| taxa de entrada | s_ti | ao lado do E1; estilo, aplicação do volante |
+| `guinada_por_roda` e `beta_entrada` | s_ti | estilo, resposta na entrada |
+| E4, contraesterço | a janela (agora desde b_k) | detector; estilo, resposta na entrada |
+
+**Os limiares fixos e a regra de calibração não mudam.** Os detectores desta tabela continuam calibrados nas passagens da IA da mesma curva, pela regra de 1.5. Como o indicador deles mudou, os valores da calibração (med_ref, q90_ref e sdr) são refeitos pela mesma regra, com o indicador novo. Os outros detectores ficam com os mesmos valores, porque as passagens da IA são as mesmas.
+
+### 4.4 A referência: a volta do modelo (ADR 0032)
+
+- **A volta:** `2026-11-15_02-47-12_vhe_interlagos_teste_m1#0008`, com 1:24,552, lida de `data/reference_models/vhe_interlagos.volta_do_modelo.json`.
+- **Os canais:** o arquivo tem, na grade de 2 m (2.167 pontos), o tempo, a lateral, a posição, a velocidade, a marcha e os pedais. **Ele não tem o volante nem a guinada.**
+- **A regra:**
+  - **da volta do modelo, só valem a linha, a velocidade e os pontos:** onde ela freia (s_b), a mínima (s_vmin e v_min) e onde ela retoma (s_pu, pela regra de 4.2);
+  - **a forma dos pedais e do volante nunca é comparada com ela.** Os pedais dela são o comando da IA (ADR 0032, item 5): valem como pontos, e não como técnica. A forma é comparada com a "Sua melhor volta", ou fica "não julgada".
+- **A "Sua melhor volta"** é a do app: `2026-10-24_13-43-32_vhe_interlagos#0003`, com 1:26,568 na grade da rodada 1 (o app mostra 1:26,566). É a mesma melhor volta da rodada 1. Quando a passagem for dela, a comparação usa a segunda melhor, e isso é registrado.
+
+**Cada lugar do Modelo 2 que usa uma volta de referência:**
+
+| lugar | rodada 1 | rodada 2 |
+|---|---|---|
+| a perda por fase e por curva (1.6) | contra a `#0013`, com a melhor volta ao lado | contra a volta do modelo (o relógio da grade dela), com a "Sua melhor volta" ao lado; e contra a `#0013`, "só comparação" |
+| a conferência das fases | a soma das 70 fecha a diferença contra a `#0013` | fecha a diferença contra a volta do modelo (e contra a `#0013`) |
+| o ranking por sessão | a perda contra a `#0013` | a perda contra a volta do modelo, sem o peso (4.2); e contra a `#0013`, "só comparação" |
+| o falso ganho | "freia mais tarde que a IA": F1.x, contra a mediana das passagens da IA | "freia mais tarde que a volta do modelo": s_b da passagem − s_b da volta do modelo > T, com o mesmo T de F1 (max(10 m, 2·sdr da IA)). É um ponto |
+| a cadeia causal | a retomada e a mínima contra a mediana das passagens da IA | a retomada (t(s_pu) − t(s_vmin)) e a mínima contra as da volta do modelo. São pontos |
+| a atribuição do erro | os estados do piloto, da IA e da melhor volta | veja a regra abaixo |
+| as fronteiras das fases e o tipo de curva | b_k pelas passagens da IA e do piloto; o tipo pela mínima da `#0013` | **não mudam:** as 70 fases são as da rodada 1, definidas uma vez na geometria oficial |
+| a calibração dos limiares (1.5) | as passagens da IA | **não muda:** as passagens da IA são dados, e não referência |
+| as comparações "IA e eu" (listas, frações, evolução, verificações da IA) | as voltas da IA | **não mudam**, pelo mesmo motivo |
+| o envelope E(v) do M1 | todas as voltas rotuladas | **não muda**, porque não usa referência; calculado só nas 144 voltas (4.6) |
+| as assinaturas de estilo e o modelo leve | sem referência | **não mudam** |
+| o kit 2 e a galeria (Parte E) | o kit do 38 não mostrava referência | a volta do modelo em cinza (a linha e a velocidade; nos pedais, só os pontos) e a "Sua melhor volta" tracejada, em todos os canais |
+
+**A atribuição do erro na rodada 2.** Os detectores da fase de origem se dividem em dois grupos.
+
+- **De ponto:** F1 (s_b), M2 (s_vmin), M4 (a linha na saída) e a parte "atraso" do M6 (t(s_pu) − t(s_vmin)).
+  - O valor de referência é o mesmo indicador medido na volta do modelo, com as mesmas funções.
+  - Ele explica o item quando a diferença entre a mediana do piloto nas 3 voltas e o valor da volta do modelo passa do desvio robusto do piloto naquela curva (como em 1.6) **e** a "Sua melhor volta" fica mais perto da volta do modelo que a mediana do piloto.
+- **De forma** (pedal e volante: F2 a F8, E2 a E6, M1, M3, M5, M7, M8, M9 e V3):
+  - comparados com a "Sua melhor volta", e nunca com a volta do modelo;
+  - um deles explica o item quando o estado do piloto (a maioria das 3 voltas, com pelo menos 2 conclusivas) difere do estado da melhor volta, os dois são conclusivos e a diferença do indicador principal (a mediana do piloto menos a melhor volta) passa do desvio robusto do piloto naquela curva.
+- **O que sai:** entre os que explicam, vale o de maior diferença em desvios. **Se nenhum explicar, o resultado é "não conclusivo".**
+- **A IA continua nos dados:** o estado da IA em cada detector vai ao lado, como informação. Os detectores em que a IA e a melhor volta diferem do piloto, mas a melhor volta não difere da IA, são listados à parte, como na rodada 1.
+
+### 4.5 A margem de ±2 ms das sessões aceitas com margem
+
+- **A decisão do Eduardo (17/11):** as 3 sessões em que a linha do jogo ficou fora da tolerância do pedido 34 (`2026-11-01_19-47-03`, `2026-11-07_18-46-00` e `2026-11-12_22-57-03`) são aceitas. A diferença no tempo, de cerca de 2 ms, é tratada como uma margem de erro para cima e para baixo.
+- **De onde vem a lista:** do meta do store (`laps_grid_v2_meta.json`), e não de uma lista no código. O pedido 54 (`docs/store_v2_e_evolucao.md`, emenda de 17/11) registrou duas chaves:
+  - `sessoes_aceitas_com_margem`: cada item com `sessao`, `mediana_m`, `diferenca_m`, `efeito_ms`, `voltas` e `decisao`;
+  - `margem_linha_do_jogo_ms`: a margem, 2,0.
+
+  A sessão do item é a gravação, comparada com `gravacao` da volta. Sem a segunda chave, vale 2,0 ms, pela decisão.
+- **A regra:** numa passagem de uma sessão da lista, uma perda ou um ganho de até a margem, em módulo, por fase ou por curva, fica **"dentro da margem"**:
+  - não conta como perda nem como ganho no ranking;
+  - por isso, não entra na atribuição do erro.
+
+  As perdas acima da margem entram como as outras. A regra registrada de 1.6 já exige 0,02 s para um item, então a margem só muda casos de borda. Mesmo assim, ela é aplicada e marcada.
+- **As tabelas:** as passagens, as perdas e os rankings dessas sessões levam a marca `sessao_com_margem`.
+- **Os detectores não mudam.** A linha do jogo só mexe no fechamento da volta (o tempo do ponto s = 0), e não nos tempos de dentro da volta. Os menores limiares de tempo dos detectores são 0,03 s (o "não aplica" do E4) e 0,05 s (o "não aplica" do F5 e do F7, e a faixa inicial do M5): 15 e 25 vezes a margem. Nenhum depende de tempo na escala de 2 ms.
+- **Onde essas sessões entram:** são todas posteriores a 24/10. Elas não estão nas 144 voltas da comparação. Entram só na tabela à parte da Parte D.3 e no E3 das saídas de traseira de 01/11 (Parte D.6).
+
+### 4.6 As voltas, as pastas de saída e a rodada 1 refeita
+
+- **A comparação usa os 144 `lap_id` da rodada 1:** 130 do piloto e 14 da IA, das quais 10 vêm de fora do store.
+  - **A fonte da lista** é o `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_canais_e_conferencias.json`, no git (`d705d43f`). A lista é igual à de `data/ml/modelo2/passagens.parquet`.
+  - **As 10 voltas de fora do store** são lidas como na rodada 1, do cache `fora_do_store.parquet` e `fora_do_store.json` da rodada 1. O store de 15/11 também tem as gravações de 24/10, mas, nessas voltas, a versão de fora do store continua valendo.
+- **As fases, o envelope E(v) e a calibração** saem só dessas 144 voltas, nas duas rodadas.
+- **As voltas novas** são as do piloto, na pista original, de sessões depois de 24/10. Elas são só medidas, com as fases, o envelope e a calibração das 144, e vão para a tabela à parte (Parte D.3).
+- **Ficam fora de tudo:** as sessões na cópia da pista (`vhe_interlagos_teste_m1`), salvo a volta do modelo como referência, e as voltas de teste da Parte F.
+- **As pastas de saída:**
+  - `data/ml/modelo2/rodada1_refeita/` e `data/ml/modelo2/rodada2/`;
+  - nada da rodada 1 em `data/ml/modelo2/` é sobrescrito: nem as saídas, nem o `derivados.parquet`, nem os caches de fora do store, nem o `rotulagem_gabarito.json`;
+  - os caches da rodada 1 são só lidos. Uma taxa derivada que falte (das voltas novas) vai para o cache da pasta da rodada;
+  - o kit 2 tem gabarito próprio, na pasta da rodada 2.
+- **A rodada 1 refeita** roda as regras da rodada 1 (a seção 1 com as emendas de código da seção 2, como no commit `53d563f1`). Ela confere com os arquivos guardados:
+  - os estados de cada detector, por passagem;
+  - as perdas;
+  - o ranking;
+  - as fases;
+  - o fechamento.
+
+  Se não reproduzir, a diferença é relatada, e a Parte D não roda.
+
+### 4.7 A frenagem emendada
+
+Não muda. Uma passagem tem frenagem emendada quando a sequência de freio que dá s_b já está ligada no primeiro ponto da janela, ou seja, o freio continua desde o ápice anterior, p_(k−1). Ela é só contada, por curva, nas duas rodadas.
+
+### 4.8 A validação, registrada antes de qualquer rótulo ou volta de teste
+
+- **O kit 2 (Parte E.1):**
+  - as mesmas 120 passagens do kit do 38 (semente 38), com as referências do app (4.4) e uma página por pergunta com a assinatura da literatura;
+  - a origem e o estado do detector continuam escondidos;
+  - **o que se espera:**
+    - nos detectores de pedal (F4, F5), a precisão de "aplica" maior que nos de equilíbrio (E2, E3), que são lidos na guinada e na deriva, mais difíceis de ver nos traços;
+    - "nao sei" em até um quarto das passagens, mais nos detectores de equilíbrio.
+- **A consistência:** 30 das 120 passagens (semente 42), com outros ids e em outra ordem, rotuladas de novo pelo menos 3 dias depois.
+  - **O que se espera:** o kappa de Cohen de 0,6 ou mais (concordância "substancial", na escala de Landis e Koch).
+  - **Abaixo de 0,4,** os rótulos não dão base para a precisão, e isso é dito no relatório. Nenhum limiar muda por isso.
+- **A galeria (Parte E.2), gerada só depois dos rótulos:** 3 passagens "aplica" e 3 "não aplica" de cada um dos 5 detectores, ao lado do desenho da literatura.
+  - **O que se espera:** que o "aplica" de F4, F5 e M6 se pareça com o desenho em pelo menos 2 das 3 passagens.
+- **As voltas de teste (Parte F):** cada comportamento provocado em 3 passagens, com 3 de controle nas mesmas curvas.
+  - **O que se espera:**
+    - o detector certo marca "aplica" em pelo menos 2 das 3 provocadas e em no máximo 1 das 3 de controle;
+    - os detectores de outras famílias não mudam.
+
+    A tabela esperada, comportamento a comportamento, é registrada no roteiro (F.1), antes das sessões.
+- **Nenhum limiar muda por causa dos rótulos, da galeria ou das voltas de teste.** Uma falha vira proposta de emenda para uma rodada 3, registrada antes de rodar.

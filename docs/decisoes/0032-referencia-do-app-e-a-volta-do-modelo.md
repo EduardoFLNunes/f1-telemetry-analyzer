@@ -73,3 +73,7 @@ Em todo lugar em que a referência é a volta do modelo:
 - O instalador leva o arquivo da volta do modelo, como leva o traçado ótimo. O backend o procura na pasta do repositório, na pasta de dados e na pasta de recursos do app instalado, nessa ordem.
 - O fantasma, o rádio, o minimapa e a tela Volta leem a grade da volta do modelo do arquivo, e não do store v2.
 - Os relatórios e as comparações antigas que citam a `volta_ia` ficam como estavam: eram a referência da época.
+
+## Atualizações
+
+- **17/11/2026 (pedido 42, Parte A), o Modelo 2:** o item 6 muda para o Modelo 2. A rodada 2 usa a volta do modelo como referência da perda, do ranking e dos pontos da atribuição, e nunca compara com ela a forma dos pedais e do volante, pelo item 5. A `#0013` fica no Modelo 2 só como comparação com a rodada 1, marcada "só comparação". O retreino da LSTM continua na `#0013`, como no item 6.

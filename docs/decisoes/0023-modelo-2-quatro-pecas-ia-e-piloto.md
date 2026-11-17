@@ -55,3 +55,7 @@
 - **As voltas da IA rotuladas de 04/10** não têm a guinada nem as velocidades no referencial do carro, porque foram gravadas antes do pedido 18. Os detectores que dependem desses canais ficam "não conclusivo" na IA até haver uma sessão nova da IA gravada pelo app do repositório.
 - **A biblioteca de conceitos** (o que é cada técnica, por que funciona, como se treina e como medir) é outra peça, independente desta decisão, e entra no relatório depois da sessão.
 - **Resultados negativos são aceitos e documentados.** Se um detector não passar na validação, ele não chega ao piloto.
+
+## Atualizações
+
+- **17/11/2026 (pedido 42, Parte A), a rodada 2:** as três emendas de 29/10, decididas depois da rodada 1 e antes da H.4. A retomada passa a ser o começo da subida contínua do acelerador depois da mínima. O ranking fica sem o peso da reta seguinte. A entrada não é cortada numa troca de sinal, e a janela do E4 começa em b_k. A referência passa a ser a volta do modelo (ADR 0032), só nos pontos, na linha e na velocidade; a forma dos pedais e do volante é comparada com a "Sua melhor volta". As sessões aceitas com margem pelo store têm uma margem de ±2 ms. A validação dos detectores ganha o kit 2 com as referências, a consistência da rotulagem, a galeria e as voltas de teste com comportamento provocado. A rodada 1 continua registrada; as regras e os valores estão na seção 4 de `docs/modelo2_tecnica_e_estilo.md`, registrada antes de rodar.
