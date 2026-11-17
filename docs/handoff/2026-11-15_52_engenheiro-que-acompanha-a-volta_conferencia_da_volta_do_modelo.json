@@ -226,7 +226,7 @@
    "antes": "C10",
    "depoisDe": "C09",
    "inicio": null,
-   "acao": 2672.0490552452975,
+   "acao": 2622.048137295348,
    "fim": null,
    "duracaoS": null,
    "motivo": "sem retomada no trecho anterior"
@@ -917,33 +917,33 @@
    "trecho": "C10",
    "pontos": {
     "trecho": "C10",
-    "freada": 2680.0,
+    "freada": 2622.0,
     "entrada": 2672.0,
     "retomada": 2750.1,
     "minimaKmh": 82.7,
-    "velocidadeNaFreadaKmh": 108.3,
+    "velocidadeNaFreadaKmh": 180.7,
     "semTirarOPe": false,
     "aceleradorMinimo": 0.0
    },
    "freie": {
     "acao": "freie",
-    "frase": "freie 5 metros antes do começo da zebra à direita",
+    "frase": "freie 10 metros antes do começo da zebra à direita",
     "marco": {
-     "id": "M034",
+     "id": "M033",
      "tipo": "zebra",
      "valor": null,
      "lado": "direita",
      "ponta": "comeco",
-     "sMarco": 2687.1,
+     "sMarco": 2630.4,
      "nome": "começo da zebra à direita"
     },
-    "d": -7.1,
-    "custo": 10.6,
-    "sDito": 2682.1,
+    "d": -8.4,
+    "custo": 12.5,
+    "sDito": 2620.4,
     "comMarco": true,
-    "fala": "Freie 5 metros antes do começo da zebra à direita.",
-    "escrita": "Curva 10: freie 5 metros antes do começo da zebra à direita",
-    "sPonto": 2680.0
+    "fala": "Freie 10 metros antes do começo da zebra à direita.",
+    "escrita": "Curva 10: freie 10 metros antes do começo da zebra à direita",
+    "sPonto": 2622.0
    },
    "vire": {
     "acao": "vire",

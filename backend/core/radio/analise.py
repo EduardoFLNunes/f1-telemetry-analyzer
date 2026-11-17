@@ -132,6 +132,23 @@ def _primeiro_acelerador_cheio(acelerador: np.ndarray, track: Any, inicio_s: flo
     return float(track.s[indices[cheio[0]]]) if cheio.size else None
 
 
+def freada_desde(freio: np.ndarray, track: Any, de: float, apice: float) -> Optional[float]:
+    """Pedido 52 (ADR 0033, emenda de 16/11, itens 4 e 10): a frenagem buscada a partir de `de` (a saida do trecho
+    anterior). Se o freio ja estiver apertado (0,15 ou mais) em `de`, a frenagem e onde essa pisada comecou, mesmo
+    antes de `de`; senao, a primeira subida do freio de `de` ao apice (`braking_point`)."""
+    from ml.comparison.evolution import BRAKE_ONSET, braking_point
+
+    b = np.nan_to_num(np.asarray(freio, dtype=float))
+    i = int(track.index_of(float(de) % float(track.length)))
+    if b[i] >= BRAKE_ONSET:
+        for _ in range(int(track.size) - 1):
+            if b[(i - 1) % track.size] < BRAKE_ONSET:
+                return float(track.s[i])
+            i = (i - 1) % track.size
+        return None
+    return braking_point(b, track, float(de) % float(track.length), apice)
+
+
 def medidas_da_volta(volta: Dict[str, np.ndarray], total: float, ref: Dict[str, np.ndarray], ref_total: float,
                      pista: Pista, inicio_da_freada: Optional[Dict[str, float]] = None) -> List[Dict[str, Any]]:
     """Por curva: a perda e as quatro diferencas (volta menos referencia).
@@ -147,11 +164,14 @@ def medidas_da_volta(volta: Dict[str, np.ndarray], total: float, ref: Dict[str, 
     for k, seg in enumerate(pista.segmentos):
         corner = seg.corner
         anterior = pista.segmentos[k - 1].corner.apex_s
-        if inicio_da_freada and corner.label[:3] in inicio_da_freada:
-            anterior = float(inicio_da_freada[corner.label[:3]]) % float(track.length)
         perda = segment_time(volta["elapsed"], total, track, seg) - segment_time(ref["elapsed"], ref_total, track, seg)
-        freada_v = braking_point(volta["freio"], track, anterior, corner.apex_s)
-        freada_r = braking_point(ref["freio"], track, anterior, corner.apex_s)
+        if inicio_da_freada and corner.label[:3] in inicio_da_freada:
+            de = float(inicio_da_freada[corner.label[:3]])
+            freada_v = freada_desde(volta["freio"], track, de, corner.apex_s)
+            freada_r = freada_desde(ref["freio"], track, de, corner.apex_s)
+        else:
+            freada_v = braking_point(volta["freio"], track, anterior, corner.apex_s)
+            freada_r = braking_point(ref["freio"], track, anterior, corner.apex_s)
         dentro = _window(track, corner.start_s, corner.end_s)
         min_v = float(np.nanmin(volta["velocidade"][dentro]))
         min_r = float(np.nanmin(ref["velocidade"][dentro]))

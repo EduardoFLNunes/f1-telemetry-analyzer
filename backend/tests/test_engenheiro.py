@@ -386,6 +386,19 @@ def test_a_freada_so_e_buscada_depois_da_saida_do_trecho_anterior():
     assert R.ponto_de_freada(g["freio"], track, 250.0, 450.0) == pytest.approx(270.0, abs=2.0)
 
 
+def test_a_pisada_em_andamento_na_saida_do_trecho_anterior_conta_desde_o_comeco():
+    """Item 10 (a C10): o freio ja apertado na saida do trecho anterior; a frenagem e onde a pisada comecou."""
+    from core.radio.analise import freada_desde
+    from test_lap_origin import circular_track
+
+    track = circular_track()
+    s = np.asarray(track.s, float)
+    freio = np.where((s >= 290) & (s < 330), 0.9, 0.0) + np.where((s >= 360) & (s < 370), 0.6, 0.0)
+    assert freada_desde(freio, track, 300.0, 450.0) == pytest.approx(290.0, abs=2.0)    # e nao a segunda pisada (360)
+    freio = np.where((s >= 310) & (s < 330), 0.9, 0.0)
+    assert freada_desde(freio, track, 300.0, 450.0) == pytest.approx(310.0, abs=2.0)    # sem pisada na saida: a subida
+
+
 def test_sem_tirar_o_pe_quando_a_referencia_nao_freia_nem_alivia():
     """Item 3: o acelerador em 0,90 ou mais do comeco ao fim do trecho; a frase sem marco e a conferencia."""
     from test_lap_origin import circular_track

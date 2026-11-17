@@ -144,7 +144,8 @@ def minima_da_curva(velocidade: np.ndarray, track, trecho) -> Optional[float]:
 def pontos_do_trecho(grade: Dict[str, np.ndarray], total: float, track, trechos: Sequence[Any], k: int) -> Dict[str, Any]:
     """Os pontos de um trecho numa volta: a freada, a entrada, a retomada, a minima e a velocidade na freada."""
     t = trechos[k]
-    freada = ponto_de_freada(grade["freio"], track, inicio_da_busca_da_freada(trechos, k), t.apice_s) if t.tem_curva else None
+    from core.radio.analise import freada_desde
+    freada = freada_desde(grade["freio"], track, inicio_da_busca_da_freada(trechos, k), t.apice_s) if t.tem_curva else None
     ret = retomada(grade["acelerador"], track, t)
     v = np.asarray(grade["velocidade"], float)
     return {
