@@ -87,6 +87,38 @@ Decidida pelo Eduardo em 18/10 (opção 1 do relatório do pedido 33) e registra
 - **O controle do store antigo** (cerca de −26 ms) passa a usar a mesma régua.
 - **O que se esperava antes de rodar** (pedido 33, com a velocidade da grade): o p99 das 676 voltas iria de 7,63 ms para 3,56 ms, e as voltas acima de 5 ms, de 10 para 3. O antes e depois da rodada está na seção 3.
 
+#### Emenda de 17/11/2026 (pedido 54): as sessões aceitas com margem
+
+Decidida pelo Eduardo em 17/11 e registrada antes do código e da rodada.
+
+- **Por que:** na rodada de 15/11 (pedido 51), três sessões ficaram fora da tolerância de 0,10 m, e o store foi gravado com `aprovado: false`:
+
+  | sessão | mediana | desvio |
+  |---|---|---|
+  | `2026-11-01_19-47-03` | 1,606 m | 0,018 m |
+  | `2026-11-07_18-46-00` | 1,581 m | 0,080 m |
+  | `2026-11-12_22-57-03` | 1,573 m | 0,023 m |
+
+  As outras checagens passaram, a do período incluída. A diferença, de 0,11 a 0,14 m na velocidade da reta dos boxes, dá cerca de 2 ms.
+- **A decisão do Eduardo (17/11):** essas sessões são aceitas, e a diferença é tratada como uma margem de erro, para cima e para baixo. A causa continua sendo procurada (pedido 54, Parte B).
+- **A regra, "aceita com margem"** (`store_checks.check_game_line`):
+  - vale para uma sessão com pelo menos 3 voltas medidas, cuja mediana fica fora da tolerância de 0,10 m;
+  - **a diferença da sessão** é a mediana da sessão menos 1,463 m (o mesmo número que a checagem já usa);
+  - **o efeito, volta a volta:** `1000 × diferença da sessão / v`, em ms. `v` é a velocidade gravada na passagem do começo da volta (`v_linha_inicio_kmh`, em m/s), a mesma passagem em que a posição da linha é medida (`game_line_position`). Entram as voltas da sessão com a linha medida e com essa velocidade;
+  - **o número da sessão é a mediana desses efeitos,** com o sinal. Foi escolhido pelo Eduardo em 17/11, antes de a conta ser feita nas voltas, entre a mediana e o p95;
+  - **a sessão é aceita com margem quando o número fica em até 2,0 ms em módulo,** para cima ou para baixo. Ela não reprova, e a saída da checagem diz a diferença e o efeito dela;
+  - **acima de 2,0 ms,** ou sem nenhuma volta com a velocidade, a sessão reprova o store, como antes;
+  - **a lista sai da medida, e não de uma lista no código.** Uma sessão nova com a mesma diferença entra do mesmo jeito, e uma com diferença maior reprova.
+- **O meta do store** (`laps_grid_v2_meta.json`):
+  - `aprovado: true` quando cada sessão passa ou é aceita com margem e as outras checagens passam;
+  - a chave `sessoes_aceitas_com_margem` guarda a lista. Cada item tem `sessao`, `mediana_m`, `diferenca_m`, `efeito_ms`, `voltas` e `decisao` (a data da decisão, `2026-11-17`);
+  - a chave `margem_linha_do_jogo_ms` guarda a margem (2,0).
+- **O que não muda:**
+  - os 1,463 m e a tolerância de 0,10 m;
+  - a mediana de todas as voltas, que continua tendo de ficar dentro da tolerância;
+  - a checagem do período e as outras checagens;
+  - nenhuma volta sai do store, e nenhuma gravação muda.
+
 ### 1.4 Regras do relatório de evolução
 
 - **Voltas:**
