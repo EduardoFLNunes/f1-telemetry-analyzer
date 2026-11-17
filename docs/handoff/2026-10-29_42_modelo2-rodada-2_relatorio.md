@@ -118,7 +118,7 @@ Nenhum código mudou, então a suíte não foi rodada.
 
 ## Envio ao GitHub
 
-Tentei o envio da branch uma vez, depois do commit deste relatório. O resultado está no chat e na nota da sessão. Se o controle de permissões recusar, rode pelo terminal, um comando por vez:
+Tentei o envio da branch uma vez, depois do commit `e1151879`, e o controle de permissões recusou. Não insisti. Nada foi enviado: a branch só existe no local. Rode pelo terminal, um comando por vez:
 
 ```bash
 git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer-48 push -u origin etapa/modelo2-rodada-2
