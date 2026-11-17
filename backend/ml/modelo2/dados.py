@@ -61,9 +61,70 @@ DERIVED = ("brake_rate", "throttle_rate", "steer_rate", "steer_ma01", "steer_ma0
 
 AI_LEVELS_FILE = config.repo_root() / "docs" / "experimentos" / "ia_niveis.csv"
 
+# Pedido 42 (secao 4.6): a lista das 144 voltas da rodada 1, versionada no git.
+RODADA1_VOLTAS_FILE = (config.repo_root() / "docs" / "handoff"
+                       / "2026-10-24_38_modelo2-erro-tecnica-e-estilo_canais_e_conferencias.json")
+RODADA1_TOTAL = 144
+
+# Pedido 42 (secao 4.5) e pedido 54: as sessoes aceitas com margem vem do meta do store.
+META_SESSOES_COM_MARGEM = "sessoes_aceitas_com_margem"
+META_MARGEM_MS = "margem_linha_do_jogo_ms"
+MARGEM_PADRAO_MS = 2.0        # a decisao do Eduardo de 17/11, quando o meta nao traz o numero
+
+# Os arquivos da rodada 1 em data/ml/modelo2/: so lidos a partir do pedido 42.
+RODADA1_ARQUIVOS = ("derivados.parquet", "fora_do_store.parquet", "fora_do_store.json", "rotulagem_gabarito.json",
+                    "resultados.json", "fases.json", "canais_e_conferencias.json", "erros_por_sessao.json",
+                    "tecnicas.json", "estilo.json", "modelo_leve.json", "passagens.parquet",
+                    "precisao_revocacao.json", "rotulagem")
+
 
 def raiz() -> Path:
     return config.artifacts_root() / "modelo2"
+
+
+def pasta_da_rodada(nome: str) -> Path:
+    """A pasta de saida de uma rodada, dentro de `data/ml/modelo2/` (secao 4.6).
+
+    Recusa o nome vazio, um caminho que saia da raiz e o nome de um arquivo
+    da rodada 1: nada da rodada 1 e sobrescrito.
+    """
+    nome = str(nome or "").strip()
+    if not nome or nome in (".", "..") or any(sep in nome for sep in ("/", "\\", ":")) or nome in RODADA1_ARQUIVOS:
+        raise ValueError(f"pasta de saida invalida: {nome!r} (um nome simples, fora dos arquivos da rodada 1)")
+    return raiz() / nome
+
+
+def voltas_da_rodada1(path: Path = RODADA1_VOLTAS_FILE) -> List[str]:
+    """Os 144 `lap_id` da rodada 1 (pedido 38), da lista versionada."""
+    voltas = json.loads(Path(path).read_text(encoding="utf-8"))["voltas"]
+    ids = sorted({v["lap_id"] for v in voltas})
+    if len(ids) != RODADA1_TOTAL or len(ids) != len(voltas):
+        raise ValueError(f"a lista da rodada 1 tem {len(ids)} voltas unicas em {len(voltas)}; eram {RODADA1_TOTAL}")
+    return ids
+
+
+def sessoes_com_margem(meta: Mapping[str, object]) -> Tuple[Dict[str, Dict[str, object]], float]:
+    """(gravacao -> item do meta, margem em segundos) das sessoes aceitas com margem pelo store (pedido 54)."""
+    items = meta.get(META_SESSOES_COM_MARGEM) or []
+    out: Dict[str, Dict[str, object]] = {}
+    for item in items:
+        sessao = str(item.get("sessao") or "").strip()
+        if sessao:
+            out[sessao] = dict(item)
+    margem_ms = meta.get(META_MARGEM_MS)
+    margem_ms = MARGEM_PADRAO_MS if margem_ms is None else float(margem_ms)
+    return out, margem_ms / 1000.0
+
+
+def _com_margem(gravacao: str, sessoes: Mapping[str, object]) -> bool:
+    """A sessao do meta e a gravacao; aceita tambem o id sem o sufixo da pista."""
+    return any(gravacao == s or gravacao.startswith(s + "_") for s in sessoes)
+
+
+def restringir(selected: pd.DataFrame, ids: Iterable[str]) -> pd.DataFrame:
+    """So as voltas pedidas do store (secao 4.6)."""
+    wanted = set(ids)
+    return selected[selected["lap_id"].isin(wanted)]
 
 
 def sha256(path: Path) -> str:
@@ -172,6 +233,7 @@ class Volta:
     sessao: Optional[str] = None
     canais: Tuple[str, ...] = ()
     nivel_ia: Optional[Dict[str, object]] = None
+    com_margem: bool = False      # sessao aceita com margem pelo store (pedido 42, secao 4.5)
 
     @property
     def ia(self) -> bool:
@@ -288,6 +350,9 @@ class Conjunto:
     store_meta: Dict[str, object]
     fora_relatorio: Dict[str, List[Dict[str, object]]] = field(default_factory=dict)
     lidos: List[Dict[str, object]] = field(default_factory=list)
+    com_margem: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    margem_s: float = MARGEM_PADRAO_MS / 1000.0
+    escritos: List[str] = field(default_factory=list)
 
     def da_ia(self) -> List[Volta]:
         return [v for v in self.voltas.values() if v.ia]
@@ -296,32 +361,53 @@ class Conjunto:
         return [v for v in self.voltas.values() if not v.ia]
 
 
-def carregar(track: TrackGeometry, cache: bool = True, progress=print) -> Conjunto:
-    """Todas as voltas rotuladas, com a grade do store (ou a de fora) e as taxas derivadas."""
+def _read_derived(path: Path) -> Dict[str, pd.DataFrame]:
+    if not path.exists():
+        return {}
+    frame = pd.read_parquet(path)
+    return {k: g.drop(columns="lap_id").reset_index(drop=True) for k, g in frame.groupby("lap_id")}
+
+
+def carregar(track: TrackGeometry, saida: Optional[Path] = None, so_ids: Optional[Iterable[str]] = None,
+             mais_ids: Iterable[str] = (), progress=print) -> Conjunto:
+    """As voltas rotuladas, com a grade do store (ou a de fora) e as taxas derivadas.
+
+    Pedido 42 (secao 4.6):
+
+    * os caches da rodada 1 em `data/ml/modelo2/` (`derivados.parquet`,
+      `fora_do_store.parquet` e `fora_do_store.json`) sao **so lidos**;
+    * o que faltar e calculado e gravado so em `saida` (a pasta da rodada).
+      Sem `saida`, nada e gravado;
+    * `so_ids` restringe as voltas (os 144 `lap_id` da rodada 1); uma volta
+      pedida que falte para tudo. `mais_ids` sao voltas a mais, so medidas;
+    * as sessoes aceitas com margem vem do meta do store (pedido 54).
+    """
     meta = store_v2_meta()
     if not meta or not meta.get("aprovado"):
         raise SystemExit("PARADO: store v2 ausente ou nao aprovado.")
+    root = raiz()
+    if saida is not None:
+        saida = Path(saida)
+        if saida.resolve() == root.resolve() or root.resolve() not in saida.resolve().parents:
+            raise ValueError(f"a saida tem de ser uma pasta dentro de {root}, e nao a propria: {saida}")
+        saida.mkdir(parents=True, exist_ok=True)
+    wanted_ids = None if so_ids is None else set(so_ids) | set(mais_ids)
     store = load_store_v2(track=track)
     selected = store_selection(store.laps)
-    root = raiz()
-    root.mkdir(parents=True, exist_ok=True)
-    derived_cache = root / "derivados.parquet"
-    outside_cache = root / "fora_do_store.parquet"
-    outside_meta = root / "fora_do_store.json"
+    if wanted_ids is not None:
+        selected = restringir(selected, wanted_ids)
+    written: List[str] = []
 
     sessions = {s.session_id: s for s in list_all_sessions()}
-    derived: Dict[str, pd.DataFrame] = {}
-    if cache and derived_cache.exists():
-        frame = pd.read_parquet(derived_cache)
-        derived = {k: g.drop(columns="lap_id").reset_index(drop=True) for k, g in frame.groupby("lap_id")}
-    wanted = selected[~selected["lap_id"].isin(derived)]
-    for position, (sid, rows) in enumerate(sorted(wanted.groupby("session_id")), start=1):
-        progress(f"  taxas [{position}] {sid}: {len(rows)} voltas")
-        derived.update(derived_for_session(sessions[sid], dict(zip(rows["sequence"].astype(int), rows["raw_samples"].astype(int))), track))
+    derived: Dict[str, pd.DataFrame] = _read_derived(root / "derivados.parquet")
+    own_cache = None if saida is None else saida / "derivados.parquet"
+    own: Dict[str, pd.DataFrame] = {} if own_cache is None else _read_derived(own_cache)
+    derived.update({k: v for k, v in own.items() if k not in derived})
 
     outside_laps: List[Volta] = []
     outside_report: Dict[str, List[Dict[str, object]]] = {}
-    if cache and outside_cache.exists() and outside_meta.exists():
+    outside_cache, outside_meta = root / "fora_do_store.parquet", root / "fora_do_store.json"
+    if outside_cache.exists() and outside_meta.exists():
         info = json.loads(outside_meta.read_text(encoding="utf-8"))
         frame = pd.read_parquet(outside_cache)
         grids = {k: g.drop(columns="lap_id").reset_index(drop=True) for k, g in frame.groupby("lap_id")}
@@ -339,14 +425,31 @@ def carregar(track: TrackGeometry, cache: bool = True, progress=print) -> Conjun
             laps, report, extra = read_outside(sessions[sid], track)
             outside_laps.extend(laps)
             outside_report[sid] = report
+            own.update(extra)
             derived.update(extra)
-        if outside_laps:
-            pd.concat([v.grid.assign(lap_id=v.lap_id) for v in outside_laps]).to_parquet(outside_cache)
-        outside_meta.write_text(json.dumps({
-            "voltas": [{"lap_id": v.lap_id, "gravacao": v.gravacao, "origem": v.origem, "tempo_s": v.tempo_s,
-                        "canais": list(v.canais)} for v in outside_laps],
-            "relatorio": outside_report}, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
-    pd.concat([g.assign(lap_id=k) for k, g in derived.items()]).to_parquet(derived_cache)
+        if saida is not None:
+            if outside_laps:
+                pd.concat([v.grid.assign(lap_id=v.lap_id) for v in outside_laps]).to_parquet(saida / "fora_do_store.parquet")
+                written.append(str(saida / "fora_do_store.parquet"))
+            (saida / "fora_do_store.json").write_text(json.dumps({
+                "voltas": [{"lap_id": v.lap_id, "gravacao": v.gravacao, "origem": v.origem, "tempo_s": v.tempo_s,
+                            "canais": list(v.canais)} for v in outside_laps],
+                "relatorio": outside_report}, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
+            written.append(str(saida / "fora_do_store.json"))
+    if wanted_ids is not None:
+        outside_laps = [v for v in outside_laps if v.lap_id in wanted_ids]
+
+    # As taxas que faltam: so das voltas pedidas do store que nao vem de fora dele.
+    outside_ids = {v.lap_id for v in outside_laps}
+    wanted = selected[~selected["lap_id"].isin(derived) & ~selected["lap_id"].isin(outside_ids)]
+    for position, (sid, rows) in enumerate(sorted(wanted.groupby("session_id")), start=1):
+        progress(f"  taxas [{position}] {sid}: {len(rows)} voltas")
+        extra = derived_for_session(sessions[sid], dict(zip(rows["sequence"].astype(int), rows["raw_samples"].astype(int))), track)
+        own.update(extra)
+        derived.update(extra)
+    if own_cache is not None and own:
+        pd.concat([g.assign(lap_id=k) for k, g in own.items()]).to_parquet(own_cache)
+        written.append(str(own_cache))
 
     channels = meta.get("canais_por_volta", {})
     voltas: Dict[str, Volta] = {}
@@ -358,6 +461,10 @@ def carregar(track: TrackGeometry, cache: bool = True, progress=print) -> Conjun
                                       canais=tuple(channels.get(row["lap_id"], [])))
     for v in outside_laps:
         voltas[v.lap_id] = v
+    if so_ids is not None:
+        missing = sorted(set(so_ids) - set(voltas))
+        if missing:
+            raise SystemExit(f"PARADO: {len(missing)} voltas pedidas nao foram encontradas: {missing[:5]}")
     for lap_id, volta in voltas.items():
         extra = derived[lap_id]
         base = volta.grid.drop(columns=[c for c in DERIVED if c in volta.grid.columns])
@@ -368,8 +475,10 @@ def carregar(track: TrackGeometry, cache: bool = True, progress=print) -> Conjun
         periods.setdefault(v.gravacao, recording_period(v.gravacao, pd.DataFrame()))
     sessions_of = group_sessions({v.gravacao: periods[v.gravacao] for v in voltas.values()})
     levels = ai_levels()
+    margin_sessions, margin_s = sessoes_com_margem(meta)
     for v in voltas.values():
         v.sessao = sessions_of[v.gravacao]
+        v.com_margem = _com_margem(v.gravacao, margin_sessions)
         if not levels.empty:
             number = int(v.lap_id.split("#")[1])
             match = levels[(levels["gravacao"] == v.gravacao) & (levels["volta_de"] <= number) & (levels["volta_ate"] >= number)]
@@ -377,7 +486,11 @@ def carregar(track: TrackGeometry, cache: bool = True, progress=print) -> Conjun
                 v.nivel_ia = match.iloc[0].to_dict()
 
     read = [config.artifacts_root() / "laps_grid_v2.parquet", config.artifacts_root() / "laps_grid_v2_meta.json"]
-    for sid in sorted({v.gravacao for v in voltas.values()} | (set(FORA_DO_STORE) & set(sessions))):
+    for path in (root / "derivados.parquet", outside_cache, outside_meta):
+        if path.exists():
+            read.append(path)
+    for sid in sorted({v.gravacao for v in voltas.values()} & set(sessions)):
         read.append(sessions[sid].player_stream)
     return Conjunto(voltas=voltas, store_meta=meta, fora_relatorio=outside_report,
-                    lidos=[{"arquivo": str(p), "bytes": p.stat().st_size} for p in read])
+                    lidos=[{"arquivo": str(p), "bytes": p.stat().st_size} for p in read],
+                    com_margem=margin_sessions, margem_s=margin_s, escritos=written)

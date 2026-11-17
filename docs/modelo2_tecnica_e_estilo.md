@@ -372,7 +372,7 @@ Ele **mostra associação, não causa,** e não promete ganho (ADR 0004). Serve 
 
 | saída | onde |
 |---|---|
-| o comando | `python -m ml.scripts.modelo2 todos` (de `backend/`) |
+| o comando | `python -m ml.scripts.modelo2 todos --saida <pasta>` (de `backend/`); desde o pedido 42, cada rodada grava em `data/ml/modelo2/<pasta>/`, só com os 144 `lap_id` da rodada 1 (seção 4.6) |
 | os dados intermediários | `data/ml/modelo2/` (fora do git): as passagens, os estados de cada passagem, os derivados e o gabarito do kit |
 | os resultados do pedido 38 | `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_*.json` |
 | o kit de rotulagem | `docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_kit_rotulagem.html` e `_rotulagem.csv` |

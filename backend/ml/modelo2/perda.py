@@ -36,16 +36,28 @@ def phase_losses(lap: Lap, ref: Lap, track: TrackGeometry, phases: Sequence[Corn
     return out
 
 
+def dentro_da_margem(perda_s, com_margem, margem_s: float):
+    """Pedido 42 (secao 4.5): numa sessao aceita com margem, |perda| ate a margem nao e perda nem ganho."""
+    perda = np.asarray(perda_s, dtype=float)
+    return np.asarray(com_margem, dtype=bool) & np.isfinite(perda) & (np.abs(perda) <= margem_s)
+
+
 def loss_table(laps: Sequence[Lap], ref: Lap, best: Lap, track: TrackGeometry,
-               phases: Sequence[CornerPhases]) -> pd.DataFrame:
+               phases: Sequence[CornerPhases], margem_s: float = 0.0) -> pd.DataFrame:
+    """A perda de cada volta em cada fase, com a marca da margem das sessoes aceitas com margem (4.5)."""
     rows = []
     for lap in laps:
         vs_ai = phase_losses(lap, ref, track, phases)
         vs_best = phase_losses(lap, best, track, phases)
+        flagged = bool(getattr(lap.volta, "com_margem", False))
         for a, b in zip(vs_ai, vs_best):
             rows.append({"lap_id": lap.volta.lap_id, "sessao": lap.volta.sessao, "origem": lap.volta.origem,
-                         **a, "perda_vs_melhor_s": b["perda_s"]})
-    return pd.DataFrame(rows)
+                         **a, "perda_vs_melhor_s": b["perda_s"], "sessao_com_margem": flagged})
+    out = pd.DataFrame(rows)
+    if not out.empty:
+        out["dentro_da_margem"] = dentro_da_margem(out["perda_s"], out["sessao_com_margem"], margem_s)
+        out["dentro_da_margem_vs_melhor"] = dentro_da_margem(out["perda_vs_melhor_s"], out["sessao_com_margem"], margem_s)
+    return out
 
 
 def majority(states: Sequence[str], minimum: int) -> str:
@@ -115,7 +127,14 @@ def session_ranking(session: str, laps: Sequence[Lap], losses: pd.DataFrame, pas
         out["itens"] = []
         return out
     cp_by = {cp.curva: cp for cp in phases}
-    sess = losses[losses["lap_id"].isin(last)]
+    sess = losses[losses["lap_id"].isin(last)].copy()
+    # Secao 4.5: dentro da margem, a perda conta como zero (nem perda nem ganho).
+    with_margin = bool(sess["sessao_com_margem"].any()) if "sessao_com_margem" in sess else False
+    if "dentro_da_margem" in sess:
+        sess.loc[sess["dentro_da_margem"].astype(bool), "perda_s"] = 0.0
+    if "dentro_da_margem_vs_melhor" in sess:
+        sess.loc[sess["dentro_da_margem_vs_melhor"].astype(bool), "perda_vs_melhor_s"] = 0.0
+    out["sessao_com_margem"] = with_margin
 
     # consistencia primeiro
     consistency = None

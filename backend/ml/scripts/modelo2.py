@@ -1,11 +1,14 @@
 """Modelo 2: o erro, as tecnicas e o estilo, nas voltas da IA e do piloto (pedido 38).
 
-    python -m ml.scripts.modelo2 todos [--handoff PREFIXO]
+    python -m ml.scripts.modelo2 todos --saida PASTA [--handoff PREFIXO]
     python -m ml.scripts.modelo2 rotulos --rotulos ARQUIVO.csv
 
-As regras estao em `docs/modelo2_tecnica_e_estilo.md`, secao 1, registradas
-antes de rodar. As saidas ficam em `data/ml/modelo2/` (fora do git) e, com
-`--handoff`, uma copia dos JSON vai para `docs/handoff/`.
+As regras estao em `docs/modelo2_tecnica_e_estilo.md`, secao 1 (rodada 1) e
+secao 4 (rodada 2), registradas antes de rodar. Desde o pedido 42, cada rodada
+grava numa pasta propria dentro de `data/ml/modelo2/` (por exemplo,
+`rodada1_refeita`), so com os 144 `lap_id` da rodada 1; os arquivos da rodada 1
+em `data/ml/modelo2/` so sao lidos. Com `--handoff`, uma copia dos JSON vai
+para `docs/handoff/`.
 """
 
 from __future__ import annotations
@@ -32,7 +35,7 @@ from ml import config  # noqa: E402
 from ml.data.recordings import list_all_sessions  # noqa: E402
 from ml.modelo2 import conferencias as conf  # noqa: E402
 from ml.modelo2 import estilo, rotulagem, supervisionado  # noqa: E402
-from ml.modelo2.dados import FORA_DO_STORE, ai_levels, carregar, raiz, sha256  # noqa: E402
+from ml.modelo2.dados import FORA_DO_STORE, ai_levels, carregar, pasta_da_rodada, raiz, sha256, voltas_da_rodada1  # noqa: E402
 from ml.modelo2.detectores import (APLICA, CATALOG, NAO_APLICA, NC, PER_CORNER, PRIMARY, Lap,  # noqa: E402
                                    assign_states, consistency_states, envelope_from, lap_measures, lap_states,
                                    measure_passage, phase_time)
@@ -90,14 +93,16 @@ def fractions(states: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def run(handoff_prefix: str = None) -> Dict[str, object]:
+def run(saida: str, handoff_prefix: str = None) -> Dict[str, object]:
     started = time.time()
     timings = {}
+    out_dir = pasta_da_rodada(saida)
+    wanted = voltas_da_rodada1()
     track = load_geometry()
     corners = detect_corners(track)
     if len(corners) != 14:
         raise SystemExit(f"PARADO: {len(corners)} curvas, o radio e o relatorio usam 14.")
-    data = carregar(track)
+    data = carregar(track, saida=out_dir, so_ids=wanted)
     timings["leitura_s"] = round(time.time() - started, 1)
     laps = {k: Lap.build(v) for k, v in data.voltas.items()}
 
@@ -134,6 +139,7 @@ def run(handoff_prefix: str = None) -> Dict[str, object]:
             r = measure_passage(lap, track, cp, phases[cp.k - 1], env)
             r["tipo"] = cp.tipo
             r["tempo_trecho_s"] = phase_time(lap, track, *cp.trecho)
+            r["sessao_com_margem"] = lap.volta.com_margem
             rows.append(r)
     states, refs = assign_states(rows)
     passages = pd.DataFrame([{k: v for k, v in r.items() if k != "_ausente"} for r in rows])
@@ -166,7 +172,7 @@ def run(handoff_prefix: str = None) -> Dict[str, object]:
     }
 
     # --- Parte D
-    losses = loss_table(humans, ref, best, track, phases)
+    losses = loss_table(humans, ref, best, track, phases, margem_s=data.margem_s)
     ai_passages = passages[passages["origem"] == "ia"]
     rankings = []
     by_session: Dict[str, List[Lap]] = {}
@@ -251,7 +257,7 @@ def run(handoff_prefix: str = None) -> Dict[str, object]:
     timings["modelos_s"] = round(time.time() - started, 1)
 
     # --- Parte H
-    root = raiz()
+    root = out_dir
     kit_dir = root / "rotulagem"
     kit_dir.mkdir(parents=True, exist_ok=True)
     stem = handoff_prefix or "kit"
@@ -290,11 +296,17 @@ def run(handoff_prefix: str = None) -> Dict[str, object]:
         "commit": commit, "geometry_id": track.geometry_id, "geometria_source_hash": track.source_hash,
         "store_v2": {"commit": data.store_meta.get("commit"), "construido_em": data.store_meta.get("construido_em")},
         "ambiente": {"python": platform.python_version(), "numpy": np.__version__, "pandas": pd.__version__},
-        "comandos": ["python -m ml.scripts.modelo2 todos --handoff docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo"],
+        "comandos": [" ".join(["python -m ml.scripts.modelo2 todos --saida", saida]
+                              + (["--handoff", handoff_prefix] if handoff_prefix else []))],
+        "saida": str(out_dir),
         "voltas": {"total": len(laps), "piloto": len(humans), "ia": len(ais),
-                   "fora_do_store": sum(l.volta.fora_do_store for l in laps.values())},
+                   "fora_do_store": sum(l.volta.fora_do_store for l in laps.values()),
+                   "pedidas": len(wanted), "fonte_da_lista": "docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_canais_e_conferencias.json"},
+        "sessoes_com_margem": {"margem_s": data.margem_s, "sessoes": data.com_margem,
+                               "voltas": sorted(l.volta.lap_id for l in laps.values() if l.volta.com_margem)},
         "lidos": read_files,
-        "escritos": [{"arquivo": str(p), "sha256": sha256(p)} for p in list(paths.values()) + [kit_html, kit_csv, key]],
+        "escritos": [{"arquivo": str(p), "sha256": sha256(p)} for p in list(paths.values()) + [kit_html, kit_csv, key]]
+                    + [{"arquivo": p, "sha256": sha256(Path(p))} for p in data.escritos],
         "kit": kit, "tempos": timings,
     }
     write(root / "resultados.json", results)
@@ -324,12 +336,15 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("comando", choices=["todos", "rotulos"])
     parser.add_argument("--handoff", default=None)
+    parser.add_argument("--saida", default=None, help="pasta da rodada dentro de data/ml/modelo2/ (pedido 42)")
     parser.add_argument("--rotulos", type=Path, default=None)
     args = parser.parse_args(argv)
     if args.comando == "rotulos":
         return labels(args.rotulos)
+    if not args.saida:
+        parser.error("todos exige --saida (pedido 42: nada da rodada 1 em data/ml/modelo2/ e sobrescrito)")
     try:
-        result = run(args.handoff)
+        result = run(args.saida, args.handoff)
     except SystemExit as stop:
         print(stop)
         return 2

@@ -343,3 +343,159 @@ def test_perda_numa_volta_so_nao_entra_no_ranking(phases):
     laps, losses, passages, states, ai, cp = _ranking_inputs(phases, by_lap, [0.0, 0.0, 0.0])
     out = session_ranking("s", laps, losses, passages, states, phases, "r#0001", ai)
     assert [i["fase_sintoma"] for i in out["todos_os_itens"] if i["curva"] == cp.curva] == ["meio"]
+
+
+# ------------------------------- pedido 42: pastas, 144 voltas e margem ---
+
+import json
+
+from ml.modelo2 import dados as dados_mod
+from ml.modelo2.perda import dentro_da_margem, loss_table
+
+
+def test_as_144_voltas_da_rodada1_vem_da_lista_versionada():
+    ids = dados_mod.voltas_da_rodada1()
+    assert len(ids) == 144 and len(set(ids)) == 144
+    voltas = json.loads(dados_mod.RODADA1_VOLTAS_FILE.read_text(encoding="utf-8"))["voltas"]
+    assert sum(v["origem"] == "ia" for v in voltas) == 14
+    assert sum(bool(v["fora_do_store"]) for v in voltas) == 10
+
+
+def test_pasta_da_rodada_nunca_e_a_raiz_nem_um_arquivo_da_rodada1():
+    assert dados_mod.pasta_da_rodada("rodada1_refeita") == dados_mod.raiz() / "rodada1_refeita"
+    for bad in ("", ".", "..", "a/b", "a\\b", "C:x", "derivados.parquet", "rotulagem_gabarito.json", "rotulagem"):
+        with pytest.raises(ValueError):
+            dados_mod.pasta_da_rodada(bad)
+
+
+def test_sessoes_com_margem_vem_do_meta():
+    meta = {"sessoes_aceitas_com_margem": [{"sessao": "2026-11-01_19-47-03_vhe_interlagos", "efeito_ms": 1.8}],
+            "margem_linha_do_jogo_ms": 2.0}
+    sessions, margin = dados_mod.sessoes_com_margem(meta)
+    assert set(sessions) == {"2026-11-01_19-47-03_vhe_interlagos"} and margin == pytest.approx(0.002)
+    assert dados_mod._com_margem("2026-11-01_19-47-03_vhe_interlagos", sessions)
+    assert not dados_mod._com_margem("2026-11-07_18-46-00_vhe_interlagos", sessions)
+    assert dados_mod._com_margem("2026-11-01_19-47-03_vhe_interlagos", {"2026-11-01_19-47-03": {}})
+    # sem a margem no meta, vale a decisao de 17/11 (2,0 ms); sem a lista, nenhuma sessao
+    empty, margin = dados_mod.sessoes_com_margem({"sessoes_aceitas_com_margem": []})
+    assert empty == {} and margin == pytest.approx(0.002)
+    assert dados_mod.sessoes_com_margem({})[0] == {}
+
+
+def test_margem_marca_a_perda_so_nas_sessoes_aceitas_com_margem(phases):
+    ref = synthetic_lap("ref#0001", origem="ia")
+    # cerca de 1 ms mais lenta na volta inteira: cada fase fica dentro da margem
+    slow = lambda s: np.full_like(s, 150.0 * (1.0 - 1e-3 / ref.total))
+    marked = synthetic_lap("m#0001", speed_kmh=slow)
+    marked.volta.com_margem = True
+    plain = synthetic_lap("p#0001", speed_kmh=slow)
+    table = loss_table([marked, plain], ref, ref, TRACK, phases, margem_s=0.002)
+    m = table[table["lap_id"] == "m#0001"]
+    p = table[table["lap_id"] == "p#0001"]
+    assert m["sessao_com_margem"].all() and m["dentro_da_margem"].all()
+    assert not p["sessao_com_margem"].any() and not p["dentro_da_margem"].any()
+    assert dentro_da_margem([0.0021, -0.002, 0.001], [True, True, False], 0.002).tolist() == [False, True, False]
+
+
+def test_margem_tira_o_ganho_pequeno_do_falso_ganho(phases):
+    # Frenagem com ganho de 1 ms (dentro da margem): sem a margem e falso ganho; com a margem, nao.
+    loss = {"frenagem": -0.001, "entrada": 0.25, "meio": 0.05}
+    laps, losses, passages, states, ai, cp = _ranking_inputs(
+        phases, {f"r#{i:04d}": loss for i in range(1, 4)}, [30.0, 30.0, 30.0])
+    plain = session_ranking("s", laps, losses, passages, states, phases, "r#0001", ai)
+    assert [i["falso_ganho"] for i in plain["todos_os_itens"] if i["curva"] == cp.curva] == [True]
+    flagged = losses.assign(sessao_com_margem=True)
+    flagged["dentro_da_margem"] = dentro_da_margem(flagged["perda_s"], flagged["sessao_com_margem"], 0.002)
+    flagged["dentro_da_margem_vs_melhor"] = flagged["dentro_da_margem"]
+    out = session_ranking("s", laps, flagged, passages, states, phases, "r#0001", ai)
+    items = [i for i in out["todos_os_itens"] if i["curva"] == cp.curva]
+    assert out["sessao_com_margem"] is True
+    assert not any(i["falso_ganho"] for i in items)
+    assert sorted(i["fase_sintoma"] for i in items) == ["entrada", "meio"]
+
+
+def _fake_world(tmp_path, monkeypatch, aprovado=True):
+    """Um store, um cache da rodada 1 e gravacoes falsos, num data/ml temporario."""
+    ml = tmp_path / "ml"
+    root = ml / "modelo2"
+    root.mkdir(parents=True)
+    (ml / "laps_grid_v2.parquet").write_bytes(b"x")
+    (ml / "laps_grid_v2_meta.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(dados_mod.config, "artifacts_root", lambda: ml)
+    n = 5
+
+    def derived_frame(lap_id):
+        f = pd.DataFrame({"grid_index": np.arange(n)})
+        for c in dados_mod.DERIVED:
+            f[c] = 1.0
+        return f.assign(lap_id=lap_id)
+
+    def grid(lap_id):
+        return pd.DataFrame({"lap_id": lap_id, "grid_index": np.arange(n), "speed_kmh": 100.0})
+
+    store_ids = ["A_vhe#0001", "A_vhe#0002", "B_vhe#0001", "C_vhe#0001"]
+    laps = pd.DataFrame({"lap_id": store_ids, "session_id": [i.split("#")[0] for i in store_ids],
+                         "sequence": [1, 2, 1, 1], "raw_samples": [10, 10, 10, 10], "origem": "humano",
+                         "lap_time_s": 90.0})
+    frame = pd.concat([grid(i) for i in store_ids])
+    pd.concat([derived_frame(i) for i in ("A_vhe#0001", "A_vhe#0002", "2026-10-22_09-46-01_vhe#0001")]).to_parquet(root / "derivados.parquet")
+    grid("2026-10-22_09-46-01_vhe#0001").to_parquet(root / "fora_do_store.parquet")
+    (root / "fora_do_store.json").write_text(json.dumps({
+        "voltas": [{"lap_id": "2026-10-22_09-46-01_vhe#0001", "gravacao": "2026-10-22_09-46-01_vhe", "origem": "ia", "tempo_s": 85.0, "canais": []}],
+        "relatorio": {}}), encoding="utf-8")
+    periods = {g: {"inicio": f"2026-10-{d}T10:00:00", "duracao_s": 600}
+               for g, d in (("A_vhe", "20"), ("B_vhe", "30"), ("C_vhe", "21"))}
+    meta = {"aprovado": aprovado, "periodos_das_gravacoes": periods,
+            "sessoes_aceitas_com_margem": [{"sessao": "B_vhe"}], "margem_linha_do_jogo_ms": 2.0}
+    calls = []
+    stream = tmp_path / "stream.jsonl"
+    stream.write_text("x", encoding="utf-8")
+    monkeypatch.setattr(dados_mod, "store_v2_meta", lambda: meta)
+    monkeypatch.setattr(dados_mod, "load_store_v2", lambda track=None: SimpleNamespace(laps=laps, frame=frame))
+    monkeypatch.setattr(dados_mod, "store_selection", lambda df: df)
+    monkeypatch.setattr(dados_mod, "list_all_sessions", lambda: [
+        SimpleNamespace(session_id=s, player_stream=stream) for s in ("A_vhe", "B_vhe", "C_vhe", "2026-10-22_09-46-01_vhe")])
+
+    def fake_derived(session, sequences, track):
+        calls.append((session.session_id, dict(sequences)))
+        return {f"{session.session_id}#{q:04d}": derived_frame("x").drop(columns="lap_id") for q in sequences}
+
+    monkeypatch.setattr(dados_mod, "derived_for_session", fake_derived)
+    return root, calls
+
+
+def _snapshot(root):
+    return {p.name: (p.stat().st_size, p.stat().st_mtime_ns, p.read_bytes()) for p in root.iterdir() if p.is_file()}
+
+
+def test_carregar_le_os_caches_da_rodada1_e_grava_so_na_pasta_da_rodada(tmp_path, monkeypatch):
+    root, calls = _fake_world(tmp_path, monkeypatch)
+    before = _snapshot(root)
+    out = root / "rodada2"
+    data = dados_mod.carregar(None, saida=out, so_ids=["A_vhe#0001", "A_vhe#0002", "2026-10-22_09-46-01_vhe#0001"],
+                              mais_ids=["B_vhe#0001"], progress=lambda *_: None)
+    assert _snapshot(root) == before                       # nada da rodada 1 mudou
+    assert set(data.voltas) == {"A_vhe#0001", "A_vhe#0002", "2026-10-22_09-46-01_vhe#0001", "B_vhe#0001"}
+    assert calls == [("B_vhe", {1: 10})]                   # so a volta nova teve as taxas calculadas
+    own = pd.read_parquet(out / "derivados.parquet")
+    assert set(own["lap_id"]) == {"B_vhe#0001"}
+    assert data.escritos == [str(out / "derivados.parquet")]
+    assert data.voltas["B_vhe#0001"].com_margem and not data.voltas["A_vhe#0001"].com_margem
+    assert data.voltas["2026-10-22_09-46-01_vhe#0001"].fora_do_store and data.margem_s == pytest.approx(0.002)
+    # sem saida, nada e gravado
+    again = dados_mod.carregar(None, so_ids=["A_vhe#0001"], progress=lambda *_: None)
+    assert set(again.voltas) == {"A_vhe#0001"} and again.escritos == []
+    assert _snapshot(root) == before
+
+
+def test_carregar_para_sem_uma_volta_pedida_e_com_o_store_reprovado(tmp_path, monkeypatch):
+    root, _ = _fake_world(tmp_path, monkeypatch)
+    with pytest.raises(SystemExit, match="nao foram encontradas"):
+        dados_mod.carregar(None, so_ids=["A_vhe#0001", "Z_vhe#0009"], progress=lambda *_: None)
+    with pytest.raises(ValueError):
+        dados_mod.carregar(None, saida=root, so_ids=["A_vhe#0001"], progress=lambda *_: None)
+    other = tmp_path / "b"
+    other.mkdir()
+    _fake_world(other, monkeypatch, aprovado=False)
+    with pytest.raises(SystemExit, match="nao aprovado"):
+        dados_mod.carregar(None, saida=other / "ml" / "modelo2" / "r", so_ids=["A_vhe#0001"])
