@@ -569,3 +569,61 @@ Não muda. Uma passagem tem frenagem emendada quando a sequência de freio que d
 
     A tabela esperada, comportamento a comportamento, é registrada no roteiro (F.1), antes das sessões.
 - **Nenhum limiar muda por causa dos rótulos, da galeria ou das voltas de teste.** Uma falha vira proposta de emenda para uma rodada 3, registrada antes de rodar.
+
+---
+
+## 5. Rodada 3: a emenda da entrada (registrado em 18/11/2026, antes de rodar)
+
+Pedido 42, "Atualização de 18/11", item 1. A seção 4 não muda. A rodada 3 muda uma coisa só: o ponto de entrada, s_ti.
+
+### 5.1 Por que
+
+**O que a rodada 2 mostrou:** a regra da seção 4.2 ("não cortar na troca de sinal") une dois trechos de volante acima do limiar quando, no buraco entre eles, o volante passa para o outro lado além de 0,05·δ_pk.
+
+- **Onde falha:** nas curvas que vêm depois de outra curva para o mesmo lado (C01 depois da C14, C04 depois da C03, C07 depois da C06, C12 depois da C11 e C14 depois da C13).
+- **Por quê:** o volante passa levemente para o outro lado na reta entre as duas curvas, e a regra une o volante da curva anterior ao desta. Na C04, a entrada recuou 531 m na mediana.
+- **O efeito:** o E1, o F5, o E5, o E6 e a entrada do estilo dessas curvas ficaram contaminados.
+
+A emenda foi decidida pelo Eduardo em 18/11, depois de ver a rodada 2.
+
+### 5.2 A regra
+
+- **O limiar e a troca de sinal não mudam:** o volante no sentido da curva acima de 0,15·δ_pk, e a troca de sinal além de 0,05·δ_pk no buraco.
+- **A união só vale entre o fim da curva anterior, e_(k−1), e o ápice:**
+  - dois trechos só são unidos quando o buraco entre eles começa em e_(k−1) ou depois;
+  - quando a união acontece, a sequência unida começa no maior entre o começo do trecho anterior e e_(k−1);
+  - fora disso, a sequência é cortada como na rodada 1.
+- **Um trecho único,** sem buraco, que já começa antes de e_(k−1) (o volante não volta abaixo do limiar entre as duas curvas) continua como na rodada 1. Nada é unido aí.
+- **Na C01,** a curva anterior é a C14, no fim da volta, e a janela atravessa o s = 0. Vale a mesma definição que as fases já usam:
+  - a distância é medida para a frente, com o módulo do comprimento da volta (`fases.ahead` e `fases.window`);
+  - e_(k−1) é o fim geométrico da C14 (e_14), contado a partir do ápice da C14, que é o começo da janela da passagem.
+
+### 5.3 O que não muda
+
+- a retomada, a janela do E4 (desde b_k), o ranking sem peso;
+- a referência (a volta do modelo, e a `#0013` só como comparação);
+- a margem de ±2 ms e os 144 `lap_id`;
+- o E2 com a geometria do pedido 39;
+- as fases, o envelope e a calibração das 144 voltas.
+
+### 5.4 A família e a calibração
+
+- **Quem segue a regra nova:** todos os detectores e atributos que usam s_ti, a lista da seção 4.3:
+  - E1 (`s_ti_rel`, também no modelo leve) e F5;
+  - E5 e E6;
+  - a taxa de entrada, a `guinada_por_roda` e a `beta_entrada`.
+- **A calibração:** os detectores cujo indicador mudar são recalibrados pela mesma regra, nas mesmas passagens da IA, como na rodada 2.
+
+### 5.5 As saídas e o relato
+
+- **As saídas** vão para `data/ml/modelo2/rodada3/`. Nada da rodada 1 nem da rodada 2 é sobrescrito.
+- **O relato, ao lado da rodada 2:**
+  - o recuo da entrada por curva;
+  - nas 5 curvas, o E1, o F5, o E5, o E6 e o estilo da entrada;
+  - nas outras 9, a confirmação de que nada mudou, ou o que mudou e por quê;
+  - o modelo leve;
+  - os 3 maiores erros por sessão;
+  - o fechamento das fases.
+- **Se a rodada 3 mostrar outro defeito,** nada muda depois de ver os números: ele é relatado e vira proposta.
+- **A precisão (E.2)** sai para as três rodadas, com os mesmos rótulos. O kit 2 não muda.
+- **O M7 na IA** fica registrado como limitação: ele dá "aplica" em 9 das 14 curvas na rodada 2, porque o volante da IA continua crescendo depois da retomada. Nada muda nele agora.
