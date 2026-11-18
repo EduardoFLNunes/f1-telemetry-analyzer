@@ -5,7 +5,9 @@
   - A rodada aprovou o store, com as 3 sessões aceitas com margem: +1,980, +1,643 e +1,590 ms.
   - O relatório de evolução foi refeito contra a volta do modelo.
   - O pedido 42 pode retomar.
-  - **A Parte B (a causa) está em andamento:** as hipóteses já estão registradas, e as contas vêm a seguir.
+  - **A Parte B está feita.** A causa provável é o CSP 0.3.1, instalado em 31/10 às 19:52: a linha do jogo andou +0,11 m em todas as sessões depois dele.
+    - Não está confirmada, porque a versão do app mudou no mesmo dia.
+    - A confirmação e a correção são decisão sua (B.4).
   - A parada antes da rodada (A.5) está registrada abaixo, como foi escrita.
 - **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47`.
 - **Branch:** `etapa/trava-do-store-v2`, a partir de `develop` em `14fe1ca0`.
@@ -15,7 +17,11 @@
   - o commit do código, dos testes e deste relatório (o hash está no chat e na seção "O envio").
 - **Arquivos de handoff:**
   - `docs/handoff/2026-11-17_54_trava-do-store-v2_relatorio.md` (este);
-  - `docs/handoff/2026-11-17_54_trava-do-store-v2_testes.txt` (a suíte do backend).
+  - `docs/handoff/2026-11-17_54_trava-do-store-v2_testes.txt` (a suíte do backend);
+  - `docs/handoff/2026-11-17_54_trava-do-store-v2_parteb_sessoes.csv` (B.1, uma linha por sessão);
+  - `docs/handoff/2026-11-17_54_trava-do-store-v2_parteb_voltas.csv` (B.1, uma linha por volta);
+  - `docs/handoff/2026-11-17_54_trava-do-store-v2_parteb_amostras.txt` (B.3, as amostras na passagem pela linha);
+  - `docs/handoff/2026-11-17_54_trava-do-store-v2_scripts/` (os três scripts da Parte B, só leitura).
 
 ## Parte 0: a pasta e os dados
 
@@ -261,6 +267,134 @@ Escritas antes de qualquer conta da Parte B, enquanto o passo 6 da rodada rodava
    - **Descartaria:** todas as sessões, as que passam e as que reprovam, estão no mesmo `geometry_id` (`0ed16f0dd2225990`), e o arquivo não mudou.
 5. **Outra que os dados mostrarem.** Por exemplo, o FPS ou a taxa de amostragem, o carro, ou a IA contra o piloto. O critério é o mesmo: a mudança tem de acompanhar a variável, e o discriminador diz se ela é de espaço ou de tempo.
 
+## Parte B: a medida, as evidências e a conclusão (18/11)
+
+**Como foi medida:**
+- é a mesma medida do store (`game_line_position` e `line_speeds`, na volta limpa e alinhada à geometria `0ed16f0dd2225990`), feita nas primeiras 240 amostras de cada volta crua, o que cobre a passagem do começo;
+- foram **todas as 171 sessões de Interlagos** das duas pastas, de 01/06 a 16/11, a cópia da pista incluída. Isso deu 1.221 voltas com a linha medida;
+- as gravações só foram lidas;
+- com o `acs.exe` fechado.
+
+**Os arquivos:**
+- `_parteb_voltas.csv`: uma linha por volta;
+- `_parteb_sessoes.csv`: uma linha por sessão;
+- `_parteb_amostras.txt`;
+- `_scripts\`: os três scripts.
+
+**Esta medida não é a do store.** Ela inclui as voltas que o store não usa (inválidas e com box), e por isso as medianas diferem um pouco das do store. Na sessão de 01/11, por exemplo, ela dá 1,590 m em 13 voltas, contra 1,606 m em 6 no store.
+
+### B.1, a tabela por sessão (as sessões depois de 15/10 com pelo menos 3 voltas medidas; a tabela inteira está no CSV)
+
+| sessão | pasta | pista | app | empacotado | voltas (IA) | mediana | desvio | v na linha | atraso equivalente |
+|---|---|---|---|---|---|---:|---:|---:|---:|
+| `2026-10-15_23-24-50` | repositório | original | 0.3.0 | não | 19 (0) | 1,448 m | 0,054 | 263 km/h | −0,20 ms |
+| `2026-10-17_01-02-22` | repositório | original | 0.3.0 | não | 18 (0) | 1,462 m | 0,077 | 264 km/h | −0,01 ms |
+| `2026-10-17_16-17-08` | instalado | original | 0.4.0 | sim | 21 (0) | 1,460 m | 0,057 | 257 km/h | −0,05 ms |
+| `2026-10-18_12-38-44` | repositório | original | 0.4.0 | não | 15 (0) | 1,490 m | 0,060 | 255 km/h | 0,38 ms |
+| `2026-10-21_20-30-54` | repositório | original | 0.4.0 | não | 19 (0) | 1,494 m | 0,054 | 265 km/h | 0,41 ms |
+| `2026-10-24_13-26-12` | repositório | original | 0.4.0 | não | 5 (0) | 1,450 m | 0,054 | 260 km/h | −0,18 ms |
+| **`2026-10-24_13-43-32`** (a última que passa) | repositório | original | 0.4.0 | não | 11 (0) | 1,499 m | 0,060 | 262 km/h | 0,50 ms |
+| *31/10, 19:52: o CSP 0.3.1 instalado* | | | | | | | | | |
+| **`2026-11-01_19-47-03`** (a primeira que reprova) | repositório | original | 0.5.0 | não | 13 (0) | 1,590 m | 0,048 | 257 km/h | 1,76 ms |
+| `2026-11-07_18-46-00` | repositório | original | 0.7.0 | não | 8 (0) | 1,614 m | 0,070 | 259 km/h | 2,10 ms |
+| `2026-11-07_19-52-33` | instalado | original | 0.7.0 | sim | 3 (0) | 1,627 m | 0,003 | 260 km/h | 2,27 ms |
+| `2026-11-09_08-59-24` | instalado | cópia | 0.7.0 | sim | 9 (9) | 1,600 m | 0,014 | 268 km/h | 1,84 ms |
+| `2026-11-09_09-15-20` | instalado | cópia | 0.7.0 | sim | 11 (11) | 1,618 m | 0,016 | 250 km/h | 2,22 ms |
+| `2026-11-09_10-00-41` | instalado | cópia | 0.7.0 | sim | 11 (11) | 1,601 m | 0,015 | 267 km/h | 1,86 ms |
+| `2026-11-09_11-19-46` | instalado | cópia | 0.7.0 | sim | 11 (11) | 1,587 m | 0,020 | 249 km/h | 1,79 ms |
+| `2026-11-09_14-32-22` | instalado | cópia | 0.7.0 | sim | 3 (3) | 1,624 m | 0,041 | 265 km/h | 2,18 ms |
+| `2026-11-09_14-37-38` | instalado | cópia | 0.7.0 | sim | 10 (10) | 1,601 m | 0,040 | 266 km/h | 1,88 ms |
+| `2026-11-09_15-01-32` | instalado | cópia | 0.7.0 | sim | 10 (10) | 1,593 m | 0,029 | 267 km/h | 1,75 ms |
+| `2026-11-12_22-57-03` | repositório | original | 0.7.0 | não | 8 (0) | 1,594 m | 0,024 | 261 km/h | 1,81 ms |
+| `2026-11-14_19-01-15` | instalado | cópia | 0.7.0 | sim | 8 (8) | 1,603 m | 0,022 | 273 km/h | 1,84 ms |
+| `2026-11-14_22-52-59` | instalado | cópia | 0.7.0 | sim | 9 (9) | 1,605 m | 0,022 | 272 km/h | 1,89 ms |
+| `2026-11-15_02-29-50` | instalado | cópia | 0.7.0 | sim | 9 (9) | 1,574 m | 0,020 | 273 km/h | 1,46 ms |
+| `2026-11-15_02-47-12` | instalado | cópia | 0.7.0 | sim | 9 (9) | 1,594 m | 0,023 | 273 km/h | 1,72 ms |
+| `2026-11-15_03-01-09` | instalado | cópia | 0.7.0 | sim | 9 (9) | 1,625 m | 0,026 | 273 km/h | 2,13 ms |
+
+- **Notas da tabela:**
+  - o "atraso equivalente" é a mediana, volta a volta, de (linha − 1,463 m) / v;
+  - "voltas (IA)" conta as voltas com `isAIControlled` em todas as amostras da cabeça da volta;
+  - as gravações de junho a setembro não guardam a versão do app (é o campo vazio no CSV);
+  - **a versão do CSP e a do jogo não estão em nenhuma gravação.**
+- **Por grupo:**
+
+  | grupo | voltas | sessões | mediana | desvio |
+  |---|---:|---:|---:|---:|
+  | antes do CSP 0.3.1, tudo | 1.080 | 75 | 1,494 m | — |
+  | antes, as voltas da IA | 22 | — | 1,488 m | 0,069 |
+  | depois, o piloto, na pista original | 32 | — | 1,600 m | 0,050 |
+  | depois, a IA, na cópia | 109 | — | 1,601 m | 0,026 |
+  | depois, o app instalado (empacotado) | 112 | 13 | 1,605 m | — |
+  | depois, o app do repositório | 29 | 3 | 1,594 m | — |
+  | depois, o app 0.5.0 | 13 | 1 | 1,590 m | — |
+  | depois, o app 0.7.0 | 128 | 15 | 1,601 m | — |
+
+  **O deslocamento é de +0,108 m** (1,494 → 1,601 m), cerca de 1,46 ms a 265 km/h.
+- **A sessão `2026-11-07_19-52-33`** (2 voltas no store) mede 1,627 m em 3 voltas na cabeça crua. Ela não aparece entre as reprovadas porque, no store, tem menos de 3 voltas medidas, e a checagem não dá veredito com menos de 3.
+- **Antes do CSP, uma sessão já saiu da tolerância na cabeça crua:** `2026-08-08_16-52-13`, com 1,575 m em 4 voltas. É o ruído de uma sessão curta. Ela não reprovou o store.
+
+### B.3, as evidências
+
+1. **A data exata:**
+   - a última sessão que passa é a `2026-10-24_13-43-32`, de 24/10;
+   - o CSP 0.3.1, build 4302, foi instalado em 31/10 às 19:52. As datas vêm do `extension\installed.log` e do `dwrite.dll`, só lidos;
+   - a primeira sessão que reprova é a `2026-11-01_19-47-03`. **É a primeira sessão gravada depois da instalação.**
+   - **Depois dela, todas as 16 sessões ficam fora da tolerância, e nenhuma antes de 31/10 tem esse deslocamento em grupo.**
+2. **As amostras em volta da passagem** (`_parteb_amostras.txt`; 24/10 contra 12/11):
+   - nas duas sessões, o cronômetro zera na mesma amostra em que o carro passa a linha. O contador de voltas às vezes troca uma amostra depois do cronômetro, e isso acontece nas duas;
+   - a cadência das amostras é a mesma (cerca de 15,6 ms, com buracos de cerca de 31 ms);
+   - a de 12/11 tem uma amostra repetida (o mesmo cronômetro e a mesma posição), mas a de 24/10 também tem buracos;
+   - **a diferença está só no valor:** na primeira amostra depois do zero, `s − v × cronômetro` dá 1,36 e 1,43 m em 24/10, e 1,55 e 1,59 m em 12/11. O gravador e o corte em voltas se comportam igual.
+3. **O código do gravador entre o 0.4.0 e o 0.5.0** (`git diff 3b192d61 b85638dd`):
+   - o `recording_runtime.py` só mudou a detecção do reinício da sessão (quando abrir um arquivo novo). A leitura do cronômetro, da posição e do instante da amostra não mudou;
+   - o `track_geometry_provider.py` ganhou uma chave de origem para refazer o cache da pista do app. Mas a medida do ML não usa esse cache: ela alinha a posição no mundo à geometria do ML (`0ed16f0dd2225990`), a mesma em todas as sessões.
+4. **As sessões da cópia** (a IA, 109 voltas depois do CSP):
+   - mostram o mesmo deslocamento que as suas na pista original (1,601 contra 1,600 m), com metade do desvio;
+   - **não é o piloto nem a pista:** a cópia tem os mesmos arquivos da original, com só a linha da IA trocada.
+5. **O app instalado contra o do repositório:**
+   - depois do CSP, os dois deslocam igual (1,605 e 1,594 m);
+   - antes, também eram iguais (1,497 e 1,487 m).
+6. **A pista e o jogo:**
+   - os arquivos da pista (fora do `data.acd`, que não foi aberto) são de maio;
+   - o `acs.exe` é de maio de 2025;
+   - nada mudou perto de 01/11.
+7. **O discriminador (espaço ou tempo): não conclusivo.**
+   - Quase todas as passagens ficam entre 250 e 275 km/h. Nessa faixa, um atraso constante de 1,5 ms dá 0,104 m a 250 km/h e 0,115 m a 275 km/h, uma diferença de 0,011 m, abaixo do ruído (desvio de 0,02 a 0,07 m por sessão).
+   - Por faixa de velocidade, o deslocamento é de +0,086 m (230 a 250 km/h), +0,132 m (250 a 265 km/h) e +0,105 m (acima de 265 km/h). As faixas lentas têm poucas voltas.
+
+### B.2, as hipóteses contra as evidências
+
+| hipótese | resultado | por quê |
+|---|---|---|
+| 1. o CSP 0.3.1 | **a causa provável** | a mudança começa na primeira sessão depois da instalação e vale para tudo: os dois apps, as duas pastas, as duas pistas, o piloto e a IA |
+| 2. o gravador do app 0.5.0 em diante | **improvável, não descartada** | o código que lê o cronômetro e a posição não mudou entre o 0.4.0 e o 0.5.0. Mas **o 0.5.0 é de 01/11 às 17:47, depois da instalação do CSP:** nenhuma sessão foi gravada com app novo e CSP velho, nem com app velho e CSP novo. Os dados não separam os dois |
+| 3. uma atualização do jogo ou da pista | **descartada** | nenhum arquivo da pista ou do jogo mudou desde maio |
+| 4. a geometria oficial ou o cache da pista | **descartada** | uma geometria só (`0ed16f0dd2225990`) em todas as sessões, e a medida não usa o cache da pista do app |
+| 5. outra | nenhuma achada | a IA contra o piloto e o app instalado contra o do repositório não mudam o deslocamento |
+
+### B.4, a conclusão
+
+- **A causa provável é o CSP 0.3.1.** Ele mudou o ponto em que o cronômetro do jogo zera, em cerca de +0,11 m (cerca de 1,5 ms à velocidade da reta), a partir de 31/10.
+- **Não está confirmada:** a versão do app mudou no mesmo dia, e os dados não separam as duas. O código do gravador aponta para o CSP.
+- **Para confirmar** (decisão sua), basta uma das duas:
+  - **uma sessão curta com o app atual e o CSP de antes** (ou desligado), de 5 voltas. Se a linha voltar para cerca de 1,49 m, é o CSP;
+  - **uma sessão curta com o app 0.4.0 e o CSP 0.3.1.** Se a linha ficar em cerca de 1,60 m, é o CSP.
+
+**As correções possíveis (a decisão é sua; nada mudou além da Parte A):**
+
+1. **Manter a margem de 2,0 ms.**
+   - Não custa nada agora.
+   - **O risco:** o deslocamento vale cerca de 1,5 a 2,3 ms por sessão, e o efeito cresce quando a passagem é mais lenta. Na cópia, as sessões a 250 km/h dão 2,2 ms (`2026-11-09_09-15-20`), e a `2026-11-15_03-01-09` dá 2,13 ms a 273 km/h.
+   - **Uma sessão sua nova, com a mesma diferença e uma passagem um pouco mais lenta, passa de 2,0 ms e reprova o store de novo.** A de 01/11 já ficou a 0,020 ms do limite.
+2. **Uma nova medida dos 1,463 m, por regime.**
+   - Seria registrar a linha depois do CSP 0.3.1 (cerca de 1,60 m, das 141 voltas de 01/11 a 16/11) como um segundo valor, a partir de 31/10, com a mesma tolerância de 0,10 m.
+   - **É a correção mais fiel se o CSP for confirmado:** a linha do jogo mudou de lugar, e a checagem continua conferindo que ela fica onde foi medida.
+   - A checagem do período já usa a linha medida nas próprias voltas, e por isso não muda.
+3. **Uma correção no gravador:** **não proposta.** Nada indica que o gravador esteja errado. Ele grava o que o jogo publica.
+
+**O que eu recomendaria:** confirmar com uma das duas sessões curtas e, se for o CSP, a opção 2.
+
 ## Testes
 
 - **A suíte do backend:** `1053 passed, 37 warnings in 556.88s`, sem nenhuma falha. A saída inteira está em `_testes.txt`.
@@ -279,17 +413,14 @@ Escritas antes de qualquer conta da Parte B, enquanto o passo 6 da rodada rodava
 - **Só a branch do pedido vai,** como branch nova e sem `--force`. `develop`, `main` e as tags não vão antes do merge.
 - **O hash local e o remoto** estão no chat, conferidos com `git ls-remote origin`.
 
-## O que falta (depois do seu sinal)
+## O que falta
 
-1. **A rodada (A.6),** como descrita em A.5.
-2. **O antes e o depois (A.7).**
-3. **O merge da Parte A em `develop` (A.8):**
-   - trazer `develop` para a branch, com merge;
-   - enviar;
-   - voltar a pasta para a branch do pedido;
-   - avisar que o pedido 42 pode retomar.
-4. **A Parte B,** só análise.
+Escrito na parada da A.5. As duas decisões de então já foram tomadas: o sinal para a rodada e a linha no ADR 0007. A rodada, o merge e a Parte B estão feitos (veja acima).
 
-**Precisa de você:**
-- **o sinal para a rodada,** confirmando que o teste do pedido 52 no jogo não está acontecendo;
-- **a linha de atualização no ADR:** onde pôr, já que nenhum ADR registra as checagens do store v2 (veja A.1).
+**O pedido está concluído.** As decisões que ficam com você, todas da Parte B (B.4):
+- confirmar a causa com uma sessão curta: o app atual com o CSP de antes, ou o app 0.4.0 com o CSP 0.3.1;
+- escolher a correção: manter a margem de 2,0 ms, ou registrar uma nova medida da linha a partir de 31/10.
+
+**O risco de manter só a margem:** uma sessão nova com passagem mais lenta pela linha pode passar de 2,0 ms e reprovar o store de novo.
+
+**O backup** `data\ml\_backup_antes_pedido54\` (cerca de 400 MB) fica até você decidir apagar.
