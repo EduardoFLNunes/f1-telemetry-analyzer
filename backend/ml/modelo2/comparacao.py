@@ -219,6 +219,7 @@ def comparar_r3(r1_refeita: Path, r2_dir: Path, r3_dir: Path) -> Dict[str, objec
         m = a.merge(b, on=["curva", "quem"], how="outer", suffixes=("_r2", "_r3"))
         return json.loads(m.sort_values(["curva", "quem"]).to_json(orient="records"))
     out["cinco_curvas"] = {d: [r for r in side(d) if r["curva"][:3] in AFFECTED] for d in ENTRY_DETECTORS}
+    out["por_curva"] = {d: side(d) for d in ENTRY_DETECTORS + ("E4",)}
     medidas = []
     for curva in sorted({c for _, c in both if c[:3] in AFFECTED}):
         idx = [i for i in both if i[1] == curva]

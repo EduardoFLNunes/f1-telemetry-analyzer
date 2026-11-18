@@ -410,7 +410,8 @@ def run(saida: str, handoff_prefix: str = None, rodada: int = 1) -> Dict[str, ob
         "pedido": ("docs/prompts/2026-10-24_38_modelo2-erro-tecnica-e-estilo.md" if rodada < 2 else
                    "docs/prompts/2026-10-29_42_modelo2-rodada-2.md"),
         "rodada": rodada, "regras": {1: "secoes 1 e 2", 2: "secao 4 (pedido 42, Parte A)",
-                                     3: "secao 4 com a emenda da entrada da secao 5 (pedido 42, 18/11)"}[rodada],
+                                     3: "secao 4 com a emenda da entrada da secao 5 (pedido 42, 18/11)",
+                                     4: "secao 4 com a entrada da secao 6 (pedido 42, 18/11 a tarde)"}[rodada],
         "commit": commit, "geometry_id": track.geometry_id, "geometria_source_hash": track.source_hash,
         "store_v2": {"commit": data.store_meta.get("commit"), "construido_em": data.store_meta.get("construido_em")},
         "ambiente": {"python": platform.python_version(), "numpy": np.__version__, "pandas": pd.__version__},
@@ -456,7 +457,8 @@ def main(argv=None) -> int:
     parser.add_argument("comando", choices=["todos", "rotulos", "conferir", "comparar", "comparar3"])
     parser.add_argument("--handoff", default=None)
     parser.add_argument("--saida", default=None, help="pasta da rodada dentro de data/ml/modelo2/ (pedido 42)")
-    parser.add_argument("--rodada", type=int, choices=[1, 2, 3], default=1)
+    parser.add_argument("--rodada", type=int, choices=[1, 2, 3, 4], default=1)
+    parser.add_argument("--anterior", default="rodada2", help="comparar3: a pasta da rodada anterior")
     parser.add_argument("--rodada1", default=None, help="comparar: a pasta da rodada 1 refeita")
     parser.add_argument("--rotulos", type=Path, default=None)
     args = parser.parse_args(argv)
@@ -470,11 +472,14 @@ def main(argv=None) -> int:
         print(json.dumps(_clean(out), indent=1, ensure_ascii=False))
         return 0 if out["reproduz"] else 3
     if args.comando == "comparar3":
-        out = comparacao.comparar_r3(pasta_da_rodada(args.rodada1 or "rodada1_refeita"), pasta_da_rodada("rodada2"),
-                                     pasta_da_rodada(args.saida or "rodada3"))
-        write(pasta_da_rodada(args.saida or "rodada3") / "comparacao_com_a_rodada2.json", out)
+        new = args.saida or "rodada3"
+        out = comparacao.comparar_r3(pasta_da_rodada(args.rodada1 or "rodada1_refeita"), pasta_da_rodada(args.anterior),
+                                     pasta_da_rodada(new))
+        out = {"anterior": args.anterior, "nova": new,
+               "nota": "nas chaves, r2 e a rodada anterior e r3 e a nova", **out}
+        write(pasta_da_rodada(new) / f"comparacao_com_a_{args.anterior}.json", out)
         if args.handoff:
-            write(BACKEND.parent / f"{args.handoff}_comparacao_rodada3.json", out)
+            write(BACKEND.parent / f"{args.handoff}_comparacao_{new}.json", out)
         print("ok")
         return 0
     if args.comando == "comparar":

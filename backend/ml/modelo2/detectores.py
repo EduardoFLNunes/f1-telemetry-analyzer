@@ -311,7 +311,8 @@ def measure_passage(lap: Lap, track: TrackGeometry, cp: CornerPhases, previous: 
                     geometria: Tuple[float, float] = GEOMETRIA_SUBSTITUTA) -> Dict[str, object]:
     """Eventos e indicadores de uma passagem (1.4 e 1.5), sem estado.
 
-    `rodada=3` aplica tambem a emenda da entrada da secao 5.2.
+    `rodada=3` aplica tambem a emenda da entrada da secao 5.2, e `rodada=4` a da secao 6.2 (a uniao so
+    desde b_k).
     `rodada=2` aplica as emendas da secao 4.2 (a retomada, a entrada e a janela
     do E4). `geometria` e (L, k_delta) do E2 e da resposta na entrada: a
     substituta da secao 1.2 ou a medida do pedido 39 (Parte C do pedido 42).
@@ -352,7 +353,8 @@ def measure_passage(lap: Lap, track: TrackGeometry, cp: CornerPhases, previous: 
     out["pico_freio"] = b_pk if ib is not None else None
     iti = None
     if into is not None and np.isfinite(d_pk) and d_pk > 0:
-        iti = turn_in_index(into, d_pk, apex, rodada, previous_end=o["e_prev"])
+        # Rodada 3 (secao 5.2): a uniao so desde e_(k-1); rodada 4 (secao 6.2): so desde b_k.
+        iti = turn_in_index(into, d_pk, apex, rodada, previous_end=o["b"] if rodada >= 4 else o["e_prev"])
     out["s_ti_rel"] = None if iti is None else (iti - a) * step
     ivmin = a + int(np.nanargmin(speed[a:e + 1])) if speed is not None else None
     out["s_vmin_rel"] = None if ivmin is None else (ivmin - a) * step

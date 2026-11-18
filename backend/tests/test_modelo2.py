@@ -704,3 +704,55 @@ def test_turn_in_index_rodada3_so_une_depois_do_fim_da_curva_anterior():
     # um trecho que comeca antes de e_(k-1) nunca e unido, mesmo que acabe depois dele
     assert turn_in_index(into, 1.0, apex, rodada=3, previous_end=5) == 25
     assert turn_in_index(into, 1.0, apex, rodada=3, previous_end=0) == 0
+
+
+# ------------------------------- pedido 42, rodada 4: a entrada a partir de b_k ---
+
+def _braking_after_straight(phases):
+    """Uma curva com frenagem e pelo menos 50 m de reta entre o fim da anterior e b_k, sem atravessar o s = 0."""
+    from ml.modelo2.fases import ahead
+    for cp in phases:
+        prev = phases[cp.k - 1]
+        if not cp.sem_frenagem and prev.e < cp.b < cp.a < cp.apice and ahead(TRACK, prev.e, cp.b) >= 50.0:
+            return prev, cp
+    raise AssertionError("sem curva com reta antes da frenagem")
+
+
+def test_rodada4_a_correcao_na_reta_antes_de_b_nao_vira_a_entrada(phases):
+    prev, cp = _braking_after_straight(phases)
+    sign, b, a = cp.direcao, cp.b, cp.a
+
+    def steer(s):
+        turn = -0.3 * sign * np.clip((s - (a - 5.0)) / 15.0, 0.0, 1.0) * np.clip((cp.e + 20.0 - s) / 20.0, 0.0, 1.0)
+        correction = np.where((s >= b - 40.0) & (s < b - 30.0), -0.3 * sign, 0.0)      # para dentro, na reta
+        back = np.where((s >= b - 25.0) & (s < b - 20.0), 0.1 * sign, 0.0)              # e para o outro lado
+        return turn + correction + back
+
+    lap = synthetic_lap("r4#0001", channels={"steer_angle": steer, "yaw_rate": lambda s: np.full_like(s, 0.3 * sign),
+                                             "lateral_g": lambda s: np.full_like(s, 1.0 * sign),
+                                             "brake": bump(b + 20.0, 15.0, 0.8)})
+    env = lambda v: np.full_like(np.asarray(v, dtype=float), 3.0)
+    r3 = measure_passage(lap, TRACK, cp, phases[cp.k - 1], env, rodada=3)
+    r4 = measure_passage(lap, TRACK, cp, phases[cp.k - 1], env, rodada=4)
+    assert r3["s_ti_rel"] <= (b - a) - 25.0        # rodada 3: a correcao na reta vira a entrada
+    assert -10.0 <= r4["s_ti_rel"] <= 5.0           # rodada 4: a entrada da curva
+
+
+def test_rodada4_o_contraesterco_depois_de_b_continua_unido_e_visto(phases):
+    cp = _longest_entry(phases)
+    a, apex, sign = cp.a, cp.apice, cp.direcao
+    c0, c1 = a + 0.35 * (apex - a), a + 0.35 * (apex - a) + 12.0
+
+    def steer(s):
+        normal = -0.3 * sign * np.clip((s - (a - 20.0)) / 15.0, 0.0, 1.0) * np.clip((cp.e - s) / 20.0, 0.0, 1.0)
+        return np.where((s >= c0) & (s < c1), 0.1 * sign, normal)
+
+    lap = synthetic_lap("r4#0002", channels={"steer_angle": steer, "yaw_rate": lambda s: np.full_like(s, 0.3 * sign),
+                                             "lateral_g": lambda s: np.full_like(s, 1.0 * sign),
+                                             "brake": bump(a - 60.0, 30.0, 0.8)})
+    env = lambda v: np.full_like(np.asarray(v, dtype=float), 3.0)
+    r1 = measure_passage(lap, TRACK, cp, phases[cp.k - 1], env, rodada=1)
+    r4 = measure_passage(lap, TRACK, cp, phases[cp.k - 1], env, rodada=4)
+    assert r4["s_ti_rel"] < r1["s_ti_rel"]          # o contraesterco nao corta a entrada
+    assert r4["contra_s"] >= 0.10 and r4["contra_antes_apice_s"] >= 0.10
+    assert state_of("E4", r4, corner_refs([]))[0] == APLICA
