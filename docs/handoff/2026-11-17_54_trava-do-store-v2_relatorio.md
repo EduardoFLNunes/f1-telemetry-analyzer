@@ -127,6 +127,31 @@ Os testes da checagem que já existiam (`test_regua_do_periodo.py`, `test_store_
 
 **O que eu não sei antes de rodar:** se as 3 sessões entram. A regra decide pela medida. Se alguma ficar acima de 2,0 ms, o store continua com `aprovado: false`, o passo 7 não roda, e eu paro e aviso.
 
+## Parte B: as hipóteses, registradas antes das contas (17/11, 21:20)
+
+Escritas antes de qualquer conta da Parte B, enquanto o passo 6 da rodada rodava. Para cada uma, o que a confirmaria e o que a descartaria.
+
+**Um discriminador que serve para todas:**
+- se a linha se moveu no espaço (a geometria, o cache ou a pista), a diferença é **constante em metros**, qualquer que seja a velocidade na linha;
+- se o que mudou foi o tempo (um atraso entre a posição e o cronômetro na amostra), a diferença **cresce com a velocidade**, e o que fica constante é o atraso em ms. A medida da linha é `s − v × cronômetro`, então um atraso Δt soma `v × Δt` à posição.
+
+1. **O CSP 0.3.1 (chegou em 01/11).**
+   - **Confirmaria:** a mudança começa na primeira sessão depois da instalação do CSP, em qualquer app (o instalado e o do repositório, de qualquer versão) e em qualquer pista (a original e a cópia). Ela aparece como um atraso constante em ms.
+   - **Descartaria:** sessões depois da instalação do CSP que passam, ou uma mudança que começa antes dela.
+2. **O gravador do app 0.5.0 em diante** (onde ele lê a troca de volta ou o instante da amostra).
+   - **Confirmaria:**
+     - a mudança acompanha a versão do app, e não a data;
+     - sessões gravadas no mesmo período por um app 0.4.x passam;
+     - o `git diff` do gravador entre o 0.4.x e o 0.5.0 mexe na leitura do cronômetro, da posição ou do instante da amostra.
+   - **Descartaria:** sessões gravadas pelo 0.5.0 ou depois que passam, ou um gravador sem mudança nesses pontos.
+3. **Uma atualização do jogo ou da pista.**
+   - **Confirmaria:** os arquivos da pista ou do jogo mudaram perto de 01/11, com a data e o tamanho dos arquivos só lidos; e a diferença é constante em metros.
+   - **Descartaria:** nenhum arquivo da pista ou do jogo mudou no período.
+4. **A geometria oficial ou o cache da pista.**
+   - **Confirmaria:** o `geometry_id` ou o arquivo da geometria mudou, ou o s = 0 se moveu; e a diferença é constante em metros.
+   - **Descartaria:** todas as sessões, as que passam e as que reprovam, estão no mesmo `geometry_id` (`0ed16f0dd2225990`), e o arquivo não mudou.
+5. **Outra que os dados mostrarem.** Por exemplo, o FPS ou a taxa de amostragem, o carro, ou a IA contra o piloto. O critério é o mesmo: a mudança tem de acompanhar a variável, e o discriminador diz se ela é de espaço ou de tempo.
+
 ## Testes
 
 - **A suíte do backend:** `1053 passed, 37 warnings in 556.88s`, sem nenhuma falha. A saída inteira está em `_testes.txt`.
