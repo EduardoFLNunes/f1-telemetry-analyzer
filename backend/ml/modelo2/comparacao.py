@@ -182,3 +182,79 @@ def comparar(r1_dir: Path, r1_refeita: Path, r2_dir: Path) -> Dict[str, object]:
                                 "tres_maiores_por_sessao": _top3(after),
                                 "sessao_com_margem": {s["sessao"]: s.get("sessao_com_margem") for s in after["sessoes"]}}
     return out
+
+
+AFFECTED = ("C01", "C04", "C07", "C12", "C14")
+ENTRY_DETECTORS = ("E1", "F5", "E5", "E6")
+ENTRY_MEASURES = ("s_ti_rel", "taxa_entrada", "guinada_por_roda", "beta_entrada")
+
+
+def comparar_r3(r1_refeita: Path, r2_dir: Path, r3_dir: Path) -> Dict[str, object]:
+    """A rodada 3 (a emenda da entrada, secao 5) ao lado da rodada 2."""
+    s2, s3 = _estados(r2_dir), _estados(r3_dir)
+    p1 = pd.read_parquet(r1_refeita / "passagens.parquet").set_index(["lap_id", "curva"])
+    p2 = pd.read_parquet(r2_dir / "passagens.parquet").set_index(["lap_id", "curva"])
+    p3 = pd.read_parquet(r3_dir / "passagens.parquet").set_index(["lap_id", "curva"])
+    both = p1.index.intersection(p2.index).intersection(p3.index)
+    out: Dict[str, object] = {}
+
+    rows = []
+    for curva in sorted({c for _, c in both}):
+        idx = [i for i in both if i[1] == curva]
+        d2 = (p2.loc[idx, "s_ti_rel"] - p1.loc[idx, "s_ti_rel"]).dropna()
+        d3 = (p3.loc[idx, "s_ti_rel"] - p1.loc[idx, "s_ti_rel"]).dropna()
+        d32 = (p3.loc[idx, "s_ti_rel"] - p2.loc[idx, "s_ti_rel"]).dropna()
+
+        def q(x, p):
+            return None if x.empty else round(float(x.quantile(p)), 1)
+        rows.append({"curva": curva, "passagens": len(idx),
+                     "recuo_r2_mediana_m": q(d2, 0.5), "recuo_r2_p10_m": q(d2, 0.1), "recuo_r2_p90_m": q(d2, 0.9),
+                     "recuo_r3_mediana_m": q(d3, 0.5), "recuo_r3_p10_m": q(d3, 0.1), "recuo_r3_p90_m": q(d3, 0.9),
+                     "mudaram_de_r2_para_r3": int((d32.abs() > 1e-9).sum()),
+                     "voltaram_a_rodada1": int(((d3.abs() <= 1e-9) & (d2.abs() > 1e-9)).sum())})
+    out["recuo_da_entrada"] = rows
+
+    def side(det):
+        a, b = _fractions(s2, det), _fractions(s3, det)
+        m = a.merge(b, on=["curva", "quem"], how="outer", suffixes=("_r2", "_r3"))
+        return json.loads(m.sort_values(["curva", "quem"]).to_json(orient="records"))
+    out["cinco_curvas"] = {d: [r for r in side(d) if r["curva"][:3] in AFFECTED] for d in ENTRY_DETECTORS}
+    medidas = []
+    for curva in sorted({c for _, c in both if c[:3] in AFFECTED}):
+        idx = [i for i in both if i[1] == curva]
+        row = {"curva": curva}
+        for m in ENTRY_MEASURES[1:]:
+            for tag, frame in (("r2", p2), ("r3", p3)):
+                v = frame.loc[idx, m].dropna() if m in frame else pd.Series(dtype=float)
+                row[f"{m}_{tag}"] = None if v.empty else round(float(v.median()), 4)
+        medidas.append(row)
+    out["cinco_curvas_medidas_da_entrada"] = medidas
+
+    m = s2.merge(s3, on=["lap_id", "curva", "detector"], suffixes=("_r2", "_r3"))
+    m["code"] = m["curva"].str[:3]
+    changed = m[m["estado_r2"] != m["estado_r3"]]
+    out["estados_que_mudaram"] = {
+        "cinco_curvas": changed[changed["code"].isin(AFFECTED)].groupby("detector").size().to_dict(),
+        "outras_nove": changed[~changed["code"].isin(AFFECTED)].groupby(["curva", "detector"]).size().reset_index(name="n").to_dict("records"),
+        "total": int(len(changed))}
+    other = [r for r in rows if r["curva"][:3] not in AFFECTED]
+    out["outras_nove_entrada_mudou"] = [{"curva": r["curva"], "mudaram_de_r2_para_r3": r["mudaram_de_r2_para_r3"]}
+                                        for r in other if r["mudaram_de_r2_para_r3"]]
+
+    def dims(folder):
+        e = _json(folder / "estilo.json")["total"]
+        return {(x["tipo"], x["quem"]): {d: {k: v.get("z") for k, v in x["dimensoes"].get(d, {}).items()}
+                                         for d in ("resposta_na_entrada", "aplicacao_do_volante")} for x in e}
+    e2, e3 = dims(r2_dir), dims(r3_dir)
+    out["estilo_da_entrada"] = [{"tipo": k[0], "quem": k[1], "rodada2": e2[k], "rodada3": e3.get(k)} for k in sorted(e2)]
+
+    ml2, ml3 = _json(r2_dir / "modelo_leve.json"), _json(r3_dir / "modelo_leve.json")
+    out["modelo_leve"] = [{"curva": a["curva"], "r2_fora_r2": a.get("r2_deixando_uma_sessao_de_fora"),
+                           "r2_fora_r3": b.get("r2_deixando_uma_sessao_de_fora")} for a, b in zip(ml2, ml3)]
+    e2r, e3r = _json(r2_dir / "erros_por_sessao.json"), _json(r3_dir / "erros_por_sessao.json")
+    t2, t3 = _top3(e2r), _top3(e3r)
+    out["tres_maiores_por_sessao"] = [{"sessao": k, "rodada2": t2.get(k), "rodada3": t3.get(k),
+                                       "mudou": t2.get(k) != t3.get(k)} for k in sorted(set(t2) | set(t3))]
+    out["fechamento"] = {"rodada2_s": e2r["fechamento_soma_das_fases_s"], "rodada3_s": e3r["fechamento_soma_das_fases_s"],
+                         "metros_cobertos_r3": _json(r3_dir / "fases.json")["metros_cobertos"]}
+    return out

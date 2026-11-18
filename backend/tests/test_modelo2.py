@@ -640,3 +640,67 @@ def test_kit2_esquematico_e_paginas_da_literatura():
         page = rotulagem.literature_page(det)
         assert "aplica" in page and "não aplica" in page and "nao sei" in page and "Fonte" in page
         assert " IA" not in page.replace("IA do", "")
+
+
+# ------------------------------- pedido 42, rodada 3: a emenda da entrada ---
+
+def _same_side_pair(phases):
+    """Uma curva que vem depois de outra para o mesmo lado, com reta de 100 m ou mais entre elas."""
+    from ml.modelo2.fases import ahead
+    for cp in phases:
+        prev = phases[cp.k - 1]
+        if (prev.direcao == cp.direcao and ahead(TRACK, prev.e, cp.a) > 100.0 and prev.a < prev.e < cp.a < cp.e):
+            return prev, cp
+    raise AssertionError("sem par de curvas para o mesmo lado")
+
+
+def test_rodada3_a_entrada_nao_recua_ate_a_curva_anterior(phases):
+    prev, cp = _same_side_pair(phases)
+    sign = cp.direcao
+    mid = prev.e + 0.5 * (cp.a - prev.e)       # o meio da reta entre as duas curvas
+
+    def steer(s):
+        first = np.where((s >= prev.a - 10.0) & (s < prev.e + 10.0), -0.3 * sign, 0.0)
+        second = -0.3 * sign * np.clip((s - (cp.a - 5.0)) / 15.0, 0.0, 1.0) * np.clip((cp.e + 20.0 - s) / 20.0, 0.0, 1.0)
+        straight = np.where((s >= mid - 5.0) & (s < mid + 5.0), 0.05 * sign, 0.0)   # levemente para o outro lado
+        return first + second + straight
+
+    lap = synthetic_lap("r3#0001", channels={"steer_angle": steer, "yaw_rate": lambda s: np.full_like(s, 0.3 * sign),
+                                             "lateral_g": lambda s: np.full_like(s, 1.0 * sign)})
+    env = lambda v: np.full_like(np.asarray(v, dtype=float), 3.0)
+    r2 = measure_passage(lap, TRACK, cp, phases[cp.k - 1], env, rodada=2)
+    r3 = measure_passage(lap, TRACK, cp, phases[cp.k - 1], env, rodada=3)
+    gap = (cp.a - prev.e) % TRACK.length
+    assert r2["s_ti_rel"] < -gap                   # rodada 2: recua ate a curva anterior (o defeito)
+    assert -10.0 <= r3["s_ti_rel"] <= 5.0          # rodada 3: a entrada desta curva
+
+
+def test_rodada3_o_contraesterco_antes_do_apice_continua_visto(phases):
+    cp = _longest_entry(phases)
+    a, apex, sign = cp.a, cp.apice, cp.direcao
+    c0, c1 = a + 0.35 * (apex - a), a + 0.35 * (apex - a) + 12.0
+
+    def steer(s):
+        normal = -0.3 * sign * np.clip((s - (a - 20.0)) / 15.0, 0.0, 1.0) * np.clip((cp.e - s) / 20.0, 0.0, 1.0)
+        return np.where((s >= c0) & (s < c1), 0.1 * sign, normal)
+
+    lap = synthetic_lap("r3#0002", channels={"steer_angle": steer, "yaw_rate": lambda s: np.full_like(s, 0.3 * sign),
+                                             "lateral_g": lambda s: np.full_like(s, 1.0 * sign),
+                                             "brake": bump(a - 60.0, 30.0, 0.8)})
+    env = lambda v: np.full_like(np.asarray(v, dtype=float), 3.0)
+    r2 = measure_passage(lap, TRACK, cp, phases[cp.k - 1], env, rodada=2)
+    r3 = measure_passage(lap, TRACK, cp, phases[cp.k - 1], env, rodada=3)
+    assert r3["s_ti_rel"] == r2["s_ti_rel"]        # dentro da curva, a uniao vale como na rodada 2
+    assert r3["contra_s"] >= 0.10 and r3["contra_antes_apice_s"] >= 0.10
+    assert state_of("E4", r3, corner_refs([]))[0] == APLICA
+
+
+def test_turn_in_index_rodada3_so_une_depois_do_fim_da_curva_anterior():
+    into = np.concatenate([np.full(10, 0.5), np.full(5, -0.2), np.full(10, 0.0), np.full(5, 0.5), np.full(4, -0.2),
+                           np.full(16, 1.0)])
+    apex = 40
+    assert turn_in_index(into, 1.0, apex, rodada=2) == 0            # rodada 2: une tudo, desde a curva anterior
+    assert turn_in_index(into, 1.0, apex, rodada=3, previous_end=12) == 25   # o primeiro buraco comeca antes de e_(k-1)
+    # um trecho que comeca antes de e_(k-1) nunca e unido, mesmo que acabe depois dele
+    assert turn_in_index(into, 1.0, apex, rodada=3, previous_end=5) == 25
+    assert turn_in_index(into, 1.0, apex, rodada=3, previous_end=0) == 0

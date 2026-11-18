@@ -155,18 +155,25 @@ def count_reversals(signal: np.ndarray, gap: float) -> int:
     return count
 
 
-def turn_in_index(into: np.ndarray, d_pk: float, apex: int, rodada: int = 1) -> Optional[int]:
+def turn_in_index(into: np.ndarray, d_pk: float, apex: int, rodada: int = 1,
+                  previous_end: Optional[int] = None) -> Optional[int]:
     """s_ti: o comeco da sequencia de volante >= 0,15 x delta_pk, para dentro da curva, que contem o apice.
 
     Rodada 2 (secao 4.2): dois trechos acima do limiar sao unidos quando, no buraco
     entre eles, o volante passa para o outro lado alem de 0,05 x delta_pk.
+    Rodada 3 (secao 5.2): a uniao so vale entre o fim da curva anterior
+    (`previous_end`, indice na janela) e o apice: os dois trechos tem de estar
+    nesse intervalo, ou seja, o trecho anterior tem de comecar em e_(k-1) ou
+    depois. Fora disso, a sequencia e cortada como na rodada 1.
     """
     segs = runs(into >= TURN_IN_SHARE * d_pk)
     if rodada >= 2:
+        floor = 0 if rodada < 3 or previous_end is None else int(previous_end)
         merged: List[Tuple[int, int]] = []
         for lo, hi in segs:
             gap = into[merged[-1][1]:lo] if merged else np.array([])
-            if merged and gap.size and np.isfinite(gap).any() and np.nanmin(gap) <= -TURN_IN_SIGN * d_pk:
+            sign_change = bool(gap.size and np.isfinite(gap).any() and np.nanmin(gap) <= -TURN_IN_SIGN * d_pk)
+            if merged and sign_change and merged[-1][0] >= floor:
                 merged[-1] = (merged[-1][0], hi)
             else:
                 merged.append((lo, hi))
@@ -274,7 +281,7 @@ def corner_window(lap: Lap, track: TrackGeometry, cp: CornerPhases, previous: Co
     def off(s):
         return int(min(round(ahead(track, start, s) / step), idx.size - 1))
 
-    offsets = {"p_prev": 0, "b": off(cp.b), "a": off(cp.a), "m1": off(cp.m1), "apice": off(cp.apice),
+    offsets = {"p_prev": 0, "e_prev": off(previous.e), "b": off(cp.b), "a": off(cp.a), "m1": off(cp.m1), "apice": off(cp.apice),
                "m2": off(cp.m2), "e": off(cp.e), "e50": off(np.mod(cp.e + 50.0, track.length)),
                "e60": off(np.mod(cp.e + 60.0, track.length)), "fim": idx.size - 1}
     return Window(idx=idx, t=t, offsets=offsets)
@@ -304,6 +311,7 @@ def measure_passage(lap: Lap, track: TrackGeometry, cp: CornerPhases, previous: 
                     geometria: Tuple[float, float] = GEOMETRIA_SUBSTITUTA) -> Dict[str, object]:
     """Eventos e indicadores de uma passagem (1.4 e 1.5), sem estado.
 
+    `rodada=3` aplica tambem a emenda da entrada da secao 5.2.
     `rodada=2` aplica as emendas da secao 4.2 (a retomada, a entrada e a janela
     do E4). `geometria` e (L, k_delta) do E2 e da resposta na entrada: a
     substituta da secao 1.2 ou a medida do pedido 39 (Parte C do pedido 42).
@@ -344,7 +352,7 @@ def measure_passage(lap: Lap, track: TrackGeometry, cp: CornerPhases, previous: 
     out["pico_freio"] = b_pk if ib is not None else None
     iti = None
     if into is not None and np.isfinite(d_pk) and d_pk > 0:
-        iti = turn_in_index(into, d_pk, apex, rodada)
+        iti = turn_in_index(into, d_pk, apex, rodada, previous_end=o["e_prev"])
     out["s_ti_rel"] = None if iti is None else (iti - a) * step
     ivmin = a + int(np.nanargmin(speed[a:e + 1])) if speed is not None else None
     out["s_vmin_rel"] = None if ivmin is None else (ivmin - a) * step

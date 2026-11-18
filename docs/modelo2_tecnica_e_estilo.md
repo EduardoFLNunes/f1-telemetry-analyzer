@@ -590,9 +590,10 @@ A emenda foi decidida pelo Eduardo em 18/11, depois de ver a rodada 2.
 
 - **O limiar e a troca de sinal não mudam:** o volante no sentido da curva acima de 0,15·δ_pk, e a troca de sinal além de 0,05·δ_pk no buraco.
 - **A união só vale entre o fim da curva anterior, e_(k−1), e o ápice:**
-  - dois trechos só são unidos quando o buraco entre eles começa em e_(k−1) ou depois;
-  - quando a união acontece, a sequência unida começa no maior entre o começo do trecho anterior e e_(k−1);
+  - dois trechos só são unidos quando os dois estão nesse intervalo, ou seja, quando o trecho anterior começa em e_(k−1) ou depois;
+  - um trecho que começa antes de e_(k−1) (o volante da curva anterior, mesmo que passe do fim geométrico dela) nunca é unido;
   - fora disso, a sequência é cortada como na rodada 1.
+  - *Correção de redação de 18/11, antes de rodar a rodada 3:* a primeira redação deixava unir um trecho que começava antes de e_(k−1) e acabava depois, com a sequência começando em e_(k−1). O teste sintético (duas curvas para o mesmo lado) mostrou que isso ainda levava a entrada até o fim da curva anterior, a 620 m. Isso é contra a decisão do Eduardo ("a união só vale entre e_(k−1) e o ápice"). Nenhuma conta da rodada 3 tinha rodado.
 - **Um trecho único,** sem buraco, que já começa antes de e_(k−1) (o volante não volta abaixo do limiar entre as duas curvas) continua como na rodada 1. Nada é unido aí.
 - **Na C01,** a curva anterior é a C14, no fim da volta, e a janela atravessa o s = 0. Vale a mesma definição que as fases já usam:
   - a distância é medida para a frente, com o módulo do comprimento da volta (`fases.ahead` e `fases.window`);
