@@ -1,4 +1,265 @@
-# Pedido 42 — relatório parcial: Partes 0, A, C, D, E.1 e F.1 feitas; parado na parada do pedido (o kit 2, as voltas de teste e a IA em níveis)
+# Pedido 42 — relatório parcial de 18/11: a rodada 3 (a emenda da entrada) e as voltas de teste na cópia da pista; parado
+
+- **Pedido:** `docs/prompts/2026-10-29_42_modelo2-rodada-2.md`, com a "Atualização de 18/11" (itens 1 e 2; depois, gravar o relatório parcial e parar).
+- **Data:** 18/11/2026.
+- **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-48`. A atualização de 18/11 estava só nela, sem commit; a pasta principal (pedido 52) estava limpa e não foi tocada.
+- **Branch:** `etapa/modelo2-rodada-2`.
+- **Commits desta etapa:**
+  - `4b0d6686` — o texto da atualização de 18/11;
+  - `f47f0b3f` — a rodada 3 registrada antes de rodar (seção 5 e linha no ADR 0023);
+  - `ba488f69` — o código da rodada 3, a correção de redação da seção 5.2 (antes de rodar), os testes e a comparação;
+  - `5a35cb2f` — o item 2: o roteiro, a folha, o CSV e o esperado na cópia da pista, com a conferência, antes de qualquer sessão;
+  - o commit das saídas e deste relatório (o hash está no chat e na nota da sessão).
+- **Merges:** nenhum. O `develop` andou com o 54 (até `2d0c8327`) e só vem para a branch antes do merge, como mandam as regras.
+- **Arquivos de handoff gerados nesta etapa:**
+  - `docs/handoff/2026-10-29_42_modelo2-rodada-2_comparacao_rodada3.json`: a rodada 3 ao lado da rodada 2;
+  - `docs/handoff/2026-10-29_42_modelo2-rodada-2_pytest.txt`, atualizado;
+  - este relatório, atualizado.
+
+  A rodada 3 grava em `data/ml/modelo2/rodada3/` (fora do git), com o próprio gabarito do kit 2 (`kit2_gabarito.json`, com os estados da rodada 3).
+
+## Resumo de 18/11
+
+1. **A rodada 3 resolve o defeito da entrada em quatro das cinco curvas:** C01, C07, C12 e C14 voltam ao comportamento da rodada 1, e a C04 em grande parte.
+   - **Na C04, sobra um segundo defeito, relatado e não corrigido:** em 29 passagens minhas, o volante passa do limiar na própria reta oposta, depois do fim da C03. A regra da rodada 3 deixa unir esse trecho, porque ele está entre e_(k−1) e o ápice. A entrada fica a uns 576 m antes da C04 (mediana dessas 29).
+   - Proponho uma emenda para uma rodada 4.
+2. **Nada mais mudou:**
+   - os 3 maiores erros por sessão são os mesmos da rodada 2 nas 13 sessões;
+   - o fechamento das fases é de 0,000 s;
+   - nas outras 9 curvas, só mudou o que a regra nova manda: na C05 e na C13, a entrada volta à da rodada 1 (as duas vêm depois de curvas para o mesmo lado).
+3. **A cópia da pista serve para as voltas de teste:**
+   - pelo código, uma sessão minha nela fica fora do store, do coach, da "Sua melhor volta", da evolução, dos treinos e da avaliação do aprendizado;
+   - o Modelo 2 só a lê pedindo;
+   - o engenheiro cala nela, por falta do modelo da pista e, com ele, da posição do carro. Isso não foi testado no jogo;
+   - o roteiro, a folha e o CSV dizem "Interlagos [teste]" e estão commitados.
+
+## Item 3: os dados
+
+- **Os vínculos:** os 3 de `data/reference_models` batem pelo SHA-256 com a pasta principal (`811da4c9…`, `f8e61864…` e `e8651d45…`).
+- **O store:** é o mesmo da rodada 2 (meta de 18/11, 00:31 UTC, `aprovado: true`, commit `ff0ce3ed`, 721 voltas). A rodada 3 e a rodada 2 usam os mesmos dados.
+- **O jogo:** o `acs.exe` estava fechado antes da rodada 3.
+
+## Item 1: a rodada 3
+
+### O registro, antes de rodar
+
+**A seção 5 de `docs/modelo2_tecnica_e_estilo.md`** registra:
+
+- a regra: a união dos trechos na troca de sinal só vale entre o fim da curva anterior, e_(k−1), e o ápice;
+- a C01, depois da C14: a janela atravessa o s = 0, e vale a mesma definição das fases (`ahead` e `window`, com o módulo do comprimento da volta);
+- o que não muda, a família e a calibração;
+- as saídas;
+- o M7 da IA, registrado como limitação.
+
+**A linha no ADR 0023** foi acrescentada no mesmo commit (`f47f0b3f`).
+
+**Uma correção de redação antes de rodar.**
+
+- **A primeira redação** deixava unir um trecho que começava antes de e_(k−1) e acabava depois, com a sequência começando em e_(k−1).
+- **O teste sintético** (duas curvas para o mesmo lado, com o volante passando levemente para o outro lado na reta) mostrou que isso ainda levava a entrada até o fim da curva anterior, a 620 m. Isso contraria a sua regra.
+- **A redação corrigida:** os dois trechos têm de estar entre e_(k−1) e o ápice, e um trecho que começa antes de e_(k−1) nunca é unido.
+- A correção foi feita e commitada (`ba488f69`) antes de qualquer conta da rodada 3, com uma nota na seção 5.2.
+
+### O comando
+
+`python -m ml.scripts.modelo2 todos --saida rodada3 --rodada 3` (5 min 45 s), e depois `python -m ml.scripts.modelo2 comparar3 --saida rodada3 --rodada1 rodada1_refeita --handoff docs/handoff/2026-10-29_42_modelo2-rodada-2`.
+
+### O recuo da entrada por curva
+
+É o s_ti de cada rodada menos o da rodada 1, nas 144 voltas, em metros.
+
+| curva | rodada 2: mediana | p10 | p90 | rodada 3: mediana | p10 | p90 | mudaram da 2 para a 3 | voltaram à rodada 1 |
+|---|---|---|---|---|---|---|---|---|
+| C01 | 0,0 | −895,8 | 0,0 | 0,0 | 0,0 | 0,0 | 17 | 15 |
+| C02 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0 | 0 |
+| C03 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0 | 0 |
+| C04 | −531,0 | −799,4 | 0,0 | 0,0 | −545,0 | 0,0 | 56 | 50 |
+| C05 | 0,0 | −77,2 | 0,0 | 0,0 | 0,0 | 0,0 | 19 | 17 |
+| C06 | 0,0 | −44,0 | 0,0 | 0,0 | −44,0 | 0,0 | 0 | 0 |
+| C07 | 0,0 | −132,0 | 0,0 | 0,0 | 0,0 | 0,0 | 45 | 43 |
+| C08 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 1 | 1 |
+| C09 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 2 | 1 |
+| C10 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 4 | 4 |
+| C11 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0 | 0 |
+| C12 | 0,0 | −280,0 | 0,0 | 0,0 | 0,0 | 0,0 | 42 | 41 |
+| C13 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 13 | 13 |
+| C14 | 0,0 | −59,0 | 0,0 | 0,0 | 0,0 | 0,0 | 10 | 10 |
+
+### Nas 5 curvas: E1, F5, E5, E6 e o estilo da entrada
+
+Fração de "aplica", eu: rodada 1 → rodada 2 → rodada 3.
+
+| curva | E1 | F5 | E5 | E6 |
+|---|---|---|---|---|
+| C01 | 0,28 → 0,43 → 0,33 | 0,86 → 0,83 → 0,85 | — → 0,16 → 0,08 | — → 1,00 → 1,00 |
+| C04 | 0,01 → 0,60 → 0,22 | 0,84 → 0,30 → 0,66 | — → 0,57 → 0,24 | — → 1,00 → 1,00 |
+| C07 | 0,09 → 0,44 → 0,09 | 0,87 → 0,56 → 0,91 | — → 0,04 → 0,02 | — → 0,99 → 0,99 |
+| C12 | 0,22 → 0,53 → 0,27 | 0,81 → 0,47 → 0,78 | — → 0,09 → 0,00 | — → 1,00 → 1,00 |
+| C14 | 0,32 → 0,42 → 0,35 | — (sem frenagem) | — → 0,05 → 0,04 | — → 1,00 → 1,00 |
+
+- **A IA** não muda em nenhum dos quatro detectores nessas curvas, da rodada 2 para a 3.
+- **O E5 e o E6 da rodada 1** não estão na tabela da comparação, que tem só a rodada 2 e a 3. Eles estão em `rodada1_refeita/tecnicas.json`.
+- **Os estados que mudaram da rodada 2 para a 3** nessas 5 curvas: E1, 146; F5, 137; E5, 80; E6, 12.
+- **A leitura:** na C07 e na C12, os números voltam para perto da rodada 1. Na C01 e na C14, ficam um pouco acima. Na C04, ficam no meio do caminho, por causa do segundo defeito (abaixo).
+
+**O estilo da entrada** (o z de todas as passagens, por tipo de curva) muda pouco:
+
+- na IA, nas lentas, a `taxa_entrada` vai de 0,70 para 0,66;
+- na IA, nas médias, as `reversoes` vão de 0,67 para 1,08;
+- em mim, todas as dimensões mudam 0,05 ou menos, salvo as `reversoes` nas médias (de −0,22 para 0,00) e nas rápidas (de −0,23 para −0,11).
+
+**As medidas da entrada nas 5 curvas** (mediana das passagens, rodada 2 → rodada 3):
+
+| curva | taxa de entrada | guinada por roda |
+|---|---|---|
+| C01 | 0,547 → 0,553 | 11,89 → 11,88 |
+| C04 | 0,850 → 0,913 | 10,90 → 12,21 |
+| C07 | 0,687 → 0,797 | 9,31 → 9,65 |
+| C12 | 0,715 → 0,809 | 9,58 → 10,13 |
+| C14 | 1,720 → 1,747 | 12,35 → 12,49 |
+
+A `beta_entrada` não mudou em nenhuma das 5 curvas.
+
+### Nas outras 9 curvas
+
+O que mudou foi só o que a regra nova manda:
+
+- **a entrada:**
+  - na C05, depois da C04 para o mesmo lado, 19 passagens, das quais 17 voltam à rodada 1;
+  - na C13, depois da C12, 13 passagens, todas de volta à rodada 1;
+  - na C10, 4; na C09, 2; na C08, 1.
+
+  Em todas, era uma união que começava antes do fim da curva anterior, e a rodada 3 corta;
+- **os estados que mudaram, por causa dessas entradas:**
+  - C05: F5, 1;
+  - C08: E1, 1;
+  - C09: E6, 2;
+  - C10: E5, 3; F5, 4;
+  - C13: E5, 2; E6, 1.
+- **a C06 não mudou:** o recuo de 44 m no p10 já estava na rodada 2 e continua na 3. A C05, antes dela, vira para o outro lado, então a regra nova não se aplica.
+
+No total, 389 estados mudaram da rodada 2 para a 3, quase todos nas 5 curvas.
+
+### O modelo leve
+
+O R² é deixando uma sessão de fora.
+
+| curva | rodada 1 | rodada 2 | rodada 3 |
+|---|---|---|---|
+| C01 | 0,318 | 0,040 | 0,020 |
+| C02 | 0,014 | 0,214 | 0,214 |
+| C03 | 0,157 | 0,467 | 0,467 |
+| C04 | 0,262 | 0,093 | 0,113 |
+| C05 | 0,355 | 0,208 | 0,286 |
+| C06 | −0,044 | −0,035 | −0,035 |
+| C07 | −0,187 | −0,283 | −0,301 |
+| C08 | 0,161 | 0,140 | 0,137 |
+| C09 | 0,676 | 0,624 | 0,620 |
+| C10 | 0,257 | 0,274 | 0,276 |
+| C11 | −0,294 | −0,290 | −0,290 |
+| C12 | 0,501 | 0,238 | 0,250 |
+| C13 | −0,134 | 0,208 | 0,128 |
+| C14 | 0,251 | −0,040 | −0,042 |
+
+**Uma correção do relatório anterior:** lá eu atribuí a queda do R² da C01, da C04, da C12 e da C14 ao defeito da entrada. A rodada 3 mostra que não:
+
+- a entrada dessas curvas volta ao normal (salvo as 29 passagens da C04), e o R² continua baixo;
+- então a queda vem das outras emendas (a retomada, que muda o M6, o M7, o M8 e o `retomada_s`), e não da entrada.
+
+### Os 3 maiores erros por sessão e o fechamento
+
+- **Os 3 maiores erros:** iguais aos da rodada 2 nas 13 sessões. A entrada não mexe na perda.
+- **O fechamento:** a soma das 70 fases fecha em 0,000 s; as fases cobrem os 4.334,08 m.
+
+### O segundo defeito, na C04 (relatado, não corrigido)
+
+- **O que acontece:** em 29 passagens minhas da C04 (nenhuma da IA), a entrada da rodada 3 fica de 36 a 618 m antes do começo da curva (mediana de 576 m).
+  - Nessas voltas, o volante passa de 0,15·δ_pk da C04 em algum ponto da reta oposta, depois do fim da C03: uma correção ou uma troca de faixa.
+  - Depois, ele troca de sinal, e a regra une esse trecho à entrada.
+  - A união é permitida, porque os dois trechos estão entre e_(k−1) e o ápice.
+- **A C06** tem o mesmo fenômeno em 17 passagens (mediana de 84 m antes da curva), desde a rodada 2.
+- **O efeito:** o E1 da C04 fica em 0,22 (era 0,01 na rodada 1), e o F5 em 0,66 (era 0,84). Nas outras curvas, o efeito é pequeno.
+- **A emenda que proponho para uma rodada 4,** registrada antes de rodar: a união só vale a partir do início da fase de frenagem, b_k, e não de e_(k−1). Nas curvas sem frenagem, b_k = a_k. Assim, uma correção de volante na reta nunca vira a entrada da curva.
+- **Até a decisão,** o E1, o F5 e o E5 da C04 na rodada 3 não devem ser usados. O resto da rodada 3 vale.
+
+### O teste
+
+Novos em `backend/tests/test_modelo2.py`:
+
+- **duas curvas para o mesmo lado,** com o volante passando levemente para o outro lado na reta entre elas: na rodada 2, a entrada da segunda recua até a primeira; na rodada 3, fica no começo da segunda;
+- **o contraesterço antes do ápice:** dentro da curva, a união vale como na rodada 2, e o E4 da rodada 3 continua vendo o contraesterço;
+- **a regra no índice:** um trecho que começa antes de e_(k−1) nunca é unido, e dois trechos depois dele são unidos.
+
+**A suíte do backend:** 1.062 passam, nenhuma falha (9 min 21 s); eram 1.059. A saída está em `docs/handoff/2026-10-29_42_modelo2-rodada-2_pytest.txt`. O arquivo do Modelo 2 tem 53 testes.
+
+## Item 2: as voltas de teste na cópia da pista
+
+### A cópia instalada
+
+- **A pasta:** `D:\SteamLibrary\steamapps\common\assettocorsa\content\tracks\vhe_interlagos_teste_m1`. O Content Manager mostra "Interlagos [teste]", layout `gp`.
+- **A superfície:** o `vhe_interlagos.kn5` (sha256 `ce1f3bb2…`) e o `gp/data/surfaces.ini` (`4520b16b…`) são iguais aos da original.
+- **A geometria** é a mesma (`0ed16f0dd2225990`, pelo ADR 0032, item 2). A pasta do jogo só foi lida.
+
+### A conferência
+
+Pelo código de `develop` e da branch do pedido 52, sem rodar nada no jogo.
+
+| o quê | resultado | por quê |
+|---|---|---|
+| o store v2 | fora | o construtor usa `list_all_sessions()`, que deixa as pistas de teste (`config.TEST_TRACK_NAMES`) fora, salvo `incluir_pistas_de_teste=True` |
+| o coach (as duas referências e a seleção das minhas voltas) | fora | o `atualizar_coach`, o construtor do modelo (`backend/tools/train_reference_model.py`) e o inventário usam a mesma lista. A volta do modelo vem do arquivo dela (`vhe_interlagos`) |
+| a "Sua melhor volta" | fora | é a `minha_melhor` do modelo do coach; o "recorde pessoal" do rádio vem do store |
+| o relatório de evolução | fora | é feito do store v2 |
+| os treinos (a LSTM incluída) | fora | o `retreino_lstm.py` usa `list_all_sessions()`; o Modelo 1 e a validação usam o store v1 (`lap_store.py`, a mesma lista) |
+| a avaliação do aprendizado | fora | a validação (`ml/scripts/validate.py`) lê o store |
+| o Modelo 2 | só pedindo | o `carregar` usa o store e a lista sem as pistas de teste. A F.2 vai pedir com `incluir_pistas_de_teste=True`, pela sessão do roteiro, só com as minhas voltas (pelo `isAIControlled`) |
+| o engenheiro (o app do jogo) | **cala, pelo código** | o coach ao vivo procura o modelo pelo nome da pista do jogo (`vhe_interlagos_teste_m1.json`), que não existe. Sem modelo, não há a projeção na geometria oficial nem a `posicao_oficial`, de onde o rádio e o engenheiro tiram a posição do carro |
+
+- **Nenhum ponto falhou,** e nenhum código fora do Modelo 2 mudou.
+- **O que não foi testado:** o engenheiro calado é uma leitura do código. As sessões dos pedidos 47 e 50 na cópia eram da IA, e o rádio já cala com a IA.
+- **As únicas listagens das gravações sem o filtro** são as do app que acham uma volta pelo id (a tela Volta e as frases de uma volta já gravada). Elas não medem nada.
+
+### O roteiro, a folha e o CSV (`5a35cb2f`, antes de qualquer sessão)
+
+- **A folha** diz, no topo: escolha "Interlagos [teste]" (a cópia) no Content Manager, com o preset de sempre.
+- **O CSV de marcação** ganhou a coluna `pista`, com `vhe_interlagos_teste_m1 (Interlagos [teste] no Content Manager)` em cada linha.
+- **O roteiro:**
+  - a seção 2 diz a pista e a conferência da superfície;
+  - a seção 3 agora tem a sua decisão, a tabela da conferência, o engenheiro e como a F.2 lê as sessões. A proposta da coluna `finalidade` ficou sem efeito.
+- **O esperado** (`…_esperado.json`) ganhou a pista e a decisão.
+- **Os comportamentos, as curvas e o plano volta a volta não mudaram.**
+
+## O que precisa de decisão (18/11)
+
+1. **O segundo defeito da entrada, na C04 (e na C06):** a emenda proposta é unir só a partir de b_k. Se aprovar, é uma rodada 4, registrada antes de rodar. Até lá, não use o E1, o F5 e o E5 da C04 na rodada 3.
+
+## O que falta
+
+- **A Parte B:** quando as gravações da IA em níveis estiverem anotadas.
+- **A Parte E.2,** quando os rótulos chegarem: a precisão e a revocação das três rodadas, com os mesmos rótulos, o kappa e a galeria. O gabarito da rodada 3 está em `data/ml/modelo2/rodada3/kit2_gabarito.json`.
+- **As sessões de teste,** na cópia, pela folha. Depois, a Parte F.2.
+- **A Parte G, o merge e o envio.**
+
+## O envio
+
+Não tentei: o controle de permissões recusou nas outras vezes. O remoto tem a branch em `a3287e40`. Rode pelo terminal, um comando por vez:
+
+```bash
+git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer-48 push origin etapa/modelo2-rodada-2
+```
+
+```bash
+git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer-48 ls-remote origin refs/heads/etapa/modelo2-rodada-2
+```
+
+**A conferência antes do envio:** os commits de 18/11 mudam `backend/` (o código e os testes), `docs/` e os arquivos de `docs/experimentos/` e `docs/handoff/` listados acima. Nada passa de 50 MB, e não há gravações, `data/` nem segredos.
+
+---
+
+# A etapa de 17 e 18/11 (Partes 0, A, C, D, E.1 e F.1), como foi relatada
+
+
+## Pedido 42 — relatório parcial: Partes 0, A, C, D, E.1 e F.1 feitas; parado na parada do pedido (o kit 2, as voltas de teste e a IA em níveis)
 
 - **Pedido:** `docs/prompts/2026-10-29_42_modelo2-rodada-2.md`, versão de 17/11/2026, com a "Atualização de 17/11, à tarde".
 - **Datas:** de 17 a 18/11/2026.

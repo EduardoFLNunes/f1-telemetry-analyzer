@@ -11,8 +11,8 @@
 ........................................................................ [ 74%]
 ........................................................................ [ 81%]
 ........................................................................ [ 88%]
-........................................................................ [ 95%]
-...................................................                      [100%]
+........................................................................ [ 94%]
+......................................................                   [100%]
 ============================== warnings summary ===============================
 ..\..\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:64
   C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\matplotlib\_fontconfig_pattern.py:64: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
@@ -97,4 +97,4 @@ tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
     warnings.warn(
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-1059 passed, 37 warnings in 600.10s (0:10:00)
+1062 passed, 37 warnings in 561.21s (0:09:21)
