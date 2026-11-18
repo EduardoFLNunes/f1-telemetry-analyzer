@@ -1,23 +1,15 @@
-Pedido 52, D.4: as suites (15/11/2026, na branch etapa/engenheiro)
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 1 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
 
-== backend: a suite inteira (pytest -q, na pasta backend) ==
-1062 passed, 37 warnings in 767.12s (0:12:47)
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 2 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
 
-== backend: o engenheiro, o radio, o 45 e a referencia ==
-...................                                                      [100%]
-91 passed in 4.02s
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+tests/test_ml_empirical.py::EstimatorTest::test_knn_and_gp_learn_the_relation
+  C:\Users\Dokas\Desktop\f1-telemetry-analyzer\.venv\lib\site-packages\sklearn\gaussian_process\kernels.py:452: ConvergenceWarning: The optimal value found for dimension 4 of parameter k1__k2__length_scale is close to the specified upper bound 1000.0. Increasing the bound and calling fit again may find a better value.
+    warnings.warn(
 
-== front (vitest run) e tsc --noEmit ==
-15 arquivos, 180 testes passando; tsc sem erro (saida 0)
-
-== desktop (node --test) ==
-4 testes passando, 0 falhas
-
-== Lua ==
-arquivo: tools\csp_app\radio_engenheiro\radio_engenheiro.lua
-tokens: 38559; erros de lexico: 0 []
-blocos: ok
-API usada (55): JSON.parse, ac.FolderID, ac.accessAppWindow, ac.getAppWindows, ac.getCar, ac.getFolder, ac.getSim, ac.getUI, ac.log, io.createDir, io.deleteFile, io.fileExists, io.load, io.save, io.scanDir, os.preciseClock, physics.raycastTrack, render.on, render.quad, rgbm, setInterval, ui.Alignment, ui.ExtraCanvas, ui.MediaPlayer, ui.MouseButton, ui.drawCircle, ui.drawCircleFilled, ui.drawImage, ui.drawImageQuad, ui.drawLine, ui.drawQuadFilled, ui.drawRect, ui.drawRectFilled, ui.drawTriangleFilled, ui.dwriteDrawText, ui.dwriteDrawTextClipped, ui.getCursor, ui.isImageReady, ui.measureDWriteText, ui.mouseClicked, ui.mouseLocalPos, ui.mouseWheel, ui.pathClear, ui.pathLineTo, ui.pathStroke, ui.popClipRect, ui.pushClipRect, ui.windowHovered, ui.windowPos, ui.windowSize, vec2, vec3, web.get, web.post, web.timeouts
-metodos usados (14): clear, currentTime, dispose, move, pause, play, resize, setAutoPlay, setSource, setVisible, setVolume, size, update, visible
-no SDK do CSP: todas existem
-metodos no SDK do CSP: todos existem
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1069 passed, 37 warnings in 570.53s (0:09:30)

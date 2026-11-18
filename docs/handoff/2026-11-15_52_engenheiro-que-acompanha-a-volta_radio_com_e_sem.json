@@ -6,157 +6,185 @@
    "voltasQueContaram": 8,
    "avisos": {
     "dados": 94,
-    "pelaVoz": 14,
-    "soNaJanela": 80,
+    "pelaVoz": 17,
+    "soNaJanela": 77,
     "pelaVozPorTrecho": {
-     "C01": 10,
-     "C04": 4
+     "C01": 11,
+     "C04": 6
     },
     "soNaJanelaPorMotivo": {
-     "a referência não freia no trecho": 35,
-     "outra fala em andamento": 9,
-     "sem bloco de voz antes da freada": 24,
-     "a frase não cabe no bloco": 12
+     "a referência não freia no trecho": 32,
+     "outra fala em andamento": 6,
+     "sem bloco de voz antes da frenagem": 16,
+     "a frase não cabe no bloco": 12,
+     "sem tirar o pé (a referência não freia nem alivia no trecho)": 11
     },
-    "entreguesNoRadio": 14,
+    "entreguesNoRadio": 17,
     "folgaAteAFreadaS": {
-     "min": 1.46,
-     "max": 11.71,
+     "min": 1.32,
+     "max": 9.33,
      "todas": [
-      1.55,
-      1.67,
-      1.48,
-      1.71,
-      1.46,
-      1.6,
-      1.49,
-      1.85,
+      1.39,
+      1.33,
+      1.35,
       1.5,
-      11.71,
-      2.77,
-      1.54,
-      1.46,
-      1.56
+      1.44,
+      1.35,
+      1.35,
+      1.34,
+      1.36,
+      1.32,
+      9.33,
+      1.9,
+      1.39,
+      1.37,
+      1.35,
+      1.4,
+      1.36
      ]
     },
     "pelaVozLista": [
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.5,
-      "velocidadeKmh": 245.4,
-      "folgaAteAFreadaS": 1.55
+      "sFala": 4196.1,
+      "sCarro": 4197.2,
+      "velocidadeKmh": 247.6,
+      "folgaAteAFreadaS": 1.39
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4197.6,
+      "velocidadeKmh": 251.7,
+      "folgaAteAFreadaS": 1.33
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.2,
+      "velocidadeKmh": 251.3,
+      "folgaAteAFreadaS": 1.35
      },
      {
       "trecho": "C04",
       "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.4,
-      "velocidadeKmh": 235.5,
-      "folgaAteAFreadaS": 1.67
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.6,
-      "velocidadeKmh": 249.0,
-      "folgaAteAFreadaS": 1.48
-     },
-     {
-      "trecho": "C04",
-      "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.8,
-      "velocidadeKmh": 233.2,
-      "folgaAteAFreadaS": 1.71
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.4,
-      "velocidadeKmh": 250.1,
-      "folgaAteAFreadaS": 1.46
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.9,
-      "velocidadeKmh": 242.8,
-      "folgaAteAFreadaS": 1.6
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4121.9,
-      "velocidadeKmh": 248.9,
-      "folgaAteAFreadaS": 1.49
-     },
-     {
-      "trecho": "C04",
-      "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.9,
-      "velocidadeKmh": 227.2,
-      "folgaAteAFreadaS": 1.85
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.6,
-      "velocidadeKmh": 248.0,
+      "sFala": 964.8,
+      "sCarro": 965.7,
+      "velocidadeKmh": 233.8,
       "folgaAteAFreadaS": 1.5
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4121.8,
-      "velocidadeKmh": 80.0,
-      "folgaAteAFreadaS": 11.71
+      "sFala": 4196.1,
+      "sCarro": 4196.3,
+      "velocidadeKmh": 245.7,
+      "folgaAteAFreadaS": 1.44
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.6,
+      "velocidadeKmh": 250.9,
+      "folgaAteAFreadaS": 1.35
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.3,
+      "velocidadeKmh": 251.3,
+      "folgaAteAFreadaS": 1.35
      },
      {
       "trecho": "C04",
       "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.7,
-      "velocidadeKmh": 194.1,
-      "folgaAteAFreadaS": 2.77
+      "sFala": 964.8,
+      "sCarro": 965.4,
+      "velocidadeKmh": 244.5,
+      "folgaAteAFreadaS": 1.34
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4121.9,
-      "velocidadeKmh": 246.5,
-      "folgaAteAFreadaS": 1.54
+      "sFala": 4196.1,
+      "sCarro": 4197.1,
+      "velocidadeKmh": 250.2,
+      "folgaAteAFreadaS": 1.36
+     },
+     {
+      "trecho": "C04",
+      "frase": "freie 10 metros antes da placa de 100",
+      "sFala": 964.8,
+      "sCarro": 965.2,
+      "velocidadeKmh": 246.0,
+      "folgaAteAFreadaS": 1.32
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.9,
-      "velocidadeKmh": 249.7,
-      "folgaAteAFreadaS": 1.46
+      "sFala": 4196.1,
+      "sCarro": 4196.4,
+      "velocidadeKmh": 79.9,
+      "folgaAteAFreadaS": 9.33
+     },
+     {
+      "trecho": "C04",
+      "frase": "freie 10 metros antes da placa de 100",
+      "sFala": 964.8,
+      "sCarro": 965.7,
+      "velocidadeKmh": 212.1,
+      "folgaAteAFreadaS": 1.9
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.4,
-      "velocidadeKmh": 245.4,
-      "folgaAteAFreadaS": 1.56
+      "sFala": 4196.1,
+      "sCarro": 4196.2,
+      "velocidadeKmh": 248.9,
+      "folgaAteAFreadaS": 1.39
+     },
+     {
+      "trecho": "C04",
+      "frase": "freie 10 metros antes da placa de 100",
+      "sFala": 964.8,
+      "sCarro": 965.6,
+      "velocidadeKmh": 242.5,
+      "folgaAteAFreadaS": 1.37
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.1,
+      "velocidadeKmh": 251.8,
+      "folgaAteAFreadaS": 1.35
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.4,
+      "velocidadeKmh": 247.9,
+      "folgaAteAFreadaS": 1.4
+     },
+     {
+      "trecho": "C04",
+      "frase": "freie 10 metros antes da placa de 100",
+      "sFala": 964.8,
+      "sCarro": 965.7,
+      "velocidadeKmh": 243.0,
+      "folgaAteAFreadaS": 1.36
      }
     ]
    },
    "conferencia": {
     "conferidas": 48,
-    "aplicadas": 13,
+    "aplicadas": 12,
     "semMedida": 3,
     "acuraciaPorVolta": [
      {
@@ -196,7 +224,7 @@
      },
      {
       "volta": 14.0,
-      "aplicadas": 3,
+      "aplicadas": 2,
       "medidas": 7
      }
     ]
@@ -211,7 +239,7 @@
      "coach": 9,
      "resumo": 13,
      "analise": 2,
-     "curva": 6
+     "curva": 2
     },
     "pendentesNoFim": {
      "sem": 1,
@@ -219,40 +247,6 @@
     },
     "mesmaMensagemNasDuas": 24,
     "mudaramDeBloco": [
-     {
-      "origem": "coach",
-      "volta": 1,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 1,
-       "sCarro": 3697.1,
-       "fala": "Curva 7, direita: 8 décimos atrás da referência. Freou 39 metros antes da referência.",
-       "duracaoS": 6.93
-      },
-      "com": {
-       "voltaDoCarro": 1,
-       "sCarro": 2922.5,
-       "fala": "Curva 7: 8 décimos atrás.",
-       "duracaoS": 2.58
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 4,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 4,
-       "sCarro": 3697.7,
-       "fala": "Curva 7: 2,0 segundos atrás da referência. Freou 44 metros depois da referência.",
-       "duracaoS": 7.21
-      },
-      "com": {
-       "voltaDoCarro": 4,
-       "sCarro": 2922.1,
-       "fala": "Curva 7: 2,0 segundos atrás. Freou 44 metros depois.",
-       "duracaoS": 5.98
-      }
-     },
      {
       "origem": "coach",
       "volta": 4,
@@ -264,10 +258,10 @@
        "duracaoS": 6.76
       },
       "com": {
-       "voltaDoCarro": 4,
-       "sCarro": 3306.8,
-       "fala": "Curva 11: 1,1 segundo atrás. Mínima 10 quilômetros por hora abaixo.",
-       "duracaoS": 5.59
+       "voltaDoCarro": 5,
+       "sCarro": 1510.3,
+       "fala": "Curva 11: 1,1 segundo atrás da referência. Mínima 10 quilômetros por hora abaixo da referência.",
+       "duracaoS": 6.76
       }
      },
      {
@@ -281,10 +275,10 @@
        "duracaoS": 6.88
       },
       "com": {
-       "voltaDoCarro": 4,
-       "sCarro": 3619.5,
-       "fala": "Curva 12: 1,9 segundo atrás da referência. Freou 56 metros antes da referência.",
-       "duracaoS": 6.88
+       "voltaDoCarro": 5,
+       "sCarro": 2922.4,
+       "fala": "Curva 12: 1,9 segundo atrás da referência.",
+       "duracaoS": 3.66
       }
      },
      {
@@ -299,9 +293,9 @@
       },
       "com": {
        "voltaDoCarro": 5,
-       "sCarro": 2922.4,
-       "fala": "Curva 7: 1,0 segundo atrás da referência.",
-       "duracaoS": 3.73
+       "sCarro": 3618.7,
+       "fala": "Curva 7: 1,0 segundo atrás da referência. Freou 44 metros depois da referência.",
+       "duracaoS": 7.01
       }
      },
      {
@@ -315,10 +309,10 @@
        "duracaoS": 7.05
       },
       "com": {
-       "voltaDoCarro": 5,
-       "sCarro": 3306.9,
-       "fala": "Curva 12: 7 décimos atrás. Freou 51 metros antes.",
-       "duracaoS": 5.1
+       "voltaDoCarro": 6,
+       "sCarro": 1510.2,
+       "fala": "Curva 12, esquerda: 7 décimos atrás da referência. Freou 51 metros antes da referência.",
+       "duracaoS": 7.05
       }
      },
      {
@@ -343,16 +337,16 @@
       "volta": 9,
       "titulo": "C07, direita",
       "sem": {
-       "voltaDoCarro": 11,
-       "sCarro": 3962.2,
+       "voltaDoCarro": 10,
+       "sCarro": 3697.9,
        "fala": "Curva 7: 7 décimos atrás da referência. Mínima 22 quilômetros por hora abaixo da referência.",
        "duracaoS": 7.06
       },
       "com": {
        "voltaDoCarro": 9,
-       "sCarro": 3306.6,
-       "fala": "Curva 7, direita: 7 décimos atrás da referência.",
-       "duracaoS": 4.0
+       "sCarro": 3618.3,
+       "fala": "Curva 7: 7 décimos atrás da referência. Mínima 22 quilômetros por hora abaixo da referência.",
+       "duracaoS": 7.06
       }
      },
      {
@@ -361,32 +355,15 @@
       "titulo": "C12, esquerda",
       "sem": {
        "voltaDoCarro": 11,
-       "sCarro": 4153.6,
+       "sCarro": 3962.2,
        "fala": "Curva 12, esquerda: 6 décimos atrás da referência. Freou 54 metros depois da referência.",
        "duracaoS": 7.26
       },
       "com": {
-       "voltaDoCarro": 9,
-       "sCarro": 3618.3,
-       "fala": "Curva 12, esquerda: 6 décimos atrás da referência. Freou 54 metros depois da referência.",
-       "duracaoS": 7.26
-      }
-     },
-     {
-      "origem": "resumo",
-      "volta": 9,
-      "titulo": "Volta 9: 1:33,120",
-      "sem": {
        "voltaDoCarro": 10,
-       "sCarro": 3697.9,
-       "fala": "3,0 segundos atrás da melhor da sessão. Curva 8: 1,8 segundo, perdeu 8 décimos na freada.",
-       "duracaoS": 7.89
-      },
-      "com": {
-       "voltaDoCarro": 10,
-       "sCarro": 555.0,
-       "fala": "3,0 segundos atrás da melhor da sessão. Curva 8: 1,8 segundo.",
-       "duracaoS": 6.09
+       "sCarro": 1510.2,
+       "fala": "Curva 12: 6 décimos atrás. Freou 54 metros depois da referência.",
+       "duracaoS": 5.95
       }
      },
      {
@@ -411,8 +388,8 @@
       "volta": 10,
       "titulo": "Análise das voltas 8 a 10",
       "sem": {
-       "voltaDoCarro": 12,
-       "sCarro": 3697.1,
+       "voltaDoCarro": 11,
+       "sCarro": 4158.3,
        "fala": "Voltas 8 a 10. Curva 1: perde 1,1 segundo por volta. Freou 62 metros antes da referência.",
        "duracaoS": 8.25
       },
@@ -428,7 +405,7 @@
       "volta": 11,
       "titulo": "C12, esquerda",
       "sem": {
-       "voltaDoCarro": 13,
+       "voltaDoCarro": 12,
        "sCarro": 3697.1,
        "fala": "Curva 12: 4,4 segundos atrás da referência. Freou 26 metros antes da referência.",
        "duracaoS": 7.15
@@ -445,30 +422,6 @@
     "soCom": [
      {
       "origem": "curva",
-      "volta": 7,
-      "voltaDoCarro": 8,
-      "titulo": "C01, esquerda",
-      "fala": "Curva 1: 9 décimos.",
-      "sCarro": 2923.1
-     },
-     {
-      "origem": "curva",
-      "volta": 8,
-      "voltaDoCarro": 9,
-      "titulo": "C01, esquerda",
-      "fala": "Curva 1: 1,5 segundo, freou 62 metros antes da referência.",
-      "sCarro": 1510.1
-     },
-     {
-      "origem": "curva",
-      "volta": 9,
-      "voltaDoCarro": 10,
-      "titulo": "C08, esquerda",
-      "fala": "Curva 8: 1,8 segundo, perdeu 8 décimos na freada.",
-      "sCarro": 1510.2
-     },
-     {
-      "origem": "curva",
       "volta": 10,
       "voltaDoCarro": 11,
       "titulo": "C01, esquerda",
@@ -477,109 +430,33 @@
      },
      {
       "origem": "curva",
-      "volta": 13,
-      "voltaDoCarro": 14,
-      "titulo": "C01, esquerda",
-      "fala": "Curva 1: 1,3 segundo.",
-      "sCarro": 891.5
-     },
-     {
-      "origem": "curva",
       "volta": 14,
       "voltaDoCarro": 15,
       "titulo": "C05, esquerda",
-      "fala": "Curva 5: 1,1 segundo.",
-      "sCarro": 938.9
+      "fala": "Curva 5: 1,1 segundo, mínima 30 quilômetros por hora abaixo da referência.",
+      "sCarro": 1390.2
      }
     ],
     "comCausaNaVoz": {
      "sem": 16,
-     "com": 11
+     "com": 16
     },
     "perderamACausa": [
      {
       "origem": "coach",
-      "volta": 1,
-      "titulo": "C07, direita",
+      "volta": 4,
+      "titulo": "C12, esquerda",
       "sem": {
-       "voltaDoCarro": 1,
-       "sCarro": 3697.1,
-       "fala": "Curva 7, direita: 8 décimos atrás da referência. Freou 39 metros antes da referência.",
-       "duracaoS": 6.93
-      },
-      "com": {
-       "voltaDoCarro": 1,
-       "sCarro": 2922.5,
-       "fala": "Curva 7: 8 décimos atrás.",
-       "duracaoS": 2.58
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 5,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 7,
-       "sCarro": 3697.0,
-       "fala": "Curva 7: 1,0 segundo atrás da referência. Freou 44 metros depois da referência.",
-       "duracaoS": 7.01
+       "voltaDoCarro": 6,
+       "sCarro": 3697.8,
+       "fala": "Curva 12: 1,9 segundo atrás da referência. Freou 56 metros antes da referência.",
+       "duracaoS": 6.88
       },
       "com": {
        "voltaDoCarro": 5,
        "sCarro": 2922.4,
-       "fala": "Curva 7: 1,0 segundo atrás da referência.",
-       "duracaoS": 3.73
-      }
-     },
-     {
-      "origem": "resumo",
-      "volta": 7,
-      "titulo": "Volta 7: 1:30,363",
-      "sem": {
-       "voltaDoCarro": 8,
-       "sCarro": 723.4,
-       "fala": "2 décimos atrás da melhor da sessão. Curva 1: 9 décimos, freou 30 metros antes da referência.",
-       "duracaoS": 7.06
-      },
-      "com": {
-       "voltaDoCarro": 8,
-       "sCarro": 554.3,
-       "fala": "2 décimos atrás da melhor da sessão. Curva 1: 9 décimos.",
-       "duracaoS": 4.83
-      }
-     },
-     {
-      "origem": "resumo",
-      "volta": 8,
-      "titulo": "Volta 8: 1:30,230",
-      "sem": {
-       "voltaDoCarro": 9,
-       "sCarro": 723.8,
-       "fala": "1 décimo atrás da melhor da sessão. Curva 1: 1,5 segundo, freou 62 metros antes da referência.",
-       "duracaoS": 7.75
-      },
-      "com": {
-       "voltaDoCarro": 9,
-       "sCarro": 554.1,
-       "fala": "1 décimo atrás da melhor da sessão. Curva 1: 1,5 segundo.",
-       "duracaoS": 5.13
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 9,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 11,
-       "sCarro": 3962.2,
-       "fala": "Curva 7: 7 décimos atrás da referência. Mínima 22 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.06
-      },
-      "com": {
-       "voltaDoCarro": 9,
-       "sCarro": 3306.6,
-       "fala": "Curva 7, direita: 7 décimos atrás da referência.",
-       "duracaoS": 4.0
+       "fala": "Curva 12: 1,9 segundo atrás da referência.",
+       "duracaoS": 3.66
       }
      },
      {
@@ -598,42 +475,25 @@
        "fala": "Melhor da sessão, 4 décimos mais rápida. Curva 1: 1,0 segundo.",
        "duracaoS": 5.82
       }
-     },
-     {
-      "origem": "resumo",
-      "volta": 13,
-      "titulo": "Volta 13: 1:30,928",
-      "sem": {
-       "voltaDoCarro": 14,
-       "sCarro": 723.2,
-       "fala": "1,2 segundo atrás da melhor da sessão. Curva 1: 1,3 segundo, freou 54 metros antes.",
-       "duracaoS": 7.84
-      },
-      "com": {
-       "voltaDoCarro": 14,
-       "sCarro": 554.6,
-       "fala": "1,2 segundo atrás da melhor da sessão. Curva 1: 1,3 segundo.",
-       "duracaoS": 5.72
-      }
      }
     ],
     "duracaoMediaS": {
-     "sem": 6.99,
-     "com": 5.08
+     "sem": 6.92,
+     "com": 6.33
     }
    },
    "acimaDoLimite": [],
    "maiorDuracaoPorOrigem": {
-    "aviso": 3.54,
-    "coach": 7.26,
-    "analise": 5.74,
-    "curva": 5.22,
-    "resumo": 6.32
+    "aviso": 2.37,
+    "curva": 5.51,
+    "coach": 7.21,
+    "resumo": 7.84,
+    "analise": 5.74
    },
    "listaNoFim": [
     {
      "trecho": "C01",
-     "causa": "freada cedo",
+     "causa": "frenagem cedo",
      "frase": "freie 10 metros depois da placa de 100",
      "voz": true
     },
@@ -651,14 +511,14 @@
     },
     {
      "trecho": "C04",
-     "causa": "freada cedo",
+     "causa": "frenagem cedo",
      "frase": "freie 10 metros antes da placa de 100",
      "voz": true
     },
     {
      "trecho": "C05",
      "causa": "mínima baixa",
-     "frase": "vire no começo da zebra à esquerda",
+     "frase": "sem tirar o pé",
      "voz": false
     },
     {
@@ -699,7 +559,7 @@
     },
     {
      "trecho": "C12",
-     "causa": "freada cedo",
+     "causa": "frenagem cedo",
      "frase": "freie 15 metros depois da placa de 100",
      "voz": false
     },
@@ -727,213 +587,178 @@
    "sessao": "2026-10-18_12-38-44_vhe_interlagos",
    "voltasQueContaram": 9,
    "avisos": {
-    "dados": 115,
-    "pelaVoz": 20,
-    "soNaJanela": 95,
+    "dados": 121,
+    "pelaVoz": 16,
+    "soNaJanela": 105,
     "pelaVozPorTrecho": {
-     "C04": 8,
-     "C01": 12
+     "C01": 12,
+     "C04": 4
     },
     "soNaJanelaPorMotivo": {
-     "a referência não freia no trecho": 45,
-     "sem bloco de voz antes da freada": 30,
+     "a referência não freia no trecho": 38,
+     "sem tirar o pé (a referência não freia nem alivia no trecho)": 20,
+     "outra fala em andamento": 10,
+     "sem bloco de voz antes da frenagem": 23,
      "a frase não cabe no bloco": 12,
-     "outra fala em andamento": 6,
      "volta de saída dos boxes": 2
     },
-    "entreguesNoRadio": 20,
+    "entreguesNoRadio": 16,
     "folgaAteAFreadaS": {
-     "min": 1.42,
-     "max": 2.23,
+     "min": 1.3,
+     "max": 1.63,
      "todas": [
-      1.68,
-      1.46,
-      2.23,
-      1.65,
-      2.08,
-      1.49,
-      1.49,
-      1.48,
-      1.95,
-      1.54,
-      1.73,
-      1.73,
-      1.44,
-      1.67,
-      1.44,
-      2.03,
-      1.42,
-      1.68,
+      1.32,
+      1.43,
+      1.61,
+      1.63,
+      1.36,
+      1.62,
+      1.35,
+      1.33,
       1.47,
-      1.49
+      1.36,
+      1.48,
+      1.3,
+      1.3,
+      1.3,
+      1.33,
+      1.33
      ]
     },
     "pelaVozLista": [
      {
-      "trecho": "C04",
-      "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.6,
-      "velocidadeKmh": 235.0,
-      "folgaAteAFreadaS": 1.68
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.5,
+      "velocidadeKmh": 253.5,
+      "folgaAteAFreadaS": 1.32
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4121.8,
+      "sFala": 4196.1,
+      "sCarro": 4196.8,
+      "velocidadeKmh": 245.7,
+      "folgaAteAFreadaS": 1.43
+     },
+     {
+      "trecho": "C04",
+      "frase": "acelere 15 metros depois do começo da zebra à direita",
+      "sFala": 895.1,
+      "sCarro": 895.8,
+      "velocidadeKmh": 236.3,
+      "folgaAteAFreadaS": 1.61
+     },
+     {
+      "trecho": "C04",
+      "frase": "acelere 15 metros depois do começo da zebra à direita",
+      "sFala": 895.1,
+      "sCarro": 895.2,
+      "velocidadeKmh": 235.9,
+      "folgaAteAFreadaS": 1.63
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.6,
+      "velocidadeKmh": 250.5,
+      "folgaAteAFreadaS": 1.36
+     },
+     {
+      "trecho": "C04",
+      "frase": "acelere 15 metros depois do começo da zebra à direita",
+      "sFala": 895.1,
+      "sCarro": 895.3,
+      "velocidadeKmh": 236.3,
+      "folgaAteAFreadaS": 1.62
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.6,
       "velocidadeKmh": 251.0,
-      "folgaAteAFreadaS": 1.46
-     },
-     {
-      "trecho": "C04",
-      "frase": "acelere 15 metros depois do começo da zebra à direita",
-      "sFala": 807.0,
-      "sCarro": 807.9,
-      "velocidadeKmh": 220.0,
-      "folgaAteAFreadaS": 2.23
+      "folgaAteAFreadaS": 1.35
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4121.9,
-      "velocidadeKmh": 240.9,
-      "folgaAteAFreadaS": 1.65
-     },
-     {
-      "trecho": "C04",
-      "frase": "acelere 15 metros depois do começo da zebra à direita",
-      "sFala": 807.0,
-      "sCarro": 807.5,
-      "velocidadeKmh": 225.3,
-      "folgaAteAFreadaS": 2.08
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4123.1,
-      "velocidadeKmh": 248.0,
-      "folgaAteAFreadaS": 1.49
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4123.4,
-      "velocidadeKmh": 248.1,
-      "folgaAteAFreadaS": 1.49
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.7,
-      "velocidadeKmh": 249.0,
-      "folgaAteAFreadaS": 1.48
+      "sFala": 4196.1,
+      "sCarro": 4197.0,
+      "velocidadeKmh": 251.7,
+      "folgaAteAFreadaS": 1.33
      },
      {
       "trecho": "C04",
       "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.9,
-      "velocidadeKmh": 222.8,
-      "folgaAteAFreadaS": 1.95
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.1,
-      "velocidadeKmh": 246.4,
-      "folgaAteAFreadaS": 1.54
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.3,
-      "velocidadeKmh": 236.8,
-      "folgaAteAFreadaS": 1.73
-     },
-     {
-      "trecho": "C04",
-      "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.4,
-      "velocidadeKmh": 232.8,
-      "folgaAteAFreadaS": 1.73
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.5,
-      "velocidadeKmh": 251.2,
-      "folgaAteAFreadaS": 1.44
-     },
-     {
-      "trecho": "C04",
-      "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 876.7,
-      "velocidadeKmh": 234.7,
-      "folgaAteAFreadaS": 1.67
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.0,
-      "velocidadeKmh": 251.9,
-      "folgaAteAFreadaS": 1.44
-     },
-     {
-      "trecho": "C04",
-      "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.8,
-      "velocidadeKmh": 219.7,
-      "folgaAteAFreadaS": 2.03
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.9,
-      "velocidadeKmh": 251.8,
-      "folgaAteAFreadaS": 1.42
-     },
-     {
-      "trecho": "C04",
-      "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.4,
-      "velocidadeKmh": 234.7,
-      "folgaAteAFreadaS": 1.68
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.5,
-      "velocidadeKmh": 249.8,
+      "sFala": 964.8,
+      "sCarro": 967.0,
+      "velocidadeKmh": 234.5,
       "folgaAteAFreadaS": 1.47
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.1,
-      "velocidadeKmh": 248.8,
-      "folgaAteAFreadaS": 1.49
+      "sFala": 4196.1,
+      "sCarro": 4197.3,
+      "velocidadeKmh": 249.6,
+      "folgaAteAFreadaS": 1.36
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4197.2,
+      "velocidadeKmh": 242.2,
+      "folgaAteAFreadaS": 1.48
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4197.3,
+      "velocidadeKmh": 253.7,
+      "folgaAteAFreadaS": 1.3
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4197.0,
+      "velocidadeKmh": 253.9,
+      "folgaAteAFreadaS": 1.3
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4197.2,
+      "velocidadeKmh": 254.2,
+      "folgaAteAFreadaS": 1.3
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.4,
+      "velocidadeKmh": 252.4,
+      "folgaAteAFreadaS": 1.33
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4197.7,
+      "velocidadeKmh": 251.8,
+      "folgaAteAFreadaS": 1.33
      }
     ]
    },
    "conferencia": {
-    "conferidas": 51,
-    "aplicadas": 7,
+    "conferidas": 52,
+    "aplicadas": 10,
     "semMedida": 3,
     "acuraciaPorVolta": [
      {
@@ -943,13 +768,13 @@
      },
      {
       "volta": 3.0,
-      "aplicadas": 2,
+      "aplicadas": 1,
       "medidas": 7
      },
      {
       "volta": 7.0,
-      "aplicadas": 1,
-      "medidas": 7
+      "aplicadas": 2,
+      "medidas": 8
      },
      {
       "volta": 8.0,
@@ -968,17 +793,17 @@
      },
      {
       "volta": 13.0,
-      "aplicadas": 0,
+      "aplicadas": 1,
       "medidas": 5
      },
      {
       "volta": 14.0,
-      "aplicadas": 0,
+      "aplicadas": 1,
       "medidas": 7
      },
      {
       "volta": 15.0,
-      "aplicadas": 1,
+      "aplicadas": 2,
       "medidas": 8
      }
     ]
@@ -992,8 +817,8 @@
     "com": {
      "coach": 7,
      "resumo": 13,
-     "curva": 6,
-     "analise": 3
+     "analise": 3,
+     "curva": 1
     },
     "pendentesNoFim": {
      "sem": 1,
@@ -1001,23 +826,6 @@
     },
     "mesmaMensagemNasDuas": 22,
     "mudaramDeBloco": [
-     {
-      "origem": "coach",
-      "volta": 1,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 1,
-       "sCarro": 3697.2,
-       "fala": "Curva 7: 7 décimos atrás da referência. Mínima 16 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.9
-      },
-      "com": {
-       "voltaDoCarro": 1,
-       "sCarro": 2750.2,
-       "fala": "Curva 7: 7 décimos atrás da referência.",
-       "duracaoS": 3.33
-      }
-     },
      {
       "origem": "coach",
       "volta": 1,
@@ -1030,26 +838,9 @@
       },
       "com": {
        "voltaDoCarro": 1,
-       "sCarro": 3306.3,
-       "fala": "Curva 11, esquerda: 1,7 segundo atrás da referência.",
-       "duracaoS": 4.39
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 4,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 4,
-       "sCarro": 3697.3,
-       "fala": "Curva 7: 7 décimos atrás da referência. Mínima 25 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.15
-      },
-      "com": {
-       "voltaDoCarro": 4,
-       "sCarro": 2922.2,
-       "fala": "Curva 7, direita: 7 décimos atrás da referência.",
-       "duracaoS": 4.0
+       "sCarro": 4088.1,
+       "fala": "Curva 11: 1,7 segundo atrás da referência.",
+       "duracaoS": 3.7
       }
      },
      {
@@ -1063,27 +854,10 @@
        "duracaoS": 6.76
       },
       "com": {
-       "voltaDoCarro": 4,
-       "sCarro": 3306.1,
-       "fala": "Curva 11, esquerda: 1,2 segundo atrás da referência.",
-       "duracaoS": 4.29
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 6,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 6,
-       "sCarro": 3698.1,
-       "fala": "Curva 7: 1,1 segundo atrás. Mínima 67 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.92
-      },
-      "com": {
-       "voltaDoCarro": 6,
-       "sCarro": 3306.3,
-       "fala": "Curva 7, direita: 1,1 segundo atrás da referência.",
-       "duracaoS": 4.21
+       "voltaDoCarro": 5,
+       "sCarro": 1510.5,
+       "fala": "Curva 11: 1,2 segundo atrás. Mínima 26 quilômetros por hora abaixo.",
+       "duracaoS": 6.13
       }
      },
      {
@@ -1116,8 +890,8 @@
       "com": {
        "voltaDoCarro": 10,
        "sCarro": 554.2,
-       "fala": "1,3 segundo atrás da melhor da sessão. Curva 1: 8 décimos.",
-       "duracaoS": 5.3
+       "fala": "1,3 segundo atrás da melhor da sessão. Curva 1: 8 décimos, freou 24 metros antes da referência.",
+       "duracaoS": 7.86
       }
      },
      {
@@ -1132,9 +906,9 @@
       },
       "com": {
        "voltaDoCarro": 10,
-       "sCarro": 2922.7,
-       "fala": "Curva 7: 1,0 segundo atrás.",
-       "duracaoS": 3.13
+       "sCarro": 3306.2,
+       "fala": "Curva 7: 1,0 segundo atrás da referência. Mínima 20 quilômetros por hora abaixo da referência.",
+       "duracaoS": 7.16
       }
      },
      {
@@ -1150,8 +924,8 @@
       "com": {
        "voltaDoCarro": 11,
        "sCarro": 554.1,
-       "fala": "Volta com rodada: 70,7 segundos atrás da melhor da sessão.",
-       "duracaoS": 4.76
+       "fala": "Volta com rodada: 2 minutos e 39,7 segundos, 70,7 segundos atrás da melhor da sessão.",
+       "duracaoS": 7.69
       }
      },
      {
@@ -1183,22 +957,14 @@
       },
       "com": {
        "voltaDoCarro": 13,
-       "sCarro": 3307.0,
-       "fala": "Curva 7, direita: 7 décimos atrás da referência.",
-       "duracaoS": 4.0
+       "sCarro": 3618.2,
+       "fala": "Curva 7: 7 décimos atrás da referência. Mínima 9 quilômetros por hora abaixo da referência.",
+       "duracaoS": 6.66
       }
      }
     ],
     "soSem": [],
     "soCom": [
-     {
-      "origem": "curva",
-      "volta": 2,
-      "voltaDoCarro": 3,
-      "titulo": "C06, direita",
-      "fala": "Curva 6: 1,3 segundo, mínima 28 quilômetros por hora abaixo da referência.",
-      "sCarro": 1510.4
-     },
      {
       "origem": "curva",
       "volta": 8,
@@ -1208,68 +974,19 @@
       "sCarro": 1510.3
      },
      {
-      "origem": "curva",
-      "volta": 9,
-      "voltaDoCarro": 10,
-      "titulo": "C01, esquerda",
-      "fala": "Curva 1: 8 décimos.",
-      "sCarro": 904.6
-     },
-     {
-      "origem": "curva",
-      "volta": 13,
-      "voltaDoCarro": 14,
-      "titulo": "C06, direita",
-      "fala": "Curva 6: 3,5 segundos, mínima 47 quilômetros por hora abaixo.",
-      "sCarro": 1511.2
-     },
-     {
-      "origem": "curva",
-      "volta": 14,
-      "voltaDoCarro": 15,
-      "titulo": "C09, direita",
-      "fala": "Curva 9: 8 décimos.",
-      "sCarro": 881.0
-     },
-     {
       "origem": "analise",
       "volta": 15,
       "voltaDoCarro": 16,
       "titulo": "Análise das voltas 13 a 15",
       "fala": "Curva 1: perde 7 décimos por volta. Freou 52 metros antes.",
       "sCarro": 1510.1
-     },
-     {
-      "origem": "curva",
-      "volta": 15,
-      "voltaDoCarro": 16,
-      "titulo": "C01, esquerda",
-      "fala": "Curva 1: 8 décimos.",
-      "sCarro": 2923.0
      }
     ],
     "comCausaNaVoz": {
      "sem": 15,
-     "com": 5
+     "com": 15
     },
     "perderamACausa": [
-     {
-      "origem": "coach",
-      "volta": 1,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 1,
-       "sCarro": 3697.2,
-       "fala": "Curva 7: 7 décimos atrás da referência. Mínima 16 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.9
-      },
-      "com": {
-       "voltaDoCarro": 1,
-       "sCarro": 2750.2,
-       "fala": "Curva 7: 7 décimos atrás da referência.",
-       "duracaoS": 3.33
-      }
-     },
      {
       "origem": "coach",
       "volta": 1,
@@ -1282,94 +999,9 @@
       },
       "com": {
        "voltaDoCarro": 1,
-       "sCarro": 3306.3,
-       "fala": "Curva 11, esquerda: 1,7 segundo atrás da referência.",
-       "duracaoS": 4.39
-      }
-     },
-     {
-      "origem": "resumo",
-      "volta": 2,
-      "titulo": "Volta 2: 1:33,294",
-      "sem": {
-       "voltaDoCarro": 3,
-       "sCarro": 723.8,
-       "fala": "Melhor da sessão. Curva 6: 1,3 segundo, mínima 28 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.49
-      },
-      "com": {
-       "voltaDoCarro": 3,
-       "sCarro": 554.2,
-       "fala": "Melhor da sessão. Curva 6: 1,3 segundo.",
-       "duracaoS": 4.28
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 4,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 4,
-       "sCarro": 3697.3,
-       "fala": "Curva 7: 7 décimos atrás da referência. Mínima 25 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.15
-      },
-      "com": {
-       "voltaDoCarro": 4,
-       "sCarro": 2922.2,
-       "fala": "Curva 7, direita: 7 décimos atrás da referência.",
-       "duracaoS": 4.0
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 4,
-      "titulo": "C11, esquerda",
-      "sem": {
-       "voltaDoCarro": 5,
-       "sCarro": 723.2,
-       "fala": "Curva 11: 1,2 segundo atrás. Mínima 26 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.76
-      },
-      "com": {
-       "voltaDoCarro": 4,
-       "sCarro": 3306.1,
-       "fala": "Curva 11, esquerda: 1,2 segundo atrás da referência.",
-       "duracaoS": 4.29
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 6,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 6,
-       "sCarro": 3698.1,
-       "fala": "Curva 7: 1,1 segundo atrás. Mínima 67 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.92
-      },
-      "com": {
-       "voltaDoCarro": 6,
-       "sCarro": 3306.3,
-       "fala": "Curva 7, direita: 1,1 segundo atrás da referência.",
-       "duracaoS": 4.21
-      }
-     },
-     {
-      "origem": "resumo",
-      "volta": 7,
-      "titulo": "Volta 7: 1:30,828",
-      "sem": {
-       "voltaDoCarro": 8,
-       "sCarro": 723.6,
-       "fala": "6 décimos atrás da melhor da sessão. Curva 4: 1,3 segundo, freou 64 metros antes.",
-       "duracaoS": 7.58
-      },
-      "com": {
-       "voltaDoCarro": 8,
-       "sCarro": 554.5,
-       "fala": "6 décimos atrás da melhor da sessão. Curva 4: 1,3 segundo.",
-       "duracaoS": 5.51
+       "sCarro": 4088.1,
+       "fala": "Curva 11: 1,7 segundo atrás da referência.",
+       "duracaoS": 3.7
       }
      },
      {
@@ -1388,127 +1020,25 @@
        "fala": "Voltas 2, 3 e 7. Curva 4: perde 1,3 segundo por volta.",
        "duracaoS": 5.97
       }
-     },
-     {
-      "origem": "resumo",
-      "volta": 9,
-      "titulo": "Volta 9: 1:30,401",
-      "sem": {
-       "voltaDoCarro": 10,
-       "sCarro": 1637.1,
-       "fala": "1,3 segundo atrás da melhor da sessão. Curva 1: 8 décimos, freou 24 metros antes da referência.",
-       "duracaoS": 7.86
-      },
-      "com": {
-       "voltaDoCarro": 10,
-       "sCarro": 554.2,
-       "fala": "1,3 segundo atrás da melhor da sessão. Curva 1: 8 décimos.",
-       "duracaoS": 5.3
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 10,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 10,
-       "sCarro": 3697.7,
-       "fala": "Curva 7: 1,0 segundo atrás da referência. Mínima 20 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.16
-      },
-      "com": {
-       "voltaDoCarro": 10,
-       "sCarro": 2922.7,
-       "fala": "Curva 7: 1,0 segundo atrás.",
-       "duracaoS": 3.13
-      }
-     },
-     {
-      "origem": "resumo",
-      "volta": 12,
-      "titulo": "Volta 12: 1:29,346",
-      "sem": {
-       "voltaDoCarro": 13,
-       "sCarro": 723.6,
-       "fala": "3 décimos atrás da melhor da sessão. Curva 6: 9 décimos, mínima 25 quilômetros por hora abaixo.",
-       "duracaoS": 7.62
-      },
-      "com": {
-       "voltaDoCarro": 13,
-       "sCarro": 554.6,
-       "fala": "3 décimos atrás da melhor da sessão. Curva 6: 9 décimos.",
-       "duracaoS": 4.98
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 13,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 14,
-       "sCarro": 3697.5,
-       "fala": "Curva 7: 7 décimos atrás da referência. Mínima 9 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.66
-      },
-      "com": {
-       "voltaDoCarro": 13,
-       "sCarro": 3307.0,
-       "fala": "Curva 7, direita: 7 décimos atrás da referência.",
-       "duracaoS": 4.0
-      }
-     },
-     {
-      "origem": "resumo",
-      "volta": 14,
-      "titulo": "Volta 14: 1:29,884",
-      "sem": {
-       "voltaDoCarro": 15,
-       "sCarro": 723.8,
-       "fala": "8 décimos atrás da melhor da sessão. Curva 9: 8 décimos, mínima 43 quilômetros por hora abaixo.",
-       "duracaoS": 7.58
-      },
-      "com": {
-       "voltaDoCarro": 15,
-       "sCarro": 554.5,
-       "fala": "8 décimos atrás da melhor da sessão. Curva 9: 8 décimos.",
-       "duracaoS": 4.98
-      }
-     },
-     {
-      "origem": "resumo",
-      "volta": 15,
-      "titulo": "Volta 15: 1:29,713",
-      "sem": {
-       "voltaDoCarro": 16,
-       "sCarro": 723.4,
-       "fala": "7 décimos atrás da melhor da sessão. Curva 1: 8 décimos, freou 52 metros antes da referência.",
-       "duracaoS": 7.54
-      },
-      "com": {
-       "voltaDoCarro": 16,
-       "sCarro": 554.1,
-       "fala": "7 décimos atrás da melhor da sessão. Curva 1: 8 décimos.",
-       "duracaoS": 4.88
-      }
      }
     ],
     "duracaoMediaS": {
      "sem": 7.14,
-     "com": 4.34
+     "com": 6.47
     }
    },
    "acimaDoLimite": [],
    "maiorDuracaoPorOrigem": {
-    "aviso": 4.45,
-    "coach": 4.39,
-    "analise": 5.97,
-    "curva": 5.9,
-    "resumo": 5.51
+    "aviso": 3.27,
+    "curva": 5.43,
+    "coach": 7.16,
+    "resumo": 7.86,
+    "analise": 5.97
    },
    "listaNoFim": [
     {
      "trecho": "C01",
-     "causa": "freada cedo",
+     "causa": "frenagem cedo",
      "frase": "freie 10 metros depois da placa de 100",
      "voz": true
     },
@@ -1521,19 +1051,19 @@
     {
      "trecho": "C03",
      "causa": "mínima baixa",
-     "frase": "vire 10 metros depois do começo da zebra à esquerda",
+     "frase": "sem tirar o pé",
      "voz": false
     },
     {
      "trecho": "C04",
-     "causa": "freada cedo",
+     "causa": "frenagem cedo",
      "frase": "freie 10 metros antes da placa de 100",
      "voz": true
     },
     {
      "trecho": "C05",
      "causa": "mínima baixa",
-     "frase": "vire no começo da zebra à esquerda",
+     "frase": "sem tirar o pé",
      "voz": false
     },
     {
@@ -1574,7 +1104,7 @@
     },
     {
      "trecho": "C12",
-     "causa": "freada cedo",
+     "causa": "frenagem cedo",
      "frase": "freie 15 metros depois da placa de 100",
      "voz": false
     },
@@ -1606,137 +1136,138 @@
     "pelaVoz": 12,
     "soNaJanela": 87,
     "pelaVozPorTrecho": {
-     "C04": 2,
-     "C01": 10
+     "C01": 10,
+     "C04": 2
     },
     "soNaJanelaPorMotivo": {
-     "a referência não freia no trecho": 41,
+     "a referência não freia no trecho": 38,
+     "sem tirar o pé (a referência não freia nem alivia no trecho)": 13,
      "outra fala em andamento": 5,
-     "sem bloco de voz antes da freada": 25,
      "a frase não cabe no bloco": 13,
+     "sem bloco de voz antes da frenagem": 15,
      "volta de saída dos boxes": 3
     },
     "entreguesNoRadio": 12,
     "folgaAteAFreadaS": {
-     "min": 1.26,
-     "max": 5.87,
+     "min": 1.17,
+     "max": 10.83,
      "todas": [
-      1.56,
-      1.29,
-      1.32,
-      1.33,
-      1.35,
-      3.23,
-      1.61,
-      1.26,
-      1.32,
+      1.19,
+      1.22,
+      1.27,
+      1.28,
+      1.41,
+      10.83,
       1.3,
-      5.87,
-      1.38
+      1.17,
+      1.2,
+      1.2,
+      10.48,
+      1.24
      ]
     },
     "pelaVozLista": [
      {
-      "trecho": "C04",
-      "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.1,
-      "velocidadeKmh": 240.5,
-      "folgaAteAFreadaS": 1.56
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.1,
+      "velocidadeKmh": 262.6,
+      "folgaAteAFreadaS": 1.19
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.1,
-      "velocidadeKmh": 259.9,
-      "folgaAteAFreadaS": 1.29
+      "sFala": 4196.1,
+      "sCarro": 4196.2,
+      "velocidadeKmh": 260.8,
+      "folgaAteAFreadaS": 1.22
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.0,
-      "velocidadeKmh": 258.0,
-      "folgaAteAFreadaS": 1.32
+      "sFala": 4196.1,
+      "sCarro": 4196.9,
+      "velocidadeKmh": 256.2,
+      "folgaAteAFreadaS": 1.27
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4123.3,
+      "sFala": 4196.1,
+      "sCarro": 4196.3,
       "velocidadeKmh": 256.3,
-      "folgaAteAFreadaS": 1.33
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.3,
-      "velocidadeKmh": 256.4,
-      "folgaAteAFreadaS": 1.35
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.0,
-      "velocidadeKmh": 183.0,
-      "folgaAteAFreadaS": 3.23
+      "folgaAteAFreadaS": 1.28
      },
      {
       "trecho": "C04",
       "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 876.6,
-      "velocidadeKmh": 237.2,
-      "folgaAteAFreadaS": 1.61
+      "sFala": 964.8,
+      "sCarro": 964.9,
+      "velocidadeKmh": 240.4,
+      "folgaAteAFreadaS": 1.41
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.7,
-      "velocidadeKmh": 260.9,
-      "folgaAteAFreadaS": 1.26
+      "sFala": 4196.1,
+      "sCarro": 4196.3,
+      "velocidadeKmh": 70.8,
+      "folgaAteAFreadaS": 10.83
      },
      {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4121.8,
-      "velocidadeKmh": 258.0,
-      "folgaAteAFreadaS": 1.32
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.6,
-      "velocidadeKmh": 259.0,
+      "trecho": "C04",
+      "frase": "freie 10 metros antes da placa de 100",
+      "sFala": 964.8,
+      "sCarro": 965.6,
+      "velocidadeKmh": 246.8,
       "folgaAteAFreadaS": 1.3
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4121.7,
-      "velocidadeKmh": 130.7,
-      "folgaAteAFreadaS": 5.87
+      "sFala": 4196.1,
+      "sCarro": 4197.2,
+      "velocidadeKmh": 263.3,
+      "folgaAteAFreadaS": 1.17
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.0,
-      "velocidadeKmh": 255.1,
-      "folgaAteAFreadaS": 1.38
+      "sFala": 4196.1,
+      "sCarro": 4197.1,
+      "velocidadeKmh": 260.9,
+      "folgaAteAFreadaS": 1.2
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.5,
+      "velocidadeKmh": 261.8,
+      "folgaAteAFreadaS": 1.2
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.8,
+      "velocidadeKmh": 72.7,
+      "folgaAteAFreadaS": 10.48
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.8,
+      "velocidadeKmh": 258.5,
+      "folgaAteAFreadaS": 1.24
      }
     ]
    },
    "conferencia": {
     "conferidas": 44,
-    "aplicadas": 15,
+    "aplicadas": 14,
     "semMedida": 0,
     "acuraciaPorVolta": [
      {
@@ -1746,7 +1277,7 @@
      },
      {
       "volta": 10.0,
-      "aplicadas": 3,
+      "aplicadas": 2,
       "medidas": 8
      },
      {
@@ -1761,12 +1292,12 @@
      },
      {
       "volta": 16.0,
-      "aplicadas": 0,
+      "aplicadas": 1,
       "medidas": 6
      },
      {
       "volta": 17.0,
-      "aplicadas": 1,
+      "aplicadas": 0,
       "medidas": 9
      },
      {
@@ -1783,34 +1314,16 @@
      "analise": 2
     },
     "com": {
-     "coach": 18,
+     "coach": 17,
      "resumo": 17,
-     "curva": 2,
      "analise": 2
     },
     "pendentesNoFim": {
      "sem": 2,
-     "com": 0
+     "com": 1
     },
     "mesmaMensagemNasDuas": 35,
     "mudaramDeBloco": [
-     {
-      "origem": "coach",
-      "volta": 1,
-      "titulo": "C11, esquerda",
-      "sem": {
-       "voltaDoCarro": 1,
-       "sCarro": 3697.4,
-       "fala": "Curva 11: 3,1 segundos atrás. Mínima 53 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.92
-      },
-      "com": {
-       "voltaDoCarro": 1,
-       "sCarro": 2922.4,
-       "fala": "Curva 11, esquerda: 3,1 segundos atrás da referência.",
-       "duracaoS": 4.35
-      }
-     },
      {
       "origem": "coach",
       "volta": 1,
@@ -1823,9 +1336,9 @@
       },
       "com": {
        "voltaDoCarro": 1,
-       "sCarro": 3306.8,
-       "fala": "Curva 12: 7 décimos atrás. Freou 18 metros antes da referência.",
-       "duracaoS": 5.54
+       "sCarro": 4125.7,
+       "fala": "Curva 12: 7 décimos atrás.",
+       "duracaoS": 2.66
       }
      },
      {
@@ -1840,9 +1353,9 @@
       },
       "com": {
        "voltaDoCarro": 2,
-       "sCarro": 3306.5,
-       "fala": "Curva 7, direita: 2,2 segundos atrás da referência.",
-       "duracaoS": 4.57
+       "sCarro": 2507.8,
+       "fala": "Curva 7: 2,2 segundos atrás. Mínima 65 quilômetros por hora abaixo da referência.",
+       "duracaoS": 7.2
       }
      },
      {
@@ -1864,23 +1377,6 @@
      },
      {
       "origem": "coach",
-      "volta": 4,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 4,
-       "sCarro": 3697.5,
-       "fala": "Curva 7: 2,5 segundos atrás. Mínima 60 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.97
-      },
-      "com": {
-       "voltaDoCarro": 4,
-       "sCarro": 2922.4,
-       "fala": "Curva 7: 2,5 segundos atrás.",
-       "duracaoS": 3.37
-      }
-     },
-     {
-      "origem": "coach",
       "volta": 5,
       "titulo": "C11, esquerda",
       "sem": {
@@ -1891,9 +1387,9 @@
       },
       "com": {
        "voltaDoCarro": 5,
-       "sCarro": 2922.7,
-       "fala": "Curva 11: 6 décimos atrás.",
-       "duracaoS": 2.54
+       "sCarro": 3315.8,
+       "fala": "Curva 11: 6 décimos atrás da referência. Mínima 26 quilômetros por hora abaixo da referência.",
+       "duracaoS": 6.95
       }
      },
      {
@@ -1908,9 +1404,9 @@
       },
       "com": {
        "voltaDoCarro": 5,
-       "sCarro": 3306.2,
-       "fala": "Curva 12, esquerda: 10,1 segundos atrás da referência.",
-       "duracaoS": 4.38
+       "sCarro": 3618.6,
+       "fala": "Curva 12: 10,1 segundos atrás da referência. Freou 35 metros antes da referência.",
+       "duracaoS": 6.79
       }
      },
      {
@@ -1942,26 +1438,9 @@
       },
       "com": {
        "voltaDoCarro": 7,
-       "sCarro": 3306.2,
-       "fala": "Curva 12, esquerda: 6 décimos atrás da referência.",
-       "duracaoS": 3.93
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 10,
-      "titulo": "C11, esquerda",
-      "sem": {
-       "voltaDoCarro": 10,
-       "sCarro": 3697.3,
-       "fala": "Curva 11, esquerda: 9 décimos atrás da referência. Mínima 8 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.18
-      },
-      "com": {
-       "voltaDoCarro": 10,
-       "sCarro": 2922.9,
-       "fala": "Curva 11: 9 décimos atrás.",
-       "duracaoS": 2.51
+       "sCarro": 3619.5,
+       "fala": "Curva 12, esquerda: 6 décimos atrás da referência. Freou 33 metros antes da referência.",
+       "duracaoS": 6.96
       }
      },
      {
@@ -2010,26 +1489,9 @@
       },
       "com": {
        "voltaDoCarro": 12,
-       "sCarro": 3306.1,
-       "fala": "Curva 7, direita: 1,7 segundo atrás da referência.",
-       "duracaoS": 4.45
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 15,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 15,
-       "sCarro": 3698.1,
-       "fala": "Curva 7: 2,0 segundos atrás. Mínima 51 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.04
-      },
-      "com": {
-       "voltaDoCarro": 15,
-       "sCarro": 2922.4,
-       "fala": "Curva 7: 2,0 segundos atrás.",
-       "duracaoS": 3.29
+       "sCarro": 3618.1,
+       "fala": "Curva 7: 1,7 segundo atrás. Mínima 47 quilômetros por hora abaixo da referência.",
+       "duracaoS": 7.08
       }
      },
      {
@@ -2044,26 +1506,9 @@
       },
       "com": {
        "voltaDoCarro": 15,
-       "sCarro": 3306.8,
-       "fala": "Curva 12, esquerda: 7 décimos atrás da referência.",
-       "duracaoS": 3.98
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 15,
-      "titulo": "C11, esquerda",
-      "sem": {
-       "voltaDoCarro": 15,
-       "sCarro": 3697.4,
-       "fala": "Curva 11: 6 décimos atrás da referência. Mínima 16 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.77
-      },
-      "com": {
-       "voltaDoCarro": 15,
-       "sCarro": 2922.5,
-       "fala": "Curva 11: 6 décimos atrás.",
-       "duracaoS": 2.54
+       "sCarro": 554.3,
+       "fala": "Curva 12, esquerda: 7 décimos atrás da referência. Freou 58 metros antes da referência.",
+       "duracaoS": 7.22
       }
      },
      {
@@ -2079,8 +1524,8 @@
       "com": {
        "voltaDoCarro": 17,
        "sCarro": 554.7,
-       "fala": "2,1 segundos atrás da melhor da sessão. Curva 1: 1,2 segundo.",
-       "duracaoS": 5.79
+       "fala": "2,1 segundos atrás da melhor da sessão. Curva 1: 1,2 segundo, freou 28 metros antes.",
+       "duracaoS": 7.65
       }
      },
      {
@@ -2095,9 +1540,9 @@
       },
       "com": {
        "voltaDoCarro": 17,
-       "sCarro": 940.5,
-       "fala": "Curva 2: 9 décimos atrás.",
-       "duracaoS": 2.56
+       "sCarro": 1510.6,
+       "fala": "Curva 2: 9 décimos atrás. Mínima 38 quilômetros por hora abaixo da referência.",
+       "duracaoS": 6.32
       }
      },
      {
@@ -2113,8 +1558,8 @@
       "com": {
        "voltaDoCarro": 18,
        "sCarro": 554.3,
-       "fala": "4 décimos atrás da melhor da sessão. Curva 1: 1,1 segundo.",
-       "duracaoS": 5.16
+       "fala": "4 décimos atrás da melhor da sessão. Curva 1: 1,1 segundo, freou 28 metros antes.",
+       "duracaoS": 7.02
       }
      },
      {
@@ -2146,9 +1591,9 @@
       },
       "com": {
        "voltaDoCarro": 19,
-       "sCarro": 2922.1,
-       "fala": "Curva 7: 1,3 segundo atrás da referência.",
-       "duracaoS": 3.71
+       "sCarro": 3618.9,
+       "fala": "Curva 7: 1,3 segundo atrás. Mínima 33 quilômetros por hora abaixo da referência.",
+       "duracaoS": 6.84
       }
      },
      {
@@ -2163,30 +1608,14 @@
       },
       "com": {
        "voltaDoCarro": 19,
-       "sCarro": 3306.1,
-       "fala": "Curva 12: 1,0 segundo atrás. Freou 26 metros depois.",
-       "duracaoS": 5.57
+       "sCarro": 3934.2,
+       "fala": "Curva 12: 1,0 segundo atrás da referência. Freou 26 metros depois da referência.",
+       "duracaoS": 6.76
       }
      }
     ],
     "soSem": [],
     "soCom": [
-     {
-      "origem": "curva",
-      "volta": 10,
-      "voltaDoCarro": 11,
-      "titulo": "C11, esquerda",
-      "fala": "Curva 11: 1,4 segundo, mínima 54 quilômetros por hora abaixo.",
-      "sCarro": 1510.6
-     },
-     {
-      "origem": "curva",
-      "volta": 16,
-      "voltaDoCarro": 17,
-      "titulo": "C01, esquerda",
-      "fala": "Curva 1: 1,2 segundo, freou 28 metros antes da referência.",
-      "sCarro": 1510.6
-     },
      {
       "origem": "resumo",
       "volta": 20,
@@ -2194,294 +1623,47 @@
       "titulo": "Volta 20: 3:17,412",
       "fala": "Volta com rodada: 3 minutos e 17,4 segundos, 110,5 segundos atrás da melhor da sessão.",
       "sCarro": 554.5
-     },
-     {
-      "origem": "coach",
-      "volta": 21,
-      "voltaDoCarro": 21,
-      "titulo": "C12, esquerda",
-      "fala": "Curva 12: 6 décimos atrás. Freou 40 metros antes.",
-      "sCarro": 3306.8
      }
     ],
     "comCausaNaVoz": {
      "sem": 25,
-     "com": 13
+     "com": 24
     },
     "perderamACausa": [
      {
       "origem": "coach",
       "volta": 1,
-      "titulo": "C11, esquerda",
-      "sem": {
-       "voltaDoCarro": 1,
-       "sCarro": 3697.4,
-       "fala": "Curva 11: 3,1 segundos atrás. Mínima 53 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.92
-      },
-      "com": {
-       "voltaDoCarro": 1,
-       "sCarro": 2922.4,
-       "fala": "Curva 11, esquerda: 3,1 segundos atrás da referência.",
-       "duracaoS": 4.35
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 2,
-      "titulo": "C07, direita",
+      "titulo": "C12, esquerda",
       "sem": {
        "voltaDoCarro": 2,
-       "sCarro": 3697.2,
-       "fala": "Curva 7: 2,2 segundos atrás. Mínima 65 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.2
+       "sCarro": 724.1,
+       "fala": "Curva 12, esquerda: 7 décimos atrás da referência. Freou 18 metros antes da referência.",
+       "duracaoS": 6.85
       },
       "com": {
-       "voltaDoCarro": 2,
-       "sCarro": 3306.5,
-       "fala": "Curva 7, direita: 2,2 segundos atrás da referência.",
-       "duracaoS": 4.57
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 4,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 4,
-       "sCarro": 3697.5,
-       "fala": "Curva 7: 2,5 segundos atrás. Mínima 60 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.97
-      },
-      "com": {
-       "voltaDoCarro": 4,
-       "sCarro": 2922.4,
-       "fala": "Curva 7: 2,5 segundos atrás.",
-       "duracaoS": 3.37
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 5,
-      "titulo": "C11, esquerda",
-      "sem": {
-       "voltaDoCarro": 5,
-       "sCarro": 3697.6,
-       "fala": "Curva 11: 6 décimos atrás da referência. Mínima 26 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.95
-      },
-      "com": {
-       "voltaDoCarro": 5,
-       "sCarro": 2922.7,
-       "fala": "Curva 11: 6 décimos atrás.",
-       "duracaoS": 2.54
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 5,
-      "titulo": "C12, esquerda",
-      "sem": {
-       "voltaDoCarro": 6,
-       "sCarro": 3697.7,
-       "fala": "Curva 12: 10,1 segundos atrás da referência. Freou 35 metros antes da referência.",
-       "duracaoS": 6.79
-      },
-      "com": {
-       "voltaDoCarro": 5,
-       "sCarro": 3306.2,
-       "fala": "Curva 12, esquerda: 10,1 segundos atrás da referência.",
-       "duracaoS": 4.38
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 7,
-      "titulo": "C12, esquerda",
-      "sem": {
-       "voltaDoCarro": 8,
-       "sCarro": 1181.1,
-       "fala": "Curva 12, esquerda: 6 décimos atrás da referência. Freou 33 metros antes da referência.",
-       "duracaoS": 6.96
-      },
-      "com": {
-       "voltaDoCarro": 7,
-       "sCarro": 3306.2,
-       "fala": "Curva 12, esquerda: 6 décimos atrás da referência.",
-       "duracaoS": 3.93
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 10,
-      "titulo": "C11, esquerda",
-      "sem": {
-       "voltaDoCarro": 10,
-       "sCarro": 3697.3,
-       "fala": "Curva 11, esquerda: 9 décimos atrás da referência. Mínima 8 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.18
-      },
-      "com": {
-       "voltaDoCarro": 10,
-       "sCarro": 2922.9,
-       "fala": "Curva 11: 9 décimos atrás.",
-       "duracaoS": 2.51
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 12,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 14,
-       "sCarro": 3697.2,
-       "fala": "Curva 7: 1,7 segundo atrás. Mínima 47 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.08
-      },
-      "com": {
-       "voltaDoCarro": 12,
-       "sCarro": 3306.1,
-       "fala": "Curva 7, direita: 1,7 segundo atrás da referência.",
-       "duracaoS": 4.45
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 15,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 15,
-       "sCarro": 3698.1,
-       "fala": "Curva 7: 2,0 segundos atrás. Mínima 51 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.04
-      },
-      "com": {
-       "voltaDoCarro": 15,
-       "sCarro": 2922.4,
-       "fala": "Curva 7: 2,0 segundos atrás.",
-       "duracaoS": 3.29
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 15,
-      "titulo": "C12, esquerda",
-      "sem": {
-       "voltaDoCarro": 15,
-       "sCarro": 4164.6,
-       "fala": "Curva 12, esquerda: 7 décimos atrás da referência. Freou 58 metros antes da referência.",
-       "duracaoS": 7.22
-      },
-      "com": {
-       "voltaDoCarro": 15,
-       "sCarro": 3306.8,
-       "fala": "Curva 12, esquerda: 7 décimos atrás da referência.",
-       "duracaoS": 3.98
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 15,
-      "titulo": "C11, esquerda",
-      "sem": {
-       "voltaDoCarro": 15,
-       "sCarro": 3697.4,
-       "fala": "Curva 11: 6 décimos atrás da referência. Mínima 16 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.77
-      },
-      "com": {
-       "voltaDoCarro": 15,
-       "sCarro": 2922.5,
-       "fala": "Curva 11: 6 décimos atrás.",
-       "duracaoS": 2.54
-      }
-     },
-     {
-      "origem": "resumo",
-      "volta": 16,
-      "titulo": "Volta 16: 1:30,180",
-      "sem": {
-       "voltaDoCarro": 17,
-       "sCarro": 3697.2,
-       "fala": "2,1 segundos atrás da melhor da sessão. Curva 1: 1,2 segundo, freou 28 metros antes.",
-       "duracaoS": 7.65
-      },
-      "com": {
-       "voltaDoCarro": 17,
-       "sCarro": 554.7,
-       "fala": "2,1 segundos atrás da melhor da sessão. Curva 1: 1,2 segundo.",
-       "duracaoS": 5.79
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 17,
-      "titulo": "C02, direita",
-      "sem": {
-       "voltaDoCarro": 19,
-       "sCarro": 3697.4,
-       "fala": "Curva 2: 9 décimos atrás da referência. Mínima 38 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.94
-      },
-      "com": {
-       "voltaDoCarro": 17,
-       "sCarro": 940.5,
-       "fala": "Curva 2: 9 décimos atrás.",
-       "duracaoS": 2.56
-      }
-     },
-     {
-      "origem": "resumo",
-      "volta": 17,
-      "titulo": "Volta 17: 1:28,539",
-      "sem": {
-       "voltaDoCarro": 18,
-       "sCarro": 3697.8,
-       "fala": "4 décimos atrás da melhor da sessão. Curva 1: 1,1 segundo, freou 28 metros antes da referência.",
-       "duracaoS": 7.65
-      },
-      "com": {
-       "voltaDoCarro": 18,
-       "sCarro": 554.3,
-       "fala": "4 décimos atrás da melhor da sessão. Curva 1: 1,1 segundo.",
-       "duracaoS": 5.16
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 19,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 19,
-       "sCarro": 4216.9,
-       "fala": "Curva 7: 1,3 segundo atrás. Mínima 33 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.84
-      },
-      "com": {
-       "voltaDoCarro": 19,
-       "sCarro": 2922.1,
-       "fala": "Curva 7: 1,3 segundo atrás da referência.",
-       "duracaoS": 3.71
+       "voltaDoCarro": 1,
+       "sCarro": 4125.7,
+       "fala": "Curva 12: 7 décimos atrás.",
+       "duracaoS": 2.66
       }
      }
     ],
     "duracaoMediaS": {
      "sem": 7.08,
-     "com": 5.46
+     "com": 6.88
     }
    },
    "acimaDoLimite": [],
    "maiorDuracaoPorOrigem": {
-    "aviso": 3.54,
-    "coach": 7.26,
+    "aviso": 2.37,
     "analise": 6.32,
-    "curva": 5.54,
-    "resumo": 7.77
+    "resumo": 7.77,
+    "coach": 7.26
    },
    "listaNoFim": [
     {
      "trecho": "C01",
-     "causa": "freada cedo",
+     "causa": "frenagem cedo",
      "frase": "freie 10 metros depois da placa de 100",
      "voz": true
     },
@@ -2511,7 +1693,7 @@
     },
     {
      "trecho": "C07",
-     "causa": "freada cedo",
+     "causa": "frenagem cedo",
      "frase": "freie 35 metros antes do começo da zebra à direita",
      "voz": false
     },
@@ -2535,7 +1717,7 @@
     },
     {
      "trecho": "C12",
-     "causa": "freada cedo",
+     "causa": "frenagem cedo",
      "frase": "freie 15 metros depois da placa de 100",
      "voz": false
     },
@@ -2548,7 +1730,7 @@
     {
      "trecho": "C14",
      "causa": "traçado por fora",
-     "frase": "vire 40 metros depois do fim da zebra à esquerda",
+     "frase": "sem tirar o pé",
      "voz": false
     },
     {
@@ -2564,103 +1746,77 @@
    "voltasQueContaram": 5,
    "avisos": {
     "dados": 56,
-    "pelaVoz": 8,
-    "soNaJanela": 48,
+    "pelaVoz": 5,
+    "soNaJanela": 51,
     "pelaVozPorTrecho": {
-     "C04": 4,
-     "C01": 4
+     "C01": 4,
+     "C04": 1
     },
     "soNaJanelaPorMotivo": {
-     "a referência não freia no trecho": 21,
-     "sem bloco de voz antes da freada": 19,
-     "a frase não cabe no bloco": 5,
-     "outra fala em andamento": 3
+     "sem tirar o pé (a referência não freia nem alivia no trecho)": 10,
+     "outra fala em andamento": 6,
+     "sem bloco de voz antes da frenagem": 13,
+     "a referência não freia no trecho": 17,
+     "a frase não cabe no bloco": 5
     },
-    "entreguesNoRadio": 8,
+    "entreguesNoRadio": 5,
     "folgaAteAFreadaS": {
-     "min": 1.39,
-     "max": 4.98,
+     "min": 1.26,
+     "max": 9.57,
      "todas": [
-      1.71,
-      1.49,
-      2.11,
-      1.39,
-      1.79,
-      1.67,
-      2.02,
-      4.98
+      1.32,
+      1.38,
+      1.86,
+      1.26,
+      9.57
      ]
     },
     "pelaVozLista": [
      {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4197.1,
+      "velocidadeKmh": 253.0,
+      "folgaAteAFreadaS": 1.32
+     },
+     {
       "trecho": "C04",
       "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.6,
-      "velocidadeKmh": 233.5,
-      "folgaAteAFreadaS": 1.71
+      "sFala": 964.8,
+      "sCarro": 964.9,
+      "velocidadeKmh": 242.1,
+      "folgaAteAFreadaS": 1.38
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4121.7,
-      "velocidadeKmh": 249.3,
-      "folgaAteAFreadaS": 1.49
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4121.9,
-      "velocidadeKmh": 220.6,
-      "folgaAteAFreadaS": 2.11
-     },
-     {
-      "trecho": "C01",
-      "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.2,
-      "velocidadeKmh": 253.9,
-      "folgaAteAFreadaS": 1.39
-     },
-     {
-      "trecho": "C04",
-      "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.2,
-      "velocidadeKmh": 230.0,
-      "folgaAteAFreadaS": 1.79
-     },
-     {
-      "trecho": "C04",
-      "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.9,
-      "velocidadeKmh": 235.1,
-      "folgaAteAFreadaS": 1.67
-     },
-     {
-      "trecho": "C04",
-      "frase": "freie 10 metros antes da placa de 100",
-      "sFala": 875.0,
-      "sCarro": 875.6,
+      "sFala": 4196.1,
+      "sCarro": 4197.0,
       "velocidadeKmh": 220.5,
-      "folgaAteAFreadaS": 2.02
+      "folgaAteAFreadaS": 1.86
      },
      {
       "trecho": "C01",
       "frase": "freie 10 metros depois da placa de 100",
-      "sFala": 4121.7,
-      "sCarro": 4122.0,
-      "velocidadeKmh": 144.6,
-      "folgaAteAFreadaS": 4.98
+      "sFala": 4196.1,
+      "sCarro": 4196.8,
+      "velocidadeKmh": 256.9,
+      "folgaAteAFreadaS": 1.26
+     },
+     {
+      "trecho": "C01",
+      "frase": "freie 10 metros depois da placa de 100",
+      "sFala": 4196.1,
+      "sCarro": 4196.1,
+      "velocidadeKmh": 78.4,
+      "folgaAteAFreadaS": 9.57
      }
     ]
    },
    "conferencia": {
     "conferidas": 29,
-    "aplicadas": 7,
+    "aplicadas": 10,
     "semMedida": 2,
     "acuraciaPorVolta": [
      {
@@ -2670,12 +1826,12 @@
      },
      {
       "volta": 3.0,
-      "aplicadas": 2,
+      "aplicadas": 3,
       "medidas": 7
      },
      {
       "volta": 5.0,
-      "aplicadas": 2,
+      "aplicadas": 3,
       "medidas": 7
      },
      {
@@ -2685,7 +1841,7 @@
      },
      {
       "volta": 8.0,
-      "aplicadas": 3,
+      "aplicadas": 4,
       "medidas": 8
      }
     ]
@@ -2698,9 +1854,9 @@
     },
     "com": {
      "resumo": 7,
-     "curva": 3,
      "coach": 4,
-     "analise": 1
+     "analise": 1,
+     "curva": 1
     },
     "pendentesNoFim": {
      "sem": 0,
@@ -2708,40 +1864,6 @@
     },
     "mesmaMensagemNasDuas": 12,
     "mudaramDeBloco": [
-     {
-      "origem": "coach",
-      "volta": 4,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 4,
-       "sCarro": 3697.6,
-       "fala": "Curva 7: 1,0 segundo atrás. Mínima 57 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.09
-      },
-      "com": {
-       "voltaDoCarro": 4,
-       "sCarro": 2922.5,
-       "fala": "Curva 7: 1,0 segundo atrás.",
-       "duracaoS": 3.13
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 4,
-      "titulo": "C11, esquerda",
-      "sem": {
-       "voltaDoCarro": 6,
-       "sCarro": 3697.6,
-       "fala": "Curva 11: 7 décimos atrás da referência. Mínima 24 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.07
-      },
-      "com": {
-       "voltaDoCarro": 4,
-       "sCarro": 3306.2,
-       "fala": "Curva 11, esquerda: 7 décimos atrás da referência.",
-       "duracaoS": 3.93
-      }
-     },
      {
       "origem": "resumo",
       "volta": 4,
@@ -2755,8 +1877,42 @@
       "com": {
        "voltaDoCarro": 5,
        "sCarro": 554.4,
-       "fala": "Volta com rodada: 68,0 segundos atrás da melhor da sessão.",
-       "duracaoS": 4.99
+       "fala": "Volta com rodada: 2 minutos e 39,1 segundos, 68,0 segundos atrás da melhor da sessão.",
+       "duracaoS": 7.72
+      }
+     },
+     {
+      "origem": "coach",
+      "volta": 4,
+      "titulo": "C11, esquerda",
+      "sem": {
+       "voltaDoCarro": 7,
+       "sCarro": 3697.0,
+       "fala": "Curva 11: 7 décimos atrás da referência. Mínima 24 quilômetros por hora abaixo da referência.",
+       "duracaoS": 7.07
+      },
+      "com": {
+       "voltaDoCarro": 5,
+       "sCarro": 1511.0,
+       "fala": "Curva 11: 7 décimos atrás. Mínima 24 quilômetros por hora abaixo da referência.",
+       "duracaoS": 6.43
+      }
+     },
+     {
+      "origem": "resumo",
+      "volta": 5,
+      "titulo": "Volta 5: 1:29,389",
+      "sem": {
+       "voltaDoCarro": 6,
+       "sCarro": 3697.6,
+       "fala": "Melhor da sessão, 1,6 segundo mais rápida. Curva 1: 9 décimos, perdeu 5 décimos na frenagem.",
+       "duracaoS": 7.76
+      },
+      "com": {
+       "voltaDoCarro": 6,
+       "sCarro": 554.4,
+       "fala": "Melhor da sessão, 1,6 segundo mais rápida. Curva 1: 9 décimos, perdeu 5 décimos na frenagem.",
+       "duracaoS": 7.76
       }
      },
      {
@@ -2764,8 +1920,8 @@
       "volta": 5,
       "titulo": "Análise das voltas 2, 3 e 5",
       "sem": {
-       "voltaDoCarro": 7,
-       "sCarro": 3697.0,
+       "voltaDoCarro": 8,
+       "sCarro": 3697.5,
        "fala": "Voltas 2, 3 e 5. Curva 4: perde 9 décimos por volta. Freou 34 metros antes da referência.",
        "duracaoS": 8.69
       },
@@ -2781,16 +1937,16 @@
       "volta": 6,
       "titulo": "C12, esquerda",
       "sem": {
-       "voltaDoCarro": 8,
-       "sCarro": 3697.5,
+       "voltaDoCarro": 9,
+       "sCarro": 3697.7,
        "fala": "Curva 12: 1,0 segundo atrás. Mínima 51 quilômetros por hora abaixo da referência.",
        "duracaoS": 6.82
       },
       "com": {
        "voltaDoCarro": 6,
-       "sCarro": 3306.6,
-       "fala": "Curva 12, esquerda: 1,0 segundo atrás da referência.",
-       "duracaoS": 4.39
+       "sCarro": 3618.4,
+       "fala": "Curva 12: 1,0 segundo atrás. Mínima 51 quilômetros por hora abaixo da referência.",
+       "duracaoS": 6.82
       }
      },
      {
@@ -2799,15 +1955,15 @@
       "titulo": "C07, direita",
       "sem": {
        "voltaDoCarro": 9,
-       "sCarro": 3697.7,
+       "sCarro": 4138.9,
        "fala": "Curva 7: 1,3 segundo atrás. Mínima 72 quilômetros por hora abaixo da referência.",
        "duracaoS": 6.93
       },
       "com": {
        "voltaDoCarro": 7,
-       "sCarro": 3306.3,
-       "fala": "Curva 7, direita: 1,3 segundo atrás da referência.",
-       "duracaoS": 4.35
+       "sCarro": 3618.3,
+       "fala": "Curva 7: 1,3 segundo atrás. Mínima 72 quilômetros por hora abaixo da referência.",
+       "duracaoS": 6.93
       }
      }
     ],
@@ -2824,51 +1980,18 @@
     "soCom": [
      {
       "origem": "curva",
-      "volta": 3,
-      "voltaDoCarro": 4,
-      "titulo": "C04, esquerda",
-      "fala": "Curva 4: 9 décimos.",
-      "sCarro": 919.3
-     },
-     {
-      "origem": "curva",
-      "volta": 5,
-      "voltaDoCarro": 6,
-      "titulo": "C01, esquerda",
-      "fala": "Curva 1: 9 décimos.",
-      "sCarro": 2750.1
-     },
-     {
-      "origem": "curva",
       "volta": 7,
       "voltaDoCarro": 8,
       "titulo": "C08, esquerda",
-      "fala": "Curva 8: 3,9 segundos, perdeu 2,9 segundos na freada.",
+      "fala": "Curva 8: 3,9 segundos, perdeu 2,9 segundos na frenagem.",
       "sCarro": 1510.9
      }
     ],
     "comCausaNaVoz": {
      "sem": 7,
-     "com": 1
+     "com": 6
     },
     "perderamACausa": [
-     {
-      "origem": "resumo",
-      "volta": 2,
-      "titulo": "Volta 2: 1:31,341",
-      "sem": {
-       "voltaDoCarro": 3,
-       "sCarro": 723.6,
-       "fala": "Melhor da sessão. Curva 4: 1,1 segundo, freou 34 metros antes da referência.",
-       "duracaoS": 6.76
-      },
-      "com": {
-       "voltaDoCarro": 3,
-       "sCarro": 554.8,
-       "fala": "Melhor da sessão. Curva 4: 1,1 segundo.",
-       "duracaoS": 4.17
-      }
-     },
      {
       "origem": "resumo",
       "volta": 3,
@@ -2885,93 +2008,25 @@
        "fala": "Melhor da sessão, 3 décimos mais rápida. Curva 4: 9 décimos.",
        "duracaoS": 5.49
       }
-     },
-     {
-      "origem": "coach",
-      "volta": 4,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 4,
-       "sCarro": 3697.6,
-       "fala": "Curva 7: 1,0 segundo atrás. Mínima 57 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.09
-      },
-      "com": {
-       "voltaDoCarro": 4,
-       "sCarro": 2922.5,
-       "fala": "Curva 7: 1,0 segundo atrás.",
-       "duracaoS": 3.13
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 4,
-      "titulo": "C11, esquerda",
-      "sem": {
-       "voltaDoCarro": 6,
-       "sCarro": 3697.6,
-       "fala": "Curva 11: 7 décimos atrás da referência. Mínima 24 quilômetros por hora abaixo da referência.",
-       "duracaoS": 7.07
-      },
-      "com": {
-       "voltaDoCarro": 4,
-       "sCarro": 3306.2,
-       "fala": "Curva 11, esquerda: 7 décimos atrás da referência.",
-       "duracaoS": 3.93
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 6,
-      "titulo": "C12, esquerda",
-      "sem": {
-       "voltaDoCarro": 8,
-       "sCarro": 3697.5,
-       "fala": "Curva 12: 1,0 segundo atrás. Mínima 51 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.82
-      },
-      "com": {
-       "voltaDoCarro": 6,
-       "sCarro": 3306.6,
-       "fala": "Curva 12, esquerda: 1,0 segundo atrás da referência.",
-       "duracaoS": 4.39
-      }
-     },
-     {
-      "origem": "coach",
-      "volta": 7,
-      "titulo": "C07, direita",
-      "sem": {
-       "voltaDoCarro": 9,
-       "sCarro": 3697.7,
-       "fala": "Curva 7: 1,3 segundo atrás. Mínima 72 quilômetros por hora abaixo da referência.",
-       "duracaoS": 6.93
-      },
-      "com": {
-       "voltaDoCarro": 7,
-       "sCarro": 3306.3,
-       "fala": "Curva 7, direita: 1,3 segundo atrás da referência.",
-       "duracaoS": 4.35
-      }
      }
     ],
     "duracaoMediaS": {
-     "sem": 7.18,
-     "com": 4.21
+     "sem": 7.19,
+     "com": 6.66
     }
    },
    "acimaDoLimite": [],
    "maiorDuracaoPorOrigem": {
-    "aviso": 3.54,
-    "coach": 4.39,
-    "analise": 5.65,
-    "curva": 5.35,
-    "resumo": 5.75
+    "aviso": 2.37,
+    "curva": 5.48,
+    "coach": 7.09,
+    "resumo": 7.76,
+    "analise": 5.65
    },
    "listaNoFim": [
     {
      "trecho": "C01",
-     "causa": "freada cedo",
+     "causa": "frenagem cedo",
      "frase": "freie 10 metros depois da placa de 100",
      "voz": true
     },
@@ -2983,7 +2038,7 @@
     },
     {
      "trecho": "C04",
-     "causa": "freada cedo",
+     "causa": "frenagem cedo",
      "frase": "freie 10 metros antes da placa de 100",
      "voz": true
     },
@@ -3025,7 +2080,7 @@
     },
     {
      "trecho": "C12",
-     "causa": "freada cedo",
+     "causa": "frenagem cedo",
      "frase": "freie 15 metros depois da placa de 100",
      "voz": false
     },
