@@ -115,7 +115,7 @@ Os testes da checagem que já existiam (`test_regua_do_periodo.py`, `test_store_
 
 **A rodada (A.6), depois do seu sinal, a partir de `f1-telemetry-analyzer-47\backend`:**
 
-1. **Guardar a cópia de antes,** fora do git e fora de `data\ml`: o `laps_grid_v2.parquet` (398 MB), o `laps_grid_v2_meta.json`, o `store_v2_relatorio.json` e a pasta `evolucao`.
+1. **Guardar a cópia de antes,** fora do git (ela ficou em `data\ml\_backup_antes_pedido54\`, veja A.6): o `laps_grid_v2.parquet` (398 MB), o `laps_grid_v2_meta.json`, o `store_v2_relatorio.json` e a pasta `evolucao`.
 2. **Conferir** que o app instalado e o app do repositório estão fechados, que nenhuma sessão está sendo gravada e que o `acs.exe` está fechado.
 3. **O passo 6, sozinho:** `python -m ml.scripts.build_lap_store_v2 --incremental`.
    - É o mesmo comando que o `atualizar_coach` roda no passo 6, com o inventário de `data\ml\origem` e o cache de `data\ml\cache_store_v2`.
@@ -126,6 +126,88 @@ Os testes da checagem que já existiam (`test_regua_do_periodo.py`, `test_store_
 6. **Conferir pelo SHA-256** que os arquivos regravados na pasta principal são os novos.
 
 **O que eu não sei antes de rodar:** se as 3 sessões entram. A regra decide pela medida. Se alguma ficar acima de 2,0 ms, o store continua com `aprovado: false`, o passo 7 não roda, e eu paro e aviso.
+
+## A.6, a rodada (17/11, depois do seu sinal)
+
+**O sinal:**
+- você respondeu "Pode rodar" aqui;
+- pela sessão que abriu esta, chegou a resposta com as suas palavras: "o teste do 52 no jogo não está acontecendo, e o app instalado e o do repositório estão fechados";
+- a mesma resposta pediu a linha da decisão no ADR 0007. **Ela foi escrita no commit `ff0ce3ed`,** com uma linha no índice.
+
+**Antes de rodar:**
+- **A cópia de antes** ficou em `data\ml\_backup_antes_pedido54\`, fora do git, como os outros backups de `data\ml` (ADR 0007). Ela tem:
+  - o `laps_grid_v2.parquet`, o `laps_grid_v2_meta.json` e o `store_v2_relatorio.json`;
+  - a pasta `evolucao`, com 15 arquivos.
+
+  O SHA-256 de cada cópia é igual ao original.
+- **Os apps estavam fechados:** não havia processo do app instalado, do app do repositório, do backend nem do jogo. Também não havia gravação em andamento: a última pasta de gravação mudou em 16/11.
+
+**O passo 6** (`python -m ml.scripts.build_lap_store_v2 --incremental`):
+- **A primeira tentativa (20:34) foi interrompida às 20:47,** no meio da leitura das gravações, quando a sessão anterior terminou. O store e o meta não chegaram a ser escritos: os três arquivos continuaram os de 15/11. O cache do passo 6 ficou sem manifesto.
+- **Por que ele lia tudo:** "a chave global mudou: codigo: …". O código desses arquivos é o mesmo do 15/11 (`git diff a168e41f` vazio). A chave mudou pelo fim de linha dos arquivos nesta pasta, como na memória do projeto sobre o cache do coach.
+- **A segunda (21:16 a 21:31) terminou com código 0,** em 929 s, com a leitura completa ("o cache nao tem manifesto").
+  - O `commit` no meta é `ff0ce3ed`, o HEAD na hora de gravar. O código da checagem é o do `b9cd4069`, porque o `ff0ce3ed` só mudou documentos.
+
+**O passo 7** (`python tools/relatorio_evolucao.py`) terminou com código 0, às 21:32.
+
+**O modelo do coach, o inventário e os passos 1 a 5 não rodaram.**
+
+## A.7, o antes e o depois
+
+**O meta:**
+
+| | antes (15/11, `a168e41f`) | depois (17/11) |
+|---|---|---|
+| `aprovado` | `false` | **`true`** |
+| a checagem da linha do jogo | reprovou com as 3 sessões | passou, com as 3 aceitas com margem |
+| as outras checagens | passaram | passaram |
+| a mediana de todas as voltas | 1,4972 m | 1,4972 m |
+| o período contra o jogo | p99 de 3,72 ms (em módulo), mediana de 0,78 ms | o mesmo |
+
+**As sessões aceitas com margem** (`sessoes_aceitas_com_margem`, com `margem_linha_do_jogo_ms` de 2,0):
+
+| sessão | mediana | diferença | efeito (mediana das voltas) | voltas |
+|---|---:|---:|---:|---:|
+| `2026-11-01_19-47-03` | 1,606 m | +0,143 m | **+1,980 ms** | 6 |
+| `2026-11-07_18-46-00` | 1,581 m | +0,118 m | +1,643 ms | 5 |
+| `2026-11-12_22-57-03` | 1,573 m | +0,110 m | +1,590 ms | 4 |
+
+**A de 01/11 entrou por 0,020 ms.** Com o p95, ela provavelmente teria ficado de fora.
+
+**O store:**
+- **o `laps_grid_v2.parquet` ficou byte a byte igual ao de antes** (SHA-256 `8FCADDF17783D50C…` nos dois). Nenhuma volta entrou, saiu ou mudou;
+- são 721 voltas, iguais antes e depois:
+
+  | por origem | | por pasta | | por equipamento | |
+  |---|---:|---|---:|---|---:|
+  | desconhecida | 552 | app instalado | 528 | anterior | 552 |
+  | humano | 153 | repositório | 193 | atual | 169 |
+  | IA | 13 | | | | |
+  | misturada | 3 | | | | |
+
+**O relatório de evolução:**
+
+| | antes (22/10) | depois (17/11) |
+|---|---|---|
+| a referência | `volta_ia`, a `#0013` (1:24,829), sem rótulo | **`volta_do_modelo`, rótulo "Volta de referência"**: `2026-11-15_02-47-12_vhe_interlagos_teste_m1#0008`, 1:24,552 (ADR 0032) |
+| as sessões | 12, de 04/10 a 21/10 | **16, de 04/10 a 12/11**: entraram 24/10, 01/11, 07/11 e 12/11 |
+| o critério do ADR 0015 | "ainda variando" (amplitude de 2,23 s) | **"ainda variando"**: nas 3 últimas sessões, as medianas são 1:31,635, 1:30,364 e 1:30,207, uma amplitude de 1,428 s contra o limite de 0,5 s |
+| a tendência da mediana | — | −0,179 s por sessão |
+| as 3 curvas de maior perda | — | C04, C01 e C12 |
+
+- **O que o terminal ainda mostra:** a saída impressa do relatório ainda escreve "mediana - IA" e "perda para a IA". São os nomes antigos das chaves, que o pedido 51 manteve (seção 1.4 do documento) e que agora medem contra a volta do modelo. **Nos JSONs, o rótulo é "Volta de referência".**
+- **O caminho do modelo nos JSONs:** o `referencia.modelo` e o `referencia.arquivo` apontam para `f1-telemetry-analyzer-47\data\reference_models\…`, os vínculos reais da Parte 0. O conteúdo é o mesmo da pasta principal (o mesmo arquivo), mas o caminho escrito é o desta pasta.
+
+**A conferência pelo SHA-256 na pasta principal** (`data\ml`, pela junção, os mesmos arquivos):
+
+| arquivo | SHA-256 (início) | igual ao de antes? |
+|---|---|---|
+| `laps_grid_v2.parquet` | `8FCADDF17783D50C` | sim, byte a byte |
+| `laps_grid_v2_meta.json` | `6E05753DE2FCDC00` | não (novo) |
+| `store_v2_relatorio.json` | `2DCF28E9244AE982` | não (novo) |
+| `evolucao\resumo.json` | `16F0C64F631C5EF4` | não (novo) |
+| `evolucao\painel.html` | `4EA2A8B13ECFF02D` | não (novo) |
+| `evolucao\sessao_*.json` | 16 arquivos, de 21:31:57 a 21:32:04 | 12 refeitos e 4 novos |
 
 ## Parte B: as hipóteses, registradas antes das contas (17/11, 21:20)
 
