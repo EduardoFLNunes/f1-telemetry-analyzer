@@ -47,6 +47,13 @@ OVERLAP_LIMIT = 0.5
 GAME_LINE_REGISTERED_M = 1.463
 GAME_LINE_TOLERANCE_M = 0.10
 GAME_LINE_MIN_LAPS = 3
+# Pedido 54 (decisao do Eduardo de 17/11, docs/store_v2_e_evolucao.md, emenda de
+# 17/11): uma sessao fora da tolerancia e "aceita com margem" quando o efeito no
+# tempo fica em ate 2,0 ms em modulo. O efeito, volta a volta, e a diferenca da
+# sessao (mediana - 1,463 m) dividida pela velocidade na passagem do comeco da
+# volta (onde a linha e medida); o numero da sessao e a mediana desses efeitos.
+GAME_LINE_MARGIN_MS = 2.0
+GAME_LINE_MARGIN_DECIDED = "2026-11-17"
 EXPECTED_SHIFT_MS = (20.0, 35.0)
 OTHER_SECTORS_LIMIT_MS = 5.0
 
@@ -147,19 +154,41 @@ def check_period(laps: pd.DataFrame, limit_ms: float = PERIOD_LIMIT_MS) -> Dict[
     }
 
 
+def margin_effect_ms(difference_m: float, start_speeds_kmh: pd.Series) -> Optional[float]:
+    """O efeito no tempo de uma sessao fora da tolerancia (pedido 54), em ms, ou None.
+
+    Volta a volta, `1000 x diferenca da sessao / v`, com `v` a velocidade na passagem
+    do comeco da volta, em m/s; vale a mediana, com o sinal. Sem velocidade, None.
+    """
+    speed = pd.to_numeric(start_speeds_kmh, errors="coerce").astype(float) / 3.6
+    speed = speed[np.isfinite(speed) & (speed > 0)]
+    if speed.empty:
+        return None
+    return float(np.median(1000.0 * difference_m / speed.to_numpy()))
+
+
 def check_game_line(laps: pd.DataFrame, registered_m: float = GAME_LINE_REGISTERED_M,
                     tolerance_m: float = GAME_LINE_TOLERANCE_M,
-                    min_laps: int = GAME_LINE_MIN_LAPS) -> Dict[str, object]:
+                    min_laps: int = GAME_LINE_MIN_LAPS,
+                    margin_ms: float = GAME_LINE_MARGIN_MS) -> Dict[str, object]:
     """A linha do jogo fica onde foi medida no pedido 33, sessao a sessao (pedido 34).
 
     Cada sessao com pelo menos `min_laps` voltas medidas tem de ficar a ate
     `tolerance_m` de `registered_m`, e a mediana de todas tambem. Se a geometria
     oficial ou a linha do jogo mudarem, a checagem reprova e diz onde.
+
+    Pedido 54: uma sessao fora da tolerancia, mas com o efeito no tempo
+    (`margin_effect_ms`) em ate `margin_ms` em modulo, e "aceita com margem": nao
+    reprova, e vai para `aceitas_com_margem` com a diferenca e o efeito.
     """
     column = laps["linha_do_jogo_m"] if "linha_do_jogo_m" in laps.columns else pd.Series(np.nan, index=laps.index)
     values = pd.to_numeric(column, errors="coerce")
+    start_speed = (laps["v_linha_inicio_kmh"] if "v_linha_inicio_kmh" in laps.columns
+                   else pd.Series(np.nan, index=laps.index))
     sessions: Dict[str, Dict[str, object]] = {}
     reasons: List[str] = []
+    accepted: List[Dict[str, object]] = []
+    notes: List[str] = []
     for session_id, group in values.groupby(laps["session_id"]):
         measured = group.dropna()
         entry: Dict[str, object] = {"voltas_medidas": int(len(measured))}
@@ -169,9 +198,26 @@ def check_game_line(laps: pd.DataFrame, registered_m: float = GAME_LINE_REGISTER
             entry.update({"mediana_m": round(median, 3), "desvio_m": round(float(measured.std(ddof=0)), 3),
                           "dentro": bool(inside)})
             if not inside:
-                reasons.append(f"{session_id}: a linha do jogo ficou a {median:.3f} m do s = 0, e a registrada e "
-                               f"{registered_m:.3f} m (tolerancia {tolerance_m:.2f} m): a geometria oficial ou a "
-                               f"linha do jogo mudaram")
+                difference = median - registered_m
+                effect = margin_effect_ms(difference, start_speed.loc[measured.index])
+                speeds = int(pd.to_numeric(start_speed.loc[measured.index], errors="coerce").gt(0).sum())
+                entry.update({"diferenca_m": round(difference, 3),
+                              "efeito_ms": round(effect, 3) if effect is not None else None,
+                              "voltas_com_velocidade": speeds})
+                where = (f"{session_id}: a linha do jogo ficou a {median:.3f} m do s = 0, e a registrada e "
+                         f"{registered_m:.3f} m (tolerancia {tolerance_m:.2f} m), diferenca de {difference:+.3f} m")
+                if effect is not None and abs(effect) <= margin_ms:
+                    entry["aceita_com_margem"] = True
+                    accepted.append({"sessao": str(session_id), "mediana_m": round(median, 3),
+                                     "diferenca_m": round(difference, 3), "efeito_ms": round(effect, 3),
+                                     "voltas": speeds, "decisao": GAME_LINE_MARGIN_DECIDED})
+                    notes.append(f"{where}; efeito de {effect:+.3f} ms, ate {margin_ms:.1f} ms: aceita com margem "
+                                 f"(decisao de {GAME_LINE_MARGIN_DECIDED}, pedido 54)")
+                else:
+                    entry["aceita_com_margem"] = False
+                    effect_text = (f"efeito de {effect:+.3f} ms, acima de {margin_ms:.1f} ms" if effect is not None
+                                   else "sem a velocidade na linha para medir o efeito")
+                    reasons.append(f"{where}; {effect_text}: a geometria oficial ou a linha do jogo mudaram")
         else:
             entry["dentro"] = None                      # poucas voltas medidas: sem veredito
         sessions[str(session_id)] = entry
@@ -189,9 +235,19 @@ def check_game_line(laps: pd.DataFrame, registered_m: float = GAME_LINE_REGISTER
         "voltas_medidas": int(values.notna().sum()),
         "sessoes": sessions,
         "sessoes_sem_veredito": sorted(k for k, v in sessions.items() if v["dentro"] is None),
+        "margem_ms": margin_ms,
+        "aceitas_com_margem": accepted,
+        "avisos_aceitas_com_margem": notes,
         "motivos": reasons,
         "passou": not reasons,
     }
+
+
+def margin_meta(checks: Dict[str, Dict[str, object]]) -> Dict[str, object]:
+    """As chaves do meta do store com as sessoes aceitas com margem (pedido 54; o pedido 42 le estas)."""
+    line = checks["linha_do_jogo"]
+    return {"sessoes_aceitas_com_margem": list(line.get("aceitas_com_margem", [])),
+            "margem_linha_do_jogo_ms": line.get("margem_ms", GAME_LINE_MARGIN_MS)}
 
 
 def check_no_box(store: StoredLaps, sectors: Microsectors) -> Dict[str, object]:
