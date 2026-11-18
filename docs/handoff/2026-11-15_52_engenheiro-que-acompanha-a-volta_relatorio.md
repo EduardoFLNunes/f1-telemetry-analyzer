@@ -2,7 +2,10 @@
 
 - **Pedido:** `docs/prompts/2026-11-15_52_engenheiro-que-acompanha-a-volta.md` (o engenheiro que acompanha a volta).
 - **Pasta e branch:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer`, `etapa/engenheiro` (a partir de `develop` em `14fe1ca0`, com o merge do 51, `c4869295`).
-- **Atualização de 16/11 (a seção no fim):** as decisões estão no ADR 0033 e no código. **Parei antes de medir a voz e refazer a D.1:** o jogo (`acs.exe`) está aberto, e há dois pontos em que a regra escrita não faz o que a decisão esperava (a C13 e a C10). Falta a sua resposta.
+- **Atualização de 16/11 e 17/11 (as duas seções no fim):** as decisões estão no ADR 0033 (emenda, itens 1 a 10) e no código.
+  - A B.4 e a D.1 foram refeitas: o feedback com o engenheiro perde a causa na voz em 6 mensagens, contra 42 antes.
+  - A suíte do backend passou: **1069 testes**.
+  - **Pronto para o seu teste no jogo (a Parte E).**
 - **Situação antes da atualização:** **parado na Parte E, como o pedido manda.** As Partes A a D e a documentação da F estão feitas e commitadas. Falta o seu teste no jogo ("rodei o engenheiro"); depois dele, a minha leitura da sessão, o merge em `develop` e o instalador 0.9.0. Há **três pontos para a sua decisão** (a seção "O que precisa de decisão").
 - **Commits** (em `etapa/engenheiro`):
   - `227e46cc` Pedido 52: o texto do pedido
@@ -13,7 +16,12 @@
   - `ef0251a0` a suíte do backend (1062 passando), a conferência da rota e o relatório
   - `fa1262ed` atualização de 16/11: as decisões no ADR 0033, antes do código
   - `a95c0843` atualização de 16/11: as decisões 1 a 4 e 6 no código, os testes e a documentação
-  - o commit deste relatório atualizado
+  - `0bbb85c8` o relatório da atualização (parado antes da D.1)
+  - `cd74772c` o termo "freada" no relatório
+  - `1edbebf3` "frenagem" no lugar de "freada" no que o piloto ouve e lê (ADR 0033, emenda, item 9)
+  - `eb526234` a pisada em andamento na saída do trecho anterior conta desde o começo (a C10; item 10)
+  - `a724ff76` a B.4 com a voz curta, a D.1 refeita e a saída da suíte (os arquivos de dados)
+  - o commit deste relatório
 - **Merge:** nenhum (depois do teste no jogo). **Envio:** nenhum feito por mim (os comandos estão no fim).
 - **Arquivos de handoff** (`docs/handoff/2026-11-15_52_engenheiro-que-acompanha-a-volta_…`):
   - `_relatorio.md` (este);
@@ -384,9 +392,140 @@ Uma saída possível para a C10: se o freio já estiver apertado na saída do tr
 - **O que não mudou:** o verbo e as chaves internas (`freada`, `freadaM`). O texto técnico da documentação também ficou como estava.
 - **Os testes:** 114 do backend passando (o engenheiro, o rádio, o 45, a referência, a análise assistida e o coach). No front, 180 passando e o `tsc` sem erro. O Lua continua passando na conferência contra o SDK.
 
-### O que falta
+### O que faltava (feito depois das suas respostas; veja a seção seguinte)
 
 1. **A sua resposta** aos dois pontos acima (a C13 e a C10). O termo já está aplicado.
 2. **Medir a voz de novo** (a frase curta, sem a vinheta) e refazer a tabela da B.4: quais avisos cabem na voz agora.
 3. **Refazer a D.1** nas 4 sessões. Os dois passos esperam o jogo fechar (o `acs.exe` estava aberto às 14h, com 1h47 de CPU), porque são contas pesadas. Também dependem da resposta acima, que muda a C10.
 4. **A suíte inteira do backend** e o relatório com a D.1 nova. Depois disso, aviso você antes do teste no jogo, como pedido.
+
+## Depois das suas respostas (16/11 e 17/11): a voz curta, a D.1 refeita e o teste no jogo
+
+**As suas respostas:**
+- **"Sim, frenagem":** aplicada (`1edbebf3`; ADR 0033, emenda, item 9). Veja a seção do termo, acima.
+- **A C10, "Sim, do começo dela":** se o freio já estiver apertado (0,15 ou mais) na saída do trecho anterior, a frenagem é onde essa pisada começou (`eb526234`; ADR 0033, emenda, item 10).
+  - Na volta do modelo, só a C10 está nesse caso. A frenagem dela voltou a 2.622 m ("Freie 10 metros antes do começo da zebra à direita."), e a C09 continua sem frenagem.
+  - Os blocos de voz ficaram como na tabela da seção da atualização: a C09 ganhou um bloco de 0,9 s, e os outros sete não mudaram.
+- **A C13:** você não pediu outra regra, então fica a regra escrita. Na volta do modelo, a C13 continua com "vire" e "acelere". Nas sessões, "sem tirar o pé" apareceu na C03, na C05 e na C14, onde a referência do trecho era a sua melhor passagem (veja a D.1).
+
+### B.4 refeita: a duração de cada aviso no molde curto (sem "Curva N:" e sem a vinheta)
+
+A medição usou a voz do projeto (Microsoft Daniel a 1,4x), com o `acs.exe` fechado (`_duracao_dos_avisos.py` e `.json`).
+- Cada aviso ficou cerca de 1,15 s mais curto: 0,34 s da vinheta e cerca de 0,8 s do "Curva N:". A frase da chegada, que não tinha "Curva N:", só perdeu os 0,34 s.
+
+| trecho | ação | a fala | antes | agora | voz ou janela |
+|---|---|---|---:|---:|---|
+| C01 | freie | Freie 10 metros depois da placa de 100. | 3,34 s | 2,37 s | **voz** |
+| C01 | vire | Vire 35 metros antes do começo da zebra à esquerda. | 4,43 s | 3,49 s | **voz** |
+| C02 | freie | Freie no começo da zebra à direita. | 3,20 s | 2,02 s | janela (sem bloco antes da frenagem) |
+| C02 | vire | Vire 5 metros depois do começo da zebra à direita. | 4,28 s | 3,13 s | janela (sem bloco) |
+| C02 | acelere | Acelere no fim da zebra à direita. | 3,10 s | 1,95 s | janela (sem bloco) |
+| C03 | vire | Vire 10 metros depois do começo da zebra à esquerda. | 4,19 s | 3,02 s | janela (a referência não freia) |
+| C03 | acelere | Acelere no ponto marcado. | 2,68 s | 1,52 s | janela (a referência não freia) |
+| C04 | freie | Freie 10 metros antes da placa de 100. | 3,54 s | 2,35 s | **voz** |
+| C04 | vire | Vire no começo da zebra à esquerda. | 3,22 s | 2,02 s | **voz** |
+| C04 | acelere | Acelere 15 metros depois do começo da zebra à direita. | 4,45 s | 3,27 s | **voz** |
+| C05 | vire | Vire no começo da zebra à esquerda. | 3,21 s | 2,02 s | janela (a referência não freia) |
+| C05 | acelere | Acelere 35 metros depois do começo da zebra à esquerda. | 4,83 s | 3,66 s | janela (a referência não freia) |
+| C06 | freie | Freie na placa de 50. | 2,84 s | 1,66 s | **voz** |
+| C06 | vire | Vire no começo da zebra à direita. | 3,19 s | 2,01 s | **voz** |
+| C07 | freie | Freie 35 metros antes do começo da zebra à direita. | 4,67 s | 3,47 s | janela (sem bloco) |
+| C07 | vire | Vire 15 metros depois do começo da zebra à direita. | 4,31 s | 3,14 s | janela (sem bloco) |
+| C07 | acelere | Acelere no fim da zebra à direita. | 3,12 s | 1,95 s | janela (sem bloco) |
+| C08 | freie | Freie no começo da zebra à esquerda. | 3,18 s | 2,05 s | janela (sem bloco) |
+| C08 | vire | Vire 10 metros antes do começo da zebra à esquerda. | 4,09 s | 3,00 s | janela (sem bloco) |
+| C08 | acelere | Acelere 15 metros antes do começo da zebra à direita. | 4,33 s | 3,24 s | janela (sem bloco) |
+| C09 | vire | Vire 30 metros antes do fim da zebra à direita. | 4,02 s | 2,87 s | janela (a referência não freia mais na C09) |
+| C10 | freie | Freie 10 metros antes do começo da zebra à direita. | 4,14 s | 2,98 s | janela (sem bloco) |
+| C10 | vire | Vire 15 metros antes do começo da zebra à direita. | 4,21 s | 3,10 s | janela (sem bloco) |
+| C10 | acelere | Acelere no começo da zebra à esquerda. | 3,27 s | 2,17 s | janela (sem bloco) |
+| C11 | vire | Vire 5 metros depois do começo da zebra à esquerda. | 4,22 s | 3,16 s | janela (a referência não freia) |
+| C11 | acelere | Acelere 80 metros depois do começo da zebra à esquerda. | 4,43 s | 3,35 s | janela (a referência não freia) |
+| C12 | freie | Freie 15 metros depois da placa de 100. | 3,61 s | 2,49 s | janela (não cabe no bloco) |
+| C12 | vire | Vire 20 metros depois do começo da zebra à esquerda. | 4,24 s | 3,12 s | janela (não cabe no bloco) |
+| C12 | acelere | Acelere 10 metros depois do começo da zebra à direita. | 4,28 s | 3,17 s | janela (não cabe no bloco) |
+| C13 | vire | Vire no fim da zebra à direita. | 3,00 s | 1,82 s | janela (a referência não freia) |
+| C13 | acelere | Acelere 30 metros antes do fim da zebra à direita. | 4,19 s | 3,02 s | janela (a referência não freia) |
+| C14 | vire | Vire 40 metros depois do fim da zebra à esquerda. | 4,45 s | 3,08 s | janela (a referência não freia) |
+| C14 | acelere | Acelere no começo da zebra à esquerda. | 3,53 s | 2,17 s | janela (a referência não freia) |
+| C14→linha | acelere | Acelere 15 metros antes do posto de bandeira à direita. | 3,58 s | 3,24 s | janela (sem curva, sem causa) |
+
+**Quais cabem na voz agora:**
+- **Os mesmos de antes:** a C01, a C04 e a C06.
+- **A C12 é a única perto de entrar.** A frase mais curta (2,49 s) mais 1,0 s pede um `s_fala` em 2.910 m, e o bloco começa em 2.922 m: ficam faltando 12 m.
+- **As outras não mudam com a frase mais curta:** ou não têm bloco de voz antes da frenagem, ou a referência não freia.
+
+### D.1 refeita (as 4 sessões, com as decisões 1 a 4, 9 e 10)
+
+As rodadas são as do 51, com o engenheiro ligado (`com`) e desligado (`sem`), a voz de verdade e o relógio do gravador, com o jogo fechado (`_radio_com_e_sem.json`). As 8 rodadas terminaram sem erro.
+
+| sessão | voltas que contaram | avisos dados | pela voz (C01 / C04) | só na janela | folga até a frenagem (mín / máx) | feedback sem / com | mudaram de bloco | com a causa na voz (sem / com) | perderam a causa | acima do limite |
+|---|---:|---:|---|---:|---|---|---:|---|---:|---:|
+| 13/10 (19:24) | 8 | 94 | 17 (11 / 6) | 77 | 1,32 / 9,33 s | 24 / 26 | 10 | 16 / 16 | 2 | 0 |
+| 18/10 (12:38) | 9 | 121 | 16 (12 / 4) | 105 | 1,30 / 1,63 s | 22 / 24 | 8 | 15 / 15 | 2 | 0 |
+| 21/10 (20:30) | 7 | 99 | 12 (10 / 2) | 87 | 1,17 / 10,83 s | 35 / 36 | 17 | 25 / 24 | 1 | 0 |
+| 12/11 (22:57) | 5 | 56 | 5 (4 / 1) | 51 | 1,26 / 9,57 s | 13 / 13 | 6 | 7 / 6 | 1 | 0 |
+
+- **A causa na voz:**
+  - **6 mensagens perdem a causa, contra 42 antes da decisão 1.** Com o engenheiro, a voz diz a causa em 61 mensagens, contra 63 sem ele (antes eram 30 contra 63);
+  - **a duração média do feedback** com o engenheiro voltou a 6,3 a 6,9 s (antes da decisão, 4,2 a 5,5 s; sem o engenheiro, 6,9 a 7,2 s).
+- **As 6 que perderam a causa:**
+  - **3 frases do coach**, porque a variante com a causa (6,8 a 6,9 s) não coube nem na primeira reta longa, antes da reserva do aviso da C04:
+    - 13/10, volta 4: "Curva 12: 1,9 segundo atrás da referência. Freou 56 metros antes da referência." virou "Curva 12: 1,9 segundo atrás da referência." (3,66 s);
+    - 18/10, volta 1: a Curva 11 saiu sem a causa;
+    - 21/10, volta 1: a Curva 12 saiu sem a causa;
+  - **2 resumos:** 13/10, volta 10, e 12/11, volta 3. Em 13/10, a curva com a causa foi numa mensagem própria ("Curva 1: 1,0 segundo, freou 64 metros antes da referência."), pela regra do 45;
+  - **1 análise:** 18/10, volta 7.
+- **Os avisos pela voz:**
+  - **só na C01 (37) e na C04 (13)**, todos entregues;
+  - **a menor folga até a frenagem foi 1,17 s**, então todo aviso acabou mais de 1,0 s antes da frenagem;
+  - **a C06 continua sem voz,** porque a referência dela é a sua melhor passagem, que não freia.
+- **Só na janela, por quê** (as 4 sessões):
+  - a referência não freia no trecho: 125;
+  - sem bloco de voz antes da frenagem: 67;
+  - "sem tirar o pé": 54;
+  - a frase não cabe no bloco: 42;
+  - outra fala em andamento: 27;
+  - volta de saída dos boxes: 5.
+- **"Sem tirar o pé" nas sessões:**
+  - apareceu na C03 (30 vezes), na C05 (19) e na C14 (5), onde a referência era a sua melhor passagem e ela não tirou o pé;
+  - das conferidas, 15 aplicadas e 16 não.
+- **Nenhuma fala acima do limite** (7,3, 8,0 e 8,8 s).
+- **Mensagens pendentes no fim:** 0, 0, 1 e 1 com o engenheiro, contra 1, 1, 2 e 0 sem ele.
+  - **"Só sem"** é a mensagem que, com o engenheiro, ficou pendente no fim: um resumo de volta com rodada de 12/11.
+  - **"Só com"** são as curvas em mensagem própria, uma análise a mais em 18/10 e um resumo de volta com rodada em 21/10, que sem o engenheiro ficou pendente.
+- **A acurácia** (sessões antigas, sem o engenheiro no carro, então o número só mostra que a conta roda): 12 de 48, 10 de 52, 14 de 44 e 10 de 29.
+
+### As suítes
+
+- **Backend, a suíte inteira:** **1069 passando**, nenhuma falha (9 min 30 s; 37 avisos do scikit-learn, os de sempre; `_testes.txt`).
+- **Testes do engenheiro, do rádio, do 45 e da referência:** 98 passando. O engenheiro tem 25 testes.
+- **Front:** 180 testes passando e o `tsc` sem erro.
+- **Lua:** passa na conferência contra o SDK do CSP.
+
+### Para o teste no jogo (a Parte E)
+
+1. **Instale o app do jogo 0.7.0** pelo `instalar.ps1`. Ele mudou desde o relatório anterior (o "frenagem" e a contagem do "sem tirar o pé"), mas continua 0.7.0, porque ainda não tinha sido instalado:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\Users\Dokas\Desktop\f1-telemetry-analyzer\tools\csp_app\instalar.ps1
+```
+
+2. **Abra o app do repositório** na branch `etapa/engenheiro` e ligue a janela "Engenheiro" na barra de apps do jogo.
+3. **O roteiro do pedido:** até 45 minutos, pelo menos 10 voltas. Quando acabar, me avise com **"rodei o engenheiro"**.
+
+**O que vale ouvir e olhar:**
+- os avisos curtos, sem a vinheta, na reta dos boxes ("Freie 10 metros depois da placa de 100.") e na reta oposta;
+- o feedback com a causa, que agora espera a reta longa;
+- "sem tirar o pé" na janela, se a C03, a C05 ou a C14 entrarem na lista com a sua melhor passagem como referência;
+- a marca no asfalto (a decisão 8: você diz se ela aparece a tempo).
+
+### O que falta
+
+1. **A Parte E:** o seu teste no jogo e a minha leitura dele.
+2. **O merge em `develop` e o instalador 0.9.0,** depois do teste. A instalação, só com o seu "pode instalar".
+3. **O envio da branch,** que é seu (o `git push` é recusado aqui):
+
+```bash
+git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer push origin etapa/engenheiro
+```
