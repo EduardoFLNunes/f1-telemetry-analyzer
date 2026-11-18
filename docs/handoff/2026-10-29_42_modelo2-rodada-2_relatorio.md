@@ -181,7 +181,7 @@ O arquivo do Modelo 2 tem 55 testes.
 
 ## O envio
 
-Não tentei: o controle de permissões recusou nas outras vezes. O remoto tem a branch em `a3287e40`. Rode pelo terminal:
+Não tentei: o controle de permissões recusou nas outras vezes. O remoto tem a branch em `13f332ba` (você enviou a etapa anterior); faltam os commits desta etapa (de `e567e694` em diante). Rode pelo terminal:
 
 ```bash
 git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer-48 push origin etapa/modelo2-rodada-2
