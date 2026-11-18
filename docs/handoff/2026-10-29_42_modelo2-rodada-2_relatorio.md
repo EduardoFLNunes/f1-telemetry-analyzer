@@ -1,4 +1,204 @@
-# Pedido 42 — relatório parcial de 18/11: a rodada 3 (a emenda da entrada) e as voltas de teste na cópia da pista; parado
+# Pedido 42 — relatório parcial de 18/11, à tarde: a rodada 4 (a entrada a partir de b_k); parado
+
+- **Pedido:** `docs/prompts/2026-10-29_42_modelo2-rodada-2.md`, com a "Atualização de 18/11, à tarde" (item 1; depois, gravar o relatório parcial e parar).
+- **Data:** 18/11/2026.
+- **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-48`. A atualização estava só nela, sem commit, e foi commitada antes de tudo (`e567e694`). A pasta principal não foi tocada.
+- **As duas mensagens:** a primeira mensagem ("Pode fazer a rodada 4 na C04") chegou antes da instrução completa. A rodada 4 já foi feita pelo item 1 da atualização da tarde, que estava commitado antes do código. Conferi o item 1 de novo depois da segunda mensagem: o texto do pedido não mudou depois de `e567e694`, e a regra, as saídas, o relato e os testes seguem o item. Nada foi refeito.
+- **Branch:** `etapa/modelo2-rodada-2`.
+- **Commits desta etapa:**
+  - `e567e694` — o texto da atualização de 18/11, à tarde;
+  - `4cc7e3f8` — a rodada 4 registrada antes de rodar (seção 6 de `docs/modelo2_tecnica_e_estilo.md` e linha no ADR 0023);
+  - `435e017f` — o código da rodada 4, os testes e a comparação com a rodada anterior;
+  - o commit das saídas e deste relatório (o hash está no chat e na nota da sessão).
+- **Merges:** nenhum.
+- **Arquivos de handoff gerados nesta etapa:**
+  - `docs/handoff/2026-10-29_42_modelo2-rodada-2_comparacao_rodada4.json`: a rodada 4 ao lado da rodada 3. Nas chaves, `r2` é a rodada 3 e `r3` é a rodada 4, como diz a nota do arquivo;
+  - `docs/handoff/2026-10-29_42_modelo2-rodada-2_pytest.txt`, atualizado;
+  - este relatório.
+
+  A rodada 4 grava em `data/ml/modelo2/rodada4/` (fora do git), com o próprio gabarito do kit 2 (`kit2_gabarito.json`).
+
+## Resumo
+
+1. **A rodada 4 resolve o segundo defeito da entrada:**
+   - na C04 e na C06, o recuo da entrada ficou em zero na mediana e no p10;
+   - na C04, o E1 voltou a 0,03 e o F5 a 0,85 (eram 0,01 e 0,84 na rodada 1).
+2. **A regra também cortou uniões que começavam antes de b_k em outras curvas,** como manda a seção 6.2. São a C01 (14 passagens), a C11 (12), a C14 (8), a C05 (2) e a C12 (1). Todas voltaram à entrada da rodada 1.
+   - A C11, a C14 e a C05 não têm frenagem, então b_k = a_k nelas.
+   - Na C11, o E1 da IA voltou de 0,21 para 0,00, como na rodada 1.
+3. **Nada mais mudou:**
+   - o E4 é igual nas 2.016 passagens;
+   - os 3 maiores erros por sessão são iguais nas 13 sessões;
+   - o fechamento das fases é de 0,000 s.
+4. **Nenhum defeito novo apareceu** nos números pedidos. A rodada 4 é a última mudança de regra antes dos rótulos e é a que vale para o TCC.
+5. **A suíte do backend:** 1.064 passam, nenhuma falha (8 min 52 s); eram 1.062.
+
+## Os dados
+
+- **Os vínculos:** os 3 de `data/reference_models` batem pelo SHA-256 com a pasta principal.
+- **O store:** é o mesmo das rodadas 2 e 3 (meta de 17/11, 21:31, `aprovado: true`).
+- **O jogo:** o `acs.exe` estava fechado antes da rodada 4.
+
+## O registro, antes de rodar (`4cc7e3f8`)
+
+**A seção 6** registra:
+
+- a união dos trechos na troca de sinal só vale a partir de b_k até o ápice (a mesma janela do E4). Nas curvas sem frenagem, b_k = a_k;
+- os dois trechos têm de estar nesse intervalo, e um trecho que começa antes de b_k nunca é unido;
+- como b_k fica sempre entre e_(k−1) e a_k, a rodada 4 só pode unir menos que a 3;
+- o que não muda, as saídas e o relato;
+- se a rodada 4 mostrar outro defeito, ele fica relatado como trabalho futuro;
+- a E.2 julga as quatro rodadas, e a que vale é a 4.
+
+**A linha no ADR 0023** foi acrescentada no mesmo commit.
+
+## O comando
+
+`python -m ml.scripts.modelo2 todos --saida rodada4 --rodada 4` (5 min 26 s), e depois `python -m ml.scripts.modelo2 comparar3 --saida rodada4 --anterior rodada3 --rodada1 rodada1_refeita --handoff docs/handoff/2026-10-29_42_modelo2-rodada-2`.
+
+## A rodada 4 ao lado da rodada 3
+
+### O recuo da entrada por curva
+
+É o s_ti menos o da rodada 1, nas 144 voltas, em metros.
+
+| curva | rodada 3: mediana | p10 | p90 | rodada 4: mediana | p10 | p90 | mudaram da 3 para a 4 | voltaram à rodada 1 |
+|---|---|---|---|---|---|---|---|---|
+| C01 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 14 | 14 |
+| C02 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0 | 0 |
+| C03 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0 | 0 |
+| C04 | 0,0 | −545,0 | 0,0 | 0,0 | 0,0 | 0,0 | 25 | 25 |
+| C05 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 2 | 2 |
+| C06 | 0,0 | −44,0 | 0,0 | 0,0 | 0,0 | 0,0 | 5 | 4 |
+| C07 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0 | 0 |
+| C08 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0 | 0 |
+| C09 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0 | 0 |
+| C10 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0 | 0 |
+| C11 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 12 | 12 |
+| C12 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 1 | 1 |
+| C13 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0 | 0 |
+| C14 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 0,0 | 8 | 8 |
+
+- **Na C04 e na C06,** o recuo ficou em zero, como se esperava.
+- **Na C06,** 5 passagens mudaram: 4 voltaram à rodada 1, e 1 ficou numa união que começa depois de b_k (dentro da regra).
+- **Nas outras curvas,** só mudaram as uniões que começavam antes de b_k. Todas voltaram à entrada da rodada 1:
+  - C01, com frenagem: uniões que começavam na reta dos boxes, antes do início da frenagem;
+  - C11, C14 e C05, sem frenagem, onde b_k = a_k: uniões que começavam antes do começo geométrico da curva;
+  - C12: 1 passagem.
+
+### E1, F5, E5, E6 e E4 por curva, eu e a IA
+
+Fração de "aplica" nas passagens conclusivas, rodada 3 → rodada 4.
+
+| curva | E1 eu | E1 IA | F5 eu | F5 IA | E5 eu | E5 IA | E6 eu | E6 IA | E4 eu |
+|---|---|---|---|---|---|---|---|---|---|
+| C01 | 0,33 → 0,28 | 0,00 → 0,00 | 0,85 → 0,86 | 1,00 → 1,00 | 0,08 → 0,01 | 0,00 → 0,00 | 1,00 → 1,00 | 1,00 → 1,00 | 0,02 → 0,02 |
+| C02 | 0,00 → 0,00 | 0,00 → 0,00 | 0,17 → 0,17 | 0,00 → 0,00 | 0,05 → 0,05 | 0,00 → 0,00 | 1,00 → 1,00 | 1,00 → 1,00 | 0,03 → 0,03 |
+| C03 | 0,00 → 0,00 | 0,00 → 0,00 | — → — | — → — | 0,00 → 0,00 | 0,08 → 0,08 | 1,00 → 1,00 | 1,00 → 1,00 | 0,00 → 0,00 |
+| C04 | 0,22 → 0,03 | 0,00 → 0,00 | 0,66 → 0,85 | 0,00 → 0,00 | 0,24 → 0,11 | 0,00 → 0,00 | 1,00 → 1,00 | 1,00 → 1,00 | 0,02 → 0,02 |
+| C05 | 0,00 → 0,00 | 0,00 → 0,00 | 0,50 → 0,50 | — → — | 0,00 → 0,00 | 0,00 → 0,00 | 1,00 → 1,00 | 1,00 → 1,00 | 0,00 → 0,00 |
+| C06 | 0,75 → 0,75 | 0,00 → 0,00 | 0,46 → 0,56 | 0,07 → 0,07 | 0,02 → 0,01 | 0,00 → 0,00 | 1,00 → 1,00 | 1,00 → 1,00 | 0,00 → 0,00 |
+| C07 | 0,09 → 0,09 | 0,07 → 0,07 | 0,91 → 0,91 | 0,93 → 0,93 | 0,02 → 0,02 | 0,00 → 0,00 | 0,99 → 0,99 | 0,92 → 0,92 | 0,08 → 0,08 |
+| C08 | 0,00 → 0,00 | 0,00 → 0,00 | 0,10 → 0,10 | 0,00 → 0,00 | 0,02 → 0,02 | 0,08 → 0,08 | 1,00 → 1,00 | 1,00 → 1,00 | 0,06 → 0,06 |
+| C09 | 0,96 → 0,96 | 0,00 → 0,00 | 0,05 → 0,05 | 0,00 → 0,00 | 0,45 → 0,45 | 0,00 → 0,00 | 0,98 → 0,98 | 1,00 → 1,00 | 0,04 → 0,04 |
+| C10 | 0,81 → 0,81 | 0,00 → 0,00 | 0,98 → 0,98 | 1,00 → 1,00 | 0,21 → 0,21 | 0,00 → 0,00 | 0,99 → 0,99 | 1,00 → 1,00 | 0,00 → 0,00 |
+| C11 | 0,14 → 0,08 | 0,21 → 0,00 | — → — | — → — | 0,47 → 0,46 | 0,22 → 0,20 | 0,99 → 0,99 | 1,00 → 1,00 | 0,02 → 0,02 |
+| C12 | 0,27 → 0,27 | 0,00 → 0,00 | 0,78 → 0,79 | 1,00 → 1,00 | 0,00 → 0,00 | 0,27 → 0,27 | 1,00 → 1,00 | 1,00 → 1,00 | 0,00 → 0,00 |
+| C13 | 0,00 → 0,00 | 0,00 → 0,00 | — → — | — → — | 0,10 → 0,10 | 0,00 → 0,00 | 0,99 → 0,99 | 1,00 → 1,00 | 0,00 → 0,00 |
+| C14 | 0,35 → 0,32 | 0,00 → 0,00 | — → — | — → — | 0,04 → 0,04 | 0,00 → 0,00 | 1,00 → 1,00 | 1,00 → 1,00 | 0,00 → 0,00 |
+
+**A leitura:**
+
+- **C04:**
+  - o E1 meu vai de 0,22 para 0,03, e o F5 de 0,66 para 0,85, de volta aos números da rodada 1 (0,01 e 0,84);
+  - o E5 meu cai de 0,24 para 0,11;
+  - o E6 não muda.
+- **C01:**
+  - o E1 meu vai de 0,33 para 0,28, o mesmo da rodada 1;
+  - o E5 vai de 0,08 para 0,01.
+- **C11:**
+  - o E1 meu vai de 0,14 para 0,08;
+  - o da IA vai de 0,21 para 0,00, o mesmo da rodada 1. Na rodada 3, uma união antes do começo da curva puxava a entrada da IA.
+- **C06:** o F5 meu vai de 0,46 para 0,56.
+- **Estados que mudaram da rodada 3 para a 4,** 125 no total:
+  - nas 5 curvas da rodada 3: E1, 35; F5, 36; E5, 29; E6, 6;
+  - nas outras: na C06, E1 1, E5 1 e F5 3; na C11, E1 11, E5 2 e E6 1.
+- **O E4 não mudou em nenhuma passagem,** como se esperava: a janela dele é a mesma (desde b_k).
+
+### O modelo leve
+
+O R² é deixando uma sessão de fora.
+
+| curva | rodada 1 | rodada 3 | rodada 4 |
+|---|---|---|---|
+| C01 | 0,318 | 0,020 | 0,034 |
+| C02 | 0,014 | 0,214 | 0,214 |
+| C03 | 0,157 | 0,467 | 0,467 |
+| C04 | 0,262 | 0,113 | 0,062 |
+| C05 | 0,355 | 0,286 | 0,322 |
+| C06 | −0,044 | −0,035 | 0,028 |
+| C07 | −0,187 | −0,301 | −0,301 |
+| C08 | 0,161 | 0,137 | 0,137 |
+| C09 | 0,676 | 0,620 | 0,620 |
+| C10 | 0,257 | 0,276 | 0,276 |
+| C11 | −0,294 | −0,290 | −0,313 |
+| C12 | 0,501 | 0,250 | 0,235 |
+| C13 | −0,134 | 0,128 | 0,128 |
+| C14 | 0,251 | −0,042 | −0,048 |
+
+- As mudanças da rodada 3 para a 4 são pequenas e só nas curvas em que a entrada mudou.
+- A distância para a rodada 1 vem da retomada nova (relatório de 18/11).
+
+### Os 3 maiores erros por sessão e o fechamento
+
+- **Os 3 maiores erros:** iguais aos das rodadas 2 e 3 nas 13 sessões.
+- **O fechamento:** a soma das 70 fases fecha em 0,000 s, cobrindo os 4.334,08 m.
+
+### Outro defeito?
+
+Nos números pedidos (a entrada, os quatro detectores, o E4, o modelo leve, o ranking e o fechamento), nenhum. Duas observações, só registradas, sem mudança, como manda o item 2:
+
+- **O E6 (suavidade do volante)** dá "aplica" em quase todas as passagens, minhas e da IA, em todas as rodadas (0,92 a 1,00). Ele separa pouco. É trabalho futuro, e os rótulos não incluem o E6.
+- **O M7 na IA** continua como limitação registrada (rodada 2).
+
+## Os testes
+
+Novos em `backend/tests/test_modelo2.py`:
+
+- **uma correção de volante na reta antes de b_k,** seguida de uma troca de sinal: na rodada 3, ela vira a entrada; na rodada 4, a entrada fica no começo da curva;
+- **o contraesterço depois de b_k e antes do ápice:** continua unido (a entrada da rodada 4 fica antes da da rodada 1) e visto pelo E4.
+
+O arquivo do Modelo 2 tem 55 testes.
+
+**A suíte do backend:** 1.064 passam, nenhuma falha (8 min 52 s); eram 1.062.
+
+## O que falta
+
+- **Os seus rótulos:** o kit 2 e, pelo menos 3 dias depois, a consistência. Depois, a E.2 para as quatro rodadas, com os mesmos rótulos. Os gabaritos estão em `data/ml/modelo2/rodada2/`, `rodada3/` e `rodada4/` (`kit2_gabarito.json`), e o da rodada 1 em `data/ml/modelo2/rotulagem_gabarito.json`.
+- **As voltas de teste,** na cópia da pista ("Interlagos [teste]"), pela folha. Depois, a F.2.
+- **As gravações da IA em níveis.** Depois, a Parte B.
+- **A Parte G, o merge e o envio.**
+
+## O envio
+
+Não tentei: o controle de permissões recusou nas outras vezes. O remoto tem a branch em `a3287e40`. Rode pelo terminal:
+
+```bash
+git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer-48 push origin etapa/modelo2-rodada-2
+```
+
+```bash
+git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer-48 ls-remote origin refs/heads/etapa/modelo2-rodada-2
+```
+
+**A conferência antes do envio:** os commits mudam só `backend/` e `docs/`. Nada passa de 50 MB, e não há gravações, `data/` nem segredos.
+
+---
+
+# A etapa de 18/11 (a rodada 3 e a cópia da pista), como foi relatada
+
+
+## Pedido 42 — relatório parcial de 18/11: a rodada 3 (a emenda da entrada) e as voltas de teste na cópia da pista; parado
 
 - **Pedido:** `docs/prompts/2026-10-29_42_modelo2-rodada-2.md`, com a "Atualização de 18/11" (itens 1 e 2; depois, gravar o relatório parcial e parar).
 - **Data:** 18/11/2026.
