@@ -418,6 +418,49 @@ Escritas antes de qualquer conta da Parte B, enquanto o passo 6 da rodada rodava
 - **Só a branch do pedido vai,** como branch nova e sem `--force`. `develop`, `main` e as tags não vão antes do merge.
 - **O hash local e o remoto** estão no chat, conferidos com `git ls-remote origin`.
 
+## Depois do pedido: a confirmação da causa e a nova medida (decisão do Eduardo, 18/11, 09:45)
+
+Você escolheu "Confirmar e remedir": primeiro a sessão curta que confirma a causa e, se for o CSP, a nova medida da linha. **Nada foi mudado ainda.**
+
+### O critério, registrado antes da sessão
+
+- **Duas sessões,** no mesmo dia, uma logo depois da outra:
+  - **A:** sem o CSP;
+  - **B:** com o CSP 0.3.1.
+- **Nas duas, o mesmo:**
+  - o app instalado 0.8.0;
+  - a pista original (`vhe_interlagos`);
+  - o carro do TCC;
+  - a IA dirigindo.
+- **A medida:** a mesma da Parte B (`_scripts\parteb_medida.py`, só leitura). Cada sessão precisa de pelo menos 5 voltas medidas.
+- **O CSP fica confirmado como a causa** quando a mediana da A fica dentro de 1,463 ± 0,10 m **e** a da B fica acima de 1,563 m.
+- **Fica descartado** quando a A também fica acima de 1,563 m: a linha andou sem o CSP.
+- **Qualquer outro resultado é "não conclusivo",** e a decisão volta para você.
+
+### O roteiro (você roda; eu não mexo na pasta do jogo)
+
+1. **Feche o jogo.** No Content Manager, desligue o CSP. Na página do Custom Shaders Patch, nas configurações, desmarque a opção que ativa o patch.
+   - **Se o carro ou a pista não carregarem sem o CSP** (alguns mods precisam dele), troque o CSP pela versão de antes de 31/10 na mesma página e anote qual foi.
+2. **Abra o app instalado** e deixe a aba Coleta gravando.
+3. **Sessão A:**
+   - abra o jogo com o preset de sempre, na pista **Interlagos original** (não a "[teste]"), em prática;
+   - nos boxes, aperte Ctrl+C para a IA dirigir, e deixe-a dar **7 voltas** completas;
+   - feche o jogo.
+4. **Religue o CSP 0.3.1** no Content Manager (ou volte para ele, se tiver trocado de versão).
+5. **Sessão B:** a mesma coisa (pista original, IA, 7 voltas), e feche o jogo.
+6. **Avise "rodei a confirmação da linha".**
+   - Eu meço as duas sessões, só lendo, e digo o resultado pelo critério acima.
+   - **Se o CSP for confirmado,** eu proponho a nova medida (abaixo), e ela só entra com o seu ok.
+
+**As duas sessões entram no coach e no store** como sessões da IA. **A A só dá aprovação limpa se o CSP for a causa,** e a B entra pela margem. **Não aperte "Atualizar coach e relatório" antes de eu medir.**
+
+### A nova medida, se o CSP for confirmado (o que vou propor)
+
+- **Um segundo valor registrado:** a mediana das voltas depois de 31/10, 19:52. Hoje ela é de 1,601 m, em 141 voltas; o valor final vai incluir a sessão B.
+- **Ele vale para as sessões que começam a partir dessa hora,** com a mesma tolerância de 0,10 m. As de antes continuam contra 1,463 m.
+- **A margem de 2,0 ms** fica como reserva, para sessões no limite.
+- **Será registrada antes do código,** em `docs/store_v2_e_evolucao.md` e no ADR 0007, como nesta Parte A, e depois rodada com o store.
+
 ## O que falta
 
 Escrito na parada da A.5. As duas decisões de então já foram tomadas: o sinal para a rodada e a linha no ADR 0007. A rodada, o merge e a Parte B estão feitos (veja acima).
