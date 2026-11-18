@@ -1,0 +1,35 @@
+{
+ "original": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2",
+ "refeita": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada1_refeita",
+ "passagens": {
+  "original": 2016,
+  "refeita": 2016,
+  "so_na_original": 0,
+  "so_na_refeita": 0
+ },
+ "colunas_diferentes": {},
+ "colunas_novas_na_refeita": [
+  "contra_antes_apice_s",
+  "freio_emendado",
+  "s_pu_rel",
+  "sessao_com_margem"
+ ],
+ "estados": {
+  "original": 48384,
+  "refeita": 48384,
+  "sem_par": 0,
+  "estado_diferente": 0
+ },
+ "fases_iguais": true,
+ "ranking": {
+  "sessoes": 13,
+  "sessoes_iguais": 13,
+  "diferentes": []
+ },
+ "fechamento": {
+  "original": 0.0,
+  "refeita": 0.0
+ },
+ "modelo_leve_r2_iguais": true,
+ "reproduz": true
+}

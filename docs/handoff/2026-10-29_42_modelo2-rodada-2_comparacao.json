@@ -1,0 +1,3398 @@
+{
+ "tres_maiores_por_sessao": [
+  {
+   "sessao": "2026-10-04",
+   "rodada1": [
+    "consistencia",
+    "C14-esq reta (+0.623 s)",
+    "C03-esq reta (+0.230 s)"
+   ],
+   "rodada2_volta_do_modelo": [
+    "consistencia",
+    "C12-esq frenagem (+0.528 s)",
+    "C08-esq meio (+0.496 s)"
+   ],
+   "rodada2_so_comparacao_0013": [
+    "consistencia",
+    "C14-esq reta (+0.623 s)",
+    "C01-esq frenagem (+0.567 s)"
+   ],
+   "entrou": [
+    "C08-esq meio",
+    "C12-esq frenagem"
+   ],
+   "saiu": [
+    "C03-esq reta",
+    "C14-esq reta"
+   ]
+  },
+  {
+   "sessao": "2026-10-05",
+   "rodada1": [
+    "consistencia",
+    "C14-esq reta (+0.269 s)",
+    "C03-esq reta (+0.194 s)"
+   ],
+   "rodada2_volta_do_modelo": [
+    "consistencia",
+    "C07-dir frenagem (+0.543 s)",
+    "C08-esq meio (+0.505 s)"
+   ],
+   "rodada2_so_comparacao_0013": [
+    "consistencia",
+    "C01-esq frenagem (+0.463 s)",
+    "C07-dir frenagem (+0.452 s)"
+   ],
+   "entrou": [
+    "C07-dir frenagem",
+    "C08-esq meio"
+   ],
+   "saiu": [
+    "C03-esq reta",
+    "C14-esq reta"
+   ]
+  },
+  {
+   "sessao": "2026-10-05-2",
+   "rodada1": [
+    "consistencia",
+    "C14-esq reta (+0.619 s)",
+    "C03-esq reta (+0.396 s)"
+   ],
+   "rodada2_volta_do_modelo": [
+    "consistencia",
+    "C12-esq frenagem (+0.823 s)",
+    "C01-esq frenagem (+0.693 s)"
+   ],
+   "rodada2_so_comparacao_0013": [
+    "consistencia",
+    "C12-esq frenagem (+0.843 s)",
+    "C01-esq frenagem (+0.788 s)"
+   ],
+   "entrou": [
+    "C01-esq frenagem",
+    "C12-esq frenagem"
+   ],
+   "saiu": [
+    "C03-esq reta",
+    "C14-esq reta"
+   ]
+  },
+  {
+   "sessao": "2026-10-09",
+   "rodada1": [
+    "consistencia",
+    "C14-esq reta (+0.241 s)",
+    "C03-esq reta (+0.181 s)"
+   ],
+   "rodada2_volta_do_modelo": [
+    "consistencia",
+    "C01-esq frenagem (+0.654 s)",
+    "C08-esq meio (+0.652 s)"
+   ],
+   "rodada2_so_comparacao_0013": [
+    "consistencia",
+    "C01-esq frenagem (+0.750 s)",
+    "C12-esq frenagem (+0.661 s)"
+   ],
+   "entrou": [
+    "C01-esq frenagem",
+    "C08-esq meio"
+   ],
+   "saiu": [
+    "C03-esq reta",
+    "C14-esq reta"
+   ]
+  },
+  {
+   "sessao": "2026-10-10",
+   "rodada1": [
+    "consistencia",
+    "C14-esq reta (+0.627 s)",
+    "C03-esq reta (+0.373 s)"
+   ],
+   "rodada2_volta_do_modelo": [
+    "consistencia",
+    "C01-esq frenagem (+0.679 s)",
+    "C12-esq frenagem (+0.667 s)"
+   ],
+   "rodada2_so_comparacao_0013": [
+    "consistencia",
+    "C01-esq frenagem (+0.774 s)",
+    "C12-esq frenagem (+0.687 s)"
+   ],
+   "entrou": [
+    "C01-esq frenagem",
+    "C12-esq frenagem"
+   ],
+   "saiu": [
+    "C03-esq reta",
+    "C14-esq reta"
+   ]
+  },
+  {
+   "sessao": "2026-10-11",
+   "rodada1": [
+    "consistencia",
+    "C14-esq reta (+0.686 s)",
+    "C03-esq reta (+0.196 s)"
+   ],
+   "rodada2_volta_do_modelo": [
+    "consistencia",
+    "C14-esq reta (+0.468 s)",
+    "C12-esq frenagem (+0.464 s)"
+   ],
+   "rodada2_so_comparacao_0013": [
+    "consistencia",
+    "C14-esq reta (+0.686 s)",
+    "C12-esq frenagem (+0.484 s)"
+   ],
+   "entrou": [
+    "C12-esq frenagem"
+   ],
+   "saiu": [
+    "C03-esq reta"
+   ]
+  },
+  {
+   "sessao": "2026-10-13",
+   "rodada1": [
+    "consistencia",
+    "C14-esq reta (+0.667 s)",
+    "C03-esq reta (+0.347 s)"
+   ],
+   "rodada2_volta_do_modelo": [
+    "consistencia",
+    "C01-esq frenagem (+0.628 s)",
+    "C12-esq frenagem (+0.522 s)"
+   ],
+   "rodada2_so_comparacao_0013": [
+    "consistencia",
+    "C01-esq frenagem (+0.724 s)",
+    "C14-esq reta (+0.667 s)"
+   ],
+   "entrou": [
+    "C01-esq frenagem",
+    "C12-esq frenagem"
+   ],
+   "saiu": [
+    "C03-esq reta",
+    "C14-esq reta"
+   ]
+  },
+  {
+   "sessao": "2026-10-16",
+   "rodada1": [
+    "consistencia",
+    "C14-esq reta (+0.251 s)",
+    "C03-esq reta (+0.139 s)"
+   ],
+   "rodada2_volta_do_modelo": [
+    "consistencia",
+    "C04-esq frenagem (+0.463 s)",
+    "C10-dir reta (+0.426 s)"
+   ],
+   "rodada2_so_comparacao_0013": [
+    "consistencia",
+    "C10-dir reta (+0.481 s)",
+    "C12-esq frenagem (+0.435 s)"
+   ],
+   "entrou": [
+    "C04-esq frenagem",
+    "C10-dir reta"
+   ],
+   "saiu": [
+    "C03-esq reta",
+    "C14-esq reta"
+   ]
+  },
+  {
+   "sessao": "2026-10-17",
+   "rodada1": [
+    "consistencia",
+    "C14-esq reta (+0.248 s)",
+    "C03-esq reta (+0.310 s)"
+   ],
+   "rodada2_volta_do_modelo": [
+    "consistencia",
+    "C04-esq frenagem (+0.658 s)",
+    "C12-esq frenagem (+0.529 s)"
+   ],
+   "rodada2_so_comparacao_0013": [
+    "consistencia",
+    "C12-esq frenagem (+0.549 s)",
+    "C04-esq frenagem (+0.518 s)"
+   ],
+   "entrou": [
+    "C04-esq frenagem",
+    "C12-esq frenagem"
+   ],
+   "saiu": [
+    "C03-esq reta",
+    "C14-esq reta"
+   ]
+  },
+  {
+   "sessao": "2026-10-17-2",
+   "rodada1": [
+    "consistencia",
+    "C14-esq reta (+0.672 s)",
+    "C03-esq reta (+0.529 s)"
+   ],
+   "rodada2_volta_do_modelo": [
+    "consistencia",
+    "C12-esq frenagem (+0.565 s)",
+    "C04-esq frenagem (+0.511 s)"
+   ],
+   "rodada2_so_comparacao_0013": [
+    "consistencia",
+    "C14-esq reta (+0.672 s)",
+    "C12-esq frenagem (+0.584 s)"
+   ],
+   "entrou": [
+    "C04-esq frenagem",
+    "C12-esq frenagem"
+   ],
+   "saiu": [
+    "C03-esq reta",
+    "C14-esq reta"
+   ]
+  },
+  {
+   "sessao": "2026-10-18",
+   "rodada1": [
+    "consistencia",
+    "C14-esq reta (+0.631 s)",
+    "C03-esq reta (+0.368 s)"
+   ],
+   "rodada2_volta_do_modelo": [
+    "consistencia",
+    "C07-dir frenagem (+0.441 s)",
+    "C14-esq reta (+0.414 s)"
+   ],
+   "rodada2_so_comparacao_0013": [
+    "consistencia",
+    "C14-esq reta (+0.631 s)",
+    "C12-esq frenagem (+0.410 s)"
+   ],
+   "entrou": [
+    "C07-dir frenagem"
+   ],
+   "saiu": [
+    "C03-esq reta"
+   ]
+  },
+  {
+   "sessao": "2026-10-21",
+   "rodada1": [
+    "consistencia",
+    "C14-esq reta (+0.282 s)",
+    "C03-esq reta (+0.187 s)"
+   ],
+   "rodada2_volta_do_modelo": [
+    "consistencia",
+    "C01-esq meio (+0.894 s)",
+    "C08-esq meio (+0.452 s)"
+   ],
+   "rodada2_so_comparacao_0013": [
+    "consistencia",
+    "C01-esq meio (+0.816 s)",
+    "C12-esq frenagem (+0.413 s)"
+   ],
+   "entrou": [
+    "C01-esq meio",
+    "C08-esq meio"
+   ],
+   "saiu": [
+    "C03-esq reta",
+    "C14-esq reta"
+   ]
+  },
+  {
+   "sessao": "2026-10-24",
+   "rodada1": [
+    "consistencia",
+    "C14-esq reta (+0.483 s)",
+    "C03-esq reta (+0.487 s)"
+   ],
+   "rodada2_volta_do_modelo": [
+    "consistencia",
+    "C03-esq reta (+0.381 s)",
+    "C04-esq frenagem (+0.294 s)"
+   ],
+   "rodada2_so_comparacao_0013": [
+    "consistencia",
+    "C03-esq reta (+0.487 s)",
+    "C14-esq reta (+0.483 s)"
+   ],
+   "entrou": [
+    "C04-esq frenagem"
+   ],
+   "saiu": [
+    "C14-esq reta"
+   ]
+  }
+ ],
+ "referencias": {
+  "rodada1": {
+   "volta_ia": "2026-10-04_03-42-10_vhe_interlagos#0013",
+   "tempo_s": 84.82916,
+   "melhor_volta": "2026-10-24_13-43-32_vhe_interlagos#0003",
+   "melhor_tempo_s": 86.56767
+  },
+  "rodada2": {
+   "volta_de_referencia": "2026-11-15_02-47-12_vhe_interlagos_teste_m1#0008",
+   "tempo_s": 84.55158,
+   "melhor_volta": "2026-10-24_13-43-32_vhe_interlagos#0003",
+   "melhor_tempo_s": 86.56767,
+   "segunda_melhor_volta": "2026-10-21_20-30-54_vhe_interlagos#0017"
+  }
+ },
+ "M6_M7_M8": {
+  "M6": [
+   {
+    "curva": "C01-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C01-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 117,
+    "fracao_aplica_r2": 0.06
+   },
+   {
+    "curva": "C02-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 13,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C02-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 127,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 107,
+    "fracao_aplica_r2": 0.262
+   },
+   {
+    "curva": "C03-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C03-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 128,
+    "fracao_aplica_r2": 0.023
+   },
+   {
+    "curva": "C04-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C04-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 86,
+    "fracao_aplica_r2": 0.453
+   },
+   {
+    "curva": "C05-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C05-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 122,
+    "fracao_aplica_r2": 0.016
+   },
+   {
+    "curva": "C06-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 6,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C06-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 102,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C07-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.929
+   },
+   {
+    "curva": "C07-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 127,
+    "fracao_aplica_r2": 0.047
+   },
+   {
+    "curva": "C08-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C08-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 129,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 99,
+    "fracao_aplica_r2": 0.303
+   },
+   {
+    "curva": "C09-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C09-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.008,
+    "passagens_r2": 130,
+    "conclusivas_r2": 128,
+    "fracao_aplica_r2": 0.117
+   },
+   {
+    "curva": "C10-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C10-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 98,
+    "fracao_aplica_r2": 0.5
+   },
+   {
+    "curva": "C11-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C11-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 126,
+    "fracao_aplica_r2": 0.016
+   },
+   {
+    "curva": "C12-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 9,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C12-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 104,
+    "fracao_aplica_r2": 0.75
+   },
+   {
+    "curva": "C13-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C13-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 113,
+    "fracao_aplica_r2": 0.327
+   },
+   {
+    "curva": "C14-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C14-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 116,
+    "fracao_aplica_r2": 0.069
+   }
+  ],
+  "M7": [
+   {
+    "curva": "C01-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C01-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 108,
+    "fracao_aplica_r1": 0.694,
+    "passagens_r2": 130,
+    "conclusivas_r2": 101,
+    "fracao_aplica_r2": 0.356
+   },
+   {
+    "curva": "C02-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 13,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C02-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 127,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 97,
+    "fracao_aplica_r2": 0.258
+   },
+   {
+    "curva": "C03-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C03-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 128,
+    "fracao_aplica_r2": 0.961
+   },
+   {
+    "curva": "C04-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C04-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 116,
+    "fracao_aplica_r1": 0.767,
+    "passagens_r2": 130,
+    "conclusivas_r2": 95,
+    "fracao_aplica_r2": 0.358
+   },
+   {
+    "curva": "C05-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.071,
+    "passagens_r2": 14,
+    "conclusivas_r2": 13,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C05-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 124,
+    "fracao_aplica_r1": 0.548,
+    "passagens_r2": 130,
+    "conclusivas_r2": 120,
+    "fracao_aplica_r2": 0.975
+   },
+   {
+    "curva": "C06-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 6,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C06-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 119,
+    "fracao_aplica_r1": 0.807,
+    "passagens_r2": 130,
+    "conclusivas_r2": 7,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C07-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.071
+   },
+   {
+    "curva": "C07-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 115,
+    "fracao_aplica_r1": 0.53,
+    "passagens_r2": 130,
+    "conclusivas_r2": 104,
+    "fracao_aplica_r2": 0.221
+   },
+   {
+    "curva": "C08-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C08-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 126,
+    "fracao_aplica_r1": 0.952,
+    "passagens_r2": 130,
+    "conclusivas_r2": 102,
+    "fracao_aplica_r2": 0.314
+   },
+   {
+    "curva": "C09-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C09-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 85,
+    "fracao_aplica_r1": 0.859,
+    "passagens_r2": 130,
+    "conclusivas_r2": 37,
+    "fracao_aplica_r2": 0.541
+   },
+   {
+    "curva": "C10-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C10-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 103,
+    "fracao_aplica_r1": 0.515,
+    "passagens_r2": 130,
+    "conclusivas_r2": 112,
+    "fracao_aplica_r2": 0.134
+   },
+   {
+    "curva": "C11-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C11-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 107,
+    "fracao_aplica_r2": 0.86
+   },
+   {
+    "curva": "C12-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 9,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C12-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 116,
+    "fracao_aplica_r1": 0.784,
+    "passagens_r2": 130,
+    "conclusivas_r2": 110,
+    "fracao_aplica_r2": 0.155
+   },
+   {
+    "curva": "C13-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C13-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 70,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 112,
+    "fracao_aplica_r2": 0.652
+   },
+   {
+    "curva": "C14-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C14-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 129,
+    "fracao_aplica_r1": 0.977,
+    "passagens_r2": 130,
+    "conclusivas_r2": 114,
+    "fracao_aplica_r2": 0.921
+   }
+  ],
+  "M8": [
+   {
+    "curva": "C01-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 13,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C01-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 119,
+    "fracao_aplica_r1": 0.924,
+    "passagens_r2": 130,
+    "conclusivas_r2": 114,
+    "fracao_aplica_r2": 0.877
+   },
+   {
+    "curva": "C02-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 4,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C02-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 103,
+    "fracao_aplica_r1": 0.796,
+    "passagens_r2": 130,
+    "conclusivas_r2": 107,
+    "fracao_aplica_r2": 0.131
+   },
+   {
+    "curva": "C03-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C03-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 125,
+    "fracao_aplica_r1": 0.032,
+    "passagens_r2": 130,
+    "conclusivas_r2": 125,
+    "fracao_aplica_r2": 0.024
+   },
+   {
+    "curva": "C04-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C04-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 102,
+    "fracao_aplica_r1": 0.539,
+    "passagens_r2": 130,
+    "conclusivas_r2": 103,
+    "fracao_aplica_r2": 0.136
+   },
+   {
+    "curva": "C05-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C05-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 117,
+    "fracao_aplica_r1": 0.068,
+    "passagens_r2": 130,
+    "conclusivas_r2": 127,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C06-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 10,
+    "fracao_aplica_r1": 0.6,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.429
+   },
+   {
+    "curva": "C06-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 124,
+    "fracao_aplica_r1": 0.935,
+    "passagens_r2": 130,
+    "conclusivas_r2": 90,
+    "fracao_aplica_r2": 0.667
+   },
+   {
+    "curva": "C07-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.071
+   },
+   {
+    "curva": "C07-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 127,
+    "fracao_aplica_r1": 0.945,
+    "passagens_r2": 130,
+    "conclusivas_r2": 125,
+    "fracao_aplica_r2": 0.928
+   },
+   {
+    "curva": "C08-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 7,
+    "fracao_aplica_r1": 0.286,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.143
+   },
+   {
+    "curva": "C08-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 119,
+    "fracao_aplica_r1": 0.966,
+    "passagens_r2": 130,
+    "conclusivas_r2": 94,
+    "fracao_aplica_r2": 0.521
+   },
+   {
+    "curva": "C09-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C09-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 127,
+    "fracao_aplica_r1": 0.685,
+    "passagens_r2": 130,
+    "conclusivas_r2": 119,
+    "fracao_aplica_r2": 0.731
+   },
+   {
+    "curva": "C10-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C10-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 107,
+    "fracao_aplica_r1": 0.664,
+    "passagens_r2": 130,
+    "conclusivas_r2": 103,
+    "fracao_aplica_r2": 0.379
+   },
+   {
+    "curva": "C11-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C11-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 126,
+    "fracao_aplica_r1": 0.238,
+    "passagens_r2": 130,
+    "conclusivas_r2": 112,
+    "fracao_aplica_r2": 0.268
+   },
+   {
+    "curva": "C12-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C12-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 109,
+    "fracao_aplica_r1": 0.615,
+    "passagens_r2": 130,
+    "conclusivas_r2": 119,
+    "fracao_aplica_r2": 0.118
+   },
+   {
+    "curva": "C13-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C13-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 121,
+    "fracao_aplica_r1": 0.165,
+    "passagens_r2": 130,
+    "conclusivas_r2": 128,
+    "fracao_aplica_r2": 0.016
+   },
+   {
+    "curva": "C14-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C14-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.023,
+    "passagens_r2": 130,
+    "conclusivas_r2": 130,
+    "fracao_aplica_r2": 0.015
+   }
+  ]
+ },
+ "E1_F5": {
+  "E1": [
+   {
+    "curva": "C01-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C01-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 102,
+    "fracao_aplica_r1": 0.275,
+    "passagens_r2": 130,
+    "conclusivas_r2": 110,
+    "fracao_aplica_r2": 0.427
+   },
+   {
+    "curva": "C02-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C02-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 123,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 123,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C03-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C03-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 129,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 129,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C04-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C04-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.008,
+    "passagens_r2": 130,
+    "conclusivas_r2": 130,
+    "fracao_aplica_r2": 0.6
+   },
+   {
+    "curva": "C05-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 13,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 13,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C05-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 130,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C06-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C06-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 114,
+    "fracao_aplica_r1": 0.667,
+    "passagens_r2": 130,
+    "conclusivas_r2": 116,
+    "fracao_aplica_r2": 0.75
+   },
+   {
+    "curva": "C07-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.071
+   },
+   {
+    "curva": "C07-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 106,
+    "fracao_aplica_r1": 0.085,
+    "passagens_r2": 130,
+    "conclusivas_r2": 116,
+    "fracao_aplica_r2": 0.44
+   },
+   {
+    "curva": "C08-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 13,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 13,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C08-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 125,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 127,
+    "fracao_aplica_r2": 0.008
+   },
+   {
+    "curva": "C09-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C09-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 108,
+    "fracao_aplica_r1": 0.954,
+    "passagens_r2": 130,
+    "conclusivas_r2": 115,
+    "fracao_aplica_r2": 0.957
+   },
+   {
+    "curva": "C10-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C10-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 109,
+    "fracao_aplica_r1": 0.771,
+    "passagens_r2": 130,
+    "conclusivas_r2": 109,
+    "fracao_aplica_r2": 0.807
+   },
+   {
+    "curva": "C11-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.214
+   },
+   {
+    "curva": "C11-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 118,
+    "fracao_aplica_r1": 0.076,
+    "passagens_r2": 130,
+    "conclusivas_r2": 118,
+    "fracao_aplica_r2": 0.144
+   },
+   {
+    "curva": "C12-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C12-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 97,
+    "fracao_aplica_r1": 0.216,
+    "passagens_r2": 130,
+    "conclusivas_r2": 111,
+    "fracao_aplica_r2": 0.532
+   },
+   {
+    "curva": "C13-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C13-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 130,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C14-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C14-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 130,
+    "fracao_aplica_r1": 0.315,
+    "passagens_r2": 130,
+    "conclusivas_r2": 130,
+    "fracao_aplica_r2": 0.423
+   }
+  ],
+  "F5": [
+   {
+    "curva": "C01-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 6,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 6,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C01-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 110,
+    "fracao_aplica_r1": 0.864,
+    "passagens_r2": 130,
+    "conclusivas_r2": 88,
+    "fracao_aplica_r2": 0.83
+   },
+   {
+    "curva": "C02-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C02-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 6,
+    "fracao_aplica_r1": 0.167,
+    "passagens_r2": 130,
+    "conclusivas_r2": 6,
+    "fracao_aplica_r2": 0.167
+   },
+   {
+    "curva": "C03-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 0,
+    "fracao_aplica_r1": null,
+    "passagens_r2": 14,
+    "conclusivas_r2": 0,
+    "fracao_aplica_r2": null
+   },
+   {
+    "curva": "C03-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 0,
+    "fracao_aplica_r1": null,
+    "passagens_r2": 130,
+    "conclusivas_r2": 0,
+    "fracao_aplica_r2": null
+   },
+   {
+    "curva": "C04-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C04-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 120,
+    "fracao_aplica_r1": 0.842,
+    "passagens_r2": 130,
+    "conclusivas_r2": 127,
+    "fracao_aplica_r2": 0.299
+   },
+   {
+    "curva": "C05-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 0,
+    "fracao_aplica_r1": null,
+    "passagens_r2": 14,
+    "conclusivas_r2": 0,
+    "fracao_aplica_r2": null
+   },
+   {
+    "curva": "C05-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 4,
+    "fracao_aplica_r1": 0.5,
+    "passagens_r2": 130,
+    "conclusivas_r2": 4,
+    "fracao_aplica_r2": 0.75
+   },
+   {
+    "curva": "C06-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.071,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.071
+   },
+   {
+    "curva": "C06-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 24,
+    "fracao_aplica_r1": 0.5,
+    "passagens_r2": 130,
+    "conclusivas_r2": 24,
+    "fracao_aplica_r2": 0.458
+   },
+   {
+    "curva": "C07-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.929
+   },
+   {
+    "curva": "C07-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 119,
+    "fracao_aplica_r1": 0.874,
+    "passagens_r2": 130,
+    "conclusivas_r2": 120,
+    "fracao_aplica_r2": 0.558
+   },
+   {
+    "curva": "C08-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C08-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 9,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 10,
+    "fracao_aplica_r2": 0.1
+   },
+   {
+    "curva": "C09-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 9,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 9,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C09-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 39,
+    "fracao_aplica_r1": 0.051,
+    "passagens_r2": 130,
+    "conclusivas_r2": 43,
+    "fracao_aplica_r2": 0.047
+   },
+   {
+    "curva": "C10-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 7,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 7,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C10-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 123,
+    "fracao_aplica_r1": 0.967,
+    "passagens_r2": 130,
+    "conclusivas_r2": 119,
+    "fracao_aplica_r2": 0.983
+   },
+   {
+    "curva": "C11-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 0,
+    "fracao_aplica_r1": null,
+    "passagens_r2": 14,
+    "conclusivas_r2": 0,
+    "fracao_aplica_r2": null
+   },
+   {
+    "curva": "C11-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 0,
+    "fracao_aplica_r1": null,
+    "passagens_r2": 130,
+    "conclusivas_r2": 0,
+    "fracao_aplica_r2": null
+   },
+   {
+    "curva": "C12-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 14,
+    "fracao_aplica_r1": 1.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 14,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C12-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 110,
+    "fracao_aplica_r1": 0.809,
+    "passagens_r2": 130,
+    "conclusivas_r2": 116,
+    "fracao_aplica_r2": 0.474
+   },
+   {
+    "curva": "C13-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 0,
+    "fracao_aplica_r1": null,
+    "passagens_r2": 14,
+    "conclusivas_r2": 0,
+    "fracao_aplica_r2": null
+   },
+   {
+    "curva": "C13-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 0,
+    "fracao_aplica_r1": null,
+    "passagens_r2": 130,
+    "conclusivas_r2": 0,
+    "fracao_aplica_r2": null
+   },
+   {
+    "curva": "C14-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 0,
+    "fracao_aplica_r1": null,
+    "passagens_r2": 14,
+    "conclusivas_r2": 0,
+    "fracao_aplica_r2": null
+   },
+   {
+    "curva": "C14-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 0,
+    "fracao_aplica_r1": null,
+    "passagens_r2": 130,
+    "conclusivas_r2": 0,
+    "fracao_aplica_r2": null
+   }
+  ]
+ },
+ "E2_antes_e_depois": [
+  {
+   "curva": "C01-esq",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C01-esq",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 62,
+   "fracao_aplica_r1": 0.097,
+   "passagens_r2": 130,
+   "conclusivas_r2": 62,
+   "fracao_aplica_r2": 0.113
+  },
+  {
+   "curva": "C02-dir",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C02-dir",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 62,
+   "fracao_aplica_r1": 0.855,
+   "passagens_r2": 130,
+   "conclusivas_r2": 61,
+   "fracao_aplica_r2": 0.869
+  },
+  {
+   "curva": "C03-esq",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C03-esq",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 59,
+   "fracao_aplica_r1": 0.017,
+   "passagens_r2": 130,
+   "conclusivas_r2": 59,
+   "fracao_aplica_r2": 0.034
+  },
+  {
+   "curva": "C04-esq",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C04-esq",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 62,
+   "fracao_aplica_r1": 0.016,
+   "passagens_r2": 130,
+   "conclusivas_r2": 63,
+   "fracao_aplica_r2": 0.016
+  },
+  {
+   "curva": "C05-esq",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C05-esq",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 64,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 130,
+   "conclusivas_r2": 64,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C06-dir",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C06-dir",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 62,
+   "fracao_aplica_r1": 0.081,
+   "passagens_r2": 130,
+   "conclusivas_r2": 64,
+   "fracao_aplica_r2": 0.094
+  },
+  {
+   "curva": "C07-dir",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C07-dir",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 63,
+   "fracao_aplica_r1": 0.032,
+   "passagens_r2": 130,
+   "conclusivas_r2": 63,
+   "fracao_aplica_r2": 0.032
+  },
+  {
+   "curva": "C08-esq",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C08-esq",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 58,
+   "fracao_aplica_r1": 0.914,
+   "passagens_r2": 130,
+   "conclusivas_r2": 59,
+   "fracao_aplica_r2": 0.915
+  },
+  {
+   "curva": "C09-dir",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C09-dir",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 61,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 130,
+   "conclusivas_r2": 58,
+   "fracao_aplica_r2": 0.017
+  },
+  {
+   "curva": "C10-dir",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C10-dir",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 64,
+   "fracao_aplica_r1": 0.016,
+   "passagens_r2": 130,
+   "conclusivas_r2": 64,
+   "fracao_aplica_r2": 0.016
+  },
+  {
+   "curva": "C11-esq",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C11-esq",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 58,
+   "fracao_aplica_r1": 0.121,
+   "passagens_r2": 130,
+   "conclusivas_r2": 58,
+   "fracao_aplica_r2": 0.138
+  },
+  {
+   "curva": "C12-esq",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C12-esq",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 59,
+   "fracao_aplica_r1": 0.661,
+   "passagens_r2": 130,
+   "conclusivas_r2": 62,
+   "fracao_aplica_r2": 0.677
+  },
+  {
+   "curva": "C13-esq",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C13-esq",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 64,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 130,
+   "conclusivas_r2": 62,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C14-esq",
+   "quem": "ia",
+   "passagens_r1": 14,
+   "conclusivas_r1": 1,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 14,
+   "conclusivas_r2": 1,
+   "fracao_aplica_r2": 0.0
+  },
+  {
+   "curva": "C14-esq",
+   "quem": "piloto",
+   "passagens_r1": 130,
+   "conclusivas_r1": 64,
+   "fracao_aplica_r1": 0.0,
+   "passagens_r2": 130,
+   "conclusivas_r2": 63,
+   "fracao_aplica_r2": 0.0
+  }
+ ],
+ "E4": {
+  "por_curva": [
+   {
+    "curva": "C01-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 1,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C01-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 64,
+    "fracao_aplica_r1": 0.016,
+    "passagens_r2": 130,
+    "conclusivas_r2": 64,
+    "fracao_aplica_r2": 0.016
+   },
+   {
+    "curva": "C02-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 1,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C02-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 57,
+    "fracao_aplica_r1": 0.018,
+    "passagens_r2": 130,
+    "conclusivas_r2": 39,
+    "fracao_aplica_r2": 0.026
+   },
+   {
+    "curva": "C03-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 1,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C03-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 58,
+    "fracao_aplica_r1": 0.017,
+    "passagens_r2": 130,
+    "conclusivas_r2": 44,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C04-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 0,
+    "fracao_aplica_r2": null
+   },
+   {
+    "curva": "C04-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 64,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 63,
+    "fracao_aplica_r2": 0.016
+   },
+   {
+    "curva": "C05-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 0,
+    "fracao_aplica_r1": null,
+    "passagens_r2": 14,
+    "conclusivas_r2": 0,
+    "fracao_aplica_r2": null
+   },
+   {
+    "curva": "C05-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 63,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 63,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C06-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 0,
+    "fracao_aplica_r2": null
+   },
+   {
+    "curva": "C06-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 62,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 58,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C07-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 1,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C07-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 63,
+    "fracao_aplica_r1": 0.016,
+    "passagens_r2": 130,
+    "conclusivas_r2": 62,
+    "fracao_aplica_r2": 0.081
+   },
+   {
+    "curva": "C08-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 1,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C08-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 60,
+    "fracao_aplica_r1": 0.017,
+    "passagens_r2": 130,
+    "conclusivas_r2": 55,
+    "fracao_aplica_r2": 0.055
+   },
+   {
+    "curva": "C09-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 1,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C09-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 47,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 54,
+    "fracao_aplica_r2": 0.037
+   },
+   {
+    "curva": "C10-dir",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 1,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C10-dir",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 64,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 62,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C11-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 1,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C11-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 64,
+    "fracao_aplica_r1": 0.016,
+    "passagens_r2": 130,
+    "conclusivas_r2": 64,
+    "fracao_aplica_r2": 0.016
+   },
+   {
+    "curva": "C12-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 1,
+    "fracao_aplica_r2": 1.0
+   },
+   {
+    "curva": "C12-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 64,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 130,
+    "conclusivas_r2": 63,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C13-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 1,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C13-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 64,
+    "fracao_aplica_r1": 0.016,
+    "passagens_r2": 130,
+    "conclusivas_r2": 63,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C14-esq",
+    "quem": "ia",
+    "passagens_r1": 14,
+    "conclusivas_r1": 1,
+    "fracao_aplica_r1": 0.0,
+    "passagens_r2": 14,
+    "conclusivas_r2": 1,
+    "fracao_aplica_r2": 0.0
+   },
+   {
+    "curva": "C14-esq",
+    "quem": "piloto",
+    "passagens_r1": 130,
+    "conclusivas_r1": 64,
+    "fracao_aplica_r1": 0.016,
+    "passagens_r2": 130,
+    "conclusivas_r2": 64,
+    "fracao_aplica_r2": 0.0
+   }
+  ],
+  "ganharam_aplica": 11,
+  "ganharam_com_contraesterco_antes_do_apice": 10,
+  "por_origem": {
+   "piloto": 9,
+   "ia": 2
+  }
+ },
+ "entrada_moveu": [
+  {
+   "curva": "C01-esq",
+   "passagens": 144,
+   "mudaram": 29,
+   "mediana_m": 0.0,
+   "p10_m": -895.82,
+   "p90_m": 0.0
+  },
+  {
+   "curva": "C02-dir",
+   "passagens": 144,
+   "mudaram": 0,
+   "mediana_m": 0.0,
+   "p10_m": 0.0,
+   "p90_m": 0.0
+  },
+  {
+   "curva": "C03-esq",
+   "passagens": 144,
+   "mudaram": 1,
+   "mediana_m": 0.0,
+   "p10_m": 0.0,
+   "p90_m": 0.0
+  },
+  {
+   "curva": "C04-esq",
+   "passagens": 144,
+   "mudaram": 79,
+   "mediana_m": -531.01,
+   "p10_m": -799.41,
+   "p90_m": 0.0
+  },
+  {
+   "curva": "C05-esq",
+   "passagens": 143,
+   "mudaram": 20,
+   "mediana_m": 0.0,
+   "p10_m": -77.2,
+   "p90_m": 0.0
+  },
+  {
+   "curva": "C06-dir",
+   "passagens": 142,
+   "mudaram": 17,
+   "mediana_m": 0.0,
+   "p10_m": -44.0,
+   "p90_m": 0.0
+  },
+  {
+   "curva": "C07-dir",
+   "passagens": 143,
+   "mudaram": 50,
+   "mediana_m": 0.0,
+   "p10_m": -132.0,
+   "p90_m": 0.0
+  },
+  {
+   "curva": "C08-esq",
+   "passagens": 142,
+   "mudaram": 1,
+   "mediana_m": 0.0,
+   "p10_m": 0.0,
+   "p90_m": 0.0
+  },
+  {
+   "curva": "C09-dir",
+   "passagens": 123,
+   "mudaram": 3,
+   "mediana_m": 0.0,
+   "p10_m": 0.0,
+   "p90_m": 0.0
+  },
+  {
+   "curva": "C10-dir",
+   "passagens": 144,
+   "mudaram": 9,
+   "mediana_m": 0.0,
+   "p10_m": 0.0,
+   "p90_m": 0.0
+  },
+  {
+   "curva": "C11-esq",
+   "passagens": 144,
+   "mudaram": 12,
+   "mediana_m": 0.0,
+   "p10_m": 0.0,
+   "p90_m": 0.0
+  },
+  {
+   "curva": "C12-esq",
+   "passagens": 144,
+   "mudaram": 47,
+   "mediana_m": 0.0,
+   "p10_m": -280.01,
+   "p90_m": 0.0
+  },
+  {
+   "curva": "C13-esq",
+   "passagens": 144,
+   "mudaram": 13,
+   "mediana_m": 0.0,
+   "p10_m": 0.0,
+   "p90_m": 0.0
+  },
+  {
+   "curva": "C14-esq",
+   "passagens": 144,
+   "mudaram": 18,
+   "mediana_m": 0.0,
+   "p10_m": -59.0,
+   "p90_m": 0.0
+  }
+ ],
+ "retomada_moveu_s": [
+  {
+   "curva": "C01-esq",
+   "mediana_s": 0.211,
+   "p10_s": 0.0,
+   "p90_s": 2.452
+  },
+  {
+   "curva": "C02-dir",
+   "mediana_s": 0.984,
+   "p10_s": 0.433,
+   "p90_s": 1.884
+  },
+  {
+   "curva": "C03-esq",
+   "mediana_s": -0.154,
+   "p10_s": -0.424,
+   "p90_s": 0.0
+  },
+  {
+   "curva": "C04-esq",
+   "mediana_s": 0.575,
+   "p10_s": 0.066,
+   "p90_s": 1.916
+  },
+  {
+   "curva": "C05-esq",
+   "mediana_s": 2.552,
+   "p10_s": 0.362,
+   "p90_s": 2.727
+  },
+  {
+   "curva": "C06-dir",
+   "mediana_s": 2.909,
+   "p10_s": 0.41,
+   "p90_s": 4.302
+  },
+  {
+   "curva": "C07-dir",
+   "mediana_s": 0.238,
+   "p10_s": 0.0,
+   "p90_s": 2.079
+  },
+  {
+   "curva": "C08-esq",
+   "mediana_s": 1.785,
+   "p10_s": 0.078,
+   "p90_s": 2.83
+  },
+  {
+   "curva": "C09-dir",
+   "mediana_s": 0.598,
+   "p10_s": -0.128,
+   "p90_s": 2.347
+  },
+  {
+   "curva": "C10-dir",
+   "mediana_s": 0.299,
+   "p10_s": 0.0,
+   "p90_s": 1.848
+  },
+  {
+   "curva": "C11-esq",
+   "mediana_s": 1.231,
+   "p10_s": 0.842,
+   "p90_s": 2.356
+  },
+  {
+   "curva": "C12-esq",
+   "mediana_s": 0.912,
+   "p10_s": 0.142,
+   "p90_s": 1.883
+  },
+  {
+   "curva": "C13-esq",
+   "mediana_s": 3.058,
+   "p10_s": 0.871,
+   "p90_s": 3.309
+  },
+  {
+   "curva": "C14-esq",
+   "mediana_s": 1.913,
+   "p10_s": 0.452,
+   "p90_s": 4.302
+  }
+ ],
+ "estados_que_mudaram": {
+  "E1": {
+   "passagens": 2016,
+   "estado_mudou": 230
+  },
+  "F5": {
+   "passagens": 2016,
+   "estado_mudou": 196
+  },
+  "M6": {
+   "passagens": 2016,
+   "estado_mudou": 616
+  },
+  "M7": {
+   "passagens": 2016,
+   "estado_mudou": 983
+  },
+  "M8": {
+   "passagens": 2016,
+   "estado_mudou": 574
+  },
+  "E4": {
+   "passagens": 2016,
+   "estado_mudou": 82
+  },
+  "E2": {
+   "passagens": 2016,
+   "estado_mudou": 24
+  }
+ },
+ "modelo_leve": [
+  {
+   "curva": "C01-esq",
+   "r2_fora_r1": 0.318,
+   "r2_fora_r2": 0.04,
+   "estaveis_r1": [
+    "pedais_juntos_s",
+    "reversoes",
+    "s_ti_rel",
+    "s_vmin_rel",
+    "sem_pedal_s",
+    "sobreposicao_s",
+    "uso_aderencia",
+    "volante_depois"
+   ],
+   "estaveis_r2": [
+    "pedais_juntos_s",
+    "s_vmin_rel",
+    "sem_pedal_s",
+    "uso_aderencia",
+    "volante_depois"
+   ]
+  },
+  {
+   "curva": "C02-dir",
+   "r2_fora_r1": 0.014,
+   "r2_fora_r2": 0.214,
+   "estaveis_r1": [
+    "afastamento_m",
+    "escorr_traseiro",
+    "plato_s",
+    "s_ti_rel",
+    "sem_pedal_s",
+    "uso_aderencia",
+    "volante_depois"
+   ],
+   "estaveis_r2": [
+    "afastamento_m",
+    "escorr_traseiro",
+    "plato_s",
+    "s_ti_rel",
+    "sem_pedal_s",
+    "taxa_carga",
+    "uso_aderencia",
+    "volante_depois"
+   ]
+  },
+  {
+   "curva": "C03-esq",
+   "r2_fora_r1": 0.157,
+   "r2_fora_r2": 0.467,
+   "estaveis_r1": [
+    "alivio",
+    "retomada_s",
+    "s_ti_rel",
+    "sem_pedal_s",
+    "taxa_carga",
+    "uso_aderencia"
+   ],
+   "estaveis_r2": [
+    "alivio",
+    "sem_pedal_s",
+    "taxa_carga",
+    "uso_aderencia"
+   ]
+  },
+  {
+   "curva": "C04-esq",
+   "r2_fora_r1": 0.262,
+   "r2_fora_r2": 0.093,
+   "estaveis_r1": [
+    "afastamento_m",
+    "pico_fracao",
+    "retomada_s",
+    "s_b_rel",
+    "s_ti_rel",
+    "s_vmin_rel",
+    "sem_pedal_s",
+    "sobreposicao_s",
+    "taxa_carga"
+   ],
+   "estaveis_r2": [
+    "afastamento_m",
+    "s_b_rel",
+    "sem_pedal_s",
+    "taxa_carga"
+   ]
+  },
+  {
+   "curva": "C05-esq",
+   "r2_fora_r1": 0.355,
+   "r2_fora_r2": 0.208,
+   "estaveis_r1": [
+    "plato_s",
+    "retomada_s",
+    "s_ti_rel",
+    "taxa_carga",
+    "uso_aderencia",
+    "volante_depois"
+   ],
+   "estaveis_r2": [
+    "alivio",
+    "plato_s",
+    "retomada_s",
+    "s_ti_rel",
+    "sobreposicao_s",
+    "taxa_carga",
+    "uso_aderencia",
+    "volante_depois"
+   ]
+  },
+  {
+   "curva": "C06-dir",
+   "r2_fora_r1": -0.044,
+   "r2_fora_r2": -0.035,
+   "estaveis_r1": [
+    "afastamento_m",
+    "s_ti_rel",
+    "sem_pedal_s",
+    "uso_aderencia",
+    "volante_depois"
+   ],
+   "estaveis_r2": [
+    "afastamento_m",
+    "s_ti_rel",
+    "uso_aderencia"
+   ]
+  },
+  {
+   "curva": "C07-dir",
+   "r2_fora_r1": -0.187,
+   "r2_fora_r2": -0.283,
+   "estaveis_r1": [
+    "escorr_traseiro",
+    "pico_fracao",
+    "s_b_rel",
+    "s_ti_rel",
+    "sem_pedal_s",
+    "t_pico",
+    "taxa_carga",
+    "uso_aderencia",
+    "volante_depois"
+   ],
+   "estaveis_r2": [
+    "escorr_traseiro",
+    "pico_fracao",
+    "s_b_rel",
+    "sem_pedal_s",
+    "t_pico",
+    "taxa_carga",
+    "uso_aderencia"
+   ]
+  },
+  {
+   "curva": "C08-esq",
+   "r2_fora_r1": 0.161,
+   "r2_fora_r2": 0.14,
+   "estaveis_r1": [
+    "afastamento_m",
+    "s_vmin_rel",
+    "taxa_carga",
+    "uso_aderencia"
+   ],
+   "estaveis_r2": [
+    "afastamento_m",
+    "retomada_s",
+    "reversoes",
+    "sem_pedal_s",
+    "taxa_carga",
+    "uso_aderencia",
+    "volante_depois"
+   ]
+  },
+  {
+   "curva": "C09-dir",
+   "r2_fora_r1": 0.676,
+   "r2_fora_r2": 0.624,
+   "estaveis_r1": [
+    "alivio",
+    "sem_pedal_s",
+    "taxa_carga",
+    "uso_aderencia"
+   ],
+   "estaveis_r2": [
+    "alivio",
+    "sem_pedal_s"
+   ]
+  },
+  {
+   "curva": "C10-dir",
+   "r2_fora_r1": 0.257,
+   "r2_fora_r2": 0.274,
+   "estaveis_r1": [
+    "alivio",
+    "escorr_traseiro",
+    "plato_s",
+    "reversoes",
+    "s_ti_rel",
+    "sem_pedal_s",
+    "sobreposicao_s",
+    "taxa_carga",
+    "uso_aderencia"
+   ],
+   "estaveis_r2": [
+    "alivio",
+    "escorr_traseiro",
+    "sem_pedal_s",
+    "taxa_carga",
+    "uso_aderencia"
+   ]
+  },
+  {
+   "curva": "C11-esq",
+   "r2_fora_r1": -0.294,
+   "r2_fora_r2": -0.29,
+   "estaveis_r1": [
+    "irregularidade",
+    "plato_s",
+    "retomada_s",
+    "s_ti_rel",
+    "sem_pedal_s",
+    "uso_aderencia"
+   ],
+   "estaveis_r2": [
+    "afastamento_m",
+    "alivio",
+    "irregularidade",
+    "plato_s",
+    "reversoes",
+    "sem_pedal_s",
+    "uso_aderencia"
+   ]
+  },
+  {
+   "curva": "C12-esq",
+   "r2_fora_r1": 0.501,
+   "r2_fora_r2": 0.238,
+   "estaveis_r1": [
+    "alivio",
+    "s_ti_rel",
+    "sem_pedal_s",
+    "uso_aderencia"
+   ],
+   "estaveis_r2": [
+    "s_vmin_rel",
+    "sem_pedal_s",
+    "taxa_carga",
+    "uso_aderencia"
+   ]
+  },
+  {
+   "curva": "C13-esq",
+   "r2_fora_r1": -0.134,
+   "r2_fora_r2": 0.208,
+   "estaveis_r1": [
+    "alivio",
+    "irregularidade",
+    "plato_s",
+    "s_ti_rel",
+    "uso_aderencia"
+   ],
+   "estaveis_r2": [
+    "alivio",
+    "irregularidade",
+    "retomada_s",
+    "uso_aderencia"
+   ]
+  },
+  {
+   "curva": "C14-esq",
+   "r2_fora_r1": 0.251,
+   "r2_fora_r2": -0.04,
+   "estaveis_r1": [
+    "alivio",
+    "irregularidade",
+    "s_ti_rel",
+    "uso_aderencia"
+   ],
+   "estaveis_r2": [
+    "alivio",
+    "irregularidade",
+    "retomada_s",
+    "s_ti_rel",
+    "uso_aderencia"
+   ]
+  }
+ ],
+ "frenagem_emendada_por_curva": {
+  "C01-esq": 0,
+  "C02-dir": 5,
+  "C03-esq": 0,
+  "C04-esq": 0,
+  "C05-esq": 4,
+  "C06-dir": 0,
+  "C07-dir": 0,
+  "C08-esq": 6,
+  "C09-dir": 1,
+  "C10-dir": 78,
+  "C11-esq": 0,
+  "C12-esq": 0,
+  "C13-esq": 0,
+  "C14-esq": 0
+ },
+ "conferencia_das_fases": {
+  "rodada1_fechamento_s": 0.0,
+  "rodada2_fechamento_s": 0.0,
+  "rodada2_so_comparacao_0013_fechamento_s": 0.0,
+  "metros_cobertos_r2": 4334.07957
+ },
+ "e3_saidas_de_traseira": {
+  "rodada1": {
+   "sessao": "2026-11-01_19-47-03_vhe_interlagos",
+   "voltas": [
+    {
+     "volta_relatada": 3,
+     "tempo_relatado_s": 285.743,
+     "lap_number": 3,
+     "como": "pelo numero (o tempo confere)",
+     "curvas": [
+      "C05",
+      "C06",
+      "C13"
+     ],
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002"
+    },
+    {
+     "volta_relatada": 4,
+     "tempo_relatado_s": 224.219,
+     "lap_number": 4,
+     "como": "pelo numero (o tempo confere)",
+     "curvas": [
+      "C02",
+      "C06"
+     ],
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0003"
+    },
+    {
+     "volta_relatada": 10,
+     "tempo_relatado_s": 145.948,
+     "lap_number": 10,
+     "como": "pelo tempo das amostras (o numero da gravacao nao bateu)",
+     "curvas": [
+      "C05"
+     ],
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0009"
+    },
+    {
+     "volta_relatada": 11,
+     "tempo_relatado_s": 159.678,
+     "lap_number": 11,
+     "como": "pelo numero (o tempo confere)",
+     "curvas": [
+      "C01"
+     ],
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0010"
+    }
+   ],
+   "passagens": [
+    {
+     "volta_relatada": 3,
+     "lap_number": 3,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002",
+     "como_achada": "pelo numero (o tempo confere)",
+     "curva": "C05-esq",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "volta longa demais (285.7s > 200s)",
+       "carro parado em 48.9% das amostras",
+       "fora de pista em 9.1% das amostras"
+      ],
+      "box": false
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "nao_aplica",
+     "motivo": null,
+     "valor_regra": -4.34881,
+     "beta_p95": 1.84696
+    },
+    {
+     "volta_relatada": 3,
+     "lap_number": 3,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002",
+     "como_achada": "pelo numero (o tempo confere)",
+     "curva": "C06-dir",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "volta longa demais (285.7s > 200s)",
+       "carro parado em 48.9% das amostras",
+       "fora de pista em 9.1% das amostras"
+      ],
+      "box": false
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "aplica",
+     "motivo": null,
+     "valor_regra": 56.06963,
+     "beta_p95": 59.11231
+    },
+    {
+     "volta_relatada": 3,
+     "lap_number": 3,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002",
+     "como_achada": "pelo numero (o tempo confere)",
+     "curva": "C13-esq",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "volta longa demais (285.7s > 200s)",
+       "carro parado em 48.9% das amostras",
+       "fora de pista em 9.1% das amostras"
+      ],
+      "box": false
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "aplica",
+     "motivo": null,
+     "valor_regra": 7.00974,
+     "beta_p95": 8.16751
+    },
+    {
+     "volta_relatada": 4,
+     "lap_number": 4,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0003",
+     "como_achada": "pelo numero (o tempo confere)",
+     "curva": "C02-dir",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "volta longa demais (224.2s > 200s)",
+       "carro parado em 41.5% das amostras"
+      ],
+      "box": false
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "aplica",
+     "motivo": null,
+     "valor_regra": 1.30304,
+     "beta_p95": 2.97714
+    },
+    {
+     "volta_relatada": 4,
+     "lap_number": 4,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0003",
+     "como_achada": "pelo numero (o tempo confere)",
+     "curva": "C06-dir",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "volta longa demais (224.2s > 200s)",
+       "carro parado em 41.5% das amostras"
+      ],
+      "box": false
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "aplica",
+     "motivo": null,
+     "valor_regra": 64.62379,
+     "beta_p95": 67.66647
+    },
+    {
+     "volta_relatada": 10,
+     "lap_number": 9,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0009",
+     "como_achada": "pelo tempo das amostras (o numero da gravacao nao bateu)",
+     "curva": "C05-esq",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "carro parado em 23.2% das amostras"
+      ],
+      "box": false
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "nao_aplica",
+     "motivo": null,
+     "valor_regra": -3.10979,
+     "beta_p95": 3.08598
+    },
+    {
+     "volta_relatada": 11,
+     "lap_number": 11,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0010",
+     "como_achada": "pelo numero (o tempo confere)",
+     "curva": "C01-esq",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "carro parado em 32.9% das amostras"
+      ],
+      "box": true
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "aplica",
+     "motivo": null,
+     "valor_regra": 12.7744,
+     "beta_p95": 17.25693
+    }
+   ],
+   "aplica": 5,
+   "total": 7,
+   "recusadas_pelo_portao": 7,
+   "nota": "revocacao so sobre os casos relatados; a lista nao tem nao aplica e nao da precisao"
+  },
+  "rodada2": {
+   "sessao": "2026-11-01_19-47-03_vhe_interlagos",
+   "voltas": [
+    {
+     "volta_relatada": 3,
+     "tempo_relatado_s": 285.743,
+     "lap_number": 3,
+     "como": "pelo numero (o tempo confere)",
+     "curvas": [
+      "C05",
+      "C06",
+      "C13"
+     ],
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002"
+    },
+    {
+     "volta_relatada": 4,
+     "tempo_relatado_s": 224.219,
+     "lap_number": 4,
+     "como": "pelo numero (o tempo confere)",
+     "curvas": [
+      "C02",
+      "C06"
+     ],
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0003"
+    },
+    {
+     "volta_relatada": 10,
+     "tempo_relatado_s": 145.948,
+     "lap_number": 10,
+     "como": "pelo tempo das amostras (o numero da gravacao nao bateu)",
+     "curvas": [
+      "C05"
+     ],
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0009"
+    },
+    {
+     "volta_relatada": 11,
+     "tempo_relatado_s": 159.678,
+     "lap_number": 11,
+     "como": "pelo numero (o tempo confere)",
+     "curvas": [
+      "C01"
+     ],
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0010"
+    }
+   ],
+   "passagens": [
+    {
+     "volta_relatada": 3,
+     "lap_number": 3,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002",
+     "como_achada": "pelo numero (o tempo confere)",
+     "curva": "C05-esq",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "volta longa demais (285.7s > 200s)",
+       "carro parado em 48.9% das amostras",
+       "fora de pista em 9.1% das amostras"
+      ],
+      "box": false
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "nao_aplica",
+     "motivo": null,
+     "valor_regra": -4.34881,
+     "beta_p95": 1.84696
+    },
+    {
+     "volta_relatada": 3,
+     "lap_number": 3,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002",
+     "como_achada": "pelo numero (o tempo confere)",
+     "curva": "C06-dir",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "volta longa demais (285.7s > 200s)",
+       "carro parado em 48.9% das amostras",
+       "fora de pista em 9.1% das amostras"
+      ],
+      "box": false
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "aplica",
+     "motivo": null,
+     "valor_regra": 56.06963,
+     "beta_p95": 59.11231
+    },
+    {
+     "volta_relatada": 3,
+     "lap_number": 3,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002",
+     "como_achada": "pelo numero (o tempo confere)",
+     "curva": "C13-esq",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "volta longa demais (285.7s > 200s)",
+       "carro parado em 48.9% das amostras",
+       "fora de pista em 9.1% das amostras"
+      ],
+      "box": false
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "aplica",
+     "motivo": null,
+     "valor_regra": 7.00974,
+     "beta_p95": 8.16751
+    },
+    {
+     "volta_relatada": 4,
+     "lap_number": 4,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0003",
+     "como_achada": "pelo numero (o tempo confere)",
+     "curva": "C02-dir",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "volta longa demais (224.2s > 200s)",
+       "carro parado em 41.5% das amostras"
+      ],
+      "box": false
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "aplica",
+     "motivo": null,
+     "valor_regra": 1.30304,
+     "beta_p95": 2.97714
+    },
+    {
+     "volta_relatada": 4,
+     "lap_number": 4,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0003",
+     "como_achada": "pelo numero (o tempo confere)",
+     "curva": "C06-dir",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "volta longa demais (224.2s > 200s)",
+       "carro parado em 41.5% das amostras"
+      ],
+      "box": false
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "aplica",
+     "motivo": null,
+     "valor_regra": 64.62379,
+     "beta_p95": 67.66647
+    },
+    {
+     "volta_relatada": 10,
+     "lap_number": 9,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0009",
+     "como_achada": "pelo tempo das amostras (o numero da gravacao nao bateu)",
+     "curva": "C05-esq",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "carro parado em 23.2% das amostras"
+      ],
+      "box": false
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "nao_aplica",
+     "motivo": null,
+     "valor_regra": -3.10979,
+     "beta_p95": 3.08598
+    },
+    {
+     "volta_relatada": 11,
+     "lap_number": 11,
+     "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0010",
+     "como_achada": "pelo numero (o tempo confere)",
+     "curva": "C01-esq",
+     "portao": {
+      "valida": false,
+      "motivos_portao": [
+       "carro parado em 32.9% das amostras"
+      ],
+      "box": true
+     },
+     "recusada_pelo_portao": true,
+     "estado_e3": "aplica",
+     "motivo": null,
+     "valor_regra": 12.7744,
+     "beta_p95": 17.25693
+    }
+   ],
+   "aplica": 5,
+   "total": 7,
+   "recusadas_pelo_portao": 7,
+   "nota": "revocacao so sobre os casos relatados; a lista nao tem nao aplica e nao da precisao"
+  }
+ },
+ "depois_do_kit": {
+  "voltas": [
+   {
+    "lap_id": "2026-11-12_22-57-03_vhe_interlagos#0007",
+    "sessao": "2026-11-12",
+    "tempo_s": 87.963,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-07_18-46-00_vhe_interlagos#0005",
+    "sessao": "2026-11-07",
+    "tempo_s": 88.247,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-07_18-46-00_vhe_interlagos#0003",
+    "sessao": "2026-11-07",
+    "tempo_s": 88.546,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-12_22-57-03_vhe_interlagos#0004",
+    "sessao": "2026-11-12",
+    "tempo_s": 89.39,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-07_19-52-33_vhe_interlagos#0002",
+    "sessao": "2026-11-07",
+    "tempo_s": 89.416,
+    "sessao_com_margem": false
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0006",
+    "sessao": "2026-11-01",
+    "tempo_s": 89.433,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0005",
+    "sessao": "2026-11-01",
+    "tempo_s": 89.601,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-07_18-46-00_vhe_interlagos#0002",
+    "sessao": "2026-11-07",
+    "tempo_s": 90.364,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-12_22-57-03_vhe_interlagos#0002",
+    "sessao": "2026-11-12",
+    "tempo_s": 91.024,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-12_22-57-03_vhe_interlagos#0001",
+    "sessao": "2026-11-12",
+    "tempo_s": 91.342,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0011",
+    "sessao": "2026-11-01",
+    "tempo_s": 91.56,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0004",
+    "sessao": "2026-11-01",
+    "tempo_s": 91.71,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0001",
+    "sessao": "2026-11-01",
+    "tempo_s": 93.482,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-07_19-52-33_vhe_interlagos#0003",
+    "sessao": "2026-11-07",
+    "tempo_s": 93.53,
+    "sessao_com_margem": false
+   },
+   {
+    "lap_id": "2026-11-07_18-46-00_vhe_interlagos#0001",
+    "sessao": "2026-11-07",
+    "tempo_s": 95.13,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0007",
+    "sessao": "2026-11-01",
+    "tempo_s": 96.4,
+    "sessao_com_margem": true
+   },
+   {
+    "lap_id": "2026-11-07_18-46-00_vhe_interlagos#0007",
+    "sessao": "2026-11-07",
+    "tempo_s": 100.131,
+    "sessao_com_margem": true
+   }
+  ],
+  "fora_da_selecao": [],
+  "fechamento_s": 0.0,
+  "tres_maiores_por_sessao": {
+   "2026-11-01": [
+    "consistencia",
+    "C12-esq frenagem (+0.438 s)",
+    "C03-esq meio (+0.437 s)"
+   ],
+   "2026-11-07": [
+    "consistencia",
+    "C12-esq frenagem (+0.605 s)",
+    "C11-esq meio (+0.470 s)"
+   ],
+   "2026-11-12": [
+    "consistencia",
+    "C04-esq frenagem (+0.498 s)",
+    "C14-esq reta (+0.409 s)"
+   ]
+  },
+  "sessao_com_margem": {
+   "2026-11-01": true,
+   "2026-11-07": true,
+   "2026-11-12": true
+  }
+ }
+}

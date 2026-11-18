@@ -1,0 +1,195 @@
+{
+ "sessao": "2026-11-01_19-47-03_vhe_interlagos",
+ "voltas": [
+  {
+   "volta_relatada": 3,
+   "tempo_relatado_s": 285.743,
+   "lap_number": 3,
+   "como": "pelo numero (o tempo confere)",
+   "curvas": [
+    "C05",
+    "C06",
+    "C13"
+   ],
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002"
+  },
+  {
+   "volta_relatada": 4,
+   "tempo_relatado_s": 224.219,
+   "lap_number": 4,
+   "como": "pelo numero (o tempo confere)",
+   "curvas": [
+    "C02",
+    "C06"
+   ],
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0003"
+  },
+  {
+   "volta_relatada": 10,
+   "tempo_relatado_s": 145.948,
+   "lap_number": 10,
+   "como": "pelo tempo das amostras (o numero da gravacao nao bateu)",
+   "curvas": [
+    "C05"
+   ],
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0009"
+  },
+  {
+   "volta_relatada": 11,
+   "tempo_relatado_s": 159.678,
+   "lap_number": 11,
+   "como": "pelo numero (o tempo confere)",
+   "curvas": [
+    "C01"
+   ],
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0010"
+  }
+ ],
+ "passagens": [
+  {
+   "volta_relatada": 3,
+   "lap_number": 3,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002",
+   "como_achada": "pelo numero (o tempo confere)",
+   "curva": "C05-esq",
+   "portao": {
+    "valida": false,
+    "motivos_portao": [
+     "volta longa demais (285.7s > 200s)",
+     "carro parado em 48.9% das amostras",
+     "fora de pista em 9.1% das amostras"
+    ],
+    "box": false
+   },
+   "recusada_pelo_portao": true,
+   "estado_e3": "nao_aplica",
+   "motivo": null,
+   "valor_regra": -4.34881,
+   "beta_p95": 1.84696
+  },
+  {
+   "volta_relatada": 3,
+   "lap_number": 3,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002",
+   "como_achada": "pelo numero (o tempo confere)",
+   "curva": "C06-dir",
+   "portao": {
+    "valida": false,
+    "motivos_portao": [
+     "volta longa demais (285.7s > 200s)",
+     "carro parado em 48.9% das amostras",
+     "fora de pista em 9.1% das amostras"
+    ],
+    "box": false
+   },
+   "recusada_pelo_portao": true,
+   "estado_e3": "aplica",
+   "motivo": null,
+   "valor_regra": 56.06963,
+   "beta_p95": 59.11231
+  },
+  {
+   "volta_relatada": 3,
+   "lap_number": 3,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0002",
+   "como_achada": "pelo numero (o tempo confere)",
+   "curva": "C13-esq",
+   "portao": {
+    "valida": false,
+    "motivos_portao": [
+     "volta longa demais (285.7s > 200s)",
+     "carro parado em 48.9% das amostras",
+     "fora de pista em 9.1% das amostras"
+    ],
+    "box": false
+   },
+   "recusada_pelo_portao": true,
+   "estado_e3": "aplica",
+   "motivo": null,
+   "valor_regra": 7.00974,
+   "beta_p95": 8.16751
+  },
+  {
+   "volta_relatada": 4,
+   "lap_number": 4,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0003",
+   "como_achada": "pelo numero (o tempo confere)",
+   "curva": "C02-dir",
+   "portao": {
+    "valida": false,
+    "motivos_portao": [
+     "volta longa demais (224.2s > 200s)",
+     "carro parado em 41.5% das amostras"
+    ],
+    "box": false
+   },
+   "recusada_pelo_portao": true,
+   "estado_e3": "aplica",
+   "motivo": null,
+   "valor_regra": 1.30304,
+   "beta_p95": 2.97714
+  },
+  {
+   "volta_relatada": 4,
+   "lap_number": 4,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0003",
+   "como_achada": "pelo numero (o tempo confere)",
+   "curva": "C06-dir",
+   "portao": {
+    "valida": false,
+    "motivos_portao": [
+     "volta longa demais (224.2s > 200s)",
+     "carro parado em 41.5% das amostras"
+    ],
+    "box": false
+   },
+   "recusada_pelo_portao": true,
+   "estado_e3": "aplica",
+   "motivo": null,
+   "valor_regra": 64.62379,
+   "beta_p95": 67.66647
+  },
+  {
+   "volta_relatada": 10,
+   "lap_number": 9,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0009",
+   "como_achada": "pelo tempo das amostras (o numero da gravacao nao bateu)",
+   "curva": "C05-esq",
+   "portao": {
+    "valida": false,
+    "motivos_portao": [
+     "carro parado em 23.2% das amostras"
+    ],
+    "box": false
+   },
+   "recusada_pelo_portao": true,
+   "estado_e3": "nao_aplica",
+   "motivo": null,
+   "valor_regra": -3.10979,
+   "beta_p95": 3.08598
+  },
+  {
+   "volta_relatada": 11,
+   "lap_number": 11,
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0010",
+   "como_achada": "pelo numero (o tempo confere)",
+   "curva": "C01-esq",
+   "portao": {
+    "valida": false,
+    "motivos_portao": [
+     "carro parado em 32.9% das amostras"
+    ],
+    "box": true
+   },
+   "recusada_pelo_portao": true,
+   "estado_e3": "aplica",
+   "motivo": null,
+   "valor_regra": 12.7744,
+   "beta_p95": 17.25693
+  }
+ ],
+ "aplica": 5,
+ "total": 7,
+ "recusadas_pelo_portao": 7,
+ "nota": "revocacao so sobre os casos relatados; a lista nao tem nao aplica e nao da precisao"
+}

@@ -1,0 +1,292 @@
+{
+ "pedido": "docs/prompts/2026-10-29_42_modelo2-rodada-2.md",
+ "rodada": 2,
+ "regras": "secao 4 (pedido 42, Parte A)",
+ "commit": "552e892da692c1f124db57f91b046ca26561d679",
+ "geometry_id": "0ed16f0dd2225990",
+ "geometria_source_hash": "8c3e058486e0d691a52769eca59d209ea170a3e988da078ae6ec7c726b909609",
+ "store_v2": {
+  "commit": "ff0ce3eda8638b4a1700cbccccea32fd0305b937",
+  "construido_em": "2026-11-18T00:31:19.242171+00:00"
+ },
+ "ambiente": {
+  "python": "3.9.7",
+  "numpy": "1.26.3",
+  "pandas": "2.1.4"
+ },
+ "comandos": [
+  "python -m ml.scripts.modelo2 todos --saida rodada2 --rodada 2 --handoff docs/handoff/2026-10-29_42_modelo2-rodada-2"
+ ],
+ "saida": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2",
+ "voltas": {
+  "total": 144,
+  "piloto": 130,
+  "ia": 14,
+  "fora_do_store": 10,
+  "pedidas": 144,
+  "fonte_da_lista": "docs/handoff/2026-10-24_38_modelo2-erro-tecnica-e-estilo_canais_e_conferencias.json"
+ },
+ "sessoes_com_margem": {
+  "margem_s": 0.002,
+  "sessoes": {
+   "2026-11-01_19-47-03_vhe_interlagos": {
+    "sessao": "2026-11-01_19-47-03_vhe_interlagos",
+    "mediana_m": 1.606,
+    "diferenca_m": 0.143,
+    "efeito_ms": 1.98,
+    "voltas": 6,
+    "decisao": "2026-11-17"
+   },
+   "2026-11-07_18-46-00_vhe_interlagos": {
+    "sessao": "2026-11-07_18-46-00_vhe_interlagos",
+    "mediana_m": 1.581,
+    "diferenca_m": 0.118,
+    "efeito_ms": 1.643,
+    "voltas": 5,
+    "decisao": "2026-11-17"
+   },
+   "2026-11-12_22-57-03_vhe_interlagos": {
+    "sessao": "2026-11-12_22-57-03_vhe_interlagos",
+    "mediana_m": 1.573,
+    "diferenca_m": 0.11,
+    "efeito_ms": 1.59,
+    "voltas": 4,
+    "decisao": "2026-11-17"
+   }
+  },
+  "voltas": []
+ },
+ "lidos": [
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\laps_grid_v2.parquet",
+   "bytes": 398060722,
+   "sha256": "8fcaddf17783d50cc9b51955f884366a9e8fcfd6c50406da9292509c77041c81"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\laps_grid_v2_meta.json",
+   "bytes": 1401443,
+   "sha256": "6e05753de2fcdc00b619dae1f8b99469a998aa09f2b5ecfe6201ba70a80b498e"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\derivados.parquet",
+   "bytes": 21884432,
+   "sha256": "9699e3fbb358b154a464b2d89329be06a059407dec5cab96c90e8765b593e6ce"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\fora_do_store.parquet",
+   "bytes": 8836879,
+   "sha256": "2e7dd028ea4182502910bb85b891793f746a2e0e8e0d0896b1a40b29bbeabed8"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\fora_do_store.json",
+   "bytes": 14871,
+   "sha256": "9bc449850ee63c3e061713b0c0ebc3e3a62408953d7e8fc15e3f088aa3d7e759"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\recordings\\2026-10-04_02-24-04_vhe_interlagos\\player.jsonl",
+   "bytes": 734142161,
+   "sha256": "14442bffaf9b7f1a910ff4583540bba7f319de07e89ec622d2d3fb1833e66129"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\recordings\\2026-10-04_03-21-52_vhe_interlagos\\player.jsonl",
+   "bytes": 182687339,
+   "sha256": "fd465f54e7fe5106d9971df7df8dabca99bf2af4b2fa38661df095389c4e843e"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\recordings\\2026-10-04_03-42-10_vhe_interlagos\\player.jsonl",
+   "bytes": 513496466,
+   "sha256": "048dfc3e1a6ccd80a01b8754da22fd6a6d6bc0f44399781ba987a2a751f92ec6"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\AppData\\Roaming\\Automobilista Telemetria\\data\\recordings\\2026-10-04_23-51-42_vhe_interlagos\\player.jsonl",
+   "bytes": 525971530,
+   "sha256": "f3f29f42f512215ad1a89ce31e3f9b995b028ba4222353cd19b35afcf50ab80e"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\AppData\\Roaming\\Automobilista Telemetria\\data\\recordings\\2026-10-05_20-33-47_vhe_interlagos\\player.jsonl",
+   "bytes": 488626503,
+   "sha256": "8b9fed38061f76dccfd2c60c7e12e22acf872609ab8f3cc3504812cbfc90047c"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\AppData\\Roaming\\Automobilista Telemetria\\data\\recordings\\2026-10-08_23-56-13_vhe_interlagos\\player.jsonl",
+   "bytes": 244867937,
+   "sha256": "d329966c1e7d6f87556107c4fb10524afb057787d2b79132ec7d83c10af6ff48"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\AppData\\Roaming\\Automobilista Telemetria\\data\\recordings\\2026-10-10_09-57-09_vhe_interlagos\\player.jsonl",
+   "bytes": 533662419,
+   "sha256": "b0fb9eeb24103f8516f0eee6f05623883ea7a7dcb3fea6d7aff55550bb300141"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\AppData\\Roaming\\Automobilista Telemetria\\data\\recordings\\2026-10-11_14-19-52_vhe_interlagos\\player.jsonl",
+   "bytes": 487460110,
+   "sha256": "d15e78078e3798fdb55c59c5f7fcdf1f8e2624ba5064ad1ce26cbcc18d6179ec"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\AppData\\Roaming\\Automobilista Telemetria\\data\\recordings\\2026-10-13_19-24-10_vhe_interlagos\\player.jsonl",
+   "bytes": 358438741,
+   "sha256": "7a8641b4cfd19ea265d8b1579ec00f105b1829b34a5949087e60b31f3a434089"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\recordings\\2026-10-15_23-24-50_vhe_interlagos\\player.jsonl",
+   "bytes": 556513212,
+   "sha256": "21b6d30a29031ff686f4232abf9699b7afe72f0fe7cb933e4a3a9baab85ab32e"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\recordings\\2026-10-17_01-02-22_vhe_interlagos\\player.jsonl",
+   "bytes": 767815886,
+   "sha256": "490dd97d79c6f75e336a62c68aae4ebb94255901cd7fdda21a061dbe56a12db3"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\AppData\\Roaming\\Automobilista Telemetria\\data\\recordings\\2026-10-17_16-17-08_vhe_interlagos\\player.jsonl",
+   "bytes": 651630041,
+   "sha256": "24535cda8fa03e97ec35748a4df42d96bd1b0a75a8b53ad1cfb2dc93742b18f7"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\recordings\\2026-10-18_12-38-44_vhe_interlagos\\player.jsonl",
+   "bytes": 461494686,
+   "sha256": "92dbc61e7c479505d05a0a0bb6258afcbc47e603977afa833afdb266a3dddb4a"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\recordings\\2026-10-21_20-30-54_vhe_interlagos\\player.jsonl",
+   "bytes": 700523954,
+   "sha256": "4c57e31c05b10f9fbc897dab73e772b07f8a57e045ae50dbe96817b9f0a28443"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\recordings\\2026-10-22_09-46-01_vhe_interlagos\\player.jsonl",
+   "bytes": 58652300,
+   "sha256": "fe4635fc1bfd637bd82d65938971f491124a3bd210d8c4535750c9c994867851"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\recordings\\2026-10-24_13-26-12_vhe_interlagos\\player.jsonl",
+   "bytes": 167829639,
+   "sha256": "879902a3e4f8e694f01050b99b938f80c1363bd53c0c964cbff81b5fa080d813"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\recordings\\2026-10-24_13-43-32_vhe_interlagos\\player.jsonl",
+   "bytes": 583100158,
+   "sha256": "9c561dab0212b7016d0935e49e70d801e10b5144b263960f67ee5e9ab7c36998"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\recordings\\2026-11-01_19-47-03_vhe_interlagos\\player.jsonl",
+   "bytes": 521281230,
+   "sha256": "89c707215a55e8832d1728982eae926a6cd311727a8823c07762bc29580c264b"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\recordings\\2026-11-07_18-46-00_vhe_interlagos\\player.jsonl",
+   "bytes": 315841016,
+   "sha256": "881d39c8737f6da897fe12dc8a33c5ed52196cc426abf3eebabb6df3718a5cb2"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\AppData\\Roaming\\Automobilista Telemetria\\data\\recordings\\2026-11-07_19-52-33_vhe_interlagos\\player.jsonl",
+   "bytes": 222567322,
+   "sha256": "7743e45aaf5273168c0f6610c70b8494d31cbd6978b364fe71bd145862163ffb"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\recordings\\2026-11-12_22-57-03_vhe_interlagos\\player.jsonl",
+   "bytes": 376096552,
+   "sha256": "762bc8611000d9d49045c06c43937fcf098e38a766d9fe7d12eafbd016cdf6e5"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\reference_models\\vhe_interlagos.json",
+   "bytes": 58872,
+   "sha256": "f8e61864ba2a38df08cd1377d2a4f1f774cad686bd4c71b694bdeefaee3fbfe8"
+  }
+ ],
+ "escritos": [
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\fases.json",
+   "sha256": "c7c5e135df383b7a806c4e4fab9b3009b0574fa89985809a8dfab67e46bbe699"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\canais_e_conferencias.json",
+   "sha256": "b327eb447255a47e8bb8fd291204590c557073546fc60dbd7f55e9f02013c52e"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\erros_por_sessao.json",
+   "sha256": "6f36b5cfa7d6cf0d657d5158cab94d121f1f202ac1d42dd87f234598c24077fb"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\tecnicas.json",
+   "sha256": "6f59c79eb67505fd74e27b872a708d7ee4178d8b7dd5b5ea8b46c416f8abd665"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\estilo.json",
+   "sha256": "90837f98ca375aca665a2812f1430311902efbbc4a45ff97cd13728b9eb18be6"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\modelo_leve.json",
+   "sha256": "0f459fbf86c603136d6ff6026e66af3c33d4f6088a4a89bf31dfca3acc222b6d"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\e3_saidas_de_traseira.json",
+   "sha256": "04a070aa3271c1b8ab5b45d6cba70bc4da7c24a71e36376b7e9204b6f80e3748"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\erros_por_sessao_so_comparacao_0013.json",
+   "sha256": "89cb9cbebc5204e9d4a3b538c5276af6ef3c5834cbff0340d5ed7603022bafc9"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\erros_depois_do_kit.json",
+   "sha256": "90e0e3673ff497968ed5fa6d2921ffd91eb22c85a58299291099077a70ec7c4c"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\rotulagem\\kit2_rotulagem.html",
+   "sha256": "56aad227d9940090386c8547f8202f72702b3eaafb9e665227da06a34a3745b5"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\rotulagem\\kit2_consistencia.html",
+   "sha256": "6d563c65e7e2287360d824c7ed208acee78d88619ac4cee63e3cb630d88f5296"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\rotulagem\\kit2_consistencia.csv",
+   "sha256": "0f52a79f28e4d56df85057203a896fb0c3964be0d7fdef46eff43975930bb3ea"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\kit2_gabarito.json",
+   "sha256": "041de5c4f7b177013c4bc98b63abe134548ceb8f594e7cf841aecfcca3624973"
+  },
+  {
+   "arquivo": "C:\\Users\\Dokas\\Desktop\\f1-telemetry-analyzer-48\\data\\ml\\modelo2\\rodada2\\derivados.parquet",
+   "sha256": "1f3fbbb72856c224b40c5dfcebcf0c6c5e074940030acb8413285d8df8bddf89"
+  }
+ ],
+ "kit": {
+  "por_detector": {
+   "F4": {
+    "passagens": 24,
+    "ia": 7,
+    "segunda_melhor_usada": 0
+   },
+   "F5": {
+    "passagens": 24,
+    "ia": 6,
+    "segunda_melhor_usada": 0
+   },
+   "M6": {
+    "passagens": 24,
+    "ia": 3,
+    "segunda_melhor_usada": 0
+   },
+   "E2": {
+    "passagens": 24,
+    "ia": 2,
+    "segunda_melhor_usada": 0
+   },
+   "E3": {
+    "passagens": 24,
+    "ia": 2,
+    "segunda_melhor_usada": 0
+   }
+  },
+  "consistencia": 30,
+  "csv_dos_rotulos": "data/ml/modelo2/rotulagem/2026-10-24_38_modelo2-erro-tecnica-e-estilo_rotulagem.csv",
+  "sha256_html": "56aad227d9940090386c8547f8202f72702b3eaafb9e665227da06a34a3745b5"
+ },
+ "tempos": {
+  "leitura_s": 71.2,
+  "detectores_s": 75.9,
+  "modelos_s": 410.9,
+  "total_s": 431.0
+ }
+}

@@ -1,0 +1,3777 @@
+{
+ "pedidas": 17,
+ "medidas": 17,
+ "fora_da_selecao": [],
+ "voltas": [
+  {
+   "lap_id": "2026-11-12_22-57-03_vhe_interlagos#0007",
+   "sessao": "2026-11-12",
+   "tempo_s": 87.963,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-07_18-46-00_vhe_interlagos#0005",
+   "sessao": "2026-11-07",
+   "tempo_s": 88.247,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-07_18-46-00_vhe_interlagos#0003",
+   "sessao": "2026-11-07",
+   "tempo_s": 88.546,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-12_22-57-03_vhe_interlagos#0004",
+   "sessao": "2026-11-12",
+   "tempo_s": 89.39,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-07_19-52-33_vhe_interlagos#0002",
+   "sessao": "2026-11-07",
+   "tempo_s": 89.416,
+   "sessao_com_margem": false
+  },
+  {
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0006",
+   "sessao": "2026-11-01",
+   "tempo_s": 89.433,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0005",
+   "sessao": "2026-11-01",
+   "tempo_s": 89.601,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-07_18-46-00_vhe_interlagos#0002",
+   "sessao": "2026-11-07",
+   "tempo_s": 90.364,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-12_22-57-03_vhe_interlagos#0002",
+   "sessao": "2026-11-12",
+   "tempo_s": 91.024,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-12_22-57-03_vhe_interlagos#0001",
+   "sessao": "2026-11-12",
+   "tempo_s": 91.342,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0011",
+   "sessao": "2026-11-01",
+   "tempo_s": 91.56,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0004",
+   "sessao": "2026-11-01",
+   "tempo_s": 91.71,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0001",
+   "sessao": "2026-11-01",
+   "tempo_s": 93.482,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-07_19-52-33_vhe_interlagos#0003",
+   "sessao": "2026-11-07",
+   "tempo_s": 93.53,
+   "sessao_com_margem": false
+  },
+  {
+   "lap_id": "2026-11-07_18-46-00_vhe_interlagos#0001",
+   "sessao": "2026-11-07",
+   "tempo_s": 95.13,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-01_19-47-03_vhe_interlagos#0007",
+   "sessao": "2026-11-01",
+   "tempo_s": 96.4,
+   "sessao_com_margem": true
+  },
+  {
+   "lap_id": "2026-11-07_18-46-00_vhe_interlagos#0007",
+   "sessao": "2026-11-07",
+   "tempo_s": 100.131,
+   "sessao_com_margem": true
+  }
+ ],
+ "fechamento_soma_das_fases_s": 0.0,
+ "sessoes": [
+  {
+   "sessao": "2026-11-01",
+   "voltas": 6,
+   "ultimas_3": [
+    "2026-11-01_19-47-03_vhe_interlagos#0006",
+    "2026-11-01_19-47-03_vhe_interlagos#0007",
+    "2026-11-01_19-47-03_vhe_interlagos#0011"
+   ],
+   "tempos_ultimas_3_s": [
+    89.433,
+    96.4,
+    91.56
+   ],
+   "sessao_com_margem": true,
+   "consistencia": {
+    "item": "consistencia",
+    "desvio_volta_s": 2.614,
+    "curva_de_maior_desvio_da_frenagem": "C04-esq",
+    "desvio_frenagem_m": 24.4,
+    "curvas_com_desvio_de_frenagem_acima_de_15_m": [
+     "C01-esq",
+     "C04-esq",
+     "C12-esq"
+    ]
+   },
+   "itens": [
+    {
+     "item": "consistencia",
+     "desvio_volta_s": 2.614,
+     "curva_de_maior_desvio_da_frenagem": "C04-esq",
+     "desvio_frenagem_m": 24.4,
+     "curvas_com_desvio_de_frenagem_acima_de_15_m": [
+      "C01-esq",
+      "C04-esq",
+      "C12-esq"
+     ]
+    },
+    {
+     "item": "perda",
+     "curva": "C12-esq",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.438,
+     "perdas_ultimas_3_s": [
+      0.438,
+      0.623,
+      0.408
+     ],
+     "perda_vs_melhor_volta_mediana_s": -0.055,
+     "peso": 0.56,
+     "pontuacao": 0.438,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.2454,
+     "atribuicao": {
+      "explica": null,
+      "outros_que_explicam": [],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [
+       {
+        "detector": "F2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0453,
+        "diferenca_em_desvios": 0.21
+       }
+      ],
+      "conferidos": [
+       {
+        "detector": "F1",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": -64.00117,
+        "valor_melhor_volta": -104.00191,
+        "diferenca": -36.0007,
+        "diferenca_em_desvios": -2.07
+       },
+       {
+        "detector": "F2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0453,
+        "diferenca_em_desvios": 0.21
+       },
+       {
+        "detector": "F3",
+        "estado_piloto": "nao_conclusivo",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.0505,
+        "diferenca_em_desvios": -0.61
+       },
+       {
+        "detector": "F6",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0472,
+        "diferenca_em_desvios": 0.85
+       },
+       {
+        "detector": "F7",
+        "estado_piloto": "aplica",
+        "estado_ia": "nao_conclusivo",
+        "estado_melhor_volta": "aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.4269,
+        "diferenca_em_desvios": 1.31
+       },
+       {
+        "detector": "F8",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.1137,
+        "diferenca_em_desvios": 1.45
+       },
+       {
+        "detector": "V3",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.3119,
+        "diferenca_em_desvios": -2.24
+       }
+      ],
+      "conclusao": "nao_conclusivo"
+     }
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.437,
+     "perdas_ultimas_3_s": [
+      0.111,
+      0.585,
+      0.437
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.446,
+     "peso": 3.391,
+     "pontuacao": 0.4368,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 1.4809,
+     "atribuicao": {
+      "explica": null,
+      "outros_que_explicam": [],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [],
+      "conferidos": [
+       {
+        "detector": "E2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.1837,
+        "diferenca_em_desvios": -1.8
+       },
+       {
+        "detector": "E3",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.8735,
+        "diferenca_em_desvios": -1.45
+       },
+       {
+        "detector": "E4",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.0471,
+        "diferenca_em_desvios": null
+       },
+       {
+        "detector": "M1",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.1882,
+        "diferenca_em_desvios": -1.69
+       },
+       {
+        "detector": "M2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 0.0,
+        "valor_melhor_volta": 0.0,
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       },
+       {
+        "detector": "M3",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.0186,
+        "diferenca_em_desvios": -0.82
+       },
+       {
+        "detector": "M5",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       }
+      ],
+      "conclusao": "nao_conclusivo"
+     }
+    }
+   ],
+   "itens_com_peso_informativo": [
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.437,
+     "perdas_ultimas_3_s": [
+      0.111,
+      0.585,
+      0.437
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.446,
+     "peso": 3.391,
+     "pontuacao": 0.4368,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 1.4809,
+     "atribuicao": {
+      "explica": null,
+      "outros_que_explicam": [],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [],
+      "conferidos": [
+       {
+        "detector": "E2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.1837,
+        "diferenca_em_desvios": -1.8
+       },
+       {
+        "detector": "E3",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.8735,
+        "diferenca_em_desvios": -1.45
+       },
+       {
+        "detector": "E4",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.0471,
+        "diferenca_em_desvios": null
+       },
+       {
+        "detector": "M1",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.1882,
+        "diferenca_em_desvios": -1.69
+       },
+       {
+        "detector": "M2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 0.0,
+        "valor_melhor_volta": 0.0,
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       },
+       {
+        "detector": "M3",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.0186,
+        "diferenca_em_desvios": -0.82
+       },
+       {
+        "detector": "M5",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       }
+      ],
+      "conclusao": "nao_conclusivo"
+     }
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.374,
+     "perdas_ultimas_3_s": [
+      0.194,
+      3.56,
+      0.374
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.142,
+     "peso": 3.391,
+     "pontuacao": 0.3737,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 1.2671,
+     "atribuicao": {
+      "explica": {
+       "detector": "M4",
+       "estado_piloto": "nao_aplica",
+       "estado_ia": "aplica",
+       "estado_melhor_volta": "nao_conclusivo",
+       "tipo": "ponto",
+       "comparado_com": "volta de referencia",
+       "valor_referencia": 3.5066,
+       "valor_melhor_volta": 3.93144,
+       "diferenca": -2.773,
+       "diferenca_em_desvios": -2.21
+      },
+      "outros_que_explicam": [],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [],
+      "conferidos": [
+       {
+        "detector": "M4",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 3.5066,
+        "valor_melhor_volta": 3.93144,
+        "diferenca": -2.773,
+        "diferenca_em_desvios": -2.21
+       },
+       {
+        "detector": "M6",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 0.0,
+        "valor_melhor_volta": 0.0,
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       },
+       {
+        "detector": "M8",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       }
+      ],
+      "conclusao": "explicado"
+     }
+    },
+    {
+     "item": "perda",
+     "curva": "C14-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.213,
+     "perdas_ultimas_3_s": [
+      0.213,
+      0.211,
+      1.155
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.022,
+     "peso": 5.431,
+     "pontuacao": 0.2132,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 1.158,
+     "atribuicao": {
+      "explica": null,
+      "outros_que_explicam": [],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [],
+      "conferidos": [
+       {
+        "detector": "M4",
+        "estado_piloto": "aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 3.5278,
+        "valor_melhor_volta": 3.91806,
+        "diferenca": -2.1531,
+        "diferenca_em_desvios": -0.68
+       },
+       {
+        "detector": "M6",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 0.0,
+        "valor_melhor_volta": 0.0,
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       },
+       {
+        "detector": "M8",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       }
+      ],
+      "conclusao": "nao_conclusivo"
+     }
+    }
+   ],
+   "todos_os_itens": [
+    {
+     "item": "perda",
+     "curva": "C12-esq",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.438,
+     "perdas_ultimas_3_s": [
+      0.438,
+      0.623,
+      0.408
+     ],
+     "perda_vs_melhor_volta_mediana_s": -0.055,
+     "peso": 0.56,
+     "pontuacao": 0.438,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.2454
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.437,
+     "perdas_ultimas_3_s": [
+      0.111,
+      0.585,
+      0.437
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.446,
+     "peso": 3.391,
+     "pontuacao": 0.4368,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 1.4809
+    },
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.397,
+     "perdas_ultimas_3_s": [
+      0.19,
+      1.602,
+      0.397
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.143,
+     "peso": 0.607,
+     "pontuacao": 0.3973,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.2411
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.374,
+     "perdas_ultimas_3_s": [
+      0.194,
+      3.56,
+      0.374
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.142,
+     "peso": 3.391,
+     "pontuacao": 0.3737,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 1.2671
+    },
+    {
+     "item": "perda",
+     "curva": "C07-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.302,
+     "perdas_ultimas_3_s": [
+      0.302,
+      0.452,
+      0.23
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.14,
+     "peso": 0.0,
+     "pontuacao": 0.3016,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.293,
+     "perdas_ultimas_3_s": [
+      0.097,
+      0.302,
+      0.293
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.312,
+     "peso": 3.391,
+     "pontuacao": 0.2933,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.9946
+    },
+    {
+     "item": "perda",
+     "curva": "C01-esq",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.254,
+     "perdas_ultimas_3_s": [
+      -0.046,
+      0.254,
+      0.277
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.156,
+     "peso": 0.0,
+     "pontuacao": 0.2544,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C08-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.249,
+     "perdas_ultimas_3_s": [
+      0.209,
+      0.249,
+      0.314
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.178,
+     "peso": 0.0,
+     "pontuacao": 0.2494,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C10-dir",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.236,
+     "perdas_ultimas_3_s": [
+      0.267,
+      0.128,
+      0.236
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.135,
+     "peso": 0.716,
+     "pontuacao": 0.2363,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.1691
+    },
+    {
+     "item": "perda",
+     "curva": "C07-dir",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.231,
+     "perdas_ultimas_3_s": [
+      0.116,
+      0.588,
+      0.231
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.309,
+     "peso": 0.0,
+     "pontuacao": 0.2311,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C14-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.213,
+     "perdas_ultimas_3_s": [
+      0.213,
+      0.211,
+      1.155
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.022,
+     "peso": 5.431,
+     "pontuacao": 0.2132,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 1.158
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.206,
+     "perdas_ultimas_3_s": [
+      0.075,
+      0.666,
+      0.206
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.18,
+     "peso": 3.391,
+     "pontuacao": 0.2061,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.6989
+    },
+    {
+     "item": "perda",
+     "curva": "C02-dir",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.165,
+     "perdas_ultimas_3_s": [
+      0.071,
+      0.172,
+      0.165
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.202,
+     "peso": 0.093,
+     "pontuacao": 0.1651,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0154
+    },
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.157,
+     "perdas_ultimas_3_s": [
+      0.194,
+      0.157,
+      0.071
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.143,
+     "peso": 0.607,
+     "pontuacao": 0.1566,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.095
+    },
+    {
+     "item": "perda",
+     "curva": "C06-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.155,
+     "perdas_ultimas_3_s": [
+      0.033,
+      0.155,
+      0.257
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.134,
+     "peso": 0.047,
+     "pontuacao": 0.1554,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0073
+    },
+    {
+     "item": "perda",
+     "curva": "C06-dir",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.119,
+     "perdas_ultimas_3_s": [
+      0.011,
+      0.119,
+      0.212
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.22,
+     "peso": 0.047,
+     "pontuacao": 0.1193,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0056
+    },
+    {
+     "item": "perda",
+     "curva": "C02-dir",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.118,
+     "perdas_ultimas_3_s": [
+      0.085,
+      0.251,
+      0.118
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.218,
+     "peso": 0.093,
+     "pontuacao": 0.1178,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.011
+    },
+    {
+     "item": "perda",
+     "curva": "C09-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.112,
+     "perdas_ultimas_3_s": [
+      0.112,
+      0.092,
+      0.165
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.038,
+     "peso": 0.0,
+     "pontuacao": 0.1124,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C01-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.112,
+     "perdas_ultimas_3_s": [
+      0.432,
+      0.112,
+      0.065
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.0,
+     "peso": 0.0,
+     "pontuacao": 0.1122,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C12-esq",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.11,
+     "perdas_ultimas_3_s": [
+      0.15,
+      0.08,
+      0.11
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.105,
+     "peso": 0.56,
+     "pontuacao": 0.1103,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0618
+    },
+    {
+     "item": "perda",
+     "curva": "C09-dir",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.098,
+     "perdas_ultimas_3_s": [
+      0.055,
+      0.119,
+      0.098
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.015,
+     "peso": 0.0,
+     "pontuacao": 0.0977,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C11-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.095,
+     "perdas_ultimas_3_s": [
+      0.286,
+      0.095,
+      0.067
+     ],
+     "perda_vs_melhor_volta_mediana_s": -0.069,
+     "peso": 0.171,
+     "pontuacao": 0.095,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0163
+    },
+    {
+     "item": "perda",
+     "curva": "C02-dir",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.095,
+     "perdas_ultimas_3_s": [
+      0.039,
+      0.095,
+      0.102
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.105,
+     "peso": 0.093,
+     "pontuacao": 0.0945,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0088
+    },
+    {
+     "item": "perda",
+     "curva": "C05-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.09,
+     "perdas_ultimas_3_s": [
+      0.117,
+      0.09,
+      -0.029
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.061,
+     "peso": 1.444,
+     "pontuacao": 0.0898,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.1296
+    },
+    {
+     "item": "perda",
+     "curva": "C08-esq",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.085,
+     "perdas_ultimas_3_s": [
+      0.085,
+      0.082,
+      0.106
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.064,
+     "peso": 0.0,
+     "pontuacao": 0.085,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C06-dir",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.083,
+     "perdas_ultimas_3_s": [
+      0.041,
+      0.09,
+      0.083
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.076,
+     "peso": 0.047,
+     "pontuacao": 0.0825,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0039
+    },
+    {
+     "item": "perda",
+     "curva": "C02-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.079,
+     "perdas_ultimas_3_s": [
+      0.059,
+      0.102,
+      0.079
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.066,
+     "peso": 0.093,
+     "pontuacao": 0.0789,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0074
+    },
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.078,
+     "perdas_ultimas_3_s": [
+      0.029,
+      0.078,
+      0.078
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.056,
+     "peso": 0.607,
+     "pontuacao": 0.0782,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0474
+    },
+    {
+     "item": "perda",
+     "curva": "C10-dir",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.068,
+     "perdas_ultimas_3_s": [
+      0.068,
+      0.003,
+      0.117
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.085,
+     "peso": 0.716,
+     "pontuacao": 0.0685,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.049
+    },
+    {
+     "item": "perda",
+     "curva": "C01-esq",
+     "fase_sintoma": "saida",
+     "fase_origem": "entrada (cadeia causal)",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.068,
+     "perdas_ultimas_3_s": [
+      0.108,
+      0.068,
+      0.049
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.054,
+     "peso": 0.0,
+     "pontuacao": 0.0676,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C02-dir",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.064,
+     "perdas_ultimas_3_s": [
+      0.054,
+      0.101,
+      0.064
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.045,
+     "peso": 0.093,
+     "pontuacao": 0.0644,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.006
+    },
+    {
+     "item": "perda",
+     "curva": "C08-esq",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.059,
+     "perdas_ultimas_3_s": [
+      0.059,
+      0.054,
+      0.15
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.046,
+     "peso": 0.0,
+     "pontuacao": 0.0587,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C07-dir",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.055,
+     "perdas_ultimas_3_s": [
+      0.053,
+      0.055,
+      0.21
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.054,
+     "peso": 0.0,
+     "pontuacao": 0.0552,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C05-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.05,
+     "perdas_ultimas_3_s": [
+      0.068,
+      0.05,
+      0.003
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.023,
+     "peso": 1.444,
+     "pontuacao": 0.0503,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0726
+    },
+    {
+     "item": "perda",
+     "curva": "C10-dir",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.044,
+     "perdas_ultimas_3_s": [
+      0.019,
+      0.044,
+      0.075
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.014,
+     "peso": 0.716,
+     "pontuacao": 0.0437,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0313
+    },
+    {
+     "item": "perda",
+     "curva": "C10-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.037,
+     "perdas_ultimas_3_s": [
+      0.037,
+      -0.088,
+      0.059
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.156,
+     "peso": 0.716,
+     "pontuacao": 0.0368,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0263
+    },
+    {
+     "item": "perda",
+     "curva": "C07-dir",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.03,
+     "perdas_ultimas_3_s": [
+      0.03,
+      0.078,
+      -0.025
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.003,
+     "peso": 0.0,
+     "pontuacao": 0.0303,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C08-esq",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.029,
+     "perdas_ultimas_3_s": [
+      0.029,
+      0.021,
+      0.045
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.026,
+     "peso": 0.0,
+     "pontuacao": 0.0292,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C13-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.027,
+     "perdas_ultimas_3_s": [
+      0.042,
+      0.027,
+      0.009
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.004,
+     "peso": 1.541,
+     "pontuacao": 0.0268,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0413
+    },
+    {
+     "item": "perda",
+     "curva": "C12-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.027,
+     "perdas_ultimas_3_s": [
+      0.158,
+      0.017,
+      0.027
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.094,
+     "peso": 0.56,
+     "pontuacao": 0.0267,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.015
+    },
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.025,
+     "perdas_ultimas_3_s": [
+      0.102,
+      0.025,
+      -0.052
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.059,
+     "peso": 0.607,
+     "pontuacao": 0.0251,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0152
+    },
+    {
+     "item": "perda",
+     "curva": "C14-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.02,
+     "perdas_ultimas_3_s": [
+      0.016,
+      0.09,
+      0.02
+     ],
+     "perda_vs_melhor_volta_mediana_s": -0.004,
+     "peso": 5.431,
+     "pontuacao": 0.02,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.1089
+    }
+   ],
+   "melhor_volta_usada": "2026-10-24_13-43-32_vhe_interlagos#0003"
+  },
+  {
+   "sessao": "2026-11-07",
+   "voltas": 7,
+   "ultimas_3": [
+    "2026-11-07_18-46-00_vhe_interlagos#0007",
+    "2026-11-07_19-52-33_vhe_interlagos#0002",
+    "2026-11-07_19-52-33_vhe_interlagos#0003"
+   ],
+   "tempos_ultimas_3_s": [
+    100.131,
+    89.416,
+    93.53
+   ],
+   "sessao_com_margem": true,
+   "consistencia": {
+    "item": "consistencia",
+    "desvio_volta_s": 4.347,
+    "curva_de_maior_desvio_da_frenagem": "C01-esq",
+    "desvio_frenagem_m": 57.5,
+    "curvas_com_desvio_de_frenagem_acima_de_15_m": [
+     "C01-esq",
+     "C04-esq",
+     "C07-dir"
+    ]
+   },
+   "itens": [
+    {
+     "item": "consistencia",
+     "desvio_volta_s": 4.347,
+     "curva_de_maior_desvio_da_frenagem": "C01-esq",
+     "desvio_frenagem_m": 57.5,
+     "curvas_com_desvio_de_frenagem_acima_de_15_m": [
+      "C01-esq",
+      "C04-esq",
+      "C07-dir"
+     ]
+    },
+    {
+     "item": "perda",
+     "curva": "C12-esq",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.605,
+     "perdas_ultimas_3_s": [
+      0.605,
+      0.52,
+      0.65
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.113,
+     "peso": 0.56,
+     "pontuacao": 0.6054,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.3392,
+     "atribuicao": {
+      "explica": {
+       "detector": "F1",
+       "estado_piloto": "nao_aplica",
+       "estado_ia": "aplica",
+       "estado_melhor_volta": "nao_aplica",
+       "tipo": "ponto",
+       "comparado_com": "volta de referencia",
+       "valor_referencia": -64.00117,
+       "valor_melhor_volta": -104.00191,
+       "diferenca": -46.0008,
+       "diferenca_em_desvios": -12.41
+      },
+      "outros_que_explicam": [
+       {
+        "detector": "F7",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_conclusivo",
+        "estado_melhor_volta": "aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.3851,
+        "diferenca_em_desvios": -2.12
+       }
+      ],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [
+       {
+        "detector": "F2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.3718,
+        "diferenca_em_desvios": 1.01
+       }
+      ],
+      "conferidos": [
+       {
+        "detector": "F1",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": -64.00117,
+        "valor_melhor_volta": -104.00191,
+        "diferenca": -46.0008,
+        "diferenca_em_desvios": -12.41
+       },
+       {
+        "detector": "F2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.3718,
+        "diferenca_em_desvios": 1.01
+       },
+       {
+        "detector": "F3",
+        "estado_piloto": "nao_conclusivo",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.1565,
+        "diferenca_em_desvios": 1.08
+       },
+       {
+        "detector": "F6",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0327,
+        "diferenca_em_desvios": 0.65
+       },
+       {
+        "detector": "F7",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_conclusivo",
+        "estado_melhor_volta": "aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.3851,
+        "diferenca_em_desvios": -2.12
+       },
+       {
+        "detector": "F8",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.0597,
+        "diferenca_em_desvios": -0.97
+       },
+       {
+        "detector": "V3",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.9071,
+        "diferenca_em_desvios": -1.83
+       }
+      ],
+      "conclusao": "explicado"
+     }
+    },
+    {
+     "item": "perda",
+     "curva": "C11-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.47,
+     "perdas_ultimas_3_s": [
+      0.47,
+      0.087,
+      1.998
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.306,
+     "peso": 0.171,
+     "pontuacao": 0.4702,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0805,
+     "atribuicao": {
+      "explica": {
+       "detector": "E2",
+       "estado_piloto": "nao_aplica",
+       "estado_ia": "nao_aplica",
+       "estado_melhor_volta": "aplica",
+       "tipo": "forma",
+       "comparado_com": "sua melhor volta",
+       "diferenca": -1.9308,
+       "diferenca_em_desvios": -6.58
+      },
+      "outros_que_explicam": [
+       {
+        "detector": "E3",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -1.7986,
+        "diferenca_em_desvios": -3.54
+       }
+      ],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [],
+      "conferidos": [
+       {
+        "detector": "E2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -1.9308,
+        "diferenca_em_desvios": -6.58
+       },
+       {
+        "detector": "E3",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -1.7986,
+        "diferenca_em_desvios": -3.54
+       },
+       {
+        "detector": "E4",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       },
+       {
+        "detector": "M1",
+        "estado_piloto": "nao_conclusivo",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.258,
+        "diferenca_em_desvios": -3.24
+       },
+       {
+        "detector": "M2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 0.0,
+        "valor_melhor_volta": 0.0,
+        "diferenca": 0.0,
+        "diferenca_em_desvios": 0.0
+       },
+       {
+        "detector": "M3",
+        "estado_piloto": "nao_conclusivo",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.1335,
+        "diferenca_em_desvios": 1.52
+       },
+       {
+        "detector": "M5",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.2806,
+        "diferenca_em_desvios": null
+       }
+      ],
+      "conclusao": "explicado"
+     }
+    }
+   ],
+   "itens_com_peso_informativo": [
+    {
+     "item": "perda",
+     "curva": "C14-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.407,
+     "perdas_ultimas_3_s": [
+      0.872,
+      0.277,
+      0.407
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.217,
+     "peso": 5.431,
+     "pontuacao": 0.4074,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 2.2126,
+     "atribuicao": {
+      "explica": {
+       "detector": "M4",
+       "estado_piloto": "aplica",
+       "estado_ia": "aplica",
+       "estado_melhor_volta": "aplica",
+       "tipo": "ponto",
+       "comparado_com": "volta de referencia",
+       "valor_referencia": 3.5278,
+       "valor_melhor_volta": 3.91806,
+       "diferenca": -2.0397,
+       "diferenca_em_desvios": -1.29
+      },
+      "outros_que_explicam": [],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [],
+      "conferidos": [
+       {
+        "detector": "M4",
+        "estado_piloto": "aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 3.5278,
+        "valor_melhor_volta": 3.91806,
+        "diferenca": -2.0397,
+        "diferenca_em_desvios": -1.29
+       },
+       {
+        "detector": "M6",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 0.0,
+        "valor_melhor_volta": 0.0,
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       },
+       {
+        "detector": "M8",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       }
+      ],
+      "conclusao": "explicado"
+     }
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.223,
+     "perdas_ultimas_3_s": [
+      1.953,
+      0.223,
+      0.214
+     ],
+     "perda_vs_melhor_volta_mediana_s": -0.008,
+     "peso": 3.391,
+     "pontuacao": 0.2232,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.7569,
+     "atribuicao": {
+      "explica": {
+       "detector": "M4",
+       "estado_piloto": "nao_aplica",
+       "estado_ia": "aplica",
+       "estado_melhor_volta": "nao_conclusivo",
+       "tipo": "ponto",
+       "comparado_com": "volta de referencia",
+       "valor_referencia": 3.5066,
+       "valor_melhor_volta": 3.93144,
+       "diferenca": -1.6631,
+       "diferenca_em_desvios": -1.07
+      },
+      "outros_que_explicam": [],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [],
+      "conferidos": [
+       {
+        "detector": "M4",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 3.5066,
+        "valor_melhor_volta": 3.93144,
+        "diferenca": -1.6631,
+        "diferenca_em_desvios": -1.07
+       },
+       {
+        "detector": "M6",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 0.0,
+        "valor_melhor_volta": 0.0,
+        "diferenca": 0.0,
+        "diferenca_em_desvios": 0.0
+       },
+       {
+        "detector": "M8",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       }
+      ],
+      "conclusao": "explicado"
+     }
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.161,
+     "perdas_ultimas_3_s": [
+      0.591,
+      0.161,
+      0.151
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.17,
+     "peso": 3.391,
+     "pontuacao": 0.1609,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.5455,
+     "atribuicao": {
+      "explica": null,
+      "outros_que_explicam": [],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [],
+      "conferidos": [
+       {
+        "detector": "E2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.1095,
+        "diferenca_em_desvios": -0.86
+       },
+       {
+        "detector": "E3",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.4507,
+        "diferenca_em_desvios": -2.04
+       },
+       {
+        "detector": "E4",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.0471,
+        "diferenca_em_desvios": null
+       },
+       {
+        "detector": "M1",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.08,
+        "diferenca_em_desvios": -3.2
+       },
+       {
+        "detector": "M2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 0.0,
+        "valor_melhor_volta": 0.0,
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       },
+       {
+        "detector": "M3",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.0104,
+        "diferenca_em_desvios": -0.41
+       },
+       {
+        "detector": "M5",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       }
+      ],
+      "conclusao": "nao_conclusivo"
+     }
+    }
+   ],
+   "todos_os_itens": [
+    {
+     "item": "perda",
+     "curva": "C12-esq",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.605,
+     "perdas_ultimas_3_s": [
+      0.605,
+      0.52,
+      0.65
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.113,
+     "peso": 0.56,
+     "pontuacao": 0.6054,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.3392
+    },
+    {
+     "item": "perda",
+     "curva": "C11-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.47,
+     "perdas_ultimas_3_s": [
+      0.47,
+      0.087,
+      1.998
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.306,
+     "peso": 0.171,
+     "pontuacao": 0.4702,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0805
+    },
+    {
+     "item": "perda",
+     "curva": "C14-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.407,
+     "perdas_ultimas_3_s": [
+      0.872,
+      0.277,
+      0.407
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.217,
+     "peso": 5.431,
+     "pontuacao": 0.4074,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 2.2126
+    },
+    {
+     "item": "perda",
+     "curva": "C07-dir",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.364,
+     "perdas_ultimas_3_s": [
+      0.156,
+      0.364,
+      0.494
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.441,
+     "peso": 0.0,
+     "pontuacao": 0.3637,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C10-dir",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.352,
+     "perdas_ultimas_3_s": [
+      0.352,
+      0.187,
+      1.624
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.25,
+     "peso": 0.716,
+     "pontuacao": 0.3521,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.252
+    },
+    {
+     "item": "perda",
+     "curva": "C08-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.335,
+     "perdas_ultimas_3_s": [
+      0.195,
+      0.335,
+      0.607
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.264,
+     "peso": 0.0,
+     "pontuacao": 0.3352,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C01-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.306,
+     "perdas_ultimas_3_s": [
+      0.306,
+      0.509,
+      0.274
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.192,
+     "peso": 0.0,
+     "pontuacao": 0.3059,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.293,
+     "perdas_ultimas_3_s": [
+      0.936,
+      0.293,
+      0.174
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.039,
+     "peso": 0.607,
+     "pontuacao": 0.2934,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.1781
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.223,
+     "perdas_ultimas_3_s": [
+      1.953,
+      0.223,
+      0.214
+     ],
+     "perda_vs_melhor_volta_mediana_s": -0.008,
+     "peso": 3.391,
+     "pontuacao": 0.2232,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.7569
+    },
+    {
+     "item": "perda",
+     "curva": "C07-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.207,
+     "perdas_ultimas_3_s": [
+      0.521,
+      0.207,
+      -0.026
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.045,
+     "peso": 0.0,
+     "pontuacao": 0.2069,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C10-dir",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.204,
+     "perdas_ultimas_3_s": [
+      0.289,
+      -0.109,
+      0.204
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.122,
+     "peso": 0.716,
+     "pontuacao": 0.204,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.146
+    },
+    {
+     "item": "perda",
+     "curva": "C12-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "entrada (cadeia causal)",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.182,
+     "perdas_ultimas_3_s": [
+      0.098,
+      0.182,
+      0.66
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.208,
+     "peso": 0.56,
+     "pontuacao": 0.1821,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.102
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.161,
+     "perdas_ultimas_3_s": [
+      0.591,
+      0.161,
+      0.151
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.17,
+     "peso": 3.391,
+     "pontuacao": 0.1609,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.5455
+    },
+    {
+     "item": "perda",
+     "curva": "C13-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.135,
+     "perdas_ultimas_3_s": [
+      0.041,
+      0.135,
+      0.394
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.098,
+     "peso": 1.541,
+     "pontuacao": 0.135,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.208
+    },
+    {
+     "item": "perda",
+     "curva": "C10-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.127,
+     "perdas_ultimas_3_s": [
+      0.461,
+      0.127,
+      0.047
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.246,
+     "peso": 0.716,
+     "pontuacao": 0.1268,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0907
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.123,
+     "perdas_ultimas_3_s": [
+      0.328,
+      0.12,
+      0.123
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.142,
+     "peso": 3.391,
+     "pontuacao": 0.1228,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.4164
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.115,
+     "perdas_ultimas_3_s": [
+      0.892,
+      0.085,
+      0.115
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.089,
+     "peso": 3.391,
+     "pontuacao": 0.1153,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.3911
+    },
+    {
+     "item": "perda",
+     "curva": "C07-dir",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.106,
+     "perdas_ultimas_3_s": [
+      0.106,
+      0.116,
+      -0.034
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.078,
+     "peso": 0.0,
+     "pontuacao": 0.1057,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C06-dir",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.098,
+     "perdas_ultimas_3_s": [
+      0.119,
+      0.098,
+      0.031
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.092,
+     "peso": 0.047,
+     "pontuacao": 0.0977,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0046
+    },
+    {
+     "item": "perda",
+     "curva": "C05-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.095,
+     "perdas_ultimas_3_s": [
+      0.152,
+      0.095,
+      0.044
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.066,
+     "peso": 1.444,
+     "pontuacao": 0.0955,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.1379
+    },
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.095,
+     "perdas_ultimas_3_s": [
+      0.172,
+      0.095,
+      0.05
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.13,
+     "peso": 0.607,
+     "pontuacao": 0.0954,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0579
+    },
+    {
+     "item": "perda",
+     "curva": "C09-dir",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.093,
+     "perdas_ultimas_3_s": [
+      0.353,
+      0.093,
+      0.034
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.01,
+     "peso": 0.0,
+     "pontuacao": 0.0929,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C10-dir",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.086,
+     "perdas_ultimas_3_s": [
+      0.091,
+      0.034,
+      0.086
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.056,
+     "peso": 0.716,
+     "pontuacao": 0.0857,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0614
+    },
+    {
+     "item": "perda",
+     "curva": "C10-dir",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.084,
+     "perdas_ultimas_3_s": [
+      0.192,
+      0.084,
+      -0.02
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.1,
+     "peso": 0.716,
+     "pontuacao": 0.0843,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0604
+    },
+    {
+     "item": "perda",
+     "curva": "C02-dir",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.069,
+     "perdas_ultimas_3_s": [
+      0.205,
+      0.069,
+      0.055
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.049,
+     "peso": 0.093,
+     "pontuacao": 0.0688,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0064
+    },
+    {
+     "item": "perda",
+     "curva": "C02-dir",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.066,
+     "perdas_ultimas_3_s": [
+      0.215,
+      0.028,
+      0.066
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.166,
+     "peso": 0.093,
+     "pontuacao": 0.0658,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0061
+    },
+    {
+     "item": "perda",
+     "curva": "C11-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.059,
+     "perdas_ultimas_3_s": [
+      0.059,
+      0.015,
+      0.063
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.015,
+     "peso": 0.171,
+     "pontuacao": 0.0594,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0102
+    },
+    {
+     "item": "perda",
+     "curva": "C01-esq",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.059,
+     "perdas_ultimas_3_s": [
+      0.058,
+      0.078,
+      0.059
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.046,
+     "peso": 0.0,
+     "pontuacao": 0.059,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C06-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.058,
+     "perdas_ultimas_3_s": [
+      0.408,
+      0.058,
+      0.012
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.036,
+     "peso": 0.047,
+     "pontuacao": 0.0577,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0027
+    },
+    {
+     "item": "perda",
+     "curva": "C05-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.055,
+     "perdas_ultimas_3_s": [
+      0.165,
+      0.055,
+      0.039
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.028,
+     "peso": 1.444,
+     "pontuacao": 0.0545,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0787
+    },
+    {
+     "item": "perda",
+     "curva": "C02-dir",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.051,
+     "perdas_ultimas_3_s": [
+      0.049,
+      0.053,
+      0.051
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.088,
+     "peso": 0.093,
+     "pontuacao": 0.0512,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0048
+    },
+    {
+     "item": "perda",
+     "curva": "C02-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.044,
+     "perdas_ultimas_3_s": [
+      0.179,
+      0.044,
+      0.042
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.031,
+     "peso": 0.093,
+     "pontuacao": 0.0439,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0041
+    },
+    {
+     "item": "perda",
+     "curva": "C13-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.042,
+     "perdas_ultimas_3_s": [
+      0.01,
+      0.042,
+      0.162
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.019,
+     "peso": 1.541,
+     "pontuacao": 0.0416,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.064
+    },
+    {
+     "item": "perda",
+     "curva": "C02-dir",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.04,
+     "perdas_ultimas_3_s": [
+      0.066,
+      0.039,
+      0.04
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.05,
+     "peso": 0.093,
+     "pontuacao": 0.04,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0037
+    },
+    {
+     "item": "perda",
+     "curva": "C14-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.039,
+     "perdas_ultimas_3_s": [
+      0.003,
+      0.039,
+      0.057
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.015,
+     "peso": 5.431,
+     "pontuacao": 0.0393,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.2137
+    },
+    {
+     "item": "perda",
+     "curva": "C12-esq",
+     "fase_sintoma": "saida",
+     "fase_origem": "entrada (cadeia causal)",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.036,
+     "perdas_ultimas_3_s": [
+      0.021,
+      0.036,
+      0.09
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.068,
+     "peso": 0.56,
+     "pontuacao": 0.0362,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0203
+    },
+    {
+     "item": "perda",
+     "curva": "C11-esq",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.029,
+     "perdas_ultimas_3_s": [
+      0.029,
+      0.007,
+      0.033
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.005,
+     "peso": 0.171,
+     "pontuacao": 0.0295,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.005
+    },
+    {
+     "item": "perda",
+     "curva": "C12-esq",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.029,
+     "perdas_ultimas_3_s": [
+      0.048,
+      0.029,
+      -0.024
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.024,
+     "peso": 0.56,
+     "pontuacao": 0.0288,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0161
+    },
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.028,
+     "perdas_ultimas_3_s": [
+      0.1,
+      0.024,
+      0.028
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.007,
+     "peso": 0.607,
+     "pontuacao": 0.0284,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0172
+    },
+    {
+     "item": "perda",
+     "curva": "C08-esq",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.026,
+     "perdas_ultimas_3_s": [
+      0.093,
+      0.026,
+      0.001
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.006,
+     "peso": 0.0,
+     "pontuacao": 0.0265,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C09-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.025,
+     "perdas_ultimas_3_s": [
+      0.308,
+      0.025,
+      -0.034
+     ],
+     "perda_vs_melhor_volta_mediana_s": -0.049,
+     "peso": 0.0,
+     "pontuacao": 0.0254,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C07-dir",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.024,
+     "perdas_ultimas_3_s": [
+      0.024,
+      -0.051,
+      0.03
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.023,
+     "peso": 0.0,
+     "pontuacao": 0.0242,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    }
+   ],
+   "melhor_volta_usada": "2026-10-24_13-43-32_vhe_interlagos#0003"
+  },
+  {
+   "sessao": "2026-11-12",
+   "voltas": 4,
+   "ultimas_3": [
+    "2026-11-12_22-57-03_vhe_interlagos#0002",
+    "2026-11-12_22-57-03_vhe_interlagos#0004",
+    "2026-11-12_22-57-03_vhe_interlagos#0007"
+   ],
+   "tempos_ultimas_3_s": [
+    91.024,
+    89.39,
+    87.963
+   ],
+   "sessao_com_margem": true,
+   "consistencia": {
+    "item": "consistencia",
+    "desvio_volta_s": 1.565,
+    "curva_de_maior_desvio_da_frenagem": null,
+    "desvio_frenagem_m": 0.0,
+    "curvas_com_desvio_de_frenagem_acima_de_15_m": []
+   },
+   "itens": [
+    {
+     "item": "consistencia",
+     "desvio_volta_s": 1.565,
+     "curva_de_maior_desvio_da_frenagem": null,
+     "desvio_frenagem_m": 0.0,
+     "curvas_com_desvio_de_frenagem_acima_de_15_m": []
+    },
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.498,
+     "perdas_ultimas_3_s": [
+      0.553,
+      0.261,
+      0.498
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.244,
+     "peso": 0.607,
+     "pontuacao": 0.4982,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.3024,
+     "atribuicao": {
+      "explica": {
+       "detector": "F1",
+       "estado_piloto": "nao_aplica",
+       "estado_ia": "aplica",
+       "estado_melhor_volta": "aplica",
+       "tipo": "ponto",
+       "comparado_com": "volta de referencia",
+       "valor_referencia": -96.00176,
+       "valor_melhor_volta": -116.00213,
+       "diferenca": -54.001,
+       "diferenca_em_desvios": -2.02
+      },
+      "outros_que_explicam": [],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [
+       {
+        "detector": "F2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.2149,
+        "diferenca_em_desvios": 1.05
+       }
+      ],
+      "conferidos": [
+       {
+        "detector": "F1",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": -96.00176,
+        "valor_melhor_volta": -116.00213,
+        "diferenca": -54.001,
+        "diferenca_em_desvios": -2.02
+       },
+       {
+        "detector": "F2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.2149,
+        "diferenca_em_desvios": 1.05
+       },
+       {
+        "detector": "F3",
+        "estado_piloto": "nao_conclusivo",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.1084,
+        "diferenca_em_desvios": 1.35
+       },
+       {
+        "detector": "F6",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.0062,
+        "diferenca_em_desvios": -0.04
+       },
+       {
+        "detector": "F7",
+        "estado_piloto": "nao_conclusivo",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.1442,
+        "diferenca_em_desvios": -1.1
+       },
+       {
+        "detector": "F8",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.1082,
+        "diferenca_em_desvios": -0.51
+       },
+       {
+        "detector": "V3",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.3484,
+        "diferenca_em_desvios": 0.45
+       }
+      ],
+      "conclusao": "explicado"
+     }
+    },
+    {
+     "item": "perda",
+     "curva": "C14-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.409,
+     "perdas_ultimas_3_s": [
+      0.434,
+      0.409,
+      0.183
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.218,
+     "peso": 5.431,
+     "pontuacao": 0.4094,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 2.2233,
+     "atribuicao": {
+      "explica": null,
+      "outros_que_explicam": [],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [],
+      "conferidos": [
+       {
+        "detector": "M4",
+        "estado_piloto": "aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 3.5278,
+        "valor_melhor_volta": 3.91806,
+        "diferenca": -1.0076,
+        "diferenca_em_desvios": -0.39
+       },
+       {
+        "detector": "M6",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 0.0,
+        "valor_melhor_volta": 0.0,
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       },
+       {
+        "detector": "M8",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       }
+      ],
+      "conclusao": "nao_conclusivo"
+     }
+    }
+   ],
+   "itens_com_peso_informativo": [
+    {
+     "item": "perda",
+     "curva": "C14-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.409,
+     "perdas_ultimas_3_s": [
+      0.434,
+      0.409,
+      0.183
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.218,
+     "peso": 5.431,
+     "pontuacao": 0.4094,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 2.2233,
+     "atribuicao": {
+      "explica": null,
+      "outros_que_explicam": [],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [],
+      "conferidos": [
+       {
+        "detector": "M4",
+        "estado_piloto": "aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 3.5278,
+        "valor_melhor_volta": 3.91806,
+        "diferenca": -1.0076,
+        "diferenca_em_desvios": -0.39
+       },
+       {
+        "detector": "M6",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 0.0,
+        "valor_melhor_volta": 0.0,
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       },
+       {
+        "detector": "M8",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       }
+      ],
+      "conclusao": "nao_conclusivo"
+     }
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.174,
+     "perdas_ultimas_3_s": [
+      0.174,
+      0.224,
+      0.129
+     ],
+     "perda_vs_melhor_volta_mediana_s": -0.058,
+     "peso": 3.391,
+     "pontuacao": 0.1741,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.5903,
+     "atribuicao": {
+      "explica": null,
+      "outros_que_explicam": [],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [],
+      "conferidos": [
+       {
+        "detector": "M4",
+        "estado_piloto": "nao_conclusivo",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 3.5066,
+        "valor_melhor_volta": 3.93144,
+        "diferenca": 0.3687,
+        "diferenca_em_desvios": 0.15
+       },
+       {
+        "detector": "M6",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": 0.0,
+        "valor_melhor_volta": 0.0,
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       },
+       {
+        "detector": "M8",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.0,
+        "diferenca_em_desvios": null
+       }
+      ],
+      "conclusao": "nao_conclusivo"
+     }
+    },
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.498,
+     "perdas_ultimas_3_s": [
+      0.553,
+      0.261,
+      0.498
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.244,
+     "peso": 0.607,
+     "pontuacao": 0.4982,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.3024,
+     "atribuicao": {
+      "explica": {
+       "detector": "F1",
+       "estado_piloto": "nao_aplica",
+       "estado_ia": "aplica",
+       "estado_melhor_volta": "aplica",
+       "tipo": "ponto",
+       "comparado_com": "volta de referencia",
+       "valor_referencia": -96.00176,
+       "valor_melhor_volta": -116.00213,
+       "diferenca": -54.001,
+       "diferenca_em_desvios": -2.02
+      },
+      "outros_que_explicam": [],
+      "tecnica_da_ia_que_nenhuma_volta_minha_mostra": [
+       {
+        "detector": "F2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.2149,
+        "diferenca_em_desvios": 1.05
+       }
+      ],
+      "conferidos": [
+       {
+        "detector": "F1",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "ponto",
+        "comparado_com": "volta de referencia",
+        "valor_referencia": -96.00176,
+        "valor_melhor_volta": -116.00213,
+        "diferenca": -54.001,
+        "diferenca_em_desvios": -2.02
+       },
+       {
+        "detector": "F2",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.2149,
+        "diferenca_em_desvios": 1.05
+       },
+       {
+        "detector": "F3",
+        "estado_piloto": "nao_conclusivo",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_conclusivo",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.1084,
+        "diferenca_em_desvios": 1.35
+       },
+       {
+        "detector": "F6",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.0062,
+        "diferenca_em_desvios": -0.04
+       },
+       {
+        "detector": "F7",
+        "estado_piloto": "nao_conclusivo",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.1442,
+        "diferenca_em_desvios": -1.1
+       },
+       {
+        "detector": "F8",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": -0.1082,
+        "diferenca_em_desvios": -0.51
+       },
+       {
+        "detector": "V3",
+        "estado_piloto": "nao_aplica",
+        "estado_ia": "nao_aplica",
+        "estado_melhor_volta": "nao_aplica",
+        "tipo": "forma",
+        "comparado_com": "sua melhor volta",
+        "diferenca": 0.3484,
+        "diferenca_em_desvios": 0.45
+       }
+      ],
+      "conclusao": "explicado"
+     }
+    }
+   ],
+   "todos_os_itens": [
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.498,
+     "perdas_ultimas_3_s": [
+      0.553,
+      0.261,
+      0.498
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.244,
+     "peso": 0.607,
+     "pontuacao": 0.4982,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.3024
+    },
+    {
+     "item": "perda",
+     "curva": "C14-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.409,
+     "perdas_ultimas_3_s": [
+      0.434,
+      0.409,
+      0.183
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.218,
+     "peso": 5.431,
+     "pontuacao": 0.4094,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 2.2233
+    },
+    {
+     "item": "perda",
+     "curva": "C12-esq",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.231,
+     "perdas_ultimas_3_s": [
+      0.159,
+      0.231,
+      0.264
+     ],
+     "perda_vs_melhor_volta_mediana_s": -0.261,
+     "peso": 0.56,
+     "pontuacao": 0.2314,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.1296
+    },
+    {
+     "item": "perda",
+     "curva": "C01-esq",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.227,
+     "perdas_ultimas_3_s": [
+      0.227,
+      0.402,
+      0.221
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.128,
+     "peso": 0.0,
+     "pontuacao": 0.2271,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C10-dir",
+     "fase_sintoma": "reta",
+     "fase_origem": "entrada (cadeia causal)",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.21,
+     "perdas_ultimas_3_s": [
+      0.236,
+      0.21,
+      0.049
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.108,
+     "peso": 0.716,
+     "pontuacao": 0.2099,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.1503
+    },
+    {
+     "item": "perda",
+     "curva": "C08-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.209,
+     "perdas_ultimas_3_s": [
+      0.209,
+      0.173,
+      0.395
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.138,
+     "peso": 0.0,
+     "pontuacao": 0.2087,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C07-dir",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.204,
+     "perdas_ultimas_3_s": [
+      0.204,
+      0.13,
+      0.349
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.281,
+     "peso": 0.0,
+     "pontuacao": 0.2041,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.197,
+     "perdas_ultimas_3_s": [
+      0.103,
+      0.25,
+      0.197
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.183,
+     "peso": 0.607,
+     "pontuacao": 0.1968,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.1194
+    },
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.188,
+     "perdas_ultimas_3_s": [
+      0.188,
+      0.217,
+      0.076
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.223,
+     "peso": 0.607,
+     "pontuacao": 0.1885,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.1144
+    },
+    {
+     "item": "perda",
+     "curva": "C07-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.175,
+     "perdas_ultimas_3_s": [
+      0.175,
+      0.276,
+      0.037
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.013,
+     "peso": 0.0,
+     "pontuacao": 0.1748,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.174,
+     "perdas_ultimas_3_s": [
+      0.174,
+      0.224,
+      0.129
+     ],
+     "perda_vs_melhor_volta_mediana_s": -0.058,
+     "peso": 3.391,
+     "pontuacao": 0.1741,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.5903
+    },
+    {
+     "item": "perda",
+     "curva": "C05-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.171,
+     "perdas_ultimas_3_s": [
+      0.215,
+      0.171,
+      0.15
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.142,
+     "peso": 1.444,
+     "pontuacao": 0.1713,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.2474
+    },
+    {
+     "item": "perda",
+     "curva": "C12-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.165,
+     "perdas_ultimas_3_s": [
+      0.205,
+      0.165,
+      0.03
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.232,
+     "peso": 0.56,
+     "pontuacao": 0.1648,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0923
+    },
+    {
+     "item": "perda",
+     "curva": "C13-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.154,
+     "perdas_ultimas_3_s": [
+      0.168,
+      0.154,
+      0.018
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.117,
+     "peso": 1.541,
+     "pontuacao": 0.1541,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.2374
+    },
+    {
+     "item": "perda",
+     "curva": "C01-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.141,
+     "perdas_ultimas_3_s": [
+      0.141,
+      0.185,
+      0.072
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.028,
+     "peso": 0.0,
+     "pontuacao": 0.141,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C11-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.138,
+     "perdas_ultimas_3_s": [
+      0.138,
+      0.178,
+      0.02
+     ],
+     "perda_vs_melhor_volta_mediana_s": -0.026,
+     "peso": 0.171,
+     "pontuacao": 0.138,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0236
+    },
+    {
+     "item": "perda",
+     "curva": "C12-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.134,
+     "perdas_ultimas_3_s": [
+      0.269,
+      0.134,
+      0.023
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.16,
+     "peso": 0.56,
+     "pontuacao": 0.1344,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0753
+    },
+    {
+     "item": "perda",
+     "curva": "C09-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.123,
+     "perdas_ultimas_3_s": [
+      0.206,
+      0.075,
+      0.123
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.048,
+     "peso": 0.0,
+     "pontuacao": 0.1228,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C09-dir",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.096,
+     "perdas_ultimas_3_s": [
+      0.193,
+      0.08,
+      0.096
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.013,
+     "peso": 0.0,
+     "pontuacao": 0.0956,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C05-esq",
+     "fase_sintoma": "reta",
+     "fase_origem": "reta",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.089,
+     "perdas_ultimas_3_s": [
+      0.115,
+      0.089,
+      0.064
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.062,
+     "peso": 1.444,
+     "pontuacao": 0.0893,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.129
+    },
+    {
+     "item": "perda",
+     "curva": "C12-esq",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.086,
+     "perdas_ultimas_3_s": [
+      0.026,
+      0.086,
+      0.09
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.081,
+     "peso": 0.56,
+     "pontuacao": 0.0858,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0481
+    },
+    {
+     "item": "perda",
+     "curva": "C01-esq",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.079,
+     "perdas_ultimas_3_s": [
+      -0.008,
+      0.079,
+      0.157
+     ],
+     "perda_vs_melhor_volta_mediana_s": -0.006,
+     "peso": 0.0,
+     "pontuacao": 0.0789,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C10-dir",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.071,
+     "perdas_ultimas_3_s": [
+      0.167,
+      0.039,
+      0.071
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.087,
+     "peso": 0.716,
+     "pontuacao": 0.071,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0508
+    },
+    {
+     "item": "perda",
+     "curva": "C06-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.066,
+     "perdas_ultimas_3_s": [
+      0.114,
+      0.023,
+      0.066
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.045,
+     "peso": 0.047,
+     "pontuacao": 0.0664,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0031
+    },
+    {
+     "item": "perda",
+     "curva": "C13-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.063,
+     "perdas_ultimas_3_s": [
+      0.075,
+      0.063,
+      0.013
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.041,
+     "peso": 1.541,
+     "pontuacao": 0.0633,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0975
+    },
+    {
+     "item": "perda",
+     "curva": "C07-dir",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.058,
+     "perdas_ultimas_3_s": [
+      0.058,
+      0.117,
+      0.011
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.03,
+     "peso": 0.0,
+     "pontuacao": 0.0579,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C02-dir",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.054,
+     "perdas_ultimas_3_s": [
+      0.068,
+      0.054,
+      0.01
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.034,
+     "peso": 0.093,
+     "pontuacao": 0.054,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.005
+    },
+    {
+     "item": "perda",
+     "curva": "C10-dir",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.053,
+     "perdas_ultimas_3_s": [
+      0.074,
+      -0.164,
+      0.053
+     ],
+     "perda_vs_melhor_volta_mediana_s": -0.029,
+     "peso": 0.716,
+     "pontuacao": 0.0533,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0381
+    },
+    {
+     "item": "perda",
+     "curva": "C14-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.053,
+     "perdas_ultimas_3_s": [
+      0.053,
+      0.053,
+      0.033
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.029,
+     "peso": 5.431,
+     "pontuacao": 0.0526,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.2859
+    },
+    {
+     "item": "perda",
+     "curva": "C10-dir",
+     "fase_sintoma": "saida",
+     "fase_origem": "entrada (cadeia causal)",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.047,
+     "perdas_ultimas_3_s": [
+      0.053,
+      0.047,
+      -0.024
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.017,
+     "peso": 0.716,
+     "pontuacao": 0.0468,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0335
+    },
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "entrada",
+     "fase_origem": "entrada",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.046,
+     "perdas_ultimas_3_s": [
+      0.046,
+      0.029,
+      0.121
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.024,
+     "peso": 0.607,
+     "pontuacao": 0.0455,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0276
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.045,
+     "perdas_ultimas_3_s": [
+      0.089,
+      0.045,
+      -0.008
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.054,
+     "peso": 3.391,
+     "pontuacao": 0.0448,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.1518
+    },
+    {
+     "item": "perda",
+     "curva": "C07-dir",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.041,
+     "perdas_ultimas_3_s": [
+      0.041,
+      0.011,
+      0.053
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.04,
+     "peso": 0.0,
+     "pontuacao": 0.0411,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C04-esq",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.037,
+     "perdas_ultimas_3_s": [
+      0.037,
+      0.039,
+      0.009
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.047,
+     "peso": 0.607,
+     "pontuacao": 0.0367,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0223
+    },
+    {
+     "item": "perda",
+     "curva": "C06-dir",
+     "fase_sintoma": "meio",
+     "fase_origem": "meio",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.033,
+     "perdas_ultimas_3_s": [
+      0.033,
+      0.096,
+      0.004
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.027,
+     "peso": 0.047,
+     "pontuacao": 0.0327,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0015
+    },
+    {
+     "item": "perda",
+     "curva": "C03-esq",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.031,
+     "perdas_ultimas_3_s": [
+      0.088,
+      0.031,
+      0.0
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.005,
+     "peso": 3.391,
+     "pontuacao": 0.0315,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.1067
+    },
+    {
+     "item": "perda",
+     "curva": "C08-esq",
+     "fase_sintoma": "saida",
+     "fase_origem": "saida",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.027,
+     "perdas_ultimas_3_s": [
+      0.072,
+      0.027,
+      0.025
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.024,
+     "peso": 0.0,
+     "pontuacao": 0.0271,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0
+    },
+    {
+     "item": "perda",
+     "curva": "C02-dir",
+     "fase_sintoma": "frenagem",
+     "fase_origem": "frenagem",
+     "falso_ganho": false,
+     "perda_mediana_s": 0.024,
+     "perdas_ultimas_3_s": [
+      0.065,
+      0.024,
+      0.0
+     ],
+     "perda_vs_melhor_volta_mediana_s": 0.011,
+     "peso": 0.093,
+     "pontuacao": 0.0241,
+     "referencia": "volta de referencia (volta do modelo)",
+     "pontuacao_com_peso": 0.0023
+    }
+   ],
+   "melhor_volta_usada": "2026-10-24_13-43-32_vhe_interlagos#0003"
+  }
+ ]
+}

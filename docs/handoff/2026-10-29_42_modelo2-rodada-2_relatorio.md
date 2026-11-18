@@ -1,23 +1,481 @@
-# Pedido 42 — relatório parcial: a Parte A e o código do item 6 feitos; parado à espera da reaprovação do store (pedido 54)
+# Pedido 42 — relatório parcial: Partes 0, A, C, D, E.1 e F.1 feitas; parado na parada do pedido (o kit 2, as voltas de teste e a IA em níveis)
 
-- **Pedido:** `docs/prompts/2026-10-29_42_modelo2-rodada-2.md`, versão de 17/11/2026, com a "Atualização de 17/11, à tarde" (item 6: a Parte A e o código, sem ler o store; depois, parar).
-- **Data:** 17/11/2026.
-- **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-48`. A pasta principal (pedido 52, `etapa/engenheiro`) não foi tocada: nenhuma troca de branch, nenhum commit, nenhuma escrita.
+- **Pedido:** `docs/prompts/2026-10-29_42_modelo2-rodada-2.md`, versão de 17/11/2026, com a "Atualização de 17/11, à tarde".
+- **Datas:** de 17 a 18/11/2026.
+- **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-48`. A pasta principal (pedido 52, `etapa/engenheiro`) não foi tocada: nenhuma troca de branch, nenhum commit e nenhuma escrita fora de `data/` pelos links. As saídas das rodadas vão para `data/ml/modelo2/rodada1_refeita/` e `data/ml/modelo2/rodada2/`, pela junção `data/ml`, e ficam na pasta principal.
 - **Branch:** `etapa/modelo2-rodada-2`, criada a partir de `develop` (`14fe1ca0`).
-- **Commits:**
-  - `dc405d6a` — Pedido 42, atualizacao de 17/11: o texto do pedido (a volta do modelo como referencia, a pasta do 48, o store v2 reprovado);
-  - `e1151879` — Pedido 42, relatorio parcial: parado na Parte 0, item 5 (o Modelo 2 recusa o store v2 reprovado; links da 0.3 criados);
-  - `a8e7a518` — Pedido 42, relatorio parcial: o envio recusado pelo controle de permissoes (comandos no relatorio);
-  - `46066db8` — Pedido 42, atualizacao de 17/11 a tarde: as decisoes do Eduardo depois da parada na Parte 0 (a margem de 2 ms, o pedido 54 reaprova o store, as pastas de saida e os 144 lap_id);
-  - `ba776e82` — Pedido 42, Parte A: a rodada 2 registrada antes de rodar (as emendas com os valores fixos, a familia, a volta do modelo como referencia, a margem de 2 ms, as pastas de saida, os 144 lap_id e a validacao); linhas nos ADRs 0023 e 0032;
-  - `9b6f56b9` — Pedido 42, item 6 da atualizacao de 17/11: as pastas de saida por rodada, os 144 lap_id da rodada 1 e a margem de 2 ms (sem ler o store); testes sinteticos e a suite (1051 passam);
-  - o commit desta atualização do relatório (o hash está no chat e na nota da sessão).
+- **Commits deste pedido:**
+  - `dc405d6a` — o texto do pedido (17/11);
+  - `e1151879` e `a8e7a518` — o relatório parcial da manhã (parado na Parte 0, item 5) e o envio recusado;
+  - `46066db8` — as decisões da tarde no texto do pedido;
+  - `ba776e82` — a Parte A, registrada antes de rodar;
+  - `9b6f56b9` — as pastas de saída, os 144 `lap_id` e a margem de 2 ms;
+  - `1e1ea229` — o relatório parcial da tarde;
+  - `13797174` — o código das Partes C, D e E.1, antes de rodar. Inclui a correção de redação da seção 4.4 e a seção 4.6.1 (o E2 com a geometria medida);
+  - `552e892d` — a Parte F.1: o roteiro, a folha, o CSV e o esperado, antes de qualquer sessão;
+  - o commit das saídas e deste relatório (o hash está no chat e na nota da sessão).
 - **Merges:** nenhum.
-- **Arquivos de handoff gerados:**
-  - `docs/handoff/2026-10-29_42_modelo2-rodada-2_relatorio.md` (este);
-  - `docs/handoff/2026-10-29_42_modelo2-rodada-2_pytest.txt` (a saída da suíte).
+- **Arquivos de handoff gerados (`docs/handoff/2026-10-29_42_modelo2-rodada-2_*`):**
+  - `relatorio.md` (este) e `pytest.txt`;
+  - `conferencia_rodada1.json`: a rodada 1 refeita contra a guardada;
+  - `comparacao.json`: a rodada 2 ao lado da rodada 1, o E2 antes e depois e o E3 de 01/11;
+  - da rodada 2:
+    - `resultados.json`, `fases.json`, `canais_e_conferencias.json` e `estilo.json`;
+    - `erros_por_sessao.json` e `erros_por_sessao_so_comparacao_0013.json`;
+    - `erros_depois_do_kit.json` e `e3_saidas_de_traseira.json`;
+    - `tecnicas.json` (sem os estados de cada passagem) e `modelo_leve.json`;
+  - o kit 2: `kit2_rotulagem.html`, `kit2_consistencia.html` e `kit2_consistencia.csv`;
+  - em `docs/experimentos/`: o roteiro, a folha, o CSV de marcação e o esperado das voltas de teste.
 
-## Atualização de 17/11, à tarde: a Parte A e o código do item 6
+## Resumo
+
+1. **Os dados:** o store foi reaprovado pelo pedido 54 às 21:31 de 17/11. Esperei a reaprovação aparecer no meta antes de ler. Os 3 vínculos de `data/reference_models` batem pelo SHA-256 com a pasta principal.
+2. **A rodada 1 refeita reproduz a guardada** nas passagens, nos estados, nas fases, no ranking, no fechamento e no modelo leve. Só o sorteio do kit refeito difere, porque depende da ordem das linhas. O kit 2 usa o gabarito guardado.
+3. **A rodada 2 rodou** com as emendas, a volta do modelo como referência, o E2 com a geometria do pedido 39 e a margem de ±2 ms.
+   - **Um defeito da regra registrada da entrada:** a regra de "não cortar na troca de sinal" junta, nas curvas que vêm depois de outra curva para o mesmo lado, o volante da curva anterior. Nesses casos, a entrada recua centenas de metros: C01, C04, C07, C12 e C14.
+   - O E1, o F5, o E5, o E6 e a parte da entrada do estilo dessas curvas ficam contaminados.
+   - Não mudei a regra, porque o pedido proíbe mudar critério depois de ver os números. Proponho a emenda para uma rodada 3.
+4. **O kit 2** (as mesmas 120 passagens, com as duas referências do app e as páginas da literatura) e **o CSV da consistência** (30 passagens) estão prontos. O CSV dos rótulos continua vazio.
+5. **O roteiro das voltas de teste está pronto e commitado.** O item 4 parou: não há como deixar as sessões de teste fora de tudo sem código novo. A proposta está no roteiro.
+6. **A suíte do backend:** veja a seção "Testes".
+
+## Retomada de 17/11, à noite: o store reaprovado, a Parte 0 (itens 5 e 6) e as Partes C, D, E.1 e F.1
+
+O Eduardo avisou que o store estava reaprovado e que a leitura da seção 4.3 estava certa: só os detectores cujo indicador mudou com as emendas são recalibrados, pela mesma regra e nas mesmas passagens da IA, e os outros ficam iguais.
+
+**Antes de ler qualquer coisa, conferi duas coisas:**
+
+- **O store ainda não estava reaprovado** quando o aviso chegou (21:15). O meta ainda era o de 15/11, com `aprovado: false`, e o pedido 54 estava regravando o store (a sessão dele estava ativa, e a cópia `_backup_antes_pedido54` era de 20:35). Então esperei: um laço só de leitura olhou o meta a cada 30 s.
+- **O meta virou `aprovado: true` às 21:31.** Ele foi construído em 18/11, 00:31 UTC, com o commit `ff0ce3ed` (branch do 54) e 721 voltas. Todas as checagens passam.
+  - As 3 sessões estão em `sessoes_aceitas_com_margem`, com efeito de 1,98, 1,643 e 1,59 ms;
+  - `margem_linha_do_jogo_ms` = 2,0.
+  - Só comecei depois disso.
+- **O `develop` local continua em `14fe1ca0`:** o merge do 54 não estava lá até o fim deste trabalho. Este pedido não precisa dele, porque o Modelo 2 lê só o meta e o store.
+
+### Os 3 vínculos de `data/reference_models` (pelo SHA-256, antes de ler)
+
+| arquivo | pasta do 48 | pasta principal |
+|---|---|---|
+| `vhe_interlagos.geometry.json` | `811da4c9…` | `811da4c9…` |
+| `vhe_interlagos.json` | `f8e61864…` | `f8e61864…` |
+| `vhe_interlagos.volta_do_modelo.json` | `e8651d45…` | `e8651d45…` |
+
+Os três são iguais, e nenhum vínculo precisou ser refeito.
+
+### 0.5 A trava do store v2
+
+- O Modelo 2 lê o store reaprovado: a trava `aprovado` do código não mudou, e passou.
+- As 3 sessões aceitas com margem têm 15 voltas `humano` (6 + 5 + 4), até 210 passagens. Nenhuma está nas 144 voltas da comparação.
+- Elas entram só na tabela à parte da Parte D.3 e no E3 das saídas de traseira (D.6), marcadas `sessao_com_margem`.
+- A outra sessão depois de 24/10 (`2026-11-07_19-52-33`, 2 voltas) passa na checagem sem margem.
+
+### 0.6 A rodada 1 refeita: **reproduz**
+
+- **O comando:** `python -m ml.scripts.modelo2 todos --saida rodada1_refeita --rodada 1`, com o jogo fechado. Levou 4 min 52 s.
+- **A conferência:** `python -m ml.scripts.modelo2 conferir --saida rodada1_refeita`, contra os arquivos guardados da rodada 1 em `data/ml/modelo2/`. Saída em `docs/handoff/2026-10-29_42_modelo2-rodada-2_conferencia_rodada1.json`.
+
+| o quê | guardada | refeita | resultado |
+|---|---|---|---|
+| passagens (`passagens.parquet`) | 2.016 | 2.016 | iguais, coluna a coluna (tolerância 1e-6), nenhuma diferente |
+| estados de cada detector | 48.384 | 48.384 | nenhum diferente, nenhum sem par |
+| as 70 fases | — | — | iguais |
+| os 3 maiores erros por sessão | 13 sessões | 13 sessões | as 13 iguais |
+| o fechamento da soma das fases | 0,000 s | 0,000 s | igual |
+| o R² do modelo leve | — | — | iguais |
+
+- **Quatro colunas novas** na refeita, só relatadas: `contra_antes_apice_s`, `freio_emendado`, `s_pu_rel` e `sessao_com_margem`.
+- **Uma diferença fora das regras: o sorteio do kit.** O kit refeito (`rodada1_refeita/rotulagem_gabarito.json`) tem só 41 das 120 passagens do kit guardado.
+  - **A causa:** o sorteio (`pandas.sample` com a semente 38) depende da ordem das linhas na memória, e o store de 15/11 traz as voltas em outra ordem. Os estados são os mesmos, linha a linha.
+  - **O efeito:** nenhum na comparação. O kit 2 (Parte E.1) usa o gabarito guardado da rodada 1, com as mesmas 120 passagens e os mesmos ids, como o pedido manda.
+- **O jogo:** o `acs.exe` estava fechado antes desta conta e antes da Parte D.
+
+
+### Parte B — a IA em níveis: fica para depois
+
+`docs/experimentos/ia_niveis.csv` e `data/ml/modelo2/ia_niveis.csv` não existem: as gravações da IA em níveis ainda não chegaram. Como o pedido manda, a Parte B fica para depois da sua parada.
+
+### Parte C — o E2 com a geometria medida
+
+- **De onde vêm os valores:** `L` e `k_δ` são lidos de onde o pedido 39 os registrou, em `docs/handoff/2026-10-25_39_m1-geometria-medida_geometria.json`, chave `usados`: `L` = 2,9636 m e `k_δ` = 0,30396 rad. O código lê o arquivo (`dados.geometria_medida`).
+- **Na rodada 1 refeita** ficou a medida substituta: `L` = 2,955 m e `k_δ` = 0,267 rad.
+- **O registro, antes de rodar,** está na seção 4.6.1.
+- **A fração de "aplica" do E2, por curva** (eu; a IA tem só uma volta com a guinada):
+
+  | curva | eu, antes → depois | IA, antes → depois |
+  |---|---|---|
+  | C01 | 0,10 → 0,11 | 0,00 → 0,00 |
+  | C02 | 0,85 → 0,87 | 0,00 → 0,00 |
+  | C03 | 0,02 → 0,03 | 0,00 → 0,00 |
+  | C04 | 0,02 → 0,02 | 0,00 → 0,00 |
+  | C05 | 0,00 → 0,00 | 0,00 → 0,00 |
+  | C06 | 0,08 → 0,09 | 0,00 → 0,00 |
+  | C07 | 0,03 → 0,03 | 0,00 → 0,00 |
+  | C08 | 0,91 → 0,92 | 0,00 → 0,00 |
+  | C09 | 0,00 → 0,02 | 0,00 → 0,00 |
+  | C10 | 0,02 → 0,02 | 0,00 → 0,00 |
+  | C11 | 0,12 → 0,14 | 0,00 → 0,00 |
+  | C12 | 0,66 → 0,68 | 0,00 → 0,00 |
+  | C13 | 0,00 → 0,00 | 0,00 → 0,00 |
+  | C14 | 0,00 → 0,00 | 0,00 → 0,00 |
+
+- **O que mudou:** quase nada. 24 das 2.016 passagens mudaram de estado.
+  - O E2 compara o ângulo de subesterço com a mediana da IA, e a geometria nova desloca os dois juntos.
+  - O E2 continua dizendo "aplica" na C02, na C08 e na C12, e quase nunca nas outras.
+- **A IA tem uma passagem com a guinada por curva** (a volta de 22/10). A referência do E2 é essa passagem só, como na rodada 1.
+
+### Parte D — a rodada 2
+
+- **O comando:** `python -m ml.scripts.modelo2 todos --saida rodada2 --rodada 2 --handoff docs/handoff/2026-10-29_42_modelo2-rodada-2`, com o jogo fechado. Levou 7 min 11 s.
+- **A comparação:** `python -m ml.scripts.modelo2 comparar --saida rodada2 --rodada1 rodada1_refeita --handoff …`.
+- **As voltas:** as mesmas 144 da rodada 1 (130 minhas e 14 da IA). As fases, o envelope e a calibração saem só delas.
+- **A volta do modelo:** `2026-11-15_02-47-12_vhe_interlagos_teste_m1#0008`, com 1:24,552, lida do arquivo da pasta principal pelo vínculo.
+- **A "Sua melhor volta":** `2026-10-24_13-43-32#0003`, com 1:26,568 na grade. A segunda melhor, usada quando a melhor está entre as voltas comparadas, é a `2026-10-21_20-30-54#0017`.
+
+#### D.4 Os 3 maiores erros por sessão, lado a lado
+
+**O que mudou:**
+
+- **Na rodada 1, as duas retas pesavam mais que tudo:** a C14 (reta dos boxes) e a C03 (reta oposta) ficavam em 2º e 3º lugar em todas as 13 sessões.
+- **Sem o peso e contra a volta do modelo, as frenagens e os meios das curvas lentas sobem:**
+  - a frenagem da C12, em 7 sessões;
+  - a da C01, em 4 (e o meio da C01, em mais 1);
+  - a da C04, em 4;
+  - o meio da C08, em 4;
+  - a frenagem da C07, em 2.
+- **A coluna "só comparação" separa os dois efeitos:** com a `#0013` como referência e as regras novas, a C14 ainda aparece em 6 sessões. Então tirar o peso tira a C03 de quase todas, e trocar a referência tira boa parte da C14.
+
+| sessão | rodada 1 (contra a `#0013`, com peso) | rodada 2 (contra a volta do modelo, sem peso) | rodada 2, só comparação (contra a `#0013`) | entrou | saiu |
+|---|---|---|---|---|---|
+| 2026-10-04 | consistencia; C14-esq reta (+0.623 s); C03-esq reta (+0.230 s) | consistencia; C12-esq frenagem (+0.528 s); C08-esq meio (+0.496 s) | consistencia; C14-esq reta (+0.623 s); C01-esq frenagem (+0.567 s) | C08-esq meio, C12-esq frenagem | C03-esq reta, C14-esq reta |
+| 2026-10-05 | consistencia; C14-esq reta (+0.269 s); C03-esq reta (+0.194 s) | consistencia; C07-dir frenagem (+0.543 s); C08-esq meio (+0.505 s) | consistencia; C01-esq frenagem (+0.463 s); C07-dir frenagem (+0.452 s) | C07-dir frenagem, C08-esq meio | C03-esq reta, C14-esq reta |
+| 2026-10-05-2 | consistencia; C14-esq reta (+0.619 s); C03-esq reta (+0.396 s) | consistencia; C12-esq frenagem (+0.823 s); C01-esq frenagem (+0.693 s) | consistencia; C12-esq frenagem (+0.843 s); C01-esq frenagem (+0.788 s) | C01-esq frenagem, C12-esq frenagem | C03-esq reta, C14-esq reta |
+| 2026-10-09 | consistencia; C14-esq reta (+0.241 s); C03-esq reta (+0.181 s) | consistencia; C01-esq frenagem (+0.654 s); C08-esq meio (+0.652 s) | consistencia; C01-esq frenagem (+0.750 s); C12-esq frenagem (+0.661 s) | C01-esq frenagem, C08-esq meio | C03-esq reta, C14-esq reta |
+| 2026-10-10 | consistencia; C14-esq reta (+0.627 s); C03-esq reta (+0.373 s) | consistencia; C01-esq frenagem (+0.679 s); C12-esq frenagem (+0.667 s) | consistencia; C01-esq frenagem (+0.774 s); C12-esq frenagem (+0.687 s) | C01-esq frenagem, C12-esq frenagem | C03-esq reta, C14-esq reta |
+| 2026-10-11 | consistencia; C14-esq reta (+0.686 s); C03-esq reta (+0.196 s) | consistencia; C14-esq reta (+0.468 s); C12-esq frenagem (+0.464 s) | consistencia; C14-esq reta (+0.686 s); C12-esq frenagem (+0.484 s) | C12-esq frenagem | C03-esq reta |
+| 2026-10-13 | consistencia; C14-esq reta (+0.667 s); C03-esq reta (+0.347 s) | consistencia; C01-esq frenagem (+0.628 s); C12-esq frenagem (+0.522 s) | consistencia; C01-esq frenagem (+0.724 s); C14-esq reta (+0.667 s) | C01-esq frenagem, C12-esq frenagem | C03-esq reta, C14-esq reta |
+| 2026-10-16 | consistencia; C14-esq reta (+0.251 s); C03-esq reta (+0.139 s) | consistencia; C04-esq frenagem (+0.463 s); C10-dir reta (+0.426 s) | consistencia; C10-dir reta (+0.481 s); C12-esq frenagem (+0.435 s) | C04-esq frenagem, C10-dir reta | C03-esq reta, C14-esq reta |
+| 2026-10-17 | consistencia; C14-esq reta (+0.248 s); C03-esq reta (+0.310 s) | consistencia; C04-esq frenagem (+0.658 s); C12-esq frenagem (+0.529 s) | consistencia; C12-esq frenagem (+0.549 s); C04-esq frenagem (+0.518 s) | C04-esq frenagem, C12-esq frenagem | C03-esq reta, C14-esq reta |
+| 2026-10-17-2 | consistencia; C14-esq reta (+0.672 s); C03-esq reta (+0.529 s) | consistencia; C12-esq frenagem (+0.565 s); C04-esq frenagem (+0.511 s) | consistencia; C14-esq reta (+0.672 s); C12-esq frenagem (+0.584 s) | C04-esq frenagem, C12-esq frenagem | C03-esq reta, C14-esq reta |
+| 2026-10-18 | consistencia; C14-esq reta (+0.631 s); C03-esq reta (+0.368 s) | consistencia; C07-dir frenagem (+0.441 s); C14-esq reta (+0.414 s) | consistencia; C14-esq reta (+0.631 s); C12-esq frenagem (+0.410 s) | C07-dir frenagem | C03-esq reta |
+| 2026-10-21 | consistencia; C14-esq reta (+0.282 s); C03-esq reta (+0.187 s) | consistencia; C01-esq meio (+0.894 s); C08-esq meio (+0.452 s) | consistencia; C01-esq meio (+0.816 s); C12-esq frenagem (+0.413 s) | C01-esq meio, C08-esq meio | C03-esq reta, C14-esq reta |
+| 2026-10-24 | consistencia; C14-esq reta (+0.483 s); C03-esq reta (+0.487 s) | consistencia; C03-esq reta (+0.381 s); C04-esq frenagem (+0.294 s) | consistencia; C03-esq reta (+0.487 s); C14-esq reta (+0.483 s) | C04-esq frenagem | C14-esq reta |
+
+**O fechamento das fases:** a soma das 70 continua fechando o tempo da volta: 0,000 s contra a volta do modelo, contra a `#0013` e nas voltas depois do kit. As 70 fases cobrem os 4.334,08 m.
+
+#### M6, M7 e M8 por curva (fração de "aplica" nas passagens conclusivas, rodada 1 → rodada 2)
+
+| curva | M6 eu | M6 IA | M7 eu | M7 IA | M8 eu | M8 IA |
+|---|---|---|---|---|---|---|
+| C01-esq | 0,00 → 0,06 | 0,00 → 0,00 | 0,69 → 0,36 | 1,00 → 1,00 | 0,92 → 0,88 | 1,00 → 1,00 |
+| C02-dir | 0,00 → 0,26 | 0,00 → 0,00 | 1,00 → 0,26 | 1,00 → 1,00 | 0,80 → 0,13 | 1,00 → 0,00 |
+| C03-esq | 0,00 → 0,02 | 0,00 → 0,00 | 1,00 → 0,96 | 1,00 → 1,00 | 0,03 → 0,02 | 0,00 → 0,00 |
+| C04-esq | 0,00 → 0,45 | 0,00 → 1,00 | 0,77 → 0,36 | 1,00 → 0,00 | 0,54 → 0,14 | 1,00 → 0,00 |
+| C05-esq | 0,00 → 0,02 | 0,00 → 0,00 | 0,55 → 0,97 | 0,07 → 1,00 | 0,07 → 0,00 | 0,00 → 0,00 |
+| C06-dir | 0,00 → 0,00 | 0,00 → 0,00 | 0,81 → 1,00 | 1,00 → 1,00 | 0,94 → 0,67 | 0,60 → 0,43 |
+| C07-dir | 0,00 → 0,05 | 0,00 → 0,93 | 0,53 → 0,22 | 1,00 → 0,07 | 0,94 → 0,93 | 1,00 → 0,07 |
+| C08-esq | 0,00 → 0,30 | 0,00 → 0,00 | 0,95 → 0,31 | 1,00 → 1,00 | 0,97 → 0,52 | 0,29 → 0,14 |
+| C09-dir | 0,01 → 0,12 | 0,00 → 0,00 | 0,86 → 0,54 | 1,00 → 1,00 | 0,69 → 0,73 | 0,00 → 0,00 |
+| C10-dir | 0,00 → 0,50 | 0,00 → 1,00 | 0,52 → 0,13 | 1,00 → 0,00 | 0,66 → 0,38 | 1,00 → 0,00 |
+| C11-esq | 0,00 → 0,02 | 0,00 → 0,00 | 1,00 → 0,86 | 1,00 → 1,00 | 0,24 → 0,27 | 0,00 → 0,00 |
+| C12-esq | 0,00 → 0,75 | 0,00 → 0,00 | 0,78 → 0,15 | 1,00 → 1,00 | 0,61 → 0,12 | 1,00 → 0,00 |
+| C13-esq | 0,00 → 0,33 | 0,00 → 1,00 | 1,00 → 0,65 | 1,00 → 0,00 | 0,17 → 0,02 | 0,00 → 0,00 |
+| C14-esq | 0,00 → 0,07 | 0,00 → 0,00 | 0,98 → 0,92 | 1,00 → 1,00 | 0,02 → 0,01 | 0,00 → 0,00 |
+
+**A leitura:**
+
+- **A retomada nova faz o M6 informar:** na rodada 1, ele dava "aplica" em 1 de 2.016 passagens.
+  - **Eu:** a fração sobe nas curvas lentas: C12, 0,75; C10, 0,50; C04, 0,45; C13, 0,33; C08, 0,30.
+  - **A IA:** passa a "aplicar" na C04, na C07, na C10 e na C13.
+- **O M7 da IA ainda dá "aplica" em 9 das 14 curvas.** Isso ocorre mesmo com a retomada depois da mínima: o volante dela continua crescendo depois da subida do acelerador.
+  - O M7 continua pouco informativo na IA.
+  - É uma limitação para uma rodada 3, e não muda nada agora.
+- **O M8 cai bastante:** o alívio contado a partir do começo da subida contínua pega menos quedas.
+- **Estados que mudaram, nas 2.016 passagens:** M6, 616; M7, 983; M8, 574.
+
+#### E4, a entrada, E1 e F5
+
+- **E4:** 11 passagens ganharam "aplica" (9 minhas e 2 da IA). Em 10 delas, o contraesterço está antes do ápice (`contra_antes_apice_s` ≥ 0,10 s), ou seja, na parte que a janela da rodada 1 cortava. 82 passagens mudaram de estado no total.
+- **A entrada e a retomada** (rodada 2 menos rodada 1, nas 144 voltas):
+
+| curva | passagens | mudaram | mediana | p10 | p90 | retomada: mediana | p10 | p90 |
+|---|---|---|---|---|---|---|---|---|
+| C01-esq | 144 | 29 | 0,0 m | -895,8 m | 0,0 m | 0,21 s | 0,00 s | 2,45 s |
+| C02-dir | 144 | 0 | 0,0 m | 0,0 m | 0,0 m | 0,98 s | 0,43 s | 1,88 s |
+| C03-esq | 144 | 1 | 0,0 m | 0,0 m | 0,0 m | -0,15 s | -0,42 s | 0,00 s |
+| C04-esq | 144 | 79 | -531,0 m | -799,4 m | 0,0 m | 0,57 s | 0,07 s | 1,92 s |
+| C05-esq | 143 | 20 | 0,0 m | -77,2 m | 0,0 m | 2,55 s | 0,36 s | 2,73 s |
+| C06-dir | 142 | 17 | 0,0 m | -44,0 m | 0,0 m | 2,91 s | 0,41 s | 4,30 s |
+| C07-dir | 143 | 50 | 0,0 m | -132,0 m | 0,0 m | 0,24 s | 0,00 s | 2,08 s |
+| C08-esq | 142 | 1 | 0,0 m | 0,0 m | 0,0 m | 1,78 s | 0,08 s | 2,83 s |
+| C09-dir | 123 | 3 | 0,0 m | 0,0 m | 0,0 m | 0,60 s | -0,13 s | 2,35 s |
+| C10-dir | 144 | 9 | 0,0 m | 0,0 m | 0,0 m | 0,30 s | 0,00 s | 1,85 s |
+| C11-esq | 144 | 12 | 0,0 m | 0,0 m | 0,0 m | 1,23 s | 0,84 s | 2,36 s |
+| C12-esq | 144 | 47 | 0,0 m | -280,0 m | 0,0 m | 0,91 s | 0,14 s | 1,88 s |
+| C13-esq | 144 | 13 | 0,0 m | 0,0 m | 0,0 m | 3,06 s | 0,87 s | 3,31 s |
+| C14-esq | 144 | 18 | 0,0 m | -59,0 m | 0,0 m | 1,91 s | 0,45 s | 4,30 s |
+
+**Um defeito da regra registrada da entrada.** A regra de "não cortar na troca de sinal" junta dois trechos quando, entre eles, o volante passa para o outro lado além de 0,05·δ_pk.
+
+- **Onde a entrada recua:** nas curvas que vêm depois de outra curva para o mesmo lado. São a C01 (depois da C14), a C04 (depois da C03), a C07 (depois da C06), a C12 (depois da C11) e a C14 (depois da C13).
+- **Por quê:** na reta entre as duas curvas, o volante passa levemente para o outro lado, e a regra une o volante da curva anterior ao desta. A entrada recua até a curva anterior, a centenas de metros. Na C04, a mediana do recuo é de −531 m, e 56 passagens têm a entrada antes do fim da C03.
+- **Os detectores contaminados nessas curvas:**
+  - E1: na C04, o "aplica" vai de 0,01 a 0,60; na C07, de 0,09 a 0,44; na C12, de 0,22 a 0,53;
+  - F5: na C04, de 0,84 a 0,30; na C12, de 0,81 a 0,47; na C07, de 0,87 a 0,56;
+  - E5, E6, a taxa de entrada e a resposta na entrada do estilo.
+- **Nas outras 9 curvas,** a regra se comporta como o esperado: o recuo é zero na mediana.
+- **Não mudei a regra:** o pedido proíbe mudar critério depois de ver os números. Os números do E1 e do F5 dessas 5 curvas não devem ser usados.
+- **A emenda que proponho para uma rodada 3,** registrada antes de rodar: a união dos trechos só vale dentro da curva, entre o fim da curva anterior (e_(k−1)) e o ápice. Fora disso, a sequência é cortada como na rodada 1.
+
+**E1 e F5 por curva** (eu e a IA), **o E4 meu** e **o E2 meu**, rodada 1 → rodada 2:
+
+| curva | E1 eu | E1 IA | F5 eu | F5 IA | E4 eu | E2 eu (antes → depois) |
+|---|---|---|---|---|---|---|
+| C01-esq | 0,28 → 0,43 | 0,00 → 0,00 | 0,86 → 0,83 | 1,00 → 1,00 | 0,02 → 0,02 | 0,10 → 0,11 |
+| C02-dir | 0,00 → 0,00 | 0,00 → 0,00 | 0,17 → 0,17 | 0,00 → 0,00 | 0,02 → 0,03 | 0,85 → 0,87 |
+| C03-esq | 0,00 → 0,00 | 0,00 → 0,00 | — → — | — → — | 0,02 → 0,00 | 0,02 → 0,03 |
+| C04-esq | 0,01 → 0,60 | 0,00 → 0,00 | 0,84 → 0,30 | 0,00 → 0,00 | 0,00 → 0,02 | 0,02 → 0,02 |
+| C05-esq | 0,00 → 0,00 | 0,00 → 0,00 | 0,50 → 0,75 | — → — | 0,00 → 0,00 | 0,00 → 0,00 |
+| C06-dir | 0,67 → 0,75 | 0,00 → 0,00 | 0,50 → 0,46 | 0,07 → 0,07 | 0,00 → 0,00 | 0,08 → 0,09 |
+| C07-dir | 0,09 → 0,44 | 0,00 → 0,07 | 0,87 → 0,56 | 1,00 → 0,93 | 0,02 → 0,08 | 0,03 → 0,03 |
+| C08-esq | 0,00 → 0,01 | 0,00 → 0,00 | 0,00 → 0,10 | 0,00 → 0,00 | 0,02 → 0,06 | 0,91 → 0,92 |
+| C09-dir | 0,95 → 0,96 | 0,00 → 0,00 | 0,05 → 0,05 | 0,00 → 0,00 | 0,00 → 0,04 | 0,00 → 0,02 |
+| C10-dir | 0,77 → 0,81 | 0,00 → 0,00 | 0,97 → 0,98 | 1,00 → 1,00 | 0,00 → 0,00 | 0,02 → 0,02 |
+| C11-esq | 0,08 → 0,14 | 0,00 → 0,21 | — → — | — → — | 0,02 → 0,02 | 0,12 → 0,14 |
+| C12-esq | 0,22 → 0,53 | 0,00 → 0,00 | 0,81 → 0,47 | 1,00 → 1,00 | 0,00 → 0,00 | 0,66 → 0,68 |
+| C13-esq | 0,00 → 0,00 | 0,00 → 0,00 | — → — | — → — | 0,02 → 0,00 | 0,00 → 0,00 |
+| C14-esq | 0,32 → 0,42 | 0,00 → 0,00 | — → — | — → — | 0,02 → 0,00 | 0,00 → 0,00 |
+
+#### O modelo leve
+
+O R² é deixando uma sessão de fora; os coeficientes estáveis são os da rodada 2.
+
+| curva | R² rodada 1 | R² rodada 2 | coeficientes estáveis na rodada 2 |
+|---|---|---|---|
+| C01-esq | 0,318 | 0,040 | pedais_juntos_s, s_vmin_rel, sem_pedal_s, uso_aderencia, volante_depois |
+| C02-dir | 0,014 | 0,214 | afastamento_m, escorr_traseiro, plato_s, s_ti_rel, sem_pedal_s, taxa_carga, uso_aderencia, volante_depois |
+| C03-esq | 0,157 | 0,467 | alivio, sem_pedal_s, taxa_carga, uso_aderencia |
+| C04-esq | 0,262 | 0,093 | afastamento_m, s_b_rel, sem_pedal_s, taxa_carga |
+| C05-esq | 0,355 | 0,208 | alivio, plato_s, retomada_s, s_ti_rel, sobreposicao_s, taxa_carga, uso_aderencia, volante_depois |
+| C06-dir | -0,044 | -0,035 | afastamento_m, s_ti_rel, uso_aderencia |
+| C07-dir | -0,187 | -0,283 | escorr_traseiro, pico_fracao, s_b_rel, sem_pedal_s, t_pico, taxa_carga, uso_aderencia |
+| C08-esq | 0,161 | 0,140 | afastamento_m, retomada_s, reversoes, sem_pedal_s, taxa_carga, uso_aderencia, volante_depois |
+| C09-dir | 0,676 | 0,624 | alivio, sem_pedal_s |
+| C10-dir | 0,257 | 0,274 | alivio, escorr_traseiro, sem_pedal_s, taxa_carga, uso_aderencia |
+| C11-esq | -0,294 | -0,290 | afastamento_m, alivio, irregularidade, plato_s, reversoes, sem_pedal_s, uso_aderencia |
+| C12-esq | 0,501 | 0,238 | s_vmin_rel, sem_pedal_s, taxa_carga, uso_aderencia |
+| C13-esq | -0,134 | 0,208 | alivio, irregularidade, retomada_s, uso_aderencia |
+| C14-esq | 0,251 | -0,040 | alivio, irregularidade, retomada_s, s_ti_rel, uso_aderencia |
+
+O R² cai justamente nas curvas afetadas pelo defeito da entrada (C01, de 0,318 para 0,040; C04, de 0,262 para 0,093; C12, de 0,501 para 0,238; C14, de 0,251 para −0,040), porque o indicador `s_ti_rel` delas mudou de sentido. Nas outras, ele fica parecido ou sobe (C02, C03 e C13).
+
+#### A frenagem emendada (o freio desde o ápice anterior)
+
+| curva | passagens |
+|---|---|
+| C10 | 78 |
+| C08 | 6 |
+| C02 | 5 |
+| C05 | 4 |
+| C09 | 1 |
+| as outras | 0 |
+
+É a mesma nas duas rodadas: a regra não mudou. A C10, depois da C09, concentra quase todas, como a seção 2 já dizia.
+
+#### D.3 As minhas sessões depois de 24/10 (tabela à parte, só na rodada 2)
+
+- **As voltas:** 17, todas do piloto, na pista original. Nenhuma ficou fora da seleção.
+  - 15 são das sessões aceitas com margem (01/11, 07/11 18:46 e 12/11);
+  - 2 são de `2026-11-07_19-52-33`, que a regra de sessão do relatório de evolução junta à de 07/11 18:46.
+- **Como foram medidas:** com as fases, o envelope e a calibração das 144. A soma das fases fecha em 0,000 s.
+- **A margem de ±2 ms** ficou marcada (`sessao_com_margem`). Nenhuma das perdas dos 3 maiores erros fica perto da margem.
+
+| sessão | os 3 maiores erros, contra a volta do modelo | com margem |
+|---|---|---|
+| 2026-11-01 | consistencia; C12-esq frenagem (+0.438 s); C03-esq meio (+0.437 s) | sim |
+| 2026-11-07 | consistencia; C12-esq frenagem (+0.605 s); C11-esq meio (+0.470 s) | sim |
+| 2026-11-12 | consistencia; C04-esq frenagem (+0.498 s); C14-esq reta (+0.409 s) | sim |
+
+#### D.6 O E3 nas saídas de traseira de 01/11
+
+- **Como as voltas foram achadas:**
+  - pelo número do relato, conferido pelo tempo do `session-index.json`: 4:45,743, 3:44,219, 2:25,948 e 2:39,678;
+  - a volta 10 foi achada pelo tempo das amostras, porque o número da gravação não bateu.
+- **O portão:** as 4 voltas são recusadas pelo portão do Modelo 2 (volta longa demais, carro parado, fora de pista; a volta 11 passa pelo box). O portão não mudou: o E3 rodou só nas 7 passagens citadas.
+- **O resultado:** o E3 diz "aplica" em **5 das 7**, igual nas duas rodadas (o E3 não mudou e a calibração é a mesma).
+
+| volta relatada | curva | volta na gravação | E3 rodada 1 | E3 rodada 2 | x = p95 de \|β\| − mediana da IA | p95 de \|β\| | portão |
+|---|---|---|---|---|---|---|---|
+| 3 | C05-esq | 0002 | nao_aplica | nao_aplica | -4,35° | 1,85° | recusada: volta longa demais (285.7s > 200s); carro parado em 48.9% das amostras; fora de pista em 9.1% das amostras |
+| 3 | C06-dir | 0002 | aplica | aplica | 56,07° | 59,11° | recusada: volta longa demais (285.7s > 200s); carro parado em 48.9% das amostras; fora de pista em 9.1% das amostras |
+| 3 | C13-esq | 0002 | aplica | aplica | 7,01° | 8,17° | recusada: volta longa demais (285.7s > 200s); carro parado em 48.9% das amostras; fora de pista em 9.1% das amostras |
+| 4 | C02-dir | 0003 | aplica | aplica | 1,30° | 2,98° | recusada: volta longa demais (224.2s > 200s); carro parado em 41.5% das amostras |
+| 4 | C06-dir | 0003 | aplica | aplica | 64,62° | 67,67° | recusada: volta longa demais (224.2s > 200s); carro parado em 41.5% das amostras |
+| 10 | C05-esq | 0009 | nao_aplica | nao_aplica | -3,11° | 3,09° | recusada: carro parado em 23.2% das amostras |
+| 11 | C01-esq | 0010 | aplica | aplica | 12,77° | 17,26° | recusada: carro parado em 32.9% das amostras; box |
+
+- **As duas da C05 que não aplicam:** o p95 de |β| delas (1,85° e 3,09°) fica abaixo da mediana da IA na C05, que é cerca de 6,2°.
+  - Ou a referência da IA na C05 é alta (é uma passagem só, a de 22/10);
+  - ou a saída de traseira não chegou à deriva que o E3 mede.
+
+  É uma revocação só sobre os casos relatados: a lista não tem "não aplica" e não dá precisão.
+- **As 5 que aplicam** vão de 2,98° (C02, volta 4) a 67,67° (C06, volta 4). As duas da C06 passam de 59°: são as rodadas.
+
+#### D.5 Os testes
+
+Novos em `backend/tests/test_modelo2.py`, numa volta sintética:
+
+- **a retomada com acelerador parcial na entrada:** na rodada 1, ela fica 0,3 s antes da mínima; na rodada 2, depois;
+- **as regras fixas da retomada:** a subida que volta abaixo do começo antes de 0,5 s é descartada; o pleno na mínima; sem subida de 0,10, não há retomada;
+- **a entrada com um contraesterço antes do ápice:** a sequência não é cortada, e o E4 da rodada 2 o vê. Sem troca de sinal, ela continua cortando;
+- **o ranking da rodada 2 sem o peso**, e o ponderado como informativo;
+- **a perda contra a volta do modelo:** a soma fecha a diferença de tempo de volta;
+- **a forma do pedal nunca é comparada com a volta do modelo:**
+  - o F4 explica contra a "Sua melhor volta";
+  - o F1 é comparado com a volta do modelo, como ponto;
+  - sem a melhor volta diferente, nenhum detector de forma explica;
+- **o kit 2:** as páginas da literatura têm "aplica", "não aplica", "nao sei" e a fonte, e não escrevem "IA".
+
+**Os testes do 38 continuam passando sem mudança.** A rodada 1 é o padrão (`rodada=1`) de todas as funções.
+
+### Parte E.1 — o kit 2 (antes da parada)
+
+**Os arquivos:**
+
+| o quê | onde |
+|---|---|
+| o kit 2 | `data/ml/modelo2/rodada2/rotulagem/kit2_rotulagem.html` (6,6 MB, sha256 `56aad227…`, também em `resultados.json`); cópia em `docs/handoff/2026-10-29_42_modelo2-rodada-2_kit2_rotulagem.html` |
+| o CSV dos rótulos | o mesmo do 38: `data/ml/modelo2/rotulagem/2026-10-24_38_modelo2-erro-tecnica-e-estilo_rotulagem.csv`. Conferido em 18/11: 120 linhas, nenhum rótulo e nenhuma observação. Continua vazio |
+| a consistência | `data/ml/modelo2/rodada2/rotulagem/kit2_consistencia.html` e `kit2_consistencia.csv`: 30 das 120 passagens (semente 42), com os ids R-01 a R-30 e em outra ordem. Cópias em `docs/handoff/` |
+| o gabarito do kit 2 | `data/ml/modelo2/rodada2/kit2_gabarito.json`, fora do git: os estados das duas rodadas, a origem, a melhor volta usada e o de-para da consistência |
+
+**O kit do 38** e o gabarito dele ficaram como estavam.
+
+**O que o kit 2 mostra em cada passagem:**
+
+- **o mapa e cinco traços:** os pedais, o volante, a velocidade, a guinada e a linha (o afastamento do centro para fora da curva);
+- **a "Volta de referência" (cinza):** na velocidade e na linha. Nos pedais, só os pontos "freia (referência)" e "retoma (referência)";
+- **os canais que a Volta de referência não tem:** no volante e na guinada, o kit escreve que ela não tem o canal;
+- **a "Sua melhor volta" (tracejada):** em todos os canais;
+- **sem a palavra "IA":** conferi no HTML que ela não aparece.
+
+**A segunda melhor volta:** a melhor volta não é a volta de nenhuma das 120 passagens, então a segunda melhor não foi usada.
+
+**Antes das passagens de cada pergunta, uma página** com:
+
+- o desenho esquemático do "aplica" e do "não aplica", feito pelo código;
+- a assinatura e a fonte da tabela da pesquisa;
+- onde olhar e o que comparar com as duas referências;
+- a regra "na dúvida, nao sei".
+
+**O que continua escondido:** o estado do detector e a origem. **Só para o relatório, pelo gabarito,** as passagens da IA por pergunta são: F4, 7; F5, 6; M6, 3; E2, 2; E3, 2.
+
+**O que você faz:**
+
+1. Abra o `kit2_rotulagem.html` e preencha a coluna `rotulo` do CSV do 38 com `aplica`, `nao aplica` ou `nao sei`.
+2. **Pelo menos 3 dias depois,** abra o `kit2_consistencia.html` e preencha o `kit2_consistencia.csv`, sem olhar os rótulos de antes.
+3. Se houver uma segunda pessoa, ela usa o mesmo kit e um CSV próprio, sem ver os seus rótulos.
+
+
+### F.1 O roteiro das voltas de teste (`552e892d`, antes de qualquer sessão)
+
+**Os arquivos, em `docs/experimentos/`:**
+
+- `2026-11-17_42_voltas_de_teste_roteiro.md`: os comportamentos, a sessão, o plano volta a volta e o item 4;
+- `2026-11-17_42_voltas_de_teste_folha.html`: a folha para imprimir, uma tabela por sessão, com a frase de cada volta e a caixa do resultado;
+- `2026-11-17_42_voltas_de_teste_marcacao.csv`: uma linha por comportamento e volta, mais as voltas normais. Você marca `consegui`, `nao consegui` ou `nao sei`;
+- `2026-11-17_42_voltas_de_teste_esperado.json`: o que se espera de cada comportamento (os detectores que devem dizer "aplica" ou "não aplica" e os que não devem mudar), legível pela Parte F.2.
+
+**O conteúdo:**
+
+- **Os comportamentos provocados:** 21, que cobrem todos os detectores menos dois: F1 a F8, E1 a E6, M1 a M9, V1, V2 e V3.
+- **Os que ficam de fora,** com o motivo:
+  - **V4**, a temperatura dos pneus: acompanha o ritmo de várias voltas;
+  - **V5**, a consistência: precisa de 5 voltas iguais, e uma sessão de provocações é inconsistente por construção.
+- **O F6 (travar a roda)** entra como tentativa: com ABS, a roda pode não travar.
+- **As curvas** foram escolhidas pela física de cada uma:
+  - as frenagens fortes depois de reta longa (C01, C04);
+  - as lentas e médias com frenagem (C06, C09, C10, C12);
+  - as saídas em marcha baixa (C08, C12);
+  - as médias sem frenagem (C03, C11).
+
+  A C13 e a C14 ficam fora de propósito, por segurança.
+- **As passagens:** em cada comportamento, 3 provocadas, alternando as duas curvas. Os controles são as passagens normais nas mesmas curvas, das voltas normais entre os blocos.
+- **As sessões:** duas, com 25 e 21 voltas (cerca de 37 e 31 minutos):
+  - no máximo dois comportamentos por volta, em curvas a 3 ou mais curvas de distância;
+  - uma volta normal depois de cada bloco;
+  - os comportamentos de risco na sessão 2, com o sobresterço de potência no último bloco.
+
+**O item 4, as sessões de teste fora de tudo:** não há jeito limpo com o que já existe. Parei neste item, como manda o pedido.
+
+- **A anotação de sessão** (`docs/experimentos/anotacoes_de_sessao.csv`) só marca a origem.
+  - Marcar a sessão de teste como `desconhecida` seria uma origem falsa.
+  - E tiraria as voltas também do Modelo 2, que precisa delas na F.2.
+- **O engenheiro do pedido 52 é ao vivo:** nenhuma marca depois da sessão tira as voltas da "melhor da sessão" e da "volta lenta" dele.
+- **A proposta,** no roteiro, seção 3:
+  - uma coluna `finalidade` = `teste_provocado` na anotação de sessão, sem mudar a origem;
+  - a seleção das voltas do piloto, os treinos (a LSTM incluída) e a avaliação do aprendizado deixam essas sessões de fora;
+  - o Modelo 2 lê essas sessões só pedindo, como faz com a cópia da pista;
+  - no engenheiro ao vivo, você desliga o coach no app antes de sair dos boxes (já existe). Como alternativa, um botão "sessão de teste".
+
+  **Até a decisão, as sessões de teste não devem ser gravadas.**
+
+### O que precisa de decisão
+
+1. **O defeito da regra da entrada (seção "E4, a entrada, E1 e F5").** A emenda proposta: a união dos trechos só vale entre o fim da curva anterior e o ápice.
+   - Se você aprovar, ela entra como rodada 3, registrada antes de rodar.
+   - Até lá, o E1, o F5, o E5, o E6 e a parte de entrada do estilo da C01, da C04, da C07, da C12 e da C14 da rodada 2 não devem ser usados.
+   - Os rótulos do kit 2 servem para as duas rodadas e para uma rodada 3, porque o kit não depende da regra.
+2. **O item 4 da Parte F.1:** como deixar as sessões de teste fora de tudo. A proposta está no roteiro, seção 3. **Até a decisão, as sessões de teste não devem ser gravadas.**
+3. **O M7 na IA** ainda dá "aplica" em 9 das 14 curvas, mesmo com a retomada nova. É uma limitação para uma rodada 3. Não proponho nada agora, porque os rótulos do kit não incluem o M7.
+
+### O que falta (depois da parada)
+
+- **A Parte B**, quando as gravações da IA em níveis estiverem anotadas (`docs/experimentos/ia_niveis.csv`).
+- **A Parte E.2**, quando os rótulos do kit 2 e da consistência chegarem:
+  - a precisão e a revocação das duas rodadas;
+  - o kappa;
+  - a galeria;
+  - a seção da H.4 no relatório do 38.
+- **A Parte F.2**, depois da decisão do item 4 e das sessões de teste.
+- **A Parte G:**
+  - a seção da rodada 2 com os resultados e a validação, em `docs/modelo2_tecnica_e_estilo.md`;
+  - as linhas da lista viva;
+  - a arquitetura, se mudar.
+- **O merge em `develop` e o envio.**
+
+### Testes
+
+**A suíte do backend, na pasta do 48, depois de todo o código desta etapa:** 1.059 passam, nenhuma falha (10 min 0 s). Antes do código das Partes C e D eram 1.051. A saída está em `docs/handoff/2026-10-29_42_modelo2-rodada-2_pytest.txt`, que substitui a da tarde.
+
+O arquivo do Modelo 2 (`tests/test_modelo2.py`) tem 50 testes: os do 38, os 7 do item 6 e os 8 da Parte D.5, todos passando.
+
+### O envio
+
+O controle de permissões recusou o `push` neste pedido, então não tentei de novo. O remoto tem a branch em `1e1ea229`. Rode pelo terminal, um comando por vez:
+
+```bash
+git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer-48 push origin etapa/modelo2-rodada-2
+```
+
+```bash
+git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer-48 ls-remote origin refs/heads/etapa/modelo2-rodada-2
+```
+
+O hash do `ls-remote` deve ser o de `git -C C:/Users/Dokas/Desktop/f1-telemetry-analyzer-48 rev-parse etapa/modelo2-rodada-2`.
+
+**A conferência antes do envio:**
+
+- os commits desta etapa mudam `backend/`, `docs/` e os arquivos de `docs/handoff/` e `docs/experimentos/` listados no começo;
+- o maior é o kit 2 (6,6 MB). Nada passa de 50 MB;
+- nenhuma gravação, nenhum arquivo de `data/` e nenhum segredo;
+- os gabaritos (`kit2_gabarito.json` e o do 38) ficam fora do git.
+
+---
+
+# Os relatórios anteriores deste pedido, como foram gravados
+
+
+## A tarde de 17/11: a Parte A e o código do item 6: a Parte A e o código do item 6
 
 O Eduardo decidiu na "Atualização de 17/11, à tarde" do pedido:
 
