@@ -1,9 +1,12 @@
 # Relatório do pedido 54: a trava do store v2 (parada antes da rodada, A.5)
 
 - **Pedido:** `docs/prompts/2026-11-17_54_trava-do-store-v2.md`.
-- **Situação:** **parado antes da rodada (A.5),** como o pedido manda.
-  - A Parte 0 e as Partes A.1 a A.4 estão feitas.
-  - A rodada (A.6), o antes e o depois (A.7), o merge (A.8) e a Parte B ficam para depois do seu sinal.
+- **Situação:** **a Parte A está feita e em `develop`** (o merge é o `64fe180a`).
+  - A rodada aprovou o store, com as 3 sessões aceitas com margem: +1,980, +1,643 e +1,590 ms.
+  - O relatório de evolução foi refeito contra a volta do modelo.
+  - O pedido 42 pode retomar.
+  - **A Parte B (a causa) está em andamento:** as hipóteses já estão registradas, e as contas vêm a seguir.
+  - A parada antes da rodada (A.5) está registrada abaixo, como foi escrita.
 - **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47`.
 - **Branch:** `etapa/trava-do-store-v2`, a partir de `develop` em `14fe1ca0`.
 - **Commits** (na branch, nenhum merge):
@@ -208,6 +211,30 @@ Os testes da checagem que já existiam (`test_regua_do_periodo.py`, `test_store_
 | `evolucao\resumo.json` | `16F0C64F631C5EF4` | não (novo) |
 | `evolucao\painel.html` | `4EA2A8B13ECFF02D` | não (novo) |
 | `evolucao\sessao_*.json` | 16 arquivos, de 21:31:57 a 21:32:04 | 12 refeitos e 4 novos |
+
+## A.8, o merge da Parte A em `develop` (18/11)
+
+- **Antes:**
+  - `develop` não tinha andado: estava em `14fe1ca0` no local e no remoto, o mesmo ponto de partida da branch. Não houve o que trazer, nem conflito;
+  - nenhuma pasta estava com `develop` aberta: a principal está em `etapa/engenheiro`, e a do 48 em `etapa/modelo2-rodada-2`;
+  - nenhuma trava do git.
+- **O merge:** `64fe180a` Merge do pedido 54, Parte A: as sessoes aceitas com margem na checagem da linha do jogo (ate 2,0 ms; ADR 0007) e o store v2 reaprovado. É um `--no-ff`, sem conflito.
+- **Este registro** foi commitado em `develop`. Depois, a branch do pedido avançou até ele, e **a pasta do 47 voltou para `etapa/trava-do-store-v2`.** `develop` fica livre para a pasta principal fazer o merge do 52.
+- **O pedido 42 pode retomar.**
+  - O store v2 está com `aprovado: true`.
+  - As chaves que ele lê no meta são `sessoes_aceitas_com_margem` e `margem_linha_do_jogo_ms` (veja A.2).
+
+| envio | ref | hash local | hash no remoto (`git ls-remote origin`) | confere |
+|---|---|---|---|---|
+| a parada da A.5 | `etapa/trava-do-store-v2` (nova) | `b9cd4069d91b70b87633c03bc4405dc5eed8896a` | `b9cd4069d91b70b87633c03bc4405dc5eed8896a` | sim |
+| A.6 e A.7 | `etapa/trava-do-store-v2` | `d8e07ff036a8b7b42e79cc6f4b326e512d228e68` | `d8e07ff036a8b7b42e79cc6f4b326e512d228e68` | sim |
+| o merge | `develop` | `64fe180af3a27aa7fd301fd8086b42803b85914f` | `64fe180af3a27aa7fd301fd8086b42803b85914f` | sim |
+
+- Todos foram avanços simples, sem `--force`.
+- `main` e as tags não foram.
+- **Conferido antes do envio de `develop`:** as 9 mudanças desde `14fe1ca0` não têm nada acima de 50 MB, nenhuma gravação, nada de `data/ml` e nenhum segredo.
+
+**A Parte B vem a seguir, nesta branch.** As hipóteses estão registradas logo abaixo, antes das contas.
 
 ## Parte B: as hipóteses, registradas antes das contas (17/11, 21:20)
 
