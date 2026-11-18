@@ -235,6 +235,11 @@ Os testes da checagem que já existiam (`test_regua_do_periodo.py`, `test_store_
 | a parada da A.5 | `etapa/trava-do-store-v2` (nova) | `b9cd4069d91b70b87633c03bc4405dc5eed8896a` | `b9cd4069d91b70b87633c03bc4405dc5eed8896a` | sim |
 | A.6 e A.7 | `etapa/trava-do-store-v2` | `d8e07ff036a8b7b42e79cc6f4b326e512d228e68` | `d8e07ff036a8b7b42e79cc6f4b326e512d228e68` | sim |
 | o merge | `develop` | `64fe180af3a27aa7fd301fd8086b42803b85914f` | `64fe180af3a27aa7fd301fd8086b42803b85914f` | sim |
+| o registro do merge da Parte A | `develop` e a branch | `46acad97b1de2c98014a81510ff4733a0fce1ddc` | `46acad97b1de2c98014a81510ff4733a0fce1ddc` | sim |
+| a Parte B | `etapa/trava-do-store-v2` | `f293932613352a99de099b82a79dcd8eacd9ae3d` | `f293932613352a99de099b82a79dcd8eacd9ae3d` | sim |
+| o merge da Parte B (`a21065a0`, `--no-ff`, sem conflito; só documentos) | `develop` | `a21065a017a031e85ec1a7aa0d63f193080857cc` | `a21065a017a031e85ec1a7aa0d63f193080857cc` | sim |
+
+O último commit (este registro, `Relatorio do pedido 54: o merge da Parte B conferido`) foi feito em `develop`. A branch avançou até ele por avanço simples, e a pasta do 47 voltou para `etapa/trava-do-store-v2`. O hash dele está no chat.
 
 - Todos foram avanços simples, sem `--force`.
 - `main` e as tags não foram.
