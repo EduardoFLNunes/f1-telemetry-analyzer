@@ -628,3 +628,51 @@ A emenda foi decidida pelo Eduardo em 18/11, depois de ver a rodada 2.
 - **Se a rodada 3 mostrar outro defeito,** nada muda depois de ver os números: ele é relatado e vira proposta.
 - **A precisão (E.2)** sai para as três rodadas, com os mesmos rótulos. O kit 2 não muda.
 - **O M7 na IA** fica registrado como limitação: ele dá "aplica" em 9 das 14 curvas na rodada 2, porque o volante da IA continua crescendo depois da retomada. Nada muda nele agora.
+
+---
+
+## 6. Rodada 4: a entrada a partir do início da frenagem (registrado em 18/11/2026, antes de rodar)
+
+Pedido 42, "Atualização de 18/11, à tarde", item 1. A seção 5 não muda. A rodada 4 muda só onde a união dos trechos da entrada pode começar. **É a última mudança de regra antes dos rótulos** (item 2).
+
+### 6.1 Por que
+
+**O que a rodada 3 mostrou:** ela resolveu a entrada na C01, na C07, na C12 e na C14, mas sobrou um segundo defeito.
+
+- **Onde:** na C04 (29 passagens minhas) e na C06 (17).
+- **O que acontece:** uma correção de volante na reta, depois do fim da curva anterior, passa de 0,15·δ_pk e é unida à entrada pela troca de sinal. Na C04, a entrada dessas passagens ficou a uns 576 m da curva (mediana).
+
+A emenda foi proposta no relatório de 18/11 e aprovada pelo Eduardo em 18/11, à tarde.
+
+### 6.2 A regra
+
+- **O limiar e a troca de sinal não mudam:** 0,15·δ_pk, e 0,05·δ_pk para o outro lado no buraco.
+- **A união só vale a partir do início da fase de frenagem, b_k, até o ápice.** É a mesma janela do E4 da seção 4.2.
+  - Nas curvas sem frenagem (C03, C05, C11, C13 e C14), b_k = a_k.
+  - Dois trechos só são unidos quando os dois estão nesse intervalo, ou seja, quando o trecho anterior começa em b_k ou depois.
+  - Um trecho que começa antes de b_k nunca é unido; fora disso, a sequência é cortada como na rodada 1.
+- **Um trecho único,** sem buraco, que já começa antes de b_k, continua como na rodada 1. Nada é unido aí.
+- **Como b_k fica** sempre entre e_(k−1) e a_k (seção 1.3), a janela da rodada 4 fica dentro da janela da rodada 3. A rodada 4 só pode unir menos.
+- **Na C01,** depois da C14, vale a mesma definição das fases, com o módulo do comprimento da volta.
+
+### 6.3 O que não muda
+
+O resto é a rodada 3:
+
+- a família (a lista da seção 4.3) e a recalibração pela mesma regra, nas mesmas passagens da IA;
+- a retomada, a janela do E4, o ranking sem peso;
+- a referência (a volta do modelo e a `#0013` só como comparação);
+- a margem de ±2 ms e os 144 `lap_id`;
+- o E2 com a geometria do pedido 39.
+
+### 6.4 As saídas e o relato
+
+- **As saídas** vão para `data/ml/modelo2/rodada4/`, com o próprio gabarito do kit 2. Nada das rodadas 1 a 3 é sobrescrito.
+- **O relato, ao lado da rodada 3:**
+  - o recuo da entrada por curva. Na C04 e na C06, ele deve ficar perto de zero;
+  - nas outras curvas, a confirmação de que nada mudou, ou o que mudou e por quê;
+  - o E1, o F5, o E5 e o E6 por curva, eu e a IA;
+  - o E4, que não deve mudar, porque a janela é a mesma;
+  - o modelo leve, os 3 maiores erros por sessão e o fechamento das fases.
+- **Se a rodada 4 mostrar outro defeito,** nada muda: ele fica relatado e registrado como trabalho futuro.
+- **A E.2** julga as quatro rodadas como estão, com os mesmos rótulos. A rodada que vale para o TCC é a 4; as outras aparecem como o caminho até ela.
