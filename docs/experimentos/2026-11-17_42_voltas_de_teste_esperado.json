@@ -1,0 +1,1036 @@
+{
+ "comportamentos": {
+  "P01": {
+   "nome": "Frear antes",
+   "detectores": "F1",
+   "curvas": [
+    "C01",
+    "C04"
+   ],
+   "acao": "Na {c}, comece a frear uma placa antes (uns 30 m) do seu ponto de sempre, com a mesma força.",
+   "aplica": [],
+   "nao_aplica": [
+    "F1"
+   ],
+   "nao_devem_mudar": [
+    "F4",
+    "F5",
+    "E4",
+    "E5",
+    "M7",
+    "M8"
+   ],
+   "estilo": ""
+  },
+  "P02": {
+   "nome": "Pico do freio lento",
+   "detectores": "F2, F3",
+   "curvas": [
+    "C06",
+    "C10"
+   ],
+   "acao": "Na {c}, aperte o freio devagar, levando quase 1 s para chegar ao máximo.",
+   "aplica": [],
+   "nao_aplica": [
+    "F2",
+    "F3"
+   ],
+   "nao_devem_mudar": [
+    "F1",
+    "E5",
+    "M7",
+    "M8"
+   ],
+   "estilo": "perfil de frenagem: o pico mais tarde"
+  },
+  "P03": {
+   "nome": "Soltura em degrau",
+   "detectores": "F4, V3",
+   "curvas": [
+    "C01",
+    "C10"
+   ],
+   "acao": "Na {c}, no fim da frenagem, solte o freio de uma vez, antes de virar.",
+   "aplica": [
+    "V3"
+   ],
+   "nao_aplica": [
+    "F4",
+    "F5"
+   ],
+   "nao_devem_mudar": [
+    "F1",
+    "F2",
+    "M8"
+   ],
+   "estilo": "perfil de frenagem: a soltura mais rápida"
+  },
+  "P04": {
+   "nome": "Trail braking",
+   "detectores": "F5",
+   "curvas": [
+    "C04",
+    "C12"
+   ],
+   "acao": "Na {c}, continue com um pouco de freio enquanto começa a virar e vá soltando aos poucos até perto do ápice.",
+   "aplica": [
+    "F5",
+    "F4"
+   ],
+   "nao_aplica": [],
+   "nao_devem_mudar": [
+    "F1",
+    "F2",
+    "M8"
+   ],
+   "estilo": ""
+  },
+  "P05": {
+   "nome": "Pé esquerdo",
+   "detectores": "F7",
+   "curvas": [
+    "C06",
+    "C09"
+   ],
+   "acao": "Na {c}, freie com o pé esquerdo e mantenha um pouco de acelerador junto por meio segundo.",
+   "aplica": [
+    "F7"
+   ],
+   "nao_aplica": [],
+   "nao_devem_mudar": [
+    "F1",
+    "E5",
+    "M7"
+   ],
+   "estilo": "uso dos pedais: F7 maior"
+  },
+  "P06": {
+   "nome": "Virar cedo",
+   "detectores": "E1",
+   "curvas": [
+    "C06",
+    "C12"
+   ],
+   "acao": "Na {c}, comece a virar uns 15 m antes do seu ponto de sempre.",
+   "aplica": [
+    "E1"
+   ],
+   "nao_aplica": [],
+   "nao_devem_mudar": [
+    "F2",
+    "F4",
+    "F7",
+    "M8"
+   ],
+   "estilo": "aplicação do volante; o M2 pode ir junto (ápice antecipado)"
+  },
+  "P07": {
+   "nome": "Volante em zigue-zague",
+   "detectores": "E5, E6",
+   "curvas": [
+    "C09",
+    "C11"
+   ],
+   "acao": "No meio da {c}, faça 3 ou 4 correções pequenas no volante, para lá e para cá.",
+   "aplica": [
+    "E5"
+   ],
+   "nao_aplica": [
+    "E6"
+   ],
+   "nao_devem_mudar": [
+    "F1",
+    "F4",
+    "M8"
+   ],
+   "estilo": "aplicação do volante: mais reversões"
+  },
+  "P08": {
+   "nome": "Curva devagar",
+   "detectores": "M1",
+   "curvas": [
+    "C03",
+    "C11"
+   ],
+   "acao": "Faça a {c} uns 20 km/h abaixo do normal, tirando o pé um pouco antes.",
+   "aplica": [],
+   "nao_aplica": [
+    "M1"
+   ],
+   "nao_devem_mudar": [
+    "F4",
+    "F7",
+    "E5"
+   ],
+   "estilo": ""
+  },
+  "P09": {
+   "nome": "Ápice cedo",
+   "detectores": "M2",
+   "curvas": [
+    "C06",
+    "C10"
+   ],
+   "acao": "Na {c}, mire o ápice cedo: chegue ao miolo antes e saia aberto.",
+   "aplica": [
+    "M2"
+   ],
+   "nao_aplica": [],
+   "nao_devem_mudar": [
+    "F2",
+    "F4",
+    "F7"
+   ],
+   "estilo": "o E1 pode ir junto"
+  },
+  "P10": {
+   "nome": "Curva em V",
+   "detectores": "M3",
+   "curvas": [
+    "C06",
+    "C12"
+   ],
+   "acao": "Na {c}, freie mais fundo, vire rápido no ponto mais lento e acelere cedo: a curva em V.",
+   "aplica": [],
+   "nao_aplica": [
+    "M3"
+   ],
+   "nao_devem_mudar": [
+    "F1",
+    "F7",
+    "E5"
+   ],
+   "estilo": "forma V ou U: mais V"
+  },
+  "P11": {
+   "nome": "Curva em U",
+   "detectores": "M3",
+   "curvas": [
+    "C04",
+    "C09"
+   ],
+   "acao": "Na {c}, entre mais rápido e segure a velocidade mínima por mais tempo, com o volante parado: a curva em U.",
+   "aplica": [
+    "M3"
+   ],
+   "nao_aplica": [],
+   "nao_devem_mudar": [
+    "F7",
+    "E5",
+    "M8"
+   ],
+   "estilo": "forma V ou U: mais U"
+  },
+  "P12": {
+   "nome": "Saída fechada",
+   "detectores": "M4",
+   "curvas": [
+    "C04",
+    "C12"
+   ],
+   "acao": "Na saída da {c}, fique perto do meio da pista, sem abrir até a zebra de fora.",
+   "aplica": [],
+   "nao_aplica": [
+    "M4"
+   ],
+   "nao_devem_mudar": [
+    "F1",
+    "F4",
+    "F5",
+    "E5"
+   ],
+   "estilo": ""
+  },
+  "P13": {
+   "nome": "Sem pedal",
+   "detectores": "M5",
+   "curvas": [
+    "C06",
+    "C10"
+   ],
+   "acao": "Na {c}, depois de soltar o freio, fique cerca de 1 s sem freio e sem acelerador antes de acelerar.",
+   "aplica": [
+    "M5"
+   ],
+   "nao_aplica": [
+    "M6"
+   ],
+   "nao_devem_mudar": [
+    "F1",
+    "F2",
+    "E5"
+   ],
+   "estilo": ""
+  },
+  "P14": {
+   "nome": "Retomada tarde",
+   "detectores": "M6",
+   "curvas": [
+    "C10",
+    "C12"
+   ],
+   "acao": "Na {c}, espere 1 s a mais depois do ponto mais lento antes de acelerar.",
+   "aplica": [],
+   "nao_aplica": [
+    "M6"
+   ],
+   "nao_devem_mudar": [
+    "F1",
+    "F4",
+    "E5"
+   ],
+   "estilo": "perfil do acelerador: do ápice ao pleno mais longo"
+  },
+  "P15": {
+   "nome": "Acelerar cedo e abrir o volante",
+   "detectores": "M7",
+   "curvas": [
+    "C06",
+    "C10"
+   ],
+   "acao": "Na {c}, acelere antes do ápice e, quando a frente abrir, aumente o volante para segurar a linha.",
+   "aplica": [
+    "M7"
+   ],
+   "nao_aplica": [
+    "M6"
+   ],
+   "nao_devem_mudar": [
+    "F1",
+    "F4"
+   ],
+   "estilo": ""
+  },
+  "P16": {
+   "nome": "Alívio na saída",
+   "detectores": "M8",
+   "curvas": [
+    "C08",
+    "C12"
+   ],
+   "acao": "Na saída da {c}, acelere até a metade, tire o pé e acelere de novo.",
+   "aplica": [
+    "M8"
+   ],
+   "nao_aplica": [
+    "M6"
+   ],
+   "nao_devem_mudar": [
+    "F1",
+    "F4",
+    "E5"
+   ],
+   "estilo": "perfil do acelerador"
+  },
+  "P17": {
+   "nome": "Meio pedal e troca cedo",
+   "detectores": "V1, V2",
+   "curvas": [
+    "volta"
+   ],
+   "acao": "Nesta volta inteira, use meio acelerador nas saídas e troque de marcha uns 1.000 rpm antes do normal.",
+   "aplica": [],
+   "nao_aplica": [
+    "V1",
+    "V2"
+   ],
+   "nao_devem_mudar": [
+    "F1",
+    "F4",
+    "E5"
+   ],
+   "estilo": ""
+  },
+  "P18": {
+   "nome": "Entrar rápido demais",
+   "detectores": "E2",
+   "curvas": [
+    "C09",
+    "C12"
+   ],
+   "acao": "Entre na {c} uns 10 km/h mais rápido que o normal e segure a linha com mais volante.",
+   "aplica": [
+    "E2"
+   ],
+   "nao_aplica": [],
+   "nao_devem_mudar": [
+    "F4",
+    "F7"
+   ],
+   "estilo": "resposta na entrada: menos guinada por volante"
+  },
+  "P19": {
+   "nome": "Redução brusca",
+   "detectores": "F8",
+   "curvas": [
+    "C01",
+    "C10"
+   ],
+   "acao": "Na {c}, reduza duas marchas de uma vez, cedo, ainda em alta.",
+   "aplica": [
+    "F8"
+   ],
+   "nao_aplica": [],
+   "nao_devem_mudar": [
+    "F4",
+    "F7"
+   ],
+   "estilo": "o E3 pode ir junto"
+  },
+  "P20": {
+   "nome": "Travar a roda",
+   "detectores": "F6",
+   "curvas": [
+    "C01",
+    "C04"
+   ],
+   "acao": "Na {c}, pise o freio com força total e de uma vez, em linha reta.",
+   "aplica": [
+    "F6"
+   ],
+   "nao_aplica": [],
+   "nao_devem_mudar": [
+    "E5",
+    "M8"
+   ],
+   "estilo": "pode não travar, se o carro tiver ABS"
+  },
+  "P21": {
+   "nome": "Sobresterço de potência",
+   "detectores": "E3, E4, M9",
+   "curvas": [
+    "C08",
+    "C12"
+   ],
+   "acao": "Na saída da {c}, acelere de uma vez até o fim, em marcha baixa.",
+   "aplica": [
+    "M9",
+    "E3",
+    "E4"
+   ],
+   "nao_aplica": [],
+   "nao_devem_mudar": [
+    "F1",
+    "F4"
+   ],
+   "estilo": "o último bloco: pode rodar"
+  }
+ },
+ "nao_provocaveis": {
+  "V4": "pneus na faixa da IA: a temperatura do pneu acompanha o ritmo de várias voltas e não muda numa passagem; provocar exigiria estragar o resto da sessão",
+  "V5": "consistência: mede o desvio de 5 voltas ou mais por sessão e curva; uma sessão de provocações é inconsistente por construção e não testa o detector"
+ },
+ "sessoes": {
+  "1": [
+   [
+    "P01",
+    "P16"
+   ],
+   [
+    "P02",
+    "P12"
+   ],
+   [
+    "P03",
+    "P07"
+   ],
+   [
+    "P04",
+    "P13"
+   ],
+   [
+    "P05",
+    "P14"
+   ],
+   [
+    "P06",
+    "P08"
+   ]
+  ],
+  "2": [
+   [
+    "P09",
+    "P11"
+   ],
+   [
+    "P10",
+    "P15"
+   ],
+   [
+    "P17"
+   ],
+   [
+    "P18",
+    "P19"
+   ],
+   [
+    "P20",
+    "P21"
+   ]
+  ]
+ },
+ "voltas": [
+  {
+   "sessao": 1,
+   "volta": 1,
+   "tipo": "saída dos boxes",
+   "itens": []
+  },
+  {
+   "sessao": 1,
+   "volta": 2,
+   "tipo": "bloco 1",
+   "itens": [
+    {
+     "comportamento": "P01",
+     "curva": "C01"
+    },
+    {
+     "comportamento": "P16",
+     "curva": "C08"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 3,
+   "tipo": "bloco 1",
+   "itens": [
+    {
+     "comportamento": "P01",
+     "curva": "C04"
+    },
+    {
+     "comportamento": "P16",
+     "curva": "C12"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 4,
+   "tipo": "bloco 1",
+   "itens": [
+    {
+     "comportamento": "P01",
+     "curva": "C01"
+    },
+    {
+     "comportamento": "P16",
+     "curva": "C08"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 5,
+   "tipo": "volta normal (controle)",
+   "itens": []
+  },
+  {
+   "sessao": 1,
+   "volta": 6,
+   "tipo": "bloco 2",
+   "itens": [
+    {
+     "comportamento": "P02",
+     "curva": "C06"
+    },
+    {
+     "comportamento": "P12",
+     "curva": "C12"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 7,
+   "tipo": "bloco 2",
+   "itens": [
+    {
+     "comportamento": "P02",
+     "curva": "C06"
+    },
+    {
+     "comportamento": "P12",
+     "curva": "C12"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 8,
+   "tipo": "bloco 2",
+   "itens": [
+    {
+     "comportamento": "P02",
+     "curva": "C06"
+    },
+    {
+     "comportamento": "P12",
+     "curva": "C12"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 9,
+   "tipo": "volta normal (controle)",
+   "itens": []
+  },
+  {
+   "sessao": 1,
+   "volta": 10,
+   "tipo": "bloco 3",
+   "itens": [
+    {
+     "comportamento": "P03",
+     "curva": "C01"
+    },
+    {
+     "comportamento": "P07",
+     "curva": "C09"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 11,
+   "tipo": "bloco 3",
+   "itens": [
+    {
+     "comportamento": "P03",
+     "curva": "C01"
+    },
+    {
+     "comportamento": "P07",
+     "curva": "C11"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 12,
+   "tipo": "bloco 3",
+   "itens": [
+    {
+     "comportamento": "P03",
+     "curva": "C01"
+    },
+    {
+     "comportamento": "P07",
+     "curva": "C09"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 13,
+   "tipo": "volta normal (controle)",
+   "itens": []
+  },
+  {
+   "sessao": 1,
+   "volta": 14,
+   "tipo": "bloco 4",
+   "itens": [
+    {
+     "comportamento": "P04",
+     "curva": "C04"
+    },
+    {
+     "comportamento": "P13",
+     "curva": "C10"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 15,
+   "tipo": "bloco 4",
+   "itens": [
+    {
+     "comportamento": "P04",
+     "curva": "C04"
+    },
+    {
+     "comportamento": "P13",
+     "curva": "C10"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 16,
+   "tipo": "bloco 4",
+   "itens": [
+    {
+     "comportamento": "P04",
+     "curva": "C04"
+    },
+    {
+     "comportamento": "P13",
+     "curva": "C10"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 17,
+   "tipo": "volta normal (controle)",
+   "itens": []
+  },
+  {
+   "sessao": 1,
+   "volta": 18,
+   "tipo": "bloco 5",
+   "itens": [
+    {
+     "comportamento": "P05",
+     "curva": "C06"
+    },
+    {
+     "comportamento": "P14",
+     "curva": "C10"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 19,
+   "tipo": "bloco 5",
+   "itens": [
+    {
+     "comportamento": "P05",
+     "curva": "C09"
+    },
+    {
+     "comportamento": "P14",
+     "curva": "C12"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 20,
+   "tipo": "bloco 5",
+   "itens": [
+    {
+     "comportamento": "P05",
+     "curva": "C06"
+    },
+    {
+     "comportamento": "P14",
+     "curva": "C10"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 21,
+   "tipo": "volta normal (controle)",
+   "itens": []
+  },
+  {
+   "sessao": 1,
+   "volta": 22,
+   "tipo": "bloco 6",
+   "itens": [
+    {
+     "comportamento": "P06",
+     "curva": "C06"
+    },
+    {
+     "comportamento": "P08",
+     "curva": "C03"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 23,
+   "tipo": "bloco 6",
+   "itens": [
+    {
+     "comportamento": "P06",
+     "curva": "C06"
+    },
+    {
+     "comportamento": "P08",
+     "curva": "C11"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 24,
+   "tipo": "bloco 6",
+   "itens": [
+    {
+     "comportamento": "P06",
+     "curva": "C06"
+    },
+    {
+     "comportamento": "P08",
+     "curva": "C03"
+    }
+   ]
+  },
+  {
+   "sessao": 1,
+   "volta": 25,
+   "tipo": "volta normal (controle)",
+   "itens": []
+  },
+  {
+   "sessao": 2,
+   "volta": 1,
+   "tipo": "saída dos boxes",
+   "itens": []
+  },
+  {
+   "sessao": 2,
+   "volta": 2,
+   "tipo": "bloco 1",
+   "itens": [
+    {
+     "comportamento": "P09",
+     "curva": "C10"
+    },
+    {
+     "comportamento": "P11",
+     "curva": "C04"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 3,
+   "tipo": "bloco 1",
+   "itens": [
+    {
+     "comportamento": "P09",
+     "curva": "C10"
+    },
+    {
+     "comportamento": "P11",
+     "curva": "C04"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 4,
+   "tipo": "bloco 1",
+   "itens": [
+    {
+     "comportamento": "P09",
+     "curva": "C10"
+    },
+    {
+     "comportamento": "P11",
+     "curva": "C04"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 5,
+   "tipo": "volta normal (controle)",
+   "itens": []
+  },
+  {
+   "sessao": 2,
+   "volta": 6,
+   "tipo": "bloco 2",
+   "itens": [
+    {
+     "comportamento": "P10",
+     "curva": "C12"
+    },
+    {
+     "comportamento": "P15",
+     "curva": "C06"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 7,
+   "tipo": "bloco 2",
+   "itens": [
+    {
+     "comportamento": "P10",
+     "curva": "C12"
+    },
+    {
+     "comportamento": "P15",
+     "curva": "C06"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 8,
+   "tipo": "bloco 2",
+   "itens": [
+    {
+     "comportamento": "P10",
+     "curva": "C12"
+    },
+    {
+     "comportamento": "P15",
+     "curva": "C06"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 9,
+   "tipo": "volta normal (controle)",
+   "itens": []
+  },
+  {
+   "sessao": 2,
+   "volta": 10,
+   "tipo": "bloco 3",
+   "itens": [
+    {
+     "comportamento": "P17",
+     "curva": "volta"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 11,
+   "tipo": "bloco 3",
+   "itens": [
+    {
+     "comportamento": "P17",
+     "curva": "volta"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 12,
+   "tipo": "bloco 3",
+   "itens": [
+    {
+     "comportamento": "P17",
+     "curva": "volta"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 13,
+   "tipo": "volta normal (controle)",
+   "itens": []
+  },
+  {
+   "sessao": 2,
+   "volta": 14,
+   "tipo": "bloco 4",
+   "itens": [
+    {
+     "comportamento": "P18",
+     "curva": "C09"
+    },
+    {
+     "comportamento": "P19",
+     "curva": "C01"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 15,
+   "tipo": "bloco 4",
+   "itens": [
+    {
+     "comportamento": "P18",
+     "curva": "C12"
+    },
+    {
+     "comportamento": "P19",
+     "curva": "C01"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 16,
+   "tipo": "bloco 4",
+   "itens": [
+    {
+     "comportamento": "P18",
+     "curva": "C09"
+    },
+    {
+     "comportamento": "P19",
+     "curva": "C01"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 17,
+   "tipo": "volta normal (controle)",
+   "itens": []
+  },
+  {
+   "sessao": 2,
+   "volta": 18,
+   "tipo": "bloco 5",
+   "itens": [
+    {
+     "comportamento": "P20",
+     "curva": "C01"
+    },
+    {
+     "comportamento": "P21",
+     "curva": "C08"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 19,
+   "tipo": "bloco 5",
+   "itens": [
+    {
+     "comportamento": "P20",
+     "curva": "C04"
+    },
+    {
+     "comportamento": "P21",
+     "curva": "C12"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 20,
+   "tipo": "bloco 5",
+   "itens": [
+    {
+     "comportamento": "P20",
+     "curva": "C01"
+    },
+    {
+     "comportamento": "P21",
+     "curva": "C08"
+    }
+   ]
+  },
+  {
+   "sessao": 2,
+   "volta": 21,
+   "tipo": "volta normal (controle)",
+   "itens": []
+  }
+ ],
+ "regra": "registrado antes das sessoes; nenhum limiar muda por causa do teste"
+}
