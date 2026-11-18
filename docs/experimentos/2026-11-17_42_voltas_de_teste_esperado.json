@@ -1032,5 +1032,7 @@
    "itens": []
   }
  ],
+ "pista": "vhe_interlagos_teste_m1",
+ "decisao_da_pista": "Eduardo, 18/11: as sessoes de teste na copia da pista",
  "regra": "registrado antes das sessoes; nenhum limiar muda por causa do teste"
 }

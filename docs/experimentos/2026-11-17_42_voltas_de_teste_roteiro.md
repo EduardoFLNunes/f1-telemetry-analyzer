@@ -63,7 +63,10 @@ O F6 (travar a roda) entra como tentativa: se o carro tiver ABS, a roda pode nã
 
 ## 2. A sessão
 
-- **A pista:** a original (`vhe_interlagos`), e não a cópia (`vhe_interlagos_teste_m1`).
+- **A pista: a cópia, `vhe_interlagos_teste_m1`.** No Content Manager, escolha "Interlagos [teste]", com o preset de sempre (o carro, o setup e as ajudas de sempre). É a decisão do Eduardo de 18/11, e a conferência está na seção 3.
+  - A cópia tem a mesma geometria da original (`geometry_id` `0ed16f0dd2225990`, ADR 0032, item 2).
+  - Conferi em 18/11, na pasta do jogo, os mesmos arquivos de superfície: o `vhe_interlagos.kn5` (`ce1f3bb2…`) e o `gp/data/surfaces.ini` (`4520b16b…`) são iguais nas duas pastas.
+  - As curvas, as fases e os números C01 a C14 são os mesmos.
 - **As voltas:**
   - no máximo dois comportamentos por volta, em curvas a pelo menos 3 curvas de distância uma da outra;
   - uma volta normal depois de cada bloco de 3 voltas.
@@ -123,39 +126,37 @@ O F6 (travar a roda) entra como tentativa: se o carro tiver ABS, a roda pode nã
 | 2 | 20 | bloco 5 | P20 na C01; P21 na C08 |
 | 2 | 21 | volta normal (controle) | volta normal (controle) |
 
-## 3. As sessões de teste fora de tudo o que mede a evolução (item 4): **sem jeito limpo com o que já existe; proposta e parada neste item**
+## 3. As sessões de teste fora de tudo o que mede a evolução (item 4)
 
-As sessões de teste têm de ficar fora de:
+**A decisão do Eduardo (18/11):**
 
-- o coach;
-- a "Sua melhor volta" do app;
-- o engenheiro (a melhor da sessão e a volta lenta);
-- o relatório de evolução;
-- a avaliação do aprendizado;
-- os treinos dos modelos, a LSTM incluída.
+- as sessões de teste são gravadas na cópia da pista;
+- nenhum código fora do Modelo 2 muda por causa disso;
+- se algum ponto da conferência abaixo falhasse, este pedido parava.
 
-**O que existe hoje:**
+**A proposta de 17/11** (uma coluna `finalidade` na anotação de sessão) ficou sem efeito.
 
-- **A anotação de sessão** (`docs/experimentos/anotacoes_de_sessao.csv`, lida por `ml/data/session_annotations.py`) só sabe dizer **quem pilotou**: `humano`, `ia`, `misturada` ou `desconhecida`.
-  - Anotar a sessão de teste como `desconhecida` tiraria as voltas do store como voltas do piloto e, por isso, do coach, da "Sua melhor volta" (quando o coach for refeito), do relatório de evolução e dos treinos.
-  - Mas seria uma origem falsa: fui eu que pilotei.
-  - E tiraria as voltas também do Modelo 2, que só lê voltas `humano` e `ia`: a Parte F.2 não teria o que analisar.
-- **As pistas de teste** (`config.TEST_TRACK_NAMES`) ficam fora de tudo, mas só valem para a cópia da pista. O teste tem de ser na original.
-- **O engenheiro (pedido 52) é ao vivo.** Durante a sessão de teste, a "melhor da sessão" e a "volta lenta" dele seriam as das voltas provocadas. Nenhuma marca depois da sessão muda isso.
+**A conferência (18/11, pelo código de `develop` e da branch do pedido 52, sem rodar nada no jogo).** Uma sessão minha na cópia fica fora de:
 
-**A proposta** (código novo; não fiz, porque o pedido manda parar neste item):
+| o quê | por quê | fica fora? |
+|---|---|---|
+| o store v2 | o construtor lista as gravações com `list_all_sessions()`, que deixa as pistas de teste (`config.TEST_TRACK_NAMES`) sempre fora, salvo pedindo (`incluir_pistas_de_teste=True`) | sim |
+| o coach: as duas referências e a seleção das minhas voltas | o `atualizar_coach` e o construtor do modelo (`tools/train_reference_model.py`) usam o mesmo `list_all_sessions()` e o inventário (`build_inventory`, idem). A volta do modelo vem do arquivo próprio dela (`vhe_interlagos`) | sim |
+| a "Sua melhor volta" | é a `minha_melhor` do modelo do coach, feita pelo mesmo construtor; o "recorde pessoal" do rádio vem do store | sim |
+| o relatório de evolução | é feito do store v2 | sim |
+| os treinos | o retreino da LSTM (`retreino_lstm.py`) usa `list_all_sessions()`; o Modelo 1 e a validação usam o store (`lap_store.py`, idem) | sim |
+| a avaliação do aprendizado | a validação (`ml/scripts/validate.py`) lê o store | sim |
+| o Modelo 2 | o `carregar` lê o store e as gravações de fora dele pela lista sem as pistas de teste. Só a Parte F.2 lê a cópia, pedindo, com `incluir_pistas_de_teste=True`, pela sessão do roteiro, e só as minhas voltas (as da IA ficam de fora pelo `isAIControlled`) | sim (lê só pedindo) |
 
-1. **Uma coluna `finalidade` na anotação de sessão,** com o valor `teste_provocado`, sem mudar a origem, que continua `humano`.
-2. **Quem lê a marca e deixa a sessão fora:**
-   - a seleção das voltas do piloto (`evolution.driver_laps`, que alimenta a evolução, o coach e a "Sua melhor volta");
-   - os treinos (o retreino da LSTM e o Modelo 1);
-   - a avaliação do aprendizado.
+As únicas listagens das gravações que não passam pelo filtro são as do app que acham uma volta pelo id (a tela Volta e as frases do coach de uma volta já gravada). Elas não medem nada.
 
-   O store guarda as voltas com a marca, como faz com as outras.
-3. **O Modelo 2** lê as sessões `teste_provocado` só na Parte F.2, pedindo explicitamente, como o `incluir_pistas_de_teste` faz com a cópia da pista.
-4. **O engenheiro ao vivo:**
-   - **sem código:** você desliga o coach e o engenheiro no app antes de sair dos boxes nas duas sessões (a configuração "coach desligado" já existe);
-   - **com código,** como alternativa: um botão "sessão de teste" no app, que grava a marca no metadado da gravação, e o engenheiro não usa a sessão marcada.
-5. **Testes:** uma sessão marcada não entra na evolução, no coach nem nos treinos, e entra no Modelo 2 só pedindo.
+**O engenheiro (o app do jogo) na cópia: pelo código, ele cala.**
 
-**Até a decisão, as sessões de teste não devem ser gravadas.** O roteiro, a folha, o CSV e o esperado já estão prontos e commitados.
+- O coach ao vivo procura o modelo pelo nome da pista do jogo (`model_path(…, "vhe_interlagos_teste_m1")`). Esse arquivo não existe, nem na pasta principal nem na do app instalado. Sem modelo, não há a projeção na geometria oficial.
+- O rádio e o engenheiro (pedido 52) pegam a posição do carro dessa projeção (`posicao_oficial`). Sem ela, não há posição: nem os avisos do engenheiro, nem o feedback do rádio.
+- **Não foi testado no jogo:** as sessões dos pedidos 47 e 50 na cópia eram da IA, e o rádio já cala com a IA.
+- Se o engenheiro falar numa volta de teste, a volta continua valendo para o teste. Anote no CSV.
+
+**No Modelo 2 (Parte F.2):** a análise lê as sessões de teste na cópia pedindo explicitamente, pela sessão do roteiro, e só as minhas voltas. Os detectores, as fases, o envelope e a calibração são os das 144 voltas, como nas voltas depois do kit.
+
+**Tudo isso foi commitado antes de qualquer sessão de teste.**
