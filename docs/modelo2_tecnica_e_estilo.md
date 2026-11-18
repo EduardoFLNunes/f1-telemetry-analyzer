@@ -489,7 +489,8 @@ Tudo o que usa s_pu, s_ti ou a janela do E4 segue as regras novas:
   - comparados com a "Sua melhor volta", e nunca com a volta do modelo;
   - um deles explica o item quando o estado do piloto (a maioria das 3 voltas, com pelo menos 2 conclusivas) difere do estado da melhor volta, os dois são conclusivos e a diferença do indicador principal (a mediana do piloto menos a melhor volta) passa do desvio robusto do piloto naquela curva.
 - **O que sai:** entre os que explicam, vale o de maior diferença em desvios. **Se nenhum explicar, o resultado é "não conclusivo".**
-- **A IA continua nos dados:** o estado da IA em cada detector vai ao lado, como informação. Os detectores em que a IA e a melhor volta diferem do piloto, mas a melhor volta não difere da IA, são listados à parte, como na rodada 1.
+- **A IA continua nos dados:** o estado da IA em cada detector vai ao lado, como informação. Os detectores de forma em que o estado da IA difere do piloto e a melhor volta concorda com o piloto são listados à parte, como "técnica da IA que nenhuma volta minha mostra". É o equivalente da "técnica que o piloto não mostrou em nenhuma volta" da rodada 1.
+  - *Correção de redação de 17/11, antes de rodar:* a primeira redação desta frase descrevia o caso errado.
 
 ### 4.5 A margem de ±2 ms das sessões aceitas com margem
 
@@ -529,6 +530,20 @@ Tudo o que usa s_pu, s_ti ou a janela do E4 segue as regras novas:
   - o fechamento.
 
   Se não reproduzir, a diferença é relatada, e a Parte D não roda.
+
+### 4.6.1 O E2 com a geometria medida (Parte C; registrado em 17/11, antes de rodar)
+
+A seção 1.2 já previa recalcular o subesterço quando a M1 medisse o entre-eixos e a unidade do volante. Na rodada 2:
+
+- **os valores** são `L` e `k_δ` como o pedido 39 os deixou: a chave `usados` de `docs/handoff/2026-10-25_39_m1-geometria-medida_geometria.json` (`L` = 2,9636 m; `k_δ` = 0,30396 rad de roda por unidade de volante). O código lê o arquivo, e não copia os números;
+- **o que muda:** o E2, e a razão guinada ÷ ângulo de roda da resposta na entrada (estilo), que usa o mesmo `k_δ`. Os limiares do E2 (0,5° e 0,2° contra a mediana da IA) não mudam;
+- **a rodada 1 refeita** continua com a medida substituta (`L` = 2,955 m; `k_δ` = 0,267 rad);
+- **o relatório** dá, por curva, a fração de "aplica" do E2 antes e depois, para mim e para a IA.
+
+**Duas medidas a mais, só relatadas** (não mudam nenhum estado):
+
+- `contra_antes_apice_s`: a maior sequência de contraesterço da janela do E4 que acaba antes do ápice. Ela conta quantas passagens ganharam um contraesterço antes do ápice;
+- `s_pu_rel`: a posição da retomada. Ela marca no kit 2 onde a Volta de referência retoma.
 
 ### 4.7 A frenagem emendada
 

@@ -78,8 +78,37 @@ RODADA1_ARQUIVOS = ("derivados.parquet", "fora_do_store.parquet", "fora_do_store
                     "precisao_revocacao.json", "rotulagem")
 
 
+VOLTA_DO_MODELO_FILE = config.repo_root() / "data" / "reference_models" / "vhe_interlagos.volta_do_modelo.json"
+GEOMETRIA_39_FILE = config.repo_root() / "docs" / "handoff" / "2026-10-25_39_m1-geometria-medida_geometria.json"
+
+
 def raiz() -> Path:
     return config.artifacts_root() / "modelo2"
+
+
+def geometria_medida(path: Path = GEOMETRIA_39_FILE) -> Tuple[float, float]:
+    """(L, k_delta) como o pedido 39 os deixou: a chave `usados` do registro da geometria (Parte C do pedido 42)."""
+    used = json.loads(Path(path).read_text(encoding="utf-8"))["usados"]
+    return float(used["L"]), float(used["k_delta"])
+
+
+def volta_do_modelo(track: TrackGeometry, path: Path = VOLTA_DO_MODELO_FILE) -> "Volta":
+    """A "Volta de referencia" do app (ADR 0032) na grade de 2 m: tempo, lateral, posicao, velocidade, marcha e pedais.
+
+    Nao tem o volante nem a guinada. Pelo item 5 do ADR 0032, os pedais dela so
+    valem como pontos (secao 4.4 de docs/modelo2_tecnica_e_estilo.md).
+    """
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    grade = data["grade"]
+    if data.get("geometry_id") != track.geometry_id or int(grade["pontos"]) != track.size:
+        raise SystemExit(f"PARADO: a volta do modelo ({data.get('geometry_id')}, {grade['pontos']} pontos) "
+                         f"nao e da geometria do Modelo 2 ({track.geometry_id}, {track.size} pontos).")
+    grid = pd.DataFrame({"grid_index": np.arange(track.size)})
+    for column in ("elapsed_s", "lateral", "speed_kmh", "gear", "throttle", "brake"):
+        grid[column] = np.asarray([np.nan if v is None else v for v in grade[column]], dtype=float)
+    return Volta(lap_id=str(data["lap_id"]), gravacao=str(data["origem"]["sessao"]), origem="volta_do_modelo",
+                 tempo_s=float(data["tempo_s"]), grid=grid, sessao="volta_do_modelo",
+                 canais=("elapsed_s", "lateral", "speed_kmh", "gear", "throttle", "brake"))
 
 
 def pasta_da_rodada(nome: str) -> Path:

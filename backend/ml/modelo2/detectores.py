@@ -41,6 +41,14 @@ STEER_GAIN_SUBSTITUTE_RAD = 0.267
 G = 9.80665
 SLIP_RELIABLE_MAX = 10.0
 
+# Rodada 2 (pedido 42, secao 4.2 de docs/modelo2_tecnica_e_estilo.md), registrados antes de rodar.
+PICKUP_RISE = 0.10            # a subida da retomada: 0,10 acima do valor do comeco
+PICKUP_HOLD_S = 0.5           # "continua": nos 0,5 s seguintes, nunca abaixo do comeco - 0,02
+PICKUP_TOL = 0.02
+PICKUP_FULL_AT_MIN = 0.90     # acelerador ja alto na minima: s_pu = s_vmin
+TURN_IN_SIGN = 0.05           # a troca de sinal que une dois trechos da entrada (x delta_pk), o ruido do E4
+GEOMETRIA_SUBSTITUTA = (WHEELBASE_SUBSTITUTE_M, STEER_GAIN_SUBSTITUTE_RAD)
+
 # Detector -> (familia, tecnica ou erro, tipo, nome, fases para a atribuicao).
 CATALOG = {
     "F1": ("frenagem", "tecnica", "C", "referencia de frenagem"),
@@ -147,6 +155,61 @@ def count_reversals(signal: np.ndarray, gap: float) -> int:
     return count
 
 
+def turn_in_index(into: np.ndarray, d_pk: float, apex: int, rodada: int = 1) -> Optional[int]:
+    """s_ti: o comeco da sequencia de volante >= 0,15 x delta_pk, para dentro da curva, que contem o apice.
+
+    Rodada 2 (secao 4.2): dois trechos acima do limiar sao unidos quando, no buraco
+    entre eles, o volante passa para o outro lado alem de 0,05 x delta_pk.
+    """
+    segs = runs(into >= TURN_IN_SHARE * d_pk)
+    if rodada >= 2:
+        merged: List[Tuple[int, int]] = []
+        for lo, hi in segs:
+            gap = into[merged[-1][1]:lo] if merged else np.array([])
+            if merged and gap.size and np.isfinite(gap).any() and np.nanmin(gap) <= -TURN_IN_SIGN * d_pk:
+                merged[-1] = (merged[-1][0], hi)
+            else:
+                merged.append((lo, hi))
+        segs = merged
+    for lo, hi in segs:
+        if lo <= apex < hi:
+            return lo
+    return None
+
+
+def pickup_index(throttle: np.ndarray, t: np.ndarray, ivmin: int, end: int) -> Tuple[Optional[int], bool]:
+    """Rodada 2 (secao 4.2): o comeco da subida continua do acelerador depois da minima.
+
+    Devolve (indice, retomada_no_pleno). O comeco e o ultimo ponto no menor
+    acelerador visto desde s_vmin (tolerancia de 0,02); a subida tem de chegar a
+    0,10 acima dele e, nos 0,5 s depois do comeco, nao ficar abaixo dele - 0,02.
+    """
+    end = min(end, throttle.size - 1)
+    if ivmin > end:
+        return None, False
+    if throttle[ivmin] >= PICKUP_FULL_AT_MIN:
+        return ivmin, True
+    low, start = np.inf, None
+    for j in range(ivmin, end + 1):
+        x = throttle[j]
+        if x <= low + PICKUP_TOL:
+            low = min(low, x)
+            start = j
+            continue
+        if start is not None and x >= throttle[start] + PICKUP_RISE:
+            hold = (t >= t[start]) & (t <= t[start] + PICKUP_HOLD_S)
+            if not (throttle[hold] < throttle[start] - PICKUP_TOL).any():
+                return start, False
+    return None, False
+
+
+def _longest(mask: np.ndarray, t: np.ndarray) -> float:
+    longest = 0.0
+    for lo, hi in runs(mask):
+        longest = max(longest, float(t[min(hi, t.size - 1)] - t[lo]))
+    return longest
+
+
 # ------------------------------------------------------- passagem ---
 
 @dataclass
@@ -237,8 +300,15 @@ def _holes(lap: Lap, w: Window, lo: int, hi: int) -> bool:
 
 
 def measure_passage(lap: Lap, track: TrackGeometry, cp: CornerPhases, previous: CornerPhases,
-                    envelope: Callable[[np.ndarray], np.ndarray]) -> Dict[str, object]:
-    """Eventos e indicadores de uma passagem (1.4 e 1.5), sem estado."""
+                    envelope: Callable[[np.ndarray], np.ndarray], rodada: int = 1,
+                    geometria: Tuple[float, float] = GEOMETRIA_SUBSTITUTA) -> Dict[str, object]:
+    """Eventos e indicadores de uma passagem (1.4 e 1.5), sem estado.
+
+    `rodada=2` aplica as emendas da secao 4.2 (a retomada, a entrada e a janela
+    do E4). `geometria` e (L, k_delta) do E2 e da resposta na entrada: a
+    substituta da secao 1.2 ou a medida do pedido 39 (Parte C do pedido 42).
+    """
+    wheelbase, steer_gain = geometria
     w = corner_window(lap, track, cp, previous)
     o, t, step = w.offsets, w.t, track.step
     brake = np.nan_to_num(_seg(lap.a("brake"), w))
@@ -268,26 +338,33 @@ def measure_passage(lap: Lap, track: TrackGeometry, cp: CornerPhases, previous: 
             b_pk = float(brake[ib:ie].max())
             itpk = ib + int(np.flatnonzero(brake[ib:ie] >= 0.9 * b_pk)[0])
     out["freia"] = ib is not None
+    # A frenagem emendada (secao 2 e 4.7): o freio ja esta ligado no apice anterior.
+    out["freio_emendado"] = bool(ib is not None and ib == 0)
     out["s_b_rel"] = None if ib is None else (ib - a) * step
     out["pico_freio"] = b_pk if ib is not None else None
     iti = None
     if into is not None and np.isfinite(d_pk) and d_pk > 0:
-        mask = into >= TURN_IN_SHARE * d_pk
-        for lo, hi in runs(mask):
-            if lo <= apex < hi:
-                iti = lo
+        iti = turn_in_index(into, d_pk, apex, rodada)
     out["s_ti_rel"] = None if iti is None else (iti - a) * step
     ivmin = a + int(np.nanargmin(speed[a:e + 1])) if speed is not None else None
     out["s_vmin_rel"] = None if ivmin is None else (ivmin - a) * step
     out["v_min"] = None if ivmin is None else float(speed[ivmin])
-    after = max([x for x in (ie, iti) if x is not None] or [a])
     ipu = ifull = None
-    cand = np.flatnonzero(throttle[after:o["e50"] + 1] >= PICKUP)
-    if cand.size:
-        ipu = after + int(cand[0])
+    if rodada >= 2:
+        at_full = False
+        if ivmin is not None:
+            ipu, at_full = pickup_index(throttle, t, ivmin, o["e50"])
+        out["retomada_no_pleno"] = bool(at_full)
+    else:
+        after = max([x for x in (ie, iti) if x is not None] or [a])
+        cand = np.flatnonzero(throttle[after:o["e50"] + 1] >= PICKUP)
+        if cand.size:
+            ipu = after + int(cand[0])
+    if ipu is not None:
         full = np.flatnonzero(throttle[ipu:] >= FULL)
         ifull = ipu + int(full[0]) if full.size else None
     out["retoma"] = ipu is not None
+    out["s_pu_rel"] = None if ipu is None else (ipu - a) * step
 
     # ---- frenagem
     if ib is not None:
@@ -368,8 +445,8 @@ def measure_passage(lap: Lap, track: TrackGeometry, cp: CornerPhases, previous: 
         sl = slice(o["m1"], o["m2"])
         m = (np.abs(lat[sl]) >= 0.4) & (np.abs(yaw[sl]) >= 0.05) & (vx[sl] > 5.0)
         if m.any():
-            wheel = -STEER_GAIN_SUBSTITUTE_RAD * steer[sl][m]
-            ua = np.sign(yaw[sl][m]) * (wheel - WHEELBASE_SUBSTITUTE_M * yaw[sl][m] / vx[sl][m])
+            wheel = -steer_gain * steer[sl][m]
+            ua = np.sign(yaw[sl][m]) * (wheel - wheelbase * yaw[sl][m] / vx[sl][m])
             out["ua_graus"] = float(np.degrees(np.median(ua)))
         else:
             missing["E2"] = "sem pontos com |a_y| >= 0,4 g no meio"
@@ -381,20 +458,22 @@ def measure_passage(lap: Lap, track: TrackGeometry, cp: CornerPhases, previous: 
         # resposta na entrada (estilo): guinada / angulo de roda nos 0,5 s depois de s_ti
         if iti is not None and yaw is not None and steer is not None:
             span = (t >= t[iti]) & (t <= t[iti] + 0.5)
-            wheel = np.abs(STEER_GAIN_SUBSTITUTE_RAD * steer[span])
+            wheel = np.abs(steer_gain * steer[span])
             ok = wheel > 0.005
             out["guinada_por_roda"] = float(np.median(np.abs(yaw[span][ok]) / wheel[ok])) if ok.any() else None
             out["beta_entrada"] = float(np.nanmax(np.abs(beta[max(iti - a, 0):max(apex - a, 1)]))) if apex > iti else None
-    if yaw is None or steer is None or iti is None:
+    # E4: rodada 1, de s_ti a e_k; rodada 2 (secao 4.2), de b_k a e_k.
+    e4_start = o["b"] if rodada >= 2 else iti
+    if yaw is None or steer is None or e4_start is None:
         missing["E4"] = "sem guinada ou sem entrada"
     else:
         counter = (steer * yaw > 0) & (np.abs(steer) >= 0.05 * d_pk) & (np.abs(yaw) >= 0.05)
-        counter[:iti] = False
+        counter[:e4_start] = False
         counter[e + 1:] = False
-        longest = 0.0
-        for lo, hi in runs(counter):
-            longest = max(longest, float(t[min(hi, t.size - 1)] - t[lo]))
-        out["contra_s"] = longest
+        out["contra_s"] = _longest(counter, t)
+        before = counter.copy()
+        before[apex:] = False
+        out["contra_antes_apice_s"] = _longest(before, t)
     ma01 = _seg(lap.a("steer_ma01"), w)
     dev = _seg(lap.a("steer_dev05"), w)
     if iti is None or ma01 is None or _holes(lap, w, iti, e):

@@ -25,6 +25,9 @@ LATE_PICKUP_S = 0.20
 LOW_VMIN_KMH = -2.0
 TOP = 3
 
+# Rodada 2 (pedido 42, secao 4.4): os detectores "de ponto", comparados com a volta do modelo.
+POINT_DETECTORS = {"F1": "s_b_rel", "M2": "s_vmin_rel", "M4": "afastamento_m", "M6": "retomada_s"}
+
 
 def phase_losses(lap: Lap, ref: Lap, track: TrackGeometry, phases: Sequence[CornerPhases]) -> List[Dict[str, object]]:
     """A perda de uma volta em cada uma das 70 fases contra a referencia."""
@@ -112,10 +115,103 @@ def attribute(curva: str, origin_phases: Sequence[str], last_ids: Sequence[str],
             "conclusao": "explicado" if explaining else "nao_conclusivo"}
 
 
+def _value(frame: pd.DataFrame, lap_id: str, curva: str, column: str) -> Optional[float]:
+    if frame is None or column not in frame:
+        return None
+    rows = frame[(frame["lap_id"] == lap_id) & (frame["curva"] == curva)]
+    if rows.empty:
+        return None
+    v = rows[column].iloc[0]
+    return None if v is None or not np.isfinite(v) else float(v)
+
+
+def _ref_value(ref_points: pd.DataFrame, curva: str, column: str) -> Optional[float]:
+    if ref_points is None or curva not in ref_points.index or column not in ref_points:
+        return None
+    v = ref_points.at[curva, column]
+    return None if v is None or not np.isfinite(v) else float(v)
+
+
+def attribute_r2(curva: str, origin_phases: Sequence[str], last_ids: Sequence[str], best_id: str,
+                 states: pd.DataFrame, passages: pd.DataFrame, ref_points: pd.DataFrame,
+                 session_ids: Sequence[str]) -> Dict[str, object]:
+    """A atribuicao da rodada 2 (secao 4.4).
+
+    * De ponto (F1, M2, M4 e a parte "atraso" do M6): a mediana do piloto contra o
+      mesmo indicador na volta do modelo; explica se a diferenca passa do desvio
+      robusto do piloto e a melhor volta fica mais perto da volta do modelo.
+    * De forma (os outros): o estado do piloto contra o da "Sua melhor volta",
+      nunca contra a volta do modelo.
+    """
+    corner = states[states["curva"] == curva]
+    detectors = []
+    for phase in origin_phases:
+        detectors += [d for d in PHASE_DETECTORS[phase] if d not in detectors]
+    explaining, ai_only, checked = [], [], []
+    for det in detectors:
+        d = corner[corner["detector"] == det]
+        if d.empty:
+            continue
+        mine = d[d["lap_id"].isin(last_ids)]
+        ai = d[d["origem"] == "ia"]
+        best = d[d["lap_id"] == best_id]
+        s_mine = majority(mine["estado"].tolist(), 2)
+        s_ai = majority(ai["estado"].tolist(), 1)
+        s_best = best["estado"].iloc[0] if len(best) else NC
+        pool = d[d["lap_id"].isin(session_ids)]["indicador"].dropna()
+        if len(pool) < 5:
+            pool = d[d["origem"] != "ia"]["indicador"].dropna()
+        sd = robust_sd(pool.tolist())
+        entry = {"detector": det, "estado_piloto": s_mine, "estado_ia": s_ai, "estado_melhor_volta": s_best}
+        if det in POINT_DETECTORS:
+            column = POINT_DETECTORS[det]
+            values = [v for v in (_value(passages, i, curva, column) for i in last_ids) if v is not None]
+            ref = _ref_value(ref_points, curva, column)
+            best_v = _value(passages, best_id, curva, column)
+            diff = float(np.median(values)) - ref if len(values) >= 2 and ref is not None else None
+            z = diff / sd if diff is not None and np.isfinite(sd) and sd > 0 else None
+            entry.update({"tipo": "ponto", "comparado_com": "volta de referencia", "valor_referencia": ref,
+                          "valor_melhor_volta": best_v, "diferenca": None if diff is None else round(diff, 4),
+                          "diferenca_em_desvios": None if z is None else round(z, 2)})
+            checked.append(entry)
+            if z is None or abs(z) <= 1.0:
+                continue
+            if best_v is None or abs(best_v - ref) >= abs(diff):
+                continue
+            explaining.append(entry)
+            continue
+        x_mine = mine["indicador"].dropna()
+        x_best = best["indicador"].dropna()
+        diff = float(x_mine.median() - x_best.iloc[0]) if len(x_mine) and len(x_best) else None
+        z = diff / sd if diff is not None and np.isfinite(sd) and sd > 0 else None
+        entry.update({"tipo": "forma", "comparado_com": "sua melhor volta",
+                      "diferenca": None if diff is None else round(diff, 4),
+                      "diferenca_em_desvios": None if z is None else round(z, 2)})
+        checked.append(entry)
+        if s_mine != NC and s_ai != NC and s_ai != s_mine and s_best == s_mine:
+            ai_only.append(entry)
+        if s_mine == NC or s_best == NC or s_mine == s_best:
+            continue
+        if z is None or abs(z) <= 1.0:
+            continue
+        explaining.append(entry)
+    explaining.sort(key=lambda e: -abs(e["diferenca_em_desvios"]))
+    return {"explica": explaining[0] if explaining else None, "outros_que_explicam": explaining[1:],
+            "tecnica_da_ia_que_nenhuma_volta_minha_mostra": ai_only, "conferidos": checked,
+            "conclusao": "explicado" if explaining else "nao_conclusivo"}
+
+
 def session_ranking(session: str, laps: Sequence[Lap], losses: pd.DataFrame, passages: pd.DataFrame,
                     states: pd.DataFrame, phases: Sequence[CornerPhases], best_id: str,
-                    ai_passages: pd.DataFrame) -> Dict[str, object]:
-    """Os 3 maiores erros da sessao (1.6)."""
+                    ai_passages: pd.DataFrame, rodada: int = 1, ref_points: Optional[pd.DataFrame] = None,
+                    ref_label: str = "volta da IA do coach") -> Dict[str, object]:
+    """Os 3 maiores erros da sessao (1.6; rodada 2, secoes 4.2 e 4.4).
+
+    Na rodada 2, `ref_points` tem, por curva (indice), os pontos da referencia
+    (s_b_rel, s_vmin_rel, v_min, retomada_s, afastamento_m), medidos com as regras
+    da rodada 2; o falso ganho e a cadeia causal usam esses pontos, a pontuacao e
+    a perda sem o peso, e a atribuicao e a da secao 4.4.
+    """
     ordered = sorted(laps, key=lambda l: (l.volta.gravacao, int(l.volta.lap_id.split("#")[1])))
     ids = [l.volta.lap_id for l in ordered]
     last = ids[-LAST:]
@@ -168,9 +264,14 @@ def session_ranking(session: str, laps: Sequence[Lap], losses: pd.DataFrame, pas
         ai_sb = ai_by.get_group(cp.curva)["s_b_rel"].dropna() if cp.curva in ai_by.groups else pd.Series(dtype=float)
         sdr_sb = robust_sd(ai_sb.tolist())
         T = max(10.0, 2.0 * sdr_sb) if np.isfinite(sdr_sb) else 10.0
+        ref_sb = _ref_value(ref_points, cp.curva, "s_b_rel") if rodada >= 2 else None
         for lap_id in last:
             g_brake = per_phase["frenagem"].at[lap_id, "perda_s"]
-            d = f1.at[lap_id, "valor_regra"] if lap_id in f1.index else None
+            if rodada >= 2:
+                mine_sb = _value(passages, lap_id, cp.curva, "s_b_rel")
+                d = None if mine_sb is None or ref_sb is None else mine_sb - ref_sb
+            else:
+                d = f1.at[lap_id, "valor_regra"] if lap_id in f1.index else None
             later = d is not None and np.isfinite(d) and d > T
             entry_mid = per_phase["entrada"].at[lap_id, "perda_s"] + per_phase["meio"].at[lap_id, "perda_s"]
             if g_brake < 0 and later and entry_mid > -g_brake:
@@ -181,7 +282,8 @@ def session_ranking(session: str, laps: Sequence[Lap], losses: pd.DataFrame, pas
             net = (per_phase["frenagem"]["perda_s"] + per_phase["entrada"]["perda_s"] + per_phase["meio"]["perda_s"]).to_numpy()
             net_best = (per_phase["frenagem"]["perda_vs_melhor_s"] + per_phase["entrada"]["perda_vs_melhor_s"]
                         + per_phase["meio"]["perda_vs_melhor_s"]).to_numpy()
-            items.append(_item(cp, "frenagem+entrada+meio (falso ganho)", net, net_best, ["frenagem"], "frenagem", True))
+            items.append(_item(cp, "frenagem+entrada+meio (falso ganho)", net, net_best, ["frenagem"], "frenagem", True,
+                               rodada, ref_label))
             used = {"frenagem", "entrada", "meio"}
         for ph in PHASES:
             if ph in used:
@@ -195,6 +297,16 @@ def session_ranking(session: str, laps: Sequence[Lap], losses: pd.DataFrame, pas
                 late = []
                 low = []
                 for lap_id in last:
+                    if rodada >= 2:
+                        ref_pu = _ref_value(ref_points, cp.curva, "retomada_s")
+                        ref_v = _ref_value(ref_points, cp.curva, "v_min")
+                        mine_pu = _value(passages, lap_id, cp.curva, "retomada_s")
+                        mine_v = _value(passages, lap_id, cp.curva, "v_min")
+                        if ref_pu is not None and mine_pu is not None:
+                            late.append(mine_pu - ref_pu)
+                        if ref_v is not None and mine_v is not None:
+                            low.append(mine_v - ref_v)
+                        continue
                     if (lap_id, cp.curva) in p_last.index:
                         row = p_last.loc[(lap_id, cp.curva)]
                         ai = ai_by.get_group(cp.curva) if cp.curva in ai_by.groups else None
@@ -206,26 +318,39 @@ def session_ranking(session: str, laps: Sequence[Lap], losses: pd.DataFrame, pas
                 if late and low and np.median(late) > LATE_PICKUP_S and np.median(low) < LOW_VMIN_KMH:
                     origin = ["frenagem", "entrada", "meio"]
                     origin_label = "entrada (cadeia causal)"
-            items.append(_item(cp, ph, values, per_phase[ph]["perda_vs_melhor_s"].to_numpy(), origin, origin_label, False))
+            items.append(_item(cp, ph, values, per_phase[ph]["perda_vs_melhor_s"].to_numpy(), origin, origin_label, False,
+                               rodada, ref_label))
     for item in items:
-        item["atribuicao"] = attribute(item["curva"], item["_origem"], last, best_id, states, ids)
+        if rodada >= 2:
+            item["atribuicao"] = attribute_r2(item["curva"], item["_origem"], last, best_id, states, passages,
+                                              ref_points, ids)
+        else:
+            item["atribuicao"] = attribute(item["curva"], item["_origem"], last, best_id, states, ids)
         del item["_origem"]
     items.sort(key=lambda i: -i["pontuacao"])
     out["consistencia"] = consistency
     top = ([consistency] if consistency else []) + items[: TOP - (1 if consistency else 0)]
     out["itens"] = top
-    # Informativo, fora da regra registrada: os 3 de maior perda sem o peso da reta seguinte.
-    out["itens_sem_peso_informativo"] = sorted(items, key=lambda i: -i["perda_mediana_s"])[:TOP]
+    if rodada >= 2:
+        # Secao 4.2: o ranking registrado e sem o peso; o ponderado fica como informativo.
+        out["itens_com_peso_informativo"] = sorted(items, key=lambda i: -i["pontuacao_com_peso"])[:TOP]
+    else:
+        # Informativo, fora da regra registrada: os 3 de maior perda sem o peso da reta seguinte.
+        out["itens_sem_peso_informativo"] = sorted(items, key=lambda i: -i["perda_mediana_s"])[:TOP]
     out["todos_os_itens"] = [{k: v for k, v in i.items() if k != "atribuicao"} for i in items]
     return out
 
 
 def _item(cp: CornerPhases, phase: str, values: np.ndarray, vs_best: np.ndarray, origin: List[str],
-          origin_label: str, false_gain: bool) -> Dict[str, object]:
+          origin_label: str, false_gain: bool, rodada: int = 1, ref_label: str = "volta da IA do coach") -> Dict[str, object]:
     median = float(np.median(values))
-    return {"item": "perda", "curva": cp.curva, "fase_sintoma": phase, "fase_origem": origin_label,
-            "falso_ganho": false_gain, "perda_mediana_s": round(median, 3),
-            "perdas_ultimas_3_s": [round(float(v), 3) for v in values],
-            "perda_vs_melhor_volta_mediana_s": round(float(np.median(vs_best)), 3),
-            "peso": round(cp.peso, 3), "pontuacao": round(median * cp.peso, 4),
-            "referencia": "volta da IA do coach", "_origem": origin}
+    weighted = round(median * cp.peso, 4)
+    out = {"item": "perda", "curva": cp.curva, "fase_sintoma": phase, "fase_origem": origin_label,
+           "falso_ganho": false_gain, "perda_mediana_s": round(median, 3),
+           "perdas_ultimas_3_s": [round(float(v), 3) for v in values],
+           "perda_vs_melhor_volta_mediana_s": round(float(np.median(vs_best)), 3),
+           "peso": round(cp.peso, 3), "pontuacao": weighted if rodada < 2 else round(median, 4),
+           "referencia": ref_label, "_origem": origin}
+    if rodada >= 2:
+        out["pontuacao_com_peso"] = weighted
+    return out

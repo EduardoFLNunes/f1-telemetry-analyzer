@@ -11,12 +11,12 @@ import csv
 import html
 import json
 from pathlib import Path
-from typing import Dict, List, Sequence
+from typing import Dict, List, Optional, Sequence
 
 import numpy as np
 import pandas as pd
 
-from .detectores import APLICA, NAO_APLICA, NC, Lap
+from .detectores import APLICA, NAO_APLICA, NC, Lap, measure_passage
 from .fases import CornerPhases, ahead, window
 from ..track.geometry import TrackGeometry
 
@@ -197,3 +197,306 @@ def precision_recall(labels_csv: Path, key_json: Path) -> Dict[str, object]:
                     "detector_nao_conclusivo": int((g["estado"] == NC).sum()),
                     "sem_rotulo": int((g["rotulo_n"] == "vazio").sum())}
     return out
+
+
+# ------------------------------------------------- o kit 2 (pedido 42, Parte E.1) ---
+
+CONSISTENCY_N = 30
+CONSISTENCY_SEED = 42
+REF_GREY = "#8a8a8a"
+LABEL_CSV_38 = "data/ml/modelo2/rotulagem/2026-10-24_38_modelo2-erro-tecnica-e-estilo_rotulagem.csv"
+
+# A assinatura de cada pergunta segundo a pesquisa (docs/tecnica_de_pilotagem_pesquisa.md,
+# secao "Cada tecnica deixa uma assinatura mensuravel nos canais do Assetto Corsa").
+LITERATURE = {
+    "F4": {"assinatura": "Na soltura progressiva, o freio desce em rampa no fim da frenagem. A soltura abrupta é um degrau: "
+                         "o freio cai de uma vez, e a carga sai da dianteira antes da hora.",
+           "fonte": "Coach Dave (A delta guide: understanding brake traces); Winding Road (Speed Secrets: to trail brake or not)",
+           "onde": "No traço do freio, no fim da frenagem, perto da linha \"entrada\": o último terço da descida.",
+           "comparar": "Compare a forma da descida com a da Sua melhor volta (tracejada). A Volta de referência só mostra "
+                       "onde ela freia: a forma do pedal dela não serve de comparação."},
+    "F5": {"assinatura": "No trail braking, o freio continua um pouco apertado depois que o volante começa a virar e vai "
+                         "diminuindo enquanto o volante aumenta. Sem trail braking, o freio acaba antes de o volante virar.",
+           "fonte": "Speed Secrets (Data for Drivers); HP Academy (diagrama g-g)",
+           "onde": "Nos traços do freio e do volante juntos, entre as linhas \"entrada\" e \"meio\".",
+           "comparar": "Compare a sobreposição do freio com o volante com a da Sua melhor volta. A Volta de referência não "
+                       "tem o volante."},
+    "M6": {"assinatura": "Na retomada boa, o acelerador sobe de forma contínua a partir da velocidade mínima, sem o volante "
+                         "voltar a crescer e sem alívio (acelerar, soltar e acelerar de novo).",
+           "fonte": "Betz et al. (2020); Blayze (understeer); Coach Dave (A delta guide: throttle traces)",
+           "onde": "No acelerador e na velocidade, da mínima até o fim da saída; e no volante depois que o acelerador sobe.",
+           "comparar": "O ponto cinza \"retoma (referência)\" mostra onde a Volta de referência retoma: compare o ponto, "
+                       "e não a forma. Compare a forma da subida e o volante com a Sua melhor volta."},
+    "E2": {"assinatura": "No subesterço, a frente escorrega: o piloto pede mais volante do que a curva pede para a guinada "
+                         "que o carro faz (ângulo de subesterço positivo), com o carro bem carregado na lateral.",
+           "fonte": "Patente US 10293852; HP Academy (math channels)",
+           "onde": "No meio da curva: o volante, a guinada e a velocidade. Volante grande para pouca guinada, na mesma velocidade.",
+           "comparar": "Compare com a Sua melhor volta: mais volante para a mesma guinada é sinal de subesterço. A Volta de "
+                       "referência não tem o volante nem a guinada; a linha e a velocidade dela ajudam a ver a curva."},
+    "E3": {"assinatura": "No sobresterço, a traseira escorrega: a guinada passa do que o volante pede, a deriva cresce no "
+                         "sentido da rotação e às vezes aparece contraesterço (o volante para fora da curva).",
+           "fonte": "Betz et al. (2020); Binetti et al. (SAE WCX, drifting)",
+           "onde": "Da entrada à saída: a guinada contra o volante, e o volante passando para o lado de fora.",
+           "comparar": "Compare a guinada e o volante com os da Sua melhor volta. A Volta de referência não tem o volante "
+                       "nem a guinada."},
+}
+
+
+def _schematic(det: str) -> str:
+    """Um desenho esquematico do "aplica" e do "nao aplica", feito pelo codigo (nao e uma passagem real)."""
+    x = np.linspace(0.0, 1.0, 120)
+    W, H = 300, 110
+
+    def panel(title, lines, ox):
+        parts = [f'<text x="{ox + 4}" y="14" font-size="12" font-weight="600">{html.escape(title)}</text>',
+                 f'<rect x="{ox}" y="20" width="{W}" height="{H - 30}" fill="none" stroke="#ccc"/>']
+        for ys, colour, dash in lines:
+            pts = " ".join(f"{ox + xi * W:.1f},{20 + (H - 30) * (1 - yi):.1f}" for xi, yi in zip(x, ys))
+            parts.append(f'<polyline fill="none" stroke="{colour}" stroke-width="2" points="{pts}"'
+                         + (' stroke-dasharray="5,3"' if dash else "") + "/>")
+        return "".join(parts)
+
+    def clip(v):
+        return np.clip(v, 0.0, 1.0)
+
+    if det == "F4":
+        yes = [(clip(np.where(x < 0.5, 0.9, 0.9 - (x - 0.5) / 0.4 * 0.9)), "#c0392b", False)]
+        no = [(np.where(x < 0.75, 0.9, 0.02), "#c0392b", False)]
+        legend = "freio (vermelho)"
+    elif det == "F5":
+        steer = clip((x - 0.45) / 0.35) * 0.8
+        yes = [(clip(np.where(x < 0.45, 0.9, 0.9 - (x - 0.45) / 0.45 * 0.9)), "#c0392b", False), (steer, "#2c3e50", False)]
+        no = [(np.where(x < 0.42, 0.9, 0.0), "#c0392b", False), (steer, "#2c3e50", False)]
+        legend = "freio (vermelho) e volante para dentro da curva (azul-escuro)"
+    elif det == "M6":
+        speed = 0.35 + 0.5 * (x - 0.35) ** 2 / 0.42
+        yes = [(clip(np.where(x < 0.38, 0.0, (x - 0.38) / 0.4)), "#27ae60", False), (clip(speed), "#8e44ad", True)]
+        bumpy = np.where(x < 0.38, 0.0, np.where(x < 0.55, (x - 0.38) / 0.3, np.where(x < 0.65, 0.25, (x - 0.65) / 0.3)))
+        no = [(clip(bumpy), "#27ae60", False), (clip(speed), "#8e44ad", True)]
+        legend = "acelerador (verde) e velocidade (roxo, tracejado)"
+    elif det == "E2":
+        needed = 0.5 * np.sin(np.pi * x)
+        yes = [(clip(needed * 1.6), "#2c3e50", False), (needed, "#d35400", True)]
+        no = [(clip(needed * 1.05), "#2c3e50", False), (needed, "#d35400", True)]
+        legend = "volante (azul-escuro) e o volante que a guinada pede (laranja, tracejado)"
+    else:
+        yaw = 0.5 * np.sin(np.pi * x)
+        yes = [(clip(yaw + 0.35 * np.exp(-((x - 0.6) / 0.08) ** 2)), "#d35400", False),
+               (clip(0.5 * np.sin(np.pi * x) - 0.45 * np.exp(-((x - 0.62) / 0.08) ** 2) + 0.05), "#2c3e50", False)]
+        no = [(yaw, "#d35400", False), (clip(yaw * 1.02), "#2c3e50", False)]
+        legend = "guinada (laranja) e volante para dentro da curva (azul-escuro)"
+    body = panel("aplica", yes, 0) + panel("não aplica", no, W + 20)
+    return (f'<svg viewBox="0 0 {2 * W + 20} {H}" width="100%" style="max-width:{2 * W + 20}px">{body}</svg>'
+            f'<p class="legend">Desenho esquemático: {html.escape(legend)}. Não é uma passagem real.</p>')
+
+
+def literature_page(det: str) -> str:
+    title, question = QUESTIONS[det]
+    lit = LITERATURE[det]
+    return (f'<section class="lit" id="lit-{det}"><h2>{det}: {html.escape(title)}</h2>'
+            f'<p class="q">{html.escape(question)}</p>{_schematic(det)}'
+            f'<p><b>A assinatura na literatura:</b> {html.escape(lit["assinatura"])}</p>'
+            f'<p><b>Fonte</b> (tabela da pesquisa, <code>docs/tecnica_de_pilotagem_pesquisa.md</code>): {html.escape(lit["fonte"])}</p>'
+            f'<p><b>Onde olhar:</b> {html.escape(lit["onde"])}</p>'
+            f'<p><b>O que comparar:</b> {html.escape(lit["comparar"])}</p>'
+            f'<p class="rule"><b>A regra:</b> na dúvida, <b>nao sei</b>. Um rótulo errado pesa mais que um "nao sei", '
+            f'que é contado à parte.</p></section>')
+
+
+def _window_idx(track: TrackGeometry, cp: CornerPhases, previous: CornerPhases):
+    start = float(np.mod(min(cp.b, cp.a) - 60.0, track.length)) if cp.b != cp.a else float(np.mod(cp.a - 120.0, track.length))
+    start = previous.apice if ahead(track, previous.apice, cp.a) < ahead(track, start, cp.a) else start
+    end = float(np.mod(cp.e + 100.0, track.length))
+    return start, window(track, start, end)
+
+
+def trace_svg2(lap: Lap, model: Lap, best: Lap, track: TrackGeometry, cp: CornerPhases, previous: CornerPhases,
+               model_points: Dict[str, object]) -> str:
+    """Os tracos da passagem com as duas referencias do app (secao 4.4 e Parte E.1).
+
+    A "Volta de referencia" (cinza) entra na velocidade e na linha; nos pedais, so
+    os pontos onde ela freia e onde retoma. A "Sua melhor volta" (tracejada) entra
+    em todos os canais que ela tiver.
+    """
+    start, idx = _window_idx(track, cp, previous)
+    x = np.arange(idx.size) * track.step
+    W, rowh, gap = 760, 70, 18
+    corner_idx = window(track, cp.a, cp.e)
+
+    def steer_in(l: Lap):
+        st = l.a("steer")
+        if st is None:
+            return None
+        dpk = np.nanmax(np.abs(st[corner_idx]))
+        return -st[idx] * cp.direcao / dpk if dpk > 0 else None
+
+    def ch(l: Lap, name: str, sign: float = 1.0):
+        v = l.a(name)
+        return None if v is None else v[idx] * sign
+
+    rows = [
+        ("freio (vermelho) e acelerador (verde), 0 a 1",
+         [(ch(lap, "brake"), "#c0392b", None), (ch(lap, "throttle"), "#27ae60", None),
+          (ch(best, "brake"), "#c0392b", "6,4"), (ch(best, "throttle"), "#27ae60", "6,4")], (0, 1),
+         "Volta de referência: só os pontos (onde freia e onde retoma)."),
+        ("volante para dentro da curva, dividido pelo maior da curva",
+         [(steer_in(lap), "#2c3e50", None), (steer_in(best), "#2c3e50", "6,4")], None,
+         "Volta de referência: sem o volante."),
+        ("velocidade, km/h",
+         [(ch(lap, "speed_kmh"), "#8e44ad", None), (ch(model, "speed_kmh"), REF_GREY, None),
+          (ch(best, "speed_kmh"), "#8e44ad", "6,4")], None, ""),
+        ("guinada, rad/s (para dentro da curva)",
+         [(ch(lap, "yaw_rate", cp.direcao), "#d35400", None), (ch(best, "yaw_rate", cp.direcao), "#d35400", "6,4")], None,
+         "Volta de referência: sem a guinada."),
+        ("linha: afastamento do centro para fora da curva, m",
+         [(ch(lap, "lateral", -cp.direcao), "#16a085", None), (ch(model, "lateral", -cp.direcao), REF_GREY, None),
+          (ch(best, "lateral", -cp.direcao), "#16a085", "6,4")], None, ""),
+    ]
+    parts = []
+    H = len(rows) * (rowh + gap) + 20
+    for r, (label, lines, rng, note) in enumerate(rows):
+        top = r * (rowh + gap) + 14
+        parts.append(f'<text x="2" y="{top - 3}" font-size="10" fill="#555">{html.escape(label)}</text>')
+        if note:
+            parts.append(f'<text x="{W - 2}" y="{top - 3}" font-size="10" fill="{REF_GREY}" text-anchor="end">{html.escape(note)}</text>')
+        parts.append(f'<rect x="0" y="{top}" width="{W}" height="{rowh}" fill="none" stroke="#ddd"/>')
+        finite = np.concatenate([v[np.isfinite(v)] for v, _, _ in lines if v is not None] or [np.array([0.0])])
+        lo, hi = rng if rng else (float(np.min(finite)), float(np.max(finite)))
+        if hi - lo < 1e-6:
+            hi = lo + 1.0
+        if lines[0][0] is None:
+            parts.append(f'<text x="{W/2}" y="{top + rowh/2}" font-size="11" fill="#999" text-anchor="middle">sem o canal nesta passagem</text>')
+        for v, colour, dash in lines:
+            if v is None:
+                continue
+            poly = _poly(x, v, 0, max(x[-1], 1), lo, hi, W, rowh, top, colour)
+            if dash:
+                poly = poly.replace("/>", f' stroke-dasharray="{dash}"/>')
+            parts.append(poly)
+        if lo < 0 < hi:
+            y0 = top + rowh - (0 - lo) / (hi - lo) * rowh
+            parts.append(f'<line x1="0" x2="{W}" y1="{y0:.1f}" y2="{y0:.1f}" stroke="#bbb" stroke-dasharray="2,3"/>')
+        if r == 0:
+            for key, text in (("s_b_rel", "freia (referência)"), ("s_pu_rel", "retoma (referência)")):
+                rel = model_points.get(key)
+                if rel is None or not np.isfinite(rel):
+                    continue
+                off = ahead(track, start, float(np.mod(cp.a + rel, track.length)))
+                if off <= x[-1]:
+                    px = off / max(x[-1], 1) * W
+                    parts.append(f'<circle cx="{px:.1f}" cy="{top + rowh - 4}" r="4" fill="{REF_GREY}"/>'
+                                 f'<text x="{px + 5:.1f}" y="{top + rowh - 8}" font-size="10" fill="{REF_GREY}">{html.escape(text)}</text>')
+    for name, s in (("frenagem", cp.b), ("entrada", cp.a), ("meio", cp.m1), ("saida", cp.m2), ("reta", cp.e)):
+        off = ahead(track, start, s)
+        if off <= x[-1]:
+            px = off / max(x[-1], 1) * W
+            parts.append(f'<line x1="{px:.1f}" x2="{px:.1f}" y1="10" y2="{H - 14}" stroke="#3498db" stroke-dasharray="4,3"/>')
+            parts.append(f'<text x="{px + 2:.1f}" y="{H - 2}" font-size="10" fill="#3498db">{name}</text>')
+    return f'<svg viewBox="0 0 {W} {H}" width="100%" style="max-width:{W}px">{"".join(parts)}</svg>'
+
+
+KIT2_STYLE = """
+body{font-family:system-ui,sans-serif;margin:16px;max-width:1000px;color:#222;background:#fff}
+.card{border:1px solid #ddd;border-radius:6px;padding:8px;margin:10px 0} .head{margin-bottom:6px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start} .tr{flex:1;min-width:300px}
+.q{background:#f4f6f8;padding:8px;border-left:4px solid #3498db} .rule{background:#fff7e6;padding:8px;border-left:4px solid #e67e22}
+.lit{border:2px solid #3498db;border-radius:8px;padding:12px;margin:18px 0;page-break-after:always} .legend{color:#666;font-size:12px}
+.key span{display:inline-block;margin-right:14px}
+"""
+
+LEGEND_HTML = ('<p class="key"><span><b>traço cheio colorido</b>: a passagem</span>'
+               f'<span><b style="color:{REF_GREY}">cinza</b>: a Volta de referência (só a velocidade, a linha e os pontos dos pedais)</span>'
+               '<span><b>tracejado</b>: a Sua melhor volta (em todos os canais que ela tem)</span></p>')
+
+
+def _card(pid: str, cp: CornerPhases, track: TrackGeometry, svg: str) -> str:
+    return (f'<div class="card"><div class="head"><b>{pid}</b> · curva {html.escape(cp.curva)} '
+            f'({"esquerda" if cp.direcao > 0 else "direita"}) · trecho de {cp.b:.0f} m a {cp.e + 100:.0f} m</div>'
+            f'<div class="row">{map_svg(track, cp)}<div class="tr">{svg}</div></div></div>')
+
+
+def _page(title: str, intro: str, body: str) -> str:
+    return (f'<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'
+            f'<meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)}</title>'
+            f'<style>{KIT2_STYLE}</style></head><body><h1>{html.escape(title)}</h1>{intro}{LEGEND_HTML}{body}</body></html>')
+
+
+def build_kit2(key_38: Path, states_r2: pd.DataFrame, laps: Dict[str, Lap], track: TrackGeometry,
+               phases: Sequence[CornerPhases], model: Lap, ordered_best: Sequence[str], out_html: Path,
+               out_consistency_html: Path, out_consistency_csv: Path, out_key: Path,
+               model_points: Optional[pd.DataFrame] = None) -> Dict[str, object]:
+    """O kit 2: as mesmas 120 passagens do kit do 38, com as referencias do app e a pagina da literatura.
+
+    Os rotulos vao no mesmo CSV do 38. O CSV da consistencia tem 30 das 120
+    (semente 42), com outros ids e em outra ordem. O gabarito guarda o estado das
+    duas rodadas, a origem, a melhor volta usada e o de-para da consistencia.
+    """
+    key38 = json.loads(Path(key_38).read_text(encoding="utf-8"))
+    if len(key38) != 120:
+        raise SystemExit(f"PARADO: o gabarito do kit do 38 tem {len(key38)} passagens, e nao 120.")
+    cp_by = {cp.curva: cp for cp in phases}
+    st = states_r2.set_index(["lap_id", "curva", "detector"])
+    if model_points is None:
+        rows = [measure_passage(model, track, cp, phases[cp.k - 1], lambda v: np.full_like(np.asarray(v, float), np.nan), rodada=2)
+                for cp in phases]
+        model_points = pd.DataFrame([{k: v for k, v in r.items() if k != "_ausente"} for r in rows]).set_index("curva")
+    cards: Dict[str, str] = {}
+    key_out = []
+    for entry in key38:
+        cp = cp_by[entry["curva"]]
+        previous = phases[cp.k - 1]
+        best_id = ordered_best[0] if entry["lap_id"] != ordered_best[0] else ordered_best[1]
+        mp = model_points.loc[cp.curva].to_dict() if cp.curva in model_points.index else {}
+        svg = trace_svg2(laps[entry["lap_id"]], model, laps[best_id], track, cp, previous, mp)
+        cards[entry["id"]] = (cp, svg)
+        r2 = st.loc[(entry["lap_id"], entry["curva"], entry["detector"])] if (entry["lap_id"], entry["curva"], entry["detector"]) in st.index else None
+        key_out.append({**{k: entry[k] for k in ("id", "detector", "lap_id", "curva", "origem")},
+                        "estado_rodada1": entry["estado"], "valor_regra_rodada1": entry.get("valor_regra"),
+                        "estado_rodada2": None if r2 is None else r2["estado"],
+                        "valor_regra_rodada2": None if r2 is None else r2["valor_regra"],
+                        "sua_melhor_volta_usada": best_id,
+                        "segunda_melhor_porque_e_a_melhor": best_id != ordered_best[0]})
+    body = []
+    for det in DETECTORS:
+        body.append(literature_page(det))
+        for entry in [e for e in key38 if e["detector"] == det]:
+            cp, svg = cards[entry["id"]]
+            body.append(_card(entry["id"], cp, track, svg))
+    intro = (f'<p>As mesmas 120 passagens do kit do pedido 38, com os mesmos ids. Antes das passagens de cada pergunta há uma '
+             f'página com a assinatura da literatura. Responda com <b>aplica</b>, <b>nao aplica</b> ou <b>nao sei</b> na coluna '
+             f'<code>rotulo</code> do mesmo CSV de antes: <code>{html.escape(LABEL_CSV_38)}</code>. A coluna <code>observacao</code> '
+             f'é livre. O kit não mostra o que o detector respondeu nem quem dirigiu a passagem. As linhas azuis são as fronteiras '
+             f'das fases. O volante está dividido pelo maior volante da curva e virado para dentro da curva.</p>')
+    out_html.write_text(_page("Kit 2 de rotulagem: 5 perguntas, 120 passagens", intro, "".join(body)), encoding="utf-8")
+
+    rng = np.random.default_rng(CONSISTENCY_SEED)
+    chosen = rng.choice(len(key38), size=CONSISTENCY_N, replace=False)
+    order = rng.permutation(CONSISTENCY_N)
+    consistency, rows_csv, body2 = [], [], []
+    for n, pos in enumerate(order, start=1):
+        entry = key38[int(chosen[pos])]
+        new_id = f"R-{n:02d}"
+        consistency.append({"id_consistencia": new_id, "id_original": entry["id"]})
+        cp, svg = cards[entry["id"]]
+        title, question = QUESTIONS[entry["detector"]]
+        body2.append(f'<p class="q"><b>{new_id}</b> · {html.escape(title)}: {html.escape(question)}</p>'
+                     + _card(new_id, cp, track, svg))
+        rows_csv.append({"id": new_id, "pergunta": title, "curva": entry["curva"], "rotulo": "", "observacao": ""})
+    intro2 = (f'<p>30 das 120 passagens, sorteadas com a semente 42, em outra ordem e com outros ids. Rotule de novo, '
+              f'<b>pelo menos 3 dias depois</b> da primeira vez, sem olhar os rótulos de antes, na coluna <code>rotulo</code> de '
+              f'<code>{html.escape(out_consistency_csv.name)}</code> (na mesma pasta). As páginas da literatura estão no kit 2.</p>')
+    out_consistency_html.write_text(_page("Kit 2: a consistência da rotulagem (30 passagens)", intro2, "".join(body2)),
+                                    encoding="utf-8")
+    with out_consistency_csv.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["id", "pergunta", "curva", "rotulo", "observacao"])
+        writer.writeheader()
+        writer.writerows(rows_csv)
+    out_key.write_text(json.dumps({"passagens": key_out, "consistencia": consistency,
+                                   "semente_consistencia": CONSISTENCY_SEED, "kit_do_38": str(key_38)},
+                                  indent=1, ensure_ascii=False, default=float), encoding="utf-8")
+    summary = {}
+    for det in DETECTORS:
+        items = [k for k in key_out if k["detector"] == det]
+        summary[det] = {"passagens": len(items), "ia": sum(k["origem"] == "ia" for k in items),
+                        "segunda_melhor_usada": sum(k["segunda_melhor_porque_e_a_melhor"] for k in items)}
+    return {"por_detector": summary, "consistencia": CONSISTENCY_N, "csv_dos_rotulos": LABEL_CSV_38}

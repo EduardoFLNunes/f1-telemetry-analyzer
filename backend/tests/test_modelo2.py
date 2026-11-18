@@ -499,3 +499,144 @@ def test_carregar_para_sem_uma_volta_pedida_e_com_o_store_reprovado(tmp_path, mo
     _fake_world(other, monkeypatch, aprovado=False)
     with pytest.raises(SystemExit, match="nao aprovado"):
         dados_mod.carregar(None, saida=other / "ml" / "modelo2" / "r", so_ids=["A_vhe#0001"])
+
+
+# ------------------------------- pedido 42, Parte D.5: as emendas e a referencia ---
+
+from ml.modelo2.detectores import pickup_index, turn_in_index
+from ml.modelo2.perda import attribute_r2
+
+
+def _longest_entry(phases):
+    return max(phases, key=lambda cp: (cp.apice - cp.a) % TRACK.length)
+
+
+def _longest_exit(phases):
+    return max(phases, key=lambda cp: (cp.e - cp.apice) % TRACK.length)
+
+
+def test_retomada_com_acelerador_parcial_na_entrada_fica_depois_da_minima(phases):
+    cp = _longest_exit(phases)
+    a, apex = cp.a, cp.apice
+    speed = lambda s: 200.0 - 100.0 * np.exp(-((s - apex) / 40.0) ** 2)
+    # a IA: acelerador parcial (0,3) desde antes da entrada, e a subida so depois da minima
+    throttle = lambda s: np.where(s < a - 30.0, 1.0, np.where(s < apex + 5.0, 0.3,
+                                                              np.clip(0.3 + (s - apex - 5.0) / 60.0, 0.3, 1.0)))
+    lap = synthetic_lap("pu#0001", speed_kmh=speed, channels={"throttle": throttle,
+                                                               "brake": bump(a - 60.0, 30.0, 0.8)})
+    env = lambda v: np.full_like(np.asarray(v, dtype=float), 3.0)
+    r1 = measure_passage(lap, TRACK, cp, phases[cp.k - 1], env, rodada=1)
+    r2 = measure_passage(lap, TRACK, cp, phases[cp.k - 1], env, rodada=2)
+    assert r1["retomada_s"] < -0.3                # rodada 1: o acelerador parcial ja conta como retomada
+    assert 0.0 <= r2["retomada_s"] < 0.6          # rodada 2: o comeco da subida, depois da minima
+    assert r2["s_pu_rel"] >= r2["s_vmin_rel"]
+    assert r2["retomada_no_pleno"] is False
+
+
+def test_pickup_index_regras_fixas():
+    t = np.arange(0.0, 3.0, 0.02)
+    # sobe 0,10 e volta abaixo do comeco antes de 0,5 s: descartada; a subida seguinte vale
+    thr = np.full(t.size, 0.2)
+    thr[(t >= 0.4) & (t < 0.6)] = 0.35
+    thr[(t >= 0.6) & (t < 1.0)] = 0.1
+    thr[t >= 1.0] = np.clip(0.1 + (t[t >= 1.0] - 1.0), 0.1, 1.0)
+    i, full = pickup_index(thr, t, 0, t.size - 1)
+    assert not full and t[i] == pytest.approx(0.98, abs=0.03)
+    # pleno na minima
+    assert pickup_index(np.full(t.size, 0.95), t, 10, t.size - 1) == (10, True)
+    # sem subida de 0,10
+    assert pickup_index(np.full(t.size, 0.2) + 0.05 * (t > 1.0), t, 0, t.size - 1) == (None, False)
+
+
+def test_turn_in_index_nao_corta_na_troca_de_sinal():
+    into = np.concatenate([np.zeros(10), np.full(10, 0.5), np.full(5, -0.2), np.full(20, 1.0)])
+    apex = 35
+    assert turn_in_index(into, 1.0, apex, rodada=1) == 25      # rodada 1: corta no contraesterco
+    assert turn_in_index(into, 1.0, apex, rodada=2) == 10      # rodada 2: une os dois trechos
+    relaxed = np.concatenate([np.zeros(10), np.full(10, 0.5), np.full(5, 0.02), np.full(20, 1.0)])
+    assert turn_in_index(relaxed, 1.0, apex, rodada=2) == 25   # sem troca de sinal, continua cortando
+
+
+def test_contraesterco_antes_do_apice_e_visto_pelo_e4_da_rodada2(phases):
+    cp = _longest_entry(phases)
+    a, apex, sign = cp.a, cp.apice, cp.direcao
+    c0, c1 = a + 0.35 * (apex - a), a + 0.35 * (apex - a) + 12.0
+    assert c1 < apex - 5.0
+
+    def steer(s):
+        normal = -0.3 * sign * np.clip((s - (a - 20.0)) / 15.0, 0.0, 1.0) * np.clip((cp.e - s) / 20.0, 0.0, 1.0)
+        return np.where((s >= c0) & (s < c1), 0.1 * sign, normal)
+
+    lap = synthetic_lap("ce#0001", channels={"steer_angle": steer, "yaw_rate": lambda s: np.full_like(s, 0.3 * sign),
+                                             "lateral_g": lambda s: np.full_like(s, 1.0 * sign),
+                                             "brake": bump(a - 60.0, 30.0, 0.8)})
+    env = lambda v: np.full_like(np.asarray(v, dtype=float), 3.0)
+    r1 = measure_passage(lap, TRACK, cp, phases[cp.k - 1], env, rodada=1)
+    r2 = measure_passage(lap, TRACK, cp, phases[cp.k - 1], env, rodada=2)
+    assert r2["s_ti_rel"] < r1["s_ti_rel"]                    # a sequencia nao e cortada
+    assert r1["contra_s"] < 0.03                               # rodada 1: fora da janela
+    assert r2["contra_s"] >= 0.10 and r2["contra_antes_apice_s"] >= 0.10
+    assert state_of("E4", r2, corner_refs([]))[0] == APLICA
+
+
+def test_ranking_da_rodada2_e_sem_o_peso(phases):
+    by_lap = {f"r#{i:04d}": {"meio": 0.30, "saida": 0.25} for i in range(1, 4)}
+    laps, losses, passages, states, ai, cp = _ranking_inputs(phases, by_lap, [0.0, 0.0, 0.0])
+    ref_points = pd.DataFrame([{"curva": c.curva, "s_b_rel": -110.0, "retomada_s": 0.2, "v_min": 100.0,
+                                "s_vmin_rel": 50.0, "afastamento_m": 5.0} for c in phases]).set_index("curva")
+    out = session_ranking("s", laps, losses, passages, states, phases, "r#0001", ai, rodada=2, ref_points=ref_points)
+    items = [i for i in out["todos_os_itens"] if i["curva"] == cp.curva]
+    assert {i["fase_sintoma"]: i["pontuacao"] for i in items} == {"meio": 0.30, "saida": 0.25}
+    assert all(i["pontuacao_com_peso"] == pytest.approx(i["perda_mediana_s"] * cp.peso, abs=1e-4) for i in items)
+    assert "itens_com_peso_informativo" in out and "itens_sem_peso_informativo" not in out
+    r1 = session_ranking("s", laps, losses, passages, states, phases, "r#0001", ai)
+    assert all(i["pontuacao"] == pytest.approx(i["perda_mediana_s"] * cp.peso, abs=1e-4)
+               for i in r1["todos_os_itens"] if i["curva"] == cp.curva)
+
+
+def test_a_perda_e_contra_a_volta_do_modelo(phases):
+    from ml.modelo2.perda import loss_table
+    slow = synthetic_lap("me#0001", speed_kmh=lambda s: np.full_like(s, 140.0))
+    model = synthetic_lap("vm#0001", origem="volta_do_modelo", speed_kmh=lambda s: np.full_like(s, 150.0))
+    best = synthetic_lap("b#0001", speed_kmh=lambda s: np.full_like(s, 145.0))
+    table = loss_table([slow], model, best, TRACK, phases)
+    assert table["perda_s"].sum() == pytest.approx(slow.total - model.total, abs=1e-9)
+    assert table["perda_vs_melhor_s"].sum() == pytest.approx(slow.total - best.total, abs=1e-9)
+
+
+def test_a_forma_do_pedal_nunca_e_comparada_com_a_volta_do_modelo(phases):
+    cp = corner_of(phases)
+    last = ["me#0001", "me#0002", "me#0003"]
+    rows = []
+    for lap_id, origem, f4, x in [(i, "humano", NAO_APLICA, 6.0) for i in last] + [("best#0001", "humano", APLICA, 1.0)] \
+            + [(f"ia#{i}", "ia", NAO_APLICA, 6.0) for i in range(3)]:
+        rows.append({"lap_id": lap_id, "curva": cp.curva, "detector": "F4", "estado": f4, "indicador": x, "origem": origem})
+    for lap_id in last + ["best#0001"]:
+        rows.append({"lap_id": lap_id, "curva": cp.curva, "detector": "F1", "estado": APLICA, "indicador": -100.0,
+                     "origem": "humano"})
+    states = pd.DataFrame(rows)
+    passages = pd.DataFrame([{"lap_id": i, "curva": cp.curva, "s_b_rel": -100.0} for i in last + ["best#0001"]])
+    # A volta do modelo freia no mesmo ponto; o pedal dela (que a IA comandou) nao entra em nada.
+    ref_points = pd.DataFrame([{"curva": cp.curva, "s_b_rel": -100.0}]).set_index("curva")
+    out = attribute_r2(cp.curva, ["frenagem", "entrada"], last, "best#0001", states, passages, ref_points,
+                       last + ["best#0001"])
+    assert out["explica"]["detector"] == "F4"
+    assert out["explica"]["comparado_com"] == "sua melhor volta"
+    f1 = next(c for c in out["conferidos"] if c["detector"] == "F1")
+    assert f1["tipo"] == "ponto" and f1["comparado_com"] == "volta de referencia"
+    # a IA igual ao piloto nao muda nada: a forma e julgada contra a melhor volta
+    assert out["explica"]["estado_ia"] == NAO_APLICA
+    # sem a melhor volta diferente, nenhum detector de forma explica
+    same = states.copy()
+    same.loc[(same["lap_id"] == "best#0001") & (same["detector"] == "F4"), ["estado", "indicador"]] = [NAO_APLICA, 6.0]
+    out2 = attribute_r2(cp.curva, ["frenagem", "entrada"], last, "best#0001", same, passages, ref_points,
+                        last + ["best#0001"])
+    assert out2["conclusao"] == "nao_conclusivo"
+
+
+def test_kit2_esquematico_e_paginas_da_literatura():
+    from ml.modelo2 import rotulagem
+    for det in rotulagem.DETECTORS:
+        page = rotulagem.literature_page(det)
+        assert "aplica" in page and "não aplica" in page and "nao sei" in page and "Fonte" in page
+        assert " IA" not in page.replace("IA do", "")

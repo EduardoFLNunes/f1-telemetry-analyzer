@@ -1,6 +1,6 @@
 """Modelo 2: o erro, as tecnicas e o estilo, nas voltas da IA e do piloto (pedido 38).
 
-    python -m ml.scripts.modelo2 todos --saida PASTA [--handoff PREFIXO]
+    python -m ml.scripts.modelo2 todos --saida PASTA [--rodada 1|2] [--handoff PREFIXO]
     python -m ml.scripts.modelo2 rotulos --rotulos ARQUIVO.csv
 
 As regras estao em `docs/modelo2_tecnica_e_estilo.md`, secao 1 (rodada 1) e
@@ -34,17 +34,58 @@ from ml.pista_teste.condicoes import VOLTA_IA as VOLTA_0013  # noqa: E402
 from ml import config  # noqa: E402
 from ml.data.recordings import list_all_sessions  # noqa: E402
 from ml.modelo2 import conferencias as conf  # noqa: E402
-from ml.modelo2 import estilo, rotulagem, supervisionado  # noqa: E402
-from ml.modelo2.dados import FORA_DO_STORE, ai_levels, carregar, pasta_da_rodada, raiz, sha256, voltas_da_rodada1  # noqa: E402
-from ml.modelo2.detectores import (APLICA, CATALOG, NAO_APLICA, NC, PER_CORNER, PRIMARY, Lap,  # noqa: E402
-                                   assign_states, consistency_states, envelope_from, lap_measures, lap_states,
-                                   measure_passage, phase_time)
+from ml.modelo2 import comparacao, estilo, rotulagem, saidas, supervisionado  # noqa: E402
+from ml.data.store_v2 import store_v2_meta  # noqa: E402
+from ml.modelo2.dados import (FORA_DO_STORE, ai_levels, carregar, geometria_medida, pasta_da_rodada,  # noqa: E402
+                              raiz, sha256, volta_do_modelo, voltas_da_rodada1)
+from ml.modelo2.detectores import (APLICA, CATALOG, GEOMETRIA_SUBSTITUTA, NAO_APLICA, NC, PER_CORNER,  # noqa: E402
+                                   PRIMARY, Lap, assign_states, consistency_states, envelope_from, lap_measures,
+                                   lap_states, measure_passage, phase_time)
 from ml.modelo2.fases import build_phases, check_partition, window  # noqa: E402
 from ml.modelo2.perda import loss_table, session_ranking  # noqa: E402
 from ml.track.corners import detect_corners  # noqa: E402
 from ml.track.geometry import load_geometry  # noqa: E402
 
 TRACK = "vhe_interlagos"
+KIT_DATE = "2026-10-25"       # as sessoes depois do kit de 24/10 (pedido 42, Parte D.3)
+
+
+def voltas_depois_do_kit(meta: Dict[str, object]) -> List[str]:
+    """As voltas do piloto na pista original, de gravacoes depois de 24/10 (pelo meta do store)."""
+    return sorted(l["lap_id"] for l in meta.get("laps", [])
+                  if l.get("origem") == "humano" and l.get("track") == TRACK and str(l["session_id"])[:10] >= KIT_DATE)
+
+
+def best_for(last: List[str], ordered_best: List[str]) -> str:
+    """A "Sua melhor volta" de uma comparacao: a segunda melhor quando a melhor esta entre as voltas comparadas."""
+    for lap_id in ordered_best:
+        if lap_id not in last:
+            return lap_id
+    return ordered_best[0]
+
+
+def rankings_for(laps: List[Lap], losses: pd.DataFrame, passages: pd.DataFrame, states: pd.DataFrame,
+                 phases, ordered_best: List[str], ai_passages: pd.DataFrame, rodada: int,
+                 ref_points: pd.DataFrame = None, ref_label: str = "volta da IA do coach") -> List[Dict[str, object]]:
+    by_session: Dict[str, List[Lap]] = {}
+    for l in laps:
+        by_session.setdefault(l.volta.sessao, []).append(l)
+    out = []
+    for session, items in sorted(by_session.items()):
+        ordered = sorted(items, key=lambda l: (l.volta.gravacao, int(l.volta.lap_id.split("#")[1])))
+        last = [l.volta.lap_id for l in ordered][-3:]
+        best_id = best_for(last, ordered_best) if rodada >= 2 else ordered_best[0]
+        r = session_ranking(session, items, losses, passages, states, phases, best_id, ai_passages,
+                            rodada=rodada, ref_points=ref_points, ref_label=ref_label)
+        r["melhor_volta_usada"] = best_id
+        out.append(r)
+    return out
+
+
+def closure_of(losses: pd.DataFrame, laps: List[Lap], ref: Lap) -> float:
+    phase_sum = losses.groupby("lap_id")["perda_s"].sum()
+    lap_diff = pd.Series({l.volta.lap_id: l.total - ref.total for l in laps})
+    return float((phase_sum - lap_diff.reindex(phase_sum.index)).abs().max())
 
 
 def _clean(value):
@@ -93,7 +134,8 @@ def fractions(states: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def run(saida: str, handoff_prefix: str = None) -> Dict[str, object]:
+def run(saida: str, handoff_prefix: str = None, rodada: int = 1) -> Dict[str, object]:
+    """Uma rodada do Modelo 2 (rodada 1: secoes 1 e 2; rodada 2: secao 4), gravada em data/ml/modelo2/<saida>/."""
     started = time.time()
     timings = {}
     out_dir = pasta_da_rodada(saida)
@@ -102,9 +144,13 @@ def run(saida: str, handoff_prefix: str = None) -> Dict[str, object]:
     corners = detect_corners(track)
     if len(corners) != 14:
         raise SystemExit(f"PARADO: {len(corners)} curvas, o radio e o relatorio usam 14.")
-    data = carregar(track, saida=out_dir, so_ids=wanted)
+    extra_wanted = voltas_depois_do_kit(store_v2_meta()) if rodada >= 2 else []
+    data = carregar(track, saida=out_dir, so_ids=wanted, mais_ids=extra_wanted)
     timings["leitura_s"] = round(time.time() - started, 1)
-    laps = {k: Lap.build(v) for k, v in data.voltas.items()}
+    all_laps = {k: Lap.build(v) for k, v in data.voltas.items()}
+    laps = {k: v for k, v in all_laps.items() if k in set(wanted)}
+    extras = {k: v for k, v in all_laps.items() if k not in set(wanted)}
+    geometria = geometria_medida() if rodada >= 2 else GEOMETRIA_SUBSTITUTA
 
     model_file = model_path(BACKEND.parent, TRACK)
     model = DriverReferenceModel.load(model_file)
@@ -126,7 +172,7 @@ def run(saida: str, handoff_prefix: str = None) -> Dict[str, object]:
     ai_on, drv_on = [[] for _ in corners], [[] for _ in corners]
     for lap in laps.values():
         for cp in provisional:
-            r = measure_passage(lap, track, cp, provisional[cp.k - 1], env)
+            r = measure_passage(lap, track, cp, provisional[cp.k - 1], env, rodada=rodada, geometria=geometria)
             s = None if r["s_b_rel"] is None else float(np.mod(cp.a + r["s_b_rel"], track.length))
             (ai_on if lap.volta.origem == "ia" else drv_on)[cp.k].append(s)
     phases = build_phases(track, corners, ai_min, ai_on, drv_on)
@@ -136,7 +182,7 @@ def run(saida: str, handoff_prefix: str = None) -> Dict[str, object]:
     rows = []
     for lap in laps.values():
         for cp in phases:
-            r = measure_passage(lap, track, cp, phases[cp.k - 1], env)
+            r = measure_passage(lap, track, cp, phases[cp.k - 1], env, rodada=rodada, geometria=geometria)
             r["tipo"] = cp.tipo
             r["tempo_trecho_s"] = phase_time(lap, track, *cp.trecho)
             r["sessao_com_margem"] = lap.volta.com_margem
@@ -163,7 +209,9 @@ def run(saida: str, handoff_prefix: str = None) -> Dict[str, object]:
             "m1_pedido_37": "nao identificados: a regra registrada deu L negativo ou < 1,1 m; na opcao (a), L foi ao limite de 3,8 m e k_delta = 0,30 rad",
             "retrato_pedido_39": {"L_m": 2.955, "k_delta_rad": 0.267, "L_sobre_k": round(2.955 / 0.267, 2)},
             "reportagem_m": 2.943,
-            "usado_no_e2": "retrato do pedido 39, como medida substituta (secao 1.2)"},
+            "usado_no_e2": ("retrato do pedido 39, como medida substituta (secao 1.2)" if rodada < 2 else
+                            {"fonte": "docs/handoff/2026-10-25_39_m1-geometria-medida_geometria.json, chave usados",
+                             "L_m": geometria[0], "k_delta_rad": geometria[1]})},
         "escorregamento": conf.slip_nature(list(laps.values())),
         "abs_ciclos": conf.abs_cycles(list(laps.values())),
         "abs_ajuste": [conf.abs_setting(sessions[s]) for s in ("2026-10-22_09-46-01_vhe_interlagos",
@@ -172,17 +220,37 @@ def run(saida: str, handoff_prefix: str = None) -> Dict[str, object]:
     }
 
     # --- Parte D
-    losses = loss_table(humans, ref, best, track, phases, margem_s=data.margem_s)
     ai_passages = passages[passages["origem"] == "ia"]
-    rankings = []
-    by_session: Dict[str, List[Lap]] = {}
-    for l in humans:
-        by_session.setdefault(l.volta.sessao, []).append(l)
-    for session, items in sorted(by_session.items()):
-        rankings.append(session_ranking(session, items, losses, passages, states, phases, best.volta.lap_id, ai_passages))
-    phase_sum = losses.groupby("lap_id")["perda_s"].sum()
-    lap_diff = pd.Series({l.volta.lap_id: l.total - ref.total for l in humans})
-    closure = float((phase_sum - lap_diff.reindex(phase_sum.index)).abs().max())
+    ordered_best = [l.volta.lap_id for l in sorted(humans, key=lambda l: l.total)]
+    comparison = None
+    if rodada < 2:
+        losses = loss_table(humans, ref, best, track, phases, margem_s=data.margem_s)
+        rankings = rankings_for(humans, losses, passages, states, phases, ordered_best, ai_passages, rodada)
+        closure = closure_of(losses, humans, ref)
+        reference = {"volta_ia": ref_id, "tempo_s": ref.total, "melhor_volta": best.volta.lap_id, "melhor_tempo_s": best.total}
+    else:
+        # Secao 4.4: a volta do modelo; a `#0013` so como comparacao com a rodada 1.
+        model_lap = Lap.build(volta_do_modelo(track))
+        model_rows = [measure_passage(model_lap, track, cp, phases[cp.k - 1], env, rodada=rodada, geometria=geometria)
+                      for cp in phases]
+        model_points = pd.DataFrame([{k: v for k, v in r.items() if k != "_ausente"} for r in model_rows]).set_index("curva")
+        ref_points_0013 = passages[passages["lap_id"] == ref_id].set_index("curva")
+        losses = loss_table(humans, model_lap, best, track, phases, margem_s=data.margem_s)
+        rankings = rankings_for(humans, losses, passages, states, phases, ordered_best, ai_passages, rodada,
+                                model_points, "volta de referencia (volta do modelo)")
+        closure = closure_of(losses, humans, model_lap)
+        losses_0013 = loss_table(humans, ref, best, track, phases, margem_s=data.margem_s)
+        comparison = {"marca": "so comparacao: contra a #0013, a referencia da rodada 1 (secao 4.1)",
+                      "referencia": {"lap_id": ref_id, "tempo_s": ref.total},
+                      "fechamento_soma_das_fases_s": closure_of(losses_0013, humans, ref),
+                      "sessoes": rankings_for(humans, losses_0013, passages, states, phases, ordered_best, ai_passages,
+                                              rodada, ref_points_0013, "so comparacao: #0013")}
+        reference = {"volta_de_referencia": model_lap.volta.lap_id, "tempo_s": model_lap.total,
+                     "melhor_volta": best.volta.lap_id, "melhor_tempo_s": best.total,
+                     "segunda_melhor_volta": ordered_best[1] if len(ordered_best) > 1 else None,
+                     "pontos_da_volta_de_referencia": model_points[["s_b_rel", "s_vmin_rel", "v_min", "retomada_s",
+                                                                    "afastamento_m", "freia", "retoma"]]
+                     .reset_index().to_dict("records")}
 
     # --- Parte E
     all_states = pd.concat([states, lstates.assign(curva="volta")], ignore_index=True)
@@ -256,23 +324,65 @@ def run(saida: str, handoff_prefix: str = None) -> Dict[str, object]:
         models.append({"curva": cp.curva, "tipo": cp.tipo, **supervisionado.fit_corner(g, features)})
     timings["modelos_s"] = round(time.time() - started, 1)
 
-    # --- Parte H
+    # --- Parte H (rodada 1) ou o kit 2 (rodada 2, Parte E.1 do pedido 42)
     root = out_dir
     kit_dir = root / "rotulagem"
     kit_dir.mkdir(parents=True, exist_ok=True)
     stem = handoff_prefix or "kit"
-    kit_html = kit_dir / f"{Path(stem).name}_kit_rotulagem.html"
-    kit_csv = kit_dir / f"{Path(stem).name}_rotulagem.csv"
-    key = root / "rotulagem_gabarito.json"
-    kit = rotulagem.build_kit(states, laps, track, phases, kit_html, kit_csv, key)
+    if rodada < 2:
+        kit_html = kit_dir / f"{Path(stem).name}_kit_rotulagem.html"
+        kit_csv = kit_dir / f"{Path(stem).name}_rotulagem.csv"
+        key = root / "rotulagem_gabarito.json"
+        kit = rotulagem.build_kit(states, laps, track, phases, kit_html, kit_csv, key)
+        kit_files = [kit_html, kit_csv, key]
+    else:
+        kit_html = kit_dir / "kit2_rotulagem.html"
+        kit_csv = kit_dir / "kit2_consistencia.csv"
+        key = root / "kit2_gabarito.json"
+        consistency_html = kit_dir / "kit2_consistencia.html"
+        kit = rotulagem.build_kit2(raiz() / "rotulagem_gabarito.json", states, laps, track, phases, model_lap,
+                                   ordered_best, kit_html, consistency_html, kit_csv, key, model_points=model_points)
+        kit_files = [kit_html, consistency_html, kit_csv, key]
+        kit["sha256_html"] = sha256(kit_html)
+
+    # --- Parte D.6 (pedido 42): o E3 nas saidas de traseira relatadas em 01/11, a parte dos rotulos
+    e3_exits = saidas.run_e3(track, phases, refs, env, rodada, geometria)
+
+    # --- Parte D.3 (rodada 2): as sessoes depois do kit, so medidas, com as fases, o envelope e a calibracao das 144
+    after_kit = None
+    if rodada >= 2:
+        extra_humans = [l for l in extras.values() if l.volta.origem != "ia"]
+        extra_rows = []
+        for lap in extra_humans:
+            for cp in phases:
+                r = measure_passage(lap, track, cp, phases[cp.k - 1], env, rodada=rodada, geometria=geometria)
+                r["tipo"] = cp.tipo
+                r["tempo_trecho_s"] = phase_time(lap, track, *cp.trecho)
+                r["sessao_com_margem"] = lap.volta.com_margem
+                extra_rows.append(r)
+        ai_rows = [r for r in rows if r["origem"] == "ia"]
+        extra_states_all, _ = assign_states(ai_rows + extra_rows)
+        extra_states = extra_states_all[extra_states_all["origem"] != "ia"]
+        extra_passages = pd.DataFrame([{k: v for k, v in r.items() if k != "_ausente"} for r in extra_rows])
+        both_passages = pd.concat([passages, extra_passages], ignore_index=True)
+        both_states = pd.concat([states, extra_states], ignore_index=True)
+        extra_losses = loss_table(extra_humans, model_lap, best, track, phases, margem_s=data.margem_s)
+        after_kit = {"pedidas": len(extra_wanted), "medidas": len(extra_humans),
+                     "fora_da_selecao": sorted(set(extra_wanted) - set(extras)),
+                     "voltas": [{"lap_id": l.volta.lap_id, "sessao": l.volta.sessao, "tempo_s": round(l.total, 3),
+                                 "sessao_com_margem": l.volta.com_margem} for l in extra_humans],
+                     "fechamento_soma_das_fases_s": closure_of(extra_losses, extra_humans, model_lap) if extra_humans else None,
+                     "sessoes": rankings_for(extra_humans, extra_losses, both_passages, both_states, phases, ordered_best,
+                                             ai_passages, rodada, model_points, "volta de referencia (volta do modelo)")}
+        if len(extra_passages):
+            extra_passages.to_parquet(root / "passagens_depois_do_kit.parquet")
 
     # --- saidas
     outputs = {
         "fases": {"curvas": [cp.to_dict() for cp in phases], "metros_cobertos": covered, "comprimento_da_volta": track.length,
                   "envelope": env.table},
         "canais_e_conferencias": {"voltas": per_lap, "fora_do_store": data.fora_relatorio, "conferencias": checks},
-        "erros_por_sessao": {"referencia": {"volta_ia": ref_id, "tempo_s": ref.total, "melhor_volta": best.volta.lap_id,
-                                            "melhor_tempo_s": best.total},
+        "erros_por_sessao": {"rodada": rodada, "referencia": reference,
                              "fechamento_soma_das_fases_s": closure, "sessoes": rankings},
         "tecnicas": {"fracoes": frac.to_dict("records"), "listas": lists, "evolucao_piloto": evolution,
                      "por_volta": lstates.to_dict("records"), "consistencia_v5": v5.to_dict("records"),
@@ -282,6 +392,11 @@ def run(saida: str, handoff_prefix: str = None) -> Dict[str, object]:
         "estilo": signature,
         "modelo_leve": models,
     }
+    outputs["e3_saidas_de_traseira"] = e3_exits
+    if comparison is not None:
+        outputs["erros_por_sessao_so_comparacao_0013"] = comparison
+    if after_kit is not None:
+        outputs["erros_depois_do_kit"] = after_kit
     paths = {}
     for name, payload in outputs.items():
         paths[name] = write(root / f"{name}.json", payload)
@@ -292,11 +407,13 @@ def run(saida: str, handoff_prefix: str = None) -> Dict[str, object]:
     read_files = [dict(e, sha256=sha256(Path(e["arquivo"]))) for e in data.lidos]
     read_files.append({"arquivo": str(model_file), "bytes": model_file.stat().st_size, "sha256": sha256(model_file)})
     results = {
-        "pedido": "docs/prompts/2026-10-24_38_modelo2-erro-tecnica-e-estilo.md",
+        "pedido": ("docs/prompts/2026-10-24_38_modelo2-erro-tecnica-e-estilo.md" if rodada < 2 else
+                   "docs/prompts/2026-10-29_42_modelo2-rodada-2.md"),
+        "rodada": rodada, "regras": "secoes 1 e 2" if rodada < 2 else "secao 4 (pedido 42, Parte A)",
         "commit": commit, "geometry_id": track.geometry_id, "geometria_source_hash": track.source_hash,
         "store_v2": {"commit": data.store_meta.get("commit"), "construido_em": data.store_meta.get("construido_em")},
         "ambiente": {"python": platform.python_version(), "numpy": np.__version__, "pandas": pd.__version__},
-        "comandos": [" ".join(["python -m ml.scripts.modelo2 todos --saida", saida]
+        "comandos": [" ".join(["python -m ml.scripts.modelo2 todos --saida", saida, "--rodada", str(rodada)]
                               + (["--handoff", handoff_prefix] if handoff_prefix else []))],
         "saida": str(out_dir),
         "voltas": {"total": len(laps), "piloto": len(humans), "ia": len(ais),
@@ -305,7 +422,7 @@ def run(saida: str, handoff_prefix: str = None) -> Dict[str, object]:
         "sessoes_com_margem": {"margem_s": data.margem_s, "sessoes": data.com_margem,
                                "voltas": sorted(l.volta.lap_id for l in laps.values() if l.volta.com_margem)},
         "lidos": read_files,
-        "escritos": [{"arquivo": str(p), "sha256": sha256(p)} for p in list(paths.values()) + [kit_html, kit_csv, key]]
+        "escritos": [{"arquivo": str(p), "sha256": sha256(p)} for p in list(paths.values()) + kit_files]
                     + [{"arquivo": p, "sha256": sha256(Path(p))} for p in data.escritos],
         "kit": kit, "tempos": timings,
     }
@@ -318,8 +435,9 @@ def run(saida: str, handoff_prefix: str = None) -> Dict[str, object]:
                 # Os estados de cada passagem (~13 MB) ficam so em data/ml/modelo2/tecnicas.json.
                 payload = {k: v for k, v in payload.items() if k != "estados"}
             write(base.parent / f"{base.name}_{name}.json", payload)
-        for p in (kit_html, kit_csv):
-            target = base.parent / p.name.replace("kit_kit", "kit").replace(Path(stem).name, base.name)
+        for p in [f for f in kit_files if f != key]:
+            name = p.name.replace("kit_kit", "kit").replace(Path(stem).name, base.name)
+            target = base.parent / (name if name.startswith(base.name) else f"{base.name}_{name}")
             target.write_text(p.read_text(encoding="utf-8"), encoding="utf-8")
         (base.parent / f"{base.name}_resultados.json").write_text((root / "resultados.json").read_text(encoding="utf-8"), encoding="utf-8")
     return {"saidas": outputs, "resultados": results}
@@ -334,17 +452,34 @@ def labels(path: Path) -> int:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("comando", choices=["todos", "rotulos"])
+    parser.add_argument("comando", choices=["todos", "rotulos", "conferir", "comparar"])
     parser.add_argument("--handoff", default=None)
     parser.add_argument("--saida", default=None, help="pasta da rodada dentro de data/ml/modelo2/ (pedido 42)")
+    parser.add_argument("--rodada", type=int, choices=[1, 2], default=1)
+    parser.add_argument("--rodada1", default=None, help="comparar: a pasta da rodada 1 refeita")
     parser.add_argument("--rotulos", type=Path, default=None)
     args = parser.parse_args(argv)
     if args.comando == "rotulos":
         return labels(args.rotulos)
+    if args.comando == "conferir":
+        out = comparacao.conferir_rodada1(raiz(), pasta_da_rodada(args.saida or "rodada1_refeita"))
+        write(pasta_da_rodada(args.saida or "rodada1_refeita") / "conferencia_com_a_rodada1.json", out)
+        if args.handoff:
+            write(BACKEND.parent / f"{args.handoff}_conferencia_rodada1.json", out)
+        print(json.dumps(_clean(out), indent=1, ensure_ascii=False))
+        return 0 if out["reproduz"] else 3
+    if args.comando == "comparar":
+        out = comparacao.comparar(raiz(), pasta_da_rodada(args.rodada1 or "rodada1_refeita"),
+                                  pasta_da_rodada(args.saida or "rodada2"))
+        write(pasta_da_rodada(args.saida or "rodada2") / "comparacao_com_a_rodada1.json", out)
+        if args.handoff:
+            write(BACKEND.parent / f"{args.handoff}_comparacao.json", out)
+        print("ok")
+        return 0
     if not args.saida:
         parser.error("todos exige --saida (pedido 42: nada da rodada 1 em data/ml/modelo2/ e sobrescrito)")
     try:
-        result = run(args.saida, args.handoff)
+        result = run(args.saida, args.handoff, args.rodada)
     except SystemExit as stop:
         print(stop)
         return 2
