@@ -461,6 +461,33 @@ Você escolheu "Confirmar e remedir": primeiro a sessão curta que confirma a ca
 - **A margem de 2,0 ms** fica como reserva, para sessões no limite.
 - **Será registrada antes do código,** em `docs/store_v2_e_evolucao.md` e no ADR 0007, como nesta Parte A, e depois rodada com o store.
 
+### A conferência de 18/11, 20:27: as duas sessões não aparecem nos registros
+
+O aviso "rodei a confirmação da linha" chegou pela sessão que abriu esta. Antes de medir, conferi os registros, como você pediu, e **nenhum mostra as sessões A e B:**
+
+| registro | o que mostra |
+|---|---|
+| as gravações do app instalado (`%APPDATA%\Automobilista Telemetria\data\recordings`) | a última é `2026-11-16_13-55-15_vhe_interlagos_teste_m1`, de 16/11 |
+| as gravações do app do repositório (`data\recordings`) | a última é `2026-11-12_22-57-03_vhe_interlagos`, de 12/11 |
+| qualquer `player.jsonl` em C: e D: escrito depois de 17/11, 19:10 | só arquivos de teste do pytest, em pastas temporárias |
+| o log do jogo (`Documents\Assetto Corsa\logs\log.txt`, `custom_shaders_patch.log`) | a última escrita é de 17/11, 19:09 |
+| a última corrida (`cfg\race.ini`) | 17/11, 18:54, na pista `ks_silverstone`, e não em Interlagos |
+| o CSP (`dwrite.dll` e `extension\installed.log`) | os mesmos arquivos de 29/10 e 31/10 (0.3.1, build 4302), sem sinal de ter sido desligado ou trocado |
+
+**Por isso eu parei:**
+- não medi nada;
+- não registrei a nova medida;
+- não mexi no código nem no caminho do modelo.
+
+**O backup** `data\ml\_backup_antes_pedido54\` continua lá.
+
+**O que pode ter acontecido** (para você conferir):
+- o jogo rodou sem o app gravando;
+- ou o app gravou em outra pasta, por exemplo um app de teste isolado;
+- ou o aviso se referia a outra sessão.
+
+**Se as sessões foram gravadas em outro lugar, me diga onde, e eu meço de lá. Se não foram, o roteiro acima continua valendo.**
+
 ## O que falta
 
 Escrito na parada da A.5. As duas decisões de então já foram tomadas: o sinal para a rodada e a linha no ADR 0007. A rodada, o merge e a Parte B estão feitos (veja acima).
