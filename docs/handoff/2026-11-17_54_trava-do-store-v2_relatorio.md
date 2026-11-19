@@ -627,6 +627,20 @@ A checagem passa, e a lista `sessoes_aceitas_com_margem` fica vazia.
 
 **O ponto 2, o backup:** `data\ml\_backup_antes_pedido54\` continua lá. A nova medida entrou e foi conferida. **Apagar o backup é decisão sua;** eu não apago.
 
+**O merge e o envio da nova medida:**
+
+| envio | ref | hash local | hash no remoto | confere |
+|---|---|---|---|---|
+| o registro antes do código, o código e a parada | `etapa/trava-do-store-v2` | `85b549cf94f9fddd606add767e995c4aeb662ad4` | o mesmo | sim |
+| a rodada | `etapa/trava-do-store-v2` | `01c56b7b3cc92cc90126f1cf1562ae7cad2a2466` | o mesmo | sim |
+| o merge (`c83d743d`, `--no-ff`, sem conflito) | `develop` | `c83d743d72eed423569a6859edbedee3d631b5a5` | o mesmo | sim |
+
+- **Antes do merge,** `develop` estava em `2d0c8327`, igual ao remoto. Nenhuma pasta o tinha aberto, e as 7 mudanças não têm nada acima de 50 MB, nenhuma gravação e nenhum segredo.
+- **Este registro foi commitado em `develop`.** A branch avançou até ele, e a pasta do 47 voltou para `etapa/trava-do-store-v2`. O hash está no chat.
+- **Qualquer rodada nova do construtor** (o `atualizar_coach`, o botão do app) a partir de `develop` já usa as duas épocas.
+  - Atenção: a pasta principal está em `etapa/engenheiro`. **Ela só ganha a checagem nova quando trouxer `develop`.**
+  - Até lá, uma rodada do construtor lá reprova o store de novo. Ela usaria a regra antiga, sem a margem e sem as épocas.
+
 ## O que falta
 
 Escrito na parada da A.5. As duas decisões de então já foram tomadas: o sinal para a rodada e a linha no ADR 0007. A rodada, o merge e a Parte B estão feitos (veja acima).
