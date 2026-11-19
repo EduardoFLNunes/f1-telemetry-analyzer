@@ -568,6 +568,65 @@ A checagem passa, e a lista `sessoes_aceitas_com_margem` fica vazia.
 
 **O que vai ser regravado:** o meta, o relatório do construtor e a pasta `evolucao`. O parquet deve sair igual. **O backup de antes continua lá.**
 
+### A rodada da nova medida (18/11, 21:18, com o seu sinal)
+
+- **O sinal:**
+  - "pode rodar a rodada do 54" chegou pela sessão que abriu esta, às 21:10;
+  - às 21:13 você respondeu aqui "Vou rodar de novo". Perguntei, e você escolheu "Rodada da nova medida".
+- **Antes de rodar:**
+  - o `acs.exe`, o app instalado, o app do repositório e o backend estavam fechados. Os únicos processos de node eram do servidor Aikido;
+  - nenhuma gravação estava em andamento: as últimas pastas de gravação são de 16/11 e 12/11;
+  - conferi isso de novo antes do passo 7.
+- **O passo 6** (`build_lap_store_v2 --incremental`) terminou com código 0, em 43 s, com o cache.
+- **O passo 7** (`relatorio_evolucao.py --modelo C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\reference_models\vhe_interlagos.json`) terminou com código 0.
+- **Os passos 1 a 5 e o modelo do coach não rodaram.**
+
+**O meta, depois** (construído em 18/11 às 21:18, no commit `85b549cf`):
+
+| | antes desta rodada (17/11) | depois (18/11) |
+|---|---|---|
+| `aprovado` | `true` | `true` |
+| `sessoes_aceitas_com_margem` | 3 sessões | **vazia** |
+| `margem_linha_do_jogo_ms` | 2,0 | 2,0 |
+| `linha_do_jogo_regimes` | — | 1,463 m (antes de 31/10 às 19:52) e 1,601 m (a partir daí; o CSP 0.3.1, provável, não confirmado) |
+| a mediana da época antiga | — | 1,4949 m, em 702 voltas |
+| a mediana da época nova | — | 1,5986 m, em 17 voltas |
+| as três sessões de 01/11, 07/11 e 12/11 | aceitas com margem | **dentro da tolerância** (1,606, 1,581 e 1,573 m contra 1,601 m) |
+| as outras checagens | passaram | passaram, com os mesmos números |
+
+**O que se esperava, registrado antes, aconteceu.**
+
+**O store:** o `laps_grid_v2.parquet` continua byte a byte igual (`8FCADDF17783D50C…`), com as mesmas 721 voltas e as mesmas contagens por origem e por pasta.
+
+**O relatório de evolução:**
+- a referência é a mesma: a volta do modelo, "Volta de referência", 1:24,552;
+- são 16 sessões, e o critério do ADR 0015 continua "ainda variando" (1,428 s);
+- os números das sessões são os mesmos da rodada de 17/11, porque o store não mudou.
+
+**O ponto 1, o caminho do modelo:**
+- **o `referencia.modelo` e o `referencia.arquivo` agora apontam para a pasta principal:**
+  - `C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\reference_models\vhe_interlagos.json`;
+  - `…\vhe_interlagos.volta_do_modelo.json`.
+- **Outros três caminhos ainda saem com `f1-telemetry-analyzer-47`:**
+  - o `store.arquivo` (o parquet);
+  - a lista `arquivos_de_sessao` do `resumo.json`;
+  - o caminho do painel no terminal.
+
+  Eles vêm da raiz do repositório desta pasta (`config.artifacts_root`), que não aceita outra raiz sem mudar o código. **O app não lê nenhum dos três:** ele lista as sessões pela pasta, e a tela só usa `referencia.tempo_s`. O arquivo apontado é o mesmo, pela junção. Se você quiser esses caminhos também na pasta principal, é uma mudança pequena no `relatorio_evolucao.py`, num pedido próprio.
+
+**A conferência pelo SHA-256 na pasta principal** (`data\ml`, os mesmos arquivos pela junção):
+
+| arquivo | SHA-256 (início) | |
+|---|---|---|
+| `laps_grid_v2.parquet` | `8FCADDF17783D50C` | igual ao backup |
+| `laps_grid_v2_meta.json` | `CE0335B9F8DA16D9` | novo |
+| `store_v2_relatorio.json` | `AF95B8CFFEDA05EE` | novo |
+| `evolucao\resumo.json` | `9C82BD83D37B8D11` | novo |
+| `evolucao\painel.html` | `CF750EFAA76CA923` | novo |
+| `evolucao\sessao_*.json` | 16 arquivos, de 21:19:25 a 21:19:32 | novos |
+
+**O ponto 2, o backup:** `data\ml\_backup_antes_pedido54\` continua lá. A nova medida entrou e foi conferida. **Apagar o backup é decisão sua;** eu não apago.
+
 ## O que falta
 
 Escrito na parada da A.5. As duas decisões de então já foram tomadas: o sinal para a rodada e a linha no ADR 0007. A rodada, o merge e a Parte B estão feitos (veja acima).
