@@ -10,7 +10,7 @@ Formato de Michael Nygard: **Título, Status, Contexto, Decisão, Consequências
 | [0004](0004-simulador-nao-estima-ganho-local.md) | O simulador não estima ganho de tempo local | aceita; o caminho para um modelo físico novo está no 0017 |
 | [0005](0005-estimador-empirico-e-predicao-seletiva.md) | Estimador empírico de ganho e predição seletiva | aceita; Fase 2b |
 | [0006](0006-protocolo-de-validacao.md) | Protocolo de validação dos estimadores | aceita |
-| [0007](0007-versionamento-de-dados.md) | Versionamento de dados sem DVC, por enquanto | aceita; atualização de 17/11 (pedido 54): as sessões aceitas com margem no store v2 (até 2,0 ms) |
+| [0007](0007-versionamento-de-dados.md) | Versionamento de dados sem DVC, por enquanto | aceita; atualização de 17/11 (pedido 54): as sessões aceitas com margem no store v2 (até 2,0 ms); atualização de 18/11: a linha do jogo em 1,601 m a partir de 31/10 (o CSP 0.3.1, causa provável, não confirmada) |
 | [0008](0008-uma-sessao-de-implementacao.md) | Uma única sessão de implementação por vez | aceita |
 | [0009](0009-alvos-do-coach-e-tracado-otimizado.md) | O traçado otimizado não vira alvo do coach enquanto for mais lento que voltas reais | aceita |
 | [0010](0010-fase-2b-ajustada-pelos-artigos.md) | Fase 2b ajustada pela leitura dos artigos | aceita; complementa 0005 |

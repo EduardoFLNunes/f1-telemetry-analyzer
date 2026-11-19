@@ -29,3 +29,10 @@ As gravações somam ~12 GB e os artefatos derivados (store, modelos, resultados
   - O meta do store guarda a lista em `sessoes_aceitas_com_margem` e a margem em `margem_linha_do_jogo_ms`.
   - Acima de 2,0 ms, a sessão continua reprovando o store.
   - A regra está em `docs/store_v2_e_evolucao.md`, seção 1.3, na emenda de 17/11. Os 1,463 m, a tolerância e as outras checagens não mudam.
+- **18/11/2026 (pedido 54, depois da Parte B), decisão do Eduardo ("registra a nova medida pela data, sem o teste"):** a linha do jogo tem dois valores registrados, pela data de começo da sessão.
+  - Antes de 31/10/2026 às 19:52, vale **1,463 m** (pedido 33).
+  - A partir daí, vale **1,601 m**, a mediana de 141 voltas em 16 sessões (pedido 54, Parte B).
+  - A tolerância de 0,10 m é a mesma, e a margem de 2,0 ms continua como reserva.
+  - **A causa provável é o CSP 0.3.1, instalado nessa hora, mas não foi confirmada:** a versão do app mudou no mesmo dia, e o teste com o CSP desligado não foi feito.
+  - O meta guarda os dois valores em `linha_do_jogo_regimes`.
+  - A regra está em `docs/store_v2_e_evolucao.md`, seção 1.3, na emenda de 18/11.
