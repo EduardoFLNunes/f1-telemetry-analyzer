@@ -7,7 +7,9 @@
   - O pedido 42 pode retomar.
   - **A Parte B está feita.** A causa provável é o CSP 0.3.1, instalado em 31/10 às 19:52: a linha do jogo andou +0,11 m em todas as sessões depois dele.
     - Não está confirmada, porque a versão do app mudou no mesmo dia.
-    - A confirmação e a correção são decisão sua (B.4).
+  - **A sua decisão de 18/11, às 21:03,** foi registrar a nova medida pela data, sem o teste: **1,601 m a partir de 31/10, às 19:52.** As sessões A e B ficaram desistidas.
+    - O registro, o código e os testes estão feitos.
+    - A rodada foi liberada por você (veja "A nova medida, pela data, sem o teste").
   - A parada antes da rodada (A.5) está registrada abaixo, como foi escrita.
 - **Pasta:** `C:\Users\Dokas\Desktop\f1-telemetry-analyzer-47`.
 - **Branch:** `etapa/trava-do-store-v2`, a partir de `develop` em `14fe1ca0`.
@@ -420,6 +422,8 @@ Escritas antes de qualquer conta da Parte B, enquanto o passo 6 da rodada rodava
 
 ## Depois do pedido: a confirmação da causa e a nova medida (decisão do Eduardo, 18/11, 09:45)
 
+> **Este roteiro foi desistido pelo Eduardo em 18/11, às 21:03.** Valeu a nova medida pela data, sem o teste (veja "A nova medida, pela data, sem o teste", abaixo). As sessões A e B não são mais pedidas. O texto abaixo fica só como histórico.
+
 Você escolheu "Confirmar e remedir": primeiro a sessão curta que confirma a causa e, se for o CSP, a nova medida da linha. **Nada foi mudado ainda.**
 
 ### O critério, registrado antes da sessão
@@ -487,6 +491,82 @@ O aviso "rodei a confirmação da linha" chegou pela sessão que abriu esta. Ant
 - ou o aviso se referia a outra sessão.
 
 **Se as sessões foram gravadas em outro lugar, me diga onde, e eu meço de lá. Se não foram, o roteiro acima continua valendo.**
+
+### A nova medida, pela data, sem o teste (decisão do Eduardo, 18/11, 21:03)
+
+- **A sua decisão,** repassada pela sessão que abriu esta: "registra a nova medida pela data, sem o teste". As sessões A e B ficam desistidas.
+- **O CSP 0.3.1 fica como causa provável, sem confirmar,** e isso consta no registro.
+
+**O registro, antes do código** (commit `cfa2b411`):
+- em `docs/store_v2_e_evolucao.md`, seção 1.3, na emenda de 18/11;
+- no ADR 0007, com uma linha de atualização e a linha do índice.
+
+**A regra:**
+
+| sessões que começam | linha registrada | de onde |
+|---|---|---|
+| antes de 31/10/2026, 19:52 | 1,463 m | pedido 33 |
+| a partir de 31/10/2026, 19:52 | **1,601 m** | a mediana de 141 voltas em 16 sessões (Parte B), com o desvio de 0,033 m e o p5 a p95 de 1,558 a 1,638 m |
+
+- **O começo da sessão** é a data e a hora do `session_id`.
+- **A tolerância de 0,10 m** vale para os dois valores.
+- **A margem de 2,0 ms** fica como reserva, contra o valor da época.
+- **A mediana das voltas** é conferida por época.
+
+**O código:**
+- `store_checks.py` ganhou:
+  - `GAME_LINE_REGIMES`;
+  - `regime_of(session_id)`;
+  - a checagem por época;
+  - a chave nova `linha_do_jogo_regimes` no meta (por `margin_meta`, que o construtor já usa).
+- **Para o pedido 42,** as chaves do meta passam a ser três:
+  - `sessoes_aceitas_com_margem`;
+  - `margem_linha_do_jogo_ms`;
+  - `linha_do_jogo_regimes`, uma lista com `desde`, `registrada_m`, `origem` e `causa`.
+
+**Os testes:** `test_trava_do_store_v2.py` tem agora 15 testes. Os 5 novos cobrem:
+- a época pela data, com o limite exato de 19:51:59 contra 19:52:00 e um `session_id` sem data;
+- cada sessão contra o valor da sua época;
+- a linha velha depois de 31/10, aceita com margem e com efeito negativo;
+- a mediana de cada época;
+- o meta com as duas épocas.
+
+Com os testes da checagem e do store, são 50, todos passando.
+
+**A suíte inteira, em 18/11:** `1058 passed, 37 warnings in 598.35s`, sem nenhuma falha. A saída está em `_testes.txt`, que foi substituído por esta rodada.
+
+**O que se espera da rodada,** conferido antes, só lendo: apliquei a regra nova às 721 voltas que já estão no meta do store, sem gravar nada.
+
+| | depois de 31/10 (contra 1,601 m) | antes (contra 1,463 m) |
+|---|---|---|
+| a mediana da época | 1,5986 m, em 17 voltas | 1,4949 m, em 702 voltas |
+| `2026-11-01_19-47-03` | 1,606 m, dentro, sem margem | — |
+| `2026-11-07_18-46-00` | 1,581 m, dentro, sem margem | — |
+| `2026-11-12_22-57-03` | 1,573 m, dentro, sem margem | — |
+| `2026-11-07_19-52-33` | 2 voltas, sem veredito | — |
+
+A checagem passa, e a lista `sessoes_aceitas_com_margem` fica vazia.
+
+**Os dois pontos que você pediu para a mesma rodada:**
+1. **O caminho do modelo nos JSONs do relatório de evolução:**
+   - **o app não usa esse caminho.** A tela Evolução (`EvolucaoPage.tsx`) e a de Sessões só leem `referencia.tempo_s`. O backend (`core/leitura/arquivos.py`) entrega o `resumo.json` como está. O `referencia.modelo` e o `referencia.arquivo` são só registro;
+   - **mesmo assim, eles vão apontar para a pasta principal:** na rodada, o passo 7 roda com `--modelo C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\reference_models\vhe_interlagos.json`. O `relatorio_evolucao.py` acha a volta do modelo pela pasta do modelo, e por isso os dois caminhos saem da pasta principal. O código não muda.
+2. **O backup** `data\ml\_backup_antes_pedido54\` fica até a nova medida entrar e ser conferida.
+
+### A parada antes da rodada (18/11)
+
+**A rodada, depois do seu sinal, a partir de `f1-telemetry-analyzer-47\backend`:**
+1. **Conferir** que o jogo, o app instalado e o app do repositório estão fechados, e que nenhuma sessão está sendo gravada.
+2. **O passo 6:** `python -m ml.scripts.build_lap_store_v2 --incremental`. Ele regrava o store, o meta e o relatório do construtor em `data\ml`, pela junção.
+3. **O passo 7:** `python tools/relatorio_evolucao.py --modelo C:\Users\Dokas\Desktop\f1-telemetry-analyzer\data\reference_models\vhe_interlagos.json`. Ele regrava `data\ml\evolucao`.
+4. **Conferir:**
+   - o SHA-256 dos arquivos regravados na pasta principal;
+   - o meta (`aprovado`, `linha_do_jogo_regimes` e a lista vazia);
+   - o caminho do modelo nos JSONs;
+   - o parquet, que deve ficar igual ao de antes, porque nenhuma volta muda.
+5. **O merge em `develop`,** e a pasta volta para a branch.
+
+**O que vai ser regravado:** o meta, o relatório do construtor e a pasta `evolucao`. O parquet deve sair igual. **O backup de antes continua lá.**
 
 ## O que falta
 
